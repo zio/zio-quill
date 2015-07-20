@@ -1,3 +1,4 @@
+
 lazy val root = (project in file(".")).aggregate(`quill-core`, `quill-sql`, `quill-jdbc`)
 
 lazy val `quill-core` = (project in file("quill-core")).settings(commonSettings: _*)
