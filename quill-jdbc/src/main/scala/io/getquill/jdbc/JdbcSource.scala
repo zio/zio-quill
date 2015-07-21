@@ -26,15 +26,12 @@ trait JdbcSource extends SqlSource[ResultSet] {
       row.getString(index)
   }
 
-  def run[T](sql: String, extractor: ResultSet => T) =
-    extractor(withConnection(_.prepareStatement(sql).executeQuery))
-
-  private val dataSource =
-    new HikariDataSource(new HikariConfig(config.properties))
-
-  private def withConnection[T](f: Connection => T) = {
+  def run[T](sql: String, extractor: ResultSet => T) = {
     val conn = dataSource.getConnection
-    try f(conn)
-    finally conn.close()
+    try extractor(conn.prepareStatement(sql).executeQuery)
+    finally conn.close
   }
+
+  private val dataSource: HikariDataSource =
+    new HikariDataSource(new HikariConfig(config.properties))
 }
