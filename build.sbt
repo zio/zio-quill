@@ -20,7 +20,10 @@ lazy val `quill-sql` =
 lazy val `quill-jdbc` = 
   (project in file("quill-jdbc"))
     .settings(commonSettings: _*)
-    .settings(libraryDependencies += "com.zaxxer" % "HikariCP" % "2.3.9")
+    .settings(libraryDependencies ++= Seq(
+      "com.zaxxer" % "HikariCP"             % "2.3.9",
+      "mysql"      % "mysql-connector-java" % "5.1.36" % "test"
+    ))
     .dependsOn(`quill-sql`)
 
 lazy val commonSettings = releaseSettings ++ Seq(

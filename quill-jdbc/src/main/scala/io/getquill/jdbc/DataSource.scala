@@ -5,6 +5,7 @@ import com.typesafe.config.Config
 import java.util.Properties
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
+import com.typesafe.config.ConfigFactory
 
 object DataSource {
 
@@ -14,7 +15,7 @@ object DataSource {
   private def toProperties(config: Config) = {
     val p = new Properties
     for (entry <- config.entrySet)
-      p.setProperty(entry.getKey, entry.getValue.render)
+      p.setProperty(entry.getKey, entry.getValue.unwrapped.toString)
     p
   }
 }
