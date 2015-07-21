@@ -33,5 +33,5 @@ trait JdbcSource extends SqlSource[ResultSet] {
   }
 
   private val dataSource: HikariDataSource =
-    new HikariDataSource(new HikariConfig(config.properties))
+    new HikariDataSource(DataSourceConfig(config))
 }

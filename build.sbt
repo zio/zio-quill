@@ -6,6 +6,11 @@ lazy val root =
 lazy val `quill-core` = 
   (project in file("quill-core"))
     .settings(commonSettings: _*)
+    .settings(libraryDependencies ++= Seq(
+      "com.typesafe"               %  "config"        % "1.3.0",
+      "com.typesafe.scala-logging" %% "scala-logging" % "3.1.0",
+      "org.scala-lang"             %  "scala-reflect" % scalaVersion.value
+    ))
 
 lazy val `quill-sql` = 
   (project in file("quill-sql"))
@@ -22,8 +27,7 @@ lazy val commonSettings = releaseSettings ++ Seq(
   organization := "io.getquill",
   scalaVersion := "2.11.5",
   libraryDependencies ++= Seq(
-    "org.scalatest" %% "scalatest" % "2.2.4" % "test",
-    "org.scala-lang" % "scala-reflect" % scalaVersion.value
+    "org.scalatest" %% "scalatest" % "2.2.4" % "test"
   ),
   scalacOptions ++= Seq("-deprecation", "-feature", "-Xfatal-warnings"),
   publishMavenStyle := true,
