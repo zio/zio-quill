@@ -6,8 +6,9 @@ import io.getquill.sql.SqlSource
 import com.zaxxer.hikari.HikariDataSource
 import com.zaxxer.hikari.HikariConfig
 import scala.collection.mutable.ListBuffer
+import com.typesafe.scalalogging.StrictLogging
 
-trait JdbcSource extends SqlSource[ResultSet] {
+trait JdbcSource extends SqlSource[ResultSet] with StrictLogging {
 
   implicit val longEncoder = new Encoder[Long] {
     def encode(value: Long, index: Int, row: ResultSet) = ???
@@ -30,6 +31,7 @@ trait JdbcSource extends SqlSource[ResultSet] {
   private val dataSource = DataSource(config)
 
   def run[T](sql: String, extractor: ResultSet => T) = {
+    println(sql)
     val conn = dataSource.getConnection
     try {
       val rs = conn.prepareStatement(sql).executeQuery

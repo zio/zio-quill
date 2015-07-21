@@ -17,6 +17,10 @@ case class Equals(a: Expr, b: Expr) extends Predicate
 case class And(a: Predicate, b: Predicate) extends Predicate
 
 case class GreaterThan(a: Expr, b: Expr) extends Predicate
+case class GreaterThanOrEqual(a: Expr, b: Expr) extends Predicate
+
+case class LessThan(a: Expr, b: Expr) extends Predicate
+case class LessThanOrEqual(a: Expr, b: Expr) extends Predicate
 
 //************************************************************
 

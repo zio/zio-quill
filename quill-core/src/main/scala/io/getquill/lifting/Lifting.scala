@@ -38,6 +38,12 @@ trait Lifting {
       q"$pack.And($a, $b)"
     case GreaterThan(a, b) =>
       q"$pack.GreaterThan($a, $b)"
+    case GreaterThanOrEqual(a, b) =>
+      q"$pack.GreaterThanOrEqual($a, $b)"
+    case LessThan(a, b) =>
+      q"$pack.LessThan($a, $b)"
+    case LessThanOrEqual(a, b) =>
+      q"$pack.LessThanOrEqual($a, $b)"
   }
 
   implicit val refLift: Liftable[Ref] = Liftable[Ref] {

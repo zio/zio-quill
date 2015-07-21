@@ -41,14 +41,31 @@ trait Unlifting {
       Equals(a, b)
     case q"${ a: Expr } == ${ b: Expr }" =>
       Equals(a, b)
+
     case q"$pack.And.apply(${ a: Predicate }, ${ b: Predicate })" =>
       And(a, b)
     case q"${ a: Predicate } && ${ b: Predicate }" =>
       And(a, b)
+
+    case q"$pack.GreaterThanOrEqual.apply(${ a: Expr }, ${ b: Expr })" =>
+      GreaterThanOrEqual(a, b)
+    case q"${ a: Expr } >= ${ b: Expr }" =>
+      GreaterThanOrEqual(a, b)
+
     case q"$pack.GreaterThan.apply(${ a: Expr }, ${ b: Expr })" =>
       GreaterThan(a, b)
     case q"${ a: Expr } > ${ b: Expr }" =>
       GreaterThan(a, b)
+
+    case q"$pack.LessThanOrEqual.apply(${ a: Expr }, ${ b: Expr })" =>
+      LessThanOrEqual(a, b)
+    case q"${ a: Expr } <= ${ b: Expr }" =>
+      LessThanOrEqual(a, b)
+
+    case q"$pack.LessThan.apply(${ a: Expr }, ${ b: Expr })" =>
+      LessThan(a, b)
+    case q"${ a: Expr } < ${ b: Expr }" =>
+      LessThan(a, b)
   }
 
   implicit val refUnlift: Unliftable[Ref] = Unliftable[Ref] {

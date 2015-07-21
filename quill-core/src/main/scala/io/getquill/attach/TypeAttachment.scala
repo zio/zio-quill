@@ -32,23 +32,25 @@ trait TypeAttachment {
   def to[T](implicit t: WeakTypeTag[T]) =
     new Attachable[T]
 
-  def attachmentMetadata[D](tree: Tree)(implicit unlift: Unliftable[D]) =
-    attachmentUnlift(tree).get
-    
+  def attachmentMetadata[D](tree: Tree)(implicit unlift: Unliftable[D]) = {
+    val method =
+      tree.tpe.decls.find(_.name.decodedName.toString == "metadata")
+        .getOrElse(c.abort(c.enclosingPosition, s"Can't find the metadata method at '${tree.tpe}'."))
+    val annotation =
+      method.annotations.headOption
+        .getOrElse(c.abort(c.enclosingPosition, s"Can't find the metadata annotation at '$method'."))
+    val data =
+      annotation.tree.children.lastOption
+        .getOrElse(c.abort(c.enclosingPosition, s"Can't find the data field from metadata annotation '$annotation'."))
+    unlift.unapply(data)
+      .getOrElse(c.abort(c.enclosingPosition, s"Can't unlift metadata '$data'."))
+  }
+
   def attachmentDataTypeSymbol(tree: Tree) =
     tree.tpe.member(TermName("data")).typeSignature.typeSymbol.asType
 
   def attachmentData(tree: Tree) =
     q"$tree.data"
-
-  private def attachmentUnlift[D](tree: Tree)(implicit unlift: Unliftable[D]) =
-    for {
-      method <- tree.tpe.decls.find(_.name.decodedName.toString == "metadata")
-      annotation <- method.annotations.headOption
-      unlift(attachment) <- annotation.tree.children.lastOption
-    } yield {
-      attachment
-    }
 
   def debugg[T](v: T) = {
     c.info(c.enclosingPosition, v.toString(), false)

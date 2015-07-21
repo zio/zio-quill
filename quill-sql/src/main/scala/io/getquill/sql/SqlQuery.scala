@@ -28,7 +28,7 @@ object SqlQuery {
       case other =>
         import io.getquill.util.Show._
         import io.getquill.ast.QueryShow._
-        throw new IllegalStateException(s"Query not propertly normalized, please submit a bug report. ${query.show}")
+        throw new IllegalStateException(s"Query is not propertly normalized, please submit a bug report. ${query.show}")
     }
   }
 }

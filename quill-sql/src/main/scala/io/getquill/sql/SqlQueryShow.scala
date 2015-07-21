@@ -12,19 +12,14 @@ object SqlQueryShow {
     def show(e: SqlQuery) =
       e.where match {
         case None =>
-          s"""SELECT ${e.select.show}
-  FROM ${e.from.show}
-"""
+          s"SELECT ${e.select.show} FROM ${e.from.show}"
         case Some(where) =>
-          s"""SELECT ${e.select.show}
-  FROM ${e.from.show}
- WHERE ${where.show}
-"""
+          s"SELECT ${e.select.show} FROM ${e.from.show} WHERE ${where.show}"
       }
   }
 
   implicit val sourceListShow: Show[List[Source]] = new Show[List[Source]] {
     def show(list: List[Source]) =
-      list.map(e => s"${e.table} ${e.alias}").mkString(",\n       ")
+      list.map(e => s"${e.table} ${e.alias}").mkString(", ")
   }
 }

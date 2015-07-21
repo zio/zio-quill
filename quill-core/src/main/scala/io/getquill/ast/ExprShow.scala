@@ -17,9 +17,12 @@ object ExprShow {
   implicit val predicateShow: Show[Predicate] = new Show[Predicate] {
     def show(e: Predicate) =
       e match {
-        case Equals(a, b)      => s"${a.show} == ${b.show}"
-        case And(a, b)         => s"${a.show} && ${b.show}"
-        case GreaterThan(a, b) => s"${a.show} > ${b.show}"
+        case Equals(a, b)             => s"${a.show} == ${b.show}"
+        case And(a, b)                => s"${a.show} && ${b.show}"
+        case GreaterThan(a, b)        => s"${a.show} > ${b.show}"
+        case GreaterThanOrEqual(a, b) => s"${a.show} >= ${b.show}"
+        case LessThan(a, b)           => s"${a.show} < ${b.show}"
+        case LessThanOrEqual(a, b)    => s"${a.show} <= ${b.show}"
       }
   }
 

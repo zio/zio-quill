@@ -28,7 +28,7 @@ trait NormalizationMacro extends ImplicitResolution {
     def encoderType[T, R](implicit t: WeakTypeTag[T], r: WeakTypeTag[R]) =
       c.weakTypeTag[Encoder[R, T]]
     val (sql, materialize) = expand(inferEncoder, query)(t, c.WeakTypeTag(rowType))
-    NormalizedQuery(query, materialize)
+    NormalizedQuery(sql, materialize)
   }
 
   private def ensureFinalMap(query: Query): Query =

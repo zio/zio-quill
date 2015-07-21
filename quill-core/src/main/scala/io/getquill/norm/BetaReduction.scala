@@ -33,6 +33,12 @@ object BetaReduction {
         And(apply(a), apply(b))
       case GreaterThan(a, b) =>
         GreaterThan(apply(a), apply(b))
+      case GreaterThanOrEqual(a, b) =>
+        GreaterThanOrEqual(apply(a), apply(b))
+      case LessThan(a, b) =>
+        LessThan(apply(a), apply(b))
+      case LessThanOrEqual(a, b) =>
+        LessThanOrEqual(apply(a), apply(b))
     }
 
   def apply(ref: Ref)(implicit refs: collection.Map[Ident, Expr]): Expr =
