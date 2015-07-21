@@ -10,7 +10,7 @@ trait ImplicitResolution {
     inferImplicitValue(tpe).orElse {
       val members =
         fallbackType.members.collect {
-          case m: MethodSymbol if (m.isImplicit && m.typeSignature.resultType.dealias =:= tpe) =>
+          case m: MethodSymbol if (m.isImplicit && m.typeSignature.resultType.dealias <:< tpe) =>
             m
         }
       members.headOption.map { m =>

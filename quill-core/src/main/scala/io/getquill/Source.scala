@@ -15,6 +15,8 @@ abstract class Source[R: ClassTag] {
   type Encoder[T] = io.getquill.Encoder[R, T]
 
   protected def entity[T]: Any = macro SourceMacro.entity[T, R]
+  
+  protected val config = new Config(getClass.getSimpleName)
 
   def run[T](q: Queryable[T]): Any = ???
 }

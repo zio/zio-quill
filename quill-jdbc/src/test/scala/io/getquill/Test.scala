@@ -2,6 +2,8 @@ package io.getquill
 
 import language.experimental.macros
 import io.getquill.ast.Ident
+import io.getquill.jdbc.JdbcSource
+import java.sql.ResultSet
 
 case class Person(id: Long, name: String, surname: String, age: Int)
 case class Address(id: Long, personId: Long, streetId: Long, number: Int)
@@ -9,40 +11,17 @@ case class Street(id: Long, name: String, city: String)
 
 object Test extends App {
 
-  object db extends Source[List[String]] {
-
-    implicit val longEncoder = new Encoder[Long] {
-      def encode(value: Long, index: Int, row: List[String]) =
-        row :+ value.toString
-      def decode(index: Int, row: List[String]) =
-        row(index).toLong
-    }
-
-    implicit val intEncoder = new Encoder[Int] {
-      def encode(value: Int, index: Int, row: List[String]) =
-        row :+ value.toString
-      def decode(index: Int, row: List[String]) =
-        row(index).toInt
-    }
-
-    implicit val stringEncoder = new Encoder[String] {
-      def encode(value: String, index: Int, row: List[String]) =
-        row :+ value
-      def decode(index: Int, row: List[String]) =
-        row(index)
-    }
+  object db extends JdbcSource {
 
     val person = entity[Person]
     val address = entity[Address]
     val street = entity[Street]
-
-    override def run[T](q: Queryable[T]): Any = macro TestMacro.run[T]
   }
 
   def q1 = db.person.filter(p => p.name == p.surname).map(p => (p.name, p.age))
 
-  val a: String = q1.run
-  
+  val a = q1.run
+
   println(q1)
   println(q1.run)
 

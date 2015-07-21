@@ -17,7 +17,7 @@ trait NormalizationMacro extends ImplicitResolution {
   val c: Context
   import c.universe.{ Expr => _, Ident => _, _ }
 
-  case class NormalizedQuery[R, T](query: Query, materializeFunction: Tree)
+  case class NormalizedQuery[R, T](query: Query, extractor: Tree)
 
   def normalize[T](queryTree: Tree)(implicit t: WeakTypeTag[T]) = {
     val dbType = attachmentDataTypeSymbol(queryTree)
@@ -112,7 +112,7 @@ trait NormalizationMacro extends ImplicitResolution {
                   val paramType = param.typeSignature.typeSymbol.asType.toType
                   val encoder =
                     inferEncoder(paramType)
-                      .getOrElse(c.abort(c.enclosingPosition, s"Source doesn't know how to encode '${t.tpe.typeSymbol.name}.${param.name}: $paramType'"))
+                      .getOrElse(c.abort(c.enclosingPosition, s"Source doesn't know how to encode '${param.name}: $paramType'"))
                   SimpleSelectValue(Property(expr, param.name.decodedName.toString), encoder)
               })
             CaseClassSelectValue(typ, params)

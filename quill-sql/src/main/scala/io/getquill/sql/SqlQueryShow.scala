@@ -2,21 +2,25 @@ package io.getquill.sql
 
 import ExprShow.exprShow
 import ExprShow.predicateShow
-import io.getquill.util.Show.Show
-import io.getquill.util.Show.Shower
+import io.getquill.util.Show._
 
 object SqlQueryShow {
 
   import ExprShow._
 
   implicit val sqlQueryShow: Show[SqlQuery] = new Show[SqlQuery] {
-    def show(e: SqlQuery) = {
-      s"""
-SELECT ${e.select.show}
+    def show(e: SqlQuery) =
+      e.where match {
+        case None =>
+          s"""SELECT ${e.select.show}
   FROM ${e.from.show}
- WHERE ${e.where.show}
 """
-    }
+        case Some(where) =>
+          s"""SELECT ${e.select.show}
+  FROM ${e.from.show}
+ WHERE ${where.show}
+"""
+      }
   }
 
   implicit val sourceListShow: Show[List[Source]] = new Show[List[Source]] {

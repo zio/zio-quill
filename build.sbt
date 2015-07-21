@@ -1,11 +1,22 @@
 
-lazy val root = (project in file(".")).aggregate(`quill-core`, `quill-sql`, `quill-jdbc`)
+lazy val root = 
+  (project in file("."))
+    .aggregate(`quill-core`, `quill-sql`, `quill-jdbc`)
 
-lazy val `quill-core` = (project in file("quill-core")).settings(commonSettings: _*)
+lazy val `quill-core` = 
+  (project in file("quill-core"))
+    .settings(commonSettings: _*)
 
-lazy val `quill-sql` = (project in file("quill-sql")).settings(commonSettings: _*).dependsOn(`quill-core`)
+lazy val `quill-sql` = 
+  (project in file("quill-sql"))
+    .settings(commonSettings: _*)
+    .dependsOn(`quill-core`)
 
-lazy val `quill-jdbc` = (project in file("quill-jdbc")).settings(commonSettings: _*).dependsOn(`quill-sql`)
+lazy val `quill-jdbc` = 
+  (project in file("quill-jdbc"))
+    .settings(commonSettings: _*)
+    .settings(libraryDependencies += "com.zaxxer" % "HikariCP" % "2.3.9")
+    .dependsOn(`quill-sql`)
 
 lazy val commonSettings = releaseSettings ++ Seq(
   organization := "io.getquill",
