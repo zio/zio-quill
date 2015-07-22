@@ -19,27 +19,27 @@ class PartialMacro(val c: Context) extends TypeAttachment with Lifting with Unli
   def create1[P1, T](f: c.Expr[P1 => T])(implicit p1: WeakTypeTag[P1], t: WeakTypeTag[T]) =
     f.tree match {
       case q"(${ pr1: Ident }) => ${ expr: Expr }" =>
-        to[Partial1[P1, T]].attach(ParametrizedExpr(List(pr1), expr): Parametrized)
+        attach[Partial1[P1, T]](ParametrizedExpr(List(pr1), expr): Parametrized)
       case q"(${ pr1: Ident }) => $query" =>
-        to[Partial1[P1, T]].attach(attachmentData(query), ParametrizedQuery(List(pr1), attachmentMetadata[Query](query)): Parametrized)
+        attach[Partial1[P1, T]](ParametrizedQuery(List(pr1), detach[Query](query)): Parametrized)
     }
 
   def create2[P1, P2, T](f: c.Expr[(P1, P2) => T])(implicit p1: WeakTypeTag[P1], p2: WeakTypeTag[P2], t: WeakTypeTag[T]) =
     f.tree match {
       case q"(${ pr1: Ident }, ${ pr2: Ident }) => ${ expr: Expr }" =>
-        to[Partial2[P1, P2, T]].attach(ParametrizedExpr(List(pr1, pr2), expr): Parametrized)
+        attach[Partial2[P1, P2, T]](ParametrizedExpr(List(pr1, pr2), expr): Parametrized)
       case q"(${ pr1: Ident }, ${ pr2: Ident }) => $query" if (query.tpe <:< weakTypeOf[Queryable[Any]]) =>
-        to[Partial2[P1, P2, T]].attach(attachmentData(query), ParametrizedQuery(List(pr1, pr2), attachmentMetadata[Query](query)): Parametrized)
+        attach[Partial2[P1, P2, T]](ParametrizedQuery(List(pr1, pr2), detach[Query](query)): Parametrized)
     }
 
   def apply1[P1, T](pr1: c.Expr[P1])(implicit p1: WeakTypeTag[P1], t: WeakTypeTag[T]) = {
     val actuals = List(pr1.tree).map {
       case q"${ ref: Ref }" => ref
     }
-    attachmentMetadata[Parametrized](c.prefix.tree) match {
+    detach[Parametrized](c.prefix.tree) match {
       case ParametrizedQuery(idents, query) =>
         val reductionMap = idents.zip(actuals).toMap
-        to[T].attach(attachmentData(c.prefix.tree), BetaReduction(query)(reductionMap))
+        attach[T](BetaReduction(query)(reductionMap))
       case ParametrizedExpr(idents, expr) =>
         val reductionMap = idents.zip(actuals).toMap
         q"${BetaReduction(expr)(reductionMap)}"
@@ -50,10 +50,10 @@ class PartialMacro(val c: Context) extends TypeAttachment with Lifting with Unli
     val actuals = List(pr1.tree, pr2.tree).map {
       case q"${ ref: Ref }" => ref
     }
-    attachmentMetadata[Parametrized](c.prefix.tree) match {
+    detach[Parametrized](c.prefix.tree) match {
       case ParametrizedQuery(idents, query) =>
         val reductionMap = idents.zip(actuals).toMap
-        to[T].attach(attachmentData(c.prefix.tree), BetaReduction(query)(reductionMap))
+        attach[T](BetaReduction(query)(reductionMap))
       case ParametrizedExpr(idents, expr) =>
         val reductionMap = idents.zip(actuals).toMap
         q"${BetaReduction(expr)(reductionMap)}"

@@ -19,15 +19,13 @@ trait NormalizationMacro extends ImplicitResolution {
 
   case class NormalizedQuery[R, T](query: Query, extractor: Tree)
 
-  def normalize[T](queryTree: Tree)(implicit t: WeakTypeTag[T]) = {
-    val dbType = attachmentDataTypeSymbol(queryTree)
-    val rowType = dbType.toType.baseType(c.typeOf[Source[_]].typeSymbol).typeArgs.head
-    val query = AdHocReduction(SymbolicReduction(attachmentMetadata[Query](queryTree)))
+  def normalize[D, R, T](queryTree: Tree)(implicit d: WeakTypeTag[D], r: WeakTypeTag[R], t: WeakTypeTag[T]) = {
+    val query = AdHocReduction(SymbolicReduction(detach[Query](queryTree)))
     def inferEncoder(tpe: Type) =
-      inferImplicitValueWithFallback(encoderType(c.WeakTypeTag(tpe), c.WeakTypeTag(rowType)).tpe, dbType.toType, attachmentData(queryTree))
+      inferImplicitValueWithFallback(encoderType(c.WeakTypeTag(tpe), r).tpe, d.tpe, c.prefix.tree)
     def encoderType[T, R](implicit t: WeakTypeTag[T], r: WeakTypeTag[R]) =
       c.weakTypeTag[Encoder[R, T]]
-    val (sql, materialize) = expand(inferEncoder, query)(t, c.WeakTypeTag(rowType))
+    val (sql, materialize) = expand(inferEncoder, query)(t, r)
     NormalizedQuery(sql, materialize)
   }
 

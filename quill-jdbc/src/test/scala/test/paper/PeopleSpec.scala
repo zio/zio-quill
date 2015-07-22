@@ -5,14 +5,11 @@ import io.getquill.Partial
 import io.getquill.jdbc.JdbcSource
 import test.Spec
 import io.getquill.Queryable
+import io.getquill.From
 
 class PeopleSpec extends Spec {
 
-  object peopleDB extends JdbcSource {
-
-    val people = entity[Person]
-    val couples = entity[Couple]
-  }
+  object peopleDB extends JdbcSource
 
   case class Person(name: String, age: Int)
   case class Couple(her: String, him: String)
@@ -21,14 +18,14 @@ class PeopleSpec extends Spec {
 
     val differences =
       for {
-        c <- peopleDB.couples
-        w <- peopleDB.people
-        m <- peopleDB.people if (c.her == w.name && c.him == m.name && w.age > m.age)
+        c <- From[Couple]
+        w <- From[Person]
+        m <- From[Person] if (c.her == w.name && c.him == m.name && w.age > m.age)
       } yield {
         (w.name, w.age - m.age)
       }
 
-    differences.run mustEqual List(("Alex", 5), ("Cora", 2))
+    peopleDB.run(differences) mustEqual List(("Alex", 5), ("Cora", 2))
   }
 
   "Example 2 - range simple" in {
@@ -36,7 +33,7 @@ class PeopleSpec extends Spec {
     val rangeSimple = Partial {
       (a: Int, b: Int) =>
         for {
-          u <- peopleDB.people if (a <= u.age && u.age < b)
+          u <- From[Person] if (a <= u.age && u.age < b)
         } yield {
           u
         }
@@ -44,7 +41,7 @@ class PeopleSpec extends Spec {
 
     val r = rangeSimple(30, 40)
 
-    r.run mustEqual List(Person("Cora", 33), Person("Drew", 31))
+    peopleDB.run(r) mustEqual List(Person("Cora", 33), Person("Drew", 31))
   }
 
   //  "Example 3 - satisfies" in {

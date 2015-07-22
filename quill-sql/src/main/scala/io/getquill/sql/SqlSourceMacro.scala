@@ -15,8 +15,9 @@ class SqlSourceMacro(val c: Context)
 
   import SqlQueryShow._
 
-  def run[T](q: Expr[Queryable[T]])(implicit t: WeakTypeTag[T]) = {
-    val NormalizedQuery(query, extractor) = normalize[T](q.tree)
+  def run[R, T](q: Expr[Queryable[T]])(implicit r: WeakTypeTag[R], t: WeakTypeTag[T]) = {
+    val d = c.WeakTypeTag(c.prefix.tree.tpe)
+    val NormalizedQuery(query, extractor) = normalize(q.tree)(d, r, t)
     val sql = SqlQuery(query).show
     c.echo(c.enclosingPosition, sql)
     q"${c.prefix}.run[$t]($sql, $extractor)"

@@ -6,14 +6,15 @@ import io.getquill.ast.Query
 import io.getquill.ast.Expr
 import io.getquill.ast.ParametrizedQuery
 import io.getquill.ast.ParametrizedExpr
+import io.getquill.ast.Parametrized
 
-trait Partial extends Attachable {
+trait Partial extends Attachable[Parametrized] {
 
   override def toString = {
     import util.Show._
     import ast.QueryShow._
     import ast.ExprShow._
-    metadata match {
+    attachment match {
       case ParametrizedQuery(_, q) => q.show
       case ParametrizedExpr(_, e) => e.show
     } 

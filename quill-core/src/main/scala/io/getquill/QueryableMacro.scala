@@ -17,13 +17,10 @@ class QueryableMacro(val c: Context)
 
   import c.universe._
 
-  def run[T](implicit t: WeakTypeTag[T]) = 
-    q"${attachmentData(c.prefix.tree)}.run(${c.prefix})"
-
   def filterPartial[T](f: c.Expr[Partial1[T, Boolean]])(implicit t: WeakTypeTag[T]) = {
-    attachmentMetadata[Parametrized](f.tree) match {
+    detach[Parametrized](f.tree) match {
       case ParametrizedExpr(List(alias), predicate: Predicate) =>
-        toQueryable[T](ast.Filter(attachmentMetadata[Query](c.prefix.tree), alias, predicate))
+        toQueryable[T](ast.Filter(detach[Query](c.prefix.tree), alias, predicate))
     }
   }
 
@@ -32,14 +29,14 @@ class QueryableMacro(val c: Context)
       case q"($input) => $body" if (input.name.toString.contains("ifrefutable")) =>
         c.prefix.tree
       case q"(${ alias: ast.Ident }) => ${ body: ast.Predicate }" =>
-        toQueryable[T](ast.Filter(attachmentMetadata[Query](c.prefix.tree), alias, body))
+        toQueryable[T](ast.Filter(detach[Query](c.prefix.tree), alias, body))
     }
   }
 
   def map[T, R](f: c.Expr[T => R])(implicit t: WeakTypeTag[T], r: WeakTypeTag[R]) = {
     f.tree match {
       case q"(${ alias: ast.Ident }) => ${ body: ast.Expr }" =>
-        toQueryable[R](ast.Map(attachmentMetadata[Query](c.prefix.tree), alias, body))
+        toQueryable[R](ast.Map(detach[Query](c.prefix.tree), alias, body))
     }
   }
 
@@ -51,18 +48,18 @@ class QueryableMacro(val c: Context)
             case Bind(name, _) =>
               ast.Ident(name.decodedName.toString)
           }
-        val query = attachmentMetadata[Query](body)
+        val query = detach[Query](body)
         val reduction =
           for ((a, i) <- aliases.zipWithIndex) yield {
             a -> ast.Property(alias, s"_${i + 1}")
           }
-        toQueryable[R](ast.FlatMap(attachmentMetadata[Query](c.prefix.tree), alias, BetaReduction(query)(reduction.toMap)))
+        toQueryable[R](ast.FlatMap(detach[Query](c.prefix.tree), alias, BetaReduction(query)(reduction.toMap)))
       case q"(${ alias: ast.Ident }) => $body" =>
-        toQueryable[R](ast.FlatMap(attachmentMetadata[Query](c.prefix.tree), alias, attachmentMetadata[Query](body)))
+        toQueryable[R](ast.FlatMap(detach[Query](c.prefix.tree), alias, detach[Query](body)))
     }
   }
 
   private def toQueryable[T](query: Query)(implicit t: WeakTypeTag[T]) =
-    to[Queryable[T]].attach(attachmentData(c.prefix.tree), query)
+    attach[Queryable[T]](query)
 
 }
