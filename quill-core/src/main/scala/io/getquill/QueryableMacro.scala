@@ -16,6 +16,9 @@ class QueryableMacro(val c: Context)
     extends TypeAttachment with Lifting with Unlifting with NormalizationMacro {
 
   import c.universe._
+  
+  def apply[T](implicit t: WeakTypeTag[T]) =
+    attach[Queryable[T]](ast.Table(t.tpe.typeSymbol.name.toString): ast.Query)
 
   def filterPartial[T](f: c.Expr[Partial1[T, Boolean]])(implicit t: WeakTypeTag[T]) = {
     detach[Parametrized](f.tree) match {

@@ -5,7 +5,7 @@ import io.getquill.Partial
 import io.getquill.jdbc.JdbcSource
 import test.Spec
 import io.getquill.Queryable
-import io.getquill.From
+import io.getquill.Queryable
 
 class PeopleSpec extends Spec {
 
@@ -18,9 +18,9 @@ class PeopleSpec extends Spec {
 
     val differences =
       for {
-        c <- From[Couple]
-        w <- From[Person]
-        m <- From[Person] if (c.her == w.name && c.him == m.name && w.age > m.age)
+        c <- Queryable[Couple]
+        w <- Queryable[Person]
+        m <- Queryable[Person] if (c.her == w.name && c.him == m.name && w.age > m.age)
       } yield {
         (w.name, w.age - m.age)
       }
@@ -33,7 +33,7 @@ class PeopleSpec extends Spec {
     val rangeSimple = Partial {
       (a: Int, b: Int) =>
         for {
-          u <- From[Person] if (a <= u.age && u.age < b)
+          u <- Queryable[Person] if (a <= u.age && u.age < b)
         } yield {
           u
         }

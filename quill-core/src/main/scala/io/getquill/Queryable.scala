@@ -22,3 +22,7 @@ trait Queryable[+T] extends Attachable[Query] {
     attachment.show
   }
 }
+
+object Queryable {
+  def apply[T]: Queryable[T] = macro QueryableMacro.apply[T]
+}
