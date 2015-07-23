@@ -4,7 +4,6 @@ import scala.reflect.macros.whitebox.Context
 
 import io.getquill.ast.Parametrized
 import io.getquill.ast.ParametrizedExpr
-import io.getquill.ast.Predicate
 import io.getquill.ast.Query
 import io.getquill.attach.TypeAttachment
 import io.getquill.lifting.Lifting
@@ -22,8 +21,8 @@ class QueryableMacro(val c: Context)
 
   def filterPartial[T](f: c.Expr[Partial1[T, Boolean]])(implicit t: WeakTypeTag[T]) = {
     detach[Parametrized](f.tree) match {
-      case ParametrizedExpr(List(alias), predicate: Predicate) =>
-        toQueryable[T](ast.Filter(detach[Query](c.prefix.tree), alias, predicate))
+      case ParametrizedExpr(List(alias), body: ast.Expr) =>
+        toQueryable[T](ast.Filter(detach[Query](c.prefix.tree), alias, body))
     }
   }
 
@@ -31,7 +30,7 @@ class QueryableMacro(val c: Context)
     f.tree match {
       case q"($input) => $body" if (input.name.toString.contains("ifrefutable")) =>
         c.prefix.tree
-      case q"(${ alias: ast.Ident }) => ${ body: ast.Predicate }" =>
+      case q"(${ alias: ast.Ident }) => ${ body: ast.Expr }" =>
         toQueryable[T](ast.Filter(detach[Query](c.prefix.tree), alias, body))
     }
   }

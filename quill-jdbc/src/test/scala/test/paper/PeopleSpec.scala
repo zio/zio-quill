@@ -44,19 +44,16 @@ class PeopleSpec extends Spec {
     peopleDB.run(r) mustEqual List(Person("Cora", 33), Person("Drew", 31))
   }
 
-  //  "Example 3 - satisfies" in {
-  //     for u in db.People do
-  //                        if p u.Age then
-  //                            yield u
-  //     
-  //    val satisfies =
-  //      Partial {
-  //        (p: Int => Boolean) =>
-  //          for {
-  //            u <- peopleDB.people if (p(u.age))
-  //          } yield {
-  //            u
-  //          }
-  //      }
-  //  }
+  "Example 3 - satisfies" in {
+    val satisfies =
+      Partial {
+        (p: Int => Boolean) =>
+          for {
+            u <- Queryable[Person] if (p(u.age))
+          } yield {
+            u
+          }
+      }
+    run(satisfies(x => 20 <= x && x < 30))
+  }
 }

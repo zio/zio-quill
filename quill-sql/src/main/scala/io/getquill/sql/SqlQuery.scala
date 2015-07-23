@@ -3,7 +3,7 @@ package io.getquill.sql
 import io.getquill.ast._
 
 case class Source(table: String, alias: String)
-case class SqlQuery(from: List[Source], where: Option[Predicate], select: Expr)
+case class SqlQuery(from: List[Source], where: Option[Expr], select: Expr)
 
 object SqlQuery {
 
@@ -13,7 +13,7 @@ object SqlQuery {
         new SqlQuery(from, where, select)
     }
 
-  private def flatten(query: Query): (List[Source], Option[Predicate], Expr) = {
+  private def flatten(query: Query): (List[Source], Option[Expr], Expr) = {
     query match {
       case FlatMap(Table(name), Ident(alias), r) =>
         val (sources, predicate, expr) = flatten(r)

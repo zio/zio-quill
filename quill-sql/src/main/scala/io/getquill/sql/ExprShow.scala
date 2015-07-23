@@ -8,22 +8,17 @@ object ExprShow {
   implicit val exprShow: Show[Expr] = new Show[Expr] {
     def show(e: Expr) =
       e match {
-        case predicate: Predicate => predicate.show
-        case ref: Ref             => ref.show
-        case Subtract(a, b)       => s"${a.show} - ${b.show}"
-        case Add(a, b)            => s"${a.show} + ${b.show}"
-      }
-  }
-
-  implicit val predicateShow: Show[Predicate] = new Show[Predicate] {
-    def show(e: Predicate) =
-      e match {
+        case ref: Ref                 => ref.show
+        case Subtract(a, b)           => s"${a.show} - ${b.show}"
+        case Add(a, b)                => s"${a.show} + ${b.show}"
         case Equals(a, b)             => s"${a.show} = ${b.show}"
         case And(a, b)                => s"${a.show} AND ${b.show}"
         case GreaterThan(a, b)        => s"${a.show} > ${b.show}"
         case GreaterThanOrEqual(a, b) => s"${a.show} >= ${b.show}"
         case LessThan(a, b)           => s"${a.show} < ${b.show}"
         case LessThanOrEqual(a, b)    => s"${a.show} <= ${b.show}"
+        case FunctionApply(ident, value) =>
+          throw new IllegalStateException("Query not properly normalized. Please submit a bug report.")
       }
   }
 

@@ -1,7 +1,6 @@
 package io.getquill.sql
 
 import ExprShow.exprShow
-import ExprShow.predicateShow
 import io.getquill.util.Show._
 
 object SqlQueryShow {

@@ -21,17 +21,12 @@ trait Lifting {
   }
 
   implicit val exprLift: Liftable[Expr] = Liftable[Expr] {
+    case FunctionApply(ident, value) =>
+      q"$pack.FunctionApply($ident, $value)"
     case Subtract(a, b) =>
       q"$pack.Subtract($a, $b)"
     case Add(a, b) =>
       q"$pack.Add($a, $b)"
-    case predicate: Predicate =>
-      q"$predicate"
-    case ref: Ref =>
-      q"$ref"
-  }
-
-  implicit val predicateLift: Liftable[Predicate] = Liftable[Predicate] {
     case Equals(a, b) =>
       q"$pack.Equals($a, $b)"
     case And(a, b) =>
@@ -44,6 +39,8 @@ trait Lifting {
       q"$pack.LessThan($a, $b)"
     case LessThanOrEqual(a, b) =>
       q"$pack.LessThanOrEqual($a, $b)"
+    case ref: Ref =>
+      q"$ref"
   }
 
   implicit val refLift: Liftable[Ref] = Liftable[Ref] {

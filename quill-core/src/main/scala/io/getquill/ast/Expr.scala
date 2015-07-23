@@ -8,19 +8,17 @@ case class Subtract(a: Expr, b: Expr) extends Expr
 
 case class Add(a: Expr, b: Expr) extends Expr
 
-//************************************************************
+case class FunctionApply(ident: Ident, value: Expr) extends Expr
 
-sealed trait Predicate extends Expr
+case class Equals(a: Expr, b: Expr) extends Expr
 
-case class Equals(a: Expr, b: Expr) extends Predicate
+case class And(a: Expr, b: Expr) extends Expr
 
-case class And(a: Predicate, b: Predicate) extends Predicate
+case class GreaterThan(a: Expr, b: Expr) extends Expr
+case class GreaterThanOrEqual(a: Expr, b: Expr) extends Expr
 
-case class GreaterThan(a: Expr, b: Expr) extends Predicate
-case class GreaterThanOrEqual(a: Expr, b: Expr) extends Predicate
-
-case class LessThan(a: Expr, b: Expr) extends Predicate
-case class LessThanOrEqual(a: Expr, b: Expr) extends Predicate
+case class LessThan(a: Expr, b: Expr) extends Expr
+case class LessThanOrEqual(a: Expr, b: Expr) extends Expr
 
 //************************************************************
 

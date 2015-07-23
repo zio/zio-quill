@@ -13,7 +13,7 @@ trait Unlifting {
   implicit val queryUnlift: Unliftable[Query] = Unliftable[Query] {
     case q"$pack.Table.apply(${ name: String })" =>
       Table(name)
-    case q"$pack.Filter.apply(${ source: Query }, ${ alias: Ident }, ${ body: Predicate })" =>
+    case q"$pack.Filter.apply(${ source: Query }, ${ alias: Ident }, ${ body: Expr })" =>
       Filter(source, alias, body)
     case q"$pack.Map.apply(${ source: Query }, ${ alias: Ident }, ${ body: Expr })" =>
       Map(source, alias, body)
@@ -22,29 +22,30 @@ trait Unlifting {
   }
 
   implicit val exprUnlift: Unliftable[Expr] = Unliftable[Expr] {
+
     case q"$pack.Subtract.apply(${ a: Expr }, ${ b: Expr })" =>
       Subtract(a, b)
-    case q"$pack.Add.apply(${ a: Expr }, ${ b: Expr })" =>
-      Add(a, b)
     case q"${ a: Expr } - ${ b: Expr }" =>
       Subtract(a, b)
+
+    case q"$pack.Add.apply(${ a: Expr }, ${ b: Expr })" =>
+      Add(a, b)
     case q"${ a: Expr } + ${ b: Expr }" =>
       Add(a, b)
-    case q"${ predicate: Predicate }" =>
-      predicate
-    case q"${ ref: Ref }" =>
-      ref
-  }
 
-  implicit val predicateUnlift: Unliftable[Predicate] = Unliftable[Predicate] {
+    case q"$pack.FunctionApply.apply(${ ident: Ident }, ${ value: Expr })" =>
+      FunctionApply(ident, value)
+    case q"${ ident: Ident }.apply(${ value: Expr })" =>
+      FunctionApply(ident, value)
+
     case q"$pack.Equals.apply(${ a: Expr }, ${ b: Expr })" =>
       Equals(a, b)
     case q"${ a: Expr } == ${ b: Expr }" =>
       Equals(a, b)
 
-    case q"$pack.And.apply(${ a: Predicate }, ${ b: Predicate })" =>
+    case q"$pack.And.apply(${ a: Expr }, ${ b: Expr })" =>
       And(a, b)
-    case q"${ a: Predicate } && ${ b: Predicate }" =>
+    case q"${ a: Expr } && ${ b: Expr }" =>
       And(a, b)
 
     case q"$pack.GreaterThanOrEqual.apply(${ a: Expr }, ${ b: Expr })" =>
@@ -66,6 +67,9 @@ trait Unlifting {
       LessThan(a, b)
     case q"${ a: Expr } < ${ b: Expr }" =>
       LessThan(a, b)
+
+    case q"${ ref: Ref }" =>
+      ref
   }
 
   implicit val refUnlift: Unliftable[Ref] = Unliftable[Ref] {
