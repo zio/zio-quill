@@ -23,6 +23,8 @@ trait Lifting {
   implicit val exprLift: Liftable[Expr] = Liftable[Expr] {
     case FunctionApply(ident, value) =>
       q"$pack.FunctionApply($ident, $value)"
+    case FunctionDef(ident, body) =>
+      q"$pack.FunctionDef($ident, $body)"
     case Subtract(a, b) =>
       q"$pack.Subtract($a, $b)"
     case Add(a, b) =>

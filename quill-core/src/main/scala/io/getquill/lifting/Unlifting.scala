@@ -37,6 +37,11 @@ trait Unlifting {
       FunctionApply(ident, value)
     case q"${ ident: Ident }.apply(${ value: Expr })" =>
       FunctionApply(ident, value)
+      
+    case q"$pack.FunctionDef.apply(${ ident: Ident }, ${ value: Expr })" =>
+      FunctionDef(ident, value)
+    case q"(${ ident: Ident }) => ${ value: Expr }" =>
+      FunctionDef(ident, value)
 
     case q"$pack.Equals.apply(${ a: Expr }, ${ b: Expr })" =>
       Equals(a, b)

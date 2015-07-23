@@ -54,6 +54,7 @@ class PeopleSpec extends Spec {
             u
           }
       }
-    run(satisfies(x => 20 <= x && x < 30))
+
+    peopleDB.run(satisfies(x => 20 <= x && x < 30)) mustEqual List(Person("Edna", 21))
   }
 }

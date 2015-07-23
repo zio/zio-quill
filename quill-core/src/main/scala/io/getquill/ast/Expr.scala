@@ -9,6 +9,7 @@ case class Subtract(a: Expr, b: Expr) extends Expr
 case class Add(a: Expr, b: Expr) extends Expr
 
 case class FunctionApply(ident: Ident, value: Expr) extends Expr
+case class FunctionDef(ident: Ident, body: Expr) extends Expr
 
 case class Equals(a: Expr, b: Expr) extends Expr
 

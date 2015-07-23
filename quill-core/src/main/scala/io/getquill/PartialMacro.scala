@@ -34,7 +34,7 @@ class PartialMacro(val c: Context) extends TypeAttachment with Lifting with Unli
 
   def apply1[P1, T](pr1: c.Expr[P1])(implicit p1: WeakTypeTag[P1], t: WeakTypeTag[T]) = {
     val actuals = List(pr1.tree).map {
-      case q"${ ref: Ref }" => ref
+      case q"${ expr: ast.Expr }" => expr
     }
     detach[Parametrized](c.prefix.tree) match {
       case ParametrizedQuery(idents, query) =>
@@ -48,7 +48,7 @@ class PartialMacro(val c: Context) extends TypeAttachment with Lifting with Unli
 
   def apply2[P1, P2, T](pr1: c.Expr[P1], pr2: c.Expr[P2])(implicit p2: WeakTypeTag[P2], p1: WeakTypeTag[P1], t: WeakTypeTag[T]) = {
     val actuals = List(pr1.tree, pr2.tree).map {
-      case q"${ ref: Ref }" => ref
+      case q"${ expr: ast.Expr }" => expr
     }
     detach[Parametrized](c.prefix.tree) match {
       case ParametrizedQuery(idents, query) =>

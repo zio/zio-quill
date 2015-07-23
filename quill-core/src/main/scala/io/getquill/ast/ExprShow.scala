@@ -10,13 +10,14 @@ object ExprShow {
         case ref: Ref                    => ref.show
         case Subtract(a, b)              => s"${a.show} - ${b.show}"
         case Add(a, b)                   => s"${a.show} + ${b.show}"
-        case FunctionApply(ident, value) => s"${ident.show}(${value.show})"
         case Equals(a, b)                => s"${a.show} == ${b.show}"
         case And(a, b)                   => s"${a.show} && ${b.show}"
         case GreaterThan(a, b)           => s"${a.show} > ${b.show}"
         case GreaterThanOrEqual(a, b)    => s"${a.show} >= ${b.show}"
         case LessThan(a, b)              => s"${a.show} < ${b.show}"
         case LessThanOrEqual(a, b)       => s"${a.show} <= ${b.show}"
+        case FunctionApply(ident, value) => s"${ident.show}(${value.show})"
+        case FunctionDef(ident, body)    => s"(${ident.show}) => ${body.show}"
       }
   }
 

@@ -17,7 +17,7 @@ object ExprShow {
         case GreaterThanOrEqual(a, b) => s"${a.show} >= ${b.show}"
         case LessThan(a, b)           => s"${a.show} < ${b.show}"
         case LessThanOrEqual(a, b)    => s"${a.show} <= ${b.show}"
-        case FunctionApply(ident, value) =>
+        case _: FunctionApply | _: FunctionDef =>
           throw new IllegalStateException("Query not properly normalized. Please submit a bug report.")
       }
   }
