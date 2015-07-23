@@ -27,6 +27,10 @@ trait Lifting {
       q"$pack.FunctionDef($ident, $body)"
     case Subtract(a, b) =>
       q"$pack.Subtract($a, $b)"
+    case Division(a, b) =>
+      q"$pack.Division($a, $b)"
+    case Remainder(a, b) =>
+      q"$pack.Remainder($a, $b)"
     case Add(a, b) =>
       q"$pack.Add($a, $b)"
     case Equals(a, b) =>

@@ -21,6 +21,8 @@ object BetaReduction {
     expr match {
       case expr: Ref                => apply(expr)
       case Subtract(a, b)           => Subtract(apply(a), apply(b))
+      case Division(a, b)           => Division(apply(a), apply(b))
+      case Remainder(a, b)          => Remainder(apply(a), apply(b))
       case Add(a, b)                => Add(apply(a), apply(b))
       case Equals(a, b)             => Equals(apply(a), apply(b))
       case And(a, b)                => And(apply(a), apply(b))

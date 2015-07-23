@@ -44,7 +44,7 @@ class PeopleSpec extends Spec {
     peopleDB.run(r) mustEqual List(Person("Cora", 33), Person("Drew", 31))
   }
 
-  "Example 3 - satisfies" in {
+  "Examples 3, 4 - satisfies" in {
     val satisfies =
       Partial {
         (p: Int => Boolean) =>
@@ -56,5 +56,7 @@ class PeopleSpec extends Spec {
       }
 
     peopleDB.run(satisfies(x => 20 <= x && x < 30)) mustEqual List(Person("Edna", 21))
+
+    peopleDB.run(satisfies(x => x % 2 == 0)) mustEqual List(Person("Alex", 60), Person("Fred", 60))
   }
 }

@@ -10,6 +10,8 @@ object ExprShow {
       e match {
         case ref: Ref                 => ref.show
         case Subtract(a, b)           => s"${a.show} - ${b.show}"
+        case Division(a, b)           => s"${a.show} / ${b.show}"
+        case Remainder(a, b)          => s"${a.show} % ${b.show}"
         case Add(a, b)                => s"${a.show} + ${b.show}"
         case Equals(a, b)             => s"${a.show} = ${b.show}"
         case And(a, b)                => s"${a.show} AND ${b.show}"

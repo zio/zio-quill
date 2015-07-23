@@ -37,7 +37,7 @@ trait Unlifting {
       FunctionApply(ident, value)
     case q"${ ident: Ident }.apply(${ value: Expr })" =>
       FunctionApply(ident, value)
-      
+
     case q"$pack.FunctionDef.apply(${ ident: Ident }, ${ value: Expr })" =>
       FunctionDef(ident, value)
     case q"(${ ident: Ident }) => ${ value: Expr }" =>
@@ -72,6 +72,16 @@ trait Unlifting {
       LessThan(a, b)
     case q"${ a: Expr } < ${ b: Expr }" =>
       LessThan(a, b)
+
+    case q"$pack.Division.apply(${ a: Expr }, ${ b: Expr })" =>
+      Division(a, b)
+    case q"${ a: Expr } / ${ b: Expr }" =>
+      Division(a, b)
+
+    case q"$pack.Remainder.apply(${ a: Expr }, ${ b: Expr })" =>
+      Remainder(a, b)
+    case q"${ a: Expr } % ${ b: Expr }" =>
+      Remainder(a, b)
 
     case q"${ ref: Ref }" =>
       ref

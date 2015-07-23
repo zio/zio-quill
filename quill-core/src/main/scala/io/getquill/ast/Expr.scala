@@ -21,6 +21,9 @@ case class GreaterThanOrEqual(a: Expr, b: Expr) extends Expr
 case class LessThan(a: Expr, b: Expr) extends Expr
 case class LessThanOrEqual(a: Expr, b: Expr) extends Expr
 
+case class Division(a: Expr, b: Expr) extends Expr
+case class Remainder(a: Expr, b: Expr) extends Expr
+
 //************************************************************
 
 sealed trait Ref extends Expr
