@@ -8,77 +8,91 @@ trait Unlifting {
   val c: Context
   import c.universe.{ Function => _, Expr => _, Ident => _, Constant => _, _ }
 
-  private val pack = q"io.getquill.ast"
-
   implicit val queryUnlift: Unliftable[Query] = Unliftable[Query] {
-    case q"$pack.Table.apply(${ name: String })" =>
+
+    case q"io.getquill.ast.Table.apply(${ name: String })" =>
       Table(name)
-    case q"$pack.Filter.apply(${ source: Query }, ${ alias: Ident }, ${ body: Expr })" =>
+    case q"io.getquill.`package`.from[${ t: Type }]" =>
+      Table(t.typeSymbol.name.decodedName.toString)
+
+    case q"io.getquill.ast.Filter.apply(${ source: Query }, ${ alias: Ident }, ${ body: Expr })" =>
       Filter(source, alias, body)
-    case q"$pack.Map.apply(${ source: Query }, ${ alias: Ident }, ${ body: Expr })" =>
+    case q"${ source: Query }.filter((${ alias: Ident }) => $body)" if (alias.name.toString.contains("ifrefutable")) =>
+      source
+    case q"${ source: Query }.filter((${ alias: Ident }) => ${ body: Expr })" =>
+      Filter(source, alias, body)
+    case q"${ source: Query }.withFilter((${ alias: Ident }) => ${ body: Expr })" =>
+      Filter(source, alias, body)
+
+    case q"io.getquill.ast.Map.apply(${ source: Query }, ${ alias: Ident }, ${ body: Expr })" =>
       Map(source, alias, body)
-    case q"$pack.FlatMap.apply(${ source: Query }, ${ alias: Ident }, ${ body: Query })" =>
+    case q"${ source: Query }.map[$t]((${ alias: Ident }) => ${ body: Expr })" =>
+      Map(source, alias, body)
+
+    case q"io.getquill.ast.FlatMap.apply(${ source: Query }, ${ alias: Ident }, ${ body: Query })" =>
+      FlatMap(source, alias, body)
+    case q"${ source: Query }.flatMap[$t]((${ alias: Ident }) => ${ body: Query })" =>
       FlatMap(source, alias, body)
   }
 
   implicit val exprUnlift: Unliftable[Expr] = Unliftable[Expr] {
 
-    case q"$pack.Subtract.apply(${ a: Expr }, ${ b: Expr })" =>
+    case q"io.getquill.ast.Subtract.apply(${ a: Expr }, ${ b: Expr })" =>
       Subtract(a, b)
     case q"${ a: Expr } - ${ b: Expr }" =>
       Subtract(a, b)
 
-    case q"$pack.Add.apply(${ a: Expr }, ${ b: Expr })" =>
+    case q"io.getquill.ast.Add.apply(${ a: Expr }, ${ b: Expr })" =>
       Add(a, b)
     case q"${ a: Expr } + ${ b: Expr }" =>
       Add(a, b)
 
-    case q"$pack.FunctionApply.apply(${ ident: Ident }, ${ value: Expr })" =>
+    case q"io.getquill.ast.FunctionApply.apply(${ ident: Ident }, ${ value: Expr })" =>
       FunctionApply(ident, value)
     case q"${ ident: Ident }.apply(${ value: Expr })" =>
       FunctionApply(ident, value)
 
-    case q"$pack.FunctionDef.apply(${ ident: Ident }, ${ value: Expr })" =>
+    case q"io.getquill.ast.FunctionDef.apply(${ ident: Ident }, ${ value: Expr })" =>
       FunctionDef(ident, value)
     case q"(${ ident: Ident }) => ${ value: Expr }" =>
       FunctionDef(ident, value)
 
-    case q"$pack.Equals.apply(${ a: Expr }, ${ b: Expr })" =>
+    case q"io.getquill.ast.Equals.apply(${ a: Expr }, ${ b: Expr })" =>
       Equals(a, b)
     case q"${ a: Expr } == ${ b: Expr }" =>
       Equals(a, b)
 
-    case q"$pack.And.apply(${ a: Expr }, ${ b: Expr })" =>
+    case q"io.getquill.ast.And.apply(${ a: Expr }, ${ b: Expr })" =>
       And(a, b)
     case q"${ a: Expr } && ${ b: Expr }" =>
       And(a, b)
 
-    case q"$pack.GreaterThanOrEqual.apply(${ a: Expr }, ${ b: Expr })" =>
+    case q"io.getquill.ast.GreaterThanOrEqual.apply(${ a: Expr }, ${ b: Expr })" =>
       GreaterThanOrEqual(a, b)
     case q"${ a: Expr } >= ${ b: Expr }" =>
       GreaterThanOrEqual(a, b)
 
-    case q"$pack.GreaterThan.apply(${ a: Expr }, ${ b: Expr })" =>
+    case q"io.getquill.ast.GreaterThan.apply(${ a: Expr }, ${ b: Expr })" =>
       GreaterThan(a, b)
     case q"${ a: Expr } > ${ b: Expr }" =>
       GreaterThan(a, b)
 
-    case q"$pack.LessThanOrEqual.apply(${ a: Expr }, ${ b: Expr })" =>
+    case q"io.getquill.ast.LessThanOrEqual.apply(${ a: Expr }, ${ b: Expr })" =>
       LessThanOrEqual(a, b)
     case q"${ a: Expr } <= ${ b: Expr }" =>
       LessThanOrEqual(a, b)
 
-    case q"$pack.LessThan.apply(${ a: Expr }, ${ b: Expr })" =>
+    case q"io.getquill.ast.LessThan.apply(${ a: Expr }, ${ b: Expr })" =>
       LessThan(a, b)
     case q"${ a: Expr } < ${ b: Expr }" =>
       LessThan(a, b)
 
-    case q"$pack.Division.apply(${ a: Expr }, ${ b: Expr })" =>
+    case q"io.getquill.ast.Division.apply(${ a: Expr }, ${ b: Expr })" =>
       Division(a, b)
     case q"${ a: Expr } / ${ b: Expr }" =>
       Division(a, b)
 
-    case q"$pack.Remainder.apply(${ a: Expr }, ${ b: Expr })" =>
+    case q"io.getquill.ast.Remainder.apply(${ a: Expr }, ${ b: Expr })" =>
       Remainder(a, b)
     case q"${ a: Expr } % ${ b: Expr }" =>
       Remainder(a, b)
@@ -88,7 +102,7 @@ trait Unlifting {
   }
 
   implicit val refUnlift: Unliftable[Ref] = Unliftable[Ref] {
-    case q"$pack.Property.apply(${ expr: Expr }, ${ name: String })" =>
+    case q"io.getquill.ast.Property.apply(${ expr: Expr }, ${ name: String })" =>
       Property(expr, name)
     case q"${ value: Value }" =>
       value
@@ -99,15 +113,15 @@ trait Unlifting {
   }
 
   implicit val valueUnlift: Unliftable[Value] = Unliftable[Value] {
-    case q"$pack.Tuple.apply(immutable.this.List.apply[$t](..$v))" =>
+    case q"io.getquill.ast.Tuple.apply(immutable.this.List.apply[$t](..$v))" =>
       val values =
         v.map {
           case q"${ expr: Expr }" => expr
         }
       Tuple(values)
-    case q"$pack.Constant.apply(${ Literal(c.universe.Constant(v)) })" =>
+    case q"io.getquill.ast.Constant.apply(${ Literal(c.universe.Constant(v)) })" =>
       Constant(v)
-    case q"$pack.NullValue" =>
+    case q"io.getquill.ast.NullValue" =>
       NullValue
     case q"null" =>
       NullValue
@@ -122,7 +136,7 @@ trait Unlifting {
   }
 
   implicit val identUnift: Unliftable[Ident] = Unliftable[Ident] {
-    case q"$pack.Ident.apply(${ name: String })" =>
+    case q"io.getquill.ast.Ident.apply(${ name: String })" =>
       Ident(name)
     case t: ValDef =>
       Ident(t.name.decodedName.toString)
@@ -140,7 +154,7 @@ trait Unlifting {
   }
 
   implicit val parametrizedQueryUnlift: Unliftable[ParametrizedQuery] = Unliftable[ParametrizedQuery] {
-    case q"$pack.ParametrizedQuery.apply(immutable.this.List.apply[$t](..$p), ${ query: Query })" =>
+    case q"io.getquill.ast.ParametrizedQuery.apply(immutable.this.List.apply[$t](..$p), ${ query: Query })" =>
       val params =
         p.map {
           case q"${ ident: Ident }" => ident
@@ -149,7 +163,7 @@ trait Unlifting {
   }
 
   implicit val parametrizedExprUnlift: Unliftable[ParametrizedExpr] = Unliftable[ParametrizedExpr] {
-    case q"$pack.ParametrizedExpr.apply(immutable.this.List.apply[$t](..$p), ${ expr: Expr })" =>
+    case q"io.getquill.ast.ParametrizedExpr.apply(immutable.this.List.apply[$t](..$p), ${ expr: Expr })" =>
       val params =
         p.map {
           case q"${ ident: Ident }" => ident

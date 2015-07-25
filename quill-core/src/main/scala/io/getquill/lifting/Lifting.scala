@@ -7,75 +7,73 @@ trait Lifting {
   val c: Context
   import c.universe.{ Function => _, Expr => _, Ident => _, Constant => _, _ }
 
-  private val pack = q"io.getquill.ast"
-
   implicit val queryLift: Liftable[Query] = Liftable[Query] {
     case Table(name) =>
-      q"$pack.Table($name)"
+      q"io.getquill.ast.Table($name)"
     case Filter(query, alias, body) =>
-      q"$pack.Filter($query, $alias, $body)"
+      q"io.getquill.ast.Filter($query, $alias, $body)"
     case Map(query, alias, body) =>
-      q"$pack.Map($query, $alias, $body)"
+      q"io.getquill.ast.Map($query, $alias, $body)"
     case FlatMap(query, alias, body) =>
-      q"$pack.FlatMap($query, $alias, $body)"
+      q"io.getquill.ast.FlatMap($query, $alias, $body)"
   }
 
   implicit val exprLift: Liftable[Expr] = Liftable[Expr] {
     case FunctionApply(ident, value) =>
-      q"$pack.FunctionApply($ident, $value)"
+      q"io.getquill.ast.FunctionApply($ident, $value)"
     case FunctionDef(ident, body) =>
-      q"$pack.FunctionDef($ident, $body)"
+      q"io.getquill.ast.FunctionDef($ident, $body)"
     case Subtract(a, b) =>
-      q"$pack.Subtract($a, $b)"
+      q"io.getquill.ast.Subtract($a, $b)"
     case Division(a, b) =>
-      q"$pack.Division($a, $b)"
+      q"io.getquill.ast.Division($a, $b)"
     case Remainder(a, b) =>
-      q"$pack.Remainder($a, $b)"
+      q"io.getquill.ast.Remainder($a, $b)"
     case Add(a, b) =>
-      q"$pack.Add($a, $b)"
+      q"io.getquill.ast.Add($a, $b)"
     case Equals(a, b) =>
-      q"$pack.Equals($a, $b)"
+      q"io.getquill.ast.Equals($a, $b)"
     case And(a, b) =>
-      q"$pack.And($a, $b)"
+      q"io.getquill.ast.And($a, $b)"
     case GreaterThan(a, b) =>
-      q"$pack.GreaterThan($a, $b)"
+      q"io.getquill.ast.GreaterThan($a, $b)"
     case GreaterThanOrEqual(a, b) =>
-      q"$pack.GreaterThanOrEqual($a, $b)"
+      q"io.getquill.ast.GreaterThanOrEqual($a, $b)"
     case LessThan(a, b) =>
-      q"$pack.LessThan($a, $b)"
+      q"io.getquill.ast.LessThan($a, $b)"
     case LessThanOrEqual(a, b) =>
-      q"$pack.LessThanOrEqual($a, $b)"
+      q"io.getquill.ast.LessThanOrEqual($a, $b)"
     case ref: Ref =>
       q"$ref"
   }
 
   implicit val refLift: Liftable[Ref] = Liftable[Ref] {
     case Property(ref, name) =>
-      q"$pack.Property($ref, $name)"
+      q"io.getquill.ast.Property($ref, $name)"
     case Ident(ident) =>
-      q"$pack.Ident($ident)"
+      q"io.getquill.ast.Ident($ident)"
     case v: Value =>
       q"$v"
   }
 
   implicit val valueLift: Liftable[Value] = Liftable[Value] {
     case Constant(v) =>
-      q"$pack.Constant(${Literal(c.universe.Constant(v))})"
+      q"io.getquill.ast.Constant(${Literal(c.universe.Constant(v))})"
     case NullValue =>
-      q"$pack.NullValue"
+      q"io.getquill.ast.NullValue"
     case Tuple(values) =>
-      q"$pack.Tuple(List(..$values))"
+      q"io.getquill.ast.Tuple(List(..$values))"
   }
 
   implicit val identLift: Liftable[Ident] = Liftable[Ident] {
     case Ident(name) =>
-      q"$pack.Ident($name)"
+      q"io.getquill.ast.Ident($name)"
   }
 
   implicit val parametrizedLift: Liftable[Parametrized] = Liftable[Parametrized] {
     case ParametrizedQuery(params, query) =>
-      q"$pack.ParametrizedQuery(List(..$params), $query)"
+      q"io.getquill.ast.ParametrizedQuery(List(..$params), $query)"
     case ParametrizedExpr(params, expr) =>
-      q"$pack.ParametrizedExpr(List(..$params), $expr)"
+      q"io.getquill.ast.ParametrizedExpr(List(..$params), $expr)"
   }
 }
