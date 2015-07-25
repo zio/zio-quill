@@ -18,7 +18,7 @@ class PeopleSpec extends Spec {
 
     val differences =
       for {
-        c <- Queryable[Couple]
+        c <- Queryable[Couple] 
         w <- Queryable[Person]
         m <- Queryable[Person] if (c.her == w.name && c.him == m.name && w.age > m.age)
       } yield {
@@ -59,4 +59,38 @@ class PeopleSpec extends Spec {
 
     peopleDB.run(satisfies(x => x % 2 == 0)) mustEqual List(Person("Alex", 60), Person("Fred", 60))
   }
+
+  "Example 5 - compose" in {
+    val range = Partial {
+      (a: Int, b: Int) =>
+        for {
+          u <- Queryable[Person] if (a <= u.age && u.age < b)
+        } yield {
+          u
+        }
+    }
+
+    val ageFromName = Partial {
+      (s: String) =>
+        for {
+          u <- Queryable[Person] if (s == u.name)
+        } yield {
+          u.age
+        }
+    }
+
+    val compose = Partial {
+      (s: String, t: String) =>
+        for {
+          a <- ageFromName(s)
+          b <- ageFromName(t)
+          r <- range(a, b)
+        } yield {
+          r
+        }
+    }
+    println(compose("Eve", "Bob")) 
+//    println(peopleDB.run(compose("Eve", "Bob")))
+  }
+
 }
