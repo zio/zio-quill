@@ -3,6 +3,7 @@ package io.getquill.lifting
 import scala.reflect.macros.whitebox.Context
 import io.getquill.Queryable
 import io.getquill.ast._
+import io.getquill.norm.BetaReduction
 
 trait Unlifting {
   val c: Context
@@ -33,6 +34,17 @@ trait Unlifting {
       FlatMap(source, alias, body)
     case q"${ source: Query }.flatMap[$t]((${ alias: Ident }) => ${ body: Query })" =>
       FlatMap(source, alias, body)
+    case q"${ source: Query }.flatMap[$t]((${ alias: Ident }) => ${ matchAlias: Ident } match { case (..$a) => ${ body: Query } })" if (alias == matchAlias) =>
+      val aliases =
+        a.map {
+          case Bind(name, _) =>
+            Ident(name.decodedName.toString)
+        }
+      val reduction =
+        for ((a, i) <- aliases.zipWithIndex) yield {
+          a -> Property(alias, s"_${i + 1}")
+        }
+      FlatMap(source, alias, BetaReduction(body)(reduction.toMap))
   }
 
   implicit val exprUnlift: Unliftable[Expr] = Unliftable[Expr] {
