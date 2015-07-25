@@ -31,13 +31,13 @@ trait TypeAttachment {
   def detach[D](tree: Tree)(implicit unlift: Unliftable[D]) = {
     val method =
       tree.tpe.decls.find(_.name.decodedName.toString == "attachment")
-        .getOrElse(c.abort(c.enclosingPosition, s"Can't find the attachment method at '${tree.tpe}'."))
+        .getOrElse(c.abort(c.enclosingPosition, s"Can't find the attachment method at '${tree.tpe}'. $tree"))
     val annotation =
       method.annotations.headOption
-        .getOrElse(c.abort(c.enclosingPosition, s"Can't find the attachment annotation at '$method'."))
+        .getOrElse(c.abort(c.enclosingPosition, s"Can't find the attachment annotation at '$method'. $tree"))
     val data =
       annotation.tree.children.lastOption
-        .getOrElse(c.abort(c.enclosingPosition, s"Can't find the data field from attachment annotation '$annotation'."))
+        .getOrElse(c.abort(c.enclosingPosition, s"Can't find the data field from attachment annotation '$annotation'. $tree"))
     unlift.unapply(data)
       .getOrElse(c.abort(c.enclosingPosition, s"Can't unlift attachment '$data'."))
   }

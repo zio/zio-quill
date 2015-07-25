@@ -10,7 +10,7 @@ object QueryShow {
     def show(q: Query) =
       q match {
         case Table(name) =>
-          s"Table($name)"
+          s"from[$name]"
         case Filter(source, alias, body) =>
           s"${source.show}.filter(${alias.show} => ${body.show})"
         case Map(source, alias, body) =>

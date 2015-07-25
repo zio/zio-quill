@@ -4,8 +4,9 @@ import scala.reflect.macros.whitebox.Context
 import io.getquill.Queryable
 import io.getquill.ast._
 import io.getquill.norm.BetaReduction
+import io.getquill.attach.TypeAttachment
 
-trait Unlifting {
+trait Unlifting extends TypeAttachment {
   val c: Context
   import c.universe.{ Function => _, Expr => _, Ident => _, Constant => _, _ }
 
@@ -13,15 +14,15 @@ trait Unlifting {
 
     case q"io.getquill.ast.Table.apply(${ name: String })" =>
       Table(name)
-    case q"io.getquill.`package`.from[${ t: Type }]" =>
+    case q"$pack.from[${ t: Type }]" =>
       Table(t.typeSymbol.name.decodedName.toString)
 
     case q"io.getquill.ast.Filter.apply(${ source: Query }, ${ alias: Ident }, ${ body: Expr })" =>
       Filter(source, alias, body)
-    case q"${ source: Query }.filter((${ alias: Ident }) => $body)" if (alias.name.toString.contains("ifrefutable")) =>
-      source
     case q"${ source: Query }.filter((${ alias: Ident }) => ${ body: Expr })" =>
       Filter(source, alias, body)
+    case q"${ source: Query }.withFilter((${ alias: Ident }) => $body)" if (alias.name.toString.contains("ifrefutable")) =>
+      source
     case q"${ source: Query }.withFilter((${ alias: Ident }) => ${ body: Expr })" =>
       Filter(source, alias, body)
 
@@ -31,8 +32,6 @@ trait Unlifting {
       Map(source, alias, body)
 
     case q"io.getquill.ast.FlatMap.apply(${ source: Query }, ${ alias: Ident }, ${ body: Query })" =>
-      FlatMap(source, alias, body)
-    case q"${ source: Query }.flatMap[$t]((${ alias: Ident }) => ${ body: Query })" =>
       FlatMap(source, alias, body)
     case q"${ source: Query }.flatMap[$t]((${ alias: Ident }) => ${ matchAlias: Ident } match { case (..$a) => ${ body: Query } })" if (alias == matchAlias) =>
       val aliases =
@@ -45,6 +44,11 @@ trait Unlifting {
           a -> Property(alias, s"_${i + 1}")
         }
       FlatMap(source, alias, BetaReduction(body)(reduction.toMap))
+    case q"${ source: Query }.flatMap[$t]((${ alias: Ident }) => ${ body: Query })" =>
+      FlatMap(source, alias, body)
+
+    case t if (t.tpe.erasure <:< c.weakTypeTag[Queryable[_]].tpe) =>
+      detach[Query](t)
   }
 
   implicit val exprUnlift: Unliftable[Expr] = Unliftable[Expr] {

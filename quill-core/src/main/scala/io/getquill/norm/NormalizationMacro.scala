@@ -20,7 +20,7 @@ trait NormalizationMacro extends ImplicitResolution {
   case class NormalizedQuery[R, T](query: Query, extractor: Tree)
 
   def normalize[D, R, T](queryTree: Tree)(implicit d: WeakTypeTag[D], r: WeakTypeTag[R], t: WeakTypeTag[T]) = {
-    val query = AdHocReduction(SymbolicReduction(detach[Query](queryTree)))
+    val query = Normalize(detach[Query](queryTree))
     def inferEncoder(tpe: Type) =
       inferImplicitValueWithFallback(encoderType(c.WeakTypeTag(tpe), r).tpe, d.tpe, c.prefix.tree)
     def encoderType[T, R](implicit t: WeakTypeTag[T], r: WeakTypeTag[R]) =
