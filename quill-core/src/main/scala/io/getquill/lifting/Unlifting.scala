@@ -14,26 +14,24 @@ trait Unlifting extends TypeAttachment {
 
     case q"io.getquill.ast.Table.apply(${ name: String })" =>
       Table(name)
-    case q"$pack.from[${ t: Type }]" =>
-      Table(t.typeSymbol.name.decodedName.toString)
-
-    case q"io.getquill.ast.Filter.apply(${ source: Query }, ${ alias: Ident }, ${ body: Expr })" =>
-      Filter(source, alias, body)
-    case q"${ source: Query }.filter((${ alias: Ident }) => ${ body: Expr })" =>
-      Filter(source, alias, body)
-    case q"${ source: Query }.withFilter((${ alias: Ident }) => $body)" if (alias.name.toString.contains("ifrefutable")) =>
-      source
-    case q"${ source: Query }.withFilter((${ alias: Ident }) => ${ body: Expr })" =>
-      Filter(source, alias, body)
-
     case q"io.getquill.ast.Map.apply(${ source: Query }, ${ alias: Ident }, ${ body: Expr })" =>
       Map(source, alias, body)
-    case q"${ source: Query }.map[$t]((${ alias: Ident }) => ${ body: Expr })" =>
-      Map(source, alias, body)
-
     case q"io.getquill.ast.FlatMap.apply(${ source: Query }, ${ alias: Ident }, ${ body: Query })" =>
       FlatMap(source, alias, body)
-    case q"${ source: Query }.flatMap[$t]((${ alias: Ident }) => ${ matchAlias: Ident } match { case (..$a) => ${ body: Query } })" if (alias == matchAlias) =>
+    case q"io.getquill.ast.Filter.apply(${ source: Query }, ${ alias: Ident }, ${ body: Expr })" =>
+      Filter(source, alias, body)
+
+    case q"$pack.from[${ t: Type }]" =>
+      Table(t.typeSymbol.name.decodedName.toString)
+    case q"$source.filter((${ alias: Ident }) => ${ body: Expr })" =>
+      Filter(query(source), alias, body)
+    case q"$source.withFilter((${ alias: Ident }) => $body)" if (alias.name.toString.contains("ifrefutable")) =>
+      query(source)
+    case q"$source.withFilter((${ alias: Ident }) => ${ body: Expr })" =>
+      Filter(query(source), alias, body)
+    case q"$source.map[$t]((${ alias: Ident }) => ${ body: Expr })" =>
+      Map(query(source), alias, body)
+    case q"$source.flatMap[$t]((${ alias: Ident }) => ${ matchAlias: Ident } match { case (..$a) => ${ body: Query } })" if (alias == matchAlias) =>
       val aliases =
         a.map {
           case Bind(name, _) =>
@@ -43,13 +41,18 @@ trait Unlifting extends TypeAttachment {
         for ((a, i) <- aliases.zipWithIndex) yield {
           a -> Property(alias, s"_${i + 1}")
         }
-      FlatMap(source, alias, BetaReduction(body)(reduction.toMap))
-    case q"${ source: Query }.flatMap[$t]((${ alias: Ident }) => ${ body: Query })" =>
-      FlatMap(source, alias, body)
+      FlatMap(query(source), alias, BetaReduction(body)(reduction.toMap))
+    case q"$source.flatMap[$t]((${ alias: Ident }) => ${ body: Query })" =>
+      FlatMap(query(source), alias, body)
 
     case t if (t.tpe.erasure <:< c.weakTypeTag[Queryable[_]].tpe) =>
       detach[Query](t)
   }
+
+  private def query(t: Tree) =
+    t match {
+      case q"${ query: Query }" => query
+    }
 
   implicit val exprUnlift: Unliftable[Expr] = Unliftable[Expr] {
 
