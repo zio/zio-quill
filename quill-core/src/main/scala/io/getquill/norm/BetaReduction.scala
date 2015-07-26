@@ -10,11 +10,11 @@ object BetaReduction {
       case t: Table =>
         t
       case Filter(source, alias, body) =>
-        Filter(apply(source), alias, apply(body))
+        Filter(apply(source), alias, apply(body)(refs - alias))
       case Map(source, alias, body) =>
-        Map(apply(source), alias, apply(body))
+        Map(apply(source), alias, apply(body)(refs - alias))
       case FlatMap(source, alias, body) =>
-        FlatMap(apply(source), alias, apply(body))
+        FlatMap(apply(source), alias, apply(body)(refs - alias))
     }
 
   def apply(expr: Expr)(implicit refs: collection.Map[Ident, Expr]): Expr =
