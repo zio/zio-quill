@@ -2,8 +2,9 @@ package io.getquill.attach
 
 import scala.annotation.StaticAnnotation
 import scala.reflect.macros.whitebox.Context
+import scala.reflect.ClassTag
 
-case class Attachment(data: Any) extends StaticAnnotation
+case class Attachment(hash: Int, data: Any) extends StaticAnnotation
 
 trait TypeAttachment {
   val c: Context
@@ -16,9 +17,10 @@ trait TypeAttachment {
         if (!t.tpe.typeSymbol.asClass.isTrait)
           t.tpe.baseType(t.tpe.baseClasses.find(_.asClass.isTrait).get)
         else t.tpe
+      Cache.update(attachment)
       q"""
         new $typ {
-           @${c.weakTypeOf[Attachment]}($attachment)
+           @${c.weakTypeOf[Attachment]}(${attachment.hashCode}, $attachment)
            def attachment = $attachment
         }  
       """
@@ -35,10 +37,10 @@ trait TypeAttachment {
     val annotation =
       method.annotations.headOption
         .getOrElse(c.abort(c.enclosingPosition, s"Can't find the attachment annotation at '$method'. $tree"))
-    val data =
-      annotation.tree.children.lastOption
-        .getOrElse(c.abort(c.enclosingPosition, s"Can't find the data field from attachment annotation '$annotation'. $tree"))
-    unlift.unapply(data)
-      .getOrElse(c.abort(c.enclosingPosition, s"Can't unlift attachment '$data'."))
+    val q"${ hash: Int }" :: data :: Nil = annotation.tree.children.drop(1).toList
+    Cache.getOrElseUpdate(hash) {
+      unlift.unapply(data)
+        .getOrElse(c.abort(c.enclosingPosition, s"Can't unlift attachment '$data'."))
+    }
   }
 }
