@@ -1,12 +1,10 @@
 package io.getquill
 
 import language.experimental.macros
-import io.getquill.attach.Attachable
-import io.getquill.ast.Query
-import io.getquill.ast.Expr
-import io.getquill.ast.ParametrizedQuery
-import io.getquill.ast.ParametrizedExpr
 import io.getquill.ast.Parametrized
+import io.getquill.ast.ParametrizedExpr
+import io.getquill.ast.ParametrizedQuery
+import io.getquill.attach.Attachable
 
 trait Partial extends Attachable[Parametrized] {
 

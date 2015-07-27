@@ -1,15 +1,16 @@
 package io.getquill.norm
 
 import scala.reflect.macros.whitebox.Context
-import io.getquill.ast._
-import io.getquill.util.Show._
-import io.getquill.ast.Expr
-import ExprShow.exprShow
-import io.getquill.attach.TypeAttachment
-import io.getquill.Source
-import io.getquill.util.ImplicitResolution
+
 import io.getquill.Encoder
+import io.getquill.Source
+import io.getquill.ast._
+import io.getquill.ast.Expr
+import io.getquill.ast.ExprShow.exprShow
+import io.getquill.attach.TypeAttachment
 import io.getquill.lifting.Unlifting
+import io.getquill.util.ImplicitResolution
+import io.getquill.util.Show._
 
 trait NormalizationMacro extends ImplicitResolution {
   this: TypeAttachment with Unlifting =>

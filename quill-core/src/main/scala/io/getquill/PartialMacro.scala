@@ -1,17 +1,17 @@
 package io.getquill
 
 import scala.reflect.macros.whitebox.Context
-import io.getquill.ast.Ident
+
+import io.getquill.ast.Parametrized
+import io.getquill.ast.ParametrizedExpr
 import io.getquill.ast.ParametrizedQuery
 import io.getquill.ast.Query
-import io.getquill.ast.Ref
-import io.getquill.norm.BetaReduction
+import io.getquill.ast.Ident
 import io.getquill.ast.Expr
-import io.getquill.ast.ParametrizedExpr
 import io.getquill.attach.TypeAttachment
 import io.getquill.lifting.Lifting
 import io.getquill.lifting.Unlifting
-import io.getquill.ast.Parametrized
+import io.getquill.norm.BetaReduction
 
 class PartialMacro(val c: Context) extends TypeAttachment with Lifting with Unlifting {
   import c.universe.{ Ident => _, Expr => _, _ }

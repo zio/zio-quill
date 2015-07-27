@@ -1,7 +1,35 @@
 package io.getquill.lifting
 
 import scala.reflect.macros.whitebox.Context
-import io.getquill.ast._
+
+import io.getquill.ast.Add
+import io.getquill.ast.And
+import io.getquill.ast.Constant
+import io.getquill.ast.Division
+import io.getquill.ast.Equals
+import io.getquill.ast.Expr
+import io.getquill.ast.Filter
+import io.getquill.ast.FlatMap
+import io.getquill.ast.FunctionApply
+import io.getquill.ast.FunctionDef
+import io.getquill.ast.GreaterThan
+import io.getquill.ast.GreaterThanOrEqual
+import io.getquill.ast.Ident
+import io.getquill.ast.LessThan
+import io.getquill.ast.LessThanOrEqual
+import io.getquill.ast.Map
+import io.getquill.ast.NullValue
+import io.getquill.ast.Parametrized
+import io.getquill.ast.ParametrizedExpr
+import io.getquill.ast.ParametrizedQuery
+import io.getquill.ast.Property
+import io.getquill.ast.Query
+import io.getquill.ast.Ref
+import io.getquill.ast.Remainder
+import io.getquill.ast.Subtract
+import io.getquill.ast.Table
+import io.getquill.ast.Tuple
+import io.getquill.ast.Value
 
 trait Lifting {
   val c: Context

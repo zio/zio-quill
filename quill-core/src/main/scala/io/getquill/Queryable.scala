@@ -1,9 +1,7 @@
 package io.getquill
 
-import io.getquill.ast.Query
-import io.getquill.ast.QueryShow.queryShow
-import io.getquill.util.Show.Shower
 import language.experimental.macros
+import io.getquill.ast.Query
 import io.getquill.attach.Attachable
 
 trait Queryable[+T] extends Attachable[Query] {
@@ -18,6 +16,7 @@ trait Queryable[+T] extends Attachable[Query] {
   def filter(f: Partial1[T, Boolean]): Queryable[T] = macro QueryableMacro.filterPartial[T]
 
   override def toString = {
+    import util.Show._
     import ast.QueryShow._
     attachment.show
   }

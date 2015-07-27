@@ -1,9 +1,7 @@
 package io.getquill
 
-import language.experimental.macros
 import scala.reflect.ClassTag
-import io.getquill.ast.Ident
-import io.getquill.ast.Property
+
 import com.typesafe.config.ConfigFactory
 
 abstract class Encoder[R: ClassTag, T: ClassTag] {

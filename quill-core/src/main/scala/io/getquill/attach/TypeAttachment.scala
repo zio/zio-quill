@@ -2,7 +2,6 @@ package io.getquill.attach
 
 import scala.annotation.StaticAnnotation
 import scala.reflect.macros.whitebox.Context
-import scala.reflect.ClassTag
 
 case class Attachment(hash: Int, data: Any) extends StaticAnnotation
 

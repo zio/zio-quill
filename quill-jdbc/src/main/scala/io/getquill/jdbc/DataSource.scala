@@ -1,11 +1,12 @@
 package io.getquill.jdbc
 
-import scala.collection.JavaConversions._
-import com.typesafe.config.Config
 import java.util.Properties
+
+import scala.collection.JavaConversions.asScalaSet
+
+import com.typesafe.config.Config
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import com.typesafe.config.ConfigFactory
 
 object DataSource {
 

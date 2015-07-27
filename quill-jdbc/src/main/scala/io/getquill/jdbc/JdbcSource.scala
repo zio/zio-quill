@@ -1,12 +1,12 @@
 package io.getquill.jdbc
 
-import java.sql.Connection
 import java.sql.ResultSet
-import io.getquill.sql.SqlSource
-import com.zaxxer.hikari.HikariDataSource
-import com.zaxxer.hikari.HikariConfig
+
 import scala.collection.mutable.ListBuffer
+
 import com.typesafe.scalalogging.StrictLogging
+
+import io.getquill.sql.SqlSource
 
 trait JdbcSource extends SqlSource[ResultSet] with StrictLogging {
 

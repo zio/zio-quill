@@ -1,11 +1,13 @@
 package io.getquill.sql
 
-import io.getquill.util.Show._
-import io.getquill.norm.NormalizationMacro
+import scala.reflect.macros.whitebox.Context
+
+import SqlQueryShow.sqlQueryShow
+import io.getquill.Queryable
 import io.getquill.attach.TypeAttachment
 import io.getquill.lifting.Unlifting
-import scala.reflect.macros.whitebox.Context
-import io.getquill.Queryable
+import io.getquill.norm.NormalizationMacro
+import io.getquill.util.Show.Shower
 
 class SqlSourceMacro(val c: Context)
     extends NormalizationMacro
