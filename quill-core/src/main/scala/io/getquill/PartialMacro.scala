@@ -20,16 +20,16 @@ class PartialMacro(val c: Context) extends TypeAttachment with Lifting with Unli
     f.tree match {
       case q"(${ pr1: Ident }) => ${ expr: Expr }" =>
         attach[Partial1[P1, T]](ParametrizedExpr(List(pr1), expr): Parametrized)
-      case q"(${ pr1: Ident }) => ${ query: Query } " =>
-        attach[Partial1[P1, T]](ParametrizedQuery(List(pr1), query): Parametrized)
+      case q"(${ pr1: Ident }) => $query" =>
+        attach[Partial1[P1, T]](ParametrizedQuery(List(pr1), detach[Query](query)): Parametrized)
     }
 
   def create2[P1, P2, T](f: c.Expr[(P1, P2) => T])(implicit p1: WeakTypeTag[P1], p2: WeakTypeTag[P2], t: WeakTypeTag[T]) =
     f.tree match {
       case q"(${ pr1: Ident }, ${ pr2: Ident }) => ${ expr: Expr }" =>
         attach[Partial2[P1, P2, T]](ParametrizedExpr(List(pr1, pr2), expr): Parametrized)
-      case q"(${ pr1: Ident }, ${ pr2: Ident }) => ${ query: Query }" =>
-        attach[Partial2[P1, P2, T]](ParametrizedQuery(List(pr1, pr2), query): Parametrized)
+      case q"(${ pr1: Ident }, ${ pr2: Ident }) => $query" if (query.tpe <:< weakTypeOf[Queryable[Any]]) =>
+        attach[Partial2[P1, P2, T]](ParametrizedQuery(List(pr1, pr2), detach[Query](query)): Parametrized)
     }
 
   def apply1[P1, T](pr1: c.Expr[P1])(implicit p1: WeakTypeTag[P1], t: WeakTypeTag[T]) = {

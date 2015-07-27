@@ -11,7 +11,6 @@ trait Unlifting extends TypeAttachment {
   import c.universe.{ Function => _, Expr => _, Ident => _, Constant => _, _ }
 
   implicit val queryUnlift: Unliftable[Query] = Unliftable[Query] {
-
     case q"io.getquill.ast.Table.apply(${ name: String })" =>
       Table(name)
     case q"io.getquill.ast.Map.apply(${ source: Query }, ${ alias: Ident }, ${ body: Expr })" =>
@@ -20,33 +19,6 @@ trait Unlifting extends TypeAttachment {
       FlatMap(source, alias, body)
     case q"io.getquill.ast.Filter.apply(${ source: Query }, ${ alias: Ident }, ${ body: Expr })" =>
       Filter(source, alias, body)
-
-    case q"$pack.from[${ t: Type }]" =>
-      Table(t.typeSymbol.name.decodedName.toString)
-    case q"$source.filter((${ alias: Ident }) => ${ body: Expr })" =>
-      Filter(query(source), alias, body)
-    case q"$source.withFilter((${ alias: Ident }) => $body)" if (alias.name.toString.contains("ifrefutable")) =>
-      query(source)
-    case q"$source.withFilter((${ alias: Ident }) => ${ body: Expr })" =>
-      Filter(query(source), alias, body)
-    case q"$source.map[$t]((${ alias: Ident }) => ${ body: Expr })" =>
-      Map(query(source), alias, body)
-    case q"$source.flatMap[$t]((${ alias: Ident }) => ${ matchAlias: Ident } match { case (..$a) => ${ body: Query } })" if (alias == matchAlias) =>
-      val aliases =
-        a.map {
-          case Bind(name, _) =>
-            Ident(name.decodedName.toString)
-        }
-      val reduction =
-        for ((a, i) <- aliases.zipWithIndex) yield {
-          a -> Property(alias, s"_${i + 1}")
-        }
-      FlatMap(query(source), alias, BetaReduction(body)(reduction.toMap))
-    case q"$source.flatMap[$t]((${ alias: Ident }) => ${ body: Query })" =>
-      FlatMap(query(source), alias, body)
-
-    case t if (t.tpe.erasure <:< c.weakTypeTag[Queryable[_]].tpe) =>
-      detach[Query](t)
   }
 
   private def query(t: Tree) =
