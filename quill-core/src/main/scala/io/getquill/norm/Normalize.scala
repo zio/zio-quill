@@ -56,9 +56,10 @@ object Normalize {
 
       // **if-for**
       // q.flatMap(x => r).filter(y => p) =>
-      //    q.flatMap(x => r.filter(y => p))
+      //    q.flatMap(x => r.filter(y => p'))
       case Filter(FlatMap(q, x, r), y, p) =>
-        apply(FlatMap(apply(q), x, apply(Filter(apply(r), y, p))))
+        val pr = BetaReduction(p)(collection.Map(y -> x))
+        apply(FlatMap(apply(q), x, apply(Filter(apply(r), Ident("temp"), pr))))
 
       // ************Recursion***************
 

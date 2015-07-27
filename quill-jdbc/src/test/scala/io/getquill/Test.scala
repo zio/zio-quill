@@ -12,7 +12,7 @@ object Test extends App {
 
   object db extends JdbcSource
 
-  def q1 =  
+  def q1 =
     query {
       from[Person].filter(p => p.name == p.surname).map(p => (p.name, p.age))
     }
@@ -27,7 +27,7 @@ object Test extends App {
         a
       }
     }
-  
+
   db.run(q2)
 
   def q3 =

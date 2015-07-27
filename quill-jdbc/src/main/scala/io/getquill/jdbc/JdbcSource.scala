@@ -31,7 +31,7 @@ trait JdbcSource extends SqlSource[ResultSet] with StrictLogging {
   private val dataSource = DataSource(config)
 
   def run[T](sql: String, extractor: ResultSet => T) = {
-    println(sql)
+    logger.debug(sql)
     val conn = dataSource.getConnection
     try {
       val rs = conn.prepareStatement(sql).executeQuery

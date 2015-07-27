@@ -5,39 +5,65 @@ import io.getquill.ast._
 object AvoidCapture {
 
   def apply(q: Query): Query =
-    apply(q, Set())._1
+    dealias(reduction(q, Set())._1)
 
-  private def apply(q: Query, seen: Set[Ident]): (Query, Set[Ident]) = {
+  private def dealias(q: Query): Query =
+    q match {
+
+      case FlatMap(Filter(q, x, p), y, r) =>
+        val rr = BetaReduction(r)(collection.Map(y -> x))
+        FlatMap(dealias(Filter(q, x, p)), x, dealias(rr))
+
+      case Filter(Filter(q, x, p), y, r) =>
+        val rr = BetaReduction(r)(collection.Map(y -> x))
+        Filter(dealias(Filter(q, x, p)), x, rr)
+
+      case Map(Filter(q, x, p), y, r) =>
+        val rr = BetaReduction(r)(collection.Map(y -> x))
+        Map(dealias(Filter(q, x, p)), x, rr)
+
+      // Recursion
+      case FlatMap(q, x, p) =>
+        FlatMap(dealias(q), x, dealias(p))
+      case Map(q, x, p) =>
+        Map(dealias(q), x, p)
+      case Filter(q, x, p) =>
+        Filter(dealias(q), x, p)
+      case t: Table =>
+        t
+    }
+
+  private def reduction(q: Query, seen: Set[Ident]): (Query, Set[Ident]) = {
     q match {
       // Reduction
       case FlatMap(q: Table, x, p) =>
-        val (xr, pr, rseen) = apply(x, p, seen)
-        val (prr, prrseen) = apply(pr, rseen)
+        val (xr, pr, rseen) = reduction(x, p, seen)
+        val (prr, prrseen) = reduction(pr, rseen)
         (FlatMap(q, xr, prr), prrseen)
       case Map(q: Table, x, p) =>
-        val (xr, pr, rseen) = apply(x, p, seen)
+        val (xr, pr, rseen) = reduction(x, p, seen)
         (Map(q, xr, pr), rseen)
       case Filter(q: Table, x, p) =>
-        val (xr, pr, rseen) = apply(x, p, seen)
+        val (xr, pr, rseen) = reduction(x, p, seen)
         (Filter(q, xr, pr), rseen)
 
       // Recursion
       case FlatMap(q, x, p) =>
-        val (qr, qrseen) = apply(q, seen)
-        val (pr, prseen) = apply(p, qrseen)
+        val (qr, qrseen) = reduction(q, seen)
+        val (pr, prseen) = reduction(p, qrseen)
         (FlatMap(qr, x, pr), prseen)
       case Map(q, x, p) =>
-        val (qr, qrseen) = apply(q, seen)
+        val (qr, qrseen) = reduction(q, seen)
         (Map(qr, x, p), qrseen)
       case Filter(q, x, p) =>
-        val (qr, qrseen) = apply(q, seen)
+        val (qr, qrseen) = reduction(q, seen)
         (Filter(qr, x, p), qrseen)
       case t: Table =>
         (t, Set())
     }
   }
 
-  private def apply(x: Ident, p: Query, seen: Set[Ident]): (Ident, Query, Set[Ident]) =
+  private def reduction(x: Ident, p: Query, seen: Set[Ident]): (Ident, Query, Set[Ident]) =
     if (seen.contains(x)) {
       val xr = freshIdent(x, seen)
       val pr = BetaReduction(p)(collection.Map(x -> xr))
@@ -45,7 +71,7 @@ object AvoidCapture {
     } else
       (x, p, seen + x)
 
-  private def apply(x: Ident, p: Expr, seen: Set[Ident]): (Ident, Expr, Set[Ident]) =
+  private def reduction(x: Ident, p: Expr, seen: Set[Ident]): (Ident, Expr, Set[Ident]) =
     if (seen.contains(x)) {
       val xr = freshIdent(x, seen)
       val pr = BetaReduction(p)(collection.Map(x -> xr))
@@ -53,9 +79,11 @@ object AvoidCapture {
     } else
       (x, p, seen + x)
 
-  private def freshIdent(x: Ident, seen: Set[Ident]): Ident =
-    if (seen.contains(x))
-      freshIdent(Ident(x.name + x.name), seen)
+  private def freshIdent(x: Ident, seen: Set[Ident], n: Int = 1): Ident = {
+    val fresh = Ident(s"${x.name}$n")
+    if (!seen.contains(fresh))
+      fresh
     else
-      x
+      freshIdent(x, seen, n + 1)
+  }
 }

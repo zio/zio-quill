@@ -189,9 +189,4 @@ trait Unlifting extends TypeAttachment {
         }
       ParametrizedExpr(params, expr)
   }
-
-  def debug[T](v: T) = {
-    c.info(c.enclosingPosition, v.toString(), false)
-    v
-  }
 }

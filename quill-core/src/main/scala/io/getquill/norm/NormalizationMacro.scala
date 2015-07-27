@@ -20,10 +20,6 @@ trait NormalizationMacro extends ImplicitResolution {
   case class NormalizedQuery[R, T](query: Query, extractor: Tree)
 
   def normalize[D, R, T](queryTree: Tree)(implicit d: WeakTypeTag[D], r: WeakTypeTag[R], t: WeakTypeTag[T]) = {
-    import io.getquill.util.Show._
-    import io.getquill.ast.QueryShow._
-    debug(AvoidCapture(detach[Query](queryTree)).show)
-    debug(Normalize(AvoidCapture(detach[Query](queryTree))).show)
     val query = Normalize(AvoidCapture(detach[Query](queryTree)))
     def inferEncoder(tpe: Type) =
       inferImplicitValueWithFallback(encoderType(c.WeakTypeTag(tpe), r).tpe, d.tpe, c.prefix.tree)
@@ -35,16 +31,17 @@ trait NormalizationMacro extends ImplicitResolution {
 
   private def ensureFinalMap(query: Query): Query =
     query match {
-      case FlatMap(q, x, p) => FlatMap(q, x, ensureFinalMap(p))
-      case q: Map           => query
-      case other            => Map(query, Ident("x"), Ident("x"))
+      case FlatMap(q, x, p)    => FlatMap(q, x, ensureFinalMap(p))
+      case q: Map              => query
+      case q @ Filter(_, x, _) => Map(q, x, x)
+      case t: Table            => Map(t, Ident("x"), Ident("x"))
     }
 
   private def mapExpr(query: Query): Expr =
     query match {
       case FlatMap(q, x, p) => mapExpr(p)
       case Map(q, x, p)     => p
-      case other            => c.abort(c.enclosingPosition, "Query not properly normalized, please file a bug report.")
+      case other            => c.abort(c.enclosingPosition, s"Query not properly normalized, please file a bug report. $other")
     }
 
   private def replaceMapExpr(query: Query, expr: Expr): Query =
@@ -54,8 +51,9 @@ trait NormalizationMacro extends ImplicitResolution {
       case other            => other
     }
 
-  private def expand[T, R](inferEncoder: Type => Option[Tree], query: Query)(implicit t: WeakTypeTag[T], r: WeakTypeTag[R]) = {
-    val values = expandSelect[T](inferEncoder, mapExpr(ensureFinalMap(query)))
+  private def expand[T, R](inferEncoder: Type => Option[Tree], q: Query)(implicit t: WeakTypeTag[T], r: WeakTypeTag[R]) = {
+    val query = ensureFinalMap(q)
+    val values = expandSelect[T](inferEncoder, mapExpr(query))
     val selectColumns = selectExprs(values)
     (replaceMapExpr(query, Tuple(selectColumns.flatten)), materialize[T, R](values))
   }
