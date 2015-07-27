@@ -15,6 +15,6 @@ abstract class Source[R: ClassTag] {
 
   type Encoder[T] = io.getquill.Encoder[R, T]
 
-  protected def config =
+  protected val config =
     ConfigFactory.load.getConfig(getClass.getSimpleName.replaceAllLiterally("$", ""))
 }
