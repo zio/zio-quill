@@ -1,5 +1,6 @@
 package io.getquill
 
+import scala.language.existentials
 import language.experimental.macros
 import io.getquill.jdbc.JdbcSource
 import java.sql.ResultSet
@@ -40,7 +41,8 @@ object Test extends App {
   }
 
   val q4 =
-    byName("jesus")
+    byName(name = "jesus")
+
   db.run(q4)
 
   val byFullName = Partial {
@@ -100,14 +102,12 @@ object Test extends App {
       (p, a)
     }
 
-  //  val q11 =
-  //    query {
-  //      for {
-  //        (pp, aa) <- personAndAddress
-  //        s <- Queryable[Street] if (aa.streetId == s.id)
-  //      } yield {
-  //        (pp, aa, s.city)
-  //      }
-  //    }
-  //  db.run(q11)
+//  val q11 =
+//      for {
+//        (pp, aa) <- personAndAddress
+//        s <- Queryable[Street] if (aa.streetId == s.id)
+//      } yield {
+//        (pp, aa, s.city)
+//      }
+//  db.run(q11)
 }

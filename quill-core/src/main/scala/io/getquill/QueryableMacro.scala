@@ -19,13 +19,6 @@ class QueryableMacro(val c: Context)
   def apply[T](implicit t: WeakTypeTag[T]) =
     attach[Queryable[T]](ast.Table(t.tpe.typeSymbol.name.toString): ast.Query)
 
-  def filterPartial[T](f: c.Expr[Partial1[T, Boolean]])(implicit t: WeakTypeTag[T]) = {
-    detach[Parametrized](f.tree) match {
-      case ParametrizedExpr(List(alias), body: ast.Expr) =>
-        toQueryable[T](ast.Filter(detach[Query](c.prefix.tree), alias, body))
-    }
-  }
-
   def filter[T](f: c.Expr[T => Any])(implicit t: WeakTypeTag[T]) = {
     f.tree match {
       case q"($input) => $body" if (input.name.toString.contains("ifrefutable")) =>

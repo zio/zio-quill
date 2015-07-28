@@ -10,10 +10,7 @@ trait Queryable[+T] extends Attachable[Query] {
   def flatMap[R](f: T => Queryable[R]): Queryable[R] = macro QueryableMacro.flatMap[T, R]
 
   def withFilter(f: T => Any): Queryable[T] = macro QueryableMacro.filter[T]
-  def withFilter(f: Partial1[T, Boolean]): Queryable[T] = macro QueryableMacro.filterPartial[T]
-
   def filter(f: T => Any): Queryable[T] = macro QueryableMacro.filter[T]
-  def filter(f: Partial1[T, Boolean]): Queryable[T] = macro QueryableMacro.filterPartial[T]
 
   override def toString = {
     import util.Show._

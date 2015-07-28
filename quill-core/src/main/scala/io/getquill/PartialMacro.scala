@@ -16,24 +16,48 @@ import io.getquill.norm.BetaReduction
 class PartialMacro(val c: Context) extends TypeAttachment with Lifting with Unlifting {
   import c.universe.{ Ident => _, Expr => _, _ }
 
-  def create1[P1, T](f: c.Expr[P1 => T])(implicit p1: WeakTypeTag[P1], t: WeakTypeTag[T]) =
+  def create1[P1: WeakTypeTag, T: WeakTypeTag](f: c.Expr[P1 => T]) = create[T](f)
+  def create2[P1: WeakTypeTag, P2: WeakTypeTag, T: WeakTypeTag](f: c.Expr[(P1, P2) => T]) = create[T](f)
+
+  private def create[T](f: c.Expr[Any])(implicit t: WeakTypeTag[T]) =
     f.tree match {
-      case q"(${ pr1: Ident }) => ${ expr: Expr }" =>
-        attach[Partial1[P1, T]](ParametrizedExpr(List(pr1), expr): Parametrized)
-      case q"(${ pr1: Ident }) => $query" =>
-        attach[Partial1[P1, T]](ParametrizedQuery(List(pr1), detach[Query](query)): Parametrized)
+      case q"(..$inputs) => ${ expr: Expr }" =>
+        val args = inputs.map {
+          case q"${ ident: Ident }" => ident
+        }
+        attach[Partial[Expr]](ParametrizedExpr(args, expr): Parametrized)
+      case q"(..$inputs) => $query" =>
+        val args = inputs.map {
+          case q"${ ident: Ident }" => ident
+        }
+        attach[Partial[T]](ParametrizedQuery(args, detach[Query](query)): Parametrized)
     }
 
-  def create2[P1, P2, T](f: c.Expr[(P1, P2) => T])(implicit p1: WeakTypeTag[P1], p2: WeakTypeTag[P2], t: WeakTypeTag[T]) =
-    f.tree match {
-      case q"(${ pr1: Ident }, ${ pr2: Ident }) => ${ expr: Expr }" =>
-        attach[Partial2[P1, P2, T]](ParametrizedExpr(List(pr1, pr2), expr): Parametrized)
-      case q"(${ pr1: Ident }, ${ pr2: Ident }) => $query" if (query.tpe <:< weakTypeOf[Queryable[Any]]) =>
-        attach[Partial2[P1, P2, T]](ParametrizedQuery(List(pr1, pr2), detach[Query](query)): Parametrized)
+  def applyNamed[T](selection: c.Expr[String])(args: c.Expr[(String, Any)]*)(implicit t: WeakTypeTag[T]): Tree = {
+    val map =
+      args.map(_.tree).map {
+        case q"(${ name: String }, ${ expr: ast.Expr })" => name -> expr
+      }.toMap[String, Expr]
+    detach[Parametrized](c.prefix.tree) match {
+      case ParametrizedQuery(idents, query) =>
+        val actuals =
+          idents.map { ident =>
+            map.getOrElse(ident.name, c.abort(c.enclosingPosition, s"Can't find param ${ident.name}"))
+          }
+        val reductionMap = idents.zip(actuals).toMap
+        attach[T](BetaReduction(query)(reductionMap))
+      case ParametrizedExpr(idents, expr) =>
+        val actuals =
+          idents.map { ident =>
+            map.getOrElse(ident.name, c.abort(c.enclosingPosition, s"Can't find param ${ident.name}"))
+          }
+        val reductionMap = idents.zip(actuals).toMap
+        q"${BetaReduction(expr)(reductionMap)}"
     }
+  }
 
-  def apply1[P1, T](pr1: c.Expr[P1])(implicit p1: WeakTypeTag[P1], t: WeakTypeTag[T]) = {
-    val actuals = List(pr1.tree).map {
+  def apply[T](selection: c.Expr[String])(args: c.Expr[Any]*)(implicit t: WeakTypeTag[T]): Tree = {
+    val actuals = args.map(_.tree).map {
       case q"${ expr: ast.Expr }" => expr
     }
     detach[Parametrized](c.prefix.tree) match {
@@ -46,17 +70,6 @@ class PartialMacro(val c: Context) extends TypeAttachment with Lifting with Unli
     }
   }
 
-  def apply2[P1, P2, T](pr1: c.Expr[P1], pr2: c.Expr[P2])(implicit p2: WeakTypeTag[P2], p1: WeakTypeTag[P1], t: WeakTypeTag[T]) = {
-    val actuals = List(pr1.tree, pr2.tree).map {
-      case q"${ expr: ast.Expr }" => expr
-    }
-    detach[Parametrized](c.prefix.tree) match {
-      case ParametrizedQuery(idents, query) =>
-        val reductionMap = idents.zip(actuals).toMap
-        attach[T](BetaReduction(query)(reductionMap))
-      case ParametrizedExpr(idents, expr) =>
-        val reductionMap = idents.zip(actuals).toMap
-        q"${BetaReduction(expr)(reductionMap)}"
-    }
-  }
+  private def partialType[T](implicit t: WeakTypeTag[T]) =
+    c.weakTypeTag[Partial[T]]
 }

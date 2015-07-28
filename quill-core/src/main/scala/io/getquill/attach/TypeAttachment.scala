@@ -42,4 +42,9 @@ trait TypeAttachment {
         .getOrElse(c.abort(c.enclosingPosition, s"Can't unlift attachment '$data'."))
     }
   }
+  
+  def debug[T](v: T): T = {
+    c.warning(c.enclosingPosition, s"$v")
+    v
+  }
 }
