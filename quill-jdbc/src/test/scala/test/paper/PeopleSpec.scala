@@ -1,10 +1,13 @@
 package test.paper
 
 import io.getquill.Source
+import io.getquill.partial
 import io.getquill.jdbc.JdbcSource
 import test.Spec
-import io.getquill.Partial
-import io.getquill.Queryable
+import io.getquill.query
+import io.getquill.query
+import io.getquill.partial
+import io.getquill.from
 
 class PeopleSpec extends Spec {
 
@@ -16,23 +19,25 @@ class PeopleSpec extends Spec {
   "Example 1 - diferences" in {
 
     val differences =
+      query {
         for {
-          c <- Queryable[Couple]
-          w <- Queryable[Person]
-          m <- Queryable[Person] if (c.her == w.name && c.him == m.name && w.age > m.age)
+          c <- io.getquill.from[Couple]
+          w <- from[Person]
+          m <- from[Person] if (c.her == w.name && c.him == m.name && w.age > m.age)
         } yield {
           (w.name, w.age - m.age)
         }
+      }
 
     peopleDB.run(differences) mustEqual List(("Alex", 5), ("Cora", 2))
   }
 
   "Example 2 - range simple" in {
 
-    val rangeSimple = Partial {
+    val rangeSimple = partial {
       (a: Int, b: Int) =>
         for {
-          u <- Queryable[Person] if (a <= u.age && u.age < b)
+          u <- from[Person] if (a <= u.age && u.age < b)
         } yield {
           u
         }
@@ -45,10 +50,10 @@ class PeopleSpec extends Spec {
 
   "Examples 3, 4 - satisfies" in {
     val satisfies =
-      Partial {
+      partial {
         (p: Int => Boolean) =>
           for {
-            u <- Queryable[Person] if (p(u.age))
+            u <- from[Person] if (p(u.age))
           } yield {
             u
           }
@@ -59,25 +64,25 @@ class PeopleSpec extends Spec {
   }
 
   "Example 5 - compose" in {
-    val range = Partial {
+    val range = partial {
       (a: Int, b: Int) =>
         for {
-          u <- Queryable[Person] if (a <= u.age && u.age < b)
+          u <- from[Person] if (a <= u.age && u.age < b)
         } yield {
           u
         }
     }
 
-    val ageFromName = Partial {
+    val ageFromName = partial {
       (s: String) =>
         for {
-          u <- Queryable[Person] if (s == u.name)
+          u <- from[Person] if (s == u.name)
         } yield {
           u.age
         }
     }
 
-    val compose = Partial {
+    val compose = partial {
       (s: String, t: String) =>
         for {
           a <- ageFromName(s)

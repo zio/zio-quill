@@ -1,6 +1,5 @@
 package io.getquill
 
-import scala.language.existentials
 import language.experimental.macros
 import io.getquill.jdbc.JdbcSource
 import java.sql.ResultSet
@@ -14,100 +13,119 @@ object Test extends App {
   object db extends JdbcSource
 
   def q1 =
-    Queryable[Person].filter(p => p.name == p.surname).map(p => (p.name, p.age))
+    query {
+      from[Person].filter(p => p.name == p.surname).map(p => (p.name, p.age))
+    }
   db.run(q1)
 
   def q2 =
-    for {
-      p <- Queryable[Person] if (p.name == null)
-      a <- Queryable[Address] if (a.personId == p.id)
-    } yield {
-      a
+    query {
+      for {
+        p <- from[Person] if (p.name == null)
+        a <- from[Address] if (a.personId == p.id)
+      } yield {
+        a
+      }
     }
 
   db.run(q2)
 
   def q3 =
-    for {
-      a <- q2
-      s <- Queryable[Street] if (a.streetId == s.id)
-    } yield {
-      a
+    query {
+      for {
+        a <- q2
+        s <- from[Street] if (a.streetId == s.id)
+      } yield {
+        a
+      }
     }
   db.run(q3)
 
-  val byName = Partial {
-    (name: String) => Queryable[Person].filter(_.name == name)
+  val byName = partial {
+    (name: String) => from[Person].filter(_.name == name)
   }
 
   val q4 =
-    byName(name = "jesus")
-
+    query {
+      byName("jesus")
+    }
   db.run(q4)
 
-  val byFullName = Partial {
+  val byFullName = partial {
     (name: String, surname: String) => byName(name).filter(_.surname == surname)
   }
 
-  val q5 =
+  val q5 = query {
     byFullName("flavio", "brasil")
+  }
   db.run(q5)
 
-  val nameEqualsSurname = Partial {
+  val nameEqualsSurname = partial {
     (p: Person) => p.name == p.surname
   }
 
-  val q6 =
-    Queryable[Person].filter(nameEqualsSurname(_))
+  val q6 = query {
+    from[Person].filter(nameEqualsSurname(_))
+  }
   db.run(q6)
 
-  val nameIs = Partial {
+  val nameIs = partial {
     (p: Person, name: String) => p.name == name
   }
 
-  val q7 =
-    Queryable[Person].filter(nameIs(_, "flavio"))
+  val q7 = query {
+    from[Person].filter(nameIs(_, "flavio"))
+  }
   db.run(q7)
 
-  val names =
-    Queryable[Person].map(_.name)
+  val names = query {
+    from[Person].map(_.name)
+  }
 
-  val q8 =
+  val q8 = query {
     for {
       name <- names
-      p <- Queryable[Person] if (p.name == name)
+      p <- from[Person] if (p.name == name)
     } yield {
       (p.name, p.age)
     }
+  }
   db.run(q8)
 
-  val q9 =
-    Queryable[Address].map(_.personId)
+  val q9 = query {
+    from[Address].map(_.personId)
+  }
   db.run(q9)
 
   val q10 =
-    for {
-      p1 <- Queryable[Person]
-      p2 <- Queryable[Person] if (p1.name == p2.name)
-    } yield {
-      p2
+    query {
+      for {
+        p1 <- from[Person]
+        p2 <- from[Person] if (p1.name == p2.name)
+      } yield {
+        p2
+      }
     }
   db.run(q10)
 
   val personAndAddress =
-    for {
-      p <- Queryable[Person]
-      a <- Queryable[Address] if (a.personId == p.id)
-    } yield {
-      (p, a)
+    query {
+      for {
+        p <- from[Person]
+        a <- from[Address] if (a.personId == p.id)
+      } yield {
+        (p, a)
+      }
     }
 
 //  val q11 =
+//    query {
 //      for {
 //        (pp, aa) <- personAndAddress
-//        s <- Queryable[Street] if (aa.streetId == s.id)
+//        s <- from[Street] if (aa.streetId == s.id)
 //      } yield {
 //        (pp, aa, s.city)
 //      }
+//    }
 //  db.run(q11)
 }

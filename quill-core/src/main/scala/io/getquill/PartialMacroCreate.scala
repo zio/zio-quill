@@ -22,7 +22,7 @@ class PartialMacroCreate(val c: Context) extends TypeAttachment with Lifting wit
   private def create[P, T](f: c.Expr[Any])(implicit p: WeakTypeTag[P], t: WeakTypeTag[T]): Tree =
     f.tree match {
       case q"(..${ inputs: List[ast.Ident] }) => $body" =>
-        attach[Partial[P, T]](create(inputs, body))
+        attach[Partial](create(inputs, body))
     }
 
   private def create(inputs: List[ast.Ident], body: Tree): Parametrized =

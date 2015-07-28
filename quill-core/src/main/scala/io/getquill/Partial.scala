@@ -1,22 +1,32 @@
 package io.getquill
 
-import scala.language.dynamics
 import language.experimental.macros
-import io.getquill.ast.Parametrized
-import io.getquill.ast.ParametrizedShow.parametrizedShow
 import io.getquill.attach.Attachable
-import util.Show.Shower
+import io.getquill.ast.Query
+import io.getquill.ast.Expr
+import io.getquill.ast.ParametrizedQuery
+import io.getquill.ast.ParametrizedExpr
+import io.getquill.ast.Parametrized
 
-trait Partial[P, +T] extends Attachable[Parametrized] with Dynamic {
+trait Partial extends Attachable[Parametrized] {
 
-  def applyDynamic(selection: String)(args: Any*): Any = macro PartialMacroApply.apply[T]
-  def applyDynamicNamed(selection: String)(args: (String, Any)*): Any = macro PartialMacroApply.applyNamed[T]
-
-  override def toString = attachment.show
+  override def toString = {
+    import util.Show._
+    import ast.QueryShow._
+    import ast.ExprShow._
+    attachment match {
+      case ParametrizedQuery(_, q) => q.show
+      case ParametrizedExpr(_, e) => e.show
+    } 
+  }
 }
 
-object Partial {
+trait Partial1[P1, T] extends Partial {
 
-  def apply[P1, T](f: P1 => T): Any = macro PartialMacroCreate.create1[P1, T]
-  def apply[P1, P2, T](f: (P1, P2) => T): Any = macro PartialMacroCreate.create2[P1, P2, T]
+  def apply(pr1: P1): Any = macro PartialMacro.apply1[P1, T]
+}
+
+trait Partial2[P1, P2, T] extends Partial {
+
+  def apply(pr1: P1, pr2: P2): Any = macro PartialMacro.apply2[P1, P2, T]
 }

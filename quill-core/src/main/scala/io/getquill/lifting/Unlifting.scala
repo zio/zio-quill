@@ -1,42 +1,17 @@
 package io.getquill.lifting
 
 import scala.reflect.macros.whitebox.Context
-import io.getquill.ast.Add
-import io.getquill.ast.And
-import io.getquill.ast.Constant
-import io.getquill.ast.Division
-import io.getquill.ast.Equals
-import io.getquill.ast.Expr
-import io.getquill.ast.Filter
-import io.getquill.ast.FlatMap
-import io.getquill.ast.FunctionApply
-import io.getquill.ast.FunctionDef
-import io.getquill.ast.GreaterThan
-import io.getquill.ast.GreaterThanOrEqual
-import io.getquill.ast.Ident
-import io.getquill.ast.LessThan
-import io.getquill.ast.LessThanOrEqual
-import io.getquill.ast.Map
-import io.getquill.ast.NullValue
-import io.getquill.ast.Parametrized
-import io.getquill.ast.ParametrizedExpr
-import io.getquill.ast.ParametrizedQuery
-import io.getquill.ast.Property
-import io.getquill.ast.Query
-import io.getquill.ast.Ref
-import io.getquill.ast.Remainder
-import io.getquill.ast.Subtract
-import io.getquill.ast.Table
-import io.getquill.ast.Tuple
-import io.getquill.ast.Value
-import io.getquill.attach.TypeAttachment
 import io.getquill.Queryable
+import io.getquill.ast._
+import io.getquill.norm.BetaReduction
+import io.getquill.attach.TypeAttachment
 
 trait Unlifting extends TypeAttachment {
   val c: Context
   import c.universe.{ Function => _, Expr => _, Ident => _, Constant => _, _ }
 
   implicit val queryUnlift: Unliftable[Query] = Unliftable[Query] {
+
     case q"io.getquill.ast.Table.apply(${ name: String })" =>
       Table(name)
     case q"io.getquill.ast.Map.apply(${ source: Query }, ${ alias: Ident }, ${ body: Expr })" =>
@@ -46,8 +21,29 @@ trait Unlifting extends TypeAttachment {
     case q"io.getquill.ast.Filter.apply(${ source: Query }, ${ alias: Ident }, ${ body: Expr })" =>
       Filter(source, alias, body)
 
-    case q"$pack.Queryable[${ t: Type }]" =>
+    case q"$pack.from[${ t: Type }]" =>
       Table(t.typeSymbol.name.decodedName.toString)
+    case q"$source.filter((${ alias: Ident }) => ${ body: Expr })" =>
+      Filter(query(source), alias, body)
+    case q"$source.withFilter((${ alias: Ident }) => $body)" if (alias.name.toString.contains("ifrefutable")) =>
+      query(source)
+    case q"$source.withFilter((${ alias: Ident }) => ${ body: Expr })" =>
+      Filter(query(source), alias, body)
+    case q"$source.map[$t]((${ alias: Ident }) => ${ body: Expr })" =>
+      Map(query(source), alias, body)
+    case q"$source.flatMap[$t]((${ alias: Ident }) => ${ matchAlias: Ident } match { case (..$a) => ${ body: Query } })" if (alias == matchAlias) =>
+      val aliases =
+        a.map {
+          case Bind(name, _) =>
+            Ident(name.decodedName.toString)
+        }
+      val reduction =
+        for ((a, i) <- aliases.zipWithIndex) yield {
+          a -> Property(alias, s"_${i + 1}")
+        }
+      FlatMap(query(source), alias, BetaReduction(body)(reduction.toMap))
+    case q"$source.flatMap[$t]((${ alias: Ident }) => ${ body: Query })" =>
+      FlatMap(query(source), alias, body)
 
     case t if (t.tpe.erasure <:< c.weakTypeTag[Queryable[_]].tpe) =>
       detach[Query](t)
