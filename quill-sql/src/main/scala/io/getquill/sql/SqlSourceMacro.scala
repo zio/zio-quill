@@ -4,14 +4,12 @@ import scala.reflect.macros.whitebox.Context
 
 import SqlQueryShow.sqlQueryShow
 import io.getquill.Queryable
-import io.getquill.attach.TypeAttachment
 import io.getquill.lifting.Unlifting
 import io.getquill.norm.NormalizationMacro
 import io.getquill.util.Show.Shower
 
 class SqlSourceMacro(val c: Context)
     extends NormalizationMacro
-    with TypeAttachment
     with Unlifting {
   import c.universe._
 

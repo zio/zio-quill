@@ -7,13 +7,12 @@ import io.getquill.Source
 import io.getquill.ast._
 import io.getquill.ast.Expr
 import io.getquill.ast.ExprShow.exprShow
-import io.getquill.attach.TypeAttachment
 import io.getquill.lifting.Unlifting
 import io.getquill.util.ImplicitResolution
 import io.getquill.util.Show._
 
 trait NormalizationMacro extends ImplicitResolution {
-  this: TypeAttachment with Unlifting =>
+  this: Unlifting =>
 
   val c: Context
   import c.universe.{ Expr => _, Ident => _, _ }
@@ -21,11 +20,15 @@ trait NormalizationMacro extends ImplicitResolution {
   case class NormalizedQuery[R, T](query: Query, extractor: Tree)
 
   def normalize[D, R, T](queryTree: Tree)(implicit d: WeakTypeTag[D], r: WeakTypeTag[R], t: WeakTypeTag[T]) = {
-    val query = Normalize(AvoidCapture(detach[Query](queryTree)))
-    def inferEncoder(tpe: Type) =
-      inferImplicitValueWithFallback(encoderType(c.WeakTypeTag(tpe), r).tpe, d.tpe, c.prefix.tree)
-    def encoderType[T, R](implicit t: WeakTypeTag[T], r: WeakTypeTag[R]) =
-      c.weakTypeTag[Encoder[R, T]]
+    val q =
+      queryTree match {
+        case q"${ query: Query }" => query
+      }
+    val query = Normalize(AvoidCapture(q))
+      def inferEncoder(tpe: Type) =
+        inferImplicitValueWithFallback(encoderType(c.WeakTypeTag(tpe), r).tpe, d.tpe, c.prefix.tree)
+      def encoderType[T, R](implicit t: WeakTypeTag[T], r: WeakTypeTag[R]) =
+        c.weakTypeTag[Encoder[R, T]]
     val (sql, materialize) = expand(inferEncoder, query)(t, r)
     NormalizedQuery(sql, materialize)
   }
@@ -65,10 +68,10 @@ trait NormalizationMacro extends ImplicitResolution {
 
   private def materialize[T, R](values: List[SelectValue])(implicit t: WeakTypeTag[T], r: WeakTypeTag[R]) = {
     var index = -1
-    def nextIndex = {
-      index += 1
-      index
-    }
+      def nextIndex = {
+        index += 1
+        index
+      }
     val decodedValues =
       values.map {
         case SimpleSelectValue(_, encoder) =>
