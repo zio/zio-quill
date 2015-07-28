@@ -1,7 +1,6 @@
 package io.getquill.lifting
 
 import scala.reflect.macros.whitebox.Context
-
 import io.getquill.ast.Add
 import io.getquill.ast.And
 import io.getquill.ast.Constant
@@ -31,6 +30,7 @@ import io.getquill.ast.Table
 import io.getquill.ast.Tuple
 import io.getquill.ast.Value
 import io.getquill.attach.TypeAttachment
+import io.getquill.Queryable
 
 trait Unlifting extends TypeAttachment {
   val c: Context
@@ -45,6 +45,12 @@ trait Unlifting extends TypeAttachment {
       FlatMap(source, alias, body)
     case q"io.getquill.ast.Filter.apply(${ source: Query }, ${ alias: Ident }, ${ body: Expr })" =>
       Filter(source, alias, body)
+
+    case q"$pack.Queryable[${ t: Type }]" =>
+      Table(t.typeSymbol.name.decodedName.toString)
+
+    case t if (t.tpe.erasure <:< c.weakTypeTag[Queryable[_]].tpe) =>
+      detach[Query](t)
   }
 
   private def query(t: Tree) =
