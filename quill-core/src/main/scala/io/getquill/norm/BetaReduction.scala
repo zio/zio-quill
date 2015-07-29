@@ -23,6 +23,12 @@ import io.getquill.ast.Tuple
 import io.getquill.ast.Value
 
 object BetaReduction {
+  
+  def apply(expr: Expr, t: (Ident, Expr)*): Expr =
+    apply(expr)(t.toMap)
+
+  def apply(query: Query, t: (Ident, Expr)*): Query =
+    apply(query)(t.toMap)
 
   def apply(query: Query)(implicit refs: collection.Map[Ident, Expr]): Query =
     query match {

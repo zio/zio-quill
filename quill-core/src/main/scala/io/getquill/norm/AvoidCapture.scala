@@ -17,26 +17,22 @@ object AvoidCapture {
     q match {
 
       case FlatMap(Filter(q, x, p), y, r) =>
-        val rr = BetaReduction(r)(collection.Map(y -> x))
+        val rr = BetaReduction(r, y -> x)
         FlatMap(dealias(Filter(q, x, p)), x, dealias(rr))
 
       case Filter(Filter(q, x, p), y, r) =>
-        val rr = BetaReduction(r)(collection.Map(y -> x))
+        val rr = BetaReduction(r, y -> x)
         Filter(dealias(Filter(q, x, p)), x, rr)
 
       case Map(Filter(q, x, p), y, r) =>
-        val rr = BetaReduction(r)(collection.Map(y -> x))
+        val rr = BetaReduction(r, y -> x)
         Map(dealias(Filter(q, x, p)), x, rr)
 
       // Recursion
-      case FlatMap(q, x, p) =>
-        FlatMap(dealias(q), x, dealias(p))
-      case Map(q, x, p) =>
-        Map(dealias(q), x, p)
-      case Filter(q, x, p) =>
-        Filter(dealias(q), x, p)
-      case t: Table =>
-        t
+      case FlatMap(q, x, p) => FlatMap(dealias(q), x, dealias(p))
+      case Map(q, x, p)     => Map(dealias(q), x, p)
+      case Filter(q, x, p)  => Filter(dealias(q), x, p)
+      case t: Table         => t
     }
 
   private def reduction(q: Query, seen: Set[Ident]): (Query, Set[Ident]) = {
@@ -70,19 +66,18 @@ object AvoidCapture {
   }
 
   private def reduction(x: Ident, p: Query, seen: Set[Ident]): (Ident, Query, Set[Ident]) =
-    if (seen.contains(x)) {
-      val xr = freshIdent(x, seen)
-      val pr = BetaReduction(p)(collection.Map(x -> xr))
-      (xr, pr, seen + xr)
-    } else
-      (x, p, seen + x)
+    reduction[Query](x, p, seen, BetaReduction.apply(_, _))
 
   private def reduction(x: Ident, p: Expr, seen: Set[Ident]): (Ident, Expr, Set[Ident]) =
+    reduction[Expr](x, p, seen, BetaReduction.apply(_, _))
+
+  private def reduction[T](x: Ident, p: T, seen: Set[Ident], betaReduction: (T, (Ident, Expr)) => T): (Ident, T, Set[Ident]) =
     if (seen.contains(x)) {
       val xr = freshIdent(x, seen)
-      val pr = BetaReduction(p)(collection.Map(x -> xr))
+      val pr = betaReduction(p, x -> xr)
       (xr, pr, seen + xr)
-    } else
+    }
+    else
       (x, p, seen + x)
 
   private def freshIdent(x: Ident, seen: Set[Ident], n: Int = 1): Ident = {
