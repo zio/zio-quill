@@ -41,42 +41,42 @@ object Test extends App {
     }
   db.run(q3)
 
-//  val byName = quote {
-//    (name: String) => from[Person].filter(_.name == name)
-//  }
-//
-//  val q4 =
-//    quote {
-//      byName("jesus")
-//    }
-//  db.run(q4)
+  val byName = quote {
+    (name: String) => from[Person].filter(_.name == name)
+  }
 
-//  val byFullName = quote {
-//    (name: String, surname: String) => byName(name).filter(_.surname == surname)
-//  }
-//
-//  val q5 = quote {
-//    byFullName("flavio", "brasil")
-//  }
-//  db.run(q5)
+  val q4 =
+    quote {
+      byName("jesus")
+    }
+  db.run(q4)
 
-//  val nameEqualsSurname = quote {
-//    (p: Person) => p.name == p.surname
-//  }
-//
-//  val q6 = quote {
-//    from[Person].filter(nameEqualsSurname(_))
-//  }
-//  db.run(q6)
+  val byFullName = quote {
+    (name: String, surname: String) => byName(name).filter(_.surname == surname)
+  }
 
-//  val nameIs = quote {
-//    (p: Person, name: String) => p.name == name
-//  }
-//
-//  val q7 = quote {
-//    from[Person].filter(nameIs(_, "flavio"))
-//  }
-//  db.run(q7)
+  val q5 = quote {
+    byFullName("flavio", "brasil")
+  }
+  db.run(q5)
+
+  val nameEqualsSurname = quote {
+    (p: Person) => p.name == p.surname
+  }
+
+  val q6 = quote {
+    from[Person].filter(nameEqualsSurname(_))
+  }
+  db.run(q6)
+
+  val nameIs = quote {
+    (p: Person, name: String) => p.name == name
+  }
+
+  val q7 = quote {
+    from[Person].filter(nameIs(_, "flavio"))
+  }
+  db.run(q7)
 
   val names = quote {
     from[Person].map(_.name)
@@ -118,14 +118,14 @@ object Test extends App {
       }
     }
 
-//  val q11 =
-//    quote {
-//      for {
-//        (pp, aa) <- personAndAddress
-//        s <- from[Street] if (aa.streetId == s.id)
-//      } yield {
-//        (pp, aa, s.city)
-//      }
-//    }
+  val q11 =
+    quote {
+      for {
+        (pp, aa) <- personAndAddress
+        s <- from[Street] if (aa.streetId == s.id)
+      } yield {
+        (pp, aa, s.city)
+      }
+    }
 //  db.run(q11)
 }

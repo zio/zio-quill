@@ -7,8 +7,6 @@ import io.getquill.ast.Equals
 import io.getquill.ast.Expr
 import io.getquill.ast.Filter
 import io.getquill.ast.FlatMap
-import io.getquill.ast.FunctionApply
-import io.getquill.ast.FunctionDef
 import io.getquill.ast.GreaterThan
 import io.getquill.ast.GreaterThanOrEqual
 import io.getquill.ast.Ident
@@ -51,18 +49,6 @@ object BetaReduction {
       case GreaterThanOrEqual(a, b) => GreaterThanOrEqual(apply(a), apply(b))
       case LessThan(a, b)           => LessThan(apply(a), apply(b))
       case LessThanOrEqual(a, b)    => LessThanOrEqual(apply(a), apply(b))
-      case FunctionApply(ident, value) =>
-        refs.get(ident) match {
-          case Some(FunctionDef(fIdent, fBody)) =>
-            apply(fBody)(refs + (fIdent -> value))
-          case Some(i: Ident) =>
-            FunctionApply(i, apply(value))
-          case Some(other) =>
-            throw new IllegalStateException("Unexpected beta reduction, please submit a bug report.")
-          case other =>
-            FunctionApply(ident, apply(value))
-        }
-      case FunctionDef(ident, body) => FunctionDef(ident, apply(body))
     }
 
   def apply(ref: Ref)(implicit refs: collection.Map[Ident, Expr]): Expr =

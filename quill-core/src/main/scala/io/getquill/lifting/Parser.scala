@@ -5,9 +5,10 @@ import io.getquill.Queryable
 import io.getquill.ast._
 import io.getquill.norm.BetaReduction
 import scala.reflect.ClassTag
+import io.getquill.util.TreeSubstitution
 
-trait Parser {
-  
+trait Parser extends TreeSubstitution {
+
   val c: Context
   import c.universe.{ Function => _, Expr => _, Ident => _, Constant => _, _ }
 
@@ -20,6 +21,8 @@ trait Parser {
   }
 
   val query: Extractor[Query] = Extractor[Query] {
+    case q"((..$params) => $body).apply(..$actuals)" =>
+      query(substituteTree(body, params, actuals))
     case q"$pack.from[${ t: Type }]" =>
       Table(t.typeSymbol.name.decodedName.toString)
     case q"$source.filter(($alias) => $body)" =>
@@ -46,14 +49,12 @@ trait Parser {
   }
 
   val expr: Extractor[Expr] = Extractor[Expr] {
+    case q"((..$params) => $body).apply(..$actuals)" =>
+      expr(substituteTree(body, params, actuals))
     case q"$a - $b" =>
       Subtract(expr(a), expr(b))
     case q"$a + $b" =>
       Add(expr(a), expr(b))
-    case q"$i.apply($value)" =>
-      FunctionApply(ident(i), expr(value))
-    case q"($i) => $value" =>
-      FunctionDef(ident(i), expr(value))
     case q"$a == $b" =>
       Equals(expr(a), expr(b))
     case q"$a && $b" =>

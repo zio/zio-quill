@@ -18,8 +18,6 @@ object ExprShow {
         case GreaterThanOrEqual(a, b)    => s"${a.show} >= ${b.show}"
         case LessThan(a, b)              => s"${a.show} < ${b.show}"
         case LessThanOrEqual(a, b)       => s"${a.show} <= ${b.show}"
-        case FunctionApply(ident, value) => s"${ident.show}(${value.show})"
-        case FunctionDef(ident, body)    => s"(${ident.show}) => ${body.show}"
       }
   }
 
