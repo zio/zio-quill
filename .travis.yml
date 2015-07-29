@@ -6,6 +6,7 @@ jdk:
 - openjdk7
 before_script:
   - mysql -e 'create database people;'
+  - mysql -u root people < quill-jdbc/src/test/sql/mysql-people.sql
 script: travis_retry ./build.sh
 env:
   global:
