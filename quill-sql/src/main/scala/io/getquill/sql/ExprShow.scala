@@ -25,31 +25,23 @@ object ExprShow {
   implicit val refShow: Show[Ref] = new Show[Ref] {
     def show(e: Ref) =
       e match {
-        case Property(ref, name) =>
-          s"${ref.show}.$name"
-        case ident: Ident =>
-          ident.show
-        case v: Value =>
-          v.show
+        case Property(ref, name) => s"${ref.show}.$name"
+        case ident: Ident        => ident.show
+        case v: Value            => v.show
       }
   }
 
   implicit val valueShow: Show[Value] = new Show[Value] {
     def show(e: Value) =
       e match {
-        case Constant(v: String) =>
-          s"'$v'"
-        case Constant(v) =>
-          s"$v"
-        case NullValue =>
-          s"null"
-        case Tuple(values) =>
-          s"${values.map(_.show).mkString(", ")}"
+        case Constant(v: String) => s"'$v'"
+        case Constant(v)         => s"$v"
+        case NullValue           => s"null"
+        case Tuple(values)       => s"${values.show}"
       }
   }
 
   implicit val identShow: Show[Ident] = new Show[Ident] {
     def show(e: Ident) = e.name
   }
-
 }

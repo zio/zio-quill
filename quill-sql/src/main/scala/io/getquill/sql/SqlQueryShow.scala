@@ -17,8 +17,8 @@ object SqlQueryShow {
       }
   }
 
-  implicit val sourceListShow: Show[List[Source]] = new Show[List[Source]] {
-    def show(list: List[Source]) =
-      list.map(e => s"${e.table} ${e.alias}").mkString(", ")
+  implicit val sourceShow: Show[Source] = new Show[Source] {
+    def show(source: Source) =
+      s"${source.table} ${source.alias}"
   }
 }
