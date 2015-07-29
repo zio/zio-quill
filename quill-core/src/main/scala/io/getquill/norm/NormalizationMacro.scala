@@ -1,30 +1,24 @@
 package io.getquill.norm
 
 import scala.reflect.macros.whitebox.Context
-
 import io.getquill.Encoder
 import io.getquill.Source
 import io.getquill.ast._
 import io.getquill.ast.Expr
 import io.getquill.ast.ExprShow.exprShow
-import io.getquill.lifting.Unlifting
 import io.getquill.util.ImplicitResolution
 import io.getquill.util.Show._
+import io.getquill.lifting.Parser
 
-trait NormalizationMacro extends ImplicitResolution {
-  this: Unlifting =>
+trait NormalizationMacro extends ImplicitResolution with Parser {
 
   val c: Context
   import c.universe.{ Expr => _, Ident => _, _ }
-
+  
   case class NormalizedQuery[R, T](query: Query, extractor: Tree)
 
-  def normalize[D, R, T](queryTree: Tree)(implicit d: WeakTypeTag[D], r: WeakTypeTag[R], t: WeakTypeTag[T]) = {
-    val q =
-      queryTree match {
-        case q"${ query: Query }" => query
-      }
-    val query = Normalize(AvoidCapture(q))
+  def normalize[D, R, T](tree: Tree)(implicit d: WeakTypeTag[D], r: WeakTypeTag[R], t: WeakTypeTag[T]) = {
+    val query = Normalize(AvoidCapture(this.query(tree)))
       def inferEncoder(tpe: Type) =
         inferImplicitValueWithFallback(encoderType(c.WeakTypeTag(tpe), r).tpe, d.tpe, c.prefix.tree)
       def encoderType[T, R](implicit t: WeakTypeTag[T], r: WeakTypeTag[R]) =
