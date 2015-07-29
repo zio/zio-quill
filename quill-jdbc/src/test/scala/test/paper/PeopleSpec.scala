@@ -1,6 +1,6 @@
 package test.paper
 
-import io.getquill.Source
+import io.getquill.impl.Source
 import io.getquill.jdbc.JdbcSource
 import test.Spec
 import io.getquill._

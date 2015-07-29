@@ -3,7 +3,7 @@ package io.getquill.sql
 import scala.reflect.macros.whitebox.Context
 
 import SqlQueryShow.sqlQueryShow
-import io.getquill.Queryable
+import io.getquill.impl.Queryable
 import io.getquill.norm.NormalizationMacro
 import io.getquill.util.Show.Shower
 

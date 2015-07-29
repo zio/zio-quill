@@ -5,9 +5,7 @@ package io.getquill.ast
 sealed trait Expr
 
 case class Subtract(a: Expr, b: Expr) extends Expr
-
 case class Add(a: Expr, b: Expr) extends Expr
-
 case class Equals(a: Expr, b: Expr) extends Expr
 
 case class And(a: Expr, b: Expr) extends Expr

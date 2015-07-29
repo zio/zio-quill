@@ -1,10 +1,11 @@
-package io.getquill
+package io.getquill.impl
 
 import scala.reflect.macros.whitebox.Context
+import io.getquill.util.Messages
 
 trait Quoted[T]
 
-class Quotation(val c: Context) {
+class Quotation(val c: Context) extends Messages {
 
   import c.universe._
 
@@ -12,7 +13,7 @@ class Quotation(val c: Context) {
 
   def unquote[T](quoted: c.Expr[Quoted[T]]) =
     extract(quoted.tree).getOrElse {
-      c.abort(c.enclosingPosition, s"Can't find the original quoted tree at ${quoted.tree}.")
+      fail(s"Can't find the original quoted tree at ${quoted.tree}.")
     }
 
   def quote[T: WeakTypeTag](body: c.Expr[T]) =

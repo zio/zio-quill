@@ -1,8 +1,7 @@
-package io.getquill
+package test
 
-import language.experimental.macros
 import io.getquill.jdbc.JdbcSource
-import java.sql.ResultSet
+import io.getquill._
 
 case class Person(id: Long, name: String, surname: String, age: Int)
 case class Address(id: Long, personId: Long, streetId: Long, number: Int)

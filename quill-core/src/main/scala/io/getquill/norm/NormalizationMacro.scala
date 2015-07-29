@@ -1,8 +1,8 @@
 package io.getquill.norm
 
 import scala.reflect.macros.whitebox.Context
-import io.getquill.Encoder
-import io.getquill.Source
+import io.getquill.impl.Encoder
+import io.getquill.impl.Source
 import io.getquill.ast._
 import io.getquill.ast.Expr
 import io.getquill.ast.ExprShow.exprShow

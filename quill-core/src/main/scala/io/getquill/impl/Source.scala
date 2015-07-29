@@ -1,7 +1,6 @@
-package io.getquill
+package io.getquill.impl
 
 import scala.reflect.ClassTag
-
 import com.typesafe.config.ConfigFactory
 
 abstract class Encoder[R: ClassTag, T: ClassTag] {
@@ -11,8 +10,9 @@ abstract class Encoder[R: ClassTag, T: ClassTag] {
 
 abstract class Source[R: ClassTag] {
 
-  type Encoder[T] = io.getquill.Encoder[R, T]
+  type Encoder[T] = io.getquill.impl.Encoder[R, T]
 
-  protected val config =
-    ConfigFactory.load.getConfig(getClass.getSimpleName.replaceAllLiterally("$", ""))
+  protected val config = ConfigFactory.load.getConfig(configPrefix)
+
+  private def configPrefix = getClass.getSimpleName.replaceAllLiterally("$", "")
 }
