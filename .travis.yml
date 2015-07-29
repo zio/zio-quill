@@ -4,6 +4,8 @@ scala:
 jdk:
 - oraclejdk7
 - openjdk7
+before_script:
+  - mysql -e 'create database people;'
 script: travis_retry ./build.sh
 env:
   global:
