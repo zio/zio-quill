@@ -14,8 +14,10 @@ trait JdbcSource extends SqlSource[ResultSet, PreparedStatement] with StrictLogg
   }
 
   implicit val longEncoder = new Encoder[Long] {
-    def apply(index: Int, row: PreparedStatement, value: Long) =
+    def apply(index: Int, value: Long, row: PreparedStatement) = {
       row.setLong(index + 1, value)
+      row
+    }
   }
 
   implicit val intDecoder = new Decoder[Int] {
@@ -24,8 +26,10 @@ trait JdbcSource extends SqlSource[ResultSet, PreparedStatement] with StrictLogg
   }
 
   implicit val intEncoder = new Encoder[Int] {
-    def apply(index: Int, row: PreparedStatement, value: Int) =
+    def apply(index: Int, value: Int, row: PreparedStatement) = {
       row.setInt(index + 1, value)
+      row
+    }
   }
 
   implicit val stringDecoder = new Decoder[String] {
@@ -34,22 +38,19 @@ trait JdbcSource extends SqlSource[ResultSet, PreparedStatement] with StrictLogg
   }
 
   implicit val stringEncoder = new Encoder[String] {
-    def apply(index: Int, row: PreparedStatement, value: String) =
+    def apply(index: Int, value: String, row: PreparedStatement) = {
       row.setString(index + 1, value)
+      row
+    }
   }
 
   private val dataSource = DataSource(config)
 
-  def run[T](sql: String, extractor: ResultSet => T): List[T] = {
-    run(sql, null, extractor)
-  }
-
-  def run[T](sql: String, bind: PreparedStatement => Unit, extractor: ResultSet => T) = {
+  def run[T](sql: String, bind: PreparedStatement => PreparedStatement, extractor: ResultSet => T) = {
     logger.debug(sql)
     val conn = dataSource.getConnection
     try {
-      val ps = conn.prepareStatement(sql)
-      bind(ps)
+      val ps = bind(conn.prepareStatement(sql))
       val rs = ps.executeQuery
       val result = new ListBuffer[T]
       while (rs.next)

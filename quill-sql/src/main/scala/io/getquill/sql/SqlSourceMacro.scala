@@ -11,7 +11,7 @@ import io.getquill.impl.Encoder
 class SqlSourceMacro(val c: Context) extends NormalizationMacro with Messages {
   import c.universe._
 
-  def run[R, S, T](q: Expr[Queryable[T]])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]): Tree = 
+  def run[R, S, T](q: Expr[Queryable[T]])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]): Tree =
     run[R, S, T](q.tree, List(), List())
 
   def run1[P1, R: WeakTypeTag, S: WeakTypeTag, T: WeakTypeTag](q: Expr[P1 => Queryable[T]])(p1: Expr[P1]): Tree =
@@ -40,12 +40,14 @@ class SqlSourceMacro(val c: Context) extends NormalizationMacro with Messages {
       for ((ident, index) <- bindingIdents.zipWithIndex) yield {
         val (param, binding) = bindingMap(ident)
         val encoder = inferEncoder(param.tpt.tpe)(s).get
-        q"$encoder($index, row, $binding)"
+        q"r = $encoder($index, $binding, r)"
       }
     q"""
       {
           def encode(row: $s) = {
-            ..$applyEncoders
+            var r = row
+            $applyEncoders
+            r
           }
           ${c.prefix}.run[$t]($sql, encode _, $extractor)
       }  

@@ -8,7 +8,7 @@ abstract class Decoder[R: ClassTag, T: ClassTag] {
 }
 
 abstract class Encoder[S: ClassTag, T: ClassTag] {
-  def apply(index: Int, row: S, value: T): Unit
+  def apply(index: Int, value: T, row: S): S
 }
 
 abstract class Source[R: ClassTag, S: ClassTag] {
