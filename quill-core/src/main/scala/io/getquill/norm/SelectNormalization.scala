@@ -24,7 +24,7 @@ trait SelectNormalization extends Messages {
           case None if (typ.typeSymbol.asClass.isCaseClass) =>
             caseClassSelectValue(typ, expr, inferDecoder)
           case _ =>
-            fail(s"Source doesn't know how to encode '${t.tpe.typeSymbol.name}.${expr.show}: $typ'")
+            fail(s"Source doesn't know how to decode '${t.tpe.typeSymbol.name}.${expr.show}: $typ'")
         }
     }
   }
@@ -41,7 +41,7 @@ trait SelectNormalization extends Messages {
         val paramType = param.typeSignature.typeSymbol.asType.toType
         val decoder =
           inferDecoder(paramType)
-            .getOrElse(fail(s"Source doesn't know how to encode '${param.name}: $paramType'"))
+            .getOrElse(fail(s"Source doesn't know how to decode '${param.name}: $paramType'"))
         SimpleSelectValue(Property(expr, param.name.decodedName.toString), decoder)
     })
 

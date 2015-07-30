@@ -48,7 +48,7 @@ object Test extends App {
     quote {
       byName("jesus")
     }
-  db.run(q4)
+  db.run(byName)("test")
 
   val byFullName = quote {
     (name: String, surname: String) => byName(name).filter(_.surname == surname)
