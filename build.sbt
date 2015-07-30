@@ -32,7 +32,7 @@ lazy val commonSettings = releaseSettings ++ Seq(
   libraryDependencies ++= Seq(
     "org.scalatest" %% "scalatest" % "2.2.4" % "test"
   ),
-  scalacOptions ++= Seq("-deprecation", "-feature"),
+  scalacOptions ++= Seq("-deprecation", "-feature", "-Xfatal-warnings"),
   publishMavenStyle := true,
   publishTo := {
     val nexus = "https://oss.sonatype.org/"
