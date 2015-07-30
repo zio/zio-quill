@@ -1,4 +1,5 @@
-![quill](https://raw.githubusercontent.com/getquill/quill/master/quill.png) **Quill**
+![quill](https://raw.githubusercontent.com/getquill/quill/master/quill.png)
+# Quill
 Compile-time Language Integrated Query for Scala
 
 [![Build Status](https://secure.travis-ci.org/getquill/quill.png)](https://api.travis-ci.org/getquill/quill.svg?branch=master)
