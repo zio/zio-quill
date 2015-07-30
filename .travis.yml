@@ -2,8 +2,8 @@ language: scala
 scala:
 - 2.11.5
 jdk:
-- oraclejdk7
-- openjdk7
+- oraclejdk8
+- openjdk8
 before_script:
   - mysql -e 'create database people;'
   - mysql -u root people < quill-jdbc/src/test/sql/mysql-people.sql
