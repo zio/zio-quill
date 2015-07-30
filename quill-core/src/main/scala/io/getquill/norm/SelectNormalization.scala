@@ -15,34 +15,34 @@ trait SelectNormalization extends Messages {
   val c: Context
   import c.universe.{ Expr => _, _ }
 
-  protected def normalizeSelect[T](inferEncoder: Type => Option[Tree], mapExpr: Expr)(implicit t: WeakTypeTag[T]) = {
+  protected def normalizeSelect[T](inferDecoder: Type => Option[Tree], mapExpr: Expr)(implicit t: WeakTypeTag[T]) = {
     selectElements(mapExpr).map {
       case (expr, typ) =>
-        inferEncoder(typ) match {
-          case Some(encoder) =>
-            SimpleSelectValue(expr, encoder)
+        inferDecoder(typ) match {
+          case Some(decoder) =>
+            SimpleSelectValue(expr, decoder)
           case None if (typ.typeSymbol.asClass.isCaseClass) =>
-            caseClassSelectValue(typ, expr, inferEncoder)
+            caseClassSelectValue(typ, expr, inferDecoder)
           case _ =>
             fail(s"Source doesn't know how to encode '${t.tpe.typeSymbol.name}.${expr.show}: $typ'")
         }
     }
   }
 
-  private def caseClassSelectValue(typ: Type, expr: Expr, inferEncoder: Type => Option[Tree]) =
-    CaseClassSelectValue(typ, selectValuesForCaseClass(typ, expr, inferEncoder))
+  private def caseClassSelectValue(typ: Type, expr: Expr, inferDecoder: Type => Option[Tree]) =
+    CaseClassSelectValue(typ, selectValuesForCaseClass(typ, expr, inferDecoder))
 
-  private def selectValuesForCaseClass(typ: Type, expr: Expr, inferEncoder: Type => Option[Tree]) =
-    selectValuesForConstructor(caseClassConstructor(typ), expr, inferEncoder)
+  private def selectValuesForCaseClass(typ: Type, expr: Expr, inferDecoder: Type => Option[Tree]) =
+    selectValuesForConstructor(caseClassConstructor(typ), expr, inferDecoder)
 
-  private def selectValuesForConstructor(constructor: MethodSymbol, expr: Expr, inferEncoder: Type => Option[Tree]) =
+  private def selectValuesForConstructor(constructor: MethodSymbol, expr: Expr, inferDecoder: Type => Option[Tree]) =
     constructor.paramLists.map(_.map {
       param =>
         val paramType = param.typeSignature.typeSymbol.asType.toType
-        val encoder =
-          inferEncoder(paramType)
+        val decoder =
+          inferDecoder(paramType)
             .getOrElse(fail(s"Source doesn't know how to encode '${param.name}: $paramType'"))
-        SimpleSelectValue(Property(expr, param.name.decodedName.toString), encoder)
+        SimpleSelectValue(Property(expr, param.name.decodedName.toString), decoder)
     })
 
   private def selectElements[T](mapExpr: Expr)(implicit t: WeakTypeTag[T]) =

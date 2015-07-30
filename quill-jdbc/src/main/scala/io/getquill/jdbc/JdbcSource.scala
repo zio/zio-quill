@@ -10,21 +10,18 @@ import io.getquill.sql.SqlSource
 
 trait JdbcSource extends SqlSource[ResultSet] with StrictLogging {
 
-  implicit val longEncoder = new Encoder[Long] {
-    def encode(value: Long, index: Int, row: ResultSet) = ???
-    def decode(index: Int, row: ResultSet) =
+  implicit val longDecoder = new Decoder[Long] {
+    def apply(index: Int, row: ResultSet) =
       row.getLong(index + 1)
   }
 
-  implicit val intEncoder = new Encoder[Int] {
-    def encode(value: Int, index: Int, row: ResultSet) = ???
-    def decode(index: Int, row: ResultSet) =
+  implicit val intDecoder = new Decoder[Int] {
+    def apply(index: Int, row: ResultSet) =
       row.getInt(index + 1)
   }
 
-  implicit val stringEncoder = new Encoder[String] {
-    def encode(value: String, index: Int, row: ResultSet) = ???
-    def decode(index: Int, row: ResultSet) =
+  implicit val stringDecoder = new Decoder[String] {
+    def apply(index: Int, row: ResultSet) =
       row.getString(index + 1)
   }
 
@@ -39,6 +36,7 @@ trait JdbcSource extends SqlSource[ResultSet] with StrictLogging {
       while (rs.next)
         result += extractor(rs)
       result.toList
-    } finally conn.close
+    }
+    finally conn.close
   }
 }

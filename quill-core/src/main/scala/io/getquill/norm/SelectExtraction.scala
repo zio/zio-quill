@@ -16,13 +16,13 @@ trait SelectExtraction {
       }
     val decodedValues =
       values.map {
-        case SimpleSelectValue(_, encoder) =>
-          q"$encoder.decode($nextIndex, row)"
+        case SimpleSelectValue(_, decoder) =>
+          q"$decoder($nextIndex, row)"
         case CaseClassSelectValue(tpe, params) =>
           val decodedParams =
             params.map(_.map {
-              case SimpleSelectValue(_, encoder) =>
-                q"$encoder.decode($nextIndex, row)"
+              case SimpleSelectValue(_, decoder) =>
+                q"$decoder($nextIndex, row)"
             })
           q"new $tpe(...$decodedParams)"
       }

@@ -3,14 +3,13 @@ package io.getquill.impl
 import scala.reflect.ClassTag
 import com.typesafe.config.ConfigFactory
 
-abstract class Encoder[R: ClassTag, T: ClassTag] {
-  def encode(value: T, index: Int, row: R): R
-  def decode(index: Int, row: R): T
+abstract class Decoder[R: ClassTag, T: ClassTag] {
+  def apply(index: Int, row: R): T
 }
 
 abstract class Source[R: ClassTag] {
 
-  type Encoder[T] = io.getquill.impl.Encoder[R, T]
+  type Decoder[T] = io.getquill.impl.Decoder[R, T]
 
   protected val config = ConfigFactory.load.getConfig(configPrefix)
 

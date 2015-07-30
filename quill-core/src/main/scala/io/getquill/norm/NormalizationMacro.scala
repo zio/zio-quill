@@ -1,7 +1,7 @@
 package io.getquill.norm
 
 import scala.reflect.macros.whitebox.Context
-import io.getquill.impl.Encoder
+import io.getquill.impl.Decoder
 import io.getquill.impl.Source
 import io.getquill.ast._
 import io.getquill.ast.Expr
@@ -18,16 +18,16 @@ trait NormalizationMacro extends ImplicitResolution with Parser with SelectNorma
   case class NormalizedQuery(query: Query, extractor: Tree)
 
   sealed trait SelectValue
-  case class SimpleSelectValue(expr: Expr, encoder: Tree) extends SelectValue
+  case class SimpleSelectValue(expr: Expr, decoder: Tree) extends SelectValue
   case class CaseClassSelectValue(tpe: Type, params: List[List[SimpleSelectValue]]) extends SelectValue
 
   def normalize[D: WeakTypeTag, R: WeakTypeTag, T: WeakTypeTag](tree: Tree) = {
     val query = Normalize(AvoidCapture(this.query(tree)))
-    normalizedQuery[T, R](ensureFinalMap(query), inferEncoder[R, D](_))
+    normalizedQuery[T, R](ensureFinalMap(query), inferDecoder[R, D](_))
   }
 
-  private def normalizedQuery[T: WeakTypeTag, R: WeakTypeTag](query: Query, inferEncoder: Type => Option[Tree]): NormalizedQuery =
-    normalizedQuery[T, R](query, normalizeSelect[T](inferEncoder, mapExpr(query)))
+  private def normalizedQuery[T: WeakTypeTag, R: WeakTypeTag](query: Query, inferDecoder: Type => Option[Tree]): NormalizedQuery =
+    normalizedQuery[T, R](query, normalizeSelect[T](inferDecoder, mapExpr(query)))
 
   private def normalizedQuery[T: WeakTypeTag, R: WeakTypeTag](query: Query, values: List[SelectValue]) =
     NormalizedQuery(replaceMapExpr(query, selectTuple(values)), selectExtractor[T, R](values))
@@ -41,10 +41,10 @@ trait NormalizationMacro extends ImplicitResolution with Parser with SelectNorma
       case CaseClassSelectValue(_, params) => params.flatten.map(_.expr)
     }
 
-  private def inferEncoder[R, D](tpe: Type)(implicit r: WeakTypeTag[R], d: WeakTypeTag[D]) = {
-      def encoderType[T, R](implicit t: WeakTypeTag[T], r: WeakTypeTag[R]) =
-        c.weakTypeTag[Encoder[R, T]]
-    inferImplicitValueWithFallback(encoderType(c.WeakTypeTag(tpe), r).tpe, d.tpe, c.prefix.tree)
+  private def inferDecoder[R, D](tpe: Type)(implicit r: WeakTypeTag[R], d: WeakTypeTag[D]) = {
+      def decoderType[T, R](implicit t: WeakTypeTag[T], r: WeakTypeTag[R]) =
+        c.weakTypeTag[Decoder[R, T]]
+    inferImplicitValueWithFallback(decoderType(c.WeakTypeTag(tpe), r).tpe, d.tpe, c.prefix.tree)
   }
 
   private def ensureFinalMap(query: Query): Query =
