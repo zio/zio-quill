@@ -4,8 +4,7 @@ scala:
 jdk:
 - oraclejdk8
 before_script:
-  - mysql -e 'create database people;'
-  - mysql -u root people < quill-jdbc/src/test/sql/mysql-people.sql
+  - mysql -u root < quill-jdbc/src/test/sql/mysql-people.sql
 script: travis_retry ./build.sh
 env:
   global:
