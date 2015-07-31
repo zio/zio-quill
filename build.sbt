@@ -26,6 +26,14 @@ lazy val `quill-jdbc` =
     ))
     .dependsOn(`quill-sql`)
 
+lazy val `quill-finagle-mysql` = 
+  (project in file("quill-fingle-mysql"))
+    .settings(commonSettings: _*)
+    .settings(libraryDependencies ++= Seq(
+      "com.twitter" %% "finagle-mysql" % "6.27.0"
+    ))
+    .dependsOn(`quill-sql`)
+
 lazy val commonSettings = releaseSettings ++ Seq(
   organization := "io.getquill",
   scalaVersion := "2.11.5",
