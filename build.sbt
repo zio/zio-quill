@@ -1,7 +1,7 @@
 
 lazy val root = 
   (project in file("."))
-    .aggregate(`quill-core`, `quill-sql`, `quill-jdbc`)
+    .aggregate(`quill-core`, `quill-sql`, `quill-jdbc`, `quill-finagle-mysql`)
 
 lazy val `quill-core` = 
   (project in file("quill-core"))
@@ -24,7 +24,7 @@ lazy val `quill-jdbc` =
       "com.zaxxer" % "HikariCP"             % "2.3.9",
       "mysql"      % "mysql-connector-java" % "5.1.36" % "test"
     ))
-    .dependsOn(`quill-sql`)
+    .dependsOn(`quill-sql` % "compile->compile;test->test")
 
 lazy val `quill-finagle-mysql` = 
   (project in file("quill-fingle-mysql"))
@@ -32,7 +32,7 @@ lazy val `quill-finagle-mysql` =
     .settings(libraryDependencies ++= Seq(
       "com.twitter" %% "finagle-mysql" % "6.27.0"
     ))
-    .dependsOn(`quill-sql`)
+    .dependsOn(`quill-sql` % "compile->compile;test->test")
 
 lazy val commonSettings = releaseSettings ++ Seq(
   organization := "io.getquill",
