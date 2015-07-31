@@ -1,25 +1,38 @@
-- migration
-- query optimization
-- query optimization for specific dbs
-- optimistic offline locking
-- plain case classes
+MVP
+
+√ plain case classes
+√ query optimization
+√ zero runtime overhead
+√ fully non-blocking
+√ free oracle and sqllite drivers
+- transactions
+- inserts
+- updates
+- dynamic queries
 - macro to generate the case classes from db schema
-- schema validation
-- query validation using the db schema
-- no runtime overhead (query string generated at compile time)
+- full sql standard support
+- generic test suite
+- quill-jdbc
+- quill-finagle-mysql
+- quill-finagle-postgres
+- quill-doobie
+- master slave out-of-the-box
+- custom encoders
+
+Later
+
+- custom functions
+- compile-time query validation using the db
+- migrations
+- optimistic offline locking
 - batch queries
 - automatic batching (using clump?)
 - sbt plugin (rake)
-- master slave out-of-the-box
-- if it compiles, it runs
-- fully non-blocking
-- free oracle and sqllite drivers
-- transactions
 - transaction isolations
 - sql interpolation
 - easy crud (see scaladays talk)
 - automatic migration from slick
 - cached queries
 - nested transactions (save points)
-- insistence lquillr
-- dynamic queries
+- insistence layer
+- query optimization for specific dbs
