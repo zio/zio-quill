@@ -11,7 +11,11 @@ import io.getquill.ast.Table
 object AvoidCapture {
 
   def apply(q: Query): Query =
-    dealias(reduction(q, Set())._1)
+    dealias {
+      reduction(q, Set()) match {
+        case (query, idents) => query
+      }
+    }
 
   private def dealias(q: Query): Query =
     q match {

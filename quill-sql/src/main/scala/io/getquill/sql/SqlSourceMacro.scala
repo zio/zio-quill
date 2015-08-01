@@ -39,7 +39,9 @@ class SqlSourceMacro(val c: Context) extends NormalizationMacro with Messages {
     val applyEncoders =
       for ((ident, index) <- bindingIdents.zipWithIndex) yield {
         val (param, binding) = bindingMap(ident)
-        val encoder = inferEncoder(param.tpt.tpe)(s).get
+        val encoder =
+          inferEncoder(param.tpt.tpe)(s)
+            .getOrElse(fail(s"Source doesn't know how do encode $param: ${param.tpt}"))
         q"r = $encoder($index, $binding, r)"
       }
     q"""
