@@ -3,14 +3,14 @@ package test.paper
 import io.getquill.impl.Source
 import test.Spec
 import io.getquill._
-import io.getquill.jdbc.JdbcSource
+import io.getquill.jdbc.PooledJdbcSource
 
 class PeopleJdbcSpec extends PeopleSpec {
 
-  object peopleDB extends JdbcSource
+  object peopleDB extends PooledJdbcSource
 
   "Example 1 - differences" in {
-    peopleDB.run(`Ex 1 differences`) mustEqual `Ex 1 expected result`
+    peopleDB.transaction { _.run(`Ex 1 differences`) } mustEqual `Ex 1 expected result`
   }
 
   "Example 2 - range simple" in {

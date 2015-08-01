@@ -11,10 +11,12 @@ import com.twitter.finagle.exp.mysql.IntValue
 import com.twitter.finagle.exp.mysql.StringValue
 import com.twitter.finagle.exp.mysql.CanBeParameter._
 import com.twitter.finagle.exp.mysql.Parameter._
+import com.twitter.finagle.exp.mysql.Client
+import com.twitter.util.Future
 
 trait FinagleMysqlSource extends SqlSource[Row, List[Parameter]] with StrictLogging {
 
-  private val mysql = FinagleMysqlClient(config)
+  protected val client: Client
 
   implicit val longDecoder = new Decoder[Long] {
     def apply(index: Int, row: Row) =
@@ -61,7 +63,7 @@ trait FinagleMysqlSource extends SqlSource[Row, List[Parameter]] with StrictLogg
 
   def run[T](sql: String, bind: List[Parameter] => List[Parameter], extractor: Row => T) = {
     logger.debug(sql)
-    mysql.prepare(sql).select(bind(List()): _*)(extractor)
+    client.prepare(sql).select(bind(List()): _*)(extractor)
   }
 
 }

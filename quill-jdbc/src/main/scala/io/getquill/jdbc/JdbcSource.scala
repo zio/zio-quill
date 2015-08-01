@@ -5,6 +5,8 @@ import scala.collection.mutable.ListBuffer
 import com.typesafe.scalalogging.StrictLogging
 import io.getquill.sql.SqlSource
 import java.sql.PreparedStatement
+import java.sql.Connection
+import scala.util.control.NonFatal
 
 trait JdbcSource extends SqlSource[ResultSet, PreparedStatement] with StrictLogging {
 
@@ -44,12 +46,30 @@ trait JdbcSource extends SqlSource[ResultSet, PreparedStatement] with StrictLogg
     }
   }
 
-  private val dataSource = DataSource(config)
+  protected def withConnection[T](f: Connection => T): T
+
+  def transaction[T](f: JdbcSource => T) =
+    withConnection { conn =>
+      conn.setAutoCommit(false)
+      try {
+        val res = f(new JdbcSource { override def withConnection[T](f: Connection => T) = f(conn) })
+        conn.commit
+        res
+      }
+      catch {
+        case NonFatal(e) =>
+          conn.rollback
+          throw e
+      }
+      finally {
+        conn.setAutoCommit(true)
+        conn.close
+      }
+    }
 
   def run[T](sql: String, bind: PreparedStatement => PreparedStatement, extractor: ResultSet => T) = {
     logger.debug(sql)
-    val conn = dataSource.getConnection
-    try {
+    withConnection { conn =>
       val ps = bind(conn.prepareStatement(sql))
       val rs = ps.executeQuery
       val result = new ListBuffer[T]
@@ -57,6 +77,5 @@ trait JdbcSource extends SqlSource[ResultSet, PreparedStatement] with StrictLogg
         result += extractor(rs)
       result.toList
     }
-    finally conn.close
   }
 }

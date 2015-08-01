@@ -16,7 +16,7 @@ abstract class Source[R: ClassTag, S: ClassTag] {
   type Decoder[T] = io.getquill.impl.Decoder[R, T]
   type Encoder[T] = io.getquill.impl.Encoder[S, T]
 
-  protected val config = ConfigFactory.load.getConfig(configPrefix)
+  protected lazy val config = ConfigFactory.load.getConfig(configPrefix)
 
   private def configPrefix = getClass.getSimpleName.replaceAllLiterally("$", "")
 }

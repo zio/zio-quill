@@ -3,18 +3,19 @@ package test.paper
 import io.getquill.impl.Source
 import test.Spec
 import io.getquill._
-import io.getquill.finagle.mysql.FinagleMysqlSource
 import com.twitter.util.Await
 import com.twitter.util.Future
+import io.getquill.finagle.mysql.FinagleMysqlClient
+import io.getquill.finagle.mysql.TransactionalFinagleMysqlSource
 
 class PeopleFinagleMysqlSpec extends PeopleSpec {
 
-  object peopleDB extends FinagleMysqlSource
+  object peopleDB extends TransactionalFinagleMysqlSource
 
   def await[T](future: Future[T]) = Await.result(future)
 
   "Example 1 - differences" in {
-    await(peopleDB.run(`Ex 1 differences`)) mustEqual `Ex 1 expected result`
+    await(peopleDB.transaction(_.run(`Ex 1 differences`))) mustEqual `Ex 1 expected result`
   }
 
   "Example 2 - range simple" in {
