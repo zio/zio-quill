@@ -16,7 +16,7 @@ import com.twitter.util.Future
 
 trait FinagleMysqlSource extends SqlSource[Row, List[Parameter]] with StrictLogging {
 
-  protected val client: Client = FinagleMysqlClient(config)
+  protected val client: Client
 
   implicit val longDecoder = new Decoder[Long] {
     def apply(index: Int, row: Row) =
