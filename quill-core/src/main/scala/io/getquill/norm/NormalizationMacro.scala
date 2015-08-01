@@ -8,7 +8,7 @@ import io.getquill.ast.Expr
 import io.getquill.ast.ExprShow.exprShow
 import io.getquill.util.ImplicitResolution
 import io.getquill.util.Show._
-import io.getquill.lifting.Parser
+import io.getquill.impl.Parser
 
 trait NormalizationMacro extends ImplicitResolution with Parser with SelectNormalization with SelectExtraction {
 

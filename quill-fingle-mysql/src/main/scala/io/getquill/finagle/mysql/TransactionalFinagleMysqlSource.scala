@@ -6,7 +6,7 @@ import com.twitter.util.Future
 
 trait TransactionalFinagleMysqlSource extends FinagleMysqlSource {
 
-  override protected val client: Client with Transactions = FinagleMysqlClient(config)
+	override protected val client: Client with Transactions = FinagleMysqlClient(config)
 
   def transaction[T](f: FinagleMysqlSource => Future[T]) =
     client.transaction { transactional =>

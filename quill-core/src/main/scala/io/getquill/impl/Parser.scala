@@ -1,4 +1,4 @@
-package io.getquill.lifting
+package io.getquill.impl
 
 import scala.reflect.ClassTag
 import scala.reflect.macros.whitebox.Context
@@ -28,7 +28,7 @@ import io.getquill.norm.BetaReduction
 import io.getquill.util.TreeSubstitution
 import io.getquill.util.Messages
 
-trait Parser extends TreeSubstitution with Messages {
+trait Parser extends TreeSubstitution with Quotation with Messages {
 
   val c: Context
   import c.universe.{ Expr => _, Ident => _, Constant => _, _ }
@@ -42,6 +42,8 @@ trait Parser extends TreeSubstitution with Messages {
 
     def unapply(tree: Tree): Option[T] =
       tree match {
+        case tree if (tree.tpe.erasure =:= c.weakTypeOf[Quoted[_]]) =>
+          unapply(unquoteTree(tree))
         case q"((..$params) => $body).apply(..$actuals)" =>
           unapply(substituteTree(body, params, actuals))
         case other =>

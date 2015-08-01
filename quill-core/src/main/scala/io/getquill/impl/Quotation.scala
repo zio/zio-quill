@@ -6,8 +6,9 @@ import scala.annotation.StaticAnnotation
 
 trait Quoted[T]
 
-class Quotation(val c: Context) extends Messages {
+trait Quotation extends Messages {
 
+  val c: Context
   import c.universe._
 
   case class QuotedTree(tree: Any) extends StaticAnnotation
@@ -21,10 +22,13 @@ class Quotation(val c: Context) extends Messages {
       }
     """
 
-  def unquote[T](quoted: c.Expr[Quoted[T]]) = {
+  def unquote[T](quoted: c.Expr[Quoted[T]]) =
+    unquoteTree(quoted.tree)
+
+  protected def unquoteTree[T](tree: Tree) = {
     val method =
-      quoted.tree.tpe.decls.find(_.name.decodedName.toString == "tree")
-        .getOrElse(fail(s"Can't find the tree method at ${quoted.tree}: ${quoted.tree.tpe}"))
+      tree.tpe.decls.find(_.name.decodedName.toString == "tree")
+        .getOrElse(fail(s"Can't find the tree method at ${tree}: ${tree.tpe}"))
     val annotation =
       method.annotations.headOption
         .getOrElse(fail(s"Can't find the QuotedTree annotation at $method"))

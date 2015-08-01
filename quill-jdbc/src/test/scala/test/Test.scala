@@ -10,10 +10,12 @@ case class Street(id: Long, name: String, city: String)
 object Test extends App {
 
   object db extends PooledJdbcSource
+  
+  val name = quote("test")
 
   def q1 =
     quote {
-      from[Person].filter(p => p.name == p.surname).map(p => (p.name, p.age))
+      from[Person].filter(p => p.name == name).map(p => (p.name, p.age))
     }
   db.run(q1)
 
