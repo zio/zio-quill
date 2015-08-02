@@ -1,15 +1,18 @@
 package test
 
 import io.getquill._
-import io.getquill.jdbc.PooledJdbcSource
+import io.getquill.jdbc.JdbcSource
 
 case class Person(id: Long, name: String, surname: String, age: Int)
 case class Address(id: Long, personId: Long, streetId: Long, number: Int)
 case class Street(id: Long, name: String, city: String)
 
 object Test extends App {
+  
+  // all[Person].filter(_.id == 42).update(_.age -> 33)
+  // all[Person].insert(Person(_, "nnn", "mmm", 33))
 
-  object db extends PooledJdbcSource
+  object db extends JdbcSource
   
   val name = quote("test")
 

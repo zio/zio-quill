@@ -15,10 +15,12 @@ import com.twitter.finagle.exp.mysql.Client
 import com.twitter.util.Future
 import com.twitter.finagle.exp.mysql.CanBeParameter
 import scala.reflect.ClassTag
+import com.twitter.util.Local
+import com.twitter.util.Return
 
 trait FinagleMysqlSource extends SqlSource[Row, List[Parameter]] with StrictLogging {
 
-  protected val client: Client
+  protected val client = FinagleMysqlClient(config)
 
   class ParameterEncoder[T: ClassTag](implicit cbp: CanBeParameter[T]) extends Encoder[T] {
     def apply(index: Int, value: T, row: List[Parameter]) =
@@ -56,9 +58,22 @@ trait FinagleMysqlSource extends SqlSource[Row, List[Parameter]] with StrictLogg
 
   implicit val stringEncoder = new ParameterEncoder[String]
 
+  private val currentClient = new Local[Client]
+
+  def transaction[T](f: => Future[T]) =
+    client.transaction {
+      transactional =>
+        currentClient.update(transactional)
+        f.interruptible.ensure(currentClient.clear)
+    }
+
   def run[T](sql: String, bind: List[Parameter] => List[Parameter], extractor: Row => T) = {
     logger.debug(sql)
-    client.prepare(sql).select(bind(List()): _*)(extractor)
+    withClient(_.prepare(sql).select(bind(List()): _*)(extractor))
   }
 
+  private def withClient[T](f: Client => T) =
+    currentClient().map(f).getOrElse {
+      f(client)
+    }
 }

@@ -7,6 +7,7 @@ import io.getquill.sql.SqlSource
 import java.sql.PreparedStatement
 import java.sql.Connection
 import scala.util.control.NonFatal
+import scala.util.DynamicVariable
 
 trait JdbcSource extends SqlSource[ResultSet, PreparedStatement] with StrictLogging {
 
@@ -46,24 +47,32 @@ trait JdbcSource extends SqlSource[ResultSet, PreparedStatement] with StrictLogg
     }
   }
 
-  protected def withConnection[T](f: Connection => T): T
+  protected val dataSource = DataSource(config)
 
-  def transaction[T](f: JdbcSource => T) =
+  private val currentConnection = new DynamicVariable[Option[Connection]](None)
+
+  protected def withConnection[T](f: Connection => T) =
+    currentConnection.value.map(f).getOrElse {
+      val conn = dataSource.getConnection
+      conn.setAutoCommit(true)
+      try f(conn)
+      finally conn.close
+    }
+
+  def transaction[T](f: => T) =
     withConnection { conn =>
-      conn.setAutoCommit(false)
-      try {
-        val res = f(new JdbcSource { override def withConnection[T](f: Connection => T) = f(conn) })
-        conn.commit
-        res
-      }
-      catch {
-        case NonFatal(e) =>
-          conn.rollback
-          throw e
-      }
-      finally {
-        conn.setAutoCommit(true)
-        conn.close
+      currentConnection.withValue(Some(conn)) {
+        conn.setAutoCommit(false)
+        try {
+          val res = f
+          conn.commit
+          res
+        }
+        catch {
+          case NonFatal(e) =>
+            conn.rollback
+            throw e
+        }
       }
     }
 
