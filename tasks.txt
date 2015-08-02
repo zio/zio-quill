@@ -4,25 +4,29 @@ MVP
 √ query optimization
 √ zero runtime overhead
 √ fully non-blocking
-√ free oracle and sqllite drivers
-- transactions
+√ transactions
 - inserts
 - updates
-- dynamic queries
-- macro to generate the case classes from db schema
-- full sql standard support
 - generic test suite
+- database dialects (db2, derby, h2, hsql, mysql, oracle, postgres, sqlserver)
+- full sql support
+- compile-time query validation using db
 - quill-jdbc
 - quill-finagle-mysql
 - quill-finagle-postgres
-- quill-doobie
+- quill-postgresql-async
+- quill-mysql-async
 - master slave out-of-the-box
 - custom encoders
+- jekyll website w/ docs
+- documentation w/ https://github.com/tpolecat/tut
+- dynamic queries
 
 Later
 
+- quill-doobie
+- macro to generate the case classes from db schema
 - custom functions
-- compile-time query validation using the db
 - migrations
 - optimistic offline locking
 - batch queries
@@ -30,8 +34,7 @@ Later
 - sbt plugin (rake)
 - transaction isolations
 - sql interpolation
-- easy crud (see scaladays talk)
-- automatic migration from slick
+- easy crud (https://github.com/strongtyped/active-slick)
 - cached queries
 - nested transactions (save points)
 - insistence layer
