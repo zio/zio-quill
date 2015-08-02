@@ -13,10 +13,17 @@ import com.twitter.finagle.exp.mysql.CanBeParameter._
 import com.twitter.finagle.exp.mysql.Parameter._
 import com.twitter.finagle.exp.mysql.Client
 import com.twitter.util.Future
+import com.twitter.finagle.exp.mysql.CanBeParameter
+import scala.reflect.ClassTag
 
 trait FinagleMysqlSource extends SqlSource[Row, List[Parameter]] with StrictLogging {
 
   protected val client: Client
+
+  class ParameterEncoder[T: ClassTag](implicit cbp: CanBeParameter[T]) extends Encoder[T] {
+    def apply(index: Int, value: T, row: List[Parameter]) =
+      row :+ (value: Parameter)
+  }
 
   implicit val longDecoder = new Decoder[Long] {
     def apply(index: Int, row: Row) =
@@ -26,11 +33,7 @@ trait FinagleMysqlSource extends SqlSource[Row, List[Parameter]] with StrictLogg
       }
   }
 
-  implicit val longEncoder = new Encoder[Long] {
-    def apply(index: Int, value: Long, row: List[Parameter]) = {
-      row :+ (value: Parameter)
-    }
-  }
+  implicit val longEncoder = new ParameterEncoder[Long]
 
   implicit val intDecoder = new Decoder[Int] {
     def apply(index: Int, row: Row) =
@@ -41,11 +44,7 @@ trait FinagleMysqlSource extends SqlSource[Row, List[Parameter]] with StrictLogg
       }
   }
 
-  implicit val intEncoder = new Encoder[Int] {
-    def apply(index: Int, value: Int, row: List[Parameter]) = {
-      row :+ (value: Parameter)
-    }
-  }
+  implicit val intEncoder = new ParameterEncoder[Int]
 
   implicit val stringDecoder = new Decoder[String] {
     def apply(index: Int, row: Row) =
@@ -55,11 +54,7 @@ trait FinagleMysqlSource extends SqlSource[Row, List[Parameter]] with StrictLogg
       }
   }
 
-  implicit val stringEncoder = new Encoder[String] {
-    def apply(index: Int, value: String, row: List[Parameter]) = {
-      row :+ (value: Parameter)
-    }
-  }
+  implicit val stringEncoder = new ParameterEncoder[String]
 
   def run[T](sql: String, bind: List[Parameter] => List[Parameter], extractor: Row => T) = {
     logger.debug(sql)
