@@ -1,4 +1,4 @@
-MVP
+MVP - mid-september
 
 √ plain case classes
 √ query optimization
@@ -32,6 +32,7 @@ Later
 - batch queries
 - automatic batching (using clump?)
 - sbt plugin (rake)
+- non-sql sources (mongo, graphql, in-memory collections)
 - transaction isolations
 - sql interpolation
 - easy crud (https://github.com/strongtyped/active-slick)
