@@ -53,7 +53,7 @@ trait Parser extends TreeSubstitution with Quotation with Messages {
 
   val query: Extractor[Query] = Extractor[Query] {
 
-    case q"io.getquill.`package`.from[${ t: Type }]" =>
+    case q"io.getquill.`package`.table[${ t: Type }]" =>
       Table(t.typeSymbol.name.decodedName.toString)
 
     case q"$source.filter(($alias) => $body)" =>

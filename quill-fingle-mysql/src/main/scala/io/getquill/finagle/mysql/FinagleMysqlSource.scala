@@ -67,7 +67,7 @@ trait FinagleMysqlSource extends SqlSource[Row, List[Parameter]] with StrictLogg
         f.interruptible.ensure(currentClient.clear)
     }
 
-  def run[T](sql: String, bind: List[Parameter] => List[Parameter], extractor: Row => T) = {
+  def query[T](sql: String, bind: List[Parameter] => List[Parameter], extractor: Row => T) = {
     logger.debug(sql)
     withClient(_.prepare(sql).select(bind(List()): _*)(extractor))
   }

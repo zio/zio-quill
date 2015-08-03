@@ -12,9 +12,9 @@ trait PeopleSpec extends Spec {
   val `Ex 1 differences` =
     quote {
       for {
-        c <- from[Couple]
-        w <- from[Person]
-        m <- from[Person] if (c.her == w.name && c.him == m.name && w.age > m.age)
+        c <- table[Couple]
+        w <- table[Person]
+        m <- table[Person] if (c.her == w.name && c.him == m.name && w.age > m.age)
       } yield {
         (w.name, w.age - m.age)
       }
@@ -24,7 +24,7 @@ trait PeopleSpec extends Spec {
   val `Ex 2 rangeSimple` = quote {
     (a: Int, b: Int) =>
       for {
-        u <- from[Person] if (a <= u.age && u.age < b)
+        u <- table[Person] if (a <= u.age && u.age < b)
       } yield {
         u
       }
@@ -37,7 +37,7 @@ trait PeopleSpec extends Spec {
     quote {
       (p: Int => Boolean) =>
         for {
-          u <- from[Person] if (p(u.age))
+          u <- table[Person] if (p(u.age))
         } yield {
           u
         }
@@ -52,7 +52,7 @@ trait PeopleSpec extends Spec {
     val range = quote {
       (a: Int, b: Int) =>
         for {
-          u <- from[Person] if (a <= u.age && u.age < b)
+          u <- table[Person] if (a <= u.age && u.age < b)
         } yield {
           u
         }
@@ -60,7 +60,7 @@ trait PeopleSpec extends Spec {
     val ageFromName = quote {
       (s: String) =>
         for {
-          u <- from[Person] if (s == u.name)
+          u <- table[Person] if (s == u.name)
         } yield {
           u.age
         }

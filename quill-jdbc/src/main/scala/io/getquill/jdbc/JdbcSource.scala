@@ -76,7 +76,7 @@ trait JdbcSource extends SqlSource[ResultSet, PreparedStatement] with StrictLogg
       }
     }
 
-  def run[T](sql: String, bind: PreparedStatement => PreparedStatement, extractor: ResultSet => T) = {
+  def query[T](sql: String, bind: PreparedStatement => PreparedStatement, extractor: ResultSet => T) = {
     logger.debug(sql)
     withConnection { conn =>
       val ps = bind(conn.prepareStatement(sql))
