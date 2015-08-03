@@ -7,9 +7,20 @@ import io.getquill.norm.NormalizationMacro
 import io.getquill.util.Messages
 import io.getquill.util.Show.Shower
 import io.getquill.impl.Encoder
+import io.getquill.impl.Quoted
+import io.getquill.impl.Quotation
 
-class SqlSourceMacro(val c: Context) extends NormalizationMacro with Messages {
+class SqlSourceMacro(val c: Context) extends NormalizationMacro with Messages with Quotation {
   import c.universe._
+
+  def runQuoted[R, S, T](q: Expr[Quoted[Queryable[T]]])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]): Tree =
+    run[R, S, T](q.tree, List(), List())
+
+  def run1Quoted[P1, R: WeakTypeTag, S: WeakTypeTag, T: WeakTypeTag](q: Expr[Quoted[P1 => Queryable[T]]])(p1: Expr[P1]): Tree =
+    runParametrized[R, S, T](unquote(q), List(p1))
+
+  def run2Quoted[P1, P2, R: WeakTypeTag, S: WeakTypeTag, T: WeakTypeTag](q: Expr[Quoted[(P1, P2) => Queryable[T]]])(p1: Expr[P1], p2: Expr[P2]): Tree =
+    runParametrized[R, S, T](unquote(q), List(p1, p2))
 
   def run[R, S, T](q: Expr[Queryable[T]])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]): Tree =
     run[R, S, T](q.tree, List(), List())
