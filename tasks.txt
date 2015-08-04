@@ -24,6 +24,7 @@ MVP - mid-september
 
 Later
 
+- upserts
 - quill-doobie
 - macro to generate the case classes from db schema
 - custom functions
