@@ -51,7 +51,7 @@ class SqlQueryMacro(val c: Context) extends NormalizationMacro with Messages {
             $applyEncoders
             r
           }
-          ${c.prefix}.queryRun[$t]($sql, encode _, $extractor)
+          ${c.prefix}.query[$t]($sql, encode _, $extractor)
       }  
     """
   }

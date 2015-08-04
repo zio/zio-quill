@@ -46,7 +46,7 @@ class SqlInsertMacro(val c: Context) extends NormalizationMacro with Messages {
           }  
       """
     q"""
-        ${c.prefix}.insertRun($sql,  $values.map(v => (s: $s) => $bind(s, v)))
+        ${c.prefix}.insert($sql,  $values.map(v => (s: $s) => $bind(s, v)))
     """
   }
 

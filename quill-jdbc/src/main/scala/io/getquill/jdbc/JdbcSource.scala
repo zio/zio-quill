@@ -75,7 +75,7 @@ trait JdbcSource extends SqlSource[ResultSet, PreparedStatement] with StrictLogg
       }
     }
 
-  def insertRun(sql: String, bindList: List[PreparedStatement => PreparedStatement]) = {
+  def insert(sql: String, bindList: List[PreparedStatement => PreparedStatement]) = {
     logger.debug(sql)
     withConnection { conn =>
       val ps = conn.prepareStatement(sql)
@@ -87,7 +87,7 @@ trait JdbcSource extends SqlSource[ResultSet, PreparedStatement] with StrictLogg
     }
   }
 
-  def queryRun[T](sql: String, bind: PreparedStatement => PreparedStatement, extractor: ResultSet => T) = {
+  def query[T](sql: String, bind: PreparedStatement => PreparedStatement, extractor: ResultSet => T) = {
     logger.debug(sql)
     withConnection { conn =>
       val ps = bind(conn.prepareStatement(sql))
