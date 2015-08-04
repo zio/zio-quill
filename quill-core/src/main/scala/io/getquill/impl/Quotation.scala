@@ -4,7 +4,7 @@ import scala.reflect.macros.whitebox.Context
 import io.getquill.util.Messages
 import scala.annotation.StaticAnnotation
 
-trait Quoted[T]
+trait Quoted[+T]
 
 trait Quotation extends Messages {
 

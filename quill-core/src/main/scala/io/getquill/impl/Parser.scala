@@ -42,10 +42,12 @@ trait Parser extends TreeSubstitution with Quotation with Messages {
 
     def unapply(tree: Tree): Option[T] =
       tree match {
-        case tree if (tree.tpe.erasure =:= c.weakTypeOf[Quoted[_]]) =>
-          unapply(unquoteTree(tree))
         case q"((..$params) => $body).apply(..$actuals)" =>
           unapply(substituteTree(body, params, actuals))
+        case q"io.getquill.`package`.unquote[$t]($quoted)" =>
+          unapply(unquoteTree(quoted))
+        case tree if (tree.tpe <:< c.weakTypeOf[Quoted[Any]] && !(tree.tpe <:< c.weakTypeOf[Null])) =>
+          unapply(unquoteTree(tree))
         case other =>
           p.lift(tree)
       }

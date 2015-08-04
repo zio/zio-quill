@@ -12,7 +12,7 @@ package object getquill {
 
   def table[T]: TableQueryable[T] = NonQuotedException()
 
-  def quote[T](body: T): Any = macro Macro.quote[T]
+  implicit def quote[T](body: T): Quoted[T] = macro Macro.quote[T]
   
   implicit def unquote[T](quoted: Quoted[T]): T = macro Macro.unquote[T]
 }
