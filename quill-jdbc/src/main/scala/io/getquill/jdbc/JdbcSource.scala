@@ -67,8 +67,7 @@ trait JdbcSource extends SqlSource[ResultSet, PreparedStatement] with StrictLogg
           val res = f
           conn.commit
           res
-        }
-        catch {
+        } catch {
           case NonFatal(e) =>
             conn.rollback
             throw e
@@ -76,7 +75,19 @@ trait JdbcSource extends SqlSource[ResultSet, PreparedStatement] with StrictLogg
       }
     }
 
-  def query[T](sql: String, bind: PreparedStatement => PreparedStatement, extractor: ResultSet => T) = {
+  def insertRun(sql: String, bindList: List[PreparedStatement => PreparedStatement]) = {
+    logger.debug(sql)
+    withConnection { conn =>
+      val ps = conn.prepareStatement(sql)
+      for (bind <- bindList) {
+        bind(ps)
+        ps.addBatch
+      }
+      ps.executeBatch
+    }
+  }
+
+  def queryRun[T](sql: String, bind: PreparedStatement => PreparedStatement, extractor: ResultSet => T) = {
     logger.debug(sql)
     withConnection { conn =>
       val ps = bind(conn.prepareStatement(sql))

@@ -6,11 +6,10 @@ import io.getquill.impl.Quoted
 import io.getquill.impl.Macro
 import io.getquill.impl.Queryable
 import io.getquill.impl.NonQuotedException
-import io.getquill.impl.TableQueryable
 
 package object getquill {
 
-  def table[T]: TableQueryable[T] = NonQuotedException()
+  def table[T]: Queryable[T] = NonQuotedException()
 
   implicit def quote[T](body: T): Quoted[T] = macro Macro.quote[T]
   

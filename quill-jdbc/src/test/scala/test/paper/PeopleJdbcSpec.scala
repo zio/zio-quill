@@ -9,6 +9,10 @@ class PeopleJdbcSpec extends PeopleSpec {
 
   object peopleDB extends JdbcSource
 
+  "insert" in {
+    peopleDB.insert(table[Person].map(p => (p.name, p.age)))(List(("test", 99)))
+  }
+
   "Example 1 - differences" in {
     peopleDB.transaction { peopleDB.query(`Ex 1 differences`) } mustEqual `Ex 1 expected result`
   }

@@ -12,10 +12,3 @@ sealed trait Queryable[+T] {
 
   def filter(f: T => Any): Queryable[T] = NonQuotedException()
 }
-
-sealed trait TableQueryable[+T] extends Queryable[T] {
-
-  override def map[R](f: T => R): TableQueryable[R] = NonQuotedException()
-  override def withFilter(f: T => Any): TableQueryable[T] = NonQuotedException()
-  override def filter(f: T => Any): TableQueryable[T] = NonQuotedException()
-}

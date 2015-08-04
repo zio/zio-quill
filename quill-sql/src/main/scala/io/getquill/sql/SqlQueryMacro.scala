@@ -8,7 +8,7 @@ import io.getquill.util.Messages
 import io.getquill.util.Show.Shower
 import io.getquill.impl.Encoder
 
-class SqlSourceMacro(val c: Context) extends NormalizationMacro with Messages {
+class SqlQueryMacro(val c: Context) extends NormalizationMacro with Messages {
   import c.universe._
 
   def query[R, S, T](q: Expr[Queryable[T]])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]): Tree =
@@ -51,14 +51,14 @@ class SqlSourceMacro(val c: Context) extends NormalizationMacro with Messages {
             $applyEncoders
             r
           }
-          ${c.prefix}.query[$t]($sql, encode _, $extractor)
+          ${c.prefix}.queryRun[$t]($sql, encode _, $extractor)
       }  
     """
   }
 
   private def inferEncoder[R](tpe: Type)(implicit r: WeakTypeTag[R]) = {
-      def encoderType[T, R](implicit t: WeakTypeTag[T], r: WeakTypeTag[R]) =
-        c.weakTypeTag[Encoder[R, T]]
+    def encoderType[T, R](implicit t: WeakTypeTag[T], r: WeakTypeTag[R]) =
+      c.weakTypeTag[Encoder[R, T]]
     inferImplicitValueWithFallback(encoderType(c.WeakTypeTag(tpe), r).tpe, c.prefix.tree.tpe, c.prefix.tree)
   }
 
