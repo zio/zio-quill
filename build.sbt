@@ -1,6 +1,7 @@
 
 lazy val root = 
   (project in file("."))
+    .settings(scalaVersion := "2.11.7")
     .aggregate(`quill-core`, `quill-sql`, `quill-jdbc`, `quill-finagle-mysql`)
 
 lazy val `quill-core` = 
@@ -36,7 +37,7 @@ lazy val `quill-finagle-mysql` =
 
 lazy val commonSettings = releaseSettings ++ Seq(
   organization := "io.getquill",
-  scalaVersion := "2.11.5",
+  scalaVersion := "2.11.7",
   libraryDependencies ++= Seq(
     "org.scalatest" %% "scalatest" % "2.2.4" % "test"
   ),
