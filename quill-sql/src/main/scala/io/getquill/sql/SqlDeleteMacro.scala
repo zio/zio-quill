@@ -1,32 +1,33 @@
 package io.getquill.sql
 
 import scala.reflect.macros.whitebox.Context
-import SqlQueryShow.sqlQueryShow
 import io.getquill.impl.Queryable
 import io.getquill.norm.NormalizationMacro
 import io.getquill.util.Messages
 import io.getquill.util.Show.Shower
 import io.getquill.impl.Encoder
 
-class SqlQueryMacro(val c: Context) extends NormalizationMacro with Messages {
+class SqlDeleteMacro(val c: Context) extends NormalizationMacro with Messages {
   import c.universe._
+  
+  import SqlDeleteShow._
 
-  def query[R, S, T](q: Expr[Queryable[T]])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]): Tree =
-    query[R, S, T](q.tree, List(), List())
+  def delete[R, S, T](q: Expr[Queryable[T]])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]): Tree =
+    delete[R, S, T](q.tree, List(), List())
 
-  def query1[P1, R: WeakTypeTag, S: WeakTypeTag, T: WeakTypeTag](q: Expr[P1 => Queryable[T]])(p1: Expr[P1]): Tree =
-    queryParametrized[R, S, T](q.tree, List(p1))
+  def delete1[P1, R: WeakTypeTag, S: WeakTypeTag, T: WeakTypeTag](q: Expr[P1 => Queryable[T]])(p1: Expr[P1]): Tree =
+    deleteParametrized[R, S, T](q.tree, List(p1))
 
-  def query2[P1, P2, R: WeakTypeTag, S: WeakTypeTag, T: WeakTypeTag](q: Expr[(P1, P2) => Queryable[T]])(p1: Expr[P1], p2: Expr[P2]): Tree =
-    queryParametrized[R, S, T](q.tree, List(p1, p2))
+  def delete2[P1, P2, R: WeakTypeTag, S: WeakTypeTag, T: WeakTypeTag](q: Expr[(P1, P2) => Queryable[T]])(p1: Expr[P1], p2: Expr[P2]): Tree =
+    deleteParametrized[R, S, T](q.tree, List(p1, p2))
 
-  private def queryParametrized[R, S, T](q: Tree, bindings: List[Expr[Any]])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]) =
+  private def deleteParametrized[R, S, T](q: Tree, bindings: List[Expr[Any]])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]) =
     q match {
       case q"(..$params) => $body" =>
-        query[R, S, T](body, params, bindings)
+        delete[R, S, T](body, params, bindings)
     }
 
-  private def query[R, S, T](q: Tree, params: List[ValDef], bindings: List[Expr[Any]])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]) = {
+  private def delete[R, S, T](q: Tree, params: List[ValDef], bindings: List[Expr[Any]])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]) = {
     val bindingMap =
       (for ((param, binding) <- params.zip(bindings)) yield {
         identExtractor(param) -> (param, binding)
@@ -51,7 +52,7 @@ class SqlQueryMacro(val c: Context) extends NormalizationMacro with Messages {
             $applyEncoders
             r
           }
-          ${c.prefix}.query[$t]($sql, encode _, $extractor)
+          ${c.prefix}.update($sql, List(encode _))
       }  
     """
   }

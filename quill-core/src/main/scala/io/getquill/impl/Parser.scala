@@ -53,22 +53,22 @@ trait Parser extends TreeSubstitution with Quotation with Messages {
       }
   }
 
-  val query: Extractor[Query] = Extractor[Query] {
+  val queryExtractor: Extractor[Query] = Extractor[Query] {
 
     case q"io.getquill.`package`.table[${ t: Type }]" =>
       Table(t.typeSymbol.name.decodedName.toString)
 
     case q"$source.filter(($alias) => $body)" =>
-      Filter(query(source), ident(alias), expr(body))
+      Filter(queryExtractor(source), identExtractor(alias), exprExtractor(body))
 
     case q"$source.withFilter(($alias) => $body)" if (alias.name.toString.contains("ifrefutable")) =>
-      query(source)
+      queryExtractor(source)
 
     case q"$source.withFilter(($alias) => $body)" =>
-      Filter(query(source), ident(alias), expr(body))
+      Filter(queryExtractor(source), identExtractor(alias), exprExtractor(body))
 
     case q"$source.map[$t](($alias) => $body)" =>
-      Map(query(source), ident(alias), expr(body))
+      Map(queryExtractor(source), identExtractor(alias), exprExtractor(body))
 
     case q"$source.flatMap[$t](($alias) => $matchAlias match { case (..$a) => $body })" if (alias == matchAlias) =>
       val aliases =
@@ -78,46 +78,46 @@ trait Parser extends TreeSubstitution with Quotation with Messages {
         }
       val reduction =
         for ((a, i) <- aliases.zipWithIndex) yield {
-          a -> Property(expr(alias), s"_${i + 1}")
+          a -> Property(exprExtractor(alias), s"_${i + 1}")
         }
-      FlatMap(query(source), ident(alias), BetaReduction(query(body))(reduction.toMap))
+      FlatMap(queryExtractor(source), identExtractor(alias), BetaReduction(queryExtractor(body))(reduction.toMap))
 
     case q"$source.flatMap[$t](($alias) => $body)" =>
-      FlatMap(query(source), ident(alias), query(body))
+      FlatMap(queryExtractor(source), identExtractor(alias), queryExtractor(body))
   }
 
-  val expr: Extractor[Expr] = Extractor[Expr] {
+  val exprExtractor: Extractor[Expr] = Extractor[Expr] {
 
-    case q"$a - $b"  => Subtract(expr(a), expr(b))
-    case q"$a + $b"  => Add(expr(a), expr(b))
-    case q"$a == $b" => Equals(expr(a), expr(b))
-    case q"$a && $b" => And(expr(a), expr(b))
-    case q"$a >= $b" => GreaterThanOrEqual(expr(a), expr(b))
-    case q"$a > $b"  => GreaterThan(expr(a), expr(b))
-    case q"$a <= $b" => LessThanOrEqual(expr(a), expr(b))
-    case q"$a < $b"  => LessThan(expr(a), expr(b))
-    case q"$a / $b"  => Division(expr(a), expr(b))
-    case q"$a % $b"  => Remainder(expr(a), expr(b))
+    case q"$a - $b"  => Subtract(exprExtractor(a), exprExtractor(b))
+    case q"$a + $b"  => Add(exprExtractor(a), exprExtractor(b))
+    case q"$a == $b" => Equals(exprExtractor(a), exprExtractor(b))
+    case q"$a && $b" => And(exprExtractor(a), exprExtractor(b))
+    case q"$a >= $b" => GreaterThanOrEqual(exprExtractor(a), exprExtractor(b))
+    case q"$a > $b"  => GreaterThan(exprExtractor(a), exprExtractor(b))
+    case q"$a <= $b" => LessThanOrEqual(exprExtractor(a), exprExtractor(b))
+    case q"$a < $b"  => LessThan(exprExtractor(a), exprExtractor(b))
+    case q"$a / $b"  => Division(exprExtractor(a), exprExtractor(b))
+    case q"$a % $b"  => Remainder(exprExtractor(a), exprExtractor(b))
 
-    case `ref`(ref)  => ref
+    case `refExtractor`(ref)  => ref
   }
 
-  val ref: Extractor[Ref] = Extractor[Ref] {
-    case `value`(value)  => value
-    case `ident`(ident)  => ident
-    case q"$e.$property" => Property(expr(e), property.decodedName.toString)
+  val refExtractor: Extractor[Ref] = Extractor[Ref] {
+    case `valueExtractor`(value)  => value
+    case `identExtractor`(ident)  => ident
+    case q"$e.$property" => Property(exprExtractor(e), property.decodedName.toString)
   }
 
-  val value: Extractor[Ref] = Extractor[Ref] {
+  val valueExtractor: Extractor[Ref] = Extractor[Ref] {
     case q"null"                         => NullValue
     case Literal(c.universe.Constant(v)) => Constant(v)
-    case q"((..$v))" if (v.size > 1)     => Tuple(v.map(expr(_)))
+    case q"((..$v))" if (v.size > 1)     => Tuple(v.map(exprExtractor(_)))
   }
 
-  val ident: Extractor[Ident] = Extractor[Ident] {
+  val identExtractor: Extractor[Ident] = Extractor[Ident] {
     case t: ValDef                        => Ident(t.name.decodedName.toString)
     case c.universe.Ident(TermName(name)) => Ident(name)
-    case q"$i: $typ"                      => ident(i)
+    case q"$i: $typ"                      => identExtractor(i)
     case c.universe.Bind(TermName(name), c.universe.Ident(termNames.WILDCARD)) =>
       Ident(name)
   }

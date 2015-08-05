@@ -13,4 +13,8 @@ abstract class SqlSource[R: ClassTag, S: ClassTag] extends io.getquill.impl.Sour
   
   
   def insert[T](q: Quoted[Queryable[T]])(values: Iterable[T]): Any = macro SqlInsertMacro.insert[R, S, T]
+  
+  def delete[T](q: Queryable[T]): Any = macro SqlDeleteMacro.delete[R, S, T]
+  def delete[P1, T](q: P1 => Queryable[T])(p1: P1): Any = macro SqlDeleteMacro.delete1[P1, R, S, T]
+  def delete[P1, P2, T](q: (P1, P2) => Queryable[T])(p1: P1, p2: P2): Any = macro SqlDeleteMacro.delete2[P1, P2, R, S, T]
 }

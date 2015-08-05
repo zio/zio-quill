@@ -9,8 +9,10 @@ class PeopleJdbcSpec extends PeopleSpec {
 
   object peopleDB extends JdbcSource
 
-  "insert" in {
-    peopleDB.insert(table[Person].map(p => (p.name, p.age)))(List(("test", 99)))
+  peopleDB.transaction {
+    peopleDB.delete(table[Person].filter(_.age > 0))
+    peopleDB.insert(peopleInsert)(peopleEntries)
+    peopleDB.insert(couplesInsert)(couplesEntries)
   }
 
   "Example 1 - differences" in {

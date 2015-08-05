@@ -17,6 +17,7 @@ import com.twitter.finagle.exp.mysql.CanBeParameter
 import scala.reflect.ClassTag
 import com.twitter.util.Local
 import com.twitter.util.Return
+import com.twitter.finagle.exp.mysql.Result
 
 trait FinagleMysqlSource extends SqlSource[Row, List[Parameter]] with StrictLogging {
 
@@ -65,6 +66,15 @@ trait FinagleMysqlSource extends SqlSource[Row, List[Parameter]] with StrictLogg
       transactional =>
         currentClient.update(transactional)
         f.interruptible.ensure(currentClient.clear)
+    }
+
+  def update(sql: String, bindList: List[List[Parameter] => List[Parameter]]): Future[List[Result]] =
+    bindList match {
+      case Nil =>
+        Future.value(List())
+      case bind :: tail =>
+        withClient(_.prepare(sql)(bind(List()): _*))
+          .flatMap(_ => update(sql, tail))
     }
 
   def query[T](sql: String, bind: List[Parameter] => List[Parameter], extractor: Row => T) = {

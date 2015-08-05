@@ -1,7 +1,6 @@
 package io.getquill.sql
 
 import scala.reflect.macros.whitebox.Context
-import SqlQueryShow.sqlQueryShow
 import io.getquill.impl.Queryable
 import io.getquill.norm.NormalizationMacro
 import io.getquill.util.Messages
@@ -20,7 +19,7 @@ class SqlInsertMacro(val c: Context) extends NormalizationMacro with Messages {
     // TODO extractor is not needed
     val NormalizedQuery(query, extractor) = normalize(q.tree)(d, r, t)
     val sqlQuery = SqlQuery(query)
-    val sql = sqlInsertShow.show(sqlQuery)
+    val sql = sqlQuery.show
     info(sql)
     val bindings =
       sqlQuery.select match {
@@ -46,7 +45,7 @@ class SqlInsertMacro(val c: Context) extends NormalizationMacro with Messages {
           }  
       """
     q"""
-        ${c.prefix}.insert($sql,  $values.map(v => (s: $s) => $bind(s, v)))
+        ${c.prefix}.update($sql,  $values.map(v => (s: $s) => $bind(s, v)))
     """
   }
 

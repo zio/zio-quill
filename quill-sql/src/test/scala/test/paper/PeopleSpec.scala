@@ -9,6 +9,25 @@ case class Couple(her: String, him: String)
 
 trait PeopleSpec extends Spec {
 
+  val peopleInsert =
+    quote(table[Person].map(p => (p.name, p.age)))
+
+  val peopleEntries = List(
+    ("Alex", 60),
+    ("Bert", 55),
+    ("Cora", 33),
+    ("Drew", 31),
+    ("Edna", 21),
+    ("Fred", 60))
+
+  val couplesInsert =
+    quote(table[Couple].map(p => (p.her, p.him)))
+
+  val couplesEntries = List(
+    ("Alex", "Bert"),
+    ("Cora", "Drew"),
+    ("Edna", "Fred"))
+
   val `Ex 1 differences` =
     quote {
       for {
