@@ -13,13 +13,15 @@ class PeopleFinagleMysqlSpec extends PeopleSpec {
 
   def await[T](future: Future[T]) = Await.result(future)
 
-  peopleDB.transaction {
-    for {
-      _ <- peopleDB.delete(table[Person].filter(_.age > 0))
-      _ <- peopleDB.insert(peopleInsert)(peopleEntries)
-      _ <- peopleDB.insert(couplesInsert)(couplesEntries)
-    } yield {}
-  }
+  override def beforeAll =
+    await(peopleDB.transaction {
+      for {
+        _ <- peopleDB.delete(table[Couple])
+        _ <- peopleDB.delete(table[Person].filter(_.age > 0))
+        _ <- peopleDB.insert(peopleInsert)(peopleEntries)
+        _ <- peopleDB.insert(couplesInsert)(couplesEntries)
+      } yield {}
+    })
 
   "Example 1 - differences" in {
     await(peopleDB.transaction(peopleDB.query(`Ex 1 differences`))) mustEqual `Ex 1 expected result`

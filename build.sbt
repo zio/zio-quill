@@ -39,10 +39,12 @@ lazy val commonSettings = releaseSettings ++ Seq(
   organization := "io.getquill",
   scalaVersion := "2.11.7",
   libraryDependencies ++= Seq(
-    "org.scalatest" %% "scalatest" % "2.2.4" % "test"
+    "org.scalatest" %% "scalatest"       % "2.2.4" % "test",
+    "ch.qos.logback" % "logback-classic" % "1.1.3" % "test"
   ),
   scalacOptions ++= Seq("-deprecation", "-feature", "-Xfatal-warnings"),
   publishMavenStyle := true,
+  parallelExecution in Test := false,
   publishTo := {
     val nexus = "https://oss.sonatype.org/"
     if (isSnapshot.value)
