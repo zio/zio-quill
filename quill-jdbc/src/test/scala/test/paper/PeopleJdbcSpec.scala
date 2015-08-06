@@ -9,7 +9,9 @@ class PeopleJdbcSpec extends PeopleSpec {
 
   object peopleDB extends JdbcSource
   
-//  peopleDB.run(table[Person].delete)
+  peopleDB.run(table[Person].delete)
+  peopleDB.run(table[Person].insert(_.age -> 10))
+  peopleDB.run(table[Person].update(_.age -> 10, _.name -> "aaa"))
 
 //  override def beforeAll =
 //    peopleDB.transaction {

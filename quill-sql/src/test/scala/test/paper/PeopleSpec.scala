@@ -9,9 +9,6 @@ case class Couple(her: String, him: String)
 
 trait PeopleSpec extends Spec {
 
-  table[Person].filter(_.name == "ddd").update(p => p.age -> (p.age + 10))
-  table[Person].insert(_.name -> "aa", _.age -> 10)
-
   val peopleInsert =
     quote(table[Person].map(p => (p.name, p.age)))
 

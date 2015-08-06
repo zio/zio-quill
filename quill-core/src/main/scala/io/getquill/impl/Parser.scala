@@ -59,7 +59,7 @@ trait Parser extends TreeSubstitution with Quotation with Messages {
   }
 
   val actionExtractor: Extractor[Action] = Extractor[Action] {
-    case q"$query.insert(..$assignments)" =>
+    case q"$query.$method(..$assignments)" if (method.decodedName.toString == "update") =>
       Update(queryExtractor(query), assignments.map(assignmentExtractor(_)))
     case q"$query.insert(..$assignments)" =>
       Insert(queryExtractor(query), assignments.map(assignmentExtractor(_)))
@@ -68,7 +68,7 @@ trait Parser extends TreeSubstitution with Quotation with Messages {
   }
 
   val assignmentExtractor: Extractor[Assignment] = Extractor[Assignment] {
-    case q"((x) => $expr -> $value)" =>
+    case q"(($x) => scala.this.Predef.ArrowAssoc[$t]($expr).->[$v]($value))" =>
       Assignment(exprExtractor(expr), exprExtractor(value))
   }
 
