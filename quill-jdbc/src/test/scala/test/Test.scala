@@ -21,7 +21,7 @@ object Test extends App {
     quote {
       table[Person].filter(p => p.name == name).map(p => (p.name, p.age))
     }
-  db.query(q1)
+  db.run(q1)
 
   def q2 =
     quote {
@@ -33,7 +33,7 @@ object Test extends App {
       }
     }
 
-  db.query(q2)
+  db.run(q2)
 
   def q3 =
     quote {
@@ -44,7 +44,7 @@ object Test extends App {
         a
       }
     }
-  db.query(q3)
+  db.run(q3)
 
   val byName = quote {
     (name: String) => table[Person].filter(_.name == name)
@@ -54,7 +54,7 @@ object Test extends App {
     quote {
       byName("jesus")
     }
-  db.query(q4)
+  db.run(q4)
 
   val byFullName = quote {
     (name: String, surname: String) => byName(name).filter(_.surname == surname)
@@ -63,7 +63,7 @@ object Test extends App {
   val q5 = quote {
     byFullName("flavio", "brasil")
   }
-  db.query(q5)
+  db.run(q5)
 
   val nameEqualsSurname = quote {
     (p: Person) => p.name == p.surname
@@ -72,7 +72,7 @@ object Test extends App {
   val q6 = quote {
     table[Person].filter(nameEqualsSurname(_))
   }
-  db.query(q6)
+  db.run(q6)
 
   val nameIs = quote {
     (p: Person, name: String) => p.name == name
@@ -81,7 +81,7 @@ object Test extends App {
   val q7 = quote {
     table[Person].filter(nameIs(_, "flavio"))
   }
-  db.query(q7)
+  db.run(q7)
 
   val names = quote {
     table[Person].map(_.name)
@@ -95,12 +95,12 @@ object Test extends App {
       (p.name, p.age)
     }
   }
-  db.query(q8)
+  db.run(q8)
 
   val q9 = quote {
     table[Address].map(_.personId)
   }
-  db.query(q9)
+  db.run(q9)
 
   val q10 =
     quote {
@@ -111,7 +111,7 @@ object Test extends App {
         p2
       }
     }
-  db.query(q10)
+  db.run(q10)
 
   val personAndAddress =
     quote {
@@ -132,5 +132,5 @@ object Test extends App {
         (pp, aa, s.city)
       }
     }
-  //  db.query(q11)
+  //  db.run(q11)
 }

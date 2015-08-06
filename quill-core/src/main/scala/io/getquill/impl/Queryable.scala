@@ -12,3 +12,18 @@ sealed trait Queryable[+T] {
 
   def filter(f: T => Any): Queryable[T] = NonQuotedException()
 }
+
+sealed trait TableQueryable[+T] extends Queryable[T] {
+
+  def insert(f: (T => (Any, Any))*): Insertable[T] = NonQuotedException()
+  def update(f: (T => (Any, Any))*): Updatable[T] = NonQuotedException()
+  def delete: Deletable[T] = NonQuotedException()
+
+  override def withFilter(f: T => Any): TableQueryable[T] = NonQuotedException()
+  override def filter(f: T => Any): TableQueryable[T] = NonQuotedException()
+}
+
+sealed trait Action
+class Insertable[+T] extends Action
+class Updatable[+T] extends Action
+class Deletable[+T] extends Action
