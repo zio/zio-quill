@@ -27,6 +27,11 @@ import io.getquill.ast.Tuple
 import io.getquill.norm.BetaReduction
 import io.getquill.util.TreeSubstitution
 import io.getquill.util.Messages
+import io.getquill.ast.Update
+import io.getquill.ast.Assignment
+import io.getquill.ast.Insert
+import io.getquill.ast.Delete
+import io.getquill.ast.Action
 
 trait Parser extends TreeSubstitution with Quotation with Messages {
 
@@ -51,6 +56,20 @@ trait Parser extends TreeSubstitution with Quotation with Messages {
         case other =>
           p.lift(tree)
       }
+  }
+
+  val actionExtractor: Extractor[Action] = Extractor[Action] {
+    case q"$query.insert(..$assignments)" =>
+      Update(queryExtractor(query), assignments.map(assignmentExtractor(_)))
+    case q"$query.insert(..$assignments)" =>
+      Insert(queryExtractor(query), assignments.map(assignmentExtractor(_)))
+    case q"$query.delete" =>
+      Delete(queryExtractor(query))
+  }
+
+  val assignmentExtractor: Extractor[Assignment] = Extractor[Assignment] {
+    case q"((x) => $expr -> $value)" =>
+      Assignment(exprExtractor(expr), exprExtractor(value))
   }
 
   val queryExtractor: Extractor[Query] = Extractor[Query] {
@@ -88,24 +107,24 @@ trait Parser extends TreeSubstitution with Quotation with Messages {
 
   val exprExtractor: Extractor[Expr] = Extractor[Expr] {
 
-    case q"$a - $b"  => Subtract(exprExtractor(a), exprExtractor(b))
-    case q"$a + $b"  => Add(exprExtractor(a), exprExtractor(b))
-    case q"$a == $b" => Equals(exprExtractor(a), exprExtractor(b))
-    case q"$a && $b" => And(exprExtractor(a), exprExtractor(b))
-    case q"$a >= $b" => GreaterThanOrEqual(exprExtractor(a), exprExtractor(b))
-    case q"$a > $b"  => GreaterThan(exprExtractor(a), exprExtractor(b))
-    case q"$a <= $b" => LessThanOrEqual(exprExtractor(a), exprExtractor(b))
-    case q"$a < $b"  => LessThan(exprExtractor(a), exprExtractor(b))
-    case q"$a / $b"  => Division(exprExtractor(a), exprExtractor(b))
-    case q"$a % $b"  => Remainder(exprExtractor(a), exprExtractor(b))
+    case q"$a - $b"          => Subtract(exprExtractor(a), exprExtractor(b))
+    case q"$a + $b"          => Add(exprExtractor(a), exprExtractor(b))
+    case q"$a == $b"         => Equals(exprExtractor(a), exprExtractor(b))
+    case q"$a && $b"         => And(exprExtractor(a), exprExtractor(b))
+    case q"$a >= $b"         => GreaterThanOrEqual(exprExtractor(a), exprExtractor(b))
+    case q"$a > $b"          => GreaterThan(exprExtractor(a), exprExtractor(b))
+    case q"$a <= $b"         => LessThanOrEqual(exprExtractor(a), exprExtractor(b))
+    case q"$a < $b"          => LessThan(exprExtractor(a), exprExtractor(b))
+    case q"$a / $b"          => Division(exprExtractor(a), exprExtractor(b))
+    case q"$a % $b"          => Remainder(exprExtractor(a), exprExtractor(b))
 
-    case `refExtractor`(ref)  => ref
+    case `refExtractor`(ref) => ref
   }
 
   val refExtractor: Extractor[Ref] = Extractor[Ref] {
-    case `valueExtractor`(value)  => value
-    case `identExtractor`(ident)  => ident
-    case q"$e.$property" => Property(exprExtractor(e), property.decodedName.toString)
+    case `valueExtractor`(value) => value
+    case `identExtractor`(ident) => ident
+    case q"$e.$property"         => Property(exprExtractor(e), property.decodedName.toString)
   }
 
   val valueExtractor: Extractor[Ref] = Extractor[Ref] {

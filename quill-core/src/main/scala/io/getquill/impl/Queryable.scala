@@ -23,7 +23,7 @@ sealed trait TableQueryable[+T] extends Queryable[T] {
   override def filter(f: T => Any): TableQueryable[T] = NonQuotedException()
 }
 
-sealed trait Action
-class Insertable[+T] extends Action
-class Updatable[+T] extends Action
-class Deletable[+T] extends Action
+sealed trait Actionable[+T]
+class Insertable[+T] extends Actionable[T]
+class Updatable[+T] extends Actionable[T]
+class Deletable[+T] extends Actionable[T]

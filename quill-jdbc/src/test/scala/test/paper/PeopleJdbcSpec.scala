@@ -8,6 +8,8 @@ import io.getquill.jdbc.JdbcSource
 class PeopleJdbcSpec extends PeopleSpec {
 
   object peopleDB extends JdbcSource
+  
+//  peopleDB.run(table[Person].delete)
 
 //  override def beforeAll =
 //    peopleDB.transaction {
