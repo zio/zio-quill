@@ -69,7 +69,7 @@ trait Parser extends TreeSubstitution with Quotation with Messages {
 
   val assignmentExtractor: Extractor[Assignment] = Extractor[Assignment] {
     case q"(($x) => scala.this.Predef.ArrowAssoc[$t]($expr).->[$v]($value))" =>
-      Assignment(exprExtractor(expr), exprExtractor(value))
+      Assignment(propertyExtractor(expr), exprExtractor(value))
   }
 
   val queryExtractor: Extractor[Query] = Extractor[Query] {
@@ -122,9 +122,13 @@ trait Parser extends TreeSubstitution with Quotation with Messages {
   }
 
   val refExtractor: Extractor[Ref] = Extractor[Ref] {
-    case `valueExtractor`(value) => value
-    case `identExtractor`(ident) => ident
-    case q"$e.$property"         => Property(exprExtractor(e), property.decodedName.toString)
+    case `valueExtractor`(value)   => value
+    case `identExtractor`(ident)   => ident
+    case `propertyExtractor`(prop) => prop
+  }
+
+  val propertyExtractor: Extractor[Property] = Extractor[Property] {
+    case q"$e.$property" => Property(exprExtractor(e), property.decodedName.toString)
   }
 
   val valueExtractor: Extractor[Ref] = Extractor[Ref] {

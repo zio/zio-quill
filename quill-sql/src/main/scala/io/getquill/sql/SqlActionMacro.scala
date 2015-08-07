@@ -1,5 +1,6 @@
 package io.getquill.sql
 
+import ActionShow._
 import scala.reflect.macros.whitebox.Context
 import SqlQueryShow.sqlQueryShow
 import io.getquill.impl.Queryable
@@ -8,8 +9,11 @@ import io.getquill.util.Messages
 import io.getquill.util.Show.Shower
 import io.getquill.impl.Encoder
 import io.getquill.impl.Actionable
+import io.getquill.impl.Parser
+import io.getquill.util.ImplicitResolution
+import io.getquill.norm.Normalize
 
-class SqlActionMacro(val c: Context) extends NormalizationMacro with Messages {
+class SqlActionMacro(val c: Context) extends Parser with Messages with ImplicitResolution {
   import c.universe._
 
   def run[R, S, T](q: Expr[Actionable[T]])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]): Tree =
@@ -28,19 +32,37 @@ class SqlActionMacro(val c: Context) extends NormalizationMacro with Messages {
     }
 
   private def run[R, S, T](q: Tree, params: List[ValDef], bindings: List[Expr[Any]])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]) = {
-    info(actionExtractor(q).toString)
-    ???
+    val action = Normalize(actionExtractor(q))
+    val bindingMap =
+      (for ((param, binding) <- params.zip(bindings)) yield {
+        identExtractor(param) -> (param, binding)
+      }).toMap
+    val (bindedAction, bindingIdents) = ReplaceBindVariables(action)(bindingMap.keys.toList)
+    val sql = bindedAction.show
+    info(sql)
+    val applyEncoders =
+      for ((ident, index) <- bindingIdents.zipWithIndex) yield {
+        val (param, binding) = bindingMap(ident)
+        val encoder =
+          inferEncoder(param.tpt.tpe)(s)
+            .getOrElse(fail(s"Source doesn't know how do encode $param: ${param.tpt}"))
+        q"r = $encoder($index, $binding, r)"
+      }
+    q"""
+      {
+          def encode(row: $s) = {
+            var r = row
+            $applyEncoders
+            r
+          }
+          ${c.prefix}.update($sql, List(encode _))
+      }  
+    """
   }
 
   private def inferEncoder[R](tpe: Type)(implicit r: WeakTypeTag[R]) = {
     def encoderType[T, R](implicit t: WeakTypeTag[T], r: WeakTypeTag[R]) =
       c.weakTypeTag[Encoder[R, T]]
     inferImplicitValueWithFallback(encoderType(c.WeakTypeTag(tpe), r).tpe, c.prefix.tree.tpe, c.prefix.tree)
-  }
-
-  private def interpret[R, T](q: Tree)(implicit r: WeakTypeTag[R], t: WeakTypeTag[T]) = {
-    val d = c.WeakTypeTag(c.prefix.tree.tpe)
-    val NormalizedQuery(query, extractor) = normalize(q)(d, r, t)
-    (SqlQuery(query).show, extractor)
   }
 }

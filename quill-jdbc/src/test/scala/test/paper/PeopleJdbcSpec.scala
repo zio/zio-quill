@@ -9,17 +9,13 @@ class PeopleJdbcSpec extends PeopleSpec {
 
   object peopleDB extends JdbcSource
   
-  peopleDB.run(table[Person].delete)
-  peopleDB.run(table[Person].insert(_.age -> 10))
-  peopleDB.run(table[Person].update(_.age -> 10, _.name -> "aaa"))
-
-//  override def beforeAll =
-//    peopleDB.transaction {
-//      peopleDB.delete(table[Couple])
-//      peopleDB.delete(table[Person].filter(_.age > 0))
+  override def beforeAll =
+    peopleDB.transaction {
+      peopleDB.run(table[Couple].delete)
+      peopleDB.run(table[Person].filter(_.age > 0).delete)
 //      peopleDB.insert(peopleInsert)(peopleEntries)
 //      peopleDB.insert(couplesInsert)(couplesEntries)
-//    }
+    }
 
   "Example 1 - differences" in {
     peopleDB.transaction { peopleDB.run(`Ex 1 differences`) } mustEqual `Ex 1 expected result`

@@ -22,7 +22,7 @@ trait NormalizationMacro extends ImplicitResolution with Parser with SelectNorma
   case class CaseClassSelectValue(tpe: Type, params: List[List[SimpleSelectValue]]) extends SelectValue
 
   def normalize[D: WeakTypeTag, R: WeakTypeTag, T: WeakTypeTag](tree: Tree) = {
-    val query = Normalize(AvoidCapture(queryExtractor(tree)))
+    val query = Normalize(queryExtractor(tree))
     normalizedQuery[T, R](ensureFinalMap(query), inferDecoder[R, D](_))
   }
 

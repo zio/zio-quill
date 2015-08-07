@@ -4,6 +4,33 @@ import io.getquill.ast._
 
 object ReplaceBindVariables {
 
+  def apply(action: Action)(implicit vars: List[Ident]): (Action, List[Ident]) =
+    action match {
+      case Update(query, assignments) =>
+        val (qr, qrv) = apply(query)
+        val (ar, arv) = apply(assignments)
+        (Update(qr, ar), qrv ++ arv)
+      case Insert(query, assignments) =>
+        val (qr, qrv) = apply(query)
+        val (ar, arv) = apply(assignments)
+        (Update(qr, ar), qrv ++ arv)
+      case Delete(query) =>
+        val (qr, qrv) = apply(query)
+        (Delete(qr), qrv)
+    }
+
+  def apply(assignments: List[Assignment])(implicit vars: List[Ident]): (List[Assignment], List[Ident]) = {
+    val r = assignments.map(apply)
+    (r.map(_._1), r.map(_._2).flatten)
+  }
+
+  def apply(assignment: Assignment)(implicit vars: List[Ident]): (Assignment, List[Ident]) =
+    assignment match {
+      case Assignment(prop, value) =>
+        val (vr, vrv) = apply(value)
+        (Assignment(prop, vr), vrv)
+    }
+
   def apply(query: Query)(implicit vars: List[Ident]): (Query, List[Ident]) =
     query match {
       case FlatMap(q, x, p) =>
