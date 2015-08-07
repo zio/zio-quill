@@ -13,7 +13,7 @@ object ReplaceBindVariables {
       case Insert(query, assignments) =>
         val (qr, qrv) = apply(query)
         val (ar, arv) = apply(assignments)
-        (Update(qr, ar), qrv ++ arv)
+        (Insert(qr, ar), qrv ++ arv)
       case Delete(query) =>
         val (qr, qrv) = apply(query)
         (Delete(qr), qrv)

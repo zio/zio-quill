@@ -24,7 +24,10 @@ trait PeopleSpec extends Spec {
     ("Fred", 60))
 
   val couplesInsert =
-    quote(table[Couple].map(p => (p.her, p.him)))
+    quote {
+      (her: String, him: String) =>
+        table[Couple].insert(_.her -> her, _.him -> him)
+    }
 
   val couplesEntries = List(
     ("Alex", "Bert"),

@@ -8,13 +8,13 @@ import io.getquill.jdbc.JdbcSource
 class PeopleJdbcSpec extends PeopleSpec {
 
   object peopleDB extends JdbcSource
-  
+
   override def beforeAll =
     peopleDB.transaction {
       peopleDB.run(table[Couple].delete)
       peopleDB.run(table[Person].filter(_.age > 0).delete)
-//      peopleDB.insert(peopleInsert)(peopleEntries)
-//      peopleDB.insert(couplesInsert)(couplesEntries)
+      peopleDB.run(peopleInsert)(peopleEntries)
+      peopleDB.run(couplesInsert)(couplesEntries)
     }
 
   "Example 1 - differences" in {
