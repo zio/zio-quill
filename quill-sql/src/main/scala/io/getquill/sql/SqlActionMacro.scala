@@ -51,11 +51,16 @@ class SqlActionMacro(val c: Context) extends Parser with Messages with ImplicitR
       }
     q"""
       { 
-          ${c.prefix}.execute($sql, $bindings.map(value => (row: $s) => {
-            var r = row
-            ..$applyEncoders
-            r
-          }))
+        val encode =
+          if($bindings.isEmpty)
+            List(identity[$s] _)
+          else
+            $bindings.map(value => (row: $s) => {
+              var r = row
+              ..$applyEncoders
+              r
+            })
+        ${c.prefix}.execute($sql, encode)
       }  
     """
   }

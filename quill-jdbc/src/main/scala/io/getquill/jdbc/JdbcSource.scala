@@ -78,17 +78,12 @@ trait JdbcSource extends SqlSource[ResultSet, PreparedStatement] with StrictLogg
   def execute(sql: String, bindList: List[PreparedStatement => PreparedStatement]) = {
     logger.info(sql)
     withConnection { conn =>
-      bindList match {
-        case Nil =>
-          conn.prepareStatement(sql).execute
-        case bindList =>
-          val ps = conn.prepareStatement(sql)
-          for (bind <- bindList) {
-            bind(ps)
-            ps.addBatch
-          }
-          ps.executeBatch
+      val ps = conn.prepareStatement(sql)
+      for (bind <- bindList) {
+        bind(ps)
+        ps.addBatch
       }
+      ps.executeBatch
     }
   }
 
