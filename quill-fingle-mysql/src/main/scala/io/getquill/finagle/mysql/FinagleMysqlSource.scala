@@ -68,6 +68,9 @@ trait FinagleMysqlSource extends SqlSource[Row, List[Parameter]] with StrictLogg
         f.interruptible.ensure(currentClient.clear)
     }
 
+  def execute(sql: String) =
+    withClient(_.prepare(sql)())
+
   def execute(sql: String, bindList: List[List[Parameter] => List[Parameter]]): Future[List[Result]] =
     bindList match {
       case Nil =>

@@ -75,6 +75,13 @@ trait JdbcSource extends SqlSource[ResultSet, PreparedStatement] with StrictLogg
       }
     }
 
+  def execute(sql: String) = {
+    logger.info(sql)
+    withConnection {
+      _.prepareStatement(sql).executeUpdate
+    }
+  }
+
   def execute(sql: String, bindList: List[PreparedStatement => PreparedStatement]) = {
     logger.info(sql)
     withConnection { conn =>

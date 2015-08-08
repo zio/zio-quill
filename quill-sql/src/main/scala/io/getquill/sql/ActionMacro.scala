@@ -2,7 +2,7 @@ package io.getquill.sql
 
 import ActionShow._
 import scala.reflect.macros.whitebox.Context
-import SqlQueryShow.sqlQueryShow
+import QueryShow.sqlQueryShow
 import io.getquill.impl.Queryable
 import io.getquill.norm.NormalizationMacro
 import io.getquill.util.Messages
@@ -14,11 +14,15 @@ import io.getquill.impl.Parser
 import io.getquill.util.ImplicitResolution
 import io.getquill.norm.Normalize
 
-class SqlActionMacro(val c: Context) extends Parser with Messages with ImplicitResolution {
+class ActionMacro(val c: Context) extends Parser with Messages with ImplicitResolution {
   import c.universe.{ Ident => _, _ }
 
-  def run[R, S, T](q: Expr[Actionable[T]])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]): Tree =
-    run[R, S, T](q.tree, List(), q"List[Unit]()")
+  def run[R, S, T](q: Expr[Actionable[T]])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]): Tree = {
+    val action = Normalize(actionExtractor(q.tree))
+    val sql = action.show
+    info(sql)
+    q"${c.prefix}.execute($sql)"
+  }
 
   def run1[P1, R: WeakTypeTag, S: WeakTypeTag, T: WeakTypeTag](q: Expr[P1 => Actionable[T]])(bindings: Expr[Iterable[P1]]): Tree =
     runParametrized[R, S, T](q.tree, bindings)
@@ -38,7 +42,7 @@ class SqlActionMacro(val c: Context) extends Parser with Messages with ImplicitR
       (for ((param, index) <- params.zipWithIndex) yield {
         identExtractor(param) -> (param, q"value.${TermName(s"_${index + 1}")}")
       }).toMap
-    val (bindedAction, bindingIdents) = ReplaceBindVariables(action)(bindingMap.keys.toList)
+    val (bindedAction, bindingIdents) = BindVariables(action)(bindingMap.keys.toList)
     val sql = bindedAction.show
     info(sql)
     val applyEncoders =
@@ -52,9 +56,6 @@ class SqlActionMacro(val c: Context) extends Parser with Messages with ImplicitR
     q"""
       { 
         val encode =
-          if($bindings.isEmpty)
-            List(identity[$s] _)
-          else
             $bindings.map(value => (row: $s) => {
               var r = row
               ..$applyEncoders

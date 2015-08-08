@@ -1,14 +1,14 @@
 package io.getquill.sql
 
 import scala.reflect.macros.whitebox.Context
-import SqlQueryShow.sqlQueryShow
+import QueryShow.sqlQueryShow
 import io.getquill.impl.Queryable
 import io.getquill.norm.NormalizationMacro
 import io.getquill.util.Messages
 import io.getquill.util.Show.Shower
 import io.getquill.impl.Encoder
 
-class SqlQueryMacro(val c: Context) extends NormalizationMacro with Messages {
+class QueryMacro(val c: Context) extends NormalizationMacro with Messages {
   import c.universe._
 
   def run[R, S, T](q: Expr[Queryable[T]])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]): Tree =
@@ -33,7 +33,7 @@ class SqlQueryMacro(val c: Context) extends NormalizationMacro with Messages {
       }).toMap
     val d = c.WeakTypeTag(c.prefix.tree.tpe)
     val NormalizedQuery(query, extractor) = normalize(q)(d, r, t)
-    val (bindedQuery, bindingIdents) = ReplaceBindVariables(query)(bindingMap.keys.toList)
+    val (bindedQuery, bindingIdents) = BindVariables(query)(bindingMap.keys.toList)
     val sql = SqlQuery(bindedQuery).show
     info(sql)
     val applyEncoders =

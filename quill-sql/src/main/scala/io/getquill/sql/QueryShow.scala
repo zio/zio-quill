@@ -3,7 +3,7 @@ package io.getquill.sql
 import ExprShow.exprShow
 import io.getquill.util.Show._
 
-object SqlQueryShow {
+object QueryShow {
 
   import ExprShow._
 

@@ -17,7 +17,7 @@ object Normalize {
 
   def apply(q: Query) = norm(AvoidCapture(q))
 
-  def apply(a: Action) =
+  def apply(a: Action): Action =
     a match {
       case Insert(query, assignments) =>
         Insert(norm(query), assignments)

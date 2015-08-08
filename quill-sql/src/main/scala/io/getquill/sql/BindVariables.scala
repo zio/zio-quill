@@ -2,7 +2,7 @@ package io.getquill.sql
 
 import io.getquill.ast._
 
-object ReplaceBindVariables {
+object BindVariables {
 
   def apply(action: Action)(implicit vars: List[Ident]): (Action, List[Ident]) =
     action match {
