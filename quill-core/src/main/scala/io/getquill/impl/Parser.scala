@@ -2,36 +2,10 @@ package io.getquill.impl
 
 import scala.reflect.ClassTag
 import scala.reflect.macros.whitebox.Context
-import io.getquill.ast.Add
-import io.getquill.ast.And
-import io.getquill.ast.Constant
-import io.getquill.ast.Division
-import io.getquill.ast.Equals
-import io.getquill.ast.Expr
-import io.getquill.ast.Filter
-import io.getquill.ast.FlatMap
-import io.getquill.ast.GreaterThan
-import io.getquill.ast.GreaterThanOrEqual
-import io.getquill.ast.Ident
-import io.getquill.ast.LessThan
-import io.getquill.ast.LessThanOrEqual
-import io.getquill.ast.Map
-import io.getquill.ast.NullValue
-import io.getquill.ast.Property
-import io.getquill.ast.Query
-import io.getquill.ast.Ref
-import io.getquill.ast.Remainder
-import io.getquill.ast.Subtract
-import io.getquill.ast.Table
-import io.getquill.ast.Tuple
+import io.getquill.ast._
 import io.getquill.norm.BetaReduction
-import io.getquill.util.TreeSubstitution
 import io.getquill.util.Messages
-import io.getquill.ast.Update
-import io.getquill.ast.Assignment
-import io.getquill.ast.Insert
-import io.getquill.ast.Delete
-import io.getquill.ast.Action
+import io.getquill.util.TreeSubstitution
 
 trait Parser extends TreeSubstitution with Quotation with Messages {
 
@@ -106,20 +80,26 @@ trait Parser extends TreeSubstitution with Quotation with Messages {
   }
 
   val exprExtractor: Extractor[Expr] = Extractor[Expr] {
-
-    case q"$a - $b"          => Subtract(exprExtractor(a), exprExtractor(b))
-    case q"$a + $b"          => Add(exprExtractor(a), exprExtractor(b))
-    case q"$a == $b"         => Equals(exprExtractor(a), exprExtractor(b))
-    case q"$a && $b"         => And(exprExtractor(a), exprExtractor(b))
-    case q"$a >= $b"         => GreaterThanOrEqual(exprExtractor(a), exprExtractor(b))
-    case q"$a > $b"          => GreaterThan(exprExtractor(a), exprExtractor(b))
-    case q"$a <= $b"         => LessThanOrEqual(exprExtractor(a), exprExtractor(b))
-    case q"$a < $b"          => LessThan(exprExtractor(a), exprExtractor(b))
-    case q"$a / $b"          => Division(exprExtractor(a), exprExtractor(b))
-    case q"$a % $b"          => Remainder(exprExtractor(a), exprExtractor(b))
-
+    case q"$a.$op($b)"       => BinaryOperation(exprExtractor(a), binaryOperator(op), exprExtractor(b))
     case `refExtractor`(ref) => ref
   }
+
+  private def binaryOperator(name: TermName) =
+    name.decodedName.toString match {
+      case "-"    => io.getquill.ast.`-`
+      case "+"    => io.getquill.ast.`+`
+      case "=="   => io.getquill.ast.`==`
+      case "!="   => io.getquill.ast.`!=`
+      case "&&"   => io.getquill.ast.`&&`
+      case "||"   => io.getquill.ast.`||`
+      case ">"    => io.getquill.ast.`>`
+      case ">="   => io.getquill.ast.`>=`
+      case "<"    => io.getquill.ast.`<`
+      case "<="   => io.getquill.ast.`<=`
+      case "/"    => io.getquill.ast.`/`
+      case "%"    => io.getquill.ast.`%`
+      case "like" => io.getquill.ast.`like`
+    }
 
   val refExtractor: Extractor[Ref] = Extractor[Ref] {
     case `valueExtractor`(value)   => value

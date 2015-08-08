@@ -1,6 +1,6 @@
 package io.getquill.norm
 
-import io.getquill.ast.And
+import io.getquill.ast.`&&`
 import io.getquill.ast.Filter
 import io.getquill.ast.FlatMap
 import io.getquill.ast.Ident
@@ -11,6 +11,7 @@ import io.getquill.ast.Action
 import io.getquill.ast.Insert
 import io.getquill.ast.Update
 import io.getquill.ast.Delete
+import io.getquill.ast.BinaryOperation
 
 object Normalize {
 
@@ -71,7 +72,7 @@ object Normalize {
       //    r.filter(x => q && p')
       case Filter(Filter(r, x, q), y, p) =>
         val pr = BetaReduction(p, y -> x)
-        norm(Filter(norm(r), x, And(q, pr)))
+        norm(Filter(norm(r), x, BinaryOperation(q, `&&`, pr)))
 
       // **if-for**
       // q.flatMap(x => r).filter(y => p) =>

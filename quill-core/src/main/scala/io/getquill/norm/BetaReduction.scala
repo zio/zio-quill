@@ -1,29 +1,22 @@
 package io.getquill.norm
 
-import io.getquill.ast.Add
-import io.getquill.ast.And
-import io.getquill.ast.Division
-import io.getquill.ast.Equals
 import io.getquill.ast.Expr
 import io.getquill.ast.Filter
 import io.getquill.ast.FlatMap
-import io.getquill.ast.GreaterThan
-import io.getquill.ast.GreaterThanOrEqual
 import io.getquill.ast.Ident
-import io.getquill.ast.LessThan
-import io.getquill.ast.LessThanOrEqual
 import io.getquill.ast.Map
 import io.getquill.ast.Property
 import io.getquill.ast.Query
 import io.getquill.ast.Ref
-import io.getquill.ast.Remainder
-import io.getquill.ast.Subtract
 import io.getquill.ast.Table
 import io.getquill.ast.Tuple
 import io.getquill.ast.Value
+import io.getquill.ast.BinaryOperation
+import io.getquill.ast.BinaryOperation
+import io.getquill.ast.UnaryOperation
 
 object BetaReduction {
-  
+
   def apply(expr: Expr, t: (Ident, Expr)*): Expr =
     apply(expr)(t.toMap)
 
@@ -44,17 +37,9 @@ object BetaReduction {
 
   def apply(expr: Expr)(implicit refs: collection.Map[Ident, Expr]): Expr =
     expr match {
-      case expr: Ref                => apply(expr)
-      case Subtract(a, b)           => Subtract(apply(a), apply(b))
-      case Division(a, b)           => Division(apply(a), apply(b))
-      case Remainder(a, b)          => Remainder(apply(a), apply(b))
-      case Add(a, b)                => Add(apply(a), apply(b))
-      case Equals(a, b)             => Equals(apply(a), apply(b))
-      case And(a, b)                => And(apply(a), apply(b))
-      case GreaterThan(a, b)        => GreaterThan(apply(a), apply(b))
-      case GreaterThanOrEqual(a, b) => GreaterThanOrEqual(apply(a), apply(b))
-      case LessThan(a, b)           => LessThan(apply(a), apply(b))
-      case LessThanOrEqual(a, b)    => LessThanOrEqual(apply(a), apply(b))
+      case expr: Ref                 => apply(expr)
+      case UnaryOperation(op, expr)  => UnaryOperation(op, apply(expr))
+      case BinaryOperation(a, op, b) => BinaryOperation(apply(a), op, apply(b))
     }
 
   def apply(ref: Ref)(implicit refs: collection.Map[Ident, Expr]): Expr =

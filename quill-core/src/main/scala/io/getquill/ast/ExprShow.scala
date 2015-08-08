@@ -7,17 +7,16 @@ object ExprShow {
   implicit val exprShow: Show[Expr] = new Show[Expr] {
     def show(e: Expr) =
       e match {
-        case ref: Ref                 => ref.show
-        case Subtract(a, b)           => s"${a.show} - ${b.show}"
-        case Division(a, b)           => s"${a.show} / ${b.show}"
-        case Remainder(a, b)          => s"${a.show} % ${b.show}"
-        case Add(a, b)                => s"${a.show} + ${b.show}"
-        case Equals(a, b)             => s"${a.show} == ${b.show}"
-        case And(a, b)                => s"${a.show} && ${b.show}"
-        case GreaterThan(a, b)        => s"${a.show} > ${b.show}"
-        case GreaterThanOrEqual(a, b) => s"${a.show} >= ${b.show}"
-        case LessThan(a, b)           => s"${a.show} < ${b.show}"
-        case LessThanOrEqual(a, b)    => s"${a.show} <= ${b.show}"
+        case ref: Ref             => ref.show
+        case operation: Operation => operation.show
+      }
+  }
+
+  implicit val operationShow: Show[Operation] = new Show[Operation] {
+    def show(e: Operation) =
+      e match {
+        case UnaryOperation(op, expr)  => s"${op.toString}${expr.show}"
+        case BinaryOperation(a, op, b) => s"${a.show} ${op.toString} ${b.show}"
       }
   }
 

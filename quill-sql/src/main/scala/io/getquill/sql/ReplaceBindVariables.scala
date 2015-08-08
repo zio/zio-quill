@@ -52,46 +52,13 @@ object ReplaceBindVariables {
     expr match {
       case expr: Ref =>
         apply(expr)
-      case Subtract(a, b) =>
+      case UnaryOperation(op, expr) =>
+        val (er, erv) = apply(expr)
+        (UnaryOperation(op, er), erv)
+      case BinaryOperation(a, op, b) =>
         val (ar, arv) = apply(a)
         val (br, brv) = apply(b)
-        (Subtract(ar, br), arv ++ brv)
-      case Division(a, b) =>
-        val (ar, arv) = apply(a)
-        val (br, brv) = apply(b)
-        (Division(ar, br), arv ++ brv)
-      case Remainder(a, b) =>
-        val (ar, arv) = apply(a)
-        val (br, brv) = apply(b)
-        (Remainder(ar, br), arv ++ brv)
-      case Add(a, b) =>
-        val (ar, arv) = apply(a)
-        val (br, brv) = apply(b)
-        (Add(ar, br), arv ++ brv)
-      case Equals(a, b) =>
-        val (ar, arv) = apply(a)
-        val (br, brv) = apply(b)
-        (Equals(ar, br), arv ++ brv)
-      case And(a, b) =>
-        val (ar, arv) = apply(a)
-        val (br, brv) = apply(b)
-        (And(ar, br), arv ++ brv)
-      case GreaterThan(a, b) =>
-        val (ar, arv) = apply(a)
-        val (br, brv) = apply(b)
-        (GreaterThan(ar, br), arv ++ brv)
-      case GreaterThanOrEqual(a, b) =>
-        val (ar, arv) = apply(a)
-        val (br, brv) = apply(b)
-        (GreaterThanOrEqual(ar, br), arv ++ brv)
-      case LessThan(a, b) =>
-        val (ar, arv) = apply(a)
-        val (br, brv) = apply(b)
-        (LessThan(ar, br), arv ++ brv)
-      case LessThanOrEqual(a, b) =>
-        val (ar, arv) = apply(a)
-        val (br, brv) = apply(b)
-        (LessThanOrEqual(ar, br), arv ++ brv)
+        (BinaryOperation(ar, op, br), arv ++ brv)
     }
 
   def apply(ref: Ref)(implicit vars: List[Ident]): (Expr, List[Ident]) =

@@ -9,19 +9,37 @@ object ExprShow {
     new Show[Expr] {
       def show(e: Expr) =
         e match {
-          case ref: Ref                 => ref.show
-          case Subtract(a, b)           => s"${a.show} - ${b.show}"
-          case Division(a, b)           => s"${a.show} / ${b.show}"
-          case Remainder(a, b)          => s"${a.show} % ${b.show}"
-          case Add(a, b)                => s"${a.show} + ${b.show}"
-          case Equals(a, b)             => s"${a.show} = ${b.show}"
-          case And(a, b)                => s"${a.show} AND ${b.show}"
-          case GreaterThan(a, b)        => s"${a.show} > ${b.show}"
-          case GreaterThanOrEqual(a, b) => s"${a.show} >= ${b.show}"
-          case LessThan(a, b)           => s"${a.show} < ${b.show}"
-          case LessThanOrEqual(a, b)    => s"${a.show} <= ${b.show}"
+          case ref: Ref                  => ref.show
+          case UnaryOperation(op, expr)  => s"(${op.show} ${expr.show})"
+          case BinaryOperation(a, op, b) => s"(${a.show} ${op.show} ${b.show})"
         }
     }
+
+  implicit val unaryOperatorShow: Show[UnaryOperator] = new Show[UnaryOperator] {
+    def show(o: UnaryOperator) =
+      o match {
+        case io.getquill.ast.`!` => "NOT"
+      }
+  }
+
+  implicit val binaryOperatorShow: Show[BinaryOperator] = new Show[BinaryOperator] {
+    def show(o: BinaryOperator) =
+      o match {
+        case io.getquill.ast.`-`    => "-"
+        case io.getquill.ast.`+`    => "+"
+        case io.getquill.ast.`==`   => "="
+        case io.getquill.ast.`!=`   => "!="
+        case io.getquill.ast.`&&`   => "AND"
+        case io.getquill.ast.`||`   => "OR"
+        case io.getquill.ast.`>`    => ">"
+        case io.getquill.ast.`>=`   => ">="
+        case io.getquill.ast.`<`    => "<"
+        case io.getquill.ast.`<=`   => "<="
+        case io.getquill.ast.`/`    => "/"
+        case io.getquill.ast.`%`    => "%"
+        case io.getquill.ast.`like` => "like"
+      }
+  }
 
   implicit def refShow(implicit valueShow: Show[Value], identShow: Show[Ident]): Show[Ref] =
     new Show[Ref] {

@@ -4,20 +4,12 @@ package io.getquill.ast
 
 sealed trait Expr
 
-case class Subtract(a: Expr, b: Expr) extends Expr
-case class Add(a: Expr, b: Expr) extends Expr
-case class Equals(a: Expr, b: Expr) extends Expr
+//************************************************************
 
-case class And(a: Expr, b: Expr) extends Expr
+sealed trait Operation extends Expr
 
-case class GreaterThan(a: Expr, b: Expr) extends Expr
-case class GreaterThanOrEqual(a: Expr, b: Expr) extends Expr
-
-case class LessThan(a: Expr, b: Expr) extends Expr
-case class LessThanOrEqual(a: Expr, b: Expr) extends Expr
-
-case class Division(a: Expr, b: Expr) extends Expr
-case class Remainder(a: Expr, b: Expr) extends Expr
+case class UnaryOperation(operator: UnaryOperator, expr: Expr) extends Operation
+case class BinaryOperation(a: Expr, operator: BinaryOperator, b: Expr) extends Operation
 
 //************************************************************
 
