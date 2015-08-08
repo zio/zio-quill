@@ -10,6 +10,7 @@ sealed trait BinaryOperator extends Operator
 
 object `-` extends BinaryOperator
 object `+` extends BinaryOperator
+object `*` extends BinaryOperator
 object `==` extends BinaryOperator
 object `!=` extends BinaryOperator
 object `&&` extends BinaryOperator
