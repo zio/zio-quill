@@ -1,5 +1,6 @@
 package io.getquill.sql
 
+import io.getquill._
 import io.getquill.util.Show._
 import io.getquill.ast._
 
@@ -9,9 +10,11 @@ object ExprShow {
     new Show[Expr] {
       def show(e: Expr) =
         e match {
-          case ref: Ref                  => ref.show
-          case UnaryOperation(op, expr)  => s"(${op.show} ${expr.show})"
-          case BinaryOperation(a, op, b) => s"(${a.show} ${op.show} ${b.show})"
+          case ref: Ref                                => ref.show
+          case UnaryOperation(op, expr)                => s"(${op.show} ${expr.show})"
+          case BinaryOperation(a, ast.`==`, NullValue) => s"(${a.show} IS NULL)"
+          case BinaryOperation(NullValue, ast.`==`, b) => s"(${b.show} IS NULL)"
+          case BinaryOperation(a, op, b)               => s"(${a.show} ${op.show} ${b.show})"
         }
     }
 
@@ -25,19 +28,20 @@ object ExprShow {
   implicit val binaryOperatorShow: Show[BinaryOperator] = new Show[BinaryOperator] {
     def show(o: BinaryOperator) =
       o match {
-        case io.getquill.ast.`-`    => "-"
-        case io.getquill.ast.`+`    => "+"
-        case io.getquill.ast.`==`   => "="
-        case io.getquill.ast.`!=`   => "!="
-        case io.getquill.ast.`&&`   => "AND"
-        case io.getquill.ast.`||`   => "OR"
-        case io.getquill.ast.`>`    => ">"
-        case io.getquill.ast.`>=`   => ">="
-        case io.getquill.ast.`<`    => "<"
-        case io.getquill.ast.`<=`   => "<="
-        case io.getquill.ast.`/`    => "/"
-        case io.getquill.ast.`%`    => "%"
-        case io.getquill.ast.`like` => "like"
+        case ast.`-`    => "-"
+        case ast.`+`    => "+"
+        case ast.`*`    => "*"
+        case ast.`==`   => "="
+        case ast.`!=`   => "<>"
+        case ast.`&&`   => "AND"
+        case ast.`||`   => "OR"
+        case ast.`>`    => ">"
+        case ast.`>=`   => ">="
+        case ast.`<`    => "<"
+        case ast.`<=`   => "<="
+        case ast.`/`    => "/"
+        case ast.`%`    => "%"
+        case ast.`like` => "like"
       }
   }
 
