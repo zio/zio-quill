@@ -5,11 +5,10 @@ import io.getquill.ast.Tuple
 import scala.reflect.macros.whitebox.Context
 import io.getquill.ast.Property
 import io.getquill.ast.ExprShow.exprShow
-import io.getquill.util.ImplicitResolution
 import io.getquill.util.Show._
-import io.getquill.util.Messages
+import io.getquill.util.Messages._
 
-trait SelectNormalization extends Messages {
+trait SelectNormalization {
   this: NormalizationMacro =>
 
   val c: Context
@@ -24,7 +23,7 @@ trait SelectNormalization extends Messages {
           case None if (typ.typeSymbol.asClass.isCaseClass) =>
             caseClassSelectValue(typ, expr, inferDecoder)
           case _ =>
-            fail(s"Source doesn't know how to decode '${t.tpe.typeSymbol.name}.${expr.show}: $typ'")
+            c.fail(s"Source doesn't know how to decode '${t.tpe.typeSymbol.name}.${expr.show}: $typ'")
         }
     }
   }
@@ -41,7 +40,7 @@ trait SelectNormalization extends Messages {
         val paramType = param.typeSignature.typeSymbol.asType.toType
         val decoder =
           inferDecoder(paramType)
-            .getOrElse(fail(s"Source doesn't know how to decode '${param.name}: $paramType'"))
+            .getOrElse(c.fail(s"Source doesn't know how to decode '${param.name}: $paramType'"))
         SimpleSelectValue(Property(expr, param.name.decodedName.toString), decoder)
     })
 
@@ -49,7 +48,7 @@ trait SelectNormalization extends Messages {
     mapExpr match {
       case Tuple(values) =>
         if (values.size != t.tpe.typeArgs.size)
-          fail(s"Query shape doesn't match the return type $t, please submit a bug report.")
+          c.fail(s"Query shape doesn't match the return type $t, please submit a bug report.")
         values.zip(t.tpe.typeArgs)
       case expr =>
         List(expr -> t.tpe)
@@ -59,6 +58,6 @@ trait SelectNormalization extends Messages {
     t.members.collect {
       case m: MethodSymbol if (m.isPrimaryConstructor) => m
     }.headOption.getOrElse {
-      fail(s"Can't find the primary constructor for '${t.typeSymbol.name}, please submit a bug report.'")
+      c.fail(s"Can't find the primary constructor for '${t.typeSymbol.name}, please submit a bug report.'")
     }
 }

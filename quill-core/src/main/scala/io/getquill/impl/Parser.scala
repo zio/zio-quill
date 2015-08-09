@@ -4,10 +4,10 @@ import scala.reflect.ClassTag
 import scala.reflect.macros.whitebox.Context
 import io.getquill.ast._
 import io.getquill.norm.BetaReduction
-import io.getquill.util.Messages
-import io.getquill.util.TreeSubstitution
+import io.getquill.util.Messages._
+import io.getquill.util.SubstituteTrees
 
-trait Parser extends TreeSubstitution with Quotation with Messages {
+trait Parser extends Quotation  {
 
   val c: Context
   import c.universe.{ Expr => _, Ident => _, Constant => _, _ }
@@ -16,13 +16,13 @@ trait Parser extends TreeSubstitution with Quotation with Messages {
 
     def apply(tree: Tree) =
       unapply(tree).getOrElse {
-        fail(s"Tree '$tree' can't be parsed to '${t.runtimeClass.getSimpleName}'")
+        c.fail(s"Tree '$tree' can't be parsed to '${t.runtimeClass.getSimpleName}'")
       }
 
     def unapply(tree: Tree): Option[T] =
       tree match {
         case q"((..$params) => $body).apply(..$actuals)" =>
-          unapply(substituteTree(body, params, actuals))
+          unapply(SubstituteTrees(c)(body, params, actuals))
         case q"io.getquill.`package`.unquote[$t]($quoted)" =>
           unapply(unquoteTree(quoted))
         case tree if (tree.tpe <:< c.weakTypeOf[Quoted[Any]] && !(tree.tpe <:< c.weakTypeOf[Null])) =>

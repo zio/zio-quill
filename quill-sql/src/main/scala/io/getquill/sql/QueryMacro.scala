@@ -4,11 +4,12 @@ import scala.reflect.macros.whitebox.Context
 import QueryShow.sqlQueryShow
 import io.getquill.impl.Queryable
 import io.getquill.norm.NormalizationMacro
-import io.getquill.util.Messages
+import io.getquill.util.Messages._
 import io.getquill.util.Show.Shower
-import io.getquill.impl.Encoder
+import io.getquill.encoding.Encoder
+import io.getquill.util.InferImplicitValueWithFallback
 
-class QueryMacro(val c: Context) extends NormalizationMacro with Messages {
+class QueryMacro(val c: Context) extends NormalizationMacro {
   import c.universe._
 
   def run[R, S, T](q: Expr[Queryable[T]])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]): Tree =
@@ -35,13 +36,13 @@ class QueryMacro(val c: Context) extends NormalizationMacro with Messages {
     val NormalizedQuery(query, extractor) = normalize(q)(d, r, t)
     val (bindedQuery, bindingIdents) = BindVariables(query)(bindingMap.keys.toList)
     val sql = SqlQuery(bindedQuery).show
-    info(sql)
+    c.info(sql)
     val applyEncoders =
       for ((ident, index) <- bindingIdents.zipWithIndex) yield {
         val (param, binding) = bindingMap(ident)
         val encoder =
           inferEncoder(param.tpt.tpe)(s)
-            .getOrElse(fail(s"Source doesn't know how do encode $param: ${param.tpt}"))
+            .getOrElse(c.fail(s"Source doesn't know how do encode $param: ${param.tpt}"))
         q"r = $encoder($index, $binding, r)"
       }
     q"""
@@ -59,7 +60,7 @@ class QueryMacro(val c: Context) extends NormalizationMacro with Messages {
   private def inferEncoder[R](tpe: Type)(implicit r: WeakTypeTag[R]) = {
     def encoderType[T, R](implicit t: WeakTypeTag[T], r: WeakTypeTag[R]) =
       c.weakTypeTag[Encoder[R, T]]
-    inferImplicitValueWithFallback(encoderType(c.WeakTypeTag(tpe), r).tpe, c.prefix.tree.tpe, c.prefix.tree)
+    InferImplicitValueWithFallback(c)(encoderType(c.WeakTypeTag(tpe), r).tpe, c.prefix.tree)
   }
 
   private def interpret[R, T](q: Tree)(implicit r: WeakTypeTag[R], t: WeakTypeTag[T]) = {

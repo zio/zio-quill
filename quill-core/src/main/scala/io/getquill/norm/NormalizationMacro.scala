@@ -1,16 +1,16 @@
 package io.getquill.norm
 
 import scala.reflect.macros.whitebox.Context
-import io.getquill.impl.Decoder
+import io.getquill.encoding.Decoder
 import io.getquill.impl.Source
 import io.getquill.ast._
 import io.getquill.ast.Expr
 import io.getquill.ast.ExprShow.exprShow
-import io.getquill.util.ImplicitResolution
 import io.getquill.util.Show._
 import io.getquill.impl.Parser
+import io.getquill.util.InferImplicitValueWithFallback
 
-trait NormalizationMacro extends ImplicitResolution with Parser with SelectNormalization with SelectExtraction {
+trait NormalizationMacro extends  Parser with SelectNormalization with SelectExtraction {
 
   val c: Context
   import c.universe.{ Expr => _, Ident => _, _ }
@@ -44,7 +44,7 @@ trait NormalizationMacro extends ImplicitResolution with Parser with SelectNorma
   private def inferDecoder[R, D](tpe: Type)(implicit r: WeakTypeTag[R], d: WeakTypeTag[D]) = {
       def decoderType[T, R](implicit t: WeakTypeTag[T], r: WeakTypeTag[R]) =
         c.weakTypeTag[Decoder[R, T]]
-    inferImplicitValueWithFallback(decoderType(c.WeakTypeTag(tpe), r).tpe, d.tpe, c.prefix.tree)
+    InferImplicitValueWithFallback(c)(decoderType(c.WeakTypeTag(tpe), r).tpe, c.prefix.tree)
   }
 
   private def ensureFinalMap(query: Query): Query =
