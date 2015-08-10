@@ -1,6 +1,14 @@
 package io.getquill.sql
 
-import io.getquill.ast._
+import io.getquill.ast.Expr
+import io.getquill.ast.Filter
+import io.getquill.ast.FlatMap
+import io.getquill.ast.Ident
+import io.getquill.ast.Map
+import io.getquill.ast.Query
+import io.getquill.ast.QueryShow.queryShow
+import io.getquill.ast.Table
+import io.getquill.util.Show.Shower
 
 case class Source(table: String, alias: String)
 case class SqlQuery(from: List[Source], where: Option[Expr], select: Expr)

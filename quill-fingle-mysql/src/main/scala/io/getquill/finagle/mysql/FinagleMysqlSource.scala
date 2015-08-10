@@ -1,23 +1,24 @@
 package io.getquill.finagle.mysql
 
-import io.getquill.sql.SqlSource
-import com.twitter.finagle.exp.mysql.Row
-import com.twitter.finagle.exp.mysql.Value
-import com.twitter.finagle.exp.Mysql
-import com.typesafe.scalalogging.StrictLogging
-import com.twitter.finagle.exp.mysql.Parameter
-import com.twitter.finagle.exp.mysql.LongValue
-import com.twitter.finagle.exp.mysql.IntValue
-import com.twitter.finagle.exp.mysql.StringValue
-import com.twitter.finagle.exp.mysql.CanBeParameter._
-import com.twitter.finagle.exp.mysql.Parameter._
-import com.twitter.finagle.exp.mysql.Client
-import com.twitter.util.Future
-import com.twitter.finagle.exp.mysql.CanBeParameter
 import scala.reflect.ClassTag
-import com.twitter.util.Local
-import com.twitter.util.Return
+
+import com.twitter.finagle.exp.mysql.CanBeParameter
+import com.twitter.finagle.exp.mysql.CanBeParameter.intCanBeParameter
+import com.twitter.finagle.exp.mysql.CanBeParameter.longCanBeParameter
+import com.twitter.finagle.exp.mysql.CanBeParameter.stringCanBeParameter
+import com.twitter.finagle.exp.mysql.Client
+import com.twitter.finagle.exp.mysql.IntValue
+import com.twitter.finagle.exp.mysql.LongValue
+import com.twitter.finagle.exp.mysql.Parameter
+import com.twitter.finagle.exp.mysql.Parameter.wrap
 import com.twitter.finagle.exp.mysql.Result
+import com.twitter.finagle.exp.mysql.Row
+import com.twitter.finagle.exp.mysql.StringValue
+import com.twitter.util.Future
+import com.twitter.util.Local
+import com.typesafe.scalalogging.StrictLogging
+
+import io.getquill.sql.SqlSource
 
 trait FinagleMysqlSource extends SqlSource[Row, List[Parameter]] with StrictLogging {
 

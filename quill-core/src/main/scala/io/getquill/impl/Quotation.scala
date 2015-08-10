@@ -1,8 +1,9 @@
 package io.getquill.impl
 
-import scala.reflect.macros.whitebox.Context
-import io.getquill.util.Messages._
 import scala.annotation.StaticAnnotation
+import scala.reflect.macros.whitebox.Context
+
+import io.getquill.util.Messages.RichContext
 
 trait Quoted[+T]
 

@@ -1,6 +1,7 @@
 package io.getquill.norm.select
 
 import scala.reflect.macros.whitebox.Context
+
 import io.getquill.ast.Expr
 
 trait SelectValues {

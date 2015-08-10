@@ -1,6 +1,10 @@
 package io.getquill.norm.select
 
-import io.getquill.ast._
+import io.getquill.ast.Expr
+import io.getquill.ast.FlatMap
+import io.getquill.ast.Map
+import io.getquill.ast.Query
+import io.getquill.ast.Tuple
 
 private[select] object ReplaceSelect {
 

@@ -1,5 +1,6 @@
 package io.getquill.norm
 
+import io.getquill.ast.BinaryOperation
 import io.getquill.ast.Expr
 import io.getquill.ast.Filter
 import io.getquill.ast.FlatMap
@@ -10,10 +11,8 @@ import io.getquill.ast.Query
 import io.getquill.ast.Ref
 import io.getquill.ast.Table
 import io.getquill.ast.Tuple
-import io.getquill.ast.Value
-import io.getquill.ast.BinaryOperation
-import io.getquill.ast.BinaryOperation
 import io.getquill.ast.UnaryOperation
+import io.getquill.ast.Value
 
 object BetaReduction {
 

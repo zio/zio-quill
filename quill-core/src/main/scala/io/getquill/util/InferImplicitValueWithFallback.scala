@@ -1,7 +1,8 @@
 package io.getquill.util
 
 import scala.reflect.macros.whitebox.Context
-import Messages._
+
+import Messages.RichContext
 
 object InferImplicitValueWithFallback {
 

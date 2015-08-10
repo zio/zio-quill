@@ -1,6 +1,21 @@
 package io.getquill.source
 
-import io.getquill.ast._
+import io.getquill.ast.Action
+import io.getquill.ast.Assignment
+import io.getquill.ast.BinaryOperation
+import io.getquill.ast.Delete
+import io.getquill.ast.Expr
+import io.getquill.ast.Filter
+import io.getquill.ast.FlatMap
+import io.getquill.ast.Ident
+import io.getquill.ast.Insert
+import io.getquill.ast.Map
+import io.getquill.ast.Query
+import io.getquill.ast.Ref
+import io.getquill.ast.Table
+import io.getquill.ast.Tuple
+import io.getquill.ast.UnaryOperation
+import io.getquill.ast.Update
 
 private[source] object BindVariables {
 

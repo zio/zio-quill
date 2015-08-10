@@ -1,7 +1,8 @@
 package io.getquill.source
 
-import language.higherKinds
+import scala.language.higherKinds
 import scala.reflect.macros.whitebox.Context
+
 import io.getquill.util.InferImplicitValueWithFallback
 
 trait Decoder[R, T] {

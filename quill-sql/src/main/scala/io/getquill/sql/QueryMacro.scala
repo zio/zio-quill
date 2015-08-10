@@ -1,20 +1,17 @@
 package io.getquill.sql
 
 import scala.reflect.macros.whitebox.Context
+
 import QueryShow.sqlQueryShow
+import io.getquill.impl.Parser
 import io.getquill.impl.Queryable
 import io.getquill.norm.Normalize
-import io.getquill.util.Messages._
-import io.getquill.util.Show.Shower
-import io.getquill.source.Encoder
-import io.getquill.util.InferImplicitValueWithFallback
-import io.getquill.source.Encoding
-import io.getquill.norm.select.SelectFlattening
 import io.getquill.norm.SelectResultExtraction
-import io.getquill.impl.Parser
-import io.getquill.ast.Query
-import io.getquill.ast.Ident
+import io.getquill.norm.select.SelectFlattening
 import io.getquill.source.EncodeBindVariables
+import io.getquill.source.Encoding
+import io.getquill.util.Messages.RichContext
+import io.getquill.util.Show.Shower
 
 class QueryMacro(val c: Context) extends Parser with SelectFlattening with SelectResultExtraction {
   import c.universe.{ Ident => _, _ }

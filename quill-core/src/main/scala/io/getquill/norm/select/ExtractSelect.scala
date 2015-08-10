@@ -1,7 +1,13 @@
 package io.getquill.norm.select
 
-import io.getquill.ast._
-import io.getquill.util.Messages._
+import io.getquill.ast.Expr
+import io.getquill.ast.Filter
+import io.getquill.ast.FlatMap
+import io.getquill.ast.Ident
+import io.getquill.ast.Map
+import io.getquill.ast.Query
+import io.getquill.ast.Table
+import io.getquill.util.Messages.fail
 
 private[select] object ExtractSelect {
 

@@ -1,13 +1,16 @@
 package io.getquill.jdbc
 
-import java.sql.ResultSet
-import scala.collection.mutable.ListBuffer
-import com.typesafe.scalalogging.StrictLogging
-import io.getquill.sql.SqlSource
-import java.sql.PreparedStatement
 import java.sql.Connection
-import scala.util.control.NonFatal
+import java.sql.PreparedStatement
+import java.sql.ResultSet
+
+import scala.collection.mutable.ListBuffer
 import scala.util.DynamicVariable
+import scala.util.control.NonFatal
+
+import com.typesafe.scalalogging.StrictLogging
+
+import io.getquill.sql.SqlSource
 
 trait JdbcSource extends SqlSource[ResultSet, PreparedStatement] with StrictLogging {
 

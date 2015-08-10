@@ -1,7 +1,7 @@
 package io.getquill.finagle.mysql
 
-import com.typesafe.config.Config
 import com.twitter.finagle.exp.Mysql
+import com.typesafe.config.Config
 
 object FinagleMysqlClient {
 

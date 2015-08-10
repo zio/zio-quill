@@ -1,6 +1,9 @@
 package io.getquill.ast
 
-import io.getquill.util.Show._
+import ExprShow.exprShow
+import ExprShow.identShow
+import io.getquill.util.Show.Show
+import io.getquill.util.Show.Shower
 
 object QueryShow {
 

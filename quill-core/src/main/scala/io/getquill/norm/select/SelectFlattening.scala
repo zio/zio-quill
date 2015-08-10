@@ -1,13 +1,15 @@
 package io.getquill.norm.select
 
 import scala.reflect.macros.whitebox.Context
+
 import io.getquill.ast.Expr
+import io.getquill.ast.ExprShow.exprShow
 import io.getquill.ast.Property
-import io.getquill.util.Show._
-import io.getquill.util.Messages._
+import io.getquill.ast.Query
 import io.getquill.ast.Tuple
 import io.getquill.ast.ExprShow
-import io.getquill.ast.Query
+import io.getquill.util.Messages.RichContext
+import io.getquill.util.Show.Shower
 
 trait SelectFlattening extends SelectValues {
   val c: Context

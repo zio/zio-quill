@@ -1,17 +1,17 @@
 package io.getquill.norm
 
 import io.getquill.ast.`&&`
+import io.getquill.ast.Action
+import io.getquill.ast.BinaryOperation
+import io.getquill.ast.Delete
 import io.getquill.ast.Filter
 import io.getquill.ast.FlatMap
 import io.getquill.ast.Ident
+import io.getquill.ast.Insert
 import io.getquill.ast.Map
 import io.getquill.ast.Query
 import io.getquill.ast.Table
-import io.getquill.ast.Action
-import io.getquill.ast.Insert
 import io.getquill.ast.Update
-import io.getquill.ast.Delete
-import io.getquill.ast.BinaryOperation
 
 object Normalize {
 

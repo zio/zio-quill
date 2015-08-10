@@ -1,8 +1,8 @@
 package io.getquill.source
 
 import scala.reflect.ClassTag
-import com.typesafe.config.ConfigFactory
 
+import com.typesafe.config.ConfigFactory
 
 abstract class Source[R: ClassTag, S: ClassTag] {
 

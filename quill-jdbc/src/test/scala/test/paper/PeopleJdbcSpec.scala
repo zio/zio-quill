@@ -1,8 +1,8 @@
 package test.paper
 
-import test.Spec
 import io.getquill._
 import io.getquill.jdbc.JdbcSource
+import test.Spec
 
 class PeopleJdbcSpec extends PeopleSpec {
 

@@ -1,7 +1,5 @@
 package io.getquill.impl
 
-import scala.reflect.ClassTag
-
 sealed trait Queryable[+T] {
 
   def map[R](f: T => R): Queryable[R] = NonQuotedException()

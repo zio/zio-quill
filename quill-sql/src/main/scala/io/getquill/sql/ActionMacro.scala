@@ -1,21 +1,15 @@
 package io.getquill.sql
 
-import ActionShow._
 import scala.reflect.macros.whitebox.Context
-import QueryShow.sqlQueryShow
-import io.getquill.impl.Queryable
-import io.getquill.util.Messages._
+
+import ActionShow.actionShow
 import io.getquill.ast.Ident
-import io.getquill.ast.Action
-import io.getquill.util.Show.Shower
-import io.getquill.source.Encoder
 import io.getquill.impl.Actionable
 import io.getquill.impl.Parser
 import io.getquill.norm.Normalize
-import io.getquill.util.InferImplicitValueWithFallback
-import io.getquill.source.Encoding
-import io.getquill.source.BindVariables
 import io.getquill.source.EncodeBindVariables
+import io.getquill.util.Messages.RichContext
+import io.getquill.util.Show.Shower
 
 class ActionMacro(val c: Context) extends Parser {
   import c.universe.{ Ident => _, _ }

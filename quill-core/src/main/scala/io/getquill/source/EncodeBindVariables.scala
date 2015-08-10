@@ -1,8 +1,11 @@
 package io.getquill.source
 
-import io.getquill.util.Messages._
-import io.getquill.ast._
 import scala.reflect.macros.whitebox.Context
+
+import io.getquill.ast.Action
+import io.getquill.ast.Ident
+import io.getquill.ast.Query
+import io.getquill.util.Messages.RichContext
 
 object EncodeBindVariables {
 

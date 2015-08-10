@@ -1,7 +1,21 @@
 package io.getquill.sql
 
-import io.getquill.util.Show._
-import io.getquill.ast._
+import ExprShow.exprShow
+import ExprShow.identShow
+import ExprShow.valueShow
+import io.getquill.ast.Action
+import io.getquill.ast.Assignment
+import io.getquill.ast.Delete
+import io.getquill.ast.Expr
+import io.getquill.ast.Filter
+import io.getquill.ast.Insert
+import io.getquill.ast.Property
+import io.getquill.ast.Ref
+import io.getquill.ast.Table
+import io.getquill.ast.Update
+import io.getquill.util.Show.Show
+import io.getquill.util.Show.Shower
+import io.getquill.util.Show.listShow
 
 object ActionShow {
 

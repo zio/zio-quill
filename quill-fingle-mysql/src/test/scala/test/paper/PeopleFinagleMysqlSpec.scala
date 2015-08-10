@@ -1,10 +1,11 @@
 package test.paper
 
-import test.Spec
-import io.getquill._
 import com.twitter.util.Await
 import com.twitter.util.Future
+
+import io.getquill._
 import io.getquill.finagle.mysql.FinagleMysqlSource
+import test.Spec
 
 class PeopleFinagleMysqlSpec extends PeopleSpec {
 

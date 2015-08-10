@@ -1,7 +1,9 @@
 package io.getquill.sql
 
 import ExprShow.exprShow
-import io.getquill.util.Show._
+import io.getquill.util.Show.Show
+import io.getquill.util.Show.Shower
+import io.getquill.util.Show.listShow
 
 object QueryShow {
 

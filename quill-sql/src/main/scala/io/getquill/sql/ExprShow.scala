@@ -1,8 +1,21 @@
 package io.getquill.sql
 
-import io.getquill._
-import io.getquill.util.Show._
-import io.getquill.ast._
+import io.getquill.ast
+import io.getquill.ast.BinaryOperation
+import io.getquill.ast.BinaryOperator
+import io.getquill.ast.Constant
+import io.getquill.ast.Expr
+import io.getquill.ast.Ident
+import io.getquill.ast.NullValue
+import io.getquill.ast.Property
+import io.getquill.ast.Ref
+import io.getquill.ast.Tuple
+import io.getquill.ast.UnaryOperation
+import io.getquill.ast.UnaryOperator
+import io.getquill.ast.Value
+import io.getquill.util.Show.Show
+import io.getquill.util.Show.Shower
+import io.getquill.util.Show.listShow
 
 object ExprShow {
 

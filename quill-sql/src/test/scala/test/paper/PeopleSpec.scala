@@ -1,7 +1,9 @@
 package test.paper
 
+import io.getquill.quote
+import io.getquill.table
+import io.getquill.unquote
 import test.Spec
-import io.getquill._
 
 case class Person(name: String, age: Int)
 case class Couple(her: String, him: String)
