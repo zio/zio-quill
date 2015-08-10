@@ -34,19 +34,22 @@ class QueryMacro(val c: Context) extends Parser with SelectFlattening with Selec
         run[R, S, T](body, params, bindings)
     }
 
-  private def run[R, S, T](q: Tree, params: List[ValDef], bindings: List[Expr[Any]])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]) = {
-    val bindingMap =
-      (for ((param, binding) <- params.zip(bindings)) yield {
-        identExtractor(param) -> (param, binding.tree)
-      }).toMap
-    val (query, selectValues) = flattenSelect[T](Normalize(queryExtractor(q)), Encoding.inferDecoder[R](c))
+  private def run[R, S, T](query: Tree, params: List[ValDef], bindings: List[Expr[Any]])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]) = {
+    val normalizedQuery = Normalize(queryExtractor(query))
+    val (flattenQuery, selectValues) = flattenSelect[T](normalizedQuery, Encoding.inferDecoder[R](c))
+    val (bindedQuery, encode) = EncodeBindVariables.forQuery[S](c)(flattenQuery, bindingMap(params, bindings))
     val extractor = selectResultExtractor[T, R](selectValues)
-    val (bindedQuery, encode) = EncodeBindVariables.query[S](c)(query, bindingMap)
     val sql = SqlQuery(bindedQuery).show
     c.info(sql)
     q"""
       ${c.prefix}.query[$t]($sql, $encode, $extractor)
     """
+  }
+
+  private def bindingMap(params: List[ValDef], bindings: List[Expr[Any]]) = {
+    (for ((param, binding) <- params.zip(bindings)) yield {
+      identExtractor(param) -> (param, binding.tree)
+    }).toMap
   }
 
 }

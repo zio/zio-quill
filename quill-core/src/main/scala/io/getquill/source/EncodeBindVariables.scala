@@ -6,12 +6,12 @@ import scala.reflect.macros.whitebox.Context
 
 object EncodeBindVariables {
 
-  def query[S](c: Context)(query: Query, bindingMap: collection.Map[Ident, (c.universe.ValDef, c.Tree)])(implicit s: c.WeakTypeTag[S]) = {
+  def forQuery[S](c: Context)(query: Query, bindingMap: collection.Map[Ident, (c.universe.ValDef, c.Tree)])(implicit s: c.WeakTypeTag[S]) = {
     val (bindedAction, bindingIdents) = BindVariables(query)(bindingMap.keys.toList)
     (bindedAction, encode(c)(bindingIdents, bindingMap))
   }
 
-  def action[S](c: Context)(action: Action, bindingMap: collection.Map[Ident, (c.universe.ValDef, c.Tree)])(implicit s: c.WeakTypeTag[S]) = {
+  def forAction[S](c: Context)(action: Action, bindingMap: collection.Map[Ident, (c.universe.ValDef, c.Tree)])(implicit s: c.WeakTypeTag[S]) = {
     val (bindedAction, bindingIdents) = BindVariables(action)(bindingMap.keys.toList)
     (bindedAction, encode(c)(bindingIdents, bindingMap))
   }

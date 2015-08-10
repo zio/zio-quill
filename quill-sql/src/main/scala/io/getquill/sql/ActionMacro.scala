@@ -20,9 +20,9 @@ import io.getquill.source.EncodeBindVariables
 class ActionMacro(val c: Context) extends Parser {
   import c.universe.{ Ident => _, _ }
 
-  def run[R, S, T](q: Expr[Actionable[T]])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]): Tree = {
-    val action = Normalize(actionExtractor(q.tree))
-    val sql = action.show
+  def run[R, S, T](action: Expr[Actionable[T]])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]): Tree = {
+    val normalizedAction = Normalize(actionExtractor(action.tree))
+    val sql = normalizedAction.show
     c.info(sql)
     q"${c.prefix}.execute($sql)"
   }
@@ -39,17 +39,18 @@ class ActionMacro(val c: Context) extends Parser {
         run[R, S, T](body, params, bindings.tree)
     }
 
-  private def run[R, S, T](q: Tree, params: List[ValDef], bindings: Tree)(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]) = {
-    val action = Normalize(actionExtractor(q))
-    val bindingMap: Map[Ident, (ValDef, Tree)] =
-      (for ((param, index) <- params.zipWithIndex) yield {
-        identExtractor(param) -> (param, q"value.${TermName(s"_${index + 1}")}")
-      }).toMap
-    val (bindedAction, encode) = EncodeBindVariables.action[S](c)(action, bindingMap)
+  private def run[R, S, T](action: Tree, params: List[ValDef], bindings: Tree)(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]) = {
+    val normalizedAction = Normalize(actionExtractor(action))
+    val (bindedAction, encode) = EncodeBindVariables.forAction[S](c)(normalizedAction, bindingMap(params))
     val sql = bindedAction.show
     c.info(sql)
     q"""
       ${c.prefix}.execute($sql, $bindings.map(value => $encode))
     """
   }
+
+  private def bindingMap(params: List[ValDef]): Map[Ident, (ValDef, Tree)] =
+    (for ((param, index) <- params.zipWithIndex) yield {
+      identExtractor(param) -> (param, q"value.${TermName(s"_${index + 1}")}")
+    }).toMap
 }
