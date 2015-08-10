@@ -19,17 +19,17 @@ import io.getquill.source.EncodeBindVariables
 class QueryMacro(val c: Context) extends Parser with SelectFlattening with SelectResultExtraction {
   import c.universe.{ Ident => _, _ }
 
-  def run[R, S, T](q: Expr[Queryable[T]])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]): Tree =
-    run[R, S, T](q.tree, List(), List())
+  def run[R, S, T](query: Expr[Queryable[T]])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]): Tree =
+    run[R, S, T](query.tree, List(), List())
 
-  def run1[P1, R: WeakTypeTag, S: WeakTypeTag, T: WeakTypeTag](q: Expr[P1 => Queryable[T]])(p1: Expr[P1]): Tree =
-    runParametrized[R, S, T](q.tree, List(p1))
+  def run1[P1, R: WeakTypeTag, S: WeakTypeTag, T: WeakTypeTag](query: Expr[P1 => Queryable[T]])(p1: Expr[P1]): Tree =
+    runParametrized[R, S, T](query.tree, List(p1))
 
-  def run2[P1, P2, R: WeakTypeTag, S: WeakTypeTag, T: WeakTypeTag](q: Expr[(P1, P2) => Queryable[T]])(p1: Expr[P1], p2: Expr[P2]): Tree =
-    runParametrized[R, S, T](q.tree, List(p1, p2))
+  def run2[P1, P2, R: WeakTypeTag, S: WeakTypeTag, T: WeakTypeTag](query: Expr[(P1, P2) => Queryable[T]])(p1: Expr[P1], p2: Expr[P2]): Tree =
+    runParametrized[R, S, T](query.tree, List(p1, p2))
 
-  private def runParametrized[R, S, T](q: Tree, bindings: List[Expr[Any]])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]) =
-    q match {
+  private def runParametrized[R, S, T](query: Tree, bindings: List[Expr[Any]])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]) =
+    query match {
       case q"(..$params) => $body" =>
         run[R, S, T](body, params, bindings)
     }

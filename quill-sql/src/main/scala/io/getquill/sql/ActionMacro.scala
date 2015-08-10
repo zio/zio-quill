@@ -27,14 +27,14 @@ class ActionMacro(val c: Context) extends Parser {
     q"${c.prefix}.execute($sql)"
   }
 
-  def run1[P1, R: WeakTypeTag, S: WeakTypeTag, T: WeakTypeTag](q: Expr[P1 => Actionable[T]])(bindings: Expr[Iterable[P1]]): Tree =
-    runParametrized[R, S, T](q.tree, bindings)
+  def run1[P1, R: WeakTypeTag, S: WeakTypeTag, T: WeakTypeTag](action: Expr[P1 => Actionable[T]])(bindings: Expr[Iterable[P1]]): Tree =
+    runParametrized[R, S, T](action.tree, bindings)
 
-  def run2[P1, P2, R: WeakTypeTag, S: WeakTypeTag, T: WeakTypeTag](q: Expr[(P1, P2) => Actionable[T]])(bindings: Expr[Iterable[(P1, P2)]]): Tree =
-    runParametrized[R, S, T](q.tree, bindings)
+  def run2[P1, P2, R: WeakTypeTag, S: WeakTypeTag, T: WeakTypeTag](action: Expr[(P1, P2) => Actionable[T]])(bindings: Expr[Iterable[(P1, P2)]]): Tree =
+    runParametrized[R, S, T](action.tree, bindings)
 
-  private def runParametrized[R, S, T](q: Tree, bindings: Expr[Iterable[Any]])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]) =
-    q match {
+  private def runParametrized[R, S, T](action: Tree, bindings: Expr[Iterable[Any]])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]) =
+    action match {
       case q"(..$params) => $body" =>
         run[R, S, T](body, params, bindings.tree)
     }
