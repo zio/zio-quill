@@ -1,32 +1,42 @@
-package io.getquill.norm
+package io.getquill.norm.select
 
-import io.getquill.ast.Expr
-import io.getquill.ast.Tuple
 import scala.reflect.macros.whitebox.Context
+import io.getquill.ast.Expr
 import io.getquill.ast.Property
-import io.getquill.ast.ExprShow.exprShow
 import io.getquill.util.Show._
 import io.getquill.util.Messages._
+import io.getquill.ast.Tuple
+import io.getquill.ast.ExprShow
+import io.getquill.ast.Query
 
-trait SelectNormalization {
-  this: NormalizationMacro =>
-
+trait SelectFlattening extends SelectValues {
   val c: Context
+
   import c.universe.{ Expr => _, _ }
 
-  protected def normalizeSelect[T](inferDecoder: Type => Option[Tree], mapExpr: Expr)(implicit t: WeakTypeTag[T]) = {
-    selectElements(mapExpr).map {
-      case (expr, typ) =>
-        inferDecoder(typ) match {
-          case Some(decoder) =>
-            SimpleSelectValue(expr, decoder)
-          case None if (typ.typeSymbol.asClass.isCaseClass) =>
-            caseClassSelectValue(typ, expr, inferDecoder)
-          case _ =>
-            c.fail(s"Source doesn't know how to decode '${t.tpe.typeSymbol.name}.${expr.show}: $typ'")
-        }
-    }
+  protected def flattenSelect[T](q: Query, inferDecoder: Type => Option[Tree])(implicit t: WeakTypeTag[T]) = {
+    val (query, mapExpr) = ExtractSelect(q)
+    val selectValues =
+      selectElements(mapExpr).map {
+        case (expr, typ) =>
+          inferDecoder(typ) match {
+            case Some(decoder) =>
+              SimpleSelectValue(expr, decoder)
+            case None if (typ.typeSymbol.asClass.isCaseClass) =>
+              caseClassSelectValue(typ, expr, inferDecoder)
+            case _ =>
+              import ExprShow._
+              c.fail(s"Source doesn't know how to decode '${t.tpe.typeSymbol.name}.${expr.show}: $typ'")
+          }
+      }
+    (ReplaceSelect(query, selectExprs(selectValues).flatten), selectValues)
   }
+
+  private def selectExprs(values: List[SelectValue]) =
+    values map {
+      case SimpleSelectValue(expr, _)      => List(expr)
+      case CaseClassSelectValue(_, params) => params.flatten.map(_.expr)
+    }
 
   private def caseClassSelectValue(typ: Type, expr: Expr, inferDecoder: Type => Option[Tree]) =
     CaseClassSelectValue(typ, selectValuesForCaseClass(typ, expr, inferDecoder))
@@ -60,4 +70,5 @@ trait SelectNormalization {
     }.headOption.getOrElse {
       c.fail(s"Can't find the primary constructor for '${t.typeSymbol.name}, please submit a bug report.'")
     }
+
 }

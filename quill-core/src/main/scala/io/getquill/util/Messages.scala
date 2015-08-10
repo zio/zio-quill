@@ -3,6 +3,10 @@ package io.getquill.util
 import scala.reflect.macros.whitebox.Context
 
 object Messages {
+
+  def fail(msg: String) =
+    throw new IllegalStateException(msg)
+
   implicit class RichContext(c: Context) {
     def fail(msg: String) =
       c.abort(c.enclosingPosition, msg)
