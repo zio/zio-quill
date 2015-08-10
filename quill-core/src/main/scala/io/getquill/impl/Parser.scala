@@ -66,7 +66,7 @@ trait Parser extends Quotation {
 
   val queryExtractor: Extractor[Query] = Extractor[Query] {
 
-    case q"io.getquill.`package`.table[${ t: Type }]" =>
+    case q"io.getquill.`package`.queryable[${ t: Type }]" =>
       Table(t.typeSymbol.name.decodedName.toString)
 
     case q"$source.filter(($alias) => $body)" =>

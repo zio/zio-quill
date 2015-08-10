@@ -1,7 +1,7 @@
 package test.paper
 
 import io.getquill.quote
-import io.getquill.table
+import io.getquill.queryable
 import io.getquill.unquote
 import test.Spec
 
@@ -13,7 +13,7 @@ trait PeopleSpec extends Spec {
   val peopleInsert =
     quote {
       (name: String, age: Int) =>
-        table[Person].insert(_.name -> name, _.age -> age)
+        queryable[Person].insert(_.name -> name, _.age -> age)
     }
 
   val peopleEntries = List(
@@ -27,7 +27,7 @@ trait PeopleSpec extends Spec {
   val couplesInsert =
     quote {
       (her: String, him: String) =>
-        table[Couple].insert(_.her -> her, _.him -> him)
+        queryable[Couple].insert(_.her -> her, _.him -> him)
     }
 
   val couplesEntries = List(
@@ -38,9 +38,9 @@ trait PeopleSpec extends Spec {
   val `Ex 1 differences` =
     quote {
       for {
-        c <- table[Couple]
-        w <- table[Person]
-        m <- table[Person] if (c.her == w.name && c.him == m.name && w.age > m.age)
+        c <- queryable[Couple]
+        w <- queryable[Person]
+        m <- queryable[Person] if (c.her == w.name && c.him == m.name && w.age > m.age)
       } yield {
         (w.name, w.age - m.age)
       }
@@ -50,7 +50,7 @@ trait PeopleSpec extends Spec {
   val `Ex 2 rangeSimple` = quote {
     (a: Int, b: Int) =>
       for {
-        u <- table[Person] if (a <= u.age && u.age < b)
+        u <- queryable[Person] if (a <= u.age && u.age < b)
       } yield {
         u
       }
@@ -63,7 +63,7 @@ trait PeopleSpec extends Spec {
     quote {
       (p: Int => Boolean) =>
         for {
-          u <- table[Person] if (p(u.age))
+          u <- queryable[Person] if (p(u.age))
         } yield {
           u
         }
@@ -78,7 +78,7 @@ trait PeopleSpec extends Spec {
     val range = quote {
       (a: Int, b: Int) =>
         for {
-          u <- table[Person] if (a <= u.age && u.age < b)
+          u <- queryable[Person] if (a <= u.age && u.age < b)
         } yield {
           u
         }
@@ -86,7 +86,7 @@ trait PeopleSpec extends Spec {
     val ageFromName = quote {
       (s: String) =>
         for {
-          u <- table[Person] if (s == u.name)
+          u <- queryable[Person] if (s == u.name)
         } yield {
           u.age
         }

@@ -9,9 +9,9 @@ case class Street(id: Long, name: String, city: String)
 
 object Test extends App {
 
-  // peopleDB.insert(table[Person].map(name, surname, age))("nnn", "mmm", 33)
-  // peopleDB.update(table[Person].filter(_.id == 42))(_.age -> 33)
-  // peopleDB.upsert(table[Person])(Person(0, "nnn", "mmm", 33)
+  // peopleDB.insert(queryable[Person].map(name, surname, age))("nnn", "mmm", 33)
+  // peopleDB.update(queryable[Person].filter(_.id == 42))(_.age -> 33)
+  // peopleDB.upsert(queryable[Person])(Person(0, "nnn", "mmm", 33)
 
   object db extends JdbcSource
 
@@ -19,15 +19,15 @@ object Test extends App {
 
   def q1 =
     quote {
-      table[Person].filter(p => p.name == name).map(p => (p.name, p.age))
+      queryable[Person].filter(p => p.name == name).map(p => (p.name, p.age))
     }
   db.run(q1)
 
   def q2 =
     quote {
       for {
-        p <- table[Person] if (p.name == null)
-        a <- table[Address] if (a.personId == p.id)
+        p <- queryable[Person] if (p.name == null)
+        a <- queryable[Address] if (a.personId == p.id)
       } yield {
         a
       }
@@ -39,7 +39,7 @@ object Test extends App {
     quote {
       for {
         a <- q2
-        s <- table[Street] if (a.streetId == s.id)
+        s <- queryable[Street] if (a.streetId == s.id)
       } yield {
         a
       }
@@ -47,7 +47,7 @@ object Test extends App {
   db.run(q3)
 
   val byName = quote {
-    (name: String) => table[Person].filter(_.name == name)
+    (name: String) => queryable[Person].filter(_.name == name)
   }
 
   val q4 =
@@ -70,7 +70,7 @@ object Test extends App {
   }
 
   val q6 = quote {
-    table[Person].filter(nameEqualsSurname(_))
+    queryable[Person].filter(nameEqualsSurname(_))
   }
   db.run(q6)
 
@@ -79,18 +79,18 @@ object Test extends App {
   }
 
   val q7 = quote {
-    table[Person].filter(nameIs(_, "flavio"))
+    queryable[Person].filter(nameIs(_, "flavio"))
   }
   db.run(q7)
 
   val names = quote {
-    table[Person].map(_.name)
+    queryable[Person].map(_.name)
   }
 
   val q8 = quote {
     for {
       name <- names
-      p <- table[Person] if (p.name == name)
+      p <- queryable[Person] if (p.name == name)
     } yield {
       (p.name, p.age)
     }
@@ -98,15 +98,15 @@ object Test extends App {
   db.run(q8)
 
   val q9 = quote {
-    table[Address].map(_.personId)
+    queryable[Address].map(_.personId)
   }
   db.run(q9)
 
   val q10 =
     quote {
       for {
-        p1 <- table[Person]
-        p2 <- table[Person] if (p1.name == p2.name)
+        p1 <- queryable[Person]
+        p2 <- queryable[Person] if (p1.name == p2.name)
       } yield {
         p2
       }
@@ -116,8 +116,8 @@ object Test extends App {
   val personAndAddress =
     quote {
       for {
-        p <- table[Person]
-        a <- table[Address] if (a.personId == p.id)
+        p <- queryable[Person]
+        a <- queryable[Address] if (a.personId == p.id)
       } yield {
         (p, a)
       }
@@ -127,7 +127,7 @@ object Test extends App {
     quote {
       for {
         (pp, aa) <- personAndAddress
-        s <- table[Street] if (aa.streetId == s.id)
+        s <- queryable[Street] if (aa.streetId == s.id)
       } yield {
         (pp, aa, s.city)
       }
