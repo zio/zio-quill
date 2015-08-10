@@ -1,6 +1,5 @@
 package test.paper
 
-import io.getquill.impl.Source
 import test.Spec
 import io.getquill._
 import com.twitter.util.Await

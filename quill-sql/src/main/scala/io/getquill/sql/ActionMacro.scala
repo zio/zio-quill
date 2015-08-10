@@ -8,11 +8,12 @@ import io.getquill.norm.NormalizationMacro
 import io.getquill.util.Messages._
 import io.getquill.ast.Ident
 import io.getquill.util.Show.Shower
-import io.getquill.encoding.Encoder
+import io.getquill.source.Encoder
 import io.getquill.impl.Actionable
 import io.getquill.impl.Parser
 import io.getquill.norm.Normalize
 import io.getquill.util.InferImplicitValueWithFallback
+import io.getquill.source.Encoding
 
 class ActionMacro(val c: Context) extends Parser {
   import c.universe.{ Ident => _, _ }
@@ -49,7 +50,7 @@ class ActionMacro(val c: Context) extends Parser {
       for ((ident, index) <- bindingIdents.zipWithIndex) yield {
         val (param, binding) = bindingMap(ident)
         val encoder =
-          inferEncoder(param.tpt.tpe)(s)
+          Encoding.inferEcoder(c)(param.tpt.tpe)(s)
             .getOrElse(c.fail(s"Source doesn't know how do encode $param: ${param.tpt}"))
         q"r = $encoder($index, $binding, r)"
       }
@@ -64,11 +65,5 @@ class ActionMacro(val c: Context) extends Parser {
         ${c.prefix}.execute($sql, encode)
       }  
     """
-  }
-
-  private def inferEncoder[R](tpe: Type)(implicit r: WeakTypeTag[R]) = {
-    def encoderType[T, R](implicit t: WeakTypeTag[T], r: WeakTypeTag[R]) =
-      c.weakTypeTag[Encoder[R, T]]
-    InferImplicitValueWithFallback(c)(encoderType(c.WeakTypeTag(tpe), r).tpe, c.prefix.tree)
   }
 }

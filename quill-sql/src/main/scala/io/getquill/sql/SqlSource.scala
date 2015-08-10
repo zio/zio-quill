@@ -6,7 +6,7 @@ import io.getquill.impl.Queryable
 import io.getquill.impl.Quoted
 import io.getquill.impl.Actionable
 
-abstract class SqlSource[R: ClassTag, S: ClassTag] extends io.getquill.impl.Source[R, S] {
+abstract class SqlSource[R: ClassTag, S: ClassTag] extends io.getquill.source.Source[R, S] {
 
   def run[T](q: Queryable[T]): Any = macro QueryMacro.run[R, S, T]
   def run[P1, T](q: P1 => Queryable[T])(p1: P1): Any = macro QueryMacro.run1[P1, R, S, T]

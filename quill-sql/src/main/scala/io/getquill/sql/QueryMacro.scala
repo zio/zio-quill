@@ -6,8 +6,9 @@ import io.getquill.impl.Queryable
 import io.getquill.norm.NormalizationMacro
 import io.getquill.util.Messages._
 import io.getquill.util.Show.Shower
-import io.getquill.encoding.Encoder
+import io.getquill.source.Encoder
 import io.getquill.util.InferImplicitValueWithFallback
+import io.getquill.source.Encoding
 
 class QueryMacro(val c: Context) extends NormalizationMacro {
   import c.universe._
@@ -33,7 +34,7 @@ class QueryMacro(val c: Context) extends NormalizationMacro {
         identExtractor(param) -> (param, binding)
       }).toMap
     val d = c.WeakTypeTag(c.prefix.tree.tpe)
-    val NormalizedQuery(query, extractor) = normalize(q)(d, r, t)
+    val NormalizedQuery(query, extractor) = normalize(q)(r, t)
     val (bindedQuery, bindingIdents) = BindVariables(query)(bindingMap.keys.toList)
     val sql = SqlQuery(bindedQuery).show
     c.info(sql)
@@ -41,7 +42,7 @@ class QueryMacro(val c: Context) extends NormalizationMacro {
       for ((ident, index) <- bindingIdents.zipWithIndex) yield {
         val (param, binding) = bindingMap(ident)
         val encoder =
-          inferEncoder(param.tpt.tpe)(s)
+          Encoding.inferEcoder(c)(param.tpt.tpe)(s)
             .getOrElse(c.fail(s"Source doesn't know how do encode $param: ${param.tpt}"))
         q"r = $encoder($index, $binding, r)"
       }
@@ -57,15 +58,8 @@ class QueryMacro(val c: Context) extends NormalizationMacro {
     """
   }
 
-  private def inferEncoder[R](tpe: Type)(implicit r: WeakTypeTag[R]) = {
-    def encoderType[T, R](implicit t: WeakTypeTag[T], r: WeakTypeTag[R]) =
-      c.weakTypeTag[Encoder[R, T]]
-    InferImplicitValueWithFallback(c)(encoderType(c.WeakTypeTag(tpe), r).tpe, c.prefix.tree)
-  }
-
   private def interpret[R, T](q: Tree)(implicit r: WeakTypeTag[R], t: WeakTypeTag[T]) = {
-    val d = c.WeakTypeTag(c.prefix.tree.tpe)
-    val NormalizedQuery(query, extractor) = normalize(q)(d, r, t)
+    val NormalizedQuery(query, extractor) = normalize(q)(r, t)
     (SqlQuery(query).show, extractor)
   }
 }
