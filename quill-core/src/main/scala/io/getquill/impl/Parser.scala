@@ -25,7 +25,7 @@ import io.getquill.norm.BetaReduction
 import io.getquill.util.Messages.RichContext
 import io.getquill.util.SubstituteTrees
 
-trait Parser extends Quotation  {
+trait Parser extends Quotation {
 
   val c: Context
   import c.universe.{ Expr => _, Ident => _, Constant => _, _ }
