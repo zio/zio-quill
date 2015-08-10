@@ -39,6 +39,8 @@ trait Parser extends Quotation {
 
     def unapply(tree: Tree): Option[T] =
       tree match {
+        case q"io.getquill.`package`.unquote[$t]($function).apply(..$actuals)" =>
+          unapply(q"${unquoteTree(function)}.apply(..$actuals)")
         case q"((..$params) => $body).apply(..$actuals)" =>
           unapply(SubstituteTrees(c)(body, params, actuals))
         case q"io.getquill.`package`.unquote[$t]($quoted)" =>
