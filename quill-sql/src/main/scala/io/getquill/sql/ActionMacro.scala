@@ -4,9 +4,9 @@ import ActionShow._
 import scala.reflect.macros.whitebox.Context
 import QueryShow.sqlQueryShow
 import io.getquill.impl.Queryable
-import io.getquill.norm.NormalizationMacro
 import io.getquill.util.Messages._
 import io.getquill.ast.Ident
+import io.getquill.ast.Action
 import io.getquill.util.Show.Shower
 import io.getquill.source.Encoder
 import io.getquill.impl.Actionable
@@ -14,6 +14,8 @@ import io.getquill.impl.Parser
 import io.getquill.norm.Normalize
 import io.getquill.util.InferImplicitValueWithFallback
 import io.getquill.source.Encoding
+import io.getquill.source.BindVariables
+import io.getquill.source.EncodeBindVariables
 
 class ActionMacro(val c: Context) extends Parser {
   import c.universe.{ Ident => _, _ }
@@ -43,27 +45,11 @@ class ActionMacro(val c: Context) extends Parser {
       (for ((param, index) <- params.zipWithIndex) yield {
         identExtractor(param) -> (param, q"value.${TermName(s"_${index + 1}")}")
       }).toMap
-    val (bindedAction, bindingIdents) = BindVariables(action)(bindingMap.keys.toList)
+    val (bindedAction, encode) = EncodeBindVariables.action[S](c)(action, bindingMap)
     val sql = bindedAction.show
     c.info(sql)
-    val applyEncoders =
-      for ((ident, index) <- bindingIdents.zipWithIndex) yield {
-        val (param, binding) = bindingMap(ident)
-        val encoder =
-          Encoding.inferEcoder(c)(param.tpt.tpe)(s)
-            .getOrElse(c.fail(s"Source doesn't know how do encode $param: ${param.tpt}"))
-        q"r = $encoder($index, $binding, r)"
-      }
     q"""
-      { 
-        val encode =
-            $bindings.map(value => (row: $s) => {
-              var r = row
-              ..$applyEncoders
-              r
-            })
-        ${c.prefix}.execute($sql, encode)
-      }  
+      ${c.prefix}.execute($sql, $bindings.map(value => $encode))
     """
   }
 }
