@@ -33,40 +33,34 @@ object Normalize {
 
       // ************Symbolic***************
 
-      // **yld-for**
       // q.flatMap(x => p.map(y => r)) =>
       //    q.flatMap(x => p).map(y => r)
       case FlatMap(q, x, Map(p, y, r)) =>
         norm(Map(norm(FlatMap(norm(q), x, norm(p))), y, r))
 
-      // **for-yld**
       // q.map(x => r).flatMap(y => p) =>
       //    q.flatMap(x => p[y := r])
       case FlatMap(Map(q, x, r), y, p) =>
         val pr = BetaReduction(p, y -> r)
         norm(FlatMap(norm(q), x, norm(pr)))
 
-      // **if-yld**
       // q.map(x => r).filter(y => p) =>
       //    q.filter(x => p[y := r])
       case Filter(Map(q, x, r), y, p) =>
         val pr = BetaReduction(p, y -> r)
         norm(Filter(norm(q), x, pr))
 
-      // **yld-yld**
       // q.map(x => r).map(y => p) =>
       //    q.map(x => p[y := r])
       case Map(Map(q, x, r), y, p) =>
         val pr = BetaReduction(p, y -> r)
         norm(Map(norm(q), x, pr))
 
-      // **for-for**
       // p.flatMap(x => q).flatMap(y => r) =>
       //     p.flatMap(x => q.flatMap(y => r))
       case FlatMap(FlatMap(p, x, q), y, r) =>
         norm(FlatMap(norm(p), x, norm(FlatMap(norm(q), y, norm(r)))))
 
-      // **for-if**
       // q.filter(x => p).flatMap(y => r) =>
       //     q.flatMap(y => r.filter(temp => p[x := y]))
       case FlatMap(Filter(q, x, p), y, r) =>
@@ -75,14 +69,12 @@ object Normalize {
 
       // ************AdHoc***************
 
-      // **if-if**
       // r.filter(x => q).filter(y => p) =>
       //    r.filter(x => q && p[y := x])
       case Filter(Filter(r, x, q), y, p) =>
         val pr = BetaReduction(p, y -> x)
         norm(Filter(norm(r), x, BinaryOperation(q, `&&`, pr)))
 
-      // **if-for**
       // q.flatMap(x => r).filter(y => p) =>
       //    q.flatMap(x => r.filter(temp => p[y := x]))
       case Filter(FlatMap(q, x, r), y, p) =>
