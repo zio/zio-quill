@@ -39,13 +39,19 @@ trait Parser extends Quotation {
 
     def unapply(tree: Tree): Option[T] =
       tree match {
+        case q"$tuple match { case (..$fields) => $body }" =>
+          val fa =
+            for (i <- 1 to fields.size) yield {
+              q"$tuple.${TermName(s"_$i")}"
+            }
+          unapply(SubstituteTrees(c)(body, fields, fa.toList))
         case q"io.getquill.`package`.unquote[$t]($function).apply(..$actuals)" =>
           unapply(q"${unquoteTree(function)}.apply(..$actuals)")
         case q"((..$params) => $body).apply(..$actuals)" =>
           unapply(SubstituteTrees(c)(body, params, actuals))
         case q"io.getquill.`package`.unquote[$t]($quoted)" =>
           unapply(unquoteTree(quoted))
-        case tree if (tree.tpe <:< c.weakTypeOf[Quoted[Any]] && !(tree.tpe <:< c.weakTypeOf[Null])) =>
+        case tree if (tree.tpe != null && tree.tpe <:< c.weakTypeOf[Quoted[Any]] && !(tree.tpe <:< c.weakTypeOf[Null])) =>
           unapply(unquoteTree(tree))
         case other =>
           p.lift(tree)

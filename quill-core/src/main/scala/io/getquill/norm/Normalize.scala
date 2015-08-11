@@ -15,17 +15,18 @@ import io.getquill.ast.Update
 
 object Normalize {
 
-  def apply(q: Query) = norm(AvoidCapture(q))
-
   def apply(a: Action): Action =
     a match {
       case Insert(query, assignments) =>
-        Insert(norm(query), assignments)
+        Insert(apply(query), assignments)
       case Update(query, assignments) =>
-        Update(norm(query), assignments)
+        Update(apply(query), assignments)
       case Delete(query) =>
-        Delete(norm(query))
+        Delete(apply(query))
     }
+
+  def apply(q: Query) =
+    BetaReduction(norm(AvoidCapture(q)))(collection.Map.empty)
 
   private def norm(q: Query): Query =
     q match {

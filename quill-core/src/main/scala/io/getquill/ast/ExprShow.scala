@@ -35,7 +35,7 @@ object ExprShow {
         case io.getquill.ast.`-`    => "-"
         case io.getquill.ast.`+`    => "+"
         case io.getquill.ast.`*`    => "*"
-        case io.getquill.ast.`==`   => "=-"
+        case io.getquill.ast.`==`   => "=="
         case io.getquill.ast.`!=`   => "!="
         case io.getquill.ast.`&&`   => "&&"
         case io.getquill.ast.`||`   => "||"

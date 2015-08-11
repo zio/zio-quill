@@ -9,10 +9,6 @@ case class Street(id: Long, name: String, city: String)
 
 object Test extends App {
 
-  // peopleDB.insert(queryable[Person].map(name, surname, age))("nnn", "mmm", 33)
-  // peopleDB.update(queryable[Person].filter(_.id == 42))(_.age -> 33)
-  // peopleDB.upsert(queryable[Person])(Person(0, "nnn", "mmm", 33)
-
   object db extends JdbcSource
 
   val name = quote("test")
@@ -113,6 +109,22 @@ object Test extends App {
     }
   db.run(q10)
 
+  val nameAndAge =
+    quote {
+      for {
+        p <- queryable[Person]
+      } yield {
+        (p.name, p.age)
+      }
+    }
+
+  val q11 =
+    quote {
+      nameAndAge.map(_._1)
+    }
+
+  db.run(q11)
+
   val personAndAddress =
     quote {
       for {
@@ -123,14 +135,15 @@ object Test extends App {
       }
     }
 
-  val q11 =
+  val q12 =
     quote {
       for {
         (pp, aa) <- personAndAddress
         s <- queryable[Street] if (aa.streetId == s.id)
       } yield {
-        (pp, aa, s.city)
+        s
       }
     }
-  //  db.run(q11)
+  db.run(q12)
+
 }

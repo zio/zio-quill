@@ -43,9 +43,10 @@ object BetaReduction {
 
   def apply(ref: Ref)(implicit refs: collection.Map[Ident, Expr]): Expr =
     ref match {
-      case Tuple(values)       => Tuple(values.map(apply))
-      case Property(ref, name) => Property(apply(ref), name)
-      case ident: Ident        => refs.getOrElse(ident, ident)
-      case value: Value        => value
+      case Property(Tuple(values), name) => values(name.drop(1).toInt - 1)
+      case Tuple(values)                 => Tuple(values.map(apply))
+      case Property(ref, name)           => Property(apply(ref), name)
+      case ident: Ident                  => refs.getOrElse(ident, ident)
+      case value: Value                  => value
     }
 }
