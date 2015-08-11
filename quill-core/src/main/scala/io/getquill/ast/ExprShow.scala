@@ -17,8 +17,35 @@ object ExprShow {
   implicit val operationShow: Show[Operation] = new Show[Operation] {
     def show(e: Operation) =
       e match {
-        case UnaryOperation(op, expr)  => s"${op.toString}${expr.show}"
-        case BinaryOperation(a, op, b) => s"${a.show} ${op.toString} ${b.show}"
+        case UnaryOperation(op, expr)  => s"${op.show}${expr.show}"
+        case BinaryOperation(a, op, b) => s"${a.show} ${op.show} ${b.show}"
+      }
+  }
+
+  implicit val unaryOperatorShow: Show[UnaryOperator] = new Show[UnaryOperator] {
+    def show(o: UnaryOperator) =
+      o match {
+        case io.getquill.ast.`!` => "!"
+      }
+  }
+
+  implicit val binaryOperatorShow: Show[BinaryOperator] = new Show[BinaryOperator] {
+    def show(o: BinaryOperator) =
+      o match {
+        case io.getquill.ast.`-`    => "-"
+        case io.getquill.ast.`+`    => "+"
+        case io.getquill.ast.`*`    => "*"
+        case io.getquill.ast.`==`   => "=-"
+        case io.getquill.ast.`!=`   => "!="
+        case io.getquill.ast.`&&`   => "&&"
+        case io.getquill.ast.`||`   => "||"
+        case io.getquill.ast.`>`    => ">"
+        case io.getquill.ast.`>=`   => ">="
+        case io.getquill.ast.`<`    => "<"
+        case io.getquill.ast.`<=`   => "<="
+        case io.getquill.ast.`/`    => "/"
+        case io.getquill.ast.`%`    => "%"
+        case io.getquill.ast.`like` => "like"
       }
   }
 
