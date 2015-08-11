@@ -62,9 +62,10 @@ object Normalize {
 
       // **for-if**
       // q.filter(x => p).flatMap(y => r) =>
-      //     q.flatMap(y => r).filter(x => p)
+      //     q.flatMap(y => r.filter(temp => p[x := y]))
       case FlatMap(Filter(q, x, p), y, r) =>
-        norm(Filter(norm(FlatMap(norm(q), y, norm(r))), x, p))
+        val pr = BetaReduction(p, x -> y)
+        norm(FlatMap(norm(q), y, norm(Filter(norm(r), Ident("temp"), pr))))
 
       // ************AdHoc***************
 
