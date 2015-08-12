@@ -44,7 +44,12 @@ class ActionMacro(val c: Context) extends Parser {
   }
 
   private def bindingMap(params: List[ValDef]): Map[Ident, (ValDef, Tree)] =
-    (for ((param, index) <- params.zipWithIndex) yield {
-      identExtractor(param) -> (param, q"value.${TermName(s"_${index + 1}")}")
-    }).toMap
+    params match {
+      case param :: Nil =>
+        Map((identExtractor(param), (param, q"value")))
+      case params =>
+        (for ((param, index) <- params.zipWithIndex) yield {
+          identExtractor(param) -> (param, q"value.${TermName(s"_${index + 1}")}")
+        }).toMap
+    }
 }

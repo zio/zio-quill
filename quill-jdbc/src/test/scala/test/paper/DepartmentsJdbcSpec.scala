@@ -4,6 +4,7 @@ import test.Spec
 import io.getquill.jdbc.JdbcSource
 import io.getquill._
 import test.testDB
+import io.getquill.impl.Queryable
 
 case class Department(dpt: String)
 case class Employee(emp: String, dpt: String, salary: Int)
@@ -11,7 +12,43 @@ case class Task(emp: String, tsk: String)
 
 class DepartmentsJdbcSpec extends Spec {
 
-  "Example 8 - nested naive" ignore {
+  override def beforeAll =
+    testDB.transaction {
+      testDB.run(queryable[Department].delete)
+      testDB.run(queryable[Employee].delete)
+      testDB.run(queryable[Task].delete)
+
+      testDB.run((dpt: String) => queryable[Department].insert(_.dpt -> dpt)) {
+        List("Product", "Quality", "Research", "Sales")
+      }
+      testDB.run((dpt: String, emp: String) => queryable[Employee].insert(_.dpt -> dpt, _.emp -> emp)) {
+        List(
+          ("Product", "Alex"),
+          ("Product", "Bert"),
+          ("Research", "Cora"),
+          ("Research", "Drew"),
+          ("Research", "Edna"),
+          ("Sales", "Fred")
+        )
+      }
+      testDB.run((emp: String, tsk: String) => queryable[Task].insert(_.emp -> emp, _.tsk -> tsk)) {
+        List(
+          ("Alex", "build"),
+          ("Bert", "build"),
+          ("Cora", "abstract"),
+          ("Cora", "build"),
+          ("Cora", "design"),
+          ("Drew", "abstract"),
+          ("Drew", "design"),
+          ("Edna", "abstract"),
+          ("Edna", "call"),
+          ("Edna", "design"),
+          ("Fred", "call")
+        )
+      }
+    }
+
+  "Example 8 - nested naive" in {
 
     val expertiseNaive =
       quote {
@@ -25,10 +62,77 @@ class DepartmentsJdbcSpec extends Spec {
                       t <- queryable[Task] if (e.emp == t.emp && t.tsk == u)
                     } yield {}).isEmpty)
               } yield {}).isEmpty)
-          } yield d
+          } yield d.dpt
 
       }
 
-    testDB.run(expertiseNaive("a"))
+    testDB.run(expertiseNaive)("abstract") mustEqual List("Quality", "Research")
+  }
+
+  "Example 9 - nested db" in {
+
+    val nestedOrg =
+      quote {
+        for {
+          d <- queryable[Department]
+        } yield {
+          (d.dpt, for {
+            e <- queryable[Employee] if (d.dpt == e.dpt)
+          } yield {
+            (e.emp, for {
+              t <- queryable[Task] if (e.emp == t.emp)
+            } yield {
+              t.tsk
+            })
+          })
+        }
+      }
+
+    val any =
+      quote {
+        (xs: Queryable[T], p: T => Boolean) =>
+          (for {
+            x <- xs if (p(x))
+          } yield {}).nonEmpty
+      }
+
+//    val all =
+//      quote[(Queryable[T], T => Boolean) => Boolean forSome { type T }] {
+//        (xs: Queryable[T], p: T => Boolean) =>
+//          !any(xs, (x: T) => !p(x))
+//      }
+//
+    //    val q =
+    //      quote {
+    //        for {
+    //          q <- queryable[Employee] if (all(queryable[Department], (d: Department) => d.dpt == "a"))
+    //        } yield {
+    //          q
+    //        }
+    //      }
+    //
+    //    testDB.run(q)
+
+    //    def contains[T] =
+    //      quote {
+    //        (xs: Queryable[T], u: T) =>
+    //          any(xs, (x: Any) => x == u)
+    //      }
+
+    //    val expertise =
+    //      quote {
+    //        (u: String) =>
+    //          for {
+    //            d <- nestedOrg if (all(d._2, e => contains(e._2, u)))
+    //          } yield {
+    //            d._1
+    //          }
+    //      }
+    //    let expertise =
+    //            <@ fun u ->
+    //                query {
+    //                    for d in (%nestedDb) do
+    //                        if (%forallA()) (d.employees) (fun e -> (%containsA()) e.tasks u) then yield d.dpt
+    //                } @>
   }
 }
