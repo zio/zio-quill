@@ -4,8 +4,8 @@ scala:
 jdk:
 - oraclejdk8
 before_script:
-  - mysql -u root -e "create database people;"
-  - mysql -u root people < quill-sql/src/test/sql/mysql-people.sql
+  - mysql -u root -e "create database quill_test;"
+  - mysql -u root quill_test < quill-sql/src/test/sql/mysql-schema.sql
   - mysql -u root -e "CREATE USER 'finagle'@'localhost' IDENTIFIED BY 'finagle';"
   - mysql -u root -e "GRANT ALL PRIVILEGES ON * . * TO 'finagle'@'localhost';"
   - mysql -u root -e "FLUSH PRIVILEGES;"
