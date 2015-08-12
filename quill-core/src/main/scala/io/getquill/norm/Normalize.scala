@@ -37,30 +37,30 @@ object Normalize {
       //    q.flatMap(x => p[y := r])
       case FlatMap(Map(q, x, r), y, p) =>
         val pr = BetaReduction(p, y -> r)
-        norm(FlatMap(norm(q), x, norm(pr)))
+        norm(FlatMap(q, x, pr))
 
       // q.map(x => r).filter(y => p) =>
       //    q.filter(x => p[y := r])
       case Filter(Map(q, x, r), y, p) =>
         val pr = BetaReduction(p, y -> r)
-        norm(Filter(norm(q), x, pr))
+        norm(Filter(q, x, pr))
 
       // q.map(x => r).map(y => p) =>
       //    q.map(x => p[y := r])
       case Map(Map(q, x, r), y, p) =>
         val pr = BetaReduction(p, y -> r)
-        norm(Map(norm(q), x, pr))
+        norm(Map(q, x, pr))
 
       // p.flatMap(x => q).flatMap(y => r) =>
       //     p.flatMap(x => q.flatMap(y => r))
       case FlatMap(FlatMap(p, x, q), y, r) =>
-        norm(FlatMap(norm(p), x, norm(FlatMap(norm(q), y, norm(r)))))
+        norm(FlatMap(p, x, FlatMap(q, y, r)))
 
       // q.filter(x => p).flatMap(y => r) =>
       //     q.flatMap(y => r.filter(temp => p[x := y]))
       case FlatMap(Filter(q, x, p), y, r) =>
         val pr = BetaReduction(p, x -> y)
-        norm(FlatMap(norm(q), y, norm(Filter(norm(r), Ident("temp"), pr))))
+        norm(FlatMap(q, y, Filter(r, Ident("temp"), pr)))
 
       // ************AdHoc***************
 
@@ -68,13 +68,13 @@ object Normalize {
       //    r.filter(x => q && p[y := x])
       case Filter(Filter(r, x, q), y, p) =>
         val pr = BetaReduction(p, y -> x)
-        norm(Filter(norm(r), x, BinaryOperation(q, `&&`, pr)))
+        norm(Filter(r, x, BinaryOperation(q, `&&`, pr)))
 
       // q.flatMap(x => r).filter(y => p) =>
       //    q.flatMap(x => r.filter(temp => p[y := x]))
       case Filter(FlatMap(q, x, r), y, p) =>
         val pr = BetaReduction(p, y -> x)
-        norm(FlatMap(norm(q), x, norm(Filter(norm(r), Ident("temp"), pr))))
+        norm(FlatMap(q, x, Filter(r, Ident("temp"), pr)))
 
       // ************Recursion***************
 
