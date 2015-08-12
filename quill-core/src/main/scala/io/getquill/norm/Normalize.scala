@@ -32,17 +32,47 @@ object Normalize {
     q match {
 
       // ************Symbolic***************
+    
+      // a.flatMap(b => c.map(d => e)).flatMap(f => g)
+      //    a.flatMap(b => c).flatMap(d => g[f := e])
+      case FlatMap(FlatMap(a, b, Map(c, d, e)), f, g) =>
+        val gr = BetaReduction(g, f -> e)
+        norm(FlatMap(FlatMap(a, b, c), d, gr))
+        
+      // a.map(b => c).flatMap(d => e) =>
+      //    a.flatMap(b => e[d := c])
+      case FlatMap(Map(a, b, c), d, e) =>
+        val er = BetaReduction(e, d -> c)
+        norm(FlatMap(a, b, er))
+
+      // a.map(b => c).filter(d => e) =>
+      //    a.filter(b => e[d := c])
+      case Filter(Map(a, b, c), d, e) =>
+        val er = BetaReduction(e, d -> c)
+        norm(Filter(a, b, er))
+
+      // a.map(b => c).map(d => e) =>
+      //    a.map(b => e[d := c])
+      case Map(Map(a, b, c), d, e) =>
+        val er = BetaReduction(e, d -> c)
+        norm(Map(a, b, er))
 
       // a.flatMap(b => c).flatMap(d => e) =>
       //     a.flatMap(b => c.flatMap(d => e))
       case FlatMap(FlatMap(a, b, c), d, e) =>
         norm(FlatMap(a, b, FlatMap(c, d, e)))
 
+      // a.filter(b => c).flatMap(d => e.map(f => g)) =>
+      //     a.flatMap(d => e.filter(temp => c[b := d]).map(f => g))
+      case FlatMap(Filter(a, b, c), d, Map(e, f, g)) =>
+        val cr = BetaReduction(c, b -> d)
+        norm(FlatMap(a, d, Map(Filter(e, Ident("temp"), cr), f, g)))
+
       // a.filter(b => c).flatMap(d => e) =>
-      //     a.flatMap(d => r.filter(temp => c[b := d]))
+      //     a.flatMap(d => e.filter(temp => c[b := d]))
       case FlatMap(Filter(a, b, c), d, e) =>
-        val pr = BetaReduction(c, b -> d)
-        norm(FlatMap(a, d, Filter(e, Ident("temp"), pr)))
+        val cr = BetaReduction(c, b -> d)
+        norm(FlatMap(a, d, Filter(e, Ident("temp"), cr)))
 
       // ************AdHoc***************
 
