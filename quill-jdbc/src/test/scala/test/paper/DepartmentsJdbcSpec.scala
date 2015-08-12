@@ -25,7 +25,7 @@ class DepartmentsJdbcSpec extends Spec {
                     for {
                       t <- queryable[Task] if (e.emp == t.emp && t.tsk == u)
                     } yield {}).isEmpty)
-              } yield e).isEmpty)
+              } yield {}).isEmpty)
           } yield d
 
       }
