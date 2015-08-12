@@ -5,8 +5,8 @@ MVP - mid-september
 √ zero runtime overhead
 √ fully non-blocking
 √ transactions
-- inserts
-- updates
+√ inserts
+√ updates
 - generic test suite
 - database dialects (db2, derby, h2, hsql, mysql, oracle, postgres, sqlserver)
 - full sql support
@@ -25,6 +25,7 @@ MVP - mid-september
 Later
 
 - upserts
+- monadic io
 - quill-doobie
 - macro to generate the case classes from db schema
 - custom functions
