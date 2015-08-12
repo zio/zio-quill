@@ -2,7 +2,6 @@ package io.getquill.impl
 
 import scala.reflect.ClassTag
 import scala.reflect.macros.whitebox.Context
-
 import io.getquill.ast.Action
 import io.getquill.ast.Assignment
 import io.getquill.ast.BinaryOperation
@@ -24,6 +23,11 @@ import io.getquill.ast.Update
 import io.getquill.norm.BetaReduction
 import io.getquill.util.Messages.RichContext
 import io.getquill.util.SubstituteTrees
+import io.getquill.ast.UnaryOperation
+import io.getquill.ast.UnaryOperator
+import io.getquill.ast.PrefixUnaryOperator
+import io.getquill.ast.UnaryOperation
+import io.getquill.ast.QueryExpr
 
 trait Parser extends Quotation {
 
@@ -106,8 +110,18 @@ trait Parser extends Quotation {
   }
 
   val exprExtractor: Extractor[Expr] = Extractor[Expr] {
-    case q"$a.$op($b)"       => BinaryOperation(exprExtractor(a), binaryOperator(op), exprExtractor(b))
-    case `refExtractor`(ref) => ref
+    case q"${ queryExtractor(query) }" => QueryExpr(query)
+    case q"$a.$op($b)"                 => BinaryOperation(exprExtractor(a), binaryOperator(op), exprExtractor(b))
+    case q"!$a"                        => UnaryOperation(io.getquill.ast.`!`, exprExtractor(a))
+    case q"$a.isEmpty"                 => UnaryOperation(io.getquill.ast.`isEmpty`, exprExtractor(a))
+    case q"$a.nonEmpty"                => UnaryOperation(io.getquill.ast.`nonEmpty`, exprExtractor(a))
+    case `refExtractor`(ref)           => ref
+  }
+
+  val unaryOperatorExtractor = PartialFunction[String, UnaryOperator] {
+    case "unary_!"  => io.getquill.ast.`!`
+    case "nonEmpty" => io.getquill.ast.`nonEmpty`
+    case "isEmpty"  => io.getquill.ast.`isEmpty`
   }
 
   private def binaryOperator(name: TermName) =

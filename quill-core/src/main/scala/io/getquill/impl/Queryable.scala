@@ -9,6 +9,9 @@ sealed trait Queryable[+T] {
   def withFilter(f: T => Any): Queryable[T] = NonQuotedException()
 
   def filter(f: T => Any): Queryable[T] = NonQuotedException()
+
+  def nonEmpty: Boolean = NonQuotedException()
+  def isEmpty: Boolean = NonQuotedException()
 }
 
 sealed trait EntityQueryable[+T] extends Queryable[T] {

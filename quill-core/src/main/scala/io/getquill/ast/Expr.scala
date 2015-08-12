@@ -4,6 +4,8 @@ package io.getquill.ast
 
 sealed trait Expr
 
+case class QueryExpr(query: Query) extends Expr
+
 //************************************************************
 
 sealed trait Operation extends Expr

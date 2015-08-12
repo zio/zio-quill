@@ -16,13 +16,17 @@ import io.getquill.ast.Value
 import io.getquill.util.Show.Show
 import io.getquill.util.Show.Shower
 import io.getquill.util.Show.listShow
+import io.getquill.ast.QueryExpr
 
 object ExprShow {
+
+  import QueryShow._
 
   implicit def exprShow(implicit refShow: Show[Ref]): Show[Expr] =
     new Show[Expr] {
       def show(e: Expr) =
         e match {
+          case QueryExpr(query)                        => s"(${SqlQuery(query).show})"
           case ref: Ref                                => ref.show
           case UnaryOperation(op, expr)                => s"(${op.show} ${expr.show})"
           case BinaryOperation(a, ast.`==`, NullValue) => s"(${a.show} IS NULL)"
@@ -34,7 +38,9 @@ object ExprShow {
   implicit val unaryOperatorShow: Show[UnaryOperator] = new Show[UnaryOperator] {
     def show(o: UnaryOperator) =
       o match {
-        case io.getquill.ast.`!` => "NOT"
+        case io.getquill.ast.`!`        => "NOT"
+        case io.getquill.ast.`isEmpty`  => "NOT EXISTS"
+        case io.getquill.ast.`nonEmpty` => "NOT EXISTS"
       }
   }
 

@@ -16,6 +16,7 @@ import io.getquill.ast.Table
 import io.getquill.ast.Tuple
 import io.getquill.ast.UnaryOperation
 import io.getquill.ast.Update
+import io.getquill.ast.QueryExpr
 
 private[source] object BindVariables {
 
@@ -65,6 +66,9 @@ private[source] object BindVariables {
 
   def apply(expr: Expr)(implicit vars: List[Ident]): (Expr, List[Ident]) =
     expr match {
+      case QueryExpr(query) =>
+        val (q, idents) = apply(query)
+        (QueryExpr(q), idents)
       case expr: Ref =>
         apply(expr)
       case UnaryOperation(op, expr) =>

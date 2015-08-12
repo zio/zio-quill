@@ -6,9 +6,12 @@ import io.getquill.util.Show.listShow
 
 object ExprShow {
 
+  import QueryShow._
+
   implicit val exprShow: Show[Expr] = new Show[Expr] {
     def show(e: Expr) =
       e match {
+        case QueryExpr(query)     => s"(${query.show})"
         case ref: Ref             => ref.show
         case operation: Operation => operation.show
       }
@@ -17,15 +20,24 @@ object ExprShow {
   implicit val operationShow: Show[Operation] = new Show[Operation] {
     def show(e: Operation) =
       e match {
-        case UnaryOperation(op, expr)  => s"${op.show}${expr.show}"
-        case BinaryOperation(a, op, b) => s"${a.show} ${op.show} ${b.show}"
+        case UnaryOperation(op: PrefixUnaryOperator, expr)  => s"${op.show}${expr.show}"
+        case UnaryOperation(op: PostfixUnaryOperator, expr) => s"${expr.show}.${op.show}"
+        case BinaryOperation(a, op, b)                      => s"${a.show} ${op.show} ${b.show}"
       }
   }
 
-  implicit val unaryOperatorShow: Show[UnaryOperator] = new Show[UnaryOperator] {
-    def show(o: UnaryOperator) =
+  implicit val prefixUnaryOperatorShow: Show[PrefixUnaryOperator] = new Show[PrefixUnaryOperator] {
+    def show(o: PrefixUnaryOperator) =
       o match {
         case io.getquill.ast.`!` => "!"
+      }
+  }
+
+  implicit val postfixUnaryOperatorShow: Show[PostfixUnaryOperator] = new Show[PostfixUnaryOperator] {
+    def show(o: PostfixUnaryOperator) =
+      o match {
+        case io.getquill.ast.`isEmpty`  => "isEmpty"
+        case io.getquill.ast.`nonEmpty` => "nonEmpty"
       }
   }
 
