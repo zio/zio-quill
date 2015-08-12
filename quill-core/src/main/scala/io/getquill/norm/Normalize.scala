@@ -33,11 +33,6 @@ object Normalize {
 
       // ************Symbolic***************
 
-      // q.flatMap(x => p.map(y => r)) =>
-      //    q.flatMap(x => p).map(y => r)
-      case FlatMap(q, x, Map(p, y, r)) =>
-        norm(Map(norm(FlatMap(norm(q), x, norm(p))), y, r))
-
       // q.map(x => r).flatMap(y => p) =>
       //    q.flatMap(x => p[y := r])
       case FlatMap(Map(q, x, r), y, p) =>

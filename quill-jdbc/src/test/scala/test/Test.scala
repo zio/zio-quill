@@ -146,15 +146,15 @@ object Test extends App {
     }
   db.run(q12)
 
-  val q13 =
-    quote {
-      for {
-        (pp, aa) <- personAndAddress
-        s <- queryable[Street] if (aa.streetId == s.id)
-      } yield {
-        (pp, aa, s)
-      }
-    }
-  db.run(q13)
+//  val q13 =
+//    quote {
+//      for {
+//        (pp, aa) <- personAndAddress
+//        s <- queryable[Street] if (aa.streetId == s.id)
+//      } yield {
+//        (pp, aa, s)
+//      }
+//    }
+//  db.run(q13)
  
 }
