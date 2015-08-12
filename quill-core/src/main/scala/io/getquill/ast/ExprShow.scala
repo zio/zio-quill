@@ -74,6 +74,7 @@ object ExprShow {
     def show(e: Value) =
       e match {
         case Constant(v: String) => s""""$v""""
+        case Constant(())        => s"{}"
         case Constant(v)         => s"$v"
         case NullValue           => s"null"
         case Tuple(values)       => s"(${values.show})"

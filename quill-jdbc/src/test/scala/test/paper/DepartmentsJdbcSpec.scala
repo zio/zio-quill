@@ -11,9 +11,9 @@ case class Task(emp: String, tsk: String)
 
 class DepartmentsJdbcSpec extends Spec {
 
-  object departmentsDB extends JdbcSource
+  "Example 8 - nested naive" ignore {
+    object departmentsDB extends JdbcSource
 
-  "Example 8 - nested naive" in {
     val expertiseNaive =
       quote {
         (u: String) =>
@@ -24,28 +24,12 @@ class DepartmentsJdbcSpec extends Spec {
                   e.dpt == d.dpt && (
                     for {
                       t <- queryable[Task] if (e.emp == t.emp && t.tsk == u)
-                    } yield t).isEmpty)
+                    } yield {}).isEmpty)
               } yield e).isEmpty)
           } yield d
 
       }
 
     departmentsDB.run(expertiseNaive("a"))
-    //    let expertiseNaive =
-    //            <@ fun u ->
-    //                query {
-    //                    for d in db.Departments do
-    //                        if not (query {
-    //                                    for e in db.Employees do
-    //                                        exists (e.Dpt = d.Dpt && not (query {
-    //                                                                          for t in db.Tasks do
-    //                                                                              exists (e.Emp = t.Emp && t.Tsk = u)
-    //                                                                      }))
-    //                                })
-    //                        then yield d
-    //                } @>
-    //
-    //        let ex8 = <@ query { yield! (%expertiseNaive) "abstract" } @>
   }
-
 }
