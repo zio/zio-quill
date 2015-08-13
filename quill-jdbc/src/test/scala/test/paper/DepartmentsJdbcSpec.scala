@@ -91,7 +91,7 @@ class DepartmentsJdbcSpec extends Spec {
     val any =
       quote {
         new {
-          def apply[T](xs: Queryable[T], p: T => Boolean) =
+          def apply[T](xs: Queryable[T])(p: T => Boolean) =
             (for {
               x <- xs if (p(x))
             } yield {}).nonEmpty
@@ -101,25 +101,16 @@ class DepartmentsJdbcSpec extends Spec {
     val all =
       quote {
         new {
-          def apply[T](xs: Queryable[T], p: T => Boolean) =
-            !any(xs, (x: T) => !p(x))
-        }
-      }
-
-    val q =
-      quote {
-        for {
-          q <- queryable[Employee] if (any[Department](queryable[Department], _.dpt == "a"))
-        } yield {
-          q
+          def apply[T](xs: Queryable[T])(p: T => Boolean) =
+            !any(xs)(x => !p(x))
         }
       }
 
     def contains[T] =
       quote {
         new {
-          def apply[T](xs: Queryable[T], u: T) =
-            any(xs, (x: T) => x == u)
+          def apply[T](xs: Queryable[T])(u: T) =
+            any(xs)(_ == u)
         }
       }
 
@@ -127,7 +118,7 @@ class DepartmentsJdbcSpec extends Spec {
       quote {
         (u: String) =>
           for {
-            (dpt, employees) <- nestedOrg if (all(employees, (e: (String, Queryable[String])) => contains(e._2, u)))
+            (dpt, employees) <- nestedOrg if (all(employees)(e => contains(e._2)(u)))
           } yield {
             dpt
           }
