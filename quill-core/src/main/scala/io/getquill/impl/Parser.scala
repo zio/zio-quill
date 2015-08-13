@@ -21,7 +21,7 @@ import io.getquill.ast.Table
 import io.getquill.ast.Tuple
 import io.getquill.ast.Update
 import io.getquill.norm.BetaReduction
-import io.getquill.util.Messages.RichContext
+import io.getquill.util.Messages._
 import io.getquill.util.SubstituteTrees
 import io.getquill.ast.UnaryOperation
 import io.getquill.ast.UnaryOperator
@@ -51,6 +51,8 @@ trait Parser extends Quotation {
           unapply(SubstituteTrees(c)(body, fields, fa.toList))
         case q"io.getquill.`package`.unquote[$t]($function).apply(..$actuals)" =>
           unapply(q"${unquoteTree(function)}.apply(..$actuals)")
+        case q"new { def apply[..$t1](..$params) = $body }.apply[..$t2](..$actuals)" =>
+          unapply(SubstituteTrees(c)(body, params, actuals))
         case q"((..$params) => $body).apply(..$actuals)" =>
           unapply(SubstituteTrees(c)(body, params, actuals))
         case q"io.getquill.`package`.unquote[$t]($quoted)" =>

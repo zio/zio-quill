@@ -90,49 +90,49 @@ class DepartmentsJdbcSpec extends Spec {
 
     val any =
       quote {
-        (xs: Queryable[T], p: T => Boolean) =>
-          (for {
-            x <- xs if (p(x))
-          } yield {}).nonEmpty
+        new {
+          def apply[T](xs: Queryable[T], p: T => Boolean) =
+            (for {
+              x <- xs if (p(x))
+            } yield {}).nonEmpty
+        }
       }
 
-//    val all =
-//      quote[(Queryable[T], T => Boolean) => Boolean forSome { type T }] {
-//        (xs: Queryable[T], p: T => Boolean) =>
-//          !any(xs, (x: T) => !p(x))
-//      }
-//
-    //    val q =
-    //      quote {
-    //        for {
-    //          q <- queryable[Employee] if (all(queryable[Department], (d: Department) => d.dpt == "a"))
-    //        } yield {
-    //          q
-    //        }
-    //      }
-    //
-    //    testDB.run(q)
+    val all =
+      quote {
+        new {
+          def apply[T](xs: Queryable[T], p: T => Boolean) =
+            !any(xs, (x: T) => !p(x))
+        }
+      }
 
-    //    def contains[T] =
-    //      quote {
-    //        (xs: Queryable[T], u: T) =>
-    //          any(xs, (x: Any) => x == u)
-    //      }
+    val q =
+      quote {
+        for {
+          q <- queryable[Employee] if (any[Department](queryable[Department], _.dpt == "a"))
+        } yield {
+          q
+        }
+      }
 
-    //    val expertise =
-    //      quote {
-    //        (u: String) =>
-    //          for {
-    //            d <- nestedOrg if (all(d._2, e => contains(e._2, u)))
-    //          } yield {
-    //            d._1
-    //          }
-    //      }
-    //    let expertise =
-    //            <@ fun u ->
-    //                query {
-    //                    for d in (%nestedDb) do
-    //                        if (%forallA()) (d.employees) (fun e -> (%containsA()) e.tasks u) then yield d.dpt
-    //                } @>
+    def contains[T] =
+      quote {
+        new {
+          def apply[T](xs: Queryable[T], u: T) =
+            any(xs, (x: T) => x == u)
+        }
+      }
+
+    val expertise =
+      quote {
+        (u: String) =>
+          for {
+            (dpt, employees) <- nestedOrg if (all(employees, (e: (String, Queryable[String])) => contains(e._2, u)))
+          } yield {
+            dpt
+          }
+      }
+
+    testDB.run(expertise)("abstract") mustEqual List("Quality", "Research")
   }
 }
