@@ -32,7 +32,10 @@ class QueryMacro(val c: Context) extends Parser with SelectFlattening with Selec
     }
 
   private def run[R, S, T](query: Tree, params: List[ValDef], bindings: List[Expr[Any]])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]) = {
+    import io.getquill.ast.QueryShow._
     val normalizedQuery = Normalize(queryExtractor(query))
+//    c.info(queryExtractor(query).show)
+//    c.info(normalizedQuery.show)
     val (flattenQuery, selectValues) = flattenSelect[T](normalizedQuery, Encoding.inferDecoder[R](c))
     val (bindedQuery, encode) = EncodeBindVariables.forQuery[S](c)(flattenQuery, bindingMap(params, bindings))
     val extractor = selectResultExtractor[T, R](selectValues)

@@ -28,71 +28,90 @@ object Normalize {
   def apply(q: Query) =
     BetaReduction(norm(AvoidCapture(q)))(collection.Map.empty)
 
-  private def norm(q: Query): Query =
-    q match {
+  private def norm(q: Query): Query = {
+    import io.getquill.util.Show._
+    import io.getquill.ast.QueryShow._
+    println(q.show)
+    val r =
+      q match {
 
-      // ************Symbolic***************
-    
-      // a.flatMap(b => c.map(d => e)).flatMap(f => g)
-      //    a.flatMap(b => c).flatMap(d => g[f := e])
-      case FlatMap(FlatMap(a, b, Map(c, d, e)), f, g) =>
-        val gr = BetaReduction(g, f -> e)
-        norm(FlatMap(FlatMap(a, b, c), d, gr))
-        
-      // a.map(b => c).flatMap(d => e) =>
-      //    a.flatMap(b => e[d := c])
-      case FlatMap(Map(a, b, c), d, e) =>
-        val er = BetaReduction(e, d -> c)
-        norm(FlatMap(a, b, er))
+        // ************Symbolic***************
 
-      // a.map(b => c).filter(d => e) =>
-      //    a.filter(b => e[d := c])
-      case Filter(Map(a, b, c), d, e) =>
-        val er = BetaReduction(e, d -> c)
-        norm(Filter(a, b, er))
+        // a.flatMap(b => c.map(d => e)).flatMap(f => g)
+        //    a.flatMap(b => c).flatMap(d => g[f := e])
+        case FlatMap(FlatMap(a, b, Map(c, d, e)), f, g) =>
+          val gr = BetaReduction(g, f -> e)
+          norm(FlatMap(FlatMap(a, b, c), d, gr))
 
-      // a.map(b => c).map(d => e) =>
-      //    a.map(b => e[d := c])
-      case Map(Map(a, b, c), d, e) =>
-        val er = BetaReduction(e, d -> c)
-        norm(Map(a, b, er))
+        // a.map(b => c).flatMap(d => e) =>
+        //    a.flatMap(b => e[d := c])
+        case FlatMap(Map(a, b, c), d, e) =>
+          val er = BetaReduction(e, d -> c)
+          norm(FlatMap(a, b, er))
 
-      // a.flatMap(b => c).flatMap(d => e) =>
-      //     a.flatMap(b => c.flatMap(d => e))
-      case FlatMap(FlatMap(a, b, c), d, e) =>
-        norm(FlatMap(a, b, FlatMap(c, d, e)))
+        // a.map(b => c).filter(d => e) =>
+        //    a.filter(b => e[d := c]).map(b => c)
+        case Filter(Map(a, b, c), d, e) =>
+          val er = BetaReduction(e, d -> c)
+          norm(Map(Filter(a, b, er), b, c))
 
-      // a.filter(b => c).flatMap(d => e.map(f => g)) =>
-      //     a.flatMap(d => e.filter(temp => c[b := d]).map(f => g))
-      case FlatMap(Filter(a, b, c), d, Map(e, f, g)) =>
-        val cr = BetaReduction(c, b -> d)
-        norm(FlatMap(a, d, Map(Filter(e, Ident("temp"), cr), f, g)))
+        // a.map(b => c).map(d => e) =>
+        //    a.map(b => e[d := c])
+        case Map(Map(a, b, c), d, e) =>
+          val er = BetaReduction(e, d -> c)
+          norm(Map(a, b, er))
 
-      // a.filter(b => c).flatMap(d => e) =>
-      //     a.flatMap(d => e.filter(temp => c[b := d]))
-      case FlatMap(Filter(a, b, c), d, e) =>
-        val cr = BetaReduction(c, b -> d)
-        norm(FlatMap(a, d, Filter(e, Ident("temp"), cr)))
+        // a.flatMap(b => c).flatMap(d => e) =>
+        //     a.flatMap(b => c.flatMap(d => e))
+        case FlatMap(FlatMap(a, b, c), d, e) =>
+          norm(FlatMap(a, b, FlatMap(c, d, e)))
 
-      // ************AdHoc***************
+        // a.filter(b => c).flatMap(d => e.map(f => g)) =>
+        //     a.flatMap(d => e.filter(temp => c[b := d]).map(f => g))
+        case FlatMap(Filter(a, b, c), d, Map(e, f, g)) =>
+          val cr = BetaReduction(c, b -> d)
+          norm(FlatMap(a, d, Map(Filter(e, Ident("temp"), cr), f, g)))
 
-      // a.filter(b => c).filter(d => e) =>
-      //    a.filter(b => c && e[d := b])
-      case Filter(Filter(a, b, c), d, e) =>
-        val er = BetaReduction(e, d -> b)
-        norm(Filter(a, b, BinaryOperation(c, `&&`, er)))
+        // a.filter(b => c).flatMap(d => e) =>
+        //     a.flatMap(d => e.filter(temp => c[b := d]))
+        case FlatMap(Filter(a, b, c), d, e) =>
+          val cr = BetaReduction(c, b -> d)
+          norm(FlatMap(a, d, Filter(e, Ident("temp"), cr)))
 
-      // a.flatMap(b => c).filter(d => e) =>
-      //    a.flatMap(b => c.filter(temp => e[d := b]))
-      case Filter(FlatMap(a, b, c), d, e) =>
-        val er = BetaReduction(e, d -> b)
-        norm(FlatMap(a, b, Filter(c, Ident("temp"), er)))
+        // ************AdHoc***************
 
-      // ************Recursion***************
+        // a.filter(b => c).filter(d => e) =>
+        //    a.filter(b => c && e[d := b])
+        case Filter(Filter(a, b, c), d, e) =>
+          val er = BetaReduction(e, d -> b)
+          norm(Filter(a, b, BinaryOperation(c, `&&`, er)))
 
-      case FlatMap(a, b, c) => FlatMap(norm(a), b, norm(c))
-      case Filter(a, b, c)  => Filter(norm(a), b, c)
-      case Map(a, b, c)     => Map(norm(a), b, c)
-      case t: Table         => t
-    }
+        // a.flatMap(b => c).filter(d => e) =>
+        //    a.flatMap(b => c.filter(temp => e[d := b]))
+        case Filter(FlatMap(a, b, c), d, e) =>
+          val er = BetaReduction(e, d -> b)
+          norm(FlatMap(a, b, Filter(c, Ident("temp"), er)))
+
+        // ************Recursion***************
+
+        case FlatMap(a, b, c) =>
+          (norm(a), norm(c)) match {
+            case (`a`, `c`) => FlatMap(a, b, c)
+            case (a, c)     => norm(FlatMap(a, b, c))
+          }
+        case Filter(a, b, c) =>
+          norm(a) match {
+            case `a` => Filter(a, b, c)
+            case a   => norm(Filter(a, b, c))
+          }
+        case Map(a, b, c) =>
+          norm(a) match {
+            case `a` => Map(a, b, c)
+            case a   => norm(Map(a, b, c))
+          }
+        case t: Table => t
+      }
+    //    println(s"${q.show} => \n\t\t ${r.show}")
+    r
+  }
 }

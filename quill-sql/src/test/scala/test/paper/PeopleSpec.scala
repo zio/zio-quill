@@ -95,7 +95,7 @@ trait PeopleSpec extends Spec {
       (s: String, t: String) =>
         for {
           a <- ageFromName(s)
-          b <- ageFromName(t)
+          b <- ageFromName(t)  
           r <- range(a, b)
         } yield {
           r

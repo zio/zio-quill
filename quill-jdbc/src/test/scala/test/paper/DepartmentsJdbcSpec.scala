@@ -76,15 +76,21 @@ class DepartmentsJdbcSpec extends Spec {
         for {
           d <- queryable[Department]
         } yield {
-          (d.dpt, for {
-            e <- queryable[Employee] if (d.dpt == e.dpt)
-          } yield {
-            (e.emp, for {
-              t <- queryable[Task] if (e.emp == t.emp)
-            } yield {
-              t.tsk
+          (d.dpt,
+            quote {
+              for {
+                e <- queryable[Employee] if (d.dpt == e.dpt)
+              } yield {
+                (e.emp,
+                  quote {
+                    for {
+                      t <- queryable[Task] if (e.emp == t.emp)
+                    } yield {
+                      t.tsk
+                    }
+                  })
+              }
             })
-          })
         }
       }
 
@@ -110,7 +116,7 @@ class DepartmentsJdbcSpec extends Spec {
       quote {
         new {
           def apply[T](xs: Queryable[T])(u: T) =
-            any(xs)(_ == u)
+            any(xs)(x => x == u)
         }
       }
 
@@ -119,8 +125,10 @@ class DepartmentsJdbcSpec extends Spec {
         (u: String) =>
           for {
             (dpt, employees) <- nestedOrg if (all(employees)(e => contains(e._2)(u)))
+            (emp, tks) <- employees
+            f <- tks
           } yield {
-            dpt
+            (dpt, emp, f)
           }
       }
 

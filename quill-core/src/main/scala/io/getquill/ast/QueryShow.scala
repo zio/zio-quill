@@ -14,7 +14,7 @@ object QueryShow {
       q match {
 
         case Table(name) =>
-          s"from[$name]"
+          s"queryable[$name]"
 
         case Filter(source, alias, body) =>
           s"${source.show}.filter(${alias.show} => ${body.show})"

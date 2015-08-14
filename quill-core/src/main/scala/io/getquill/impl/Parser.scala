@@ -51,8 +51,8 @@ trait Parser extends Quotation {
           unapply(SubstituteTrees(c)(body, fields, fa.toList))
         case q"io.getquill.`package`.unquote[$t]($function).apply(..$actuals)" =>
           unapply(q"${unquoteTree(function)}.apply(..$actuals)")
-        case q"new { def apply[..$t1](..$params) = $body }.apply[..$t2](..$actuals)" =>
-          unapply(SubstituteTrees(c)(body, params, actuals))
+        case q"new { def apply[..$t1](...$params) = $body }.apply[..$t2](...$actuals)" =>
+          unapply(SubstituteTrees(c)(body, params.flatten, actuals.flatten))
         case q"((..$params) => $body).apply(..$actuals)" =>
           unapply(SubstituteTrees(c)(body, params, actuals))
         case q"io.getquill.`package`.unquote[$t]($quoted)" =>
@@ -112,12 +112,12 @@ trait Parser extends Quotation {
   }
 
   val exprExtractor: Extractor[Expr] = Extractor[Expr] {
-    case q"${ queryExtractor(query) }" => QueryExpr(query)
     case q"$a.$op($b)"                 => BinaryOperation(exprExtractor(a), binaryOperator(op), exprExtractor(b))
     case q"!$a"                        => UnaryOperation(io.getquill.ast.`!`, exprExtractor(a))
     case q"$a.isEmpty"                 => UnaryOperation(io.getquill.ast.`isEmpty`, exprExtractor(a))
     case q"$a.nonEmpty"                => UnaryOperation(io.getquill.ast.`nonEmpty`, exprExtractor(a))
     case `refExtractor`(ref)           => ref
+    case q"${ queryExtractor(query) }" => QueryExpr(query)
   }
 
   val unaryOperatorExtractor = PartialFunction[String, UnaryOperator] {
