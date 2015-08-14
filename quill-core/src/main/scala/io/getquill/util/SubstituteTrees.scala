@@ -1,5 +1,6 @@
 package io.getquill.util
 
+import language.implicitConversions
 import scala.reflect.macros.whitebox.Context
 
 // Keep calm, I know that this is very bad but I couldn't figure out an alternative.
@@ -7,22 +8,15 @@ import scala.reflect.macros.whitebox.Context
 // http://cdn.meme.am/instances/57874036.jpg
 object SubstituteTrees {
 
-  def apply(c: Context)(tree: c.Tree, from: List[c.Tree], to: List[c.Tree]) = {
+  def apply(c: Context)(tree: c.Tree, from: List[c.Tree], to: List[c.Tree]): c.Tree = {
     import c.universe._
 
-    def unsafeCast[T](value: Any) = value.asInstanceOf[T]
+    implicit def unsafeCast[T](value: Any) = value.asInstanceOf[T]
 
-    val trees =
-      tree.getClass.getField("$outer").get(tree)
-        .asInstanceOf[scala.reflect.internal.Trees]
+    val trees: scala.reflect.internal.Trees = tree.getClass.getField("$outer").get(tree)
 
-    val substituter =
-      new trees.TreeSubstituter(
-        unsafeCast(from.map(_.symbol)),
-        unsafeCast(to))
+    val substituter = new trees.TreeSubstituter(from.map(_.symbol), to)
 
-    substituter
-      .transform(unsafeCast(tree))
-      .asInstanceOf[Tree]
+    substituter.transform(unsafeCast(tree))
   }
 }
