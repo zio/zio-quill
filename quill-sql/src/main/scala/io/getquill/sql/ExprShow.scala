@@ -13,20 +13,20 @@ import io.getquill.ast.Tuple
 import io.getquill.ast.UnaryOperation
 import io.getquill.ast.UnaryOperator
 import io.getquill.ast.Value
+import io.getquill.ast.Query
 import io.getquill.util.Show.Show
 import io.getquill.util.Show.Shower
 import io.getquill.util.Show.listShow
-import io.getquill.ast.QueryExpr
 
 object ExprShow {
 
-  import QueryShow._
+  import SqlQueryShow._
 
   implicit def exprShow(implicit refShow: Show[Ref]): Show[Expr] =
     new Show[Expr] {
       def show(e: Expr) =
         e match {
-          case QueryExpr(query)                        => s"(${SqlQuery(query).show})"
+          case query: Query                            => s"(${SqlQuery(query).show})"
           case ref: Ref                                => ref.show
           case UnaryOperation(op, expr)                => s"(${op.show} ${expr.show})"
           case BinaryOperation(a, ast.`==`, NullValue) => s"(${a.show} IS NULL)"

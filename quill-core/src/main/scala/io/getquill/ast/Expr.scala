@@ -4,7 +4,15 @@ package io.getquill.ast
 
 sealed trait Expr
 
-case class QueryExpr(query: Query) extends Expr
+sealed trait Query extends Expr
+
+case class Table(name: String) extends Query
+
+case class Filter(query: Query, alias: Ident, body: Expr) extends Query
+
+case class Map(query: Query, alias: Ident, body: Expr) extends Query
+
+case class FlatMap(query: Query, alias: Ident, body: Query) extends Query
 
 //************************************************************
 

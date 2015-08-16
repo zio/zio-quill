@@ -6,14 +6,30 @@ import io.getquill.util.Show.listShow
 
 object ExprShow {
 
-  import QueryShow._
-
   implicit val exprShow: Show[Expr] = new Show[Expr] {
     def show(e: Expr) =
       e match {
-        case QueryExpr(query)     => s"(${query.show})"
-        case ref: Ref             => ref.show
+        case expr: Query           => expr.show
+        case expr: Ref             => expr.show
         case operation: Operation => operation.show
+      }
+  }
+
+  implicit val queryShow: Show[Query] = new Show[Query] {
+    def show(q: Query) =
+      q match {
+
+        case Table(name) =>
+          s"queryable[$name]"
+
+        case Filter(source, alias, body) =>
+          s"${source.show}.filter(${alias.show} => ${body.show})"
+
+        case Map(source, alias, body) =>
+          s"${source.show}.map(${alias.show} => ${body.show})"
+
+        case FlatMap(source, alias, body) =>
+          s"${source.show}.flatMap(${alias.show} => ${body.show})"
       }
   }
 

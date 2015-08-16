@@ -6,7 +6,7 @@ import io.getquill.ast.FlatMap
 import io.getquill.ast.Ident
 import io.getquill.ast.Map
 import io.getquill.ast.Query
-import io.getquill.ast.QueryShow.queryShow
+import io.getquill.ast.ExprShow._
 import io.getquill.ast.Table
 import io.getquill.util.Show.Shower
 
@@ -35,7 +35,7 @@ object SqlQuery {
         (sources, predicate, p)
       case other =>
         import io.getquill.util.Show._
-        import io.getquill.ast.QueryShow._
+        import io.getquill.ast.ExprShow._
         throw new IllegalStateException(s"Query is not propertly normalized, please submit a bug report. ${query.show}")
     }
   }

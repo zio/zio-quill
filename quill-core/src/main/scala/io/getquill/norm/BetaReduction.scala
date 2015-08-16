@@ -13,7 +13,6 @@ import io.getquill.ast.Table
 import io.getquill.ast.Tuple
 import io.getquill.ast.UnaryOperation
 import io.getquill.ast.Value
-import io.getquill.ast.QueryExpr
 
 object BetaReduction {
 
@@ -22,6 +21,14 @@ object BetaReduction {
 
   def apply(query: Query, t: (Ident, Expr)*): Query =
     apply(query)(t.toMap)
+
+  def apply(expr: Expr)(implicit refs: collection.Map[Ident, Expr]): Expr =
+    expr match {
+      case expr: Query               => apply(expr)
+      case expr: Ref                 => apply(expr)
+      case UnaryOperation(op, expr)  => UnaryOperation(op, apply(expr))
+      case BinaryOperation(a, op, b) => BinaryOperation(apply(a), op, apply(b))
+    }
 
   def apply(query: Query)(implicit refs: collection.Map[Ident, Expr]): Query =
     query match {
@@ -33,14 +40,6 @@ object BetaReduction {
         Map(apply(source), alias, apply(body)(refs - alias))
       case FlatMap(source, alias, body) =>
         FlatMap(apply(source), alias, apply(body)(refs - alias))
-    }
-
-  def apply(expr: Expr)(implicit refs: collection.Map[Ident, Expr]): Expr =
-    expr match {
-      case QueryExpr(query)          => QueryExpr(apply(query))
-      case expr: Ref                 => apply(expr)
-      case UnaryOperation(op, expr)  => UnaryOperation(op, apply(expr))
-      case BinaryOperation(a, op, b) => BinaryOperation(apply(a), op, apply(b))
     }
 
   def apply(ref: Ref)(implicit refs: collection.Map[Ident, Expr]): Expr =

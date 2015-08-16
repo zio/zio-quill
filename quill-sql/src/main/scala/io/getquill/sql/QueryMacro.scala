@@ -2,7 +2,7 @@ package io.getquill.sql
 
 import scala.reflect.macros.whitebox.Context
 
-import QueryShow.sqlQueryShow
+import SqlQueryShow.sqlQueryShow
 import io.getquill.impl.Parser
 import io.getquill.impl.Queryable
 import io.getquill.norm.Normalize
@@ -32,7 +32,7 @@ class QueryMacro(val c: Context) extends Parser with SelectFlattening with Selec
     }
 
   private def run[R, S, T](query: Tree, params: List[ValDef], bindings: List[Expr[Any]])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]) = {
-    import io.getquill.ast.QueryShow._
+    import io.getquill.ast.ExprShow._
     val normalizedQuery = Normalize(queryExtractor(query))
 //    c.info(queryExtractor(query).show)
 //    c.info(normalizedQuery.show)

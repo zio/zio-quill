@@ -16,7 +16,6 @@ import io.getquill.ast.Table
 import io.getquill.ast.Tuple
 import io.getquill.ast.UnaryOperation
 import io.getquill.ast.Update
-import io.getquill.ast.QueryExpr
 
 private[source] object BindVariables {
 
@@ -47,6 +46,21 @@ private[source] object BindVariables {
         (Assignment(prop, vr), vrv)
     }
 
+  def apply(expr: Expr)(implicit vars: List[Ident]): (Expr, List[Ident]) =
+    expr match {
+      case expr: Query =>
+        apply(expr)
+      case expr: Ref =>
+        apply(expr)
+      case UnaryOperation(op, expr) =>
+        val (er, erv) = apply(expr)
+        (UnaryOperation(op, er), erv)
+      case BinaryOperation(a, op, b) =>
+        val (ar, arv) = apply(a)
+        val (br, brv) = apply(b)
+        (BinaryOperation(ar, op, br), arv ++ brv)
+    }
+
   def apply(query: Query)(implicit vars: List[Ident]): (Query, List[Ident]) =
     query match {
       case FlatMap(q, x, p) =>
@@ -62,22 +76,6 @@ private[source] object BindVariables {
         val (pr, prv) = apply(p)
         (Filter(qr, x, pr), qrv ++ prv)
       case t: Table => (t, List())
-    }
-
-  def apply(expr: Expr)(implicit vars: List[Ident]): (Expr, List[Ident]) =
-    expr match {
-      case QueryExpr(query) =>
-        val (q, idents) = apply(query)
-        (QueryExpr(q), idents)
-      case expr: Ref =>
-        apply(expr)
-      case UnaryOperation(op, expr) =>
-        val (er, erv) = apply(expr)
-        (UnaryOperation(op, er), erv)
-      case BinaryOperation(a, op, b) =>
-        val (ar, arv) = apply(a)
-        val (br, brv) = apply(b)
-        (BinaryOperation(ar, op, br), arv ++ brv)
     }
 
   def apply(ref: Ref)(implicit vars: List[Ident]): (Expr, List[Ident]) =

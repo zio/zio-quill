@@ -27,7 +27,6 @@ import io.getquill.ast.UnaryOperation
 import io.getquill.ast.UnaryOperator
 import io.getquill.ast.PrefixUnaryOperator
 import io.getquill.ast.UnaryOperation
-import io.getquill.ast.QueryExpr
 
 trait Parser extends Quotation {
 
@@ -112,12 +111,12 @@ trait Parser extends Quotation {
   }
 
   val exprExtractor: Extractor[Expr] = Extractor[Expr] {
-    case q"$a.$op($b)"                 => BinaryOperation(exprExtractor(a), binaryOperator(op), exprExtractor(b))
-    case q"!$a"                        => UnaryOperation(io.getquill.ast.`!`, exprExtractor(a))
-    case q"$a.isEmpty"                 => UnaryOperation(io.getquill.ast.`isEmpty`, exprExtractor(a))
-    case q"$a.nonEmpty"                => UnaryOperation(io.getquill.ast.`nonEmpty`, exprExtractor(a))
-    case `refExtractor`(ref)           => ref
-    case q"${ queryExtractor(query) }" => QueryExpr(query)
+    case q"$a.$op($b)"           => BinaryOperation(exprExtractor(a), binaryOperator(op), exprExtractor(b))
+    case q"!$a"                  => UnaryOperation(io.getquill.ast.`!`, exprExtractor(a))
+    case q"$a.isEmpty"           => UnaryOperation(io.getquill.ast.`isEmpty`, exprExtractor(a))
+    case q"$a.nonEmpty"          => UnaryOperation(io.getquill.ast.`nonEmpty`, exprExtractor(a))
+    case `refExtractor`(ref)     => ref
+    case `queryExtractor`(query) => query
   }
 
   val unaryOperatorExtractor = PartialFunction[String, UnaryOperator] {

@@ -30,7 +30,7 @@ object Normalize {
 
   private def norm(q: Query): Query = {
     import io.getquill.util.Show._
-    import io.getquill.ast.QueryShow._
+    import io.getquill.ast.ExprShow._
     println(q.show)
     val r =
       q match {
