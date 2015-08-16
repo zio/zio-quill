@@ -15,7 +15,7 @@ object Test extends App {
 
   def q1 =
     quote {
-      queryable[Person].filter(p => !(p.name == name)).map(p => (p.name, p.age))
+      queryable[Person].filter(p => !(p.name == unquote(name))).map(p => (p.name, p.age))
     }
   db.run(q1)
 

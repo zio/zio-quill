@@ -77,20 +77,18 @@ class DepartmentsJdbcSpec extends Spec {
           d <- queryable[Department]
         } yield {
           (d.dpt,
-            quote {
-              for {
-                e <- queryable[Employee] if (d.dpt == e.dpt)
-              } yield {
-                (e.emp,
-                  quote {
-                    for {
-                      t <- queryable[Task] if (e.emp == t.emp)
-                    } yield {
-                      t.tsk
-                    }
-                  })
-              }
-            })
+            for {
+              e <- queryable[Employee] if (d.dpt == e.dpt)
+            } yield {
+              (e.emp,
+                for {
+                  t <- queryable[Task] if (e.emp == t.emp)
+                } yield {
+                  t.tsk
+                }
+              )
+            }
+          )
         }
       }
 
@@ -112,15 +110,15 @@ class DepartmentsJdbcSpec extends Spec {
         }
       }
 
-//    val q =
-//      quote {
-//        for {
-//          q <- queryable[Employee] if (any(queryable[Department])(_.dpt == "a"))
-//        } yield {
-//          q
-//        }
-//      }
-//    testDB.run(q)
+    //    val q =
+    //      quote {
+    //        for {
+    //          q <- queryable[Employee] if (any(queryable[Department])(_.dpt == "a"))
+    //        } yield {
+    //          q
+    //        }
+    //      }
+    //    testDB.run(q)
 
     def contains[T] =
       quote {
@@ -142,6 +140,6 @@ class DepartmentsJdbcSpec extends Spec {
           }
       }
 
-//    testDB.run(expertise)("abstract") mustEqual List("Quality", "Research")
+    //    testDB.run(expertise)("abstract") mustEqual List("Quality", "Research")
   }
 }

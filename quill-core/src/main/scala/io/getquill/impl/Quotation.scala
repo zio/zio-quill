@@ -47,7 +47,7 @@ trait Quotation {
 
   private def freeVariables(tree: Tree, known: List[Symbol] = List()): List[String] =
     tree match {
-      case Select(This(TypeName(tpe)), TermName(name)) =>
+      case Select(This(TypeName(tpe)), TermName(name)) if (name != "Predef") =>
         List(name)
       case i: Ident if (isVariable(i.symbol) && i.toString != "_" && !known.contains(i.symbol)) =>
         List(i.toString)
