@@ -23,14 +23,14 @@ object SqlQuery {
 
   private def flatten(query: Query): (List[Source], Option[Expr], Expr) = {
     query match {
-      case FlatMap(Table(name), Ident(alias), r) =>
+      case FlatMap(Table(name), Ident(alias), r: Query) =>
         val (sources, predicate, expr) = flatten(r)
         (Source(name, alias) :: sources, predicate, expr)
       case Filter(Table(name), Ident(alias), p) =>
         (Source(name, alias) :: Nil, Option(p), Ident(alias))
       case Map(Table(name), Ident(alias), p) =>
         (List(Source(name, alias)), None, p)
-      case Map(q, x, p) =>
+      case Map(q: Query, x, p) =>
         val (sources, predicate, expr) = flatten(q)
         (sources, predicate, p)
       case other =>

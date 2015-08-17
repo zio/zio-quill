@@ -18,16 +18,16 @@ private[select] object ExtractSelect {
 
   private def ensureFinalMap(query: Query): Query =
     query match {
-      case FlatMap(q, x, p)    => FlatMap(q, x, ensureFinalMap(p))
-      case q: Map              => query
-      case q @ Filter(_, x, _) => Map(q, x, x)
-      case t: Table            => Map(t, Ident("x"), Ident("x"))
+      case FlatMap(q, x, p: Query) => FlatMap(q, x, ensureFinalMap(p))
+      case q @ Filter(_, x, _)     => Map(q, x, x)
+      case t: Table                => Map(t, Ident("x"), Ident("x"))
+      case other                   => query
     }
 
   private def mapExpr(query: Query): Expr =
     query match {
-      case FlatMap(q, x, p) => mapExpr(p)
-      case Map(q, x, p)     => p
-      case other            => fail(s"Query not properly normalized, please submit a bug report. $other")
+      case FlatMap(q, x, p: Query) => mapExpr(p)
+      case Map(q, x, p)            => p
+      case other                   => fail(s"Query not properly normalized, please submit a bug report. $other")
     }
 }

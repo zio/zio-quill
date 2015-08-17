@@ -13,8 +13,8 @@ private[select] object ReplaceSelect {
 
   private def apply(query: Query, expr: Expr): Query =
     query match {
-      case FlatMap(q, x, p) => FlatMap(q, x, apply(p, expr))
-      case Map(q, x, p)     => Map(q, x, expr)
-      case other            => other
+      case FlatMap(q, x, p: Query) => FlatMap(q, x, apply(p, expr))
+      case Map(q, x, p)            => Map(q, x, expr)
+      case other                   => other
     }
 }
