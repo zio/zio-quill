@@ -12,6 +12,7 @@ import io.getquill.ast.Map
 import io.getquill.ast.Query
 import io.getquill.ast.Table
 import io.getquill.ast.Update
+import io.getquill.norm.capture.AvoidCapture
 
 object Normalize {
 
