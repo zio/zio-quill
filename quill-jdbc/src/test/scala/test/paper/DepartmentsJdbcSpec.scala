@@ -128,6 +128,6 @@ class DepartmentsJdbcSpec extends Spec {
           }
       }
 
-      testDB.run(expertise)("abstract") mustEqual List("Quality", "Research")
+    testDB.run(expertise)("abstract") mustEqual List("Quality", "Research")
   }
 }

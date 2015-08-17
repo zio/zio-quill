@@ -40,7 +40,7 @@ object ExprShow {
       o match {
         case io.getquill.ast.`!`        => "NOT"
         case io.getquill.ast.`isEmpty`  => "NOT EXISTS"
-        case io.getquill.ast.`nonEmpty` => "NOT EXISTS"
+        case io.getquill.ast.`nonEmpty` => "EXISTS"
       }
   }
 
