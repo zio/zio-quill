@@ -110,16 +110,6 @@ class DepartmentsJdbcSpec extends Spec {
         }
       }
 
-    //    val q =
-    //      quote {
-    //        for {
-    //          q <- queryable[Employee] if (any(queryable[Department])(_.dpt == "a"))
-    //        } yield {
-    //          q
-    //        }
-    //      }
-    //    testDB.run(q)
-
     def contains[T] =
       quote {
         new {
@@ -133,13 +123,11 @@ class DepartmentsJdbcSpec extends Spec {
         (u: String) =>
           for {
             (dpt, employees) <- nestedOrg if (all(employees)(e => contains(e._2)(u)))
-            (emp, tks) <- employees
-            f <- tks
           } yield {
-            (dpt, emp, f)
+            dpt
           }
       }
 
-    //    testDB.run(expertise)("abstract") mustEqual List("Quality", "Research")
+      testDB.run(expertise)("abstract") mustEqual List("Quality", "Research")
   }
 }

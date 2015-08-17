@@ -48,6 +48,8 @@ trait Parser extends Quotation {
               q"$tuple.${TermName(s"_$i")}"
             }
           unapply(SubstituteTrees(c)(body, fields, fa.toList))
+        case q"$source.withFilter(($alias) => $body)" if (alias.name.toString.contains("ifrefutable")) =>
+          unapply(source)
         case q"io.getquill.`package`.unquote[$t]($function).apply(..$actuals)" =>
           unapply(q"${unquoteTree(function)}.apply(..$actuals)")
         case q"new { def apply[..$t1](...$params) = $body }.apply[..$t2](...$actuals)" =>
@@ -83,16 +85,13 @@ trait Parser extends Quotation {
       Table(t.typeSymbol.name.decodedName.toString)
 
     case q"$source.filter(($alias) => $body)" =>
-      Filter(queryExtractor(source), identExtractor(alias), exprExtractor(body))
-
-    case q"$source.withFilter(($alias) => $body)" if (alias.name.toString.contains("ifrefutable")) =>
-      queryExtractor(source)
+      Filter(exprExtractor(source), identExtractor(alias), exprExtractor(body))
 
     case q"$source.withFilter(($alias) => $body)" =>
-      Filter(queryExtractor(source), identExtractor(alias), exprExtractor(body))
+      Filter(exprExtractor(source), identExtractor(alias), exprExtractor(body))
 
     case q"$source.map[$t](($alias) => $body)" =>
-      Map(queryExtractor(source), identExtractor(alias), exprExtractor(body))
+      Map(exprExtractor(source), identExtractor(alias), exprExtractor(body))
 
     case q"$source.flatMap[$t](($alias) => $matchAlias match { case (..$a) => $body })" if (alias == matchAlias) =>
       val aliases =
@@ -104,19 +103,19 @@ trait Parser extends Quotation {
         for ((a, i) <- aliases.zipWithIndex) yield {
           a -> Property(exprExtractor(alias), s"_${i + 1}")
         }
-      FlatMap(queryExtractor(source), identExtractor(alias), BetaReduction(queryExtractor(body), reduction: _*))
+      FlatMap(exprExtractor(source), identExtractor(alias), BetaReduction(exprExtractor(body), reduction: _*))
 
     case q"$source.flatMap[$t](($alias) => $body)" =>
-      FlatMap(queryExtractor(source), identExtractor(alias), queryExtractor(body))
+      FlatMap(exprExtractor(source), identExtractor(alias), exprExtractor(body))
   }
 
   val exprExtractor: Extractor[Expr] = Extractor[Expr] {
+    case `queryExtractor`(query) => query
     case q"$a.$op($b)"           => BinaryOperation(exprExtractor(a), binaryOperator(op), exprExtractor(b))
     case q"!$a"                  => UnaryOperation(io.getquill.ast.`!`, exprExtractor(a))
     case q"$a.isEmpty"           => UnaryOperation(io.getquill.ast.`isEmpty`, exprExtractor(a))
     case q"$a.nonEmpty"          => UnaryOperation(io.getquill.ast.`nonEmpty`, exprExtractor(a))
     case `refExtractor`(ref)     => ref
-    case `queryExtractor`(query) => query
   }
 
   val unaryOperatorExtractor = PartialFunction[String, UnaryOperator] {
