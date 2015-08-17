@@ -1,15 +1,17 @@
 package io.getquill.ast
 
-trait Transformer {
+trait Transformer[T] {
+  
+  val state: T
 
-  def apply(e: Expr): (Expr, Transformer) =
+  def apply(e: Expr): (Expr, Transformer[T]) =
     e match {
       case e: Query     => apply(e)
       case e: Operation => apply(e)
       case e: Ref       => apply(e)
     }
 
-  def apply(e: Query): (Query, Transformer) =
+  def apply(e: Query): (Query, Transformer[T]) =
     e match {
       case e: Table => (e, this)
       case Filter(a, b, c) =>
@@ -26,7 +28,7 @@ trait Transformer {
         (FlatMap(at, b, ct), ctt)
     }
 
-  def apply(e: Operation): (Operation, Transformer) =
+  def apply(e: Operation): (Operation, Transformer[T]) =
     e match {
       case UnaryOperation(o, a) =>
         val (at, att) = apply(a)
@@ -37,7 +39,7 @@ trait Transformer {
         (BinaryOperation(at, b, ct), ctt)
     }
 
-  def apply(e: Ref): (Ref, Transformer) =
+  def apply(e: Ref): (Ref, Transformer[T]) =
     e match {
       case Property(a, name) =>
         val (at, att) = apply(a)
@@ -48,7 +50,7 @@ trait Transformer {
         apply(e)
     }
 
-  def apply(e: Value): (Value, Transformer) =
+  def apply(e: Value): (Value, Transformer[T]) =
     e match {
       case e: Constant => (e, this)
       case NullValue   => (e, this)

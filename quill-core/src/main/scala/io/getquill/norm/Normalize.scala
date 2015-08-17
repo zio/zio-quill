@@ -27,7 +27,7 @@ object Normalize {
     }
 
   def apply(q: Query) =
-    BetaReduction(norm(AvoidCapture(q)))(collection.Map.empty)
+    BetaReduction(norm(AvoidCapture(q)))
 
   private def norm(q: Query): Query = {
     import io.getquill.util.Show._

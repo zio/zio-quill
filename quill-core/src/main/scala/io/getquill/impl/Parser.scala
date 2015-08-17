@@ -104,7 +104,7 @@ trait Parser extends Quotation {
         for ((a, i) <- aliases.zipWithIndex) yield {
           a -> Property(exprExtractor(alias), s"_${i + 1}")
         }
-      FlatMap(queryExtractor(source), identExtractor(alias), BetaReduction(queryExtractor(body))(reduction.toMap))
+      FlatMap(queryExtractor(source), identExtractor(alias), BetaReduction(queryExtractor(body), reduction: _*))
 
     case q"$source.flatMap[$t](($alias) => $body)" =>
       FlatMap(queryExtractor(source), identExtractor(alias), queryExtractor(body))
