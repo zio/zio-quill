@@ -78,7 +78,16 @@ trait Parser extends Quotation {
     case q"(($x) => scala.this.Predef.ArrowAssoc[$t]($ast).->[$v]($value))" =>
       Assignment(propertyExtractor(ast), astExtractor(value))
   }
-
+  
+  val astExtractor: Extractor[Ast] = Extractor[Ast] {
+    case `queryExtractor`(query) => query
+    case q"$a.$op($b)"           => BinaryOperation(astExtractor(a), binaryOperator(op), astExtractor(b))
+    case q"!$a"                  => UnaryOperation(io.getquill.ast.`!`, astExtractor(a))
+    case q"$a.isEmpty"           => UnaryOperation(io.getquill.ast.`isEmpty`, astExtractor(a))
+    case q"$a.nonEmpty"          => UnaryOperation(io.getquill.ast.`nonEmpty`, astExtractor(a))
+    case `refExtractor`(ref)     => ref
+  }
+  
   val queryExtractor: Extractor[Query] = Extractor[Query] {
 
     case q"io.getquill.`package`.queryable[${ t: Type }]" =>
@@ -107,15 +116,6 @@ trait Parser extends Quotation {
 
     case q"$source.flatMap[$t](($alias) => $body)" =>
       FlatMap(astExtractor(source), identExtractor(alias), astExtractor(body))
-  }
-
-  val astExtractor: Extractor[Ast] = Extractor[Ast] {
-    case `queryExtractor`(query) => query
-    case q"$a.$op($b)"           => BinaryOperation(astExtractor(a), binaryOperator(op), astExtractor(b))
-    case q"!$a"                  => UnaryOperation(io.getquill.ast.`!`, astExtractor(a))
-    case q"$a.isEmpty"           => UnaryOperation(io.getquill.ast.`isEmpty`, astExtractor(a))
-    case q"$a.nonEmpty"          => UnaryOperation(io.getquill.ast.`nonEmpty`, astExtractor(a))
-    case `refExtractor`(ref)     => ref
   }
 
   val unaryOperatorExtractor = PartialFunction[String, UnaryOperator] {

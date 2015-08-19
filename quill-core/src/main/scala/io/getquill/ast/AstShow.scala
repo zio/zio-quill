@@ -37,8 +37,7 @@ object AstShow {
   implicit val functionShow: Show[Function] = new Show[Function] {
     def show(q: Function) =
       q match {
-        case FunctionDef(params, body) => s"((${params.show}) => ${body.show})"
-        case FunctionRef(ident)        => ident.show
+        case Function(params, body) => s"((${params.show}) => ${body.show})"
       }
   }
 

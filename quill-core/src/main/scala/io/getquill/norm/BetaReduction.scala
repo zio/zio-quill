@@ -14,9 +14,24 @@ import io.getquill.ast.Tuple
 import io.getquill.ast.UnaryOperation
 import io.getquill.ast.Value
 import io.getquill.ast.Transformer
+import io.getquill.ast.Function
 
 case class BetaReduction(state: collection.Map[Ident, Ast])
     extends Transformer[collection.Map[Ident, Ast]] {
+
+  override def apply(ast: Ast) =
+    ast match {
+      case Property(Tuple(values), name) => (values(name.drop(1).toInt - 1), this)
+      case ident: Ident                  => (state.getOrElse(ident, ident), this)
+      case other                         => super.apply(other)
+    }
+
+  override def apply(function: Function) =
+    function match {
+      case Function(params, body) =>
+        val (bodyt, t) = BetaReduction(state -- params)(body)
+        (Function(params, bodyt), t)
+    }
 
   override def apply(query: Query) =
     query match {
@@ -34,13 +49,6 @@ case class BetaReduction(state: collection.Map[Ident, Ast])
         val (ar, art) = apply(a)
         val (cr, crt) = BetaReduction(art.state - b)(c)
         (FlatMap(ar, b, cr), crt)
-    }
-
-  override def apply(ast: Ast) =
-    ast match {
-      case Property(Tuple(values), name) => (values(name.drop(1).toInt - 1), this)
-      case ident: Ident                  => (state.getOrElse(ident, ident), this)
-      case other                         => super.apply(other)
     }
 }
 

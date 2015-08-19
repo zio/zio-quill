@@ -21,8 +21,7 @@ trait SimpleTransformer {
 
   def apply(e: Function): Function =
     e match {
-      case FunctionDef(params, body) => FunctionDef(params.map(apply), apply(body))
-      case FunctionRef(ident)        => FunctionRef(apply(ident))
+      case Function(params, body) => Function(params.map(apply), apply(body))
     }
 
   def apply(e: Operation): Operation =

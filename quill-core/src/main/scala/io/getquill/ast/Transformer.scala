@@ -31,7 +31,7 @@ trait Transformer[T] {
 
   def apply(e: Function): (Function, Transformer[T]) =
     e match {
-      case FunctionDef(params, body) =>
+      case Function(params, body) =>
         val (paramst, t) =
           params.foldLeft((List[Ident](), this)) {
             case ((values, t), v) =>
@@ -39,10 +39,7 @@ trait Transformer[T] {
               (values :+ vt, vtt)
           }
         val (bodyt, bt) = t.apply(body)
-        (FunctionDef(paramst, bodyt), bt)
-      case FunctionRef(ident) =>
-        val (identt, t) = apply(ident)
-        (FunctionRef(identt), t)
+        (Function(paramst, bodyt), bt)
     }
 
   def apply(e: Operation): (Operation, Transformer[T]) =
