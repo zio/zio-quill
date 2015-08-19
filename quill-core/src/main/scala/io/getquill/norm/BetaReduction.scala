@@ -13,11 +13,11 @@ import io.getquill.ast.Table
 import io.getquill.ast.Tuple
 import io.getquill.ast.UnaryOperation
 import io.getquill.ast.Value
-import io.getquill.ast.Transformer
+import io.getquill.ast.StatefulTransformer
 import io.getquill.ast.Function
 
 case class BetaReduction(state: collection.Map[Ident, Ast])
-    extends Transformer[collection.Map[Ident, Ast]] {
+    extends StatefulTransformer[collection.Map[Ident, Ast]] {
 
   override def apply(ast: Ast) =
     ast match {

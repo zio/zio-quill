@@ -13,10 +13,10 @@ import io.getquill.ast.Query
 import io.getquill.ast.Table
 import io.getquill.ast.Update
 import io.getquill.norm.capture.AvoidCapture
-import io.getquill.ast.SimpleTransformer
+import io.getquill.ast.StatelessTransformer
 import io.getquill.ast.Ast
 
-object Normalize extends SimpleTransformer {
+object Normalize extends StatelessTransformer {
 
   override def apply(q: Ast): Ast =
     super.apply(BetaReduction(q))

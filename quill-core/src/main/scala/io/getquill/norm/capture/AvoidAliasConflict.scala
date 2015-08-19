@@ -4,9 +4,9 @@ import io.getquill.ast._
 import io.getquill.norm.BetaReduction
 
 private[capture] case class AvoidAliasConflict(state: Set[Ident])
-    extends Transformer[Set[Ident]] {
+    extends StatefulTransformer[Set[Ident]] {
 
-  override def apply(q: Query): (Query, Transformer[Set[Ident]]) =
+  override def apply(q: Query): (Query, StatefulTransformer[Set[Ident]]) =
     q match {
 
       case FlatMap(q: Table, x, p) if (state.contains(x)) =>

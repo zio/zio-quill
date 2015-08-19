@@ -4,7 +4,7 @@ import io.getquill.ast._
 import io.getquill.ast.Query
 import io.getquill.norm.BetaReduction
 
-private[capture] object Dealias extends SimpleTransformer {
+private[capture] object Dealias extends StatelessTransformer {
 
   override def apply(e: Query): Query =
     e match {

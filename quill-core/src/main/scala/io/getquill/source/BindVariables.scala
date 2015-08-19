@@ -17,10 +17,10 @@ import io.getquill.ast.Tuple
 import io.getquill.ast.UnaryOperation
 import io.getquill.ast.Update
 import io.getquill.ast.Function
-import io.getquill.ast.Transformer
+import io.getquill.ast.StatefulTransformer
 
 private[source] case class BindVariables(state: (List[Ident], List[Ident]))
-    extends Transformer[(List[Ident], List[Ident])] {
+    extends StatefulTransformer[(List[Ident], List[Ident])] {
 
   override def apply(i: Ident) =
     state match {

@@ -1,6 +1,6 @@
 package io.getquill.ast
 
-trait SimpleTransformer {
+trait StatelessTransformer {
 
   def apply(e: Ast): Ast =
     e match {

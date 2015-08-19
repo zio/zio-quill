@@ -1,10 +1,10 @@
 package io.getquill.ast
 
-trait Transformer[T] {
+trait StatefulTransformer[T] {
 
   val state: T
 
-  def apply(e: Ast): (Ast, Transformer[T]) =
+  def apply(e: Ast): (Ast, StatefulTransformer[T]) =
     e match {
       case e: Query     => apply(e)
       case e: Function  => apply(e)
@@ -13,7 +13,7 @@ trait Transformer[T] {
       case e: Action    => apply(e)
     }
 
-  def apply(e: Query): (Query, Transformer[T]) =
+  def apply(e: Query): (Query, StatefulTransformer[T]) =
     e match {
       case e: Table => (e, this)
       case Filter(a, b, c) =>
@@ -30,7 +30,7 @@ trait Transformer[T] {
         (FlatMap(at, b, ct), ctt)
     }
 
-  def apply(e: Function): (Function, Transformer[T]) =
+  def apply(e: Function): (Function, StatefulTransformer[T]) =
     e match {
       case Function(params, body) =>
         val (paramst, t) =
@@ -43,7 +43,7 @@ trait Transformer[T] {
         (Function(paramst, bodyt), bt)
     }
 
-  def apply(e: Operation): (Operation, Transformer[T]) =
+  def apply(e: Operation): (Operation, StatefulTransformer[T]) =
     e match {
       case UnaryOperation(o, a) =>
         val (at, att) = apply(a)
@@ -63,24 +63,24 @@ trait Transformer[T] {
         (FunctionApply(functiont, valuest), valuestt)
     }
 
-  def apply(e: Ref): (Ref, Transformer[T]) =
+  def apply(e: Ref): (Ref, StatefulTransformer[T]) =
     e match {
       case e: Property => apply(e)
       case e: Ident    => apply(e)
       case e: Value    => apply(e)
     }
 
-  def apply(e: Property): (Property, Transformer[T]) =
+  def apply(e: Property): (Property, StatefulTransformer[T]) =
     e match {
       case Property(a, name) =>
         val (at, att) = apply(a)
         (Property(at, name), att)
     }
 
-  def apply(e: Ident): (Ident, Transformer[T]) =
+  def apply(e: Ident): (Ident, StatefulTransformer[T]) =
     (e, this)
 
-  def apply(e: Value): (Value, Transformer[T]) =
+  def apply(e: Value): (Value, StatefulTransformer[T]) =
     e match {
       case e: Constant => (e, this)
       case NullValue   => (e, this)
@@ -89,7 +89,7 @@ trait Transformer[T] {
         (Tuple(valuest), valuestt)
     }
 
-  def apply(e: Action): (Action, Transformer[T]) =
+  def apply(e: Action): (Action, StatefulTransformer[T]) =
     e match {
       case Update(query, assignments) =>
         val (queryt, querytt) = apply(query)
@@ -104,7 +104,7 @@ trait Transformer[T] {
         (Delete(query), qtt)
     }
 
-  def apply(e: Assignment): (Assignment, Transformer[T]) =
+  def apply(e: Assignment): (Assignment, StatefulTransformer[T]) =
     e match {
       case Assignment(a, b) =>
         val (at, att) = apply(a)
@@ -112,7 +112,7 @@ trait Transformer[T] {
         (Assignment(at, bt), btt)
     }
 
-  private def apply[U](list: List[U])(f: U => (U, Transformer[T])) =
+  private def apply[U](list: List[U])(f: U => (U, StatefulTransformer[T])) =
     list.foldLeft((List[U](), this)) {
       case ((values, t), v) =>
         val (vt, vtt) = f(v)
