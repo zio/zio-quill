@@ -2,68 +2,68 @@ package io.getquill.norm.select
 
 import scala.reflect.macros.whitebox.Context
 
-import io.getquill.ast.Expr
-import io.getquill.ast.ExprShow.exprShow
+import io.getquill.ast.Ast
+import io.getquill.ast.AstShow.astShow
 import io.getquill.ast.Property
 import io.getquill.ast.Query
 import io.getquill.ast.Tuple
-import io.getquill.ast.ExprShow
+import io.getquill.ast.AstShow
 import io.getquill.util.Messages.RichContext
 import io.getquill.util.Show.Shower
 
 trait SelectFlattening extends SelectValues {
   val c: Context
 
-  import c.universe.{ Expr => _, _ }
+  import c.universe._
 
   protected def flattenSelect[T](q: Query, inferDecoder: Type => Option[Tree])(implicit t: WeakTypeTag[T]) = {
-    val (query, mapExpr) = ExtractSelect(q)
+    val (query, mapAst) = ExtractSelect(q)
     val selectValues =
-      selectElements(mapExpr).map {
-        case (expr, typ) =>
+      selectElements(mapAst).map {
+        case (ast, typ) =>
           inferDecoder(typ) match {
             case Some(decoder) =>
-              SimpleSelectValue(expr, decoder)
+              SimpleSelectValue(ast, decoder)
             case None if (typ.typeSymbol.asClass.isCaseClass) =>
-              caseClassSelectValue(typ, expr, inferDecoder)
+              caseClassSelectValue(typ, ast, inferDecoder)
             case _ =>
-              import ExprShow._
-              c.fail(s"Source doesn't know how to decode '${t.tpe.typeSymbol.name}.${expr.show}: $typ'")
+              import AstShow._
+              c.fail(s"Source doesn't know how to decode '${t.tpe.typeSymbol.name}.${ast.show}: $typ'")
           }
       }
-    (ReplaceSelect(query, selectExprs(selectValues).flatten), selectValues)
+    (ReplaceSelect(query, selectAsts(selectValues).flatten), selectValues)
   }
 
-  private def selectExprs(values: List[SelectValue]) =
+  private def selectAsts(values: List[SelectValue]) =
     values map {
-      case SimpleSelectValue(expr, _)      => List(expr)
-      case CaseClassSelectValue(_, params) => params.flatten.map(_.expr)
+      case SimpleSelectValue(ast, _)      => List(ast)
+      case CaseClassSelectValue(_, params) => params.flatten.map(_.ast)
     }
 
-  private def caseClassSelectValue(typ: Type, expr: Expr, inferDecoder: Type => Option[Tree]) =
-    CaseClassSelectValue(typ, selectValuesForCaseClass(typ, expr, inferDecoder))
+  private def caseClassSelectValue(typ: Type, ast: Ast, inferDecoder: Type => Option[Tree]) =
+    CaseClassSelectValue(typ, selectValuesForCaseClass(typ, ast, inferDecoder))
 
-  private def selectValuesForCaseClass(typ: Type, expr: Expr, inferDecoder: Type => Option[Tree]) =
-    selectValuesForConstructor(caseClassConstructor(typ), expr, inferDecoder)
+  private def selectValuesForCaseClass(typ: Type, ast: Ast, inferDecoder: Type => Option[Tree]) =
+    selectValuesForConstructor(caseClassConstructor(typ), ast, inferDecoder)
 
-  private def selectValuesForConstructor(constructor: MethodSymbol, expr: Expr, inferDecoder: Type => Option[Tree]) =
+  private def selectValuesForConstructor(constructor: MethodSymbol, ast: Ast, inferDecoder: Type => Option[Tree]) =
     constructor.paramLists.map(_.map {
       param =>
         val paramType = param.typeSignature.typeSymbol.asType.toType
         val decoder =
           inferDecoder(paramType)
             .getOrElse(c.fail(s"Source doesn't know how to decode '${param.name}: $paramType'"))
-        SimpleSelectValue(Property(expr, param.name.decodedName.toString), decoder)
+        SimpleSelectValue(Property(ast, param.name.decodedName.toString), decoder)
     })
 
-  private def selectElements[T](mapExpr: Expr)(implicit t: WeakTypeTag[T]) =
-    mapExpr match {
+  private def selectElements[T](mapAst: Ast)(implicit t: WeakTypeTag[T]) =
+    mapAst match {
       case Tuple(values) =>
         if (values.size != t.tpe.typeArgs.size)
           c.fail(s"Query shape doesn't match the return type $t, please submit a bug report.")
         values.zip(t.tpe.typeArgs)
-      case expr =>
-        List(expr -> t.tpe)
+      case ast =>
+        List(ast -> t.tpe)
     }
 
   private def caseClassConstructor(t: Type) =

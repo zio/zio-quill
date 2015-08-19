@@ -1,12 +1,12 @@
 package io.getquill.sql
 
-import ExprShow.exprShow
-import ExprShow.identShow
-import ExprShow.valueShow
+import AstShow.astShow
+import AstShow.identShow
+import AstShow.valueShow
 import io.getquill.ast.Action
 import io.getquill.ast.Assignment
 import io.getquill.ast.Delete
-import io.getquill.ast.Expr
+import io.getquill.ast.Ast
 import io.getquill.ast.Filter
 import io.getquill.ast.Insert
 import io.getquill.ast.Property
@@ -19,14 +19,14 @@ import io.getquill.util.Show.listShow
 
 object ActionShow {
 
-  import ExprShow.exprShow
+  import AstShow.astShow
 
   implicit val actionShow: Show[Action] = new Show[Action] {
     def show(a: Action) =
       a match {
 
         case Insert(Table(table), assignments) =>
-          val columns = assignments.map(_.property: Expr)
+          val columns = assignments.map(_.property: Ast)
           val values = assignments.map(_.value)
           s"INSERT INTO $table (${columns.show}) VALUES (${values.show})"
 
@@ -55,9 +55,9 @@ object ActionShow {
       e match {
         case Property(_, name) => name
         case other =>
-          import ExprShow.valueShow
-          import ExprShow.identShow
-          ExprShow.refShow.show(other)
+          import AstShow.valueShow
+          import AstShow.identShow
+          AstShow.refShow.show(other)
       }
   }
 

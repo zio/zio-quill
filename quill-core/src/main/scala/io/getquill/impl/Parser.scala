@@ -7,7 +7,7 @@ import io.getquill.ast.Assignment
 import io.getquill.ast.BinaryOperation
 import io.getquill.ast.Constant
 import io.getquill.ast.Delete
-import io.getquill.ast.Expr
+import io.getquill.ast.Ast
 import io.getquill.ast.Filter
 import io.getquill.ast.FlatMap
 import io.getquill.ast.Ident
@@ -31,7 +31,7 @@ import io.getquill.ast.UnaryOperation
 trait Parser extends Quotation {
 
   val c: Context
-  import c.universe.{ Expr => _, Ident => _, Constant => _, _ }
+  import c.universe.{ Ident => _, Constant => _, _ }
 
   case class Extractor[T](p: PartialFunction[Tree, T])(implicit t: ClassTag[T]) {
 
@@ -75,8 +75,8 @@ trait Parser extends Quotation {
   }
 
   val assignmentExtractor: Extractor[Assignment] = Extractor[Assignment] {
-    case q"(($x) => scala.this.Predef.ArrowAssoc[$t]($expr).->[$v]($value))" =>
-      Assignment(propertyExtractor(expr), exprExtractor(value))
+    case q"(($x) => scala.this.Predef.ArrowAssoc[$t]($ast).->[$v]($value))" =>
+      Assignment(propertyExtractor(ast), astExtractor(value))
   }
 
   val queryExtractor: Extractor[Query] = Extractor[Query] {
@@ -85,13 +85,13 @@ trait Parser extends Quotation {
       Table(t.typeSymbol.name.decodedName.toString)
 
     case q"$source.filter(($alias) => $body)" =>
-      Filter(exprExtractor(source), identExtractor(alias), exprExtractor(body))
+      Filter(astExtractor(source), identExtractor(alias), astExtractor(body))
 
     case q"$source.withFilter(($alias) => $body)" =>
-      Filter(exprExtractor(source), identExtractor(alias), exprExtractor(body))
+      Filter(astExtractor(source), identExtractor(alias), astExtractor(body))
 
     case q"$source.map[$t](($alias) => $body)" =>
-      Map(exprExtractor(source), identExtractor(alias), exprExtractor(body))
+      Map(astExtractor(source), identExtractor(alias), astExtractor(body))
 
     case q"$source.flatMap[$t](($alias) => $matchAlias match { case (..$a) => $body })" if (alias == matchAlias) =>
       val aliases =
@@ -101,20 +101,20 @@ trait Parser extends Quotation {
         }
       val reduction =
         for ((a, i) <- aliases.zipWithIndex) yield {
-          a -> Property(exprExtractor(alias), s"_${i + 1}")
+          a -> Property(astExtractor(alias), s"_${i + 1}")
         }
-      FlatMap(exprExtractor(source), identExtractor(alias), BetaReduction(exprExtractor(body), reduction: _*))
+      FlatMap(astExtractor(source), identExtractor(alias), BetaReduction(astExtractor(body), reduction: _*))
 
     case q"$source.flatMap[$t](($alias) => $body)" =>
-      FlatMap(exprExtractor(source), identExtractor(alias), exprExtractor(body))
+      FlatMap(astExtractor(source), identExtractor(alias), astExtractor(body))
   }
 
-  val exprExtractor: Extractor[Expr] = Extractor[Expr] {
+  val astExtractor: Extractor[Ast] = Extractor[Ast] {
     case `queryExtractor`(query) => query
-    case q"$a.$op($b)"           => BinaryOperation(exprExtractor(a), binaryOperator(op), exprExtractor(b))
-    case q"!$a"                  => UnaryOperation(io.getquill.ast.`!`, exprExtractor(a))
-    case q"$a.isEmpty"           => UnaryOperation(io.getquill.ast.`isEmpty`, exprExtractor(a))
-    case q"$a.nonEmpty"          => UnaryOperation(io.getquill.ast.`nonEmpty`, exprExtractor(a))
+    case q"$a.$op($b)"           => BinaryOperation(astExtractor(a), binaryOperator(op), astExtractor(b))
+    case q"!$a"                  => UnaryOperation(io.getquill.ast.`!`, astExtractor(a))
+    case q"$a.isEmpty"           => UnaryOperation(io.getquill.ast.`isEmpty`, astExtractor(a))
+    case q"$a.nonEmpty"          => UnaryOperation(io.getquill.ast.`nonEmpty`, astExtractor(a))
     case `refExtractor`(ref)     => ref
   }
 
@@ -148,13 +148,13 @@ trait Parser extends Quotation {
   }
 
   val propertyExtractor: Extractor[Property] = Extractor[Property] {
-    case q"$e.$property" => Property(exprExtractor(e), property.decodedName.toString)
+    case q"$e.$property" => Property(astExtractor(e), property.decodedName.toString)
   }
 
   val valueExtractor: Extractor[Ref] = Extractor[Ref] {
     case q"null"                         => NullValue
     case Literal(c.universe.Constant(v)) => Constant(v)
-    case q"((..$v))" if (v.size > 1)     => Tuple(v.map(exprExtractor(_)))
+    case q"((..$v))" if (v.size > 1)     => Tuple(v.map(astExtractor(_)))
   }
 
   val identExtractor: Extractor[Ident] = Extractor[Ident] {

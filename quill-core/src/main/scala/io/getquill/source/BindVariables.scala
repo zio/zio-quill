@@ -4,7 +4,7 @@ import io.getquill.ast.Action
 import io.getquill.ast.Assignment
 import io.getquill.ast.BinaryOperation
 import io.getquill.ast.Delete
-import io.getquill.ast.Expr
+import io.getquill.ast.Ast
 import io.getquill.ast.Filter
 import io.getquill.ast.FlatMap
 import io.getquill.ast.Ident
@@ -46,14 +46,14 @@ private[source] object BindVariables {
         (Assignment(prop, vr), vrv)
     }
 
-  def apply(expr: Expr)(implicit vars: List[Ident]): (Expr, List[Ident]) =
-    expr match {
-      case expr: Query =>
-        apply(expr)
-      case expr: Ref =>
-        apply(expr)
-      case UnaryOperation(op, expr) =>
-        val (er, erv) = apply(expr)
+  def apply(ast: Ast)(implicit vars: List[Ident]): (Ast, List[Ident]) =
+    ast match {
+      case ast: Query =>
+        apply(ast)
+      case ast: Ref =>
+        apply(ast)
+      case UnaryOperation(op, ast) =>
+        val (er, erv) = apply(ast)
         (UnaryOperation(op, er), erv)
       case BinaryOperation(a, op, b) =>
         val (ar, arv) = apply(a)
@@ -78,7 +78,7 @@ private[source] object BindVariables {
       case t: Table => (t, List())
     }
 
-  def apply(ref: Ref)(implicit vars: List[Ident]): (Expr, List[Ident]) =
+  def apply(ref: Ref)(implicit vars: List[Ident]): (Ast, List[Ident]) =
     ref match {
       case Tuple(values) =>
         val vr = values.map(apply)

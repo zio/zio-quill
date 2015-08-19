@@ -4,7 +4,7 @@ trait Transformer[T] {
   
   val state: T
 
-  def apply(e: Expr): (Expr, Transformer[T]) =
+  def apply(e: Ast): (Ast, Transformer[T]) =
     e match {
       case e: Query     => apply(e)
       case e: Operation => apply(e)
@@ -56,7 +56,7 @@ trait Transformer[T] {
       case NullValue   => (e, this)
       case Tuple(values) =>
         val valuest =
-          values.foldLeft((List[Expr](), this)) {
+          values.foldLeft((List[Ast](), this)) {
             case ((values, t), v) =>
               val (vt, vtt) = apply(v)
               (values :+ vt, vtt)

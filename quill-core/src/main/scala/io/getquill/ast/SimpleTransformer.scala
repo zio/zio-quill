@@ -2,7 +2,7 @@ package io.getquill.ast
 
 trait SimpleTransformer {
 
-  def apply(e: Expr): Expr =
+  def apply(e: Ast): Ast =
     e match {
       case e: Query     => apply(e)
       case e: Operation => apply(e)

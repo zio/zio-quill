@@ -14,7 +14,7 @@ trait Quotation {
 
   case class QuotedTree(tree: Any) extends StaticAnnotation
 
-  def quote[T: WeakTypeTag](body: c.Expr[T]) = {
+  def quote[T: WeakTypeTag](body: Expr[T]) = {
     verifyFreeVariables(body.tree)
     q"""
       new ${c.weakTypeOf[Quoted[T]]} {
@@ -25,7 +25,7 @@ trait Quotation {
     """
   }
 
-  def unquote[T](quoted: c.Expr[Quoted[T]]) =
+  def unquote[T](quoted: Expr[Quoted[T]]) =
     unquoteTree(quoted.tree)
 
   protected def unquoteTree[T](tree: Tree) = {

@@ -14,7 +14,7 @@ import io.getquill.ast.Table
 import io.getquill.ast.Update
 import io.getquill.norm.capture.AvoidCapture
 import io.getquill.ast.SimpleTransformer
-import io.getquill.ast.Expr
+import io.getquill.ast.Ast
 
 object Normalize extends SimpleTransformer {
 
@@ -28,7 +28,7 @@ object Normalize extends SimpleTransformer {
         Delete(apply(query))
     }
 
-  override def apply(q: Expr): Expr =
+  override def apply(q: Ast): Ast =
     super.apply(BetaReduction(q))
 
   override def apply(q: Query): Query =

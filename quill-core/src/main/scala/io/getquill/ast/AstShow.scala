@@ -4,13 +4,13 @@ import io.getquill.util.Show.Show
 import io.getquill.util.Show.Shower
 import io.getquill.util.Show.listShow
 
-object ExprShow {
+object AstShow {
 
-  implicit val exprShow: Show[Expr] = new Show[Expr] {
-    def show(e: Expr) =
+  implicit val astShow: Show[Ast] = new Show[Ast] {
+    def show(e: Ast) =
       e match {
-        case expr: Query           => expr.show
-        case expr: Ref             => expr.show
+        case ast: Query           => ast.show
+        case ast: Ref             => ast.show
         case operation: Operation => operation.show
       }
   }
@@ -36,8 +36,8 @@ object ExprShow {
   implicit val operationShow: Show[Operation] = new Show[Operation] {
     def show(e: Operation) =
       e match {
-        case UnaryOperation(op: PrefixUnaryOperator, expr)  => s"${op.show}${expr.show}"
-        case UnaryOperation(op: PostfixUnaryOperator, expr) => s"${expr.show}.${op.show}"
+        case UnaryOperation(op: PrefixUnaryOperator, ast)  => s"${op.show}${ast.show}"
+        case UnaryOperation(op: PostfixUnaryOperator, ast) => s"${ast.show}.${op.show}"
         case BinaryOperation(a, op, b)                      => s"${a.show} ${op.show} ${b.show}"
       }
   }
