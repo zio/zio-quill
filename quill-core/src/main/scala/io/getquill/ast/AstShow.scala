@@ -10,6 +10,7 @@ object AstShow {
     def show(e: Ast) =
       e match {
         case ast: Query           => ast.show
+        case ast: Function        => ast.show
         case ast: Ref             => ast.show
         case operation: Operation => operation.show
       }
@@ -33,12 +34,21 @@ object AstShow {
       }
   }
 
+  implicit val functionShow: Show[Function] = new Show[Function] {
+    def show(q: Function) =
+      q match {
+        case FunctionDef(params, body) => s"((${params.show}) => ${body.show})"
+        case FunctionRef(ident)        => ident.show
+      }
+  }
+
   implicit val operationShow: Show[Operation] = new Show[Operation] {
     def show(e: Operation) =
       e match {
         case UnaryOperation(op: PrefixUnaryOperator, ast)  => s"${op.show}${ast.show}"
         case UnaryOperation(op: PostfixUnaryOperator, ast) => s"${ast.show}.${op.show}"
-        case BinaryOperation(a, op, b)                      => s"${a.show} ${op.show} ${b.show}"
+        case BinaryOperation(a, op, b)                     => s"${a.show} ${op.show} ${b.show}"
+        case FunctionApply(function, values)               => s"${function.show}.apply(${values.show})"
       }
   }
 

@@ -14,6 +14,7 @@ import io.getquill.ast.UnaryOperation
 import io.getquill.ast.UnaryOperator
 import io.getquill.ast.Value
 import io.getquill.ast.Query
+import io.getquill.ast.Function
 import io.getquill.util.Show.Show
 import io.getquill.util.Show.Shower
 import io.getquill.util.Show.listShow
@@ -28,10 +29,11 @@ object AstShow {
         e match {
           case query: Query                            => s"(${SqlQuery(query).show})"
           case ref: Ref                                => ref.show
-          case UnaryOperation(op, ast)                => s"(${op.show} ${ast.show})"
+          case UnaryOperation(op, ast)                 => s"(${op.show} ${ast.show})"
           case BinaryOperation(a, ast.`==`, NullValue) => s"(${a.show} IS NULL)"
           case BinaryOperation(NullValue, ast.`==`, b) => s"(${b.show} IS NULL)"
           case BinaryOperation(a, op, b)               => s"(${a.show} ${op.show} ${b.show})"
+          case other                                   => throw new IllegalStateException(s"Invalid sql fragment $other.")
         }
     }
 

@@ -1,12 +1,13 @@
 package io.getquill.ast
 
 trait Transformer[T] {
-  
+
   val state: T
 
   def apply(e: Ast): (Ast, Transformer[T]) =
     e match {
       case e: Query     => apply(e)
+      case e: Function  => apply(e)
       case e: Operation => apply(e)
       case e: Ref       => apply(e)
     }
@@ -28,6 +29,22 @@ trait Transformer[T] {
         (FlatMap(at, b, ct), ctt)
     }
 
+  def apply(e: Function): (Function, Transformer[T]) =
+    e match {
+      case FunctionDef(params, body) =>
+        val (paramst, t) =
+          params.foldLeft((List[Ident](), this)) {
+            case ((values, t), v) =>
+              val (vt, vtt) = apply(v)
+              (values :+ vt, vtt)
+          }
+        val (bodyt, bt) = t.apply(body)
+        (FunctionDef(paramst, bodyt), bt)
+      case FunctionRef(ident) =>
+        val (identt, t) = apply(ident)
+        (FunctionRef(identt), t)
+    }
+
   def apply(e: Operation): (Operation, Transformer[T]) =
     e match {
       case UnaryOperation(o, a) =>
@@ -37,6 +54,15 @@ trait Transformer[T] {
         val (at, att) = apply(a)
         val (ct, ctt) = att.apply(c)
         (BinaryOperation(at, b, ct), ctt)
+      case FunctionApply(function, values) =>
+        val (functiont, functiontt) = apply(function)
+        val (valuest, valuestt) =
+          values.foldLeft((List[Ast](), functiontt)) {
+            case ((values, t), v) =>
+              val (vt, vtt) = apply(v)
+              (values :+ vt, vtt)
+          }
+        (FunctionApply(functiont, valuest), valuestt)
     }
 
   def apply(e: Ref): (Ref, Transformer[T]) =
@@ -45,10 +71,13 @@ trait Transformer[T] {
         val (at, att) = apply(a)
         (Property(at, name), att)
       case e: Ident =>
-        (e, this)
+        apply(e)
       case e: Value =>
         apply(e)
     }
+
+  def apply(e: Ident): (Ident, Transformer[T]) =
+    (e, this)
 
   def apply(e: Value): (Value, Transformer[T]) =
     e match {

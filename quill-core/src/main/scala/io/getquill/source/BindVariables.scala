@@ -16,6 +16,20 @@ import io.getquill.ast.Table
 import io.getquill.ast.Tuple
 import io.getquill.ast.UnaryOperation
 import io.getquill.ast.Update
+import io.getquill.ast.Function
+import io.getquill.ast.Transformer
+
+private[source] case class BindVariables(state: (List[Ident], List[Ident]))
+    extends Transformer[(List[Ident], List[Ident])] {
+
+  override def apply(i: Ident) =
+    state match {
+      case (vars, bindings) if (vars.contains(i)) =>
+        (Ident("?"), BindVariables((vars, bindings :+ i)))
+      case other =>
+        (i, this)
+    }
+}
 
 private[source] object BindVariables {
 
@@ -46,45 +60,8 @@ private[source] object BindVariables {
         (Assignment(prop, vr), vrv)
     }
 
-  def apply(ast: Ast)(implicit vars: List[Ident]): (Ast, List[Ident]) =
-    ast match {
-      case ast: Query =>
-        apply(ast)
-      case ast: Ref =>
-        apply(ast)
-      case UnaryOperation(op, ast) =>
-        val (er, erv) = apply(ast)
-        (UnaryOperation(op, er), erv)
-      case BinaryOperation(a, op, b) =>
-        val (ar, arv) = apply(a)
-        val (br, brv) = apply(b)
-        (BinaryOperation(ar, op, br), arv ++ brv)
-    }
-
-  def apply(query: Query)(implicit vars: List[Ident]): (Query, List[Ident]) =
-    query match {
-      case FlatMap(q, x, p) =>
-        val (qr, qrv) = apply(q)
-        val (pr, prv) = apply(p)
-        (FlatMap(qr, x, pr), qrv ++ prv)
-      case Map(q, x, p) =>
-        val (qr, qrv) = apply(q)
-        val (pr, prv) = apply(p)
-        (Map(qr, x, pr), qrv ++ prv)
-      case Filter(q, x, p) =>
-        val (qr, qrv) = apply(q)
-        val (pr, prv) = apply(p)
-        (Filter(qr, x, pr), qrv ++ prv)
-      case t: Table => (t, List())
-    }
-
-  def apply(ref: Ref)(implicit vars: List[Ident]): (Ast, List[Ident]) =
-    ref match {
-      case Tuple(values) =>
-        val vr = values.map(apply)
-        (Tuple(vr.map(_._1)), vr.map(_._2).flatten)
-      case ident: Ident if (vars.contains(ident)) =>
-        (Ident("?"), List(ident))
-      case other => (other, List())
-    }
+  def apply(ast: Ast)(implicit vars: List[Ident]): (Ast, List[Ident]) = {
+    val (astt, transformer) = BindVariables((vars, List())).apply(ast)
+    (astt, transformer.state._2)
+  }
 }

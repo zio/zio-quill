@@ -4,6 +4,8 @@ package io.getquill.ast
 
 sealed trait Ast
 
+//************************************************************
+
 sealed trait Query extends Ast
 
 case class Table(name: String) extends Query
@@ -16,10 +18,18 @@ case class FlatMap(query: Ast, alias: Ident, body: Ast) extends Query
 
 //************************************************************
 
+trait Function extends Ast
+
+case class FunctionDef(params: List[Ident], body: Ast) extends Function
+case class FunctionRef(ident: Ident) extends Function
+
+//************************************************************
+
 sealed trait Operation extends Ast
 
 case class UnaryOperation(operator: UnaryOperator, Ast: Ast) extends Operation
 case class BinaryOperation(a: Ast, operator: BinaryOperator, b: Ast) extends Operation
+case class FunctionApply(function: Function, values: List[Ast]) extends Operation
 
 //************************************************************
 

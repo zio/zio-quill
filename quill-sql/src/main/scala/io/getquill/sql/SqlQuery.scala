@@ -15,10 +15,17 @@ case class SqlQuery(from: List[Source], where: Option[Ast], select: Ast)
 
 object SqlQuery {
 
-  def apply(query: Query) =
-    flatten(query) match {
-      case (from, where, select) =>
-        new SqlQuery(from, where, select)
+  def apply(ast: Ast) =
+    ast match {
+      case query: Query =>
+        flatten(query) match {
+          case (from, where, select) =>
+            new SqlQuery(from, where, select)
+        }
+      case other =>
+        import io.getquill.util.Show._
+        import io.getquill.ast.AstShow._
+        throw new IllegalStateException(s"Query is not propertly normalized, please submit a bug report. ${other.show}")
     }
 
   private def flatten(query: Query): (List[Source], Option[Ast], Ast) = {
