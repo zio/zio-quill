@@ -15,15 +15,22 @@ import io.getquill.ast.UnaryOperation
 import io.getquill.ast.Value
 import io.getquill.ast.StatefulTransformer
 import io.getquill.ast.Function
+import io.getquill.ast.Operation
+import io.getquill.ast.FunctionApply
 
 case class BetaReduction(state: collection.Map[Ident, Ast])
     extends StatefulTransformer[collection.Map[Ident, Ast]] {
 
   override def apply(ast: Ast) =
     ast match {
-      case Property(Tuple(values), name) => (values(name.drop(1).toInt - 1), this)
-      case ident: Ident                  => (state.getOrElse(ident, ident), this)
-      case other                         => super.apply(other)
+      case Property(Tuple(values), name) =>
+        (values(name.drop(1).toInt - 1), this)
+      case FunctionApply(Function(params, body), values) =>
+        BetaReduction(state ++ params.zip(values))(body)
+      case ident: Ident =>
+        (state.getOrElse(ident, ident), this)
+      case other =>
+        super.apply(other)
     }
 
   override def apply(function: Function) =
