@@ -18,16 +18,6 @@ import io.getquill.ast.Ast
 
 object Normalize extends SimpleTransformer {
 
-  def apply(a: Action): Action =
-    a match {
-      case Insert(query, assignments) =>
-        Insert(apply(query), assignments)
-      case Update(query, assignments) =>
-        Update(apply(query), assignments)
-      case Delete(query) =>
-        Delete(apply(query))
-    }
-
   override def apply(q: Ast): Ast =
     super.apply(BetaReduction(q))
 

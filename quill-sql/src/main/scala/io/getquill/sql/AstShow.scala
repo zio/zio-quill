@@ -5,7 +5,8 @@ import io.getquill.ast.BinaryOperation
 import io.getquill.ast.BinaryOperator
 import io.getquill.ast.Constant
 import io.getquill.ast.Ast
-import io.getquill.ast.Ident
+import io.getquill.ast.Action
+import io.getquill.ast.Assignment
 import io.getquill.ast.NullValue
 import io.getquill.ast.Property
 import io.getquill.ast.Ref
@@ -18,6 +19,12 @@ import io.getquill.ast.Function
 import io.getquill.util.Show.Show
 import io.getquill.util.Show.Shower
 import io.getquill.util.Show.listShow
+import io.getquill.ast.Ident
+import io.getquill.ast.Insert
+import io.getquill.ast.Table
+import io.getquill.ast.Update
+import io.getquill.ast.Delete
+import io.getquill.ast.Filter
 
 object AstShow {
 
@@ -33,6 +40,7 @@ object AstShow {
           case BinaryOperation(a, ast.`==`, NullValue) => s"(${a.show} IS NULL)"
           case BinaryOperation(NullValue, ast.`==`, b) => s"(${b.show} IS NULL)"
           case BinaryOperation(a, op, b)               => s"(${a.show} ${op.show} ${b.show})"
+          case a: Action                               => a.show
           case other                                   => throw new IllegalStateException(s"Invalid sql fragment $other.")
         }
     }
@@ -70,7 +78,7 @@ object AstShow {
     new Show[Ref] {
       def show(e: Ref) =
         e match {
-          case Property(ref, name) => s"${ref.show}.$name"
+          case Property(ast, name) => s"${ast.show}.$name"
           case ident: Ident        => ident.show
           case v: Value            => v.show
         }
@@ -90,4 +98,44 @@ object AstShow {
   implicit val identShow: Show[Ident] = new Show[Ident] {
     def show(e: Ident) = e.name
   }
+
+  implicit val actionShow: Show[Action] = {
+
+    def set(assignments: List[Assignment]) =
+      assignments.map(a => s"${a.property.name} = ${a.value.show}").mkString(", ")
+
+    implicit def refShow: Show[Ref] = new Show[Ref] {
+      def show(e: Ref) =
+        e match {
+          case Property(_, name) => name
+          case other             => AstShow.this.refShow.show(other)
+        }
+    }
+    new Show[Action] {
+      def show(a: Action) =
+        a match {
+
+          case Insert(Table(table), assignments) =>
+            val columns = assignments.map(_.property: Ast)
+            val values = assignments.map(_.value)
+            s"INSERT INTO $table (${columns.show}) VALUES (${values.show})"
+
+          case Update(Table(table), assignments) =>
+            s"UPDATE $table SET ${set(assignments)}"
+
+          case Update(Filter(Table(table), x, where), assignments) =>
+            s"UPDATE $table SET ${set(assignments)} WHERE ${where.show}"
+
+          case Delete(Filter(Table(table), x, where)) =>
+            s"DELETE FROM $table WHERE ${where.show}"
+
+          case Delete(Table(table)) =>
+            s"DELETE FROM $table"
+
+          case other =>
+            throw new IllegalStateException(s"Invalid action '$a'")
+        }
+    }
+  }
+
 }

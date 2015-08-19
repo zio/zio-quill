@@ -27,11 +27,14 @@ import io.getquill.ast.UnaryOperation
 import io.getquill.ast.UnaryOperator
 import io.getquill.ast.PrefixUnaryOperator
 import io.getquill.ast.UnaryOperation
+import io.getquill.ast.Function
+import io.getquill.ast.FunctionApply
 
-trait Parser extends Quotation {
+trait Parser {
+  this: Quotation =>
 
   val c: Context
-  import c.universe.{ Ident => _, Constant => _, _ }
+  import c.universe.{ Ident => _, Constant => _, Function => _, _ }
 
   case class Extractor[T](p: PartialFunction[Tree, T])(implicit t: ClassTag[T]) {
 
@@ -67,27 +70,37 @@ trait Parser extends Quotation {
 
   val actionExtractor: Extractor[Action] = Extractor[Action] {
     case q"$query.$method(..$assignments)" if (method.decodedName.toString == "update") =>
-      Update(queryExtractor(query), assignments.map(assignmentExtractor(_)))
+      Update(astExtractor(query), assignments.map(assignmentExtractor(_)))
     case q"$query.insert(..$assignments)" =>
-      Insert(queryExtractor(query), assignments.map(assignmentExtractor(_)))
+      Insert(astExtractor(query), assignments.map(assignmentExtractor(_)))
     case q"$query.delete" =>
-      Delete(queryExtractor(query))
+      Delete(astExtractor(query))
   }
 
   val assignmentExtractor: Extractor[Assignment] = Extractor[Assignment] {
     case q"(($x) => scala.this.Predef.ArrowAssoc[$t]($ast).->[$v]($value))" =>
       Assignment(propertyExtractor(ast), astExtractor(value))
   }
-  
+
   val astExtractor: Extractor[Ast] = Extractor[Ast] {
-    case `queryExtractor`(query) => query
-    case q"$a.$op($b)"           => BinaryOperation(astExtractor(a), binaryOperator(op), astExtractor(b))
-    case q"!$a"                  => UnaryOperation(io.getquill.ast.`!`, astExtractor(a))
-    case q"$a.isEmpty"           => UnaryOperation(io.getquill.ast.`isEmpty`, astExtractor(a))
-    case q"$a.nonEmpty"          => UnaryOperation(io.getquill.ast.`nonEmpty`, astExtractor(a))
-    case `refExtractor`(ref)     => ref
+    case `queryExtractor`(query)      => query
+    case `functionExtrator`(function) => function
+    case `actionExtractor`(action)    => action
+    case q"$a.apply(..$values)"       => FunctionApply(astExtractor(a), values.map(astExtractor(_)))
+    case q"$a.$op($b)"                => BinaryOperation(astExtractor(a), binaryOperator(op), astExtractor(b))
+    case q"!$a"                       => UnaryOperation(io.getquill.ast.`!`, astExtractor(a))
+    case q"$a.isEmpty"                => UnaryOperation(io.getquill.ast.`isEmpty`, astExtractor(a))
+    case q"$a.nonEmpty"               => UnaryOperation(io.getquill.ast.`nonEmpty`, astExtractor(a))
+    case `refExtractor`(ref)          => ref
   }
-  
+
+  val functionExtrator: Extractor[Function] = Extractor[Function] {
+    case q"new { def apply[..$t1](...$params) = $body }" =>
+      Function(params.flatten.map(p => p: Tree).map(identExtractor(_)), astExtractor(body))
+    case q"(..$params) => $body" =>
+      Function(params.map(identExtractor(_)), astExtractor(body))
+  }
+
   val queryExtractor: Extractor[Query] = Extractor[Query] {
 
     case q"io.getquill.`package`.queryable[${ t: Type }]" =>

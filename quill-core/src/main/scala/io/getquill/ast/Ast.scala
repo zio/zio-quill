@@ -47,3 +47,11 @@ object NullValue extends Value
 case class Tuple(values: List[Ast]) extends Value
 
 //************************************************************
+
+sealed trait Action extends Ast
+
+case class Update(query: Ast, assingments: List[Assignment]) extends Action
+case class Insert(query: Ast, assingments: List[Assignment]) extends Action
+case class Delete(query: Ast) extends Action
+
+case class Assignment(property: Property, value: Ast)

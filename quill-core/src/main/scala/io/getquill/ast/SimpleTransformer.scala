@@ -8,6 +8,7 @@ trait SimpleTransformer {
       case e: Function  => apply(e)
       case e: Operation => apply(e)
       case e: Ref       => apply(e)
+      case e: Action    => apply(e)
     }
 
   def apply(e: Query): Query =
@@ -33,9 +34,14 @@ trait SimpleTransformer {
 
   def apply(e: Ref): Ref =
     e match {
+      case e: Property => apply(e)
+      case e: Ident    => apply(e)
+      case e: Value    => apply(e)
+    }
+
+  def apply(e: Property): Property =
+    e match {
       case Property(a, name) => Property(apply(a), name)
-      case e: Ident          => apply(e)
-      case e: Value          => apply(e)
     }
 
   def apply(e: Ident): Ident =
@@ -46,5 +52,17 @@ trait SimpleTransformer {
       case e: Constant   => e
       case NullValue     => NullValue
       case Tuple(values) => Tuple(values.map(apply))
+    }
+
+  def apply(e: Action): Action =
+    e match {
+      case Update(query, assignments) => Update(apply(query), assignments.map(apply))
+      case Insert(query, assignments) => Insert(apply(query), assignments.map(apply))
+      case Delete(query)              => Delete(apply(query))
+    }
+
+  def apply(e: Assignment): Assignment =
+    e match {
+      case Assignment(property, value) => Assignment(apply(property), apply(value))
     }
 }

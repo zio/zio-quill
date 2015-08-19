@@ -9,10 +9,11 @@ object AstShow {
   implicit val astShow: Show[Ast] = new Show[Ast] {
     def show(e: Ast) =
       e match {
-        case ast: Query           => ast.show
-        case ast: Function        => ast.show
-        case ast: Ref             => ast.show
-        case operation: Operation => operation.show
+        case ast: Query     => ast.show
+        case ast: Function  => ast.show
+        case ast: Ref       => ast.show
+        case ast: Operation => ast.show
+        case ast: Action    => ast.show
       }
   }
 
@@ -108,6 +109,22 @@ object AstShow {
 
   implicit val identShow: Show[Ident] = new Show[Ident] {
     def show(e: Ident) = e.name
+  }
+
+  implicit val actionShow: Show[Action] = new Show[Action] {
+    def show(e: Action) =
+      e match {
+        case Update(query, assignments) => s"${query.show}.update(${assignments.show})"
+        case Insert(query, assignments) => s"${query.show}.insert(${assignments.show})"
+        case Delete(query)              => s"${query.show}.delete"
+      }
+  }
+
+  implicit val assignmentShow: Show[Assignment] = new Show[Assignment] {
+    def show(e: Assignment) =
+      e match {
+        case Assignment(property, value) => s"${(property: Ref).show} -> ${value.show}"
+      }
   }
 
 }

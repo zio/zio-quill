@@ -1,7 +1,6 @@
 package io.getquill.sql
 
 import scala.reflect.macros.whitebox.Context
-
 import SqlQueryShow.sqlQueryShow
 import io.getquill.impl.Parser
 import io.getquill.impl.Queryable
@@ -12,8 +11,9 @@ import io.getquill.source.EncodeBindVariables
 import io.getquill.source.Encoding
 import io.getquill.util.Messages.RichContext
 import io.getquill.util.Show.Shower
+import io.getquill.impl.Quotation
 
-class QueryMacro(val c: Context) extends Parser with SelectFlattening with SelectResultExtraction {
+class QueryMacro(val c: Context) extends Parser with Quotation with SelectFlattening with SelectResultExtraction {
   import c.universe.{ Ident => _, _ }
 
   def run[R, S, T](query: Expr[Queryable[T]])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]): Tree =
@@ -34,7 +34,7 @@ class QueryMacro(val c: Context) extends Parser with SelectFlattening with Selec
   private def run[R, S, T](query: Tree, params: List[ValDef], bindings: List[Expr[Any]])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]) = {
     val normalizedQuery = Normalize(queryExtractor(query))
     val (flattenQuery, selectValues) = flattenSelect[T](normalizedQuery, Encoding.inferDecoder[R](c))
-    val (bindedQuery, encode) = EncodeBindVariables.forQuery[S](c)(flattenQuery, bindingMap(params, bindings))
+    val (bindedQuery, encode) = EncodeBindVariables[S](c)(flattenQuery, bindingMap(params, bindings))
     val extractor = selectResultExtractor[T, R](selectValues)
     val sql = SqlQuery(bindedQuery).show
     c.info(sql)

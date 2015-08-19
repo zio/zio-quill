@@ -1,21 +1,22 @@
 package io.getquill.sql
 
 import scala.reflect.macros.whitebox.Context
-
-import ActionShow.actionShow
 import io.getquill.ast.Ident
+import io.getquill.ast.Ast
 import io.getquill.impl.Actionable
 import io.getquill.impl.Parser
 import io.getquill.norm.Normalize
 import io.getquill.source.EncodeBindVariables
 import io.getquill.util.Messages.RichContext
-import io.getquill.util.Show.Shower
+import io.getquill.util.Show._
+import io.getquill.impl.Quotation
+import AstShow._
 
-class ActionMacro(val c: Context) extends Parser {
+class ActionMacro(val c: Context) extends Parser with Quotation {
   import c.universe.{ Ident => _, _ }
 
   def run[R, S, T](action: Expr[Actionable[T]])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]): Tree = {
-    val normalizedAction = Normalize(actionExtractor(action.tree))
+    val normalizedAction = Normalize(actionExtractor(action.tree): Ast)
     val sql = normalizedAction.show
     c.info(sql)
     q"${c.prefix}.execute($sql)"
@@ -34,8 +35,8 @@ class ActionMacro(val c: Context) extends Parser {
     }
 
   private def run[R, S, T](action: Tree, params: List[ValDef], bindings: Tree)(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]) = {
-    val normalizedAction = Normalize(actionExtractor(action))
-    val (bindedAction, encode) = EncodeBindVariables.forAction[S](c)(normalizedAction, bindingMap(params))
+    val normalizedAction = Normalize(actionExtractor(action): Ast)
+    val (bindedAction, encode) = EncodeBindVariables[S](c)(normalizedAction, bindingMap(params))
     val sql = bindedAction.show
     c.info(sql)
     q"""

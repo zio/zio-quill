@@ -7,7 +7,7 @@ import io.getquill.util.Messages._
 
 trait Quoted[+T]
 
-trait Quotation {
+trait Quotation extends Parser{
 
   val c: Context
   import c.universe._
@@ -16,6 +16,7 @@ trait Quotation {
 
   def quote[T: WeakTypeTag](body: Expr[T]) = {
     verifyFreeVariables(body.tree)
+    astExtractor(body.tree)
     q"""
       new ${c.weakTypeOf[Quoted[T]]} {
         @${c.weakTypeOf[QuotedTree]}(${body.tree})

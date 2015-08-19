@@ -10,6 +10,7 @@ trait Transformer[T] {
       case e: Function  => apply(e)
       case e: Operation => apply(e)
       case e: Ref       => apply(e)
+      case e: Action    => apply(e)
     }
 
   def apply(e: Query): (Query, Transformer[T]) =
@@ -64,13 +65,16 @@ trait Transformer[T] {
 
   def apply(e: Ref): (Ref, Transformer[T]) =
     e match {
+      case e: Property => apply(e)
+      case e: Ident    => apply(e)
+      case e: Value    => apply(e)
+    }
+
+  def apply(e: Property): (Property, Transformer[T]) =
+    e match {
       case Property(a, name) =>
         val (at, att) = apply(a)
         (Property(at, name), att)
-      case e: Ident =>
-        apply(e)
-      case e: Value =>
-        apply(e)
     }
 
   def apply(e: Ident): (Ident, Transformer[T]) =
@@ -81,12 +85,37 @@ trait Transformer[T] {
       case e: Constant => (e, this)
       case NullValue   => (e, this)
       case Tuple(values) =>
-        val valuest =
-          values.foldLeft((List[Ast](), this)) {
-            case ((values, t), v) =>
-              val (vt, vtt) = apply(v)
-              (values :+ vt, vtt)
-          }
-        (Tuple(valuest._1), valuest._2)
+        val (valuest, valuestt) = apply(values)(apply)
+        (Tuple(valuest), valuestt)
+    }
+
+  def apply(e: Action): (Action, Transformer[T]) =
+    e match {
+      case Update(query, assignments) =>
+        val (queryt, querytt) = apply(query)
+        val (at, att) = apply(assignments)(apply)
+        (Update(queryt, at), att)
+      case Insert(query, assignments) =>
+        val (queryt, querytt) = apply(query)
+        val (at, att) = apply(assignments)(apply)
+        (Insert(queryt, at), att)
+      case Delete(query) =>
+        val (qt, qtt) = apply(query)
+        (Delete(query), qtt)
+    }
+
+  def apply(e: Assignment): (Assignment, Transformer[T]) =
+    e match {
+      case Assignment(a, b) =>
+        val (at, att) = apply(a)
+        val (bt, btt) = att.apply(b)
+        (Assignment(at, bt), btt)
+    }
+
+  private def apply[U](list: List[U])(f: U => (U, Transformer[T])) =
+    list.foldLeft((List[U](), this)) {
+      case ((values, t), v) =>
+        val (vt, vtt) = f(v)
+        (values :+ vt, vtt)
     }
 }
