@@ -54,12 +54,7 @@ trait StatefulTransformer[T] {
         (BinaryOperation(at, b, ct), ctt)
       case FunctionApply(function, values) =>
         val (functiont, functiontt) = apply(function)
-        val (valuest, valuestt) =
-          values.foldLeft((List[Ast](), functiontt)) {
-            case ((values, t), v) =>
-              val (vt, vtt) = apply(v)
-              (values :+ vt, vtt)
-          }
+        val (valuest, valuestt) = apply(values)(apply)
         (FunctionApply(functiont, valuest), valuestt)
     }
 
