@@ -2,8 +2,8 @@ package io.getquill.sql
 
 import scala.reflect.ClassTag
 import language.experimental.macros
-import io.getquill.impl.Actionable
-import io.getquill.impl.Queryable
+import io.getquill.Actionable
+import io.getquill.Queryable
 
 abstract class SqlSource[R: ClassTag, S: ClassTag] extends io.getquill.source.Source[R, S] {
 

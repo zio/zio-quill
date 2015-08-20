@@ -3,13 +3,13 @@ package io.getquill.sql
 import scala.reflect.macros.whitebox.Context
 import io.getquill.ast.Ident
 import io.getquill.ast.Ast
-import io.getquill.impl.Actionable
+import io.getquill.Actionable
 import io.getquill.impl.Parser
 import io.getquill.norm.Normalize
 import io.getquill.source.EncodeBindVariables
 import io.getquill.util.Messages.RichContext
 import io.getquill.util.Show._
-import io.getquill.impl.Quotation
+import io.getquill.quotation.Quotation
 import AstShow._
 
 class ActionMacro(val c: Context) extends Parser with Quotation {

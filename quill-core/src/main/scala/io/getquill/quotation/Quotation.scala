@@ -1,9 +1,9 @@
-package io.getquill.impl
+package io.getquill.quotation
 
 import scala.annotation.StaticAnnotation
 import scala.reflect.macros.whitebox.Context
-
 import io.getquill.util.Messages._
+import io.getquill.impl.Parser
 
 trait Quoted[+T]
 

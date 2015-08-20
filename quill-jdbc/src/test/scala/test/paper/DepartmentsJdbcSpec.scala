@@ -4,7 +4,6 @@ import test.Spec
 import io.getquill.jdbc.JdbcSource
 import io.getquill._
 import test.testDB
-import io.getquill.impl.Queryable
 
 case class Department(dpt: String)
 case class Employee(emp: String, dpt: String, salary: Int)

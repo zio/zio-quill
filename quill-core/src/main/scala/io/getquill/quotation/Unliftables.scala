@@ -1,4 +1,4 @@
-package io.getquill.impl
+package io.getquill.quotation
 
 import scala.reflect.ClassTag
 import scala.reflect.macros.whitebox.Context
@@ -29,10 +29,8 @@ import io.getquill.ast.PrefixUnaryOperator
 import io.getquill.ast.UnaryOperation
 import io.getquill.ast.Function
 import io.getquill.ast.FunctionApply
-import io.getquill.quotation.Quoted
-import io.getquill.quotation.Quotation
 
-trait Parser {
+trait Unliftable {
   this: Quotation =>
 
   val c: Context

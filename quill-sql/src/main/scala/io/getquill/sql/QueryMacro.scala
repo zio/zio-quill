@@ -3,7 +3,7 @@ package io.getquill.sql
 import scala.reflect.macros.whitebox.Context
 import SqlQueryShow.sqlQueryShow
 import io.getquill.impl.Parser
-import io.getquill.impl.Queryable
+import io.getquill.Queryable
 import io.getquill.norm.Normalize
 import io.getquill.norm.SelectResultExtraction
 import io.getquill.norm.select.SelectFlattening
@@ -11,7 +11,7 @@ import io.getquill.source.EncodeBindVariables
 import io.getquill.source.Encoding
 import io.getquill.util.Messages.RichContext
 import io.getquill.util.Show.Shower
-import io.getquill.impl.Quotation
+import io.getquill.quotation.Quotation
 
 class QueryMacro(val c: Context) extends Parser with Quotation with SelectFlattening with SelectResultExtraction {
   import c.universe.{ Ident => _, _ }

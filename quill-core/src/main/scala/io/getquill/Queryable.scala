@@ -1,4 +1,6 @@
-package io.getquill.impl
+package io.getquill
+
+import io.getquill.quotation.NonQuotedException
 
 sealed trait Queryable[+T] {
 

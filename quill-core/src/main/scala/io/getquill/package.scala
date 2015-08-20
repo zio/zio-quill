@@ -2,10 +2,10 @@ package io
 
 import scala.language.implicitConversions
 import language.experimental.macros
-import io.getquill.impl.NonQuotedException
-import io.getquill.impl.Quoted
-import io.getquill.impl.EntityQueryable
-import io.getquill.impl.Macro
+import io.getquill.quotation.NonQuotedException
+import io.getquill.quotation.Quoted
+import io.getquill.EntityQueryable
+import io.getquill.Macro
 
 package object getquill {
   
