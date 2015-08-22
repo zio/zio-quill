@@ -42,7 +42,7 @@ lazy val commonSettings = releaseSettings ++ Seq(
     "org.scalatest" %% "scalatest"       % "2.2.4" % "test",
     "ch.qos.logback" % "logback-classic" % "1.1.3" % "test"
   ),
-  scalacOptions ++= Seq("-deprecation", "-feature", "-Xfatal-warnings"),
+  scalacOptions ++= Seq("-deprecation", "-feature", "-Xfatal-warnings", "-optimize", "-unchecked"),
   EclipseKeys.eclipseOutput := Some("target/eclipse"),
   fork in Test := true,
   publishMavenStyle := true,
