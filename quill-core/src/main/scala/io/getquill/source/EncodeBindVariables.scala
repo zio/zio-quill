@@ -9,16 +9,10 @@ import io.getquill.ast.Ast
 
 object EncodeBindVariables {
 
-  def apply[S](c: Context)(ast: Ast, bindingMap: collection.Map[Ident, (c.universe.ValDef, c.Tree)])(implicit s: c.WeakTypeTag[S]) =
-    ast match {
-      case query: Query =>
-        val (bindedAction, bindingIdents) = BindVariables(query)(bindingMap.keys.toList)
-        (bindedAction, encode(c)(bindingIdents, bindingMap))
-      case action: Action =>
-        val (bindedAction, bindingIdents) = BindVariables(action)(bindingMap.keys.toList)
-        (bindedAction, encode(c)(bindingIdents, bindingMap))
-      case other => (other, encode(c)(List(), Map()))
-    }
+  def apply[S](c: Context)(ast: Ast, bindingMap: collection.Map[Ident, (c.universe.ValDef, c.Tree)])(implicit s: c.WeakTypeTag[S]) = {
+    val (bindedAst, bindingIdents) = BindVariables(ast, bindingMap.keys.toList)
+    (bindedAst, encode(c)(bindingIdents, bindingMap))
+  }
 
   private def encode[S](c: Context)(bindingIdents: List[Ident], bindingMap: collection.Map[Ident, (c.universe.ValDef, c.Tree)])(implicit s: c.WeakTypeTag[S]) = {
     import c.universe._

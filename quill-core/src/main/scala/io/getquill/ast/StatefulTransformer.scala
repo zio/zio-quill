@@ -36,7 +36,7 @@ trait StatefulTransformer[T] {
   def apply(e: Function): (Function, StatefulTransformer[T]) =
     e match {
       case Function(params, body) =>
-        val (paramst, t) = apply(params)(apply)
+        val (paramst, t) = apply(params)(_.apply)
         val (bodyt, bt) = t.apply(body)
         (Function(paramst, bodyt), bt)
     }
@@ -45,7 +45,7 @@ trait StatefulTransformer[T] {
     e match {
       case FunctionApply(function, values) =>
         val (functiont, functiontt) = apply(function)
-        val (valuest, valuestt) = apply(values)(apply)
+        val (valuest, valuestt) = functiontt.apply(values)(_.apply)
         (FunctionApply(functiont, valuest), valuestt)
     }
 
@@ -75,7 +75,7 @@ trait StatefulTransformer[T] {
       case e: Constant => (e, this)
       case NullValue   => (e, this)
       case Tuple(values) =>
-        val (valuest, valuestt) = apply(values)(apply)
+        val (valuest, valuestt) = apply(values)(_.apply)
         (Tuple(valuest), valuestt)
     }
 
@@ -83,11 +83,11 @@ trait StatefulTransformer[T] {
     e match {
       case Update(query, assignments) =>
         val (queryt, querytt) = apply(query)
-        val (at, att) = apply(assignments)(apply)
+        val (at, att) = querytt.apply(assignments)(_.apply)
         (Update(queryt, at), att)
       case Insert(query, assignments) =>
         val (queryt, querytt) = apply(query)
-        val (at, att) = apply(assignments)(apply)
+        val (at, att) = querytt.apply(assignments)(_.apply)
         (Insert(queryt, at), att)
       case Delete(query) =>
         val (qt, qtt) = apply(query)
@@ -102,10 +102,10 @@ trait StatefulTransformer[T] {
         (Assignment(at, bt), btt)
     }
 
-  private def apply[U](list: List[U])(f: U => (U, StatefulTransformer[T])) =
+  private def apply[U](list: List[U])(f: StatefulTransformer[T] => U => (U, StatefulTransformer[T])) =
     list.foldLeft((List[U](), this)) {
       case ((values, t), v) =>
-        val (vt, vtt) = f(v)
+        val (vt, vtt) = f(t)(v)
         (values :+ vt, vtt)
     }
 }
