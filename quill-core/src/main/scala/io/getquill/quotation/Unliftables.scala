@@ -16,7 +16,6 @@ import io.getquill.ast.Map
 import io.getquill.ast.NullValue
 import io.getquill.ast.Property
 import io.getquill.ast.Query
-import io.getquill.ast.Ref
 import io.getquill.ast.Table
 import io.getquill.ast.Tuple
 import io.getquill.ast.Update
@@ -29,6 +28,7 @@ import io.getquill.ast.PrefixUnaryOperator
 import io.getquill.ast.UnaryOperation
 import io.getquill.ast.Function
 import io.getquill.ast.FunctionApply
+import io.getquill.ast.Value
 
 trait Unliftables {
   this: Quotation =>
@@ -50,7 +50,6 @@ trait Unliftables {
             for (i <- 1 to fields.size) yield {
               q"$tuple.${TermName(s"_$i")}"
             }
-          println(tree)
           unapply(SubstituteTrees(c)(body, fields, fa.toList))
         case q"$source.withFilter(($alias) => $body)" if (alias.name.toString.contains("ifrefutable")) =>
           unapply(source)
@@ -80,16 +79,18 @@ trait Unliftables {
   }
 
   implicit val astUnliftable: Unliftable[Ast] = Unliftable[Ast] {
-    case `queryUnliftable`(query)                   => query
-    case `functionExtrator`(function)               => function
-    case `actionUnliftable`(action)                 => action
+    case `queryUnliftable`(query)                    => query
+    case `functionExtrator`(function)                => function
+    case `actionUnliftable`(action)                  => action
     case q"${ a: Function }.apply[..$t](...$values)" => FunctionApply(a, values.flatten.map(astUnliftable(_)))
     case q"${ a: Ident }.apply[..$t](...$values)"    => FunctionApply(a, values.flatten.map(astUnliftable(_)))
-    case q"$a.$op($b)"                              => BinaryOperation(astUnliftable(a), binaryOperator(op), astUnliftable(b))
-    case q"!$a"                                     => UnaryOperation(io.getquill.ast.`!`, astUnliftable(a))
-    case q"$a.isEmpty"                              => UnaryOperation(io.getquill.ast.`isEmpty`, astUnliftable(a))
-    case q"$a.nonEmpty"                             => UnaryOperation(io.getquill.ast.`nonEmpty`, astUnliftable(a))
-    case `refUnliftable`(ref)                       => ref
+    case q"$a.$op($b)"                               => BinaryOperation(astUnliftable(a), binaryOperator(op), astUnliftable(b))
+    case q"!$a"                                      => UnaryOperation(io.getquill.ast.`!`, astUnliftable(a))
+    case q"$a.isEmpty"                               => UnaryOperation(io.getquill.ast.`isEmpty`, astUnliftable(a))
+    case q"$a.nonEmpty"                              => UnaryOperation(io.getquill.ast.`nonEmpty`, astUnliftable(a))
+    case `identUnliftable`(ident)                    => ident
+    case `valueUnliftable`(value)                    => value
+    case `propertyUnliftable`(value)                 => value
   }
 
   implicit val functionExtrator: Unliftable[Function] = Unliftable[Function] {
@@ -152,17 +153,11 @@ trait Unliftables {
       case "like" => io.getquill.ast.`like`
     }
 
-  implicit val refUnliftable: Unliftable[Ref] = Unliftable[Ref] {
-    case `valueUnliftable`(value)   => value
-    case `identUnliftable`(ident)   => ident
-    case `propertyUnliftable`(prop) => prop
-  }
-
   implicit val propertyUnliftable: Unliftable[Property] = Unliftable[Property] {
     case q"$e.$property" => Property(astUnliftable(e), property.decodedName.toString)
   }
 
-  implicit val valueUnliftable: Unliftable[Ref] = Unliftable[Ref] {
+  implicit val valueUnliftable: Unliftable[Value] = Unliftable[Value] {
     case q"null"                         => NullValue
     case Literal(c.universe.Constant(v)) => Constant(v)
     case q"((..$v))" if (v.size > 1)     => Tuple(v.map(astUnliftable(_)))

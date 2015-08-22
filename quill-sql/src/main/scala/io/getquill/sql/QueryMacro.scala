@@ -32,7 +32,7 @@ class QueryMacro(val c: Context) extends Quotation with SelectFlattening with Se
     }
 
   private def run[R, S, T](query: Tree, params: List[ValDef], bindings: List[Expr[Any]])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]) = {
-    val normalizedQuery = Normalize(queryUnliftable(query))
+    val normalizedQuery = Normalize(astUnliftable(query)).asInstanceOf[Query]
     val (flattenQuery, selectValues) = flattenSelect[T](normalizedQuery, Encoding.inferDecoder[R](c))
     val (bindedQuery, encode) = EncodeBindVariables[S](c)(flattenQuery, bindingMap(params, bindings))
     val extractor = selectResultExtractor[T, R](selectValues)

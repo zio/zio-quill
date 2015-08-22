@@ -9,7 +9,6 @@ import io.getquill.ast.Action
 import io.getquill.ast.Assignment
 import io.getquill.ast.NullValue
 import io.getquill.ast.Property
-import io.getquill.ast.Ref
 import io.getquill.ast.Tuple
 import io.getquill.ast.UnaryOperation
 import io.getquill.ast.UnaryOperator
@@ -30,17 +29,19 @@ object AstShow {
 
   import SqlQueryShow._
 
-  implicit def astShow(implicit refShow: Show[Ref]): Show[Ast] =
+  implicit def astShow(implicit propertyShow: Show[Property]): Show[Ast] =
     new Show[Ast] {
       def show(e: Ast) =
         e match {
           case query: Query                            => s"(${SqlQuery(query).show})"
-          case ref: Ref                                => ref.show
           case UnaryOperation(op, ast)                 => s"(${op.show} ${ast.show})"
           case BinaryOperation(a, ast.`==`, NullValue) => s"(${a.show} IS NULL)"
           case BinaryOperation(NullValue, ast.`==`, b) => s"(${b.show} IS NULL)"
           case BinaryOperation(a, op, b)               => s"(${a.show} ${op.show} ${b.show})"
           case a: Action                               => a.show
+          case ident: Ident                            => ident.show
+          case property: Property                      => property.show
+          case value: Value                            => value.show
           case other                                   => throw new IllegalStateException(s"Invalid sql fragment $other.")
         }
     }
@@ -74,13 +75,11 @@ object AstShow {
       }
   }
 
-  implicit def refShow(implicit valueShow: Show[Value], identShow: Show[Ident]): Show[Ref] =
-    new Show[Ref] {
-      def show(e: Ref) =
+  implicit def propertyShow(implicit valueShow: Show[Value], identShow: Show[Ident]): Show[Property] =
+    new Show[Property] {
+      def show(e: Property) =
         e match {
           case Property(ast, name) => s"${ast.show}.$name"
-          case ident: Ident        => ident.show
-          case v: Value            => v.show
         }
     }
 
@@ -104,11 +103,10 @@ object AstShow {
     def set(assignments: List[Assignment]) =
       assignments.map(a => s"${a.property.name} = ${a.value.show}").mkString(", ")
 
-    implicit def refShow: Show[Ref] = new Show[Ref] {
-      def show(e: Ref) =
+    implicit def propertyShow: Show[Property] = new Show[Property] {
+      def show(e: Property) =
         e match {
           case Property(_, name) => name
-          case other             => AstShow.this.refShow.show(other)
         }
     }
     new Show[Action] {

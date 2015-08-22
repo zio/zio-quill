@@ -8,7 +8,6 @@ import io.getquill.ast.Ident
 import io.getquill.ast.Map
 import io.getquill.ast.Property
 import io.getquill.ast.Query
-import io.getquill.ast.Ref
 import io.getquill.ast.Table
 import io.getquill.ast.Tuple
 import io.getquill.ast.UnaryOperation

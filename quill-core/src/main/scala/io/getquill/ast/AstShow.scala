@@ -9,11 +9,14 @@ object AstShow {
   implicit val astShow: Show[Ast] = new Show[Ast] {
     def show(e: Ast) =
       e match {
-        case ast: Query     => ast.show
-        case ast: Function  => ast.show
-        case ast: Ref       => ast.show
-        case ast: Operation => ast.show
-        case ast: Action    => ast.show
+        case ast: Query         => ast.show
+        case ast: Function      => ast.show
+        case ast: FunctionApply => ast.show
+        case ast: Value         => ast.show
+        case ast: Operation     => ast.show
+        case ast: Action        => ast.show
+        case ast: Ident         => ast.show
+        case ast: Property      => ast.show
       }
   }
 
@@ -42,13 +45,19 @@ object AstShow {
       }
   }
 
+  implicit val functionpplyShow: Show[FunctionApply] = new Show[FunctionApply] {
+    def show(q: FunctionApply) =
+      q match {
+        case FunctionApply(function, values) => s"${function.show}.apply(${values.show})"
+      }
+  }
+
   implicit val operationShow: Show[Operation] = new Show[Operation] {
     def show(e: Operation) =
       e match {
         case UnaryOperation(op: PrefixUnaryOperator, ast)  => s"${op.show}${ast.show}"
         case UnaryOperation(op: PostfixUnaryOperator, ast) => s"${ast.show}.${op.show}"
         case BinaryOperation(a, op, b)                     => s"${a.show} ${op.show} ${b.show}"
-        case FunctionApply(function, values)               => s"${function.show}.apply(${values.show})"
       }
   }
 
@@ -87,12 +96,10 @@ object AstShow {
       }
   }
 
-  implicit val refShow: Show[Ref] = new Show[Ref] {
-    def show(e: Ref) =
+  implicit val propertyShow: Show[Property] = new Show[Property] {
+    def show(e: Property) =
       e match {
         case Property(ref, name) => s"${ref.show}.$name"
-        case ident: Ident        => ident.show
-        case v: Value            => v.show
       }
   }
 
@@ -123,7 +130,7 @@ object AstShow {
   implicit val assignmentShow: Show[Assignment] = new Show[Assignment] {
     def show(e: Assignment) =
       e match {
-        case Assignment(property, value) => s"${(property: Ref).show} -> ${value.show}"
+        case Assignment(property, value) => s"${property.show} -> ${value.show}"
       }
   }
 

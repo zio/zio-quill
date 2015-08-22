@@ -4,11 +4,14 @@ trait StatelessTransformer {
 
   def apply(e: Ast): Ast =
     e match {
-      case e: Query     => apply(e)
-      case e: Function  => apply(e)
-      case e: Operation => apply(e)
-      case e: Ref       => apply(e)
-      case e: Action    => apply(e)
+      case e: Query         => apply(e)
+      case e: Function      => apply(e)
+      case e: FunctionApply => apply(e)
+      case e: Operation     => apply(e)
+      case e: Action        => apply(e)
+      case e: Ident         => apply(e)
+      case e: Value         => apply(e)
+      case e: Property      => apply(e)
     }
 
   def apply(e: Query): Query =
@@ -25,18 +28,15 @@ trait StatelessTransformer {
       case Function(params, body) => Function(params.map(apply), apply(body))
     }
 
-  def apply(e: Operation): Operation =
+  def apply(e: FunctionApply): FunctionApply =
     e match {
-      case UnaryOperation(o, a)            => UnaryOperation(o, apply(a))
-      case BinaryOperation(a, b, c)        => BinaryOperation(apply(a), b, apply(c))
       case FunctionApply(function, values) => FunctionApply(apply(function), values.map(apply))
     }
 
-  def apply(e: Ref): Ref =
+  def apply(e: Operation): Operation =
     e match {
-      case e: Property => apply(e)
-      case e: Ident    => apply(e)
-      case e: Value    => apply(e)
+      case UnaryOperation(o, a)     => UnaryOperation(o, apply(a))
+      case BinaryOperation(a, b, c) => BinaryOperation(apply(a), b, apply(c))
     }
 
   def apply(e: Property): Property =
