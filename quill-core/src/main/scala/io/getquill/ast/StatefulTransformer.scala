@@ -6,14 +6,25 @@ trait StatefulTransformer[T] {
 
   def apply(e: Ast): (Ast, StatefulTransformer[T]) =
     e match {
-      case e: Query         => apply(e)
-      case e: Function      => apply(e)
-      case e: FunctionApply => apply(e)
-      case e: Operation     => apply(e)
-      case e: Action        => apply(e)
-      case e: Ident         => apply(e)
-      case e: Property      => apply(e)
-      case e: Value         => apply(e)
+      case e: Query     => apply(e)
+      case e: Operation => apply(e)
+      case e: Action    => apply(e)
+      case e: Value     => apply(e)
+
+      case e: Ident     => (e, this)
+
+      case Function(params, body) =>
+        val (bodyt, bt) = apply(body)
+        (Function(params, bodyt), bt)
+
+      case FunctionApply(function, values) =>
+        val (functiont, functiontt) = apply(function)
+        val (valuest, valuestt) = functiontt.apply(values)(_.apply)
+        (FunctionApply(functiont, valuest), valuestt)
+
+      case Property(a, name) =>
+        val (at, att) = apply(a)
+        (Property(at, name), att)
     }
 
   def apply(e: Query): (Query, StatefulTransformer[T]) =
@@ -33,22 +44,6 @@ trait StatefulTransformer[T] {
         (FlatMap(at, b, ct), ctt)
     }
 
-  def apply(e: Function): (Function, StatefulTransformer[T]) =
-    e match {
-      case Function(params, body) =>
-        val (paramst, t) = apply(params)(_.apply)
-        val (bodyt, bt) = t.apply(body)
-        (Function(paramst, bodyt), bt)
-    }
-
-  def apply(e: FunctionApply): (FunctionApply, StatefulTransformer[T]) =
-    e match {
-      case FunctionApply(function, values) =>
-        val (functiont, functiontt) = apply(function)
-        val (valuest, valuestt) = functiontt.apply(values)(_.apply)
-        (FunctionApply(functiont, valuest), valuestt)
-    }
-
   def apply(e: Operation): (Operation, StatefulTransformer[T]) =
     e match {
       case UnaryOperation(o, a) =>
@@ -59,16 +54,6 @@ trait StatefulTransformer[T] {
         val (ct, ctt) = att.apply(c)
         (BinaryOperation(at, b, ct), ctt)
     }
-
-  def apply(e: Property): (Property, StatefulTransformer[T]) =
-    e match {
-      case Property(a, name) =>
-        val (at, att) = apply(a)
-        (Property(at, name), att)
-    }
-
-  def apply(e: Ident): (Ident, StatefulTransformer[T]) =
-    (e, this)
 
   def apply(e: Value): (Value, StatefulTransformer[T]) =
     e match {
@@ -102,8 +87,8 @@ trait StatefulTransformer[T] {
         (Assignment(at, bt), btt)
     }
 
-  private def apply[U](list: List[U])(f: StatefulTransformer[T] => U => (U, StatefulTransformer[T])) =
-    list.foldLeft((List[U](), this)) {
+  private def apply[U, R](list: List[U])(f: StatefulTransformer[T] => U => (R, StatefulTransformer[T])) =
+    list.foldLeft((List[R](), this)) {
       case ((values, t), v) =>
         val (vt, vtt) = f(t)(v)
         (values :+ vt, vtt)

@@ -21,12 +21,11 @@ import io.getquill.ast.StatefulTransformer
 private[source] case class BindVariables(state: (List[Ident], List[Ident]))
     extends StatefulTransformer[(List[Ident], List[Ident])] {
 
-  override def apply(i: Ident) =
-    state match {
-      case (vars, bindings) if (vars.contains(i)) =>
+  override def apply(ast: Ast) =
+    (state, ast) match {
+      case ((vars, bindings), i: Ident) if (vars.contains(i)) =>
         (Ident("?"), BindVariables((vars, bindings :+ i)))
-      case other =>
-        (i, this)
+      case other => super.apply(ast)
     }
 }
 
@@ -35,7 +34,6 @@ private[source] object BindVariables {
   def apply(ast: Ast, idents: List[Ident]) =
     (new BindVariables((idents, List()))(ast)) match {
       case (ast, transformer) =>
-        println((ast, transformer.state._2))
         (ast, transformer.state._2)
     }
 }

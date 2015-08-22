@@ -28,15 +28,11 @@ case class BetaReduction(state: collection.Map[Ident, Ast])
         BetaReduction(state ++ params.zip(values))(body)
       case ident: Ident =>
         (state.getOrElse(ident, ident), this)
-      case other =>
-        super.apply(other)
-    }
-
-  override def apply(function: Function) =
-    function match {
       case Function(params, body) =>
         val (bodyt, t) = BetaReduction(state -- params)(body)
         (Function(params, bodyt), t)
+      case other =>
+        super.apply(other)
     }
 
   override def apply(query: Query) =
