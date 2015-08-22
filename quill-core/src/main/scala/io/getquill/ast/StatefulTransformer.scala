@@ -33,12 +33,7 @@ trait StatefulTransformer[T] {
   def apply(e: Function): (Function, StatefulTransformer[T]) =
     e match {
       case Function(params, body) =>
-        val (paramst, t) =
-          params.foldLeft((List[Ident](), this)) {
-            case ((values, t), v) =>
-              val (vt, vtt) = apply(v)
-              (values :+ vt, vtt)
-          }
+        val (paramst, t) = apply(params)(apply)
         val (bodyt, bt) = t.apply(body)
         (Function(paramst, bodyt), bt)
     }

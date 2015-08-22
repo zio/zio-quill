@@ -3,11 +3,10 @@ package io.getquill.quotation
 import scala.annotation.StaticAnnotation
 import scala.reflect.macros.whitebox.Context
 import io.getquill.util.Messages._
-import io.getquill.impl.Parser
 
 trait Quoted[+T]
 
-trait Quotation extends Parser{
+trait Quotation extends Unliftables {
 
   val c: Context
   import c.universe._
@@ -16,7 +15,7 @@ trait Quotation extends Parser{
 
   def quote[T: WeakTypeTag](body: Expr[T]) = {
     verifyFreeVariables(body.tree)
-    astExtractor(body.tree)
+    astUnliftable(body.tree)
     q"""
       new ${c.weakTypeOf[Quoted[T]]} {
         @${c.weakTypeOf[QuotedTree]}(${body.tree})
@@ -48,6 +47,8 @@ trait Quotation extends Parser{
 
   private def freeVariables(tree: Tree, known: List[Symbol] = List()): List[String] =
     tree match {
+      case t if (t.tpe <:< c.weakTypeTag[Quoted[Any]].tpe) =>
+        List()
       case Select(This(_), TermName(name)) if (name != "Predef") =>
         List(name)
       case i: Ident if (isVariable(i.symbol) && i.toString != "_" && !known.contains(i.symbol)) =>

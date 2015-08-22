@@ -30,13 +30,13 @@ import io.getquill.ast.UnaryOperation
 import io.getquill.ast.Function
 import io.getquill.ast.FunctionApply
 
-trait Unliftable {
+trait Unliftables {
   this: Quotation =>
 
   val c: Context
   import c.universe.{ Ident => _, Constant => _, Function => _, _ }
 
-  case class Extractor[T](p: PartialFunction[Tree, T])(implicit t: ClassTag[T]) {
+  case class Unliftable[T](p: PartialFunction[Tree, T])(implicit t: ClassTag[T]) extends c.universe.Unliftable[T] {
 
     def apply(tree: Tree) =
       unapply(tree).getOrElse {
@@ -50,70 +50,68 @@ trait Unliftable {
             for (i <- 1 to fields.size) yield {
               q"$tuple.${TermName(s"_$i")}"
             }
+          println(tree)
           unapply(SubstituteTrees(c)(body, fields, fa.toList))
         case q"$source.withFilter(($alias) => $body)" if (alias.name.toString.contains("ifrefutable")) =>
           unapply(source)
-        case q"io.getquill.`package`.unquote[$t]($function).apply(..$actuals)" =>
-          unapply(q"${unquoteTree(function)}.apply(..$actuals)")
         case q"new { def apply[..$t1](...$params) = $body }.apply[..$t2](...$actuals)" =>
           unapply(SubstituteTrees(c)(body, params.flatten, actuals.flatten))
         case q"((..$params) => $body).apply(..$actuals)" =>
           unapply(SubstituteTrees(c)(body, params, actuals))
         case q"io.getquill.`package`.unquote[$t]($quoted)" =>
           unapply(unquoteTree(quoted))
-        case tree if (tree.tpe != null && tree.tpe <:< c.weakTypeOf[Quoted[Any]] && !(tree.tpe <:< c.weakTypeOf[Null])) =>
-          unapply(unquoteTree(tree))
         case other =>
           p.lift(tree)
       }
   }
 
-  val actionExtractor: Extractor[Action] = Extractor[Action] {
+  implicit val actionUnliftable: Unliftable[Action] = Unliftable[Action] {
     case q"$query.$method(..$assignments)" if (method.decodedName.toString == "update") =>
-      Update(astExtractor(query), assignments.map(assignmentExtractor(_)))
+      Update(astUnliftable(query), assignments.map(assignmentUnliftable(_)))
     case q"$query.insert(..$assignments)" =>
-      Insert(astExtractor(query), assignments.map(assignmentExtractor(_)))
+      Insert(astUnliftable(query), assignments.map(assignmentUnliftable(_)))
     case q"$query.delete" =>
-      Delete(astExtractor(query))
+      Delete(astUnliftable(query))
   }
 
-  val assignmentExtractor: Extractor[Assignment] = Extractor[Assignment] {
+  implicit val assignmentUnliftable: Unliftable[Assignment] = Unliftable[Assignment] {
     case q"(($x) => scala.this.Predef.ArrowAssoc[$t]($ast).->[$v]($value))" =>
-      Assignment(propertyExtractor(ast), astExtractor(value))
+      Assignment(propertyUnliftable(ast), astUnliftable(value))
   }
 
-  val astExtractor: Extractor[Ast] = Extractor[Ast] {
-    case `queryExtractor`(query)      => query
-    case `functionExtrator`(function) => function
-    case `actionExtractor`(action)    => action
-    case q"$a.apply(..$values)"       => FunctionApply(astExtractor(a), values.map(astExtractor(_)))
-    case q"$a.$op($b)"                => BinaryOperation(astExtractor(a), binaryOperator(op), astExtractor(b))
-    case q"!$a"                       => UnaryOperation(io.getquill.ast.`!`, astExtractor(a))
-    case q"$a.isEmpty"                => UnaryOperation(io.getquill.ast.`isEmpty`, astExtractor(a))
-    case q"$a.nonEmpty"               => UnaryOperation(io.getquill.ast.`nonEmpty`, astExtractor(a))
-    case `refExtractor`(ref)          => ref
+  implicit val astUnliftable: Unliftable[Ast] = Unliftable[Ast] {
+    case `queryUnliftable`(query)                   => query
+    case `functionExtrator`(function)               => function
+    case `actionUnliftable`(action)                 => action
+    case q"${ a: Function }.apply[..$t](...$values)" => FunctionApply(a, values.flatten.map(astUnliftable(_)))
+    case q"${ a: Ident }.apply[..$t](...$values)"    => FunctionApply(a, values.flatten.map(astUnliftable(_)))
+    case q"$a.$op($b)"                              => BinaryOperation(astUnliftable(a), binaryOperator(op), astUnliftable(b))
+    case q"!$a"                                     => UnaryOperation(io.getquill.ast.`!`, astUnliftable(a))
+    case q"$a.isEmpty"                              => UnaryOperation(io.getquill.ast.`isEmpty`, astUnliftable(a))
+    case q"$a.nonEmpty"                             => UnaryOperation(io.getquill.ast.`nonEmpty`, astUnliftable(a))
+    case `refUnliftable`(ref)                       => ref
   }
 
-  val functionExtrator: Extractor[Function] = Extractor[Function] {
+  implicit val functionExtrator: Unliftable[Function] = Unliftable[Function] {
     case q"new { def apply[..$t1](...$params) = $body }" =>
-      Function(params.flatten.map(p => p: Tree).map(identExtractor(_)), astExtractor(body))
+      Function(params.flatten.map(p => p: Tree).map(identUnliftable(_)), astUnliftable(body))
     case q"(..$params) => $body" =>
-      Function(params.map(identExtractor(_)), astExtractor(body))
+      Function(params.map(identUnliftable(_)), astUnliftable(body))
   }
 
-  val queryExtractor: Extractor[Query] = Extractor[Query] {
+  implicit val queryUnliftable: Unliftable[Query] = Unliftable[Query] {
 
     case q"io.getquill.`package`.queryable[${ t: Type }]" =>
       Table(t.typeSymbol.name.decodedName.toString)
 
     case q"$source.filter(($alias) => $body)" =>
-      Filter(astExtractor(source), identExtractor(alias), astExtractor(body))
+      Filter(astUnliftable(source), identUnliftable(alias), astUnliftable(body))
 
     case q"$source.withFilter(($alias) => $body)" =>
-      Filter(astExtractor(source), identExtractor(alias), astExtractor(body))
+      Filter(astUnliftable(source), identUnliftable(alias), astUnliftable(body))
 
     case q"$source.map[$t](($alias) => $body)" =>
-      Map(astExtractor(source), identExtractor(alias), astExtractor(body))
+      Map(astUnliftable(source), identUnliftable(alias), astUnliftable(body))
 
     case q"$source.flatMap[$t](($alias) => $matchAlias match { case (..$a) => $body })" if (alias == matchAlias) =>
       val aliases =
@@ -123,15 +121,15 @@ trait Unliftable {
         }
       val reduction =
         for ((a, i) <- aliases.zipWithIndex) yield {
-          a -> Property(astExtractor(alias), s"_${i + 1}")
+          a -> Property(astUnliftable(alias), s"_${i + 1}")
         }
-      FlatMap(astExtractor(source), identExtractor(alias), BetaReduction(astExtractor(body), reduction: _*))
+      FlatMap(astUnliftable(source), identUnliftable(alias), BetaReduction(astUnliftable(body), reduction: _*))
 
     case q"$source.flatMap[$t](($alias) => $body)" =>
-      FlatMap(astExtractor(source), identExtractor(alias), astExtractor(body))
+      FlatMap(astUnliftable(source), identUnliftable(alias), astUnliftable(body))
   }
 
-  val unaryOperatorExtractor = PartialFunction[String, UnaryOperator] {
+  implicit val unaryOperatorUnliftable = PartialFunction[String, UnaryOperator] {
     case "unary_!"  => io.getquill.ast.`!`
     case "nonEmpty" => io.getquill.ast.`nonEmpty`
     case "isEmpty"  => io.getquill.ast.`isEmpty`
@@ -154,26 +152,26 @@ trait Unliftable {
       case "like" => io.getquill.ast.`like`
     }
 
-  val refExtractor: Extractor[Ref] = Extractor[Ref] {
-    case `valueExtractor`(value)   => value
-    case `identExtractor`(ident)   => ident
-    case `propertyExtractor`(prop) => prop
+  implicit val refUnliftable: Unliftable[Ref] = Unliftable[Ref] {
+    case `valueUnliftable`(value)   => value
+    case `identUnliftable`(ident)   => ident
+    case `propertyUnliftable`(prop) => prop
   }
 
-  val propertyExtractor: Extractor[Property] = Extractor[Property] {
-    case q"$e.$property" => Property(astExtractor(e), property.decodedName.toString)
+  implicit val propertyUnliftable: Unliftable[Property] = Unliftable[Property] {
+    case q"$e.$property" => Property(astUnliftable(e), property.decodedName.toString)
   }
 
-  val valueExtractor: Extractor[Ref] = Extractor[Ref] {
+  implicit val valueUnliftable: Unliftable[Ref] = Unliftable[Ref] {
     case q"null"                         => NullValue
     case Literal(c.universe.Constant(v)) => Constant(v)
-    case q"((..$v))" if (v.size > 1)     => Tuple(v.map(astExtractor(_)))
+    case q"((..$v))" if (v.size > 1)     => Tuple(v.map(astUnliftable(_)))
   }
 
-  val identExtractor: Extractor[Ident] = Extractor[Ident] {
+  implicit val identUnliftable: Unliftable[Ident] = Unliftable[Ident] {
     case t: ValDef                        => Ident(t.name.decodedName.toString)
     case c.universe.Ident(TermName(name)) => Ident(name)
-    case q"$i: $typ"                      => identExtractor(i)
+    case q"$i: $typ"                      => identUnliftable(i)
     case c.universe.Bind(TermName(name), c.universe.Ident(termNames.WILDCARD)) =>
       Ident(name)
   }

@@ -18,7 +18,7 @@ object Messages {
       c.echo(c.enclosingPosition, msg)
 
     def debug[T](value: T) = {
-      c.warning(c.enclosingPosition, s"$value")
+      c.echo(c.enclosingPosition, s"$value")
       value
     }
   }
