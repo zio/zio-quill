@@ -29,7 +29,7 @@ class QueryMacro(val c: Context) extends Quotation with SelectFlattening with Se
 
   private def run[R, S, T](tree: Tree, bindings: List[Expr[Any]])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]) = {
     val (params, query) =
-      Normalize(astUnliftable(tree)) match {
+      Normalize(astParser(tree)) match {
         case Function(params, query: Query) => (params, query)
         case q: Query                       => (List(), q)
         case other                          => c.fail(s"Invalid query $other")

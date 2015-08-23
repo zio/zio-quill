@@ -30,13 +30,13 @@ import io.getquill.ast.Function
 import io.getquill.ast.FunctionApply
 import io.getquill.ast.Value
 
-trait Unliftables {
+trait Parsing {
   this: Quotation =>
 
   val c: Context
   import c.universe.{ Ident => _, Constant => _, Function => _, _ }
 
-  case class Unliftable[T](p: PartialFunction[Tree, T])(implicit t: ClassTag[T]) extends c.universe.Unliftable[T] {
+  case class Parser[T](p: PartialFunction[Tree, T])(implicit t: ClassTag[T]) {
 
     def apply(tree: Tree) =
       unapply(tree).getOrElse {
@@ -54,35 +54,38 @@ trait Unliftables {
       }
   }
 
-  implicit val actionUnliftable: Unliftable[Action] = Unliftable[Action] {
+  val actionParser: Parser[Action] = Parser[Action] {
     case q"$query.$method(..$assignments)" if (method.decodedName.toString == "update") =>
-      Update(astUnliftable(query), assignments.map(assignmentUnliftable(_)))
+      Update(astParser(query), assignments.map(assignmentParser(_)))
     case q"$query.insert(..$assignments)" =>
-      Insert(astUnliftable(query), assignments.map(assignmentUnliftable(_)))
+      Insert(astParser(query), assignments.map(assignmentParser(_)))
     case q"$query.delete" =>
-      Delete(astUnliftable(query))
+      Delete(astParser(query))
   }
 
-  implicit val assignmentUnliftable: Unliftable[Assignment] = Unliftable[Assignment] {
+  val assignmentParser: Parser[Assignment] = Parser[Assignment] {
     case q"(($x) => scala.this.Predef.ArrowAssoc[$t]($ast).->[$v]($value))" =>
-      Assignment(propertyUnliftable(ast), astUnliftable(value))
+      Assignment(propertyParser(ast), astParser(value))
   }
 
-  implicit val astUnliftable: Unliftable[Ast] = Unliftable[Ast] {
-    case `queryUnliftable`(query)                    => query
-    case `functionExtrator`(function)                => function
-    case `actionUnliftable`(action)                  => action
-    case q"${ a: Function }.apply[..$t](...$values)" => FunctionApply(a, values.flatten.map(astUnliftable(_)))
-    case q"${ a: Ident }.apply[..$t](...$values)"    => FunctionApply(a, values.flatten.map(astUnliftable(_)))
-    case q"$a.$op($b)"                               => BinaryOperation(astUnliftable(a), binaryOperator(op), astUnliftable(b))
-    case q"!$a"                                      => UnaryOperation(io.getquill.ast.`!`, astUnliftable(a))
-    case q"$a.isEmpty"                               => UnaryOperation(io.getquill.ast.`isEmpty`, astUnliftable(a))
-    case q"$a.nonEmpty"                              => UnaryOperation(io.getquill.ast.`nonEmpty`, astUnliftable(a))
-    case `identUnliftable`(ident)                    => ident
-    case `valueUnliftable`(value)                    => value
-    case `propertyUnliftable`(value)                 => value
+  val astParser: Parser[Ast] = Parser[Ast] {
+    case `queryParser`(query) => query
+    case `functionParser`(function) => function
+    case `actionParser`(action) => action
+    case q"${ functionParser(a) }.apply[..$t](...$values)" => FunctionApply(a, values.flatten.map(astParser(_)))
+    case q"${ identParser(a) }.apply[..$t](...$values)" => FunctionApply(a, values.flatten.map(astParser(_)))
+    case q"$a.$op($b)" => BinaryOperation(astParser(a), binaryOperator(op), astParser(b))
+    case q"!$a" => UnaryOperation(io.getquill.ast.`!`, astParser(a))
+    case q"$a.isEmpty" => UnaryOperation(io.getquill.ast.`isEmpty`, astParser(a))
+    case q"$a.nonEmpty" => UnaryOperation(io.getquill.ast.`nonEmpty`, astParser(a))
+    case `identParser`(ident) => ident
+    case `valueParser`(value) => value
+    case `propertyParser`(value) => value
 
-    case q"${ tuple: Ast } match { case (..${ fields: List[Ident] }) => ${ body: Ast } }" =>
+    case q"$tupleTree match { case (..$fieldsTrees) => $bodyTree }" =>
+      val tuple = astParser(tupleTree)
+      val fields = fieldsTrees.map(identParser(_))
+      val body = astParser(bodyTree)
       val properties =
         for ((field, i) <- fields.zipWithIndex) yield {
           Property(tuple, s"_${i + 1}")
@@ -90,26 +93,26 @@ trait Unliftables {
       BetaReduction(body, fields.zip(properties): _*)
   }
 
-  implicit val functionExtrator: Unliftable[Function] = Unliftable[Function] {
+  val functionParser: Parser[Function] = Parser[Function] {
     case q"new { def apply[..$t1](...$params) = $body }" =>
-      Function(params.flatten.map(p => p: Tree).map(identUnliftable(_)), astUnliftable(body))
+      Function(params.flatten.map(p => p: Tree).map(identParser(_)), astParser(body))
     case q"(..$params) => $body" =>
-      Function(params.map(identUnliftable(_)), astUnliftable(body))
+      Function(params.map(identParser(_)), astParser(body))
   }
 
-  implicit val queryUnliftable: Unliftable[Query] = Unliftable[Query] {
+  val queryParser: Parser[Query] = Parser[Query] {
 
     case q"io.getquill.`package`.queryable[${ t: Type }]" =>
       Table(t.typeSymbol.name.decodedName.toString)
 
     case q"$source.filter(($alias) => $body)" =>
-      Filter(astUnliftable(source), identUnliftable(alias), astUnliftable(body))
+      Filter(astParser(source), identParser(alias), astParser(body))
 
     case q"$source.withFilter(($alias) => $body)" =>
-      Filter(astUnliftable(source), identUnliftable(alias), astUnliftable(body))
+      Filter(astParser(source), identParser(alias), astParser(body))
 
     case q"$source.map[$t](($alias) => $body)" =>
-      Map(astUnliftable(source), identUnliftable(alias), astUnliftable(body))
+      Map(astParser(source), identParser(alias), astParser(body))
 
     case q"$source.flatMap[$t](($alias) => $matchAlias match { case (..$a) => $body })" if (alias == matchAlias) =>
       val aliases =
@@ -119,15 +122,15 @@ trait Unliftables {
         }
       val reduction =
         for ((a, i) <- aliases.zipWithIndex) yield {
-          a -> Property(astUnliftable(alias), s"_${i + 1}")
+          a -> Property(astParser(alias), s"_${i + 1}")
         }
-      FlatMap(astUnliftable(source), identUnliftable(alias), BetaReduction(astUnliftable(body), reduction: _*))
+      FlatMap(astParser(source), identParser(alias), BetaReduction(astParser(body), reduction: _*))
 
     case q"$source.flatMap[$t](($alias) => $body)" =>
-      FlatMap(astUnliftable(source), identUnliftable(alias), astUnliftable(body))
+      FlatMap(astParser(source), identParser(alias), astParser(body))
   }
 
-  implicit val unaryOperatorUnliftable = PartialFunction[String, UnaryOperator] {
+  val unaryOperatorParser = PartialFunction[String, UnaryOperator] {
     case "unary_!"  => ast.`!`
     case "nonEmpty" => ast.`nonEmpty`
     case "isEmpty"  => ast.`isEmpty`
@@ -150,20 +153,20 @@ trait Unliftables {
       case "like" => ast.`like`
     }
 
-  implicit val propertyUnliftable: Unliftable[Property] = Unliftable[Property] {
-    case q"$e.$property" => Property(astUnliftable(e), property.decodedName.toString)
+  val propertyParser: Parser[Property] = Parser[Property] {
+    case q"$e.$property" => Property(astParser(e), property.decodedName.toString)
   }
 
-  implicit val valueUnliftable: Unliftable[Value] = Unliftable[Value] {
+  val valueParser: Parser[Value] = Parser[Value] {
     case q"null"                         => NullValue
     case Literal(c.universe.Constant(v)) => Constant(v)
-    case q"((..$v))" if (v.size > 1)     => Tuple(v.map(astUnliftable(_)))
+    case q"((..$v))" if (v.size > 1)     => Tuple(v.map(astParser(_)))
   }
 
-  implicit val identUnliftable: Unliftable[Ident] = Unliftable[Ident] {
+  val identParser: Parser[Ident] = Parser[Ident] {
     case t: ValDef                        => Ident(t.name.decodedName.toString)
     case c.universe.Ident(TermName(name)) => Ident(name)
-    case q"$i: $typ"                      => identUnliftable(i)
+    case q"$i: $typ"                      => identParser(i)
     case c.universe.Bind(TermName(name), c.universe.Ident(termNames.WILDCARD)) =>
       Ident(name)
   }

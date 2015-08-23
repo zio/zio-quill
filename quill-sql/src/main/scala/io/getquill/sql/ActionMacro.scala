@@ -17,7 +17,7 @@ class ActionMacro(val c: Context) extends Quotation {
   import c.universe.{ Ident => _, Function => _, _ }
 
   def run[R, S, T](action: Expr[Actionable[T]])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]): Tree = {
-    val normalizedAction = Normalize(actionUnliftable(action.tree): Ast)
+    val normalizedAction = Normalize(actionParser(action.tree): Ast)
     val sql = normalizedAction.show
     c.info(sql)
     q"${c.prefix}.execute($sql)"
@@ -31,7 +31,7 @@ class ActionMacro(val c: Context) extends Quotation {
 
   private def run[R, S, T](tree: Tree, types: List[Type], bindings: Tree)(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]) = {
     val (params, action) =
-      Normalize(astUnliftable(tree)) match {
+      Normalize(astParser(tree)) match {
         case Function(params, action: Action) => (params, action)
         case action: Action                   => (List(), action)
         case other                            => throw new IllegalStateException(s"Invalid action $tree.")
