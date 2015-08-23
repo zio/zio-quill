@@ -2,6 +2,7 @@ package io.getquill.quotation
 
 import scala.reflect.ClassTag
 import scala.reflect.macros.whitebox.Context
+import io.getquill.ast
 import io.getquill.ast.Action
 import io.getquill.ast.Assignment
 import io.getquill.ast.BinaryOperation
@@ -127,26 +128,26 @@ trait Unliftables {
   }
 
   implicit val unaryOperatorUnliftable = PartialFunction[String, UnaryOperator] {
-    case "unary_!"  => io.getquill.ast.`!`
-    case "nonEmpty" => io.getquill.ast.`nonEmpty`
-    case "isEmpty"  => io.getquill.ast.`isEmpty`
+    case "unary_!"  => ast.`!`
+    case "nonEmpty" => ast.`nonEmpty`
+    case "isEmpty"  => ast.`isEmpty`
   }
 
   private def binaryOperator(name: TermName) =
     name.decodedName.toString match {
-      case "-"    => io.getquill.ast.`-`
-      case "+"    => io.getquill.ast.`+`
-      case "=="   => io.getquill.ast.`==`
-      case "!="   => io.getquill.ast.`!=`
-      case "&&"   => io.getquill.ast.`&&`
-      case "||"   => io.getquill.ast.`||`
-      case ">"    => io.getquill.ast.`>`
-      case ">="   => io.getquill.ast.`>=`
-      case "<"    => io.getquill.ast.`<`
-      case "<="   => io.getquill.ast.`<=`
-      case "/"    => io.getquill.ast.`/`
-      case "%"    => io.getquill.ast.`%`
-      case "like" => io.getquill.ast.`like`
+      case "-"    => ast.`-`
+      case "+"    => ast.`+`
+      case "=="   => ast.`==`
+      case "!="   => ast.`!=`
+      case "&&"   => ast.`&&`
+      case "||"   => ast.`||`
+      case ">"    => ast.`>`
+      case ">="   => ast.`>=`
+      case "<"    => ast.`<`
+      case "<="   => ast.`<=`
+      case "/"    => ast.`/`
+      case "%"    => ast.`%`
+      case "like" => ast.`like`
     }
 
   implicit val propertyUnliftable: Unliftable[Property] = Unliftable[Property] {

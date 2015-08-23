@@ -6,7 +6,7 @@ import io.getquill.util.Messages._
 
 trait Quoted[+T]
 
-trait Quotation extends Unliftables {
+trait Quotation extends Unliftables with Liftables {
 
   val c: Context
   import c.universe._
@@ -15,19 +15,19 @@ trait Quotation extends Unliftables {
 
   def quote[T: WeakTypeTag](body: Expr[T]) = {
     verifyFreeVariables(body.tree)
-    astUnliftable(body.tree)
+    val ast = astUnliftable(body.tree)
     q"""
       new ${c.weakTypeOf[Quoted[T]]} {
         @${c.weakTypeOf[QuotedTree]}(${body.tree})
-        def tree = ()
-        override def toString = ${body.tree.toString}
+        def ast = $ast
+        override def toString = ast.toString
       }
     """
   }
 
   protected def unquote[T](tree: Tree) = {
     val method =
-      tree.tpe.decls.find(_.name.decodedName.toString == "tree")
+      tree.tpe.decls.find(_.name.decodedName.toString == "ast")
         .getOrElse(c.fail(s"Can't find the tree method at ${tree}: ${tree.tpe}"))
     val annotation =
       method.annotations.headOption
