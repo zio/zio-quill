@@ -21,7 +21,6 @@ import io.getquill.ast.Tuple
 import io.getquill.ast.Update
 import io.getquill.norm.BetaReduction
 import io.getquill.util.Messages._
-import io.getquill.util.SubstituteTrees
 import io.getquill.ast.UnaryOperation
 import io.getquill.ast.UnaryOperator
 import io.getquill.ast.PrefixUnaryOperator
@@ -45,12 +44,6 @@ trait Unliftables {
 
     def unapply(tree: Tree): Option[T] =
       tree match {
-        case q"$tuple match { case (..$fields) => $body }" =>
-          val fa =
-            for (i <- 1 to fields.size) yield {
-              q"$tuple.${TermName(s"_$i")}"
-            }
-          unapply(SubstituteTrees(c)(body, fields, fa.toList))
         case q"$source.withFilter(($alias) => $body)" if (alias.name.toString.contains("ifrefutable")) =>
           unapply(source)
         case q"io.getquill.`package`.unquote[$t]($quoted)" =>
@@ -87,6 +80,13 @@ trait Unliftables {
     case `identUnliftable`(ident)                    => ident
     case `valueUnliftable`(value)                    => value
     case `propertyUnliftable`(value)                 => value
+
+    case q"${ tuple: Ast } match { case (..${ fields: List[Ident] }) => ${ body: Ast } }" =>
+      val properties =
+        for ((field, i) <- fields.zipWithIndex) yield {
+          Property(tuple, s"_${i + 1}")
+        }
+      BetaReduction(body, fields.zip(properties): _*)
   }
 
   implicit val functionExtrator: Unliftable[Function] = Unliftable[Function] {
