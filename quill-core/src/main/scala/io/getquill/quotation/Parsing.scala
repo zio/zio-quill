@@ -36,19 +36,19 @@ trait Parsing {
   val c: Context
   import c.universe.{ Ident => _, Constant => _, Function => _, _ }
 
-  case class Parser[T](p: PartialFunction[Tree, T])(implicit t: ClassTag[T]) {
+  case class Parser[T](p: PartialFunction[Tree, T])(implicit ct: ClassTag[T]) {
 
     def apply(tree: Tree) =
       unapply(tree).getOrElse {
-        c.fail(s"Tree '$tree' can't be parsed to '${t.runtimeClass.getSimpleName}'")
+        c.fail(s"Tree '$tree' can't be parsed to '${ct.runtimeClass.getSimpleName}'")
       }
 
     def unapply(tree: Tree): Option[T] =
       tree match {
+        case q"io.getquill.`package`.unquote[$t]($quoted)" =>
+          unquote[T](quoted)
         case q"$source.withFilter(($alias) => $body)" if (alias.name.toString.contains("ifrefutable")) =>
           unapply(source)
-        case q"io.getquill.`package`.unquote[$t]($quoted)" =>
-          unapply(unquote(quoted))
         case other =>
           p.lift(tree)
       }
