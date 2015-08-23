@@ -47,7 +47,7 @@ trait Unliftables {
         case q"$source.withFilter(($alias) => $body)" if (alias.name.toString.contains("ifrefutable")) =>
           unapply(source)
         case q"io.getquill.`package`.unquote[$t]($quoted)" =>
-          unapply(unquoteTree(quoted))
+          unapply(unquote(quoted))
         case other =>
           p.lift(tree)
       }

@@ -9,19 +9,19 @@ import io.getquill.ast.Ast
 
 object EncodeBindVariables {
 
-  def apply[S](c: Context)(ast: Ast, bindingMap: collection.Map[Ident, (c.universe.ValDef, c.Tree)])(implicit s: c.WeakTypeTag[S]) = {
+  def apply[S](c: Context)(ast: Ast, bindingMap: collection.Map[Ident, (c.Type, c.Tree)])(implicit s: c.WeakTypeTag[S]): (Ast, c.universe.Function) = {
     val (bindedAst, bindingIdents) = BindVariables(ast, bindingMap.keys.toList)
     (bindedAst, encode(c)(bindingIdents, bindingMap))
   }
 
-  private def encode[S](c: Context)(bindingIdents: List[Ident], bindingMap: collection.Map[Ident, (c.universe.ValDef, c.Tree)])(implicit s: c.WeakTypeTag[S]) = {
+  private def encode[S](c: Context)(bindingIdents: List[Ident], bindingMap: collection.Map[Ident, (c.Type, c.Tree)])(implicit s: c.WeakTypeTag[S]) = {
     import c.universe._
     val applyEncoders =
       for ((ident, index) <- bindingIdents.zipWithIndex) yield {
-        val (param, binding) = bindingMap(ident)
+        val (tpe, binding) = bindingMap(ident)
         val encoder =
-          Encoding.inferEcoder(c)(param.tpt.tpe)(s)
-            .getOrElse(c.fail(s"Source doesn't know how do encode '$param: ${param.tpt}'"))
+          Encoding.inferEcoder(c)(tpe)(s)
+            .getOrElse(c.fail(s"Source doesn't know how do encode '$binding: $tpe'"))
         q"r = $encoder($index, $binding, r)"
       }
     q"""

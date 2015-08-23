@@ -4,6 +4,7 @@ import test.Spec
 import io.getquill.jdbc.JdbcSource
 import io.getquill._
 import test.testDB
+import language.reflectiveCalls
 
 case class Department(dpt: String)
 case class Employee(emp: String, dpt: String, salary: Int)
@@ -27,8 +28,7 @@ class DepartmentsJdbcSpec extends Spec {
           ("Research", "Cora"),
           ("Research", "Drew"),
           ("Research", "Edna"),
-          ("Sales", "Fred")
-        )
+          ("Sales", "Fred"))
       }
       testDB.run((emp: String, tsk: String) => queryable[Task].insert(_.emp -> emp, _.tsk -> tsk)) {
         List(
@@ -42,8 +42,7 @@ class DepartmentsJdbcSpec extends Spec {
           ("Edna", "abstract"),
           ("Edna", "call"),
           ("Edna", "design"),
-          ("Fred", "call")
-        )
+          ("Fred", "call"))
       }
     }
 
@@ -84,10 +83,8 @@ class DepartmentsJdbcSpec extends Spec {
                   t <- queryable[Task] if (e.emp == t.emp)
                 } yield {
                   t.tsk
-                }
-              )
-            }
-          )
+                })
+            })
         }
       }
 

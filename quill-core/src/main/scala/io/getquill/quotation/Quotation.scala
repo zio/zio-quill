@@ -25,10 +25,7 @@ trait Quotation extends Unliftables {
     """
   }
 
-  def unquote[T](quoted: Expr[Quoted[T]]) =
-    unquoteTree(quoted.tree)
-
-  protected def unquoteTree[T](tree: Tree) = {
+  protected def unquote[T](tree: Tree) = {
     val method =
       tree.tpe.decls.find(_.name.decodedName.toString == "tree")
         .getOrElse(c.fail(s"Can't find the tree method at ${tree}: ${tree.tpe}"))

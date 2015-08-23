@@ -77,12 +77,13 @@ trait FinagleMysqlSource extends SqlSource[Row, List[Parameter]] with StrictLogg
       case Nil =>
         Future.value(List())
       case bind :: tail =>
+        logger.info(sql)
         withClient(_.prepare(sql)(bind(List()): _*))
           .flatMap(_ => execute(sql, tail))
     }
 
   def query[T](sql: String, bind: List[Parameter] => List[Parameter], extractor: Row => T) = {
-    logger.debug(sql)
+    logger.info(sql)
     withClient(_.prepare(sql).select(bind(List()): _*)(extractor))
   }
 

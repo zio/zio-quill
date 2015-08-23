@@ -13,5 +13,5 @@ package object getquill {
 
   implicit def quote[T](body: T): Quoted[T] = macro Macro.quote[T]
 
-  implicit def unquote[T](quoted: Quoted[T]): T = macro Macro.unquote[T]
+  implicit def unquote[T](quoted: Quoted[T]): T = NonQuotedException()
 }
