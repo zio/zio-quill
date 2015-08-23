@@ -2,7 +2,13 @@ package io.getquill.ast
 
 //************************************************************
 
-sealed trait Ast
+sealed trait Ast {
+  override def toString = {
+    import io.getquill.util.Show._
+    import AstShow._
+    this.show
+  }
+}
 
 //************************************************************
 

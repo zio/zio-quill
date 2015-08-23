@@ -53,10 +53,6 @@ trait Unliftables {
           unapply(SubstituteTrees(c)(body, fields, fa.toList))
         case q"$source.withFilter(($alias) => $body)" if (alias.name.toString.contains("ifrefutable")) =>
           unapply(source)
-        case q"new { def apply[..$t1](...$params) = $body }.apply[..$t2](...$actuals)" =>
-          unapply(SubstituteTrees(c)(body, params.flatten, actuals.flatten))
-        case q"((..$params) => $body).apply(..$actuals)" =>
-          unapply(SubstituteTrees(c)(body, params, actuals))
         case q"io.getquill.`package`.unquote[$t]($quoted)" =>
           unapply(unquoteTree(quoted))
         case other =>

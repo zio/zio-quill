@@ -23,14 +23,16 @@ case class BetaReduction(state: collection.Map[Ident, Ast])
   override def apply(ast: Ast) =
     ast match {
       case Property(Tuple(values), name) =>
-        (values(name.drop(1).toInt - 1), this)
-      case FunctionApply(Function(params, body), values) =>
-        BetaReduction(state ++ params.zip(values))(body)
+        apply(values(name.drop(1).toInt - 1))
+      case a @ FunctionApply(Function(params, body), values) =>
+        BetaReduction(state ++ params.zip(values)).apply(body) match {
+          case (body, t) => apply(body)
+        }
       case ident: Ident =>
         (state.getOrElse(ident, ident), this)
       case Function(params, body) =>
         val (bodyt, t) = BetaReduction(state -- params)(body)
-        (Function(params, bodyt), t)
+        (Function(params, bodyt), this)
       case other =>
         super.apply(other)
     }
@@ -41,16 +43,16 @@ case class BetaReduction(state: collection.Map[Ident, Ast])
         (t, this)
       case Filter(a, b, c) =>
         val (ar, art) = apply(a)
-        val (cr, crt) = BetaReduction(art.state - b)(c)
-        (Filter(ar, b, cr), crt)
+        val (cr, crt) = BetaReduction(state - b)(c)
+        (Filter(ar, b, cr), this)
       case Map(a, b, c) =>
         val (ar, art) = apply(a)
-        val (cr, crt) = BetaReduction(art.state - b)(c)
-        (Map(ar, b, cr), crt)
+        val (cr, crt) = BetaReduction(state - b)(c)
+        (Map(ar, b, cr), this)
       case FlatMap(a, b, c) =>
         val (ar, art) = apply(a)
-        val (cr, crt) = BetaReduction(art.state - b)(c)
-        (FlatMap(ar, b, cr), crt)
+        val (cr, crt) = BetaReduction(state - b)(c)
+        (FlatMap(ar, b, cr), this)
     }
 }
 
