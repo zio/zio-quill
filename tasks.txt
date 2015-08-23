@@ -10,6 +10,8 @@ MVP - mid-september
 - generic test suite
 - database dialects (db2, derby, h2, hsql, mysql, oracle, postgres, sqlserver)
 - full sql support
+	- options
+	- set operations (union, outer joins, etc)
 - compile-time query validation using db
 - quill-jdbc
 - quill-finagle-mysql
