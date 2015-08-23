@@ -120,7 +120,7 @@ trait DepartmentsSpec extends Spec {
     quote {
       (u: String) =>
         for {
-          (dpt, employees) <- nestedOrg if (all(employees)(e => contains(e._2)(u)))
+          (dpt, employees) <- nestedOrg if (all(employees) { case (emp, tasks) => contains(tasks)(u) })
         } yield {
           dpt
         }

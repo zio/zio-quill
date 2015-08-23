@@ -34,6 +34,8 @@ private[source] object BindVariables {
   def apply(ast: Ast, idents: List[Ident]) =
     (new BindVariables((idents, List()))(ast)) match {
       case (ast, transformer) =>
-        (ast, transformer.state._2)
+        transformer.state match {
+          case (_, bindings) => (ast, bindings)
+        }
     }
 }

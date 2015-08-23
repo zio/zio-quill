@@ -54,5 +54,8 @@ private[capture] case class AvoidAliasConflict(state: Set[Ident])
 
 private[capture] object AvoidAliasConflict {
 
-  def apply(q: Query): Query = AvoidAliasConflict(Set[Ident]())(q)._1
+  def apply(q: Query): Query =
+    AvoidAliasConflict(Set[Ident]())(q) match {
+      case (q, _) => q
+    }
 }
