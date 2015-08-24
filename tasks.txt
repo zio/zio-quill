@@ -12,6 +12,8 @@ MVP - mid-september
 - full sql support
 	- options
 	- set operations (union, outer joins, etc)
+	- returning id
+- insert case class directly
 - compile-time query validation using db
 - quill-jdbc
 - quill-finagle-mysql
