@@ -24,7 +24,7 @@ case class BetaReduction(state: collection.Map[Ident, Ast])
     ast match {
       case Property(Tuple(values), name) =>
         apply(values(name.drop(1).toInt - 1))
-      case a @ FunctionApply(Function(params, body), values) =>
+      case FunctionApply(Function(params, body), values) =>
         BetaReduction(state ++ params.zip(values)).apply(body) match {
           case (body, t) => apply(body)
         }

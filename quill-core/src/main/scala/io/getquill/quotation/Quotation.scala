@@ -16,8 +16,8 @@ trait Quotation extends Parsing with Liftables with Unliftables {
   case class QuotedAst(ast: Ast) extends StaticAnnotation
 
   def quote[T: WeakTypeTag](body: Expr[T]) = {
-    verifyFreeVariables(body.tree)
     val ast = astParser(body.tree)
+    verifyFreeVariables(ast)
     q"""
       new ${c.weakTypeOf[Quoted[T]]} {
         @${c.weakTypeOf[QuotedAst]}($ast)
@@ -43,32 +43,9 @@ trait Quotation extends Parsing with Liftables with Unliftables {
     }
   }
 
-  private def verifyFreeVariables(tree: Tree) =
-    freeVariables(tree) match {
+  private def verifyFreeVariables(ast: Ast) =
+    FreeVariables(ast).toList match {
       case Nil  =>
-      case vars => c.fail(s"A quotation must not have references to free variables. Found: ${vars.mkString(", ")}")
+      case vars => c.fail(s"A quotation must not have references to variables outside it's scope. Found: '${vars.mkString(", ")}' in '$ast'.")
     }
-
-  private def freeVariables(tree: Tree, known: List[Symbol] = List()): List[String] =
-    tree match {
-      case t if (t.tpe <:< c.weakTypeTag[Quoted[Any]].tpe) =>
-        List()
-      case Select(This(_), TermName(name)) if (name != "Predef") =>
-        List(name)
-      case i: Ident if (isVariable(i.symbol) && i.toString != "_" && !known.contains(i.symbol)) =>
-        List(i.toString)
-      case q"(..$params) => $body" =>
-        freeVariables(body, known ++ params.map(_.symbol))
-      case q"new { def apply[..$t1](...$params) = $body }" =>
-        freeVariables(body, known ++ params.flatten.map(_.symbol))
-      case q"$tuple match { case (..$params) => $body }" =>
-        freeVariables(body, known ++ params.map(_.symbol))
-      case tree if (tree.children.nonEmpty) =>
-        tree.children.map(freeVariables(_, known)).flatten
-      case other =>
-        List()
-    }
-
-  private def isVariable(s: Symbol) =
-    !s.isPackage && !s.isMethod && !s.isModule && !s.isClass && !s.isType
 }
