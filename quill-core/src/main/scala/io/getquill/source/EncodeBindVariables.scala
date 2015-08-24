@@ -1,11 +1,10 @@
 package io.getquill.source
 
 import scala.reflect.macros.whitebox.Context
-import io.getquill.ast.Action
-import io.getquill.ast.Ident
-import io.getquill.ast.Query
-import io.getquill.util.Messages.RichContext
+
 import io.getquill.ast.Ast
+import io.getquill.ast.Ident
+import io.getquill.util.Messages.RichContext
 
 object EncodeBindVariables {
 
@@ -29,7 +28,7 @@ object EncodeBindVariables {
         var r = row
         $applyEncoders
         r
-      }  
+      }
     """
   }
 }

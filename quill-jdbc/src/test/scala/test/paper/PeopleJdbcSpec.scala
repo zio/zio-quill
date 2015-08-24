@@ -1,9 +1,9 @@
 package test.paper
 
-import io.getquill._
-import io.getquill.jdbc.JdbcSource
-import test.Spec
+import io.getquill.queryable
+import io.getquill.unquote
 import test.testDB
+import test.testDB.run
 
 class PeopleJdbcSpec extends PeopleSpec {
 

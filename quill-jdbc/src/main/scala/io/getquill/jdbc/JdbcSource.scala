@@ -70,8 +70,7 @@ trait JdbcSource extends SqlSource[ResultSet, PreparedStatement] with StrictLogg
           val res = f
           conn.commit
           res
-        }
-        catch {
+        } catch {
           case NonFatal(e) =>
             conn.rollback
             throw e

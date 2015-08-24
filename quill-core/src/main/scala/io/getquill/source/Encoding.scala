@@ -1,6 +1,5 @@
 package io.getquill.source
 
-import scala.language.higherKinds
 import scala.reflect.macros.whitebox.Context
 
 import io.getquill.util.InferImplicitValueWithFallback

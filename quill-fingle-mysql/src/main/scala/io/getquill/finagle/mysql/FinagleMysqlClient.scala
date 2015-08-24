@@ -16,5 +16,4 @@ object FinagleMysqlClient {
       .withDatabase(database)
       .newRichClient(dest)
   }
-
 }

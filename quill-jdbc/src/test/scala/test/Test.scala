@@ -1,7 +1,9 @@
 package test
 
-import io.getquill._
 import io.getquill.jdbc.JdbcSource
+import io.getquill.queryable
+import io.getquill.quote
+import io.getquill.unquote
 
 case class Person(id: Long, name: String, surname: String, age: Int)
 case class Address(id: Long, personId: Long, streetId: Long, number: Int)
@@ -60,7 +62,7 @@ object Test extends App {
     byFullName("flavio", "brasil")
   }
   db.run(q5)
-  
+
   val nameEqualsSurname = quote {
     (p: Person) => p.name == p.surname
   }

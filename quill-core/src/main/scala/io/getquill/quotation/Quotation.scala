@@ -1,10 +1,11 @@
 package io.getquill.quotation
 
 import scala.annotation.StaticAnnotation
-import scala.reflect.macros.whitebox.Context
-import io.getquill.util.Messages._
-import io.getquill.ast.Ast
 import scala.reflect.ClassTag
+import scala.reflect.macros.whitebox.Context
+
+import io.getquill.ast.Ast
+import io.getquill.util.Messages.RichContext
 
 trait Quoted[+T]
 

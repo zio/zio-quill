@@ -2,33 +2,32 @@ package io.getquill.quotation
 
 import scala.reflect.ClassTag
 import scala.reflect.macros.whitebox.Context
+
 import io.getquill.ast
 import io.getquill.ast.Action
 import io.getquill.ast.Assignment
+import io.getquill.ast.Ast
 import io.getquill.ast.BinaryOperation
 import io.getquill.ast.Constant
 import io.getquill.ast.Delete
-import io.getquill.ast.Ast
+import io.getquill.ast.Entity
 import io.getquill.ast.Filter
 import io.getquill.ast.FlatMap
+import io.getquill.ast.Function
+import io.getquill.ast.FunctionApply
 import io.getquill.ast.Ident
 import io.getquill.ast.Insert
 import io.getquill.ast.Map
 import io.getquill.ast.NullValue
 import io.getquill.ast.Property
 import io.getquill.ast.Query
-import io.getquill.ast.Entity
 import io.getquill.ast.Tuple
-import io.getquill.ast.Update
-import io.getquill.norm.BetaReduction
-import io.getquill.util.Messages._
 import io.getquill.ast.UnaryOperation
 import io.getquill.ast.UnaryOperator
-import io.getquill.ast.PrefixUnaryOperator
-import io.getquill.ast.UnaryOperation
-import io.getquill.ast.Function
-import io.getquill.ast.FunctionApply
+import io.getquill.ast.Update
 import io.getquill.ast.Value
+import io.getquill.norm.BetaReduction
+import io.getquill.util.Messages.RichContext
 
 trait Parsing {
   this: Quotation =>

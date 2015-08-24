@@ -1,13 +1,13 @@
 package io.getquill.sql
 
 import io.getquill.ast.Ast
+import io.getquill.ast.AstShow.queryShow
+import io.getquill.ast.Entity
 import io.getquill.ast.Filter
 import io.getquill.ast.FlatMap
 import io.getquill.ast.Ident
 import io.getquill.ast.Map
 import io.getquill.ast.Query
-import io.getquill.ast.AstShow._
-import io.getquill.ast.Entity
 import io.getquill.util.Show.Shower
 
 case class Source(table: String, alias: String)
@@ -23,9 +23,7 @@ object SqlQuery {
             new SqlQuery(from, where, select)
         }
       case other =>
-        import io.getquill.util.Show._
-        import io.getquill.ast.AstShow._
-        throw new IllegalStateException(s"Query is not propertly normalized, please submit a bug report. ${other.show}")
+        throw new IllegalStateException(s"Query is not propertly normalized, please submit a bug report. $other")
     }
 
   private def flatten(query: Query): (List[Source], Option[Ast], Ast) = {

@@ -3,13 +3,10 @@ package io.getquill.norm.select
 import scala.reflect.macros.whitebox.Context
 
 import io.getquill.ast.Ast
-import io.getquill.ast.AstShow.astShow
 import io.getquill.ast.Property
 import io.getquill.ast.Query
 import io.getquill.ast.Tuple
-import io.getquill.ast.AstShow
 import io.getquill.util.Messages.RichContext
-import io.getquill.util.Show.Shower
 
 trait SelectFlattening extends SelectValues {
   val c: Context
@@ -27,8 +24,7 @@ trait SelectFlattening extends SelectValues {
             case None if (typ.typeSymbol.asClass.isCaseClass) =>
               caseClassSelectValue(typ, ast, inferDecoder)
             case _ =>
-              import AstShow._
-              c.fail(s"Source doesn't know how to decode '${t.tpe.typeSymbol.name}.${ast.show}: $typ'")
+              c.fail(s"Source doesn't know how to decode '${t.tpe.typeSymbol.name}.$ast: $typ'")
           }
       }
     (ReplaceSelect(query, selectAsts(selectValues).flatten), selectValues)
@@ -36,7 +32,7 @@ trait SelectFlattening extends SelectValues {
 
   private def selectAsts(values: List[SelectValue]) =
     values map {
-      case SimpleSelectValue(ast, _)      => List(ast)
+      case SimpleSelectValue(ast, _)       => List(ast)
       case CaseClassSelectValue(_, params) => params.flatten.map(_.ast)
     }
 
