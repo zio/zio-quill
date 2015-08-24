@@ -3,6 +3,7 @@ package io.getquill.ast
 import io.getquill.util.Show.Show
 import io.getquill.util.Show.Shower
 import io.getquill.util.Show.listShow
+import io.getquill.ast
 
 object AstShow {
 
@@ -55,7 +56,7 @@ object AstShow {
   implicit val operationShow: Show[Operation] = new Show[Operation] {
     def show(e: Operation) =
       e match {
-        case UnaryOperation(op: PrefixUnaryOperator, ast)  => s"${op.show}${ast.show}"
+        case UnaryOperation(op: PrefixUnaryOperator, ast)  => s"${op.show}(${ast.show})"
         case UnaryOperation(op: PostfixUnaryOperator, ast) => s"${ast.show}.${op.show}"
         case BinaryOperation(a, op, b)                     => s"${a.show} ${op.show} ${b.show}"
       }
@@ -79,20 +80,19 @@ object AstShow {
   implicit val binaryOperatorShow: Show[BinaryOperator] = new Show[BinaryOperator] {
     def show(o: BinaryOperator) =
       o match {
-        case io.getquill.ast.`-`    => "-"
-        case io.getquill.ast.`+`    => "+"
-        case io.getquill.ast.`*`    => "*"
-        case io.getquill.ast.`==`   => "=="
-        case io.getquill.ast.`!=`   => "!="
-        case io.getquill.ast.`&&`   => "&&"
-        case io.getquill.ast.`||`   => "||"
-        case io.getquill.ast.`>`    => ">"
-        case io.getquill.ast.`>=`   => ">="
-        case io.getquill.ast.`<`    => "<"
-        case io.getquill.ast.`<=`   => "<="
-        case io.getquill.ast.`/`    => "/"
-        case io.getquill.ast.`%`    => "%"
-        case io.getquill.ast.`like` => "like"
+        case ast.`-`  => "-"
+        case ast.`+`  => "+"
+        case ast.`*`  => "*"
+        case ast.`==` => "=="
+        case ast.`!=` => "!="
+        case ast.`&&` => "&&"
+        case ast.`||` => "||"
+        case ast.`>`  => ">"
+        case ast.`>=` => ">="
+        case ast.`<`  => "<"
+        case ast.`<=` => "<="
+        case ast.`/`  => "/"
+        case ast.`%`  => "%"
       }
   }
 

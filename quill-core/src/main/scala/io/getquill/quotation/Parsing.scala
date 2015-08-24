@@ -137,19 +137,19 @@ trait Parsing {
 
   private def binaryOperator(name: TermName) =
     name.decodedName.toString match {
-      case "-"    => ast.`-`
-      case "+"    => ast.`+`
-      case "=="   => ast.`==`
-      case "!="   => ast.`!=`
-      case "&&"   => ast.`&&`
-      case "||"   => ast.`||`
-      case ">"    => ast.`>`
-      case ">="   => ast.`>=`
-      case "<"    => ast.`<`
-      case "<="   => ast.`<=`
-      case "/"    => ast.`/`
-      case "%"    => ast.`%`
-      case "like" => ast.`like`
+      case "-"  => ast.`-`
+      case "+"  => ast.`+`
+      case "*"  => ast.`*`
+      case "==" => ast.`==`
+      case "!=" => ast.`!=`
+      case "&&" => ast.`&&`
+      case "||" => ast.`||`
+      case ">"  => ast.`>`
+      case ">=" => ast.`>=`
+      case "<"  => ast.`<`
+      case "<=" => ast.`<=`
+      case "/"  => ast.`/`
+      case "%"  => ast.`%`
     }
 
   val propertyParser: Parser[Property] = Parser[Property] {

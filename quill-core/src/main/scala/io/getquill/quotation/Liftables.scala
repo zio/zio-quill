@@ -46,20 +46,19 @@ trait Liftables {
   }
 
   implicit val binaryOperatorLiftable: Liftable[BinaryOperator] = Liftable[BinaryOperator] {
-    case ast.`-`    => q"$pack.`-`"
-    case ast.`+`    => q"$pack.`+`"
-    case ast.`*`    => q"$pack.`*`"
-    case ast.`==`   => q"$pack.`==`"
-    case ast.`!=`   => q"$pack.`!=`"
-    case ast.`&&`   => q"$pack.`&&`"
-    case ast.`||`   => q"$pack.`||`"
-    case ast.`>`    => q"$pack.`>`"
-    case ast.`>=`   => q"$pack.`>=`"
-    case ast.`<`    => q"$pack.`<`"
-    case ast.`<=`   => q"$pack.`<=`"
-    case ast.`/`    => q"$pack.`/`"
-    case ast.`%`    => q"$pack.`%`"
-    case ast.`like` => q"$pack.`like`"
+    case ast.`-`  => q"$pack.`-`"
+    case ast.`+`  => q"$pack.`+`"
+    case ast.`*`  => q"$pack.`*`"
+    case ast.`==` => q"$pack.`==`"
+    case ast.`!=` => q"$pack.`!=`"
+    case ast.`&&` => q"$pack.`&&`"
+    case ast.`||` => q"$pack.`||`"
+    case ast.`>`  => q"$pack.`>`"
+    case ast.`>=` => q"$pack.`>=`"
+    case ast.`<`  => q"$pack.`<`"
+    case ast.`<=` => q"$pack.`<=`"
+    case ast.`/`  => q"$pack.`/`"
+    case ast.`%`  => q"$pack.`%`"
   }
 
   implicit val unaryOperatorLiftable: Liftable[UnaryOperator] = Liftable[UnaryOperator] {

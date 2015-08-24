@@ -28,4 +28,3 @@ object `<` extends BinaryOperator
 object `<=` extends BinaryOperator
 object `/` extends BinaryOperator
 object `%` extends BinaryOperator
-object `like` extends BinaryOperator

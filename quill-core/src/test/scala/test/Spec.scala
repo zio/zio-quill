@@ -5,4 +5,6 @@ import org.scalatest.FreeSpec
 import org.scalatest.Inside
 import org.scalatest.MustMatchers
 
-trait Spec extends FreeSpec with MustMatchers with Inside with BeforeAndAfterAll
+trait Spec extends FreeSpec with MustMatchers with Inside with BeforeAndAfterAll {
+  case class TestEntity(s: String)
+}

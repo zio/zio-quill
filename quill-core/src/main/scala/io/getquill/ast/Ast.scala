@@ -5,7 +5,7 @@ package io.getquill.ast
 sealed trait Ast {
   override def toString = {
     import io.getquill.util.Show._
-    import AstShow._
+    import io.getquill.ast.AstShow._
     this.show
   }
 }

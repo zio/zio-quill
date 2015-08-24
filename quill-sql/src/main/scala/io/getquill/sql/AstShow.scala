@@ -58,20 +58,19 @@ object AstShow {
   implicit val binaryOperatorShow: Show[BinaryOperator] = new Show[BinaryOperator] {
     def show(o: BinaryOperator) =
       o match {
-        case ast.`-`    => "-"
-        case ast.`+`    => "+"
-        case ast.`*`    => "*"
-        case ast.`==`   => "="
-        case ast.`!=`   => "<>"
-        case ast.`&&`   => "AND"
-        case ast.`||`   => "OR"
-        case ast.`>`    => ">"
-        case ast.`>=`   => ">="
-        case ast.`<`    => "<"
-        case ast.`<=`   => "<="
-        case ast.`/`    => "/"
-        case ast.`%`    => "%"
-        case ast.`like` => "like"
+        case ast.`-`  => "-"
+        case ast.`+`  => "+"
+        case ast.`*`  => "*"
+        case ast.`==` => "="
+        case ast.`!=` => "<>"
+        case ast.`&&` => "AND"
+        case ast.`||` => "OR"
+        case ast.`>`  => ">"
+        case ast.`>=` => ">="
+        case ast.`<`  => "<"
+        case ast.`<=` => "<="
+        case ast.`/`  => "/"
+        case ast.`%`  => "%"
       }
   }
 

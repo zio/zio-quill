@@ -16,7 +16,7 @@ lazy val `quill-core` =
 lazy val `quill-sql` = 
   (project in file("quill-sql"))
     .settings(commonSettings: _*)
-    .dependsOn(`quill-core`)
+    .dependsOn(`quill-core` % "compile->compile;test->test")
 
 lazy val `quill-jdbc` = 
   (project in file("quill-jdbc"))
