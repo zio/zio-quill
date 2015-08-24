@@ -37,7 +37,7 @@ class QueryMacro(val c: Context) extends Quotation with SelectFlattening with Se
       }
     val (flattenQuery, selectValues) = flattenSelect[T](query, Encoding.inferDecoder[R](c))
     val (bindedQuery, encode) = EncodeBindVariables[S](c)(flattenQuery, bindingMap(params, bindings))
-    val extractor = selectResultExtractor[T, R](selectValues)
+    val extractor = selectResultExtractor[R](selectValues)
     val sql = SqlQuery(bindedQuery).show
     c.info(sql)
     q"""
