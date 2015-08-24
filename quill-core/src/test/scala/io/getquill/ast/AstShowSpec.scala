@@ -211,13 +211,28 @@ class AstShowSpec extends Spec {
       """((a) => a)"""
   }
 
-  //  "shows actions" - {
-  //    "update" in {
-  //      val q = quote {
-  //        queryable[TestEntity].filter(t => t.s == "test").update(t => t.s -> "a")
-  //      }
-  //      q.ast.show mustEqual
-  //        """queryable[TestEntity].filter(t => t.s == "test").update(t => t.s ->  "a")"""
-  //    }
-  //  }
+  "shows actions" - {
+    "update" in {
+      val q = quote {
+        queryable[TestEntity].filter(t => t.s == "test").update(_.s -> "a")
+      }
+      q.ast.show mustEqual
+        """queryable[TestEntity].filter(t => t.s == "test").update(_.s -> "a")"""
+    }
+    "insert" in {
+      val q = quote {
+        queryable[TestEntity].insert(_.s -> "a")
+      }
+      q.ast.show mustEqual
+        """queryable[TestEntity].insert(_.s -> "a")"""
+    }
+
+    "delete" in {
+      val q = quote {
+        queryable[TestEntity].delete
+      }
+      q.ast.show mustEqual
+        """queryable[TestEntity].delete"""
+    }
+  }
 }

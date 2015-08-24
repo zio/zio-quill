@@ -100,7 +100,7 @@ object AstShow {
   implicit val actionShow: Show[Action] = {
 
     def set(assignments: List[Assignment]) =
-      assignments.map(a => s"${a.ast.show} = ${a.value.show}").mkString(", ")
+      assignments.map(a => s"${a.property} = ${a.value.show}").mkString(", ")
 
     implicit def propertyShow: Show[Property] = new Show[Property] {
       def show(e: Property) =
@@ -108,14 +108,15 @@ object AstShow {
           case Property(_, name) => name
         }
     }
+
     new Show[Action] {
       def show(a: Action) =
         a match {
 
           case Insert(Entity(table), assignments) =>
-            val columns = assignments.map(_.ast)
+            val columns = assignments.map(_.property)
             val values = assignments.map(_.value)
-            s"INSERT INTO $table (${columns.show}) VALUES (${values.show})"
+            s"INSERT INTO $table (${columns.mkString(",")}) VALUES (${values.show})"
 
           case Update(Entity(table), assignments) =>
             s"UPDATE $table SET ${set(assignments)}"

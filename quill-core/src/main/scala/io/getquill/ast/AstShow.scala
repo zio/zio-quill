@@ -130,7 +130,7 @@ object AstShow {
   implicit val assignmentShow: Show[Assignment] = new Show[Assignment] {
     def show(e: Assignment) =
       e match {
-        case Assignment(property, value) => s"${property.show} -> ${value.show}"
+        case Assignment(property, value) => s"_.$property -> ${value.show}"
       }
   }
 

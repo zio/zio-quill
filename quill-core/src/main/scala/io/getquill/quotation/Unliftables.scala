@@ -83,7 +83,7 @@ trait Unliftables {
   }
 
   implicit val assignmentUnliftable: Unliftable[Assignment] = Unliftable[Assignment] {
-    case q"$pack.Assignment.apply(${ a: Ast }, ${ b: Ast })" => Assignment(a, b)
+    case q"$pack.Assignment.apply(${ a: String }, ${ b: Ast })" => Assignment(a, b)
   }
 
   implicit val valueUnliftable: Unliftable[Value] = Unliftable[Value] {

@@ -46,6 +46,6 @@ trait StatelessTransformer {
 
   def apply(e: Assignment): Assignment =
     e match {
-      case Assignment(property, value) => Assignment(apply(property), apply(value))
+      case Assignment(property, value) => Assignment(property, apply(value))
     }
 }

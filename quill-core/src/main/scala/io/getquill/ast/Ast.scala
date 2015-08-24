@@ -55,4 +55,4 @@ case class Update(query: Ast, assingments: List[Assignment]) extends Action
 case class Insert(query: Ast, assingments: List[Assignment]) extends Action
 case class Delete(query: Ast) extends Action
 
-case class Assignment(ast: Ast, value: Ast)
+case class Assignment(property: String, value: Ast)
