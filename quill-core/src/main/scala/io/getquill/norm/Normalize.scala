@@ -10,7 +10,7 @@ import io.getquill.ast.Ident
 import io.getquill.ast.Insert
 import io.getquill.ast.Map
 import io.getquill.ast.Query
-import io.getquill.ast.Table
+import io.getquill.ast.Entity
 import io.getquill.ast.Update
 import io.getquill.norm.capture.AvoidCapture
 import io.getquill.ast.StatelessTransformer
@@ -99,7 +99,7 @@ object Normalize extends StatelessTransformer {
             case `a` => Map(apply(a), b, apply(c))
             case a   => apply(Map(a, b, c))
           }
-        case t: Table => t
+        case t: Entity => t
       }
     }
 }

@@ -17,7 +17,7 @@ trait StatelessTransformer {
 
   def apply(e: Query): Query =
     e match {
-      case e: Table =>
+      case e: Entity =>
         e
       case Filter(a, b, c)  => Filter(apply(a), b, apply(c))
       case Map(a, b, c)     => Map(apply(a), b, apply(c))

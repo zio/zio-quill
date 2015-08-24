@@ -17,7 +17,7 @@ import io.getquill.ast.Map
 import io.getquill.ast.NullValue
 import io.getquill.ast.Property
 import io.getquill.ast.Query
-import io.getquill.ast.Table
+import io.getquill.ast.Entity
 import io.getquill.ast.Tuple
 import io.getquill.ast.Update
 import io.getquill.norm.BetaReduction
@@ -103,7 +103,7 @@ trait Parsing {
   val queryParser: Parser[Query] = Parser[Query] {
 
     case q"io.getquill.`package`.queryable[${ t: Type }]" =>
-      Table(t.typeSymbol.name.decodedName.toString)
+      Entity(t.typeSymbol.name.decodedName.toString)
 
     case q"$source.filter(($alias) => $body)" =>
       Filter(astParser(source), identParser(alias), astParser(body))

@@ -24,7 +24,7 @@ object AstShow {
     def show(q: Query) =
       q match {
 
-        case Table(name) =>
+        case Entity(name) =>
           s"queryable[$name]"
 
         case Filter(source, alias, body) =>

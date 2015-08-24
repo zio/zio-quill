@@ -14,7 +14,7 @@ sealed trait Ast {
 
 sealed trait Query extends Ast
 
-case class Table(name: String) extends Query
+case class Entity(name: String) extends Query
 
 case class Filter(query: Ast, alias: Ident, body: Ast) extends Query
 

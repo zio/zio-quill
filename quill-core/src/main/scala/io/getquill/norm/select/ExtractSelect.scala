@@ -6,7 +6,7 @@ import io.getquill.ast.FlatMap
 import io.getquill.ast.Ident
 import io.getquill.ast.Map
 import io.getquill.ast.Query
-import io.getquill.ast.Table
+import io.getquill.ast.Entity
 import io.getquill.util.Messages.fail
 
 private[select] object ExtractSelect {
@@ -20,7 +20,7 @@ private[select] object ExtractSelect {
     query match {
       case FlatMap(q, x, p: Query) => FlatMap(q, x, ensureFinalMap(p))
       case q @ Filter(_, x, _)     => Map(q, x, x)
-      case t: Table                => Map(t, Ident("x"), Ident("x"))
+      case t: Entity                => Map(t, Ident("x"), Ident("x"))
       case other                   => query
     }
 

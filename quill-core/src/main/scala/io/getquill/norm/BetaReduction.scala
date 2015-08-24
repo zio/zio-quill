@@ -8,7 +8,7 @@ import io.getquill.ast.Ident
 import io.getquill.ast.Map
 import io.getquill.ast.Property
 import io.getquill.ast.Query
-import io.getquill.ast.Table
+import io.getquill.ast.Entity
 import io.getquill.ast.Tuple
 import io.getquill.ast.UnaryOperation
 import io.getquill.ast.Value
@@ -39,7 +39,7 @@ case class BetaReduction(state: collection.Map[Ident, Ast])
 
   override def apply(query: Query) =
     query match {
-      case t: Table =>
+      case t: Entity =>
         (t, this)
       case Filter(a, b, c) =>
         val (ar, art) = apply(a)

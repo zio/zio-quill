@@ -29,7 +29,7 @@ trait StatefulTransformer[T] {
 
   def apply(e: Query): (Query, StatefulTransformer[T]) =
     e match {
-      case e: Table => (e, this)
+      case e: Entity => (e, this)
       case Filter(a, b, c) =>
         val (at, att) = apply(a)
         val (ct, ctt) = att.apply(c)

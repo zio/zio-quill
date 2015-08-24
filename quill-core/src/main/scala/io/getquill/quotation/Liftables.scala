@@ -47,7 +47,7 @@ trait Liftables {
   }
 
   implicit val queryLiftable: Liftable[Query] = Liftable[Query] {
-    case Table(name)      => q"$pack.Table($name)"
+    case Entity(name)      => q"$pack.Entity($name)"
     case Filter(a, b, c)  => q"$pack.Filter($a, $b, $c)"
     case Map(a, b, c)     => q"$pack.Map($a, $b, $c)"
     case FlatMap(a, b, c) => q"$pack.FlatMap($a, $b, $c)"

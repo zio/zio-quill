@@ -9,33 +9,33 @@ private[capture] case class AvoidAliasConflict(state: Set[Ident])
   override def apply(q: Query): (Query, StatefulTransformer[Set[Ident]]) =
     q match {
 
-      case FlatMap(q: Table, x, p) if (state.contains(x)) =>
+      case FlatMap(q: Entity, x, p) if (state.contains(x)) =>
         val fresh = freshIdent(x)
         val pr = BetaReduction(p, x -> fresh)
         val (prr, t) = AvoidAliasConflict(state + fresh)(pr)
         (FlatMap(q, fresh, prr), t)
 
-      case Map(q: Table, x, p) if (state.contains(x)) =>
+      case Map(q: Entity, x, p) if (state.contains(x)) =>
         val fresh = freshIdent(x)
         val pr = BetaReduction(p, x -> fresh)
         val (prr, t) = AvoidAliasConflict(state + fresh)(pr)
         (Map(q, fresh, prr), t)
 
-      case Filter(q: Table, x, p) if (state.contains(x)) =>
+      case Filter(q: Entity, x, p) if (state.contains(x)) =>
         val fresh = freshIdent(x)
         val pr = BetaReduction(p, x -> fresh)
         val (prr, t) = AvoidAliasConflict(state + fresh)(pr)
         (Filter(q, fresh, prr), t)
 
-      case FlatMap(q: Table, x, p) =>
+      case FlatMap(q: Entity, x, p) =>
         val (pr, t) = AvoidAliasConflict(state + x)(p)
         (FlatMap(q, x, pr), t)
 
-      case Map(q: Table, x, p) =>
+      case Map(q: Entity, x, p) =>
         val (pr, t) = AvoidAliasConflict(state + x)(p)
         (Map(q, x, pr), t)
 
-      case Filter(q: Table, x, p) =>
+      case Filter(q: Entity, x, p) =>
         val (pr, t) = AvoidAliasConflict(state + x)(p)
         (Filter(q, x, pr), t)
 

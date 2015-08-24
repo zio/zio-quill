@@ -11,7 +11,7 @@ import io.getquill.ast.Ident
 import io.getquill.ast.Insert
 import io.getquill.ast.Map
 import io.getquill.ast.Query
-import io.getquill.ast.Table
+import io.getquill.ast.Entity
 import io.getquill.ast.Tuple
 import io.getquill.ast.UnaryOperation
 import io.getquill.ast.Update

@@ -5,10 +5,10 @@ import io.getquill.queryable
 import io.getquill.unquote
 import test.Spec
 
-case class Person(name: String, age: Int)
-case class Couple(her: String, him: String)
-
 trait PeopleSpec extends Spec {
+
+  case class Person(name: String, age: Int)
+  case class Couple(her: String, him: String)
 
   val peopleInsert =
     quote {
@@ -95,7 +95,7 @@ trait PeopleSpec extends Spec {
       (s: String, t: String) =>
         for {
           a <- ageFromName(s)
-          b <- ageFromName(t)  
+          b <- ageFromName(t)
           r <- range(a, b)
         } yield {
           r
