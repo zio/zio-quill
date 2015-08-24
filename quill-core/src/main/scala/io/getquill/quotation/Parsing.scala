@@ -65,7 +65,7 @@ trait Parsing {
 
   val assignmentParser: Parser[Assignment] = Parser[Assignment] {
     case q"(($x) => scala.this.Predef.ArrowAssoc[$t]($ast).->[$v]($value))" =>
-      Assignment(Ident(propertyParser(ast).name), astParser(value))
+      Assignment(propertyParser(ast), astParser(value))
   }
 
   val astParser: Parser[Ast] = Parser[Ast] {

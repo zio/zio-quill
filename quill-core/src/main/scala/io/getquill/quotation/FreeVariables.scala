@@ -44,6 +44,13 @@ case class FreeVariables(state: (Set[Ident], Set[Ident]))
         val (_, tc) = FreeVariables((seen() + b, freeVars()))(c)
         (q, FreeVariables((seen(), freeVars() ++ freeVars(ta.state) ++ freeVars(tc.state))))
     }
+
+  override def apply(e: Assignment) =
+    e match {
+      case e @ Assignment(a, b) =>
+        val (_, t) = apply(b)
+        (e, t)
+    }
 }
 
 object FreeVariables {
