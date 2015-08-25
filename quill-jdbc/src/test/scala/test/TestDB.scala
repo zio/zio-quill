@@ -1,5 +1,5 @@
 package test
 
-import io.getquill.jdbc.JdbcSource
+import io.getquill.source.jdbc.JdbcSource
 
 object testDB extends JdbcSource

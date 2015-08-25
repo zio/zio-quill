@@ -18,7 +18,7 @@ import com.twitter.util.Future
 import com.twitter.util.Local
 import com.typesafe.scalalogging.StrictLogging
 
-import io.getquill.sql.SqlSource
+import io.getquill.source.sql.SqlSource
 
 trait FinagleMysqlSource extends SqlSource[Row, List[Parameter]] with StrictLogging {
 

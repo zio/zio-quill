@@ -1,6 +1,6 @@
 package test
 
-import io.getquill.jdbc.JdbcSource
+import io.getquill.source.jdbc.JdbcSource
 import io.getquill.queryable
 import io.getquill.quote
 import io.getquill.unquote

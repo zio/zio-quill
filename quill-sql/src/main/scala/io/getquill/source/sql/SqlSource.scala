@@ -1,4 +1,4 @@
-package io.getquill.sql
+package io.getquill.source.sql
 
 import scala.reflect.ClassTag
 import language.experimental.macros

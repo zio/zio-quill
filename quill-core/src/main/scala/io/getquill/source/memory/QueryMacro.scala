@@ -1,11 +1,11 @@
-package io.getquill.sql
+package io.getquill.source.memory
 
 import scala.reflect.macros.whitebox.Context
 
-import SqlQueryShow.sqlQueryShow
 import io.getquill.Queryable
 import io.getquill.ast.Function
 import io.getquill.ast.Ident
+import io.getquill.ast.AstShow._
 import io.getquill.ast.Query
 import io.getquill.norm.Normalize
 import io.getquill.norm.SelectResultExtraction
@@ -38,10 +38,9 @@ class QueryMacro(val c: Context) extends Quotation with SelectFlattening with Se
     val (flattenQuery, selectValues) = flattenSelect[T](query, Encoding.inferDecoder[R](c))
     val (bindedQuery, encode) = EncodeBindVariables[S](c)(flattenQuery, bindingMap(params, bindings))
     val extractor = selectResultExtractor[R](selectValues)
-    val sql = SqlQuery(bindedQuery).show
-    c.info(sql)
+    c.info(bindedQuery.show)
     q"""
-      ${c.prefix}.query[$t]($sql, $encode, $extractor)
+      ${c.prefix}.query[$t]($bindedQuery, $encode, $extractor)
     """
   }
 

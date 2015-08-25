@@ -1,4 +1,4 @@
-package io.getquill.jdbc
+package io.getquill.source.jdbc
 
 import java.util.Properties
 

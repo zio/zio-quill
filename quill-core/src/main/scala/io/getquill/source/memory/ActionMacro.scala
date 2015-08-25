@@ -1,4 +1,4 @@
-package io.getquill.sql
+package io.getquill.source.memory
 
 import scala.reflect.macros.whitebox.Context
 import io.getquill.ast.Ident
@@ -10,7 +10,7 @@ import io.getquill.source.EncodeBindVariables
 import io.getquill.util.Messages.RichContext
 import io.getquill.util.Show._
 import io.getquill.quotation.Quotation
-import AstShow._
+import io.getquill.ast.AstShow._
 import io.getquill.ast.Action
 
 class ActionMacro(val c: Context) extends Quotation {
@@ -18,9 +18,8 @@ class ActionMacro(val c: Context) extends Quotation {
 
   def run[R, S, T](action: Expr[Actionable[T]])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]): Tree = {
     val normalizedAction = Normalize(actionParser(action.tree): Ast)
-    val sql = normalizedAction.show
-    c.info(sql)
-    q"${c.prefix}.execute($sql)"
+    c.info(normalizedAction.show)
+    q"${c.prefix}.execute($normalizedAction)"
   }
 
   def run1[P1, R: WeakTypeTag, S: WeakTypeTag, T: WeakTypeTag](action: Expr[P1 => Actionable[T]])(bindings: Expr[Iterable[P1]])(implicit p1: WeakTypeTag[P1]): Tree =
@@ -37,10 +36,9 @@ class ActionMacro(val c: Context) extends Quotation {
         case other                            => throw new IllegalStateException(s"Invalid action $tree.")
       }
     val (bindedAction, encode) = EncodeBindVariables[S](c)(action, bindingMap(params, types))
-    val sql = bindedAction.show
-    c.info(sql)
+    c.info(bindedAction.show)
     q"""
-      ${c.prefix}.execute($sql, $bindings.map(value => $encode))
+      ${c.prefix}.execute($bindedAction, $bindings.map(value => $encode))
     """
   }
 

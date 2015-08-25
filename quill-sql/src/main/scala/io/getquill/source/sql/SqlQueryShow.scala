@@ -1,4 +1,4 @@
-package io.getquill.sql
+package io.getquill.source.sql
 
 import AstShow.astShow
 import io.getquill.util.Show.Show

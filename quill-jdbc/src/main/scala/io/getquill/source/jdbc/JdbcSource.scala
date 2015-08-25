@@ -1,4 +1,4 @@
-package io.getquill.jdbc
+package io.getquill.source.jdbc
 
 import java.sql.Connection
 import java.sql.PreparedStatement
@@ -10,7 +10,7 @@ import scala.util.control.NonFatal
 
 import com.typesafe.scalalogging.StrictLogging
 
-import io.getquill.sql.SqlSource
+import io.getquill.source.sql.SqlSource
 
 trait JdbcSource extends SqlSource[ResultSet, PreparedStatement] with StrictLogging {
 
