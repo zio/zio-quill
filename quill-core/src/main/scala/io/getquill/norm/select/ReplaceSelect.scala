@@ -5,6 +5,7 @@ import io.getquill.ast.FlatMap
 import io.getquill.ast.Map
 import io.getquill.ast.Query
 import io.getquill.ast.Tuple
+import io.getquill.util.Messages._
 
 private[select] object ReplaceSelect {
 
@@ -15,6 +16,6 @@ private[select] object ReplaceSelect {
     query match {
       case FlatMap(q, x, p: Query) => FlatMap(q, x, apply(p, ast))
       case Map(q, x, p)            => Map(q, x, ast)
-      case other                   => other
+      case other                   => fail(s"Query doesn't have a final map (select). Ast: $query")
     }
 }
