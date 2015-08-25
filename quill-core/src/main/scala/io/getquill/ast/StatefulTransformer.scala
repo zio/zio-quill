@@ -13,18 +13,18 @@ trait StatefulTransformer[T] {
 
       case e: Ident     => (e, this)
 
-      case Function(params, body) =>
-        val (bodyt, bt) = apply(body)
-        (Function(params, bodyt), bt)
+      case Function(a, b) =>
+        val (bt, btt) = apply(b)
+        (Function(a, bt), btt)
 
-      case FunctionApply(function, values) =>
-        val (functiont, functiontt) = apply(function)
-        val (valuest, valuestt) = functiontt.apply(values)(_.apply)
-        (FunctionApply(functiont, valuest), valuestt)
-
-      case Property(a, name) =>
+      case FunctionApply(a, b) =>
         val (at, att) = apply(a)
-        (Property(at, name), att)
+        val (bt, btt) = att.apply(b)(_.apply)
+        (FunctionApply(at, bt), btt)
+
+      case Property(a, b) =>
+        val (at, att) = apply(a)
+        (Property(at, b), att)
     }
 
   def apply(e: Query): (Query, StatefulTransformer[T]) =
@@ -59,24 +59,24 @@ trait StatefulTransformer[T] {
     e match {
       case e: Constant => (e, this)
       case NullValue   => (e, this)
-      case Tuple(values) =>
-        val (valuest, valuestt) = apply(values)(_.apply)
-        (Tuple(valuest), valuestt)
+      case Tuple(a) =>
+        val (at, att) = apply(a)(_.apply)
+        (Tuple(at), att)
     }
 
   def apply(e: Action): (Action, StatefulTransformer[T]) =
     e match {
-      case Update(query, assignments) =>
-        val (queryt, querytt) = apply(query)
-        val (at, att) = querytt.apply(assignments)(_.apply)
-        (Update(queryt, at), att)
-      case Insert(query, assignments) =>
-        val (queryt, querytt) = apply(query)
-        val (at, att) = querytt.apply(assignments)(_.apply)
-        (Insert(queryt, at), att)
-      case Delete(query) =>
-        val (qt, qtt) = apply(query)
-        (Delete(query), qtt)
+      case Update(a, b) =>
+        val (at, att) = apply(a)
+        val (bt, btt) = att.apply(b)(_.apply)
+        (Update(at, bt), btt)
+      case Insert(a, b) =>
+        val (at, att) = apply(a)
+        val (bt, btt) = att.apply(b)(_.apply)
+        (Insert(at, bt), btt)
+      case Delete(a) =>
+        val (at, att) = apply(a)
+        (Delete(at), att)
     }
 
   def apply(e: Assignment): (Assignment, StatefulTransformer[T]) =
