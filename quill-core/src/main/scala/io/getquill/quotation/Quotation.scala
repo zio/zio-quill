@@ -22,7 +22,7 @@ trait Quotation extends Parsing with Liftables with Unliftables {
     q"""
       new ${c.weakTypeOf[Quoted[T]]} {
         @${c.weakTypeOf[QuotedAst]}($ast)
-        def ast: io.getquill.ast.Ast = $ast
+        def ast = $ast
         override def toString = ast.toString
       }
     """

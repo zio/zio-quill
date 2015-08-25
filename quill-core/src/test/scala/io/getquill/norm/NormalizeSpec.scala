@@ -6,16 +6,6 @@ import test.Spec
 
 class NormalizeSpec extends Spec {
 
-  val qr1 = quote {
-    queryable[TestEntity]
-  }
-  val qr2 = quote {
-    queryable[TestEntity2]
-  }
-  val qr3 = quote {
-    queryable[TestEntity3]
-  }
-
   "applies symbolic reduction" - {
     "a.flatMap(b => c.map(d => e)).flatMap(f => g)" in {
       val q = quote {

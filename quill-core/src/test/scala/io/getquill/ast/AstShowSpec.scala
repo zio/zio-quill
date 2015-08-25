@@ -13,7 +13,7 @@ class AstShowSpec extends Spec {
     val q = quote {
       queryable[TestEntity].filter(t => t.s == "test").flatMap(t => queryable[TestEntity]).map(t => t)
     }
-    q.ast.show mustEqual
+    (q.ast: Ast).show mustEqual
       """queryable[TestEntity].filter(t => t.s == "test").flatMap(t => queryable[TestEntity]).map(t => t)"""
   }
 
@@ -21,7 +21,7 @@ class AstShowSpec extends Spec {
     val q = quote {
       (s: String) => s
     }
-    q.ast.show mustEqual
+    (q.ast: Ast).show mustEqual
       """((s) => s)"""
   }
 
@@ -29,7 +29,7 @@ class AstShowSpec extends Spec {
     val q = quote {
       (xs: Queryable[_]) => !(xs.nonEmpty && xs != null)
     }
-    q.ast.show mustEqual
+    (q.ast: Ast).show mustEqual
       """((xs) => !(xs.nonEmpty && xs != null))"""
   }
 
@@ -39,7 +39,7 @@ class AstShowSpec extends Spec {
         val q = quote {
           (s: String) => !(s == "s")
         }
-        q.ast.show mustEqual
+        (q.ast: Ast).show mustEqual
           """((s) => !(s == "s"))"""
       }
     }
@@ -48,14 +48,14 @@ class AstShowSpec extends Spec {
         val q = quote {
           (xs: Queryable[_]) => xs.isEmpty
         }
-        q.ast.show mustEqual
+        (q.ast: Ast).show mustEqual
           """((xs) => xs.isEmpty)"""
       }
       "nonEmpty" in {
         val q = quote {
           (xs: Queryable[_]) => xs.nonEmpty
         }
-        q.ast.show mustEqual
+        (q.ast: Ast).show mustEqual
           """((xs) => xs.nonEmpty)"""
       }
     }
@@ -66,91 +66,91 @@ class AstShowSpec extends Spec {
       val q = quote {
         (a: Int, b: Int) => a - b
       }
-      q.ast.show mustEqual
+      (q.ast: Ast).show mustEqual
         """((a, b) => a - b)"""
     }
     "+" in {
       val q = quote {
         (a: Int, b: Int) => a + b
       }
-      q.ast.show mustEqual
+      (q.ast: Ast).show mustEqual
         """((a, b) => a + b)"""
     }
     "*" in {
       val q = quote {
         (a: Int, b: Int) => a * b
       }
-      q.ast.show mustEqual
+      (q.ast: Ast).show mustEqual
         """((a, b) => a * b)"""
     }
     "==" in {
       val q = quote {
         (a: Int, b: Int) => a == b
       }
-      q.ast.show mustEqual
+      (q.ast: Ast).show mustEqual
         """((a, b) => a == b)"""
     }
     "!=" in {
       val q = quote {
         (a: Int, b: Int) => a != b
       }
-      q.ast.show mustEqual
+      (q.ast: Ast).show mustEqual
         """((a, b) => a != b)"""
     }
     "&&" in {
       val q = quote {
         (a: Boolean, b: Boolean) => a && b
       }
-      q.ast.show mustEqual
+      (q.ast: Ast).show mustEqual
         """((a, b) => a && b)"""
     }
     "||" in {
       val q = quote {
         (a: Boolean, b: Boolean) => a || b
       }
-      q.ast.show mustEqual
+      (q.ast: Ast).show mustEqual
         """((a, b) => a || b)"""
     }
     ">" in {
       val q = quote {
         (a: Int, b: Int) => a > b
       }
-      q.ast.show mustEqual
+      (q.ast: Ast).show mustEqual
         """((a, b) => a > b)"""
     }
     ">=" in {
       val q = quote {
         (a: Int, b: Int) => a >= b
       }
-      q.ast.show mustEqual
+      (q.ast: Ast).show mustEqual
         """((a, b) => a >= b)"""
     }
     "<" in {
       val q = quote {
         (a: Int, b: Int) => a < b
       }
-      q.ast.show mustEqual
+      (q.ast: Ast).show mustEqual
         """((a, b) => a < b)"""
     }
     "<=" in {
       val q = quote {
         (a: Int, b: Int) => a <= b
       }
-      q.ast.show mustEqual
+      (q.ast: Ast).show mustEqual
         """((a, b) => a <= b)"""
     }
     "/" in {
       val q = quote {
         (a: Int, b: Int) => a / b
       }
-      q.ast.show mustEqual
+      (q.ast: Ast).show mustEqual
         """((a, b) => a / b)"""
     }
     "%" in {
       val q = quote {
         (a: Int, b: Int) => a % b
       }
-      q.ast.show mustEqual
+      (q.ast: Ast).show mustEqual
         """((a, b) => a % b)"""
     }
   }
@@ -159,7 +159,7 @@ class AstShowSpec extends Spec {
     val q = quote {
       (e: TestEntity) => e.s
     }
-    q.ast.show mustEqual
+    (q.ast: Ast).show mustEqual
       """((e) => e.s)"""
   }
 
@@ -169,21 +169,21 @@ class AstShowSpec extends Spec {
         val q = quote {
           "test"
         }
-        q.ast.show mustEqual
+        (q.ast: Ast).show mustEqual
           """"test""""
       }
       "unit" in {
         val q = quote {
           {}
         }
-        q.ast.show mustEqual
+        (q.ast: Ast).show mustEqual
           """{}"""
       }
       "value" in {
         val q = quote {
           1
         }
-        q.ast.show mustEqual
+        (q.ast: Ast).show mustEqual
           """1"""
       }
     }
@@ -191,14 +191,14 @@ class AstShowSpec extends Spec {
       val q = quote {
         null
       }
-      q.ast.show mustEqual
+      (q.ast: Ast).show mustEqual
         """null"""
     }
     "tuple" in {
       val q = quote {
         (null, 1, "a")
       }
-      q.ast.show mustEqual
+      (q.ast: Ast).show mustEqual
         """(null, 1, "a")"""
     }
   }
@@ -207,7 +207,7 @@ class AstShowSpec extends Spec {
     val q = quote {
       (a: String) => a
     }
-    q.ast.show mustEqual
+    (q.ast: Ast).show mustEqual
       """((a) => a)"""
   }
 
@@ -216,14 +216,14 @@ class AstShowSpec extends Spec {
       val q = quote {
         queryable[TestEntity].filter(t => t.s == "test").update(_.s -> "a")
       }
-      q.ast.show mustEqual
+      (q.ast: Ast).show mustEqual
         """queryable[TestEntity].filter(t => t.s == "test").update(_.s -> "a")"""
     }
     "insert" in {
       val q = quote {
         queryable[TestEntity].insert(_.s -> "a")
       }
-      q.ast.show mustEqual
+      (q.ast: Ast).show mustEqual
         """queryable[TestEntity].insert(_.s -> "a")"""
     }
 
@@ -231,7 +231,7 @@ class AstShowSpec extends Spec {
       val q = quote {
         queryable[TestEntity].delete
       }
-      q.ast.show mustEqual
+      (q.ast: Ast).show mustEqual
         """queryable[TestEntity].delete"""
     }
   }
