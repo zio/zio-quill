@@ -28,7 +28,7 @@ case class Function(params: List[Ident], body: Ast) extends Ast
 case class FunctionApply(function: Ast, values: List[Ast]) extends Ast
 
 case class Ident(name: String) extends Ast
-case class Property(Ast: Ast, name: String) extends Ast
+case class Property(ast: Ast, name: String) extends Ast
 
 //************************************************************
 

@@ -11,23 +11,19 @@ import io.getquill.util.Messages.fail
 
 private[select] object ExtractSelect {
 
-  def apply(q: Query) = {
-    val query = ensureFinalMap(q)
-    (query, mapAst(query))
-  }
-
-  private def ensureFinalMap(query: Query): Query =
+  def apply(query: Query): (Query, Ast) =
     query match {
-      case FlatMap(q, x, p: Query) => FlatMap(q, x, ensureFinalMap(p))
-      case q @ Filter(_, x, _)     => Map(q, x, x)
-      case t: Entity               => Map(t, Ident("x"), Ident("x"))
-      case other                   => query
-    }
-
-  private def mapAst(query: Query): Ast =
-    query match {
-      case FlatMap(q, x, p: Query) => mapAst(p)
-      case Map(q, x, p)            => p
-      case other                   => fail(s"Query not properly normalized, please submit a bug report. $other")
+      case FlatMap(q, x, p: Query) =>
+        val (pr, map) = apply(p)
+        (FlatMap(q, x, pr), map)
+      case q @ Filter(_, x, _) =>
+        (Map(q, x, x), x)
+      case t: Entity =>
+        val x = Ident("x")
+        (Map(t, x, x), x)
+      case Map(q, x, p) =>
+        (query, p)
+      case FlatMap(q, x, p) =>
+        fail("The body of a flatMap is not a query. Ast: $query")
     }
 }
