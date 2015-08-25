@@ -7,7 +7,9 @@ import scala.reflect.macros.whitebox.Context
 import io.getquill.ast.Ast
 import io.getquill.util.Messages.RichContext
 
-trait Quoted[+T]
+trait Quoted[+T] {
+  def ast: Ast
+}
 
 trait Quotation extends Parsing with Liftables with Unliftables {
 
@@ -22,7 +24,8 @@ trait Quotation extends Parsing with Liftables with Unliftables {
     q"""
       new ${c.weakTypeOf[Quoted[T]]} {
         @${c.weakTypeOf[QuotedAst]}($ast)
-        def ast = $ast
+        def quoted = ()
+        override def ast = $ast
         override def toString = ast.toString
       }
     """
@@ -30,14 +33,14 @@ trait Quotation extends Parsing with Liftables with Unliftables {
 
   protected def unquote[T](tree: Tree)(implicit ct: ClassTag[T]) = {
     val method =
-      tree.tpe.decls.find(_.name.decodedName.toString == "ast")
-        .getOrElse(c.fail(s"Can't find the ast method at ${tree}: ${tree.tpe}"))
+      tree.tpe.decls.find(_.name.decodedName.toString == "quoted")
+        .getOrElse(c.fail(s"Can't find the 'quoted' method at '${tree}: ${tree.tpe}'"))
     val annotation =
       method.annotations.headOption
-        .getOrElse(c.fail(s"Can't find the QuotedAst annotation at $method"))
+        .getOrElse(c.fail(s"Can't find the QuotedAst annotation at '$method'"))
     val astTree =
       annotation.tree.children.lastOption
-        .getOrElse(c.fail(s"Can't find the QuotedAst body at $annotation"))
+        .getOrElse(c.fail(s"Can't find the QuotedAst body at '$annotation'"))
     astUnliftable.unapply(astTree) map {
       case ast: T => ast
       case other  => c.fail(s"Expected a '${ct.runtimeClass.getSimpleName}', but got '$other'")
