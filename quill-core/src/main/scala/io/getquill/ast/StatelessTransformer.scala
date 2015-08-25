@@ -44,7 +44,7 @@ trait StatelessTransformer {
       case Delete(query)              => Delete(apply(query))
     }
 
-  def apply(e: Assignment): Assignment =
+  private def apply(e: Assignment): Assignment =
     e match {
       case Assignment(property, value) => Assignment(property, apply(value))
     }
