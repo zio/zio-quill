@@ -25,6 +25,14 @@ class AstShowSpec extends Spec {
       """((s) => s)"""
   }
 
+  "shows function applies" in {
+    val q = quote {
+      (s: String => String) => s("a")
+    }
+    (q.ast: Ast).show mustEqual
+      """((s) => s.apply("a"))"""
+  }
+
   "shows operations" in {
     val q = quote {
       (xs: Queryable[_]) => !(xs.nonEmpty && xs != null)
