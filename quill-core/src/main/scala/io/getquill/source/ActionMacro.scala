@@ -1,25 +1,25 @@
-package io.getquill.source.memory
+package io.getquill.source
 
 import scala.reflect.macros.whitebox.Context
-import io.getquill.ast.Ident
-import io.getquill.ast.Function
-import io.getquill.ast.Ast
-import io.getquill.Actionable
-import io.getquill.norm.Normalize
-import io.getquill.source.EncodeBindVariables
-import io.getquill.util.Messages.RichContext
-import io.getquill.util.Show._
-import io.getquill.quotation.Quotation
-import io.getquill.ast.AstShow._
-import io.getquill.ast.Action
 
-class ActionMacro(val c: Context) extends Quotation {
+import io.getquill.Actionable
+import io.getquill.ast.Action
+import io.getquill.ast.Ast
+import io.getquill.ast.Function
+import io.getquill.ast.Ident
+import io.getquill.norm.Normalize
+import io.getquill.quotation.Quotation
+
+trait ActionMacro extends Quotation {
+
+  val c: Context
   import c.universe.{ Ident => _, Function => _, _ }
+
+  protected def toExecutionTree(ast: Ast): Tree
 
   def run[R, S, T](action: Expr[Actionable[T]])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]): Tree = {
     val normalizedAction = Normalize(actionParser(action.tree): Ast)
-    c.info(normalizedAction.show)
-    q"${c.prefix}.execute($normalizedAction)"
+    q"${c.prefix}.execute(${toExecutionTree(normalizedAction)})"
   }
 
   def run1[P1, R: WeakTypeTag, S: WeakTypeTag, T: WeakTypeTag](action: Expr[P1 => Actionable[T]])(bindings: Expr[Iterable[P1]])(implicit p1: WeakTypeTag[P1]): Tree =
@@ -36,9 +36,8 @@ class ActionMacro(val c: Context) extends Quotation {
         case other                            => throw new IllegalStateException(s"Invalid action $tree.")
       }
     val (bindedAction, encode) = EncodeBindVariables[S](c)(action, bindingMap(params, types))
-    c.info(bindedAction.show)
     q"""
-      ${c.prefix}.execute($bindedAction, $bindings.map(value => $encode))
+      ${c.prefix}.execute(${toExecutionTree(bindedAction)}, $bindings.map(value => $encode))
     """
   }
 

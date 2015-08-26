@@ -1,23 +1,24 @@
-package io.getquill.source.memory
+package io.getquill.source
 
 import scala.reflect.macros.whitebox.Context
 
 import io.getquill.Queryable
+import io.getquill.ast.Ast
 import io.getquill.ast.Function
 import io.getquill.ast.Ident
-import io.getquill.ast.AstShow._
 import io.getquill.ast.Query
 import io.getquill.norm.Normalize
 import io.getquill.norm.SelectResultExtraction
 import io.getquill.norm.select.SelectFlattening
 import io.getquill.quotation.Quotation
-import io.getquill.source.EncodeBindVariables
-import io.getquill.source.Encoding
 import io.getquill.util.Messages.RichContext
-import io.getquill.util.Show.Shower
 
-class QueryMacro(val c: Context) extends Quotation with SelectFlattening with SelectResultExtraction {
+trait QueryMacro extends Quotation with SelectFlattening with SelectResultExtraction {
+
+  val c: Context
   import c.universe.{ Ident => _, Function => _, _ }
+
+  protected def toExecutionTree(ast: Ast): Tree
 
   def run[R, S, T](query: Expr[Queryable[T]])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]): Tree =
     run[R, S, T](query.tree, List())
@@ -38,9 +39,8 @@ class QueryMacro(val c: Context) extends Quotation with SelectFlattening with Se
     val (flattenQuery, selectValues) = flattenSelect[T](query, Encoding.inferDecoder[R](c))
     val (bindedQuery, encode) = EncodeBindVariables[S](c)(flattenQuery, bindingMap(params, bindings))
     val extractor = selectResultExtractor[R](selectValues)
-    c.info(bindedQuery.show)
     q"""
-      ${c.prefix}.query[$t]($bindedQuery, $encode, $extractor)
+      ${c.prefix}.query[$t](${toExecutionTree(bindedQuery)}, $encode, $extractor)
     """
   }
 
