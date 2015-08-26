@@ -28,6 +28,12 @@ class ReplaceSelectSpec extends Spec {
       ReplaceSelect(q.ast, List(Ident("t"), Property(Ident("t"), "s"))) mustEqual
         n.ast
     }
+    "doesn't change the select if not necessary" in {
+      val q = quote {
+        qr1.map(t => t)
+      }
+      ReplaceSelect(q.ast, List(Ident("t"))) mustEqual q.ast
+    }
   }
 
   "fails if the query doesn't have a final map (select)" - {

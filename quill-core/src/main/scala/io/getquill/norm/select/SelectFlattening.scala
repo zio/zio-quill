@@ -24,7 +24,7 @@ trait SelectFlattening extends SelectValues {
             case None if (typ.typeSymbol.asClass.isCaseClass) =>
               caseClassSelectValue(typ, ast, inferDecoder)
             case _ =>
-              c.fail(s"Source doesn't know how to decode '${t.tpe.typeSymbol.name}.$ast: $typ'")
+              c.fail(s"Source doesn't know how to decode '$ast: $typ'")
           }
       }
     (ReplaceSelect(query, selectAsts(selectValues).flatten), selectValues)
@@ -54,19 +54,12 @@ trait SelectFlattening extends SelectValues {
 
   private def selectElements[T](mapAst: Ast)(implicit t: WeakTypeTag[T]) =
     mapAst match {
-      case Tuple(values) =>
-        if (values.size != t.tpe.typeArgs.size)
-          c.fail(s"Query shape doesn't match the return type $t, please submit a bug report.")
-        values.zip(t.tpe.typeArgs)
-      case ast =>
-        List(ast -> t.tpe)
+      case Tuple(values) => values.zip(t.tpe.typeArgs)
+      case ast           => List(ast -> t.tpe)
     }
 
   private def caseClassConstructor(t: Type) =
     t.members.collect {
       case m: MethodSymbol if (m.isPrimaryConstructor) => m
-    }.headOption.getOrElse {
-      c.fail(s"Can't find the primary constructor for '${t.typeSymbol.name}, please submit a bug report.'")
-    }
-
+    }.headOption.get // a case class always have a primary constructor
 }

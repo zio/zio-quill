@@ -10,7 +10,10 @@ import io.getquill.util.Messages._
 private[select] object ReplaceSelect {
 
   def apply(query: Query, asts: List[Ast]): Query =
-    apply(query, Tuple(asts))
+    asts match {
+      case ast :: Nil => apply(query, ast)
+      case asts       => apply(query, Tuple(asts))
+    }
 
   private def apply(query: Query, ast: Ast): Query =
     query match {

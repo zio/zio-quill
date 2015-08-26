@@ -8,7 +8,7 @@ import io.getquill.ast.Function
 import io.getquill.ast.Ident
 import io.getquill.ast.Query
 import io.getquill.norm.Normalize
-import io.getquill.norm.SelectResultExtraction
+import io.getquill.norm.select.SelectResultExtraction
 import io.getquill.norm.select.SelectFlattening
 import io.getquill.quotation.Quotation
 import io.getquill.util.Messages.RichContext

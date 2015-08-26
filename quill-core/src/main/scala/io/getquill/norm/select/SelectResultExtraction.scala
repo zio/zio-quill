@@ -1,8 +1,6 @@
-package io.getquill.norm
+package io.getquill.norm.select
 
 import scala.reflect.macros.whitebox.Context
-
-import io.getquill.norm.select.SelectValues
 
 trait SelectResultExtraction extends SelectValues {
 
@@ -30,7 +28,7 @@ trait SelectResultExtraction extends SelectValues {
           params.foldLeft((List[List[Tree]](), index)) {
             case ((trees, index), params) =>
               val (paramsTrees, paramsIndex) = extractors(params, index)
-              (trees :+ paramsTrees, paramsIndex + 1)
+              (trees :+ paramsTrees, paramsIndex)
           }
         val (tailTrees, tailIndex) = extractors(tail, paramsIndex)
         (q"new $tpe(...$decodedParams)" +: tailTrees, tailIndex)
