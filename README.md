@@ -2,7 +2,8 @@
 # Quill
 Compile-time Language Integrated Query for Scala
 
-[![Build Status](https://secure.travis-ci.org/getquill/quill.png)](https://api.travis-ci.org/getquill/quill.svg?branch=master)
-[![Codacy Badge](https://www.codacy.com/project/badge/36ab84c7ff43480489df9b7312a4bdc1)](https://www.codacy.com/app/fwbrasil/quill)
-[![codecov.io](http://codecov.io/github/getquill/quill/coverage.svg?branch=master)](http://codecov.io/github/getquill/quill?branch=master)
-[![Join the chat at https://gitter.im/getquill/quill](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/getquill/quill?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Build Status](https://img.shields.io/travis/getquill/quill.svg)](https://api.travis-ci.org/getquill/quill.svg?branch=master)
+[![Codacy Badge](https://img.shields.io/codacy/36ab84c7ff43480489df9b7312a4bdc1.svg)](https://www.codacy.com/app/fwbrasil/quill)
+[![codecov.io](https://img.shields.io/codecov/c/github/getquill/quill.svg)](http://codecov.io/github/getquill/quill?branch=master)
+[![Maven Central](https://img.shields.io/maven-central/v/io.getquill/quill_2.11.svg)](http://search.maven.org/#search%7Cga%7C1%7Cgetquill)
+[![Join the chat at https://gitter.im/getquill/quill](https://img.shields.io/badge/gitter-join%20chat-green.svg)](https://gitter.im/getquill/quill?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
