@@ -1,9 +1,6 @@
-package test
+package io.getquill
 
 import io.getquill.source.jdbc.JdbcSource
-import io.getquill.queryable
-import io.getquill.quote
-import io.getquill.unquote
 
 case class Person(id: Long, name: String, surname: String, age: Int)
 case class Address(id: Long, personId: Long, streetId: Long, number: Int)

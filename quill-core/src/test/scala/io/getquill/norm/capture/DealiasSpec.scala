@@ -1,6 +1,6 @@
 package io.getquill.norm.capture
 
-import test.Spec
+import io.getquill.Spec
 import io.getquill._
 import language.reflectiveCalls
 

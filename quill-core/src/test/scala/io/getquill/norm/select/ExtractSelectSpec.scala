@@ -1,6 +1,6 @@
 package io.getquill.norm.select
 
-import test.Spec
+import io.getquill.Spec
 
 import language.reflectiveCalls
 import io.getquill._

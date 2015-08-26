@@ -1,10 +1,8 @@
-package test.paper
+package io.getquill
 
-import test.Spec
-import io.getquill._
-import test.testDB
 import com.twitter.util.Future
 import com.twitter.util.Await
+import io.getquill.testDB.run
 
 class DepartmentsFinagleMysqlSpec extends DepartmentsSpec {
 

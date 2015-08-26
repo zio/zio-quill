@@ -1,9 +1,4 @@
-package test.paper
-
-import io.getquill.quote
-import io.getquill.queryable
-import io.getquill.unquote
-import test.Spec
+package io.getquill
 
 trait PeopleSpec extends Spec {
 

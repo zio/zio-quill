@@ -1,9 +1,6 @@
-package test.paper
-
-import test.Spec
+package io.getquill
 
 import language.reflectiveCalls
-import io.getquill._
 
 trait DepartmentsSpec extends Spec {
 

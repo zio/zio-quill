@@ -1,7 +1,7 @@
 package io.getquill.ast
 
 import io.getquill._
-import test.Spec
+import io.getquill.Spec
 import language.reflectiveCalls
 
 class AstShowSpec extends Spec {

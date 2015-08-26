@@ -2,7 +2,7 @@ package io.getquill.source.sql
 
 import scala.reflect.macros.whitebox.Context
 
-import AstShow._
+import SqlQueryShow._
 import io.getquill.ast.Ast
 import io.getquill.source.QueryMacro
 import io.getquill.util.Messages.RichContext
@@ -13,7 +13,8 @@ class SqlQueryMacro(val c: Context) extends QueryMacro {
   import c.universe._
 
   override def toExecutionTree(ast: Ast) = {
-    c.info(ast.show)
-    q"${ast.show}"
+    val sql = SqlQuery(ast).show
+    c.info(sql)
+    q"$sql"
   }
 }

@@ -2,7 +2,7 @@ package io.getquill.norm
 
 import language.reflectiveCalls
 import io.getquill._
-import test.Spec
+import io.getquill.Spec
 
 class NormalizeSpec extends Spec {
 

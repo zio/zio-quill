@@ -44,7 +44,7 @@ trait Parsing {
 
     def unapply(tree: Tree): Option[T] =
       tree match {
-        case q"io.getquill.`package`.unquote[$t]($quoted)" =>
+        case q"$pack.unquote[$t]($quoted)" =>
           unquote[T](quoted)
         case q"$source.withFilter(($alias) => $body)" if (alias.name.toString.contains("ifrefutable")) =>
           unapply(source)
@@ -101,7 +101,7 @@ trait Parsing {
 
   val queryParser: Parser[Query] = Parser[Query] {
 
-    case q"io.getquill.`package`.queryable[${ t: Type }]" =>
+    case q"$pack.queryable[${ t: Type }]" =>
       Entity(t.typeSymbol.name.decodedName.toString)
 
     case q"$source.filter(($alias) => $body)" =>

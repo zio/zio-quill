@@ -1,6 +1,6 @@
 package io.getquill.norm
 
-import test.Spec
+import io.getquill.Spec
 import io.getquill.ast._
 
 class BetaReductionSpec extends Spec {

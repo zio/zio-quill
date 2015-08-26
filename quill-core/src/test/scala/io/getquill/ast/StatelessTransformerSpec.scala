@@ -1,6 +1,6 @@
 package io.getquill.ast
 
-import test.Spec
+import io.getquill.Spec
 
 import io.getquill.ast
 import language.reflectiveCalls

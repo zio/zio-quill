@@ -1,4 +1,4 @@
-package test
+package io.getquill
 
 import io.getquill.source.jdbc.JdbcSource
 

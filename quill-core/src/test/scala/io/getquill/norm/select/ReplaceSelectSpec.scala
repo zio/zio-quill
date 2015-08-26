@@ -2,7 +2,7 @@ package io.getquill.norm.select
 
 import io.getquill._
 import io.getquill.ast._
-import test.Spec
+import io.getquill.Spec
 import language.reflectiveCalls
 
 class ReplaceSelectSpec extends Spec {

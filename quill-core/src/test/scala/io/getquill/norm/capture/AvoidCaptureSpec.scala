@@ -1,7 +1,7 @@
 package io.getquill.norm.capture
 
 import io.getquill._
-import test.Spec
+import io.getquill.Spec
 import language.reflectiveCalls
 
 class AvoidCaptureSpec extends Spec {
