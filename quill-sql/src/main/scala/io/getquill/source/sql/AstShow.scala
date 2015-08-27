@@ -33,11 +33,11 @@ object AstShow {
     new Show[Ast] {
       def show(e: Ast) =
         e match {
-          case query: Query                            => s"(${SqlQuery(query).show})"
-          case UnaryOperation(op, ast)                 => s"(${op.show} ${ast.show})"
-          case BinaryOperation(a, ast.`==`, NullValue) => s"(${a.show} IS NULL)"
-          case BinaryOperation(NullValue, ast.`==`, b) => s"(${b.show} IS NULL)"
-          case BinaryOperation(a, op, b)               => s"(${a.show} ${op.show} ${b.show})"
+          case query: Query                            => s"${SqlQuery(query).show}"
+          case UnaryOperation(op, ast)                 => s"${op.show} ${scopedShow(ast)}"
+          case BinaryOperation(a, ast.`==`, NullValue) => s"${scopedShow(a)} IS NULL"
+          case BinaryOperation(NullValue, ast.`==`, b) => s"${scopedShow(b)} IS NULL"
+          case BinaryOperation(a, op, b)               => s"${scopedShow(a)} ${op.show} ${scopedShow(b)}"
           case a: Action                               => a.show
           case ident: Ident                            => ident.show
           case property: Property                      => property.show
@@ -78,7 +78,7 @@ object AstShow {
     new Show[Property] {
       def show(e: Property) =
         e match {
-          case Property(ast, name) => s"${ast.show}.$name"
+          case Property(ast, name) => s"${scopedShow(ast)}.$name"
         }
     }
 
@@ -135,5 +135,12 @@ object AstShow {
         }
     }
   }
+
+  private def scopedShow[A <: Ast](ast: A)(implicit show: Show[A]) =
+    ast match {
+      case _: Query           => s"(${ast.show})"
+      case _: BinaryOperation => s"(${ast.show})"
+      case other              => ast.show
+    }
 
 }

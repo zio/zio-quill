@@ -12,7 +12,8 @@ class SqlActionMacro(val c: Context) extends ActionMacro {
   import c.universe._
 
   override def toExecutionTree(ast: Ast) = {
-    c.info(ast.show)
-    q"${ast.show}"
+    val sql = ast.show
+    c.info(sql)
+    q"$sql"
   }
 }
