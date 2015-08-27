@@ -22,7 +22,7 @@ class AstShowSpec extends Spec {
       (s: String) => s
     }
     (q.ast: Ast).show mustEqual
-      """((s) => s)"""
+      """(s) => s"""
   }
 
   "shows function applies" in {
@@ -30,7 +30,7 @@ class AstShowSpec extends Spec {
       (s: String => String) => s("a")
     }
     (q.ast: Ast).show mustEqual
-      """((s) => s.apply("a"))"""
+      """(s) => s.apply("a")"""
   }
 
   "shows operations" in {
@@ -38,7 +38,7 @@ class AstShowSpec extends Spec {
       (xs: Queryable[_]) => !(xs.nonEmpty && xs != null)
     }
     (q.ast: Ast).show mustEqual
-      """((xs) => !(xs.nonEmpty && xs != null))"""
+      """(xs) => !(xs.nonEmpty && (xs != null))"""
   }
 
   "shows unary operators" - {
@@ -48,7 +48,7 @@ class AstShowSpec extends Spec {
           (s: String) => !(s == "s")
         }
         (q.ast: Ast).show mustEqual
-          """((s) => !(s == "s"))"""
+          """(s) => !(s == "s")"""
       }
     }
     "prostfix" - {
@@ -57,14 +57,14 @@ class AstShowSpec extends Spec {
           (xs: Queryable[_]) => xs.isEmpty
         }
         (q.ast: Ast).show mustEqual
-          """((xs) => xs.isEmpty)"""
+          """(xs) => xs.isEmpty"""
       }
       "nonEmpty" in {
         val q = quote {
           (xs: Queryable[_]) => xs.nonEmpty
         }
         (q.ast: Ast).show mustEqual
-          """((xs) => xs.nonEmpty)"""
+          """(xs) => xs.nonEmpty"""
       }
     }
   }
@@ -75,91 +75,91 @@ class AstShowSpec extends Spec {
         (a: Int, b: Int) => a - b
       }
       (q.ast: Ast).show mustEqual
-        """((a, b) => a - b)"""
+        """(a, b) => a - b"""
     }
     "+" in {
       val q = quote {
         (a: Int, b: Int) => a + b
       }
       (q.ast: Ast).show mustEqual
-        """((a, b) => a + b)"""
+        """(a, b) => a + b"""
     }
     "*" in {
       val q = quote {
         (a: Int, b: Int) => a * b
       }
       (q.ast: Ast).show mustEqual
-        """((a, b) => a * b)"""
+        """(a, b) => a * b"""
     }
     "==" in {
       val q = quote {
         (a: Int, b: Int) => a == b
       }
       (q.ast: Ast).show mustEqual
-        """((a, b) => a == b)"""
+        """(a, b) => a == b"""
     }
     "!=" in {
       val q = quote {
         (a: Int, b: Int) => a != b
       }
       (q.ast: Ast).show mustEqual
-        """((a, b) => a != b)"""
+        """(a, b) => a != b"""
     }
     "&&" in {
       val q = quote {
         (a: Boolean, b: Boolean) => a && b
       }
       (q.ast: Ast).show mustEqual
-        """((a, b) => a && b)"""
+        """(a, b) => a && b"""
     }
     "||" in {
       val q = quote {
         (a: Boolean, b: Boolean) => a || b
       }
       (q.ast: Ast).show mustEqual
-        """((a, b) => a || b)"""
+        """(a, b) => a || b"""
     }
     ">" in {
       val q = quote {
         (a: Int, b: Int) => a > b
       }
       (q.ast: Ast).show mustEqual
-        """((a, b) => a > b)"""
+        """(a, b) => a > b"""
     }
     ">=" in {
       val q = quote {
         (a: Int, b: Int) => a >= b
       }
       (q.ast: Ast).show mustEqual
-        """((a, b) => a >= b)"""
+        """(a, b) => a >= b"""
     }
     "<" in {
       val q = quote {
         (a: Int, b: Int) => a < b
       }
       (q.ast: Ast).show mustEqual
-        """((a, b) => a < b)"""
+        """(a, b) => a < b"""
     }
     "<=" in {
       val q = quote {
         (a: Int, b: Int) => a <= b
       }
       (q.ast: Ast).show mustEqual
-        """((a, b) => a <= b)"""
+        """(a, b) => a <= b"""
     }
     "/" in {
       val q = quote {
         (a: Int, b: Int) => a / b
       }
       (q.ast: Ast).show mustEqual
-        """((a, b) => a / b)"""
+        """(a, b) => a / b"""
     }
     "%" in {
       val q = quote {
         (a: Int, b: Int) => a % b
       }
       (q.ast: Ast).show mustEqual
-        """((a, b) => a % b)"""
+        """(a, b) => a % b"""
     }
   }
 
@@ -168,7 +168,7 @@ class AstShowSpec extends Spec {
       (e: TestEntity) => e.s
     }
     (q.ast: Ast).show mustEqual
-      """((e) => e.s)"""
+      """(e) => e.s"""
   }
 
   "shows values" - {
@@ -216,7 +216,7 @@ class AstShowSpec extends Spec {
       (a: String) => a
     }
     (q.ast: Ast).show mustEqual
-      """((a) => a)"""
+      """(a) => a"""
   }
 
   "shows actions" - {

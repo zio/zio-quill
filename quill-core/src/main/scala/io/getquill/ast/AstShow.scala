@@ -42,23 +42,23 @@ object AstShow {
   implicit val functionShow: Show[Function] = new Show[Function] {
     def show(q: Function) =
       q match {
-        case Function(params, body) => s"((${params.show}) => ${body.show})"
+        case Function(params, body) => s"(${params.show}) => ${body.show}"
       }
   }
 
   implicit val functionpplyShow: Show[FunctionApply] = new Show[FunctionApply] {
     def show(q: FunctionApply) =
       q match {
-        case FunctionApply(function, values) => s"${function.show}.apply(${values.show})"
+        case FunctionApply(function, values) => s"${scopedShow(function)}.apply(${values.show})"
       }
   }
 
   implicit val operationShow: Show[Operation] = new Show[Operation] {
     def show(e: Operation) =
       e match {
-        case UnaryOperation(op: PrefixUnaryOperator, ast)  => s"${op.show}(${ast.show})"
-        case UnaryOperation(op: PostfixUnaryOperator, ast) => s"${ast.show}.${op.show}"
-        case BinaryOperation(a, op, b)                     => s"${a.show} ${op.show} ${b.show}"
+        case UnaryOperation(op: PrefixUnaryOperator, ast)  => s"${op.show}${scopedShow(ast)}"
+        case UnaryOperation(op: PostfixUnaryOperator, ast) => s"${scopedShow(ast)}.${op.show}"
+        case BinaryOperation(a, op, b)                     => s"${scopedShow(a)} ${op.show} ${scopedShow(b)}"
       }
   }
 
@@ -99,7 +99,7 @@ object AstShow {
   implicit val propertyShow: Show[Property] = new Show[Property] {
     def show(e: Property) =
       e match {
-        case Property(ref, name) => s"${ref.show}.$name"
+        case Property(ref, name) => s"${scopedShow(ref)}.$name"
       }
   }
 
@@ -133,5 +133,12 @@ object AstShow {
         case Assignment(property, value) => s"_.$property -> ${value.show}"
       }
   }
+
+  private def scopedShow(ast: Ast) =
+    ast match {
+      case _: Function        => s"(${ast.show})"
+      case _: BinaryOperation => s"(${ast.show})"
+      case other              => ast.show
+    }
 
 }
