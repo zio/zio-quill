@@ -62,7 +62,7 @@ trait Parsing {
       Delete(astParser(query))
   }
 
-  val assignmentParser: Parser[Assignment] = Parser[Assignment] {
+  private val assignmentParser: Parser[Assignment] = Parser[Assignment] {
     case q"(($x1) => scala.this.Predef.ArrowAssoc[$t]($x2.$prop).->[$v]($value))" =>
       Assignment(prop.decodedName.toString, astParser(value))
   }
@@ -112,18 +112,6 @@ trait Parsing {
 
     case q"$source.map[$t](($alias) => $body)" =>
       Map(astParser(source), identParser(alias), astParser(body))
-
-    case q"$source.flatMap[$t](($alias) => $matchAlias match { case (..$a) => $body })" if (alias == matchAlias) =>
-      val aliases =
-        a.map {
-          case Bind(name, _) =>
-            Ident(name.decodedName.toString)
-        }
-      val reduction =
-        for ((a, i) <- aliases.zipWithIndex) yield {
-          a -> Property(astParser(alias), s"_${i + 1}")
-        }
-      FlatMap(astParser(source), identParser(alias), BetaReduction(astParser(body), reduction: _*))
 
     case q"$source.flatMap[$t](($alias) => $body)" =>
       FlatMap(astParser(source), identParser(alias), astParser(body))
