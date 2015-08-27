@@ -82,18 +82,18 @@ object Normalize extends StatelessTransformer {
 
         case FlatMap(a, b, c) =>
           (apply(a), apply(c)) match {
-            case (`a`, `c`) => FlatMap(apply(a), b, apply(c))
-            case (a, c)     => apply(FlatMap(a, b, c))
+            case (`a`, `c`) => FlatMap(a, b, c)
+            case (a, c)     => apply(FlatMap(apply(a), b, apply(c)))
           }
         case Filter(a, b, c) =>
-          apply(a) match {
-            case `a` => Filter(apply(a), b, apply(c))
-            case a   => apply(Filter(a, b, c))
+          (apply(a), apply(c)) match {
+            case (`a`, `c`) => Filter(a, b, c)
+            case (a, c)     => apply(Filter(apply(a), b, apply(c)))
           }
         case Map(a, b, c) =>
-          apply(a) match {
-            case `a` => Map(apply(a), b, apply(c))
-            case a   => apply(Map(a, b, c))
+          (apply(a), apply(c)) match {
+            case (`a`, `c`) => Map(a, b, c)
+            case (a, c)     => apply(Map(apply(a), b, apply(c)))
           }
         case t: Entity => t
       }

@@ -92,4 +92,34 @@ class NormalizeSpec extends Spec {
       Normalize(q.ast) mustEqual n.ast
     }
   }
+
+  "applies recursion if the nested asts change" - {
+    "flatMap" in {
+      val q = quote {
+        qr1.flatMap(x => qr2.map(y => y.s).filter(s => s == "s"))
+      }
+      val n = quote {
+        qr1.flatMap(x => qr2.filter(y => y.s == "s").map(y => y.s))
+      }
+      Normalize(q.ast) mustEqual n.ast
+    }
+    "filter" in {
+      val q = quote {
+        qr1.filter(x => qr2.map(y => y.s).filter(s => s == "s").isEmpty)
+      }
+      val n = quote {
+        qr1.filter(x => qr2.filter(y => y.s == "s").map(y => y.s).isEmpty)
+      }
+      Normalize(q.ast) mustEqual n.ast
+    }
+    "map" in {
+      val q = quote {
+        qr1.map(x => qr2.map(y => y.s).filter(s => s == "s").isEmpty)
+      }
+      val n = quote {
+        qr1.map(x => qr2.filter(y => y.s == "s").map(y => y.s).isEmpty)
+      }
+      Normalize(q.ast) mustEqual n.ast
+    }
+  }
 }
