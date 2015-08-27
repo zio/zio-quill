@@ -24,6 +24,8 @@ object mirrorSource extends Source[Row, Row] {
   def run[P1, T](action: P1 => Actionable[T])(bindings: Iterable[P1]): Any = macro TestActionMacro.run1[P1, Row, Row, T]
   def run[P1, P2, T](action: (P1, P2) => Actionable[T])(bindings: Iterable[(P1, P2)]): Any = macro TestActionMacro.run2[P1, P2, Row, Row, T]
 
+  def mirrorConfig = config
+
   case class ActionMirror(ast: Ast)
 
   def execute(ast: Ast) =
