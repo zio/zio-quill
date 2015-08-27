@@ -1,5 +1,6 @@
 package io.getquill.test
 
+import io.getquill.util.Messages._
 import io.getquill.source.QueryMacro
 import io.getquill.source.ActionMacro
 import scala.reflect.macros.whitebox.Context
@@ -74,10 +75,16 @@ object mirrorSource extends Source[Row, Row] {
 
 class TestQueryMacro(val c: Context) extends QueryMacro {
   import c.universe._
-  protected def toExecutionTree(ast: Ast) = q"$ast"
+  protected def toExecutionTree(ast: Ast) = {
+    c.info(ast.toString)
+    q"$ast"
+  }
 }
 
 class TestActionMacro(val c: Context) extends ActionMacro {
   import c.universe._
-  protected def toExecutionTree(ast: Ast) = q"$ast"
+  protected def toExecutionTree(ast: Ast) = {
+    c.info(ast.toString)
+    q"$ast"
+  }
 }

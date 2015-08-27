@@ -3,6 +3,8 @@ package io.getquill.norm.select
 import io.getquill.Spec
 import io.getquill._
 import io.getquill.test.mirrorSource
+import io.getquill.source.Decoder
+import io.getquill.test.Row
 
 class SelectFlatteningSpec extends Spec {
 
@@ -76,5 +78,15 @@ class SelectFlatteningSpec extends Spec {
       }
       "mirrorSource.run(q)" mustNot compile
     }
+  }
+
+  "uses a custom implicit decoder" in {
+    implicit val doubleDecoded = new Decoder[Row, Double] {
+      override def apply(index: Int, row: Row) =
+        row[Double](index)
+    }
+    case class Test(d: Double)
+    val q = quote(queryable[Test])
+    mirrorSource.run(q).extractor(Row(1D)) mustEqual Test(1D)
   }
 }

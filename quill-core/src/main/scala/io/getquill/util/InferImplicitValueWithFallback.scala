@@ -17,15 +17,7 @@ object InferImplicitValueWithFallback {
             m
         }
 
-      def fallbackImplicit =
-        fallbackImplicits.toList match {
-          case Nil          => None
-          case value :: Nil => Some(value)
-          case multiple =>
-            c.fail(s"Multiple implicits '$multiple' found for '$tpe' at '$fallbackTree")
-        }
-
-      fallbackImplicit.map { m =>
+      fallbackImplicits.headOption.map { m =>
         q"$fallbackTree.${m.name}"
       }
     }
