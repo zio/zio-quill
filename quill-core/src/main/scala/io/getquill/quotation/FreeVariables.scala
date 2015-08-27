@@ -11,62 +11,42 @@ import io.getquill.ast.Map
 import io.getquill.ast.Query
 import io.getquill.ast.StatefulTransformer
 
-case class FreeVariables(state: (Set[Ident], Set[Ident]))
-    extends StatefulTransformer[(Set[Ident], Set[Ident])] {
+case class State(seen: Set[Ident], free: Set[Ident])
 
-  protected def seen(state: (Set[Ident], Set[Ident]) = state) =
-    state match {
-      case (seen, _) => seen
-    }
+case class FreeVariables(state: State)
+    extends StatefulTransformer[State] {
 
-  protected def freeVars(state: (Set[Ident], Set[Ident]) = state) =
-    state match {
-      case (_, freeVars) => freeVars
-    }
-
-  override def apply(ast: Ast): (Ast, StatefulTransformer[(Set[Ident], Set[Ident])]) =
+  override def apply(ast: Ast): (Ast, StatefulTransformer[State]) =
     ast match {
-      case ident: Ident if (!seen().contains(ident)) =>
-        (ident, FreeVariables((seen(), freeVars() + ident)))
+      case ident: Ident if (!state.seen.contains(ident)) =>
+        (ident, FreeVariables(State(state.seen, state.free + ident)))
       case f @ Function(params, body) =>
-        val (_, t) = FreeVariables((seen() ++ params, freeVars()))(body)
-        (f, FreeVariables((seen(), freeVars() ++ freeVars(t.state))))
+        val (_, t) = FreeVariables(State(state.seen ++ params, state.free))(body)
+        (f, FreeVariables(State(state.seen, state.free ++ t.state.free)))
       case other =>
         super.apply(other)
     }
 
-  override def apply(query: Query): (Query, StatefulTransformer[(Set[Ident], Set[Ident])]) =
+  override def apply(query: Query): (Query, StatefulTransformer[State]) =
     query match {
       case t: Entity =>
         (t, this)
-      case q @ Filter(a, b, c) =>
-        val (_, ta) = apply(a)
-        val (_, tc) = FreeVariables((seen() + b, freeVars()))(c)
-        (q, FreeVariables((seen(), freeVars() ++ freeVars(ta.state) ++ freeVars(tc.state))))
-      case q @ Map(a, b, c) =>
-        val (_, ta) = apply(a)
-        val (_, tc) = FreeVariables((seen() + b, freeVars()))(c)
-        (q, FreeVariables((seen(), freeVars() ++ freeVars(ta.state) ++ freeVars(tc.state))))
-      case q @ FlatMap(a, b, c) =>
-        val (_, ta) = apply(a)
-        val (_, tc) = FreeVariables((seen() + b, freeVars()))(c)
-        (q, FreeVariables((seen(), freeVars() ++ freeVars(ta.state) ++ freeVars(tc.state))))
+      case q @ Filter(a, b, c)  => apply(q, a, b, c)
+      case q @ Map(a, b, c)     => apply(q, a, b, c)
+      case q @ FlatMap(a, b, c) => apply(q, a, b, c)
     }
 
-  override def apply(e: Assignment) =
-    e match {
-      case e @ Assignment(a, b) =>
-        val (_, t) = apply(b)
-        (e, t)
-    }
+  private def apply(q: Query, a: Ast, b: Ident, c: Ast): (Query, StatefulTransformer[State]) = {
+    val (_, ta) = apply(a)
+    val (_, tc) = FreeVariables(State(state.seen + b, state.free))(c)
+    (q, FreeVariables(State(state.seen, state.free ++ ta.state.free ++ tc.state.free)))
+  }
 }
 
 object FreeVariables {
   def apply(ast: Ast) =
-    new FreeVariables((Set(), Set()))(ast) match {
+    new FreeVariables(State(Set(), Set()))(ast) match {
       case (_, transformer) =>
-        transformer.state match {
-          case (_, freeVars) => freeVars
-        }
+        transformer.state.free
     }
 }
