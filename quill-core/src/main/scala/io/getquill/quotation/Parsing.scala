@@ -117,12 +117,6 @@ trait Parsing {
       FlatMap(astParser(source), identParser(alias), astParser(body))
   }
 
-  val unaryOperatorParser = PartialFunction[String, UnaryOperator] {
-    case "unary_!"  => ast.`!`
-    case "nonEmpty" => ast.`nonEmpty`
-    case "isEmpty"  => ast.`isEmpty`
-  }
-
   private def binaryOperator(name: TermName) =
     name.decodedName.toString match {
       case "-"  => ast.`-`
