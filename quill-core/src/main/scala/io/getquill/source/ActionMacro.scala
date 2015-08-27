@@ -32,7 +32,6 @@ trait ActionMacro extends Quotation {
     val (params, action) =
       Normalize(astParser(tree)) match {
         case Function(params, action: Action) => (params, action)
-        case action: Action                   => (List(), action)
         case other                            => throw new IllegalStateException(s"Invalid action $tree.")
       }
     val (bindedAction, encode) = EncodeBindVariables[S](c)(action, bindingMap(params, types))
