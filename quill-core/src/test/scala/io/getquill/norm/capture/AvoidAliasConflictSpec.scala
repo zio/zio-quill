@@ -8,10 +8,10 @@ class AvoidAliasConflictSpec extends Spec {
 
   "renames alias to avoid conflict between queryables during normalization" in {
     val q = quote {
-      qr1.flatMap(u => qr2.filter(u => u.s == "s1")).flatMap(u => qr3.map(u => u.s))
+      qr1.filter(u => u.s == "s1").flatMap(u => qr2.flatMap(u => qr3.filter(u => u.s == "s1").map(u => u.s)))
     }
     val n = quote {
-      qr1.flatMap(u => qr2.filter(u1 => u1.s == "s1")).flatMap(u => qr3.map(u2 => u2.s))
+      qr1.filter(u => u.s == "s1").flatMap(u => qr2.flatMap(u1 => qr3.filter(u2 => u2.s == "s1").map(u => u.s)))
     }
     AvoidAliasConflict(q.ast) mustEqual n.ast
   }
