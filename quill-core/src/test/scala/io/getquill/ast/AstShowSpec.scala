@@ -25,12 +25,21 @@ class AstShowSpec extends Spec {
       """(s) => s"""
   }
 
-  "shows function applies" in {
-    val q = quote {
-      (s: String => String) => s("a")
+  "shows function applies" - {
+    "function reference" in {
+      val q = quote {
+        (s: String => String) => s("a")
+      }
+      (q.ast: Ast).show mustEqual
+        """(s) => s.apply("a")"""
     }
-    (q.ast: Ast).show mustEqual
-      """(s) => s.apply("a")"""
+    "local function" in {
+      val q = quote {
+        ((s: String) => s)("s")
+      }
+      (q.ast: Ast).show mustEqual
+        """((s) => s).apply("s")"""
+    }
   }
 
   "shows operations" in {
