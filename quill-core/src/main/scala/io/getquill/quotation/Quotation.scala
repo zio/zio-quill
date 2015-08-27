@@ -11,12 +11,12 @@ trait Quoted[+T] {
   def ast: Ast
 }
 
+case class QuotedAst(ast: Ast) extends StaticAnnotation
+
 trait Quotation extends Parsing with Liftables with Unliftables {
 
   val c: Context
   import c.universe._
-
-  case class QuotedAst(ast: Ast) extends StaticAnnotation
 
   def quote[T: WeakTypeTag](body: Expr[T]) = {
     val ast = astParser(body.tree)
@@ -31,21 +31,18 @@ trait Quotation extends Parsing with Liftables with Unliftables {
     """
   }
 
-  protected def unquote[T](tree: Tree)(implicit ct: ClassTag[T]) = {
-    val method =
-      tree.tpe.decls.find(_.name.decodedName.toString == "quoted")
-        .getOrElse(c.fail(s"Can't find the 'quoted' method at '${tree}: ${tree.tpe}'"))
-    val annotation =
-      method.annotations.headOption
-        .getOrElse(c.fail(s"Can't find the QuotedAst annotation at '$method'"))
-    val astTree =
-      annotation.tree.children.lastOption
-        .getOrElse(c.fail(s"Can't find the QuotedAst body at '$annotation'"))
-    astUnliftable.unapply(astTree) map {
+  protected def unquote[T](tree: Tree)(implicit ct: ClassTag[T]) =
+    astTree(tree).flatMap(astUnliftable.unapply).map {
       case ast: T => ast
       case other  => c.fail(s"Expected a '${ct.runtimeClass.getSimpleName}', but got '$other'")
     }
-  }
+
+  private def astTree(tree: Tree) =
+    for {
+      method <- tree.tpe.decls.find(_.name.decodedName.toString == "quoted")
+      annotation <- method.annotations.headOption
+      astTree <- annotation.tree.children.lastOption
+    } yield (astTree)
 
   private def verifyFreeVariables(ast: Ast) =
     FreeVariables(ast).toList match {
