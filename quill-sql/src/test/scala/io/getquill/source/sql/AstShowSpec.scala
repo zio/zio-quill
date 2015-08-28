@@ -258,10 +258,10 @@ class AstShowSpec extends Spec {
       }
       "null" in {
         val q = quote {
-          qr1.filter(t => t.s == null)
+          qr1.update(_.s -> null)
         }
         mirrorSource.run(q).sql mustEqual
-          "SELECT t.s, t.i, t.l FROM TestEntity t WHERE t.s IS NULL"
+          "UPDATE TestEntity SET s = null"
       }
       "tuple" in {
         val q = quote {
