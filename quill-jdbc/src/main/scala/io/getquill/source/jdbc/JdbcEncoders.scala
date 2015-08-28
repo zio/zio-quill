@@ -9,7 +9,7 @@ trait JdbcEncoders {
   private def encoder[T](f: PreparedStatement => (Int, T) => Unit) =
     new Encoder[T] {
       override def apply(index: Int, value: T, row: PreparedStatement) = {
-        f(row)(index, value)
+        f(row)(index + 1, value)
         row
       }
     }
