@@ -2,8 +2,8 @@ package io.getquill.norm.select
 
 import io.getquill.Spec
 import io.getquill._
-import io.getquill.test.mirrorSource
-import io.getquill.test.Row
+import io.getquill.source.test.mirrorSource
+import io.getquill.source.test.Row
 
 class SelectResultExtractionSpec extends Spec {
 

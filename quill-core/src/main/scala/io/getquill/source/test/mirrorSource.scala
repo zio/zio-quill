@@ -1,4 +1,4 @@
-package io.getquill.test
+package io.getquill.source.test
 
 import io.getquill.util.Messages._
 import io.getquill.source.QueryMacro

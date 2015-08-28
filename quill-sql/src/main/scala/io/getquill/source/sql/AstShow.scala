@@ -1,6 +1,5 @@
 package io.getquill.source.sql
 
-import SqlQueryShow.sqlQueryShow
 import io.getquill.ast
 import io.getquill.ast.Action
 import io.getquill.ast.Assignment
@@ -21,13 +20,12 @@ import io.getquill.ast.UnaryOperation
 import io.getquill.ast.UnaryOperator
 import io.getquill.ast.Update
 import io.getquill.ast.Value
+import io.getquill.util.Messages._
 import io.getquill.util.Show.Show
 import io.getquill.util.Show.Shower
 import io.getquill.util.Show.listShow
 
 object AstShow {
-
-  import SqlQueryShow._
 
   implicit def astShow(implicit propertyShow: Show[Property]): Show[Ast] =
     new Show[Ast] {
@@ -37,14 +35,31 @@ object AstShow {
           case UnaryOperation(op, ast)                 => s"${op.show} ${scopedShow(ast)}"
           case BinaryOperation(a, ast.`==`, NullValue) => s"${scopedShow(a)} IS NULL"
           case BinaryOperation(NullValue, ast.`==`, b) => s"${scopedShow(b)} IS NULL"
+          case BinaryOperation(a, ast.`!=`, NullValue) => s"${scopedShow(a)} IS NOT NULL"
+          case BinaryOperation(NullValue, ast.`!=`, b) => s"${scopedShow(b)} IS NOT NULL"
           case BinaryOperation(a, op, b)               => s"${scopedShow(a)} ${op.show} ${scopedShow(b)}"
           case a: Action                               => a.show
           case ident: Ident                            => ident.show
           case property: Property                      => property.show
           case value: Value                            => value.show
-          case other                                   => throw new IllegalStateException(s"Invalid sql fragment $other.")
+          case other                                   => fail(s"Malformed query $other.")
         }
     }
+
+  implicit val sqlQueryShow: Show[SqlQuery] = new Show[SqlQuery] {
+    def show(e: SqlQuery) =
+      e.where match {
+        case None =>
+          s"SELECT ${e.select.show} FROM ${e.from.show}"
+        case Some(where) =>
+          s"SELECT ${e.select.show} FROM ${e.from.show} WHERE ${where.show}"
+      }
+  }
+
+  implicit val sourceShow: Show[Source] = new Show[Source] {
+    def show(source: Source) =
+      s"${source.table} ${source.alias}"
+  }
 
   implicit val unaryOperatorShow: Show[UnaryOperator] = new Show[UnaryOperator] {
     def show(o: UnaryOperator) =
@@ -131,7 +146,7 @@ object AstShow {
             s"DELETE FROM $table"
 
           case other =>
-            throw new IllegalStateException(s"Invalid action '$a'")
+            fail(s"Malformed action '$a'")
         }
     }
   }
