@@ -1,7 +1,6 @@
 package io.getquill.source.jdbc
 
 import java.sql.ResultSet
-import java.math.BigDecimal
 import java.sql.Date
 import java.sql.Time
 import java.sql.Timestamp
@@ -11,6 +10,7 @@ import java.sql.Array
 import java.sql.Struct
 import java.sql.Ref
 import java.sql
+import java.util
 
 trait JdbcDecoders {
   this: JdbcSource =>
@@ -22,7 +22,12 @@ trait JdbcDecoders {
     }
 
   implicit val stringDecoder = decoder(_.getString)
-  implicit val bigDecimalDecoder = decoder(_.getBigDecimal)
+  implicit val bigDecimalDecoder =
+    decoder {
+      rs =>
+        (index: Int) =>
+          BigDecimal(rs.getBigDecimal(index + 1))
+    }
   implicit val booleanDecoder = decoder(_.getBoolean)
   implicit val byteDecoder = decoder(_.getByte)
   implicit val shortDecoder = decoder(_.getShort)
@@ -31,10 +36,15 @@ trait JdbcDecoders {
   implicit val floatDecoder = decoder(_.getFloat)
   implicit val doubleDecoder = decoder(_.getDouble)
   implicit val byteArrayDecoder = decoder(_.getBytes)
+  implicit val dateDecoder = decoder {
+    rs =>
+      (index: Int) =>
+        new util.Date(rs.getTimestamp(index + 1).getTime)
+  }
 
   // java.sql
 
-  implicit val sqlDateDecoder = decoder(_.getDate)
+  implicit val sqlDateDecoder = decoder[sql.Date](_.getDate)
   implicit val sqlTimeDecoder = decoder(_.getTime)
   implicit val sqlTimestampDecoder = decoder(_.getTimestamp)
   implicit val sqlClobDecoder = decoder(_.getClob)

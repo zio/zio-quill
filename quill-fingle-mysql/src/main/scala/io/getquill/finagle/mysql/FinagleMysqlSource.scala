@@ -20,45 +20,13 @@ import com.typesafe.scalalogging.StrictLogging
 
 import io.getquill.source.sql.SqlSource
 
-trait FinagleMysqlSource extends SqlSource[Row, List[Parameter]] with StrictLogging {
+trait FinagleMysqlSource
+    extends SqlSource[Row, List[Parameter]]
+    with FinagleMysqlDecoders
+    with FinagleMysqlEncoders
+    with StrictLogging {
 
   protected val client = FinagleMysqlClient(config)
-
-  class ParameterEncoder[T: ClassTag](implicit cbp: CanBeParameter[T]) extends Encoder[T] {
-    def apply(index: Int, value: T, row: List[Parameter]) =
-      row :+ (value: Parameter)
-  }
-
-  implicit val longDecoder = new Decoder[Long] {
-    def apply(index: Int, row: Row) =
-      row.values(index) match {
-        case LongValue(long) => long
-        case other           => throw new IllegalStateException(s"Invalid column value $other")
-      }
-  }
-
-  implicit val longEncoder = new ParameterEncoder[Long]
-
-  implicit val intDecoder = new Decoder[Int] {
-    def apply(index: Int, row: Row) =
-      row.values(index) match {
-        case IntValue(int)   => int
-        case LongValue(long) => long.toInt
-        case other           => throw new IllegalStateException(s"Invalid column value $other")
-      }
-  }
-
-  implicit val intEncoder = new ParameterEncoder[Int]
-
-  implicit val stringDecoder = new Decoder[String] {
-    def apply(index: Int, row: Row) =
-      row.values(index) match {
-        case StringValue(long) => long
-        case other             => throw new IllegalStateException(s"Invalid column value $other")
-      }
-  }
-
-  implicit val stringEncoder = new ParameterEncoder[String]
 
   private val currentClient = new Local[Client]
 

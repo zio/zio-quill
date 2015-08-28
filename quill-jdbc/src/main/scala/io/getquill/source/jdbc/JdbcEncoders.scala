@@ -1,6 +1,7 @@
 package io.getquill.source.jdbc
 
 import java.sql
+import java.util
 import java.sql.PreparedStatement
 
 trait JdbcEncoders {
@@ -15,7 +16,12 @@ trait JdbcEncoders {
     }
 
   implicit val stringEncoder = encoder(_.setString)
-  implicit val bigDecimalEncoder = encoder(_.setBigDecimal)
+  implicit val bigDecimalEncoder: Encoder[BigDecimal] =
+    encoder {
+      ps =>
+        (index: Int, v: BigDecimal) =>
+          ps.setBigDecimal(index, v.bigDecimal)
+    }
   implicit val booleanEncoder = encoder(_.setBoolean)
   implicit val byteEncoder = encoder(_.setByte)
   implicit val shortEncoder = encoder(_.setShort)
@@ -24,6 +30,12 @@ trait JdbcEncoders {
   implicit val floatEncoder = encoder(_.setFloat)
   implicit val doubleEncoder = encoder(_.setDouble)
   implicit val byteArrayEncoder = encoder(_.setBytes)
+  implicit val dateEncoder: Encoder[util.Date] =
+    encoder {
+      ps =>
+        (index: Int, v: util.Date) =>
+          ps.setTimestamp(index + 1, new sql.Timestamp(v.getTime))
+    }
 
   // java.sql
 
