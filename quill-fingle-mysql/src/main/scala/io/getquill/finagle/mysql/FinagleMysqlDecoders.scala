@@ -4,6 +4,8 @@ import io.getquill.util.Messages._
 import com.twitter.finagle.exp.mysql._
 import java.util.Date
 import java.util.TimeZone
+import scala.reflect.ClassTag
+import scala.reflect.classTag
 
 trait FinagleMysqlDecoders {
   this: FinagleMysqlSource =>
@@ -13,11 +15,11 @@ trait FinagleMysqlDecoders {
       TimeZone.getDefault(),
       TimeZone.getTimeZone("UTC"))
 
-  def decoder[T](f: PartialFunction[Value, T]) =
+  def decoder[T: ClassTag](f: PartialFunction[Value, T]): Decoder[T] =
     new Decoder[T] {
       def apply(index: Int, row: Row) = {
         val value = row.values(index)
-        f.lift(value).getOrElse(fail(s"Can't decode $value"))
+        f.lift(value).getOrElse(fail(s"Value '$value' can't be decoded to '${classTag[T].runtimeClass}'"))
       }
     }
 

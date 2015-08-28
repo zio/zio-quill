@@ -19,19 +19,19 @@ trait FinagleMysqlEncoders {
         row :+ (value: Parameter)
     }
 
-  implicit val stringEncoder = encoder[String]
-  implicit val bigDecimalEncoder =
+  implicit val stringEncoder: Encoder[String] = encoder[String]
+  implicit val bigDecimalEncoder: Encoder[BigDecimal] =
     new Encoder[BigDecimal] {
       def apply(index: Int, value: BigDecimal, row: List[Parameter]) =
         row :+ (BigDecimalValue(value): Parameter)
     }
-  implicit val booleanEncoder = encoder[Boolean]
-  implicit val byteEncoder = encoder[Byte]
-  implicit val shortEncoder = encoder[Short]
-  implicit val intEncoder = encoder[Int]
-  implicit val longEncoder = encoder[Long]
-  implicit val floatEncoder = encoder[Float]
-  implicit val doubleEncoder = encoder[Double]
-  implicit val byteArrayEncoder = encoder[Array[Byte]]
-  implicit val dateEncoder = encoder[Date]
+  implicit val booleanEncoder: Encoder[Boolean] = encoder[Boolean]
+  implicit val byteEncoder: Encoder[Byte] = encoder[Byte]
+  implicit val shortEncoder: Encoder[Short] = encoder[Short]
+  implicit val intEncoder: Encoder[Int] = encoder[Int]
+  implicit val longEncoder: Encoder[Long] = encoder[Long]
+  implicit val floatEncoder: Encoder[Float] = encoder[Float]
+  implicit val doubleEncoder: Encoder[Double] = encoder[Double]
+  implicit val byteArrayEncoder: Encoder[Array[Byte]] = encoder[Array[Byte]]
+  implicit val dateEncoder: Encoder[Date] = encoder[Date]
 }
