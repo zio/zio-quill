@@ -52,7 +52,7 @@ object AstShow {
         case None =>
           s"SELECT ${e.select.show} FROM ${e.from.show}"
         case Some(where) =>
-          s"SELECT ${e.select.show} FROM ${e.from.show} WHERE ${scopedShow(where)}"
+          s"SELECT ${e.select.show} FROM ${e.from.show} WHERE ${where.show}"
       }
   }
 
