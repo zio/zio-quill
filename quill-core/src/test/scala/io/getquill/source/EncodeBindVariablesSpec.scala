@@ -3,9 +3,9 @@ package io.getquill.source
 import io.getquill._
 import io.getquill.ast._
 import io.getquill.Spec
-import io.getquill.source.test.mirrorSource
-import io.getquill.source.test.Row
-import io.getquill.source.test.Row
+import io.getquill.source.mirror.mirrorSource
+import io.getquill.source.mirror.Row
+import io.getquill.source.mirror.Row
 
 class EncodeBindVariablesSpec extends Spec {
 

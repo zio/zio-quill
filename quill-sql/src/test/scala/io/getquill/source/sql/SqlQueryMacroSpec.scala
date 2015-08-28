@@ -2,7 +2,7 @@ package io.getquill.source.sql
 
 import io.getquill._
 import io.getquill.source.sql.test.mirrorSource
-import io.getquill.source.test.Row
+import io.getquill.source.mirror.Row
 
 class SqlQueryMacroSpec extends Spec {
 

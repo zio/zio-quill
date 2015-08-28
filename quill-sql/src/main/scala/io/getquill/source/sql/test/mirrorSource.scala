@@ -1,7 +1,7 @@
 package io.getquill.source.sql.test
 
 import io.getquill.source.sql.SqlSource
-import io.getquill.source.test.Row
+import io.getquill.source.mirror.Row
 
 object mirrorSource
     extends SqlSource[Row, Row]

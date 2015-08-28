@@ -2,7 +2,7 @@ package io.getquill.source.sql.test
 
 import io.getquill._
 import io.getquill.EncodingSpec
-import io.getquill.source.test.Row
+import io.getquill.source.mirror.Row
 
 class MirrorSourceEncodingSpec extends EncodingSpec {
 
