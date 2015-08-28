@@ -57,7 +57,6 @@ trait JdbcSource extends SqlSource[ResultSet, PreparedStatement] with StrictLogg
   protected def withConnection[T](f: Connection => T) =
     currentConnection.value.map(f).getOrElse {
       val conn = dataSource.getConnection
-      conn.setAutoCommit(true)
       try f(conn)
       finally conn.close
     }
@@ -74,6 +73,8 @@ trait JdbcSource extends SqlSource[ResultSet, PreparedStatement] with StrictLogg
           case NonFatal(e) =>
             conn.rollback
             throw e
+        } finally {
+          conn.setAutoCommit(true)
         }
       }
     }
