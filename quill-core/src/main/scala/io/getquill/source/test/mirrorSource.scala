@@ -9,6 +9,8 @@ import io.getquill.source.Source
 import io.getquill.Actionable
 import io.getquill.Queryable
 import language.experimental.macros
+import io.getquill.source.SourceMacro
+import io.getquill.quotation.Quoted
 
 case class Row(data: Any*) {
   def apply[T](index: Int) = data(index).asInstanceOf[T]
@@ -17,13 +19,7 @@ case class Row(data: Any*) {
 
 object mirrorSource extends Source[Row, Row] {
 
-  def run[T](query: Queryable[T]): Any = macro TestQueryMacro.run[Row, Row, T]
-  def run[P1, T](query: P1 => Queryable[T])(p1: P1): Any = macro TestQueryMacro.run1[P1, Row, Row, T]
-  def run[P1, P2, T](query: (P1, P2) => Queryable[T])(p1: P1, p2: P2): Any = macro TestQueryMacro.run2[P1, P2, Row, Row, T]
-
-  def run[T](action: Actionable[T]): Any = macro TestActionMacro.run[Row, Row, T]
-  def run[P1, T](action: P1 => Actionable[T])(bindings: Iterable[P1]): Any = macro TestActionMacro.run1[P1, Row, Row, T]
-  def run[P1, P2, T](action: (P1, P2) => Actionable[T])(bindings: Iterable[(P1, P2)]): Any = macro TestActionMacro.run2[P1, P2, Row, Row, T]
+  def run[T](quoted: Quoted[T]): Any = macro MirrorSourceMacro.run[Row, Row, T]
 
   def mirrorConfig = config
 
@@ -73,17 +69,9 @@ object mirrorSource extends Source[Row, Row] {
   }
 }
 
-class TestQueryMacro(val c: Context) extends QueryMacro {
+class MirrorSourceMacro(val c: Context) extends SourceMacro {
   import c.universe._
-  protected def toExecutionTree(ast: Ast) = {
-    c.info(ast.toString)
-    q"$ast"
-  }
-}
-
-class TestActionMacro(val c: Context) extends ActionMacro {
-  import c.universe._
-  protected def toExecutionTree(ast: Ast) = {
+  override protected def toExecutionTree(ast: Ast) = {
     c.info(ast.toString)
     q"$ast"
   }

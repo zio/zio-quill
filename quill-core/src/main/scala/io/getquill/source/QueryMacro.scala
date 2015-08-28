@@ -13,41 +13,44 @@ import io.getquill.norm.select.SelectFlattening
 import io.getquill.quotation.Quotation
 import io.getquill.util.Messages.RichContext
 
-trait QueryMacro extends Quotation with SelectFlattening with SelectResultExtraction {
+trait QueryMacro extends SelectFlattening with SelectResultExtraction {
+  this: SourceMacro =>
 
   val c: Context
-  import c.universe.{ Ident => _, Function => _, _ }
+  import c.universe.{ Ident => _, _ }
 
-  protected def toExecutionTree(ast: Ast): Tree
-
-  def run[R, S, T](query: Expr[Queryable[T]])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]): Tree =
-    run[R, S, T](query.tree, List())
-
-  def run1[P1, R: WeakTypeTag, S: WeakTypeTag, T: WeakTypeTag](query: Expr[P1 => Queryable[T]])(p1: Expr[P1]): Tree =
-    run[R, S, T](query.tree, List(p1))
-
-  def run2[P1, P2, R: WeakTypeTag, S: WeakTypeTag, T: WeakTypeTag](query: Expr[(P1, P2) => Queryable[T]])(p1: Expr[P1], p2: Expr[P2]): Tree =
-    run[R, S, T](query.tree, List(p1, p2))
-
-  private def run[R, S, T](tree: Tree, bindings: List[Expr[Any]])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]) = {
-    val (params, query) =
-      Normalize(astParser(tree)) match {
-        case Function(params, query: Query) => (params, query)
-        case q: Query                       => (List(), q)
-        case other                          => c.fail(s"Invalid query $other")
-      }
+  def runQuery[R, S, T](query: Query, params: List[(Ident, Type)])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]): Tree = {
     val (flattenQuery, selectValues) = flattenSelect[T](query, Encoding.inferDecoder[R](c))
-    val (bindedQuery, encode) = EncodeBindVariables[S](c)(flattenQuery, bindingMap(params, bindings))
+    val (bindedQuery, encode) = EncodeBindVariables[S](c)(flattenQuery, bindingMap(params))
     val extractor = selectResultExtractor[R](selectValues)
-    q"""
-      ${c.prefix}.query[$t](${toExecutionTree(bindedQuery)}, $encode, $extractor)
-    """
+    val inputs =
+      for ((Ident(param), tpe) <- params) yield {
+        q"${TermName(param)}: $tpe"
+      }
+    if (inputs.isEmpty)
+      q"""
+        ${c.prefix}.query(
+            ${toExecutionTree(bindedQuery)},
+            $encode,
+            $extractor)
+      """
+    else
+      q"""
+      {
+        class Partial {
+          def using(..$inputs) =
+            ${c.prefix}.query(
+              ${toExecutionTree(bindedQuery)},
+              $encode,
+              $extractor)
+        }
+        new Partial
+      }
+      """
   }
 
-  private def bindingMap(params: List[Ident], bindings: List[Expr[Any]]) = {
-    (for ((param, binding) <- params.zip(bindings)) yield {
-      param -> (binding.actualType.erasure, binding.tree)
+  private def bindingMap(params: List[(Ident, Type)]): collection.Map[Ident, (Type, Tree)] =
+    (for ((param, tpe) <- params) yield {
+      param -> (tpe, q"${TermName(param.name)}")
     }).toMap
-  }
-
 }

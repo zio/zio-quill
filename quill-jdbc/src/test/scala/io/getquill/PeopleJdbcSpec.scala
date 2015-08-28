@@ -6,8 +6,8 @@ class PeopleJdbcSpec extends PeopleSpec {
     testDB.transaction {
       testDB.run(queryable[Couple].delete)
       testDB.run(queryable[Person].filter(_.age > 0).delete)
-      testDB.run(peopleInsert)(peopleEntries)
-      testDB.run(couplesInsert)(couplesEntries)
+      testDB.run(peopleInsert).using(peopleEntries)
+      testDB.run(couplesInsert).using(couplesEntries)
     }
 
   "Example 1 - differences" in {
@@ -15,7 +15,7 @@ class PeopleJdbcSpec extends PeopleSpec {
   }
 
   "Example 2 - range simple" in {
-    testDB.run(`Ex 2 rangeSimple`)(`Ex 2 param 1`, `Ex 2 param 2`) mustEqual `Ex 2 expected result`
+    testDB.run(`Ex 2 rangeSimple`).using(`Ex 2 param 1`, `Ex 2 param 2`) mustEqual `Ex 2 expected result`
   }
 
   "Examples 3 - satisfies" in {
@@ -27,7 +27,7 @@ class PeopleJdbcSpec extends PeopleSpec {
   }
 
   "Example 5 - compose" in {
-    testDB.run(`Ex 5 compose`)(`Ex 5 param 1`, `Ex 5 param 2`) mustEqual `Ex 5 expected result`
+    testDB.run(`Ex 5 compose`).using(`Ex 5 param 1`, `Ex 5 param 2`) mustEqual `Ex 5 expected result`
   }
 
 }

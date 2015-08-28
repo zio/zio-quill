@@ -9,6 +9,7 @@ import com.twitter.finagle.exp.mysql.transport.BufferWriter
 import com.twitter.finagle.exp.mysql.BigDecimalValue
 import com.twitter.finagle.exp.mysql.Type
 import language.implicitConversions
+import java.sql.Timestamp
 
 trait FinagleMysqlEncoders {
   this: FinagleMysqlSource =>
@@ -33,5 +34,9 @@ trait FinagleMysqlEncoders {
   implicit val floatEncoder: Encoder[Float] = encoder[Float]
   implicit val doubleEncoder: Encoder[Double] = encoder[Double]
   implicit val byteArrayEncoder: Encoder[Array[Byte]] = encoder[Array[Byte]]
-  implicit val dateEncoder: Encoder[Date] = encoder[Date]
+  implicit val dateEncoder: Encoder[Date] =
+    new Encoder[Date] {
+      def apply(index: Int, value: Date, row: List[Parameter]) =
+        row :+ (new Timestamp(value.getTime): Parameter)
+    }
 }

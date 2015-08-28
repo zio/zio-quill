@@ -20,7 +20,7 @@ class ActionMacroSpec extends Spec {
       val q = quote {
         (i: Int) => qr1.insert(_.i -> i)
       }
-      val r = mirrorSource.run(q)(List(1, 2))
+      val r = mirrorSource.run(q).using(List(1, 2))
       r.ast mustEqual bind(q.ast.body, "i")
       r.bindList mustEqual List(Row(1), Row(2))
     }
@@ -28,7 +28,7 @@ class ActionMacroSpec extends Spec {
       val q = quote {
         (i: Int, s: String) => qr1.insert(_.i -> i, _.s -> s)
       }
-      val r = mirrorSource.run(q)(List((1, "a"), (2, "b")))
+      val r = mirrorSource.run(q).using(List((1, "a"), (2, "b")))
       r.ast mustEqual bind(q.ast.body, "i", "s")
       r.bindList mustEqual List(Row(1, "a"), Row(2, "b"))
     }

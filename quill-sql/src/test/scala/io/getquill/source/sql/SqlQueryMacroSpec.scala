@@ -41,7 +41,7 @@ class SqlQueryMacroSpec extends Spec {
         val q = quote {
           (s: String) => qr1.filter(t => t.s != s)
         }
-        val mirror = mirrorSource.run(q)("s")
+        val mirror = mirrorSource.run(q).using("s")
         mirror.binds mustEqual Row("s")
         mirror.sql mustEqual
           "SELECT t.s, t.i, t.l FROM TestEntity t WHERE t.s <> ?"
@@ -50,7 +50,7 @@ class SqlQueryMacroSpec extends Spec {
         val q = quote {
           (l: Long, i: Int) => qr1.filter(t => t.l != l && t.i != i)
         }
-        val mirror = mirrorSource.run(q)(2L, 1)
+        val mirror = mirrorSource.run(q).using(2L, 1)
         mirror.binds mustEqual Row(2L, 1)
         mirror.sql mustEqual
           "SELECT t.s, t.i, t.l FROM TestEntity t WHERE (t.l <> ?) AND (t.i <> ?)"

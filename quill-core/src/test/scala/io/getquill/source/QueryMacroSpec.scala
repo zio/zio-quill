@@ -20,7 +20,7 @@ class QueryMacroSpec extends Spec {
       val q = quote {
         (i: Int) => qr1.filter(t => t.i == i).map(t => t.i)
       }
-      val r = mirrorSource.run(q)(1)
+      val r = mirrorSource.run(q).using(1)
       r.ast mustEqual bind(q.ast.body, "i")
       r.binds mustEqual Row(1)
     }
@@ -28,7 +28,7 @@ class QueryMacroSpec extends Spec {
       val q = quote {
         (i: Int, s: String) => qr1.filter(t => t.i == i && t.s == s).map(t => t.i)
       }
-      val r = mirrorSource.run(q)(1, "a")
+      val r = mirrorSource.run(q).using(1, "a")
       r.ast mustEqual bind(q.ast.body, "i", "s")
       r.binds mustEqual Row(1, "a")
     }

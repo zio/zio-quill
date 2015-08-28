@@ -1,15 +1,14 @@
 package io.getquill.source.sql
 
 import scala.reflect.macros.whitebox.Context
-
 import AstShow._
 import io.getquill.ast.Ast
-import io.getquill.source.QueryMacro
-import io.getquill.util.Messages.RichContext
-import io.getquill.util.Show.Shower
+import io.getquill.source.ActionMacro
+import io.getquill.util.Messages._
+import io.getquill.util.Show._
+import io.getquill.source.SourceMacro
 
-class SqlQueryMacro(val c: Context) extends QueryMacro {
-
+class SqlSourceMacro(val c: Context) extends SourceMacro {
   import c.universe._
 
   override def toExecutionTree(ast: Ast) = {

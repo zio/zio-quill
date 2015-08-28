@@ -12,8 +12,8 @@ class PeopleFinagleMysqlSpec extends PeopleSpec {
       for {
         _ <- testDB.run(queryable[Couple].delete)
         _ <- testDB.run(queryable[Person].filter(_.age > 0).delete)
-        _ <- testDB.run(peopleInsert)(peopleEntries)
-        _ <- testDB.run(couplesInsert)(couplesEntries)
+        _ <- testDB.run(peopleInsert).using(peopleEntries)
+        _ <- testDB.run(couplesInsert).using(couplesEntries)
       } yield {}
     })
 
@@ -22,7 +22,7 @@ class PeopleFinagleMysqlSpec extends PeopleSpec {
   }
 
   "Example 2 - range simple" in {
-    await(testDB.run(`Ex 2 rangeSimple`)(`Ex 2 param 1`, `Ex 2 param 2`)) mustEqual `Ex 2 expected result`
+    await(testDB.run(`Ex 2 rangeSimple`).using(`Ex 2 param 1`, `Ex 2 param 2`)) mustEqual `Ex 2 expected result`
   }
 
   "Examples 3 - satisfies" in {
@@ -34,7 +34,7 @@ class PeopleFinagleMysqlSpec extends PeopleSpec {
   }
 
   "Example 5 - compose" in {
-    await(testDB.run(`Ex 5 compose`)(`Ex 5 param 1`, `Ex 5 param 2`)) mustEqual `Ex 5 expected result`
+    await(testDB.run(`Ex 5 compose`).using(`Ex 5 param 1`, `Ex 5 param 2`)) mustEqual `Ex 5 expected result`
   }
 
 }

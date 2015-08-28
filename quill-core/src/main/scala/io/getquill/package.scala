@@ -8,7 +8,7 @@ import io.getquill.quotation.Quoted
 
 package object getquill {
 
-  def quote[T](body: T): Quoted[T] = macro Macro.quote[T]
   def queryable[T]: EntityQueryable[T] = NonQuotedException()
+  implicit def quote[T](body: T): Quoted[T] = macro Macro.quote[T]
   implicit def unquote[T](quoted: Quoted[T]): T = NonQuotedException()
 }

@@ -10,40 +10,34 @@ import io.getquill.ast.Ident
 import io.getquill.norm.Normalize
 import io.getquill.quotation.Quotation
 
-trait ActionMacro extends Quotation {
+trait ActionMacro {
+  this: SourceMacro =>
 
   val c: Context
-  import c.universe.{ Ident => _, Function => _, _ }
+  import c.universe.{ Ident => _, _ }
 
-  protected def toExecutionTree(ast: Ast): Tree
+  def runAction(action: Action): Tree =
+    q"${c.prefix}.execute(${toExecutionTree(action)})"
 
-  def run[R, S, T](action: Expr[Actionable[T]])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]): Tree = {
-    val normalizedAction = Normalize(actionParser(action.tree): Ast)
-    q"${c.prefix}.execute(${toExecutionTree(normalizedAction)})"
-  }
-
-  def run1[P1, R: WeakTypeTag, S: WeakTypeTag, T: WeakTypeTag](action: Expr[P1 => Actionable[T]])(bindings: Expr[Iterable[P1]])(implicit p1: WeakTypeTag[P1]): Tree =
-    run[R, S, T](action.tree, List(p1.tpe), bindings.tree)
-
-  def run2[P1, P2, R: WeakTypeTag, S: WeakTypeTag, T: WeakTypeTag](action: Expr[(P1, P2) => Actionable[T]])(bindings: Expr[Iterable[(P1, P2)]])(implicit p1: WeakTypeTag[P1], p2: WeakTypeTag[P2]): Tree =
-    run[R, S, T](action.tree, List(p1.tpe, p2.tpe), bindings.tree)
-
-  private def run[R, S, T](tree: Tree, types: List[Type], bindings: Tree)(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]) = {
-    val (params, action) =
-      Normalize(astParser(tree)) match {
-        case Function(params, action: Action) => (params, action)
-        case other                            => throw new IllegalStateException(s"Invalid action $tree.")
-      }
-    val (bindedAction, encode) = EncodeBindVariables[S](c)(action, bindingMap(params, types))
+  def runAction[S](action: Action, params: List[(Ident, Type)])(implicit s: WeakTypeTag[S]): Tree = {
+    val (bindedAction, encode) = EncodeBindVariables[S](c)(action, bindingMap(params))
     q"""
-      ${c.prefix}.execute(${toExecutionTree(bindedAction)}, $bindings.map(value => $encode))
+    {
+      class Partial {
+        def using(bindings: List[(..${params.map(_._2)})]) =
+          ${c.prefix}.execute(
+            ${toExecutionTree(bindedAction)},
+            bindings.map(value => $encode))
+      }
+      new Partial
+    }
     """
   }
 
-  private def bindingMap(params: List[Ident], types: List[Type]): Map[Ident, (Type, Tree)] =
-    params.zip(types) match {
+  private def bindingMap(params: List[(Ident, Type)]): collection.Map[Ident, (Type, Tree)] =
+    params match {
       case (param, tpe) :: Nil =>
-        Map((param, (tpe, q"value")))
+        collection.Map((param, (tpe, q"value")))
       case params =>
         (for (((param, tpe), index) <- params.zipWithIndex) yield {
           param -> (tpe, q"value.${TermName(s"_${index + 1}")}")
