@@ -28,7 +28,7 @@ class EncodeBindVariablesSpec extends Spec {
     val q = quote {
       (i: Thread) => qr1.filter(_.i == i)
     }
-    "mirrorSource.run(q)(new Thread)" mustNot compile
+    "mirrorSource.run(q).using(new Thread)" mustNot compile
   }
 
   "uses a custom implicit encoder" in {
