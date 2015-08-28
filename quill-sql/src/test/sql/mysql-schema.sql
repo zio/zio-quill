@@ -36,3 +36,21 @@ CREATE TABLE EncodingTestEntity(
     v10 VARBINARY(255),
     v11 DATETIME
 );
+
+CREATE TABLE TestEntity(
+	s VARCHAR(255),
+    i INTEGER,
+    l BIGINT
+);
+
+CREATE TABLE TestEntity2(
+	s VARCHAR(255),
+    i INTEGER,
+    l BIGINT
+);
+
+CREATE TABLE TestEntity3(
+	s VARCHAR(255),
+    i INTEGER,
+    l BIGINT
+);
