@@ -12,7 +12,7 @@ object mirrorSource extends SqlSource[Row, Row] {
 
   implicit val longEncoder = new Encoder[Long] {
     def apply(index: Int, value: Long, row: Row) =
-      row.add(index)
+      row.add(value)
   }
 
   implicit val intDecoder = new Decoder[Int] {
@@ -22,7 +22,7 @@ object mirrorSource extends SqlSource[Row, Row] {
 
   implicit val intEncoder = new Encoder[Int] {
     def apply(index: Int, value: Int, row: Row) =
-      row.add(index)
+      row.add(value)
   }
 
   implicit val stringDecoder = new Decoder[String] {
@@ -32,7 +32,7 @@ object mirrorSource extends SqlSource[Row, Row] {
 
   implicit val stringEncoder = new Encoder[String] {
     def apply(index: Int, value: String, row: Row) =
-      row.add(index)
+      row.add(value)
   }
 
   case class ActionMirror(sql: String)

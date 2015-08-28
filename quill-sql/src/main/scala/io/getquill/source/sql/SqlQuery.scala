@@ -9,21 +9,17 @@ import io.getquill.ast.Ident
 import io.getquill.ast.Map
 import io.getquill.ast.Query
 import io.getquill.util.Show.Shower
+import io.getquill.util.Messages._
 
 case class Source(table: String, alias: String)
 case class SqlQuery(from: List[Source], where: Option[Ast], select: Ast)
 
 object SqlQuery {
 
-  def apply(ast: Ast) =
-    ast match {
-      case query: Query =>
-        flatten(query) match {
-          case (from, where, select) =>
-            new SqlQuery(from, where, select)
-        }
-      case other =>
-        throw new IllegalStateException(s"Query is not propertly normalized, please submit a bug report. $other")
+  def apply(query: Query) =
+    flatten(query) match {
+      case (from, where, select) =>
+        new SqlQuery(from, where, select)
     }
 
   private def flatten(query: Query): (List[Source], Option[Ast], Ast) = {
@@ -39,9 +35,7 @@ object SqlQuery {
         val (sources, predicate, ast) = flatten(q)
         (sources, predicate, p)
       case other =>
-        import io.getquill.util.Show._
-        import io.getquill.ast.AstShow._
-        throw new IllegalStateException(s"Query is not propertly normalized, please submit a bug report. ${query.show}")
+        fail(s"Query is not propertly normalized, please submit a bug report. ${query.show}")
     }
   }
 }
