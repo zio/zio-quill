@@ -33,9 +33,7 @@ trait FinagleMysqlDecoders {
     }
   implicit val booleanDecoder =
     decoder[Boolean] {
-      case IntValue(v)   => v == 1
-      case ShortValue(v) => v == 1
-      case v: RawValue   => v.bytes.head == (1: Byte)
+      case v: RawValue => v.bytes.head == (1: Byte)
     }
   implicit val byteDecoder =
     decoder[Byte] {
@@ -45,7 +43,6 @@ trait FinagleMysqlDecoders {
   implicit val shortDecoder =
     decoder[Short] {
       case ShortValue(v) => v
-      case IntValue(v)   => v.toShort
     }
   implicit val intDecoder =
     decoder[Int] {
@@ -55,7 +52,6 @@ trait FinagleMysqlDecoders {
   implicit val longDecoder =
     decoder[Long] {
       case LongValue(v) => v
-      case IntValue(v)  => v
     }
   implicit val floatDecoder =
     decoder[Float] {
