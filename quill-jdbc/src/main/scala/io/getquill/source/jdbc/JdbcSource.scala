@@ -12,43 +12,11 @@ import com.typesafe.scalalogging.StrictLogging
 
 import io.getquill.source.sql.SqlSource
 
-trait JdbcSource extends SqlSource[ResultSet, PreparedStatement] with StrictLogging {
-
-  implicit val longDecoder = new Decoder[Long] {
-    def apply(index: Int, row: ResultSet) =
-      row.getLong(index + 1)
-  }
-
-  implicit val longEncoder = new Encoder[Long] {
-    def apply(index: Int, value: Long, row: PreparedStatement) = {
-      row.setLong(index + 1, value)
-      row
-    }
-  }
-
-  implicit val intDecoder = new Decoder[Int] {
-    def apply(index: Int, row: ResultSet) =
-      row.getInt(index + 1)
-  }
-
-  implicit val intEncoder = new Encoder[Int] {
-    def apply(index: Int, value: Int, row: PreparedStatement) = {
-      row.setInt(index + 1, value)
-      row
-    }
-  }
-
-  implicit val stringDecoder = new Decoder[String] {
-    def apply(index: Int, row: ResultSet) =
-      row.getString(index + 1)
-  }
-
-  implicit val stringEncoder = new Encoder[String] {
-    def apply(index: Int, value: String, row: PreparedStatement) = {
-      row.setString(index + 1, value)
-      row
-    }
-  }
+trait JdbcSource
+    extends SqlSource[ResultSet, PreparedStatement]
+    with JdbcEncoders
+    with JdbcDecoders
+    with StrictLogging {
 
   protected val dataSource = DataSource(config)
 
