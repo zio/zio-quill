@@ -7,7 +7,7 @@ MVP - mid-september
 √ transactions
 √ inserts
 √ updates
-- generic test suite
+√ generic test suite
 - database dialects (db2, derby, h2, hsql, mysql, oracle, postgres, sqlserver)
 - full sql support
 	- options
