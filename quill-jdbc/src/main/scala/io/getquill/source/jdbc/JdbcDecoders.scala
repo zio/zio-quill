@@ -41,14 +41,4 @@ trait JdbcDecoders {
       def apply(index: Int, row: ResultSet) =
         new util.Date(row.getTimestamp(index + 1, Calendar.getInstance(dateTimeZone)).getTime)
     }
-
-  // java.sql
-
-  implicit val sqlDateDecoder = decoder[sql.Date](_.getDate)
-  implicit val sqlTimeDecoder = decoder(_.getTime)
-  implicit val sqlTimestampDecoder = decoder(_.getTimestamp)
-  implicit val sqlClobDecoder = decoder(_.getClob)
-  implicit val sqlBlobDecoder = decoder(_.getBlob)
-  implicit val sqlArrayDecoder = decoder(_.getArray)
-  implicit val sqlRefDecoder = decoder(_.getRef)
 }

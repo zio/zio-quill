@@ -14,7 +14,7 @@ class FinagleMysqlEncodingSpec extends EncodingSpec {
         result <- testDB.run(queryable[EncodingTestEntity])
       } yield result
 
-    Await.result(r) mustEqual List(instance)
+    verify(Await.result(r).toList)
   }
 
   "fails if the column has the wrong type" in {

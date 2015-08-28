@@ -17,7 +17,7 @@ class EncodingSpec extends Spec {
     v7: Long,
     v8: Float,
     v9: Double,
-    //    v10: Array[Byte],
+    v10: Array[Byte],
     v11: Date)
 
   val delete = quote {
@@ -34,7 +34,7 @@ class EncodingSpec extends Spec {
     v7: Long,
     v8: Float,
     v9: Double,
-    //    v10: Array[Byte],
+    v10: Array[Byte],
     v11: Date) =>
       queryable[EncodingTestEntity].insert(
         _.v1 -> v1,
@@ -46,7 +46,7 @@ class EncodingSpec extends Spec {
         _.v7 -> v7,
         _.v8 -> v8,
         _.v9 -> v9,
-        //        _.v10 -> v10,
+        _.v10 -> v10,
         _.v11 -> v11)
   }
 
@@ -61,21 +61,23 @@ class EncodingSpec extends Spec {
       431L,
       34.4f,
       42d,
-      //      Array(1.toByte, 2.toByte),
+      Array(1.toByte, 2.toByte),
       new Date(31200000))
 
-  val instance =
-    EncodingTestEntity(
-      v1 = "s",
-      v2 = BigDecimal(1.1),
-      v3 = true,
-      v4 = 11.toByte,
-      v5 = 23.toShort,
-      v6 = 33,
-      v7 = 431L,
-      v8 = 34.4f,
-      v9 = 42d,
-      //      v10 = Array(1.toByte, 2.toByte),
-      v11 = new Date(31200000))
+  def verify(result: List[EncodingTestEntity]) = {
+    result.size mustEqual 1
+    val entity = result.head
+    entity.v1 mustEqual "s"
+    entity.v2 mustEqual BigDecimal(1.1)
+    entity.v3 mustEqual true
+    entity.v4 mustEqual 11.toByte
+    entity.v5 mustEqual 23.toShort
+    entity.v6 mustEqual 33
+    entity.v7 mustEqual 431L
+    entity.v8 mustEqual 34.4f
+    entity.v9 mustEqual 42d
+    entity.v10.toList mustEqual List(1.toByte, 2.toByte)
+    entity.v11 mustEqual new Date(31200000)
+  }
 
 }

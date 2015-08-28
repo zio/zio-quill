@@ -45,10 +45,10 @@ trait SelectFlattening extends SelectValues {
   private def selectValuesForConstructor(constructor: MethodSymbol, ast: Ast, inferDecoder: Type => Option[Tree]) =
     constructor.paramLists.map(_.map {
       param =>
-        val paramType = param.typeSignature.typeSymbol.asType.toType
+        val paramType = param.typeSignature
         val decoder =
           inferDecoder(paramType)
-            .getOrElse(c.fail(s"Source doesn't know how to decode '${param.name}: $paramType'"))
+            .getOrElse(c.fail(s"Source doesn't know how to decode constructor param '${param.name}: $paramType'"))
         SimpleSelectValue(Property(ast, param.name.decodedName.toString), decoder)
     })
 

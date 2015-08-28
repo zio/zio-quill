@@ -42,13 +42,4 @@ trait JdbcEncoders {
         row
       }
     }
-  // java.sql
-
-  implicit val sqlDateEncoder = encoder(_.setDate)
-  implicit val sqlTimeEncoder = encoder(_.setTime)
-  implicit val sqlTimestampEncoder = encoder(_.setTimestamp)
-  implicit val sqlClobEncoder = encoder[sql.Clob](_.setClob)
-  implicit val sqlBlobEncoder = encoder[sql.Blob](_.setBlob)
-  implicit val sqlArrayEncoder = encoder(_.setArray)
-  implicit val sqlRefEncoder = encoder(_.setRef)
 }
