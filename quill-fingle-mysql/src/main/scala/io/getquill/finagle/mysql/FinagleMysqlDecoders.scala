@@ -17,7 +17,7 @@ trait FinagleMysqlDecoders {
     new Decoder[T] {
       def apply(index: Int, row: Row) = {
         val value = row.values(index)
-        f.applyOrElse(value, fail("Can't decode $value"))
+        f.lift(value).getOrElse(fail(s"Can't decode $value"))
       }
     }
 
