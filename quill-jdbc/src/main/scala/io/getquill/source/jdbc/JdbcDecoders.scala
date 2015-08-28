@@ -15,7 +15,7 @@ import java.sql
 trait JdbcDecoders {
   this: JdbcSource =>
 
-  private def decoder[T](f: ResultSet => Int => T) =
+  private def decoder[T](f: ResultSet => Int => T): Decoder[T] =
     new Decoder[T] {
       def apply(index: Int, row: ResultSet) =
         f(row)(index + 1)
@@ -31,10 +31,10 @@ trait JdbcDecoders {
   implicit val floatDecoder = decoder(_.getFloat)
   implicit val doubleDecoder = decoder(_.getDouble)
   implicit val byteArrayDecoder = decoder(_.getBytes)
-  implicit val dateDecoder = decoder(_.getDate)
 
   // java.sql
 
+  implicit val sqlDateDecoder = decoder(_.getDate)
   implicit val sqlTimeDecoder = decoder(_.getTime)
   implicit val sqlTimestampDecoder = decoder(_.getTimestamp)
   implicit val sqlClobDecoder = decoder(_.getClob)

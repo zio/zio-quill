@@ -6,7 +6,7 @@ import java.sql.PreparedStatement
 trait JdbcEncoders {
   this: JdbcSource =>
 
-  private def encoder[T](f: PreparedStatement => (Int, T) => Unit) =
+  private def encoder[T](f: PreparedStatement => (Int, T) => Unit): Encoder[T] =
     new Encoder[T] {
       override def apply(index: Int, value: T, row: PreparedStatement) = {
         f(row)(index + 1, value)
@@ -24,10 +24,10 @@ trait JdbcEncoders {
   implicit val floatEncoder = encoder(_.setFloat)
   implicit val doubleEncoder = encoder(_.setDouble)
   implicit val byteArrayEncoder = encoder(_.setBytes)
-  implicit val dateEncoder = encoder(_.setDate)
 
   // java.sql
 
+  implicit val sqlDateEncoder = encoder(_.setDate)
   implicit val sqlTimeEncoder = encoder(_.setTime)
   implicit val sqlTimestampEncoder = encoder(_.setTimestamp)
   implicit val sqlClobEncoder = encoder[sql.Clob](_.setClob)
