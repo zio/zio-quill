@@ -18,7 +18,7 @@ trait JdbcSource
     with JdbcDecoders
     with StrictLogging {
 
-  protected val dataSource = DataSource(config)
+  protected def dataSource = DataSource(config)
 
   private val currentConnection = new DynamicVariable[Option[Connection]](None)
 

@@ -1,4 +1,4 @@
-package io.getquill.source.sql.test
+package io.getquill.source.sql.mirror
 
 import io.getquill.source.mirror.Row
 import java.util.Date

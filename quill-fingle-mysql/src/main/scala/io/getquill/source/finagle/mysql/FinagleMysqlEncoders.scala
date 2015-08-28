@@ -1,4 +1,4 @@
-package io.getquill.finagle.mysql
+package io.getquill.source.finagle.mysql
 
 import scala.reflect.ClassTag
 import com.twitter.finagle.exp.mysql.CanBeParameter
@@ -34,9 +34,5 @@ trait FinagleMysqlEncoders {
   implicit val floatEncoder: Encoder[Float] = encoder[Float]
   implicit val doubleEncoder: Encoder[Double] = encoder[Double]
   implicit val byteArrayEncoder: Encoder[Array[Byte]] = encoder[Array[Byte]]
-  implicit val dateEncoder: Encoder[Date] =
-    new Encoder[Date] {
-      def apply(index: Int, value: Date, row: List[Parameter]) =
-        row :+ (new Timestamp(value.getTime): Parameter)
-    }
+  implicit val dateEncoder: Encoder[Date] = encoder[Date]
 }

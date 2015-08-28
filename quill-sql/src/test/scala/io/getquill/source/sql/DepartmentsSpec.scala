@@ -1,6 +1,10 @@
-package io.getquill
+package io.getquill.source.sql
 
 import language.reflectiveCalls
+import io.getquill._
+import io.getquill.Queryable
+import io.getquill.Spec
+import io.getquill.unquote
 
 trait DepartmentsSpec extends Spec {
 

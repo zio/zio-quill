@@ -1,7 +1,6 @@
-package io.getquill.finagle.mysql
+package io.getquill.source.finagle.mysql
 
 import scala.reflect.ClassTag
-
 import com.twitter.finagle.exp.mysql.CanBeParameter
 import com.twitter.finagle.exp.mysql.CanBeParameter.intCanBeParameter
 import com.twitter.finagle.exp.mysql.CanBeParameter.longCanBeParameter
@@ -17,14 +16,16 @@ import com.twitter.finagle.exp.mysql.StringValue
 import com.twitter.util.Future
 import com.twitter.util.Local
 import com.typesafe.scalalogging.StrictLogging
-
 import io.getquill.source.sql.SqlSource
+import java.util.TimeZone
 
 trait FinagleMysqlSource
     extends SqlSource[Row, List[Parameter]]
     with FinagleMysqlDecoders
     with FinagleMysqlEncoders
     with StrictLogging {
+
+  protected def dateTimezone = TimeZone.getDefault
 
   protected val client = FinagleMysqlClient(config)
 

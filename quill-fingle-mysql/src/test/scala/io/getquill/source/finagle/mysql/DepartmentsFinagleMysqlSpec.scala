@@ -1,8 +1,9 @@
-package io.getquill
+package io.getquill.source.finagle.mysql
 
 import com.twitter.util.Future
 import com.twitter.util.Await
-import io.getquill.testDB.run
+import io.getquill.source.sql.DepartmentsSpec
+import io.getquill._
 
 class DepartmentsFinagleMysqlSpec extends DepartmentsSpec {
 

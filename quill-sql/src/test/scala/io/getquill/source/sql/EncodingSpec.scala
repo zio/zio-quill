@@ -1,6 +1,9 @@
-package io.getquill
+package io.getquill.source.sql
 
+import io.getquill._
 import java.util.Date
+import io.getquill.Spec
+import scala.BigDecimal
 
 class EncodingSpec extends Spec {
 
@@ -59,7 +62,7 @@ class EncodingSpec extends Spec {
       34.4f,
       42d,
       //      Array(1.toByte, 2.toByte),
-      new Date(312))
+      new Date(31200000))
 
   val instance =
     EncodingTestEntity(
@@ -73,6 +76,6 @@ class EncodingSpec extends Spec {
       v8 = 34.4f,
       v9 = 42d,
       //      v10 = Array(1.toByte, 2.toByte),
-      v11 = new Date(312))
+      v11 = new Date(31200000))
 
 }

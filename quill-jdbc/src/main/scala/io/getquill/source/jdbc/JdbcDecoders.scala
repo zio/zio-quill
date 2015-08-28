@@ -11,6 +11,7 @@ import java.sql.Struct
 import java.sql.Ref
 import java.sql
 import java.util
+import java.util.Calendar
 
 trait JdbcDecoders {
   this: JdbcSource =>
@@ -22,11 +23,10 @@ trait JdbcDecoders {
     }
 
   implicit val stringDecoder = decoder(_.getString)
-  implicit val bigDecimalDecoder =
-    decoder {
-      rs =>
-        (index: Int) =>
-          BigDecimal(rs.getBigDecimal(index + 1))
+  implicit val bigDecimalDecoder: Decoder[BigDecimal] =
+    new Decoder[BigDecimal] {
+      def apply(index: Int, row: ResultSet) =
+        row.getBigDecimal(index + 1)
     }
   implicit val booleanDecoder = decoder(_.getBoolean)
   implicit val byteDecoder = decoder(_.getByte)
@@ -36,11 +36,11 @@ trait JdbcDecoders {
   implicit val floatDecoder = decoder(_.getFloat)
   implicit val doubleDecoder = decoder(_.getDouble)
   implicit val byteArrayDecoder = decoder(_.getBytes)
-  implicit val dateDecoder = decoder {
-    rs =>
-      (index: Int) =>
-        new util.Date(rs.getTimestamp(index + 1).getTime)
-  }
+  implicit val dateDecoder: Decoder[util.Date] =
+    new Decoder[util.Date] {
+      def apply(index: Int, row: ResultSet) =
+        new util.Date(row.getTimestamp(index + 1, Calendar.getInstance(dateTimeZone)).getTime)
+    }
 
   // java.sql
 

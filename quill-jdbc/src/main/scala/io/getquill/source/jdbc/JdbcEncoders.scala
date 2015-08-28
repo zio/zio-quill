@@ -3,9 +3,13 @@ package io.getquill.source.jdbc
 import java.sql
 import java.util
 import java.sql.PreparedStatement
+import java.util.TimeZone
+import java.util.Calendar
 
 trait JdbcEncoders {
   this: JdbcSource =>
+
+  protected val dateTimeZone = TimeZone.getDefault
 
   private def encoder[T](f: PreparedStatement => (Int, T) => Unit): Encoder[T] =
     new Encoder[T] {
@@ -17,10 +21,11 @@ trait JdbcEncoders {
 
   implicit val stringEncoder = encoder(_.setString)
   implicit val bigDecimalEncoder: Encoder[BigDecimal] =
-    encoder {
-      ps =>
-        (index: Int, v: BigDecimal) =>
-          ps.setBigDecimal(index, v.bigDecimal)
+    new Encoder[BigDecimal] {
+      override def apply(index: Int, value: BigDecimal, row: PreparedStatement) = {
+        row.setBigDecimal(index + 1, value.bigDecimal)
+        row
+      }
     }
   implicit val booleanEncoder = encoder(_.setBoolean)
   implicit val byteEncoder = encoder(_.setByte)
@@ -31,12 +36,12 @@ trait JdbcEncoders {
   implicit val doubleEncoder = encoder(_.setDouble)
   implicit val byteArrayEncoder = encoder(_.setBytes)
   implicit val dateEncoder: Encoder[util.Date] =
-    encoder {
-      ps =>
-        (index: Int, v: util.Date) =>
-          ps.setTimestamp(index + 1, new sql.Timestamp(v.getTime))
+    new Encoder[util.Date] {
+      override def apply(index: Int, value: util.Date, row: PreparedStatement) = {
+        row.setTimestamp(index + 1, new sql.Timestamp(value.getTime), Calendar.getInstance(dateTimeZone))
+        row
+      }
     }
-
   // java.sql
 
   implicit val sqlDateEncoder = encoder(_.setDate)

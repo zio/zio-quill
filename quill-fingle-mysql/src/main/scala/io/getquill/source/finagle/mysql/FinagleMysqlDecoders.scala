@@ -1,4 +1,4 @@
-package io.getquill.finagle.mysql
+package io.getquill.source.finagle.mysql
 
 import io.getquill.util.Messages._
 import com.twitter.finagle.exp.mysql._
@@ -12,8 +12,8 @@ trait FinagleMysqlDecoders {
 
   protected val timestampValue =
     new TimestampValue(
-      TimeZone.getDefault(),
-      TimeZone.getTimeZone("UTC"))
+      dateTimezone,
+      dateTimezone)
 
   def decoder[T: ClassTag](f: PartialFunction[Value, T]): Decoder[T] =
     new Decoder[T] {
@@ -35,11 +35,12 @@ trait FinagleMysqlDecoders {
     decoder[Boolean] {
       case IntValue(v)   => v == 1
       case ShortValue(v) => v == 1
-      case ByteValue(v)  => v == (1: Byte)
+      case v: RawValue   => v.bytes.head == (1: Byte)
     }
   implicit val byteDecoder =
     decoder[Byte] {
-      case ByteValue(v) => v
+      case ByteValue(v)  => v
+      case ShortValue(v) => v.toByte
     }
   implicit val shortDecoder =
     decoder[Short] {

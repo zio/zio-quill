@@ -1,4 +1,4 @@
-package io.getquill.source.sql.test
+package io.getquill.source.sql.mirror
 
 import io.getquill.source.sql.SqlSource
 import io.getquill.source.mirror.Row

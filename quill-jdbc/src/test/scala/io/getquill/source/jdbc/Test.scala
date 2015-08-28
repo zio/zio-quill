@@ -1,6 +1,6 @@
-package io.getquill
+package io.getquill.source.jdbc
 
-import io.getquill.source.jdbc.JdbcSource
+import io.getquill._
 
 case class Person(id: Long, name: String, surname: String, age: Int)
 case class Address(id: Long, personId: Long, streetId: Long, number: Int)

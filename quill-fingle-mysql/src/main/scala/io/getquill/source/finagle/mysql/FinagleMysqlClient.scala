@@ -1,4 +1,4 @@
-package io.getquill.finagle.mysql
+package io.getquill.source.finagle.mysql
 
 import com.twitter.finagle.exp.Mysql
 import com.typesafe.config.Config
