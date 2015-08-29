@@ -35,7 +35,7 @@ trait FinagleMysqlSource
     client.transaction {
       transactional =>
         currentClient.update(transactional)
-        f.interruptible.ensure(currentClient.clear)
+        f.ensure(currentClient.clear)
     }
 
   def execute(sql: String) =
@@ -56,8 +56,11 @@ trait FinagleMysqlSource
     withClient(_.prepare(sql).select(bind(List()): _*)(extractor))
   }
 
-  private def withClient[T](f: Client => T) =
-    currentClient().map(f).getOrElse {
+  private def withClient[T](f: Client => T) = {
+    currentClient().map {
+      client => f(client)
+    }.getOrElse {
       f(client)
     }
+  }
 }

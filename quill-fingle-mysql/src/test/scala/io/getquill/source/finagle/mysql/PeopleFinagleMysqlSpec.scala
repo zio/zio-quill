@@ -20,7 +20,7 @@ class PeopleFinagleMysqlSpec extends PeopleSpec {
     })
 
   "Example 1 - differences" in {
-    await(testDB.transaction(testDB.run(`Ex 1 differences`))) mustEqual `Ex 1 expected result`
+    await(testDB.run(`Ex 1 differences`)) mustEqual `Ex 1 expected result`
   }
 
   "Example 2 - range simple" in {

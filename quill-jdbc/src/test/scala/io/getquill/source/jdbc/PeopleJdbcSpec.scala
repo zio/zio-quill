@@ -14,7 +14,7 @@ class PeopleJdbcSpec extends PeopleSpec {
     }
 
   "Example 1 - differences" in {
-    testDB.transaction { testDB.run(`Ex 1 differences`) } mustEqual `Ex 1 expected result`
+    testDB.run(`Ex 1 differences`) mustEqual `Ex 1 expected result`
   }
 
   "Example 2 - range simple" in {
