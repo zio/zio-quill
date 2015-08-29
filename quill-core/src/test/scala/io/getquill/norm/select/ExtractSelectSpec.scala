@@ -32,6 +32,16 @@ class ExtractSelectSpec extends Spec {
           select mustEqual Property(Ident("u"), "s")
       }
     }
+    "sorted query" in {
+      val q = quote {
+        qr1.map(t => t.s).sortBy(t => t)
+      }
+      ExtractSelect(q.ast) match {
+        case (query, select) =>
+          query mustEqual q.ast
+          select mustEqual Property(Ident("t"), "s")
+      }
+    }
   }
 
   "creates a final map (select) if necessary" - {

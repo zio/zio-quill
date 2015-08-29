@@ -12,6 +12,7 @@ import io.getquill.ast.Property
 import io.getquill.ast.Query
 import io.getquill.ast.StatefulTransformer
 import io.getquill.ast.Tuple
+import io.getquill.ast.SortBy
 
 case class BetaReduction(state: collection.Map[Ident, Ast])
     extends StatefulTransformer[collection.Map[Ident, Ast]] {
@@ -49,6 +50,10 @@ case class BetaReduction(state: collection.Map[Ident, Ast])
         val (ar, art) = apply(a)
         val (cr, crt) = BetaReduction(state - b)(c)
         (FlatMap(ar, b, cr), this)
+      case SortBy(a, b, c) =>
+        val (ar, art) = apply(a)
+        val (cr, crt) = BetaReduction(state - b)(c)
+        (SortBy(ar, b, cr), this)
     }
 }
 

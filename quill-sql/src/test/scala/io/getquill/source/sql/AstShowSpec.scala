@@ -31,6 +31,13 @@ class AstShowSpec extends Spec {
         mirrorSource.run(q).sql mustEqual
           "SELECT a.s FROM TestEntity a, TestEntity2 b WHERE a.s = b.s"
       }
+      "sorted" in {
+        val q = quote {
+          qr1.filter(t => t.s != null).sortBy(_.s)
+        }
+        mirrorSource.run(q).sql mustEqual
+          "SELECT t.s, t.i, t.l FROM TestEntity t WHERE t.s IS NOT NULL ORDER BY t.s"
+      }
     }
     "unary operation" - {
       "!" in {

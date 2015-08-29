@@ -47,13 +47,18 @@ object AstShow {
     }
 
   implicit val sqlQueryShow: Show[SqlQuery] = new Show[SqlQuery] {
-    def show(e: SqlQuery) =
-      e.where match {
-        case None =>
-          s"SELECT ${e.select.show} FROM ${e.from.show}"
-        case Some(where) =>
-          s"SELECT ${e.select.show} FROM ${e.from.show} WHERE ${where.show}"
+    def show(e: SqlQuery) = {
+      val selectFrom = s"SELECT ${e.select.show} FROM ${e.from.show}"
+      val where =
+        e.where match {
+          case None        => selectFrom
+          case Some(where) => selectFrom + s" WHERE ${where.show}"
+        }
+      e.sortBy match {
+        case None         => where
+        case Some(sortBy) => where + s" ORDER BY ${sortBy.show}"
       }
+    }
   }
 
   implicit val sourceShow: Show[Source] = new Show[Source] {

@@ -6,6 +6,7 @@ import io.getquill.ast.Map
 import io.getquill.ast.Query
 import io.getquill.ast.Tuple
 import io.getquill.util.Messages._
+import io.getquill.ast.SortBy
 
 private[select] object ReplaceSelect {
 
@@ -18,6 +19,7 @@ private[select] object ReplaceSelect {
   private def apply(query: Query, ast: Ast): Query =
     query match {
       case FlatMap(q, x, p: Query) => FlatMap(q, x, apply(p, ast))
+      case SortBy(q: Query, x, p)  => SortBy(apply(q, ast), x, p)
       case Map(q, x, p)            => Map(q, x, ast)
       case other                   => fail(s"Query doesn't have a final map (select). Ast: $query")
     }

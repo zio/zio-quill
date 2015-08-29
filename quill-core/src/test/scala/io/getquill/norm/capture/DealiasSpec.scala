@@ -34,5 +34,14 @@ class DealiasSpec extends Spec {
       }
       Dealias(q.ast) mustEqual n.ast
     }
+    "filter.sortBy" in {
+      val q = quote {
+        qr1.filter(a => a.s == "s1").sortBy(b => b.s)
+      }
+      val n = quote {
+        qr1.filter(a => a.s == "s1").sortBy(a => a.s)
+      }
+      Dealias(q.ast) mustEqual n.ast
+    }
   }
 }

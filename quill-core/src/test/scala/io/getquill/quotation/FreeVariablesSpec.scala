@@ -42,6 +42,14 @@ class FreeVariablesSpec extends Spec {
       }
       """ mustNot compile
     }
+    "sortBy" in {
+      val s = "s"
+      """
+      quote {
+        qr1.sortBy(_ => s)
+      }
+      """ mustNot compile
+    }
   }
 
   "doesn't fail for variables defined in the quotation" - {

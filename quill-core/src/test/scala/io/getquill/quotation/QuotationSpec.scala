@@ -36,6 +36,12 @@ class QuotationSpec extends Spec {
         }
         quote(unquote(q)).ast mustEqual FlatMap(Entity("TestEntity"), Ident("t"), Entity("TestEntity2"))
       }
+      "sortBy" in {
+        val q = quote {
+          qr1.sortBy(t => t.s)
+        }
+        quote(unquote(q)).ast mustEqual SortBy(Entity("TestEntity"), Ident("t"), Property(Ident("t"), "s"))
+      }
     }
     "action" - {
       "update" in {

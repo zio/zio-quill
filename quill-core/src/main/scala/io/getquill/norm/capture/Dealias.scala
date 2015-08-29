@@ -6,6 +6,7 @@ import io.getquill.ast.Map
 import io.getquill.ast.Query
 import io.getquill.ast.StatelessTransformer
 import io.getquill.norm.BetaReduction
+import io.getquill.ast.SortBy
 
 private[capture] object Dealias extends StatelessTransformer {
 
@@ -23,6 +24,10 @@ private[capture] object Dealias extends StatelessTransformer {
       case Map(Filter(q, x, p), y, r) if (x != y) =>
         val rr = BetaReduction(r, y -> x)
         Map(apply(Filter(q, x, p)), x, rr)
+
+      case SortBy(Filter(q, x, p), y, r) if (x != y) =>
+        val rr = BetaReduction(r, y -> x)
+        SortBy(apply(Filter(q, x, p)), x, rr)
 
       case other => super.apply(other)
     }

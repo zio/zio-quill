@@ -36,6 +36,9 @@ object AstShow {
 
         case FlatMap(source, alias, body) =>
           s"${source.show}.flatMap(${alias.show} => ${body.show})"
+
+        case SortBy(source, alias, body) =>
+          s"${source.show}.sortBy(${alias.show} => ${body.show})"
       }
   }
 

@@ -1,7 +1,6 @@
 package io.getquill.quotation
 
 import scala.reflect.macros.whitebox.Context
-
 import io.getquill.ast
 import io.getquill.ast.Action
 import io.getquill.ast.Assignment
@@ -26,6 +25,7 @@ import io.getquill.ast.UnaryOperation
 import io.getquill.ast.UnaryOperator
 import io.getquill.ast.Update
 import io.getquill.ast.Value
+import io.getquill.ast.SortBy
 
 trait Liftables {
   val c: Context
@@ -72,6 +72,7 @@ trait Liftables {
     case Filter(a, b, c)  => q"$pack.Filter($a, $b, $c)"
     case Map(a, b, c)     => q"$pack.Map($a, $b, $c)"
     case FlatMap(a, b, c) => q"$pack.FlatMap($a, $b, $c)"
+    case SortBy(a, b, c)  => q"$pack.SortBy($a, $b, $c)"
   }
 
   implicit val actionLiftable: Liftable[Action] = Liftable[Action] {

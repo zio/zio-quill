@@ -8,6 +8,7 @@ import io.getquill.ast.Ident
 import io.getquill.ast.Map
 import io.getquill.ast.Query
 import io.getquill.util.Messages.fail
+import io.getquill.ast.SortBy
 
 private[select] object ExtractSelect {
 
@@ -16,6 +17,9 @@ private[select] object ExtractSelect {
       case FlatMap(q, x, p: Query) =>
         val (pr, map) = apply(p)
         (FlatMap(q, x, pr), map)
+      case SortBy(q: Query, x, p) =>
+        val (qr, map) = apply(q)
+        (SortBy(qr, x, p), map)
       case q @ Filter(_, x, _) =>
         (Map(q, x, x), x)
       case t: Entity =>
@@ -23,7 +27,7 @@ private[select] object ExtractSelect {
         (Map(t, x, x), x)
       case Map(q, x, p) =>
         (query, p)
-      case FlatMap(q, x, p) =>
-        fail("The body of a flatMap is not a query. Ast: $query")
+      case other =>
+        fail(s"Can't find the final map (select) in $query")
     }
 }

@@ -11,6 +11,7 @@ import io.getquill.ast.Map
 import io.getquill.ast.Query
 import io.getquill.ast.StatelessTransformer
 import io.getquill.norm.capture.AvoidCapture
+import io.getquill.ast.SortBy
 
 object Normalize extends StatelessTransformer {
 
@@ -47,6 +48,12 @@ object Normalize extends StatelessTransformer {
           val er = BetaReduction(e, d -> c)
           apply(Map(a, b, er))
 
+        // a.map(b => c).sortBy(d => e) =>
+        //    a.sortBy(b => e[d := c]).map(b => c)
+        case SortBy(Map(a, b, c), d, e) =>
+          val er = BetaReduction(e, d -> c)
+          apply(Map(SortBy(a, b, er), b, c))
+
         // a.flatMap(b => c).flatMap(d => e) =>
         //     a.flatMap(b => c.flatMap(d => e))
         case FlatMap(FlatMap(a, b, c), d, e) =>
@@ -79,6 +86,12 @@ object Normalize extends StatelessTransformer {
           apply(FlatMap(a, b, Filter(c, Ident("temp"), er)))
 
         // ************Recursion***************
+
+        case SortBy(a, b, c) =>
+          (apply(a), apply(c)) match {
+            case (`a`, `c`) => SortBy(a, b, c)
+            case (a, c)     => apply(SortBy(apply(a), b, apply(c)))
+          }
 
         case FlatMap(a, b, c) =>
           (apply(a), apply(c)) match {

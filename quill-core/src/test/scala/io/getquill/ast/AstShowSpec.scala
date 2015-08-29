@@ -17,6 +17,14 @@ class AstShowSpec extends Spec {
       """queryable[TestEntity].filter(t => t.s == "test").flatMap(t => queryable[TestEntity]).map(t => t)"""
   }
 
+  "shows sorted queries" in {
+    val q = quote {
+      qr1.sortBy(t => t.i)
+    }
+    (q.ast: Ast).show mustEqual
+      """queryable[TestEntity].sortBy(t => t.i)"""
+  }
+
   "shows functions" in {
     val q = quote {
       (s: String) => s

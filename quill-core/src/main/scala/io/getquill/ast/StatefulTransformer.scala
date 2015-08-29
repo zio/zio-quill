@@ -42,6 +42,10 @@ trait StatefulTransformer[T] {
         val (at, att) = apply(a)
         val (ct, ctt) = att.apply(c)
         (FlatMap(at, b, ct), ctt)
+      case SortBy(a, b, c) =>
+        val (at, att) = apply(a)
+        val (ct, ctt) = att.apply(c)
+        (SortBy(at, b, ct), ctt)
     }
 
   def apply(e: Operation): (Operation, StatefulTransformer[T]) =
