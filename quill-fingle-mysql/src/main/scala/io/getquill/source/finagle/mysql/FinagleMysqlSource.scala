@@ -56,11 +56,10 @@ trait FinagleMysqlSource
     withClient(_.prepare(sql).select(bind(List()): _*)(extractor))
   }
 
-  private def withClient[T](f: Client => T) = {
+  private def withClient[T](f: Client => T) =
     currentClient().map {
       client => f(client)
     }.getOrElse {
       f(client)
     }
-  }
 }
