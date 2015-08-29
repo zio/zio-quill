@@ -11,8 +11,8 @@ sealed trait ComposableQueryable[+T] extends Queryable[T] {
 
   def map[R](f: T => R): ComposableQueryable[R]
   def flatMap[R](f: T => Queryable[R]): ComposableQueryable[R]
-  def withFilter(f: T => Any): ComposableQueryable[T]
-  def filter(f: T => Any): ComposableQueryable[T]
+  def withFilter(f: T => Boolean): ComposableQueryable[T]
+  def filter(f: T => Boolean): ComposableQueryable[T]
   def sortBy(f: T => Any): SortedQueryable[T]
 }
 
@@ -26,8 +26,8 @@ sealed trait EntityQueryable[+T] extends ComposableQueryable[T] {
   def update(f: (T => (Any, Any))*): Updatable[T]
   def delete: Deletable[T]
 
-  override def withFilter(f: T => Any): EntityQueryable[T]
-  override def filter(f: T => Any): EntityQueryable[T]
+  override def withFilter(f: T => Boolean): EntityQueryable[T]
+  override def filter(f: T => Boolean): EntityQueryable[T]
 }
 
 sealed trait Actionable[+T]

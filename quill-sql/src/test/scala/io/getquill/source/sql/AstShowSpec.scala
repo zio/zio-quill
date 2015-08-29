@@ -178,17 +178,17 @@ class AstShowSpec extends Spec {
       }
       "/" in {
         val q = quote {
-          qr1.filter(t => t.i / t.l)
+          qr1.filter(t => (t.i / t.l) == 0)
         }
         mirrorSource.run(q).sql mustEqual
-          "SELECT t.s, t.i, t.l FROM TestEntity t WHERE t.i / t.l"
+          "SELECT t.s, t.i, t.l FROM TestEntity t WHERE (t.i / t.l) = 0"
       }
       "%" in {
         val q = quote {
-          qr1.filter(t => t.i % t.l)
+          qr1.filter(t => (t.i % t.l) == 0)
         }
         mirrorSource.run(q).sql mustEqual
-          "SELECT t.s, t.i, t.l FROM TestEntity t WHERE t.i % t.l"
+          "SELECT t.s, t.i, t.l FROM TestEntity t WHERE (t.i % t.l) = 0"
       }
     }
     "action" - {
