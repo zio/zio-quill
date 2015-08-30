@@ -43,7 +43,7 @@ lazy val commonSettings = releaseSettings ++ Seq(
     "ch.qos.logback" % "logback-classic" % "1.1.3" % "test"
   ),
   scalacOptions ++= Seq("-deprecation", "-feature", "-Xfatal-warnings", "-optimize", "-unchecked"),
-  EclipseKeys.eclipseOutput := Some("target/eclipse"),
+  EclipseKeys.eclipseOutput := Some("bin"),
   fork in Test := true,
   publishMavenStyle := true,
   parallelExecution in Test := false,

@@ -4,3 +4,4 @@ target
 .project
 .settings
 .cache*
+**/bin
