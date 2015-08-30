@@ -67,7 +67,7 @@ object AdHocReduction extends StatelessTransformer {
         apply(Filter(a, b, BinaryOperation(c, `&&`, er)))
 
       // ---------------------------
-      // nest sortBy and map clauses inside flatMap
+      // flatMap.*
 
       // a.flatMap(b => c).map(d => e) =>
       //    a.flatMap(b => c.map(d => e))
