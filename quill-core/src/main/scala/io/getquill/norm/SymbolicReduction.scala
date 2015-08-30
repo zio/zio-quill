@@ -23,7 +23,8 @@ object SymbolicReduction extends StatelessTransformer {
     BetaReduction {
       AvoidCapture(q) match {
 
-        // ************Nested***************
+        // ---------------------------
+        // Reduce nested structures
 
         case Map(a, b, c) if (apply(a) != a || apply(c) != c) =>
           apply(Map(apply(a), b, apply(c)))
@@ -37,10 +38,8 @@ object SymbolicReduction extends StatelessTransformer {
         case SortBy(a, b, c) if (apply(a) != a || apply(c) != c) =>
           apply(SortBy(apply(a), b, apply(c)))
 
-        // ************Symbolic***************
-
         // ---------------------------
-        // apply intermediate mappings
+        // map.*
 
         // a.map(b => c).map(d => e) =>
         //    a.map(b => e[d := c])
@@ -67,42 +66,26 @@ object SymbolicReduction extends StatelessTransformer {
           apply(Map(SortBy(a, b, er), b, c))
 
         // ---------------------------
-        // merge edge transformations to inside the outer flatMap's body
+        // *.flatMap
 
-        // a.filter(b => c).flatMap(d => e) =>
-        //     a.flatMap(d => e.filter(temp => c[b := d]))
-        case FlatMap(Filter(a, b, c), d, e) =>
+        // a.filter(b => c).flatMap(d => e.$) =>
+        //     a.flatMap(d => e.filter(_ => c[b := d]).$)
+        case FlatMap(Filter(a, b, c), d, e: Query) =>
           val cr = BetaReduction(c, b -> d)
-          apply(FlatMap(a, d, Filter(e, Ident("temp"), cr)))
+          val er = AttachToEntity(Filter(_, _, cr))(e)
+          apply(FlatMap(a, d, er))
 
-        // a.sortBy(b => c).flatMap(d => e) =>
-        //     a.flatMap(d => e.sortBy(temp => c[b := d]))
-        case FlatMap(SortBy(a, b, c), d, e) =>
+        // a.sortBy(b => c).flatMap(d => e.$) =>
+        //     a.flatMap(d => e.sortBy(_ => c[b := d]).$)
+        case FlatMap(SortBy(a, b, c), d, e: Query) =>
           val cr = BetaReduction(c, b -> d)
-          apply(FlatMap(a, d, SortBy(e, Ident("temp"), cr)))
+          val er = AttachToEntity(SortBy(_, _, cr))(e)
+          apply(FlatMap(a, d, er))
 
         // a.flatMap(b => c).flatMap(d => e) =>
         //     a.flatMap(b => c.flatMap(d => e))
         case FlatMap(FlatMap(a, b, c), d, e) =>
           apply(FlatMap(a, b, FlatMap(c, d, e)))
-
-        // ---------------------------
-        // move map, filter and sortBy to outside flatMap's body
-
-        // a.flatMap(b => c.map(d => e)) =>
-        //    a.flatMap(b => c).map(d => e)
-        case FlatMap(a, b, Map(c, d, e)) =>
-          apply(Map(FlatMap(a, b, c), d, e))
-
-        // a.flatMap(b => c.filter(d => e)) =>
-        //    a.flatMap(b => c).filter(d => e)
-        case FlatMap(a, b, Filter(c, d, e)) =>
-          apply(Filter(FlatMap(a, b, c), d, e))
-
-        // a.flatMap(b => c.sortBy(d => e)) =>
-        //    a.flatMap(b => c).sortBy(d => e)
-        case FlatMap(a, b, SortBy(c, d, e)) =>
-          apply(SortBy(FlatMap(a, b, c), d, e))
 
         case other => other
       }

@@ -19,7 +19,8 @@ object AdHocReduction extends StatelessTransformer {
   override def apply(q: Query): Query =
     q match {
 
-      // ************Nested***************
+      // ---------------------------
+      // Reduce nested structures
 
       case Map(a, b, c) if (apply(a) != a || apply(c) != c) =>
         apply(Map(apply(a), b, apply(c)))
@@ -34,7 +35,7 @@ object AdHocReduction extends StatelessTransformer {
         apply(SortBy(apply(a), b, apply(c)))
 
       // ---------------------------
-      // order sortBy and filter
+      // Order sortBy and filter
 
       // a.sortBy(b => c).filter(d => e) =>
       //     a.filter(d => e).sortBy(b => c)
@@ -42,7 +43,7 @@ object AdHocReduction extends StatelessTransformer {
         apply(SortBy(Filter(a, d, e), b, c))
 
       // ---------------------------
-      // combine multiple filters and sortbys
+      // Combine multiple sortBy
 
       // a.sortBy(b => (c)).sortBy(d => e) =>
       //    a.sortBy(b => (c, e[d := b]))
@@ -56,6 +57,9 @@ object AdHocReduction extends StatelessTransformer {
         val er = BetaReduction(e, d -> b)
         apply(SortBy(a, b, Tuple(List(c, er))))
 
+      // ---------------------------
+      // Combine multiple filter
+
       // a.filter(b => c).filter(d => e) =>
       //    a.filter(b => c && e[d := b])
       case Filter(Filter(a, b, c), d, e) =>
@@ -63,7 +67,7 @@ object AdHocReduction extends StatelessTransformer {
         apply(Filter(a, b, BinaryOperation(c, `&&`, er)))
 
       // ---------------------------
-      // move final sortbys and maps to inside the base flatmap's body
+      // nest sortBy and map clauses inside flatMap
 
       // a.flatMap(b => c).map(d => e) =>
       //    a.flatMap(b => c.map(d => e))

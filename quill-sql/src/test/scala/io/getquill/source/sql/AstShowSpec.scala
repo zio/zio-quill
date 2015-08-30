@@ -51,7 +51,7 @@ class AstShowSpec extends Spec {
             }
           }
           mirrorSource.run(q).sql mustEqual
-            "SELECT t.s, t1.i FROM TestEntity t, TestEntity2 t1 WHERE t.l = t1.l ORDER BY t1.i, t.s"
+            "SELECT t.s, t1.i FROM TestEntity t, TestEntity2 t1 WHERE t.l = t1.l ORDER BY t.s, t1.i"
         }
       }
     }

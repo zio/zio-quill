@@ -78,7 +78,7 @@ class NormalizeSpec extends Spec {
           qr1.filter(b => b.s == "s1").flatMap(d => qr2)
         }
         val n = quote {
-          qr1.flatMap(b => qr2.filter(temp => b.s == "s1"))
+          qr1.flatMap(b => qr2.filter(x => b.s == "s1"))
         }
         Normalize(q.ast) mustEqual n.ast
       }
@@ -96,7 +96,7 @@ class NormalizeSpec extends Spec {
           qr1.sortBy(b => b.s).flatMap(d => qr2)
         }
         val n = quote {
-          qr1.flatMap(b => qr2.sortBy(temp => b.s))
+          qr1.flatMap(b => qr2.sortBy(x => b.s))
         }
         Normalize(q.ast) mustEqual n.ast
       }
