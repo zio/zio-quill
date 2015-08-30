@@ -31,12 +31,27 @@ class AstShowSpec extends Spec {
         mirrorSource.run(q).sql mustEqual
           "SELECT a.s FROM TestEntity a, TestEntity2 b WHERE a.s = b.s"
       }
-      "sorted" in {
-        val q = quote {
-          qr1.filter(t => t.s != null).sortBy(_.s)
+      "sorted" - {
+        "simple" in {
+          val q = quote {
+            qr1.filter(t => t.s != null).sortBy(_.s)
+          }
+          mirrorSource.run(q).sql mustEqual
+            "SELECT t.s, t.i, t.l FROM TestEntity t WHERE t.s IS NOT NULL ORDER BY t.s"
         }
-        mirrorSource.run(q).sql mustEqual
-          "SELECT t.s, t.i, t.l FROM TestEntity t WHERE t.s IS NOT NULL ORDER BY t.s"
+        "nested" in {
+          val q = quote {
+            for {
+              a <- qr1.sortBy(t => t.s)
+              b <- qr2.sortBy(t => t.i)
+              if (a.l == b.l)
+            } yield {
+              (a.s, b.i)
+            }
+          }
+          mirrorSource.run(q).sql mustEqual
+            "SELECT a.s, b.i FROM TestEntity a, TestEntity2 b WHERE a.l = b.l ORDER BY b.i, a.s"
+        }
       }
     }
     "unary operation" - {

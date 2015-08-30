@@ -116,7 +116,7 @@ trait Parsing {
     case q"$source.flatMap[$t](($alias) => $body)" =>
       FlatMap(astParser(source), identParser(alias), astParser(body))
 
-    case q"$source.sortBy(($alias) => $body)" =>
+    case q"$source.sortBy[$t](($alias) => $body)($ord)" =>
       SortBy(astParser(source), identParser(alias), astParser(body))
   }
 

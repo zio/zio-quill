@@ -3,24 +3,17 @@ package io.getquill
 import io.getquill.quotation.NonQuotedException
 
 sealed trait Queryable[+T] {
+
+  def map[R](f: T => R): Queryable[R]
+  def flatMap[R](f: T => Queryable[R]): Queryable[R]
+  def withFilter(f: T => Boolean): Queryable[T]
+  def filter(f: T => Boolean): Queryable[T]
+  def sortBy[R](f: T => R)(implicit ord: Ordering[R]): Queryable[T]
   def nonEmpty: Boolean
   def isEmpty: Boolean
 }
 
-sealed trait ComposableQueryable[+T] extends Queryable[T] {
-
-  def map[R](f: T => R): ComposableQueryable[R]
-  def flatMap[R](f: T => Queryable[R]): ComposableQueryable[R]
-  def withFilter(f: T => Boolean): ComposableQueryable[T]
-  def filter(f: T => Boolean): ComposableQueryable[T]
-  def sortBy(f: T => Any): SortedQueryable[T]
-}
-
-sealed trait SortedQueryable[+T] extends Queryable[T] {
-  def map[R](f: T => R): Queryable[R]
-}
-
-sealed trait EntityQueryable[+T] extends ComposableQueryable[T] {
+sealed trait EntityQueryable[+T] extends Queryable[T] {
 
   def insert(f: (T => (Any, Any))*): Insertable[T]
   def update(f: (T => (Any, Any))*): Updatable[T]

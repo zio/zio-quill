@@ -75,7 +75,7 @@ trait DepartmentsSpec extends Spec {
   val any =
     quote {
       new {
-        def apply[T](xs: ComposableQueryable[T])(p: T => Boolean) =
+        def apply[T](xs: Queryable[T])(p: T => Boolean) =
           (for {
             x <- xs if (p(x))
           } yield {}).nonEmpty
@@ -105,7 +105,7 @@ trait DepartmentsSpec extends Spec {
     val all =
       quote {
         new {
-          def apply[T](xs: ComposableQueryable[T])(p: T => Boolean) =
+          def apply[T](xs: Queryable[T])(p: T => Boolean) =
             !any(xs)(x => !p(x))
         }
       }
@@ -113,7 +113,7 @@ trait DepartmentsSpec extends Spec {
     def contains[T] =
       quote {
         new {
-          def apply[T](xs: ComposableQueryable[T])(u: T) =
+          def apply[T](xs: Queryable[T])(u: T) =
             any(xs)(x => x == u)
         }
       }
