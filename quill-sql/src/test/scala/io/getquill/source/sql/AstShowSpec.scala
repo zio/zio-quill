@@ -3,6 +3,7 @@ package io.getquill.source.sql
 import io.getquill._
 import io.getquill.Spec
 import io.getquill.source.sql.mirror.mirrorSource
+import io.getquill.norm.Normalize
 
 class AstShowSpec extends Spec {
 
@@ -50,7 +51,7 @@ class AstShowSpec extends Spec {
             }
           }
           mirrorSource.run(q).sql mustEqual
-            "SELECT a.s, b.i FROM TestEntity a, TestEntity2 b WHERE a.l = b.l ORDER BY b.i, a.s"
+            "SELECT t.s, t1.i FROM TestEntity t, TestEntity2 t1 WHERE t.l = t1.l ORDER BY t1.i, t.s"
         }
       }
     }

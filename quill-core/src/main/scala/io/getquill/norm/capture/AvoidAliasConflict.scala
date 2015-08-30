@@ -8,6 +8,7 @@ import io.getquill.ast.Map
 import io.getquill.ast.Query
 import io.getquill.ast.StatefulTransformer
 import io.getquill.norm.BetaReduction
+import io.getquill.ast.SortBy
 
 private case class AvoidAliasConflict(state: Set[Ident])
     extends StatefulTransformer[Set[Ident]] {
@@ -33,6 +34,12 @@ private case class AvoidAliasConflict(state: Set[Ident])
         val (prr, t) = AvoidAliasConflict(state + fresh)(pr)
         (Filter(q, fresh, prr), t)
 
+      case SortBy(q: Entity, x, p) if (state.contains(x)) =>
+        val fresh = freshIdent(x)
+        val pr = BetaReduction(p, x -> fresh)
+        val (prr, t) = AvoidAliasConflict(state + fresh)(pr)
+        (SortBy(q, fresh, prr), t)
+
       case FlatMap(q: Entity, x, p) =>
         val (pr, t) = AvoidAliasConflict(state + x)(p)
         (FlatMap(q, x, pr), t)
@@ -44,6 +51,10 @@ private case class AvoidAliasConflict(state: Set[Ident])
       case Filter(q: Entity, x, p) =>
         val (pr, t) = AvoidAliasConflict(state + x)(p)
         (Filter(q, x, pr), t)
+
+      case SortBy(q: Entity, x, p) =>
+        val (pr, t) = AvoidAliasConflict(state + x)(p)
+        (SortBy(q, x, pr), t)
 
       case other => super.apply(other)
     }
