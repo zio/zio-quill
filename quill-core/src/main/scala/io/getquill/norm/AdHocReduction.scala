@@ -14,7 +14,7 @@ import io.getquill.norm.capture.AvoidCapture
 import io.getquill.ast.SortBy
 import io.getquill.ast.Tuple
 
-object AdHocReduction extends StatelessTransformer {
+private[norm] object AdHocReduction extends StatelessTransformer {
 
   override def apply(q: Query): Query =
     q match {
@@ -35,15 +35,12 @@ object AdHocReduction extends StatelessTransformer {
         apply(SortBy(apply(a), b, apply(c)))
 
       // ---------------------------
-      // Order sortBy and filter
+      // sortBy.*
 
       // a.sortBy(b => c).filter(d => e) =>
       //     a.filter(d => e).sortBy(b => c)
       case Filter(SortBy(a, b, c), d, e) =>
         apply(SortBy(Filter(a, d, e), b, c))
-
-      // ---------------------------
-      // Combine multiple sortBy
 
       // a.sortBy(b => (c)).sortBy(d => e) =>
       //    a.sortBy(b => (c, e[d := b]))
@@ -58,7 +55,7 @@ object AdHocReduction extends StatelessTransformer {
         apply(SortBy(a, b, Tuple(List(c, er))))
 
       // ---------------------------
-      // Combine multiple filter
+      // filter.filter
 
       // a.filter(b => c).filter(d => e) =>
       //    a.filter(b => c && e[d := b])

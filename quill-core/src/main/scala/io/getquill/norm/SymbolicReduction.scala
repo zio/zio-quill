@@ -14,7 +14,7 @@ import io.getquill.norm.capture.AvoidCapture
 import io.getquill.ast.SortBy
 import io.getquill.ast.Tuple
 
-object SymbolicReduction extends StatelessTransformer {
+private[norm] object SymbolicReduction extends StatelessTransformer {
 
   override def apply(q: Ast): Ast =
     super.apply(BetaReduction(q))
