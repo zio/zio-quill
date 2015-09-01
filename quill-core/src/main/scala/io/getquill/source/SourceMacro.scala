@@ -38,7 +38,7 @@ trait SourceMacro extends Quotation with ActionMacro with QueryMacro {
 
   private def ast[T](quoted: Expr[Quoted[T]]) =
     unquote[Ast](quoted.tree).getOrElse {
-      c.fail("Can't unquote $quoted")
+      c.fail(s"Can't unquote $quoted")
     }
 
   private def paramsTypes[T](implicit t: WeakTypeTag[T]) =

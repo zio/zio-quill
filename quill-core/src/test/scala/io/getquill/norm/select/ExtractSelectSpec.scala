@@ -87,7 +87,7 @@ class ExtractSelectSpec extends Spec {
   }
 
   "fails if the query is malformed" in {
-    intercept[IllegalStateException] {
+    val e = intercept[IllegalStateException] {
       ExtractSelect(FlatMap(Ident("a"), Ident("b"), Ident("c")))
     }
   }

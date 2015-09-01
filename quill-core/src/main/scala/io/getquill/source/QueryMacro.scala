@@ -45,6 +45,6 @@ trait QueryMacro extends SelectFlattening with SelectResultExtraction {
 
   private def bindingMap(params: List[(Ident, Type)]): collection.Map[Ident, (Type, Tree)] =
     (for ((param, tpe) <- params) yield {
-      param -> (tpe, q"${TermName(param.name)}")
+      (param, (tpe, q"${TermName(param.name)}"))
     }).toMap
 }

@@ -35,7 +35,7 @@ trait ActionMacro {
         collection.Map((param, (tpe, q"value")))
       case params =>
         (for (((param, tpe), index) <- params.zipWithIndex) yield {
-          param -> (tpe, q"value.${TermName(s"_${index + 1}")}")
+          (param, (tpe, q"value.${TermName(s"_${index + 1}")}"))
         }).toMap
     }
 }

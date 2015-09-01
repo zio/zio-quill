@@ -15,13 +15,13 @@ trait Encoder[S, T] {
 object Encoding {
 
   def inferDecoder[R](c: Context)(tpe: c.Type)(implicit r: c.WeakTypeTag[R]) = {
-    def decoderType[T, R](implicit t: c.WeakTypeTag[T], r: c.WeakTypeTag[R]) = c.weakTypeTag[Decoder[R, T]]
-    InferImplicitValueWithFallback(c)(decoderType(c.WeakTypeTag(tpe), r).tpe, c.prefix.tree)
+    def decoderType[T](implicit t: c.WeakTypeTag[T]) = c.weakTypeTag[Decoder[R, T]]
+    InferImplicitValueWithFallback(c)(decoderType(c.WeakTypeTag(tpe)).tpe, c.prefix.tree)
   }
 
   def inferEcoder[R](c: Context)(tpe: c.Type)(implicit r: c.WeakTypeTag[R]) = {
-    def encoderType[T, R](implicit t: c.WeakTypeTag[T], r: c.WeakTypeTag[R]) = c.weakTypeTag[Encoder[R, T]]
-    InferImplicitValueWithFallback(c)(encoderType(c.WeakTypeTag(tpe), r).tpe, c.prefix.tree)
+    def encoderType[T](implicit t: c.WeakTypeTag[T]) = c.weakTypeTag[Encoder[R, T]]
+    InferImplicitValueWithFallback(c)(encoderType(c.WeakTypeTag(tpe)).tpe, c.prefix.tree)
   }
 
 }

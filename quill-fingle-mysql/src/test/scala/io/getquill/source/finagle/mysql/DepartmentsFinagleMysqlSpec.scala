@@ -11,8 +11,8 @@ class DepartmentsFinagleMysqlSpec extends DepartmentsSpec {
 
   def await[T](future: Future[T]) = Await.result(future)
 
-  override def beforeAll =
-    testDB.transaction {
+  override def beforeAll = {
+    val t = testDB.transaction {
       for {
         _ <- testDB.run(queryable[Department].delete)
         _ <- testDB.run(queryable[Employee].delete)
@@ -23,6 +23,7 @@ class DepartmentsFinagleMysqlSpec extends DepartmentsSpec {
         _ <- testDB.run(taskInsert).using(taskEntries)
       } yield {}
     }
+  }
 
   "Example 8 - nested naive" in {
     await(testDB.run(`Example 8 expertise naive`).using(`Example 8 param`)) mustEqual `Example 8 expected result`

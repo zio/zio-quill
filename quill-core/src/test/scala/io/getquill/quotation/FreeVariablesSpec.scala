@@ -55,22 +55,22 @@ class FreeVariablesSpec extends Spec {
 
   "doesn't fail for variables defined in the quotation" - {
     "function" in {
-      quote {
+      val q = quote {
         (s: String) => s
       }
     }
     "filter" in {
-      quote {
+      val q = quote {
         qr1.filter(t => t.s == "s1")
       }
     }
     "map" in {
-      quote {
+      val q = quote {
         qr1.map(_.s)
       }
     }
     "flatMap" in {
-      quote {
+      val q = quote {
         qr1.flatMap(t => qr2.filter(u => t.s == u.s))
       }
     }

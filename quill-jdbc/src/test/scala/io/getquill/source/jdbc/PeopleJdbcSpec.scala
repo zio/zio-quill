@@ -6,13 +6,14 @@ import io.getquill.source.sql.PeopleSpec
 
 class PeopleJdbcSpec extends PeopleSpec {
 
-  override def beforeAll =
-    testDB.transaction {
+  override def beforeAll = {
+    val t = testDB.transaction {
       testDB.run(queryable[Couple].delete)
       testDB.run(queryable[Person].filter(_.age > 0).delete)
       testDB.run(peopleInsert).using(peopleEntries)
       testDB.run(couplesInsert).using(couplesEntries)
     }
+  }
 
   "Example 1 - differences" in {
     testDB.run(`Ex 1 differences`) mustEqual `Ex 1 expected result`

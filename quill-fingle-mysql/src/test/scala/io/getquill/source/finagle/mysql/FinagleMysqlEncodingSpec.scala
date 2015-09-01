@@ -22,7 +22,7 @@ class FinagleMysqlEncodingSpec extends EncodingSpec {
   "fails if the column has the wrong type" in {
     Await.result(testDB.run(insert).using(List(insertValues)))
     case class EncodingTestEntity(v1: Int)
-    intercept[IllegalStateException] {
+    val e = intercept[IllegalStateException] {
       Await.result(testDB.run(queryable[EncodingTestEntity]))
     }
   }

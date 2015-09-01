@@ -112,7 +112,7 @@ trait DepartmentsSpec extends Spec {
         }
       }
 
-    def contains[T] =
+    def contains =
       quote {
         new {
           def apply[T](xs: Queryable[T])(u: T) =

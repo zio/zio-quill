@@ -26,28 +26,28 @@ class SelectResultExtractionSpec extends Spec {
           qr1.map(t => (t, t.s))
         }
         mirrorSource.run(q)
-          .extractor(Row("a", 1, 2L, "b")) mustEqual (TestEntity("a", 1, 2L), "b")
+          .extractor(Row("a", 1, 2L, "b")) mustEqual ((TestEntity("a", 1, 2L), "b"))
       }
       "case class in the end" in {
         val q = quote {
           qr1.map(t => (t.s, t))
         }
         mirrorSource.run(q)
-          .extractor(Row("b", "a", 1, 2L)) mustEqual ("b", TestEntity("a", 1, 2L))
+          .extractor(Row("b", "a", 1, 2L)) mustEqual (("b", TestEntity("a", 1, 2L)))
       }
       "case class in the middle" in {
         val q = quote {
           qr1.map(t => (t.s, t, t.i))
         }
         mirrorSource.run(q)
-          .extractor(Row("b", "a", 1, 2L, 3)) mustEqual ("b", TestEntity("a", 1, 2L), 3)
+          .extractor(Row("b", "a", 1, 2L, 3)) mustEqual (("b", TestEntity("a", 1, 2L), 3))
       }
       "two case classes" in {
         val q = quote {
           qr1.flatMap(x => qr2.map(y => (x, y)))
         }
         mirrorSource.run(q)
-          .extractor(Row("a", 1, 2L, "b", 3, 4L)) mustEqual (TestEntity("a", 1, 2L), TestEntity2("b", 3, 4L))
+          .extractor(Row("a", 1, 2L, "b", 3, 4L)) mustEqual ((TestEntity("a", 1, 2L), TestEntity2("b", 3, 4L)))
       }
     }
   }

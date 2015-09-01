@@ -263,7 +263,7 @@ class QuotationSpec extends Spec {
     val q = quote {
       qr1.map(t => (t.i, t.l))
     }
-    quote {
+    val n = quote {
       for {
         (a, b) <- q
       } yield {
@@ -284,7 +284,7 @@ class QuotationSpec extends Spec {
   "fails if the ast doesn't match the type" in {
     val q = new Quoted[Int => Int] {
       @QuotedAst(Constant(1))
-      def quoted = ()
+      def quoted = ast
       override def ast = Constant(1)
     }
     "quote(q(1))" mustNot compile

@@ -44,7 +44,7 @@ class ReplaceSelectSpec extends Spec {
       val q = quote {
         qr1.filter(t => t.s == "s1")
       }
-      intercept[IllegalStateException] {
+      val e = intercept[IllegalStateException] {
         ReplaceSelect(q.ast, List())
       }
     }
@@ -52,7 +52,7 @@ class ReplaceSelectSpec extends Spec {
       val q = quote {
         qr1.flatMap(u => qr2)
       }
-      intercept[IllegalStateException] {
+      val e = intercept[IllegalStateException] {
         ReplaceSelect(q.ast, List())
       }
     }

@@ -19,13 +19,13 @@ class PackageSpec extends Spec {
   }
 
   "fails if a queryable is used ouside of a quotation" in {
-    intercept[NonQuotedException] {
+    val e = intercept[NonQuotedException] {
       queryable[TestEntity]
     }
   }
 
   "fails if a quotation is unquoted ouside of a quotation" in {
-    intercept[NonQuotedException] {
+    val e = intercept[NonQuotedException] {
       unquote(qr1)
     }
   }

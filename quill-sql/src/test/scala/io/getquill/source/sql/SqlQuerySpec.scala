@@ -50,7 +50,7 @@ class SqlQuerySpec extends Spec {
     val q = quote {
       qr1.map(_.s).filter(_ == "s")
     }
-    intercept[IllegalStateException] {
+    val e = intercept[IllegalStateException] {
       SqlQuery(q.ast)
     }
   }
