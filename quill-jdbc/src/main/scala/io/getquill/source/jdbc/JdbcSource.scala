@@ -4,7 +4,6 @@ import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 
-import scala.collection.mutable.ListBuffer
 import scala.util.DynamicVariable
 import scala.util.control.NonFatal
 
@@ -71,10 +70,13 @@ trait JdbcSource
     withConnection { conn =>
       val ps = bind(conn.prepareStatement(sql))
       val rs = ps.executeQuery
-      val result = new ListBuffer[T]
-      while (rs.next)
-        result += extractor(rs)
-      result.toList
+      extractResult(rs, extractor)
     }
   }
+
+  private def extractResult[T](rs: ResultSet, extractor: ResultSet => T): List[T] =
+    if (rs.next)
+      extractor(rs) +: extractResult(rs, extractor)
+    else
+      List()
 }

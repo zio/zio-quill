@@ -4,7 +4,7 @@ import scala.reflect.macros.whitebox.Context
 
 import io.getquill.ast.Ast
 import io.getquill.ast.Ident
-import io.getquill.util.Messages.RichContext
+import io.getquill.util.Messages._
 
 object EncodeBindVariables {
 
@@ -21,14 +21,15 @@ object EncodeBindVariables {
         val encoder =
           Encoding.inferEcoder(c)(tpe)(s)
             .getOrElse(c.fail(s"Source doesn't know how do encode '$binding: $tpe'"))
-        q"r = $encoder($index, $binding, r)"
+        (row: Tree) => q"$encoder($index, $binding, $row)"
+      }
+    val body =
+      applyEncoders.foldLeft[Tree](q"row") {
+        case (row, function) =>
+          function(row)
       }
     q"""
-      (row: $s) => {
-        var r = row
-        $applyEncoders
-        r
-      }
+      (row: $s) => $body
     """
   }
 }
