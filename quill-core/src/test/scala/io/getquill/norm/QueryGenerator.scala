@@ -59,7 +59,7 @@ class QueryGenerator(seed: Int) {
   }
 
   private def reverse(i: Int) =
-    Reverse(apply(i - 1))
+    Reverse(sortBy(i - 1))
 
   private def distribute(i: Int) = {
     val j = random.nextInt(i - 2) + 1

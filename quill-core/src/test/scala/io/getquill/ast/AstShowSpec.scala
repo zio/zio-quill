@@ -25,10 +25,10 @@ class AstShowSpec extends Spec {
 
   "shows sorted queries" in {
     val q = quote {
-      qr1.sortBy(t => t.i)
+      qr1.sortBy(t => t.i).reverse
     }
     (q.ast: Ast).show mustEqual
-      """queryable[TestEntity].sortBy(t => t.i)"""
+      """queryable[TestEntity].sortBy(t => t.i).reverse"""
   }
 
   "shows functions" in {

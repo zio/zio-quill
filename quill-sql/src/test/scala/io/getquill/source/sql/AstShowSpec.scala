@@ -43,7 +43,7 @@ class AstShowSpec extends Spec {
         "nested" in {
           val q = quote {
             for {
-              a <- qr1.sortBy(t => t.s)
+              a <- qr1.sortBy(t => t.s).reverse
               b <- qr2.sortBy(t => t.i)
               if (a.l == b.l)
             } yield {
@@ -51,7 +51,7 @@ class AstShowSpec extends Spec {
             }
           }
           mirrorSource.run(q).sql mustEqual
-            "SELECT t.s, t1.i FROM TestEntity t, TestEntity2 t1 WHERE t.l = t1.l ORDER BY t.s, t1.i"
+            "SELECT t.s, t1.i FROM TestEntity t, TestEntity2 t1 WHERE t.l = t1.l ORDER BY t.s DESC, t1.i"
         }
       }
     }

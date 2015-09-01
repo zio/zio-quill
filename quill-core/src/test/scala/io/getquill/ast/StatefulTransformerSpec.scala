@@ -56,6 +56,14 @@ class StatefulTransformerSpec extends Spec {
             att.state mustEqual List(Ident("a"), Ident("c"))
         }
       }
+      "reverse" in {
+        val ast: Ast = Reverse(SortBy(Ident("a"), Ident("b"), Ident("c")))
+        Subject(List(), Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) match {
+          case (at, att) =>
+            at mustEqual Reverse(SortBy(Ident("a'"), Ident("b"), Ident("c'")))
+            att.state mustEqual List(Ident("a"), Ident("c"))
+        }
+      }
     }
 
     "operation" - {

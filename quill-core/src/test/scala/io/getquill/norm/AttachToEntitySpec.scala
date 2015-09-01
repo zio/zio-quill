@@ -6,17 +6,19 @@ import io.getquill.ast.SortBy
 import io.getquill.quote
 import io.getquill.unquote
 import io.getquill.ast.Entity
+import io.getquill.ast.Ident
+import io.getquill.ast.Map
 
-class AttachToSpec extends Spec {
+class AttachToEntitySpec extends Spec {
 
-  val attachToEntity = AttachTo[Entity](SortBy(_, _, Constant(1))) _
+  val attachToEntity = AttachToEntity(SortBy(_, _, Constant(1))) _
 
   "attaches clause to the root of the query (entity)" - {
     "query is the entity" in {
       val n = quote {
         qr1.sortBy(x => 1)
       }
-      attachToEntity(qr1.ast) mustEqual Some(n.ast)
+      attachToEntity(qr1.ast) mustEqual n.ast
     }
     "query is a composition" - {
       "map" in {
@@ -26,7 +28,7 @@ class AttachToSpec extends Spec {
         val n = quote {
           qr1.sortBy(t => 1).filter(t => t.i == 1).map(t => t.s)
         }
-        attachToEntity(q.ast) mustEqual Some(n.ast)
+        attachToEntity(q.ast) mustEqual n.ast
       }
       "flatMap" in {
         val q = quote {
@@ -35,7 +37,7 @@ class AttachToSpec extends Spec {
         val n = quote {
           qr1.sortBy(t => 1).filter(t => t.i == 1).flatMap(t => qr2)
         }
-        attachToEntity(q.ast) mustEqual Some(n.ast)
+        attachToEntity(q.ast) mustEqual n.ast
       }
       "filter" in {
         val q = quote {
@@ -44,7 +46,7 @@ class AttachToSpec extends Spec {
         val n = quote {
           qr1.sortBy(t => 1).filter(t => t.i == 1).filter(t => t.s == "s1")
         }
-        attachToEntity(q.ast) mustEqual Some(n.ast)
+        attachToEntity(q.ast) mustEqual n.ast
       }
       "sortBy" in {
         val q = quote {
@@ -53,8 +55,23 @@ class AttachToSpec extends Spec {
         val n = quote {
           qr1.sortBy(t => 1).filter(t => t.i == 1).sortBy(t => t.s)
         }
-        attachToEntity(q.ast) mustEqual Some(n.ast)
+        attachToEntity(q.ast) mustEqual n.ast
       }
+      "reverse" in {
+        val q = quote {
+          qr1.filter(t => t.i == 1).sortBy(b => b.s).reverse
+        }
+        val n = quote {
+          qr1.sortBy(t => 1).filter(t => t.i == 1).sortBy(b => b.s).reverse
+        }
+        attachToEntity(q.ast) mustEqual n.ast
+      }
+    }
+  }
+
+  "fails if the entity isn't found" in {
+    val e = intercept[IllegalStateException] {
+      attachToEntity(Map(Ident("a"), Ident("b"), Ident("c")))
     }
   }
 }

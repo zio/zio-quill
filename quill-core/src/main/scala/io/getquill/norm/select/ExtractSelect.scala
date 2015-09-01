@@ -27,9 +27,8 @@ private[select] object ExtractSelect {
         (Map(q, x, x), x)
       case q @ SortBy(_, x, _) =>
         (Map(q, x, x), x)
-      case Reverse(q: Query) =>
-        val (qr, map) = apply(q)
-        (Reverse(qr), map)
+      case q @ Reverse(SortBy(_, x, _)) =>
+        (Map(q, x, x), x)
       case other =>
         fail(s"Can't find the final map (select) in $query")
     }

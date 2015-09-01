@@ -11,6 +11,7 @@ import io.getquill.ast.Map
 import io.getquill.ast.Property
 import io.getquill.ast.SortBy
 import io.getquill.ast.Tuple
+import io.getquill.ast.Reverse
 
 class BetaReductionSpec extends Spec {
 
@@ -57,6 +58,11 @@ class BetaReductionSpec extends Spec {
         val ast: Ast = SortBy(Ident("a"), Ident("b"), Ident("b"))
         BetaReduction(ast, Ident("b") -> Ident("b'")) mustEqual
           SortBy(Ident("a"), Ident("b"), Ident("b"))
+      }
+      "reverse" in {
+        val ast: Ast = Reverse(SortBy(Ident("a"), Ident("b"), Ident("b")))
+        BetaReduction(ast, Ident("b") -> Ident("b'")) mustEqual
+          Reverse(SortBy(Ident("a"), Ident("b"), Ident("b")))
       }
     }
   }

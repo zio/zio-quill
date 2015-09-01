@@ -51,6 +51,14 @@ class FreeVariablesSpec extends Spec {
       }
       """ mustNot compile
     }
+    "reverse" in {
+      val s = "s"
+      """
+      quote {
+        qr1.sortBy(_ => s).reverse
+      }
+      """ mustNot compile
+    }
   }
 
   "doesn't fail for variables defined in the quotation" - {
@@ -72,6 +80,11 @@ class FreeVariablesSpec extends Spec {
     "flatMap" in {
       val q = quote {
         qr1.flatMap(t => qr2.filter(u => t.s == u.s))
+      }
+    }
+    "reverse" in {
+      val q = quote {
+        qr1.sortBy(b => b.s).reverse
       }
     }
   }

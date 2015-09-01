@@ -26,7 +26,37 @@ class AdHocReductionSpec extends Spec {
     AdHocReduction(q.ast) mustEqual n.ast
   }
 
-  "sortBy.*" - {
+  "reverse" - {
+    "a.reverse.reverse" in {
+      val q = quote {
+        qr1.sortBy(b => b.s).reverse.reverse
+      }
+      val n = quote {
+        qr1.sortBy(b => b.s)
+      }
+      AdHocReduction(q.ast) mustEqual n.ast
+    }
+    "a.reverse.filter(b => c)" in {
+      val q = quote {
+        qr1.sortBy(b => b.s).reverse.filter(d => d == "s2")
+      }
+      val n = quote {
+        qr1.filter(d => d == "s2").sortBy(b => b.s).reverse
+      }
+      AdHocReduction(q.ast) mustEqual n.ast
+    }
+    "a.map(b => c).reverse" in {
+      val q = quote {
+        qr1.sortBy(t => t.s).map(t => t.s).reverse
+      }
+      val n = quote {
+        qr1.sortBy(t => t.s).reverse.map(t => t.s)
+      }
+      AdHocReduction(q.ast) mustEqual n.ast
+    }
+  }
+
+  "sortBy" - {
     "a.sortBy(b => c).filter(d => e)" in {
       val q = quote {
         qr1.sortBy(b => b.s).filter(d => d.s == "s1")
@@ -36,21 +66,9 @@ class AdHocReductionSpec extends Spec {
       }
       AdHocReduction(q.ast) mustEqual n.ast
     }
-    "a.sortBy(b => (c)).sortBy(d => e)" in {
-      val q = quote {
-        qr1.sortBy(b => (b.s, b.i)).sortBy(d => d.l)
-      }
-      AdHocReduction(q.ast) mustEqual q.ast
-    }
-    "a.sortBy(b => c).sortBy(d => e)" in {
-      val q = quote {
-        qr1.sortBy(b => b.s).sortBy(d => d.l)
-      }
-      AdHocReduction(q.ast) mustEqual q.ast
-    }
   }
 
-  "filter.filter" - {
+  "filter" - {
     "a.filter(b => c).filter(d => e)" in {
       val q = quote {
         qr1.filter(b => b.s == "s1").filter(d => d.s == "s2")
@@ -62,7 +80,7 @@ class AdHocReductionSpec extends Spec {
     }
   }
 
-  "flatMap.*" - {
+  "flatMap" - {
     "a.flatMap(b => c).map(d => e)" in {
       val q = quote {
         qr1.flatMap(b => qr2).map(d => d.s)
@@ -87,6 +105,15 @@ class AdHocReductionSpec extends Spec {
       }
       val n = quote {
         qr1.flatMap(b => qr2.sortBy(d => d.s))
+      }
+      AdHocReduction(q.ast) mustEqual n.ast
+    }
+    "a.flatMap(b => c).reverse" in {
+      val q = quote {
+        qr1.flatMap(b => qr2).sortBy(b => b.s).reverse
+      }
+      val n = quote {
+        qr1.flatMap(b => qr2.sortBy(b => b.s).reverse)
       }
       AdHocReduction(q.ast) mustEqual n.ast
     }

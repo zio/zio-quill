@@ -44,4 +44,13 @@ class ReduceNestedStructuresSpec extends Spec {
     }
     subject.unapply(q.ast) mustEqual Some(n.ast)
   }
+  "reverse" in {
+    val q = quote {
+      qr1.sortBy(t => (t.i, t.s)._1).reverse
+    }
+    val n = quote {
+      qr1.sortBy(t => t.i).reverse
+    }
+    subject.unapply(q.ast) mustEqual Some(n.ast)
+  }
 }

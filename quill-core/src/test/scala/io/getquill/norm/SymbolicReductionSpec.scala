@@ -67,6 +67,15 @@ class SymbolicReductionSpec extends Spec {
         SymbolicReduction(q.ast) mustEqual n.ast
       }
     }
+    "a.reverse.flatMap(d => e.$)" in {
+      val q = quote {
+        qr1.sortBy(b => b.s).reverse.flatMap(d => qr2.map(f => f.s))
+      }
+      val n = quote {
+        qr1.flatMap(b => qr2.sortBy(x => b.s).reverse.map(f => f.s))
+      }
+      SymbolicReduction(q.ast) mustEqual n.ast
+    }
     "a.flatMap(b => c).flatMap(d => e)" in {
       val q = quote {
         qr1.flatMap(b => qr2).flatMap(d => qr3)

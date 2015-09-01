@@ -43,7 +43,7 @@ private[norm] object AdHocReduction extends StatelessTransformer {
         apply(Map(Reverse(a), b, c))
 
       // ---------------------------
-      // sortBy.filter
+      // sortBy
 
       // a.sortBy(b => c).filter(d => e) =>
       //     a.filter(d => e).sortBy(b => c)
@@ -51,7 +51,7 @@ private[norm] object AdHocReduction extends StatelessTransformer {
         apply(SortBy(Filter(a, d, e), b, c))
 
       // ---------------------------
-      // filter.filter
+      // filter
 
       // a.filter(b => c).filter(d => e) =>
       //    a.filter(b => c && e[d := b])
@@ -59,13 +59,8 @@ private[norm] object AdHocReduction extends StatelessTransformer {
         val er = BetaReduction(e, d -> b)
         apply(Filter(a, b, BinaryOperation(c, ast.`&&`, er)))
 
-      // a.filter(b => c).reverse =>
-      //    a.filter(b => c).sortBy(b => b).reverse
-      case Reverse(Filter(a, b, c)) =>
-        apply(Reverse(SortBy(Filter(a, b, c), b, b)))
-
       // ---------------------------
-      // flatMap.*
+      // flatMap
 
       // a.flatMap(b => c).map(d => e) =>
       //    a.flatMap(b => c.map(d => e))

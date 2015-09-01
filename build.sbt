@@ -62,6 +62,7 @@ lazy val commonSettings = releaseSettings ++ Seq(
     "-Xfuture",
     "-Ywarn-unused-import"
   ),
+  fork in Test := true,
   ScoverageSbtPlugin.ScoverageKeys.coverageMinimum := 100,
   ScoverageSbtPlugin.ScoverageKeys.coverageFailOnMinimum := false,
   EclipseKeys.eclipseOutput := Some("bin"),
