@@ -3,6 +3,7 @@ package io.getquill.source
 import io.getquill.Spec
 import io.getquill.quotation.Quoted
 import io.getquill.quote
+import io.getquill.source.mirror.mirrorSource
 
 class SourceMacroSpec extends Spec {
 
