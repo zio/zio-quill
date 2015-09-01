@@ -18,7 +18,7 @@ class SqlQuerySpec extends Spec {
       }
       val sqlq = SqlQuery(q.ast)
       sqlq.from mustEqual List(Source("TestEntity", "a"), Source("TestEntity2", "b"))
-      sqlq.where.get.toString mustEqual "(a.s != null) && (b.i > a.i)"
+      sqlq.where.toString mustEqual "Some((a.s != null) && (b.i > a.i))"
       sqlq.select.toString mustEqual "(a, b)"
       sqlq.sortBy mustEqual None
     }
@@ -31,7 +31,7 @@ class SqlQuerySpec extends Spec {
         sqlq.from mustEqual List(Source("TestEntity", "t"))
         sqlq.where mustEqual None
         sqlq.select.toString mustEqual "t.s"
-        sqlq.sortBy.get.toString mustEqual "t.s"
+        sqlq.sortBy.toString mustEqual "Some(t.s)"
       }
       "with filter" in {
         val q = quote {
@@ -39,9 +39,9 @@ class SqlQuerySpec extends Spec {
         }
         val sqlq = SqlQuery(q.ast)
         sqlq.from mustEqual List(Source("TestEntity", "t"))
-        sqlq.where.get.toString mustEqual """t.s == "s""""
+        sqlq.where.toString mustEqual """Some(t.s == "s")"""
         sqlq.select.toString mustEqual "t.i"
-        sqlq.sortBy.get.toString mustEqual "t.s"
+        sqlq.sortBy.toString mustEqual "Some(t.s)"
       }
     }
   }

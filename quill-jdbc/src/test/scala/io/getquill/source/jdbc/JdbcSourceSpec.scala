@@ -12,7 +12,7 @@ class JdbcSourceSpec extends Spec {
       testDB.transaction {
         testDB.run(qr1.insert(_.i -> 33))
       }
-      testDB.run(qr1).head.i mustEqual 33
+      testDB.run(qr1).map(_.i) mustEqual List(33)
     }
     "failure" in {
       testDB.run(qr1.delete)

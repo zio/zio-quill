@@ -67,20 +67,19 @@ class EncodingSpec extends Spec {
       Array(1.toByte, 2.toByte),
       new Date(31200000))
 
-  def verify(result: List[EncodingTestEntity]) = {
-    result.size mustEqual 1
-    val entity = result.head
-    entity.v1 mustEqual "s"
-    entity.v2 mustEqual BigDecimal(1.1)
-    entity.v3 mustEqual true
-    entity.v4 mustEqual 11.toByte
-    entity.v5 mustEqual 23.toShort
-    entity.v6 mustEqual 33
-    entity.v7 mustEqual 431L
-    entity.v8 mustEqual 34.4f
-    entity.v9 mustEqual 42d
-    entity.v10.toList mustEqual List(1.toByte, 2.toByte)
-    entity.v11 mustEqual new Date(31200000)
-  }
-
+  def verify(result: List[EncodingTestEntity]) =
+    result match {
+      case List(entity) =>
+        entity.v1 mustEqual "s"
+        entity.v2 mustEqual BigDecimal(1.1)
+        entity.v3 mustEqual true
+        entity.v4 mustEqual 11.toByte
+        entity.v5 mustEqual 23.toShort
+        entity.v6 mustEqual 33
+        entity.v7 mustEqual 431L
+        entity.v8 mustEqual 34.4f
+        entity.v9 mustEqual 42d
+        entity.v10.toList mustEqual List(1.toByte, 2.toByte)
+        entity.v11 mustEqual new Date(31200000)
+    }
 }
