@@ -16,6 +16,8 @@ import io.getquill.ast.Tuple
 
 private[norm] object SymbolicReduction extends StatelessTransformer {
 
+  private val reduceNestedStructures = ReduceNestedStructures(apply)
+
   override def apply(q: Ast): Ast =
     super.apply(BetaReduction(q))
 
@@ -23,47 +25,11 @@ private[norm] object SymbolicReduction extends StatelessTransformer {
     BetaReduction {
       AvoidCapture(q) match {
 
-        // ---------------------------
-        // Reduce nested structures
+        case `reduceNestedStructures`(query) =>
+          apply(query)
 
-        case Map(a, b, c) if (apply(a) != a || apply(c) != c) =>
-          apply(Map(apply(a), b, apply(c)))
-
-        case FlatMap(a, b, c) if (apply(a) != a || apply(c) != c) =>
-          apply(FlatMap(apply(a), b, apply(c)))
-
-        case Filter(a, b, c) if (apply(a) != a || apply(c) != c) =>
-          apply(Filter(apply(a), b, apply(c)))
-
-        case SortBy(a, b, c) if (apply(a) != a || apply(c) != c) =>
-          apply(SortBy(apply(a), b, apply(c)))
-
-        // ---------------------------
-        // map.*
-
-        // a.map(b => c).map(d => e) =>
-        //    a.map(b => e[d := c])
-        case Map(Map(a, b, c), d, e) =>
-          val er = BetaReduction(e, d -> c)
-          apply(Map(a, b, er))
-
-        // a.map(b => c).flatMap(d => e) =>
-        //    a.flatMap(b => e[d := c])
-        case FlatMap(Map(a, b, c), d, e) =>
-          val er = BetaReduction(e, d -> c)
-          apply(FlatMap(a, b, er))
-
-        // a.map(b => c).filter(d => e) =>
-        //    a.filter(b => e[d := c]).map(b => c)
-        case Filter(Map(a, b, c), d, e) =>
-          val er = BetaReduction(e, d -> c)
-          apply(Map(Filter(a, b, er), b, c))
-
-        // a.map(b => c).sortBy(d => e) =>
-        //    a.sortBy(b => e[d := c]).map(b => c)
-        case SortBy(Map(a, b, c), d, e) =>
-          val er = BetaReduction(e, d -> c)
-          apply(Map(SortBy(a, b, er), b, c))
+        case ApplyIntermediateMap(query) =>
+          apply(query)
 
         // ---------------------------
         // *.flatMap

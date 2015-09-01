@@ -16,23 +16,16 @@ import io.getquill.ast.Tuple
 
 private[norm] object AdHocReduction extends StatelessTransformer {
 
+  private val reduceNestedStructures = ReduceNestedStructures(apply)
+
   override def apply(q: Query): Query =
     q match {
 
-      // ---------------------------
-      // Reduce nested structures
+      case `reduceNestedStructures`(query) =>
+        apply(query)
 
-      case Map(a, b, c) if (apply(a) != a || apply(c) != c) =>
-        apply(Map(apply(a), b, apply(c)))
-
-      case FlatMap(a, b, c) if (apply(a) != a || apply(c) != c) =>
-        apply(FlatMap(apply(a), b, apply(c)))
-
-      case Filter(a, b, c) if (apply(a) != a || apply(c) != c) =>
-        apply(Filter(apply(a), b, apply(c)))
-
-      case SortBy(a, b, c) if (apply(a) != a || apply(c) != c) =>
-        apply(SortBy(apply(a), b, apply(c)))
+      case ApplyIntermediateMap(query) =>
+        apply(query)
 
       // ---------------------------
       // sortBy.*
