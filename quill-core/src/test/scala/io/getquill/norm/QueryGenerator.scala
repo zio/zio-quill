@@ -1,7 +1,6 @@
 package io.getquill.norm
 
 import scala.util.Random
-
 import io.getquill.ast
 import io.getquill.ast.BinaryOperation
 import io.getquill.ast.Constant
@@ -14,6 +13,7 @@ import io.getquill.ast.NullValue
 import io.getquill.ast.Property
 import io.getquill.ast.Query
 import io.getquill.ast.SortBy
+import io.getquill.ast.Reverse
 
 class QueryGenerator(seed: Int) {
 
@@ -23,11 +23,12 @@ class QueryGenerator(seed: Int) {
     if (i <= 2) {
       Entity(string)
     } else {
-      random.nextInt(4) match {
+      random.nextInt(5) match {
         case 0 => map(i)
         case 1 => flatMap(i)
         case 2 => filter(i)
         case 3 => sortBy(i)
+        case 4 => reverse(i)
       }
     }
 
@@ -56,6 +57,9 @@ class QueryGenerator(seed: Int) {
     else
       SortBy(apply(i), id, Property(id, string))
   }
+
+  private def reverse(i: Int) =
+    Reverse(apply(i - 1))
 
   private def distribute(i: Int) = {
     val j = random.nextInt(i - 2) + 1

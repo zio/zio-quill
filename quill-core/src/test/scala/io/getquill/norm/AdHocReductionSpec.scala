@@ -40,19 +40,13 @@ class AdHocReductionSpec extends Spec {
       val q = quote {
         qr1.sortBy(b => (b.s, b.i)).sortBy(d => d.l)
       }
-      val n = quote {
-        qr1.sortBy(b => (b.s, b.i, b.l))
-      }
-      AdHocReduction(q.ast) mustEqual n.ast
+      AdHocReduction(q.ast) mustEqual q.ast
     }
     "a.sortBy(b => c).sortBy(d => e)" in {
       val q = quote {
         qr1.sortBy(b => b.s).sortBy(d => d.l)
       }
-      val n = quote {
-        qr1.sortBy(b => (b.s, b.l))
-      }
-      AdHocReduction(q.ast) mustEqual n.ast
+      AdHocReduction(q.ast) mustEqual q.ast
     }
   }
 

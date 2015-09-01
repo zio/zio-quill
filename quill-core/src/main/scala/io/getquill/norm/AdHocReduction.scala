@@ -25,7 +25,12 @@ private[norm] object AdHocReduction extends StatelessTransformer {
         apply(query)
 
       // ---------------------------
-      // reverse position
+      // reverse
+
+      // a.reverse.reverse =>
+      //    a
+      case Reverse(Reverse(a: Query)) =>
+        apply(a)
 
       // a.reverse.filter(b => c) =>
       //     a.filter(b => c).reverse
@@ -34,28 +39,16 @@ private[norm] object AdHocReduction extends StatelessTransformer {
 
       // a.map(b => c).reverse =>
       //     a.reverse.map(b => c)
-      case Map(Reverse(a), b, c) =>
+      case Reverse(Map(a, b, c)) =>
         apply(Map(Reverse(a), b, c))
 
       // ---------------------------
-      // sortBy.*
+      // sortBy.filter
 
       // a.sortBy(b => c).filter(d => e) =>
       //     a.filter(d => e).sortBy(b => c)
       case Filter(SortBy(a, b, c), d, e) =>
         apply(SortBy(Filter(a, d, e), b, c))
-
-      // a.sortBy(b => (c)).sortBy(d => e) =>
-      //    a.sortBy(b => (c, e[d := b]))
-      case SortBy(SortBy(a, b, Tuple(c)), d, e) =>
-        val er = BetaReduction(e, d -> b)
-        apply(SortBy(a, b, Tuple(c :+ er)))
-
-      // a.sortBy(b => c).sortBy(d => e) =>
-      //    a.sortBy(b => (c, e[d := b]))
-      case SortBy(SortBy(a, b, c), d, e) =>
-        val er = BetaReduction(e, d -> b)
-        apply(SortBy(a, b, Tuple(List(c, er))))
 
       // ---------------------------
       // filter.filter
@@ -65,6 +58,11 @@ private[norm] object AdHocReduction extends StatelessTransformer {
       case Filter(Filter(a, b, c), d, e) =>
         val er = BetaReduction(e, d -> b)
         apply(Filter(a, b, BinaryOperation(c, ast.`&&`, er)))
+
+      // a.filter(b => c).reverse =>
+      //    a.filter(b => c).sortBy(b => b).reverse
+      case Reverse(Filter(a, b, c)) =>
+        apply(Reverse(SortBy(Filter(a, b, c), b, b)))
 
       // ---------------------------
       // flatMap.*

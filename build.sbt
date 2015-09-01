@@ -63,7 +63,7 @@ lazy val commonSettings = releaseSettings ++ Seq(
     "-Ywarn-unused-import"
   ),
   ScoverageSbtPlugin.ScoverageKeys.coverageMinimum := 100,
-  ScoverageSbtPlugin.ScoverageKeys.coverageFailOnMinimum := true,
+  ScoverageSbtPlugin.ScoverageKeys.coverageFailOnMinimum := false,
   EclipseKeys.eclipseOutput := Some("bin"),
   publishMavenStyle := true,
   publishTo := {

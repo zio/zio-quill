@@ -54,9 +54,9 @@ object AstShow {
           case None        => selectFrom
           case Some(where) => selectFrom + s" WHERE ${where.show}"
         }
-      e.sortBy match {
-        case None         => where
-        case Some(sortBy) => where + s" ORDER BY ${sortBy.show}"
+      e.orderBy match {
+        case Nil     => where
+        case orderBy => where + s" ORDER BY ${orderBy.show}"
       }
     }
   }
@@ -64,6 +64,14 @@ object AstShow {
   implicit val sourceShow: Show[Source] = new Show[Source] {
     def show(source: Source) =
       s"${source.table} ${source.alias}"
+  }
+
+  implicit val orderByCriteriaShow: Show[OrderByCriteria] = new Show[OrderByCriteria] {
+    def show(criteria: OrderByCriteria) =
+      criteria match {
+        case OrderByCriteria(prop, true)  => s"${prop.show} DESC"
+        case OrderByCriteria(prop, false) => prop.show
+      }
   }
 
   implicit val unaryOperatorShow: Show[UnaryOperator] = new Show[UnaryOperator] {

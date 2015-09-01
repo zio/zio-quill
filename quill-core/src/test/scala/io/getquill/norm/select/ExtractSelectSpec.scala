@@ -26,9 +26,6 @@ class ExtractSelectSpec extends Spec {
       val q = quote {
         qr1.flatMap(t => qr2.map(u => u.s))
       }
-      val m = quote {
-        qr2.map(u => u.s)
-      }
       ExtractSelect(q.ast) match {
         case (query, select) =>
           query mustEqual q.ast
@@ -37,7 +34,7 @@ class ExtractSelectSpec extends Spec {
     }
     "sorted query" in {
       val q = quote {
-        qr1.map(t => t.s).sortBy(t => t)
+        qr1.sortBy(t => t.s).map(t => t.s)
       }
       ExtractSelect(q.ast) match {
         case (query, select) =>

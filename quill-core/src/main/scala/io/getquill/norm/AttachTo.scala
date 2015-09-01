@@ -10,6 +10,7 @@ import io.getquill.ast.Map
 import io.getquill.ast.Query
 import io.getquill.ast.SortBy
 import scala.reflect.ClassTag
+import io.getquill.ast.Reverse
 
 object AttachTo {
 
@@ -30,6 +31,7 @@ object AttachTo {
       case FlatMap(a: Query, b, c) => apply(f)(a).map(FlatMap(_, b, c))
       case Filter(a: Query, b, c)  => apply(f)(a).map(Filter(_, b, c))
       case SortBy(a: Query, b, c)  => apply(f)(a).map(SortBy(_, b, c))
+      case Reverse(a: Query)       => apply(f)(a).map(Reverse(_))
 
       case e: T                    => Some(f(e, Ident("x")))
 
