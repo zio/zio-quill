@@ -21,18 +21,24 @@ lazy val `quill-sql` =
 lazy val `quill-jdbc` = 
   (project in file("quill-jdbc"))
     .settings(commonSettings: _*)
-    .settings(libraryDependencies ++= Seq(
-      "com.zaxxer" % "HikariCP"             % "2.3.9",
-      "mysql"      % "mysql-connector-java" % "5.1.36" % "test"
-    ))
+    .settings(
+      libraryDependencies ++= Seq(
+        "com.zaxxer" % "HikariCP"             % "2.3.9",
+        "mysql"      % "mysql-connector-java" % "5.1.36" % "test"
+      ),
+      parallelExecution in Test := false
+    )
     .dependsOn(`quill-sql` % "compile->compile;test->test")
 
 lazy val `quill-finagle-mysql` = 
   (project in file("quill-fingle-mysql"))
     .settings(commonSettings: _*)
-    .settings(libraryDependencies ++= Seq(
-      "com.twitter" %% "finagle-mysql" % "6.27.0"
-    ))
+    .settings(
+      libraryDependencies ++= Seq(
+        "com.twitter" %% "finagle-mysql" % "6.27.0"
+      ),
+      parallelExecution in Test := false
+    )
     .dependsOn(`quill-sql` % "compile->compile;test->test")
 
 lazy val commonSettings = releaseSettings ++ Seq(
@@ -44,9 +50,7 @@ lazy val commonSettings = releaseSettings ++ Seq(
   ),
   scalacOptions ++= Seq("-deprecation", "-feature", "-Xfatal-warnings", "-optimize", "-unchecked"),
   EclipseKeys.eclipseOutput := Some("bin"),
-  fork in Test := true,
   publishMavenStyle := true,
-  parallelExecution in Test := false,
   publishTo := {
     val nexus = "https://oss.sonatype.org/"
     if (isSnapshot.value)
