@@ -1,6 +1,7 @@
 package io.getquill.source.jdbc
 
-import io.getquill._
+import io.getquill.queryable
+import io.getquill.quote
 import io.getquill.source.sql.DepartmentsSpec
 
 class DepartmentsJdbcSpec extends DepartmentsSpec {

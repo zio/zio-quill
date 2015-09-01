@@ -2,13 +2,8 @@ package io.getquill.source
 
 import scala.reflect.macros.whitebox.Context
 
-import io.getquill.Actionable
 import io.getquill.ast.Action
-import io.getquill.ast.Ast
-import io.getquill.ast.Function
 import io.getquill.ast.Ident
-import io.getquill.norm.Normalize
-import io.getquill.quotation.Quotation
 
 trait ActionMacro {
   this: SourceMacro =>

@@ -1,7 +1,5 @@
 package io.getquill
 
-import io.getquill.quotation.NonQuotedException
-
 sealed trait Queryable[+T] {
 
   def map[R](f: T => R): Queryable[R]

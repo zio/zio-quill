@@ -1,8 +1,10 @@
 package io.getquill.ast
 
-import io.getquill._
+import scala.language.reflectiveCalls
+
 import io.getquill.Spec
-import language.reflectiveCalls
+import io.getquill.queryable
+import io.getquill.quote
 
 class AstSpec extends Spec {
 

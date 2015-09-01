@@ -1,9 +1,13 @@
 package test
 
-import io.getquill._
-import io.getquill.ast._
-import io.getquill.quotation.NonQuotedException
 import io.getquill.Spec
+import io.getquill.ast.Entity
+import io.getquill.ast.Ident
+import io.getquill.ast.Map
+import io.getquill.queryable
+import io.getquill.quotation.NonQuotedException
+import io.getquill.quote
+import io.getquill.unquote
 
 class PackageSpec extends Spec {
 

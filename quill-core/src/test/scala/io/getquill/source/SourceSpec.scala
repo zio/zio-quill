@@ -2,7 +2,6 @@ package io.getquill.source
 
 import io.getquill.Spec
 import io.getquill.source.mirror.mirrorSource
-import com.typesafe.config.ConfigFactory
 
 class SourceSpec extends Spec {
 

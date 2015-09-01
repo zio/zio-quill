@@ -1,8 +1,19 @@
 package io.getquill.norm
 
-import io.getquill.ast
-import io.getquill.ast._
 import scala.util.Random
+
+import io.getquill.ast
+import io.getquill.ast.BinaryOperation
+import io.getquill.ast.Constant
+import io.getquill.ast.Entity
+import io.getquill.ast.Filter
+import io.getquill.ast.FlatMap
+import io.getquill.ast.Ident
+import io.getquill.ast.Map
+import io.getquill.ast.NullValue
+import io.getquill.ast.Property
+import io.getquill.ast.Query
+import io.getquill.ast.SortBy
 
 class QueryGenerator(seed: Int) {
 

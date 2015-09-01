@@ -1,9 +1,12 @@
 package io.getquill.norm.select
 
-import io.getquill._
-import io.getquill.ast._
+import scala.language.reflectiveCalls
+
 import io.getquill.Spec
-import language.reflectiveCalls
+import io.getquill.ast.Ident
+import io.getquill.ast.Property
+import io.getquill.quote
+import io.getquill.unquote
 
 class ReplaceSelectSpec extends Spec {
 

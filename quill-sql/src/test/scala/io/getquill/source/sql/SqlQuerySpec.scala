@@ -1,8 +1,8 @@
 package io.getquill.source.sql
 
-import io.getquill.ast._
-import io.getquill._
-import io.getquill.source.sql.mirror.mirrorSource
+import io.getquill.Spec
+import io.getquill.quote
+import io.getquill.unquote
 
 class SqlQuerySpec extends Spec {
 

@@ -20,7 +20,7 @@ import io.getquill.ast.UnaryOperation
 import io.getquill.ast.UnaryOperator
 import io.getquill.ast.Update
 import io.getquill.ast.Value
-import io.getquill.util.Messages._
+import io.getquill.util.Messages.fail
 import io.getquill.util.Show.Show
 import io.getquill.util.Show.Shower
 import io.getquill.util.Show.listShow

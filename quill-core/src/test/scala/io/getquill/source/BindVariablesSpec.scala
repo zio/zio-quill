@@ -1,8 +1,9 @@
 package io.getquill.source
 
 import io.getquill.Spec
-import io.getquill._
-import io.getquill.ast._
+import io.getquill.ast.Ident
+import io.getquill.quote
+import io.getquill.unquote
 
 class BindVariablesSpec extends Spec {
 

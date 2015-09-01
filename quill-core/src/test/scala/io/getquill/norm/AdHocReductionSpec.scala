@@ -1,6 +1,8 @@
 package io.getquill.norm
 
-import io.getquill._
+import io.getquill.Spec
+import io.getquill.quote
+import io.getquill.unquote
 
 class AdHocReductionSpec extends Spec {
 

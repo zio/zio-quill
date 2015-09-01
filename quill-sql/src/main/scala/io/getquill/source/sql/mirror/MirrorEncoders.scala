@@ -1,6 +1,7 @@
 package io.getquill.source.sql.mirror
 
 import java.util.Date
+
 import io.getquill.source.mirror.Row
 
 trait MirrorEncoders {

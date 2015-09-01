@@ -1,16 +1,12 @@
 package io.getquill.source.mirror
 
-import io.getquill.util.Messages._
-import io.getquill.source.QueryMacro
-import io.getquill.source.ActionMacro
 import scala.reflect.macros.whitebox.Context
-import io.getquill.ast.Ast
-import io.getquill.source.Source
-import io.getquill.Actionable
-import io.getquill.Queryable
 import language.experimental.macros
-import io.getquill.source.SourceMacro
+import io.getquill.ast.Ast
 import io.getquill.quotation.Quoted
+import io.getquill.source.Source
+import io.getquill.source.SourceMacro
+import io.getquill.util.Messages.RichContext
 
 case class Row(data: Any*) {
   def apply[T](index: Int) = data(index).asInstanceOf[T]

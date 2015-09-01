@@ -7,8 +7,8 @@ import io.getquill.ast.FlatMap
 import io.getquill.ast.Ident
 import io.getquill.ast.Map
 import io.getquill.ast.Query
-import io.getquill.util.Messages.fail
 import io.getquill.ast.SortBy
+import io.getquill.util.Messages.fail
 
 private[select] object ExtractSelect {
 

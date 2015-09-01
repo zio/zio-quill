@@ -1,13 +1,15 @@
 package io.getquill.source
 
 import scala.reflect.macros.whitebox.Context
-import io.getquill.quotation.Quoted
-import io.getquill.quotation.Quotation
-import io.getquill.ast._
-import io.getquill.util.Messages._
+
+import io.getquill.ast.Action
+import io.getquill.ast.Ast
+import io.getquill.ast.Function
+import io.getquill.ast.Query
 import io.getquill.norm.Normalize
-import io.getquill.norm.select.SelectFlattening
-import io.getquill.norm.select.SelectResultExtraction
+import io.getquill.quotation.Quotation
+import io.getquill.quotation.Quoted
+import io.getquill.util.Messages.RichContext
 
 trait SourceMacro extends Quotation with ActionMacro with QueryMacro {
   val c: Context

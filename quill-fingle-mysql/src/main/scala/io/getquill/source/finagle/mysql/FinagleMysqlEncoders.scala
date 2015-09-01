@@ -1,15 +1,24 @@
 package io.getquill.source.finagle.mysql
 
-import scala.reflect.ClassTag
-import com.twitter.finagle.exp.mysql.CanBeParameter
-import com.twitter.finagle.exp.mysql.CanBeParameter._
-import com.twitter.finagle.exp.mysql.Parameter
 import java.util.Date
-import com.twitter.finagle.exp.mysql.transport.BufferWriter
+
+import scala.language.implicitConversions
+
 import com.twitter.finagle.exp.mysql.BigDecimalValue
-import com.twitter.finagle.exp.mysql.Type
-import language.implicitConversions
-import java.sql.Timestamp
+import com.twitter.finagle.exp.mysql.CanBeParameter
+import com.twitter.finagle.exp.mysql.CanBeParameter.booleanCanBeParameter
+import com.twitter.finagle.exp.mysql.CanBeParameter.byteArrayCanBeParameter
+import com.twitter.finagle.exp.mysql.CanBeParameter.byteCanBeParameter
+import com.twitter.finagle.exp.mysql.CanBeParameter.doubleCanBeParameter
+import com.twitter.finagle.exp.mysql.CanBeParameter.floatCanBeParameter
+import com.twitter.finagle.exp.mysql.CanBeParameter.intCanBeParameter
+import com.twitter.finagle.exp.mysql.CanBeParameter.javaDateCanBeParameter
+import com.twitter.finagle.exp.mysql.CanBeParameter.longCanBeParameter
+import com.twitter.finagle.exp.mysql.CanBeParameter.shortCanBeParameter
+import com.twitter.finagle.exp.mysql.CanBeParameter.stringCanBeParameter
+import com.twitter.finagle.exp.mysql.CanBeParameter.valueCanBeParameter
+import com.twitter.finagle.exp.mysql.Parameter
+import com.twitter.finagle.exp.mysql.Parameter.wrap
 
 trait FinagleMysqlEncoders {
   this: FinagleMysqlSource =>

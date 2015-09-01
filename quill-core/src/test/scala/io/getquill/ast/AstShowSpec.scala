@@ -1,8 +1,14 @@
 package io.getquill.ast
 
-import io.getquill._
+import scala.language.reflectiveCalls
+
+import io.getquill.Queryable
 import io.getquill.Spec
-import language.reflectiveCalls
+import io.getquill.ast.AstShow.astShow
+import io.getquill.queryable
+import io.getquill.quote
+import io.getquill.unquote
+import io.getquill.util.Show.Shower
 
 class AstShowSpec extends Spec {
 

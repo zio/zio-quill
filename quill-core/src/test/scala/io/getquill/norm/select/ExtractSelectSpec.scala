@@ -1,10 +1,13 @@
 package io.getquill.norm.select
 
-import io.getquill.Spec
+import scala.language.reflectiveCalls
 
-import language.reflectiveCalls
-import io.getquill._
-import io.getquill.ast._
+import io.getquill.Spec
+import io.getquill.ast.FlatMap
+import io.getquill.ast.Ident
+import io.getquill.ast.Property
+import io.getquill.quote
+import io.getquill.unquote
 
 class ExtractSelectSpec extends Spec {
 

@@ -1,6 +1,6 @@
 package io.getquill.norm
 
-import io.getquill._
+import io.getquill.Spec
 
 class NormalizeSpec extends Spec {
 

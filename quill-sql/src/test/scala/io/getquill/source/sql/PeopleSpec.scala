@@ -1,7 +1,8 @@
 package io.getquill.source.sql
 
-import io.getquill._
 import io.getquill.Spec
+import io.getquill.queryable
+import io.getquill.quote
 import io.getquill.unquote
 
 trait PeopleSpec extends Spec {

@@ -1,23 +1,16 @@
 package io.getquill.source.finagle.mysql
 
-import scala.reflect.ClassTag
-import com.twitter.finagle.exp.mysql.CanBeParameter
-import com.twitter.finagle.exp.mysql.CanBeParameter.intCanBeParameter
-import com.twitter.finagle.exp.mysql.CanBeParameter.longCanBeParameter
-import com.twitter.finagle.exp.mysql.CanBeParameter.stringCanBeParameter
+import java.util.TimeZone
+
 import com.twitter.finagle.exp.mysql.Client
-import com.twitter.finagle.exp.mysql.IntValue
-import com.twitter.finagle.exp.mysql.LongValue
 import com.twitter.finagle.exp.mysql.Parameter
-import com.twitter.finagle.exp.mysql.Parameter.wrap
 import com.twitter.finagle.exp.mysql.Result
 import com.twitter.finagle.exp.mysql.Row
-import com.twitter.finagle.exp.mysql.StringValue
 import com.twitter.util.Future
 import com.twitter.util.Local
 import com.typesafe.scalalogging.StrictLogging
+
 import io.getquill.source.sql.SqlSource
-import java.util.TimeZone
 
 trait FinagleMysqlSource
     extends SqlSource[Row, List[Parameter]]

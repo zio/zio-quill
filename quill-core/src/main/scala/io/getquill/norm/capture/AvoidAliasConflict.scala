@@ -6,9 +6,9 @@ import io.getquill.ast.FlatMap
 import io.getquill.ast.Ident
 import io.getquill.ast.Map
 import io.getquill.ast.Query
+import io.getquill.ast.SortBy
 import io.getquill.ast.StatefulTransformer
 import io.getquill.norm.BetaReduction
-import io.getquill.ast.SortBy
 
 private case class AvoidAliasConflict(state: Set[Ident])
     extends StatefulTransformer[Set[Ident]] {

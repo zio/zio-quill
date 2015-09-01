@@ -1,10 +1,8 @@
 package io.getquill.ast
 
-import io.getquill.Spec
+import scala.language.reflectiveCalls
 
-import io.getquill.ast
-import language.reflectiveCalls
-import io.getquill._
+import io.getquill.Spec
 
 class StatelessTransformerSpec extends Spec {
 

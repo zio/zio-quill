@@ -2,8 +2,6 @@ package io.getquill.util
 
 import scala.reflect.macros.whitebox.Context
 
-import Messages.RichContext
-
 object InferImplicitValueWithFallback {
 
   def apply(c: Context)(tpe: c.Type, fallbackTree: c.Tree) = {

@@ -1,5 +1,8 @@
 package io.getquill.ast
 
+import io.getquill.ast.AstShow.astShow
+import io.getquill.util.Show.Shower
+
 //************************************************************
 
 sealed trait Ast {

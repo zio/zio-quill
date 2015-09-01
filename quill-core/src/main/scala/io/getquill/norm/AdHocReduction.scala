@@ -1,17 +1,13 @@
 package io.getquill.norm
 
-import io.getquill.ast.`&&`
-import io.getquill.ast.Ast
+import io.getquill.ast
 import io.getquill.ast.BinaryOperation
-import io.getquill.ast.Entity
 import io.getquill.ast.Filter
 import io.getquill.ast.FlatMap
-import io.getquill.ast.Ident
 import io.getquill.ast.Map
 import io.getquill.ast.Query
-import io.getquill.ast.StatelessTransformer
-import io.getquill.norm.capture.AvoidCapture
 import io.getquill.ast.SortBy
+import io.getquill.ast.StatelessTransformer
 import io.getquill.ast.Tuple
 
 private[norm] object AdHocReduction extends StatelessTransformer {
@@ -54,7 +50,7 @@ private[norm] object AdHocReduction extends StatelessTransformer {
       //    a.filter(b => c && e[d := b])
       case Filter(Filter(a, b, c), d, e) =>
         val er = BetaReduction(e, d -> b)
-        apply(Filter(a, b, BinaryOperation(c, `&&`, er)))
+        apply(Filter(a, b, BinaryOperation(c, ast.`&&`, er)))
 
       // ---------------------------
       // flatMap.*

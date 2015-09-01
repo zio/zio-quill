@@ -1,6 +1,5 @@
 package io.getquill.quotation
 
-import io.getquill.ast.Assignment
 import io.getquill.ast.Ast
 import io.getquill.ast.Entity
 import io.getquill.ast.Filter
@@ -9,8 +8,8 @@ import io.getquill.ast.Function
 import io.getquill.ast.Ident
 import io.getquill.ast.Map
 import io.getquill.ast.Query
-import io.getquill.ast.StatefulTransformer
 import io.getquill.ast.SortBy
+import io.getquill.ast.StatefulTransformer
 
 case class State(seen: Set[Ident], free: Set[Ident])
 
@@ -35,7 +34,7 @@ case class FreeVariables(state: State)
       case q @ Filter(a, b, c)  => apply(q, a, b, c)
       case q @ Map(a, b, c)     => apply(q, a, b, c)
       case q @ FlatMap(a, b, c) => apply(q, a, b, c)
-      case q @ SortBy(a, b, c) => apply(q, a, b, c)
+      case q @ SortBy(a, b, c)  => apply(q, a, b, c)
     }
 
   private def apply(q: Query, a: Ast, b: Ident, c: Ast): (Query, StatefulTransformer[State]) = {

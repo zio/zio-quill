@@ -1,9 +1,12 @@
 package io.getquill.source.sql
 
-import io.getquill._
 import java.util.Date
-import io.getquill.Spec
+
 import scala.BigDecimal
+
+import io.getquill.Spec
+import io.getquill.queryable
+import io.getquill.quote
 
 class EncodingSpec extends Spec {
 

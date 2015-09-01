@@ -1,17 +1,10 @@
 package io.getquill.source.jdbc
 
 import java.sql.ResultSet
-import java.sql.Date
-import java.sql.Time
-import java.sql.Timestamp
-import java.sql.Clob
-import java.sql.Blob
-import java.sql.Array
-import java.sql.Struct
-import java.sql.Ref
-import java.sql
 import java.util
 import java.util.Calendar
+
+import scala.math.BigDecimal.javaBigDecimal2bigDecimal
 
 trait JdbcDecoders {
   this: JdbcSource =>

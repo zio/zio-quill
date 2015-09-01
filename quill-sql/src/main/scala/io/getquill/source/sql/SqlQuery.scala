@@ -1,18 +1,14 @@
 package io.getquill.source.sql
 
 import io.getquill.ast.Ast
-import io.getquill.ast.AstShow.queryShow
 import io.getquill.ast.Entity
 import io.getquill.ast.Filter
 import io.getquill.ast.FlatMap
 import io.getquill.ast.Ident
 import io.getquill.ast.Map
 import io.getquill.ast.Query
-import io.getquill.util.Show.Shower
-import io.getquill.util.Messages._
 import io.getquill.ast.SortBy
-import io.getquill.ast.SortBy
-import io.getquill.norm.BetaReduction
+import io.getquill.util.Messages.fail
 
 case class Source(table: String, alias: String)
 case class SqlQuery(from: List[Source], where: Option[Ast], sortBy: Option[Ast], select: Ast)

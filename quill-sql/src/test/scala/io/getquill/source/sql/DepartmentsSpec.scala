@@ -1,9 +1,11 @@
 package io.getquill.source.sql
 
-import language.reflectiveCalls
-import io.getquill._
+import scala.language.reflectiveCalls
+
 import io.getquill.Queryable
 import io.getquill.Spec
+import io.getquill.queryable
+import io.getquill.quote
 import io.getquill.unquote
 
 trait DepartmentsSpec extends Spec {

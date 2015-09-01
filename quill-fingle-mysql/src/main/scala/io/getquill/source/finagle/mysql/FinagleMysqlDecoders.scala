@@ -1,11 +1,24 @@
 package io.getquill.source.finagle.mysql
 
-import io.getquill.util.Messages._
-import com.twitter.finagle.exp.mysql._
 import java.util.Date
-import java.util.TimeZone
+
 import scala.reflect.ClassTag
 import scala.reflect.classTag
+
+import com.twitter.finagle.exp.mysql.BigDecimalValue
+import com.twitter.finagle.exp.mysql.ByteValue
+import com.twitter.finagle.exp.mysql.DoubleValue
+import com.twitter.finagle.exp.mysql.FloatValue
+import com.twitter.finagle.exp.mysql.IntValue
+import com.twitter.finagle.exp.mysql.LongValue
+import com.twitter.finagle.exp.mysql.RawValue
+import com.twitter.finagle.exp.mysql.Row
+import com.twitter.finagle.exp.mysql.ShortValue
+import com.twitter.finagle.exp.mysql.StringValue
+import com.twitter.finagle.exp.mysql.TimestampValue
+import com.twitter.finagle.exp.mysql.Value
+
+import io.getquill.util.Messages.fail
 
 trait FinagleMysqlDecoders {
   this: FinagleMysqlSource =>

@@ -1,8 +1,10 @@
 package io.getquill.source.finagle.mysql
 
-import io.getquill._
-import io.getquill.source.sql.EncodingSpec
 import com.twitter.util.Await
+
+import io.getquill.queryable
+import io.getquill.quote
+import io.getquill.source.sql.EncodingSpec
 
 class FinagleMysqlEncodingSpec extends EncodingSpec {
 

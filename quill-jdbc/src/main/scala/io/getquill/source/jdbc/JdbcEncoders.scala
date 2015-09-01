@@ -1,10 +1,10 @@
 package io.getquill.source.jdbc
 
 import java.sql
-import java.util
 import java.sql.PreparedStatement
-import java.util.TimeZone
+import java.util
 import java.util.Calendar
+import java.util.TimeZone
 
 trait JdbcEncoders {
   this: JdbcSource =>

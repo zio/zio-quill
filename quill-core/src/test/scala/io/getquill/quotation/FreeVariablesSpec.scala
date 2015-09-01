@@ -1,7 +1,8 @@
 package io.getquill.quotation
 
-import io.getquill._
 import io.getquill.Spec
+import io.getquill.quote
+import io.getquill.unquote
 
 class FreeVariablesSpec extends Spec {
 

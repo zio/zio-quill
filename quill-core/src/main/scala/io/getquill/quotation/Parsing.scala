@@ -2,6 +2,7 @@ package io.getquill.quotation
 
 import scala.reflect.ClassTag
 import scala.reflect.macros.whitebox.Context
+
 import io.getquill.ast
 import io.getquill.ast.Action
 import io.getquill.ast.Assignment
@@ -20,14 +21,13 @@ import io.getquill.ast.Map
 import io.getquill.ast.NullValue
 import io.getquill.ast.Property
 import io.getquill.ast.Query
+import io.getquill.ast.SortBy
 import io.getquill.ast.Tuple
 import io.getquill.ast.UnaryOperation
-import io.getquill.ast.UnaryOperator
 import io.getquill.ast.Update
 import io.getquill.ast.Value
 import io.getquill.norm.BetaReduction
 import io.getquill.util.Messages.RichContext
-import io.getquill.ast.SortBy
 
 trait Parsing {
   this: Quotation =>

@@ -1,8 +1,8 @@
 package io.getquill.source
 
-import io.getquill._
-import io.getquill.source.mirror.mirrorSource
+import io.getquill.Spec
 import io.getquill.quotation.Quoted
+import io.getquill.quote
 
 class SourceMacroSpec extends Spec {
 
