@@ -8,7 +8,7 @@ MVP - mid-september
 √ inserts
 √ updates
 √ generic test suite
-- database dialects (db2, derby, h2, hsql, mysql, oracle, postgres, sqlserver)
+- database dialects (derby, h2, hsql, mysql, postgres)
 - full sql support
 	- options
 	- set operations (union, outer joins, etc)
@@ -28,6 +28,7 @@ MVP - mid-september
 
 Later
 
+- more dialects (oracle, sqlserver, db2)
 - upserts
 - monadic io
 - quill-doobie
