@@ -5,17 +5,18 @@ import io.getquill.ast.Constant
 import io.getquill.ast.SortBy
 import io.getquill.quote
 import io.getquill.unquote
+import io.getquill.ast.Entity
 
-class AttachToEntitySpec extends Spec {
+class AttachToSpec extends Spec {
 
-  val attachToEntity = AttachToEntity(SortBy(_, _, Constant(1)))
+  val attachToEntity = AttachTo[Entity](SortBy(_, _, Constant(1))) _
 
   "attaches clause to the root of the query (entity)" - {
     "query is the entity" in {
       val n = quote {
         qr1.sortBy(x => 1)
       }
-      attachToEntity(qr1.ast) mustEqual n.ast
+      attachToEntity(qr1.ast) mustEqual Some(n.ast)
     }
     "query is a composition" - {
       "map" in {
@@ -25,7 +26,7 @@ class AttachToEntitySpec extends Spec {
         val n = quote {
           qr1.sortBy(t => 1).filter(t => t.i == 1).map(t => t.s)
         }
-        attachToEntity(q.ast) mustEqual n.ast
+        attachToEntity(q.ast) mustEqual Some(n.ast)
       }
       "flatMap" in {
         val q = quote {
@@ -34,7 +35,7 @@ class AttachToEntitySpec extends Spec {
         val n = quote {
           qr1.sortBy(t => 1).filter(t => t.i == 1).flatMap(t => qr2)
         }
-        attachToEntity(q.ast) mustEqual n.ast
+        attachToEntity(q.ast) mustEqual Some(n.ast)
       }
       "filter" in {
         val q = quote {
@@ -43,7 +44,7 @@ class AttachToEntitySpec extends Spec {
         val n = quote {
           qr1.sortBy(t => 1).filter(t => t.i == 1).filter(t => t.s == "s1")
         }
-        attachToEntity(q.ast) mustEqual n.ast
+        attachToEntity(q.ast) mustEqual Some(n.ast)
       }
       "sortBy" in {
         val q = quote {
@@ -52,7 +53,7 @@ class AttachToEntitySpec extends Spec {
         val n = quote {
           qr1.sortBy(t => 1).filter(t => t.i == 1).sortBy(t => t.s)
         }
-        attachToEntity(q.ast) mustEqual n.ast
+        attachToEntity(q.ast) mustEqual Some(n.ast)
       }
     }
   }

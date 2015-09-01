@@ -22,6 +22,7 @@ trait StatelessTransformer {
       case Map(a, b, c)     => Map(apply(a), b, apply(c))
       case FlatMap(a, b, c) => FlatMap(apply(a), b, apply(c))
       case SortBy(a, b, c)  => SortBy(apply(a), b, apply(c))
+      case Reverse(a)       => Reverse(apply(a))
     }
 
   def apply(e: Operation): Operation =

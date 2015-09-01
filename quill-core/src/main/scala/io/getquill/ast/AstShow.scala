@@ -39,6 +39,9 @@ object AstShow {
 
         case SortBy(source, alias, body) =>
           s"${source.show}.sortBy(${alias.show} => ${body.show})"
+
+        case Reverse(source) =>
+          s"${source.show}.reverse"
       }
   }
 

@@ -10,6 +10,7 @@ import io.getquill.ast.Map
 import io.getquill.ast.Query
 import io.getquill.ast.SortBy
 import io.getquill.ast.StatefulTransformer
+import io.getquill.ast.Reverse
 
 case class State(seen: Set[Ident], free: Set[Ident])
 
@@ -29,12 +30,14 @@ case class FreeVariables(state: State)
 
   override def apply(query: Query): (Query, StatefulTransformer[State]) =
     query match {
-      case t: Entity =>
-        (t, this)
+      case t: Entity            => (t, this)
       case q @ Filter(a, b, c)  => apply(q, a, b, c)
       case q @ Map(a, b, c)     => apply(q, a, b, c)
       case q @ FlatMap(a, b, c) => apply(q, a, b, c)
       case q @ SortBy(a, b, c)  => apply(q, a, b, c)
+      case Reverse(a) =>
+        val (ar, art) = apply(a)
+        (Reverse(ar), art)
     }
 
   private def apply(q: Query, a: Ast, b: Ident, c: Ast): (Query, StatefulTransformer[State]) = {

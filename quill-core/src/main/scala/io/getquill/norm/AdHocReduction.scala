@@ -9,6 +9,7 @@ import io.getquill.ast.Query
 import io.getquill.ast.SortBy
 import io.getquill.ast.StatelessTransformer
 import io.getquill.ast.Tuple
+import io.getquill.ast.Reverse
 
 private[norm] object AdHocReduction extends StatelessTransformer {
 
@@ -22,6 +23,19 @@ private[norm] object AdHocReduction extends StatelessTransformer {
 
       case ApplyIntermediateMap(query) =>
         apply(query)
+
+      // ---------------------------
+      // reverse position
+
+      // a.reverse.filter(b => c) =>
+      //     a.filter(b => c).reverse
+      case Filter(Reverse(a), b, c) =>
+        apply(Reverse(Filter(a, b, c)))
+
+      // a.map(b => c).reverse =>
+      //     a.reverse.map(b => c)
+      case Map(Reverse(a), b, c) =>
+        apply(Map(Reverse(a), b, c))
 
       // ---------------------------
       // sortBy.*
@@ -69,6 +83,11 @@ private[norm] object AdHocReduction extends StatelessTransformer {
       //    a.flatMap(b => c.sortBy(d => e))
       case SortBy(FlatMap(a, b, c), d, e) =>
         apply(FlatMap(a, b, SortBy(c, d, e)))
+
+      // a.flatMap(b => c).reverse =>
+      //    a.flatMap(b => c.reverse)
+      case Reverse(FlatMap(a, b, c)) =>
+        apply(FlatMap(a, b, Reverse(c)))
 
       case other => other
     }

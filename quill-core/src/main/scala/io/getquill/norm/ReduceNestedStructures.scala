@@ -7,11 +7,13 @@ import io.getquill.ast.FlatMap
 import io.getquill.ast.Map
 import io.getquill.ast.Query
 import io.getquill.ast.SortBy
+import io.getquill.ast.Reverse
 
 case class ReduceNestedStructures(apply: Ast => Ast) {
 
   def unapply(q: Query): Option[Query] =
     q match {
+      case e: Entity => None
       case Map(a, b, c) =>
         (apply(a), apply(c)) match {
           case (`a`, `c`) => None
@@ -32,6 +34,10 @@ case class ReduceNestedStructures(apply: Ast => Ast) {
           case (`a`, `c`) => None
           case (a, c)     => Some(SortBy(a, b, c))
         }
-      case e: Entity => None
+      case Reverse(a) =>
+        apply(a) match {
+          case `a` => None
+          case a   => Some(Reverse(a))
+        }
     }
 }

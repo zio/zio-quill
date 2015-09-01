@@ -6,7 +6,8 @@ sealed trait Queryable[+T] {
   def flatMap[R](f: T => Queryable[R]): Queryable[R]
   def withFilter(f: T => Boolean): Queryable[T]
   def filter(f: T => Boolean): Queryable[T]
-  def sortBy[R](f: T => R)(implicit ord: Ordering[R]): Queryable[T]
+  def sortBy[R](f: T => R): Queryable[T]
+  def reverse: Queryable[T]
   def nonEmpty: Boolean
   def isEmpty: Boolean
 }

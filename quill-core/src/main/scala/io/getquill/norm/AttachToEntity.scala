@@ -1,5 +1,7 @@
 package io.getquill.norm
 
+import scala.reflect.classTag
+import io.getquill.util.Messages._
 import io.getquill.ast.Entity
 import io.getquill.ast.Filter
 import io.getquill.ast.FlatMap
@@ -7,24 +9,30 @@ import io.getquill.ast.Ident
 import io.getquill.ast.Map
 import io.getquill.ast.Query
 import io.getquill.ast.SortBy
+import scala.reflect.ClassTag
 
-case class AttachToEntity(f: (Query, Ident) => Query) {
+object AttachTo {
 
-  def apply(q: Query): Query =
+  def required[T <: Query: ClassTag](f: (Query, Ident) => Query)(q: Query) =
+    apply[T](f)(q).getOrElse {
+      fail(s"Can't find a '${classTag[T].runtimeClass.getName}' in $q")
+    }
+
+  def apply[T <: Query: ClassTag](f: (Query, Ident) => Query)(q: Query): Option[Query] =
     q match {
 
-      case Map(a: Entity, b, c)     => Map(f(a, b), b, c)
-      case FlatMap(a: Entity, b, c) => FlatMap(f(a, b), b, c)
-      case Filter(a: Entity, b, c)  => Filter(f(a, b), b, c)
-      case SortBy(a: Entity, b, c)  => SortBy(f(a, b), b, c)
+      case Map(a: T, b, c)         => Some(Map(f(a, b), b, c))
+      case FlatMap(a: T, b, c)     => Some(FlatMap(f(a, b), b, c))
+      case Filter(a: T, b, c)      => Some(Filter(f(a, b), b, c))
+      case SortBy(a: T, b, c)      => Some(SortBy(f(a, b), b, c))
 
-      case Map(a: Query, b, c)      => Map(apply(a), b, c)
-      case FlatMap(a: Query, b, c)  => FlatMap(apply(a), b, c)
-      case Filter(a: Query, b, c)   => Filter(apply(a), b, c)
-      case SortBy(a: Query, b, c)   => SortBy(apply(a), b, c)
+      case Map(a: Query, b, c)     => apply(f)(a).map(Map(_, b, c))
+      case FlatMap(a: Query, b, c) => apply(f)(a).map(FlatMap(_, b, c))
+      case Filter(a: Query, b, c)  => apply(f)(a).map(Filter(_, b, c))
+      case SortBy(a: Query, b, c)  => apply(f)(a).map(SortBy(_, b, c))
 
-      case e: Entity                => f(e, Ident("x"))
+      case e: T                    => Some(f(e, Ident("x")))
 
-      case other                    => other
+      case other                   => None
     }
 }

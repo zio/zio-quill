@@ -1,7 +1,6 @@
 package io.getquill.quotation
 
 import scala.reflect.macros.whitebox.Context
-
 import io.getquill.ast
 import io.getquill.ast.Action
 import io.getquill.ast.Assignment
@@ -27,6 +26,7 @@ import io.getquill.ast.UnaryOperation
 import io.getquill.ast.UnaryOperator
 import io.getquill.ast.Update
 import io.getquill.ast.Value
+import io.getquill.ast.Reverse
 
 trait Liftables {
   val c: Context
@@ -74,6 +74,7 @@ trait Liftables {
     case Map(a, b, c)     => q"$pack.Map($a, $b, $c)"
     case FlatMap(a, b, c) => q"$pack.FlatMap($a, $b, $c)"
     case SortBy(a, b, c)  => q"$pack.SortBy($a, $b, $c)"
+    case Reverse(a)       => q"$pack.Reverse($a)"
   }
 
   implicit val actionLiftable: Liftable[Action] = Liftable[Action] {
