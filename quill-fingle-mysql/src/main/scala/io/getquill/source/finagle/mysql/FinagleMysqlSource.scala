@@ -1,7 +1,6 @@
 package io.getquill.source.finagle.mysql
 
 import java.util.TimeZone
-
 import com.twitter.finagle.exp.mysql.Client
 import com.twitter.finagle.exp.mysql.Parameter
 import com.twitter.finagle.exp.mysql.Result
@@ -9,10 +8,10 @@ import com.twitter.finagle.exp.mysql.Row
 import com.twitter.util.Future
 import com.twitter.util.Local
 import com.typesafe.scalalogging.StrictLogging
-
 import io.getquill.source.sql.SqlSource
+import io.getquill.source.sql.idiom.MySQLDialect
 
-trait FinagleMysqlSource
+class FinagleMysqlSource
     extends SqlSource[Row, List[Parameter]]
     with FinagleMysqlDecoders
     with FinagleMysqlEncoders
@@ -20,7 +19,9 @@ trait FinagleMysqlSource
 
   protected def dateTimezone = TimeZone.getDefault
 
-  protected val client = FinagleMysqlClient(config)
+  protected lazy val client = FinagleMysqlClient(config)
+
+  override lazy val dialect = MySQLDialect
 
   private val currentClient = new Local[Client]
 

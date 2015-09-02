@@ -3,21 +3,22 @@ package io.getquill.source.jdbc
 import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.ResultSet
-
 import scala.util.DynamicVariable
 import scala.util.control.NonFatal
-
 import com.typesafe.scalalogging.StrictLogging
-
 import io.getquill.source.sql.SqlSource
+import scala.util.Try
+import io.getquill.source.sql.idiom.StandardSqlDialect
 
-trait JdbcSource
+class JdbcSource
     extends SqlSource[ResultSet, PreparedStatement]
     with JdbcEncoders
     with JdbcDecoders
     with StrictLogging {
 
-  protected def dataSource = DataSource(config)
+  protected lazy val dataSource = DataSource(config)
+
+  override lazy val dialect = DialectFromConfig(config)
 
   private val currentConnection = new DynamicVariable[Option[Connection]](None)
 

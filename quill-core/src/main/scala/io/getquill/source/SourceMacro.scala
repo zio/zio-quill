@@ -11,7 +11,7 @@ import io.getquill.quotation.Quotation
 import io.getquill.quotation.Quoted
 import io.getquill.util.Messages.RichContext
 
-trait SourceMacro extends Quotation with ActionMacro with QueryMacro {
+trait SourceMacro extends Quotation with ActionMacro with QueryMacro with SourceResolveMacro {
   val c: Context
   import c.universe.{ Function => _, _ }
 
