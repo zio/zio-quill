@@ -12,15 +12,15 @@ trait MirrorDecoders {
       row[T](index)
   }
 
-  implicit val stringDecoder = decoder[String]
-  implicit val bigDecimalDecoder = decoder[BigDecimal]
-  implicit val booleanDecoder = decoder[Boolean]
-  implicit val byteDecoder = decoder[Byte]
-  implicit val shortDecoder = decoder[Short]
-  implicit val intDecoder = decoder[Int]
-  implicit val longDecoder = decoder[Long]
-  implicit val floatDecoder = decoder[Float]
-  implicit val doubleDecoder = decoder[Double]
-  implicit val byteArrayDecoder = decoder[Array[Byte]]
-  implicit val dateDecoder = decoder[Date]
+  implicit val stringDecoder: Decoder[String] = decoder[String]
+  implicit val bigDecimalDecoder: Decoder[BigDecimal] = decoder[BigDecimal]
+  implicit val booleanDecoder: Decoder[Boolean] = decoder[Boolean]
+  implicit val byteDecoder: Decoder[Byte] = decoder[Byte]
+  implicit val shortDecoder: Decoder[Short] = decoder[Short]
+  implicit val intDecoder: Decoder[Int] = decoder[Int]
+  implicit val longDecoder: Decoder[Long] = decoder[Long]
+  implicit val floatDecoder: Decoder[Float] = decoder[Float]
+  implicit val doubleDecoder: Decoder[Double] = decoder[Double]
+  implicit val byteArrayDecoder: Decoder[Array[Byte]] = decoder[Array[Byte]]
+  implicit val dateDecoder: Decoder[Date] = decoder[Date]
 }
