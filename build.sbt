@@ -53,7 +53,6 @@ lazy val commonSettings = releaseSettings ++ Seq(
     "-encoding", "UTF-8",
     "-feature",
     "-unchecked",
-    "-Xfatal-warnings",       
     "-Xlint",
     "-Yno-adapted-args",       
     "-Ywarn-dead-code",

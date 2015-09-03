@@ -11,6 +11,11 @@ import com.typesafe.scalalogging.StrictLogging
 import io.getquill.source.sql.SqlSource
 import io.getquill.source.sql.idiom.MySQLDialect
 import scala.util.Success
+import com.twitter.util.Await
+import scala.util.Try
+import com.twitter.finagle.Service
+import com.twitter.finagle.exp.mysql.Request
+import com.twitter.finagle.exp.mysql.PrepareRequest
 
 class FinagleMysqlSource
     extends SqlSource[MySQLDialect.type, Row, List[Parameter]]
@@ -24,8 +29,12 @@ class FinagleMysqlSource
 
   private val currentClient = new Local[Client]
 
-  def probe(sql: String) =
-    Success(())
+  def probe(sql: String) = {
+    val serviceField = client.getClass.getDeclaredField("service")
+    serviceField.setAccessible(true)
+    val service = serviceField.get(client).asInstanceOf[Service[Request, Result]]
+    Try(Await.result(service(PrepareRequest(sql))))
+  }
 
   def transaction[T](f: => Future[T]) =
     client.transaction {

@@ -15,16 +15,11 @@ trait SourceResolveMacro {
 
   private val classLoader = getClass.getClassLoader
 
-  def resolveRequiredSource[T](implicit t: ClassTag[T]) =
+  def resolveSource[T](implicit t: ClassTag[T]) =
     resolveCached[T] match {
       case (Some(source), errors) => source
       case (None, errors) =>
-        c.fail(s"Can't resolve the source instance at compile time. Trace: \n${errors.mkString("/n")}")
-    }
-
-  def resolveSource[T](implicit t: ClassTag[T]) =
-    resolveCached[T] match {
-      case (source, errors) => source
+        fail(s"Can't resolve the source instance at compile time. Trace: \n${errors.mkString("/n")}")
     }
 
   private def resolveCached[T](implicit t: ClassTag[T]) = {

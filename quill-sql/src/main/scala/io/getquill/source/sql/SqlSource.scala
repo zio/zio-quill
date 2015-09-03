@@ -11,7 +11,7 @@ abstract class SqlSource[D <: SqlIdiom, R: ClassTag, S: ClassTag] extends io.get
 
   def run[T](quoted: Quoted[T]): Any = macro SqlSourceMacro.run[R, S, T]
 
-  def probe(sql: String): Try[_]
+  def probe(sql: String): Try[Any]
 
   implicit val stringDecoder: Decoder[String]
   implicit val bigDecimalDecoder: Decoder[BigDecimal]

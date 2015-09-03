@@ -4,11 +4,11 @@ import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 import scala.util.DynamicVariable
-import scala.util.control.NonFatal
 import com.typesafe.scalalogging.StrictLogging
 import io.getquill.source.sql.SqlSource
 import scala.util.Try
 import io.getquill.source.sql.idiom.SqlIdiom
+import scala.util.control.NonFatal
 
 class JdbcSource[D <: SqlIdiom]
     extends SqlSource[D, ResultSet, PreparedStatement]

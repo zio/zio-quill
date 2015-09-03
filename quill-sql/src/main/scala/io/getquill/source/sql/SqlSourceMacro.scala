@@ -19,8 +19,15 @@ class SqlSourceMacro(val c: Context) extends SourceMacro {
     import d._
     val sql = ast.show
     c.info(sql)
+    probe(sql)
     q"$sql"
   }
+
+  private def probe(sql: String) =
+    try resolveSource[SqlSource[SqlIdiom, Any, Any]].probe(sql).get
+    catch {
+      case NonFatal(e) => c.warn(s"The sql query probing failed. Reason '$e'")
+    }
 
   private def dialect = {
     val cls =
