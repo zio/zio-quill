@@ -16,7 +16,7 @@ class JdbcSource[D <: SqlIdiom]
     with JdbcDecoders
     with StrictLogging {
 
-  protected lazy val dataSource = DataSource(config)
+  protected val dataSource = DataSource(config)
 
   private val currentConnection = new DynamicVariable[Option[Connection]](None)
 

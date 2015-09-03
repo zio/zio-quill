@@ -25,16 +25,18 @@ class FinagleMysqlSource
 
   protected def dateTimezone = TimeZone.getDefault
 
-  protected lazy val client = FinagleMysqlClient(config)
+  protected val client = FinagleMysqlClient(config)
+
+  private val service = {
+    val serviceField = client.getClass.getDeclaredField("service")
+    serviceField.setAccessible(true)
+    serviceField.get(client).asInstanceOf[Service[Request, Result]]
+  }
 
   private val currentClient = new Local[Client]
 
-  def probe(sql: String) = {
-    val serviceField = client.getClass.getDeclaredField("service")
-    serviceField.setAccessible(true)
-    val service = serviceField.get(client).asInstanceOf[Service[Request, Result]]
+  def probe(sql: String) =
     Try(Await.result(service(PrepareRequest(sql))))
-  }
 
   def transaction[T](f: => Future[T]) =
     client.transaction {

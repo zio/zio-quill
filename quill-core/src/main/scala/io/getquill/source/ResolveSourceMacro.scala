@@ -9,7 +9,7 @@ import scala.util.Success
 import scala.util.Failure
 import scala.reflect.ClassTag
 
-trait SourceResolveMacro {
+trait ResolveSourceMacro {
   val c: Context
   import c.universe.{ Try => _, _ }
 
@@ -24,7 +24,7 @@ trait SourceResolveMacro {
 
   private def resolveCached[T](implicit t: ClassTag[T]) = {
     val tpe = c.prefix.tree.tpe
-    SourceResolveMacro.cache.getOrElseUpdate(tpe, resolve[T](tpe)) match {
+    ResolveSourceMacro.cache.getOrElseUpdate(tpe, resolve[T](tpe)) match {
       case (None, errors)       => (None, errors)
       case (Some(v: T), errors) => (Some(v), errors)
       case (Some(v), errors) =>
@@ -49,11 +49,9 @@ trait SourceResolveMacro {
       case cls :: tail =>
         Try {
           Try(cls.getField("MODULE$")).toOption.map(_.get(cls)).getOrElse {
-            val instance = cls.newInstance
-            val field = classOf[Source[_, _]].getDeclaredField("configPrefix")
-            field.setAccessible(true)
-            field.set(instance, name)
-            instance
+            Source.configPrefix.withValue(Some(name)) {
+              cls.newInstance
+            }
           }
         } match {
           case Success(v) => (Some(v), List())
@@ -68,6 +66,6 @@ trait SourceResolveMacro {
     Try(classLoader.loadClass(name).asInstanceOf[Class[Any]]).toOption
 }
 
-object SourceResolveMacro {
+object ResolveSourceMacro {
   private val cache = collection.mutable.Map[Types#Type, (Option[Any], List[String])]()
 }
