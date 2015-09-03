@@ -69,7 +69,7 @@ trait SourceResolveMacro {
         }
     }
 
-  private def loadClass(name: String) =
+  protected def loadClass(name: String) =
     Try(classLoader.loadClass(name).asInstanceOf[Class[Any]]).toOption
 }
 

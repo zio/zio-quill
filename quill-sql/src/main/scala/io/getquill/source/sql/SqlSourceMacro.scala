@@ -4,28 +4,33 @@ import io.getquill.util.Messages._
 import scala.reflect.macros.whitebox.Context
 import io.getquill.ast.Ast
 import io.getquill.source.SourceMacro
-import io.getquill.util.Messages.RichContext
+import io.getquill.util.Messages._
 import io.getquill.util.Show.Shower
 import scala.util.Try
 import scala.util.control.NonFatal
 import io.getquill.source.sql.idiom.FallbackDialect
+import io.getquill.source.sql.idiom.SqlIdiom
 
 class SqlSourceMacro(val c: Context) extends SourceMacro {
   import c.universe.{ Try => _, _ }
 
   override def toExecutionTree(ast: Ast) = {
-    import dialect._
+    val d = dialect
+    import d._
     val sql = ast.show
     c.info(sql)
     q"$sql"
   }
 
-  private lazy val dialect =
-    try resolveRequiredSource[SqlSource[_, _]].dialect
-    catch {
-      case NonFatal(e) =>
-        c.warn(s"Can't determine the sql dialect, falling back to a standard dialect. Reason: $e")
-        FallbackDialect
-    }
-
+  private def dialect = {
+    val cls =
+      c.prefix.actualType
+        .baseType(c.weakTypeOf[SqlSource[SqlIdiom, Any, Any]].typeSymbol)
+        .typeArgs.head.termSymbol.fullName
+    loadClass(cls + "$")
+      .map(cls => cls.getField("MODULE$").get(cls)) match {
+        case Some(d: SqlIdiom) => d
+        case other             => c.fail("Can't load the source's sql dialect.")
+      }
+  }
 }

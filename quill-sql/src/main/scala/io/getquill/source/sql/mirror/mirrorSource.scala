@@ -2,16 +2,17 @@ package io.getquill.source.sql.mirror
 
 import io.getquill.source.mirror.Row
 import io.getquill.source.sql.SqlSource
-import io.getquill.source.sql.idiom.SqlIdiom
+import io.getquill.source.sql.idiom.FallbackDialect
+import scala.util.Success
 
 object mirrorSource
-    extends SqlSource[Row, Row]
+    extends SqlSource[MirrorDialect.type, Row, Row]
     with MirrorEncoders
     with MirrorDecoders {
 
-  case class ActionMirror(sql: String)
+  def probe(sql: String) = Success(())
 
-  override val dialect = new SqlIdiom {}
+  case class ActionMirror(sql: String)
 
   def execute(sql: String) =
     ActionMirror(sql)

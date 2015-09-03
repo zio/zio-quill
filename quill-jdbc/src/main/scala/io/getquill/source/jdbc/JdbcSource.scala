@@ -8,16 +8,15 @@ import scala.util.control.NonFatal
 import com.typesafe.scalalogging.StrictLogging
 import io.getquill.source.sql.SqlSource
 import scala.util.Try
+import io.getquill.source.sql.idiom.SqlIdiom
 
-class JdbcSource
-    extends SqlSource[ResultSet, PreparedStatement]
+class JdbcSource[D <: SqlIdiom]
+    extends SqlSource[D, ResultSet, PreparedStatement]
     with JdbcEncoders
     with JdbcDecoders
     with StrictLogging {
 
   protected lazy val dataSource = DataSource(config)
-
-  override lazy val dialect = DialectFromConfig(config)
 
   private val currentConnection = new DynamicVariable[Option[Connection]](None)
 
@@ -27,6 +26,9 @@ class JdbcSource
       try f(conn)
       finally conn.close
     }
+
+  def probe(sql: String) =
+    Try(withConnection(_.prepareStatement("dsdsad")))
 
   def transaction[T](f: => T) =
     withConnection { conn =>

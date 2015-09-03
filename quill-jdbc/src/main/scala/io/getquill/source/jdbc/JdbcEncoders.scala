@@ -7,7 +7,7 @@ import java.util.Calendar
 import java.util.TimeZone
 
 trait JdbcEncoders {
-  this: JdbcSource =>
+  this: JdbcSource[_] =>
 
   protected val dateTimeZone = TimeZone.getDefault
 

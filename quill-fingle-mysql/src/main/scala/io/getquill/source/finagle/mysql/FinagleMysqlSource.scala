@@ -10,9 +10,10 @@ import com.twitter.util.Local
 import com.typesafe.scalalogging.StrictLogging
 import io.getquill.source.sql.SqlSource
 import io.getquill.source.sql.idiom.MySQLDialect
+import scala.util.Success
 
 class FinagleMysqlSource
-    extends SqlSource[Row, List[Parameter]]
+    extends SqlSource[MySQLDialect.type, Row, List[Parameter]]
     with FinagleMysqlDecoders
     with FinagleMysqlEncoders
     with StrictLogging {
@@ -21,9 +22,10 @@ class FinagleMysqlSource
 
   protected lazy val client = FinagleMysqlClient(config)
 
-  override lazy val dialect = MySQLDialect
-
   private val currentClient = new Local[Client]
+
+  def probe(sql: String) =
+    Success(())
 
   def transaction[T](f: => Future[T]) =
     client.transaction {

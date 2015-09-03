@@ -5,12 +5,13 @@ import java.util.Date
 import scala.reflect.ClassTag
 import io.getquill.quotation.Quoted
 import io.getquill.source.sql.idiom.SqlIdiom
+import scala.util.Try
 
-abstract class SqlSource[R: ClassTag, S: ClassTag] extends io.getquill.source.Source[R, S] {
-
-  val dialect: SqlIdiom
+abstract class SqlSource[D <: SqlIdiom, R: ClassTag, S: ClassTag] extends io.getquill.source.Source[R, S] {
 
   def run[T](quoted: Quoted[T]): Any = macro SqlSourceMacro.run[R, S, T]
+
+  def probe(sql: String): Try[_]
 
   implicit val stringDecoder: Decoder[String]
   implicit val bigDecimalDecoder: Decoder[BigDecimal]

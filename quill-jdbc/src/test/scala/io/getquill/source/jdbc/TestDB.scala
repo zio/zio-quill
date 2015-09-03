@@ -1,3 +1,5 @@
 package io.getquill.source.jdbc
 
-object testDB extends JdbcSource
+import io.getquill.source.sql.idiom.MySQLDialect
+
+object testDB extends JdbcSource[MySQLDialect.type]
