@@ -15,16 +15,30 @@ trait SourceResolveMacro {
 
   private val classLoader = getClass.getClassLoader
 
-  def self[T](implicit t: ClassTag[T]) = {
+  def resolveRequiredSource[T](implicit t: ClassTag[T]) =
+    resolveCached[T] match {
+      case (Some(source), errors) => source
+      case (None, errors) =>
+        c.fail(s"Can't resolve the source instance at compile time. Trace: \n${errors.mkString("/n")}")
+    }
+
+  def resolveSource[T](implicit t: ClassTag[T]) =
+    resolveCached[T] match {
+      case (source, errors) => source
+    }
+
+  private def resolveCached[T](implicit t: ClassTag[T]) = {
     val tpe = c.prefix.tree.tpe
-    SourceResolveMacro.cache
-      .getOrElseUpdate(tpe, resolve[T](tpe).toOption)
-      .asInstanceOf[Option[T]]
+    SourceResolveMacro.cache.getOrElseUpdate(tpe, resolve[T](tpe)) match {
+      case (None, errors)       => (None, errors)
+      case (Some(v: T), errors) => (Some(v), errors)
+      case (Some(v), errors) =>
+        c.fail(s"The resolved source instance '$v' doesn't have the expected type '${t.runtimeClass}'")
+    }
   }
 
-  private def resolve[T](tpe: Type)(implicit t: ClassTag[T]): Try[Any] = {
+  private def resolve[T](tpe: Type)(implicit t: ClassTag[T]): (Option[Any], List[String]) = {
     val sourceName = tpe.termSymbol.name.decodedName.toString
-    println(getClass.getResource("."))
     resolve(sourceName, baseClasses[T](tpe))
   }
 
@@ -33,10 +47,10 @@ trait SourceResolveMacro {
       .map(name => List(loadClass(name), loadClass(name + "$")).flatten)
       .flatten.filter(t.runtimeClass.isAssignableFrom(_))
 
-  private def resolve(name: String, classes: List[Class[Any]]): Try[Any] =
+  private def resolve(name: String, classes: List[Class[Any]]): (Option[Any], List[String]) =
     classes match {
       case Nil =>
-        c.fail("Can't instantiate the source at compile time.")
+        (None, List("All source alternatives failed."))
       case cls :: tail =>
         Try {
           Try(cls.getField("MODULE$")).toOption.map(_.get(cls)).getOrElse {
@@ -46,8 +60,12 @@ trait SourceResolveMacro {
             field.set(instance, name)
             instance
           }
-        }.orElse {
-          resolve(name, tail)
+        } match {
+          case Success(v) => (Some(v), List())
+          case Failure(e) =>
+            val (value, errors) = resolve(name, tail)
+            val error = s"Failed to load from source class '$cls'. Reason: '$e'"
+            (value, error +: errors)
         }
     }
 
@@ -56,5 +74,5 @@ trait SourceResolveMacro {
 }
 
 object SourceResolveMacro {
-  private val cache = collection.mutable.Map[Types#Type, Option[Any]]()
+  private val cache = collection.mutable.Map[Types#Type, (Option[Any], List[String])]()
 }

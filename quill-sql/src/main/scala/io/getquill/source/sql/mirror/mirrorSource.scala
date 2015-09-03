@@ -2,7 +2,7 @@ package io.getquill.source.sql.mirror
 
 import io.getquill.source.mirror.Row
 import io.getquill.source.sql.SqlSource
-import io.getquill.source.sql.idiom.StandardSqlDialect
+import io.getquill.source.sql.idiom.SqlIdiom
 
 object mirrorSource
     extends SqlSource[Row, Row]
@@ -11,7 +11,7 @@ object mirrorSource
 
   case class ActionMirror(sql: String)
 
-  override val dialect = StandardSqlDialect
+  override val dialect = new SqlIdiom {}
 
   def execute(sql: String) =
     ActionMirror(sql)

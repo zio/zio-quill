@@ -1,10 +1,10 @@
 package io.getquill.source.jdbc
 
 import com.typesafe.config.Config
+import io.getquill.util.Messages._
 import io.getquill.source.sql.idiom.H2Dialect
 import io.getquill.source.sql.idiom.MySQLDialect
 import io.getquill.source.sql.idiom.PostgresDialect
-import io.getquill.source.sql.idiom.StandardSqlDialect
 
 object DialectFromConfig {
 
@@ -21,5 +21,13 @@ object DialectFromConfig {
         case jdbc :: "mysql" :: url      => MySQLDialect
         case jdbc :: "postgresql" :: url => PostgresDialect
       }
-    }.getOrElse(StandardSqlDialect)
+    }.orElse {
+      Option(config.getString("dialect")).collect {
+        case "H2Dialect"       => H2Dialect
+        case "MySQLDialect"    => MySQLDialect
+        case "PostgresDialect" => PostgresDialect
+      }
+    }.getOrElse {
+      fail("Can't determine the sql dialect based on the configuration.")
+    }
 }

@@ -8,7 +8,6 @@ import scala.util.control.NonFatal
 import com.typesafe.scalalogging.StrictLogging
 import io.getquill.source.sql.SqlSource
 import scala.util.Try
-import io.getquill.source.sql.idiom.StandardSqlDialect
 
 class JdbcSource
     extends SqlSource[ResultSet, PreparedStatement]
