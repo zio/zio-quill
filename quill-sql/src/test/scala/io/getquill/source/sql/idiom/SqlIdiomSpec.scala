@@ -309,11 +309,4 @@ class SqlIdiomSpec extends Spec {
     }
     "mirrorSource.run(q)" mustNot compile
   }
-
-  "fails if the action is malformed" in {
-    val q = quote {
-      qr1.filter(_.s == null).insert(_.s -> "")
-    }
-    "mirrorSource.run(q)" mustNot compile
-  }
 }

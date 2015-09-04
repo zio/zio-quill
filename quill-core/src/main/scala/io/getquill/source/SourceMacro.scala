@@ -1,7 +1,6 @@
 package io.getquill.source
 
 import scala.reflect.macros.whitebox.Context
-
 import io.getquill.ast.Action
 import io.getquill.ast.Ast
 import io.getquill.ast.Function
@@ -10,6 +9,7 @@ import io.getquill.norm.Normalize
 import io.getquill.quotation.Quotation
 import io.getquill.quotation.Quoted
 import io.getquill.util.Messages.RichContext
+import io.getquill.Queryable
 
 trait SourceMacro extends Quotation with ActionMacro with QueryMacro with ResolveSourceMacro {
   val c: Context
@@ -26,15 +26,19 @@ trait SourceMacro extends Quotation with ActionMacro with QueryMacro with Resolv
         runAction(action)
 
       case Function(params, query: Query) =>
-        val tr = c.WeakTypeTag(t.tpe.typeArgs.takeRight(1).head.typeArgs.head)
+        val tr = c.WeakTypeTag(queryableType(t.tpe.typeArgs.takeRight(1).head))
         runQuery(query, params.zip(paramsTypes[T]))(r, s, tr)
       case query: Query =>
-        val tr = c.WeakTypeTag(t.tpe.typeArgs.takeRight(1).head)
+        c.info(t.tpe.toString)
+        val tr = c.WeakTypeTag(queryableType(t.tpe))
         runQuery(query, List())(r, s, tr)
 
       case other =>
         c.fail(s"Not runnable $other")
     }
+
+  private def queryableType(tpe: Type) =
+    tpe.baseType(c.typeOf[Queryable[_]].typeSymbol).typeArgs.head
 
   private def ast[T](quoted: Expr[Quoted[T]]) =
     unquote[Ast](quoted.tree).getOrElse {

@@ -7,6 +7,7 @@ sealed trait Queryable[+T] {
   def withFilter(f: T => Boolean): Queryable[T]
   def filter(f: T => Boolean): Queryable[T]
   def sortBy[R](f: T => R)(implicit ord: Ordering[R]): SortedQueryable[T]
+
   def nonEmpty: Boolean
   def isEmpty: Boolean
 }
@@ -21,17 +22,24 @@ sealed trait SortedQueryable[+T] extends Queryable[T] {
   def filter(f: T => Boolean): SortedQueryable[T]
 }
 
-sealed trait EntityQueryable[+T] extends Queryable[T] {
+sealed trait EntityQueryable[+T]
+    extends Queryable[T]
+    with Insertable[T]
+    with Updatable[T]
+    with Deletable[T] {
 
-  def insert(f: (T => (Any, Any))*): Insertable[T]
-  def update(f: (T => (Any, Any))*): Updatable[T]
-  def delete: Deletable[T]
-
-  override def withFilter(f: T => Boolean): EntityQueryable[T]
-  override def filter(f: T => Boolean): EntityQueryable[T]
+  override def withFilter(f: T => Boolean): Queryable[T] with Updatable[T] with Deletable[T]
+  override def filter(f: T => Boolean): Queryable[T] with Updatable[T] with Deletable[T]
 }
 
 sealed trait Actionable[+T]
-sealed trait Insertable[+T] extends Actionable[T]
-sealed trait Updatable[+T] extends Actionable[T]
-sealed trait Deletable[+T] extends Actionable[T]
+
+sealed trait Insertable[+T] {
+  def insert(f: (T => (Any, Any)), f2: (T => (Any, Any))*): Actionable[T]
+}
+sealed trait Updatable[+T] {
+  def update(f: (T => (Any, Any)), f2: (T => (Any, Any))*): Actionable[T]
+}
+sealed trait Deletable[+T] {
+  def delete: Actionable[T]
+}

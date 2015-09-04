@@ -143,7 +143,7 @@ trait SqlIdiom {
 
     new Show[Action] {
       def show(a: Action) =
-        a match {
+        (a: @unchecked) match {
 
           case Insert(Entity(table), assignments) =>
             val columns = assignments.map(_.property)
@@ -161,9 +161,6 @@ trait SqlIdiom {
 
           case Delete(Entity(table)) =>
             s"DELETE FROM $table"
-
-          case other =>
-            fail(s"Malformed action '$a'")
         }
     }
   }
