@@ -1,3 +1,5 @@
 package io.getquill.source.sql.idiom
 
-object H2Dialect extends SqlIdiom
+object H2Dialect
+  extends SqlIdiom
+  with NullsOrderingClause

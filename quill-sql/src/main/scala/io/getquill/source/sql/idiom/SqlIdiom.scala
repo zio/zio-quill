@@ -57,10 +57,13 @@ trait SqlIdiom {
         }
       e.orderBy match {
         case Nil     => where
-        case orderBy => where + s" ORDER BY ${orderBy.show}"
+        case orderBy => where + showOrderBy(orderBy)
       }
     }
   }
+
+  protected def showOrderBy(criterias: List[OrderByCriteria]) =
+    s" ORDER BY ${criterias.show}"
 
   implicit val sourceShow: Show[Source] = new Show[Source] {
     def show(source: Source) =
