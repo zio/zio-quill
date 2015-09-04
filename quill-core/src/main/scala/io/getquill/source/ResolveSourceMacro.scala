@@ -27,8 +27,6 @@ trait ResolveSourceMacro {
     ResolveSourceMacro.cache.getOrElseUpdate(tpe, resolve[T](tpe)) match {
       case (None, errors)       => (None, errors)
       case (Some(v: T), errors) => (Some(v), errors)
-      case (Some(v), errors) =>
-        c.fail(s"The resolved source instance '$v' doesn't have the expected type '${t.runtimeClass}'")
     }
   }
 

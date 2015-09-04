@@ -4,13 +4,18 @@ import io.getquill.source.mirror.Row
 import io.getquill.source.sql.SqlSource
 import io.getquill.source.sql.idiom.FallbackDialect
 import scala.util.Success
+import scala.util.Failure
 
 object mirrorSource
     extends SqlSource[MirrorDialect.type, Row, Row]
     with MirrorEncoders
     with MirrorDecoders {
 
-  def probe(sql: String) = Success(())
+  def probe(sql: String) =
+    if (sql.contains("Fail"))
+      Failure(new IllegalStateException("The sql contains the 'Fail' keyword'"))
+    else
+      Success(())
 
   case class ActionMirror(sql: String)
 

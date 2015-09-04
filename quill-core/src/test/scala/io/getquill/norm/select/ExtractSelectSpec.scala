@@ -94,6 +94,19 @@ class ExtractSelectSpec extends Spec {
           select mustEqual Ident("t")
       }
     }
+    "sorted query" in {
+      val q = quote {
+        qr1.sortBy(t => t.s)
+      }
+      val m = quote {
+        qr1.sortBy(t => t.s).map(t => t)
+      }
+      ExtractSelect(q.ast) match {
+        case (query, select) =>
+          query mustEqual m.ast
+          select mustEqual Ident("t")
+      }
+    }
   }
 
   "fails if the query is malformed" in {

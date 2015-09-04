@@ -7,12 +7,23 @@ import io.getquill.quotation.Quoted
 import io.getquill.source.Source
 import io.getquill.source.SourceMacro
 import io.getquill.util.Messages._
+import scala.util.Success
+import scala.util.Failure
+import scala.util.control.NonFatal
 
-object mirrorSource extends Source[Row, Row] {
+object mirrorSource extends MirrorSourceTemplate
+
+abstract class MirrorSourceTemplate extends Source[Row, Row] {
 
   def run[T](quoted: Quoted[T]): Any = macro MirrorSourceMacro.run[Row, Row, T]
 
   def mirrorConfig = config
+
+  def probe(ast: Ast) =
+    if (ast.toString.contains("Fail"))
+      Failure(new IllegalStateException("The ast contains 'Fail'"))
+    else
+      Success(())
 
   case class ActionMirror(ast: Ast)
 
@@ -63,6 +74,10 @@ object mirrorSource extends Source[Row, Row] {
 class MirrorSourceMacro(val c: Context) extends SourceMacro {
   import c.universe._
   override protected def toExecutionTree(ast: Ast) = {
+    try resolveSource[MirrorSourceTemplate].probe(ast).get
+    catch {
+      case NonFatal(e) => c.warn("Probe failed.")
+    }
     c.info(ast.toString)
     q"$ast"
   }
