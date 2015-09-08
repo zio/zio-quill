@@ -41,7 +41,7 @@ class AdHocReductionSpec extends Spec {
         qr1.sortBy(b => b.s).reverse.filter(d => d == "s2")
       }
       val n = quote {
-        qr1.filter(d => d == "s2").sortBy(b => b.s).reverse
+        qr1.filter(b => b == "s2").sortBy(b => b.s).reverse
       }
       AdHocReduction(q.ast) mustEqual n.ast
     }
@@ -62,7 +62,7 @@ class AdHocReductionSpec extends Spec {
         qr1.sortBy(b => b.s).filter(d => d.s == "s1")
       }
       val n = quote {
-        qr1.filter(d => d.s == "s1").sortBy(b => b.s)
+        qr1.filter(b => b.s == "s1").sortBy(b => b.s)
       }
       AdHocReduction(q.ast) mustEqual n.ast
     }
@@ -113,7 +113,7 @@ class AdHocReductionSpec extends Spec {
         qr1.flatMap(b => qr2).sortBy(b => b.s).reverse
       }
       val n = quote {
-        qr1.flatMap(b => qr2.sortBy(b => b.s).reverse)
+        qr1.flatMap(b => qr2.sortBy(b1 => b1.s).reverse)
       }
       AdHocReduction(q.ast) mustEqual n.ast
     }

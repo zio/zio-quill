@@ -50,19 +50,19 @@ class AttachToEntitySpec extends Spec {
       }
       "sortBy" in {
         val q = quote {
-          qr1.filter(t => t.i == 1).sortBy(t => t.s)
+          qr1.sortBy(t => t.s)
         }
         val n = quote {
-          qr1.sortBy(t => 1).filter(t => t.i == 1).sortBy(t => t.s)
+          qr1.sortBy(t => 1).sortBy(t => t.s)
         }
         attachToEntity(q.ast) mustEqual n.ast
       }
       "reverse" in {
         val q = quote {
-          qr1.filter(t => t.i == 1).sortBy(b => b.s).reverse
+          qr1.sortBy(b => b.s).reverse
         }
         val n = quote {
-          qr1.sortBy(t => 1).filter(t => t.i == 1).sortBy(b => b.s).reverse
+          qr1.sortBy(b => 1).sortBy(b => b.s).reverse
         }
         attachToEntity(q.ast) mustEqual n.ast
       }
