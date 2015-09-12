@@ -12,7 +12,7 @@ class SqlQuerySpec extends Spec {
 
     "generated query" - {
       val gen = new QueryGenerator(1)
-      for (i <- (2 to 15)) {
+      for (i <- (3 to 15)) {
         for (j <- (0 until 30)) {
           val query = Normalize(gen(i))
           s"$i levels ($j) - $query" in {
