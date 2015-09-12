@@ -52,7 +52,4 @@ object BetaReduction {
 
   def apply(ast: Ast, t: (Ident, Ast)*): Ast =
     BetaReduction(t.toMap)(ast)
-
-  def apply(query: Query, t: (Ident, Ast)*): Query =
-    BetaReduction(t.toMap)(query)
 }

@@ -67,7 +67,10 @@ trait SqlIdiom {
 
   implicit val sourceShow: Show[Source] = new Show[Source] {
     def show(source: Source) =
-      s"${source.table} ${source.alias}"
+      source match {
+        case TableSource(name, alias)  => s"$name $alias"
+        case QuerySource(query, alias) => s"(${query.show}) $alias"
+      }
   }
 
   implicit val orderByCriteriaShow: Show[OrderByCriteria] = new Show[OrderByCriteria] {

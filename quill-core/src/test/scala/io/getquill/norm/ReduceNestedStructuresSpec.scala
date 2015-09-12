@@ -6,7 +6,7 @@ import io.getquill.unquote
 
 class ReduceNestedStructuresSpec extends Spec {
 
-  val subject = ReduceNestedStructures(SymbolicReduction.apply)
+  val subject = ReduceNestedStructures(Normalize.apply)
 
   "flatMap" in {
     val q = quote {

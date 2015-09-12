@@ -45,13 +45,12 @@ class SqlIdiomSpec extends Spec {
             for {
               a <- qr1.sortBy(t => t.s).reverse
               b <- qr2.sortBy(t => t.i)
-              if (a.l == b.l)
             } yield {
               (a.s, b.i)
             }
           }
           mirrorSource.run(q).sql mustEqual
-            "SELECT t.s, t1.i FROM TestEntity t, TestEntity2 t1 WHERE t.l = t1.l ORDER BY t.s DESC, t1.i"
+            "SELECT t.s, t1.i FROM (SELECT * FROM TestEntity t ORDER BY t.s DESC) t, TestEntity2 t1 ORDER BY t1.i"
         }
       }
     }
@@ -68,14 +67,14 @@ class SqlIdiomSpec extends Spec {
           qr1.filter(t => qr2.filter(u => u.s == t.s).isEmpty)
         }
         mirrorSource.run(q).sql mustEqual
-          "SELECT t.s, t.i, t.l FROM TestEntity t WHERE NOT EXISTS (SELECT u FROM TestEntity2 u WHERE u.s = t.s)"
+          "SELECT t.s, t.i, t.l FROM TestEntity t WHERE NOT EXISTS (SELECT * FROM TestEntity2 u WHERE u.s = t.s)"
       }
       "nonEmpty" in {
         val q = quote {
           qr1.filter(t => qr2.filter(u => u.s == t.s).nonEmpty)
         }
         mirrorSource.run(q).sql mustEqual
-          "SELECT t.s, t.i, t.l FROM TestEntity t WHERE EXISTS (SELECT u FROM TestEntity2 u WHERE u.s = t.s)"
+          "SELECT t.s, t.i, t.l FROM TestEntity t WHERE EXISTS (SELECT * FROM TestEntity2 u WHERE u.s = t.s)"
       }
     }
     "binary operation" - {

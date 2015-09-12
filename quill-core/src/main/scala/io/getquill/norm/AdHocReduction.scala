@@ -11,10 +11,14 @@ import io.getquill.ast.StatelessTransformer
 import io.getquill.ast.Tuple
 import io.getquill.ast.Reverse
 import io.getquill.norm.capture.AvoidCapture
+import io.getquill.ast.Ast
 
-private[norm] object AdHocReduction extends StatelessTransformer {
+object Normalize extends StatelessTransformer {
 
   private val reduceNestedStructures = ReduceNestedStructures(apply)
+
+  override def apply(q: Ast): Ast =
+    super.apply(BetaReduction(q))
 
   override def apply(q: Query): Query =
     AvoidCapture(q) match {
@@ -82,6 +86,21 @@ private[norm] object AdHocReduction extends StatelessTransformer {
       //    a.flatMap(b => c.reverse)
       case Reverse(FlatMap(a, b, c)) =>
         apply(FlatMap(a, b, Reverse(c)))
+
+      // ---------------------------
+      // *.flatMap
+
+      // a.filter(b => c).flatMap(d => e.$) =>
+      //     a.flatMap(d => e.filter(_ => c[b := d]).$)
+      case FlatMap(Filter(a, b, c), d, e: Query) =>
+        val cr = BetaReduction(c, b -> d)
+        val er = AttachToEntity(Filter(_, _, cr))(e)
+        apply(FlatMap(a, d, er))
+
+      // a.flatMap(b => c).flatMap(d => e) =>
+      //     a.flatMap(b => c.flatMap(d => e))
+      case FlatMap(FlatMap(a, b, c), d, e) =>
+        apply(FlatMap(a, b, FlatMap(c, d, e)))
 
       case other => other
     }

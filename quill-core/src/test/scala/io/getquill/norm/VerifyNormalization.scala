@@ -16,10 +16,19 @@ object VerifyNormalization extends StatelessTransformer {
 
   private def finalFlatMapBody(q: Query): Query =
     q match {
-      case FlatMap(a: Entity, b, c: FlatMap) => finalFlatMapBody(c)
-      case FlatMap(a: Entity, b, c: Query)   => verifyFinalFlatMapBody(c)
-      case other                             => verifyFinalFlatMapBody(q)
+      case FlatMap(sourceQuery(a), b, c: FlatMap) => finalFlatMapBody(c)
+      case FlatMap(sourceQuery(a), b, c: Query)   => verifyFinalFlatMapBody(c)
+      case other                                  => verifyFinalFlatMapBody(q)
     }
+
+  object sourceQuery {
+    def unapply(q: Query) =
+      q match {
+        case _: Entity              => Some(q)
+        case _: SortBy | _: Reverse => Some(apply(q))
+        case other                  => None
+      }
+  }
 
   private def verifyFinalFlatMapBody(q: Query): Query =
     q match {
@@ -36,9 +45,9 @@ object VerifyNormalization extends StatelessTransformer {
 
   private def verifyFilterClause(q: Query): Query =
     q match {
-      case q: Filter => q
-      case q: Entity => q
-      case other     => fail(s"Expected 'Filter' or 'Entity', but got $q")
+      case q: Filter      => q
+      case sourceQuery(q) => q
+      case other          => fail(s"Expected 'Filter' or a source query, but got $q")
     }
 
 }
