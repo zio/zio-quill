@@ -3,10 +3,25 @@ package io.getquill.source.sql
 import io.getquill.Spec
 import io.getquill.quote
 import io.getquill.unquote
+import io.getquill.norm.QueryGenerator
+import io.getquill.norm.Normalize
 
 class SqlQuerySpec extends Spec {
 
   "transforms the ast into a flatten sql-like structure" - {
+
+    "generated query" - {
+      val gen = new QueryGenerator(1)
+      for (i <- (2 to 15)) {
+        for (j <- (0 until 30)) {
+          val query = Normalize(gen(i))
+          s"$i levels ($j) - $query" in {
+            val q = SqlQuery(query)
+          }
+        }
+      }
+    }
+
     "non-sorted query" in {
       val q = quote {
         for {

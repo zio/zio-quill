@@ -21,7 +21,7 @@ class QueryGenerator(seed: Int) {
 
   def apply(i: Int): Query =
     if (i <= 2) {
-      Entity(string)
+      Entity(string(3))
     } else {
       random.nextInt(5) match {
         case 0 => map(i)
@@ -44,18 +44,12 @@ class QueryGenerator(seed: Int) {
 
   private def filter(i: Int) = {
     val id = ident
-    if (i % 2 == 0)
-      Filter(apply(i), id, BinaryOperation(id, ast.`!=`, NullValue))
-    else
-      Filter(apply(i), id, BinaryOperation(Property(id, string), ast.`!=`, Constant(1)))
+    Filter(apply(i), id, BinaryOperation(Property(id, string), ast.`!=`, Constant(1)))
   }
 
   private def sortBy(i: Int) = {
     val id = ident
-    if (i % 2 == 0)
-      SortBy(apply(i), id, id)
-    else
-      SortBy(apply(i), id, Property(id, string))
+    SortBy(apply(i), id, Property(id, string))
   }
 
   private def reverse(i: Int) =
@@ -70,7 +64,13 @@ class QueryGenerator(seed: Int) {
   private def ident =
     Ident(string)
 
-  private def string = {
+  private def string(size: Int): String =
+    size match {
+      case 0    => ""
+      case size => string + string(size - 1)
+    }
+
+  private def string: String = {
     val letters = "abcdefghijklmnopqrstuvwxyz"
     letters.charAt(random.nextInt(letters.size)).toString
   }

@@ -28,6 +28,9 @@ object SqlQuery {
 
       // entity
 
+      case Entity(name) =>
+        SqlQuery(TableSource(name, "x") :: Nil, None, List(), Ident("*"))
+
       case Map(Entity(name), Ident(alias), p) =>
         SqlQuery(TableSource(name, alias) :: Nil, None, List(), p)
 
