@@ -29,7 +29,6 @@ trait SourceMacro extends Quotation with ActionMacro with QueryMacro with Resolv
         val tr = c.WeakTypeTag(queryableType(t.tpe.typeArgs.takeRight(1).head))
         runQuery(query, params.zip(paramsTypes[T]))(r, s, tr)
       case query: Query =>
-        c.info(t.tpe.toString)
         val tr = c.WeakTypeTag(queryableType(t.tpe))
         runQuery(query, List())(r, s, tr)
 

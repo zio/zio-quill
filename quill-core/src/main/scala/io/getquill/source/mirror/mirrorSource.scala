@@ -10,6 +10,8 @@ import io.getquill.util.Messages._
 import scala.util.Success
 import scala.util.Failure
 import scala.util.control.NonFatal
+import scala.util.Failure
+import scala.util.Success
 
 object mirrorSource extends MirrorSourceTemplate
 
@@ -74,9 +76,9 @@ abstract class MirrorSourceTemplate extends Source[Row, Row] {
 class MirrorSourceMacro(val c: Context) extends SourceMacro {
   import c.universe._
   override protected def toExecutionTree(ast: Ast) = {
-    try resolveSource[MirrorSourceTemplate].probe(ast).get
-    catch {
-      case NonFatal(e) => c.warn("Probe failed.")
+    resolveSource[MirrorSourceTemplate].flatMap(_.probe(ast)) match {
+      case Failure(e) => c.warn(s"Probe failed. Reason $e")
+      case Success(v) =>
     }
     c.info(ast.toString)
     q"$ast"

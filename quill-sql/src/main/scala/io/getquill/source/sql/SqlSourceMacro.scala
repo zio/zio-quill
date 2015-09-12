@@ -10,6 +10,8 @@ import scala.util.Try
 import scala.util.control.NonFatal
 import io.getquill.source.sql.idiom.FallbackDialect
 import io.getquill.source.sql.idiom.SqlIdiom
+import scala.util.Failure
+import scala.util.Success
 
 class SqlSourceMacro(val c: Context) extends SourceMacro {
   import c.universe.{ Try => _, _ }
@@ -24,9 +26,9 @@ class SqlSourceMacro(val c: Context) extends SourceMacro {
   }
 
   private def probe(sql: String) =
-    try resolveSource[SqlSource[SqlIdiom, Any, Any]].probe(sql).get
-    catch {
-      case NonFatal(e) => c.warn(s"The sql query probing failed. Reason '$e'")
+    resolveSource[SqlSource[SqlIdiom, Any, Any]].flatMap(_.probe(sql)) match {
+      case Failure(e) => c.warn(s"The sql query probing failed. Reason '$e'")
+      case Success(v) => v
     }
 
   private def dialect = {
