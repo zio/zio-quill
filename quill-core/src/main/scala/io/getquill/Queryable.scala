@@ -8,6 +8,8 @@ sealed trait Queryable[+T] {
   def filter(f: T => Boolean): Queryable[T]
   def sortBy[R](f: T => R)(implicit ord: Ordering[R]): SortedQueryable[T]
 
+  def take(n: Int): Queryable[T]
+  
   def nonEmpty: Boolean
   def isEmpty: Boolean
 }

@@ -49,6 +49,10 @@ trait StatefulTransformer[T] {
       case Reverse(a) =>
         val (at, att) = apply(a)
         (Reverse(at), att)
+      case Take(a, b) =>
+        val (at, att) = apply(a)
+        val (bt, btt) = att.apply(b)
+        (Take(at, bt), btt)
     }
 
   def apply(e: Operation): (Operation, StatefulTransformer[T]) =

@@ -27,6 +27,7 @@ import io.getquill.ast.UnaryOperator
 import io.getquill.ast.Update
 import io.getquill.ast.Value
 import io.getquill.ast.Reverse
+import io.getquill.ast.Take
 
 trait Liftables {
   val c: Context
@@ -75,6 +76,7 @@ trait Liftables {
     case FlatMap(a, b, c) => q"$pack.FlatMap($a, $b, $c)"
     case SortBy(a, b, c)  => q"$pack.SortBy($a, $b, $c)"
     case Reverse(a)       => q"$pack.Reverse($a)"
+    case Take(a, b)       => q"$pack.Take($a, $b)"
   }
 
   implicit val actionLiftable: Liftable[Action] = Liftable[Action] {

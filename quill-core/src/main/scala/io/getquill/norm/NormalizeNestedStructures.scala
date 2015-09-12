@@ -7,6 +7,7 @@ import io.getquill.ast.Map
 import io.getquill.ast.Query
 import io.getquill.ast.SortBy
 import io.getquill.ast.Reverse
+import io.getquill.ast.Take
 
 object NormalizeNestedStructures {
 
@@ -37,6 +38,11 @@ object NormalizeNestedStructures {
         Normalize(a) match {
           case `a` => None
           case a   => Some(Reverse(a))
+        }
+      case Take(a, b) =>
+        (Normalize(a), Normalize(b)) match {
+          case (`a`, `b`) => None
+          case (a, b)     => Some(Take(a, b))
         }
     }
 }

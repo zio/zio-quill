@@ -28,6 +28,7 @@ import io.getquill.ast.Value
 import io.getquill.norm.BetaReduction
 import io.getquill.util.Messages.RichContext
 import io.getquill.ast.Reverse
+import io.getquill.ast.Take
 
 trait Parsing {
   this: Quotation =>
@@ -121,6 +122,9 @@ trait Parsing {
 
     case q"$source.reverse" =>
       Reverse(astParser(source))
+
+    case q"$source.take($n)" =>
+      Take(astParser(source), astParser(n))
   }
 
   private def binaryOperator(name: TermName) =

@@ -42,6 +42,9 @@ object AstShow {
 
         case Reverse(source) =>
           s"${source.show}.reverse"
+
+        case Take(source, n) =>
+          s"${source.show}.take($n)"
       }
   }
 

@@ -12,10 +12,12 @@ import io.getquill.util.Messages.fail
 import io.getquill.ast.Property
 import io.getquill.ast.Tuple
 import io.getquill.ast.Reverse
+import io.getquill.ast.Take
 
 case class OrderByCriteria(property: Property, desc: Boolean)
 
 sealed trait Source
+
 case class TableSource(name: String, alias: String) extends Source
 case class QuerySource(query: SqlQuery, alias: String) extends Source
 
@@ -29,17 +31,17 @@ object SqlQuery {
       // entity
 
       case Entity(name) =>
-        SqlQuery(TableSource(name, "x") :: Nil, None, List(), Ident("*"))
+        SqlQuery(TableSource(name, "x") :: Nil, None, Nil, Ident("*"))
 
       case Map(Entity(name), Ident(alias), p) =>
-        SqlQuery(TableSource(name, alias) :: Nil, None, List(), p)
+        SqlQuery(TableSource(name, alias) :: Nil, None, Nil, p)
 
       case FlatMap(Entity(name), Ident(alias), r: Query) =>
         val nested = apply(r)
-        SqlQuery(TableSource(name, alias) :: nested.from, nested.where, nested.orderBy, nested.select)
+        nested.copy(from = TableSource(name, alias) :: nested.from)
 
       case Filter(Entity(name), Ident(alias), p) =>
-        SqlQuery(TableSource(name, alias) :: Nil, Option(p), List(), Ident("*"))
+        SqlQuery(TableSource(name, alias) :: Nil, Option(p), Nil, Ident("*"))
 
       case Reverse(SortBy(Entity(name), Ident(alias), p)) =>
         val criterias = orderByCriterias(p, reverse = true)
@@ -49,40 +51,39 @@ object SqlQuery {
         val criterias = orderByCriterias(p, reverse = false)
         SqlQuery(TableSource(name, alias) :: Nil, None, criterias, Ident("*"))
 
-      // nested
-
-      case FlatMap(nestedQuery(source), Ident(alias), r: Query) =>
-        val nested = apply(r)
-        SqlQuery(QuerySource(SqlQuery(source), alias) :: nested.from, nested.where, nested.orderBy, nested.select)
-
-      case Filter(nestedQuery(source), Ident(alias), p) =>
-        SqlQuery(QuerySource(SqlQuery(source), alias) :: Nil, Option(p), List(), Ident(alias))
-
       // recursion
 
       case Map(q: Query, x, p) =>
-        val base = apply(q)
-        SqlQuery(base.from, base.where, base.orderBy, p)
+        apply(q).copy(select = p)
 
       case Reverse(SortBy(q: Query, Ident(alias), p)) =>
         val base = apply(q)
         val criterias = orderByCriterias(p, reverse = true)
-        SqlQuery(base.from, base.where, base.orderBy ++ criterias, Ident("*"))
+        base.copy(orderBy = base.orderBy ++ criterias)
 
       case SortBy(q: Query, Ident(alias), p) =>
         val base = apply(q)
         val criterias = orderByCriterias(p, reverse = false)
-        SqlQuery(base.from, base.where, base.orderBy ++ criterias, Ident("*"))
+        base.copy(orderBy = base.orderBy ++ criterias)
+
+      // nested
+
+      case FlatMap(nested(source), Ident(alias), r: Query) =>
+        val nested = apply(r)
+        nested.copy(from = source(alias) :: nested.from)
+
+      case Filter(nested(source), Ident(alias), p) =>
+        SqlQuery(source(alias) :: Nil, Option(p), Nil, Ident("*"))
 
       case other =>
         fail(s"Query is not propertly normalized, please submit a bug report. $query")
     }
 
-  private object nestedQuery {
-    def unapply(query: Query) =
+  private object nested {
+    def unapply(query: Query): Option[String => Source] =
       query match {
-        case _: SortBy | _: Reverse => Some(query)
-        case other                  => None
+        case _: SortBy | _: Reverse | _: Take => Some(QuerySource(SqlQuery(query), _))
+        case other                            => None
       }
   }
 

@@ -24,6 +24,9 @@ private[capture] case class Dealias(state: Option[Ident]) extends StatefulTransf
       case Reverse(a) =>
         val (an, ant) = apply(a)
         (Reverse(an), ant)
+      case Take(a, b) =>
+        val (an, ant) = apply(a)
+        (Take(an, b), ant)
       case q: Entity =>
         (q, Dealias(None))
     }
