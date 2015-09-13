@@ -1,3 +1,4 @@
+
 package io.getquill.source.sql
 
 import io.getquill.Spec
@@ -5,6 +6,9 @@ import io.getquill.quote
 import io.getquill.unquote
 import io.getquill.norm.QueryGenerator
 import io.getquill.norm.Normalize
+import io.getquill.ast.Ident
+import io.getquill.quotation.FreeVariables
+import io.getquill.ast.Ast
 
 class SqlQuerySpec extends Spec {
 
@@ -16,13 +20,16 @@ class SqlQuerySpec extends Spec {
         for (j <- (0 until 30)) {
           val query = Normalize(gen(i))
           s"$i levels ($j) - $query" in {
-            val q = SqlQuery(query)
+            VerifySqlQuery(SqlQuery(query)) match {
+              case None        =>
+              case Some(error) => println(error)
+            }
           }
         }
       }
     }
 
-    "non-sorted query" in {
+    "join query" in {
       val q = quote {
         for {
           a <- qr1
@@ -36,6 +43,7 @@ class SqlQuerySpec extends Spec {
       sqlq.where.toString mustEqual "Some((a.s != null) && (b.i > a.i))"
       sqlq.select.toString mustEqual "(a, b)"
       sqlq.orderBy mustEqual List()
+      sqlq.limit mustEqual None
     }
     "sorted query" - {
       "with map" in {
@@ -47,6 +55,7 @@ class SqlQuerySpec extends Spec {
         sqlq.where mustEqual None
         sqlq.select.toString mustEqual "t.s"
         sqlq.orderBy.toString mustEqual "List(OrderByCriteria(t.s,false))"
+        sqlq.limit mustEqual None
       }
       "with filter" in {
         val q = quote {
@@ -57,6 +66,7 @@ class SqlQuerySpec extends Spec {
         sqlq.where.toString mustEqual """Some(t.s == "s")"""
         sqlq.select.toString mustEqual "t.i"
         sqlq.orderBy.toString mustEqual "List(OrderByCriteria(t.s,false))"
+        sqlq.limit mustEqual None
       }
       "with reverse" in {
         val q = quote {
@@ -67,26 +77,29 @@ class SqlQuerySpec extends Spec {
         sqlq.where mustEqual None
         sqlq.select.toString mustEqual "t.s"
         sqlq.orderBy.toString mustEqual "List(OrderByCriteria(t.s,true))"
+        sqlq.limit mustEqual None
       }
       "with outer filter" in {
         val q = quote {
           qr1.sortBy(t => t.s).filter(t => t.s == "s").map(t => t.s)
         }
         val sqlq = SqlQuery(q.ast)
-        sqlq.from.toString mustEqual "List(QuerySource(SqlQuery(List(TableSource(TestEntity,t)),None,List(OrderByCriteria(t.s,false)),*),t))"
+        sqlq.from.toString mustEqual "List(QuerySource(SqlQuery(List(TableSource(TestEntity,t)),None,List(OrderByCriteria(t.s,false)),None,*),t))"
         sqlq.where.toString mustEqual "Some(t.s == \"s\")"
         sqlq.select.toString mustEqual "t.s"
         sqlq.orderBy mustEqual List()
+        sqlq.limit mustEqual None
       }
       "with flatMap" in {
         val q = quote {
           qr1.sortBy(t => t.s).flatMap(t => qr2.map(t => t.s))
         }
         val sqlq = SqlQuery(q.ast)
-        sqlq.from.toString mustEqual "List(QuerySource(SqlQuery(List(TableSource(TestEntity,t)),None,List(OrderByCriteria(t.s,false)),*),t), TableSource(TestEntity2,t))"
+        sqlq.from.toString mustEqual "List(QuerySource(SqlQuery(List(TableSource(TestEntity,t)),None,List(OrderByCriteria(t.s,false)),None,*),t), TableSource(TestEntity2,t))"
         sqlq.where mustEqual None
         sqlq.select.toString mustEqual "t.s"
         sqlq.orderBy mustEqual List()
+        sqlq.limit mustEqual None
       }
       "tuple criteria" in {
         val q = quote {
@@ -97,6 +110,7 @@ class SqlQuerySpec extends Spec {
         sqlq.where mustEqual None
         sqlq.select.toString mustEqual "t.s"
         sqlq.orderBy.toString mustEqual "List(OrderByCriteria(t.s,false), OrderByCriteria(t.i,false))"
+        sqlq.limit mustEqual None
       }
       "multiple sortBy" in {
         val q = quote {
@@ -107,6 +121,7 @@ class SqlQuerySpec extends Spec {
         sqlq.where mustEqual None
         sqlq.select.toString mustEqual "t.s"
         sqlq.orderBy.toString mustEqual "List(OrderByCriteria(t.s,true), OrderByCriteria(t.i,true), OrderByCriteria(t.l,false))"
+        sqlq.limit mustEqual None
       }
       "fails if the sortBy criteria is malformed" in {
         val q = quote {
@@ -115,6 +130,30 @@ class SqlQuerySpec extends Spec {
         val e = intercept[IllegalStateException] {
           SqlQuery(q.ast)
         }
+      }
+    }
+    "limited query" - {
+      "simple" in {
+        val q = quote {
+          qr1.take(10)
+        }
+        val sqlq = SqlQuery(q.ast)
+        sqlq.from mustEqual List(TableSource("TestEntity", "x"))
+        sqlq.where mustEqual None
+        sqlq.select.toString mustEqual "*"
+        sqlq.orderBy mustEqual List()
+        sqlq.limit.toString mustEqual "Some(10)"
+      }
+      "nested" in {
+        val q = quote {
+          qr1.take(10).flatMap(a => qr2)
+        }
+        val sqlq = SqlQuery(q.ast)
+        sqlq.from.toString mustEqual "List(QuerySource(SqlQuery(List(TableSource(TestEntity,x)),None,List(),Some(10),*),a), TableSource(TestEntity2,x))"
+        sqlq.where mustEqual None
+        sqlq.select.toString mustEqual "*"
+        sqlq.orderBy mustEqual List()
+        sqlq.limit mustEqual None
       }
     }
   }

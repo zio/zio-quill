@@ -53,6 +53,27 @@ class SqlIdiomSpec extends Spec {
             "SELECT t.s, t1.i FROM (SELECT * FROM TestEntity t ORDER BY t.s DESC) t, TestEntity2 t1 ORDER BY t1.i"
         }
       }
+      "limited" - {
+        "simple" in {
+          val q = quote {
+            qr1.filter(t => t.s != null).take(10)
+          }
+          mirrorSource.run(q).sql mustEqual
+            "SELECT t.s, t.i, t.l FROM TestEntity t WHERE t.s IS NOT NULL LIMIT 10"
+        }
+        "nested" in {
+          val q = quote {
+            for {
+              a <- qr1.take(1)
+              b <- qr2.take(2)
+            } yield {
+              (a.s, b.i)
+            }
+          }
+          mirrorSource.run(q).sql mustEqual
+            "SELECT a.s, b.i FROM (SELECT * FROM TestEntity x LIMIT 1) a, TestEntity2 b LIMIT 2"
+        }
+      }
     }
     "unary operation" - {
       "!" in {

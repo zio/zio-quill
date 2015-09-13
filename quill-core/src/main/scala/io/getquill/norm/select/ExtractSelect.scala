@@ -1,35 +1,38 @@
 package io.getquill.norm.select
 
+import io.getquill.util.Messages._
 import io.getquill.ast.Ast
-import io.getquill.ast.Entity
-import io.getquill.ast.Filter
 import io.getquill.ast.FlatMap
 import io.getquill.ast.Ident
 import io.getquill.ast.Map
 import io.getquill.ast.Query
-import io.getquill.ast.SortBy
-import io.getquill.util.Messages.fail
-import io.getquill.ast.Reverse
+import io.getquill.norm.capture.Dealias
 
 private[select] object ExtractSelect {
 
-  def apply(query: Query): (Query, Ast) =
+  def apply(query: Query) = {
+    val q = Dealias(ensureFinalMap(query))
+    (q, extractSelect(q))
+  }
+
+  private def ensureFinalMap(query: Query): Query =
     query match {
-      case t: Entity =>
-        val x = Ident("x")
-        (Map(t, x, x), x)
       case Map(q, x, p) =>
-        (query, p)
+        query
       case FlatMap(q, x, p: Query) =>
-        val (pr, map) = apply(p)
-        (FlatMap(q, x, pr), map)
-      case q @ Filter(_, x, _) =>
-        (Map(q, x, x), x)
-      case q @ SortBy(_, x, _) =>
-        (Map(q, x, x), x)
-      case q @ Reverse(SortBy(_, x, _)) =>
-        (Map(q, x, x), x)
+        FlatMap(q, x, ensureFinalMap(p))
+      case q =>
+        val x = Ident("x")
+        Map(q, x, x)
+    }
+
+  private def extractSelect(query: Query): Ast =
+    query match {
+      case Map(q, x, p) =>
+        p
+      case FlatMap(q, x, p: Query) =>
+        extractSelect(p)
       case other =>
-        fail(s"Can't find the final map (select) in $query")
+        fail(s"Query doesn't have a final map. $query")
     }
 }

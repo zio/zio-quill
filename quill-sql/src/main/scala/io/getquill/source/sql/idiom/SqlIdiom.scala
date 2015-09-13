@@ -48,18 +48,25 @@ trait SqlIdiom {
     }
 
   implicit val sqlQueryShow: Show[SqlQuery] = new Show[SqlQuery] {
-    def show(e: SqlQuery) = {
-      val selectFrom = s"SELECT ${e.select.show} FROM ${e.from.show}"
-      val where =
-        e.where match {
-          case None        => selectFrom
-          case Some(where) => selectFrom + s" WHERE ${where.show}"
-        }
-      e.orderBy match {
-        case Nil     => where
-        case orderBy => where + showOrderBy(orderBy)
+    def show(e: SqlQuery) =
+      e match {
+        case SqlQuery(from, where, orderBy, limit, select) =>
+          val selectClause = s"SELECT ${select.show} FROM ${from.show}"
+          val withWhere =
+            where match {
+              case None        => selectClause
+              case Some(where) => selectClause + s" WHERE ${where.show}"
+            }
+          val withOrderBy =
+            orderBy match {
+              case Nil     => withWhere
+              case orderBy => withWhere + showOrderBy(orderBy)
+            }
+          limit match {
+            case None        => withOrderBy
+            case Some(limit) => withOrderBy + s" LIMIT ${limit.show}"
+          }
       }
-    }
   }
 
   protected def showOrderBy(criterias: List[OrderByCriteria]) =

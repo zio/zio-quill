@@ -5,7 +5,7 @@ import io.getquill.ast._
 import io.getquill.ast.StatefulTransformer
 import io.getquill.norm.BetaReduction
 
-private[capture] case class Dealias(state: Option[Ident]) extends StatefulTransformer[Option[Ident]] {
+case class Dealias(state: Option[Ident]) extends StatefulTransformer[Option[Ident]] {
 
   override def apply(q: Query): (Query, StatefulTransformer[Option[Ident]]) =
     q match {
