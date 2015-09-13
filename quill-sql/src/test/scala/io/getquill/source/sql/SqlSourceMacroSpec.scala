@@ -13,6 +13,13 @@ class SqlSourceMacroSpec extends Spec {
     "mirrorSource.run(queryable[Fail])" must compile
   }
 
+  "fails if the query can't be translated to sql" in {
+    val q = quote {
+      qr1.flatMap(a => qr2.filter(b => b.s == a.s).take(1))
+    }
+    "mirrorSource.run(q)" mustNot compile
+  }
+
   "fails if the sql dialect is not valid" in {
 
     "testSource.run(qr1.delete)" mustNot compile

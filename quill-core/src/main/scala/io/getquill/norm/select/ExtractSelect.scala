@@ -1,6 +1,5 @@
 package io.getquill.norm.select
 
-import io.getquill.util.Messages._
 import io.getquill.ast.Ast
 import io.getquill.ast.FlatMap
 import io.getquill.ast.Ident
@@ -27,12 +26,10 @@ private[select] object ExtractSelect {
     }
 
   private def extractSelect(query: Query): Ast =
-    query match {
+    (query: @unchecked) match {
       case Map(q, x, p) =>
         p
       case FlatMap(q, x, p: Query) =>
         extractSelect(p)
-      case other =>
-        fail(s"Query doesn't have a final map. $query")
     }
 }

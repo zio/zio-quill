@@ -8,7 +8,7 @@ case class Error(free: List[Ident], ast: Ast)
 case class InvalidSqlQuery(errors: List[Error]) {
   override def toString =
     s"The monad composition can't be expressed using applicative joins. " +
-      errors.map(error => s"Faulty expression: '${error.ast}'. Free variables: '${error.free}'.)").mkString(", ")
+      errors.map(error => s"Faulty expression: '${error.ast}'. Free variables: '${error.free}'.").mkString(", ")
 }
 
 object VerifySqlQuery {
