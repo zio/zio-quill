@@ -51,4 +51,13 @@ class NormalizeNestedStructuresSpec extends Spec {
     }
     NormalizeNestedStructures.unapply(q.ast) mustEqual Some(n.ast)
   }
+  "take" in {
+    val q = quote {
+      qr1.sortBy(t => (t.i, t.s)._1).take((1, 2)._2)
+    }
+    val n = quote {
+      qr1.sortBy(t => t.i).take(2)
+    }
+    NormalizeNestedStructures.unapply(q.ast) mustEqual Some(n.ast)
+  }
 }

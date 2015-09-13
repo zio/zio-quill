@@ -17,13 +17,15 @@ object OrderTerms {
       case Reverse(Map(a, b, c)) =>
         Some(Map(Reverse(a), b, c))
 
-      // ---------------------------
-      // sortBy
-
       // a.sortBy(b => c).filter(d => e) =>
       //     a.filter(d => e).sortBy(b => c)
       case Filter(SortBy(a, b, c), d, e) =>
         Some(SortBy(Filter(a, d, e), b, c))
+
+      // a.map(b => c).take(d) =>
+      //    a.take(d).map(b => c)
+      case Take(Map(a, b, c), d) =>
+        Some(Map(Take(a, d), b, c))
 
       case other => None
     }

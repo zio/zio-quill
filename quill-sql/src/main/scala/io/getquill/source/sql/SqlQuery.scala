@@ -33,6 +33,9 @@ case class SqlQuery(
 object SqlQuery {
 
   def apply(query: Ast): SqlQuery =
+    apply(query, nest = false)
+
+  def apply(query: Ast, nest: Boolean): SqlQuery =
     query match {
 
       // entity
@@ -47,7 +50,7 @@ object SqlQuery {
           select = p)
 
       case FlatMap(Entity(name), Ident(alias), r: Query) =>
-        val nested = apply(r)
+        val nested = apply(r, nest = true)
         nested.copy(from = TableSource(name, alias) :: nested.from)
 
       case Filter(Entity(name), Ident(alias), p) =>
@@ -73,6 +76,22 @@ object SqlQuery {
           limit = Some(n),
           select = p)
 
+      // nested
+
+      case Map(nested(source), Ident(alias), p) if (nest) =>
+        SqlQuery(
+          from = source(alias) :: Nil,
+          select = p)
+
+      case FlatMap(nested(source), Ident(alias), r: Query) =>
+        val nested = apply(r)
+        nested.copy(from = source(alias) :: nested.from)
+
+      case Filter(nested(source), Ident(alias), p) =>
+        SqlQuery(
+          from = source(alias) :: Nil,
+          where = Option(p))
+
       // recursion
 
       case Map(q: Query, x, p) =>
@@ -91,17 +110,6 @@ object SqlQuery {
       case Take(q: Query, n) =>
         val base = apply(q)
         base.copy(limit = Some(n))
-
-      // nested
-
-      case FlatMap(nested(source), Ident(alias), r: Query) =>
-        val nested = apply(r)
-        nested.copy(from = source(alias) :: nested.from)
-
-      case Filter(nested(source), Ident(alias), p) =>
-        SqlQuery(
-          from = source(alias) :: Nil,
-          where = Option(p))
 
       case other =>
         fail(s"Query is not propertly normalized, please submit a bug report. $query")

@@ -55,6 +55,16 @@ class ExtractSelectSpec extends Spec {
           select mustEqual Ident("b")
       }
     }
+    "limited query" in {
+      val q = quote {
+        qr1.take(10).map(t => t.s)
+      }
+      ExtractSelect(q.ast) match {
+        case (query, select) =>
+          query mustEqual q.ast
+          select mustEqual Property(Ident("t"), "s")
+      }
+    }
   }
 
   "creates a final map (select) if necessary" - {
@@ -105,6 +115,19 @@ class ExtractSelectSpec extends Spec {
         case (query, select) =>
           query mustEqual m.ast
           select mustEqual Ident("t")
+      }
+    }
+    "limited query" in {
+      val q = quote {
+        qr1.take(10)
+      }
+      val m = quote {
+        qr1.take(10).map(x => x)
+      }
+      ExtractSelect(q.ast) match {
+        case (query, select) =>
+          query mustEqual m.ast
+          select mustEqual Ident("x")
       }
     }
   }

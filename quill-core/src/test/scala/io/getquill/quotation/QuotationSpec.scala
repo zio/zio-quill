@@ -24,6 +24,7 @@ import io.getquill.ast.Update
 import io.getquill.quote
 import io.getquill.unquote
 import io.getquill.ast.Reverse
+import io.getquill.ast.Take
 
 class QuotationSpec extends Spec {
 
@@ -67,6 +68,12 @@ class QuotationSpec extends Spec {
           qr1.sortBy(t => t.s).reverse
         }
         quote(unquote(q)).ast mustEqual Reverse(SortBy(Entity("TestEntity"), Ident("t"), Property(Ident("t"), "s")))
+      }
+      "take" in {
+        val q = quote {
+          qr1.take(10)
+        }
+        quote(unquote(q)).ast mustEqual Take(Entity("TestEntity"), Constant(10))
       }
     }
     "action" - {

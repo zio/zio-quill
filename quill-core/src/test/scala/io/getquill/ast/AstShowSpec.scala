@@ -17,10 +17,10 @@ class AstShowSpec extends Spec {
 
   "shows queries" in {
     val q = quote {
-      queryable[TestEntity].filter(t => t.s == "test").flatMap(t => queryable[TestEntity]).map(t => t)
+      queryable[TestEntity].filter(t => t.s == "test").flatMap(t => queryable[TestEntity]).take(10).map(t => t)
     }
     (q.ast: Ast).show mustEqual
-      """queryable[TestEntity].filter(t => t.s == "test").flatMap(t => queryable[TestEntity]).map(t => t)"""
+      """queryable[TestEntity].filter(t => t.s == "test").flatMap(t => queryable[TestEntity]).take(10).map(t => t)"""
   }
 
   "shows sorted queries" in {

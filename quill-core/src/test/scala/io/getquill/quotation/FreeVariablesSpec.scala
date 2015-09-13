@@ -59,6 +59,14 @@ class FreeVariablesSpec extends Spec {
       }
       """ mustNot compile
     }
+    "take" in {
+      val s = 10
+      """
+      quote {
+        qr1.take(s)
+      }
+      """ mustNot compile
+    }
   }
 
   "doesn't fail for variables defined in the quotation" - {

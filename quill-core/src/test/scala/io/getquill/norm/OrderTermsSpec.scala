@@ -37,4 +37,16 @@ class OrderTermsSpec extends Spec {
     }
   }
 
+  "take" - {
+    "a.map(b => c).take(d)" in {
+      val q = quote {
+        qr1.map(b => b.s).take(10)
+      }
+      val n = quote {
+        qr1.take(10).map(b => b.s)
+      }
+      OrderTerms.unapply(q.ast) mustEqual Some(n.ast)
+    }
+  }
+
 }

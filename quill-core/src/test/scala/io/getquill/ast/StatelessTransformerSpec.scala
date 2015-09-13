@@ -42,6 +42,11 @@ class StatelessTransformerSpec extends Spec {
         Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) mustEqual
           Reverse(SortBy(Ident("a'"), Ident("b"), Ident("c'")))
       }
+      "take" in {
+        val ast: Ast = Take(Ident("a"), Ident("b"))
+        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"))(ast) mustEqual
+          Take(Ident("a'"), Ident("b'"))
+      }
     }
 
     "operation" - {
