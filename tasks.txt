@@ -8,19 +8,25 @@ MVP - mid-september
 √ inserts
 √ updates
 √ generic test suite
-- database dialects (derby, h2, mysql, postgres)
+√ database dialects (derby, h2, mysql, postgres)
+√ compile-time query validation using db
 - full sql support
+	√ take
+	- drop
 	- options
+	- groupBy
+	- aggregations
+	- string concatenation
 	- set operations (union, outer joins, etc)
-	- returning id
+	- insert returning id
+- interpolator
 - insert case class directly
-- compile-time query validation using db
 - quill-jdbc
 - quill-finagle-mysql
 - quill-finagle-postgres
 - quill-postgresql-async
 - quill-mysql-async
-- master slave out-of-the-box
+- master slave
 - custom encoders
 - jekyll website w/ docs
 - documentation w/ https://github.com/tpolecat/tut
