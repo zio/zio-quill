@@ -19,31 +19,31 @@ class SqlSourceMacroSpec extends Spec {
 
     class EvilDBDialect extends SqlIdiom
     object testSource extends SqlSource[EvilDBDialect, Any, Any] {
-      def probe(sql: String): Try[Any] = ???
+      def probe(sql: String): Try[Any] = null
 
-      implicit val stringDecoder: Decoder[String] = ???
-      implicit val bigDecimalDecoder: Decoder[BigDecimal] = ???
-      implicit val booleanDecoder: Decoder[Boolean] = ???
-      implicit val byteDecoder: Decoder[Byte] = ???
-      implicit val shortDecoder: Decoder[Short] = ???
-      implicit val intDecoder: Decoder[Int] = ???
-      implicit val longDecoder: Decoder[Long] = ???
-      implicit val floatDecoder: Decoder[Float] = ???
-      implicit val doubleDecoder: Decoder[Double] = ???
-      implicit val byteArrayDecoder: Decoder[Array[Byte]] = ???
-      implicit val dateDecoder: Decoder[Date] = ???
+      implicit val stringDecoder: Decoder[String] = null
+      implicit val bigDecimalDecoder: Decoder[BigDecimal] = null
+      implicit val booleanDecoder: Decoder[Boolean] = null
+      implicit val byteDecoder: Decoder[Byte] = null
+      implicit val shortDecoder: Decoder[Short] = null
+      implicit val intDecoder: Decoder[Int] = null
+      implicit val longDecoder: Decoder[Long] = null
+      implicit val floatDecoder: Decoder[Float] = null
+      implicit val doubleDecoder: Decoder[Double] = null
+      implicit val byteArrayDecoder: Decoder[Array[Byte]] = null
+      implicit val dateDecoder: Decoder[Date] = null
 
-      implicit val stringEncoder: Encoder[String] = ???
-      implicit val bigDecimalEncoder: Encoder[BigDecimal] = ???
-      implicit val booleanEncoder: Encoder[Boolean] = ???
-      implicit val byteEncoder: Encoder[Byte] = ???
-      implicit val shortEncoder: Encoder[Short] = ???
-      implicit val intEncoder: Encoder[Int] = ???
-      implicit val longEncoder: Encoder[Long] = ???
-      implicit val floatEncoder: Encoder[Float] = ???
-      implicit val doubleEncoder: Encoder[Double] = ???
-      implicit val byteArrayEncoder: Encoder[Array[Byte]] = ???
-      implicit val dateEncoder: Encoder[Date] = ???
+      implicit val stringEncoder: Encoder[String] = null
+      implicit val bigDecimalEncoder: Encoder[BigDecimal] = null
+      implicit val booleanEncoder: Encoder[Boolean] = null
+      implicit val byteEncoder: Encoder[Byte] = null
+      implicit val shortEncoder: Encoder[Short] = null
+      implicit val intEncoder: Encoder[Int] = null
+      implicit val longEncoder: Encoder[Long] = null
+      implicit val floatEncoder: Encoder[Float] = null
+      implicit val doubleEncoder: Encoder[Double] = null
+      implicit val byteArrayEncoder: Encoder[Array[Byte]] = null
+      implicit val dateEncoder: Encoder[Date] = null
     }
   }
 }
