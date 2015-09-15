@@ -339,7 +339,7 @@ class SqlIdiomSpec extends Spec {
       }
       "full infix query" in {
         mirrorSource.run(infix"SELECT * FROM TestEntity".as[Queryable[TestEntity]]).sql mustEqual
-          "SELECT x.s, x.i, x.l FROM (SELECT * FROM TestEntity)"
+          "SELECT x.s, x.i, x.l FROM (SELECT * FROM TestEntity) x"
       }
       "full infix action" in {
         mirrorSource.run(infix"DELETE FROM TestEntity".as[Actionable[TestEntity]]).sql mustEqual
