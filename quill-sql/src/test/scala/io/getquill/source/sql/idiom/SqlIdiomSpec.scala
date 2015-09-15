@@ -345,12 +345,6 @@ class SqlIdiomSpec extends Spec {
         mirrorSource.run(infix"DELETE FROM TestEntity".as[Actionable[TestEntity]]).sql mustEqual
           "DELETE FROM TestEntity"
       }
-      "nested infix query - failure" in {
-        val q = quote {
-          qr1.flatMap(a => infix"SELECT * FROM TestEntity2 t where t.s = ${a.s}".as[Queryable[TestEntity2]])
-        }
-        "mirrorSource.run(q)" mustNot compile
-      }
     }
   }
 

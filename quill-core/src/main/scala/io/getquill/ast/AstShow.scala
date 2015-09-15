@@ -148,9 +148,14 @@ object AstShow {
     def show(e: Infix) =
       e match {
         case Infix(parts, params) =>
-          val ps = params.map(p => "$" + p.show)
+          val ps = params.map(showParam)
           val body = StringContext(parts: _*).s(ps: _*)
           s"""infix"$body""""
+      }
+    private def showParam(ast: Ast) =
+      ast match {
+        case ast: Ident => "$" + ast.show
+        case other      => "$" + s"{${ast.show}}"
       }
   }
 

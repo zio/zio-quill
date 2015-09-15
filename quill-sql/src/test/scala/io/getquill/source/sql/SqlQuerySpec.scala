@@ -1,14 +1,10 @@
 
 package io.getquill.source.sql
 
-import io.getquill.Spec
-import io.getquill.quote
-import io.getquill.unquote
+import io.getquill._
+import io.getquill.ast._
 import io.getquill.norm.QueryGenerator
 import io.getquill.norm.Normalize
-import io.getquill.ast.Ident
-import io.getquill.quotation.FreeVariables
-import io.getquill.ast.Ast
 
 class SqlQuerySpec extends Spec {
 
@@ -44,6 +40,27 @@ class SqlQuerySpec extends Spec {
       sqlq.select.toString mustEqual "(a, b)"
       sqlq.orderBy mustEqual List()
       sqlq.limit mustEqual None
+    }
+    "nested infix query" - {
+      "as source" in {
+        val q = quote {
+          infix"SELECT * FROM TestEntity".as[Queryable[TestEntity]].filter(t => t.i == 1)
+        }
+        val sqlq = SqlQuery(q.ast)
+        sqlq.from mustEqual List(InfixSource(Infix(List("SELECT * FROM TestEntity"), List()), "t"))
+        sqlq.where.toString mustEqual "Some(t.i == 1)"
+        sqlq.select.toString mustEqual "*"
+        sqlq.orderBy mustEqual List()
+        sqlq.limit mustEqual None
+      }
+      "fails if used as the flatMap body" in {
+        val q = quote {
+          qr1.flatMap(a => infix"SELECT * FROM TestEntity2 t where t.s = ${a.s}".as[Queryable[TestEntity2]])
+        }
+        val e = intercept[IllegalStateException] {
+          SqlQuery(q.ast)
+        }
+      }
     }
     "sorted query" - {
       "with map" in {

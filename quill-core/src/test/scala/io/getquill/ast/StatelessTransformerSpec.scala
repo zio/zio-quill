@@ -119,5 +119,11 @@ class StatelessTransformerSpec extends Spec {
       Subject(Ident("a") -> Ident("a'"))(ast) mustEqual
         Property(Ident("a'"), "b")
     }
+
+    "infix" in {
+      val ast: Ast = Infix(List("test"), List(Ident("a"), Ident("b")))
+      Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"))(ast) mustEqual
+        Infix(List("test"), List(Ident("a'"), Ident("b'")))
+    }
   }
 }

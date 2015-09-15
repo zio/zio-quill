@@ -182,5 +182,14 @@ class StatefulTransformerSpec extends Spec {
           att.state mustEqual List(Ident("a"))
       }
     }
+
+    "infix" in {
+      val ast: Ast = Infix(List("test"), List(Ident("a")))
+      Subject(List(), Ident("a") -> Ident("a'"))(ast) match {
+        case (at, att) =>
+          at mustEqual Infix(List("test"), List(Ident("a'")))
+          att.state mustEqual List(Ident("a"))
+      }
+    }
   }
 }

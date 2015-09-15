@@ -2,12 +2,8 @@ package io.getquill.ast
 
 import scala.language.reflectiveCalls
 
-import io.getquill.Queryable
-import io.getquill.Spec
+import io.getquill._
 import io.getquill.ast.AstShow.astShow
-import io.getquill.queryable
-import io.getquill.quote
-import io.getquill.unquote
 import io.getquill.util.Show.Shower
 
 class AstShowSpec extends Spec {
@@ -264,6 +260,23 @@ class AstShowSpec extends Spec {
       }
       (q.ast: Ast).show mustEqual
         """queryable[TestEntity].delete"""
+    }
+  }
+
+  "shows infix" - {
+    "as part of the query" in {
+      val q = quote {
+        qr1.filter(t => infix"true".as[Boolean])
+      }
+      (q.ast: Ast).show mustEqual
+        """queryable[TestEntity].filter(t => infix"true")"""
+    }
+    "with params" in {
+      val q = quote {
+        qr1.filter(t => infix"${t.s} == 's'".as[Boolean])
+      }
+      (q.ast: Ast).show mustEqual
+        """queryable[TestEntity].filter(t => infix"""" + "$" + """{t.s} == 's'")"""
     }
   }
 }

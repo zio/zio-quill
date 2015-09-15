@@ -23,51 +23,35 @@ trait SourceMacro extends Quotation with ActionMacro with QueryMacro with Resolv
 
   def run[R, S, T](quoted: Expr[Quoted[T]])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]): Tree = {
 
-    object action {
-      def unapply(ast: Ast) =
-        ast match {
-          case ast: Action =>
-            Some(ast)
-          case ast: Infix if (t.tpe <:< c.weakTypeTag[Actionable[Any]].tpe) =>
-            Some(ast)
-          case other =>
-            None
-        }
-    }
-
-    object query {
-      def unapply(ast: Ast) =
-        ast match {
-          case ast: Query =>
-            Some(ast)
-          case ast: Infix if (t.tpe <:< c.weakTypeTag[Queryable[Any]].tpe) =>
-            Some(Map(ast, Ident("x"), Ident("x")))
-          case other =>
-            None
-        }
-    }
-
     Normalize(ast(quoted)) match {
 
-      case Function(params, action(ast)) =>
-        runAction[S](ast, params.zip(paramsTypes[T]))
-      case Function(params, query(ast)) =>
-        val tr = c.WeakTypeTag(queryableType(t.tpe.typeArgs.takeRight(1).head))
-        runQuery(ast, params.zip(paramsTypes[T]))(r, s, tr)
+      case Function(params, ast) =>
+        val bodyType = c.WeakTypeTag(t.tpe.typeArgs.takeRight(1).head)
+        run(ast, params.zip(paramsTypes[T]))(r, s, bodyType)
 
-      case action(ast) =>
-        runAction(ast)
-      case query(ast) =>
-        val tr = c.WeakTypeTag(queryableType(t.tpe))
-        runQuery(ast, List())(r, s, tr)
+      case ast =>
+        run[R, S, T](ast, List())
+    }
+  }
+
+  private def run[R, S, T](ast: Ast, params: List[(Ident, Type)])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]): Tree =
+    ast match {
+      case ast: Action =>
+        runAction[S](ast, params)
+      case ast: Infix if (t.tpe <:< c.weakTypeTag[Actionable[Any]].tpe) =>
+        runAction[S](ast, params)
+
+      case ast: Query =>
+        runQuery(ast, params)(r, s, queryableType(t.tpe))
+      case ast: Infix if (t.tpe <:< c.weakTypeTag[Queryable[Any]].tpe) =>
+        runQuery(Map(ast, Ident("x"), Ident("x")), params)(r, s, queryableType(t.tpe))
 
       case other =>
         c.fail(s"Not runnable $other")
     }
-  }
 
   private def queryableType(tpe: Type) =
-    tpe.baseType(c.typeOf[Queryable[_]].typeSymbol).typeArgs.head
+    c.WeakTypeTag(tpe.baseType(c.typeOf[Queryable[_]].typeSymbol).typeArgs.head)
 
   private def ast[T](quoted: Expr[Quoted[T]]) =
     unquote[Ast](quoted.tree).getOrElse {

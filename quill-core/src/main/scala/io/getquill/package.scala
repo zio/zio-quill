@@ -12,10 +12,6 @@ package object getquill {
   implicit def unquote[T](quoted: Quoted[T]): T = NonQuotedException()
 
   implicit class InfixInterpolator(val sc: StringContext) extends AnyVal {
-    def infix(args: Any*) = InfixValue
-  }
-
-  object InfixValue {
-    def as[T]: T = NonQuotedException()
+    def infix(args: Any*): InfixValue = NonQuotedException()
   }
 }
