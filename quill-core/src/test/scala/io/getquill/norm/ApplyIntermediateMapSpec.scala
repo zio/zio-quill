@@ -1,8 +1,6 @@
 package io.getquill.norm
 
-import io.getquill.Spec
-import io.getquill.quote
-import io.getquill.unquote
+import io.getquill._
 
 class ApplyIntermediateMapSpec extends Spec {
 

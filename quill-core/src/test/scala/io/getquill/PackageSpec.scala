@@ -2,8 +2,8 @@ package test
 
 import io.getquill._
 import io.getquill.ast._
-import io.getquill.quotation.Quoted
 import io.getquill.quotation.NonQuotedException
+import io.getquill.quotation.Quoted
 
 class PackageSpec extends Spec {
 

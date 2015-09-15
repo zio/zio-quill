@@ -1,6 +1,6 @@
 package io.getquill.ast
 
-import io.getquill.Spec
+import io.getquill._
 
 class StatefulTransformerSpec extends Spec {
 

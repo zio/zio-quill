@@ -1,8 +1,6 @@
 package io.getquill.source
 
-import io.getquill.ast.Ast
-import io.getquill.ast.Ident
-import io.getquill.ast.StatefulTransformer
+import io.getquill.ast._
 
 private[source] case class BindVariables(state: (List[Ident], List[Ident]))
     extends StatefulTransformer[(List[Ident], List[Ident])] {

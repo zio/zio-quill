@@ -2,7 +2,6 @@ package io.getquill.source
 
 import io.getquill._
 import io.getquill.source.mirror.MirrorSourceTemplate
-import io.getquill.source.mirror.mirrorSource
 
 class ResolveSourceMacroSpec extends Spec {
 
@@ -13,6 +12,6 @@ class ResolveSourceMacroSpec extends Spec {
 
   "warns if the probe fails" in {
     case class Fail()
-    "mirrorSource.run(queryable[Fail].delete)" must compile
+    "io.getquill.source.mirror.mirrorSource.run(queryable[Fail].delete)" must compile
   }
 }

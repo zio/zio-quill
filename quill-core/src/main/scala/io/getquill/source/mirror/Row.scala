@@ -1,7 +1,8 @@
 package io.getquill.source.mirror
 
-import io.getquill.util.Messages._
 import scala.reflect.ClassTag
+
+import io.getquill.util.Messages.fail
 
 case class Row(data: Any*) {
   def add(value: Any) = Row((data :+ value): _*)

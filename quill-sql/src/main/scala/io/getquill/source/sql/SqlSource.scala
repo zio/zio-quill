@@ -1,11 +1,13 @@
 package io.getquill.source.sql
 
-import language.experimental.macros
 import java.util.Date
+
+import language.experimental.macros
 import scala.reflect.ClassTag
+import scala.util.Try
+
 import io.getquill.quotation.Quoted
 import io.getquill.source.sql.idiom.SqlIdiom
-import scala.util.Try
 
 abstract class SqlSource[D <: SqlIdiom, R: ClassTag, S: ClassTag] extends io.getquill.source.Source[R, S] {
 

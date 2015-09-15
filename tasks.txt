@@ -19,7 +19,7 @@ MVP - mid-september
 	- string concatenation
 	- set operations (union, outer joins, etc)
 	- insert returning id
-- interpolator
+√ interpolator
 - insert case class directly
 - quill-jdbc
 - quill-finagle-mysql

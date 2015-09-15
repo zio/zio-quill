@@ -2,7 +2,7 @@ package io.getquill.norm.select
 
 import scala.reflect.macros.whitebox.Context
 
-import io.getquill.ast.Ast
+import io.getquill.ast._
 
 trait SelectValues {
   val c: Context

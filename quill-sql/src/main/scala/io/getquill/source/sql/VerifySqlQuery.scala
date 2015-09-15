@@ -2,7 +2,6 @@ package io.getquill.source.sql
 
 import io.getquill.ast._
 import io.getquill.quotation.FreeVariables
-import scala.reflect.macros.whitebox.Context
 
 case class Error(free: List[Ident], ast: Ast)
 case class InvalidSqlQuery(errors: List[Error]) {

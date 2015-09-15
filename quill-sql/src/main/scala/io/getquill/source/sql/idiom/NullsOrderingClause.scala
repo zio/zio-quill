@@ -1,8 +1,7 @@
 package io.getquill.source.sql.idiom
 
-import io.getquill.util.Show._
 import io.getquill.source.sql.OrderByCriteria
-import io.getquill.source.sql.OrderByCriteria
+import io.getquill.util.Show.Shower
 
 trait NullsOrderingClause {
   this: SqlIdiom =>

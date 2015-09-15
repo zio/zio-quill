@@ -1,10 +1,6 @@
 package io.getquill.norm
 
-import io.getquill.ast.Filter
-import io.getquill.ast.FlatMap
-import io.getquill.ast.Map
-import io.getquill.ast.Query
-import io.getquill.ast.SortBy
+import io.getquill.ast._
 
 object ApplyIntermediateMap {
 

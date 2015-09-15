@@ -3,10 +3,8 @@ package io.getquill.source.finagle.mysql
 import com.twitter.util.Await
 import com.twitter.util.Future
 
-import io.getquill.queryable
-import io.getquill.quote
+import io.getquill._
 import io.getquill.source.sql.PeopleSpec
-import testDB.run
 
 class PeopleFinagleMysqlSpec extends PeopleSpec {
 

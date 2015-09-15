@@ -1,10 +1,9 @@
 package io.getquill.source
 
 import scala.reflect.ClassTag
-import com.typesafe.config.ConfigFactory
 import scala.util.DynamicVariable
-import com.typesafe.config.ConfigResolveOptions
-import com.typesafe.config.Config
+
+import com.typesafe.config.ConfigFactory
 
 abstract class Source[R: ClassTag, S: ClassTag] {
 

@@ -1,8 +1,7 @@
 package io.getquill.source
 
 import scala.reflect.macros.whitebox.Context
-import io.getquill.ast.Ident
-import io.getquill.ast.Ast
+import io.getquill.ast._
 
 trait ActionMacro {
   this: SourceMacro =>

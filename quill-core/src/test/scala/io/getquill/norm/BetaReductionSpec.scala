@@ -1,17 +1,7 @@
 package io.getquill.norm
 
-import io.getquill.Spec
-import io.getquill.ast.Ast
-import io.getquill.ast.Filter
-import io.getquill.ast.FlatMap
-import io.getquill.ast.Function
-import io.getquill.ast.FunctionApply
-import io.getquill.ast.Ident
-import io.getquill.ast.Map
-import io.getquill.ast.Property
-import io.getquill.ast.SortBy
-import io.getquill.ast.Tuple
-import io.getquill.ast.Reverse
+import io.getquill._
+import io.getquill.ast._
 
 class BetaReductionSpec extends Spec {
 

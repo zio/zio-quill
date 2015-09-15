@@ -2,9 +2,7 @@ package io.getquill.norm.capture
 
 import scala.language.reflectiveCalls
 
-import io.getquill.Spec
-import io.getquill.quote
-import io.getquill.unquote
+import io.getquill._
 
 class DealiasSpec extends Spec {
 

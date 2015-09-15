@@ -1,6 +1,6 @@
 package io.getquill.norm
 
-import io.getquill.ast
+import io.getquill._
 import io.getquill.ast._
 
 object AdHocReduction {

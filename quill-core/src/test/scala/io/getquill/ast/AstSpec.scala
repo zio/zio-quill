@@ -2,7 +2,7 @@ package io.getquill.ast
 
 import scala.language.reflectiveCalls
 
-import io.getquill.Spec
+import io.getquill._
 import io.getquill.queryable
 import io.getquill.quote
 

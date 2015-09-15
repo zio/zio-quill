@@ -2,16 +2,14 @@ package io.getquill.source.mirror
 
 import scala.reflect.macros.whitebox.Context
 import language.experimental.macros
-import io.getquill.ast.Ast
+import scala.util.Failure
+import scala.util.Success
+
+import io.getquill.ast._
 import io.getquill.quotation.Quoted
 import io.getquill.source.Source
 import io.getquill.source.SourceMacro
-import io.getquill.util.Messages._
-import scala.util.Success
-import scala.util.Failure
-import scala.util.control.NonFatal
-import scala.util.Failure
-import scala.util.Success
+import io.getquill.util.Messages.RichContext
 
 object mirrorSource extends MirrorSourceTemplate
 

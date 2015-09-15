@@ -1,17 +1,6 @@
 package io.getquill.quotation
 
-import io.getquill.ast.Ast
-import io.getquill.ast.Entity
-import io.getquill.ast.Filter
-import io.getquill.ast.FlatMap
-import io.getquill.ast.Function
-import io.getquill.ast.Ident
-import io.getquill.ast.Map
-import io.getquill.ast.Query
-import io.getquill.ast.SortBy
-import io.getquill.ast.StatefulTransformer
-import io.getquill.ast.Reverse
-import io.getquill.ast.Take
+import io.getquill.ast._
 
 case class State(seen: Set[Ident], free: Set[Ident])
 

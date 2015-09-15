@@ -1,13 +1,7 @@
 package io.getquill.norm
 
-import io.getquill.Spec
-import io.getquill.ast.Constant
-import io.getquill.ast.SortBy
-import io.getquill.quote
-import io.getquill.unquote
-import io.getquill.ast.Entity
-import io.getquill.ast.Ident
-import io.getquill.ast.Map
+import io.getquill._
+import io.getquill.ast._
 
 class AttachToEntitySpec extends Spec {
 

@@ -1,19 +1,13 @@
 package io.getquill.source
 
 import scala.reflect.macros.whitebox.Context
-import io.getquill.ast.Action
-import io.getquill.ast.Ast
-import io.getquill.ast.Function
-import io.getquill.ast.Query
-import io.getquill.ast.Map
-import io.getquill.ast.Ident
+
+import io.getquill._
+import io.getquill.ast._
 import io.getquill.norm.Normalize
 import io.getquill.quotation.Quotation
 import io.getquill.quotation.Quoted
 import io.getquill.util.Messages.RichContext
-import io.getquill.Queryable
-import io.getquill.ast.Infix
-import io.getquill.Actionable
 
 trait SourceMacro extends Quotation with ActionMacro with QueryMacro with ResolveSourceMacro {
   val c: Context

@@ -1,31 +1,17 @@
 package io.getquill.source.sql.idiom
 
-import io.getquill.ast
-import io.getquill.ast.Action
-import io.getquill.ast.Assignment
-import io.getquill.ast.Ast
-import io.getquill.ast.BinaryOperation
-import io.getquill.ast.BinaryOperator
-import io.getquill.ast.Constant
-import io.getquill.ast.Delete
-import io.getquill.ast.Entity
-import io.getquill.ast.Filter
-import io.getquill.ast.Ident
-import io.getquill.ast.Insert
-import io.getquill.ast.NullValue
-import io.getquill.ast.Property
-import io.getquill.ast.Query
-import io.getquill.ast.Tuple
-import io.getquill.ast.UnaryOperation
-import io.getquill.ast.UnaryOperator
-import io.getquill.ast.Update
-import io.getquill.ast.Value
+import io.getquill._
+import io.getquill.ast._
+import io.getquill.source.sql.InfixSource
+import io.getquill.source.sql.OrderByCriteria
+import io.getquill.source.sql.QuerySource
+import io.getquill.source.sql.Source
+import io.getquill.source.sql.SqlQuery
+import io.getquill.source.sql.TableSource
 import io.getquill.util.Messages.fail
 import io.getquill.util.Show.Show
 import io.getquill.util.Show.Shower
 import io.getquill.util.Show.listShow
-import io.getquill.source.sql._
-import io.getquill.ast.Infix
 
 trait SqlIdiom {
 

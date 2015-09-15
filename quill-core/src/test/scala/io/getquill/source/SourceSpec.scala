@@ -1,6 +1,6 @@
 package io.getquill.source
 
-import io.getquill.Spec
+import io.getquill._
 import io.getquill.source.mirror.mirrorSource
 
 class SourceSpec extends Spec {

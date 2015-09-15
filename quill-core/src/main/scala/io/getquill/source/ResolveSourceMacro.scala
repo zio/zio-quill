@@ -1,14 +1,11 @@
 package io.getquill.source
 
-import scala.reflect.macros.whitebox.Context
-import scala.reflect.api.Position
-import scala.util.Try
-import scala.reflect.api.Types
-import scala.util.Success
-import scala.util.Failure
 import scala.reflect.ClassTag
-import scala.util.Success
+import scala.reflect.api.Types
+import scala.reflect.macros.whitebox.Context
 import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
 
 trait ResolveSourceMacro {
   val c: Context
@@ -21,7 +18,7 @@ trait ResolveSourceMacro {
       case (Some(source), errors) =>
         Success(source)
       case (None, errors) =>
-        Failure(new IllegalStateException(s"Can't resolve the source instance at compile time. Trace: \n${errors.mkString("/n")}"))
+        Failure(new IllegalStateException(s"Can't resolve the source instance at compile time. Trace: \n${errors.mkString("\n")}"))
     }
 
   private def resolveCached[T](implicit t: ClassTag[T]) = {

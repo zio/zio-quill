@@ -1,14 +1,7 @@
 package io.getquill.norm
 
-import io.getquill.ast.Entity
-import io.getquill.ast.Filter
-import io.getquill.ast.FlatMap
-import io.getquill.ast.Map
-import io.getquill.ast.Query
-import io.getquill.ast.SortBy
-import io.getquill.ast.StatelessTransformer
+import io.getquill.ast._
 import io.getquill.util.Messages.fail
-import io.getquill.ast.Reverse
 
 object VerifyNormalization extends StatelessTransformer {
 

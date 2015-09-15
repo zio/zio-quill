@@ -4,7 +4,7 @@ import scala.annotation.StaticAnnotation
 import scala.reflect.ClassTag
 import scala.reflect.macros.whitebox.Context
 
-import io.getquill.ast.Ast
+import io.getquill.ast._
 import io.getquill.util.Messages.RichContext
 
 trait Quoted[+T] {

@@ -1,20 +1,7 @@
 package io.getquill.source.sql
 
-import io.getquill.ast.Infix
-import io.getquill.ast.Ast
-import io.getquill.ast.Entity
-import io.getquill.ast.Filter
-import io.getquill.ast.FlatMap
-import io.getquill.ast.Ident
-import io.getquill.ast.Map
-import io.getquill.ast.Query
-import io.getquill.ast.SortBy
+import io.getquill.ast._
 import io.getquill.util.Messages.fail
-import io.getquill.ast.Property
-import io.getquill.ast.Tuple
-import io.getquill.ast.Reverse
-import io.getquill.ast.Take
-import io.getquill.quotation.FreeVariables
 
 case class OrderByCriteria(property: Property, desc: Boolean)
 

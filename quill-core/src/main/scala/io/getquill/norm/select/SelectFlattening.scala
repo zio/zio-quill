@@ -2,10 +2,7 @@ package io.getquill.norm.select
 
 import scala.reflect.macros.whitebox.Context
 
-import io.getquill.ast.Ast
-import io.getquill.ast.Property
-import io.getquill.ast.Query
-import io.getquill.ast.Tuple
+import io.getquill.ast._
 import io.getquill.util.Messages.RichContext
 
 trait SelectFlattening extends SelectValues {
