@@ -1,9 +1,8 @@
 package io.getquill.source
 
 import scala.reflect.macros.whitebox.Context
-
-import io.getquill.ast.Action
 import io.getquill.ast.Ident
+import io.getquill.ast.Ast
 
 trait ActionMacro {
   this: SourceMacro =>
@@ -11,10 +10,10 @@ trait ActionMacro {
   val c: Context
   import c.universe.{ Ident => _, _ }
 
-  def runAction(action: Action): Tree =
+  def runAction(action: Ast): Tree =
     q"${c.prefix}.execute(${toExecutionTree(action)})"
 
-  def runAction[S](action: Action, params: List[(Ident, Type)])(implicit s: WeakTypeTag[S]): Tree = {
+  def runAction[S](action: Ast, params: List[(Ident, Type)])(implicit s: WeakTypeTag[S]): Tree = {
     val (bindedAction, encode) = EncodeBindVariables[S](c)(action, bindingMap(params))
     q"""
     {

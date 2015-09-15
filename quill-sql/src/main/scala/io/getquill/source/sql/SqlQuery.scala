@@ -113,6 +113,9 @@ object SqlQuery {
         val base = apply(q)
         base.copy(limit = Some(n))
 
+      case FlatMap(Entity(name), Ident(alias), r: Infix) =>
+        fail(s"Infix can't be use as a `flatMap` body. $query")
+
       case other =>
         fail(s"Query is not propertly normalized, please submit a bug report. $query")
     }

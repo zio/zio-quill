@@ -337,6 +337,20 @@ class SqlIdiomSpec extends Spec {
         mirrorSource.run(q).sql mustEqual
           "SELECT a.i FROM (SELECT 1 i FROM DUAL) a"
       }
+      "full infix query" in {
+        mirrorSource.run(infix"SELECT * FROM TestEntity".as[Queryable[TestEntity]]).sql mustEqual
+          "SELECT x.s, x.i, x.l FROM (SELECT * FROM TestEntity)"
+      }
+      "full infix action" in {
+        mirrorSource.run(infix"DELETE FROM TestEntity".as[Actionable[TestEntity]]).sql mustEqual
+          "DELETE FROM TestEntity"
+      }
+      "nested infix query - failure" in {
+        val q = quote {
+          qr1.flatMap(a => infix"SELECT * FROM TestEntity2 t where t.s = ${a.s}".as[Queryable[TestEntity2]])
+        }
+        "mirrorSource.run(q)" mustNot compile
+      }
     }
   }
 
