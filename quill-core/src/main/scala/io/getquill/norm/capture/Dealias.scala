@@ -25,6 +25,9 @@ case class Dealias(state: Option[Ident]) extends StatefulTransformer[Option[Iden
       case Take(a, b) =>
         val (an, ant) = apply(a)
         (Take(an, b), ant)
+      case Drop(a, b) =>
+        val (an, ant) = apply(a)
+        (Drop(an, b), ant)
       case q: Entity =>
         (q, Dealias(None))
     }

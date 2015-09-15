@@ -1,3 +1,5 @@
 package io.getquill.source.sql.idiom
 
-object MySQLDialect extends SqlIdiom
+object MySQLDialect
+  extends SqlIdiom
+  with OffsetWithoutLimitWorkaround

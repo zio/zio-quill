@@ -29,7 +29,7 @@ case class BetaReduction(map: collection.Map[Ident, Ast])
         FlatMap(apply(a), b, BetaReduction(map - b)(c))
       case SortBy(a, b, c) =>
         SortBy(apply(a), b, BetaReduction(map - b)(c))
-      case _: Reverse | _: Take | _: Entity =>
+      case _: Reverse | _: Take | _: Entity | _: Drop =>
         super.apply(query)
     }
 }

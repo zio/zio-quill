@@ -54,6 +54,7 @@ trait Liftables {
     case SortBy(a, b, c)  => q"$pack.SortBy($a, $b, $c)"
     case Reverse(a)       => q"$pack.Reverse($a)"
     case Take(a, b)       => q"$pack.Take($a, $b)"
+    case Drop(a, b)       => q"$pack.Drop($a, $b)"
   }
 
   implicit val actionLiftable: Liftable[Action] = Liftable[Action] {

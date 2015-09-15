@@ -57,6 +57,10 @@ trait StatefulTransformer[T] {
         val (at, att) = apply(a)
         val (bt, btt) = att.apply(b)
         (Take(at, bt), btt)
+      case Drop(a, b) =>
+        val (at, att) = apply(a)
+        val (bt, btt) = att.apply(b)
+        (Drop(at, bt), btt)
     }
 
   def apply(e: Operation): (Operation, StatefulTransformer[T]) =

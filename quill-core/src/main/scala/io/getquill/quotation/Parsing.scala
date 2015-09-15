@@ -104,6 +104,9 @@ trait Parsing {
 
     case q"$source.take($n)" =>
       Take(astParser(source), astParser(n))
+      
+    case q"$source.drop($n)" =>
+      Drop(astParser(source), astParser(n))
   }
 
   private def binaryOperator(name: TermName) =

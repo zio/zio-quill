@@ -17,6 +17,7 @@ case class SqlQuery(
   where: Option[Ast] = None,
   orderBy: List[OrderByCriteria] = List(),
   limit: Option[Ast] = None,
+  offset: Option[Ast] = None,
   select: Ast = Ident("*"))
 
 object SqlQuery {
@@ -65,6 +66,12 @@ object SqlQuery {
           limit = Some(n),
           select = p)
 
+      case Map(Drop(Entity(name), n), Ident(x), p) =>
+        SqlQuery(
+          from = TableSource(name, x) :: Nil,
+          offset = Some(n),
+          select = p)
+
       // nested
 
       case Map(s @ nested(source), Ident(alias), p) if (nest || s.isInstanceOf[Infix]) =>
@@ -98,7 +105,21 @@ object SqlQuery {
 
       case Take(q: Query, n) =>
         val base = apply(q)
-        base.copy(limit = Some(n))
+        if (base.limit.isEmpty)
+          base.copy(limit = Some(n))
+        else
+          SqlQuery(
+            from = QuerySource(SqlQuery(q), "x") :: Nil,
+            limit = Some(n))
+
+      case Drop(q: Query, n) =>
+        val base = apply(q)
+        if (base.offset.isEmpty && base.limit.isEmpty)
+          base.copy(offset = Some(n))
+        else
+          SqlQuery(
+            from = QuerySource(SqlQuery(q), "x") :: Nil,
+            offset = Some(n))
 
       case FlatMap(Entity(name), Ident(alias), r: Infix) =>
         fail(s"Infix can't be use as a `flatMap` body. $query")
@@ -110,9 +131,9 @@ object SqlQuery {
   private object nested {
     def unapply(ast: Ast): Option[String => Source] =
       ast match {
-        case _: SortBy | _: Reverse | _: Take => Some(QuerySource(SqlQuery(ast), _))
-        case ast: Infix                       => Some(InfixSource(ast, _))
-        case other                            => None
+        case _: SortBy | _: Reverse | _: Take | _: Drop => Some(QuerySource(SqlQuery(ast), _))
+        case ast: Infix                                 => Some(InfixSource(ast, _))
+        case other                                      => None
       }
   }
 

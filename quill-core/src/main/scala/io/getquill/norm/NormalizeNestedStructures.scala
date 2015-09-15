@@ -37,5 +37,10 @@ object NormalizeNestedStructures {
           case (`a`, `b`) => None
           case (a, b)     => Some(Take(a, b))
         }
+      case Drop(a, b) =>
+        (Normalize(a), Normalize(b)) match {
+          case (`a`, `b`) => None
+          case (a, b)     => Some(Drop(a, b))
+        }
     }
 }

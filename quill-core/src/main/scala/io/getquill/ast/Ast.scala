@@ -33,6 +33,8 @@ case class Reverse(query: Ast) extends Query
 
 case class Take(query: Ast, n: Ast) extends Query
 
+case class Drop(query: Ast, n: Ast) extends Query
+
 //************************************************************
 
 case class Function(params: List[Ident], body: Ast) extends Ast

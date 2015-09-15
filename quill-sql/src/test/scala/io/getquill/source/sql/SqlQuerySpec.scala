@@ -2,11 +2,16 @@
 package io.getquill.source.sql
 
 import io.getquill._
-import io.getquill.ast._
 import io.getquill.norm.QueryGenerator
 import io.getquill.norm.Normalize
+import io.getquill.source.sql.idiom.SqlIdiom
+import io.getquill.util.Show._
 
 class SqlQuerySpec extends Spec {
+
+  val idiom = new SqlIdiom {}
+
+  import idiom._
 
   "transforms the ast into a flatten sql-like structure" - {
 
@@ -34,24 +39,16 @@ class SqlQuerySpec extends Spec {
           (a, b)
         }
       }
-      val sqlq = SqlQuery(q.ast)
-      sqlq.from mustEqual List(TableSource("TestEntity", "a"), TableSource("TestEntity2", "b"))
-      sqlq.where.toString mustEqual "Some((a.s != null) && (b.i > a.i))"
-      sqlq.select.toString mustEqual "(a, b)"
-      sqlq.orderBy mustEqual List()
-      sqlq.limit mustEqual None
+      SqlQuery(q.ast).show mustEqual
+        "SELECT a, b FROM TestEntity a, TestEntity2 b WHERE (a.s IS NOT NULL) AND (b.i > a.i)"
     }
     "nested infix query" - {
       "as source" in {
         val q = quote {
           infix"SELECT * FROM TestEntity".as[Queryable[TestEntity]].filter(t => t.i == 1)
         }
-        val sqlq = SqlQuery(q.ast)
-        sqlq.from mustEqual List(InfixSource(Infix(List("SELECT * FROM TestEntity"), List()), "t"))
-        sqlq.where.toString mustEqual "Some(t.i == 1)"
-        sqlq.select.toString mustEqual "*"
-        sqlq.orderBy mustEqual List()
-        sqlq.limit mustEqual None
+        SqlQuery(q.ast).show mustEqual
+          "SELECT * FROM (SELECT * FROM TestEntity) t WHERE t.i = 1"
       }
       "fails if used as the flatMap body" in {
         val q = quote {
@@ -67,78 +64,50 @@ class SqlQuerySpec extends Spec {
         val q = quote {
           qr1.sortBy(t => t.s).map(t => t.s)
         }
-        val sqlq = SqlQuery(q.ast)
-        sqlq.from mustEqual List(TableSource("TestEntity", "t"))
-        sqlq.where mustEqual None
-        sqlq.select.toString mustEqual "t.s"
-        sqlq.orderBy.toString mustEqual "List(OrderByCriteria(t.s,false))"
-        sqlq.limit mustEqual None
+        SqlQuery(q.ast).show mustEqual
+          "SELECT t.s FROM TestEntity t ORDER BY t.s"
       }
       "with filter" in {
         val q = quote {
           qr1.filter(t => t.s == "s").sortBy(t => t.s).map(t => (t.i))
         }
-        val sqlq = SqlQuery(q.ast)
-        sqlq.from mustEqual List(TableSource("TestEntity", "t"))
-        sqlq.where.toString mustEqual """Some(t.s == "s")"""
-        sqlq.select.toString mustEqual "t.i"
-        sqlq.orderBy.toString mustEqual "List(OrderByCriteria(t.s,false))"
-        sqlq.limit mustEqual None
+        SqlQuery(q.ast).show mustEqual
+          "SELECT t.i FROM TestEntity t WHERE t.s = 's' ORDER BY t.s"
       }
       "with reverse" in {
         val q = quote {
           qr1.sortBy(t => t.s).reverse.map(t => t.s)
         }
-        val sqlq = SqlQuery(q.ast)
-        sqlq.from mustEqual List(TableSource("TestEntity", "t"))
-        sqlq.where mustEqual None
-        sqlq.select.toString mustEqual "t.s"
-        sqlq.orderBy.toString mustEqual "List(OrderByCriteria(t.s,true))"
-        sqlq.limit mustEqual None
+        SqlQuery(q.ast).show mustEqual
+          "SELECT t.s FROM TestEntity t ORDER BY t.s DESC"
       }
       "with outer filter" in {
         val q = quote {
           qr1.sortBy(t => t.s).filter(t => t.s == "s").map(t => t.s)
         }
-        val sqlq = SqlQuery(q.ast)
-        sqlq.from.toString mustEqual "List(QuerySource(SqlQuery(List(TableSource(TestEntity,t)),None,List(OrderByCriteria(t.s,false)),None,*),t))"
-        sqlq.where.toString mustEqual "Some(t.s == \"s\")"
-        sqlq.select.toString mustEqual "t.s"
-        sqlq.orderBy mustEqual List()
-        sqlq.limit mustEqual None
+        SqlQuery(q.ast).show mustEqual
+          "SELECT t.s FROM (SELECT * FROM TestEntity t ORDER BY t.s) t WHERE t.s = 's'"
       }
       "with flatMap" in {
         val q = quote {
           qr1.sortBy(t => t.s).flatMap(t => qr2.map(t => t.s))
         }
-        val sqlq = SqlQuery(q.ast)
-        sqlq.from.toString mustEqual "List(QuerySource(SqlQuery(List(TableSource(TestEntity,t)),None,List(OrderByCriteria(t.s,false)),None,*),t), TableSource(TestEntity2,t))"
-        sqlq.where mustEqual None
-        sqlq.select.toString mustEqual "t.s"
-        sqlq.orderBy mustEqual List()
-        sqlq.limit mustEqual None
+        SqlQuery(q.ast).show mustEqual
+          "SELECT t.s FROM (SELECT * FROM TestEntity t ORDER BY t.s) t, TestEntity2 t"
       }
       "tuple criteria" in {
         val q = quote {
           qr1.sortBy(t => (t.s, t.i)).map(t => t.s)
         }
-        val sqlq = SqlQuery(q.ast)
-        sqlq.from mustEqual List(TableSource("TestEntity", "t"))
-        sqlq.where mustEqual None
-        sqlq.select.toString mustEqual "t.s"
-        sqlq.orderBy.toString mustEqual "List(OrderByCriteria(t.s,false), OrderByCriteria(t.i,false))"
-        sqlq.limit mustEqual None
+        SqlQuery(q.ast).show mustEqual
+          "SELECT t.s FROM TestEntity t ORDER BY t.s, t.i"
       }
       "multiple sortBy" in {
         val q = quote {
           qr1.sortBy(t => (t.s, t.i)).reverse.sortBy(t => t.l).map(t => t.s)
         }
-        val sqlq = SqlQuery(q.ast)
-        sqlq.from mustEqual List(TableSource("TestEntity", "t"))
-        sqlq.where mustEqual None
-        sqlq.select.toString mustEqual "t.s"
-        sqlq.orderBy.toString mustEqual "List(OrderByCriteria(t.s,true), OrderByCriteria(t.i,true), OrderByCriteria(t.l,false))"
-        sqlq.limit mustEqual None
+        SqlQuery(q.ast).show mustEqual
+          "SELECT t.s FROM TestEntity t ORDER BY t.s DESC, t.i DESC, t.l"
       }
       "fails if the sortBy criteria is malformed" in {
         val q = quote {
@@ -154,23 +123,89 @@ class SqlQuerySpec extends Spec {
         val q = quote {
           qr1.take(10)
         }
-        val sqlq = SqlQuery(q.ast)
-        sqlq.from mustEqual List(TableSource("TestEntity", "x"))
-        sqlq.where mustEqual None
-        sqlq.select.toString mustEqual "*"
-        sqlq.orderBy mustEqual List()
-        sqlq.limit.toString mustEqual "Some(10)"
+        SqlQuery(q.ast).show mustEqual
+          "SELECT * FROM TestEntity x LIMIT 10"
       }
       "nested" in {
         val q = quote {
           qr1.take(10).flatMap(a => qr2)
         }
-        val sqlq = SqlQuery(q.ast)
-        sqlq.from.toString mustEqual "List(QuerySource(SqlQuery(List(TableSource(TestEntity,x)),None,List(),Some(10),*),a), TableSource(TestEntity2,x))"
-        sqlq.where mustEqual None
-        sqlq.select.toString mustEqual "*"
-        sqlq.orderBy mustEqual List()
-        sqlq.limit mustEqual None
+        SqlQuery(q.ast).show mustEqual
+          "SELECT * FROM (SELECT * FROM TestEntity x LIMIT 10) a, TestEntity2 x"
+      }
+      "with map" in {
+        val q = quote {
+          qr1.take(10).map(t => t.s)
+        }
+        SqlQuery(q.ast).show mustEqual
+          "SELECT t.s FROM TestEntity t LIMIT 10"
+      }
+      "multiple limits" in {
+        val q = quote {
+          qr1.take(1).take(10)
+        }
+        SqlQuery(q.ast).show mustEqual
+          "SELECT * FROM (SELECT * FROM TestEntity x LIMIT 1) x LIMIT 10"
+      }
+    }
+    "offset query" - {
+      "simple" in {
+        val q = quote {
+          qr1.drop(10)
+        }
+        SqlQuery(q.ast).show mustEqual
+          "SELECT * FROM TestEntity x OFFSET 10"
+      }
+      "nested" in {
+        val q = quote {
+          qr1.drop(10).flatMap(a => qr2)
+        }
+        SqlQuery(q.ast).show mustEqual
+          "SELECT * FROM (SELECT * FROM TestEntity x OFFSET 10) a, TestEntity2 x"
+      }
+      "with map" in {
+        val q = quote {
+          qr1.drop(10).map(t => t.s)
+        }
+        SqlQuery(q.ast).show mustEqual
+          "SELECT t.s FROM TestEntity t OFFSET 10"
+      }
+      "multiple offsets" in {
+        val q = quote {
+          qr1.drop(1).drop(10)
+        }
+        SqlQuery(q.ast).show mustEqual
+          "SELECT * FROM (SELECT * FROM TestEntity x OFFSET 1) x OFFSET 10"
+      }
+    }
+    "limited and offset query" - {
+      "simple" in {
+        val q = quote {
+          qr1.drop(10).take(11)
+        }
+        SqlQuery(q.ast).show mustEqual
+          "SELECT * FROM TestEntity x LIMIT 11 OFFSET 10"
+      }
+      "nested" in {
+        val q = quote {
+          qr1.drop(10).take(11).flatMap(a => qr2)
+        }
+        SqlQuery(q.ast).show mustEqual
+          "SELECT * FROM (SELECT * FROM TestEntity x LIMIT 11 OFFSET 10) a, TestEntity2 x"
+      }
+      "multiple" in {
+        val q = quote {
+          qr1.drop(1).take(2).drop(3).take(4)
+        }
+        SqlQuery(q.ast).show mustEqual
+          "SELECT * FROM (SELECT * FROM TestEntity x LIMIT 2 OFFSET 1) x LIMIT 4 OFFSET 3"
+      }
+      "take.drop" in {
+        val q = quote {
+          qr1.take(1).drop(2)
+        }
+        SqlQuery(q.ast).show mustEqual
+          "SELECT * FROM (SELECT * FROM TestEntity x LIMIT 1) x OFFSET 2"
       }
     }
   }

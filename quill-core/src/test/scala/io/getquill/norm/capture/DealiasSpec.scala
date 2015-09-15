@@ -61,6 +61,15 @@ class DealiasSpec extends Spec {
       }
       Dealias(q.ast) mustEqual n.ast
     }
+    "drop" in {
+      val q = quote {
+        qr1.filter(a => a.s == "s").drop(10).map(b => b.s)
+      }
+      val n = quote {
+        qr1.filter(a => a.s == "s").drop(10).map(a => a.s)
+      }
+      Dealias(q.ast) mustEqual n.ast
+    }
     "entity" in {
       Dealias(qr1.ast) mustEqual qr1.ast
     }

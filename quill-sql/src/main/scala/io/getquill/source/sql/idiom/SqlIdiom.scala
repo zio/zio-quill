@@ -38,7 +38,7 @@ trait SqlIdiom {
   implicit val sqlQueryShow: Show[SqlQuery] = new Show[SqlQuery] {
     def show(e: SqlQuery) =
       e match {
-        case SqlQuery(from, where, orderBy, limit, select) =>
+        case SqlQuery(from, where, orderBy, limit, offset, select) =>
           val selectClause = s"SELECT ${select.show} FROM ${from.show}"
           val withWhere =
             where match {
@@ -50,12 +50,17 @@ trait SqlIdiom {
               case Nil     => withWhere
               case orderBy => withWhere + showOrderBy(orderBy)
             }
-          limit match {
-            case None        => withOrderBy
-            case Some(limit) => withOrderBy + s" LIMIT ${limit.show}"
+          (limit, offset) match {
+            case (None, None)                => withOrderBy
+            case (Some(limit), None)         => withOrderBy + s" LIMIT ${limit.show}"
+            case (Some(limit), Some(offset)) => withOrderBy + s" LIMIT ${limit.show} OFFSET ${offset.show}"
+            case (None, Some(offset))        => withOrderBy + showOffsetWithoutLimit(offset)
           }
       }
   }
+
+  protected def showOffsetWithoutLimit(offset: Ast) =
+    s" OFFSET ${offset.show}"
 
   protected def showOrderBy(criterias: List[OrderByCriteria]) =
     s" ORDER BY ${criterias.show}"

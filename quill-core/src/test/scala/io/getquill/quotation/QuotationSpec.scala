@@ -52,6 +52,12 @@ class QuotationSpec extends Spec {
         }
         quote(unquote(q)).ast mustEqual Take(Entity("TestEntity"), Constant(10))
       }
+      "drop" in {
+        val q = quote {
+          qr1.drop(10)
+        }
+        quote(unquote(q)).ast mustEqual Drop(Entity("TestEntity"), Constant(10))
+      }
     }
     "action" - {
       "update" in {

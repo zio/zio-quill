@@ -46,6 +46,9 @@ object AstShow {
 
         case Take(source, n) =>
           s"${source.show}.take($n)"
+
+        case Drop(source, n) =>
+          s"${source.show}.drop($n)"
       }
   }
 
