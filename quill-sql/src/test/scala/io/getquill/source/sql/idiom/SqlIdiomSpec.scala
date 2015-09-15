@@ -335,7 +335,7 @@ class SqlIdiomSpec extends Spec {
           infix"SELECT 1 i FROM DUAL".as[Queryable[Entity]].map(a => a.i)
         }
         mirrorSource.run(q).sql mustEqual
-          "SELECT CONCAT(t.s, t.s) FROM TestEntity t"
+          "SELECT a.i FROM (SELECT 1 i FROM DUAL) a"
       }
     }
   }
