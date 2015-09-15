@@ -18,7 +18,10 @@ object VerifyNormalization extends StatelessTransformer {
     def unapply(q: Query) =
       q match {
         case _: Entity              => Some(q)
-        case _: SortBy | _: Reverse => Some(apply(q))
+        case SortBy(a: Query, b, c) => Some(apply(a))
+        case Reverse(a: Query)      => Some(apply(a))
+        case Take(a: Query, b)      => Some(apply(a))
+        case Drop(a: Query, b)      => Some(apply(a))
         case other                  => None
       }
   }

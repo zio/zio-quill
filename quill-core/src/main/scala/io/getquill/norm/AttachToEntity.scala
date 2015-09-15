@@ -18,6 +18,8 @@ object AttachToEntity {
       case Filter(a: Query, b, c)   => Filter(apply(f, Some(b))(a), b, c)
       case SortBy(a: Query, b, c)   => SortBy(apply(f, Some(b))(a), b, c)
       case Reverse(a: Query)        => Reverse(apply(f, alias)(a))
+      case Take(a: Query, b)        => Take(apply(f, alias)(a), b)
+      case Drop(a: Query, b)        => Drop(apply(f, alias)(a), b)
 
       case e: Entity                => f(e, alias.getOrElse(Ident("x")))
 

@@ -1,19 +1,8 @@
 package io.getquill.norm
 
 import scala.util.Random
+import io.getquill.ast._
 import io.getquill.ast
-import io.getquill.ast.BinaryOperation
-import io.getquill.ast.Constant
-import io.getquill.ast.Entity
-import io.getquill.ast.Filter
-import io.getquill.ast.FlatMap
-import io.getquill.ast.Ident
-import io.getquill.ast.Map
-import io.getquill.ast.NullValue
-import io.getquill.ast.Property
-import io.getquill.ast.Query
-import io.getquill.ast.SortBy
-import io.getquill.ast.Reverse
 
 class QueryGenerator(seed: Int) {
 
@@ -23,14 +12,22 @@ class QueryGenerator(seed: Int) {
     if (i <= 2) {
       Entity(string(3))
     } else {
-      random.nextInt(5) match {
+      random.nextInt(7) match {
         case 0 => map(i)
         case 1 => flatMap(i)
         case 2 => filter(i)
         case 3 => sortBy(i)
         case 4 => reverse(i)
+        case 5 => take(i)
+        case 6 => drop(i)
       }
     }
+
+  private def take(i: Int) =
+    Take(apply(i - 1), Constant(i))
+
+  private def drop(i: Int) =
+    Drop(apply(i - 1), Constant(i))
 
   private def map(i: Int) = {
     val id = ident
