@@ -28,6 +28,7 @@ import io.getquill.ast.Update
 import io.getquill.ast.Value
 import io.getquill.ast.Reverse
 import io.getquill.ast.Take
+import io.getquill.ast.Infix
 
 trait Liftables {
   val c: Context
@@ -45,6 +46,7 @@ trait Liftables {
     case FunctionApply(a, b)      => q"$pack.FunctionApply($a, $b)"
     case BinaryOperation(a, b, c) => q"$pack.BinaryOperation($a, $b, $c)"
     case UnaryOperation(a, b)     => q"$pack.UnaryOperation($a, $b)"
+    case Infix(a, b)              => q"$pack.Infix($a, $b)"
   }
 
   implicit val binaryOperatorLiftable: Liftable[BinaryOperator] = Liftable[BinaryOperator] {

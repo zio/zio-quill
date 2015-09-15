@@ -321,6 +321,23 @@ class SqlIdiomSpec extends Spec {
       mirrorSource.run(q).sql mustEqual
         "SELECT t.s FROM TestEntity t"
     }
+    "infix" - {
+      "part of the query" in {
+        val q = quote {
+          qr1.map(t => infix"CONCAT(${t.s}, ${t.s})".as[String])
+        }
+        mirrorSource.run(q).sql mustEqual
+          "SELECT CONCAT(t.s, t.s) FROM TestEntity t"
+      }
+      "source query" in {
+        case class Entity(i: Int)
+        val q = quote {
+          infix"SELECT 1 i FROM DUAL".as[Queryable[Entity]].map(a => a.i)
+        }
+        mirrorSource.run(q).sql mustEqual
+          "SELECT CONCAT(t.s, t.s) FROM TestEntity t"
+      }
+    }
   }
 
   "fails if the query is malformed" in {

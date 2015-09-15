@@ -25,6 +25,7 @@ import io.getquill.util.Show.Show
 import io.getquill.util.Show.Shower
 import io.getquill.util.Show.listShow
 import io.getquill.source.sql._
+import io.getquill.ast.Infix
 
 trait SqlIdiom {
 
@@ -39,6 +40,7 @@ trait SqlIdiom {
           case BinaryOperation(a, ast.`!=`, NullValue) => s"${scopedShow(a)} IS NOT NULL"
           case BinaryOperation(NullValue, ast.`!=`, b) => s"${scopedShow(b)} IS NOT NULL"
           case BinaryOperation(a, op, b)               => s"${scopedShow(a)} ${op.show} ${scopedShow(b)}"
+          case Infix(parts, params)                    => StringContext(parts: _*).s(params.map(_.show): _*)
           case a: Action                               => a.show
           case ident: Ident                            => ident.show
           case property: Property                      => property.show
@@ -77,6 +79,7 @@ trait SqlIdiom {
       source match {
         case TableSource(name, alias)  => s"$name $alias"
         case QuerySource(query, alias) => s"(${query.show}) $alias"
+        case InfixSource(infix, alias) => s"(${(infix: Ast).show}) $alias"
       }
   }
 

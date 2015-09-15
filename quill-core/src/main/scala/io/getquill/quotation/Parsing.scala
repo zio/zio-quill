@@ -29,6 +29,7 @@ import io.getquill.norm.BetaReduction
 import io.getquill.util.Messages.RichContext
 import io.getquill.ast.Reverse
 import io.getquill.ast.Take
+import io.getquill.ast.Infix
 
 trait Parsing {
   this: Quotation =>
@@ -72,6 +73,7 @@ trait Parsing {
     case `queryParser`(query) => query
     case `functionParser`(function) => function
     case `actionParser`(action) => action
+    case `infixParser`(value) => value
     case q"${ functionParser(a) }.apply[..$t](...$values)" => FunctionApply(a, values.flatten.map(astParser(_)))
     case q"${ identParser(a) }.apply[..$t](...$values)" => FunctionApply(a, values.flatten.map(astParser(_)))
     case q"$a.$op($b)" => BinaryOperation(astParser(a), binaryOperator(op), astParser(b))
@@ -160,5 +162,12 @@ trait Parsing {
     case q"$i: $typ"                      => identParser(i)
     case c.universe.Bind(TermName(name), c.universe.Ident(termNames.WILDCARD)) =>
       Ident(name)
+  }
+
+  val infixParser: Parser[Infix] = Parser[Infix] {
+    case q"$infix.as[$t]" =>
+      infixParser(infix)
+    case q"$pack.InfixInterpolator(scala.StringContext.apply(..${ parts: List[String] })).infix(..$params)" =>
+      Infix(parts, params.map(astParser(_)))
   }
 }

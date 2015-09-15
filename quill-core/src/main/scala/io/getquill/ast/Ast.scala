@@ -13,6 +13,8 @@ sealed trait Ast {
   }
 }
 
+case class Infix(parts: List[String], params: List[Ast]) extends Ast
+
 //************************************************************
 
 sealed trait Query extends Ast

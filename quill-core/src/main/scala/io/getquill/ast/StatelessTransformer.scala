@@ -13,6 +13,7 @@ trait StatelessTransformer {
       case FunctionApply(function, values) => FunctionApply(apply(function), values.map(apply))
       case e: Ident                        => e
       case Property(a, name)               => Property(apply(a), name)
+      case Infix(a, b)                     => Infix(a, b.map(apply))
     }
 
   def apply(e: Query): Query =

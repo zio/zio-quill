@@ -1,5 +1,6 @@
 package io.getquill.source.sql
 
+import io.getquill.ast.Infix
 import io.getquill.ast.Ast
 import io.getquill.ast.Entity
 import io.getquill.ast.Filter
@@ -22,6 +23,7 @@ sealed trait Source {
 }
 case class TableSource(name: String, alias: String) extends Source
 case class QuerySource(query: SqlQuery, alias: String) extends Source
+case class InfixSource(infix: Infix, alias: String) extends Source
 
 case class SqlQuery(
   from: List[Source],
@@ -78,7 +80,7 @@ object SqlQuery {
 
       // nested
 
-      case Map(nested(source), Ident(alias), p) if (nest) =>
+      case Map(s @ nested(source), Ident(alias), p) if (nest || s.isInstanceOf[Infix]) =>
         SqlQuery(
           from = source(alias) :: Nil,
           select = p)
@@ -116,9 +118,10 @@ object SqlQuery {
     }
 
   private object nested {
-    def unapply(query: Query): Option[String => Source] =
-      query match {
-        case _: SortBy | _: Reverse | _: Take => Some(QuerySource(SqlQuery(query), _))
+    def unapply(ast: Ast): Option[String => Source] =
+      ast match {
+        case _: SortBy | _: Reverse | _: Take => Some(QuerySource(SqlQuery(ast), _))
+        case ast: Infix                       => Some(InfixSource(ast, _))
         case other                            => None
       }
   }

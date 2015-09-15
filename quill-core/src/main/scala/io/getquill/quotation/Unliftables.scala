@@ -28,6 +28,7 @@ import io.getquill.ast.Update
 import io.getquill.ast.Value
 import io.getquill.ast.Reverse
 import io.getquill.ast.Take
+import io.getquill.ast.Infix
 
 trait Unliftables {
   val c: Context
@@ -43,10 +44,12 @@ trait Unliftables {
     case q"$pack.FunctionApply.apply(${ a: Ast }, ${ b: List[Ast] })" => FunctionApply(a, b)
     case q"$pack.BinaryOperation.apply(${ a: Ast }, ${ b: BinaryOperator }, ${ c: Ast })" => BinaryOperation(a, b, c)
     case q"$pack.UnaryOperation.apply(${ a: UnaryOperator }, ${ b: Ast })" => UnaryOperation(a, b)
+    case q"$pack.Infix.apply(${ a: List[String] }, ${ b: List[Ast] })" => Infix(a, b)
   }
 
   implicit def listUnliftable[T](implicit u: Unliftable[T]): Unliftable[List[T]] = Unliftable[List[T]] {
-    case q"scala.collection.immutable.List.apply[..$t](..$values)" => values.map(u.unapply(_)).flatten
+    case q"$pack.Nil"                         => Nil
+    case q"$pack.List.apply[..$t](..$values)" => values.map(u.unapply(_)).flatten
   }
 
   implicit val binaryOperatorUnliftable: Unliftable[BinaryOperator] = Unliftable[BinaryOperator] {

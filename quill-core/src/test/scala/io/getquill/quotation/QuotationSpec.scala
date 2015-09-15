@@ -1,7 +1,6 @@
 package io.getquill.quotation
 
-import io.getquill.Queryable
-import io.getquill.Spec
+import io.getquill._
 import io.getquill.ast
 import io.getquill.ast.Assignment
 import io.getquill.ast.BinaryOperation
@@ -21,10 +20,9 @@ import io.getquill.ast.SortBy
 import io.getquill.ast.Tuple
 import io.getquill.ast.UnaryOperation
 import io.getquill.ast.Update
-import io.getquill.quote
-import io.getquill.unquote
 import io.getquill.ast.Reverse
 import io.getquill.ast.Take
+import io.getquill.ast.Infix
 
 class QuotationSpec extends Spec {
 
@@ -253,6 +251,27 @@ class QuotationSpec extends Spec {
           qr1.isEmpty
         }
         quote(unquote(q)).ast mustEqual UnaryOperation(ast.`isEmpty`, Entity("TestEntity"))
+      }
+    }
+    "infix" - {
+      "without `as`" in {
+        val q = quote {
+          infix"true"
+        }
+        quote(unquote(q)).ast mustEqual Infix(List("true"), List())
+      }
+      "with `as`" in {
+        val q = quote {
+          infix"true".as[Boolean]
+        }
+        quote(unquote(q)).ast mustEqual Infix(List("true"), List())
+      }
+      "with params" in {
+        val q = quote {
+          (a: String, b: String) =>
+            infix"$a || $b".as[String]
+        }
+        quote(unquote(q)).ast.body mustEqual Infix(List("", " || ", ""), List(Ident("a"), Ident("b")))
       }
     }
   }

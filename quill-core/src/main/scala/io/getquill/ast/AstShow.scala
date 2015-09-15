@@ -18,6 +18,7 @@ object AstShow {
         case ast: Action        => ast.show
         case ast: Ident         => ast.show
         case ast: Property      => ast.show
+        case ast: Infix         => ast.show
       }
   }
 
@@ -140,6 +141,16 @@ object AstShow {
     def show(e: Assignment) =
       e match {
         case Assignment(property, value) => s"_.$property -> ${value.show}"
+      }
+  }
+
+  implicit val infixShow: Show[Infix] = new Show[Infix] {
+    def show(e: Infix) =
+      e match {
+        case Infix(parts, params) =>
+          val ps = params.map(p => "$" + p.show)
+          val body = StringContext(parts: _*).s(ps: _*)
+          s"""infix"$body""""
       }
   }
 
