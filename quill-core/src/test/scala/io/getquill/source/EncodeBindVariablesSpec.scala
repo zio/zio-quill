@@ -15,9 +15,9 @@ class EncodeBindVariablesSpec extends Spec {
     }
     "two" in {
       val q = quote {
-        (i: Int, j: Long) => qr1.filter(t => t.i == i && t.i > j)
+        (i: Int, j: Long, o: Option[Int]) => qr1.filter(t => t.i == i && t.i > j && t.o == o)
       }
-      mirrorSource.run(q).using(1, 2).binds mustEqual Row(1, 2L)
+      mirrorSource.run(q).using(1, 2, None).binds mustEqual Row(1, 2L, None)
     }
   }
 

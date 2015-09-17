@@ -15,6 +15,9 @@ abstract class SqlSource[D <: SqlIdiom, R: ClassTag, S: ClassTag] extends io.get
 
   def probe(sql: String): Try[Any]
 
+  implicit def optionDecoder[T](implicit d: Decoder[T]): Decoder[Option[T]]
+  implicit def optionEncoder[T](implicit d: Encoder[T]): Encoder[Option[T]]
+
   implicit val stringDecoder: Decoder[String]
   implicit val bigDecimalDecoder: Decoder[BigDecimal]
   implicit val booleanDecoder: Decoder[Boolean]

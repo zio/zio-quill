@@ -29,7 +29,7 @@ class SourceMacroSpec extends Spec {
           (a: String) => qr1.filter(t => t.s == a)
         }
         val r = mirrorSource.run(q).using("a")
-        r.ast.toString mustEqual "queryable[TestEntity].filter(t => t.s == ?).map(t => (t.s, t.i, t.l))"
+        r.ast.toString mustEqual "queryable[TestEntity].filter(t => t.s == ?).map(t => (t.s, t.i, t.l, t.o))"
         r.binds mustEqual Row("a")
       }
       "infix" in {

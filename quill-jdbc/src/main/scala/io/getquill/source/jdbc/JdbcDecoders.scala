@@ -15,11 +15,27 @@ trait JdbcDecoders {
         f(row)(index + 1)
     }
 
+  implicit def optionDecoder[T](implicit d: Decoder[T]): Decoder[Option[T]] =
+    new Decoder[Option[T]] {
+      def apply(index: Int, row: ResultSet) = {
+        val res = d(index, row)
+        row.wasNull match {
+          case true  => None
+          case false => Some(res)
+        }
+      }
+    }
+
   implicit val stringDecoder = decoder(_.getString)
   implicit val bigDecimalDecoder: Decoder[BigDecimal] =
     new Decoder[BigDecimal] {
-      def apply(index: Int, row: ResultSet) =
-        row.getBigDecimal(index + 1)
+      def apply(index: Int, row: ResultSet) = {
+        val v = row.getBigDecimal(index + 1)
+        if (v == null)
+          BigDecimal(0)
+        else
+          v
+      }
     }
   implicit val booleanDecoder = decoder(_.getBoolean)
   implicit val byteDecoder = decoder(_.getByte)
@@ -31,7 +47,12 @@ trait JdbcDecoders {
   implicit val byteArrayDecoder = decoder(_.getBytes)
   implicit val dateDecoder: Decoder[util.Date] =
     new Decoder[util.Date] {
-      def apply(index: Int, row: ResultSet) =
-        new util.Date(row.getTimestamp(index + 1, Calendar.getInstance(dateTimeZone)).getTime)
+      def apply(index: Int, row: ResultSet) = {
+        val v = row.getTimestamp(index + 1, Calendar.getInstance(dateTimeZone))
+        if (v == null)
+          new util.Date(0)
+        else
+          new util.Date(v.getTime)
+      }
     }
 }

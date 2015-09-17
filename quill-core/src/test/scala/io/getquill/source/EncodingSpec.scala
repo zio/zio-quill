@@ -1,4 +1,4 @@
-package io.getquill.source.sql
+package io.getquill.source
 
 import java.util.Date
 

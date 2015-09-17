@@ -40,6 +40,16 @@ abstract class MirrorSourceTemplate extends Source[Row, Row] {
   def query[T](ast: Ast, bind: Row => Row, extractor: Row => T) =
     QueryMirror(ast, bind(Row()), extractor)
 
+  implicit def optionDecoder[T](implicit d: Decoder[T]) = new Decoder[Option[T]] {
+    def apply(index: Int, row: Row) =
+      row[Option[T]](index)
+  }
+
+  implicit def optionEncoder[T](implicit d: Encoder[T]) = new Encoder[Option[T]] {
+    def apply(index: Int, value: Option[T], row: Row) =
+      row.add(value)
+  }
+
   implicit val longDecoder = new Decoder[Long] {
     def apply(index: Int, row: Row) =
       row[Long](index)

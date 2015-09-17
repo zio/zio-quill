@@ -54,6 +54,7 @@ class FinagleMysqlSource
         Future.value(List())
       case bind :: tail =>
         logger.info(sql)
+        logger.info(bind(List()).toString)
         withClient(_.prepare(sql)(bind(List()): _*))
           .flatMap(_ => execute(sql, tail))
     }

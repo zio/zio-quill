@@ -1,5 +1,5 @@
 
-lazy val root = 
+lazy val quill = 
   (project in file("."))
     .settings(scalaVersion := "2.11.7")
     .aggregate(`quill-core`, `quill-sql`, `quill-jdbc`, `quill-finagle-mysql`)

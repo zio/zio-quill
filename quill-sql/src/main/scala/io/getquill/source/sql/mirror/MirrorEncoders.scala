@@ -12,6 +12,12 @@ trait MirrorEncoders {
       row.add(value)
   }
 
+  implicit def optionEncoder[T](implicit d: Encoder[T]): Encoder[Option[T]] =
+    new Encoder[Option[T]] {
+      def apply(index: Int, value: Option[T], row: Row) =
+        row.add(value)
+    }
+
   implicit val stringEncoder = encoder[String]
   implicit val bigDecimalEncoder = encoder[BigDecimal]
   implicit val booleanEncoder = encoder[Boolean]

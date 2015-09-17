@@ -28,6 +28,9 @@ class SqlSourceMacroSpec extends Spec {
     object testSource extends SqlSource[EvilDBDialect, Any, Any] {
       def probe(sql: String): Try[Any] = null
 
+      implicit def optionDecoder[T](implicit d: Decoder[T]): Decoder[Option[T]] = null
+      implicit def optionEncoder[T](implicit d: Encoder[T]): Encoder[Option[T]] = null
+
       implicit val stringDecoder: Decoder[String] = null
       implicit val bigDecimalDecoder: Decoder[BigDecimal] = null
       implicit val booleanDecoder: Decoder[Boolean] = null

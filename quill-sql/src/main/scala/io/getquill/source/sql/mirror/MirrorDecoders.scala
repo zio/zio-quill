@@ -14,6 +14,12 @@ trait MirrorDecoders {
       row[T](index)
   }
 
+  implicit def optionDecoder[T](implicit d: Decoder[T]): Decoder[Option[T]] =
+    new Decoder[Option[T]] {
+      def apply(index: Int, row: Row) =
+        row[Option[T]](index)
+    }
+
   implicit val stringDecoder: Decoder[String] = decoder[String]
   implicit val bigDecimalDecoder: Decoder[BigDecimal] = decoder[BigDecimal]
   implicit val booleanDecoder: Decoder[Boolean] = decoder[Boolean]

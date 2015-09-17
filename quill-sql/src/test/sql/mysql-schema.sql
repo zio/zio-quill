@@ -34,13 +34,25 @@ CREATE TABLE EncodingTestEntity(
     v8 FLOAT,
     v9 DOUBLE,
     v10 VARBINARY(255),
-    v11 DATETIME
+    v11 DATETIME,
+    o1 VARCHAR(255),
+    o2 DECIMAL(5,2),
+    o3 BIT,
+    o4 SMALLINT,
+    o5 SMALLINT,
+    o6 INTEGER,
+    o7 BIGINT,
+    o8 FLOAT,
+    o9 DOUBLE,
+    o10 VARBINARY(255),
+    o11 DATETIME
 );
 
 CREATE TABLE TestEntity(
 	s VARCHAR(255),
     i INTEGER,
-    l BIGINT
+    l BIGINT,
+    o INTEGER
 );
 
 CREATE TABLE TestEntity2(

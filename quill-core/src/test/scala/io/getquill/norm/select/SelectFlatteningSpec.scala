@@ -18,7 +18,7 @@ class SelectFlatteningSpec extends Spec {
 
     "flattens a case class select" in {
       val n = quote {
-        qr1.map(x => (x.s, x.i, x.l))
+        qr1.map(x => (x.s, x.i, x.l, x.o))
       }
       mirrorSource.run(qr1).ast mustEqual n.ast
     }
@@ -29,7 +29,7 @@ class SelectFlatteningSpec extends Spec {
           qr1.map(x => (x, x.s, x.i, x.l))
         }
         val n = quote {
-          qr1.map(x => (x.s, x.i, x.l, x.s, x.i, x.l))
+          qr1.map(x => (x.s, x.i, x.l, x.o, x.s, x.i, x.l))
         }
         mirrorSource.run(q).ast mustEqual n.ast
       }
@@ -38,7 +38,7 @@ class SelectFlatteningSpec extends Spec {
           qr1.map(x => (x.s, x, x.i, x.l))
         }
         val n = quote {
-          qr1.map(x => (x.s, x.s, x.i, x.l, x.i, x.l))
+          qr1.map(x => (x.s, x.s, x.i, x.l, x.o, x.i, x.l))
         }
         mirrorSource.run(q).ast mustEqual n.ast
       }
@@ -47,7 +47,7 @@ class SelectFlatteningSpec extends Spec {
           qr1.map(x => (x.s, x.i, x.l, x))
         }
         val n = quote {
-          qr1.map(x => (x.s, x.i, x.l, x.s, x.i, x.l))
+          qr1.map(x => (x.s, x.i, x.l, x.s, x.i, x.l, x.o))
         }
         mirrorSource.run(q).ast mustEqual n.ast
       }
@@ -56,7 +56,7 @@ class SelectFlatteningSpec extends Spec {
           qr1.flatMap(x => qr2.map(y => (x, x.s, y)))
         }
         val n = quote {
-          qr1.flatMap(x => qr2.map(y => (x.s, x.i, x.l, x.s, y.s, y.i, y.l)))
+          qr1.flatMap(x => qr2.map(y => (x.s, x.i, x.l, x.o, x.s, y.s, y.i, y.l, y.o)))
         }
         mirrorSource.run(q).ast mustEqual n.ast
       }

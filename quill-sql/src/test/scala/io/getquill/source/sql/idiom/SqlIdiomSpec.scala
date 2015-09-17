@@ -11,14 +11,14 @@ class SqlIdiomSpec extends Spec {
     "query" - {
       "without filter" in {
         mirrorSource.run(qr1).sql mustEqual
-          "SELECT x.s, x.i, x.l FROM TestEntity x"
+          "SELECT x.s, x.i, x.l, x.o FROM TestEntity x"
       }
       "with filter" in {
         val q = quote {
           qr1.filter(t => t.s == "s")
         }
         mirrorSource.run(q).sql mustEqual
-          "SELECT t.s, t.i, t.l FROM TestEntity t WHERE t.s = 's'"
+          "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.s = 's'"
       }
       "multiple entities" in {
         val q = quote {
@@ -38,7 +38,7 @@ class SqlIdiomSpec extends Spec {
             qr1.filter(t => t.s != null).sortBy(_.s)
           }
           mirrorSource.run(q).sql mustEqual
-            "SELECT t.s, t.i, t.l FROM TestEntity t WHERE t.s IS NOT NULL ORDER BY t.s"
+            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.s IS NOT NULL ORDER BY t.s"
         }
         "nested" in {
           val q = quote {
@@ -59,7 +59,7 @@ class SqlIdiomSpec extends Spec {
             qr1.filter(t => t.s != null).take(10)
           }
           mirrorSource.run(q).sql mustEqual
-            "SELECT t.s, t.i, t.l FROM TestEntity t WHERE t.s IS NOT NULL LIMIT 10"
+            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.s IS NOT NULL LIMIT 10"
         }
         "nested" in {
           val q = quote {
@@ -81,21 +81,21 @@ class SqlIdiomSpec extends Spec {
           qr1.filter(t => !(t.s == "a"))
         }
         mirrorSource.run(q).sql mustEqual
-          "SELECT t.s, t.i, t.l FROM TestEntity t WHERE NOT (t.s = 'a')"
+          "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE NOT (t.s = 'a')"
       }
       "isEmpty" in {
         val q = quote {
           qr1.filter(t => qr2.filter(u => u.s == t.s).isEmpty)
         }
         mirrorSource.run(q).sql mustEqual
-          "SELECT t.s, t.i, t.l FROM TestEntity t WHERE NOT EXISTS (SELECT * FROM TestEntity2 u WHERE u.s = t.s)"
+          "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE NOT EXISTS (SELECT * FROM TestEntity2 u WHERE u.s = t.s)"
       }
       "nonEmpty" in {
         val q = quote {
           qr1.filter(t => qr2.filter(u => u.s == t.s).nonEmpty)
         }
         mirrorSource.run(q).sql mustEqual
-          "SELECT t.s, t.i, t.l FROM TestEntity t WHERE EXISTS (SELECT * FROM TestEntity2 u WHERE u.s = t.s)"
+          "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE EXISTS (SELECT * FROM TestEntity2 u WHERE u.s = t.s)"
       }
     }
     "binary operation" - {
@@ -127,14 +127,14 @@ class SqlIdiomSpec extends Spec {
               qr1.filter(t => t.s == null)
             }
             mirrorSource.run(q).sql mustEqual
-              "SELECT t.s, t.i, t.l FROM TestEntity t WHERE t.s IS NULL"
+              "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.s IS NULL"
           }
           "left" in {
             val q = quote {
               qr1.filter(t => null == t.s)
             }
             mirrorSource.run(q).sql mustEqual
-              "SELECT t.s, t.i, t.l FROM TestEntity t WHERE t.s IS NULL"
+              "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.s IS NULL"
           }
         }
         "values" in {
@@ -142,7 +142,7 @@ class SqlIdiomSpec extends Spec {
             qr1.filter(t => t.s == "s")
           }
           mirrorSource.run(q).sql mustEqual
-            "SELECT t.s, t.i, t.l FROM TestEntity t WHERE t.s = 's'"
+            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.s = 's'"
         }
       }
       "!=" - {
@@ -152,14 +152,14 @@ class SqlIdiomSpec extends Spec {
               qr1.filter(t => t.s != null)
             }
             mirrorSource.run(q).sql mustEqual
-              "SELECT t.s, t.i, t.l FROM TestEntity t WHERE t.s IS NOT NULL"
+              "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.s IS NOT NULL"
           }
           "left" in {
             val q = quote {
               qr1.filter(t => null != t.s)
             }
             mirrorSource.run(q).sql mustEqual
-              "SELECT t.s, t.i, t.l FROM TestEntity t WHERE t.s IS NOT NULL"
+              "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.s IS NOT NULL"
           }
         }
         "values" in {
@@ -167,7 +167,7 @@ class SqlIdiomSpec extends Spec {
             qr1.filter(t => t.s != "s")
           }
           mirrorSource.run(q).sql mustEqual
-            "SELECT t.s, t.i, t.l FROM TestEntity t WHERE t.s <> 's'"
+            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.s <> 's'"
         }
       }
       "&&" in {
@@ -175,56 +175,56 @@ class SqlIdiomSpec extends Spec {
           qr1.filter(t => t.i != null && t.s == "s")
         }
         mirrorSource.run(q).sql mustEqual
-          "SELECT t.s, t.i, t.l FROM TestEntity t WHERE (t.i IS NOT NULL) AND (t.s = 's')"
+          "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE (t.i IS NOT NULL) AND (t.s = 's')"
       }
       "||" in {
         val q = quote {
           qr1.filter(t => t.i != null || t.s == "s")
         }
         mirrorSource.run(q).sql mustEqual
-          "SELECT t.s, t.i, t.l FROM TestEntity t WHERE (t.i IS NOT NULL) OR (t.s = 's')"
+          "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE (t.i IS NOT NULL) OR (t.s = 's')"
       }
       ">" in {
         val q = quote {
           qr1.filter(t => t.i > t.l)
         }
         mirrorSource.run(q).sql mustEqual
-          "SELECT t.s, t.i, t.l FROM TestEntity t WHERE t.i > t.l"
+          "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.i > t.l"
       }
       ">=" in {
         val q = quote {
           qr1.filter(t => t.i >= t.l)
         }
         mirrorSource.run(q).sql mustEqual
-          "SELECT t.s, t.i, t.l FROM TestEntity t WHERE t.i >= t.l"
+          "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.i >= t.l"
       }
       "<" in {
         val q = quote {
           qr1.filter(t => t.i < t.l)
         }
         mirrorSource.run(q).sql mustEqual
-          "SELECT t.s, t.i, t.l FROM TestEntity t WHERE t.i < t.l"
+          "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.i < t.l"
       }
       "<=" in {
         val q = quote {
           qr1.filter(t => t.i <= t.l)
         }
         mirrorSource.run(q).sql mustEqual
-          "SELECT t.s, t.i, t.l FROM TestEntity t WHERE t.i <= t.l"
+          "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.i <= t.l"
       }
       "/" in {
         val q = quote {
           qr1.filter(t => (t.i / t.l) == 0)
         }
         mirrorSource.run(q).sql mustEqual
-          "SELECT t.s, t.i, t.l FROM TestEntity t WHERE (t.i / t.l) = 0"
+          "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE (t.i / t.l) = 0"
       }
       "%" in {
         val q = quote {
           qr1.filter(t => (t.i % t.l) == 0)
         }
         mirrorSource.run(q).sql mustEqual
-          "SELECT t.s, t.i, t.l FROM TestEntity t WHERE (t.i % t.l) = 0"
+          "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE (t.i % t.l) = 0"
       }
     }
     "action" - {
@@ -289,7 +289,7 @@ class SqlIdiomSpec extends Spec {
             qr1.filter(t => qr1.map(u => {}).isEmpty)
           }
           mirrorSource.run(q).sql mustEqual
-            "SELECT t.s, t.i, t.l FROM TestEntity t WHERE NOT EXISTS (SELECT 1 FROM TestEntity u)"
+            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE NOT EXISTS (SELECT 1 FROM TestEntity u)"
         }
         "value" in {
           val q = quote {
@@ -339,7 +339,7 @@ class SqlIdiomSpec extends Spec {
       }
       "full infix query" in {
         mirrorSource.run(infix"SELECT * FROM TestEntity".as[Queryable[TestEntity]]).sql mustEqual
-          "SELECT x.s, x.i, x.l FROM (SELECT * FROM TestEntity) x"
+          "SELECT x.s, x.i, x.l, x.o FROM (SELECT * FROM TestEntity) x"
       }
       "full infix action" in {
         mirrorSource.run(infix"DELETE FROM TestEntity".as[Actionable[TestEntity]]).sql mustEqual

@@ -5,6 +5,7 @@ import java.sql.PreparedStatement
 import java.util
 import java.util.Calendar
 import java.util.TimeZone
+import java.sql.Types
 
 trait JdbcEncoders {
   this: JdbcSource[_] =>
@@ -17,6 +18,32 @@ trait JdbcEncoders {
         f(row)(index + 1, value)
         row
       }
+    }
+
+  implicit def optionEncoder[T](implicit d: Encoder[T]): Encoder[Option[T]] =
+    new Encoder[Option[T]] {
+      override def apply(index: Int, value: Option[T], row: PreparedStatement) =
+        value match {
+          case Some(value) => d(index, value, row)
+          case None =>
+            import Types._
+            val sqlType =
+              d match {
+                case `stringEncoder`     => VARCHAR
+                case `bigDecimalEncoder` => NUMERIC
+                case `booleanEncoder`    => BOOLEAN
+                case `byteEncoder`       => TINYINT
+                case `shortEncoder`      => SMALLINT
+                case `intEncoder`        => INTEGER
+                case `longEncoder`       => BIGINT
+                case `floatEncoder`      => REAL
+                case `doubleEncoder`     => DOUBLE
+                case `byteArrayEncoder`  => VARBINARY
+                case `dateEncoder`       => TIMESTAMP
+              }
+            row.setNull(index + 1, sqlType)
+            row
+        }
     }
 
   implicit val stringEncoder = encoder(_.setString)
