@@ -12,7 +12,7 @@ MVP - mid-september
 √ compile-time query validation using db
 - full sql support
 	√ take
-	- drop
+	√ drop
 	- options
 	- groupBy
 	- aggregations
