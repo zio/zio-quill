@@ -183,7 +183,7 @@ class EncodingSpec extends Spec {
         e2.o7 mustEqual None
         e2.o8 mustEqual None
         e2.o9 mustEqual None
-        e2.o10.map(_.toList) mustEqual None
+        e2.o10 mustEqual None
         e2.o11 mustEqual None
     }
 }

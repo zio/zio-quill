@@ -10,6 +10,7 @@ MVP - mid-september
 √ generic test suite
 √ database dialects (derby, h2, mysql, postgres)
 √ compile-time query validation using db
+√ interpolator
 - full sql support
 	√ take
 	√ drop
@@ -19,7 +20,7 @@ MVP - mid-september
 	- string concatenation
 	- set operations (union, outer joins, etc)
 	- insert returning id
-√ interpolator
+- custom table/column names
 - insert case class directly
 - quill-jdbc
 - quill-finagle-mysql
