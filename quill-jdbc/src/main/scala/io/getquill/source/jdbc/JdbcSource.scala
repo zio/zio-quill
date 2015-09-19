@@ -28,7 +28,14 @@ class JdbcSource[D <: SqlIdiom]
     }
 
   def probe(sql: String) =
-    Try(withConnection(_.prepareStatement("dsdsad")))
+    withConnection { conn =>
+      Try {
+        if (sql.startsWith("PREPARE"))
+          conn.createStatement.execute(sql)
+        else
+          conn.prepareStatement(sql)
+      }
+    }
 
   def transaction[T](f: => T) =
     withConnection { conn =>

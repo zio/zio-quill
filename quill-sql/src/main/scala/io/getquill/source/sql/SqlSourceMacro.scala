@@ -14,14 +14,14 @@ class SqlSourceMacro(val c: Context) extends SourceMacro {
   import c.universe.{ Try => _, _ }
 
   override def toExecutionTree(ast: Ast) = {
-    val sql = show(ast)
+    val d = dialect
+    val sql = show(ast, d)
     c.info(sql)
-    probe(sql)
+    probe(sql, d)
     q"$sql"
   }
 
-  private def show(ast: Ast) = {
-    val d = dialect
+  private def show(ast: Ast, d: SqlIdiom) = {
     import d._
     ast match {
       case ast: Query =>
@@ -33,10 +33,12 @@ class SqlSourceMacro(val c: Context) extends SourceMacro {
     }
   }
 
-  private def probe(sql: String) =
-    resolveSource[SqlSource[SqlIdiom, Any, Any]].flatMap(_.probe(sql)) match {
-      case Failure(e) => c.warn(s"The sql query probing failed. Reason '$e'")
-      case Success(v) => v
+  private def probe(sql: String, d: SqlIdiom) =
+    resolveSource[SqlSource[SqlIdiom, Any, Any]].map {
+      _.probe(d.prepare(sql).getOrElse(sql))
+    } match {
+      case Some(Failure(e)) => c.error(s"The sql query probing failed. Reason '$e'")
+      case other            =>
     }
 
   private def dialect = {

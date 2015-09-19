@@ -15,6 +15,11 @@ import io.getquill.util.Show.listShow
 
 trait SqlIdiom {
 
+  def prepare(sql: String): Option[String] =
+    prepareKeyword.map(k => s"PREPARE p${sql.hashCode.abs} $k '$sql'")
+
+  def prepareKeyword: Option[String] = None
+
   implicit def astShow(implicit propertyShow: Show[Property]): Show[Ast] =
     new Show[Ast] {
       def show(e: Ast) =

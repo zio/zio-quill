@@ -27,16 +27,12 @@ class FinagleMysqlSource
 
   protected val client = FinagleMysqlClient(config)
 
-  private val service = {
-    val serviceField = client.getClass.getDeclaredField("service")
-    serviceField.setAccessible(true)
-    serviceField.get(client).asInstanceOf[Service[Request, Result]]
-  }
+  Await.result(client.ping)
 
   private val currentClient = new Local[Client]
 
   def probe(sql: String) =
-    Try(Await.result(service(PrepareRequest(sql))))
+    Try(Await.result(client.query(sql)))
 
   def transaction[T](f: => Future[T]) =
     client.transaction {

@@ -8,6 +8,10 @@ object Messages {
     throw new IllegalStateException(msg)
 
   implicit class RichContext(c: Context) {
+
+    def error(msg: String) =
+      c.error(c.enclosingPosition, msg)
+
     def fail(msg: String) =
       c.abort(c.enclosingPosition, msg)
 

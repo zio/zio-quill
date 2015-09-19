@@ -84,9 +84,9 @@ abstract class MirrorSourceTemplate extends Source[Row, Row] {
 class MirrorSourceMacro(val c: Context) extends SourceMacro {
   import c.universe._
   override protected def toExecutionTree(ast: Ast) = {
-    resolveSource[MirrorSourceTemplate].flatMap(_.probe(ast)) match {
-      case Failure(e) => c.warn(s"Probe failed. Reason $e")
-      case Success(v) =>
+    resolveSource[MirrorSourceTemplate].map(_.probe(ast)) match {
+      case Some(Failure(e)) => c.warn(s"Probe failed. Reason $e")
+      case other            =>
     }
     c.info(ast.toString)
     q"$ast"
