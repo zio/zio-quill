@@ -10,8 +10,11 @@ object InferImplicitValueWithFallback {
     def fallback =
       c.typecheck(
         q"""{
-          import $fallbackTree._
-          _root_.scala.Predef.implicitly[$tpe]
+          def infer = {
+            import $fallbackTree._
+            _root_.scala.Predef.implicitly[$tpe]
+          }
+          infer
         }""",
         silent = true)
 
