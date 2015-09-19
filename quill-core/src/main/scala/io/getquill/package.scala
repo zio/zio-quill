@@ -4,6 +4,7 @@ import scala.language.implicitConversions
 import language.experimental.macros
 import io.getquill.quotation.NonQuotedException
 import io.getquill.quotation.Quoted
+import io.getquill.source.Encoder
 
 package object getquill {
 
@@ -14,4 +15,6 @@ package object getquill {
   implicit class InfixInterpolator(val sc: StringContext) extends AnyVal {
     def infix(args: Any*): InfixValue = NonQuotedException()
   }
+
+  def mappedEncoding[I, O](f: I => O) = source.MappedEncoding(f)
 }

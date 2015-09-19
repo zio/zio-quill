@@ -12,6 +12,8 @@ trait Encoder[S, T] {
   def apply(index: Int, value: T, row: S): S
 }
 
+case class MappedEncoding[I, O](f: I => O)
+
 object Encoding {
 
   def inferDecoder[R](c: Context)(tpe: c.Type)(implicit r: c.WeakTypeTag[R]) = {
