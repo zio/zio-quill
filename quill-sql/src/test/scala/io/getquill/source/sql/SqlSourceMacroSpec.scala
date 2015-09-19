@@ -4,20 +4,19 @@ import io.getquill._
 import io.getquill.source.sql.idiom.SqlIdiom
 import scala.util.Try
 import java.util.Date
-import io.getquill.source.sql.mirror.mirrorSource
 
 class SqlSourceMacroSpec extends Spec {
 
   "warns if the sql probing fails" in {
     case class Fail()
-    "mirrorSource.run(queryable[Fail])" must compile
+    "io.getquill.source.sql.mirror.mirrorSource.run(queryable[Fail])" mustNot compile
   }
 
   "fails if the query can't be translated to sql" in {
     val q = quote {
       qr1.flatMap(a => qr2.filter(b => b.s == a.s).take(1))
     }
-    "mirrorSource.run(q)" mustNot compile
+    "io.getquill.source.sql.mirror.mirrorSource.run(q)" mustNot compile
   }
 
   "fails if the sql dialect is not valid" in {

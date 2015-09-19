@@ -35,7 +35,6 @@ trait ResolveSourceMacro {
     tpe.baseClasses.map(_.asClass.fullName)
       .map(name => List(loadClass(name), loadClass(name + "$")).flatten).flatten
       .filter(ct.runtimeClass.isAssignableFrom(_))
-      .filter(_.getConstructors.filter(_.getParameters.isEmpty).nonEmpty)
 
   private def resolve(name: String, classes: List[Class[Any]]): (Option[Any], List[String]) =
     classes match {

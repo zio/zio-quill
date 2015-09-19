@@ -4,6 +4,10 @@ import io.getquill._
 
 class JdbcSourceSpec extends Spec {
 
+  "probes sqls" - {
+    testDB.probe("DELETE FROM TestEntity")
+  }
+
   "provides transaction support" - {
     "success" in {
       testDB.run(qr1.delete)
