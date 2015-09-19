@@ -15,7 +15,7 @@ MVP - mid-september
 - full sql support
 	√ take
 	√ drop
-	- options
+	√ options
 	- groupBy
 	- aggregations
 	- string concatenation
