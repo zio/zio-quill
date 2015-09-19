@@ -11,6 +11,7 @@ MVP - mid-september
 √ database dialects (derby, h2, mysql, postgres)
 √ compile-time query validation using db
 √ interpolator
+√ mapped encoding
 - full sql support
 	√ take
 	√ drop
