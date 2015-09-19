@@ -1,7 +1,7 @@
 package test
 
 import io.getquill._
-import io.getquill.ast._
+import io.getquill.ast.{ Query => _, _ }
 import io.getquill.quotation.NonQuotedException
 import io.getquill.quotation.Quoted
 
@@ -10,13 +10,13 @@ class PackageSpec extends Spec {
   "quotes asts" - {
     "explicitly" in {
       val q = quote {
-        queryable[TestEntity]
+        query[TestEntity]
       }
       q.ast mustEqual Entity("TestEntity")
     }
     "implicitly" in {
-      val q: Quoted[Queryable[TestEntity]] =
-        queryable[TestEntity]
+      val q: Quoted[Query[TestEntity]] =
+        query[TestEntity]
     }
   }
 
@@ -56,9 +56,9 @@ class PackageSpec extends Spec {
     }
   }
 
-  "fails if a queryable is used ouside of a quotation" in {
+  "fails if a query is used ouside of a quotation" in {
     val e = intercept[NonQuotedException] {
-      queryable[TestEntity]
+      query[TestEntity]
     }
   }
 

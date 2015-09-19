@@ -1,6 +1,6 @@
 package io.getquill.source.sql.idiom
 
-import io.getquill._
+import io.getquill.{ Query => _, Action => _, _ }
 import io.getquill.ast._
 import io.getquill.source.sql.InfixSource
 import io.getquill.source.sql.OrderByCriteria

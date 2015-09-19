@@ -10,7 +10,7 @@ class BindVariablesSpec extends Spec {
       (a: Int, b: Int) => qr1.filter(t => t.i == (b + a))
     }
     val (ast, bindings) = BindVariables(q.ast.body, List(Ident("a"), Ident("b")))
-    ast.toString mustEqual "queryable[TestEntity].filter(t => t.i == (? + ?))"
+    ast.toString mustEqual "query[TestEntity].filter(t => t.i == (? + ?))"
     bindings mustEqual List(Ident("b"), Ident("a"))
   }
 }

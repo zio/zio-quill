@@ -1,7 +1,7 @@
 package io.getquill.quotation
 
 import io.getquill._
-import io.getquill.ast._
+import io.getquill.ast.{ Query => _, _ }
 
 class QuotationSpec extends Spec {
 
@@ -115,7 +115,7 @@ class QuotationSpec extends Spec {
       "anonymous class" in {
         val q = quote {
           new {
-            def apply[T](q: Queryable[T]) = q
+            def apply[T](q: Query[T]) = q
           }
         }
         quote(unquote(q)).ast mustEqual Function(List(Ident("q")), Ident("q"))

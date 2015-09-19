@@ -9,7 +9,7 @@ class SqlSourceMacroSpec extends Spec {
 
   "warns if the sql probing fails" in {
     case class Fail()
-    "io.getquill.source.sql.mirror.mirrorSource.run(queryable[Fail])" mustNot compile
+    "io.getquill.source.sql.mirror.mirrorSource.run(query[Fail])" mustNot compile
   }
 
   "fails if the query can't be translated to sql" in {

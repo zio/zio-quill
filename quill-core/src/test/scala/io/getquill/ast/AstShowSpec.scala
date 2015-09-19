@@ -3,6 +3,7 @@ package io.getquill.ast
 import scala.language.reflectiveCalls
 
 import io.getquill._
+import io.getquill.{ Query => QueryInterface }
 import io.getquill.ast.AstShow.astShow
 import io.getquill.util.Show.Shower
 
@@ -13,10 +14,10 @@ class AstShowSpec extends Spec {
 
   "shows queries" in {
     val q = quote {
-      queryable[TestEntity].filter(t => t.s == "test").flatMap(t => queryable[TestEntity]).drop(9).take(10).map(t => t)
+      query[TestEntity].filter(t => t.s == "test").flatMap(t => query[TestEntity]).drop(9).take(10).map(t => t)
     }
     (q.ast: Ast).show mustEqual
-      """queryable[TestEntity].filter(t => t.s == "test").flatMap(t => queryable[TestEntity]).drop(9).take(10).map(t => t)"""
+      """query[TestEntity].filter(t => t.s == "test").flatMap(t => query[TestEntity]).drop(9).take(10).map(t => t)"""
   }
 
   "shows sorted queries" in {
@@ -24,7 +25,7 @@ class AstShowSpec extends Spec {
       qr1.sortBy(t => t.i).reverse
     }
     (q.ast: Ast).show mustEqual
-      """queryable[TestEntity].sortBy(t => t.i).reverse"""
+      """query[TestEntity].sortBy(t => t.i).reverse"""
   }
 
   "shows functions" in {
@@ -54,7 +55,7 @@ class AstShowSpec extends Spec {
 
   "shows operations" in {
     val q = quote {
-      (xs: Queryable[_]) => !(xs.nonEmpty && xs != null)
+      (xs: QueryInterface[_]) => !(xs.nonEmpty && xs != null)
     }
     (q.ast: Ast).show mustEqual
       """(xs) => !(xs.nonEmpty && (xs != null))"""
@@ -73,14 +74,14 @@ class AstShowSpec extends Spec {
     "prostfix" - {
       "isEmpty" in {
         val q = quote {
-          (xs: Queryable[_]) => xs.isEmpty
+          (xs: QueryInterface[_]) => xs.isEmpty
         }
         (q.ast: Ast).show mustEqual
           """(xs) => xs.isEmpty"""
       }
       "nonEmpty" in {
         val q = quote {
-          (xs: Queryable[_]) => xs.nonEmpty
+          (xs: QueryInterface[_]) => xs.nonEmpty
         }
         (q.ast: Ast).show mustEqual
           """(xs) => xs.nonEmpty"""
@@ -241,25 +242,25 @@ class AstShowSpec extends Spec {
   "shows actions" - {
     "update" in {
       val q = quote {
-        queryable[TestEntity].filter(t => t.s == "test").update(_.s -> "a")
+        query[TestEntity].filter(t => t.s == "test").update(_.s -> "a")
       }
       (q.ast: Ast).show mustEqual
-        """queryable[TestEntity].filter(t => t.s == "test").update(_.s -> "a")"""
+        """query[TestEntity].filter(t => t.s == "test").update(_.s -> "a")"""
     }
     "insert" in {
       val q = quote {
-        queryable[TestEntity].insert(_.s -> "a")
+        query[TestEntity].insert(_.s -> "a")
       }
       (q.ast: Ast).show mustEqual
-        """queryable[TestEntity].insert(_.s -> "a")"""
+        """query[TestEntity].insert(_.s -> "a")"""
     }
 
     "delete" in {
       val q = quote {
-        queryable[TestEntity].delete
+        query[TestEntity].delete
       }
       (q.ast: Ast).show mustEqual
-        """queryable[TestEntity].delete"""
+        """query[TestEntity].delete"""
     }
   }
 
@@ -269,14 +270,14 @@ class AstShowSpec extends Spec {
         qr1.filter(t => infix"true".as[Boolean])
       }
       (q.ast: Ast).show mustEqual
-        """queryable[TestEntity].filter(t => infix"true")"""
+        """query[TestEntity].filter(t => infix"true")"""
     }
     "with params" in {
       val q = quote {
         qr1.filter(t => infix"${t.s} == 's'".as[Boolean])
       }
       (q.ast: Ast).show mustEqual
-        """queryable[TestEntity].filter(t => infix"""" + "$" + """{t.s} == 's'")"""
+        """query[TestEntity].filter(t => infix"""" + "$" + """{t.s} == 's'")"""
     }
   }
 }

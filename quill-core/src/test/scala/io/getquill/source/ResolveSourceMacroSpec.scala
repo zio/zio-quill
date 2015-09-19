@@ -12,6 +12,6 @@ class ResolveSourceMacroSpec extends Spec {
 
   "warns if the probe fails" in {
     case class Fail()
-    "io.getquill.source.mirror.mirrorSource.run(queryable[Fail].delete)" must compile
+    "io.getquill.source.mirror.mirrorSource.run(query[Fail].delete)" must compile
   }
 }

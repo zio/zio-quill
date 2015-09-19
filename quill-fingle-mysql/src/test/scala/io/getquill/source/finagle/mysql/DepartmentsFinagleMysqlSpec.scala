@@ -13,9 +13,9 @@ class DepartmentsFinagleMysqlSpec extends DepartmentsSpec {
   override def beforeAll = {
     val t = testDB.transaction {
       for {
-        _ <- testDB.run(queryable[Department].delete)
-        _ <- testDB.run(queryable[Employee].delete)
-        _ <- testDB.run(queryable[Task].delete)
+        _ <- testDB.run(query[Department].delete)
+        _ <- testDB.run(query[Employee].delete)
+        _ <- testDB.run(query[Task].delete)
 
         _ <- testDB.run(departmentInsert).using(departmentEntries)
         _ <- testDB.run(employeeInsert).using(employeeEntries)

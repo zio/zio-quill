@@ -7,8 +7,8 @@ class PeopleJdbcSpec extends PeopleSpec {
 
   override def beforeAll = {
     val t = testDB.transaction {
-      testDB.run(queryable[Couple].delete)
-      testDB.run(queryable[Person].filter(_.age > 0).delete)
+      testDB.run(query[Couple].delete)
+      testDB.run(query[Person].filter(_.age > 0).delete)
       testDB.run(peopleInsert).using(peopleEntries)
       testDB.run(couplesInsert).using(couplesEntries)
     }

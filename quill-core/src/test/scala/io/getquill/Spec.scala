@@ -13,12 +13,12 @@ trait Spec extends FreeSpec with MustMatchers with BeforeAndAfterAll {
   case class TestEntity3(s: String, i: Int, l: Long, o: Option[Int])
 
   val qr1 = quote {
-    queryable[TestEntity]
+    query[TestEntity]
   }
   val qr2 = quote {
-    queryable[TestEntity2]
+    query[TestEntity2]
   }
   val qr3 = quote {
-    queryable[TestEntity3]
+    query[TestEntity3]
   }
 }

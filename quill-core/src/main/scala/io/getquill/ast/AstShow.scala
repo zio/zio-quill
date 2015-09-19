@@ -27,7 +27,7 @@ object AstShow {
       q match {
 
         case Entity(name) =>
-          s"queryable[$name]"
+          s"query[$name]"
 
         case Filter(source, alias, body) =>
           s"${source.show}.filter(${alias.show} => ${body.show})"

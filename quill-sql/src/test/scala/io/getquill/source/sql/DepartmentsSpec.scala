@@ -2,9 +2,9 @@ package io.getquill.source.sql
 
 import scala.language.reflectiveCalls
 
-import io.getquill.Queryable
+import io.getquill.Query
 import io.getquill.Spec
-import io.getquill.queryable
+import io.getquill.query
 import io.getquill.quote
 import io.getquill.unquote
 
@@ -16,7 +16,7 @@ trait DepartmentsSpec extends Spec {
 
   val departmentInsert =
     quote {
-      (dpt: String) => queryable[Department].insert(_.dpt -> dpt)
+      (dpt: String) => query[Department].insert(_.dpt -> dpt)
     }
 
   val departmentEntries =
@@ -24,7 +24,7 @@ trait DepartmentsSpec extends Spec {
 
   val employeeInsert =
     quote {
-      (dpt: String, emp: String) => queryable[Employee].insert(_.dpt -> dpt, _.emp -> emp)
+      (dpt: String, emp: String) => query[Employee].insert(_.dpt -> dpt, _.emp -> emp)
     }
 
   val employeeEntries =
@@ -38,7 +38,7 @@ trait DepartmentsSpec extends Spec {
 
   val taskInsert =
     quote {
-      (emp: String, tsk: String) => queryable[Task].insert(_.emp -> emp, _.tsk -> tsk)
+      (emp: String, tsk: String) => query[Task].insert(_.emp -> emp, _.tsk -> tsk)
     }
 
   val taskEntries =
@@ -59,12 +59,12 @@ trait DepartmentsSpec extends Spec {
     quote {
       (u: String) =>
         for {
-          d <- queryable[Department] if (
+          d <- query[Department] if (
             (for {
-              e <- queryable[Employee] if (
+              e <- query[Employee] if (
                 e.dpt == d.dpt && (
                   for {
-                    t <- queryable[Task] if (e.emp == t.emp && t.tsk == u)
+                    t <- query[Task] if (e.emp == t.emp && t.tsk == u)
                   } yield {}).isEmpty)
             } yield {}).isEmpty)
         } yield d.dpt
@@ -77,7 +77,7 @@ trait DepartmentsSpec extends Spec {
   val any =
     quote {
       new {
-        def apply[T](xs: Queryable[T])(p: T => Boolean) =
+        def apply[T](xs: Query[T])(p: T => Boolean) =
           (for {
             x <- xs if (p(x))
           } yield {}).nonEmpty
@@ -88,15 +88,15 @@ trait DepartmentsSpec extends Spec {
     val nestedOrg =
       quote {
         for {
-          d <- queryable[Department]
+          d <- query[Department]
         } yield {
           (d.dpt,
             for {
-              e <- queryable[Employee] if (d.dpt == e.dpt)
+              e <- query[Employee] if (d.dpt == e.dpt)
             } yield {
               (e.emp,
                 for {
-                  t <- queryable[Task] if (e.emp == t.emp)
+                  t <- query[Task] if (e.emp == t.emp)
                 } yield {
                   t.tsk
                 })
@@ -107,7 +107,7 @@ trait DepartmentsSpec extends Spec {
     val all =
       quote {
         new {
-          def apply[T](xs: Queryable[T])(p: T => Boolean) =
+          def apply[T](xs: Query[T])(p: T => Boolean) =
             !any(xs)(x => !p(x))
         }
       }
@@ -115,7 +115,7 @@ trait DepartmentsSpec extends Spec {
     def contains =
       quote {
         new {
-          def apply[T](xs: Queryable[T])(u: T) =
+          def apply[T](xs: Query[T])(u: T) =
             any(xs)(x => x == u)
         }
       }

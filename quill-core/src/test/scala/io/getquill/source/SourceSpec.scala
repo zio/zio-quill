@@ -18,7 +18,7 @@ class SourceSpec extends Spec {
     "encoding" in {
       implicit val testToString = mappedEncoding[StringValue, String](_.s)
       val q = quote {
-        (s: StringValue) => queryable[Entity].insert(_.s -> s)
+        (s: StringValue) => query[Entity].insert(_.s -> s)
       }
       mirrorSource.run(q).using(List(StringValue("s"))).bindList mustEqual List(Row("s"))
     }
@@ -26,7 +26,7 @@ class SourceSpec extends Spec {
     "decoding" in {
       implicit val stringToTest = mappedEncoding[String, StringValue](StringValue)
       val q = quote {
-        queryable[Entity]
+        query[Entity]
       }
       mirrorSource.run(q).extractor(Row("s")) mustEqual Entity(StringValue("s"))
     }

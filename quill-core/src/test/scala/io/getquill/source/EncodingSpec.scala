@@ -5,7 +5,7 @@ import java.util.Date
 import scala.BigDecimal
 
 import io.getquill.Spec
-import io.getquill.queryable
+import io.getquill.query
 import io.getquill.quote
 
 class EncodingSpec extends Spec {
@@ -35,7 +35,7 @@ class EncodingSpec extends Spec {
     o11: Option[Date])
 
   val delete = quote {
-    queryable[EncodingTestEntity].delete
+    query[EncodingTestEntity].delete
   }
 
   val insert = quote {
@@ -61,7 +61,7 @@ class EncodingSpec extends Spec {
     o9: Option[Double],
     o10: Option[Array[Byte]],
     o11: Option[Date]) =>
-      queryable[EncodingTestEntity].insert(
+      query[EncodingTestEntity].insert(
         _.v1 -> v1,
         _.v2 -> v2,
         _.v3 -> v3,

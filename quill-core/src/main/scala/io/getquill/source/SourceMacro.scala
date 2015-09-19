@@ -3,7 +3,7 @@ package io.getquill.source
 import scala.reflect.macros.whitebox.Context
 
 import io.getquill._
-import io.getquill.ast._
+import io.getquill.ast.{ Query => QueryAst, Action => ActionAst, _ }
 import io.getquill.norm.Normalize
 import io.getquill.quotation.Quotation
 import io.getquill.quotation.Quoted
@@ -30,22 +30,22 @@ trait SourceMacro extends Quotation with ActionMacro with QueryMacro with Resolv
 
   private def run[R, S, T](ast: Ast, params: List[(Ident, Type)])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]): Tree =
     ast match {
-      case ast: Action =>
+      case ast: ActionAst =>
         runAction[S](ast, params)
-      case ast: Infix if (t.tpe <:< c.weakTypeTag[Actionable[Any]].tpe) =>
+      case ast: Infix if (t.tpe <:< c.weakTypeTag[Action[Any]].tpe) =>
         runAction[S](ast, params)
 
-      case ast: Query =>
-        runQuery(ast, params)(r, s, queryableType(t.tpe))
-      case ast: Infix if (t.tpe <:< c.weakTypeTag[Queryable[Any]].tpe) =>
-        runQuery(Map(ast, Ident("x"), Ident("x")), params)(r, s, queryableType(t.tpe))
+      case ast: QueryAst =>
+        runQuery(ast, params)(r, s, queryType(t.tpe))
+      case ast: Infix if (t.tpe <:< c.weakTypeTag[Query[Any]].tpe) =>
+        runQuery(Map(ast, Ident("x"), Ident("x")), params)(r, s, queryType(t.tpe))
 
       case other =>
         c.fail(s"Not runnable $other")
     }
 
-  private def queryableType(tpe: Type) =
-    c.WeakTypeTag(tpe.baseType(c.typeOf[Queryable[_]].typeSymbol).typeArgs.head)
+  private def queryType(tpe: Type) =
+    c.WeakTypeTag(tpe.baseType(c.typeOf[Query[_]].typeSymbol).typeArgs.head)
 
   private def ast[T](quoted: Expr[Quoted[T]]) =
     unquote[Ast](quoted.tree).getOrElse {

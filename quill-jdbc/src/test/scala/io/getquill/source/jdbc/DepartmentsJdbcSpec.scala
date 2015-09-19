@@ -7,9 +7,9 @@ class DepartmentsJdbcSpec extends DepartmentsSpec {
 
   override def beforeAll = {
     val t = testDB.transaction {
-      testDB.run(queryable[Department].delete)
-      testDB.run(queryable[Employee].delete)
-      testDB.run(queryable[Task].delete)
+      testDB.run(query[Department].delete)
+      testDB.run(query[Employee].delete)
+      testDB.run(query[Task].delete)
 
       testDB.run(departmentInsert).using(departmentEntries)
       testDB.run(employeeInsert).using(employeeEntries)

@@ -5,7 +5,7 @@ import io.getquill._
 class JdbcSourceSpec extends Spec {
 
   "probes sqls" - {
-    testDB.probe("DELETE FROM TestEntity")
+    val p = testDB.probe("DELETE FROM TestEntity")
   }
 
   "provides transaction support" - {

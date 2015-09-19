@@ -3,7 +3,7 @@ package io.getquill.quotation
 import scala.reflect.ClassTag
 import scala.reflect.macros.whitebox.Context
 
-import io.getquill._
+import io.getquill.{ Action => _, Query => _, _ }
 import io.getquill.ast._
 import io.getquill.norm.BetaReduction
 import io.getquill.util.Messages.RichContext
@@ -81,7 +81,7 @@ trait Parsing {
 
   val queryParser: Parser[Query] = Parser[Query] {
 
-    case q"$pack.queryable[${ t: Type }]" =>
+    case q"$pack.query[${ t: Type }]" =>
       Entity(t.typeSymbol.name.decodedName.toString)
 
     case q"$source.filter(($alias) => $body)" =>
@@ -104,7 +104,7 @@ trait Parsing {
 
     case q"$source.take($n)" =>
       Take(astParser(source), astParser(n))
-      
+
     case q"$source.drop($n)" =>
       Drop(astParser(source), astParser(n))
   }

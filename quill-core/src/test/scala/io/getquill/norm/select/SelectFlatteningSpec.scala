@@ -67,13 +67,13 @@ class SelectFlatteningSpec extends Spec {
     case class Evil(x: Thread)
     "simple value" in {
       val q = quote {
-        queryable[Evil].map(_.x)
+        query[Evil].map(_.x)
       }
       "mirrorSource.run(q)" mustNot compile
     }
     "case class" in {
       val q = quote {
-        queryable[Evil]
+        query[Evil]
       }
       "mirrorSource.run(q)" mustNot compile
     }
@@ -85,7 +85,7 @@ class SelectFlatteningSpec extends Spec {
         row[Double](index)
     }
     case class Test(d: Double)
-    val q = quote(queryable[Test])
+    val q = quote(query[Test])
     mirrorSource.run(q).extractor(Row(1D)) mustEqual Test(1D)
   }
 }

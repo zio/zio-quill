@@ -332,17 +332,17 @@ class SqlIdiomSpec extends Spec {
       "source query" in {
         case class Entity(i: Int)
         val q = quote {
-          infix"SELECT 1 i FROM DUAL".as[Queryable[Entity]].map(a => a.i)
+          infix"SELECT 1 i FROM DUAL".as[Query[Entity]].map(a => a.i)
         }
         mirrorSource.run(q).sql mustEqual
           "SELECT a.i FROM (SELECT 1 i FROM DUAL) a"
       }
       "full infix query" in {
-        mirrorSource.run(infix"SELECT * FROM TestEntity".as[Queryable[TestEntity]]).sql mustEqual
+        mirrorSource.run(infix"SELECT * FROM TestEntity".as[Query[TestEntity]]).sql mustEqual
           "SELECT x.s, x.i, x.l, x.o FROM (SELECT * FROM TestEntity) x"
       }
       "full infix action" in {
-        mirrorSource.run(infix"DELETE FROM TestEntity".as[Actionable[TestEntity]]).sql mustEqual
+        mirrorSource.run(infix"DELETE FROM TestEntity".as[Action[TestEntity]]).sql mustEqual
           "DELETE FROM TestEntity"
       }
     }

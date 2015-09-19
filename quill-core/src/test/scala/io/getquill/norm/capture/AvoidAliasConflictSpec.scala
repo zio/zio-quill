@@ -6,7 +6,7 @@ import io.getquill._
 
 class AvoidAliasConflictSpec extends Spec {
 
-  "renames alias to avoid conflict between queryables during normalization" in {
+  "renames alias to avoid conflict between entities during normalization" in {
     val q = quote {
       qr1.filter(u => u.s == "s1").flatMap(u => qr2.flatMap(u => qr3.sortBy(u => u.s).filter(u => u.s == "s1").map(u => u.s)))
     }

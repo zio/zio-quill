@@ -2,7 +2,7 @@ package io.getquill.source
 
 import io.getquill.quotation.Quoted
 import io.getquill._
-import io.getquill.ast._
+import io.getquill.ast.{ Action => _, _ }
 import io.getquill.source.mirror.mirrorSource
 import io.getquill.source.mirror.Row
 
@@ -18,7 +18,7 @@ class SourceMacroSpec extends Spec {
       }
       "infix" in {
         val q = quote {
-          infix"STRING".as[Actionable[TestEntity]]
+          infix"STRING".as[Action[TestEntity]]
         }
         mirrorSource.run(q).ast mustEqual Infix(List("STRING"), List())
       }
@@ -29,12 +29,12 @@ class SourceMacroSpec extends Spec {
           (a: String) => qr1.filter(t => t.s == a)
         }
         val r = mirrorSource.run(q).using("a")
-        r.ast.toString mustEqual "queryable[TestEntity].filter(t => t.s == ?).map(t => (t.s, t.i, t.l, t.o))"
+        r.ast.toString mustEqual "query[TestEntity].filter(t => t.s == ?).map(t => (t.s, t.i, t.l, t.o))"
         r.binds mustEqual Row("a")
       }
       "infix" in {
         val q = quote {
-          (a: String) => infix"t = $a".as[Actionable[TestEntity]]
+          (a: String) => infix"t = $a".as[Action[TestEntity]]
         }
         val r = mirrorSource.run(q).using(List("a"))
         r.ast.toString mustEqual """infix"t = $?""""

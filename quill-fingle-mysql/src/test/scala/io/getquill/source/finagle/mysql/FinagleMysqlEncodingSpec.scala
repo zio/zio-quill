@@ -12,7 +12,7 @@ class FinagleMysqlEncodingSpec extends EncodingSpec {
       for {
         _ <- testDB.run(delete)
         _ <- testDB.run(insert).using(insertValues)
-        result <- testDB.run(queryable[EncodingTestEntity])
+        result <- testDB.run(query[EncodingTestEntity])
       } yield result
 
     verify(Await.result(r).toList)
@@ -22,7 +22,7 @@ class FinagleMysqlEncodingSpec extends EncodingSpec {
     Await.result(testDB.run(insert).using(insertValues))
     case class EncodingTestEntity(v1: Int)
     val e = intercept[IllegalStateException] {
-      Await.result(testDB.run(queryable[EncodingTestEntity]))
+      Await.result(testDB.run(query[EncodingTestEntity]))
     }
   }
 }

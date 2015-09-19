@@ -45,14 +45,14 @@ class SqlQuerySpec extends Spec {
     "nested infix query" - {
       "as source" in {
         val q = quote {
-          infix"SELECT * FROM TestEntity".as[Queryable[TestEntity]].filter(t => t.i == 1)
+          infix"SELECT * FROM TestEntity".as[Query[TestEntity]].filter(t => t.i == 1)
         }
         SqlQuery(q.ast).show mustEqual
           "SELECT * FROM (SELECT * FROM TestEntity) t WHERE t.i = 1"
       }
       "fails if used as the flatMap body" in {
         val q = quote {
-          qr1.flatMap(a => infix"SELECT * FROM TestEntity2 t where t.s = ${a.s}".as[Queryable[TestEntity2]])
+          qr1.flatMap(a => infix"SELECT * FROM TestEntity2 t where t.s = ${a.s}".as[Query[TestEntity2]])
         }
         val e = intercept[IllegalStateException] {
           SqlQuery(q.ast)

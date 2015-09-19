@@ -2,7 +2,7 @@ package io.getquill.quotation
 
 import scala.reflect.macros.whitebox.Context
 
-import io.getquill._
+import io.getquill.{ Query => _, Action => _, _ }
 import io.getquill.ast._
 
 trait Unliftables {
