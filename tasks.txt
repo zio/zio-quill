@@ -12,15 +12,19 @@ MVP - mid-september
 √ compile-time query validation using db
 √ interpolator
 √ mapped encoding
+√ custom encoders
+√ custom functions (via infix)
+√ batch queries
 - full sql support
 	√ take
 	√ drop
 	√ options
 	- groupBy
 	- aggregations
-	- string concatenation
+	- additional operations (string concatenation, etc)
 	- set operations (union, outer joins, etc)
 	- insert returning id
+- sql warnings (see doobie)
 - custom table/column names
 - insert case class directly
 - quill-jdbc
@@ -29,7 +33,6 @@ MVP - mid-september
 - quill-postgresql-async
 - quill-mysql-async
 - master slave
-- custom encoders
 - jekyll website w/ docs
 - documentation w/ https://github.com/tpolecat/tut
 - dynamic queries
@@ -41,17 +44,13 @@ Later
 - monadic io
 - quill-doobie
 - macro to generate the case classes from db schema
-- custom functions
 - migrations
 - optimistic offline locking
-- batch queries
 - automatic batching (using clump?)
 - sbt plugin (rake)
 - non-sql sources (mongo, graphql, in-memory collections)
 - transaction isolations
-- sql interpolation
 - easy crud (https://github.com/strongtyped/active-slick)
 - cached queries
 - nested transactions (save points)
 - insistence layer
-- query optimization for specific dbs
