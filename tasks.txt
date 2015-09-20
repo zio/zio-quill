@@ -36,6 +36,7 @@ MVP - mid-september
 - jekyll website w/ docs
 - documentation w/ https://github.com/tpolecat/tut
 - dynamic queries
+- gitter8/activator
 
 Later
 
