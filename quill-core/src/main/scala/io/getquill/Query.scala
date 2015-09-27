@@ -11,6 +11,8 @@ sealed trait Query[+T] {
   def take(n: Int): Query[T]
   def drop(n: Int): Query[T]
 
+  def ++[U >: T](q: Query[U]): Query[U]
+  def unionAll[U >: T](q: Query[U]): Query[U]
   def union[U >: T](q: Query[U]): Query[U]
 
   def nonEmpty: Boolean

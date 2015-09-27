@@ -32,6 +32,10 @@ case class Dealias(state: Option[Ident]) extends StatefulTransformer[Option[Iden
         val (an, ant) = apply(a)
         val (bn, bnt) = ant.apply(b)
         (Union(an, bn), bnt)
+      case UnionAll(a, b) =>
+        val (an, ant) = apply(a)
+        val (bn, bnt) = ant.apply(b)
+        (UnionAll(an, bn), bnt)
       case q: Entity =>
         (q, Dealias(None))
     }

@@ -45,6 +45,11 @@ object AdHocReduction {
       case FlatMap(a, b, Union(c, d)) =>
         Some(Union(FlatMap(a, b, c), FlatMap(a, b, d)))
 
+      // a.flatMap(b => c.unionAll(d))
+      //    a.flatMap(b => c).unionAll(a.flatMap(b => d))
+      case FlatMap(a, b, UnionAll(c, d)) =>
+        Some(UnionAll(FlatMap(a, b, c), FlatMap(a, b, d)))
+
       case other => None
     }
 

@@ -208,6 +208,22 @@ class SqlQuerySpec extends Spec {
           "SELECT * FROM (SELECT * FROM TestEntity x LIMIT 1) x OFFSET 2"
       }
     }
+    "set operation query" - {
+      "union" in {
+        val q = quote {
+          qr1.union(qr1)
+        }
+        SqlQuery(q.ast).show mustEqual
+          "SELECT * FROM TestEntity x UNION SELECT * FROM TestEntity x"
+      }
+      "unionAll" in {
+        val q = quote {
+          qr1.unionAll(qr1)
+        }
+        SqlQuery(q.ast).show mustEqual
+          "SELECT * FROM TestEntity x UNION ALL SELECT * FROM TestEntity x"
+      }
+    }
   }
 
   "fails if the query is not normalized" in {

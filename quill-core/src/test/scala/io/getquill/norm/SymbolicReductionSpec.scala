@@ -54,4 +54,14 @@ class SymbolicReductionSpec extends Spec {
     }
     SymbolicReduction.unapply(q.ast) mustEqual Some(n.ast)
   }
+  
+  "a.unionAll(b).flatMap(c => d)" in {
+    val q = quote {
+      qr1.unionAll(qr1.filter(t => t.i == 1)).flatMap(c => qr2)
+    }
+    val n = quote {
+      qr1.flatMap(c => qr2).unionAll(qr1.filter(t => t.i == 1).flatMap(c => qr2))
+    }
+    SymbolicReduction.unapply(q.ast) mustEqual Some(n.ast)
+  }
 }

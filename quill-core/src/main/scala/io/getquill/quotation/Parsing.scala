@@ -110,6 +110,12 @@ trait Parsing {
 
     case q"$source.union[$t]($n)" =>
       Union(astParser(source), astParser(n))
+
+    case q"$source.unionAll[$t]($n)" =>
+      UnionAll(astParser(source), astParser(n))
+
+    case q"$source.++[$t]($n)" =>
+      UnionAll(astParser(source), astParser(n))
   }
 
   private def binaryOperator(name: TermName) =

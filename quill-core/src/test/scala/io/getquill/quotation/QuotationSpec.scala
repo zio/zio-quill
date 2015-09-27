@@ -64,6 +64,20 @@ class QuotationSpec extends Spec {
         }
         quote(unquote(q)).ast mustEqual Union(Entity("TestEntity"), Entity("TestEntity"))
       }
+      "unionAll" - {
+        "unionAll" in {
+          val q = quote {
+            qr1.union(qr1)
+          }
+          quote(unquote(q)).ast mustEqual Union(Entity("TestEntity"), Entity("TestEntity"))
+        }
+        "++" in {
+          val q = quote {
+            qr1 ++ qr1
+          }
+          quote(unquote(q)).ast mustEqual UnionAll(Entity("TestEntity"), Entity("TestEntity"))
+        }
+      }
     }
     "action" - {
       "update" in {

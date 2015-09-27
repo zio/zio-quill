@@ -16,6 +16,7 @@ sealed trait SqlQuery
 
 sealed trait SetOperation
 case object UnionOperation extends SetOperation
+case object UnionAllOperation extends SetOperation
 
 case class SetOperationSqlQuery(a: SqlQuery,
                                 op: SetOperation,
@@ -34,9 +35,10 @@ object SqlQuery {
 
   def apply(query: Ast): SqlQuery =
     query match {
-      case Union(a, b) => SetOperationSqlQuery(apply(a), UnionOperation, apply(b))
-      case q: Query    => flatten(q)
-      case other       => fail(s"Query not properly normalized. Please open a bug report. Ast: '$other'")
+      case Union(a, b)    => SetOperationSqlQuery(apply(a), UnionOperation, apply(b))
+      case UnionAll(a, b) => SetOperationSqlQuery(apply(a), UnionAllOperation, apply(b))
+      case q: Query       => flatten(q)
+      case other          => fail(s"Query not properly normalized. Please open a bug report. Ast: '$other'")
     }
 
   private def flatten(query: Query): FlattenSqlQuery = {

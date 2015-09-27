@@ -56,6 +56,7 @@ trait Liftables {
     case Take(a, b)       => q"$pack.Take($a, $b)"
     case Drop(a, b)       => q"$pack.Drop($a, $b)"
     case Union(a, b)      => q"$pack.Union($a, $b)"
+    case UnionAll(a, b)      => q"$pack.UnionAll($a, $b)"
   }
 
   implicit val actionLiftable: Liftable[Action] = Liftable[Action] {

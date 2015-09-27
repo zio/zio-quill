@@ -64,7 +64,8 @@ trait SqlIdiom {
   implicit val setOperationShow: Show[SetOperation] = new Show[SetOperation] {
     def show(e: SetOperation) =
       e match {
-        case UnionOperation => "UNION"
+        case UnionOperation    => "UNION"
+        case UnionAllOperation => "UNION ALL"
       }
   }
 

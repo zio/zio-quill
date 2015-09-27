@@ -47,5 +47,10 @@ object NormalizeNestedStructures {
           case (`a`, `b`) => None
           case (a, b)     => Some(Union(a, b))
         }
+      case UnionAll(a, b) =>
+        (Normalize(a), Normalize(b)) match {
+          case (`a`, `b`) => None
+          case (a, b)     => Some(UnionAll(a, b))
+        }
     }
 }

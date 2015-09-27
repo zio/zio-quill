@@ -53,6 +53,8 @@ object AstShow {
         case Union(a, b) =>
           s"${a.show}.union(${b.show})"
 
+        case UnionAll(a, b) =>
+          s"${a.show}.unionAll(${b.show})"
       }
   }
 

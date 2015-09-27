@@ -28,6 +28,13 @@ class AstShowSpec extends Spec {
       (q.ast: Ast).show mustEqual
         """query[TestEntity].filter(a => a.s == "s").union(query[TestEntity].filter(b => b.i == 1))"""
     }
+    "unionAll" in {
+      val q = quote {
+        qr1.filter(a => a.s == "s").unionAll(qr1.filter(b => b.i == 1))
+      }
+      (q.ast: Ast).show mustEqual
+        """query[TestEntity].filter(a => a.s == "s").unionAll(query[TestEntity].filter(b => b.i == 1))"""
+    }
   }
 
   "shows sorted queries" in {

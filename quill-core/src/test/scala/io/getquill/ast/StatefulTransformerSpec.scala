@@ -88,6 +88,14 @@ class StatefulTransformerSpec extends Spec {
             att.state mustEqual List(Ident("a"), Ident("b"))
         }
       }
+      "unionAll" in {
+        val ast: Ast = UnionAll(Ident("a"), Ident("b"))
+        Subject(List(), Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"))(ast) match {
+          case (at, att) =>
+            at mustEqual UnionAll(Ident("a'"), Ident("b'"))
+            att.state mustEqual List(Ident("a"), Ident("b"))
+        }
+      }
     }
 
     "operation" - {

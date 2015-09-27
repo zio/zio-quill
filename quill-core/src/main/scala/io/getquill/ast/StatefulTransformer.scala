@@ -65,6 +65,10 @@ trait StatefulTransformer[T] {
         val (at, att) = apply(a)
         val (bt, btt) = att.apply(b)
         (Union(at, bt), btt)
+      case UnionAll(a, b) =>
+        val (at, att) = apply(a)
+        val (bt, btt) = att.apply(b)
+        (UnionAll(at, bt), btt)
     }
 
   def apply(e: Operation): (Operation, StatefulTransformer[T]) =
