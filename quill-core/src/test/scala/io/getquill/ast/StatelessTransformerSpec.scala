@@ -52,6 +52,11 @@ class StatelessTransformerSpec extends Spec {
         Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"))(ast) mustEqual
           Drop(Ident("a'"), Ident("b'"))
       }
+      "union" in {
+        val ast: Ast = Union(Ident("a"), Ident("b"))
+        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"))(ast) mustEqual
+          Union(Ident("a'"), Ident("b'"))
+      }
     }
 
     "operation" - {

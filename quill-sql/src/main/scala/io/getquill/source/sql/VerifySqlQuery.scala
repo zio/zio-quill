@@ -12,7 +12,16 @@ case class InvalidSqlQuery(errors: List[Error]) {
 
 object VerifySqlQuery {
 
-  def apply(query: SqlQuery): Option[InvalidSqlQuery] = {
+  def apply(query: SqlQuery): Option[String] =
+    verify(query).map(_.toString)
+
+  private def verify(query: SqlQuery): Option[InvalidSqlQuery] =
+    query match {
+      case q: FlattenSqlQuery             => verify(q)
+      case SetOperationSqlQuery(a, op, b) => verify(a).orElse(verify(b))
+    }
+
+  private def verify(query: FlattenSqlQuery): Option[InvalidSqlQuery] = {
 
     val aliases = query.from.map(_.alias).map(Ident(_)) :+ Ident("*") :+ Ident("?")
 
@@ -30,10 +39,11 @@ object VerifySqlQuery {
 
     val nestedErrors =
       query.from.collect {
-        case QuerySource(query, alias) => apply(query).map(_.errors)
+        case QuerySource(query, alias) => verify(query).map(_.errors)
       }.flatten.flatten
 
     (errors ++ nestedErrors) match {
+
       case Nil    => None
       case errors => Some(InvalidSqlQuery(errors))
     }

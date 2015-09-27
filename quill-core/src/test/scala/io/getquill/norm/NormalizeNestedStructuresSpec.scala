@@ -68,6 +68,15 @@ class NormalizeNestedStructuresSpec extends Spec {
       }
       NormalizeNestedStructures.unapply(q.ast) mustEqual Some(n.ast)
     }
+    "union" in {
+      val q = quote {
+        qr1.filter(t => t.s == ("a", "b")._1).union(qr1)
+      }
+      val n = quote {
+        qr1.filter(t => t.s == "a").union(qr1)
+      }
+      NormalizeNestedStructures.unapply(q.ast) mustEqual Some(n.ast)
+    }
   }
 
   "returns None if none of the nested structures changes" - {

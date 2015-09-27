@@ -49,6 +49,10 @@ object AstShow {
 
         case Drop(source, n) =>
           s"${source.show}.drop($n)"
+
+        case Union(a, b) =>
+          s"${a.show}.union(${b.show})"
+
       }
   }
 

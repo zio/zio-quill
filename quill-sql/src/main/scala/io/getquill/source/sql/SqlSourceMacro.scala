@@ -26,7 +26,7 @@ class SqlSourceMacro(val c: Context) extends SourceMacro {
     ast match {
       case ast: Query =>
         val sql = SqlQuery(ast)
-        VerifySqlQuery(sql).map(_.toString).map(c.fail)
+        VerifySqlQuery(sql).map(c.fail)
         sql.show
       case ast =>
         ast.show

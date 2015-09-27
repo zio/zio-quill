@@ -4,6 +4,7 @@ import io.getquill._
 import io.getquill.Spec
 import io.getquill.source.sql.mirror.mirrorSource.run
 import io.getquill.source.sql.mirror.mirrorSource
+import io.getquill.ast.Ast
 
 class SqlIdiomSpec extends Spec {
 
@@ -50,7 +51,7 @@ class SqlIdiomSpec extends Spec {
             }
           }
           mirrorSource.run(q).sql mustEqual
-            "SELECT t.s, t1.i FROM (SELECT * FROM TestEntity t ORDER BY t.s DESC) t, TestEntity2 t1 ORDER BY t1.i"
+            "SELECT t.s, t1.i FROM (SELECT * FROM TestEntity t ORDER BY t.s DESC) t, (SELECT * FROM TestEntity2 t1 ORDER BY t1.i) t1"
         }
       }
       "limited" - {
@@ -71,7 +72,16 @@ class SqlIdiomSpec extends Spec {
             }
           }
           mirrorSource.run(q).sql mustEqual
-            "SELECT a.s, b.i FROM (SELECT * FROM TestEntity x LIMIT 1) a, TestEntity2 b LIMIT 2"
+            "SELECT a.s, b.i FROM (SELECT * FROM TestEntity x LIMIT 1) a, (SELECT * FROM TestEntity2 x LIMIT 2) b"
+        }
+      }
+      "union" - {
+        "simple" in {
+          val q = quote {
+            qr1.filter(t => t.i > 10).union(qr1.filter(t => t.s == "s"))
+          }
+          mirrorSource.run(q).sql mustEqual
+            "SELECT t1.s, t1.i, t1.l, t1.o FROM (SELECT * FROM TestEntity t WHERE t.i > 10 UNION SELECT * FROM TestEntity t1 WHERE t1.s = 's') t1"
         }
       }
     }

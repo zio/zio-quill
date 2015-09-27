@@ -58,6 +58,7 @@ trait Unliftables {
     case q"$pack.Reverse.apply(${ a: Ast })"                             => Reverse(a)
     case q"$pack.Take.apply(${ a: Ast }, ${ b: Ast })"                   => Take(a, b)
     case q"$pack.Drop.apply(${ a: Ast }, ${ b: Ast })"                   => Drop(a, b)
+    case q"$pack.Union.apply(${ a: Ast }, ${ b: Ast })"                  => Union(a, b)
   }
 
   implicit val actionUnliftable: Unliftable[Action] = Unliftable[Action] {

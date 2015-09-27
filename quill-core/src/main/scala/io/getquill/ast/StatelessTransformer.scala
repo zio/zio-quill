@@ -26,6 +26,7 @@ trait StatelessTransformer {
       case Reverse(a)       => Reverse(apply(a))
       case Take(a, b)       => Take(apply(a), apply(b))
       case Drop(a, b)       => Drop(apply(a), apply(b))
+      case Union(a, b)      => Union(apply(a), apply(b))
     }
 
   def apply(e: Operation): Operation =

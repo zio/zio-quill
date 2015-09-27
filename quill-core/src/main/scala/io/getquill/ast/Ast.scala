@@ -35,6 +35,8 @@ case class Take(query: Ast, n: Ast) extends Query
 
 case class Drop(query: Ast, n: Ast) extends Query
 
+case class Union(a: Ast, b: Ast) extends Query
+
 //************************************************************
 
 case class Function(params: List[Ident], body: Ast) extends Ast

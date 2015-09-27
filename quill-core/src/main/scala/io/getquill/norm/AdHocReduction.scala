@@ -40,6 +40,11 @@ object AdHocReduction {
       case Reverse(FlatMap(a, b, c)) =>
         Some(FlatMap(a, b, Reverse(c)))
 
+      // a.flatMap(b => c.union(d))
+      //    a.flatMap(b => c).union(a.flatMap(b => d))
+      case FlatMap(a, b, Union(c, d)) =>
+        Some(Union(FlatMap(a, b, c), FlatMap(a, b, d)))
+
       case other => None
     }
 

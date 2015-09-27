@@ -12,130 +12,110 @@ case class TableSource(name: String, alias: String) extends Source
 case class QuerySource(query: SqlQuery, alias: String) extends Source
 case class InfixSource(infix: Infix, alias: String) extends Source
 
-case class SqlQuery(
-  from: List[Source],
-  where: Option[Ast] = None,
-  orderBy: List[OrderByCriteria] = List(),
-  limit: Option[Ast] = None,
-  offset: Option[Ast] = None,
-  select: Ast = Ident("*"))
+sealed trait SqlQuery
+
+sealed trait SetOperation
+case object UnionOperation extends SetOperation
+
+case class SetOperationSqlQuery(a: SqlQuery,
+                                op: SetOperation,
+                                b: SqlQuery)
+    extends SqlQuery
+
+case class FlattenSqlQuery(from: List[Source],
+                           where: Option[Ast] = None,
+                           orderBy: List[OrderByCriteria] = List(),
+                           limit: Option[Ast] = None,
+                           offset: Option[Ast] = None,
+                           select: Ast = Ident("*"))
+    extends SqlQuery
 
 object SqlQuery {
 
   def apply(query: Ast): SqlQuery =
-    apply(query, nest = false)
-
-  def apply(query: Ast, nest: Boolean): SqlQuery =
     query match {
-
-      // entity
-
-      case Entity(name) =>
-        SqlQuery(
-          from = TableSource(name, "x") :: Nil)
-
-      case Map(Entity(name), Ident(alias), p) =>
-        SqlQuery(
-          from = TableSource(name, alias) :: Nil,
-          select = p)
-
-      case FlatMap(Entity(name), Ident(alias), r: Query) =>
-        val nested = apply(r, nest = true)
-        nested.copy(from = TableSource(name, alias) :: nested.from)
-
-      case Filter(Entity(name), Ident(alias), p) =>
-        SqlQuery(
-          from = TableSource(name, alias) :: Nil,
-          where = Option(p))
-
-      case Reverse(SortBy(Entity(name), Ident(alias), p)) =>
-        val criterias = orderByCriterias(p, reverse = true)
-        SqlQuery(
-          from = TableSource(name, alias) :: Nil,
-          orderBy = criterias)
-
-      case SortBy(Entity(name), Ident(alias), p) =>
-        val criterias = orderByCriterias(p, reverse = false)
-        SqlQuery(
-          from = TableSource(name, alias) :: Nil,
-          orderBy = criterias)
-
-      case Map(Take(Entity(name), n), Ident(x), p) =>
-        SqlQuery(
-          from = TableSource(name, x) :: Nil,
-          limit = Some(n),
-          select = p)
-
-      case Map(Drop(Entity(name), n), Ident(x), p) =>
-        SqlQuery(
-          from = TableSource(name, x) :: Nil,
-          offset = Some(n),
-          select = p)
-
-      // nested
-
-      case Map(s @ nested(source), Ident(alias), p) if (nest || s.isInstanceOf[Infix]) =>
-        SqlQuery(
-          from = source(alias) :: Nil,
-          select = p)
-
-      case FlatMap(nested(source), Ident(alias), r: Query) =>
-        val nested = apply(r)
-        nested.copy(from = source(alias) :: nested.from)
-
-      case Filter(nested(source), Ident(alias), p) =>
-        SqlQuery(
-          from = source(alias) :: Nil,
-          where = Option(p))
-
-      // recursion
-
-      case Map(q: Query, x, p) =>
-        apply(q).copy(select = p)
-
-      case Reverse(SortBy(q: Query, Ident(alias), p)) =>
-        val base = apply(q)
-        val criterias = orderByCriterias(p, reverse = true)
-        base.copy(orderBy = base.orderBy ++ criterias)
-
-      case SortBy(q: Query, Ident(alias), p) =>
-        val base = apply(q)
-        val criterias = orderByCriterias(p, reverse = false)
-        base.copy(orderBy = base.orderBy ++ criterias)
-
-      case Take(q: Query, n) =>
-        val base = apply(q)
-        if (base.limit.isEmpty)
-          base.copy(limit = Some(n))
-        else
-          SqlQuery(
-            from = QuerySource(SqlQuery(q), "x") :: Nil,
-            limit = Some(n))
-
-      case Drop(q: Query, n) =>
-        val base = apply(q)
-        if (base.offset.isEmpty && base.limit.isEmpty)
-          base.copy(offset = Some(n))
-        else
-          SqlQuery(
-            from = QuerySource(SqlQuery(q), "x") :: Nil,
-            offset = Some(n))
-
-      case FlatMap(Entity(name), Ident(alias), r: Infix) =>
-        fail(s"Infix can't be use as a `flatMap` body. $query")
-
-      case other =>
-        fail(s"Query is not propertly normalized, please submit a bug report. $query")
+      case Union(a, b) => SetOperationSqlQuery(apply(a), UnionOperation, apply(b))
+      case q: Query    => flatten(q)
+      case other       => fail(s"Query not properly normalized. Please open a bug report. Ast: '$other'")
     }
 
-  private object nested {
-    def unapply(ast: Ast): Option[String => Source] =
-      ast match {
-        case _: SortBy | _: Reverse | _: Take | _: Drop => Some(QuerySource(SqlQuery(ast), _))
-        case ast: Infix                                 => Some(InfixSource(ast, _))
-        case other                                      => None
-      }
+  private def flatten(query: Query): FlattenSqlQuery = {
+    val (sources, finalFlatMapBody) = flattenSources(query)
+    flatten(sources, finalFlatMapBody, "x")
   }
+
+  private def flattenSources(query: Query): (List[Source], Query) =
+    query match {
+      case FlatMap(q: Query, Ident(alias), p: Query) =>
+        val source = this.source(q, alias)
+        val (nestedSources, finalFlatMapBody) = flattenSources(p)
+        (source +: nestedSources, finalFlatMapBody)
+      case FlatMap(q: Query, Ident(alias), p: Infix) =>
+        fail(s"Infix can't be use as a `flatMap` body. $query")
+      case other =>
+        (List.empty, other)
+    }
+
+  private def flatten(sources: List[Source], finalFlatMapBody: Ast, alias: String): FlattenSqlQuery = {
+    def base(q: Ast, alias: String) =
+      q match {
+        case q @ (_: Map | _: Filter | _: Entity) => flatten(sources, q, alias)
+        case q if (sources == Nil)                => flatten(sources, q, alias)
+        case other                                => FlattenSqlQuery(from = sources :+ source(q, alias))
+      }
+    finalFlatMapBody match {
+
+      case Map(q, Ident(alias), p) =>
+        base(q, alias).copy(select = p)
+
+      case Filter(q, Ident(alias), p) =>
+        val b = base(q, alias)
+        if (b.where.isEmpty)
+          b.copy(where = Some(p))
+        else
+          FlattenSqlQuery(
+            from = QuerySource(apply(q), alias) :: Nil,
+            where = Some(p))
+
+      case Reverse(SortBy(q, Ident(alias), p)) =>
+        val b = base(q, alias)
+        val criterias = orderByCriterias(p, reverse = true)
+        b.copy(orderBy = b.orderBy ++ criterias)
+
+      case SortBy(q, Ident(alias), p) =>
+        val b = base(q, alias)
+        val criterias = orderByCriterias(p, reverse = false)
+        b.copy(orderBy = b.orderBy ++ criterias)
+
+      case Take(q, n) =>
+        val b = base(q, alias)
+        if (b.limit.isEmpty)
+          b.copy(limit = Some(n))
+        else
+          FlattenSqlQuery(
+            from = QuerySource(apply(q), alias) :: Nil,
+            limit = Some(n))
+
+      case Drop(q, n) =>
+        val b = base(q, alias)
+        if (b.offset.isEmpty && b.limit.isEmpty)
+          b.copy(offset = Some(n))
+        else
+          FlattenSqlQuery(
+            from = QuerySource(apply(q), alias) :: Nil,
+            offset = Some(n))
+
+      case other =>
+        FlattenSqlQuery(from = sources :+ source(other, alias))
+    }
+  }
+
+  private def source(ast: Ast, alias: String) =
+    ast match {
+      case Entity(table) => TableSource(table, alias)
+      case infix: Infix  => InfixSource(infix, alias)
+      case other         => QuerySource(apply(other), alias)
+    }
 
   private def orderByCriterias(ast: Ast, reverse: Boolean): List[OrderByCriteria] =
     ast match {

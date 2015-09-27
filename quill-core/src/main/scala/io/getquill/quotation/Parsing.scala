@@ -107,6 +107,9 @@ trait Parsing {
 
     case q"$source.drop($n)" =>
       Drop(astParser(source), astParser(n))
+
+    case q"$source.union[$t]($n)" =>
+      Union(astParser(source), astParser(n))
   }
 
   private def binaryOperator(name: TermName) =

@@ -86,7 +86,7 @@ class SqlQuerySpec extends Spec {
           qr1.sortBy(t => t.s).filter(t => t.s == "s").map(t => t.s)
         }
         SqlQuery(q.ast).show mustEqual
-          "SELECT t.s FROM (SELECT * FROM TestEntity t ORDER BY t.s) t WHERE t.s = 's'"
+          "SELECT t.s FROM TestEntity t WHERE t.s = 's' ORDER BY t.s"
       }
       "with flatMap" in {
         val q = quote {
@@ -212,10 +212,10 @@ class SqlQuerySpec extends Spec {
 
   "fails if the query is not normalized" in {
     val q = quote {
-      qr1.map(_.s).filter(_ == "s")
+      ((s: String) => qr1.filter(_.s == s))("s")
     }
     val e = intercept[IllegalStateException] {
-      SqlQuery(q.ast)
+      val a = SqlQuery(q.ast)
     }
   }
 }

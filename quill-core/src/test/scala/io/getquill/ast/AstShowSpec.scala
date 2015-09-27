@@ -20,6 +20,16 @@ class AstShowSpec extends Spec {
       """query[TestEntity].filter(t => t.s == "test").flatMap(t => query[TestEntity]).drop(9).take(10).map(t => t)"""
   }
 
+  "shows set operation queries" - {
+    "union" in {
+      val q = quote {
+        qr1.filter(a => a.s == "s").union(qr1.filter(b => b.i == 1))
+      }
+      (q.ast: Ast).show mustEqual
+        """query[TestEntity].filter(a => a.s == "s").union(query[TestEntity].filter(b => b.i == 1))"""
+    }
+  }
+
   "shows sorted queries" in {
     val q = quote {
       qr1.sortBy(t => t.i).reverse

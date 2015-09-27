@@ -2,12 +2,7 @@ package io.getquill.source.sql.idiom
 
 import io.getquill.{ Query => _, Action => _, _ }
 import io.getquill.ast._
-import io.getquill.source.sql.InfixSource
-import io.getquill.source.sql.OrderByCriteria
-import io.getquill.source.sql.QuerySource
-import io.getquill.source.sql.Source
-import io.getquill.source.sql.SqlQuery
-import io.getquill.source.sql.TableSource
+import io.getquill.source.sql._
 import io.getquill.util.Messages.fail
 import io.getquill.util.Show.Show
 import io.getquill.util.Show.Shower
@@ -43,7 +38,7 @@ trait SqlIdiom {
   implicit val sqlQueryShow: Show[SqlQuery] = new Show[SqlQuery] {
     def show(e: SqlQuery) =
       e match {
-        case SqlQuery(from, where, orderBy, limit, offset, select) =>
+        case FlattenSqlQuery(from, where, orderBy, limit, offset, select) =>
           val selectClause = s"SELECT ${select.show} FROM ${from.show}"
           val withWhere =
             where match {
@@ -61,6 +56,15 @@ trait SqlIdiom {
             case (Some(limit), Some(offset)) => withOrderBy + s" LIMIT ${limit.show} OFFSET ${offset.show}"
             case (None, Some(offset))        => withOrderBy + showOffsetWithoutLimit(offset)
           }
+        case SetOperationSqlQuery(a, op, b) =>
+          s"${a.show} ${op.show} ${b.show}"
+      }
+  }
+
+  implicit val setOperationShow: Show[SetOperation] = new Show[SetOperation] {
+    def show(e: SetOperation) =
+      e match {
+        case UnionOperation => "UNION"
       }
   }
 

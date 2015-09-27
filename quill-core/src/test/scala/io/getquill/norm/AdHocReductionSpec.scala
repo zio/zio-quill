@@ -44,5 +44,14 @@ class AdHocReductionSpec extends Spec {
       }
       AdHocReduction.unapply(q.ast) mustEqual Some(n.ast)
     }
+    "a.flatMap(b => c.union(d))" in {
+      val q = quote {
+        qr1.flatMap(b => qr2.filter(t => t.i == 1).union(qr2.filter(t => t.s == "s")))
+      }
+      val n = quote {
+        qr1.flatMap(b => qr2.filter(t => t.i == 1)).union(qr1.flatMap(b => qr2.filter(t => t.s == "s")))
+      }
+      AdHocReduction.unapply(q.ast) mustEqual Some(n.ast)
+    }
   }
 }
