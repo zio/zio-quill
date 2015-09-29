@@ -55,6 +55,7 @@ trait Unliftables {
     case q"$pack.Map.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })"     => Map(a, b, c)
     case q"$pack.FlatMap.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => FlatMap(a, b, c)
     case q"$pack.SortBy.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })"  => SortBy(a, b, c)
+    case q"$pack.GroupBy.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => GroupBy(a, b, c)
     case q"$pack.Reverse.apply(${ a: Ast })"                             => Reverse(a)
     case q"$pack.Take.apply(${ a: Ast }, ${ b: Ast })"                   => Take(a, b)
     case q"$pack.Drop.apply(${ a: Ast }, ${ b: Ast })"                   => Drop(a, b)

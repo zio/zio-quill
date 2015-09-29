@@ -44,6 +44,11 @@ trait Liftables {
     case ast.`!`        => q"$pack.`!`"
     case ast.`nonEmpty` => q"$pack.`nonEmpty`"
     case ast.`isEmpty`  => q"$pack.`isEmpty`"
+    case ast.`min`      => q"$pack.`min`"
+    case ast.`max`      => q"$pack.`max`"
+    case ast.`avg`      => q"$pack.`avg`"
+    case ast.`sum`      => q"$pack.`sum`"
+    case ast.`size`     => q"$pack.`size`"
   }
 
   implicit val queryLiftable: Liftable[Query] = Liftable[Query] {
@@ -52,11 +57,12 @@ trait Liftables {
     case Map(a, b, c)     => q"$pack.Map($a, $b, $c)"
     case FlatMap(a, b, c) => q"$pack.FlatMap($a, $b, $c)"
     case SortBy(a, b, c)  => q"$pack.SortBy($a, $b, $c)"
+    case GroupBy(a, b, c) => q"$pack.GroupBy($a, $b, $c)"
     case Reverse(a)       => q"$pack.Reverse($a)"
     case Take(a, b)       => q"$pack.Take($a, $b)"
     case Drop(a, b)       => q"$pack.Drop($a, $b)"
     case Union(a, b)      => q"$pack.Union($a, $b)"
-    case UnionAll(a, b)      => q"$pack.UnionAll($a, $b)"
+    case UnionAll(a, b)   => q"$pack.UnionAll($a, $b)"
   }
 
   implicit val actionLiftable: Liftable[Action] = Liftable[Action] {

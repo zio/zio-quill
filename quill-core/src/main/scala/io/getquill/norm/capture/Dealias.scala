@@ -19,6 +19,8 @@ case class Dealias(state: Option[Ident]) extends StatefulTransformer[Option[Iden
         dealias(q, a, b, c)(Filter)
       case SortBy(a, b, c) =>
         dealias(q, a, b, c)(SortBy)
+      case GroupBy(a, b, c) =>
+        dealias(q, a, b, c)(GroupBy)
       case Reverse(a) =>
         val (an, ant) = apply(a)
         (Reverse(an), ant)

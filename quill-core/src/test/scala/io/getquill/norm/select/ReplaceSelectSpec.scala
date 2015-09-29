@@ -42,7 +42,7 @@ class ReplaceSelectSpec extends Spec {
         qr1.filter(t => t.s == "s1")
       }
       val e = intercept[IllegalStateException] {
-        ReplaceSelect(q.ast, List())
+        ReplaceSelect(q.ast, Nil)
       }
     }
     "nested query" in {
@@ -50,7 +50,7 @@ class ReplaceSelectSpec extends Spec {
         qr1.flatMap(u => qr2)
       }
       val e = intercept[IllegalStateException] {
-        ReplaceSelect(q.ast, List())
+        ReplaceSelect(q.ast, Nil)
       }
     }
   }

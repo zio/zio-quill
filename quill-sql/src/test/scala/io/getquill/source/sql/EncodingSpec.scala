@@ -171,7 +171,7 @@ class EncodingSpec extends Spec {
         e2.v7 mustEqual 0L
         e2.v8 mustEqual 0f
         e2.v9 mustEqual 0d
-        e2.v10.toList mustEqual List()
+        e2.v10.toList mustEqual Nil
         e2.v11 mustEqual new Date(0)
 
         e2.o1 mustEqual None

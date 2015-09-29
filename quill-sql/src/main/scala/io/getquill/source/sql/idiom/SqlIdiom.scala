@@ -17,38 +17,38 @@ trait SqlIdiom {
 
   implicit def astShow(implicit propertyShow: Show[Property]): Show[Ast] =
     new Show[Ast] {
-      def show(e: Ast) =
-        e match {
-          case query: Query                            => s"${SqlQuery(query).show}"
-          case UnaryOperation(op, ast)                 => s"${op.show} ${scopedShow(ast)}"
-          case BinaryOperation(a, ast.`==`, NullValue) => s"${scopedShow(a)} IS NULL"
-          case BinaryOperation(NullValue, ast.`==`, b) => s"${scopedShow(b)} IS NULL"
-          case BinaryOperation(a, ast.`!=`, NullValue) => s"${scopedShow(a)} IS NOT NULL"
-          case BinaryOperation(NullValue, ast.`!=`, b) => s"${scopedShow(b)} IS NOT NULL"
-          case BinaryOperation(a, op, b)               => s"${scopedShow(a)} ${op.show} ${scopedShow(b)}"
-          case Infix(parts, params)                    => StringContext(parts: _*).s(params.map(_.show): _*)
-          case a: Action                               => a.show
-          case ident: Ident                            => ident.show
-          case property: Property                      => property.show
-          case value: Value                            => value.show
-          case other                                   => fail(s"Malformed query $other.")
+      def show(a: Ast) =
+        a match {
+          case a: Query                       => s"${SqlQuery(a).show}"
+          case a: Operation                   => a.show
+          case Infix(parts, params)           => StringContext(parts: _*).s(params.map(_.show): _*)
+          case a: Action                      => a.show
+          case a: Ident                       => a.show
+          case a: Property                    => a.show
+          case a: Value                       => a.show
+          case _: Function | _: FunctionApply => fail(s"Malformed query $a.")
         }
     }
 
   implicit val sqlQueryShow: Show[SqlQuery] = new Show[SqlQuery] {
     def show(e: SqlQuery) =
       e match {
-        case FlattenSqlQuery(from, where, orderBy, limit, offset, select) =>
+        case FlattenSqlQuery(from, where, groupBy, orderBy, limit, offset, select) =>
           val selectClause = s"SELECT ${select.show} FROM ${from.show}"
           val withWhere =
             where match {
               case None        => selectClause
               case Some(where) => selectClause + s" WHERE ${where.show}"
             }
+          val withGroupBy =
+            groupBy match {
+              case Nil     => withWhere
+              case groupBy => withWhere + s" GROUP BY ${groupBy.show}"
+            }
           val withOrderBy =
             orderBy match {
-              case Nil     => withWhere
-              case orderBy => withWhere + showOrderBy(orderBy)
+              case Nil     => withGroupBy
+              case orderBy => withGroupBy + showOrderBy(orderBy)
             }
           (limit, offset) match {
             case (None, None)                => withOrderBy
@@ -60,6 +60,27 @@ trait SqlIdiom {
           s"${a.show} ${op.show} ${b.show}"
       }
   }
+
+  implicit val operationShow: Show[Operation] = new Show[Operation] {
+    def show(e: Operation) =
+      e match {
+        case UnaryOperation(op, ast) if (requiresParenthesis(op)) => s"${op.show}($ast)"
+        case UnaryOperation(op, ast)                              => s"${op.show} ${scopedShow(ast)}"
+        case BinaryOperation(a, ast.`==`, NullValue)              => s"${scopedShow(a)} IS NULL"
+        case BinaryOperation(NullValue, ast.`==`, b)              => s"${scopedShow(b)} IS NULL"
+        case BinaryOperation(a, ast.`!=`, NullValue)              => s"${scopedShow(a)} IS NOT NULL"
+        case BinaryOperation(NullValue, ast.`!=`, b)              => s"${scopedShow(b)} IS NOT NULL"
+        case BinaryOperation(a, op, b)                            => s"${scopedShow(a)} ${op.show} ${scopedShow(b)}"
+      }
+  }
+
+  private def requiresParenthesis(op: UnaryOperator) =
+    op match {
+      case ast.`!`        => false
+      case ast.`isEmpty`  => false
+      case ast.`nonEmpty` => false
+      case other          => true
+    }
 
   implicit val setOperationShow: Show[SetOperation] = new Show[SetOperation] {
     def show(e: SetOperation) =
@@ -95,9 +116,14 @@ trait SqlIdiom {
   implicit val unaryOperatorShow: Show[UnaryOperator] = new Show[UnaryOperator] {
     def show(o: UnaryOperator) =
       o match {
-        case io.getquill.ast.`!`        => "NOT"
-        case io.getquill.ast.`isEmpty`  => "NOT EXISTS"
-        case io.getquill.ast.`nonEmpty` => "EXISTS"
+        case ast.`!`        => "NOT"
+        case ast.`isEmpty`  => "NOT EXISTS"
+        case ast.`nonEmpty` => "EXISTS"
+        case ast.`min`      => "MIN"
+        case ast.`max`      => "MAX"
+        case ast.`avg`      => "AVG"
+        case ast.`sum`      => "SUM"
+        case ast.`size`     => "COUNT"
       }
   }
 

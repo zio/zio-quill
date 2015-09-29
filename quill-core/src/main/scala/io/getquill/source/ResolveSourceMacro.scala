@@ -48,7 +48,7 @@ trait ResolveSourceMacro {
             }
           }
         } match {
-          case Success(v) => (Some(v), List())
+          case Success(v) => (Some(v), Nil)
           case Failure(e) =>
             val (value, errors) = resolve(name, tail)
             val error = s"Failed to load from source class '$cls'. Stack trace:\n${stackTraceToString(e)}"

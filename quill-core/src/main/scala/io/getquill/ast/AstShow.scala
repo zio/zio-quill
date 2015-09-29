@@ -41,6 +41,9 @@ object AstShow {
         case SortBy(source, alias, body) =>
           s"${source.show}.sortBy(${alias.show} => ${body.show})"
 
+        case GroupBy(source, alias, body) =>
+          s"${source.show}.groupBy(${alias.show} => ${body.show})"
+
         case Reverse(source) =>
           s"${source.show}.reverse"
 
@@ -84,15 +87,20 @@ object AstShow {
   implicit val prefixUnaryOperatorShow: Show[PrefixUnaryOperator] = new Show[PrefixUnaryOperator] {
     def show(o: PrefixUnaryOperator) =
       o match {
-        case io.getquill.ast.`!` => "!"
+        case ast.`!` => "!"
       }
   }
 
   implicit val postfixUnaryOperatorShow: Show[PostfixUnaryOperator] = new Show[PostfixUnaryOperator] {
     def show(o: PostfixUnaryOperator) =
       o match {
-        case io.getquill.ast.`isEmpty`  => "isEmpty"
-        case io.getquill.ast.`nonEmpty` => "nonEmpty"
+        case ast.`isEmpty`  => "isEmpty"
+        case ast.`nonEmpty` => "nonEmpty"
+        case ast.`min`      => "min"
+        case ast.`max`      => "max"
+        case ast.`avg`      => "avg"
+        case ast.`sum`      => "sum"
+        case ast.`size`     => "size"
       }
   }
 

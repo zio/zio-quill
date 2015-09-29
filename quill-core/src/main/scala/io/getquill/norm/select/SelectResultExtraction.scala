@@ -19,7 +19,7 @@ trait SelectResultExtraction extends SelectValues {
 
   private def extractors(values: List[SelectValue], index: Int = 0): (List[Tree], Int) =
     values match {
-      case Nil => (List(), index)
+      case Nil => (Nil, index)
       case SimpleSelectValue(_, decoder) :: tail =>
         val (tailTrees, tailIndex) = extractors(tail, index + 1)
         (q"$decoder($index, row)" +: tailTrees, tailIndex)

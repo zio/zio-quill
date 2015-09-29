@@ -50,6 +50,10 @@ trait StatefulTransformer[T] {
         val (at, att) = apply(a)
         val (ct, ctt) = att.apply(c)
         (SortBy(at, b, ct), ctt)
+        case GroupBy(a, b, c) =>
+        val (at, att) = apply(a)
+        val (ct, ctt) = att.apply(c)
+        (GroupBy(at, b, ct), ctt)
       case Reverse(a) =>
         val (at, att) = apply(a)
         (Reverse(at), att)

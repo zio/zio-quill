@@ -27,6 +27,11 @@ object NormalizeNestedStructures {
           case (`a`, `c`) => None
           case (a, c)     => Some(SortBy(a, b, c))
         }
+      case GroupBy(a, b, c) =>
+        (Normalize(a), Normalize(c)) match {
+          case (`a`, `c`) => None
+          case (a, c)     => Some(GroupBy(a, b, c))
+        }
       case Reverse(a) =>
         Normalize(a) match {
           case `a` => None

@@ -20,7 +20,7 @@ class SourceMacroSpec extends Spec {
         val q = quote {
           infix"STRING".as[Action[TestEntity]]
         }
-        mirrorSource.run(q).ast mustEqual Infix(List("STRING"), List())
+        mirrorSource.run(q).ast mustEqual Infix(List("STRING"), Nil)
       }
     }
     "parametrized" - {

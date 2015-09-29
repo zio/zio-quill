@@ -54,6 +54,16 @@ class SqlIdiomSpec extends Spec {
             "SELECT t.s, t1.i FROM (SELECT * FROM TestEntity t ORDER BY t.s DESC) t, (SELECT * FROM TestEntity2 t1 ORDER BY t1.i) t1"
         }
       }
+      "grouped" in {
+        val q = quote {
+          qr1.groupBy(t => t.i).map {
+            case (i, entities) => (i, entities.size)
+          }
+        }
+        println(q.ast)
+        mirrorSource.run(q).sql mustEqual
+          "SELECT t._1.s, t._1.i, t._1.l, t._1.o, t._2.size FROM TestEntity t GROUP BY t.i"
+      }
       "limited" - {
         "simple" in {
           val q = quote {

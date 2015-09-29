@@ -263,13 +263,13 @@ class QuotationSpec extends Spec {
         val q = quote {
           infix"true"
         }
-        quote(unquote(q)).ast mustEqual Infix(List("true"), List())
+        quote(unquote(q)).ast mustEqual Infix(List("true"), Nil)
       }
       "with `as`" in {
         val q = quote {
           infix"true".as[Boolean]
         }
-        quote(unquote(q)).ast mustEqual Infix(List("true"), List())
+        quote(unquote(q)).ast mustEqual Infix(List("true"), Nil)
       }
       "with params" in {
         val q = quote {

@@ -25,7 +25,8 @@ case class SetOperationSqlQuery(a: SqlQuery,
 
 case class FlattenSqlQuery(from: List[Source],
                            where: Option[Ast] = None,
-                           orderBy: List[OrderByCriteria] = List(),
+                           groupBy: List[Property] = Nil,
+                           orderBy: List[OrderByCriteria] = Nil,
                            limit: Option[Ast] = None,
                            offset: Option[Ast] = None,
                            select: Ast = Ident("*"))
@@ -89,6 +90,11 @@ object SqlQuery {
         val criterias = orderByCriterias(p, reverse = false)
         b.copy(orderBy = b.orderBy ++ criterias)
 
+      case GroupBy(q, Ident(alias), p) =>
+        val b = base(q, alias)
+        val criterias = groupByCriterias(p)
+        b.copy(groupBy = b.groupBy ++ criterias)
+
       case Take(q, n) =>
         val b = base(q, alias)
         if (b.limit.isEmpty)
@@ -117,6 +123,13 @@ object SqlQuery {
       case Entity(table) => TableSource(table, alias)
       case infix: Infix  => InfixSource(infix, alias)
       case other         => QuerySource(apply(other), alias)
+    }
+
+  private def groupByCriterias(ast: Ast): List[Property] =
+    ast match {
+      case a: Property       => List(a)
+      case Tuple(properties) => properties.map(groupByCriterias).flatten
+      case other             => fail(s"Invalid group by criteria $ast")
     }
 
   private def orderByCriterias(ast: Ast, reverse: Boolean): List[OrderByCriteria] =

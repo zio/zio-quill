@@ -54,9 +54,14 @@ trait Parsing {
     case q"${ functionParser(a) }.apply[..$t](...$values)" => FunctionApply(a, values.flatten.map(astParser(_)))
     case q"${ identParser(a) }.apply[..$t](...$values)" => FunctionApply(a, values.flatten.map(astParser(_)))
     case q"$a.$op($b)" => BinaryOperation(astParser(a), binaryOperator(op), astParser(b))
-    case q"!$a" => UnaryOperation(io.getquill.ast.`!`, astParser(a))
-    case q"$a.isEmpty" => UnaryOperation(io.getquill.ast.`isEmpty`, astParser(a))
-    case q"$a.nonEmpty" => UnaryOperation(io.getquill.ast.`nonEmpty`, astParser(a))
+    case q"!$a" => UnaryOperation(ast.`!`, astParser(a))
+    case q"$a.isEmpty" => UnaryOperation(ast.`isEmpty`, astParser(a))
+    case q"$a.nonEmpty" => UnaryOperation(ast.`nonEmpty`, astParser(a))
+    case q"$a.min" => UnaryOperation(ast.`min`, astParser(a))
+    case q"$a.max" => UnaryOperation(ast.`max`, astParser(a))
+    case q"$a.avg" => UnaryOperation(ast.`avg`, astParser(a))
+    case q"$a.sum" => UnaryOperation(ast.`sum`, astParser(a))
+    case q"$a.size" => UnaryOperation(ast.`size`, astParser(a))
     case `identParser`(ident) => ident
     case `valueParser`(value) => value
     case `propertyParser`(value) => value
@@ -98,6 +103,9 @@ trait Parsing {
 
     case q"$source.sortBy[$t](($alias) => $body)($ord)" =>
       SortBy(astParser(source), identParser(alias), astParser(body))
+
+    case q"$source.groupBy[$t](($alias) => $body)" =>
+      GroupBy(astParser(source), identParser(alias), astParser(body))
 
     case q"$source.reverse" =>
       Reverse(astParser(source))

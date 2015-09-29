@@ -1,6 +1,6 @@
 package io.getquill
 
-sealed trait Query[+T] {
+sealed trait Query[+T] extends QueryList[T] {
 
   def map[R](f: T => R): Query[R]
   def flatMap[R](f: T => Query[R]): Query[R]
@@ -15,8 +15,18 @@ sealed trait Query[+T] {
   def unionAll[U >: T](q: Query[U]): Query[U]
   def union[U >: T](q: Query[U]): Query[U]
 
+  def groupBy[R](f: T => R): Query[(T, QueryList[R])]
+
   def nonEmpty: Boolean
   def isEmpty: Boolean
+}
+
+sealed trait QueryList[+T] {
+  def min[U >: T](implicit n: Numeric[U]): Option[T]
+  def max[U >: T](implicit n: Numeric[U]): Option[T]
+  def avg[U >: T](implicit n: Numeric[U]): Option[T]
+  def sum[U >: T](implicit n: Numeric[U]): T
+  def size: Long
 }
 
 sealed trait SortedQuery[+T] extends Query[T] {

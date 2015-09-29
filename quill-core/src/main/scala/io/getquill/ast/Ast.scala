@@ -29,6 +29,8 @@ case class FlatMap(query: Ast, alias: Ident, body: Ast) extends Query
 
 case class SortBy(query: Ast, alias: Ident, criterias: Ast) extends Query
 
+case class GroupBy(query: Ast, alias: Ident, body: Ast) extends Query
+
 case class Reverse(query: Ast) extends Query
 
 case class Take(query: Ast, n: Ast) extends Query

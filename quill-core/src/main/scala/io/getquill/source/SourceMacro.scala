@@ -24,7 +24,7 @@ trait SourceMacro extends Quotation with ActionMacro with QueryMacro with Resolv
         run(ast, params.zip(paramsTypes[T]))(r, s, bodyType)
 
       case ast =>
-        run[R, S, T](ast, List())
+        run[R, S, T](ast, Nil)
     }
   }
 
