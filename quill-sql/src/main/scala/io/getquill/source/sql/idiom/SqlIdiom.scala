@@ -61,26 +61,19 @@ trait SqlIdiom {
       }
   }
 
-  implicit val operationShow: Show[Operation] = new Show[Operation] {
+  implicit def operationShow(implicit propertyShow: Show[Property]): Show[Operation] = new Show[Operation] {
     def show(e: Operation) =
       e match {
-        case UnaryOperation(op, ast) if (requiresParenthesis(op)) => s"${op.show}($ast)"
-        case UnaryOperation(op, ast)                              => s"${op.show} ${scopedShow(ast)}"
-        case BinaryOperation(a, ast.`==`, NullValue)              => s"${scopedShow(a)} IS NULL"
-        case BinaryOperation(NullValue, ast.`==`, b)              => s"${scopedShow(b)} IS NULL"
-        case BinaryOperation(a, ast.`!=`, NullValue)              => s"${scopedShow(a)} IS NOT NULL"
-        case BinaryOperation(NullValue, ast.`!=`, b)              => s"${scopedShow(b)} IS NOT NULL"
-        case BinaryOperation(a, op, b)                            => s"${scopedShow(a)} ${op.show} ${scopedShow(b)}"
+        case UnaryOperation(op, ast)                 => s"${op.show} ${scopedShow(ast)}"
+        case BinaryOperation(a, ast.`==`, NullValue) => s"${scopedShow(a)} IS NULL"
+        case BinaryOperation(NullValue, ast.`==`, b) => s"${scopedShow(b)} IS NULL"
+        case BinaryOperation(a, ast.`!=`, NullValue) => s"${scopedShow(a)} IS NOT NULL"
+        case BinaryOperation(NullValue, ast.`!=`, b) => s"${scopedShow(b)} IS NOT NULL"
+        case BinaryOperation(a, op, b)               => s"${scopedShow(a)} ${op.show} ${scopedShow(b)}"
+        case Aggregation(op, Ident(_))               => s"${op.show}(*)"
+        case Aggregation(op, ast)                    => s"${op.show}(${ast.show})"
       }
   }
-
-  private def requiresParenthesis(op: UnaryOperator) =
-    op match {
-      case ast.`!`        => false
-      case ast.`isEmpty`  => false
-      case ast.`nonEmpty` => false
-      case other          => true
-    }
 
   implicit val setOperationShow: Show[SetOperation] = new Show[SetOperation] {
     def show(e: SetOperation) =
@@ -119,11 +112,17 @@ trait SqlIdiom {
         case ast.`!`        => "NOT"
         case ast.`isEmpty`  => "NOT EXISTS"
         case ast.`nonEmpty` => "EXISTS"
-        case ast.`min`      => "MIN"
-        case ast.`max`      => "MAX"
-        case ast.`avg`      => "AVG"
-        case ast.`sum`      => "SUM"
-        case ast.`size`     => "COUNT"
+      }
+  }
+
+  implicit val aggregationOperatorShow: Show[AggregationOperator] = new Show[AggregationOperator] {
+    def show(o: AggregationOperator) =
+      o match {
+        case ast.`min`  => "MIN"
+        case ast.`max`  => "MAX"
+        case ast.`avg`  => "AVG"
+        case ast.`sum`  => "SUM"
+        case ast.`size` => "COUNT"
       }
   }
 

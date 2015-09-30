@@ -19,6 +19,7 @@ trait Unliftables {
     case q"$pack.FunctionApply.apply(${ a: Ast }, ${ b: List[Ast] })" => FunctionApply(a, b)
     case q"$pack.BinaryOperation.apply(${ a: Ast }, ${ b: BinaryOperator }, ${ c: Ast })" => BinaryOperation(a, b, c)
     case q"$pack.UnaryOperation.apply(${ a: UnaryOperator }, ${ b: Ast })" => UnaryOperation(a, b)
+    case q"$pack.Aggregation.apply(${ a: AggregationOperator }, ${ b: Ast })" => Aggregation(a, b)
     case q"$pack.Infix.apply(${ a: List[String] }, ${ b: List[Ast] })" => Infix(a, b)
   }
 
@@ -47,6 +48,14 @@ trait Unliftables {
     case q"$pack.`!`"        => ast.`!`
     case q"$pack.`nonEmpty`" => ast.`nonEmpty`
     case q"$pack.`isEmpty`"  => ast.`isEmpty`
+  }
+
+  implicit val aggregationOperatorUnliftable: Unliftable[AggregationOperator] = Unliftable[AggregationOperator] {
+    case q"$pack.`min`"  => ast.`min`
+    case q"$pack.`max`"  => ast.`max`
+    case q"$pack.`avg`"  => ast.`avg`
+    case q"$pack.`sum`"  => ast.`sum`
+    case q"$pack.`size`" => ast.`size`
   }
 
   implicit val queryUnliftable: Unliftable[Query] = Unliftable[Query] {

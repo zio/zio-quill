@@ -35,6 +35,7 @@ trait StatelessTransformer {
     e match {
       case UnaryOperation(o, a)     => UnaryOperation(o, apply(a))
       case BinaryOperation(a, b, c) => BinaryOperation(apply(a), b, apply(c))
+      case Aggregation(o, a)        => Aggregation(o, apply(a))
     }
 
   def apply(e: Value): Value =

@@ -15,7 +15,7 @@ sealed trait Query[+T] extends QueryList[T] {
   def unionAll[U >: T](q: Query[U]): Query[U]
   def union[U >: T](q: Query[U]): Query[U]
 
-  def groupBy[R](f: T => R): Query[(T, QueryList[R])]
+  def groupBy[R](f: T => R): Query[(R, QueryList[T])]
 
   def nonEmpty: Boolean
   def isEmpty: Boolean

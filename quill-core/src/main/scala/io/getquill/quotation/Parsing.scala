@@ -57,11 +57,11 @@ trait Parsing {
     case q"!$a" => UnaryOperation(ast.`!`, astParser(a))
     case q"$a.isEmpty" => UnaryOperation(ast.`isEmpty`, astParser(a))
     case q"$a.nonEmpty" => UnaryOperation(ast.`nonEmpty`, astParser(a))
-    case q"$a.min" => UnaryOperation(ast.`min`, astParser(a))
-    case q"$a.max" => UnaryOperation(ast.`max`, astParser(a))
-    case q"$a.avg" => UnaryOperation(ast.`avg`, astParser(a))
-    case q"$a.sum" => UnaryOperation(ast.`sum`, astParser(a))
-    case q"$a.size" => UnaryOperation(ast.`size`, astParser(a))
+    case q"$a.min" => Aggregation(ast.`min`, astParser(a))
+    case q"$a.max" => Aggregation(ast.`max`, astParser(a))
+    case q"$a.avg" => Aggregation(ast.`avg`, astParser(a))
+    case q"$a.sum" => Aggregation(ast.`sum`, astParser(a))
+    case q"$a.size" => Aggregation(ast.`size`, astParser(a))
     case `identParser`(ident) => ident
     case `valueParser`(value) => value
     case `propertyParser`(value) => value
@@ -105,7 +105,8 @@ trait Parsing {
       SortBy(astParser(source), identParser(alias), astParser(body))
 
     case q"$source.groupBy[$t](($alias) => $body)" =>
-      GroupBy(astParser(source), identParser(alias), astParser(body))
+      val groupBy = GroupBy(astParser(source), identParser(alias), astParser(body))
+      Map(groupBy, groupBy.alias, Tuple(List(groupBy.body, groupBy.alias)))
 
     case q"$source.reverse" =>
       Reverse(astParser(source))

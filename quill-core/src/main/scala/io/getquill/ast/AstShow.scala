@@ -81,6 +81,7 @@ object AstShow {
         case UnaryOperation(op: PrefixUnaryOperator, ast)  => s"${op.show}${scopedShow(ast)}"
         case UnaryOperation(op: PostfixUnaryOperator, ast) => s"${scopedShow(ast)}.${op.show}"
         case BinaryOperation(a, op, b)                     => s"${scopedShow(a)} ${op.show} ${scopedShow(b)}"
+        case Aggregation(op, ast)                          => s"${scopedShow(ast)}.${op.show}"
       }
   }
 
@@ -96,11 +97,17 @@ object AstShow {
       o match {
         case ast.`isEmpty`  => "isEmpty"
         case ast.`nonEmpty` => "nonEmpty"
-        case ast.`min`      => "min"
-        case ast.`max`      => "max"
-        case ast.`avg`      => "avg"
-        case ast.`sum`      => "sum"
-        case ast.`size`     => "size"
+      }
+  }
+
+  implicit val aggregationOperatorShow: Show[AggregationOperator] = new Show[AggregationOperator] {
+    def show(o: AggregationOperator) =
+      o match {
+        case ast.`min`  => "min"
+        case ast.`max`  => "max"
+        case ast.`avg`  => "avg"
+        case ast.`sum`  => "sum"
+        case ast.`size` => "size"
       }
   }
 

@@ -21,6 +21,7 @@ trait Liftables {
     case FunctionApply(a, b)      => q"$pack.FunctionApply($a, $b)"
     case BinaryOperation(a, b, c) => q"$pack.BinaryOperation($a, $b, $c)"
     case UnaryOperation(a, b)     => q"$pack.UnaryOperation($a, $b)"
+    case Aggregation(a, b)        => q"$pack.Aggregation($a, $b)"
     case Infix(a, b)              => q"$pack.Infix($a, $b)"
   }
 
@@ -44,11 +45,14 @@ trait Liftables {
     case ast.`!`        => q"$pack.`!`"
     case ast.`nonEmpty` => q"$pack.`nonEmpty`"
     case ast.`isEmpty`  => q"$pack.`isEmpty`"
-    case ast.`min`      => q"$pack.`min`"
-    case ast.`max`      => q"$pack.`max`"
-    case ast.`avg`      => q"$pack.`avg`"
-    case ast.`sum`      => q"$pack.`sum`"
-    case ast.`size`     => q"$pack.`size`"
+  }
+
+  implicit val aggregationOperatorLiftable: Liftable[AggregationOperator] = Liftable[AggregationOperator] {
+    case ast.`min`  => q"$pack.`min`"
+    case ast.`max`  => q"$pack.`max`"
+    case ast.`avg`  => q"$pack.`avg`"
+    case ast.`sum`  => q"$pack.`sum`"
+    case ast.`size` => q"$pack.`size`"
   }
 
   implicit val queryLiftable: Liftable[Query] = Liftable[Query] {

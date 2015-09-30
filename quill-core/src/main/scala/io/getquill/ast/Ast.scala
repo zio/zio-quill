@@ -53,8 +53,9 @@ case class Property(ast: Ast, name: String) extends Ast
 
 sealed trait Operation extends Ast
 
-case class UnaryOperation(operator: UnaryOperator, Ast: Ast) extends Operation
+case class UnaryOperation(operator: UnaryOperator, ast: Ast) extends Operation
 case class BinaryOperation(a: Ast, operator: BinaryOperator, b: Ast) extends Operation
+case class Aggregation(operator: AggregationOperator, ast: Ast) extends Operation
 
 //************************************************************
 
