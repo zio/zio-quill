@@ -48,6 +48,7 @@ lazy val commonSettings = releaseSettings ++ Seq(
     "org.scalatest" %% "scalatest"       % "2.2.4" % "test",
     "ch.qos.logback" % "logback-classic" % "1.1.3" % "test"
   ),
+  EclipseKeys.createSrc := EclipseCreateSrc.Default + EclipseCreateSrc.Resource,
   scalacOptions ++= Seq(
     "-deprecation",           
     "-encoding", "UTF-8",
