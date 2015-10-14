@@ -2,6 +2,7 @@ package io.getquill.source.sql
 
 import io.getquill.ast._
 import io.getquill.util.Messages.fail
+import io.getquill.norm.BetaReduction
 
 case class OrderByCriteria(property: Property, desc: Boolean)
 
@@ -23,13 +24,15 @@ case class SetOperationSqlQuery(a: SqlQuery,
                                 b: SqlQuery)
     extends SqlQuery
 
+case class SelectValue(ast: Ast, alias: Option[String] = None)
+
 case class FlattenSqlQuery(from: List[Source],
                            where: Option[Ast] = None,
                            groupBy: List[Property] = Nil,
                            orderBy: List[OrderByCriteria] = Nil,
                            limit: Option[Ast] = None,
                            offset: Option[Ast] = None,
-                           select: Ast = Ident("*"))
+                           select: List[SelectValue] = SelectValue(Ident("*")) :: Nil)
     extends SqlQuery
 
 object SqlQuery {
@@ -68,8 +71,17 @@ object SqlQuery {
       }
     finalFlatMapBody match {
 
+      case Map(GroupBy(q, x, g), a @ Ident(alias), p) =>
+        val b = base(q, alias)
+        val criterias = groupByCriterias(g)
+        val selectValues = {
+          val select = BetaReduction(p, a -> Tuple(List(g, x)))
+          for ((v, i) <- this.selectValues(select).zipWithIndex) yield v.copy(alias = Some(s"_${i + 1}"))
+        }
+        b.copy(groupBy = criterias, select = selectValues)
+
       case Map(q, Ident(alias), p) =>
-        base(q, alias).copy(select = p)
+        base(q, alias).copy(select = selectValues(p))
 
       case Filter(q, Ident(alias), p) =>
         val b = base(q, alias)
@@ -91,9 +103,7 @@ object SqlQuery {
         b.copy(orderBy = b.orderBy ++ criterias)
 
       case GroupBy(q, Ident(alias), p) =>
-        val b = base(q, alias)
-        val criterias = groupByCriterias(p)
-        b.copy(groupBy = b.groupBy ++ criterias)
+        fail("A `groupBy` clause must be followed by a `map`.")
 
       case Take(q, n) =>
         val b = base(q, alias)
@@ -117,6 +127,12 @@ object SqlQuery {
         FlattenSqlQuery(from = sources :+ source(other, alias))
     }
   }
+
+  private def selectValues(ast: Ast) =
+    ast match {
+      case Tuple(values) => values.map(SelectValue(_))
+      case other         => SelectValue(ast) :: Nil
+    }
 
   private def source(ast: Ast, alias: String) =
     ast match {

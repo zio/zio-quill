@@ -105,9 +105,8 @@ trait Parsing {
       SortBy(astParser(source), identParser(alias), astParser(body))
 
     case q"$source.groupBy[$t](($alias) => $body)" =>
-      val groupBy = GroupBy(astParser(source), identParser(alias), astParser(body))
-      Map(groupBy, groupBy.alias, Tuple(List(groupBy.body, groupBy.alias)))
-
+      GroupBy(astParser(source), identParser(alias), astParser(body))
+      
     case q"$source.reverse" =>
       Reverse(astParser(source))
 

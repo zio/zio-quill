@@ -61,6 +61,14 @@ trait SqlIdiom {
       }
   }
 
+  implicit val selectValueShow: Show[SelectValue] = new Show[SelectValue] {
+    def show(e: SelectValue) =
+      e match {
+        case SelectValue(ast, Some(alias)) => s"${ast.show} $alias"
+        case SelectValue(ast, None)        => ast.show
+      }
+  }
+
   implicit def operationShow(implicit propertyShow: Show[Property]): Show[Operation] = new Show[Operation] {
     def show(e: Operation) =
       e match {

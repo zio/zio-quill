@@ -24,6 +24,8 @@ MVP - mid-september
 	- additional operations (string concatenation, etc)
 	- set operations (union, outer joins, etc)
 	- insert returning id
+- table/column aliases (query[Entity]("table_name")(_.someCol -> "some_col"))
+- naming strategy
 - sql warnings (see doobie)
 - custom table/column names
 - insert case class directly

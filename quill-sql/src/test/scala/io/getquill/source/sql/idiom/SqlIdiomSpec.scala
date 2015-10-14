@@ -62,7 +62,7 @@ class SqlIdiomSpec extends Spec {
             }
           }
           mirrorSource.run(q).sql mustEqual
-            "SELECT t.i, COUNT(*) FROM TestEntity t GROUP BY t.i"
+            "SELECT t.i _1, COUNT(*) _2 FROM TestEntity t GROUP BY t.i"
         }
         "nested" in {
           val q = quote {
@@ -75,7 +75,8 @@ class SqlIdiomSpec extends Spec {
               (a, b, c)
             }
           }
-          mirrorSource.run(q).sql
+          mirrorSource.run(q).sql mustEqual
+            "SELECT t._1, t._2, c.s, c.i, c.l, c.o FROM (SELECT t.i _1, COUNT(*) _2 FROM TestEntity t GROUP BY t.i) t, TestEntity2 c WHERE c.i = t._1"
         }
       }
       "limited" - {

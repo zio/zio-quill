@@ -39,5 +39,8 @@ case class BetaReduction(map: collection.Map[Ident, Ast])
 object BetaReduction {
 
   def apply(ast: Ast, t: (Ident, Ast)*): Ast =
-    BetaReduction(t.toMap)(ast)
+    BetaReduction(t.toMap)(ast) match {
+      case `ast` => ast
+      case other => apply(other)
+    }
 }

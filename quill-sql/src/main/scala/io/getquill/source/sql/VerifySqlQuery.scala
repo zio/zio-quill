@@ -35,7 +35,7 @@ object VerifySqlQuery {
       query.where.flatMap(verifyFreeVars).toList ++
         query.orderBy.map(_.property).flatMap(verifyFreeVars) ++
         query.limit.flatMap(verifyFreeVars) ++
-        verifyFreeVars(query.select)
+        query.select.map(_.ast).map(verifyFreeVars).flatten
 
     val nestedErrors =
       query.from.collect {
