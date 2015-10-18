@@ -64,9 +64,16 @@ trait SqlIdiom {
   implicit val selectValueShow: Show[SelectValue] = new Show[SelectValue] {
     def show(e: SelectValue) =
       e match {
-        case SelectValue(Ident(i), _) if i != "*" => fail(s"A select value must not be a nested type. Found: '$i'")
-        case SelectValue(ast, Some(alias))        => s"${ast.show} $alias"
-        case SelectValue(ast, None)               => ast.show
+        case SelectValue(ast, Some(alias)) => s"${showValue(ast)} $alias"
+        case SelectValue(ast, None)        => showValue(ast)
+      }
+
+    private def showValue(ast: Ast) =
+      ast match {
+        case Aggregation(op, Ident(_)) => s"${op.show}(*)"
+        case Aggregation(op, _: Query) => scopedShow(ast)
+        case Aggregation(op, ast)      => s"${op.show}(${ast.show})"
+        case other                     => ast.show
       }
   }
 
@@ -79,8 +86,6 @@ trait SqlIdiom {
         case BinaryOperation(a, ast.`!=`, NullValue) => s"${scopedShow(a)} IS NOT NULL"
         case BinaryOperation(NullValue, ast.`!=`, b) => s"${scopedShow(b)} IS NOT NULL"
         case BinaryOperation(a, op, b)               => s"${scopedShow(a)} ${op.show} ${scopedShow(b)}"
-        case Aggregation(op, Ident(_))               => s"${op.show}(*)"
-        case Aggregation(op, ast)                    => s"${op.show}(${ast.show})"
       }
   }
 
@@ -217,6 +222,7 @@ trait SqlIdiom {
     ast match {
       case _: Query           => s"(${ast.show})"
       case _: BinaryOperation => s"(${ast.show})"
+      case _: Tuple           => s"(${ast.show})"
       case other              => ast.show
     }
 

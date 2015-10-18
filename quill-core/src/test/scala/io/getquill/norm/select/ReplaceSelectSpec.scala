@@ -28,6 +28,16 @@ class ReplaceSelectSpec extends Spec {
       ReplaceSelect(q.ast, List(Ident("t"), Property(Ident("t"), "s"))) mustEqual
         n.ast
     }
+    "aggregated query" in {
+      val q = quote {
+        qr1.map(t => t.i).min
+      }
+      val n = quote {
+        qr1.map(t => t.l).min
+      }
+      ReplaceSelect(q.ast, List(Property(Ident("t"), "l"))) mustEqual
+        n.ast
+    }
     "doesn't change the select if not necessary" in {
       val q = quote {
         qr1.map(t => t)

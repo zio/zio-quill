@@ -64,6 +64,14 @@ class StatefulTransformerSpec extends Spec {
             att.state mustEqual List(Ident("a"), Ident("c"))
         }
       }
+      "aggregation" in {
+        val ast: Ast = Aggregation(io.getquill.ast.max, Ident("a"))
+        Subject(Nil, Ident("a") -> Ident("a'"))(ast) match {
+          case (at, att) =>
+            at mustEqual Aggregation(io.getquill.ast.max, Ident("a'"))
+            att.state mustEqual List(Ident("a"))
+        }
+      }
       "reverse" in {
         val ast: Ast = Reverse(SortBy(Ident("a"), Ident("b"), Ident("c")))
         Subject(Nil, Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) match {
@@ -121,14 +129,6 @@ class StatefulTransformerSpec extends Spec {
           case (at, att) =>
             at mustEqual BinaryOperation(Ident("a'"), io.getquill.ast.`&&`, Ident("b'"))
             att.state mustEqual List(Ident("a"), Ident("b"))
-        }
-      }
-      "aggregation" in {
-        val ast: Ast = Aggregation(io.getquill.ast.max, Ident("a"))
-        Subject(Nil, Ident("a") -> Ident("a'"))(ast) match {
-          case (at, att) =>
-            at mustEqual Aggregation(io.getquill.ast.max, Ident("a'"))
-            att.state mustEqual List(Ident("a"))
         }
       }
     }

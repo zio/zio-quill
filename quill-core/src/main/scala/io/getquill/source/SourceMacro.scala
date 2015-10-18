@@ -45,7 +45,10 @@ trait SourceMacro extends Quotation with ActionMacro with QueryMacro with Resolv
     }
 
   private def queryType(tpe: Type) =
-    c.WeakTypeTag(tpe.baseType(c.typeOf[Query[_]].typeSymbol).typeArgs.head)
+    if (tpe <:< c.typeOf[Query[_]])
+      c.WeakTypeTag(tpe.baseType(c.typeOf[Query[_]].typeSymbol).typeArgs.head)
+    else
+      c.WeakTypeTag(tpe)
 
   private def ast[T](quoted: Expr[Quoted[T]]) =
     unquote[Ast](quoted.tree).getOrElse {

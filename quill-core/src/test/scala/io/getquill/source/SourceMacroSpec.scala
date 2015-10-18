@@ -41,6 +41,12 @@ class SourceMacroSpec extends Spec {
         r.bindList mustEqual List(Row("a"))
       }
     }
+    "aggregated" in {
+      val q = quote {
+        qr1.map(t => t.i).max
+      }
+      mirrorSource.run(q).ast mustEqual q.ast
+    }
   }
 
   "fails if the quotation is not runnable" in {

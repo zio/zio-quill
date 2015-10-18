@@ -38,6 +38,16 @@ class ExtractSelectSpec extends Spec {
           select mustEqual Property(Ident("t"), "s")
       }
     }
+    "aggregated query" in {
+      val q = quote {
+        qr1.map(t => t.i).avg
+      }
+      ExtractSelect(q.ast) match {
+        case (query, select) =>
+          query mustEqual q.ast
+          select mustEqual Property(Ident("t"), "i")
+      }
+    }
     "reversed query" in {
       val q = quote {
         qr1.sortBy(b => b.s).reverse

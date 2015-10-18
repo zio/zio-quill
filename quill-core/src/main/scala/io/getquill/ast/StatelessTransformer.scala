@@ -18,24 +18,24 @@ trait StatelessTransformer {
 
   def apply(e: Query): Query =
     e match {
-      case e: Entity        => e
-      case Filter(a, b, c)  => Filter(apply(a), b, apply(c))
-      case Map(a, b, c)     => Map(apply(a), b, apply(c))
-      case FlatMap(a, b, c) => FlatMap(apply(a), b, apply(c))
-      case SortBy(a, b, c)  => SortBy(apply(a), b, apply(c))
-      case GroupBy(a, b, c) => GroupBy(apply(a), b, apply(c))
-      case Reverse(a)       => Reverse(apply(a))
-      case Take(a, b)       => Take(apply(a), apply(b))
-      case Drop(a, b)       => Drop(apply(a), apply(b))
-      case Union(a, b)      => Union(apply(a), apply(b))
-      case UnionAll(a, b)   => UnionAll(apply(a), apply(b))
+      case e: Entity         => e
+      case Filter(a, b, c)   => Filter(apply(a), b, apply(c))
+      case Map(a, b, c)      => Map(apply(a), b, apply(c))
+      case FlatMap(a, b, c)  => FlatMap(apply(a), b, apply(c))
+      case SortBy(a, b, c)   => SortBy(apply(a), b, apply(c))
+      case GroupBy(a, b, c)  => GroupBy(apply(a), b, apply(c))
+      case Aggregation(o, a) => Aggregation(o, apply(a))
+      case Reverse(a)        => Reverse(apply(a))
+      case Take(a, b)        => Take(apply(a), apply(b))
+      case Drop(a, b)        => Drop(apply(a), apply(b))
+      case Union(a, b)       => Union(apply(a), apply(b))
+      case UnionAll(a, b)    => UnionAll(apply(a), apply(b))
     }
 
   def apply(e: Operation): Operation =
     e match {
       case UnaryOperation(o, a)     => UnaryOperation(o, apply(a))
       case BinaryOperation(a, b, c) => BinaryOperation(apply(a), b, apply(c))
-      case Aggregation(o, a)        => Aggregation(o, apply(a))
     }
 
   def apply(e: Value): Value =

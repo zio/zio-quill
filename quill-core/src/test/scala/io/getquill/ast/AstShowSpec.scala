@@ -44,7 +44,7 @@ class AstShowSpec extends Spec {
     (q.ast: Ast).show mustEqual
       """query[TestEntity].sortBy(t => t.i).reverse"""
   }
-  
+
   "shows grouped queries" in {
     val q = quote {
       qr1.groupBy(t => t.i)
@@ -84,6 +84,44 @@ class AstShowSpec extends Spec {
     }
     (q.ast: Ast).show mustEqual
       """(xs) => !(xs.nonEmpty && (xs != null))"""
+  }
+
+  "shows aggregations" - {
+    "min" in {
+      val q = quote {
+        qr1.map(t => t.i).min
+      }
+      (q.ast: Ast).show mustEqual
+        "query[TestEntity].map(t => t.i).min"
+    }
+    "max" in {
+      val q = quote {
+        qr1.map(t => t.i).max
+      }
+      (q.ast: Ast).show mustEqual
+        "query[TestEntity].map(t => t.i).max"
+    }
+    "avg" in {
+      val q = quote {
+        qr1.map(t => t.i).avg
+      }
+      (q.ast: Ast).show mustEqual
+        "query[TestEntity].map(t => t.i).avg"
+    }
+    "sum" in {
+      val q = quote {
+        qr1.map(t => t.i).sum
+      }
+      (q.ast: Ast).show mustEqual
+        "query[TestEntity].map(t => t.i).sum"
+    }
+    "size" in {
+      val q = quote {
+        qr1.map(t => t.i).size
+      }
+      (q.ast: Ast).show mustEqual
+        "query[TestEntity].map(t => t.i).size"
+    }
   }
 
   "shows unary operators" - {

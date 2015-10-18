@@ -79,6 +79,57 @@ class SqlIdiomSpec extends Spec {
             "SELECT t._1, t._2, c.s, c.i, c.l, c.o FROM (SELECT t.i _1, COUNT(*) _2 FROM TestEntity t GROUP BY t.i) t, TestEntity2 c WHERE c.i = t._1"
         }
       }
+      "aggregated" - {
+        "min" in {
+          val q = quote {
+            qr1.map(t => t.i).min
+          }
+          mirrorSource.run(q).sql mustEqual
+            "SELECT MIN(t.i) FROM TestEntity t"
+        }
+        "max" in {
+          val q = quote {
+            qr1.map(t => t.i).max
+          }
+          mirrorSource.run(q).sql mustEqual
+            "SELECT MAX(t.i) FROM TestEntity t"
+        }
+        "avg" in {
+          val q = quote {
+            qr1.map(t => t.i).avg
+          }
+          mirrorSource.run(q).sql mustEqual
+            "SELECT AVG(t.i) FROM TestEntity t"
+        }
+        "sum" in {
+          val q = quote {
+            qr1.map(t => t.i).sum
+          }
+          mirrorSource.run(q).sql mustEqual
+            "SELECT SUM(t.i) FROM TestEntity t"
+        }
+        "size" in {
+          val q = quote {
+            qr1.size
+          }
+          mirrorSource.run(q).sql mustEqual
+            "SELECT COUNT(*) FROM TestEntity x"
+        }
+        "with filter" in {
+          val q = quote {
+            qr1.filter(t => t.i > 1).map(t => t.i).min
+          }
+          mirrorSource.run(q).sql mustEqual
+            "SELECT MIN(t.i) FROM TestEntity t WHERE t.i > 1"
+        }
+        "as select value" in {
+          val q = quote {
+            qr1.take(10).map(a => qr2.filter(t => t.i > a.i).map(t => t.i).min)
+          }
+          mirrorSource.run(q).sql mustEqual
+            "SELECT (SELECT MIN(t.i) FROM TestEntity2 t WHERE t.i > a.i) FROM TestEntity a LIMIT 10"
+        }
+      }
       "limited" - {
         "simple" in {
           val q = quote {
@@ -352,10 +403,10 @@ class SqlIdiomSpec extends Spec {
       }
       "tuple" in {
         val q = quote {
-          qr1.map(t => (t.s, t.i))
+          qr1.filter(t => (1, 2) == t.i)
         }
         mirrorSource.run(q).sql mustEqual
-          "SELECT t.s, t.i FROM TestEntity t"
+          "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE (1, 2) = t.i"
       }
     }
     "property" in {

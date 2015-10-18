@@ -25,7 +25,7 @@ case class FreeVariables(state: State)
       case q @ FlatMap(a, b, c) => apply(q, a, b, c)
       case q @ SortBy(a, b, c)  => apply(q, a, b, c)
       case q @ GroupBy(a, b, c) => apply(q, a, b, c)
-      case _: Entity | _: Reverse | _: Take | _: Drop | _: Union | _: UnionAll =>
+      case _: Entity | _: Reverse | _: Take | _: Drop | _: Union | _: UnionAll | _: Aggregation =>
         super.apply(query)
     }
 

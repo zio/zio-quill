@@ -44,6 +44,9 @@ object AstShow {
         case GroupBy(source, alias, body) =>
           s"${source.show}.groupBy(${alias.show} => ${body.show})"
 
+        case Aggregation(op, ast) =>
+          s"${scopedShow(ast)}.${op.show}"
+
         case Reverse(source) =>
           s"${source.show}.reverse"
 
@@ -81,7 +84,6 @@ object AstShow {
         case UnaryOperation(op: PrefixUnaryOperator, ast)  => s"${op.show}${scopedShow(ast)}"
         case UnaryOperation(op: PostfixUnaryOperator, ast) => s"${scopedShow(ast)}.${op.show}"
         case BinaryOperation(a, op, b)                     => s"${scopedShow(a)} ${op.show} ${scopedShow(b)}"
-        case Aggregation(op, ast)                          => s"${scopedShow(ast)}.${op.show}"
       }
   }
 

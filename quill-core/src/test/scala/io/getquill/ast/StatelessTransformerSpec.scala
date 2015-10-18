@@ -42,6 +42,11 @@ class StatelessTransformerSpec extends Spec {
         Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) mustEqual
           GroupBy(Ident("a'"), Ident("b"), Ident("c'"))
       }
+      "aggregation" in {
+        val ast: Ast = Aggregation(io.getquill.ast.max, Ident("a"))
+        Subject(Ident("a") -> Ident("a'"))(ast) mustEqual
+          Aggregation(io.getquill.ast.max, Ident("a'"))
+      }
       "reverse" in {
         val ast: Ast = Reverse(SortBy(Ident("a"), Ident("b"), Ident("c")))
         Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) mustEqual
@@ -79,11 +84,6 @@ class StatelessTransformerSpec extends Spec {
         val ast: Ast = BinaryOperation(Ident("a"), io.getquill.ast.`&&`, Ident("b"))
         Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"))(ast) mustEqual
           BinaryOperation(Ident("a'"), io.getquill.ast.`&&`, Ident("b'"))
-      }
-      "aggregation" in {
-        val ast: Ast = Aggregation(io.getquill.ast.max, Ident("a"))
-        Subject(Ident("a") -> Ident("a'"))(ast) mustEqual
-          Aggregation(io.getquill.ast.max, Ident("a'"))
       }
     }
 

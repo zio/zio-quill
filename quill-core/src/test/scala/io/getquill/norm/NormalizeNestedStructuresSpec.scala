@@ -50,6 +50,15 @@ class NormalizeNestedStructuresSpec extends Spec {
       }
       NormalizeNestedStructures.unapply(q.ast) mustEqual Some(n.ast)
     }
+    "aggregation" in {
+      val q = quote {
+        qr1.map(t => (t.i, t.s)._1).max
+      }
+      val n = quote {
+        qr1.map(t => t.i).max
+      }
+      NormalizeNestedStructures.unapply(q.ast) mustEqual Some(n.ast)
+    }
     "reverse" in {
       val q = quote {
         qr1.sortBy(t => (t.i, t.s)._1).reverse

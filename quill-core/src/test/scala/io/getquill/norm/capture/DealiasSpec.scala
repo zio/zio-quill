@@ -52,6 +52,12 @@ class DealiasSpec extends Spec {
       }
       Dealias(q.ast) mustEqual n.ast
     }
+    "aggregation" in {
+      val q = quote {
+        qr1.map(a => a.i).max
+      }
+      Dealias(q.ast) mustEqual q.ast
+    }
     "reverse" in {
       val q = quote {
         qr1.sortBy(a => a.s).reverse.map(b => b.s)

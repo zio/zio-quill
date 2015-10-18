@@ -141,6 +141,28 @@ class SqlQuerySpec extends Spec {
           SqlQuery(q.ast)
         }
       }
+      "tuple" in {
+        val q = quote {
+          qr1.groupBy(t => (t.i, t.l)).map(t => t._1)
+        }
+        SqlQuery(q.ast).show mustEqual
+          "SELECT t.i _1, t.l _2 FROM TestEntity t GROUP BY t.i, t.l"
+      }
+      "invalid groupby criteria" - {
+        val q = quote {
+          qr1.groupBy(t => t).map(t => t)
+        }
+        val e = intercept[IllegalStateException] {
+          SqlQuery(q.ast)
+        }
+      }
+    }
+    "aggregated query" in {
+      val q = quote {
+        qr1.map(t => t.i).max
+      }
+      SqlQuery(q.ast).show mustEqual
+        "SELECT MAX(t.i) FROM TestEntity t"
     }
     "limited query" - {
       "simple" in {

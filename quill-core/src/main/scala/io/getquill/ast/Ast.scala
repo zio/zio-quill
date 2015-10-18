@@ -31,6 +31,8 @@ case class SortBy(query: Ast, alias: Ident, criterias: Ast) extends Query
 
 case class GroupBy(query: Ast, alias: Ident, body: Ast) extends Query
 
+case class Aggregation(operator: AggregationOperator, ast: Ast) extends Query
+
 case class Reverse(query: Ast) extends Query
 
 case class Take(query: Ast, n: Ast) extends Query
@@ -55,7 +57,6 @@ sealed trait Operation extends Ast
 
 case class UnaryOperation(operator: UnaryOperator, ast: Ast) extends Operation
 case class BinaryOperation(a: Ast, operator: BinaryOperator, b: Ast) extends Operation
-case class Aggregation(operator: AggregationOperator, ast: Ast) extends Operation
 
 //************************************************************
 

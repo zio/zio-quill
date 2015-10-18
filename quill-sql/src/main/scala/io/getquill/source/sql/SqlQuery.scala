@@ -63,14 +63,14 @@ object SqlQuery {
     }
 
   private def flatten(sources: List[Source], finalFlatMapBody: Ast, alias: String): FlattenSqlQuery = {
-    
+
     def base(q: Ast, alias: String) =
       q match {
         case q @ (_: Map | _: Filter | _: Entity) => flatten(sources, q, alias)
         case q if (sources == Nil)                => flatten(sources, q, alias)
         case other                                => FlattenSqlQuery(from = sources :+ source(q, alias))
       }
-    
+
     finalFlatMapBody match {
 
       case Map(GroupBy(q, x, g), a @ Ident(alias), p) =>
@@ -108,6 +108,11 @@ object SqlQuery {
 
       case GroupBy(q, Ident(alias), p) =>
         fail("A `groupBy` clause must be followed by a `map`.")
+
+      case Aggregation(op, q) =>
+        val b = base(q, alias)
+        val agg = b.select.map(v => v.copy(ast = Aggregation(op, v.ast)))
+        b.copy(select = agg)
 
       case Take(q, n) =>
         val b = base(q, alias)
