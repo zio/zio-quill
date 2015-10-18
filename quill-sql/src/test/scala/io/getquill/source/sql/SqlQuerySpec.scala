@@ -36,11 +36,11 @@ class SqlQuerySpec extends Spec {
           a <- qr1
           b <- qr2 if (a.s != null && b.i > a.i)
         } yield {
-          (a, b)
+          (a.i, b.i)
         }
       }
       SqlQuery(q.ast).show mustEqual
-        "SELECT a, b FROM TestEntity a, TestEntity2 b WHERE (a.s IS NOT NULL) AND (b.i > a.i)"
+        "SELECT a.i, b.i FROM TestEntity a, TestEntity2 b WHERE (a.s IS NOT NULL) AND (b.i > a.i)"
     }
     "nested infix query" - {
       "as source" in {
@@ -112,6 +112,30 @@ class SqlQuerySpec extends Spec {
       "fails if the sortBy criteria is malformed" in {
         val q = quote {
           qr1.sortBy(t => t)(null)
+        }
+        val e = intercept[IllegalStateException] {
+          SqlQuery(q.ast)
+        }
+      }
+    }
+    "grouped query" - {
+      "simple" in {
+        val q = quote {
+          qr1.groupBy(t => t.i).map(t => t._1)
+        }
+        SqlQuery(q.ast).show mustEqual
+          "SELECT t.i _1 FROM TestEntity t GROUP BY t.i"
+      }
+      "nested" in {
+        val q = quote {
+          qr1.groupBy(t => t.i).map(t => t._1).flatMap(t => qr2)
+        }
+        SqlQuery(q.ast).show mustEqual
+          "SELECT * FROM (SELECT t.i _1 FROM TestEntity t GROUP BY t.i) t, TestEntity2 x"
+      }
+      "without map" in {
+        val q = quote {
+          qr1.groupBy(t => t.i)
         }
         val e = intercept[IllegalStateException] {
           SqlQuery(q.ast)

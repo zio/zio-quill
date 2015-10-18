@@ -57,10 +57,10 @@ trait Parsing {
     case q"!$a" => UnaryOperation(ast.`!`, astParser(a))
     case q"$a.isEmpty" => UnaryOperation(ast.`isEmpty`, astParser(a))
     case q"$a.nonEmpty" => UnaryOperation(ast.`nonEmpty`, astParser(a))
-    case q"$a.min" => Aggregation(ast.`min`, astParser(a))
-    case q"$a.max" => Aggregation(ast.`max`, astParser(a))
-    case q"$a.avg" => Aggregation(ast.`avg`, astParser(a))
-    case q"$a.sum" => Aggregation(ast.`sum`, astParser(a))
+    case q"$a.min[$t]($n)" => Aggregation(ast.`min`, astParser(a))
+    case q"$a.max[$t]($n)" => Aggregation(ast.`max`, astParser(a))
+    case q"$a.avg[$t]($n)" => Aggregation(ast.`avg`, astParser(a))
+    case q"$a.sum[$t]($n)" => Aggregation(ast.`sum`, astParser(a))
     case q"$a.size" => Aggregation(ast.`size`, astParser(a))
     case `identParser`(ident) => ident
     case `valueParser`(value) => value

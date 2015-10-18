@@ -43,6 +43,15 @@ class DealiasSpec extends Spec {
       }
       Dealias(q.ast) mustEqual n.ast
     }
+    "groupBy" in {
+      val q = quote {
+        qr1.filter(a => a.s == "s").groupBy(b => b.s)
+      }
+      val n = quote {
+        qr1.filter(a => a.s == "s").groupBy(a => a.s)
+      }
+      Dealias(q.ast) mustEqual n.ast
+    }
     "reverse" in {
       val q = quote {
         qr1.sortBy(a => a.s).reverse.map(b => b.s)

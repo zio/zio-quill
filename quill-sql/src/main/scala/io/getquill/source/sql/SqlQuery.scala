@@ -1,8 +1,8 @@
 package io.getquill.source.sql
 
 import io.getquill.ast._
-import io.getquill.util.Messages.fail
 import io.getquill.norm.BetaReduction
+import io.getquill.util.Messages.fail
 
 case class OrderByCriteria(property: Property, desc: Boolean)
 
@@ -63,12 +63,14 @@ object SqlQuery {
     }
 
   private def flatten(sources: List[Source], finalFlatMapBody: Ast, alias: String): FlattenSqlQuery = {
+    
     def base(q: Ast, alias: String) =
       q match {
         case q @ (_: Map | _: Filter | _: Entity) => flatten(sources, q, alias)
         case q if (sources == Nil)                => flatten(sources, q, alias)
         case other                                => FlattenSqlQuery(from = sources :+ source(q, alias))
       }
+    
     finalFlatMapBody match {
 
       case Map(GroupBy(q, x, g), a @ Ident(alias), p) =>
@@ -76,7 +78,9 @@ object SqlQuery {
         val criterias = groupByCriterias(g)
         val selectValues = {
           val select = BetaReduction(p, a -> Tuple(List(g, x)))
-          for ((v, i) <- this.selectValues(select).zipWithIndex) yield v.copy(alias = Some(s"_${i + 1}"))
+          for ((v, i) <- this.selectValues(select).zipWithIndex) yield {
+            v.copy(alias = Some(s"_${i + 1}"))
+          }
         }
         b.copy(groupBy = criterias, select = selectValues)
 

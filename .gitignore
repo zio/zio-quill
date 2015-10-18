@@ -5,3 +5,4 @@ target
 .settings
 .cache*
 **/bin
+**/.tmpBin

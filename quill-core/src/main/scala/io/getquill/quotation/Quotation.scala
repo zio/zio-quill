@@ -47,6 +47,6 @@ trait Quotation extends Parsing with Liftables with Unliftables {
   private def verifyFreeVariables(ast: Ast) =
     FreeVariables(ast).toList match {
       case Nil  =>
-      case vars => c.fail(s"A quotation must not have references to variables outside it's scope. Found: '${vars.mkString(", ")}' in '$ast'.")
+      case vars => c.fail(s"A quotation must not have references to variables outside its scope. Found: '${vars.mkString(", ")}' in '$ast'.")
     }
 }

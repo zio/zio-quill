@@ -49,11 +49,22 @@ class BetaReductionSpec extends Spec {
         BetaReduction(ast, Ident("b") -> Ident("b'")) mustEqual
           SortBy(Ident("a"), Ident("b"), Ident("b"))
       }
+      "groupBy" in {
+        val ast: Ast = GroupBy(Ident("a"), Ident("b"), Ident("b"))
+        BetaReduction(ast, Ident("b") -> Ident("b'")) mustEqual
+          GroupBy(Ident("a"), Ident("b"), Ident("b"))
+      }
       "reverse" in {
         val ast: Ast = Reverse(SortBy(Ident("a"), Ident("b"), Ident("b")))
         BetaReduction(ast, Ident("b") -> Ident("b'")) mustEqual
           Reverse(SortBy(Ident("a"), Ident("b"), Ident("b")))
       }
     }
+  }
+
+  "reapplies the beta reduction if the structure changes" in {
+    val ast: Ast = Property(Ident("a"), "_1")
+    BetaReduction(ast, Ident("a") -> Tuple(List(Ident("a'")))) mustEqual
+      Ident("a'")
   }
 }

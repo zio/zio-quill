@@ -44,6 +44,14 @@ class AstShowSpec extends Spec {
     (q.ast: Ast).show mustEqual
       """query[TestEntity].sortBy(t => t.i).reverse"""
   }
+  
+  "shows grouped queries" in {
+    val q = quote {
+      qr1.groupBy(t => t.i)
+    }
+    (q.ast: Ast).show mustEqual
+      """query[TestEntity].groupBy(t => t.i)"""
+  }
 
   "shows functions" in {
     val q = quote {

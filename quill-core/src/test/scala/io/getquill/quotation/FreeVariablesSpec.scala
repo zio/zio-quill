@@ -49,6 +49,14 @@ class FreeVariablesSpec extends Spec {
       }
       """ mustNot compile
     }
+    "groupBy" in {
+      val s = "s"
+      """
+      quote {
+        qr1.groupBy(_ => s)
+      }
+      """ mustNot compile
+    }
     "reverse" in {
       val s = "s"
       """

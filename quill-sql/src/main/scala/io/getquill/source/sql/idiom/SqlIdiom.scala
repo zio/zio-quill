@@ -64,8 +64,9 @@ trait SqlIdiom {
   implicit val selectValueShow: Show[SelectValue] = new Show[SelectValue] {
     def show(e: SelectValue) =
       e match {
-        case SelectValue(ast, Some(alias)) => s"${ast.show} $alias"
-        case SelectValue(ast, None)        => ast.show
+        case SelectValue(Ident(i), _) if i != "*" => fail(s"A select value must not be a nested type. Found: '$i'")
+        case SelectValue(ast, Some(alias))        => s"${ast.show} $alias"
+        case SelectValue(ast, None)               => ast.show
       }
   }
 
