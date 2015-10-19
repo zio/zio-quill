@@ -85,6 +85,11 @@ class StatelessTransformerSpec extends Spec {
         Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"))(ast) mustEqual
           BinaryOperation(Ident("a'"), io.getquill.ast.`&&`, Ident("b'"))
       }
+      "function apply" in {
+      val ast: Ast = FunctionApply(Ident("a"), List(Ident("b"), Ident("c")))
+      Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) mustEqual
+        FunctionApply(Ident("a'"), List(Ident("b'"), Ident("c'")))
+    }
     }
 
     "value" - {
@@ -125,12 +130,6 @@ class StatelessTransformerSpec extends Spec {
       val ast: Ast = Function(List(Ident("a")), Ident("a"))
       Subject(Ident("a") -> Ident("b"))(ast) mustEqual
         Function(List(Ident("a")), Ident("b"))
-    }
-
-    "function apply" in {
-      val ast: Ast = FunctionApply(Ident("a"), List(Ident("b"), Ident("c")))
-      Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) mustEqual
-        FunctionApply(Ident("a'"), List(Ident("b'"), Ident("c'")))
     }
 
     "ident" in {

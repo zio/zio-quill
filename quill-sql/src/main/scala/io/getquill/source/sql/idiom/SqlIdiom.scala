@@ -86,6 +86,8 @@ trait SqlIdiom {
         case BinaryOperation(a, ast.`!=`, NullValue) => s"${scopedShow(a)} IS NOT NULL"
         case BinaryOperation(NullValue, ast.`!=`, b) => s"${scopedShow(b)} IS NOT NULL"
         case BinaryOperation(a, op, b)               => s"${scopedShow(a)} ${op.show} ${scopedShow(b)}"
+        case FunctionApply(Ident(function), params)  => s"$function(${params.show})"
+        case FunctionApply(_, _)                     => fail("Function apply at wrong position")
       }
   }
 

@@ -170,157 +170,164 @@ class SqlIdiomSpec extends Spec {
         }
       }
     }
-    "unary operation" - {
-      "!" in {
-        val q = quote {
-          qr1.filter(t => !(t.s == "a"))
-        }
-        mirrorSource.run(q).sql mustEqual
-          "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE NOT (t.s = 'a')"
-      }
-      "isEmpty" in {
-        val q = quote {
-          qr1.filter(t => qr2.filter(u => u.s == t.s).isEmpty)
-        }
-        mirrorSource.run(q).sql mustEqual
-          "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE NOT EXISTS (SELECT * FROM TestEntity2 u WHERE u.s = t.s)"
-      }
-      "nonEmpty" in {
-        val q = quote {
-          qr1.filter(t => qr2.filter(u => u.s == t.s).nonEmpty)
-        }
-        mirrorSource.run(q).sql mustEqual
-          "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE EXISTS (SELECT * FROM TestEntity2 u WHERE u.s = t.s)"
-      }
-    }
-    "binary operation" - {
-      "-" in {
-        val q = quote {
-          qr1.map(t => t.i - t.i)
-        }
-        mirrorSource.run(q).sql mustEqual
-          "SELECT t.i - t.i FROM TestEntity t"
-      }
-      "+" in {
-        val q = quote {
-          qr1.map(t => t.i + t.i)
-        }
-        mirrorSource.run(q).sql mustEqual
-          "SELECT t.i + t.i FROM TestEntity t"
-      }
-      "*" in {
-        val q = quote {
-          qr1.map(t => t.i * t.i)
-        }
-        mirrorSource.run(q).sql mustEqual
-          "SELECT t.i * t.i FROM TestEntity t"
-      }
-      "==" - {
-        "null" - {
-          "right" in {
-            val q = quote {
-              qr1.filter(t => t.s == null)
-            }
-            mirrorSource.run(q).sql mustEqual
-              "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.s IS NULL"
-          }
-          "left" in {
-            val q = quote {
-              qr1.filter(t => null == t.s)
-            }
-            mirrorSource.run(q).sql mustEqual
-              "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.s IS NULL"
-          }
-        }
-        "values" in {
+    "operations" - {
+      "unary operation" - {
+        "!" in {
           val q = quote {
-            qr1.filter(t => t.s == "s")
+            qr1.filter(t => !(t.s == "a"))
           }
           mirrorSource.run(q).sql mustEqual
-            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.s = 's'"
+            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE NOT (t.s = 'a')"
         }
-      }
-      "!=" - {
-        "null" - {
-          "right" in {
-            val q = quote {
-              qr1.filter(t => t.s != null)
-            }
-            mirrorSource.run(q).sql mustEqual
-              "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.s IS NOT NULL"
-          }
-          "left" in {
-            val q = quote {
-              qr1.filter(t => null != t.s)
-            }
-            mirrorSource.run(q).sql mustEqual
-              "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.s IS NOT NULL"
-          }
-        }
-        "values" in {
+        "isEmpty" in {
           val q = quote {
-            qr1.filter(t => t.s != "s")
+            qr1.filter(t => qr2.filter(u => u.s == t.s).isEmpty)
           }
           mirrorSource.run(q).sql mustEqual
-            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.s <> 's'"
+            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE NOT EXISTS (SELECT * FROM TestEntity2 u WHERE u.s = t.s)"
+        }
+        "nonEmpty" in {
+          val q = quote {
+            qr1.filter(t => qr2.filter(u => u.s == t.s).nonEmpty)
+          }
+          mirrorSource.run(q).sql mustEqual
+            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE EXISTS (SELECT * FROM TestEntity2 u WHERE u.s = t.s)"
         }
       }
-      "&&" in {
-        val q = quote {
-          qr1.filter(t => t.i != null && t.s == "s")
+      "binary operation" - {
+        "-" in {
+          val q = quote {
+            qr1.map(t => t.i - t.i)
+          }
+          mirrorSource.run(q).sql mustEqual
+            "SELECT t.i - t.i FROM TestEntity t"
         }
-        mirrorSource.run(q).sql mustEqual
-          "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE (t.i IS NOT NULL) AND (t.s = 's')"
-      }
-      "||" in {
-        val q = quote {
-          qr1.filter(t => t.i != null || t.s == "s")
+        "+" in {
+          val q = quote {
+            qr1.map(t => t.i + t.i)
+          }
+          mirrorSource.run(q).sql mustEqual
+            "SELECT t.i + t.i FROM TestEntity t"
         }
-        mirrorSource.run(q).sql mustEqual
-          "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE (t.i IS NOT NULL) OR (t.s = 's')"
-      }
-      ">" in {
-        val q = quote {
-          qr1.filter(t => t.i > t.l)
+        "*" in {
+          val q = quote {
+            qr1.map(t => t.i * t.i)
+          }
+          mirrorSource.run(q).sql mustEqual
+            "SELECT t.i * t.i FROM TestEntity t"
         }
-        mirrorSource.run(q).sql mustEqual
-          "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.i > t.l"
-      }
-      ">=" in {
-        val q = quote {
-          qr1.filter(t => t.i >= t.l)
+        "==" - {
+          "null" - {
+            "right" in {
+              val q = quote {
+                qr1.filter(t => t.s == null)
+              }
+              mirrorSource.run(q).sql mustEqual
+                "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.s IS NULL"
+            }
+            "left" in {
+              val q = quote {
+                qr1.filter(t => null == t.s)
+              }
+              mirrorSource.run(q).sql mustEqual
+                "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.s IS NULL"
+            }
+          }
+          "values" in {
+            val q = quote {
+              qr1.filter(t => t.s == "s")
+            }
+            mirrorSource.run(q).sql mustEqual
+              "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.s = 's'"
+          }
         }
-        mirrorSource.run(q).sql mustEqual
-          "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.i >= t.l"
-      }
-      "<" in {
-        val q = quote {
-          qr1.filter(t => t.i < t.l)
+        "!=" - {
+          "null" - {
+            "right" in {
+              val q = quote {
+                qr1.filter(t => t.s != null)
+              }
+              mirrorSource.run(q).sql mustEqual
+                "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.s IS NOT NULL"
+            }
+            "left" in {
+              val q = quote {
+                qr1.filter(t => null != t.s)
+              }
+              mirrorSource.run(q).sql mustEqual
+                "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.s IS NOT NULL"
+            }
+          }
+          "values" in {
+            val q = quote {
+              qr1.filter(t => t.s != "s")
+            }
+            mirrorSource.run(q).sql mustEqual
+              "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.s <> 's'"
+          }
         }
-        mirrorSource.run(q).sql mustEqual
-          "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.i < t.l"
-      }
-      "<=" in {
-        val q = quote {
-          qr1.filter(t => t.i <= t.l)
+        "&&" in {
+          val q = quote {
+            qr1.filter(t => t.i != null && t.s == "s")
+          }
+          mirrorSource.run(q).sql mustEqual
+            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE (t.i IS NOT NULL) AND (t.s = 's')"
         }
-        mirrorSource.run(q).sql mustEqual
-          "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.i <= t.l"
-      }
-      "/" in {
-        val q = quote {
-          qr1.filter(t => (t.i / t.l) == 0)
+        "||" in {
+          val q = quote {
+            qr1.filter(t => t.i != null || t.s == "s")
+          }
+          mirrorSource.run(q).sql mustEqual
+            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE (t.i IS NOT NULL) OR (t.s = 's')"
         }
-        mirrorSource.run(q).sql mustEqual
-          "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE (t.i / t.l) = 0"
-      }
-      "%" in {
-        val q = quote {
-          qr1.filter(t => (t.i % t.l) == 0)
+        ">" in {
+          val q = quote {
+            qr1.filter(t => t.i > t.l)
+          }
+          mirrorSource.run(q).sql mustEqual
+            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.i > t.l"
         }
-        mirrorSource.run(q).sql mustEqual
-          "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE (t.i % t.l) = 0"
+        ">=" in {
+          val q = quote {
+            qr1.filter(t => t.i >= t.l)
+          }
+          mirrorSource.run(q).sql mustEqual
+            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.i >= t.l"
+        }
+        "<" in {
+          val q = quote {
+            qr1.filter(t => t.i < t.l)
+          }
+          mirrorSource.run(q).sql mustEqual
+            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.i < t.l"
+        }
+        "<=" in {
+          val q = quote {
+            qr1.filter(t => t.i <= t.l)
+          }
+          mirrorSource.run(q).sql mustEqual
+            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.i <= t.l"
+        }
+        "/" in {
+          val q = quote {
+            qr1.filter(t => (t.i / t.l) == 0)
+          }
+          mirrorSource.run(q).sql mustEqual
+            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE (t.i / t.l) = 0"
+        }
+        "%" in {
+          val q = quote {
+            qr1.filter(t => (t.i % t.l) == 0)
+          }
+          mirrorSource.run(q).sql mustEqual
+            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE (t.i % t.l) = 0"
+        }
       }
+      //      "function apply" in {
+      //        val q = quote {
+      //          qr1.map(t =>
+      //        }
+      //      }
     }
     "action" - {
       "insert" in {

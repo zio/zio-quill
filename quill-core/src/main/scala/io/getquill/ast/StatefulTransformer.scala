@@ -17,11 +17,6 @@ trait StatefulTransformer[T] {
         val (bt, btt) = apply(b)
         (Function(a, bt), btt)
 
-      case FunctionApply(a, b) =>
-        val (at, att) = apply(a)
-        val (bt, btt) = att.apply(b)(_.apply)
-        (FunctionApply(at, bt), btt)
-
       case Property(a, b) =>
         val (at, att) = apply(a)
         (Property(at, b), att)
@@ -87,6 +82,11 @@ trait StatefulTransformer[T] {
         val (at, att) = apply(a)
         val (ct, ctt) = att.apply(c)
         (BinaryOperation(at, b, ct), ctt)
+      case FunctionApply(a, b) =>
+        val (at, att) = apply(a)
+        val (bt, btt) = att.apply(b)(_.apply)
+        (FunctionApply(at, bt), btt)
+
     }
 
   def apply(e: Value): (Value, StatefulTransformer[T]) =

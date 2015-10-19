@@ -13,14 +13,6 @@ sealed trait PostfixUnaryOperator extends UnaryOperator
 object `nonEmpty` extends PostfixUnaryOperator
 object `isEmpty` extends PostfixUnaryOperator
 
-sealed trait AggregationOperator extends Operator
-
-object `min` extends AggregationOperator
-object `max` extends AggregationOperator
-object `avg` extends AggregationOperator
-object `sum` extends AggregationOperator
-object `size` extends AggregationOperator
-
 sealed trait BinaryOperator extends Operator
 
 object `-` extends BinaryOperator
@@ -36,3 +28,11 @@ object `<` extends BinaryOperator
 object `<=` extends BinaryOperator
 object `/` extends BinaryOperator
 object `%` extends BinaryOperator
+
+sealed trait AggregationOperator extends Operator
+
+object `min` extends AggregationOperator
+object `max` extends AggregationOperator
+object `avg` extends AggregationOperator
+object `sum` extends AggregationOperator
+object `size` extends AggregationOperator

@@ -20,7 +20,7 @@ MVP - mid-september
 	√ drop
 	√ options
 	√ groupBy
-	- aggregations
+	√ aggregations
 	- additional operations (string concatenation, etc)
 	- set operations (union, outer joins, etc)
 	- insert returning id
@@ -55,4 +55,4 @@ Later
 - easy crud (https://github.com/strongtyped/active-slick)
 - cached queries
 - nested transactions (save points)
-- insistence layer
+- insistence layer√

@@ -61,29 +61,37 @@ class AstShowSpec extends Spec {
       """(s) => s"""
   }
 
-  "shows function applies" - {
-    "function reference" in {
+  "shows operations" - {
+    "unary" in {
       val q = quote {
-        (s: String => String) => s("a")
+        (xs: QueryInterface[_]) => !xs.nonEmpty
       }
       (q.ast: Ast).show mustEqual
-        """(s) => s.apply("a")"""
+        """(xs) => !xs.nonEmpty"""
     }
-    "local function" in {
+    "binary" in {
       val q = quote {
-        ((s: String) => s)("s")
+        (xs: QueryInterface[_]) => xs.nonEmpty && xs != null
       }
       (q.ast: Ast).show mustEqual
-        """((s) => s).apply("s")"""
+        """(xs) => xs.nonEmpty && xs != null"""
     }
-  }
-
-  "shows operations" in {
-    val q = quote {
-      (xs: QueryInterface[_]) => !(xs.nonEmpty && xs != null)
+    "function apply" - {
+      "function reference" in {
+        val q = quote {
+          (s: String => String) => s("a")
+        }
+        (q.ast: Ast).show mustEqual
+          """(s) => s.apply("a")"""
+      }
+      "local function" in {
+        val q = quote {
+          ((s: String) => s)("s")
+        }
+        (q.ast: Ast).show mustEqual
+          """((s) => s).apply("s")"""
+      }
     }
-    (q.ast: Ast).show mustEqual
-      """(xs) => !(xs.nonEmpty && (xs != null))"""
   }
 
   "shows aggregations" - {

@@ -13,8 +13,6 @@ sealed trait Ast {
   }
 }
 
-case class Infix(parts: List[String], params: List[Ast]) extends Ast
-
 //************************************************************
 
 sealed trait Query extends Ast
@@ -45,10 +43,12 @@ case class UnionAll(a: Ast, b: Ast) extends Query
 
 //************************************************************
 
+case class Infix(parts: List[String], params: List[Ast]) extends Ast
+
 case class Function(params: List[Ident], body: Ast) extends Ast
-case class FunctionApply(function: Ast, values: List[Ast]) extends Ast
 
 case class Ident(name: String) extends Ast
+
 case class Property(ast: Ast, name: String) extends Ast
 
 //************************************************************
@@ -57,6 +57,7 @@ sealed trait Operation extends Ast
 
 case class UnaryOperation(operator: UnaryOperator, ast: Ast) extends Operation
 case class BinaryOperation(a: Ast, operator: BinaryOperator, b: Ast) extends Operation
+case class FunctionApply(function: Ast, values: List[Ast]) extends Operation
 
 //************************************************************
 
