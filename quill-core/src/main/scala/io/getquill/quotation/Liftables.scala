@@ -2,7 +2,6 @@ package io.getquill.quotation
 
 import scala.reflect.macros.whitebox.Context
 
-import io.getquill.{ Query => _, Action => _, _ }
 import io.getquill.ast._
 
 trait Liftables {
@@ -21,37 +20,38 @@ trait Liftables {
     case FunctionApply(a, b)      => q"$pack.FunctionApply($a, $b)"
     case BinaryOperation(a, b, c) => q"$pack.BinaryOperation($a, $b, $c)"
     case UnaryOperation(a, b)     => q"$pack.UnaryOperation($a, $b)"
+    case MethodCall(a, b, c)      => q"$pack.MethodCall($a, $b, $c)"
     case Infix(a, b)              => q"$pack.Infix($a, $b)"
   }
 
   implicit val binaryOperatorLiftable: Liftable[BinaryOperator] = Liftable[BinaryOperator] {
-    case ast.`-`  => q"$pack.`-`"
-    case ast.`+`  => q"$pack.`+`"
-    case ast.`*`  => q"$pack.`*`"
-    case ast.`==` => q"$pack.`==`"
-    case ast.`!=` => q"$pack.`!=`"
-    case ast.`&&` => q"$pack.`&&`"
-    case ast.`||` => q"$pack.`||`"
-    case ast.`>`  => q"$pack.`>`"
-    case ast.`>=` => q"$pack.`>=`"
-    case ast.`<`  => q"$pack.`<`"
-    case ast.`<=` => q"$pack.`<=`"
-    case ast.`/`  => q"$pack.`/`"
-    case ast.`%`  => q"$pack.`%`"
+    case EqualityOperator.`==` => q"$pack.EqualityOperator.`==`"
+    case EqualityOperator.`!=` => q"$pack.EqualityOperator.`!=`"
+    case BooleanOperator.`&&`  => q"$pack.BooleanOperator.`&&`"
+    case BooleanOperator.`||`  => q"$pack.BooleanOperator.`||`"
+    case NumericOperator.`-`   => q"$pack.NumericOperator.`-`"
+    case NumericOperator.`+`   => q"$pack.NumericOperator.`+`"
+    case NumericOperator.`*`   => q"$pack.NumericOperator.`*`"
+    case NumericOperator.`>`   => q"$pack.NumericOperator.`>`"
+    case NumericOperator.`>=`  => q"$pack.NumericOperator.`>=`"
+    case NumericOperator.`<`   => q"$pack.NumericOperator.`<`"
+    case NumericOperator.`<=`  => q"$pack.NumericOperator.`<=`"
+    case NumericOperator.`/`   => q"$pack.NumericOperator.`/`"
+    case NumericOperator.`%`   => q"$pack.NumericOperator.`%`"
   }
 
   implicit val unaryOperatorLiftable: Liftable[UnaryOperator] = Liftable[UnaryOperator] {
-    case ast.`!`        => q"$pack.`!`"
-    case ast.`nonEmpty` => q"$pack.`nonEmpty`"
-    case ast.`isEmpty`  => q"$pack.`isEmpty`"
+    case BooleanOperator.`!`    => q"$pack.BooleanOperator.`!`"
+    case SetOperator.`nonEmpty` => q"$pack.SetOperator.`nonEmpty`"
+    case SetOperator.`isEmpty`  => q"$pack.SetOperator.`isEmpty`"
   }
 
   implicit val aggregationOperatorLiftable: Liftable[AggregationOperator] = Liftable[AggregationOperator] {
-    case ast.`min`  => q"$pack.`min`"
-    case ast.`max`  => q"$pack.`max`"
-    case ast.`avg`  => q"$pack.`avg`"
-    case ast.`sum`  => q"$pack.`sum`"
-    case ast.`size` => q"$pack.`size`"
+    case AggregationOperator.`min`  => q"$pack.AggregationOperator.`min`"
+    case AggregationOperator.`max`  => q"$pack.AggregationOperator.`max`"
+    case AggregationOperator.`avg`  => q"$pack.AggregationOperator.`avg`"
+    case AggregationOperator.`sum`  => q"$pack.AggregationOperator.`sum`"
+    case AggregationOperator.`size` => q"$pack.AggregationOperator.`size`"
   }
 
   implicit val queryLiftable: Liftable[Query] = Liftable[Query] {

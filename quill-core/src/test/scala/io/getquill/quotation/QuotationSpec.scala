@@ -14,13 +14,13 @@ class QuotationSpec extends Spec {
         val q = quote {
           qr1.filter(t => t.s == "s")
         }
-        quote(unquote(q)).ast mustEqual Filter(Entity("TestEntity"), Ident("t"), BinaryOperation(Property(Ident("t"), "s"), ast.`==`, Constant("s")))
+        quote(unquote(q)).ast mustEqual Filter(Entity("TestEntity"), Ident("t"), BinaryOperation(Property(Ident("t"), "s"), EqualityOperator.`==`, Constant("s")))
       }
       "withFilter" in {
         val q = quote {
           qr1.withFilter(t => t.s == "s")
         }
-        quote(unquote(q)).ast mustEqual Filter(Entity("TestEntity"), Ident("t"), BinaryOperation(Property(Ident("t"), "s"), ast.`==`, Constant("s")))
+        quote(unquote(q)).ast mustEqual Filter(Entity("TestEntity"), Ident("t"), BinaryOperation(Property(Ident("t"), "s"), EqualityOperator.`==`, Constant("s")))
       }
       "map" in {
         val q = quote {
@@ -51,31 +51,31 @@ class QuotationSpec extends Spec {
           val q = quote {
             qr1.map(t => t.i).min
           }
-          quote(unquote(q)).ast mustEqual Aggregation(ast.`min`, Map(Entity("TestEntity"), Ident("t"), Property(Ident("t"), "i")))
+          quote(unquote(q)).ast mustEqual Aggregation(AggregationOperator.`min`, Map(Entity("TestEntity"), Ident("t"), Property(Ident("t"), "i")))
         }
         "max" in {
           val q = quote {
             qr1.map(t => t.i).max
           }
-          quote(unquote(q)).ast mustEqual Aggregation(ast.`max`, Map(Entity("TestEntity"), Ident("t"), Property(Ident("t"), "i")))
+          quote(unquote(q)).ast mustEqual Aggregation(AggregationOperator.`max`, Map(Entity("TestEntity"), Ident("t"), Property(Ident("t"), "i")))
         }
         "avg" in {
           val q = quote {
             qr1.map(t => t.i).avg
           }
-          quote(unquote(q)).ast mustEqual Aggregation(ast.`avg`, Map(Entity("TestEntity"), Ident("t"), Property(Ident("t"), "i")))
+          quote(unquote(q)).ast mustEqual Aggregation(AggregationOperator.`avg`, Map(Entity("TestEntity"), Ident("t"), Property(Ident("t"), "i")))
         }
         "sum" in {
           val q = quote {
             qr1.map(t => t.i).sum
           }
-          quote(unquote(q)).ast mustEqual Aggregation(ast.`sum`, Map(Entity("TestEntity"), Ident("t"), Property(Ident("t"), "i")))
+          quote(unquote(q)).ast mustEqual Aggregation(AggregationOperator.`sum`, Map(Entity("TestEntity"), Ident("t"), Property(Ident("t"), "i")))
         }
         "size" in {
           val q = quote {
             qr1.map(t => t.i).size
           }
-          quote(unquote(q)).ast mustEqual Aggregation(ast.`size`, Map(Entity("TestEntity"), Ident("t"), Property(Ident("t"), "i")))
+          quote(unquote(q)).ast mustEqual Aggregation(AggregationOperator.`size`, Map(Entity("TestEntity"), Ident("t"), Property(Ident("t"), "i")))
         }
       }
       "reverse" in {
@@ -197,83 +197,83 @@ class QuotationSpec extends Spec {
       }
     }
     "binary operation" - {
-      "-" in {
-        val q = quote {
-          (a: Int, b: Int) => a - b
-        }
-        quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), ast.`-`, Ident("b"))
-      }
-      "+" in {
-        val q = quote {
-          (a: Int, b: Int) => a + b
-        }
-        quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), ast.`+`, Ident("b"))
-      }
-      "*" in {
-        val q = quote {
-          (a: Int, b: Int) => a * b
-        }
-        quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), ast.`*`, Ident("b"))
-      }
       "==" in {
         val q = quote {
           (a: Int, b: Int) => a == b
         }
-        quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), ast.`==`, Ident("b"))
+        quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), EqualityOperator.`==`, Ident("b"))
       }
       "!=" in {
         val q = quote {
           (a: Int, b: Int) => a != b
         }
-        quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), ast.`!=`, Ident("b"))
+        quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), EqualityOperator.`!=`, Ident("b"))
       }
       "&&" in {
         val q = quote {
           (a: Boolean, b: Boolean) => a && b
         }
-        quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), ast.`&&`, Ident("b"))
+        quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), BooleanOperator.`&&`, Ident("b"))
       }
       "||" in {
         val q = quote {
           (a: Boolean, b: Boolean) => a || b
         }
-        quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), ast.`||`, Ident("b"))
+        quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), BooleanOperator.`||`, Ident("b"))
+      }
+      "-" in {
+        val q = quote {
+          (a: Int, b: Int) => a - b
+        }
+        quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), NumericOperator.`-`, Ident("b"))
+      }
+      "+" in {
+        val q = quote {
+          (a: Int, b: Int) => a + b
+        }
+        quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), NumericOperator.`+`, Ident("b"))
+      }
+      "*" in {
+        val q = quote {
+          (a: Int, b: Int) => a * b
+        }
+        quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), NumericOperator.`*`, Ident("b"))
       }
       ">" in {
         val q = quote {
           (a: Int, b: Int) => a > b
         }
-        quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), ast.`>`, Ident("b"))
+        quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), NumericOperator.`>`, Ident("b"))
       }
       ">=" in {
         val q = quote {
           (a: Int, b: Int) => a >= b
         }
-        quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), ast.`>=`, Ident("b"))
+        quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), NumericOperator.`>=`, Ident("b"))
       }
       "<" in {
         val q = quote {
           (a: Int, b: Int) => a < b
         }
-        quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), ast.`<`, Ident("b"))
+        quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), NumericOperator.`<`, Ident("b"))
       }
       "<=" in {
         val q = quote {
           (a: Int, b: Int) => a <= b
         }
-        quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), ast.`<=`, Ident("b"))
+        quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), NumericOperator.`<=`, Ident("b"))
       }
       "/" in {
         val q = quote {
           (a: Int, b: Int) => a / b
         }
-        quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), ast.`/`, Ident("b"))
+        quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), NumericOperator.`/`, Ident("b"))
       }
       "%" in {
         val q = quote {
           (a: Int, b: Int) => a % b
         }
-        quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), ast.`%`, Ident("b"))
+        quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), NumericOperator.`%`, Ident("b"))
       }
     }
     "unary operation" - {
@@ -281,19 +281,19 @@ class QuotationSpec extends Spec {
         val q = quote {
           (a: Boolean) => !a
         }
-        quote(unquote(q)).ast.body mustEqual UnaryOperation(ast.`!`, Ident("a"))
+        quote(unquote(q)).ast.body mustEqual UnaryOperation(BooleanOperator.`!`, Ident("a"))
       }
       "nonEmpty" in {
         val q = quote {
           qr1.nonEmpty
         }
-        quote(unquote(q)).ast mustEqual UnaryOperation(ast.`nonEmpty`, Entity("TestEntity"))
+        quote(unquote(q)).ast mustEqual UnaryOperation(SetOperator.`nonEmpty`, Entity("TestEntity"))
       }
       "isEmpty" in {
         val q = quote {
           qr1.isEmpty
         }
-        quote(unquote(q)).ast mustEqual UnaryOperation(ast.`isEmpty`, Entity("TestEntity"))
+        quote(unquote(q)).ast mustEqual UnaryOperation(SetOperator.`isEmpty`, Entity("TestEntity"))
       }
     }
     "infix" - {
@@ -326,13 +326,13 @@ class QuotationSpec extends Spec {
           case (a, b) => a + b
         }
     }
-    quote(unquote(q)).ast.body mustEqual BinaryOperation(Property(Ident("t"), "_1"), ast.`+`, Property(Ident("t"), "_2"))
+    quote(unquote(q)).ast.body mustEqual BinaryOperation(Property(Ident("t"), "_1"), NumericOperator.`+`, Property(Ident("t"), "_2"))
   }
 
   "unquotes referenced quotations" - {
     val q = quote(1)
     val q2 = quote(q + 1)
-    quote(unquote(q2)).ast mustEqual BinaryOperation(Constant(1), ast.`+`, Constant(1))
+    quote(unquote(q2)).ast mustEqual BinaryOperation(Constant(1), NumericOperator.`+`, Constant(1))
   }
 
   "ignores the ifrefutable call" - {

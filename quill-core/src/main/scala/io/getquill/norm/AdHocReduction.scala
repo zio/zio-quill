@@ -1,6 +1,5 @@
 package io.getquill.norm
 
-import io.getquill.{ Query => _, _ }
 import io.getquill.ast._
 
 object AdHocReduction {
@@ -15,7 +14,7 @@ object AdHocReduction {
       //    a.filter(b => c && e[d := b])
       case Filter(Filter(a, b, c), d, e) =>
         val er = BetaReduction(e, d -> b)
-        Some(Filter(a, b, BinaryOperation(c, ast.`&&`, er)))
+        Some(Filter(a, b, BinaryOperation(c, BooleanOperator.`&&`, er)))
 
       // ---------------------------
       // flatMap.*

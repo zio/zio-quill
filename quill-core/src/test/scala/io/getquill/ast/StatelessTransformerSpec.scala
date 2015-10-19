@@ -43,9 +43,9 @@ class StatelessTransformerSpec extends Spec {
           GroupBy(Ident("a'"), Ident("b"), Ident("c'"))
       }
       "aggregation" in {
-        val ast: Ast = Aggregation(io.getquill.ast.max, Ident("a"))
+        val ast: Ast = Aggregation(AggregationOperator.`max`, Ident("a"))
         Subject(Ident("a") -> Ident("a'"))(ast) mustEqual
-          Aggregation(io.getquill.ast.max, Ident("a'"))
+          Aggregation(AggregationOperator.`max`, Ident("a'"))
       }
       "reverse" in {
         val ast: Ast = Reverse(SortBy(Ident("a"), Ident("b"), Ident("c")))
@@ -76,20 +76,20 @@ class StatelessTransformerSpec extends Spec {
 
     "operation" - {
       "unary" in {
-        val ast: Ast = UnaryOperation(io.getquill.ast.`!`, Ident("a"))
+        val ast: Ast = UnaryOperation(BooleanOperator.`!`, Ident("a"))
         Subject(Ident("a") -> Ident("a'"))(ast) mustEqual
-          UnaryOperation(io.getquill.ast.`!`, Ident("a'"))
+          UnaryOperation(BooleanOperator.`!`, Ident("a'"))
       }
       "binary" in {
-        val ast: Ast = BinaryOperation(Ident("a"), io.getquill.ast.`&&`, Ident("b"))
+        val ast: Ast = BinaryOperation(Ident("a"), BooleanOperator.`&&`, Ident("b"))
         Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"))(ast) mustEqual
-          BinaryOperation(Ident("a'"), io.getquill.ast.`&&`, Ident("b'"))
+          BinaryOperation(Ident("a'"), BooleanOperator.`&&`, Ident("b'"))
       }
       "function apply" in {
-      val ast: Ast = FunctionApply(Ident("a"), List(Ident("b"), Ident("c")))
-      Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) mustEqual
-        FunctionApply(Ident("a'"), List(Ident("b'"), Ident("c'")))
-    }
+        val ast: Ast = FunctionApply(Ident("a"), List(Ident("b"), Ident("c")))
+        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) mustEqual
+          FunctionApply(Ident("a'"), List(Ident("b'"), Ident("c'")))
+      }
     }
 
     "value" - {

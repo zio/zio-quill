@@ -65,10 +65,10 @@ class StatefulTransformerSpec extends Spec {
         }
       }
       "aggregation" in {
-        val ast: Ast = Aggregation(io.getquill.ast.max, Ident("a"))
+        val ast: Ast = Aggregation(AggregationOperator.max, Ident("a"))
         Subject(Nil, Ident("a") -> Ident("a'"))(ast) match {
           case (at, att) =>
-            at mustEqual Aggregation(io.getquill.ast.max, Ident("a'"))
+            at mustEqual Aggregation(AggregationOperator.max, Ident("a'"))
             att.state mustEqual List(Ident("a"))
         }
       }
@@ -116,18 +116,18 @@ class StatefulTransformerSpec extends Spec {
 
     "operation" - {
       "unary" in {
-        val ast: Ast = UnaryOperation(io.getquill.ast.`!`, Ident("a"))
+        val ast: Ast = UnaryOperation(BooleanOperator.`!`, Ident("a"))
         Subject(Nil, Ident("a") -> Ident("a'"))(ast) match {
           case (at, att) =>
-            at mustEqual UnaryOperation(io.getquill.ast.`!`, Ident("a'"))
+            at mustEqual UnaryOperation(BooleanOperator.`!`, Ident("a'"))
             att.state mustEqual List(Ident("a"))
         }
       }
       "binary" in {
-        val ast: Ast = BinaryOperation(Ident("a"), io.getquill.ast.`&&`, Ident("b"))
+        val ast: Ast = BinaryOperation(Ident("a"), BooleanOperator.`&&`, Ident("b"))
         Subject(Nil, Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"))(ast) match {
           case (at, att) =>
-            at mustEqual BinaryOperation(Ident("a'"), io.getquill.ast.`&&`, Ident("b'"))
+            at mustEqual BinaryOperation(Ident("a'"), BooleanOperator.`&&`, Ident("b'"))
             att.state mustEqual List(Ident("a"), Ident("b"))
         }
       }

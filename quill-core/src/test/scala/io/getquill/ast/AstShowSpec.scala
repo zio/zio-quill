@@ -74,7 +74,7 @@ class AstShowSpec extends Spec {
         (xs: QueryInterface[_]) => xs.nonEmpty && xs != null
       }
       (q.ast: Ast).show mustEqual
-        """(xs) => xs.nonEmpty && xs != null"""
+        """(xs) => xs.nonEmpty && (xs != null)"""
     }
     "function apply" - {
       "function reference" in {

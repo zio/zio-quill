@@ -2,7 +2,6 @@ package io.getquill.quotation
 
 import scala.reflect.macros.whitebox.Context
 
-import io.getquill.{ Query => _, Action => _, _ }
 import io.getquill.ast._
 
 trait Unliftables {
@@ -29,33 +28,33 @@ trait Unliftables {
   }
 
   implicit val binaryOperatorUnliftable: Unliftable[BinaryOperator] = Unliftable[BinaryOperator] {
-    case q"$pack.`-`"  => ast.`-`
-    case q"$pack.`+`"  => ast.`+`
-    case q"$pack.`*`"  => ast.`*`
-    case q"$pack.`==`" => ast.`==`
-    case q"$pack.`!=`" => ast.`!=`
-    case q"$pack.`&&`" => ast.`&&`
-    case q"$pack.`||`" => ast.`||`
-    case q"$pack.`>`"  => ast.`>`
-    case q"$pack.`>=`" => ast.`>=`
-    case q"$pack.`<`"  => ast.`<`
-    case q"$pack.`<=`" => ast.`<=`
-    case q"$pack.`/`"  => ast.`/`
-    case q"$pack.`%`"  => ast.`%`
+    case q"$pack.EqualityOperator.`==`" => EqualityOperator.`==`
+    case q"$pack.EqualityOperator.`!=`" => EqualityOperator.`!=`
+    case q"$pack.BooleanOperator.`&&`"  => BooleanOperator.`&&`
+    case q"$pack.BooleanOperator.`||`"  => BooleanOperator.`||`
+    case q"$pack.NumericOperator.`-`"   => NumericOperator.`-`
+    case q"$pack.NumericOperator.`+`"   => NumericOperator.`+`
+    case q"$pack.NumericOperator.`*`"   => NumericOperator.`*`
+    case q"$pack.NumericOperator.`>`"   => NumericOperator.`>`
+    case q"$pack.NumericOperator.`>=`"  => NumericOperator.`>=`
+    case q"$pack.NumericOperator.`<`"   => NumericOperator.`<`
+    case q"$pack.NumericOperator.`<=`"  => NumericOperator.`<=`
+    case q"$pack.NumericOperator.`/`"   => NumericOperator.`/`
+    case q"$pack.NumericOperator.`%`"   => NumericOperator.`%`
   }
 
   implicit val unaryOperatorUnliftable: Unliftable[UnaryOperator] = Unliftable[UnaryOperator] {
-    case q"$pack.`!`"        => ast.`!`
-    case q"$pack.`nonEmpty`" => ast.`nonEmpty`
-    case q"$pack.`isEmpty`"  => ast.`isEmpty`
+    case q"$pack.BooleanOperator.`!`"    => BooleanOperator.`!`
+    case q"$pack.SetOperator.`nonEmpty`" => SetOperator.`nonEmpty`
+    case q"$pack.SetOperator.`isEmpty`"  => SetOperator.`isEmpty`
   }
 
   implicit val aggregationOperatorUnliftable: Unliftable[AggregationOperator] = Unliftable[AggregationOperator] {
-    case q"$pack.`min`"  => ast.`min`
-    case q"$pack.`max`"  => ast.`max`
-    case q"$pack.`avg`"  => ast.`avg`
-    case q"$pack.`sum`"  => ast.`sum`
-    case q"$pack.`size`" => ast.`size`
+    case q"$pack.AggregationOperator.`min`"  => AggregationOperator.`min`
+    case q"$pack.AggregationOperator.`max`"  => AggregationOperator.`max`
+    case q"$pack.AggregationOperator.`avg`"  => AggregationOperator.`avg`
+    case q"$pack.AggregationOperator.`sum`"  => AggregationOperator.`sum`
+    case q"$pack.AggregationOperator.`size`" => AggregationOperator.`size`
   }
 
   implicit val queryUnliftable: Unliftable[Query] = Unliftable[Query] {

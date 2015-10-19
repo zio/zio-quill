@@ -3,7 +3,6 @@ package io.getquill.quotation
 import scala.reflect.ClassTag
 import scala.reflect.macros.whitebox.Context
 
-import io.getquill.{ Action => _, Query => _, _ }
 import io.getquill.ast._
 import io.getquill.norm.BetaReduction
 import io.getquill.util.Messages.RichContext
@@ -32,39 +31,15 @@ trait Parsing {
       }
   }
 
-  val actionParser: Parser[Action] = Parser[Action] {
-    case q"$query.$method(..$assignments)" if (method.decodedName.toString == "update") =>
-      Update(astParser(query), assignments.map(assignmentParser(_)))
-    case q"$query.insert(..$assignments)" =>
-      Insert(astParser(query), assignments.map(assignmentParser(_)))
-    case q"$query.delete" =>
-      Delete(astParser(query))
-  }
-
-  private val assignmentParser: Parser[Assignment] = Parser[Assignment] {
-    case q"(($x1) => scala.this.Predef.ArrowAssoc[$t]($x2.$prop).->[$v]($value))" =>
-      Assignment(prop.decodedName.toString, astParser(value))
-  }
-
   val astParser: Parser[Ast] = Parser[Ast] {
-    case `queryParser`(query) => query
+    case `queryParser`(query)       => query
     case `functionParser`(function) => function
-    case `actionParser`(action) => action
-    case `infixParser`(value) => value
-    case q"${ functionParser(a) }.apply[..$t](...$values)" => FunctionApply(a, values.flatten.map(astParser(_)))
-    case q"${ identParser(a) }.apply[..$t](...$values)" => FunctionApply(a, values.flatten.map(astParser(_)))
-    case q"$a.$op($b)" => BinaryOperation(astParser(a), binaryOperator(op), astParser(b))
-    case q"!$a" => UnaryOperation(ast.`!`, astParser(a))
-    case q"$a.isEmpty" => UnaryOperation(ast.`isEmpty`, astParser(a))
-    case q"$a.nonEmpty" => UnaryOperation(ast.`nonEmpty`, astParser(a))
-    case q"$a.min[$t]($n)" => Aggregation(ast.`min`, astParser(a))
-    case q"$a.max[$t]($n)" => Aggregation(ast.`max`, astParser(a))
-    case q"$a.avg[$t]($n)" => Aggregation(ast.`avg`, astParser(a))
-    case q"$a.sum[$t]($n)" => Aggregation(ast.`sum`, astParser(a))
-    case q"$a.size" => Aggregation(ast.`size`, astParser(a))
-    case `identParser`(ident) => ident
-    case `valueParser`(value) => value
-    case `propertyParser`(value) => value
+    case `actionParser`(action)     => action
+    case `infixParser`(value)       => value
+    case `operationParser`(value)   => value
+    case `identParser`(ident)       => ident
+    case `valueParser`(value)       => value
+    case `propertyParser`(value)    => value
 
     case q"$tupleTree match { case (..$fieldsTrees) => $bodyTree }" =>
       val tuple = astParser(tupleTree)
@@ -75,13 +50,6 @@ trait Parsing {
           Property(tuple, s"_${i + 1}")
         }
       BetaReduction(body, fields.zip(properties): _*)
-  }
-
-  val functionParser: Parser[Function] = Parser[Function] {
-    case q"new { def apply[..$t1](...$params) = $body }" =>
-      Function(params.flatten.map(p => p: Tree).map(identParser(_)), astParser(body))
-    case q"(..$params) => $body" =>
-      Function(params.map(identParser(_)), astParser(body))
   }
 
   val queryParser: Parser[Query] = Parser[Query] {
@@ -106,7 +74,13 @@ trait Parsing {
 
     case q"$source.groupBy[$t](($alias) => $body)" =>
       GroupBy(astParser(source), identParser(alias), astParser(body))
-      
+
+    case q"$a.min[$t]($n)" => Aggregation(AggregationOperator.`min`, astParser(a))
+    case q"$a.max[$t]($n)" => Aggregation(AggregationOperator.`max`, astParser(a))
+    case q"$a.avg[$t]($n)" => Aggregation(AggregationOperator.`avg`, astParser(a))
+    case q"$a.sum[$t]($n)" => Aggregation(AggregationOperator.`sum`, astParser(a))
+    case q"$a.size"        => Aggregation(AggregationOperator.`size`, astParser(a))
+
     case q"$source.reverse" =>
       Reverse(astParser(source))
 
@@ -126,31 +100,18 @@ trait Parsing {
       UnionAll(astParser(source), astParser(n))
   }
 
-  private def binaryOperator(name: TermName) =
-    name.decodedName.toString match {
-      case "-"  => ast.`-`
-      case "+"  => ast.`+`
-      case "*"  => ast.`*`
-      case "==" => ast.`==`
-      case "!=" => ast.`!=`
-      case "&&" => ast.`&&`
-      case "||" => ast.`||`
-      case ">"  => ast.`>`
-      case ">=" => ast.`>=`
-      case "<"  => ast.`<`
-      case "<=" => ast.`<=`
-      case "/"  => ast.`/`
-      case "%"  => ast.`%`
-    }
-
-  val propertyParser: Parser[Property] = Parser[Property] {
-    case q"$e.$property" => Property(astParser(e), property.decodedName.toString)
+  val infixParser: Parser[Infix] = Parser[Infix] {
+    case q"$infix.as[$t]" =>
+      infixParser(infix)
+    case q"$pack.InfixInterpolator(scala.StringContext.apply(..${ parts: List[String] })).infix(..$params)" =>
+      Infix(parts, params.map(astParser(_)))
   }
 
-  val valueParser: Parser[Value] = Parser[Value] {
-    case q"null"                         => NullValue
-    case Literal(c.universe.Constant(v)) => Constant(v)
-    case q"((..$v))" if (v.size > 1)     => Tuple(v.map(astParser(_)))
+  val functionParser: Parser[Function] = Parser[Function] {
+    case q"new { def apply[..$t1](...$params) = $body }" =>
+      Function(params.flatten.map(p => p: Tree).map(identParser(_)), astParser(body))
+    case q"(..$params) => $body" =>
+      Function(params.map(identParser(_)), astParser(body))
   }
 
   val identParser: Parser[Ident] = Parser[Ident] {
@@ -161,10 +122,54 @@ trait Parsing {
       Ident(name)
   }
 
-  val infixParser: Parser[Infix] = Parser[Infix] {
-    case q"$infix.as[$t]" =>
-      infixParser(infix)
-    case q"$pack.InfixInterpolator(scala.StringContext.apply(..${ parts: List[String] })).infix(..$params)" =>
-      Infix(parts, params.map(astParser(_)))
+  val propertyParser: Parser[Property] = Parser[Property] {
+    case q"$e.$property" => Property(astParser(e), property.decodedName.toString)
   }
+
+  val operationParser: Parser[Operation] = Parser[Operation] {
+    case q"${ functionParser(a) }.apply[..$t](...$values)" => FunctionApply(a, values.flatten.map(astParser(_)))
+    case q"${ identParser(a) }.apply[..$t](...$values)" => FunctionApply(a, values.flatten.map(astParser(_)))
+    case q"$a.$op($b)" => BinaryOperation(astParser(a), binaryOperator(op), astParser(b))
+    case q"!$a" => UnaryOperation(BooleanOperator.`!`, astParser(a))
+    case q"$a.isEmpty" => UnaryOperation(SetOperator.`isEmpty`, astParser(a))
+    case q"$a.nonEmpty" => UnaryOperation(SetOperator.`nonEmpty`, astParser(a))
+  }
+
+  private def binaryOperator(name: TermName) =
+    name.decodedName.toString match {
+      case "==" => EqualityOperator.`==`
+      case "!=" => EqualityOperator.`!=`
+      case "&&" => BooleanOperator.`&&`
+      case "||" => BooleanOperator.`||`
+      case "-"  => NumericOperator.`-`
+      case "+"  => NumericOperator.`+`
+      case "*"  => NumericOperator.`*`
+      case ">"  => NumericOperator.`>`
+      case ">=" => NumericOperator.`>=`
+      case "<"  => NumericOperator.`<`
+      case "<=" => NumericOperator.`<=`
+      case "/"  => NumericOperator.`/`
+      case "%"  => NumericOperator.`%`
+    }
+
+  val valueParser: Parser[Value] = Parser[Value] {
+    case q"null"                         => NullValue
+    case Literal(c.universe.Constant(v)) => Constant(v)
+    case q"((..$v))" if (v.size > 1)     => Tuple(v.map(astParser(_)))
+  }
+
+  val actionParser: Parser[Action] = Parser[Action] {
+    case q"$query.$method(..$assignments)" if (method.decodedName.toString == "update") =>
+      Update(astParser(query), assignments.map(assignmentParser(_)))
+    case q"$query.insert(..$assignments)" =>
+      Insert(astParser(query), assignments.map(assignmentParser(_)))
+    case q"$query.delete" =>
+      Delete(astParser(query))
+  }
+
+  private val assignmentParser: Parser[Assignment] = Parser[Assignment] {
+    case q"(($x1) => scala.this.Predef.ArrowAssoc[$t]($x2.$prop).->[$v]($value))" =>
+      Assignment(prop.decodedName.toString, astParser(value))
+  }
+
 }

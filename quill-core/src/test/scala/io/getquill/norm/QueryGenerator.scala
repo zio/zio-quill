@@ -41,7 +41,7 @@ class QueryGenerator(seed: Int) {
 
   private def filter(i: Int) = {
     val id = ident
-    Filter(apply(i), id, BinaryOperation(Property(id, string), ast.`!=`, Constant(1)))
+    Filter(apply(i), id, BinaryOperation(Property(id, string), EqualityOperator.`!=`, Constant(1)))
   }
 
   private def sortBy(i: Int) = {

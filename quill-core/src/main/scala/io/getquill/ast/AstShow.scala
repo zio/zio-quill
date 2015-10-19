@@ -77,52 +77,12 @@ object AstShow {
         case UnaryOperation(op: PostfixUnaryOperator, ast) => s"${scopedShow(ast)}.${op.show}"
         case BinaryOperation(a, op, b)                     => s"${scopedShow(a)} ${op.show} ${scopedShow(b)}"
         case FunctionApply(function, values)               => s"${scopedShow(function)}.apply(${values.show})"
+        case MethodCall(value, method, params)             => s"${value.show}.$method(${params.show})"
       }
   }
 
-  implicit val prefixUnaryOperatorShow: Show[PrefixUnaryOperator] = new Show[PrefixUnaryOperator] {
-    def show(o: PrefixUnaryOperator) =
-      o match {
-        case ast.`!` => "!"
-      }
-  }
-
-  implicit val postfixUnaryOperatorShow: Show[PostfixUnaryOperator] = new Show[PostfixUnaryOperator] {
-    def show(o: PostfixUnaryOperator) =
-      o match {
-        case ast.`isEmpty`  => "isEmpty"
-        case ast.`nonEmpty` => "nonEmpty"
-      }
-  }
-
-  implicit val aggregationOperatorShow: Show[AggregationOperator] = new Show[AggregationOperator] {
-    def show(o: AggregationOperator) =
-      o match {
-        case ast.`min`  => "min"
-        case ast.`max`  => "max"
-        case ast.`avg`  => "avg"
-        case ast.`sum`  => "sum"
-        case ast.`size` => "size"
-      }
-  }
-
-  implicit val binaryOperatorShow: Show[BinaryOperator] = new Show[BinaryOperator] {
-    def show(o: BinaryOperator) =
-      o match {
-        case ast.`-`  => "-"
-        case ast.`+`  => "+"
-        case ast.`*`  => "*"
-        case ast.`==` => "=="
-        case ast.`!=` => "!="
-        case ast.`&&` => "&&"
-        case ast.`||` => "||"
-        case ast.`>`  => ">"
-        case ast.`>=` => ">="
-        case ast.`<`  => "<"
-        case ast.`<=` => "<="
-        case ast.`/`  => "/"
-        case ast.`%`  => "%"
-      }
+  implicit def operatorShow[T <: Operator]: Show[T] = new Show[T] {
+    def show(o: T) = o.toString
   }
 
   implicit val propertyShow: Show[Property] = new Show[Property] {

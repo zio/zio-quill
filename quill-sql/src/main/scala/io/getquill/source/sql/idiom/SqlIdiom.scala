@@ -1,6 +1,5 @@
 package io.getquill.source.sql.idiom
 
-import io.getquill.{ Query => _, Action => _, _ }
 import io.getquill.ast._
 import io.getquill.source.sql._
 import io.getquill.util.Messages.fail
@@ -80,14 +79,14 @@ trait SqlIdiom {
   implicit def operationShow(implicit propertyShow: Show[Property]): Show[Operation] = new Show[Operation] {
     def show(e: Operation) =
       e match {
-        case UnaryOperation(op, ast)                 => s"${op.show} ${scopedShow(ast)}"
-        case BinaryOperation(a, ast.`==`, NullValue) => s"${scopedShow(a)} IS NULL"
-        case BinaryOperation(NullValue, ast.`==`, b) => s"${scopedShow(b)} IS NULL"
-        case BinaryOperation(a, ast.`!=`, NullValue) => s"${scopedShow(a)} IS NOT NULL"
-        case BinaryOperation(NullValue, ast.`!=`, b) => s"${scopedShow(b)} IS NOT NULL"
-        case BinaryOperation(a, op, b)               => s"${scopedShow(a)} ${op.show} ${scopedShow(b)}"
-        case FunctionApply(Ident(function), params)  => s"$function(${params.show})"
-        case FunctionApply(_, _)                     => fail("Function apply at wrong position")
+        case UnaryOperation(op, ast)                              => s"${op.show} ${scopedShow(ast)}"
+        case BinaryOperation(a, EqualityOperator.`==`, NullValue) => s"${scopedShow(a)} IS NULL"
+        case BinaryOperation(NullValue, EqualityOperator.`==`, b) => s"${scopedShow(b)} IS NULL"
+        case BinaryOperation(a, EqualityOperator.`!=`, NullValue) => s"${scopedShow(a)} IS NOT NULL"
+        case BinaryOperation(NullValue, EqualityOperator.`!=`, b) => s"${scopedShow(b)} IS NOT NULL"
+        case BinaryOperation(a, op, b)                            => s"${scopedShow(a)} ${op.show} ${scopedShow(b)}"
+        case MethodCall(value, method, params)                    => s"$method(${value.show}, ${params.show})"
+        case FunctionApply(_, _)                                  => fail(s"Can't translate the ast to sql: '$e'")
       }
   }
 
@@ -125,39 +124,39 @@ trait SqlIdiom {
   implicit val unaryOperatorShow: Show[UnaryOperator] = new Show[UnaryOperator] {
     def show(o: UnaryOperator) =
       o match {
-        case ast.`!`        => "NOT"
-        case ast.`isEmpty`  => "NOT EXISTS"
-        case ast.`nonEmpty` => "EXISTS"
+        case BooleanOperator.`!`    => "NOT"
+        case SetOperator.`isEmpty`  => "NOT EXISTS"
+        case SetOperator.`nonEmpty` => "EXISTS"
       }
   }
 
   implicit val aggregationOperatorShow: Show[AggregationOperator] = new Show[AggregationOperator] {
     def show(o: AggregationOperator) =
       o match {
-        case ast.`min`  => "MIN"
-        case ast.`max`  => "MAX"
-        case ast.`avg`  => "AVG"
-        case ast.`sum`  => "SUM"
-        case ast.`size` => "COUNT"
+        case AggregationOperator.`min`  => "MIN"
+        case AggregationOperator.`max`  => "MAX"
+        case AggregationOperator.`avg`  => "AVG"
+        case AggregationOperator.`sum`  => "SUM"
+        case AggregationOperator.`size` => "COUNT"
       }
   }
 
   implicit val binaryOperatorShow: Show[BinaryOperator] = new Show[BinaryOperator] {
     def show(o: BinaryOperator) =
       o match {
-        case ast.`-`  => "-"
-        case ast.`+`  => "+"
-        case ast.`*`  => "*"
-        case ast.`==` => "="
-        case ast.`!=` => "<>"
-        case ast.`&&` => "AND"
-        case ast.`||` => "OR"
-        case ast.`>`  => ">"
-        case ast.`>=` => ">="
-        case ast.`<`  => "<"
-        case ast.`<=` => "<="
-        case ast.`/`  => "/"
-        case ast.`%`  => "%"
+        case EqualityOperator.`==` => "="
+        case EqualityOperator.`!=` => "<>"
+        case BooleanOperator.`&&`  => "AND"
+        case BooleanOperator.`||`  => "OR"
+        case NumericOperator.`-`   => "-"
+        case NumericOperator.`+`   => "+"
+        case NumericOperator.`*`   => "*"
+        case NumericOperator.`>`   => ">"
+        case NumericOperator.`>=`  => ">="
+        case NumericOperator.`<`   => "<"
+        case NumericOperator.`<=`  => "<="
+        case NumericOperator.`/`   => "/"
+        case NumericOperator.`%`   => "%"
       }
   }
 
