@@ -124,6 +124,7 @@ trait SqlIdiom {
   implicit val unaryOperatorShow: Show[UnaryOperator] = new Show[UnaryOperator] {
     def show(o: UnaryOperator) =
       o match {
+        case NumericOperator.`-`    => "-"
         case BooleanOperator.`!`    => "NOT"
         case SetOperator.`isEmpty`  => "NOT EXISTS"
         case SetOperator.`nonEmpty` => "EXISTS"

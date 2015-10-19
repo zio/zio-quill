@@ -41,6 +41,7 @@ trait Liftables {
   }
 
   implicit val unaryOperatorLiftable: Liftable[UnaryOperator] = Liftable[UnaryOperator] {
+    case NumericOperator.`-`    => q"$pack.NumericOperator.`-`"
     case BooleanOperator.`!`    => q"$pack.BooleanOperator.`!`"
     case SetOperator.`nonEmpty` => q"$pack.SetOperator.`nonEmpty`"
     case SetOperator.`isEmpty`  => q"$pack.SetOperator.`isEmpty`"

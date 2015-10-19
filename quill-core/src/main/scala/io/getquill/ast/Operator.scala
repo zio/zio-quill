@@ -22,7 +22,7 @@ object BooleanOperator {
 
 sealed trait NumericOperator extends Operator
 object NumericOperator {
-  case object `-` extends NumericOperator with BinaryOperator
+  case object `-` extends NumericOperator with BinaryOperator with PrefixUnaryOperator
   case object `+` extends NumericOperator with BinaryOperator
   case object `*` extends NumericOperator with BinaryOperator
   case object `>` extends NumericOperator with BinaryOperator

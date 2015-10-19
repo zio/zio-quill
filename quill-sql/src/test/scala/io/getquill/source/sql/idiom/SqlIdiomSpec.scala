@@ -172,6 +172,13 @@ class SqlIdiomSpec extends Spec {
     }
     "operations" - {
       "unary operation" - {
+        "-" in {
+          val q = quote {
+            qr1.map(t => -t.i)
+          }
+          mirrorSource.run(q).sql mustEqual
+            "SELECT - t.i FROM TestEntity t"
+        }
         "!" in {
           val q = quote {
             qr1.filter(t => !(t.s == "a"))

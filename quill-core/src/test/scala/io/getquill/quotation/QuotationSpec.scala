@@ -277,6 +277,12 @@ class QuotationSpec extends Spec {
       }
     }
     "unary operation" - {
+      "-" in {
+        val q = quote {
+          (a: Int) => -a
+        }
+        quote(unquote(q)).ast.body mustEqual UnaryOperation(NumericOperator.`-`, Ident("a"))
+      }
       "!" in {
         val q = quote {
           (a: Boolean) => !a

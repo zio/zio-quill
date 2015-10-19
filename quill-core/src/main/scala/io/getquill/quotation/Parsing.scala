@@ -131,6 +131,7 @@ trait Parsing {
     case q"${ identParser(a) }.apply[..$t](...$values)" => FunctionApply(a, values.flatten.map(astParser(_)))
     case q"$a.$op($b)" => BinaryOperation(astParser(a), binaryOperator(op), astParser(b))
     case q"!$a" => UnaryOperation(BooleanOperator.`!`, astParser(a))
+    case q"-$a" => UnaryOperation(NumericOperator.`-`, astParser(a))
     case q"$a.isEmpty" => UnaryOperation(SetOperator.`isEmpty`, astParser(a))
     case q"$a.nonEmpty" => UnaryOperation(SetOperator.`nonEmpty`, astParser(a))
   }
