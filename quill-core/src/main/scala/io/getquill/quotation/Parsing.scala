@@ -127,15 +127,11 @@ trait Parsing {
   }
 
   val operationParser: Parser[Operation] = Parser[Operation] {
-    case q"${ functionParser(a) }.apply[..$t](...$values)" => FunctionApply(a, values.flatten.map(astParser(_)))
-    case q"${ identParser(a) }.apply[..$t](...$values)"    => FunctionApply(a, values.flatten.map(astParser(_)))
-
-    case `equalityOperationParser`(value)                  => value
-    case `booleanOperationParser`(value)                   => value
-    case `numericOperationParser`(value)                   => value
-
-    case q"$a.isEmpty"                                     => UnaryOperation(SetOperator.`isEmpty`, astParser(a))
-    case q"$a.nonEmpty"                                    => UnaryOperation(SetOperator.`nonEmpty`, astParser(a))
+    case `equalityOperationParser`(value) => value
+    case `booleanOperationParser`(value)  => value
+    case `numericOperationParser`(value)  => value
+    case `functionOperationParser`(value) => value
+    case `setOperationParser`(value)      => value
   }
 
   private def operationParser(cond: Tree => Boolean)(
@@ -150,6 +146,11 @@ trait Parsing {
       case q"$a.${ operator(op: UnaryOperator) }" =>
         UnaryOperation(op, astParser(a))
     }
+  }
+
+  val functionOperationParser: Parser[Operation] = Parser[Operation] {
+    case q"${ functionParser(a) }.apply[..$t](...$values)" => FunctionApply(a, values.flatten.map(astParser(_)))
+    case q"${ identParser(a) }.apply[..$t](...$values)"    => FunctionApply(a, values.flatten.map(astParser(_)))
   }
 
   val equalityOperationParser: Parser[Operation] =
@@ -177,6 +178,12 @@ trait Parsing {
       case "<="      => NumericOperator.`<=`
       case "/"       => NumericOperator.`/`
       case "%"       => NumericOperator.`%`
+    }
+
+  val setOperationParser: Parser[Operation] =
+    operationParser(is[io.getquill.Query[_]](_)) {
+      case "isEmpty"  => SetOperator.`isEmpty`
+      case "nonEmpty" => SetOperator.`nonEmpty`
     }
 
   private def isNumeric[T: WeakTypeTag] =
