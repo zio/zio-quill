@@ -128,30 +128,62 @@ trait Parsing {
 
   val operationParser: Parser[Operation] = Parser[Operation] {
     case q"${ functionParser(a) }.apply[..$t](...$values)" => FunctionApply(a, values.flatten.map(astParser(_)))
-    case q"${ identParser(a) }.apply[..$t](...$values)" => FunctionApply(a, values.flatten.map(astParser(_)))
-    case q"$a.$op($b)" => BinaryOperation(astParser(a), binaryOperator(op), astParser(b))
-    case q"!$a" => UnaryOperation(BooleanOperator.`!`, astParser(a))
-    case q"-$a" => UnaryOperation(NumericOperator.`-`, astParser(a))
-    case q"$a.isEmpty" => UnaryOperation(SetOperator.`isEmpty`, astParser(a))
-    case q"$a.nonEmpty" => UnaryOperation(SetOperator.`nonEmpty`, astParser(a))
+    case q"${ identParser(a) }.apply[..$t](...$values)"    => FunctionApply(a, values.flatten.map(astParser(_)))
+
+    case `equalityOperationParser`(value)                  => value
+    case `booleanOperationParser`(value)                   => value
+    case `numericOperationParser`(value)                   => value
+
+    case q"$a.isEmpty"                                     => UnaryOperation(SetOperator.`isEmpty`, astParser(a))
+    case q"$a.nonEmpty"                                    => UnaryOperation(SetOperator.`nonEmpty`, astParser(a))
   }
 
-  private def binaryOperator(name: TermName) =
-    name.decodedName.toString match {
+  private def operationParser(cond: Tree => Boolean)(
+    f: PartialFunction[String, Operator]): Parser[Operation] = {
+    object operator {
+      def unapply(t: TermName) =
+        f.lift(t.decodedName.toString)
+    }
+    Parser[Operation] {
+      case q"$a.${ operator(op: BinaryOperator) }($b)" if (cond(a) && cond(b)) =>
+        BinaryOperation(astParser(a), op, astParser(b))
+      case q"$a.${ operator(op: UnaryOperator) }" =>
+        UnaryOperation(op, astParser(a))
+    }
+  }
+
+  val equalityOperationParser: Parser[Operation] =
+    operationParser(_ => true) {
       case "==" => EqualityOperator.`==`
       case "!=" => EqualityOperator.`!=`
-      case "&&" => BooleanOperator.`&&`
-      case "||" => BooleanOperator.`||`
-      case "-"  => NumericOperator.`-`
-      case "+"  => NumericOperator.`+`
-      case "*"  => NumericOperator.`*`
-      case ">"  => NumericOperator.`>`
-      case ">=" => NumericOperator.`>=`
-      case "<"  => NumericOperator.`<`
-      case "<=" => NumericOperator.`<=`
-      case "/"  => NumericOperator.`/`
-      case "%"  => NumericOperator.`%`
     }
+
+  val booleanOperationParser: Parser[Operation] =
+    operationParser(is[Boolean](_)) {
+      case "unary_!" => BooleanOperator.`!`
+      case "&&"      => BooleanOperator.`&&`
+      case "||"      => BooleanOperator.`||`
+    }
+
+  val numericOperationParser: Parser[Operation] =
+    operationParser(t => isNumeric(c.WeakTypeTag(t.tpe.erasure))) {
+      case "unary_-" => NumericOperator.`-`
+      case "-"       => NumericOperator.`-`
+      case "+"       => NumericOperator.`+`
+      case "*"       => NumericOperator.`*`
+      case ">"       => NumericOperator.`>`
+      case ">="      => NumericOperator.`>=`
+      case "<"       => NumericOperator.`<`
+      case "<="      => NumericOperator.`<=`
+      case "/"       => NumericOperator.`/`
+      case "%"       => NumericOperator.`%`
+    }
+
+  private def isNumeric[T: WeakTypeTag] =
+    c.inferImplicitValue(c.weakTypeOf[Numeric[T]]) != EmptyTree
+
+  private def is[T](tree: Tree)(implicit t: TypeTag[T]) =
+    tree.tpe.weak_<:<(t.tpe)
 
   val valueParser: Parser[Value] = Parser[Value] {
     case q"null"                         => NullValue
