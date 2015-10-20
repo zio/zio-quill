@@ -7,39 +7,36 @@ sealed trait PrefixUnaryOperator extends UnaryOperator
 sealed trait PostfixUnaryOperator extends UnaryOperator
 sealed trait BinaryOperator extends Operator
 
-sealed trait EqualityOperator extends Operator
 object EqualityOperator {
-  case object `==` extends EqualityOperator with BinaryOperator
-  case object `!=` extends EqualityOperator with BinaryOperator
+  case object `==` extends BinaryOperator
+  case object `!=` extends BinaryOperator
 }
 
-sealed trait BooleanOperator extends Operator
 object BooleanOperator {
-  case object `!` extends BooleanOperator with PrefixUnaryOperator
-  case object `&&` extends BooleanOperator with BinaryOperator
-  case object `||` extends BooleanOperator with BinaryOperator
+  case object `!` extends PrefixUnaryOperator
+  case object `&&` extends BinaryOperator
+  case object `||` extends BinaryOperator
 }
 
-sealed trait NumericOperator extends Operator
 object NumericOperator {
-  case object `-` extends NumericOperator with BinaryOperator with PrefixUnaryOperator
-  case object `+` extends NumericOperator with BinaryOperator
-  case object `*` extends NumericOperator with BinaryOperator
-  case object `>` extends NumericOperator with BinaryOperator
-  case object `>=` extends NumericOperator with BinaryOperator
-  case object `<` extends NumericOperator with BinaryOperator
-  case object `<=` extends NumericOperator with BinaryOperator
-  case object `/` extends NumericOperator with BinaryOperator
-  case object `%` extends NumericOperator with BinaryOperator
+  case object `-` extends BinaryOperator with PrefixUnaryOperator
+  case object `+` extends BinaryOperator
+  case object `*` extends BinaryOperator
+  case object `>` extends BinaryOperator
+  case object `>=` extends BinaryOperator
+  case object `<` extends BinaryOperator
+  case object `<=` extends BinaryOperator
+  case object `/` extends BinaryOperator
+  case object `%` extends BinaryOperator
 }
 
-sealed trait SetOperator extends Operator
 object SetOperator {
-  case object `nonEmpty` extends SetOperator with PostfixUnaryOperator
-  case object `isEmpty` extends SetOperator with PostfixUnaryOperator
+  case object `nonEmpty` extends PostfixUnaryOperator
+  case object `isEmpty` extends PostfixUnaryOperator
 }
 
 sealed trait AggregationOperator extends Operator
+
 object AggregationOperator {
   case object `min` extends AggregationOperator
   case object `max` extends AggregationOperator
