@@ -12,7 +12,7 @@ class MySQLDialectSpec extends Spec {
     MySQLDialect.isInstanceOf[OffsetWithoutLimitWorkaround] mustEqual true
   }
 
-  "uses CONCAT instead if ||" in {
+  "uses CONCAT instead of ||" in {
     val q = quote {
       qr1.map(t => t.s + t.s)
     }

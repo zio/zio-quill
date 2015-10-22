@@ -144,9 +144,9 @@ trait Parsing {
     Parser[Operation] {
       case q"$a.${ operator(op: BinaryOperator) }($b)" if (cond(a) && cond(b)) =>
         BinaryOperation(astParser(a), op, astParser(b))
-      case q"$a.${ operator(op: UnaryOperator) }" =>
+      case q"$a.${ operator(op: UnaryOperator) }" if (cond(a)) =>
         UnaryOperation(op, astParser(a))
-      case q"$a.${ operator(op: UnaryOperator) }()" =>
+      case q"$a.${ operator(op: UnaryOperator) }()" if (cond(a)) =>
         UnaryOperation(op, astParser(a))
     }
   }
@@ -191,7 +191,7 @@ trait Parsing {
     }
 
   val setOperationParser: Parser[Operation] =
-    operationParser(is[io.getquill.Query[_]](_)) {
+    operationParser(is[io.getquill.Query[Any]](_)) {
       case "isEmpty"  => SetOperator.`isEmpty`
       case "nonEmpty" => SetOperator.`nonEmpty`
     }
@@ -200,7 +200,7 @@ trait Parsing {
     c.inferImplicitValue(c.weakTypeOf[Numeric[T]]) != EmptyTree
 
   private def is[T](tree: Tree)(implicit t: TypeTag[T]) =
-    tree.tpe.weak_<:<(t.tpe)
+    tree.tpe <:< t.tpe
 
   val valueParser: Parser[Value] = Parser[Value] {
     case q"null"                         => NullValue
