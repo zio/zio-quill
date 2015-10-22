@@ -207,6 +207,13 @@ class SqlIdiomSpec extends Spec {
           mirrorSource.run(q).sql mustEqual
             "SELECT UPPER (t.s) FROM TestEntity t"
         }
+        "toLowerCase" in {
+          val q = quote {
+            qr1.map(t => t.s.toLowerCase)
+          }
+          mirrorSource.run(q).sql mustEqual
+            "SELECT LOWER (t.s) FROM TestEntity t"
+        }
       }
       "binary operation" - {
         "-" in {
@@ -216,12 +223,21 @@ class SqlIdiomSpec extends Spec {
           mirrorSource.run(q).sql mustEqual
             "SELECT t.i - t.i FROM TestEntity t"
         }
-        "+" in {
-          val q = quote {
-            qr1.map(t => t.i + t.i)
+        "+" - {
+          "numeric" in {
+            val q = quote {
+              qr1.map(t => t.i + t.i)
+            }
+            mirrorSource.run(q).sql mustEqual
+              "SELECT t.i + t.i FROM TestEntity t"
           }
-          mirrorSource.run(q).sql mustEqual
-            "SELECT t.i + t.i FROM TestEntity t"
+          "string" in {
+            val q = quote {
+              qr1.map(t => t.s + t.s)
+            }
+            mirrorSource.run(q).sql mustEqual
+              "SELECT t.s || t.s FROM TestEntity t"
+          }
         }
         "*" in {
           val q = quote {
@@ -337,11 +353,16 @@ class SqlIdiomSpec extends Spec {
             "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE (t.i % t.l) = 0"
         }
       }
-      //      "function apply" in {
-      //        val q = quote {
-      //          qr1.map(t =>
-      //        }
-      //      }
+      "function apply" in {
+        import io.getquill.util.Show._
+        import FallbackDialect._
+        val q = quote {
+          ((i: Int) => i + 1).apply(2)
+        }
+        val e = intercept[IllegalStateException] {
+          (q.ast: Ast).show
+        }
+      }
     }
     "action" - {
       "insert" in {

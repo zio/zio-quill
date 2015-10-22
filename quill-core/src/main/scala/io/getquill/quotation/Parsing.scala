@@ -131,8 +131,8 @@ trait Parsing {
     case `booleanOperationParser`(value)  => value
     case `stringOperationParser`(value)   => value
     case `numericOperationParser`(value)  => value
-    case `functionOperationParser`(value) => value
     case `setOperationParser`(value)      => value
+    case `functionOperationParser`(value) => value
   }
 
   private def operationParser(cond: Tree => Boolean)(

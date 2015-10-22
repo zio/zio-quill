@@ -227,11 +227,19 @@ class QuotationSpec extends Spec {
         }
         quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), NumericOperator.`-`, Ident("b"))
       }
-      "+" in {
-        val q = quote {
-          (a: Int, b: Int) => a + b
+      "+" - {
+        "numeric" in {
+          val q = quote {
+            (a: Int, b: Int) => a + b
+          }
+          quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), NumericOperator.`+`, Ident("b"))
         }
-        quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), NumericOperator.`+`, Ident("b"))
+        "string" in {
+          val q = quote {
+            (a: String, b: String) => a + b
+          }
+          quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), StringOperator.`+`, Ident("b"))
+        }
       }
       "*" in {
         val q = quote {
