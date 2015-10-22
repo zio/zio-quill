@@ -44,10 +44,12 @@ trait Unliftables {
   }
 
   implicit val unaryOperatorUnliftable: Unliftable[UnaryOperator] = Unliftable[UnaryOperator] {
-    case q"$pack.NumericOperator.`-`"    => NumericOperator.`-`
-    case q"$pack.BooleanOperator.`!`"    => BooleanOperator.`!`
-    case q"$pack.SetOperator.`nonEmpty`" => SetOperator.`nonEmpty`
-    case q"$pack.SetOperator.`isEmpty`"  => SetOperator.`isEmpty`
+    case q"$pack.NumericOperator.`-`"          => NumericOperator.`-`
+    case q"$pack.BooleanOperator.`!`"          => BooleanOperator.`!`
+    case q"$pack.StringOperator.`toUpperCase`" => StringOperator.`toUpperCase`
+    case q"$pack.StringOperator.`toLowerCase`" => StringOperator.`toLowerCase`
+    case q"$pack.SetOperator.`nonEmpty`"       => SetOperator.`nonEmpty`
+    case q"$pack.SetOperator.`isEmpty`"        => SetOperator.`isEmpty`
   }
 
   implicit val aggregationOperatorUnliftable: Unliftable[AggregationOperator] = Unliftable[AggregationOperator] {

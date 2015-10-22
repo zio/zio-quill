@@ -20,7 +20,6 @@ trait Liftables {
     case FunctionApply(a, b)      => q"$pack.FunctionApply($a, $b)"
     case BinaryOperation(a, b, c) => q"$pack.BinaryOperation($a, $b, $c)"
     case UnaryOperation(a, b)     => q"$pack.UnaryOperation($a, $b)"
-    case MethodCall(a, b, c)      => q"$pack.MethodCall($a, $b, $c)"
     case Infix(a, b)              => q"$pack.Infix($a, $b)"
   }
 
@@ -29,6 +28,7 @@ trait Liftables {
     case EqualityOperator.`!=` => q"$pack.EqualityOperator.`!=`"
     case BooleanOperator.`&&`  => q"$pack.BooleanOperator.`&&`"
     case BooleanOperator.`||`  => q"$pack.BooleanOperator.`||`"
+    case StringOperator.`+`    => q"$pack.StringOperator.`+`"
     case NumericOperator.`-`   => q"$pack.NumericOperator.`-`"
     case NumericOperator.`+`   => q"$pack.NumericOperator.`+`"
     case NumericOperator.`*`   => q"$pack.NumericOperator.`*`"
@@ -41,10 +41,12 @@ trait Liftables {
   }
 
   implicit val unaryOperatorLiftable: Liftable[UnaryOperator] = Liftable[UnaryOperator] {
-    case NumericOperator.`-`    => q"$pack.NumericOperator.`-`"
-    case BooleanOperator.`!`    => q"$pack.BooleanOperator.`!`"
-    case SetOperator.`nonEmpty` => q"$pack.SetOperator.`nonEmpty`"
-    case SetOperator.`isEmpty`  => q"$pack.SetOperator.`isEmpty`"
+    case NumericOperator.`-`          => q"$pack.NumericOperator.`-`"
+    case BooleanOperator.`!`          => q"$pack.BooleanOperator.`!`"
+    case StringOperator.`toUpperCase` => q"$pack.StringOperator.`toUpperCase`"
+    case StringOperator.`toLowerCase` => q"$pack.StringOperator.`toLowerCase`"
+    case SetOperator.`nonEmpty`       => q"$pack.SetOperator.`nonEmpty`"
+    case SetOperator.`isEmpty`        => q"$pack.SetOperator.`isEmpty`"
   }
 
   implicit val aggregationOperatorLiftable: Liftable[AggregationOperator] = Liftable[AggregationOperator] {

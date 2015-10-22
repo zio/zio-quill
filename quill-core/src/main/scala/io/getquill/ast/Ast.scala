@@ -58,7 +58,6 @@ sealed trait Operation extends Ast
 case class UnaryOperation(operator: UnaryOperator, ast: Ast) extends Operation
 case class BinaryOperation(a: Ast, operator: BinaryOperator, b: Ast) extends Operation
 case class FunctionApply(function: Ast, values: List[Ast]) extends Operation
-case class MethodCall(value: Ast, name: String, params: List[Ast]) extends Operation
 
 //************************************************************
 

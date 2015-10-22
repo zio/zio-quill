@@ -18,6 +18,12 @@ object BooleanOperator {
   case object `||` extends BinaryOperator
 }
 
+object StringOperator {
+  case object `+` extends BinaryOperator
+  case object `toUpperCase` extends PostfixUnaryOperator
+  case object `toLowerCase` extends PostfixUnaryOperator
+}
+
 object NumericOperator {
   case object `-` extends BinaryOperator with PrefixUnaryOperator
   case object `+` extends BinaryOperator

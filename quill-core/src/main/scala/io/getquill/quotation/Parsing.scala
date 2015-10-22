@@ -129,6 +129,7 @@ trait Parsing {
   val operationParser: Parser[Operation] = Parser[Operation] {
     case `equalityOperationParser`(value) => value
     case `booleanOperationParser`(value)  => value
+    case `stringOperationParser`(value)   => value
     case `numericOperationParser`(value)  => value
     case `functionOperationParser`(value) => value
     case `setOperationParser`(value)      => value
@@ -144,6 +145,8 @@ trait Parsing {
       case q"$a.${ operator(op: BinaryOperator) }($b)" if (cond(a) && cond(b)) =>
         BinaryOperation(astParser(a), op, astParser(b))
       case q"$a.${ operator(op: UnaryOperator) }" =>
+        UnaryOperation(op, astParser(a))
+      case q"$a.${ operator(op: UnaryOperator) }()" =>
         UnaryOperation(op, astParser(a))
     }
   }
@@ -164,6 +167,13 @@ trait Parsing {
       case "unary_!" => BooleanOperator.`!`
       case "&&"      => BooleanOperator.`&&`
       case "||"      => BooleanOperator.`||`
+    }
+
+  val stringOperationParser: Parser[Operation] =
+    operationParser(is[String](_)) {
+      case "+"           => StringOperator.+
+      case "toUpperCase" => StringOperator.`toUpperCase`
+      case "toLowerCase" => StringOperator.`toLowerCase`
     }
 
   val numericOperationParser: Parser[Operation] =

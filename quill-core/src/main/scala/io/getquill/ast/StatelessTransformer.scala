@@ -33,10 +33,9 @@ trait StatelessTransformer {
 
   def apply(e: Operation): Operation =
     e match {
-      case UnaryOperation(o, a)              => UnaryOperation(o, apply(a))
-      case BinaryOperation(a, b, c)          => BinaryOperation(apply(a), b, apply(c))
-      case FunctionApply(function, values)   => FunctionApply(apply(function), values.map(apply))
-      case MethodCall(value, method, params) => MethodCall(apply(value), method, params.map(apply))
+      case UnaryOperation(o, a)            => UnaryOperation(o, apply(a))
+      case BinaryOperation(a, b, c)        => BinaryOperation(apply(a), b, apply(c))
+      case FunctionApply(function, values) => FunctionApply(apply(function), values.map(apply))
     }
 
   def apply(e: Value): Value =

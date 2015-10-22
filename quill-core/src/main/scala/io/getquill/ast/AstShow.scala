@@ -77,7 +77,6 @@ object AstShow {
         case UnaryOperation(op: PostfixUnaryOperator, ast) => s"${scopedShow(ast)}.${op.show}"
         case BinaryOperation(a, op, b)                     => s"${scopedShow(a)} ${op.show} ${scopedShow(b)}"
         case FunctionApply(function, values)               => s"${scopedShow(function)}.apply(${values.show})"
-        case MethodCall(value, method, params)             => s"${value.show}.$method(${params.show})"
       }
   }
 

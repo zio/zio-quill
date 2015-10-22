@@ -301,6 +301,18 @@ class QuotationSpec extends Spec {
         }
         quote(unquote(q)).ast mustEqual UnaryOperation(SetOperator.`isEmpty`, Entity("TestEntity"))
       }
+      "toUpperCase" in {
+        val q = quote {
+          qr1.map(t => t.s.toUpperCase)
+        }
+        quote(unquote(q)).ast mustEqual Map(Entity("TestEntity"), Ident("t"), UnaryOperation(StringOperator.`toUpperCase`, Property(Ident("t"), "s")))
+      }
+      "toLowerCase" in {
+        val q = quote {
+          qr1.map(t => t.s.toLowerCase)
+        }
+        quote(unquote(q)).ast mustEqual Map(Entity("TestEntity"), Ident("t"), UnaryOperation(StringOperator.`toLowerCase`, Property(Ident("t"), "s")))
+      }
     }
     "infix" - {
       "without `as`" in {
@@ -355,7 +367,7 @@ class QuotationSpec extends Spec {
   }
 
   "fails if the tree is not valid" in {
-    """quote("s".toUpperCase)""" mustNot compile
+    """quote("s".getBytes)""" mustNot compile
   }
 
   "fails if the quoted ast is not available" in {

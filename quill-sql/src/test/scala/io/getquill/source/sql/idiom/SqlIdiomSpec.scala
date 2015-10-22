@@ -177,7 +177,7 @@ class SqlIdiomSpec extends Spec {
             qr1.map(t => -t.i)
           }
           mirrorSource.run(q).sql mustEqual
-            "SELECT - t.i FROM TestEntity t"
+            "SELECT - (t.i) FROM TestEntity t"
         }
         "!" in {
           val q = quote {
@@ -199,6 +199,13 @@ class SqlIdiomSpec extends Spec {
           }
           mirrorSource.run(q).sql mustEqual
             "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE EXISTS (SELECT * FROM TestEntity2 u WHERE u.s = t.s)"
+        }
+        "toUpperCase" in {
+          val q = quote {
+            qr1.map(t => t.s.toUpperCase)
+          }
+          mirrorSource.run(q).sql mustEqual
+            "SELECT UPPER (t.s) FROM TestEntity t"
         }
       }
       "binary operation" - {

@@ -79,13 +79,12 @@ trait SqlIdiom {
   implicit def operationShow(implicit propertyShow: Show[Property]): Show[Operation] = new Show[Operation] {
     def show(e: Operation) =
       e match {
-        case UnaryOperation(op, ast)                              => s"${op.show} ${scopedShow(ast)}"
+        case UnaryOperation(op, ast)                              => s"${op.show} (${ast.show})"
         case BinaryOperation(a, EqualityOperator.`==`, NullValue) => s"${scopedShow(a)} IS NULL"
         case BinaryOperation(NullValue, EqualityOperator.`==`, b) => s"${scopedShow(b)} IS NULL"
         case BinaryOperation(a, EqualityOperator.`!=`, NullValue) => s"${scopedShow(a)} IS NOT NULL"
         case BinaryOperation(NullValue, EqualityOperator.`!=`, b) => s"${scopedShow(b)} IS NOT NULL"
         case BinaryOperation(a, op, b)                            => s"${scopedShow(a)} ${op.show} ${scopedShow(b)}"
-        case MethodCall(value, method, params)                    => s"$method(${value.show}, ${params.show})"
         case FunctionApply(_, _)                                  => fail(s"Can't translate the ast to sql: '$e'")
       }
   }
@@ -124,10 +123,12 @@ trait SqlIdiom {
   implicit val unaryOperatorShow: Show[UnaryOperator] = new Show[UnaryOperator] {
     def show(o: UnaryOperator) =
       o match {
-        case NumericOperator.`-`    => "-"
-        case BooleanOperator.`!`    => "NOT"
-        case SetOperator.`isEmpty`  => "NOT EXISTS"
-        case SetOperator.`nonEmpty` => "EXISTS"
+        case NumericOperator.`-`          => "-"
+        case BooleanOperator.`!`          => "NOT"
+        case StringOperator.`toUpperCase` => "UPPER"
+        case StringOperator.`toLowerCase` => "LOWER"
+        case SetOperator.`isEmpty`        => "NOT EXISTS"
+        case SetOperator.`nonEmpty`       => "EXISTS"
       }
   }
 
@@ -149,6 +150,7 @@ trait SqlIdiom {
         case EqualityOperator.`!=` => "<>"
         case BooleanOperator.`&&`  => "AND"
         case BooleanOperator.`||`  => "OR"
+        case StringOperator.`+`    => "||"
         case NumericOperator.`-`   => "-"
         case NumericOperator.`+`   => "+"
         case NumericOperator.`*`   => "*"

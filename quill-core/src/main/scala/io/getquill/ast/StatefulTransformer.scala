@@ -86,10 +86,6 @@ trait StatefulTransformer[T] {
         val (at, att) = apply(a)
         val (bt, btt) = att.apply(b)(_.apply)
         (FunctionApply(at, bt), btt)
-      case MethodCall(a, b, c) =>
-        val (at, att) = apply(a)
-        val (ct, ctt) = att.apply(c)(_.apply)
-        (MethodCall(at, b, ct), ctt)
     }
 
   def apply(e: Value): (Value, StatefulTransformer[T]) =
