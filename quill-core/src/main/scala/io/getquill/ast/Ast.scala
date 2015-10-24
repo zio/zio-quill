@@ -43,6 +43,18 @@ case class UnionAll(a: Ast, b: Ast) extends Query
 
 //************************************************************
 
+sealed trait OuterJoin extends Query
+
+case class LeftJoin(a: Ast, b: Ast) extends OuterJoin
+
+case class RightJoin(a: Ast, b: Ast) extends OuterJoin
+
+case class FullJoin(a: Ast, b: Ast) extends OuterJoin
+
+case class ConditionalOuterJoin(join: OuterJoin, aliasA: Ident, aliasB: Ident, body: Ast) extends OuterJoin
+
+//************************************************************
+
 case class Infix(parts: List[String], params: List[Ast]) extends Ast
 
 case class Function(params: List[Ident], body: Ast) extends Ast

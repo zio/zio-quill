@@ -37,6 +37,37 @@ class AstShowSpec extends Spec {
     }
   }
 
+  "shows outer join queries" - {
+    "left join" in {
+      val q = quote {
+        qr1.leftJoin(qr2)
+      }
+      (q.ast: Ast).show mustEqual
+        """query[TestEntity].leftJoin(query[TestEntity2])"""
+    }
+    "right join" in {
+      val q = quote {
+        qr1.rightJoin(qr2)
+      }
+      (q.ast: Ast).show mustEqual
+        """query[TestEntity].rightJoin(query[TestEntity2])"""
+    }
+    "full join" in {
+      val q = quote {
+        qr1.fullJoin(qr2)
+      }
+      (q.ast: Ast).show mustEqual
+        """query[TestEntity].fullJoin(query[TestEntity2])"""
+    }
+    "conditional" in {
+      val q = quote {
+        qr1.fullJoin(qr2).on((a, b) => a.s == b.s)
+      }
+      (q.ast: Ast).show mustEqual
+        """query[TestEntity].fullJoin(query[TestEntity2]).on((a, b) => a.s == b.s)"""
+    }
+  }
+
   "shows sorted queries" in {
     val q = quote {
       qr1.sortBy(t => t.i).reverse

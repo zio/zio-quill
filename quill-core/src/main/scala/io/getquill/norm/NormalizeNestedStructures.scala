@@ -62,5 +62,31 @@ object NormalizeNestedStructures {
           case (`a`, `b`) => None
           case (a, b)     => Some(UnionAll(a, b))
         }
+      case e: OuterJoin =>
+        unapply(q)
+    }
+
+  private def unapply(q: OuterJoin): Option[OuterJoin] =
+    q match {
+      case LeftJoin(a, b) =>
+        (Normalize(a), Normalize(b)) match {
+          case (`a`, `b`) => None
+          case (a, b)     => Some(LeftJoin(a, b))
+        }
+      case RightJoin(a, b) =>
+        (Normalize(a), Normalize(b)) match {
+          case (`a`, `b`) => None
+          case (a, b)     => Some(RightJoin(a, b))
+        }
+      case FullJoin(a, b) =>
+        (Normalize(a), Normalize(b)) match {
+          case (`a`, `b`) => None
+          case (a, b)     => Some(FullJoin(a, b))
+        }
+      case ConditionalOuterJoin(a, b, c, d) =>
+        (Normalize(a), Normalize(d)) match {
+          case (`a`, `d`) => None
+          case (a, d)     => Some(ConditionalOuterJoin(a, b, c, d))
+        }
     }
 }

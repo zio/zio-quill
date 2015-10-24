@@ -157,7 +157,7 @@ class SqlIdiomSpec extends Spec {
             qr1.filter(t => t.i > 10).union(qr1.filter(t => t.s == "s"))
           }
           mirrorSource.run(q).sql mustEqual
-            "SELECT t1.s, t1.i, t1.l, t1.o FROM (SELECT * FROM TestEntity t WHERE t.i > 10 UNION SELECT * FROM TestEntity t1 WHERE t1.s = 's') t1"
+            "SELECT x.s, x.i, x.l, x.o FROM (SELECT * FROM TestEntity t WHERE t.i > 10 UNION SELECT * FROM TestEntity t1 WHERE t1.s = 's') x"
         }
       }
       "unionAll" - {
@@ -166,7 +166,7 @@ class SqlIdiomSpec extends Spec {
             qr1.filter(t => t.i > 10).unionAll(qr1.filter(t => t.s == "s"))
           }
           mirrorSource.run(q).sql mustEqual
-            "SELECT t1.s, t1.i, t1.l, t1.o FROM (SELECT * FROM TestEntity t WHERE t.i > 10 UNION ALL SELECT * FROM TestEntity t1 WHERE t1.s = 's') t1"
+            "SELECT x.s, x.i, x.l, x.o FROM (SELECT * FROM TestEntity t WHERE t.i > 10 UNION ALL SELECT * FROM TestEntity t1 WHERE t1.s = 's') x"
         }
       }
     }

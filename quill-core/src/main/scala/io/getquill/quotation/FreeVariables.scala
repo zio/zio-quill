@@ -20,18 +20,19 @@ case class FreeVariables(state: State)
 
   override def apply(query: Query): (Query, StatefulTransformer[State]) =
     query match {
-      case q @ Filter(a, b, c)  => apply(q, a, b, c)
-      case q @ Map(a, b, c)     => apply(q, a, b, c)
-      case q @ FlatMap(a, b, c) => apply(q, a, b, c)
-      case q @ SortBy(a, b, c)  => apply(q, a, b, c)
-      case q @ GroupBy(a, b, c) => apply(q, a, b, c)
-      case _: Entity | _: Reverse | _: Take | _: Drop | _: Union | _: UnionAll | _: Aggregation =>
+      case q @ Filter(a, b, c)                  => apply(q, a, List(b), c)
+      case q @ Map(a, b, c)                     => apply(q, a, List(b), c)
+      case q @ FlatMap(a, b, c)                 => apply(q, a, List(b), c)
+      case q @ SortBy(a, b, c)                  => apply(q, a, List(b), c)
+      case q @ GroupBy(a, b, c)                 => apply(q, a, List(b), c)
+      case q @ ConditionalOuterJoin(a, b, c, d) => apply(q, a, List(b, c), d)
+      case _: Entity | _: Reverse | _: Take | _: Drop | _: Union | _: UnionAll | _: Aggregation | _: LeftJoin | _: RightJoin | _: FullJoin =>
         super.apply(query)
     }
 
-  private def apply(q: Query, a: Ast, b: Ident, c: Ast): (Query, StatefulTransformer[State]) = {
+  private def apply(q: Query, a: Ast, idents: List[Ident], c: Ast): (Query, StatefulTransformer[State]) = {
     val (_, ta) = apply(a)
-    val (_, tc) = FreeVariables(State(state.seen + b, state.free))(c)
+    val (_, tc) = FreeVariables(State(state.seen ++ idents, state.free))(c)
     (q, FreeVariables(State(state.seen, state.free ++ ta.state.free ++ tc.state.free)))
   }
 }

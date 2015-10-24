@@ -21,7 +21,7 @@ MVP - mid-september
 	√ options
 	√ groupBy
 	√ aggregations
-	- additional operations (string concatenation, etc)
+	√ additional operations (string concatenation, etc)
 	- set operations (union, outer joins, etc)
 	- insert returning id
 - naming strategy

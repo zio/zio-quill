@@ -26,38 +26,35 @@ class BetaReductionSpec extends Spec {
     "avoids replacing idents of an outer scope" - {
       "function" in {
         val ast: Ast = Function(List(Ident("a")), Ident("a"))
-        BetaReduction(ast, Ident("a") -> Ident("a'")) mustEqual
-          Function(List(Ident("a")), Ident("a"))
+        BetaReduction(ast, Ident("a") -> Ident("a'")) mustEqual ast
       }
       "filter" in {
         val ast: Ast = Filter(Ident("a"), Ident("b"), Ident("b"))
-        BetaReduction(ast, Ident("b") -> Ident("b'")) mustEqual
-          Filter(Ident("a"), Ident("b"), Ident("b"))
+        BetaReduction(ast, Ident("b") -> Ident("b'")) mustEqual ast
       }
       "map" in {
         val ast: Ast = Map(Ident("a"), Ident("b"), Ident("b"))
-        BetaReduction(ast, Ident("b") -> Ident("b'")) mustEqual
-          Map(Ident("a"), Ident("b"), Ident("b"))
+        BetaReduction(ast, Ident("b") -> Ident("b'")) mustEqual ast
       }
       "flatMap" in {
         val ast: Ast = FlatMap(Ident("a"), Ident("b"), Ident("b"))
-        BetaReduction(ast, Ident("b") -> Ident("b'")) mustEqual
-          FlatMap(Ident("a"), Ident("b"), Ident("b"))
+        BetaReduction(ast, Ident("b") -> Ident("b'")) mustEqual ast
       }
       "sortBy" in {
         val ast: Ast = SortBy(Ident("a"), Ident("b"), Ident("b"))
-        BetaReduction(ast, Ident("b") -> Ident("b'")) mustEqual
-          SortBy(Ident("a"), Ident("b"), Ident("b"))
+        BetaReduction(ast, Ident("b") -> Ident("b'")) mustEqual ast
       }
       "groupBy" in {
         val ast: Ast = GroupBy(Ident("a"), Ident("b"), Ident("b"))
-        BetaReduction(ast, Ident("b") -> Ident("b'")) mustEqual
-          GroupBy(Ident("a"), Ident("b"), Ident("b"))
+        BetaReduction(ast, Ident("b") -> Ident("b'")) mustEqual ast
       }
       "reverse" in {
         val ast: Ast = Reverse(SortBy(Ident("a"), Ident("b"), Ident("b")))
-        BetaReduction(ast, Ident("b") -> Ident("b'")) mustEqual
-          Reverse(SortBy(Ident("a"), Ident("b"), Ident("b")))
+        BetaReduction(ast, Ident("b") -> Ident("b'")) mustEqual ast
+      }
+      "conditional outer join" in {
+        val ast: Ast = ConditionalOuterJoin(LeftJoin(Ident("a"), Ident("b")), Ident("c"), Ident("d"), Tuple(List(Ident("c"), Ident("d"))))
+        BetaReduction(ast, Ident("c") -> Ident("c'"), Ident("d") -> Ident("d'")) mustEqual ast
       }
     }
   }

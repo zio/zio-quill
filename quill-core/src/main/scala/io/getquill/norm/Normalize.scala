@@ -17,4 +17,6 @@ object Normalize extends StatelessTransformer {
       case OrderTerms(query)                => apply(query)
       case other                            => other
     }
+
+  override def apply(q: OuterJoin): OuterJoin = super.apply(q)
 }

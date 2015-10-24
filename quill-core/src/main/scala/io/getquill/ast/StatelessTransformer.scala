@@ -29,6 +29,15 @@ trait StatelessTransformer {
       case Drop(a, b)        => Drop(apply(a), apply(b))
       case Union(a, b)       => Union(apply(a), apply(b))
       case UnionAll(a, b)    => UnionAll(apply(a), apply(b))
+      case e: OuterJoin      => apply(e)
+    }
+
+  def apply(e: OuterJoin): OuterJoin =
+    e match {
+      case LeftJoin(a, b)                   => LeftJoin(apply(a), apply(b))
+      case RightJoin(a, b)                  => RightJoin(apply(a), apply(b))
+      case FullJoin(a, b)                   => FullJoin(apply(a), apply(b))
+      case ConditionalOuterJoin(a, b, c, d) => ConditionalOuterJoin(apply(a), b, c, apply(d))
     }
 
   def apply(e: Operation): Operation =

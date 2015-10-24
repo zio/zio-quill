@@ -58,18 +58,22 @@ trait Liftables {
   }
 
   implicit val queryLiftable: Liftable[Query] = Liftable[Query] {
-    case Entity(name)      => q"$pack.Entity($name)"
-    case Filter(a, b, c)   => q"$pack.Filter($a, $b, $c)"
-    case Map(a, b, c)      => q"$pack.Map($a, $b, $c)"
-    case FlatMap(a, b, c)  => q"$pack.FlatMap($a, $b, $c)"
-    case SortBy(a, b, c)   => q"$pack.SortBy($a, $b, $c)"
-    case GroupBy(a, b, c)  => q"$pack.GroupBy($a, $b, $c)"
-    case Aggregation(a, b) => q"$pack.Aggregation($a, $b)"
-    case Reverse(a)        => q"$pack.Reverse($a)"
-    case Take(a, b)        => q"$pack.Take($a, $b)"
-    case Drop(a, b)        => q"$pack.Drop($a, $b)"
-    case Union(a, b)       => q"$pack.Union($a, $b)"
-    case UnionAll(a, b)    => q"$pack.UnionAll($a, $b)"
+    case Entity(name)                     => q"$pack.Entity($name)"
+    case Filter(a, b, c)                  => q"$pack.Filter($a, $b, $c)"
+    case Map(a, b, c)                     => q"$pack.Map($a, $b, $c)"
+    case FlatMap(a, b, c)                 => q"$pack.FlatMap($a, $b, $c)"
+    case SortBy(a, b, c)                  => q"$pack.SortBy($a, $b, $c)"
+    case GroupBy(a, b, c)                 => q"$pack.GroupBy($a, $b, $c)"
+    case Aggregation(a, b)                => q"$pack.Aggregation($a, $b)"
+    case Reverse(a)                       => q"$pack.Reverse($a)"
+    case Take(a, b)                       => q"$pack.Take($a, $b)"
+    case Drop(a, b)                       => q"$pack.Drop($a, $b)"
+    case Union(a, b)                      => q"$pack.Union($a, $b)"
+    case UnionAll(a, b)                   => q"$pack.UnionAll($a, $b)"
+    case LeftJoin(a, b)                   => q"$pack.LeftJoin($a, $b)"
+    case RightJoin(a, b)                  => q"$pack.RightJoin($a, $b)"
+    case FullJoin(a, b)                   => q"$pack.FullJoin($a, $b)"
+    case ConditionalOuterJoin(a, b, c, d) => q"$pack.ConditionalOuterJoin(${a: Ast}, $b, $c, $d)"
   }
 
   implicit val actionLiftable: Liftable[Action] = Liftable[Action] {

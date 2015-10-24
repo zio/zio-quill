@@ -112,6 +112,40 @@ class StatefulTransformerSpec extends Spec {
             att.state mustEqual List(Ident("a"), Ident("b"))
         }
       }
+      "outer join" - {
+        "leftJoin" in {
+          val ast: Ast = LeftJoin(Ident("a"), Ident("b"))
+          Subject(Nil, Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"))(ast) match {
+            case (at, att) =>
+              at mustEqual LeftJoin(Ident("a'"), Ident("b'"))
+              att.state mustEqual List(Ident("a"), Ident("b"))
+          }
+        }
+        "rightJoin" in {
+          val ast: Ast = RightJoin(Ident("a"), Ident("b"))
+          Subject(Nil, Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"))(ast) match {
+            case (at, att) =>
+              at mustEqual RightJoin(Ident("a'"), Ident("b'"))
+              att.state mustEqual List(Ident("a"), Ident("b"))
+          }
+        }
+        "fullJoin" in {
+          val ast: Ast = FullJoin(Ident("a"), Ident("b"))
+          Subject(Nil, Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"))(ast) match {
+            case (at, att) =>
+              at mustEqual FullJoin(Ident("a'"), Ident("b'"))
+              att.state mustEqual List(Ident("a"), Ident("b"))
+          }
+        }
+        "conditional" in {
+          val ast: Ast = ConditionalOuterJoin(FullJoin(Ident("a"), Ident("b")), Ident("c"), Ident("d"), Ident("e"))
+          Subject(Nil, Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("e") -> Ident("e'"))(ast) match {
+            case (at, att) =>
+              at mustEqual ConditionalOuterJoin(FullJoin(Ident("a'"), Ident("b'")), Ident("c"), Ident("d"), Ident("e'"))
+              att.state mustEqual List(Ident("a"), Ident("b"), Ident("e"))
+          }
+        }
+      }
     }
 
     "operation" - {

@@ -31,7 +31,9 @@ case class BetaReduction(map: collection.Map[Ident, Ast])
         SortBy(apply(a), b, BetaReduction(map - b)(c))
       case GroupBy(a, b, c) =>
         GroupBy(apply(a), b, BetaReduction(map - b)(c))
-      case _: Reverse | _: Take | _: Entity | _: Drop | _: Union | _: UnionAll | _: Aggregation =>
+      case ConditionalOuterJoin(a, b, c, d) =>
+        ConditionalOuterJoin(apply(a), b, c, BetaReduction(map - b - c)(d))
+      case _: Reverse | _: Take | _: Entity | _: Drop | _: Union | _: UnionAll | _: Aggregation | _: LeftJoin | _: RightJoin | _: FullJoin =>
         super.apply(query)
     }
 }

@@ -73,6 +73,14 @@ class FreeVariablesSpec extends Spec {
       }
       """ mustNot compile
     }
+    "conditional outer join" in {
+      val s = 10
+      """
+      quote {
+        qr1.leftJoin(qr2).on((a, b) => a.s == s)
+      }
+      """ mustNot compile
+    }
   }
 
   "doesn't fail for variables defined in the quotation" - {
@@ -99,6 +107,11 @@ class FreeVariablesSpec extends Spec {
     "reverse" in {
       val q = quote {
         qr1.sortBy(b => b.s).reverse
+      }
+    }
+    "conditional outer join" in {
+      val q = quote {
+        qr1.leftJoin(qr2).on((a, b) => a.s == b.s)
       }
     }
   }

@@ -98,6 +98,13 @@ trait Parsing {
 
     case q"$source.++[$t]($n)" =>
       UnionAll(astParser(source), astParser(n))
+
+    case q"${ astParser(a: OuterJoin) }.on(($aliasA, $aliasB) => $body)" =>
+      ConditionalOuterJoin(a, identParser(aliasA), identParser(aliasB), astParser(body))
+
+    case q"$a.leftJoin[$t, $u]($b)"  => LeftJoin(astParser(a), astParser(b))
+    case q"$a.rightJoin[$t, $u]($b)" => RightJoin(astParser(a), astParser(b))
+    case q"$a.fullJoin[$t, $u]($b)"  => FullJoin(astParser(a), astParser(b))
   }
 
   val infixParser: Parser[Infix] = Parser[Infix] {

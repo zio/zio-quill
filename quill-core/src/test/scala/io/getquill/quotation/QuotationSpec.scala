@@ -98,22 +98,48 @@ class QuotationSpec extends Spec {
       }
       "union" in {
         val q = quote {
-          qr1.union(qr1)
+          qr1.union(qr2)
         }
-        quote(unquote(q)).ast mustEqual Union(Entity("TestEntity"), Entity("TestEntity"))
+        quote(unquote(q)).ast mustEqual Union(Entity("TestEntity"), Entity("TestEntity2"))
       }
       "unionAll" - {
         "unionAll" in {
           val q = quote {
-            qr1.union(qr1)
+            qr1.union(qr2)
           }
-          quote(unquote(q)).ast mustEqual Union(Entity("TestEntity"), Entity("TestEntity"))
+          quote(unquote(q)).ast mustEqual Union(Entity("TestEntity"), Entity("TestEntity2"))
         }
         "++" in {
           val q = quote {
-            qr1 ++ qr1
+            qr1 ++ qr2
           }
-          quote(unquote(q)).ast mustEqual UnionAll(Entity("TestEntity"), Entity("TestEntity"))
+          quote(unquote(q)).ast mustEqual UnionAll(Entity("TestEntity"), Entity("TestEntity2"))
+        }
+      }
+      "outer join" - {
+        "left join" in {
+          val q = quote {
+            qr1.leftJoin(qr2)
+          }
+          quote(unquote(q)).ast mustEqual LeftJoin(Entity("TestEntity"), Entity("TestEntity2"))
+        }
+        "right join" in {
+          val q = quote {
+            qr1.rightJoin(qr2)
+          }
+          quote(unquote(q)).ast mustEqual RightJoin(Entity("TestEntity"), Entity("TestEntity2"))
+        }
+        "full join" in {
+          val q = quote {
+            qr1.fullJoin(qr2)
+          }
+          quote(unquote(q)).ast mustEqual FullJoin(Entity("TestEntity"), Entity("TestEntity2"))
+        }
+        "conditional" in {
+          val q = quote {
+            qr1.rightJoin(qr2).on(_.s == _.s)
+          }
+          quote(unquote(q)).ast mustEqual ConditionalOuterJoin(RightJoin(Entity("TestEntity"), Entity("TestEntity2")), Ident("x$1"), Ident("x$2"), BinaryOperation(Property(Ident("x$1"), "s"), EqualityOperator.`==`, Property(Ident("x$2"), "s")))
         }
       }
     }

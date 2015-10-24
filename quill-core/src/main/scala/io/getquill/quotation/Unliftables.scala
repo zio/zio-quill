@@ -24,7 +24,7 @@ trait Unliftables {
 
   implicit def listUnliftable[T](implicit u: Unliftable[T]): Unliftable[List[T]] = Unliftable[List[T]] {
     case q"$pack.Nil"                         => Nil
-    case q"$pack.List.apply[..$t](..$values)" => values.map(u.unapply(_)).flatten
+    case q"$pack.List.apply[..$t](..$values)" => values.map(u.unapply(_).get)
   }
 
   implicit val binaryOperatorUnliftable: Unliftable[BinaryOperator] = Unliftable[BinaryOperator] {
@@ -73,6 +73,11 @@ trait Unliftables {
     case q"$pack.Drop.apply(${ a: Ast }, ${ b: Ast })"                   => Drop(a, b)
     case q"$pack.Union.apply(${ a: Ast }, ${ b: Ast })"                  => Union(a, b)
     case q"$pack.UnionAll.apply(${ a: Ast }, ${ b: Ast })"               => UnionAll(a, b)
+    case q"$pack.LeftJoin.apply(${ a: Ast }, ${ b: Ast })"               => LeftJoin(a, b)
+    case q"$pack.RightJoin.apply(${ a: Ast }, ${ b: Ast })"              => RightJoin(a, b)
+    case q"$pack.FullJoin.apply(${ a: Ast }, ${ b: Ast })"               => FullJoin(a, b)
+    case q"$pack.ConditionalOuterJoin.apply(${ astUnliftable(a: OuterJoin) }, ${ b: Ident }, ${ c: Ident }, ${ d: Ast })" =>
+      ConditionalOuterJoin(a, b, c, d)
   }
 
   implicit val actionUnliftable: Unliftable[Action] = Unliftable[Action] {

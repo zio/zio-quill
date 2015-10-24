@@ -104,6 +104,44 @@ class NormalizeNestedStructuresSpec extends Spec {
       }
       NormalizeNestedStructures.unapply(q.ast) mustEqual Some(n.ast)
     }
+    "outer join" - {
+      "leftJoin" in {
+        val q = quote {
+          qr1.filter(t => t.s == ("a", "b")._1).leftJoin(qr1)
+        }
+        val n = quote {
+          qr1.filter(t => t.s == "a").leftJoin(qr1)
+        }
+        NormalizeNestedStructures.unapply(q.ast) mustEqual Some(n.ast)
+      }
+      "rightJoin" in {
+        val q = quote {
+          qr1.filter(t => t.s == ("a", "b")._1).rightJoin(qr1)
+        }
+        val n = quote {
+          qr1.filter(t => t.s == "a").rightJoin(qr1)
+        }
+        NormalizeNestedStructures.unapply(q.ast) mustEqual Some(n.ast)
+      }
+      "fullJoin" in {
+        val q = quote {
+          qr1.filter(t => t.s == ("a", "b")._1).fullJoin(qr1)
+        }
+        val n = quote {
+          qr1.filter(t => t.s == "a").fullJoin(qr1)
+        }
+        NormalizeNestedStructures.unapply(q.ast) mustEqual Some(n.ast)
+      }
+      "conditional" in {
+        val q = quote {
+          qr1.filter(t => t.s == ("a", "b")._1).rightJoin(qr1).on((a, b) => a.s == b.s)
+        }
+        val n = quote {
+          qr1.filter(t => t.s == "a").rightJoin(qr1).on((a, b) => a.s == b.s)
+        }
+        NormalizeNestedStructures.unapply(q.ast) mustEqual Some(n.ast)
+      }
+    }
   }
 
   "returns None if none of the nested structures changes" - {
@@ -148,6 +186,44 @@ class NormalizeNestedStructuresSpec extends Spec {
         qr1.sortBy(t => t.i).drop(2)
       }
       NormalizeNestedStructures.unapply(q.ast) mustEqual None
+    }
+    "union" in {
+      val q = quote {
+        qr1.filter(t => t.s == "a").union(qr1)
+      }
+      NormalizeNestedStructures.unapply(q.ast) mustEqual None
+    }
+    "unionAll" in {
+      val q = quote {
+        qr1.filter(t => t.s == "a").unionAll(qr1)
+      }
+      NormalizeNestedStructures.unapply(q.ast) mustEqual None
+    }
+    "outer join" - {
+      "leftJoin" in {
+        val q = quote {
+          qr1.filter(t => t.s == "a").leftJoin(qr1)
+        }
+        NormalizeNestedStructures.unapply(q.ast) mustEqual None
+      }
+      "rightJoin" in {
+        val q = quote {
+          qr1.filter(t => t.s == "a").rightJoin(qr1)
+        }
+        NormalizeNestedStructures.unapply(q.ast) mustEqual None
+      }
+      "fullJoin" in {
+        val q = quote {
+          qr1.filter(t => t.s == "a").fullJoin(qr1)
+        }
+        NormalizeNestedStructures.unapply(q.ast) mustEqual None
+      }
+      "conditional" in {
+        val q = quote {
+          qr1.filter(t => t.s == "a").rightJoin(qr1).on(_.s == _.s)
+        }
+        NormalizeNestedStructures.unapply(q.ast) mustEqual None
+      }
     }
   }
 }
