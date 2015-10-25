@@ -6,12 +6,151 @@ import io.getquill._
 
 class AvoidAliasConflictSpec extends Spec {
 
-  "renames alias to avoid conflict between entities during normalization" in {
+  "renames alias to avoid conflict between entities during normalization" - {
+    "flatMap" in {
+      val q = quote {
+        qr1.flatMap(a => qr2.flatMap(a => qr3))
+      }
+      val n = quote {
+        qr1.flatMap(a => qr2.flatMap(a1 => qr3))
+      }
+      AvoidAliasConflict(q.ast) mustEqual n.ast
+    }
+    "map" in {
+      val q = quote {
+        qr1.flatMap(a => qr2.map(a => a.s))
+      }
+      val n = quote {
+        qr1.flatMap(a => qr2.map(a1 => a1.s))
+      }
+      AvoidAliasConflict(q.ast) mustEqual n.ast
+    }
+    "filter" in {
+      val q = quote {
+        qr1.flatMap(a => qr2.filter(a => a.i == 1))
+      }
+      val n = quote {
+        qr1.flatMap(a => qr2.filter(a1 => a1.i == 1))
+      }
+      AvoidAliasConflict(q.ast) mustEqual n.ast
+    }
+    "sortBy" in {
+      val q = quote {
+        qr1.flatMap(a => qr2.sortBy(a => a.s))
+      }
+      val n = quote {
+        qr1.flatMap(a => qr2.sortBy(a1 => a1.s))
+      }
+      AvoidAliasConflict(q.ast) mustEqual n.ast
+    }
+    "outer join" - {
+      "both sides" in {
+        val q = quote {
+          for {
+            a <- qr1
+            b <- qr1
+            c <- qr1.leftJoin(qr2).on((a, b) => a.s == b.s)
+          } yield {
+            (a, b, c)
+          }
+        }
+        val n = quote {
+          for {
+            a <- qr1
+            b <- qr1
+            c <- qr1.leftJoin(qr2).on((a1, b1) => a1.s == b1.s)
+          } yield {
+            (a, b, c)
+          }
+        }
+        AvoidAliasConflict(q.ast) mustEqual n.ast
+      }
+      "left" in {
+        val q = quote {
+          for {
+            a <- qr1
+            c <- qr1.leftJoin(qr2).on((a, b) => a.s == b.s)
+          } yield {
+            (a, c)
+          }
+        }
+        val n = quote {
+          for {
+            a <- qr1
+            c <- qr1.leftJoin(qr2).on((a1, b) => a1.s == b.s)
+          } yield {
+            (a, c)
+          }
+        }
+        AvoidAliasConflict(q.ast) mustEqual n.ast
+      }
+      "right" in {
+        val q = quote {
+          for {
+            b <- qr1
+            c <- qr1.leftJoin(qr2).on((a, b) => a.s == b.s)
+          } yield {
+            (b, c)
+          }
+        }
+        val n = quote {
+          for {
+            b <- qr1
+            c <- qr1.leftJoin(qr2).on((a, b1) => a.s == b1.s)
+          } yield {
+            (b, c)
+          }
+        }
+        AvoidAliasConflict(q.ast) mustEqual n.ast
+      }
+    }
+  }
+
+  "takes in consideration the aliases already defined" - {
+    "flatMap" in {
+      val q = quote {
+        qr1.flatMap(a => qr2.flatMap(a => qr3))
+      }
+      val n = quote {
+        qr1.flatMap(a => qr2.flatMap(a1 => qr3))
+      }
+      AvoidAliasConflict(q.ast) mustEqual n.ast
+    }
+    "map" in {
+      val q = quote {
+        qr1.map(a => a.s).flatMap(s => qr2.map(a => a.s))
+      }
+      val n = quote {
+        qr1.map(a => a.s).flatMap(s => qr2.map(a1 => a1.s))
+      }
+      AvoidAliasConflict(q.ast) mustEqual n.ast
+    }
+    "filter" in {
+      val q = quote {
+        qr1.filter(a => a.s == "s").flatMap(s => qr2.map(a => a.s))
+      }
+      val n = quote {
+        qr1.filter(a => a.s == "s").flatMap(s => qr2.map(a1 => a1.s))
+      }
+      AvoidAliasConflict(q.ast) mustEqual n.ast
+    }
+    "sortBy" in {
+      val q = quote {
+        qr1.sortBy(a => a.s).flatMap(s => qr2.map(a => a.s))
+      }
+      val n = quote {
+        qr1.sortBy(a => a.s).flatMap(s => qr2.map(a1 => a1.s))
+      }
+      AvoidAliasConflict(q.ast) mustEqual n.ast
+    }
+  }
+
+  "handles many alias conflicts" in {
     val q = quote {
-      qr1.filter(u => u.s == "s1").flatMap(u => qr2.flatMap(u => qr3.sortBy(u => u.s).filter(u => u.s == "s1").map(u => u.s)))
+      qr1.flatMap(a => qr2.flatMap(a => qr2.flatMap(a => qr1)))
     }
     val n = quote {
-      qr1.filter(u => u.s == "s1").flatMap(u => qr2.flatMap(u1 => qr3.sortBy(u2 => u2.s).filter(u => u.s == "s1").map(u => u.s)))
+      qr1.flatMap(a => qr2.flatMap(a1 => qr2.flatMap(a2 => qr1)))
     }
     AvoidAliasConflict(q.ast) mustEqual n.ast
   }

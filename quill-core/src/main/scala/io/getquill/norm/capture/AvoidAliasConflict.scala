@@ -33,22 +33,6 @@ private case class AvoidAliasConflict(state: Set[Ident])
         val (prr, t) = AvoidAliasConflict(state + fresh)(pr)
         (SortBy(q, fresh, prr), t)
 
-      case FlatMap(q: Entity, x, p) =>
-        val (pr, t) = AvoidAliasConflict(state + x)(p)
-        (FlatMap(q, x, pr), t)
-
-      case Map(q: Entity, x, p) =>
-        val (pr, t) = AvoidAliasConflict(state + x)(p)
-        (Map(q, x, pr), t)
-
-      case Filter(q: Entity, x, p) =>
-        val (pr, t) = AvoidAliasConflict(state + x)(p)
-        (Filter(q, x, pr), t)
-
-      case SortBy(q: Entity, x, p) =>
-        val (pr, t) = AvoidAliasConflict(state + x)(p)
-        (SortBy(q, x, pr), t)
-
       case OuterJoin(t, a, b, iA, iB, o) if (state.contains(iA) && state.contains(iB)) =>
         val freshA = freshIdent(iA)
         val freshB = freshIdent(iB)
@@ -67,6 +51,22 @@ private case class AvoidAliasConflict(state: Set[Ident])
         val or = BetaReduction(o, iB -> fresh)
         val (orr, orrt) = AvoidAliasConflict(state + fresh)(or)
         (OuterJoin(t, a, b, iA, fresh, orr), orrt)
+
+      case FlatMap(q: Entity, x, p) =>
+        val (pr, t) = AvoidAliasConflict(state + x)(p)
+        (FlatMap(q, x, pr), t)
+
+      case Map(q: Entity, x, p) =>
+        val (pr, t) = AvoidAliasConflict(state + x)(p)
+        (Map(q, x, pr), t)
+
+      case Filter(q: Entity, x, p) =>
+        val (pr, t) = AvoidAliasConflict(state + x)(p)
+        (Filter(q, x, pr), t)
+
+      case SortBy(q: Entity, x, p) =>
+        val (pr, t) = AvoidAliasConflict(state + x)(p)
+        (SortBy(q, x, pr), t)
 
       case other => super.apply(other)
     }
