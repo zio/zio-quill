@@ -117,29 +117,27 @@ class QuotationSpec extends Spec {
         }
       }
       "outer join" - {
+
+        def tree(t: OuterJoinType) =
+          OuterJoin(t, Entity("TestEntity"), Entity("TestEntity2"), Ident("a"), Ident("b"), BinaryOperation(Property(Ident("a"), "s"), EqualityOperator.`==`, Property(Ident("b"), "s")))
+
         "left join" in {
           val q = quote {
-            qr1.leftJoin(qr2)
+            qr1.leftJoin(qr2).on((a, b) => a.s == b.s)
           }
-          quote(unquote(q)).ast mustEqual LeftJoin(Entity("TestEntity"), Entity("TestEntity2"))
+          quote(unquote(q)).ast mustEqual tree(LeftJoin)
         }
         "right join" in {
           val q = quote {
-            qr1.rightJoin(qr2)
+            qr1.rightJoin(qr2).on((a, b) => a.s == b.s)
           }
-          quote(unquote(q)).ast mustEqual RightJoin(Entity("TestEntity"), Entity("TestEntity2"))
+          quote(unquote(q)).ast mustEqual tree(RightJoin)
         }
         "full join" in {
           val q = quote {
-            qr1.fullJoin(qr2)
+            qr1.fullJoin(qr2).on((a, b) => a.s == b.s)
           }
-          quote(unquote(q)).ast mustEqual FullJoin(Entity("TestEntity"), Entity("TestEntity2"))
-        }
-        "conditional" in {
-          val q = quote {
-            qr1.rightJoin(qr2).on(_.s == _.s)
-          }
-          quote(unquote(q)).ast mustEqual ConditionalOuterJoin(RightJoin(Entity("TestEntity"), Entity("TestEntity2")), Ident("x$1"), Ident("x$2"), BinaryOperation(Property(Ident("x$1"), "s"), EqualityOperator.`==`, Property(Ident("x$2"), "s")))
+          quote(unquote(q)).ast mustEqual tree(FullJoin)
         }
       }
     }

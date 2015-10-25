@@ -61,25 +61,17 @@ object AstShow {
         case UnionAll(a, b) =>
           s"${a.show}.unionAll(${b.show})"
 
-        case q: OuterJoin =>
-          q.show
+        case OuterJoin(t, a, b, iA, iB, on) =>
+          s"${a.show}.${t.show}(${b.show}).on((${iA.show}, ${iB.show}) => ${on.show})"
       }
   }
 
-  implicit val outerJoinShow: Show[OuterJoin] = new Show[OuterJoin] {
-    def show(q: OuterJoin) =
+  implicit val outerJoinTypeShow: Show[OuterJoinType] = new Show[OuterJoinType] {
+    def show(q: OuterJoinType) =
       q match {
-        case LeftJoin(a, b) =>
-          s"${a.show}.leftJoin(${b.show})"
-
-        case RightJoin(a, b) =>
-          s"${a.show}.rightJoin(${b.show})"
-
-        case FullJoin(a, b) =>
-          s"${a.show}.fullJoin(${b.show})"
-
-        case ConditionalOuterJoin(a, b, c, d) =>
-          s"${a.show}.on((${b.show}, ${c.show}) => ${d.show})"
+        case LeftJoin  => "leftJoin"
+        case RightJoin => "rightJoin"
+        case FullJoin  => "fullJoin"
       }
   }
 

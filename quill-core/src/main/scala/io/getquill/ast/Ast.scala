@@ -41,17 +41,7 @@ case class Union(a: Ast, b: Ast) extends Query
 
 case class UnionAll(a: Ast, b: Ast) extends Query
 
-//************************************************************
-
-sealed trait OuterJoin extends Query
-
-case class LeftJoin(a: Ast, b: Ast) extends OuterJoin
-
-case class RightJoin(a: Ast, b: Ast) extends OuterJoin
-
-case class FullJoin(a: Ast, b: Ast) extends OuterJoin
-
-case class ConditionalOuterJoin(join: OuterJoin, aliasA: Ident, aliasB: Ident, body: Ast) extends OuterJoin
+case class OuterJoin(typ: OuterJoinType, a: Ast, b: Ast, aliasA: Ident, aliasB: Ident, on: Ast) extends Query
 
 //************************************************************
 

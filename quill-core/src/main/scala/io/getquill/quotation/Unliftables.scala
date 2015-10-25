@@ -73,11 +73,14 @@ trait Unliftables {
     case q"$pack.Drop.apply(${ a: Ast }, ${ b: Ast })"                   => Drop(a, b)
     case q"$pack.Union.apply(${ a: Ast }, ${ b: Ast })"                  => Union(a, b)
     case q"$pack.UnionAll.apply(${ a: Ast }, ${ b: Ast })"               => UnionAll(a, b)
-    case q"$pack.LeftJoin.apply(${ a: Ast }, ${ b: Ast })"               => LeftJoin(a, b)
-    case q"$pack.RightJoin.apply(${ a: Ast }, ${ b: Ast })"              => RightJoin(a, b)
-    case q"$pack.FullJoin.apply(${ a: Ast }, ${ b: Ast })"               => FullJoin(a, b)
-    case q"$pack.ConditionalOuterJoin.apply(${ astUnliftable(a: OuterJoin) }, ${ b: Ident }, ${ c: Ident }, ${ d: Ast })" =>
-      ConditionalOuterJoin(a, b, c, d)
+    case q"$pack.OuterJoin.apply(${ t: OuterJoinType }, ${ a: Ast }, ${ b: Ast }, ${ iA: Ident }, ${ iB: Ident }, ${ on: Ast })" =>
+      OuterJoin(t, a, b, iA, iB, on)
+  }
+
+  implicit val outerJoinTypeUnliftable: Unliftable[OuterJoinType] = Unliftable[OuterJoinType] {
+    case q"$pack.LeftJoin"  => LeftJoin
+    case q"$pack.RightJoin" => RightJoin
+    case q"$pack.FullJoin"  => FullJoin
   }
 
   implicit val actionUnliftable: Unliftable[Action] = Unliftable[Action] {

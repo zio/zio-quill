@@ -52,8 +52,8 @@ class BetaReductionSpec extends Spec {
         val ast: Ast = Reverse(SortBy(Ident("a"), Ident("b"), Ident("b")))
         BetaReduction(ast, Ident("b") -> Ident("b'")) mustEqual ast
       }
-      "conditional outer join" in {
-        val ast: Ast = ConditionalOuterJoin(LeftJoin(Ident("a"), Ident("b")), Ident("c"), Ident("d"), Tuple(List(Ident("c"), Ident("d"))))
+      "outer join" in {
+        val ast: Ast = OuterJoin(LeftJoin, Ident("a"), Ident("b"), Ident("c"), Ident("d"), Tuple(List(Ident("c"), Ident("d"))))
         BetaReduction(ast, Ident("c") -> Ident("c'"), Ident("d") -> Ident("d'")) mustEqual ast
       }
     }

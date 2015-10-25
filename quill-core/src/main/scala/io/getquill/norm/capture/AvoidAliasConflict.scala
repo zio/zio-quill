@@ -49,6 +49,25 @@ private case class AvoidAliasConflict(state: Set[Ident])
         val (pr, t) = AvoidAliasConflict(state + x)(p)
         (SortBy(q, x, pr), t)
 
+      case OuterJoin(t, a, b, iA, iB, o) if (state.contains(iA) && state.contains(iB)) =>
+        val freshA = freshIdent(iA)
+        val freshB = freshIdent(iB)
+        val or = BetaReduction(o, iA -> freshA, iB -> freshB)
+        val (orr, orrt) = AvoidAliasConflict(state + freshA + freshB)(or)
+        (OuterJoin(t, a, b, freshA, freshB, orr), orrt)
+
+      case OuterJoin(t, a, b, iA, iB, o) if (state.contains(iA)) =>
+        val fresh = freshIdent(iA)
+        val or = BetaReduction(o, iA -> fresh)
+        val (orr, orrt) = AvoidAliasConflict(state + fresh)(or)
+        (OuterJoin(t, a, b, fresh, iB, orr), orrt)
+
+      case OuterJoin(t, a, b, iA, iB, o) if (state.contains(iB)) =>
+        val fresh = freshIdent(iB)
+        val or = BetaReduction(o, iB -> fresh)
+        val (orr, orrt) = AvoidAliasConflict(state + fresh)(or)
+        (OuterJoin(t, a, b, iA, fresh, orr), orrt)
+
       case other => super.apply(other)
     }
 

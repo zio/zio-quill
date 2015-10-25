@@ -72,27 +72,10 @@ class StatelessTransformerSpec extends Spec {
         Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"))(ast) mustEqual
           UnionAll(Ident("a'"), Ident("b'"))
       }
-      "outer join" - {
-        "leftJoin" in {
-          val ast: Ast = LeftJoin(Ident("a"), Ident("b"))
-          Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"))(ast) mustEqual
-            LeftJoin(Ident("a'"), Ident("b'"))
-        }
-        "rightJoin" in {
-          val ast: Ast = RightJoin(Ident("a"), Ident("b"))
-          Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"))(ast) mustEqual
-            RightJoin(Ident("a'"), Ident("b'"))
-        }
-        "fullJoin" in {
-          val ast: Ast = FullJoin(Ident("a"), Ident("b"))
-          Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"))(ast) mustEqual
-            FullJoin(Ident("a'"), Ident("b'"))
-        }
-        "conditional" in {
-          val ast: Ast = ConditionalOuterJoin(FullJoin(Ident("a"), Ident("b")), Ident("c"), Ident("d"), Ident("e"))
-          Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("e") -> Ident("e'"))(ast) mustEqual
-            ConditionalOuterJoin(FullJoin(Ident("a'"), Ident("b'")), Ident("c"), Ident("d"), Ident("e'"))
-        }
+      "outer join" in {
+        val ast: Ast = OuterJoin(FullJoin, Ident("a"), Ident("b"), Ident("c"), Ident("d"), Ident("e"))
+        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("e") -> Ident("e'"))(ast) mustEqual
+          OuterJoin(FullJoin, Ident("a'"), Ident("b'"), Ident("c"), Ident("d"), Ident("e'"))
       }
     }
 

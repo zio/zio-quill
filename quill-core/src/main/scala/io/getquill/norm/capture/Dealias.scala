@@ -40,35 +40,13 @@ case class Dealias(state: Option[Ident]) extends StatefulTransformer[Option[Iden
         val (an, _) = apply(a)
         val (bn, _) = apply(b)
         (UnionAll(an, bn), Dealias(None))
-      case LeftJoin(a, b) =>
-        val (an, _) = apply(a)
-        val (bn, _) = apply(b)
-        (LeftJoin(an, bn), Dealias(None))
-      case RightJoin(a, b) =>
-        val (an, _) = apply(a)
-        val (bn, _) = apply(b)
-        (RightJoin(an, bn), Dealias(None))
-      case FullJoin(a, b) =>
-        val (an, _) = apply(a)
-        val (bn, _) = apply(b)
-        (FullJoin(an, bn), Dealias(None))
-      case ConditionalOuterJoin(LeftJoin(a, b), c, d, e) =>
-        dealias(a, b, c, d, e)(LeftJoin)
-      case ConditionalOuterJoin(RightJoin(a, b), c, d, e) =>
-        dealias(a, b, c, d, e)(RightJoin)
-      case ConditionalOuterJoin(FullJoin(a, b), c, d, e) =>
-        dealias(a, b, c, d, e)(FullJoin)
-      case _: Entity | _: ConditionalOuterJoin =>
+      case OuterJoin(t, a, b, iA, iB, o) =>
+        val ((an, iAn, on), ont) = dealias(a, iA, o)((_, _, _))
+        val ((bn, iBn, onn), onnt) = ont.dealias(b, iB, on)((_, _, _))
+        (OuterJoin(t, an, bn, iAn, iBn, onn), Dealias(None))
+      case _: Entity =>
         (q, Dealias(None))
     }
-
-  private def dealias(
-    a: Ast, b: Ast, c: Ident, d: Ident, e: Ast)(
-      f: (Ast, Ast) => OuterJoin): (ConditionalOuterJoin, Dealias) = {
-    val ((an, cn, en), ent) = dealias(a, c, e)((_, _, _))
-    val ((bn, dn, enn), ennt) = ent.dealias(b, d, en)((_, _, _))
-    (ConditionalOuterJoin(f(an, bn), cn, dn, enn), Dealias(None))
-  }
 
   private def dealias[T](a: Ast, b: Ident, c: Ast)(f: (Ast, Ident, Ast) => T) =
     apply(a) match {

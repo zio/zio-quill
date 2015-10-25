@@ -99,12 +99,17 @@ trait Parsing {
     case q"$source.++[$t]($n)" =>
       UnionAll(astParser(source), astParser(n))
 
-    case q"${ astParser(a: OuterJoin) }.on(($aliasA, $aliasB) => $body)" =>
-      ConditionalOuterJoin(a, identParser(aliasA), identParser(aliasB), astParser(body))
+    case q"${ outerJoinCallParser(typ, a, b) }.on(($aliasA, $aliasB) => $body)" =>
+      OuterJoin(typ, a, b, identParser(aliasA), identParser(aliasB), astParser(body))
 
-    case q"$a.leftJoin[$t, $u]($b)"  => LeftJoin(astParser(a), astParser(b))
-    case q"$a.rightJoin[$t, $u]($b)" => RightJoin(astParser(a), astParser(b))
-    case q"$a.fullJoin[$t, $u]($b)"  => FullJoin(astParser(a), astParser(b))
+    case q"${ outerJoinCallParser(typ, a, b) }" =>
+      c.fail("An outer join clause must be followed by 'on'.")
+  }
+
+  val outerJoinCallParser: Parser[(OuterJoinType, Ast, Ast)] = Parser[(OuterJoinType, Ast, Ast)] {
+    case q"$a.leftJoin[$t, $u]($b)"  => (LeftJoin, astParser(a), astParser(b))
+    case q"$a.rightJoin[$t, $u]($b)" => (RightJoin, astParser(a), astParser(b))
+    case q"$a.fullJoin[$t, $u]($b)"  => (FullJoin, astParser(a), astParser(b))
   }
 
   val infixParser: Parser[Infix] = Parser[Infix] {
