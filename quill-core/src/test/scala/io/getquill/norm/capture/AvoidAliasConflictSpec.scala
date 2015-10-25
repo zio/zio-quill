@@ -143,6 +143,35 @@ class AvoidAliasConflictSpec extends Spec {
       }
       AvoidAliasConflict(q.ast) mustEqual n.ast
     }
+    "outer join" - {
+      "left" in {
+        val q = quote {
+          qr1.fullJoin(qr2.filter(a => a.i == 1)).on((b, c) => b.s == c.s).flatMap(d => qr2.map(b => b.s))
+        }
+        val n = quote {
+          qr1.fullJoin(qr2.filter(a => a.i == 1)).on((b, c) => b.s == c.s).flatMap(d => qr2.map(b1 => b1.s))
+        }
+        AvoidAliasConflict(q.ast) mustEqual n.ast
+      }
+      "right" in {
+        val q = quote {
+          qr1.filter(a => a.i == 1).fullJoin(qr2).on((b, c) => b.s == c.s).flatMap(d => qr2.map(c => c.s))
+        }
+        val n = quote {
+          qr1.filter(a => a.i == 1).fullJoin(qr2).on((b, c) => b.s == c.s).flatMap(d => qr2.map(c1 => c1.s))
+        }
+        AvoidAliasConflict(q.ast) mustEqual n.ast
+      }
+      "both" in {
+        val q = quote {
+          qr1.fullJoin(qr2).on((a, b) => a.s == b.s).flatMap(c => qr1.flatMap(a => qr2.map(b => b.s)))
+        }
+        val n = quote {
+          qr1.fullJoin(qr2).on((a, b) => a.s == b.s).flatMap(c => qr1.flatMap(a1 => qr2.map(b1 => b1.s)))
+        }
+        AvoidAliasConflict(q.ast) mustEqual n.ast
+      }
+    }
   }
 
   "handles many alias conflicts" in {

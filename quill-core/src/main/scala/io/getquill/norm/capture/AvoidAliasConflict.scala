@@ -68,6 +68,15 @@ private case class AvoidAliasConflict(state: Set[Ident])
         val (pr, t) = AvoidAliasConflict(state + x)(p)
         (SortBy(q, x, pr), t)
 
+      case q @ OuterJoin(t, a: Entity, b: Entity, iA, iB, o) =>
+        (q, AvoidAliasConflict(state + iA + iB))
+
+      case q @ OuterJoin(t, a: Entity, b, iA, iB, o) =>
+        (q, AvoidAliasConflict(state + iA))
+
+      case q @ OuterJoin(t, a, b: Entity, iA, iB, o) =>
+        (q, AvoidAliasConflict(state + iB))
+
       case other => super.apply(other)
     }
 
