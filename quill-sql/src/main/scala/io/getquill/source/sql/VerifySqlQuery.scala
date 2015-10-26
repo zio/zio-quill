@@ -23,7 +23,7 @@ object VerifySqlQuery {
 
   private def verify(query: FlattenSqlQuery): Option[InvalidSqlQuery] = {
 
-    val aliases = query.from.map(_.alias).map(Ident(_)) :+ Ident("*") :+ Ident("?")
+    val aliases = query.from.map(this.aliases).flatten.map(Ident(_)) :+ Ident("*") :+ Ident("?")
 
     def verifyFreeVars(ast: Ast) =
       (FreeVariables(ast) -- aliases).toList match {
@@ -48,4 +48,12 @@ object VerifySqlQuery {
       case errors => Some(InvalidSqlQuery(errors))
     }
   }
+
+  private def aliases(s: Source): List[String] =
+    s match {
+      case s: TableSource     => List(s.alias)
+      case s: QuerySource     => List(s.alias)
+      case s: InfixSource     => List(s.alias)
+      case s: OuterJoinSource => aliases(s.a) ++ aliases(s.b)
+    }
 }

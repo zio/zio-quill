@@ -6,12 +6,11 @@ import io.getquill.util.Messages.fail
 
 case class OrderByCriteria(property: Property, desc: Boolean)
 
-sealed trait Source {
-  val alias: String
-}
+sealed trait Source
 case class TableSource(name: String, alias: String) extends Source
 case class QuerySource(query: SqlQuery, alias: String) extends Source
 case class InfixSource(infix: Infix, alias: String) extends Source
+case class OuterJoinSource(t: OuterJoinType, a: Source, b: Source, on: Ast) extends Source
 
 sealed trait SqlQuery
 
@@ -143,11 +142,12 @@ object SqlQuery {
       case other         => SelectValue(ast) :: Nil
     }
 
-  private def source(ast: Ast, alias: String) =
+  private def source(ast: Ast, alias: String): Source =
     ast match {
-      case Entity(table) => TableSource(table, alias)
-      case infix: Infix  => InfixSource(infix, alias)
-      case other         => QuerySource(apply(other), alias)
+      case Entity(table)                  => TableSource(table, alias)
+      case infix: Infix                   => InfixSource(infix, alias)
+      case OuterJoin(t, a, b, ia, ib, on) => OuterJoinSource(t, source(a, ia.name), source(b, ib.name), on)
+      case other                          => QuerySource(apply(other), alias)
     }
 
   private def groupByCriterias(ast: Ast): List[Property] =

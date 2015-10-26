@@ -169,6 +169,14 @@ class SqlIdiomSpec extends Spec {
             "SELECT x.s, x.i, x.l, x.o FROM (SELECT * FROM TestEntity t WHERE t.i > 10 UNION ALL SELECT * FROM TestEntity t1 WHERE t1.s = 's') x"
         }
       }
+      "outer join" - {
+        "left" in {
+          val q = quote {
+            qr1.leftJoin(qr2).on((a, b) => a.s == b.s).map(_._1)
+          }
+          mirrorSource.run(q).sql
+        }
+      }
     }
     "operations" - {
       "unary operation" - {

@@ -50,7 +50,7 @@ trait SourceMacro extends Quotation with ActionMacro with QueryMacro with Resolv
     else
       c.WeakTypeTag(tpe)
 
-  private def ast[T](quoted: Expr[Quoted[T]]) =
+  protected def ast[T](quoted: Expr[Quoted[T]]) =
     unquote[Ast](quoted.tree).getOrElse {
       c.fail(s"Can't unquote $quoted")
     }

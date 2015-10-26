@@ -106,9 +106,19 @@ trait SqlIdiom {
   implicit val sourceShow: Show[Source] = new Show[Source] {
     def show(source: Source) =
       source match {
-        case TableSource(name, alias)  => s"$name $alias"
-        case QuerySource(query, alias) => s"(${query.show}) $alias"
-        case InfixSource(infix, alias) => s"(${(infix: Ast).show}) $alias"
+        case TableSource(name, alias)     => s"$name $alias"
+        case QuerySource(query, alias)    => s"(${query.show}) $alias"
+        case InfixSource(infix, alias)    => s"(${(infix: Ast).show}) $alias"
+        case OuterJoinSource(t, a, b, on) => s"${a.show} ${t.show} ${b.show} ON ${on.show}"
+      }
+  }
+
+  implicit val outerJoinTypeShow: Show[OuterJoinType] = new Show[OuterJoinType] {
+    def show(q: OuterJoinType) =
+      q match {
+        case LeftJoin  => "LEFT JOIN"
+        case RightJoin => "RIGHT JOIN"
+        case FullJoin  => "FULL JOIN"
       }
   }
 
