@@ -166,6 +166,12 @@ class NormalizeNestedStructuresSpec extends Spec {
       }
       NormalizeNestedStructures.unapply(q.ast) mustEqual None
     }
+    "groupBy" in {
+      val q = quote {
+        qr1.groupBy(t => t.i)
+      }
+      NormalizeNestedStructures.unapply(q.ast) mustEqual None
+    }
     "take" in {
       val q = quote {
         qr1.sortBy(t => t.i).take(2)
