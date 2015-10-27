@@ -191,13 +191,29 @@ class SqlIdiomSpec extends Spec {
           mirrorSource.run(q).sql mustEqual
             "SELECT a.s FROM TestEntity a FULL JOIN TestEntity2 b ON a.s = b.s"
         }
-        //        "multiple outer joins" in {
-        //          val q = quote {
-        //            qr1.leftJoin(qr2).on((a, b) => a.s == b.s).leftJoin(qr2).on((a, b) => a._1.s == b.s).map(_._1._1)
-        //          }
-        //          mirrorSource.run(q).sql mustEqual
-        //            "SELECT a.s, a.i, a.l, a.o FROM TestEntity a FULL JOIN TestEntity2 b ON a.s = b.s"
-        //        }
+        "multiple outer joins" in {
+          val q = quote {
+            qr1.leftJoin(qr2).on((a, b) => a.s == b.s).leftJoin(qr2).on((a, b) => a._1.s == b.s).map(_._1._1)
+          }
+          mirrorSource.run(q).sql mustEqual
+            "SELECT a.s, a.i, a.l, a.o FROM TestEntity a LEFT JOIN TestEntity2 b ON a.s = b.s LEFT JOIN TestEntity2 b ON a.s = b.s"
+        }
+        "with flatMap" - {
+          "left" ignore {
+            // TODO flatten left flatMaps
+            val q = quote {
+              qr1.flatMap(a => qr2).leftJoin(qr3).on((b, c) => b.s == c.s).map(_._1)
+            }
+            mirrorSource.run(q).sql mustEqual ""
+          }
+          "right" in {
+            val q = quote {
+              qr1.leftJoin(qr2).on((a, b) => a.s == b.s).flatMap(c => qr3)
+            }
+            mirrorSource.run(q).sql mustEqual
+              "SELECT x.s, x.i, x.l, x.o FROM TestEntity a LEFT JOIN TestEntity2 b ON a.s = b.s, TestEntity3 x"
+          }
+        }
       }
     }
     "operations" - {
@@ -511,6 +527,22 @@ class SqlIdiomSpec extends Spec {
       "full infix action" in {
         mirrorSource.run(infix"DELETE FROM TestEntity".as[Action[TestEntity]]).sql mustEqual
           "DELETE FROM TestEntity"
+      }
+    }
+    "option operation" - {
+      "map" in {
+        val q = quote {
+          qr1.leftJoin(qr2).on((a, b) => a.s == b.s).map(t => (t._1.s, t._2.map(_.i)))
+        }
+        mirrorSource.run(q).sql mustEqual
+          "SELECT a.s, b.i FROM TestEntity a LEFT JOIN TestEntity2 b ON a.s = b.s"
+      }
+      "forall" in {
+        val q = quote {
+          qr1.leftJoin(qr2).on((a, b) => a.s == b.s).filter(t => t._2.forall(_.i == t._1.i)).map(_._1.s)
+        }
+        mirrorSource.run(q).sql mustEqual
+          "SELECT a.s FROM TestEntity a LEFT JOIN TestEntity2 b ON a.s = b.s WHERE b.i = a.i"
       }
     }
   }
