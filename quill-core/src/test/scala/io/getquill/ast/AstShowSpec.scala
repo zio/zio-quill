@@ -375,4 +375,21 @@ class AstShowSpec extends Spec {
         """query[TestEntity].filter(t => infix"""" + "$" + """{t.s} == 's'")"""
     }
   }
+
+  "shows option operations" - {
+    "map" in {
+      val q = quote {
+        (o: Option[Int]) => o.map(v => v)
+      }
+      (q.ast: Ast).show mustEqual
+        "(o) => o.map((v) => v)"
+    }
+    "forall" in {
+      val q = quote {
+        (o: Option[Boolean]) => o.forall(v => v)
+      }
+      (q.ast: Ast).show mustEqual
+        "(o) => o.forall((v) => v)"
+    }
+  }
 }

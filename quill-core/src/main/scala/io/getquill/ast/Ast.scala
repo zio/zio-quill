@@ -53,6 +53,8 @@ case class Ident(name: String) extends Ast
 
 case class Property(ast: Ast, name: String) extends Ast
 
+case class OptionOperation(t: OptionOperationType, ast: Ast, alias: Ident, body: Ast) extends Ast
+
 //************************************************************
 
 sealed trait Operation extends Ast

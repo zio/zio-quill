@@ -6,6 +6,7 @@ import io.getquill.util.Messages.fail
 import io.getquill.util.Show.Show
 import io.getquill.util.Show.Shower
 import io.getquill.util.Show.listShow
+import io.getquill.norm.BetaReduction
 
 trait SqlIdiom {
 
@@ -25,9 +26,18 @@ trait SqlIdiom {
           case a: Ident                       => a.show
           case a: Property                    => a.show
           case a: Value                       => a.show
+          case a: OptionOperation             => a.show
           case _: Function | _: FunctionApply => fail(s"Malformed query $a.")
         }
     }
+
+  implicit val optionOperationShow: Show[OptionOperation] = new Show[OptionOperation] {
+    def show(e: OptionOperation) =
+      e match {
+        case OptionOperation(t, ast, alias, body) =>
+          BetaReduction(body, alias -> ast).show
+      }
+  }
 
   implicit val sqlQueryShow: Show[SqlQuery] = new Show[SqlQuery] {
     def show(e: SqlQuery) =

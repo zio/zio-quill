@@ -24,6 +24,11 @@ trait StatefulTransformer[T] {
       case Infix(a, b) =>
         val (bt, btt) = apply(b)(_.apply)
         (Infix(a, bt), btt)
+
+      case OptionOperation(t, a, b, c) =>
+        val (at, att) = apply(a)
+        val (ct, ctt) = att.apply(c)
+        (OptionOperation(t, at, b, ct), ctt)
     }
 
   def apply(e: Query): (Query, StatefulTransformer[T]) =

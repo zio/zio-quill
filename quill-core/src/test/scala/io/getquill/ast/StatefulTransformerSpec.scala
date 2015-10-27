@@ -30,7 +30,6 @@ class StatefulTransformerSpec extends Spec {
             at mustEqual Filter(Ident("a'"), Ident("b"), Ident("c'"))
             att.state mustEqual List(Ident("a"), Ident("c"))
         }
-
       }
       "map" in {
         val ast: Ast = Map(Ident("a"), Ident("b"), Ident("c"))
@@ -236,6 +235,15 @@ class StatefulTransformerSpec extends Spec {
         case (at, att) =>
           at mustEqual Infix(List("test"), List(Ident("a'")))
           att.state mustEqual List(Ident("a"))
+      }
+    }
+
+    "option operation" in {
+      val ast: Ast = OptionOperation(OptionMap, Ident("a"), Ident("b"), Ident("c"))
+      Subject(Nil, Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) match {
+        case (at, att) =>
+          at mustEqual OptionOperation(OptionMap, Ident("a'"), Ident("b"), Ident("c'"))
+          att.state mustEqual List(Ident("a"), Ident("c"))
       }
     }
   }

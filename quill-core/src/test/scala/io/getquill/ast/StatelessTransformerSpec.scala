@@ -154,5 +154,11 @@ class StatelessTransformerSpec extends Spec {
       Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"))(ast) mustEqual
         Infix(List("test"), List(Ident("a'"), Ident("b'")))
     }
+
+    "option operation" in {
+      val ast: Ast = OptionOperation(OptionForall, Ident("a"), Ident("b"), Ident("c"))
+      Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) mustEqual
+        OptionOperation(OptionForall, Ident("a'"), Ident("b"), Ident("c'"))
+    }
   }
 }

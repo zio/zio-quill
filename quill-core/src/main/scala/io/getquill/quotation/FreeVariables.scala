@@ -14,6 +14,8 @@ case class FreeVariables(state: State)
       case f @ Function(params, body) =>
         val (_, t) = FreeVariables(State(state.seen ++ params, state.free))(body)
         (f, FreeVariables(State(state.seen, state.free ++ t.state.free)))
+      case OptionOperation(t, a, b, c) =>
+        (ast, free(a, b, c))
       case other =>
         super.apply(other)
     }

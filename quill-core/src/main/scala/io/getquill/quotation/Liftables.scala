@@ -11,16 +11,22 @@ trait Liftables {
   private val pack = q"io.getquill.ast"
 
   implicit val astLiftable: Liftable[Ast] = Liftable[Ast] {
-    case ast: Query               => queryLiftable(ast)
-    case ast: Action              => actionLiftable(ast)
-    case ast: Value               => valueLiftable(ast)
-    case ast: Ident               => identLiftable(ast)
-    case Property(a, b)           => q"$pack.Property($a, $b)"
-    case Function(a, b)           => q"$pack.Function($a, $b)"
-    case FunctionApply(a, b)      => q"$pack.FunctionApply($a, $b)"
-    case BinaryOperation(a, b, c) => q"$pack.BinaryOperation($a, $b, $c)"
-    case UnaryOperation(a, b)     => q"$pack.UnaryOperation($a, $b)"
-    case Infix(a, b)              => q"$pack.Infix($a, $b)"
+    case ast: Query                  => queryLiftable(ast)
+    case ast: Action                 => actionLiftable(ast)
+    case ast: Value                  => valueLiftable(ast)
+    case ast: Ident                  => identLiftable(ast)
+    case Property(a, b)              => q"$pack.Property($a, $b)"
+    case Function(a, b)              => q"$pack.Function($a, $b)"
+    case FunctionApply(a, b)         => q"$pack.FunctionApply($a, $b)"
+    case BinaryOperation(a, b, c)    => q"$pack.BinaryOperation($a, $b, $c)"
+    case UnaryOperation(a, b)        => q"$pack.UnaryOperation($a, $b)"
+    case Infix(a, b)                 => q"$pack.Infix($a, $b)"
+    case OptionOperation(a, b, c, d) => q"$pack.OptionOperation($a, $b, $c, $d)"
+  }
+
+  implicit val optionOperationTypeLiftable: Liftable[OptionOperationType] = Liftable[OptionOperationType] {
+    case OptionMap    => q"$pack.OptionMap"
+    case OptionForall => q"$pack.OptionForall"
   }
 
   implicit val binaryOperatorLiftable: Liftable[BinaryOperator] = Liftable[BinaryOperator] {

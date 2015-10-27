@@ -19,6 +19,7 @@ class SqlSourceMacro(val c: Context) extends SourceMacro {
   override def toExecutionTree(ast: Ast) = {
     val d = dialect
     val sql = show(ast, d)
+    c.info(ast.toString)
     c.info(sql)
     probe(sql, d)
     q"$sql"

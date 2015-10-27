@@ -15,6 +15,8 @@ case class BetaReduction(map: collection.Map[Ident, Ast])
         map.getOrElse(ident, ident)
       case Function(params, body) =>
         Function(params, BetaReduction(map -- params)(body))
+      case OptionOperation(t, a, b, c) =>
+        OptionOperation(t, apply(a), b, BetaReduction(map - b)(c))
       case other =>
         super.apply(other)
     }

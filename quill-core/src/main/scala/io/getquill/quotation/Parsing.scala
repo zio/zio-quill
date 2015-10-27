@@ -3,6 +3,7 @@ package io.getquill.quotation
 import scala.reflect.ClassTag
 import scala.reflect.macros.whitebox.Context
 
+import io.getquill.{ Query => QuillQuery }
 import io.getquill.ast._
 import io.getquill.norm.BetaReduction
 import io.getquill.util.Messages.RichContext
@@ -32,14 +33,15 @@ trait Parsing {
   }
 
   val astParser: Parser[Ast] = Parser[Ast] {
-    case `queryParser`(query)       => query
-    case `functionParser`(function) => function
-    case `actionParser`(action)     => action
-    case `infixParser`(value)       => value
-    case `operationParser`(value)   => value
-    case `identParser`(ident)       => ident
-    case `valueParser`(value)       => value
-    case `propertyParser`(value)    => value
+    case `queryParser`(query)           => query
+    case `functionParser`(function)     => function
+    case `actionParser`(action)         => action
+    case `infixParser`(value)           => value
+    case `operationParser`(value)       => value
+    case `identParser`(ident)           => ident
+    case `valueParser`(value)           => value
+    case `propertyParser`(value)        => value
+    case `optionOperationParser`(value) => value
 
     case q"$tupleTree match { case (..$fieldsTrees) => $bodyTree }" =>
       val tuple = astParser(tupleTree)
@@ -57,46 +59,46 @@ trait Parsing {
     case q"$pack.query[${ t: Type }]" =>
       Entity(t.typeSymbol.name.decodedName.toString)
 
-    case q"$source.filter(($alias) => $body)" =>
+    case q"$source.filter(($alias) => $body)" if (is[QuillQuery[Any]](source)) =>
       Filter(astParser(source), identParser(alias), astParser(body))
 
-    case q"$source.withFilter(($alias) => $body)" =>
+    case q"$source.withFilter(($alias) => $body)" if (is[QuillQuery[Any]](source)) =>
       Filter(astParser(source), identParser(alias), astParser(body))
 
-    case q"$source.map[$t](($alias) => $body)" =>
+    case q"$source.map[$t](($alias) => $body)" if (is[QuillQuery[Any]](source)) =>
       Map(astParser(source), identParser(alias), astParser(body))
 
-    case q"$source.flatMap[$t](($alias) => $body)" =>
+    case q"$source.flatMap[$t](($alias) => $body)" if (is[QuillQuery[Any]](source)) =>
       FlatMap(astParser(source), identParser(alias), astParser(body))
 
-    case q"$source.sortBy[$t](($alias) => $body)($ord)" =>
+    case q"$source.sortBy[$t](($alias) => $body)($ord)" if (is[QuillQuery[Any]](source)) =>
       SortBy(astParser(source), identParser(alias), astParser(body))
 
-    case q"$source.groupBy[$t](($alias) => $body)" =>
+    case q"$source.groupBy[$t](($alias) => $body)" if (is[QuillQuery[Any]](source)) =>
       GroupBy(astParser(source), identParser(alias), astParser(body))
 
-    case q"$a.min[$t]($n)" => Aggregation(AggregationOperator.`min`, astParser(a))
-    case q"$a.max[$t]($n)" => Aggregation(AggregationOperator.`max`, astParser(a))
-    case q"$a.avg[$t]($n)" => Aggregation(AggregationOperator.`avg`, astParser(a))
-    case q"$a.sum[$t]($n)" => Aggregation(AggregationOperator.`sum`, astParser(a))
-    case q"$a.size"        => Aggregation(AggregationOperator.`size`, astParser(a))
+    case q"$a.min[$t]($n)" if (is[QuillQuery[Any]](a)) => Aggregation(AggregationOperator.`min`, astParser(a))
+    case q"$a.max[$t]($n)" if (is[QuillQuery[Any]](a)) => Aggregation(AggregationOperator.`max`, astParser(a))
+    case q"$a.avg[$t]($n)" if (is[QuillQuery[Any]](a)) => Aggregation(AggregationOperator.`avg`, astParser(a))
+    case q"$a.sum[$t]($n)" if (is[QuillQuery[Any]](a)) => Aggregation(AggregationOperator.`sum`, astParser(a))
+    case q"$a.size" if (is[QuillQuery[Any]](a))        => Aggregation(AggregationOperator.`size`, astParser(a))
 
-    case q"$source.reverse" =>
+    case q"$source.reverse" if (is[QuillQuery[Any]](source)) =>
       Reverse(astParser(source))
 
-    case q"$source.take($n)" =>
+    case q"$source.take($n)" if (is[QuillQuery[Any]](source)) =>
       Take(astParser(source), astParser(n))
 
-    case q"$source.drop($n)" =>
+    case q"$source.drop($n)" if (is[QuillQuery[Any]](source)) =>
       Drop(astParser(source), astParser(n))
 
-    case q"$source.union[$t]($n)" =>
+    case q"$source.union[$t]($n)" if (is[QuillQuery[Any]](source)) =>
       Union(astParser(source), astParser(n))
 
-    case q"$source.unionAll[$t]($n)" =>
+    case q"$source.unionAll[$t]($n)" if (is[QuillQuery[Any]](source)) =>
       UnionAll(astParser(source), astParser(n))
 
-    case q"$source.++[$t]($n)" =>
+    case q"$source.++[$t]($n)" if (is[QuillQuery[Any]](source)) =>
       UnionAll(astParser(source), astParser(n))
 
     case q"${ outerJoinCallParser(typ, a, b) }.on(($aliasA, $aliasB) => $body)" =>
@@ -107,9 +109,9 @@ trait Parsing {
   }
 
   val outerJoinCallParser: Parser[(OuterJoinType, Ast, Ast)] = Parser[(OuterJoinType, Ast, Ast)] {
-    case q"$a.leftJoin[$t, $u]($b)"  => (LeftJoin, astParser(a), astParser(b))
-    case q"$a.rightJoin[$t, $u]($b)" => (RightJoin, astParser(a), astParser(b))
-    case q"$a.fullJoin[$t, $u]($b)"  => (FullJoin, astParser(a), astParser(b))
+    case q"$a.leftJoin[$t, $u]($b)" if (is[QuillQuery[Any]](a))  => (LeftJoin, astParser(a), astParser(b))
+    case q"$a.rightJoin[$t, $u]($b)" if (is[QuillQuery[Any]](a)) => (RightJoin, astParser(a), astParser(b))
+    case q"$a.fullJoin[$t, $u]($b)" if (is[QuillQuery[Any]](a))  => (FullJoin, astParser(a), astParser(b))
   }
 
   val infixParser: Parser[Infix] = Parser[Infix] {
@@ -132,6 +134,13 @@ trait Parsing {
     case q"$i: $typ"                      => identParser(i)
     case c.universe.Bind(TermName(name), c.universe.Ident(termNames.WILDCARD)) =>
       Ident(name)
+  }
+
+  val optionOperationParser: Parser[OptionOperation] = Parser[OptionOperation] {
+    case q"$o.map[$t](($alias) => $body)" if (is[Option[Any]](o)) =>
+      OptionOperation(OptionMap, astParser(o), identParser(alias), astParser(body))
+    case q"$o.forall(($alias) => $body)" if (is[Option[Any]](o)) =>
+      OptionOperation(OptionForall, astParser(o), identParser(alias), astParser(body))
   }
 
   val propertyParser: Parser[Property] = Parser[Property] {

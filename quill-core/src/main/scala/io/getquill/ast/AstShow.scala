@@ -10,14 +10,15 @@ object AstShow {
   implicit val astShow: Show[Ast] = new Show[Ast] {
     def show(e: Ast) =
       e match {
-        case ast: Query     => ast.show
-        case ast: Function  => ast.show
-        case ast: Value     => ast.show
-        case ast: Operation => ast.show
-        case ast: Action    => ast.show
-        case ast: Ident     => ast.show
-        case ast: Property  => ast.show
-        case ast: Infix     => ast.show
+        case ast: Query           => ast.show
+        case ast: Function        => ast.show
+        case ast: Value           => ast.show
+        case ast: Operation       => ast.show
+        case ast: Action          => ast.show
+        case ast: Ident           => ast.show
+        case ast: Property        => ast.show
+        case ast: Infix           => ast.show
+        case ast: OptionOperation => ast.show
       }
   }
 
@@ -64,6 +65,16 @@ object AstShow {
         case OuterJoin(t, a, b, iA, iB, on) =>
           s"${a.show}.${t.show}(${b.show}).on((${iA.show}, ${iB.show}) => ${on.show})"
       }
+  }
+
+  implicit val optionOperationShow: Show[OptionOperation] = new Show[OptionOperation] {
+    def show(q: OptionOperation) = {
+      val method = q.t match {
+        case OptionMap    => "map"
+        case OptionForall => "forall"
+      }
+      s"${q.ast}.$method((${q.alias.show}) => ${q.body.show})"
+    }
   }
 
   implicit val outerJoinTypeShow: Show[OuterJoinType] = new Show[OuterJoinType] {

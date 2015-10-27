@@ -2,7 +2,6 @@ package io.getquill.source
 
 import io.getquill.quotation.Quoted
 import io.getquill._
-import io.getquill.ast.{ Query => _, Action => _, _ }
 import io.getquill.source.mirror.mirrorSource
 import io.getquill.source.mirror.Row
 

@@ -374,6 +374,20 @@ class QuotationSpec extends Spec {
         quote(unquote(q)).ast.body mustEqual Infix(List("", " || ", ""), List(Ident("a"), Ident("b")))
       }
     }
+    "option operation" - {
+      "map" in {
+        val q = quote {
+          (o: Option[Int]) => o.map(v => v)
+        }
+        quote(unquote(q)).ast.body mustEqual OptionOperation(OptionMap, Ident("o"), Ident("v"), Ident("v"))
+      }
+      "forall" in {
+        val q = quote {
+          (o: Option[Boolean]) => o.forall(v => v)
+        }
+        quote(unquote(q)).ast.body mustEqual OptionOperation(OptionForall, Ident("o"), Ident("v"), Ident("v"))
+      }
+    }
   }
 
   "reduces tuple matching locally" in {

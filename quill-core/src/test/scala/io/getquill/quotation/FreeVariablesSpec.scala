@@ -114,5 +114,10 @@ class FreeVariablesSpec extends Spec {
         qr1.leftJoin(qr2).on((a, b) => a.s == b.s)
       }
     }
+    "option operator" in {
+      val q = quote {
+        qr1.filter(t => t.s == "s1")
+      }
+    }
   }
 }

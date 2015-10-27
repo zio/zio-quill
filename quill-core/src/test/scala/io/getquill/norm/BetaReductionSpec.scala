@@ -56,6 +56,10 @@ class BetaReductionSpec extends Spec {
         val ast: Ast = OuterJoin(LeftJoin, Ident("a"), Ident("b"), Ident("c"), Ident("d"), Tuple(List(Ident("c"), Ident("d"))))
         BetaReduction(ast, Ident("c") -> Ident("c'"), Ident("d") -> Ident("d'")) mustEqual ast
       }
+      "option operation" in {
+        val ast: Ast = OptionOperation(OptionMap, Ident("a"), Ident("b"), Ident("b"))
+        BetaReduction(ast, Ident("b") -> Ident("b'")) mustEqual ast
+      }
     }
   }
 

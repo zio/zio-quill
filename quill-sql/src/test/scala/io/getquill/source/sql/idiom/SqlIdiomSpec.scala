@@ -174,8 +174,30 @@ class SqlIdiomSpec extends Spec {
           val q = quote {
             qr1.leftJoin(qr2).on((a, b) => a.s == b.s).map(_._1)
           }
-          mirrorSource.run(q).sql
+          mirrorSource.run(q).sql mustEqual
+            "SELECT a.s, a.i, a.l, a.o FROM TestEntity a LEFT JOIN TestEntity2 b ON a.s = b.s"
         }
+        "right" in {
+          val q = quote {
+            qr1.rightJoin(qr2).on((a, b) => a.s == b.s).map(_._2)
+          }
+          mirrorSource.run(q).sql mustEqual
+            "SELECT b.s, b.i, b.l, b.o FROM TestEntity a RIGHT JOIN TestEntity2 b ON a.s = b.s"
+        }
+        "full" in {
+          val q = quote {
+            qr1.fullJoin(qr2).on((a, b) => a.s == b.s).map(_._1.map(c => c.s))
+          }
+          mirrorSource.run(q).sql mustEqual
+            "SELECT a.s FROM TestEntity a FULL JOIN TestEntity2 b ON a.s = b.s"
+        }
+        //        "multiple outer joins" in {
+        //          val q = quote {
+        //            qr1.leftJoin(qr2).on((a, b) => a.s == b.s).leftJoin(qr2).on((a, b) => a._1.s == b.s).map(_._1._1)
+        //          }
+        //          mirrorSource.run(q).sql mustEqual
+        //            "SELECT a.s, a.i, a.l, a.o FROM TestEntity a FULL JOIN TestEntity2 b ON a.s = b.s"
+        //        }
       }
     }
     "operations" - {
