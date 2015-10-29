@@ -3,10 +3,13 @@ package io.getquill.source.sql.idiom
 import io.getquill.util.Show._
 import io.getquill._
 import io.getquill.ast._
+import io.getquill.source.sql.naming.Literal
 
 class MySQLDialectSpec extends Spec {
 
   import MySQLDialect._
+
+  implicit val naming = new Literal {}
 
   "mixes the workaround for offset without limit" in {
     MySQLDialect.isInstanceOf[OffsetWithoutLimitWorkaround] mustEqual true

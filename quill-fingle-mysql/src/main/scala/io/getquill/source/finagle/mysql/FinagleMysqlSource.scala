@@ -16,9 +16,10 @@ import scala.util.Try
 import com.twitter.finagle.Service
 import com.twitter.finagle.exp.mysql.Request
 import com.twitter.finagle.exp.mysql.PrepareRequest
+import io.getquill.source.sql.naming.NamingStrategy
 
-class FinagleMysqlSource
-    extends SqlSource[MySQLDialect.type, Row, List[Parameter]]
+class FinagleMysqlSource[N <: NamingStrategy]
+    extends SqlSource[MySQLDialect.type, N, Row, List[Parameter]]
     with FinagleMysqlDecoders
     with FinagleMysqlEncoders
     with StrictLogging {

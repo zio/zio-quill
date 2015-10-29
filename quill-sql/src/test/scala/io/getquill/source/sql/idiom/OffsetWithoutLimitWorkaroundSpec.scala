@@ -4,10 +4,13 @@ import io.getquill.util.Show._
 import io.getquill._
 import io.getquill.source.sql.mirror.mirrorSource
 import io.getquill.source.sql.SqlQuery
+import io.getquill.source.sql.naming.Literal
 
 class OffsetWithoutLimitWorkaroundSpec extends Spec {
 
   val subject = new SqlIdiom with OffsetWithoutLimitWorkaround {}
+
+  implicit val naming = new Literal {}
 
   import subject._
 

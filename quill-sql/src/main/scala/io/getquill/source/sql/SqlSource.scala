@@ -1,15 +1,14 @@
 package io.getquill.source.sql
 
 import java.util.Date
-
 import language.experimental.macros
 import scala.reflect.ClassTag
 import scala.util.Try
-
 import io.getquill.quotation.Quoted
 import io.getquill.source.sql.idiom.SqlIdiom
+import io.getquill.source.sql.naming.NamingStrategy
 
-abstract class SqlSource[D <: SqlIdiom, R: ClassTag, S: ClassTag] extends io.getquill.source.Source[R, S] {
+abstract class SqlSource[D <: SqlIdiom, N <: NamingStrategy, R: ClassTag, S: ClassTag] extends io.getquill.source.Source[R, S] {
 
   def run[T](quoted: Quoted[T]): Any = macro SqlSourceMacro.run[R, S, T]
 

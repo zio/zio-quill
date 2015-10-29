@@ -5,6 +5,12 @@ import io.getquill.Spec
 import io.getquill.source.sql.mirror.mirrorSource.run
 import io.getquill.source.sql.mirror.mirrorSource
 import io.getquill.ast.Ast
+import io.getquill.source.sql.naming.NamingStrategy
+import io.getquill.source.sql.naming.Literal
+import io.getquill.source.sql.mirror.MirrorSourceTemplate
+import io.getquill.source.sql.naming.SnakeCase
+import io.getquill.source.sql.naming.UpperCase
+import io.getquill.source.sql.naming.Escape
 
 class SqlIdiomSpec extends Spec {
 
@@ -401,6 +407,7 @@ class SqlIdiomSpec extends Spec {
       }
       "function apply" in {
         import io.getquill.util.Show._
+        implicit val naming = new Literal {}
         import FallbackDialect._
         val q = quote {
           ((i: Int) => i + 1).apply(2)
@@ -544,6 +551,20 @@ class SqlIdiomSpec extends Spec {
         mirrorSource.run(q).sql mustEqual
           "SELECT a.s FROM TestEntity a LEFT JOIN TestEntity2 b ON a.s = b.s WHERE b.i = a.i"
       }
+    }
+  }
+
+  "uses the naming strategy" - {
+    case class TestEntity(someColumn: Int)
+    "one transformation" in {
+      object db extends MirrorSourceTemplate[SnakeCase]
+      db.run(query[TestEntity]).sql mustEqual
+        "SELECT x.some_column FROM test_entity x"
+    }
+    "mutiple transformations" in {
+      object db extends MirrorSourceTemplate[SnakeCase with UpperCase with Escape]
+      db.run(query[TestEntity]).sql mustEqual
+        """SELECT x."SOME_COLUMN" FROM "TEST_ENTITY" x"""
     }
   }
 

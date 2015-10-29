@@ -7,7 +7,7 @@ import scala.reflect.ClassTag
 import io.getquill.source.mirror.Row
 
 trait MirrorDecoders {
-  this: mirrorSource.type =>
+  this: MirrorSourceTemplate[_] =>
 
   private def decoder[T: ClassTag]: Decoder[T] = new Decoder[T] {
     def apply(index: Int, row: Row) =

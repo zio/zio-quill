@@ -19,7 +19,7 @@ import io.getquill.util.Messages.fail
 import com.twitter.finagle.exp.mysql.NullValue
 
 trait FinagleMysqlDecoders {
-  this: FinagleMysqlSource =>
+  this: FinagleMysqlSource[_] =>
 
   protected val timestampValue =
     new TimestampValue(

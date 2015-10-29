@@ -9,9 +9,11 @@ import io.getquill.source.sql.SqlSource
 import scala.util.Try
 import io.getquill.source.sql.idiom.SqlIdiom
 import scala.util.control.NonFatal
+import io.getquill.source.sql.naming.NamingStrategy
+import io.getquill.source.sql.naming.SnakeCase
 
-class JdbcSource[D <: SqlIdiom]
-    extends SqlSource[D, ResultSet, PreparedStatement]
+class JdbcSource[D <: SqlIdiom, N <: NamingStrategy]
+    extends SqlSource[D, N, ResultSet, PreparedStatement]
     with JdbcEncoders
     with JdbcDecoders
     with StrictLogging {

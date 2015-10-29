@@ -4,6 +4,7 @@ import io.getquill._
 import io.getquill.source.sql.idiom.SqlIdiom
 import scala.util.Try
 import java.util.Date
+import io.getquill.source.sql.naming.NamingStrategy
 
 class SqlSourceMacroSpec extends Spec {
 
@@ -24,7 +25,7 @@ class SqlSourceMacroSpec extends Spec {
     "testSource.run(qr1.delete)" mustNot compile
 
     class EvilDBDialect extends SqlIdiom
-    object testSource extends SqlSource[EvilDBDialect, Any, Any] {
+    object testSource extends SqlSource[EvilDBDialect, NamingStrategy, Any, Any] {
       def probe(sql: String): Try[Any] = null
 
       implicit def optionDecoder[T](implicit d: Decoder[T]): Decoder[Option[T]] = null

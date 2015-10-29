@@ -6,12 +6,16 @@ import io.getquill.norm.QueryGenerator
 import io.getquill.norm.Normalize
 import io.getquill.source.sql.idiom.SqlIdiom
 import io.getquill.util.Show._
+import io.getquill.source.sql.naming.NamingStrategy
+import io.getquill.source.sql.naming.Literal
 
 class SqlQuerySpec extends Spec {
 
   val idiom = new SqlIdiom {}
 
   import idiom._
+
+  implicit val naming = new Literal {}
 
   "transforms the ast into a flatten sql-like structure" - {
 

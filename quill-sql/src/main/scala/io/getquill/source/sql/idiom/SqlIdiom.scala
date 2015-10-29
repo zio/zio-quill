@@ -7,6 +7,7 @@ import io.getquill.util.Show.Show
 import io.getquill.util.Show.Shower
 import io.getquill.util.Show.listShow
 import io.getquill.norm.BetaReduction
+import io.getquill.source.sql.naming.NamingStrategy
 
 trait SqlIdiom {
 
@@ -15,7 +16,7 @@ trait SqlIdiom {
 
   def prepareKeyword: Option[String] = None
 
-  implicit def astShow(implicit propertyShow: Show[Property]): Show[Ast] =
+  implicit def astShow(implicit propertyShow: Show[Property], strategy: NamingStrategy): Show[Ast] =
     new Show[Ast] {
       def show(a: Ast) =
         a match {
@@ -31,7 +32,7 @@ trait SqlIdiom {
         }
     }
 
-  implicit val optionOperationShow: Show[OptionOperation] = new Show[OptionOperation] {
+  implicit def optionOperationShow(implicit strategy: NamingStrategy): Show[OptionOperation] = new Show[OptionOperation] {
     def show(e: OptionOperation) =
       e match {
         case OptionOperation(t, ast, alias, body) =>
@@ -39,7 +40,7 @@ trait SqlIdiom {
       }
   }
 
-  implicit val sqlQueryShow: Show[SqlQuery] = new Show[SqlQuery] {
+  implicit def sqlQueryShow(implicit strategy: NamingStrategy): Show[SqlQuery] = new Show[SqlQuery] {
     def show(e: SqlQuery) =
       e match {
         case FlattenSqlQuery(from, where, groupBy, orderBy, limit, offset, select) =>
@@ -70,7 +71,7 @@ trait SqlIdiom {
       }
   }
 
-  implicit val selectValueShow: Show[SelectValue] = new Show[SelectValue] {
+  implicit def selectValueShow(implicit strategy: NamingStrategy): Show[SelectValue] = new Show[SelectValue] {
     def show(e: SelectValue) =
       e match {
         case SelectValue(ast, Some(alias)) => s"${showValue(ast)} $alias"
@@ -86,7 +87,7 @@ trait SqlIdiom {
       }
   }
 
-  implicit def operationShow(implicit propertyShow: Show[Property]): Show[Operation] = new Show[Operation] {
+  implicit def operationShow(implicit propertyShow: Show[Property], strategy: NamingStrategy): Show[Operation] = new Show[Operation] {
     def show(e: Operation) =
       e match {
         case UnaryOperation(op, ast)                              => s"${op.show} (${ast.show})"
@@ -107,16 +108,16 @@ trait SqlIdiom {
       }
   }
 
-  protected def showOffsetWithoutLimit(offset: Ast) =
+  protected def showOffsetWithoutLimit(offset: Ast)(implicit strategy: NamingStrategy) =
     s" OFFSET ${offset.show}"
 
-  protected def showOrderBy(criterias: List[OrderByCriteria]) =
+  protected def showOrderBy(criterias: List[OrderByCriteria])(implicit strategy: NamingStrategy) =
     s" ORDER BY ${criterias.show}"
 
-  implicit val sourceShow: Show[Source] = new Show[Source] {
+  implicit def sourceShow(implicit strategy: NamingStrategy): Show[Source] = new Show[Source] {
     def show(source: Source) =
       source match {
-        case TableSource(name, alias)     => s"$name $alias"
+        case TableSource(name, alias)     => s"${strategy(name)} $alias"
         case QuerySource(query, alias)    => s"(${query.show}) $alias"
         case InfixSource(infix, alias)    => s"(${(infix: Ast).show}) $alias"
         case OuterJoinSource(t, a, b, on) => s"${a.show} ${t.show} ${b.show} ON ${on.show}"
@@ -132,7 +133,7 @@ trait SqlIdiom {
       }
   }
 
-  implicit val orderByCriteriaShow: Show[OrderByCriteria] = new Show[OrderByCriteria] {
+  implicit def orderByCriteriaShow(implicit strategy: NamingStrategy): Show[OrderByCriteria] = new Show[OrderByCriteria] {
     def show(criteria: OrderByCriteria) =
       criteria match {
         case OrderByCriteria(prop, true)  => s"${prop.show} DESC"
@@ -183,15 +184,15 @@ trait SqlIdiom {
       }
   }
 
-  implicit def propertyShow(implicit valueShow: Show[Value], identShow: Show[Ident]): Show[Property] =
+  implicit def propertyShow(implicit valueShow: Show[Value], identShow: Show[Ident], strategy: NamingStrategy): Show[Property] =
     new Show[Property] {
       def show(e: Property) =
         e match {
-          case Property(ast, name) => s"${scopedShow(ast)}.$name"
+          case Property(ast, name) => s"${scopedShow(ast)}.${strategy(name)}"
         }
     }
 
-  implicit val valueShow: Show[Value] = new Show[Value] {
+  implicit def valueShow(implicit strategy: NamingStrategy): Show[Value] = new Show[Value] {
     def show(e: Value) =
       e match {
         case Constant(v: String) => s"'$v'"
@@ -206,7 +207,7 @@ trait SqlIdiom {
     def show(e: Ident) = e.name
   }
 
-  implicit val actionShow: Show[Action] = {
+  implicit def actionShow(implicit strategy: NamingStrategy): Show[Action] = {
 
     def set(assignments: List[Assignment]) =
       assignments.map(a => s"${a.property} = ${a.value.show}").mkString(", ")
@@ -225,19 +226,19 @@ trait SqlIdiom {
           case Insert(Entity(table), assignments) =>
             val columns = assignments.map(_.property)
             val values = assignments.map(_.value)
-            s"INSERT INTO $table (${columns.mkString(",")}) VALUES (${values.show})"
+            s"INSERT INTO ${strategy(table)} (${columns.mkString(",")}) VALUES (${values.show})"
 
           case Update(Entity(table), assignments) =>
-            s"UPDATE $table SET ${set(assignments)}"
+            s"UPDATE ${strategy(table)} SET ${set(assignments)}"
 
           case Update(Filter(Entity(table), x, where), assignments) =>
-            s"UPDATE $table SET ${set(assignments)} WHERE ${where.show}"
+            s"UPDATE ${strategy(table)} SET ${set(assignments)} WHERE ${where.show}"
 
           case Delete(Filter(Entity(table), x, where)) =>
-            s"DELETE FROM $table WHERE ${where.show}"
+            s"DELETE FROM ${strategy(table)} WHERE ${where.show}"
 
           case Delete(Entity(table)) =>
-            s"DELETE FROM $table"
+            s"DELETE FROM ${strategy(table)}"
         }
     }
   }

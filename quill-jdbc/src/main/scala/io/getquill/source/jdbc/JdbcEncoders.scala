@@ -8,7 +8,7 @@ import java.util.TimeZone
 import java.sql.Types
 
 trait JdbcEncoders {
-  this: JdbcSource[_] =>
+  this: JdbcSource[_, _] =>
 
   protected val dateTimeZone = TimeZone.getDefault
 

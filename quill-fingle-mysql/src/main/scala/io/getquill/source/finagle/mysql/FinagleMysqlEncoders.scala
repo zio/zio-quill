@@ -10,7 +10,7 @@ import com.twitter.finagle.exp.mysql.Parameter.wrap
 import com.twitter.finagle.exp.mysql.NullValue
 
 trait FinagleMysqlEncoders {
-  this: FinagleMysqlSource =>
+  this: FinagleMysqlSource[_] =>
 
   def encoder[T](implicit cbp: CanBeParameter[T]): Encoder[T] =
     new Encoder[T] {

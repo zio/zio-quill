@@ -5,9 +5,10 @@ import io.getquill.source.sql.SqlSource
 import io.getquill.source.sql.idiom.FallbackDialect
 import scala.util.Success
 import scala.util.Failure
+import io.getquill.source.sql.naming.NamingStrategy
+import io.getquill.source.sql.naming.Literal
 
-object mirrorSource
-    extends SqlSource[MirrorDialect.type, Row, Row]
+trait MirrorSourceTemplate[N <: NamingStrategy] extends SqlSource[MirrorDialect.type, N, Row, Row]
     with MirrorEncoders
     with MirrorDecoders {
 
@@ -32,3 +33,5 @@ object mirrorSource
   def query[T](sql: String, bind: Row => Row, extractor: Row => T) =
     QueryMirror(sql, bind(Row()), extractor)
 }
+
+object mirrorSource extends MirrorSourceTemplate[Literal]

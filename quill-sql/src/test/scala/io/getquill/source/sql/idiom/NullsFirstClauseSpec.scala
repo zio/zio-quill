@@ -3,10 +3,13 @@ package io.getquill.source.sql.idiom
 import io.getquill._
 import io.getquill.source.sql.SqlQuery
 import io.getquill.util.Show._
+import io.getquill.source.sql.naming.Literal
 
 class NullsFirstClauseSpec extends Spec {
 
   val subject = new SqlIdiom with NullsOrderingClause {}
+
+  implicit val naming = new Literal {}
 
   import subject._
 

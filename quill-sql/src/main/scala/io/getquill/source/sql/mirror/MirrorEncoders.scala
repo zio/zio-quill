@@ -5,7 +5,7 @@ import java.util.Date
 import io.getquill.source.mirror.Row
 
 trait MirrorEncoders {
-  this: mirrorSource.type =>
+  this: MirrorSourceTemplate[_] =>
 
   private def encoder[T] = new Encoder[T] {
     def apply(index: Int, value: T, row: Row) =
