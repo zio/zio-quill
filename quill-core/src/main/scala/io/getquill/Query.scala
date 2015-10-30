@@ -51,6 +51,8 @@ sealed trait EntityQuery[+T]
     with Updatable[T]
     with Deletable[T] {
 
+  def apply(alias: String, propertyAlias: (T => (Any, String))*): Query[T] with Insertable[T] with Updatable[T] with Deletable[T]
+
   override def withFilter(f: T => Boolean): Query[T] with Updatable[T] with Deletable[T]
   override def filter(f: T => Boolean): Query[T] with Updatable[T] with Deletable[T]
 }

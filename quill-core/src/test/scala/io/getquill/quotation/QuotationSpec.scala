@@ -7,8 +7,22 @@ class QuotationSpec extends Spec {
 
   "quotes and unquotes asts" - {
     "query" - {
-      "entity" in {
-        qr1.ast mustEqual Entity("TestEntity")
+      "entity" - {
+        "without aliases" in {
+          qr1.ast mustEqual Entity("TestEntity")
+        }
+        "with alias" in {
+          val q = quote {
+            query[TestEntity]("SomeAlias")
+          }
+          quote(unquote(q)).ast mustEqual Entity("TestEntity", Some("SomeAlias"))
+        }
+        "with property alias" in {
+          val q = quote {
+            query[TestEntity]("SomeAlias", _.s -> "theS", _.i -> "theI")
+          }
+          quote(unquote(q)).ast mustEqual Entity("TestEntity", Some("SomeAlias"), List(PropertyAlias("s", "theS"), PropertyAlias("i", "theI")))
+        }
       }
       "filter" in {
         val q = quote {

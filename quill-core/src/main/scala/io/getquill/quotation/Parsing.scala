@@ -56,8 +56,11 @@ trait Parsing {
 
   val queryParser: Parser[Query] = Parser[Query] {
 
+    case q"$pack.query[${ t: Type }].apply(${ alias: String }, ..$propertyAliases)" =>
+      Entity(t.typeSymbol.name.decodedName.toString, Some(alias), propertyAliases.map(propertyAliasParser(_)))
+
     case q"$pack.query[${ t: Type }]" =>
-      Entity(t.typeSymbol.name.decodedName.toString)
+      Entity(t.typeSymbol.name.decodedName.toString, None, List())
 
     case q"$source.filter(($alias) => $body)" if (is[QuillQuery[Any]](source)) =>
       Filter(astParser(source), identParser(alias), astParser(body))
@@ -106,6 +109,16 @@ trait Parsing {
 
     case q"${ outerJoinCallParser(typ, a, b) }" =>
       c.fail("An outer join clause must be followed by 'on'.")
+  }
+
+  implicit def listParser[T](implicit p: Parser[T]): Parser[List[T]] = Parser[List[T]] {
+    case q"$pack.Nil"                         => Nil
+    case q"$pack.List.apply[..$t](..$values)" => values.map(p(_))
+  }
+
+  implicit val propertyAliasParser: Parser[PropertyAlias] = Parser[PropertyAlias] {
+    case q"(($x1) => scala.this.Predef.ArrowAssoc[$t]($x2.$prop).->[$v](${ alias: String }))" =>
+      PropertyAlias(prop.decodedName.toString, alias)
   }
 
   val outerJoinCallParser: Parser[(OuterJoinType, Ast, Ast)] = Parser[(OuterJoinType, Ast, Ast)] {

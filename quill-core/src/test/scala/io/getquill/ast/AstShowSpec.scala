@@ -12,12 +12,21 @@ class AstShowSpec extends Spec {
   import io.getquill.util.Show._
   import io.getquill.ast.AstShow._
 
-  "shows queries" in {
-    val q = quote {
-      query[TestEntity].filter(t => t.s == "test").flatMap(t => query[TestEntity]).drop(9).take(10).map(t => t)
+  "shows queries" - {
+    "entity with aliases" - {
+      val q = quote {
+        query[TestEntity]("entity_alias", _.s -> "s_alias", _.i -> "i_alias")
+      }
+      (q.ast: Ast).show mustEqual
+        """query[TestEntity]("entity_alias", _.s -> "s_alias", _.i -> "i_alias")"""
     }
-    (q.ast: Ast).show mustEqual
-      """query[TestEntity].filter(t => t.s == "test").flatMap(t => query[TestEntity]).drop(9).take(10).map(t => t)"""
+    "complex" in {
+      val q = quote {
+        query[TestEntity].filter(t => t.s == "test").flatMap(t => query[TestEntity]).drop(9).take(10).map(t => t)
+      }
+      (q.ast: Ast).show mustEqual
+        """query[TestEntity].filter(t => t.s == "test").flatMap(t => query[TestEntity]).drop(9).take(10).map(t => t)"""
+    }
   }
 
   "shows set operation queries" - {

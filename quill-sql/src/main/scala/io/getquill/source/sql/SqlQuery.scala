@@ -7,7 +7,7 @@ import io.getquill.util.Messages.fail
 case class OrderByCriteria(property: Property, desc: Boolean)
 
 sealed trait Source
-case class TableSource(name: String, alias: String) extends Source
+case class TableSource(entity: Entity, alias: String) extends Source
 case class QuerySource(query: SqlQuery, alias: String) extends Source
 case class InfixSource(infix: Infix, alias: String) extends Source
 case class OuterJoinSource(t: OuterJoinType, a: Source, b: Source, on: Ast) extends Source
@@ -37,7 +37,7 @@ case class FlattenSqlQuery(from: List[Source],
 object SqlQuery {
 
   def apply(query: Ast): SqlQuery =
-    query match {
+    RenameProperties(query) match {
       case Union(a, b)    => SetOperationSqlQuery(apply(a), UnionOperation, apply(b))
       case UnionAll(a, b) => SetOperationSqlQuery(apply(a), UnionAllOperation, apply(b))
       case q: Query       => flatten(q)
@@ -144,7 +144,7 @@ object SqlQuery {
 
   private def source(ast: Ast, alias: String): Source =
     ast match {
-      case Entity(table)                  => TableSource(table, alias)
+      case entity: Entity                 => TableSource(entity, alias)
       case infix: Infix                   => InfixSource(infix, alias)
       case OuterJoin(t, a, b, ia, ib, on) => OuterJoinSource(t, source(a, ia.name), source(b, ib.name), on)
       case other                          => QuerySource(apply(other), alias)

@@ -23,9 +23,8 @@ MVP - mid-september
 	√ aggregations
 	√ additional operations (string concatenation, etc)
 	√ set operations (union, outer joins, etc)
-	- insert returning id
-- naming strategy
-- table/column aliases (query[Entity]("table_name")(_.someCol -> "some_col"))
+√ naming strategy
+√ table/column aliases (query[Entity]("table_name")(_.someCol -> "some_col"))
 - insert case class directly
 - quill-jdbc
 - quill-finagle-mysql
@@ -40,9 +39,10 @@ MVP - mid-september
 
 Later
 
+- insert returning id
+- upserts
 - sql warnings (see doobie)
 - more dialects (hsql, oracle, sqlserver, db2)
-- upserts
 - monadic io
 - quill-doobie
 - macro to generate the case classes from db schema
@@ -55,4 +55,4 @@ Later
 - easy crud (https://github.com/strongtyped/active-slick)
 - cached queries
 - nested transactions (save points)
-- insistence layer√√
+- insistence layer√√√

@@ -26,8 +26,11 @@ object AstShow {
     def show(q: Query) =
       q match {
 
-        case Entity(name) =>
-          s"query[$name]"
+        case q: Entity =>
+          q.alias.map(a => s""""$a"""").toList ::: q.properties.map(p => s"""_.${p.property} -> "${p.alias}"""") match {
+            case Nil    => s"query[${q.name}]"
+            case params => s"query[${q.name}](${params.mkString(", ")})"
+          }
 
         case Filter(source, alias, body) =>
           s"${source.show}.filter(${alias.show} => ${body.show})"

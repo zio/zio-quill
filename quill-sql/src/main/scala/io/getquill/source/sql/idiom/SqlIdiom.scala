@@ -117,7 +117,7 @@ trait SqlIdiom {
   implicit def sourceShow(implicit strategy: NamingStrategy): Show[Source] = new Show[Source] {
     def show(source: Source) =
       source match {
-        case TableSource(name, alias)     => s"${strategy(name)} $alias"
+        case TableSource(name, alias)     => s"${name.show} $alias"
         case QuerySource(query, alias)    => s"(${query.show}) $alias"
         case InfixSource(infix, alias)    => s"(${(infix: Ast).show}) $alias"
         case OuterJoinSource(t, a, b, on) => s"${a.show} ${t.show} ${b.show} ON ${on.show}"
@@ -223,24 +223,29 @@ trait SqlIdiom {
       def show(a: Action) =
         (a: @unchecked) match {
 
-          case Insert(Entity(table), assignments) =>
+          case Insert(table: Entity, assignments) =>
             val columns = assignments.map(_.property)
             val values = assignments.map(_.value)
-            s"INSERT INTO ${strategy(table)} (${columns.mkString(",")}) VALUES (${values.show})"
+            s"INSERT INTO ${table.show} (${columns.mkString(",")}) VALUES (${values.show})"
 
-          case Update(Entity(table), assignments) =>
-            s"UPDATE ${strategy(table)} SET ${set(assignments)}"
+          case Update(table: Entity, assignments) =>
+            s"UPDATE ${table.show} SET ${set(assignments)}"
 
-          case Update(Filter(Entity(table), x, where), assignments) =>
-            s"UPDATE ${strategy(table)} SET ${set(assignments)} WHERE ${where.show}"
+          case Update(Filter(table: Entity, x, where), assignments) =>
+            s"UPDATE ${table.show} SET ${set(assignments)} WHERE ${where.show}"
 
-          case Delete(Filter(Entity(table), x, where)) =>
-            s"DELETE FROM ${strategy(table)} WHERE ${where.show}"
+          case Delete(Filter(table: Entity, x, where)) =>
+            s"DELETE FROM ${table.show} WHERE ${where.show}"
 
-          case Delete(Entity(table)) =>
-            s"DELETE FROM ${strategy(table)}"
+          case Delete(table: Entity) =>
+            s"DELETE FROM ${table.show}"
         }
     }
+  }
+
+  implicit def entityShow(implicit strategy: NamingStrategy): Show[Entity] = new Show[Entity] {
+    def show(e: Entity) =
+      e.alias.getOrElse(strategy(e.name))
   }
 
   private def scopedShow[A <: Ast](ast: A)(implicit show: Show[A]) =

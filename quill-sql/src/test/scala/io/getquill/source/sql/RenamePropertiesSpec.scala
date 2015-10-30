@@ -1,0 +1,102 @@
+package io.getquill.source.sql
+
+import io.getquill.source.sql.mirror.mirrorSource
+import io.getquill._
+
+class RenamePropertiesSpec extends Spec {
+
+  val e = quote {
+    query[TestEntity]("test_entity", _.s -> "field_s", _.i -> "field_i")
+  }
+
+  "renames properties according to the entity aliases" - {
+    "flatMap" - {
+      "body" in {
+        val q = quote {
+          e.flatMap(t => qr2.filter(u => u.s == t.s))
+        }
+        mirrorSource.run(q).sql mustEqual
+          "SELECT u.s, u.i, u.l, u.o FROM test_entity t, TestEntity2 u WHERE u.s = t.field_s"
+      }
+      "transitive" in {
+        val q = quote {
+          e.flatMap(t => qr2.map(u => t)).map(t => t.s)
+        }
+        mirrorSource.run(q).sql mustEqual
+          "SELECT t.field_s FROM test_entity t, TestEntity2 u"
+      }
+    }
+    "map" - {
+      "body" in {
+        val q = quote {
+          e.map(t => (t.i, t.l))
+        }
+        mirrorSource.run(q).sql mustEqual
+          "SELECT t.field_i, t.l FROM test_entity t"
+      }
+      "transitive" in {
+        val q = quote {
+          e.map(t => t).filter(t => t.i == 1)
+        }
+        mirrorSource.run(q).sql mustEqual
+          "SELECT t.field_s, t.field_i, t.l, t.o FROM test_entity t WHERE t.field_i = 1"
+      }
+    }
+    "filter" - {
+      "body" in {
+        val q = quote {
+          e.filter(t => t.i == 1)
+        }
+        mirrorSource.run(q).sql mustEqual
+          "SELECT t.field_s, t.field_i, t.l, t.o FROM test_entity t WHERE t.field_i = 1"
+      }
+      "transitive" in {
+        val q = quote {
+          e.filter(t => t.l == 1).map(t => t.s)
+        }
+        mirrorSource.run(q).sql mustEqual
+          "SELECT t.field_s FROM test_entity t WHERE t.l = 1"
+      }
+    }
+    "sortBy" - {
+      "body" in {
+        val q = quote {
+          e.sortBy(t => t.i)
+        }
+        mirrorSource.run(q).sql mustEqual
+          "SELECT t.field_s, t.field_i, t.l, t.o FROM test_entity t ORDER BY t.field_i"
+      }
+      "transitive" in {
+        val q = quote {
+          e.sortBy(t => t.l).map(t => t.s)
+        }
+        mirrorSource.run(q).sql mustEqual
+          "SELECT t.field_s FROM test_entity t ORDER BY t.l"
+      }
+    }
+    "outer join" - {
+      "both sides" in {
+        val q = quote {
+          e.leftJoin(e).on((a, b) => a.s == b.s).map(t => (t._1.s, t._2.map(_.s)))
+        }
+        mirrorSource.run(q).sql mustEqual
+          "SELECT a.field_s, b.field_s FROM test_entity a LEFT JOIN test_entity b ON a.field_s = b.field_s"
+      }
+      "left" in {
+        val q = quote {
+          e.leftJoin(qr2).on((a, b) => a.s == b.s).map(t => t._1.s)
+        }
+        mirrorSource.run(q).sql mustEqual
+          "SELECT a.field_s FROM test_entity a LEFT JOIN TestEntity2 b ON a.field_s = b.s"
+      }
+      "right" in {
+        val q = quote {
+          qr2.rightJoin(e).on((a, b) => a.s == b.s).map(t => t._2.s)
+        }
+        mirrorSource.run(q).sql mustEqual
+          "SELECT b.field_s FROM TestEntity2 a RIGHT JOIN test_entity b ON a.s = b.field_s"
+      }
+    }
+  }
+
+}

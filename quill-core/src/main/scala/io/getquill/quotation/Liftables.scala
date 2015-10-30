@@ -64,7 +64,7 @@ trait Liftables {
   }
 
   implicit val queryLiftable: Liftable[Query] = Liftable[Query] {
-    case Entity(name)                => q"$pack.Entity($name)"
+    case Entity(a, b, c)             => q"$pack.Entity($a, $b, $c)"
     case Filter(a, b, c)             => q"$pack.Filter($a, $b, $c)"
     case Map(a, b, c)                => q"$pack.Map($a, $b, $c)"
     case FlatMap(a, b, c)            => q"$pack.FlatMap($a, $b, $c)"
@@ -77,6 +77,10 @@ trait Liftables {
     case Union(a, b)                 => q"$pack.Union($a, $b)"
     case UnionAll(a, b)              => q"$pack.UnionAll($a, $b)"
     case OuterJoin(a, b, c, d, e, f) => q"$pack.OuterJoin($a, $b, $c, $d, $e, $f)"
+  }
+
+  implicit val propertyAliasLiftable: Liftable[PropertyAlias] = Liftable[PropertyAlias] {
+    case PropertyAlias(a, b) => q"$pack.PropertyAlias($a, $b)"
   }
 
   implicit val outerJoinTypeLiftable: Liftable[OuterJoinType] = Liftable[OuterJoinType] {

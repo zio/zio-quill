@@ -68,19 +68,28 @@ trait Unliftables {
   }
 
   implicit val queryUnliftable: Unliftable[Query] = Unliftable[Query] {
-    case q"$pack.Entity.apply(${ name: String })"                        => Entity(name)
-    case q"$pack.Filter.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })"  => Filter(a, b, c)
-    case q"$pack.Map.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })"     => Map(a, b, c)
+    case q"$pack.Entity.apply(${ a: String }, ${ b: Option[String] }, ${ c: List[PropertyAlias] })" => Entity(a, b, c)
+    case q"$pack.Filter.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => Filter(a, b, c)
+    case q"$pack.Map.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => Map(a, b, c)
     case q"$pack.FlatMap.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => FlatMap(a, b, c)
-    case q"$pack.SortBy.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })"  => SortBy(a, b, c)
+    case q"$pack.SortBy.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => SortBy(a, b, c)
     case q"$pack.GroupBy.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => GroupBy(a, b, c)
-    case q"$pack.Reverse.apply(${ a: Ast })"                             => Reverse(a)
-    case q"$pack.Take.apply(${ a: Ast }, ${ b: Ast })"                   => Take(a, b)
-    case q"$pack.Drop.apply(${ a: Ast }, ${ b: Ast })"                   => Drop(a, b)
-    case q"$pack.Union.apply(${ a: Ast }, ${ b: Ast })"                  => Union(a, b)
-    case q"$pack.UnionAll.apply(${ a: Ast }, ${ b: Ast })"               => UnionAll(a, b)
+    case q"$pack.Reverse.apply(${ a: Ast })" => Reverse(a)
+    case q"$pack.Take.apply(${ a: Ast }, ${ b: Ast })" => Take(a, b)
+    case q"$pack.Drop.apply(${ a: Ast }, ${ b: Ast })" => Drop(a, b)
+    case q"$pack.Union.apply(${ a: Ast }, ${ b: Ast })" => Union(a, b)
+    case q"$pack.UnionAll.apply(${ a: Ast }, ${ b: Ast })" => UnionAll(a, b)
     case q"$pack.OuterJoin.apply(${ t: OuterJoinType }, ${ a: Ast }, ${ b: Ast }, ${ iA: Ident }, ${ iB: Ident }, ${ on: Ast })" =>
       OuterJoin(t, a, b, iA, iB, on)
+  }
+
+  implicit val propertyAliasUnliftable: Unliftable[PropertyAlias] = Unliftable[PropertyAlias] {
+    case q"$pack.PropertyAlias.apply(${ a: String }, ${ b: String })" => PropertyAlias(a, b)
+  }
+
+  implicit def optionUnliftable[T](implicit u: Unliftable[T]): Unliftable[Option[T]] = Unliftable[Option[T]] {
+    case q"scala.None"               => None
+    case q"scala.Some.apply[$t]($v)" => Some(u.unapply(v).get)
   }
 
   implicit val outerJoinTypeUnliftable: Unliftable[OuterJoinType] = Unliftable[OuterJoinType] {
