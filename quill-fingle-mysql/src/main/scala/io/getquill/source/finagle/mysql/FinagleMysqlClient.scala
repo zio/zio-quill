@@ -9,11 +9,11 @@ object FinagleMysqlClient {
     val user = config.getString("user")
     val password = config.getString("password")
     val database = config.getString("database")
-    val host = config.getString("host")
+    val dest = config.getString("dest")
 
     Mysql.client
       .withCredentials(user, password)
       .withDatabase(database)
-      .newRichClient(host)
+      .newRichClient(dest)
   }
 }
