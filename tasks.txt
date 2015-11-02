@@ -25,13 +25,10 @@ MVP - mid-september
 	√ set operations (union, outer joins, etc)
 √ naming strategy
 √ table/column aliases (query[Entity]("table_name")(_.someCol -> "some_col"))
-- insert case class directly
 - quill-jdbc
 - quill-finagle-mysql
-- quill-finagle-postgres
 - quill-postgresql-async
 - quill-mysql-async
-- master slave
 - jekyll website w/ docs
 - documentation w/ https://github.com/tpolecat/tut
 - dynamic queries
@@ -39,8 +36,11 @@ MVP - mid-september
 
 Later
 
+- insert case class directly
+- master slave
 - insert returning id
 - upserts
+- quill-finagle-postgres
 - sql warnings (see doobie)
 - more dialects (hsql, oracle, sqlserver, db2)
 - monadic io

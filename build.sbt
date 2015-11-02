@@ -41,6 +41,17 @@ lazy val `quill-finagle-mysql` =
     )
     .dependsOn(`quill-sql` % "compile->compile;test->test")
 
+lazy val `quill-postgresql-async` = 
+  (project in file("quill-postgresql-async"))
+    .settings(commonSettings: _*)
+    .settings(
+      libraryDependencies ++= Seq(
+        "com.github.mauricio" %% "postgresql-async" % "0.2.18"
+      ),
+      parallelExecution in Test := false
+    )
+    .dependsOn(`quill-sql` % "compile->compile;test->test")
+
 lazy val commonSettings = releaseSettings ++ Seq(
   organization := "io.getquill",
   scalaVersion := "2.11.7",
