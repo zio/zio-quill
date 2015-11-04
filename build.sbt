@@ -31,7 +31,7 @@ lazy val `quill-jdbc` =
     .dependsOn(`quill-sql` % "compile->compile;test->test")
 
 lazy val `quill-finagle-mysql` = 
-  (project in file("quill-fingle-mysql"))
+  (project in file("quill-finagle-mysql"))
     .settings(commonSettings: _*)
     .settings(
       libraryDependencies ++= Seq(
