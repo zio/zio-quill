@@ -36,18 +36,6 @@ object ApplyIntermediateMap {
         val er = BetaReduction(e, d -> c)
         Some(Map(SortBy(a, b, er), b, c))
 
-      // a.map(b => c).outerJoin(d).on((iA, iB) => f) =>
-      //    a.outerJoin(d).on((b, iB) => f[iA := c]).map(b => c)
-      case OuterJoin(t, Map(a, b, c), d, iA, iB, f) =>
-        val fr = BetaReduction(f, iA -> c)
-        Some(Map(OuterJoin(t, a, d, b, iB, fr), b, c))
-
-      // a.outerJoin(b.map(c => d)).on((iA, iB) => f) =>
-      //    a.outerJoin(b).on((iA, c) => f[iB := d]).map(c => d)
-      case OuterJoin(t, a, Map(b, c, d), iA, iB, f) =>
-        val fr = BetaReduction(f, iB -> d)
-        Some(Map(OuterJoin(t, a, b, iA, c, fr), c, d))
-
       case other => None
     }
 }
