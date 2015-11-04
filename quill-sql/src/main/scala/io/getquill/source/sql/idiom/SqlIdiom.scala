@@ -11,10 +11,7 @@ import io.getquill.source.sql.naming.NamingStrategy
 
 trait SqlIdiom {
 
-  def prepare(sql: String): Option[String] =
-    prepareKeyword.map(k => s"PREPARE p${sql.hashCode.abs} $k '$sql'")
-
-  def prepareKeyword: Option[String] = None
+  def prepare(sql: String): Option[String] = None
 
   implicit def astShow(implicit propertyShow: Show[Property], strategy: NamingStrategy): Show[Ast] =
     new Show[Ast] {

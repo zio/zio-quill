@@ -1,18 +1,19 @@
-package io.getquill.source.finagle.mysql
-
-import com.twitter.util.Await
-import com.twitter.util.Future
+package io.getquill.source.async.mysql
 
 import io.getquill._
 import io.getquill.source.sql.PeopleSpec
+import scala.concurrent.Future
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
+import scala.concurrent.ExecutionContext.Implicits.global
 
-class PeopleFinagleMysqlSpec extends PeopleSpec {
+class PeopleMysqlAsyncSpec extends PeopleSpec {
 
-  def await[T](future: Future[T]) = Await.result(future)
+  def await[T](future: Future[T]) = Await.result(future, Duration.Inf)
 
   override def beforeAll =
     await {
-      testDB.transaction {
+      testDB.transaction { implicit ec =>
         for {
           _ <- testDB.run(query[Couple].delete)
           _ <- testDB.run(query[Person].filter(_.age > 0).delete)

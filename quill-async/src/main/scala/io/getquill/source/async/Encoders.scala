@@ -1,18 +1,11 @@
-package io.getquill.source.async.postgresql
+package io.getquill.source.async
 
-import com.github.mauricio.async.db.RowData
-import io.getquill.source.sql.SqlSource
-import io.getquill.source.sql.idiom.MySQLDialect
-import io.getquill.source.sql.naming.NamingStrategy
-import scala.reflect.ClassTag
-import scala.reflect.classTag
-import org.joda.time.LocalDateTime
-import org.joda.time.DateTimeZone
-import org.joda.time.DateTime
 import java.util.Date
 
-trait PostgresqlAsyncEncoders {
-  this: PostgresqlAsyncSource[_] =>
+import org.joda.time.LocalDateTime
+
+trait Encoders {
+  this: AsyncSource[_, _, _] =>
 
   def encoder[T](f: T => Any): Encoder[T] =
     new Encoder[T] {

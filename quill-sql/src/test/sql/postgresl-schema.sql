@@ -1,6 +1,6 @@
 CREATE TABLE Person(
 	name VARCHAR(255),
-	age int(3)
+	age int
 );
 
 CREATE TABLE Couple(
@@ -15,7 +15,7 @@ CREATE TABLE Department(
 CREATE TABLE Employee(
 	emp VARCHAR(255),
 	dpt VARCHAR(255),
-	salary int(20)
+	salary int
 );
 
 CREATE TABLE Task(
@@ -24,7 +24,7 @@ CREATE TABLE Task(
 );
 
 CREATE TABLE EncodingTestEntity(
-	v1 VARCHAR(255),
+    v1 VARCHAR(255),
     v2 DECIMAL(5,2),
     v3 BOOLEAN,
     v4 SMALLINT,
@@ -32,9 +32,9 @@ CREATE TABLE EncodingTestEntity(
     v6 INTEGER,
     v7 BIGINT,
     v8 FLOAT,
-    v9 DOUBLE,
-    v10 VARBINARY(255),
-    v11 DATETIME,
+    v9 DOUBLE PRECISIOn,
+    v10 BYTEA,
+    v11 TIMESTAMP,
     o1 VARCHAR(255),
     o2 DECIMAL(5,2),
     o3 BOOLEAN,
@@ -43,9 +43,9 @@ CREATE TABLE EncodingTestEntity(
     o6 INTEGER,
     o7 BIGINT,
     o8 FLOAT,
-    o9 DOUBLE,
-    o10 VARBINARY(255),
-    o11 DATETIME
+    o9 DOUBLE PRECISIOn,
+    o10 BYTEA,
+    o11 TIMESTAMP
 );
 
 CREATE TABLE TestEntity(

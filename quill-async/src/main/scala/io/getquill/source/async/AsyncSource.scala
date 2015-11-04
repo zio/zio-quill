@@ -1,4 +1,4 @@
-package io.getquill.source.async.postgresql
+package io.getquill.source.async
 
 import scala.annotation.implicitNotFound
 import scala.concurrent.Await
@@ -6,23 +6,26 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.concurrent.duration.Duration
 import scala.util.Try
-
+import com.github.mauricio.async.db.Configuration
 import com.github.mauricio.async.db.Connection
 import com.github.mauricio.async.db.QueryResult
 import com.github.mauricio.async.db.RowData
+import com.github.mauricio.async.db.pool.ObjectFactory
 import com.typesafe.scalalogging.StrictLogging
-
 import io.getquill.source.sql.SqlSource
 import io.getquill.source.sql.idiom.MySQLDialect
 import io.getquill.source.sql.naming.NamingStrategy
+import io.getquill.source.sql.idiom.SqlIdiom
 
-class PostgresqlAsyncSource[N <: NamingStrategy]
-    extends SqlSource[MySQLDialect.type, N, RowData, List[Any]]
-    with PostgresqlAsyncDecoders
-    with PostgresqlAsyncEncoders
+trait AsyncSource[D <: SqlIdiom, N <: NamingStrategy, C <: Connection]
+    extends SqlSource[D, N, RowData, List[Any]]
+    with Decoders
+    with Encoders
     with StrictLogging {
 
-  protected val pool = PostgresqlAsyncPool(config)
+  protected def objectFactory(config: Configuration): ObjectFactory[C]
+
+  protected val pool = Pool(config, objectFactory)
 
   private def withConnection[T](f: Connection => Future[T])(implicit ec: ExecutionContext) =
     ec match {
@@ -63,7 +66,7 @@ class PostgresqlAsyncSource[N <: NamingStrategy]
   def query[T](sql: String, bind: List[Any] => List[Any], extractor: RowData => T)(implicit ec: ExecutionContext) = {
     withConnection(_.sendPreparedStatement(sql, bind(List()))).map {
       _.rows match {
-        case Some(rows) => rows.map(extractor)
+        case Some(rows) => rows.map(extractor).toList
         case None       => List()
       }
     }
