@@ -10,7 +10,7 @@ before_script:
   - mysql -u root -e "GRANT ALL PRIVILEGES ON * . * TO 'finagle'@'localhost';"
   - mysql -u root -e "FLUSH PRIVILEGES;"
   - createdb quill_test -U postgres
-  - psql -U postgres -d quill_test -a -f ./quill-sql/src/test/sql/postgres-schema.sql
+  - psql -U postgres -d quill_test -a -f quill-sql/src/test/sql/postgres-schema.sql
 script:
   - sbt clean coverage test &&
     sbt coverageAggregate
