@@ -25,17 +25,18 @@ MVP - mid-september
 	√ set operations (union, outer joins, etc)
 √ naming strategy
 √ table/column aliases (query[Entity]("table_name")(_.someCol -> "some_col"))
+- fix a.union(b).map(t => t.s)
 - quill-jdbc
 - quill-finagle-mysql
 - quill-postgresql-async
 - quill-mysql-async
-- jekyll website w/ docs
 - documentation w/ https://github.com/tpolecat/tut
 - dynamic queries
-- gitter8/activator
 
 Later
 
+- jekyll website w/ docs
+- gitter8/activator
 - insert case class directly
 - master slave
 - insert returning id

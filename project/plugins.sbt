@@ -2,7 +2,7 @@ resolvers += Classpaths.sbtPluginReleases
 
 resolvers += "Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/"
 
-addSbtPlugin("org.scoverage" % "sbt-scoverage" % "1.0.4")
+addSbtPlugin("org.scoverage" % "sbt-scoverage" % "1.3.3")
 
 addSbtPlugin("com.typesafe.sbteclipse" % "sbteclipse-plugin" % "2.5.0")
 
