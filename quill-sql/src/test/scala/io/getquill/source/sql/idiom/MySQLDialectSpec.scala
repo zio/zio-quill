@@ -22,4 +22,10 @@ class MySQLDialectSpec extends Spec {
     (q.ast: Ast).show mustEqual
       "SELECT CONCAT(t.s, t.s) FROM TestEntity t"
   }
+
+  "supports the `prepare` statement" in {
+    val sql = "test"
+    MySQLDialect.prepare(sql) mustEqual
+      Some(s"PREPARE p${sql.hashCode.abs} FROM '$sql'")
+  }
 }

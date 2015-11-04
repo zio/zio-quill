@@ -9,6 +9,10 @@ class RenamePropertiesSpec extends Spec {
     query[TestEntity]("test_entity", _.s -> "field_s", _.i -> "field_i")
   }
 
+  val f = quote {
+    qr1.filter(t => t.i == 1)
+  }
+
   "renames properties according to the entity aliases" - {
     "flatMap" - {
       "body" in {
@@ -84,17 +88,17 @@ class RenamePropertiesSpec extends Spec {
       }
       "left" in {
         val q = quote {
-          e.leftJoin(qr2).on((a, b) => a.s == b.s).map(t => t._1.s)
+          e.leftJoin(f).on((a, b) => a.s == b.s).map(t => t._1.s)
         }
         mirrorSource.run(q).sql mustEqual
-          "SELECT a.field_s FROM test_entity a LEFT JOIN TestEntity2 b ON a.field_s = b.s"
+          "SELECT a.field_s FROM test_entity a LEFT JOIN (SELECT * FROM TestEntity t WHERE t.i = 1) t ON a.field_s = t.s"
       }
       "right" in {
         val q = quote {
-          qr2.rightJoin(e).on((a, b) => a.s == b.s).map(t => t._2.s)
+          f.rightJoin(e).on((a, b) => a.s == b.s).map(t => t._2.s)
         }
         mirrorSource.run(q).sql mustEqual
-          "SELECT b.field_s FROM TestEntity2 a RIGHT JOIN test_entity b ON a.s = b.field_s"
+          "SELECT b.field_s FROM (SELECT * FROM TestEntity t WHERE t.i = 1) t RIGHT JOIN test_entity b ON t.s = b.field_s"
       }
     }
   }

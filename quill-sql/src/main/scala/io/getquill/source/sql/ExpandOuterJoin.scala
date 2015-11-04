@@ -13,12 +13,6 @@ object ExpandOuterJoin extends StatelessTransformer {
       case other => super.apply(other)
     }
 
-  private def expand(a: OuterJoin, b: Ident, c: Ast)(f: (Ast, Ident, Ast) => Ast) = {
-    val (ar, at) = expandedTuple(a)
-    val cr = BetaReduction(c, b -> at)
-    Map(f(ar, b, cr), Ident("temp"), at)
-  }
-
   private def expandedTuple(q: OuterJoin): (OuterJoin, Tuple) =
     q match {
       case OuterJoin(t, a: OuterJoin, b: OuterJoin, tA, tB, o) =>

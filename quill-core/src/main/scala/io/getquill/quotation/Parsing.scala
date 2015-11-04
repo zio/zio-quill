@@ -111,11 +111,6 @@ trait Parsing {
       c.fail("An outer join clause must be followed by 'on'.")
   }
 
-  implicit def listParser[T](implicit p: Parser[T]): Parser[List[T]] = Parser[List[T]] {
-    case q"$pack.Nil"                         => Nil
-    case q"$pack.List.apply[..$t](..$values)" => values.map(p(_))
-  }
-
   implicit val propertyAliasParser: Parser[PropertyAlias] = Parser[PropertyAlias] {
     case q"(($x1) => scala.this.Predef.ArrowAssoc[$t]($x2.$prop).->[$v](${ alias: String }))" =>
       PropertyAlias(prop.decodedName.toString, alias)
