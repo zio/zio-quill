@@ -2,7 +2,7 @@
 lazy val quill = 
   (project in file("."))
     .settings(scalaVersion := "2.11.7")
-    .aggregate(`quill-core`, `quill-sql`, `quill-jdbc`, `quill-finagle-mysql`, `quill-async`, `quill-async-mysql`, `quill-async-postgres`)
+    .aggregate(`quill-core`, `quill-sql`, `quill-jdbc`, `quill-finagle-mysql`, `quill-async`, `quill-async-mysql`, `quill-async-postgresql`)
 
 lazy val `quill-core` = 
   (project in file("quill-core"))
@@ -52,8 +52,8 @@ lazy val `quill-async` =
     )
     .dependsOn(`quill-sql` % "compile->compile;test->test")
 
-lazy val `quill-async-postgres` = 
-  (project in file("quill-async-postgres"))
+lazy val `quill-async-postgresql` =
+  (project in file("quill-async-postgresql"))
     .settings(commonSettings: _*)
     .settings(
       libraryDependencies ++= Seq(
