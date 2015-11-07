@@ -11,6 +11,6 @@ class PostgresDialectSpec extends Spec {
   "supports the `prepare` statement" in {
     val sql = "test"
     PostgresDialect.prepare(sql) mustEqual
-      Some(s"PREPARE p${sql.hashCode.abs} AS $sql")
+      Some(s"PREPARE p${PostgresDialect.preparedStatementId} AS $sql")
   }
 }

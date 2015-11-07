@@ -24,8 +24,6 @@ class PeoplePostgresAsyncSpec extends PeopleSpec {
     }
 
   "Example 1 - differences" in {
-    case class Bug(a: String)
-    testDB.run(query[Bug])
     await(testDB.run(`Ex 1 differences`)) mustEqual `Ex 1 expected result`
   }
 
