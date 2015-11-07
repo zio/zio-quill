@@ -8,7 +8,9 @@ import io.getquill.source.sql.naming.Literal
 
 class OffsetWithoutLimitWorkaroundSpec extends Spec {
 
-  val subject = new SqlIdiom with OffsetWithoutLimitWorkaround {}
+  val subject = new SqlIdiom with OffsetWithoutLimitWorkaround {
+    def prepare(sql: String) = sql
+  }
 
   implicit val naming = new Literal {}
 

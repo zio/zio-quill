@@ -24,7 +24,9 @@ class SqlSourceMacroSpec extends Spec {
 
     "testSource.run(qr1.delete)" mustNot compile
 
-    class EvilDBDialect extends SqlIdiom
+    class EvilDBDialect extends SqlIdiom {
+      def prepare(sql: String) = sql
+    }
     object testSource extends SqlSource[EvilDBDialect, NamingStrategy, Any, Any] {
       def probe(sql: String): Try[Any] = null
 

@@ -11,7 +11,7 @@ import io.getquill.source.sql.naming.NamingStrategy
 
 trait SqlIdiom {
 
-  def prepare(sql: String): Option[String] = None
+  def prepare(sql: String): String
 
   implicit def astShow(implicit propertyShow: Show[Property], strategy: NamingStrategy): Show[Ast] =
     new Show[Ast] {

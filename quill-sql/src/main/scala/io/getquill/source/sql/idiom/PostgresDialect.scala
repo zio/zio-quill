@@ -8,7 +8,7 @@ object PostgresDialect
 
   override def prepare(sql: String) = {
     preparedStatementId += 1
-    Some(s"PREPARE p$preparedStatementId AS ${positionalVariables(sql)}")
+    s"PREPARE p$preparedStatementId AS ${positionalVariables(sql)}"
   }
 
   private def positionalVariables(sql: String) =

@@ -41,7 +41,7 @@ class SqlSourceMacro(val c: Context) extends SourceMacro {
 
   private def probe(sql: String, d: SqlIdiom) =
     resolveSource[SqlSource[SqlIdiom, NamingStrategy, Any, Any]].map {
-      _.probe(d.prepare(sql).getOrElse(sql))
+      _.probe(d.prepare(sql))
     } match {
       case Some(Failure(e)) => c.error(s"The sql query probing failed. Reason '$e'")
       case other            =>

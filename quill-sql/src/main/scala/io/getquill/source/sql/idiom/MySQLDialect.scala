@@ -9,7 +9,7 @@ object MySQLDialect
     with OffsetWithoutLimitWorkaround {
 
   override def prepare(sql: String) =
-    Some(s"PREPARE p${sql.hashCode.abs} FROM '$sql'")
+    s"PREPARE p${sql.hashCode.abs} FROM '$sql'"
 
   override implicit def operationShow(implicit propertyShow: Show[Property], strategy: NamingStrategy): Show[Operation] = new Show[Operation] {
     def show(e: Operation) =

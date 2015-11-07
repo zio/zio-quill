@@ -7,7 +7,9 @@ import io.getquill.source.sql.naming.Literal
 
 class NullsFirstClauseSpec extends Spec {
 
-  val subject = new SqlIdiom with NullsOrderingClause {}
+  val subject = new SqlIdiom with NullsOrderingClause {
+    def prepare(sql: String) = sql
+  }
 
   implicit val naming = new Literal {}
 

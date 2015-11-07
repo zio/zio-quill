@@ -11,7 +11,9 @@ import io.getquill.source.sql.naming.Literal
 
 class SqlQuerySpec extends Spec {
 
-  val idiom = new SqlIdiom {}
+  val idiom = new SqlIdiom {
+    def prepare(sql: String) = sql
+  }
 
   import idiom._
 

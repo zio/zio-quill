@@ -32,10 +32,7 @@ class JdbcSource[D <: SqlIdiom, N <: NamingStrategy]
   def probe(sql: String) =
     withConnection { conn =>
       Try {
-        if (sql.startsWith("PREPARE"))
-          conn.createStatement.execute(sql)
-        else
-          conn.prepareStatement(sql)
+        conn.prepareStatement(sql)
       }
     }
 
