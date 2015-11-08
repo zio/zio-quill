@@ -7,7 +7,7 @@ import org.joda.time.LocalDateTime
 trait Encoders {
   this: AsyncSource[_, _, _] =>
 
-  def encoder[T](f: T => Any): Encoder[T] =
+  def encoder[T]: Encoder[T] =
     new Encoder[T] {
       def apply(index: Int, value: T, row: List[Any]) =
         row :+ value
@@ -22,15 +22,19 @@ trait Encoders {
         })
     }
 
-  implicit val stringEncoder: Encoder[String] = encoder[String](identity)
-  implicit val bigDecimalEncoder: Encoder[BigDecimal] = encoder[BigDecimal](identity)
-  implicit val booleanEncoder: Encoder[Boolean] = encoder[Boolean](identity)
-  implicit val byteEncoder: Encoder[Byte] = encoder[Byte](identity)
-  implicit val shortEncoder: Encoder[Short] = encoder[Short](identity)
-  implicit val intEncoder: Encoder[Int] = encoder[Int](identity)
-  implicit val longEncoder: Encoder[Long] = encoder[Long](identity)
-  implicit val floatEncoder: Encoder[Float] = encoder[Float](identity)
-  implicit val doubleEncoder: Encoder[Double] = encoder[Double](identity)
-  implicit val byteArrayEncoder: Encoder[Array[Byte]] = encoder[Array[Byte]](identity)
-  implicit val dateEncoder: Encoder[Date] = encoder[Date](new LocalDateTime(_))
+  implicit val stringEncoder: Encoder[String] = encoder[String]
+  implicit val bigDecimalEncoder: Encoder[BigDecimal] = encoder[BigDecimal]
+  implicit val booleanEncoder: Encoder[Boolean] = encoder[Boolean]
+  implicit val byteEncoder: Encoder[Byte] = encoder[Byte]
+  implicit val shortEncoder: Encoder[Short] = encoder[Short]
+  implicit val intEncoder: Encoder[Int] = encoder[Int]
+  implicit val longEncoder: Encoder[Long] = encoder[Long]
+  implicit val floatEncoder: Encoder[Float] = encoder[Float]
+  implicit val doubleEncoder: Encoder[Double] = encoder[Double]
+  implicit val byteArrayEncoder: Encoder[Array[Byte]] = encoder[Array[Byte]]
+  implicit val dateEncoder: Encoder[Date] =
+    new Encoder[Date] {
+      def apply(index: Int, value: Date, row: List[Any]) =
+        row :+ new LocalDateTime(value)
+    }
 }

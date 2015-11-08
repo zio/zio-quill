@@ -16,6 +16,9 @@ import io.getquill.source.sql.SqlSource
 import io.getquill.source.sql.idiom.MySQLDialect
 import io.getquill.source.sql.naming.NamingStrategy
 import io.getquill.source.sql.idiom.SqlIdiom
+import language.experimental.macros
+import io.getquill.quotation.Quoted
+import io.getquill.source.sql.SqlSourceMacro
 
 trait AsyncSource[D <: SqlIdiom, N <: NamingStrategy, C <: Connection]
     extends SqlSource[D, N, RowData, List[Any]]
@@ -35,12 +38,7 @@ trait AsyncSource[D <: SqlIdiom, N <: NamingStrategy, C <: Connection]
 
   def probe(sql: String) =
     Try {
-      val query =
-        if (sql.startsWith("PREPARE"))
-          pool.sendQuery(sql)
-        else
-          pool.sendQuery(s"PREPARE $sql")
-      Await.result(query, Duration.Inf)
+      Await.result(pool.sendQuery(sql), Duration.Inf)
     }
 
   def transaction[T](f: ExecutionContext => Future[T])(implicit ec: ExecutionContext) =

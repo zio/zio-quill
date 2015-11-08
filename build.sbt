@@ -2,7 +2,7 @@
 lazy val quill = 
   (project in file("."))
     .settings(scalaVersion := "2.11.7")
-    .aggregate(`quill-core`, `quill-sql`, `quill-jdbc`, `quill-finagle-mysql`, `quill-async`, `quill-async-mysql`, `quill-async-postgres`)
+    .aggregate(`quill-core`, `quill-sql`, `quill-jdbc`, `quill-finagle-mysql`, `quill-async`)
 
 lazy val `quill-core` = 
   (project in file("quill-core"))
@@ -46,34 +46,13 @@ lazy val `quill-async` =
     .settings(commonSettings: _*)
     .settings(
       libraryDependencies ++= Seq(
-        "com.github.mauricio" %% "db-async-common" % "0.2.18"
-      ),
-      parallelExecution in Test := false
-    )
-    .dependsOn(`quill-sql` % "compile->compile;test->test")
-
-lazy val `quill-async-postgres` = 
-  (project in file("quill-async-postgres"))
-    .settings(commonSettings: _*)
-    .settings(
-      libraryDependencies ++= Seq(
+        "com.github.mauricio" %% "db-async-common" % "0.2.18",
+        "com.github.mauricio" %% "mysql-async" % "0.2.18",
         "com.github.mauricio" %% "postgresql-async" % "0.2.18"
       ),
       parallelExecution in Test := false
     )
-    .dependsOn(`quill-async` % "compile->compile;test->test")
-
-lazy val `quill-async-mysql` = 
-  (project in file("quill-async-mysql"))
-    .settings(commonSettings: _*)
-    .settings(
-      libraryDependencies ++= Seq(
-        "com.github.mauricio" %% "mysql-async" % "0.2.18"
-      ),
-      parallelExecution in Test := false
-    )
-    .dependsOn(`quill-async` % "compile->compile;test->test")
-
+    .dependsOn(`quill-sql` % "compile->compile;test->test")
 
 lazy val commonSettings = releaseSettings ++ Seq(
   organization := "io.getquill",

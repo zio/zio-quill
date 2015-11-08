@@ -1,4 +1,4 @@
-package io.getquill.source.async.postgres
+package io.getquill.source.async.mysql
 
 import io.getquill._
 import io.getquill.source.sql.EncodingSpec
@@ -6,24 +6,24 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
-class PostgresAsyncEncodingSpec extends EncodingSpec {
+class MysqlAsyncEncodingSpec extends EncodingSpec {
 
   "encodes and decodes types" in {
     val r =
       for {
-        _ <- testDB.run(delete)
-        _ <- testDB.run(insert).using(insertValues)
-        result <- testDB.run(query[EncodingTestEntity])
+        _ <- testMysqlDB.run(delete)
+        _ <- testMysqlDB.run(insert).using(insertValues)
+        result <- testMysqlDB.run(query[EncodingTestEntity])
       } yield result
 
     verify(Await.result(r, Duration.Inf).toList)
   }
 
   "fails if the column has the wrong type" in {
-    Await.result(testDB.run(insert).using(insertValues), Duration.Inf)
+    Await.result(testMysqlDB.run(insert).using(insertValues), Duration.Inf)
     case class EncodingTestEntity(v1: Int)
     val e = intercept[IllegalStateException] {
-      Await.result(testDB.run(query[EncodingTestEntity]), Duration.Inf)
+      Await.result(testMysqlDB.run(query[EncodingTestEntity]), Duration.Inf)
     }
   }
 }

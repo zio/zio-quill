@@ -26,6 +26,6 @@ class MySQLDialectSpec extends Spec {
   "supports the `prepare` statement" in {
     val sql = "test"
     MySQLDialect.prepare(sql) mustEqual
-      Some(s"PREPARE p${sql.hashCode.abs} FROM '$sql'")
+      s"PREPARE p${sql.hashCode.abs} FROM '$sql'"
   }
 }

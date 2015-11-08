@@ -63,7 +63,6 @@ trait Decoders {
 
   implicit val booleanDecoder: Decoder[Boolean] = decoder[Boolean] {
     case byte: Byte         => byte == (1: Byte)
-    case bytes: Array[Byte] => bytes == Array(1: Byte)
   }
 
   implicit val byteDecoder: Decoder[Byte] = decoder[Byte] {
@@ -102,7 +101,5 @@ trait Decoders {
     decoder[Date] {
       case localDateTime: LocalDateTime =>
         localDateTime.toDate
-      case dateTime: DateTime =>
-        dateTime.toDate
     }
 }
