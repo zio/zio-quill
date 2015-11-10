@@ -41,7 +41,7 @@ trait AsyncSource[D <: SqlIdiom, N <: NamingStrategy, C <: Connection]
       Await.result(pool.sendQuery(sql), Duration.Inf)
     }
 
-  def transaction[T](f: ExecutionContext => Future[T])(implicit ec: ExecutionContext) =
+  def transaction[T](f: TransactionalExecutionContext => Future[T])(implicit ec: ExecutionContext) =
     pool.inTransaction { c =>
       f(TransactionalExecutionContext(ec, c))
     }

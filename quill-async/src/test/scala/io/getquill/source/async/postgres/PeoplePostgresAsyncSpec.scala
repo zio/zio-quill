@@ -5,7 +5,7 @@ import io.getquill.source.sql.PeopleSpec
 import scala.concurrent.Future
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.ExecutionContext.Implicits.{global => ec}
 
 class PeoplePostgresAsyncSpec extends PeopleSpec {
 

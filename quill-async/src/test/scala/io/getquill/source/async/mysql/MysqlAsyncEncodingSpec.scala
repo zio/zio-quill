@@ -5,6 +5,7 @@ import io.getquill.source.sql.EncodingSpec
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
+import java.util.Date
 
 class MysqlAsyncEncodingSpec extends EncodingSpec {
 
@@ -19,11 +20,20 @@ class MysqlAsyncEncodingSpec extends EncodingSpec {
     verify(Await.result(r, Duration.Inf).toList)
   }
 
-  "fails if the column has the wrong type" in {
-    Await.result(testMysqlDB.run(insert).using(insertValues), Duration.Inf)
-    case class EncodingTestEntity(v1: Int)
-    val e = intercept[IllegalStateException] {
-      Await.result(testMysqlDB.run(query[EncodingTestEntity]), Duration.Inf)
+  "fails if the column has the wrong type" - {
+    "numeric" in {
+      Await.result(testMysqlDB.run(insert).using(insertValues), Duration.Inf)
+      case class EncodingTestEntity(v1: Int)
+      val e = intercept[IllegalStateException] {
+        Await.result(testMysqlDB.run(query[EncodingTestEntity]), Duration.Inf)
+      }
+    }
+    "non-numeric" in {
+      Await.result(testMysqlDB.run(insert).using(insertValues), Duration.Inf)
+      case class EncodingTestEntity(v1: Date)
+      val e = intercept[IllegalStateException] {
+        Await.result(testMysqlDB.run(query[EncodingTestEntity]), Duration.Inf)
+      }
     }
   }
 }
