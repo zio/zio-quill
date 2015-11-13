@@ -19,7 +19,7 @@ import com.twitter.finagle.exp.mysql.PrepareRequest
 import io.getquill.source.sql.naming.NamingStrategy
 
 class FinagleMysqlSource[N <: NamingStrategy]
-    extends SqlSource[MySQLDialect.type, N, Row, List[Parameter]]
+    extends SqlSource[MySQLDialect, N, Row, List[Parameter]]
     with FinagleMysqlDecoders
     with FinagleMysqlEncoders
     with StrictLogging {

@@ -7,7 +7,7 @@ import io.getquill.source.async.AsyncSource
 import io.getquill.source.sql.naming.NamingStrategy
 import io.getquill.source.sql.idiom.PostgresDialect
 
-class PostgresAsyncSource[N <: NamingStrategy] extends AsyncSource[PostgresDialect.type, N, PostgreSQLConnection] {
+class PostgresAsyncSource[N <: NamingStrategy] extends AsyncSource[PostgresDialect, N, PostgreSQLConnection] {
 
   override protected def objectFactory(config: Configuration) =
     new PostgreSQLConnectionFactory(config)

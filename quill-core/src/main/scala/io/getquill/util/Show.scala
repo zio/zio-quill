@@ -5,6 +5,12 @@ object Show {
     def show(v: T): String
   }
 
+  object Show {
+    def apply[T](f: T => String) = new Show[T] {
+      def show(v: T) = f(v)
+    }
+  }
+
   implicit class Shower[T](v: T)(implicit shower: Show[T]) {
     def show = shower.show(v)
   }

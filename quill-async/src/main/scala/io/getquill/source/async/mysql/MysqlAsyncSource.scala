@@ -7,7 +7,7 @@ import io.getquill.source.async.AsyncSource
 import io.getquill.source.sql.naming.NamingStrategy
 import io.getquill.source.sql.idiom.MySQLDialect
 
-class MysqlAsyncSource[N <: NamingStrategy] extends AsyncSource[MySQLDialect.type, N, MySQLConnection] {
+class MysqlAsyncSource[N <: NamingStrategy] extends AsyncSource[MySQLDialect, N, MySQLConnection] {
 
   override protected def objectFactory(config: Configuration) =
     new MySQLConnectionFactory(config)
