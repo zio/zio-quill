@@ -1,13 +1,13 @@
 package io.getquill.source.sql.idiom
 
 import io.getquill.ast._
+import io.getquill.naming.NamingStrategy
 import io.getquill.source.sql._
 import io.getquill.util.Messages.fail
 import io.getquill.util.Show.Show
 import io.getquill.util.Show.Shower
 import io.getquill.util.Show.listShow
 import io.getquill.norm.BetaReduction
-import io.getquill.source.sql.naming.NamingStrategy
 
 trait SqlIdiom {
 

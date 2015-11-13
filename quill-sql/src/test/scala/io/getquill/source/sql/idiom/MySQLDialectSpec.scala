@@ -1,9 +1,9 @@
 package io.getquill.source.sql.idiom
 
+import io.getquill.naming.Literal
 import io.getquill.util.Show._
 import io.getquill._
 import io.getquill.ast._
-import io.getquill.source.sql.naming.Literal
 
 class MySQLDialectSpec extends Spec {
 

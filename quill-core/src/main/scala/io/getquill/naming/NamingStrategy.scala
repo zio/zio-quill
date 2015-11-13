@@ -1,4 +1,4 @@
-package io.getquill.source.sql.naming
+package io.getquill.naming
 
 trait NamingStrategy {
   def apply(s: String): String

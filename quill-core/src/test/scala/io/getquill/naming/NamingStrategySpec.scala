@@ -1,4 +1,4 @@
-package io.getquill.source.sql.naming
+package io.getquill.naming
 
 import io.getquill.Spec
 

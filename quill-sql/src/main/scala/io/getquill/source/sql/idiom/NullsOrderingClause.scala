@@ -1,8 +1,8 @@
 package io.getquill.source.sql.idiom
 
+import io.getquill.naming.NamingStrategy
 import io.getquill.source.sql.OrderByCriteria
 import io.getquill.util.Show.Shower
-import io.getquill.source.sql.naming.NamingStrategy
 
 trait NullsOrderingClause {
   this: SqlIdiom =>
