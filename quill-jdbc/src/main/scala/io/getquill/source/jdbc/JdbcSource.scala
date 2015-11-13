@@ -5,12 +5,11 @@ import java.sql.PreparedStatement
 import java.sql.ResultSet
 import scala.util.DynamicVariable
 import com.typesafe.scalalogging.StrictLogging
+import io.getquill.naming.NamingStrategy
 import io.getquill.source.sql.SqlSource
 import scala.util.Try
 import io.getquill.source.sql.idiom.SqlIdiom
 import scala.util.control.NonFatal
-import io.getquill.source.sql.naming.NamingStrategy
-import io.getquill.source.sql.naming.SnakeCase
 
 class JdbcSource[D <: SqlIdiom, N <: NamingStrategy]
     extends SqlSource[D, N, ResultSet, PreparedStatement]

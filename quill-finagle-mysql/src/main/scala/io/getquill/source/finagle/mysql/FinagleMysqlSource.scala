@@ -8,6 +8,7 @@ import com.twitter.finagle.exp.mysql.Row
 import com.twitter.util.Future
 import com.twitter.util.Local
 import com.typesafe.scalalogging.StrictLogging
+import io.getquill.naming.NamingStrategy
 import io.getquill.source.sql.SqlSource
 import io.getquill.source.sql.idiom.MySQLDialect
 import scala.util.Success
@@ -16,7 +17,6 @@ import scala.util.Try
 import com.twitter.finagle.Service
 import com.twitter.finagle.exp.mysql.Request
 import com.twitter.finagle.exp.mysql.PrepareRequest
-import io.getquill.source.sql.naming.NamingStrategy
 
 class FinagleMysqlSource[N <: NamingStrategy]
     extends SqlSource[MySQLDialect.type, N, Row, List[Parameter]]

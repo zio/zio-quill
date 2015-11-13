@@ -1,10 +1,10 @@
 package io.getquill.source.sql
 
 import io.getquill._
+import io.getquill.naming.NamingStrategy
 import io.getquill.source.sql.idiom.SqlIdiom
 import scala.util.Try
 import java.util.Date
-import io.getquill.source.sql.naming.NamingStrategy
 
 class SqlSourceMacroSpec extends Spec {
 

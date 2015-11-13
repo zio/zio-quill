@@ -1,8 +1,8 @@
 package io.getquill.source.sql.idiom
 
 import io.getquill.ast.Ast
+import io.getquill.naming.NamingStrategy
 import io.getquill.util.Show._
-import io.getquill.source.sql.naming.NamingStrategy
 
 trait OffsetWithoutLimitWorkaround {
   self: SqlIdiom =>

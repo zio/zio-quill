@@ -12,9 +12,9 @@ import com.github.mauricio.async.db.QueryResult
 import com.github.mauricio.async.db.RowData
 import com.github.mauricio.async.db.pool.ObjectFactory
 import com.typesafe.scalalogging.StrictLogging
+import io.getquill.naming.NamingStrategy
 import io.getquill.source.sql.SqlSource
 import io.getquill.source.sql.idiom.MySQLDialect
-import io.getquill.source.sql.naming.NamingStrategy
 import io.getquill.source.sql.idiom.SqlIdiom
 import language.experimental.macros
 import io.getquill.quotation.Quoted

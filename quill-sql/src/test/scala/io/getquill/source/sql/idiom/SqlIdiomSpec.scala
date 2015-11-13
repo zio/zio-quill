@@ -2,15 +2,11 @@ package io.getquill.source.sql.idiom
 
 import io.getquill._
 import io.getquill.Spec
+import io.getquill.naming.{SnakeCase, UpperCase, Escape, Literal}
 import io.getquill.source.sql.mirror.mirrorSource.run
 import io.getquill.source.sql.mirror.mirrorSource
 import io.getquill.ast.Ast
-import io.getquill.source.sql.naming.NamingStrategy
-import io.getquill.source.sql.naming.Literal
 import io.getquill.source.sql.mirror.MirrorSourceTemplate
-import io.getquill.source.sql.naming.SnakeCase
-import io.getquill.source.sql.naming.UpperCase
-import io.getquill.source.sql.naming.Escape
 
 class SqlIdiomSpec extends Spec {
 

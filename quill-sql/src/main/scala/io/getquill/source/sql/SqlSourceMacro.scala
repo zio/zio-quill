@@ -4,12 +4,12 @@ import scala.reflect.macros.whitebox.Context
 import scala.util.Failure
 import scala.util.Success
 import io.getquill.ast._
+import io.getquill.naming.NamingStrategy
 import io.getquill.source.SourceMacro
 import io.getquill.source.sql.idiom.SqlIdiom
 import io.getquill.util.Messages.RichContext
 import io.getquill.util.Show.Shower
 import io.getquill.quotation.Quoted
-import io.getquill.source.sql.naming.NamingStrategy
 import scala.reflect.ClassTag
 import io.getquill.source.sql.idiom.SqlIdiom
 

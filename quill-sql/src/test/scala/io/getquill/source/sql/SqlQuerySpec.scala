@@ -2,12 +2,11 @@
 package io.getquill.source.sql
 
 import io.getquill._
+import io.getquill.naming.Literal
 import io.getquill.norm.QueryGenerator
 import io.getquill.norm.Normalize
 import io.getquill.source.sql.idiom.SqlIdiom
 import io.getquill.util.Show._
-import io.getquill.source.sql.naming.NamingStrategy
-import io.getquill.source.sql.naming.Literal
 
 class SqlQuerySpec extends Spec {
 
