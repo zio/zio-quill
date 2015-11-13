@@ -1,6 +1,6 @@
 package io.getquill.source.sql.idiom
 
-object PostgresDialect
+trait PostgresDialect
     extends SqlIdiom
     with NullsOrderingClause {
 
@@ -19,3 +19,4 @@ object PostgresDialect
         (idx, s + c)
     }._2
 }
+object PostgresDialect extends PostgresDialect
