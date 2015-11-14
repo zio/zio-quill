@@ -129,14 +129,14 @@ class SqlQuerySpec extends Spec {
           qr1.groupBy(t => t.i).map(t => t._1)
         }
         SqlQuery(q.ast).show mustEqual
-          "SELECT t.i _1 FROM TestEntity t GROUP BY t.i"
+          "SELECT t.i FROM TestEntity t GROUP BY t.i"
       }
       "nested" in {
         val q = quote {
           qr1.groupBy(t => t.i).map(t => t._1).flatMap(t => qr2)
         }
         SqlQuery(q.ast).show mustEqual
-          "SELECT * FROM (SELECT t.i _1 FROM TestEntity t GROUP BY t.i) t, TestEntity2 x"
+          "SELECT * FROM (SELECT t.i FROM TestEntity t GROUP BY t.i) t, TestEntity2 x"
       }
       "without map" in {
         val q = quote {
@@ -151,7 +151,7 @@ class SqlQuerySpec extends Spec {
           qr1.groupBy(t => (t.i, t.l)).map(t => t._1)
         }
         SqlQuery(q.ast).show mustEqual
-          "SELECT t.i _1, t.l _2 FROM TestEntity t GROUP BY t.i, t.l"
+          "SELECT t.i, t.l FROM TestEntity t GROUP BY t.i, t.l"
       }
       "invalid groupby criteria" - {
         val q = quote {

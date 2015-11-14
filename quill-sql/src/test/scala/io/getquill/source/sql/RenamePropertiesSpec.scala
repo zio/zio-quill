@@ -91,14 +91,14 @@ class RenamePropertiesSpec extends Spec {
           e.leftJoin(f).on((a, b) => a.s == b.s).map(t => t._1.s)
         }
         mirrorSource.run(q).sql mustEqual
-          "SELECT a.field_s FROM test_entity a LEFT JOIN (SELECT * FROM TestEntity t WHERE t.i = 1) t ON a.field_s = t.s"
+          "SELECT a.field_s FROM test_entity a LEFT JOIN (SELECT s FROM TestEntity t WHERE t.i = 1) t ON a.field_s = t.s"
       }
       "right" in {
         val q = quote {
           f.rightJoin(e).on((a, b) => a.s == b.s).map(t => t._2.s)
         }
         mirrorSource.run(q).sql mustEqual
-          "SELECT b.field_s FROM (SELECT * FROM TestEntity t WHERE t.i = 1) t RIGHT JOIN test_entity b ON t.s = b.field_s"
+          "SELECT b.field_s FROM (SELECT s FROM TestEntity t WHERE t.i = 1) t RIGHT JOIN test_entity b ON t.s = b.field_s"
       }
     }
   }

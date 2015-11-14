@@ -75,13 +75,8 @@ object SqlQuery {
       case Map(GroupBy(q, x, g), a @ Ident(alias), p) =>
         val b = base(q, alias)
         val criterias = groupByCriterias(g)
-        val selectValues = {
-          val select = BetaReduction(p, a -> Tuple(List(g, x)))
-          for ((v, i) <- this.selectValues(select).zipWithIndex) yield {
-            v.copy(alias = Some(s"_${i + 1}"))
-          }
-        }
-        b.copy(groupBy = criterias, select = selectValues)
+        val select = BetaReduction(p, a -> Tuple(List(g, x)))
+        b.copy(groupBy = criterias, select = this.selectValues(select))
 
       case Map(q, Ident(alias), p) =>
         base(q, alias).copy(select = selectValues(p))

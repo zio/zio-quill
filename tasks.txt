@@ -15,23 +15,23 @@ MVP - mid-september
 √ custom encoders
 √ custom functions (via infix)
 √ batch queries
-- full sql support
-	√ take
-	√ drop
-	√ options
-	√ groupBy
-	√ aggregations
-	√ additional operations (string concatenation, etc)
-	√ set operations (union, outer joins, etc)
+√ take
+√ drop
+√ options
+√ groupBy
+√ aggregations
+√ additional operations (string concatenation, etc)
+√ set operations (union, outer joins, etc)
 √ naming strategy
 √ table/column aliases (query[Entity]("table_name")(_.someCol -> "some_col"))
+√ quill-jdbc
+√ quill-finagle-mysql
+√ quill-postgresql-async
+√ quill-mysql-async
 - fix a.union(b).map(t => t.s)
-- quill-jdbc
-- quill-finagle-mysql
-- quill-postgresql-async
-- quill-mysql-async
-- documentation w/ https://github.com/tpolecat/tut
+- readme w/ https://github.com/tpolecat/tut
 - dynamic queries
+- additional random-generated query tests
 
 Later
 

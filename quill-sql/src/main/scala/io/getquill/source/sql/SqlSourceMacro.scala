@@ -33,7 +33,7 @@ class SqlSourceMacro(val c: Context) extends SourceMacro {
       case ast: Query =>
         val sql = SqlQuery(ast)
         VerifySqlQuery(sql).map(c.fail)
-        sql.show
+        ExpandNestedQueries(sql, Set.empty).show
       case ast =>
         ast.show
     }

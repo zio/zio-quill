@@ -129,7 +129,7 @@ trait StatefulTransformer[T] {
         (Assignment(a, bt), btt)
     }
 
-  private def apply[U, R](list: List[U])(f: StatefulTransformer[T] => U => (R, StatefulTransformer[T])) =
+  def apply[U, R](list: List[U])(f: StatefulTransformer[T] => U => (R, StatefulTransformer[T])) =
     list.foldLeft((List[R](), this)) {
       case ((values, t), v) =>
         val (vt, vtt) = f(t)(v)

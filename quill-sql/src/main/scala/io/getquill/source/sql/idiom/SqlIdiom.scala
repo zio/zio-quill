@@ -41,7 +41,12 @@ trait SqlIdiom {
     def show(e: SqlQuery) =
       e match {
         case FlattenSqlQuery(from, where, groupBy, orderBy, limit, offset, select) =>
-          val selectClause = s"SELECT ${select.show} FROM ${from.show}"
+          val selectClause =
+            select match {
+              case Nil => s"SELECT * FROM ${from.show}"
+              case _   => s"SELECT ${select.show} FROM ${from.show}"
+            }
+
           val withWhere =
             where match {
               case None        => selectClause
