@@ -7,7 +7,7 @@ import io.getquill.source.sql.idiom.FallbackDialect
 import scala.util.Success
 import scala.util.Failure
 
-trait MirrorSourceTemplate[N <: NamingStrategy] extends SqlSource[MirrorDialect.type, N, Row, Row]
+class MirrorSourceTemplate[N <: NamingStrategy] extends SqlSource[MirrorDialect.type, N, Row, Row]
     with MirrorEncoders
     with MirrorDecoders {
 

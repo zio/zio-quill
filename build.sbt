@@ -62,6 +62,7 @@ lazy val commonSettings = releaseSettings ++ Seq(
     "ch.qos.logback" % "logback-classic" % "1.1.3" % "test"
   ),
   EclipseKeys.createSrc := EclipseCreateSrc.Default + EclipseCreateSrc.Resource,
+  unmanagedClasspath in Test += baseDirectory.value / "src" / "test" / "resources",
   scalacOptions ++= Seq(
     "-deprecation",           
     "-encoding", "UTF-8",
