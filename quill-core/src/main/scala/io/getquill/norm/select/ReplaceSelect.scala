@@ -13,7 +13,7 @@ private[select] object ReplaceSelect {
 
   private def apply(query: Query, ast: Ast): Query =
     query match {
-      case Aggregation(op, q: Query) => Aggregation(op, apply(q, ast))
+      case Aggregation(op, q: Query) => Aggregation(op, q)
       case FlatMap(q, x, p: Query)   => FlatMap(q, x, apply(p, ast))
       case Map(q, x, p)              => Map(q, x, ast)
       case other                     => fail(s"Query doesn't have a final map (select). Ast: $query")

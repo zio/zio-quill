@@ -78,6 +78,9 @@ object SqlQuery {
         val select = BetaReduction(p, a -> Tuple(List(g, x)))
         b.copy(groupBy = criterias, select = this.selectValues(select))
 
+      case GroupBy(q, Ident(alias), p) =>
+        fail("A `groupBy` clause must be followed by `map`.")
+
       case Map(q, Ident(alias), p) =>
         base(q, alias).copy(select = selectValues(p))
 
@@ -100,13 +103,16 @@ object SqlQuery {
         val criterias = orderByCriterias(p, reverse = false)
         b.copy(orderBy = b.orderBy ++ criterias)
 
-      case GroupBy(q, Ident(alias), p) =>
-        fail("A `groupBy` clause must be followed by a `map`.")
-
       case Aggregation(op, q) =>
         val b = base(q, alias)
-        val agg = b.select.map(v => v.copy(ast = Aggregation(op, v.ast)))
-        b.copy(select = agg)
+        b.select match {
+          case head :: Nil =>
+            b.copy(select = List(head.copy(ast = Aggregation(op, head.ast))))
+          case other =>
+            FlattenSqlQuery(
+              from = QuerySource(apply(q), alias) :: Nil,
+              select = List(SelectValue(Aggregation(op, Ident("*")))))
+        }
 
       case Take(q, n) =>
         val b = base(q, alias)

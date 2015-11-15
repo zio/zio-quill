@@ -2,7 +2,7 @@ package io.getquill.source.sql.idiom
 
 import io.getquill._
 import io.getquill.Spec
-import io.getquill.naming.{SnakeCase, UpperCase, Escape, Literal}
+import io.getquill.naming.{ SnakeCase, UpperCase, Escape, Literal }
 import io.getquill.source.sql.mirror.mirrorSource.run
 import io.getquill.source.sql.mirror.mirrorSource
 import io.getquill.ast.Ast
@@ -131,6 +131,13 @@ class SqlIdiomSpec extends Spec {
           mirrorSource.run(q).sql mustEqual
             "SELECT (SELECT MIN(t.i) FROM TestEntity2 t WHERE t.i > a.i) FROM TestEntity a LIMIT 10"
         }
+        "after a group by" in {
+          val q = quote {
+            qr1.groupBy(t => t.s).map { case (a, b) => (a, b.size) }.size
+          }
+          mirrorSource.run(q).sql mustEqual
+            "SELECT COUNT(*) FROM (SELECT t.s, COUNT(*) FROM TestEntity t GROUP BY t.s) x"
+        }
       }
       "limited" - {
         "simple" in {
@@ -178,9 +185,10 @@ class SqlIdiomSpec extends Spec {
             }
           }
           val q = quote {
-            j.union(j).map(u => u._1.s)
+            j.union(j).map(u => (u._1.s, u._2.i))
           }
-          mirrorSource.run(q).sql
+          mirrorSource.run(q).sql mustEqual
+            "SELECT u._1s, u._2i FROM (SELECT a.s _1s, b.i _2i FROM TestEntity a, TestEntity2 b UNION SELECT a1.s _1s, b1.i _2i FROM TestEntity a1, TestEntity2 b1) u"
         }
       }
       "unionAll" - {

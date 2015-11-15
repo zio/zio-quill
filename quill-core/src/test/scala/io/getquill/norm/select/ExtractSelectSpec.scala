@@ -45,7 +45,7 @@ class ExtractSelectSpec extends Spec {
       ExtractSelect(q.ast) match {
         case (query, select) =>
           query mustEqual q.ast
-          select mustEqual Property(Ident("t"), "i")
+          select mustEqual Ident("x")
       }
     }
     "reversed query" in {

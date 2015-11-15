@@ -190,7 +190,8 @@ trait SqlIdiom {
     new Show[Property] {
       def show(e: Property) =
         e match {
-          case Property(ast, name) => s"${scopedShow(ast)}.${strategy(name)}"
+          case Property(Property(ident, a), b) => s"$ident.$a$b"
+          case Property(ast, name)             => s"${scopedShow(ast)}.${strategy(name)}"
         }
     }
 
