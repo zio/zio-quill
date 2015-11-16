@@ -1,4 +1,4 @@
-MVP - mid-september
+0.1.0
 
 √ plain case classes
 √ query optimization
@@ -28,13 +28,15 @@ MVP - mid-september
 √ quill-finagle-mysql
 √ quill-postgresql-async
 √ quill-mysql-async
-- fix a.union(b).map(t => t.s)
-- readme w/ https://github.com/tpolecat/tut
+√ fix a.union(b).map(t => t.s)
 - dynamic queries
-- additional random-generated query tests
+- readme w/ https://github.com/tpolecat/tut
+- website from readme
+- create issues for roadmap and tech debt
 
 Later
 
+- additional random-generated query tests
 - jekyll website w/ docs
 - gitter8/activator
 - insert case class directly
