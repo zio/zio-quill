@@ -2,33 +2,36 @@ package io.getquill.source.async
 
 import io.getquill.Spec
 import scala.concurrent.ExecutionContext
+import scala.collection.mutable.ListBuffer
 
 class TransactionalExecutionContextSpec extends Spec {
 
   "uses the wrapped context to execute runnables" in {
-    var called = false
+    val executed = ListBuffer[Runnable]()
     val ec = new ExecutionContext {
       def execute(r: Runnable) = {
-        called = true
+        executed += r
         r.run
       }
       def reportFailure(t: Throwable) = ???
     }
-    TransactionalExecutionContext(ec, null).execute {
-      new Runnable {
-        override def run = {}
-      }
+    val runnable = new Runnable {
+      override def run = {}
     }
-    called mustEqual true
+    TransactionalExecutionContext(ec, null).execute(runnable)
+    executed.result mustEqual List(runnable)
   }
 
   "uses the wrapped context to report errors" in {
-	  var called = false
+    val reported = ListBuffer[Throwable]()
     val ec = new ExecutionContext {
       def execute(r: Runnable) = ???
-      def reportFailure(t: Throwable) = called = true
+      def reportFailure(t: Throwable) = {
+        val r = reported += t
+      }
     }
-    TransactionalExecutionContext(ec, null).reportFailure(new IllegalStateException)
-    called mustEqual true
+    val exception = new IllegalStateException
+    TransactionalExecutionContext(ec, null).reportFailure(exception)
+    reported.result mustEqual List(exception)
   }
 }

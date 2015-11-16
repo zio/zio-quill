@@ -9,78 +9,42 @@ private case class AvoidAliasConflict(state: Set[Ident])
   override def apply(q: Query): (Query, StatefulTransformer[Set[Ident]]) =
     q match {
 
-      case FlatMap(q: Entity, x, p) if (state.contains(x)) =>
-        val fresh = freshIdent(x)
-        val pr = BetaReduction(p, x -> fresh)
-        val (prr, t) = AvoidAliasConflict(state + fresh)(pr)
-        (FlatMap(q, fresh, prr), t)
+      case FlatMap(q: Entity, x, p) =>
+        apply(x, p)(FlatMap(q, _, _))
 
-      case Map(q: Entity, x, p) if (state.contains(x)) =>
-        val fresh = freshIdent(x)
-        val pr = BetaReduction(p, x -> fresh)
-        val (prr, t) = AvoidAliasConflict(state + fresh)(pr)
-        (Map(q, fresh, prr), t)
+      case Map(q: Entity, x, p) =>
+        apply(x, p)(Map(q, _, _))
 
-      case Filter(q: Entity, x, p) if (state.contains(x)) =>
-        val fresh = freshIdent(x)
-        val pr = BetaReduction(p, x -> fresh)
-        val (prr, t) = AvoidAliasConflict(state + fresh)(pr)
-        (Filter(q, fresh, prr), t)
+      case Filter(q: Entity, x, p) =>
+        apply(x, p)(Filter(q, _, _))
 
-      case SortBy(q: Entity, x, p) if (state.contains(x)) =>
-        val fresh = freshIdent(x)
-        val pr = BetaReduction(p, x -> fresh)
-        val (prr, t) = AvoidAliasConflict(state + fresh)(pr)
-        (SortBy(q, fresh, prr), t)
+      case SortBy(q: Entity, x, p) =>
+        apply(x, p)(SortBy(q, _, _))
 
-      case OuterJoin(t, a, b, iA, iB, o) if (state.contains(iA) && state.contains(iB)) =>
+      case OuterJoin(t, a, b, iA, iB, o) =>
         val freshA = freshIdent(iA)
         val freshB = freshIdent(iB)
         val or = BetaReduction(o, iA -> freshA, iB -> freshB)
         val (orr, orrt) = AvoidAliasConflict(state + freshA + freshB)(or)
         (OuterJoin(t, a, b, freshA, freshB, orr), orrt)
 
-      case OuterJoin(t, a, b, iA, iB, o) if (state.contains(iA)) =>
-        val fresh = freshIdent(iA)
-        val or = BetaReduction(o, iA -> fresh)
-        val (orr, orrt) = AvoidAliasConflict(state + fresh)(or)
-        (OuterJoin(t, a, b, fresh, iB, orr), orrt)
-
-      case OuterJoin(t, a, b, iA, iB, o) if (state.contains(iB)) =>
-        val fresh = freshIdent(iB)
-        val or = BetaReduction(o, iB -> fresh)
-        val (orr, orrt) = AvoidAliasConflict(state + fresh)(or)
-        (OuterJoin(t, a, b, iA, fresh, orr), orrt)
-
-      case FlatMap(q: Entity, x, p) =>
-        val (pr, t) = AvoidAliasConflict(state + x)(p)
-        (FlatMap(q, x, pr), t)
-
-      case Map(q: Entity, x, p) =>
-        val (pr, t) = AvoidAliasConflict(state + x)(p)
-        (Map(q, x, pr), t)
-
-      case Filter(q: Entity, x, p) =>
-        val (pr, t) = AvoidAliasConflict(state + x)(p)
-        (Filter(q, x, pr), t)
-
-      case SortBy(q: Entity, x, p) =>
-        val (pr, t) = AvoidAliasConflict(state + x)(p)
-        (SortBy(q, x, pr), t)
-
-      case q @ OuterJoin(t, a: Entity, b: Entity, iA, iB, o) =>
-        (q, AvoidAliasConflict(state + iA + iB))
-
-      case q @ OuterJoin(t, a: Entity, b, iA, iB, o) =>
-        (q, AvoidAliasConflict(state + iA))
-
-      case q @ OuterJoin(t, a, b: Entity, iA, iB, o) =>
-        (q, AvoidAliasConflict(state + iB))
-
       case other => super.apply(other)
     }
 
-  private def freshIdent(x: Ident, n: Int = 1): Ident = {
+  private def apply(x: Ident, p: Ast)(f: (Ident, Ast) => Query): (Query, StatefulTransformer[Set[Ident]]) = {
+    val fresh = freshIdent(x)
+    val pr = BetaReduction(p, x -> fresh)
+    val (prr, t) = AvoidAliasConflict(state + fresh)(pr)
+    (f(fresh, prr), t)
+  }
+
+  private def freshIdent(x: Ident): Ident =
+    if (!state.contains(x))
+      x
+    else
+      freshIdent(x, 1)
+
+  private def freshIdent(x: Ident, n: Int): Ident = {
     val fresh = Ident(s"${x.name}$n")
     if (!state.contains(fresh))
       fresh

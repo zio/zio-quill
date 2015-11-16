@@ -21,17 +21,16 @@ object Pool {
         host = config.getString("host"))
 
     val poolConfiguration = {
-      var poolConfig = PoolConfiguration.Default
-      Try(config.getInt("poolMaxQueueSize")).map { value =>
-        poolConfig = poolConfig.copy(maxQueueSize = value)
-      }
-      Try(config.getInt("poolMaxObjects")).map { value =>
-        poolConfig = poolConfig.copy(maxObjects = value)
-      }
-      Try(config.getLong("poolMaxIdle")).map { value =>
-        poolConfig = poolConfig.copy(maxIdle = value)
-      }
-      poolConfig
+      val default = PoolConfiguration.Default
+      val maxObjects = Try(config.getInt("poolMaxObjects")).getOrElse(default.maxObjects)
+      val maxIdle = Try(config.getLong("poolMaxIdle")).getOrElse(default.maxIdle)
+      val maxQueueSize = Try(config.getInt("poolMaxQueueSize")).getOrElse(default.maxQueueSize)
+      val validationInterval = Try(config.getLong("poolValidationInterval")).getOrElse(default.validationInterval)
+      PoolConfiguration(
+        maxObjects = maxObjects,
+        maxIdle = maxIdle,
+        maxQueueSize = maxQueueSize,
+        validationInterval = validationInterval)
     }
 
     val numberOfPartitions = Try(config.getInt("poolNumberOfPartitions")).getOrElse(4)
