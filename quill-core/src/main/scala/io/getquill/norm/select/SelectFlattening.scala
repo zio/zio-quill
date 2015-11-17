@@ -26,7 +26,7 @@ trait SelectFlattening extends SelectValues {
       }
     (ReplaceSelect(query, selectAsts(selectValues).flatten), selectValues)
   }
-
+  
   private def selectAsts(values: List[SelectValue]) =
     values map {
       case SimpleSelectValue(ast, _)       => List(ast)
@@ -37,15 +37,17 @@ trait SelectFlattening extends SelectValues {
     CaseClassSelectValue(typ, selectValuesForCaseClass(typ, ast, inferDecoder))
 
   private def selectValuesForCaseClass(typ: Type, ast: Ast, inferDecoder: Type => Option[Tree]) =
-    selectValuesForConstructor(caseClassConstructor(typ), ast, inferDecoder)
+    selectValuesForConstructor(typ, caseClassConstructor(typ), ast, inferDecoder)
 
-  private def selectValuesForConstructor(constructor: MethodSymbol, ast: Ast, inferDecoder: Type => Option[Tree]) =
+  private def selectValuesForConstructor(typ: Type, constructor: MethodSymbol, ast: Ast, inferDecoder: Type => Option[Tree]) =
     constructor.paramLists.map(_.map {
       param =>
-        val paramType = param.typeSignature
+        val paramType = param.typeSignature.asSeenFrom(typ, typ.typeSymbol)
         val decoder =
           inferDecoder(paramType)
-            .getOrElse(c.fail(s"Source doesn't know how to decode constructor param '${param.name}: $paramType'"))
+            .getOrElse {
+              c.fail(s"Source doesn't know how to decode constructor param '${param.name}: $paramType'")
+            }
         SimpleSelectValue(Property(ast, param.name.decodedName.toString), decoder)
     })
 
@@ -58,5 +60,5 @@ trait SelectFlattening extends SelectValues {
   private def caseClassConstructor(t: Type) =
     t.members.collect {
       case m: MethodSymbol if (m.isPrimaryConstructor) => m
-    }.headOption.get // a case class always have a primary constructor
+    }.headOption.get // a case class always has a primary constructor
 }

@@ -16,11 +16,23 @@ class SelectFlatteningSpec extends Spec {
       mirrorSource.run(q).ast mustEqual q.ast
     }
 
-    "flattens a case class select" in {
-      val n = quote {
-        qr1.map(x => (x.s, x.i, x.l, x.o))
+    "flattens a case class select" - {
+      "normal" in {
+        val n = quote {
+          qr1.map(x => (x.s, x.i, x.l, x.o))
+        }
+        mirrorSource.run(qr1).ast mustEqual n.ast
       }
-      mirrorSource.run(qr1).ast mustEqual n.ast
+      "with type param" in {
+        case class Test[T](v: T)
+        val q = quote {
+          query[Test[Int]]
+        }
+        val n = quote {
+          query[Test[Int]].map(x => x.v)
+        }
+        mirrorSource.run(q).ast mustEqual n.ast
+      }
     }
 
     "flattens a select with case class and simple values" - {
