@@ -17,6 +17,8 @@ trait SelectResultExtraction extends SelectValues {
 
   private def extractor(value: SelectValue, index: Int = 0): (Tree, Int) =
     value match {
+      case OptionSelectValue(value) =>
+        optionalExtractor(value, index)
       case SimpleSelectValue(_, decoder, _) =>
         (q"$decoder($index, row)", index + 1)
       case TupleSelectValue(elems) =>
@@ -30,12 +32,13 @@ trait SelectResultExtraction extends SelectValues {
               (trees :+ tree, newIndex)
           }
         (q"new $tpe(...$decodedParams)", paramsIndex)
-      case OptionSelectValue(value) =>
-        optionalExtractor(value, index)
     }
 
   private def optionalExtractor(value: SelectValue, index: Int): (Tree, Int) =
     value match {
+      case OptionSelectValue(value) =>
+        val (tree, idx) = optionalExtractor(value, index)
+        (q"Option($tree)", idx)
       case SimpleSelectValue(ast, _, None) =>
         c.fail(s"Source doesn't know how to decode the optional value $ast")
       case SimpleSelectValue(_, _, Some(decoder)) =>
@@ -50,10 +53,12 @@ trait SelectResultExtraction extends SelectValues {
               val (tree, newIndex) = optionalExtractors(params, index)
               (trees :+ tree, newIndex)
           }
-        (q"${joinOptions(decodedParams.map(joinOptions(_)))}.map((${tpe.typeSymbol.companion}.apply _).tupled)", paramsIndex)
-      case OptionSelectValue(value) =>
-        val (tree, idx) = optionalExtractor(value, index)
-        (q"Option($tree)", idx)
+        val tree =
+          q"""
+            val tuple = ${joinOptions(decodedParams.map(joinOptions(_)))}
+            tuple.map((${tpe.typeSymbol.companion}.apply _).tupled)
+          """
+        (tree, paramsIndex)
     }
 
   private def joinOptions(trees: List[Tree], index: Int = 0): Tree =

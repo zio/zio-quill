@@ -18,6 +18,8 @@ trait SelectFlattening extends SelectValues {
 
   private def flatten(ast: Ast, typ: Type, inferDecoder: Type => Option[Tree]): SelectValue =
     (inferDecoder(typ), inferDecoder(optionType(c.WeakTypeTag(typ))), ast) match {
+      case (_, _, ast) if (typ <:< c.weakTypeOf[Option[Any]]) =>
+        OptionSelectValue(flatten(ast, typ.typeArgs.head, inferDecoder))
       case (Some(decoder), optionDecoder, ast) =>
         SimpleSelectValue(ast, decoder, optionDecoder)
       case (None, _, Tuple(elems)) =>
@@ -26,20 +28,18 @@ trait SelectFlattening extends SelectValues {
             case (ast, typ) => flatten(ast, typ, inferDecoder)
           }
         TupleSelectValue(values)
-      case (None, _, ast) if (typ <:< c.weakTypeOf[Option[Any]]) =>
-        OptionSelectValue(flatten(ast, typ.typeArgs.head, inferDecoder))
       case (None, _, ast) if (typ.typeSymbol.asClass.isCaseClass) =>
         caseClassSelectValue(typ, ast, inferDecoder)
       case other =>
         c.fail(s"Source doesn't know how to decode '$ast: $typ'")
     }
-  
+
   private def optionType[T](implicit t: WeakTypeTag[T]) =
     c.weakTypeOf[Option[T]]
 
   private def selectAsts(value: SelectValue): List[Ast] =
     value match {
-      case SimpleSelectValue(ast, _, _)       => List(ast)
+      case SimpleSelectValue(ast, _, _)    => List(ast)
       case CaseClassSelectValue(_, params) => params.flatten.map(selectAsts).flatten
       case TupleSelectValue(elems)         => elems.map(selectAsts).flatten
       case OptionSelectValue(value)        => selectAsts(value)
