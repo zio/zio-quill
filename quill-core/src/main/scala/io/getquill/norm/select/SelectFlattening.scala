@@ -40,7 +40,7 @@ trait SelectFlattening extends SelectValues {
   private def selectAsts(value: SelectValue): List[Ast] =
     value match {
       case SimpleSelectValue(ast, _, _)       => List(ast)
-      case CaseClassSelectValue(_, params) => params.flatten.map(_.ast)
+      case CaseClassSelectValue(_, params) => params.flatten.map(selectAsts).flatten
       case TupleSelectValue(elems)         => elems.map(selectAsts).flatten
       case OptionSelectValue(value)        => selectAsts(value)
     }
@@ -55,13 +55,7 @@ trait SelectFlattening extends SelectValues {
     constructor.paramLists.map(_.map {
       param =>
         val paramType = param.typeSignature.asSeenFrom(typ, typ.typeSymbol)
-        val decoder =
-          inferDecoder(paramType)
-            .getOrElse {
-              c.fail(s"Source doesn't know how to decode constructor param '${param.name}: $paramType'")
-            }
-        val optionDecoder = inferDecoder(optionType(c.WeakTypeTag(paramType)))
-        SimpleSelectValue(Property(ast, param.name.decodedName.toString), decoder, optionDecoder)
+        flatten(Property(ast, param.name.decodedName.toString), paramType, inferDecoder)
     })
 
   private def caseClassConstructor(t: Type) =
