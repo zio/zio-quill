@@ -12,25 +12,37 @@ trait SelectFlattening extends SelectValues {
 
   protected def flattenSelect[T](q: Query, inferDecoder: Type => Option[Tree])(implicit t: WeakTypeTag[T]) = {
     val (query, mapAst) = ExtractSelect(q)
-    val selectValues =
-      selectElements(mapAst).map {
-        case (ast, typ) =>
-          inferDecoder(typ) match {
-            case Some(decoder) =>
-              SimpleSelectValue(ast, decoder)
-            case None if (typ.typeSymbol.asClass.isCaseClass) =>
-              caseClassSelectValue(typ, ast, inferDecoder)
-            case _ =>
-              c.fail(s"Source doesn't know how to decode '$ast: $typ'")
-          }
-      }
-    (ReplaceSelect(query, selectAsts(selectValues).flatten), selectValues)
+    val selectValues = flatten(mapAst, t.tpe, inferDecoder)
+    (ReplaceSelect(query, selectAsts(selectValues)), selectValues)
   }
+
+  private def flatten(ast: Ast, typ: Type, inferDecoder: Type => Option[Tree]): SelectValue =
+    (inferDecoder(typ), inferDecoder(optionType(c.WeakTypeTag(typ))), ast) match {
+      case (Some(decoder), optionDecoder, ast) =>
+        SimpleSelectValue(ast, decoder, optionDecoder)
+      case (None, _, Tuple(elems)) =>
+        val values =
+          elems.zip(typ.typeArgs).map {
+            case (ast, typ) => flatten(ast, typ, inferDecoder)
+          }
+        TupleSelectValue(values)
+      case (None, _, ast) if (typ <:< c.weakTypeOf[Option[Any]]) =>
+        OptionSelectValue(flatten(ast, typ.typeArgs.head, inferDecoder))
+      case (None, _, ast) if (typ.typeSymbol.asClass.isCaseClass) =>
+        caseClassSelectValue(typ, ast, inferDecoder)
+      case other =>
+        c.fail(s"Source doesn't know how to decode '$ast: $typ'")
+    }
   
-  private def selectAsts(values: List[SelectValue]) =
-    values map {
-      case SimpleSelectValue(ast, _)       => List(ast)
+  private def optionType[T](implicit t: WeakTypeTag[T]) =
+    c.weakTypeOf[Option[T]]
+
+  private def selectAsts(value: SelectValue): List[Ast] =
+    value match {
+      case SimpleSelectValue(ast, _, _)       => List(ast)
       case CaseClassSelectValue(_, params) => params.flatten.map(_.ast)
+      case TupleSelectValue(elems)         => elems.map(selectAsts).flatten
+      case OptionSelectValue(value)        => selectAsts(value)
     }
 
   private def caseClassSelectValue(typ: Type, ast: Ast, inferDecoder: Type => Option[Tree]) =
@@ -48,14 +60,9 @@ trait SelectFlattening extends SelectValues {
             .getOrElse {
               c.fail(s"Source doesn't know how to decode constructor param '${param.name}: $paramType'")
             }
-        SimpleSelectValue(Property(ast, param.name.decodedName.toString), decoder)
+        val optionDecoder = inferDecoder(optionType(c.WeakTypeTag(paramType)))
+        SimpleSelectValue(Property(ast, param.name.decodedName.toString), decoder, optionDecoder)
     })
-
-  private def selectElements[T](mapAst: Ast)(implicit t: WeakTypeTag[T]) =
-    mapAst match {
-      case Tuple(values) => values.zip(t.tpe.typeArgs)
-      case ast           => List(ast -> t.tpe)
-    }
 
   private def caseClassConstructor(t: Type) =
     t.members.collect {
