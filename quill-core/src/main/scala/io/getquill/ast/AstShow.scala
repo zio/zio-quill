@@ -19,6 +19,14 @@ object AstShow {
         case ast: Property        => ast.show
         case ast: Infix           => ast.show
         case ast: OptionOperation => ast.show
+        case ast: Dynamic         => ast.show
+      }
+  }
+
+  implicit val dynamicShow: Show[Dynamic] = new Show[Dynamic] {
+    def show(q: Dynamic) =
+      q match {
+        case Dynamic(tree) => tree.toString
       }
   }
 

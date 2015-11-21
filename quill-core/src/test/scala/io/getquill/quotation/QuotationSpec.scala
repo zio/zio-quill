@@ -6,10 +6,11 @@ import io.getquill.ast.{ Query => _, _ }
 class QuotationSpec extends Spec {
 
   "quotes and unquotes asts" - {
+
     "query" - {
       "entity" - {
         "without aliases" in {
-          qr1.ast mustEqual Entity("TestEntity")
+          quote(unquote(qr1)).ast mustEqual Entity("TestEntity")
         }
         "with alias" in {
           val q = quote {
@@ -402,6 +403,18 @@ class QuotationSpec extends Spec {
         quote(unquote(q)).ast.body mustEqual OptionOperation(OptionForall, Ident("o"), Ident("v"), Ident("v"))
       }
     }
+    "dynamic" - {
+      val filtered = quote {
+        qr1.filter(t => t.i == 1)
+      }
+      def m(b: Boolean) =
+        if (b)
+          filtered
+        else
+          qr1
+      quote(unquote(m(true))).ast mustEqual filtered.ast
+      quote(unquote(m(false))).ast mustEqual qr1.ast
+    }
   }
 
   "reduces tuple matching locally" in {
@@ -435,11 +448,6 @@ class QuotationSpec extends Spec {
 
   "fails if the tree is not valid" in {
     """quote("s".getBytes)""" mustNot compile
-  }
-
-  "fails if the quoted ast is not available" in {
-    val q: Quoted[Int] = quote(1)
-    "quote(unquote(q))" mustNot compile
   }
 
   "fails if the ast doesn't match the type" in {

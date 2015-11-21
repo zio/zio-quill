@@ -23,16 +23,19 @@ trait Parsing {
 
     def unapply(tree: Tree): Option[T] =
       tree match {
-        case q"$pack.unquote[$t]($quoted)" =>
-          unquote[T](quoted)
         case q"$source.withFilter(($alias) => $body)" if (alias.name.toString.contains("ifrefutable")) =>
           unapply(source)
+        case q"$pack.unquote[$t]($quoted)" =>
+          unquote[T](quoted).orElse(p.lift(tree))
         case other =>
           p.lift(tree)
       }
   }
 
   val astParser: Parser[Ast] = Parser[Ast] {
+
+    case q"$pack.unquote[$t]($quoted)"  => Dynamic(quoted)
+
     case `queryParser`(query)           => query
     case `functionParser`(function)     => function
     case `actionParser`(action)         => action

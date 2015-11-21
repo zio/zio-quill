@@ -2,6 +2,7 @@ package io.getquill.source
 
 import scala.reflect.macros.whitebox.Context
 import io.getquill.ast._
+import io.getquill.quotation.IsDynamic
 
 trait ActionMacro {
   this: SourceMacro =>
@@ -13,18 +14,23 @@ trait ActionMacro {
     params match {
       case Nil => q"${c.prefix}.execute(${toExecutionTree(action)})"
       case params =>
-        val (bindedAction, encode) = EncodeBindVariables[S](c)(action, bindingMap(params))
-        q"""
-        {
-          class Partial {
-            def using(bindings: List[(..${params.map(_._2)})]) =
-              ${c.prefix}.execute(
-                ${toExecutionTree(bindedAction)},
-                bindings.map(value => $encode))
-          }
-          new Partial
+        val encodedParams = EncodeParams[S](c)(bindingMap(params))
+        IsDynamic(action) match {
+          case false =>
+            val (ast, bindings) = io.getquill.source.BindVariables(action, params.map(_._1))
+            val bindingNames = bindings.map(_.name)
+            q"""
+            {
+              class Partial {
+                def using(values: List[(..${params.map(_._2)})]) =
+                  ${c.prefix}.execute(
+                    ${toExecutionTree(ast)},
+                    values.map(value => $encodedParams($bindingNames)))
+              }
+              new Partial
+            }
+            """
         }
-        """
     }
 
   private def bindingMap(params: List[(Ident, Type)]): collection.Map[Ident, (Type, Tree)] =

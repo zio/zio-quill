@@ -22,6 +22,7 @@ trait Liftables {
     case UnaryOperation(a, b)        => q"$pack.UnaryOperation($a, $b)"
     case Infix(a, b)                 => q"$pack.Infix($a, $b)"
     case OptionOperation(a, b, c, d) => q"$pack.OptionOperation($a, $b, $c, $d)"
+    case Dynamic(tree)               => q"${tree.asInstanceOf[Tree]}.ast"
   }
 
   implicit val optionOperationTypeLiftable: Liftable[OptionOperationType] = Liftable[OptionOperationType] {

@@ -15,7 +15,7 @@ private[source] case class BindVariables(state: (List[Ident], List[Ident]))
 
 private[source] object BindVariables {
 
-  def apply(ast: Ast, idents: List[Ident]) =
+  def apply(ast: Ast, idents: List[Ident]): (Ast, List[Ident]) =
     (new BindVariables((idents, Nil))(ast)) match {
       case (ast, transformer) =>
         transformer.state match {

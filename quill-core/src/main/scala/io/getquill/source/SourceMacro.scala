@@ -23,6 +23,11 @@ trait SourceMacro extends Quotation with ActionMacro with QueryMacro with Resolv
         val bodyType = c.WeakTypeTag(t.tpe.typeArgs.takeRight(1).head)
         run(ast, params.zip(paramsTypes[T]))(r, s, bodyType)
 
+      case d: Dynamic if (t.tpe.typeSymbol.fullName.startsWith("scala.Function")) =>
+        val bodyType = c.WeakTypeTag(t.tpe.typeArgs.takeRight(1).head)
+        val params = (1 until t.tpe.typeArgs.size).map(i => Ident(s"x$i")).toList
+        run(Function(params, FunctionApply(d, params)), params.zip(paramsTypes[T]))(r, s, bodyType)
+
       case ast =>
         run[R, S, T](ast, Nil)
     }
@@ -32,12 +37,12 @@ trait SourceMacro extends Quotation with ActionMacro with QueryMacro with Resolv
     ast match {
       case ast: ActionAst =>
         runAction[S](ast, params)
-      case ast: Infix if (t.tpe <:< c.weakTypeTag[Action[Any]].tpe) =>
+      case _: Infix | _: Dynamic if (t.tpe <:< c.weakTypeTag[Action[Any]].tpe) =>
         runAction[S](ast, params)
 
       case ast: QueryAst =>
         runQuery(ast, params)(r, s, queryType(t.tpe))
-      case ast: Infix if (t.tpe <:< c.weakTypeTag[Query[Any]].tpe) =>
+      case _: Infix | _: Dynamic if (t.tpe <:< c.weakTypeTag[Query[Any]].tpe) =>
         runQuery(Map(ast, Ident("x"), Ident("x")), params)(r, s, queryType(t.tpe))
 
       case other =>

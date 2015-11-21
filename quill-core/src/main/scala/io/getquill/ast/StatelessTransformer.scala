@@ -14,6 +14,8 @@ trait StatelessTransformer {
       case Property(a, name)           => Property(apply(a), name)
       case Infix(a, b)                 => Infix(a, b.map(apply))
       case OptionOperation(t, a, b, c) => OptionOperation(t, apply(a), b, apply(c))
+
+      case d: Dynamic                  => d
     }
 
   def apply(e: Query): Query =

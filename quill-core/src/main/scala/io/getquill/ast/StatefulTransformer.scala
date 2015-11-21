@@ -29,6 +29,8 @@ trait StatefulTransformer[T] {
         val (at, att) = apply(a)
         val (ct, ctt) = att.apply(c)
         (OptionOperation(t, at, b, ct), ctt)
+
+      case d: Dynamic => (d, this)
     }
 
   def apply(e: Query): (Query, StatefulTransformer[T]) =
