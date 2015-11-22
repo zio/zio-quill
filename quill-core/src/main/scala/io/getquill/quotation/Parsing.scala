@@ -40,9 +40,9 @@ trait Parsing {
     case `functionParser`(function)     => function
     case `actionParser`(action)         => action
     case `infixParser`(value)           => value
+    case `valueParser`(value)           => value
     case `operationParser`(value)       => value
     case `identParser`(ident)           => ident
-    case `valueParser`(value)           => value
     case `propertyParser`(value)        => value
     case `optionOperationParser`(value) => value
 
@@ -164,7 +164,7 @@ trait Parsing {
     case `stringOperationParser`(value)   => value
     case `numericOperationParser`(value)  => value
     case `setOperationParser`(value)      => value
-    case `functionOperationParser`(value) => value
+    case `functionApplyParser`(value)     => value
   }
 
   private def operationParser(cond: Tree => Boolean)(
@@ -183,9 +183,8 @@ trait Parsing {
     }
   }
 
-  val functionOperationParser: Parser[Operation] = Parser[Operation] {
-    case q"${ functionParser(a) }.apply[..$t](...$values)" => FunctionApply(a, values.flatten.map(astParser(_)))
-    case q"${ identParser(a) }.apply[..$t](...$values)"    => FunctionApply(a, values.flatten.map(astParser(_)))
+  val functionApplyParser: Parser[Operation] = Parser[Operation] {
+    case q"${ astParser(a) }.apply[..$t](...$values)" => FunctionApply(a, values.flatten.map(astParser(_)))
   }
 
   val equalityOperationParser: Parser[Operation] =
