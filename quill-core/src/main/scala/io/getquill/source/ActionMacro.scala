@@ -13,25 +13,23 @@ trait ActionMacro {
 
   def runAction[S](action: Ast, params: List[(Ident, Type)])(implicit s: WeakTypeTag[S]): Tree =
     params match {
-      case Nil => q"${c.prefix}.execute(${toExecutionTree(action)})"
+      case Nil => q"${c.prefix}.execute(${prepare(action, params.map(_._1))}._1)"
       case params =>
         val encodedParams = EncodeParams[S](c)(bindingMap(params))
-        IsDynamic(action) match {
-          case false =>
-            val (ast, bindings) = io.getquill.source.BindVariables(Normalize(action), params.map(_._1))
-            val bindingNames = bindings.map(_.name)
-            q"""
-            {
-              class Partial {
-                def using(values: List[(..${params.map(_._2)})]) =
-                  ${c.prefix}.execute(
-                    ${toExecutionTree(ast)},
-                    values.map(value => $encodedParams($bindingNames)))
-              }
-              new Partial
-            }
-            """
+        q"""
+        {
+          class Partial {
+            private val (sql, bindings: List[io.getquill.ast.Ident]) =
+              ${prepare(action, params.map(_._1))}
+
+            def using(values: List[(..${params.map(_._2)})]) =
+              ${c.prefix}.execute(
+                sql,
+                values.map(value => $encodedParams(bindings.map(_.name))))
+          }
+          new Partial
         }
+        """
     }
 
   private def bindingMap(params: List[(Ident, Type)]): collection.Map[Ident, (Type, Tree)] =

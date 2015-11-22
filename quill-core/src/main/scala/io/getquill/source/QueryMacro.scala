@@ -19,8 +19,8 @@ trait QueryMacro extends SelectFlattening with SelectResultExtraction {
         case q        => Map(q, Ident("x"), Ident("x"))
       }
     val (flattenQuery, selectValues) = flattenSelect[T](query, Encoding.inferDecoder[R](c))
-    val (bindedQuery, encode) = EncodeBindVariables[S](c)(flattenQuery, bindingMap(params))
     val extractor = selectResultExtractor[R](selectValues)
+    val encodedParams = EncodeParams[S](c)(bindingMap(params))
     val inputs =
       for ((Ident(param), tpe) <- params) yield {
         q"${TermName(param)}: $tpe"
@@ -28,18 +28,21 @@ trait QueryMacro extends SelectFlattening with SelectResultExtraction {
     if (inputs.isEmpty)
       q"""
         ${c.prefix}.query(
-            ${toExecutionTree(bindedQuery)},
-            $encode,
+            ${prepare(flattenQuery, params.map(_._1))}._1,
+            identity,
             $extractor)
       """
     else
       q"""
       {
         class Partial {
+          private val (sql, bindings: List[io.getquill.ast.Ident]) =
+              ${prepare(flattenQuery, params.map(_._1))}
+
           def using(..$inputs) =
             ${c.prefix}.query(
-              ${toExecutionTree(bindedQuery)},
-              $encode,
+              sql,
+              $encodedParams(bindings.map(_.name)),
               $extractor)
         }
         new Partial

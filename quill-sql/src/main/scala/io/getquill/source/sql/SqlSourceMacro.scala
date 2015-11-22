@@ -22,22 +22,13 @@ class SqlSourceMacro(val c: Context) extends SourceMacro {
   override protected def prepare(ast: Ast, params: List[Ident]) = {
     implicit val (d, n) = dialectAndNaming
     if (!IsDynamic(ast)) {
-      import d._
-      val (bindedAst, idents) = BindVariables(ast, params)
-      val sql = SqlQuery(Normalize(ExpandOuterJoin(bindedAst)))
-      VerifySqlQuery(sql).map(c.fail)
-      val sqlString = ExpandNestedQueries(sql, Set.empty).show
-      c.info(sqlString)
-      probe(sqlString, d)
-      q"($sqlString, $idents)"
+      val (sql, idents) = Prepare(ast, params)
+      c.info(sql)
+      probe(sql, d)
+      q"($sql, $idents)"
     } else {
-      q"""
-      {
-        val (bindedAst, idents) = io.getquill.source.BindVariables(ast, params)
-      }
-      """
+      q"io.getquill.source.sql.Prepare(ast, params)"
     }
-
   }
 
   override def toExecutionTree(ast: Ast) = {

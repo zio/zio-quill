@@ -4,12 +4,13 @@ import scala.reflect.macros.whitebox.Context
 import language.experimental.macros
 import scala.util.Failure
 import scala.util.Success
-
 import io.getquill.ast._
 import io.getquill.quotation.Quoted
 import io.getquill.source.Source
 import io.getquill.source.SourceMacro
 import io.getquill.util.Messages.RichContext
+import io.getquill.norm.Normalize
+import io.getquill.source.BindVariables
 
 object mirrorSource extends MirrorSourceTemplate
 
@@ -84,7 +85,15 @@ abstract class MirrorSourceTemplate extends Source[Row, Row] {
 class MirrorSourceMacro(val c: Context) extends SourceMacro {
   import c.universe.{ Ident => _, _ }
 
-  override protected def prepare(ast: Ast, params: List[Ident]) = q"($ast, List())"
+  override protected def prepare(ast: Ast, params: List[Ident]) = {
+    val (normalized, bindings) = BindVariables(Normalize(ast), params)
+    resolveSource[MirrorSourceTemplate].map(_.probe(normalized)) match {
+      case Some(Failure(e)) => c.warn(s"Probe failed. Reason $e")
+      case other            =>
+    }
+    c.info(normalized.toString)
+    q"($normalized, $bindings)"
+  }
 
   override protected def toExecutionTree(ast: Ast) = {
     resolveSource[MirrorSourceTemplate].map(_.probe(ast)) match {
