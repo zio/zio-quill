@@ -3,6 +3,7 @@ package io.getquill.source
 import scala.reflect.macros.whitebox.Context
 import io.getquill.ast._
 import io.getquill.quotation.IsDynamic
+import io.getquill.norm.Normalize
 
 trait ActionMacro {
   this: SourceMacro =>
@@ -17,7 +18,7 @@ trait ActionMacro {
         val encodedParams = EncodeParams[S](c)(bindingMap(params))
         IsDynamic(action) match {
           case false =>
-            val (ast, bindings) = io.getquill.source.BindVariables(action, params.map(_._1))
+            val (ast, bindings) = io.getquill.source.BindVariables(Normalize(action), params.map(_._1))
             val bindingNames = bindings.map(_.name)
             q"""
             {

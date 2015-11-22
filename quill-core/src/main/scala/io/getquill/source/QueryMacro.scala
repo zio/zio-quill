@@ -1,10 +1,10 @@
 package io.getquill.source
 
 import scala.reflect.macros.whitebox.Context
-
 import io.getquill.ast._
 import io.getquill.norm.select.SelectFlattening
 import io.getquill.norm.select.SelectResultExtraction
+import io.getquill.norm.Normalize
 
 trait QueryMacro extends SelectFlattening with SelectResultExtraction {
   this: SourceMacro =>
@@ -12,7 +12,12 @@ trait QueryMacro extends SelectFlattening with SelectResultExtraction {
   val c: Context
   import c.universe.{ Ident => _, _ }
 
-  def runQuery[R, S, T](query: Query, params: List[(Ident, Type)])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]): Tree = {
+  def runQuery[R, S, T](ast: Ast, params: List[(Ident, Type)])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]): Tree = {
+    val query =
+      Normalize(ast) match {
+        case q: Query => q
+        case q        => Map(q, Ident("x"), Ident("x"))
+      }
     val (flattenQuery, selectValues) = flattenSelect[T](query, Encoding.inferDecoder[R](c))
     val (bindedQuery, encode) = EncodeBindVariables[S](c)(flattenQuery, bindingMap(params))
     val extractor = selectResultExtractor[R](selectValues)

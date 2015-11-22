@@ -12,12 +12,10 @@ import io.getquill.util.Show.Shower
 import io.getquill.quotation.Quoted
 import scala.reflect.ClassTag
 import io.getquill.source.sql.idiom.SqlIdiom
+import io.getquill.norm.Normalize
 
 class SqlSourceMacro(val c: Context) extends SourceMacro {
   import c.universe.{ Try => _, Literal => _, _ }
-
-  override protected def ast[T](quoted: Expr[Quoted[T]]) =
-    ExpandOuterJoin(super.ast(quoted))
 
   override def toExecutionTree(ast: Ast) = {
     implicit val (d, n) = dialectAndNaming
@@ -31,7 +29,7 @@ class SqlSourceMacro(val c: Context) extends SourceMacro {
     import d._
     ast match {
       case ast: Query =>
-        val sql = SqlQuery(ast)
+        val sql = SqlQuery(Normalize(ExpandOuterJoin(ast)))
         VerifySqlQuery(sql).map(c.fail)
         ExpandNestedQueries(sql, Set.empty).show
       case ast =>

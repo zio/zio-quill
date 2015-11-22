@@ -17,16 +17,12 @@ trait SourceMacro extends Quotation with ActionMacro with QueryMacro with Resolv
 
   def run[R, S, T](quoted: Expr[Quoted[T]])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]): Tree = {
 
-    Normalize(ast(quoted)) match {
+    ast(quoted) match {
 
-      case Function(params, ast) =>
-        val bodyType = c.WeakTypeTag(t.tpe.typeArgs.takeRight(1).head)
-        run(ast, params.zip(paramsTypes[T]))(r, s, bodyType)
-
-      case d: Dynamic if (t.tpe.typeSymbol.fullName.startsWith("scala.Function")) =>
+      case ast if (t.tpe.typeSymbol.fullName.startsWith("scala.Function")) =>
         val bodyType = c.WeakTypeTag(t.tpe.typeArgs.takeRight(1).head)
         val params = (1 until t.tpe.typeArgs.size).map(i => Ident(s"x$i")).toList
-        run(Function(params, FunctionApply(d, params)), params.zip(paramsTypes[T]))(r, s, bodyType)
+        run(FunctionApply(ast, params), params.zip(paramsTypes[T]))(r, s, bodyType)
 
       case ast =>
         run[R, S, T](ast, Nil)
@@ -35,18 +31,11 @@ trait SourceMacro extends Quotation with ActionMacro with QueryMacro with Resolv
 
   private def run[R, S, T](ast: Ast, params: List[(Ident, Type)])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]): Tree =
     ast match {
-      case ast: ActionAst =>
-        runAction[S](ast, params)
-      case _: Infix | _: Dynamic if (t.tpe <:< c.weakTypeTag[Action[Any]].tpe) =>
+      case ast if ((t.tpe <:< c.weakTypeTag[Action[Any]].tpe)) =>
         runAction[S](ast, params)
 
-      case ast: QueryAst =>
+      case ast =>
         runQuery(ast, params)(r, s, queryType(t.tpe))
-      case _: Infix | _: Dynamic if (t.tpe <:< c.weakTypeTag[Query[Any]].tpe) =>
-        runQuery(Map(ast, Ident("x"), Ident("x")), params)(r, s, queryType(t.tpe))
-
-      case other =>
-        c.fail(s"Not runnable $other")
     }
 
   private def queryType(tpe: Type) =
