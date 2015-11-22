@@ -3,7 +3,7 @@ package io.getquill.source
 import scala.reflect.macros.whitebox.Context
 
 import io.getquill._
-import io.getquill.ast.{ Query => QueryAst, Action => ActionAst, _ }
+import io.getquill.ast.{ Query => _, Action => _, _ }
 import io.getquill.norm.Normalize
 import io.getquill.quotation.Quotation
 import io.getquill.quotation.Quoted
@@ -14,6 +14,8 @@ trait SourceMacro extends Quotation with ActionMacro with QueryMacro with Resolv
   import c.universe.{ Function => _, Ident => _, _ }
 
   protected def toExecutionTree(ast: Ast): Tree
+
+  protected def prepare(ast: Ast, params: List[Ident]): Tree
 
   def run[R, S, T](quoted: Expr[Quoted[T]])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]): Tree = {
 
@@ -44,7 +46,7 @@ trait SourceMacro extends Quotation with ActionMacro with QueryMacro with Resolv
     else
       c.WeakTypeTag(tpe)
 
-  protected def ast[T](quoted: Expr[Quoted[T]]) =
+  private def ast[T](quoted: Expr[Quoted[T]]) =
     unquote[Ast](quoted.tree).getOrElse {
       c.fail(s"Can't unquote $quoted")
     }

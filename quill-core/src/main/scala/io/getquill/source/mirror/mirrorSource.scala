@@ -82,7 +82,10 @@ abstract class MirrorSourceTemplate extends Source[Row, Row] {
 }
 
 class MirrorSourceMacro(val c: Context) extends SourceMacro {
-  import c.universe._
+  import c.universe.{ Ident => _, _ }
+
+  override protected def prepare(ast: Ast, params: List[Ident]) = q"($ast, List())"
+
   override protected def toExecutionTree(ast: Ast) = {
     resolveSource[MirrorSourceTemplate].map(_.probe(ast)) match {
       case Some(Failure(e)) => c.warn(s"Probe failed. Reason $e")

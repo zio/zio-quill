@@ -13,9 +13,32 @@ import io.getquill.quotation.Quoted
 import scala.reflect.ClassTag
 import io.getquill.source.sql.idiom.SqlIdiom
 import io.getquill.norm.Normalize
+import io.getquill.quotation.IsDynamic
+import io.getquill.source.BindVariables
 
 class SqlSourceMacro(val c: Context) extends SourceMacro {
-  import c.universe.{ Try => _, Literal => _, _ }
+  import c.universe.{ Try => _, Literal => _, Ident => _, _ }
+
+  override protected def prepare(ast: Ast, params: List[Ident]) = {
+    implicit val (d, n) = dialectAndNaming
+    if (!IsDynamic(ast)) {
+      import d._
+      val (bindedAst, idents) = BindVariables(ast, params)
+      val sql = SqlQuery(Normalize(ExpandOuterJoin(bindedAst)))
+      VerifySqlQuery(sql).map(c.fail)
+      val sqlString = ExpandNestedQueries(sql, Set.empty).show
+      c.info(sqlString)
+      probe(sqlString, d)
+      q"($sqlString, $idents)"
+    } else {
+      q"""
+      {
+        val (bindedAst, idents) = io.getquill.source.BindVariables(ast, params)
+      }
+      """
+    }
+
+  }
 
   override def toExecutionTree(ast: Ast) = {
     implicit val (d, n) = dialectAndNaming
