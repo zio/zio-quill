@@ -82,9 +82,4 @@ class SourceMacroSpec extends Spec {
       mirrorSource.run(q).ast mustEqual q.ast
     }
   }
-
-  "fails if unquotation fails" in {
-    val q: Quoted[Int] = null
-    "mirrorSource.run(q)" mustNot compile
-  }
 }

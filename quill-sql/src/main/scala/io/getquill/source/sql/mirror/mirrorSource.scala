@@ -1,13 +1,13 @@
 package io.getquill.source.sql.mirror
 
-import io.getquill.naming.{Literal, NamingStrategy}
+import io.getquill.naming.{ Literal, NamingStrategy }
 import io.getquill.source.mirror.Row
 import io.getquill.source.sql.SqlSource
 import io.getquill.source.sql.idiom.FallbackDialect
 import scala.util.Success
 import scala.util.Failure
 
-class MirrorSourceTemplate[N <: NamingStrategy] extends SqlSource[MirrorDialect.type, N, Row, Row]
+class MirrorSourceTemplate[N <: NamingStrategy] extends SqlSource[MirrorDialect, N, Row, Row]
     with MirrorEncoders
     with MirrorDecoders {
 

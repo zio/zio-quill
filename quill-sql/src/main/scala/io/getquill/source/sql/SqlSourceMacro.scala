@@ -27,27 +27,12 @@ class SqlSourceMacro(val c: Context) extends SourceMacro {
       probe(sql, d)
       q"($sql, $idents)"
     } else {
-      q"io.getquill.source.sql.Prepare(ast, params)"
-    }
-  }
-
-  override def toExecutionTree(ast: Ast) = {
-    implicit val (d, n) = dialectAndNaming
-    val sql = show(ast)
-    c.info(sql)
-    probe(sql, d)
-    q"$sql"
-  }
-
-  private def show(ast: Ast)(implicit d: SqlIdiom, n: NamingStrategy) = {
-    import d._
-    ast match {
-      case ast: Query =>
-        val sql = SqlQuery(Normalize(ExpandOuterJoin(ast)))
-        VerifySqlQuery(sql).map(c.fail)
-        ExpandNestedQueries(sql, Set.empty).show
-      case ast =>
-        ast.show
+      q"""
+      {
+        implicit val (d, n) = $dialectAndNamingDynamic
+        io.getquill.source.sql.Prepare($ast, $params)
+      }
+      """
     }
   }
 
@@ -58,6 +43,32 @@ class SqlSourceMacro(val c: Context) extends SourceMacro {
       case Some(Failure(e)) => c.error(s"The sql query probing failed. Reason '$e'")
       case other            =>
     }
+
+  private def dialectAndNamingDynamic = {
+    val (idiom :: n :: _) =
+      c.prefix.actualType
+        .baseType(c.weakTypeOf[SqlSource[SqlIdiom, NamingStrategy, Any, Any]].typeSymbol)
+        .typeArgs
+    val types =
+      n match {
+        case RefinedType(types, _) => types
+        case other                 => List(other)
+      }
+    val objs =
+      types
+        .filterNot(_ =:= c.weakTypeOf[NamingStrategy])
+        .filterNot(_ =:= c.weakTypeOf[scala.Nothing])
+        .map(_.typeSymbol.companion)
+    val naming =
+      q"""
+      new io.getquill.naming.NamingStrategy {
+        override def apply(s: String) = {
+          ${objs.foldLeft[Tree](q"s")((s, n) => q"$n($s)")}
+        }
+      }
+      """
+    q"(${idiom.typeSymbol.companion}, $naming)"
+  }
 
   private def dialectAndNaming = {
     val (idiom :: n :: _) =

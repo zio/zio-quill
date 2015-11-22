@@ -17,15 +17,15 @@ trait SqlIdiom {
     new Show[Ast] {
       def show(a: Ast) =
         a match {
-          case a: Query                       => s"${SqlQuery(a).show}"
-          case a: Operation                   => a.show
-          case Infix(parts, params)           => StringContext(parts: _*).s(params.map(_.show): _*)
-          case a: Action                      => a.show
-          case a: Ident                       => a.show
-          case a: Property                    => a.show
-          case a: Value                       => a.show
-          case a: OptionOperation             => a.show
-          case _: Function | _: FunctionApply => fail(s"Malformed query $a.")
+          case a: Query                                    => s"${SqlQuery(a).show}"
+          case a: Operation                                => a.show
+          case Infix(parts, params)                        => StringContext(parts: _*).s(params.map(_.show): _*)
+          case a: Action                                   => a.show
+          case a: Ident                                    => a.show
+          case a: Property                                 => a.show
+          case a: Value                                    => a.show
+          case a: OptionOperation                          => a.show
+          case _: Function | _: FunctionApply | _: Dynamic => fail(s"Malformed query $a.")
         }
     }
 
