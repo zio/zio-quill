@@ -418,10 +418,13 @@ class QuotationSpec extends Spec {
       }
       "value" in {
         val i = 1
-        val q = quote {
+        val l = quote {
           lift(i)
         }
-        q.ast mustEqual Constant(1)
+        val q = quote {
+          unquote(l)
+        }
+        quote(unquote(q)).ast mustEqual Constant(1)
       }
     }
   }

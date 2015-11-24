@@ -51,5 +51,4 @@ trait SourceMacro extends Quotation with ActionMacro with QueryMacro with Resolv
 
   private def paramsTypes[T](implicit t: WeakTypeTag[T]) =
     t.tpe.typeArgs.dropRight(1)
-
 }

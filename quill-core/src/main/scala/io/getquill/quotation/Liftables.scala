@@ -23,7 +23,7 @@ trait Liftables {
     case Infix(a, b) => q"$pack.Infix($a, $b)"
     case OptionOperation(a, b, c, d) => q"$pack.OptionOperation($a, $b, $c, $d)"
     case Dynamic(tree: Tree) if (tree.tpe <:< c.weakTypeOf[Quoted[Any]]) => q"$tree.ast"
-    case Dynamic(tree) => q"$pack.Constant(${tree.asInstanceOf[Tree]})"
+    case Dynamic(tree: Tree) => q"$pack.Constant($tree)"
   }
 
   implicit val optionOperationTypeLiftable: Liftable[OptionOperationType] = Liftable[OptionOperationType] {

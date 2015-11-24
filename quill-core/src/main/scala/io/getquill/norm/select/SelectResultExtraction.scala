@@ -1,6 +1,5 @@
 package io.getquill.norm.select
 
-import io.getquill.util.Messages._
 import scala.reflect.macros.whitebox.Context
 
 trait SelectResultExtraction extends SelectValues {
@@ -21,9 +20,6 @@ trait SelectResultExtraction extends SelectValues {
         optionalExtractor(value, index)
       case SimpleSelectValue(_, decoder, _) =>
         (q"$decoder($index, row)", index + 1)
-      case TupleSelectValue(elems) =>
-        val (trees, newIndex) = extractors(elems, index)
-        (q"(..$trees)", newIndex)
       case CaseClassSelectValue(tpe, params) =>
         val (decodedParams, paramsIndex) =
           params.foldLeft((List[List[Tree]](), index)) {
@@ -39,13 +35,8 @@ trait SelectResultExtraction extends SelectValues {
       case OptionSelectValue(value) =>
         val (tree, idx) = optionalExtractor(value, index)
         (q"Option($tree)", idx)
-      case SimpleSelectValue(ast, _, None) =>
-        c.fail(s"Source doesn't know how to decode the optional value $ast")
-      case SimpleSelectValue(_, _, Some(decoder)) =>
+      case SimpleSelectValue(_, _, decoder) =>
         (q"$decoder($index, row)", index + 1)
-      case TupleSelectValue(elems) =>
-        val (trees, newIndex) = optionalExtractors(elems, index)
-        (joinOptions(trees), newIndex)
       case CaseClassSelectValue(tpe, params) =>
         val (decodedParams, paramsIndex) =
           params.foldLeft((List[List[Tree]](), index)) {
@@ -54,7 +45,10 @@ trait SelectResultExtraction extends SelectValues {
               (trees :+ tree, newIndex)
           }
         val tree =
-          q"""
+          if (tpe.typeSymbol.fullName.startsWith("scala.Tuple"))
+            joinOptions(decodedParams.map(joinOptions(_)))
+          else
+            q"""
             val tuple = ${joinOptions(decodedParams.map(joinOptions(_)))}
             tuple.map((${tpe.typeSymbol.companion}.apply _).tupled)
           """

@@ -34,7 +34,6 @@ trait Quotation extends Parsing with Liftables with Unliftables {
   protected def unquote[T](tree: Tree)(implicit ct: ClassTag[T]) =
     astTree(tree).flatMap(astUnliftable.unapply).map {
       case ast: T => ast
-      case other  => c.fail(s"Expected a '${ct.runtimeClass.getSimpleName}', but got '$other'")
     }
 
   private def astTree(tree: Tree) =

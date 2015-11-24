@@ -46,6 +46,20 @@ class SelectResultExtractionSpec extends Spec {
           .extractor(Row("a", 1, 2L)) mustEqual (("a", (1, 2L)))
       }
     }
+    "nested option" in {
+      val q = quote {
+        qr2.rightJoin(qr2).on((a, b) => a.s == b.s).rightJoin(qr3).on((a, b) => true).map(_._1.map(_._1.map(_.s)))
+      }
+      mirrorSource.run(q)
+        .extractor(Row(Option("a"))) mustEqual Option(Option("a"))
+    }
+    "optional tuple" in {
+      val q = quote {
+        qr2.rightJoin(qr2).on((a, b) => a.s == b.s).map(_._1.map(t => (t.s, t.i)))
+      }
+      mirrorSource.run(q)
+        .extractor(Row(Option("a"), Option(1))) mustEqual Some(("a", 1))
+    }
     "mixed" - {
       "case class in the beginning" in {
         val q = quote {

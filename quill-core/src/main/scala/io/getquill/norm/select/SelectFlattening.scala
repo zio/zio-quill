@@ -20,14 +20,8 @@ trait SelectFlattening extends SelectValues {
     (inferDecoder(typ), inferDecoder(optionType(c.WeakTypeTag(typ))), ast) match {
       case (_, _, ast) if (typ <:< c.weakTypeOf[Option[Any]]) =>
         OptionSelectValue(flatten(ast, typ.typeArgs.head, inferDecoder))
-      case (Some(decoder), optionDecoder, ast) =>
+      case (Some(decoder), Some(optionDecoder), ast) =>
         SimpleSelectValue(ast, decoder, optionDecoder)
-      case (None, _, Tuple(elems)) =>
-        val values =
-          elems.zip(typ.typeArgs).map {
-            case (ast, typ) => flatten(ast, typ, inferDecoder)
-          }
-        TupleSelectValue(values)
       case (None, _, ast) if (typ.typeSymbol.asClass.isCaseClass) =>
         caseClassSelectValue(typ, ast, inferDecoder)
       case other =>
@@ -41,7 +35,6 @@ trait SelectFlattening extends SelectValues {
     value match {
       case SimpleSelectValue(ast, _, _)    => List(ast)
       case CaseClassSelectValue(_, params) => params.flatten.map(selectAsts).flatten
-      case TupleSelectValue(elems)         => elems.map(selectAsts).flatten
       case OptionSelectValue(value)        => selectAsts(value)
     }
 

@@ -20,8 +20,8 @@ class SqlSourceMacro(val c: Context) extends SourceMacro {
   import c.universe.{ Try => _, Literal => _, Ident => _, _ }
 
   override protected def prepare(ast: Ast, params: List[Ident]) = {
-    implicit val (d, n) = dialectAndNaming
     if (!IsDynamic(ast)) {
+      implicit val (d, n) = dialectAndNamingStatic
       val (sql, idents) = Prepare(ast, params)
       c.info(sql)
       probe(sql, d)
@@ -45,32 +45,6 @@ class SqlSourceMacro(val c: Context) extends SourceMacro {
       case other            =>
     }
 
-  private def dialectAndNamingDynamic = {
-    val (idiom :: n :: _) =
-      c.prefix.actualType
-        .baseType(c.weakTypeOf[SqlSource[SqlIdiom, NamingStrategy, Any, Any]].typeSymbol)
-        .typeArgs
-    val types =
-      n match {
-        case RefinedType(types, _) => types
-        case other                 => List(other)
-      }
-    val objs =
-      types
-        .filterNot(_ =:= c.weakTypeOf[NamingStrategy])
-        .filterNot(_ =:= c.weakTypeOf[scala.Nothing])
-        .map(_.typeSymbol.companion)
-    val naming =
-      q"""
-      new io.getquill.naming.NamingStrategy {
-        override def apply(s: String) = {
-          ${objs.foldLeft[Tree](q"s")((s, n) => q"$n($s)")}
-        }
-      }
-      """
-    q"(${idiom.typeSymbol.companion}, $naming)"
-  }
-
   private def dialectAndNaming = {
     val (idiom :: n :: _) =
       c.prefix.actualType
@@ -81,15 +55,33 @@ class SqlSourceMacro(val c: Context) extends SourceMacro {
         case RefinedType(types, _) => types
         case other                 => List(other)
       }
-    val objs =
+    val namingMixin =
       types
         .filterNot(_ =:= c.weakTypeOf[NamingStrategy])
         .filterNot(_ =:= c.weakTypeOf[scala.Nothing])
-        .map(loadObject[NamingStrategy])
+    (idiom, namingMixin)
+  }
+
+  private def dialectAndNamingDynamic = {
+    val (idiom, namingMixin) = dialectAndNaming
+    val naming =
+      q"""
+      new io.getquill.naming.NamingStrategy {
+        override def apply(s: String) = {
+          ${namingMixin.foldLeft[Tree](q"s")((s, n) => q"${n.typeSymbol.companion}($s)")}
+        }
+      }
+      """
+    q"(${idiom.typeSymbol.companion}, $naming)"
+  }
+
+  private def dialectAndNamingStatic = {
+    val (idiom, namingMixin) = dialectAndNaming
     val naming =
       new NamingStrategy {
         override def apply(s: String) =
-          objs.foldLeft(s)((s, n) => n(s))
+          namingMixin.map(loadObject[NamingStrategy])
+            .foldLeft(s)((s, n) => n(s))
       }
     (loadObject[SqlIdiom](idiom), naming)
   }

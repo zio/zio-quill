@@ -17,7 +17,9 @@ trait ResolveSourceMacro {
 
   def resolveSource[T](implicit t: ClassTag[T]): Option[T] = {
     val tpe = c.prefix.tree.tpe
-    ResolveSourceMacro.cache.getOrElseUpdate(tpe, resolve[T](tpe)).asInstanceOf[Option[T]]
+    ResolveSourceMacro.cache.getOrElseUpdate(tpe, resolve[T](tpe)).map {
+      case v: T => v
+    }
   }
 
   private def resolve[T](tpe: Type)(implicit t: ClassTag[T]): Option[Any] = {
