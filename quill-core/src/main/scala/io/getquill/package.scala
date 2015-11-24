@@ -3,7 +3,6 @@ package io
 import scala.language.implicitConversions
 import language.experimental.macros
 import io.getquill.quotation.NonQuotedException
-import io.getquill.quotation.Quoted
 
 package object getquill {
 

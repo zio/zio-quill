@@ -401,4 +401,19 @@ class AstShowSpec extends Spec {
         "(o) => o.forall((v) => v)"
     }
   }
+
+  "shows dynamic asts" - {
+    "quotation" in {
+      val d: Quoted[Int] = quote(1)
+      val q = quote(d + 1)
+      (q.ast: Ast).show mustEqual
+        "1 + 1"
+    }
+    "value" in {
+      val i = 1
+      val q = quote(lift(i) + 1)
+      (q.ast: Ast).show mustEqual
+        "1 + 1"
+    }
+  }
 }

@@ -246,5 +246,14 @@ class StatefulTransformerSpec extends Spec {
           att.state mustEqual List(Ident("a"), Ident("c"))
       }
     }
+
+    "dynamic" in {
+      val ast: Ast = Dynamic(Ident("a"))
+      Subject(Nil, Ident("a") -> Ident("a'"))(ast) match {
+        case (at, att) =>
+          at mustEqual ast
+          att.state mustEqual List()
+      }
+    }
   }
 }

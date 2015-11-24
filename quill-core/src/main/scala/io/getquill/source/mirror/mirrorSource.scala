@@ -11,6 +11,7 @@ import io.getquill.source.SourceMacro
 import io.getquill.util.Messages.RichContext
 import io.getquill.norm.Normalize
 import io.getquill.source.BindVariables
+import io.getquill.quotation.IsDynamic
 
 object mirrorSource extends MirrorSourceTemplate
 
@@ -85,13 +86,21 @@ abstract class MirrorSourceTemplate extends Source[Row, Row] {
 class MirrorSourceMacro(val c: Context) extends SourceMacro {
   import c.universe.{ Ident => _, _ }
 
-  override protected def prepare(ast: Ast, params: List[Ident]) = {
-    val (normalized, bindings) = BindVariables(Normalize(ast), params)
-    resolveSource[MirrorSourceTemplate].map(_.probe(normalized)) match {
-      case Some(Failure(e)) => c.warn(s"Probe failed. Reason $e")
-      case other            =>
+  override protected def prepare(ast: Ast, params: List[Ident]) =
+    IsDynamic(ast) match {
+      case false =>
+        val (normalized, bindings) = BindVariables(Normalize(ast), params)
+        resolveSource[MirrorSourceTemplate].map(_.probe(normalized)) match {
+          case Some(Failure(e)) => c.warn(s"Probe failed. Reason $e")
+          case other            =>
+        }
+        c.info(normalized.toString)
+        q"($normalized, $bindings)"
+      case true =>
+        q"""
+          import io.getquill.norm._
+          import io.getquill.ast._
+          BindVariables(Normalize($ast: Ast), $params)
+        """
     }
-    c.info(normalized.toString)
-    q"($normalized, $bindings)"
-  }
 }
