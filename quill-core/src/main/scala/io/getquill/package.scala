@@ -19,4 +19,6 @@ package object getquill {
   }
 
   def mappedEncoding[I, O](f: I => O) = source.MappedEncoding(f)
+
+  type Quoted[T] = quotation.Quoted[T]
 }

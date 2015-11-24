@@ -37,29 +37,11 @@ class PeopleJdbcSpec extends PeopleSpec {
     testDB.run(`Ex 5 compose`).using(`Ex 5 param 1`, `Ex 5 param 2`) mustEqual `Ex 5 expected result`
   }
 
-  "Example 6" in {
-    sealed trait Predicate
-    case class Above(i: Int) extends Predicate
-    case class Below(i: Int) extends Predicate
-    case class And(a: Predicate, b: Predicate) extends Predicate
-    case class Or(a: Predicate, b: Predicate) extends Predicate
-    case class Not(p: Predicate) extends Predicate
-
-    def eval(t: Predicate): Quoted[Int => Boolean] =
-      t match {
-        case Above(n)    => quote(x => x > lift(n))
-        case Below(n)    => quote(x => x < lift(n))
-        case And(t1, t2) => quote(x => eval(t1)(x) && eval(t2)(x))
-        case Or(t1, t2)  => quote(x => eval(t1)(x) || eval(t2)(x))
-        case Not(t0)     => quote(x => !eval(t0)(x))
-      }
-
-    val p1 = And(Above(30), Below(40))
-    val p2 = Not(Or(Below(20), Above(30)))
-
-    testDB.run(satisfies(eval(p1))) mustEqual List(Person("Cora", 33), Person("Drew", 31))
-
-    testDB.run(satisfies(eval(p2))) mustEqual List(Person("Edna", 21))
+  "Example 6 - predicate 0" in {
+    testDB.run(satisfies(eval(`Ex 6 predicate`))) mustEqual `Ex 6 expected result`
   }
 
+  "Example 7 - predicate 1" in {
+    testDB.run(satisfies(eval(`Ex 7 predicate`))) mustEqual `Ex 7 expected result`
+  }
 }

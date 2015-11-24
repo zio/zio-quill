@@ -27,6 +27,7 @@ class SqlSourceMacro(val c: Context) extends SourceMacro {
       probe(sql, d)
       q"($sql, $idents)"
     } else {
+      c.info("Dynamic query")
       q"""
       {
         implicit val (d, n) = $dialectAndNamingDynamic

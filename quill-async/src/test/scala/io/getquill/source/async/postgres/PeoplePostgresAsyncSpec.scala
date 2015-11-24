@@ -5,7 +5,7 @@ import io.getquill.source.sql.PeopleSpec
 import scala.concurrent.Future
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
-import scala.concurrent.ExecutionContext.Implicits.{global => ec}
+import scala.concurrent.ExecutionContext.Implicits.{ global => ec }
 
 class PeoplePostgresAsyncSpec extends PeopleSpec {
 
@@ -43,4 +43,11 @@ class PeoplePostgresAsyncSpec extends PeopleSpec {
     await(testPostgresDB.run(`Ex 5 compose`).using(`Ex 5 param 1`, `Ex 5 param 2`)) mustEqual `Ex 5 expected result`
   }
 
+  "Example 6 - predicate 0" in {
+    await(testPostgresDB.run(satisfies(eval(`Ex 6 predicate`)))) mustEqual `Ex 6 expected result`
+  }
+
+  "Example 7 - predicate 1" in {
+    await(testPostgresDB.run(satisfies(eval(`Ex 7 predicate`)))) mustEqual `Ex 7 expected result`
+  }
 }
