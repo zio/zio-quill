@@ -3,6 +3,8 @@ package io.getquill.source.jdbc
 import io.getquill._
 import io.getquill.source.sql.PeopleSpec
 import io.getquill.quotation.Quoted
+import io.getquill.quotation.IsDynamic
+import io.getquill.source.sql.mirror.mirrorSource
 
 class PeopleJdbcSpec extends PeopleSpec {
 
@@ -43,18 +45,21 @@ class PeopleJdbcSpec extends PeopleSpec {
     case class Or(a: Predicate, b: Predicate) extends Predicate
     case class Not(p: Predicate) extends Predicate
 
-    //    def eval(t: Predicate): Quoted[Int => Boolean] =
-    //      t match {
-    //        case Above(n)    => quote(x => x > 1)
-    //        case Below(n)    => quote(x => x < 1)
-    //        case And(t1, t2) => quote(x => eval(t1)(x) && eval(t2)(x))
-    //        case Or(t1, t2)  => quote(x => eval(t1)(x) || eval(t2)(x))
-    //        case Not(t0)     => quote(x => !eval(t0)(x))
-    //      }
-    //
-    //    val q = quote((p: Predicate) => `Ex 3, 4`(eval(p)))
-    //
-    //    println(q.ast)
+    def eval(t: Predicate): Quoted[Int => Boolean] =
+      t match {
+        case Above(n)    => quote(x => x > lift(n))
+        case Below(n)    => quote(x => x < lift(n))
+        case And(t1, t2) => quote(x => eval(t1)(x) && eval(t2)(x))
+        case Or(t1, t2)  => quote(x => eval(t1)(x) || eval(t2)(x))
+        case Not(t0)     => quote(x => !eval(t0)(x))
+      }
+
+    val p1 = And(Above(30), Below(40))
+    val p2 = Not(Or(Below(20), Above(30)))
+
+    testDB.run(satisfies(eval(p1))) mustEqual List(Person("Cora", 33), Person("Drew", 31))
+
+    testDB.run(satisfies(eval(p2))) mustEqual List(Person("Edna", 21))
   }
 
 }

@@ -59,7 +59,7 @@ trait PeopleSpec extends Spec {
   val `Ex 2 param 2` = 40
   val `Ex 2 expected result` = List(Person("Cora", 33), Person("Drew", 31))
 
-  val `Ex 3, 4` =
+  val satisfies =
     quote {
       (p: Int => Boolean) =>
         for {
@@ -68,10 +68,10 @@ trait PeopleSpec extends Spec {
           u
         }
     }
-  val `Ex 3 satisfies` = quote(`Ex 3, 4`((x: Int) => 20 <= x && x < 30))
+  val `Ex 3 satisfies` = quote(satisfies((x: Int) => 20 <= x && x < 30))
   val `Ex 3 expected result` = List(Person("Edna", 21))
 
-  val `Ex 4 satisfies` = quote(`Ex 3, 4`((x: Int) => x % 2 == 0))
+  val `Ex 4 satisfies` = quote(satisfies((x: Int) => x % 2 == 0))
   val `Ex 4 expected result` = List(Person("Alex", 60), Person("Fred", 60))
 
   val `Ex 5 compose` = {

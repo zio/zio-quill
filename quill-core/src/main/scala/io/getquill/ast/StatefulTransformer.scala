@@ -30,7 +30,7 @@ trait StatefulTransformer[T] {
         val (ct, ctt) = att.apply(c)
         (OptionOperation(t, at, b, ct), ctt)
 
-      case d: Dynamic => (d, this)
+      case l: Dynamic => (l, this)
     }
 
   def apply(e: Query): (Query, StatefulTransformer[T]) =

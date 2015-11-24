@@ -403,17 +403,26 @@ class QuotationSpec extends Spec {
         quote(unquote(q)).ast.body mustEqual OptionOperation(OptionForall, Ident("o"), Ident("v"), Ident("v"))
       }
     }
-    "dynamic" - {
-      val filtered = quote {
-        qr1.filter(t => t.i == 1)
+    "lifted" - {
+      "quotation" in {
+        val filtered = quote {
+          qr1.filter(t => t.i == 1)
+        }
+        def m(b: Boolean) =
+          if (b)
+            filtered
+          else
+            qr1
+        quote(unquote(m(true))).ast mustEqual filtered.ast
+        quote(unquote(m(false))).ast mustEqual qr1.ast
       }
-      def m(b: Boolean) =
-        if (b)
-          filtered
-        else
-          qr1
-      quote(unquote(m(true))).ast mustEqual filtered.ast
-      quote(unquote(m(false))).ast mustEqual qr1.ast
+      "value" in {
+        val i = 1
+        val q = quote {
+          lift(i)
+        }
+        q.ast mustEqual Constant(1)
+      }
     }
   }
 

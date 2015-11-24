@@ -1,8 +1,6 @@
 package io.getquill.quotation
 
-import io.getquill.ast.Ast
-import io.getquill.ast.Dynamic
-import io.getquill.ast.StatefulTransformer
+import io.getquill.ast._
 
 case class IsDynamic(state: Boolean)
     extends StatefulTransformer[Boolean] {

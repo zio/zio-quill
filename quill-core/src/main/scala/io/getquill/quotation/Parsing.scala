@@ -35,6 +35,7 @@ trait Parsing {
   val astParser: Parser[Ast] = Parser[Ast] {
 
     case q"$pack.unquote[$t]($quoted)"  => Dynamic(quoted)
+    case q"$pack.lift[$t]($value)"      => Dynamic(value)
 
     case `queryParser`(query)           => query
     case `functionParser`(function)     => function
