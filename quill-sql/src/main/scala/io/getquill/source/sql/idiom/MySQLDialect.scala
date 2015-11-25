@@ -9,7 +9,7 @@ trait MySQLDialect
     with OffsetWithoutLimitWorkaround {
 
   override def prepare(sql: String) =
-    s"PREPARE p${sql.hashCode.abs} FROM '$sql'"
+    s"PREPARE p${sql.hashCode.abs} FROM '${sql.replace("'", "\\'")}'"
 
   override implicit def operationShow(implicit propertyShow: Show[Property], strategy: NamingStrategy): Show[Operation] =
     Show[Operation] {

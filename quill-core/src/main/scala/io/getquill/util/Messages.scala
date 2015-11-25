@@ -19,6 +19,6 @@ object Messages {
       c.warning(c.enclosingPosition, msg)
 
     def info(msg: String) =
-      c.echo(c.enclosingPosition, msg)
+      c.info(c.enclosingPosition, msg, force = true)
   }
 }

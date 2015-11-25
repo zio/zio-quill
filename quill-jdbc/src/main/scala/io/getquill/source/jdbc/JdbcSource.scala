@@ -31,7 +31,7 @@ class JdbcSource[D <: SqlIdiom, N <: NamingStrategy]
   def probe(sql: String) =
     withConnection { conn =>
       Try {
-        conn.prepareStatement(sql)
+        conn.createStatement.execute(sql)
       }
     }
 
