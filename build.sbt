@@ -1,7 +1,10 @@
 
 lazy val quill = 
   (project in file("."))
-    .settings(scalaVersion := "2.11.7")
+    .settings(tutSettings ++ Seq(
+      scalaVersion := "2.11.7", 
+      tutSourceDirectory := baseDirectory.value / "README.md"))
+    .dependsOn(`quill-core`, `quill-sql`, `quill-jdbc`, `quill-finagle-mysql`, `quill-async`)
     .aggregate(`quill-core`, `quill-sql`, `quill-jdbc`, `quill-finagle-mysql`, `quill-async`)
 
 lazy val `quill-core` = 
