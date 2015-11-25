@@ -80,6 +80,7 @@ lazy val commonSettings = Seq(
     "-Ywarn-unused-import"
   ),
   fork in Test := true,
+  releasePublishArtifactsAction := PgpKeys.publishSigned.value,
   scoverage.ScoverageKeys.coverageMinimum := 100,
   scoverage.ScoverageKeys.coverageFailOnMinimum := false,
   EclipseKeys.eclipseOutput := Some("bin"),
