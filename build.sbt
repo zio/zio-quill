@@ -57,7 +57,7 @@ lazy val `quill-async` =
     )
     .dependsOn(`quill-sql` % "compile->compile;test->test")
 
-lazy val commonSettings = Seq(
+lazy val commonSettings = releaseSettings ++ Seq(
   organization := "io.getquill",
   scalaVersion := "2.11.7",
   libraryDependencies ++= Seq(
