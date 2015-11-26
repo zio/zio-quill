@@ -23,7 +23,7 @@ Quill provides a Quoted Domain Specific Language (QDSL) to express queries in Sc
 
 Sources represent the database and provide an execution interface for queries. Example:
 
-```tut
+```scala
 import io.getquill.naming.SnakeCase
 import io.getquill.source.jdbc.JdbcSource
 import io.getquill.source.sql.idiom.MySQLDialect
@@ -82,7 +82,7 @@ libraryDependencies ++= Seq(
 ```
 
 source definition
-```tut
+```scala
 import io.getquill.naming.SnakeCase
 import io.getquill.source.jdbc.JdbcSource
 import io.getquill.source.sql.idiom.MySQLDialect
@@ -112,7 +112,7 @@ libraryDependencies ++= Seq(
 ```
 
 source definition
-```tut
+```scala
 import io.getquill.naming.SnakeCase
 import io.getquill.source.jdbc.JdbcSource
 import io.getquill.source.sql.idiom.PostgresDialect
@@ -144,7 +144,7 @@ libraryDependencies ++= Seq(
 ```
 
 source definition
-```tut
+```scala
 import io.getquill.naming.SnakeCase
 import io.getquill.source.async.mysql.MysqlAsyncSource
 
@@ -174,7 +174,7 @@ libraryDependencies ++= Seq(
 ```
 
 source definition
-```tut
+```scala
 import io.getquill.naming.SnakeCase
 import io.getquill.source.async.postgres.PostgresAsyncSource
 
@@ -204,7 +204,7 @@ libraryDependencies ++= Seq(
 ```
 
 source definition
-```tut
+```scala
 import io.getquill.naming.SnakeCase
 import io.getquill.source.finagle.mysql.FinagleMysqlSource
 
@@ -221,16 +221,14 @@ testDB.database=database
 
 # Mirror sources #
 
-Quill provides mirror sources for test purposes. Instead of running the query, they return a mirror with the information that would be used to run the query.
+Quill provides mirror sources for test purposes. Instead of running the query, they return a mirror with the information that would be used to run the query. There are two mirror source versions:
 
-There are two mirror source versions:
-
-`io.getquill.source.mirror.mirrorSource` - Mirrors the quotation ast
-`io.getquill.source.sql.mirror.mirrorSource` - Mirrors the sql query
+- `io.getquill.source.mirror.mirrorSource`: Mirrors the quotation ast
+- `io.getquill.source.sql.mirror.mirrorSource`: Mirrors the sql query
 
 This documentation uses the sql mirror in its examples under the `db` name:
 
-```tut
+```scala
 val db = io.getquill.source.sql.mirror.mirrorSource
 ```
 
@@ -238,19 +236,19 @@ val db = io.getquill.source.sql.mirror.mirrorSource
 
 The QDSL allows the user to write plain scala code, leveraging scala's syntax and type system. Quotations are created using the `quote` method and can contain any excerpt of code that uses supported operations. To create quotations, first import `quote` and some other auxiliary methods:
 
-```tut
+```scala
 import io.getquill._
 ```
 
 A quotation can be a simple value:
 
-```tut
+```scala
 val pi = quote(3.14159)
 ```
 
 And be used within another quotation:
 
-```tut
+```scala
 case class Circle(radius: Float)
 
 val areas = quote {
@@ -260,21 +258,21 @@ val areas = quote {
 
 Quotations can also contain high-order functions:
 
-```tut
+```scala
 val area = quote {
   (c: Circle) => pi * c.radius * c.radius
 }
 ```
 
-```tut
+```scala
 val areas = quote {
   query[Circle].map(c => area(c))
 }
 ```
 
-Quill's normalization engine applies some reduction steps before translating the quotation to the target language. The correspondent normalized quotation for both versions of the `areas` query is:
+Quill's normalization engine applies reduction steps before translating the quotation to the target language. The correspondent normalized quotation for both versions of the `areas` query is:
 
-```tut
+```scala
 val areas = quote {
   query[Circle].map(c => 3.14159 * c.radius * c.radius)
 }
@@ -282,7 +280,7 @@ val areas = quote {
 
 Scala doesn't have support for high-order functions with type parameters. Quill supports anonymous classes with an apply method for this purpose:
 
-```tut
+```scala
 val existsAny = quote {
   new {
     def apply[T](xs: Query[T])(p: T => Boolean) =
@@ -299,7 +297,7 @@ val q = quote {
 
 The database schema is represented by case classes. By default, quill uses the class and field names as the database identifiers:
 
-```tut
+```scala
 case class Circle(radius: Float)
 
 val q = quote {
@@ -311,7 +309,7 @@ db.run(q) // SELECT c.radius FROM Circle c WHERE c.radius > 1
 
 Alternatively, the identifiers can be customized:
 
-```tut
+```scala
 val circles = quote {
   query[Circle]("circle_table", _.radius -> "radius_column")
 }
@@ -325,7 +323,7 @@ db.run(q) // SELECT c.radius_column FROM circle_table c WHERE c.radius_column > 
 
 If multiple tables require custom identifiers, it is good practice to define a `schema` object with all table queries to be reused across multiple queries:
 
-```tut
+```scala
 object schema {
   case class Circle(radius: Int)
   val circles = quote {
@@ -339,6 +337,54 @@ object schema {
 ```
 
 # Queries #
+
+The overall abstraction of quill queries is use database tables as if they were scala collections.
+
+**filter**
+```scala
+val q = quote {
+  query[Circle].filter(c => c.radius > 0)
+}
+
+db.run(q) // SELECT c.radius FROM Circle c where c.radius > 0
+```
+
+**map**
+```scala
+val q = quote {
+  query[Circle].map(c => c.radius)
+}
+
+db.run(q) // SELECT c.radius FROM Circle
+```
+
+**sortBy**
+```scala
+val q = quote {
+  query[Circle].sortBy(c => c.radius)
+}
+
+db.run(q) // SELECT c.radius FROM Circle SORT BY c.radius
+```
+
+**drop/take**
+```scala
+val q = quote {
+  query[Circle].drop(2).take(1)
+}
+
+db.run(q) // SELECT c.radius FROM Circle LIMIT 1 OFFSET 2
+```
+
+**union**
+```scala
+val q = quote {
+  query[Circle].drop(2).take(1)
+}
+
+db.run(q) // SELECT c.radius FROM Circle LIMIT 1 OFFSET 2
+```
+
 
 ## Joins ##
 

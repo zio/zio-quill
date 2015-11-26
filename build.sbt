@@ -3,7 +3,14 @@ lazy val quill =
   (project in file("."))
     .settings(tutSettings ++ commonSettings ++ Seq(
       scalaVersion := "2.11.7", 
-      tutSourceDirectory := baseDirectory.value / "README.md"))
+      tutSourceDirectory := baseDirectory.value / "target" / "README.md"))
+    .settings(sourceGenerators in Compile <+= Def.task {
+      val source = baseDirectory.value / "README.md"
+      val file = baseDirectory.value / "target" / "README.md"
+      val str = IO.read(source).replace("```scala", "```tut")
+      IO.write(file, str)
+      Seq()
+    })
     .dependsOn(`quill-core`, `quill-sql`, `quill-jdbc`, `quill-finagle-mysql`, `quill-async`)
     .aggregate(`quill-core`, `quill-sql`, `quill-jdbc`, `quill-finagle-mysql`, `quill-async`)
 
