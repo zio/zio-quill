@@ -14,7 +14,7 @@ Quill provides a Quoted Domain Specific Language (QDSL) to express queries in Sc
 
 ![example](https://raw.githubusercontent.com/getquill/quill/master/example.gif)
 
-1. **Boilerplate-free mapping**: The database's schema is mapped using simple case classes.
+1. **Boilerplate-free mapping**: The database schema is mapped using simple case classes.
 2. **Quoted DSL**: Queries are defined inside a `quote` block. Quill parses each quoted block of code (quotation) at compile time and translates them to an internal Abstract Syntax Tree (AST)
 3. **Compile-time SQL generation**: The `db.run` call reads the quotation's AST and translates it to the target language at compile time, emitting the SQL string as a compilation message. As the query string is known at compile time, the runtime overhead is very low and similar to using the database driver directly.
 4. **Compile-time query validation**: If configured, the query is verified against the database at compile time and the compilation fails if it is not valid.
@@ -33,7 +33,7 @@ object db extends JdbcSource[MySQLDialect, SnakeCase]
 
 ## Dialect ##
 
-The sql dialect to be used by the source is defined by the first type parameter. Some source types are specific to a database and thus not require the type parameter.
+The sql dialect to be used by the source is defined by the first type parameter. Some source types are specific to a database and thus not require it.
 
 Quill has two built-in dialects:
 
@@ -176,7 +176,7 @@ libraryDependencies ++= Seq(
 source definition
 ```tut
 import io.getquill.naming.SnakeCase
-import io.getquill.source.async.mysql.PostgresAsyncSource
+import io.getquill.source.async.postgres.PostgresAsyncSource
 
 object db extends PostgresAsyncSource[SnakeCase]
 ```
@@ -219,9 +219,126 @@ testDB.password=root
 testDB.database=database
 ```
 
-# Queries #
+# Mirror sources #
 
-## Quotation ##
+Quill provides mirror sources for test purposes. Instead of running the query, they return a mirror with the information that would be used to run the query.
+
+There are two mirror source versions:
+
+`io.getquill.source.mirror.mirrorSource` - Mirrors the quotation ast
+`io.getquill.source.sql.mirror.mirrorSource` - Mirrors the sql query
+
+This documentation uses the sql mirror in its examples under the `db` name:
+
+```tut
+val db = io.getquill.source.sql.mirror.mirrorSource
+```
+
+# Quotation #
+
+The QDSL allows the user to write plain scala code, leveraging scala's syntax and type system. Quotations are created using the `quote` method and can contain any excerpt of code that uses supported operations. To create quotations, first import `quote` and some other auxiliary methods:
+
+```tut
+import io.getquill._
+```
+
+A quotation can be a simple value:
+
+```tut
+val pi = quote(3.14159)
+```
+
+And be used within another quotation:
+
+```tut
+case class Circle(radius: Float)
+
+val areas = quote {
+  query[Circle].map(c => pi * c.radius * c.radius)
+}
+```
+
+Quotations can also contain high-order functions:
+
+```tut
+val area = quote {
+  (c: Circle) => pi * c.radius * c.radius
+}
+```
+
+```tut
+val areas = quote {
+  query[Circle].map(c => area(c))
+}
+```
+
+Quill's normalization engine applies some reduction steps before translating the quotation to the target language. The correspondent normalized quotation for both versions of the `areas` query is:
+
+```tut
+val areas = quote {
+  query[Circle].map(c => 3.14159 * c.radius * c.radius)
+}
+```
+
+Scala doesn't have support for high-order functions with type parameters. Quill supports anonymous classes with an apply method for this purpose:
+
+```tut
+val existsAny = quote {
+  new {
+    def apply[T](xs: Query[T])(p: T => Boolean) =
+    	xs.filter(p(_)).nonEmpty
+  }
+}
+
+val q = quote {
+  query[Circle].filter(c1 => existsAny(query[Circle])(c2 => c2.radius > c1.radius))
+}
+```
+
+# Schema #
+
+The database schema is represented by case classes. By default, quill uses the class and field names as the database identifiers:
+
+```tut
+case class Circle(radius: Float)
+
+val q = quote {
+  query[Circle].filter(c => c.radius > 1)
+}
+
+db.run(q) // SELECT c.radius FROM Circle c WHERE c.radius > 1
+```
+
+Alternatively, the identifiers can be customized:
+
+```tut
+val circles = quote {
+  query[Circle]("circle_table", _.radius -> "radius_column")
+}
+
+val q = quote {
+  circles.filter(c => c.radius > 1)
+}
+
+db.run(q) // SELECT c.radius_column FROM circle_table c WHERE c.radius_column > 1
+```
+
+If multiple tables require custom identifiers, it is good practice to define a `schema` object with all table queries to be reused across multiple queries:
+
+```tut
+object schema {
+  case class Circle(radius: Int)
+  val circles = quote {
+    query[Circle]("circle_table", _.radius -> "radius_column")
+  }
+  case class Rectangle(length: Int, width: Int)
+  val rectangles = quote {
+    query[Rectangle]("rectangle_table", _.length -> "length_column", _.width -> "width_column")
+  }
+}
+```
+
+# Queries #
 
 ## Joins ##
 
@@ -229,6 +346,8 @@ testDB.database=database
 ## Probing ##
 
 # Dynamic queries #
+
+# Actions #
 
 # Extending quill #
 
