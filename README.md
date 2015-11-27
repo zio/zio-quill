@@ -8,7 +8,19 @@ Compile-time Language Integrated Query for Scala
 [![Join the chat at https://gitter.im/getquill/quill](https://img.shields.io/badge/gitter-join%20chat-green.svg)](https://gitter.im/getquill/quill?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![maven](https://img.shields.io/maven-central/v/io.getquill/quill_2.11.svg)](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22io.getquill%22)
 
-* [Overview](#overview)
+# Overview #
+
+Quill provides a Quoted Domain Specific Language (QDSL) to express queries in Scala and execute them in a target language. The library's core is designed to support multiple target languages, but the current version only supports the generation of Structured Language Queries (SQL).
+
+![example](https://raw.githubusercontent.com/getquill/quill/master/example.gif)
+
+1. **Boilerplate-free mapping**: The database schema is mapped using simple case classes.
+2. **Quoted DSL**: Queries are defined inside a `quote` block. Quill parses each quoted block of code (quotation) at compile time and translates them to an internal Abstract Syntax Tree (AST)
+3. **Compile-time SQL generation**: The `db.run` call reads the quotation's AST and translates it to the target language at compile time, emitting the SQL string as a compilation message. As the query string is known at compile time, the runtime overhead is very low and similar to using the database driver directly.
+4. **Compile-time query validation**: If configured, the query is verified against the database at compile time and the compilation fails if it is not valid.
+
+# Index #
+
 * [Quotation](#quotation)
 * [Mirror sources](#mirror-sources)
 * [Compile-time quotations](#compile-time-quotations)
@@ -26,17 +38,6 @@ Compile-time Language Integrated Query for Scala
   * [Configuration](#configuration)
 * [Acknowledgments](#acknowledgments)
 * [License](#license)
-
-# Overview #
-
-Quill provides a Quoted Domain Specific Language (QDSL) to express queries in Scala and execute them in a target language. The library's core is designed to support multiple target languages, but the current version only supports the generation of Structured Language Queries (SQL).
-
-![example](https://raw.githubusercontent.com/getquill/quill/master/example.gif)
-
-1. **Boilerplate-free mapping**: The database schema is mapped using simple case classes.
-2. **Quoted DSL**: Queries are defined inside a `quote` block. Quill parses each quoted block of code (quotation) at compile time and translates them to an internal Abstract Syntax Tree (AST)
-3. **Compile-time SQL generation**: The `db.run` call reads the quotation's AST and translates it to the target language at compile time, emitting the SQL string as a compilation message. As the query string is known at compile time, the runtime overhead is very low and similar to using the database driver directly.
-4. **Compile-time query validation**: If configured, the query is verified against the database at compile time and the compilation fails if it is not valid.
 
 # Quotation #
 
