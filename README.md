@@ -10,7 +10,7 @@ Compile-time Language Integrated Query for Scala
 
 # Overview #
 
-Quill provides a Quoted Domain Specific Language (QDSL) to express queries in Scala and execute them in a target language. The library's core is designed to support multiple target languages but the current version only supports the generation of Structured Language Queries (SQL) for interaction with relational databases.
+Quill provides a Quoted Domain Specific Language (QDSL) to express queries in Scala and execute them in a target language. The library's core is designed to support multiple target languages, but the current version only supports the generation of Structured Language Queries (SQL) for interacting with relational databases.
 
 ![example](https://raw.githubusercontent.com/getquill/quill/master/example.gif)
 
@@ -33,7 +33,7 @@ object db extends JdbcSource[MySQLDialect, SnakeCase]
 
 ## Dialect ##
 
-The sql dialect to be used by the source is defined by the first type parameter. Some source types are specific to a database and thus not require it.
+The SQL dialect to be used by the source is defined by the first type parameter. Some source types are specific to a database and thus not require it.
 
 Quill has two built-in dialects:
 
@@ -223,10 +223,10 @@ testDB.database=database
 
 Quill provides mirror sources for test purposes. Instead of running the query, they return a mirror with the information that would be used to run the query. There are two mirror source versions:
 
-- `io.getquill.source.mirror.mirrorSource`: Mirrors the quotation ast
-- `io.getquill.source.sql.mirror.mirrorSource`: Mirrors the sql query
+- `io.getquill.source.mirror.mirrorSource`: Mirrors the quotation AST
+- `io.getquill.source.sql.mirror.mirrorSource`: Mirrors the SQL query
 
-This documentation uses the sql mirror in its examples under the `db` name:
+This documentation uses the SQL mirror in its examples under the `db` name:
 
 ```scala
 val db = io.getquill.source.sql.mirror.mirrorSource
@@ -234,7 +234,7 @@ val db = io.getquill.source.sql.mirror.mirrorSource
 
 # Quotation #
 
-The QDSL allows the user to write plain scala code, leveraging scala's syntax and type system. Quotations are created using the `quote` method and can contain any excerpt of code that uses supported operations. To create quotations, first import `quote` and some other auxiliary methods:
+The QDSL allows the user to write plain Scala code, leveraging scala's syntax and type system. Quotations are created using the `quote` method and can contain any excerpt of code that uses supported operations. To create quotations, first import `quote` and some other auxiliary methods:
 
 ```scala
 import io.getquill._
@@ -295,7 +295,7 @@ val q = quote {
 
 ## Compile-time quotations ##
 
-Quotations are both compile-time and runtime values. Quill uses a type refinement to store the quotation's AST as an annotation available at compile-time and the `q.ast` method exposes the ast as runtime value.
+Quotations are both compile-time and runtime values. Quill uses a type refinement to store the quotation's AST as an annotation available at compile-time and the `q.ast` method exposes the AST as runtime value.
 
 It is important to avoid giving explicit types to quotations when possible. For instance, this quotation can't be read at compile-time as the type refinement is lost:
 
@@ -311,19 +311,19 @@ Quill falls back to runtime normalization and query generation if the quotation'
 
 # Parametrized quotations #
 
-Quotations are designed to be self-contained, without references to runtime values ouside their scope. If a quotation needs to receive a runtime value, it needs to be done by defining the quotation as a function:
+Quotations are designed to be self-contained, without references to runtime values outside their scope. If a quotation needs to receive a runtime value, it needs to be done by defining the quotation as a function:
 
 ```scala
 val q = quote {
-  (r: Int) =>
-    query[Circle].filter(_.radius > r)
+  (i: Int) =>
+    query[Circle].filter(r => r.radius > i)
 }
 ```
 
 The runtime value can be specified when running it:
 
 ```scala
-db.run(q).using(10)
+db.run(q).using(10) // SELECT r.radius FROM Circle r WHERE r.radius > ?
 ```
 
 The method `run` is a bridge between the compile-time quotations and the runtime execution.
@@ -388,7 +388,7 @@ val q = quote {
   }
 }
 
-db.run(q)
+db.run(q) // SELECT p.name, c.phone FROM Person p, Contact c WHERE (p.id = 999) AND (c.personId = p.id)
 ```
 
 Quill normalizes the quotation and translates the monadic joins to applicative joins in SQL, generating a database-friendly query that avoids nested queries.
@@ -401,7 +401,7 @@ val q = quote {
   query[Person].filter(p => p.age > 18)
 }
 
-db.run(q)
+db.run(q) // SELECT p.id, p.name, p.age FROM Person p WHERE p.age > 18
 ```
 
 **map**
@@ -419,7 +419,7 @@ val q = quote {
   query[Person].filter(p => p.age > 18).flatMap(p => query[Contact].filter(c => c.personId == p.id))
 }
 
-db.run(q)
+db.run(q) // SELECT c.personId, c.phone FROM Person p, Contact c WHERE (p.age > 18) AND (c.personId = p.id)
 ```
 
 **sortBy**
@@ -428,7 +428,7 @@ val q = quote {
   query[Person].sortBy(p => p.age)
 }
 
-db.run(q)
+db.run(q) // SELECT p.id, p.name, p.age FROM Person p ORDER BY p.age
 ```
 
 **drop/take**
@@ -437,7 +437,7 @@ val q = quote {
   query[Person].drop(2).take(1)
 }
 
-db.run(q)
+db.run(q) // SELECT x.id, x.name, x.age FROM Person x LIMIT 1 OFFSET 2
 ```
 
 **groupBy**
@@ -449,7 +449,7 @@ val q = quote {
   }
 }
 
-db.run(q)
+db.run(q) // SELECT p.age, COUNT(*) FROM Person p GROUP BY p.age
 ```
 
 **union**
@@ -458,7 +458,7 @@ val q = quote {
   query[Person].filter(p => p.age > 18).union(query[Person].filter(p => p.age > 60))
 }
 
-db.run(q)
+db.run(q) // SELECT x.id, x.name, x.age FROM (SELECT id, name, age FROM Person p WHERE p.age > 18 UNION SELECT id, name, age FROM Person p1 WHERE p1.age > 60) x
 ```
 
 **unionAll/++**
@@ -467,13 +467,13 @@ val q = quote {
   query[Person].filter(p => p.age > 18).unionAll(query[Person].filter(p => p.age > 60))
 }
 
-db.run(q)
+db.run(q) // SELECT x.id, x.name, x.age FROM (SELECT id, name, age FROM Person p WHERE p.age > 18 UNION ALL SELECT id, name, age FROM Person p1 WHERE p1.age > 60) x
 
 val q2 = quote {
   query[Person].filter(p => p.age > 18) ++ query[Person].filter(p => p.age > 60)
 }
 
-db.run(q2)
+db.run(q2) // SELECT x.id, x.name, x.age FROM (SELECT id, name, age FROM Person p WHERE p.age > 18 UNION ALL SELECT id, name, age FROM Person p1 WHERE p1.age > 60) x
 ```
 
 **aggregation**
@@ -482,11 +482,11 @@ val r = quote {
   query[Person].map(p => p.age)
 }
 
-db.run(r.min)
-db.run(r.max)
-db.run(r.avg)
-db.run(r.sum)
-db.run(r.size)
+db.run(r.min) // SELECT MIN(p.age) FROM Person p
+db.run(r.max) // SELECT MAX(p.age) FROM Person p
+db.run(r.avg) // SELECT AVG(p.age) FROM Person p
+db.run(r.sum) // SELECT SUM(p.age) FROM Person p
+db.run(r.size) // SELECT COUNT(p.age) FROM Person p
 ```
 
 **isEmpty/nonEmpty**
@@ -495,13 +495,13 @@ val q = quote {
   query[Person].filter(p1 => query[Person].filter(p2 => p2.id != p1.id && p2.age == p1.age).isEmpty)
 }
 
-db.run(q)
+db.run(q) // SELECT p1.id, p1.name, p1.age FROM Person p1 WHERE NOT EXISTS (SELECT * FROM Person p2 WHERE (p2.id <> p1.id) AND (p2.age = p1.age))
 
 val q2 = quote {
   query[Person].filter(p1 => query[Person].filter(p2 => p2.id != p1.id && p2.age == p1.age).nonEmpty)
 }
 
-db.run(q2)
+db.run(q2) // SELECT p1.id, p1.name, p1.age FROM Person p1 WHERE EXISTS (SELECT * FROM Person p2 WHERE (p2.id <> p1.id) AND (p2.age = p1.age))
 ```
 
 **outer joins**
@@ -511,19 +511,19 @@ val q = quote {
   query[Person].leftJoin(query[Contact]).on((p, c) => c.personId == p)
 }
 
-db.run(q)
+db.run(q) // SELECT p.id, p.name, p.age, c.personId, c.phone FROM Person p LEFT JOIN Contact c ON c.personId = p
 
 val q2 = quote {
   query[Person].rightJoin(query[Contact]).on((p, c) => c.personId == p)
 }
 
-db.run(q2)
+db.run(q2) // SELECT p.id, p.name, p.age, c.personId, c.phone FROM Person p RIGHT JOIN Contact c ON c.personId = p
 
 val q3 = quote {
   query[Person].fullJoin(query[Contact]).on((p, c) => c.personId == p)
 }
 
-db.run(q3)
+db.run(q3) // SELECT p.id, p.name, p.age, c.personId, c.phone FROM Person p FULL JOIN Contact c ON c.personId = p
 ```
 
 # Actions #
@@ -537,7 +537,7 @@ val a = quote {
     query[Contact].insert(_.personId -> personId, _.phone -> phone)
 }
 
-db.run(a).using(List((999, "+1510488988")))
+db.run(a).using(List((999, "+1510488988"))) // INSERT INTO Contact (personId,phone) VALUES (?, ?)
 ```
 
   Note: Actions receive a `List` of tuples as they are batched by default.
@@ -549,7 +549,7 @@ val a = quote {
   query[Person].filter(p => p.id == id).update(_.age -> age)
 }
 
-db.run(a)
+db.run(a) // UPDATE Person SET age = ? WHERE id = ?
 ```
 
 **delete**
@@ -558,7 +558,7 @@ val a = quote {
   query[Person].filter(p => p.name == "").delete
 }
 
-db.run(a)
+db.run(a) // DELETE FROM Person WHERE name = ''
 ```
 
 # Dynamic queries #
@@ -580,15 +580,15 @@ def people(t: QueryType) =
     }
   }
 
-db.run(people(Minor))
-db.run(people(Senior))
+db.run(people(Minor)) // SELECT p.id, p.name, p.age FROM Person p WHERE p.age < 18
+db.run(people(Senior)) // SELECT p.id, p.name, p.age FROM Person p WHERE p.age < 18
 ```
 
 # Extending quill #
 
 ## Infix ##
 
-Infix is a very flexible mechanism to use non-supported features without having to use plain SQL queries. It allows insertion of arbitrary sql.
+Infix is a very flexible mechanism to use non-supported features without having to use plain SQL queries. It allows insertion of arbitrary SQL.
 
 For instance, quill doesn't support the `FOR UPDATE` SQL feature. It can still be used through infix:
 
@@ -603,7 +603,7 @@ val a = quote {
   query[Person].filter(p => p.age < 18)
 }
 
-db.run(forUpdate(a))
+db.run(forUpdate(a)) // SELECT p.id, p.name, p.age FROM (SELECT * FROM Person p WHERE p.age < 18 FOR UPDATE) p
 ```
 
 The `forUpdate` quotation can be reused for multiple queries.
@@ -613,7 +613,7 @@ The same approach can be used for `RETURNING ID`:
 ```scala
 val returningId = quote {
   new {
-    def apply[T](q: Query[T]) = infix"$q RETURNING ID".as[Query[T]]
+    def apply[T](a: Action[T]) = infix"$a RETURNING ID".as[Action[T]]
   }
 }
 
@@ -628,14 +628,14 @@ A custom database function also can be used through infix:
 
 ```scala
 val myFunction = quote {
-  (i: Int) => infix"MY_FUNCTION($i)"
+  (i: Int) => infix"MY_FUNCTION($i)".as[Int]
 }
 
 val q = quote {
   query[Person].map(p => myFunction(p.age))
 }
 
-db.run(q)
+db.run(q) // INSERT INTO Person (name,age) VALUES ('John', 21) RETURNING ID
 ```
 
 ## Custom encoding ##
@@ -651,9 +651,11 @@ implicit val decodeCustomValue = mappedEncoding[CustomValue, Int](_.i)
 implicit val encodeCustomValue = mappedEncoding[Int, CustomValue](CustomValue(_))
 ```
 
-If the databse type is not supported, it is possible to provide "raw" encoders and decoders:
+If the database type is not supported, it is possible to provide "raw" encoders and decoders:
 
 ```scala
+import io.getquill.source.mirror.Row
+
 implicit val customValueEncoder = 
   new db.Encoder[CustomValue] {
     def apply(index: Int, value: CustomValue, row: Row) = ??? // database-specific implementation
@@ -661,17 +663,17 @@ implicit val customValueEncoder =
 
 implicit val customValueDecoder = 
   new db.Decoder[CustomValue] {
-    def apply(index: Int, row: R): T = ??? // database-specific implementation
+    def apply(index: Int, row: Row) = ??? // database-specific implementation
   }
 ```
 
-## Custom dialect ##
-
-## Custom naming strategy ##
-
 # Acknowledgments #
 
-# Contributing #
+The project was created having Philip Wadler's talk ["A practical theory of language-integrated query"](http://www.infoq.com/presentations/theory-language-integrated-query) as its initial inspiration. The development was heavily influenced by the following papers:
+
+[A Practical Theory of Language-Integrated Query](http://homepages.inf.ed.ac.uk/slindley/papers/practical-theory-of-linq.pdf)
+[Everything old is new again: Quoted Domain Specific Languages](http://homepages.inf.ed.ac.uk/wadler/papers/qdsl/qdsl.pdf)
+[The Flatter, the Better](http://db.inf.uni-tuebingen.de/staticfiles/publications/the-flatter-the-better.pdf)
 
 # License #
 
