@@ -29,7 +29,7 @@ Compile-time Language Integrated Query for Scala
 
 # Overview #
 
-Quill provides a Quoted Domain Specific Language (QDSL) to express queries in Scala and execute them in a target language. The library's core is designed to support multiple target languages, but the current version only supports the generation of Structured Language Queries (SQL) for interacting with relational databases.
+Quill provides a Quoted Domain Specific Language (QDSL) to express queries in Scala and execute them in a target language. The library's core is designed to support multiple target languages, but the current version only supports the generation of Structured Language Queries (SQL).
 
 ![example](https://raw.githubusercontent.com/getquill/quill/master/example.gif)
 
@@ -367,7 +367,7 @@ db.run(a).using(List((999, "+1510488988"))) // INSERT INTO Contact (personId,pho
 ```scala
 val a = quote {
   (id: Int, age: Int) =>
-  query[Person].filter(p => p.id == id).update(_.age -> age)
+    query[Person].filter(p => p.id == id).update(_.age -> age)
 }
 
 db.run(a) // UPDATE Person SET age = ? WHERE id = ?
@@ -391,7 +391,7 @@ sealed trait QueryType
 case object Minor extends QueryType
 case object Senior extends QueryType
 
-def people(t: QueryType) =
+def people(t: QueryType): Quoted[Query[Person]] =
   t match {
     case Minor => quote {
       query[Person].filter(p => p.age < 18)
@@ -402,14 +402,14 @@ def people(t: QueryType) =
   }
 
 db.run(people(Minor)) // SELECT p.id, p.name, p.age FROM Person p WHERE p.age < 18
-db.run(people(Senior)) // SELECT p.id, p.name, p.age FROM Person p WHERE p.age < 18
+db.run(people(Senior)) // SELECT p.id, p.name, p.age FROM Person p WHERE p.age > 65
 ```
 
 # Extending quill #
 
 ## Infix ##
 
-Infix is a very flexible mechanism to use non-supported features without having to use plain SQL queries. It allows insertion of arbitrary SQL.
+Infix is a very flexible mechanism to use non-supported features without having to use plain SQL queries. It allows insertion of arbitrary SQL strings.
 
 For instance, quill doesn't support the `FOR UPDATE` SQL feature. It can still be used through infix:
 
@@ -445,7 +445,7 @@ val a = quote {
 db.run(returningId(a))
 ```
 
-A custom database function also can be used through infix:
+A custom database function can also be used through infix:
 
 ```scala
 val myFunction = quote {
@@ -693,9 +693,9 @@ testDB.database=database
 
 The project was created having Philip Wadler's talk ["A practical theory of language-integrated query"](http://www.infoq.com/presentations/theory-language-integrated-query) as its initial inspiration. The development was heavily influenced by the following papers:
 
-[A Practical Theory of Language-Integrated Query](http://homepages.inf.ed.ac.uk/slindley/papers/practical-theory-of-linq.pdf)
-[Everything old is new again: Quoted Domain Specific Languages](http://homepages.inf.ed.ac.uk/wadler/papers/qdsl/qdsl.pdf)
-[The Flatter, the Better](http://db.inf.uni-tuebingen.de/staticfiles/publications/the-flatter-the-better.pdf)
+* [A Practical Theory of Language-Integrated Query](http://homepages.inf.ed.ac.uk/slindley/papers/practical-theory-of-linq.pdf)
+* [Everything old is new again: Quoted Domain Specific Languages](http://homepages.inf.ed.ac.uk/wadler/papers/qdsl/qdsl.pdf)
+* [The Flatter, the Better](http://db.inf.uni-tuebingen.de/staticfiles/publications/the-flatter-the-better.pdf)
 
 # License #
 

@@ -413,8 +413,14 @@ class QuotationSpec extends Spec {
             filtered
           else
             qr1
-        quote(unquote(m(true))).ast mustEqual filtered.ast
-        quote(unquote(m(false))).ast mustEqual qr1.ast
+        val q1 = quote {
+          unquote(m(true))
+        }
+        val q2 = quote {
+          unquote(m(false))
+        }
+        quote(unquote(q1)).ast mustEqual filtered.ast
+        quote(unquote(q2)).ast mustEqual qr1.ast
       }
       "value" in {
         val i = 1
