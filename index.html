@@ -31,8 +31,25 @@
     <!-- MAIN CONTENT -->
     <div id="main_content_wrap" class="outer">
       <section id="main_content" class="inner">
-        <ul>
-<li><a href="#overview">Overview</a></li>
+        <p>Quill provides a Quoted Domain Specific Language (QDSL) to express queries in Scala and execute them in a target language. The library's core is designed to support multiple target languages, but the current version only supports the generation of Structured Language Queries (SQL).</p>
+
+<p><img src="https://raw.githubusercontent.com/getquill/quill/master/example.gif" alt="example"></p>
+
+<ol>
+<li>
+<strong>Boilerplate-free mapping</strong>: The database schema is mapped using simple case classes.</li>
+<li>
+<strong>Quoted DSL</strong>: Queries are defined inside a <code>quote</code> block. Quill parses each quoted block of code (quotation) at compile time and translates them to an internal Abstract Syntax Tree (AST)</li>
+<li>
+<strong>Compile-time SQL generation</strong>: The <code>db.run</code> call reads the quotation's AST and translates it to the target language at compile time, emitting the SQL string as a compilation message. As the query string is known at compile time, the runtime overhead is very low and similar to using the database driver directly.</li>
+<li>
+<strong>Compile-time query validation</strong>: If configured, the query is verified against the database at compile time and the compilation fails if it is not valid.</li>
+</ol>
+
+<h1>
+<a id="index" class="anchor" href="#index" aria-hidden="true"><span class="octicon octicon-link"></span></a>Index</h1>
+
+<ul>
 <li><a href="#quotation">Quotation</a></li>
 <li><a href="#mirror-sources">Mirror sources</a></li>
 <li><a href="#compile-time-quotations">Compile-time quotations</a></li>
@@ -61,24 +78,6 @@
 <li><a href="#acknowledgments">Acknowledgments</a></li>
 <li><a href="#license">License</a></li>
 </ul>
-
-<h1>
-<a id="overview" class="anchor" href="#overview" aria-hidden="true"><span class="octicon octicon-link"></span></a>Overview</h1>
-
-<p>Quill provides a Quoted Domain Specific Language (QDSL) to express queries in Scala and execute them in a target language. The library's core is designed to support multiple target languages, but the current version only supports the generation of Structured Language Queries (SQL).</p>
-
-<p><img src="https://raw.githubusercontent.com/getquill/quill/master/example.gif" alt="example"></p>
-
-<ol>
-<li>
-<strong>Boilerplate-free mapping</strong>: The database schema is mapped using simple case classes.</li>
-<li>
-<strong>Quoted DSL</strong>: Queries are defined inside a <code>quote</code> block. Quill parses each quoted block of code (quotation) at compile time and translates them to an internal Abstract Syntax Tree (AST)</li>
-<li>
-<strong>Compile-time SQL generation</strong>: The <code>db.run</code> call reads the quotation's AST and translates it to the target language at compile time, emitting the SQL string as a compilation message. As the query string is known at compile time, the runtime overhead is very low and similar to using the database driver directly.</li>
-<li>
-<strong>Compile-time query validation</strong>: If configured, the query is verified against the database at compile time and the compilation fails if it is not valid.</li>
-</ol>
 
 <h1>
 <a id="quotation" class="anchor" href="#quotation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Quotation</h1>
