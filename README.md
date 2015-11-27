@@ -22,21 +22,6 @@ Quill provides a Quoted Domain Specific Language (QDSL) to express queries in Sc
 3. **Compile-time SQL generation**: The `db.run` call reads the quotation's AST and translates it to the target language at compile time, emitting the SQL string as a compilation message. As the query string is known at compile time, the runtime overhead is very low and similar to using the database driver directly.
 4. **Compile-time query validation**: If configured, the query is verified against the database at compile time and the compilation fails if it is not valid.
 
-# Mirror sources #
-
-Sources represent the database and provide an execution interface for queries. Quill provides mirror sources for test purposes. Please refer to [sources](#sources) for information on how to create normal sources.
-
-Instead of running the query, mirror sources return a structure with the information that would be used to run the query. There are two mirror source versions:
-
-- `io.getquill.source.mirror.mirrorSource`: Mirrors the quotation AST
-- `io.getquill.source.sql.mirror.mirrorSource`: Mirrors the SQL query
-
-This documentation uses the SQL mirror in its examples under the `db` name:
-
-```scala
-val db = io.getquill.source.sql.mirror.mirrorSource
-```
-
 # Quotation #
 
 The QDSL allows the user to write plain Scala code, leveraging scala's syntax and type system. Quotations are created using the `quote` method and can contain any excerpt of code that uses supported operations. To create quotations, first import `quote` and some other auxiliary methods:
@@ -98,7 +83,22 @@ val q = quote {
 }
 ```
 
-## Compile-time quotations ##
+# Mirror sources #
+
+Sources represent the database and provide an execution interface for queries. Quill provides mirror sources for test purposes. Please refer to [sources](#sources) for information on how to create normal sources.
+
+Instead of running the query, mirror sources return a structure with the information that would be used to run the query. There are two mirror source versions:
+
+- `io.getquill.source.mirror.mirrorSource`: Mirrors the quotation AST
+- `io.getquill.source.sql.mirror.mirrorSource`: Mirrors the SQL query
+
+This documentation uses the SQL mirror in its examples under the `db` name:
+
+```scala
+val db = io.getquill.source.sql.mirror.mirrorSource
+```
+
+# Compile-time quotations #
 
 Quotations are both compile-time and runtime values. Quill uses a type refinement to store the quotation's AST as an annotation available at compile-time and the `q.ast` method exposes the AST as runtime value.
 
