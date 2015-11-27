@@ -293,6 +293,41 @@ val q = quote {
 }
 ```
 
+## Compile-time quotations ##
+
+Quotations are both compile-time and runtime values. Quill uses a type refinement to store the quotation's AST as an annotation available at compile-time and the `q.ast` method exposes the ast as runtime value.
+
+It is important to avoid giving explicit types to quotations when possible. For instance, this quotation can't be read at compile-time as the type refinement is lost:
+
+```scala
+val q: Quoted[Query[Circle]] = quote {
+  query[Circle].filter(c => c.radius > 10)
+}
+
+db.run(q) // Dynamic query
+```
+
+Quill falls back to runtime normalization and query generation if the quotation's AST can be read at compile-time. Please refer to [dynamic queries](#dynamic-queries) for more information
+
+# Parametrized quotations #
+
+Quotations are designed to be self-contained, without references to runtime values ouside their scope. If a quotation needs to receive a runtime value, it needs to be done by defining the quotation as a function:
+
+```scala
+val q = quote {
+  (r: Int) =>
+    query[Circle].filter(_.radius > r)
+}
+```
+
+The runtime value can be specified when running it:
+
+```scala
+db.run(q).using(10)
+```
+
+The method `run` is a bridge between the compile-time quotations and the runtime execution.
+
 # Schema #
 
 The database schema is represented by case classes. By default, quill uses the class and field names as the database identifiers:
@@ -324,12 +359,12 @@ db.run(q) // SELECT c.radius_column FROM circle_table c WHERE c.radius_column > 
 If multiple tables require custom identifiers, it is good practice to define a `schema` object with all table queries to be reused across multiple queries:
 
 ```scala
+case class Circle(radius: Int)
+case class Rectangle(length: Int, width: Int)
 object schema {
-  case class Circle(radius: Int)
   val circles = quote {
     query[Circle]("circle_table", _.radius -> "radius_column")
   }
-  case class Rectangle(length: Int, width: Int)
   val rectangles = quote {
     query[Rectangle]("rectangle_table", _.length -> "length_column", _.width -> "width_column")
   }
@@ -338,76 +373,301 @@ object schema {
 
 # Queries #
 
-The overall abstraction of quill queries is use database tables as if they were scala collections.
+The overall abstraction of quill queries is use database tables as if they were in-memory collections. Scala for-comprehensions provides syntatic sugar to deal with this kind of monadic operations:
+
+```scala
+case class Person(id: Int, name: String, age: Int)
+case class Contact(personId: Int, phone: String)
+
+val q = quote {
+  for {
+    p <- query[Person] if(p.id == 999)
+    c <- query[Contact] if(c.personId == p.id)
+  } yield {
+    (p.name, c.phone)
+  }
+}
+
+db.run(q)
+```
+
+Quill normalizes the quotation and translates the monadic joins to applicative joins in SQL, generating a database-friendly query that avoids nested queries.
+
+Any of the following features can be used together with the others and/or within a for-comprehension:
 
 **filter**
 ```scala
 val q = quote {
-  query[Circle].filter(c => c.radius > 0)
+  query[Person].filter(p => p.age > 18)
 }
 
-db.run(q) // SELECT c.radius FROM Circle c where c.radius > 0
+db.run(q)
 ```
 
 **map**
 ```scala
 val q = quote {
-  query[Circle].map(c => c.radius)
+  query[Person].map(p => p.name)
 }
 
 db.run(q) // SELECT c.radius FROM Circle
 ```
 
+**flatMap**
+```scala
+val q = quote {
+  query[Person].filter(p => p.age > 18).flatMap(p => query[Contact].filter(c => c.personId == p.id))
+}
+
+db.run(q)
+```
+
 **sortBy**
 ```scala
 val q = quote {
-  query[Circle].sortBy(c => c.radius)
+  query[Person].sortBy(p => p.age)
 }
 
-db.run(q) // SELECT c.radius FROM Circle SORT BY c.radius
+db.run(q)
 ```
 
 **drop/take**
 ```scala
 val q = quote {
-  query[Circle].drop(2).take(1)
+  query[Person].drop(2).take(1)
 }
 
-db.run(q) // SELECT c.radius FROM Circle LIMIT 1 OFFSET 2
+db.run(q)
+```
+
+**groupBy**
+```scala
+val q = quote {
+  query[Person].groupBy(p => p.age).map {
+    case (age, people) =>
+      (age, people.size)
+  }
+}
+
+db.run(q)
 ```
 
 **union**
 ```scala
 val q = quote {
-  query[Circle].drop(2).take(1)
+  query[Person].filter(p => p.age > 18).union(query[Person].filter(p => p.age > 60))
 }
 
-db.run(q) // SELECT c.radius FROM Circle LIMIT 1 OFFSET 2
+db.run(q)
 ```
 
+**unionAll/++**
+```scala
+val q = quote {
+  query[Person].filter(p => p.age > 18).unionAll(query[Person].filter(p => p.age > 60))
+}
 
-## Joins ##
+db.run(q)
 
+val q2 = quote {
+  query[Person].filter(p => p.age > 18) ++ query[Person].filter(p => p.age > 60)
+}
 
-## Probing ##
+db.run(q2)
+```
 
-# Dynamic queries #
+**aggregation**
+```scala
+val r = quote {
+  query[Person].map(p => p.age)
+}
+
+db.run(r.min)
+db.run(r.max)
+db.run(r.avg)
+db.run(r.sum)
+db.run(r.size)
+```
+
+**isEmpty/nonEmpty**
+```scala
+val q = quote {
+  query[Person].filter(p1 => query[Person].filter(p2 => p2.id != p1.id && p2.age == p1.age).isEmpty)
+}
+
+db.run(q)
+
+val q2 = quote {
+  query[Person].filter(p1 => query[Person].filter(p2 => p2.id != p1.id && p2.age == p1.age).nonEmpty)
+}
+
+db.run(q2)
+```
+
+**outer joins**
+```scala
+
+val q = quote {
+  query[Person].leftJoin(query[Contact]).on((p, c) => c.personId == p)
+}
+
+db.run(q)
+
+val q2 = quote {
+  query[Person].rightJoin(query[Contact]).on((p, c) => c.personId == p)
+}
+
+db.run(q2)
+
+val q3 = quote {
+  query[Person].fullJoin(query[Contact]).on((p, c) => c.personId == p)
+}
+
+db.run(q3)
+```
 
 # Actions #
 
+Database actions are defined using quotations as well. These actions don't have a collection-like API but rather a custom DSL to express inserts, deletes and updates.
+
+**insert**
+```scala
+val a = quote {
+  (personId: Int, phone: String) =>
+    query[Contact].insert(_.personId -> personId, _.phone -> phone)
+}
+
+db.run(a).using(List((999, "+1510488988")))
+```
+
+  Note: Actions receive a `List` of tuples as they are batched by default.
+
+**update**
+```scala
+val a = quote {
+  (id: Int, age: Int) =>
+  query[Person].filter(p => p.id == id).update(_.age -> age)
+}
+
+db.run(a)
+```
+
+**delete**
+```scala
+val a = quote {
+  query[Person].filter(p => p.name == "").delete
+}
+
+db.run(a)
+```
+
+# Dynamic queries #
+
+Quill's default operation mode is compile-time, but there are queries that have their structure defined only at runtime. Quill automatically falls back to runtime normalization and query generation if the query's structure is not static. Example:
+
+```scala
+sealed trait QueryType
+case object Minor extends QueryType
+case object Senior extends QueryType
+
+def people(t: QueryType) =
+  t match {
+    case Minor => quote {
+      query[Person].filter(p => p.age < 18)
+    }
+    case Senior => quote {
+      query[Person].filter(p => p.age > 65)
+    }
+  }
+
+db.run(people(Minor))
+db.run(people(Senior))
+```
+
 # Extending quill #
+
+## Infix ##
+
+Infix is a very flexible mechanism to use non-supported features without having to use plain SQL queries. It allows insertion of arbitrary sql.
+
+For instance, quill doesn't support the `FOR UPDATE` SQL feature. It can still be used through infix:
+
+```scala
+val forUpdate = quote {
+  new {
+    def apply[T](q: Query[T]) = infix"$q FOR UPDATE".as[Query[T]]
+  }
+}
+
+val a = quote {
+  query[Person].filter(p => p.age < 18)
+}
+
+db.run(forUpdate(a))
+```
+
+The `forUpdate` quotation can be reused for multiple queries.
+
+The same approach can be used for `RETURNING ID`:
+
+```scala
+val returningId = quote {
+  new {
+    def apply[T](q: Query[T]) = infix"$q RETURNING ID".as[Query[T]]
+  }
+}
+
+val a = quote {
+  query[Person].insert(_.name -> "John", _.age -> 21)
+}
+
+db.run(returningId(a))
+```
+
+A custom database function also can be used through infix:
+
+```scala
+val myFunction = quote {
+  (i: Int) => infix"MY_FUNCTION($i)"
+}
+
+val q = quote {
+  query[Person].map(p => myFunction(p.age))
+}
+
+db.run(q)
+```
 
 ## Custom encoding ##
 
-## Infix ##
+Quill uses `Encoder`s to encode runtime values defined with the `using` method and `Decoder`s to parse the query return value. The library has some encoders and decoders built-in and it is possible to provide new ones.
+
+If the correspondent database type is already supported, use `mappedEncoding`:
+
+```scala
+case class CustomValue(i: Int)
+
+implicit val decodeCustomValue = mappedEncoding[CustomValue, Int](_.i)
+implicit val encodeCustomValue = mappedEncoding[Int, CustomValue](CustomValue(_))
+```
+
+If the databse type is not supported, it is possible to provide "raw" encoders and decoders:
+
+```scala
+implicit val customValueEncoder = 
+  new db.Encoder[CustomValue] {
+    def apply(index: Int, value: CustomValue, row: Row) = ??? // database-specific implementation
+  }
+
+implicit val customValueDecoder = 
+  new db.Decoder[CustomValue] {
+    def apply(index: Int, row: R): T = ??? // database-specific implementation
+  }
+```
 
 ## Custom dialect ##
 
 ## Custom naming strategy ##
-
-# Internals #
-
-# Known limitations #
 
 # Acknowledgments #
 
