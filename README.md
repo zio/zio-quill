@@ -95,7 +95,9 @@ val existsAny = quote {
 }
 
 val q = quote {
-  query[Circle].filter(c1 => existsAny(query[Circle])(c2 => c2.radius > c1.radius))
+  query[Circle].filter { c1 => 
+    existsAny(query[Circle])(c2 => c2.radius > c1.radius)
+  }
 }
 ```
 
@@ -174,7 +176,8 @@ val q = quote {
   circles.filter(c => c.radius > 1)
 }
 
-db.run(q) // SELECT c.radius_column FROM circle_table c WHERE c.radius_column > 1
+db.run(q) 
+// SELECT c.radius_column FROM circle_table c WHERE c.radius_column > 1
 ```
 
 If multiple tables require custom identifiers, it is good practice to define a `schema` object with all table queries to be reused across multiple queries:
@@ -184,10 +187,13 @@ case class Circle(radius: Int)
 case class Rectangle(length: Int, width: Int)
 object schema {
   val circles = quote {
-    query[Circle]("circle_table", _.radius -> "radius_column")
+    query[Circle]("circle_table", 
+      _.radius -> "radius_column")
   }
   val rectangles = quote {
-    query[Rectangle]("rectangle_table", _.length -> "length_column", _.width -> "width_column")
+    query[Rectangle]("rectangle_table", 
+      _.length -> "length_column", 
+      _.width -> "width_column")
   }
 }
 ```
@@ -209,7 +215,8 @@ val q = quote {
   }
 }
 
-db.run(q) // SELECT p.name, c.phone FROM Person p, Contact c WHERE (p.id = 999) AND (c.personId = p.id)
+db.run(q) 
+// SELECT p.name, c.phone FROM Person p, Contact c WHERE (p.id = 999) AND (c.personId = p.id)
 ```
 
 Quill normalizes the quotation and translates the monadic joins to applicative joins in SQL, generating a database-friendly query that avoids nested queries.
@@ -222,7 +229,8 @@ val q = quote {
   query[Person].filter(p => p.age > 18)
 }
 
-db.run(q) // SELECT p.id, p.name, p.age FROM Person p WHERE p.age > 18
+db.run(q)
+// SELECT p.id, p.name, p.age FROM Person p WHERE p.age > 18
 ```
 
 **map**
@@ -231,7 +239,8 @@ val q = quote {
   query[Person].map(p => p.name)
 }
 
-db.run(q) // SELECT c.radius FROM Circle
+db.run(q)
+// SELECT c.radius FROM Circle
 ```
 
 **flatMap**
@@ -240,7 +249,8 @@ val q = quote {
   query[Person].filter(p => p.age > 18).flatMap(p => query[Contact].filter(c => c.personId == p.id))
 }
 
-db.run(q) // SELECT c.personId, c.phone FROM Person p, Contact c WHERE (p.age > 18) AND (c.personId = p.id)
+db.run(q)
+// SELECT c.personId, c.phone FROM Person p, Contact c WHERE (p.age > 18) AND (c.personId = p.id)
 ```
 
 **sortBy**
@@ -249,7 +259,8 @@ val q = quote {
   query[Person].sortBy(p => p.age)
 }
 
-db.run(q) // SELECT p.id, p.name, p.age FROM Person p ORDER BY p.age
+db.run(q)
+// SELECT p.id, p.name, p.age FROM Person p ORDER BY p.age
 ```
 
 **drop/take**
@@ -258,7 +269,8 @@ val q = quote {
   query[Person].drop(2).take(1)
 }
 
-db.run(q) // SELECT x.id, x.name, x.age FROM Person x LIMIT 1 OFFSET 2
+db.run(q)
+// SELECT x.id, x.name, x.age FROM Person x LIMIT 1 OFFSET 2
 ```
 
 **groupBy**
@@ -270,7 +282,8 @@ val q = quote {
   }
 }
 
-db.run(q) // SELECT p.age, COUNT(*) FROM Person p GROUP BY p.age
+db.run(q)
+// SELECT p.age, COUNT(*) FROM Person p GROUP BY p.age
 ```
 
 **union**
@@ -279,7 +292,9 @@ val q = quote {
   query[Person].filter(p => p.age > 18).union(query[Person].filter(p => p.age > 60))
 }
 
-db.run(q) // SELECT x.id, x.name, x.age FROM (SELECT id, name, age FROM Person p WHERE p.age > 18 UNION SELECT id, name, age FROM Person p1 WHERE p1.age > 60) x
+db.run(q)
+// SELECT x.id, x.name, x.age FROM (SELECT id, name, age FROM Person p WHERE p.age > 18 
+// UNION SELECT id, name, age FROM Person p1 WHERE p1.age > 60) x
 ```
 
 **unionAll/++**
@@ -294,7 +309,9 @@ val q2 = quote {
   query[Person].filter(p => p.age > 18) ++ query[Person].filter(p => p.age > 60)
 }
 
-db.run(q2) // SELECT x.id, x.name, x.age FROM (SELECT id, name, age FROM Person p WHERE p.age > 18 UNION ALL SELECT id, name, age FROM Person p1 WHERE p1.age > 60) x
+db.run(q2) 
+// SELECT x.id, x.name, x.age FROM (SELECT id, name, age FROM Person p WHERE p.age > 18 
+// UNION ALL SELECT id, name, age FROM Person p1 WHERE p1.age > 60) x
 ```
 
 **aggregation**
@@ -313,16 +330,24 @@ db.run(r.size) // SELECT COUNT(p.age) FROM Person p
 **isEmpty/nonEmpty**
 ```scala
 val q = quote {
-  query[Person].filter(p1 => query[Person].filter(p2 => p2.id != p1.id && p2.age == p1.age).isEmpty)
+  query[Person].filter{ p1 => 
+    query[Person].filter(p2 => p2.id != p1.id && p2.age == p1.age).isEmpty
+  }
 }
 
-db.run(q) // SELECT p1.id, p1.name, p1.age FROM Person p1 WHERE NOT EXISTS (SELECT * FROM Person p2 WHERE (p2.id <> p1.id) AND (p2.age = p1.age))
+db.run(q) 
+// SELECT p1.id, p1.name, p1.age FROM Person p1 WHERE 
+// NOT EXISTS (SELECT * FROM Person p2 WHERE (p2.id <> p1.id) AND (p2.age = p1.age))
 
 val q2 = quote {
-  query[Person].filter(p1 => query[Person].filter(p2 => p2.id != p1.id && p2.age == p1.age).nonEmpty)
+  query[Person].filter{ p1 => 
+    query[Person].filter(p2 => p2.id != p1.id && p2.age == p1.age).nonEmpty
+  }
 }
 
-db.run(q2) // SELECT p1.id, p1.name, p1.age FROM Person p1 WHERE EXISTS (SELECT * FROM Person p2 WHERE (p2.id <> p1.id) AND (p2.age = p1.age))
+db.run(q2)
+// SELECT p1.id, p1.name, p1.age FROM Person p1 WHERE 
+// EXISTS (SELECT * FROM Person p2 WHERE (p2.id <> p1.id) AND (p2.age = p1.age))
 ```
 
 **outer joins**
@@ -332,19 +357,25 @@ val q = quote {
   query[Person].leftJoin(query[Contact]).on((p, c) => c.personId == p)
 }
 
-db.run(q) // SELECT p.id, p.name, p.age, c.personId, c.phone FROM Person p LEFT JOIN Contact c ON c.personId = p
+db.run(q) 
+// SELECT p.id, p.name, p.age, c.personId, c.phone 
+// FROM Person p LEFT JOIN Contact c ON c.personId = p
 
 val q2 = quote {
   query[Person].rightJoin(query[Contact]).on((p, c) => c.personId == p)
 }
 
-db.run(q2) // SELECT p.id, p.name, p.age, c.personId, c.phone FROM Person p RIGHT JOIN Contact c ON c.personId = p
+db.run(q2) 
+// SELECT p.id, p.name, p.age, c.personId, c.phone 
+// FROM Person p RIGHT JOIN Contact c ON c.personId = p
 
 val q3 = quote {
   query[Person].fullJoin(query[Contact]).on((p, c) => c.personId == p)
 }
 
-db.run(q3) // SELECT p.id, p.name, p.age, c.personId, c.phone FROM Person p FULL JOIN Contact c ON c.personId = p
+db.run(q3) 
+// SELECT p.id, p.name, p.age, c.personId, c.phone 
+// FROM Person p FULL JOIN Contact c ON c.personId = p
 ```
 
 # Actions #
@@ -358,7 +389,8 @@ val a = quote {
     query[Contact].insert(_.personId -> personId, _.phone -> phone)
 }
 
-db.run(a).using(List((999, "+1510488988"))) // INSERT INTO Contact (personId,phone) VALUES (?, ?)
+db.run(a).using(List((999, "+1510488988"))) 
+// INSERT INTO Contact (personId,phone) VALUES (?, ?)
 ```
 
   Note: Actions receive a `List` of tuples as they are batched by default.
@@ -370,7 +402,8 @@ val a = quote {
     query[Person].filter(p => p.id == id).update(_.age -> age)
 }
 
-db.run(a) // UPDATE Person SET age = ? WHERE id = ?
+db.run(a) 
+// UPDATE Person SET age = ? WHERE id = ?
 ```
 
 **delete**
@@ -379,7 +412,8 @@ val a = quote {
   query[Person].filter(p => p.name == "").delete
 }
 
-db.run(a) // DELETE FROM Person WHERE name = ''
+db.run(a) 
+// DELETE FROM Person WHERE name = ''
 ```
 
 # Dynamic queries #
@@ -401,8 +435,11 @@ def people(t: QueryType): Quoted[Query[Person]] =
     }
   }
 
-db.run(people(Minor)) // SELECT p.id, p.name, p.age FROM Person p WHERE p.age < 18
-db.run(people(Senior)) // SELECT p.id, p.name, p.age FROM Person p WHERE p.age > 65
+db.run(people(Minor)) 
+// SELECT p.id, p.name, p.age FROM Person p WHERE p.age < 18
+
+db.run(people(Senior)) 
+// SELECT p.id, p.name, p.age FROM Person p WHERE p.age > 65
 ```
 
 # Extending quill #
@@ -424,7 +461,8 @@ val a = quote {
   query[Person].filter(p => p.age < 18)
 }
 
-db.run(forUpdate(a)) // SELECT p.id, p.name, p.age FROM (SELECT * FROM Person p WHERE p.age < 18 FOR UPDATE) p
+db.run(forUpdate(a)) 
+// SELECT p.id, p.name, p.age FROM (SELECT * FROM Person p WHERE p.age < 18 FOR UPDATE) p
 ```
 
 The `forUpdate` quotation can be reused for multiple queries.
@@ -456,7 +494,8 @@ val q = quote {
   query[Person].map(p => myFunction(p.age))
 }
 
-db.run(q) // INSERT INTO Person (name,age) VALUES ('John', 21) RETURNING ID
+db.run(q) 
+// INSERT INTO Person (name,age) VALUES ('John', 21) RETURNING ID
 ```
 
 ## Custom encoding ##
@@ -479,12 +518,14 @@ import io.getquill.source.mirror.Row
 
 implicit val customValueEncoder = 
   new db.Encoder[CustomValue] {
-    def apply(index: Int, value: CustomValue, row: Row) = ??? // database-specific implementation
+    def apply(index: Int, value: CustomValue, row: Row) = 
+      ??? // database-specific implementation
   }
 
 implicit val customValueDecoder = 
   new db.Decoder[CustomValue] {
-    def apply(index: Int, row: Row) = ??? // database-specific implementation
+    def apply(index: Int, row: Row) = 
+      ??? // database-specific implementation
   }
 ```
 
