@@ -9,7 +9,23 @@ Compile-time Language Integrated Query for Scala
 [![maven](https://img.shields.io/maven-central/v/io.getquill/quill_2.11.svg)](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22io.getquill%22)
 
 * [Overview](#overview)
-* 
+* [Quotation](#quotation)
+* [Mirror sources](#mirror-sources)
+* [Compile-time quotations](#compile-time-quotations)
+* [Parametrized quotations](#parametrized-quotations)
+* [Schema](#schema)
+* [Queries](#queries)
+* [Actions](#actions)
+* [Dynamic queries](#dynamic-queries)
+* [Sources](#sources)
+  * [Dialect](#dialect)
+  * [Naming strategy](#naming-strategy)
+  * [Configuration](#configuration)
+* [Extending quill](#extending-quill)
+  * [Infix](#infix)
+  * [Custom encoding](#custom-encoding)
+* [Acknowledgments](#acknowledgments)
+* [License](#license)
 
 # Overview #
 
