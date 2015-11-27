@@ -17,13 +17,13 @@ Compile-time Language Integrated Query for Scala
 * [Queries](#queries)
 * [Actions](#actions)
 * [Dynamic queries](#dynamic-queries)
+* [Extending quill](#extending-quill)
+  * [Infix](#infix)
+  * [Custom encoding](#custom-encoding)
 * [Sources](#sources)
   * [Dialect](#dialect)
   * [Naming strategy](#naming-strategy)
   * [Configuration](#configuration)
-* [Extending quill](#extending-quill)
-  * [Infix](#infix)
-  * [Custom encoding](#custom-encoding)
 * [Acknowledgments](#acknowledgments)
 * [License](#license)
 
@@ -405,6 +405,90 @@ db.run(people(Minor)) // SELECT p.id, p.name, p.age FROM Person p WHERE p.age < 
 db.run(people(Senior)) // SELECT p.id, p.name, p.age FROM Person p WHERE p.age < 18
 ```
 
+# Extending quill #
+
+## Infix ##
+
+Infix is a very flexible mechanism to use non-supported features without having to use plain SQL queries. It allows insertion of arbitrary SQL.
+
+For instance, quill doesn't support the `FOR UPDATE` SQL feature. It can still be used through infix:
+
+```scala
+val forUpdate = quote {
+  new {
+    def apply[T](q: Query[T]) = infix"$q FOR UPDATE".as[Query[T]]
+  }
+}
+
+val a = quote {
+  query[Person].filter(p => p.age < 18)
+}
+
+db.run(forUpdate(a)) // SELECT p.id, p.name, p.age FROM (SELECT * FROM Person p WHERE p.age < 18 FOR UPDATE) p
+```
+
+The `forUpdate` quotation can be reused for multiple queries.
+
+The same approach can be used for `RETURNING ID`:
+
+```scala
+val returningId = quote {
+  new {
+    def apply[T](a: Action[T]) = infix"$a RETURNING ID".as[Action[T]]
+  }
+}
+
+val a = quote {
+  query[Person].insert(_.name -> "John", _.age -> 21)
+}
+
+db.run(returningId(a))
+```
+
+A custom database function also can be used through infix:
+
+```scala
+val myFunction = quote {
+  (i: Int) => infix"MY_FUNCTION($i)".as[Int]
+}
+
+val q = quote {
+  query[Person].map(p => myFunction(p.age))
+}
+
+db.run(q) // INSERT INTO Person (name,age) VALUES ('John', 21) RETURNING ID
+```
+
+## Custom encoding ##
+
+Quill uses `Encoder`s to encode runtime values defined with the `using` method and `Decoder`s to parse the query return value. The library has some encoders and decoders built-in and it is possible to provide new ones.
+
+If the correspondent database type is already supported, use `mappedEncoding`:
+
+```scala
+case class CustomValue(i: Int)
+
+implicit val decodeCustomValue = mappedEncoding[CustomValue, Int](_.i)
+implicit val encodeCustomValue = mappedEncoding[Int, CustomValue](CustomValue(_))
+```
+
+If the database type is not supported, it is possible to provide "raw" encoders and decoders:
+
+```scala
+import io.getquill.source.mirror.Row
+
+implicit val customValueEncoder = 
+  new db.Encoder[CustomValue] {
+    def apply(index: Int, value: CustomValue, row: Row) = ??? // database-specific implementation
+  }
+
+implicit val customValueDecoder = 
+  new db.Decoder[CustomValue] {
+    def apply(index: Int, row: Row) = ??? // database-specific implementation
+  }
+```
+
+
 # Sources #
 
 Sources represent the database and provide an execution interface for queries. Example:
@@ -603,90 +687,6 @@ testDB.dest=localhost:3306
 testDB.user=root
 testDB.password=root
 testDB.database=database
-```
-
-
-# Extending quill #
-
-## Infix ##
-
-Infix is a very flexible mechanism to use non-supported features without having to use plain SQL queries. It allows insertion of arbitrary SQL.
-
-For instance, quill doesn't support the `FOR UPDATE` SQL feature. It can still be used through infix:
-
-```scala
-val forUpdate = quote {
-  new {
-    def apply[T](q: Query[T]) = infix"$q FOR UPDATE".as[Query[T]]
-  }
-}
-
-val a = quote {
-  query[Person].filter(p => p.age < 18)
-}
-
-db.run(forUpdate(a)) // SELECT p.id, p.name, p.age FROM (SELECT * FROM Person p WHERE p.age < 18 FOR UPDATE) p
-```
-
-The `forUpdate` quotation can be reused for multiple queries.
-
-The same approach can be used for `RETURNING ID`:
-
-```scala
-val returningId = quote {
-  new {
-    def apply[T](a: Action[T]) = infix"$a RETURNING ID".as[Action[T]]
-  }
-}
-
-val a = quote {
-  query[Person].insert(_.name -> "John", _.age -> 21)
-}
-
-db.run(returningId(a))
-```
-
-A custom database function also can be used through infix:
-
-```scala
-val myFunction = quote {
-  (i: Int) => infix"MY_FUNCTION($i)".as[Int]
-}
-
-val q = quote {
-  query[Person].map(p => myFunction(p.age))
-}
-
-db.run(q) // INSERT INTO Person (name,age) VALUES ('John', 21) RETURNING ID
-```
-
-## Custom encoding ##
-
-Quill uses `Encoder`s to encode runtime values defined with the `using` method and `Decoder`s to parse the query return value. The library has some encoders and decoders built-in and it is possible to provide new ones.
-
-If the correspondent database type is already supported, use `mappedEncoding`:
-
-```scala
-case class CustomValue(i: Int)
-
-implicit val decodeCustomValue = mappedEncoding[CustomValue, Int](_.i)
-implicit val encodeCustomValue = mappedEncoding[Int, CustomValue](CustomValue(_))
-```
-
-If the database type is not supported, it is possible to provide "raw" encoders and decoders:
-
-```scala
-import io.getquill.source.mirror.Row
-
-implicit val customValueEncoder = 
-  new db.Encoder[CustomValue] {
-    def apply(index: Int, value: CustomValue, row: Row) = ??? // database-specific implementation
-  }
-
-implicit val customValueDecoder = 
-  new db.Decoder[CustomValue] {
-    def apply(index: Int, row: Row) = ??? // database-specific implementation
-  }
 ```
 
 # Acknowledgments #
