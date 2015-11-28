@@ -480,6 +480,7 @@ val a = quote {
 }
 
 db.run(returningId(a))
+// INSERT INTO Person (name,age) VALUES ('John', 21) RETURNING ID
 ```
 
 A custom database function can also be used through infix:
@@ -494,7 +495,7 @@ val q = quote {
 }
 
 db.run(q) 
-// INSERT INTO Person (name,age) VALUES ('John', 21) RETURNING ID
+// SELECT MY_FUNCTION(p.age) FROM Person p
 ```
 
 ## Custom encoding ##
