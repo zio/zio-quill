@@ -199,7 +199,7 @@ object schema {
 
 # Queries #
 
-The overall abstraction of quill queries is use database tables as if they were in-memory collections. Scala for-comprehensions provides syntatic sugar to deal with this kind of monadic operations:
+The overall abstraction of quill queries is use database tables as if they were in-memory collections. Scala for-comprehensions provide syntatic sugar to deal with this kind of monadic operations:
 
 ```scala
 case class Person(id: Int, name: String, age: Int)
@@ -302,7 +302,9 @@ val q = quote {
   query[Person].filter(p => p.age > 18).unionAll(query[Person].filter(p => p.age > 60))
 }
 
-db.run(q) // SELECT x.id, x.name, x.age FROM (SELECT id, name, age FROM Person p WHERE p.age > 18 UNION ALL SELECT id, name, age FROM Person p1 WHERE p1.age > 60) x
+db.run(q) 
+// SELECT x.id, x.name, x.age FROM (SELECT id, name, age FROM Person p WHERE p.age > 18 
+// UNION ALL SELECT id, name, age FROM Person p1 WHERE p1.age > 60) x
 
 val q2 = quote {
   query[Person].filter(p => p.age > 18) ++ query[Person].filter(p => p.age > 60)
@@ -401,7 +403,7 @@ val a = quote {
     query[Person].filter(p => p.id == id).update(_.age -> age)
 }
 
-db.run(a) 
+db.run(a).using(List((999, 18)))
 // UPDATE Person SET age = ? WHERE id = ?
 ```
 
@@ -445,7 +447,7 @@ db.run(people(Senior))
 
 ## Infix ##
 
-Infix is a very flexible mechanism to use non-supported features without having to use plain SQL queries. It allows insertion of arbitrary SQL strings.
+Infix is a very flexible mechanism to use non-supported features without having to use plain SQL queries. It allows insertion of arbitrary SQL strings within quotations.
 
 For instance, quill doesn't support the `FOR UPDATE` SQL feature. It can still be used through infix:
 
