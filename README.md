@@ -590,7 +590,7 @@ sbt dependencies
 ```
 libraryDependencies ++= Seq(
   "mysql" % "mysql-connector-java" % "5.1.36",
-  "io.getquill" % "quill-jdbc" % "0.1.0"
+  "io.getquill" %% "quill-jdbc" % "0.1.0"
 )
 ```
 
@@ -620,7 +620,7 @@ sbt dependencies
 ```
 libraryDependencies ++= Seq(
   "postgresql" % "postgresql" % "9.1-901.jdbc4",
-  "io.getquill" % "quill-jdbc" % "0.1.0"
+  "io.getquill" %% "quill-jdbc" % "0.1.0"
 )
 ```
 
@@ -652,7 +652,7 @@ Please refer to HikariCP's [documentation](https://github.com/brettwooldridge/Hi
 sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" % "quill-async" % "0.1.0"
+  "io.getquill" %% "quill-async" % "0.1.0"
 )
 ```
 
@@ -682,7 +682,7 @@ db.poolValidationInterval=100
 sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" % "quill-async" % "0.1.0"
+  "io.getquill" %% "quill-async" % "0.1.0"
 )
 ```
 
@@ -712,7 +712,7 @@ db.poolValidationInterval=100
 sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" % "quill-finagle-mysql" % "0.1.0"
+  "io.getquill" %% "quill-finagle-mysql" % "0.1.0"
 )
 ```
 
