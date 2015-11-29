@@ -12,13 +12,6 @@
   </head>
 
   <body>
-    
-    <script>
-  ((window.gitter = {}).chat = {}).options = {
-    room: 'getquill/quill'
-  };
-</script>
-<script src="https://sidecar.gitter.im/dist/sidecar.v1.js" async defer></script>
 
     <!-- HEADER -->
     <div id="header_wrap" class="outer">
@@ -626,7 +619,7 @@ db.run(q)
 
 <pre><code>libraryDependencies ++= Seq(
   "mysql" % "mysql-connector-java" % "5.1.36",
-  "io.getquill" % "quill-jdbc" % "0.1.0"
+  "io.getquill" %% "quill-jdbc" % "0.1.0"
 )
 </code></pre>
 
@@ -655,7 +648,7 @@ db.dataSource.prepStmtCacheSqlLimit=2048
 
 <pre><code>libraryDependencies ++= Seq(
   "postgresql" % "postgresql" % "9.1-901.jdbc4",
-  "io.getquill" % "quill-jdbc" % "0.1.0"
+  "io.getquill" %% "quill-jdbc" % "0.1.0"
 )
 </code></pre>
 
@@ -687,7 +680,7 @@ db.dataSource.serverName=host
 <p>sbt dependencies</p>
 
 <pre><code>libraryDependencies ++= Seq(
-  "io.getquill" % "quill-async" % "0.1.0"
+  "io.getquill" %% "quill-async" % "0.1.0"
 )
 </code></pre>
 
@@ -716,7 +709,7 @@ db.poolValidationInterval=100
 <p>sbt dependencies</p>
 
 <pre><code>libraryDependencies ++= Seq(
-  "io.getquill" % "quill-async" % "0.1.0"
+  "io.getquill" %% "quill-async" % "0.1.0"
 )
 </code></pre>
 
@@ -746,7 +739,7 @@ db.poolValidationInterval=100
 <p>sbt dependencies</p>
 
 <pre><code>libraryDependencies ++= Seq(
-  "io.getquill" % "quill-finagle-mysql" % "0.1.0"
+  "io.getquill" %% "quill-finagle-mysql" % "0.1.0"
 )
 </code></pre>
 
