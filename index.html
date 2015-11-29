@@ -31,7 +31,7 @@
     <!-- MAIN CONTENT -->
     <div id="main_content_wrap" class="outer">
       <section id="main_content" class="inner">
-        <p>Quill provides a Quoted Domain Specific Language (QDSL) to express queries in Scala and execute them in a target language. The library's core is designed to support multiple target languages and the current version features support for Structured Language Queries (SQL).</p>
+        <p>Quill provides a Quoted Domain Specific Language (<a href="http://homepages.inf.ed.ac.uk/slindley/papers/qdsl-draft-february2015.pdf">QDSL</a>) to express queries in Scala and execute them in a target language. The library's core is designed to support multiple target languages and the current version features support for Structured Query Language (<a href="https://en.wikipedia.org/wiki/SQL">SQL</a>).</p>
 
 <p><img src="https://raw.githubusercontent.com/getquill/quill/master/example.gif" alt="example"></p>
 
@@ -223,7 +223,7 @@ db.run(q)
 <h1>
 <a id="queries" class="anchor" href="#queries" aria-hidden="true"><span class="octicon octicon-link"></span></a>Queries</h1>
 
-<p>The overall abstraction of quill queries is use database tables as if they were in-memory collections. Scala for-comprehensions provides syntatic sugar to deal with this kind of monadic operations:</p>
+<p>The overall abstraction of quill queries is use database tables as if they were in-memory collections. Scala for-comprehensions provide syntatic sugar to deal with this kind of monadic operations:</p>
 
 <div class="highlight highlight-source-scala"><pre><span class="pl-k">case</span> <span class="pl-k">class</span> <span class="pl-en">Person</span>(<span class="pl-v">id</span>: <span class="pl-k">Int</span>, <span class="pl-v">name</span>: <span class="pl-k">String</span>, <span class="pl-v">age</span>: <span class="pl-k">Int</span>)
 <span class="pl-k">case</span> <span class="pl-k">class</span> <span class="pl-en">Contact</span>(<span class="pl-v">personId</span>: <span class="pl-k">Int</span>, <span class="pl-v">phone</span>: <span class="pl-k">String</span>)
@@ -317,7 +317,9 @@ db.run(q)
   query[<span class="pl-en">Person</span>].filter(p <span class="pl-k">=&gt;</span> p.age <span class="pl-k">&gt;</span> <span class="pl-c1">18</span>).unionAll(query[<span class="pl-en">Person</span>].filter(p <span class="pl-k">=&gt;</span> p.age <span class="pl-k">&gt;</span> <span class="pl-c1">60</span>))
 }
 
-db.run(q) <span class="pl-c">// SELECT x.id, x.name, x.age FROM (SELECT id, name, age FROM Person p WHERE p.age &gt; 18 UNION ALL SELECT id, name, age FROM Person p1 WHERE p1.age &gt; 60) x</span>
+db.run(q) 
+<span class="pl-c">// SELECT x.id, x.name, x.age FROM (SELECT id, name, age FROM Person p WHERE p.age &gt; 18 </span>
+<span class="pl-c">// UNION ALL SELECT id, name, age FROM Person p1 WHERE p1.age &gt; 60) x</span>
 
 <span class="pl-k">val</span> <span class="pl-en">q2</span> <span class="pl-k">=</span> quote {
   query[<span class="pl-en">Person</span>].filter(p <span class="pl-k">=&gt;</span> p.age <span class="pl-k">&gt;</span> <span class="pl-c1">18</span>) <span class="pl-k">++</span> query[<span class="pl-en">Person</span>].filter(p <span class="pl-k">=&gt;</span> p.age <span class="pl-k">&gt;</span> <span class="pl-c1">60</span>)
@@ -412,7 +414,7 @@ db.run(a).using(<span class="pl-en">List</span>((<span class="pl-c1">999</span>,
     query[<span class="pl-en">Person</span>].filter(p <span class="pl-k">=&gt;</span> p.id <span class="pl-k">==</span> id).update(_.age <span class="pl-k">-</span><span class="pl-k">&gt;</span> age)
 }
 
-db.run(a) 
+db.run(a).using(<span class="pl-en">List</span>((<span class="pl-c1">999</span>, <span class="pl-c1">18</span>)))
 <span class="pl-c">// UPDATE Person SET age = ? WHERE id = ?</span></pre></div>
 
 <p><strong>delete</strong></p>
@@ -455,7 +457,7 @@ db.run(people(<span class="pl-en">Senior</span>))
 <h2>
 <a id="infix" class="anchor" href="#infix" aria-hidden="true"><span class="octicon octicon-link"></span></a>Infix</h2>
 
-<p>Infix is a very flexible mechanism to use non-supported features without having to use plain SQL queries. It allows insertion of arbitrary SQL strings.</p>
+<p>Infix is a very flexible mechanism to use non-supported features without having to use plain SQL queries. It allows insertion of arbitrary SQL strings within quotations.</p>
 
 <p>For instance, quill doesn't support the <code>FOR UPDATE</code> SQL feature. It can still be used through infix:</p>
 
@@ -486,7 +488,8 @@ db.run(forUpdate(a))
   query[<span class="pl-en">Person</span>].insert(_.name <span class="pl-k">-</span><span class="pl-k">&gt;</span> <span class="pl-s"><span class="pl-pds">"</span>John<span class="pl-pds">"</span></span>, _.age <span class="pl-k">-</span><span class="pl-k">&gt;</span> <span class="pl-c1">21</span>)
 }
 
-db.run(returningId(a))</pre></div>
+db.run(returningId(a))
+<span class="pl-c">// INSERT INTO Person (name,age) VALUES ('John', 21) RETURNING ID</span></pre></div>
 
 <p>A custom database function can also be used through infix:</p>
 
@@ -499,7 +502,7 @@ db.run(returningId(a))</pre></div>
 }
 
 db.run(q) 
-<span class="pl-c">// INSERT INTO Person (name,age) VALUES ('John', 21) RETURNING ID</span></pre></div>
+<span class="pl-c">// SELECT MY_FUNCTION(p.age) FROM Person p</span></pre></div>
 
 <h2>
 <a id="custom-encoding" class="anchor" href="#custom-encoding" aria-hidden="true"><span class="octicon octicon-link"></span></a>Custom encoding</h2>
