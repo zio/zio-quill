@@ -239,7 +239,7 @@ val q = quote {
 }
 
 db.run(q)
-// SELECT c.radius FROM Circle
+// SELECT p.name FROM Person p
 ```
 
 **flatMap**
