@@ -10,6 +10,7 @@ import io.getquill.source.sql.SqlSource
 import scala.util.Try
 import io.getquill.source.sql.idiom.SqlIdiom
 import scala.util.control.NonFatal
+import scala.annotation.tailrec
 
 class JdbcSource[D <: SqlIdiom, N <: NamingStrategy]
     extends SqlSource[D, N, ResultSet, PreparedStatement]
@@ -81,9 +82,10 @@ class JdbcSource[D <: SqlIdiom, N <: NamingStrategy]
     }
   }
 
-  private def extractResult[T](rs: ResultSet, extractor: ResultSet => T): List[T] =
+  @tailrec
+  private def extractResult[T](rs: ResultSet, extractor: ResultSet => T, acc: List[T] = List()): List[T] =
     if (rs.next)
-      extractor(rs) +: extractResult(rs, extractor)
+      extractResult(rs, extractor, acc :+ extractor(rs))
     else
-      List()
+      acc
 }
