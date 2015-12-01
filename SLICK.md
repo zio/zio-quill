@@ -3,7 +3,7 @@ This document compares Quill to the [Typesafe Slick](http://slick.typesafe.com) 
 
 # Abstraction #
 
-Quill and Slick have similar abstraction levels. They represent database rows as flat immutable structures (case classes without nested data) and provide a type-safe composable query DSLs.
+Quill and Slick have similar abstraction levels. They represent database rows as flat immutable structures (case classes without nested data) and provide a type-safe composable query DSL.
 
 The Slick documentation refers to this abstraction level as a [new paradigm called functional-relational mapping (FRM)](https://github.com/slick/slick/blob/3b3bd36c93c6d9c63b0471ff4d8409f913954b2b/slick/src/sphinx/introduction.rst#functional-relational-mapping). In fact, the approach is not new and backs from the late '90s with ["Kleisli􏰂, a Functional Query System"](https://www.comp.nus.edu.sg/~wongls/psZ/wls-jfp98-3.ps). The approach was also used by the [Links programming language](http://groups.inf.ed.ac.uk/links/papers/links-fmco06.pdf), and later on was popularized by [Microsoft LINQ](https://msdn.microsoft.com/en-us/library/bb425822.aspx) in a less functional manner.
 
@@ -17,7 +17,7 @@ Slick is coupled to SQL and JDBC. The are github issues requesting support for o
 
 # QDSl versus EDSL #
 
-Quill's DSL is a macro-based quotation mechanism, allowing usage of Scala types and operators directly. Please refer to the paper ["Everything old is new again: Quoted Domain Specific Languages"](http://homepages.inf.ed.ac.uk/wadler/papers/qdsl/qdsl.pdf) for more details. On the other hand, Slick provides DSL that requires lifting of types and operations to the correspondent DSL counterparts at runtime. Example:
+Quill's DSL is a macro-based quotation mechanism, allowing usage of Scala types and operators directly. Please refer to the paper ["Everything old is new again: Quoted Domain Specific Languages"](http://homepages.inf.ed.ac.uk/wadler/papers/qdsl/qdsl.pdf) for more details. On the other hand, Slick provides a DSL that requires lifting of types and operations to the correspondent DSL counterparts at runtime. Example:
 
 **quill**
 ```scala
@@ -90,7 +90,7 @@ val q =
     }
 ```
 
-In order to produce the lifted AST at runtime, Slick requires boilerplate code to map the database model to lifted values. The query definition also requires special equality operators and usage of `Rep` for composable queries. There's an impression that the query is defined using the models directly, but it actually uses only lifted types.
+In order to produce the lifted AST at runtime, Slick requires boilerplate code to map the database model to lifted values. The query definition also requires special equality operators and usage of `Rep` for composable queries.
 
 # Compile-time versus Runtime #
 
