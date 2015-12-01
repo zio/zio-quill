@@ -1,0 +1,108 @@
+
+This document compares Quill to the [Typesafe Slick](http://slick.typesafe.com) library. This is not a complete comparison, corrections and additions are welcome.
+
+# Abstraction #
+
+Quill and Slick have similar abstraction levels. They represent database rows as flat immutable structures (case classes without nested data) and provide a type-safe composable query DSLs.
+
+The Slick documentation refers to this abstraction level as a [new paradigm called functional-relational mapping (FRM)](https://github.com/slick/slick/blob/3b3bd36c93c6d9c63b0471ff4d8409f913954b2b/slick/src/sphinx/introduction.rst#functional-relational-mapping). In fact, the approach is not new and backs from the late '90s with ["Kleisli􏰂, a Functional Query System"](https://www.comp.nus.edu.sg/~wongls/psZ/wls-jfp98-3.ps). The approach was also used by the [Links programming language](http://groups.inf.ed.ac.uk/links/papers/links-fmco06.pdf), and later on was popularized by [Microsoft LINQ](https://msdn.microsoft.com/en-us/library/bb425822.aspx) in a less functional manner.
+
+Quill is referred as a Language Integrated Query library to match the available publications on the subject. The paper ["Language-integrated query using comprehension syntax: state of the art, open problems, and work in progress"](http://research.microsoft.com/en-us/events/dcp2014/cheney.pdf) has a good overview of the current implementations, although it doesn't mention Slick nor Quill.
+
+# Generality #
+
+Quill's core is designed to support multiple query languages, not only SQL, and support multiple execution mechanisms. The current version has SQL support using [async drivers](https://github.com/mauricio/postgresql-async), [finagle](https://github.com/twitter/finagle/tree/develop/finagle-mysql) and [jdbc](https://en.wikipedia.org/wiki/Java_Database_Connectivity).
+
+Slick is coupled to SQL and JDBC. The are github issues requesting support for other query languages and drivers, but there is no considerable progress on this matter.
+
+# QDSl versus EDSL #
+
+Quill's DSL is a macro-based quotation mechanism, allowing usage of Scala types and operators directly. Please refer to the paper ["Everything old is new again: Quoted Domain Specific Languages"](http://homepages.inf.ed.ac.uk/wadler/papers/qdsl/qdsl.pdf) for more details. On the other hand, Slick provides DSL that requires lifting of types and operations to the correspondent DSL counterparts at runtime. Example:
+
+**quill**
+```scala
+case class Person(name: String, age: Int)
+
+val range = quote {
+  (a: Int, b: Int) =>
+    for {
+      u <- query[Person] if (a <= u.age && u.age < b)
+    } yield {
+      u
+    }
+}
+val ageFromName = quote {
+  (s: String) =>
+    for {
+      u <- query[Person] if (s == u.name)
+    } yield {
+      u.age
+    }
+}
+val q = quote {
+  (s: String, t: String) =>
+    for {
+      a <- ageFromName(s)
+      b <- ageFromName(t)
+      r <- range(a, b)
+    } yield {
+      r
+    }
+}
+```
+
+**slick**
+```scala
+case class PersonRow(name: String, age: Int)
+
+class Person(_tableTag: Tag) extends Table[PersonRow](_tableTag, "Person") {
+  def * = (name, age) <> (PersonRow.tupled, PersonRow.unapply)
+  def ? = (Rep.Some(name), Rep.Some(age)).shaped.<>({r=>import r._; _1.map(_=> PersonRow.tupled((_1.get, _2.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
+
+  val name: Rep[String] = column[String]("name", O.Length(255,varying=true))
+  val age: Rep[Int] = column[Int]("age")
+}
+
+lazy val Person = new TableQuery(tag => new Person(tag))
+
+val range =
+  (a: Rep[Int], b: Rep[Int]) =>
+    for {
+      u <- Person if (a <= u.age && u.age < b)
+    } yield {
+      u
+    }
+val ageFromName =
+  (s: Rep[String]) =>
+    for {
+      u <- Person if (s === u.name)
+    } yield {
+      u.age
+    }
+val q = 
+  (s: String, t: String) =>
+    for {
+      a <- ageFromName(s)
+      b <- ageFromName(t)
+      r <- range(a, b)
+    } yield {
+      r
+    }
+```
+
+In order to produce the lifted AST at runtime, Slick requires boilerplate code to map the database model to lifted values. The query definition also requires special equality operators and usage of `Rep` for composable queries. There's an impression that the query is defined using the models directly, but it actually uses only lifted types.
+
+# Compile-time versus Runtime #
+
+Quill's quoted DSL opens a new path to query generation. For the quotations that are known statically, the query normalization and translation to SQL happen at compile-time. The user receives feedback during compilation, knows the SQL string that will be used and if it will succeed when executed against the database.
+
+The feedback cycle using Slick is much longer. Some factors like normalization bugs and unsupported operations can make the query fail, but only at runtime it is possible to know whether they will affect the query or not.
+
+# Non-blocking IO #
+
+Slick provides an asynchronous wrapper on top of jdbc's blocking interface, making harder to scale applications using it. On the other hand, quill provides fully asynchronous non-blocking database access through quill-async and quill-finagle-mysql.
+
+# Extensibility #
+
+It is common to have to fallback to plain SQL when a feature is not supported by Slick. Quill's [`infix` mechanism](https://github.com/getquill/quill#infix) solves this problem by allowing the user to insert arbitrary SQL within quotations at any position.
+
