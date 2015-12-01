@@ -1,7 +1,7 @@
 
-This document compares Quill to the [Typesafe Slick](http://slick.typesafe.com) library. This is not a complete comparison, corrections and additions are welcome.
+This document compares Quill to the [Typesafe Slick](http://slick.typesafe.com) library. This is an incomplete comparison, corrections and additions are welcome.
 
-# Abstraction #
+# Abstraction level #
 
 Quill and Slick have similar abstraction levels. They represent database rows as flat immutable structures (case classes without nested data) and provide a type-safe composable query DSL.
 
@@ -17,7 +17,7 @@ Slick is coupled to SQL and JDBC. The are github issues requesting support for o
 
 # QDSl versus EDSL #
 
-Quill's DSL is a macro-based quotation mechanism, allowing usage of Scala types and operators directly. Please refer to the paper ["Everything old is new again: Quoted Domain Specific Languages"](http://homepages.inf.ed.ac.uk/wadler/papers/qdsl/qdsl.pdf) for more details. On the other hand, Slick provides a DSL that requires lifting of types and operations to the correspondent DSL counterparts at runtime. Example:
+Quill's DSL is a macro-based quotation mechanism, allowing usage of Scala types and operators directly. Please refer to the paper ["Everything old is new again: Quoted Domain Specific Languages"](http://homepages.inf.ed.ac.uk/wadler/papers/qdsl/qdsl.pdf) for more details. On the other hand, Slick provides a DSL that requires lifting of types and operations to the DSL counterparts at runtime. Example:
 
 **quill**
 ```scala
