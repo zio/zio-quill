@@ -5,7 +5,7 @@ This document compares Quill to the [Typesafe Slick](http://slick.typesafe.com) 
 
 Quill and Slick have similar abstraction levels. They represent database rows as flat immutable structures (case classes without nested data) and provide a type-safe composable query DSL.
 
-Slick's documentation refers to this abstraction level as a [new paradigm called functional-relational mapping (FRM)](https://github.com/slick/slick/blob/3b3bd36c93c6d9c63b0471ff4d8409f913954b2b/slick/src/sphinx/introduction.rst#functional-relational-mapping). In fact, the approach is not new and backs from the late '90s with ["Kleisli􏰂, a Functional Query System"](https://www.comp.nus.edu.sg/~wongls/psZ/wls-jfp98-3.ps). The approach was also used by the [Links programming language](http://groups.inf.ed.ac.uk/links/papers/links-fmco06.pdf), and later on was popularized by [Microsoft LINQ](https://msdn.microsoft.com/en-us/library/bb425822.aspx) in a less functional manner.
+Slick's documentation refers to this abstraction level as a [new paradigm called functional-relational mapping (FRM)](https://github.com/slick/slick/blob/3b3bd36c93c6d9c63b0471ff4d8409f913954b2b/slick/src/sphinx/introduction.rst#functional-relational-mapping). In fact, the approach is not new and was introduced in the late '90s by ["Kleisli􏰂, a Functional Query System"](https://www.comp.nus.edu.sg/~wongls/psZ/wls-jfp98-3.ps). It was also used by the [Links programming language](http://groups.inf.ed.ac.uk/links/papers/links-fmco06.pdf), and later on was popularized by [Microsoft LINQ](https://msdn.microsoft.com/en-us/library/bb425822.aspx) in a less functional manner.
 
 Quill is referred as a Language Integrated Query library to match the available publications on the subject. The paper ["Language-integrated query using comprehension syntax: state of the art, open problems, and work in progress"](http://research.microsoft.com/en-us/events/dcp2014/cheney.pdf) has an overview with some of the available implementations of language integrated queries.
 
@@ -104,7 +104,7 @@ Slick provides an asynchronous wrapper on top of jdbc's blocking interface, maki
 
 ## Extensibility ##
 
-It is common to fallback to plain SQL when a feature is not supported by Slick. Quill's [`infix` mechanism](https://github.com/getquill/quill#infix) solves this problem by allowing the user to insert arbitrary SQL within quotations at any position.
+It is common to have to write plain SQL statements when a feature is not supported by Slick. Quill's [`infix` mechanism](https://github.com/getquill/quill#infix) solves this problem by allowing the user to insert arbitrary SQL within quotations at any position.
 
 ## Normalization ##
 
@@ -112,7 +112,7 @@ Quill's normalization engine is based on the rules introduced by the paper ["A p
 
 Unfortunately, the paper doesn't cover all SQL features supported by Quill. Some additional transformations were added to normalization engine for this reason.
 
-Slick's normalization is based on an ad-hoc multi-phase compilation engine. The code complexity is very high and seems to have been developed based on trial and error over the years.
+Slick's normalization is based on an multi-phase compilation engine. The code complexity is very high and seems to have been developed based on trial and error over the years.
 
 The `3.1` version features a major rewrite of the query compiler. Before it, even simple compositions used to produce highly nested queries with bad performance characteristics. The library is being stabilized, some trivial queries still fail at runtime ([example](https://github.com/slick/slick/issues/1316)).
 
@@ -120,6 +120,10 @@ The reader is invited to compare the libraries' normalization code:
 
 https://github.com/getquill/quill/tree/master/quill-core/src/main/scala/io/getquill/norm
 https://github.com/slick/slick/tree/master/slick/src/main/scala/slick/compiler
+
+## Database interaction ##
+
+TDB
 
 ## Performance ##
 
