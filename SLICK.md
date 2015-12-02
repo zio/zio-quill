@@ -110,7 +110,7 @@ It is common to have to write plain SQL statements when a feature is not support
 
 Quill's normalization engine is based on the rules introduced by the paper ["A practical theory of language-integrated query"](http://www.infoq.com/presentations/theory-language-integrated-query). They ensure that, given some fulfilled requirements, the normalization will always succeed. Quill verifies these requirements at compile-time.
 
-Unfortunately, the paper doesn't cover all SQL features supported by Quill. Some additional transformations were added to normalization engine for this reason.
+Unfortunately, the paper doesn't cover all SQL features supported by Quill. Some additional transformations were added to the normalization engine for this reason.
 
 Slick's normalization is based on an multi-phase compilation engine. The code complexity is very high, the compiler seems to have been developed based on trial and error over the years.
 
