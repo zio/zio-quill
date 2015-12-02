@@ -112,7 +112,7 @@ Quill's normalization engine is based on the rules introduced by the paper ["A p
 
 Unfortunately, the paper doesn't cover all SQL features supported by Quill. Some additional transformations were added to normalization engine for this reason.
 
-Slick's normalization is based on an multi-phase compilation engine. The code complexity is very high and seems to have been developed based on trial and error over the years.
+Slick's normalization is based on an multi-phase compilation engine. The code complexity is very high, the compiler seems to have been developed based on trial and error over the years.
 
 The `3.1` version features a major rewrite of the query compiler. Before it, even simple compositions used to produce highly nested queries with bad performance characteristics. The library is being stabilized, some trivial queries still fail at runtime ([example](https://github.com/slick/slick/issues/1316)).
 
