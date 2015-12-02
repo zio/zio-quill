@@ -15,7 +15,7 @@ Quill's core is designed to support multiple query languages, not only SQL, and 
 
 Slick is coupled to SQL and JDBC. The are github issues requesting support for other query languages and drivers, but there is no considerable progress on this matter.
 
-## QDSl versus EDSL ##
+## QDSL versus EDSL ##
 
 Quill's DSL is a macro-based quotation mechanism, allowing usage of Scala types and operators directly. Please refer to the paper ["Everything old is new again: Quoted Domain Specific Languages"](http://homepages.inf.ed.ac.uk/wadler/papers/qdsl/qdsl.pdf) for more details. On the other hand, Slick provides a DSL that requires lifting of types and operations to the DSL counterparts at runtime. Example:
 
@@ -104,7 +104,7 @@ Slick provides an asynchronous wrapper on top of jdbc's blocking interface, maki
 
 ## Extensibility ##
 
-It is common to have to fallback to plain SQL when a feature is not supported by Slick. Quill's [`infix` mechanism](https://github.com/getquill/quill#infix) solves this problem by allowing the user to insert arbitrary SQL within quotations at any position.
+It is common to fallback to plain SQL when a feature is not supported by Slick. Quill's [`infix` mechanism](https://github.com/getquill/quill#infix) solves this problem by allowing the user to insert arbitrary SQL within quotations at any position.
 
 ## Normalization ##
 
@@ -114,7 +114,12 @@ Unfortunately, the paper doesn't cover all SQL features supported by Quill. Some
 
 Slick's normalization is based on an ad-hoc multi-phase compilation engine. The code complexity is very high and seems to have been developed based on trial and error over the years.
 
-The `3.1` features a major rewrite of the query compiler. Before it, even simple compositions used to produce highly nested queries with bad performance characteristics. The library is being stabilized, some trivial queries still fail at runtime ([example](https://github.com/slick/slick/issues/1316)).
+The `3.1` version features a major rewrite of the query compiler. Before it, even simple compositions used to produce highly nested queries with bad performance characteristics. The library is being stabilized, some trivial queries still fail at runtime ([example](https://github.com/slick/slick/issues/1316)).
+
+The reader is invited to compare the libraries' normalization code:
+
+https://github.com/getquill/quill/tree/master/quill-core/src/main/scala/io/getquill/norm
+https://github.com/slick/slick/tree/master/slick/src/main/scala/slick/compiler
 
 ## Performance ##
 

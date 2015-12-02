@@ -732,6 +732,10 @@ testDB.password=root
 testDB.database=database
 ```
 
+# Slick comparison #
+
+Please refer to [SLICK.md](https://github.com/getquill/quill/blob/master/SLICK.md) for a detailed comparison between Quill and Slick.
+
 # Acknowledgments #
 
 The project was created having Philip Wadler's talk ["A practical theory of language-integrated query"](http://www.infoq.com/presentations/theory-language-integrated-query) as its initial inspiration. The development was heavily influenced by the following papers:
