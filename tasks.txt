@@ -29,13 +29,14 @@
 √ quill-postgresql-async
 √ quill-mysql-async
 √ fix a.union(b).map(t => t.s)
-- dynamic queries
-- readme w/ https://github.com/tpolecat/tut
-- website from readme
+√ dynamic queries
+√ readme w/ https://github.com/tpolecat/tut
+√ website from readme
+
+Backlog
+
 - create issues for roadmap and tech debt
-
-Later
-
+- fix repl support
 - additional random-generated query tests
 - jekyll website w/ docs
 - gitter8/activator
