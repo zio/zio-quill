@@ -9,12 +9,6 @@ Slick's documentation refers to this abstraction level as a [new paradigm called
 
 Quill is referred as a Language Integrated Query library to match the available publications on the subject. The paper ["Language-integrated query using comprehension syntax: state of the art, open problems, and work in progress"](http://research.microsoft.com/en-us/events/dcp2014/cheney.pdf) has an overview with some of the available implementations of language integrated queries.
 
-## Generality ##
-
-Quill's core is designed to support multiple query languages, not only SQL, and support multiple execution mechanisms. The current version has SQL support using [async drivers](https://github.com/mauricio/postgresql-async), [finagle](https://github.com/twitter/finagle/tree/develop/finagle-mysql) and [jdbc](https://en.wikipedia.org/wiki/Java_Database_Connectivity).
-
-Slick is coupled to SQL and JDBC. The are github issues requesting support for other query languages and drivers, but there is no considerable progress on this matter.
-
 ## QDSL versus EDSL ##
 
 Quill's DSL is a macro-based quotation mechanism, allowing usage of Scala types and operators directly. Please refer to the paper ["Everything old is new again: Quoted Domain Specific Languages"](http://homepages.inf.ed.ac.uk/wadler/papers/qdsl/qdsl.pdf) for more details. On the other hand, Slick provides a DSL that requires lifting of types and operations to the DSL counterparts at runtime. Example:
@@ -92,11 +86,13 @@ val q =
 
 In order to produce the lifted AST at runtime, Slick requires boilerplate code to map the database model to lifted values. The query definition also requires special equality operators and usage of `Rep` for composable queries.
 
+The [`slick-codegen`](http://slick.typesafe.com/doc/3.1.0/code-generation.html) tool reduces the friction introduced by the boilerplate code, allowing the user to automatically generate schema classes from a database schema.
+
 ## Compile-time versus Runtime ##
 
 Quill's quoted DSL opens a new path to query generation. For the quotations that are known statically, the query normalization and translation to SQL happen at compile-time. The user receives feedback during compilation, knows the SQL string that will be used and if it will succeed when executed against the database.
 
-The feedback cycle using Slick is much longer. Some factors like normalization bugs and unsupported operations can make the query fail, but only at runtime it is possible to know whether they will affect the query or not.
+The feedback cycle using Slick is tipically longer. Some factors like normalization bugs and unsupported operations can make the query fail, but only at runtime it is possible to know whether they will affect the query or not.
 
 ## Non-blocking IO ##
 
@@ -112,19 +108,11 @@ Quill's normalization engine is based on the rules introduced by the paper ["A p
 
 Unfortunately, the paper doesn't cover all SQL features supported by Quill. Some additional transformations were added to the normalization engine for this reason.
 
-Slick's normalization is based on an multi-phase compilation engine. The code complexity is very high, the compiler seems to have been developed based on trial and error over the years.
+Slick's normalization is based on an multi-phase compilation engine. The code complexity is very high, probably due to the lack of principled normalization rules.
 
-The `3.1` version features a major rewrite of the query compiler. Before it, even simple compositions used to produce highly nested queries with bad performance characteristics. The library is being stabilized, some trivial queries still fail at runtime ([example](https://github.com/slick/slick/issues/1316)).
+The last stable version (3.1) features a major rewrite of the query compiler. Before it, even simple compositions used to produce highly nested queries with bad performance characteristics when executed against MySQL.
 
 The reader is invited to compare the libraries' normalization code:
 
 https://github.com/getquill/quill/tree/master/quill-core/src/main/scala/io/getquill/norm
 https://github.com/slick/slick/tree/master/slick/src/main/scala/slick/compiler
-
-## Database interaction ##
-
-TDB
-
-## Performance ##
-
-TDB
