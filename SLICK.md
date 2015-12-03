@@ -84,15 +84,13 @@ val q =
     }
 ```
 
-In order to produce the lifted AST at runtime, Slick requires boilerplate code to map the database model to lifted values. The query definition also requires special equality operators and usage of `Rep` for composable queries.
-
-The [`slick-codegen`](http://slick.typesafe.com/doc/3.1.0/code-generation.html) tool reduces the friction introduced by the boilerplate code, allowing the user to automatically generate schema classes from a database schema.
+Slick requires explicit type definition to map the database model to lifted values, which can be automatically generated and maintained by the [`slick-codegen`](http://slick.typesafe.com/doc/3.1.0/code-generation.html) tool. The query definition also requires special equality operators and usage of `Rep` for composable queries.
 
 ## Compile-time versus Runtime ##
 
 Quill's quoted DSL opens a new path to query generation. For the quotations that are known statically, the query normalization and translation to SQL happen at compile-time. The user receives feedback during compilation, knows the SQL string that will be used and if it will succeed when executed against the database.
 
-The feedback cycle using Slick is tipically longer. Some factors like normalization bugs and unsupported operations can make the query fail, but only at runtime it is possible to know whether they will affect the query or not.
+The feedback cycle using Slick is typically longer. Some factors like normalization bugs and unsupported operations can make the query fail, but only at runtime it is possible to know whether they will affect the query or not.
 
 ## Non-blocking IO ##
 
