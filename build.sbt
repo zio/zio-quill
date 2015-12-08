@@ -33,8 +33,9 @@ lazy val `quill-jdbc` =
     .settings(commonSettings: _*)
     .settings(
       libraryDependencies ++= Seq(
-        "com.zaxxer" % "HikariCP"             % "2.3.9",
-        "mysql"      % "mysql-connector-java" % "5.1.36" % "test"
+        "com.zaxxer"     % "HikariCP"             % "2.3.9",
+        "mysql"          % "mysql-connector-java" % "5.1.36" % "test",
+        "org.postgresql" % "postgresql"           % "9.4-1206-jdbc41"
       ),
       parallelExecution in Test := false
     )

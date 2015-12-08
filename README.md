@@ -619,7 +619,7 @@ db.dataSource.prepStmtCacheSqlLimit=2048
 sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "postgresql" % "postgresql" % "9.1-901.jdbc4",
+  "org.postgresql" % "postgresql" % "9.4-1206-jdbc41",
   "io.getquill" %% "quill-jdbc" % "0.1.0"
 )
 ```
