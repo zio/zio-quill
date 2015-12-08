@@ -1,7 +1,6 @@
 package io.getquill.source.jdbc.postgres
 
 import io.getquill._
-import io.getquill.source.jdbc.mysql.testPostgresDB;
 
 class JdbcSourceSpec extends Spec {
 

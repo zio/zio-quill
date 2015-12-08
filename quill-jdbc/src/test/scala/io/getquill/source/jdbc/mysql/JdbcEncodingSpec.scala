@@ -6,8 +6,8 @@ import io.getquill.source.sql.EncodingSpec
 class JdbcEncodingSpec extends EncodingSpec {
 
   "encodes and decodes types" in {
-    testPostgresDB.run(delete)
-    testPostgresDB.run(insert).using(insertValues)
-    verify(testPostgresDB.run(query[EncodingTestEntity]))
+    testMysqlDB.run(delete)
+    testMysqlDB.run(insert).using(insertValues)
+    verify(testMysqlDB.run(query[EncodingTestEntity]))
   }
 }
