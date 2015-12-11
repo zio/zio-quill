@@ -25,23 +25,18 @@ trait Parsing {
       tree match {
         case q"$source.withFilter(($alias) => $body)" if (alias.name.toString.contains("ifrefutable")) =>
           unapply(source)
-        case q"$pack.unquote[$t]($quoted)" =>
-          unquote[T](quoted).orElse(p.lift(tree))
         case other =>
           p.lift(tree)
       }
   }
 
   val astParser: Parser[Ast] = Parser[Ast] {
-
-    case q"$pack.unquote[$t]($quoted)"  => Dynamic(quoted)
-    case q"$pack.lift[$t]($value)"      => Dynamic(value)
-
+    case `valueParser`(value)           => value
+    case `quotedAstParser`(value)       => value
     case `queryParser`(query)           => query
     case `functionParser`(function)     => function
     case `actionParser`(action)         => action
     case `infixParser`(value)           => value
-    case `valueParser`(value)           => value
     case `operationParser`(value)       => value
     case `identParser`(ident)           => ident
     case `propertyParser`(value)        => value
@@ -56,6 +51,17 @@ trait Parsing {
           Property(tuple, s"_${i + 1}")
         }
       BetaReduction(body, fields.zip(properties): _*)
+  }
+
+  val quotedAstParser: Parser[Ast] = Parser[Ast] {
+    case q"$pack.unquote[$t]($quoted)" => astParser(quoted)
+    case q"$pack.lift[$t]($value)"     => Dynamic(value)
+
+    case t if (t.tpe <:< c.weakTypeOf[Quoted[Any]]) =>
+      unquote[Ast](t) match {
+        case Some(ast) => ast
+        case None      => Dynamic(t)
+      }
   }
 
   val queryParser: Parser[Query] = Parser[Query] {

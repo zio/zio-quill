@@ -432,6 +432,20 @@ class QuotationSpec extends Spec {
         }
         quote(unquote(q)).ast mustEqual Constant(1)
       }
+      "quoted dynamic" in {
+        val i: Quoted[Int] = quote(1)
+        val q: Quoted[Int] = quote(i + 1)
+        quote(unquote(q)).ast mustEqual BinaryOperation(Constant(1), NumericOperator.`+`, Constant(1))
+      }
+      "abritrary tree" in {
+        object test {
+          def a = quote("a")
+        }
+        val q = quote {
+          test.a
+        }
+        quote(unquote(q)).ast mustEqual Constant("a")
+      }
     }
   }
 
