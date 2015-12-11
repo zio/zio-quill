@@ -446,6 +446,15 @@ class QuotationSpec extends Spec {
         }
         quote(unquote(q)).ast mustEqual Constant("a")
       }
+      "nested" in {
+        case class Add(i: Quoted[Int]) {
+          def apply() = quote(i + 1)
+        }
+        val q = quote {
+          Add(1).apply()
+        }
+        quote(unquote(q)).ast mustEqual BinaryOperation(Constant(1), NumericOperator.`+`, Constant(1))
+      }
     }
   }
 

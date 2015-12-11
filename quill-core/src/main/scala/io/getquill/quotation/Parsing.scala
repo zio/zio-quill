@@ -59,9 +59,10 @@ trait Parsing {
 
     case t if (t.tpe <:< c.weakTypeOf[Quoted[Any]]) =>
       unquote[Ast](t) match {
-        case Some(ast) => ast
-        case None      => Dynamic(t)
+        case Some(ast) if (!IsDynamic(ast)) => ast
+        case other                          => Dynamic(t)
       }
+
   }
 
   val queryParser: Parser[Query] = Parser[Query] {
