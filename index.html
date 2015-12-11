@@ -12,13 +12,6 @@
   </head>
 
   <body>
-    
-    <script>
-  ((window.gitter = {}).chat = {}).options = {
-    room: 'getquill/quill'
-  };
-</script>
-<script src="https://sidecar.gitter.im/dist/sidecar.v1.js" async defer></script>
 
     <!-- HEADER -->
     <div id="header_wrap" class="outer">
@@ -654,7 +647,7 @@ db.dataSource.prepStmtCacheSqlLimit=2048
 <p>sbt dependencies</p>
 
 <pre><code>libraryDependencies ++= Seq(
-  "postgresql" % "postgresql" % "9.1-901.jdbc4",
+  "org.postgresql" % "postgresql" % "9.4-1206-jdbc41",
   "io.getquill" %% "quill-jdbc" % "0.1.0"
 )
 </code></pre>
@@ -764,6 +757,11 @@ testDB.user=root
 testDB.password=root
 testDB.database=database
 </code></pre>
+
+<h1>
+<a id="slick-comparison" class="anchor" href="#slick-comparison" aria-hidden="true"><span class="octicon octicon-link"></span></a>Slick comparison</h1>
+
+<p>Please refer to <a href="https://github.com/getquill/quill/blob/master/SLICK.md">SLICK.md</a> for a detailed comparison between Quill and Slick.</p>
 
 <h1>
 <a id="acknowledgments" class="anchor" href="#acknowledgments" aria-hidden="true"><span class="octicon octicon-link"></span></a>Acknowledgments</h1>
