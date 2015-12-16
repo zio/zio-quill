@@ -105,8 +105,8 @@ lazy val commonSettings = Seq(
     <url>http://github.com/fwbrasil/quill</url>
     <licenses>
       <license>
-        <name>LGPL</name>
-        <url>https://raw.githubusercontent.com/fwbrasil/quill/master/LICENSE-LGPL.txt</url>
+        <name>Apache License 2.0</name>
+        <url>https://raw.githubusercontent.com/getquill/quill/master/LICENSE.txt</url>
         <distribution>repo</distribution>
       </license>
     </licenses>
