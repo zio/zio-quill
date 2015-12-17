@@ -287,6 +287,28 @@ class QuotationSpec extends Spec {
           }
           quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), StringOperator.`+`, Ident("b"))
         }
+        "string interpolation" - {
+          "one param" - {
+            "end" in {
+              val q = quote {
+                (i: Int) => s"v$i"
+              }
+              quote(unquote(q)).ast.body mustEqual BinaryOperation(Constant("v"), StringOperator.`+`, Ident("i"))
+            }
+            "start" in {
+              val q = quote {
+                (i: Int) => s"${i}v"
+              }
+              quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("i"), StringOperator.`+`, Constant("v"))
+            }
+          }
+          "multiple params" in {
+            val q = quote {
+              (i: Int, j: Int, h: Int) => s"${i}a${j}b${h}"
+            }
+            quote(unquote(q)).ast.body mustEqual BinaryOperation(BinaryOperation(BinaryOperation(BinaryOperation(Ident("i"), StringOperator.`+`, Constant("a")), StringOperator.`+`, Ident("j")), StringOperator.`+`, Constant("b")), StringOperator.`+`, Ident("h"))
+          }
+        }
       }
       "*" in {
         val q = quote {

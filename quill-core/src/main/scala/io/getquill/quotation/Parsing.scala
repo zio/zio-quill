@@ -2,11 +2,11 @@ package io.getquill.quotation
 
 import scala.reflect.ClassTag
 import scala.reflect.macros.whitebox.Context
-
 import io.getquill.{ Query => QuillQuery }
 import io.getquill.ast._
 import io.getquill.norm.BetaReduction
 import io.getquill.util.Messages.RichContext
+import io.getquill.util.Interleave
 
 trait Parsing {
   this: Quotation =>
@@ -31,16 +31,17 @@ trait Parsing {
   }
 
   val astParser: Parser[Ast] = Parser[Ast] {
-    case `valueParser`(value)           => value
-    case `quotedAstParser`(value)       => value
-    case `queryParser`(query)           => query
-    case `functionParser`(function)     => function
-    case `actionParser`(action)         => action
-    case `infixParser`(value)           => value
-    case `operationParser`(value)       => value
-    case `identParser`(ident)           => ident
-    case `propertyParser`(value)        => value
-    case `optionOperationParser`(value) => value
+    case `valueParser`(value)               => value
+    case `quotedAstParser`(value)           => value
+    case `queryParser`(query)               => query
+    case `functionParser`(function)         => function
+    case `actionParser`(action)             => action
+    case `infixParser`(value)               => value
+    case `operationParser`(value)           => value
+    case `identParser`(ident)               => ident
+    case `propertyParser`(value)            => value
+    case `stringInterpolationParser`(value) => value
+    case `optionOperationParser`(value)     => value
 
     case q"$tupleTree match { case (..$fieldsTrees) => $bodyTree }" =>
       val tuple = astParser(tupleTree)
@@ -208,9 +209,20 @@ trait Parsing {
       case "||"      => BooleanOperator.`||`
     }
 
+  val stringInterpolationParser: Parser[Ast] = Parser[Ast] {
+    case q"scala.StringContext.apply(..$parts).s(..$params)" =>
+      val asts =
+        Interleave(parts.map(astParser(_)), params.map(astParser(_)))
+          .filter(_ != Constant(""))
+      asts.tail.foldLeft(asts.head) {
+        case (a, b) =>
+          BinaryOperation(a, StringOperator.`+`, b)
+      }
+  }
+
   val stringOperationParser: Parser[Operation] =
     operationParser(is[String](_)) {
-      case "+"           => StringOperator.+
+      case "+"           => StringOperator.`+`
       case "toUpperCase" => StringOperator.`toUpperCase`
       case "toLowerCase" => StringOperator.`toLowerCase`
     }
