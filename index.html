@@ -12,13 +12,6 @@
   </head>
 
   <body>
-    
-    <script>
-  ((window.gitter = {}).chat = {}).options = {
-    room: 'getquill/quill'
-  };
-</script>
-<script src="https://sidecar.gitter.im/dist/sidecar.v1.js" async defer></script>
 
     <!-- HEADER -->
     <div id="header_wrap" class="outer">
@@ -65,6 +58,7 @@
 <li><a href="#queries">Queries</a></li>
 <li><a href="#actions">Actions</a></li>
 <li><a href="#dynamic-queries">Dynamic queries</a></li>
+<li><a href="#sql-specific-operations">SQL-specific operations</a></li>
 <li>
 <a href="#extending-quill">Extending quill</a>
 
@@ -434,6 +428,21 @@ db.run(a)
 <span class="pl-c">// DELETE FROM Person WHERE name = ''</span></pre></div>
 
 <h1>
+<a id="sql-specific-operations" class="anchor" href="#sql-specific-operations" aria-hidden="true"><span class="octicon octicon-link"></span></a>SQL-specific operations</h1>
+
+<p>Some operations are sql-specific and not provided with the generic quotation mechanism. The <code>io.getquill.source.sql.ops</code> package has some implicit classes for this kind of operations:</p>
+
+<p><strong>like</strong></p>
+
+<div class="highlight highlight-source-scala"><pre><span class="pl-k">import</span> <span class="pl-v">io.getquill.source.sql.ops.</span><span class="pl-v">_</span>
+
+<span class="pl-k">val</span> <span class="pl-en">q</span> <span class="pl-k">=</span> quote {
+  query[<span class="pl-en">Person</span>].filter(p <span class="pl-k">=&gt;</span> p.name like <span class="pl-s"><span class="pl-pds">"</span>%John%<span class="pl-pds">"</span></span>)
+}
+db.run(q)
+<span class="pl-c">// SELECT p.id, p.name, p.age FROM Person p WHERE p.name like '%John%'</span></pre></div>
+
+<h1>
 <a id="dynamic-queries" class="anchor" href="#dynamic-queries" aria-hidden="true"><span class="octicon octicon-link"></span></a>Dynamic queries</h1>
 
 <p>Quill's default operation mode is compile-time, but there are queries that have their structure defined only at runtime. Quill automatically falls back to runtime normalization and query generation if the query's structure is not static. Example:</p>
@@ -466,36 +475,32 @@ db.run(people(<span class="pl-en">Senior</span>))
 
 <p>Infix is a very flexible mechanism to use non-supported features without having to use plain SQL queries. It allows insertion of arbitrary SQL strings within quotations.</p>
 
-<p>For instance, quill doesn't support the <code>FOR UPDATE</code> SQL feature. It can still be used through infix:</p>
+<p>For instance, quill doesn't support the <code>FOR UPDATE</code> SQL feature. It can still be used through infix and implicit classes:</p>
 
-<div class="highlight highlight-source-scala"><pre><span class="pl-k">val</span> <span class="pl-en">forUpdate</span> <span class="pl-k">=</span> quote {
-  new {
-    <span class="pl-k">def</span> <span class="pl-en">apply</span>[<span class="pl-en">T</span>](<span class="pl-v">q</span>: <span class="pl-en">Query</span>[<span class="pl-en">T</span>]) <span class="pl-k">=</span> infix<span class="pl-s"><span class="pl-pds">"</span>$q FOR UPDATE<span class="pl-pds">"</span></span>.as[<span class="pl-en">Query</span>[<span class="pl-en">T</span>]]
-  }
+<div class="highlight highlight-source-scala"><pre><span class="pl-k">implicit</span> <span class="pl-k">class</span> <span class="pl-en">ForUpdate</span>[<span class="pl-en">T</span>](<span class="pl-v">q</span>: <span class="pl-en">Query</span>[<span class="pl-en">T</span>]) {
+  <span class="pl-k">def</span> <span class="pl-en">forUpdate</span> <span class="pl-k">=</span> quote(infix<span class="pl-s"><span class="pl-pds">"</span>$q FOR UPDATE<span class="pl-pds">"</span></span>.as[<span class="pl-en">Query</span>[<span class="pl-en">T</span>]])
 }
 
 <span class="pl-k">val</span> <span class="pl-en">a</span> <span class="pl-k">=</span> quote {
-  query[<span class="pl-en">Person</span>].filter(p <span class="pl-k">=&gt;</span> p.age <span class="pl-k">&lt;</span> <span class="pl-c1">18</span>)
+  query[<span class="pl-en">Person</span>].filter(p <span class="pl-k">=&gt;</span> p.age <span class="pl-k">&lt;</span> <span class="pl-c1">18</span>).forUpdate
 }
 
-db.run(forUpdate(a)) 
+db.run(a)
 <span class="pl-c">// SELECT p.id, p.name, p.age FROM (SELECT * FROM Person p WHERE p.age &lt; 18 FOR UPDATE) p</span></pre></div>
 
 <p>The <code>forUpdate</code> quotation can be reused for multiple queries.</p>
 
 <p>The same approach can be used for <code>RETURNING ID</code>:</p>
 
-<div class="highlight highlight-source-scala"><pre><span class="pl-k">val</span> <span class="pl-en">returningId</span> <span class="pl-k">=</span> quote {
-  new {
-    <span class="pl-k">def</span> <span class="pl-en">apply</span>[<span class="pl-en">T</span>](<span class="pl-v">a</span>: <span class="pl-en">Action</span>[<span class="pl-en">T</span>]) <span class="pl-k">=</span> infix<span class="pl-s"><span class="pl-pds">"</span>$a RETURNING ID<span class="pl-pds">"</span></span>.as[<span class="pl-en">Action</span>[<span class="pl-en">T</span>]]
-  }
+<div class="highlight highlight-source-scala"><pre><span class="pl-k">implicit</span> <span class="pl-k">class</span> <span class="pl-en">ReturningId</span>[<span class="pl-en">T</span>](<span class="pl-v">a</span>: <span class="pl-en">Action</span>[<span class="pl-en">T</span>]) {
+  <span class="pl-k">def</span> <span class="pl-en">returningId</span> <span class="pl-k">=</span> quote(infix<span class="pl-s"><span class="pl-pds">"</span>$a RETURNING ID<span class="pl-pds">"</span></span>.as[<span class="pl-en">Action</span>[<span class="pl-en">T</span>]])
 }
 
 <span class="pl-k">val</span> <span class="pl-en">a</span> <span class="pl-k">=</span> quote {
-  query[<span class="pl-en">Person</span>].insert(_.name <span class="pl-k">-</span><span class="pl-k">&gt;</span> <span class="pl-s"><span class="pl-pds">"</span>John<span class="pl-pds">"</span></span>, _.age <span class="pl-k">-</span><span class="pl-k">&gt;</span> <span class="pl-c1">21</span>)
+  query[<span class="pl-en">Person</span>].insert(_.name <span class="pl-k">-</span><span class="pl-k">&gt;</span> <span class="pl-s"><span class="pl-pds">"</span>John<span class="pl-pds">"</span></span>, _.age <span class="pl-k">-</span><span class="pl-k">&gt;</span> <span class="pl-c1">21</span>).returningId
 }
 
-db.run(returningId(a))
+db.run(a)
 <span class="pl-c">// INSERT INTO Person (name,age) VALUES ('John', 21) RETURNING ID</span></pre></div>
 
 <p>A custom database function can also be used through infix:</p>
