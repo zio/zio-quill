@@ -59,10 +59,9 @@ trait Parsing {
 
     case t if (t.tpe <:< c.weakTypeOf[Quoted[Any]]) =>
       unquote[Ast](t) match {
-        case Some(ast) if (!IsDynamic(ast)) => ast
+        case Some(ast) if (!IsDynamic(ast)) => Rebind(c)(t, ast, astParser(_))
         case other                          => Dynamic(t)
       }
-
   }
 
   val queryParser: Parser[Query] = Parser[Query] {
@@ -151,6 +150,7 @@ trait Parsing {
     case t: ValDef                        => Ident(t.name.decodedName.toString)
     case c.universe.Ident(TermName(name)) => Ident(name)
     case q"$i: $typ"                      => identParser(i)
+    case q"$cls.this.$i"                  => Ident(i.decodedName.toString)
     case c.universe.Bind(TermName(name), c.universe.Ident(termNames.WILDCARD)) =>
       Ident(name)
   }

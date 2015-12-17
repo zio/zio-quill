@@ -1,11 +1,11 @@
 package io.getquill.quotation
 
+import io.getquill.util.Messages._
 import scala.annotation.StaticAnnotation
 import scala.reflect.ClassTag
 import scala.reflect.macros.whitebox.Context
 
 import io.getquill.ast._
-import io.getquill.util.Messages.RichContext
 
 trait Quoted[+T] {
   def ast: Ast
@@ -20,7 +20,6 @@ trait Quotation extends Parsing with Liftables with Unliftables {
 
   def quote[T: WeakTypeTag](body: Expr[T]) = {
     val ast = astParser(body.tree)
-    verifyFreeVariables(ast)
     q"""
       new ${c.weakTypeOf[Quoted[T]]} {
         @${c.weakTypeOf[QuotedAst]}($ast)
@@ -29,6 +28,13 @@ trait Quotation extends Parsing with Liftables with Unliftables {
         override def toString = ast.toString
       }
     """
+  }
+
+  def doubleQuote[T: WeakTypeTag](body: Expr[Quoted[T]]) = {
+    body.tree match {
+      case q"null" => c.fail("Can't quote null")
+      case tree    => q"io.getquill.unquote($tree)"
+    }
   }
 
   protected def unquote[T](tree: Tree)(implicit ct: ClassTag[T]) =
@@ -42,10 +48,4 @@ trait Quotation extends Parsing with Liftables with Unliftables {
       annotation <- method.annotations.headOption
       astTree <- annotation.tree.children.lastOption
     } yield (astTree)
-
-  private def verifyFreeVariables(ast: Ast) =
-    FreeVariables(ast).toList match {
-      case Nil  =>
-      case vars => c.fail(s"A quotation must not have references to variables outside its scope. Found: '${vars.mkString(", ")}' in '$ast'.")
-    }
 }

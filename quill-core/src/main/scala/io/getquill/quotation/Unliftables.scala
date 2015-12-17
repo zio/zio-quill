@@ -2,6 +2,7 @@ package io.getquill.quotation
 
 import scala.reflect.macros.whitebox.Context
 
+import io.getquill.util.Messages._
 import io.getquill.ast._
 
 trait Unliftables {
@@ -32,7 +33,7 @@ trait Unliftables {
 
   implicit def listUnliftable[T](implicit u: Unliftable[T]): Unliftable[List[T]] = Unliftable[List[T]] {
     case q"$pack.Nil"                         => Nil
-    case q"$pack.List.apply[..$t](..$values)" => values.map(v => u.unapply(v)).flatten
+    case q"$pack.List.apply[..$t](..$values)" => values.map(v => u.unapply(v).getOrElse(c.fail(s"Can't unlift $v")))
   }
 
   implicit val binaryOperatorUnliftable: Unliftable[BinaryOperator] = Unliftable[BinaryOperator] {

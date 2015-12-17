@@ -1,13 +1,13 @@
 package io.getquill.source
 
 import scala.reflect.macros.whitebox.Context
-
 import io.getquill._
 import io.getquill.ast.{ Query => _, Action => _, _ }
 import io.getquill.norm.Normalize
 import io.getquill.quotation.Quotation
 import io.getquill.quotation.Quoted
 import io.getquill.util.Messages.RichContext
+import io.getquill.quotation.FreeVariables
 
 trait SourceMacro extends Quotation with ActionMacro with QueryMacro with ResolveSourceMacro {
   val c: Context
@@ -17,7 +17,7 @@ trait SourceMacro extends Quotation with ActionMacro with QueryMacro with Resolv
 
   def run[R, S, T](quoted: Expr[Quoted[T]])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]): Tree = {
 
-    ast(quoted) match {
+    verifyFreeVariables(ast(quoted)) match {
 
       case ast if (t.tpe.typeSymbol.fullName.startsWith("scala.Function")) =>
         val bodyType = c.WeakTypeTag(t.tpe.typeArgs.takeRight(1).head)
@@ -51,4 +51,10 @@ trait SourceMacro extends Quotation with ActionMacro with QueryMacro with Resolv
 
   private def paramsTypes[T](implicit t: WeakTypeTag[T]) =
     t.tpe.typeArgs.dropRight(1)
+
+  private def verifyFreeVariables(ast: Ast) =
+    FreeVariables(ast).toList match {
+      case Nil  => ast
+      case vars => c.fail(s"A quotation must not have references to variables outside its scope. Found: '${vars.mkString(", ")}' in '$ast'.")
+    }
 }

@@ -321,10 +321,10 @@ class AstShowSpec extends Spec {
     }
     "null" in {
       val q = quote {
-        null
+        1 != null
       }
       (q.ast: Ast).show mustEqual
-        """null"""
+        """1 != null"""
     }
     "tuple" in {
       val q = quote {

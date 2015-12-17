@@ -112,11 +112,11 @@ trait PeopleSpec extends Spec {
 
   def eval(t: Predicate): Quoted[Int => Boolean] =
     t match {
-      case Above(n)    => quote(x => x > lift(n))
-      case Below(n)    => quote(x => x < lift(n))
-      case And(t1, t2) => quote(x => eval(t1)(x) && eval(t2)(x))
-      case Or(t1, t2)  => quote(x => eval(t1)(x) || eval(t2)(x))
-      case Not(t0)     => quote(x => !eval(t0)(x))
+      case Above(n)    => quote((x: Int) => x > lift(n))
+      case Below(n)    => quote((x: Int) => x < lift(n))
+      case And(t1, t2) => quote((x: Int) => eval(t1)(x) && eval(t2)(x))
+      case Or(t1, t2)  => quote((x: Int) => eval(t1)(x) || eval(t2)(x))
+      case Not(t0)     => quote((x: Int) => !eval(t0)(x))
     }
 
   val `Ex 6 predicate` = And(Above(30), Below(40))

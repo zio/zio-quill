@@ -44,7 +44,7 @@ case class FreeVariables(state: State)
 }
 
 object FreeVariables {
-  def apply(ast: Ast) =
+  def apply(ast: Ast): Set[Ident] =
     new FreeVariables(State(Set(), Set()))(ast) match {
       case (_, transformer) =>
         transformer.state.free

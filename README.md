@@ -449,20 +449,18 @@ db.run(people(Senior))
 
 Infix is a very flexible mechanism to use non-supported features without having to use plain SQL queries. It allows insertion of arbitrary SQL strings within quotations.
 
-For instance, quill doesn't support the `FOR UPDATE` SQL feature. It can still be used through infix:
+For instance, quill doesn't support the `FOR UPDATE` SQL feature. It can still be used through infix and implicit classes:
 
 ```scala
-val forUpdate = quote {
-  new {
-    def apply[T](q: Query[T]) = infix"$q FOR UPDATE".as[Query[T]]
-  }
+implicit class ForUpdate[T](q: Query[T]) {
+  def forUpdate = quote(infix"$q FOR UPDATE".as[Query[T]])
 }
 
 val a = quote {
-  query[Person].filter(p => p.age < 18)
+  query[Person].filter(p => p.age < 18).forUpdate
 }
 
-db.run(forUpdate(a)) 
+db.run(a)
 // SELECT p.id, p.name, p.age FROM (SELECT * FROM Person p WHERE p.age < 18 FOR UPDATE) p
 ```
 
@@ -471,17 +469,15 @@ The `forUpdate` quotation can be reused for multiple queries.
 The same approach can be used for `RETURNING ID`:
 
 ```scala
-val returningId = quote {
-  new {
-    def apply[T](a: Action[T]) = infix"$a RETURNING ID".as[Action[T]]
-  }
+implicit class ReturningId[T](a: Action[T]) {
+  def returningId = quote(infix"$a RETURNING ID".as[Action[T]])
 }
 
 val a = quote {
-  query[Person].insert(_.name -> "John", _.age -> 21)
+  query[Person].insert(_.name -> "John", _.age -> 21).returningId
 }
 
-db.run(returningId(a))
+db.run(a)
 // INSERT INTO Person (name,age) VALUES ('John', 21) RETURNING ID
 ```
 

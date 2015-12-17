@@ -2,6 +2,7 @@ package io.getquill.quotation
 
 import io.getquill._
 import io.getquill.ast.{ Query => _, _ }
+import io.getquill.source.mirror.mirrorSource
 
 class QuotationSpec extends Spec {
 
@@ -185,8 +186,8 @@ class QuotationSpec extends Spec {
     }
     "value" - {
       "null" in {
-        val q = quote(null)
-        quote(unquote(q)).ast mustEqual NullValue
+        val q = quote(1 != null)
+        quote(unquote(q)).ast.b mustEqual NullValue
       }
       "constant" in {
         val q = quote(11L)
@@ -485,6 +486,44 @@ class QuotationSpec extends Spec {
         a + b
       }
     }
+  }
+
+  "supports implicit quotations" - {
+    "implicit class" in {
+      implicit class ForUpdate[T](q: Query[T]) {
+        def forUpdate = quote(infix"$q FOR UPDATE")
+      }
+
+      val q = quote {
+        query[TestEntity].forUpdate
+      }
+      val n = quote {
+        infix"${query[TestEntity]} FOR UPDATE"
+      }
+      quote(unquote(q)).ast mustEqual n.ast
+    }
+    "with additional param" in {
+      implicit class GreaterThan[T](q: Query[Int]) {
+        def greaterThan(j: Int) = quote(q.filter(i => i > j))
+      }
+
+      val q = quote {
+        query[TestEntity].map(t => t.i).greaterThan(1)
+      }
+      val n = quote {
+        query[TestEntity].map(t => t.i).filter(i => i > 1)
+      }
+      quote(unquote(q)).ast mustEqual n.ast
+    }
+  }
+
+  "doesn't double quote" in {
+    val q = quote(1)
+    val dq: Quoted[Int] = quote(q)
+  }
+
+  "doean't a allow quotation of null" in {
+    "quote(null)" mustNot compile
   }
 
   "fails if the tree is not valid" in {
