@@ -417,6 +417,22 @@ db.run(a)
 // DELETE FROM Person WHERE name = ''
 ```
 
+# SQL-specific operations #
+
+Some operations are sql-specific and not provided with the generic quotation mechanism. The `io.getquill.source.sql.ops` package has some implicit classes for this kind of operations:
+
+**like**
+
+```scala
+import io.getquill.source.sql.ops._
+
+val q = quote {
+  query[Person].filter(p => p.name like "%John%")
+}
+db.run(q)
+// SELECT p.id, p.name, p.age FROM Person p WHERE p.name like '%John%'
+```
+
 # Dynamic queries #
 
 Quill's default operation mode is compile-time, but there are queries that have their structure defined only at runtime. Quill automatically falls back to runtime normalization and query generation if the query's structure is not static. Example:
