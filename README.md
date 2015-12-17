@@ -27,6 +27,7 @@ Quill provides a Quoted Domain Specific Language ([QDSL](http://homepages.inf.ed
 * [Queries](#queries)
 * [Actions](#actions)
 * [Dynamic queries](#dynamic-queries)
+* [SQL-specific operations](#sql-specific-operations)
 * [Extending quill](#extending-quill)
   * [Infix](#infix)
   * [Custom encoding](#custom-encoding)
