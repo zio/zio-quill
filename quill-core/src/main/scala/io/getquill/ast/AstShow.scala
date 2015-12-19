@@ -83,6 +83,7 @@ object AstShow {
       val method = q.t match {
         case OptionMap    => "map"
         case OptionForall => "forall"
+        case OptionExists => "exists"
       }
       s"${q.ast}.$method((${q.alias.show}) => ${q.body.show})"
     }

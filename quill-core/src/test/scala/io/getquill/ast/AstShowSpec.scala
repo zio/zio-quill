@@ -400,6 +400,13 @@ class AstShowSpec extends Spec {
       (q.ast: Ast).show mustEqual
         "(o) => o.forall((v) => v)"
     }
+    "exists" in {
+      val q = quote {
+        (o: Option[Boolean]) => o.exists(v => v)
+      }
+      (q.ast: Ast).show mustEqual
+        "(o) => o.exists((v) => v)"
+    }
   }
 
   "shows dynamic asts" in {

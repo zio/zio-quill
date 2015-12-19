@@ -425,6 +425,12 @@ class QuotationSpec extends Spec {
         }
         quote(unquote(q)).ast.body mustEqual OptionOperation(OptionForall, Ident("o"), Ident("v"), Ident("v"))
       }
+      "exists" in {
+        val q = quote {
+          (o: Option[Boolean]) => o.exists(v => v)
+        }
+        quote(unquote(q)).ast.body mustEqual OptionOperation(OptionExists, Ident("o"), Ident("v"), Ident("v"))
+      }
     }
     "dynamic" - {
       "quotation" in {

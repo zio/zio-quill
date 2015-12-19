@@ -29,6 +29,7 @@ trait Liftables {
   implicit val optionOperationTypeLiftable: Liftable[OptionOperationType] = Liftable[OptionOperationType] {
     case OptionMap    => q"$pack.OptionMap"
     case OptionForall => q"$pack.OptionForall"
+    case OptionExists => q"$pack.OptionExists"
   }
 
   implicit val binaryOperatorLiftable: Liftable[BinaryOperator] = Liftable[BinaryOperator] {
