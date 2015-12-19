@@ -17,8 +17,8 @@ class PeopleMysqlAsyncSpec extends PeopleSpec {
         for {
           _ <- testMysqlDB.run(query[Couple].delete)
           _ <- testMysqlDB.run(query[Person].filter(_.age > 0).delete)
-          _ <- testMysqlDB.run(peopleInsert).using(peopleEntries)
-          _ <- testMysqlDB.run(couplesInsert).using(couplesEntries)
+          _ <- testMysqlDB.run(peopleInsert)(peopleEntries)
+          _ <- testMysqlDB.run(couplesInsert)(couplesEntries)
         } yield {}
       }
     }
@@ -28,7 +28,7 @@ class PeopleMysqlAsyncSpec extends PeopleSpec {
   }
 
   "Example 2 - range simple" in {
-    await(testMysqlDB.run(`Ex 2 rangeSimple`).using(`Ex 2 param 1`, `Ex 2 param 2`)) mustEqual `Ex 2 expected result`
+    await(testMysqlDB.run(`Ex 2 rangeSimple`)(`Ex 2 param 1`, `Ex 2 param 2`)) mustEqual `Ex 2 expected result`
   }
 
   "Examples 3 - satisfies" in {
@@ -40,7 +40,7 @@ class PeopleMysqlAsyncSpec extends PeopleSpec {
   }
 
   "Example 5 - compose" in {
-    await(testMysqlDB.run(`Ex 5 compose`).using(`Ex 5 param 1`, `Ex 5 param 2`)) mustEqual `Ex 5 expected result`
+    await(testMysqlDB.run(`Ex 5 compose`)(`Ex 5 param 1`, `Ex 5 param 2`)) mustEqual `Ex 5 expected result`
   }
 
   "Example 6 - predicate 0" in {

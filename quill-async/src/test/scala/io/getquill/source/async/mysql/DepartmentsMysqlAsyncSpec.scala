@@ -19,18 +19,18 @@ class DepartmentsMysqlAsyncSpec extends DepartmentsSpec {
           _ <- testMysqlDB.run(query[Employee].delete)
           _ <- testMysqlDB.run(query[Task].delete)
 
-          _ <- testMysqlDB.run(departmentInsert).using(departmentEntries)
-          _ <- testMysqlDB.run(employeeInsert).using(employeeEntries)
-          _ <- testMysqlDB.run(taskInsert).using(taskEntries)
+          _ <- testMysqlDB.run(departmentInsert)(departmentEntries)
+          _ <- testMysqlDB.run(employeeInsert)(employeeEntries)
+          _ <- testMysqlDB.run(taskInsert)(taskEntries)
         } yield {}
       }
     }
 
   "Example 8 - nested naive" in {
-    await(testMysqlDB.run(`Example 8 expertise naive`).using(`Example 8 param`)) mustEqual `Example 8 expected result`
+    await(testMysqlDB.run(`Example 8 expertise naive`)(`Example 8 param`)) mustEqual `Example 8 expected result`
   }
 
   "Example 9 - nested db" in {
-    await(testMysqlDB.run(`Example 9 expertise`).using(`Example 9 param`)) mustEqual `Example 9 expected result`
+    await(testMysqlDB.run(`Example 9 expertise`)(`Example 9 param`)) mustEqual `Example 9 expected result`
   }
 }

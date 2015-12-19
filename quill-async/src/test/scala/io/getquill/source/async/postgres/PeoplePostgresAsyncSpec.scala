@@ -17,8 +17,8 @@ class PeoplePostgresAsyncSpec extends PeopleSpec {
         for {
           _ <- testPostgresDB.run(query[Couple].delete)
           _ <- testPostgresDB.run(query[Person].filter(_.age > 0).delete)
-          _ <- testPostgresDB.run(peopleInsert).using(peopleEntries)
-          _ <- testPostgresDB.run(couplesInsert).using(couplesEntries)
+          _ <- testPostgresDB.run(peopleInsert)(peopleEntries)
+          _ <- testPostgresDB.run(couplesInsert)(couplesEntries)
         } yield {}
       }
     }
@@ -28,7 +28,7 @@ class PeoplePostgresAsyncSpec extends PeopleSpec {
   }
 
   "Example 2 - range simple" in {
-    await(testPostgresDB.run(`Ex 2 rangeSimple`).using(`Ex 2 param 1`, `Ex 2 param 2`)) mustEqual `Ex 2 expected result`
+    await(testPostgresDB.run(`Ex 2 rangeSimple`)(`Ex 2 param 1`, `Ex 2 param 2`)) mustEqual `Ex 2 expected result`
   }
 
   "Examples 3 - satisfies" in {
@@ -40,7 +40,7 @@ class PeoplePostgresAsyncSpec extends PeopleSpec {
   }
 
   "Example 5 - compose" in {
-    await(testPostgresDB.run(`Ex 5 compose`).using(`Ex 5 param 1`, `Ex 5 param 2`)) mustEqual `Ex 5 expected result`
+    await(testPostgresDB.run(`Ex 5 compose`)(`Ex 5 param 1`, `Ex 5 param 2`)) mustEqual `Ex 5 expected result`
   }
 
   "Example 6 - predicate 0" in {

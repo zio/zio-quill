@@ -19,18 +19,18 @@ class DepartmentsPostgresAsyncSpec extends DepartmentsSpec {
           _ <- testPostgresDB.run(query[Employee].delete)
           _ <- testPostgresDB.run(query[Task].delete)
 
-          _ <- testPostgresDB.run(departmentInsert).using(departmentEntries)
-          _ <- testPostgresDB.run(employeeInsert).using(employeeEntries)
-          _ <- testPostgresDB.run(taskInsert).using(taskEntries)
+          _ <- testPostgresDB.run(departmentInsert)(departmentEntries)
+          _ <- testPostgresDB.run(employeeInsert)(employeeEntries)
+          _ <- testPostgresDB.run(taskInsert)(taskEntries)
         } yield {}
       }
     }
 
   "Example 8 - nested naive" in {
-    await(testPostgresDB.run(`Example 8 expertise naive`).using(`Example 8 param`)) mustEqual `Example 8 expected result`
+    await(testPostgresDB.run(`Example 8 expertise naive`)(`Example 8 param`)) mustEqual `Example 8 expected result`
   }
 
   "Example 9 - nested db" in {
-    await(testPostgresDB.run(`Example 9 expertise`).using(`Example 9 param`)) mustEqual `Example 9 expected result`
+    await(testPostgresDB.run(`Example 9 expertise`)(`Example 9 param`)) mustEqual `Example 9 expected result`
   }
 }

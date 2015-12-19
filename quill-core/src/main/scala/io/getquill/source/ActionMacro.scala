@@ -18,16 +18,13 @@ trait ActionMacro {
         val encodedParams = EncodeParams[S](c)(bindingMap(params))
         q"""
         {
-          class Partial {
-            private val (sql, bindings: List[io.getquill.ast.Ident]) =
-              ${prepare(action, params.map(_._1))}
+          val (sql, bindings: List[io.getquill.ast.Ident]) =
+            ${prepare(action, params.map(_._1))}
 
-            def using(values: List[(..${params.map(_._2)})]) =
-              ${c.prefix}.execute(
-                sql,
-                values.map(value => $encodedParams(bindings.map(_.name))))
-          }
-          new Partial
+          (values: List[(..${params.map(_._2)})]) =>
+            ${c.prefix}.execute(
+              sql,
+              values.map(value => $encodedParams(bindings.map(_.name))))
         }
         """
     }

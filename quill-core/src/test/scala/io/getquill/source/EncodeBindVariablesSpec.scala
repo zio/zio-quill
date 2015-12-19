@@ -11,13 +11,13 @@ class EncodeBindVariablesSpec extends Spec {
       val q = quote {
         (i: Int) => qr1.filter(t => t.i == i)
       }
-      mirrorSource.run(q).using(1).binds mustEqual Row(1)
+      mirrorSource.run(q)(1).binds mustEqual Row(1)
     }
     "two" in {
       val q = quote {
         (i: Int, j: Long, o: Option[Int]) => qr1.filter(t => t.i == i && t.i > j && t.o == o)
       }
-      mirrorSource.run(q).using(1, 2, None).binds mustEqual Row(1, 2L, None)
+      mirrorSource.run(q)(1, 2, None).binds mustEqual Row(1, 2L, None)
     }
   }
 
@@ -25,7 +25,7 @@ class EncodeBindVariablesSpec extends Spec {
     val q = quote {
       (i: Thread) => qr1.filter(_.i == i)
     }
-    "mirrorSource.run(q).using(new Thread)" mustNot compile
+    "mirrorSource.run(q)(new Thread)" mustNot compile
   }
 
   "uses a custom implicit encoder" in {
@@ -36,6 +36,6 @@ class EncodeBindVariablesSpec extends Spec {
     val q = quote {
       (d: Double) => qr1.filter(_.i == d)
     }
-    mirrorSource.run(q).using(1D).binds mustEqual Row(1D)
+    mirrorSource.run(q)(1D).binds mustEqual Row(1D)
   }
 }

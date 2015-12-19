@@ -11,6 +11,10 @@ class MirrorSourceTemplate[N <: NamingStrategy] extends SqlSource[MirrorDialect,
     with MirrorEncoders
     with MirrorDecoders {
 
+  type QueryResult[T] = QueryMirror[T]
+  type ActionResult[T] = ActionMirror
+  type BatchedActionResult[T] = BatchActionMirror
+
   def probe(sql: String) =
     if (sql.contains("Fail"))
       Failure(new IllegalStateException("The sql contains the 'Fail' keyword'"))

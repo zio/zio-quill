@@ -8,7 +8,7 @@ import scala.concurrent.duration.Duration
 import scala.util.Try
 import com.github.mauricio.async.db.Configuration
 import com.github.mauricio.async.db.Connection
-import com.github.mauricio.async.db.QueryResult
+import com.github.mauricio.async.db.{ QueryResult => DBQueryResult }
 import com.github.mauricio.async.db.RowData
 import com.github.mauricio.async.db.pool.ObjectFactory
 import com.typesafe.scalalogging.StrictLogging
@@ -25,6 +25,10 @@ trait AsyncSource[D <: SqlIdiom, N <: NamingStrategy, C <: Connection]
     with Decoders
     with Encoders
     with StrictLogging {
+
+  type QueryResult[T] = Future[List[T]]
+  type ActionResult[T] = Future[DBQueryResult]
+  type BatchedActionResult[T] = Future[List[DBQueryResult]]
 
   protected def objectFactory(config: Configuration): ObjectFactory[C]
 
@@ -51,7 +55,7 @@ trait AsyncSource[D <: SqlIdiom, N <: NamingStrategy, C <: Connection]
     withConnection(_.sendQuery(sql))
   }
 
-  def execute(sql: String, bindList: List[List[Any] => List[Any]])(implicit ec: ExecutionContext): Future[List[QueryResult]] =
+  def execute(sql: String, bindList: List[List[Any] => List[Any]])(implicit ec: ExecutionContext): Future[List[DBQueryResult]] =
     bindList match {
       case Nil =>
         Future.successful(List())

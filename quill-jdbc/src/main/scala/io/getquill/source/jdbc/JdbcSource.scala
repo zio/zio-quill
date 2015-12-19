@@ -18,6 +18,10 @@ class JdbcSource[D <: SqlIdiom, N <: NamingStrategy]
     with JdbcDecoders
     with StrictLogging {
 
+  type QueryResult[T] = List[T]
+  type ActionResult[T] = Int
+  type BatchedActionResult[T] = List[Int]
+
   protected val dataSource = DataSource(config)
 
   private val currentConnection = new DynamicVariable[Option[Connection]](None)
@@ -54,14 +58,14 @@ class JdbcSource[D <: SqlIdiom, N <: NamingStrategy]
       }
     }
 
-  def execute(sql: String) = {
+  def execute(sql: String): Int = {
     logger.info(sql)
     withConnection {
       _.prepareStatement(sql).executeUpdate
     }
   }
 
-  def execute(sql: String, bindList: List[PreparedStatement => PreparedStatement]) = {
+  def execute(sql: String, bindList: List[PreparedStatement => PreparedStatement]): List[Int] = {
     logger.info(sql)
     withConnection { conn =>
       val ps = conn.prepareStatement(sql)
@@ -69,11 +73,11 @@ class JdbcSource[D <: SqlIdiom, N <: NamingStrategy]
         bind(ps)
         ps.addBatch
       }
-      ps.executeBatch
+      ps.executeBatch.toList
     }
   }
 
-  def query[T](sql: String, bind: PreparedStatement => PreparedStatement, extractor: ResultSet => T) = {
+  def query[T](sql: String, bind: PreparedStatement => PreparedStatement, extractor: ResultSet => T): List[T] = {
     logger.info(sql)
     withConnection { conn =>
       val ps = bind(conn.prepareStatement(sql))

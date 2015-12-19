@@ -24,6 +24,10 @@ class FinagleMysqlSource[N <: NamingStrategy]
     with FinagleMysqlEncoders
     with StrictLogging {
 
+  type QueryResult[T] = Future[List[T]]
+  type ActionResult[T] = Future[Result]
+  type BatchedActionResult[T] = Future[List[Result]]
+
   protected def dateTimezone = TimeZone.getDefault
 
   protected val client = FinagleMysqlClient(config)
@@ -42,7 +46,7 @@ class FinagleMysqlSource[N <: NamingStrategy]
         f.ensure(currentClient.clear)
     }
 
-  def execute(sql: String) =
+  def execute(sql: String): Future[Result] =
     withClient(_.prepare(sql)())
 
   def execute(sql: String, bindList: List[List[Parameter] => List[Parameter]]): Future[List[Result]] =
@@ -55,9 +59,9 @@ class FinagleMysqlSource[N <: NamingStrategy]
           .flatMap(_ => execute(sql, tail))
     }
 
-  def query[T](sql: String, bind: List[Parameter] => List[Parameter], extractor: Row => T) = {
+  def query[T](sql: String, bind: List[Parameter] => List[Parameter], extractor: Row => T): Future[List[T]] = {
     logger.info(sql)
-    withClient(_.prepare(sql).select(bind(List()): _*)(extractor))
+    withClient(_.prepare(sql).select(bind(List()): _*)(extractor)).map(_.toList)
   }
 
   private def withClient[T](f: Client => T) =

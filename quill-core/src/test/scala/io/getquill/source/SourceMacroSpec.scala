@@ -33,7 +33,7 @@ class SourceMacroSpec extends Spec {
         val q = quote {
           (a: String) => qr1.filter(t => t.s == a).delete
         }
-        val r = mirrorSource.run(q).using(List("a"))
+        val r = mirrorSource.run(q)(List("a"))
         r.ast.toString mustEqual "query[TestEntity].filter(t => t.s == ?).delete"
         r.bindList mustEqual List(Row("a"))
       }
@@ -41,7 +41,7 @@ class SourceMacroSpec extends Spec {
         val q = quote {
           (a: String) => infix"t = $a".as[Action[TestEntity]]
         }
-        val r = mirrorSource.run(q).using(List("a"))
+        val r = mirrorSource.run(q)(List("a"))
         r.ast.toString mustEqual """infix"t = $?""""
         r.bindList mustEqual List(Row("a"))
       }
@@ -49,7 +49,7 @@ class SourceMacroSpec extends Spec {
         val q: Quoted[String => Action[TestEntity]] = quote {
           (a: String) => infix"t = $a".as[Action[TestEntity]]
         }
-        val r = mirrorSource.run(q).using(List("a"))
+        val r = mirrorSource.run(q)(List("a"))
         r.ast.toString mustEqual """infix"t = $?""""
         r.bindList mustEqual List(Row("a"))
       }
@@ -82,7 +82,7 @@ class SourceMacroSpec extends Spec {
         val q = quote {
           (a: String) => qr1.filter(t => t.s == a)
         }
-        val r = mirrorSource.run(q).using("a")
+        val r = mirrorSource.run(q)("a")
         r.ast.toString mustEqual "query[TestEntity].filter(t => t.s == ?).map(t => (t.s, t.i, t.l, t.o))"
         r.binds mustEqual Row("a")
       }
@@ -90,7 +90,7 @@ class SourceMacroSpec extends Spec {
         val q = quote {
           (a: String) => infix"SELECT $a".as[Query[String]]
         }
-        val r = mirrorSource.run(q).using("a")
+        val r = mirrorSource.run(q)("a")
         r.ast.toString mustEqual """infix"SELECT $?".map(x => x)"""
         r.binds mustEqual Row("a")
       }
@@ -98,7 +98,7 @@ class SourceMacroSpec extends Spec {
         val q: Quoted[String => Query[TestEntity]] = quote {
           (a: String) => qr1.filter(t => t.s == a)
         }
-        val r = mirrorSource.run(q).using("a")
+        val r = mirrorSource.run(q)("a")
         r.ast.toString mustEqual "query[TestEntity].filter(t => t.s == ?).map(t => (t.s, t.i, t.l, t.o))"
         r.binds mustEqual Row("a")
       }

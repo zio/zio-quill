@@ -11,7 +11,7 @@ class FinagleMysqlEncodingSpec extends EncodingSpec {
     val r =
       for {
         _ <- testDB.run(delete)
-        _ <- testDB.run(insert).using(insertValues)
+        _ <- testDB.run(insert)(insertValues)
         result <- testDB.run(query[EncodingTestEntity])
       } yield result
 
@@ -19,7 +19,7 @@ class FinagleMysqlEncodingSpec extends EncodingSpec {
   }
 
   "fails if the column has the wrong type" in {
-    Await.result(testDB.run(insert).using(insertValues))
+    Await.result(testDB.run(insert)(insertValues))
     case class EncodingTestEntity(v1: Int)
     val e = intercept[IllegalStateException] {
       Await.result(testDB.run(query[EncodingTestEntity]))

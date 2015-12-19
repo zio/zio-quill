@@ -36,7 +36,7 @@ class SqlActionMacroSpec extends Spec {
         val q = quote {
           (s: String) => qr1.insert(_.s -> s)
         }
-        val mirror = mirrorSource.run(q).using(List("s"))
+        val mirror = mirrorSource.run(q)(List("s"))
         mirror.sql mustEqual "INSERT INTO TestEntity (s) VALUES (?)"
         mirror.bindList mustEqual List(Row("s"))
       }
@@ -44,7 +44,7 @@ class SqlActionMacroSpec extends Spec {
         val q = quote {
           (s: String, i: Int) => qr1.insert(_.s -> s, _.i -> i)
         }
-        val mirror = mirrorSource.run(q).using(List(("s", 1)))
+        val mirror = mirrorSource.run(q)(List(("s", 1)))
         mirror.sql mustEqual "INSERT INTO TestEntity (s,i) VALUES (?, ?)"
         mirror.bindList mustEqual List(Row("s", 1))
       }

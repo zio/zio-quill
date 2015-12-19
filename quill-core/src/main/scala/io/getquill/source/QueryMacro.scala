@@ -35,17 +35,14 @@ trait QueryMacro extends SelectFlattening with SelectResultExtraction {
     else
       q"""
       {
-        class Partial {
-          private val (sql, bindings: List[io.getquill.ast.Ident]) =
-              ${prepare(flattenQuery, params.map(_._1))}
+        val (sql, bindings: List[io.getquill.ast.Ident]) =
+            ${prepare(flattenQuery, params.map(_._1))}
 
-          def using(..$inputs) =
-            ${c.prefix}.query(
-              sql,
-              $encodedParams(bindings.map(_.name)),
-              $extractor)
-        }
-        new Partial
+        (..$inputs) =>
+          ${c.prefix}.query(
+            sql,
+            $encodedParams(bindings.map(_.name)),
+            $extractor)
       }
       """
   }
