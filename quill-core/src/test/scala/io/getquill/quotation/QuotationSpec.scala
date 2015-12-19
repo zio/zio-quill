@@ -481,14 +481,33 @@ class QuotationSpec extends Spec {
     }
   }
 
-  "reduces tuple matching locally" in {
-    val q = quote {
-      (t: (Int, Int)) =>
-        t match {
-          case (a, b) => a + b
-        }
+  "reduces tuple matching locally" - {
+    "simple" in {
+      val q = quote {
+        (t: (Int, Int)) =>
+          t match {
+            case (a, b) => a + b
+          }
+      }
+      quote(unquote(q)).ast.body mustEqual
+        BinaryOperation(Property(Ident("t"), "_1"), NumericOperator.`+`, Property(Ident("t"), "_2"))
     }
-    quote(unquote(q)).ast.body mustEqual BinaryOperation(Property(Ident("t"), "_1"), NumericOperator.`+`, Property(Ident("t"), "_2"))
+    "nested" in {
+      val q = quote {
+        (t: ((Int, Int), Int)) =>
+          t match {
+            case ((a, b), c) => a + b + c
+          }
+      }
+      quote(unquote(q)).ast.body mustEqual
+        BinaryOperation(
+          BinaryOperation(
+            Property(Property(Ident("t"), "_1"), "_1"),
+            NumericOperator.`+`,
+            Property(Property(Ident("t"), "_1"), "_2")),
+          NumericOperator.`+`,
+          Property(Ident("t"), "_2"))
+    }
   }
 
   "unquotes referenced quotations" - {

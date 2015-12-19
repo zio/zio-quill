@@ -43,15 +43,26 @@ trait Parsing {
     case `stringInterpolationParser`(value) => value
     case `optionOperationParser`(value)     => value
 
-    case q"$tupleTree match { case (..$fieldsTrees) => $bodyTree }" =>
+    case q"$tupleTree match { case ($fieldsTrees) => $bodyTree }" =>
       val tuple = astParser(tupleTree)
-      val fields = fieldsTrees.map(identParser(_))
+      val fields = astParser(fieldsTrees)
       val body = astParser(bodyTree)
-      val properties =
-        for ((field, i) <- fields.zipWithIndex) yield {
-          Property(tuple, s"_${i + 1}")
+      def property(path: List[Int]) =
+        path.foldLeft(tuple) {
+          case (t, i) => Property(t, s"_${i + 1}")
         }
-      BetaReduction(body, fields.zip(properties): _*)
+      def reductions(ast: Ast, path: List[Int] = List()): List[(Ident, Ast)] =
+        ast match {
+          case ident: Ident =>
+            List(ident -> property(path))
+          case Tuple(elems) =>
+            elems.zipWithIndex.flatMap {
+              case (elem, idx) => reductions(elem, path :+ idx)
+            }
+          case other =>
+            c.fail(s"Please report a bug. Expected tuple or ident, got '$other'")
+        }
+      BetaReduction(body, reductions(fields): _*)
   }
 
   val quotedAstParser: Parser[Ast] = Parser[Ast] {
