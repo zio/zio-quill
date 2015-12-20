@@ -7,6 +7,7 @@ then
 	git config --global user.name "Quill CI"
 	git config --global user.email "quillci@getquill.io"
 	git remote set-url origin git@github.com:getquill/quill.git 
+	git checkout master
 	sbt clean release with-defaults
 	git push --delete deploy release
 else
