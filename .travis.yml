@@ -17,6 +17,7 @@ before_script:
 - psql -U postgres -d quill_test -a -f quill-sql/src/test/sql/postgres-schema.sql
 script:
 - sbt clean tut coverage test publish && sbt coverageAggregate
+- ./release.sh
 - find $HOME/.sbt -name "*.lock" | xargs rm
 - find $HOME/.ivy2 -name "ivydata-*.properties" | xargs rm
 after_success:
