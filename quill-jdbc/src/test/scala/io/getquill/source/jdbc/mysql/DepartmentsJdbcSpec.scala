@@ -11,17 +11,17 @@ class DepartmentsJdbcSpec extends DepartmentsSpec {
       testMysqlDB.run(query[Employee].delete)
       testMysqlDB.run(query[Task].delete)
 
-      testMysqlDB.run(departmentInsert).using(departmentEntries)
-      testMysqlDB.run(employeeInsert).using(employeeEntries)
-      testMysqlDB.run(taskInsert).using(taskEntries)
+      testMysqlDB.run(departmentInsert)(departmentEntries)
+      testMysqlDB.run(employeeInsert)(employeeEntries)
+      testMysqlDB.run(taskInsert)(taskEntries)
     }
   }
 
   "Example 8 - nested naive" in {
-    testMysqlDB.run(`Example 8 expertise naive`).using(`Example 8 param`) mustEqual `Example 8 expected result`
+    testMysqlDB.run(`Example 8 expertise naive`)(`Example 8 param`) mustEqual `Example 8 expected result`
   }
 
   "Example 9 - nested db" in {
-    testMysqlDB.run(`Example 9 expertise`).using(`Example 9 param`) mustEqual `Example 9 expected result`
+    testMysqlDB.run(`Example 9 expertise`)(`Example 9 param`) mustEqual `Example 9 expected result`
   }
 }

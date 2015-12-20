@@ -147,7 +147,7 @@ val q = quote {
 The runtime value can be specified when running it:
 
 ```scala
-db.run(q).using(10) // SELECT r.radius FROM Circle r WHERE r.radius > ?
+db.run(q)(10) // SELECT r.radius FROM Circle r WHERE r.radius > ?
 ```
 
 The method `run` is a bridge between the compile-time quotations and the runtime execution.
@@ -392,7 +392,7 @@ val a = quote {
     query[Contact].insert(_.personId -> personId, _.phone -> phone)
 }
 
-db.run(a).using(List((999, "+1510488988"))) 
+db.run(a)(List((999, "+1510488988"))) 
 // INSERT INTO Contact (personId,phone) VALUES (?, ?)
 ```
 
@@ -405,7 +405,7 @@ val a = quote {
     query[Person].filter(p => p.id == id).update(_.age -> age)
 }
 
-db.run(a).using(List((999, 18)))
+db.run(a)(List((999, 18)))
 // UPDATE Person SET age = ? WHERE id = ?
 ```
 

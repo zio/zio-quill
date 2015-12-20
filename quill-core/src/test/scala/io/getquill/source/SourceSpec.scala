@@ -20,7 +20,7 @@ class SourceSpec extends Spec {
       val q = quote {
         (s: StringValue) => query[Entity].insert(_.s -> s)
       }
-      mirrorSource.run(q).using(List(StringValue("s"))).bindList mustEqual List(Row("s"))
+      mirrorSource.run(q)(List(StringValue("s"))).bindList mustEqual List(Row("s"))
     }
 
     "decoding" in {

@@ -1,7 +1,6 @@
 package io.getquill.source.jdbc.mysql
 
 import io.getquill._
-import io.getquill.source.jdbc.mysql.testMysqlDB;
 
 class JdbcSourceSpec extends Spec {
 

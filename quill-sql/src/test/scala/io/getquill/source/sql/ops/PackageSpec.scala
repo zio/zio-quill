@@ -17,7 +17,7 @@ class PackageSpec extends Spec {
         (a: String) =>
           query[TestEntity].filter(t => t.s like s"%$a%")
       }
-      mirrorSource.run(q).using("a").sql mustEqual "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.s like ('%' || ?) || '%'"
+      mirrorSource.run(q)("a").sql mustEqual "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.s like ('%' || ?) || '%'"
     }
   }
 }

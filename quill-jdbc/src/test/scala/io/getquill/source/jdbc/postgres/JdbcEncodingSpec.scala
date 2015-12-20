@@ -7,7 +7,7 @@ class JdbcEncodingSpec extends EncodingSpec {
 
   "encodes and decodes types" in {
     testPostgresDB.run(delete)
-    testPostgresDB.run(insert).using(insertValues)
+    testPostgresDB.run(insert)(insertValues)
     verify(testPostgresDB.run(query[EncodingTestEntity]))
   }
 }

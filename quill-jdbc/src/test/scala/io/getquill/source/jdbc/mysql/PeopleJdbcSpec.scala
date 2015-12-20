@@ -12,8 +12,8 @@ class PeopleJdbcSpec extends PeopleSpec {
     val t = testMysqlDB.transaction {
       testMysqlDB.run(query[Couple].delete)
       testMysqlDB.run(query[Person].filter(_.age > 0).delete)
-      testMysqlDB.run(peopleInsert).using(peopleEntries)
-      testMysqlDB.run(couplesInsert).using(couplesEntries)
+      testMysqlDB.run(peopleInsert)(peopleEntries)
+      testMysqlDB.run(couplesInsert)(couplesEntries)
     }
   }
 
@@ -22,7 +22,7 @@ class PeopleJdbcSpec extends PeopleSpec {
   }
 
   "Example 2 - range simple" in {
-    testMysqlDB.run(`Ex 2 rangeSimple`).using(`Ex 2 param 1`, `Ex 2 param 2`) mustEqual `Ex 2 expected result`
+    testMysqlDB.run(`Ex 2 rangeSimple`)(`Ex 2 param 1`, `Ex 2 param 2`) mustEqual `Ex 2 expected result`
   }
 
   "Example 3 - satisfies" in {
@@ -34,7 +34,7 @@ class PeopleJdbcSpec extends PeopleSpec {
   }
 
   "Example 5 - compose" in {
-    testMysqlDB.run(`Ex 5 compose`).using(`Ex 5 param 1`, `Ex 5 param 2`) mustEqual `Ex 5 expected result`
+    testMysqlDB.run(`Ex 5 compose`)(`Ex 5 param 1`, `Ex 5 param 2`) mustEqual `Ex 5 expected result`
   }
 
   "Example 6 - predicate 0" in {

@@ -13,7 +13,7 @@ class PostgresAsyncEncodingSpec extends EncodingSpec {
     val r =
       for {
         _ <- testPostgresDB.run(delete)
-        _ <- testPostgresDB.run(insert).using(insertValues)
+        _ <- testPostgresDB.run(insert)(insertValues)
         result <- testPostgresDB.run(query[EncodingTestEntity])
       } yield result
 
@@ -22,14 +22,14 @@ class PostgresAsyncEncodingSpec extends EncodingSpec {
 
   "fails if the column has the wrong type" - {
     "numeric" in {
-      Await.result(testPostgresDB.run(insert).using(insertValues), Duration.Inf)
+      Await.result(testPostgresDB.run(insert)(insertValues), Duration.Inf)
       case class EncodingTestEntity(v1: Int)
       val e = intercept[IllegalStateException] {
         Await.result(testPostgresDB.run(query[EncodingTestEntity]), Duration.Inf)
       }
     }
     "non-numeric" in {
-      Await.result(testPostgresDB.run(insert).using(insertValues), Duration.Inf)
+      Await.result(testPostgresDB.run(insert)(insertValues), Duration.Inf)
       case class EncodingTestEntity(v1: Date)
       val e = intercept[IllegalStateException] {
         Await.result(testPostgresDB.run(query[EncodingTestEntity]), Duration.Inf)

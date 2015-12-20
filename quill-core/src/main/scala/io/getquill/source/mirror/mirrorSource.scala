@@ -4,7 +4,8 @@ import scala.reflect.macros.whitebox.Context
 import language.experimental.macros
 import scala.util.Failure
 import scala.util.Success
-import io.getquill.ast._
+import io.getquill._
+import io.getquill.ast.{ Ast, Ident }
 import io.getquill.quotation.Quoted
 import io.getquill.source.Source
 import io.getquill.source.SourceMacro
@@ -17,7 +18,20 @@ object mirrorSource extends MirrorSourceTemplate
 
 abstract class MirrorSourceTemplate extends Source[Row, Row] {
 
-  def run[T](quoted: Quoted[T]): Any = macro MirrorSourceMacro.run[Row, Row, T]
+  def run[T](quoted: Quoted[Query[T]]): QueryMirror[T] = macro MirrorSourceMacro.run[Row, Row]
+  def run[P1, T](quoted: Quoted[P1 => Query[T]]): P1 => QueryMirror[T] = macro MirrorSourceMacro.run[Row, Row]
+  def run[P1, P2, T](quoted: Quoted[(P1, P2) => Query[T]]): (P1, P2) => QueryMirror[T] = macro MirrorSourceMacro.run[Row, Row]
+  def run[P1, P2, P3, T](quoted: Quoted[(P1, P2, P3) => Query[T]]): (P1, P2, P3) => QueryMirror[T] = macro MirrorSourceMacro.run[Row, Row]
+
+  def run[T](quoted: Quoted[Action[T]]): ActionMirror = macro MirrorSourceMacro.run[Row, Row]
+  def run[P1, T](quoted: Quoted[P1 => Action[T]]): List[P1] => BatchActionMirror = macro MirrorSourceMacro.run[Row, Row]
+  def run[P1, P2, T](quoted: Quoted[(P1, P2) => Action[T]]): List[(P1, P2)] => BatchActionMirror = macro MirrorSourceMacro.run[Row, Row]
+  def run[P1, P2, P3, T](quoted: Quoted[(P1, P2, P3) => Action[T]]): List[(P1, P2, P3)] => BatchActionMirror = macro MirrorSourceMacro.run[Row, Row]
+
+  def run[T](quoted: Quoted[T]): QueryMirror[T] = macro MirrorSourceMacro.run[Row, Row]
+  def run[P1, T](quoted: Quoted[P1 => T]): P1 => QueryMirror[T] = macro MirrorSourceMacro.run[Row, Row]
+  def run[P1, P2, T](quoted: Quoted[(P1, P2) => T]): (P1, P2) => QueryMirror[T] = macro MirrorSourceMacro.run[Row, Row]
+  def run[P1, P2, P3, T](quoted: Quoted[(P1, P2, P3) => T]): (P1, P2, P3) => QueryMirror[T] = macro MirrorSourceMacro.run[Row, Row]
 
   def mirrorConfig = config
 

@@ -12,8 +12,8 @@ class PeopleJdbcSpec extends PeopleSpec {
     val t = testPostgresDB.transaction {
       testPostgresDB.run(query[Couple].delete)
       testPostgresDB.run(query[Person].filter(_.age > 0).delete)
-      testPostgresDB.run(peopleInsert).using(peopleEntries)
-      testPostgresDB.run(couplesInsert).using(couplesEntries)
+      testPostgresDB.run(peopleInsert)(peopleEntries)
+      testPostgresDB.run(couplesInsert)(couplesEntries)
     }
   }
 
@@ -22,7 +22,7 @@ class PeopleJdbcSpec extends PeopleSpec {
   }
 
   "Example 2 - range simple" in {
-    testPostgresDB.run(`Ex 2 rangeSimple`).using(`Ex 2 param 1`, `Ex 2 param 2`) mustEqual `Ex 2 expected result`
+    testPostgresDB.run(`Ex 2 rangeSimple`)(`Ex 2 param 1`, `Ex 2 param 2`) mustEqual `Ex 2 expected result`
   }
 
   "Example 3 - satisfies" in {
@@ -34,7 +34,7 @@ class PeopleJdbcSpec extends PeopleSpec {
   }
 
   "Example 5 - compose" in {
-    testPostgresDB.run(`Ex 5 compose`).using(`Ex 5 param 1`, `Ex 5 param 2`) mustEqual `Ex 5 expected result`
+    testPostgresDB.run(`Ex 5 compose`)(`Ex 5 param 1`, `Ex 5 param 2`) mustEqual `Ex 5 expected result`
   }
 
   "Example 6 - predicate 0" in {

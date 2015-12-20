@@ -13,7 +13,7 @@ class MysqlAsyncEncodingSpec extends EncodingSpec {
     val r =
       for {
         _ <- testMysqlDB.run(delete)
-        _ <- testMysqlDB.run(insert).using(insertValues)
+        _ <- testMysqlDB.run(insert)(insertValues)
         result <- testMysqlDB.run(query[EncodingTestEntity])
       } yield result
 
@@ -22,14 +22,14 @@ class MysqlAsyncEncodingSpec extends EncodingSpec {
 
   "fails if the column has the wrong type" - {
     "numeric" in {
-      Await.result(testMysqlDB.run(insert).using(insertValues), Duration.Inf)
+      Await.result(testMysqlDB.run(insert)(insertValues), Duration.Inf)
       case class EncodingTestEntity(v1: Int)
       val e = intercept[IllegalStateException] {
         Await.result(testMysqlDB.run(query[EncodingTestEntity]), Duration.Inf)
       }
     }
     "non-numeric" in {
-      Await.result(testMysqlDB.run(insert).using(insertValues), Duration.Inf)
+      Await.result(testMysqlDB.run(insert)(insertValues), Duration.Inf)
       case class EncodingTestEntity(v1: Date)
       val e = intercept[IllegalStateException] {
         Await.result(testMysqlDB.run(query[EncodingTestEntity]), Duration.Inf)

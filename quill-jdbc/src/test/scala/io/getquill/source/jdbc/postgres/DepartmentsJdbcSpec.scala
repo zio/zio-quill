@@ -11,17 +11,17 @@ class DepartmentsJdbcSpec extends DepartmentsSpec {
       testPostgresDB.run(query[Employee].delete)
       testPostgresDB.run(query[Task].delete)
 
-      testPostgresDB.run(departmentInsert).using(departmentEntries)
-      testPostgresDB.run(employeeInsert).using(employeeEntries)
-      testPostgresDB.run(taskInsert).using(taskEntries)
+      testPostgresDB.run(departmentInsert)(departmentEntries)
+      testPostgresDB.run(employeeInsert)(employeeEntries)
+      testPostgresDB.run(taskInsert)(taskEntries)
     }
   }
 
   "Example 8 - nested naive" in {
-    testPostgresDB.run(`Example 8 expertise naive`).using(`Example 8 param`) mustEqual `Example 8 expected result`
+    testPostgresDB.run(`Example 8 expertise naive`)(`Example 8 param`) mustEqual `Example 8 expected result`
   }
 
   "Example 9 - nested db" in {
-    testPostgresDB.run(`Example 9 expertise`).using(`Example 9 param`) mustEqual `Example 9 expected result`
+    testPostgresDB.run(`Example 9 expertise`)(`Example 9 param`) mustEqual `Example 9 expected result`
   }
 }
