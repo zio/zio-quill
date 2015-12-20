@@ -7,6 +7,7 @@ before_install:
 - openssl aes-256-cbc -pass pass:$ENCRYPTION_PASSWORD -in secring.gpg.enc -out local.secring.gpg -d
 - openssl aes-256-cbc -pass pass:$ENCRYPTION_PASSWORD -in pubring.gpg.enc -out local.pubring.gpg -d
 - openssl aes-256-cbc -pass pass:$ENCRYPTION_PASSWORD -in credentials.sbt.enc -out local.credentials.sbt -d
+- openssl aes-256-cbc -pass pass:$ENCRYPTION_PASSWORD -in local.deploy_key.pem.enc -out local.deploy_key.pem -d
 before_script:
 - mysql -u root -e "create database quill_test;"
 - mysql -u root quill_test < quill-sql/src/test/sql/mysql-schema.sql
@@ -17,10 +18,10 @@ before_script:
 - psql -U postgres -d quill_test -a -f quill-sql/src/test/sql/postgres-schema.sql
 script:
 - sbt clean tut coverage test publish && sbt coverageAggregate
-- ./release.sh
 - find $HOME/.sbt -name "*.lock" | xargs rm
 - find $HOME/.ivy2 -name "ivydata-*.properties" | xargs rm
 after_success:
+- ./release.sh
 - bash <(curl -s https://codecov.io/bash)
 sudo: false
 cache:
