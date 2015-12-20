@@ -6,3 +6,4 @@ target
 .cache*
 **/bin
 **/.tmpBin
+local.*

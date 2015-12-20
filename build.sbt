@@ -1,3 +1,4 @@
+import ReleaseTransformations._
 
 lazy val quill = 
   (project in file("."))
@@ -100,6 +101,22 @@ lazy val commonSettings = Seq(
     else
       Some("releases"  at nexus + "service/local/staging/deploy/maven2")
   },
+  pgpSecretRing := file("local.secring.gpg"),
+  pgpPublicRing := file("local.pubring.gpg"),
+  releaseProcess := Seq[ReleaseStep](
+    checkSnapshotDependencies,
+    inquireVersions,
+    runClean,
+    runTest,
+    setReleaseVersion,
+    commitReleaseVersion,
+    tagRelease,
+    ReleaseStep(action = Command.process("publishSigned", _)),
+    setNextVersion,
+    commitNextVersion,
+    ReleaseStep(action = Command.process("sonatypeReleaseAll", _)),
+    pushChanges
+  ),
   pomExtra := (
     <url>http://github.com/fwbrasil/quill</url>
     <licenses>
