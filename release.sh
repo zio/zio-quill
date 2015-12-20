@@ -5,4 +5,5 @@ then
 	chmod 600 deploy_key.pem
 	ssh-add deploy_key.pem
 	sbt release with-defaults
+	git push --delete origin release
 fi
