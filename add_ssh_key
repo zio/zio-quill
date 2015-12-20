@@ -1,0 +1,8 @@
+#!/usr/bin/expect -f
+eval "$(ssh-agent -s)"
+chmod 600 local.deploy_key.pem
+echo $ENCRYPTION_PASSWORD | ssh-add -p local.deploy_key.pem
+spawn ssh-add /home/user/.ssh/id_rsa
+expect "Enter passphrase for local.deploy_key.pem:"
+send "$ENCRYPTION_PASSWORD\n";
+interact
