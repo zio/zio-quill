@@ -18,10 +18,10 @@ before_script:
 - psql -U postgres -d quill_test -a -f quill-sql/src/test/sql/postgres-schema.sql
 script:
 - sbt clean coverage test tut publish && sbt coverageAggregate
+- ./release.sh
 - find $HOME/.sbt -name "*.lock" | xargs rm
 - find $HOME/.ivy2 -name "ivydata-*.properties" | xargs rm
 after_success:
-- ./release.sh
 - bash <(curl -s https://codecov.io/bash)
 sudo: false
 cache:
