@@ -1,5 +1,5 @@
 #!/bin/bash
-if [[ $(git tag -l --contains HEAD) =~ 'release' ]]
+if [[ $TRAVIS_TAG =~ 'release' ]]
 then
 	eval "$(ssh-agent -s)"
 	chmod 600 local.deploy_key.pem
