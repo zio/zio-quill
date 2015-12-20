@@ -2,8 +2,9 @@
 if [[ $(git tag -l --contains HEAD) =~ 'release' ]]
 then
 	eval "$(ssh-agent -s)"
-	chmod 600 deploy_key.pem
-	ssh-add deploy_key.pem
+	chmod 600 local.deploy_key.pem
+	ssh-add local.deploy_key.pem
+	git remote add origin git@github.com:getquill/quill.git 
 	sbt release with-defaults
 	git push --delete origin release
 fi
