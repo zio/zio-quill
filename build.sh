@@ -8,8 +8,10 @@ then
 	git config --global user.email "quillci@getquill.io"
 	git remote set-url origin git@github.com:getquill/quill.git
 	git fetch --unshallow
+	git checkout master || git checkout -b master
+	git reset --hard origin/master
 	git symbolic-ref HEAD
-	sbt tut clean release with-defaults
+	sbt clean release with-defaults
 	git push --delete deploy release
 else
 	sbt clean coverage test tut coverageAggregate
