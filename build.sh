@@ -11,9 +11,8 @@ then
 	git checkout master || git checkout -b master
 	git reset --hard origin/master
 	git symbolic-ref HEAD
-	sbt tut
-	sbt 'release with-defaults'
-	git push --delete deploy release
+	sbt tut 'release with-defaults'
+	git push --delete origin release
 else
 	sbt clean coverage test tut coverageAggregate
 fi
