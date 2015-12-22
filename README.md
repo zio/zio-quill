@@ -744,6 +744,11 @@ testDB.dest=localhost:3306
 testDB.user=root
 testDB.password=root
 testDB.database=database
+testDB.pool.watermark.low=0
+testDB.pool.watermark.high=10
+testDB.pool.idleTime=5 # seconds
+testDB.pool.bufferSize=0
+testDB.pool.maxWaiters=2147483647
 ```
 
 # Slick comparison #
