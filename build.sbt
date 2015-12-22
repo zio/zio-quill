@@ -47,7 +47,7 @@ lazy val `quill-finagle-mysql` =
     .settings(commonSettings: _*)
     .settings(
       libraryDependencies ++= Seq(
-        "com.twitter" %% "finagle-mysql" % "6.27.0"
+        "com.twitter" %% "finagle-mysql" % "6.31.0"
       ),
       parallelExecution in Test := false
     )
