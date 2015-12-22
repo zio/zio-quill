@@ -10,7 +10,7 @@ object FinagleMysqlClient {
 
   def apply(config: Config) = {
     val user = config.getString("user")
-    val password = config.getString("password")
+    val password = Try(config.getString("password")).getOrElse(null)
     val database = config.getString("database")
     val dest = config.getString("dest")
     val lowWatermark = Try(config.getInt("pool.watermark.low")).getOrElse(0)
