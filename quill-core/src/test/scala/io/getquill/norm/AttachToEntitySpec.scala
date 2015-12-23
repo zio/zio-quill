@@ -78,6 +78,15 @@ class AttachToEntitySpec extends Spec {
         }
         attachToEntity(q.ast) mustEqual n.ast
       }
+      "groupBy" in {
+        val q = quote {
+          qr1.groupBy(b => b.s)
+        }
+        val n = quote {
+          qr1.sortBy(b => 1).groupBy(b => b.s)
+        }
+        attachToEntity(q.ast) mustEqual n.ast
+      }
     }
   }
 

@@ -9,9 +9,8 @@ class NormalizeSpec extends Spec {
     for (i <- (3 to 15)) {
       for (j <- (0 until 30)) {
         val query = gen(i)
-        val n = Normalize(query)
         s"$i levels ($j) - $query" in {
-          val q = VerifyNormalization(n)
+          val n = Normalize(query)
         }
       }
     }

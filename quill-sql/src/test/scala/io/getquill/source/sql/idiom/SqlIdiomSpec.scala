@@ -80,6 +80,17 @@ class SqlIdiomSpec extends Spec {
           mirrorSource.run(q).sql mustEqual
             "SELECT t._1, t._2, c.s, c.i, c.l, c.o FROM (SELECT t.i _1, COUNT(*) _2 FROM TestEntity t GROUP BY t.i) t, TestEntity2 c WHERE c.i = t._1"
         }
+        "limited" in {
+          val q = quote {
+            (qr1.groupBy(t => t.i).map {
+              case (i, e) =>
+                (i, e.map(_.l).min)
+            }).take(10)
+          }
+
+          mirrorSource.run(q).sql mustEqual
+            "SELECT t._1, t._2 FROM (SELECT t.i _1, MIN(t.l) _2 FROM TestEntity t GROUP BY t.i) t LIMIT 10"
+        }
       }
       "aggregated" - {
         "min" in {

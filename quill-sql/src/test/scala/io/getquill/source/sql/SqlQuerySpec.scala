@@ -25,9 +25,12 @@ class SqlQuerySpec extends Spec {
         for (j <- (0 until 30)) {
           val query = Normalize(gen(i))
           s"$i levels ($j) - $query" in {
-            VerifySqlQuery(SqlQuery(query)) match {
-              case None        =>
-              case Some(error) => println(error)
+            val sql = SqlQuery(query)
+            VerifySqlQuery(sql) match {
+              case None =>
+                println(sql.show)
+              case Some(error) =>
+                println(query + "\n" + error)
             }
           }
         }

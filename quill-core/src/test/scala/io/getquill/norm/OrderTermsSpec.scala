@@ -4,6 +4,13 @@ import io.getquill._
 
 class OrderTermsSpec extends Spec {
 
+  "doesn't reorder groupBy.map" in {
+    val q = quote {
+      qr1.map(b => b.s).sortBy(b => b).reverse
+    }
+    OrderTerms.unapply(q.ast) mustEqual None
+  }
+
   "reverse" - {
     "a.reverse.filter(b => c)" in {
       val q = quote {

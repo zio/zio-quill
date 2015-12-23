@@ -7,6 +7,9 @@ object OrderTerms {
   def unapply(q: Query) =
     q match {
 
+      case Reverse(Map(a: GroupBy, b, c)) => None
+      case Take(Map(a: GroupBy, b, c), d) => None
+
       // a.reverse.filter(b => c) =>
       //     a.filter(b => c).reverse
       case Filter(Reverse(a), b, c) =>
