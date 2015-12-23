@@ -173,7 +173,7 @@ class SqlIdiomSpec extends Spec {
             qr1.filter(t => t.i > 10).map(u => u).union(qr1.filter(t => t.s == "s")).map(u => u.s)
           }
           mirrorSource.run(q).sql mustEqual
-            "SELECT u.s FROM (SELECT s FROM TestEntity t WHERE t.i > 10 UNION SELECT s FROM TestEntity t1 WHERE t1.s = 's') u"
+            "SELECT u.s FROM (SELECT t.s FROM TestEntity t WHERE t.i > 10 UNION SELECT s FROM TestEntity t1 WHERE t1.s = 's') u"
         }
         "nested" in {
           val j = quote {
@@ -596,7 +596,7 @@ class SqlIdiomSpec extends Spec {
     "mutiple transformations" in {
       object db extends MirrorSourceTemplate[SnakeCase with UpperCase with Escape]
       db.run(query[TestEntity]).sql mustEqual
-        """SELECT x."SOME_COLUMN" FROM "TEST_ENTITY" x"""
+        """SELECT "X"."SOME_COLUMN" FROM "TEST_ENTITY" "X""""
     }
   }
 

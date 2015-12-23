@@ -1,26 +1,20 @@
-//package io.getquill.source.sql
-//
-//import io.getquill._
-//import io.getquill.norm.Normalize
-//import io.getquill.source.sql.naming.Literal
-//
-//class ExpandNestedQueriesSpec extends Spec {
-//
-//  "test" in {
-//    val j = quote {
-//      for {
-//        a <- qr1
-//        b <- qr2
-//      } yield {
-//        (a, b)
-//      }
-//    }
-//    val q = quote {
-//      j.union(j).map(u => u._1.s)
-//    }
-//    import idiom.FallbackDialect._
-//    import io.getquill.util.Show._
-//    implicit val strategy = Literal
-//    println(ExpandNestedQueries(SqlQuery(Normalize(q.ast)), Nil).show)
-//  }
-//}
+package io.getquill.source.sql
+
+import io.getquill._
+import io.getquill.norm.Normalize
+import io.getquill.source.sql.mirror.mirrorSource
+
+class ExpandNestedQueriesSpec extends Spec {
+
+  "keeps the initial table alias" in {
+    val q = quote {
+      (for {
+        a <- qr1
+        b <- qr2
+      } yield b).take(10)
+    }
+
+    mirrorSource.run(q).sql mustEqual
+      "SELECT b.s, b.i, b.l, b.o FROM (SELECT b.s, b.i, b.l, b.o FROM TestEntity a, TestEntity2 b) b LIMIT 10"
+  }
+}

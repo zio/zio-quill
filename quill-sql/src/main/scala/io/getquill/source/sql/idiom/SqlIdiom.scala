@@ -119,9 +119,9 @@ trait SqlIdiom {
   implicit def sourceShow(implicit strategy: NamingStrategy): Show[Source] = new Show[Source] {
     def show(source: Source) =
       source match {
-        case TableSource(name, alias)     => s"${name.show} $alias"
-        case QuerySource(query, alias)    => s"(${query.show}) $alias"
-        case InfixSource(infix, alias)    => s"(${(infix: Ast).show}) $alias"
+        case TableSource(name, alias)     => s"${name.show} ${strategy(alias)}"
+        case QuerySource(query, alias)    => s"(${query.show}) ${strategy(alias)}"
+        case InfixSource(infix, alias)    => s"(${(infix: Ast).show}) ${strategy(alias)}"
         case OuterJoinSource(t, a, b, on) => s"${a.show} ${t.show} ${b.show} ON ${on.show}"
       }
   }
@@ -206,8 +206,8 @@ trait SqlIdiom {
       }
   }
 
-  implicit val identShow: Show[Ident] = new Show[Ident] {
-    def show(e: Ident) = e.name
+  implicit def identShow(implicit strategy: NamingStrategy): Show[Ident] = new Show[Ident] {
+    def show(e: Ident) = strategy(e.name)
   }
 
   implicit def actionShow(implicit strategy: NamingStrategy): Show[Action] = {
@@ -248,7 +248,7 @@ trait SqlIdiom {
 
   implicit def entityShow(implicit strategy: NamingStrategy): Show[Entity] = new Show[Entity] {
     def show(e: Entity) =
-      e.alias.getOrElse(strategy(e.name))
+      e.alias.map(strategy(_)).getOrElse(strategy(e.name))
   }
 
   private def scopedShow[A <: Ast](ast: A)(implicit show: Show[A]) =
