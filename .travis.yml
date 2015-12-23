@@ -6,8 +6,6 @@ jdk:
 branches:
   except:
     - release
-before_install:
-- ./decrypt.sh
 before_script:
 - mysql -u root -e "create database quill_test;"
 - mysql -u root quill_test < quill-sql/src/test/sql/mysql-schema.sql
