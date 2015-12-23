@@ -1,4 +1,3 @@
-
 package io.getquill.source.sql
 
 import io.getquill._
@@ -153,7 +152,25 @@ class SqlQuerySpec extends Spec {
         SqlQuery(q.ast).show mustEqual
           "SELECT t.i, t.l FROM TestEntity t GROUP BY t.i, t.l"
       }
-      "invalid groupby criteria" - {
+      "aggregated" - {
+        "simple" in {
+          val q = quote {
+            qr1.groupBy(t => t.i).map {
+              case (i, entities) => (i, entities.size)
+            }
+          }
+          SqlQuery(Normalize(q.ast)).show mustEqual "SELECT t.i, COUNT(*) FROM TestEntity t GROUP BY t.i"
+        }
+        "mapped" in {
+          val q = quote {
+            qr1.groupBy(t => t.i).map {
+              case (i, entities) => (i, entities.map(_.l).max)
+            }
+          }
+          SqlQuery(Normalize(q.ast)).show mustEqual "SELECT t.i, MAX(t.l) FROM TestEntity t GROUP BY t.i"
+        }
+      }
+      "invalid groupby criteria" in {
         val q = quote {
           qr1.groupBy(t => t).map(t => t)
         }

@@ -65,6 +65,7 @@ object SqlQuery {
 
     def base(q: Ast, alias: String) =
       q match {
+        case Map(_: GroupBy, _, _)                => FlattenSqlQuery(from = sources :+ source(q, alias))
         case q @ (_: Map | _: Filter | _: Entity) => flatten(sources, q, alias)
         case q if (sources == Nil)                => flatten(sources, q, alias)
         case other                                => FlattenSqlQuery(from = sources :+ source(q, alias))
@@ -76,7 +77,8 @@ object SqlQuery {
         val b = base(q, alias)
         val criterias = groupByCriterias(g)
         val select = BetaReduction(p, a -> Tuple(List(g, x)))
-        b.copy(groupBy = criterias, select = this.selectValues(select))
+        val flattenSelect = FlattenGroupByAggregation(x)(select)
+        b.copy(groupBy = criterias, select = this.selectValues(flattenSelect))
 
       case GroupBy(q, Ident(alias), p) =>
         fail("A `groupBy` clause must be followed by `map`.")
