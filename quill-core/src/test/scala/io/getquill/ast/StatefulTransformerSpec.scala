@@ -176,20 +176,40 @@ class StatefulTransformerSpec extends Spec {
     }
 
     "action" - {
-      "update" in {
-        val ast: Ast = Update(Ident("a"), List(Assignment("b", Ident("c"))))
-        Subject(Nil, Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) match {
-          case (at, att) =>
-            at mustEqual Update(Ident("a'"), List(Assignment("b", Ident("c'"))))
-            att.state mustEqual List(Ident("a"), Ident("c"))
+      "update" - {
+        "assigned" in {
+          val ast: Ast = AssignedAction(Update(Ident("a")), List(Assignment("b", Ident("c"))))
+          Subject(Nil, Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) match {
+            case (at, att) =>
+              at mustEqual AssignedAction(Update(Ident("a'")), List(Assignment("b", Ident("c'"))))
+              att.state mustEqual List(Ident("a"), Ident("c"))
+          }
+        }
+        "unassigned" in {
+          val ast: Ast = Update(Ident("a"))
+          Subject(Nil, Ident("a") -> Ident("a'"))(ast) match {
+            case (at, att) =>
+              at mustEqual Update(Ident("a'"))
+              att.state mustEqual List(Ident("a"))
+          }
         }
       }
-      "insert" in {
-        val ast: Ast = Insert(Ident("a"), List(Assignment("b", Ident("c"))))
-        Subject(Nil, Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) match {
-          case (at, att) =>
-            at mustEqual Insert(Ident("a'"), List(Assignment("b", Ident("c'"))))
-            att.state mustEqual List(Ident("a"), Ident("c"))
+      "insert" - {
+        "assigned" in {
+          val ast: Ast = AssignedAction(Insert(Ident("a")), List(Assignment("b", Ident("c"))))
+          Subject(Nil, Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) match {
+            case (at, att) =>
+              at mustEqual AssignedAction(Insert(Ident("a'")), List(Assignment("b", Ident("c'"))))
+              att.state mustEqual List(Ident("a"), Ident("c"))
+          }
+        }
+        "unassigned" in {
+          val ast: Ast = Insert(Ident("a"))
+          Subject(Nil, Ident("a") -> Ident("a'"))(ast) match {
+            case (at, att) =>
+              at mustEqual Insert(Ident("a'"))
+              att.state mustEqual List(Ident("a"))
+          }
         }
       }
       "delete" in {

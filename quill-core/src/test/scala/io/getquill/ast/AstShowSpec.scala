@@ -344,19 +344,37 @@ class AstShowSpec extends Spec {
   }
 
   "shows actions" - {
-    "update" in {
-      val q = quote {
-        query[TestEntity].filter(t => t.s == "test").update(_.s -> "a")
+    "update" - {
+      "assigned" in {
+        val q = quote {
+          query[TestEntity].filter(t => t.s == "test").update(_.s -> "a")
+        }
+        (q.ast: Ast).show mustEqual
+          """query[TestEntity].filter(t => t.s == "test").update(_.s -> "a")"""
       }
-      (q.ast: Ast).show mustEqual
-        """query[TestEntity].filter(t => t.s == "test").update(_.s -> "a")"""
+      "unassigned" in {
+        val q = quote {
+          query[TestEntity].filter(t => t.s == "test").update
+        }
+        (q.ast: Ast).show mustEqual
+          """(x1) => query[TestEntity].filter(t => t.s == "test").update"""
+      }
     }
-    "insert" in {
-      val q = quote {
-        query[TestEntity].insert(_.s -> "a")
+    "insert" - {
+      "assigned" in {
+        val q = quote {
+          query[TestEntity].insert(_.s -> "a")
+        }
+        (q.ast: Ast).show mustEqual
+          """query[TestEntity].insert(_.s -> "a")"""
       }
-      (q.ast: Ast).show mustEqual
-        """query[TestEntity].insert(_.s -> "a")"""
+      "unassigned" in {
+        val q = quote {
+          query[TestEntity].insert
+        }
+        (q.ast: Ast).show mustEqual
+          """(x1) => query[TestEntity].insert"""
+      }
     }
 
     "delete" in {

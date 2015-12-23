@@ -103,9 +103,10 @@ trait Unliftables {
   }
 
   implicit val actionUnliftable: Unliftable[Action] = Unliftable[Action] {
-    case q"$pack.Update.apply(${ a: Ast }, ${ b: List[Assignment] })" => Update(a, b)
-    case q"$pack.Insert.apply(${ a: Ast }, ${ b: List[Assignment] })" => Insert(a, b)
-    case q"$pack.Delete.apply(${ a: Ast })"                           => Delete(a)
+    case q"$pack.AssignedAction.apply(${ a: Ast }, ${ b: List[Assignment] })" => AssignedAction(a, b)
+    case q"$pack.Update.apply(${ a: Ast })"                                   => Update(a)
+    case q"$pack.Insert.apply(${ a: Ast })"                                   => Insert(a)
+    case q"$pack.Delete.apply(${ a: Ast })"                                   => Delete(a)
   }
 
   implicit val assignmentUnliftable: Unliftable[Assignment] = Unliftable[Assignment] {

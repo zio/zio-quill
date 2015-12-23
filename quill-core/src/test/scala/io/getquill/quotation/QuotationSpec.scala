@@ -165,17 +165,33 @@ class QuotationSpec extends Spec {
       }
     }
     "action" - {
-      "update" in {
-        val q = quote {
-          qr1.update(_.s -> "s")
+      "update" - {
+        "assigned" in {
+          val q = quote {
+            qr1.update(_.s -> "s")
+          }
+          quote(unquote(q)).ast mustEqual AssignedAction(Update(Entity("TestEntity")), List(Assignment("s", Constant("s"))))
         }
-        quote(unquote(q)).ast mustEqual Update(Entity("TestEntity"), List(Assignment("s", Constant("s"))))
+        "unassigned" in {
+          val q = quote {
+            qr1.update
+          }
+          quote(unquote(q)).ast mustEqual Function(List(Ident("x1")), Update(Entity("TestEntity")))
+        }
       }
-      "insert" in {
-        val q = quote {
-          qr1.insert(_.s -> "s")
+      "insert" - {
+        "assigned" in {
+          val q = quote {
+            qr1.insert(_.s -> "s")
+          }
+          quote(unquote(q)).ast mustEqual AssignedAction(Insert(Entity("TestEntity")), List(Assignment("s", Constant("s"))))
         }
-        quote(unquote(q)).ast mustEqual Insert(Entity("TestEntity"), List(Assignment("s", Constant("s"))))
+        "unassigned" in {
+          val q = quote {
+            qr1.insert
+          }
+          quote(unquote(q)).ast mustEqual Function(List(Ident("x1")), Insert(Entity("TestEntity")))
+        }
       }
       "delete" in {
         val q = quote {

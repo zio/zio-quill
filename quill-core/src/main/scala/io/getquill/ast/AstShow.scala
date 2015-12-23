@@ -144,9 +144,10 @@ object AstShow {
   implicit val actionShow: Show[Action] = new Show[Action] {
     def show(e: Action) =
       e match {
-        case Update(query, assignments) => s"${query.show}.update(${assignments.show})"
-        case Insert(query, assignments) => s"${query.show}.insert(${assignments.show})"
-        case Delete(query)              => s"${query.show}.delete"
+        case AssignedAction(action, assignments) => s"${action.show}(${assignments.show})"
+        case Update(query)                       => s"${query.show}.update"
+        case Insert(query)                       => s"${query.show}.insert"
+        case Delete(query)                       => s"${query.show}.delete"
       }
   }
 
