@@ -385,7 +385,18 @@ db.run(q3)
 
 Database actions are defined using quotations as well. These actions don't have a collection-like API but rather a custom DSL to express inserts, deletes and updates.
 
+  Note: Actions receive a `List` of tuples as they are batched by default.
+
 **insert**
+```scala
+val a = quote(query[Contact].insert)
+
+db.run(a)(List(Contact(999, "+1510488988"))) 
+// INSERT INTO Contact (personId,phone) VALUES (?, ?)
+```
+
+It is also possible to insert specific columns:
+
 ```scala
 val a = quote {
   (personId: Int, phone: String) =>
@@ -396,9 +407,18 @@ db.run(a)(List((999, "+1510488988")))
 // INSERT INTO Contact (personId,phone) VALUES (?, ?)
 ```
 
-  Note: Actions receive a `List` of tuples as they are batched by default.
-
 **update**
+```scala
+val a = quote {
+  query[Person].filter(_.id == 999).update
+}
+
+db.run(a)(List(Person(999, "John", 22)))
+// UPDATE Person SET id = ?, name = ?, age = ? WHERE id = 999
+```
+
+Using specific columns:
+
 ```scala
 val a = quote {
   (id: Int, age: Int) =>
