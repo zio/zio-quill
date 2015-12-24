@@ -385,7 +385,7 @@ db.run(q3)
 
 Database actions are defined using quotations as well. These actions don't have a collection-like API but rather a custom DSL to express inserts, deletes and updates.
 
-  Note: Actions receive a `List` of tuples as they are batched by default.
+  Note: Actions receive a `List` as they are batched by default.
 
 **insert**
 ```scala
