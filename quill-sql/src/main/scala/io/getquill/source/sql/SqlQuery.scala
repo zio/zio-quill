@@ -31,7 +31,7 @@ case class FlattenSqlQuery(from: List[Source],
                            orderBy: List[OrderByCriteria] = Nil,
                            limit: Option[Ast] = None,
                            offset: Option[Ast] = None,
-                           select: List[SelectValue] = SelectValue(Ident("*")) :: Nil)
+                           select: List[SelectValue])
     extends SqlQuery
 
 object SqlQuery {
@@ -63,12 +63,14 @@ object SqlQuery {
 
   private def flatten(sources: List[Source], finalFlatMapBody: Ast, alias: String): FlattenSqlQuery = {
 
+    val aliasSelect = SelectValue(Ident(alias), None) :: Nil
+
     def base(q: Ast, alias: String) =
       q match {
-        case Map(_: GroupBy, _, _)                => FlattenSqlQuery(from = sources :+ source(q, alias))
+        case Map(_: GroupBy, _, _)                => FlattenSqlQuery(from = sources :+ source(q, alias), select = aliasSelect)
         case q @ (_: Map | _: Filter | _: Entity) => flatten(sources, q, alias)
         case q if (sources == Nil)                => flatten(sources, q, alias)
-        case other                                => FlattenSqlQuery(from = sources :+ source(q, alias))
+        case other                                => FlattenSqlQuery(from = sources :+ source(q, alias), select = aliasSelect)
       }
 
     finalFlatMapBody match {
@@ -93,7 +95,8 @@ object SqlQuery {
         else
           FlattenSqlQuery(
             from = QuerySource(apply(q), alias) :: Nil,
-            where = Some(p))
+            where = Some(p),
+            select = aliasSelect)
 
       case Reverse(SortBy(q, Ident(alias), p)) =>
         val b = base(q, alias)
@@ -123,7 +126,8 @@ object SqlQuery {
         else
           FlattenSqlQuery(
             from = QuerySource(apply(q), alias) :: Nil,
-            limit = Some(n))
+            limit = Some(n),
+            select = aliasSelect)
 
       case Drop(q, n) =>
         val b = base(q, alias)
@@ -132,10 +136,11 @@ object SqlQuery {
         else
           FlattenSqlQuery(
             from = QuerySource(apply(q), alias) :: Nil,
-            offset = Some(n))
+            offset = Some(n),
+            select = aliasSelect)
 
       case other =>
-        FlattenSqlQuery(from = sources :+ source(other, alias))
+        FlattenSqlQuery(from = sources :+ source(other, alias), select = aliasSelect)
     }
   }
 

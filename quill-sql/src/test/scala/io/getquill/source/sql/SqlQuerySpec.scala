@@ -55,7 +55,7 @@ class SqlQuerySpec extends Spec {
           infix"SELECT * FROM TestEntity".as[Query[TestEntity]].filter(t => t.i == 1)
         }
         SqlQuery(q.ast).show mustEqual
-          "SELECT * FROM (SELECT * FROM TestEntity) t WHERE t.i = 1"
+          "SELECT t.* FROM (SELECT * FROM TestEntity) t WHERE t.i = 1"
       }
       "fails if used as the flatMap body" in {
         val q = quote {
@@ -100,7 +100,7 @@ class SqlQuerySpec extends Spec {
           qr1.sortBy(t => t.s).flatMap(t => qr2.map(t => t.s))
         }
         SqlQuery(q.ast).show mustEqual
-          "SELECT t.s FROM (SELECT * FROM TestEntity t ORDER BY t.s) t, TestEntity2 t"
+          "SELECT t.s FROM (SELECT t.* FROM TestEntity t ORDER BY t.s) t, TestEntity2 t"
       }
       "tuple criteria" in {
         val q = quote {
@@ -138,7 +138,7 @@ class SqlQuerySpec extends Spec {
           qr1.groupBy(t => t.i).map(t => t._1).flatMap(t => qr2)
         }
         SqlQuery(q.ast).show mustEqual
-          "SELECT * FROM (SELECT t.i FROM TestEntity t GROUP BY t.i) t, TestEntity2 x"
+          "SELECT x.* FROM (SELECT t.i FROM TestEntity t GROUP BY t.i) t, TestEntity2 x"
       }
       "without map" in {
         val q = quote {
@@ -195,14 +195,14 @@ class SqlQuerySpec extends Spec {
           qr1.take(10)
         }
         SqlQuery(q.ast).show mustEqual
-          "SELECT * FROM TestEntity x LIMIT 10"
+          "SELECT x.* FROM TestEntity x LIMIT 10"
       }
       "nested" in {
         val q = quote {
           qr1.take(10).flatMap(a => qr2)
         }
         SqlQuery(q.ast).show mustEqual
-          "SELECT * FROM (SELECT * FROM TestEntity x LIMIT 10) a, TestEntity2 x"
+          "SELECT x.* FROM (SELECT x.* FROM TestEntity x LIMIT 10) a, TestEntity2 x"
       }
       "with map" in {
         val q = quote {
@@ -216,7 +216,7 @@ class SqlQuerySpec extends Spec {
           qr1.take(1).take(10)
         }
         SqlQuery(q.ast).show mustEqual
-          "SELECT * FROM (SELECT * FROM TestEntity x LIMIT 1) x LIMIT 10"
+          "SELECT x.* FROM (SELECT x.* FROM TestEntity x LIMIT 1) x LIMIT 10"
       }
     }
     "offset query" - {
@@ -225,14 +225,14 @@ class SqlQuerySpec extends Spec {
           qr1.drop(10)
         }
         SqlQuery(q.ast).show mustEqual
-          "SELECT * FROM TestEntity x OFFSET 10"
+          "SELECT x.* FROM TestEntity x OFFSET 10"
       }
       "nested" in {
         val q = quote {
           qr1.drop(10).flatMap(a => qr2)
         }
         SqlQuery(q.ast).show mustEqual
-          "SELECT * FROM (SELECT * FROM TestEntity x OFFSET 10) a, TestEntity2 x"
+          "SELECT x.* FROM (SELECT x.* FROM TestEntity x OFFSET 10) a, TestEntity2 x"
       }
       "with map" in {
         val q = quote {
@@ -246,7 +246,7 @@ class SqlQuerySpec extends Spec {
           qr1.drop(1).drop(10)
         }
         SqlQuery(q.ast).show mustEqual
-          "SELECT * FROM (SELECT * FROM TestEntity x OFFSET 1) x OFFSET 10"
+          "SELECT x.* FROM (SELECT x.* FROM TestEntity x OFFSET 1) x OFFSET 10"
       }
     }
     "limited and offset query" - {
@@ -255,28 +255,28 @@ class SqlQuerySpec extends Spec {
           qr1.drop(10).take(11)
         }
         SqlQuery(q.ast).show mustEqual
-          "SELECT * FROM TestEntity x LIMIT 11 OFFSET 10"
+          "SELECT x.* FROM TestEntity x LIMIT 11 OFFSET 10"
       }
       "nested" in {
         val q = quote {
           qr1.drop(10).take(11).flatMap(a => qr2)
         }
         SqlQuery(q.ast).show mustEqual
-          "SELECT * FROM (SELECT * FROM TestEntity x LIMIT 11 OFFSET 10) a, TestEntity2 x"
+          "SELECT x.* FROM (SELECT x.* FROM TestEntity x LIMIT 11 OFFSET 10) a, TestEntity2 x"
       }
       "multiple" in {
         val q = quote {
           qr1.drop(1).take(2).drop(3).take(4)
         }
         SqlQuery(q.ast).show mustEqual
-          "SELECT * FROM (SELECT * FROM TestEntity x LIMIT 2 OFFSET 1) x LIMIT 4 OFFSET 3"
+          "SELECT x.* FROM (SELECT x.* FROM TestEntity x LIMIT 2 OFFSET 1) x LIMIT 4 OFFSET 3"
       }
       "take.drop" in {
         val q = quote {
           qr1.take(1).drop(2)
         }
         SqlQuery(q.ast).show mustEqual
-          "SELECT * FROM (SELECT * FROM TestEntity x LIMIT 1) x OFFSET 2"
+          "SELECT x.* FROM (SELECT x.* FROM TestEntity x LIMIT 1) x OFFSET 2"
       }
     }
     "set operation query" - {
@@ -285,14 +285,14 @@ class SqlQuerySpec extends Spec {
           qr1.union(qr1)
         }
         SqlQuery(q.ast).show mustEqual
-          "SELECT * FROM TestEntity x UNION SELECT * FROM TestEntity x"
+          "SELECT x.* FROM TestEntity x UNION SELECT x.* FROM TestEntity x"
       }
       "unionAll" in {
         val q = quote {
           qr1.unionAll(qr1)
         }
         SqlQuery(q.ast).show mustEqual
-          "SELECT * FROM TestEntity x UNION ALL SELECT * FROM TestEntity x"
+          "SELECT x.* FROM TestEntity x UNION ALL SELECT x.* FROM TestEntity x"
       }
     }
   }

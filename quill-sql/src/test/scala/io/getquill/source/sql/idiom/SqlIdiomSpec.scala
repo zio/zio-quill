@@ -53,7 +53,7 @@ class SqlIdiomSpec extends Spec {
             }
           }
           mirrorSource.run(q).sql mustEqual
-            "SELECT t.s, t1.i FROM (SELECT s FROM TestEntity t ORDER BY t.s DESC) t, (SELECT i FROM TestEntity2 t1 ORDER BY t1.i) t1"
+            "SELECT t.s, t1.i FROM (SELECT t.s FROM TestEntity t ORDER BY t.s DESC) t, (SELECT t1.i FROM TestEntity2 t1 ORDER BY t1.i) t1"
         }
       }
       "grouped" - {
@@ -168,7 +168,7 @@ class SqlIdiomSpec extends Spec {
             }
           }
           mirrorSource.run(q).sql mustEqual
-            "SELECT a.s, b.i FROM (SELECT s FROM TestEntity x LIMIT 1) a, (SELECT i FROM TestEntity2 x LIMIT 2) b"
+            "SELECT a.s, b.i FROM (SELECT x.s FROM TestEntity x LIMIT 1) a, (SELECT x.i FROM TestEntity2 x LIMIT 2) b"
         }
       }
       "union" - {
@@ -177,14 +177,14 @@ class SqlIdiomSpec extends Spec {
             qr1.filter(t => t.i > 10).union(qr1.filter(t => t.s == "s"))
           }
           mirrorSource.run(q).sql mustEqual
-            "SELECT x.s, x.i, x.l, x.o FROM (SELECT s, i, l, o FROM TestEntity t WHERE t.i > 10 UNION SELECT s, i, l, o FROM TestEntity t1 WHERE t1.s = 's') x"
+            "SELECT x.s, x.i, x.l, x.o FROM (SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.i > 10 UNION SELECT t1.s, t1.i, t1.l, t1.o FROM TestEntity t1 WHERE t1.s = 's') x"
         }
         "mapped" in {
           val q = quote {
             qr1.filter(t => t.i > 10).map(u => u).union(qr1.filter(t => t.s == "s")).map(u => u.s)
           }
           mirrorSource.run(q).sql mustEqual
-            "SELECT u.s FROM (SELECT t.s FROM TestEntity t WHERE t.i > 10 UNION SELECT s FROM TestEntity t1 WHERE t1.s = 's') u"
+            "SELECT u.s FROM (SELECT t.s FROM TestEntity t WHERE t.i > 10 UNION SELECT t1.s FROM TestEntity t1 WHERE t1.s = 's') u"
         }
         "nested" in {
           val j = quote {
@@ -208,7 +208,7 @@ class SqlIdiomSpec extends Spec {
             qr1.filter(t => t.i > 10).unionAll(qr1.filter(t => t.s == "s"))
           }
           mirrorSource.run(q).sql mustEqual
-            "SELECT x.s, x.i, x.l, x.o FROM (SELECT s, i, l, o FROM TestEntity t WHERE t.i > 10 UNION ALL SELECT s, i, l, o FROM TestEntity t1 WHERE t1.s = 's') x"
+            "SELECT x.s, x.i, x.l, x.o FROM (SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.i > 10 UNION ALL SELECT t1.s, t1.i, t1.l, t1.o FROM TestEntity t1 WHERE t1.s = 's') x"
         }
       }
       "outer join" - {
@@ -279,14 +279,14 @@ class SqlIdiomSpec extends Spec {
             qr1.filter(t => qr2.filter(u => u.s == t.s).isEmpty)
           }
           mirrorSource.run(q).sql mustEqual
-            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE NOT EXISTS (SELECT * FROM TestEntity2 u WHERE u.s = t.s)"
+            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE NOT EXISTS (SELECT u.* FROM TestEntity2 u WHERE u.s = t.s)"
         }
         "nonEmpty" in {
           val q = quote {
             qr1.filter(t => qr2.filter(u => u.s == t.s).nonEmpty)
           }
           mirrorSource.run(q).sql mustEqual
-            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE EXISTS (SELECT * FROM TestEntity2 u WHERE u.s = t.s)"
+            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE EXISTS (SELECT u.* FROM TestEntity2 u WHERE u.s = t.s)"
         }
         "toUpperCase" in {
           val q = quote {

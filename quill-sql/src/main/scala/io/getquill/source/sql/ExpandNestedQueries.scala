@@ -41,8 +41,6 @@ object ExpandNestedQueries {
             SelectValue(select(tupleElem.drop(1).toInt - 1).ast, Some(tupleElem))
           case Property(_, name) =>
             select match {
-              case List(SelectValue(Ident("*"), _)) =>
-                SelectValue(Ident(name))
               case List(SelectValue(i: Ident, _)) =>
                 SelectValue(Property(i, name))
               case other =>

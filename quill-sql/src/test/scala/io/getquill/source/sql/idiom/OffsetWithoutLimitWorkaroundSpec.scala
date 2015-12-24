@@ -21,7 +21,7 @@ class OffsetWithoutLimitWorkaroundSpec extends Spec {
       qr1.drop(1)
     }
     SqlQuery(q.ast).show mustEqual
-      "SELECT * FROM TestEntity x LIMIT 18446744073709551610 OFFSET 1"
+      "SELECT x.* FROM TestEntity x LIMIT 18446744073709551610 OFFSET 1"
   }
 
 }

@@ -77,6 +77,7 @@ trait SqlIdiom {
     def show(e: SelectValue) =
       e match {
         case SelectValue(ast, Some(alias)) => s"${showValue(ast)} $alias"
+        case SelectValue(ast: Ident, None) => s"${showValue(ast)}.*"
         case SelectValue(ast, None)        => showValue(ast)
       }
 

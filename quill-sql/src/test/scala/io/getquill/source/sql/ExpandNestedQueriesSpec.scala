@@ -17,4 +17,15 @@ class ExpandNestedQueriesSpec extends Spec {
     mirrorSource.run(q).sql mustEqual
       "SELECT b.s, b.i, b.l, b.o FROM (SELECT b.s, b.i, b.l, b.o FROM TestEntity a, TestEntity2 b) b LIMIT 10"
   }
+
+  "partial select" in {
+    val q = quote {
+      (for {
+        a <- qr1
+        b <- qr2
+      } yield b.i).take(10)
+    }
+    mirrorSource.run(q).sql mustEqual
+      "SELECT b.* FROM (SELECT b.i FROM TestEntity a, TestEntity2 b) b LIMIT 10"
+  }
 }
