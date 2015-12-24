@@ -83,9 +83,6 @@ object SqlQuery {
       case GroupBy(q, Ident(alias), p) =>
         fail("A `groupBy` clause must be followed by `map`.")
 
-      case Map(q, ident1, ident2) if (ident1 == ident2) =>
-        base(q, ident1.name)
-
       case Map(q, Ident(alias), p) =>
         base(q, alias).copy(select = selectValues(p))
 

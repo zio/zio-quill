@@ -158,16 +158,6 @@ class SqlIdiomSpec extends Spec {
           mirrorSource.run(q).sql mustEqual
             "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.s IS NOT NULL LIMIT 10"
         }
-        "partial select" in {
-          val q = quote {
-            (for {
-              a <- qr1
-              b <- qr2
-            } yield b.i).take(10)
-          }
-          mirrorSource.run(q).sql mustEqual
-            "SELECT * FROM (SELECT b.i FROM TestEntity a, TestEntity2 b) b LIMIT 10"
-        }
         "nested" in {
           val q = quote {
             for {
@@ -194,7 +184,7 @@ class SqlIdiomSpec extends Spec {
             qr1.filter(t => t.i > 10).map(u => u).union(qr1.filter(t => t.s == "s")).map(u => u.s)
           }
           mirrorSource.run(q).sql mustEqual
-            "SELECT u.s FROM (SELECT s FROM TestEntity t WHERE t.i > 10 UNION SELECT s FROM TestEntity t1 WHERE t1.s = 's') u"
+            "SELECT u.s FROM (SELECT t.s FROM TestEntity t WHERE t.i > 10 UNION SELECT s FROM TestEntity t1 WHERE t1.s = 's') u"
         }
         "nested" in {
           val j = quote {
