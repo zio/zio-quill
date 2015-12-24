@@ -1,7 +1,7 @@
 package io.getquill.source
 
 import io.getquill._
-import io.getquill.ast._
+import io.getquill.ast.{ Action => _, _ }
 import io.getquill.source.mirror.Row
 import io.getquill.source.mirror.mirrorSource
 
@@ -31,6 +31,17 @@ class ActionMacroSpec extends Spec {
       r.ast mustEqual bind(q.ast.body, "i", "s")
       r.bindList mustEqual List(Row(1, "a"), Row(2, "b"))
     }
+  }
+
+  "expands unassigned actions" in {
+    val q = quote(qr1.insert)
+    val r = mirrorSource.run(q)(
+      List(TestEntity("s", 1, 2L, Some(4)),
+        TestEntity("s2", 12, 22L, Some(42))))
+    r.ast.toString mustEqual "query[TestEntity].insert(_.s -> ?, _.i -> ?, _.l -> ?, _.o -> ?)"
+    r.bindList mustEqual List(
+      Row("s", 1, 2L, Some(4)),
+      Row("s2", 12, 22L, Some(42)))
   }
 
   private def bind(ast: Ast, idents: String*) =

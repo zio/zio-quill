@@ -21,7 +21,7 @@ object Encoding {
     InferImplicitValueWithFallback(c)(decoderType(c.WeakTypeTag(tpe)).tpe, c.prefix.tree)
   }
 
-  def inferEcoder[R](c: Context)(tpe: c.Type)(implicit r: c.WeakTypeTag[R]) = {
+  def inferEncoder[R](c: Context)(tpe: c.Type)(implicit r: c.WeakTypeTag[R]) = {
     def encoderType[T](implicit t: c.WeakTypeTag[T]) = c.weakTypeTag[Encoder[R, T]]
     InferImplicitValueWithFallback(c)(encoderType(c.WeakTypeTag(tpe)).tpe, c.prefix.tree)
   }

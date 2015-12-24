@@ -224,17 +224,17 @@ trait SqlIdiom {
 
     new Show[Action] {
       def show(a: Action) =
-        (a: @unchecked) match {
+        a match {
 
-          case Insert(table: Entity, assignments) =>
+          case AssignedAction(Insert(table: Entity), assignments) =>
             val columns = assignments.map(_.property)
             val values = assignments.map(_.value)
             s"INSERT INTO ${table.show} (${columns.mkString(",")}) VALUES (${values.show})"
 
-          case Update(table: Entity, assignments) =>
+          case AssignedAction(Update(table: Entity), assignments) =>
             s"UPDATE ${table.show} SET ${set(assignments)}"
 
-          case Update(Filter(table: Entity, x, where), assignments) =>
+          case AssignedAction(Update(Filter(table: Entity, x, where)), assignments) =>
             s"UPDATE ${table.show} SET ${set(assignments)} WHERE ${where.show}"
 
           case Delete(Filter(table: Entity, x, where)) =>
@@ -242,6 +242,9 @@ trait SqlIdiom {
 
           case Delete(table: Entity) =>
             s"DELETE FROM ${table.show}"
+
+          case other =>
+            fail(s"Action ast can't be translated to sql: '$other'")
         }
     }
   }

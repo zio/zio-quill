@@ -93,9 +93,10 @@ trait Liftables {
   }
 
   implicit val actionLiftable: Liftable[Action] = Liftable[Action] {
-    case Update(a, b) => q"$pack.Update($a, $b)"
-    case Insert(a, b) => q"$pack.Insert($a, $b)"
-    case Delete(a)    => q"$pack.Delete($a)"
+    case AssignedAction(a, b) => q"$pack.AssignedAction($a, $b)"
+    case Update(a)            => q"$pack.Update($a)"
+    case Insert(a)            => q"$pack.Insert($a)"
+    case Delete(a)            => q"$pack.Delete($a)"
   }
 
   implicit val assignmentLiftable: Liftable[Assignment] = Liftable[Assignment] {

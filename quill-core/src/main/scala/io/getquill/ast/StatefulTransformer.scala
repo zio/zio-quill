@@ -111,14 +111,16 @@ trait StatefulTransformer[T] {
 
   def apply(e: Action): (Action, StatefulTransformer[T]) =
     e match {
-      case Update(a, b) =>
+      case AssignedAction(a, b) =>
         val (at, att) = apply(a)
         val (bt, btt) = att.apply(b)(_.apply)
-        (Update(at, bt), btt)
-      case Insert(a, b) =>
+        (AssignedAction(at, bt), btt)
+      case Update(a) =>
         val (at, att) = apply(a)
-        val (bt, btt) = att.apply(b)(_.apply)
-        (Insert(at, bt), btt)
+        (Update(at), att)
+      case Insert(a) =>
+        val (at, att) = apply(a)
+        (Insert(at), att)
       case Delete(a) =>
         val (at, att) = apply(a)
         (Delete(at), att)

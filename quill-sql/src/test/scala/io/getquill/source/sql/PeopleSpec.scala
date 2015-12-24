@@ -8,29 +8,23 @@ trait PeopleSpec extends Spec {
   case class Couple(her: String, him: String)
 
   val peopleInsert =
-    quote {
-      (name: String, age: Int) =>
-        query[Person].insert(_.name -> name, _.age -> age)
-    }
+    quote(query[Person].insert)
 
   val peopleEntries = List(
-    ("Alex", 60),
-    ("Bert", 55),
-    ("Cora", 33),
-    ("Drew", 31),
-    ("Edna", 21),
-    ("Fred", 60))
+    Person("Alex", 60),
+    Person("Bert", 55),
+    Person("Cora", 33),
+    Person("Drew", 31),
+    Person("Edna", 21),
+    Person("Fred", 60))
 
   val couplesInsert =
-    quote {
-      (her: String, him: String) =>
-        query[Couple].insert(_.her -> her, _.him -> him)
-    }
+    quote(query[Couple].insert)
 
   val couplesEntries = List(
-    ("Alex", "Bert"),
-    ("Cora", "Drew"),
-    ("Edna", "Fred"))
+    Couple("Alex", "Bert"),
+    Couple("Cora", "Drew"),
+    Couple("Edna", "Fred"))
 
   val `Ex 1 differences` =
     quote {

@@ -1,26 +1,27 @@
 package io.getquill.norm.select
 
 import scala.reflect.macros.whitebox.Context
+import io.getquill.source.EncodingMacro
 
-trait SelectResultExtraction extends SelectValues {
+trait SelectResultExtraction extends EncodingMacro {
 
   val c: Context
   import c.universe._
 
-  def selectResultExtractor[R](value: SelectValue)(implicit r: WeakTypeTag[R]) = {
+  def selectResultExtractor[R](value: Value)(implicit r: WeakTypeTag[R]) = {
     val (tree, _) = extractor(value)
     q"""
     (row: $r) => $tree
     """
   }
 
-  private def extractor(value: SelectValue, index: Int = 0): (Tree, Int) =
+  private def extractor(value: Value, index: Int = 0): (Tree, Int) =
     value match {
-      case OptionSelectValue(value) =>
+      case OptionValue(value) =>
         optionalExtractor(value, index)
-      case SimpleSelectValue(_, decoder, _) =>
+      case SimpleValue(_, decoder, _) =>
         (q"$decoder($index, row)", index + 1)
-      case CaseClassSelectValue(tpe, params) =>
+      case CaseClassValue(tpe, params) =>
         val (decodedParams, paramsIndex) =
           params.foldLeft((List[List[Tree]](), index)) {
             case ((trees, index), params) =>
@@ -30,14 +31,14 @@ trait SelectResultExtraction extends SelectValues {
         (q"new $tpe(...$decodedParams)", paramsIndex)
     }
 
-  private def optionalExtractor(value: SelectValue, index: Int): (Tree, Int) =
+  private def optionalExtractor(value: Value, index: Int): (Tree, Int) =
     value match {
-      case OptionSelectValue(value) =>
+      case OptionValue(value) =>
         val (tree, idx) = optionalExtractor(value, index)
         (q"Option($tree)", idx)
-      case SimpleSelectValue(_, _, decoder) =>
+      case SimpleValue(_, _, decoder) =>
         (q"$decoder($index, row)", index + 1)
-      case CaseClassSelectValue(tpe, params) =>
+      case CaseClassValue(tpe, params) =>
         val (decodedParams, paramsIndex) =
           params.foldLeft((List[List[Tree]](), index)) {
             case ((trees, index), params) =>
@@ -63,14 +64,14 @@ trait SelectResultExtraction extends SelectValues {
         q"$head.flatMap(($o) => ${joinOptions(tail, index + 1)})"
     }
 
-  private def extractors(values: List[SelectValue], index: Int) =
+  private def extractors(values: List[Value], index: Int) =
     values.foldLeft((List[Tree](), index)) {
       case ((trees, idx), elem) =>
         val (ext, newIdx) = extractor(elem, idx)
         (trees :+ ext, newIdx)
     }
 
-  private def optionalExtractors(values: List[SelectValue], index: Int) =
+  private def optionalExtractors(values: List[Value], index: Int) =
     values.foldLeft((List[Tree](), index)) {
       case ((trees, idx), elem) =>
         val (ext, newIdx) = optionalExtractor(elem, idx)

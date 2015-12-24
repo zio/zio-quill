@@ -272,11 +272,15 @@ trait Parsing {
     case q"((..$v))" if (v.size > 1)     => Tuple(v.map(astParser(_)))
   }
 
-  val actionParser: Parser[Action] = Parser[Action] {
+  val actionParser: Parser[Ast] = Parser[Ast] {
     case q"$query.$method(..$assignments)" if (method.decodedName.toString == "update") =>
-      Update(astParser(query), assignments.map(assignmentParser(_)))
+      AssignedAction(Update(astParser(query)), assignments.map(assignmentParser(_)))
     case q"$query.insert(..$assignments)" =>
-      Insert(astParser(query), assignments.map(assignmentParser(_)))
+      AssignedAction(Insert(astParser(query)), assignments.map(assignmentParser(_)))
+    case q"$query.$method" if (method.decodedName.toString == "update") =>
+      Function(List(Ident("x1")), Update(astParser(query)))
+    case q"$query.insert" =>
+      Function(List(Ident("x1")), Insert(astParser(query)))
     case q"$query.delete" =>
       Delete(astParser(query))
   }
