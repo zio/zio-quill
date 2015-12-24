@@ -12,13 +12,6 @@
   </head>
 
   <body>
-    
-    <script>
-  ((window.gitter = {}).chat = {}).options = {
-    room: 'getquill/quill'
-  };
-</script>
-<script src="https://sidecar.gitter.im/dist/sidecar.v1.js" async defer></script>
 
     <!-- HEADER -->
     <div id="header_wrap" class="outer">
@@ -182,7 +175,7 @@ db.run(q) <span class="pl-c">// Dynamic query</span></pre></div>
 
 <p>The runtime value can be specified when running it:</p>
 
-<div class="highlight highlight-source-scala"><pre>db.run(q).using(<span class="pl-c1">10</span>) <span class="pl-c">// SELECT r.radius FROM Circle r WHERE r.radius &gt; ?</span></pre></div>
+<div class="highlight highlight-source-scala"><pre>db.run(q)(<span class="pl-c1">10</span>) <span class="pl-c">// SELECT r.radius FROM Circle r WHERE r.radius &gt; ?</span></pre></div>
 
 <p>The method <code>run</code> is a bridge between the compile-time quotations and the runtime execution.</p>
 
@@ -403,26 +396,42 @@ db.run(q3)
 
 <p>Database actions are defined using quotations as well. These actions don't have a collection-like API but rather a custom DSL to express inserts, deletes and updates.</p>
 
+<p>Note: Actions receive a <code>List</code> as they are batched by default.</p>
+
 <p><strong>insert</strong></p>
+
+<div class="highlight highlight-source-scala"><pre><span class="pl-k">val</span> <span class="pl-en">a</span> <span class="pl-k">=</span> quote(query[<span class="pl-en">Contact</span>].insert)
+
+db.run(a)(<span class="pl-en">List</span>(<span class="pl-en">Contact</span>(<span class="pl-c1">999</span>, <span class="pl-s"><span class="pl-pds">"</span>+1510488988<span class="pl-pds">"</span></span>))) 
+<span class="pl-c">// INSERT INTO Contact (personId,phone) VALUES (?, ?)</span></pre></div>
+
+<p>It is also possible to insert specific columns:</p>
 
 <div class="highlight highlight-source-scala"><pre><span class="pl-k">val</span> <span class="pl-en">a</span> <span class="pl-k">=</span> quote {
   (<span class="pl-v">personId</span>: <span class="pl-k">Int</span>, <span class="pl-v">phone</span>: <span class="pl-k">String</span>) <span class="pl-k">=&gt;</span>
     query[<span class="pl-en">Contact</span>].insert(_.personId <span class="pl-k">-</span><span class="pl-k">&gt;</span> personId, _.phone <span class="pl-k">-</span><span class="pl-k">&gt;</span> phone)
 }
 
-db.run(a).using(<span class="pl-en">List</span>((<span class="pl-c1">999</span>, <span class="pl-s"><span class="pl-pds">"</span>+1510488988<span class="pl-pds">"</span></span>))) 
+db.run(a)(<span class="pl-en">List</span>((<span class="pl-c1">999</span>, <span class="pl-s"><span class="pl-pds">"</span>+1510488988<span class="pl-pds">"</span></span>))) 
 <span class="pl-c">// INSERT INTO Contact (personId,phone) VALUES (?, ?)</span></pre></div>
 
-<p>Note: Actions receive a <code>List</code> of tuples as they are batched by default.</p>
-
 <p><strong>update</strong></p>
+
+<div class="highlight highlight-source-scala"><pre><span class="pl-k">val</span> <span class="pl-en">a</span> <span class="pl-k">=</span> quote {
+  query[<span class="pl-en">Person</span>].filter(_.id <span class="pl-k">==</span> <span class="pl-c1">999</span>).update
+}
+
+db.run(a)(<span class="pl-en">List</span>(<span class="pl-en">Person</span>(<span class="pl-c1">999</span>, <span class="pl-s"><span class="pl-pds">"</span>John<span class="pl-pds">"</span></span>, <span class="pl-c1">22</span>)))
+<span class="pl-c">// UPDATE Person SET id = ?, name = ?, age = ? WHERE id = 999</span></pre></div>
+
+<p>Using specific columns:</p>
 
 <div class="highlight highlight-source-scala"><pre><span class="pl-k">val</span> <span class="pl-en">a</span> <span class="pl-k">=</span> quote {
   (<span class="pl-v">id</span>: <span class="pl-k">Int</span>, <span class="pl-v">age</span>: <span class="pl-k">Int</span>) <span class="pl-k">=&gt;</span>
     query[<span class="pl-en">Person</span>].filter(p <span class="pl-k">=&gt;</span> p.id <span class="pl-k">==</span> id).update(_.age <span class="pl-k">-</span><span class="pl-k">&gt;</span> age)
 }
 
-db.run(a).using(<span class="pl-en">List</span>((<span class="pl-c1">999</span>, <span class="pl-c1">18</span>)))
+db.run(a)(<span class="pl-en">List</span>((<span class="pl-c1">999</span>, <span class="pl-c1">18</span>)))
 <span class="pl-c">// UPDATE Person SET age = ? WHERE id = ?</span></pre></div>
 
 <p><strong>delete</strong></p>
@@ -638,7 +647,7 @@ db.run(q)
 
 <pre><code>libraryDependencies ++= Seq(
   "mysql" % "mysql-connector-java" % "5.1.36",
-  "io.getquill" %% "quill-jdbc" % "0.1.0"
+  "io.getquill" %% "quill-jdbc" % "0.2.0"
 )
 </code></pre>
 
@@ -667,7 +676,7 @@ db.dataSource.prepStmtCacheSqlLimit=2048
 
 <pre><code>libraryDependencies ++= Seq(
   "org.postgresql" % "postgresql" % "9.4-1206-jdbc41",
-  "io.getquill" %% "quill-jdbc" % "0.1.0"
+  "io.getquill" %% "quill-jdbc" % "0.2.0"
 )
 </code></pre>
 
@@ -699,7 +708,7 @@ db.dataSource.serverName=host
 <p>sbt dependencies</p>
 
 <pre><code>libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async" % "0.1.0"
+  "io.getquill" %% "quill-async" % "0.2.0"
 )
 </code></pre>
 
@@ -728,7 +737,7 @@ db.poolValidationInterval=100
 <p>sbt dependencies</p>
 
 <pre><code>libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async" % "0.1.0"
+  "io.getquill" %% "quill-async" % "0.2.0"
 )
 </code></pre>
 
@@ -758,7 +767,7 @@ db.poolValidationInterval=100
 <p>sbt dependencies</p>
 
 <pre><code>libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-finagle-mysql" % "0.1.0"
+  "io.getquill" %% "quill-finagle-mysql" % "0.2.0"
 )
 </code></pre>
 
@@ -775,6 +784,11 @@ db.poolValidationInterval=100
 testDB.user=root
 testDB.password=root
 testDB.database=database
+testDB.pool.watermark.low=0
+testDB.pool.watermark.high=10
+testDB.pool.idleTime=5 # seconds
+testDB.pool.bufferSize=0
+testDB.pool.maxWaiters=2147483647
 </code></pre>
 
 <h1>
