@@ -62,6 +62,7 @@ class QuotationSpec extends Spec {
         }
         quote(unquote(q)).ast mustEqual GroupBy(Entity("TestEntity"), Ident("t"), Property(Ident("t"), "s"))
       }
+
       "aggregation" - {
         "min" in {
           val q = quote {
@@ -94,6 +95,22 @@ class QuotationSpec extends Spec {
           quote(unquote(q)).ast mustEqual Aggregation(AggregationOperator.`size`, Map(Entity("TestEntity"), Ident("t"), Property(Ident("t"), "i")))
         }
       }
+
+      "aggregation implicits" - {
+        "min" in {
+          val q = quote {
+            qr1.map(t => t.s).min
+          }
+          quote(unquote(q)).ast mustEqual Aggregation(AggregationOperator.`min`, Map(Entity("TestEntity"), Ident("t"), Property(Ident("t"), "s")))
+        }
+        "max" in {
+          val q = quote {
+            qr1.map(t => t.s).max
+          }
+          quote(unquote(q)).ast mustEqual Aggregation(AggregationOperator.`max`, Map(Entity("TestEntity"), Ident("t"), Property(Ident("t"), "s")))
+        }
+      }
+
       "reverse" in {
         val q = quote {
           qr1.sortBy(t => t.s).reverse
