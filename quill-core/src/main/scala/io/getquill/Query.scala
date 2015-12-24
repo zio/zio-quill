@@ -17,8 +17,8 @@ sealed trait Query[+T] {
 
   def groupBy[R](f: T => R): Query[(R, Query[T])]
 
-  def min[U >: T](implicit n: Numeric[U]): Option[T]
-  def max[U >: T](implicit n: Numeric[U]): Option[T]
+  def min[U >: T](implicit o: Ordering[U]): Option[T]
+  def max[U >: T](implicit o: Ordering[U]): Option[T]
   def avg[U >: T](implicit n: Numeric[U]): Option[T]
   def sum[U >: T](implicit n: Numeric[U]): T
   def size: Long
