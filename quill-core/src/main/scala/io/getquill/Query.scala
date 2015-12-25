@@ -20,7 +20,7 @@ sealed trait Query[+T] {
   def min[U >: T](implicit o: Ordering[U]): Option[T]
   def max[U >: T](implicit o: Ordering[U]): Option[T]
   def avg[U >: T](implicit n: Numeric[U]): Option[T]
-  def sum[U >: T](implicit n: Numeric[U]): T
+  def sum[U >: T](implicit n: Numeric[U]): Option[T]
   def size: Long
 
   def leftJoin[A >: T, B](q: Query[B]): OuterJoinQuery[A, B, (A, Option[B])]
