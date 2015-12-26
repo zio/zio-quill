@@ -20,4 +20,19 @@ class PackageSpec extends Spec {
       mirrorSource.run(q)("a").sql mustEqual "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.s like ('%' || ?) || '%'"
     }
   }
+
+  "in" - {
+    "constant int" in {
+      val q = quote {
+        query[TestEntity].filter(t => t.i in List(1, 2))
+      }
+      mirrorSource.run(q).sql mustEqual "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.i IN (1,2)"
+    }
+    "constant string" in {
+      val q = quote {
+        query[TestEntity].filter(t => t.s IN List("a", "b"))
+      }
+      mirrorSource.run(q).sql mustEqual "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.s IN ('a', 'b')"
+    }
+  }
 }
