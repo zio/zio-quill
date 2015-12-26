@@ -22,7 +22,7 @@ trait ResolveSourceMacro {
   def resolveSource[T <: Source[_, _]](implicit t: ClassTag[T]): Option[T] = {
     val tpe = c.prefix.tree.tpe
     ResolveSourceMacro.cache
-      .getOrElseUpdate(tpe, resolve[T](tpe), 10.seconds)
+      .getOrElseUpdate(tpe, resolve[T](tpe), 30.seconds)
       .asInstanceOf[Option[T]]
   }
 
