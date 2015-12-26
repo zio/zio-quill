@@ -2,10 +2,10 @@ package io.getquill.source
 
 import scala.reflect.ClassTag
 import scala.util.DynamicVariable
-
 import com.typesafe.config.ConfigFactory
+import java.io.Closeable
 
-abstract class Source[R: ClassTag, S: ClassTag] {
+abstract class Source[R: ClassTag, S: ClassTag] extends Closeable {
 
   type Decoder[T] = io.getquill.source.Decoder[R, T]
   type Encoder[T] = io.getquill.source.Encoder[S, T]

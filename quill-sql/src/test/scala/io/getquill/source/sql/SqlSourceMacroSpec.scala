@@ -28,6 +28,8 @@ class SqlSourceMacroSpec extends Spec {
       def prepare(sql: String) = sql
     }
     object testSource extends SqlSource[EvilDBDialect, NamingStrategy, Any, Any] {
+
+      override def close = ()
       def probe(sql: String): Try[Any] = null
 
       implicit def optionDecoder[T](implicit d: Decoder[T]): Decoder[Option[T]] = null

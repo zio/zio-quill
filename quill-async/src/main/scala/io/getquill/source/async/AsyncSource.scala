@@ -34,6 +34,11 @@ trait AsyncSource[D <: SqlIdiom, N <: NamingStrategy, C <: Connection]
 
   protected val pool = Pool(config, objectFactory)
 
+  override def close = {
+    Await.result(pool.close, Duration.Inf)
+    ()
+  }
+
   private def withConnection[T](f: Connection => Future[T])(implicit ec: ExecutionContext) =
     ec match {
       case TransactionalExecutionContext(ec, conn) => f(conn)

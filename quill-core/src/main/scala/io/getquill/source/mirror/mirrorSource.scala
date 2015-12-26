@@ -18,6 +18,8 @@ object mirrorSource extends MirrorSourceTemplate
 
 abstract class MirrorSourceTemplate extends Source[Row, Row] {
 
+  override def close = ()
+
   def run[T](quoted: Quoted[Query[T]]): QueryMirror[T] = macro MirrorSourceMacro.run[Row, Row]
   def run[P1, T](quoted: Quoted[P1 => Query[T]]): P1 => QueryMirror[T] = macro MirrorSourceMacro.run[Row, Row]
   def run[P1, P2, T](quoted: Quoted[(P1, P2) => Query[T]]): (P1, P2) => QueryMirror[T] = macro MirrorSourceMacro.run[Row, Row]

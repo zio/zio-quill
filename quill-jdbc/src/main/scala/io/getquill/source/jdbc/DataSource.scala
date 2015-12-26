@@ -10,7 +10,7 @@ import com.zaxxer.hikari.HikariDataSource
 
 object DataSource {
 
-  def apply(config: Config): javax.sql.DataSource =
+  def apply(config: Config): javax.sql.DataSource with java.io.Closeable =
     new HikariDataSource(new HikariConfig(toProperties(config)))
 
   private def toProperties(config: Config) = {

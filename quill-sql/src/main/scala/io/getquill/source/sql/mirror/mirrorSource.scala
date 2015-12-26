@@ -11,6 +11,8 @@ class MirrorSourceTemplate[N <: NamingStrategy] extends SqlSource[MirrorDialect,
     with MirrorEncoders
     with MirrorDecoders {
 
+  override def close = ()
+
   type QueryResult[T] = QueryMirror[T]
   type ActionResult[T] = ActionMirror
   type BatchedActionResult[T] = BatchActionMirror

@@ -34,6 +34,8 @@ class FinagleMysqlSource[N <: NamingStrategy]
 
   Await.result(client.ping)
 
+  override def close = Await.result(client.close())
+
   private val currentClient = new Local[Client]
 
   def probe(sql: String) =

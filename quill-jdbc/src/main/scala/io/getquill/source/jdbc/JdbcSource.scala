@@ -24,6 +24,8 @@ class JdbcSource[D <: SqlIdiom, N <: NamingStrategy]
 
   protected val dataSource = DataSource(config)
 
+  override def close = dataSource.close
+
   private val currentConnection = new DynamicVariable[Option[Connection]](None)
 
   protected def withConnection[T](f: Connection => T) =

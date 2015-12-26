@@ -8,6 +8,10 @@ import scala.util.Success
 import scala.util.Try
 import java.io.StringWriter
 import java.io.PrintWriter
+import scala.concurrent.duration._
+import scala.reflect.api.Trees
+import io.getquill.util.Cache
+import java.io.Closeable
 
 trait ResolveSourceMacro {
   val c: Context
@@ -15,14 +19,14 @@ trait ResolveSourceMacro {
 
   private val classLoader = getClass.getClassLoader
 
-  def resolveSource[T](implicit t: ClassTag[T]): Option[T] = {
+  def resolveSource[T <: Source[_, _]](implicit t: ClassTag[T]): Option[T] = {
     val tpe = c.prefix.tree.tpe
-    ResolveSourceMacro.cache.getOrElseUpdate(tpe, resolve[T](tpe)).map {
-      case v: T => v
-    }
+    ResolveSourceMacro.cache
+      .getOrElseUpdate(tpe, resolve[T](tpe), 10.seconds)
+      .asInstanceOf[Option[T]]
   }
 
-  private def resolve[T](tpe: Type)(implicit t: ClassTag[T]): Option[Any] = {
+  private def resolve[T <: Source[_, _]](tpe: Type)(implicit t: ClassTag[T]): Option[Source[_, _]] = {
     val sourceName = tpe.termSymbol.name.decodedName.toString
     resolve(sourceName, baseClasses[T](tpe)) match {
       case (None, errors) =>
@@ -38,7 +42,7 @@ trait ResolveSourceMacro {
       .map(name => List(loadClass(name), loadClass(name + "$")).flatten).flatten
       .filter(ct.runtimeClass.isAssignableFrom(_))
 
-  private def resolve(name: String, classes: List[Class[Any]]): (Option[Any], List[String]) =
+  private def resolve(name: String, classes: List[Class[Any]]): (Option[Source[_, _]], List[String]) =
     classes match {
       case Nil =>
         (None, List("All source alternatives failed."))
@@ -50,7 +54,7 @@ trait ResolveSourceMacro {
             }
           }
         } match {
-          case Success(v) => (Some(v), Nil)
+          case Success(v) => (Some(v.asInstanceOf[Source[_, _]]), Nil)
           case Failure(e) =>
             val (value, errors) = resolve(name, tail)
             val error = s"Failed to load from source class '$cls'. Stack trace:\n${stackTraceToString(e)}"
@@ -70,5 +74,5 @@ trait ResolveSourceMacro {
 }
 
 object ResolveSourceMacro {
-  private val cache = collection.mutable.Map[Types#Type, Option[Any]]()
+  private val cache = new Cache[Types#Type, Source[_, _]]
 }
