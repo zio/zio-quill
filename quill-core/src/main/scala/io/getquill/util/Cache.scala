@@ -7,13 +7,23 @@ import scala.concurrent.duration.Duration
 import java.util.concurrent.ConcurrentHashMap
 import scala.collection.JavaConverters._
 import java.io.Closeable
+import java.util.concurrent.ScheduledThreadPoolExecutor
+import java.util.concurrent.ThreadFactory
 
 class Cache[K, V <: Closeable] {
 
   private case class Entry(value: Option[V], expiration: Long)
 
   private val cache = new ConcurrentHashMap[K, Entry]().asScala
-  private val scheduler = Executors.newScheduledThreadPool(1)
+  private val scheduler =
+    new ScheduledThreadPoolExecutor(1,
+      new ThreadFactory {
+        override def newThread(r: Runnable) = {
+          val thread = Executors.defaultThreadFactory().newThread(r)
+          thread.setDaemon(true)
+          thread
+        }
+      })
 
   private val evict = new Runnable {
     override def run =
