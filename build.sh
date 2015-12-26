@@ -17,11 +17,11 @@ then
 		git fetch --unshallow
 		git checkout master || git checkout -b master
 		git reset --hard origin/master
-		sbt tut 'release with-defaults'
+		sbt tut && sbt 'release with-defaults'
 		git push --delete origin release
 	else
-		sbt clean coverage test tut coverageAggregate publish
+		sbt clean coverage test && sbt tut coverageAggregate publish
 	fi
 else
-	sbt clean coverage test tut coverageAggregate
+	sbt clean coverage test && sbt tut coverageAggregate
 fi
