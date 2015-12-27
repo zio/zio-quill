@@ -439,6 +439,28 @@ db.run(a)
 // DELETE FROM Person WHERE name = ''
 ```
 
+# Implicit query #
+
+Quill provides implicit conversions from case class companion objects to `query[T]` through an extra import:
+
+```scala
+import io.getquill.ImplicitQuery._
+
+val q = quote {
+  for {
+    p <- Person if(p.id == 999)
+    c <- Contact if(c.personId == p.id)
+  } yield {
+    (p.name, c.phone)
+  }
+}
+
+db.run(q) 
+// SELECT p.name, c.phone FROM Person p, Contact c WHERE (p.id = 999) AND (c.personId = p.id)
+```
+
+Note the usage of `Person` and `Contact` instead of `query[Person]` and `query[Contact]`.
+
 # SQL-specific operations #
 
 Some operations are sql-specific and not provided with the generic quotation mechanism. The `io.getquill.source.sql.ops` package has some implicit classes for this kind of operations:
