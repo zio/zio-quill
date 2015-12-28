@@ -12,13 +12,6 @@
   </head>
 
   <body>
-    
-    <script>
-  ((window.gitter = {}).chat = {}).options = {
-    room: 'getquill/quill'
-  };
-</script>
-<script src="https://sidecar.gitter.im/dist/sidecar.v1.js" async defer></script>
 
     <!-- HEADER -->
     <div id="header_wrap" class="outer">
@@ -451,6 +444,27 @@ db.run(a)
 <span class="pl-c">// DELETE FROM Person WHERE name = ''</span></pre></div>
 
 <h1>
+<a id="implicit-query" class="anchor" href="#implicit-query" aria-hidden="true"><span class="octicon octicon-link"></span></a>Implicit query</h1>
+
+<p>Quill provides implicit conversions from case class companion objects to <code>query[T]</code> through an extra import:</p>
+
+<div class="highlight highlight-source-scala"><pre><span class="pl-k">import</span> <span class="pl-v">io.getquill.ImplicitQuery.</span><span class="pl-v">_</span>
+
+<span class="pl-k">val</span> <span class="pl-en">q</span> <span class="pl-k">=</span> quote {
+  <span class="pl-k">for</span> {
+    p <span class="pl-k">&lt;</span><span class="pl-k">-</span> <span class="pl-en">Person</span> <span class="pl-k">if</span>(p.id <span class="pl-k">==</span> <span class="pl-c1">999</span>)
+    c <span class="pl-k">&lt;</span><span class="pl-k">-</span> <span class="pl-en">Contact</span> <span class="pl-k">if</span>(c.personId <span class="pl-k">==</span> p.id)
+  } <span class="pl-k">yield</span> {
+    (p.name, c.phone)
+  }
+}
+
+db.run(q) 
+<span class="pl-c">// SELECT p.name, c.phone FROM Person p, Contact c WHERE (p.id = 999) AND (c.personId = p.id)</span></pre></div>
+
+<p>Note the usage of <code>Person</code> and <code>Contact</code> instead of <code>query[Person]</code> and <code>query[Contact]</code>.</p>
+
+<h1>
 <a id="sql-specific-operations" class="anchor" href="#sql-specific-operations" aria-hidden="true"><span class="octicon octicon-link"></span></a>SQL-specific operations</h1>
 
 <p>Some operations are sql-specific and not provided with the generic quotation mechanism. The <code>io.getquill.source.sql.ops</code> package has some implicit classes for this kind of operations:</p>
@@ -654,7 +668,7 @@ db.run(q)
 
 <pre><code>libraryDependencies ++= Seq(
   "mysql" % "mysql-connector-java" % "5.1.36",
-  "io.getquill" %% "quill-jdbc" % "0.2.0"
+  "io.getquill" %% "quill-jdbc" % "0.2.1"
 )
 </code></pre>
 
@@ -683,7 +697,7 @@ db.dataSource.prepStmtCacheSqlLimit=2048
 
 <pre><code>libraryDependencies ++= Seq(
   "org.postgresql" % "postgresql" % "9.4-1206-jdbc41",
-  "io.getquill" %% "quill-jdbc" % "0.2.0"
+  "io.getquill" %% "quill-jdbc" % "0.2.1"
 )
 </code></pre>
 
@@ -715,7 +729,7 @@ db.dataSource.serverName=host
 <p>sbt dependencies</p>
 
 <pre><code>libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async" % "0.2.0"
+  "io.getquill" %% "quill-async" % "0.2.1"
 )
 </code></pre>
 
@@ -744,7 +758,7 @@ db.poolValidationInterval=100
 <p>sbt dependencies</p>
 
 <pre><code>libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async" % "0.2.0"
+  "io.getquill" %% "quill-async" % "0.2.1"
 )
 </code></pre>
 
@@ -774,7 +788,7 @@ db.poolValidationInterval=100
 <p>sbt dependencies</p>
 
 <pre><code>libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-finagle-mysql" % "0.2.0"
+  "io.getquill" %% "quill-finagle-mysql" % "0.2.1"
 )
 </code></pre>
 
