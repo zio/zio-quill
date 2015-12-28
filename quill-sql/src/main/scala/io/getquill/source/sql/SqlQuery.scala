@@ -101,12 +101,24 @@ object SqlQuery {
       case Reverse(SortBy(q, Ident(alias), p)) =>
         val b = base(q, alias)
         val criterias = orderByCriterias(p, reverse = true)
-        b.copy(orderBy = b.orderBy ++ criterias)
+        if (b.orderBy.isEmpty)
+          b.copy(orderBy = criterias)
+        else
+          FlattenSqlQuery(
+            from = QuerySource(apply(q), alias) :: Nil,
+            orderBy = criterias,
+            select = aliasSelect)
 
       case SortBy(q, Ident(alias), p) =>
         val b = base(q, alias)
         val criterias = orderByCriterias(p, reverse = false)
-        b.copy(orderBy = b.orderBy ++ criterias)
+        if (b.orderBy.isEmpty)
+          b.copy(orderBy = criterias)
+        else
+          FlattenSqlQuery(
+            from = QuerySource(apply(q), alias) :: Nil,
+            orderBy = criterias,
+            select = aliasSelect)
 
       case Aggregation(op, q) =>
         val b = base(q, alias)

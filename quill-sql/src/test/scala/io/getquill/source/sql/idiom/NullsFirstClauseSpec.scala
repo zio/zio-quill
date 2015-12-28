@@ -32,7 +32,7 @@ class NullsFirstClauseSpec extends Spec {
       val q = quote {
         qr1.sortBy(t => t.i).sortBy(t => t.s).reverse.map(t => t.s)
       }
-      SqlQuery(q.ast).show mustEqual "SELECT t.s FROM TestEntity t ORDER BY t.i NULLS FIRST, t.s DESC NULLS LAST"
+      SqlQuery(q.ast).show mustEqual "SELECT t.s FROM (SELECT t.* FROM TestEntity t ORDER BY t.i NULLS FIRST) t ORDER BY t.s DESC NULLS LAST"
     }
   }
 }

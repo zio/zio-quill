@@ -114,7 +114,7 @@ class SqlQuerySpec extends Spec {
           qr1.sortBy(t => (t.s, t.i)).reverse.sortBy(t => t.l).map(t => t.s)
         }
         SqlQuery(q.ast).show mustEqual
-          "SELECT t.s FROM TestEntity t ORDER BY t.s DESC, t.i DESC, t.l"
+          "SELECT t.s FROM (SELECT t.* FROM TestEntity t ORDER BY t.s DESC, t.i DESC) t ORDER BY t.l"
       }
       "fails if the sortBy criteria is malformed" in {
         val q = quote {
