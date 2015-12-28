@@ -609,6 +609,21 @@ class SqlIdiomSpec extends Spec {
       db.run(query[TestEntity]).sql mustEqual
         """SELECT "X"."SOME_COLUMN" FROM "TEST_ENTITY" "X""""
     }
+    "insert" in {
+      object db extends MirrorSourceTemplate[SnakeCase]
+      db.run(query[TestEntity].insert)(List()).sql mustEqual
+        "INSERT INTO test_entity (some_column) VALUES (?)"
+    }
+    "update" in {
+      object db extends MirrorSourceTemplate[SnakeCase]
+      db.run(query[TestEntity].update)(List()).sql mustEqual
+        "UPDATE test_entity SET some_column = ?"
+    }
+    "delete" in {
+      object db extends MirrorSourceTemplate[SnakeCase]
+      db.run(query[TestEntity].delete).sql mustEqual
+        "DELETE FROM test_entity"
+    }
   }
 
   "fails if the query is malformed" in {

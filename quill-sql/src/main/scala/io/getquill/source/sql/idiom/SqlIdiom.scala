@@ -214,12 +214,12 @@ trait SqlIdiom {
   implicit def actionShow(implicit strategy: NamingStrategy): Show[Action] = {
 
     def set(assignments: List[Assignment]) =
-      assignments.map(a => s"${a.property} = ${a.value.show}").mkString(", ")
+      assignments.map(a => s"${strategy(a.property)} = ${a.value.show}").mkString(", ")
 
     implicit def propertyShow: Show[Property] = new Show[Property] {
       def show(e: Property) =
         e match {
-          case Property(_, name) => name
+          case Property(_, name) => strategy(name)
         }
     }
 
@@ -228,7 +228,7 @@ trait SqlIdiom {
         a match {
 
           case AssignedAction(Insert(table: Entity), assignments) =>
-            val columns = assignments.map(_.property)
+            val columns = assignments.map(_.property).map(strategy(_))
             val values = assignments.map(_.value)
             s"INSERT INTO ${table.show} (${columns.mkString(",")}) VALUES (${values.show})"
 
