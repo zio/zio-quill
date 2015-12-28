@@ -1,3 +1,12 @@
+# 0.2.1 / 28-Dec-2015
+
+* [expire and close compile-time sources automatically](https://github.com/getquill/quill/issues/10)
+* [Aggregation sum should return an Option](https://github.com/getquill/quill/pull/69)
+* [Changed min/max implicit from Numeric to Ordering](https://github.com/getquill/quill/pull/70)
+* [provide implicit to query case class companion objects directly](https://github.com/getquill/quill/pull/73)
+* [don't fuse multiple `sortBy`s](https://github.com/getquill/quill/issues/71)
+* [actions now respect the naming strategy](https://github.com/getquill/quill/issues/74)
+
 # 0.2.0 / 24-Dec-2015
 
 * [Insert/update using case class instances](https://github.com/getquill/quill/commit/aed630bdb514b3d71a3a3cc47299ff28c0472023)
