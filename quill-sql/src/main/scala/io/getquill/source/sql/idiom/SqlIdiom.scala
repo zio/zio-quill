@@ -120,9 +120,9 @@ trait SqlIdiom {
   implicit def sourceShow(implicit strategy: NamingStrategy): Show[Source] = new Show[Source] {
     def show(source: Source) =
       source match {
-        case TableSource(name, alias)     => s"${name.show} ${strategy(alias)}"
-        case QuerySource(query, alias)    => s"(${query.show}) ${strategy(alias)}"
-        case InfixSource(infix, alias)    => s"(${(infix: Ast).show}) ${strategy(alias)}"
+        case TableSource(name, alias)     => s"${name.show} ${strategy.default(alias)}"
+        case QuerySource(query, alias)    => s"(${query.show}) ${strategy.default(alias)}"
+        case InfixSource(infix, alias)    => s"(${(infix: Ast).show}) ${strategy.default(alias)}"
         case OuterJoinSource(t, a, b, on) => s"${a.show} ${t.show} ${b.show} ON ${on.show}"
       }
   }
@@ -192,7 +192,7 @@ trait SqlIdiom {
       def show(e: Property) =
         e match {
           case Property(Property(ident, a), b) => s"$ident.$a$b"
-          case Property(ast, name)             => s"${scopedShow(ast)}.${strategy(name)}"
+          case Property(ast, name)             => s"${scopedShow(ast)}.${strategy.column(name)}"
         }
     }
 
@@ -208,18 +208,18 @@ trait SqlIdiom {
   }
 
   implicit def identShow(implicit strategy: NamingStrategy): Show[Ident] = new Show[Ident] {
-    def show(e: Ident) = strategy(e.name)
+    def show(e: Ident) = strategy.default(e.name)
   }
 
   implicit def actionShow(implicit strategy: NamingStrategy): Show[Action] = {
 
     def set(assignments: List[Assignment]) =
-      assignments.map(a => s"${strategy(a.property)} = ${a.value.show}").mkString(", ")
+      assignments.map(a => s"${strategy.column(a.property)} = ${a.value.show}").mkString(", ")
 
     implicit def propertyShow: Show[Property] = new Show[Property] {
       def show(e: Property) =
         e match {
-          case Property(_, name) => strategy(name)
+          case Property(_, name) => strategy.column(name)
         }
     }
 
@@ -228,7 +228,7 @@ trait SqlIdiom {
         a match {
 
           case AssignedAction(Insert(table: Entity), assignments) =>
-            val columns = assignments.map(_.property).map(strategy(_))
+            val columns = assignments.map(_.property).map(strategy.column(_))
             val values = assignments.map(_.value)
             s"INSERT INTO ${table.show} (${columns.mkString(",")}) VALUES (${values.show})"
 
@@ -252,7 +252,7 @@ trait SqlIdiom {
 
   implicit def entityShow(implicit strategy: NamingStrategy): Show[Entity] = new Show[Entity] {
     def show(e: Entity) =
-      e.alias.map(strategy(_)).getOrElse(strategy(e.name))
+      e.alias.map(strategy.table(_)).getOrElse(strategy.table(e.name))
   }
 
   private def scopedShow[A <: Ast](ast: A)(implicit show: Show[A]) =

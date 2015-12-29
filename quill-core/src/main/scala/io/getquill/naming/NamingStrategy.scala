@@ -1,35 +1,37 @@
 package io.getquill.naming
 
 trait NamingStrategy {
-  def apply(s: String): String
+  def table(s: String): String = default(s)
+  def column(s: String): String = default(s)
+  def default(s: String): String
 }
 
 trait Literal extends NamingStrategy {
-  override def apply(s: String) = s
+  override def default(s: String) = s
 }
 object Literal extends Literal
 
 trait Escape extends NamingStrategy {
-  override def apply(s: String) =
+  override def default(s: String) =
     s""""$s""""
 }
 object Escape extends Escape
 
 trait UpperCase extends NamingStrategy {
-  override def apply(s: String) =
+  override def default(s: String) =
     s.toUpperCase
 }
 object UpperCase extends UpperCase
 
 trait LowerCase extends NamingStrategy {
-  override def apply(s: String) =
+  override def default(s: String) =
     s.toLowerCase
 }
 object LowerCase extends LowerCase
 
 trait SnakeCase extends NamingStrategy {
 
-  override def apply(s: String) =
+  override def default(s: String) =
     (s.toList match {
       case c :: tail => c.toLower +: snakeCase(tail)
       case Nil       => Nil
@@ -46,7 +48,7 @@ object SnakeCase extends SnakeCase
 
 trait CamelCase extends NamingStrategy {
 
-  override def apply(s: String) =
+  override def default(s: String) =
     calmelCase(s.toList).mkString
 
   private def calmelCase(s: List[Char]): List[Char] =

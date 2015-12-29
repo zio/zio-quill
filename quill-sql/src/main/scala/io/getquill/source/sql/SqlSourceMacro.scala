@@ -79,9 +79,9 @@ class SqlSourceMacro(val c: Context) extends SourceMacro {
     val (idiom, namingMixin) = dialectAndNaming
     val naming =
       new NamingStrategy {
-        override def apply(s: String) =
+        override def default(s: String) =
           namingMixin.map(loadObject[NamingStrategy])
-            .foldLeft(s)((s, n) => n(s))
+            .foldLeft(s)((s, n) => n.default(s))
       }
     (loadObject[SqlIdiom](idiom), naming)
   }

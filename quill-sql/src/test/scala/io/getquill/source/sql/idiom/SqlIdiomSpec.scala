@@ -597,35 +597,6 @@ class SqlIdiomSpec extends Spec {
     }
   }
 
-  "uses the naming strategy" - {
-    case class TestEntity(someColumn: Int)
-    "one transformation" in {
-      object db extends MirrorSourceTemplate[SnakeCase]
-      db.run(query[TestEntity]).sql mustEqual
-        "SELECT x.some_column FROM test_entity x"
-    }
-    "mutiple transformations" in {
-      object db extends MirrorSourceTemplate[SnakeCase with UpperCase with Escape]
-      db.run(query[TestEntity]).sql mustEqual
-        """SELECT "X"."SOME_COLUMN" FROM "TEST_ENTITY" "X""""
-    }
-    "insert" in {
-      object db extends MirrorSourceTemplate[SnakeCase]
-      db.run(query[TestEntity].insert)(List()).sql mustEqual
-        "INSERT INTO test_entity (some_column) VALUES (?)"
-    }
-    "update" in {
-      object db extends MirrorSourceTemplate[SnakeCase]
-      db.run(query[TestEntity].update)(List()).sql mustEqual
-        "UPDATE test_entity SET some_column = ?"
-    }
-    "delete" in {
-      object db extends MirrorSourceTemplate[SnakeCase]
-      db.run(query[TestEntity].delete).sql mustEqual
-        "DELETE FROM test_entity"
-    }
-  }
-
   "fails if the query is malformed" in {
     val q = quote {
       qr1.filter(t => t == ((s: String) => s))
