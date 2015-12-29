@@ -67,8 +67,8 @@ class SqlSourceMacro(val c: Context) extends SourceMacro {
     val naming =
       q"""
       new io.getquill.naming.NamingStrategy {
-        override def apply(s: String) = {
-          ${namingMixin.foldLeft[Tree](q"s")((s, n) => q"${n.typeSymbol.companion}($s)")}
+        override def default(s: String) = {
+          ${namingMixin.foldLeft[Tree](q"s")((s, n) => q"${n.typeSymbol.companion}.default($s)")}
         }
       }
       """
