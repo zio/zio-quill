@@ -11,6 +11,12 @@ object ApplyIntermediateMap {
       case FlatMap(Map(a: GroupBy, b, c), d, e) => None
       case Filter(Map(a: GroupBy, b, c), d, e)  => None
       case SortBy(Map(a: GroupBy, b, c), d, e)  => None
+      case Map(a: GroupBy, b, c) if (b == c)    => None
+
+      // a.map(b => b) =>
+      //    a
+      case Map(a: Query, b, c) if (b == c) =>
+        Some(a)
 
       // a.map(b => c).map(d => e) =>
       //    a.map(b => e[d := c])

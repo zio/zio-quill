@@ -44,9 +44,9 @@ object SqlQuery {
       case other          => fail(s"Query not properly normalized. Please open a bug report. Ast: '$other'")
     }
 
-  private def flatten(query: Query): FlattenSqlQuery = {
+  private def flatten(query: Query, alias: String = "x"): FlattenSqlQuery = {
     val (sources, finalFlatMapBody) = flattenSources(query)
-    flatten(sources, finalFlatMapBody, "x")
+    flatten(sources, finalFlatMapBody, alias)
   }
 
   private def flattenSources(query: Query): (List[Source], Query) =
@@ -86,7 +86,16 @@ object SqlQuery {
         fail("A `groupBy` clause must be followed by `map`.")
 
       case Map(q, Ident(alias), p) =>
-        base(q, alias).copy(select = selectValues(p))
+        val b = base(q, alias)
+        val agg = b.select.collect {
+          case s @ SelectValue(_: Aggregation, _) => s
+        }
+        if (agg.isEmpty)
+          b.copy(select = selectValues(p))
+        else
+          FlattenSqlQuery(
+            from = QuerySource(apply(q), alias) :: Nil,
+            select = selectValues(p))
 
       case Filter(q, Ident(alias), p) =>
         val b = base(q, alias)
@@ -120,8 +129,8 @@ object SqlQuery {
             orderBy = criterias,
             select = aliasSelect)
 
-      case Aggregation(op, q) =>
-        val b = base(q, alias)
+      case Aggregation(op, q: Query) =>
+        val b = flatten(q, alias)
         b.select match {
           case head :: Nil =>
             b.copy(select = List(head.copy(ast = Aggregation(op, head.ast))))

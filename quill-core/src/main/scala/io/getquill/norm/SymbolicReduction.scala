@@ -28,8 +28,8 @@ object SymbolicReduction {
       //      a.flatMap(c => d).union(b.flatMap(c => d))
       case FlatMap(Union(a, b), c, d) =>
         Some(Union(FlatMap(a, c, d), FlatMap(b, c, d)))
-        
-     // a.unionAll(b).flatMap(c => d)
+
+      // a.unionAll(b).flatMap(c => d)
       //      a.flatMap(c => d).unionAll(b.flatMap(c => d))
       case FlatMap(UnionAll(a, b), c, d) =>
         Some(UnionAll(FlatMap(a, c, d), FlatMap(b, c, d)))

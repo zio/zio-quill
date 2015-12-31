@@ -60,8 +60,13 @@ class QueryGenerator(seed: Int) {
     Map(group, id, id)
   }
 
-  private def aggregation(i: Int) =
-    Aggregation(AggregationOperator.max, map(i))
+  private def aggregation(i: Int) = {
+    val m = map(i)
+    IsAggregated()(m)._2.state match {
+      case true  => m
+      case false => Aggregation(AggregationOperator.max, m)
+    }
+  }
 
   private def distribute(i: Int) = {
     val j = random.nextInt(i - 2) + 1
@@ -82,5 +87,13 @@ class QueryGenerator(seed: Int) {
     val letters = "abcdefghijklmnopqrstuvwxyz"
     letters.charAt(random.nextInt(letters.size)).toString
   }
+}
 
+case class IsAggregated(state: Boolean = false) extends StatefulTransformer[Boolean] {
+
+  override def apply(q: Query) =
+    q match {
+      case q: Aggregation => (q, IsAggregated(true))
+      case other          => super.apply(q)
+    }
 }

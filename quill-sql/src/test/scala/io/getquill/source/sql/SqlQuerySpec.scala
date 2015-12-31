@@ -295,6 +295,18 @@ class SqlQuerySpec extends Spec {
           "SELECT x.* FROM TestEntity x UNION ALL SELECT x.* FROM TestEntity x"
       }
     }
+    "nested, aggregated, and mapped query" in {
+      val q = quote {
+        (for {
+          q1 <- qr1
+          q2 <- qr2
+        } yield {
+          q2.i
+        }).min
+      }
+      SqlQuery(q.ast).show mustEqual
+        "SELECT MIN(q2.i) FROM TestEntity q1, TestEntity2 q2"
+    }
   }
 
   "fails if the query is not normalized" in {

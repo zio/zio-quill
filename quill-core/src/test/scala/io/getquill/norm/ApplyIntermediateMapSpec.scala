@@ -29,8 +29,14 @@ class ApplyIntermediateMapSpec extends Spec {
       }
       ApplyIntermediateMap.unapply(q.ast) mustEqual None
     }
+    "identity map" in {
+      val q = quote {
+        qr1.groupBy(t => t.i).map(y => y)
+      }
+      ApplyIntermediateMap.unapply(q.ast) mustEqual None
+    }
   }
-  
+
   "applies intermediate map" - {
     "flatMap" in {
       val q = quote {
@@ -65,6 +71,15 @@ class ApplyIntermediateMapSpec extends Spec {
       }
       val n = quote {
         qr1.sortBy(y => y.s).map(y => y.s)
+      }
+      ApplyIntermediateMap.unapply(q.ast) mustEqual Some(n.ast)
+    }
+    "identity map" in {
+      val q = quote {
+        qr1.sortBy(y => y.s).map(y => y)
+      }
+      val n = quote {
+        qr1.sortBy(y => y.s)
       }
       ApplyIntermediateMap.unapply(q.ast) mustEqual Some(n.ast)
     }
