@@ -554,6 +554,20 @@ class QuotationSpec extends Spec {
         quote(unquote(q)).ast mustEqual BinaryOperation(Constant(1), NumericOperator.`+`, Constant(1))
       }
     }
+    "if" - {
+      "simple" in {
+        val q = quote {
+          (c: Boolean) => if (c) 1 else 2
+        }
+        q.ast.body mustEqual If(Ident("c"), Constant(1), Constant(2))
+      }
+      "nested" in {
+        val q = quote {
+          (c1: Boolean, c2: Boolean) => if (c1) 1 else if (c2) 2 else 3
+        }
+        q.ast.body mustEqual If(Ident("c1"), Constant(1), If(Ident("c2"), Constant(2), Constant(3)))
+      }
+    }
   }
 
   "reduces tuple matching locally" - {

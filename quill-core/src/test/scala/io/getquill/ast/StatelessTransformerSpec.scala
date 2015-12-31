@@ -175,6 +175,12 @@ class StatelessTransformerSpec extends Spec {
         OptionOperation(OptionForall, Ident("a'"), Ident("b"), Ident("c'"))
     }
 
+    "if" in {
+      val ast: Ast = If(Ident("a"), Ident("b"), Ident("c"))
+      Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) mustEqual
+        If(Ident("a'"), Ident("b'"), Ident("c'"))
+    }
+
     "dynamic" in {
       val ast: Ast = Dynamic(Ident("a"))
       Subject(Ident("a") -> Ident("a'"))(ast) mustEqual ast

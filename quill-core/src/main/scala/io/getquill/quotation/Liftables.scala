@@ -6,7 +6,7 @@ import io.getquill.ast._
 
 trait Liftables {
   val c: Context
-  import c.universe.{ Ident => _, Constant => _, Function => _, _ }
+  import c.universe.{ Ident => _, Constant => _, Function => _, If => _, _ }
 
   private val pack = q"io.getquill.ast"
 
@@ -22,6 +22,7 @@ trait Liftables {
     case UnaryOperation(a, b) => q"$pack.UnaryOperation($a, $b)"
     case Infix(a, b) => q"$pack.Infix($a, $b)"
     case OptionOperation(a, b, c, d) => q"$pack.OptionOperation($a, $b, $c, $d)"
+    case If(a, b, c) => q"$pack.If($a, $b, $c)"
     case Dynamic(tree: Tree) if (tree.tpe <:< c.weakTypeOf[Quoted[Any]]) => q"$tree.ast"
     case Dynamic(tree: Tree) => q"$pack.Constant($tree)"
   }

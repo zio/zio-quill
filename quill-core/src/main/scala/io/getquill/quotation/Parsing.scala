@@ -12,7 +12,7 @@ trait Parsing {
   this: Quotation =>
 
   val c: Context
-  import c.universe.{ Ident => _, Constant => _, Function => _, _ }
+  import c.universe.{ Ident => _, Constant => _, Function => _, If => _, _ }
 
   case class Parser[T](p: PartialFunction[Tree, T])(implicit ct: ClassTag[T]) {
 
@@ -43,6 +43,7 @@ trait Parsing {
     case `stringInterpolationParser`(value) => value
     case `optionOperationParser`(value)     => value
     case `boxingParser`(value)              => value
+    case `ifParser`(value)                  => value
 
     case q"$i: $typ"                        => astParser(i)
 
@@ -66,6 +67,10 @@ trait Parsing {
             c.fail(s"Please report a bug. Expected tuple or ident, got '$other'")
         }
       BetaReduction(body, reductions(fields): _*)
+  }
+
+  val ifParser: Parser[If] = Parser[If] {
+    case q"if($a) $b else $c" => If(astParser(a), astParser(b), astParser(c))
   }
 
   val quotedAstParser: Parser[Ast] = Parser[Ast] {

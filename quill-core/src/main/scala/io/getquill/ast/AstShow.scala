@@ -20,6 +20,14 @@ object AstShow {
         case ast: Infix           => ast.show
         case ast: OptionOperation => ast.show
         case ast: Dynamic         => ast.show
+        case ast: If              => ast.show
+      }
+  }
+
+  implicit val ifShow: Show[If] = new Show[If] {
+    def show(q: If) =
+      q match {
+        case If(a, b, c) => s"if($a) $b else $c"
       }
   }
 

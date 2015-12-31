@@ -595,6 +595,22 @@ class SqlIdiomSpec extends Spec {
           "SELECT a.s FROM TestEntity a LEFT JOIN TestEntity2 b ON a.s = b.s WHERE b.i = a.i"
       }
     }
+    "if" - {
+      "simple" in {
+        val q = quote {
+          qr1.map(t => if (t.i > 0) "a" else "b")
+        }
+        mirrorSource.run(q).sql mustEqual
+          "SELECT CASE WHEN t.i > 0 THEN 'a' ELSE 'b' END FROM TestEntity t"
+      }
+      "nested" in {
+        val q = quote {
+          qr1.map(t => if (t.i > 0) "a" else if (t.i > 10) "b" else "c")
+        }
+        mirrorSource.run(q).sql mustEqual
+          "SELECT CASE WHEN t.i > 0 THEN 'a' WHEN t.i > 10 THEN 'b' ELSE 'c' END FROM TestEntity t"
+      }
+    }
   }
 
   "fails if the query is malformed" in {

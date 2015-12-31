@@ -25,9 +25,32 @@ trait SqlIdiom {
           case a: Property                                 => a.show
           case a: Value                                    => a.show
           case a: OptionOperation                          => a.show
+          case a: If                                       => a.show
           case _: Function | _: FunctionApply | _: Dynamic => fail(s"Malformed query $a.")
         }
     }
+
+  implicit def ifShow(implicit strategy: NamingStrategy): Show[If] = new Show[If] {
+    def show(e: If) =
+      e match {
+        case ast: If =>
+          def flatten(ast: Ast): (List[(Ast, Ast)], Ast) =
+            ast match {
+              case If(cond, a, b) =>
+                val (l, e) = flatten(b)
+                ((cond, a) +: l, e)
+              case other =>
+                (List(), other)
+            }
+
+          val (l, e) = flatten(ast)
+          val conditions =
+            for ((cond, body) <- l) yield {
+              s"WHEN ${cond.show} THEN ${body.show}"
+            }
+          s"CASE ${conditions.mkString(" ")} ELSE ${e.show} END"
+      }
+  }
 
   implicit def optionOperationShow(implicit strategy: NamingStrategy): Show[OptionOperation] = new Show[OptionOperation] {
     def show(e: OptionOperation) =

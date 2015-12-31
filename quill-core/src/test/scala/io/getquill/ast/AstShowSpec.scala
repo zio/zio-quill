@@ -430,4 +430,13 @@ class AstShowSpec extends Spec {
   "shows dynamic asts" in {
     (Dynamic(1): Ast).show mustEqual "1"
   }
+
+  "shows if" in {
+    val q = quote {
+      (i: Int) =>
+        if (i > 10) "a" else "b"
+    }
+    (q.ast.body: Ast).show mustEqual
+      """if(i > 10) "a" else "b""""
+  }
 }
