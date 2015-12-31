@@ -465,6 +465,42 @@ class QuotationSpec extends Spec {
         quote(unquote(q)).ast.body mustEqual OptionOperation(OptionExists, Ident("o"), Ident("v"), Ident("v"))
       }
     }
+    "boxed numbers" - {
+      "big decimal" in {
+        val q = quote {
+          (a: Int, b: Long, c: Double, d: java.math.BigDecimal) =>
+            (a: BigDecimal, b: BigDecimal, c: BigDecimal, d: BigDecimal)
+        }
+      }
+      "predef" - {
+        "scala to java" in {
+          val q = quote {
+            (a: Byte, b: Short, c: Char, d: Int, e: Long,
+            f: Float, g: Double, h: Boolean) =>
+              (a: java.lang.Byte, b: java.lang.Short, c: java.lang.Character,
+                d: java.lang.Integer, e: java.lang.Long, f: java.lang.Float,
+                g: java.lang.Double, h: java.lang.Boolean)
+          }
+          quote(unquote(q)).ast match {
+            case Function(params, Tuple(values)) =>
+              values mustEqual params
+          }
+        }
+        "java to scala" in {
+          val q = quote {
+            (a: java.lang.Byte, b: java.lang.Short, c: java.lang.Character,
+            d: java.lang.Integer, e: java.lang.Long, f: java.lang.Float,
+            g: java.lang.Double, h: java.lang.Boolean) =>
+              (a: Byte, b: Short, c: Char, d: Int, e: Long,
+                f: Float, g: Double, h: Boolean)
+          }
+          quote(unquote(q)).ast match {
+            case Function(params, Tuple(values)) =>
+              values mustEqual params
+          }
+        }
+      }
+    }
     "dynamic" - {
       "quotation" in {
         val filtered = quote {

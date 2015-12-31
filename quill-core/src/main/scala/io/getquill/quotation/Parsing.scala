@@ -42,6 +42,9 @@ trait Parsing {
     case `propertyParser`(value)            => value
     case `stringInterpolationParser`(value) => value
     case `optionOperationParser`(value)     => value
+    case `boxingParser`(value)              => value
+
+    case q"$i: $typ"                        => astParser(i)
 
     case q"$tupleTree match { case ($fieldsTrees) => $bodyTree }" =>
       val tuple = astParser(tupleTree)
@@ -74,6 +77,33 @@ trait Parsing {
         case Some(ast) if (!IsDynamic(ast)) => Rebind(c)(t, ast, astParser(_))
         case other                          => Dynamic(t)
       }
+  }
+
+  val boxingParser: Parser[Ast] = Parser[Ast] {
+    // BigDecimal
+    case q"$pack.int2bigDecimal(${ astParser(v) })"            => v
+    case q"$pack.long2bigDecimal(${ astParser(v) })"           => v
+    case q"$pack.double2bigDecimal(${ astParser(v) })"         => v
+    case q"$pack.javaBigDecimal2bigDecimal(${ astParser(v) })" => v
+
+    // Predef autoboxing
+    case q"$pack.byte2Byte(${ astParser(v) })"                 => v
+    case q"$pack.short2Short(${ astParser(v) })"               => v
+    case q"$pack.char2Character(${ astParser(v) })"            => v
+    case q"$pack.int2Integer(${ astParser(v) })"               => v
+    case q"$pack.long2Long(${ astParser(v) })"                 => v
+    case q"$pack.float2Float(${ astParser(v) })"               => v
+    case q"$pack.double2Double(${ astParser(v) })"             => v
+    case q"$pack.boolean2Boolean(${ astParser(v) })"           => v
+
+    case q"$pack.Byte2byte(${ astParser(v) })"                 => v
+    case q"$pack.Short2short(${ astParser(v) })"               => v
+    case q"$pack.Character2char(${ astParser(v) })"            => v
+    case q"$pack.Integer2int(${ astParser(v) })"               => v
+    case q"$pack.Long2long(${ astParser(v) })"                 => v
+    case q"$pack.Float2float(${ astParser(v) })"               => v
+    case q"$pack.Double2double(${ astParser(v) })"             => v
+    case q"$pack.Boolean2boolean(${ astParser(v) })"           => v
   }
 
   val queryParser: Parser[Query] = Parser[Query] {
@@ -161,7 +191,6 @@ trait Parsing {
   val identParser: Parser[Ident] = Parser[Ident] {
     case t: ValDef                        => Ident(t.name.decodedName.toString)
     case c.universe.Ident(TermName(name)) => Ident(name)
-    case q"$i: $typ"                      => identParser(i)
     case q"$cls.this.$i"                  => Ident(i.decodedName.toString)
     case c.universe.Bind(TermName(name), c.universe.Ident(termNames.WILDCARD)) =>
       Ident(name)
