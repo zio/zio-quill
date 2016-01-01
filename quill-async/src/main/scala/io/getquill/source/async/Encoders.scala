@@ -1,6 +1,7 @@
 package io.getquill.source.async
 
 import java.util.Date
+import java.util.UUID
 
 import org.joda.time.LocalDateTime
 
@@ -36,5 +37,11 @@ trait Encoders {
     new Encoder[Date] {
       def apply(index: Int, value: Date, row: List[Any]) =
         row :+ new LocalDateTime(value)
+    }
+
+  implicit val uuidEncoder: Encoder[UUID] =
+    new Encoder[UUID] {
+      def apply(index: Int, value: UUID, row: List[Any]) =
+        row :+ value
     }
 }

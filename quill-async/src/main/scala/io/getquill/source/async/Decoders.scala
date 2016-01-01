@@ -1,6 +1,7 @@
 package io.getquill.source.async
 
 import java.util.Date
+import java.util.UUID
 
 import scala.math.BigDecimal.javaBigDecimal2bigDecimal
 import scala.reflect.ClassTag
@@ -102,4 +103,11 @@ trait Decoders {
       case localDateTime: LocalDateTime =>
         localDateTime.toDate
     }
+
+  implicit val uuidDecoder: Decoder[UUID] = new Decoder[UUID] {
+    def apply(index: Int, row: RowData): UUID = row(index) match {
+      case value: UUID => value
+    }
+  }
+
 }
