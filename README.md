@@ -563,10 +563,10 @@ Quill uses `Encoder`s to encode runtime values defined with the `using` method a
 If the correspondent database type is already supported, use `mappedEncoding`:
 
 ```scala
-case class CustomValue(i: Int)
+import java.util.UUID
 
-implicit val decodeCustomValue = mappedEncoding[CustomValue, Int](_.i)
-implicit val encodeCustomValue = mappedEncoding[Int, CustomValue](CustomValue(_))
+implicit val decodeCustomValue = mappedEncoding[UUID, String](_.toString)
+implicit val encodeCustomValue = mappedEncoding[String, UUID](UUID.fromString(_))
 ```
 
 If the database type is not supported, it is possible to provide "raw" encoders and decoders:
@@ -574,14 +574,14 @@ If the database type is not supported, it is possible to provide "raw" encoders 
 ```scala
 import io.getquill.source.mirror.Row
 
-implicit val customValueEncoder = 
-  new db.Encoder[CustomValue] {
-    def apply(index: Int, value: CustomValue, row: Row) = 
+implicit val uuidEncoder = 
+  new db.Encoder[UUID] {
+    def apply(index: Int, value: UUID, row: Row) = 
       ??? // database-specific implementation
   }
 
-implicit val customValueDecoder = 
-  new db.Decoder[CustomValue] {
+implicit val uuidDecoder = 
+  new db.Decoder[UUID] {
     def apply(index: Int, row: Row) = 
       ??? // database-specific implementation
   }
