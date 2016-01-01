@@ -50,7 +50,7 @@ CREATE TABLE EncodingTestEntity(
 
 CREATE TABLE EncodingUUIDTestEntity(
     v1 UUID
-)
+);
 
 CREATE TABLE TestEntity(
 	s VARCHAR(255),
