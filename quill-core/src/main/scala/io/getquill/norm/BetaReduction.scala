@@ -29,13 +29,13 @@ case class BetaReduction(map: collection.Map[Ident, Ast])
         Map(apply(a), b, BetaReduction(map - b)(c))
       case FlatMap(a, b, c) =>
         FlatMap(apply(a), b, BetaReduction(map - b)(c))
-      case SortBy(a, b, c) =>
-        SortBy(apply(a), b, BetaReduction(map - b)(c))
+      case SortBy(a, b, c, d) =>
+        SortBy(apply(a), b, BetaReduction(map - b)(c), d)
       case GroupBy(a, b, c) =>
         GroupBy(apply(a), b, BetaReduction(map - b)(c))
       case OuterJoin(t, a, b, iA, iB, on) =>
         OuterJoin(t, apply(a), apply(b), iA, iB, BetaReduction(map - iA - iB)(on))
-      case _: Reverse | _: Take | _: Entity | _: Drop | _: Union | _: UnionAll | _: Aggregation =>
+      case _: Take | _: Entity | _: Drop | _: Union | _: UnionAll | _: Aggregation =>
         super.apply(query)
     }
 }

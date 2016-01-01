@@ -28,4 +28,35 @@ class MySQLDialectSpec extends Spec {
     MySQLDialect.prepare(sql) mustEqual
       s"PREPARE p${sql.hashCode.abs} FROM '$sql'"
   }
+
+  "workaround missing nulls ordering feature in mysql" - {
+    "ascNullsFirst" in {
+      val q = quote {
+        qr1.sortBy(t => t.s)(Ord.ascNullsFirst)
+      }
+      (q.ast: Ast).show mustEqual
+        "SELECT t.* FROM TestEntity t ORDER BY t.s ASC"
+    }
+    "descNullsFirst" in {
+      val q = quote {
+        qr1.sortBy(t => t.s)(Ord.descNullsFirst)
+      }
+      (q.ast: Ast).show mustEqual
+        "SELECT t.* FROM TestEntity t ORDER BY ISNULL(t.s) DESC, t.s DESC"
+    }
+    "ascNullsLast" in {
+      val q = quote {
+        qr1.sortBy(t => t.s)(Ord.ascNullsLast)
+      }
+      (q.ast: Ast).show mustEqual
+        "SELECT t.* FROM TestEntity t ORDER BY ISNULL(t.s) ASC, t.s ASC"
+    }
+    "descNullsLast" in {
+      val q = quote {
+        qr1.sortBy(t => t.s)(Ord.descNullsLast)
+      }
+      (q.ast: Ast).show mustEqual
+        "SELECT t.* FROM TestEntity t ORDER BY t.s DESC"
+    }
+  }
 }

@@ -72,10 +72,9 @@ trait Liftables {
     case Filter(a, b, c)             => q"$pack.Filter($a, $b, $c)"
     case Map(a, b, c)                => q"$pack.Map($a, $b, $c)"
     case FlatMap(a, b, c)            => q"$pack.FlatMap($a, $b, $c)"
-    case SortBy(a, b, c)             => q"$pack.SortBy($a, $b, $c)"
+    case SortBy(a, b, c, d)          => q"$pack.SortBy($a, $b, $c, $d)"
     case GroupBy(a, b, c)            => q"$pack.GroupBy($a, $b, $c)"
     case Aggregation(a, b)           => q"$pack.Aggregation($a, $b)"
-    case Reverse(a)                  => q"$pack.Reverse($a)"
     case Take(a, b)                  => q"$pack.Take($a, $b)"
     case Drop(a, b)                  => q"$pack.Drop($a, $b)"
     case Union(a, b)                 => q"$pack.Union($a, $b)"
@@ -85,6 +84,16 @@ trait Liftables {
 
   implicit val propertyAliasLiftable: Liftable[PropertyAlias] = Liftable[PropertyAlias] {
     case PropertyAlias(a, b) => q"$pack.PropertyAlias($a, $b)"
+  }
+
+  implicit val orderingLiftable: Liftable[Ordering] = Liftable[Ordering] {
+    case TupleOrdering(elems) => q"$pack.TupleOrdering($elems)"
+    case Asc                  => q"$pack.Asc"
+    case Desc                 => q"$pack.Desc"
+    case AscNullsFirst        => q"$pack.AscNullsFirst"
+    case DescNullsFirst       => q"$pack.DescNullsFirst"
+    case AscNullsLast         => q"$pack.AscNullsLast"
+    case DescNullsLast        => q"$pack.DescNullsLast"
   }
 
   implicit val outerJoinTypeLiftable: Liftable[OuterJoinType] = Liftable[OuterJoinType] {

@@ -21,4 +21,8 @@ package object getquill {
   def mappedEncoding[I, O](f: I => O) = source.MappedEncoding(f)
 
   type Quoted[T] = quotation.Quoted[T]
+
+  def Ord: OrdOps = NonQuotedException()
+
+  implicit def orderingToOrd[T](implicit o: Ordering[T]): Ord[T] = NonQuotedException()
 }

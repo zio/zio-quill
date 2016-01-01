@@ -3,12 +3,11 @@ package io.getquill.source.sql.idiom
 import java.util.concurrent.atomic.AtomicInteger
 
 trait PostgresDialect
-    extends SqlIdiom
-    with NullsOrderingClause {
+    extends SqlIdiom {
 
   private[idiom] val preparedStatementId = new AtomicInteger
 
-  override def prepare(sql: String) = 
+  override def prepare(sql: String) =
     s"PREPARE p${preparedStatementId.incrementAndGet} AS ${positionalVariables(sql)}"
 
   private def positionalVariables(sql: String) =

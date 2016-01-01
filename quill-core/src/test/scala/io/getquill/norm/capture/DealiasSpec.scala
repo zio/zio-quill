@@ -58,15 +58,6 @@ class DealiasSpec extends Spec {
       }
       Dealias(q.ast) mustEqual q.ast
     }
-    "reverse" in {
-      val q = quote {
-        qr1.sortBy(a => a.s).reverse.map(b => b.s)
-      }
-      val n = quote {
-        qr1.sortBy(a => a.s).reverse.map(a => a.s)
-      }
-      Dealias(q.ast) mustEqual n.ast
-    }
     "take" in {
       val q = quote {
         qr1.filter(a => a.s == "s").take(10).map(b => b.s)

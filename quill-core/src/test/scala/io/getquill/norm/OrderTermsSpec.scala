@@ -6,30 +6,9 @@ class OrderTermsSpec extends Spec {
 
   "doesn't reorder groupBy.map" in {
     val q = quote {
-      qr1.map(b => b.s).sortBy(b => b).reverse
+      qr1.map(b => b.s).sortBy(b => b)
     }
     OrderTerms.unapply(q.ast) mustEqual None
-  }
-
-  "reverse" - {
-    "a.reverse.filter(b => c)" in {
-      val q = quote {
-        qr1.sortBy(b => b.s).reverse.filter(d => d == "s2")
-      }
-      val n = quote {
-        qr1.sortBy(b => b.s).filter(d => d == "s2").reverse
-      }
-      OrderTerms.unapply(q.ast) mustEqual Some(n.ast)
-    }
-    "a.map(b => c).reverse" in {
-      val q = quote {
-        qr1.sortBy(t => t.s).map(t => t.s).reverse
-      }
-      val n = quote {
-        qr1.sortBy(t => t.s).reverse.map(t => t.s)
-      }
-      OrderTerms.unapply(q.ast) mustEqual Some(n.ast)
-    }
   }
 
   "sortBy" - {

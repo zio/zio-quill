@@ -48,10 +48,10 @@ class StatefulTransformerSpec extends Spec {
         }
       }
       "sortBy" in {
-        val ast: Ast = SortBy(Ident("a"), Ident("b"), Ident("c"))
+        val ast: Ast = SortBy(Ident("a"), Ident("b"), Ident("c"), AscNullsFirst)
         Subject(Nil, Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) match {
           case (at, att) =>
-            at mustEqual SortBy(Ident("a'"), Ident("b"), Ident("c'"))
+            at mustEqual SortBy(Ident("a'"), Ident("b"), Ident("c'"), AscNullsFirst)
             att.state mustEqual List(Ident("a"), Ident("c"))
         }
       }
@@ -69,14 +69,6 @@ class StatefulTransformerSpec extends Spec {
           case (at, att) =>
             at mustEqual Aggregation(AggregationOperator.max, Ident("a'"))
             att.state mustEqual List(Ident("a"))
-        }
-      }
-      "reverse" in {
-        val ast: Ast = Reverse(SortBy(Ident("a"), Ident("b"), Ident("c")))
-        Subject(Nil, Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) match {
-          case (at, att) =>
-            at mustEqual Reverse(SortBy(Ident("a'"), Ident("b"), Ident("c'")))
-            att.state mustEqual List(Ident("a"), Ident("c"))
         }
       }
       "take" in {

@@ -67,4 +67,16 @@ class PackageSpec extends Spec {
       unquote(qr1)
     }
   }
+
+  "fails if ord is unquoted ouside of a quotation" in {
+    val e = intercept[NonQuotedException] {
+      Ord.asc[Int]
+    }
+  }
+
+  "fails if orderingToOrd is unquoted ouside of a quotation" in {
+    val e = intercept[NonQuotedException] {
+      orderingToOrd[Int]
+    }
+  }
 }

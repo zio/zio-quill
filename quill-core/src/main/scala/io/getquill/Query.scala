@@ -6,7 +6,7 @@ sealed trait Query[+T] {
   def flatMap[R](f: T => Query[R]): Query[R]
   def withFilter(f: T => Boolean): Query[T]
   def filter(f: T => Boolean): Query[T]
-  def sortBy[R](f: T => R)(implicit ord: Ordering[R]): SortedQuery[T]
+  def sortBy[R](f: T => R)(implicit ord: Ord[R]): Query[T]
 
   def take(n: Int): Query[T]
   def drop(n: Int): Query[T]
@@ -33,16 +33,6 @@ sealed trait Query[+T] {
 
 sealed trait OuterJoinQuery[A, B, R] extends Query[R] {
   def on(f: (A, B) => Boolean): Query[R]
-}
-
-sealed trait SortedQuery[+T] extends Query[T] {
-
-  def reverse: SortedQuery[T]
-
-  def map[R](f: T => R): SortedQuery[R]
-  def flatMap[R](f: T => Query[R]): SortedQuery[R]
-  def withFilter(f: T => Boolean): SortedQuery[T]
-  def filter(f: T => Boolean): SortedQuery[T]
 }
 
 sealed trait EntityQuery[T]

@@ -70,15 +70,6 @@ class FlattenGroupByAggregationSpec extends Spec {
         FlattenGroupByAggregation(Ident("e"))(q.ast.body)
       }
     }
-    "reverse" in {
-      val q = quote {
-        (e: Query[TestEntity]) =>
-          e.sortBy(_.i).reverse.size
-      }
-      val e = intercept[IllegalStateException] {
-        FlattenGroupByAggregation(Ident("e"))(q.ast.body)
-      }
-    }
     "take" in {
       val q = quote {
         (e: Query[TestEntity]) =>

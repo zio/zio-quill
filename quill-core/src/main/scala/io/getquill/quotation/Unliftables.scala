@@ -77,15 +77,24 @@ trait Unliftables {
     case q"$pack.Filter.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => Filter(a, b, c)
     case q"$pack.Map.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => Map(a, b, c)
     case q"$pack.FlatMap.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => FlatMap(a, b, c)
-    case q"$pack.SortBy.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => SortBy(a, b, c)
+    case q"$pack.SortBy.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast }, ${ d: Ordering })" => SortBy(a, b, c, d)
     case q"$pack.GroupBy.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => GroupBy(a, b, c)
-    case q"$pack.Reverse.apply(${ a: Ast })" => Reverse(a)
     case q"$pack.Take.apply(${ a: Ast }, ${ b: Ast })" => Take(a, b)
     case q"$pack.Drop.apply(${ a: Ast }, ${ b: Ast })" => Drop(a, b)
     case q"$pack.Union.apply(${ a: Ast }, ${ b: Ast })" => Union(a, b)
     case q"$pack.UnionAll.apply(${ a: Ast }, ${ b: Ast })" => UnionAll(a, b)
     case q"$pack.OuterJoin.apply(${ t: OuterJoinType }, ${ a: Ast }, ${ b: Ast }, ${ iA: Ident }, ${ iB: Ident }, ${ on: Ast })" =>
       OuterJoin(t, a, b, iA, iB, on)
+  }
+
+  implicit val orderingUnliftable: Unliftable[Ordering] = Unliftable[Ordering] {
+    case q"$pack.TupleOrdering.apply(${ elems: List[Ordering] })" => TupleOrdering(elems)
+    case q"$pack.Asc" => Asc
+    case q"$pack.Desc" => Desc
+    case q"$pack.AscNullsFirst" => AscNullsFirst
+    case q"$pack.DescNullsFirst" => DescNullsFirst
+    case q"$pack.AscNullsLast" => AscNullsLast
+    case q"$pack.DescNullsLast" => DescNullsLast
   }
 
   implicit val propertyAliasUnliftable: Unliftable[PropertyAlias] = Unliftable[PropertyAlias] {

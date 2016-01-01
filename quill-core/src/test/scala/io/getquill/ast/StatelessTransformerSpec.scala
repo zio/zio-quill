@@ -33,9 +33,9 @@ class StatelessTransformerSpec extends Spec {
           FlatMap(Ident("a'"), Ident("b"), Ident("c'"))
       }
       "sortBy" in {
-        val ast: Ast = SortBy(Ident("a"), Ident("b"), Ident("c"))
+        val ast: Ast = SortBy(Ident("a"), Ident("b"), Ident("c"), AscNullsFirst)
         Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) mustEqual
-          SortBy(Ident("a'"), Ident("b"), Ident("c'"))
+          SortBy(Ident("a'"), Ident("b"), Ident("c'"), AscNullsFirst)
       }
       "groupBy" in {
         val ast: Ast = GroupBy(Ident("a"), Ident("b"), Ident("c"))
@@ -46,11 +46,6 @@ class StatelessTransformerSpec extends Spec {
         val ast: Ast = Aggregation(AggregationOperator.`max`, Ident("a"))
         Subject(Ident("a") -> Ident("a'"))(ast) mustEqual
           Aggregation(AggregationOperator.`max`, Ident("a'"))
-      }
-      "reverse" in {
-        val ast: Ast = Reverse(SortBy(Ident("a"), Ident("b"), Ident("c")))
-        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) mustEqual
-          Reverse(SortBy(Ident("a'"), Ident("b"), Ident("c'")))
       }
       "take" in {
         val ast: Ast = Take(Ident("a"), Ident("b"))

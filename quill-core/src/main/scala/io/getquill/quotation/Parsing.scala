@@ -132,7 +132,7 @@ trait Parsing {
       FlatMap(astParser(source), identParser(alias), astParser(body))
 
     case q"$source.sortBy[$t](($alias) => $body)($ord)" if (is[QuillQuery[Any]](source)) =>
-      SortBy(astParser(source), identParser(alias), astParser(body))
+      SortBy(astParser(source), identParser(alias), astParser(body), orderingParser(ord))
 
     case q"$source.groupBy[$t](($alias) => $body)" if (is[QuillQuery[Any]](source)) =>
       GroupBy(astParser(source), identParser(alias), astParser(body))
@@ -142,9 +142,6 @@ trait Parsing {
     case q"$a.avg[$t]($n)" if (is[QuillQuery[Any]](a)) => Aggregation(AggregationOperator.`avg`, astParser(a))
     case q"$a.sum[$t]($n)" if (is[QuillQuery[Any]](a)) => Aggregation(AggregationOperator.`sum`, astParser(a))
     case q"$a.size" if (is[QuillQuery[Any]](a))        => Aggregation(AggregationOperator.`size`, astParser(a))
-
-    case q"$source.reverse" if (is[QuillQuery[Any]](source)) =>
-      Reverse(astParser(source))
 
     case q"$source.take($n)" if (is[QuillQuery[Any]](source)) =>
       Take(astParser(source), astParser(n))
@@ -166,6 +163,17 @@ trait Parsing {
 
     case q"${ outerJoinCallParser(typ, a, b) }" =>
       c.fail("An outer join clause must be followed by 'on'.")
+  }
+
+  implicit val orderingParser: Parser[Ordering] = Parser[Ordering] {
+    case q"$pack.orderingToOrd[$t]($o)"      => AscNullsFirst
+    case q"$pack.Ord.apply[..$t](..$elems)"  => TupleOrdering(elems.map(orderingParser(_)))
+    case q"$pack.Ord.asc[$t]($o)"            => Asc
+    case q"$pack.Ord.desc[$t]($o)"           => Desc
+    case q"$pack.Ord.ascNullsFirst[$t]($o)"  => AscNullsFirst
+    case q"$pack.Ord.descNullsFirst[$t]($o)" => DescNullsFirst
+    case q"$pack.Ord.ascNullsLast[$t]($o)"   => AscNullsLast
+    case q"$pack.Ord.descNullsLast[$t]($o)"  => DescNullsLast
   }
 
   implicit val propertyAliasParser: Parser[PropertyAlias] = Parser[PropertyAlias] {

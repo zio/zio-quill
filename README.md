@@ -256,12 +256,26 @@ db.run(q)
 
 **sortBy**
 ```scala
-val q = quote {
+val q1 = quote {
   query[Person].sortBy(p => p.age)
 }
 
-db.run(q)
-// SELECT p.id, p.name, p.age FROM Person p ORDER BY p.age
+db.run(q1)
+// SELECT p.id, p.name, p.age FROM Person p ORDER BY p.age ASC NULLS FIRST
+
+val q2 = quote {
+  query[Person].sortBy(p => p.age)(Ord.descNullsLast)
+}
+
+db.run(q2)
+// SELECT p.id, p.name, p.age FROM Person p ORDER BY p.age DESC NULLS LAST
+
+val q3 = quote {
+  query[Person].sortBy(p => (p.name, p.age))(Ord(Ord.asc, Ord.desc))
+}
+
+db.run(q3)
+// SELECT p.id, p.name, p.age FROM Person p ORDER BY p.name ASC, p.age DESC
 ```
 
 **drop/take**

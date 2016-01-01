@@ -5,7 +5,7 @@ import io.getquill.ast._
 
 class AttachToEntitySpec extends Spec {
 
-  val attachToEntity = AttachToEntity(SortBy(_, _, Constant(1))) _
+  val attachToEntity = AttachToEntity(SortBy(_, _, Constant(1), AscNullsFirst)) _
 
   "attaches clause to the root of the query (entity)" - {
     "query is the entity" in {
@@ -48,15 +48,6 @@ class AttachToEntitySpec extends Spec {
         }
         val n = quote {
           qr1.sortBy(t => 1).sortBy(t => t.s)
-        }
-        attachToEntity(q.ast) mustEqual n.ast
-      }
-      "reverse" in {
-        val q = quote {
-          qr1.sortBy(b => b.s).reverse
-        }
-        val n = quote {
-          qr1.sortBy(b => 1).sortBy(b => b.s).reverse
         }
         attachToEntity(q.ast) mustEqual n.ast
       }

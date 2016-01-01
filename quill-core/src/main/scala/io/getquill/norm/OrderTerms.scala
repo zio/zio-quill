@@ -7,23 +7,12 @@ object OrderTerms {
   def unapply(q: Query) =
     q match {
 
-      case Reverse(Map(a: GroupBy, b, c)) => None
       case Take(Map(a: GroupBy, b, c), d) => None
-
-      // a.reverse.filter(b => c) =>
-      //     a.filter(b => c).reverse
-      case Filter(Reverse(a), b, c) =>
-        Some(Reverse(Filter(a, b, c)))
-
-      // a.map(b => c).reverse =>
-      //     a.reverse.map(b => c)
-      case Reverse(Map(a, b, c)) =>
-        Some(Map(Reverse(a), b, c))
 
       // a.sortBy(b => c).filter(d => e) =>
       //     a.filter(d => e).sortBy(b => c)
-      case Filter(SortBy(a, b, c), d, e) =>
-        Some(SortBy(Filter(a, d, e), b, c))
+      case Filter(SortBy(a, b, c, d), e, f) =>
+        Some(SortBy(Filter(a, e, f), b, c, d))
 
       // a.map(b => c).take(d) =>
       //    a.take(d).map(b => c)

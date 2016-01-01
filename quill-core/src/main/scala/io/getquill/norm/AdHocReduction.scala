@@ -31,13 +31,8 @@ object AdHocReduction {
 
       // a.flatMap(b => c).sortBy(d => e) =>
       //    a.flatMap(b => c.sortBy(d => e))
-      case SortBy(FlatMap(a, b, c), d, e) =>
-        Some(FlatMap(a, b, SortBy(c, d, e)))
-
-      // a.flatMap(b => c).reverse =>
-      //    a.flatMap(b => c.reverse)
-      case Reverse(FlatMap(a, b, c)) =>
-        Some(FlatMap(a, b, Reverse(c)))
+      case SortBy(FlatMap(a, b, c), d, e, f) =>
+        Some(FlatMap(a, b, SortBy(c, d, e, f)))
 
       // a.flatMap(b => c.union(d))
       //    a.flatMap(b => c).union(a.flatMap(b => d))

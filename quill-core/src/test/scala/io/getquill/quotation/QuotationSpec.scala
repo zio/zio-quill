@@ -50,11 +50,63 @@ class QuotationSpec extends Spec {
         }
         quote(unquote(q)).ast mustEqual FlatMap(Entity("TestEntity"), Ident("t"), Entity("TestEntity2"))
       }
-      "sortBy" in {
-        val q = quote {
-          qr1.sortBy(t => t.s)
+      "sortBy" - {
+        "default ordering" in {
+          val q = quote {
+            qr1.sortBy(t => t.s)
+          }
+          quote(unquote(q)).ast mustEqual SortBy(Entity("TestEntity"), Ident("t"), Property(Ident("t"), "s"), AscNullsFirst)
         }
-        quote(unquote(q)).ast mustEqual SortBy(Entity("TestEntity"), Ident("t"), Property(Ident("t"), "s"))
+        "asc" in {
+          val q = quote {
+            qr1.sortBy(t => t.s)(Ord.asc)
+          }
+          quote(unquote(q)).ast mustEqual SortBy(Entity("TestEntity"), Ident("t"), Property(Ident("t"), "s"), Asc)
+        }
+        "desc" in {
+          val q = quote {
+            qr1.sortBy(t => t.s)(Ord.desc)
+          }
+          quote(unquote(q)).ast mustEqual SortBy(Entity("TestEntity"), Ident("t"), Property(Ident("t"), "s"), Desc)
+        }
+        "ascNullsFirst" in {
+          val q = quote {
+            qr1.sortBy(t => t.s)(Ord.ascNullsFirst)
+          }
+          quote(unquote(q)).ast mustEqual SortBy(Entity("TestEntity"), Ident("t"), Property(Ident("t"), "s"), AscNullsFirst)
+        }
+        "descNullsFirst" in {
+          val q = quote {
+            qr1.sortBy(t => t.s)(Ord.descNullsFirst)
+          }
+          quote(unquote(q)).ast mustEqual SortBy(Entity("TestEntity"), Ident("t"), Property(Ident("t"), "s"), DescNullsFirst)
+        }
+        "ascNullsLast" in {
+          val q = quote {
+            qr1.sortBy(t => t.s)(Ord.ascNullsLast)
+          }
+          quote(unquote(q)).ast mustEqual SortBy(Entity("TestEntity"), Ident("t"), Property(Ident("t"), "s"), AscNullsLast)
+        }
+        "descNullsLast" in {
+          val q = quote {
+            qr1.sortBy(t => t.s)(Ord.descNullsLast)
+          }
+          quote(unquote(q)).ast mustEqual SortBy(Entity("TestEntity"), Ident("t"), Property(Ident("t"), "s"), DescNullsLast)
+        }
+        "tuple" - {
+          "simple" in {
+            val q = quote {
+              qr1.sortBy(t => (t.s, t.i))(Ord.desc)
+            }
+            quote(unquote(q)).ast mustEqual SortBy(Entity("TestEntity"), Ident("t"), Tuple(List(Property(Ident("t"), "s"), Property(Ident("t"), "i"))), Desc)
+          }
+          "by element" in {
+            val q = quote {
+              qr1.sortBy(t => (t.s, t.i))(Ord(Ord.desc, Ord.asc))
+            }
+            quote(unquote(q)).ast mustEqual SortBy(Entity("TestEntity"), Ident("t"), Tuple(List(Property(Ident("t"), "s"), Property(Ident("t"), "i"))), TupleOrdering(List(Desc, Asc)))
+          }
+        }
       }
       "groupBy" in {
         val q = quote {
@@ -111,12 +163,6 @@ class QuotationSpec extends Spec {
         }
       }
 
-      "reverse" in {
-        val q = quote {
-          qr1.sortBy(t => t.s).reverse
-        }
-        quote(unquote(q)).ast mustEqual Reverse(SortBy(Entity("TestEntity"), Ident("t"), Property(Ident("t"), "s")))
-      }
       "take" in {
         val q = quote {
           qr1.take(10)

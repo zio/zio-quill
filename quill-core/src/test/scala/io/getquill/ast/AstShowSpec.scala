@@ -70,12 +70,56 @@ class AstShowSpec extends Spec {
     }
   }
 
-  "shows sorted queries" in {
-    val q = quote {
-      qr1.sortBy(t => t.i).reverse
+  "shows sorted queries" - {
+    "asc" in {
+      val q = quote {
+        qr1.sortBy(t => t.i)(Ord.asc)
+      }
+      (q.ast: Ast).show mustEqual
+        """query[TestEntity].sortBy(t => t.i)(Ord.asc)"""
     }
-    (q.ast: Ast).show mustEqual
-      """query[TestEntity].sortBy(t => t.i).reverse"""
+    "desc" in {
+      val q = quote {
+        qr1.sortBy(t => t.i)(Ord.desc)
+      }
+      (q.ast: Ast).show mustEqual
+        """query[TestEntity].sortBy(t => t.i)(Ord.desc)"""
+    }
+    "ascNullsFirst" in {
+      val q = quote {
+        qr1.sortBy(t => t.i)(Ord.ascNullsFirst)
+      }
+      (q.ast: Ast).show mustEqual
+        """query[TestEntity].sortBy(t => t.i)(Ord.ascNullsFirst)"""
+    }
+    "descNullsFirst" in {
+      val q = quote {
+        qr1.sortBy(t => t.i)(Ord.descNullsFirst)
+      }
+      (q.ast: Ast).show mustEqual
+        """query[TestEntity].sortBy(t => t.i)(Ord.descNullsFirst)"""
+    }
+    "ascNullsLast" in {
+      val q = quote {
+        qr1.sortBy(t => t.i)(Ord.ascNullsLast)
+      }
+      (q.ast: Ast).show mustEqual
+        """query[TestEntity].sortBy(t => t.i)(Ord.ascNullsLast)"""
+    }
+    "descNullsLast" in {
+      val q = quote {
+        qr1.sortBy(t => t.i)(Ord.descNullsLast)
+      }
+      (q.ast: Ast).show mustEqual
+        """query[TestEntity].sortBy(t => t.i)(Ord.descNullsLast)"""
+    }
+    "tuple" in {
+      val q = quote {
+        qr1.sortBy(t => (t.i, t.s))(Ord(Ord.descNullsLast, Ord.ascNullsLast))
+      }
+      (q.ast: Ast).show mustEqual
+        """query[TestEntity].sortBy(t => (t.i, t.s))(Ord(Ord.descNullsLast, Ord.ascNullsLast))"""
+    }
   }
 
   "shows grouped queries" in {

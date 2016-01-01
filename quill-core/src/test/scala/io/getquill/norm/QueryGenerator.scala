@@ -12,16 +12,15 @@ class QueryGenerator(seed: Int) {
     if (i <= 2) {
       Entity(string(3))
     } else {
-      random.nextInt(9) match {
+      random.nextInt(8) match {
         case 0 => map(i)
         case 1 => flatMap(i)
         case 2 => filter(i)
         case 3 => sortBy(i)
-        case 4 => reverse(i)
-        case 5 => take(i)
-        case 6 => drop(i)
-        case 7 => groupBy(i)
-        case 8 => aggregation(i)
+        case 4 => take(i)
+        case 5 => drop(i)
+        case 6 => groupBy(i)
+        case 7 => aggregation(i)
       }
     }
 
@@ -48,11 +47,8 @@ class QueryGenerator(seed: Int) {
 
   private def sortBy(i: Int) = {
     val id = ident
-    SortBy(apply(i), id, Property(id, string))
+    SortBy(apply(i), id, Property(id, string), AscNullsFirst)
   }
-
-  private def reverse(i: Int) =
-    Reverse(sortBy(i - 1))
 
   private def groupBy(i: Int) = {
     val id = ident
