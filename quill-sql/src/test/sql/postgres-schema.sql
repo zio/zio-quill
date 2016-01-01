@@ -48,6 +48,10 @@ CREATE TABLE EncodingTestEntity(
     o11 TIMESTAMP
 );
 
+CREATE TABLE EncodingUUIDTestEntity(
+    v1 UUID
+);
+
 CREATE TABLE TestEntity(
 	s VARCHAR(255),
     i INTEGER,
