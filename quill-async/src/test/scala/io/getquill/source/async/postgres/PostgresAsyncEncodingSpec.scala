@@ -33,11 +33,11 @@ class PostgresAsyncEncodingSpec extends EncodingSpec {
     val q1 = quote(query[EncodingUUIDTestEntity].insert)
     val rez1 = Await.result(testPostgresDB.run(q1)(List(EncodingUUIDTestEntity(testUUID))), Duration.Inf)
 
-    //verify you can get the uuid backk from the db
+    //verify you can get the uuid back from the db
     val q2 = quote(query[EncodingUUIDTestEntity].map(p => p.v1))
     val rez2 = Await.result(testPostgresDB.run(q2), Duration.Inf)
 
-    rez2.contains(testUUID) mustEqual true
+    rez2 mustEqual List(testUUID)
   }
 
   "fails if the column has the wrong type" - {
