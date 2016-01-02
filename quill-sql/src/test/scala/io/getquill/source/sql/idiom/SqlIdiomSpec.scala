@@ -41,19 +41,68 @@ class SqlIdiomSpec extends Spec {
             qr1.filter(t => t.s != null).sortBy(_.s)
           }
           mirrorSource.run(q).sql mustEqual
-            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.s IS NOT NULL ORDER BY t.s"
+            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.s IS NOT NULL ORDER BY t.s ASC NULLS FIRST"
         }
         "nested" in {
           val q = quote {
             for {
-              a <- qr1.sortBy(t => t.s).reverse
+              a <- qr1.sortBy(t => t.s)
               b <- qr2.sortBy(t => t.i)
             } yield {
               (a.s, b.i)
             }
           }
           mirrorSource.run(q).sql mustEqual
-            "SELECT t.s, t1.i FROM (SELECT t.s FROM TestEntity t ORDER BY t.s DESC) t, (SELECT t1.i FROM TestEntity2 t1 ORDER BY t1.i) t1"
+            "SELECT t.s, t1.i FROM (SELECT t.s FROM TestEntity t ORDER BY t.s ASC NULLS FIRST) t, (SELECT t1.i FROM TestEntity2 t1 ORDER BY t1.i ASC NULLS FIRST) t1"
+        }
+        "asc" in {
+          val q = quote {
+            qr1.sortBy(t => t.s)(Ord.asc)
+          }
+          mirrorSource.run(q).sql mustEqual
+            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t ORDER BY t.s ASC"
+        }
+        "desc" in {
+          val q = quote {
+            qr1.sortBy(t => t.s)(Ord.desc)
+          }
+          mirrorSource.run(q).sql mustEqual
+            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t ORDER BY t.s DESC"
+        }
+        "ascNullsFirst" in {
+          val q = quote {
+            qr1.sortBy(t => t.s)(Ord.ascNullsFirst)
+          }
+          mirrorSource.run(q).sql mustEqual
+            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t ORDER BY t.s ASC NULLS FIRST"
+        }
+        "descNullsFirst" in {
+          val q = quote {
+            qr1.sortBy(t => t.s)(Ord.descNullsFirst)
+          }
+          mirrorSource.run(q).sql mustEqual
+            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t ORDER BY t.s DESC NULLS FIRST"
+        }
+        "ascNullsLast" in {
+          val q = quote {
+            qr1.sortBy(t => t.s)(Ord.ascNullsLast)
+          }
+          mirrorSource.run(q).sql mustEqual
+            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t ORDER BY t.s ASC NULLS LAST"
+        }
+        "descNullsLast" in {
+          val q = quote {
+            qr1.sortBy(t => t.s)(Ord.descNullsLast)
+          }
+          mirrorSource.run(q).sql mustEqual
+            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t ORDER BY t.s DESC NULLS LAST"
+        }
+        "tuple" in {
+          val q = quote {
+            qr1.sortBy(t => (t.i, t.s))(Ord(Ord.desc, Ord.asc))
+          }
+          mirrorSource.run(q).sql mustEqual
+            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t ORDER BY t.i DESC, t.s ASC"
         }
       }
       "grouped" - {

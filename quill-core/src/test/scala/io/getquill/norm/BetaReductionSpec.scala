@@ -41,15 +41,11 @@ class BetaReductionSpec extends Spec {
         BetaReduction(ast, Ident("b") -> Ident("b'")) mustEqual ast
       }
       "sortBy" in {
-        val ast: Ast = SortBy(Ident("a"), Ident("b"), Ident("b"))
+        val ast: Ast = SortBy(Ident("a"), Ident("b"), Ident("b"), AscNullsFirst)
         BetaReduction(ast, Ident("b") -> Ident("b'")) mustEqual ast
       }
       "groupBy" in {
         val ast: Ast = GroupBy(Ident("a"), Ident("b"), Ident("b"))
-        BetaReduction(ast, Ident("b") -> Ident("b'")) mustEqual ast
-      }
-      "reverse" in {
-        val ast: Ast = Reverse(SortBy(Ident("a"), Ident("b"), Ident("b")))
         BetaReduction(ast, Ident("b") -> Ident("b'")) mustEqual ast
       }
       "outer join" in {

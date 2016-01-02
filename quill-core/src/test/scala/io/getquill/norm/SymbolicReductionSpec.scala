@@ -4,16 +4,6 @@ import io.getquill._
 
 class SymbolicReductionSpec extends Spec {
 
-  "a.reverse.reverse" in {
-    val q = quote {
-      qr1.sortBy(b => b.s).reverse.reverse
-    }
-    val n = quote {
-      qr1.sortBy(b => b.s)
-    }
-    SymbolicReduction.unapply(q.ast) mustEqual Some(n.ast)
-  }
-
   "a.filter(b => c).flatMap(d => e.$)" - {
     "e is an entity" in {
       val q = quote {
@@ -54,7 +44,7 @@ class SymbolicReductionSpec extends Spec {
     }
     SymbolicReduction.unapply(q.ast) mustEqual Some(n.ast)
   }
-  
+
   "a.unionAll(b).flatMap(c => d)" in {
     val q = quote {
       qr1.unionAll(qr1.filter(t => t.i == 1)).flatMap(c => qr2)

@@ -3,8 +3,9 @@ package io.getquill.source.sql
 import io.getquill.ast._
 import io.getquill.norm.BetaReduction
 import io.getquill.util.Messages.fail
+import io.getquill.ast.PropertyOrdering
 
-case class OrderByCriteria(property: Property, desc: Boolean)
+case class OrderByCriteria(property: Property, ordering: PropertyOrdering)
 
 sealed trait Source
 case class TableSource(entity: Entity, alias: String) extends Source
@@ -107,20 +108,9 @@ object SqlQuery {
             where = Some(p),
             select = aliasSelect)
 
-      case Reverse(SortBy(q, Ident(alias), p)) =>
+      case SortBy(q, Ident(alias), p, o) =>
         val b = base(q, alias)
-        val criterias = orderByCriterias(p, reverse = true)
-        if (b.orderBy.isEmpty)
-          b.copy(orderBy = criterias)
-        else
-          FlattenSqlQuery(
-            from = QuerySource(apply(q), alias) :: Nil,
-            orderBy = criterias,
-            select = aliasSelect)
-
-      case SortBy(q, Ident(alias), p) =>
-        val b = base(q, alias)
-        val criterias = orderByCriterias(p, reverse = false)
+        val criterias = orderByCriterias(p, o)
         if (b.orderBy.isEmpty)
           b.copy(orderBy = criterias)
         else
@@ -186,10 +176,11 @@ object SqlQuery {
       case other             => fail(s"Invalid group by criteria $ast")
     }
 
-  private def orderByCriterias(ast: Ast, reverse: Boolean): List[OrderByCriteria] =
-    ast match {
-      case a: Property       => List(OrderByCriteria(a, reverse))
-      case Tuple(properties) => properties.map(orderByCriterias(_, reverse)).flatten
-      case other             => fail(s"Invalid order by criteria $ast")
+  private def orderByCriterias(ast: Ast, ordering: Ordering): List[OrderByCriteria] =
+    (ast, ordering) match {
+      case (a: Property, o: PropertyOrdering)         => List(OrderByCriteria(a, o))
+      case (Tuple(properties), ord: PropertyOrdering) => properties.map(orderByCriterias(_, ord)).flatten
+      case (Tuple(properties), TupleOrdering(ord))    => properties.zip(ord).map { case (a, o) => orderByCriterias(a, o) }.flatten
+      case other                                      => fail(s"Invalid order by criteria $ast")
     }
 }

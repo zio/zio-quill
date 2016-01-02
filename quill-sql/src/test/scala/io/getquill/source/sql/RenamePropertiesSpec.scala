@@ -68,14 +68,14 @@ class RenamePropertiesSpec extends Spec {
           e.sortBy(t => t.i)
         }
         mirrorSource.run(q).sql mustEqual
-          "SELECT t.field_s, t.field_i, t.l, t.o FROM test_entity t ORDER BY t.field_i"
+          "SELECT t.field_s, t.field_i, t.l, t.o FROM test_entity t ORDER BY t.field_i ASC NULLS FIRST"
       }
       "transitive" in {
         val q = quote {
           e.sortBy(t => t.l).map(t => t.s)
         }
         mirrorSource.run(q).sql mustEqual
-          "SELECT t.field_s FROM test_entity t ORDER BY t.l"
+          "SELECT t.field_s FROM test_entity t ORDER BY t.l ASC NULLS FIRST"
       }
     }
     "outer join" - {

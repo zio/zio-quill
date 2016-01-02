@@ -10,7 +10,7 @@ object ApplyIntermediateMap {
       case Map(Map(a: GroupBy, b, c), d, e)     => None
       case FlatMap(Map(a: GroupBy, b, c), d, e) => None
       case Filter(Map(a: GroupBy, b, c), d, e)  => None
-      case SortBy(Map(a: GroupBy, b, c), d, e)  => None
+      case SortBy(Map(a: GroupBy, b, c), d, e, f)  => None
       case Map(a: GroupBy, b, c) if (b == c)    => None
 
       // a.map(b => b) =>
@@ -38,9 +38,9 @@ object ApplyIntermediateMap {
 
       // a.map(b => c).sortBy(d => e) =>
       //    a.sortBy(b => e[d := c]).map(b => c)
-      case SortBy(Map(a, b, c), d, e) =>
+      case SortBy(Map(a, b, c), d, e, f) =>
         val er = BetaReduction(e, d -> c)
-        Some(Map(SortBy(a, b, er), b, c))
+        Some(Map(SortBy(a, b, er, f), b, c))
 
       case other => None
     }

@@ -48,19 +48,6 @@ class ExtractSelectSpec extends Spec {
           select mustEqual Ident("x")
       }
     }
-    "reversed query" in {
-      val q = quote {
-        qr1.sortBy(b => b.s).reverse
-      }
-      val m = quote {
-        qr1.sortBy(b => b.s).reverse.map(b => b)
-      }
-      ExtractSelect(q.ast) match {
-        case (query, select) =>
-          query mustEqual m.ast
-          select mustEqual Ident("b")
-      }
-    }
     "limited query" in {
       val q = quote {
         qr1.take(10).map(t => t.s)

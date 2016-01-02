@@ -162,8 +162,12 @@ trait SqlIdiom {
   implicit def orderByCriteriaShow(implicit strategy: NamingStrategy): Show[OrderByCriteria] = new Show[OrderByCriteria] {
     def show(criteria: OrderByCriteria) =
       criteria match {
-        case OrderByCriteria(prop, true)  => s"${prop.show} DESC"
-        case OrderByCriteria(prop, false) => prop.show
+        case OrderByCriteria(prop, Asc)            => s"${prop.show} ASC"
+        case OrderByCriteria(prop, Desc)           => s"${prop.show} DESC"
+        case OrderByCriteria(prop, AscNullsFirst)  => s"${prop.show} ASC NULLS FIRST"
+        case OrderByCriteria(prop, DescNullsFirst) => s"${prop.show} DESC NULLS FIRST"
+        case OrderByCriteria(prop, AscNullsLast)   => s"${prop.show} ASC NULLS LAST"
+        case OrderByCriteria(prop, DescNullsLast)  => s"${prop.show} DESC NULLS LAST"
       }
   }
 

@@ -57,17 +57,14 @@ object AstShow {
         case FlatMap(source, alias, body) =>
           s"${source.show}.flatMap(${alias.show} => ${body.show})"
 
-        case SortBy(source, alias, body) =>
-          s"${source.show}.sortBy(${alias.show} => ${body.show})"
+        case SortBy(source, alias, body, ordering) =>
+          s"${source.show}.sortBy(${alias.show} => ${body.show})(${ordering.show})"
 
         case GroupBy(source, alias, body) =>
           s"${source.show}.groupBy(${alias.show} => ${body.show})"
 
         case Aggregation(op, ast) =>
           s"${scopedShow(ast)}.${op.show}"
-
-        case Reverse(source) =>
-          s"${source.show}.reverse"
 
         case Take(source, n) =>
           s"${source.show}.take($n)"
@@ -83,6 +80,19 @@ object AstShow {
 
         case OuterJoin(t, a, b, iA, iB, on) =>
           s"${a.show}.${t.show}(${b.show}).on((${iA.show}, ${iB.show}) => ${on.show})"
+      }
+  }
+
+  implicit val orderingShow: Show[Ordering] = new Show[Ordering] {
+    def show(q: Ordering) =
+      q match {
+        case TupleOrdering(elems) => s"Ord(${elems.show})"
+        case Asc                  => s"Ord.asc"
+        case Desc                 => s"Ord.desc"
+        case AscNullsFirst        => s"Ord.ascNullsFirst"
+        case DescNullsFirst       => s"Ord.descNullsFirst"
+        case AscNullsLast         => s"Ord.ascNullsLast"
+        case DescNullsLast        => s"Ord.descNullsLast"
       }
   }
 

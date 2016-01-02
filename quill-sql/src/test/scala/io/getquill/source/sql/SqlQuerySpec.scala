@@ -72,53 +72,56 @@ class SqlQuerySpec extends Spec {
           qr1.sortBy(t => t.s).map(t => t.s)
         }
         SqlQuery(q.ast).show mustEqual
-          "SELECT t.s FROM TestEntity t ORDER BY t.s"
+          "SELECT t.s FROM TestEntity t ORDER BY t.s ASC NULLS FIRST"
       }
       "with filter" in {
         val q = quote {
           qr1.filter(t => t.s == "s").sortBy(t => t.s).map(t => (t.i))
         }
         SqlQuery(q.ast).show mustEqual
-          "SELECT t.i FROM TestEntity t WHERE t.s = 's' ORDER BY t.s"
-      }
-      "with reverse" in {
-        val q = quote {
-          qr1.sortBy(t => t.s).reverse.map(t => t.s)
-        }
-        SqlQuery(q.ast).show mustEqual
-          "SELECT t.s FROM TestEntity t ORDER BY t.s DESC"
+          "SELECT t.i FROM TestEntity t WHERE t.s = 's' ORDER BY t.s ASC NULLS FIRST"
       }
       "with outer filter" in {
         val q = quote {
           qr1.sortBy(t => t.s).filter(t => t.s == "s").map(t => t.s)
         }
         SqlQuery(q.ast).show mustEqual
-          "SELECT t.s FROM TestEntity t WHERE t.s = 's' ORDER BY t.s"
+          "SELECT t.s FROM TestEntity t WHERE t.s = 's' ORDER BY t.s ASC NULLS FIRST"
       }
       "with flatMap" in {
         val q = quote {
           qr1.sortBy(t => t.s).flatMap(t => qr2.map(t => t.s))
         }
         SqlQuery(q.ast).show mustEqual
-          "SELECT t.s FROM (SELECT t.* FROM TestEntity t ORDER BY t.s) t, TestEntity2 t"
+          "SELECT t.s FROM (SELECT t.* FROM TestEntity t ORDER BY t.s ASC NULLS FIRST) t, TestEntity2 t"
       }
-      "tuple criteria" in {
-        val q = quote {
-          qr1.sortBy(t => (t.s, t.i)).map(t => t.s)
+      "tuple criteria" - {
+        "single ordering" in {
+          val q = quote {
+            qr1.sortBy(t => (t.s, t.i))(Ord.asc).map(t => t.s)
+          }
+          SqlQuery(q.ast).show mustEqual
+            "SELECT t.s FROM TestEntity t ORDER BY t.s ASC, t.i ASC"
         }
-        SqlQuery(q.ast).show mustEqual
-          "SELECT t.s FROM TestEntity t ORDER BY t.s, t.i"
+        "ordering per column" in {
+          val q = quote {
+            qr1.sortBy(t => (t.s, t.i))(Ord(Ord.asc, Ord.desc)).map(t => t.s)
+          }
+          SqlQuery(q.ast).show mustEqual
+            "SELECT t.s FROM TestEntity t ORDER BY t.s ASC, t.i DESC"
+        }
       }
       "multiple sortBy" in {
         val q = quote {
-          qr1.sortBy(t => (t.s, t.i)).reverse.sortBy(t => t.l).map(t => t.s)
+          qr1.sortBy(t => (t.s, t.i)).sortBy(t => t.l).map(t => t.s)
         }
         SqlQuery(q.ast).show mustEqual
-          "SELECT t.s FROM (SELECT t.* FROM TestEntity t ORDER BY t.s DESC, t.i DESC) t ORDER BY t.l"
+          "SELECT t.s FROM (SELECT t.* FROM TestEntity t ORDER BY t.s ASC NULLS FIRST, t.i ASC NULLS FIRST) t ORDER BY t.l ASC NULLS FIRST"
       }
       "fails if the sortBy criteria is malformed" in {
+        implicit val o: Ordering[TestEntity] = null
         val q = quote {
-          qr1.sortBy(t => t)(null)
+          qr1.sortBy(t => t)
         }
         val e = intercept[IllegalStateException] {
           SqlQuery(q.ast)

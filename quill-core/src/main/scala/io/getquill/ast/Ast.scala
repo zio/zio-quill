@@ -27,13 +27,22 @@ case class Map(query: Ast, alias: Ident, body: Ast) extends Query
 
 case class FlatMap(query: Ast, alias: Ident, body: Ast) extends Query
 
-case class SortBy(query: Ast, alias: Ident, criterias: Ast) extends Query
+case class SortBy(query: Ast, alias: Ident, criterias: Ast, ordering: Ordering) extends Query
+
+sealed trait Ordering
+case class TupleOrdering(elems: List[Ordering]) extends Ordering
+
+sealed trait PropertyOrdering extends Ordering
+case object Asc extends PropertyOrdering
+case object Desc extends PropertyOrdering
+case object AscNullsFirst extends PropertyOrdering
+case object DescNullsFirst extends PropertyOrdering
+case object AscNullsLast extends PropertyOrdering
+case object DescNullsLast extends PropertyOrdering
 
 case class GroupBy(query: Ast, alias: Ident, body: Ast) extends Query
 
 case class Aggregation(operator: AggregationOperator, ast: Ast) extends Query
-
-case class Reverse(query: Ast) extends Query
 
 case class Take(query: Ast, n: Ast) extends Query
 

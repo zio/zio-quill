@@ -59,14 +59,6 @@ class FreeVariablesSpec extends Spec {
         }
       FreeVariables(q.ast) mustEqual Set(Ident("s"))
     }
-    "reverse" in {
-      val s = "s"
-      val q =
-        quote {
-          qr1.sortBy(_ => s).reverse
-        }
-      FreeVariables(q.ast) mustEqual Set(Ident("s"))
-    }
     "take" in {
       val s = 10
       val q =
@@ -107,12 +99,6 @@ class FreeVariablesSpec extends Spec {
     "flatMap" in {
       val q = quote {
         qr1.flatMap(t => qr2.filter(u => t.s == u.s))
-      }
-      FreeVariables(q.ast) mustBe empty
-    }
-    "reverse" in {
-      val q = quote {
-        qr1.sortBy(b => b.s).reverse
       }
       FreeVariables(q.ast) mustBe empty
     }

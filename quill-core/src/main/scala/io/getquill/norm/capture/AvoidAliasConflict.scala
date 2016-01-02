@@ -18,8 +18,8 @@ private case class AvoidAliasConflict(state: Set[Ident])
       case Filter(q: Entity, x, p) =>
         apply(x, p)(Filter(q, _, _))
 
-      case SortBy(q: Entity, x, p) =>
-        apply(x, p)(SortBy(q, _, _))
+      case SortBy(q: Entity, x, p, o) =>
+        apply(x, p)(SortBy(q, _, _, o))
 
       case OuterJoin(t, a, b, iA, iB, o) =>
         val freshA = freshIdent(iA)

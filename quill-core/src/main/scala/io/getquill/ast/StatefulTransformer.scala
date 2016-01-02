@@ -54,10 +54,10 @@ trait StatefulTransformer[T] {
         val (at, att) = apply(a)
         val (ct, ctt) = att.apply(c)
         (FlatMap(at, b, ct), ctt)
-      case SortBy(a, b, c) =>
+      case SortBy(a, b, c, d) =>
         val (at, att) = apply(a)
         val (ct, ctt) = att.apply(c)
-        (SortBy(at, b, ct), ctt)
+        (SortBy(at, b, ct, d), ctt)
       case GroupBy(a, b, c) =>
         val (at, att) = apply(a)
         val (ct, ctt) = att.apply(c)
@@ -65,9 +65,6 @@ trait StatefulTransformer[T] {
       case Aggregation(o, a) =>
         val (at, att) = apply(a)
         (Aggregation(o, at), att)
-      case Reverse(a) =>
-        val (at, att) = apply(a)
-        (Reverse(at), att)
       case Take(a, b) =>
         val (at, att) = apply(a)
         val (bt, btt) = att.apply(b)

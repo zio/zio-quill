@@ -13,7 +13,7 @@ case class RenameProperties(state: collection.Map[Ident, collection.Map[String, 
 
       case Filter(q: Entity, x, p)  => apply(q, x, p)(Filter)
 
-      case SortBy(q: Entity, x, p)  => apply(q, x, p)(SortBy)
+      case SortBy(q: Entity, x, p, o)  => apply(q, x, p)(SortBy(_, _, _, o))
 
       case q @ OuterJoin(t, a: Entity, b: Entity, iA, iB, o) =>
         val ((_, _, or), ort) = apply(a, iA, o)((_, _, _))

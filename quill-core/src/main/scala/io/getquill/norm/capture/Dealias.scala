@@ -17,15 +17,12 @@ case class Dealias(state: Option[Ident]) extends StatefulTransformer[Option[Iden
         dealias(a, b, c)(Map)
       case Filter(a, b, c) =>
         dealias(a, b, c)(Filter)
-      case SortBy(a, b, c) =>
-        dealias(a, b, c)(SortBy)
+      case SortBy(a, b, c, d) =>
+        dealias(a, b, c)(SortBy(_, _, _, d))
       case GroupBy(a, b, c) =>
         dealias(a, b, c)(GroupBy)
       case q: Aggregation =>
         (q, Dealias(None))
-      case Reverse(a) =>
-        val (an, ant) = apply(a)
-        (Reverse(an), ant)
       case Take(a, b) =>
         val (an, ant) = apply(a)
         (Take(an, b), ant)

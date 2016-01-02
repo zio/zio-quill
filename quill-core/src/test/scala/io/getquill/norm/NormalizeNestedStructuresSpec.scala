@@ -59,15 +59,6 @@ class NormalizeNestedStructuresSpec extends Spec {
       }
       NormalizeNestedStructures.unapply(q.ast) mustEqual Some(n.ast)
     }
-    "reverse" in {
-      val q = quote {
-        qr1.sortBy(t => (t.i, t.s)._1).reverse
-      }
-      val n = quote {
-        qr1.sortBy(t => t.i).reverse
-      }
-      NormalizeNestedStructures.unapply(q.ast) mustEqual Some(n.ast)
-    }
     "take" in {
       val q = quote {
         qr1.sortBy(t => (t.i, t.s)._1).take((1, 2)._2)
@@ -157,12 +148,6 @@ class NormalizeNestedStructuresSpec extends Spec {
     "sortBy" in {
       val q = quote {
         qr1.sortBy(t => t.i)
-      }
-      NormalizeNestedStructures.unapply(q.ast) mustEqual None
-    }
-    "reverse" in {
-      val q = quote {
-        qr1.sortBy(t => t.i).reverse
       }
       NormalizeNestedStructures.unapply(q.ast) mustEqual None
     }

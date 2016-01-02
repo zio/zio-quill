@@ -7,11 +7,6 @@ object SymbolicReduction {
   def unapply(q: Query) =
     q match {
 
-      // a.reverse.reverse =>
-      //    a
-      case Reverse(Reverse(a: Query)) =>
-        Some(a)
-
       // a.filter(b => c).flatMap(d => e.$) =>
       //     a.flatMap(d => e.filter(_ => c[b := d]).$)
       case FlatMap(Filter(a, b, c), d, e: Query) =>
