@@ -30,6 +30,20 @@ class MySQLDialectSpec extends Spec {
   }
 
   "workaround missing nulls ordering feature in mysql" - {
+    "asc" in {
+      val q = quote {
+        qr1.sortBy(t => t.s)(Ord.asc)
+      }
+      (q.ast: Ast).show mustEqual
+        "SELECT t.* FROM TestEntity t ORDER BY t.s ASC"
+    }
+    "desc" in {
+      val q = quote {
+        qr1.sortBy(t => t.s)(Ord.desc)
+      }
+      (q.ast: Ast).show mustEqual
+        "SELECT t.* FROM TestEntity t ORDER BY t.s DESC"
+    }
     "ascNullsFirst" in {
       val q = quote {
         qr1.sortBy(t => t.s)(Ord.ascNullsFirst)

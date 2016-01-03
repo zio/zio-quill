@@ -21,10 +21,10 @@ trait MySQLDialect
   override implicit def orderByCriteriaShow(implicit strategy: NamingStrategy): Show[OrderByCriteria] = new Show[OrderByCriteria] {
     def show(criteria: OrderByCriteria) =
       criteria match {
-        case OrderByCriteria(prop, AscNullsFirst)  => s"${prop.show} ASC"
-        case OrderByCriteria(prop, DescNullsFirst) => s"ISNULL(${prop.show}) DESC, ${prop.show} DESC"
-        case OrderByCriteria(prop, AscNullsLast)   => s"ISNULL(${prop.show}) ASC, ${prop.show} ASC"
-        case OrderByCriteria(prop, DescNullsLast)  => s"${prop.show} DESC"
+        case OrderByCriteria(prop, AscNullsFirst | Asc)  => s"${prop.show} ASC"
+        case OrderByCriteria(prop, DescNullsFirst)       => s"ISNULL(${prop.show}) DESC, ${prop.show} DESC"
+        case OrderByCriteria(prop, AscNullsLast)         => s"ISNULL(${prop.show}) ASC, ${prop.show} ASC"
+        case OrderByCriteria(prop, DescNullsLast | Desc) => s"${prop.show} DESC"
       }
   }
 }
