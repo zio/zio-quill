@@ -16,7 +16,7 @@ Quill provides a Quoted Domain Specific Language ([QDSL](http://homepages.inf.ed
 1. **Boilerplate-free mapping**: The database schema is mapped using simple case classes.
 2. **Quoted DSL**: Queries are defined inside a `quote` block. Quill parses each quoted block of code (quotation) at compile time and translates them to an internal Abstract Syntax Tree (AST)
 3. **Compile-time SQL generation**: The `db.run` call reads the quotation's AST and translates it to the target language at compile time, emitting the SQL string as a compilation message. As the query string is known at compile time, the runtime overhead is very low and similar to using the database driver directly.
-4. **Compile-time query validation**: If configured, the query is verified against the database at compile time and the compilation fails if it is not valid.
+4. **Compile-time query validation**: If configured, the query is verified against the database at compile time and the compilation fails if it is not valid. The query validation **does not** alter the database state.
 
 # Index #
 
