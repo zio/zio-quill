@@ -6,6 +6,8 @@ import io.getquill.source.sql.SqlSource
 import io.getquill.source.sql.idiom.FallbackDialect
 import scala.util.Success
 import scala.util.Failure
+import io.getquill.source.mirror.MirrorEncoders
+import io.getquill.source.mirror.MirrorDecoders
 
 class MirrorSourceTemplate[N <: NamingStrategy] extends SqlSource[MirrorDialect, N, Row, Row]
     with MirrorEncoders

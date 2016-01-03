@@ -9,7 +9,7 @@ import io.getquill.util.Show._
 import io.getquill.util.Messages._
 import io.getquill.norm.capture.AvoidAliasConflict
 import io.getquill.norm.capture.AvoidCapture
-import io.getquill.source.sql.norm.FlattenOptionOperation
+import io.getquill.norm.FlattenOptionOperation
 import io.getquill.source.sql.norm.ExpandOuterJoin
 import io.getquill.source.sql.norm.ExpandNestedQueries
 

@@ -15,6 +15,8 @@ import io.getquill.source.sql.idiom.SqlIdiom
 import io.getquill.norm.Normalize
 import io.getquill.quotation.IsDynamic
 import io.getquill.source.BindVariables
+import io.getquill.naming.LoadNaming
+import io.getquill.util.LoadObject
 
 class SqlSourceMacro(val c: Context) extends SourceMacro {
   import c.universe.{ Try => _, Literal => _, Ident => _, _ }
@@ -50,47 +52,16 @@ class SqlSourceMacro(val c: Context) extends SourceMacro {
       c.prefix.actualType
         .baseType(c.weakTypeOf[SqlSource[SqlIdiom, NamingStrategy, Any, Any]].typeSymbol)
         .typeArgs
-    val types =
-      n match {
-        case RefinedType(types, _) => types
-        case other                 => List(other)
-      }
-    val namingMixin =
-      types
-        .filterNot(_ =:= c.weakTypeOf[NamingStrategy])
-        .filterNot(_ =:= c.weakTypeOf[scala.Nothing])
-    (idiom, namingMixin)
+    (idiom, n)
   }
 
   private def dialectAndNamingDynamic = {
-    val (idiom, namingMixin) = dialectAndNaming
-    val naming =
-      q"""
-      new io.getquill.naming.NamingStrategy {
-        override def default(s: String) = {
-          ${namingMixin.foldLeft[Tree](q"s")((s, n) => q"${n.typeSymbol.companion}.default($s)")}
-        }
-      }
-      """
-    q"(${idiom.typeSymbol.companion}, $naming)"
+    val (idiom, naming) = dialectAndNaming
+    q"(${idiom.typeSymbol.companion}, ${LoadNaming.dynamic(c)(naming)})"
   }
 
   private def dialectAndNamingStatic = {
-    val (idiom, namingMixin) = dialectAndNaming
-    val naming =
-      new NamingStrategy {
-        override def default(s: String) =
-          namingMixin.map(loadObject[NamingStrategy])
-            .foldLeft(s)((s, n) => n.default(s))
-      }
-    (loadObject[SqlIdiom](idiom), naming)
-  }
-
-  private def loadObject[T: ClassTag](typ: Type) = {
-    loadClass(typ.typeSymbol.fullName.trim + "$")
-      .map(cls => cls.getField("MODULE$").get(cls)) match {
-        case Some(d: T) => d
-        case other      => c.fail(s"Can't load object '${typ.typeSymbol.fullName}'.")
-      }
+    val (idiom, naming) = dialectAndNaming
+    (LoadObject[SqlIdiom](c)(idiom), LoadNaming.static(c)(naming))
   }
 }
