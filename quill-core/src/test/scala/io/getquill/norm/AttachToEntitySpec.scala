@@ -81,6 +81,36 @@ class AttachToEntitySpec extends Spec {
     }
   }
 
+  "falls back to the query if it's not possible to flatten it" - {
+    "union" in {
+      val q = quote {
+        qr1.union(qr2)
+      }
+      val n = quote {
+        qr1.union(qr2).sortBy(x => 1)
+      }
+      attachToEntity(q.ast) mustEqual n.ast
+    }
+    "unionAll" in {
+      val q = quote {
+        qr1.unionAll(qr2)
+      }
+      val n = quote {
+        qr1.unionAll(qr2).sortBy(x => 1)
+      }
+      attachToEntity(q.ast) mustEqual n.ast
+    }
+    "outer join" in {
+      val q = quote {
+        qr1.leftJoin(qr2).on((a, b) => true)
+      }
+      val n = quote {
+        qr1.leftJoin(qr2).on((a, b) => true).sortBy(x => 1)
+      }
+      attachToEntity(q.ast) mustEqual n.ast
+    }
+  }
+
   "fails if the entity isn't found" in {
     val e = intercept[IllegalStateException] {
       attachToEntity(Map(Ident("a"), Ident("b"), Ident("c")))
