@@ -9,12 +9,15 @@ object Normalize extends StatelessTransformer {
     super.apply(BetaReduction(q))
 
   override def apply(q: Query): Query =
-    AvoidCapture(q) match {
-      case NormalizeNestedStructures(query) => apply(query)
-      case ApplyIntermediateMap(query)      => apply(query)
-      case SymbolicReduction(query)         => apply(query)
-      case AdHocReduction(query)            => apply(query)
-      case OrderTerms(query)                => apply(query)
+    norm(AvoidCapture(q))
+
+  private def norm(q: Query): Query =
+    q match {
+      case NormalizeNestedStructures(query) => norm(query)
+      case ApplyIntermediateMap(query)      => norm(query)
+      case SymbolicReduction(query)         => norm(query)
+      case AdHocReduction(query)            => norm(query)
+      case OrderTerms(query)                => norm(query)
       case other                            => other
     }
 }
