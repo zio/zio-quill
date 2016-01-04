@@ -20,7 +20,7 @@ then
 		sbt tut 'release with-defaults'
 		git push --delete origin release
 	else
-		sbt clean coverage test tut coverageAggregate publish
+		sbt clean coverage test tut coverageAggregate && sbt clean publish
 	fi
 else
 	sbt clean coverage test tut coverageAggregate
