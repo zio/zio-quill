@@ -1,4 +1,4 @@
-package io.getquill.source.sql
+package io.getquill.source.sql.norm
 
 import io.getquill._
 import io.getquill.ast.{ Query => _, _ }

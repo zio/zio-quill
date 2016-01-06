@@ -1,6 +1,15 @@
-package io.getquill.source.sql
+package io.getquill.source.sql.norm
 
 import io.getquill.ast._
+import io.getquill.source.sql.FlattenSqlQuery
+import io.getquill.source.sql.InfixSource
+import io.getquill.source.sql.QuerySource
+import io.getquill.source.sql.SetOperationSqlQuery
+import io.getquill.source.sql.OuterJoinSource
+import io.getquill.source.sql.SelectValue
+import io.getquill.source.sql.TableSource
+import io.getquill.source.sql.SqlQuery
+import io.getquill.source.sql.Source
 
 object ExpandNestedQueries {
 

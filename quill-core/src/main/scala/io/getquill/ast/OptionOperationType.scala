@@ -2,6 +2,6 @@ package io.getquill.ast
 
 sealed trait OptionOperationType
 
-object OptionMap extends OptionOperationType
-object OptionForall extends OptionOperationType
-object OptionExists extends OptionOperationType
+case object OptionMap extends OptionOperationType
+case object OptionForall extends OptionOperationType
+case object OptionExists extends OptionOperationType

@@ -4,6 +4,8 @@ import io.getquill.ast._
 import io.getquill.norm.BetaReduction
 import io.getquill.util.Messages.fail
 import io.getquill.ast.PropertyOrdering
+import io.getquill.source.sql.norm.FlattenGroupByAggregation
+import io.getquill.source.sql.norm.RenameProperties
 
 case class OrderByCriteria(property: Property, ordering: PropertyOrdering)
 
@@ -41,11 +43,11 @@ object SqlQuery {
     RenameProperties(query) match {
       case Union(a, b)    => SetOperationSqlQuery(apply(a), UnionOperation, apply(b))
       case UnionAll(a, b) => SetOperationSqlQuery(apply(a), UnionAllOperation, apply(b))
-      case q: Query       => flatten(q)
+      case q: Query       => flatten(q, "x")
       case other          => fail(s"Query not properly normalized. Please open a bug report. Ast: '$other'")
     }
 
-  private def flatten(query: Query, alias: String = "x"): FlattenSqlQuery = {
+  private def flatten(query: Query, alias: String): FlattenSqlQuery = {
     val (sources, finalFlatMapBody) = flattenSources(query)
     flatten(sources, finalFlatMapBody, alias)
   }
@@ -64,19 +66,19 @@ object SqlQuery {
 
   private def flatten(sources: List[Source], finalFlatMapBody: Ast, alias: String): FlattenSqlQuery = {
 
-    val aliasSelect = SelectValue(Ident(alias), None) :: Nil
+    def select(alias: String) = SelectValue(Ident(alias), None) :: Nil
 
     def base(q: Ast, alias: String) =
       q match {
-        case Map(_: GroupBy, _, _)                => FlattenSqlQuery(from = sources :+ source(q, alias), select = aliasSelect)
+        case Map(_: GroupBy, _, _)                => FlattenSqlQuery(from = sources :+ source(q, alias), select = select(alias))
         case q @ (_: Map | _: Filter | _: Entity) => flatten(sources, q, alias)
         case q if (sources == Nil)                => flatten(sources, q, alias)
-        case other                                => FlattenSqlQuery(from = sources :+ source(q, alias), select = aliasSelect)
+        case other                                => FlattenSqlQuery(from = sources :+ source(q, alias), select = select(alias))
       }
 
     finalFlatMapBody match {
 
-      case Map(GroupBy(q, x, g), a @ Ident(alias), p) =>
+      case Map(GroupBy(q, x @ Ident(alias), g), a, p) =>
         val b = base(q, alias)
         val criterias = groupByCriterias(g)
         val select = BetaReduction(p, a -> Tuple(List(g, x)))
@@ -106,7 +108,7 @@ object SqlQuery {
           FlattenSqlQuery(
             from = QuerySource(apply(q), alias) :: Nil,
             where = Some(p),
-            select = aliasSelect)
+            select = select(alias))
 
       case SortBy(q, Ident(alias), p, o) =>
         val b = base(q, alias)
@@ -117,7 +119,7 @@ object SqlQuery {
           FlattenSqlQuery(
             from = QuerySource(apply(q), alias) :: Nil,
             orderBy = criterias,
-            select = aliasSelect)
+            select = select(alias))
 
       case Aggregation(op, q: Query) =>
         val b = flatten(q, alias)
@@ -138,7 +140,7 @@ object SqlQuery {
           FlattenSqlQuery(
             from = QuerySource(apply(q), alias) :: Nil,
             limit = Some(n),
-            select = aliasSelect)
+            select = select(alias))
 
       case Drop(q, n) =>
         val b = base(q, alias)
@@ -148,10 +150,10 @@ object SqlQuery {
           FlattenSqlQuery(
             from = QuerySource(apply(q), alias) :: Nil,
             offset = Some(n),
-            select = aliasSelect)
+            select = select(alias))
 
       case other =>
-        FlattenSqlQuery(from = sources :+ source(other, alias), select = aliasSelect)
+        FlattenSqlQuery(from = sources :+ source(other, alias), select = select(alias))
     }
   }
 

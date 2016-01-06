@@ -17,16 +17,16 @@ trait SqlIdiom {
     new Show[Ast] {
       def show(a: Ast) =
         a match {
-          case a: Query                                    => s"${SqlQuery(a).show}"
-          case a: Operation                                => a.show
-          case Infix(parts, params)                        => StringContext(parts: _*).s(params.map(_.show): _*)
-          case a: Action                                   => a.show
-          case a: Ident                                    => a.show
-          case a: Property                                 => a.show
-          case a: Value                                    => a.show
-          case a: OptionOperation                          => a.show
-          case a: If                                       => a.show
-          case _: Function | _: FunctionApply | _: Dynamic => fail(s"Malformed query $a.")
+          case a: Query             => s"${SqlQuery(a).show}"
+          case a: Operation         => a.show
+          case Infix(parts, params) => StringContext(parts: _*).s(params.map(_.show): _*)
+          case a: Action            => a.show
+          case a: Ident             => a.show
+          case a: Property          => a.show
+          case a: Value             => a.show
+          case a: If                => a.show
+          case _: Function | _: FunctionApply | _: Dynamic | _: OptionOperation =>
+            fail(s"Malformed query $a.")
         }
     }
 
@@ -49,14 +49,6 @@ trait SqlIdiom {
               s"WHEN ${cond.show} THEN ${body.show}"
             }
           s"CASE ${conditions.mkString(" ")} ELSE ${e.show} END"
-      }
-  }
-
-  implicit def optionOperationShow(implicit strategy: NamingStrategy): Show[OptionOperation] = new Show[OptionOperation] {
-    def show(e: OptionOperation) =
-      e match {
-        case OptionOperation(t, ast, alias, body) =>
-          BetaReduction(body, alias -> ast).show
       }
   }
 
