@@ -103,6 +103,15 @@ class AvoidAliasConflictSpec extends Spec {
         }
         AvoidAliasConflict(q.ast) mustEqual n.ast
       }
+      "nested" in {
+        val q = quote {
+          qr1.map(t => t.i).leftJoin(qr2.map(t => t.i)).on((a, b) => a == b)
+        }
+        val n = quote {
+          qr1.map(t => t.i).leftJoin(qr2.map(t1 => t1.i)).on((a, b) => a == b)
+        }
+        AvoidAliasConflict(q.ast) mustEqual n.ast
+      }
     }
   }
 

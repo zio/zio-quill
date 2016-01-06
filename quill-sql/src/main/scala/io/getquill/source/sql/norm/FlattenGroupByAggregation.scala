@@ -1,4 +1,4 @@
-package io.getquill.source.sql
+package io.getquill.source.sql.norm
 
 import io.getquill.ast.StatelessTransformer
 import io.getquill.ast._
@@ -28,7 +28,7 @@ case class FlattenGroupByAggregation(agg: Ident) extends StatelessTransformer {
       case Map(a, b, c)                   => isGroupByAggregation(a)
       case FlatMap(a, b, c)               => isGroupByAggregation(a)
       case Filter(a, b, c)                => isGroupByAggregation(a)
-      case SortBy(a, b, c, d)                => isGroupByAggregation(a)
+      case SortBy(a, b, c, d)             => isGroupByAggregation(a)
       case Take(a, b)                     => isGroupByAggregation(a)
       case Drop(a, b)                     => isGroupByAggregation(a)
       case Union(a, b)                    => isGroupByAggregation(a) || isGroupByAggregation(b)

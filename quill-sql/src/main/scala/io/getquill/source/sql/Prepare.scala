@@ -7,6 +7,11 @@ import io.getquill.naming.NamingStrategy
 import io.getquill.source.sql.idiom.SqlIdiom
 import io.getquill.util.Show._
 import io.getquill.util.Messages._
+import io.getquill.norm.capture.AvoidAliasConflict
+import io.getquill.norm.capture.AvoidCapture
+import io.getquill.source.sql.norm.FlattenOptionOperation
+import io.getquill.source.sql.norm.ExpandOuterJoin
+import io.getquill.source.sql.norm.ExpandNestedQueries
 
 object Prepare {
 
@@ -14,7 +19,7 @@ object Prepare {
     import d._
     val (bindedAst, idents) = BindVariables(ast, params)
     val sqlString =
-      Normalize(ExpandOuterJoin(bindedAst)) match {
+      normalize(bindedAst) match {
         case q: Query =>
           val sql = SqlQuery(q)
           VerifySqlQuery(sql).map(fail)
@@ -24,4 +29,11 @@ object Prepare {
       }
     (sqlString, idents)
   }
+
+  private[this] val normalize =
+    (identity[Ast] _)
+      .andThen(Normalize.apply _)
+      .andThen(ExpandOuterJoin.apply _)
+      .andThen(Normalize.apply _)
+      .andThen(FlattenOptionOperation.apply _)
 }

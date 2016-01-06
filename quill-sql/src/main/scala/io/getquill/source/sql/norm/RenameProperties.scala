@@ -1,4 +1,4 @@
-package io.getquill.source.sql
+package io.getquill.source.sql.norm
 
 import io.getquill.ast._
 
@@ -7,13 +7,13 @@ case class RenameProperties(state: collection.Map[Ident, collection.Map[String, 
 
   override def apply(q: Query): (Query, StatefulTransformer[collection.Map[Ident, collection.Map[String, String]]]) =
     q match {
-      case FlatMap(q: Entity, x, p) => apply(q, x, p)(FlatMap)
+      case FlatMap(q: Entity, x, p)   => apply(q, x, p)(FlatMap)
 
-      case Map(q: Entity, x, p)     => apply(q, x, p)(Map)
+      case Map(q: Entity, x, p)       => apply(q, x, p)(Map)
 
-      case Filter(q: Entity, x, p)  => apply(q, x, p)(Filter)
+      case Filter(q: Entity, x, p)    => apply(q, x, p)(Filter)
 
-      case SortBy(q: Entity, x, p, o)  => apply(q, x, p)(SortBy(_, _, _, o))
+      case SortBy(q: Entity, x, p, o) => apply(q, x, p)(SortBy(_, _, _, o))
 
       case q @ OuterJoin(t, a: Entity, b: Entity, iA, iB, o) =>
         val ((_, _, or), ort) = apply(a, iA, o)((_, _, _))
@@ -33,7 +33,7 @@ case class RenameProperties(state: collection.Map[Ident, collection.Map[String, 
       case other => super.apply(q)
     }
 
-  override def apply(q: Ast) =
+  override def apply(q: Ast): (Ast, StatefulTransformer[collection.Map[Ident, collection.Map[String, String]]]) =
     q match {
       case Property(ident: Ident, prop) if (state.contains(ident)) =>
         (Property(ident, state(ident).getOrElse(prop, prop)), this)

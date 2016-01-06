@@ -2,6 +2,6 @@ package io.getquill.ast
 
 sealed trait OuterJoinType
 
-object LeftJoin extends OuterJoinType
-object RightJoin extends OuterJoinType
-object FullJoin extends OuterJoinType
+case object LeftJoin extends OuterJoinType
+case object RightJoin extends OuterJoinType
+case object FullJoin extends OuterJoinType
