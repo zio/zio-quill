@@ -20,7 +20,7 @@ then
 		sbt tut 'release with-defaults'
 		git push --delete origin release
 	else
-		sbt clean coverage test tut coverageAggregate && sbt clean publish
+		sbt clean coverage test tut coverageAggregate && bash <(curl -s https://codecov.io/bash) && sbt clean publish
 	fi
 else
 	sbt clean coverage test tut coverageAggregate
