@@ -33,7 +33,7 @@ object VerifySqlQuery {
 
     val errors: List[Error] =
       query.where.flatMap(verifyFreeVars).toList ++
-        query.orderBy.map(_.property).flatMap(verifyFreeVars) ++
+        query.orderBy.map(_.ast).flatMap(verifyFreeVars) ++
         query.limit.flatMap(verifyFreeVars) ++
         query.select.map(_.ast).map(verifyFreeVars).flatten
 

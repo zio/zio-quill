@@ -120,10 +120,27 @@ class SqlQuerySpec extends Spec {
         SqlQuery(q.ast).show mustEqual
           "SELECT t.s FROM (SELECT t.* FROM TestEntity t ORDER BY t.s ASC NULLS FIRST, t.i ASC NULLS FIRST) t ORDER BY t.l ASC NULLS FIRST"
       }
+      "expression" - {
+        "neg" in {
+          val q = quote {
+            qr1.sortBy(t => -t.i)(Ord.desc)
+          }
+          SqlQuery(q.ast).show mustEqual
+            "SELECT t.* FROM TestEntity t ORDER BY - (t.i) DESC"
+        }
+        "add" in {
+          val q = quote {
+            qr1.sortBy(t => t.l - t.i)
+          }
+          SqlQuery(q.ast).show mustEqual
+            "SELECT t.* FROM TestEntity t ORDER BY (t.l - t.i) ASC NULLS FIRST"
+        }
+      }
       "fails if the sortBy criteria is malformed" in {
+        case class Test(a: (Int, Int))
         implicit val o: Ordering[TestEntity] = null
         val q = quote {
-          qr1.sortBy(t => t)
+          query[Test].sortBy(_.a)(Ord(Ord.asc, Ord.desc))
         }
         val e = intercept[IllegalStateException] {
           SqlQuery(q.ast)

@@ -7,7 +7,7 @@ import io.getquill.ast.PropertyOrdering
 import io.getquill.source.sql.norm.FlattenGroupByAggregation
 import io.getquill.source.sql.norm.RenameProperties
 
-case class OrderByCriteria(property: Property, ordering: PropertyOrdering)
+case class OrderByCriteria(ast: Ast, ordering: PropertyOrdering)
 
 sealed trait Source
 case class TableSource(entity: Entity, alias: String) extends Source
@@ -180,9 +180,9 @@ object SqlQuery {
 
   private def orderByCriterias(ast: Ast, ordering: Ordering): List[OrderByCriteria] =
     (ast, ordering) match {
-      case (a: Property, o: PropertyOrdering)         => List(OrderByCriteria(a, o))
       case (Tuple(properties), ord: PropertyOrdering) => properties.map(orderByCriterias(_, ord)).flatten
       case (Tuple(properties), TupleOrdering(ord))    => properties.zip(ord).map { case (a, o) => orderByCriterias(a, o) }.flatten
+      case (a, o: PropertyOrdering)                   => List(OrderByCriteria(a, o))
       case other                                      => fail(s"Invalid order by criteria $ast")
     }
 }

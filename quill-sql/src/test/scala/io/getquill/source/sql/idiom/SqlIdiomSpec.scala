@@ -104,6 +104,13 @@ class SqlIdiomSpec extends Spec {
           mirrorSource.run(q).sql mustEqual
             "SELECT t.s, t.i, t.l, t.o FROM TestEntity t ORDER BY t.i DESC, t.s ASC"
         }
+        "expression" in {
+          val q = quote {
+            qr1.sortBy(t => t.i * 3)
+          }
+          mirrorSource.run(q).sql mustEqual
+            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t ORDER BY (t.i * 3) ASC NULLS FIRST"
+        }
       }
       "grouped" - {
         "simple" in {
