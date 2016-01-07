@@ -503,12 +503,21 @@ class SqlIdiomSpec extends Spec {
       }
     }
     "action" - {
-      "insert" in {
-        val q = quote {
-          qr1.insert(_.i -> 1, _.s -> "s")
+      "insert" - {
+        "simple" in {
+          val q = quote {
+            qr1.insert(_.i -> 1, _.s -> "s")
+          }
+          mirrorSource.run(q).sql mustEqual
+            "INSERT INTO TestEntity (i,s) VALUES (1, 's')"
         }
-        mirrorSource.run(q).sql mustEqual
-          "INSERT INTO TestEntity (i,s) VALUES (1, 's')"
+        "using nested select" in {
+          val q = quote {
+            qr1.insert(_.i -> qr2.map(t => t.i).max, _.s -> "s")
+          }
+          mirrorSource.run(q).sql mustEqual
+            "INSERT INTO TestEntity (i,s) VALUES ((SELECT MAX(t.i) FROM TestEntity2 t), 's')"
+        }
       }
       "update" - {
         "with filter" in {
@@ -524,6 +533,20 @@ class SqlIdiomSpec extends Spec {
           }
           mirrorSource.run(q).sql mustEqual
             "UPDATE TestEntity SET s = 's'"
+        }
+        "using a table column" in {
+          val q = quote {
+            qr1.update(t => t.i -> (t.i + 1))
+          }
+          mirrorSource.run(q).sql mustEqual
+            "UPDATE TestEntity SET i = (i + 1)"
+        }
+        "using nested select" in {
+          val q = quote {
+            qr1.update(_.i -> qr2.map(t => t.i).max)
+          }
+          mirrorSource.run(q).sql mustEqual
+            "UPDATE TestEntity SET i = (SELECT MAX(t.i) FROM TestEntity2 t)"
         }
       }
       "delete" - {

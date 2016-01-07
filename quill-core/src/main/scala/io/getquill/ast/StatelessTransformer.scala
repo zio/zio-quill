@@ -21,17 +21,17 @@ trait StatelessTransformer {
 
   def apply(e: Query): Query =
     e match {
-      case e: Entity         => e
-      case Filter(a, b, c)   => Filter(apply(a), b, apply(c))
-      case Map(a, b, c)      => Map(apply(a), b, apply(c))
-      case FlatMap(a, b, c)  => FlatMap(apply(a), b, apply(c))
-      case SortBy(a, b, c, d)   => SortBy(apply(a), b, apply(c), d)
-      case GroupBy(a, b, c)  => GroupBy(apply(a), b, apply(c))
-      case Aggregation(o, a) => Aggregation(o, apply(a))
-      case Take(a, b)        => Take(apply(a), apply(b))
-      case Drop(a, b)        => Drop(apply(a), apply(b))
-      case Union(a, b)       => Union(apply(a), apply(b))
-      case UnionAll(a, b)    => UnionAll(apply(a), apply(b))
+      case e: Entity          => e
+      case Filter(a, b, c)    => Filter(apply(a), b, apply(c))
+      case Map(a, b, c)       => Map(apply(a), b, apply(c))
+      case FlatMap(a, b, c)   => FlatMap(apply(a), b, apply(c))
+      case SortBy(a, b, c, d) => SortBy(apply(a), b, apply(c), d)
+      case GroupBy(a, b, c)   => GroupBy(apply(a), b, apply(c))
+      case Aggregation(o, a)  => Aggregation(o, apply(a))
+      case Take(a, b)         => Take(apply(a), apply(b))
+      case Drop(a, b)         => Drop(apply(a), apply(b))
+      case Union(a, b)        => Union(apply(a), apply(b))
+      case UnionAll(a, b)     => UnionAll(apply(a), apply(b))
       case OuterJoin(t, a, b, iA, iB, on) =>
         OuterJoin(t, apply(a), apply(b), iA, iB, apply(on))
     }
@@ -60,6 +60,6 @@ trait StatelessTransformer {
 
   private def apply(e: Assignment): Assignment =
     e match {
-      case Assignment(property, value) => Assignment(property, apply(value))
+      case Assignment(input, property, value) => Assignment(input, property, apply(value))
     }
 }

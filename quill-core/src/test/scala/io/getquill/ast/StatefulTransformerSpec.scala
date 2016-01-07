@@ -170,11 +170,11 @@ class StatefulTransformerSpec extends Spec {
     "action" - {
       "update" - {
         "assigned" in {
-          val ast: Ast = AssignedAction(Update(Ident("a")), List(Assignment("b", Ident("c"))))
-          Subject(Nil, Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) match {
+          val ast: Ast = AssignedAction(Update(Ident("a")), List(Assignment(Ident("b"), "c", Ident("d"))))
+          Subject(Nil, Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"), Ident("d") -> Ident("d'"))(ast) match {
             case (at, att) =>
-              at mustEqual AssignedAction(Update(Ident("a'")), List(Assignment("b", Ident("c'"))))
-              att.state mustEqual List(Ident("a"), Ident("c"))
+              at mustEqual AssignedAction(Update(Ident("a'")), List(Assignment(Ident("b"), "c", Ident("d'"))))
+              att.state mustEqual List(Ident("a"), Ident("d"))
           }
         }
         "unassigned" in {
@@ -188,11 +188,11 @@ class StatefulTransformerSpec extends Spec {
       }
       "insert" - {
         "assigned" in {
-          val ast: Ast = AssignedAction(Insert(Ident("a")), List(Assignment("b", Ident("c"))))
-          Subject(Nil, Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) match {
+          val ast: Ast = AssignedAction(Insert(Ident("a")), List(Assignment(Ident("b"), "c", Ident("d"))))
+          Subject(Nil, Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"), Ident("d") -> Ident("d'"))(ast) match {
             case (at, att) =>
-              at mustEqual AssignedAction(Insert(Ident("a'")), List(Assignment("b", Ident("c'"))))
-              att.state mustEqual List(Ident("a"), Ident("c"))
+              at mustEqual AssignedAction(Insert(Ident("a'")), List(Assignment(Ident("b"), "c", Ident("d'"))))
+              att.state mustEqual List(Ident("a"), Ident("d"))
           }
         }
         "unassigned" in {

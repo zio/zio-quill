@@ -131,9 +131,9 @@ trait StatefulTransformer[T] {
 
   def apply(e: Assignment): (Assignment, StatefulTransformer[T]) =
     e match {
-      case Assignment(a, b) =>
-        val (bt, btt) = apply(b)
-        (Assignment(a, bt), btt)
+      case Assignment(a, b, c) =>
+        val (ct, ctt) = apply(c)
+        (Assignment(a, b, ct), ctt)
     }
 
   def apply[U, R](list: List[U])(f: StatefulTransformer[T] => U => (R, StatefulTransformer[T])) =

@@ -96,7 +96,7 @@ case class Delete(query: Ast) extends Action
 
 case class AssignedAction(action: Ast, assignments: List[Assignment]) extends Action
 
-case class Assignment(property: String, value: Ast)
+case class Assignment(input: Ident, property: String, value: Ast)
 
 //************************************************************
 

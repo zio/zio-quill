@@ -328,8 +328,8 @@ trait Parsing {
   }
 
   private val assignmentParser: Parser[Assignment] = Parser[Assignment] {
-    case q"(($x1) => scala.this.Predef.ArrowAssoc[$t]($x2.$prop).->[$v]($value))" =>
-      Assignment(prop.decodedName.toString, astParser(value))
+    case q"((${ identParser(i1) }) => scala.this.Predef.ArrowAssoc[$t](${ identParser(i2) }.$prop).->[$v]($value))" if (i1 == i2) =>
+      Assignment(i1, prop.decodedName.toString, astParser(value))
   }
 
 }

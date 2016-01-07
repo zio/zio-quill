@@ -36,6 +36,13 @@ case class FreeVariables(state: State)
         super.apply(query)
     }
 
+  override def apply(e: Assignment): (Assignment, StatefulTransformer[State]) =
+    e match {
+      case Assignment(a, b, c) =>
+        val (ct, ctt) = FreeVariables(State(state.seen + a, state.free))(c)
+        (Assignment(a, b, ct), ctt)
+    }
+
   private def free(a: Ast, ident: Ident, c: Ast) = {
     val (_, ta) = apply(a)
     val (_, tc) = FreeVariables(State(state.seen + ident, state.free))(c)

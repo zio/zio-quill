@@ -110,7 +110,7 @@ trait Liftables {
   }
 
   implicit val assignmentLiftable: Liftable[Assignment] = Liftable[Assignment] {
-    case Assignment(a, b) => q"$pack.Assignment($a, $b)"
+    case Assignment(a, b, c) => q"$pack.Assignment($a, $b, $c)"
   }
 
   implicit val valueLiftable: Liftable[Value] = Liftable[Value] {

@@ -421,6 +421,18 @@ db.run(a)(List((999, "+1510488988")))
 // INSERT INTO Contact (personId,phone) VALUES (?, ?)
 ```
 
+Or column queries:
+
+```scala
+val a = quote {
+  (id: Int) =>
+    query[Person].insert(_.id -> id, _.age -> query[Person].map(p => p.age).max)
+}
+
+db.run(a)(List(999)) 
+// INSERT INTO Person (id,age) VALUES (?, (SELECT MAX(p.age) FROM Person p))
+```
+
 **update**
 ```scala
 val a = quote {
@@ -441,6 +453,30 @@ val a = quote {
 
 db.run(a)(List((999, 18)))
 // UPDATE Person SET age = ? WHERE id = ?
+```
+
+Using columns as part of the update:
+
+```scala
+val a = quote {
+  (id: Int) =>
+    query[Person].filter(p => p.id == id).update(p => p.age -> (p.age + 1))
+}
+
+db.run(a)(List(999))
+// UPDATE Person SET age = (age + 1) WHERE id = ?
+```
+
+Using column a query:
+
+```scala
+val a = quote {
+  (id: Int) =>
+    query[Person].filter(p => p.id == id).update(_.age -> query[Person].map(p => p.age).max)
+}
+
+db.run(a)(List(999))
+// UPDATE Person SET age = (SELECT MAX(p.age) FROM Person p) WHERE id = ?
 ```
 
 **delete**

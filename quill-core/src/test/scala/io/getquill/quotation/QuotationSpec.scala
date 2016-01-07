@@ -231,9 +231,15 @@ class QuotationSpec extends Spec {
       "update" - {
         "assigned" in {
           val q = quote {
-            qr1.update(_.s -> "s")
+            qr1.update(t => t.s -> "s")
           }
-          quote(unquote(q)).ast mustEqual AssignedAction(Update(Entity("TestEntity")), List(Assignment("s", Constant("s"))))
+          quote(unquote(q)).ast mustEqual AssignedAction(Update(Entity("TestEntity")), List(Assignment(Ident("t"), "s", Constant("s"))))
+        }
+        "assigned using entity property" in {
+          val q = quote {
+            qr1.update(t => t.i -> (t.i + 1))
+          }
+          quote(unquote(q)).ast mustEqual AssignedAction(Update(Entity("TestEntity")), List(Assignment(Ident("t"), "i", BinaryOperation(Property(Ident("t"), "i"), NumericOperator.`+`, Constant(1)))))
         }
         "unassigned" in {
           val q = quote {
@@ -245,9 +251,9 @@ class QuotationSpec extends Spec {
       "insert" - {
         "assigned" in {
           val q = quote {
-            qr1.insert(_.s -> "s")
+            qr1.insert(t => t.s -> "s")
           }
-          quote(unquote(q)).ast mustEqual AssignedAction(Insert(Entity("TestEntity")), List(Assignment("s", Constant("s"))))
+          quote(unquote(q)).ast mustEqual AssignedAction(Insert(Entity("TestEntity")), List(Assignment(Ident("t"), "s", Constant("s"))))
         }
         "unassigned" in {
           val q = quote {

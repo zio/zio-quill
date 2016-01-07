@@ -391,10 +391,10 @@ class AstShowSpec extends Spec {
     "update" - {
       "assigned" in {
         val q = quote {
-          query[TestEntity].filter(t => t.s == "test").update(_.s -> "a")
+          query[TestEntity].filter(t => t.s == "test").update(t => t.s -> "a")
         }
         (q.ast: Ast).show mustEqual
-          """query[TestEntity].filter(t => t.s == "test").update(_.s -> "a")"""
+          """query[TestEntity].filter(t => t.s == "test").update(t => t.s -> "a")"""
       }
       "unassigned" in {
         val q = quote {
@@ -407,10 +407,10 @@ class AstShowSpec extends Spec {
     "insert" - {
       "assigned" in {
         val q = quote {
-          query[TestEntity].insert(_.s -> "a")
+          query[TestEntity].insert(t => t.s -> "a")
         }
         (q.ast: Ast).show mustEqual
-          """query[TestEntity].insert(_.s -> "a")"""
+          """query[TestEntity].insert(t => t.s -> "a")"""
       }
       "unassigned" in {
         val q = quote {

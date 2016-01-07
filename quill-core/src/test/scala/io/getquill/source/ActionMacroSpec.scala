@@ -38,7 +38,7 @@ class ActionMacroSpec extends Spec {
     val r = mirrorSource.run(q)(
       List(TestEntity("s", 1, 2L, Some(4)),
         TestEntity("s2", 12, 22L, Some(42))))
-    r.ast.toString mustEqual "query[TestEntity].insert(_.s -> ?, _.i -> ?, _.l -> ?, _.o -> ?)"
+    r.ast.toString mustEqual "query[TestEntity].insert(x => x.s -> ?, x => x.i -> ?, x => x.l -> ?, x => x.o -> ?)"
     r.bindList mustEqual List(
       Row("s", 1, 2L, Some(4)),
       Row("s2", 12, 22L, Some(42)))

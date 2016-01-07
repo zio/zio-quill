@@ -21,7 +21,7 @@ trait ActionMacro extends EncodingMacro {
         val encodingValue = encoding(param, Encoding.inferEncoder[S](c))(c.WeakTypeTag(tpe))
         val bindings = bindingMap(encodingValue)
         val idents = bindings.keys.toList
-        val assignedAction = AssignedAction(action, idents.map(k => Assignment(k.name, k)))
+        val assignedAction = AssignedAction(action, idents.map(k => Assignment(Ident("x"), k.name, k)))
         val encodedParams = EncodeParams.raw[S](c)(bindings)
         expandedTree(assignedAction, idents.toList, List(tpe), encodedParams)
 

@@ -75,6 +75,13 @@ class FreeVariablesSpec extends Spec {
         }
       FreeVariables(q.ast) mustEqual Set(Ident("s"))
     }
+    "assignment" in {
+      val s = 10
+      val q = quote {
+        qr1.insert(_.i -> s)
+      }
+      FreeVariables(q.ast) mustEqual Set(Ident("s"))
+    }
   }
 
   "takes in consideration variables defined in the quotation" - {
@@ -111,6 +118,12 @@ class FreeVariablesSpec extends Spec {
     "option operator" in {
       val q = quote {
         qr1.filter(t => t.s == "s1")
+      }
+      FreeVariables(q.ast) mustBe empty
+    }
+    "assignment" in {
+      val q = quote {
+        qr1.insert(t => t.i -> (t.i + 1))
       }
       FreeVariables(q.ast) mustBe empty
     }
