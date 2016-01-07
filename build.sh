@@ -23,5 +23,5 @@ then
 		sbt clean coverage test tut coverageAggregate && bash <(curl -s https://codecov.io/bash) && sbt clean publish
 	fi
 else
-	sbt clean coverage test tut coverageAggregate
+	sbt clean coverage test tut coverageAggregate && bash <(curl -s https://codecov.io/bash)
 fi
