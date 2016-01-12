@@ -1,11 +1,10 @@
-package io.getquill.source.sql.mirror
+package io.getquill.source.mirror
 
 import java.util.Date
-
-import io.getquill.source.mirror.Row
+import io.getquill.source.Source
 
 trait MirrorEncoders {
-  this: MirrorSourceTemplate[_] =>
+  this: Source[Row, Row] =>
 
   private def encoder[T] = new Encoder[T] {
     def apply(index: Int, value: T, row: Row) =

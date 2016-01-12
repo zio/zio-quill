@@ -16,7 +16,10 @@ import io.getquill.quotation.IsDynamic
 
 object mirrorSource extends MirrorSourceTemplate
 
-abstract class MirrorSourceTemplate extends Source[Row, Row] {
+abstract class MirrorSourceTemplate
+    extends Source[Row, Row]
+    with MirrorEncoders
+    with MirrorDecoders {
 
   override def close = ()
 
@@ -57,46 +60,6 @@ abstract class MirrorSourceTemplate extends Source[Row, Row] {
 
   def query[T](ast: Ast, bind: Row => Row, extractor: Row => T) =
     QueryMirror(ast, bind(Row()), extractor)
-
-  implicit def optionDecoder[T](implicit d: Decoder[T]) = new Decoder[Option[T]] {
-    def apply(index: Int, row: Row) =
-      row[Option[T]](index)
-  }
-
-  implicit def optionEncoder[T](implicit d: Encoder[T]) = new Encoder[Option[T]] {
-    def apply(index: Int, value: Option[T], row: Row) =
-      row.add(value)
-  }
-
-  implicit val longDecoder = new Decoder[Long] {
-    def apply(index: Int, row: Row) =
-      row[Long](index)
-  }
-
-  implicit val longEncoder = new Encoder[Long] {
-    def apply(index: Int, value: Long, row: Row) =
-      row.add(value)
-  }
-
-  implicit val intDecoder = new Decoder[Int] {
-    def apply(index: Int, row: Row) =
-      row[Int](index)
-  }
-
-  implicit val intEncoder = new Encoder[Int] {
-    def apply(index: Int, value: Int, row: Row) =
-      row.add(value)
-  }
-
-  implicit val stringDecoder = new Decoder[String] {
-    def apply(index: Int, row: Row) =
-      row[String](index)
-  }
-
-  implicit val stringEncoder = new Encoder[String] {
-    def apply(index: Int, value: String, row: Row) =
-      row.add(value)
-  }
 }
 
 class MirrorSourceMacro(val c: Context) extends SourceMacro {

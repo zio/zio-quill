@@ -1,9 +1,8 @@
-package io.getquill.source.sql.norm
+package io.getquill.norm
 
 import io.getquill.ast.StatelessTransformer
 import io.getquill.ast.Ast
 import io.getquill.ast.OptionOperation
-import io.getquill.norm.BetaReduction
 
 object FlattenOptionOperation extends StatelessTransformer {
 

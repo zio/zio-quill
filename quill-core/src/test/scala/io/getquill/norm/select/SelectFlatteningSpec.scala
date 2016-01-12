@@ -92,12 +92,13 @@ class SelectFlatteningSpec extends Spec {
   }
 
   "uses a custom implicit decoder" in {
-    implicit val doubleDecoded = new Decoder[Row, Double] {
+    case class Value(s: String)
+    case class Test(v: Value)
+    implicit val valueDecoder = new Decoder[Row, Value] {
       override def apply(index: Int, row: Row) =
-        row[Double](index)
+        Value(row[String](index))
     }
-    case class Test(d: Double)
     val q = quote(query[Test])
-    mirrorSource.run(q).extractor(Row(1D)) mustEqual Test(1D)
+    mirrorSource.run(q).extractor(Row("test")) mustEqual Test(Value("test"))
   }
 }

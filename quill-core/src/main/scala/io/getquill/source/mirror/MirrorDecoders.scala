@@ -1,13 +1,11 @@
-package io.getquill.source.sql.mirror
+package io.getquill.source.mirror
 
 import java.util.Date
-
 import scala.reflect.ClassTag
-
-import io.getquill.source.mirror.Row
+import io.getquill.source.Source
 
 trait MirrorDecoders {
-  this: MirrorSourceTemplate[_] =>
+  this: Source[Row, Row] =>
 
   private def decoder[T: ClassTag]: Decoder[T] = new Decoder[T] {
     def apply(index: Int, row: Row) =

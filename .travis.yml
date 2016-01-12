@@ -3,6 +3,8 @@ scala:
 - 2.11.5
 jdk:
 - oraclejdk8
+services:
+- cassandra
 branches:
   except:
     - release
@@ -14,6 +16,10 @@ before_script:
 - mysql -u root -e "FLUSH PRIVILEGES;"
 - createdb quill_test -U postgres
 - psql -U postgres -d quill_test -a -f quill-sql/src/test/sql/postgres-schema.sql
+- psql -U postgres -d quill_test -a -f quill-sql/src/test/sql/postgres-schema.sql
+- "echo \"CREATE KEYSPACE quill_test WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};\" > /tmp/create-keyspace.cql"
+- cqlsh -f /tmp/create-keyspace.cql
+- cqlsh -k quill_test -f quill-cassandra/src/test/cql/cassandra-schema.cql
 script:
 - ./build.sh
 - find $HOME/.sbt -name "*.lock" | xargs rm

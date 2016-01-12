@@ -12,8 +12,8 @@ lazy val quill =
       IO.write(file, str)
       Seq()
     })
-    .dependsOn(`quill-core`, `quill-sql`, `quill-jdbc`, `quill-finagle-mysql`, `quill-async`)
-    .aggregate(`quill-core`, `quill-sql`, `quill-jdbc`, `quill-finagle-mysql`, `quill-async`)
+    .dependsOn(`quill-core`, `quill-sql`, `quill-jdbc`, `quill-finagle-mysql`, `quill-async`, `quill-cassandra`)
+    .aggregate(`quill-core`, `quill-sql`, `quill-jdbc`, `quill-finagle-mysql`, `quill-async`, `quill-cassandra`)
 
 lazy val `quill-core` = 
   (project in file("quill-core"))
@@ -65,6 +65,17 @@ lazy val `quill-async` =
       parallelExecution in Test := false
     )
     .dependsOn(`quill-sql` % "compile->compile;test->test")
+
+lazy val `quill-cassandra` = 
+  (project in file("quill-cassandra"))
+    .settings(commonSettings: _*)
+    .settings(
+      libraryDependencies ++= Seq(
+        "com.datastax.cassandra" % "cassandra-driver-core" % "2.1.9"
+      ),
+      parallelExecution in Test := false
+    )
+    .dependsOn(`quill-core` % "compile->compile;test->test")
 
 lazy val commonSettings = Seq(
   organization := "io.getquill",
