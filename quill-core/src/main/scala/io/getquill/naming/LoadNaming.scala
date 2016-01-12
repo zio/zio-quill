@@ -12,6 +12,14 @@ object LoadNaming {
       override def default(s: String) = {
         ${naming(c)(tpe).foldLeft[Tree](q"s")((s, n) => q"${n.typeSymbol.companion}.default($s)")}
       }
+
+      override def table(s: String) = {
+        ${naming(c)(tpe).foldLeft[Tree](q"s")((s, n) => q"${n.typeSymbol.companion}.table($s)")}
+      }
+
+      override def column(s: String) = {
+        ${naming(c)(tpe).foldLeft[Tree](q"s")((s, n) => q"${n.typeSymbol.companion}.column($s)")}
+      }
     }
     """
   }
@@ -21,6 +29,14 @@ object LoadNaming {
       override def default(s: String) =
         naming(c)(tpe).map(LoadObject[NamingStrategy](c))
           .foldLeft(s)((s, n) => n.default(s))
+
+      override def table(s: String) =
+        naming(c)(tpe).map(LoadObject[NamingStrategy](c))
+          .foldLeft(s)((s, n) => n.table(s))
+
+      override def column(s: String) =
+        naming(c)(tpe).map(LoadObject[NamingStrategy](c))
+          .foldLeft(s)((s, n) => n.column(s))
     }
 
   private def naming(c: Context)(tpe: c.Type) = {
