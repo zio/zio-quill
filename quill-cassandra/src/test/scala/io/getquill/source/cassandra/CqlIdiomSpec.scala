@@ -261,4 +261,39 @@ class CqlIdiomSpec extends Spec {
       ()
     }
   }
+
+  "infix" - {
+    "query" - {
+      "partial" in {
+        val q = quote {
+          qr1.filter(t => infix"${t.i} = 1".as[Boolean])
+        }
+        mirrorSource.run(q).cql mustEqual
+          "SELECT s, i, l, o FROM TestEntity WHERE i = 1"
+      }
+      "full" in {
+        val q = quote {
+          infix"SELECT COUNT(1) FROM TestEntity ALLOW FILTERING".as[Query[Int]]
+        }
+        mirrorSource.run(q).cql mustEqual
+          "SELECT COUNT(1) FROM TestEntity ALLOW FILTERING"
+      }
+    }
+    "action" - {
+      "partial" in {
+        val q = quote {
+          qr1.filter(t => infix"${t.i} = 1".as[Boolean]).update
+        }
+        mirrorSource.run(q)(List()).cql mustEqual
+          "UPDATE TestEntity SET s = ?, i = ?, l = ?, o = ? WHERE i = 1"
+      }
+      "full" in {
+        val q = quote {
+          infix"TRUNCATE TestEntity".as[Query[Int]]
+        }
+        mirrorSource.run(q).cql mustEqual
+          "TRUNCATE TestEntity"
+      }
+    }
+  }
 }

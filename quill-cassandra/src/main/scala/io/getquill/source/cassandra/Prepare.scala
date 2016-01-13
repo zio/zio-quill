@@ -20,5 +20,6 @@ object Prepare {
     (identity[Ast] _)
       .andThen(RenameProperties.apply _)
       .andThen(Normalize.apply _)
+      .andThen(ExpandMappedInfix.apply _)
       .andThen(FlattenOptionOperation.apply _)
 }
