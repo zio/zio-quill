@@ -3,6 +3,7 @@ package io.getquill.source.cassandra
 import io.getquill.util.Show._
 import io.getquill._
 import io.getquill.naming.Literal
+import io.getquill.ast.Ast
 
 class CqlQuerySpec extends Spec {
 
@@ -15,14 +16,14 @@ class CqlQuerySpec extends Spec {
       val q = quote {
         qr1.map(t => t.i)
       }
-      CqlQuery(q.ast).show mustEqual
+      (q.ast: Ast).show mustEqual
         "SELECT i FROM TestEntity"
     }
     "tuple" in {
       val q = quote {
         qr1.map(t => (t.i, t.s))
       }
-      CqlQuery(q.ast).show mustEqual
+      (q.ast: Ast).show mustEqual
         "SELECT i, s FROM TestEntity"
     }
     "other (not supported)" in {
@@ -40,7 +41,7 @@ class CqlQuerySpec extends Spec {
     val q = quote {
       qr1.take(1)
     }
-    CqlQuery(q.ast).show mustEqual
+    (q.ast: Ast).show mustEqual
       "SELECT * FROM TestEntity LIMIT 1"
   }
 
@@ -49,14 +50,14 @@ class CqlQuerySpec extends Spec {
       val q = quote {
         qr1.sortBy(t => t.i)
       }
-      CqlQuery(q.ast).show mustEqual
+      (q.ast: Ast).show mustEqual
         "SELECT * FROM TestEntity ORDER BY i ASC"
     }
     "tuple" in {
       val q = quote {
         qr1.sortBy(t => (t.i, t.s))
       }
-      CqlQuery(q.ast).show mustEqual
+      (q.ast: Ast).show mustEqual
         "SELECT * FROM TestEntity ORDER BY i ASC, s ASC"
     }
     "custom ordering" - {
@@ -64,21 +65,21 @@ class CqlQuerySpec extends Spec {
         val q = quote {
           qr1.sortBy(t => t.i)(Ord.desc)
         }
-        CqlQuery(q.ast).show mustEqual
+        (q.ast: Ast).show mustEqual
           "SELECT * FROM TestEntity ORDER BY i DESC"
       }
       "tuple" in {
         val q = quote {
           qr1.sortBy(t => (t.i, t.s))(Ord(Ord.asc, Ord.desc))
         }
-        CqlQuery(q.ast).show mustEqual
+        (q.ast: Ast).show mustEqual
           "SELECT * FROM TestEntity ORDER BY i ASC, s DESC"
       }
       "tuple single ordering" in {
         val q = quote {
           qr1.sortBy(t => (t.i, t.s))(Ord.desc)
         }
-        CqlQuery(q.ast).show mustEqual
+        (q.ast: Ast).show mustEqual
           "SELECT * FROM TestEntity ORDER BY i DESC, s DESC"
       }
       "invalid ordering" in {
@@ -98,12 +99,12 @@ class CqlQuerySpec extends Spec {
     val q = quote {
       qr1.filter(t => t.i == 1)
     }
-    CqlQuery(q.ast).show mustEqual
+    (q.ast: Ast).show mustEqual
       "SELECT * FROM TestEntity WHERE i = 1"
   }
 
   "entity" in {
-    CqlQuery(qr1.ast).show mustEqual
+    (qr1.ast: Ast).show mustEqual
       "SELECT * FROM TestEntity"
   }
 
@@ -113,7 +114,7 @@ class CqlQuerySpec extends Spec {
         qr1.filter(t => t.i == 1).size
       }
 
-      CqlQuery(q.ast).show mustEqual
+      (q.ast: Ast).show mustEqual
         "SELECT COUNT(1) FROM TestEntity WHERE i = 1"
     }
   }
@@ -122,7 +123,7 @@ class CqlQuerySpec extends Spec {
     val q = quote {
       qr1.filter(t => t.i == 1).sortBy(t => t.s).take(1).map(t => t.s)
     }
-    CqlQuery(q.ast).show mustEqual
+    (q.ast: Ast).show mustEqual
       "SELECT s FROM TestEntity WHERE i = 1 ORDER BY s ASC LIMIT 1"
   }
 

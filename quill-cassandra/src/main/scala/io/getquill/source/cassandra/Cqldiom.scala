@@ -9,18 +9,19 @@ import io.getquill.util.Show.listShow
 
 object CqlIdiom {
 
-  implicit def astShow(implicit strategy: NamingStrategy): Show[Ast] =
+  implicit def astShow(implicit strategy: NamingStrategy, queryShow: Show[Query]): Show[Ast] =
     new Show[Ast] {
       def show(a: Ast) =
         a match {
           case Aggregation(AggregationOperator.`size`, Constant(1)) =>
             "COUNT(1)"
-          case a: Query     => CqlQuery(a).show
+          case a: Query     => a.show
           case a: Operation => a.show
           case a: Action    => a.show
           case a: Ident     => a.show
           case a: Property  => a.show
           case a: Value     => a.show
+          case a: Function  => a.body.show
           case Infix(parts, params) =>
             StringContext(parts: _*).s(params.map(_.show): _*)
           case _: Function | _: FunctionApply | _: Dynamic | _: If | _: OptionOperation | _: Query =>
@@ -28,9 +29,9 @@ object CqlIdiom {
         }
     }
 
-  implicit def cqlQueryShow(implicit strategy: NamingStrategy): Show[CqlQuery] = new Show[CqlQuery] {
-    def show(q: CqlQuery) =
-      q match {
+  implicit def queryShow(implicit strategy: NamingStrategy): Show[Query] = new Show[Query] {
+    def show(q: Query) =
+      CqlQuery(q) match {
         case CqlQuery(entity, filter, orderBy, limit, select) =>
           val withSelect =
             select match {
@@ -122,25 +123,36 @@ object CqlIdiom {
     def set(assignments: List[Assignment]) =
       assignments.map(a => s"${strategy.column(a.property)} = ${a.value.show}").mkString(", ")
 
+    implicit def queryShow(implicit strategy: NamingStrategy): Show[Query] = new Show[Query] {
+      def show(q: Query) =
+        q match {
+          case q: Entity => q.show
+          case other     => fail(s"Expected a table, got '$other'")
+        }
+    }
+
     new Show[Action] {
       def show(a: Action) =
         a match {
 
-          case AssignedAction(Insert(table: Entity), assignments) =>
+          case AssignedAction(Insert(table), assignments) =>
             val columns = assignments.map(_.property).map(strategy.column(_))
             val values = assignments.map(_.value)
             s"INSERT INTO ${table.show} (${columns.mkString(",")}) VALUES (${values.show})"
 
-          case AssignedAction(Update(table: Entity), assignments) =>
-            s"UPDATE ${table.show} SET ${set(assignments)}"
-
-          case AssignedAction(Update(Filter(table: Entity, x, where)), assignments) =>
+          case AssignedAction(Update(Filter(table, x, where)), assignments) =>
             s"UPDATE ${table.show} SET ${set(assignments)} WHERE ${where.show}"
 
-          case Delete(Filter(table: Entity, x, where)) =>
+          case AssignedAction(Update(table), assignments) =>
+            s"UPDATE ${table.show} SET ${set(assignments)}"
+
+          case Delete(Map(Filter(table, _, where), _, columns)) =>
+            s"DELETE $columns FROM ${table.show} WHERE ${where.show}"
+
+          case Delete(Filter(table, x, where)) =>
             s"DELETE FROM ${table.show} WHERE ${where.show}"
 
-          case Delete(table: Entity) =>
+          case Delete(table) =>
             s"TRUNCATE ${table.show}"
 
           case other =>

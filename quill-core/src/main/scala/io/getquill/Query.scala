@@ -36,30 +36,25 @@ sealed trait OuterJoinQuery[A, B, R] extends Query[R] {
 }
 
 sealed trait EntityQuery[T]
-    extends Query[T]
-    with Insertable[T]
-    with Updatable[T]
-    with Deletable[T] {
+    extends Query[T] {
 
-  def apply(alias: String, propertyAlias: (T => (Any, String))*): Query[T] with Insertable[T] with Updatable[T] with Deletable[T]
+  def apply(alias: String, propertyAlias: (T => (Any, String))*): EntityQuery[T]
 
-  override def withFilter(f: T => Boolean): Query[T] with Updatable[T] with Deletable[T]
-  override def filter(f: T => Boolean): Query[T] with Updatable[T] with Deletable[T]
+  override def withFilter(f: T => Boolean): EntityQuery[T]
+  override def filter(f: T => Boolean): EntityQuery[T]
+  override def map[R](f: T => R): EntityQuery[R]
+
+  def insert: T => UnassignedAction[T] with Insert[T]
+  def insert(f: (T => (Any, Any)), f2: (T => (Any, Any))*): Insert[T]
+  def update: T => UnassignedAction[T] with Update[T]
+  def update(f: (T => (Any, Any)), f2: (T => (Any, Any))*): Update[T]
+  def delete: Delete[T]
 }
 
-sealed trait Action[+T]
+sealed trait Action[T]
 
-sealed trait UnassignedAction[+T] extends Action[T]
+sealed trait Insert[T] extends Action[T]
+sealed trait Update[T] extends Action[T]
+sealed trait Delete[T] extends Action[T]
 
-sealed trait Insertable[T] {
-  def insert: T => UnassignedAction[T]
-  def insert(f: (T => (Any, Any)), f2: (T => (Any, Any))*): Action[T]
-}
-
-sealed trait Updatable[T] {
-  def update: T => UnassignedAction[T]
-  def update(f: (T => (Any, Any)), f2: (T => (Any, Any))*): Action[T]
-}
-sealed trait Deletable[+T] {
-  def delete: Action[T]
-}
+sealed trait UnassignedAction[T] extends Action[T]

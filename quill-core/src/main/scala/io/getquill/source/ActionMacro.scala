@@ -17,7 +17,7 @@ trait ActionMacro extends EncodingMacro {
       case Nil =>
         q"${c.prefix}.execute(${prepare(action, params.map(_._1))}._1)"
 
-      case List((param, tpe)) if (t.tpe <:< c.weakTypeOf[UnassignedAction[Any]]) =>
+      case List((param, tpe)) if (t.tpe.erasure <:< c.weakTypeOf[UnassignedAction[Any]].erasure) =>
         val encodingValue = encoding(param, Encoding.inferEncoder[S](c))(c.WeakTypeTag(tpe))
         val bindings = bindingMap(encodingValue)
         val idents = bindings.keys.toList

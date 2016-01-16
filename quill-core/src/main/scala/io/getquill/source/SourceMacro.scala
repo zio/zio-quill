@@ -31,7 +31,7 @@ trait SourceMacro extends Quotation with ActionMacro with QueryMacro with Resolv
 
   private def run[R, S, T](ast: Ast, params: List[(Ident, Type)])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]): Tree =
     ast match {
-      case ast if ((t.tpe <:< c.weakTypeTag[Action[Any]].tpe)) =>
+      case ast if ((t.tpe.erasure <:< c.weakTypeTag[Action[Any]].tpe.erasure)) =>
         runAction[S, T](ast, params)
 
       case ast =>
