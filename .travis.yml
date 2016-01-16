@@ -9,8 +9,6 @@ branches:
   except:
     - release
 before_script:
-- mkdir -p ~/.sbt/0.13/plugins/
-- "echo 'addSbtPlugin(\"com.github.alexarchambault\" % \"coursier-sbt-plugin\" % \"1.0.0-M4\")' > ~/.sbt/0.13/plugins/plugins.sbt"
 - mysql -u root -e "create database quill_test;"
 - mysql -u root quill_test < quill-sql/src/test/sql/mysql-schema.sql
 - mysql -u root -e "CREATE USER 'finagle'@'localhost' IDENTIFIED BY 'finagle';"
@@ -26,6 +24,10 @@ script:
 - ./build.sh
 - find $HOME/.sbt -name "*.lock" | xargs rm
 - find $HOME/.ivy2 -name "ivydata-*.properties" | xargs rm
+cache:
+  directories:
+  - $HOME/.ivy2/cache
+  - $HOME/.sbt/boot/
 sudo: false
 env:
   global:
