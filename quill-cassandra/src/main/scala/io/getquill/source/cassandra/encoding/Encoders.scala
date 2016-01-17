@@ -1,8 +1,9 @@
-package io.getquill.source.cassandra
+package io.getquill.source.cassandra.encoding
 
 import com.datastax.driver.core.BoundStatement
-import com.datastax.driver.core.Row
 import java.nio.ByteBuffer
+import io.getquill.source.cassandra.CassandraSource
+import com.datastax.driver.core.Row
 
 trait Encoders {
   this: CassandraSource[_, Row, BoundStatement] =>

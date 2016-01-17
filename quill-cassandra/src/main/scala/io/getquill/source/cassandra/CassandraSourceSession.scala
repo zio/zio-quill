@@ -3,6 +3,7 @@ package io.getquill.source.cassandra
 import com.datastax.driver.core.Session
 import scala.util.Try
 import com.datastax.driver.core.ConsistencyLevel
+import io.getquill.source.cassandra.cluster.ClusterSession
 
 trait CassandraSourceSession {
   this: CassandraSource[_, _, _] =>

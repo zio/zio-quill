@@ -1,7 +1,8 @@
-package io.getquill.source.cassandra
+package io.getquill.source.cassandra.encoding
 
 import scala.math.BigDecimal.javaBigDecimal2bigDecimal
 import com.datastax.driver.core.Row
+import io.getquill.source.cassandra.CassandraSource
 import com.datastax.driver.core.BoundStatement
 
 trait Decoders {

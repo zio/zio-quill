@@ -14,6 +14,8 @@ import io.getquill.naming.NamingStrategy
 import com.typesafe.scalalogging.StrictLogging
 import scala.concurrent.ExecutionContext
 import com.datastax.driver.core.ConsistencyLevel
+import io.getquill.source.cassandra.encoding.Encoders
+import io.getquill.source.cassandra.encoding.Decoders
 
 class CassandraAsyncSource[N <: NamingStrategy]
     extends CassandraSource[N, Row, BoundStatement]

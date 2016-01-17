@@ -1,4 +1,4 @@
-package io.getquill.source.cassandra
+package io.getquill.source.cassandra.cluster
 
 import com.typesafe.config.Config
 

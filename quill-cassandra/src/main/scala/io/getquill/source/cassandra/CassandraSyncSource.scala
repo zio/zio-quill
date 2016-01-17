@@ -8,6 +8,8 @@ import io.getquill.naming.NamingStrategy
 import com.typesafe.scalalogging.StrictLogging
 import scala.annotation.tailrec
 import com.datastax.driver.core.ConsistencyLevel
+import io.getquill.source.cassandra.encoding.Encoders
+import io.getquill.source.cassandra.encoding.Decoders
 
 class CassandraSyncSource[N <: NamingStrategy]
     extends CassandraSource[N, Row, BoundStatement]
