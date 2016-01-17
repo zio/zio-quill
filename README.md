@@ -9,13 +9,13 @@ Compile-time Language Integrated Query for Scala
 [![maven](https://img.shields.io/maven-central/v/io.getquill/quill_2.11.svg)](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22io.getquill%22)
 [![Stories in Ready](https://badge.waffle.io/getquill/quill.svg?label=ready&title=Ready)](http://waffle.io/getquill/quill)
 
-Quill provides a Quoted Domain Specific Language ([QDSL](http://homepages.inf.ed.ac.uk/slindley/papers/qdsl-draft-february2015.pdf)) to express queries in Scala and execute them in a target language. The library's core is designed to support multiple target languages and the current version features support for Structured Query Language ([SQL](https://en.wikipedia.org/wiki/SQL)).
+Quill provides a Quoted Domain Specific Language ([QDSL](http://homepages.inf.ed.ac.uk/slindley/papers/qdsl-draft-february2015.pdf)) to express queries in Scala and execute them in a target language. The library's core is designed to support multiple target languages, currently featuring specializations for Structured Query Language ([SQL](https://en.wikipedia.org/wiki/SQL)) and Cassandra Query Language ([CQL](https://cassandra.apache.org/doc/cql3/CQL.html#selectStmt)).
 
 ![example](https://raw.githubusercontent.com/getquill/quill/master/example.gif)
 
 1. **Boilerplate-free mapping**: The database schema is mapped using simple case classes.
 2. **Quoted DSL**: Queries are defined inside a `quote` block. Quill parses each quoted block of code (quotation) at compile time and translates them to an internal Abstract Syntax Tree (AST)
-3. **Compile-time SQL generation**: The `db.run` call reads the quotation's AST and translates it to the target language at compile time, emitting the SQL string as a compilation message. As the query string is known at compile time, the runtime overhead is very low and similar to using the database driver directly.
+3. **Compile-time query generation**: The `db.run` call reads the quotation's AST and translates it to the target language at compile time, emitting the query string as a compilation message. As the query string is known at compile time, the runtime overhead is very low and similar to using the database driver directly.
 4. **Compile-time query validation**: If configured, the query is verified against the database at compile time and the compilation fails if it is not valid. The query validation **does not** alter the database state.
 
 # Index #
@@ -29,13 +29,15 @@ Quill provides a Quoted Domain Specific Language ([QDSL](http://homepages.inf.ed
 * [Actions](#actions)
 * [Dynamic queries](#dynamic-queries)
 * [SQL-specific operations](#sql-specific-operations)
+* [Cassandra-specific operations](#cassandra-specific-operations)
 * [Extending quill](#extending-quill)
   * [Infix](#infix)
   * [Custom encoding](#custom-encoding)
-* [Sources](#sources)
+* [Sql Sources](#sql-sources)
   * [Dialect](#dialect)
   * [Naming strategy](#naming-strategy)
   * [Configuration](#configuration)
+* [Cassandra sources](#cassandra-sources)
 * [Acknowledgments](#acknowledgments)
 * [License](#license)
 
@@ -110,6 +112,7 @@ Instead of running the query, mirror sources return a structure with the informa
 
 - `io.getquill.source.mirror.mirrorSource`: Mirrors the quotation AST
 - `io.getquill.source.sql.mirror.mirrorSource`: Mirrors the SQL query
+- `io.getquill.source.cassandra.mirror.mirrorSource`: Mirrors the CQL query
 
 This documentation uses the SQL mirror in its examples under the `db` name:
 
@@ -220,7 +223,7 @@ db.run(q)
 // SELECT p.name, c.phone FROM Person p, Contact c WHERE (p.id = 999) AND (c.personId = p.id)
 ```
 
-Quill normalizes the quotation and translates the monadic joins to applicative joins in SQL, generating a database-friendly query that avoids nested queries.
+Quill normalizes the quotation and translates the monadic joins to applicative joins, generating a database-friendly query that avoids nested queries.
 
 Any of the following features can be used together with the others and/or within a for-comprehension:
 
@@ -527,11 +530,149 @@ db.run(q)
 // SELECT p.id, p.name, p.age FROM Person p WHERE p.name like '%John%'
 ```
 
+# Cassandra-specific operations #
+
+The cql-specific operations are provided by the following import:
+
+```scala
+import io.getquill.source.cassandra.ops._
+```
+
+The cassandra package also offers a mirror source:
+
+```scala
+val db = io.getquill.source.cassandra.mirror.mirrorSource
+```
+
+Supported operations:
+
+**consistencyLevel**
+```scala
+import com.datastax.driver.core.ConsistencyLevel
+
+val q = quote {
+  query[Person].insert(_.age -> 10, _.name -> "John")
+}
+db.withConsistencyLevel(ConsistencyLevel.QUORUM).run(q)
+// INSERT INTO Person (age,name) VALUES (10, 'John')
+```
+
+**allowFiltering**
+
+```scala
+val q = quote {
+  query[Person].filter(p => p.age > 10).allowFiltering
+}
+db.run(q)
+// SELECT id, name, age FROM Person WHERE age > 10 ALLOW FILTERING
+```
+
+**ifNotExists**
+```scala
+val q = quote {
+  query[Person].insert(_.age -> 10, _.name -> "John").ifNotExists
+}
+db.run(q)
+// INSERT INTO Person (age,name) VALUES (10, 'John') IF NOT EXISTS
+```
+
+**ifExists**
+```scala
+val q = quote {
+  query[Person].filter(p => p.name == "John").delete.ifExists
+}
+db.run(q)
+// DELETE FROM Person WHERE name = 'John' IF EXISTS
+```
+
+**usingTimestamp**
+```scala
+val q1 = quote {
+  query[Person].insert(_.age -> 10, _.name -> "John").usingTimestamp(99)
+}
+db.run(q1)
+// INSERT INTO Person (age,name) VALUES (10, 'John') USING TIMESTAMP 99
+
+val q2 = quote {
+  query[Person].usingTimestamp(99).update(_.age -> 10)
+}
+db.run(q2)
+// UPDATE Person USING TIMESTAMP 99 SET age = 10
+```
+
+**usingTtl**
+```scala
+val q1 = quote {
+  query[Person].insert(_.age -> 10, _.name -> "John").usingTtl(11)
+}
+db.run(q1)
+// INSERT INTO Person (age,name) VALUES (10, 'John') USING TTL 11
+
+val q2 = quote {
+  query[Person].usingTtl(11).update(_.age -> 10)
+}
+db.run(q2)
+// UPDATE Person USING TTL 11 SET age = 10
+
+val q3 = quote {
+  query[Person].usingTtl(11).filter(_.name == "John").delete
+}
+db.run(q3)  
+// DELETE FROM Person USING TTL 11 WHERE name = 'John'
+```
+
+**using**
+```scala
+val q1 = quote {
+  query[Person].insert(_.age -> 10, _.name -> "John").using(ts = 99, ttl = 11)
+}
+db.run(q1)
+// INSERT INTO Person (age,name) VALUES (10, 'John') USING TIMESTAMP 99 AND TTL 11
+
+val q2 = quote {
+  query[Person].using(ts = 99, ttl = 11).update(_.age -> 10)
+}
+db.run(q2)
+// UPDATE Person USING TIMESTAMP 99 AND TTL 11 SET age = 10
+
+val q3 = quote {
+  query[Person].using(ts = 99, ttl = 11).filter(_.name == "John").delete
+}
+db.run(q3)
+// DELETE FROM Person USING TIMESTAMP 99 AND TTL 11 WHERE name = 'John'
+```
+
+**ifCond**
+```scala
+val q1 = quote {
+  query[Person].update(_.age -> 10).ifCond(_.name == "John")
+}
+db.run(q1)
+// UPDATE Person SET age = 10 IF name = 'John'
+
+val q2 = quote {
+  query[Person].filter(_.name == "John").delete.ifCond(_.age == 10)
+}
+db.run(q2)
+// DELETE FROM Person WHERE name = 'John' IF age = 10
+```
+
+**delete column**
+```scala
+val q = quote {
+  query[Person].map(p => p.age).delete
+}
+db.run(q)
+// DELETE p.age FROM Person
+```
+
 # Dynamic queries #
 
 Quill's default operation mode is compile-time, but there are queries that have their structure defined only at runtime. Quill automatically falls back to runtime normalization and query generation if the query's structure is not static. Example:
 
 ```scala
+val db = io.getquill.source.sql.mirror.mirrorSource
+
 sealed trait QueryType
 case object Minor extends QueryType
 case object Senior extends QueryType
@@ -557,7 +698,7 @@ db.run(people(Senior))
 
 ## Infix ##
 
-Infix is a very flexible mechanism to use non-supported features without having to use plain SQL queries. It allows insertion of arbitrary SQL strings within quotations.
+Infix is a very flexible mechanism to use non-supported features without having to use plain queries in the target language. It allows insertion of arbitrary strings within quotations.
 
 For instance, quill doesn't support the `FOR UPDATE` SQL feature. It can still be used through infix and implicit classes:
 
@@ -637,8 +778,7 @@ implicit val uuidDecoder =
   }
 ```
 
-
-# Sources #
+# SQL Sources #
 
 Sources represent the database and provide an execution interface for queries. Example:
 
@@ -832,15 +972,56 @@ object db extends FinagleMysqlSource[SnakeCase]
 
 application.properties
 ```
-testDB.dest=localhost:3306
-testDB.user=root
-testDB.password=root
-testDB.database=database
-testDB.pool.watermark.low=0
-testDB.pool.watermark.high=10
-testDB.pool.idleTime=5 # seconds
-testDB.pool.bufferSize=0
-testDB.pool.maxWaiters=2147483647
+db.dest=localhost:3306
+db.user=root
+db.password=root
+db.database=database
+db.pool.watermark.low=0
+db.pool.watermark.high=10
+db.pool.idleTime=5 # seconds
+db.pool.bufferSize=0
+db.pool.maxWaiters=2147483647
+```
+
+# Cassandra Sources #
+
+sbt dependencies
+```
+libraryDependencies ++= Seq(
+  "io.getquill" %% "quill-casandra" % "0.2.1"
+)
+```
+
+**synchronous source **
+```scala
+import io.getquill.naming.SnakeCase
+import io.getquill.source.cassandra.CassandraSyncSource
+
+object db extends CassandraSyncSource[SnakeCase]
+```
+
+**asynchronous source **
+```scala
+import io.getquill.naming.SnakeCase
+import io.getquill.source.cassandra.CassandraAsyncSource
+
+object db extends CassandraAsyncSource[SnakeCase]
+```
+
+The configurations are set using runtime reflection on the [`Cluster.builder`](https://docs.datastax.com/en/drivers/java/2.1/com/datastax/driver/core/Cluster.Builder.html) instance. It is possible to set nested structures like `queryOptions.consistencyLevel`, use enum values like `LOCAL_QUORUM`, and set multiple parameters like in `credentials`.
+
+application.properties
+```
+db.keyspace=quill_test
+db.preparedStatementCacheSize=1000
+db.session.contactPoint=127.0.0.1
+db.session.queryOptions.consistencyLevel=LOCAL_QUORUM
+db.session.withoutMetrics=true
+db.session.withoutJMXReporting=false
+db.session.credentials.0=root
+db.session.credentials.1=pass
+db.session.maxSchemaAgreementWaitSeconds=1
+db.session.addressTranslater=com.datastax.driver.core.policies.IdentityTranslater
 ```
 
 # Slick comparison #
