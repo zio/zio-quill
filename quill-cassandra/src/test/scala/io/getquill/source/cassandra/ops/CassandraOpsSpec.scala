@@ -87,7 +87,7 @@ class CassandraOpsSpec extends Spec {
         query[TestEntity].filter(t => t.i == 1).map(t => t.i).delete
       }
       mirrorSource.run(q).cql mustEqual
-        "DELETE t.i FROM TestEntity WHERE i = 1"
+        "DELETE i FROM TestEntity WHERE i = 1"
     }
     "options" - {
       "timestamp" in {
