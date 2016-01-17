@@ -247,6 +247,13 @@ class CqlIdiomSpec extends Spec {
         mirrorSource.run(q).cql mustEqual
           "TRUNCATE TestEntity"
       }
+      "column" in {
+        val q = quote {
+          qr1.map(t => t.i).delete
+        }
+        mirrorSource.run(q).cql mustEqual
+          "DELETE i FROM TestEntity"
+      }
     }
     "invalid" in {
       import io.getquill.util.Show._

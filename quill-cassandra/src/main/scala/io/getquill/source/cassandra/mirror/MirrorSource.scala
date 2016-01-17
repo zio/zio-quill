@@ -8,11 +8,14 @@ import io.getquill.source.mirror.MirrorEncoders
 import io.getquill.source.mirror.MirrorDecoders
 import scala.util.Failure
 import scala.util.Success
+import com.datastax.driver.core.ConsistencyLevel
 
 object mirrorSource
     extends CassandraSource[Literal, Row, Row]
     with MirrorEncoders
     with MirrorDecoders {
+
+  def withConsistencyLevel(level: ConsistencyLevel) = this
 
   override def close = ()
 
