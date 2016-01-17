@@ -7,6 +7,7 @@ import com.datastax.driver.core.Row
 import io.getquill.naming.NamingStrategy
 import com.typesafe.scalalogging.StrictLogging
 import scala.annotation.tailrec
+import com.datastax.driver.core.ConsistencyLevel
 
 class CassandraSyncSource[N <: NamingStrategy]
     extends CassandraSource[N, Row, BoundStatement]
@@ -18,6 +19,13 @@ class CassandraSyncSource[N <: NamingStrategy]
   override type QueryResult[T] = List[T]
   override type ActionResult[T] = ResultSet
   override type BatchedActionResult[T] = List[ResultSet]
+
+  def withConsistencyLevel(level: ConsistencyLevel) =
+    new CassandraSyncSource {
+      override protected def config = CassandraSyncSource.this.config
+      override protected def queryConsistencyLevel = Some(level)
+      override protected lazy val session = CassandraSyncSource.this.session
+    }
 
   def execute(cql: String): ResultSet = {
     logger.info(cql)

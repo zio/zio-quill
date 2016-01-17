@@ -13,6 +13,7 @@ import com.google.common.util.concurrent.Futures
 import io.getquill.naming.NamingStrategy
 import com.typesafe.scalalogging.StrictLogging
 import scala.concurrent.ExecutionContext
+import com.datastax.driver.core.ConsistencyLevel
 
 class CassandraAsyncSource[N <: NamingStrategy]
     extends CassandraSource[N, Row, BoundStatement]
@@ -24,6 +25,13 @@ class CassandraAsyncSource[N <: NamingStrategy]
   override type QueryResult[T] = Future[List[T]]
   override type ActionResult[T] = Future[ResultSet]
   override type BatchedActionResult[T] = Future[List[ResultSet]]
+
+  def withConsistencyLevel(level: ConsistencyLevel) =
+    new CassandraAsyncSource {
+      override protected def config = CassandraAsyncSource.this.config
+      override protected def queryConsistencyLevel = Some(level)
+      override protected lazy val session = CassandraAsyncSource.this.session
+    }
 
   def execute(cql: String)(implicit ec: ExecutionContext): Future[ResultSet] = {
     logger.info(cql)

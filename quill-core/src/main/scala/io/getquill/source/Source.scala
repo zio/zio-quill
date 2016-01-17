@@ -27,7 +27,7 @@ abstract class Source[R: ClassTag, S: ClassTag] extends Closeable {
       getClass.getSimpleName.replaceAllLiterally("$", "")
     }
 
-  protected val config = {
+  protected def config = {
     val factory = ConfigFactory.load(getClass.getClassLoader)
     if (factory.hasPath(configPrefix))
       factory.getConfig(configPrefix)

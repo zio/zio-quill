@@ -3,23 +3,27 @@ package io.getquill.source.cassandra
 import io.getquill._
 import java.util.Date
 import scala.concurrent.ExecutionContext.Implicits.global
+import com.datastax.driver.core.ConsistencyLevel
 
 class EncodingSpec extends Spec {
 
   "encodes and decodes types" - {
 
     "sync" in {
-      testSyncDB.run(query[EncodingTestEntity].delete)
-      testSyncDB.run(query[EncodingTestEntity].insert)(insertValues)
-      verify(testSyncDB.run(query[EncodingTestEntity]))
+      val db = testSyncDB.withConsistencyLevel(ConsistencyLevel.QUORUM)
+      db.run(query[EncodingTestEntity].delete)
+      db.run(query[EncodingTestEntity].insert)(insertValues)
+      verify(db.run(query[EncodingTestEntity]))
     }
 
     "async" in {
+      val db = testAsyncDB.withConsistencyLevel(ConsistencyLevel.QUORUM)
       await {
         for {
-          _ <- testAsyncDB.run(query[EncodingTestEntity].delete)
-          _ <- testAsyncDB.run(query[EncodingTestEntity].insert)(insertValues)
-          result <- testAsyncDB.run(query[EncodingTestEntity])
+          _ <- db.run(query[EncodingTestEntity].delete)
+          _ <- db.run(query[EncodingTestEntity].insert)(insertValues)
+          result <- db.run(query[EncodingTestEntity])
+
         } yield {
           verify(result)
         }
