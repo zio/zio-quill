@@ -147,10 +147,10 @@ object CqlIdiom {
             s"UPDATE ${table.show} SET ${set(assignments)}"
 
           case Delete(Map(Filter(table, _, where), _, columns)) =>
-            s"DELETE $columns FROM ${table.show} WHERE ${where.show}"
+            s"DELETE ${columns.show} FROM ${table.show} WHERE ${where.show}"
 
           case Delete(Map(table, _, columns)) =>
-            s"DELETE $columns FROM ${table.show}"
+            s"DELETE ${columns.show} FROM ${table.show}"
 
           case Delete(Filter(table, x, where)) =>
             s"DELETE FROM ${table.show} WHERE ${where.show}"
