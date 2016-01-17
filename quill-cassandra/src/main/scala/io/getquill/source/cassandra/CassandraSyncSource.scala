@@ -1,33 +1,27 @@
 package io.getquill.source.cassandra
 
+import scala.annotation.tailrec
 import scala.collection.JavaConversions.asScalaBuffer
+
 import com.datastax.driver.core.BoundStatement
+import com.datastax.driver.core.ConsistencyLevel
 import com.datastax.driver.core.ResultSet
 import com.datastax.driver.core.Row
+
 import io.getquill.naming.NamingStrategy
-import com.typesafe.scalalogging.StrictLogging
-import scala.annotation.tailrec
-import com.datastax.driver.core.ConsistencyLevel
-import io.getquill.source.cassandra.encoding.Encoders
-import io.getquill.source.cassandra.encoding.Decoders
 
 class CassandraSyncSource[N <: NamingStrategy]
-    extends CassandraSource[N, Row, BoundStatement]
-    with CassandraSourceSession
-    with Encoders
-    with Decoders
-    with StrictLogging {
+    extends CassandraSourceSession[N] {
 
   override type QueryResult[T] = List[T]
   override type ActionResult[T] = ResultSet
   override type BatchedActionResult[T] = List[ResultSet]
 
-  def withConsistencyLevel(level: ConsistencyLevel) =
-    new CassandraSyncSource {
-      override protected def config = CassandraSyncSource.this.config
-      override protected def queryConsistencyLevel = Some(level)
-      override protected lazy val session = CassandraSyncSource.this.session
-    }
+  def query[T](cql: String, bind: BoundStatement => BoundStatement, extractor: Row => T): List[T] = {
+    logger.info(cql)
+    session.execute(prepare(cql, bind))
+      .all.toList.map(extractor)
+  }
 
   def execute(cql: String): ResultSet = {
     logger.info(cql)
@@ -43,11 +37,5 @@ class CassandraSyncSource[N <: NamingStrategy]
         case head :: tail => exec(tail, acc :+ session.execute(prepare(cql, head)))
       }
     exec(bindList, List.empty)
-  }
-
-  def query[T](cql: String, bind: BoundStatement => BoundStatement, extractor: Row => T): List[T] = {
-    logger.info(cql)
-    session.execute(prepare(cql, bind))
-      .all.toList.map(extractor)
   }
 }

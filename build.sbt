@@ -71,7 +71,8 @@ lazy val `quill-cassandra` =
     .settings(commonSettings: _*)
     .settings(
       libraryDependencies ++= Seq(
-        "com.datastax.cassandra" % "cassandra-driver-core" % "2.1.9"
+        "com.datastax.cassandra" % "cassandra-driver-core" % "2.1.9",
+        "org.monifu" %% "monifu" % "1.0"
       ),
       parallelExecution in Test := false
     )
