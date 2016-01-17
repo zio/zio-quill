@@ -41,31 +41,7 @@ trait CassandraSource[N <: NamingStrategy, R, S]
     quoted: Quoted[(P1, P2, P3, P4, P5, P6, P7, P8, P9) => Query[T]]): (P1, P2, P3, P4, P5, P6, P7, P8, P9) => QueryResult[T] = macro CassandraSourceMacro.run[R, S]
   def run[P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, T](
     quoted: Quoted[(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10) => Query[T]]): (P1, P2, P3, P4, P5, P6, P7, P8, P9, P10) => QueryResult[T] = macro CassandraSourceMacro.run[R, S]
-  def run[P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, T](
-    quoted: Quoted[(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11) => Query[T]]): (P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11) => QueryResult[T] = macro CassandraSourceMacro.run[R, S]
-  def run[P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, T](
-    quoted: Quoted[(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12) => Query[T]]): (P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12) => QueryResult[T] = macro CassandraSourceMacro.run[R, S]
-  def run[P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, T](
-    quoted: Quoted[(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13) => Query[T]]): (P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13) => QueryResult[T] = macro CassandraSourceMacro.run[R, S]
-  def run[P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, T](
-    quoted: Quoted[(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14) => Query[T]]): (P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14) => QueryResult[T] = macro CassandraSourceMacro.run[R, S]
-  def run[P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, T](
-    quoted: Quoted[(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15) => Query[T]]): (P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15) => QueryResult[T] = macro CassandraSourceMacro.run[R, S]
-  def run[P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, T](
-    quoted: Quoted[(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16) => Query[T]]): (P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16) => QueryResult[T] = macro CassandraSourceMacro.run[R, S]
-  def run[P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, T](
-    quoted: Quoted[(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17) => Query[T]]): (P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17) => QueryResult[T] = macro CassandraSourceMacro.run[R, S]
-  def run[P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, T](
-    quoted: Quoted[(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18) => Query[T]]): (P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18) => QueryResult[T] = macro CassandraSourceMacro.run[R, S]
-  def run[P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, T](
-    quoted: Quoted[(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19) => Query[T]]): (P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19) => QueryResult[T] = macro CassandraSourceMacro.run[R, S]
-  def run[P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, P20, T](
-    quoted: Quoted[(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, P20) => Query[T]]): (P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, P20) => QueryResult[T] = macro CassandraSourceMacro.run[R, S]
-  def run[P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, P20, P21, T](
-    quoted: Quoted[(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, P20, P21) => Query[T]]): (P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, P20, P21) => QueryResult[T] = macro CassandraSourceMacro.run[R, S]
-  def run[P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, P20, P21, P22, T](
-    quoted: Quoted[(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, P20, P21, P22) => Query[T]]): (P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, P20, P21, P22) => QueryResult[T] = macro CassandraSourceMacro.run[R, S]
-
+  
   def run[T](
     quoted: Quoted[Action[T]]): ActionResult[T] = macro CassandraSourceMacro.run[R, S]
   def run[P1, T](
@@ -88,31 +64,7 @@ trait CassandraSource[N <: NamingStrategy, R, S]
     quoted: Quoted[(P1, P2, P3, P4, P5, P6, P7, P8, P9) => Action[T]]): List[(P1, P2, P3, P4, P5, P6, P7, P8, P9)] => BatchedActionResult[T] = macro CassandraSourceMacro.run[R, S]
   def run[P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, T](
     quoted: Quoted[(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10) => Action[T]]): List[(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10)] => BatchedActionResult[T] = macro CassandraSourceMacro.run[R, S]
-  def run[P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, T](
-    quoted: Quoted[(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11) => Action[T]]): List[(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11)] => BatchedActionResult[T] = macro CassandraSourceMacro.run[R, S]
-  def run[P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, T](
-    quoted: Quoted[(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12) => Action[T]]): List[(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12)] => BatchedActionResult[T] = macro CassandraSourceMacro.run[R, S]
-  def run[P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, T](
-    quoted: Quoted[(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13) => Action[T]]): List[(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13)] => BatchedActionResult[T] = macro CassandraSourceMacro.run[R, S]
-  def run[P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, T](
-    quoted: Quoted[(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14) => Action[T]]): List[(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14)] => BatchedActionResult[T] = macro CassandraSourceMacro.run[R, S]
-  def run[P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, T](
-    quoted: Quoted[(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15) => Action[T]]): List[(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15)] => BatchedActionResult[T] = macro CassandraSourceMacro.run[R, S]
-  def run[P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, T](
-    quoted: Quoted[(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16) => Action[T]]): List[(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16)] => BatchedActionResult[T] = macro CassandraSourceMacro.run[R, S]
-  def run[P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, T](
-    quoted: Quoted[(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17) => Action[T]]): List[(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17)] => BatchedActionResult[T] = macro CassandraSourceMacro.run[R, S]
-  def run[P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, T](
-    quoted: Quoted[(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18) => Action[T]]): List[(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18)] => BatchedActionResult[T] = macro CassandraSourceMacro.run[R, S]
-  def run[P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, T](
-    quoted: Quoted[(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19) => Action[T]]): List[(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19)] => BatchedActionResult[T] = macro CassandraSourceMacro.run[R, S]
-  def run[P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, P20, T](
-    quoted: Quoted[(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, P20) => Action[T]]): List[(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, P20)] => BatchedActionResult[T] = macro CassandraSourceMacro.run[R, S]
-  def run[P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, P20, P21, T](
-    quoted: Quoted[(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, P20, P21) => Action[T]]): List[(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, P20, P21)] => BatchedActionResult[T] = macro CassandraSourceMacro.run[R, S]
-  def run[P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, P20, P21, P22, T](
-    quoted: Quoted[(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, P20, P21, P22) => Action[T]]): List[(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, P20, P21, P22)] => BatchedActionResult[T] = macro CassandraSourceMacro.run[R, S]
-
+  
   def run[T](
     quoted: Quoted[T]): QueryResult[T] = macro CassandraSourceMacro.run[R, S]
   def run[P1, T](
@@ -135,28 +87,4 @@ trait CassandraSource[N <: NamingStrategy, R, S]
     quoted: Quoted[(P1, P2, P3, P4, P5, P6, P7, P8, P9) => T]): (P1, P2, P3, P4, P5, P6, P7, P8, P9) => QueryResult[T] = macro CassandraSourceMacro.run[R, S]
   def run[P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, T](
     quoted: Quoted[(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10) => T]): (P1, P2, P3, P4, P5, P6, P7, P8, P9, P10) => QueryResult[T] = macro CassandraSourceMacro.run[R, S]
-  def run[P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, T](
-    quoted: Quoted[(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11) => T]): (P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11) => QueryResult[T] = macro CassandraSourceMacro.run[R, S]
-  def run[P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, T](
-    quoted: Quoted[(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12) => T]): (P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12) => QueryResult[T] = macro CassandraSourceMacro.run[R, S]
-  def run[P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, T](
-    quoted: Quoted[(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13) => T]): (P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13) => QueryResult[T] = macro CassandraSourceMacro.run[R, S]
-  def run[P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, T](
-    quoted: Quoted[(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14) => T]): (P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14) => QueryResult[T] = macro CassandraSourceMacro.run[R, S]
-  def run[P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, T](
-    quoted: Quoted[(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15) => T]): (P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15) => QueryResult[T] = macro CassandraSourceMacro.run[R, S]
-  def run[P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, T](
-    quoted: Quoted[(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16) => T]): (P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16) => QueryResult[T] = macro CassandraSourceMacro.run[R, S]
-  def run[P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, T](
-    quoted: Quoted[(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17) => T]): (P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17) => QueryResult[T] = macro CassandraSourceMacro.run[R, S]
-  def run[P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, T](
-    quoted: Quoted[(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18) => T]): (P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18) => QueryResult[T] = macro CassandraSourceMacro.run[R, S]
-  def run[P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, T](
-    quoted: Quoted[(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19) => T]): (P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19) => QueryResult[T] = macro CassandraSourceMacro.run[R, S]
-  def run[P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, P20, T](
-    quoted: Quoted[(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, P20) => T]): (P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, P20) => QueryResult[T] = macro CassandraSourceMacro.run[R, S]
-  def run[P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, P20, P21, T](
-    quoted: Quoted[(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, P20, P21) => T]): (P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, P20, P21) => QueryResult[T] = macro CassandraSourceMacro.run[R, S]
-  def run[P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, P20, P21, P22, T](
-    quoted: Quoted[(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, P20, P21, P22) => T]): (P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, P20, P21, P22) => QueryResult[T] = macro CassandraSourceMacro.run[R, S]
 }

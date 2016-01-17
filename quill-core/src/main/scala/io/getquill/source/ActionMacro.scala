@@ -20,9 +20,9 @@ trait ActionMacro extends EncodingMacro {
       case List((param, tpe)) if (t.tpe.erasure <:< c.weakTypeOf[UnassignedAction[Any]].erasure) =>
         val encodingValue = encoding(param, Encoding.inferEncoder[S](c))(c.WeakTypeTag(tpe))
         val bindings = bindingMap(encodingValue)
-        val idents = bindings.keys.toList
+        val idents = bindings.map(_._1).toList
         val assignedAction = AssignedAction(action, idents.map(k => Assignment(Ident("x"), k.name, k)))
-        val encodedParams = EncodeParams.raw[S](c)(bindings)
+        val encodedParams = EncodeParams.raw[S](c)(bindings.toMap)
         expandedTree(assignedAction, idents.toList, List(tpe), encodedParams)
 
       case params =>
@@ -43,16 +43,16 @@ trait ActionMacro extends EncodingMacro {
     }
     """
 
-  private def bindingMap(value: Value, option: Boolean = false): collection.Map[Ident, (Tree, Tree)] =
+  private def bindingMap(value: Value, option: Boolean = false): List[(Ident, (Tree, Tree))] =
     value match {
       case CaseClassValue(tpe, values) =>
-        values.flatten.map(bindingMap(_)).flatten.toMap
+        values.flatten.map(bindingMap(_)).flatten
       case OptionValue(value) =>
         bindingMap(value, option = true)
       case SimpleValue(ast, encoder, optionEncoder) =>
         val (ident, tree) = bindingTree(ast)
         val enc = if (option) optionEncoder else encoder
-        collection.Map((ident, (enc, tree)))
+        List((ident, (enc, tree)))
     }
 
   private def bindingTree(ast: Ast): (Ident, Tree) =
