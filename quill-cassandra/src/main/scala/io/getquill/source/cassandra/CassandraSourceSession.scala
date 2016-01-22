@@ -1,17 +1,15 @@
 package io.getquill.source.cassandra
 
 import scala.util.Try
-
 import com.datastax.driver.core.BoundStatement
 import com.datastax.driver.core.ConsistencyLevel
 import com.datastax.driver.core.Row
 import com.datastax.driver.core.Session
 import com.typesafe.scalalogging.StrictLogging
-
 import io.getquill.naming.NamingStrategy
-import io.getquill.source.cassandra.cluster.ClusterSession
 import io.getquill.source.cassandra.encoding.Decoders
 import io.getquill.source.cassandra.encoding.Encoders
+import io.getquill.source.cassandra.cluster.ClusterBuilder
 
 trait CassandraSourceSession[N <: NamingStrategy]
     extends CassandraSource[N, Row, BoundStatement]
@@ -19,8 +17,8 @@ trait CassandraSourceSession[N <: NamingStrategy]
     with Encoders
     with Decoders {
 
-  protected val session: Session =
-    ClusterSession(config)
+  protected val cluster = ClusterBuilder(config.getConfig("session")).build
+  protected val session: Session = cluster.connect(config.getString("keyspace"))
 
   protected val preparedStatementCache =
     new PrepareStatementCache(config)
@@ -38,7 +36,10 @@ trait CassandraSourceSession[N <: NamingStrategy]
     bind(prepare(cql))
   }
 
-  def close() = session.close
+  def close() = {
+    session.close
+    cluster.close
+  }
 
   def probe(cql: String) =
     Try {
