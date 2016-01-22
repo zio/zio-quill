@@ -10,20 +10,17 @@ class EncodingSpec extends Spec {
   "encodes and decodes types" - {
 
     "sync" in {
-      val db = testSyncDB.withConsistencyLevel(ConsistencyLevel.QUORUM)
-      db.run(query[EncodingTestEntity].delete)
-      db.run(query[EncodingTestEntity].insert)(insertValues)
-      verify(db.run(query[EncodingTestEntity]))
+      testSyncDB.run(query[EncodingTestEntity].delete)
+      testSyncDB.run(query[EncodingTestEntity].insert)(insertValues)
+      verify(testSyncDB.run(query[EncodingTestEntity]))
     }
 
     "async" in {
-      val db = testAsyncDB.withConsistencyLevel(ConsistencyLevel.QUORUM)
       await {
         for {
-          _ <- db.run(query[EncodingTestEntity].delete)
-          _ <- db.run(query[EncodingTestEntity].insert)(insertValues)
-          result <- db.run(query[EncodingTestEntity])
-
+          _ <- testAsyncDB.run(query[EncodingTestEntity].delete)
+          _ <- testAsyncDB.run(query[EncodingTestEntity].insert)(insertValues)
+          result <- testAsyncDB.run(query[EncodingTestEntity])
         } yield {
           verify(result)
         }
