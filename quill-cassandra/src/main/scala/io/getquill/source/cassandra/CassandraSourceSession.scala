@@ -10,6 +10,7 @@ import io.getquill.naming.NamingStrategy
 import io.getquill.source.cassandra.encoding.Decoders
 import io.getquill.source.cassandra.encoding.Encoders
 import io.getquill.source.cassandra.cluster.ClusterBuilder
+import com.datastax.driver.core.Cluster
 
 trait CassandraSourceSession[N <: NamingStrategy]
     extends CassandraSource[N, Row, BoundStatement]
@@ -17,7 +18,7 @@ trait CassandraSourceSession[N <: NamingStrategy]
     with Encoders
     with Decoders {
 
-  protected val cluster = ClusterBuilder(config.getConfig("session")).build
+  protected val cluster: Cluster = ClusterBuilder(config.getConfig("session")).build
   protected val session: Session = cluster.connect(config.getString("keyspace"))
 
   protected val preparedStatementCache =
