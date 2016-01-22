@@ -10,7 +10,7 @@ import io.getquill.util.Messages._
 import io.getquill.norm.capture.AvoidAliasConflict
 import io.getquill.norm.capture.AvoidCapture
 import io.getquill.norm.FlattenOptionOperation
-import io.getquill.source.sql.norm.ExpandOuterJoin
+import io.getquill.source.sql.norm.ExpandJoin
 import io.getquill.source.sql.norm.ExpandNestedQueries
 
 object Prepare {
@@ -33,7 +33,7 @@ object Prepare {
   private[this] val normalize =
     (identity[Ast] _)
       .andThen(Normalize.apply _)
-      .andThen(ExpandOuterJoin.apply _)
+      .andThen(ExpandJoin.apply _)
       .andThen(Normalize.apply _)
       .andThen(FlattenOptionOperation.apply _)
 }

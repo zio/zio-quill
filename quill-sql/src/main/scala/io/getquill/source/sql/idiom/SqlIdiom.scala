@@ -119,7 +119,7 @@ trait SqlIdiom {
     case TableSource(name, alias)     => s"${name.show} ${strategy.default(alias)}"
     case QuerySource(query, alias)    => s"(${query.show}) ${strategy.default(alias)}"
     case InfixSource(infix, alias)    => s"(${(infix: Ast).show}) ${strategy.default(alias)}"
-    case OuterJoinSource(t, a, b, on) => s"${a.show} ${t.show} ${b.show} ON ${on.show}"
+    case JoinSource(t, a, b, on) => s"${a.show} ${t.show} ${b.show} ON ${on.show}"
   }
 
   implicit val joinTypeShow: Show[JoinType] = Show[JoinType] {

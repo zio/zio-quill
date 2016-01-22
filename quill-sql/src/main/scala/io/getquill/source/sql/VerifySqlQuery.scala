@@ -54,6 +54,6 @@ object VerifySqlQuery {
       case s: TableSource     => List(s.alias)
       case s: QuerySource     => List(s.alias)
       case s: InfixSource     => List(s.alias)
-      case s: OuterJoinSource => aliases(s.a) ++ aliases(s.b)
+      case s: JoinSource => aliases(s.a) ++ aliases(s.b)
     }
 }

@@ -67,7 +67,7 @@ object AstShow {
     case UnionAll(a, b) =>
       s"${a.show}.unionAll(${b.show})"
 
-    case OuterJoin(t, a, b, iA, iB, on) =>
+    case Join(t, a, b, iA, iB, on) =>
       s"${a.show}.${t.show}(${b.show}).on((${iA.show}, ${iB.show}) => ${on.show})"
   }
 

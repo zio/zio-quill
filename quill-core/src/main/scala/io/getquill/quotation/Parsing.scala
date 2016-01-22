@@ -159,7 +159,7 @@ trait Parsing {
       UnionAll(astParser(source), astParser(n))
 
     case q"${ joinCallParser(typ, a, b) }.on(($aliasA, $aliasB) => $body)" =>
-      OuterJoin(typ, a, b, identParser(aliasA), identParser(aliasB), astParser(body))
+      Join(typ, a, b, identParser(aliasA), identParser(aliasB), astParser(body))
 
     case q"${ joinCallParser(typ, a, b) }" =>
       c.fail("An outer join clause must be followed by 'on'.")

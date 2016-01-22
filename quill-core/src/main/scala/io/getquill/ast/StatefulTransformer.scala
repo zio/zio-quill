@@ -81,11 +81,11 @@ trait StatefulTransformer[T] {
         val (at, att) = apply(a)
         val (bt, btt) = att.apply(b)
         (UnionAll(at, bt), btt)
-      case OuterJoin(t, a, b, iA, iB, on) =>
+      case Join(t, a, b, iA, iB, on) =>
         val (at, att) = apply(a)
         val (bt, btt) = att.apply(b)
         val (ont, ontt) = btt.apply(on)
-        (OuterJoin(t, at, bt, iA, iB, ont), ontt)
+        (Join(t, at, bt, iA, iB, ont), ontt)
     }
 
   def apply(e: Operation): (Operation, StatefulTransformer[T]) =
