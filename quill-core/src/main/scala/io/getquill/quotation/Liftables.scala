@@ -96,7 +96,8 @@ trait Liftables {
     case DescNullsLast        => q"$pack.DescNullsLast"
   }
 
-  implicit val outerJoinTypeLiftable: Liftable[OuterJoinType] = Liftable[OuterJoinType] {
+  implicit val joinTypeLiftable: Liftable[JoinType] = Liftable[JoinType] {
+  	case InnerJoin  => q"$pack.InnerJoin"
     case LeftJoin  => q"$pack.LeftJoin"
     case RightJoin => q"$pack.RightJoin"
     case FullJoin  => q"$pack.FullJoin"

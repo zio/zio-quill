@@ -197,7 +197,7 @@ class QuotationSpec extends Spec {
       }
       "outer join" - {
 
-        def tree(t: OuterJoinType) =
+        def tree(t: JoinType) =
           OuterJoin(t, Entity("TestEntity"), Entity("TestEntity2"), Ident("a"), Ident("b"), BinaryOperation(Property(Ident("a"), "s"), EqualityOperator.`==`, Property(Ident("b"), "s")))
 
         "left join" in {

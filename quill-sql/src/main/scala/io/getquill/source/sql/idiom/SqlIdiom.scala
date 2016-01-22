@@ -122,7 +122,8 @@ trait SqlIdiom {
     case OuterJoinSource(t, a, b, on) => s"${a.show} ${t.show} ${b.show} ON ${on.show}"
   }
 
-  implicit val outerJoinTypeShow: Show[OuterJoinType] = Show[OuterJoinType] {
+  implicit val joinTypeShow: Show[JoinType] = Show[JoinType] {
+  	case InnerJoin => "INNER JOIN"
     case LeftJoin  => "LEFT JOIN"
     case RightJoin => "RIGHT JOIN"
     case FullJoin  => "FULL JOIN"

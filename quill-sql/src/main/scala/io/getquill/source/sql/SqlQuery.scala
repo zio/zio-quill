@@ -13,7 +13,7 @@ sealed trait Source
 case class TableSource(entity: Entity, alias: String) extends Source
 case class QuerySource(query: SqlQuery, alias: String) extends Source
 case class InfixSource(infix: Infix, alias: String) extends Source
-case class OuterJoinSource(t: OuterJoinType, a: Source, b: Source, on: Ast) extends Source
+case class OuterJoinSource(t: JoinType, a: Source, b: Source, on: Ast) extends Source
 
 sealed trait SqlQuery
 

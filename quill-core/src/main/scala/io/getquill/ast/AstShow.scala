@@ -91,7 +91,8 @@ object AstShow {
       s"${q.ast}.$method((${q.alias.show}) => ${q.body.show})"
   }
 
-  implicit val outerJoinTypeShow: Show[OuterJoinType] = Show[OuterJoinType] {
+  implicit val joinTypeShow: Show[JoinType] = Show[JoinType] {
+  	case InnerJoin => "join"
     case LeftJoin  => "leftJoin"
     case RightJoin => "rightJoin"
     case FullJoin  => "fullJoin"
