@@ -7,39 +7,14 @@ object LoadNaming {
 
   def dynamic(c: Context)(tpe: c.Type) = {
     import c.universe._
-    q"""
-    new io.getquill.naming.NamingStrategy {
-      override def default(s: String) = {
-        ${naming(c)(tpe).foldLeft[Tree](q"s")((s, n) => q"${n.typeSymbol.companion}.default($s)")}
-      }
-
-      override def table(s: String) = {
-        ${naming(c)(tpe).foldLeft[Tree](q"s")((s, n) => q"${n.typeSymbol.companion}.table($s)")}
-      }
-
-      override def column(s: String) = {
-        ${naming(c)(tpe).foldLeft[Tree](q"s")((s, n) => q"${n.typeSymbol.companion}.column($s)")}
-      }
-    }
-    """
+    val list = strategies(c)(tpe).map(s => q"${s.typeSymbol.companion}")
+    q"io.getquill.naming.NamingStrategy($list)"
   }
 
   def static(c: Context)(tpe: c.Type) =
-    new NamingStrategy {
-      override def default(s: String) =
-        naming(c)(tpe).map(LoadObject[NamingStrategy](c))
-          .foldLeft(s)((s, n) => n.default(s))
+    NamingStrategy(strategies(c)(tpe).map(LoadObject[NamingStrategy](c)))
 
-      override def table(s: String) =
-        naming(c)(tpe).map(LoadObject[NamingStrategy](c))
-          .foldLeft(s)((s, n) => n.table(s))
-
-      override def column(s: String) =
-        naming(c)(tpe).map(LoadObject[NamingStrategy](c))
-          .foldLeft(s)((s, n) => n.column(s))
-    }
-
-  private def naming(c: Context)(tpe: c.Type) = {
+  private def strategies(c: Context)(tpe: c.Type) = {
     import c.universe._
 
     val types =

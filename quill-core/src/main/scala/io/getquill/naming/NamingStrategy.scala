@@ -6,6 +6,24 @@ trait NamingStrategy {
   def default(s: String): String
 }
 
+object NamingStrategy {
+  def apply(strategies: List[NamingStrategy]) = {
+    new NamingStrategy {
+      override def default(s: String) =
+        strategies
+          .foldLeft(s)((s, n) => n.default(s))
+
+      override def table(s: String) =
+        strategies
+          .foldLeft(s)((s, n) => n.table(s))
+
+      override def column(s: String) =
+        strategies
+          .foldLeft(s)((s, n) => n.column(s))
+    }
+  }
+}
+
 trait Literal extends NamingStrategy {
   override def default(s: String) = s
 }

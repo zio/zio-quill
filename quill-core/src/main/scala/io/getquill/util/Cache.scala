@@ -15,11 +15,13 @@ class Cache[K, V <: Closeable] {
   private case class Entry(value: Option[V], expiration: Long)
 
   private val cache = new ConcurrentHashMap[K, Entry]().asScala
+
   private val scheduler =
     new ScheduledThreadPoolExecutor(1,
       new ThreadFactory {
         override def newThread(r: Runnable) = {
           val thread = Executors.defaultThreadFactory().newThread(r)
+          thread.setName("io.getquill.util.Cache.scheduler")
           thread.setDaemon(true)
           thread
         }
