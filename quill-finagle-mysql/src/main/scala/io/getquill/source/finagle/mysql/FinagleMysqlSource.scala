@@ -51,15 +51,18 @@ class FinagleMysqlSource[N <: NamingStrategy]
   def execute(sql: String): Future[Result] =
     withClient(_.prepare(sql)())
 
-  def execute(sql: String, bindList: List[List[Parameter] => List[Parameter]]): Future[List[Result]] =
-    bindList match {
-      case Nil =>
-        Future.value(List())
-      case bind :: tail =>
-        logger.info(sql)
-        withClient(_.prepare(sql)(bind(List()): _*))
-          .flatMap(_ => execute(sql, tail))
-    }
+  def execute[T](sql: String, bindParams: T => List[Parameter] => List[Parameter]): List[T] => Future[List[Result]] = {
+    def run(values: List[T]): Future[List[Result]] =
+      values match {
+        case Nil =>
+          Future.value(List())
+        case value :: tail =>
+          logger.info(sql)
+          withClient(_.prepare(sql)(bindParams(value)(List()): _*))
+            .flatMap(_ => run(tail))
+      }
+    run _
+  }
 
   def query[T](sql: String, bind: List[Parameter] => List[Parameter], extractor: Row => T): Future[List[T]] = {
     logger.info(sql)

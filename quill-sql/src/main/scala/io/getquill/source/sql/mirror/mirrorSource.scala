@@ -32,8 +32,9 @@ class MirrorSourceTemplate[N <: NamingStrategy] extends SqlSource[MirrorDialect,
 
   case class BatchActionMirror(sql: String, bindList: List[Row])
 
-  def execute(sql: String, bindList: List[Row => Row]) =
-    BatchActionMirror(sql, bindList.map(_(Row())))
+  def execute[T](sql: String, bindParams: T => Row => Row) =
+    (values: List[T]) =>
+      BatchActionMirror(sql, values.map(bindParams).map(_(Row())))
 
   case class QueryMirror[T](sql: String, binds: Row, extractor: Row => T)
 

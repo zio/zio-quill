@@ -36,8 +36,9 @@ object mirrorSource
 
   case class BatchActionMirror(cql: String, bindList: List[Row])
 
-  def execute(cql: String, bindList: List[Row => Row]) =
-    BatchActionMirror(cql, bindList.map(_(Row())))
+  def execute[T](sql: String, bindParams: T => Row => Row) =
+    (values: List[T]) =>
+      BatchActionMirror(sql, values.map(bindParams).map(_(Row())))
 
   case class QueryMirror[T](cql: String, binds: Row, extractor: Row => T)
 

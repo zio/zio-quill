@@ -60,15 +60,18 @@ trait AsyncSource[D <: SqlIdiom, N <: NamingStrategy, C <: Connection]
     withConnection(_.sendQuery(sql))
   }
 
-  def execute(sql: String, bindList: List[List[Any] => List[Any]])(implicit ec: ExecutionContext): Future[List[DBQueryResult]] =
-    bindList match {
-      case Nil =>
-        Future.successful(List())
-      case bind :: tail =>
-        logger.info(sql)
-        withConnection(_.sendPreparedStatement(sql, bind(List())))
-          .flatMap(_ => execute(sql, tail))
-    }
+  def execute[T](sql: String, bindParams: T => List[Any] => List[Any])(implicit ec: ExecutionContext): List[T] => Future[List[DBQueryResult]] = {
+    def run(values: List[T]): Future[List[DBQueryResult]] =
+      values match {
+        case Nil =>
+          Future.successful(List())
+        case value :: tail =>
+          logger.info(sql)
+          withConnection(_.sendPreparedStatement(sql, bindParams(value)(List())))
+            .flatMap(_ => run(tail))
+      }
+    run _
+  }
 
   def query[T](sql: String, bind: List[Any] => List[Any], extractor: RowData => T)(implicit ec: ExecutionContext) = {
     withConnection(_.sendPreparedStatement(sql, bind(List()))).map {

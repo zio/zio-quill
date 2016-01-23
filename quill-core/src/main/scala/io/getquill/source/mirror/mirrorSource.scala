@@ -53,8 +53,9 @@ abstract class MirrorSourceTemplate
 
   case class BatchActionMirror(ast: Ast, bindList: List[Row])
 
-  def execute(ast: Ast, bindList: List[Row => Row]) =
-    BatchActionMirror(ast, bindList.map(_(Row())))
+  def execute[T](ast: Ast, bindParams: T => Row => Row) =
+    (values: List[T]) =>
+      BatchActionMirror(ast, values.map(bindParams).map(_(Row())))
 
   case class QueryMirror[T](ast: Ast, binds: Row, extractor: Row => T)
 

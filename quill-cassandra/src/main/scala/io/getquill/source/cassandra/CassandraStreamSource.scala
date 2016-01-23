@@ -45,4 +45,10 @@ class CassandraStreamSource[N <: NamingStrategy]
         }
     }
   }
+
+  def execute[T](cql: String, bindParams: T => BoundStatement => BoundStatement)(implicit ec: ExecutionContext): Observable[T] => Observable[ResultSet] =
+    (values: Observable[T]) =>
+      values.flatMap { value =>
+        Observable.fromFuture(session.executeAsync(prepare(cql, bindParams(value))))
+      }
 }

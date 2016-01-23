@@ -31,14 +31,16 @@ class CassandraAsyncSource[N <: NamingStrategy]
     session.executeAsync(prepare(cql))
   }
 
-  def execute(cql: String, bindList: List[BoundStatement => BoundStatement])(implicit ec: ExecutionContext): Future[List[ResultSet]] = {
-    logger.info(cql)
-    bindList match {
-      case Nil => Future.successful(List())
-      case head :: tail =>
-        session.executeAsync(prepare(cql, head)).flatMap { result =>
-          execute(cql, tail).map(result +: _)
-        }
-    }
+  def execute[T](cql: String, bindParams: T => BoundStatement => BoundStatement)(implicit ec: ExecutionContext): List[T] => Future[List[ResultSet]] = {
+    def run(values: List[T]): Future[List[ResultSet]] =
+      values match {
+        case Nil => Future.successful(List())
+        case head :: tail =>
+          logger.info(cql)
+          session.executeAsync(prepare(cql, bindParams(head))).flatMap { result =>
+            run(tail).map(result +: _)
+          }
+      }
+    run _
   }
 }

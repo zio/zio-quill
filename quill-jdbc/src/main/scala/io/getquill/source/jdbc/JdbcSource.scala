@@ -67,16 +67,17 @@ class JdbcSource[D <: SqlIdiom, N <: NamingStrategy]
     }
   }
 
-  def execute(sql: String, bindList: List[PreparedStatement => PreparedStatement]): List[Int] = {
-    logger.info(sql)
-    withConnection { conn =>
-      val ps = conn.prepareStatement(sql)
-      for (bind <- bindList) {
-        bind(ps)
-        ps.addBatch
+  def execute[T](sql: String, bindParams: T => PreparedStatement => PreparedStatement): List[T] => List[Int] = {
+    (values: List[T]) =>
+      logger.info(sql)
+      withConnection { conn =>
+        val ps = conn.prepareStatement(sql)
+        for (value <- values) {
+          bindParams(value)(ps)
+          ps.addBatch
+        }
+        ps.executeBatch.toList
       }
-      ps.executeBatch.toList
-    }
   }
 
   def query[T](sql: String, bind: PreparedStatement => PreparedStatement, extractor: ResultSet => T): List[T] = {

@@ -36,10 +36,9 @@ trait ActionMacro extends EncodingMacro {
       val (sql, bindings: List[io.getquill.ast.Ident]) =
         ${prepare(action, idents)}
 
-      (values: List[(..$paramsTypes)]) =>
-        ${c.prefix}.execute(
-          sql,
-          values.map(value => $encodedParams(bindings.map(_.name))))
+      ${c.prefix}.execute[(..$paramsTypes)](
+        sql,
+        value => $encodedParams(bindings.map(_.name)))
     }
     """
 

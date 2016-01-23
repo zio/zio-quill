@@ -28,14 +28,16 @@ class CassandraSyncSource[N <: NamingStrategy]
     session.execute(prepare(cql))
   }
 
-  def execute(cql: String, bindList: List[BoundStatement => BoundStatement]): List[ResultSet] = {
-    logger.info(cql)
-    @tailrec
-    def exec(bindList: List[BoundStatement => BoundStatement], acc: List[ResultSet]): List[ResultSet] =
-      bindList match {
-        case Nil          => List()
-        case head :: tail => exec(tail, acc :+ session.execute(prepare(cql, head)))
-      }
-    exec(bindList, List.empty)
+  def execute[T](cql: String, bindParams: T => BoundStatement => BoundStatement): List[T] => List[ResultSet] = {
+    (values: List[T]) =>
+      @tailrec
+      def run(values: List[T], acc: List[ResultSet]): List[ResultSet] =
+        values match {
+          case Nil => List()
+          case head :: tail =>
+            logger.info(cql)
+            run(tail, acc :+ session.execute(prepare(cql, bindParams(head))))
+        }
+      run(values, List.empty)
   }
 }
