@@ -107,7 +107,7 @@ trait Unliftables {
   }
 
   implicit val joinTypeUnliftable: Unliftable[JoinType] = Unliftable[JoinType] {
-  	case q"$pack.InnerJoin"  => InnerJoin
+    case q"$pack.InnerJoin" => InnerJoin
     case q"$pack.LeftJoin"  => LeftJoin
     case q"$pack.RightJoin" => RightJoin
     case q"$pack.FullJoin"  => FullJoin

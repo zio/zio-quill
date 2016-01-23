@@ -78,13 +78,20 @@ class RenamePropertiesSpec extends Spec {
           "SELECT t.field_s FROM test_entity t ORDER BY t.l ASC NULLS FIRST"
       }
     }
-    "outer join" - {
+    "join" - {
       "both sides" in {
         val q = quote {
           e.leftJoin(e).on((a, b) => a.s == b.s).map(t => (t._1.s, t._2.map(_.s)))
         }
         mirrorSource.run(q).sql mustEqual
           "SELECT a.field_s, b.field_s FROM test_entity a LEFT JOIN test_entity b ON a.field_s = b.field_s"
+      }
+      "inner" in {
+        val q = quote {
+          e.join(f).on((a, b) => a.s == b.s).map(t => t._1.s)
+        }
+        mirrorSource.run(q).sql mustEqual
+          "SELECT a.field_s FROM test_entity a INNER JOIN (SELECT t.s FROM TestEntity t WHERE t.i = 1) t ON a.field_s = t.s"
       }
       "left" in {
         val q = quote {

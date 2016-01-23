@@ -123,7 +123,7 @@ trait SqlIdiom {
   }
 
   implicit val joinTypeShow: Show[JoinType] = Show[JoinType] {
-  	case InnerJoin => "INNER JOIN"
+    case InnerJoin => "INNER JOIN"
     case LeftJoin  => "LEFT JOIN"
     case RightJoin => "RIGHT JOIN"
     case FullJoin  => "FULL JOIN"

@@ -46,7 +46,14 @@ class AstShowSpec extends Spec {
     }
   }
 
-  "shows outer join queries" - {
+  "shows join queries" - {
+    "inner join" in {
+      val q = quote {
+        qr1.join(qr2).on((a, b) => a.s == b.s)
+      }
+      (q.ast: Ast).show mustEqual
+        """query[TestEntity].join(query[TestEntity2]).on((a, b) => a.s == b.s)"""
+    }
     "left join" in {
       val q = quote {
         qr1.leftJoin(qr2).on((a, b) => a.s == b.s)

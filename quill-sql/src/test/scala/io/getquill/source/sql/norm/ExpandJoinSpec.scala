@@ -15,6 +15,13 @@ class ExpandJoinSpec extends Spec {
         "query[TestEntity].leftJoin(query[TestEntity2]).on((a, b) => a.s == b.s).map(ab => (a, b))"
     }
     "nested" - {
+      "inner" in {
+        val q = quote {
+          qr1.join(qr2).on((a, b) => a.s == b.s).join(qr3).on((c, d) => c._1.s == d.s)
+        }
+        ExpandJoin(q.ast).toString mustEqual
+          "query[TestEntity].join(query[TestEntity2]).on((a, b) => a.s == b.s).join(query[TestEntity3]).on((c, d) => a.s == d.s).map(cd => ((a, b), d))"
+      }
       "left" in {
         val q = quote {
           qr1.leftJoin(qr2).on((a, b) => a.s == b.s).leftJoin(qr3).on((c, d) => c._1.s == d.s)

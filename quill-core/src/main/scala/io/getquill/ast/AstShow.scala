@@ -92,7 +92,7 @@ object AstShow {
   }
 
   implicit val joinTypeShow: Show[JoinType] = Show[JoinType] {
-  	case InnerJoin => "join"
+    case InnerJoin => "join"
     case LeftJoin  => "leftJoin"
     case RightJoin => "rightJoin"
     case FullJoin  => "fullJoin"

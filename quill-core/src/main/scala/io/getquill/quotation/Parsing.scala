@@ -182,7 +182,7 @@ trait Parsing {
   }
 
   val joinCallParser: Parser[(JoinType, Ast, Ast)] = Parser[(JoinType, Ast, Ast)] {
-  	case q"$a.join[$t, $u]($b)" if (is[QuillQuery[Any]](a))  => (InnerJoin, astParser(a), astParser(b))
+    case q"$a.join[$t, $u]($b)" if (is[QuillQuery[Any]](a))  => (InnerJoin, astParser(a), astParser(b))
     case q"$a.leftJoin[$t, $u]($b)" if (is[QuillQuery[Any]](a))  => (LeftJoin, astParser(a), astParser(b))
     case q"$a.rightJoin[$t, $u]($b)" if (is[QuillQuery[Any]](a)) => (RightJoin, astParser(a), astParser(b))
     case q"$a.fullJoin[$t, $u]($b)" if (is[QuillQuery[Any]](a))  => (FullJoin, astParser(a), astParser(b))
