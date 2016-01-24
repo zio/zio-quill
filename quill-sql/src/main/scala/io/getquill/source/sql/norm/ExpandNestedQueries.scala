@@ -5,7 +5,7 @@ import io.getquill.source.sql.FlattenSqlQuery
 import io.getquill.source.sql.InfixSource
 import io.getquill.source.sql.QuerySource
 import io.getquill.source.sql.SetOperationSqlQuery
-import io.getquill.source.sql.OuterJoinSource
+import io.getquill.source.sql.JoinSource
 import io.getquill.source.sql.SelectValue
 import io.getquill.source.sql.TableSource
 import io.getquill.source.sql.SqlQuery
@@ -33,8 +33,8 @@ object ExpandNestedQueries {
     s match {
       case QuerySource(q, alias) =>
         QuerySource(apply(q, references(alias, asts)), alias)
-      case OuterJoinSource(t, a, b, on) =>
-        OuterJoinSource(t, expandSource(a, asts :+ on), expandSource(b, asts :+ on), on)
+      case JoinSource(t, a, b, on) =>
+        JoinSource(t, expandSource(a, asts :+ on), expandSource(b, asts :+ on), on)
       case _: TableSource | _: InfixSource => s
     }
 

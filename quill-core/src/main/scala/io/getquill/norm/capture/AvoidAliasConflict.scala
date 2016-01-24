@@ -21,14 +21,14 @@ private case class AvoidAliasConflict(state: Set[Ident])
       case SortBy(q: Entity, x, p, o) =>
         apply(x, p)(SortBy(q, _, _, o))
 
-      case OuterJoin(t, a, b, iA, iB, o) =>
+      case Join(t, a, b, iA, iB, o) =>
         val (ar, art) = apply(a)
         val (br, brt) = art.apply(b)
         val freshA = freshIdent(iA)
         val freshB = freshIdent(iB)
         val or = BetaReduction(o, iA -> freshA, iB -> freshB)
         val (orr, orrt) = AvoidAliasConflict(brt.state + freshA + freshB)(or)
-        (OuterJoin(t, ar, br, freshA, freshB, orr), orrt)
+        (Join(t, ar, br, freshA, freshB, orr), orrt)
 
       case other => super.apply(other)
     }

@@ -195,11 +195,17 @@ class QuotationSpec extends Spec {
           quote(unquote(q)).ast mustEqual UnionAll(Entity("TestEntity"), Entity("TestEntity2"))
         }
       }
-      "outer join" - {
+      "join" - {
 
-        def tree(t: OuterJoinType) =
-          OuterJoin(t, Entity("TestEntity"), Entity("TestEntity2"), Ident("a"), Ident("b"), BinaryOperation(Property(Ident("a"), "s"), EqualityOperator.`==`, Property(Ident("b"), "s")))
+        def tree(t: JoinType) =
+          Join(t, Entity("TestEntity"), Entity("TestEntity2"), Ident("a"), Ident("b"), BinaryOperation(Property(Ident("a"), "s"), EqualityOperator.`==`, Property(Ident("b"), "s")))
 
+        "inner join" in {
+          val q = quote {
+            qr1.join(qr2).on((a, b) => a.s == b.s)
+          }
+          quote(unquote(q)).ast mustEqual tree(InnerJoin)
+        }
         "left join" in {
           val q = quote {
             qr1.leftJoin(qr2).on((a, b) => a.s == b.s)
@@ -294,6 +300,12 @@ class QuotationSpec extends Spec {
         qr1.map(t => t.s)
       }
       quote(unquote(q)).ast.body mustEqual Property(Ident("t"), "s")
+    }
+    "property anonymous" in {
+      val q = quote {
+        qr1.map(_.s)
+      }
+      quote(unquote(q)).ast.body mustEqual Property(Ident("x3"), "s")
     }
     "function" - {
       "anonymous function" in {

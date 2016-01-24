@@ -33,7 +33,7 @@ case class FlattenGroupByAggregation(agg: Ident) extends StatelessTransformer {
       case Drop(a, b)                     => isGroupByAggregation(a)
       case Union(a, b)                    => isGroupByAggregation(a) || isGroupByAggregation(b)
       case UnionAll(a, b)                 => isGroupByAggregation(a) || isGroupByAggregation(b)
-      case OuterJoin(t, a, b, ta, tb, on) => isGroupByAggregation(a) || isGroupByAggregation(b)
+      case Join(t, a, b, ta, tb, on) => isGroupByAggregation(a) || isGroupByAggregation(b)
       case `agg`                          => true
       case other                          => false
     }

@@ -15,20 +15,20 @@ case class RenameProperties(state: collection.Map[Ident, collection.Map[String, 
 
       case SortBy(q: Entity, x, p, o) => apply(q, x, p)(SortBy(_, _, _, o))
 
-      case q @ OuterJoin(t, a: Entity, b: Entity, iA, iB, o) =>
+      case q @ Join(t, a: Entity, b: Entity, iA, iB, o) =>
         val ((_, _, or), ort) = apply(a, iA, o)((_, _, _))
         val ((_, _, orr), orrt) = apply(b, iB, or)((_, _, _))
-        (OuterJoin(t, a, b, iA, iB, orr), RenameProperties(state ++ ort.state ++ orrt.state))
+        (Join(t, a, b, iA, iB, orr), RenameProperties(state ++ ort.state ++ orrt.state))
 
-      case q @ OuterJoin(t, a: Entity, b, iA, iB, o) =>
+      case q @ Join(t, a: Entity, b, iA, iB, o) =>
         val ((_, _, or), ort) = apply(a, iA, o)((_, _, _))
         val (br, brt) = apply(b)
-        (OuterJoin(t, a, br, iA, iB, or), RenameProperties(state ++ ort.state ++ brt.state))
+        (Join(t, a, br, iA, iB, or), RenameProperties(state ++ ort.state ++ brt.state))
 
-      case q @ OuterJoin(t, a: Query, b: Entity, iA, iB, o) =>
+      case q @ Join(t, a: Query, b: Entity, iA, iB, o) =>
         val (ar, art) = apply(a)
         val ((_, _, or), ort) = apply(b, iB, o)((_, _, _))
-        (OuterJoin(t, ar, b, iA, iB, or), RenameProperties(state ++ art.state ++ ort.state))
+        (Join(t, ar, b, iA, iB, or), RenameProperties(state ++ art.state ++ ort.state))
 
       case other => super.apply(q)
     }

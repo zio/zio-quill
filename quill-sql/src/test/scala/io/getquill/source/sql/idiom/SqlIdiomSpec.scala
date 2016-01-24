@@ -267,7 +267,14 @@ class SqlIdiomSpec extends Spec {
             "SELECT x.s, x.i, x.l, x.o FROM (SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.i > 10 UNION ALL SELECT t1.s, t1.i, t1.l, t1.o FROM TestEntity t1 WHERE t1.s = 's') x"
         }
       }
-      "outer join" - {
+      "join" - {
+        "inner" in {
+          val q = quote {
+            qr1.join(qr2).on((a, b) => a.s == b.s).map(_._1)
+          }
+          mirrorSource.run(q).sql mustEqual
+            "SELECT a.s, a.i, a.l, a.o FROM TestEntity a INNER JOIN TestEntity2 b ON a.s = b.s"
+        }
         "left" in {
           val q = quote {
             qr1.leftJoin(qr2).on((a, b) => a.s == b.s).map(_._1)
