@@ -1,16 +1,17 @@
 package io.getquill.source.cassandra
 
 import scala.util.Try
+
 import com.datastax.driver.core.BoundStatement
-import com.datastax.driver.core.ConsistencyLevel
+import com.datastax.driver.core.Cluster
 import com.datastax.driver.core.Row
 import com.datastax.driver.core.Session
 import com.typesafe.scalalogging.StrictLogging
+
 import io.getquill.naming.NamingStrategy
+import io.getquill.source.cassandra.cluster.ClusterBuilder
 import io.getquill.source.cassandra.encoding.Decoders
 import io.getquill.source.cassandra.encoding.Encoders
-import io.getquill.source.cassandra.cluster.ClusterBuilder
-import com.datastax.driver.core.Cluster
 
 trait CassandraSourceSession[N <: NamingStrategy]
     extends CassandraSource[N, Row, BoundStatement]
@@ -24,18 +25,11 @@ trait CassandraSourceSession[N <: NamingStrategy]
   protected val preparedStatementCache =
     new PrepareStatementCache(config)
 
-  protected def consistencyLevel: ConsistencyLevel =
-    session.getCluster.getConfiguration.getQueryOptions.getConsistencyLevel
+  protected def prepare(cql: String): BoundStatement =
+    preparedStatementCache(cql)(session.prepare)
 
-  protected def prepare(cql: String): BoundStatement = {
-    val ps = preparedStatementCache(cql)(session.prepare)
-    ps.setConsistencyLevel(consistencyLevel)
-    ps
-  }
-
-  protected def prepare(cql: String, bind: BoundStatement => BoundStatement): BoundStatement = {
+  protected def prepare(cql: String, bind: BoundStatement => BoundStatement): BoundStatement =
     bind(prepare(cql))
-  }
 
   def close() = {
     session.close
