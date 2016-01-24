@@ -40,14 +40,11 @@ private case class AvoidAliasConflict(state: Set[Ident])
     (f(fresh, prr), t)
   }
 
-  private def freshIdent(x: Ident): Ident = {
-    // strip "$" from scalac generated anonymous term like `x$`
-    val clean = x.copy(name = x.name.replace("$", ""))
+  private def freshIdent(x: Ident): Ident =
     if (!state.contains(x))
-      clean
+      x
     else
-      freshIdent(clean, 1)
-  }
+      freshIdent(x, 1)
 
   private def freshIdent(x: Ident, n: Int): Ident = {
     val fresh = Ident(s"${x.name}$n")

@@ -301,6 +301,12 @@ class QuotationSpec extends Spec {
       }
       quote(unquote(q)).ast.body mustEqual Property(Ident("t"), "s")
     }
+    "property anonymous" in {
+      val q = quote {
+        qr1.map(_.s)
+      }
+      quote(unquote(q)).ast.body mustEqual Property(Ident("x3"), "s")
+    }
     "function" - {
       "anonymous function" in {
         val q = quote {

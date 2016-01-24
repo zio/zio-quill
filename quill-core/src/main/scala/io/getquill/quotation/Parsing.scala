@@ -203,12 +203,13 @@ trait Parsing {
   }
 
   val identParser: Parser[Ident] = Parser[Ident] {
-    case t: ValDef                        => Ident(t.name.decodedName.toString)
-    case c.universe.Ident(TermName(name)) => Ident(name)
-    case q"$cls.this.$i"                  => Ident(i.decodedName.toString)
+    case t: ValDef                        => identClean(Ident(t.name.decodedName.toString))
+    case c.universe.Ident(TermName(name)) => identClean(Ident(name))
+    case q"$cls.this.$i"                  => identClean(Ident(i.decodedName.toString))
     case c.universe.Bind(TermName(name), c.universe.Ident(termNames.WILDCARD)) =>
-      Ident(name)
+      identClean(Ident(name))
   }
+  private def identClean(x: Ident) = x.copy(name = x.name.replace("$", ""))
 
   val optionOperationParser: Parser[OptionOperation] = Parser[OptionOperation] {
     case q"$o.map[$t](($alias) => $body)" if (is[Option[Any]](o)) =>
