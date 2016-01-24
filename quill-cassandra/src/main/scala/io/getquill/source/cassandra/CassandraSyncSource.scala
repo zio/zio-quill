@@ -16,6 +16,7 @@ class CassandraSyncSource[N <: NamingStrategy]
   override type QueryResult[T] = List[T]
   override type ActionResult[T] = ResultSet
   override type BatchedActionResult[T] = List[ResultSet]
+  override type Params[T] = List[T]
 
   def query[T](cql: String, bind: BoundStatement => BoundStatement, extractor: Row => T): List[T] = {
     logger.info(cql)

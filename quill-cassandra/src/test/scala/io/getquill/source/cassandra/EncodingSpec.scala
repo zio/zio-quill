@@ -2,8 +2,10 @@ package io.getquill.source.cassandra
 
 import io.getquill._
 import java.util.Date
-import scala.concurrent.ExecutionContext.Implicits.global
 import com.datastax.driver.core.ConsistencyLevel
+import monifu.reactive.Observable
+import scala.collection.mutable.ListBuffer
+import scala.concurrent.Await
 
 class EncodingSpec extends Spec {
 
@@ -16,6 +18,7 @@ class EncodingSpec extends Spec {
     }
 
     "async" in {
+      import scala.concurrent.ExecutionContext.Implicits.global
       await {
         for {
           _ <- testAsyncDB.run(query[EncodingTestEntity].delete)
@@ -25,6 +28,21 @@ class EncodingSpec extends Spec {
           verify(result)
         }
       }
+    }
+
+    "stream" in {
+      import monifu.concurrent.Implicits.globalScheduler
+      val result =
+        for {
+          _ <- testStreamDB.run(query[EncodingTestEntity].delete)
+          inserts = Observable.from(insertValues: _*)
+          _ <- testStreamDB.run(query[EncodingTestEntity].insert)(inserts).count
+          result <- testStreamDB.run(query[EncodingTestEntity])
+        } yield {
+          result
+        }
+      val f = result.foldLeft(List.empty[EncodingTestEntity])(_ :+ _).asFuture
+      verify(await(f).getOrElse(List()))
     }
   }
 

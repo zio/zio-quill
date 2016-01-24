@@ -546,17 +546,6 @@ val db = io.getquill.source.cassandra.mirror.mirrorSource
 
 Supported operations:
 
-**consistencyLevel**
-```scala
-import com.datastax.driver.core.ConsistencyLevel
-
-val q = quote {
-  query[Person].insert(_.age -> 10, _.name -> "John")
-}
-db.withConsistencyLevel(ConsistencyLevel.QUORUM).run(q)
-// INSERT INTO Person (age,name) VALUES (10, 'John')
-```
-
 **allowFiltering**
 
 ```scala

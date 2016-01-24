@@ -19,6 +19,7 @@ class CassandraAsyncSource[N <: NamingStrategy]
   override type QueryResult[T] = Future[List[T]]
   override type ActionResult[T] = Future[ResultSet]
   override type BatchedActionResult[T] = Future[List[ResultSet]]
+  override type Params[T] = List[T]
 
   def query[T](cql: String, bind: BoundStatement => BoundStatement, extractor: Row => T)(implicit ec: ExecutionContext): Future[List[T]] = {
     logger.info(cql)
