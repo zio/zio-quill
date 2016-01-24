@@ -68,9 +68,9 @@ class StatelessTransformerSpec extends Spec {
           UnionAll(Ident("a'"), Ident("b'"))
       }
       "outer join" in {
-        val ast: Ast = OuterJoin(FullJoin, Ident("a"), Ident("b"), Ident("c"), Ident("d"), Ident("e"))
+        val ast: Ast = Join(FullJoin, Ident("a"), Ident("b"), Ident("c"), Ident("d"), Ident("e"))
         Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("e") -> Ident("e'"))(ast) mustEqual
-          OuterJoin(FullJoin, Ident("a'"), Ident("b'"), Ident("c"), Ident("d"), Ident("e'"))
+          Join(FullJoin, Ident("a'"), Ident("b'"), Ident("c"), Ident("d"), Ident("e'"))
       }
     }
 

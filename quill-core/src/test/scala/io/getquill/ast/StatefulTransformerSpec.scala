@@ -104,10 +104,10 @@ class StatefulTransformerSpec extends Spec {
         }
       }
       "outer join" in {
-        val ast: Ast = OuterJoin(FullJoin, Ident("a"), Ident("b"), Ident("c"), Ident("d"), Ident("e"))
+        val ast: Ast = Join(FullJoin, Ident("a"), Ident("b"), Ident("c"), Ident("d"), Ident("e"))
         Subject(Nil, Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("e") -> Ident("e'"))(ast) match {
           case (at, att) =>
-            at mustEqual OuterJoin(FullJoin, Ident("a'"), Ident("b'"), Ident("c"), Ident("d"), Ident("e'"))
+            at mustEqual Join(FullJoin, Ident("a'"), Ident("b'"), Ident("c"), Ident("d"), Ident("e'"))
             att.state mustEqual List(Ident("a"), Ident("b"), Ident("e"))
         }
       }

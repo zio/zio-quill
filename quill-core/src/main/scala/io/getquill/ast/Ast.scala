@@ -52,7 +52,7 @@ case class Union(a: Ast, b: Ast) extends Query
 
 case class UnionAll(a: Ast, b: Ast) extends Query
 
-case class OuterJoin(typ: OuterJoinType, a: Ast, b: Ast, aliasA: Ident, aliasB: Ident, on: Ast) extends Query
+case class Join(typ: JoinType, a: Ast, b: Ast, aliasA: Ident, aliasB: Ident, on: Ast) extends Query
 
 //************************************************************
 

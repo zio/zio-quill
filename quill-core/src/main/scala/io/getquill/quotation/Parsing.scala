@@ -158,10 +158,10 @@ trait Parsing {
     case q"$source.++[$t]($n)" if (is[QuillQuery[Any]](source)) =>
       UnionAll(astParser(source), astParser(n))
 
-    case q"${ outerJoinCallParser(typ, a, b) }.on(($aliasA, $aliasB) => $body)" =>
-      OuterJoin(typ, a, b, identParser(aliasA), identParser(aliasB), astParser(body))
+    case q"${ joinCallParser(typ, a, b) }.on(($aliasA, $aliasB) => $body)" =>
+      Join(typ, a, b, identParser(aliasA), identParser(aliasB), astParser(body))
 
-    case q"${ outerJoinCallParser(typ, a, b) }" =>
+    case q"${ joinCallParser(typ, a, b) }" =>
       c.fail("An outer join clause must be followed by 'on'.")
   }
 
@@ -181,7 +181,8 @@ trait Parsing {
       PropertyAlias(prop.decodedName.toString, alias)
   }
 
-  val outerJoinCallParser: Parser[(OuterJoinType, Ast, Ast)] = Parser[(OuterJoinType, Ast, Ast)] {
+  val joinCallParser: Parser[(JoinType, Ast, Ast)] = Parser[(JoinType, Ast, Ast)] {
+    case q"$a.join[$t, $u]($b)" if (is[QuillQuery[Any]](a))  => (InnerJoin, astParser(a), astParser(b))
     case q"$a.leftJoin[$t, $u]($b)" if (is[QuillQuery[Any]](a))  => (LeftJoin, astParser(a), astParser(b))
     case q"$a.rightJoin[$t, $u]($b)" if (is[QuillQuery[Any]](a)) => (RightJoin, astParser(a), astParser(b))
     case q"$a.fullJoin[$t, $u]($b)" if (is[QuillQuery[Any]](a))  => (FullJoin, astParser(a), astParser(b))

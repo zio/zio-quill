@@ -23,15 +23,16 @@ sealed trait Query[+T] {
   def sum[U >: T](implicit n: Numeric[U]): Option[T]
   def size: Long
 
-  def leftJoin[A >: T, B](q: Query[B]): OuterJoinQuery[A, B, (A, Option[B])]
-  def rightJoin[A >: T, B](q: Query[B]): OuterJoinQuery[A, B, (Option[A], B)]
-  def fullJoin[A >: T, B](q: Query[B]): OuterJoinQuery[A, B, (Option[A], Option[B])]
+  def join[A >: T, B](q: Query[B]): JoinQuery[A, B, (A, B)]
+  def leftJoin[A >: T, B](q: Query[B]): JoinQuery[A, B, (A, Option[B])]
+  def rightJoin[A >: T, B](q: Query[B]): JoinQuery[A, B, (Option[A], B)]
+  def fullJoin[A >: T, B](q: Query[B]): JoinQuery[A, B, (Option[A], Option[B])]
 
   def nonEmpty: Boolean
   def isEmpty: Boolean
 }
 
-sealed trait OuterJoinQuery[A, B, R] extends Query[R] {
+sealed trait JoinQuery[A, B, R] extends Query[R] {
   def on(f: (A, B) => Boolean): Query[R]
 }
 

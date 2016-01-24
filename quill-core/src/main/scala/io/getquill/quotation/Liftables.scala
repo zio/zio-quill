@@ -79,7 +79,7 @@ trait Liftables {
     case Drop(a, b)                  => q"$pack.Drop($a, $b)"
     case Union(a, b)                 => q"$pack.Union($a, $b)"
     case UnionAll(a, b)              => q"$pack.UnionAll($a, $b)"
-    case OuterJoin(a, b, c, d, e, f) => q"$pack.OuterJoin($a, $b, $c, $d, $e, $f)"
+    case Join(a, b, c, d, e, f) => q"$pack.Join($a, $b, $c, $d, $e, $f)"
   }
 
   implicit val propertyAliasLiftable: Liftable[PropertyAlias] = Liftable[PropertyAlias] {
@@ -96,7 +96,8 @@ trait Liftables {
     case DescNullsLast        => q"$pack.DescNullsLast"
   }
 
-  implicit val outerJoinTypeLiftable: Liftable[OuterJoinType] = Liftable[OuterJoinType] {
+  implicit val joinTypeLiftable: Liftable[JoinType] = Liftable[JoinType] {
+  	case InnerJoin  => q"$pack.InnerJoin"
     case LeftJoin  => q"$pack.LeftJoin"
     case RightJoin => q"$pack.RightJoin"
     case FullJoin  => q"$pack.FullJoin"

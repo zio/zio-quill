@@ -13,7 +13,7 @@ sealed trait Source
 case class TableSource(entity: Entity, alias: String) extends Source
 case class QuerySource(query: SqlQuery, alias: String) extends Source
 case class InfixSource(infix: Infix, alias: String) extends Source
-case class OuterJoinSource(t: OuterJoinType, a: Source, b: Source, on: Ast) extends Source
+case class JoinSource(t: JoinType, a: Source, b: Source, on: Ast) extends Source
 
 sealed trait SqlQuery
 
@@ -167,7 +167,7 @@ object SqlQuery {
     ast match {
       case entity: Entity                 => TableSource(entity, alias)
       case infix: Infix                   => InfixSource(infix, alias)
-      case OuterJoin(t, a, b, ia, ib, on) => OuterJoinSource(t, source(a, ia.name), source(b, ib.name), on)
+      case Join(t, a, b, ia, ib, on) => JoinSource(t, source(a, ia.name), source(b, ib.name), on)
       case other                          => QuerySource(apply(other), alias)
     }
 

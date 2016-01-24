@@ -83,8 +83,8 @@ trait Unliftables {
     case q"$pack.Drop.apply(${ a: Ast }, ${ b: Ast })" => Drop(a, b)
     case q"$pack.Union.apply(${ a: Ast }, ${ b: Ast })" => Union(a, b)
     case q"$pack.UnionAll.apply(${ a: Ast }, ${ b: Ast })" => UnionAll(a, b)
-    case q"$pack.OuterJoin.apply(${ t: OuterJoinType }, ${ a: Ast }, ${ b: Ast }, ${ iA: Ident }, ${ iB: Ident }, ${ on: Ast })" =>
-      OuterJoin(t, a, b, iA, iB, on)
+    case q"$pack.Join.apply(${ t: JoinType }, ${ a: Ast }, ${ b: Ast }, ${ iA: Ident }, ${ iB: Ident }, ${ on: Ast })" =>
+      Join(t, a, b, iA, iB, on)
   }
 
   implicit val orderingUnliftable: Unliftable[Ordering] = Unliftable[Ordering] {
@@ -106,7 +106,8 @@ trait Unliftables {
     case q"scala.Some.apply[$t]($v)" => Some(u.unapply(v).get)
   }
 
-  implicit val outerJoinTypeUnliftable: Unliftable[OuterJoinType] = Unliftable[OuterJoinType] {
+  implicit val joinTypeUnliftable: Unliftable[JoinType] = Unliftable[JoinType] {
+    case q"$pack.InnerJoin" => InnerJoin
     case q"$pack.LeftJoin"  => LeftJoin
     case q"$pack.RightJoin" => RightJoin
     case q"$pack.FullJoin"  => FullJoin
