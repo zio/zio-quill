@@ -89,6 +89,7 @@ trait SqlIdiom {
       }
     Show[SelectValue] {
       case SelectValue(ast, Some(alias)) => s"${showValue(ast)} $alias"
+      case SelectValue(Ident("?"), None) => "?"
       case SelectValue(ast: Ident, None) => s"${showValue(ast)}.*"
       case SelectValue(ast, None)        => showValue(ast)
     }
@@ -116,10 +117,10 @@ trait SqlIdiom {
     s" ORDER BY ${criterias.show}"
 
   implicit def sourceShow(implicit strategy: NamingStrategy): Show[Source] = Show[Source] {
-    case TableSource(name, alias)     => s"${name.show} ${strategy.default(alias)}"
-    case QuerySource(query, alias)    => s"(${query.show}) ${strategy.default(alias)}"
-    case InfixSource(infix, alias)    => s"(${(infix: Ast).show}) ${strategy.default(alias)}"
-    case JoinSource(t, a, b, on) => s"${a.show} ${t.show} ${b.show} ON ${on.show}"
+    case TableSource(name, alias)  => s"${name.show} ${strategy.default(alias)}"
+    case QuerySource(query, alias) => s"(${query.show}) ${strategy.default(alias)}"
+    case InfixSource(infix, alias) => s"(${(infix: Ast).show}) ${strategy.default(alias)}"
+    case JoinSource(t, a, b, on)   => s"${a.show} ${t.show} ${b.show} ON ${on.show}"
   }
 
   implicit val joinTypeShow: Show[JoinType] = Show[JoinType] {

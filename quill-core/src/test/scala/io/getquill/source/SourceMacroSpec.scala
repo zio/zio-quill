@@ -34,23 +34,23 @@ class SourceMacroSpec extends Spec {
           (a: String) => qr1.filter(t => t.s == a).delete
         }
         val r = mirrorSource.run(q)(List("a"))
-        r.ast.toString mustEqual "query[TestEntity].filter(t => t.s == ?).delete"
+        r.ast.toString mustEqual "query[TestEntity].filter(t => t.s == p1).delete"
         r.bindList mustEqual List(Row("a"))
       }
       "infix" in {
         val q = quote {
-          (a: String) => infix"t = $a".as[Action[TestEntity]]
+          (p1: String) => infix"t = $p1".as[Action[TestEntity]]
         }
         val r = mirrorSource.run(q)(List("a"))
-        r.ast.toString mustEqual """infix"t = $?""""
+        r.ast.toString mustEqual """infix"t = $p1""""
         r.bindList mustEqual List(Row("a"))
       }
       "dynamic" in {
         val q: Quoted[String => Action[TestEntity]] = quote {
-          (a: String) => infix"t = $a".as[Action[TestEntity]]
+          (p1: String) => infix"t = $p1".as[Action[TestEntity]]
         }
         val r = mirrorSource.run(q)(List("a"))
-        r.ast.toString mustEqual """infix"t = $?""""
+        r.ast.toString mustEqual """infix"t = $p1""""
         r.bindList mustEqual List(Row("a"))
       }
     }
@@ -80,26 +80,26 @@ class SourceMacroSpec extends Spec {
     "parametrized" - {
       "normal" in {
         val q = quote {
-          (a: String) => qr1.filter(t => t.s == a)
+          (p1: String) => qr1.filter(t => t.s == p1)
         }
         val r = mirrorSource.run(q)("a")
-        r.ast.toString mustEqual "query[TestEntity].filter(t => t.s == ?).map(t => (t.s, t.i, t.l, t.o))"
+        r.ast.toString mustEqual "query[TestEntity].filter(t => t.s == p1).map(t => (t.s, t.i, t.l, t.o))"
         r.binds mustEqual Row("a")
       }
       "infix" in {
         val q = quote {
-          (a: String) => infix"SELECT $a".as[Query[String]]
+          (p1: String) => infix"SELECT $p1".as[Query[String]]
         }
         val r = mirrorSource.run(q)("a")
-        r.ast.toString mustEqual """infix"SELECT $?".map(x => x)"""
+        r.ast.toString mustEqual """infix"SELECT $p1".map(x => x)"""
         r.binds mustEqual Row("a")
       }
       "dynamic" in {
         val q: Quoted[String => Query[TestEntity]] = quote {
-          (a: String) => qr1.filter(t => t.s == a)
+          (p1: String) => qr1.filter(t => t.s == p1)
         }
         val r = mirrorSource.run(q)("a")
-        r.ast.toString mustEqual "query[TestEntity].filter(t => t.s == ?).map(t => (t.s, t.i, t.l, t.o))"
+        r.ast.toString mustEqual "query[TestEntity].filter(t => t.s == p1).map(t => (t.s, t.i, t.l, t.o))"
         r.binds mustEqual Row("a")
       }
     }

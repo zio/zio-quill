@@ -5,8 +5,31 @@ import io.getquill.naming.NamingStrategy
 import io.getquill.source.sql.idiom.SqlIdiom
 import scala.util.Try
 import java.util.Date
+import io.getquill.source.sql.mirror.mirrorSource
+import io.getquill.source.mirror.Row
 
 class SqlSourceMacroSpec extends Spec {
+
+  "binds inputs according to the sql terms order" - {
+    "filter.update" in {
+      val q = quote {
+        (i: Int, l: Long) =>
+          qr1.filter(t => t.i == i).update(t => t.l -> l)
+      }
+      val mirror = mirrorSource.run(q)(List((1, 2L)))
+      mirror.sql mustEqual "UPDATE TestEntity SET l = ? WHERE i = ?"
+      mirror.bindList mustEqual List(Row(2l, 1))
+    }
+    "filter.map" in {
+      val q = quote {
+        (i: Int, l: Long) =>
+          qr1.filter(t => t.i == i).map(t => l)
+      }
+      val mirror = mirrorSource.run(q)(1, 2L)
+      mirror.sql mustEqual "SELECT ? FROM TestEntity t WHERE t.i = ?"
+      mirror.binds mustEqual Row(2l, 1)
+    }
+  }
 
   "warns if the sql probing fails" in {
     case class Fail()

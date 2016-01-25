@@ -1,7 +1,6 @@
 package io.getquill.source
 
 import io.getquill._
-import io.getquill.ast._
 import io.getquill.source.mirror.Row
 import io.getquill.source.mirror.mirrorSource
 
@@ -17,24 +16,19 @@ class QueryMacroSpec extends Spec {
   "runs binded query" - {
     "one param" in {
       val q = quote {
-        (i: Int) => qr1.filter(t => t.i == i).map(t => t.i)
+        (p1: Int) => qr1.filter(t => t.i == p1).map(t => t.i)
       }
       val r = mirrorSource.run(q)(1)
-      r.ast mustEqual bind(q.ast.body, "i")
+      r.ast mustEqual q.ast.body
       r.binds mustEqual Row(1)
     }
     "two params" in {
       val q = quote {
-        (i: Int, s: String) => qr1.filter(t => t.i == i && t.s == s).map(t => t.i)
+        (p1: Int, p2: String) => qr1.filter(t => t.i == p1 && t.s == p2).map(t => t.i)
       }
       val r = mirrorSource.run(q)(1, "a")
-      r.ast mustEqual bind(q.ast.body, "i", "s")
+      r.ast mustEqual q.ast.body
       r.binds mustEqual Row(1, "a")
     }
   }
-
-  private def bind(ast: Ast, idents: String*) =
-    BindVariables(ast, idents.map(Ident(_)).toList) match {
-      case (ast, _) => ast
-    }
 }
