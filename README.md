@@ -840,6 +840,7 @@ object db extends JdbcSource[MySQLDialect, SnakeCase]
 
 application.properties
 ```
+db.queryProbing=true
 db.dataSourceClassName=com.mysql.jdbc.jdbc2.optional.MysqlDataSource
 db.dataSource.url=jdbc:mysql://host/database
 db.dataSource.user=root
@@ -870,6 +871,7 @@ object db extends JdbcSource[PostgresDialect, SnakeCase]
 
 application.properties
 ```
+db.queryProbing=true
 db.dataSourceClassName=org.postgresql.ds.PGSimpleDataSource
 db.dataSource.user=root
 db.dataSource.password=root
@@ -901,6 +903,7 @@ object db extends MysqlAsyncSource[SnakeCase]
 
 application.properties
 ```
+db.queryProbing=true
 db.host=host
 db.port=3306
 db.user=root
@@ -931,6 +934,7 @@ object db extends PostgresAsyncSource[SnakeCase]
 
 application.properties
 ```
+db.queryProbing=true
 db.host=host
 db.port=5432
 db.user=root
@@ -961,6 +965,7 @@ object db extends FinagleMysqlSource[SnakeCase]
 
 application.properties
 ```
+db.queryProbing=true
 db.dest=localhost:3306
 db.user=root
 db.password=root
@@ -1001,6 +1006,7 @@ The configurations are set using runtime reflection on the [`Cluster.builder`](h
 
 application.properties
 ```
+db.queryProbing=true
 db.keyspace=quill_test
 db.preparedStatementCacheSize=1000
 db.session.contactPoint=127.0.0.1

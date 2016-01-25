@@ -4,6 +4,7 @@ import scala.reflect.ClassTag
 import scala.util.DynamicVariable
 import com.typesafe.config.ConfigFactory
 import java.io.Closeable
+import io.getquill.util.Config
 
 abstract class Source[R: ClassTag, S: ClassTag] extends Closeable {
 
@@ -27,13 +28,7 @@ abstract class Source[R: ClassTag, S: ClassTag] extends Closeable {
       getClass.getSimpleName.replaceAllLiterally("$", "")
     }
 
-  protected def config = {
-    val factory = ConfigFactory.load(getClass.getClassLoader)
-    if (factory.hasPath(configPrefix))
-      factory.getConfig(configPrefix)
-    else
-      ConfigFactory.empty
-  }
+  protected def config = Config(configPrefix)
 }
 
 object Source {
