@@ -22,7 +22,7 @@ abstract class Source[R: ClassTag, S: ClassTag] extends Closeable {
         encoder(index, mapped.f(value), row)
     }
 
-  private val configPrefix =
+  private[source] val configPrefix =
     Source.configPrefix.value.getOrElse {
       getClass.getSimpleName.replaceAllLiterally("$", "")
     }
