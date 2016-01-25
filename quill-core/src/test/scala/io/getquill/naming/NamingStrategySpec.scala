@@ -87,7 +87,7 @@ class NamingStrategySpec extends Spec {
   }
 
   "mysql quote" - {
-    val s = new NamingStrategy with MysqlQuote
+    val s = new NamingStrategy with MysqlEscape
 
     "quote table name with ``" in {
       s.table("order") mustEqual "`order`"

@@ -80,11 +80,11 @@ trait CamelCase extends NamingStrategy {
 }
 object CamelCase extends CamelCase
 
-trait MysqlQuote extends NamingStrategy {
+trait MysqlEscape extends NamingStrategy {
   override def table(s: String) = quote(s)
   override def column(s: String) = quote(s)
   override def default(s: String) = s
   private def quote(s: String) = s"`$s`"
 }
 
-object MysqlQuote extends MysqlQuote
+object MysqlEscape extends MysqlEscape
