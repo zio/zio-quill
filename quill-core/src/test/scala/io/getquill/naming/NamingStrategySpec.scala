@@ -85,4 +85,20 @@ class NamingStrategySpec extends Spec {
       s.default("test_") mustEqual "test"
     }
   }
+
+  "mysql quote" - {
+    val s = new NamingStrategy with MysqlQuote
+
+    "quote table name with ``" in {
+      s.table("order") mustEqual "`order`"
+    }
+
+    "quote column name with ``" in {
+      s.column("count") mustEqual "`count`"
+    }
+
+    "persevere default naming strategy" in {
+      s.default("test") mustEqual("test")
+    }
+  }
 }
