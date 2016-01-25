@@ -21,7 +21,7 @@ trait SourceMacro extends Quotation with ActionMacro with QueryMacro with Resolv
 
       case ast if (t.tpe.typeSymbol.fullName.startsWith("scala.Function")) =>
         val bodyType = c.WeakTypeTag(t.tpe.typeArgs.takeRight(1).head)
-        val params = (1 until t.tpe.typeArgs.size).map(i => Ident(s"x$i")).toList
+        val params = (1 until t.tpe.typeArgs.size).map(i => Ident(s"p$i")).toList
         run(FunctionApply(ast, params), params.zip(paramsTypes(t)))(r, s, bodyType)
 
       case ast =>

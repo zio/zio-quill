@@ -14,7 +14,6 @@ import scala.reflect.ClassTag
 import io.getquill.source.sql.idiom.SqlIdiom
 import io.getquill.norm.Normalize
 import io.getquill.quotation.IsDynamic
-import io.getquill.source.BindVariables
 import io.getquill.naming.LoadNaming
 import io.getquill.util.LoadObject
 

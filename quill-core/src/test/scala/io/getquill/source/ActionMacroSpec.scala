@@ -1,7 +1,6 @@
 package io.getquill.source
 
 import io.getquill._
-import io.getquill.ast.{ Action => _, _ }
 import io.getquill.source.mirror.Row
 import io.getquill.source.mirror.mirrorSource
 
@@ -17,18 +16,18 @@ class ActionMacroSpec extends Spec {
   "runs batched action" - {
     "one param" in {
       val q = quote {
-        (i: Int) => qr1.insert(_.i -> i)
+        (p1: Int) => qr1.insert(_.i -> p1)
       }
       val r = mirrorSource.run(q)(List(1, 2))
-      r.ast mustEqual bind(q.ast.body, "i")
+      r.ast mustEqual q.ast.body
       r.bindList mustEqual List(Row(1), Row(2))
     }
     "two params" in {
       val q = quote {
-        (i: Int, s: String) => qr1.insert(_.i -> i, _.s -> s)
+        (p1: Int, p2: String) => qr1.insert(_.i -> p1, _.s -> p2)
       }
       val r = mirrorSource.run(q)(List((1, "a"), (2, "b")))
-      r.ast mustEqual bind(q.ast.body, "i", "s")
+      r.ast mustEqual q.ast.body
       r.bindList mustEqual List(Row(1, "a"), Row(2, "b"))
     }
   }
@@ -38,14 +37,9 @@ class ActionMacroSpec extends Spec {
     val r = mirrorSource.run(q)(
       List(TestEntity("s", 1, 2L, Some(4)),
         TestEntity("s2", 12, 22L, Some(42))))
-    r.ast.toString mustEqual "query[TestEntity].insert(x => x.s -> ?, x => x.i -> ?, x => x.l -> ?, x => x.o -> ?)"
+    r.ast.toString mustEqual "query[TestEntity].insert(x => x.s -> s, x => x.i -> i, x => x.l -> l, x => x.o -> o)"
     r.bindList mustEqual List(
       Row("s", 1, 2L, Some(4)),
       Row("s2", 12, 22L, Some(42)))
   }
-
-  private def bind(ast: Ast, idents: String*) =
-    BindVariables(ast, idents.map(Ident(_)).toList) match {
-      case (ast, _) => ast
-    }
 }

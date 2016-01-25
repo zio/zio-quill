@@ -61,10 +61,11 @@ object CqlQuery {
 
   private def select(ast: Ast): List[Ast] =
     ast match {
-      case Tuple(values) => values.map(select).flatten
-      case p: Property   => List(p)
-      case i: Ident      => List()
-      case other         => fail(s"Cql supports only properties as select elements. Found: $other")
+      case Tuple(values)  => values.map(select).flatten
+      case p: Property    => List(p)
+      case i @ Ident("?") => List(i)
+      case i: Ident       => List()
+      case other          => fail(s"Cql supports only properties as select elements. Found: $other")
     }
 
   private def orderByCriterias(ast: Ast, ordering: Ordering): List[OrderByCriteria] =
