@@ -12,8 +12,8 @@ lazy val quill =
       IO.write(file, str)
       Seq()
     })
-    .dependsOn(`quill-core`, `quill-sql`, `quill-jdbc`, `quill-finagle-mysql`, `quill-async`, `quill-cassandra`)
-    .aggregate(`quill-core`, `quill-sql`, `quill-jdbc`, `quill-finagle-mysql`, `quill-async`, `quill-cassandra`)
+    .dependsOn(`quill-core`, `quill-sql`, `quill-jdbc`, `quill-finagle-mysql`, `quill-async`, `quill-cassandra`, `quill-play`)
+    .aggregate(`quill-core`, `quill-sql`, `quill-jdbc`, `quill-finagle-mysql`, `quill-async`, `quill-cassandra`, `quill-play`)
 
 lazy val `quill-core` = 
   (project in file("quill-core"))
@@ -41,6 +41,16 @@ lazy val `quill-jdbc` =
       parallelExecution in Test := false
     )
     .dependsOn(`quill-sql` % "compile->compile;test->test")
+
+lazy val `quill-play` =
+  (project in file("quill-play"))
+    .settings(commonSettings: _*)
+    .settings(
+      libraryDependencies ++= Seq(
+        "com.typesafe.play" %% "play-jdbc" % "2.4.6" % "provided"
+      )
+    )
+    .dependsOn(`quill-jdbc`)
 
 lazy val `quill-finagle-mysql` = 
   (project in file("quill-finagle-mysql"))

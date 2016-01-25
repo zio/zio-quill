@@ -22,7 +22,9 @@ class JdbcSource[D <: SqlIdiom, N <: NamingStrategy]
   type ActionResult[T] = Int
   type BatchedActionResult[T] = List[Int]
 
-  protected val dataSource = DataSource(config)
+  protected def createDataSource = DataSource(config)
+
+  protected val dataSource = createDataSource
 
   override def close = dataSource.close
 
