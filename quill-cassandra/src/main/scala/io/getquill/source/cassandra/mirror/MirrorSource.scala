@@ -15,7 +15,10 @@ object mirrorSource
     with MirrorEncoders
     with MirrorDecoders {
 
-  def withConsistencyLevel(level: ConsistencyLevel) = this
+  override type QueryResult[T] = QueryMirror[T]
+  override type ActionResult[T] = ActionMirror
+  override type BatchedActionResult[T] = BatchActionMirror
+  override type Params[T] = List[T]
 
   override def close = ()
 
@@ -24,10 +27,6 @@ object mirrorSource
       Failure(new IllegalStateException)
     else
       Success(())
-
-  type QueryResult[T] = QueryMirror[T]
-  type ActionResult[T] = ActionMirror
-  type BatchedActionResult[T] = BatchActionMirror
 
   case class ActionMirror(cql: String)
 

@@ -5,3 +5,5 @@ import io.getquill.naming.Literal
 object testSyncDB extends CassandraSyncSource[Literal]
 
 object testAsyncDB extends CassandraAsyncSource[Literal]
+
+object testStreamDB extends CassandraStreamSource[Literal]
