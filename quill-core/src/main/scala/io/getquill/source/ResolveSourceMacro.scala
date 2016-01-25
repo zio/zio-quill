@@ -12,6 +12,7 @@ import scala.concurrent.duration._
 import scala.reflect.api.Trees
 import io.getquill.util.Cache
 import java.io.Closeable
+import io.getquill.util.Config
 
 trait ResolveSourceMacro {
   val c: Context
@@ -28,13 +29,26 @@ trait ResolveSourceMacro {
 
   private def resolve[T <: Source[_, _]](tpe: Type)(implicit t: ClassTag[T]): Option[Source[_, _]] = {
     val sourceName = tpe.typeSymbol.name.decodedName.toString
-    resolve(sourceName, baseClasses[T](tpe)) match {
-      case (None, errors) =>
-        c.warning(NoPosition, s"Can't load the source '$sourceName' at compile time. The sql probing is disabled for the source. Trace: \n${errors.mkString("\n")}")
+    isEnabled(sourceName) match {
+      case true =>
+        resolve(sourceName, baseClasses[T](tpe)) match {
+          case (None, errors) =>
+            c.warning(NoPosition, s"Can't load the source '$sourceName' at compile time. The sql probing is disabled for the source. Trace: \n${errors.mkString("\n")}")
+            None
+          case (some, errors) =>
+            some
+        }
+      case false =>
         None
-      case (some, errors) =>
-        some
     }
+  }
+
+  private def isEnabled(sourceName: String) = {
+    val config = Config(sourceName)
+    if (config.hasPath("queryProbing"))
+      config.getBoolean("queryProbing")
+    else
+      true
   }
 
   private def baseClasses[T](tpe: Type)(implicit ct: ClassTag[T]): List[Class[Any]] =
