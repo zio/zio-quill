@@ -986,7 +986,7 @@ libraryDependencies ++= Seq(
 )
 ```
 
-**synchronous source **
+**synchronous source**
 ```scala
 import io.getquill.naming.SnakeCase
 import io.getquill.source.cassandra.CassandraSyncSource
@@ -994,12 +994,20 @@ import io.getquill.source.cassandra.CassandraSyncSource
 object db extends CassandraSyncSource[SnakeCase]
 ```
 
-**asynchronous source **
+**asynchronous source**
 ```scala
 import io.getquill.naming.SnakeCase
 import io.getquill.source.cassandra.CassandraAsyncSource
 
 object db extends CassandraAsyncSource[SnakeCase]
+```
+
+**stream source**
+```scala
+import io.getquill.naming.SnakeCase
+import io.getquill.source.cassandra.CassandraAsyncSource
+
+object db extends CassandraStreamSource[SnakeCase]
 ```
 
 The configurations are set using runtime reflection on the [`Cluster.builder`](https://docs.datastax.com/en/drivers/java/2.1/com/datastax/driver/core/Cluster.Builder.html) instance. It is possible to set nested structures like `queryOptions.consistencyLevel`, use enum values like `LOCAL_QUORUM`, and set multiple parameters like in `credentials`.
