@@ -30,7 +30,7 @@ class CassandraStreamSource[N <: NamingStrategy]
       r
     }
 
-  def query[T](cql: String, bind: BoundStatement => BoundStatement, extractor: Row => T)(implicit ec: ExecutionContext): Observable[T] =
+  def query[T](cql: String, bind: BoundStatement => BoundStatement, extractor: Row => T): Observable[T] =
     logged(cql) {
       Observable
         .fromFuture(session.executeAsync(prepare(cql, bind)))
@@ -39,12 +39,12 @@ class CassandraStreamSource[N <: NamingStrategy]
         .map(extractor)
     }
 
-  def execute(cql: String)(implicit ec: ExecutionContext): Observable[ResultSet] =
+  def execute(cql: String): Observable[ResultSet] =
     logged(cql) {
       Observable.fromFuture(session.executeAsync(prepare(cql)))
     }
 
-  def execute[T](cql: String, bindParams: T => BoundStatement => BoundStatement)(implicit ec: ExecutionContext): Observable[T] => Observable[ResultSet] =
+  def execute[T](cql: String, bindParams: T => BoundStatement => BoundStatement): Observable[T] => Observable[ResultSet] =
     (values: Observable[T]) =>
       values.flatMap { value =>
         logged(cql) {
