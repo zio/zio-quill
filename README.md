@@ -1005,7 +1005,7 @@ object db extends CassandraAsyncSource[SnakeCase]
 **stream source**
 ```scala
 import io.getquill.naming.SnakeCase
-import io.getquill.source.cassandra.CassandraAsyncSource
+import io.getquill.source.cassandra.CassandraStreamSource
 
 object db extends CassandraStreamSource[SnakeCase]
 ```
