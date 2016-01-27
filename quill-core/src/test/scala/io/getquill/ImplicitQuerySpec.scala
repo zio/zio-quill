@@ -1,6 +1,6 @@
 package io.getquill
 
-import io.getquill.source.mirror.mirrorSource
+import io.getquill.TestSource.mirrorSource
 
 class ImplicitQuerySpec extends Spec {
 
@@ -9,7 +9,7 @@ class ImplicitQuerySpec extends Spec {
   "allows querying a case class companion" in {
     val q = quote {
       TestEntity.filter(t => t.s == "s")
-    }
+    } 
     mirrorSource.run(q).ast.toString mustEqual
       """query[TestEntity].filter(t => t.s == "s").map(t => (t.s, t.i, t.l, t.o))"""
   }

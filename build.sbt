@@ -82,8 +82,9 @@ lazy val commonSettings = Seq(
   organization := "io.getquill",
   scalaVersion := "2.11.7",
   libraryDependencies ++= Seq(
-    "org.scalatest" %% "scalatest"       % "2.2.4" % "test",
-    "ch.qos.logback" % "logback-classic" % "1.1.3" % "test"
+    "org.scalamacros" %% "resetallattrs"  % "1.0.0",
+    "org.scalatest"   %% "scalatest"      % "2.2.4" % "test",
+    "ch.qos.logback"  % "logback-classic" % "1.1.3" % "test"
   ),
   EclipseKeys.createSrc := EclipseCreateSrc.Default + EclipseCreateSrc.Resource,
   unmanagedClasspath in Test += baseDirectory.value / "src" / "test" / "resources",
