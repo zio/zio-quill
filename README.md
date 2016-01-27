@@ -981,7 +981,7 @@ db.pool.maxWaiters=2147483647
 sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-casandra" % "0.3.0"
+  "io.getquill" %% "quill-cassandra" % "0.3.0"
 )
 ```
 
