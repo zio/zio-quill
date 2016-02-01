@@ -25,6 +25,7 @@ Quill provides a Quoted Domain Specific Language ([QDSL](http://homepages.inf.ed
 * [Parametrized quotations](#parametrized-quotations)
 * [Schema](#schema)
 * [Queries](#queries)
+* [Query probing](#query-probing)
 * [Actions](#actions)
 * [Dynamic queries](#dynamic-queries)
 * [SQL-specific operations](#sql-specific-operations)
@@ -396,6 +397,18 @@ db.run(q3)
 // SELECT p.id, p.name, p.age, c.personId, c.phone 
 // FROM Person p FULL JOIN Contact c ON c.personId = p
 ```
+
+# Query probing #
+
+If configured, queries are verified against the database at compile time and the compilation fails if it is not valid. The query validation does not alter the database state.
+
+If query probing is enabled, the config file must be available at compile time. You can achieve it by adding this line to your project settings:
+
+```
+unmanagedClasspath in Compile += baseDirectory.value / "src" / "main" / "resources"
+```
+
+If your project doesn't have a standard layout, e.g. a play project, you should configure the path to point to the folder that contains your config file. 
 
 # Actions #
 
