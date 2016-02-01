@@ -1019,6 +1019,14 @@ object db extends CassandraStreamSource[SnakeCase]
 
 The configurations are set using runtime reflection on the [`Cluster.builder`](https://docs.datastax.com/en/drivers/java/2.1/com/datastax/driver/core/Cluster.Builder.html) instance. It is possible to set nested structures like `queryOptions.consistencyLevel`, use enum values like `LOCAL_QUORUM`, and set multiple parameters like in `credentials`.
 
+If query probing is enabled, the config file must be available at compile time. You can achieve it by adding this line to your project settings:
+
+```
+unmanagedClasspath in Compile += baseDirectory.value / "src" / "main" / "resources"
+```
+
+If your project doesn't have a standard layout, e.g. a play project, you should configure the path to point to the folder that contains your config file. 
+
 application.properties
 ```
 db.queryProbing=true
