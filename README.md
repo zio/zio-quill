@@ -25,7 +25,7 @@ Quill provides a Quoted Domain Specific Language ([QDSL](http://homepages.inf.ed
 * [Parametrized quotations](#parametrized-quotations)
 * [Schema](#schema)
 * [Queries](#queries)
-* [Query Probing](#query-probing)
+* [Query probing](#query-probing)
 * [Actions](#actions)
 * [Dynamic queries](#dynamic-queries)
 * [SQL-specific operations](#sql-specific-operations)
@@ -398,7 +398,7 @@ db.run(q3)
 // FROM Person p FULL JOIN Contact c ON c.personId = p
 ```
 
-# Query Probing #
+# Query probing #
 
 If configured, queries are verified against the database at compile time and the compilation fails if it is not valid. The query validation does not alter the database state.
 
