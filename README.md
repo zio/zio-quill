@@ -25,6 +25,7 @@ Quill provides a Quoted Domain Specific Language ([QDSL](http://homepages.inf.ed
 * [Parametrized quotations](#parametrized-quotations)
 * [Schema](#schema)
 * [Queries](#queries)
+* [Query Probing](#query-probing)
 * [Actions](#actions)
 * [Dynamic queries](#dynamic-queries)
 * [SQL-specific operations](#sql-specific-operations)
@@ -396,6 +397,18 @@ db.run(q3)
 // SELECT p.id, p.name, p.age, c.personId, c.phone 
 // FROM Person p FULL JOIN Contact c ON c.personId = p
 ```
+
+# Query Probing #
+
+If configured, queries are verified against the database at compile time and the compilation fails if it is not valid. The query validation does not alter the database state.
+
+If query probing is enabled, the config file must be available at compile time. You can achieve it by adding this line to your project settings:
+
+```
+unmanagedClasspath in Compile += baseDirectory.value / "src" / "main" / "resources"
+```
+
+If your project doesn't have a standard layout, e.g. a play project, you should configure the path to point to the folder that contains your config file. 
 
 # Actions #
 
@@ -816,14 +829,6 @@ The transformations are applied from left to right.
 
 Sources must be defined as `object` and the object name is used as the key to obtain configurations using the [typesafe config](http://github.com/typesafehub/config) library.
 
-If query probing is enabled, the config file must be available at compile time. You can achieve it by adding this line to your project settings:
-
-```
-unmanagedClasspath in Compile += baseDirectory.value / "src" / "main" / "resources"
-```
-
-If your project doesn't have a standard layout, e.g. a play project, you should configure the path to point to the folder that contains your config file. 
-
 ### quill-jdbc ###
 
 **MySQL**
@@ -1018,14 +1023,6 @@ object db extends CassandraStreamSource[SnakeCase]
 ```
 
 The configurations are set using runtime reflection on the [`Cluster.builder`](https://docs.datastax.com/en/drivers/java/2.1/com/datastax/driver/core/Cluster.Builder.html) instance. It is possible to set nested structures like `queryOptions.consistencyLevel`, use enum values like `LOCAL_QUORUM`, and set multiple parameters like in `credentials`.
-
-If query probing is enabled, the config file must be available at compile time. You can achieve it by adding this line to your project settings:
-
-```
-unmanagedClasspath in Compile += baseDirectory.value / "src" / "main" / "resources"
-```
-
-If your project doesn't have a standard layout, e.g. a play project, you should configure the path to point to the folder that contains your config file. 
 
 application.properties
 ```
