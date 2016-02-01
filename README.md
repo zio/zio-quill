@@ -816,6 +816,14 @@ The transformations are applied from left to right.
 
 Sources must be defined as `object` and the object name is used as the key to obtain configurations using the [typesafe config](http://github.com/typesafehub/config) library.
 
+If query probing is enabled, the config file must be available at compile time. You can achieve it by adding this line to your project settings:
+
+```
+unmanagedClasspath in Compile += baseDirectory.value / "src" / "main" / "resources"
+```
+
+If your project doesn't have a standard layout, e.g. a play project, you should configure the path to point to the folder that contains your config file. 
+
 ### quill-jdbc ###
 
 **MySQL**
