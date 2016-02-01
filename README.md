@@ -824,7 +824,7 @@ sbt dependencies
 ```
 libraryDependencies ++= Seq(
   "mysql" % "mysql-connector-java" % "5.1.36",
-  "io.getquill" %% "quill-jdbc" % "0.3.0"
+  "io.getquill" %% "quill-jdbc" % "0.3.1"
 )
 ```
 
@@ -855,7 +855,7 @@ sbt dependencies
 ```
 libraryDependencies ++= Seq(
   "org.postgresql" % "postgresql" % "9.4-1206-jdbc41",
-  "io.getquill" %% "quill-jdbc" % "0.3.0"
+  "io.getquill" %% "quill-jdbc" % "0.3.1"
 )
 ```
 
@@ -888,7 +888,7 @@ Please refer to HikariCP's [documentation](https://github.com/brettwooldridge/Hi
 sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async" % "0.3.0"
+  "io.getquill" %% "quill-async" % "0.3.1"
 )
 ```
 
@@ -919,7 +919,7 @@ db.poolValidationInterval=100
 sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async" % "0.3.0"
+  "io.getquill" %% "quill-async" % "0.3.1"
 )
 ```
 
@@ -950,7 +950,7 @@ db.poolValidationInterval=100
 sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-finagle-mysql" % "0.3.0"
+  "io.getquill" %% "quill-finagle-mysql" % "0.3.1"
 )
 ```
 
@@ -981,7 +981,7 @@ db.pool.maxWaiters=2147483647
 sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-cassandra" % "0.3.0"
+  "io.getquill" %% "quill-cassandra" % "0.3.1"
 )
 ```
 

@@ -1,3 +1,7 @@
+# 0.3.1 / 01-Feb-2016
+
+* [fix #134 - ignore the property `queryProbing` when creating the hikari data source](https://github.com/getquill/quill/issues/134)
+
 # 0.3.0 / 26-Jan-2016
 
 * [quill-cassandra: first version of the module featuring async and sync sources](https://github.com/getquill/quill/#cassandra-sources)
