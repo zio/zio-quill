@@ -13,7 +13,7 @@ class JdbcSourceConfig[D <: SqlIdiom, N <: NamingStrategy](val name: String) ext
 
   def configProperties = {
     val p = new Properties
-    for (entry <- config.entrySet if(entry.getKey != "queryProbing"))
+    for (entry <- config.entrySet)
       p.setProperty(entry.getKey, entry.getValue.unwrapped.toString)
     p
   }

@@ -440,6 +440,12 @@ unmanagedClasspath in Compile += baseDirectory.value / "src" / "main" / "resourc
 
 If your project doesn't have a standard layout, e.g. a play project, you should configure the path to point to the folder that contains your config file. 
 
+It's possible to disable the query probing by adding the `NoQueryProbing` trait to your source configuration:
+
+```
+lazy val db = source(new MySourceConfig("configKey") with NoQueryProbing)
+```
+
 # Actions #
 
 Database actions are defined using quotations as well. These actions don't have a collection-like API but rather a custom DSL to express inserts, deletes and updates.
@@ -886,7 +892,6 @@ lazy val db = source(new JdbcSourceConfig[MySQLDialect, SnakeCase]("db"))
 
 application.properties
 ```
-db.queryProbing=true
 db.dataSourceClassName=com.mysql.jdbc.jdbc2.optional.MysqlDataSource
 db.dataSource.url=jdbc:mysql://host/database
 db.dataSource.user=root
@@ -917,7 +922,6 @@ lazy val db = source(new JdbcSourceConfig[PostgresDialect, SnakeCase]("db"))
 
 application.properties
 ```
-db.queryProbing=true
 db.dataSourceClassName=org.postgresql.ds.PGSimpleDataSource
 db.dataSource.user=root
 db.dataSource.password=root
@@ -949,7 +953,6 @@ lazy val db = source(new MysqlAsyncSourceConfig[SnakeCase]("db"))
 
 application.properties
 ```
-db.queryProbing=true
 db.host=host
 db.port=3306
 db.user=root
@@ -980,7 +983,6 @@ lazy val db = source(new PostgresAsyncSourceConfig[SnakeCase]("db"))
 
 application.properties
 ```
-db.queryProbing=true
 db.host=host
 db.port=5432
 db.user=root
@@ -1011,7 +1013,6 @@ lazy val db = source(new FinagleMysqlSourceConfig[SnakeCase]("db"))
 
 application.properties
 ```
-db.queryProbing=true
 db.dest=localhost:3306
 db.user=root
 db.password=root
@@ -1060,7 +1061,6 @@ The configurations are set using runtime reflection on the [`Cluster.builder`](h
 
 application.properties
 ```
-db.queryProbing=true
 db.keyspace=quill_test
 db.preparedStatementCacheSize=1000
 db.session.contactPoint=127.0.0.1

@@ -9,23 +9,23 @@ import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
 import io.getquill.util.Messages._
+import io.getquill.NoQueryProbing
 
 import org.scalamacros.resetallattrs.ResetAllAttrs
 
 import io.getquill.util.Cache
 
-case class QuotedSource(tree: Any) extends StaticAnnotation
+case class QuotedSource(tree: Any, probingEnabled: Boolean) extends StaticAnnotation
 
 trait ResolveSourceMacro {
   val c: Context
   import c.universe.{ Try => _, _ }
 
   def quoteSource[T <: Source[_, _]](config: Expr[SourceConfig[T]])(implicit t: WeakTypeTag[T]) = {
-    val sourceTree = q"new $t($config)"
-    resolveSource(t.tpe, Some(sourceTree))
+    val probingEnabled = !(config.actualType <:< c.weakTypeOf[NoQueryProbing])
     q"""
       new $t($config) {
-        @${c.weakTypeOf[QuotedSource]}($sourceTree)
+        @${c.weakTypeOf[QuotedSource]}(new $t($config), $probingEnabled)
         def quoted() = ()
       }  
     """
@@ -36,16 +36,18 @@ trait ResolveSourceMacro {
     resolveSource(tpe, sourceTree(tpe))
       .asInstanceOf[Option[T]]
   }
-  
-  private def resolveSource(tpe: Type, sourceTree: Option[Tree]): Option[Any] = {
+
+  private def resolveSource(tpe: Type, sourceTree: Option[List[Tree]]): Option[Any] = {
     val tpe = c.prefix.tree.tpe
     ResolveSourceMacro.cache
-      .getOrElseUpdate(tpe, unsource(sourceTree), 30.seconds)
+      .getOrElseUpdate(tpe, unquote(sourceTree), 30.seconds)
   }
 
-  private def unsource(sourceTree: Option[Tree]): Option[Source[_, _]] =
+  private def unquote(sourceTree: Option[List[Tree]]): Option[Source[_, _]] =
     sourceTree match {
-      case Some(tree) =>
+      case Some(_ :: q"false" :: Nil) =>
+        None
+      case Some(tree :: _ :: Nil) =>
         loadSource(tree.duplicate) match {
           case Success(value) =>
             Some(value)
@@ -78,8 +80,7 @@ trait ResolveSourceMacro {
     for {
       method <- tpe.decls.find(_.name.decodedName.toString == "quoted")
       annotation <- method.annotations.headOption
-      tree <- annotation.tree.children.lastOption
-    } yield tree
+    } yield annotation.tree.children.drop(1) 
 }
 
 object ResolveSourceMacro {

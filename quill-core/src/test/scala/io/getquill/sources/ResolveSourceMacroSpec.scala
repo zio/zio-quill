@@ -4,14 +4,15 @@ import io.getquill._
 
 class ResolveSourceMacroSpec extends Spec {
 
+  class BuggyConfig extends MirrorSourceConfig("buggy")
+  
   "warns if the source can't be resolved at compile time" in {
-    class Config extends MirrorSourceConfig("buggy")
-    source(new Config)
+    "source(new BuggyConfig)" must compile
+    ()
   }
 
   "doesn't warn if query probing is disabled and the source can't be resolved at compile time" in {
-    System.setProperty("disabledSource.queryProbing", "false")
-    val s = source(new MirrorSourceConfig("disabledSource"))
+    val s = source(new BuggyConfig with NoQueryProbing)
     s.run(qr1.delete)
     ()
   }
