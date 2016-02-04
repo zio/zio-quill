@@ -1,7 +1,7 @@
 package io.getquill.source.cassandra
 
 import io.getquill._
-import java.util.Date
+import java.util.{UUID, Date}
 import com.datastax.driver.core.ConsistencyLevel
 import monifu.reactive.Observable
 import scala.collection.mutable.ListBuffer
@@ -88,6 +88,7 @@ class EncodingSpec extends Spec {
     v7: Double,
     v8: Array[Byte],
     v9: Date,
+    v10:UUID,
     o1: Option[String],
     o2: Option[BigDecimal],
     o3: Option[Boolean],
@@ -111,6 +112,7 @@ class EncodingSpec extends Spec {
         v7 = 42d,
         v8 = Array(1.toByte, 2.toByte),
         v9 = new Date(31200000),
+        v10 = UUID.fromString(""),
         o1 = Some("s"),
         o2 = Some(BigDecimal(1.1)),
         o3 = Some(true),
@@ -131,6 +133,8 @@ class EncodingSpec extends Spec {
         v7 = 0D,
         v8 = Array(),
         v9 = new Date(0),
+
+        v10 = UUID.randomUUID(),
         o1 = None,
         o2 = None,
         o3 = None,

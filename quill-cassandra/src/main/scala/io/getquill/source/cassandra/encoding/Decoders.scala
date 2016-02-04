@@ -1,5 +1,7 @@
 package io.getquill.source.cassandra.encoding
 
+import java.util.UUID
+
 import scala.math.BigDecimal.javaBigDecimal2bigDecimal
 import com.datastax.driver.core.Row
 import io.getquill.source.cassandra.CassandraSource
@@ -42,6 +44,12 @@ trait Decoders {
         val b = new Array[Byte](bb.remaining())
         bb.get(b)
         b
+      }
+    }
+  implicit val uuidDecoder: Decoder[UUID] =
+    new Decoder[UUID] {
+      def apply(index: Int, row: Row) = {
+        row.getUUID(index)
       }
     }
   implicit val dateDecoder = decoder(_.getDate)

@@ -39,6 +39,7 @@ CREATE TABLE EncodingTestEntity(
     v7 DOUBLE,
     v8 BLOB,
     v9 TIMESTAMP,
+    v10 UUID,
     o1 VARCHAR,
     o2 DECIMAL,
     o3 BOOLEAN,

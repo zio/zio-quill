@@ -1,5 +1,7 @@
 package io.getquill.source.cassandra.encoding
 
+import java.util.UUID
+
 import com.datastax.driver.core.BoundStatement
 import java.nio.ByteBuffer
 import io.getquill.source.cassandra.CassandraSource
@@ -36,6 +38,10 @@ trait Encoders {
   implicit val byteArrayEncoder: Encoder[Array[Byte]] = new Encoder[Array[Byte]] {
     override def apply(index: Int, value: Array[Byte], row: BoundStatement) =
       row.setBytes(index, ByteBuffer.wrap(value))
+  }
+  implicit val uuidEncoder: Encoder[UUID] = new Encoder[UUID] {
+    override def apply(index: Int, value: UUID, row: BoundStatement) =
+      row.setUUID(index,value)
   }
   implicit val dateEncoder = encoder(_.setDate)
 }
