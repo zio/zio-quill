@@ -65,7 +65,7 @@ class EncodingSpec extends Spec {
     e.v7 mustEqual a.v7
     e.v8.toList mustEqual a.v8.toList
     e.v9 mustEqual a.v9
-
+    e.v10 mustEqual a.v10
     e.o1 mustEqual a.o1
     e.o2 mustEqual a.o2
     e.o3 mustEqual a.o3
@@ -99,6 +99,8 @@ class EncodingSpec extends Spec {
     o8: Option[Array[Byte]],
     o9: Option[Date])
 
+  private val fixUUID: UUID = UUID.fromString("606c79e8-a331-4810-8bd7-0668ff7a23ef")
+
   val insertValues =
     List(
       EncodingTestEntity(
@@ -112,7 +114,7 @@ class EncodingSpec extends Spec {
         v7 = 42d,
         v8 = Array(1.toByte, 2.toByte),
         v9 = new Date(31200000),
-        v10 = UUID.fromString("xyz"),
+        v10 = fixUUID,
         o1 = Some("s"),
         o2 = Some(BigDecimal(1.1)),
         o3 = Some(true),
@@ -133,7 +135,7 @@ class EncodingSpec extends Spec {
         v7 = 0D,
         v8 = Array(),
         v9 = new Date(0),
-        v10 = UUID.fromString("xyz"),
+        v10 = fixUUID,
         o1 = None,
         o2 = None,
         o3 = None,
