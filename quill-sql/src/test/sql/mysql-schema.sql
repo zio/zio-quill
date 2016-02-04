@@ -48,6 +48,12 @@ CREATE TABLE EncodingTestEntity(
     o11 DATETIME
 );
 
+Create TABLE DateEncodingTestEntity(
+  v1 date,
+  v2 datetime,
+  v3 timestamp
+);
+
 CREATE TABLE TestEntity(
 	s VARCHAR(255),
     i INTEGER,
