@@ -112,7 +112,7 @@ class EncodingSpec extends Spec {
         v7 = 42d,
         v8 = Array(1.toByte, 2.toByte),
         v9 = new Date(31200000),
-        v10 = UUID.fromString(""),
+        v10 = UUID.fromString("xyz"),
         o1 = Some("s"),
         o2 = Some(BigDecimal(1.1)),
         o3 = Some(true),
@@ -133,8 +133,7 @@ class EncodingSpec extends Spec {
         v7 = 0D,
         v8 = Array(),
         v9 = new Date(0),
-
-        v10 = UUID.randomUUID(),
+        v10 = UUID.fromString("xyz"),
         o1 = None,
         o2 = None,
         o3 = None,
