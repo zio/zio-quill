@@ -11,6 +11,7 @@ import com.datastax.driver.core.Row
 import io.getquill.naming.NamingStrategy
 import io.getquill.sources.cassandra.util.FutureConversions.toScalaFuture
 import io.getquill.CassandraSourceConfig
+import io.getquill.sources.BindedStatementBuilder
 
 class CassandraAsyncSource[N <: NamingStrategy](config: CassandraSourceConfig[N, CassandraAsyncSource[N]])
   extends CassandraSourceSession[N](config) {
@@ -20,23 +21,18 @@ class CassandraAsyncSource[N <: NamingStrategy](config: CassandraSourceConfig[N,
   override type BatchedActionResult[T] = Future[List[ResultSet]]
   override type Params[T] = List[T]
 
-  def query[T](cql: String, bind: BoundStatement => BoundStatement, extractor: Row => T)(implicit ec: ExecutionContext): Future[List[T]] = {
-    logger.info(cql)
+  def query[T](cql: String, bind: BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement], extractor: Row => T)(implicit ec: ExecutionContext): Future[List[T]] =
     session.executeAsync(prepare(cql, bind))
       .map(_.all.toList.map(extractor))
-  }
 
-  def execute(cql: String)(implicit ec: ExecutionContext): Future[ResultSet] = {
-    logger.info(cql)
+  def execute(cql: String)(implicit ec: ExecutionContext): Future[ResultSet] =
     session.executeAsync(prepare(cql))
-  }
 
-  def execute[T](cql: String, bindParams: T => BoundStatement => BoundStatement)(implicit ec: ExecutionContext): List[T] => Future[List[ResultSet]] = {
+  def execute[T](cql: String, bindParams: T => BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement])(implicit ec: ExecutionContext): List[T] => Future[List[ResultSet]] = {
     def run(values: List[T]): Future[List[ResultSet]] =
       values match {
         case Nil => Future.successful(List())
         case head :: tail =>
-          logger.info(cql)
           session.executeAsync(prepare(cql, bindParams(head))).flatMap { result =>
             run(tail).map(result +: _)
           }

@@ -307,11 +307,17 @@ trait Parsing {
       case "%"       => NumericOperator.`%`
     }
 
-  val setOperationParser: Parser[Operation] =
-    operationParser(is[io.getquill.Query[Any]](_)) {
-      case "isEmpty"  => SetOperator.`isEmpty`
-      case "nonEmpty" => SetOperator.`nonEmpty`
+  val setOperationParser: Parser[Operation] = {
+    val unary =
+      operationParser(is[io.getquill.Query[Any]](_)) {
+        case "isEmpty"  => SetOperator.`isEmpty`
+        case "nonEmpty" => SetOperator.`nonEmpty`
+      }
+    Parser[Operation] {
+      case q"$a.contains[..$t]($b)" => BinaryOperation(astParser(a), SetOperator.`contains`, astParser(b))
+      case unary(op)                => op
     }
+  }
 
   private def isNumeric[T: WeakTypeTag] =
     c.inferImplicitValue(c.weakTypeOf[Numeric[T]]) != EmptyTree
@@ -323,6 +329,7 @@ trait Parsing {
     case q"null"                         => NullValue
     case Literal(c.universe.Constant(v)) => Constant(v)
     case q"((..$v))" if (v.size > 1)     => Tuple(v.map(astParser(_)))
+    case q"$pack.Set.apply[..$t](..$v)"  => Set(v.map(astParser(_)))
   }
 
   val actionParser: Parser[Ast] = Parser[Ast] {

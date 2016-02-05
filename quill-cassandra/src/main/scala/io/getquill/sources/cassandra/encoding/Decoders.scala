@@ -1,14 +1,14 @@
 package io.getquill.sources.cassandra.encoding
 
 import java.util.UUID
-
 import scala.math.BigDecimal.javaBigDecimal2bigDecimal
 import com.datastax.driver.core.Row
 import io.getquill.sources.cassandra.CassandraSource
 import com.datastax.driver.core.BoundStatement
+import io.getquill.sources.BindedStatementBuilder
 
 trait Decoders {
-  this: CassandraSource[_, Row, BoundStatement] =>
+  this: CassandraSource[_, Row, BindedStatementBuilder[BoundStatement]] =>
 
   private def decoder[T](f: Row => Int => T): Decoder[T] =
     new Decoder[T] {

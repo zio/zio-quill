@@ -384,6 +384,13 @@ class AstShowSpec extends Spec {
       (q.ast: Ast).show mustEqual
         """(null, 1, "a")"""
     }
+    "set" in {
+      val q = quote {
+        collection.Set(1, 2, 3)
+      }
+      (q.ast: Ast).show mustEqual
+        """Set(1, 2, 3)"""
+    }
   }
 
   "shows idents" in {

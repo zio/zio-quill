@@ -34,20 +34,21 @@ trait Liftables {
   }
 
   implicit val binaryOperatorLiftable: Liftable[BinaryOperator] = Liftable[BinaryOperator] {
-    case EqualityOperator.`==` => q"$pack.EqualityOperator.`==`"
-    case EqualityOperator.`!=` => q"$pack.EqualityOperator.`!=`"
-    case BooleanOperator.`&&`  => q"$pack.BooleanOperator.`&&`"
-    case BooleanOperator.`||`  => q"$pack.BooleanOperator.`||`"
-    case StringOperator.`+`    => q"$pack.StringOperator.`+`"
-    case NumericOperator.`-`   => q"$pack.NumericOperator.`-`"
-    case NumericOperator.`+`   => q"$pack.NumericOperator.`+`"
-    case NumericOperator.`*`   => q"$pack.NumericOperator.`*`"
-    case NumericOperator.`>`   => q"$pack.NumericOperator.`>`"
-    case NumericOperator.`>=`  => q"$pack.NumericOperator.`>=`"
-    case NumericOperator.`<`   => q"$pack.NumericOperator.`<`"
-    case NumericOperator.`<=`  => q"$pack.NumericOperator.`<=`"
-    case NumericOperator.`/`   => q"$pack.NumericOperator.`/`"
-    case NumericOperator.`%`   => q"$pack.NumericOperator.`%`"
+    case EqualityOperator.`==`  => q"$pack.EqualityOperator.`==`"
+    case EqualityOperator.`!=`  => q"$pack.EqualityOperator.`!=`"
+    case BooleanOperator.`&&`   => q"$pack.BooleanOperator.`&&`"
+    case BooleanOperator.`||`   => q"$pack.BooleanOperator.`||`"
+    case StringOperator.`+`     => q"$pack.StringOperator.`+`"
+    case NumericOperator.`-`    => q"$pack.NumericOperator.`-`"
+    case NumericOperator.`+`    => q"$pack.NumericOperator.`+`"
+    case NumericOperator.`*`    => q"$pack.NumericOperator.`*`"
+    case NumericOperator.`>`    => q"$pack.NumericOperator.`>`"
+    case NumericOperator.`>=`   => q"$pack.NumericOperator.`>=`"
+    case NumericOperator.`<`    => q"$pack.NumericOperator.`<`"
+    case NumericOperator.`<=`   => q"$pack.NumericOperator.`<=`"
+    case NumericOperator.`/`    => q"$pack.NumericOperator.`/`"
+    case NumericOperator.`%`    => q"$pack.NumericOperator.`%`"
+    case SetOperator.`contains` => q"$pack.SetOperator.`contains`"
   }
 
   implicit val unaryOperatorLiftable: Liftable[UnaryOperator] = Liftable[UnaryOperator] {
@@ -118,6 +119,7 @@ trait Liftables {
     case NullValue   => q"$pack.NullValue"
     case Constant(a) => q"$pack.Constant(${Literal(c.universe.Constant(a))})"
     case Tuple(a)    => q"$pack.Tuple($a)"
+    case Set(a)      => q"$pack.Set($a)"
   }
   implicit val identLiftable: Liftable[Ident] = Liftable[Ident] {
     case Ident(a) => q"$pack.Ident($a)"

@@ -19,9 +19,10 @@ import io.getquill.sources.sql.idiom.SqlIdiom
 import language.experimental.macros
 import io.getquill.quotation.Quoted
 import io.getquill.sources.sql.SqlSourceMacro
+import io.getquill.sources.BindedStatementBuilder
 
 class AsyncSource[D <: SqlIdiom, N <: NamingStrategy, C <: Connection](config: AsyncSourceConfig[D, N, C])
-  extends SqlSource[D, N, RowData, List[Any]]
+  extends SqlSource[D, N, RowData, BindedStatementBuilder[List[Any]]]
   with Decoders
   with Encoders
   with StrictLogging {
@@ -58,21 +59,24 @@ class AsyncSource[D <: SqlIdiom, N <: NamingStrategy, C <: Connection](config: A
     withConnection(_.sendQuery(sql))
   }
 
-  def execute[T](sql: String, bindParams: T => List[Any] => List[Any])(implicit ec: ExecutionContext): List[T] => Future[List[DBQueryResult]] = {
+  def execute[T](sql: String, bindParams: T => BindedStatementBuilder[List[Any]] => BindedStatementBuilder[List[Any]])(implicit ec: ExecutionContext): List[T] => Future[List[DBQueryResult]] = {
     def run(values: List[T]): Future[List[DBQueryResult]] =
       values match {
         case Nil =>
           Future.successful(List())
         case value :: tail =>
-          logger.info(sql)
-          withConnection(_.sendPreparedStatement(sql, bindParams(value)(List())))
-            .flatMap(_ => run(tail))
+          val (expanded, params) = bindParams(value)(new BindedStatementBuilder).build(sql)
+          logger.info(expanded)
+          withConnection(_.sendPreparedStatement(sql, params(List())))
+            .flatMap(r => run(tail).map(r +: _))
       }
     run _
   }
 
-  def query[T](sql: String, bind: List[Any] => List[Any], extractor: RowData => T)(implicit ec: ExecutionContext) = {
-    withConnection(_.sendPreparedStatement(sql, bind(List()))).map {
+  def query[T](sql: String, bind: BindedStatementBuilder[List[Any]] => BindedStatementBuilder[List[Any]], extractor: RowData => T)(implicit ec: ExecutionContext) = {
+    val (expanded, params) = bind(new BindedStatementBuilder).build(sql)
+    logger.info(expanded)
+    withConnection(_.sendPreparedStatement(expanded, params(List()))).map {
       _.rows match {
         case Some(rows) => rows.map(extractor).toList
         case None       => List()

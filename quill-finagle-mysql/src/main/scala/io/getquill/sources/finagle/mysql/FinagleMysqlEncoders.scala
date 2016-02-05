@@ -8,30 +8,46 @@ import com.twitter.finagle.exp.mysql.CanBeParameter._
 import com.twitter.finagle.exp.mysql.Parameter
 import com.twitter.finagle.exp.mysql.Parameter.wrap
 import com.twitter.finagle.exp.mysql.NullValue
+import io.getquill.sources.BindedStatementBuilder
 
 trait FinagleMysqlEncoders {
   this: FinagleMysqlSource[_] =>
 
   def encoder[T](implicit cbp: CanBeParameter[T]): Encoder[T] =
+    encoder[T]((v: T) => v: Parameter)
+
+  def encoder[T](f: T => Parameter): Encoder[T] =
     new Encoder[T] {
-      def apply(index: Int, value: T, row: List[Parameter]) =
-        row :+ (value: Parameter)
+      def apply(idx: Int, value: T, row: BindedStatementBuilder[List[Parameter]]) = {
+        val raw = new io.getquill.sources.Encoder[List[Parameter], T] {
+          override def apply(idx: Int, value: T, row: List[Parameter]) =
+            row :+ f(value)
+        }
+        row.single[T](idx, value, raw)
+      }
     }
 
-  implicit def optionEncoder[T](implicit d: Encoder[T]): Encoder[Option[T]] =
+  implicit def setEncoder[T](implicit e: Encoder[T]): Encoder[Set[T]] =
+    new Encoder[Set[T]] {
+      def apply(idx: Int, values: Set[T], row: BindedStatementBuilder[List[Parameter]]) =
+        row.coll[T](idx, values, e)
+    }
+
+  private[this] val nullEncoder = encoder((_: Null) => Parameter.NullParameter)
+
+  implicit def optionEncoder[T](implicit e: Encoder[T]): Encoder[Option[T]] =
     new Encoder[Option[T]] {
-      def apply(index: Int, value: Option[T], row: List[Parameter]) =
+      def apply(idx: Int, value: Option[T], row: BindedStatementBuilder[List[Parameter]]) =
         value match {
-          case None        => row :+ (Parameter.NullParameter)
-          case Some(value) => d(index, value, row)
+          case None        => nullEncoder(idx, null, row)
+          case Some(value) => e(idx, value, row)
         }
     }
 
   implicit val stringEncoder: Encoder[String] = encoder[String]
   implicit val bigDecimalEncoder: Encoder[BigDecimal] =
-    new Encoder[BigDecimal] {
-      def apply(index: Int, value: BigDecimal, row: List[Parameter]) =
-        row :+ (BigDecimalValue(value): Parameter)
+    encoder[BigDecimal] { (value: BigDecimal) =>
+      BigDecimalValue(value): Parameter
     }
   implicit val booleanEncoder: Encoder[Boolean] = encoder[Boolean]
   implicit val byteEncoder: Encoder[Byte] = encoder[Byte]

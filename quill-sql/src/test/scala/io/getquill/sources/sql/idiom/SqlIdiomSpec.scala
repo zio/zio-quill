@@ -501,6 +501,22 @@ class SqlIdiomSpec extends Spec {
           mirrorSource.run(q).sql mustEqual
             "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE (t.i % t.l) = 0"
         }
+        "contains" - {
+          "query" in {
+            val q = quote {
+              qr1.filter(t => qr2.map(p => p.i).contains(t.i))
+            }
+            mirrorSource.run(q).sql mustEqual
+              "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.i IN (SELECT p.i FROM TestEntity2 p)"
+          }
+          "set" in {
+            val q = quote {
+              qr1.filter(t => Set(1, 2).contains(t.i))
+            }
+            mirrorSource.run(q).sql mustEqual
+              "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.i IN (1, 2)"
+          }
+        }
       }
       "function apply" in {
         import io.getquill.util.Show._

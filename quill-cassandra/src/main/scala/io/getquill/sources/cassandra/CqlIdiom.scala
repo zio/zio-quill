@@ -62,9 +62,10 @@ object CqlIdiom {
   }
 
   implicit def operationShow(implicit strategy: NamingStrategy): Show[Operation] = Show[Operation] {
-    case BinaryOperation(a, op, b) => s"${a.show} ${op.show} ${b.show}"
-    case e: UnaryOperation         => fail(s"Cql doesn't support unary operations. Found: '$e'")
-    case e: FunctionApply          => fail(s"Cql doesn't support functions. Found: '$e'")
+    case BinaryOperation(a, op @ SetOperator.`contains`, b) => s"${b.show} ${op.show} (${a.show})"
+    case BinaryOperation(a, op, b)                          => s"${a.show} ${op.show} ${b.show}"
+    case e: UnaryOperation                                  => fail(s"Cql doesn't support unary operations. Found: '$e'")
+    case e: FunctionApply                                   => fail(s"Cql doesn't support functions. Found: '$e'")
   }
 
   implicit val aggregationOperatorShow: Show[AggregationOperator] = Show[AggregationOperator] {
@@ -73,13 +74,14 @@ object CqlIdiom {
   }
 
   implicit val binaryOperatorShow: Show[BinaryOperator] = Show[BinaryOperator] {
-    case EqualityOperator.`==` => "="
-    case BooleanOperator.`&&`  => "AND"
-    case NumericOperator.`>`   => ">"
-    case NumericOperator.`>=`  => ">="
-    case NumericOperator.`<`   => "<"
-    case NumericOperator.`<=`  => "<="
-    case other                 => fail(s"Cql doesn't support the '$other' operator.")
+    case EqualityOperator.`==`  => "="
+    case BooleanOperator.`&&`   => "AND"
+    case NumericOperator.`>`    => ">"
+    case NumericOperator.`>=`   => ">="
+    case NumericOperator.`<`    => "<"
+    case NumericOperator.`<=`   => "<="
+    case SetOperator.`contains` => "IN"
+    case other                  => fail(s"Cql doesn't support the '$other' operator.")
   }
 
   implicit def propertyShow(implicit valueShow: Show[Value], identShow: Show[Ident], strategy: NamingStrategy): Show[Property] =
@@ -92,6 +94,7 @@ object CqlIdiom {
     case Constant(())        => s"1"
     case Constant(v)         => s"$v"
     case Tuple(values)       => s"${values.show}"
+    case Set(values)         => s"${values.show}"
     case NullValue           => fail("Cql doesn't support null values.")
   }
 

@@ -18,9 +18,10 @@ import com.twitter.finagle.Service
 import com.twitter.finagle.exp.mysql.Request
 import com.twitter.finagle.exp.mysql.PrepareRequest
 import io.getquill.FinagleMysqlSourceConfig
+import io.getquill.sources.BindedStatementBuilder
 
 class FinagleMysqlSource[N <: NamingStrategy](config: FinagleMysqlSourceConfig[N])
-  extends SqlSource[MySQLDialect, N, Row, List[Parameter]]
+  extends SqlSource[MySQLDialect, N, Row, BindedStatementBuilder[List[Parameter]]]
   with FinagleMysqlDecoders
   with FinagleMysqlEncoders
   with StrictLogging {
@@ -52,22 +53,24 @@ class FinagleMysqlSource[N <: NamingStrategy](config: FinagleMysqlSourceConfig[N
   def execute(sql: String): Future[Result] =
     withClient(_.prepare(sql)())
 
-  def execute[T](sql: String, bindParams: T => List[Parameter] => List[Parameter]): List[T] => Future[List[Result]] = {
+  def execute[T](sql: String, bindParams: T => BindedStatementBuilder[List[Parameter]] => BindedStatementBuilder[List[Parameter]]): List[T] => Future[List[Result]] = {
     def run(values: List[T]): Future[List[Result]] =
       values match {
         case Nil =>
           Future.value(List())
         case value :: tail =>
-          logger.info(sql)
-          withClient(_.prepare(sql)(bindParams(value)(List()): _*))
+          val (expanded, params) = bindParams(value)(new BindedStatementBuilder).build(sql)
+          logger.info(expanded)
+          withClient(_.prepare(expanded)(params(List()): _*))
             .flatMap(_ => run(tail))
       }
     run _
   }
 
-  def query[T](sql: String, bind: List[Parameter] => List[Parameter], extractor: Row => T): Future[List[T]] = {
-    logger.info(sql)
-    withClient(_.prepare(sql).select(bind(List()): _*)(extractor)).map(_.toList)
+  def query[T](sql: String, bind: BindedStatementBuilder[List[Parameter]] => BindedStatementBuilder[List[Parameter]], extractor: Row => T): Future[List[T]] = {
+    val (expanded, params) = bind(new BindedStatementBuilder).build(sql)
+    logger.info(expanded)
+    withClient(_.prepare(expanded).select(params(List()): _*)(extractor)).map(_.toList)
   }
 
   private def withClient[T](f: Client => T) =

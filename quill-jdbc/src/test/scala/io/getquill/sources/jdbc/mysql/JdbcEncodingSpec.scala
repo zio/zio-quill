@@ -10,4 +10,14 @@ class JdbcEncodingSpec extends EncodingSpec {
     testMysqlDB.run(insert)(insertValues)
     verify(testMysqlDB.run(query[EncodingTestEntity]))
   }
+
+  "encodes sets" in {
+    testMysqlDB.run(query[EncodingTestEntity].delete)
+    testMysqlDB.run(query[EncodingTestEntity].insert)(insertValues)
+    val q = quote {
+      (set: Set[Int]) =>
+        query[EncodingTestEntity].filter(t => set.contains(t.v6))
+    }
+    verify(testMysqlDB.run(q)(insertValues.map(_.v6).toSet))
+  }
 }

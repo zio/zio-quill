@@ -12,9 +12,10 @@ import io.getquill.sources.sql.idiom.SqlIdiom
 import scala.util.control.NonFatal
 import scala.annotation.tailrec
 import io.getquill.JdbcSourceConfig
+import io.getquill.sources.BindedStatementBuilder
 
 class JdbcSource[D <: SqlIdiom, N <: NamingStrategy](config: JdbcSourceConfig[D, N])
-  extends SqlSource[D, N, ResultSet, PreparedStatement]
+  extends SqlSource[D, N, ResultSet, BindedStatementBuilder[PreparedStatement]]
   with JdbcEncoders
   with JdbcDecoders
   with StrictLogging {
@@ -68,23 +69,27 @@ class JdbcSource[D <: SqlIdiom, N <: NamingStrategy](config: JdbcSourceConfig[D,
     }
   }
 
-  def execute[T](sql: String, bindParams: T => PreparedStatement => PreparedStatement): List[T] => List[Int] = {
+  def execute[T](sql: String, bindParams: T => BindedStatementBuilder[PreparedStatement] => BindedStatementBuilder[PreparedStatement]): List[T] => List[Int] = {
     (values: List[T]) =>
-      logger.info(sql)
-      withConnection { conn =>
-        val ps = conn.prepareStatement(sql)
-        for (value <- values) {
-          bindParams(value)(ps)
-          ps.addBatch
+      val groups = values.map(bindParams(_)(new BindedStatementBuilder[PreparedStatement]).build(sql)).groupBy(_._1)
+      (for ((sql, setValues) <- groups.toList) yield {
+        logger.info(sql)
+        withConnection { conn =>
+          val ps = conn.prepareStatement(sql)
+          for ((_, set) <- setValues) {
+            set(ps)
+            ps.addBatch
+          }
+          ps.executeBatch.toList
         }
-        ps.executeBatch.toList
-      }
+      }).flatten
   }
 
-  def query[T](sql: String, bind: PreparedStatement => PreparedStatement, extractor: ResultSet => T): List[T] = {
-    logger.info(sql)
+  def query[T](sql: String, bind: BindedStatementBuilder[PreparedStatement] => BindedStatementBuilder[PreparedStatement], extractor: ResultSet => T): List[T] = {
+    val (expanded, setValues) = bind(new BindedStatementBuilder[PreparedStatement]).build(sql)
+    logger.info(expanded)
     withConnection { conn =>
-      val ps = bind(conn.prepareStatement(sql))
+      val ps = setValues(conn.prepareStatement(expanded))
       val rs = ps.executeQuery
       extractResult(rs, extractor)
     }

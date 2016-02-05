@@ -110,6 +110,9 @@ trait StatefulTransformer[T] {
       case Tuple(a) =>
         val (at, att) = apply(a)(_.apply)
         (Tuple(at), att)
+      case Set(a) =>
+        val (at, att) = apply(a)(_.apply)
+        (Set(at), att)
     }
 
   def apply(e: Action): (Action, StatefulTransformer[T]) =

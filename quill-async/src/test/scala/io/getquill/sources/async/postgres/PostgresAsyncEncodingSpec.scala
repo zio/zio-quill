@@ -56,4 +56,20 @@ class PostgresAsyncEncodingSpec extends EncodingSpec {
       }
     }
   }
+
+  "encodes sets" in {
+    val q = quote {
+      (set: Set[Int]) =>
+        query[EncodingTestEntity].filter(t => set.contains(t.v6))
+    }
+    val fut =
+      for {
+        _ <- testPostgresDB.run(query[EncodingTestEntity].delete)
+        _ <- testPostgresDB.run(query[EncodingTestEntity].insert)(insertValues)
+        r <- testPostgresDB.run(q)(insertValues.map(_.v6).toSet)
+      } yield {
+        r
+      }
+    verify(Await.result(fut, Duration.Inf))
+  }
 }
