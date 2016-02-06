@@ -36,6 +36,7 @@ lazy val `quill-jdbc` =
       libraryDependencies ++= Seq(
         "com.zaxxer"     % "HikariCP"             % "2.3.9",
         "mysql"          % "mysql-connector-java" % "5.1.36" % "test",
+        "com.h2database" % "h2" % "1.4.190" % "test",
         "org.postgresql" % "postgresql"           % "9.4-1206-jdbc41"
       ),
       parallelExecution in Test := false
