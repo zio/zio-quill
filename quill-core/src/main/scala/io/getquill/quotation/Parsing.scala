@@ -38,10 +38,10 @@ trait Parsing {
     case `actionParser`(action)             => action
     case `infixParser`(value)               => value
     case `operationParser`(value)           => value
+    case `optionOperationParser`(value)     => value
     case `identParser`(ident)               => ident
     case `propertyParser`(value)            => value
     case `stringInterpolationParser`(value) => value
-    case `optionOperationParser`(value)     => value
     case `boxingParser`(value)              => value
     case `ifParser`(value)                  => value
 
