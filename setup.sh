@@ -1,4 +1,5 @@
 #!/bin/bash
+sleep 30
 
 mysql -u root -proot -h mysql -e "ALTER USER 'root'@'%' IDENTIFIED BY ''"
 mysql -u root -h mysql quill_test < quill-sql/src/test/sql/mysql-schema.sql
