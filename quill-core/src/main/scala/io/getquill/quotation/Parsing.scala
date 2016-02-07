@@ -220,6 +220,8 @@ trait Parsing {
       OptionOperation(OptionExists, astParser(o), identParser(alias), astParser(body))
     case q"$o.isEmpty" if (is[Option[Any]](o)) =>
       optionOperationParser(q"$o.forall((e:Any) => e == null)")
+    case q"$o.nonEmpty" if (is[Option[Any]](o))=>
+      optionOperationParser(q"$o.forall((e:Any) => e != null)")
   }
 
   val propertyParser: Parser[Property] = Parser[Property] {
