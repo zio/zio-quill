@@ -12,8 +12,7 @@ before_script:
 - docker-compose run setup
 script:
 - ./build.sh
-- find $HOME/.sbt -name "*.lock" | xargs rm
-- find $HOME/.ivy2 -name "ivydata-*.properties" | xargs rm
+- docker-compose run sbt bash -c "find \$HOME/.ivy2 -name \"ivydata-*.properties\" | xargs rm"
 cache:
   directories:
   - $HOME/.ivy2/cache
