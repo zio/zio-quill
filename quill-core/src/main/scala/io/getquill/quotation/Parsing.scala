@@ -222,6 +222,8 @@ trait Parsing {
       optionOperationParser(q"$o.forall((e:Any) => e == null)")
     case q"$o.nonEmpty" if (is[Option[Any]](o))=>
       optionOperationParser(q"$o.forall((e:Any) => e != null)")
+    case q"$o.get" if (is[Option[Any]](o)) =>
+      optionOperationParser(q"$o.map[Any]((e:Any)=>e)")
   }
 
   val propertyParser: Parser[Property] = Parser[Property] {
