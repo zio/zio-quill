@@ -23,5 +23,5 @@ then
 		docker-compose run sbt sbt clean coverage test tut coverageAggregate && bash <(curl -s https://codecov.io/bash) && docker-compose run sbt sbt clean publish
 	fi
 else
-	ocker-compose run sbt clean coverage test tut coverageAggregate && bash <(curl -s https://codecov.io/bash)
+	docker-compose run sbt clean coverage test tut coverageAggregate && bash <(curl -s https://codecov.io/bash)
 fi
