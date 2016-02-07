@@ -20,8 +20,8 @@ then
 		sbt tut 'release with-defaults'
 		git push --delete origin release
 	else
-		sbt clean coverage test tut coverageAggregate && bash <(curl -s https://codecov.io/bash) && sbt clean publish
+		docker-compose run sbt sbt clean coverage test tut coverageAggregate && bash <(curl -s https://codecov.io/bash) && docker-compose run sbt sbt clean publish
 	fi
 else
-	sbt clean coverage test tut coverageAggregate && bash <(curl -s https://codecov.io/bash)
+	ocker-compose run sbt clean coverage test tut coverageAggregate && bash <(curl -s https://codecov.io/bash)
 fi
