@@ -12,10 +12,11 @@ before_script:
 - docker-compose run setup
 script:
 - ./build.sh
-- docker-compose run sbt bash -c "find \$HOME/.ivy2 -name \"ivydata-*.properties\" | xargs rm"
 after_success:
 - pip install --user codecov && codecov
 - docker-compose run sbt sbt clean
+after_script:
+- docker-compose run sbt bash -c "find \$HOME/.ivy2 -name \"ivydata-*.properties\" | xargs rm"
 cache:
   directories:
   - $HOME/.ivy2/cache
