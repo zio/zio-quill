@@ -4,26 +4,19 @@ scala:
 jdk:
 - oraclejdk8
 services:
-- cassandra
+- docker
 branches:
   except:
     - release
 before_script:
-- mysql -u root -e "create database quill_test;"
-- mysql -u root quill_test < quill-sql/src/test/sql/mysql-schema.sql
-- mysql -u root -e "CREATE USER 'finagle'@'localhost' IDENTIFIED BY 'finagle';"
-- mysql -u root -e "GRANT ALL PRIVILEGES ON * . * TO 'finagle'@'localhost';"
-- mysql -u root -e "FLUSH PRIVILEGES;"
-- createdb quill_test -U postgres
-- psql -U postgres -d quill_test -a -f quill-sql/src/test/sql/postgres-schema.sql
-- psql -U postgres -d quill_test -a -f quill-sql/src/test/sql/postgres-schema.sql
-- "echo \"CREATE KEYSPACE quill_test WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};\" > /tmp/create-keyspace.cql"
-- cqlsh -f /tmp/create-keyspace.cql
-- cqlsh -k quill_test -f quill-cassandra/src/test/cql/cassandra-schema.cql
+- docker-compose run setup
 script:
 - ./build.sh
-- find $HOME/.sbt -name "*.lock" | xargs rm
-- find $HOME/.ivy2 -name "ivydata-*.properties" | xargs rm
+after_success:
+- pip install --user codecov && codecov
+- docker-compose run sbt sbt clean
+after_script:
+- docker-compose run sbt bash -c "find \$HOME/.ivy2 -name \"ivydata-*.properties\" | xargs rm"
 cache:
   directories:
   - $HOME/.ivy2/cache
