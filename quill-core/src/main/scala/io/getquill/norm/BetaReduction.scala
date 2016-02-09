@@ -8,7 +8,12 @@ case class BetaReduction(map: collection.Map[Ident, Ast])
   override def apply(ast: Ast) =
     ast match {
       case Property(Tuple(values), name) =>
-        apply(values(name.drop(1).toInt - 1))
+        val aliases = values.distinct
+        aliases match{
+          case alias :: Nil if values.size > 1 =>
+            super.apply(Property(alias, name))
+          case _ => apply(values(name.drop(1).toInt - 1))
+        }
       case FunctionApply(Function(params, body), values) =>
         apply(BetaReduction(map ++ params.zip(values)).apply(body))
       case ident: Ident =>
