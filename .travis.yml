@@ -17,6 +17,7 @@ after_success:
 - docker-compose run sbt sbt clean
 after_script:
 - docker-compose run sbt bash -c "find \$HOME/.ivy2 -name \"ivydata-*.properties\" | xargs rm"
+- docker-compose run sbt bash -c "find \$HOME/.sbt -name \"*.lock\" | xargs rm"
 cache:
   directories:
   - $HOME/.ivy2/cache
