@@ -4,30 +4,31 @@ import language.experimental.macros
 import language.implicitConversions
 import scala.reflect.macros.whitebox.Context
 import io.getquill.util.Messages._
+import scala.runtime._
 
 object ImplicitQuery {
-  implicit def toQuery[P <: Product](f: Function1[_, P]): Query[P] = macro ImplicitQueryMacro.toQuery[P]
-  implicit def toQuery[P <: Product](f: Function2[_, _, P]): Query[P] = macro ImplicitQueryMacro.toQuery[P]
-  implicit def toQuery[P <: Product](f: Function3[_, _, _, P]): Query[P] = macro ImplicitQueryMacro.toQuery[P]
-  implicit def toQuery[P <: Product](f: Function4[_, _, _, _, P]): Query[P] = macro ImplicitQueryMacro.toQuery[P]
-  implicit def toQuery[P <: Product](f: Function5[_, _, _, _, _, P]): Query[P] = macro ImplicitQueryMacro.toQuery[P]
-  implicit def toQuery[P <: Product](f: Function6[_, _, _, _, _, _, P]): Query[P] = macro ImplicitQueryMacro.toQuery[P]
-  implicit def toQuery[P <: Product](f: Function7[_, _, _, _, _, _, _, P]): Query[P] = macro ImplicitQueryMacro.toQuery[P]
-  implicit def toQuery[P <: Product](f: Function8[_, _, _, _, _, _, _, _, P]): Query[P] = macro ImplicitQueryMacro.toQuery[P]
-  implicit def toQuery[P <: Product](f: Function9[_, _, _, _, _, _, _, _, _, P]): Query[P] = macro ImplicitQueryMacro.toQuery[P]
-  implicit def toQuery[P <: Product](f: Function10[_, _, _, _, _, _, _, _, _, _, P]): Query[P] = macro ImplicitQueryMacro.toQuery[P]
-  implicit def toQuery[P <: Product](f: Function11[_, _, _, _, _, _, _, _, _, _, _, P]): Query[P] = macro ImplicitQueryMacro.toQuery[P]
-  implicit def toQuery[P <: Product](f: Function12[_, _, _, _, _, _, _, _, _, _, _, _, P]): Query[P] = macro ImplicitQueryMacro.toQuery[P]
-  implicit def toQuery[P <: Product](f: Function13[_, _, _, _, _, _, _, _, _, _, _, _, _, P]): Query[P] = macro ImplicitQueryMacro.toQuery[P]
-  implicit def toQuery[P <: Product](f: Function14[_, _, _, _, _, _, _, _, _, _, _, _, _, _, P]): Query[P] = macro ImplicitQueryMacro.toQuery[P]
-  implicit def toQuery[P <: Product](f: Function15[_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, P]): Query[P] = macro ImplicitQueryMacro.toQuery[P]
-  implicit def toQuery[P <: Product](f: Function16[_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, P]): Query[P] = macro ImplicitQueryMacro.toQuery[P]
-  implicit def toQuery[P <: Product](f: Function17[_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, P]): Query[P] = macro ImplicitQueryMacro.toQuery[P]
-  implicit def toQuery[P <: Product](f: Function18[_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, P]): Query[P] = macro ImplicitQueryMacro.toQuery[P]
-  implicit def toQuery[P <: Product](f: Function19[_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, P]): Query[P] = macro ImplicitQueryMacro.toQuery[P]
-  implicit def toQuery[P <: Product](f: Function20[_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, P]): Query[P] = macro ImplicitQueryMacro.toQuery[P]
-  implicit def toQuery[P <: Product](f: Function21[_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, P]): Query[P] = macro ImplicitQueryMacro.toQuery[P]
-  implicit def toQuery[P <: Product](f: Function22[_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, P]): Query[P] = macro ImplicitQueryMacro.toQuery[P]
+  implicit def toQuery[P <: Product](f: AbstractFunction1[_, P]): Query[P] = macro ImplicitQueryMacro.toQuery[P]
+  implicit def toQuery[P <: Product](f: AbstractFunction2[_, _, P]): Query[P] = macro ImplicitQueryMacro.toQuery[P]
+  implicit def toQuery[P <: Product](f: AbstractFunction3[_, _, _, P]): Query[P] = macro ImplicitQueryMacro.toQuery[P]
+  implicit def toQuery[P <: Product](f: AbstractFunction4[_, _, _, _, P]): Query[P] = macro ImplicitQueryMacro.toQuery[P]
+  implicit def toQuery[P <: Product](f: AbstractFunction5[_, _, _, _, _, P]): Query[P] = macro ImplicitQueryMacro.toQuery[P]
+  implicit def toQuery[P <: Product](f: AbstractFunction6[_, _, _, _, _, _, P]): Query[P] = macro ImplicitQueryMacro.toQuery[P]
+  implicit def toQuery[P <: Product](f: AbstractFunction7[_, _, _, _, _, _, _, P]): Query[P] = macro ImplicitQueryMacro.toQuery[P]
+  implicit def toQuery[P <: Product](f: AbstractFunction8[_, _, _, _, _, _, _, _, P]): Query[P] = macro ImplicitQueryMacro.toQuery[P]
+  implicit def toQuery[P <: Product](f: AbstractFunction9[_, _, _, _, _, _, _, _, _, P]): Query[P] = macro ImplicitQueryMacro.toQuery[P]
+  implicit def toQuery[P <: Product](f: AbstractFunction10[_, _, _, _, _, _, _, _, _, _, P]): Query[P] = macro ImplicitQueryMacro.toQuery[P]
+  implicit def toQuery[P <: Product](f: AbstractFunction11[_, _, _, _, _, _, _, _, _, _, _, P]): Query[P] = macro ImplicitQueryMacro.toQuery[P]
+  implicit def toQuery[P <: Product](f: AbstractFunction12[_, _, _, _, _, _, _, _, _, _, _, _, P]): Query[P] = macro ImplicitQueryMacro.toQuery[P]
+  implicit def toQuery[P <: Product](f: AbstractFunction13[_, _, _, _, _, _, _, _, _, _, _, _, _, P]): Query[P] = macro ImplicitQueryMacro.toQuery[P]
+  implicit def toQuery[P <: Product](f: AbstractFunction14[_, _, _, _, _, _, _, _, _, _, _, _, _, _, P]): Query[P] = macro ImplicitQueryMacro.toQuery[P]
+  implicit def toQuery[P <: Product](f: AbstractFunction15[_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, P]): Query[P] = macro ImplicitQueryMacro.toQuery[P]
+  implicit def toQuery[P <: Product](f: AbstractFunction16[_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, P]): Query[P] = macro ImplicitQueryMacro.toQuery[P]
+  implicit def toQuery[P <: Product](f: AbstractFunction17[_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, P]): Query[P] = macro ImplicitQueryMacro.toQuery[P]
+  implicit def toQuery[P <: Product](f: AbstractFunction18[_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, P]): Query[P] = macro ImplicitQueryMacro.toQuery[P]
+  implicit def toQuery[P <: Product](f: AbstractFunction19[_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, P]): Query[P] = macro ImplicitQueryMacro.toQuery[P]
+  implicit def toQuery[P <: Product](f: AbstractFunction20[_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, P]): Query[P] = macro ImplicitQueryMacro.toQuery[P]
+  implicit def toQuery[P <: Product](f: AbstractFunction21[_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, P]): Query[P] = macro ImplicitQueryMacro.toQuery[P]
+  implicit def toQuery[P <: Product](f: AbstractFunction22[_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, P]): Query[P] = macro ImplicitQueryMacro.toQuery[P]
 }
 
 private[getquill] class ImplicitQueryMacro(val c: Context) {
