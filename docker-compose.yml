@@ -25,8 +25,7 @@ cassandra:
     - "7000"
 
 setup:
-  build: .
-  dockerfile: Dockerfile-setup
+  image: quill/build:latest
   links:
     - postgres:postgres
     - mysql:mysql
@@ -38,7 +37,7 @@ setup:
   working_dir: /app
 
 sbt:
-  image: 1science/sbt
+  image: 1science/sbt:0.13.8-oracle-jre-8
   command: sbt
   links:
     - postgres:postgres
