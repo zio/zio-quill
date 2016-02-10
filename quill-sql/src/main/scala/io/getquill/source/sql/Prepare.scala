@@ -12,6 +12,7 @@ import io.getquill.norm.capture.AvoidCapture
 import io.getquill.norm.FlattenOptionOperation
 import io.getquill.source.sql.norm.ExpandJoin
 import io.getquill.source.sql.norm.ExpandNestedQueries
+import io.getquill.source.sql.norm.MergeSecondaryJoin
 
 object Prepare {
 
@@ -29,11 +30,12 @@ object Prepare {
       }
     (sqlString, idents)
   }
-
+  
   private[this] val normalize =
     (identity[Ast] _)
       .andThen(Normalize.apply _)
       .andThen(ExpandJoin.apply _)
       .andThen(Normalize.apply _)
+      .andThen(MergeSecondaryJoin.apply _)
       .andThen(FlattenOptionOperation.apply _)
 }
