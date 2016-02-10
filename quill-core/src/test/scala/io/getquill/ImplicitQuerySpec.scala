@@ -14,7 +14,7 @@ class ImplicitQuerySpec extends Spec {
       """query[TestEntity].filter(t => t.s == "s").map(t => (t.s, t.i, t.l, t.o))"""
   }
 
-  "fails if the if querying a non-case-class companion" in {
+  "fails if querying a non-case-class companion" in {
     class Test(val a: String) extends Product {
       def canEqual(that: Any) = ???
       def productArity: Int = ???
@@ -28,5 +28,19 @@ class ImplicitQuerySpec extends Spec {
       Test.filter(_.a == "s")
     }
     """ mustNot compile
+  }
+  
+  "only attempts to convert case class derived AbstractFunctionN to Query" - {
+
+    "preserves inferred type of secondary join FunctionN argument" in {
+      """
+      val q = quote {
+        for{
+          (a,b)<- TestEntity.join(TestEntity2).on(_.i == _.i)
+             c <- TestEntity3.leftJoin(_.i == a.i)
+        } yield(a,b,c)
+      }
+      """ must compile
+    }
   }
 }
