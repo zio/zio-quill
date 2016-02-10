@@ -40,12 +40,11 @@ private case class AvoidAliasConflict(state: Set[Ident])
     (f(fresh, prr), t)
   }
 
-  private def freshIdent(x: Ident): Ident = {
+  private def freshIdent(x: Ident): Ident =
     if (!state.contains(x))
       x
     else
       freshIdent(x, 1)
-  }
 
   private def freshIdent(x: Ident, n: Int): Ident = {
     val fresh = Ident(s"${x.name}$n")
