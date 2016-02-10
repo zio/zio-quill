@@ -27,7 +27,11 @@ sealed trait Query[+T] {
   def leftJoin[A >: T, B](q: Query[B]): JoinQuery[A, B, (A, Option[B])]
   def rightJoin[A >: T, B](q: Query[B]): JoinQuery[A, B, (Option[A], B)]
   def fullJoin[A >: T, B](q: Query[B]): JoinQuery[A, B, (Option[A], Option[B])]
-
+  
+  def join[A >: T](on: A => Boolean): Query[A]
+  def leftJoin[A >: T](on: A => Boolean): Query[Option[A]]
+  def rightJoin[A >: T](on: A => Boolean): Query[Option[A]]
+  
   def nonEmpty: Boolean
   def isEmpty: Boolean
 }
