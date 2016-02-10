@@ -44,7 +44,7 @@ In order to contribute to the project, just do as follows:
 Please, install [docker-machine-nfs](https://github.com/adlogix/docker-machine-nfs). It will change the default sharing
 of your Docker-Machine from Virtual Box Shared Folders to NFS, which is a lot faster. 
 
-#### Build without Docker for sbt
+#### Build locally, without docker
 
 Run the following command, it will restart your database service with random ports exposed to your host machine. 
 
@@ -63,7 +63,7 @@ export MYSQL_PORT_3306_TCP_ADDR=192.168.99.100
 export MYSQL_PORT_3306_TCP_PORT=<MySQL exposed port> 
 export POSTGRES_PORT_5432_TCP_ADDR=192.168.99.100 
 export POSTGRES_PORT_5432_TCP_PORT=<Postgres exposed port>
-``
+```
 
-Finally, you can use `sbt` normally.
+Finally, you can use `sbt` locally.
 
