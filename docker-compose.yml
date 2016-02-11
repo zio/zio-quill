@@ -1,7 +1,7 @@
 postgres:
   image: postgres
   ports:
-    - "5432"
+    - "15432:5432"
   environment:
     - POSTGRES_USER=postgres
 
@@ -9,7 +9,7 @@ postgres:
 mysql:
   image: mysql
   ports:
-    - "3306"
+    - "13306:3306"
   environment:
     - MYSQL_ROOT_PASSWORD=root
     - MYSQL_DATABASE=quill_test
@@ -18,11 +18,11 @@ mysql:
 cassandra:
   image: cassandra:2.1
   ports:
-    - "9042"
-    - "9160"
-    - "7199"
-    - "7001"
-    - "7000"
+    - "19042:9042"
+    - "19160:9160"
+    - "17199:7199"
+    - "17001:7001"
+    - "17000:7000"
 
 setup:
   build: .
