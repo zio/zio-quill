@@ -20,7 +20,7 @@ then
 		sbt tut 'release with-defaults'
 		git push --delete origin release
 	else
-		docker-compose run sbt sbt clean coverage test tut coverageAggregate publish
+		docker-compose run sbt sbt clean coverage test tut coverageAggregate && docker-compose run sbt sbt coverageOff publish
 	fi
 else
 	docker-compose run sbt sbt clean coverage test tut coverageAggregate
