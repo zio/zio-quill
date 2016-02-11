@@ -65,5 +65,31 @@ export POSTGRES_PORT_5432_TCP_ADDR=192.168.99.100
 export POSTGRES_PORT_5432_TCP_PORT=<Postgres exposed port>
 ```
 
+*Note on the 192.168.99.100 address, usually [docker-machine](https://docs.docker.com/machine/) creates a Virtual Machine
+with this address. You can check it by running `docker-machine ps`.*
+
 Finally, you can use `sbt` locally.
 
+### For Linux users
+#### Build locally, without docker
+
+Run the following command, it will restart your database service with random ports exposed to your host machine. 
+
+`docker-compose stop && docker-compose rm && docker-compose run --rm --service-ports setup`
+
+After that, you have to find the ports that were associated with the database services with the following command.
+
+`docker ps`
+
+With that, just export the following variables with the corresponding ports from the previous command.
+
+```
+export CASSANDRA_PORT_9042_TCP_ADDR=127.0.0.1
+export CASSANDRA_PORT_9042_TCP_PORT=<Cassandra exposed port> 
+export MYSQL_PORT_3306_TCP_ADDR=127.0.0.1
+export MYSQL_PORT_3306_TCP_PORT=<MySQL exposed port> 
+export POSTGRES_PORT_5432_TCP_ADDR=127.0.0.1 
+export POSTGRES_PORT_5432_TCP_PORT=<Postgres exposed port>
+```
+
+Finally, you can use `sbt` locally.
