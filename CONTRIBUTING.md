@@ -34,62 +34,51 @@ In order to contribute to the project, just do as follows:
 5. If everything is ok, commit and push to your fork
 6. Create a Pull Request, we'll be glad to review it
 
+### Improve build performance with Docker *(for Mac users only)*
 
-## Running locally
+Please, install and run [docker-machine-nfs](https://github.com/adlogix/docker-machine-nfs). It will change the default file sharing
+of your [docker-machine](https://docs.docker.com/machine/) from Virtual Box Shared Folders to NFS, which is a lot faster. 
 
-### For Mac users
+## Building locally without Docker
 
-#### Improve build performance with Docker
-
-Please, install [docker-machine-nfs](https://github.com/adlogix/docker-machine-nfs). It will change the default sharing
-of your Docker-Machine from Virtual Box Shared Folders to NFS, which is a lot faster. 
-
-#### Build locally, without docker
-
-Run the following command, it will restart your database service with random ports exposed to your host machine. 
+Run the following command, it will restart your database service with database ports exposed to your host machine. 
 
 `docker-compose stop && docker-compose rm && docker-compose run --rm --service-ports setup`
 
-After that, you have to find the ports that were associated with the services with the following command.
+After that, we need to set some environment variables in order to run `sbt` locally.  
 
-`docker ps`
+```
+export CASSANDRA_PORT_9042_TCP_ADDR=<docker host address>
+export CASSANDRA_PORT_9042_TCP_PORT=19042 
+export MYSQL_PORT_3306_TCP_ADDR=<docker host address>
+export MYSQL_PORT_3306_TCP_PORT=13306 
+export POSTGRES_PORT_5432_TCP_ADDR=<docker host address> 
+export POSTGRES_PORT_5432_TCP_PORT=15432
+```
 
-With that, just export the following variables with the corresponding ports from the previous command.
+For Mac users, the docker host address is the address of the [docker-machine](https://docs.docker.com/machine/), it's usually
+ 192.168.99.100. You can check it by running `docker-machine ps`. For Linux users, the host address is your localhost.
+
+Therefor, for Mac users the environment variables should be:
 
 ```
 export CASSANDRA_PORT_9042_TCP_ADDR=192.168.99.100
-export CASSANDRA_PORT_9042_TCP_PORT=<Cassandra exposed port> 
+export CASSANDRA_PORT_9042_TCP_PORT=19042 
 export MYSQL_PORT_3306_TCP_ADDR=192.168.99.100
-export MYSQL_PORT_3306_TCP_PORT=<MySQL exposed port> 
+export MYSQL_PORT_3306_TCP_PORT=13306 
 export POSTGRES_PORT_5432_TCP_ADDR=192.168.99.100 
-export POSTGRES_PORT_5432_TCP_PORT=<Postgres exposed port>
+export POSTGRES_PORT_5432_TCP_PORT=15432
 ```
 
-*Note on the 192.168.99.100 address, usually [docker-machine](https://docs.docker.com/machine/) creates a Virtual Machine
-with this address. You can check it by running `docker-machine ps`.*
-
-Finally, you can use `sbt` locally.
-
-### For Linux users
-#### Build locally, without docker
-
-Run the following command, it will restart your database service with random ports exposed to your host machine. 
-
-`docker-compose stop && docker-compose rm && docker-compose run --rm --service-ports setup`
-
-After that, you have to find the ports that were associated with the database services with the following command.
-
-`docker ps`
-
-With that, just export the following variables with the corresponding ports from the previous command.
+For Linux users, the environment variables should be:
 
 ```
 export CASSANDRA_PORT_9042_TCP_ADDR=127.0.0.1
-export CASSANDRA_PORT_9042_TCP_PORT=<Cassandra exposed port> 
+export CASSANDRA_PORT_9042_TCP_PORT=19042 
 export MYSQL_PORT_3306_TCP_ADDR=127.0.0.1
-export MYSQL_PORT_3306_TCP_PORT=<MySQL exposed port> 
+export MYSQL_PORT_3306_TCP_PORT=13306 
 export POSTGRES_PORT_5432_TCP_ADDR=127.0.0.1 
-export POSTGRES_PORT_5432_TCP_PORT=<Postgres exposed port>
+export POSTGRES_PORT_5432_TCP_PORT=15432
 ```
 
 Finally, you can use `sbt` locally.
