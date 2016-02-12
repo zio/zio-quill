@@ -370,32 +370,60 @@ db.run(q2)
 // EXISTS (SELECT * FROM Person p2 WHERE (p2.id <> p1.id) AND (p2.age = p1.age))
 ```
 
-**outer joins**
+**joins**
+
+In addition to applicative joins Quill also supports explicit joins (both inner and left/right/full outer joins).
+
 ```scala
 
 val q = quote {
-  query[Person].leftJoin(query[Contact]).on((p, c) => c.personId == p)
+  query[Person].join(query[Contact]).on((p, c) => c.personId == p.id)
 }
 
 db.run(q) 
-// SELECT p.id, p.name, p.age, c.personId, c.phone 
-// FROM Person p LEFT JOIN Contact c ON c.personId = p
+// SELECT p.id, p.name, p.age, c.personId, c.phone•
+// FROM Person p INNER JOIN Contact c ON c.personId = p.id
 
-val q2 = quote {
-  query[Person].rightJoin(query[Contact]).on((p, c) => c.personId == p)
+val q = quote {
+  query[Person].leftJoin(query[Contact]).on((p, c) => c.personId == p.id)
 }
 
-db.run(q2) 
-// SELECT p.id, p.name, p.age, c.personId, c.phone 
-// FROM Person p RIGHT JOIN Contact c ON c.personId = p
+db.run(q) 
+// SELECT p.id, p.name, p.age, c.personId, c.phone•
+// FROM Person p LEFT JOIN Contact c ON c.personId = p.id
 
-val q3 = quote {
-  query[Person].fullJoin(query[Contact]).on((p, c) => c.personId == p)
+```
+
+The example joins above cover the simple case. What do you do when a query requires joining more than 2 tables?
+
+With Quill the following multi-join queries are equivalent, choose according to preference:
+
+```scala
+
+case class Employer(id: Int, personId: Int, name: String)
+
+val qFlat = quote {
+  for{
+    (p,e) <- query[Person].join(query[Employer]).on(_.id == _.personId)
+       c  <- query[Contact].leftJoin(_.personId == p.id)
+  } yield(p, e, c)
 }
 
-db.run(q3) 
-// SELECT p.id, p.name, p.age, c.personId, c.phone 
-// FROM Person p FULL JOIN Contact c ON c.personId = p
+val qNested = quote {
+  for{
+    ((p,e),c) <-
+      query[Person].join(query[Employer]).on(_.id == _.personId)
+      .leftJoin(query[Contact]).on(
+        _._1.id == _.personId
+      )
+  } yield(p, e, c)
+}
+
+db.run(qFlat) 
+db.run(qNested) 
+// SELECT p.id, p.name, p.age, e.id, e.personId, e.name, c.id, c.phone•
+// FROM Person p INNER JOIN Employer e ON p.id = e.personId LEFT JOIN Contact c ON c.personId = p.id
+
 ```
 
 # Query probing #
