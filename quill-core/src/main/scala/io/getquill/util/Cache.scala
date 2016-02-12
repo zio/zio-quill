@@ -17,7 +17,8 @@ class Cache[K, V <: Closeable] {
   private val cache = new ConcurrentHashMap[K, Entry]().asScala
 
   private val scheduler =
-    new ScheduledThreadPoolExecutor(1,
+    new ScheduledThreadPoolExecutor(
+      1,
       new ThreadFactory {
         override def newThread(r: Runnable) = {
           val thread = Executors.defaultThreadFactory().newThread(r)
@@ -25,7 +26,8 @@ class Cache[K, V <: Closeable] {
           thread.setDaemon(true)
           thread
         }
-      })
+      }
+    )
 
   private val evict = new Runnable {
     override def run =

@@ -3,7 +3,7 @@ package io.getquill.quotation
 import io.getquill.ast._
 
 case class IsDynamic(state: Boolean)
-    extends StatefulTransformer[Boolean] {
+  extends StatefulTransformer[Boolean] {
 
   override def apply(a: Ast) =
     a match {

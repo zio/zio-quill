@@ -21,10 +21,10 @@ import io.getquill.quotation.Quoted
 import io.getquill.source.sql.SqlSourceMacro
 
 trait AsyncSource[D <: SqlIdiom, N <: NamingStrategy, C <: Connection]
-    extends SqlSource[D, N, RowData, List[Any]]
-    with Decoders
-    with Encoders
-    with StrictLogging {
+  extends SqlSource[D, N, RowData, List[Any]]
+  with Decoders
+  with Encoders
+  with StrictLogging {
 
   type QueryResult[T] = Future[List[T]]
   type ActionResult[T] = Future[DBQueryResult]

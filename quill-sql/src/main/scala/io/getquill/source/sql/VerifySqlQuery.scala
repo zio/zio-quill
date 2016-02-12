@@ -51,9 +51,9 @@ object VerifySqlQuery {
 
   private def aliases(s: Source): List[String] =
     s match {
-      case s: TableSource     => List(s.alias)
-      case s: QuerySource     => List(s.alias)
-      case s: InfixSource     => List(s.alias)
-      case s: JoinSource => aliases(s.a) ++ aliases(s.b)
+      case s: TableSource => List(s.alias)
+      case s: QuerySource => List(s.alias)
+      case s: InfixSource => List(s.alias)
+      case s: JoinSource  => aliases(s.a) ++ aliases(s.b)
     }
 }

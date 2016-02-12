@@ -16,7 +16,8 @@ object InferImplicitValueWithFallback {
           }
           infer
         }""",
-        silent = true)
+        silent = true
+      )
 
     c.inferImplicitValue(tpe).orElse(fallback) match {
       case EmptyTree => None

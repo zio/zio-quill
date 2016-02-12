@@ -3,13 +3,13 @@ package io.getquill.norm
 import io.getquill.ast._
 
 case class BetaReduction(map: collection.Map[Ident, Ast])
-    extends StatelessTransformer {
+  extends StatelessTransformer {
 
   override def apply(ast: Ast) =
     ast match {
       case Property(Tuple(values), name) =>
         val aliases = values.distinct
-        aliases match{
+        aliases match {
           case alias :: Nil if values.size > 1 =>
             super.apply(Property(alias, name))
           case _ => apply(values(name.drop(1).toInt - 1))

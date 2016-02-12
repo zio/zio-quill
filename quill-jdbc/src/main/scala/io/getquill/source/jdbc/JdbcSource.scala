@@ -13,10 +13,10 @@ import scala.util.control.NonFatal
 import scala.annotation.tailrec
 
 class JdbcSource[D <: SqlIdiom, N <: NamingStrategy]
-    extends SqlSource[D, N, ResultSet, PreparedStatement]
-    with JdbcEncoders
-    with JdbcDecoders
-    with StrictLogging {
+  extends SqlSource[D, N, ResultSet, PreparedStatement]
+  with JdbcEncoders
+  with JdbcDecoders
+  with StrictLogging {
 
   type QueryResult[T] = List[T]
   type ActionResult[T] = Int

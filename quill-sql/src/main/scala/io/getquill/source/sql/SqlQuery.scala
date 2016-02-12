@@ -21,21 +21,25 @@ sealed trait SetOperation
 case object UnionOperation extends SetOperation
 case object UnionAllOperation extends SetOperation
 
-case class SetOperationSqlQuery(a: SqlQuery,
-                                op: SetOperation,
-                                b: SqlQuery)
-    extends SqlQuery
+case class SetOperationSqlQuery(
+  a:  SqlQuery,
+  op: SetOperation,
+  b:  SqlQuery
+)
+  extends SqlQuery
 
 case class SelectValue(ast: Ast, alias: Option[String] = None)
 
-case class FlattenSqlQuery(from: List[Source],
-                           where: Option[Ast] = None,
-                           groupBy: List[Property] = Nil,
-                           orderBy: List[OrderByCriteria] = Nil,
-                           limit: Option[Ast] = None,
-                           offset: Option[Ast] = None,
-                           select: List[SelectValue])
-    extends SqlQuery
+case class FlattenSqlQuery(
+  from:    List[Source],
+  where:   Option[Ast]           = None,
+  groupBy: List[Property]        = Nil,
+  orderBy: List[OrderByCriteria] = Nil,
+  limit:   Option[Ast]           = None,
+  offset:  Option[Ast]           = None,
+  select:  List[SelectValue]
+)
+  extends SqlQuery
 
 object SqlQuery {
 
@@ -98,7 +102,8 @@ object SqlQuery {
         else
           FlattenSqlQuery(
             from = QuerySource(apply(q), alias) :: Nil,
-            select = selectValues(p))
+            select = selectValues(p)
+          )
 
       case Filter(q, Ident(alias), p) =>
         val b = base(q, alias)
@@ -108,7 +113,8 @@ object SqlQuery {
           FlattenSqlQuery(
             from = QuerySource(apply(q), alias) :: Nil,
             where = Some(p),
-            select = select(alias))
+            select = select(alias)
+          )
 
       case SortBy(q, Ident(alias), p, o) =>
         val b = base(q, alias)
@@ -119,7 +125,8 @@ object SqlQuery {
           FlattenSqlQuery(
             from = QuerySource(apply(q), alias) :: Nil,
             orderBy = criterias,
-            select = select(alias))
+            select = select(alias)
+          )
 
       case Aggregation(op, q: Query) =>
         val b = flatten(q, alias)
@@ -129,7 +136,8 @@ object SqlQuery {
           case other =>
             FlattenSqlQuery(
               from = QuerySource(apply(q), alias) :: Nil,
-              select = List(SelectValue(Aggregation(op, Ident("*")))))
+              select = List(SelectValue(Aggregation(op, Ident("*"))))
+            )
         }
 
       case Take(q, n) =>
@@ -140,7 +148,8 @@ object SqlQuery {
           FlattenSqlQuery(
             from = QuerySource(apply(q), alias) :: Nil,
             limit = Some(n),
-            select = select(alias))
+            select = select(alias)
+          )
 
       case Drop(q, n) =>
         val b = base(q, alias)
@@ -150,7 +159,8 @@ object SqlQuery {
           FlattenSqlQuery(
             from = QuerySource(apply(q), alias) :: Nil,
             offset = Some(n),
-            select = select(alias))
+            select = select(alias)
+          )
 
       case other =>
         FlattenSqlQuery(from = sources :+ source(other, alias), select = select(alias))
@@ -165,10 +175,10 @@ object SqlQuery {
 
   private def source(ast: Ast, alias: String): Source =
     ast match {
-      case entity: Entity                 => TableSource(entity, alias)
-      case infix: Infix                   => InfixSource(infix, alias)
+      case entity: Entity            => TableSource(entity, alias)
+      case infix: Infix              => InfixSource(infix, alias)
       case Join(t, a, b, ia, ib, on) => JoinSource(t, source(a, ia.name), source(b, ib.name), on)
-      case other                          => QuerySource(apply(other), alias)
+      case other                     => QuerySource(apply(other), alias)
     }
 
   private def groupByCriterias(ast: Ast): List[Property] =

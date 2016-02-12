@@ -68,17 +68,17 @@ trait Liftables {
   }
 
   implicit val queryLiftable: Liftable[Query] = Liftable[Query] {
-    case Entity(a, b, c)             => q"$pack.Entity($a, $b, $c)"
-    case Filter(a, b, c)             => q"$pack.Filter($a, $b, $c)"
-    case Map(a, b, c)                => q"$pack.Map($a, $b, $c)"
-    case FlatMap(a, b, c)            => q"$pack.FlatMap($a, $b, $c)"
-    case SortBy(a, b, c, d)          => q"$pack.SortBy($a, $b, $c, $d)"
-    case GroupBy(a, b, c)            => q"$pack.GroupBy($a, $b, $c)"
-    case Aggregation(a, b)           => q"$pack.Aggregation($a, $b)"
-    case Take(a, b)                  => q"$pack.Take($a, $b)"
-    case Drop(a, b)                  => q"$pack.Drop($a, $b)"
-    case Union(a, b)                 => q"$pack.Union($a, $b)"
-    case UnionAll(a, b)              => q"$pack.UnionAll($a, $b)"
+    case Entity(a, b, c)        => q"$pack.Entity($a, $b, $c)"
+    case Filter(a, b, c)        => q"$pack.Filter($a, $b, $c)"
+    case Map(a, b, c)           => q"$pack.Map($a, $b, $c)"
+    case FlatMap(a, b, c)       => q"$pack.FlatMap($a, $b, $c)"
+    case SortBy(a, b, c, d)     => q"$pack.SortBy($a, $b, $c, $d)"
+    case GroupBy(a, b, c)       => q"$pack.GroupBy($a, $b, $c)"
+    case Aggregation(a, b)      => q"$pack.Aggregation($a, $b)"
+    case Take(a, b)             => q"$pack.Take($a, $b)"
+    case Drop(a, b)             => q"$pack.Drop($a, $b)"
+    case Union(a, b)            => q"$pack.Union($a, $b)"
+    case UnionAll(a, b)         => q"$pack.UnionAll($a, $b)"
     case Join(a, b, c, d, e, f) => q"$pack.Join($a, $b, $c, $d, $e, $f)"
   }
 
@@ -97,7 +97,7 @@ trait Liftables {
   }
 
   implicit val joinTypeLiftable: Liftable[JoinType] = Liftable[JoinType] {
-  	case InnerJoin  => q"$pack.InnerJoin"
+    case InnerJoin => q"$pack.InnerJoin"
     case LeftJoin  => q"$pack.LeftJoin"
     case RightJoin => q"$pack.RightJoin"
     case FullJoin  => q"$pack.FullJoin"

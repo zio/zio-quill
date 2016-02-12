@@ -24,8 +24,10 @@ class PrepareStatementCache(config: Config) {
       .build[java.lang.Long, PreparedStatement]
 
   def apply(stmt: String)(prepare: String => PreparedStatement) =
-    cache.get(stmt.hashCode,
+    cache.get(
+      stmt.hashCode,
       new Callable[PreparedStatement] {
         override def call = prepare(stmt)
-      }).bind
+      }
+    ).bind
 }

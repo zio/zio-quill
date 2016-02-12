@@ -12,7 +12,8 @@ object FutureConversions {
 
   implicit def toScalaFuture(fut: ResultSetFuture): Future[ResultSet] = {
     val p = Promise[ResultSet]()
-    Futures.addCallback(fut,
+    Futures.addCallback(
+      fut,
       new FutureCallback[ResultSet] {
         def onSuccess(r: ResultSet) = {
           p.success(r)
@@ -22,7 +23,8 @@ object FutureConversions {
           p.failure(t)
           ()
         }
-      })
+      }
+    )
     p.future
   }
 }

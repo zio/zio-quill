@@ -11,9 +11,9 @@ import scala.util.Success
 import com.datastax.driver.core.ConsistencyLevel
 
 object mirrorSource
-    extends CassandraSource[Literal, Row, Row]
-    with MirrorEncoders
-    with MirrorDecoders {
+  extends CassandraSource[Literal, Row, Row]
+  with MirrorEncoders
+  with MirrorDecoders {
 
   override type QueryResult[T] = QueryMirror[T]
   override type ActionResult[T] = ActionMirror

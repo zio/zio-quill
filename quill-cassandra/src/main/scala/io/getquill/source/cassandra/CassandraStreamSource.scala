@@ -15,7 +15,7 @@ import monifu.reactive.Observable
 import monifu.reactive.Observable.FutureIsObservable
 
 class CassandraStreamSource[N <: NamingStrategy]
-    extends CassandraSourceSession[N] {
+  extends CassandraSourceSession[N] {
 
   override type QueryResult[T] = Observable[T]
   override type ActionResult[T] = Observable[ResultSet]

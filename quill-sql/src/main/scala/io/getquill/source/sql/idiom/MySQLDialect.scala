@@ -6,8 +6,8 @@ import io.getquill.util.Show._
 import io.getquill.source.sql.OrderByCriteria
 
 trait MySQLDialect
-    extends SqlIdiom
-    with OffsetWithoutLimitWorkaround {
+  extends SqlIdiom
+  with OffsetWithoutLimitWorkaround {
 
   override def prepare(sql: String) =
     s"PREPARE p${sql.hashCode.abs} FROM '${sql.replace("'", "\\'")}'"

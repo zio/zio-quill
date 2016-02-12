@@ -26,7 +26,8 @@ object FinagleMysqlClient {
         low = lowWatermark, high = highWatermark,
         idleTime = idleTime.seconds,
         bufferSize = bufferSize,
-        maxWaiters = maxWaiters))
+        maxWaiters = maxWaiters
+      ))
       .newRichClient(dest)
   }
 }

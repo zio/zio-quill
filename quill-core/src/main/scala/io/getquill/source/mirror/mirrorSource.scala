@@ -16,9 +16,9 @@ import io.getquill.quotation.IsDynamic
 object mirrorSource extends MirrorSourceTemplate
 
 abstract class MirrorSourceTemplate
-    extends Source[Row, Row]
-    with MirrorEncoders
-    with MirrorDecoders {
+  extends Source[Row, Row]
+  with MirrorEncoders
+  with MirrorDecoders {
 
   override def close = ()
 

@@ -15,7 +15,7 @@ object DataSource {
 
   private def toProperties(config: Config) = {
     val p = new Properties
-    for (entry <- config.entrySet if(entry.getKey != "queryProbing"))
+    for (entry <- config.entrySet if (entry.getKey != "queryProbing"))
       p.setProperty(entry.getKey, entry.getValue.unwrapped.toString)
     p
   }

@@ -65,7 +65,7 @@ object ExpandNestedQueries {
 case class State(ident: Ident, references: List[Property])
 
 case class References(val state: State)
-    extends StatefulTransformer[State] {
+  extends StatefulTransformer[State] {
 
   import state._
 

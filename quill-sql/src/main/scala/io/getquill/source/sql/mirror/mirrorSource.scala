@@ -10,8 +10,8 @@ import io.getquill.source.mirror.MirrorEncoders
 import io.getquill.source.mirror.MirrorDecoders
 
 class MirrorSourceTemplate[N <: NamingStrategy] extends SqlSource[MirrorDialect, N, Row, Row]
-    with MirrorEncoders
-    with MirrorDecoders {
+  with MirrorEncoders
+  with MirrorDecoders {
 
   override def close = ()
 

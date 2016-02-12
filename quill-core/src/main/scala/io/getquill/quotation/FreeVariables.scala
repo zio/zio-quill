@@ -5,7 +5,7 @@ import io.getquill.ast._
 case class State(seen: Set[Ident], free: Set[Ident])
 
 case class FreeVariables(state: State)
-    extends StatefulTransformer[State] {
+  extends StatefulTransformer[State] {
 
   override def apply(ast: Ast): (Ast, StatefulTransformer[State]) =
     ast match {

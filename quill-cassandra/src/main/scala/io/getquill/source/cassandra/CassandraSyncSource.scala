@@ -11,7 +11,7 @@ import com.datastax.driver.core.Row
 import io.getquill.naming.NamingStrategy
 
 class CassandraSyncSource[N <: NamingStrategy]
-    extends CassandraSourceSession[N] {
+  extends CassandraSourceSession[N] {
 
   override type QueryResult[T] = List[T]
   override type ActionResult[T] = ResultSet

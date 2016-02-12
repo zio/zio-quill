@@ -5,15 +5,17 @@ import io.getquill.util.Messages.fail
 import io.getquill.norm.BetaReduction
 
 case class CqlQuery(
-  entity: Entity,
-  filter: Option[Ast],
+  entity:  Entity,
+  filter:  Option[Ast],
   orderBy: List[OrderByCriteria],
-  limit: Option[Ast],
-  select: List[Ast])
+  limit:   Option[Ast],
+  select:  List[Ast]
+)
 
 case class OrderByCriteria(
   property: Property,
-  ordering: PropertyOrdering)
+  ordering: PropertyOrdering
+)
 
 object CqlQuery {
 

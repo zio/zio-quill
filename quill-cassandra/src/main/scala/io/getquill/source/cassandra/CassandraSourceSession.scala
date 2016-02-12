@@ -14,10 +14,10 @@ import io.getquill.source.cassandra.encoding.Decoders
 import io.getquill.source.cassandra.encoding.Encoders
 
 trait CassandraSourceSession[N <: NamingStrategy]
-    extends CassandraSource[N, Row, BoundStatement]
-    with StrictLogging
-    with Encoders
-    with Decoders {
+  extends CassandraSource[N, Row, BoundStatement]
+  with StrictLogging
+  with Encoders
+  with Decoders {
 
   protected val cluster: Cluster = ClusterBuilder(config.getConfig("session")).build
   protected val session: Session = cluster.connect(config.getString("keyspace"))

@@ -29,7 +29,7 @@ object Prepare {
       }
     (sqlString, idents)
   }
-  
+
   private[this] val normalize =
     (identity[Ast] _)
       .andThen(Normalize.apply _)
