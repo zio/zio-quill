@@ -9,9 +9,9 @@ import io.getquill.util.Messages._
 import io.getquill.norm.capture.AvoidAliasConflict
 import io.getquill.norm.capture.AvoidCapture
 import io.getquill.norm.FlattenOptionOperation
-import io.getquill.source.sql.norm.ExpandJoin
-import io.getquill.source.sql.norm.ExpandNestedQueries
-import io.getquill.source.sql.norm.MergeSecondaryJoin
+import io.getquill.sources.sql.norm.ExpandJoin
+import io.getquill.sources.sql.norm.ExpandNestedQueries
+import io.getquill.sources.sql.norm.MergeSecondaryJoin
 
 object Prepare {
 
