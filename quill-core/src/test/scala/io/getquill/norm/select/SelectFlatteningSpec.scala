@@ -1,9 +1,9 @@
 package io.getquill.norm.select
 
 import io.getquill._
-import io.getquill.source.mirror.Row
-import io.getquill.source.mirror.mirrorSource
-import io.getquill.source.Decoder
+import io.getquill.sources.mirror.Row
+import io.getquill.TestSource.mirrorSource
+import io.getquill.sources.Decoder
 
 class SelectFlatteningSpec extends Spec {
 

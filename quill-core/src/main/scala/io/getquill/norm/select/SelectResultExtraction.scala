@@ -1,7 +1,7 @@
 package io.getquill.norm.select
 
 import scala.reflect.macros.whitebox.Context
-import io.getquill.source.EncodingMacro
+import io.getquill.sources.EncodingMacro
 
 trait SelectResultExtraction extends EncodingMacro {
 

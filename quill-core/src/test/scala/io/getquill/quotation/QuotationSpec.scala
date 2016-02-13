@@ -2,7 +2,7 @@ package io.getquill.quotation
 
 import io.getquill._
 import io.getquill.ast.{ Query => _, _ }
-import io.getquill.source.mirror.mirrorSource
+import io.getquill.TestSource.mirrorSource
 
 class QuotationSpec extends Spec {
 
