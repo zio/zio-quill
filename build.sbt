@@ -1,4 +1,7 @@
 import ReleaseTransformations._
+import com.typesafe.sbt.SbtScalariform
+import com.typesafe.sbt.SbtScalariform.ScalariformKeys
+import scalariform.formatter.preferences._
 
 lazy val quill = 
   (project in file("."))
@@ -105,6 +108,7 @@ lazy val commonSettings = Seq(
   releasePublishArtifactsAction := PgpKeys.publishSigned.value,
   scoverage.ScoverageKeys.coverageMinimum := 100,
   scoverage.ScoverageKeys.coverageFailOnMinimum := false,
+  ScalariformKeys.preferences := PreferencesImporterExporter.loadPreferences(( file(".") / "formatterPreferences.properties").getPath),
   EclipseKeys.eclipseOutput := Some("bin"),
   publishMavenStyle := true,
   publishTo := {

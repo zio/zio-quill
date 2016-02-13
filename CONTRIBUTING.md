@@ -30,14 +30,19 @@ In order to contribute to the project, just do as follows:
 1. Fork the project
 2. Build it locally
 3. Code
-4. Run the tests through `docker-compose run sbt sbt test`
-5. If everything is ok, commit and push to your fork
-6. Create a Pull Request, we'll be glad to review it
+4. Compile (file will be formatted)
+5. Run the tests through `docker-compose run sbt sbt test`
+6. If everything is ok, commit and push to your fork
+7. Create a Pull Request, we'll be glad to review it
 
 ### Improve build performance with Docker *(for Mac users only)*
 
 Please, install and run [docker-machine-nfs](https://github.com/adlogix/docker-machine-nfs). It will change the default file sharing
 of your [docker-machine](https://docs.docker.com/machine/) from Virtual Box Shared Folders to NFS, which is a lot faster. 
+
+## File Formatting 
+
+[Scalariform](http://mdr.github.io/scalariform/) is used as file formatting tool in this project. Every time you compile the project in sbt, file formatting will be triggered.
 
 ## Building locally without Docker
 
