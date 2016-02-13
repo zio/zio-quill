@@ -111,8 +111,8 @@ Sources represent the database and provide an execution interface for queries. Q
 Instead of running the query, mirror sources return a structure with the information that would be used to run the query. There are three mirror source configurations:
 
 - `io.getquill.MirrorSourceConfig`: Mirrors the quotation AST
-- `io.getquill.SqlMirrorSource`: Mirrors the SQL query
-- `io.getquill.CassandraMirrorSource`: Mirrors the CQL query
+- `io.getquill.SqlMirrorSourceConfig`: Mirrors the SQL query
+- `io.getquill.CassandraMirrorSourceConfig`: Mirrors the CQL query
 
 This documentation uses the SQL mirror in its examples under the `db` name:
 
