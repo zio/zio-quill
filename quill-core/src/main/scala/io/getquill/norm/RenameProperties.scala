@@ -3,7 +3,7 @@ package io.getquill.norm
 import io.getquill.ast._
 
 case class RenameProperties(state: collection.Map[Ident, collection.Map[String, String]])
-    extends StatefulTransformer[collection.Map[Ident, collection.Map[String, String]]] {
+  extends StatefulTransformer[collection.Map[Ident, collection.Map[String, String]]] {
 
   override def apply(q: Query): (Query, StatefulTransformer[collection.Map[Ident, collection.Map[String, String]]]) =
     q match {

@@ -41,7 +41,7 @@ class PeopleFinagleMysqlSpec extends PeopleSpec {
   "Example 5 - compose" in {
     await(testDB.run(`Ex 5 compose`)(`Ex 5 param 1`, `Ex 5 param 2`)) mustEqual `Ex 5 expected result`
   }
-  
+
   "Example 6 - predicate 0" in {
     await(testDB.run(satisfies(eval(`Ex 6 predicate`)))) mustEqual `Ex 6 expected result`
   }

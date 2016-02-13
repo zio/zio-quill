@@ -15,9 +15,9 @@ import io.getquill.quotation.IsDynamic
 import io.getquill.sources.SourceConfig
 
 class MirrorSource(config: SourceConfig[MirrorSource])
-    extends Source[Row, Row]
-    with MirrorEncoders
-    with MirrorDecoders {
+  extends Source[Row, Row]
+  with MirrorEncoders
+  with MirrorDecoders {
 
   override def close = ()
 

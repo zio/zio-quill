@@ -11,7 +11,7 @@ import io.getquill.sources.SourceConfig
 import io.getquill.CassandraSourceConfig
 
 class CassandraSyncSource[N <: NamingStrategy](config: CassandraSourceConfig[N, CassandraSyncSource[N]])
-    extends CassandraSourceSession[N](config) {
+  extends CassandraSourceSession[N](config) {
 
   override type QueryResult[T] = List[T]
   override type ActionResult[T] = ResultSet

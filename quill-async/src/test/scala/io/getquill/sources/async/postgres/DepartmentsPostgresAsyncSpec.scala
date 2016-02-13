@@ -5,7 +5,7 @@ import io.getquill.sources.sql.DepartmentsSpec
 import scala.concurrent.Future
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
-import scala.concurrent.ExecutionContext.Implicits.{global => ec}
+import scala.concurrent.ExecutionContext.Implicits.{ global => ec }
 
 class DepartmentsPostgresAsyncSpec extends DepartmentsSpec {
 

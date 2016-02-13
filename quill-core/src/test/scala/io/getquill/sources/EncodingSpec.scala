@@ -11,28 +11,29 @@ import io.getquill.quote
 class EncodingSpec extends Spec {
 
   case class EncodingTestEntity(
-    v1: String,
-    v2: BigDecimal,
-    v3: Boolean,
-    v4: Byte,
-    v5: Short,
-    v6: Int,
-    v7: Long,
-    v8: Float,
-    v9: Double,
+    v1:  String,
+    v2:  BigDecimal,
+    v3:  Boolean,
+    v4:  Byte,
+    v5:  Short,
+    v6:  Int,
+    v7:  Long,
+    v8:  Float,
+    v9:  Double,
     v10: Array[Byte],
     v11: Date,
-    o1: Option[String],
-    o2: Option[BigDecimal],
-    o3: Option[Boolean],
-    o4: Option[Byte],
-    o5: Option[Short],
-    o6: Option[Int],
-    o7: Option[Long],
-    o8: Option[Float],
-    o9: Option[Double],
+    o1:  Option[String],
+    o2:  Option[BigDecimal],
+    o3:  Option[Boolean],
+    o4:  Option[Byte],
+    o5:  Option[Short],
+    o6:  Option[Int],
+    o7:  Option[Long],
+    o8:  Option[Float],
+    o9:  Option[Double],
     o10: Option[Array[Byte]],
-    o11: Option[Date])
+    o11: Option[Date]
+  )
 
   val delete = quote {
     query[EncodingTestEntity].delete
@@ -83,7 +84,8 @@ class EncodingSpec extends Spec {
         _.o8 -> o8,
         _.o9 -> o9,
         _.o10 -> o10,
-        _.o11 -> o11)
+        _.o11 -> o11
+      )
   }
 
   val insertValues =
@@ -110,7 +112,8 @@ class EncodingSpec extends Spec {
         Some(34.4f),
         Some(42d),
         Some(Array(1.toByte, 2.toByte)),
-        Some(new Date(31200000))),
+        Some(new Date(31200000))
+      ),
       ("",
         BigDecimal(0),
         false,
@@ -132,7 +135,8 @@ class EncodingSpec extends Spec {
         None,
         None,
         None,
-        None))
+        None)
+    )
 
   def verify(result: List[EncodingTestEntity]) =
     result match {

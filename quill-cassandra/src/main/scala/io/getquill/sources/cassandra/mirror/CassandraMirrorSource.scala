@@ -13,9 +13,9 @@ import io.getquill.sources.SourceConfig
 import io.getquill.CassandraMirrorSourceConfig
 
 class CassandraMirrorSource(config: CassandraMirrorSourceConfig)
-    extends CassandraSource[Literal, Row, Row]
-    with MirrorEncoders
-    with MirrorDecoders {
+  extends CassandraSource[Literal, Row, Row]
+  with MirrorEncoders
+  with MirrorDecoders {
 
   override type QueryResult[T] = QueryMirror[T]
   override type ActionResult[T] = ActionMirror

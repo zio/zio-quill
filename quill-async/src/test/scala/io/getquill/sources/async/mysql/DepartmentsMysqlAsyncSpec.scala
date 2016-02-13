@@ -5,12 +5,12 @@ import io.getquill.sources.sql.DepartmentsSpec
 import scala.concurrent.Future
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
-import scala.concurrent.ExecutionContext.Implicits.{global => ec}
+import scala.concurrent.ExecutionContext.Implicits.{ global => ec }
 
 class DepartmentsMysqlAsyncSpec extends DepartmentsSpec {
 
   def await[T](future: Future[T]) = Await.result(future, Duration.Inf)
-  
+
   override def beforeAll =
     await {
       testMysqlDB.transaction { implicit ec =>

@@ -58,7 +58,7 @@ class BetaReductionSpec extends Spec {
       }
     }
   }
-  
+
   "deduplicates aliases in secondary table join" in {
     val aliases = List(Ident("x"), Ident("x"))
     val ast: Ast = Property(Tuple(aliases), "field")

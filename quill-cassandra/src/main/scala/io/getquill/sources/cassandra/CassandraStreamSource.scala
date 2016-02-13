@@ -14,7 +14,7 @@ import monifu.reactive.Observable.FutureIsObservable
 import io.getquill.CassandraSourceConfig
 
 class CassandraStreamSource[N <: NamingStrategy](config: CassandraSourceConfig[N, CassandraStreamSource[N]])
-    extends CassandraSourceSession[N](config) {
+  extends CassandraSourceSession[N](config) {
 
   override type QueryResult[T] = Observable[T]
   override type ActionResult[T] = Observable[ResultSet]

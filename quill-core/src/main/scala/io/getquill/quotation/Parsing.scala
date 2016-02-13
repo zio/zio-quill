@@ -160,7 +160,7 @@ trait Parsing {
 
     case q"${ joinCallParser(typ, a, Some(b)) }.on(($aliasA, $aliasB) => $body)" =>
       Join(typ, a, b, identParser(aliasA), identParser(aliasB), astParser(body))
-      
+
     case q"${ joinCallParser(typ, a, None) }($aliasA => $body)" =>
       val alias = identParser(aliasA)
       Join(typ, a, a, alias, alias, astParser(body))
@@ -186,14 +186,14 @@ trait Parsing {
   }
 
   val joinCallParser: Parser[(JoinType, Ast, Option[Ast])] = Parser[(JoinType, Ast, Option[Ast])] {
-    case q"$a.join[$t, $u]($b)" if (is[QuillQuery[Any]](a))  => (InnerJoin, astParser(a), Some(astParser(b)))
+    case q"$a.join[$t, $u]($b)" if (is[QuillQuery[Any]](a))      => (InnerJoin, astParser(a), Some(astParser(b)))
     case q"$a.leftJoin[$t, $u]($b)" if (is[QuillQuery[Any]](a))  => (LeftJoin, astParser(a), Some(astParser(b)))
     case q"$a.rightJoin[$t, $u]($b)" if (is[QuillQuery[Any]](a)) => (RightJoin, astParser(a), Some(astParser(b)))
     case q"$a.fullJoin[$t, $u]($b)" if (is[QuillQuery[Any]](a))  => (FullJoin, astParser(a), Some(astParser(b)))
-    
-    case q"$a.join[$t]" if (is[QuillQuery[Any]](a))  => (InnerJoin, astParser(a), None)
-    case q"$a.leftJoin[$t]" if (is[QuillQuery[Any]](a))  => (LeftJoin, astParser(a), None)
-    case q"$a.rightJoin[$t]" if (is[QuillQuery[Any]](a))  => (RightJoin, astParser(a), None)
+
+    case q"$a.join[$t]" if (is[QuillQuery[Any]](a))              => (InnerJoin, astParser(a), None)
+    case q"$a.leftJoin[$t]" if (is[QuillQuery[Any]](a))          => (LeftJoin, astParser(a), None)
+    case q"$a.rightJoin[$t]" if (is[QuillQuery[Any]](a))         => (RightJoin, astParser(a), None)
   }
 
   val infixParser: Parser[Infix] = Parser[Infix] {
@@ -242,7 +242,8 @@ trait Parsing {
   }
 
   private def operationParser(cond: Tree => Boolean)(
-    f: PartialFunction[String, Operator]): Parser[Operation] = {
+    f: PartialFunction[String, Operator]
+  ): Parser[Operation] = {
     object operator {
       def unapply(t: TermName) =
         f.lift(t.decodedName.toString)

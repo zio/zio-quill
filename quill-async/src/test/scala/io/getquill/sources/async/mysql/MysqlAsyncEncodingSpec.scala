@@ -26,17 +26,17 @@ class MysqlAsyncEncodingSpec extends EncodingSpec {
       "short" in {
         case class EncodingTestEntity(v3: Short)
         val v3List = Await.result(testMysqlDB.run(query[EncodingTestEntity]), Duration.Inf)
-        v3List.map(_.v3) must contain theSameElementsAs(List(1: Byte, 0: Byte))
+        v3List.map(_.v3) must contain theSameElementsAs (List(1: Byte, 0: Byte))
       }
       "int" in {
         case class EncodingTestEntity(v3: Int)
         val v3List = Await.result(testMysqlDB.run(query[EncodingTestEntity]), Duration.Inf)
-        v3List.map(_.v3) must contain theSameElementsAs(List(1, 0))
+        v3List.map(_.v3) must contain theSameElementsAs (List(1, 0))
       }
       "long" in {
         case class EncodingTestEntity(v3: Long)
         val v3List = Await.result(testMysqlDB.run(query[EncodingTestEntity]), Duration.Inf)
-        v3List.map(_.v3) must contain theSameElementsAs(List(1L, 0L))
+        v3List.map(_.v3) must contain theSameElementsAs (List(1L, 0L))
       }
     }
     "decode short to" - {
@@ -44,18 +44,18 @@ class MysqlAsyncEncodingSpec extends EncodingSpec {
       "int" in {
         case class EncodingTestEntity(v5: Int)
         val v5List = Await.result(testMysqlDB.run(query[EncodingTestEntity]), Duration.Inf)
-        v5List.map(_.v5) must contain theSameElementsAs(List(23, 0))
+        v5List.map(_.v5) must contain theSameElementsAs (List(23, 0))
       }
       "long" in {
         case class EncodingTestEntity(v5: Long)
         val v5List = Await.result(testMysqlDB.run(query[EncodingTestEntity]), Duration.Inf)
-        v5List.map(_.v5) must contain theSameElementsAs(List(23L, 0L))
+        v5List.map(_.v5) must contain theSameElementsAs (List(23L, 0L))
       }
     }
-    "decode int to long" in  {
+    "decode int to long" in {
       case class EncodingTestEntity(v6: Long)
       val v6List = Await.result(testMysqlDB.run(query[EncodingTestEntity]), Duration.Inf)
-      v6List.map(_.v6) must contain theSameElementsAs(List(33L, 0L))
+      v6List.map(_.v6) must contain theSameElementsAs (List(33L, 0L))
     }
 
     "decode and encode any numeric as boolean" in {

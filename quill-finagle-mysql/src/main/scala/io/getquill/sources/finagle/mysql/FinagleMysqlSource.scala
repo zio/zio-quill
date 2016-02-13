@@ -20,10 +20,10 @@ import com.twitter.finagle.exp.mysql.PrepareRequest
 import io.getquill.FinagleMysqlSourceConfig
 
 class FinagleMysqlSource[N <: NamingStrategy](config: FinagleMysqlSourceConfig[N])
-    extends SqlSource[MySQLDialect, N, Row, List[Parameter]]
-    with FinagleMysqlDecoders
-    with FinagleMysqlEncoders
-    with StrictLogging {
+  extends SqlSource[MySQLDialect, N, Row, List[Parameter]]
+  with FinagleMysqlDecoders
+  with FinagleMysqlEncoders
+  with StrictLogging {
 
   type QueryResult[T] = Future[List[T]]
   type ActionResult[T] = Future[Result]

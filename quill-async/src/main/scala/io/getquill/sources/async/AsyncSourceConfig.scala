@@ -12,9 +12,10 @@ import io.getquill.sources.sql.idiom.SqlIdiom
 import io.getquill.naming.NamingStrategy
 
 abstract class AsyncSourceConfig[D <: SqlIdiom, N <: NamingStrategy, C <: Connection](
-  val name: String,
-  connectionFactory: Configuration => ObjectFactory[C])
-    extends SourceConfig[AsyncSource[D, N, C]] {
+  val name:          String,
+  connectionFactory: Configuration => ObjectFactory[C]
+)
+  extends SourceConfig[AsyncSource[D, N, C]] {
 
   def user = config.getString("user")
   def password = Try(config.getString("password")).toOption
@@ -28,7 +29,8 @@ abstract class AsyncSourceConfig[D <: SqlIdiom, N <: NamingStrategy, C <: Connec
       password = password,
       database = database,
       port = port,
-      host = host)
+      host = host
+    )
 
   private val defaultPoolConfig = PoolConfiguration.Default
 
@@ -42,7 +44,8 @@ abstract class AsyncSourceConfig[D <: SqlIdiom, N <: NamingStrategy, C <: Connec
       maxObjects = poolMaxObjects,
       maxIdle = poolMaxIdle,
       maxQueueSize = poolMaxQueueSize,
-      validationInterval = poolValidationInterval)
+      validationInterval = poolValidationInterval
+    )
 
   def numberOfPartitions = Try(config.getInt("poolNumberOfPartitions")).getOrElse(4)
 
@@ -50,5 +53,6 @@ abstract class AsyncSourceConfig[D <: SqlIdiom, N <: NamingStrategy, C <: Connec
     new PartitionedConnectionPool[C](
       connectionFactory(configuration),
       poolConfiguration,
-      numberOfPartitions)
+      numberOfPartitions
+    )
 }

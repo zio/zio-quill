@@ -9,7 +9,7 @@ class ImplicitQuerySpec extends Spec {
   "allows querying a case class companion" in {
     val q = quote {
       TestEntity.filter(t => t.s == "s")
-    } 
+    }
     mirrorSource.run(q).ast.toString mustEqual
       """query[TestEntity].filter(t => t.s == "s").map(t => (t.s, t.i, t.l, t.o))"""
   }
@@ -29,7 +29,7 @@ class ImplicitQuerySpec extends Spec {
     }
     """ mustNot compile
   }
-  
+
   "only attempts to convert case class derived AbstractFunctionN to Query" - {
 
     "preserves inferred type of secondary join FunctionN argument" in {

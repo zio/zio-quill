@@ -8,7 +8,7 @@ import io.getquill.sources._
 package object getquill {
 
   def source[T <: Source[_, _]](config: SourceConfig[T]): T = macro Macro.quoteSource[T]
-  
+
   def query[T]: EntityQuery[T] = NonQuotedException()
 
   def lift[T](v: T): T = v

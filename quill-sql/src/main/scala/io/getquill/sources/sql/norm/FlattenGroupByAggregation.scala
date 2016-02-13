@@ -24,18 +24,18 @@ case class FlattenGroupByAggregation(agg: Ident) extends StatelessTransformer {
 
   private[this] def isGroupByAggregation(ast: Ast): Boolean =
     ast match {
-      case Aggregation(a, b)              => isGroupByAggregation(b)
-      case Map(a, b, c)                   => isGroupByAggregation(a)
-      case FlatMap(a, b, c)               => isGroupByAggregation(a)
-      case Filter(a, b, c)                => isGroupByAggregation(a)
-      case SortBy(a, b, c, d)             => isGroupByAggregation(a)
-      case Take(a, b)                     => isGroupByAggregation(a)
-      case Drop(a, b)                     => isGroupByAggregation(a)
-      case Union(a, b)                    => isGroupByAggregation(a) || isGroupByAggregation(b)
-      case UnionAll(a, b)                 => isGroupByAggregation(a) || isGroupByAggregation(b)
+      case Aggregation(a, b)         => isGroupByAggregation(b)
+      case Map(a, b, c)              => isGroupByAggregation(a)
+      case FlatMap(a, b, c)          => isGroupByAggregation(a)
+      case Filter(a, b, c)           => isGroupByAggregation(a)
+      case SortBy(a, b, c, d)        => isGroupByAggregation(a)
+      case Take(a, b)                => isGroupByAggregation(a)
+      case Drop(a, b)                => isGroupByAggregation(a)
+      case Union(a, b)               => isGroupByAggregation(a) || isGroupByAggregation(b)
+      case UnionAll(a, b)            => isGroupByAggregation(a) || isGroupByAggregation(b)
       case Join(t, a, b, ta, tb, on) => isGroupByAggregation(a) || isGroupByAggregation(b)
-      case `agg`                          => true
-      case other                          => false
+      case `agg`                     => true
+      case other                     => false
     }
 
 }

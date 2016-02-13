@@ -4,7 +4,7 @@ import io.getquill.ast._
 import io.getquill.norm.BetaReduction
 
 private case class AvoidAliasConflict(state: Set[Ident])
-    extends StatefulTransformer[Set[Ident]] {
+  extends StatefulTransformer[Set[Ident]] {
 
   override def apply(q: Query): (Query, StatefulTransformer[Set[Ident]]) =
     q match {

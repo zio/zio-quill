@@ -5,7 +5,7 @@ import io.getquill._
 class ResolveSourceMacroSpec extends Spec {
 
   class BuggyConfig extends MirrorSourceConfig("buggy")
-  
+
   "warns if the source can't be resolved at compile time" in {
     "source(new BuggyConfig)" must compile
     ()

@@ -24,7 +24,8 @@ trait FinagleMysqlDecoders {
   protected val timestampValue =
     new TimestampValue(
       dateTimezone,
-      dateTimezone)
+      dateTimezone
+    )
 
   def decoder[T: ClassTag](f: PartialFunction[Value, T]): Decoder[T] =
     new Decoder[T] {
@@ -74,7 +75,7 @@ trait FinagleMysqlDecoders {
     decoder[Long] {
       case LongValue(v) => v
     }
-  implicit val floatDecoder: Decoder[Float]  =
+  implicit val floatDecoder: Decoder[Float] =
     decoder[Float] {
       case FloatValue(v) => v
     }

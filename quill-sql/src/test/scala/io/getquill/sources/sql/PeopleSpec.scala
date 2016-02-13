@@ -16,7 +16,8 @@ trait PeopleSpec extends Spec {
     Person("Cora", 33),
     Person("Drew", 31),
     Person("Edna", 21),
-    Person("Fred", 60))
+    Person("Fred", 60)
+  )
 
   val couplesInsert =
     quote(query[Couple].insert)
@@ -24,7 +25,8 @@ trait PeopleSpec extends Spec {
   val couplesEntries = List(
     Couple("Alex", "Bert"),
     Couple("Cora", "Drew"),
-    Couple("Edna", "Fred"))
+    Couple("Edna", "Fred")
+  )
 
   val `Ex 1 differences` =
     quote {

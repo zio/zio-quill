@@ -657,9 +657,11 @@ class QuotationSpec extends Spec {
           BinaryOperation(
             Property(Property(Ident("t"), "_1"), "_1"),
             NumericOperator.`+`,
-            Property(Property(Ident("t"), "_1"), "_2")),
+            Property(Property(Ident("t"), "_1"), "_2")
+          ),
           NumericOperator.`+`,
-          Property(Ident("t"), "_2"))
+          Property(Ident("t"), "_2")
+        )
     }
   }
 

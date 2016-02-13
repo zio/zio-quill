@@ -1,7 +1,7 @@
 package io.getquill.sources.cassandra
 
 import io.getquill._
-import java.util.{UUID, Date}
+import java.util.{ UUID, Date }
 import com.datastax.driver.core.ConsistencyLevel
 import monifu.reactive.Observable
 import scala.collection.mutable.ListBuffer
@@ -78,26 +78,27 @@ class EncodingSpec extends Spec {
   }
 
   case class EncodingTestEntity(
-    id: Int,
-    v1: String,
-    v2: BigDecimal,
-    v3: Boolean,
-    v4: Int,
-    v5: Long,
-    v6: Float,
-    v7: Double,
-    v8: Array[Byte],
-    v9: Date,
-    v10:UUID,
-    o1: Option[String],
-    o2: Option[BigDecimal],
-    o3: Option[Boolean],
-    o4: Option[Int],
-    o5: Option[Long],
-    o6: Option[Float],
-    o7: Option[Double],
-    o8: Option[Array[Byte]],
-    o9: Option[Date])
+    id:  Int,
+    v1:  String,
+    v2:  BigDecimal,
+    v3:  Boolean,
+    v4:  Int,
+    v5:  Long,
+    v6:  Float,
+    v7:  Double,
+    v8:  Array[Byte],
+    v9:  Date,
+    v10: UUID,
+    o1:  Option[String],
+    o2:  Option[BigDecimal],
+    o3:  Option[Boolean],
+    o4:  Option[Int],
+    o5:  Option[Long],
+    o6:  Option[Float],
+    o7:  Option[Double],
+    o8:  Option[Array[Byte]],
+    o9:  Option[Date]
+  )
 
   private val fixUUID: UUID = UUID.fromString("606c79e8-a331-4810-8bd7-0668ff7a23ef")
 
@@ -123,7 +124,8 @@ class EncodingSpec extends Spec {
         o6 = Some(34.4f),
         o7 = Some(42d),
         o8 = Some(Array(1.toByte, 2.toByte)),
-        o9 = Some(new Date(31200000))),
+        o9 = Some(new Date(31200000))
+      ),
       EncodingTestEntity(
         id = 2,
         v1 = "",
@@ -144,5 +146,7 @@ class EncodingSpec extends Spec {
         o6 = None,
         o7 = None,
         o8 = None,
-        o9 = None))
+        o9 = None
+      )
+    )
 }

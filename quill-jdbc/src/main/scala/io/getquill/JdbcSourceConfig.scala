@@ -17,7 +17,7 @@ class JdbcSourceConfig[D <: SqlIdiom, N <: NamingStrategy](val name: String) ext
       p.setProperty(entry.getKey, entry.getValue.unwrapped.toString)
     p
   }
-  
+
   def dataSource: javax.sql.DataSource with java.io.Closeable =
-      new HikariDataSource(new HikariConfig(configProperties))
+    new HikariDataSource(new HikariConfig(configProperties))
 }

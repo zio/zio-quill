@@ -41,7 +41,7 @@ trait Encoders {
   }
   implicit val uuidEncoder: Encoder[UUID] = new Encoder[UUID] {
     override def apply(index: Int, value: UUID, row: BoundStatement) =
-      row.setUUID(index,value)
+      row.setUUID(index, value)
   }
   implicit val dateEncoder = encoder(_.setDate)
 }

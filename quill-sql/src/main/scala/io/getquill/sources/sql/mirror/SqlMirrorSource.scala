@@ -12,9 +12,9 @@ import io.getquill.sources.SourceConfig
 import io.getquill.SqlMirrorSourceConfig
 
 class SqlMirrorSource[N <: NamingStrategy](config: SqlMirrorSourceConfig[N])
-    extends SqlSource[MirrorDialect, N, Row, Row]
-    with MirrorEncoders
-    with MirrorDecoders {
+  extends SqlSource[MirrorDialect, N, Row, Row]
+  with MirrorEncoders
+  with MirrorDecoders {
 
   override def close = ()
 

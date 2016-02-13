@@ -34,7 +34,8 @@ trait DepartmentsSpec extends Spec {
       ("Research", "Cora"),
       ("Research", "Drew"),
       ("Research", "Edna"),
-      ("Sales", "Fred"))
+      ("Sales", "Fred")
+    )
 
   val taskInsert =
     quote {
@@ -53,7 +54,8 @@ trait DepartmentsSpec extends Spec {
       ("Edna", "abstract"),
       ("Edna", "call"),
       ("Edna", "design"),
-      ("Fred", "call"))
+      ("Fred", "call")
+    )
 
   val `Example 8 expertise naive` =
     quote {
@@ -65,8 +67,11 @@ trait DepartmentsSpec extends Spec {
                 e.dpt == d.dpt && (
                   for {
                     t <- query[Task] if (e.emp == t.emp && t.tsk == u)
-                  } yield {}).isEmpty)
-            } yield {}).isEmpty)
+                  } yield {}
+                ).isEmpty
+              )
+            } yield {}).isEmpty
+          )
         } yield d.dpt
     }
 

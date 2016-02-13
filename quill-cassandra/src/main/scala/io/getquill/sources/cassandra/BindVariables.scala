@@ -3,7 +3,7 @@ package io.getquill.sources.cassandra
 import io.getquill.ast._
 
 private[sources] case class BindVariables(state: (List[Ident], List[Ident]))
-    extends StatefulTransformer[(List[Ident], List[Ident])] {
+  extends StatefulTransformer[(List[Ident], List[Ident])] {
 
   override def apply(ast: Ast) =
     ast match {

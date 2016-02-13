@@ -7,11 +7,11 @@ object ApplyIntermediateMap {
   def unapply(q: Query): Option[Query] =
     q match {
 
-      case Map(Map(a: GroupBy, b, c), d, e)     => None
-      case FlatMap(Map(a: GroupBy, b, c), d, e) => None
-      case Filter(Map(a: GroupBy, b, c), d, e)  => None
-      case SortBy(Map(a: GroupBy, b, c), d, e, f)  => None
-      case Map(a: GroupBy, b, c) if (b == c)    => None
+      case Map(Map(a: GroupBy, b, c), d, e)       => None
+      case FlatMap(Map(a: GroupBy, b, c), d, e)   => None
+      case Filter(Map(a: GroupBy, b, c), d, e)    => None
+      case SortBy(Map(a: GroupBy, b, c), d, e, f) => None
+      case Map(a: GroupBy, b, c) if (b == c)      => None
 
       // a.map(b => b) =>
       //    a

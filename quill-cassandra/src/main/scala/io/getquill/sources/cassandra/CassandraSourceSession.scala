@@ -13,10 +13,10 @@ import io.getquill.sources.cassandra.encoding.Encoders
 import io.getquill.CassandraSourceConfig
 
 abstract class CassandraSourceSession[N <: NamingStrategy](config: CassandraSourceConfig[N, _])
-    extends CassandraSource[N, Row, BoundStatement]
-    with StrictLogging
-    with Encoders
-    with Decoders {
+  extends CassandraSource[N, Row, BoundStatement]
+  with StrictLogging
+  with Encoders
+  with Decoders {
 
   private val cluster = config.cluster
   protected val session = cluster.connect(config.keyspace)

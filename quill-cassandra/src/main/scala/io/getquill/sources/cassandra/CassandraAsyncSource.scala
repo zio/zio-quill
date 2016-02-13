@@ -13,7 +13,7 @@ import io.getquill.sources.cassandra.util.FutureConversions.toScalaFuture
 import io.getquill.CassandraSourceConfig
 
 class CassandraAsyncSource[N <: NamingStrategy](config: CassandraSourceConfig[N, CassandraAsyncSource[N]])
-    extends CassandraSourceSession[N](config) {
+  extends CassandraSourceSession[N](config) {
 
   override type QueryResult[T] = Future[List[T]]
   override type ActionResult[T] = Future[ResultSet]

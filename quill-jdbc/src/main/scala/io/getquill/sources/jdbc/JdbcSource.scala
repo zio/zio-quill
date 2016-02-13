@@ -14,10 +14,10 @@ import scala.annotation.tailrec
 import io.getquill.JdbcSourceConfig
 
 class JdbcSource[D <: SqlIdiom, N <: NamingStrategy](config: JdbcSourceConfig[D, N])
-    extends SqlSource[D, N, ResultSet, PreparedStatement]
-    with JdbcEncoders
-    with JdbcDecoders
-    with StrictLogging {
+  extends SqlSource[D, N, ResultSet, PreparedStatement]
+  with JdbcEncoders
+  with JdbcDecoders
+  with StrictLogging {
 
   type QueryResult[T] = List[T]
   type ActionResult[T] = Int

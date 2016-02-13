@@ -80,7 +80,7 @@ trait ResolveSourceMacro {
     for {
       method <- tpe.decls.find(_.name.decodedName.toString == "quoted")
       annotation <- method.annotations.headOption
-    } yield annotation.tree.children.drop(1) 
+    } yield annotation.tree.children.drop(1)
 }
 
 object ResolveSourceMacro {

@@ -3,7 +3,7 @@ package io.getquill.sources.sql.idiom
 import java.util.concurrent.atomic.AtomicInteger
 
 trait PostgresDialect
-    extends SqlIdiom {
+  extends SqlIdiom {
 
   private[idiom] val preparedStatementId = new AtomicInteger
 

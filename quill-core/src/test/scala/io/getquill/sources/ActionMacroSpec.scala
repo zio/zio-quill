@@ -35,11 +35,15 @@ class ActionMacroSpec extends Spec {
   "expands unassigned actions" in {
     val q = quote(qr1.insert)
     val r = mirrorSource.run(q)(
-      List(TestEntity("s", 1, 2L, Some(4)),
-        TestEntity("s2", 12, 22L, Some(42))))
+      List(
+        TestEntity("s", 1, 2L, Some(4)),
+        TestEntity("s2", 12, 22L, Some(42))
+      )
+    )
     r.ast.toString mustEqual "query[TestEntity].insert(x => x.s -> s, x => x.i -> i, x => x.l -> l, x => x.o -> o)"
     r.bindList mustEqual List(
       Row("s", 1, 2L, Some(4)),
-      Row("s2", 12, 22L, Some(42)))
+      Row("s2", 12, 22L, Some(42))
+    )
   }
 }

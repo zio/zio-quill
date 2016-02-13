@@ -18,7 +18,8 @@ object Pool {
         password = Try(config.getString("password")).toOption,
         database = Try(config.getString("database")).toOption,
         port = config.getInt("port"),
-        host = config.getString("host"))
+        host = config.getString("host")
+      )
 
     val poolConfiguration = {
       val default = PoolConfiguration.Default
@@ -30,7 +31,8 @@ object Pool {
         maxObjects = maxObjects,
         maxIdle = maxIdle,
         maxQueueSize = maxQueueSize,
-        validationInterval = validationInterval)
+        validationInterval = validationInterval
+      )
     }
 
     val numberOfPartitions = Try(config.getInt("poolNumberOfPartitions")).getOrElse(4)
@@ -38,6 +40,7 @@ object Pool {
     new PartitionedConnectionPool[C](
       connectionFactory(configuration),
       poolConfiguration,
-      numberOfPartitions)
+      numberOfPartitions
+    )
   }
 }
