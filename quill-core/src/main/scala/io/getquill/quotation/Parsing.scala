@@ -38,10 +38,10 @@ trait Parsing {
     case `actionParser`(action)             => action
     case `infixParser`(value)               => value
     case `operationParser`(value)           => value
+    case `optionOperationParser`(value)     => value
     case `identParser`(ident)               => ident
     case `propertyParser`(value)            => value
     case `stringInterpolationParser`(value) => value
-    case `optionOperationParser`(value)     => value
     case `boxingParser`(value)              => value
     case `ifParser`(value)                  => value
 
@@ -76,8 +76,8 @@ trait Parsing {
   val quotedAstParser: Parser[Ast] = Parser[Ast] {
     case q"$pack.unquote[$t]($quoted)" => astParser(quoted)
     case q"$pack.lift[$t]($value)"     => Dynamic(value)
-
-    case t if (t.tpe <:< c.weakTypeOf[Quoted[Any]]) =>
+    //   some time t.tye will is null example q"(e:Int) => e + 1"
+    case t if ( t.tpe != null && t.tpe <:< c.weakTypeOf[Quoted[Any]]) =>
       unquote[Ast](t) match {
         case Some(ast) if (!IsDynamic(ast)) => Rebind(c)(t, ast, astParser(_))
         case other                          => Dynamic(t)
@@ -226,6 +226,12 @@ trait Parsing {
       OptionOperation(OptionForall, astParser(o), identParser(alias), astParser(body))
     case q"$o.exists(($alias) => $body)" if (is[Option[Any]](o)) =>
       OptionOperation(OptionExists, astParser(o), identParser(alias), astParser(body))
+    case q"$o.isEmpty" if (is[Option[Any]](o)) =>
+      optionOperationParser(q"$o.forall((e:Any) => e == null)")
+    case q"$o.nonEmpty" if (is[Option[Any]](o))=>
+      optionOperationParser(q"$o.forall((e:Any) => e != null)")
+    case q"$o.get" if (is[Option[Any]](o)) =>
+      optionOperationParser(q"$o.map[Any]((e:Any)=>e)")
   }
 
   val propertyParser: Parser[Property] = Parser[Property] {
