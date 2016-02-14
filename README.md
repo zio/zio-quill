@@ -1,3 +1,5 @@
+**IMPORTANT: This is the documentation for the latest `SNAPSHOT` version. Please refer to the website at [http://getquill.io](http://getquill.io) for the lastest release's documentation.**
+
 ![quill](https://raw.githubusercontent.com/getquill/quill/master/quill.png)
 # Quill
 Compile-time Language Integrated Query for Scala
