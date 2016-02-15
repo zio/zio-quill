@@ -6,13 +6,13 @@ import io.getquill.TestSource.mirrorSource
 class RebindSpec extends Spec {
   "rebind non-arg function" - {
     "with type param" in {
-    implicit class ReturnId[T](action: Action[T]) {
-      def returnId[ID] = quote(infix"$action RETURNING ID".as[Action[ID]])
-    }
-    val q = quote { (i: Int) =>
-      unquote(query[TestEntity].insert(e => e.i -> i).returnId[Long])
-    }
-    mirrorSource.run(q)(List(1)).ast.toString must equal("infix\"${query[TestEntity].insert(e => e.i -> p1)} RETURNING ID\"")
+      implicit class ReturnId[T](action: Action[T]) {
+        def returnId[ID] = quote(infix"$action RETURNING ID".as[Action[ID]])
+      }
+      val q = quote { (i: Int) =>
+        unquote(query[TestEntity].insert(e => e.i -> i).returnId[Long])
+      }
+      mirrorSource.run(q)(List(1)).ast.toString must equal("infix\"${query[TestEntity].insert(e => e.i -> p1)} RETURNING ID\"")
     }
 
     "with no type param" in {
