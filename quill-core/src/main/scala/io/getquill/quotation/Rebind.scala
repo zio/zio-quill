@@ -18,7 +18,7 @@ object Rebind {
     }
 
     tree match {
-      case q"$conv($orig).$method" =>
+      case q"$conv($orig).$method[..$t]" =>
         BetaReduction(ast, origRebind(conv, orig, astParser))
       case q"$conv($orig).$m(...$params)" =>
         val method =
