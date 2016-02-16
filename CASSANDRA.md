@@ -1,71 +1,157 @@
 
-This document compares Quill to the [Phantom](http://websudos.github.io/phantom/) library. This is an incomplete comparison, additions and corrections are welcome.
+This document compares Quill to the [Datastax Java](https://github.com/datastax/java-driver) driver and the [Phantom](http://websudos.github.io/phantom/) library. This is an incomplete comparison, additions and corrections are welcome.
 
 ## Abstraction level ##
+
+The Datastax Java driver provides simple abstractions that let you either write you queries as plain strings or to use a declarative Query Builder. It also provides a higher level [Object Mapper](https://github.com/datastax/java-driver/tree/2.1/manual/object_mapper). For this comparison we will only use the Query Builder.
 
 Although both Quill and Phantom represent column family rows as flat immutable structures (case classes without nested data) and provide a type-safe composable query DSL, they work at a different abstraction level. 
 
 Phantom provides an embedded DSL that help you write CQL queries in a type-safe manner. Quill is referred as a Language Integrated Query library to match the available publications on the subject. The paper ["Language-integrated query using comprehension syntax: state of the art, open problems, and work in progress"](http://research.microsoft.com/en-us/events/dcp2014/cheney.pdf) has an overview with some of the available implementations of language integrated queries.
 
-## QDSL versus EDSL ##
+## A simple query ##
 
-Quill's DSL is a macro-based quotation mechanism, allowing usage of Scala types and operators directly. Please refer to the paper ["Everything old is new again: Quoted Domain Specific Languages"](http://homepages.inf.ed.ac.uk/wadler/papers/qdsl/qdsl.pdf) for more details. On the other hand, Phantom provides a DSL to create queries, that requires the usage of DSL provided operations. Example:
+This example would allow us to compare how the different libraries let us query a column family to obtain one element. The keyspace and column family needed for this and other examples are defined in this CQL script:
 
-**quill**
+```
+CREATE KEYSPACE IF NOT EXISTS db
+WITH replication = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };
+
+CREATE TABLE IF NOT EXISTS db.people (
+  name TEXT,
+  age INT,
+  PRIMARY KEY (name)
+);
+```
+
+All examples have been properly tested, and they should work out of the box.
+
+**Java Driver**
+```scala
+import com.datastax.driver.core._
+import com.datastax.driver.core.querybuilder.QueryBuilder
+import com.google.common.cache.{ CacheBuilder, CacheLoader, LoadingCache }
+
+object JavaDriver extends App {
+
+  val nrOfCacheEntries: Int = 100
+
+  val cluster: Cluster = Cluster.builder().addContactPoints("localhost").build()
+
+  val session: Session = cluster.newSession()
+
+  val cache: LoadingCache[String, PreparedStatement] =
+    CacheBuilder.newBuilder().
+      maximumSize(nrOfCacheEntries).
+      build(
+        new CacheLoader[String, PreparedStatement]() {
+          def load(key: String): PreparedStatement = session.prepare(key.toString)
+        }
+      )
+
+  case class People(name: String, age: Int)
+
+  object People {
+
+    def getByName(cache: LoadingCache[String, PreparedStatement], session: Session)(name: String): Option[People] = {
+      val query: Statement =
+        QueryBuilder.select().
+          all().
+          from("db", "people").
+          where(QueryBuilder.eq("name", QueryBuilder.bindMarker()))
+
+      Option(session.execute(cache.get(query.toString).bind(name)).one()).map(
+        row => Person(row.getString("name"), row.getInt("age"))
+      )
+    }
+  }
+
+  val getPersonByName: String => Option[People] = Person.getByName(cache, session)_
+
+  getPersonByName("Jane Doe")
+
+  session.close()
+  cluster.close()
+}
+```
+
+The Java driver requires explicit handling of a `PreparedStatement`s cache to avoid preparing the same statement more that once, that could affect performance.
+
+In order to make the Quill example to work you will need to create this config file, named `application.conf` in your resources folder:
+
+```
+db.keyspace=db
+db.preparedStatementCacheSize=100
+db.session.contactPoint=127.0.0.1
+db.session.queryOptions.consistencyLevel=ONE
+```
+
+**Quill**
 ```scala
 import io.getquill._
 import io.getquill.naming._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-val source = source(new CassandraAsyncSourceConfig[SnakeCase]("db") with NoQueryProbing)
+object Quill extends App {
 
-case class Person(name: String, age: Int)
+  val db = source(new CassandraAsyncSourceConfig[SnakeCase]("DB") with NoQueryProbing)
 
-val getByName = quote {
-  (n: String) =>
-    query[Person].filter(_.name == name)
+  case class People(name: String, age: Int)
+
+  object People {
+  
+    val getByName = quote {
+      (name: String) =>
+        query[People].filter(_.name == name)
+    }
+  }
+
+  val result = db.run(People.getByName)("Jane Doe").map(_.headOption)
+
+  result.onComplete(_ => db.close())
 }
-
-source.run(getByName)("Jane Doe")
 ```
 
-**phantom**
+During the compilation of this example, as the quotation is known statically, Quill will emit the CQL string as an info message, e.g. `SELECT name, age FROM person WHERE name = ?`.
+
+**Phantom**
 ```scala
-import com.websudos.phantom.connectors._
+import com.websudos.phantom.connectors.{ Connector, RootConnector }
+import com.websudos.phantom.db._
 import com.websudos.phantom.dsl._
 
-import scala.concurrent.Future
+import scala.concurrent._
 
-val ks = ContactPoint.local.keySpace("db")
+object Phantom extends App {
 
-case class Person(name: String, age: Int)
+  case class People(name: String, age: Int)
 
-sealed class PersonCF(override val tableName: String) extends CassandraTable[PersonCF, Person] with Connector {
-  object name extends StringColumn(this) with PartitionKey[String]
-  object age extends IntColumn(this)
+  abstract class PeopleCF(override val tableName: String) extends CassandraTable[PeopleCF, People] with RootConnector {
+  
+    object name extends StringColumn(this) with PartitionKey[String]
+    object age extends IntColumn(this)
 
-  override def fromRow(r: Row): Person = Person(name(r), age(r))
+    override def fromRow(r: Row): People = People(name(r), age(r))
+  }
+
+  abstract class PeopleQueries extends PeopleCF("people") {
+  
+    def getByName(name: String): Future[Option[People]] =
+      select.where(_.name eqs name).one()
+  }
+
+  class DB(ks: KeySpaceDef) extends DatabaseImpl(ks) {
+  
+    object people extends PeopleQueries with connector.Connector
+  }
+
+  val db = new DB(ContactPoint.local.keySpace("db"))
+
+  val result = db.people.getByName("Jane Doe")
+
+  result.onComplete { case _ => db.shutdown() }
 }
-
-object PersonCF extends PersonCF("person") extends ks.Connector {
-  def getByName(name: String): Future[Option[Person]] =
-    select.where(_.name eqs name).one()
-}
-
-PersonCF.getByname("Jane Doe")
 ```
 
 Phantom requires explicit definition of the database model. The query definition also requires special equality operators.
-
-## Compile-time versus Runtime ##
-
-Quill's quoted DSL opens a new path to query generation. For the quotations that are known statically, the query normalization and translation to SQL happen at compile-time. The user receives feedback during compilation, knows the SQL string that will be used and, as an experimental feature disabled by default, if it will succeed when executed against the database.
-
-Phantom creates the queries at runtime, but the nature of the DSL allows for some simple compile time validations, e.g. checking the absence of primary keys in the database model when querying.
-
-## Non-blocking IO ##
-
-Both Phantom and Quill are built on top of the Datastax java driver and provide tools to query Cassandra in an asynchronous and/or reactive, non-blocking manner.
-
-Quill uses the [Monix.io](https://github.com/monixio/monix) library, compatible with the [reactive-streams](http://www.reactive-streams.org/) protocol, to provide an `Observable` of the result set. Phantom implements `Publisher/Subscriber`s on top of the [reactive-streams](http://www.reactive-streams.org/) specification.
