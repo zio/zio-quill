@@ -26,12 +26,23 @@ class RebindSpec extends Spec {
     }
   }
 
-  "rebind function with args" in {
-    implicit class Inc(field: Int) {
-      def plus(delta: Int) = quote(infix"$field + $delta".as[Long])
+  "rebind function with args and" - {
+    "type param" in {
+      implicit class Inc(field: Int) {
+        def plus[T](delta: T) = quote(infix"$field + $delta".as[T])
+      }
+
+      val q = quote(query[TestEntity].map(e => unquote(e.i.plus(10))))
+      mirrorSource.run(q).ast.toString must equal("query[TestEntity].map(e => infix\"${e.i} + ${10}\")")
     }
 
-    val q = quote(query[TestEntity].map(e => unquote(e.i.plus(10))))
-    mirrorSource.run(q).ast.toString must equal("query[TestEntity].map(e => infix\"${e.i} + ${10}\")")
+    "no type param" in {
+      implicit class Inc(field: Int) {
+        def plus(delta: Int) = quote(infix"$field + $delta".as[Long])
+      }
+
+      val q = quote(query[TestEntity].map(e => unquote(e.i.plus(10))))
+      mirrorSource.run(q).ast.toString must equal("query[TestEntity].map(e => infix\"${e.i} + ${10}\")")
+    }
   }
 }
