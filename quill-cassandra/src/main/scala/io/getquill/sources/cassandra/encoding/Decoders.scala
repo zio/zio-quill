@@ -52,5 +52,5 @@ trait Decoders {
         row.getUUID(index)
       }
     }
-  implicit val dateDecoder = decoder(_.getDate)
+  implicit val dateDecoder = decoder(_.getTimestamp)
 }
