@@ -11,11 +11,11 @@ package object cassandra {
 
   val mirrorSource = source(new CassandraMirrorSourceConfig("test"))
 
-  val testSyncDB = source(new CassandraSyncSourceConfig[Literal]("testSyncDB"))
+  val testSyncDB = source(new CassandraSyncSourceConfig[Literal]("testSyncDB") with NoQueryProbing)
 
-  val testAsyncDB = source(new CassandraAsyncSourceConfig[Literal]("testAsyncDB"))
+  val testAsyncDB = source(new CassandraAsyncSourceConfig[Literal]("testAsyncDB") with NoQueryProbing)
 
-  val testStreamDB = source(new CassandraStreamSourceConfig[Literal]("testStreamDB"))
+  val testStreamDB = source(new CassandraStreamSourceConfig[Literal]("testStreamDB") with NoQueryProbing)
 
   def await[T](f: Future[T]): T = Await.result(f, Duration.Inf)
 }
