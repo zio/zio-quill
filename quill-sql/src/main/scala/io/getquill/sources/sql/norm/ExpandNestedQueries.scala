@@ -13,7 +13,7 @@ import io.getquill.sources.sql.Source
 
 object ExpandNestedQueries {
 
-  def apply(q: SqlQuery, references: Set[Property]): SqlQuery =
+  def apply(q: SqlQuery, references: collection.Set[Property]): SqlQuery =
     q match {
       case q: FlattenSqlQuery =>
         expandNested(q.copy(select = expandSelect(q.select, references)))
@@ -38,7 +38,7 @@ object ExpandNestedQueries {
       case _: TableSource | _: InfixSource => s
     }
 
-  private def expandSelect(select: List[SelectValue], references: Set[Property]) =
+  private def expandSelect(select: List[SelectValue], references: collection.Set[Property]) =
     references.toList match {
       case Nil => select
       case refs =>

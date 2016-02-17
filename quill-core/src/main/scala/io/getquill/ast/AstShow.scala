@@ -123,6 +123,7 @@ object AstShow {
     case Constant(v)         => s"$v"
     case NullValue           => s"null"
     case Tuple(values)       => s"(${values.show})"
+    case Set(values)         => s"Set(${values.show})"
   }
 
   implicit val identShow: Show[Ident] = Show[Ident] {

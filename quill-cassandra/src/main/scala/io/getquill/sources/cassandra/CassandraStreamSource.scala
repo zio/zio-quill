@@ -12,6 +12,7 @@ import io.getquill.sources.cassandra.util.FutureConversions.toScalaFuture
 import monifu.reactive.Observable
 import monifu.reactive.Observable.FutureIsObservable
 import io.getquill.CassandraSourceConfig
+import io.getquill.sources.BindedStatementBuilder
 
 class CassandraStreamSource[N <: NamingStrategy](config: CassandraSourceConfig[N, CassandraStreamSource[N]])
   extends CassandraSourceSession[N](config) {
@@ -21,33 +22,20 @@ class CassandraStreamSource[N <: NamingStrategy](config: CassandraSourceConfig[N
   override type BatchedActionResult[T] = Observable[ResultSet]
   override type Params[T] = Observable[T]
 
-  private def logged[T](cql: String)(f: => Observable[T]) =
-    for {
-      _ <- Observable.apply(logger.info(cql))
-      r <- f
-    } yield {
-      r
-    }
-
-  def query[T](cql: String, bind: BoundStatement => BoundStatement, extractor: Row => T): Observable[T] =
-    logged(cql) {
-      Observable
-        .fromFuture(session.executeAsync(prepare(cql, bind)))
-        .map(_.iterator)
-        .flatMap(Observable.fromIterator(_))
-        .map(extractor)
-    }
+  def query[T](cql: String, bind: BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement], extractor: Row => T): Observable[T] = {
+    Observable
+      .fromFuture(session.executeAsync(prepare(cql, bind)))
+      .map(_.iterator)
+      .flatMap(Observable.fromIterator(_))
+      .map(extractor)
+  }
 
   def execute(cql: String): Observable[ResultSet] =
-    logged(cql) {
-      Observable.fromFuture(session.executeAsync(prepare(cql)))
-    }
+    Observable.fromFuture(session.executeAsync(prepare(cql)))
 
-  def execute[T](cql: String, bindParams: T => BoundStatement => BoundStatement): Observable[T] => Observable[ResultSet] =
+  def execute[T](cql: String, bindParams: T => BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement]): Observable[T] => Observable[ResultSet] =
     (values: Observable[T]) =>
       values.flatMap { value =>
-        logged(cql) {
-          Observable.fromFuture(session.executeAsync(prepare(cql, bindParams(value))))
-        }
+        Observable.fromFuture(session.executeAsync(prepare(cql, bindParams(value))))
       }
 }

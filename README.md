@@ -374,6 +374,26 @@ db.run(q2)
 // EXISTS (SELECT * FROM Person p2 WHERE (p2.id <> p1.id) AND (p2.age = p1.age))
 ```
 
+**contains**
+```scala
+val q = quote {
+  query[Person].filter(p => Set(1, 2).contains(p.id))
+}
+
+db.run(q)
+// SELECT p.id, p.name, p.age FROM Person p WHERE p.id IN (1, 2)
+
+val peopleWithContacts = quote {
+  query[Person].filter(p => query[Contact].filter(c => c.personId == p.id).nonEmpty)
+}
+val q2 = quote {
+  query[Person].filter(p => peopleWithContacts.contains(p.id))
+}
+
+db.run(q2)
+// SELECT p.id, p.name, p.age FROM Person p WHERE p.id IN (SELECT p1.* FROM Person p1 WHERE EXISTS (SELECT c.* FROM Contact c WHERE c.personId = p1.id))
+```
+
 **joins**
 
 In addition to applicative joins Quill also supports explicit joins (both inner and left/right/full outer joins).
@@ -805,19 +825,17 @@ implicit val encodeCustomValue = mappedEncoding[String, UUID](UUID.fromString(_)
 
 If the database type is not supported, it is possible to provide "raw" encoders and decoders:
 
-```scala
+```
 import io.getquill.sources.mirror.Row
 
 implicit val uuidEncoder = 
-  new db.Encoder[UUID] {
-    def apply(index: Int, value: UUID, row: Row) = 
-      ??? // database-specific implementation
+  db.encoder[UUID] {
+    ??? // database-specific implementation
   }
 
 implicit val uuidDecoder = 
-  new db.Decoder[UUID] {
-    def apply(index: Int, row: Row) = 
-      ??? // database-specific implementation
+  db.decoder[UUID] {
+    ??? // database-specific implementation
   }
 ```
 

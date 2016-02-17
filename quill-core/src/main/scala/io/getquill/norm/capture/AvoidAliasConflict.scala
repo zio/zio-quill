@@ -3,10 +3,10 @@ package io.getquill.norm.capture
 import io.getquill.ast._
 import io.getquill.norm.BetaReduction
 
-private case class AvoidAliasConflict(state: Set[Ident])
-  extends StatefulTransformer[Set[Ident]] {
+private case class AvoidAliasConflict(state: collection.Set[Ident])
+  extends StatefulTransformer[collection.Set[Ident]] {
 
-  override def apply(q: Query): (Query, StatefulTransformer[Set[Ident]]) =
+  override def apply(q: Query): (Query, StatefulTransformer[collection.Set[Ident]]) =
     q match {
 
       case FlatMap(q: Entity, x, p) =>
@@ -33,7 +33,7 @@ private case class AvoidAliasConflict(state: Set[Ident])
       case other => super.apply(other)
     }
 
-  private def apply(x: Ident, p: Ast)(f: (Ident, Ast) => Query): (Query, StatefulTransformer[Set[Ident]]) = {
+  private def apply(x: Ident, p: Ast)(f: (Ident, Ast) => Query): (Query, StatefulTransformer[collection.Set[Ident]]) = {
     val fresh = freshIdent(x)
     val pr = BetaReduction(p, x -> fresh)
     val (prr, t) = AvoidAliasConflict(state + fresh)(pr)
@@ -59,7 +59,7 @@ private case class AvoidAliasConflict(state: Set[Ident])
 private[capture] object AvoidAliasConflict {
 
   def apply(q: Query): Query =
-    AvoidAliasConflict(Set[Ident]())(q) match {
+    AvoidAliasConflict(collection.Set[Ident]())(q) match {
       case (q, _) => q
     }
 }

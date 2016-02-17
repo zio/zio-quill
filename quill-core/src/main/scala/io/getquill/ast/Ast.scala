@@ -86,6 +86,8 @@ object NullValue extends Value
 
 case class Tuple(values: List[Ast]) extends Value
 
+case class Set(values: List[Ast]) extends Value
+
 //************************************************************
 
 sealed trait Action extends Ast

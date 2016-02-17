@@ -46,6 +46,47 @@ class EncodingSpec extends Spec {
     }
   }
 
+  "encodes sets" - {
+    val q = quote {
+      (set: Set[Int]) =>
+        query[EncodingTestEntity].filter(t => set.contains(t.id))
+    }
+
+    "sync" in {
+      testSyncDB.run(query[EncodingTestEntity])
+      testSyncDB.run(query[EncodingTestEntity].insert)(insertValues)
+      verify(testSyncDB.run(q)(insertValues.map(_.id).toSet))
+    }
+
+    "async" in {
+      import scala.concurrent.ExecutionContext.Implicits.global
+      await {
+        for {
+          _ <- testAsyncDB.run(query[EncodingTestEntity].delete)
+          _ <- testAsyncDB.run(query[EncodingTestEntity].insert)(insertValues)
+          r <- testAsyncDB.run(q)(insertValues.map(_.id).toSet)
+        } yield {
+          verify(r)
+        }
+      }
+    }
+
+    "stream" in {
+      import monifu.concurrent.Implicits.globalScheduler
+      val result =
+        for {
+          _ <- testStreamDB.run(query[EncodingTestEntity].delete)
+          inserts = Observable.from(insertValues: _*)
+          _ <- testStreamDB.run(query[EncodingTestEntity].insert)(inserts).count
+          result <- testStreamDB.run(q)(insertValues.map(_.id).toSet)
+        } yield {
+          result
+        }
+      val f = result.foldLeft(List.empty[EncodingTestEntity])(_ :+ _).asFuture
+      verify(await(f).getOrElse(List()))
+    }
+  }
+
   private def verify(result: List[EncodingTestEntity]): Unit =
     result.zip(insertValues) match {
       case List((e1, a1), (e2, a2)) =>

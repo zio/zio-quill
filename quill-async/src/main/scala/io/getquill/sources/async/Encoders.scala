@@ -2,25 +2,38 @@ package io.getquill.sources.async
 
 import java.util.Date
 import java.util.UUID
-
 import org.joda.time.LocalDateTime
+import io.getquill.sources.BindedStatementBuilder
 
 trait Encoders {
   this: AsyncSource[_, _, _] =>
 
   def encoder[T]: Encoder[T] =
+    encoder(identity[T] _)
+
+  def encoder[T](f: T => Any): Encoder[T] =
     new Encoder[T] {
-      def apply(index: Int, value: T, row: List[Any]) =
-        row :+ value
+      def apply(index: Int, value: T, row: BindedStatementBuilder[List[Any]]) = {
+        val raw = new io.getquill.sources.Encoder[List[Any], T] {
+          override def apply(index: Int, value: T, row: List[Any]) =
+            row :+ value
+        }
+        row.single(index, value, raw)
+      }
+    }
+
+  implicit def setEncoder[T](implicit e: Encoder[T]): Encoder[Set[T]] =
+    new Encoder[Set[T]] {
+      def apply(index: Int, values: Set[T], row: BindedStatementBuilder[List[Any]]) =
+        row.coll[T](index, values, e)
     }
 
   implicit def optionEncoder[T](implicit d: Encoder[T]): Encoder[Option[T]] =
-    new Encoder[Option[T]] {
-      def apply(index: Int, value: Option[T], row: List[Any]) =
-        row :+ (value match {
-          case None        => null
-          case Some(value) => value
-        })
+    encoder[Option[T]] { (value: Option[T]) =>
+      value match {
+        case None        => null
+        case Some(value) => value
+      }
     }
 
   implicit val stringEncoder: Encoder[String] = encoder[String]
@@ -34,14 +47,8 @@ trait Encoders {
   implicit val doubleEncoder: Encoder[Double] = encoder[Double]
   implicit val byteArrayEncoder: Encoder[Array[Byte]] = encoder[Array[Byte]]
   implicit val dateEncoder: Encoder[Date] =
-    new Encoder[Date] {
-      def apply(index: Int, value: Date, row: List[Any]) =
-        row :+ new LocalDateTime(value)
+    encoder[Date] { (value: Date) =>
+      new LocalDateTime(value)
     }
-
-  implicit val uuidEncoder: Encoder[UUID] =
-    new Encoder[UUID] {
-      def apply(index: Int, value: UUID, row: List[Any]) =
-        row :+ value
-    }
+  implicit val uuidEncoder: Encoder[UUID] = encoder[UUID]
 }

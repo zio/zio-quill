@@ -25,4 +25,20 @@ class FinagleMysqlEncodingSpec extends EncodingSpec {
       Await.result(testDB.run(query[EncodingTestEntity]))
     }
   }
+
+  "encodes sets" in {
+    val q = quote {
+      (set: Set[Int]) =>
+        query[EncodingTestEntity].filter(t => set.contains(t.v6))
+    }
+    Await.result {
+      for {
+        _ <- testDB.run(query[EncodingTestEntity].delete)
+        _ <- testDB.run(query[EncodingTestEntity].insert)(insertValues)
+        r <- testDB.run(q)(insertValues.map(_.v6).toSet)
+      } yield {
+        verify(r)
+      }
+    }
+  }
 }

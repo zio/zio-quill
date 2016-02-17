@@ -23,7 +23,7 @@ object Prepare {
         case q: Query =>
           val sql = SqlQuery(q)
           VerifySqlQuery(sql).map(fail)
-          ExpandNestedQueries(sql, Set.empty).show
+          ExpandNestedQueries(sql, collection.Set.empty).show
         case other =>
           other.show
       }

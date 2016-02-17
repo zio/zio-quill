@@ -101,6 +101,7 @@ trait SqlIdiom {
     case BinaryOperation(NullValue, EqualityOperator.`==`, b) => s"${scopedShow(b)} IS NULL"
     case BinaryOperation(a, EqualityOperator.`!=`, NullValue) => s"${scopedShow(a)} IS NOT NULL"
     case BinaryOperation(NullValue, EqualityOperator.`!=`, b) => s"${scopedShow(b)} IS NOT NULL"
+    case BinaryOperation(a, op @ SetOperator.`contains`, b)   => s"${scopedShow(b)} ${op.show} (${a.show})"
     case BinaryOperation(a, op, b)                            => s"${scopedShow(a)} ${op.show} ${scopedShow(b)}"
     case e: FunctionApply                                     => fail(s"Can't translate the ast to sql: '$e'")
   }
@@ -157,20 +158,21 @@ trait SqlIdiom {
   }
 
   implicit val binaryOperatorShow: Show[BinaryOperator] = Show[BinaryOperator] {
-    case EqualityOperator.`==` => "="
-    case EqualityOperator.`!=` => "<>"
-    case BooleanOperator.`&&`  => "AND"
-    case BooleanOperator.`||`  => "OR"
-    case StringOperator.`+`    => "||"
-    case NumericOperator.`-`   => "-"
-    case NumericOperator.`+`   => "+"
-    case NumericOperator.`*`   => "*"
-    case NumericOperator.`>`   => ">"
-    case NumericOperator.`>=`  => ">="
-    case NumericOperator.`<`   => "<"
-    case NumericOperator.`<=`  => "<="
-    case NumericOperator.`/`   => "/"
-    case NumericOperator.`%`   => "%"
+    case EqualityOperator.`==`  => "="
+    case EqualityOperator.`!=`  => "<>"
+    case BooleanOperator.`&&`   => "AND"
+    case BooleanOperator.`||`   => "OR"
+    case StringOperator.`+`     => "||"
+    case NumericOperator.`-`    => "-"
+    case NumericOperator.`+`    => "+"
+    case NumericOperator.`*`    => "*"
+    case NumericOperator.`>`    => ">"
+    case NumericOperator.`>=`   => ">="
+    case NumericOperator.`<`    => "<"
+    case NumericOperator.`<=`   => "<="
+    case NumericOperator.`/`    => "/"
+    case NumericOperator.`%`    => "%"
+    case SetOperator.`contains` => "IN"
   }
 
   implicit def propertyShow(implicit valueShow: Show[Value], identShow: Show[Ident], strategy: NamingStrategy): Show[Property] =
@@ -185,6 +187,7 @@ trait SqlIdiom {
     case Constant(v)         => s"$v"
     case NullValue           => s"null"
     case Tuple(values)       => s"${values.show}"
+    case Set(values)         => s"${values.show}"
   }
 
   implicit def identShow(implicit strategy: NamingStrategy): Show[Ident] = Show[Ident] {

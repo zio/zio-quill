@@ -37,6 +37,7 @@ object NumericOperator {
 }
 
 object SetOperator {
+  case object `contains` extends BinaryOperator
   case object `nonEmpty` extends PostfixUnaryOperator
   case object `isEmpty` extends PostfixUnaryOperator
 }

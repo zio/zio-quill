@@ -61,6 +61,7 @@ class MysqlAsyncEncodingSpec extends EncodingSpec {
     "decode and encode any numeric as boolean" in {
       case class EncodingTestEntity(v3: Boolean, v4: Boolean, v6: Boolean, v7: Boolean)
       Await.result(testMysqlDB.run(query[EncodingTestEntity]), Duration.Inf)
+      ()
     }
   }
 
@@ -75,6 +76,7 @@ class MysqlAsyncEncodingSpec extends EncodingSpec {
       result <- testMysqlDB.run(query[DateEncodingTestEntity])
     } yield result
     Await.result(r, Duration.Inf)
+    ()
   }
 
   "fails if the column has the wrong type" - {
@@ -92,6 +94,22 @@ class MysqlAsyncEncodingSpec extends EncodingSpec {
         Await.result(testMysqlDB.run(query[EncodingTestEntity]), Duration.Inf)
       }
     }
+  }
+
+  "encodes sets" in {
+    val q = quote {
+      (set: Set[Int]) =>
+        query[EncodingTestEntity].filter(t => set.contains(t.v6))
+    }
+    val fut =
+      for {
+        _ <- testMysqlDB.run(query[EncodingTestEntity].delete)
+        _ <- testMysqlDB.run(query[EncodingTestEntity].insert)(insertValues)
+        r <- testMysqlDB.run(q)(insertValues.map(_.v6).toSet)
+      } yield {
+        r
+      }
+    verify(Await.result(fut, Duration.Inf))
   }
 
   private def prepareEncodingTestEntity() = {
