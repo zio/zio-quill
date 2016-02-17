@@ -5,7 +5,7 @@ RUN apt-get update; \
   apt-get install -y python curl postgresql-client mysql-client > /dev/null
 
 RUN  cd /opt ; \
-     curl http://archive.apache.org/dist/cassandra/2.1.12/apache-cassandra-2.1.12-bin.tar.gz | tar zx
+     curl http://archive.apache.org/dist/cassandra/3.3/apache-cassandra-3.3-bin.tar.gz | tar zx
 
-ENV PATH /opt/apache-cassandra-2.1.12/bin:$PATH
+ENV PATH /opt/apache-cassandra-3.3/bin:$PATH
 

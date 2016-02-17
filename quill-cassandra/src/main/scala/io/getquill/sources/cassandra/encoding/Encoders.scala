@@ -55,5 +55,5 @@ trait Encoders {
       bs.setBytes(idx, ByteBuffer.wrap(v))
     }
   implicit val uuidEncoder: Encoder[UUID] = encoder(_.setUUID)
-  implicit val dateEncoder = encoder(_.setDate)
+  implicit val dateEncoder = encoder(_.setTimestamp)
 }
