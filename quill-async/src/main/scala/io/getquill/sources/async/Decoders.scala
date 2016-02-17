@@ -24,7 +24,7 @@ trait Decoders {
           case value: T                        => value
           case value if (f.isDefinedAt(value)) => f(value)
           case value =>
-            fail(s"Value '$value' of ${value.getClass.getName} can't be decoded to '${classTag[T].runtimeClass}'")
+            fail(s"Value '$value' at index $index can't be decoded to '${classTag[T].runtimeClass}'")
         }
       }
     }
