@@ -40,7 +40,7 @@ Phantom provides an embedded DSL that help you write CQL queries in a type-safe 
 
 ## Simple query ##
 
-This example would allow us to compare how the different libraries let us query a column family to obtain one element.
+This section would allow us to compare how the different libraries let us query a column family to obtain one element.
 
 **Java Driver (v3.0.0)**
 ```scala
@@ -78,12 +78,9 @@ object JavaDriver extends App {
           from("db", "weather_station").
           where(QueryBuilder.eq("country", QueryBuilder.bindMarker()))
 
-      session.execute(cache.get(query.toString).bind(country)).
-        all().asScala.
-        map(
-          row => WeatherStation(row.getString("country"), row.getString("city"), row.getString("station_id"), row.getInt("entry"), row.getInt("value"))
-        ).
-          to[List]
+      session.execute(cache.get(query.toString).bind(country)).all().asScala.map(
+        row => WeatherStation(row.getString("country"), row.getString("city"), row.getString("station_id"), row.getInt("entry"), row.getInt("value"))
+      ).to[List]
     }
   }
 
@@ -139,7 +136,7 @@ object Phantom extends App {
 
   val result = db.stations.getAllByCountry("UK")
 
-  result.onComplete { case _ => db.shutdown() }
+  result.onComplete(_ => db.shutdown())
 }
 ```
 
@@ -166,7 +163,7 @@ object Quill extends App {
     }
   }
 
-  val result = db.run(WeatherStation.getAllByCountry)("UK").map(_.headOption)
+  val result = db.run(WeatherStation.getAllByCountry)("UK")
 
   result.onComplete(_ => db.close())
 }
@@ -176,17 +173,17 @@ During the compilation of this example, as the quotation is known statically, Qu
 
 ## Composable queries ##
 
-This example would allow us to compare how the different libraries let us compose querie, if possible.
+This section would allow us to compare how the different libraries let us compose querie, if possible.
 
 **Java Driver (v3.0.0)** 
 
 The Query Builder allows you to partially construct queries and add filters later:
 
 ```scala
-    val selectAllFromPeople: Select =
+    val selectAllWeatherStations: Select =
       QueryBuilder.select().
       all().
-      from("db", "people")
+      from("db", "weather_station")
 ```
 
 But that's a very limited composition capability.
@@ -245,7 +242,7 @@ object Phantom extends App {
 
   val result = db.stations.getAllByCountryCityAndId("UK", "London", "SW27")
 
-  result.onComplete { case _ => db.shutdown() }
+  result.onComplete(_ => db.shutdown())
 }
 ```
 
@@ -289,3 +286,226 @@ object Quill extends App {
 ```
 
 Quill offers more advanced composability, but CQL being a much simpler query language than SQL can't benefit much from it. During the compilation of this example, as the quotation is known statically, Quill will emit the CQL string as an info message, e.g. `SELECT country, city, station_id, entry, value FROM weather_station WHERE country = ? AND city = ? AND station_id = ?`.
+
+## Extensibility ##
+
+This section would allow us to explore the extensibility capabilities of each library .
+
+**Java Driver (v3.0.0)**
+
+There is no much offered by the driver to extend the Query Builder, e.g. add a missing CQL feature.
+
+**Phantom (v1.22.0)**
+
+You could extend Phantom by extending the DSL to add new features, although it might not be a straightforward process.
+
+**Quill (v0.3.2-SNAPSHOT)**
+
+Quill provides an easy mechanism to add non-supported features through [infix](https://github.com/getquill/quill#infix). In fact, most of the [CQL specific features](https://github.com/getquill/quill/blob/master/quill-cassandra/src/main/scala/io/getquill/sources/cassandra/ops/package.scala) are added using infix.
+
+## Custom data types ##
+
+This section would allow us to compare how the different libraries let us read custom data types in a seamless way.
+
+**Java Driver (v3.0.0)**
+```scala
+import java.nio.ByteBuffer
+import java.nio.charset.Charset
+
+import com.datastax.driver.core._
+import com.datastax.driver.core.exceptions.InvalidTypeException
+import com.datastax.driver.core.querybuilder.QueryBuilder
+import com.datastax.driver.core.utils.Bytes
+import com.google.common.cache.{ CacheBuilder, CacheLoader, LoadingCache }
+
+import scala.collection.JavaConverters._
+
+object JavaDriver extends App {
+
+  case class Country(code: String)
+
+  object Country {
+
+    class Codec(charset: Charset) extends TypeCodec[Country](DataType.text(), classOf[Country]) {
+
+      override def serialize(country: Country, protocolVersion: ProtocolVersion): ByteBuffer =
+        if (country == null) null else ByteBuffer.wrap(country.code.getBytes(charset))
+
+      override def parse(value: String): Country =
+        if (value == null || value.isEmpty || value.equalsIgnoreCase("NULL"))
+          null
+        else if (!ParseUtils.isQuoted(value))
+          throw new InvalidTypeException("text or varchar values must be enclosed by single quotes")
+        else Country(ParseUtils.unquote(value))
+
+      override def format(country: Country): String =
+        if (country == null) "NULL"
+        else ParseUtils.quote(country.code)
+
+      override def deserialize(bytes: ByteBuffer, protocolVersion: ProtocolVersion): Country =
+        if (bytes == null) null
+        else if (bytes.remaining == 0) Country("")
+        else Country(new String(Bytes.getArray(bytes), charset))
+    }
+  }
+
+  val nrOfCacheEntries: Int = 100
+
+  val cluster: Cluster = Cluster.builder().addContactPoints("localhost").build()
+
+  cluster.getConfiguration.getCodecRegistry.register(new Country.Codec(Charset.forName("UTF-8")))
+
+  val session: Session = cluster.newSession()
+
+  val cache: LoadingCache[String, PreparedStatement] =
+    CacheBuilder.newBuilder().
+      maximumSize(nrOfCacheEntries).
+      build(
+        new CacheLoader[String, PreparedStatement]() {
+          def load(key: String): PreparedStatement = session.prepare(key.toString)
+        }
+      )
+
+  case class WeatherStation(country: Country, city: String, stationId: String, entry: Int, value: Int)
+
+  object WeatherStation {
+
+    def getAllByCountry(cache: LoadingCache[String, PreparedStatement], session: Session)(country: Country): List[WeatherStation] = {
+      val query: Statement =
+        QueryBuilder.select().
+          all().
+          from("db", "weather_station").
+          where(QueryBuilder.eq("country", QueryBuilder.bindMarker()))
+
+      session.execute(cache.get(query.toString).bind(country)).all().asScala.map(
+        row => WeatherStation(row.get("country", classOf[Country]), row.getString("city"), row.getString("station_id"), row.getInt("entry"), row.getInt("value"))
+      ).to[List]
+    }
+  }
+
+  val getAllByCountry: Country => List[WeatherStation] = WeatherStation.getAllByCountry(cache, session)_
+
+  getAllByCountry(Country("UK"))
+
+  session.close()
+  cluster.close()
+}
+```
+
+We need to create a new `TypeCodec` and register it in the `CodecRegistry`.
+
+**Phantom (v1.22.0)**
+```scala
+import com.websudos.phantom.builder.primitives.Primitive
+import com.websudos.phantom.builder.query.CQLQuery
+import com.websudos.phantom.builder.syntax.CQLSyntax
+import com.websudos.phantom.connectors.RootConnector
+import com.websudos.phantom.db._
+import com.websudos.phantom.dsl._
+
+import scala.concurrent.Future
+import scala.util.Try
+
+object Phantom extends App {
+
+  case class Country(code: String) extends AnyVal
+
+  object Country {
+
+    implicit object CountryIsPrimitive extends Primitive[Country] {
+
+      override type PrimitiveType = Country
+
+      override def fromRow(column: String, row: Row): Try[Country] =
+        nullCheck(column, row) {
+          r => Country(r.getString(column))
+        }
+
+      override val cassandraType: String = CQLSyntax.Types.Text
+
+      override def fromString(code: String): Country = Country(code)
+
+      override def asCql(country: Country): String = CQLQuery.empty.singleQuote(country.code)
+
+      override val clz: Class[CountryIsPrimitive.PrimitiveType] = classOf[Country]
+    }
+
+    type Column[Owner <: CassandraTable[Owner, Record], Record] = PrimitiveColumn[Owner, Record, Country]
+  }
+
+  case class WeatherStation(country: Country, city: String, stationId: String, entry: Int, value: Int)
+
+  case class People(name: String, age: Int)
+
+  abstract class WeatherStationCF(override val tableName: String) extends CassandraTable[WeatherStationCF, WeatherStation] with RootConnector {
+
+    object country extends Country.Column(this) with PartitionKey[Country]
+    object city extends StringColumn(this) with PrimaryKey[String]
+    object stationId extends StringColumn(this) with PrimaryKey[String] {
+      override lazy val name: String = "station_id"
+    }
+    object entry extends IntColumn(this) with PrimaryKey[Int]
+    object value extends IntColumn(this)
+
+    override def fromRow(r: Row): WeatherStation =
+      WeatherStation(country(r), city(r), stationId(r), entry(r), value(r))
+  }
+
+  abstract class WeatherStationQueries extends WeatherStationCF("weather_station") {
+
+    def getAllByCountry(country: Country): Future[List[WeatherStation]] =
+      select.where(_.country eqs country).fetch()
+  }
+
+  class DB(ks: KeySpaceDef) extends DatabaseImpl(ks) {
+
+    object stations extends WeatherStationQueries with connector.Connector
+  }
+
+  val db = new DB(ContactPoint.local.keySpace("db"))
+
+  val result = db.stations.getAllByCountry(Country("UK"))
+
+  result.onComplete(_ => db.shutdown())
+}
+```
+
+We need to define a new `Column` type and use it while defining the data model.
+
+**Quill (v0.3.2-SNAPSHOT)**
+```scala
+import io.getquill._
+import io.getquill.naming._
+import io.getquill.sources.MappedEncoding
+
+import scala.concurrent.ExecutionContext.Implicits.global
+
+object Quill extends App {
+
+  val db = source(new CassandraAsyncSourceConfig[SnakeCase]("DB") with NoQueryProbing)
+
+  case class Country(code: String) extends AnyVal
+
+  object Country {
+
+    implicit val decode: MappedEncoding[String, Country] = mappedEncoding[String, Country](Country(_))
+    implicit val encode: MappedEncoding[Country, String] = mappedEncoding[Country, String](_.code)
+  }
+  case class WeatherStation(country: Country, city: String, stationId: String, entry: Int, value: Int)
+
+  object WeatherStation {
+
+    val getAllByCountry = quote {
+      (country: Country) =>
+        query[WeatherStation].filter(_.country == country)
+    }
+  }
+
+  val result = db.run(WeatherStation.getAllByCountry)(Country("UK"))
+
+  result.onComplete(_ => db.close())
+}
+```
+
+We only need to define implicit encodings from/to `String`.
+
