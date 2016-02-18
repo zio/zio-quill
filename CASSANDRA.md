@@ -3,6 +3,17 @@ This document compares Quill to the [Datastax Java](https://github.com/datastax/
 
 All examples have been properly tested, and they should work out of the box.
 
+## Index ##
+
+* [Prerequisites](#prerequisites)
+* [Abstraction level](#abstraction-level)
+* [Simple queries](#simple-queries)
+* [Composable queries](#composable-queries)
+* [Extensibility](#extensibility)
+* [Custom data types](#custom-data-types)
+* [Non-blocking IO](#non-blocking-io)
+* [Other considerations](#other-considerations)
+
 ## Prerequisites ##
 
 The keyspace and column family needed for all examples are defined in this CQL script:
@@ -38,7 +49,7 @@ Although both Quill and Phantom represent column family rows as flat immutable s
 
 Phantom provides an embedded DSL that help you write CQL queries in a type-safe manner. Quill is referred as a Language Integrated Query library to match the available publications on the subject. The paper ["Language-integrated query using comprehension syntax: state of the art, open problems, and work in progress"](http://research.microsoft.com/en-us/events/dcp2014/cheney.pdf) has an overview with some of the available implementations of language integrated queries.
 
-## Simple query ##
+## Simple queries ##
 
 This section would allow us to compare how the different libraries let us query a column family to obtain one element.
 
