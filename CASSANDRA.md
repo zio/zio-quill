@@ -509,3 +509,24 @@ object Quill extends App {
 
 We only need to define implicit encodings from/to `String`.
 
+## Non-blocking IO ##
+
+This section would allow us to compare the different options the libraries offer to do non-blocking IO.
+
+**Java Driver (v3.0.0)**
+
+The Datastax driver allows you to execute queries [asynchronously](https://github.com/datastax/java-driver/tree/2.1/manual/async), returning `ListenableFuture`s.
+   
+**Phantom (v1.22.0)**
+
+Phantom is asynchronous by default and all operations returns `Future`s. It also provides an implementation of the [reactive-streams](https://github.com/reactive-streams/reactive-streams-jvm) specification on top of Akka. 
+
+**Quill (v0.3.2-SNAPSHOT)**
+
+Quill provides blocking, asynchronous and streaming sources for Cassandra. The asynchronous source returns `Future`s on all operations. The streaming source uses [Monix](https://github.com/monixio/monix) to return an `Observable`. Monix is a reactive library compatible with the [reactive-streams](https://github.com/reactive-streams/reactive-streams-jvm) protocol.
+
+## Other considerations ##
+
+So far we have only compared this libraries from technical point of view, but there are other things you might want to take into account like 3rd party dependencies. As both Phantom and Quill depend on the Datastax Java Driver, we are going to pay attention to which additional dependencies each of them add.
+
+Phantom is composed by several modules, each of them with their 3rd party dependencies. Overall it adds more 3rd party dependencies than Quill and it has dependencies on libraries like shapeless, play-iteratees, play-streams-experimental or akka-actor. Quill, on the other hand, only adds dependencies on monix and scalamacros resetallattrs.
