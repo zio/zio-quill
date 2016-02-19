@@ -28,7 +28,8 @@ class CassandraSourceMacroSpec extends Spec {
     val q = quote {
       qr1.filter(_.s == "fail")
     }
-    "mirrorSource.run(q)" mustNot compile
+    val s = source(new CassandraMirrorSourceConfig("test") with QueryProbing)
+    "s.run(q)" mustNot compile
   }
 
   "binds inputs according to the sql terms order" - {

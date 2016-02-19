@@ -15,6 +15,7 @@ lazy val quill =
       IO.write(file, str)
       Seq()
     })
+    .settings(tutScalacOptions := Seq())
     .dependsOn(`quill-core`, `quill-sql`, `quill-jdbc`, `quill-finagle-mysql`, `quill-async`, `quill-cassandra`)
     .aggregate(`quill-core`, `quill-sql`, `quill-jdbc`, `quill-finagle-mysql`, `quill-async`, `quill-cassandra`)
 
@@ -87,12 +88,14 @@ lazy val commonSettings = Seq(
   libraryDependencies ++= Seq(
     "org.scalamacros" %% "resetallattrs"  % "1.0.0",
     "org.scalatest"   %% "scalatest"      % "2.2.4" % "test",
-    "ch.qos.logback"  % "logback-classic" % "1.1.3" % "test"
+    "ch.qos.logback"  % "logback-classic" % "1.1.3" % "test",
+    "com.google.code.findbugs" % "jsr305" % "3.0.1" % "provided" // just to avoid warnings during compilation
   ),
   EclipseKeys.createSrc := EclipseCreateSrc.Default + EclipseCreateSrc.Resource,
   unmanagedClasspath in Test += baseDirectory.value / "src" / "test" / "resources",
   scalacOptions ++= Seq(
-    "-deprecation",           
+    "-Xfatal-warnings",
+    "-deprecation",
     "-encoding", "UTF-8",
     "-feature",
     "-unchecked",

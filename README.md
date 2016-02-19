@@ -452,21 +452,21 @@ db.run(qNested)
 
 # Query probing #
 
-If configured, queries are verified against the database at compile time and the compilation fails if it is not valid. The query validation does not alter the database state.
+Query probing is an experimental feature that validates queries against the database at compile time, failing the compilation if it is not valid. The query validation does not alter the database state.
 
-If query probing is enabled, the config file must be available at compile time. You can achieve it by adding this line to your project settings:
+This feature is disabled by default. To enable it, mix the `QueryProbing` trait to the database configuration:
+
+```
+lazy val db = source(new MySourceConfig("configKey") with QueryProbing)
+```
+
+The configurations correspondent to the config key must be available at compile time. You can achieve it by adding this line to your project settings:
 
 ```
 unmanagedClasspath in Compile += baseDirectory.value / "src" / "main" / "resources"
 ```
 
 If your project doesn't have a standard layout, e.g. a play project, you should configure the path to point to the folder that contains your config file. 
-
-It's possible to disable the query probing by adding the `NoQueryProbing` trait to your source configuration:
-
-```
-lazy val db = source(new MySourceConfig("configKey") with NoQueryProbing)
-```
 
 # Actions #
 
@@ -887,7 +887,19 @@ The transformations are applied from left to right.
 
 ## Configuration ##
 
-Sources must be defined as `object` and the object name is used as the key to obtain configurations using the [typesafe config](http://github.com/typesafehub/config) library.
+The string passed to the source configuration is used as the key to obtain configurations using the [typesafe config](http://github.com/typesafehub/config) library.
+
+Additionally, any member of a source configuration can be overriden. Example:
+
+```
+import io.getquill._
+import io.getquill.naming.SnakeCase
+import io.getquill.sources.sql.idiom.MySQLDialect
+
+lazy val db = source(new JdbcSourceConfig[MySQLDialect, SnakeCase]("db") {
+  override def dataSource = ??? // create the datasource manually
+})
+```
 
 ### quill-jdbc ###
 
