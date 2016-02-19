@@ -12,17 +12,23 @@ import io.getquill.util.ContextLogger
 import scala.annotation.tailrec
 import scala.util.{ DynamicVariable, Try }
 import scala.util.control.NonFatal
+import scala.util.DynamicVariable
+
+import scala.reflect.runtime.universe._
+import io.getquill.monad.SyncIOMonad
 
 abstract class JdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](dataSource: DataSource with Closeable)
   extends SqlContext[Dialect, Naming]
   with Encoders
-  with Decoders {
+  with Decoders
+  with SyncIOMonad {
 
   private val logger = ContextLogger(classOf[JdbcContext[_, _]])
 
   override type PrepareRow = PreparedStatement
   override type ResultRow = ResultSet
 
+  override type Result[T] = T
   override type RunQueryResult[T] = List[T]
   override type RunQuerySingleResult[T] = T
   override type RunActionResult = Long
@@ -66,6 +72,12 @@ abstract class JdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](dataSo
               conn.setAutoCommit(wasAutoCommit)
           }
         }
+    }
+
+  override def performIO[T](io: IO[T, _], transactional: Boolean = false): Result[T] =
+    transactional match {
+      case false => super.performIO(io)
+      case true  => transaction(super.performIO(io))
     }
 
   def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): List[T] =

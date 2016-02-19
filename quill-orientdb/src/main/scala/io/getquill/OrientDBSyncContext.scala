@@ -8,23 +8,31 @@ import io.getquill.context.orientdb.OrientDBSessionContext
 import io.getquill.util.{ ContextLogger, LoadConfig }
 
 import scala.collection.JavaConverters._
+import io.getquill.monad.SyncIOMonad
 
 class OrientDBSyncContext[N <: NamingStrategy](
   dbUrl:    String,
   username: String,
   password: String
-) extends OrientDBSessionContext[N](dbUrl, username, password) {
+) extends OrientDBSessionContext[N](dbUrl, username, password)
+  with SyncIOMonad {
 
   def this(config: OrientDBContextConfig) = this(config.dbUrl, config.username, config.password)
   def this(config: Config) = this(OrientDBContextConfig(config))
   def this(configPrefix: String) = this(LoadConfig(configPrefix))
 
+  override type Result[T] = T
   override type RunQueryResult[T] = List[T]
   override type RunQuerySingleResult[T] = T
   override type RunActionResult = Unit
   override type RunBatchActionResult = Unit
 
   private val logger = ContextLogger(classOf[OrientDBSyncContext[_]])
+
+  override def performIO[T](io: IO[T, _], transactional: Boolean = false): Result[T] = {
+    if (transactional) logger.underlying.warn("Cassandra doesn't support transactions, ignoring `io.transactional`")
+    super.performIO(io)
+  }
 
   def executeQuery[T](orientQl: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): List[T] = {
     val (params, objects) = prepare(super.prepare())
