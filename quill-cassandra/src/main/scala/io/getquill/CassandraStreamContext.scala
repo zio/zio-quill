@@ -24,10 +24,11 @@ class CassandraStreamContext[N <: NamingStrategy](
   def this(config: Config) = this(CassandraContextConfig(config))
   def this(configPrefix: String) = this(LoadConfig(configPrefix))
 
-  override type RunQueryResult[T] = Observable[T]
-  override type RunQuerySingleResult[T] = Observable[T]
-  override type RunActionResult = Observable[Unit]
-  override type RunBatchActionResult = Observable[Unit]
+  override type Result[T] = Observable[T]
+  override type RunQueryResult[T] = T
+  override type RunQuerySingleResult[T] = T
+  override type RunActionResult = Unit
+  override type RunBatchActionResult = Unit
 
   protected def page(rs: ResultSet): Task[Iterable[Row]] = Task.defer {
     val available = rs.getAvailableWithoutFetching

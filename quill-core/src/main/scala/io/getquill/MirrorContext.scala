@@ -3,8 +3,8 @@ package io.getquill
 import io.getquill.context.Context
 import io.getquill.context.mirror.{ MirrorDecoders, MirrorEncoders, Row }
 import io.getquill.idiom.{ Idiom => BaseIdiom }
-
 import scala.util.{ Failure, Success, Try }
+import io.getquill.monad.SyncIOMonad
 
 class MirrorContextWithQueryProbing[Idiom <: BaseIdiom, Naming <: NamingStrategy]
   extends MirrorContext[Idiom, Naming] with QueryProbing
@@ -12,10 +12,13 @@ class MirrorContextWithQueryProbing[Idiom <: BaseIdiom, Naming <: NamingStrategy
 class MirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy]
   extends Context[Idiom, Naming]
   with MirrorEncoders
-  with MirrorDecoders {
+  with MirrorDecoders
+  with SyncIOMonad {
 
   override type PrepareRow = Row
   override type ResultRow = Row
+
+  override type Result[T] = T
   override type RunQueryResult[T] = QueryMirror[T]
   override type RunQuerySingleResult[T] = QueryMirror[T]
   override type RunActionResult = ActionMirror
