@@ -1,3 +1,15 @@
+# 0.4.0 / 19-Feb-2016
+
+* [new sources creation mechanism](https://github.com/getquill/quill/pull/136)
+* [simplified join syntax](https://github.com/getquill/quill/commit/bfcfe49fbdbda04cce7fe7e7d382fb1adbfcbd7f)
+* [Comparison between Quill and other alternatives for CQL](https://github.com/getquill/quill/pull/164)
+* [`contains` operator (sql `in`)](https://github.com/getquill/quill/pull/165/files#diff-04c6e90faac2675aa89e2176d2eec7d8R377)
+* [query probing is now opt-in](https://github.com/getquill/quill/pull/176/files#diff-04c6e90faac2675aa89e2176d2eec7d8R453)
+* [quill-cassandra: upgrade Datastax Java Driver to version 3.0.0](https://github.com/getquill/quill/pull/171)
+* [support implicit quotations with type parameters](https://github.com/getquill/quill/pull/163)
+* [quill-cassandra: UUID support](https://github.com/getquill/quill/pull/142)
+* [quill-async: more reasonable numeric type decodes](https://github.com/getquill/quill/pull/139)
+
 # 0.3.1 / 01-Feb-2016
 
 * [fix #134 - ignore the property `queryProbing` when creating the hikari data source](https://github.com/getquill/quill/issues/134)
