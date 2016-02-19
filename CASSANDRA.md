@@ -51,7 +51,7 @@ Phantom provides an embedded DSL that help you write CQL queries in a type-safe 
 
 ## Simple queries ##
 
-This section would allow us to compare how the different libraries let us query a column family to obtain one element.
+This section compares how the different libraries let the user query a column family to obtain some elements.
 
 **Java Driver (v3.0.0)**
 ```scala
@@ -151,7 +151,7 @@ object Phantom extends App {
 }
 ```
 
-Phantom requires explicit definition of the database model. The query definition also requires special equality operators.
+Phantom requires mapping classes to lift the database model to DSL types. The query definition also requires special equality operators.
 
 **Quill (v0.3.2-SNAPSHOT)**
 ```scala
@@ -184,11 +184,11 @@ During the compilation of this example, as the quotation is known statically, Qu
 
 ## Composable queries ##
 
-This section would allow us to compare how the different libraries let us compose querie, if possible.
+This section compares how the different libraries let the user compose queries.
 
 **Java Driver (v3.0.0)** 
 
-The Query Builder allows you to partially construct queries and add filters later:
+The Query Builder allows the user to partially construct queries and add filters later:
 
 ```scala
     val selectAllWeatherStations: Select =
@@ -197,7 +197,7 @@ The Query Builder allows you to partially construct queries and add filters late
       from("db", "weather_station")
 ```
 
-But that's a very limited composition capability.
+The DSL has limited composition compatibility.
 
 **Phantom (v1.22.0)**
 ```scala
@@ -257,7 +257,7 @@ object Phantom extends App {
 }
 ```
 
-Phantom allows you certain level of composability, but it gets a bit verbose due to the nature of the DSL. 
+Phantom allows the user certain level of composability, but it gets a bit verbose due to the nature of the DSL. 
 
 **Quill (v0.3.2-SNAPSHOT)**
 ```scala
@@ -300,7 +300,7 @@ Quill offers more advanced composability, but CQL being a much simpler query lan
 
 ## Extensibility ##
 
-This section would allow us to explore the extensibility capabilities of each library .
+This section explores the extensibility capabilities of each library .
 
 **Java Driver (v3.0.0)**
 
@@ -403,7 +403,7 @@ object JavaDriver extends App {
 }
 ```
 
-We need to create a new `TypeCodec` and register it in the `CodecRegistry`.
+It is necessary to create a new `TypeCodec` and register it in the `CodecRegistry`.
 
 **Phantom (v1.22.0)**
 ```scala
@@ -481,7 +481,7 @@ object Phantom extends App {
 }
 ```
 
-We need to define a new `Column` type and use it while defining the data model.
+It is necessary to define a new `Column` type to be used when defining the data model.
 
 **Quill (v0.3.2-SNAPSHOT)**
 ```scala
@@ -518,15 +518,15 @@ object Quill extends App {
 }
 ```
 
-We only need to define implicit encodings from/to `String`.
+Quill only requires definition of implicit encodings from/to `String`.
 
 ## Non-blocking IO ##
 
-This section would allow us to compare the different options the libraries offer to do non-blocking IO.
+This section compares the different options the libraries offer to do non-blocking IO.
 
 **Java Driver (v3.0.0)**
 
-The Datastax driver allows you to execute queries [asynchronously](https://github.com/datastax/java-driver/tree/2.1/manual/async), returning `ListenableFuture`s.
+The Datastax driver allows the user to execute queries [asynchronously](https://github.com/datastax/java-driver/tree/2.1/manual/async), returning `ListenableFuture`s.
    
 **Phantom (v1.22.0)**
 
@@ -538,6 +538,6 @@ Quill provides blocking, asynchronous and streaming sources for Cassandra. The a
 
 ## Other considerations ##
 
-So far we have only compared this libraries from technical point of view, but there are other things you might want to take into account like 3rd party dependencies. As both Phantom and Quill depend on the Datastax Java Driver, we are going to pay attention to which additional dependencies each of them add.
+There other aspects the user might want to take into account like 3rd party dependencies. As both Phantom and Quill depend on the Datastax Java Driver, we are going to pay attention to which additional dependencies each of them add.
 
 Phantom is composed by several modules, each of them with their 3rd party dependencies. Overall it adds more 3rd party dependencies than Quill and it has dependencies on libraries like shapeless, play-iteratees, play-streams-experimental or akka-actor. Quill, on the other hand, only adds dependencies on monix and scalamacros resetallattrs.
