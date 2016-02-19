@@ -1,15 +1,7 @@
 package io.getquill.sources.sql.norm
 
 import io.getquill.ast._
-import io.getquill.sources.sql.FlattenSqlQuery
-import io.getquill.sources.sql.InfixSource
-import io.getquill.sources.sql.QuerySource
-import io.getquill.sources.sql.SetOperationSqlQuery
-import io.getquill.sources.sql.JoinSource
-import io.getquill.sources.sql.SelectValue
-import io.getquill.sources.sql.TableSource
-import io.getquill.sources.sql.SqlQuery
-import io.getquill.sources.sql.Source
+import io.getquill.sources.sql._
 
 object ExpandNestedQueries {
 
@@ -19,6 +11,8 @@ object ExpandNestedQueries {
         expandNested(q.copy(select = expandSelect(q.select, references)))
       case SetOperationSqlQuery(a, op, b) =>
         SetOperationSqlQuery(apply(a, references), op, apply(b, references))
+      case UnaryOperationSqlQuery(op, q) =>
+        UnaryOperationSqlQuery(op, apply(q, references))
     }
 
   private def expandNested(q: FlattenSqlQuery): SqlQuery =
