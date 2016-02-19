@@ -9,7 +9,7 @@ import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
 import io.getquill.util.Messages._
-import io.getquill.NoQueryProbing
+import io.getquill.QueryProbing
 
 import org.scalamacros.resetallattrs.ResetAllAttrs
 
@@ -22,7 +22,7 @@ trait ResolveSourceMacro {
   import c.universe.{ Try => _, _ }
 
   def quoteSource[T <: Source[_, _]](config: Expr[SourceConfig[T]])(implicit t: WeakTypeTag[T]) = {
-    val probingEnabled = !(config.actualType <:< c.weakTypeOf[NoQueryProbing])
+    val probingEnabled = config.actualType <:< c.weakTypeOf[QueryProbing]
     q"""
       new $t($config) {
         @${c.weakTypeOf[QuotedSource]}(new $t($config), $probingEnabled)
@@ -52,11 +52,11 @@ trait ResolveSourceMacro {
           case Success(value) =>
             Some(value)
           case Failure(exception) =>
-            c.warn(s"Can't load source at compile time. Reason: '${exception.getMessage}'.")
+            c.error(s"Can't load source at compile time. Reason: '${exception.getMessage}'.")
             None
         }
       case o =>
-        c.warn("Can't load source at compile time. Query probing disabled.")
+        c.error("Can't load source at compile time. Query probing disabled.")
         None
     }
 

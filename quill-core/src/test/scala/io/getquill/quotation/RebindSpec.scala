@@ -12,7 +12,7 @@ class RebindSpec extends Spec {
       val q = quote { (i: Int) =>
         unquote(query[TestEntity].insert(e => e.i -> i).returnId[Long])
       }
-      mirrorSource.run(q)(List(1)).ast.toString must equal("infix\"${query[TestEntity].insert(e => e.i -> p1)} RETURNING ID\"")
+      mirrorSource.run(q)(List(1)).ast.toString must equal("infix\"" + "$" + "{query[TestEntity].insert(e => e.i -> p1)} RETURNING ID\"")
     }
 
     "with no type param" in {
@@ -22,7 +22,7 @@ class RebindSpec extends Spec {
       val q = quote { (i: Int) =>
         unquote(query[TestEntity].insert(e => e.i -> i).returnId)
       }
-      mirrorSource.run(q)(List(1)).ast.toString must equal("infix\"${query[TestEntity].insert(e => e.i -> p1)} RETURNING ID\"")
+      mirrorSource.run(q)(List(1)).ast.toString must equal("infix\"" + "$" + "{query[TestEntity].insert(e => e.i -> p1)} RETURNING ID\"")
     }
   }
 
@@ -33,7 +33,7 @@ class RebindSpec extends Spec {
       }
 
       val q = quote(query[TestEntity].map(e => unquote(e.i.plus(10))))
-      mirrorSource.run(q).ast.toString must equal("query[TestEntity].map(e => infix\"${e.i} + ${10}\")")
+      mirrorSource.run(q).ast.toString must equal("query[TestEntity].map(e => infix\"" + "$" + "{e.i} + " + "$" + "{10}\")")
     }
 
     "no type param" in {
@@ -42,7 +42,7 @@ class RebindSpec extends Spec {
       }
 
       val q = quote(query[TestEntity].map(e => unquote(e.i.plus(10))))
-      mirrorSource.run(q).ast.toString must equal("query[TestEntity].map(e => infix\"${e.i} + ${10}\")")
+      mirrorSource.run(q).ast.toString must equal("query[TestEntity].map(e => infix\"" + "$" + "{e.i} + " + "$" + "{10}\")")
     }
   }
 }

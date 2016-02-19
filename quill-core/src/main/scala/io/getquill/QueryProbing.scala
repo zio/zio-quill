@@ -2,6 +2,6 @@ package io.getquill
 
 import io.getquill.sources.SourceConfig
 
-trait NoQueryProbing {
+trait QueryProbing {
   this: SourceConfig[_] =>
 }

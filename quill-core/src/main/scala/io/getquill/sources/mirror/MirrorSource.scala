@@ -69,7 +69,7 @@ class MirrorSourceMacro(val c: Context) extends SourceMacro {
       case false =>
         val normalized = Normalize(ast)
         resolveSource[MirrorSource].map(_.probe(normalized)) match {
-          case Some(Failure(e)) => c.warn(s"Probe failed. Reason $e")
+          case Some(Failure(e)) => c.error(s"Probe failed. Reason $e")
           case other            =>
         }
         c.info(normalized.toString)
