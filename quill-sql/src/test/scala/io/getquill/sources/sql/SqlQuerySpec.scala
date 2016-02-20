@@ -317,6 +317,22 @@ class SqlQuerySpec extends Spec {
           "SELECT x.* FROM TestEntity x UNION ALL SELECT x.* FROM TestEntity x"
       }
     }
+    "unary operation query" - {
+      "nonEmpty" in {
+        val q = quote {
+          qr1.nonEmpty
+        }
+        SqlQuery(q.ast).show mustEqual
+          "SELECT EXISTS (SELECT x.* FROM TestEntity x)"
+      }
+      "isEmpty" in {
+        val q = quote {
+          qr1.isEmpty
+        }
+        SqlQuery(q.ast).show mustEqual
+          "SELECT NOT EXISTS (SELECT x.* FROM TestEntity x)"
+      }
+    }
     "nested, aggregated, and mapped query" in {
       val q = quote {
         (for {

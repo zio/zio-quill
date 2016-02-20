@@ -77,6 +77,8 @@ trait SqlIdiom {
       }
     case SetOperationSqlQuery(a, op, b) =>
       s"${a.show} ${op.show} ${b.show}"
+    case UnaryOperationSqlQuery(op, q) =>
+      s"SELECT ${op.show} (${q.show})"
   }
 
   implicit def selectValueShow(implicit strategy: NamingStrategy): Show[SelectValue] = {

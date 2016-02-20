@@ -25,8 +25,12 @@ case class SetOperationSqlQuery(
   a:  SqlQuery,
   op: SetOperation,
   b:  SqlQuery
-)
-  extends SqlQuery
+) extends SqlQuery
+
+case class UnaryOperationSqlQuery(
+  op: UnaryOperator,
+  q:  SqlQuery
+) extends SqlQuery
 
 case class SelectValue(ast: Ast, alias: Option[String] = None)
 
@@ -45,10 +49,11 @@ object SqlQuery {
 
   def apply(query: Ast): SqlQuery =
     RenameProperties(query) match {
-      case Union(a, b)    => SetOperationSqlQuery(apply(a), UnionOperation, apply(b))
-      case UnionAll(a, b) => SetOperationSqlQuery(apply(a), UnionAllOperation, apply(b))
-      case q: Query       => flatten(q, "x")
-      case other          => fail(s"Query not properly normalized. Please open a bug report. Ast: '$other'")
+      case Union(a, b)                  => SetOperationSqlQuery(apply(a), UnionOperation, apply(b))
+      case UnionAll(a, b)               => SetOperationSqlQuery(apply(a), UnionAllOperation, apply(b))
+      case UnaryOperation(op, q: Query) => UnaryOperationSqlQuery(op, apply(q))
+      case q: Query                     => flatten(q, "x")
+      case other                        => fail(s"Query not properly normalized. Please open a bug report. Ast: '$other'")
     }
 
   private def flatten(query: Query, alias: String): FlattenSqlQuery = {

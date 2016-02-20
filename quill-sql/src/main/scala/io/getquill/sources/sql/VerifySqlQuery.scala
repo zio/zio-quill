@@ -19,6 +19,7 @@ object VerifySqlQuery {
     query match {
       case q: FlattenSqlQuery             => verify(q)
       case SetOperationSqlQuery(a, op, b) => verify(a).orElse(verify(b))
+      case UnaryOperationSqlQuery(op, q)  => verify(q)
     }
 
   private def verify(query: FlattenSqlQuery): Option[InvalidSqlQuery] = {
