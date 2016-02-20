@@ -1,0 +1,4 @@
+FROM 1science/sbt:0.13.8-oracle-jre-8
+MAINTAINER gustavo.amigo@gmail.com
+
+RUN apk-install git openssh
