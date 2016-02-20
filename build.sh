@@ -8,20 +8,20 @@ then
 
 	if [[ $(git tag -l --contains HEAD) =~ 'release' ]]
 	then
+		eval "$(ssh-agent -s)"
 		chmod 600 local.deploy_key.pem
-		docker-compose run sbt bash -c 'eval "$(ssh-agent -s)"'
-		docker-compose run openssh ssh-add local.deploy_key.pem
-		docker-compose run git git config --global user.name "Quill CI"
-		docker-compose run git git config --global user.email "quillci@getquill.io"
-		docker-compose run git git remote set-url origin git@github.com:getquill/quill.git
-		docker-compose run git git fetch --unshallow
-		docker-compose run git git checkout master || git checkout -b master
-		docker-compose run git git reset --hard origin/master
-		docker-compose run sbt sbt tut 'release with-defaults'
-		docker-compose run git git push --delete origin release
+		ssh-add local.deploy_key.pem
+		git config --global user.name "Quill CI"
+		git config --global user.email "quillci@getquill.io"
+		git remote set-url origin git@github.com:getquill/quill.git
+		git fetch --unshallow
+		git checkout master || git checkout -b master
+		git reset --hard origin/master
+		sbt tut 'release with-defaults'
+		git push --delete origin release
 	else
-		docker-compose run sbt sbt clean coverage test tut coverageAggregate && docker-compose run sbt sbt coverageOff publish
+		sbt clean coverage test tut coverageAggregate && sbt coverageOff publish
 	fi
 else
-	docker-compose run sbt sbt clean coverage test tut coverageAggregate
+	sbt clean coverage test tut coverageAggregate
 fi
