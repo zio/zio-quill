@@ -1,4 +1,7 @@
 #!/bin/bash
+
+chmod 600 /root/.ssh/config
+
 if [[ $TRAVIS_PULL_REQUEST == "false" && $TRAVIS_BRANCH == "master" ]]
 then
 	openssl aes-256-cbc -pass pass:$ENCRYPTION_PASSWORD -in secring.gpg.enc -out local.secring.gpg -d
@@ -8,7 +11,6 @@ then
 
 	if [[ $(git tag -l --contains HEAD) =~ 'release' ]]
 	then
-		chmod 600 ~/.ssh/config
 		eval "$(ssh-agent -s)"
 		chmod 600 local.deploy_key.pem
 		ssh-add local.deploy_key.pem
