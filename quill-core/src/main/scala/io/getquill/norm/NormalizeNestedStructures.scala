@@ -17,6 +17,7 @@ object NormalizeNestedStructures {
       case Drop(a, b)         => apply(a, b)(Drop)
       case Union(a, b)        => apply(a, b)(Union)
       case UnionAll(a, b)     => apply(a, b)(UnionAll)
+      case Distinct(a)        => apply(a)(Distinct)
       case Join(t, a, b, iA, iB, on) =>
         (Normalize(a), Normalize(b), Normalize(on)) match {
           case (`a`, `b`, `on`) => None

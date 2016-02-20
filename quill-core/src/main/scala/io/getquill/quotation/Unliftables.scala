@@ -86,6 +86,8 @@ trait Unliftables {
     case q"$pack.UnionAll.apply(${ a: Ast }, ${ b: Ast })" => UnionAll(a, b)
     case q"$pack.Join.apply(${ t: JoinType }, ${ a: Ast }, ${ b: Ast }, ${ iA: Ident }, ${ iB: Ident }, ${ on: Ast })" =>
       Join(t, a, b, iA, iB, on)
+
+    case q"$pack.Distinct.apply(${ a: Ast })" => Distinct(a)
   }
 
   implicit val orderingUnliftable: Unliftable[Ordering] = Unliftable[Ordering] {

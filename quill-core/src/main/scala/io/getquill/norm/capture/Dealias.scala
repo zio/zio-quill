@@ -41,6 +41,8 @@ case class Dealias(state: Option[Ident]) extends StatefulTransformer[Option[Iden
         val ((an, iAn, on), ont) = dealias(a, iA, o)((_, _, _))
         val ((bn, iBn, onn), onnt) = ont.dealias(b, iB, on)((_, _, _))
         (Join(t, an, bn, iAn, iBn, onn), Dealias(None))
+      case q: Distinct =>
+        (q, Dealias(None))
       case _: Entity =>
         (q, Dealias(None))
     }

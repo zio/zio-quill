@@ -162,6 +162,12 @@ class QuotationSpec extends Spec {
           quote(unquote(q)).ast mustEqual Aggregation(AggregationOperator.`max`, Map(Entity("TestEntity"), Ident("t"), Property(Ident("t"), "s")))
         }
       }
+      "distinct" in {
+        val q = quote {
+          qr1.distinct
+        }
+        quote(unquote(q)).ast mustEqual Distinct(Entity("TestEntity"))
+      }
 
       "take" in {
         val q = quote {
@@ -224,6 +230,8 @@ class QuotationSpec extends Spec {
           }
           quote(unquote(q)).ast mustEqual tree(FullJoin)
         }
+
+
         "fails if not followed by 'on'" in {
           """
           quote {

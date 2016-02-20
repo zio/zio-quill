@@ -3,6 +3,8 @@ package io.getquill.sources.sql.idiom
 import io.getquill._
 import io.getquill.Spec
 import io.getquill.naming.{ SnakeCase, UpperCase, Escape, Literal }
+import io.getquill.norm.select.ExtractSelect
+import io.getquill.quotation.FreeVariables
 import io.getquill.sources.sql.mirrorSource
 import io.getquill.ast.Ast
 
@@ -32,6 +34,39 @@ class SqlIdiomSpec extends Spec {
         }
         mirrorSource.run(q).sql mustEqual
           "SELECT a.s FROM TestEntity a, TestEntity2 b WHERE a.s = b.s"
+      }
+      "distinct" - {
+        "simple" in {
+          val q = quote {
+            qr1.distinct
+          }
+          mirrorSource.run(q).sql mustEqual
+            "SELECT DISTINCT x.* FROM TestEntity x"
+        }
+
+        "distinct single" in {
+          val q  = quote {
+            qr1.map(i => i.i).distinct
+          }
+          mirrorSource.run(q).sql mustEqual
+            "SELECT DISTINCT i.i FROM TestEntity i"
+        }
+
+        "distinct tuple" in {
+          val q = quote {
+            qr1.map(i => (i.i, i.l)).distinct
+          }
+          mirrorSource.run(q).sql mustEqual
+            "SELECT DISTINCT i.i, i.l FROM TestEntity i"
+        }
+
+        "distinct nesting" in {
+          val q = quote {
+            qr1.map(i => i.i).distinct.map(x => x + 1)
+          }
+          mirrorSource.run(q).sql mustEqual
+            "SELECT x + 1 FROM (SELECT DISTINCT i.i FROM TestEntity i) x"
+        }
       }
       "sorted" - {
         "simple" in {

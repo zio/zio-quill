@@ -148,5 +148,11 @@ class DealiasSpec extends Spec {
     "entity" in {
       Dealias(qr1.ast) mustEqual qr1.ast
     }
+    "distinct" in {
+      val q = quote {
+        qr1.map(a => a.i).distinct
+      }
+      Dealias(q.ast) mustEqual q.ast
+    }
   }
 }

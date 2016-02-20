@@ -211,6 +211,13 @@ class SqlQuerySpec extends Spec {
       SqlQuery(q.ast).show mustEqual
         "SELECT MAX(t.i) FROM TestEntity t"
     }
+    "distinct query" in {
+      val q = quote {
+        qr1.map(t => t.i).distinct
+      }
+      SqlQuery(q.ast).show mustEqual
+        "SELECT DISTINCT t.i FROM TestEntity t"
+    }
     "limited query" - {
       "simple" in {
         val q = quote {

@@ -35,6 +35,8 @@ sealed trait Query[+T] {
   def nonEmpty: Boolean
   def isEmpty: Boolean
   def contains[B >: T](value: B): Boolean
+
+  def distinct: Query[T]
 }
 
 sealed trait JoinQuery[A, B, R] extends Query[R] {

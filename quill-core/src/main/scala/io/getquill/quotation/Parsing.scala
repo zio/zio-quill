@@ -167,6 +167,10 @@ trait Parsing {
 
     case q"${ joinCallParser(typ, a, b) }" =>
       c.fail("a join clause must be followed by 'on'.")
+
+    case q"$source.distinct" if (is[QuillQuery[Any]](source)) =>
+      Distinct(astParser(source))
+
   }
 
   implicit val orderingParser: Parser[Ordering] = Parser[Ordering] {
