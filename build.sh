@@ -1,6 +1,6 @@
 #!/bin/bash
-chown $USER ~/.ssh/config
-chmod 600 ~/.ssh/config
+chown root ~/.ssh/config
+chmod 644 ~/.ssh/config
 
 if [[ $TRAVIS_PULL_REQUEST == "false" && $TRAVIS_BRANCH == "master" ]]
 then
