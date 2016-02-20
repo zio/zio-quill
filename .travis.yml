@@ -6,7 +6,7 @@ branches:
 before_script:
 - docker-compose run setup
 script:
-- docker-compose run sbt bash -c "export TRAVIS_PULL_REQUEST=$TRAVIS_PULL_REQUEST; export TRAVIS_BRANCH=$TRAVIS_BRANCH; export ENCRYPTION_PASSWORD=$ENCRYPTION_PASSWORD; ./build.sh"
+- docker-compose run sbt bash -c "./build.sh"
 after_success:
 - pip install --user codecov && codecov
 - docker-compose run sbt sbt clean

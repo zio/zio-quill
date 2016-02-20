@@ -50,3 +50,7 @@ sbt:
     - ~/.ivy2:/root/.ivy2
     - ~/.m2:/root/.m2
     - ~/.ssh/:/root/.ssh/
+  environment:
+    - TRAVIS_PULL_REQUEST
+    - TRAVIS_BRANCH
+    - ENCRYPTION_PASSWORD

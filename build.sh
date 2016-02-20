@@ -8,6 +8,7 @@ then
 
 	if [[ $(git tag -l --contains HEAD) =~ 'release' ]]
 	then
+		chmod 600 ~/.ssh/config
 		eval "$(ssh-agent -s)"
 		chmod 600 local.deploy_key.pem
 		ssh-add local.deploy_key.pem
