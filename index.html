@@ -12,13 +12,6 @@
   </head>
 
   <body>
-    
-    <script>
-  ((window.gitter = {}).chat = {}).options = {
-    room: 'getquill/quill'
-  };
-</script>
-<script src="https://sidecar.gitter.im/dist/sidecar.v1.js" async defer></script>
 
     <!-- HEADER -->
     <div id="header_wrap" class="outer">
@@ -63,6 +56,7 @@
 <li><a href="#parametrized-quotations">Parametrized quotations</a></li>
 <li><a href="#schema">Schema</a></li>
 <li><a href="#queries">Queries</a></li>
+<li><a href="#query-probing">Query probing</a></li>
 <li><a href="#actions">Actions</a></li>
 <li><a href="#dynamic-queries">Dynamic queries</a></li>
 <li><a href="#sql-specific-operations">SQL-specific operations</a></li>
@@ -144,20 +138,22 @@
 
 <p>Sources represent the database and provide an execution interface for queries. Quill provides mirror sources for test purposes. Please refer to <a href="#sources">sources</a> for information on how to create normal sources.</p>
 
-<p>Instead of running the query, mirror sources return a structure with the information that would be used to run the query. There are two mirror source versions:</p>
+<p>Instead of running the query, mirror sources return a structure with the information that would be used to run the query. There are three mirror source configurations:</p>
 
 <ul>
 <li>
-<code>io.getquill.source.mirror.mirrorSource</code>: Mirrors the quotation AST</li>
+<code>io.getquill.MirrorSourceConfig</code>: Mirrors the quotation AST</li>
 <li>
-<code>io.getquill.source.sql.mirror.mirrorSource</code>: Mirrors the SQL query</li>
+<code>io.getquill.SqlMirrorSourceConfig</code>: Mirrors the SQL query</li>
 <li>
-<code>io.getquill.source.cassandra.mirror.mirrorSource</code>: Mirrors the CQL query</li>
+<code>io.getquill.CassandraMirrorSourceConfig</code>: Mirrors the CQL query</li>
 </ul>
 
 <p>This documentation uses the SQL mirror in its examples under the <code>db</code> name:</p>
 
-<div class="highlight highlight-source-scala"><pre><span class="pl-k">val</span> <span class="pl-en">db</span> <span class="pl-k">=</span> io.getquill.source.sql.mirror.mirrorSource</pre></div>
+<div class="highlight highlight-source-scala"><pre><span class="pl-k">import</span> <span class="pl-v">io.getquill.</span><span class="pl-v">_</span>
+
+<span class="pl-k">lazy</span> <span class="pl-k">val</span> <span class="pl-en">db</span> <span class="pl-k">=</span> source(<span class="pl-k">new</span> <span class="pl-en">SqlMirrorSourceConfig</span>(<span class="pl-s"><span class="pl-pds">"</span>testSource<span class="pl-pds">"</span></span>))</pre></div>
 
 <h1>
 <a id="compile-time-quotations" class="anchor" href="#compile-time-quotations" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Compile-time quotations</h1>
@@ -389,32 +385,93 @@ db.run(q2)
 <span class="pl-c">// SELECT p1.id, p1.name, p1.age FROM Person p1 WHERE </span>
 <span class="pl-c">// EXISTS (SELECT * FROM Person p2 WHERE (p2.id &lt;&gt; p1.id) AND (p2.age = p1.age))</span></pre></div>
 
-<p><strong>outer joins</strong></p>
+<p><strong>contains</strong></p>
+
+<div class="highlight highlight-source-scala"><pre><span class="pl-k">val</span> <span class="pl-en">q</span> <span class="pl-k">=</span> quote {
+  query[<span class="pl-en">Person</span>].filter(p <span class="pl-k">=&gt;</span> <span class="pl-en">Set</span>(<span class="pl-c1">1</span>, <span class="pl-c1">2</span>).contains(p.id))
+}
+
+db.run(q)
+<span class="pl-c">// SELECT p.id, p.name, p.age FROM Person p WHERE p.id IN (1, 2)</span>
+
+<span class="pl-k">val</span> <span class="pl-en">peopleWithContacts</span> <span class="pl-k">=</span> quote {
+  query[<span class="pl-en">Person</span>].filter(p <span class="pl-k">=&gt;</span> query[<span class="pl-en">Contact</span>].filter(c <span class="pl-k">=&gt;</span> c.personId <span class="pl-k">==</span> p.id).nonEmpty)
+}
+<span class="pl-k">val</span> <span class="pl-en">q2</span> <span class="pl-k">=</span> quote {
+  query[<span class="pl-en">Person</span>].filter(p <span class="pl-k">=&gt;</span> peopleWithContacts.contains(p.id))
+}
+
+db.run(q2)
+<span class="pl-c">// SELECT p.id, p.name, p.age FROM Person p WHERE p.id IN (SELECT p1.* FROM Person p1 WHERE EXISTS (SELECT c.* FROM Contact c WHERE c.personId = p1.id))</span></pre></div>
+
+<p><strong>joins</strong></p>
+
+<p>In addition to applicative joins Quill also supports explicit joins (both inner and left/right/full outer joins).</p>
 
 <div class="highlight highlight-source-scala"><pre>
 <span class="pl-k">val</span> <span class="pl-en">q</span> <span class="pl-k">=</span> quote {
-  query[<span class="pl-en">Person</span>].leftJoin(query[<span class="pl-en">Contact</span>]).on((p, c) <span class="pl-k">=&gt;</span> c.personId <span class="pl-k">==</span> p)
+  query[<span class="pl-en">Person</span>].join(query[<span class="pl-en">Contact</span>]).on((p, c) <span class="pl-k">=&gt;</span> c.personId <span class="pl-k">==</span> p.id)
 }
 
 db.run(q) 
-<span class="pl-c">// SELECT p.id, p.name, p.age, c.personId, c.phone </span>
-<span class="pl-c">// FROM Person p LEFT JOIN Contact c ON c.personId = p</span>
+<span class="pl-c">// SELECT p.id, p.name, p.age, c.personId, c.phone•</span>
+<span class="pl-c">// FROM Person p INNER JOIN Contact c ON c.personId = p.id</span>
 
-<span class="pl-k">val</span> <span class="pl-en">q2</span> <span class="pl-k">=</span> quote {
-  query[<span class="pl-en">Person</span>].rightJoin(query[<span class="pl-en">Contact</span>]).on((p, c) <span class="pl-k">=&gt;</span> c.personId <span class="pl-k">==</span> p)
+<span class="pl-k">val</span> <span class="pl-en">q</span> <span class="pl-k">=</span> quote {
+  query[<span class="pl-en">Person</span>].leftJoin(query[<span class="pl-en">Contact</span>]).on((p, c) <span class="pl-k">=&gt;</span> c.personId <span class="pl-k">==</span> p.id)
 }
 
-db.run(q2) 
-<span class="pl-c">// SELECT p.id, p.name, p.age, c.personId, c.phone </span>
-<span class="pl-c">// FROM Person p RIGHT JOIN Contact c ON c.personId = p</span>
+db.run(q) 
+<span class="pl-c">// SELECT p.id, p.name, p.age, c.personId, c.phone•</span>
+<span class="pl-c">// FROM Person p LEFT JOIN Contact c ON c.personId = p.id</span>
+</pre></div>
 
-<span class="pl-k">val</span> <span class="pl-en">q3</span> <span class="pl-k">=</span> quote {
-  query[<span class="pl-en">Person</span>].fullJoin(query[<span class="pl-en">Contact</span>]).on((p, c) <span class="pl-k">=&gt;</span> c.personId <span class="pl-k">==</span> p)
+<p>The example joins above cover the simple case. What do you do when a query requires joining more than 2 tables?</p>
+
+<p>With Quill the following multi-join queries are equivalent, choose according to preference:</p>
+
+<div class="highlight highlight-source-scala"><pre>
+<span class="pl-k">case</span> <span class="pl-k">class</span> <span class="pl-en">Employer</span>(<span class="pl-v">id</span>: <span class="pl-k">Int</span>, <span class="pl-v">personId</span>: <span class="pl-k">Int</span>, <span class="pl-v">name</span>: <span class="pl-k">String</span>)
+
+<span class="pl-k">val</span> <span class="pl-en">qFlat</span> <span class="pl-k">=</span> quote {
+  <span class="pl-k">for</span>{
+    (p,e) <span class="pl-k">&lt;</span><span class="pl-k">-</span> query[<span class="pl-en">Person</span>].join(query[<span class="pl-en">Employer</span>]).on(_.id <span class="pl-k">==</span> _.personId)
+       c  <span class="pl-k">&lt;</span><span class="pl-k">-</span> query[<span class="pl-en">Contact</span>].leftJoin(_.personId <span class="pl-k">==</span> p.id)
+  } <span class="pl-k">yield</span>(p, e, c)
 }
 
-db.run(q3) 
-<span class="pl-c">// SELECT p.id, p.name, p.age, c.personId, c.phone </span>
-<span class="pl-c">// FROM Person p FULL JOIN Contact c ON c.personId = p</span></pre></div>
+<span class="pl-k">val</span> <span class="pl-en">qNested</span> <span class="pl-k">=</span> quote {
+  <span class="pl-k">for</span>{
+    ((p,e),c) <span class="pl-k">&lt;</span><span class="pl-k">-</span>
+      query[<span class="pl-en">Person</span>].join(query[<span class="pl-en">Employer</span>]).on(_.id <span class="pl-k">==</span> _.personId)
+      .leftJoin(query[<span class="pl-en">Contact</span>]).on(
+        _._1.id <span class="pl-k">==</span> _.personId
+      )
+  } <span class="pl-k">yield</span>(p, e, c)
+}
+
+db.run(qFlat) 
+db.run(qNested) 
+<span class="pl-c">// SELECT p.id, p.name, p.age, e.id, e.personId, e.name, c.id, c.phone•</span>
+<span class="pl-c">// FROM Person p INNER JOIN Employer e ON p.id = e.personId LEFT JOIN Contact c ON c.personId = p.id</span>
+</pre></div>
+
+<h1>
+<a id="query-probing" class="anchor" href="#query-probing" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Query probing</h1>
+
+<p>Query probing is an experimental feature that validates queries against the database at compile time, failing the compilation if it is not valid. The query validation does not alter the database state.</p>
+
+<p>This feature is disabled by default. To enable it, mix the <code>QueryProbing</code> trait to the database configuration:</p>
+
+<pre><code>lazy val db = source(new MySourceConfig("configKey") with QueryProbing)
+</code></pre>
+
+<p>The configurations correspondent to the config key must be available at compile time. You can achieve it by adding this line to your project settings:</p>
+
+<pre><code>unmanagedClasspath in Compile += baseDirectory.value / "src" / "main" / "resources"
+</code></pre>
+
+<p>If your project doesn't have a standard layout, e.g. a play project, you should configure the path to point to the folder that contains your config file. </p>
 
 <h1>
 <a id="actions" class="anchor" href="#actions" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Actions</h1>
@@ -522,11 +579,11 @@ db.run(q)
 <h1>
 <a id="sql-specific-operations" class="anchor" href="#sql-specific-operations" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>SQL-specific operations</h1>
 
-<p>Some operations are sql-specific and not provided with the generic quotation mechanism. The <code>io.getquill.source.sql.ops</code> package has some implicit classes for this kind of operations:</p>
+<p>Some operations are sql-specific and not provided with the generic quotation mechanism. The <code>io.getquill.sources.sql.ops</code> package has some implicit classes for this kind of operations:</p>
 
 <p><strong>like</strong></p>
 
-<div class="highlight highlight-source-scala"><pre><span class="pl-k">import</span> <span class="pl-v">io.getquill.source.sql.ops.</span><span class="pl-v">_</span>
+<div class="highlight highlight-source-scala"><pre><span class="pl-k">import</span> <span class="pl-v">io.getquill.sources.sql.ops.</span><span class="pl-v">_</span>
 
 <span class="pl-k">val</span> <span class="pl-en">q</span> <span class="pl-k">=</span> quote {
   query[<span class="pl-en">Person</span>].filter(p <span class="pl-k">=&gt;</span> p.name like <span class="pl-s"><span class="pl-pds">"</span>%John%<span class="pl-pds">"</span></span>)
@@ -539,11 +596,13 @@ db.run(q)
 
 <p>The cql-specific operations are provided by the following import:</p>
 
-<div class="highlight highlight-source-scala"><pre><span class="pl-k">import</span> <span class="pl-v">io.getquill.source.cassandra.ops.</span><span class="pl-v">_</span></pre></div>
+<div class="highlight highlight-source-scala"><pre><span class="pl-k">import</span> <span class="pl-v">io.getquill.sources.cassandra.ops.</span><span class="pl-v">_</span></pre></div>
 
 <p>The cassandra package also offers a mirror source:</p>
 
-<div class="highlight highlight-source-scala"><pre><span class="pl-k">val</span> <span class="pl-en">db</span> <span class="pl-k">=</span> io.getquill.source.cassandra.mirror.mirrorSource</pre></div>
+<div class="highlight highlight-source-scala"><pre><span class="pl-k">import</span> <span class="pl-v">io.getquill.</span><span class="pl-v">_</span>
+
+<span class="pl-k">lazy</span> <span class="pl-k">val</span> <span class="pl-en">db</span> <span class="pl-k">=</span> source(<span class="pl-k">new</span> <span class="pl-en">CassandraMirrorSourceConfig</span>(<span class="pl-s"><span class="pl-pds">"</span>testSource<span class="pl-pds">"</span></span>))</pre></div>
 
 <p>Supported operations:</p>
 
@@ -652,7 +711,9 @@ db.run(q)
 
 <p>Quill's default operation mode is compile-time, but there are queries that have their structure defined only at runtime. Quill automatically falls back to runtime normalization and query generation if the query's structure is not static. Example:</p>
 
-<div class="highlight highlight-source-scala"><pre><span class="pl-k">val</span> <span class="pl-en">db</span> <span class="pl-k">=</span> io.getquill.source.sql.mirror.mirrorSource
+<div class="highlight highlight-source-scala"><pre><span class="pl-k">import</span> <span class="pl-v">io.getquill.</span><span class="pl-v">_</span>
+
+<span class="pl-k">lazy</span> <span class="pl-k">val</span> <span class="pl-en">db</span> <span class="pl-k">=</span> source(<span class="pl-k">new</span> <span class="pl-en">MirrorSourceConfig</span>(<span class="pl-s"><span class="pl-pds">"</span>testSource<span class="pl-pds">"</span></span>))
 
 <span class="pl-k">sealed</span> <span class="pl-k">trait</span> <span class="pl-en">QueryType</span>
 <span class="pl-k">case</span> <span class="pl-k">object</span> <span class="pl-en">Minor</span> <span class="pl-k">extends</span> <span class="pl-e">QueryType</span>
@@ -737,30 +798,29 @@ db.run(q)
 
 <p>If the database type is not supported, it is possible to provide "raw" encoders and decoders:</p>
 
-<div class="highlight highlight-source-scala"><pre><span class="pl-k">import</span> <span class="pl-v">io.getquill.source.mirror.</span><span class="pl-v">Row</span>
+<pre><code>import io.getquill.sources.mirror.Row
 
-<span class="pl-k">implicit</span> <span class="pl-k">val</span> <span class="pl-en">uuidEncoder</span> <span class="pl-k">=</span> 
-  <span class="pl-k">new</span> <span class="pl-en">db.Encoder</span>[<span class="pl-en">UUID</span>] {
-    <span class="pl-k">def</span> <span class="pl-en">apply</span>(<span class="pl-v">index</span>: <span class="pl-k">Int</span>, <span class="pl-v">value</span>: <span class="pl-en">UUID</span>, <span class="pl-v">row</span>: <span class="pl-en">Row</span>) <span class="pl-k">=</span> 
-      <span class="pl-k">???</span> <span class="pl-c">// database-specific implementation</span>
+implicit val uuidEncoder = 
+  db.encoder[UUID] {
+    ??? // database-specific implementation
   }
 
-<span class="pl-k">implicit</span> <span class="pl-k">val</span> <span class="pl-en">uuidDecoder</span> <span class="pl-k">=</span> 
-  <span class="pl-k">new</span> <span class="pl-en">db.Decoder</span>[<span class="pl-en">UUID</span>] {
-    <span class="pl-k">def</span> <span class="pl-en">apply</span>(<span class="pl-v">index</span>: <span class="pl-k">Int</span>, <span class="pl-v">row</span>: <span class="pl-en">Row</span>) <span class="pl-k">=</span> 
-      <span class="pl-k">???</span> <span class="pl-c">// database-specific implementation</span>
-  }</pre></div>
+implicit val uuidDecoder = 
+  db.decoder[UUID] {
+    ??? // database-specific implementation
+  }
+</code></pre>
 
 <h1>
 <a id="sql-sources" class="anchor" href="#sql-sources" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>SQL Sources</h1>
 
 <p>Sources represent the database and provide an execution interface for queries. Example:</p>
 
-<div class="highlight highlight-source-scala"><pre><span class="pl-k">import</span> <span class="pl-v">io.getquill.naming.</span><span class="pl-v">SnakeCase</span>
-<span class="pl-k">import</span> <span class="pl-v">io.getquill.source.jdbc.</span><span class="pl-v">JdbcSource</span>
-<span class="pl-k">import</span> <span class="pl-v">io.getquill.source.sql.idiom.</span><span class="pl-v">MySQLDialect</span>
+<div class="highlight highlight-source-scala"><pre><span class="pl-k">import</span> <span class="pl-v">io.getquill.</span><span class="pl-v">_</span>
+<span class="pl-k">import</span> <span class="pl-v">io.getquill.naming.</span><span class="pl-v">SnakeCase</span>
+<span class="pl-k">import</span> <span class="pl-v">io.getquill.sources.sql.idiom.</span><span class="pl-v">MySQLDialect</span>
 
-<span class="pl-k">object</span> <span class="pl-en">db</span> <span class="pl-k">extends</span> <span class="pl-e">JdbcSource</span>[<span class="pl-en">MySQLDialect</span>, <span class="pl-en">SnakeCase</span>]</pre></div>
+<span class="pl-k">lazy</span> <span class="pl-k">val</span> <span class="pl-en">db</span> <span class="pl-k">=</span> source(<span class="pl-k">new</span> <span class="pl-en">JdbcSourceConfig</span>[<span class="pl-en">MySQLDialect</span>, <span class="pl-en">SnakeCase</span>](<span class="pl-s"><span class="pl-pds">"</span>db<span class="pl-pds">"</span></span>))</pre></div>
 
 <h2>
 <a id="dialect" class="anchor" href="#dialect" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Dialect</h2>
@@ -770,8 +830,8 @@ db.run(q)
 <p>Quill has two built-in dialects:</p>
 
 <ul>
-<li><code>io.getquill.source.sql.idiom.MySQLDialect</code></li>
-<li><code>io.getquill.source.sql.idiom.PostgresDialect</code></li>
+<li><code>io.getquill.sources.sql.idiom.MySQLDialect</code></li>
+<li><code>io.getquill.sources.sql.idiom.PostgresDialect</code></li>
 </ul>
 
 <h2>
@@ -831,7 +891,18 @@ db.run(q)
 <h2>
 <a id="configuration" class="anchor" href="#configuration" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Configuration</h2>
 
-<p>Sources must be defined as <code>object</code> and the object name is used as the key to obtain configurations using the <a href="http://github.com/typesafehub/config">typesafe config</a> library.</p>
+<p>The string passed to the source configuration is used as the key to obtain configurations using the <a href="http://github.com/typesafehub/config">typesafe config</a> library.</p>
+
+<p>Additionally, any member of a source configuration can be overriden. Example:</p>
+
+<pre><code>import io.getquill._
+import io.getquill.naming.SnakeCase
+import io.getquill.sources.sql.idiom.MySQLDialect
+
+lazy val db = source(new JdbcSourceConfig[MySQLDialect, SnakeCase]("db") {
+  override def dataSource = ??? // create the datasource manually
+})
+</code></pre>
 
 <h3>
 <a id="quill-jdbc" class="anchor" href="#quill-jdbc" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>quill-jdbc</h3>
@@ -842,22 +913,21 @@ db.run(q)
 
 <pre><code>libraryDependencies ++= Seq(
   "mysql" % "mysql-connector-java" % "5.1.36",
-  "io.getquill" %% "quill-jdbc" % "0.3.1"
+  "io.getquill" %% "quill-jdbc" % "0.4.0"
 )
 </code></pre>
 
 <p>source definition</p>
 
-<div class="highlight highlight-source-scala"><pre><span class="pl-k">import</span> <span class="pl-v">io.getquill.naming.</span><span class="pl-v">SnakeCase</span>
-<span class="pl-k">import</span> <span class="pl-v">io.getquill.source.jdbc.</span><span class="pl-v">JdbcSource</span>
-<span class="pl-k">import</span> <span class="pl-v">io.getquill.source.sql.idiom.</span><span class="pl-v">MySQLDialect</span>
+<div class="highlight highlight-source-scala"><pre><span class="pl-k">import</span> <span class="pl-v">io.getquill.</span><span class="pl-v">_</span>
+<span class="pl-k">import</span> <span class="pl-v">io.getquill.naming.</span><span class="pl-v">SnakeCase</span>
+<span class="pl-k">import</span> <span class="pl-v">io.getquill.sources.sql.idiom.</span><span class="pl-v">MySQLDialect</span>
 
-<span class="pl-k">object</span> <span class="pl-en">db</span> <span class="pl-k">extends</span> <span class="pl-e">JdbcSource</span>[<span class="pl-en">MySQLDialect</span>, <span class="pl-en">SnakeCase</span>]</pre></div>
+<span class="pl-k">lazy</span> <span class="pl-k">val</span> <span class="pl-en">db</span> <span class="pl-k">=</span> source(<span class="pl-k">new</span> <span class="pl-en">JdbcSourceConfig</span>[<span class="pl-en">MySQLDialect</span>, <span class="pl-en">SnakeCase</span>](<span class="pl-s"><span class="pl-pds">"</span>db<span class="pl-pds">"</span></span>))</pre></div>
 
 <p>application.properties</p>
 
-<pre><code>db.queryProbing=true
-db.dataSourceClassName=com.mysql.jdbc.jdbc2.optional.MysqlDataSource
+<pre><code>db.dataSourceClassName=com.mysql.jdbc.jdbc2.optional.MysqlDataSource
 db.dataSource.url=jdbc:mysql://host/database
 db.dataSource.user=root
 db.dataSource.password=root
@@ -872,22 +942,21 @@ db.dataSource.prepStmtCacheSqlLimit=2048
 
 <pre><code>libraryDependencies ++= Seq(
   "org.postgresql" % "postgresql" % "9.4-1206-jdbc41",
-  "io.getquill" %% "quill-jdbc" % "0.3.1"
+  "io.getquill" %% "quill-jdbc" % "0.4.0"
 )
 </code></pre>
 
 <p>source definition</p>
 
-<div class="highlight highlight-source-scala"><pre><span class="pl-k">import</span> <span class="pl-v">io.getquill.naming.</span><span class="pl-v">SnakeCase</span>
-<span class="pl-k">import</span> <span class="pl-v">io.getquill.source.jdbc.</span><span class="pl-v">JdbcSource</span>
-<span class="pl-k">import</span> <span class="pl-v">io.getquill.source.sql.idiom.</span><span class="pl-v">PostgresDialect</span>
+<div class="highlight highlight-source-scala"><pre><span class="pl-k">import</span> <span class="pl-v">io.getquill.</span><span class="pl-v">_</span>
+<span class="pl-k">import</span> <span class="pl-v">io.getquill.naming.</span><span class="pl-v">SnakeCase</span>
+<span class="pl-k">import</span> <span class="pl-v">io.getquill.sources.sql.idiom.</span><span class="pl-v">PostgresDialect</span>
 
-<span class="pl-k">object</span> <span class="pl-en">db</span> <span class="pl-k">extends</span> <span class="pl-e">JdbcSource</span>[<span class="pl-en">PostgresDialect</span>, <span class="pl-en">SnakeCase</span>]</pre></div>
+<span class="pl-k">lazy</span> <span class="pl-k">val</span> <span class="pl-en">db</span> <span class="pl-k">=</span> source(<span class="pl-k">new</span> <span class="pl-en">JdbcSourceConfig</span>[<span class="pl-en">PostgresDialect</span>, <span class="pl-en">SnakeCase</span>](<span class="pl-s"><span class="pl-pds">"</span>db<span class="pl-pds">"</span></span>))</pre></div>
 
 <p>application.properties</p>
 
-<pre><code>db.queryProbing=true
-db.dataSourceClassName=org.postgresql.ds.PGSimpleDataSource
+<pre><code>db.dataSourceClassName=org.postgresql.ds.PGSimpleDataSource
 db.dataSource.user=root
 db.dataSource.password=root
 db.dataSource.databaseName=database
@@ -905,21 +974,20 @@ db.dataSource.serverName=host
 <p>sbt dependencies</p>
 
 <pre><code>libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async" % "0.3.1"
+  "io.getquill" %% "quill-async" % "0.4.0"
 )
 </code></pre>
 
 <p>source definition</p>
 
-<div class="highlight highlight-source-scala"><pre><span class="pl-k">import</span> <span class="pl-v">io.getquill.naming.</span><span class="pl-v">SnakeCase</span>
-<span class="pl-k">import</span> <span class="pl-v">io.getquill.source.async.mysql.</span><span class="pl-v">MysqlAsyncSource</span>
+<div class="highlight highlight-source-scala"><pre><span class="pl-k">import</span> <span class="pl-v">io.getquill.</span><span class="pl-v">_</span>
+<span class="pl-k">import</span> <span class="pl-v">io.getquill.naming.</span><span class="pl-v">SnakeCase</span>
 
-<span class="pl-k">object</span> <span class="pl-en">db</span> <span class="pl-k">extends</span> <span class="pl-e">MysqlAsyncSource</span>[<span class="pl-en">SnakeCase</span>]</pre></div>
+<span class="pl-k">lazy</span> <span class="pl-k">val</span> <span class="pl-en">db</span> <span class="pl-k">=</span> source(<span class="pl-k">new</span> <span class="pl-en">MysqlAsyncSourceConfig</span>[<span class="pl-en">SnakeCase</span>](<span class="pl-s"><span class="pl-pds">"</span>db<span class="pl-pds">"</span></span>))</pre></div>
 
 <p>application.properties</p>
 
-<pre><code>db.queryProbing=true
-db.host=host
+<pre><code>db.host=host
 db.port=3306
 db.user=root
 db.password=root
@@ -935,21 +1003,20 @@ db.poolValidationInterval=100
 <p>sbt dependencies</p>
 
 <pre><code>libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async" % "0.3.1"
+  "io.getquill" %% "quill-async" % "0.4.0"
 )
 </code></pre>
 
 <p>source definition</p>
 
-<div class="highlight highlight-source-scala"><pre><span class="pl-k">import</span> <span class="pl-v">io.getquill.naming.</span><span class="pl-v">SnakeCase</span>
-<span class="pl-k">import</span> <span class="pl-v">io.getquill.source.async.postgres.</span><span class="pl-v">PostgresAsyncSource</span>
+<div class="highlight highlight-source-scala"><pre><span class="pl-k">import</span> <span class="pl-v">io.getquill.</span><span class="pl-v">_</span>
+<span class="pl-k">import</span> <span class="pl-v">io.getquill.naming.</span><span class="pl-v">SnakeCase</span>
 
-<span class="pl-k">object</span> <span class="pl-en">db</span> <span class="pl-k">extends</span> <span class="pl-e">PostgresAsyncSource</span>[<span class="pl-en">SnakeCase</span>]</pre></div>
+<span class="pl-k">lazy</span> <span class="pl-k">val</span> <span class="pl-en">db</span> <span class="pl-k">=</span> source(<span class="pl-k">new</span> <span class="pl-en">PostgresAsyncSourceConfig</span>[<span class="pl-en">SnakeCase</span>](<span class="pl-s"><span class="pl-pds">"</span>db<span class="pl-pds">"</span></span>))</pre></div>
 
 <p>application.properties</p>
 
-<pre><code>db.queryProbing=true
-db.host=host
+<pre><code>db.host=host
 db.port=5432
 db.user=root
 db.password=root
@@ -966,21 +1033,20 @@ db.poolValidationInterval=100
 <p>sbt dependencies</p>
 
 <pre><code>libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-finagle-mysql" % "0.3.1"
+  "io.getquill" %% "quill-finagle-mysql" % "0.4.0"
 )
 </code></pre>
 
 <p>source definition</p>
 
-<div class="highlight highlight-source-scala"><pre><span class="pl-k">import</span> <span class="pl-v">io.getquill.naming.</span><span class="pl-v">SnakeCase</span>
-<span class="pl-k">import</span> <span class="pl-v">io.getquill.source.finagle.mysql.</span><span class="pl-v">FinagleMysqlSource</span>
+<div class="highlight highlight-source-scala"><pre><span class="pl-k">import</span> <span class="pl-v">io.getquill.</span><span class="pl-v">_</span>
+<span class="pl-k">import</span> <span class="pl-v">io.getquill.naming.</span><span class="pl-v">SnakeCase</span>
 
-<span class="pl-k">object</span> <span class="pl-en">db</span> <span class="pl-k">extends</span> <span class="pl-e">FinagleMysqlSource</span>[<span class="pl-en">SnakeCase</span>]</pre></div>
+<span class="pl-k">lazy</span> <span class="pl-k">val</span> <span class="pl-en">db</span> <span class="pl-k">=</span> source(<span class="pl-k">new</span> <span class="pl-en">FinagleMysqlSourceConfig</span>[<span class="pl-en">SnakeCase</span>](<span class="pl-s"><span class="pl-pds">"</span>db<span class="pl-pds">"</span></span>))</pre></div>
 
 <p>application.properties</p>
 
-<pre><code>db.queryProbing=true
-db.dest=localhost:3306
+<pre><code>db.dest=localhost:3306
 db.user=root
 db.password=root
 db.database=database
@@ -997,37 +1063,36 @@ db.pool.maxWaiters=2147483647
 <p>sbt dependencies</p>
 
 <pre><code>libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-cassandra" % "0.3.1"
+  "io.getquill" %% "quill-cassandra" % "0.4.0"
 )
 </code></pre>
 
 <p><strong>synchronous source</strong></p>
 
-<div class="highlight highlight-source-scala"><pre><span class="pl-k">import</span> <span class="pl-v">io.getquill.naming.</span><span class="pl-v">SnakeCase</span>
-<span class="pl-k">import</span> <span class="pl-v">io.getquill.source.cassandra.</span><span class="pl-v">CassandraSyncSource</span>
+<div class="highlight highlight-source-scala"><pre><span class="pl-k">import</span> <span class="pl-v">io.getquill.</span><span class="pl-v">_</span>
+<span class="pl-k">import</span> <span class="pl-v">io.getquill.naming.</span><span class="pl-v">SnakeCase</span>
 
-<span class="pl-k">object</span> <span class="pl-en">db</span> <span class="pl-k">extends</span> <span class="pl-e">CassandraSyncSource</span>[<span class="pl-en">SnakeCase</span>]</pre></div>
+<span class="pl-k">lazy</span> <span class="pl-k">val</span> <span class="pl-en">db</span> <span class="pl-k">=</span> source(<span class="pl-k">new</span> <span class="pl-en">CassandraSyncSourceConfig</span>[<span class="pl-en">SnakeCase</span>](<span class="pl-s"><span class="pl-pds">"</span>db<span class="pl-pds">"</span></span>))</pre></div>
 
 <p><strong>asynchronous source</strong></p>
 
-<div class="highlight highlight-source-scala"><pre><span class="pl-k">import</span> <span class="pl-v">io.getquill.naming.</span><span class="pl-v">SnakeCase</span>
-<span class="pl-k">import</span> <span class="pl-v">io.getquill.source.cassandra.</span><span class="pl-v">CassandraAsyncSource</span>
+<div class="highlight highlight-source-scala"><pre><span class="pl-k">import</span> <span class="pl-v">io.getquill.</span><span class="pl-v">_</span>
+<span class="pl-k">import</span> <span class="pl-v">io.getquill.naming.</span><span class="pl-v">SnakeCase</span>
 
-<span class="pl-k">object</span> <span class="pl-en">db</span> <span class="pl-k">extends</span> <span class="pl-e">CassandraAsyncSource</span>[<span class="pl-en">SnakeCase</span>]</pre></div>
+<span class="pl-k">lazy</span> <span class="pl-k">val</span> <span class="pl-en">db</span> <span class="pl-k">=</span> source(<span class="pl-k">new</span> <span class="pl-en">CassandraAsyncSourceConfig</span>[<span class="pl-en">SnakeCase</span>](<span class="pl-s"><span class="pl-pds">"</span>db<span class="pl-pds">"</span></span>))</pre></div>
 
 <p><strong>stream source</strong></p>
 
-<div class="highlight highlight-source-scala"><pre><span class="pl-k">import</span> <span class="pl-v">io.getquill.naming.</span><span class="pl-v">SnakeCase</span>
-<span class="pl-k">import</span> <span class="pl-v">io.getquill.source.cassandra.</span><span class="pl-v">CassandraStreamSource</span>
+<div class="highlight highlight-source-scala"><pre><span class="pl-k">import</span> <span class="pl-v">io.getquill.</span><span class="pl-v">_</span>
+<span class="pl-k">import</span> <span class="pl-v">io.getquill.naming.</span><span class="pl-v">SnakeCase</span>
 
-<span class="pl-k">object</span> <span class="pl-en">db</span> <span class="pl-k">extends</span> <span class="pl-e">CassandraStreamSource</span>[<span class="pl-en">SnakeCase</span>]</pre></div>
+<span class="pl-k">lazy</span> <span class="pl-k">val</span> <span class="pl-en">db</span> <span class="pl-k">=</span> source(<span class="pl-k">new</span> <span class="pl-en">CassandraStreamSourceConfig</span>[<span class="pl-en">SnakeCase</span>](<span class="pl-s"><span class="pl-pds">"</span>db<span class="pl-pds">"</span></span>))</pre></div>
 
 <p>The configurations are set using runtime reflection on the <a href="https://docs.datastax.com/en/drivers/java/2.1/com/datastax/driver/core/Cluster.Builder.html"><code>Cluster.builder</code></a> instance. It is possible to set nested structures like <code>queryOptions.consistencyLevel</code>, use enum values like <code>LOCAL_QUORUM</code>, and set multiple parameters like in <code>credentials</code>.</p>
 
 <p>application.properties</p>
 
-<pre><code>db.queryProbing=true
-db.keyspace=quill_test
+<pre><code>db.keyspace=quill_test
 db.preparedStatementCacheSize=1000
 db.session.contactPoint=127.0.0.1
 db.session.queryOptions.consistencyLevel=LOCAL_QUORUM
@@ -1043,6 +1108,11 @@ db.session.addressTranslater=com.datastax.driver.core.policies.IdentityTranslate
 <a id="slick-comparison" class="anchor" href="#slick-comparison" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Slick comparison</h1>
 
 <p>Please refer to <a href="https://github.com/getquill/quill/blob/master/SLICK.md">SLICK.md</a> for a detailed comparison between Quill and Slick.</p>
+
+<h1>
+<a id="cassandra-libraries-comparison" class="anchor" href="#cassandra-libraries-comparison" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Cassandra libraries comparison</h1>
+
+<p>Please refer to <a href="https://github.com/getquill/quill/blob/master/CASSANDRA.md">CASSANDRA.md</a> for a detailed comparison between Quill and other main alternatives for interaction with Cassandra in Scala.</p>
 
 <h1>
 <a id="acknowledgments" class="anchor" href="#acknowledgments" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Acknowledgments</h1>
