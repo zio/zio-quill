@@ -153,7 +153,7 @@ object Phantom extends App {
 
 Phantom requires mapping classes to lift the database model to DSL types. The query definition also requires special equality operators.
 
-**Quill (v0.3.2-SNAPSHOT)**
+**Quill (v0.4.0)**
 ```scala
 import io.getquill._
 import io.getquill.naming._
@@ -162,7 +162,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 object Quill extends App {
 
-  val db = source(new CassandraAsyncSourceConfig[SnakeCase]("DB") with NoQueryProbing)
+  val db = source(new CassandraAsyncSourceConfig[SnakeCase]("DB"))
 
   case class WeatherStation(country: String, city: String, stationId: String, entry: Int, value: Int)
 
@@ -259,7 +259,7 @@ object Phantom extends App {
 
 Phantom allows the user certain level of composability, but it gets a bit verbose due to the nature of the DSL. 
 
-**Quill (v0.3.2-SNAPSHOT)**
+**Quill (v0.4.0)**
 ```scala
 import io.getquill._
 import io.getquill.naming._
@@ -268,7 +268,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 object Quill extends App {
 
-  val db = source(new CassandraAsyncSourceConfig[SnakeCase]("DB") with NoQueryProbing)
+  val db = source(new CassandraAsyncSourceConfig[SnakeCase]("DB"))
 
   case class WeatherStation(country: String, city: String, stationId: String, entry: Int, value: Int)
 
@@ -310,7 +310,7 @@ There is no much offered by the driver to extend the Query Builder, e.g. add a m
 
 You could extend Phantom by extending the DSL to add new features, although it might not be a straightforward process.
 
-**Quill (v0.3.2-SNAPSHOT)**
+**Quill (v0.4.0)**
 
 Quill provides an easy mechanism to add non-supported features through [infix](https://github.com/getquill/quill#infix). In fact, most of the [CQL specific features](https://github.com/getquill/quill/blob/master/quill-cassandra/src/main/scala/io/getquill/sources/cassandra/ops/package.scala) are added using infix.
 
@@ -483,7 +483,7 @@ object Phantom extends App {
 
 It is necessary to define a new `Column` type to be used when defining the data model.
 
-**Quill (v0.3.2-SNAPSHOT)**
+**Quill (v0.4.0)**
 ```scala
 import io.getquill._
 import io.getquill.naming._
@@ -493,7 +493,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 object Quill extends App {
 
-  val db = source(new CassandraAsyncSourceConfig[SnakeCase]("DB") with NoQueryProbing)
+  val db = source(new CassandraAsyncSourceConfig[SnakeCase]("DB"))
 
   case class Country(code: String) extends AnyVal
 
@@ -532,7 +532,7 @@ The Datastax driver allows the user to execute queries [asynchronously](https://
 
 Phantom is asynchronous by default and all operations returns `Future`s. It also provides an implementation of the [reactive-streams](https://github.com/reactive-streams/reactive-streams-jvm) specification on top of Akka. 
 
-**Quill (v0.3.2-SNAPSHOT)**
+**Quill (v0.4.0)**
 
 Quill provides blocking, asynchronous and streaming sources for Cassandra. The asynchronous source returns `Future`s on all operations. The streaming source uses [Monix](https://github.com/monixio/monix) to return an `Observable`. Monix is a reactive library compatible with the [reactive-streams](https://github.com/reactive-streams/reactive-streams-jvm) protocol.
 
