@@ -204,6 +204,16 @@ class SqlIdiomSpec extends Spec {
             "SELECT COUNT(*) FROM (SELECT t.s, COUNT(*) FROM TestEntity t GROUP BY t.s) x"
         }
       }
+      "unary operation" - {
+        "nonEmpty" in {
+          mirrorSource.run(qr1.nonEmpty).sql mustEqual
+            "SELECT x.* FROM (SELECT EXISTS (SELECT x.* FROM TestEntity x)) x"
+        }
+        "isEmpty" in {
+          mirrorSource.run(qr1.isEmpty).sql mustEqual
+            "SELECT x.* FROM (SELECT NOT EXISTS (SELECT x.* FROM TestEntity x)) x"
+        }
+      }
       "limited" - {
         "simple" in {
           val q = quote {
