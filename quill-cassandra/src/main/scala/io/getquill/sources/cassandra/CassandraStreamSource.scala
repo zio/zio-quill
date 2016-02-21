@@ -21,12 +21,11 @@ class CassandraStreamSource[N <: NamingStrategy](config: CassandraSourceConfig[N
   def page(rs: ResultSet): Observable[Iterable[Row]] = {
     val available = rs.getAvailableWithoutFetching
     val page = rs.asScala.take(available)
+
     if (rs.isFullyFetched)
       Observable.unit(page)
     else
-      Observable
-        .fromFuture(rs.fetchMoreResults())
-        .map(_ => page)
+      Observable.fromFuture(rs.fetchMoreResults()).map(_ => page)
   }
 
   def query[T](cql: String, bind: BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement], extractor: Row => T): Observable[T] = {

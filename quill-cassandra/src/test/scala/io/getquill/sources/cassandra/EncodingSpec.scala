@@ -46,6 +46,7 @@ class EncodingSpec extends Spec {
     }
   }
 
+  /*
   "encodes sets" - {
     val q = quote {
       (set: Set[Int]) =>
@@ -86,6 +87,7 @@ class EncodingSpec extends Spec {
       verify(await(f).getOrElse(List()))
     }
   }
+   */
 
   private def verify(result: List[EncodingTestEntity]): Unit =
     result.zip(insertValues) match {
