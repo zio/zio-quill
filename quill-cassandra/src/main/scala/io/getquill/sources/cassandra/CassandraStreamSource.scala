@@ -1,16 +1,12 @@
 package io.getquill.sources.cassandra
 
-import scala.collection.JavaConversions.asScalaIterator
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
+import scala.collection.JavaConverters._
 import com.datastax.driver.core.BoundStatement
-import com.datastax.driver.core.ConsistencyLevel
 import com.datastax.driver.core.ResultSet
 import com.datastax.driver.core.Row
 import io.getquill.naming.NamingStrategy
 import io.getquill.sources.cassandra.util.FutureConversions.toScalaFuture
 import monifu.reactive.Observable
-import monifu.reactive.Observable.FutureIsObservable
 import io.getquill.CassandraSourceConfig
 import io.getquill.sources.BindedStatementBuilder
 
@@ -22,11 +18,23 @@ class CassandraStreamSource[N <: NamingStrategy](config: CassandraSourceConfig[N
   override type BatchedActionResult[T] = Observable[ResultSet]
   override type Params[T] = Observable[T]
 
+  protected def page(rs: ResultSet): Observable[Iterable[Row]] = {
+    val available = rs.getAvailableWithoutFetching
+    val page = rs.asScala.take(available)
+
+    if (rs.isFullyFetched)
+      Observable.unit(page)
+    else
+      Observable.fromFuture(rs.fetchMoreResults()).map(_ => page)
+  }
+
   def query[T](cql: String, bind: BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement], extractor: Row => T): Observable[T] = {
     Observable
       .fromFuture(session.executeAsync(prepare(cql, bind)))
-      .map(_.iterator)
-      .flatMap(Observable.fromIterator(_))
+      .flatMap(Observable.fromStateAction((rs: ResultSet) => (page(rs), rs)))
+      .flatten
+      .takeWhile(_.nonEmpty)
+      .flatMap(Observable.fromIterable)
       .map(extractor)
   }
 

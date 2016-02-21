@@ -1,21 +1,18 @@
 package io.getquill.sources.cassandra.util
 
-import com.google.common.util.concurrent.FutureCallback
-import com.datastax.driver.core.ResultSetFuture
-import com.datastax.driver.core.ResultSet
+import com.google.common.util.concurrent.{ FutureCallback, Futures, ListenableFuture }
 import scala.concurrent.Promise
 import scala.concurrent.Future
-import com.google.common.util.concurrent.Futures
 import language.implicitConversions
 
 object FutureConversions {
 
-  implicit def toScalaFuture(fut: ResultSetFuture): Future[ResultSet] = {
-    val p = Promise[ResultSet]()
+  implicit def toScalaFuture[T](fut: ListenableFuture[T]): Future[T] = {
+    val p = Promise[T]()
     Futures.addCallback(
       fut,
-      new FutureCallback[ResultSet] {
-        def onSuccess(r: ResultSet) = {
+      new FutureCallback[T] {
+        def onSuccess(r: T) = {
           p.success(r)
           ()
         }
