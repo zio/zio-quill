@@ -29,7 +29,7 @@ CREATE TABLE Task(
 );
 
 CREATE TABLE EncodingTestEntity(
-    id INT PRIMARY KEY,
+    id INT,
 	v1 VARCHAR,
     v2 DECIMAL,
     v3 BOOLEAN,
@@ -48,7 +48,8 @@ CREATE TABLE EncodingTestEntity(
     o6 FLOAT,
     o7 DOUBLE,
     o8 BLOB,
-    o9 TIMESTAMP
+    o9 TIMESTAMP,
+    PRIMARY KEY(id, v1)
 );
 
 CREATE TABLE TestEntity(
