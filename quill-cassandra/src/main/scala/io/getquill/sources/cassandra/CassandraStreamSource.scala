@@ -18,7 +18,7 @@ class CassandraStreamSource[N <: NamingStrategy](config: CassandraSourceConfig[N
   override type BatchedActionResult[T] = Observable[ResultSet]
   override type Params[T] = Observable[T]
 
-  def page(rs: ResultSet): Observable[Iterable[Row]] = {
+  protected def page(rs: ResultSet): Observable[Iterable[Row]] = {
     val available = rs.getAvailableWithoutFetching
     val page = rs.asScala.take(available)
 
