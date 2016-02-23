@@ -41,6 +41,14 @@ class ReplaceSelectSpec extends Spec {
       }
       ReplaceSelect(q.ast, List(Ident("t"))) mustEqual q.ast
     }
+
+    "distinct query" in {
+      val q = quote {
+        qr1.map(t => t.l).distinct
+      }
+      ReplaceSelect(q.ast, List(Property(Ident("t"), "l"))) mustEqual
+        q.ast
+    }
   }
 
   "fails if the query doesn't have a final map (select)" - {

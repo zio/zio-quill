@@ -4,6 +4,8 @@ import io.getquill.ast._
 
 object ApplyIntermediateMap {
 
+  private def isomorphic(e: Ast, c: Ast, alias: Ident) = BetaReduction(e, alias -> c) == c
+
   def unapply(q: Query): Option[Query] =
     q match {
 
@@ -12,6 +14,11 @@ object ApplyIntermediateMap {
       case Filter(Map(a: GroupBy, b, c), d, e)    => None
       case SortBy(Map(a: GroupBy, b, c), d, e, f) => None
       case Map(a: GroupBy, b, c) if (b == c)      => None
+
+      //  map(i => (i.i, i.l)).distinct.map(x => (x._1, x._2)) =>
+      //    map(i => (i.i, i.l)).distinct
+      case Map(Distinct(Map(a, b, c)), d, e) if isomorphic(e, c, d) =>
+        Some(Distinct(Map(a, b, c)))
 
       // a.map(b => b) =>
       //    a

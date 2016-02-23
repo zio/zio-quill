@@ -17,7 +17,7 @@ object ExpandNestedQueries {
 
   private def expandNested(q: FlattenSqlQuery): SqlQuery =
     q match {
-      case FlattenSqlQuery(from, where, groupBy, orderBy, limit, offset, select) =>
+      case FlattenSqlQuery(from, where, groupBy, orderBy, limit, offset, select, distinct) =>
         val asts = Nil ++ where ++ groupBy ++ orderBy.map(_.ast) ++ limit ++ offset ++ select.map(_.ast)
         val from = q.from.map(expandSource(_, asts))
         q.copy(from = from)

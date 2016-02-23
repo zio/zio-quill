@@ -72,6 +72,11 @@ class StatelessTransformerSpec extends Spec {
         Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("e") -> Ident("e'"))(ast) mustEqual
           Join(FullJoin, Ident("a'"), Ident("b'"), Ident("c"), Ident("d"), Ident("e'"))
       }
+
+      "distinct" in {
+        val ast: Ast = Distinct(Ident("a"))
+        Subject(Ident("a") -> Ident("a'"))(ast) mustEqual Distinct(Ident("a'"))
+      }
     }
 
     "operation" - {

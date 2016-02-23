@@ -18,6 +18,8 @@ private[select] object ExtractSelect {
         FlatMap(q, x, ensureFinalMap(p))
       case Aggregation(op, q: Query) =>
         Aggregation(op, q)
+      case Distinct(q: Query) =>
+        Distinct(q)
       case q =>
         val x = Ident("x")
         Map(q, x, x)
@@ -26,6 +28,8 @@ private[select] object ExtractSelect {
   private def extractSelect(query: Query): Ast =
     (query: @unchecked) match {
       case Aggregation(op, q: Query) =>
+        Ident("x")
+      case Distinct(q: Query) =>
         Ident("x")
       case Map(q, x, p) =>
         p

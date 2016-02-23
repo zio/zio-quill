@@ -81,6 +81,7 @@ trait Liftables {
     case Union(a, b)            => q"$pack.Union($a, $b)"
     case UnionAll(a, b)         => q"$pack.UnionAll($a, $b)"
     case Join(a, b, c, d, e, f) => q"$pack.Join($a, $b, $c, $d, $e, $f)"
+    case Distinct(a)            => q"$pack.Distinct($a)"
   }
 
   implicit val propertyAliasLiftable: Liftable[PropertyAlias] = Liftable[PropertyAlias] {

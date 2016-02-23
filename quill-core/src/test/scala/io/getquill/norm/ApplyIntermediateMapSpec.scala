@@ -83,5 +83,14 @@ class ApplyIntermediateMapSpec extends Spec {
       }
       ApplyIntermediateMap.unapply(q.ast) mustEqual Some(n.ast)
     }
+    "distinct" in {
+      val q = quote {
+        query[TestEntity].map(i => (i.i, i.l)).distinct.map(x => (x._1, x._2))
+      }
+      val n = quote {
+        query[TestEntity].map(i => (i.i, i.l)).distinct
+      }
+      ApplyIntermediateMap.unapply(q.ast) mustEqual Some(n.ast)
+    }
   }
 }
