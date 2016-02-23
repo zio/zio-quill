@@ -21,6 +21,11 @@ class CassandraAsyncSource[N <: NamingStrategy](config: CassandraSourceConfig[N,
   override type BatchedActionResult[T] = Future[List[ResultSet]]
   override type Params[T] = List[T]
 
+  class ActionApply[T](f: List[T] => BatchedActionResult[T])(implicit ec: ExecutionContext) extends Function1[List[T], BatchedActionResult[T]] {
+    def apply(params: List[T]) = f(params)
+    def apply(param: T) = f(List(param)).map(_.head)
+  }
+
   def query[T](cql: String, bind: BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement], extractor: Row => T)(implicit ec: ExecutionContext): Future[List[T]] =
     session.executeAsync(prepare(cql, bind))
       .map(_.all.toList.map(extractor))
@@ -28,7 +33,7 @@ class CassandraAsyncSource[N <: NamingStrategy](config: CassandraSourceConfig[N,
   def execute(cql: String)(implicit ec: ExecutionContext): Future[ResultSet] =
     session.executeAsync(prepare(cql))
 
-  def execute[T](cql: String, bindParams: T => BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement])(implicit ec: ExecutionContext): List[T] => Future[List[ResultSet]] = {
+  def execute[T](cql: String, bindParams: T => BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement])(implicit ec: ExecutionContext): ActionApply[T] = {
     def run(values: List[T]): Future[List[ResultSet]] =
       values match {
         case Nil => Future.successful(List())
@@ -37,6 +42,6 @@ class CassandraAsyncSource[N <: NamingStrategy](config: CassandraSourceConfig[N,
             run(tail).map(result +: _)
           }
       }
-    run _
+    new ActionApply(run _)
   }
 }

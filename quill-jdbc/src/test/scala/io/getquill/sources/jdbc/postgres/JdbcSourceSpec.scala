@@ -8,6 +8,13 @@ class JdbcSourceSpec extends Spec {
     val p = testPostgresDB.probe("DELETE FROM TestEntity")
   }
 
+  "run non-batched action" in {
+    val insert = quote { (i: Int) =>
+      qr1.insert(_.i -> i)
+    }
+    testPostgresDB.run(insert)(1) mustEqual (1)
+  }
+
   "provides transaction support" - {
     "success" in {
       testPostgresDB.run(qr1.delete)

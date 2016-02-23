@@ -24,6 +24,11 @@ class JdbcSource[D <: SqlIdiom, N <: NamingStrategy](config: JdbcSourceConfig[D,
   type ActionResult[T] = Int
   type BatchedActionResult[T] = List[Int]
 
+  class ActionApply[T](f: List[T] => List[Int]) extends Function1[List[T], List[Int]] {
+    def apply(params: List[T]) = f(params)
+    def apply(param: T) = f(List(param)).head
+  }
+
   private val dataSource = config.dataSource
 
   override def close = dataSource.close
@@ -69,8 +74,8 @@ class JdbcSource[D <: SqlIdiom, N <: NamingStrategy](config: JdbcSourceConfig[D,
     }
   }
 
-  def execute[T](sql: String, bindParams: T => BindedStatementBuilder[PreparedStatement] => BindedStatementBuilder[PreparedStatement]): List[T] => List[Int] = {
-    (values: List[T]) =>
+  def execute[T](sql: String, bindParams: T => BindedStatementBuilder[PreparedStatement] => BindedStatementBuilder[PreparedStatement]): ActionApply[T] = {
+    val func = { (values: List[T]) =>
       val groups = values.map(bindParams(_)(new BindedStatementBuilder[PreparedStatement]).build(sql)).groupBy(_._1)
       (for ((sql, setValues) <- groups.toList) yield {
         logger.info(sql)
@@ -83,6 +88,8 @@ class JdbcSource[D <: SqlIdiom, N <: NamingStrategy](config: JdbcSourceConfig[D,
           ps.executeBatch.toList
         }
       }).flatten
+    }
+    new ActionApply(func)
   }
 
   def query[T](sql: String, bind: BindedStatementBuilder[PreparedStatement] => BindedStatementBuilder[PreparedStatement], extractor: ResultSet => T): List[T] = {

@@ -30,6 +30,12 @@ class FinagleMysqlSource[N <: NamingStrategy](config: FinagleMysqlSourceConfig[N
   type ActionResult[T] = Future[Result]
   type BatchedActionResult[T] = Future[List[Result]]
 
+  class ActionApply[T](f: List[T] => Future[List[Result]])
+    extends Function1[List[T], Future[List[Result]]] {
+    def apply(params: List[T]) = f(params)
+    def apply(param: T) = f(List(param)).map(_.head)
+  }
+
   private[mysql] def dateTimezone = config.dateTimezone
 
   private val client = config.client
@@ -53,7 +59,7 @@ class FinagleMysqlSource[N <: NamingStrategy](config: FinagleMysqlSourceConfig[N
   def execute(sql: String): Future[Result] =
     withClient(_.prepare(sql)())
 
-  def execute[T](sql: String, bindParams: T => BindedStatementBuilder[List[Parameter]] => BindedStatementBuilder[List[Parameter]]): List[T] => Future[List[Result]] = {
+  def execute[T](sql: String, bindParams: T => BindedStatementBuilder[List[Parameter]] => BindedStatementBuilder[List[Parameter]]): ActionApply[T] = {
     def run(values: List[T]): Future[List[Result]] =
       values match {
         case Nil =>
@@ -64,7 +70,7 @@ class FinagleMysqlSource[N <: NamingStrategy](config: FinagleMysqlSourceConfig[N
           withClient(_.prepare(expanded)(params(List()): _*))
             .flatMap(_ => run(tail))
       }
-    run _
+    new ActionApply(run _)
   }
 
   def query[T](sql: String, bind: BindedStatementBuilder[List[Parameter]] => BindedStatementBuilder[List[Parameter]], extractor: Row => T): Future[List[T]] = {

@@ -31,6 +31,12 @@ class AsyncSource[D <: SqlIdiom, N <: NamingStrategy, C <: Connection](config: A
   type ActionResult[T] = Future[DBQueryResult]
   type BatchedActionResult[T] = Future[List[DBQueryResult]]
 
+  class ActionApply[T](f: List[T] => Future[List[DBQueryResult]])(implicit ec: ExecutionContext)
+    extends Function1[List[T], Future[List[DBQueryResult]]] {
+    def apply(params: List[T]) = f(params)
+    def apply(param: T) = f(List(param)).map(_.head)
+  }
+
   private val pool = config.pool
 
   override def close = {
@@ -59,7 +65,7 @@ class AsyncSource[D <: SqlIdiom, N <: NamingStrategy, C <: Connection](config: A
     withConnection(_.sendQuery(sql))
   }
 
-  def execute[T](sql: String, bindParams: T => BindedStatementBuilder[List[Any]] => BindedStatementBuilder[List[Any]])(implicit ec: ExecutionContext): List[T] => Future[List[DBQueryResult]] = {
+  def execute[T](sql: String, bindParams: T => BindedStatementBuilder[List[Any]] => BindedStatementBuilder[List[Any]])(implicit ec: ExecutionContext): ActionApply[T] = {
     def run(values: List[T]): Future[List[DBQueryResult]] =
       values match {
         case Nil =>
@@ -70,7 +76,7 @@ class AsyncSource[D <: SqlIdiom, N <: NamingStrategy, C <: Connection](config: A
           withConnection(_.sendPreparedStatement(sql, params(List())))
             .flatMap(r => run(tail).map(r +: _))
       }
-    run _
+    new ActionApply(run _)
   }
 
   def query[T](sql: String, bind: BindedStatementBuilder[List[Any]] => BindedStatementBuilder[List[Any]], extractor: RowData => T)(implicit ec: ExecutionContext) = {
