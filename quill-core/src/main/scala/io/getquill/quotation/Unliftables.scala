@@ -74,7 +74,8 @@ trait Unliftables {
   }
 
   implicit val queryUnliftable: Unliftable[Query] = Unliftable[Query] {
-    case q"$pack.Entity.apply(${ a: String }, ${ b: Option[String] }, ${ c: List[PropertyAlias] })" => Entity(a, b, c)
+    case q"$pack.Entity.apply(${ a: String }, ${ b: Option[String] }, ${ c: List[PropertyAlias] }, ${ d: Option[String] })" => Entity(a, b, c, d)
+    case q"$pack.Generated.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => Generated(a, b, c)
     case q"$pack.Filter.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => Filter(a, b, c)
     case q"$pack.Map.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => Map(a, b, c)
     case q"$pack.FlatMap.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => FlatMap(a, b, c)
@@ -121,6 +122,7 @@ trait Unliftables {
     case q"$pack.Update.apply(${ a: Ast })"                                   => Update(a)
     case q"$pack.Insert.apply(${ a: Ast })"                                   => Insert(a)
     case q"$pack.Delete.apply(${ a: Ast })"                                   => Delete(a)
+
   }
 
   implicit val assignmentUnliftable: Unliftable[Assignment] = Unliftable[Assignment] {

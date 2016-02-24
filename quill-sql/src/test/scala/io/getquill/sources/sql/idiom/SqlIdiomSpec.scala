@@ -45,7 +45,7 @@ class SqlIdiomSpec extends Spec {
         }
 
         "distinct single" in {
-          val q  = quote {
+          val q = quote {
             qr1.map(i => i.i).distinct
           }
           mirrorSource.run(q).sql mustEqual
@@ -590,6 +590,14 @@ class SqlIdiomSpec extends Spec {
           }
           mirrorSource.run(q).sql mustEqual
             "INSERT INTO TestEntity (i,s) VALUES ((SELECT MAX(t.i) FROM TestEntity2 t), 's')"
+        }
+
+        "generated" in {
+          val q: Quoted[(TestEntity) => UnassignedAction[TestEntity] with Insert[TestEntity]] = quote {
+            qr1.generated(_.i).insert
+          }
+          val run = mirrorSource.run(q)(List(TestEntity("s",1, 2L, Some(1)))).sql mustEqual
+            "INSERT INTO TestEntity (s,l,o) VALUES (?, ?, ?)"
         }
       }
       "update" - {

@@ -37,6 +37,8 @@ object AstShow {
         case params => s"query[${q.name}](${params.mkString(", ")})"
       }
 
+    case Generated(source, alias, body)      => s"${source.show}.generated(${alias.show} => ${body.show})"
+
     case Filter(source, alias, body) =>
       s"${source.show}.filter(${alias.show} => ${body.show})"
 
@@ -138,6 +140,7 @@ object AstShow {
     case Update(query)                       => s"${query.show}.update"
     case Insert(query)                       => s"${query.show}.insert"
     case Delete(query)                       => s"${query.show}.delete"
+
   }
 
   implicit val assignmentShow: Show[Assignment] = Show[Assignment] {

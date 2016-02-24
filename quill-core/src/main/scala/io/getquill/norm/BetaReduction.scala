@@ -40,7 +40,7 @@ case class BetaReduction(map: collection.Map[Ident, Ast])
         GroupBy(apply(a), b, BetaReduction(map - b)(c))
       case Join(t, a, b, iA, iB, on) =>
         Join(t, apply(a), apply(b), iA, iB, BetaReduction(map - iA - iB)(on))
-      case _: Take | _: Entity | _: Drop | _: Union | _: UnionAll | _: Aggregation | _: Distinct =>
+      case _: Take | _: Entity | _: Drop | _: Union | _: UnionAll | _: Aggregation | _: Distinct | _: Generated =>
         super.apply(query)
     }
 }
