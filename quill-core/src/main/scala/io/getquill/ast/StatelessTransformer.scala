@@ -22,6 +22,7 @@ trait StatelessTransformer {
   def apply(e: Query): Query =
     e match {
       case e: Entity          => e
+      case Generated(a, b, c) => Generated(apply(a), b, apply(c))
       case Filter(a, b, c)    => Filter(apply(a), b, apply(c))
       case Map(a, b, c)       => Map(apply(a), b, apply(c))
       case FlatMap(a, b, c)   => FlatMap(apply(a), b, apply(c))
@@ -58,6 +59,7 @@ trait StatelessTransformer {
       case Update(query)                       => Update(apply(query))
       case Insert(query)                       => Insert(apply(query))
       case Delete(query)                       => Delete(apply(query))
+
     }
 
   private def apply(e: Assignment): Assignment =

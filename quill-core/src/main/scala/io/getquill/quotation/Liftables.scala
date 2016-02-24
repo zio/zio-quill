@@ -69,7 +69,8 @@ trait Liftables {
   }
 
   implicit val queryLiftable: Liftable[Query] = Liftable[Query] {
-    case Entity(a, b, c)        => q"$pack.Entity($a, $b, $c)"
+    case Entity(a, b, c, d)     => q"$pack.Entity($a, $b, $c, $d)"
+    case Generated(a, b, c)     => q"$pack.Generated($a, $b, $c)"
     case Filter(a, b, c)        => q"$pack.Filter($a, $b, $c)"
     case Map(a, b, c)           => q"$pack.Map($a, $b, $c)"
     case FlatMap(a, b, c)       => q"$pack.FlatMap($a, $b, $c)"
@@ -110,6 +111,7 @@ trait Liftables {
     case Update(a)            => q"$pack.Update($a)"
     case Insert(a)            => q"$pack.Insert($a)"
     case Delete(a)            => q"$pack.Delete($a)"
+
   }
 
   implicit val assignmentLiftable: Liftable[Assignment] = Liftable[Assignment] {

@@ -52,6 +52,7 @@ sealed trait EntityQuery[T]
   override def filter(f: T => Boolean): EntityQuery[T]
   override def map[R](f: T => R): EntityQuery[R]
 
+  def generated(f: T => Any): EntityQuery[T]
   def insert: T => UnassignedAction[T] with Insert[T]
   def insert(f: (T => (Any, Any)), f2: (T => (Any, Any))*): Insert[T]
   def update: T => UnassignedAction[T] with Update[T]

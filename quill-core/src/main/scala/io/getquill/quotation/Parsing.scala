@@ -119,6 +119,9 @@ trait Parsing {
     case q"$pack.query[${ t: Type }]" =>
       Entity(t.typeSymbol.name.decodedName.toString, None, List())
 
+    case q"$query.generated(($alias) => $body)" =>
+      Generated(astParser(query), identParser(alias), astParser(body))
+
     case q"$source.filter(($alias) => $body)" if (is[QuillQuery[Any]](source)) =>
       Filter(astParser(source), identParser(alias), astParser(body))
 
@@ -347,6 +350,7 @@ trait Parsing {
       Function(List(Ident("x1")), Insert(astParser(query)))
     case q"$query.delete" =>
       Delete(astParser(query))
+
   }
 
   private val assignmentParser: Parser[Assignment] = Parser[Assignment] {

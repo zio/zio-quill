@@ -46,4 +46,11 @@ class ActionMacroSpec extends Spec {
       Row("s2", 12, 22L, Some(42))
     )
   }
+
+  "generated values" in {
+    val q = quote {
+      qr1.generated(x => x.i)
+    }
+    q.ast.toString mustEqual "query[TestEntity].generated(x => x.i)"
+  }
 }

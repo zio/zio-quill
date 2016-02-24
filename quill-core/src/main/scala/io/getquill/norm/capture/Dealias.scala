@@ -43,7 +43,7 @@ case class Dealias(state: Option[Ident]) extends StatefulTransformer[Option[Iden
         (Join(t, an, bn, iAn, iBn, onn), Dealias(None))
       case q: Distinct =>
         (q, Dealias(None))
-      case _: Entity =>
+      case _: Entity | _: Generated =>
         (q, Dealias(None))
     }
 
