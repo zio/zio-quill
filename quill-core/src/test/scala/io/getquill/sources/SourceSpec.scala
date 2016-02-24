@@ -32,11 +32,11 @@ class SourceSpec extends Spec {
   }
 
   "encodes `WrappedValue` extended value class" - {
-    case class Entity(x: WrappedEncodable)
+    case class Entity(x: WrappedEncodable, s: String)
 
     "encoding" in {
       val q = quote {
-        (x: WrappedEncodable) => query[Entity].insert(_.x -> x)
+        (x: WrappedEncodable) => query[Entity].insert(_.x -> x, _.s -> s"$x")
       }
       mirrorSource.run(q)(List(WrappedEncodable(1))).bindList mustEqual List(Row(1))
     }
@@ -45,7 +45,7 @@ class SourceSpec extends Spec {
       val q = quote {
         query[Entity]
       }
-      mirrorSource.run(q).extractor(Row(1)) mustEqual Entity(WrappedEncodable(1))
+      mirrorSource.run(q).extractor(Row(1, "1")) mustEqual Entity(WrappedEncodable(1), "1")
     }
   }
 
@@ -59,7 +59,7 @@ class SourceSpec extends Spec {
       val q = quote {
         (x: Wrapped) => query[Entity].insert(_.x -> x)
       }
-      mirrorSource.run(q)(List(Wrapped(1))).bindList mustEqual List(Row(1))
+      mirrorSource.run(q)(List((Wrapped(1)))).bindList mustEqual List(Row(1))
     }
 
     "decoding" in {
