@@ -20,6 +20,9 @@ abstract class Source[R: ClassTag, S: ClassTag] extends Closeable {
       def apply(index: Int, value: I, row: S) =
         encoder(index, mapped.f(value), row)
     }
+
+  implicit def wrappedTypeDecoder[T <: WrappedType] =
+    MappedEncoding[T, T#Type](_.value)
 }
 
 object Source {

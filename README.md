@@ -849,6 +849,24 @@ implicit val uuidDecoder =
   }
 ```
 
+Quill also supports encoding of "wrapped types". Just extend the `WrappedValue` trait and Quill will automatically encode the underlying primitive type.
+
+```scala
+import io.getquill.sources._
+
+case class UserId(value: Int) extends AnyVal with WrappedValue[Int]
+case class User(id: UserId, name: String)
+
+val q = quote {
+  (id: UserId) => for {
+    u <- query[User] if u.id == id
+  } yield u
+}
+db.run(q)(UserId(1))
+
+// SELECT u.id, u.name FROM User u WHERE (u.id = 1)
+```
+
 # SQL Sources #
 
 Sources represent the database and provide an execution interface for queries. Example:

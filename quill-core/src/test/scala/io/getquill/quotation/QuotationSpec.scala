@@ -231,7 +231,6 @@ class QuotationSpec extends Spec {
           quote(unquote(q)).ast mustEqual tree(FullJoin)
         }
 
-
         "fails if not followed by 'on'" in {
           """
           quote {
