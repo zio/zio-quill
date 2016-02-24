@@ -45,7 +45,7 @@ class SourceSpec extends Spec {
       val q = quote {
         query[Entity]
       }
-      mirrorSource.run(q).extractor(Row(1)) mustEqual new Entity(WrappedEncodable(1))
+      mirrorSource.run(q).extractor(Row(1)) mustEqual Entity(WrappedEncodable(1))
     }
   }
 
@@ -66,7 +66,7 @@ class SourceSpec extends Spec {
       val q = quote {
         query[Entity]
       }
-      mirrorSource.run(q).extractor(Row(1)) mustEqual new Entity(Wrapped(1))
+      mirrorSource.run(q).extractor(Row(1)) mustEqual Entity(Wrapped(1))
     }
   }
 
