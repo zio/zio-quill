@@ -35,13 +35,14 @@ case class UnaryOperationSqlQuery(
 case class SelectValue(ast: Ast, alias: Option[String] = None)
 
 case class FlattenSqlQuery(
-  from:    List[Source],
-  where:   Option[Ast]           = None,
-  groupBy: List[Property]        = Nil,
-  orderBy: List[OrderByCriteria] = Nil,
-  limit:   Option[Ast]           = None,
-  offset:  Option[Ast]           = None,
-  select:  List[SelectValue]
+  from:     List[Source],
+  where:    Option[Ast]           = None,
+  groupBy:  List[Property]        = Nil,
+  orderBy:  List[OrderByCriteria] = Nil,
+  limit:    Option[Ast]           = None,
+  offset:   Option[Ast]           = None,
+  select:   List[SelectValue],
+  distinct: Boolean               = false
 )
   extends SqlQuery
 
@@ -102,7 +103,7 @@ object SqlQuery {
         val agg = b.select.collect {
           case s @ SelectValue(_: Aggregation, _) => s
         }
-        if (agg.isEmpty)
+        if (!b.distinct && agg.isEmpty)
           b.copy(select = selectValues(p))
         else
           FlattenSqlQuery(
@@ -166,6 +167,10 @@ object SqlQuery {
             offset = Some(n),
             select = select(alias)
           )
+
+      case Distinct(q: Query) =>
+        val b = base(q, alias)
+        b.copy(distinct = true)
 
       case other =>
         FlattenSqlQuery(from = sources :+ source(other, alias), select = select(alias))

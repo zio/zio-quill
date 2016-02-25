@@ -69,6 +69,9 @@ object AstShow {
 
     case Join(t, a, b, iA, iB, on) =>
       s"${a.show}.${t.show}(${b.show}).on((${iA.show}, ${iB.show}) => ${on.show})"
+
+    case Distinct(a) =>
+      s"${a.show}.distinct"
   }
 
   implicit val orderingShow: Show[Ordering] = Show[Ordering] {

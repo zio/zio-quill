@@ -47,11 +47,14 @@ trait SqlIdiom {
   }
 
   implicit def sqlQueryShow(implicit strategy: NamingStrategy): Show[SqlQuery] = Show[SqlQuery] {
-    case FlattenSqlQuery(from, where, groupBy, orderBy, limit, offset, select) =>
+    case FlattenSqlQuery(from, where, groupBy, orderBy, limit, offset, select, distinct) =>
+
+      val distinctShow = if (distinct) " DISTINCT" else ""
+
       val selectClause =
         select match {
-          case Nil => s"SELECT * FROM ${from.show}"
-          case _   => s"SELECT ${select.show} FROM ${from.show}"
+          case Nil => s"SELECT$distinctShow * FROM ${from.show}"
+          case _   => s"SELECT$distinctShow ${select.show} FROM ${from.show}"
         }
 
       val withWhere =

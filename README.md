@@ -394,6 +394,16 @@ db.run(q2)
 // SELECT p.id, p.name, p.age FROM Person p WHERE p.id IN (SELECT p1.* FROM Person p1 WHERE EXISTS (SELECT c.* FROM Contact c WHERE c.personId = p1.id))
 ```
 
+**distinct**
+```scala
+val q = quote {
+  query[Person].map(p => p.age).distinct
+}
+
+db.run(q)
+// SELECT DISTINCT p.age FROM Person p
+```
+
 **joins**
 
 In addition to applicative joins Quill also supports explicit joins (both inner and left/right/full outer joins).

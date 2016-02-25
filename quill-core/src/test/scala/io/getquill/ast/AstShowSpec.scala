@@ -497,4 +497,12 @@ class AstShowSpec extends Spec {
     (q.ast.body: Ast).show mustEqual
       """if(i > 10) "a" else "b""""
   }
+
+  "shows distinct" in {
+    val q = quote {
+      query[TestEntity].distinct
+    }
+    (q.ast: Ast).show mustEqual
+      """query[TestEntity].distinct"""
+  }
 }

@@ -68,7 +68,7 @@ class FinagleMysqlSource[N <: NamingStrategy](config: FinagleMysqlSourceConfig[N
           val (expanded, params) = bindParams(value)(new BindedStatementBuilder).build(sql)
           logger.info(expanded)
           withClient(_.prepare(expanded)(params(List()): _*))
-            .flatMap(_ => run(tail))
+            .flatMap(r => run(tail).map(r +: _))
       }
     new ActionApply(run _)
   }

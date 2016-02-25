@@ -8,7 +8,7 @@ The only dependency you need to build Quill locally is [Docker](https://www.dock
 Instructions on how to install Docker can be found in this [page](https://docs.docker.com/mac/).
 
 After installing Docker, you have to run the command bellow in order to setup the
-databases' schemas. If you don't change any schemas, you will only need to this once.
+databases' schemas. If you don't change any schemas, you will only need to do this once.
 
 `docker-compose run --rm setup`
 

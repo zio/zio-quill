@@ -111,6 +111,14 @@ class StatefulTransformerSpec extends Spec {
             att.state mustEqual List(Ident("a"), Ident("b"), Ident("e"))
         }
       }
+      "distinct" in {
+        val ast: Ast = Distinct(Ident("a"))
+        Subject(Nil, Ident("a") -> Ident("a'"))(ast) match {
+          case (at, att) =>
+            at mustEqual Distinct(Ident("a'"))
+            att.state mustEqual List(Ident("a"))
+        }
+      }
     }
 
     "operation" - {

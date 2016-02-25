@@ -21,6 +21,7 @@ object AttachToEntity {
       case Drop(a: Query, b)                => Drop(apply(f, alias)(a), b)
       case GroupBy(a: Query, b, c)          => GroupBy(apply(f, Some(b))(a), b, c)
       case Aggregation(op, a: Query)        => Aggregation(op, apply(f, alias)(a))
+      case Distinct(a: Query)               => Distinct(apply(f, alias)(a))
 
       case _: Union | _: UnionAll | _: Join => f(q, alias.getOrElse(Ident("x")))
 

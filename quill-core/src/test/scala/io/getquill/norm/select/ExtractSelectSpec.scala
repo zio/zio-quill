@@ -58,6 +58,16 @@ class ExtractSelectSpec extends Spec {
           select mustEqual Property(Ident("t"), "s")
       }
     }
+    "distinct" in {
+      val q = quote {
+        qr1.distinct
+      }
+      ExtractSelect(q.ast) match {
+        case (query, select) =>
+          query mustEqual q.ast
+          select mustEqual Ident("x")
+      }
+    }
   }
 
   "creates a final map (select) if necessary" - {

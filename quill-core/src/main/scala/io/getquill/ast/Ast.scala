@@ -54,6 +54,8 @@ case class UnionAll(a: Ast, b: Ast) extends Query
 
 case class Join(typ: JoinType, a: Ast, b: Ast, aliasA: Ident, aliasB: Ident, on: Ast) extends Query
 
+case class Distinct(a: Ast) extends Query
+
 //************************************************************
 
 case class Infix(parts: List[String], params: List[Ast]) extends Ast
