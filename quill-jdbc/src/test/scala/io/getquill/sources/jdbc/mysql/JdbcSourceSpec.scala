@@ -9,7 +9,7 @@ class JdbcSourceSpec extends Spec {
     val p = testMysqlDB.probe("DELETE FROM TestEntity")
   }
 
-  "run non-batched action" in {
+  "run non-batched action" - {
     val insert = quote { (i: Int) =>
       qr1.insert(_.i -> i)
     }
