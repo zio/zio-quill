@@ -111,7 +111,24 @@ lazy val commonSettings = Seq(
   releasePublishArtifactsAction := PgpKeys.publishSigned.value,
   scoverage.ScoverageKeys.coverageMinimum := 100,
   scoverage.ScoverageKeys.coverageFailOnMinimum := false,
-  ScalariformKeys.preferences := PreferencesImporterExporter.loadPreferences(( file(".") / "formatterPreferences.properties").getPath),
+  ScalariformKeys.preferences := ScalariformKeys.preferences.value
+    .setPreference(AlignParameters, true)
+    .setPreference(CompactStringConcatenation, false)
+    .setPreference(IndentPackageBlocks, true)
+    .setPreference(FormatXml, true)
+    .setPreference(PreserveSpaceBeforeArguments, false)
+    .setPreference(DoubleIndentClassDeclaration, false)
+    .setPreference(RewriteArrowSymbols, false)
+    .setPreference(AlignSingleLineCaseStatements, true)
+    .setPreference(AlignSingleLineCaseStatements.MaxArrowIndent, 40)
+    .setPreference(SpaceBeforeColon, false)
+    .setPreference(SpaceInsideBrackets, false)
+    .setPreference(SpaceInsideParentheses, false)
+    .setPreference(PreserveDanglingCloseParenthesis, false)
+    .setPreference(IndentSpaces, 2)
+    .setPreference(IndentLocalDefs, false)
+    .setPreference(SpacesWithinPatternBinders, true)
+    .setPreference(SpacesAroundMultiImports, true),
   EclipseKeys.eclipseOutput := Some("bin"),
   publishMavenStyle := true,
   publishTo := {
