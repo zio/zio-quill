@@ -36,7 +36,7 @@ class CassandraSyncSource[N <: NamingStrategy](config: CassandraSourceConfig[N, 
       @tailrec
       def run(values: List[T], acc: List[ResultSet]): List[ResultSet] =
         values match {
-          case Nil => List()
+          case Nil => acc
           case head :: tail =>
             run(tail, acc :+ session.execute(prepare(cql, bindParams(head))))
         }
