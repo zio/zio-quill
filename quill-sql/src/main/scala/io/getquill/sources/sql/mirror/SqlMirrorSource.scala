@@ -21,6 +21,11 @@ class SqlMirrorSource[N <: NamingStrategy](config: SqlMirrorSourceConfig[N])
   type QueryResult[T] = QueryMirror[T]
   type ActionResult[T] = ActionMirror
   type BatchedActionResult[T] = BatchActionMirror
+  class ActionApply[T](f: List[T] => BatchActionMirror)
+    extends Function1[List[T], BatchActionMirror] {
+    def apply(params: List[T]) = f(params)
+    def apply(param: T) = ActionMirror(f(List(param)).sql)
+  }
 
   def probe(sql: String) =
     if (sql.contains("Fail"))
@@ -35,9 +40,11 @@ class SqlMirrorSource[N <: NamingStrategy](config: SqlMirrorSourceConfig[N])
 
   case class BatchActionMirror(sql: String, bindList: List[Row])
 
-  def execute[T](sql: String, bindParams: T => Row => Row) =
-    (values: List[T]) =>
+  def execute[T](sql: String, bindParams: T => Row => Row) = {
+    val func = (values: List[T]) =>
       BatchActionMirror(sql, values.map(bindParams).map(_(Row())))
+    new ActionApply(func)
+  }
 
   case class QueryMirror[T](sql: String, binds: Row, extractor: Row => T)
 

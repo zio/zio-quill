@@ -482,13 +482,15 @@ If your project doesn't have a standard layout, e.g. a play project, you should 
 
 Database actions are defined using quotations as well. These actions don't have a collection-like API but rather a custom DSL to express inserts, deletes and updates.
 
-  Note: Actions receive a `List` as they are batched by default.
+  Note: Actions receive a `List` as they are batched by default. And also it can recieve a `single` item as well.
 
 **insert**
 ```scala
 val a = quote(query[Contact].insert)
 
 db.run(a)(List(Contact(999, "+1510488988"))) 
+// INSERT INTO Contact (personId,phone) VALUES (?, ?)
+db.run(a)(Contact(999, "+1510488988"))
 // INSERT INTO Contact (personId,phone) VALUES (?, ?)
 ```
 
