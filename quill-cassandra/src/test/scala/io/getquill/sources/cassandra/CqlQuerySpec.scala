@@ -119,6 +119,14 @@ class CqlQuerySpec extends Spec {
     }
   }
 
+  "distinct query" in {
+    val q = quote {
+      qr1.map(t => t.i).distinct
+    }
+    CqlQuery(q.ast).show mustEqual
+      "SELECT DISTINCT i FROM TestEntity"
+  }
+
   "all terms" in {
     val q = quote {
       qr1.filter(t => t.i == 1).sortBy(t => t.s).take(1).map(t => t.s)

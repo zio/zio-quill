@@ -24,7 +24,7 @@ class ResolveSourceMacroSpec extends Spec {
     val s = source(new MirrorSourceConfig("s") with QueryProbing)
     "s.run(query[Fail].delete)" mustNot compile
   }
-  
+
   "doesn't fail if the quoted source annotation can't be found" in {
     def test(db: MirrorSource) =
       "db.run(qr1.delete)" must compile

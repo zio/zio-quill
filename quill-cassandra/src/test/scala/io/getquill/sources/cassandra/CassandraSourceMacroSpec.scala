@@ -32,7 +32,7 @@ class CassandraSourceMacroSpec extends Spec {
     "s.run(q)" mustNot compile
   }
 
-  "binds inputs according to the sql terms order" - {
+  "binds inputs according to the cql terms order" - {
     "filter.update" in {
       val q = quote {
         (i: Int, l: Long) =>

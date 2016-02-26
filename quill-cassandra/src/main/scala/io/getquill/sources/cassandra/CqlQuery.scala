@@ -5,11 +5,12 @@ import io.getquill.util.Messages.fail
 import io.getquill.norm.BetaReduction
 
 case class CqlQuery(
-  entity:  Entity,
-  filter:  Option[Ast],
-  orderBy: List[OrderByCriteria],
-  limit:   Option[Ast],
-  select:  List[Ast]
+  entity:   Entity,
+  filter:   Option[Ast],
+  orderBy:  List[OrderByCriteria],
+  limit:    Option[Ast],
+  select:   List[Ast],
+  distinct: Boolean
 )
 
 case class OrderByCriteria(
@@ -21,42 +22,50 @@ object CqlQuery {
 
   def apply(q: Query): CqlQuery =
     q match {
-      case Map(q: Query, x, p) =>
-        apply(q, select(p))
-      case Aggregation(AggregationOperator.`size`, q: Query) =>
-        apply(q, List(Aggregation(AggregationOperator.`size`, Constant(1))))
+      case Distinct(q: Query) =>
+        apply(q, true)
       case other =>
-        apply(q, List())
+        apply(q, false)
     }
 
-  private def apply(q: Query, select: List[Ast]): CqlQuery =
+  private def apply(q: Query, distinct: Boolean): CqlQuery =
+    q match {
+      case Map(q: Query, x, p) =>
+        apply(q, select(p), distinct)
+      case Aggregation(AggregationOperator.`size`, q: Query) =>
+        apply(q, List(Aggregation(AggregationOperator.`size`, Constant(1))), distinct)
+      case other =>
+        apply(q, List(), distinct)
+    }
+
+  private def apply(q: Query, select: List[Ast], distinct: Boolean): CqlQuery =
     q match {
       case Take(q: Query, limit) =>
-        apply(q, Some(limit), select)
+        apply(q, Some(limit), select, distinct)
       case other =>
-        apply(q, None, select)
+        apply(q, None, select, distinct)
     }
 
-  private def apply(q: Query, limit: Option[Ast], select: List[Ast]): CqlQuery =
+  private def apply(q: Query, limit: Option[Ast], select: List[Ast], distinct: Boolean): CqlQuery =
     q match {
       case SortBy(q: Query, x, p, o) =>
-        apply(q, orderByCriterias(p, o), limit, select)
+        apply(q, orderByCriterias(p, o), limit, select, distinct)
       case other =>
-        apply(q, List(), limit, select)
+        apply(q, List(), limit, select, distinct)
     }
 
-  private def apply(q: Query, orderBy: List[OrderByCriteria], limit: Option[Ast], select: List[Ast]): CqlQuery =
+  private def apply(q: Query, orderBy: List[OrderByCriteria], limit: Option[Ast], select: List[Ast], distinct: Boolean): CqlQuery =
     q match {
       case Filter(q: Query, x, p) =>
-        apply(q, Some(p), orderBy, limit, select)
+        apply(q, Some(p), orderBy, limit, select, distinct)
       case other =>
-        apply(q, None, orderBy, limit, select)
+        apply(q, None, orderBy, limit, select, distinct)
     }
 
-  private def apply(q: Query, filter: Option[Ast], orderBy: List[OrderByCriteria], limit: Option[Ast], select: List[Ast]): CqlQuery =
+  private def apply(q: Query, filter: Option[Ast], orderBy: List[OrderByCriteria], limit: Option[Ast], select: List[Ast], distinct: Boolean): CqlQuery =
     q match {
       case q: Entity =>
-        new CqlQuery(q, filter, orderBy, limit, select)
+        new CqlQuery(q, filter, orderBy, limit, select, distinct)
       case other =>
         fail(s"Invalid cql query: $q")
     }
