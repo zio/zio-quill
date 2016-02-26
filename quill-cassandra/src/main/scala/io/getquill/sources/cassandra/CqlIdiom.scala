@@ -32,11 +32,15 @@ object CqlIdiom {
 
   implicit def cqlQueryShow(implicit strategy: NamingStrategy): Show[CqlQuery] = Show[CqlQuery] {
 
-    case CqlQuery(entity, filter, orderBy, limit, select) =>
+    case CqlQuery(entity, filter, orderBy, limit, select, distinct) =>
+
+      val distinctShow = if (distinct) " DISTINCT" else ""
+
       val withSelect =
         select match {
-          case Nil => "SELECT *"
-          case s   => s"SELECT ${s.show}"
+          case Nil if distinct => fail(s"Cql only supports DISTINCT with a selection list.'")
+          case Nil             => "SELECT *"
+          case s               => s"SELECT$distinctShow ${s.show}"
         }
       val withEntity =
         s"$withSelect FROM ${entity.show}"

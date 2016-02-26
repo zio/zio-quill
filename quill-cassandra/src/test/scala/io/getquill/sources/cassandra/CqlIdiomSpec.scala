@@ -36,6 +36,31 @@ class CqlIdiomSpec extends Spec {
     }
   }
 
+  "distinct" - {
+    "simple" in {
+      val q = quote {
+        qr1.distinct
+      }
+      "mirrorSource.run(q).cql" mustNot compile
+    }
+
+    "distinct single" in {
+      val q = quote {
+        qr1.map(i => i.i).distinct
+      }
+      mirrorSource.run(q).cql mustEqual
+        "SELECT DISTINCT i FROM TestEntity"
+    }
+
+    "distinct tuple" in {
+      val q = quote {
+        qr1.map(i => (i.i, i.l)).distinct
+      }
+      mirrorSource.run(q).cql mustEqual
+        "SELECT DISTINCT i, l FROM TestEntity"
+    }
+  }
+
   "order by criteria" - {
     "asc" in {
       val q = quote {
