@@ -56,7 +56,6 @@ trait ResolveSourceMacro {
             None
         }
       case o =>
-        c.error("Can't load source at compile time. Query probing disabled.")
         None
     }
 
