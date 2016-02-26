@@ -38,4 +38,36 @@ class EncodeBindVariablesSpec extends Spec {
     }
     mirrorSource.run(q)(1D).binds mustEqual Row(1D)
   }
+
+  "encodes bind variables for wrapped types" - {
+
+    "encodes `WrappedValue` extended value class" in {
+      case class Entity(x: WrappedEncodable)
+      val q = quote {
+        (x: WrappedEncodable) => query[Entity].filter(_.x == x)
+      }
+      mirrorSource.run(q)(WrappedEncodable(1)).binds mustEqual Row(1)
+    }
+
+    "encodes constructable `WrappedType` extended class" in {
+      case class Wrapped(value: Int) extends WrappedType {
+        override type Type = Int
+      }
+      case class Entity(x: Wrapped)
+
+      val q = quote {
+        (x: Wrapped) => query[Entity].filter(_.x == x)
+      }
+      mirrorSource.run(q)(Wrapped(1)).binds mustEqual Row(1)
+    }
+
+    "fails for unwrapped class" in {
+      case class WrappedNotEncodable(value: Int)
+      case class Entity(x: WrappedNotEncodable)
+      val q = quote {
+        (x: WrappedNotEncodable) => query[Entity].filter(_.x == x)
+      }
+      "mirrorSource.run(q)(WrappedNotEncodable(1))" mustNot compile
+    }
+  }
 }

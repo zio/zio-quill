@@ -45,7 +45,7 @@ class SqlIdiomSpec extends Spec {
         }
 
         "distinct single" in {
-          val q  = quote {
+          val q = quote {
             qr1.map(i => i.i).distinct
           }
           mirrorSource.run(q).sql mustEqual

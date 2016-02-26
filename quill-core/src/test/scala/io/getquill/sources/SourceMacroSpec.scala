@@ -86,6 +86,15 @@ class SourceMacroSpec extends Spec {
         r.ast.toString mustEqual "query[TestEntity].filter(t => t.s == p1).map(t => (t.s, t.i, t.l, t.o))"
         r.binds mustEqual Row("a")
       }
+      "wrapped" in {
+        case class Entity(x: WrappedEncodable)
+        val q = quote {
+          (p1: WrappedEncodable) => query[Entity].filter(_.x == p1)
+        }
+        val r = mirrorSource.run(q)(WrappedEncodable(1))
+        r.ast.toString mustEqual "query[Entity].filter(x1 => x1.x == p1).map(x1 => x1.x.value)"
+        r.binds mustEqual Row(1)
+      }
       "infix" in {
         val q = quote {
           (p1: String) => infix"SELECT $p1".as[Query[String]]
