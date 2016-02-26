@@ -6,13 +6,26 @@ import io.getquill.ast.AggregationOperator
 
 class FlattenGroupByAggregationSpec extends Spec {
 
-  "flattens mapped aggregation" in {
-    val q = quote {
-      (e: Query[TestEntity]) =>
-        e.map(_.i).max
+  "flattens mapped aggregation" - {
+    "simple" in {
+      val q = quote {
+        (e: Query[TestEntity]) =>
+          e.map(_.i).max
+      }
+      FlattenGroupByAggregation(Ident("e"))(q.ast.body) mustEqual
+        Aggregation(AggregationOperator.max, Property(Ident("e"), "i"))
     }
-    FlattenGroupByAggregation(Ident("e"))(q.ast.body) mustEqual
-      Aggregation(AggregationOperator.max, Property(Ident("e"), "i"))
+    "nested infix" in {
+      val q = quote {
+        (e: Query[TestEntity]) =>
+          infix"GROUP_CONCAT(${e.map(_.i)})".as[String]
+      }
+      val n = quote {
+        (e: TestEntity) =>
+          infix"GROUP_CONCAT(${e.i})".as[String]
+      }
+      FlattenGroupByAggregation(Ident("e"))(q.ast.body) mustEqual n.ast.body
+    }
   }
 
   "doesn't change simple aggregation" in {

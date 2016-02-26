@@ -1,6 +1,7 @@
 package io.getquill.sources
 
 import io.getquill._
+import io.getquill.sources.mirror.MirrorSource
 
 class ResolveSourceMacroSpec extends Spec {
 
@@ -22,5 +23,10 @@ class ResolveSourceMacroSpec extends Spec {
     case class Fail()
     val s = source(new MirrorSourceConfig("s") with QueryProbing)
     "s.run(query[Fail].delete)" mustNot compile
+  }
+  
+  "doesn't fail if the quoted source annotation can't be found" in {
+    def test(db: MirrorSource) =
+      "db.run(qr1.delete)" must compile
   }
 }

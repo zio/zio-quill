@@ -482,13 +482,15 @@ If your project doesn't have a standard layout, e.g. a play project, you should 
 
 Database actions are defined using quotations as well. These actions don't have a collection-like API but rather a custom DSL to express inserts, deletes and updates.
 
-  Note: Actions receive a `List` as they are batched by default.
+  Note: Actions receive a `List` as they are batched by default. And also it can recieve a `single` item as well.
 
 **insert**
 ```scala
 val a = quote(query[Contact].insert)
 
 db.run(a)(List(Contact(999, "+1510488988"))) 
+// INSERT INTO Contact (personId,phone) VALUES (?, ?)
+db.run(a)(Contact(999, "+1510488988"))
 // INSERT INTO Contact (personId,phone) VALUES (?, ?)
 ```
 
@@ -931,6 +933,10 @@ lazy val db = source(new JdbcSourceConfig[MySQLDialect, SnakeCase]("db") {
 
 ### quill-jdbc ###
 
+Quill uses [HikariCP](https://github.com/brettwooldridge/HikariCP) for connection pooling. Please refer to HikariCP's [documentation](https://github.com/brettwooldridge/HikariCP#configuration-knobs-baby) for a detailed explanation of the available configurations.
+
+Note that there are `dataSource` configurations, that go under `dataSource`, like `user` and `password`, but some pool settings may go under the root config, like `connectionTimeout`.
+
 **MySQL**
 
 sbt dependencies
@@ -959,6 +965,7 @@ db.dataSource.password=root
 db.dataSource.cachePrepStmts=true
 db.dataSource.prepStmtCacheSize=250
 db.dataSource.prepStmtCacheSqlLimit=2048
+db.connectionTimeout=30000
 ```
 
 **Postgres**
@@ -988,9 +995,8 @@ db.dataSource.password=root
 db.dataSource.databaseName=database
 db.dataSource.portNumber=5432
 db.dataSource.serverName=host
+db.connectionTimeout=30000
 ```
-
-Please refer to HikariCP's [documentation](https://github.com/brettwooldridge/HikariCP#configuration-knobs-baby) for a detailed explanation of the available configurations.
 
 ### quill-async ###
 
