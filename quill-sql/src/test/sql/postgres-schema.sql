@@ -1,26 +1,26 @@
 CREATE TABLE Person(
-	name VARCHAR(255),
-	age int
+    name VARCHAR(255),
+    age int
 );
 
 CREATE TABLE Couple(
-	her VARCHAR(255),
-	him VARCHAR(255)
+    her VARCHAR(255),
+    him VARCHAR(255)
 );
 
 CREATE TABLE Department(
-	dpt VARCHAR(255)
+    dpt VARCHAR(255)
 );
 
 CREATE TABLE Employee(
-	emp VARCHAR(255),
-	dpt VARCHAR(255),
-	salary int
+    emp VARCHAR(255),
+    dpt VARCHAR(255),
+    salary int
 );
 
 CREATE TABLE Task(
-	emp VARCHAR(255),
-	tsk VARCHAR(255)
+    emp VARCHAR(255),
+    tsk VARCHAR(255)
 );
 
 CREATE TABLE EncodingTestEntity(
@@ -53,20 +53,20 @@ CREATE TABLE EncodingUUIDTestEntity(
 );
 
 CREATE TABLE TestEntity(
-	s VARCHAR(255),
+    s VARCHAR(255),
     i INTEGER,
     l BIGINT,
     o INTEGER
 );
 
 CREATE TABLE TestEntity2(
-	s VARCHAR(255),
+    s VARCHAR(255),
     i INTEGER,
     l BIGINT
 );
 
 CREATE TABLE TestEntity3(
-	s VARCHAR(255),
+    s VARCHAR(255),
     i INTEGER,
     l BIGINT
 );

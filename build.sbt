@@ -1,5 +1,4 @@
 import ReleaseTransformations._
-import com.typesafe.sbt.SbtScalariform
 import com.typesafe.sbt.SbtScalariform.ScalariformKeys
 import scalariform.formatter.preferences._
 
@@ -39,8 +38,8 @@ lazy val `quill-jdbc` =
     .settings(
       libraryDependencies ++= Seq(
         "com.zaxxer"     % "HikariCP"             % "2.3.9",
-        "mysql"          % "mysql-connector-java" % "5.1.36" % "test",
-        "com.h2database" % "h2" % "1.4.190" % "test",
+        "mysql"          % "mysql-connector-java" % "5.1.36"  % "test",
+        "com.h2database" % "h2"                   % "1.4.190" % "test",
         "org.postgresql" % "postgresql"           % "9.4-1206-jdbc41"
       ),
       parallelExecution in Test := false
@@ -63,8 +62,8 @@ lazy val `quill-async` =
     .settings(commonSettings: _*)
     .settings(
       libraryDependencies ++= Seq(
-        "com.github.mauricio" %% "db-async-common" % "0.2.18",
-        "com.github.mauricio" %% "mysql-async" % "0.2.18",
+        "com.github.mauricio" %% "db-async-common"  % "0.2.18",
+        "com.github.mauricio" %% "mysql-async"      % "0.2.18",
         "com.github.mauricio" %% "postgresql-async" % "0.2.18"
       ),
       parallelExecution in Test := false

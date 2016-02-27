@@ -1,29 +1,29 @@
-CREATE TABLE Person(
-	name VARCHAR(255),
-	age int
+CREATE TABLE IF NOT EXISTS Person(
+    name VARCHAR(255),
+    age int
 );
 
-CREATE TABLE Couple(
-	her VARCHAR(255),
-	him VARCHAR(255)
+CREATE TABLE IF NOT EXISTS Couple(
+    her VARCHAR(255),
+    him VARCHAR(255)
 );
 
-CREATE TABLE Department(
-	dpt VARCHAR(255)
+CREATE TABLE IF NOT EXISTS Department(
+    dpt VARCHAR(255)
 );
 
-CREATE TABLE Employee(
-	emp VARCHAR(255),
-	dpt VARCHAR(255),
-	salary int
+CREATE TABLE IF NOT EXISTS Employee(
+    emp VARCHAR(255),
+    dpt VARCHAR(255),
+    salary int
 );
 
-CREATE TABLE Task(
-	emp VARCHAR(255),
-	tsk VARCHAR(255)
+CREATE TABLE IF NOT EXISTS Task(
+    emp VARCHAR(255),
+    tsk VARCHAR(255)
 );
 
-CREATE TABLE EncodingTestEntity(
+CREATE TABLE IF NOT EXISTS EncodingTestEntity(
     v1 VARCHAR(255),
     v2 DECIMAL(5,2),
     v3 BOOLEAN,
@@ -48,21 +48,21 @@ CREATE TABLE EncodingTestEntity(
     o11 TIMESTAMP
 );
 
-CREATE TABLE TestEntity(
-	s VARCHAR(255),
+CREATE TABLE IF NOT EXISTS TestEntity(
+    s VARCHAR(255),
     i INTEGER,
     l BIGINT,
     o INTEGER
 );
 
-CREATE TABLE TestEntity2(
-	s VARCHAR(255),
+CREATE TABLE IF NOT EXISTS TestEntity2(
+    s VARCHAR(255),
     i INTEGER,
     l BIGINT
 );
 
-CREATE TABLE TestEntity3(
-	s VARCHAR(255),
+CREATE TABLE IF NOT EXISTS TestEntity3(
+    s VARCHAR(255),
     i INTEGER,
     l BIGINT
 );

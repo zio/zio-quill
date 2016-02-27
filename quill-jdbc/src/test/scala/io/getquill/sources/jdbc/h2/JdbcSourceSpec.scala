@@ -1,11 +1,15 @@
-package io.getquill.source.jdbc.h2
+package io.getquill.sources.jdbc.h2
 
 import io.getquill._
 
 class JdbcSourceSpec extends Spec {
 
-  "probes sqls" - {
-    val p = testH2DB.probe("DELETE FROM TestEntity")
+  "probes valid sqls" - {
+    val p = testH2DBWithQueryProbing.probe("DELETE FROM TestEntity")
+  }
+
+  "probes invalid sqls without errors" - {
+    """testH2DBWithQueryProbing.probe("SELECT a FROM TestEntity")""" must compile
   }
 
   "provides transaction support" - {
