@@ -92,7 +92,10 @@ lazy val commonSettings = Seq(
     "com.google.code.findbugs" % "jsr305" % "3.0.1" % "provided" // just to avoid warnings during compilation
   ),
   EclipseKeys.createSrc := EclipseCreateSrc.Default + EclipseCreateSrc.Resource,
-  unmanagedClasspath in Test += baseDirectory.value / "src" / "test" / "resources",
+  unmanagedClasspath in Test ++= Seq(
+    baseDirectory.value / "src" / "test" / "resources",
+    baseDirectory.value / "src" / "test" / "resources" / "sql"
+  ),
   scalacOptions ++= Seq(
     "-Xfatal-warnings",
     "-deprecation",

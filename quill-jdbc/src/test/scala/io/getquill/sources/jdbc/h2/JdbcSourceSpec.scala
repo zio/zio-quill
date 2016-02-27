@@ -9,7 +9,7 @@ class JdbcSourceSpec extends Spec {
   }
 
   "probes valid sqls" - {
-    """testH2DBWithQueryProbing.run(qr1)""" must compile
+    """testH2DBWithQueryProbing.run(qr1.filter(_.i == 0))""" must compile
   }
 
   "probes invalid sqls" - {
