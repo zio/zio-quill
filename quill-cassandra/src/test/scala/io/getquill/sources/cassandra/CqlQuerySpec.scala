@@ -136,29 +136,53 @@ class CqlQuerySpec extends Spec {
   }
 
   "invalid cql" - {
+    "flatMap not supported" in {
+      val q = quote {
+        qr1.flatMap(r1 => qr2.filter(_.i == r1.i))
+      }
+      trap(CqlQuery(q.ast)).getMessage mustEqual "Cql doesn't support flatMap."
+    }
     "groupBy not supported" in {
       val q = quote {
         qr1.groupBy(t => t.i)
       }
-      trap(CqlQuery(q.ast)).getMessage mustEqual "Cql doesn't support GROUP BY."
+      trap(CqlQuery(q.ast)).getMessage mustEqual "Cql doesn't support groupBy."
     }
     "union not supported" in {
       val q = quote {
         qr1.filter(_.i == 0).union(qr1.filter(_.i == 1))
       }
-      trap(CqlQuery(q.ast)).getMessage mustEqual "Cql doesn't support UNION/UNION ALL."
+      trap(CqlQuery(q.ast)).getMessage mustEqual "Cql doesn't support union/unionAll."
     }
     "unionAll not supported" in {
       val q = quote {
         qr1.filter(_.i == 0).unionAll(qr1.filter(_.i == 1))
       }
-      trap(CqlQuery(q.ast)).getMessage mustEqual "Cql doesn't support UNION/UNION ALL."
+      trap(CqlQuery(q.ast)).getMessage mustEqual "Cql doesn't support union/unionAll."
     }
     "join not supported" in {
       val q = quote {
         qr1.join(qr2).on((a, b) => a.i == b.i)
       }
-      trap(CqlQuery(q.ast)).getMessage mustEqual "Cql doesn't support JOIN."
+      trap(CqlQuery(q.ast)).getMessage mustEqual "Cql doesn't support join."
+    }
+    "leftJoin not supported" in {
+      val q = quote {
+        qr1.leftJoin(qr2).on((a, b) => a.i == b.i)
+      }
+      trap(CqlQuery(q.ast)).getMessage mustEqual "Cql doesn't support leftJoin."
+    }
+    "rightJoin not supported" in {
+      val q = quote {
+        qr1.rightJoin(qr2).on((a, b) => a.i == b.i)
+      }
+      trap(CqlQuery(q.ast)).getMessage mustEqual "Cql doesn't support rightJoin."
+    }
+    "fullJoin not supported" in {
+      val q = quote {
+        qr1.fullJoin(qr2).on((a, b) => a.i == b.i)
+      }
+      trap(CqlQuery(q.ast)).getMessage mustEqual "Cql doesn't support fullJoin."
     }
     "sortBy after take" in {
       val q = quote {

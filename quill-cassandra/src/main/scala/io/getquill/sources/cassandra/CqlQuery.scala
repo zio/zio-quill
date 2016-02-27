@@ -1,8 +1,9 @@
 package io.getquill.sources.cassandra
 
 import io.getquill.ast._
+import io.getquill.ast.AstShow._
 import io.getquill.util.Messages.fail
-import io.getquill.norm.BetaReduction
+import io.getquill.util.Show._
 
 case class CqlQuery(
   entity:   Entity,
@@ -66,12 +67,14 @@ object CqlQuery {
     q match {
       case q: Entity =>
         new CqlQuery(q, filter, orderBy, limit, select, distinct)
+      case (_: FlatMap) =>
+        fail(s"Cql doesn't support flatMap.")
       case (_: Union) | (_: UnionAll) =>
-        fail(s"Cql doesn't support UNION/UNION ALL.")
-      case _: Join =>
-        fail(s"Cql doesn't support JOIN.")
+        fail(s"Cql doesn't support union/unionAll.")
+      case Join(joinType, _, _, _, _, _) =>
+        fail(s"Cql doesn't support ${joinType.show}.")
       case _: GroupBy =>
-        fail(s"Cql doesn't support GROUP BY.")
+        fail(s"Cql doesn't support groupBy.")
       case q =>
         fail(s"Invalid cql query: $q")
     }
@@ -92,4 +95,6 @@ object CqlQuery {
       case (a: Property, o: PropertyOrdering)         => List(OrderByCriteria(a, o))
       case other                                      => fail(s"Invalid order by criteria $ast")
     }
+
+  AstShow
 }
