@@ -1,10 +1,10 @@
-FROM ubuntu:14.04
+FROM alpine:3.3
 MAINTAINER gustavo.amigo@gmail.com
 
-RUN apt-get update; \
-  apt-get install -y python curl postgresql-client mysql-client > /dev/null
+RUN apk update; apk add postgresql-client mysql-client curl python tar
 
-RUN  cd /opt ; \
+RUN  mkdir /opt; \
+     cd /opt ; \
      curl http://archive.apache.org/dist/cassandra/3.3/apache-cassandra-3.3-bin.tar.gz | tar zx
 
 ENV PATH /opt/apache-cassandra-3.3/bin:$PATH
