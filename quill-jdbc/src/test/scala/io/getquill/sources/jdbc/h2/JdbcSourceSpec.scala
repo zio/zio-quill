@@ -4,12 +4,16 @@ import io.getquill._
 
 class JdbcSourceSpec extends Spec {
 
-  "probes valid sqls" - {
-    val p = testH2DBWithQueryProbing.probe("DELETE FROM TestEntity")
+  val badEntity = quote {
+    query[TestEntity]("TestEntity", _.s -> "a", _.i -> "i", _.l -> "l", _.o -> "o")
   }
 
-  "probes invalid sqls without errors" - {
-    """testH2DBWithQueryProbing.probe("SELECT a FROM TestEntity")""" must compile
+  "probes valid sqls" - {
+    """testH2DBWithQueryProbing.run(qr1)""" must compile
+  }
+
+  "probes invalid sqls" - {
+    """testH2DBWithQueryProbing.run(badEntity.map(_.s))""" mustNot compile
   }
 
   "provides transaction support" - {
