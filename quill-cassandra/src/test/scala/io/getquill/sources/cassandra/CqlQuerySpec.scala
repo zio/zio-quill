@@ -136,14 +136,29 @@ class CqlQuerySpec extends Spec {
   }
 
   "invalid cql" - {
-    "unsupported operation" in {
+    "groupBy not supported" in {
       val q = quote {
         qr1.groupBy(t => t.i)
       }
-      intercept[IllegalStateException] {
-        CqlQuery(q.ast)
+      trap(CqlQuery(q.ast)).getMessage mustEqual "Cql doesn't support GROUP BY."
+    }
+    "union not supported" in {
+      val q = quote {
+        qr1.filter(_.i == 0).union(qr1.filter(_.i == 1))
       }
-      ()
+      trap(CqlQuery(q.ast)).getMessage mustEqual "Cql doesn't support UNION/UNION ALL."
+    }
+    "unionAll not supported" in {
+      val q = quote {
+        qr1.filter(_.i == 0).unionAll(qr1.filter(_.i == 1))
+      }
+      trap(CqlQuery(q.ast)).getMessage mustEqual "Cql doesn't support UNION/UNION ALL."
+    }
+    "join not supported" in {
+      val q = quote {
+        qr1.join(qr2).on((a, b) => a.i == b.i)
+      }
+      trap(CqlQuery(q.ast)).getMessage mustEqual "Cql doesn't support JOIN."
     }
     "sortBy after take" in {
       val q = quote {
@@ -166,6 +181,51 @@ class CqlQuerySpec extends Spec {
     "filter after take" in {
       val q = quote {
         qr1.take(1).filter(t => t.i == 1)
+      }
+      intercept[IllegalStateException] {
+        CqlQuery(q.ast)
+      }
+      ()
+    }
+    "map after distinct" in {
+      val q = quote {
+        qr1.distinct.map(_.s)
+      }
+      intercept[IllegalStateException] {
+        CqlQuery(q.ast)
+      }
+      ()
+    }
+    "size after distinct" in {
+      val q = quote {
+        qr1.distinct.size
+      }
+      intercept[IllegalStateException] {
+        CqlQuery(q.ast)
+      }
+      ()
+    }
+    "take after distinct" in {
+      val q = quote {
+        qr1.distinct.take(10)
+      }
+      intercept[IllegalStateException] {
+        CqlQuery(q.ast)
+      }
+      ()
+    }
+    "sortBy after distinct" in {
+      val q = quote {
+        qr1.distinct.sortBy(_.i)
+      }
+      intercept[IllegalStateException] {
+        CqlQuery(q.ast)
+      }
+      ()
+    }
+    "filter after distinct" in {
+      val q = quote {
+        qr1.distinct.filter(_.i == 0)
       }
       intercept[IllegalStateException] {
         CqlQuery(q.ast)
