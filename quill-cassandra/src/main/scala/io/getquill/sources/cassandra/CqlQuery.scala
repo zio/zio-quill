@@ -66,13 +66,19 @@ object CqlQuery {
     q match {
       case q: Entity =>
         new CqlQuery(q, filter, orderBy, limit, select, distinct)
-      case other =>
+      case (_: Union) | (_: UnionAll) =>
+        fail(s"Cql doesn't support UNION/UNION ALL.")
+      case _: Join =>
+        fail(s"Cql doesn't support JOIN.")
+      case _: GroupBy =>
+        fail(s"Cql doesn't support GROUP BY.")
+      case q =>
         fail(s"Invalid cql query: $q")
     }
 
   private def select(ast: Ast): List[Ast] =
     ast match {
-      case Tuple(values)  => values.map(select).flatten
+      case Tuple(values)  => values.flatMap(select)
       case p: Property    => List(p)
       case i @ Ident("?") => List(i)
       case i: Ident       => List()
@@ -81,8 +87,8 @@ object CqlQuery {
 
   private def orderByCriterias(ast: Ast, ordering: Ordering): List[OrderByCriteria] =
     (ast, ordering) match {
-      case (Tuple(properties), ord: PropertyOrdering) => properties.map(orderByCriterias(_, ord)).flatten
-      case (Tuple(properties), TupleOrdering(ord))    => properties.zip(ord).map { case (a, o) => orderByCriterias(a, o) }.flatten
+      case (Tuple(properties), ord: PropertyOrdering) => properties.flatMap(orderByCriterias(_, ord))
+      case (Tuple(properties), TupleOrdering(ord))    => properties.zip(ord).flatMap { case (a, o) => orderByCriterias(a, o) }
       case (a: Property, o: PropertyOrdering)         => List(OrderByCriteria(a, o))
       case other                                      => fail(s"Invalid order by criteria $ast")
     }
