@@ -86,6 +86,17 @@ class NamingStrategySpec extends Spec {
     }
   }
 
+  "postgres quote" - {
+    val s = new NamingStrategy with PostgresEscape
+
+    "preserve default naming strategy" in {
+      s.column("test") mustEqual """"test""""
+    }
+    "unquote column name starting with $" in {
+      s.column("$1") mustEqual "$1"
+    }
+  }
+
   "mysql quote" - {
     val s = new NamingStrategy with MysqlEscape
 

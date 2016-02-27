@@ -80,11 +80,15 @@ trait CamelCase extends NamingStrategy {
 }
 object CamelCase extends CamelCase
 
+trait PostgresEscape extends Escape {
+  override def column(s: String) = if (s.startsWith("$")) s else default(s)
+}
+object PostgresEscape extends PostgresEscape
+
 trait MysqlEscape extends NamingStrategy {
   override def table(s: String) = quote(s)
   override def column(s: String) = quote(s)
   override def default(s: String) = s
   private def quote(s: String) = s"`$s`"
 }
-
 object MysqlEscape extends MysqlEscape
