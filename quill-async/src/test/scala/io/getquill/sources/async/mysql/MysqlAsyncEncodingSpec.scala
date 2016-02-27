@@ -22,31 +22,34 @@ class MysqlAsyncEncodingSpec extends EncodingSpec {
 
   "decode numeric types correctly" - {
     "decode byte to" - {
-      prepareEncodingTestEntity()
       "short" in {
+        prepareEncodingTestEntity()
         case class EncodingTestEntity(v3: Short)
         val v3List = Await.result(testMysqlDB.run(query[EncodingTestEntity]), Duration.Inf)
         v3List.map(_.v3) must contain theSameElementsAs (List(1: Byte, 0: Byte))
       }
       "int" in {
+        prepareEncodingTestEntity()
         case class EncodingTestEntity(v3: Int)
         val v3List = Await.result(testMysqlDB.run(query[EncodingTestEntity]), Duration.Inf)
         v3List.map(_.v3) must contain theSameElementsAs (List(1, 0))
       }
       "long" in {
+        prepareEncodingTestEntity()
         case class EncodingTestEntity(v3: Long)
         val v3List = Await.result(testMysqlDB.run(query[EncodingTestEntity]), Duration.Inf)
         v3List.map(_.v3) must contain theSameElementsAs (List(1L, 0L))
       }
     }
     "decode short to" - {
-      prepareEncodingTestEntity()
       "int" in {
+        prepareEncodingTestEntity()
         case class EncodingTestEntity(v5: Int)
         val v5List = Await.result(testMysqlDB.run(query[EncodingTestEntity]), Duration.Inf)
         v5List.map(_.v5) must contain theSameElementsAs (List(23, 0))
       }
       "long" in {
+        prepareEncodingTestEntity()
         case class EncodingTestEntity(v5: Long)
         val v5List = Await.result(testMysqlDB.run(query[EncodingTestEntity]), Duration.Inf)
         v5List.map(_.v5) must contain theSameElementsAs (List(23L, 0L))
