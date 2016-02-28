@@ -530,7 +530,7 @@ The Datastax driver allows the user to execute queries [asynchronously](https://
    
 **Phantom (v1.22.0)**
 
-Phantom is asynchronous by default and all operations returns `Future`s. It also provides an implementation of the [reactive-streams](https://github.com/reactive-streams/reactive-streams-jvm) specification on top of Akka. 
+Phantom is asynchronous by default and all operations returns `Future`s. It also allow users to process the data coming from Cassandra in as streaming fashion using [`play-iteratees`](https://www.playframework.com/documentation/2.4.x/Iteratees) or [`play-streams-experimental`](https://www.playframework.com/documentation/2.4.x/ReactiveStreamsIntegration), that allows Phantom to integrate with other software that support [reactive-streams](https://github.com/reactive-streams/reactive-streams-jvm).
 
 **Quill (v0.4.0)**
 
