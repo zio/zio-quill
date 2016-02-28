@@ -2,7 +2,7 @@ package io.getquill.sources.sql.idiom
 
 import java.util.concurrent.atomic.AtomicInteger
 
-trait PostgresDialect
+trait H2Dialect
   extends SqlIdiom
   with PositionalVariables {
 
@@ -12,4 +12,4 @@ trait PostgresDialect
     s"PREPARE p${preparedStatementId.incrementAndGet} AS ${positionalVariables(sql)}"
 }
 
-object PostgresDialect extends PostgresDialect
+object H2Dialect extends H2Dialect
