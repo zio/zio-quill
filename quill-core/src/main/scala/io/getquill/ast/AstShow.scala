@@ -32,9 +32,14 @@ object AstShow {
   implicit val queryShow: Show[Query] = Show[Query] {
 
     case q: Entity =>
-      q.alias.map(a => s""""$a"""").toList ::: q.properties.map(p => s"""_.${p.property} -> "${p.alias}"""") match {
+      val alias = q.alias.map(s => s""".entity("$s")""")
+      val properties = q.properties.map(p => s"""_.${p.property} -> "${p.alias}"""")
+      val columns = if (properties.isEmpty) None else Some(s""".columns(${properties.mkString(", ")})""")
+      val generated = q.generated.map(g => s""".generated(_.$g)""")
+      val params = alias.toList ::: columns.toList ::: generated.toList
+      params match {
         case Nil    => s"query[${q.name}]"
-        case params => s"query[${q.name}](${params.mkString(", ")})"
+        case params => s"query[${q.name}](_${params.mkString("")})"
       }
 
     case Filter(source, alias, body) =>

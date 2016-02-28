@@ -147,6 +147,7 @@ object CqlIdiom {
   }
 
   implicit def entityShow(implicit strategy: NamingStrategy): Show[Entity] = Show[Entity] {
-    case e => e.alias.map(strategy.table(_)).getOrElse(strategy.table(e.name))
+    case e if e.generated.isDefined => fail(s"Cql doesn't support returning generated during insertion")
+    case e                          => e.alias.map(strategy.table(_)).getOrElse(strategy.table(e.name))
   }
 }

@@ -17,7 +17,7 @@ sealed trait Ast {
 
 sealed trait Query extends Ast
 
-case class Entity(name: String, alias: Option[String] = None, properties: List[PropertyAlias] = List()) extends Query
+case class Entity(name: String, alias: Option[String] = None, properties: List[PropertyAlias] = List(), generated: Option[String] = None) extends Query
 
 case class PropertyAlias(property: String, alias: String)
 

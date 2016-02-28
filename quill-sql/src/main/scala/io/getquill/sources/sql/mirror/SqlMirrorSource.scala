@@ -24,7 +24,10 @@ class SqlMirrorSource[N <: NamingStrategy](config: SqlMirrorSourceConfig[N])
   class ActionApply[T](f: List[T] => BatchActionMirror)
     extends Function1[List[T], BatchActionMirror] {
     def apply(params: List[T]) = f(params)
-    def apply(param: T) = ActionMirror(f(List(param)).sql)
+    def apply(param: T) = {
+      val r = f(List(param))
+      ActionMirror(r.sql, r.generated)
+    }
   }
 
   def probe(sql: String) =
@@ -33,16 +36,16 @@ class SqlMirrorSource[N <: NamingStrategy](config: SqlMirrorSourceConfig[N])
     else
       Success(())
 
-  case class ActionMirror(sql: String)
+  case class ActionMirror(sql: String, generated: Option[String])
 
-  def execute(sql: String) =
-    ActionMirror(sql)
+  def execute(sql: String, generated: Option[String]) =
+    ActionMirror(sql, generated)
 
-  case class BatchActionMirror(sql: String, bindList: List[Row])
+  case class BatchActionMirror(sql: String, bindList: List[Row], generated: Option[String])
 
-  def execute[T](sql: String, bindParams: T => Row => Row) = {
+  def execute[T](sql: String, bindParams: T => Row => Row, generated: Option[String]) = {
     val func = (values: List[T]) =>
-      BatchActionMirror(sql, values.map(bindParams).map(_(Row())))
+      BatchActionMirror(sql, values.map(bindParams).map(_(Row())), generated)
     new ActionApply(func)
   }
 

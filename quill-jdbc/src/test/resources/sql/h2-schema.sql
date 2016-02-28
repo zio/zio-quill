@@ -66,3 +66,9 @@ CREATE TABLE IF NOT EXISTS TestEntity3(
     i INTEGER,
     l BIGINT
 );
+
+CREATE TABLE IF NOT EXISTS Product(
+    description VARCHAR(255),
+    id identity,
+    sku BIGINT
+);

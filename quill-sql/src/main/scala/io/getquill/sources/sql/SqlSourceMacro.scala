@@ -23,10 +23,10 @@ class SqlSourceMacro(val c: Context) extends SourceMacro {
   override protected def prepare(ast: Ast, params: List[Ident]) = {
     if (!IsDynamic(ast)) {
       implicit val (d, n) = dialectAndNamingStatic
-      val (sql, idents) = Prepare(ast, params)
+      val (sql, idents, generated) = Prepare(ast, params)
       c.info(sql)
       probe(sql, d)
-      q"($sql, $idents)"
+      q"($sql, $idents, $generated)"
     } else {
       c.info("Dynamic query")
       q"""

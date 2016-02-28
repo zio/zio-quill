@@ -12,14 +12,39 @@ class AstShowSpec extends Spec {
   import io.getquill.util.Show._
   import io.getquill.ast.AstShow._
 
-  "shows queries" - {
-    "entity with aliases" - {
+  "shows entity" - {
+    "table" - {
       val q = quote {
-        query[TestEntity]("entity_alias", _.s -> "s_alias", _.i -> "i_alias")
+        query[TestEntity](_.entity("test"))
       }
       (q.ast: Ast).show mustEqual
-        """query[TestEntity]("entity_alias", _.s -> "s_alias", _.i -> "i_alias")"""
+        """query[TestEntity](_.entity("test"))"""
     }
+    "columns" - {
+      val q = quote {
+        query[TestEntity](_.columns(_.i -> "'i", _.o -> "'o"))
+      }
+      (q.ast: Ast).show mustEqual
+        """query[TestEntity](_.columns(_.i -> "'i", _.o -> "'o"))"""
+    }
+    "generated" - {
+      val q = quote {
+        query[TestEntity](_.generated(c => c.i))
+      }
+      (q.ast: Ast).show mustEqual
+        """query[TestEntity](_.generated(_.i))"""
+    }
+    "composed" - {
+      val q = quote {
+        query[TestEntity](_.entity("entity_alias").columns(_.s -> "s_alias", _.i -> "i_alias").generated(_.i))
+      }
+      (q.ast: Ast).show mustEqual
+        """query[TestEntity](_.entity("entity_alias").columns(_.s -> "s_alias", _.i -> "i_alias").generated(_.i))"""
+    }
+  }
+
+  "shows queries" - {
+
     "complex" in {
       val q = quote {
         query[TestEntity].filter(t => t.s == "test").flatMap(t => query[TestEntity]).drop(9).take(10).map(t => t)
@@ -505,4 +530,5 @@ class AstShowSpec extends Spec {
     (q.ast: Ast).show mustEqual
       """query[TestEntity].distinct"""
   }
+
 }

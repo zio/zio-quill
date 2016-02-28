@@ -15,13 +15,20 @@ class QuotationSpec extends Spec {
         }
         "with alias" in {
           val q = quote {
-            query[TestEntity]("SomeAlias")
+            query[TestEntity](_.entity("SomeAlias"))
           }
           quote(unquote(q)).ast mustEqual Entity("TestEntity", Some("SomeAlias"))
         }
+        "with generated" in {
+          val q = quote {
+            query[TestEntity](_.entity("test").columns(_.i -> "'i", _.o -> "'o").generated(c => c.i))
+          }
+          quote(unquote(q)).ast mustEqual
+            Entity("TestEntity", Some("test"), List(PropertyAlias("i", "'i"), PropertyAlias("o", "'o")), Some("i"))
+        }
         "with property alias" in {
           val q = quote {
-            query[TestEntity]("SomeAlias", _.s -> "theS", _.i -> "theI")
+            query[TestEntity](_.entity("SomeAlias").columns(_.s -> "theS", _.i -> "theI"))
           }
           quote(unquote(q)).ast mustEqual Entity("TestEntity", Some("SomeAlias"), List(PropertyAlias("s", "theS"), PropertyAlias("i", "theI")))
         }
@@ -316,7 +323,7 @@ class QuotationSpec extends Spec {
       val q = quote {
         qr1.map(_.s)
       }
-      quote(unquote(q)).ast.body mustEqual Property(Ident("x3"), "s")
+      quote(unquote(q)).ast.body mustEqual Property(Ident("x8"), "s")
     }
     "function" - {
       "anonymous function" in {

@@ -34,6 +34,12 @@ class CqlIdiomSpec extends Spec {
       mirrorSource.run(q).cql mustEqual
         "SELECT s FROM TestEntity WHERE i = 1 ORDER BY s ASC LIMIT 1"
     }
+    "generated" in {
+      val q = quote {
+        query[TestEntity](_.generated(_.i))
+      }
+      "mirrorSource.run(q).cql" mustNot compile
+    }
   }
 
   "distinct" - {

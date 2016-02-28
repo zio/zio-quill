@@ -15,8 +15,7 @@ trait ActionMacro extends EncodingMacro {
   def runAction[S, T](action: Ast, params: List[(Ident, Type)])(implicit s: WeakTypeTag[S], t: WeakTypeTag[T]): Tree =
     params match {
       case Nil =>
-        q"${c.prefix}.execute(${prepare(action, params.map(_._1))}._1)"
-
+        expandedTree(action, params)
       case List((param, tpe)) if (t.tpe.erasure <:< c.weakTypeOf[UnassignedAction[Any]].erasure) =>
         val encodingValue = encoding(param, Encoding.inferEncoder[S](c))(c.WeakTypeTag(tpe))
         val bindings = bindingMap(encodingValue)
@@ -30,17 +29,27 @@ trait ActionMacro extends EncodingMacro {
         expandedTree(action, params.map(_._1), params.map(_._2), encodedParams)
     }
 
-  private def expandedTree(action: Ast, idents: List[Ident], paramsTypes: List[Type], encodedParams: Tree) =
+  private def expandedTree(action: Ast, params: List[(Ident, Type)]) = {
+    q"""
+      val (sql, _, generated) =  ${prepare(action, params.map(_._1))}
+      ${c.prefix}.execute(sql, generated)
+    """
+  }
+
+  private def expandedTree(action: Ast, idents: List[Ident], paramsTypes: List[Type], encodedParams: Tree) = {
     q"""
     {
-      val (sql, bindings: List[io.getquill.ast.Ident]) =
+      val (sql, bindings: List[io.getquill.ast.Ident], generated) =
         ${prepare(action, idents)}
 
       ${c.prefix}.execute[(..$paramsTypes)](
         sql,
-        value => $encodedParams(bindings.map(_.name)))
+        value => $encodedParams(bindings.map(_.name)),
+        generated
+        )
     }
     """
+  }
 
   private def bindingMap(value: Value, option: Boolean = false): List[(Ident, (Tree, Tree))] =
     value match {

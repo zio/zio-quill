@@ -1,8 +1,6 @@
 package io.getquill.sources.jdbc
 
-import java.sql.Connection
-import java.sql.PreparedStatement
-import java.sql.ResultSet
+import java.sql.{ Statement, Connection, PreparedStatement, ResultSet }
 import scala.util.DynamicVariable
 import com.typesafe.scalalogging.StrictLogging
 import io.getquill.naming.NamingStrategy
@@ -21,10 +19,10 @@ class JdbcSource[D <: SqlIdiom, N <: NamingStrategy](config: JdbcSourceConfig[D,
   with StrictLogging {
 
   type QueryResult[T] = List[T]
-  type ActionResult[T] = Int
-  type BatchedActionResult[T] = List[Int]
+  type ActionResult[T] = Long
+  type BatchedActionResult[T] = List[Long]
 
-  class ActionApply[T](f: List[T] => List[Int]) extends Function1[List[T], List[Int]] {
+  class ActionApply[T](f: List[T] => List[Long]) extends Function1[List[T], List[Long]] {
     def apply(params: List[T]) = f(params)
     def apply(param: T) = f(List(param)).head
   }
@@ -67,25 +65,34 @@ class JdbcSource[D <: SqlIdiom, N <: NamingStrategy](config: JdbcSourceConfig[D,
       }
     }
 
-  def execute(sql: String): Int = {
+  def execute(sql: String, generated: Option[String]): Long = {
     logger.info(sql)
-    withConnection {
-      _.prepareStatement(sql).executeUpdate
+    withConnection { conn =>
+      generated match {
+        case None =>
+          conn.prepareStatement(sql).executeUpdate.toLong
+        case Some(column) =>
+          val ps = conn.prepareStatement(sql, Array(column))
+          ps.executeUpdate()
+          extractResult(ps.getGeneratedKeys, _.getLong(1)).head
+      }
     }
   }
 
-  def execute[T](sql: String, bindParams: T => BindedStatementBuilder[PreparedStatement] => BindedStatementBuilder[PreparedStatement]): ActionApply[T] = {
+  def execute[T](sql: String, bindParams: T => BindedStatementBuilder[PreparedStatement] => BindedStatementBuilder[PreparedStatement],
+                 generated: Option[String]): ActionApply[T] = {
     val func = { (values: List[T]) =>
       val groups = values.map(bindParams(_)(new BindedStatementBuilder[PreparedStatement]).build(sql)).groupBy(_._1)
       (for ((sql, setValues) <- groups.toList) yield {
         logger.info(sql)
         withConnection { conn =>
-          val ps = conn.prepareStatement(sql)
+          val ps = generated.fold(conn.prepareStatement(sql))(c => conn.prepareStatement(sql, Array(c)))
           for ((_, set) <- setValues) {
             set(ps)
             ps.addBatch
           }
-          ps.executeBatch.toList
+          val updateCount = ps.executeBatch.toList.map(_.toLong)
+          generated.fold(updateCount)(_ => extractResult(ps.getGeneratedKeys, _.getLong(1)))
         }
       }).flatten
     }
@@ -108,4 +115,5 @@ class JdbcSource[D <: SqlIdiom, N <: NamingStrategy](config: JdbcSourceConfig[D,
       extractResult(rs, extractor, acc :+ extractor(rs))
     else
       acc
+
 }

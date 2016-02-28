@@ -8,7 +8,7 @@ import io.getquill.norm.BetaReduction
 import io.getquill.util.Messages.RichContext
 import io.getquill.util.Interleave
 
-trait Parsing {
+trait Parsing extends SchemaConfigParsing {
   this: Quotation =>
 
   val c: Context
@@ -113,11 +113,12 @@ trait Parsing {
 
   val queryParser: Parser[Query] = Parser[Query] {
 
-    case q"$pack.query[${ t: Type }].apply(${ alias: String }, ..$propertyAliases)" =>
-      Entity(t.typeSymbol.name.decodedName.toString, Some(alias), propertyAliases.map(propertyAliasParser(_)))
+    case q"$pack.query[${ t: Type }].apply(($alias) => $body)" =>
+      val config = parseEntityConfig(body)
+      Entity(t.typeSymbol.name.decodedName.toString, config.alias, config.properties, config.generated)
 
     case q"$pack.query[${ t: Type }]" =>
-      Entity(t.typeSymbol.name.decodedName.toString, None, List())
+      Entity(t.typeSymbol.name.decodedName.toString, None, List(), None)
 
     case q"$source.filter(($alias) => $body)" if (is[QuillQuery[Any]](source)) =>
       Filter(astParser(source), identParser(alias), astParser(body))

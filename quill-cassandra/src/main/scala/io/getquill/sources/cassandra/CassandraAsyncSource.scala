@@ -30,10 +30,10 @@ class CassandraAsyncSource[N <: NamingStrategy](config: CassandraSourceConfig[N,
     session.executeAsync(prepare(cql, bind))
       .map(_.all.toList.map(extractor))
 
-  def execute(cql: String)(implicit ec: ExecutionContext): Future[ResultSet] =
+  def execute(cql: String, generated: Option[String])(implicit ec: ExecutionContext): Future[ResultSet] =
     session.executeAsync(prepare(cql))
 
-  def execute[T](cql: String, bindParams: T => BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement])(implicit ec: ExecutionContext): ActionApply[T] = {
+  def execute[T](cql: String, bindParams: T => BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement], generated: Option[String])(implicit ec: ExecutionContext): ActionApply[T] = {
     def run(values: List[T]): Future[List[ResultSet]] =
       values match {
         case Nil => Future.successful(List())

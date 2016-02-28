@@ -13,6 +13,6 @@ class MysqlAsyncSourceSpec extends Spec {
     val insert = quote { (i: Int) =>
       qr1.insert(_.i -> i)
     }
-    await(testMysqlDB.run(insert)(1)).rowsAffected mustEqual (1)
+    await(testMysqlDB.run(insert)(1)) mustEqual (1)
   }
 }

@@ -591,6 +591,13 @@ class SqlIdiomSpec extends Spec {
           mirrorSource.run(q).sql mustEqual
             "INSERT INTO TestEntity (i,s) VALUES ((SELECT MAX(t.i) FROM TestEntity2 t), 's')"
         }
+        "generated" in {
+          val q = quote {
+            query[TestEntity](_.generated(_.i)).insert
+          }
+          val run = mirrorSource.run(q)(List(TestEntity("s", 1, 2L, Some(1)))).sql mustEqual
+            "INSERT INTO TestEntity (s,l,o) VALUES (?, ?, ?)"
+        }
       }
       "update" - {
         "with filter" in {
