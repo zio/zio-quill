@@ -885,8 +885,9 @@ lazy val db = source(new JdbcSourceConfig[MySQLDialect, SnakeCase]("db"))
 
 The SQL dialect to be used by the source is defined by the first type parameter. Some source types are specific to a database and thus not require it.
 
-Quill has two built-in dialects:
+Quill has three built-in dialects:
 
+- `io.getquill.sources.sql.idiom.H2Dialect`
 - `io.getquill.sources.sql.idiom.MySQLDialect`
 - `io.getquill.sources.sql.idiom.PostgresDialect`
 
