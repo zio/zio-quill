@@ -1,6 +1,7 @@
 import ReleaseTransformations._
 import com.typesafe.sbt.SbtScalariform.ScalariformKeys
 import scalariform.formatter.preferences._
+import sbtrelease.ReleasePlugin
 
 lazy val quill = 
   (project in file("."))
@@ -82,7 +83,7 @@ lazy val `quill-cassandra` =
     )
     .dependsOn(`quill-core` % "compile->compile;test->test")
 
-lazy val commonSettings = Seq(
+lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
   organization := "io.getquill",
   scalaVersion := "2.11.7",
   libraryDependencies ++= Seq(
