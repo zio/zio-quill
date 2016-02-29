@@ -14,6 +14,7 @@ package object getquill {
   def lift[T](v: T): T = v
 
   def quote[T](body: Quoted[T]): Quoted[T] = macro Macro.doubleQuote[T]
+  def quote[T, R](func: T => Quoted[R]): Quoted[T => R] = macro Macro.quotedFunctionBody[T, R]
   implicit def quote[T](body: T): Quoted[T] = macro Macro.quote[T]
   implicit def unquote[T](quoted: Quoted[T]): T = NonQuotedException()
 

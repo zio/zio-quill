@@ -30,12 +30,16 @@ trait Quotation extends Parsing with Liftables with Unliftables {
     """
   }
 
-  def doubleQuote[T: WeakTypeTag](body: Expr[Quoted[T]]) = {
+  def doubleQuote[T: WeakTypeTag](body: Expr[Quoted[T]]) =
     body.tree match {
       case q"null" => c.fail("Can't quote null")
       case tree    => q"io.getquill.unquote($tree)"
     }
-  }
+
+  def quotedFunctionBody[T, R](func: Expr[T => Quoted[R]]) =
+    func.tree match {
+      case q"(..$p) => $b" => q"io.getquill.quote((..$p) => io.getquill.unquote($b))"
+    }
 
   protected def unquote[T](tree: Tree)(implicit ct: ClassTag[T]) =
     astTree(tree).flatMap(astUnliftable.unapply).map {

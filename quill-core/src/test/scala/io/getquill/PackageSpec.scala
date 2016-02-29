@@ -50,6 +50,25 @@ class PackageSpec extends Spec {
     }
   }
 
+  "unquotes duble quotations" in {
+    val q: Quoted[EntityQuery[TestEntity]] = quote {
+      quote(query[TestEntity])
+    }
+    q.toString mustEqual "query[TestEntity]"
+  }
+
+  "unquotes quoted function bodies automatically" in {
+    implicit class QueryOps[Q <: Query[_]](q: Q) {
+      def allowFiltering = quote(infix"$q ALLOW FILTERING".as[Q])
+    }
+
+    val q: Quoted[Int => EntityQuery[TestEntity]] = quote {
+      (i: Int) =>
+        query[TestEntity].allowFiltering
+    }
+    q.toString mustEqual "(i) => infix\"" + "$" + "{query[TestEntity]} ALLOW FILTERING\""
+  }
+
   "fails if the infix is used outside of a quotation" in {
     val e = intercept[NonQuotedException] {
       infix"true"
