@@ -404,6 +404,15 @@ db.run(q)
 db.run(q2)
 <span class="pl-c">// SELECT p.id, p.name, p.age FROM Person p WHERE p.id IN (SELECT p1.* FROM Person p1 WHERE EXISTS (SELECT c.* FROM Contact c WHERE c.personId = p1.id))</span></pre></div>
 
+<p><strong>distinct</strong></p>
+
+<div class="highlight highlight-source-scala"><pre><span class="pl-k">val</span> <span class="pl-en">q</span> <span class="pl-k">=</span> quote {
+  query[<span class="pl-en">Person</span>].map(p <span class="pl-k">=&gt;</span> p.age).distinct
+}
+
+db.run(q)
+<span class="pl-c">// SELECT DISTINCT p.age FROM Person p</span></pre></div>
+
 <p><strong>joins</strong></p>
 
 <p>In addition to applicative joins Quill also supports explicit joins (both inner and left/right/full outer joins).</p>
@@ -478,13 +487,15 @@ db.run(qNested)
 
 <p>Database actions are defined using quotations as well. These actions don't have a collection-like API but rather a custom DSL to express inserts, deletes and updates.</p>
 
-<p>Note: Actions receive a <code>List</code> as they are batched by default.</p>
+<p>Note: Actions receive a <code>List</code> as they are batched by default. And also it can recieve a <code>single</code> item as well.</p>
 
 <p><strong>insert</strong></p>
 
 <div class="highlight highlight-source-scala"><pre><span class="pl-k">val</span> <span class="pl-en">a</span> <span class="pl-k">=</span> quote(query[<span class="pl-en">Contact</span>].insert)
 
 db.run(a)(<span class="pl-en">List</span>(<span class="pl-en">Contact</span>(<span class="pl-c1">999</span>, <span class="pl-s"><span class="pl-pds">"</span>+1510488988<span class="pl-pds">"</span></span>))) 
+<span class="pl-c">// INSERT INTO Contact (personId,phone) VALUES (?, ?)</span>
+db.run(a)(<span class="pl-en">Contact</span>(<span class="pl-c1">999</span>, <span class="pl-s"><span class="pl-pds">"</span>+1510488988<span class="pl-pds">"</span></span>))
 <span class="pl-c">// INSERT INTO Contact (personId,phone) VALUES (?, ?)</span></pre></div>
 
 <p>It is also possible to insert specific columns:</p>
@@ -811,6 +822,22 @@ implicit val uuidDecoder =
   }
 </code></pre>
 
+<p>Quill also supports encoding of "wrapped types". Just extend the <code>WrappedValue</code> trait and Quill will automatically encode the underlying primitive type.</p>
+
+<div class="highlight highlight-source-scala"><pre><span class="pl-k">import</span> <span class="pl-v">io.getquill.sources.</span><span class="pl-v">_</span>
+
+<span class="pl-k">case</span> <span class="pl-k">class</span> <span class="pl-en">UserId</span>(<span class="pl-v">value</span>: <span class="pl-k">Int</span>) <span class="pl-k">extends</span> <span class="pl-e">AnyVal</span> <span class="pl-k">with</span> <span class="pl-e">WrappedValue</span>[<span class="pl-k">Int</span>]
+<span class="pl-k">case</span> <span class="pl-k">class</span> <span class="pl-en">User</span>(<span class="pl-v">id</span>: <span class="pl-en">UserId</span>, <span class="pl-v">name</span>: <span class="pl-k">String</span>)
+
+<span class="pl-k">val</span> <span class="pl-en">q</span> <span class="pl-k">=</span> quote {
+  (<span class="pl-v">id</span>: <span class="pl-en">UserId</span>) <span class="pl-k">=&gt;</span> <span class="pl-k">for</span> {
+    u <span class="pl-k">&lt;</span><span class="pl-k">-</span> query[<span class="pl-en">User</span>] <span class="pl-k">if</span> u.id <span class="pl-k">==</span> id
+  } <span class="pl-k">yield</span> u
+}
+db.run(q)(<span class="pl-en">UserId</span>(<span class="pl-c1">1</span>))
+
+<span class="pl-c">// SELECT u.id, u.name FROM User u WHERE (u.id = 1)</span></pre></div>
+
 <h1>
 <a id="sql-sources" class="anchor" href="#sql-sources" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>SQL Sources</h1>
 
@@ -907,13 +934,17 @@ lazy val db = source(new JdbcSourceConfig[MySQLDialect, SnakeCase]("db") {
 <h3>
 <a id="quill-jdbc" class="anchor" href="#quill-jdbc" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>quill-jdbc</h3>
 
+<p>Quill uses <a href="https://github.com/brettwooldridge/HikariCP">HikariCP</a> for connection pooling. Please refer to HikariCP's <a href="https://github.com/brettwooldridge/HikariCP#configuration-knobs-baby">documentation</a> for a detailed explanation of the available configurations.</p>
+
+<p>Note that there are <code>dataSource</code> configurations, that go under <code>dataSource</code>, like <code>user</code> and <code>password</code>, but some pool settings may go under the root config, like <code>connectionTimeout</code>.</p>
+
 <p><strong>MySQL</strong></p>
 
 <p>sbt dependencies</p>
 
 <pre><code>libraryDependencies ++= Seq(
   "mysql" % "mysql-connector-java" % "5.1.36",
-  "io.getquill" %% "quill-jdbc" % "0.4.0"
+  "io.getquill" %% "quill-jdbc" % "0.4.1"
 )
 </code></pre>
 
@@ -934,6 +965,7 @@ db.dataSource.password=root
 db.dataSource.cachePrepStmts=true
 db.dataSource.prepStmtCacheSize=250
 db.dataSource.prepStmtCacheSqlLimit=2048
+db.connectionTimeout=30000
 </code></pre>
 
 <p><strong>Postgres</strong></p>
@@ -942,7 +974,7 @@ db.dataSource.prepStmtCacheSqlLimit=2048
 
 <pre><code>libraryDependencies ++= Seq(
   "org.postgresql" % "postgresql" % "9.4-1206-jdbc41",
-  "io.getquill" %% "quill-jdbc" % "0.4.0"
+  "io.getquill" %% "quill-jdbc" % "0.4.1"
 )
 </code></pre>
 
@@ -962,9 +994,8 @@ db.dataSource.password=root
 db.dataSource.databaseName=database
 db.dataSource.portNumber=5432
 db.dataSource.serverName=host
+db.connectionTimeout=30000
 </code></pre>
-
-<p>Please refer to HikariCP's <a href="https://github.com/brettwooldridge/HikariCP#configuration-knobs-baby">documentation</a> for a detailed explanation of the available configurations.</p>
 
 <h3>
 <a id="quill-async" class="anchor" href="#quill-async" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>quill-async</h3>
@@ -974,7 +1005,7 @@ db.dataSource.serverName=host
 <p>sbt dependencies</p>
 
 <pre><code>libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async" % "0.4.0"
+  "io.getquill" %% "quill-async" % "0.4.1"
 )
 </code></pre>
 
@@ -1003,7 +1034,7 @@ db.poolValidationInterval=100
 <p>sbt dependencies</p>
 
 <pre><code>libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async" % "0.4.0"
+  "io.getquill" %% "quill-async" % "0.4.1"
 )
 </code></pre>
 
@@ -1033,7 +1064,7 @@ db.poolValidationInterval=100
 <p>sbt dependencies</p>
 
 <pre><code>libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-finagle-mysql" % "0.4.0"
+  "io.getquill" %% "quill-finagle-mysql" % "0.4.1"
 )
 </code></pre>
 
@@ -1063,7 +1094,7 @@ db.pool.maxWaiters=2147483647
 <p>sbt dependencies</p>
 
 <pre><code>libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-cassandra" % "0.4.0"
+  "io.getquill" %% "quill-cassandra" % "0.4.1"
 )
 </code></pre>
 
