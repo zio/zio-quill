@@ -9,7 +9,7 @@ then
 	openssl aes-256-cbc -pass pass:$ENCRYPTION_PASSWORD -in credentials.sbt.enc -out local.credentials.sbt -d
 	openssl aes-256-cbc -pass pass:$ENCRYPTION_PASSWORD -in deploy_key.pem.enc -out local.deploy_key.pem -d
 
-	if [[ $(git tag -l --contains HEAD) =~ 'release' ]]
+	if [[ $(cat version.sbt) != *"SNAPSHOT"* ]]
 	then
 		eval "$(ssh-agent -s)"
 		chmod 600 local.deploy_key.pem

@@ -1,3 +1,16 @@
+# 0.4.1 / 28-Feb-2016
+
+* [quill-sql: h2 dialect](https://github.com/getquill/quill/pull/189)
+* [support for auto encoding of wrapped types](https://github.com/getquill/quill/pull/199/files#diff-04c6e90faac2675aa89e2176d2eec7d8R854)
+* [non-batched actions](https://github.com/getquill/quill/pull/202/files#diff-04c6e90faac2675aa89e2176d2eec7d8L485)
+* `distinct` support [[0]](https://github.com/getquill/quill/pull/186/files#diff-02749abf4d0d51be99715cff7074bc9eR38) [[1]](https://github.com/getquill/quill/pull/212)
+* [postgres naming strategy](https://github.com/getquill/quill/pull/218)
+* [quill-core: unquote quoted function bodies automatically](https://github.com/getquill/quill/pull/222)
+* [don't fail if the source annotation isn't available](https://github.com/getquill/quill/pull/210)
+* [fix custom aggregations](https://github.com/getquill/quill/pull/207)
+* [quill-finagle-mysql: fix finagle mysql execute result loss](https://github.com/getquill/quill/pull/197)
+* [quill-cassandra: stream source - avoid blocking queries](https://github.com/getquill/quill/pull/185)
+
 # 0.4.0 / 19-Feb-2016
 
 * [new sources creation mechanism](https://github.com/getquill/quill/pull/136)
