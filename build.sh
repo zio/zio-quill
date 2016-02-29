@@ -23,8 +23,8 @@ then
 		sbt tut 'release with-defaults'
 		git push --delete origin release
 	else
-		sbt clean coverage test tut coverageAggregate && sbt coverageOff publish
+		sbt clean coverage test tut coverageAggregate release-vcs-checks && sbt coverageOff publish
 	fi
 else
-	sbt clean coverage test tut coverageAggregate
+	sbt clean coverage test tut coverageAggregate release-vcs-checks
 fi
