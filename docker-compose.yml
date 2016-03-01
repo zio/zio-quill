@@ -26,7 +26,7 @@ cassandra:
 
 setup:
   build: .
-  dockerfile: Dockerfile-setup
+  dockerfile: ./build/Dockerfile-setup
   links:
     - postgres:postgres
     - mysql:mysql
@@ -34,12 +34,12 @@ setup:
   volumes:
     - ./:/app
   command:
-    - ./setup.sh
+    - ./build/setup.sh
   working_dir: /app
 
 sbt:
   build: .
-  dockerfile: Dockerfile-sbt
+  dockerfile: ./build/Dockerfile-sbt
   command: sbt
   links:
     - postgres:postgres
