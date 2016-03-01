@@ -12,13 +12,6 @@
   </head>
 
   <body>
-    
-    <script>
-  ((window.gitter = {}).chat = {}).options = {
-    room: 'getquill/quill'
-  };
-</script>
-<script src="https://sidecar.gitter.im/dist/sidecar.v1.js" async defer></script>
 
     <!-- HEADER -->
     <div id="header_wrap" class="outer">
@@ -956,7 +949,7 @@ lazy val db = source(new JdbcSourceConfig[MySQLDialect, SnakeCase]("db") {
 
 <pre><code>libraryDependencies ++= Seq(
   "mysql" % "mysql-connector-java" % "5.1.36",
-  "io.getquill" %% "quill-jdbc" % "0.4.2-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "0.4.1"
 )
 </code></pre>
 
@@ -986,7 +979,7 @@ db.connectionTimeout=30000
 
 <pre><code>libraryDependencies ++= Seq(
   "org.postgresql" % "postgresql" % "9.4-1206-jdbc41",
-  "io.getquill" %% "quill-jdbc" % "0.4.2-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "0.4.1"
 )
 </code></pre>
 
@@ -1017,7 +1010,7 @@ db.connectionTimeout=30000
 <p>sbt dependencies</p>
 
 <pre><code>libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async" % "0.4.2-SNAPSHOT"
+  "io.getquill" %% "quill-async" % "0.4.1"
 )
 </code></pre>
 
@@ -1046,7 +1039,7 @@ db.poolValidationInterval=100
 <p>sbt dependencies</p>
 
 <pre><code>libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async" % "0.4.2-SNAPSHOT"
+  "io.getquill" %% "quill-async" % "0.4.1"
 )
 </code></pre>
 
@@ -1076,7 +1069,7 @@ db.poolValidationInterval=100
 <p>sbt dependencies</p>
 
 <pre><code>libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-finagle-mysql" % "0.4.2-SNAPSHOT"
+  "io.getquill" %% "quill-finagle-mysql" % "0.4.1"
 )
 </code></pre>
 
@@ -1106,7 +1099,7 @@ db.pool.maxWaiters=2147483647
 <p>sbt dependencies</p>
 
 <pre><code>libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-cassandra" % "0.4.2-SNAPSHOT"
+  "io.getquill" %% "quill-cassandra" % "0.4.1"
 )
 </code></pre>
 
