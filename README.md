@@ -896,15 +896,16 @@ Quill has three built-in dialects:
 The second type parameter defines the naming strategy to be used when translating identifiers (table and column names) to SQL. 
 
 
-|           strategy               |          example             |
-|----------------------------------|------------------------------|
-| `io.getquill.naming.Literal`     | some_ident -> some_ident     |
-| `io.getquill.naming.Escape`      | some_ident -> "some_ident"   |
-| `io.getquill.naming.UpperCase`   | some_ident -> SOME_IDENT     |
-| `io.getquill.naming.LowerCase`   | SOME_IDENT -> some_ident     |
-| `io.getquill.naming.SnakeCase`   | someIdent -> some_ident      |
-| `io.getquill.naming.CamelCase`   | some_ident -> someIdent      |
-| `io.getquill.naming.MysqlEscape` | some_ident -> \`some_ident\` |
+|           strategy                  |          example              |
+|-------------------------------------|-------------------------------|
+| `io.getquill.naming.Literal`        | some_ident  -> some_ident     |
+| `io.getquill.naming.Escape`         | some_ident  -> "some_ident"   |
+| `io.getquill.naming.UpperCase`      | some_ident  -> SOME_IDENT     |
+| `io.getquill.naming.LowerCase`      | SOME_IDENT  -> some_ident     |
+| `io.getquill.naming.SnakeCase`      | someIdent   -> some_ident     |
+| `io.getquill.naming.CamelCase`      | some_ident  -> someIdent      |
+| `io.getquill.naming.MysqlEscape`    | some_ident  -> \`some_ident\` |
+| `io.getquill.naming.PostgresEscape` | $some_ident -> $some_ident    |
 
 Multiple transformations can be defined using mixin. For instance, the naming strategy 
 
