@@ -12,13 +12,6 @@
   </head>
 
   <body>
-    
-    <script>
-  ((window.gitter = {}).chat = {}).options = {
-    room: 'getquill/quill'
-  };
-</script>
-<script src="https://sidecar.gitter.im/dist/sidecar.v1.js" async defer></script>
 
     <!-- HEADER -->
     <div id="header_wrap" class="outer">
@@ -40,7 +33,7 @@
       <section id="main_content" class="inner">
         <p>Quill provides a Quoted Domain Specific Language (<a href="http://homepages.inf.ed.ac.uk/slindley/papers/qdsl-draft-february2015.pdf">QDSL</a>) to express queries in Scala and execute them in a target language. The library's core is designed to support multiple target languages, currently featuring specializations for Structured Query Language (<a href="https://en.wikipedia.org/wiki/SQL">SQL</a>) and Cassandra Query Language (<a href="https://cassandra.apache.org/doc/cql3/CQL.html#selectStmt">CQL</a>).</p>
 
-<p><img src="https://raw.githubusercontent.com/getquill/quill/master/example.gif" alt="example"></p>
+<p><img src="https://raw.githubusercontent.com/getquill/quill/master/quill-docs/example.gif" alt="example"></p>
 
 <ol>
 <li>
@@ -861,9 +854,10 @@ db.run(q)(<span class="pl-en">UserId</span>(<span class="pl-c1">1</span>))
 
 <p>The SQL dialect to be used by the source is defined by the first type parameter. Some source types are specific to a database and thus not require it.</p>
 
-<p>Quill has two built-in dialects:</p>
+<p>Quill has three built-in dialects:</p>
 
 <ul>
+<li><code>io.getquill.sources.sql.idiom.H2Dialect</code></li>
 <li><code>io.getquill.sources.sql.idiom.MySQLDialect</code></li>
 <li><code>io.getquill.sources.sql.idiom.PostgresDialect</code></li>
 </ul>
@@ -883,31 +877,35 @@ db.run(q)(<span class="pl-en">UserId</span>(<span class="pl-c1">1</span>))
 <tbody>
 <tr>
 <td><code>io.getquill.naming.Literal</code></td>
-<td>some_ident -&gt; some_ident</td>
+<td>some_ident  -&gt; some_ident</td>
 </tr>
 <tr>
 <td><code>io.getquill.naming.Escape</code></td>
-<td>some_ident -&gt; "some_ident"</td>
+<td>some_ident  -&gt; "some_ident"</td>
 </tr>
 <tr>
 <td><code>io.getquill.naming.UpperCase</code></td>
-<td>some_ident -&gt; SOME_IDENT</td>
+<td>some_ident  -&gt; SOME_IDENT</td>
 </tr>
 <tr>
 <td><code>io.getquill.naming.LowerCase</code></td>
-<td>SOME_IDENT -&gt; some_ident</td>
+<td>SOME_IDENT  -&gt; some_ident</td>
 </tr>
 <tr>
 <td><code>io.getquill.naming.SnakeCase</code></td>
-<td>someIdent -&gt; some_ident</td>
+<td>someIdent   -&gt; some_ident</td>
 </tr>
 <tr>
 <td><code>io.getquill.naming.CamelCase</code></td>
-<td>some_ident -&gt; someIdent</td>
+<td>some_ident  -&gt; someIdent</td>
 </tr>
 <tr>
 <td><code>io.getquill.naming.MysqlEscape</code></td>
-<td>some_ident -&gt; `some_ident`</td>
+<td>some_ident  -&gt; `some_ident`</td>
+</tr>
+<tr>
+<td><code>io.getquill.naming.PostgresEscape</code></td>
+<td>$some_ident -&gt; $some_ident</td>
 </tr>
 </tbody>
 </table>
@@ -951,7 +949,7 @@ lazy val db = source(new JdbcSourceConfig[MySQLDialect, SnakeCase]("db") {
 
 <pre><code>libraryDependencies ++= Seq(
   "mysql" % "mysql-connector-java" % "5.1.36",
-  "io.getquill" %% "quill-jdbc" % "0.4.1"
+  "io.getquill" %% "quill-jdbc" % "0.4.2-SNAPSHOT"
 )
 </code></pre>
 
@@ -981,7 +979,7 @@ db.connectionTimeout=30000
 
 <pre><code>libraryDependencies ++= Seq(
   "org.postgresql" % "postgresql" % "9.4-1206-jdbc41",
-  "io.getquill" %% "quill-jdbc" % "0.4.1"
+  "io.getquill" %% "quill-jdbc" % "0.4.2-SNAPSHOT"
 )
 </code></pre>
 
@@ -1012,7 +1010,7 @@ db.connectionTimeout=30000
 <p>sbt dependencies</p>
 
 <pre><code>libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async" % "0.4.1"
+  "io.getquill" %% "quill-async" % "0.4.2-SNAPSHOT"
 )
 </code></pre>
 
@@ -1041,7 +1039,7 @@ db.poolValidationInterval=100
 <p>sbt dependencies</p>
 
 <pre><code>libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async" % "0.4.1"
+  "io.getquill" %% "quill-async" % "0.4.2-SNAPSHOT"
 )
 </code></pre>
 
@@ -1071,7 +1069,7 @@ db.poolValidationInterval=100
 <p>sbt dependencies</p>
 
 <pre><code>libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-finagle-mysql" % "0.4.1"
+  "io.getquill" %% "quill-finagle-mysql" % "0.4.2-SNAPSHOT"
 )
 </code></pre>
 
@@ -1101,7 +1099,7 @@ db.pool.maxWaiters=2147483647
 <p>sbt dependencies</p>
 
 <pre><code>libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-cassandra" % "0.4.1"
+  "io.getquill" %% "quill-cassandra" % "0.4.2-SNAPSHOT"
 )
 </code></pre>
 
