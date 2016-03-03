@@ -475,6 +475,26 @@ class QuotationSpec extends Spec {
           }
           quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), SetOperator.`contains`, Ident("b"))
         }
+        "within option operation" - {
+          "forall" in {
+            val q = quote { (a: collection.Set[Int], b: Option[Int]) =>
+              b.forall(a.contains)
+            }
+            quote(unquote(q)).ast.body mustBe an[OptionOperation]
+          }
+          "exists" in {
+            val q = quote { (a: collection.Set[Int], b: Option[Int]) =>
+              b.exists(a.contains)
+            }
+            quote(unquote(q)).ast.body mustBe an[OptionOperation]
+          }
+          "map" in {
+            val q = quote { (a: collection.Set[Int], b: Option[Int]) =>
+              b.map(a.contains)
+            }
+            quote(unquote(q)).ast.body mustBe an[OptionOperation]
+          }
+        }
       }
     }
     "unary operation" - {
