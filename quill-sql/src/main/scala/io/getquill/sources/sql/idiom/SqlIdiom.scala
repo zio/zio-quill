@@ -182,6 +182,9 @@ trait SqlIdiom {
 
   implicit def propertyShow(implicit valueShow: Show[Value], identShow: Show[Ident], strategy: NamingStrategy): Show[Property] =
     Show[Property] {
+      case Property(ident, "isEmpty")      => s"$ident IS NULL"
+      case Property(ident, "nonEmpty")     => s"$ident IS NOT NULL"
+      case Property(ident, "isDefined")    => s"$ident IS NOT NULL"
       case Property(Property(ident, a), b) => s"$ident.$a$b"
       case Property(ast, name)             => s"${scopedShow(ast)}.${strategy.column(name)}"
     }

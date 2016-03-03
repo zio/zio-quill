@@ -685,12 +685,35 @@ class SqlIdiomSpec extends Spec {
           "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE (1, 2) = t.i"
       }
     }
-    "property" in {
-      val q = quote {
-        qr1.map(t => t.s)
+    "property" - {
+      "column" in {
+        val q = quote {
+          qr1.map(t => t.s)
+        }
+        mirrorSource.run(q).sql mustEqual
+          "SELECT t.s FROM TestEntity t"
       }
-      mirrorSource.run(q).sql mustEqual
-        "SELECT t.s FROM TestEntity t"
+      "isEmpty" in {
+        val q = quote {
+          qr1.filter(t => t.o.isEmpty)
+        }
+        mirrorSource.run(q).sql mustEqual
+          "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o IS NULL"
+      }
+      "nonEmpty" in {
+        val q = quote {
+          qr1.filter(t => t.o.nonEmpty)
+        }
+        mirrorSource.run(q).sql mustEqual
+          "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o IS NOT NULL"
+      }
+      "isDefined" in {
+        val q = quote {
+          qr1.filter(t => t.o.isDefined)
+        }
+        mirrorSource.run(q).sql mustEqual
+          "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o IS NOT NULL"
+      }
     }
     "infix" - {
       "part of the query" in {
