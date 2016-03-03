@@ -824,18 +824,22 @@ db.run(q)
 
 ## Custom encoding ##
 
-Quill uses `Encoder`s to encode runtime values defined with the `using` method and `Decoder`s to parse the query return value. The library has some encoders and decoders built-in and it is possible to provide new ones.
+Quill uses `Encoder`s to encode query inputs and `Decoder`s to read values returned by queries. The library provides a few built-in encodings and two mechanisms to define custom encodings: mapped encoding and raw encoding.
 
-If the correspondent database type is already supported, use `mappedEncoding`:
+### Mapped Encoding ###
+
+If the correspondent database type is already supported, use `mappedEncoding`. In this example, `String` is already supported by Quill and the `UUID` encoding from/to `String` is defined through mapped encoding:
 
 ```scala
 import java.util.UUID
 
-implicit val decodeCustomValue = mappedEncoding[UUID, String](_.toString)
-implicit val encodeCustomValue = mappedEncoding[String, UUID](UUID.fromString(_))
+implicit val decodeUUID = mappedEncoding[UUID, String](_.toString)
+implicit val encodeUUID = mappedEncoding[String, UUID](UUID.fromString(_))
 ```
 
-If the database type is not supported, it is possible to provide "raw" encoders and decoders:
+### Raw Encoding ###
+
+If the database type is not supported by Quill, it is possible to provide "raw" encoders and decoders:
 
 ```
 import io.getquill.sources.mirror.Row
@@ -850,6 +854,8 @@ implicit val uuidDecoder =
     ??? // database-specific implementation
   }
 ```
+
+### Wrapped types ###
 
 Quill also supports encoding of "wrapped types". Just extend the `WrappedValue` trait and Quill will automatically encode the underlying primitive type.
 
@@ -911,7 +917,7 @@ Multiple transformations can be defined using mixin. For instance, the naming st
 
 ```SnakeCase with UpperCase```
 
-produces this transformation:
+produces the following transformation:
 
 ```someIdent -> SOME_IDENT```
 
@@ -1148,6 +1154,16 @@ Please refer to [SLICK.md](https://github.com/getquill/quill/blob/master/quill-d
 # Cassandra libraries comparison #
 
 Please refer to [CASSANDRA.md](https://github.com/getquill/quill/blob/master/quill-docs/CASSANDRA.md) for a detailed comparison between Quill and other main alternatives for interaction with Cassandra in Scala.
+
+# Maintainers #
+
+- @fwbrasil
+- @godenji
+- @gustavoamigo
+- @jilen
+- @lvicentesanchez
+
+You can notify all maintainers using the handle `@getquill/maintainers`.
 
 # Acknowledgments #
 
