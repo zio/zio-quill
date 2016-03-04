@@ -833,8 +833,8 @@ If the correspondent database type is already supported, use `mappedEncoding`. I
 ```scala
 import java.util.UUID
 
-implicit val decodeUUID = mappedEncoding[UUID, String](_.toString)
-implicit val encodeUUID = mappedEncoding[String, UUID](UUID.fromString(_))
+implicit val encodeUUID = mappedEncoding[UUID, String](_.toString)
+implicit val decodeUUID = mappedEncoding[String, UUID](UUID.fromString(_))
 ```
 
 ### Raw Encoding ###
