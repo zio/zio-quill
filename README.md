@@ -1,6 +1,6 @@
 ###IMPORTANT: This is the documentation for the latest `SNAPSHOT` version. Please refer to the website at [http://getquill.io](http://getquill.io) for the lastest release's documentation.###
 
-![quill](https://raw.githubusercontent.com/getquill/quill/master/quill-docs/quill.png)
+![quill](https://raw.githubusercontent.com/getquill/quill/master/quill.png)
 # Quill
 Compile-time Language Integrated Query for Scala
 
@@ -12,7 +12,7 @@ Compile-time Language Integrated Query for Scala
 
 Quill provides a Quoted Domain Specific Language ([QDSL](http://homepages.inf.ed.ac.uk/slindley/papers/qdsl-draft-february2015.pdf)) to express queries in Scala and execute them in a target language. The library's core is designed to support multiple target languages, currently featuring specializations for Structured Query Language ([SQL](https://en.wikipedia.org/wiki/SQL)) and Cassandra Query Language ([CQL](https://cassandra.apache.org/doc/cql3/CQL.html#selectStmt)).
 
-![example](https://raw.githubusercontent.com/getquill/quill/master/quill-docs/example.gif)
+![example](https://raw.githubusercontent.com/getquill/quill/master/example.gif)
 
 1. **Boilerplate-free mapping**: The database schema is mapped using simple case classes.
 2. **Quoted DSL**: Queries are defined inside a `quote` block. Quill parses each quoted block of code (quotation) at compile time and translates them to an internal Abstract Syntax Tree (AST)
@@ -1149,11 +1149,11 @@ db.session.addressTranslater=com.datastax.driver.core.policies.IdentityTranslate
 
 # Slick comparison #
 
-Please refer to [SLICK.md](https://github.com/getquill/quill/blob/master/quill-docs/SLICK.md) for a detailed comparison between Quill and Slick.
+Please refer to [SLICK.md](https://github.com/getquill/quill/blob/master/SLICK.md) for a detailed comparison between Quill and Slick.
 
 # Cassandra libraries comparison #
 
-Please refer to [CASSANDRA.md](https://github.com/getquill/quill/blob/master/quill-docs/CASSANDRA.md) for a detailed comparison between Quill and other main alternatives for interaction with Cassandra in Scala.
+Please refer to [CASSANDRA.md](https://github.com/getquill/quill/blob/master/CASSANDRA.md) for a detailed comparison between Quill and other main alternatives for interaction with Cassandra in Scala.
 
 # Maintainers #
 
