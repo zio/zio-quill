@@ -224,11 +224,11 @@ trait Parsing {
   private def identClean(x: Ident) = x.copy(name = x.name.replace("$", ""))
 
   val optionOperationParser: Parser[OptionOperation] = Parser[OptionOperation] {
-    case q"$o.map[$t](($alias) => $body)" if (is[Option[Any]](o)) =>
+    case q"$o.map[$t]({($alias) => $body})" if (is[Option[Any]](o)) =>
       OptionOperation(OptionMap, astParser(o), identParser(alias), astParser(body))
-    case q"$o.forall(($alias) => $body)" if (is[Option[Any]](o)) =>
+    case q"$o.forall({($alias) => $body})" if (is[Option[Any]](o)) =>
       OptionOperation(OptionForall, astParser(o), identParser(alias), astParser(body))
-    case q"$o.exists(($alias) => $body)" if (is[Option[Any]](o)) =>
+    case q"$o.exists({($alias) => $body})" if (is[Option[Any]](o)) =>
       OptionOperation(OptionExists, astParser(o), identParser(alias), astParser(body))
   }
 
