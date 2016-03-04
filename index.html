@@ -12,13 +12,6 @@
   </head>
 
   <body>
-    
-    <script>
-  ((window.gitter = {}).chat = {}).options = {
-    room: 'getquill/quill'
-  };
-</script>
-<script src="https://sidecar.gitter.im/dist/sidecar.v1.js" async defer></script>
 
     <!-- HEADER -->
     <div id="header_wrap" class="outer">
@@ -40,7 +33,7 @@
       <section id="main_content" class="inner">
         <p>Quill provides a Quoted Domain Specific Language (<a href="http://homepages.inf.ed.ac.uk/slindley/papers/qdsl-draft-february2015.pdf">QDSL</a>) to express queries in Scala and execute them in a target language. The library's core is designed to support multiple target languages, currently featuring specializations for Structured Query Language (<a href="https://en.wikipedia.org/wiki/SQL">SQL</a>) and Cassandra Query Language (<a href="https://cassandra.apache.org/doc/cql3/CQL.html#selectStmt">CQL</a>).</p>
 
-<p><img src="https://raw.githubusercontent.com/getquill/quill/master/quill-docs/example.gif" alt="example"></p>
+<p><img src="https://raw.githubusercontent.com/getquill/quill/master/example.gif" alt="example"></p>
 
 <ol>
 <li>
@@ -805,16 +798,22 @@ db.run(q)
 <h2>
 <a id="custom-encoding" class="anchor" href="#custom-encoding" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Custom encoding</h2>
 
-<p>Quill uses <code>Encoder</code>s to encode runtime values defined with the <code>using</code> method and <code>Decoder</code>s to parse the query return value. The library has some encoders and decoders built-in and it is possible to provide new ones.</p>
+<p>Quill uses <code>Encoder</code>s to encode query inputs and <code>Decoder</code>s to read values returned by queries. The library provides a few built-in encodings and two mechanisms to define custom encodings: mapped encoding and raw encoding.</p>
 
-<p>If the correspondent database type is already supported, use <code>mappedEncoding</code>:</p>
+<h3>
+<a id="mapped-encoding" class="anchor" href="#mapped-encoding" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Mapped Encoding</h3>
+
+<p>If the correspondent database type is already supported, use <code>mappedEncoding</code>. In this example, <code>String</code> is already supported by Quill and the <code>UUID</code> encoding from/to <code>String</code> is defined through mapped encoding:</p>
 
 <div class="highlight highlight-source-scala"><pre><span class="pl-k">import</span> <span class="pl-v">java.util.</span><span class="pl-v">UUID</span>
 
-<span class="pl-k">implicit</span> <span class="pl-k">val</span> <span class="pl-en">decodeCustomValue</span> <span class="pl-k">=</span> mappedEncoding[<span class="pl-en">UUID</span>, <span class="pl-k">String</span>](_.toString)
-<span class="pl-k">implicit</span> <span class="pl-k">val</span> <span class="pl-en">encodeCustomValue</span> <span class="pl-k">=</span> mappedEncoding[<span class="pl-k">String</span>, <span class="pl-en">UUID</span>](<span class="pl-en">UUID</span>.fromString(_))</pre></div>
+<span class="pl-k">implicit</span> <span class="pl-k">val</span> <span class="pl-en">encodeUUID</span> <span class="pl-k">=</span> mappedEncoding[<span class="pl-en">UUID</span>, <span class="pl-k">String</span>](_.toString)
+<span class="pl-k">implicit</span> <span class="pl-k">val</span> <span class="pl-en">decodeUUID</span> <span class="pl-k">=</span> mappedEncoding[<span class="pl-k">String</span>, <span class="pl-en">UUID</span>](<span class="pl-en">UUID</span>.fromString(_))</pre></div>
 
-<p>If the database type is not supported, it is possible to provide "raw" encoders and decoders:</p>
+<h3>
+<a id="raw-encoding" class="anchor" href="#raw-encoding" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Raw Encoding</h3>
+
+<p>If the database type is not supported by Quill, it is possible to provide "raw" encoders and decoders:</p>
 
 <pre><code>import io.getquill.sources.mirror.Row
 
@@ -828,6 +827,9 @@ implicit val uuidDecoder =
     ??? // database-specific implementation
   }
 </code></pre>
+
+<h3>
+<a id="wrapped-types" class="anchor" href="#wrapped-types" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Wrapped types</h3>
 
 <p>Quill also supports encoding of "wrapped types". Just extend the <code>WrappedValue</code> trait and Quill will automatically encode the underlying primitive type.</p>
 
@@ -921,7 +923,7 @@ db.run(q)(<span class="pl-en">UserId</span>(<span class="pl-c1">1</span>))
 
 <p><code>SnakeCase with UpperCase</code></p>
 
-<p>produces this transformation:</p>
+<p>produces the following transformation:</p>
 
 <p><code>someIdent -&gt; SOME_IDENT</code></p>
 
@@ -1150,12 +1152,25 @@ db.session.addressTranslater=com.datastax.driver.core.policies.IdentityTranslate
 <h1>
 <a id="slick-comparison" class="anchor" href="#slick-comparison" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Slick comparison</h1>
 
-<p>Please refer to <a href="https://github.com/getquill/quill/blob/master/quill-docs/SLICK.md">SLICK.md</a> for a detailed comparison between Quill and Slick.</p>
+<p>Please refer to <a href="https://github.com/getquill/quill/blob/master/SLICK.md">SLICK.md</a> for a detailed comparison between Quill and Slick.</p>
 
 <h1>
 <a id="cassandra-libraries-comparison" class="anchor" href="#cassandra-libraries-comparison" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Cassandra libraries comparison</h1>
 
-<p>Please refer to <a href="https://github.com/getquill/quill/blob/master/quill-docs/CASSANDRA.md">CASSANDRA.md</a> for a detailed comparison between Quill and other main alternatives for interaction with Cassandra in Scala.</p>
+<p>Please refer to <a href="https://github.com/getquill/quill/blob/master/CASSANDRA.md">CASSANDRA.md</a> for a detailed comparison between Quill and other main alternatives for interaction with Cassandra in Scala.</p>
+
+<h1>
+<a id="maintainers" class="anchor" href="#maintainers" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Maintainers</h1>
+
+<ul>
+<li><a href="https://github.com/fwbrasil" class="user-mention">@fwbrasil</a></li>
+<li><a href="https://github.com/godenji" class="user-mention">@godenji</a></li>
+<li><a href="https://github.com/gustavoamigo" class="user-mention">@gustavoamigo</a></li>
+<li><a href="https://github.com/jilen" class="user-mention">@jilen</a></li>
+<li><a href="https://github.com/lvicentesanchez" class="user-mention">@lvicentesanchez</a></li>
+</ul>
+
+<p>You can notify all maintainers using the handle <code>@getquill/maintainers</code>.</p>
 
 <h1>
 <a id="acknowledgments" class="anchor" href="#acknowledgments" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Acknowledgments</h1>
