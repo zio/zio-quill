@@ -64,4 +64,5 @@ trait StatelessTransformer {
     e match {
       case Assignment(input, property, value) => Assignment(input, property, apply(value))
     }
+
 }

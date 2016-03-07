@@ -7,12 +7,10 @@ import scala.util.Success
 import io.getquill._
 import io.getquill.ast.{ Ast, Ident }
 import io.getquill.quotation.Quoted
-import io.getquill.sources.Source
-import io.getquill.sources.SourceMacro
+import io.getquill.sources._
 import io.getquill.util.Messages.RichContext
 import io.getquill.norm.Normalize
 import io.getquill.quotation.IsDynamic
-import io.getquill.sources.SourceConfig
 
 class MirrorSource(config: SourceConfig[MirrorSource])
   extends Source[Row, Row]
@@ -46,12 +44,12 @@ class MirrorSource(config: SourceConfig[MirrorSource])
 
   case class ActionMirror(ast: Ast)
 
-  def execute(ast: Ast) =
+  def execute(ast: Ast, generated: Option[String]) =
     ActionMirror(ast)
 
   case class BatchActionMirror(ast: Ast, bindList: List[Row])
 
-  def execute[T](ast: Ast, bindParams: T => Row => Row) =
+  def execute[T](ast: Ast, bindParams: T => Row => Row, generated: Option[String]) =
     (values: List[T]) =>
       BatchActionMirror(ast, values.map(bindParams).map(_(Row())))
 
@@ -73,12 +71,22 @@ class MirrorSourceMacro(val c: Context) extends SourceMacro {
           case other            =>
         }
         c.info(normalized.toString)
-        q"($normalized, $params)"
+        val (entity, insert) = ExtractEntityAndInsertAction(normalized)
+        val isInsert = insert.isDefined
+        val generated = if (isInsert) entity.flatMap(_.generated) else None
+        q"($normalized, $params, $generated)"
       case true =>
         q"""
           import io.getquill.norm._
           import io.getquill.ast._
-          (Normalize($ast: Ast), $params)
+          import io.getquill.sources.ExtractEntityAndInsertAction
+
+          val normalized = Normalize($ast: Ast)
+          val (entity, insert) = ExtractEntityAndInsertAction.apply(normalized)
+          val isInsert = insert.isDefined
+          val generated = if (isInsert) entity.flatMap(_.generated) else None
+
+          (normalized, $params, generated)
         """
     }
 }

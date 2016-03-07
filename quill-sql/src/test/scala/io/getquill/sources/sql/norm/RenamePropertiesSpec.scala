@@ -6,7 +6,7 @@ import io.getquill._
 class RenamePropertiesSpec extends Spec {
 
   val e = quote {
-    query[TestEntity]("test_entity", _.s -> "field_s", _.i -> "field_i")
+    query[TestEntity](_.entity("test_entity").columns(_.s -> "field_s", _.i -> "field_i").generated(_.i))
   }
 
   val f = quote {
@@ -14,6 +14,16 @@ class RenamePropertiesSpec extends Spec {
   }
 
   "renames properties according to the entity aliases" - {
+    "generated" - {
+      "alias" in {
+        val q = quote {
+          e.insert
+        }
+        val mirror = mirrorSource.run(q)(TestEntity("s", 1, 1L, None))
+        mirror.generated mustEqual Some("field_i")
+      }
+
+    }
     "flatMap" - {
       "body" in {
         val q = quote {

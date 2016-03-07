@@ -3,6 +3,7 @@ package io.getquill.sources.sql
 import io.getquill.ast._
 import io.getquill.norm.Normalize
 import io.getquill.naming.NamingStrategy
+import io.getquill.sources.ExtractEntityAndInsertAction
 import io.getquill.sources.sql.idiom.SqlIdiom
 import io.getquill.util.Show._
 import io.getquill.util.Messages._
@@ -27,7 +28,18 @@ object Prepare {
         case other =>
           other.show
       }
-    (sqlString, idents)
+
+    val (entity, insert) = ExtractEntityAndInsertAction(bindedAst)
+    val isInsert = insert.isDefined
+
+    val generated = if (isInsert) entity.flatMap(nameGeneratedColumn) else None
+
+    (sqlString, idents, generated)
+  }
+
+  private def nameGeneratedColumn(entity: Entity)(implicit n: NamingStrategy): Option[String] = {
+    val propertyAlias = entity.properties.map(p => p.property -> p.alias).toMap
+    entity.generated.map(g => propertyAlias.getOrElse(g, n.column(g)))
   }
 
   private[this] val normalize =

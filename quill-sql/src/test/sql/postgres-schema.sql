@@ -70,3 +70,9 @@ CREATE TABLE TestEntity3(
     i INTEGER,
     l BIGINT
 );
+
+CREATE TABLE Product(
+    description VARCHAR(255),
+    id SERIAL PRIMARY KEY,
+    sku BIGINT
+);

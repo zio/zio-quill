@@ -12,7 +12,7 @@ object Prepare {
   def apply(ast: Ast, params: List[Ident])(implicit n: NamingStrategy) = {
     import CqlIdiom._
     val (bindedAst, idents) = BindVariables(normalize(ast), params)
-    (bindedAst.show, idents)
+    (bindedAst.show, idents, None)
   }
 
   private[this] val normalize =

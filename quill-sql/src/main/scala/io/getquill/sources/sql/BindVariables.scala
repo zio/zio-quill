@@ -32,6 +32,13 @@ private[sources] case class BindVariables(state: (List[Ident], List[Ident]))
         val (at, att) = apply(assignments)(_.apply)
         val (wt, wtt) = att.apply(where)
         (AssignedAction(Update(Filter(table, x, wt)), at), wtt)
+      case AssignedAction(Insert(table: Entity), assignments) =>
+        val assignmentsWithoutGenerated =
+          table
+            .generated
+            .fold(assignments)(generated => assignments.filterNot(_.property == generated))
+        val (at, att) = apply(assignmentsWithoutGenerated)(_.apply)
+        (AssignedAction(Insert(table), at), att)
       case other =>
         super.apply(other)
     }

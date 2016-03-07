@@ -14,8 +14,9 @@ import io.getquill.naming.NamingStrategy
 abstract class AsyncSourceConfig[D <: SqlIdiom, N <: NamingStrategy, C <: Connection](
   val name:          String,
   connectionFactory: Configuration => ObjectFactory[C]
-)
-  extends SourceConfig[AsyncSource[D, N, C]] {
+) {
+
+  this: SourceConfig[_] =>
 
   def user = config.getString("user")
   def password = Try(config.getString("password")).toOption

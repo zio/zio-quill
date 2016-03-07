@@ -72,3 +72,10 @@ CREATE TABLE TestEntity3(
     i INTEGER,
     l BIGINT
 );
+
+CREATE TABLE Product(
+    description VARCHAR(255),
+    id INTEGER NOT NULL AUTO_INCREMENT,
+    sku BIGINT,
+    PRIMARY KEY (id)
+);

@@ -35,7 +35,7 @@ trait QueryMacro extends SelectFlattening with SelectResultExtraction {
     else
       q"""
       {
-        val (sql, bindings: List[io.getquill.ast.Ident]) =
+        val (sql, bindings: List[io.getquill.ast.Ident], _) =
             ${prepare(flattenQuery, params.map(_._1))}
 
         (..$inputs) =>

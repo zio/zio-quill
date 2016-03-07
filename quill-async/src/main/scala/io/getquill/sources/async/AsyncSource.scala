@@ -6,33 +6,30 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.concurrent.duration.Duration
 import scala.util.Try
-import com.github.mauricio.async.db.Configuration
 import com.github.mauricio.async.db.Connection
 import com.github.mauricio.async.db.{ QueryResult => DBQueryResult }
 import com.github.mauricio.async.db.RowData
-import com.github.mauricio.async.db.pool.ObjectFactory
 import com.typesafe.scalalogging.StrictLogging
 import io.getquill.naming.NamingStrategy
 import io.getquill.sources.sql.SqlSource
-import io.getquill.sources.sql.idiom.MySQLDialect
 import io.getquill.sources.sql.idiom.SqlIdiom
 import language.experimental.macros
 import io.getquill.quotation.Quoted
 import io.getquill.sources.sql.SqlSourceMacro
-import io.getquill.sources.BindedStatementBuilder
+import io.getquill.sources.{ SourceConfig, BindedStatementBuilder }
 
-class AsyncSource[D <: SqlIdiom, N <: NamingStrategy, C <: Connection](config: AsyncSourceConfig[D, N, C])
+abstract class AsyncSource[D <: SqlIdiom, N <: NamingStrategy, C <: Connection](config: AsyncSourceConfig[D, N, C])
   extends SqlSource[D, N, RowData, BindedStatementBuilder[List[Any]]]
   with Decoders
   with Encoders
   with StrictLogging {
 
   type QueryResult[T] = Future[List[T]]
-  type ActionResult[T] = Future[DBQueryResult]
-  type BatchedActionResult[T] = Future[List[DBQueryResult]]
+  type ActionResult[T] = Future[Long]
+  type BatchedActionResult[T] = Future[List[Long]]
 
-  class ActionApply[T](f: List[T] => Future[List[DBQueryResult]])(implicit ec: ExecutionContext)
-    extends Function1[List[T], Future[List[DBQueryResult]]] {
+  class ActionApply[T](f: List[T] => Future[List[Long]])(implicit ec: ExecutionContext)
+    extends Function1[List[T], Future[List[Long]]] {
     def apply(params: List[T]) = f(params)
     def apply(param: T) = f(List(param)).map(_.head)
   }
@@ -50,6 +47,10 @@ class AsyncSource[D <: SqlIdiom, N <: NamingStrategy, C <: Connection](config: A
       case other                                   => f(pool)
     }
 
+  protected def extractActionResult(generated: Option[String])(result: DBQueryResult): Long
+
+  protected def expandAction(sql: String, generated: Option[String]) = sql
+
   def probe(sql: String) =
     Try {
       Await.result(pool.sendQuery(sql), Duration.Inf)
@@ -60,20 +61,20 @@ class AsyncSource[D <: SqlIdiom, N <: NamingStrategy, C <: Connection](config: A
       f(TransactionalExecutionContext(ec, c))
     }
 
-  def execute(sql: String)(implicit ec: ExecutionContext) = {
+  def execute(sql: String, generated: Option[String])(implicit ec: ExecutionContext) = {
     logger.info(sql)
-    withConnection(_.sendQuery(sql))
+    withConnection(conn => conn.sendQuery(expandAction(sql, generated)).map(extractActionResult(generated)))
   }
 
-  def execute[T](sql: String, bindParams: T => BindedStatementBuilder[List[Any]] => BindedStatementBuilder[List[Any]])(implicit ec: ExecutionContext): ActionApply[T] = {
-    def run(values: List[T]): Future[List[DBQueryResult]] =
+  def execute[T](sql: String, bindParams: T => BindedStatementBuilder[List[Any]] => BindedStatementBuilder[List[Any]], generated: Option[String])(implicit ec: ExecutionContext): ActionApply[T] = {
+    def run(values: List[T]): Future[List[Long]] =
       values match {
         case Nil =>
           Future.successful(List())
         case value :: tail =>
           val (expanded, params) = bindParams(value)(new BindedStatementBuilder).build(sql)
           logger.info(expanded)
-          withConnection(_.sendPreparedStatement(sql, params(List())))
+          withConnection(conn => conn.sendPreparedStatement(expandAction(sql, generated), params(List())).map(extractActionResult(generated)))
             .flatMap(r => run(tail).map(r +: _))
       }
     new ActionApply(run _)
