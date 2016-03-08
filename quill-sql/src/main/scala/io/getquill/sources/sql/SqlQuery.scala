@@ -49,7 +49,7 @@ case class FlattenSqlQuery(
 object SqlQuery {
 
   def apply(query: Ast): SqlQuery =
-    RenameProperties(query) match {
+    query match {
       case Union(a, b)                  => SetOperationSqlQuery(apply(a), UnionOperation, apply(b))
       case UnionAll(a, b)               => SetOperationSqlQuery(apply(a), UnionAllOperation, apply(b))
       case UnaryOperation(op, q: Query) => UnaryOperationSqlQuery(op, apply(q))

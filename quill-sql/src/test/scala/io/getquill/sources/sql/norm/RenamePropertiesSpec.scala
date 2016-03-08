@@ -14,6 +14,37 @@ class RenamePropertiesSpec extends Spec {
   }
 
   "renames properties according to the entity aliases" - {
+    "action" - {
+      "insert" in {
+        val q = quote {
+          e.insert
+        }
+        mirrorSource.run(q)(TestEntity("a", 1, 1L, None)).sql mustEqual
+          "INSERT INTO test_entity (field_s,field_i,l,o) VALUES (?, ?, ?, ?)"
+      }
+
+      "insert assigned" in {
+        val q = quote {
+          e.insert(_.i -> 1, _.l -> 1L, _.o -> 1, _.s -> "test")
+        }
+        mirrorSource.run(q).sql mustEqual
+          "INSERT INTO test_entity (field_i,l,o,field_s) VALUES (1, 1, 1, 'test')"
+      }
+      "update" in {
+        val q = quote {
+          e.filter(_.i == 999).update
+        }
+        mirrorSource.run(q)(TestEntity("a", 1, 1L, None)).sql mustEqual
+          "UPDATE test_entity SET field_s = ?, field_i = ?, l = ?, o = ? WHERE field_i = 999"
+      }
+      "delete" in {
+        val q: Quoted[Delete[TestEntity]] = quote {
+          e.filter(_.i == 999).delete
+        }
+        mirrorSource.run(q).sql mustEqual
+          "DELETE FROM test_entity WHERE field_i = 999"
+      }
+    }
     "generated" - {
       "alias" in {
         val q = quote {
