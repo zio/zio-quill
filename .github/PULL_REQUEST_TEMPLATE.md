@@ -15,10 +15,10 @@ Additional notes.
 
 ### Checklist
 
-[ ] Unit test all changes
-[ ] Update `README.md` if applicable
-[ ] Add `[WIP]` to the pull request title if it's work in progress
-[ ] [Squash commits](https://ariejan.net/2011/07/05/git-squash-your-latests-commits-into-one) that aren't meaningful changes
-[ ] Run `sbt scalariformFormat` to make sure that the source files are formatted
+- [ ] Unit test all changes
+- [ ] Update `README.md` if applicable
+- [ ] Add `[WIP]` to the pull request title if it's work in progress
+- [ ] [Squash commits](https://ariejan.net/2011/07/05/git-squash-your-latests-commits-into-one) that aren't meaningful changes
+- [ ] Run `sbt scalariformFormat` to make sure that the source files are formatted
 
 @getquill/maintainers
