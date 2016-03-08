@@ -2,9 +2,7 @@ package io.getquill.sources.cassandra
 
 import io.getquill.ast._
 import io.getquill.naming.NamingStrategy
-import io.getquill.norm.FlattenOptionOperation
-import io.getquill.norm.Normalize
-import io.getquill.norm.RenameProperties
+import io.getquill.norm.{ RenameAssignments, FlattenOptionOperation, Normalize, RenameProperties }
 import io.getquill.util.Show.Shower
 
 object Prepare {
@@ -21,4 +19,5 @@ object Prepare {
       .andThen(Normalize.apply _)
       .andThen(ExpandMappedInfix.apply _)
       .andThen(FlattenOptionOperation.apply _)
+      .andThen(RenameAssignments.apply _)
 }
