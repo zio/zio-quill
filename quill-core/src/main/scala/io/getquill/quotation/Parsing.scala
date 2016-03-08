@@ -1,7 +1,6 @@
 package io.getquill.quotation
 
 import scala.reflect.ClassTag
-import scala.reflect.macros.whitebox.Context
 import io.getquill.{ Query => QuillQuery }
 import io.getquill.ast._
 import io.getquill.norm.BetaReduction
@@ -11,7 +10,6 @@ import io.getquill.util.Interleave
 trait Parsing extends SchemaConfigParsing {
   this: Quotation =>
 
-  val c: Context
   import c.universe.{ Ident => _, Constant => _, Function => _, If => _, _ }
 
   case class Parser[T](p: PartialFunction[Tree, T])(implicit ct: ClassTag[T]) {
@@ -351,7 +349,7 @@ trait Parsing extends SchemaConfigParsing {
   }
 
   private val assignmentParser: Parser[Assignment] = Parser[Assignment] {
-    case q"((${ identParser(i1) }) => scala.this.Predef.ArrowAssoc[$t](${ identParser(i2) }.$prop).->[$v]($value))" if (i1 == i2) =>
+    case q"((${ identParser(i1) }) => scala.this.Predef.ArrowAssoc[$t](${ identParser(i2) }.$prop).$arrow[$v]($value))" if (i1 == i2) =>
       Assignment(i1, prop.decodedName.toString, astParser(value))
   }
 

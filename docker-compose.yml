@@ -54,3 +54,4 @@ sbt:
     - TRAVIS_PULL_REQUEST
     - TRAVIS_BRANCH
     - ENCRYPTION_PASSWORD
+    - SBT_OPTS=-Dfile.encoding=UTF-8 -Xms512m -Xmx1536m -Xss2m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC

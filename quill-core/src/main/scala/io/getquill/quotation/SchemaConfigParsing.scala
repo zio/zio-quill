@@ -1,11 +1,12 @@
 package io.getquill.quotation
 
 import io.getquill.ast.PropertyAlias
-import scala.reflect.macros.whitebox.Context
 
 case class SchemaConfig(alias: Option[String] = None, properties: List[PropertyAlias] = List(), generated: Option[String] = None)
-trait SchemaConfigParsing {
-  val c: Context
+
+trait SchemaConfigParsing extends UnicodeArrowParsing {
+  this: Quotation =>
+
   import c.universe.{ Function => _, Ident => _, _ }
 
   def parseEntityConfig(t: Tree): SchemaConfig =
@@ -27,7 +28,7 @@ trait SchemaConfigParsing {
 
   private def parsePropertyAlias(t: Tree): PropertyAlias =
     t match {
-      case q"(($x1) => scala.this.Predef.ArrowAssoc[$t]($x2.$prop).->[$v](${ alias: String }))" =>
+      case q"(($x1) => scala.this.Predef.ArrowAssoc[$t]($x2.$prop).$arrow[$v](${ alias: String }))" =>
         PropertyAlias(prop.decodedName.toString, alias)
     }
 }

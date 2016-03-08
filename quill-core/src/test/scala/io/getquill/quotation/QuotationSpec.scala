@@ -32,6 +32,12 @@ class QuotationSpec extends Spec {
           }
           quote(unquote(q)).ast mustEqual Entity("TestEntity", Some("SomeAlias"), List(PropertyAlias("s", "theS"), PropertyAlias("i", "theI")))
         }
+        "with property alias and unicode arrow" in {
+          """|quote {
+             |  query[TestEntity](_.entity("SomeAlias").columns(_.s → "theS", _.i → "theI"))
+             |}
+          """.stripMargin must compile
+        }
       }
       "filter" in {
         val q = quote {
@@ -267,6 +273,12 @@ class QuotationSpec extends Spec {
           }
           quote(unquote(q)).ast mustEqual Function(List(Ident("x1")), Update(Entity("TestEntity")))
         }
+        "unicode arrow must compile" in {
+          """|quote {
+             |  qr1.filter(t ⇒ t.i == 1).update(_.s → "new", _.i → 0)
+             |}
+          """.stripMargin must compile
+        }
       }
       "insert" - {
         "assigned" in {
@@ -280,6 +292,12 @@ class QuotationSpec extends Spec {
             qr1.insert
           }
           quote(unquote(q)).ast mustEqual Function(List(Ident("x1")), Insert(Entity("TestEntity")))
+        }
+        "unicode arrow must compile" in {
+          """|quote {
+             |  qr1.insert(_.s → "new", _.i → 0)
+             |}
+          """.stripMargin must compile
         }
       }
       "delete" in {
