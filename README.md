@@ -302,9 +302,11 @@ db.run(q3)
 ```
 
 **drop/take**
+
+Note when calling both `take` and `drop` on a query, `take` must be called before `drop`. There is an [issue](https://github.com/getquill/quill/issues/229) tracing this bug.
 ```scala
 val q = quote {
-  query[Person].drop(2).take(1)
+  query[Person].take(1).drop(2)
 }
 
 db.run(q)
@@ -498,7 +500,7 @@ If your project doesn't have a standard layout, e.g. a play project, you should 
 
 Database actions are defined using quotations as well. These actions don't have a collection-like API but rather a custom DSL to express inserts, deletes and updates.
 
-  Note: Actions receive a `List` as they are batched by default. And also it can recieve a `single` item as well.
+  Note: Actions take either a List (in which case the query is batched) or a single value.
 
 **insert**
 ```scala
@@ -507,7 +509,7 @@ val a = quote(query[Contact].insert)
 db.run(a)(List(Contact(999, "+1510488988"))) 
 // INSERT INTO Contact (personId,phone) VALUES (?, ?)
 db.run(a)(Contact(999, "+1510488988"))
-// INSERT INTO Contact (personId,phone) VALUES (?, ?)
+// insert single item
 ```
 
 It is also possible to insert specific columns:
@@ -542,6 +544,8 @@ val a = quote {
 
 db.run(a)(List(Person(999, "John", 22)))
 // UPDATE Person SET id = ?, name = ?, age = ? WHERE id = 999
+db.run(a)(Person(999, "John", 22))
+// update single item
 ```
 
 Using specific columns:
