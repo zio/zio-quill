@@ -1,15 +1,12 @@
 package io.getquill.sources.cassandra.mirror
 
 import io.getquill.naming.Literal
-import io.getquill.naming.NamingStrategy
 import io.getquill.sources.cassandra.CassandraSource
 import io.getquill.sources.mirror.Row
 import io.getquill.sources.mirror.MirrorEncoders
 import io.getquill.sources.mirror.MirrorDecoders
 import scala.util.Failure
 import scala.util.Success
-import com.datastax.driver.core.ConsistencyLevel
-import io.getquill.sources.SourceConfig
 import io.getquill.CassandraMirrorSourceConfig
 
 class CassandraMirrorSource(config: CassandraMirrorSourceConfig)
@@ -21,6 +18,11 @@ class CassandraMirrorSource(config: CassandraMirrorSourceConfig)
   override type ActionResult[T] = ActionMirror
   override type BatchedActionResult[T] = BatchActionMirror
   override type Params[T] = List[T]
+
+  class ActionApply[T](f: Params[T] => BatchActionMirror) extends (Params[T] => BatchActionMirror) {
+    def apply(params: Params[T]) = f(params)
+    def apply(param: T) = ActionMirror(f(List(param)).cql)
+  }
 
   override def close = ()
 
@@ -37,9 +39,11 @@ class CassandraMirrorSource(config: CassandraMirrorSourceConfig)
 
   case class BatchActionMirror(cql: String, bindList: List[Row])
 
-  def execute[T](sql: String, bindParams: T => Row => Row, generated: Option[String]) =
-    (values: List[T]) =>
-      BatchActionMirror(sql, values.map(bindParams).map(_(Row())))
+  def execute[T](cql: String, bindParams: T => Row => Row, generated: Option[String]) = {
+    val f = (values: List[T]) =>
+      BatchActionMirror(cql, values.map(bindParams).map(_(Row())))
+    new ActionApply[T](f)
+  }
 
   case class QueryMirror[T](cql: String, binds: Row, extractor: Row => T)
 
