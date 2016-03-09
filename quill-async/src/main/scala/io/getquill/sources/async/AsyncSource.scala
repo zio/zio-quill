@@ -17,12 +17,16 @@ import language.experimental.macros
 import io.getquill.quotation.Quoted
 import io.getquill.sources.sql.SqlSourceMacro
 import io.getquill.sources.{ SourceConfig, BindedStatementBuilder }
+import com.typesafe.scalalogging.Logger
+import org.slf4j.LoggerFactory
 
 abstract class AsyncSource[D <: SqlIdiom, N <: NamingStrategy, C <: Connection](config: AsyncSourceConfig[D, N, C])
   extends SqlSource[D, N, RowData, BindedStatementBuilder[List[Any]]]
   with Decoders
-  with Encoders
-  with StrictLogging {
+  with Encoders {
+
+  protected val logger: Logger =
+    Logger(LoggerFactory.getLogger(classOf[AsyncSource[_, _, _]]))
 
   type QueryResult[T] = Future[List[T]]
   type ActionResult[T] = Future[Long]
