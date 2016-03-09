@@ -11,12 +11,16 @@ import scala.util.control.NonFatal
 import scala.annotation.tailrec
 import io.getquill.JdbcSourceConfig
 import io.getquill.sources.BindedStatementBuilder
+import com.typesafe.scalalogging.Logger
+import org.slf4j.LoggerFactory
 
 class JdbcSource[D <: SqlIdiom, N <: NamingStrategy](config: JdbcSourceConfig[D, N])
   extends SqlSource[D, N, ResultSet, BindedStatementBuilder[PreparedStatement]]
   with JdbcEncoders
-  with JdbcDecoders
-  with StrictLogging {
+  with JdbcDecoders {
+
+  protected val logger: Logger =
+    Logger(LoggerFactory.getLogger(classOf[JdbcSource[_, _]]))
 
   type QueryResult[T] = List[T]
   type ActionResult[T] = Long

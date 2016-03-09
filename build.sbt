@@ -94,8 +94,7 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
   ),
   EclipseKeys.createSrc := EclipseCreateSrc.Default + EclipseCreateSrc.Resource,
   unmanagedClasspath in Test ++= Seq(
-    baseDirectory.value / "src" / "test" / "resources",
-    baseDirectory.value / "src" / "test" / "resources" / "sql"
+    baseDirectory.value / "src" / "test" / "resources"
   ),
   scalacOptions ++= Seq(
     "-Xfatal-warnings",

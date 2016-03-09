@@ -19,12 +19,16 @@ import com.twitter.finagle.exp.mysql.Request
 import com.twitter.finagle.exp.mysql.PrepareRequest
 import io.getquill.FinagleMysqlSourceConfig
 import io.getquill.sources.BindedStatementBuilder
+import com.typesafe.scalalogging.Logger
+import org.slf4j.LoggerFactory
 
 class FinagleMysqlSource[N <: NamingStrategy](config: FinagleMysqlSourceConfig[N])
   extends SqlSource[MySQLDialect, N, Row, BindedStatementBuilder[List[Parameter]]]
   with FinagleMysqlDecoders
-  with FinagleMysqlEncoders
-  with StrictLogging {
+  with FinagleMysqlEncoders {
+
+  protected val logger: Logger =
+    Logger(LoggerFactory.getLogger(classOf[FinagleMysqlSource[_]]))
 
   type QueryResult[T] = Future[List[T]]
   type ActionResult[T] = Future[Result]
