@@ -6,7 +6,7 @@ import sbtrelease.ReleasePlugin
 lazy val quill = 
   (project in file("."))
     .settings(tutSettings ++ commonSettings ++ Seq(
-      scalaVersion := "2.11.7", 
+      scalaVersion := "2.11.8", 
       tutSourceDirectory := baseDirectory.value / "target" / "README.md"))
     .settings(sourceGenerators in Compile <+= Def.task {
       val source = baseDirectory.value / "README.md"
@@ -107,6 +107,7 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
     "-Ywarn-dead-code",
     "-Ywarn-numeric-widen",   
     "-Ywarn-value-discard",
+    "-Ybackend:GenBCode",
     "-Xfuture",
     "-Ywarn-unused-import"
   ),
