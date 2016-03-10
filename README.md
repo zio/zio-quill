@@ -401,6 +401,13 @@ val q = quote {
 db.run(q)
 // SELECT p.id, p.name, p.age FROM Person p WHERE p.id IN (1, 2)
 
+val q1 = quote { (ids: Set[Int]) =>
+  query[Person].filter(p => ids.contains(p.id))
+}
+
+db.run(q)
+// SELECT p.id, p.name, p.age FROM Person p WHERE p.id IN (?)
+
 val peopleWithContacts = quote {
   query[Person].filter(p => query[Contact].filter(c => c.personId == p.id).nonEmpty)
 }

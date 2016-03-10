@@ -31,6 +31,14 @@ class SourceSpec extends Spec {
     }
   }
 
+  "encoding set" in {
+    case class Entity(i: Int)
+    val q = quote { (is: Set[Int]) =>
+      query[Entity].filter(e => is.contains(e.i))
+    }
+    mirrorSource.run(q)(Set(1)).binds mustEqual Row(Set(1))
+  }
+
   "encodes `WrappedValue` extended value class" - {
     case class Entity(x: WrappedEncodable, s: String)
 
