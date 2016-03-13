@@ -23,6 +23,11 @@ class BetaReductionSpec extends Spec {
       BetaReduction(ast, Ident("a") -> Ident("a'")) mustEqual
         Ident("a'")
     }
+    "inlines val" in {
+      val (a, b, c) = (Ident("a"), Ident("b"), Ident("c"))
+      val map = collection.Map[Ident, Ast](c -> b, b -> a)
+      BetaReduction(map)(c) mustEqual a
+    }
     "avoids replacing idents of an outer scope" - {
       "function" in {
         val ast: Ast = Function(List(Ident("a")), Ident("a"))

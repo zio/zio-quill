@@ -1,5 +1,7 @@
 package io.getquill.ast
 
+import io.getquill.util.Messages.fail
+
 trait StatefulTransformer[T] {
 
   val state: T
@@ -37,6 +39,9 @@ trait StatefulTransformer[T] {
         (If(at, bt, ct), ctt)
 
       case l: Dynamic => (l, this)
+
+      case e @ (_: Block | _: Val) =>
+        fail(s"invalid stateful tranformation '$e'")
     }
 
   def apply(e: Query): (Query, StatefulTransformer[T]) =

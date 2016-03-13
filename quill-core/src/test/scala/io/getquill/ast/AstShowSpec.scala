@@ -486,6 +486,19 @@ class AstShowSpec extends Spec {
     }
   }
 
+  "shows inline statement" - {
+    "block" in {
+      val block = Block(List(
+        Val(Ident("a"), Entity("a")),
+        Val(Ident("b"), Entity("b"))
+      ))
+      (block: Ast).show mustEqual "a = query[a] b = query[b]"
+    }
+    "val" in {
+      (Val(Ident("a"), Entity("a")): Ast).show mustEqual "a = query[a]"
+    }
+  }
+
   "shows option operations" - {
     "map" in {
       val q = quote {

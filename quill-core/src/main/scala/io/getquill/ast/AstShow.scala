@@ -19,6 +19,8 @@ object AstShow {
     case ast: OptionOperation => ast.show
     case ast: Dynamic         => ast.show
     case ast: If              => ast.show
+    case ast: Block           => ast.show
+    case ast: Val             => ast.show
   }
 
   implicit val ifShow: Show[If] = Show[If] {
@@ -27,6 +29,14 @@ object AstShow {
 
   implicit val dynamicShow: Show[Dynamic] = Show[Dynamic] {
     case Dynamic(tree) => tree.toString
+  }
+
+  implicit val blockShow: Show[Block] = Show[Block] {
+    case Block(statements) => statements.map(_.show).mkString(" ")
+  }
+
+  implicit val valShow: Show[Val] = Show[Val] {
+    case Val(name, body) => s"$name = ${body.show}"
   }
 
   implicit val queryShow: Show[Query] = Show[Query] {

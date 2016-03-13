@@ -92,6 +92,12 @@ case class Set(values: List[Ast]) extends Value
 
 //************************************************************
 
+case class Block(statements: List[Ast]) extends Ast
+
+case class Val(name: Ident, body: Ast) extends Ast
+
+//************************************************************
+
 sealed trait Action extends Ast
 
 case class Update(query: Ast) extends Action

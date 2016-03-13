@@ -6,7 +6,7 @@ import io.getquill.ast._
 
 trait Liftables {
   val c: Context
-  import c.universe.{ Ident => _, Constant => _, Function => _, If => _, _ }
+  import c.universe.{ Ident => _, Constant => _, Function => _, If => _, Block => _, _ }
 
   private val pack = q"io.getquill.ast"
 
@@ -15,6 +15,8 @@ trait Liftables {
     case ast: Action => actionLiftable(ast)
     case ast: Value => valueLiftable(ast)
     case ast: Ident => identLiftable(ast)
+    case Val(name, body) => q"$pack.Val($name, $body)"
+    case Block(statements) => q"$pack.Block($statements)"
     case Property(a, b) => q"$pack.Property($a, $b)"
     case Function(a, b) => q"$pack.Function($a, $b)"
     case FunctionApply(a, b) => q"$pack.FunctionApply($a, $b)"

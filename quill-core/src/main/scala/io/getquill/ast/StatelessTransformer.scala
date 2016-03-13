@@ -1,5 +1,7 @@
 package io.getquill.ast
 
+import io.getquill.util.Messages.fail
+
 trait StatelessTransformer {
 
   def apply(e: Ast): Ast =
@@ -17,6 +19,9 @@ trait StatelessTransformer {
       case If(a, b, c)                 => If(apply(a), apply(b), apply(c))
 
       case e: Dynamic                  => e
+
+      case e @ (_: Block | _: Val) =>
+        fail(s"invalid stateless tranformation '$e'")
     }
 
   def apply(e: Query): Query =

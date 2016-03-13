@@ -10,7 +10,7 @@ import io.getquill.util.Interleave
 trait Parsing extends SchemaConfigParsing {
   this: Quotation =>
 
-  import c.universe.{ Ident => _, Constant => _, Function => _, If => _, _ }
+  import c.universe.{ Ident => _, Constant => _, Function => _, If => _, Block => _, _ }
 
   case class Parser[T](p: PartialFunction[Tree, T])(implicit ct: ClassTag[T]) {
 
@@ -29,6 +29,8 @@ trait Parsing extends SchemaConfigParsing {
   }
 
   val astParser: Parser[Ast] = Parser[Ast] {
+    case `valParser`(value)                 => value
+    case `patMatchValParser`(value)         => value
     case `valueParser`(value)               => value
     case `quotedAstParser`(value)           => value
     case `queryParser`(query)               => query
@@ -45,26 +47,49 @@ trait Parsing extends SchemaConfigParsing {
 
     case q"$i: $typ"                        => astParser(i)
 
-    case q"$tupleTree match { case ($fieldsTrees) => $bodyTree }" =>
-      val tuple = astParser(tupleTree)
-      val fields = astParser(fieldsTrees)
-      val body = astParser(bodyTree)
-      def property(path: List[Int]) =
-        path.foldLeft(tuple) {
-          case (t, i) => Property(t, s"_${i + 1}")
-        }
-      def reductions(ast: Ast, path: List[Int] = List()): List[(Ident, Ast)] =
-        ast match {
-          case ident: Ident =>
-            List(ident -> property(path))
-          case Tuple(elems) =>
-            elems.zipWithIndex.flatMap {
-              case (elem, idx) => reductions(elem, path :+ idx)
-            }
-          case other =>
-            c.fail(s"Please report a bug. Expected tuple or ident, got '$other'")
-        }
-      BetaReduction(body, reductions(fields): _*)
+    case `patMatchParser`(value)            => value
+    case `blockParser`(block)               => block
+  }
+
+  val valParser: Parser[Val] = Parser[Val] {
+    case q"val $name: $typ = $body" => Val(ident(name), astParser(body))
+  }
+
+  val patMatchValParser: Parser[Val] = Parser[Val] {
+    case q"$mods val $name: $typ = ${ patMatchParser(value) }" =>
+      Val(ident(name), value)
+  }
+
+  val blockParser: Parser[Block] = Parser[Block] {
+    case q"{..$exprs}" if exprs.size > 0 => Block(exprs.map(astParser(_)))
+  }
+
+  val patMatchParser: Parser[Ast] = Parser[Ast] {
+    case q"$expr match { case ($fields) => $body }" =>
+      patMatchParser(expr, fields, body)
+  }
+
+  private def patMatchParser(tupleTree: Tree, fieldsTrees: Tree, bodyTree: Tree) = {
+    val tuple = astParser(tupleTree)
+    val fields = astParser(fieldsTrees)
+    val body = astParser(bodyTree)
+    def property(path: List[Int]) =
+      path.foldLeft(tuple) {
+        case (t, i) => Property(t, s"_${i + 1}")
+      }
+    def reductions(ast: Ast, path: List[Int] = List()): List[(Ident, Ast)] = {
+      ast match {
+        case ident: Ident    => List(ident -> property(path))
+        case Val(name, body) => List(name -> body)
+        case Tuple(elems) =>
+          elems.zipWithIndex.flatMap {
+            case (elem, idx) => reductions(elem, path :+ idx)
+          }
+        case other =>
+          c.fail(s"Please report a bug. Expected tuple, val, or ident, got '$other'")
+      }
+    }
+    BetaReduction(body, reductions(fields): _*)
   }
 
   val ifParser: Parser[If] = Parser[If] {
@@ -220,7 +245,8 @@ trait Parsing extends SchemaConfigParsing {
     case c.universe.Bind(TermName(name), c.universe.Ident(termNames.WILDCARD)) =>
       identClean(Ident(name))
   }
-  private def identClean(x: Ident) = x.copy(name = x.name.replace("$", ""))
+  private def identClean(x: Ident): Ident = x.copy(name = x.name.replace("$", ""))
+  private def ident(x: TermName): Ident = identClean(Ident(x.decodedName.toString))
 
   val optionOperationParser: Parser[OptionOperation] = Parser[OptionOperation] {
     case q"$o.map[$t]({($alias) => $body})" if (is[Option[Any]](o)) =>
