@@ -10,7 +10,6 @@ class ResolveSourceMacroSpec extends Spec {
   "fails if the source can't be resolved at compile time" in {
     val s = source(new BuggyConfig with QueryProbing)
     "s.run(qr1)" mustNot compile
-    ()
   }
 
   "doesn't warn if query probing is disabled and the source can't be resolved at compile time" in {
