@@ -32,11 +32,11 @@ object AstShow {
   }
 
   implicit val blockShow: Show[Block] = Show[Block] {
-    case Block(statements) => statements.map(_.show).mkString(" ")
+    case Block(statements) => s"[${statements.map(_.show).mkString(" ")}]"
   }
 
   implicit val valShow: Show[Val] = Show[Val] {
-    case Val(name, body) => s"$name = ${body.show}"
+    case Val(name, body) => s"val $name = ${body.show}"
   }
 
   implicit val queryShow: Show[Query] = Show[Query] {

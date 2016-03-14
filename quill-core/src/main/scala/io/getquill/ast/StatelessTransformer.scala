@@ -20,8 +20,8 @@ trait StatelessTransformer {
 
       case e: Dynamic                  => e
 
-      case e @ (_: Block | _: Val) =>
-        fail(s"invalid stateless tranformation '$e'")
+      case Block(statements)           => Block(statements.map(apply))
+      case Val(name, body)             => Val(name, apply(body))
     }
 
   def apply(e: Query): Query =

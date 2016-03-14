@@ -40,8 +40,13 @@ trait StatefulTransformer[T] {
 
       case l: Dynamic => (l, this)
 
-      case e @ (_: Block | _: Val) =>
-        fail(s"invalid stateful tranformation '$e'")
+      case Block(a) =>
+        val (at, att) = apply(a)(_.apply)
+        (Block(at), att)
+
+      case Val(a, b) =>
+        val (at, att) = apply(b)
+        (Val(a, at), att)
     }
 
   def apply(e: Query): (Query, StatefulTransformer[T]) =

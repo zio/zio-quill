@@ -492,10 +492,10 @@ class AstShowSpec extends Spec {
         Val(Ident("a"), Entity("a")),
         Val(Ident("b"), Entity("b"))
       ))
-      (block: Ast).show mustEqual "a = query[a] b = query[b]"
+      (block: Ast).show mustEqual "[val a = query[a] val b = query[b]]"
     }
     "val" in {
-      (Val(Ident("a"), Entity("a")): Ast).show mustEqual "a = query[a]"
+      (Val(Ident("a"), Entity("a")): Ast).show mustEqual "val a = query[a]"
     }
   }
 

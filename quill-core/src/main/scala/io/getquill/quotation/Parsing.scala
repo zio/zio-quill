@@ -51,6 +51,10 @@ trait Parsing extends SchemaConfigParsing {
     case `blockParser`(block)               => block
   }
 
+  val blockParser: Parser[Block] = Parser[Block] {
+    case q"{..$exprs}" if exprs.size > 0 => Block(exprs.map(astParser(_)))
+  }
+
   val valParser: Parser[Val] = Parser[Val] {
     case q"val $name: $typ = $body" => Val(ident(name), astParser(body))
   }
@@ -60,18 +64,16 @@ trait Parsing extends SchemaConfigParsing {
       Val(ident(name), value)
   }
 
-  val blockParser: Parser[Block] = Parser[Block] {
-    case q"{..$exprs}" if exprs.size > 0 => Block(exprs.map(astParser(_)))
-  }
-
   val patMatchParser: Parser[Ast] = Parser[Ast] {
     case q"$expr match { case ($fields) => $body }" =>
-      patMatchParser(expr, fields, body)
+      astParser(fields) match {
+        case Val(name, body) => BetaReduction(body, List(name -> body): _*)
+        case fieldsAst       => patMatchParser(expr, fieldsAst, body)
+      }
   }
 
-  private def patMatchParser(tupleTree: Tree, fieldsTrees: Tree, bodyTree: Tree) = {
+  private def patMatchParser(tupleTree: Tree, fields: Ast, bodyTree: Tree) = {
     val tuple = astParser(tupleTree)
-    val fields = astParser(fieldsTrees)
     val body = astParser(bodyTree)
     def property(path: List[Int]) =
       path.foldLeft(tuple) {
@@ -79,8 +81,7 @@ trait Parsing extends SchemaConfigParsing {
       }
     def reductions(ast: Ast, path: List[Int] = List()): List[(Ident, Ast)] = {
       ast match {
-        case ident: Ident    => List(ident -> property(path))
-        case Val(name, body) => List(name -> body)
+        case ident: Ident => List(ident -> property(path))
         case Tuple(elems) =>
           elems.zipWithIndex.flatMap {
             case (elem, idx) => reductions(elem, path :+ idx)
