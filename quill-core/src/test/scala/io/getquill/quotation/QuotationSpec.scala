@@ -316,9 +316,21 @@ class QuotationSpec extends Spec {
         val q = quote(11L)
         quote(unquote(q)).ast mustEqual Constant(11L)
       }
-      "tuple" in {
-        val q = quote((1, "a"))
-        quote(unquote(q)).ast mustEqual Tuple(List(Constant(1), Constant("a")))
+      "tuple" - {
+        "literal" in {
+          val q = quote((1, "a"))
+          quote(unquote(q)).ast mustEqual Tuple(List(Constant(1), Constant("a")))
+        }
+        "arrow assoc" - {
+          "unicode arrow" in {
+            val q = quote(1 → "a")
+            quote(unquote(q)).ast mustEqual Tuple(List(Constant(1), Constant("a")))
+          }
+          "normal arrow" in {
+            val q = quote(1 -> "a" -> "b")
+            quote(unquote(q)).ast mustEqual Tuple(List(Tuple(List(Constant(1), Constant("a"))), Constant("b")))
+          }
+        }
       }
       "set" in {
         val q = quote(collection.Set(1, 2))
