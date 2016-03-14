@@ -15,7 +15,7 @@ case class BetaReduction(map: collection.Map[Ident, Ast])
           case _ => apply(values(name.drop(1).toInt - 1))
         }
       case FunctionApply(Function(params, body), values) =>
-        apply(BetaReduction(map ++ params.zip(values)).apply(body))
+        apply(BetaReduction(params.zip(values).toMap).apply(body))
       case ident: Ident =>
         map.get(ident).map(BetaReduction(map - ident)(_)).getOrElse(ident)
       case Function(params, body) =>

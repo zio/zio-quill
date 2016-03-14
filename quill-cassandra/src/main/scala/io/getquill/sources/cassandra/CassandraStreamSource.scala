@@ -38,10 +38,10 @@ class CassandraStreamSource[N <: NamingStrategy](config: CassandraSourceConfig[N
       .map(extractor)
   }
 
-  def execute(cql: String, generated: Option[String]): Observable[ResultSet] =
-    Observable.fromFuture(session.executeAsync(prepare(cql)))
+  def execute(cql: String, bind: BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement], generated: Option[String]): Observable[ResultSet] =
+    Observable.fromFuture(session.executeAsync(prepare(cql, bind)))
 
-  def execute[T](cql: String, bindParams: T => BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement], generated: Option[String]): Observable[T] => Observable[ResultSet] =
+  def executeBatch[T](cql: String, bindParams: T => BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement], generated: Option[String]): Observable[T] => Observable[ResultSet] =
     (values: Observable[T]) =>
       values.flatMap { value =>
         Observable.fromFuture(session.executeAsync(prepare(cql, bindParams(value))))
