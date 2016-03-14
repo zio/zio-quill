@@ -495,6 +495,8 @@ This feature is disabled by default. To enable it, mix the `QueryProbing` trait 
 lazy val db = source(new MySourceConfig("configKey") with QueryProbing)
 ```
 
+The config configuration must be self-contained, not having references to variables outside its scope. This allows the macro load the source instance at compile-time.
+
 The configurations correspondent to the config key must be available at compile time. You can achieve it by adding this line to your project settings:
 
 ```

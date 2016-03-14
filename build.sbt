@@ -107,7 +107,6 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
     "-Ywarn-dead-code",
     "-Ywarn-numeric-widen",   
     "-Ywarn-value-discard",
-    "-Ybackend:GenBCode",
     "-Xfuture",
     "-Ywarn-unused-import"
   ),
