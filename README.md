@@ -131,6 +131,7 @@ Quotations are both compile-time and runtime values. Quill uses a type refinemen
 It is important to avoid giving explicit types to quotations when possible. For instance, this quotation can't be read at compile-time as the type refinement is lost:
 
 ```scala
+// Avoid type widening (Quoted[Query[Circle]]), or else the quotation will be dynamic.
 val q: Quoted[Query[Circle]] = quote {
   query[Circle].filter(c => c.radius > 10)
 }
