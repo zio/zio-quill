@@ -329,10 +329,11 @@ trait Parsing extends SchemaConfigParsing {
     tree.tpe <:< t.tpe
 
   val valueParser: Parser[Value] = Parser[Value] {
-    case q"null"                         => NullValue
+    case q"null" => NullValue
     case Literal(c.universe.Constant(v)) => Constant(v)
-    case q"((..$v))" if (v.size > 1)     => Tuple(v.map(astParser(_)))
-    case q"$pack.Set.apply[..$t](..$v)"  => Set(v.map(astParser(_)))
+    case q"((..$v))" if (v.size > 1) => Tuple(v.map(astParser(_)))
+    case q"$pack.Set.apply[..$t](..$v)" => Set(v.map(astParser(_)))
+    case q"((scala.this.Predef.ArrowAssoc[$t1]($v1).$arrow[$t2]($v2)))" => Tuple(List(astParser(v1), astParser(v2)))
   }
 
   val actionParser: Parser[Ast] = Parser[Ast] {
