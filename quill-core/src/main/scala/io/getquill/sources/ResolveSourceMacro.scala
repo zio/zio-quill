@@ -15,17 +15,22 @@ import org.scalamacros.resetallattrs.ResetAllAttrs
 
 import io.getquill.util.Cache
 
-case class QuotedSource(tree: Any, probingEnabled: Boolean) extends StaticAnnotation
+case class QuotedSource(tree: Any) extends StaticAnnotation
 
 trait ResolveSourceMacro {
   val c: Context
   import c.universe.{ Try => _, _ }
 
   def quoteSource[T <: Source[_, _]](config: Expr[SourceConfig[T]])(implicit t: WeakTypeTag[T]) = {
-    val probingEnabled = config.actualType <:< c.weakTypeOf[QueryProbing]
+    val tree =
+      (config.actualType <:< c.weakTypeOf[QueryProbing]) match {
+        case true  => q"Some(new $t($config))"
+        case false => q"None"
+      }
+
     q"""
       new $t($config) {
-        @${c.weakTypeOf[QuotedSource]}(new $t($config), $probingEnabled)
+        @${c.weakTypeOf[QuotedSource]}($tree)
         def quoted() = ()
       }  
     """
@@ -45,9 +50,9 @@ trait ResolveSourceMacro {
 
   private def unquote(sourceTree: Option[List[Tree]]): Option[Source[_, _]] =
     sourceTree match {
-      case Some(_ :: q"false" :: Nil) =>
+      case Some(q"scala.None" :: Nil) =>
         None
-      case Some(tree :: _ :: Nil) =>
+      case Some(q"scala.Some.apply[$t]($tree)" :: Nil) =>
         loadSource(tree.duplicate) match {
           case Success(value) =>
             Some(value)
