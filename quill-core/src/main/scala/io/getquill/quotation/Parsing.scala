@@ -66,14 +66,12 @@ trait Parsing extends SchemaConfigParsing {
 
   val patMatchParser: Parser[Ast] = Parser[Ast] {
     case q"$expr match { case ($fields) => $body }" =>
-      astParser(fields) match {
-        case Val(name, body) => BetaReduction(body, List(name -> body): _*)
-        case fieldsAst       => patMatchParser(expr, fieldsAst, body)
-      }
+      patMatchParser(expr, fields, body)
   }
 
-  private def patMatchParser(tupleTree: Tree, fields: Ast, bodyTree: Tree) = {
+  private def patMatchParser(tupleTree: Tree, fieldsTree: Tree, bodyTree: Tree) = {
     val tuple = astParser(tupleTree)
+    val fields = astParser(fieldsTree)
     val body = astParser(bodyTree)
     def property(path: List[Int]) =
       path.foldLeft(tuple) {
