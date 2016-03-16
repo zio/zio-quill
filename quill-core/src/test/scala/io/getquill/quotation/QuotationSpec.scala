@@ -802,11 +802,22 @@ class QuotationSpec extends Spec {
     val dq: Quoted[Int] = quote(q)
   }
 
-  "doean't a allow quotation of null" in {
+  "doesn't a allow quotation of null" in {
     "quote(null)" mustNot compile
   }
 
   "fails if the tree is not valid" in {
     """quote("s".getBytes)""" mustNot compile
+  }
+
+  "infers the correct dynamic tree" in {
+    val i = -1
+    val q1 = quote(qr1.filter(_.s == "aa"))
+    val q2 = quote(qr1.filter(_.s == "bb"))
+    val q =
+      if (i > 0) q1
+      else q2
+
+    quote(unquote(q)).ast mustEqual q2.ast
   }
 }
