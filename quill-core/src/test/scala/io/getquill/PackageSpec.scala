@@ -57,16 +57,24 @@ class PackageSpec extends Spec {
     q.toString mustEqual "query[TestEntity]"
   }
 
-  "unquotes quoted function bodies automatically" in {
+  "unquotes quoted function bodies automatically" - {
     implicit class QueryOps[Q <: Query[_]](q: Q) {
       def allowFiltering = quote(infix"$q ALLOW FILTERING".as[Q])
     }
-
-    val q: Quoted[Int => EntityQuery[TestEntity]] = quote {
-      (i: Int) =>
-        query[TestEntity].allowFiltering
+    "one param" in {
+      val q: Quoted[Int => EntityQuery[TestEntity]] = quote {
+        (i: Int) =>
+          query[TestEntity].allowFiltering
+      }
+      q.toString mustEqual "(i) => infix\"" + "$" + "{query[TestEntity]} ALLOW FILTERING\""
     }
-    q.toString mustEqual "(i) => infix\"" + "$" + "{query[TestEntity]} ALLOW FILTERING\""
+    "multiple params" in {
+      val q: Quoted[(Int, Int, Int) => EntityQuery[TestEntity]] = quote {
+        (i: Int, j: Int, k: Int) =>
+          query[TestEntity].allowFiltering
+      }
+      q.toString mustEqual "(i, j, k) => infix\"" + "$" + "{query[TestEntity]} ALLOW FILTERING\""
+    }
   }
 
   "fails if the infix is used outside of a quotation" in {
