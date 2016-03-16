@@ -38,7 +38,7 @@ trait Quotation extends Parsing with Liftables with Unliftables {
       case tree    => q"io.getquill.unquote($tree)"
     }
 
-  def quotedFunctionBody[T, R](func: Expr[T => Quoted[R]]) =
+  def quotedFunctionBody(func: Expr[Any]) =
     func.tree match {
       case q"(..$p) => $b" => q"io.getquill.quote((..$p) => io.getquill.unquote($b))"
     }
