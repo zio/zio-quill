@@ -95,6 +95,4 @@ object CqlQuery {
       case (a: Property, o: PropertyOrdering)         => List(OrderByCriteria(a, o))
       case other                                      => fail(s"Invalid order by criteria $ast")
     }
-
-  AstShow
 }
