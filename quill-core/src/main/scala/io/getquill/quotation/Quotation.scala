@@ -4,8 +4,8 @@ import io.getquill.util.Messages._
 import scala.annotation.StaticAnnotation
 import scala.reflect.ClassTag
 import scala.reflect.macros.whitebox.Context
-
 import io.getquill.ast._
+import java.util.concurrent.atomic.AtomicInteger
 
 trait Quoted[+T] {
   def ast: Ast
@@ -20,12 +20,14 @@ trait Quotation extends Parsing with Liftables with Unliftables {
 
   def quote[T: WeakTypeTag](body: Expr[T]) = {
     val ast = astParser(body.tree)
+    val id = TermName(s"id${ast.hashCode}")
     q"""
       new ${c.weakTypeOf[Quoted[T]]} {
         @${c.weakTypeOf[QuotedAst]}($ast)
         def quoted = ast
         override def ast = $ast
         override def toString = ast.toString
+        def $id() = ()
       }
     """
   }
