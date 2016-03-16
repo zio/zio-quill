@@ -17,11 +17,14 @@ case class BetaReduction(map: collection.Map[Ident, Ast])
       case FunctionApply(Function(params, body), values) =>
         apply(BetaReduction(map ++ params.zip(values)).apply(body))
       case ident: Ident =>
-        map.getOrElse(ident, ident)
+        map.get(ident).map(BetaReduction(map - ident)(_)).getOrElse(ident)
       case Function(params, body) =>
         Function(params, BetaReduction(map -- params)(body))
       case OptionOperation(t, a, b, c) =>
         OptionOperation(t, apply(a), b, BetaReduction(map - b)(c))
+      case Block(statements) =>
+        val vals = statements.collect { case x: Val => x.name -> x.body }
+        BetaReduction(map ++ vals)(statements.last)
       case other =>
         super.apply(other)
     }

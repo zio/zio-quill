@@ -67,11 +67,14 @@ val areas = quote {
 }
 ```
 
-Quotations can also contain high-order functions:
+Quotations can also contain high-order functions and inline values:
 
 ```scala
 val area = quote {
-  (c: Circle) => pi * c.radius * c.radius
+  (c: Circle) => {
+    val r2 = c.radius * c.radius
+    pi * r2
+  }
 }
 ```
 

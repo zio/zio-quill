@@ -772,6 +772,49 @@ class SqlIdiomSpec extends Spec {
           "SELECT CASE WHEN t.i > 0 THEN 'a' WHEN t.i > 10 THEN 'b' ELSE 'c' END FROM TestEntity t"
       }
     }
+    "inline vals" - {
+      "simple" in {
+        val q = quote {
+          query[TestEntity].map { x =>
+            val (a, b) = (x.i, x.l)
+            val ab = a * b
+            (a, b, ab)
+          }
+        }
+        mirrorSource.run(q).sql mustEqual
+          "SELECT x.i, x.l, x.i * x.l FROM TestEntity x"
+      }
+      "nested" in {
+        val q = quote {
+          for {
+            a <- query[TestEntity]
+            b <- query[TestEntity2] if a.i == b.i
+            (c, inner) <- {
+              val outer = 1
+              query[TestEntity3].filter(_.i == outer).map { c =>
+                val inner = outer + c.i
+                (c, inner)
+              }
+            } if b.i == c.i
+          } yield (a, b, c, inner)
+        }
+        mirrorSource.run(q).sql mustEqual
+          "SELECT a.s, a.i, a.l, a.o, b.s, b.i, b.l, b.o, x21.s, x21.i, x21.l, x21.o, 1 + x21.i FROM TestEntity a, TestEntity2 b, TestEntity3 x21 WHERE (a.i = b.i) AND ((x21.i = 1) AND (b.i = x21.i))"
+      }
+      "aggregated" in {
+        val q = quote {
+          query[TestEntity].map { a =>
+            val (b, c) = (query[TestEntity2], query[TestEntity3])
+            val (ai, bi, ci) = (a.i, b.map(_.i), c.map(_.i))
+            val (sumB, sumC) = (bi.sum, ci.sum)
+            val sumABC = bi.flatMap(b => ci.map(ai + b + _)).sum
+            (sumB, sumC, sumABC)
+          }
+        }
+        mirrorSource.run(q).sql mustEqual
+          "SELECT (SELECT SUM(x25.i) FROM TestEntity2 x25), (SELECT SUM(x26.i) FROM TestEntity3 x26), (SELECT SUM((a.i + x251.i) + x261.i) FROM TestEntity2 x251, TestEntity3 x261) FROM TestEntity a"
+      }
+    }
   }
 
   "fails if the query is malformed" in {

@@ -292,5 +292,29 @@ class StatefulTransformerSpec extends Spec {
           att.state mustEqual List()
       }
     }
+
+    "block" in {
+      val ast: Ast = Block(List(
+        Val(Ident("a"), Entity("a")),
+        Val(Ident("b"), Entity("b"))
+      ))
+      Subject(Nil, Entity("a") -> Entity("b"), Entity("b") -> Entity("c"))(ast) match {
+        case (at, att) =>
+          at mustEqual Block(List(
+            Val(Ident("a"), Entity("b")),
+            Val(Ident("b"), Entity("c"))
+          ))
+          att.state mustEqual List(Entity("a"), Entity("b"))
+      }
+    }
+
+    "val" in {
+      val ast: Ast = Val(Ident("a"), Entity("a"))
+      Subject(Nil, Entity("a") -> Entity("b"))(ast) match {
+        case (at, att) =>
+          at mustEqual Val(Ident("a"), Entity("b"))
+          att.state mustEqual List(Entity("a"))
+      }
+    }
   }
 }

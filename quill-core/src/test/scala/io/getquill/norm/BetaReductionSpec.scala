@@ -23,6 +23,36 @@ class BetaReductionSpec extends Spec {
       BetaReduction(ast, Ident("a") -> Ident("a'")) mustEqual
         Ident("a'")
     }
+    "with inline" - {
+      val entity = Entity("a")
+      val (a, b, c) = (Ident("a"), Ident("b"), Ident("c"))
+      val (c1, c2, c3) = (Constant(1), Constant(2), Constant(3))
+      val map = collection.Map[Ident, Ast](c -> b, b -> a)
+
+      "top level block" in {
+        val block = Block(List(
+          Val(a, entity),
+          Val(b, a),
+          Map(c, b, c1)
+        ))
+        BetaReduction(map)(block) mustEqual Map(entity, b, c1)
+      }
+      "nested blocks" in {
+        val inner = Block(List(
+          Val(a, entity),
+          Val(b, c2),
+          Val(c, c3),
+          Tuple(List(a, b, c))
+        ))
+        val outer = Block(List(
+          Val(a, inner),
+          Val(b, a),
+          Val(c, b),
+          c
+        ))
+        BetaReduction(map)(outer) mustEqual Tuple(List(entity, c2, c3))
+      }
+    }
     "avoids replacing idents of an outer scope" - {
       "function" in {
         val ast: Ast = Function(List(Ident("a")), Ident("a"))
