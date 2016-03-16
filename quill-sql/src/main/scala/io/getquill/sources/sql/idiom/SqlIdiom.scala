@@ -23,7 +23,7 @@ trait SqlIdiom {
       case a: Property          => a.show
       case a: Value             => a.show
       case a: If                => a.show
-      case a @ (_: Function | _: FunctionApply | _: Dynamic | _: OptionOperation) =>
+      case a @ (_: Function | _: FunctionApply | _: Dynamic | _: OptionOperation | _: Block | _: Val) =>
         fail(s"Malformed query $a.")
     }
 
