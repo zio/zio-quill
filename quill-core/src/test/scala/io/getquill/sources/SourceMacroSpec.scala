@@ -119,4 +119,9 @@ class SourceMacroSpec extends Spec {
       mirrorSource.run(q).ast mustEqual q.ast
     }
   }
+
+  "can be used as a var" in {
+    var db = source(new MirrorSourceConfig(""))
+    "db.run(qr1)" must compile
+  }
 }
