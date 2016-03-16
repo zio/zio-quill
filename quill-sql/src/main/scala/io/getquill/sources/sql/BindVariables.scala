@@ -18,6 +18,11 @@ private[sources] case class BindVariables(state: (List[Ident], List[Ident]))
 
   override def apply(e: Query) =
     e match {
+      case Take(Drop(a, b), c) =>
+        val (ct, ctt) = apply(c)
+        val (bt, btt) = ctt.apply(b)
+        val (at, att) = btt.apply(a)
+        (Take(Drop(at, bt), ct), att)
       case Map(a, b, c) =>
         val (ct, ctt) = apply(c)
         val (at, att) = ctt.apply(a)
