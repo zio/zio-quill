@@ -39,9 +39,9 @@ lazy val `quill-jdbc` =
     .settings(
       libraryDependencies ++= Seq(
         "com.zaxxer"     % "HikariCP"             % "2.3.9",
-        "mysql"          % "mysql-connector-java" % "5.1.36"  % "test",
-        "com.h2database" % "h2"                   % "1.4.190" % "test",
-        "org.postgresql" % "postgresql"           % "9.4-1206-jdbc41"
+        "mysql"          % "mysql-connector-java" % "5.1.38"  % "test",
+        "com.h2database" % "h2"                   % "1.4.191" % "test",
+        "org.postgresql" % "postgresql"           % "9.4.1208"
       ),
       parallelExecution in Test := false
     )
@@ -89,7 +89,7 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
   libraryDependencies ++= Seq(
     "org.scalamacros" %% "resetallattrs"  % "1.0.0",
     "org.scalatest"   %% "scalatest"      % "2.2.4" % "test",
-    "ch.qos.logback"  % "logback-classic" % "1.1.3" % "test",
+    "ch.qos.logback"  % "logback-classic" % "1.1.6" % "test",
     "com.google.code.findbugs" % "jsr305" % "3.0.1" % "provided" // just to avoid warnings during compilation
   ),
   EclipseKeys.createSrc := EclipseCreateSrc.Default + EclipseCreateSrc.Resource,
