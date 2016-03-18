@@ -12,13 +12,6 @@
   </head>
 
   <body>
-    
-    <script>
-  ((window.gitter = {}).chat = {}).options = {
-    room: 'getquill/quill'
-  };
-</script>
-<script src="https://sidecar.gitter.im/dist/sidecar.v1.js" async defer></script>
 
     <!-- HEADER -->
     <div id="header_wrap" class="outer">
@@ -109,10 +102,13 @@
   query[<span class="pl-en">Circle</span>].map(c <span class="pl-k">=&gt;</span> pi <span class="pl-k">*</span> c.radius <span class="pl-k">*</span> c.radius)
 }</pre></div>
 
-<p>Quotations can also contain high-order functions:</p>
+<p>Quotations can also contain high-order functions and inline values:</p>
 
 <div class="highlight highlight-source-scala"><pre><span class="pl-k">val</span> <span class="pl-en">area</span> <span class="pl-k">=</span> quote {
-  (<span class="pl-v">c</span>: <span class="pl-en">Circle</span>) <span class="pl-k">=&gt;</span> pi <span class="pl-k">*</span> c.radius <span class="pl-k">*</span> c.radius
+  (<span class="pl-v">c</span>: <span class="pl-en">Circle</span>) <span class="pl-k">=&gt;</span> {
+    <span class="pl-k">val</span> <span class="pl-en">r2</span> <span class="pl-k">=</span> c.radius <span class="pl-k">*</span> c.radius
+    pi <span class="pl-k">*</span> r2
+  }
 }</pre></div>
 
 <div class="highlight highlight-source-scala"><pre><span class="pl-k">val</span> <span class="pl-en">areas</span> <span class="pl-k">=</span> quote {
@@ -169,7 +165,8 @@
 
 <p>It is important to avoid giving explicit types to quotations when possible. For instance, this quotation can't be read at compile-time as the type refinement is lost:</p>
 
-<div class="highlight highlight-source-scala"><pre><span class="pl-k">val</span> <span class="pl-en">q</span><span class="pl-k">:</span> <span class="pl-en">Quoted</span>[<span class="pl-en">Query</span>[<span class="pl-en">Circle</span>]] <span class="pl-k">=</span> quote {
+<div class="highlight highlight-source-scala"><pre><span class="pl-c">// Avoid type widening (Quoted[Query[Circle]]), or else the quotation will be dynamic.</span>
+<span class="pl-k">val</span> <span class="pl-en">q</span><span class="pl-k">:</span> <span class="pl-en">Quoted</span>[<span class="pl-en">Query</span>[<span class="pl-en">Circle</span>]] <span class="pl-k">=</span> quote {
   query[<span class="pl-en">Circle</span>].filter(c <span class="pl-k">=&gt;</span> c.radius <span class="pl-k">&gt;</span> <span class="pl-c1">10</span>)
 }
 
@@ -209,7 +206,7 @@ db.run(q) <span class="pl-c">// SELECT c.radius FROM Circle c WHERE c.radius &gt
 <p>Alternatively, the identifiers can be customized:</p>
 
 <div class="highlight highlight-source-scala"><pre><span class="pl-k">val</span> <span class="pl-en">circles</span> <span class="pl-k">=</span> quote {
-  query[<span class="pl-en">Circle</span>](<span class="pl-s"><span class="pl-pds">"</span>circle_table<span class="pl-pds">"</span></span>, _.radius <span class="pl-k">-</span><span class="pl-k">&gt;</span> <span class="pl-s"><span class="pl-pds">"</span>radius_column<span class="pl-pds">"</span></span>)
+  query[<span class="pl-en">Circle</span>](_.entity(<span class="pl-s"><span class="pl-pds">"</span>circle_table<span class="pl-pds">"</span></span>).columns(_.radius <span class="pl-k">-</span><span class="pl-k">&gt;</span> <span class="pl-s"><span class="pl-pds">"</span>radius_column<span class="pl-pds">"</span></span>))
 }
 
 <span class="pl-k">val</span> <span class="pl-en">q</span> <span class="pl-k">=</span> quote {
@@ -225,15 +222,30 @@ db.run(q)
 <span class="pl-k">case</span> <span class="pl-k">class</span> <span class="pl-en">Rectangle</span>(<span class="pl-v">length</span>: <span class="pl-k">Int</span>, <span class="pl-v">width</span>: <span class="pl-k">Int</span>)
 <span class="pl-k">object</span> <span class="pl-en">schema</span> {
   <span class="pl-k">val</span> <span class="pl-en">circles</span> <span class="pl-k">=</span> quote {
-    query[<span class="pl-en">Circle</span>](<span class="pl-s"><span class="pl-pds">"</span>circle_table<span class="pl-pds">"</span></span>, 
-      _.radius <span class="pl-k">-</span><span class="pl-k">&gt;</span> <span class="pl-s"><span class="pl-pds">"</span>radius_column<span class="pl-pds">"</span></span>)
+    query[<span class="pl-en">Circle</span>](
+        _.entity(<span class="pl-s"><span class="pl-pds">"</span>circle_table<span class="pl-pds">"</span></span>)
+        .columns(_.radius <span class="pl-k">-</span><span class="pl-k">&gt;</span> <span class="pl-s"><span class="pl-pds">"</span>radius_column<span class="pl-pds">"</span></span>))
   }
   <span class="pl-k">val</span> <span class="pl-en">rectangles</span> <span class="pl-k">=</span> quote {
-    query[<span class="pl-en">Rectangle</span>](<span class="pl-s"><span class="pl-pds">"</span>rectangle_table<span class="pl-pds">"</span></span>, 
-      _.length <span class="pl-k">-</span><span class="pl-k">&gt;</span> <span class="pl-s"><span class="pl-pds">"</span>length_column<span class="pl-pds">"</span></span>, 
-      _.width <span class="pl-k">-</span><span class="pl-k">&gt;</span> <span class="pl-s"><span class="pl-pds">"</span>width_column<span class="pl-pds">"</span></span>)
+    query[<span class="pl-en">Rectangle</span>](
+        _.entity(<span class="pl-s"><span class="pl-pds">"</span>rectangle_table<span class="pl-pds">"</span></span>)
+        .columns(
+          _.length <span class="pl-k">-</span><span class="pl-k">&gt;</span> <span class="pl-s"><span class="pl-pds">"</span>length_column<span class="pl-pds">"</span></span>,
+          _.width <span class="pl-k">-</span><span class="pl-k">&gt;</span> <span class="pl-s"><span class="pl-pds">"</span>width_column<span class="pl-pds">"</span></span>))
   }
 }</pre></div>
+
+<p>It is possible to define a column that is a key generated by the database. It will be ignored during insertions and returned as the result.
+Note that it accepts only values that can be read as <code>Long</code>.</p>
+
+<div class="highlight highlight-source-scala"><pre><span class="pl-k">case</span> <span class="pl-k">class</span> <span class="pl-en">Product</span>(<span class="pl-v">id</span>: <span class="pl-k">Long</span>, <span class="pl-v">description</span>: <span class="pl-k">String</span>, <span class="pl-v">sku</span>: <span class="pl-k">Long</span>)
+
+<span class="pl-k">val</span> <span class="pl-en">q</span> <span class="pl-k">=</span> quote {
+  query[<span class="pl-en">Product</span>](_.generated(_.id)).insert
+}
+
+db.run(q)
+<span class="pl-c">// INSERT INTO Product (description,sku) VALUES (?, ?)</span></pre></div>
 
 <h1>
 <a id="queries" class="anchor" href="#queries" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Queries</h1>
@@ -311,8 +323,10 @@ db.run(q3)
 
 <p><strong>drop/take</strong></p>
 
+<p>Note when calling both <code>take</code> and <code>drop</code> on a query, <code>take</code> must be called before <code>drop</code>. There is an <a href="https://github.com/getquill/quill/issues/229">issue</a> tracing this bug.</p>
+
 <div class="highlight highlight-source-scala"><pre><span class="pl-k">val</span> <span class="pl-en">q</span> <span class="pl-k">=</span> quote {
-  query[<span class="pl-en">Person</span>].drop(<span class="pl-c1">2</span>).take(<span class="pl-c1">1</span>)
+  query[<span class="pl-en">Person</span>].take(<span class="pl-c1">1</span>).drop(<span class="pl-c1">2</span>)
 }
 
 db.run(q)
@@ -401,6 +415,13 @@ db.run(q2)
 db.run(q)
 <span class="pl-c">// SELECT p.id, p.name, p.age FROM Person p WHERE p.id IN (1, 2)</span>
 
+<span class="pl-k">val</span> <span class="pl-en">q1</span> <span class="pl-k">=</span> quote { (<span class="pl-v">ids</span>: <span class="pl-en">Set</span>[<span class="pl-k">Int</span>]) <span class="pl-k">=&gt;</span>
+  query[<span class="pl-en">Person</span>].filter(p <span class="pl-k">=&gt;</span> ids.contains(p.id))
+}
+
+db.run(q)
+<span class="pl-c">// SELECT p.id, p.name, p.age FROM Person p WHERE p.id IN (?)</span>
+
 <span class="pl-k">val</span> <span class="pl-en">peopleWithContacts</span> <span class="pl-k">=</span> quote {
   query[<span class="pl-en">Person</span>].filter(p <span class="pl-k">=&gt;</span> query[<span class="pl-en">Contact</span>].filter(c <span class="pl-k">=&gt;</span> c.personId <span class="pl-k">==</span> p.id).nonEmpty)
 }
@@ -482,6 +503,8 @@ db.run(qNested)
 <pre><code>lazy val db = source(new MySourceConfig("configKey") with QueryProbing)
 </code></pre>
 
+<p>The config configuration must be self-contained, not having references to variables outside its scope. This allows the macro load the source instance at compile-time.</p>
+
 <p>The configurations correspondent to the config key must be available at compile time. You can achieve it by adding this line to your project settings:</p>
 
 <pre><code>unmanagedClasspath in Compile += baseDirectory.value / "src" / "main" / "resources"
@@ -494,7 +517,7 @@ db.run(qNested)
 
 <p>Database actions are defined using quotations as well. These actions don't have a collection-like API but rather a custom DSL to express inserts, deletes and updates.</p>
 
-<p>Note: Actions receive a <code>List</code> as they are batched by default. And also it can recieve a <code>single</code> item as well.</p>
+<p>Note: Actions take either a List (in which case the query is batched) or a single value.</p>
 
 <p><strong>insert</strong></p>
 
@@ -503,7 +526,7 @@ db.run(qNested)
 db.run(a)(<span class="pl-en">List</span>(<span class="pl-en">Contact</span>(<span class="pl-c1">999</span>, <span class="pl-s"><span class="pl-pds">"</span>+1510488988<span class="pl-pds">"</span></span>))) 
 <span class="pl-c">// INSERT INTO Contact (personId,phone) VALUES (?, ?)</span>
 db.run(a)(<span class="pl-en">Contact</span>(<span class="pl-c1">999</span>, <span class="pl-s"><span class="pl-pds">"</span>+1510488988<span class="pl-pds">"</span></span>))
-<span class="pl-c">// INSERT INTO Contact (personId,phone) VALUES (?, ?)</span></pre></div>
+<span class="pl-c">// insert single item</span></pre></div>
 
 <p>It is also possible to insert specific columns:</p>
 
@@ -532,7 +555,9 @@ db.run(a)(<span class="pl-en">List</span>(<span class="pl-c1">999</span>))
 }
 
 db.run(a)(<span class="pl-en">List</span>(<span class="pl-en">Person</span>(<span class="pl-c1">999</span>, <span class="pl-s"><span class="pl-pds">"</span>John<span class="pl-pds">"</span></span>, <span class="pl-c1">22</span>)))
-<span class="pl-c">// UPDATE Person SET id = ?, name = ?, age = ? WHERE id = 999</span></pre></div>
+<span class="pl-c">// UPDATE Person SET id = ?, name = ?, age = ? WHERE id = 999</span>
+db.run(a)(<span class="pl-en">Person</span>(<span class="pl-c1">999</span>, <span class="pl-s"><span class="pl-pds">"</span>John<span class="pl-pds">"</span></span>, <span class="pl-c1">22</span>))
+<span class="pl-c">// update single item</span></pre></div>
 
 <p>Using specific columns:</p>
 
@@ -965,7 +990,7 @@ lazy val db = source(new JdbcSourceConfig[MySQLDialect, SnakeCase]("db") {
 
 <pre><code>libraryDependencies ++= Seq(
   "mysql" % "mysql-connector-java" % "5.1.36",
-  "io.getquill" %% "quill-jdbc" % "0.4.1"
+  "io.getquill" %% "quill-jdbc" % "0.5.0"
 )
 </code></pre>
 
@@ -995,7 +1020,7 @@ db.connectionTimeout=30000
 
 <pre><code>libraryDependencies ++= Seq(
   "org.postgresql" % "postgresql" % "9.4-1206-jdbc41",
-  "io.getquill" %% "quill-jdbc" % "0.4.1"
+  "io.getquill" %% "quill-jdbc" % "0.5.0"
 )
 </code></pre>
 
@@ -1026,7 +1051,7 @@ db.connectionTimeout=30000
 <p>sbt dependencies</p>
 
 <pre><code>libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async" % "0.4.1"
+  "io.getquill" %% "quill-async" % "0.5.0"
 )
 </code></pre>
 
@@ -1055,7 +1080,7 @@ db.poolValidationInterval=100
 <p>sbt dependencies</p>
 
 <pre><code>libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async" % "0.4.1"
+  "io.getquill" %% "quill-async" % "0.5.0"
 )
 </code></pre>
 
@@ -1085,7 +1110,7 @@ db.poolValidationInterval=100
 <p>sbt dependencies</p>
 
 <pre><code>libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-finagle-mysql" % "0.4.1"
+  "io.getquill" %% "quill-finagle-mysql" % "0.5.0"
 )
 </code></pre>
 
@@ -1115,7 +1140,7 @@ db.pool.maxWaiters=2147483647
 <p>sbt dependencies</p>
 
 <pre><code>libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-cassandra" % "0.4.1"
+  "io.getquill" %% "quill-cassandra" % "0.5.0"
 )
 </code></pre>
 
