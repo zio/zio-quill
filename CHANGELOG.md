@@ -1,3 +1,20 @@
+# 0.5.0 / 17-Mar-2016
+
+* [Schema mini-DSL and generated values](https://github.com/getquill/quill/pull/226/files#diff-04c6e90faac2675aa89e2176d2eec7d8R212)
+* [Support for inline vals in quotation blocks](https://github.com/getquill/quill/pull/271/files#diff-02749abf4d0d51be99715cff7074bc9eR775)
+* [Support for Option.{isEmpty, nonEmpty, isDefined}](https://github.com/getquill/quill/pull/238/files#diff-02749abf4d0d51be99715cff7074bc9eR688)
+* [Tolerant function parsing in option operation](https://github.com/getquill/quill/pull/243/files#diff-6858983f3617753cfb9852426edaa121R481)
+* [quill-sql: rename properties and assignments](https://github.com/getquill/quill/pull/250)
+* [quill-cassandra: rename properties and assignments](https://github.com/getquill/quill/pull/254)
+* [Fix log category](https://github.com/getquill/quill/pull/259)
+* [Accept unicode arrows](https://github.com/getquill/quill/pull/257)
+* [Add set encoder to SqlSource](https://github.com/getquill/quill/pull/258)
+* [Don't quote the source creation tree if query probing is disabled](https://github.com/getquill/quill/pull/268)
+* [Bind `drop.take` according to the sql terms order](https://github.com/getquill/quill/pull/278)
+* [Avoid silent error when importing the source's implicits for the encoding fallback resolution](https://github.com/getquill/quill/pull/279)
+* [Quotation: add identifier method to avoid wrong type refinement inference](https://github.com/getquill/quill/pull/280)
+* [Unquote multi-param quoted function bodies automatically](https://github.com/getquill/quill/pull/277)
+
 # 0.4.1 / 28-Feb-2016
 
 * [quill-sql: h2 dialect](https://github.com/getquill/quill/pull/189)
