@@ -54,7 +54,7 @@ Phantom provides an embedded DSL that help you write CQL queries in a type-safe 
 This section compares how the different libraries let the user query a column family to obtain some elements.
 
 **Java Driver (v3.0.0)**
-```scala
+```
 import com.datastax.driver.core._
 import com.datastax.driver.core.querybuilder.QueryBuilder
 import com.google.common.cache.{ CacheBuilder, CacheLoader, LoadingCache }
@@ -107,7 +107,7 @@ object JavaDriver extends App {
 The Java driver requires explicit handling of a `PreparedStatement`s cache to avoid preparing the same statement more that once, that could affect performance.
 
 **Phantom (v1.22.0)**
-```scala
+```
 import com.websudos.phantom.connectors.RootConnector
 import com.websudos.phantom.db._
 import com.websudos.phantom.dsl._
@@ -153,7 +153,7 @@ object Phantom extends App {
 
 Phantom requires mapping classes to lift the database model to DSL types. The query definition also requires special equality operators.
 
-**Quill (v0.4.0)**
+**Quill**
 ```scala
 import io.getquill._
 import io.getquill.naming._
@@ -190,17 +190,64 @@ This section compares how the different libraries let the user compose queries.
 
 The Query Builder allows the user to partially construct queries and add filters later:
 
-```scala
-    val selectAllWeatherStations: Select =
+```
+import com.datastax.driver.core._
+import com.datastax.driver.core.querybuilder.{ QueryBuilder, Select}
+import com.google.common.cache.{ CacheBuilder, CacheLoader, LoadingCache }
+
+import scala.collection.JavaConverters._
+
+object JavaDriver extends App {
+
+  val nrOfCacheEntries: Int = 100
+
+  val cluster: Cluster = Cluster.builder().addContactPoints("localhost").build()
+
+  val session: Session = cluster.newSession()
+
+  val cache: LoadingCache[String, PreparedStatement] =
+    CacheBuilder.newBuilder().
+      maximumSize(nrOfCacheEntries).
+      build(
+        new CacheLoader[String, PreparedStatement]() {
+          def load(key: String): PreparedStatement = session.prepare(key.toString)
+        }
+      )
+
+  case class WeatherStation(country: String, city: String, stationId: String, entry: Int, value: Int)
+
+  object WeatherStation {
+
+    def getAll: Select =
       QueryBuilder.select().
-      all().
-      from("db", "weather_station")
+        all().
+        from("db", "weather_station")
+
+
+    def getAllByCountry(cache: LoadingCache[String, PreparedStatement], session: Session)(country: String): List[WeatherStation] = {
+      val query: Statement =
+        getAll.
+          where(QueryBuilder.eq("country", QueryBuilder.bindMarker()))
+
+      session.execute(cache.get(query.toString).bind(country)).all().asScala.map(
+        row => WeatherStation(row.getString("country"), row.getString("city"), row.getString("station_id"), row.getInt("entry"), row.getInt("value"))
+      ).to[List]
+    }
+  }
+
+  val getAllByCountry: String => List[WeatherStation] = WeatherStation.getAllByCountry(cache, session)_
+
+  getAllByCountry("UK")
+
+  session.close()
+  cluster.close()
+}
 ```
 
 The DSL has limited composition compatibility.
 
 **Phantom (v1.22.0)**
-```scala
+```
 import com.websudos.phantom.connectors.RootConnector
 import com.websudos.phantom.db._
 import com.websudos.phantom.dsl._
@@ -259,7 +306,7 @@ object Phantom extends App {
 
 Phantom allows the user certain level of composability, but it gets a bit verbose due to the nature of the DSL. 
 
-**Quill (v0.4.0)**
+**Quill**
 ```scala
 import io.getquill._
 import io.getquill.naming._
@@ -310,7 +357,7 @@ There is no much offered by the driver to extend the Query Builder, e.g. add a m
 
 You could extend Phantom by extending the DSL to add new features, although it might not be a straightforward process.
 
-**Quill (v0.4.0)**
+**Quill**
 
 Quill provides an easy mechanism to add non-supported features through [infix](https://github.com/getquill/quill#infix). In fact, most of the [CQL specific features](https://github.com/getquill/quill/blob/master/quill-cassandra/src/main/scala/io/getquill/sources/cassandra/ops/package.scala) are added using infix.
 
@@ -319,7 +366,7 @@ Quill provides an easy mechanism to add non-supported features through [infix](h
 This section would allow us to compare how the different libraries let us read custom data types in a seamless way.
 
 **Java Driver (v3.0.0)**
-```scala
+```
 import java.nio.ByteBuffer
 import java.nio.charset.Charset
 
@@ -406,7 +453,7 @@ object JavaDriver extends App {
 It is necessary to create a new `TypeCodec` and register it in the `CodecRegistry`.
 
 **Phantom (v1.22.0)**
-```scala
+```
 import com.websudos.phantom.builder.primitives.Primitive
 import com.websudos.phantom.builder.query.CQLQuery
 import com.websudos.phantom.builder.syntax.CQLSyntax
@@ -483,7 +530,7 @@ object Phantom extends App {
 
 It is necessary to define a new `Column` type to be used when defining the data model.
 
-**Quill (v0.4.0)**
+**Quill**
 ```scala
 import io.getquill._
 import io.getquill.naming._

@@ -6,16 +6,9 @@ import sbtrelease.ReleasePlugin
 lazy val quill = 
   (project in file("."))
     .settings(tutSettings ++ commonSettings ++ Seq(
-      scalaVersion := "2.11.8", 
-      tutSourceDirectory := baseDirectory.value / "target" / "README.md"))
-    .settings(sourceGenerators in Compile <+= Def.task {
-      val source = baseDirectory.value / "README.md"
-      val file = baseDirectory.value / "target" / "README.md"
-      val str = IO.read(source).replace("```scala", "```tut")
-      IO.write(file, str)
-      Seq()
-    })
-    .settings(tutScalacOptions := Seq())
+      scalaVersion := "2.11.8"
+    ))
+    .settings(`tut-settings`:_*)
     .dependsOn(`quill-core`, `quill-sql`, `quill-jdbc`, `quill-finagle-mysql`, `quill-async`, `quill-cassandra`)
     .aggregate(`quill-core`, `quill-sql`, `quill-jdbc`, `quill-finagle-mysql`, `quill-async`, `quill-cassandra`)
 
@@ -76,12 +69,32 @@ lazy val `quill-cassandra` =
     .settings(commonSettings: _*)
     .settings(
       libraryDependencies ++= Seq(
-        "com.datastax.cassandra" % "cassandra-driver-core" % "3.0.0",
-        "org.monifu" %% "monifu" % "1.0"
+        "com.datastax.cassandra" %  "cassandra-driver-core" % "3.0.0",
+        "org.monifu"             %% "monifu"                % "1.1"
       ),
       parallelExecution in Test := false
     )
     .dependsOn(`quill-core` % "compile->compile;test->test")
+
+lazy val `tut-sources` = Seq(
+  "CASSANDRA.md",
+  "README.md"
+)
+
+lazy val `tut-settings` = Seq(
+  tutScalacOptions := Seq(),
+  tutSourceDirectory := baseDirectory.value / "target" / "tut",
+  tutNameFilter := `tut-sources`.map(_.replaceAll("""\.""", """\.""")).mkString("(", "|", ")").r,
+  sourceGenerators in Compile <+= Def.task {
+    `tut-sources`.foreach { name =>
+      val source = baseDirectory.value / name
+      val file = baseDirectory.value / "target" / "tut" / name
+      val str = IO.read(source).replace("```scala", "```tut")
+      IO.write(file, str)
+    }
+    Seq()
+  }
+)
 
 lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
   organization := "io.getquill",
