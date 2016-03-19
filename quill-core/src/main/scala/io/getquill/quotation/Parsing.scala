@@ -52,7 +52,7 @@ trait Parsing extends SchemaConfigParsing {
   }
 
   val blockParser: Parser[Block] = Parser[Block] {
-    case q"{..$exprs}" if exprs.size > 0 => Block(exprs.map(astParser(_)))
+    case q"{..$exprs}" if exprs.size > 1 => Block(exprs.map(astParser(_)))
   }
 
   val valParser: Parser[Val] = Parser[Val] {
