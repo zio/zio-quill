@@ -22,9 +22,9 @@ trait Encoders {
       }
     }
 
-  implicit def setEncoder[T](implicit e: Encoder[T]): Encoder[Set[T]] =
-    new Encoder[Set[T]] {
-      def apply(index: Int, values: Set[T], row: BindedStatementBuilder[List[Any]]) =
+  implicit def traversableEncoder[T](implicit e: Encoder[T]): Encoder[Traversable[T]] =
+    new Encoder[Traversable[T]] {
+      def apply(index: Int, values: Traversable[T], row: BindedStatementBuilder[List[Any]]) =
         row.coll[T](index, values, e)
     }
 

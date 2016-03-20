@@ -101,7 +101,7 @@ object CqlIdiom {
     case Constant(())        => s"1"
     case Constant(v)         => s"$v"
     case Tuple(values)       => s"${values.show}"
-    case Set(values)         => s"${values.show}"
+    case Collection(values)  => s"${values.show}"
     case NullValue           => fail("Cql doesn't support null values.")
   }
 

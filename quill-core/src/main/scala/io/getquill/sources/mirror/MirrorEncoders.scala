@@ -17,9 +17,9 @@ trait MirrorEncoders {
         row.add(value)
     }
 
-  implicit def setEncoder[T](implicit d: Encoder[T]): Encoder[Set[T]] =
-    new Encoder[Set[T]] {
-      def apply(index: Int, value: Set[T], row: Row) = row.add(value)
+  implicit def traversableEncoder[T](implicit d: Encoder[T]): Encoder[Traversable[T]] =
+    new Encoder[Traversable[T]] {
+      def apply(index: Int, value: Traversable[T], row: Row) = row.add(value)
     }
 
   implicit val stringEncoder = encoder[String]

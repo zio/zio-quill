@@ -195,7 +195,7 @@ trait SqlIdiom {
     case Constant(v)         => s"$v"
     case NullValue           => s"null"
     case Tuple(values)       => s"${values.show}"
-    case Set(values)         => s"${values.show}"
+    case Collection(values)  => s"${values.show}"
   }
 
   implicit def identShow(implicit strategy: NamingStrategy): Show[Ident] = Show[Ident] {

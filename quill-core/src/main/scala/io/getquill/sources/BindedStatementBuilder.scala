@@ -8,7 +8,7 @@ sealed trait Binding[S] {
 }
 
 case class SingleBinding[S, T](index: Int, value: T, enc: Encoder[S, T]) extends Binding[S]
-case class SetBinding[S, T](index: Int, values: Set[T], enc: Encoder[BindedStatementBuilder[S], T]) extends Binding[S]
+case class SetBinding[S, T](index: Int, values: Traversable[T], enc: Encoder[BindedStatementBuilder[S], T]) extends Binding[S]
 
 class BindedStatementBuilder[S] {
 
@@ -19,7 +19,7 @@ class BindedStatementBuilder[S] {
     this
   }
 
-  def coll[T](idx: Int, values: Set[T], enc: Encoder[BindedStatementBuilder[S], T]) = {
+  def coll[T](idx: Int, values: Traversable[T], enc: Encoder[BindedStatementBuilder[S], T]) = {
     bindings += SetBinding[S, T](idx, values, enc)
     this
   }

@@ -111,10 +111,10 @@ class StatelessTransformerSpec extends Spec {
         Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) mustEqual
           Tuple(List(Ident("a'"), Ident("b'"), Ident("c'")))
       }
-      "set" in {
-        val ast: Ast = Set(List(Ident("a"), Ident("b")))
+      "collection" in {
+        val ast: Ast = Collection(List(Ident("a"), Ident("b")))
         Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"))(ast) mustEqual
-          Set(List(Ident("a'"), Ident("b'")))
+          Collection(List(Ident("a'"), Ident("b'")))
       }
     }
 

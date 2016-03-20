@@ -26,9 +26,9 @@ trait JdbcEncoders {
       }
     }
 
-  implicit def setEncoder[T](implicit enc: Encoder[T]): Encoder[Set[T]] =
-    new Encoder[Set[T]] {
-      override def apply(index: Int, values: Set[T], row: BindedStatementBuilder[PreparedStatement]) =
+  implicit def traversableEncoder[T](implicit enc: Encoder[T]): Encoder[Traversable[T]] =
+    new Encoder[Traversable[T]] {
+      override def apply(index: Int, values: Traversable[T], row: BindedStatementBuilder[PreparedStatement]) =
         row.coll(index, values, enc)
     }
 

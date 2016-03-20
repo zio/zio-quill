@@ -332,9 +332,20 @@ class QuotationSpec extends Spec {
           }
         }
       }
-      "set" in {
-        val q = quote(collection.Set(1, 2))
-        quote(unquote(q)).ast mustEqual Set(List(Constant(1), Constant(2)))
+      "collection" - {
+        val expectedAst = Collection(List(Constant(1), Constant(2)))
+        "seq" in {
+          val q = quote(Seq(1, 2))
+          quote(unquote(q)).ast mustEqual expectedAst
+        }
+        "list" in {
+          val q = quote(List(1, 2))
+          quote(unquote(q)).ast mustEqual expectedAst
+        }
+        "set" in {
+          val q = quote(Set(1, 2))
+          quote(unquote(q)).ast mustEqual expectedAst
+        }
       }
     }
     "ident" in {
@@ -505,28 +516,46 @@ class QuotationSpec extends Spec {
           }
           quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), SetOperator.`contains`, Ident("b"))
         }
-        "set" in {
-          val q = quote {
-            (a: collection.Set[TestEntity], b: TestEntity) =>
-              a.contains(b)
+        "collections" - {
+          def verifyBody(body: Ast) = body mustEqual BinaryOperation(Ident("a"), SetOperator.`contains`, Ident("b"))
+          "Set" in {
+            val q = quote {
+              (a: Set[TestEntity], b: TestEntity) =>
+                a.contains(b)
+            }
+            verifyBody(q.ast.body)
           }
-          quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), SetOperator.`contains`, Ident("b"))
+          "Seq" in {
+            val q = quote {
+              (a: Seq[TestEntity], b: TestEntity) =>
+                a.contains(b)
+            }
+            verifyBody(q.ast.body)
+          }
+          "List" in {
+            val q = quote {
+              (a: List[TestEntity], b: TestEntity) =>
+                a.contains(b)
+            }
+            verifyBody(q.ast.body)
+          }
+
         }
         "within option operation" - {
           "forall" in {
-            val q = quote { (a: collection.Set[Int], b: Option[Int]) =>
+            val q = quote { (a: Set[Int], b: Option[Int]) =>
               b.forall(a.contains)
             }
             quote(unquote(q)).ast.body mustBe an[OptionOperation]
           }
           "exists" in {
-            val q = quote { (a: collection.Set[Int], b: Option[Int]) =>
+            val q = quote { (a: Set[Int], b: Option[Int]) =>
               b.exists(a.contains)
             }
             quote(unquote(q)).ast.body mustBe an[OptionOperation]
           }
           "map" in {
-            val q = quote { (a: collection.Set[Int], b: Option[Int]) =>
+            val q = quote { (a: Set[Int], b: Option[Int]) =>
               b.map(a.contains)
             }
             quote(unquote(q)).ast.body mustBe an[OptionOperation]
