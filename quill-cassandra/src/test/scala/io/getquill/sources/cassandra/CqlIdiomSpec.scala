@@ -230,9 +230,9 @@ class CqlIdiomSpec extends Spec {
       mirrorSource.run(q).cql mustEqual
         "SELECT i, s FROM TestEntity"
     }
-    "set" in {
+    "collection" in {
       val q = quote {
-        qr1.filter(t => Set(1, 2).contains(t.i))
+        qr1.filter(t => List(1, 2).contains(t.i))
       }
       mirrorSource.run(q).cql mustEqual
         "SELECT s, i, l, o FROM TestEntity WHERE i IN (1, 2)"

@@ -21,9 +21,9 @@ trait Encoders {
       }
     }
 
-  implicit def setEncoder[T](implicit e: Encoder[T]): Encoder[Set[T]] =
-    new Encoder[Set[T]] {
-      override def apply(idx: Int, values: Set[T], row: BindedStatementBuilder[BoundStatement]) =
+  implicit def traversableEncoder[T](implicit e: Encoder[T]): Encoder[Traversable[T]] =
+    new Encoder[Traversable[T]] {
+      override def apply(idx: Int, values: Traversable[T], row: BindedStatementBuilder[BoundStatement]) =
         row.coll(idx, values, e)
     }
 
