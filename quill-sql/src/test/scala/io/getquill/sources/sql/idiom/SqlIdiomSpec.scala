@@ -1,7 +1,9 @@
 package io.getquill.sources.sql.idiom
 
 import io.getquill._
+import io.getquill.ast.{ Collection, Constant }
 import io.getquill.Spec
+import io.getquill.sources.mirror.Row
 import io.getquill.naming.{ SnakeCase, UpperCase, Escape, Literal }
 import io.getquill.norm.select.ExtractSelect
 import io.getquill.quotation.FreeVariables
@@ -554,20 +556,40 @@ class SqlIdiomSpec extends Spec {
             mirrorSource.run(q).sql mustEqual
               "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.i IN (SELECT p.i FROM TestEntity2 p)"
           }
-          "set" - {
-            "direct value" in {
-              val q = quote {
+          "collection" - {
+            "as value" in {
+              val expectedSql = "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.i IN (1, 2)"
+              val q1 = quote {
+                qr1.filter(t => List(1, 2).contains(t.i))
+              }
+              val q2 = quote {
+                qr1.filter(t => Seq(1, 2).contains(t.i))
+              }
+              val q3 = quote {
                 qr1.filter(t => Set(1, 2).contains(t.i))
               }
-              mirrorSource.run(q).sql mustEqual
-                "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.i IN (1, 2)"
+              mirrorSource.run(q1).sql mustEqual expectedSql
+              mirrorSource.run(q2).sql mustEqual expectedSql
+              mirrorSource.run(q3).sql mustEqual expectedSql
             }
             "as param" in {
-              val q = quote { (is: Set[Int]) =>
+              def verify[T](mirror: mirrorSource.QueryMirror[_], param: T) = {
+                mirror.sql mustEqual
+                  "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.i IN (?)"
+                mirror.binds mustEqual Row(param)
+              }
+              val q1 = quote { (is: List[Int]) =>
                 qr1.filter(t => is.contains(t.i))
               }
-              mirrorSource.run(q)(Set(1, 2)).sql mustEqual
-                "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.i IN (?)"
+              val q2 = quote { (is: Seq[Int]) =>
+                qr1.filter(t => is.contains(t.i))
+              }
+              val q3 = quote { (is: Set[Int]) =>
+                qr1.filter(t => is.contains(t.i))
+              }
+              verify(mirrorSource.run(q1)(List(1, 2)), List(1, 2))
+              verify(mirrorSource.run(q2)(Seq(1, 2)), Seq(1, 2))
+              verify(mirrorSource.run(q3)(Set(1, 2)), Set(1, 2))
             }
           }
         }

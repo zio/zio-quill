@@ -21,7 +21,7 @@ abstract class SqlSource[D <: SqlIdiom, N <: NamingStrategy, R: ClassTag, S: Cla
 
   implicit def optionDecoder[T](implicit d: Decoder[T]): Decoder[Option[T]]
   implicit def optionEncoder[T](implicit d: Encoder[T]): Encoder[Option[T]]
-  implicit def setEncoder[T](implicit d: Encoder[T]): Encoder[Set[T]]
+  implicit def traversableEncoder[T](implicit d: Encoder[T]): Encoder[Traversable[T]]
 
   implicit val stringDecoder: Decoder[String]
   implicit val bigDecimalDecoder: Decoder[BigDecimal]

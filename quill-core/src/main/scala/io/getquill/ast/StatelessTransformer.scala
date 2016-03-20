@@ -51,10 +51,10 @@ trait StatelessTransformer {
 
   def apply(e: Value): Value =
     e match {
-      case e: Constant   => e
-      case NullValue     => NullValue
-      case Tuple(values) => Tuple(values.map(apply))
-      case Set(values)   => Set(values.map(apply))
+      case e: Constant        => e
+      case NullValue          => NullValue
+      case Tuple(values)      => Tuple(values.map(apply))
+      case Collection(values) => Collection(values.map(apply))
     }
 
   def apply(e: Action): Action =

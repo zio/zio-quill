@@ -27,9 +27,9 @@ trait FinagleMysqlEncoders {
       }
     }
 
-  implicit def setEncoder[T](implicit e: Encoder[T]): Encoder[Set[T]] =
-    new Encoder[Set[T]] {
-      def apply(idx: Int, values: Set[T], row: BindedStatementBuilder[List[Parameter]]) =
+  implicit def traversableEncoder[T](implicit e: Encoder[T]): Encoder[Traversable[T]] =
+    new Encoder[Traversable[T]] {
+      def apply(idx: Int, values: Traversable[T], row: BindedStatementBuilder[List[Parameter]]) =
         row.coll[T](idx, values, e)
     }
 

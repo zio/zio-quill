@@ -173,11 +173,11 @@ class StatefulTransformerSpec extends Spec {
             att.state mustEqual List(Ident("a"), Ident("b"), Ident("c"))
         }
       }
-      "set" in {
-        val ast: Ast = Set(List(Ident("a"), Ident("b")))
+      "Collection" in {
+        val ast: Ast = Collection(List(Ident("a"), Ident("b")))
         Subject(Nil, Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"))(ast) match {
           case (at, att) =>
-            at mustEqual Set(List(Ident("a'"), Ident("b'")))
+            at mustEqual Collection(List(Ident("a'"), Ident("b'")))
             att.state mustEqual List(Ident("a"), Ident("b"))
         }
       }

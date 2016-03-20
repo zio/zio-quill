@@ -409,12 +409,26 @@ class AstShowSpec extends Spec {
       (q.ast: Ast).show mustEqual
         """(null, 1, "a")"""
     }
-    "set" in {
-      val q = quote {
-        collection.Set(1, 2, 3)
+    "collection" - {
+      def verify(ast: Ast) = ast.show mustEqual "Collection(1, 2, 3)"
+      "set" in {
+        val q = quote {
+          Set(1, 2, 3)
+        }
+        verify(q.ast)
       }
-      (q.ast: Ast).show mustEqual
-        """Set(1, 2, 3)"""
+      "list" in {
+        val q = quote {
+          List(1, 2, 3)
+        }
+        verify(q.ast)
+      }
+      "seq" in {
+        val q = quote {
+          Seq(1, 2, 3)
+        }
+        verify(q.ast)
+      }
     }
   }
 

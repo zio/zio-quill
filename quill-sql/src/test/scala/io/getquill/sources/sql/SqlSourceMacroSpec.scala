@@ -58,7 +58,7 @@ class SqlSourceMacroSpec extends Spec {
 
       implicit def optionDecoder[T](implicit d: Decoder[T]): Decoder[Option[T]] = null
       implicit def optionEncoder[T](implicit d: Encoder[T]): Encoder[Option[T]] = null
-      implicit def setEncoder[T](implicit d: Encoder[T]): Encoder[Set[T]] = null
+      implicit def traversableEncoder[T](implicit d: Encoder[T]): Encoder[Traversable[T]] = null
 
       implicit val stringDecoder: Decoder[String] = null
       implicit val bigDecimalDecoder: Decoder[BigDecimal] = null
