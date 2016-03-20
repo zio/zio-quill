@@ -46,16 +46,16 @@ class EncodingSpec extends Spec {
     }
   }
 
-  "encodes sets" - {
+  "encodes collections" - {
     val q = quote {
-      (set: Set[Int]) =>
-        query[EncodingTestEntity].filter(t => set.contains(t.id))
+      (list: List[Int]) =>
+        query[EncodingTestEntity].filter(t => list.contains(t.id))
     }
 
     "sync" in {
       testSyncDB.run(query[EncodingTestEntity])
       testSyncDB.run(query[EncodingTestEntity].insert)(insertValues)
-      verify(testSyncDB.run(q)(insertValues.map(_.id).toSet))
+      verify(testSyncDB.run(q)(insertValues.map(_.id)))
     }
 
     "async" in {
@@ -64,7 +64,7 @@ class EncodingSpec extends Spec {
         for {
           _ <- testAsyncDB.run(query[EncodingTestEntity].delete)
           _ <- testAsyncDB.run(query[EncodingTestEntity].insert)(insertValues)
-          r <- testAsyncDB.run(q)(insertValues.map(_.id).toSet)
+          r <- testAsyncDB.run(q)(insertValues.map(_.id))
         } yield {
           verify(r)
         }
@@ -78,7 +78,7 @@ class EncodingSpec extends Spec {
           _ <- testStreamDB.run(query[EncodingTestEntity].delete)
           inserts = Observable.from(insertValues: _*)
           _ <- testStreamDB.run(query[EncodingTestEntity].insert)(inserts).count
-          result <- testStreamDB.run(q)(insertValues.map(_.id).toSet)
+          result <- testStreamDB.run(q)(insertValues.map(_.id))
         } yield {
           result
         }
