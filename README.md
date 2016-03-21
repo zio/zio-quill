@@ -40,6 +40,7 @@ Quill provides a Quoted Domain Specific Language ([QDSL](http://homepages.inf.ed
   * [Naming strategy](#naming-strategy)
   * [Configuration](#configuration)
 * [Cassandra sources](#cassandra-sources)
+* [Templates](#templates)
 * [Acknowledgments](#acknowledgments)
 * [Code of Conduct](#code-of-conduct)
 * [License](#license)
@@ -1180,6 +1181,12 @@ db.session.credentials.1=pass
 db.session.maxSchemaAgreementWaitSeconds=1
 db.session.addressTranslater=com.datastax.driver.core.policies.IdentityTranslater
 ```
+
+# Templates #
+
+In order to quickly start with Quill, we have setup some template projects:
+
+* [Play Framework with Quill JDBC](https://github.com/getquill/play-quill-jdbc)
 
 # Slick comparison #
 
