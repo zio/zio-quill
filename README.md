@@ -41,6 +41,7 @@ Quill provides a Quoted Domain Specific Language ([QDSL](http://homepages.inf.ed
   * [Configuration](#configuration)
 * [Cassandra sources](#cassandra-sources)
 * [Acknowledgments](#acknowledgments)
+* [Code of Conduct](#code-of-conduct)
 * [License](#license)
 
 # Quotation #
@@ -1205,6 +1206,10 @@ The project was created having Philip Wadler's talk ["A practical theory of lang
 * [A Practical Theory of Language-Integrated Query](http://homepages.inf.ed.ac.uk/slindley/papers/practical-theory-of-linq.pdf)
 * [Everything old is new again: Quoted Domain Specific Languages](http://homepages.inf.ed.ac.uk/wadler/papers/qdsl/qdsl.pdf)
 * [The Flatter, the Better](http://db.inf.uni-tuebingen.de/staticfiles/publications/the-flatter-the-better.pdf)
+
+# Code of Conduct #
+
+Please note that this project is released with a Contributor Code of Conduct. By participating in this project you agree to abide by its terms. See [CODE_OF_CONDUCT.md](https://github.com/getquill/quill/blob/master/CODE_OF_CONDUCT.md) for details.
 
 # License #
 
