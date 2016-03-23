@@ -198,7 +198,7 @@ object SqlQuery {
       case other             => fail(s"Invalid group by criteria $ast")
     }
 
-  private def orderByCriterias(ast: Ast, ordering: Ordering): List[OrderByCriteria] =
+  private def orderByCriterias(ast: Ast, ordering: Ast): List[OrderByCriteria] =
     (ast, ordering) match {
       case (Tuple(properties), ord: PropertyOrdering) => properties.map(orderByCriterias(_, ord)).flatten
       case (Tuple(properties), TupleOrdering(ord))    => properties.zip(ord).map { case (a, o) => orderByCriterias(a, o) }.flatten

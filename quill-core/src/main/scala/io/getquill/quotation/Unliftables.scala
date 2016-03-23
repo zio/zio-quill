@@ -14,6 +14,7 @@ trait Unliftables {
     case actionUnliftable(ast) => ast
     case valueUnliftable(ast) => ast
     case identUnliftable(ast) => ast
+    case orderingUnliftable(ast) => ast
     case q"$pack.Property.apply(${ a: Ast }, ${ b: String })" => Property(a, b)
     case q"$pack.Function.apply(${ a: List[Ident] }, ${ b: Ast })" => Function(a, b)
     case q"$pack.FunctionApply.apply(${ a: Ast }, ${ b: List[Ast] })" => FunctionApply(a, b)
@@ -78,7 +79,7 @@ trait Unliftables {
     case q"$pack.Filter.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => Filter(a, b, c)
     case q"$pack.Map.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => Map(a, b, c)
     case q"$pack.FlatMap.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => FlatMap(a, b, c)
-    case q"$pack.SortBy.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast }, ${ d: Ordering })" => SortBy(a, b, c, d)
+    case q"$pack.SortBy.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast }, ${ d: Ast })" => SortBy(a, b, c, d)
     case q"$pack.GroupBy.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => GroupBy(a, b, c)
     case q"$pack.Take.apply(${ a: Ast }, ${ b: Ast })" => Take(a, b)
     case q"$pack.Drop.apply(${ a: Ast }, ${ b: Ast })" => Drop(a, b)

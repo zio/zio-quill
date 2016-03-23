@@ -37,6 +37,7 @@ trait Parsing extends SchemaConfigParsing {
     case `functionParser`(function)         => function
     case `actionParser`(action)             => action
     case `infixParser`(value)               => value
+    case `orderingParser`(value)            => value
     case `operationParser`(value)           => value
     case `identParser`(ident)               => ident
     case `propertyParser`(value)            => value
@@ -155,7 +156,7 @@ trait Parsing extends SchemaConfigParsing {
       FlatMap(astParser(source), identParser(alias), astParser(body))
 
     case q"$source.sortBy[$t](($alias) => $body)($ord)" if (is[QuillQuery[Any]](source)) =>
-      SortBy(astParser(source), identParser(alias), astParser(body), orderingParser(ord))
+      SortBy(astParser(source), identParser(alias), astParser(body), astParser(ord))
 
     case q"$source.groupBy[$t](($alias) => $body)" if (is[QuillQuery[Any]](source)) =>
       GroupBy(astParser(source), identParser(alias), astParser(body))

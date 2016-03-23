@@ -88,7 +88,7 @@ object CqlQuery {
       case other          => fail(s"Cql supports only properties as select elements. Found: $other")
     }
 
-  private def orderByCriterias(ast: Ast, ordering: Ordering): List[OrderByCriteria] =
+  private def orderByCriterias(ast: Ast, ordering: Ast): List[OrderByCriteria] =
     (ast, ordering) match {
       case (Tuple(properties), ord: PropertyOrdering) => properties.flatMap(orderByCriterias(_, ord))
       case (Tuple(properties), TupleOrdering(ord))    => properties.zip(ord).flatMap { case (a, o) => orderByCriterias(a, o) }

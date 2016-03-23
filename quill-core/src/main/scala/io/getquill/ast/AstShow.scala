@@ -21,6 +21,7 @@ object AstShow {
     case ast: If              => ast.show
     case ast: Block           => ast.show
     case ast: Val             => ast.show
+    case ast: Ordering        => ast.show
   }
 
   implicit val ifShow: Show[If] = Show[If] {
