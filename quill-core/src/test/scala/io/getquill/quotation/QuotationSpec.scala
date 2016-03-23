@@ -736,14 +736,23 @@ class QuotationSpec extends Spec {
         val q = quote {
           (c: Boolean) => if (c) 1 else 2
         }
-        q.ast.body mustEqual If(Ident("c"), Constant(1), Constant(2))
+        quote(unquote(q)).ast.body mustEqual If(Ident("c"), Constant(1), Constant(2))
       }
       "nested" in {
         val q = quote {
           (c1: Boolean, c2: Boolean) => if (c1) 1 else if (c2) 2 else 3
         }
-        q.ast.body mustEqual If(Ident("c1"), Constant(1), If(Ident("c2"), Constant(2), Constant(3)))
+        quote(unquote(q)).ast.body mustEqual If(Ident("c1"), Constant(1), If(Ident("c2"), Constant(2), Constant(3)))
       }
+    }
+    "ord" in {
+      val o = quote {
+        Ord.desc[Int]
+      }
+      val q = quote {
+        qr1.sortBy(_.i)(o)
+      }
+      quote(unquote(q)).ast.ordering mustEqual o.ast
     }
   }
 

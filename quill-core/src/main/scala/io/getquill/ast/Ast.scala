@@ -27,9 +27,9 @@ case class Map(query: Ast, alias: Ident, body: Ast) extends Query
 
 case class FlatMap(query: Ast, alias: Ident, body: Ast) extends Query
 
-case class SortBy(query: Ast, alias: Ident, criterias: Ast, ordering: Ordering) extends Query
+case class SortBy(query: Ast, alias: Ident, criterias: Ast, ordering: Ast) extends Query
 
-sealed trait Ordering
+sealed trait Ordering extends Ast
 case class TupleOrdering(elems: List[Ordering]) extends Ordering
 
 sealed trait PropertyOrdering extends Ordering

@@ -47,6 +47,8 @@ trait StatefulTransformer[T] {
       case Val(a, b) =>
         val (at, att) = apply(b)
         (Val(a, at), att)
+
+      case o: Ordering => (o, this)
     }
 
   def apply(e: Query): (Query, StatefulTransformer[T]) =

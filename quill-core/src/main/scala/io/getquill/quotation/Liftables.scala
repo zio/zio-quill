@@ -15,6 +15,7 @@ trait Liftables {
     case ast: Action => actionLiftable(ast)
     case ast: Value => valueLiftable(ast)
     case ast: Ident => identLiftable(ast)
+    case ast: Ordering => orderingLiftable(ast)
     case Val(name, body) => q"$pack.Val($name, $body)"
     case Block(statements) => q"$pack.Block($statements)"
     case Property(a, b) => q"$pack.Property($a, $b)"
