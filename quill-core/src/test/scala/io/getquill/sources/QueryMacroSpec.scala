@@ -53,5 +53,10 @@ class QueryMacroSpec extends Spec {
       }
       r.binds mustEqual Row(v1, v2)
     }
+    "inline" in {
+      def q(i: Int) =
+        mirrorSource.run(qr1.filter(_.i == i))
+      q(1).binds mustEqual Row(1)
+    }
   }
 }

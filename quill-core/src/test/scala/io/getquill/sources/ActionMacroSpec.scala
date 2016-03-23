@@ -7,11 +7,18 @@ import io.getquill.ast.Function
 
 class ActionMacroSpec extends Spec {
 
-  "runs non-batched action" in {
-    val q = quote {
-      qr1.delete
+  "runs non-batched action" - {
+    "normal" in {
+      val q = quote {
+        qr1.delete
+      }
+      mirrorSource.run(q).ast mustEqual q.ast
     }
-    mirrorSource.run(q).ast mustEqual q.ast
+    "inline" in {
+      def q(i: Int) =
+        mirrorSource.run(qr1.filter(_.i == i).update(_.i -> 0))
+      q(1).bind mustEqual Row(1)
+    }
   }
 
   "runs batched action" - {
@@ -50,32 +57,26 @@ class ActionMacroSpec extends Spec {
       val r = mirrorSource.run(q)(
         List(
           TestEntity("s", 1, 2L, Some(4)),
-          TestEntity("s2", 12, 22L, Some(42))
-        )
-      )
+          TestEntity("s2", 12, 22L, Some(42))))
       r.ast.toString mustEqual "query[TestEntity].insert(x => x.s -> s, x => x.i -> i, x => x.l -> l, x => x.o -> o)"
       r.bindList mustEqual List(
         Row("s", 1, 2L, Some(4)),
-        Row("s2", 12, 22L, Some(42))
-      )
+        Row("s2", 12, 22L, Some(42)))
     }
     "with in-place param" in {
       val q = quote {
-        (i: Int) => qr1.filter(_.i == i).update
+        (i: Int) => qr1.filter(t => t.i == i).update
       }
       val v = 1
       val r = mirrorSource.run(q(v))(
         List(
           TestEntity("s", 1, 2L, Some(4)),
-          TestEntity("s2", 12, 22L, Some(42))
-        )
-      )
+          TestEntity("s2", 12, 22L, Some(42))))
 
-      r.ast.toString mustEqual "query[TestEntity].filter(x6 => x6.i == v).update(x => x.s -> s, x => x.i -> i, x => x.l -> l, x => x.o -> o)"
+      r.ast.toString mustEqual "query[TestEntity].filter(t => t.i == v).update(x => x.s -> s, x => x.i -> i, x => x.l -> l, x => x.o -> o)"
       r.bindList mustEqual List(
         Row("s", 1, 2L, Some(4), v),
-        Row("s2", 12, 22L, Some(42), v)
-      )
+        Row("s2", 12, 22L, Some(42), v))
     }
   }
 }
