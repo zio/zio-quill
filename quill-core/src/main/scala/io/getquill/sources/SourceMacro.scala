@@ -24,7 +24,11 @@ trait SourceMacro extends Quotation with ActionMacro with QueryMacro with Resolv
       FreeVariables(ast).toList.map {
         case i @ Ident(name) =>
           i -> {
-            val tree = c.typecheck(q"${TermName(name)}")
+            val tree =
+              c.typecheck(q"${TermName(name)}", silent = true) match {
+                case EmptyTree => c.fail(s"Runtime value binded outside of `source.run`: $name")
+                case tree      => tree
+              }
             (tree.tpe, tree)
           }
       }.toMap

@@ -33,7 +33,6 @@ trait ActionMacro extends EncodingMacro {
         val assignedAction = AssignedAction(action, idents.map(k => Assignment(Ident("x"), k.name, k)))
         val encodedParams = EncodeParams[S](c)(inPlaceParams, bindings.toMap)
 
-        // TODO inPlaceParams
         expandedTreeBatch(assignedAction, idents.toList ++ inPlaceParams.map(_._1), List(tpe), encodedParams)
 
       case functionParams =>
