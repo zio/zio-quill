@@ -31,5 +31,7 @@ then
 		sbt coverageOff publish
 	fi
 else
-	sbt clean coverage test tut coverageAggregate release-vcs-checks
+	sbt clean coverage test tut coverageAggregate 
+	git ls-files --modified --exclude-standard
+	sbt release-vcs-checks
 fi
