@@ -21,7 +21,7 @@ class CassandraMirrorSource(config: CassandraMirrorSourceConfig)
 
   class ActionApply[T](f: Params[T] => BatchActionMirror) extends (Params[T] => BatchActionMirror) {
     def apply(params: Params[T]) = f(params)
-    def apply(param: T) = ActionMirror(f(List(param)).cql)
+    def apply(param: T) = ActionMirror(f(List(param)).cql, Row(param))
   }
 
   override def close = ()
@@ -32,14 +32,14 @@ class CassandraMirrorSource(config: CassandraMirrorSourceConfig)
     else
       Success(())
 
-  case class ActionMirror(cql: String)
+  case class ActionMirror(cql: String, bind: Row)
 
-  def execute(cql: String, generated: Option[String]) =
-    ActionMirror(cql)
+  def execute(cql: String, bind: Row => Row, generated: Option[String]) =
+    ActionMirror(cql, bind(Row()))
 
   case class BatchActionMirror(cql: String, bindList: List[Row])
 
-  def execute[T](cql: String, bindParams: T => Row => Row, generated: Option[String]) = {
+  def executeBatch[T](cql: String, bindParams: T => Row => Row, generated: Option[String]) = {
     val f = (values: List[T]) =>
       BatchActionMirror(cql, values.map(bindParams).map(_(Row())))
     new ActionApply[T](f)

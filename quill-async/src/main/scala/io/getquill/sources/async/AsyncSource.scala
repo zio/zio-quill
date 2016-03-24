@@ -65,12 +65,13 @@ abstract class AsyncSource[D <: SqlIdiom, N <: NamingStrategy, C <: Connection](
       f(TransactionalExecutionContext(ec, c))
     }
 
-  def execute(sql: String, generated: Option[String])(implicit ec: ExecutionContext) = {
+  def execute(sql: String, bind: BindedStatementBuilder[List[Any]] => BindedStatementBuilder[List[Any]], generated: Option[String])(implicit ec: ExecutionContext) = {
     logger.info(sql)
-    withConnection(conn => conn.sendQuery(expandAction(sql, generated)).map(extractActionResult(generated)))
+    val (expanded, params) = bind(new BindedStatementBuilder).build(sql)
+    withConnection(_.sendPreparedStatement(expandAction(expanded, generated), params(List()))).map(extractActionResult(generated))
   }
 
-  def execute[T](sql: String, bindParams: T => BindedStatementBuilder[List[Any]] => BindedStatementBuilder[List[Any]], generated: Option[String])(implicit ec: ExecutionContext): ActionApply[T] = {
+  def executeBatch[T](sql: String, bindParams: T => BindedStatementBuilder[List[Any]] => BindedStatementBuilder[List[Any]], generated: Option[String])(implicit ec: ExecutionContext): ActionApply[T] = {
     def run(values: List[T]): Future[List[Long]] =
       values match {
         case Nil =>
@@ -78,7 +79,7 @@ abstract class AsyncSource[D <: SqlIdiom, N <: NamingStrategy, C <: Connection](
         case value :: tail =>
           val (expanded, params) = bindParams(value)(new BindedStatementBuilder).build(sql)
           logger.info(expanded)
-          withConnection(conn => conn.sendPreparedStatement(expandAction(sql, generated), params(List())).map(extractActionResult(generated)))
+          withConnection(conn => conn.sendPreparedStatement(expandAction(expanded, generated), params(List())).map(extractActionResult(generated)))
             .flatMap(r => run(tail).map(r +: _))
       }
     new ActionApply(run _)

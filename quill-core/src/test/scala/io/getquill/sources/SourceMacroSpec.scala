@@ -124,4 +124,14 @@ class SourceMacroSpec extends Spec {
     var db = source(new MirrorSourceConfig(""))
     "db.run(qr1)" must compile
   }
+
+  "fails if bind value is outside `source.run`" in {
+    val q = {
+      val i = 1
+      quote {
+        qr1.filter(_.i == i)
+      }
+    }
+    "mirrorSource.run(q)" mustNot compile
+  }
 }

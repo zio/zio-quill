@@ -12,7 +12,15 @@ trait QueryMacro extends SelectFlattening with SelectResultExtraction {
   val c: Context
   import c.universe.{ Ident => _, _ }
 
-  def runQuery[R, S, T](ast: Ast, params: List[(Ident, Type)])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]): Tree = {
+  def runQuery[R, S, T](
+    ast:            Ast,
+    inPlaceParams:  collection.Map[Ident, (Type, Tree)],
+    functionParams: List[(Ident, Type)]
+  )(
+    implicit
+    r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]
+  ): Tree = {
+
     val query =
       Normalize(ast) match {
         case q: Query => q
@@ -20,23 +28,29 @@ trait QueryMacro extends SelectFlattening with SelectResultExtraction {
       }
     val (flattenQuery, selectValues) = flattenSelect[T](query, Encoding.inferDecoder[R](c))
     val extractor = selectResultExtractor[R](selectValues)
-    val encodedParams = EncodeParams[S](c)(bindingMap(params))
+    val encodedParams = EncodeParams[S](c)(bindingMap(functionParams) ++ inPlaceParams, collection.Map())
+    val allParamIdents = inPlaceParams.map(_._1).toList ++ functionParams.map(_._1)
     val inputs =
-      for ((Ident(param), tpe) <- params) yield {
+      for ((Ident(param), tpe) <- functionParams) yield {
         q"${TermName(param)}: $tpe"
       }
     if (inputs.isEmpty)
       q"""
+      {
+        val (sql, bindings: List[io.getquill.ast.Ident], _) =
+            ${prepare(flattenQuery, allParamIdents)}
+
         ${c.prefix}.query(
-            ${prepare(flattenQuery, params.map(_._1))}._1,
-            identity,
-            $extractor)
+          sql,
+          $encodedParams(bindings.map(_.name)),
+          $extractor)
+      }
       """
     else
       q"""
       {
         val (sql, bindings: List[io.getquill.ast.Ident], _) =
-            ${prepare(flattenQuery, params.map(_._1))}
+            ${prepare(flattenQuery, allParamIdents)}
 
         (..$inputs) =>
           ${c.prefix}.query(

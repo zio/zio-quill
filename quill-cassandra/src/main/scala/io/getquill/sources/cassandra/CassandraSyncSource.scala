@@ -28,10 +28,10 @@ class CassandraSyncSource[N <: NamingStrategy](config: CassandraSourceConfig[N, 
     session.execute(prepare(cql, bind))
       .all.toList.map(extractor)
 
-  def execute(cql: String, generated: Option[String]): ResultSet =
-    session.execute(prepare(cql))
+  def execute(cql: String, bind: BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement], generated: Option[String]): ResultSet =
+    session.execute(prepare(cql, bind))
 
-  def execute[T](cql: String, bindParams: T => BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement], generated: Option[String]): ActionApply[T] = {
+  def executeBatch[T](cql: String, bindParams: T => BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement], generated: Option[String]): ActionApply[T] = {
     val func = { (values: List[T]) =>
       @tailrec
       def run(values: List[T], acc: List[ResultSet]): List[ResultSet] =

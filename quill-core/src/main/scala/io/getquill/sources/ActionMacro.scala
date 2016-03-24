@@ -12,37 +12,56 @@ trait ActionMacro extends EncodingMacro {
   val c: Context
   import c.universe.{ Ident => _, _ }
 
-  def runAction[S, T](action: Ast, params: List[(Ident, Type)])(implicit s: WeakTypeTag[S], t: WeakTypeTag[T]): Tree =
-    params match {
+  def runAction[S, T](
+    action:         Ast,
+    inPlaceParams:  collection.Map[Ident, (c.Type, c.Tree)],
+    functionParams: List[(Ident, c.Type)]
+  )(
+    implicit
+    s: WeakTypeTag[S],
+    t: WeakTypeTag[T]
+  ): Tree =
+    functionParams match {
       case Nil =>
-        expandedTree(action, params)
+        val encodedParams = EncodeParams[S](c)(inPlaceParams, collection.Map())
+        expandedTreeSingle(action, inPlaceParams.map(_._1).toList, encodedParams)
+
       case List((param, tpe)) if (t.tpe.erasure <:< c.weakTypeOf[UnassignedAction[Any]].erasure) =>
         val encodingValue = encoding(param, Encoding.inferEncoder[S](c))(c.WeakTypeTag(tpe))
         val bindings = bindingMap(encodingValue)
         val idents = bindings.map(_._1).toList
         val assignedAction = AssignedAction(action, idents.map(k => Assignment(Ident("x"), k.name, k)))
-        val encodedParams = EncodeParams.raw[S](c)(bindings.toMap)
-        expandedTree(assignedAction, idents.toList, List(tpe), encodedParams)
+        val encodedParams = EncodeParams[S](c)(inPlaceParams, bindings.toMap)
 
-      case params =>
-        val encodedParams = EncodeParams[S](c)(bindingMap(params))
-        expandedTree(action, params.map(_._1), params.map(_._2), encodedParams)
+        expandedTreeBatch(assignedAction, idents.toList ++ inPlaceParams.map(_._1), List(tpe), encodedParams)
+
+      case functionParams =>
+        val encodedParams = EncodeParams[S](c)(bindingMap(functionParams) ++ inPlaceParams, collection.Map())
+        expandedTreeBatch(action, functionParams.map(_._1) ++ inPlaceParams.map(_._1), functionParams.map(_._2), encodedParams)
     }
 
-  private def expandedTree(action: Ast, params: List[(Ident, Type)]) = {
-    q"""
-      val (sql, _, generated) =  ${prepare(action, params.map(_._1))}
-      ${c.prefix}.execute(sql, generated)
-    """
-  }
-
-  private def expandedTree(action: Ast, idents: List[Ident], paramsTypes: List[Type], encodedParams: Tree) = {
+  private def expandedTreeSingle(action: Ast, idents: List[Ident], encodedParams: Tree) = {
     q"""
     {
       val (sql, bindings: List[io.getquill.ast.Ident], generated) =
         ${prepare(action, idents)}
 
-      ${c.prefix}.execute[(..$paramsTypes)](
+      ${c.prefix}.execute(
+        sql,
+        $encodedParams(bindings.map(_.name)),
+        generated
+        )
+    }
+    """
+  }
+
+  private def expandedTreeBatch(action: Ast, idents: List[Ident], paramsTypes: List[Type], encodedParams: Tree) = {
+    q"""
+    {
+      val (sql, bindings: List[io.getquill.ast.Ident], generated) =
+        ${prepare(action, idents)}
+
+      ${c.prefix}.executeBatch[(..$paramsTypes)](
         sql,
         value => $encodedParams(bindings.map(_.name)),
         generated

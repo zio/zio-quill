@@ -17,25 +17,41 @@ trait SourceMacro extends Quotation with ActionMacro with QueryMacro with Resolv
 
   def run[R, S](quoted: Expr[Quoted[Any]])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S]): Tree = {
     implicit val t = c.WeakTypeTag(quoted.actualType.baseType(c.weakTypeOf[Quoted[Any]].typeSymbol).typeArgs.head)
-    verifyFreeVariables(ast(quoted)) match {
 
-      case ast if (t.tpe.typeSymbol.fullName.startsWith("scala.Function")) =>
+    val ast = this.ast(quoted)
+
+    val inPlaceParams =
+      FreeVariables(ast).toList.map {
+        case i @ Ident(name) =>
+          i -> {
+            val tree =
+              c.typecheck(q"${TermName(name)}", silent = true) match {
+                case EmptyTree => c.fail(s"Runtime value binded outside of `source.run`: $name")
+                case tree      => tree
+              }
+            (tree.tpe, tree)
+          }
+      }.toMap
+
+    t.tpe.typeSymbol.fullName.startsWith("scala.Function") match {
+
+      case true =>
         val bodyType = c.WeakTypeTag(t.tpe.typeArgs.takeRight(1).head)
         val params = (1 until t.tpe.typeArgs.size).map(i => Ident(s"p$i")).toList
-        run(FunctionApply(ast, params), params.zip(paramsTypes(t)))(r, s, bodyType)
+        run(FunctionApply(ast, params), inPlaceParams, params.zip(paramsTypes(t)))(r, s, bodyType)
 
-      case ast =>
-        run(ast, Nil)(r, s, t)
+      case false =>
+        run(ast, inPlaceParams, Nil)(r, s, t)
     }
   }
 
-  private def run[R, S, T](ast: Ast, params: List[(Ident, Type)])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]): Tree =
+  private def run[R, S, T](ast: Ast, inPlaceParams: collection.Map[Ident, (Type, Tree)], params: List[(Ident, Type)])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]): Tree =
     ast match {
       case ast if ((t.tpe.erasure <:< c.weakTypeTag[Action[Any]].tpe.erasure)) =>
-        runAction[S, T](ast, params)
+        runAction[S, T](ast, inPlaceParams, params)
 
       case ast =>
-        runQuery(ast, params)(r, s, queryType(t.tpe))
+        runQuery(ast, inPlaceParams, params)(r, s, queryType(t.tpe))
     }
 
   private def queryType(tpe: Type) =
