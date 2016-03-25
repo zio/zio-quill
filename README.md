@@ -309,10 +309,9 @@ db.run(q3)
 
 **drop/take**
 
-Note when calling both `take` and `drop` on a query, `take` must be called before `drop`. There is an [issue](https://github.com/getquill/quill/issues/229) tracing this bug.
 ```scala
 val q = quote {
-  query[Person].take(1).drop(2)
+  query[Person].drop(2).take(1)
 }
 
 db.run(q)
@@ -411,7 +410,7 @@ val q1 = quote { (ids: Set[Int]) =>
   query[Person].filter(p => ids.contains(p.id))
 }
 
-db.run(q)
+db.run(q1)
 // SELECT p.id, p.name, p.age FROM Person p WHERE p.id IN (?)
 
 val peopleWithContacts = quote {
