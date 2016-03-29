@@ -47,8 +47,10 @@ class SqlIdiomNamingSpec extends Spec {
       (q.ast: Ast).show mustEqual
         "SELECT t.c_somecolumn FROM test_entity t"
     }
+
+    val db = source(new SqlMirrorSourceConfig[SnakeCase]("test"))
+
     "actions" - {
-      val db = source(new SqlMirrorSourceConfig[SnakeCase]("test"))
       "insert" in {
         db.run(query[TestEntity].insert)(List()).sql mustEqual
           "INSERT INTO test_entity (some_column) VALUES (?)"
@@ -60,6 +62,14 @@ class SqlIdiomNamingSpec extends Spec {
       "delete" in {
         db.run(query[TestEntity].delete).sql mustEqual
           "DELETE FROM test_entity"
+      }
+    }
+
+    "queries" - {
+      "property empty check" in {
+        case class TestEntity(optionValue: Option[Int])
+        db.run(query[TestEntity].filter(t => t.optionValue.isEmpty)).sql mustEqual
+          "SELECT t.option_value FROM test_entity t WHERE t.option_value IS NULL"
       }
     }
   }
