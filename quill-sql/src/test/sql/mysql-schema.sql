@@ -54,6 +54,11 @@ Create TABLE DateEncodingTestEntity(
     v3 timestamp
 );
 
+Create TABLE BooleanEncodingTestEntity(
+    v1 BOOLEAN,
+    v2 BIT(1)
+);
+
 CREATE TABLE TestEntity(
     s VARCHAR(255),
     i INTEGER,

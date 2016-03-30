@@ -56,6 +56,7 @@ trait FinagleMysqlDecoders {
   implicit val booleanDecoder: Decoder[Boolean] =
     decoder[Boolean] {
       case ByteValue(byte) => byte == (1: Byte)
+      case v: RawValue     => v.bytes.head == (1: Byte)
     }
   implicit val byteDecoder: Decoder[Byte] =
     decoder[Byte] {
