@@ -32,7 +32,7 @@ CREATE TABLE EncodingTestEntity(
     v6 INTEGER,
     v7 BIGINT,
     v8 FLOAT,
-    v9 DOUBLE PRECISIOn,
+    v9 DOUBLE PRECISION,
     v10 BYTEA,
     v11 TIMESTAMP,
     o1 VARCHAR(255),
@@ -43,7 +43,7 @@ CREATE TABLE EncodingTestEntity(
     o6 INTEGER,
     o7 BIGINT,
     o8 FLOAT,
-    o9 DOUBLE PRECISIOn,
+    o9 DOUBLE PRECISION,
     o10 BYTEA,
     o11 TIMESTAMP
 );
