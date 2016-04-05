@@ -7,8 +7,11 @@ import io.getquill.norm.BetaReduction
 import io.getquill.util.Messages.RichContext
 import io.getquill.util.Interleave
 
-trait Parsing extends SchemaConfigParsing {
-  this: Quotation =>
+import scala.reflect.macros.whitebox.Context
+
+abstract class Parsing[C <: Context](val c: C) extends SchemaConfigParsing with Quotation {
+
+  val freeVars: List[c.universe.Symbol]
 
   import c.universe.{ Ident => _, Constant => _, Function => _, If => _, Block => _, _ }
 
@@ -29,6 +32,7 @@ trait Parsing extends SchemaConfigParsing {
   }
 
   val astParser: Parser[Ast] = Parser[Ast] {
+    case `freeVarParser`(value)             => value
     case `valParser`(value)                 => value
     case `patMatchValParser`(value)         => value
     case `valueParser`(value)               => value
@@ -96,13 +100,16 @@ trait Parsing extends SchemaConfigParsing {
     case q"if($a) $b else $c" => If(astParser(a), astParser(b), astParser(c))
   }
 
+  val freeVarParser: Parser[Ast] = Parser[Ast] {
+    case t if isFreeVariable(t) => CompileTimeBinding(t.hashCode().toString, t)
+  }
+
   val quotedAstParser: Parser[Ast] = Parser[Ast] {
     case q"$pack.unquote[$t]($quoted)" => astParser(quoted)
     case q"$pack.lift[$t]($value)"     => Dynamic(value)
-
     case t if (t.tpe <:< c.weakTypeOf[Quoted[Any]]) =>
       unquote[Ast](t) match {
-        case Some(ast) if (!IsDynamic(ast)) => Rebind(c)(t, ast, astParser(_))
+        case Some(ast) if (!IsDynamic(ast)) => QuotedReference(t, Rebind(c)(t, ast, astParser(_)))
         case other                          => Dynamic(t)
       }
   }
@@ -228,7 +235,8 @@ trait Parsing extends SchemaConfigParsing {
     case q"$infix.as[$t]" =>
       infixParser(infix)
     case q"$pack.InfixInterpolator(scala.StringContext.apply(..${ parts: List[String] })).infix(..$params)" =>
-      Infix(parts, params.map(astParser(_)))
+      val noFreeVarsParser = Parsing(c)(List.empty[c.universe.Symbol])
+      Infix(parts, params.map(noFreeVarsParser.astParser(_)))
   }
 
   val functionParser: Parser[Function] = Parser[Function] {
@@ -257,8 +265,9 @@ trait Parsing extends SchemaConfigParsing {
       OptionOperation(OptionExists, astParser(o), identParser(alias), astParser(body))
   }
 
-  val propertyParser: Parser[Property] = Parser[Property] {
-    case q"$e.$property" => Property(astParser(e), property.decodedName.toString)
+  val propertyParser: Parser[Ast] = Parser[Ast] {
+    case q"$e.$property" if !isFreeVariable(e)    => Property(astParser(e), property.decodedName.toString)
+    case t @ q"$e.$property" if isFreeVariable(e) => CompileTimeBinding(t.hashCode().toString, t)
   }
 
   val operationParser: Parser[Operation] = Parser[Operation] {
@@ -358,6 +367,17 @@ trait Parsing extends SchemaConfigParsing {
     tree.tpe <:< typeOf[Traversable[_]]
   }
 
+  private def isFreeVariable(tree: Tree) = {
+    tree match {
+      case t if (t.tpe <:< c.weakTypeOf[Quoted[Any]]) => false
+      case t if isTraversable(t) => false
+      case t if is[QuillQuery[Any]](t) => false
+      case t if is[Option[Any]](t) => false
+      case t if freeVars.contains(t.symbol) => true
+      case _ => false
+    }
+  }
+
   val valueParser: Parser[Value] = Parser[Value] {
     case q"null" => NullValue
     case Literal(c.universe.Constant(v)) => Constant(v)
@@ -384,4 +404,11 @@ trait Parsing extends SchemaConfigParsing {
       Assignment(i1, prop.decodedName.toString, astParser(value))
   }
 
+}
+
+object Parsing {
+  def apply(c: Context)(_freeVars: List[c.universe.Symbol]) =
+    new Parsing[c.type](c) {
+      val freeVars = _freeVars
+    }
 }

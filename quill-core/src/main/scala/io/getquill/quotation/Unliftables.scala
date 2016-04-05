@@ -26,6 +26,7 @@ trait Unliftables {
     case q"$pack.If.apply(${ a: Ast }, ${ b: Ast }, ${ c: Ast })" => If(a, b, c)
     case q"$tree.ast" => Dynamic(tree)
     case q"$pack.lift($tree)" => Dynamic(tree)
+    case q"$pack.RuntimeBinding.apply(${ a: String }, ${ b: String })" => RuntimeBinding(a, b)
   }
 
   implicit val optionOperationTypeUnliftable: Unliftable[OptionOperationType] = Unliftable[OptionOperationType] {

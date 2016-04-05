@@ -2,10 +2,12 @@ package io.getquill.quotation
 
 import io.getquill.ast.PropertyAlias
 
+import scala.reflect.macros.whitebox.Context
+
 case class SchemaConfig(alias: Option[String] = None, properties: List[PropertyAlias] = List(), generated: Option[String] = None)
 
 trait SchemaConfigParsing extends UnicodeArrowParsing {
-  this: Quotation =>
+  val c: Context
 
   import c.universe.{ Function => _, Ident => _, _ }
 

@@ -86,6 +86,7 @@ class SourceMacroSpec extends Spec {
         r.ast.toString mustEqual "query[TestEntity].filter(t => t.s == p1).map(t => (t.s, t.i, t.l, t.o))"
         r.binds mustEqual Row("a")
       }
+
       "wrapped" in {
         case class Entity(x: WrappedEncodable)
         val q = quote {
@@ -111,6 +112,29 @@ class SourceMacroSpec extends Spec {
         r.ast.toString mustEqual "query[TestEntity].filter(t => t.s == p1).map(t => (t.s, t.i, t.l, t.o))"
         r.binds mustEqual Row("a")
       }
+      "free variable" - {
+        val i = 1
+        val q = quote {
+          qr1.filter(x => x.i == i)
+        }
+        val r = mirrorSource.run(q)
+        r.ast.toString mustEqual "query[TestEntity].filter(x => x.i == i).map(x => (x.s, x.i, x.l, x.o))"
+        r.binds mustEqual Row(1)
+      }
+      "multiple free variables" - {
+        val i = 1
+        val l = 1L
+        val q1 = quote {
+          qr1.filter(x => x.i == i)
+        }
+        val q2 = quote {
+          q1.filter(x => x.l == l)
+        }
+        val r = mirrorSource.run(q2)
+        r.ast.toString mustEqual "query[TestEntity].filter(x => (x.i == i) && (x.l == l)).map(x => (x.s, x.i, x.l, x.o))"
+        r.binds mustEqual Row(1, 1L)
+      }
+
     }
     "aggregated" in {
       val q = quote {
@@ -132,6 +156,6 @@ class SourceMacroSpec extends Spec {
         qr1.filter(_.i == i)
       }
     }
-    "mirrorSource.run(q)" mustNot compile
+    "mirrorSource.run(q)" must compile
   }
 }

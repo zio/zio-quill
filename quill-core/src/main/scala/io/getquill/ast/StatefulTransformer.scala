@@ -38,7 +38,11 @@ trait StatefulTransformer[T] {
         val (ct, ctt) = btt.apply(c)
         (If(at, bt, ct), ctt)
 
-      case l: Dynamic => (l, this)
+      case l: Dynamic            => (l, this)
+
+      case l: Binding            => (l, this)
+
+      case l: QuotedReference[_] => (l, this)
 
       case Block(a) =>
         val (at, att) = apply(a)(_.apply)
