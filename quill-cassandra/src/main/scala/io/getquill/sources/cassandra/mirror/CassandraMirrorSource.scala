@@ -34,12 +34,12 @@ class CassandraMirrorSource(config: CassandraMirrorSourceConfig)
 
   case class ActionMirror(cql: String, bind: Row)
 
-  def execute(cql: String, bind: Row => Row, generated: Option[String]) =
+  def execute(cql: String, bind: Row => Row, generated: Option[String] = None) =
     ActionMirror(cql, bind(Row()))
 
   case class BatchActionMirror(cql: String, bindList: List[Row])
 
-  def executeBatch[T](cql: String, bindParams: T => Row => Row, generated: Option[String]) = {
+  def executeBatch[T](cql: String, bindParams: T => Row => Row, generated: Option[String] = None) = {
     val f = (values: List[T]) =>
       BatchActionMirror(cql, values.map(bindParams).map(_(Row())))
     new ActionApply[T](f)

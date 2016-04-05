@@ -69,7 +69,7 @@ class JdbcSource[D <: SqlIdiom, N <: NamingStrategy](config: JdbcSourceConfig[D,
       }
     }
 
-  def execute(sql: String, bind: BindedStatementBuilder[PreparedStatement] => BindedStatementBuilder[PreparedStatement], generated: Option[String]): Long = {
+  def execute(sql: String, bind: BindedStatementBuilder[PreparedStatement] => BindedStatementBuilder[PreparedStatement], generated: Option[String] = None): Long = {
     logger.info(sql)
     val (expanded, setValues) = bind(new BindedStatementBuilder[PreparedStatement]).build(sql)
     logger.info(expanded)
@@ -87,7 +87,7 @@ class JdbcSource[D <: SqlIdiom, N <: NamingStrategy](config: JdbcSourceConfig[D,
   }
 
   def executeBatch[T](sql: String, bindParams: T => BindedStatementBuilder[PreparedStatement] => BindedStatementBuilder[PreparedStatement],
-                      generated: Option[String]): ActionApply[T] = {
+                      generated: Option[String] = None): ActionApply[T] = {
     val func = { (values: List[T]) =>
       val groups = values.map(bindParams(_)(new BindedStatementBuilder[PreparedStatement]).build(sql)).groupBy(_._1)
       (for ((sql, setValues) <- groups.toList) yield {
