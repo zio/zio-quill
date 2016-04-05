@@ -44,12 +44,12 @@ class MirrorSource(config: SourceConfig[MirrorSource])
 
   case class ActionMirror(ast: Ast, bind: Row)
 
-  def execute(ast: Ast, bindParams: Row => Row, generated: Option[String]) =
+  def execute(ast: Ast, bindParams: Row => Row, generated: Option[String] = None) =
     ActionMirror(ast, bindParams(Row()))
 
   case class BatchActionMirror(ast: Ast, bindList: List[Row])
 
-  def executeBatch[T](ast: Ast, bindParams: T => Row => Row, generated: Option[String]) =
+  def executeBatch[T](ast: Ast, bindParams: T => Row => Row, generated: Option[String] = None) =
     (values: List[T]) =>
       BatchActionMirror(ast, values.map(bindParams).map(_(Row())))
 

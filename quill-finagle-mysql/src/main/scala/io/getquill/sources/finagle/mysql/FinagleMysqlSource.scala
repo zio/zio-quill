@@ -60,13 +60,13 @@ class FinagleMysqlSource[N <: NamingStrategy](config: FinagleMysqlSourceConfig[N
         f.ensure(currentClient.clear)
     }
 
-  def execute(sql: String, bind: BindedStatementBuilder[List[Parameter]] => BindedStatementBuilder[List[Parameter]], generated: Option[String]): Future[Result] = {
+  def execute(sql: String, bind: BindedStatementBuilder[List[Parameter]] => BindedStatementBuilder[List[Parameter]], generated: Option[String] = None): Future[Result] = {
     val (expanded, params) = bind(new BindedStatementBuilder).build(sql)
     logger.info(expanded)
     withClient(_.prepare(expanded)(params(List()): _*))
   }
 
-  def executeBatch[T](sql: String, bindParams: T => BindedStatementBuilder[List[Parameter]] => BindedStatementBuilder[List[Parameter]], generated: Option[String]): ActionApply[T] = {
+  def executeBatch[T](sql: String, bindParams: T => BindedStatementBuilder[List[Parameter]] => BindedStatementBuilder[List[Parameter]], generated: Option[String] = None): ActionApply[T] = {
     def run(values: List[T]): Future[List[Result]] =
       values match {
         case Nil =>

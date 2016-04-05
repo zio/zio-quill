@@ -65,13 +65,13 @@ abstract class AsyncSource[D <: SqlIdiom, N <: NamingStrategy, C <: Connection](
       f(TransactionalExecutionContext(ec, c))
     }
 
-  def execute(sql: String, bind: BindedStatementBuilder[List[Any]] => BindedStatementBuilder[List[Any]], generated: Option[String])(implicit ec: ExecutionContext) = {
+  def execute(sql: String, bind: BindedStatementBuilder[List[Any]] => BindedStatementBuilder[List[Any]], generated: Option[String] = None)(implicit ec: ExecutionContext) = {
     logger.info(sql)
     val (expanded, params) = bind(new BindedStatementBuilder).build(sql)
     withConnection(_.sendPreparedStatement(expandAction(expanded, generated), params(List()))).map(extractActionResult(generated))
   }
 
-  def executeBatch[T](sql: String, bindParams: T => BindedStatementBuilder[List[Any]] => BindedStatementBuilder[List[Any]], generated: Option[String])(implicit ec: ExecutionContext): ActionApply[T] = {
+  def executeBatch[T](sql: String, bindParams: T => BindedStatementBuilder[List[Any]] => BindedStatementBuilder[List[Any]], generated: Option[String] = None)(implicit ec: ExecutionContext): ActionApply[T] = {
     def run(values: List[T]): Future[List[Long]] =
       values match {
         case Nil =>
