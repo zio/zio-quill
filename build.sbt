@@ -15,6 +15,7 @@ lazy val quill =
 lazy val `quill-core` = 
   (project in file("quill-core"))
     .settings(commonSettings: _*)
+    .settings(mimaSettings)
     .settings(libraryDependencies ++= Seq(
       "com.typesafe"               %  "config"        % "1.3.0",
       "com.typesafe.scala-logging" %% "scala-logging" % "3.1.0",
@@ -24,11 +25,13 @@ lazy val `quill-core` =
 lazy val `quill-sql` = 
   (project in file("quill-sql"))
     .settings(commonSettings: _*)
+    .settings(mimaSettings)
     .dependsOn(`quill-core` % "compile->compile;test->test")
 
 lazy val `quill-jdbc` = 
   (project in file("quill-jdbc"))
     .settings(commonSettings: _*)
+    .settings(mimaSettings)
     .settings(
       libraryDependencies ++= Seq(
         "com.zaxxer"     % "HikariCP"             % "2.3.9",
@@ -43,6 +46,7 @@ lazy val `quill-jdbc` =
 lazy val `quill-finagle-mysql` = 
   (project in file("quill-finagle-mysql"))
     .settings(commonSettings: _*)
+    .settings(mimaSettings)
     .settings(
       libraryDependencies ++= Seq(
         "com.twitter" %% "finagle-mysql" % "6.31.0"
@@ -54,6 +58,7 @@ lazy val `quill-finagle-mysql` =
 lazy val `quill-async` = 
   (project in file("quill-async"))
     .settings(commonSettings: _*)
+    .settings(mimaSettings)
     .settings(
       libraryDependencies ++= Seq(
         "com.github.mauricio" %% "db-async-common"  % "0.2.18",
@@ -67,6 +72,7 @@ lazy val `quill-async` =
 lazy val `quill-cassandra` = 
   (project in file("quill-cassandra"))
     .settings(commonSettings: _*)
+    .settings(mimaSettings)
     .settings(
       libraryDependencies ++= Seq(
         "com.datastax.cassandra" %  "cassandra-driver-core" % "3.0.0",
@@ -93,6 +99,17 @@ lazy val `tut-settings` = Seq(
       IO.write(file, str)
     }
     Seq()
+  }
+)
+
+lazy val mimaSettings = MimaPlugin.mimaDefaultSettings ++ Seq(
+  previousArtifact := {
+    CrossVersion.partialVersion(scalaVersion.value) match {
+      case Some((2, scalaMajor)) if scalaMajor <= 11 =>
+        Some(organization.value % s"${name.value}_${scalaBinaryVersion.value}" % "0.5.0")
+      case _ =>
+        None
+    }
   }
 )
 
