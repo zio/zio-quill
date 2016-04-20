@@ -406,6 +406,12 @@ class QuotationSpec extends Spec {
         }
         quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), EqualityOperator.`==`, Ident("b"))
       }
+      "equals" in {
+        val q = quote {
+          (a: Int, b: Int) => a.equals(b)
+        }
+        quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), EqualityOperator.`==`, Ident("b"))
+      }
       "!=" in {
         val q = quote {
           (a: Int, b: Int) => a != b
@@ -754,6 +760,7 @@ class QuotationSpec extends Spec {
       }
       quote(unquote(q)).ast.ordering mustEqual o.ast
     }
+
   }
 
   "reduces tuple matching locally" - {

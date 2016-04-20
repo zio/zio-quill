@@ -302,8 +302,8 @@ abstract class Parsing[C <: Context](val c: C) extends SchemaConfigParsing with 
 
   val equalityOperationParser: Parser[Operation] =
     operationParser(_ => true) {
-      case "==" => EqualityOperator.`==`
-      case "!=" => EqualityOperator.`!=`
+      case "==" | "equals" => EqualityOperator.`==`
+      case "!="            => EqualityOperator.`!=`
     }
 
   val booleanOperationParser: Parser[Operation] =
