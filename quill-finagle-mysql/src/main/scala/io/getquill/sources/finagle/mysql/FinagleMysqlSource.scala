@@ -1,6 +1,7 @@
 package io.getquill.sources.finagle.mysql
 
 import java.util.TimeZone
+
 import com.twitter.finagle.exp.mysql.Client
 import com.twitter.finagle.exp.mysql.Parameter
 import com.twitter.finagle.exp.mysql.Result
@@ -9,11 +10,13 @@ import com.twitter.util.Future
 import com.twitter.util.Local
 import com.typesafe.scalalogging.StrictLogging
 import io.getquill.naming.NamingStrategy
-import io.getquill.sources.sql.SqlSource
+import io.getquill.sources.sql.{ SqlBindedStatementBuilder, SqlSource }
 import io.getquill.sources.sql.idiom.MySQLDialect
 import scala.util.Success
+
 import com.twitter.util.Await
 import scala.util.Try
+
 import com.twitter.finagle.Service
 import com.twitter.finagle.exp.mysql.Request
 import com.twitter.finagle.exp.mysql.PrepareRequest
@@ -61,7 +64,7 @@ class FinagleMysqlSource[N <: NamingStrategy](config: FinagleMysqlSourceConfig[N
     }
 
   def execute(sql: String, bind: BindedStatementBuilder[List[Parameter]] => BindedStatementBuilder[List[Parameter]], generated: Option[String] = None): Future[Result] = {
-    val (expanded, params) = bind(new BindedStatementBuilder).build(sql)
+    val (expanded, params) = bind(new SqlBindedStatementBuilder).build(sql)
     logger.info(expanded)
     withClient(_.prepare(expanded)(params(List()): _*))
   }
@@ -72,7 +75,7 @@ class FinagleMysqlSource[N <: NamingStrategy](config: FinagleMysqlSourceConfig[N
         case Nil =>
           Future.value(List())
         case value :: tail =>
-          val (expanded, params) = bindParams(value)(new BindedStatementBuilder).build(sql)
+          val (expanded, params) = bindParams(value)(new SqlBindedStatementBuilder).build(sql)
           logger.info(expanded)
           withClient(_.prepare(expanded)(params(List()): _*))
             .flatMap(r => run(tail).map(r +: _))
@@ -81,7 +84,7 @@ class FinagleMysqlSource[N <: NamingStrategy](config: FinagleMysqlSourceConfig[N
   }
 
   def query[T](sql: String, bind: BindedStatementBuilder[List[Parameter]] => BindedStatementBuilder[List[Parameter]], extractor: Row => T): Future[List[T]] = {
-    val (expanded, params) = bind(new BindedStatementBuilder).build(sql)
+    val (expanded, params) = bind(new SqlBindedStatementBuilder).build(sql)
     logger.info(expanded)
     withClient(_.prepare(expanded).select(params(List()): _*)(extractor)).map(_.toList)
   }
