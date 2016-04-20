@@ -14,8 +14,8 @@ trait ProductSpec extends Spec {
     query[Product](_.generated(_.id)).insert
   }
 
-  val productById = quote {
-    (id: Long) => product.filter(_.id == id)
+  def productById(id: Long) = quote {
+    product.filter(_.id == id)
   }
 
   val productEntries = List(
@@ -26,6 +26,10 @@ trait ProductSpec extends Spec {
 
   val productSingleInsert = quote {
     product.insert(_.id -> 0, _.description -> "Window", _.sku -> 1004L)
+  }
+
+  def productInsert(prd: Product) = quote {
+    product.insert(_.description -> prd.description, _.sku -> prd.sku)
   }
 
 }

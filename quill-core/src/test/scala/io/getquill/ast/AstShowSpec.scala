@@ -537,11 +537,34 @@ class AstShowSpec extends Spec {
     }
   }
 
-  "shows dynamic asts" in {
+  "shows bindings" - {
+    "quotedReference" in {
+      val ast: Ast = QuotedReference("ignore", Filter(Ident("a"), Ident("b"), Ident("c")))
+      ast.show mustEqual
+        """a.filter(b => c)"""
+    }
+
+    "compileTimeBinding" in {
+      val ast: Ast = Filter(Ident("a"), Ident("b"), CompileTimeBinding("ignore", "c"))
+      ast.show mustEqual
+        """a.filter(b => c)"""
+    }
+
+    "runtimeBindings" in {
+      val i = 1
+      val q = quote {
+        qr1.filter(x => x.i == i)
+      }
+      (q.ast: Ast).show mustEqual
+        """query[TestEntity].filter(x => x.i == i)"""
+    }
+  }
+
+  "shows dynamic asts" - {
     (Dynamic(1): Ast).show mustEqual "1"
   }
 
-  "shows if" in {
+  "shows if" - {
     val q = quote {
       (i: Int) =>
         if (i > 10) "a" else "b"
@@ -550,7 +573,7 @@ class AstShowSpec extends Spec {
       """if(i > 10) "a" else "b""""
   }
 
-  "shows distinct" in {
+  "shows distinct" - {
     val q = quote {
       query[TestEntity].distinct
     }

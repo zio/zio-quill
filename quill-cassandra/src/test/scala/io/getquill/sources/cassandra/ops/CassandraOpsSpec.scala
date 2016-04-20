@@ -73,6 +73,7 @@ class CassandraOpsSpec extends Spec {
       }
     }
     "if" in {
+
       val q = quote {
         query[TestEntity].update(t => t.s -> "b").ifCond(t => t.s == "a")
       }

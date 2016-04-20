@@ -820,19 +820,23 @@ class QuotationSpec extends Spec {
       }
       quote(unquote(q)).ast mustEqual n.ast
     }
-    "with additional param" in {
-      implicit class GreaterThan[T](q: Query[Int]) {
-        def greaterThan(j: Int) = quote(q.filter(i => i > j))
-      }
+  }
 
-      val q = quote {
-        query[TestEntity].map(t => t.i).greaterThan(1)
-      }
-      val n = quote {
-        query[TestEntity].map(t => t.i).filter(i => i > 1)
-      }
-      quote(unquote(q)).ast mustEqual n.ast
+  "with additional param" in {
+    implicit class GreaterThan[T](q: Query[Int]) {
+      def greaterThan(j: Int) = quote(q.filter(i => i > j))
     }
+
+    val j = 1
+    val q = quote {
+      query[TestEntity].map(t => t.i).greaterThan(j)
+    }
+
+    val n = quote {
+      query[TestEntity].map(t => t.i).filter(i => i > j)
+    }
+
+    quote(unquote(q)).ast.toString mustEqual n.ast.toString
   }
 
   "doesn't double quote" in {

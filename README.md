@@ -86,6 +86,14 @@ val areas = quote {
 }
 ```
 
+Quotations can contain values defined outside of the quotation:
+```scala
+val pi = 3.14159
+val areas = quote {
+  query[Circle].map(c => pi * c.radius * c.radius)
+}
+```
+
 Quill's normalization engine applies reduction steps before translating the quotation to the target language. The correspondent normalized quotation for both versions of the `areas` query is:
 
 ```scala

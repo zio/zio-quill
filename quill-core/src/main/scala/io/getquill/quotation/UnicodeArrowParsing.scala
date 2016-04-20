@@ -1,7 +1,9 @@
 package io.getquill.quotation
 
+import scala.reflect.macros.whitebox.Context
+
 trait UnicodeArrowParsing {
-  this: Quotation =>
+  val c: Context
 
   import c.universe.Quasiquote
 
