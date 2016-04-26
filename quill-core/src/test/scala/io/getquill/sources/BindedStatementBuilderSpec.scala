@@ -66,6 +66,54 @@ class BindedStatementBuilderSpec extends Spec {
     bind(List()) mustEqual List(1, 2, 3, 4)
   }
 
+  "ignore sql value '?'" - {
+    "no op" in {
+      val subject = new Subject
+      val query = "SELECT * FROM TEST where name = 'foo?'"
+
+      val (expanded, bind) = subject.build(query)
+
+      expanded mustEqual query
+      bind(List()) mustEqual List()
+    }
+    "single binding" in {
+      val subject = new Subject
+      val query = "SELECT * FROM Test WHERE id = ? AND name = '?'"
+
+      subject.single(0, 1, rawEnc)
+      val (expanded, bind) = subject.build(query)
+
+      expanded mustEqual query
+
+      bind(List()) mustEqual List(1)
+    }
+
+    "set binding" in {
+      val subject = new Subject
+      val query = "SELECT * FROM Test WHERE id IN (?) AND name = '?bar'"
+
+      subject.coll(0, Set(1, 2), enc)
+
+      val (expanded, bind) = subject.build(query)
+
+      expanded mustEqual "SELECT * FROM Test WHERE id IN (?, ?) AND name = '?bar'"
+      bind(List()) mustEqual List(1, 2)
+    }
+    "mixed" in {
+      val subject = new Subject
+      val query = "SELECT age - ? FROM Test WHERE id IN (?) AND age > ? AND name = 'foo?bar'"
+
+      subject.single(0, 1, rawEnc)
+      subject.coll(1, Set(2, 3), enc)
+      subject.single(2, 4, rawEnc)
+
+      val (expanded, bind) = subject.build(query)
+
+      expanded mustEqual "SELECT age - ? FROM Test WHERE id IN (?, ?) AND age > ? AND name = 'foo?bar'"
+      bind(List()) mustEqual List(1, 2, 3, 4)
+    }
+  }
+
   "invalid" - {
     "more ?" in {
       val subject = new Subject
