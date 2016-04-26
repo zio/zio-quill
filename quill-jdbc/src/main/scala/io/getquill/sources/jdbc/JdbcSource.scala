@@ -1,21 +1,18 @@
 package io.getquill.sources.jdbc
 
-import java.sql.{ Connection, PreparedStatement, ResultSet }
+import java.sql.{Connection, PreparedStatement, ResultSet}
 
-import scala.util.DynamicVariable
-
-import io.getquill.naming.NamingStrategy
-import io.getquill.sources.sql.{ SqlBindedStatementBuilder, SqlSource }
-import scala.util.Try
-
-import io.getquill.sources.sql.idiom.SqlIdiom
-import scala.util.control.NonFatal
-import scala.annotation.tailrec
-
-import io.getquill.JdbcSourceConfig
-import io.getquill.sources.BindedStatementBuilder
 import com.typesafe.scalalogging.Logger
+import io.getquill.JdbcSourceConfig
+import io.getquill.naming.NamingStrategy
+import io.getquill.sources.BindedStatementBuilder
+import io.getquill.sources.sql.idiom.SqlIdiom
+import io.getquill.sources.sql.{SqlBindedStatementBuilder, SqlSource}
 import org.slf4j.LoggerFactory
+
+import scala.annotation.tailrec
+import scala.util.control.NonFatal
+import scala.util.{DynamicVariable, Try}
 
 class JdbcSource[D <: SqlIdiom, N <: NamingStrategy](config: JdbcSourceConfig[D, N])
   extends SqlSource[D, N, ResultSet, BindedStatementBuilder[PreparedStatement]]
@@ -32,6 +29,7 @@ class JdbcSource[D <: SqlIdiom, N <: NamingStrategy](config: JdbcSourceConfig[D,
 
   class ActionApply[T](f: List[T] => List[Long]) extends Function1[List[T], List[Long]] {
     def apply(params: List[T]) = f(params)
+
     def apply(param: T) = f(List(param)).head
   }
 
@@ -40,6 +38,8 @@ class JdbcSource[D <: SqlIdiom, N <: NamingStrategy](config: JdbcSourceConfig[D,
   override def close = dataSource.close
 
   private val currentConnection = new DynamicVariable[Option[Connection]](None)
+
+  private def getConnection = currentConnection.value.getOrElse(dataSource.getConnection)
 
   protected def withConnection[T](f: Connection => T) =
     currentConnection.value.map(f).getOrElse {
@@ -55,38 +55,40 @@ class JdbcSource[D <: SqlIdiom, N <: NamingStrategy](config: JdbcSourceConfig[D,
       }
     }
 
-  def transaction[T](f: => T) =
-    withConnection { conn =>
-      currentConnection.withValue(Some(conn)) {
-        conn.setAutoCommit(false)
-        try {
-          val res = f
-          conn.commit
-          res
-        } catch {
-          case NonFatal(e) =>
-            conn.rollback
-            throw e
-        } finally {
-          conn.setAutoCommit(true)
-        }
+  def transaction[T](f: JdbcSource[D, N] => T) = {
+    val jdbcSource = new JdbcSource(config)
+    val conn = jdbcSource.getConnection
+    jdbcSource.currentConnection.withValue(Some(conn)) {
+      conn.setAutoCommit(false)
+      try {
+        val res = f(jdbcSource)
+        conn.commit
+        res
+      } catch {
+        case NonFatal(e) =>
+          conn.rollback
+          throw e
+      } finally {
+        conn.setAutoCommit(true)
       }
     }
+  }
 
   def execute(sql: String, bind: BindedStatementBuilder[PreparedStatement] => BindedStatementBuilder[PreparedStatement] = identity, generated: Option[String] = None): Long = {
     logger.info(sql)
     val (expanded, setValues) = bind(new SqlBindedStatementBuilder[PreparedStatement]).build(sql)
     logger.info(expanded)
-    withConnection { conn =>
-      generated match {
-        case None =>
-          val ps = setValues(conn.prepareStatement(expanded))
-          ps.executeUpdate.toLong
-        case Some(column) =>
-          val ps = setValues(conn.prepareStatement(expanded, Array(column)))
-          val rs = ps.executeUpdate
-          extractResult(ps.getGeneratedKeys, _.getLong(1)).head
-      }
+    withConnection {
+      conn =>
+        generated match {
+          case None =>
+            val ps = setValues(conn.prepareStatement(expanded))
+            ps.executeUpdate.toLong
+          case Some(column) =>
+            val ps = setValues(conn.prepareStatement(expanded, Array(column)))
+            val rs = ps.executeUpdate
+            extractResult(ps.getGeneratedKeys, _.getLong(1)).head
+        }
     }
   }
 
@@ -104,30 +106,29 @@ class JdbcSource[D <: SqlIdiom, N <: NamingStrategy](config: JdbcSourceConfig[D,
           }
           val updateCount = ps.executeBatch.toList.map(_.toLong)
           generated.fold(updateCount)(_ => extractResult(ps.getGeneratedKeys, _.getLong(1)))
-        }
-      }).flatten
+        }).flatten
+      }
+      new ActionApply(func)
     }
-    new ActionApply(func)
-  }
 
-  def query[T](sql: String, extractor: ResultSet => T = identity[ResultSet] _, bind: BindedStatementBuilder[PreparedStatement] => BindedStatementBuilder[PreparedStatement] = identity): List[T] = {
-    val (expanded, setValues) = bind(new SqlBindedStatementBuilder[PreparedStatement]).build(sql)
-    logger.info(expanded)
-    withConnection { conn =>
-      val ps = setValues(conn.prepareStatement(expanded))
-      val rs = ps.executeQuery
-      extractResult(rs, extractor)
+    def query[T](sql: String, extractor: ResultSet => T = identity[ResultSet] _, bind: BindedStatementBuilder[PreparedStatement] => BindedStatementBuilder[PreparedStatement] = identity): List[T] = {
+      val (expanded, setValues) = bind(new SqlBindedStatementBuilder[PreparedStatement]).build(sql)
+      logger.info(expanded)
+      withConnection { conn =>
+        val ps = setValues(conn.prepareStatement(expanded))
+        val rs = ps.executeQuery
+        extractResult(rs, extractor)
+      }
     }
+
+    def querySingle[T](sql: String, extractor: ResultSet => T = identity[ResultSet] _, bind: BindedStatementBuilder[PreparedStatement] => BindedStatementBuilder[PreparedStatement] = identity): T =
+      handleSingleResult(query(sql, extractor, bind))
+
+    @tailrec
+    private def extractResult[T](rs: ResultSet, extractor: ResultSet => T, acc: List[T] = List()): List[T] =
+      if (rs.next)
+        extractResult(rs, extractor, acc :+ extractor(rs))
+      else
+        acc
+
   }
-
-  def querySingle[T](sql: String, extractor: ResultSet => T = identity[ResultSet] _, bind: BindedStatementBuilder[PreparedStatement] => BindedStatementBuilder[PreparedStatement] = identity): T =
-    handleSingleResult(query(sql, extractor, bind))
-
-  @tailrec
-  private def extractResult[T](rs: ResultSet, extractor: ResultSet => T, acc: List[T] = List()): List[T] =
-    if (rs.next)
-      extractResult(rs, extractor, acc :+ extractor(rs))
-    else
-      acc
-
-}

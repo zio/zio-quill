@@ -1,23 +1,17 @@
 package io.getquill.sources.async
 
-import scala.concurrent.Await
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
-import scala.concurrent.duration.Duration
-import scala.util.Try
-
-import org.slf4j.LoggerFactory
-
-import com.github.mauricio.async.db.Connection
-import com.github.mauricio.async.db.{ QueryResult => DBQueryResult }
-import com.github.mauricio.async.db.RowData
+import com.github.mauricio.async.db.{ Connection, QueryResult => DBQueryResult, RowData }
 import com.typesafe.scalalogging.Logger
-
 import io.getquill.naming.NamingStrategy
 import io.getquill.sources.BindedStatementBuilder
-import io.getquill.sources.sql.SqlBindedStatementBuilder
-import io.getquill.sources.sql.SqlSource
 import io.getquill.sources.sql.idiom.SqlIdiom
+import io.getquill.sources.sql.{SqlBindedStatementBuilder, SqlSource}
+import org.slf4j.LoggerFactory
+
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.language.experimental.macros
+import scala.util.Try
 
 abstract class AsyncSource[D <: SqlIdiom, N <: NamingStrategy, C <: Connection](config: AsyncSourceConfig[D, N, C])
   extends SqlSource[D, N, RowData, BindedStatementBuilder[List[Any]]]
@@ -35,6 +29,7 @@ abstract class AsyncSource[D <: SqlIdiom, N <: NamingStrategy, C <: Connection](
   class ActionApply[T](f: List[T] => Future[List[Long]])(implicit ec: ExecutionContext)
     extends Function1[List[T], Future[List[Long]]] {
     def apply(params: List[T]) = f(params)
+
     def apply(param: T) = f(List(param)).map(_.head)
   }
 
@@ -60,9 +55,9 @@ abstract class AsyncSource[D <: SqlIdiom, N <: NamingStrategy, C <: Connection](
       Await.result(pool.sendQuery(sql), Duration.Inf)
     }
 
-  def transaction[T](f: TransactionalExecutionContext => Future[T])(implicit ec: ExecutionContext) =
+  def transaction[T](f: AsyncSource[D, N, C] => Future[T]) =
     pool.inTransaction { c =>
-      f(TransactionalExecutionContext(ec, c))
+      f(this)
     }
 
   def execute(sql: String, bind: BindedStatementBuilder[List[Any]] => BindedStatementBuilder[List[Any]] = identity, generated: Option[String] = None)(implicit ec: ExecutionContext) = {

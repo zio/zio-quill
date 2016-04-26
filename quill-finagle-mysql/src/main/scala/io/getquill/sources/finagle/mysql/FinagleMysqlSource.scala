@@ -1,24 +1,16 @@
 package io.getquill.sources.finagle.mysql
 
-import com.twitter.finagle.exp.mysql.Client
-import com.twitter.finagle.exp.mysql.Parameter
-import com.twitter.finagle.exp.mysql.Result
-import com.twitter.finagle.exp.mysql.Row
-import com.twitter.util.Future
-import com.twitter.util.Local
-import io.getquill.naming.NamingStrategy
-import io.getquill.sources.sql.{ SqlBindedStatementBuilder, SqlSource }
-import io.getquill.sources.sql.idiom.MySQLDialect
-
-import com.twitter.util.Await
-import scala.util.Try
-
-import io.getquill.FinagleMysqlSourceConfig
-import io.getquill.sources.BindedStatementBuilder
+import com.twitter.finagle.exp.mysql.{ Client, Error, OK, Parameter, Result, Row }
+import com.twitter.util.{ Await, Future, Local }
 import com.typesafe.scalalogging.Logger
+import io.getquill.FinagleMysqlSourceConfig
+import io.getquill.naming.NamingStrategy
+import io.getquill.sources.BindedStatementBuilder
+import io.getquill.sources.sql.idiom.MySQLDialect
+import io.getquill.sources.sql.{ SqlBindedStatementBuilder, SqlSource }
 import org.slf4j.LoggerFactory
-import com.twitter.finagle.exp.mysql.OK
-import com.twitter.finagle.exp.mysql.Error
+
+import scala.util.Try
 
 class FinagleMysqlSource[N <: NamingStrategy](config: FinagleMysqlSourceConfig[N])
   extends SqlSource[MySQLDialect, N, Row, BindedStatementBuilder[List[Parameter]]]
@@ -36,6 +28,7 @@ class FinagleMysqlSource[N <: NamingStrategy](config: FinagleMysqlSourceConfig[N
   class ActionApply[T](f: List[T] => Future[List[Long]])
     extends Function1[List[T], Future[List[Long]]] {
     def apply(params: List[T]) = f(params)
+
     def apply(param: T) = f(List(param)).map(_.head)
   }
 
@@ -52,12 +45,12 @@ class FinagleMysqlSource[N <: NamingStrategy](config: FinagleMysqlSourceConfig[N
   def probe(sql: String) =
     Try(Await.result(client.query(sql)))
 
-  def transaction[T](f: => Future[T]) =
-    client.transaction {
-      transactional =>
-        currentClient.update(transactional)
-        f.ensure(currentClient.clear)
+  def transaction[T](f: FinagleMysqlSource[N] => Future[T]) = {
+    val source = new FinagleMysqlSource(config)
+    source.client.transaction { tx =>
+      f(source)
     }
+  }
 
   def execute(sql: String, bind: BindedStatementBuilder[List[Parameter]] => BindedStatementBuilder[List[Parameter]] = identity, generated: Option[String] = None): Future[Long] = {
     val (expanded, params) = bind(new SqlBindedStatementBuilder).build(sql)

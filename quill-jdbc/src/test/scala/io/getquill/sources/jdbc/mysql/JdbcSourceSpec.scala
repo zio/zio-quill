@@ -18,16 +18,16 @@ class JdbcSourceSpec extends Spec {
   "provides transaction support" - {
     "success" in {
       testMysqlDB.run(qr1.delete)
-      testMysqlDB.transaction {
-        testMysqlDB.run(qr1.insert(_.i -> 33))
+      testMysqlDB.transaction { transactional =>
+        transactional.run(qr1.insert(_.i -> 33))
       }
       testMysqlDB.run(qr1).map(_.i) mustEqual List(33)
     }
     "failure" in {
       testMysqlDB.run(qr1.delete)
       intercept[IllegalStateException] {
-        testMysqlDB.transaction {
-          testMysqlDB.run(qr1.insert(_.i -> 33))
+        testMysqlDB.transaction { transactional =>
+          transactional.run(qr1.insert(_.i -> 33))
           throw new IllegalStateException
         }
       }
