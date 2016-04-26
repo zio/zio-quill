@@ -1,5 +1,6 @@
 package io.getquill.sources
 
+import java.lang.StringBuilder
 import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
 
@@ -13,6 +14,7 @@ case class SetBinding[S, T](index: Int, values: Traversable[T], enc: Encoder[Bin
 class BindedStatementBuilder[S] {
 
   private val bindings = ListBuffer[Binding[S]]()
+  private val HolderPattern = "(?<=\\s|\\()\\?".r
 
   def single[T](idx: Int, value: T, enc: Encoder[S, T]) = {
     bindings += SingleBinding[S, T](idx, value, enc)
@@ -27,22 +29,24 @@ class BindedStatementBuilder[S] {
   def build(query: String) = {
 
     @tailrec
-    def expand(q: List[Char], b: List[Binding[S]], acc: List[Char]): List[Char] =
-      (q, b) match {
-        case (Nil, Nil) =>
-          acc
-        case (c :: qtail, b) if (c != '?') =>
-          expand(qtail, b, acc :+ c)
-        case ('?' :: qtail, (bind: SingleBinding[_, _]) :: btail) =>
-          expand(qtail, btail, acc :+ '?')
-        case ('?' :: qtail, (bind: SetBinding[_, _]) :: btail) =>
-          val expanded = List.fill(bind.values.size)('?').mkString(", ").toList
-          expand(qtail, btail, acc ++ expanded)
-        case other =>
+    def expand(q: CharSequence, b: List[Binding[S]], sb: StringBuilder): StringBuilder = {
+      val fm = HolderPattern.findFirstMatchIn(q)
+      (fm, b) match {
+        case (Some(m), (b: SetBinding[_, _]) :: btail) =>
+          val expanded = List.fill(b.values.size)('?').mkString(", ")
+          sb.append(m.before).append(expanded)
+          expand(m.after, btail, sb)
+        case (Some(m), (b: SingleBinding[_, _]) :: btail) =>
+          sb.append(m.before).append('?')
+          expand(m.after, btail, sb)
+        case (None, Nil) =>
+          sb.append(q)
+        case _ =>
           throw new IllegalStateException("Number of bindings doesn't match the question marks.")
       }
+    }
 
-    val expandedQuery = expand(query.toList, bindings.toList.sortBy(_.index), List.empty)
+    val expandedQuery = expand(query, bindings.toList.sortBy(_.index), new StringBuilder)
 
     def setValues(p: S) =
       bindings.foldLeft((p, 0)) {
@@ -60,6 +64,6 @@ class BindedStatementBuilder[S] {
 
           }
       }
-    (expandedQuery.mkString, (setValues _).andThen(_._1))
+    (expandedQuery.toString, (setValues _).andThen(_._1))
   }
 }
