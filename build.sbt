@@ -18,7 +18,7 @@ lazy val `quill-core` =
     .settings(mimaSettings)
     .settings(libraryDependencies ++= Seq(
       "com.typesafe"               %  "config"        % "1.3.0",
-      "com.typesafe.scala-logging" %% "scala-logging" % "3.1.0",
+      "com.typesafe.scala-logging" %% "scala-logging" % "3.4.0",
       "org.scala-lang"             %  "scala-reflect" % scalaVersion.value
     ))
 
@@ -34,7 +34,7 @@ lazy val `quill-jdbc` =
     .settings(mimaSettings)
     .settings(
       libraryDependencies ++= Seq(
-        "com.zaxxer"     % "HikariCP"             % "2.3.9",
+        "com.zaxxer"     % "HikariCP"             % "2.4.5",
         "mysql"          % "mysql-connector-java" % "5.1.38"  % "test",
         "com.h2database" % "h2"                   % "1.4.191" % "test",
         "org.postgresql" % "postgresql"           % "9.4.1208"
@@ -49,7 +49,7 @@ lazy val `quill-finagle-mysql` =
     .settings(mimaSettings)
     .settings(
       libraryDependencies ++= Seq(
-        "com.twitter" %% "finagle-mysql" % "6.31.0"
+        "com.twitter" %% "finagle-mysql" % "6.34.0"
       ),
       parallelExecution in Test := false
     )
@@ -61,9 +61,9 @@ lazy val `quill-async` =
     .settings(mimaSettings)
     .settings(
       libraryDependencies ++= Seq(
-        "com.github.mauricio" %% "db-async-common"  % "0.2.18",
-        "com.github.mauricio" %% "mysql-async"      % "0.2.18",
-        "com.github.mauricio" %% "postgresql-async" % "0.2.18"
+        "com.github.mauricio" %% "db-async-common"  % "0.2.19",
+        "com.github.mauricio" %% "mysql-async"      % "0.2.19",
+        "com.github.mauricio" %% "postgresql-async" % "0.2.19"
       ),
       parallelExecution in Test := false
     )
@@ -76,7 +76,7 @@ lazy val `quill-cassandra` =
     .settings(
       libraryDependencies ++= Seq(
         "com.datastax.cassandra" %  "cassandra-driver-core" % "3.0.0",
-        "org.monifu"             %% "monifu"                % "1.1"
+        "org.monifu"             %% "monifu"                % "1.2"
       ),
       parallelExecution in Test := false
     )
@@ -118,8 +118,8 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
   scalaVersion := "2.11.7",
   libraryDependencies ++= Seq(
     "org.scalamacros" %% "resetallattrs"  % "1.0.0",
-    "org.scalatest"   %% "scalatest"      % "2.2.4" % "test",
-    "ch.qos.logback"  % "logback-classic" % "1.1.6" % "test",
+    "org.scalatest"   %% "scalatest"      % "2.2.6" % "test",
+    "ch.qos.logback"  % "logback-classic" % "1.1.7" % "test",
     "com.google.code.findbugs" % "jsr305" % "3.0.1" % "provided" // just to avoid warnings during compilation
   ),
   EclipseKeys.createSrc := EclipseCreateSrc.Default + EclipseCreateSrc.Resource,
