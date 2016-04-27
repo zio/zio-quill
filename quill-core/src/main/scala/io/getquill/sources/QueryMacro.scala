@@ -38,7 +38,6 @@ trait QueryMacro extends SelectFlattening with SelectResultExtraction {
     if (inputs.isEmpty)
       q"""
       {
-        import scala.language.reflectiveCalls
         val quoted = $quotedTree
         val (sql, bindings: List[io.getquill.ast.Ident], _) =
             ${prepare(flattenQuery, allParamIdents)}
@@ -52,7 +51,6 @@ trait QueryMacro extends SelectFlattening with SelectResultExtraction {
     else
       q"""
       {
-        import scala.language.reflectiveCalls
         val quoted = $quotedTree
         val (sql, bindings: List[io.getquill.ast.Ident], _) =
             ${prepare(flattenQuery, allParamIdents)}

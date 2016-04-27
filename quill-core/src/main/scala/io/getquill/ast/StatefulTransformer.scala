@@ -1,7 +1,5 @@
 package io.getquill.ast
 
-import io.getquill.util.Messages.fail
-
 trait StatefulTransformer[T] {
 
   val state: T

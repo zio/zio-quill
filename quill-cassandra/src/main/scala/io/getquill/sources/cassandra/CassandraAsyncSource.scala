@@ -3,9 +3,7 @@ package io.getquill.sources.cassandra
 import scala.collection.JavaConversions.asScalaBuffer
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
-import scala.language.implicitConversions
 import com.datastax.driver.core.BoundStatement
-import com.datastax.driver.core.ConsistencyLevel
 import com.datastax.driver.core.ResultSet
 import com.datastax.driver.core.Row
 import io.getquill.naming.NamingStrategy

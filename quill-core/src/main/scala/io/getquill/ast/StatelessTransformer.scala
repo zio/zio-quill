@@ -1,7 +1,5 @@
 package io.getquill.ast
 
-import io.getquill.util.Messages.fail
-
 trait StatelessTransformer {
 
   def apply(e: Ast): Ast =

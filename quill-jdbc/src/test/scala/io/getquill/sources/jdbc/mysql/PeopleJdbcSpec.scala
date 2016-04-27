@@ -2,8 +2,6 @@ package io.getquill.sources.jdbc.mysql
 
 import io.getquill._
 import io.getquill.sources.sql.PeopleSpec
-import io.getquill.quotation.Quoted
-import io.getquill.quotation.IsDynamic
 
 class PeopleJdbcSpec extends PeopleSpec {
 

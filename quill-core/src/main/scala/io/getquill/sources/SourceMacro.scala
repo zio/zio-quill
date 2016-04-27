@@ -5,6 +5,9 @@ import io.getquill._
 import io.getquill.ast.{ Action => _, Query => _, _ }
 import io.getquill.quotation.Quotation
 import io.getquill.quotation.Quoted
+import io.getquill.quotation.FreeVariables
+import io.getquill.util.Messages._
+import io.getquill.quotation.Bindings
 
 trait SourceMacro extends Quotation with ActionMacro with QueryMacro with ResolveSourceMacro {
   val c: Context
@@ -17,7 +20,18 @@ trait SourceMacro extends Quotation with ActionMacro with QueryMacro with Resolv
 
     val ast = this.ast(quoted)
 
-    val inPlaceParams = bindingsTree(quoted.tree)
+    FreeVariables(ast) match {
+      case free if free.isEmpty =>
+      case free =>
+        c.fail(s"""
+          |Found the following free variables: ${free.mkString(", ")}.
+          |Quotations can't reference values outside their scope directly. 
+          |In order to bind runtime values to a quotation, please use the method `lift`.
+          |Example: `def byName(n: String) = quote(query[Person].filter(_.name == lift(n)))`
+        """.stripMargin)
+    }
+
+    val inPlaceParams = bindingsTree(q"quoted", quoted.tree.tpe)
 
     t.tpe.typeSymbol.fullName.startsWith("scala.Function") match {
 
@@ -31,12 +45,13 @@ trait SourceMacro extends Quotation with ActionMacro with QueryMacro with Resolv
     }
   }
 
-  private def bindingsTree(tree: Tree) =
-    tree.tpe.decls
-      .filter(_.name.decodedName.toString.startsWith("binding_"))
-      .map { symbol =>
-        (Ident(symbol.name.decodedName.toString.replace("binding_", "")), (symbol.typeSignature.resultType, q"quoted.$symbol"))
+  private def bindingsTree(tree: Tree, tpe: Type) = {
+    Bindings(c)(tree, tpe)
+      .map {
+        case (symbol, tree) =>
+          (Ident(symbol.name.decodedName.toString), (symbol.typeSignature.resultType, tree))
       }.toMap
+  }
 
   private def run[R, S, T](quotedTree: Tree, ast: Ast, inPlaceParams: collection.Map[Ident, (Type, Tree)], params: List[(Ident, Type)])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]): Tree =
     ast match {

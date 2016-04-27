@@ -2,8 +2,6 @@ package io.getquill.sources.cassandra
 
 import com.datastax.driver.core.ResultSet
 import io.getquill._
-import scala.concurrent.{ Await, Future }
-import scala.concurrent.duration.Duration
 import scala.concurrent.ExecutionContext.Implicits.{ global => ec }
 
 class CassandraSourceSpec extends Spec {

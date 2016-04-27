@@ -6,9 +6,8 @@ import scala.annotation.StaticAnnotation
 import scala.reflect.ClassTag
 import scala.reflect.macros.whitebox.Context
 import io.getquill.ast._
-import scala.reflect.internal.Symbols
 
-import scala.collection.mutable
+import scala.reflect.NameTransformer
 
 trait Quoted[+T] {
   def ast: Ast
@@ -16,48 +15,68 @@ trait Quoted[+T] {
 
 case class QuotedAst(ast: Ast) extends StaticAnnotation
 
-trait Quotation extends Liftables with Unliftables {
+trait Quotation extends Liftables with Unliftables with Parsing {
 
   val c: Context
   import c.universe._
 
   def quote[T: WeakTypeTag](body: Expr[T]) = {
 
-    val freeVars = extractFreeVars(body.tree)
+    def bindingName(s: String) =
+      TermName(NameTransformer.encode(s))
 
-    val ast = Parsing(c)(freeVars).astParser(body.tree)
+    val ast =
+      Transform(astParser(body.tree)) {
+        case QuotedReference(nested: Tree, nestedAst) =>
+          val ast =
+            Transform(nestedAst) {
+              case RuntimeBinding(name) =>
+                RuntimeBinding(s"$nested.$name")
+            }
+          QuotedReference(nested, ast)
+      }
 
-    val runtimeBindings = RuntimeBindings(c)(ast).map {
-      case (quoted, RuntimeBinding(key, _)) =>
-        val binding = TermName(s"binding_$key")
-        q"def $binding = ${quoted}.$binding"
-    }
+    val nestedBindings =
+      CollectAst(ast) {
+        case QuotedReference(nested: Tree, nestedAst) =>
+          Bindings(c)(nested, nested.tpe).map {
+            case (symbol, tree) =>
+              val nestedName = bindingName(s"$nested.${symbol.name.decodedName}")
+              q"val $nestedName = $tree"
+          }
+      }.flatten
 
-    val importReflectiveCalls = runtimeBindings.map {
-      _ => q"import scala.language.reflectiveCalls"
-    }.headOption.getOrElse(EmptyTree)
-
-    val compileTimeBindings = CompileTimeBindings(c)(ast).map {
-      case CompileTimeBinding(key, tree: Tree) =>
-        val binding = TermName(s"binding_$key")
-        q"def $binding = $tree"
-    }
+    val bindings =
+      CollectAst(ast) {
+        case CompileTimeBinding(tree: Tree) =>
+          q"val ${bindingName(tree.toString)} = $tree"
+      }
 
     val id = TermName(s"id${ast.hashCode}")
 
+    val reifiedAst =
+      Transform(ast) {
+        case CompileTimeBinding(tree: Tree) =>
+          Dynamic(tree)
+      }
+
     q"""
-      new ${c.weakTypeOf[Quoted[T]]} {
-        $importReflectiveCalls
-
-        @${c.weakTypeOf[QuotedAst]}($ast)
-        def quoted = ast
-
-        override def ast = $ast
-        override def toString = ast.toString
-
-        def $id() = ()
-        ..$runtimeBindings
-        ..$compileTimeBindings
+      {
+        new ${c.weakTypeOf[Quoted[T]]} { 
+  
+          @${c.weakTypeOf[QuotedAst]}($ast)
+          def quoted = ast
+  
+          override def ast = $reifiedAst
+          override def toString = ast.toString
+  
+          def $id() = ()
+          
+          val bindings = new {
+            ..$bindings
+            ..$nestedBindings
+          }
+        }
       }
     """
   }
@@ -84,32 +103,4 @@ trait Quotation extends Liftables with Unliftables {
       annotation <- method.annotations.headOption
       astTree <- annotation.tree.children.lastOption
     } yield (astTree)
-
-  private class FreeVarTraverser extends Traverser {
-    val freeVars = mutable.LinkedHashSet[Symbol]()
-    val declared = mutable.LinkedHashSet[Symbol]()
-    def isLocalToBlock(sym: Symbol) = sym.owner.isTerm
-    override def traverse(tree: Tree) = {
-      tree match {
-        case Function(args, _) =>
-          args foreach { arg => declared += arg.symbol }
-        case ValDef(_, _, _, _) =>
-          declared += tree.symbol
-        case _: Bind =>
-          declared += tree.symbol
-        case Ident(_) =>
-          val sym = tree.symbol
-          if ((sym != NoSymbol) && isLocalToBlock(sym) && sym.isTerm && !declared.contains(sym)) freeVars += sym
-        case _ =>
-      }
-      super.traverse(tree)
-    }
-  }
-
-  private def extractFreeVars(tree: Tree) = {
-    val freeVarsTraverser = new FreeVarTraverser
-    freeVarsTraverser.traverse(tree)
-    freeVarsTraverser.freeVars.toList
-  }
-
 }

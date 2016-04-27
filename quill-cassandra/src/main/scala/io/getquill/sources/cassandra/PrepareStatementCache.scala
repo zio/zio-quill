@@ -1,13 +1,8 @@
 package io.getquill.sources.cassandra
 
 import java.util.concurrent.Callable
-import com.datastax.driver.core.BatchStatement
-import com.datastax.driver.core.BoundStatement
 import com.datastax.driver.core.PreparedStatement
-import com.datastax.driver.core.Statement
 import com.google.common.cache.CacheBuilder
-import com.datastax.driver.core.ConsistencyLevel
-import com.typesafe.config.Config
 
 class PrepareStatementCache(size: Long) {
 

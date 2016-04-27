@@ -2,10 +2,7 @@ package io.getquill.sources.cassandra
 
 import io.getquill._
 import java.util.{ UUID, Date }
-import com.datastax.driver.core.ConsistencyLevel
 import monifu.reactive.Observable
-import scala.collection.mutable.ListBuffer
-import scala.concurrent.Await
 
 class EncodingSpec extends Spec {
 

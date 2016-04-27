@@ -7,7 +7,6 @@ import io.getquill.util.Messages.fail
 import io.getquill.util.Show.Show
 import io.getquill.util.Show.Shower
 import io.getquill.util.Show.listShow
-import io.getquill.norm.BetaReduction
 
 trait SqlIdiom {
 

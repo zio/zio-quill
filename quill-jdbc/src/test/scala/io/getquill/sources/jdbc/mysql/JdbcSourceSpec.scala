@@ -1,7 +1,6 @@
 package io.getquill.sources.jdbc.mysql
 
 import io.getquill._
-import io.getquill.quotation.IsDynamic
 
 class JdbcSourceSpec extends Spec {
 

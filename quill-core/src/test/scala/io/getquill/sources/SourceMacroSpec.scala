@@ -3,7 +3,7 @@ package io.getquill.sources
 import io.getquill.quotation.Quoted
 import io.getquill._
 import io.getquill.TestSource.mirrorSource
-import io.getquill.sources.mirror.Row
+import mirror.Row
 
 class SourceMacroSpec extends Spec {
 
@@ -112,27 +112,27 @@ class SourceMacroSpec extends Spec {
         r.ast.toString mustEqual "query[TestEntity].filter(t => t.s == p1).map(t => (t.s, t.i, t.l, t.o))"
         r.binds mustEqual Row("a")
       }
-      "free variable" - {
+      "free variable" in {
         val i = 1
         val q = quote {
-          qr1.filter(x => x.i == i)
+          qr1.filter(x => x.i == lift(i))
         }
         val r = mirrorSource.run(q)
-        r.ast.toString mustEqual "query[TestEntity].filter(x => x.i == i).map(x => (x.s, x.i, x.l, x.o))"
+        r.ast.toString mustEqual "query[TestEntity].filter(x => x.i == lift(i)).map(x => (x.s, x.i, x.l, x.o))"
         r.binds mustEqual Row(1)
       }
-      "multiple free variables" - {
+      "multiple free variables" in {
         val i = 1
         val l = 1L
         val q1 = quote {
-          qr1.filter(x => x.i == i)
+          qr1.filter(x => x.i == lift(i))
         }
         val q2 = quote {
-          q1.filter(x => x.l == l)
+          q1.filter(x => x.l == lift(l))
         }
         val r = mirrorSource.run(q2)
-        r.ast.toString mustEqual "query[TestEntity].filter(x => (x.i == i) && (x.l == l)).map(x => (x.s, x.i, x.l, x.o))"
-        r.binds mustEqual Row(1, 1L)
+        r.ast.toString mustEqual "query[TestEntity].filter(x => (x.i == lift(q1.i)) && (x.l == lift(l))).map(x => (x.s, x.i, x.l, x.o))"
+        r.binds mustEqual Row(i, l)
       }
 
     }
@@ -146,16 +146,17 @@ class SourceMacroSpec extends Spec {
 
   "can be used as a var" in {
     var db = source(new MirrorSourceConfig(""))
-    "db.run(qr1)" must compile
+    db.run(qr1)
+    ()
   }
 
-  "fails if bind value is outside `source.run`" in {
+  "fails if there's a free variable" in {
     val q = {
       val i = 1
       quote {
         qr1.filter(_.i == i)
       }
     }
-    "mirrorSource.run(q)" must compile
+    "mirrorSource.run(q)" mustNot compile
   }
 }

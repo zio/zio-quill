@@ -1,7 +1,6 @@
 package io.getquill.sources.cassandra
 
 import io.getquill._
-import io.getquill.quotation.NonQuotedException
 
 package object ops {
 

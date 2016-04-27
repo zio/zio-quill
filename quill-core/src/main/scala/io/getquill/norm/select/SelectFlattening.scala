@@ -2,7 +2,6 @@ package io.getquill.norm.select
 
 import scala.reflect.macros.whitebox.Context
 import io.getquill.ast._
-import io.getquill.util.Messages.RichContext
 import io.getquill.sources.EncodingMacro
 
 trait SelectFlattening extends EncodingMacro {

@@ -1,7 +1,6 @@
 package io.getquill.sources.sql.norm
 
 import io.getquill._
-import io.getquill.norm.Normalize
 import io.getquill.sources.sql.mirrorSource
 
 class ExpandNestedQueriesSpec extends Spec {

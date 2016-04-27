@@ -36,7 +36,7 @@ class QueryMacroSpec extends Spec {
         (p1: Int) => qr1.filter(t => t.i == p1).map(t => t.i)
       }
       val p1 = 1
-      val r = mirrorSource.run(q(p1))
+      val r = mirrorSource.run(q(lift(p1)))
       r.binds mustEqual Row(p1)
     }
     "in-place param and function param" in {
@@ -44,7 +44,7 @@ class QueryMacroSpec extends Spec {
       }
       val v1 = 1
       val v2 = 2
-      val r = mirrorSource.run(q(v1))(v2)
+      val r = mirrorSource.run(q(lift(v1)))(v2)
 
       q.ast.body match {
         case f: Function => r.ast mustEqual r.ast
@@ -54,7 +54,7 @@ class QueryMacroSpec extends Spec {
     }
     "inline" in {
       def q(i: Int) =
-        mirrorSource.run(qr1.filter(_.i == i))
+        mirrorSource.run(qr1.filter(_.i == lift(i)))
       q(1).binds mustEqual Row(1)
     }
   }

@@ -6,7 +6,6 @@ import com.github.mauricio.async.db.Connection
 import com.github.mauricio.async.db.pool.ObjectFactory
 import com.github.mauricio.async.db.pool.PartitionedConnectionPool
 import com.github.mauricio.async.db.pool.PoolConfiguration
-import com.typesafe.config.Config
 import scala.util.Try
 import io.getquill.sources.sql.idiom.SqlIdiom
 import io.getquill.naming.NamingStrategy

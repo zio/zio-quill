@@ -15,7 +15,7 @@ trait ProductSpec extends Spec {
   }
 
   def productById(id: Long) = quote {
-    product.filter(_.id == id)
+    product.filter(_.id == lift(id))
   }
 
   val productEntries = List(
@@ -29,7 +29,7 @@ trait ProductSpec extends Spec {
   }
 
   def productInsert(prd: Product) = quote {
-    product.insert(_.description -> prd.description, _.sku -> prd.sku)
+    product.insert(_.description -> lift(prd.description), _.sku -> lift(prd.sku))
   }
 
 }

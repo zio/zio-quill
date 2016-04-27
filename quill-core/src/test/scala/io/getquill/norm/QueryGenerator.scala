@@ -2,7 +2,6 @@ package io.getquill.norm
 
 import scala.util.Random
 import io.getquill.ast._
-import io.getquill.ast
 
 class QueryGenerator(seed: Int) {
 

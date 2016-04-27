@@ -1,14 +1,12 @@
 package io.getquill.sources.sql.idiom
 
 import io.getquill._
-import io.getquill.ast.{ Collection, Constant }
 import io.getquill.Spec
 import io.getquill.sources.mirror.Row
-import io.getquill.naming.{ SnakeCase, UpperCase, Escape, Literal }
-import io.getquill.norm.select.ExtractSelect
-import io.getquill.quotation.FreeVariables
 import io.getquill.sources.sql.mirrorSource
 import io.getquill.ast.Ast
+import io.getquill.naming.Literal
+import io.getquill.util.Show.Shower
 
 class SqlIdiomSpec extends Spec {
 

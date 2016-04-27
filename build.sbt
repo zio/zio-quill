@@ -5,9 +5,7 @@ import sbtrelease.ReleasePlugin
 
 lazy val quill = 
   (project in file("."))
-    .settings(tutSettings ++ commonSettings ++ Seq(
-      scalaVersion := "2.11.8"
-    ))
+    .settings(tutSettings ++ commonSettings)
     .settings(`tut-settings`:_*)
     .dependsOn(`quill-core`, `quill-sql`, `quill-jdbc`, `quill-finagle-mysql`, `quill-async`, `quill-cassandra`)
     .aggregate(`quill-core`, `quill-sql`, `quill-jdbc`, `quill-finagle-mysql`, `quill-async`, `quill-cassandra`)
@@ -115,7 +113,7 @@ lazy val mimaSettings = MimaPlugin.mimaDefaultSettings ++ Seq(
 
 lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
   organization := "io.getquill",
-  scalaVersion := "2.11.7",
+  scalaVersion := "2.11.8",
   libraryDependencies ++= Seq(
     "org.scalamacros" %% "resetallattrs"  % "1.0.0",
     "org.scalatest"   %% "scalatest"      % "2.2.6" % "test",

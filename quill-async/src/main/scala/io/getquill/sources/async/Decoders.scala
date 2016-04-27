@@ -2,14 +2,12 @@ package io.getquill.sources.async
 
 import java.util.Date
 import java.util.UUID
-import scala.math.BigDecimal.javaBigDecimal2bigDecimal
 import scala.reflect.ClassTag
 import scala.reflect.classTag
 import org.joda.time.LocalDate
 import org.joda.time.LocalDateTime
 import com.github.mauricio.async.db.RowData
 import io.getquill.util.Messages.fail
-import io.getquill.sources.Decoder
 
 trait Decoders {
   this: AsyncSource[_, _, _] =>
