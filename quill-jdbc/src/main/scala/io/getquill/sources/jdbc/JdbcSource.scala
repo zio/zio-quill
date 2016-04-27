@@ -1,14 +1,18 @@
 package io.getquill.sources.jdbc
 
-import java.sql.{ Statement, Connection, PreparedStatement, ResultSet }
+import java.sql.{ Connection, PreparedStatement, ResultSet, Statement }
+
 import scala.util.DynamicVariable
+
 import com.typesafe.scalalogging.StrictLogging
 import io.getquill.naming.NamingStrategy
-import io.getquill.sources.sql.SqlSource
+import io.getquill.sources.sql.{ SqlBindedStatementBuilder, SqlSource }
 import scala.util.Try
+
 import io.getquill.sources.sql.idiom.SqlIdiom
 import scala.util.control.NonFatal
 import scala.annotation.tailrec
+
 import io.getquill.JdbcSourceConfig
 import io.getquill.sources.BindedStatementBuilder
 import com.typesafe.scalalogging.Logger
@@ -71,7 +75,7 @@ class JdbcSource[D <: SqlIdiom, N <: NamingStrategy](config: JdbcSourceConfig[D,
 
   def execute(sql: String, bind: BindedStatementBuilder[PreparedStatement] => BindedStatementBuilder[PreparedStatement], generated: Option[String] = None): Long = {
     logger.info(sql)
-    val (expanded, setValues) = bind(new BindedStatementBuilder[PreparedStatement]).build(sql)
+    val (expanded, setValues) = bind(new SqlBindedStatementBuilder[PreparedStatement]).build(sql)
     logger.info(expanded)
     withConnection { conn =>
       generated match {
@@ -89,7 +93,7 @@ class JdbcSource[D <: SqlIdiom, N <: NamingStrategy](config: JdbcSourceConfig[D,
   def executeBatch[T](sql: String, bindParams: T => BindedStatementBuilder[PreparedStatement] => BindedStatementBuilder[PreparedStatement],
                       generated: Option[String] = None): ActionApply[T] = {
     val func = { (values: List[T]) =>
-      val groups = values.map(bindParams(_)(new BindedStatementBuilder[PreparedStatement]).build(sql)).groupBy(_._1)
+      val groups = values.map(bindParams(_)(new SqlBindedStatementBuilder[PreparedStatement]).build(sql)).groupBy(_._1)
       (for ((sql, setValues) <- groups.toList) yield {
         logger.info(sql)
         withConnection { conn =>
@@ -107,7 +111,7 @@ class JdbcSource[D <: SqlIdiom, N <: NamingStrategy](config: JdbcSourceConfig[D,
   }
 
   def query[T](sql: String, bind: BindedStatementBuilder[PreparedStatement] => BindedStatementBuilder[PreparedStatement], extractor: ResultSet => T): List[T] = {
-    val (expanded, setValues) = bind(new BindedStatementBuilder[PreparedStatement]).build(sql)
+    val (expanded, setValues) = bind(new SqlBindedStatementBuilder[PreparedStatement]).build(sql)
     logger.info(expanded)
     withConnection { conn =>
       val ps = setValues(conn.prepareStatement(expanded))

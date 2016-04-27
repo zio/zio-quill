@@ -6,17 +6,18 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.concurrent.duration.Duration
 import scala.util.Try
+
 import com.github.mauricio.async.db.Connection
 import com.github.mauricio.async.db.{ QueryResult => DBQueryResult }
 import com.github.mauricio.async.db.RowData
 import com.typesafe.scalalogging.StrictLogging
 import io.getquill.naming.NamingStrategy
-import io.getquill.sources.sql.SqlSource
+import io.getquill.sources.sql.{ SqlBindedStatementBuilder, SqlSource, SqlSourceMacro }
 import io.getquill.sources.sql.idiom.SqlIdiom
 import language.experimental.macros
+
 import io.getquill.quotation.Quoted
-import io.getquill.sources.sql.SqlSourceMacro
-import io.getquill.sources.{ SourceConfig, BindedStatementBuilder }
+import io.getquill.sources.{ BindedStatementBuilder, SourceConfig }
 import com.typesafe.scalalogging.Logger
 import org.slf4j.LoggerFactory
 
@@ -67,7 +68,7 @@ abstract class AsyncSource[D <: SqlIdiom, N <: NamingStrategy, C <: Connection](
 
   def execute(sql: String, bind: BindedStatementBuilder[List[Any]] => BindedStatementBuilder[List[Any]], generated: Option[String] = None)(implicit ec: ExecutionContext) = {
     logger.info(sql)
-    val (expanded, params) = bind(new BindedStatementBuilder).build(sql)
+    val (expanded, params) = bind(new SqlBindedStatementBuilder).build(sql)
     withConnection(_.sendPreparedStatement(expandAction(expanded, generated), params(List()))).map(extractActionResult(generated))
   }
 
@@ -77,7 +78,7 @@ abstract class AsyncSource[D <: SqlIdiom, N <: NamingStrategy, C <: Connection](
         case Nil =>
           Future.successful(List())
         case value :: tail =>
-          val (expanded, params) = bindParams(value)(new BindedStatementBuilder).build(sql)
+          val (expanded, params) = bindParams(value)(new SqlBindedStatementBuilder).build(sql)
           logger.info(expanded)
           withConnection(conn => conn.sendPreparedStatement(expandAction(expanded, generated), params(List())).map(extractActionResult(generated)))
             .flatMap(r => run(tail).map(r +: _))
@@ -86,7 +87,7 @@ abstract class AsyncSource[D <: SqlIdiom, N <: NamingStrategy, C <: Connection](
   }
 
   def query[T](sql: String, bind: BindedStatementBuilder[List[Any]] => BindedStatementBuilder[List[Any]], extractor: RowData => T)(implicit ec: ExecutionContext) = {
-    val (expanded, params) = bind(new BindedStatementBuilder).build(sql)
+    val (expanded, params) = bind(new SqlBindedStatementBuilder).build(sql)
     logger.info(expanded)
     withConnection(_.sendPreparedStatement(expanded, params(List()))).map {
       _.rows match {
