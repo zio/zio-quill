@@ -43,4 +43,12 @@ class PeopleJdbcSpec extends PeopleSpec {
   "Example 7 - predicate 1" in {
     testPostgresDB.run(satisfies(eval(`Ex 7 predicate`))) mustEqual `Ex 7 expected result`
   }
+
+  "Example 8 - contains empty" in {
+    testPostgresDB.run(`Ex 8 and 9 contains`)(`Ex 8 param`) mustEqual `Ex 8 expected result`
+  }
+
+  "Example 9 - contains non empty" in {
+    testPostgresDB.run(`Ex 8 and 9 contains`)(`Ex 9 param`) mustEqual `Ex 9 expected result`
+  }
 }

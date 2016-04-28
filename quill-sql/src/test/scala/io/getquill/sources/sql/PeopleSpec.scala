@@ -120,4 +120,16 @@ trait PeopleSpec extends Spec {
 
   val `Ex 7 predicate` = Not(Or(Below(20), Above(30)))
   val `Ex 7 expected result` = List(Person("Edna", 21))
+
+  val `Ex 8 and 9 contains` =
+    quote {
+      (set: Set[Int]) =>
+        query[Person].filter(p => set.contains(p.age))
+    }
+
+  val `Ex 8 param` = Set.empty[Int]
+  val `Ex 8 expected result` = List.empty[Person]
+
+  val `Ex 9 param` = Set(55, 33)
+  val `Ex 9 expected result` = List(Person("Bert", 55), Person("Cora", 33))
 }
