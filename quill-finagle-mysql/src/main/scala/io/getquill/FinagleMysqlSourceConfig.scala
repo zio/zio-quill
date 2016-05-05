@@ -1,15 +1,16 @@
 package io.getquill
 
+import java.util.TimeZone
+
+import com.twitter.conversions.time._
 import com.twitter.finagle.client.DefaultPool
 import com.twitter.finagle.exp.Mysql
 import com.twitter.util.Try
-import com.twitter.conversions.time._
-import io.getquill.sources.SourceConfig
 import io.getquill.naming.NamingStrategy
-import java.util.TimeZone
-import io.getquill.sources.finagle.mysql.FinagleMysqlSource
+import io.getquill.sources.SourceConfig
+import io.getquill.sources.finagle.mysql.ConfigFinagleMysqlSource
 
-class FinagleMysqlSourceConfig[N <: NamingStrategy](val name: String) extends SourceConfig[FinagleMysqlSource[N]] {
+class FinagleMysqlSourceConfig[N <: NamingStrategy](val name: String) extends SourceConfig[ConfigFinagleMysqlSource[N]] {
 
   def dateTimezone = TimeZone.getDefault
   def user = config.getString("user")

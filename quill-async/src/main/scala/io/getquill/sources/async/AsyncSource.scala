@@ -42,8 +42,6 @@ abstract class AsyncSource[D <: SqlIdiom, N <: NamingStrategy, C <: Connection](
 
   protected def connection: Connection
 
-  private def withConnection[T](f: Connection => Future[T])(implicit ec: ExecutionContext) = f(connection)
-
   def probe(sql: String) =
     Try {
       Await.result(pool.sendQuery(sql), Duration.Inf)
@@ -55,7 +53,7 @@ abstract class AsyncSource[D <: SqlIdiom, N <: NamingStrategy, C <: Connection](
   def execute(sql: String, bind: BindedStatementBuilder[List[Any]] => BindedStatementBuilder[List[Any]] = identity, generated: Option[String] = None)(implicit ec: ExecutionContext) = {
     logger.info(sql)
     val (expanded, params) = bind(new SqlBindedStatementBuilder).build(sql)
-    withConnection(_.sendPreparedStatement(config.expandAction(expanded, generated), params(List()))).map(config.extractActionResult(generated))
+    connection.sendPreparedStatement(config.expandAction(expanded, generated), params(List())).map(config.extractActionResult(generated))
   }
 
   def executeBatch[T](sql: String, bindParams: T => BindedStatementBuilder[List[Any]] => BindedStatementBuilder[List[Any]] = (_: T) => identity[BindedStatementBuilder[List[Any]]] _, generated: Option[String] = None)(implicit ec: ExecutionContext): ActionApply[T] = {
@@ -66,7 +64,7 @@ abstract class AsyncSource[D <: SqlIdiom, N <: NamingStrategy, C <: Connection](
         case value :: tail =>
           val (expanded, params) = bindParams(value)(new SqlBindedStatementBuilder).build(sql)
           logger.info(expanded.toString)
-          withConnection(conn => conn.sendPreparedStatement(config.expandAction(expanded, generated), params(List())).map(config.extractActionResult(generated)))
+          connection.sendPreparedStatement(config.expandAction(expanded, generated), params(List())).map(config.extractActionResult(generated))
             .flatMap(r => run(tail).map(r +: _))
       }
     new ActionApply(run _)
@@ -75,7 +73,7 @@ abstract class AsyncSource[D <: SqlIdiom, N <: NamingStrategy, C <: Connection](
   def query[T](sql: String, extractor: RowData => T = identity[RowData] _, bind: BindedStatementBuilder[List[Any]] => BindedStatementBuilder[List[Any]] = identity)(implicit ec: ExecutionContext) = {
     val (expanded, params) = bind(new SqlBindedStatementBuilder).build(sql)
     logger.info(expanded.toString)
-    withConnection(_.sendPreparedStatement(expanded, params(List()))).map {
+    connection.sendPreparedStatement(expanded, params(List())).map {
       _.rows match {
         case Some(rows) => rows.map(extractor).toList
         case None       => List()

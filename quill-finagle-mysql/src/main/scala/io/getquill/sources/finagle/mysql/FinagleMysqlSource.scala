@@ -1,18 +1,18 @@
 package io.getquill.sources.finagle.mysql
 
 import com.twitter.finagle.exp.mysql.{ Client, Error, OK, Parameter, Result, Row }
-import com.twitter.util.{ Await, Future, Local }
+import com.twitter.util.{Await, Future}
 import com.typesafe.scalalogging.Logger
 import io.getquill.FinagleMysqlSourceConfig
 import io.getquill.naming.NamingStrategy
 import io.getquill.sources.BindedStatementBuilder
 import io.getquill.sources.sql.idiom.MySQLDialect
-import io.getquill.sources.sql.{ SqlBindedStatementBuilder, SqlSource }
+import io.getquill.sources.sql.{SqlBindedStatementBuilder, SqlSource}
 import org.slf4j.LoggerFactory
 
 import scala.util.Try
 
-class FinagleMysqlSource[N <: NamingStrategy](config: FinagleMysqlSourceConfig[N])
+abstract class FinagleMysqlSource[N <: NamingStrategy](config: FinagleMysqlSourceConfig[N])
   extends SqlSource[MySQLDialect, N, Row, BindedStatementBuilder[List[Parameter]]]
   with FinagleMysqlDecoders
   with FinagleMysqlEncoders {
@@ -34,29 +34,21 @@ class FinagleMysqlSource[N <: NamingStrategy](config: FinagleMysqlSourceConfig[N
 
   private[mysql] def dateTimezone = config.dateTimezone
 
-  private val client = config.client
+  protected def client: Client
 
   Await.result(client.ping)
 
   override def close = Await.result(client.close())
 
-  private val currentClient = new Local[Client]
-
   def probe(sql: String) =
     Try(Await.result(client.query(sql)))
 
-  def transaction[T](f: FinagleMysqlSource[N] => Future[T]) = {
-    val source = new FinagleMysqlSource(config)
-    source.client.transaction { tx =>
-      f(source)
-    }
-  }
+  def transaction[T](f: FinagleMysqlSource[N] => Future[T]): Future[T]
 
   def execute(sql: String, bind: BindedStatementBuilder[List[Parameter]] => BindedStatementBuilder[List[Parameter]] = identity, generated: Option[String] = None): Future[Long] = {
     val (expanded, params) = bind(new SqlBindedStatementBuilder).build(sql)
     logger.info(expanded)
-    withClient(_.prepare(expanded)(params(List()): _*))
-      .map(resultToLong(_, generated))
+    client.prepare(expanded)(params(List()): _*).map(resultToLong(_, generated))
   }
 
   def executeBatch[T](sql: String, bindParams: T => BindedStatementBuilder[List[Parameter]] => BindedStatementBuilder[List[Parameter]] = (_: T) => identity[BindedStatementBuilder[List[Parameter]]] _, generated: Option[String] = None): ActionApply[T] = {
@@ -67,7 +59,7 @@ class FinagleMysqlSource[N <: NamingStrategy](config: FinagleMysqlSourceConfig[N
         case value :: tail =>
           val (expanded, params) = bindParams(value)(new SqlBindedStatementBuilder).build(sql)
           logger.info(expanded)
-          withClient(_.prepare(expanded)(params(List()): _*))
+          client.prepare(expanded)(params(List()): _*)
             .map(resultToLong(_, generated))
             .flatMap(r => run(tail).map(r +: _))
       }
@@ -77,7 +69,7 @@ class FinagleMysqlSource[N <: NamingStrategy](config: FinagleMysqlSourceConfig[N
   def query[T](sql: String, extractor: Row => T = identity[Row] _, bind: BindedStatementBuilder[List[Parameter]] => BindedStatementBuilder[List[Parameter]] = identity): Future[List[T]] = {
     val (expanded, params) = bind(new SqlBindedStatementBuilder).build(sql)
     logger.info(expanded)
-    withClient(_.prepare(expanded).select(params(List()): _*)(extractor)).map(_.toList)
+    client.prepare(expanded).select(params(List()): _*)(extractor).map(_.toList)
   }
 
   def querySingle[T](sql: String, extractor: Row => T = identity[Row] _, bind: BindedStatementBuilder[List[Parameter]] => BindedStatementBuilder[List[Parameter]]): Future[T] =
@@ -88,12 +80,5 @@ class FinagleMysqlSource[N <: NamingStrategy](config: FinagleMysqlSourceConfig[N
       case ok: OK if (generated.isDefined) => ok.insertId
       case ok: OK                          => ok.affectedRows
       case error: Error                    => throw new IllegalStateException(error.toString)
-    }
-
-  private def withClient[T](f: Client => T) =
-    currentClient().map {
-      client => f(client)
-    }.getOrElse {
-      f(client)
     }
 }
