@@ -1,7 +1,6 @@
 package io.getquill.sources.cassandra
 
 import io.getquill._
-import scala.concurrent.ExecutionContext.Implicits.global
 
 class PeopleCassandraSpec extends Spec {
   case class Person(id: Int, name: String, age: Int)

@@ -7,8 +7,6 @@ import io.getquill.sources.ExtractEntityAndInsertAction
 import io.getquill.sources.sql.idiom.SqlIdiom
 import io.getquill.util.Show._
 import io.getquill.util.Messages._
-import io.getquill.norm.capture.AvoidAliasConflict
-import io.getquill.norm.capture.AvoidCapture
 import io.getquill.sources.sql.norm.ExpandJoin
 import io.getquill.sources.sql.norm.ExpandNestedQueries
 import io.getquill.sources.sql.norm.MergeSecondaryJoin

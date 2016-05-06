@@ -3,12 +3,10 @@ package io.getquill.sources.cassandra
 import scala.language.higherKinds
 import scala.language.experimental.macros
 import scala.util.Try
-import com.datastax.driver.core.Session
 import io.getquill._
 import io.getquill.quotation.Quoted
 import io.getquill.naming.NamingStrategy
 import io.getquill.sources.Source
-import com.datastax.driver.core.ConsistencyLevel
 
 trait CassandraSource[N <: NamingStrategy, R, S]
   extends Source[R, S] {

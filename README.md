@@ -154,24 +154,37 @@ db.run(q) // Dynamic query
 
 Quill falls back to runtime normalization and query generation if the quotation's AST can be read at compile-time. Please refer to [dynamic queries](#dynamic-queries) for more information
 
-# Parametrized quotations #
+# Bindings #
 
-Quotations are designed to be self-contained, without references to runtime values outside their scope. If a quotation needs to receive a runtime value, it needs to be done by defining the quotation as a function:
+Quotations are designed to be self-contained, without references to runtime values outside their scope. There are two mechanisms to explicitly bind runtime values to a quotation execution.
+
+## Lifted values ##
+
+A runtime value can be lifted to a quotation through the method `lift`:
 
 ```scala
-val q = quote {
+def biggerThan(i: Float) = quote {
+  query[Circle].filter(r => r.radius > lift(i))
+}
+db.run(biggerThan(10)) // SELECT r.radius FROM Circle r WHERE r.radius > ?
+```
+
+## Parametrized quotations ##
+
+A quotation can be defined as a function:
+
+```scala
+val biggerThan = quote {
   (i: Int) =>
     query[Circle].filter(r => r.radius > i)
 }
 ```
 
-The runtime value can be specified when running it:
+And a runtime value can be specified when running it:
 
 ```scala
-db.run(q)(10) // SELECT r.radius FROM Circle r WHERE r.radius > ?
+db.run(biggerThan)(10) // SELECT r.radius FROM Circle r WHERE r.radius > ?
 ```
-
-The method `run` is a bridge between the compile-time quotations and the runtime execution.
 
 # Schema #
 

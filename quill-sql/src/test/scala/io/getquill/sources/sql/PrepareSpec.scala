@@ -1,8 +1,6 @@
 package io.getquill.sources.sql
 
 import io.getquill._
-import io.getquill.sources.sql.idiom.FallbackDialect
-import io.getquill.naming.Literal
 
 class PrepareSpec extends Spec {
 

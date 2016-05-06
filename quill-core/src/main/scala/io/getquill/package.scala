@@ -11,7 +11,7 @@ package object getquill {
 
   def query[T]: EntityQuery[T] = NonQuotedException()
 
-  def lift[T](v: T): T = v
+  def lift[T](v: T): T = NonQuotedException()
 
   def quote[T](body: Quoted[T]): Quoted[T] = macro Macro.doubleQuote[T]
   def quote[T1, R](func: T1 => Quoted[R]): Quoted[T1 => R] = macro Macro.quotedFunctionBody

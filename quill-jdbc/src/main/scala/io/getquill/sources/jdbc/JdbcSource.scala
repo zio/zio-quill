@@ -1,10 +1,9 @@
 package io.getquill.sources.jdbc
 
-import java.sql.{ Connection, PreparedStatement, ResultSet, Statement }
+import java.sql.{ Connection, PreparedStatement, ResultSet }
 
 import scala.util.DynamicVariable
 
-import com.typesafe.scalalogging.StrictLogging
 import io.getquill.naming.NamingStrategy
 import io.getquill.sources.sql.{ SqlBindedStatementBuilder, SqlSource }
 import scala.util.Try

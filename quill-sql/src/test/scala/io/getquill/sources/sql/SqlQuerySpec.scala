@@ -6,8 +6,6 @@ import io.getquill.norm.QueryGenerator
 import io.getquill.norm.Normalize
 import io.getquill.sources.sql.idiom.SqlIdiom
 import io.getquill.util.Show._
-import io.getquill.norm.FlattenOptionOperation
-import io.getquill.ast.Ast
 
 class SqlQuerySpec extends Spec {
 

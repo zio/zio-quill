@@ -5,7 +5,6 @@ import io.getquill.norm.BetaReduction
 import io.getquill.util.Messages.fail
 import io.getquill.ast.PropertyOrdering
 import io.getquill.sources.sql.norm.FlattenGroupByAggregation
-import io.getquill.norm.RenameProperties
 
 case class OrderByCriteria(ast: Ast, ordering: PropertyOrdering)
 

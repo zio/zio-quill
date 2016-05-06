@@ -15,7 +15,7 @@ private[sources] case class BindVariables(state: (List[Ident], List[Ident]))
         }
       case (b: RuntimeBinding) =>
         val (vars, bindings) = state
-        (Ident("?"), BindVariables((vars, bindings :+ Ident(b.key))))
+        (Ident("?"), BindVariables((vars, bindings :+ Ident(b.name))))
       case other => super.apply(ast)
     }
 

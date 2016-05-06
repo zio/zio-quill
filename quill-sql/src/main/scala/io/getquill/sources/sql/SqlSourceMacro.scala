@@ -2,17 +2,12 @@ package io.getquill.sources.sql
 
 import scala.reflect.macros.whitebox.Context
 import scala.util.Failure
-import scala.util.Success
 import io.getquill.ast._
 import io.getquill.naming.NamingStrategy
 import io.getquill.sources.SourceMacro
 import io.getquill.sources.sql.idiom.SqlIdiom
 import io.getquill.util.Messages.RichContext
-import io.getquill.util.Show.Shower
-import io.getquill.quotation.Quoted
-import scala.reflect.ClassTag
 import io.getquill.sources.sql.idiom.SqlIdiom
-import io.getquill.norm.Normalize
 import io.getquill.quotation.IsDynamic
 import io.getquill.naming.LoadNaming
 import io.getquill.util.LoadObject

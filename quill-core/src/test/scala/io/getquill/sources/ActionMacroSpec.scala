@@ -16,7 +16,7 @@ class ActionMacroSpec extends Spec {
     }
     "inline" in {
       def q(i: Int) =
-        mirrorSource.run(qr1.filter(_.i == i).update(_.i -> 0))
+        mirrorSource.run(qr1.filter(_.i == lift(i)).update(_.i -> 0))
       q(1).bind mustEqual Row(1)
     }
   }
@@ -42,7 +42,7 @@ class ActionMacroSpec extends Spec {
       val q = quote { (i: Int) => (s: Int) => qr1.update(_.i -> i, _.s -> s)
       }
       val v = 1
-      val r = mirrorSource.run(q(v))(List(1, 2))
+      val r = mirrorSource.run(q(lift(v)))(List(1, 2))
       q.ast.body match {
         case f: Function => r.ast mustEqual r.ast
         case other       => fail
@@ -71,14 +71,14 @@ class ActionMacroSpec extends Spec {
         (i: Int) => qr1.filter(t => t.i == i).update
       }
       val v = 1
-      val r = mirrorSource.run(q(v))(
+      val r = mirrorSource.run(q(lift(v)))(
         List(
           TestEntity("s", 1, 2L, Some(4)),
           TestEntity("s2", 12, 22L, Some(42))
         )
       )
 
-      r.ast.toString mustEqual "query[TestEntity].filter(t => t.i == v).update(x => x.s -> s, x => x.i -> i, x => x.l -> l, x => x.o -> o)"
+      r.ast.toString mustEqual "query[TestEntity].filter(t => t.i == lift(v)).update(x => x.s -> s, x => x.i -> i, x => x.l -> l, x => x.o -> o)"
       r.bindList mustEqual List(
         Row("s", 1, 2L, Some(4), v),
         Row("s2", 12, 22L, Some(42), v)

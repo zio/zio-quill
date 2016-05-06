@@ -1,25 +1,18 @@
 package io.getquill.sources.finagle.mysql
 
-import java.util.TimeZone
-
 import com.twitter.finagle.exp.mysql.Client
 import com.twitter.finagle.exp.mysql.Parameter
 import com.twitter.finagle.exp.mysql.Result
 import com.twitter.finagle.exp.mysql.Row
 import com.twitter.util.Future
 import com.twitter.util.Local
-import com.typesafe.scalalogging.StrictLogging
 import io.getquill.naming.NamingStrategy
 import io.getquill.sources.sql.{ SqlBindedStatementBuilder, SqlSource }
 import io.getquill.sources.sql.idiom.MySQLDialect
-import scala.util.Success
 
 import com.twitter.util.Await
 import scala.util.Try
 
-import com.twitter.finagle.Service
-import com.twitter.finagle.exp.mysql.Request
-import com.twitter.finagle.exp.mysql.PrepareRequest
 import io.getquill.FinagleMysqlSourceConfig
 import io.getquill.sources.BindedStatementBuilder
 import com.typesafe.scalalogging.Logger

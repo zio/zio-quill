@@ -3,7 +3,6 @@ package io.getquill.sources.sql.idiom
 import io.getquill.naming.Literal
 import io.getquill.util.Show._
 import io.getquill._
-import io.getquill.sources.sql.mirrorSource
 import io.getquill.sources.sql.SqlQuery
 
 class OffsetWithoutLimitWorkaroundSpec extends Spec {

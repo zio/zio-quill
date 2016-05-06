@@ -2,12 +2,8 @@ package io.getquill.sources.cassandra
 
 import scala.util.Try
 import com.datastax.driver.core.BoundStatement
-import com.datastax.driver.core.Cluster
 import com.datastax.driver.core.Row
-import com.datastax.driver.core.Session
-import com.typesafe.scalalogging.StrictLogging
 import io.getquill.naming.NamingStrategy
-import io.getquill.sources.cassandra.cluster.ClusterBuilder
 import io.getquill.sources.cassandra.encoding.Decoders
 import io.getquill.sources.cassandra.encoding.Encoders
 import io.getquill.CassandraSourceConfig

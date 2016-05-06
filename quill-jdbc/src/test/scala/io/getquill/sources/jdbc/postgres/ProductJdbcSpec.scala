@@ -27,7 +27,7 @@ class ProductJdbcSpec extends ProductSpec {
 
     "Single insert with inlined free variable" in {
       val prd = Product(0L, "test1", 1L)
-      val inserted = testPostgresDB.run(product.insert(_.sku -> prd.sku, _.description -> prd.description))
+      val inserted = testPostgresDB.run(product.insert(_.sku -> lift(prd.sku), _.description -> lift(prd.description)))
       val returnedProduct = testPostgresDB.run(productById(inserted)).head
       returnedProduct.description mustEqual "test1"
       returnedProduct.sku mustEqual 1L
@@ -36,7 +36,7 @@ class ProductJdbcSpec extends ProductSpec {
 
     "Single insert with free variable and explicit quotation" in {
       val prd = Product(0L, "test2", 2L)
-      val q1 = quote { product.insert(_.sku -> prd.sku, _.description -> prd.description) }
+      val q1 = quote { product.insert(_.sku -> lift(prd.sku), _.description -> lift(prd.description)) }
       val inserted = testPostgresDB.run(q1)
       val returnedProduct = testPostgresDB.run(productById(inserted)).head
       returnedProduct.description mustEqual "test2"

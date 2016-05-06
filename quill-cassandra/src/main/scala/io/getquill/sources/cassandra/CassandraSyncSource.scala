@@ -3,11 +3,9 @@ package io.getquill.sources.cassandra
 import scala.annotation.tailrec
 import scala.collection.JavaConversions.asScalaBuffer
 import com.datastax.driver.core.BoundStatement
-import com.datastax.driver.core.ConsistencyLevel
 import com.datastax.driver.core.ResultSet
 import com.datastax.driver.core.Row
 import io.getquill.naming.NamingStrategy
-import io.getquill.sources.SourceConfig
 import io.getquill.CassandraSourceConfig
 import io.getquill.sources.BindedStatementBuilder
 

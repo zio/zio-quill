@@ -113,8 +113,6 @@ case class Assignment(input: Ident, property: String, value: Ast)
 case class Dynamic(tree: Any) extends Ast
 
 sealed trait Binding extends Ast
-
-case class RuntimeBinding(key: String, override val toString: String) extends Binding
-case class CompileTimeBinding[T](key: String, tree: T) extends Binding
-
 case class QuotedReference[T](tree: T, ast: Ast) extends Ast
+case class RuntimeBinding(name: String) extends Binding
+case class CompileTimeBinding(tree: Any) extends Binding

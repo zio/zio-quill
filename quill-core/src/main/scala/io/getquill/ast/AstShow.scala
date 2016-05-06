@@ -1,6 +1,5 @@
 package io.getquill.ast
 
-import io.getquill.ast
 import io.getquill.util.Show.Show
 import io.getquill.util.Show.Shower
 import io.getquill.util.Show.listShow
@@ -35,8 +34,8 @@ object AstShow {
   }
 
   implicit val bindingShow: Show[Binding] = Show[Binding] {
-    case RuntimeBinding(_, toString) => toString
-    case b: CompileTimeBinding[_]    => b.tree.toString
+    case RuntimeBinding(name)     => s"lift($name)"
+    case CompileTimeBinding(tree) => s"lift($tree)"
   }
 
   implicit val blockShow: Show[Block] = Show[Block] {

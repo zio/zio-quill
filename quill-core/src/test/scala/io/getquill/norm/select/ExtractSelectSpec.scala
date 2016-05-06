@@ -1,7 +1,5 @@
 package io.getquill.norm.select
 
-import scala.language.reflectiveCalls
-
 import io.getquill._
 import io.getquill.ast._
 

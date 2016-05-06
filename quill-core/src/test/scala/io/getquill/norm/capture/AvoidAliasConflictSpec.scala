@@ -1,7 +1,5 @@
 package io.getquill.norm.capture
 
-import scala.language.reflectiveCalls
-
 import io.getquill._
 
 class AvoidAliasConflictSpec extends Spec {
