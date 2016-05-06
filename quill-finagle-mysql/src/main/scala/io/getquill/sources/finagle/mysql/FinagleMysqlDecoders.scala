@@ -16,7 +16,6 @@ import com.twitter.finagle.exp.mysql.StringValue
 import com.twitter.finagle.exp.mysql.TimestampValue
 import com.twitter.finagle.exp.mysql.Type
 import com.twitter.finagle.exp.mysql.Value
-import com.twitter.finagle.exp.mysql.transport.BufferReader
 import io.getquill.util.Messages.fail
 import com.twitter.finagle.exp.mysql.NullValue
 
