@@ -56,7 +56,12 @@ Create TABLE DateEncodingTestEntity(
 
 Create TABLE BooleanEncodingTestEntity(
     v1 BOOLEAN,
-    v2 BIT(1)
+    v2 BIT(1),
+    v3 TINYINT,
+    v4 SMALLINT,
+    v5 MEDIUMINT,
+    v6 INT,
+    v7 BIGINT
 );
 
 CREATE TABLE TestEntity(
@@ -80,7 +85,7 @@ CREATE TABLE TestEntity3(
 
 CREATE TABLE Product(
     description VARCHAR(255),
-    id INTEGER NOT NULL AUTO_INCREMENT,
+    id BIGINT NOT NULL AUTO_INCREMENT,
     sku BIGINT,
     PRIMARY KEY (id)
 );

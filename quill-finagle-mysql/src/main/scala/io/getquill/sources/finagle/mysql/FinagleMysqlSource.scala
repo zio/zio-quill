@@ -34,6 +34,7 @@ class FinagleMysqlSource[N <: NamingStrategy](config: FinagleMysqlSourceConfig[N
     Logger(LoggerFactory.getLogger(classOf[FinagleMysqlSource[_]]))
 
   type QueryResult[T] = Future[List[T]]
+  type SingleQueryResult[T] = Future[T]
   type ActionResult[T] = Future[Result]
   type BatchedActionResult[T] = Future[List[Result]]
 
@@ -88,6 +89,8 @@ class FinagleMysqlSource[N <: NamingStrategy](config: FinagleMysqlSourceConfig[N
     logger.info(expanded)
     withClient(_.prepare(expanded).select(params(List()): _*)(extractor)).map(_.toList)
   }
+
+  def querySingle[T](sql: String, bind: BindedStatementBuilder[List[Parameter]] => BindedStatementBuilder[List[Parameter]], extractor: Row => T): Future[T] = query(sql, bind, extractor).map(handleSingleResult)
 
   private def withClient[T](f: Client => T) =
     currentClient().map {

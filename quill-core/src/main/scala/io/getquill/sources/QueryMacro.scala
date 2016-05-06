@@ -16,17 +16,18 @@ trait QueryMacro extends SelectFlattening with SelectResultExtraction {
     quotedTree:     Tree,
     ast:            Ast,
     inPlaceParams:  collection.Map[Ident, (Type, Tree)],
-    functionParams: List[(Ident, Type)]
+    functionParams: List[(Ident, Type)],
+    returnList:     Boolean
   )(
     implicit
     r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]
   ): Tree = {
 
-    val query =
-      Normalize(ast) match {
-        case q: Query => q
-        case q        => Map(q, Ident("x"), Ident("x"))
-      }
+    val query = Normalize(ast) match {
+      case q: Query => q
+      case q        => Map(q, Ident("x"), Ident("x"))
+    }
+    val queryMethod = if (returnList) TermName("query") else TermName("querySingle")
     val (flattenQuery, selectValues) = flattenSelect[T](query, Encoding.inferDecoder[R](c))
     val extractor = selectResultExtractor[R](selectValues)
     val encodedParams = EncodeParams[S](c)(bindingMap(functionParams) ++ inPlaceParams, collection.Map())
@@ -43,7 +44,7 @@ trait QueryMacro extends SelectFlattening with SelectResultExtraction {
         val (sql, bindings: List[io.getquill.ast.Ident], _) =
             ${prepare(flattenQuery, allParamIdents)}
 
-        ${c.prefix}.query(
+        ${c.prefix}.$queryMethod(
           sql,
           $encodedParams(bindings.map(_.name)),
           $extractor)

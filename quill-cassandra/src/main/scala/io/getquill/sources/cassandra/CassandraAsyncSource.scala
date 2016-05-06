@@ -17,6 +17,7 @@ class CassandraAsyncSource[N <: NamingStrategy](config: CassandraSourceConfig[N,
   extends CassandraSourceSession[N](config) {
 
   override type QueryResult[T] = Future[List[T]]
+  override type SingleQueryResult[T] = Future[T]
   override type ActionResult[T] = Future[ResultSet]
   override type BatchedActionResult[T] = Future[List[ResultSet]]
   override type Params[T] = List[T]
@@ -29,6 +30,9 @@ class CassandraAsyncSource[N <: NamingStrategy](config: CassandraSourceConfig[N,
   def query[T](cql: String, bind: BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement], extractor: Row => T)(implicit ec: ExecutionContext): Future[List[T]] =
     session.executeAsync(prepare(cql, bind))
       .map(_.all.toList.map(extractor))
+
+  def querySingle[T](cql: String, bind: BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement], extractor: Row => T)(implicit ec: ExecutionContext): Future[T] =
+    query(cql, bind, extractor).map(handleSingleResult)
 
   def execute(cql: String, bind: BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement], generated: Option[String] = None)(implicit ec: ExecutionContext): Future[ResultSet] =
     session.executeAsync(prepare(cql, bind))

@@ -15,6 +15,7 @@ class CassandraMirrorSource(config: CassandraMirrorSourceConfig)
   with MirrorDecoders {
 
   override type QueryResult[T] = QueryMirror[T]
+  override type SingleQueryResult[T] = QueryMirror[T]
   override type ActionResult[T] = ActionMirror
   override type BatchedActionResult[T] = BatchActionMirror
   override type Params[T] = List[T]
@@ -49,4 +50,7 @@ class CassandraMirrorSource(config: CassandraMirrorSourceConfig)
 
   def query[T](cql: String, bind: Row => Row, extractor: Row => T) =
     QueryMirror(cql, bind(Row()), extractor)
+
+  def querySingle[T](cql: String, bind: Row => Row, extractor: Row => T) =
+    query(cql, bind, extractor)
 }

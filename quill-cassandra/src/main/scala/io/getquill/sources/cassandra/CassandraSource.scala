@@ -16,6 +16,7 @@ trait CassandraSource[N <: NamingStrategy, R, S]
   def probe(cql: String): Try[Unit]
 
   type QueryResult[T]
+  type SingleQueryResult[T]
   type ActionResult[T]
   type BatchedActionResult[T]
   type Params[T]
@@ -90,35 +91,35 @@ trait CassandraSource[N <: NamingStrategy, R, S]
 
   def run[T](
     quoted: Quoted[T]
-  ): QueryResult[T] = macro CassandraSourceMacro.run[R, S]
+  ): SingleQueryResult[T] = macro CassandraSourceMacro.runSingle[R, S]
   def run[P1, T](
     quoted: Quoted[P1 => T]
-  ): P1 => QueryResult[T] = macro CassandraSourceMacro.run[R, S]
+  ): P1 => SingleQueryResult[T] = macro CassandraSourceMacro.runSingle[R, S]
   def run[P1, P2, T](
     quoted: Quoted[(P1, P2) => T]
-  ): (P1, P2) => QueryResult[T] = macro CassandraSourceMacro.run[R, S]
+  ): (P1, P2) => SingleQueryResult[T] = macro CassandraSourceMacro.runSingle[R, S]
   def run[P1, P2, P3, T](
     quoted: Quoted[(P1, P2, P3) => T]
-  ): (P1, P2, P3) => QueryResult[T] = macro CassandraSourceMacro.run[R, S]
+  ): (P1, P2, P3) => SingleQueryResult[T] = macro CassandraSourceMacro.runSingle[R, S]
   def run[P1, P2, P3, P4, T](
     quoted: Quoted[(P1, P2, P3, P4) => T]
-  ): (P1, P2, P3, P4) => QueryResult[T] = macro CassandraSourceMacro.run[R, S]
+  ): (P1, P2, P3, P4) => SingleQueryResult[T] = macro CassandraSourceMacro.runSingle[R, S]
   def run[P1, P2, P3, P4, P5, T](
     quoted: Quoted[(P1, P2, P3, P4, P5) => T]
-  ): (P1, P2, P3, P4, P5) => QueryResult[T] = macro CassandraSourceMacro.run[R, S]
+  ): (P1, P2, P3, P4, P5) => SingleQueryResult[T] = macro CassandraSourceMacro.runSingle[R, S]
   def run[P1, P2, P3, P4, P5, P6, T](
     quoted: Quoted[(P1, P2, P3, P4, P5, P6) => T]
-  ): (P1, P2, P3, P4, P5, P6) => QueryResult[T] = macro CassandraSourceMacro.run[R, S]
+  ): (P1, P2, P3, P4, P5, P6) => SingleQueryResult[T] = macro CassandraSourceMacro.runSingle[R, S]
   def run[P1, P2, P3, P4, P5, P6, P7, T](
     quoted: Quoted[(P1, P2, P3, P4, P5, P6, P7) => T]
-  ): (P1, P2, P3, P4, P5, P6, P7) => QueryResult[T] = macro CassandraSourceMacro.run[R, S]
+  ): (P1, P2, P3, P4, P5, P6, P7) => SingleQueryResult[T] = macro CassandraSourceMacro.runSingle[R, S]
   def run[P1, P2, P3, P4, P5, P6, P7, P8, T](
     quoted: Quoted[(P1, P2, P3, P4, P5, P6, P7, P8) => T]
-  ): (P1, P2, P3, P4, P5, P6, P7, P8) => QueryResult[T] = macro CassandraSourceMacro.run[R, S]
+  ): (P1, P2, P3, P4, P5, P6, P7, P8) => SingleQueryResult[T] = macro CassandraSourceMacro.runSingle[R, S]
   def run[P1, P2, P3, P4, P5, P6, P7, P8, P9, T](
     quoted: Quoted[(P1, P2, P3, P4, P5, P6, P7, P8, P9) => T]
-  ): (P1, P2, P3, P4, P5, P6, P7, P8, P9) => QueryResult[T] = macro CassandraSourceMacro.run[R, S]
+  ): (P1, P2, P3, P4, P5, P6, P7, P8, P9) => SingleQueryResult[T] = macro CassandraSourceMacro.runSingle[R, S]
   def run[P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, T](
     quoted: Quoted[(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10) => T]
-  ): (P1, P2, P3, P4, P5, P6, P7, P8, P9, P10) => QueryResult[T] = macro CassandraSourceMacro.run[R, S]
+  ): (P1, P2, P3, P4, P5, P6, P7, P8, P9, P10) => SingleQueryResult[T] = macro CassandraSourceMacro.runSingle[R, S]
 }

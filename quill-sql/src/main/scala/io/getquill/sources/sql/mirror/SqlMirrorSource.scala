@@ -18,9 +18,11 @@ class SqlMirrorSource[N <: NamingStrategy](config: SqlMirrorSourceConfig[N])
 
   override def close = ()
 
+  type SingleQueryResult[T] = QueryMirror[T]
   type QueryResult[T] = QueryMirror[T]
   type ActionResult[T] = ActionMirror
   type BatchedActionResult[T] = BatchActionMirror
+
   class ActionApply[T](f: List[T] => BatchActionMirror)
     extends Function1[List[T], BatchActionMirror] {
     def apply(params: List[T]) = f(params)
@@ -53,4 +55,6 @@ class SqlMirrorSource[N <: NamingStrategy](config: SqlMirrorSourceConfig[N])
 
   def query[T](sql: String, bind: Row => Row, extractor: Row => T) =
     QueryMirror(sql, bind(Row()), extractor)
+
+  def querySingle[T](sql: String, bind: Row => Row, extractor: Row => T) = query(sql, bind, extractor)
 }
