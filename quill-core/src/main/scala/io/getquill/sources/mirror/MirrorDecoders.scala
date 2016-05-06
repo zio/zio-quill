@@ -7,16 +7,10 @@ import io.getquill.sources.Source
 trait MirrorDecoders {
   this: Source[Row, Row] =>
 
-  private def decoder[T: ClassTag]: Decoder[T] = new Decoder[T] {
-    def apply(index: Int, row: Row) =
-      row[T](index)
-  }
+  private def decoder[T: ClassTag]: Decoder[T] = (index: Int, row: Row) => row[T](index)
 
   implicit def optionDecoder[T](implicit d: Decoder[T]): Decoder[Option[T]] =
-    new Decoder[Option[T]] {
-      def apply(index: Int, row: Row) =
-        row[Option[T]](index)
-    }
+    (index: Int, row: Row) => row[Option[T]](index)
 
   implicit val stringDecoder: Decoder[String] = decoder[String]
   implicit val bigDecimalDecoder: Decoder[BigDecimal] = decoder[BigDecimal]

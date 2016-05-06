@@ -10,16 +10,10 @@ abstract class Source[R: ClassTag, S: ClassTag] extends Closeable {
   type Encoder[T] = io.getquill.sources.Encoder[S, T]
 
   implicit def mappedDecoder[I, O](implicit mapped: MappedEncoding[I, O], decoder: Decoder[I]): Decoder[O] =
-    new Decoder[O] {
-      def apply(index: Int, row: R) =
-        mapped.f(decoder(index, row))
-    }
+    (index: Int, row: R) => mapped.f(decoder(index, row))
 
   implicit def mappedEncoder[I, O](implicit mapped: MappedEncoding[I, O], encoder: Encoder[O]): Encoder[I] =
-    new Encoder[I] {
-      def apply(index: Int, value: I, row: S) =
-        encoder(index, mapped.f(value), row)
-    }
+    (index: Int, value: I, row: S) => encoder(index, mapped.f(value), row)
 
   implicit def wrappedTypeDecoder[T <: WrappedType] =
     MappedEncoding[T, T#Type](_.value)

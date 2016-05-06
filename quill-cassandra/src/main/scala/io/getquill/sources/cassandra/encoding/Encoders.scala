@@ -11,33 +11,25 @@ trait Encoders {
   this: CassandraSource[_, Row, BindedStatementBuilder[BoundStatement]] =>
 
   def encoder[T](f: BoundStatement => (Int, T) => BoundStatement): Encoder[T] =
-    new Encoder[T] {
-      override def apply(idx: Int, value: T, row: BindedStatementBuilder[BoundStatement]) = {
-        val raw = new io.getquill.sources.Encoder[BoundStatement, T] {
-          override def apply(idx: Int, value: T, row: BoundStatement) =
-            f(row)(idx, value)
-        }
-        row.single(idx, value, raw)
+    (idx: Int, value: T, row: BindedStatementBuilder[BoundStatement]) => {
+      val raw = new io.getquill.sources.Encoder[BoundStatement, T] {
+        override def apply (idx: Int, value: T, row: BoundStatement) =
+          f(row)(idx, value)
       }
+      row.single(idx, value, raw)
     }
 
   implicit def traversableEncoder[T](implicit e: Encoder[T]): Encoder[Traversable[T]] =
-    new Encoder[Traversable[T]] {
-      override def apply(idx: Int, values: Traversable[T], row: BindedStatementBuilder[BoundStatement]) =
-        row.coll(idx, values, e)
-    }
+    (idx: Int, values: Traversable[T], row: BindedStatementBuilder[BoundStatement]) => row.coll(idx, values, e)
 
   private[this] val nullEncoder = encoder[Null] { row => (idx, v) =>
     row.setToNull(idx)
   }
 
   implicit def optionEncoder[T](implicit d: Encoder[T]): Encoder[Option[T]] =
-    new Encoder[Option[T]] {
-      override def apply(idx: Int, value: Option[T], row: BindedStatementBuilder[BoundStatement]) =
-        value match {
-          case None    => nullEncoder(idx, null, row)
-          case Some(v) => d(idx, v, row)
-        }
+    (idx: Int, value: Option[T], row: BindedStatementBuilder[BoundStatement]) => value match {
+      case None => nullEncoder(idx, null, row)
+      case Some(v) => d(idx, v, row)
     }
 
   implicit val stringEncoder = encoder(_.setString)

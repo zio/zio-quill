@@ -15,31 +15,23 @@ trait FinagleMysqlEncoders {
     encoder[T]((v: T) => v: Parameter)
 
   def encoder[T](f: T => Parameter): Encoder[T] =
-    new Encoder[T] {
-      def apply(idx: Int, value: T, row: BindedStatementBuilder[List[Parameter]]) = {
-        val raw = new io.getquill.sources.Encoder[List[Parameter], T] {
-          override def apply(idx: Int, value: T, row: List[Parameter]) =
-            row :+ f(value)
-        }
-        row.single[T](idx, value, raw)
+    (idx: Int, value: T, row: BindedStatementBuilder[List[Parameter]]) => {
+      val raw = new io.getquill.sources.Encoder[List[Parameter], T] {
+        override def apply (idx: Int, value: T, row: List[Parameter]) =
+          row :+ f(value)
       }
+      row.single[T](idx, value, raw)
     }
 
   implicit def traversableEncoder[T](implicit e: Encoder[T]): Encoder[Traversable[T]] =
-    new Encoder[Traversable[T]] {
-      def apply(idx: Int, values: Traversable[T], row: BindedStatementBuilder[List[Parameter]]) =
-        row.coll[T](idx, values, e)
-    }
+    (idx: Int, values: Traversable[T], row: BindedStatementBuilder[List[Parameter]]) => row.coll[T](idx, values, e)
 
   private[this] val nullEncoder = encoder((_: Null) => Parameter.NullParameter)
 
   implicit def optionEncoder[T](implicit e: Encoder[T]): Encoder[Option[T]] =
-    new Encoder[Option[T]] {
-      def apply(idx: Int, value: Option[T], row: BindedStatementBuilder[List[Parameter]]) =
-        value match {
-          case None        => nullEncoder(idx, null, row)
-          case Some(value) => e(idx, value, row)
-        }
+    (idx: Int, value: Option[T], row: BindedStatementBuilder[List[Parameter]]) => value match {
+      case None => nullEncoder(idx, null, row)
+      case Some(value) => e(idx, value, row)
     }
 
   implicit val stringEncoder: Encoder[String] = encoder[String]

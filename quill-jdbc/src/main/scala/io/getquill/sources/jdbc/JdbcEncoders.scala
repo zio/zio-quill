@@ -14,49 +14,41 @@ trait JdbcEncoders {
   protected val dateTimeZone = TimeZone.getDefault
 
   def encoder[T](f: PreparedStatement => (Int, T) => Unit): Encoder[T] =
-    new Encoder[T] {
-      override def apply(index: Int, value: T, row: BindedStatementBuilder[PreparedStatement]) = {
-        val raw = new io.getquill.sources.Encoder[PreparedStatement, T] {
-          override def apply(index: Int, value: T, row: PreparedStatement) = {
-            f(row)(index + 1, value)
-            row
-          }
+    (index: Int, value: T, row: BindedStatementBuilder[PreparedStatement]) => {
+      val raw = new io.getquill.sources.Encoder[PreparedStatement, T] {
+        override def apply (index: Int, value: T, row: PreparedStatement) = {
+          f(row)(index + 1, value)
+          row
         }
-        row.single(index, value, raw)
       }
+      row.single(index, value, raw)
     }
 
   implicit def traversableEncoder[T](implicit enc: Encoder[T]): Encoder[Traversable[T]] =
-    new Encoder[Traversable[T]] {
-      override def apply(index: Int, values: Traversable[T], row: BindedStatementBuilder[PreparedStatement]) =
-        row.coll(index, values, enc)
-    }
+    (index: Int, values: Traversable[T], row: BindedStatementBuilder[PreparedStatement]) => row.coll(index, values, enc)
 
   private[this] val nullEncoder = encoder[Int](_.setNull)
 
   implicit def optionEncoder[T](implicit d: Encoder[T]): Encoder[Option[T]] =
-    new Encoder[Option[T]] {
-      override def apply(idx: Int, value: Option[T], row: BindedStatementBuilder[PreparedStatement]) =
-        value match {
-          case Some(value) => d(idx, value, row)
-          case None =>
-            import Types._
-            val sqlType =
-              d match {
-                case `stringEncoder`     => VARCHAR
-                case `bigDecimalEncoder` => NUMERIC
-                case `booleanEncoder`    => BOOLEAN
-                case `byteEncoder`       => TINYINT
-                case `shortEncoder`      => SMALLINT
-                case `intEncoder`        => INTEGER
-                case `longEncoder`       => BIGINT
-                case `floatEncoder`      => REAL
-                case `doubleEncoder`     => DOUBLE
-                case `byteArrayEncoder`  => VARBINARY
-                case `dateEncoder`       => TIMESTAMP
-              }
-            nullEncoder(idx, sqlType, row)
-        }
+    (idx: Int, value: Option[T], row: BindedStatementBuilder[PreparedStatement]) => value match {
+      case Some(value) => d(idx, value, row)
+      case None =>
+        import Types._
+        val sqlType =
+          d match {
+            case `stringEncoder` => VARCHAR
+            case `bigDecimalEncoder` => NUMERIC
+            case `booleanEncoder` => BOOLEAN
+            case `byteEncoder` => TINYINT
+            case `shortEncoder` => SMALLINT
+            case `intEncoder` => INTEGER
+            case `longEncoder` => BIGINT
+            case `floatEncoder` => REAL
+            case `doubleEncoder` => DOUBLE
+            case `byteArrayEncoder` => VARBINARY
+            case `dateEncoder` => TIMESTAMP
+          }
+        nullEncoder(idx, sqlType, row)
     }
 
   implicit val stringEncoder: Encoder[String] = encoder(_.setString)

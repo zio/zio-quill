@@ -12,21 +12,16 @@ trait Encoders {
     encoder(identity[T] _)
 
   def encoder[T](f: T => Any): Encoder[T] =
-    new Encoder[T] {
-      def apply(index: Int, value: T, row: BindedStatementBuilder[List[Any]]) = {
-        val raw = new io.getquill.sources.Encoder[List[Any], T] {
-          override def apply(index: Int, value: T, row: List[Any]) =
-            row :+ value
-        }
-        row.single(index, value, raw)
+    (index: Int, value: T, row: BindedStatementBuilder[List[Any]]) => {
+      val raw = new io.getquill.sources.Encoder[List[Any], T] {
+        override def apply (index: Int, value: T, row: List[Any]) =
+          row :+ value
       }
+      row.single(index, value, raw)
     }
 
   implicit def traversableEncoder[T](implicit e: Encoder[T]): Encoder[Traversable[T]] =
-    new Encoder[Traversable[T]] {
-      def apply(index: Int, values: Traversable[T], row: BindedStatementBuilder[List[Any]]) =
-        row.coll[T](index, values, e)
-    }
+    (index: Int, values: Traversable[T], row: BindedStatementBuilder[List[Any]]) => row.coll[T](index, values, e)
 
   implicit def optionEncoder[T](implicit d: Encoder[T]): Encoder[Option[T]] =
     encoder[Option[T]] { (value: Option[T]) =>
