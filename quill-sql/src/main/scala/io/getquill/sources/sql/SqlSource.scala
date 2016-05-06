@@ -14,6 +14,7 @@ import io.getquill.sources.sql.idiom.SqlIdiom
 abstract class SqlSource[D <: SqlIdiom, N <: NamingStrategy, R: ClassTag, S: ClassTag] extends io.getquill.sources.Source[R, S] {
 
   type QueryResult[T]
+  type SingleQueryResult[T]
   type ActionResult[T]
   type BatchedActionResult[T]
 
@@ -117,35 +118,35 @@ abstract class SqlSource[D <: SqlIdiom, N <: NamingStrategy, R: ClassTag, S: Cla
 
   def run[T](
     quoted: Quoted[T]
-  ): QueryResult[T] = macro SqlSourceMacro.run[R, S]
+  ): SingleQueryResult[T] = macro SqlSourceMacro.runSingle[R, S]
   def run[P1, T](
     quoted: Quoted[P1 => T]
-  ): P1 => QueryResult[T] = macro SqlSourceMacro.run[R, S]
+  ): P1 => SingleQueryResult[T] = macro SqlSourceMacro.runSingle[R, S]
   def run[P1, P2, T](
     quoted: Quoted[(P1, P2) => T]
-  ): (P1, P2) => QueryResult[T] = macro SqlSourceMacro.run[R, S]
+  ): (P1, P2) => SingleQueryResult[T] = macro SqlSourceMacro.runSingle[R, S]
   def run[P1, P2, P3, T](
     quoted: Quoted[(P1, P2, P3) => T]
-  ): (P1, P2, P3) => QueryResult[T] = macro SqlSourceMacro.run[R, S]
+  ): (P1, P2, P3) => SingleQueryResult[T] = macro SqlSourceMacro.runSingle[R, S]
   def run[P1, P2, P3, P4, T](
     quoted: Quoted[(P1, P2, P3, P4) => T]
-  ): (P1, P2, P3, P4) => QueryResult[T] = macro SqlSourceMacro.run[R, S]
+  ): (P1, P2, P3, P4) => SingleQueryResult[T] = macro SqlSourceMacro.runSingle[R, S]
   def run[P1, P2, P3, P4, P5, T](
     quoted: Quoted[(P1, P2, P3, P4, P5) => T]
-  ): (P1, P2, P3, P4, P5) => QueryResult[T] = macro SqlSourceMacro.run[R, S]
+  ): (P1, P2, P3, P4, P5) => SingleQueryResult[T] = macro SqlSourceMacro.runSingle[R, S]
   def run[P1, P2, P3, P4, P5, P6, T](
     quoted: Quoted[(P1, P2, P3, P4, P5, P6) => T]
-  ): (P1, P2, P3, P4, P5, P6) => QueryResult[T] = macro SqlSourceMacro.run[R, S]
+  ): (P1, P2, P3, P4, P5, P6) => SingleQueryResult[T] = macro SqlSourceMacro.runSingle[R, S]
   def run[P1, P2, P3, P4, P5, P6, P7, T](
     quoted: Quoted[(P1, P2, P3, P4, P5, P6, P7) => T]
-  ): (P1, P2, P3, P4, P5, P6, P7) => QueryResult[T] = macro SqlSourceMacro.run[R, S]
+  ): (P1, P2, P3, P4, P5, P6, P7) => SingleQueryResult[T] = macro SqlSourceMacro.runSingle[R, S]
   def run[P1, P2, P3, P4, P5, P6, P7, P8, T](
     quoted: Quoted[(P1, P2, P3, P4, P5, P6, P7, P8) => T]
-  ): (P1, P2, P3, P4, P5, P6, P7, P8) => QueryResult[T] = macro SqlSourceMacro.run[R, S]
+  ): (P1, P2, P3, P4, P5, P6, P7, P8) => SingleQueryResult[T] = macro SqlSourceMacro.runSingle[R, S]
   def run[P1, P2, P3, P4, P5, P6, P7, P8, P9, T](
     quoted: Quoted[(P1, P2, P3, P4, P5, P6, P7, P8, P9) => T]
-  ): (P1, P2, P3, P4, P5, P6, P7, P8, P9) => QueryResult[T] = macro SqlSourceMacro.run[R, S]
+  ): (P1, P2, P3, P4, P5, P6, P7, P8, P9) => SingleQueryResult[T] = macro SqlSourceMacro.runSingle[R, S]
   def run[P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, T](
     quoted: Quoted[(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10) => T]
-  ): (P1, P2, P3, P4, P5, P6, P7, P8, P9, P10) => QueryResult[T] = macro SqlSourceMacro.run[R, S]
+  ): (P1, P2, P3, P4, P5, P6, P7, P8, P9, P10) => SingleQueryResult[T] = macro SqlSourceMacro.runSingle[R, S]
 }

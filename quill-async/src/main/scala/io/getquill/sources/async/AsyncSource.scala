@@ -30,6 +30,7 @@ abstract class AsyncSource[D <: SqlIdiom, N <: NamingStrategy, C <: Connection](
     Logger(LoggerFactory.getLogger(classOf[AsyncSource[_, _, _]]))
 
   type QueryResult[T] = Future[List[T]]
+  type SingleQueryResult[T] = Future[T]
   type ActionResult[T] = Future[Long]
   type BatchedActionResult[T] = Future[List[Long]]
 
@@ -96,4 +97,9 @@ abstract class AsyncSource[D <: SqlIdiom, N <: NamingStrategy, C <: Connection](
       }
     }
   }
+
+  def querySingle[T](sql: String, bind: BindedStatementBuilder[List[Any]] => BindedStatementBuilder[List[Any]], extractor: RowData => T)(implicit ec: ExecutionContext) = {
+    query(sql, bind, extractor).map(handleSingleResult)
+  }
+
 }

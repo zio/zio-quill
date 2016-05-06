@@ -15,6 +15,7 @@ class CassandraSyncSource[N <: NamingStrategy](config: CassandraSourceConfig[N, 
   extends CassandraSourceSession[N](config) {
 
   override type QueryResult[T] = List[T]
+  override type SingleQueryResult[T] = T
   override type ActionResult[T] = ResultSet
   override type BatchedActionResult[T] = List[ResultSet]
   override type Params[T] = List[T]
@@ -27,6 +28,8 @@ class CassandraSyncSource[N <: NamingStrategy](config: CassandraSourceConfig[N, 
   def query[T](cql: String, bind: BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement], extractor: Row => T): List[T] =
     session.execute(prepare(cql, bind))
       .all.toList.map(extractor)
+
+  def querySingle[T](cql: String, bind: BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement], extractor: Row => T): T = handleSingleResult(query(cql, bind, extractor))
 
   def execute(cql: String, bind: BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement], generated: Option[String] = None): ResultSet =
     session.execute(prepare(cql, bind))

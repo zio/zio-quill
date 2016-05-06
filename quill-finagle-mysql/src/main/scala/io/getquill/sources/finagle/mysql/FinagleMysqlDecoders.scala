@@ -14,7 +14,9 @@ import com.twitter.finagle.exp.mysql.Row
 import com.twitter.finagle.exp.mysql.ShortValue
 import com.twitter.finagle.exp.mysql.StringValue
 import com.twitter.finagle.exp.mysql.TimestampValue
+import com.twitter.finagle.exp.mysql.Type
 import com.twitter.finagle.exp.mysql.Value
+import com.twitter.finagle.exp.mysql.transport.BufferReader
 import io.getquill.util.Messages.fail
 import com.twitter.finagle.exp.mysql.NullValue
 
@@ -55,8 +57,11 @@ trait FinagleMysqlDecoders {
     }
   implicit val booleanDecoder: Decoder[Boolean] =
     decoder[Boolean] {
-      case ByteValue(byte) => byte == (1: Byte)
-      case v: RawValue     => v.bytes.head == (1: Byte)
+      case ByteValue(v)                     => v == (1: Byte)
+      case ShortValue(v)                    => v == (1: Short)
+      case IntValue(v)                      => v == 1
+      case LongValue(v)                     => v == 1L
+      case v: RawValue if v.typ == Type.Bit => v.bytes.head == (1: Byte)
     }
   implicit val byteDecoder: Decoder[Byte] =
     decoder[Byte] {

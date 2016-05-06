@@ -55,8 +55,10 @@ class MirrorSource(config: SourceConfig[MirrorSource])
 
   case class QueryMirror[T](ast: Ast, binds: Row, extractor: Row => T)
 
-  def query[T](ast: Ast, bind: Row => Row, extractor: Row => T) =
+  def querySingle[T](ast: Ast, bind: Row => Row, extractor: Row => T) =
     QueryMirror(ast, bind(Row()), extractor)
+
+  def query[T](ast: Ast, bind: Row => Row, extractor: Row => T) = QueryMirror(ast, bind(Row()), extractor)
 }
 
 class MirrorSourceMacro(val c: Context) extends SourceMacro {

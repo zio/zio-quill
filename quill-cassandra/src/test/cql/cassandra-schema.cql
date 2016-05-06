@@ -1,36 +1,36 @@
 CREATE TABLE Person(
     id INT PRIMARY KEY,
-	name VARCHAR,
-	age INT
+    name VARCHAR,
+    age INT
 );
 
 CREATE TABLE Couple(
     id INT PRIMARY KEY,
-	her VARCHAR,
-	him VARCHAR
+    her VARCHAR,
+    him VARCHAR
 );
 
 CREATE TABLE Department(
     id INT PRIMARY KEY,
-	dpt VARCHAR
+    dpt VARCHAR
 );
 
 CREATE TABLE Employee(
     id INT PRIMARY KEY,
-	emp VARCHAR,
-	dpt VARCHAR,
-	salary INT
+    emp VARCHAR,
+    dpt VARCHAR,
+    salary INT
 );
 
 CREATE TABLE Task(
     id INT PRIMARY KEY,
-	emp VARCHAR,
-	tsk VARCHAR
+    emp VARCHAR,
+    tsk VARCHAR
 );
 
 CREATE TABLE EncodingTestEntity(
     id INT,
-	v1 VARCHAR,
+    v1 VARCHAR,
     v2 DECIMAL,
     v3 BOOLEAN,
     v4 INT,
@@ -52,9 +52,15 @@ CREATE TABLE EncodingTestEntity(
     PRIMARY KEY(id, v1)
 );
 
+CREATE TABLE OrderTestEntity(
+    id INT,
+    i Int,
+    PRIMARY KEY(id, i)
+) WITH CLUSTERING ORDER BY (i ASC);
+
 CREATE TABLE TestEntity(
     id INT PRIMARY KEY,
-	s VARCHAR,
+    s VARCHAR,
     i INT,
     l BIGINT,
     o INT
@@ -62,14 +68,14 @@ CREATE TABLE TestEntity(
 
 CREATE TABLE TestEntity2(
     id INT PRIMARY KEY,
-	s VARCHAR,
+    s VARCHAR,
     i INT,
     l BIGINT
 );
 
 CREATE TABLE TestEntity3(
     id INT PRIMARY KEY,
-	s VARCHAR,
+    s VARCHAR,
     i INT,
     l BIGINT
 );

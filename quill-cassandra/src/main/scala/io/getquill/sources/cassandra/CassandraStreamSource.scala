@@ -14,6 +14,7 @@ class CassandraStreamSource[N <: NamingStrategy](config: CassandraSourceConfig[N
   extends CassandraSourceSession[N](config) {
 
   override type QueryResult[T] = Observable[T]
+  override type SingleQueryResult[T] = Observable[T]
   override type ActionResult[T] = Observable[ResultSet]
   override type BatchedActionResult[T] = Observable[ResultSet]
   override type Params[T] = Observable[T]
@@ -37,6 +38,8 @@ class CassandraStreamSource[N <: NamingStrategy](config: CassandraSourceConfig[N
       .flatMap(Observable.fromIterable)
       .map(extractor)
   }
+
+  def querySingle[T](cql: String, bind: BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement], extractor: Row => T) = query(cql, bind, extractor)
 
   def execute(cql: String, bind: BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement], generated: Option[String] = None): Observable[ResultSet] =
     Observable.fromFuture(session.executeAsync(prepare(cql, bind)))

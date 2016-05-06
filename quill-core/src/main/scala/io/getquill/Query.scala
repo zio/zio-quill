@@ -19,7 +19,7 @@ sealed trait Query[+T] {
 
   def min[U >: T](implicit o: Ordering[U]): Option[T]
   def max[U >: T](implicit o: Ordering[U]): Option[T]
-  def avg[U >: T](implicit n: Numeric[U]): Option[T]
+  def avg[U >: T](implicit n: Numeric[U]): Option[BigDecimal]
   def sum[U >: T](implicit n: Numeric[U]): Option[T]
   def size: Long
 
