@@ -35,7 +35,7 @@ lazy val `quill-jdbc` =
         "com.zaxxer"     % "HikariCP"             % "2.4.5",
         "mysql"          % "mysql-connector-java" % "5.1.38"  % "test",
         "com.h2database" % "h2"                   % "1.4.191" % "test",
-        "org.postgresql" % "postgresql"           % "9.4.1208"
+        "org.postgresql" % "postgresql"           % "9.4.1208" % "test"
       ),
       parallelExecution in Test := false
     )
@@ -73,7 +73,7 @@ lazy val `quill-cassandra` =
     .settings(mimaSettings)
     .settings(
       libraryDependencies ++= Seq(
-        "com.datastax.cassandra" %  "cassandra-driver-core" % "3.0.0",
+        "com.datastax.cassandra" %  "cassandra-driver-core" % "3.0.1",
         "org.monifu"             %% "monifu"                % "1.2"
       ),
       parallelExecution in Test := false
