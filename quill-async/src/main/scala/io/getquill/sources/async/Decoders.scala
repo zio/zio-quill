@@ -13,14 +13,12 @@ trait Decoders {
   this: AsyncSource[_, _, _] =>
 
   def decoder[T: ClassTag](f: PartialFunction[Any, T] = PartialFunction.empty): Decoder[T] =
-    new Decoder[T] {
-      def apply(index: Int, row: RowData) = {
-        row(index) match {
-          case value: T                        => value
-          case value if (f.isDefinedAt(value)) => f(value)
-          case value =>
-            fail(s"Value '$value' at index $index can't be decoded to '${classTag[T].runtimeClass}'")
-        }
+    (index: Int, row: RowData) => {
+      row(index) match {
+        case value: T => value
+        case value if (f.isDefinedAt(value)) => f(value)
+        case value =>
+          fail(s"Value '$value' at index $index can't be decoded to '${classTag[T].runtimeClass}'")
       }
     }
 
@@ -41,12 +39,10 @@ trait Decoders {
   }
 
   implicit def optionDecoder[T](implicit d: Decoder[T]): Decoder[Option[T]] =
-    new Decoder[Option[T]] {
-      def apply(index: Int, row: RowData) = {
-        row(index) match {
-          case null  => None
-          case value => Some(d(index, row))
-        }
+    (index: Int, row: RowData) => {
+      row(index) match {
+        case null => None
+        case value => Some(d(index, row))
       }
     }
 
@@ -107,10 +103,9 @@ trait Decoders {
         localDate.toDate
     }
 
-  implicit val uuidDecoder: Decoder[UUID] = new Decoder[UUID] {
-    def apply(index: Int, row: RowData): UUID = row(index) match {
+  implicit val uuidDecoder: Decoder[UUID] =
+    (index: Int, row: RowData) => row(index) match {
       case value: UUID => value
     }
-  }
 
 }

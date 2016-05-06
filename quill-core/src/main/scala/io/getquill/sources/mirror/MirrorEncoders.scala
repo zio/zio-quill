@@ -12,15 +12,10 @@ trait MirrorEncoders {
   }
 
   implicit def optionEncoder[T](implicit d: Encoder[T]): Encoder[Option[T]] =
-    new Encoder[Option[T]] {
-      def apply(index: Int, value: Option[T], row: Row) =
-        row.add(value)
-    }
+    (index: Int, value: Option[T], row: Row) => row.add(value)
 
   implicit def traversableEncoder[T](implicit d: Encoder[T]): Encoder[Traversable[T]] =
-    new Encoder[Traversable[T]] {
-      def apply(index: Int, value: Traversable[T], row: Row) = row.add(value)
-    }
+    (index: Int, value: Traversable[T], row: Row) => row.add(value)
 
   implicit val stringEncoder = encoder[String]
   implicit val bigDecimalEncoder = encoder[BigDecimal]

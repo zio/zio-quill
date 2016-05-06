@@ -29,20 +29,16 @@ trait FinagleMysqlDecoders {
     )
 
   def decoder[T: ClassTag](f: PartialFunction[Value, T]): Decoder[T] =
-    new Decoder[T] {
-      def apply(index: Int, row: Row) = {
-        val value = row.values(index)
-        f.lift(value).getOrElse(fail(s"Value '$value' can't be decoded to '${classTag[T].runtimeClass}'"))
-      }
+    (index: Int, row: Row) => {
+      val value = row.values(index)
+      f.lift(value).getOrElse(fail(s"Value '$value' can't be decoded to '${classTag[T].runtimeClass}'"))
     }
 
   implicit def optionDecoder[T](implicit d: Decoder[T]): Decoder[Option[T]] =
-    new Decoder[Option[T]] {
-      def apply(index: Int, row: Row) = {
-        row.values(index) match {
-          case NullValue => None
-          case other     => Some(d(index, row))
-        }
+    (index: Int, row: Row) => {
+      row.values(index) match {
+        case NullValue => None
+        case other => Some(d(index, row))
       }
     }
 
