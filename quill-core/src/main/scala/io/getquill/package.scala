@@ -4,12 +4,13 @@ import scala.language.implicitConversions
 import language.experimental.macros
 import io.getquill.quotation.NonQuotedException
 import io.getquill.sources._
+import scala.reflect.ClassTag
 
 package object getquill {
 
   def source[T <: Source[_, _]](config: SourceConfig[T]): T = macro Macro.quoteSource[T]
 
-  def query[T]: EntityQuery[T] = NonQuotedException()
+  def query[T](implicit ct: ClassTag[T]): EntityQuery[T] = NonQuotedException()
 
   def lift[T](v: T): T = NonQuotedException()
 

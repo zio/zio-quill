@@ -48,9 +48,9 @@ class SqlActionMacroSpec extends Spec {
         mirror.bindList mustEqual List(Row("s", 1))
       }
     }
-    "with generated values" - {
+    "with generated values" in {
       val q = quote {
-        query[TestEntity](_.generated(_.i)).insert
+        query[TestEntity].schema(_.generated(_.i)).insert
       }
       val mirror = mirrorSource.run(q)(List(TestEntity("s", 0, 1L, None)))
       mirror.sql mustEqual "INSERT INTO TestEntity (s,l,o) VALUES (?, ?, ?)"

@@ -2,6 +2,7 @@ package io.getquill.quotation
 
 import io.getquill._
 import io.getquill.ast.{ Query => _, _ }
+import scala.reflect.ClassTag
 
 class QuotationSpec extends Spec {
 
@@ -14,26 +15,26 @@ class QuotationSpec extends Spec {
         }
         "with alias" in {
           val q = quote {
-            query[TestEntity](_.entity("SomeAlias"))
+            query[TestEntity].schema(_.entity("SomeAlias"))
           }
-          quote(unquote(q)).ast mustEqual Entity("TestEntity", Some("SomeAlias"))
+          quote(unquote(q)).ast mustEqual ConfiguredEntity(SimpleEntity("TestEntity"), Some("SomeAlias"))
         }
         "with generated" in {
           val q = quote {
-            query[TestEntity](_.entity("test").columns(_.i -> "'i", _.o -> "'o").generated(c => c.i))
+            query[TestEntity].schema(_.entity("test").columns(_.i -> "'i", _.o -> "'o").generated(c => c.i))
           }
           quote(unquote(q)).ast mustEqual
-            Entity("TestEntity", Some("test"), List(PropertyAlias("i", "'i"), PropertyAlias("o", "'o")), Some("i"))
+            ConfiguredEntity(Entity("TestEntity"), Some("test"), List(PropertyAlias("i", "'i"), PropertyAlias("o", "'o")), Some("i"))
         }
         "with property alias" in {
           val q = quote {
-            query[TestEntity](_.entity("SomeAlias").columns(_.s -> "theS", _.i -> "theI"))
+            query[TestEntity].schema(_.entity("SomeAlias").columns(_.s -> "theS", _.i -> "theI"))
           }
-          quote(unquote(q)).ast mustEqual Entity("TestEntity", Some("SomeAlias"), List(PropertyAlias("s", "theS"), PropertyAlias("i", "theI")))
+          quote(unquote(q)).ast mustEqual ConfiguredEntity(Entity("TestEntity"), Some("SomeAlias"), List(PropertyAlias("s", "theS"), PropertyAlias("i", "theI")))
         }
         "with property alias and unicode arrow" in {
           """|quote {
-             |  query[TestEntity](_.entity("SomeAlias").columns(_.s → "theS", _.i → "theI"))
+             |  query[TestEntity].schema(_.entity("SomeAlias").columns(_.s → "theS", _.i → "theI"))
              |}
           """.stripMargin must compile
         }
@@ -724,6 +725,16 @@ class QuotationSpec extends Spec {
           Add(1).apply()
         }
         quote(unquote(q)).ast mustEqual BinaryOperation(Constant(1), NumericOperator.`+`, Constant(1))
+      }
+      "type param" - {
+        "simple" in {
+          def test[T: ClassTag] = quote(query[T])
+          test[TestEntity].ast mustEqual Entity("TestEntity")
+        }
+        "nested" in {
+          def test[T: ClassTag] = quote(query[T].map(t => 1))
+          test[TestEntity].ast mustEqual Map(Entity("TestEntity"), Ident("t"), Constant(1))
+        }
       }
     }
     "if" - {

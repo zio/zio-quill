@@ -622,7 +622,7 @@ class SqlIdiomSpec extends Spec {
         }
         "generated" in {
           val q = quote {
-            query[TestEntity](_.generated(_.i)).insert
+            query[TestEntity].schema(_.generated(_.i)).insert
           }
           val run = mirrorSource.run(q)(List(TestEntity("s", 1, 2L, Some(1)))).sql mustEqual
             "INSERT INTO TestEntity (s,l,o) VALUES (?, ?, ?)"

@@ -6,7 +6,7 @@ import io.getquill.sources.cassandra.mirrorSource
 class RenamePropertiesSpec extends Spec {
 
   val e = quote {
-    query[TestEntity](_.entity("test_entity").columns(_.s -> "field_s", _.i -> "field_i"))
+    query[TestEntity].schema(_.entity("test_entity").columns(_.s -> "field_s", _.i -> "field_i"))
   }
 
   val f = quote {

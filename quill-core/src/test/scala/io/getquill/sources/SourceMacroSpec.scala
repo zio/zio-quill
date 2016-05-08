@@ -4,6 +4,7 @@ import io.getquill.quotation.Quoted
 import io.getquill._
 import io.getquill.TestSource.mirrorSource
 import mirror.Row
+import scala.reflect.ClassTag
 
 class SourceMacroSpec extends Spec {
 
@@ -26,6 +27,11 @@ class SourceMacroSpec extends Spec {
           qr1.delete
         }
         mirrorSource.run(q).ast mustEqual q.ast
+      }
+      "dynamic type param" in {
+        def test[T: ClassTag] = quote(query[T].delete)
+        val r = mirrorSource.run(test[TestEntity])
+        r.ast.toString mustEqual "query[TestEntity].delete"
       }
     }
     "parametrized" - {
@@ -53,6 +59,15 @@ class SourceMacroSpec extends Spec {
         r.ast.toString mustEqual """infix"t = $p1""""
         r.bindList mustEqual List(Row("a"))
       }
+      "dynamic type param" in {
+        import language.reflectiveCalls
+        def test[T <: { def i: Int }: ClassTag] = quote {
+          (p1: Int) => query[T].filter(t => t.i == p1).delete
+        }
+        val r = mirrorSource.run(test[TestEntity])(List(1))
+        r.ast.toString mustEqual "query[TestEntity].filter(t => t.i == p1).delete"
+        r.bindList mustEqual List(Row(1))
+      }
     }
   }
 
@@ -76,6 +91,11 @@ class SourceMacroSpec extends Spec {
         }
         mirrorSource.run(q).ast mustEqual q.ast
       }
+      "dynamic type param" in {
+        def test[T: ClassTag] = quote(query[T])
+        val r = mirrorSource.run(test[TestEntity])
+        r.ast.toString mustEqual "query[TestEntity].map(x => (x.s, x.i, x.l, x.o))"
+      }
     }
     "parametrized" - {
       "normal" in {
@@ -90,10 +110,10 @@ class SourceMacroSpec extends Spec {
       "wrapped" in {
         case class Entity(x: WrappedEncodable)
         val q = quote {
-          (p1: WrappedEncodable) => query[Entity].filter(_.x == p1)
+          (p1: WrappedEncodable) => query[Entity].filter(t => t.x == p1)
         }
         val r = mirrorSource.run(q)(WrappedEncodable(1))
-        r.ast.toString mustEqual "query[Entity].filter(x1 => x1.x == p1).map(x1 => x1.x.value)"
+        r.ast.toString mustEqual "query[Entity].filter(t => t.x == p1).map(t => t.x.value)"
         r.binds mustEqual Row(1)
       }
       "infix" in {
@@ -111,6 +131,14 @@ class SourceMacroSpec extends Spec {
         val r = mirrorSource.run(q)("a")
         r.ast.toString mustEqual "query[TestEntity].filter(t => t.s == p1).map(t => (t.s, t.i, t.l, t.o))"
         r.binds mustEqual Row("a")
+      }
+      "dynamic type param" in {
+        def test[T: ClassTag] = quote {
+          (p1: Int) => query[T].map(t => p1)
+        }
+        val r = mirrorSource.run(test[TestEntity])(1)
+        r.ast.toString mustEqual "query[TestEntity].map(t => p1)"
+        r.binds mustEqual Row(1)
       }
       "free variable" in {
         val i = 1

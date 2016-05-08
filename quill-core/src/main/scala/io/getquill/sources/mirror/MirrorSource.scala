@@ -84,7 +84,7 @@ class MirrorSourceMacro(val c: Context) extends SourceMacro {
           import io.getquill.sources.ExtractEntityAndInsertAction
 
           val normalized = Normalize($ast: Ast)
-          val (entity, insert) = ExtractEntityAndInsertAction.apply(normalized)
+          val (entity, insert) = ExtractEntityAndInsertAction(normalized)
           val isInsert = insert.isDefined
           val generated = if (isInsert) entity.flatMap(_.generated) else None
 

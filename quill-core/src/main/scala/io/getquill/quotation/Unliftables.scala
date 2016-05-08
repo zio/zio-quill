@@ -75,7 +75,7 @@ trait Unliftables {
   }
 
   implicit val queryUnliftable: Unliftable[Query] = Unliftable[Query] {
-    case q"$pack.Entity.apply(${ a: String }, ${ b: Option[String] }, ${ c: List[PropertyAlias] }, ${ d: Option[String] })" => Entity(a, b, c, d)
+    case q"${ entityUnliftable(entity) }" => entity
     case q"$pack.Filter.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => Filter(a, b, c)
     case q"$pack.Map.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => Map(a, b, c)
     case q"$pack.FlatMap.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => FlatMap(a, b, c)
@@ -89,6 +89,16 @@ trait Unliftables {
       Join(t, a, b, iA, iB, on)
 
     case q"$pack.Distinct.apply(${ a: Ast })" => Distinct(a)
+  }
+
+  implicit val entityUnliftable: Unliftable[Entity] = Unliftable[Entity] {
+    case q"$pack.SimpleEntity.apply(${ a: String })" => SimpleEntity(a)
+    case q"$pack.ConfiguredEntity.apply(${ a: Ast }, ${ b: Option[String] }, ${ c: List[PropertyAlias] }, ${ d: Option[String] })" => ConfiguredEntity(a, b, c, d)
+  }
+
+  implicit val entityConfigUnliftable: Unliftable[EntityConfig] = Unliftable[EntityConfig] {
+    case q"$pack.EntityConfig.apply(${ a: Option[String] }, ${ b: List[PropertyAlias] }, ${ c: Option[String] })" =>
+      EntityConfig(a, b, c)
   }
 
   implicit val orderingUnliftable: Unliftable[Ordering] = Unliftable[Ordering] {

@@ -4,14 +4,18 @@ import io.getquill.ast.PropertyAlias
 
 import scala.reflect.macros.whitebox.Context
 
-case class SchemaConfig(alias: Option[String] = None, properties: List[PropertyAlias] = List(), generated: Option[String] = None)
+case class EntityConfig(
+  alias:      Option[String]      = None,
+  properties: List[PropertyAlias] = List(),
+  generated:  Option[String]      = None
+)
 
-trait SchemaConfigParsing extends UnicodeArrowParsing {
+trait EntityConfigParsing extends UnicodeArrowParsing {
   val c: Context
 
   import c.universe.{ Function => _, Ident => _, _ }
 
-  def parseEntityConfig(t: Tree): SchemaConfig =
+  def parseEntityConfig(t: Tree): EntityConfig =
     t match {
       case q"$e.entity(${ name: String })" =>
         parseEntityConfig(e).copy(alias = Some(name))
@@ -20,7 +24,7 @@ trait SchemaConfigParsing extends UnicodeArrowParsing {
       case q"$e.generated(($alias) => $body)" =>
         parseEntityConfig(e).copy(generated = Some(parseProperty(body)))
       case _ =>
-        SchemaConfig()
+        EntityConfig()
     }
 
   private def parseProperty(t: Tree): String =
