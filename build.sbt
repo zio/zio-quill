@@ -140,7 +140,7 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
   ),
   fork in Test := true,
   releasePublishArtifactsAction := PgpKeys.publishSigned.value,
-  scoverage.ScoverageKeys.coverageMinimum := 100,
+  scoverage.ScoverageKeys.coverageMinimum := 96,
   scoverage.ScoverageKeys.coverageFailOnMinimum := false,
   ScalariformKeys.preferences := ScalariformKeys.preferences.value
     .setPreference(AlignParameters, true)
