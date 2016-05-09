@@ -49,6 +49,22 @@ class SqlQuerySpec extends Spec {
       SqlQuery(q.ast).show mustEqual
         "SELECT a.i, b.i FROM TestEntity a, TestEntity2 b WHERE (a.s IS NOT NULL) AND (b.i > a.i)"
     }
+
+    "value query" - {
+      "operation" in {
+        val q = quote {
+          qr1.map(_.i).contains(1)
+        }
+        SqlQuery(q.ast).show mustEqual
+          "SELECT 1 IN (SELECT x1.i FROM TestEntity x1)"
+      }
+      "simple value" in {
+        val q = quote(1)
+        SqlQuery(q.ast).show mustEqual
+          "SELECT 1"
+      }
+    }
+
     "nested infix query" - {
       "as source" in {
         val q = quote {
@@ -349,15 +365,6 @@ class SqlQuerySpec extends Spec {
       }
       SqlQuery(q.ast).show mustEqual
         "SELECT MIN(q2.i) FROM TestEntity q1, TestEntity2 q2"
-    }
-  }
-
-  "fails if the query is not normalized" in {
-    val q = quote {
-      ((s: String) => qr1.filter(_.s == s))("s")
-    }
-    val e = intercept[IllegalStateException] {
-      val a = SqlQuery(q.ast)
     }
   }
 }

@@ -34,7 +34,7 @@ case class UnaryOperationSqlQuery(
 case class SelectValue(ast: Ast, alias: Option[String] = None)
 
 case class FlattenSqlQuery(
-  from:     List[Source],
+  from:     List[Source]          = List(),
   where:    Option[Ast]           = None,
   groupBy:  List[Property]        = Nil,
   orderBy:  List[OrderByCriteria] = Nil,
@@ -52,6 +52,7 @@ object SqlQuery {
       case Union(a, b)                  => SetOperationSqlQuery(apply(a), UnionOperation, apply(b))
       case UnionAll(a, b)               => SetOperationSqlQuery(apply(a), UnionAllOperation, apply(b))
       case UnaryOperation(op, q: Query) => UnaryOperationSqlQuery(op, apply(q))
+      case _: Operation | _: Value      => FlattenSqlQuery(select = List(SelectValue(query)))
       case q: Query                     => flatten(q, "x")
       case other                        => fail(s"Query not properly normalized. Please open a bug report. Ast: '$other'")
     }
