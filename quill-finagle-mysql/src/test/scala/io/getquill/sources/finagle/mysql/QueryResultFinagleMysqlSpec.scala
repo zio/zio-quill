@@ -1,7 +1,6 @@
 package io.getquill.sources.finagle.mysql
 
 import io.getquill.sources.sql._
-import com.twitter.finagle.exp.mysql.OK
 import com.twitter.util.{ Await, Future }
 import java.util.concurrent.ConcurrentLinkedQueue
 import scala.collection.JavaConverters._
@@ -17,7 +16,7 @@ class QueryResultTypeFinagleMysqlSpec extends QueryResultTypeSpec {
     await(db.run(deleteAll))
     val rs = await(db.run(productInsert)(productEntries))
     val inserted = (rs zip productEntries).map {
-      case (r, prod) => prod.copy(id = r.asInstanceOf[OK].insertId)
+      case (r, prod) => prod.copy(id = r)
     }
     insertedProducts.addAll(inserted.asJava)
     ()
