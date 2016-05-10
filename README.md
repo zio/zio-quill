@@ -24,7 +24,7 @@ Quill provides a Quoted Domain Specific Language ([QDSL](http://homepages.inf.ed
 * [Quotation](#quotation)
 * [Mirror sources](#mirror-sources)
 * [Compile-time quotations](#compile-time-quotations)
-* [Parametrized quotations](#parametrized-quotations)
+* [Bindings](#bindings)
 * [Schema](#schema)
 * [Queries](#queries)
 * [Query probing](#query-probing)
@@ -1006,7 +1006,7 @@ sbt dependencies
 ```
 libraryDependencies ++= Seq(
   "mysql" % "mysql-connector-java" % "5.1.36",
-  "io.getquill" %% "quill-jdbc" % "0.5.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "0.6.0"
 )
 ```
 
@@ -1037,7 +1037,7 @@ sbt dependencies
 ```
 libraryDependencies ++= Seq(
   "org.postgresql" % "postgresql" % "9.4-1206-jdbc41",
-  "io.getquill" %% "quill-jdbc" % "0.5.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "0.6.0"
 )
 ```
 
@@ -1068,7 +1068,7 @@ db.connectionTimeout=30000
 sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async" % "0.5.1-SNAPSHOT"
+  "io.getquill" %% "quill-async" % "0.6.0"
 )
 ```
 
@@ -1098,7 +1098,7 @@ db.poolValidationInterval=100
 sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async" % "0.5.1-SNAPSHOT"
+  "io.getquill" %% "quill-async" % "0.6.0"
 )
 ```
 
@@ -1128,7 +1128,7 @@ db.poolValidationInterval=100
 sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-finagle-mysql" % "0.5.1-SNAPSHOT"
+  "io.getquill" %% "quill-finagle-mysql" % "0.6.0"
 )
 ```
 
@@ -1158,7 +1158,7 @@ db.pool.maxWaiters=2147483647
 sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-cassandra" % "0.5.1-SNAPSHOT"
+  "io.getquill" %% "quill-cassandra" % "0.6.0"
 )
 ```
 

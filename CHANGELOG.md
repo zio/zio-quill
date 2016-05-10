@@ -1,3 +1,18 @@
+# 0.6.0 / 9-May-2016
+
+* [explicit bindings using `lift`](https://github.com/getquill/quill/pull/335/files#diff-04c6e90faac2675aa89e2176d2eec7d8R157)
+* [Code Of Conduct](https://github.com/getquill/quill/pull/296)
+* [dynamic type parameters](https://github.com/getquill/quill/pull/351)
+* [support contains for Traversable](https://github.com/getquill/quill/pull/290)
+* [`equals` support](https://github.com/getquill/quill/pull/328)
+* [Always return List for any type of query](https://github.com/getquill/quill/pull/324)
+* [quilll-sql: support value queries](https://github.com/getquill/quill/pull/354)
+* [quill-sql: `in`/`contains` - support empty sets](https://github.com/getquill/quill/pull/329)
+* [Support `Ord` quotation](https://github.com/getquill/quill/pull/301)
+* [`blockParser` off-by-one error](https://github.com/getquill/quill/pull/292)
+* [show ident instead of indent.toString](https://github.com/getquill/quill/pull/307)
+* [decode bit as boolean](https://github.com/getquill/quill/pull/308)
+
 # 0.5.0 / 17-Mar-2016
 
 * [Schema mini-DSL and generated values](https://github.com/getquill/quill/pull/226/files#diff-04c6e90faac2675aa89e2176d2eec7d8R212)
