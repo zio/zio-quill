@@ -5,7 +5,7 @@ import io.getquill._
 class JdbcSourceSpec extends Spec {
 
   val badEntity = quote {
-    query[TestEntity](_.entity("TestEntity").columns(_.s -> "a", _.i -> "i", _.l -> "l", _.o -> "o"))
+    query[TestEntity].schema(_.entity("TestEntity").columns(_.s -> "a", _.i -> "i", _.l -> "l", _.o -> "o"))
   }
 
   "probes valid sqls" - {

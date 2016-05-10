@@ -46,7 +46,7 @@ sealed trait JoinQuery[A, B, R] extends Query[R] {
 sealed trait EntityQuery[T]
   extends Query[T] {
 
-  def apply(f: Schema[T] => Any): EntityQuery[T]
+  def schema(f: Schema[T] => Schema[T]): EntityQuery[T]
 
   override def withFilter(f: T => Boolean): EntityQuery[T]
   override def filter(f: T => Boolean): EntityQuery[T]

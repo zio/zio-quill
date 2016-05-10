@@ -204,7 +204,7 @@ Alternatively, the identifiers can be customized:
 
 ```scala
 val circles = quote {
-  query[Circle](_.entity("circle_table").columns(_.radius -> "radius_column"))
+  query[Circle].schema(_.entity("circle_table").columns(_.radius -> "radius_column"))
 }
 
 val q = quote {
@@ -222,12 +222,12 @@ case class Circle(radius: Int)
 case class Rectangle(length: Int, width: Int)
 object schema {
   val circles = quote {
-    query[Circle](
+    query[Circle].schema(
         _.entity("circle_table")
         .columns(_.radius -> "radius_column"))
   }
   val rectangles = quote {
-    query[Rectangle](
+    query[Rectangle].schema(
         _.entity("rectangle_table")
         .columns(
           _.length -> "length_column",
@@ -242,7 +242,7 @@ Note that it accepts only values that can be read as `Long`.
 case class Product(id: Long, description: String, sku: Long)
 
 val q = quote {
-  query[Product](_.generated(_.id)).insert
+  query[Product].schema(_.generated(_.id)).insert
 }
 
 db.run(q)

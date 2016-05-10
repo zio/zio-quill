@@ -7,7 +7,7 @@ import io.getquill.norm.BetaReduction
 import io.getquill.util.Messages.RichContext
 import io.getquill.util.Interleave
 
-trait Parsing extends SchemaConfigParsing {
+trait Parsing extends EntityConfigParsing {
   this: Quotation =>
 
   import c.universe.{ Ident => _, Constant => _, Function => _, If => _, Block => _, _ }
@@ -137,14 +137,23 @@ trait Parsing extends SchemaConfigParsing {
     case q"$pack.Boolean2boolean(${ astParser(v) })"           => v
   }
 
-  val queryParser: Parser[Query] = Parser[Query] {
+  val queryParser: Parser[Ast] = Parser[Ast] {
 
-    case q"$pack.query[${ t: Type }].apply(($alias) => $body)" =>
+    case q"$source.schema(($alias) => $body)" =>
       val config = parseEntityConfig(body)
-      Entity(t.typeSymbol.name.decodedName.toString, config.alias, config.properties, config.generated)
+      ConfiguredEntity(astParser(source), config.alias, config.properties, config.generated)
 
-    case q"$pack.query[${ t: Type }]" =>
-      Entity(t.typeSymbol.name.decodedName.toString, None, List(), None)
+    case q"$pack.query[${ t: Type }]($ct)" if(t.typeSymbol.isClass) =>
+      SimpleEntity(t.typeSymbol.name.decodedName.toString)
+      
+    case q"$pack.query[$_]($ct)" =>
+      Dynamic {
+        c.typecheck(q"""
+          new io.getquill.quotation.Quoted[EntityQuery[T]] {
+            override def ast = io.getquill.ast.SimpleEntity($ct.runtimeClass.getSimpleName)
+          }  
+        """)
+      }
 
     case q"$source.filter(($alias) => $body)" if (is[QuillQuery[Any]](source)) =>
       Filter(astParser(source), identParser(alias), astParser(body))

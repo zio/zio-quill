@@ -48,16 +48,7 @@ object AstShow {
 
   implicit val queryShow: Show[Query] = Show[Query] {
 
-    case q: Entity =>
-      val alias = q.alias.map(s => s""".entity("$s")""")
-      val properties = q.properties.map(p => s"""_.${p.property} -> "${p.alias}"""")
-      val columns = if (properties.isEmpty) None else Some(s""".columns(${properties.mkString(", ")})""")
-      val generated = q.generated.map(g => s""".generated(_.$g)""")
-      val params = alias.toList ::: columns.toList ::: generated.toList
-      params match {
-        case Nil    => s"query[${q.name}]"
-        case params => s"query[${q.name}](_${params.mkString("")})"
-      }
+    case e: Entity => e.show
 
     case Filter(source, alias, body) =>
       s"${source.show}.filter(${alias.show} => ${body.show})"
@@ -94,6 +85,17 @@ object AstShow {
 
     case Distinct(a) =>
       s"${a.show}.distinct"
+  }
+
+  implicit val entityShow: Show[Entity] = Show[Entity] {
+    case SimpleEntity(name) => s"query[$name]"
+    case c: ConfiguredEntity =>
+      val alias = c.alias.map(s => s""".entity("$s")""")
+      val properties = c.properties.map(p => s"""_.${p.property} -> "${p.alias}"""")
+      val columns = if (properties.isEmpty) None else Some(s""".columns(${properties.mkString(", ")})""")
+      val generated = c.generated.map(g => s""".generated(_.$g)""")
+      val params = alias.toList ::: columns.toList ::: generated.toList
+      s"${c.source.show}.schema(_${params.mkString("")})"
   }
 
   implicit val orderingShow: Show[Ordering] = Show[Ordering] {

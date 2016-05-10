@@ -10,34 +10,34 @@ class AstShowSpec extends Spec {
   import io.getquill.util.Show._
   import io.getquill.ast.AstShow._
 
-  "shows entity" - {
-    "table" - {
+  "shows schema" - {
+    "table" in {
       val q = quote {
-        query[TestEntity](_.entity("test"))
+        query[TestEntity].schema(_.entity("test"))
       }
       (q.ast: Ast).show mustEqual
-        """query[TestEntity](_.entity("test"))"""
+        """query[TestEntity].schema(_.entity("test"))"""
     }
-    "columns" - {
+    "columns" in {
       val q = quote {
-        query[TestEntity](_.columns(_.i -> "'i", _.o -> "'o"))
+        query[TestEntity].schema(_.columns(_.i -> "'i", _.o -> "'o"))
       }
       (q.ast: Ast).show mustEqual
-        """query[TestEntity](_.columns(_.i -> "'i", _.o -> "'o"))"""
+        """query[TestEntity].schema(_.columns(_.i -> "'i", _.o -> "'o"))"""
     }
-    "generated" - {
+    "generated" in {
       val q = quote {
-        query[TestEntity](_.generated(c => c.i))
+        query[TestEntity].schema(_.generated(c => c.i))
       }
       (q.ast: Ast).show mustEqual
-        """query[TestEntity](_.generated(_.i))"""
+        """query[TestEntity].schema(_.generated(_.i))"""
     }
-    "composed" - {
+    "composed" in {
       val q = quote {
-        query[TestEntity](_.entity("entity_alias").columns(_.s -> "s_alias", _.i -> "i_alias").generated(_.i))
+        query[TestEntity].schema(_.entity("entity_alias").columns(_.s -> "s_alias", _.i -> "i_alias").generated(_.i))
       }
       (q.ast: Ast).show mustEqual
-        """query[TestEntity](_.entity("entity_alias").columns(_.s -> "s_alias", _.i -> "i_alias").generated(_.i))"""
+        """query[TestEntity].schema(_.entity("entity_alias").columns(_.s -> "s_alias", _.i -> "i_alias").generated(_.i))"""
     }
   }
 

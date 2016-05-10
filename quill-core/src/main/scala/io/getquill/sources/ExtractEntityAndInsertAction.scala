@@ -3,7 +3,9 @@ package io.getquill.sources
 import io.getquill.ast._
 
 case class EntityAndInsertAction(entity: Option[Entity], insert: Option[Insert])
+
 case class ExtractEntityAndInsertAction(state: EntityAndInsertAction) extends StatefulTransformer[EntityAndInsertAction] {
+
   override def apply(e: Query): (Query, StatefulTransformer[EntityAndInsertAction]) =
     e match {
       case e: Entity =>

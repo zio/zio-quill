@@ -7,11 +7,11 @@ trait ProductSpec extends Spec {
   case class Product(id: Long, description: String, sku: Long)
 
   val product = quote {
-    query[Product](_.generated(_.id))
+    query[Product].schema(_.generated(_.id))
   }
 
   val productInsert = quote {
-    query[Product](_.generated(_.id)).insert
+    query[Product].schema(_.generated(_.id)).insert
   }
 
   def productById(id: Long) = quote {

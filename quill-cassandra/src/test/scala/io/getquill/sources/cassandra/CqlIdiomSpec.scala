@@ -36,7 +36,7 @@ class CqlIdiomSpec extends Spec {
     }
     "generated" in {
       val q = quote {
-        query[TestEntity](_.generated(_.i))
+        query[TestEntity].schema(_.generated(_.i))
       }
       "mirrorSource.run(q).cql" mustNot compile
     }

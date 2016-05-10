@@ -60,25 +60,31 @@ trait Quotation extends Liftables with Unliftables with Parsing {
           Dynamic(tree)
       }
 
-    q"""
-      {
-        new ${c.weakTypeOf[Quoted[T]]} { 
-  
-          @${c.weakTypeOf[QuotedAst]}($ast)
-          def quoted = ast
-  
-          override def ast = $reifiedAst
-          override def toString = ast.toString
-  
-          def $id() = ()
-          
-          val bindings = new {
-            ..$bindings
-            ..$nestedBindings
+    val quotation =
+      q"""
+        {
+          new ${c.weakTypeOf[Quoted[T]]} { 
+    
+            @${c.weakTypeOf[QuotedAst]}($ast)
+            def quoted = ast
+    
+            override def ast = $reifiedAst
+            override def toString = ast.toString
+    
+            def $id() = ()
+            
+            val bindings = new {
+              ..$bindings
+              ..$nestedBindings
+            }
           }
         }
-      }
-    """
+      """
+
+    IsDynamic(ast) match {
+      case true  => q"$quotation: ${c.weakTypeOf[Quoted[T]]}"
+      case false => quotation
+    }
   }
 
   def doubleQuote[T: WeakTypeTag](body: Expr[Quoted[T]]) =
