@@ -1,7 +1,7 @@
 # 0.6.0 / 9-May-2016
 
 * [explicit bindings using `lift`](https://github.com/getquill/quill/pull/335/files#diff-04c6e90faac2675aa89e2176d2eec7d8R157)
-* [Code Of Conduct](https://github.com/getquill/quill/pull/296)
+* [Code of Conduct](https://github.com/getquill/quill/pull/296)
 * [dynamic type parameters](https://github.com/getquill/quill/pull/351)
 * [support contains for Traversable](https://github.com/getquill/quill/pull/290)
 * [`equals` support](https://github.com/getquill/quill/pull/328)
