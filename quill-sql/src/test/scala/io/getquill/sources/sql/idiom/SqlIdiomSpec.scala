@@ -363,6 +363,13 @@ class SqlIdiomSpec extends Spec {
           }
         }
       }
+      "without from" in {
+        val q = quote {
+          qr1.map(_.i).max == 1
+        }
+        mirrorSource.run(q).sql mustEqual
+          "SELECT x.* FROM (SELECT (SELECT MAX(x10.i) FROM TestEntity x10) = 1) x"
+      }
     }
     "operations" - {
       "unary operation" - {
@@ -811,7 +818,7 @@ class SqlIdiomSpec extends Spec {
             b <- query[TestEntity2] if a.i == b.i
             (c, inner) <- {
               val outer = 1
-              query[TestEntity3].filter(_.i == outer).map { c =>
+              query[TestEntity3].filter(t => t.i == outer).map { c =>
                 val inner = outer + c.i
                 (c, inner)
               }
@@ -819,20 +826,20 @@ class SqlIdiomSpec extends Spec {
           } yield (a, b, c, inner)
         }
         mirrorSource.run(q).sql mustEqual
-          "SELECT a.s, a.i, a.l, a.o, b.s, b.i, b.l, b.o, x21.s, x21.i, x21.l, x21.o, 1 + x21.i FROM TestEntity a, TestEntity2 b, TestEntity3 x21 WHERE (a.i = b.i) AND ((x21.i = 1) AND (b.i = x21.i))"
+          "SELECT a.s, a.i, a.l, a.o, b.s, b.i, b.l, b.o, t.s, t.i, t.l, t.o, 1 + t.i FROM TestEntity a, TestEntity2 b, TestEntity3 t WHERE (a.i = b.i) AND ((t.i = 1) AND (b.i = t.i))"
       }
       "aggregated" in {
         val q = quote {
           query[TestEntity].map { a =>
             val (b, c) = (query[TestEntity2], query[TestEntity3])
-            val (ai, bi, ci) = (a.i, b.map(_.i), c.map(_.i))
+            val (ai, bi, ci) = (a.i, b.map(t => t.i), c.map(t => t.i))
             val (sumB, sumC) = (bi.sum, ci.sum)
-            val sumABC = bi.flatMap(b => ci.map(ai + b + _)).sum
+            val sumABC = bi.flatMap(b => ci.map(t => ai + b + t)).sum
             (sumB, sumC, sumABC)
           }
         }
         mirrorSource.run(q).sql mustEqual
-          "SELECT (SELECT SUM(x25.i) FROM TestEntity2 x25), (SELECT SUM(x26.i) FROM TestEntity3 x26), (SELECT SUM((a.i + x251.i) + x261.i) FROM TestEntity2 x251, TestEntity3 x261) FROM TestEntity a"
+          "SELECT (SELECT SUM(t.i) FROM TestEntity2 t), (SELECT SUM(t1.i) FROM TestEntity3 t1), (SELECT SUM((a.i + t2.i) + t3.i) FROM TestEntity2 t2, TestEntity3 t3) FROM TestEntity a"
       }
     }
   }

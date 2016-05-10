@@ -55,14 +55,20 @@ trait SqlIdiom {
 
       val selectClause =
         select match {
-          case Nil => s"SELECT$distinctShow * FROM ${from.show}"
-          case _   => s"SELECT$distinctShow ${select.show} FROM ${from.show}"
+          case Nil => s"SELECT$distinctShow *"
+          case _   => s"SELECT$distinctShow ${select.show}"
+        }
+
+      val withFrom =
+        from match {
+          case Nil  => selectClause
+          case from => selectClause + s" FROM ${from.show}"
         }
 
       val withWhere =
         where match {
-          case None        => selectClause
-          case Some(where) => selectClause + s" WHERE ${where.show}"
+          case None        => withFrom
+          case Some(where) => withFrom + s" WHERE ${where.show}"
         }
       val withGroupBy =
         groupBy match {
