@@ -5,7 +5,6 @@
     <meta charset='utf-8'>
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
     <meta name="description" content="Quill : Compile-time Language Integrated Query for Scala">
-    <meta name="google-site-verification" content="IGIx1FvW4Z4YfPKbxaj-PfznAeXx7eLVjm9wlH_8xq4" />
 
     <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
 
@@ -13,13 +12,6 @@
   </head>
 
   <body>
-    
-    <script>
-  ((window.gitter = {}).chat = {}).options = {
-    room: 'getquill/quill'
-  };
-</script>
-<script src="https://sidecar.gitter.im/dist/sidecar.v1.js" async defer></script>
 
     <!-- HEADER -->
     <div id="header_wrap" class="outer">
@@ -61,7 +53,7 @@
 <li><a href="#quotation">Quotation</a></li>
 <li><a href="#mirror-sources">Mirror sources</a></li>
 <li><a href="#compile-time-quotations">Compile-time quotations</a></li>
-<li><a href="#parametrized-quotations">Parametrized quotations</a></li>
+<li><a href="#bindings">Bindings</a></li>
 <li><a href="#schema">Schema</a></li>
 <li><a href="#queries">Queries</a></li>
 <li><a href="#query-probing">Query probing</a></li>
@@ -87,7 +79,9 @@
 </ul>
 </li>
 <li><a href="#cassandra-sources">Cassandra sources</a></li>
+<li><a href="#templates">Templates</a></li>
 <li><a href="#acknowledgments">Acknowledgments</a></li>
+<li><a href="#code-of-conduct">Code of Conduct</a></li>
 <li><a href="#license">License</a></li>
 </ul>
 
@@ -121,6 +115,13 @@
 
 <div class="highlight highlight-source-scala"><pre><span class="pl-k">val</span> <span class="pl-en">areas</span> <span class="pl-k">=</span> quote {
   query[<span class="pl-en">Circle</span>].map(c <span class="pl-k">=&gt;</span> area(c))
+}</pre></div>
+
+<p>Quotations can contain values defined outside of the quotation:</p>
+
+<div class="highlight highlight-source-scala"><pre><span class="pl-k">val</span> <span class="pl-en">pi</span> <span class="pl-k">=</span> <span class="pl-c1">3.14159</span>
+<span class="pl-k">val</span> <span class="pl-en">areas</span> <span class="pl-k">=</span> quote {
+  query[<span class="pl-en">Circle</span>].map(c <span class="pl-k">=&gt;</span> pi <span class="pl-k">*</span> c.radius <span class="pl-k">*</span> c.radius)
 }</pre></div>
 
 <p>Quill's normalization engine applies reduction steps before translating the quotation to the target language. The correspondent normalized quotation for both versions of the <code>areas</code> query is:</p>
@@ -183,20 +184,33 @@ db.run(q) <span class="pl-c">// Dynamic query</span></pre></div>
 <p>Quill falls back to runtime normalization and query generation if the quotation's AST can be read at compile-time. Please refer to <a href="#dynamic-queries">dynamic queries</a> for more information</p>
 
 <h1>
-<a id="parametrized-quotations" class="anchor" href="#parametrized-quotations" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Parametrized quotations</h1>
+<a id="bindings" class="anchor" href="#bindings" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Bindings</h1>
 
-<p>Quotations are designed to be self-contained, without references to runtime values outside their scope. If a quotation needs to receive a runtime value, it needs to be done by defining the quotation as a function:</p>
+<p>Quotations are designed to be self-contained, without references to runtime values outside their scope. There are two mechanisms to explicitly bind runtime values to a quotation execution.</p>
 
-<div class="highlight highlight-source-scala"><pre><span class="pl-k">val</span> <span class="pl-en">q</span> <span class="pl-k">=</span> quote {
+<h2>
+<a id="lifted-values" class="anchor" href="#lifted-values" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Lifted values</h2>
+
+<p>A runtime value can be lifted to a quotation through the method <code>lift</code>:</p>
+
+<div class="highlight highlight-source-scala"><pre><span class="pl-k">def</span> <span class="pl-en">biggerThan</span>(<span class="pl-v">i</span>: <span class="pl-k">Float</span>) <span class="pl-k">=</span> quote {
+  query[<span class="pl-en">Circle</span>].filter(r <span class="pl-k">=&gt;</span> r.radius <span class="pl-k">&gt;</span> lift(i))
+}
+db.run(biggerThan(<span class="pl-c1">10</span>)) <span class="pl-c">// SELECT r.radius FROM Circle r WHERE r.radius &gt; ?</span></pre></div>
+
+<h2>
+<a id="parametrized-quotations" class="anchor" href="#parametrized-quotations" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Parametrized quotations</h2>
+
+<p>A quotation can be defined as a function:</p>
+
+<div class="highlight highlight-source-scala"><pre><span class="pl-k">val</span> <span class="pl-en">biggerThan</span> <span class="pl-k">=</span> quote {
   (<span class="pl-v">i</span>: <span class="pl-k">Int</span>) <span class="pl-k">=&gt;</span>
     query[<span class="pl-en">Circle</span>].filter(r <span class="pl-k">=&gt;</span> r.radius <span class="pl-k">&gt;</span> i)
 }</pre></div>
 
-<p>The runtime value can be specified when running it:</p>
+<p>And a runtime value can be specified when running it:</p>
 
-<div class="highlight highlight-source-scala"><pre>db.run(q)(<span class="pl-c1">10</span>) <span class="pl-c">// SELECT r.radius FROM Circle r WHERE r.radius &gt; ?</span></pre></div>
-
-<p>The method <code>run</code> is a bridge between the compile-time quotations and the runtime execution.</p>
+<div class="highlight highlight-source-scala"><pre>db.run(biggerThan)(<span class="pl-c1">10</span>) <span class="pl-c">// SELECT r.radius FROM Circle r WHERE r.radius &gt; ?</span></pre></div>
 
 <h1>
 <a id="schema" class="anchor" href="#schema" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Schema</h1>
@@ -214,7 +228,7 @@ db.run(q) <span class="pl-c">// SELECT c.radius FROM Circle c WHERE c.radius &gt
 <p>Alternatively, the identifiers can be customized:</p>
 
 <div class="highlight highlight-source-scala"><pre><span class="pl-k">val</span> <span class="pl-en">circles</span> <span class="pl-k">=</span> quote {
-  query[<span class="pl-en">Circle</span>](_.entity(<span class="pl-s"><span class="pl-pds">"</span>circle_table<span class="pl-pds">"</span></span>).columns(_.radius <span class="pl-k">-</span><span class="pl-k">&gt;</span> <span class="pl-s"><span class="pl-pds">"</span>radius_column<span class="pl-pds">"</span></span>))
+  query[<span class="pl-en">Circle</span>].schema(_.entity(<span class="pl-s"><span class="pl-pds">"</span>circle_table<span class="pl-pds">"</span></span>).columns(_.radius <span class="pl-k">-</span><span class="pl-k">&gt;</span> <span class="pl-s"><span class="pl-pds">"</span>radius_column<span class="pl-pds">"</span></span>))
 }
 
 <span class="pl-k">val</span> <span class="pl-en">q</span> <span class="pl-k">=</span> quote {
@@ -230,12 +244,12 @@ db.run(q)
 <span class="pl-k">case</span> <span class="pl-k">class</span> <span class="pl-en">Rectangle</span>(<span class="pl-v">length</span>: <span class="pl-k">Int</span>, <span class="pl-v">width</span>: <span class="pl-k">Int</span>)
 <span class="pl-k">object</span> <span class="pl-en">schema</span> {
   <span class="pl-k">val</span> <span class="pl-en">circles</span> <span class="pl-k">=</span> quote {
-    query[<span class="pl-en">Circle</span>](
+    query[<span class="pl-en">Circle</span>].schema(
         _.entity(<span class="pl-s"><span class="pl-pds">"</span>circle_table<span class="pl-pds">"</span></span>)
         .columns(_.radius <span class="pl-k">-</span><span class="pl-k">&gt;</span> <span class="pl-s"><span class="pl-pds">"</span>radius_column<span class="pl-pds">"</span></span>))
   }
   <span class="pl-k">val</span> <span class="pl-en">rectangles</span> <span class="pl-k">=</span> quote {
-    query[<span class="pl-en">Rectangle</span>](
+    query[<span class="pl-en">Rectangle</span>].schema(
         _.entity(<span class="pl-s"><span class="pl-pds">"</span>rectangle_table<span class="pl-pds">"</span></span>)
         .columns(
           _.length <span class="pl-k">-</span><span class="pl-k">&gt;</span> <span class="pl-s"><span class="pl-pds">"</span>length_column<span class="pl-pds">"</span></span>,
@@ -249,7 +263,7 @@ Note that it accepts only values that can be read as <code>Long</code>.</p>
 <div class="highlight highlight-source-scala"><pre><span class="pl-k">case</span> <span class="pl-k">class</span> <span class="pl-en">Product</span>(<span class="pl-v">id</span>: <span class="pl-k">Long</span>, <span class="pl-v">description</span>: <span class="pl-k">String</span>, <span class="pl-v">sku</span>: <span class="pl-k">Long</span>)
 
 <span class="pl-k">val</span> <span class="pl-en">q</span> <span class="pl-k">=</span> quote {
-  query[<span class="pl-en">Product</span>](_.generated(_.id)).insert
+  query[<span class="pl-en">Product</span>].schema(_.generated(_.id)).insert
 }
 
 db.run(q)
@@ -331,10 +345,8 @@ db.run(q3)
 
 <p><strong>drop/take</strong></p>
 
-<p>Note when calling both <code>take</code> and <code>drop</code> on a query, <code>take</code> must be called before <code>drop</code>. There is an <a href="https://github.com/getquill/quill/issues/229">issue</a> tracing this bug.</p>
-
 <div class="highlight highlight-source-scala"><pre><span class="pl-k">val</span> <span class="pl-en">q</span> <span class="pl-k">=</span> quote {
-  query[<span class="pl-en">Person</span>].take(<span class="pl-c1">1</span>).drop(<span class="pl-c1">2</span>)
+  query[<span class="pl-en">Person</span>].drop(<span class="pl-c1">2</span>).take(<span class="pl-c1">1</span>)
 }
 
 db.run(q)
@@ -427,7 +439,7 @@ db.run(q)
   query[<span class="pl-en">Person</span>].filter(p <span class="pl-k">=&gt;</span> ids.contains(p.id))
 }
 
-db.run(q)
+db.run(q1)
 <span class="pl-c">// SELECT p.id, p.name, p.age FROM Person p WHERE p.id IN (?)</span>
 
 <span class="pl-k">val</span> <span class="pl-en">peopleWithContacts</span> <span class="pl-k">=</span> quote {
@@ -998,7 +1010,7 @@ lazy val db = source(new JdbcSourceConfig[MySQLDialect, SnakeCase]("db") {
 
 <pre><code>libraryDependencies ++= Seq(
   "mysql" % "mysql-connector-java" % "5.1.36",
-  "io.getquill" %% "quill-jdbc" % "0.5.0"
+  "io.getquill" %% "quill-jdbc" % "0.6.1-SNAPSHOT"
 )
 </code></pre>
 
@@ -1028,7 +1040,7 @@ db.connectionTimeout=30000
 
 <pre><code>libraryDependencies ++= Seq(
   "org.postgresql" % "postgresql" % "9.4-1206-jdbc41",
-  "io.getquill" %% "quill-jdbc" % "0.5.0"
+  "io.getquill" %% "quill-jdbc" % "0.6.1-SNAPSHOT"
 )
 </code></pre>
 
@@ -1059,7 +1071,7 @@ db.connectionTimeout=30000
 <p>sbt dependencies</p>
 
 <pre><code>libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async" % "0.5.0"
+  "io.getquill" %% "quill-async" % "0.6.1-SNAPSHOT"
 )
 </code></pre>
 
@@ -1088,7 +1100,7 @@ db.poolValidationInterval=100
 <p>sbt dependencies</p>
 
 <pre><code>libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async" % "0.5.0"
+  "io.getquill" %% "quill-async" % "0.6.1-SNAPSHOT"
 )
 </code></pre>
 
@@ -1118,7 +1130,7 @@ db.poolValidationInterval=100
 <p>sbt dependencies</p>
 
 <pre><code>libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-finagle-mysql" % "0.5.0"
+  "io.getquill" %% "quill-finagle-mysql" % "0.6.1-SNAPSHOT"
 )
 </code></pre>
 
@@ -1148,7 +1160,7 @@ db.pool.maxWaiters=2147483647
 <p>sbt dependencies</p>
 
 <pre><code>libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-cassandra" % "0.5.0"
+  "io.getquill" %% "quill-cassandra" % "0.6.1-SNAPSHOT"
 )
 </code></pre>
 
@@ -1190,6 +1202,15 @@ db.session.addressTranslater=com.datastax.driver.core.policies.IdentityTranslate
 </code></pre>
 
 <h1>
+<a id="templates" class="anchor" href="#templates" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Templates</h1>
+
+<p>In order to quickly start with Quill, we have setup some template projects:</p>
+
+<ul>
+<li><a href="https://github.com/getquill/play-quill-jdbc">Play Framework with Quill JDBC</a></li>
+</ul>
+
+<h1>
 <a id="slick-comparison" class="anchor" href="#slick-comparison" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Slick comparison</h1>
 
 <p>Please refer to <a href="https://github.com/getquill/quill/blob/master/SLICK.md">SLICK.md</a> for a detailed comparison between Quill and Slick.</p>
@@ -1222,6 +1243,11 @@ db.session.addressTranslater=com.datastax.driver.core.policies.IdentityTranslate
 <li><a href="http://homepages.inf.ed.ac.uk/wadler/papers/qdsl/qdsl.pdf">Everything old is new again: Quoted Domain Specific Languages</a></li>
 <li><a href="http://db.inf.uni-tuebingen.de/staticfiles/publications/the-flatter-the-better.pdf">The Flatter, the Better</a></li>
 </ul>
+
+<h1>
+<a id="code-of-conduct" class="anchor" href="#code-of-conduct" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Code of Conduct</h1>
+
+<p>Please note that this project is released with a Contributor Code of Conduct. By participating in this project you agree to abide by its terms. See <a href="https://github.com/getquill/quill/blob/master/CODE_OF_CONDUCT.md">CODE_OF_CONDUCT.md</a> for details.</p>
 
 <h1>
 <a id="license" class="anchor" href="#license" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>License</h1>
