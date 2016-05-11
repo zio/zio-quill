@@ -73,7 +73,7 @@ class JdbcSource[D <: SqlIdiom, N <: NamingStrategy](config: JdbcSourceConfig[D,
       }
     }
 
-  def execute(sql: String, bind: BindedStatementBuilder[PreparedStatement] => BindedStatementBuilder[PreparedStatement], generated: Option[String] = None): Long = {
+  def execute(sql: String, bind: BindedStatementBuilder[PreparedStatement] => BindedStatementBuilder[PreparedStatement] = identity, generated: Option[String] = None): Long = {
     logger.info(sql)
     val (expanded, setValues) = bind(new SqlBindedStatementBuilder[PreparedStatement]).build(sql)
     logger.info(expanded)
@@ -90,7 +90,7 @@ class JdbcSource[D <: SqlIdiom, N <: NamingStrategy](config: JdbcSourceConfig[D,
     }
   }
 
-  def executeBatch[T](sql: String, bindParams: T => BindedStatementBuilder[PreparedStatement] => BindedStatementBuilder[PreparedStatement],
+  def executeBatch[T](sql: String, bindParams: T => BindedStatementBuilder[PreparedStatement] => BindedStatementBuilder[PreparedStatement] = (_: T) => identity[BindedStatementBuilder[PreparedStatement]] _,
                       generated: Option[String] = None): ActionApply[T] = {
     val func = { (values: List[T]) =>
       val groups = values.map(bindParams(_)(new SqlBindedStatementBuilder[PreparedStatement]).build(sql)).groupBy(_._1)
@@ -110,7 +110,7 @@ class JdbcSource[D <: SqlIdiom, N <: NamingStrategy](config: JdbcSourceConfig[D,
     new ActionApply(func)
   }
 
-  def query[T](sql: String, bind: BindedStatementBuilder[PreparedStatement] => BindedStatementBuilder[PreparedStatement], extractor: ResultSet => T): List[T] = {
+  def query[T](sql: String, extractor: ResultSet => T = identity[ResultSet] _, bind: BindedStatementBuilder[PreparedStatement] => BindedStatementBuilder[PreparedStatement] = identity): List[T] = {
     val (expanded, setValues) = bind(new SqlBindedStatementBuilder[PreparedStatement]).build(sql)
     logger.info(expanded)
     withConnection { conn =>
@@ -120,8 +120,8 @@ class JdbcSource[D <: SqlIdiom, N <: NamingStrategy](config: JdbcSourceConfig[D,
     }
   }
 
-  def querySingle[T](sql: String, bind: BindedStatementBuilder[PreparedStatement] => BindedStatementBuilder[PreparedStatement], extractor: ResultSet => T): T =
-    handleSingleResult(query(sql, bind, extractor))
+  def querySingle[T](sql: String, extractor: ResultSet => T = identity[ResultSet] _, bind: BindedStatementBuilder[PreparedStatement] => BindedStatementBuilder[PreparedStatement] = identity): T =
+    handleSingleResult(query(sql, extractor, bind))
 
   @tailrec
   private def extractResult[T](rs: ResultSet, extractor: ResultSet => T, acc: List[T] = List()): List[T] =
