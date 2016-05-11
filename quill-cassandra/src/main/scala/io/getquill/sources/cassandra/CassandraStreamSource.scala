@@ -29,7 +29,7 @@ class CassandraStreamSource[N <: NamingStrategy](config: CassandraSourceConfig[N
       Observable.fromFuture(rs.fetchMoreResults()).map(_ => page)
   }
 
-  def query[T](cql: String, bind: BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement], extractor: Row => T): Observable[T] = {
+  def query[T](cql: String, extractor: Row => T = identity[Row] _, bind: BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement] = identity): Observable[T] = {
     Observable
       .fromFuture(session.executeAsync(prepare(cql, bind)))
       .flatMap(Observable.fromStateAction((rs: ResultSet) => (page(rs), rs)))
@@ -39,12 +39,13 @@ class CassandraStreamSource[N <: NamingStrategy](config: CassandraSourceConfig[N
       .map(extractor)
   }
 
-  def querySingle[T](cql: String, bind: BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement], extractor: Row => T) = query(cql, bind, extractor)
+  def querySingle[T](cql: String, extractor: Row => T = identity[Row] _, bind: BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement] = identity) =
+    query(cql, extractor, bind)
 
-  def execute(cql: String, bind: BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement], generated: Option[String] = None): Observable[ResultSet] =
+  def execute(cql: String, bind: BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement] = identity, generated: Option[String] = None): Observable[ResultSet] =
     Observable.fromFuture(session.executeAsync(prepare(cql, bind)))
 
-  def executeBatch[T](cql: String, bindParams: T => BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement], generated: Option[String] = None): Observable[T] => Observable[ResultSet] =
+  def executeBatch[T](cql: String, bindParams: T => BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement] = (_: T) => identity[BindedStatementBuilder[BoundStatement]] _, generated: Option[String] = None): Observable[T] => Observable[ResultSet] =
     (values: Observable[T]) =>
       values.flatMap { value =>
         Observable.fromFuture(session.executeAsync(prepare(cql, bindParams(value))))

@@ -25,17 +25,17 @@ class CassandraAsyncSource[N <: NamingStrategy](config: CassandraSourceConfig[N,
     def apply(param: T) = f(List(param)).map(_.head)
   }
 
-  def query[T](cql: String, bind: BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement], extractor: Row => T)(implicit ec: ExecutionContext): Future[List[T]] =
+  def query[T](cql: String, extractor: Row => T = identity[Row] _, bind: BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement] = identity)(implicit ec: ExecutionContext): Future[List[T]] =
     session.executeAsync(prepare(cql, bind))
       .map(_.all.toList.map(extractor))
 
-  def querySingle[T](cql: String, bind: BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement], extractor: Row => T)(implicit ec: ExecutionContext): Future[T] =
-    query(cql, bind, extractor).map(handleSingleResult)
+  def querySingle[T](cql: String, extractor: Row => T = identity[Row] _, bind: BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement] = identity)(implicit ec: ExecutionContext): Future[T] =
+    query(cql, extractor, bind).map(handleSingleResult)
 
-  def execute(cql: String, bind: BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement], generated: Option[String] = None)(implicit ec: ExecutionContext): Future[ResultSet] =
+  def execute(cql: String, bind: BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement] = identity, generated: Option[String] = None)(implicit ec: ExecutionContext): Future[ResultSet] =
     session.executeAsync(prepare(cql, bind))
 
-  def executeBatch[T](cql: String, bindParams: T => BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement], generated: Option[String] = None)(implicit ec: ExecutionContext): ActionApply[T] = {
+  def executeBatch[T](cql: String, bindParams: T => BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement] = (_: T) => identity[BindedStatementBuilder[BoundStatement]] _, generated: Option[String] = None)(implicit ec: ExecutionContext): ActionApply[T] = {
     def run(values: List[T]): Future[List[ResultSet]] =
       values match {
         case Nil => Future.successful(List())

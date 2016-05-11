@@ -35,12 +35,12 @@ class CassandraMirrorSource(config: CassandraMirrorSourceConfig)
 
   case class ActionMirror(cql: String, bind: Row)
 
-  def execute(cql: String, bind: Row => Row, generated: Option[String] = None) =
+  def execute(cql: String, bind: Row => Row = identity, generated: Option[String] = None) =
     ActionMirror(cql, bind(Row()))
 
   case class BatchActionMirror(cql: String, bindList: List[Row])
 
-  def executeBatch[T](cql: String, bindParams: T => Row => Row, generated: Option[String] = None) = {
+  def executeBatch[T](cql: String, bindParams: T => Row => Row = (_: T) => identity[Row] _, generated: Option[String] = None) = {
     val f = (values: List[T]) =>
       BatchActionMirror(cql, values.map(bindParams).map(_(Row())))
     new ActionApply[T](f)
@@ -48,9 +48,9 @@ class CassandraMirrorSource(config: CassandraMirrorSourceConfig)
 
   case class QueryMirror[T](cql: String, binds: Row, extractor: Row => T)
 
-  def query[T](cql: String, bind: Row => Row, extractor: Row => T) =
+  def query[T](cql: String, extractor: Row => T = identity[Row] _, bind: Row => Row = identity) =
     QueryMirror(cql, bind(Row()), extractor)
 
-  def querySingle[T](cql: String, bind: Row => Row, extractor: Row => T) =
-    query(cql, bind, extractor)
+  def querySingle[T](cql: String, extractor: Row => T = identity[Row] _, bind: Row => Row = identity) =
+    query(cql, extractor, bind)
 }
