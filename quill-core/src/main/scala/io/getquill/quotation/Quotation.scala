@@ -49,8 +49,9 @@ trait Quotation extends Liftables with Unliftables with Parsing {
     val bindings =
       CollectAst(ast) {
         case CompileTimeBinding(tree: Tree) =>
-          q"val ${bindingName(tree.toString)} = $tree"
-      }
+          val name = bindingName(tree.toString)
+          name -> q"val $name = $tree"
+      }.toMap.values
 
     val id = TermName(s"id${ast.hashCode}")
 
