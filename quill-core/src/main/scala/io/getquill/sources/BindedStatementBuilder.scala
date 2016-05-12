@@ -34,9 +34,10 @@ class BindedStatementBuilder[S] {
         case ('\'' :: qtail, b) => // skip quote
           @tailrec def extractQuote(q: List[Char], acc: List[Char]): (List[Char], List[Char]) =
             q match {
-              case '\'' :: tail => (acc :+ '\'', tail)
-              case head :: tail => extractQuote(tail, acc :+ head)
-              case Nil          => (acc, Nil)
+              case '\\' :: '\'' :: tail => extractQuote(tail, acc :+ '\\' :+ '\'')
+              case '\'' :: tail         => (acc :+ '\'', tail)
+              case head :: tail         => extractQuote(tail, acc :+ head)
+              case Nil                  => (acc, Nil)
             }
           val (quote, tail) = extractQuote(qtail, List('\''))
           expand(tail, b, acc ++ quote)
