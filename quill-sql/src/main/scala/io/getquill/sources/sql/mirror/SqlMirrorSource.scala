@@ -38,12 +38,12 @@ class SqlMirrorSource[N <: NamingStrategy](config: SqlMirrorSourceConfig[N])
 
   case class ActionMirror(sql: String, bind: Row, generated: Option[String])
 
-  def execute(sql: String, bind: Row => Row, generated: Option[String] = None) =
+  def execute(sql: String, bind: Row => Row = identity, generated: Option[String] = None) =
     ActionMirror(sql, bind(Row()), generated)
 
   case class BatchActionMirror(sql: String, bindList: List[Row], generated: Option[String])
 
-  def executeBatch[T](sql: String, bindParams: T => Row => Row, generated: Option[String] = None) = {
+  def executeBatch[T](sql: String, bindParams: T => Row => Row = (_: T) => identity[Row] _, generated: Option[String] = None) = {
     val func = (values: List[T]) =>
       BatchActionMirror(sql, values.map(bindParams).map(_(Row())), generated)
     new ActionApply(func)
@@ -51,8 +51,9 @@ class SqlMirrorSource[N <: NamingStrategy](config: SqlMirrorSourceConfig[N])
 
   case class QueryMirror[T](sql: String, binds: Row, extractor: Row => T)
 
-  def query[T](sql: String, bind: Row => Row, extractor: Row => T) =
+  def query[T](sql: String, extractor: Row => T = identity[Row] _, bind: Row => Row = identity) =
     QueryMirror(sql, bind(Row()), extractor)
 
-  def querySingle[T](sql: String, bind: Row => Row, extractor: Row => T) = query(sql, bind, extractor)
+  def querySingle[T](sql: String, extractor: Row => T = identity[Row] _, bind: Row => Row = identity) =
+    query(sql, extractor, bind)
 }

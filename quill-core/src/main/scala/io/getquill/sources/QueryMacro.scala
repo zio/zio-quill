@@ -45,8 +45,8 @@ trait QueryMacro extends SelectFlattening with SelectResultExtraction {
 
         ${c.prefix}.$queryMethod(
           sql,
-          $encodedParams(bindings.map(_.name)),
-          $extractor)
+          $extractor,
+          $encodedParams(bindings.map(_.name)))
       }
       """
     else
@@ -59,8 +59,8 @@ trait QueryMacro extends SelectFlattening with SelectResultExtraction {
         (..$inputs) =>
           ${c.prefix}.query(
             sql,
-            $encodedParams(bindings.map(_.name)),
-            $extractor)
+            $extractor,
+            $encodedParams(bindings.map(_.name)))
       }
       """
   }
