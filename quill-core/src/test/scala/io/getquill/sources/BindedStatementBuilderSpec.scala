@@ -66,6 +66,30 @@ class BindedStatementBuilderSpec extends Spec {
     bind(List()) mustEqual List(1, 2, 3, 4)
   }
 
+  "ignores quote" in {
+    val subject = new Subject
+    val query = "SELECT '?' FROM Test WHERE id = ?"
+
+    subject.single(0, 1, rawEnc)
+    val (expanded, bind) = subject.build(query)
+
+    expanded mustEqual query
+
+    bind(List()) mustEqual List(1)
+  }
+
+  "ignores quote within quote" in {
+    val subject = new Subject
+    val query = "SELECT '\\'?\\' \\'' FROM Test WHERE id = ?"
+
+    subject.single(0, 1, rawEnc)
+    val (expanded, bind) = subject.build(query)
+
+    expanded mustEqual query
+
+    bind(List()) mustEqual List(1)
+  }
+
   "invalid" - {
     "more ?" in {
       val subject = new Subject
