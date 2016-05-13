@@ -782,6 +782,11 @@ class QuotationSpec extends Spec {
         val q = quote(lift(String.valueOf(1)))
         q.bindings.`java.this.lang.String.valueOf(1)` mustEqual String.valueOf(1)
       }
+      "duplicate" in {
+        val i = 1
+        val q = quote(lift(i) + lift(i))
+        q.bindings.i mustEqual i
+      }
     }
 
     "aggregates bindings of nested quotations" - {
