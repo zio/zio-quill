@@ -42,7 +42,12 @@ trait EncodingMacro {
     constructor.paramLists.map(_.map {
       param =>
         val paramType = param.typeSignature.asSeenFrom(typ, typ.typeSymbol)
-        encoding(Property(ast, param.name.decodedName.toString), paramType, inferEncoding)
+        val nestedAst =
+          if (typ.baseType(c.weakTypeOf[WrappedType].typeSymbol) != NoType)
+            ast
+          else
+            Property(ast, param.name.decodedName.toString)
+        encoding(nestedAst, paramType, inferEncoding)
     })
 
   private def caseClassConstructor(t: Type) =

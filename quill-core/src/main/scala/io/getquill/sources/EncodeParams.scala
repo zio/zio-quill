@@ -19,7 +19,7 @@ object EncodeParams {
         case (ident, (tpe, tree)) =>
           val encoder =
             Encoding.inferEncoder(c)(tpe)(s)
-              .getOrElse(c.fail(s"Source doesn't know how do encode '$ident: $tpe'"))
+              .getOrElse(c.fail(s"Source doesn't know how to encode '$ident: $tpe'"))
           (ident, (encoder, tree))
       }.toMap ++ raw
     }
