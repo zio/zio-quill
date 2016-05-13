@@ -801,7 +801,7 @@ Quill's default operation mode is compile-time, but there are queries that have 
 ```scala
 import io.getquill._
 
-lazy val db = source(new MirrorSourceConfig("testSource"))
+lazy val db = source(new SqlMirrorSourceConfig("testSource"))
 
 sealed trait QueryType
 case object Minor extends QueryType
