@@ -24,13 +24,23 @@ class BindedStatementBuilder[S] {
     this
   }
 
-  def build(query: String) = {
+  def build(query: String): (String, (S => S)) = {
 
     @tailrec
     def expand(q: List[Char], b: List[Binding[S]], acc: List[Char]): List[Char] =
       (q, b) match {
         case (Nil, Nil) =>
           acc
+        case ('\'' :: qtail, b) => // skip quote
+          @tailrec def extractQuote(q: List[Char], acc: List[Char]): (List[Char], List[Char]) =
+            q match {
+              case '\\' :: '\'' :: tail => extractQuote(tail, acc :+ '\\' :+ '\'')
+              case '\'' :: tail         => (acc :+ '\'', tail)
+              case head :: tail         => extractQuote(tail, acc :+ head)
+              case Nil                  => (acc, Nil)
+            }
+          val (quote, tail) = extractQuote(qtail, List('\''))
+          expand(tail, b, acc ++ quote)
         case (c :: qtail, b) if (c != '?') =>
           expand(qtail, b, acc :+ c)
         case ('?' :: qtail, (bind: SingleBinding[_, _]) :: btail) =>
@@ -46,7 +56,7 @@ class BindedStatementBuilder[S] {
           throw new IllegalStateException("Number of bindings doesn't match the question marks.")
       }
 
-    val expandedQuery = expand(query.toList, bindings.toList.sortBy(_.index), List.empty)
+    def expandedQuery = expand(query.toList, bindings.toList.sortBy(_.index), List.empty)
 
     def setValues(p: S) =
       bindings.foldLeft((p, 0)) {
@@ -64,7 +74,11 @@ class BindedStatementBuilder[S] {
 
           }
       }
-    (expandedQuery.mkString, (setValues _).andThen(_._1))
+
+    if (bindings.isEmpty)
+      (query, identity[S] _)
+    else
+      (expandedQuery.mkString, (setValues _).andThen(_._1))
   }
 
   def emptySet = ""
