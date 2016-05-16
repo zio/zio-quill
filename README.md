@@ -1,4 +1,5 @@
-###IMPORTANT: This is the documentation for the latest `SNAPSHOT` version. Please refer to the website at [http://getquill.io](http://getquill.io) for the lastest release's documentation.###
+IMPORTANT: This is the documentation for the latest `SNAPSHOT` version. Please refer to the website at [http://getquill.io](http://getquill.io) for the lastest release's documentation.
+--------------------------------------------------------------------------------------------------
 
 ![quill](https://raw.githubusercontent.com/getquill/quill/master/quill.png)
 # Quill
@@ -19,7 +20,8 @@ Quill provides a Quoted Domain Specific Language ([QDSL](http://homepages.inf.ed
 3. **Compile-time query generation**: The `db.run` call reads the quotation's AST and translates it to the target language at compile time, emitting the query string as a compilation message. As the query string is known at compile time, the runtime overhead is very low and similar to using the database driver directly.
 4. **Compile-time query validation**: If configured, the query is verified against the database at compile time and the compilation fails if it is not valid. The query validation **does not** alter the database state.
 
-# Index #
+Index
+=====
 
 * [Quotation](#quotation)
 * [Mirror sources](#mirror-sources)
@@ -45,7 +47,8 @@ Quill provides a Quoted Domain Specific Language ([QDSL](http://homepages.inf.ed
 * [Code of Conduct](#code-of-conduct)
 * [License](#license)
 
-# Quotation #
+Quotation
+=========
 
 The QDSL allows the user to write plain Scala code, leveraging scala's syntax and type system. Quotations are created using the `quote` method and can contain any excerpt of code that uses supported operations. To create quotations, first import `quote` and some other auxiliary methods:
 
@@ -119,7 +122,8 @@ val q = quote {
 }
 ```
 
-# Mirror sources #
+Mirror sources
+==============
 
 Sources represent the database and provide an execution interface for queries. Quill provides mirror sources for test purposes. Please refer to [sources](#sources) for information on how to create normal sources.
 
@@ -137,7 +141,8 @@ import io.getquill._
 lazy val db = source(new SqlMirrorSourceConfig("testSource"))
 ```
 
-# Compile-time quotations #
+Compile-time quotations
+=======================
 
 Quotations are both compile-time and runtime values. Quill uses a type refinement to store the quotation's AST as an annotation available at compile-time and the `q.ast` method exposes the AST as runtime value.
 
@@ -154,11 +159,13 @@ db.run(q) // Dynamic query
 
 Quill falls back to runtime normalization and query generation if the quotation's AST can be read at compile-time. Please refer to [dynamic queries](#dynamic-queries) for more information
 
-# Bindings #
+Bindings
+========
 
 Quotations are designed to be self-contained, without references to runtime values outside their scope. There are two mechanisms to explicitly bind runtime values to a quotation execution.
 
-## Lifted values ##
+Lifted values
+-------------
 
 A runtime value can be lifted to a quotation through the method `lift`:
 
@@ -169,7 +176,8 @@ def biggerThan(i: Float) = quote {
 db.run(biggerThan(10)) // SELECT r.radius FROM Circle r WHERE r.radius > ?
 ```
 
-## Parametrized quotations ##
+Parametrized quotations
+-----------------------
 
 A quotation can be defined as a function:
 
@@ -186,7 +194,8 @@ And a runtime value can be specified when running it:
 db.run(biggerThan)(10) // SELECT r.radius FROM Circle r WHERE r.radius > ?
 ```
 
-# Schema #
+Schema
+======
 
 The database schema is represented by case classes. By default, quill uses the class and field names as the database identifiers:
 
@@ -249,7 +258,8 @@ db.run(q)
 // INSERT INTO Product (description,sku) VALUES (?, ?)
 ```
 
-# Queries #
+Queries
+=======
 
 The overall abstraction of quill queries is use database tables as if they were in-memory collections. Scala for-comprehensions provide syntatic sugar to deal with this kind of monadic operations:
 
@@ -511,7 +521,8 @@ db.run(qNested)
 
 ```
 
-# Query probing #
+Query probing
+-------------
 
 Query probing is an experimental feature that validates queries against the database at compile time, failing the compilation if it is not valid. The query validation does not alter the database state.
 
@@ -531,7 +542,8 @@ unmanagedClasspath in Compile += baseDirectory.value / "src" / "main" / "resourc
 
 If your project doesn't have a standard layout, e.g. a play project, you should configure the path to point to the folder that contains your config file. 
 
-# Actions #
+Actions
+=======
 
 Database actions are defined using quotations as well. These actions don't have a collection-like API but rather a custom DSL to express inserts, deletes and updates.
 
@@ -629,7 +641,8 @@ db.run(a)
 // DELETE FROM Person WHERE name = ''
 ```
 
-# Implicit query #
+Implicit query
+==============
 
 Quill provides implicit conversions from case class companion objects to `query[T]` through an extra import:
 
@@ -651,7 +664,8 @@ db.run(q)
 
 Note the usage of `Person` and `Contact` instead of `query[Person]` and `query[Contact]`.
 
-# SQL-specific operations #
+SQL-specific operations
+=======================
 
 Some operations are sql-specific and not provided with the generic quotation mechanism. The `io.getquill.sources.sql.ops` package has some implicit classes for this kind of operations:
 
@@ -667,7 +681,8 @@ db.run(q)
 // SELECT p.id, p.name, p.age FROM Person p WHERE p.name like '%John%'
 ```
 
-# Cassandra-specific operations #
+Cassandra-specific operations
+=============================
 
 The cql-specific operations are provided by the following import:
 
@@ -794,7 +809,8 @@ db.run(q)
 // DELETE p.age FROM Person
 ```
 
-# Dynamic queries #
+Dynamic queries
+===============
 
 Quill's default operation mode is compile-time, but there are queries that have their structure defined only at runtime. Quill automatically falls back to runtime normalization and query generation if the query's structure is not static. Example:
 
@@ -824,9 +840,11 @@ db.run(people(Senior))
 // SELECT p.id, p.name, p.age FROM Person p WHERE p.age > 65
 ```
 
-# Extending quill #
+Extending quill
+===============
 
-## Infix ##
+Infix
+-----
 
 Infix is a very flexible mechanism to use non-supported features without having to use plain queries in the target language. It allows insertion of arbitrary strings within quotations.
 
@@ -877,11 +895,13 @@ db.run(q)
 // SELECT MY_FUNCTION(p.age) FROM Person p
 ```
 
-## Custom encoding ##
+Custom encoding
+---------------
 
 Quill uses `Encoder`s to encode query inputs and `Decoder`s to read values returned by queries. The library provides a few built-in encodings and two mechanisms to define custom encodings: mapped encoding and raw encoding.
 
-### Mapped Encoding ###
+Mapped Encoding
+---------------
 
 If the correspondent database type is already supported, use `mappedEncoding`. In this example, `String` is already supported by Quill and the `UUID` encoding from/to `String` is defined through mapped encoding:
 
@@ -892,7 +912,8 @@ implicit val encodeUUID = mappedEncoding[UUID, String](_.toString)
 implicit val decodeUUID = mappedEncoding[String, UUID](UUID.fromString(_))
 ```
 
-### Raw Encoding ###
+Raw Encoding
+------------
 
 If the database type is not supported by Quill, it is possible to provide "raw" encoders and decoders:
 
@@ -910,7 +931,8 @@ implicit val uuidDecoder =
   }
 ```
 
-### Wrapped types ###
+Wrapped types
+-------------
 
 Quill also supports encoding of "wrapped types". Just extend the `WrappedValue` trait and Quill will automatically encode the underlying primitive type.
 
@@ -930,7 +952,8 @@ db.run(q)(UserId(1))
 // SELECT u.id, u.name FROM User u WHERE (u.id = 1)
 ```
 
-# SQL Sources #
+SQL Sources
+===========
 
 Sources represent the database and provide an execution interface for queries. Example:
 
@@ -942,7 +965,8 @@ import io.getquill.sources.sql.idiom.MySQLDialect
 lazy val db = source(new JdbcSourceConfig[MySQLDialect, SnakeCase]("db"))
 ```
 
-## Dialect ##
+Dialect
+-------
 
 The SQL dialect to be used by the source is defined by the first type parameter. Some source types are specific to a database and thus not require it.
 
@@ -952,7 +976,8 @@ Quill has three built-in dialects:
 - `io.getquill.sources.sql.idiom.MySQLDialect`
 - `io.getquill.sources.sql.idiom.PostgresDialect`
 
-## Naming strategy ##
+Naming strategy
+---------------
 
 The second type parameter defines the naming strategy to be used when translating identifiers (table and column names) to SQL. 
 
@@ -978,7 +1003,8 @@ produces the following transformation:
 
 The transformations are applied from left to right.
 
-## Configuration ##
+Configuration
+-------------
 
 The string passed to the source configuration is used as the key to obtain configurations using the [typesafe config](http://github.com/typesafehub/config) library.
 
@@ -994,7 +1020,7 @@ lazy val db = source(new JdbcSourceConfig[MySQLDialect, SnakeCase]("db") {
 })
 ```
 
-### quill-jdbc ###
+#### quill-jdbc
 
 Quill uses [HikariCP](https://github.com/brettwooldridge/HikariCP) for connection pooling. Please refer to HikariCP's [documentation](https://github.com/brettwooldridge/HikariCP#configuration-knobs-baby) for a detailed explanation of the available configurations.
 
@@ -1061,7 +1087,7 @@ db.dataSource.serverName=host
 db.connectionTimeout=30000
 ```
 
-### quill-async ###
+#### quill-async
 
 **MySQL Async**
 
@@ -1123,7 +1149,7 @@ db.poolMaxIdle=999999999
 db.poolValidationInterval=100
 ```
 
-### quill-finagle-mysql ###
+#### quill-finagle-mysql
 
 sbt dependencies
 ```
@@ -1153,7 +1179,8 @@ db.pool.bufferSize=0
 db.pool.maxWaiters=2147483647
 ```
 
-# Cassandra Sources #
+Cassandra Sources
+-----------------
 
 sbt dependencies
 ```
@@ -1202,21 +1229,25 @@ db.session.maxSchemaAgreementWaitSeconds=1
 db.session.addressTranslater=com.datastax.driver.core.policies.IdentityTranslater
 ```
 
-# Templates #
+Templates
+=========
 
 In order to quickly start with Quill, we have setup some template projects:
 
 * [Play Framework with Quill JDBC](https://github.com/getquill/play-quill-jdbc)
 
-# Slick comparison #
+Slick comparison
+================
 
 Please refer to [SLICK.md](https://github.com/getquill/quill/blob/master/SLICK.md) for a detailed comparison between Quill and Slick.
 
-# Cassandra libraries comparison #
+Cassandra libraries comparison
+==============================
 
 Please refer to [CASSANDRA.md](https://github.com/getquill/quill/blob/master/CASSANDRA.md) for a detailed comparison between Quill and other main alternatives for interaction with Cassandra in Scala.
 
-# Maintainers #
+Maintainers
+===========
 
 - @fwbrasil
 - @godenji
@@ -1226,7 +1257,8 @@ Please refer to [CASSANDRA.md](https://github.com/getquill/quill/blob/master/CAS
 
 You can notify all maintainers using the handle `@getquill/maintainers`.
 
-# Acknowledgments #
+Acknowledgments
+===============
 
 The project was created having Philip Wadler's talk ["A practical theory of language-integrated query"](http://www.infoq.com/presentations/theory-language-integrated-query) as its initial inspiration. The development was heavily influenced by the following papers:
 
@@ -1234,10 +1266,12 @@ The project was created having Philip Wadler's talk ["A practical theory of lang
 * [Everything old is new again: Quoted Domain Specific Languages](http://homepages.inf.ed.ac.uk/wadler/papers/qdsl/qdsl.pdf)
 * [The Flatter, the Better](http://db.inf.uni-tuebingen.de/staticfiles/publications/the-flatter-the-better.pdf)
 
-# Code of Conduct #
+Code of Conduct
+===============
 
 Please note that this project is released with a Contributor Code of Conduct. By participating in this project you agree to abide by its terms. See [CODE_OF_CONDUCT.md](https://github.com/getquill/quill/blob/master/CODE_OF_CONDUCT.md) for details.
 
-# License #
+License
+=======
 
 See the [LICENSE](https://github.com/getquill/quill/blob/master/LICENSE.txt) file for details.
