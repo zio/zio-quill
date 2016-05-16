@@ -925,8 +925,11 @@ db.run(q)(UserId(1))
 // SELECT u.id, u.name FROM User u WHERE (u.id = 1)
 ```
 
+Sources
+=======
+
 SQL Sources
-===========
+-----------
 
 Sources represent the database and provide an execution interface for queries. Example:
 
@@ -938,8 +941,7 @@ import io.getquill.sources.sql.idiom.MySQLDialect
 lazy val db = source(new JdbcSourceConfig[MySQLDialect, SnakeCase]("db"))
 ```
 
-Dialect
--------
+#### Dialect
 
 The SQL dialect to be used by the source is defined by the first type parameter. Some source types are specific to a database and thus not require it.
 
@@ -949,8 +951,7 @@ Quill has three built-in dialects:
 - `io.getquill.sources.sql.idiom.MySQLDialect`
 - `io.getquill.sources.sql.idiom.PostgresDialect`
 
-Naming strategy
----------------
+#### Naming strategy
 
 The second type parameter defines the naming strategy to be used when translating identifiers (table and column names) to SQL. 
 
@@ -976,8 +977,7 @@ produces the following transformation:
 
 The transformations are applied from left to right.
 
-Configuration
--------------
+#### Configuration
 
 The string passed to the source configuration is used as the key to obtain configurations using the [typesafe config](http://github.com/typesafehub/config) library.
 
@@ -993,7 +993,7 @@ lazy val db = source(new JdbcSourceConfig[MySQLDialect, SnakeCase]("db") {
 })
 ```
 
-#### quill-jdbc
+##### quill-jdbc
 
 Quill uses [HikariCP](https://github.com/brettwooldridge/HikariCP) for connection pooling. Please refer to HikariCP's [documentation](https://github.com/brettwooldridge/HikariCP#configuration-knobs-baby) for a detailed explanation of the available configurations.
 
@@ -1060,7 +1060,7 @@ db.dataSource.serverName=host
 db.connectionTimeout=30000
 ```
 
-#### quill-async
+##### quill-async
 
 **MySQL Async**
 
@@ -1122,7 +1122,7 @@ db.poolMaxIdle=999999999
 db.poolValidationInterval=100
 ```
 
-#### quill-finagle-mysql
+##### quill-finagle-mysql
 
 sbt dependencies
 ```
