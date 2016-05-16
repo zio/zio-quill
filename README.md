@@ -20,33 +20,6 @@ Quill provides a Quoted Domain Specific Language ([QDSL](http://homepages.inf.ed
 3. **Compile-time query generation**: The `db.run` call reads the quotation's AST and translates it to the target language at compile time, emitting the query string as a compilation message. As the query string is known at compile time, the runtime overhead is very low and similar to using the database driver directly.
 4. **Compile-time query validation**: If configured, the query is verified against the database at compile time and the compilation fails if it is not valid. The query validation **does not** alter the database state.
 
-Index
-=====
-
-* [Quotation](#quotation)
-* [Mirror sources](#mirror-sources)
-* [Compile-time quotations](#compile-time-quotations)
-* [Bindings](#bindings)
-* [Schema](#schema)
-* [Queries](#queries)
-* [Query probing](#query-probing)
-* [Actions](#actions)
-* [Dynamic queries](#dynamic-queries)
-* [SQL-specific operations](#sql-specific-operations)
-* [Cassandra-specific operations](#cassandra-specific-operations)
-* [Extending quill](#extending-quill)
-  * [Infix](#infix)
-  * [Custom encoding](#custom-encoding)
-* [Sql Sources](#sql-sources)
-  * [Dialect](#dialect)
-  * [Naming strategy](#naming-strategy)
-  * [Configuration](#configuration)
-* [Cassandra sources](#cassandra-sources)
-* [Templates](#templates)
-* [Acknowledgments](#acknowledgments)
-* [Code of Conduct](#code-of-conduct)
-* [License](#license)
-
 Quotation
 =========
 
