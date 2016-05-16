@@ -23,6 +23,9 @@ Quill provides a Quoted Domain Specific Language ([QDSL](http://homepages.inf.ed
 Quotation
 =========
 
+Introduction
+------------
+
 The QDSL allows the user to write plain Scala code, leveraging scala's syntax and type system. Quotations are created using the `quote` method and can contain any excerpt of code that uses supported operations. To create quotations, first import `quote` and some other auxiliary methods:
 
 ```scala
@@ -96,7 +99,7 @@ val q = quote {
 ```
 
 Mirror sources
-==============
+--------------
 
 Sources represent the database and provide an execution interface for queries. Quill provides mirror sources for test purposes. Please refer to [sources](#sources) for information on how to create normal sources.
 
@@ -115,7 +118,7 @@ lazy val db = source(new SqlMirrorSourceConfig("testSource"))
 ```
 
 Compile-time quotations
-=======================
+-----------------------
 
 Quotations are both compile-time and runtime values. Quill uses a type refinement to store the quotation's AST as an annotation available at compile-time and the `q.ast` method exposes the AST as runtime value.
 
@@ -133,12 +136,11 @@ db.run(q) // Dynamic query
 Quill falls back to runtime normalization and query generation if the quotation's AST can be read at compile-time. Please refer to [dynamic queries](#dynamic-queries) for more information
 
 Bindings
-========
+--------
 
 Quotations are designed to be self-contained, without references to runtime values outside their scope. There are two mechanisms to explicitly bind runtime values to a quotation execution.
 
-Lifted values
--------------
+#### Lifted values
 
 A runtime value can be lifted to a quotation through the method `lift`:
 
@@ -149,8 +151,7 @@ def biggerThan(i: Float) = quote {
 db.run(biggerThan(10)) // SELECT r.radius FROM Circle r WHERE r.radius > ?
 ```
 
-Parametrized quotations
------------------------
+#### Parametrized quotations
 
 A quotation can be defined as a function:
 
@@ -168,7 +169,7 @@ db.run(biggerThan)(10) // SELECT r.radius FROM Circle r WHERE r.radius > ?
 ```
 
 Schema
-======
+------
 
 The database schema is represented by case classes. By default, quill uses the class and field names as the database identifiers:
 
@@ -232,7 +233,7 @@ db.run(q)
 ```
 
 Queries
-=======
+-------
 
 The overall abstraction of quill queries is use database tables as if they were in-memory collections. Scala for-comprehensions provide syntatic sugar to deal with this kind of monadic operations:
 
@@ -494,8 +495,7 @@ db.run(qNested)
 
 ```
 
-Query probing
--------------
+#### Query probing
 
 Query probing is an experimental feature that validates queries against the database at compile time, failing the compilation if it is not valid. The query validation does not alter the database state.
 
@@ -516,7 +516,7 @@ unmanagedClasspath in Compile += baseDirectory.value / "src" / "main" / "resourc
 If your project doesn't have a standard layout, e.g. a play project, you should configure the path to point to the folder that contains your config file. 
 
 Actions
-=======
+-------
 
 Database actions are defined using quotations as well. These actions don't have a collection-like API but rather a custom DSL to express inserts, deletes and updates.
 
@@ -615,7 +615,7 @@ db.run(a)
 ```
 
 Implicit query
-==============
+--------------
 
 Quill provides implicit conversions from case class companion objects to `query[T]` through an extra import:
 
@@ -638,7 +638,7 @@ db.run(q)
 Note the usage of `Person` and `Contact` instead of `query[Person]` and `query[Contact]`.
 
 SQL-specific operations
-=======================
+-----------------------
 
 Some operations are sql-specific and not provided with the generic quotation mechanism. The `io.getquill.sources.sql.ops` package has some implicit classes for this kind of operations:
 
@@ -655,7 +655,7 @@ db.run(q)
 ```
 
 Cassandra-specific operations
-=============================
+-----------------------------
 
 The cql-specific operations are provided by the following import:
 
@@ -783,7 +783,7 @@ db.run(q)
 ```
 
 Dynamic queries
-===============
+---------------
 
 Quill's default operation mode is compile-time, but there are queries that have their structure defined only at runtime. Quill automatically falls back to runtime normalization and query generation if the query's structure is not static. Example:
 
