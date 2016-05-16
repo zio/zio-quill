@@ -1202,22 +1202,35 @@ db.session.maxSchemaAgreementWaitSeconds=1
 db.session.addressTranslater=com.datastax.driver.core.policies.IdentityTranslater
 ```
 
+Additional resources
+====================
+
 Templates
-=========
+---------
 
 In order to quickly start with Quill, we have setup some template projects:
 
 * [Play Framework with Quill JDBC](https://github.com/getquill/play-quill-jdbc)
 
 Slick comparison
-================
+----------------
 
 Please refer to [SLICK.md](https://github.com/getquill/quill/blob/master/SLICK.md) for a detailed comparison between Quill and Slick.
 
 Cassandra libraries comparison
-==============================
+------------------------------
 
 Please refer to [CASSANDRA.md](https://github.com/getquill/quill/blob/master/CASSANDRA.md) for a detailed comparison between Quill and other main alternatives for interaction with Cassandra in Scala.
+
+Code of Conduct
+---------------
+
+Please note that this project is released with a Contributor Code of Conduct. By participating in this project you agree to abide by its terms. See [CODE_OF_CONDUCT.md](https://github.com/getquill/quill/blob/master/CODE_OF_CONDUCT.md) for details.
+
+License
+-------
+
+See the [LICENSE](https://github.com/getquill/quill/blob/master/LICENSE.txt) file for details.
 
 Maintainers
 ===========
@@ -1239,12 +1252,3 @@ The project was created having Philip Wadler's talk ["A practical theory of lang
 * [Everything old is new again: Quoted Domain Specific Languages](http://homepages.inf.ed.ac.uk/wadler/papers/qdsl/qdsl.pdf)
 * [The Flatter, the Better](http://db.inf.uni-tuebingen.de/staticfiles/publications/the-flatter-the-better.pdf)
 
-Code of Conduct
-===============
-
-Please note that this project is released with a Contributor Code of Conduct. By participating in this project you agree to abide by its terms. See [CODE_OF_CONDUCT.md](https://github.com/getquill/quill/blob/master/CODE_OF_CONDUCT.md) for details.
-
-License
-=======
-
-See the [LICENSE](https://github.com/getquill/quill/blob/master/LICENSE.txt) file for details.
