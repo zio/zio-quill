@@ -21,7 +21,7 @@ trait SelectResultExtraction extends EncodingMacro {
         optionalExtractor(value, index)
       case SimpleValue(_, decoder, _) =>
         (q"$decoder($index, row)", index + 1)
-      case CaseClassValue(tpe, params) =>
+      case NestedValue(tpe, params) =>
         val (decodedParams, paramsIndex) =
           params.foldLeft((List[List[Tree]](), index)) {
             case ((trees, index), params) =>
@@ -38,7 +38,7 @@ trait SelectResultExtraction extends EncodingMacro {
         (q"Option($tree)", idx)
       case SimpleValue(_, _, decoder) =>
         (q"$decoder($index, row)", index + 1)
-      case CaseClassValue(tpe, params) =>
+      case NestedValue(tpe, params) =>
         val (decodedParams, paramsIndex) =
           params.foldLeft((List[List[Tree]](), index)) {
             case ((trees, index), params) =>

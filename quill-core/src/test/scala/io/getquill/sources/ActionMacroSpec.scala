@@ -84,5 +84,25 @@ class ActionMacroSpec extends Spec {
         Row("s2", 12, 22L, Some(42), v)
       )
     }
+    "with embedded value" in {
+      case class Value(a: String, b: String) extends Embedded
+      case class Test(v: Value, c: String)
+      val r =
+        mirrorSource.run(query[Test].insert)(
+          List(
+            Test(Value("a", "b"), "c"),
+            Test(Value("a'", "b'"), "c'")
+          )
+        )
+      r.ast.toString mustEqual ""
+      r.bindList mustEqual List(
+        Row("a", "b", "c"),
+        Row("a'", "b'", "c'")
+      )
+    }
+    "fails for nested non-embedded value" in {
+
+    }
   }
+
 }

@@ -33,6 +33,23 @@ class SelectFlatteningSpec extends Spec {
         }
         mirrorSource.run(q).ast mustEqual n.ast
       }
+      "with embedded" in {
+        case class Value(a: String, b: String) extends Embedded
+        case class Test(v: Value)
+        val q = quote {
+          query[Test]
+        }
+        val n = quote {
+          query[Test].map(x => (x.v.a, x.v.b))
+        }
+        mirrorSource.run(q).ast mustEqual n.ast
+      }
+    }
+
+    "fails for non-embedded nested case classes" in {
+      case class Value(a: String)
+      case class Test(v: Value)
+      "mirrorSource.run(query[Test])" mustNot compile
     }
 
     "flattens a select with case class and simple values" - {

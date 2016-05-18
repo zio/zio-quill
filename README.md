@@ -920,9 +920,26 @@ val q = quote {
     u <- query[User] if u.id == id
   } yield u
 }
-db.run(q)(UserId(1))
 
+db.run(q)(UserId(1))
 // SELECT u.id, u.name FROM User u WHERE (u.id = 1)
+```
+
+Embedded case classes
+---------------------
+
+It is possible to compose queries and actions over case classes with nested `Embedded` values.
+
+```scala
+case class Address(street: String, city: String) extends Embedded
+case class User(name: String, address: Address)
+
+db.run(query[User])
+// SELECT x.name, x.street, x.city FROM User x
+
+db.run(query[User].insert)(User("John", Address("5h St.", "Springfield")))
+// INSERT INTO User (name,street,city) VALUES (?, ?, ?)
+
 ```
 
 Sources

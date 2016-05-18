@@ -4,7 +4,7 @@ import scala.reflect.macros.whitebox.Context
 
 import io.getquill._
 import io.getquill.ast._
-import io.getquill.util.Messages.fail
+import io.getquill.util.Messages._
 
 trait ActionMacro extends EncodingMacro {
   this: SourceMacro =>
@@ -73,16 +73,20 @@ trait ActionMacro extends EncodingMacro {
     """
   }
 
-  private def bindingMap(value: Value, option: Boolean = false): List[(Ident, (Tree, Tree))] =
+  private def bindingMap(value: Value, option: Boolean = false, nested: Boolean = false): List[(Ident, (Tree, Tree))] =
     value match {
-      case CaseClassValue(tpe, values) =>
-        values.flatten.map(bindingMap(_)).flatten
       case OptionValue(value) =>
-        bindingMap(value, option = true)
+        bindingMap(value, option = true, nested = true)
       case SimpleValue(ast, encoder, optionEncoder) =>
         val (ident, tree) = bindingTree(ast)
         val enc = if (option) optionEncoder else encoder
         List((ident, (enc, tree)))
+      case EmbeddedValue(tpe, values) =>
+        values.flatten.map(bindingMap(_, nested = true)).flatten
+      case CaseClassValue(tpe, values) if (!nested) =>
+        values.flatten.map(bindingMap(_, nested = true)).flatten
+      case CaseClassValue(tpe, values) =>
+        c.fail(s"Can't bind a non-embedded nested case class. Found: '$tpe'")
     }
 
   private def bindingTree(ast: Ast): (Ident, Tree) =

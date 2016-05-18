@@ -20,8 +20,8 @@ class SelectResultExtractionSpec extends Spec {
         mirrorSource.run(qr1)
           .extractor(Row("a", 1, 2L, None)) mustEqual TestEntity("a", 1, 2L, None)
       }
-      "nested" in {
-        case class Inner(l: Long)
+      "nested embedded" in {
+        case class Inner(l: Long) extends Embedded
         case class Outer(s: String, i: Inner)
         val q = quote {
           query[Outer]
