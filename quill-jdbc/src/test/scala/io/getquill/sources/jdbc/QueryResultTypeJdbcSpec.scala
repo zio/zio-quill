@@ -91,6 +91,9 @@ class QueryResultTypeJdbcSpec extends QueryResultTypeSpec {
     "size" in {
       await(db.run(productSize)) mustEqual products.size
     }
+    "paramlized size" in {
+      await(db.run(paramlizedSize)(10000)) mustEqual 0
+    }
     "nonEmpty" in {
       await(db.run(nonEmpty)) mustEqual true
     }

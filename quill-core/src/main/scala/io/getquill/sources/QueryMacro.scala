@@ -57,7 +57,7 @@ trait QueryMacro extends SelectFlattening with SelectResultExtraction {
             ${prepare(flattenQuery, allParamIdents)}
 
         (..$inputs) =>
-          ${c.prefix}.query(
+          ${c.prefix}.$queryMethod(
             sql,
             $extractor,
             $encodedParams(bindings.map(_.name)))
