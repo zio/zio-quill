@@ -28,7 +28,7 @@ class QueryResultTypeCassandraSpec extends FreeSpec with BeforeAndAfterAll with 
   val sortBy = quote(query[OrderTestEntity].filter(_.id == 1).sortBy(_.i)(Ord.asc))
   val take = quote(query[OrderTestEntity].take(10))
   val entitySize = quote(query[OrderTestEntity].size)
-  val paramlizedSize = quote { (id: Int) =>
+  val parametrizedSize = quote { (id: Int) =>
     query[OrderTestEntity].filter(_.id == id).size
   }
   val distinct = quote(query[OrderTestEntity].map(_.id).distinct)
@@ -67,7 +67,7 @@ class QueryResultTypeCassandraSpec extends FreeSpec with BeforeAndAfterAll with 
         await(db.run(entitySize)) mustEqual entries.size
       }
       "paramlize size" in {
-        await(db.run(paramlizedSize)(10000)) mustEqual 0
+        await(db.run(parametrizedSize)(10000)) mustEqual 0
       }
     }
   }
@@ -101,7 +101,7 @@ class QueryResultTypeCassandraSpec extends FreeSpec with BeforeAndAfterAll with 
         await(db.run(entitySize)) mustEqual entries.size
       }
       "paramlize size" in {
-        await(db.run(paramlizedSize)(10000)) mustEqual 0
+        await(db.run(parametrizedSize)(10000)) mustEqual 0
       }
     }
   }
@@ -120,8 +120,8 @@ class QueryResultTypeCassandraSpec extends FreeSpec with BeforeAndAfterAll with 
       "size" in {
         await(db.run(entitySize)) mustEqual Some(List(3))
       }
-      "paramlized size" in {
-        await(db.run(paramlizedSize)(10000)) mustEqual Some(List(0))
+      "parametrized size" in {
+        await(db.run(parametrizedSize)(10000)) mustEqual Some(List(0))
       }
     }
   }

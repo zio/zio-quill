@@ -22,7 +22,7 @@ trait QueryResultTypeSpec extends ProductSpec {
   val avgExists = quote(query[Product].map(_.sku).avg)
   val avgNonExists = quote(query[Product].filter(_.id > 1000).map(_.sku).avg)
   val productSize = quote(query[Product].size)
-  val paramlizedSize = quote { (id: Long) =>
+  val parametrizedSize = quote { (id: Long) =>
     query[Product].filter(_.id == id).size
   }
 
