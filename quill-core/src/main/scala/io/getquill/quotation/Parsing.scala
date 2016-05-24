@@ -210,14 +210,14 @@ trait Parsing extends EntityConfigParsing {
   }
 
   implicit val orderingParser: Parser[Ordering] = Parser[Ordering] {
-    case q"$pack.orderingToOrd[$t]($o)"      => AscNullsFirst
+    case q"$pack.implicitOrd[$t]"            => AscNullsFirst
     case q"$pack.Ord.apply[..$t](..$elems)"  => TupleOrdering(elems.map(orderingParser(_)))
-    case q"$pack.Ord.asc[$t]($o)"            => Asc
-    case q"$pack.Ord.desc[$t]($o)"           => Desc
-    case q"$pack.Ord.ascNullsFirst[$t]($o)"  => AscNullsFirst
-    case q"$pack.Ord.descNullsFirst[$t]($o)" => DescNullsFirst
-    case q"$pack.Ord.ascNullsLast[$t]($o)"   => AscNullsLast
-    case q"$pack.Ord.descNullsLast[$t]($o)"  => DescNullsLast
+    case q"$pack.Ord.asc[$t]"                => Asc
+    case q"$pack.Ord.desc[$t]"               => Desc
+    case q"$pack.Ord.ascNullsFirst[$t]"      => AscNullsFirst
+    case q"$pack.Ord.descNullsFirst[$t]"     => DescNullsFirst
+    case q"$pack.Ord.ascNullsLast[$t]"       => AscNullsLast
+    case q"$pack.Ord.descNullsLast[$t]"      => DescNullsLast
   }
 
   implicit val propertyAliasParser: Parser[PropertyAlias] = Parser[PropertyAlias] {
