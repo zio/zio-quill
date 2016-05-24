@@ -39,5 +39,5 @@ package object getquill {
 
   def Ord: OrdOps = NonQuotedException()
 
-  implicit def orderingToOrd[T](implicit o: Ordering[T]): Ord[T] = NonQuotedException()
+  implicit def implicitOrd[T]: Ord[T] = NonQuotedException()
 }

@@ -4,12 +4,12 @@ trait Ord[T]
 
 trait OrdOps {
 
-  def asc[T](implicit ord: Ordering[T]): Ord[T]
-  def desc[T](implicit ord: Ordering[T]): Ord[T]
-  def ascNullsFirst[T](implicit ord: Ordering[T]): Ord[T]
-  def descNullsFirst[T](implicit ord: Ordering[T]): Ord[T]
-  def ascNullsLast[T](implicit ord: Ordering[T]): Ord[T]
-  def descNullsLast[T](implicit ord: Ordering[T]): Ord[T]
+  def asc[T]: Ord[T]
+  def desc[T]: Ord[T]
+  def ascNullsFirst[T]: Ord[T]
+  def descNullsFirst[T]: Ord[T]
+  def ascNullsLast[T]: Ord[T]
+  def descNullsLast[T]: Ord[T]
 
   def apply[T1, T2](o1: Ord[T1], o2: Ord[T2]): Ord[(T1, T2)]
   def apply[T1, T2, T3](o1: Ord[T1], o2: Ord[T2], o3: Ord[T3]): Ord[(T1, T2, T3)]

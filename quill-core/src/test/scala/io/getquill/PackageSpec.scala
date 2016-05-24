@@ -103,7 +103,7 @@ class PackageSpec extends Spec {
 
   "fails if orderingToOrd is unquoted ouside of a quotation" in {
     val e = intercept[NonQuotedException] {
-      orderingToOrd[Int]
+      implicitOrd[Int]
     }
   }
 }
