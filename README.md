@@ -2,7 +2,7 @@ IMPORTANT: This is the documentation for the latest `SNAPSHOT` version. Please r
 --------------------------------------------------------------------------------------------------
 
 ![quill](https://raw.githubusercontent.com/getquill/quill/master/quill.png)
-# Quill
+
 Compile-time Language Integrated Query for Scala
 
 [![Build Status](https://travis-ci.org/getquill/quill.svg?branch=master)](https://travis-ci.org/getquill/quill)
