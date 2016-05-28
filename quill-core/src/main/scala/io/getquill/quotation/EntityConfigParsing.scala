@@ -11,6 +11,7 @@ case class EntityConfig(
 )
 
 trait EntityConfigParsing extends UnicodeArrowParsing {
+  this: Parsing =>
   val c: Context
 
   import c.universe.{ Function => _, Ident => _, _ }
@@ -20,7 +21,7 @@ trait EntityConfigParsing extends UnicodeArrowParsing {
       case q"$e.entity(${ name: String })" =>
         parseEntityConfig(e).copy(alias = Some(name))
       case q"$e.columns(..$propertyAliases)" =>
-        parseEntityConfig(e).copy(properties = propertyAliases.map(parsePropertyAlias))
+        parseEntityConfig(e).copy(properties = propertyAliases.map(propertyAliasParser(_)))
       case q"$e.generated(($alias) => $body)" =>
         parseEntityConfig(e).copy(generated = Some(parseProperty(body)))
       case _ =>
@@ -32,9 +33,5 @@ trait EntityConfigParsing extends UnicodeArrowParsing {
       case q"$e.$property" => property.decodedName.toString
     }
 
-  private def parsePropertyAlias(t: Tree): PropertyAlias =
-    t match {
-      case q"(($x1) => scala.this.Predef.ArrowAssoc[$t]($x2.$prop).$arrow[$v](${ alias: String }))" =>
-        PropertyAlias(prop.decodedName.toString, alias)
-    }
+  val propertyAliasParser: Parser[PropertyAlias]
 }
