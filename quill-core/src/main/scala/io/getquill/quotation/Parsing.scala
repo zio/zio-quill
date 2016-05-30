@@ -221,7 +221,7 @@ trait Parsing extends EntityConfigParsing {
   }
 
   implicit val propertyAliasParser: Parser[PropertyAlias] = Parser[PropertyAlias] {
-    case q"(($x1) => scala.this.Predef.ArrowAssoc[$t]($x2.$prop).->[$v](${ alias: String }))" =>
+    case q"(($x1) => $pack.Predef.ArrowAssoc[$t]($x2.$prop).$arrow[$v](${ alias: String }))" =>
       PropertyAlias(prop.decodedName.toString, alias)
   }
 
@@ -375,7 +375,7 @@ trait Parsing extends EntityConfigParsing {
     case Literal(c.universe.Constant(v)) => Constant(v)
     case q"((..$v))" if (v.size > 1) => Tuple(v.map(astParser(_)))
     case tree @ q"$pack.$coll.apply[..$t](..$v)" if isTraversable(tree) => Collection(v.map(astParser(_)))
-    case q"((scala.this.Predef.ArrowAssoc[$t1]($v1).$arrow[$t2]($v2)))" => Tuple(List(astParser(v1), astParser(v2)))
+    case q"(($pack.Predef.ArrowAssoc[$t1]($v1).$arrow[$t2]($v2)))" => Tuple(List(astParser(v1), astParser(v2)))
   }
 
   val actionParser: Parser[Ast] = Parser[Ast] {
@@ -392,7 +392,7 @@ trait Parsing extends EntityConfigParsing {
   }
 
   private val assignmentParser: Parser[Assignment] = Parser[Assignment] {
-    case q"((${ identParser(i1) }) => scala.this.Predef.ArrowAssoc[$t](${ identParser(i2) }.$prop).$arrow[$v]($value))" if (i1 == i2) =>
+    case q"((${ identParser(i1) }) => $pack.Predef.ArrowAssoc[$t](${ identParser(i2) }.$prop).$arrow[$v]($value))" if (i1 == i2) =>
       Assignment(i1, prop.decodedName.toString, astParser(value))
   }
 

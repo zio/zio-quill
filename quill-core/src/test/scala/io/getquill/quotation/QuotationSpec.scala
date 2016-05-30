@@ -32,11 +32,17 @@ class QuotationSpec extends Spec {
           }
           quote(unquote(q)).ast mustEqual ConfiguredEntity(Entity("TestEntity"), Some("SomeAlias"), List(PropertyAlias("s", "theS"), PropertyAlias("i", "theI")))
         }
+        "explicit `Predef.ArrowAssoc`" in {
+          val q = quote {
+            query[TestEntity].schema(_.columns(e => Predef.ArrowAssoc(e.s). -> [String]("theS")))
+          }
+          quote(unquote(q)).ast mustEqual ConfiguredEntity(Entity("TestEntity"), properties = List(PropertyAlias("s", "theS")))
+        }
         "with property alias and unicode arrow" in {
-          """|quote {
-             |  query[TestEntity].schema(_.entity("SomeAlias").columns(_.s → "theS", _.i → "theI"))
-             |}
-          """.stripMargin must compile
+          val q = quote {
+            query[TestEntity].schema(_.entity("SomeAlias").columns(_.s → "theS", _.i → "theI"))
+          }
+          quote(unquote(q)).ast mustEqual ConfiguredEntity(Entity("TestEntity"), Some("SomeAlias"), List(PropertyAlias("s", "theS"), PropertyAlias("i", "theI")))
         }
       }
       "filter" in {
@@ -273,6 +279,12 @@ class QuotationSpec extends Spec {
           }
           quote(unquote(q)).ast mustEqual Function(List(Ident("x1")), Update(Entity("TestEntity")))
         }
+        "explicit `Predef.ArrowAssoc`" in {
+          val q = quote {
+            qr1.update(t => Predef.ArrowAssoc(t.s). -> [String]("s"))
+          }
+          quote(unquote(q)).ast mustEqual AssignedAction(Update(Entity("TestEntity")), List(Assignment(Ident("t"), "s", Constant("s"))))
+        }
         "unicode arrow must compile" in {
           """|quote {
              |  qr1.filter(t ⇒ t.i == 1).update(_.s → "new", _.i → 0)
@@ -330,6 +342,10 @@ class QuotationSpec extends Spec {
             val q = quote(1 -> "a" -> "b")
             quote(unquote(q)).ast mustEqual Tuple(List(Tuple(List(Constant(1), Constant("a"))), Constant("b")))
           }
+          "explicit `Predef.ArrowAssoc`" in {
+            val q = quote(Predef.ArrowAssoc("a"). -> [String]("b"))
+            quote(unquote(q)).ast mustEqual Tuple(List(Constant("a"), Constant("b")))
+          }
         }
       }
       "collection" - {
@@ -362,9 +378,9 @@ class QuotationSpec extends Spec {
     }
     "property anonymous" in {
       val q = quote {
-        qr1.map(_.s)
+        qr1.map(t => t.s)
       }
-      quote(unquote(q)).ast.body mustEqual Property(Ident("x8"), "s")
+      quote(unquote(q)).ast.body mustEqual Property(Ident("t"), "s")
     }
     "function" - {
       "anonymous function" in {
