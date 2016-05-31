@@ -92,7 +92,7 @@ val existsAny = quote {
 }
 
 val q = quote {
-  query[Circle].filter { c1 => 
+  query[Circle].filter { c1 =>
     existsAny(query[Circle])(c2 => c2.radius > c1.radius)
   }
 }
@@ -194,7 +194,7 @@ val q = quote {
   circles.filter(c => c.radius > 1)
 }
 
-db.run(q) 
+db.run(q)
 // SELECT c.radius_column FROM circle_table c WHERE c.radius_column > 1
 ```
 
@@ -250,7 +250,7 @@ val q = quote {
   }
 }
 
-db.run(q) 
+db.run(q)
 // SELECT p.name, c.phone FROM Person p, Contact c WHERE (p.id = 999) AND (c.personId = p.id)
 ```
 
@@ -343,7 +343,7 @@ val q = quote {
 }
 
 db.run(q)
-// SELECT x.id, x.name, x.age FROM (SELECT id, name, age FROM Person p WHERE p.age > 18 
+// SELECT x.id, x.name, x.age FROM (SELECT id, name, age FROM Person p WHERE p.age > 18
 // UNION SELECT id, name, age FROM Person p1 WHERE p1.age > 60) x
 ```
 
@@ -353,16 +353,16 @@ val q = quote {
   query[Person].filter(p => p.age > 18).unionAll(query[Person].filter(p => p.age > 60))
 }
 
-db.run(q) 
-// SELECT x.id, x.name, x.age FROM (SELECT id, name, age FROM Person p WHERE p.age > 18 
+db.run(q)
+// SELECT x.id, x.name, x.age FROM (SELECT id, name, age FROM Person p WHERE p.age > 18
 // UNION ALL SELECT id, name, age FROM Person p1 WHERE p1.age > 60) x
 
 val q2 = quote {
   query[Person].filter(p => p.age > 18) ++ query[Person].filter(p => p.age > 60)
 }
 
-db.run(q2) 
-// SELECT x.id, x.name, x.age FROM (SELECT id, name, age FROM Person p WHERE p.age > 18 
+db.run(q2)
+// SELECT x.id, x.name, x.age FROM (SELECT id, name, age FROM Person p WHERE p.age > 18
 // UNION ALL SELECT id, name, age FROM Person p1 WHERE p1.age > 60) x
 ```
 
@@ -382,23 +382,23 @@ db.run(r.size) // SELECT COUNT(p.age) FROM Person p
 **isEmpty/nonEmpty**
 ```scala
 val q = quote {
-  query[Person].filter{ p1 => 
+  query[Person].filter{ p1 =>
     query[Person].filter(p2 => p2.id != p1.id && p2.age == p1.age).isEmpty
   }
 }
 
-db.run(q) 
-// SELECT p1.id, p1.name, p1.age FROM Person p1 WHERE 
+db.run(q)
+// SELECT p1.id, p1.name, p1.age FROM Person p1 WHERE
 // NOT EXISTS (SELECT * FROM Person p2 WHERE (p2.id <> p1.id) AND (p2.age = p1.age))
 
 val q2 = quote {
-  query[Person].filter{ p1 => 
+  query[Person].filter{ p1 =>
     query[Person].filter(p2 => p2.id != p1.id && p2.age == p1.age).nonEmpty
   }
 }
 
 db.run(q2)
-// SELECT p1.id, p1.name, p1.age FROM Person p1 WHERE 
+// SELECT p1.id, p1.name, p1.age FROM Person p1 WHERE
 // EXISTS (SELECT * FROM Person p2 WHERE (p2.id <> p1.id) AND (p2.age = p1.age))
 ```
 
@@ -449,7 +449,7 @@ val q = quote {
   query[Person].join(query[Contact]).on((p, c) => c.personId == p.id)
 }
 
-db.run(q) 
+db.run(q)
 // SELECT p.id, p.name, p.age, c.personId, c.phone•
 // FROM Person p INNER JOIN Contact c ON c.personId = p.id
 
@@ -457,7 +457,7 @@ val q = quote {
   query[Person].leftJoin(query[Contact]).on((p, c) => c.personId == p.id)
 }
 
-db.run(q) 
+db.run(q)
 // SELECT p.id, p.name, p.age, c.personId, c.phone•
 // FROM Person p LEFT JOIN Contact c ON c.personId = p.id
 
@@ -488,8 +488,8 @@ val qNested = quote {
   } yield(p, e, c)
 }
 
-db.run(qFlat) 
-db.run(qNested) 
+db.run(qFlat)
+db.run(qNested)
 // SELECT p.id, p.name, p.age, e.id, e.personId, e.name, c.id, c.phone•
 // FROM Person p INNER JOIN Employer e ON p.id = e.personId LEFT JOIN Contact c ON c.personId = p.id
 
@@ -513,7 +513,7 @@ The configurations correspondent to the config key must be available at compile 
 unmanagedClasspath in Compile += baseDirectory.value / "src" / "main" / "resources"
 ```
 
-If your project doesn't have a standard layout, e.g. a play project, you should configure the path to point to the folder that contains your config file. 
+If your project doesn't have a standard layout, e.g. a play project, you should configure the path to point to the folder that contains your config file.
 
 Actions
 -------
@@ -526,7 +526,7 @@ Database actions are defined using quotations as well. These actions don't have 
 ```scala
 val a = quote(query[Contact].insert)
 
-db.run(a)(List(Contact(999, "+1510488988"))) 
+db.run(a)(List(Contact(999, "+1510488988")))
 // INSERT INTO Contact (personId,phone) VALUES (?, ?)
 db.run(a)(Contact(999, "+1510488988"))
 // insert single item
@@ -540,7 +540,7 @@ val a = quote {
     query[Contact].insert(_.personId -> personId, _.phone -> phone)
 }
 
-db.run(a)(List((999, "+1510488988"))) 
+db.run(a)(List((999, "+1510488988")))
 // INSERT INTO Contact (personId,phone) VALUES (?, ?)
 ```
 
@@ -552,7 +552,7 @@ val a = quote {
     query[Person].insert(_.id -> id, _.age -> query[Person].map(p => p.age).max)
 }
 
-db.run(a)(List(999)) 
+db.run(a)(List(999))
 // INSERT INTO Person (id,age) VALUES (?, (SELECT MAX(p.age) FROM Person p))
 ```
 
@@ -610,7 +610,7 @@ val a = quote {
   query[Person].filter(p => p.name == "").delete
 }
 
-db.run(a) 
+db.run(a)
 // DELETE FROM Person WHERE name = ''
 ```
 
@@ -631,7 +631,7 @@ val q = quote {
   }
 }
 
-db.run(q) 
+db.run(q)
 // SELECT p.name, c.phone FROM Person p, Contact c WHERE (p.id = 999) AND (c.personId = p.id)
 ```
 
@@ -806,10 +806,10 @@ def people(t: QueryType): Quoted[Query[Person]] =
     }
   }
 
-db.run(people(Minor)) 
+db.run(people(Minor))
 // SELECT p.id, p.name, p.age FROM Person p WHERE p.age < 18
 
-db.run(people(Senior)) 
+db.run(people(Senior))
 // SELECT p.id, p.name, p.age FROM Person p WHERE p.age > 65
 ```
 
@@ -864,7 +864,7 @@ val q = quote {
   query[Person].map(p => myFunction(p.age))
 }
 
-db.run(q) 
+db.run(q)
 // SELECT MY_FUNCTION(p.age) FROM Person p
 ```
 
@@ -890,18 +890,27 @@ Raw Encoding
 
 If the database type is not supported by Quill, it is possible to provide "raw" encoders and decoders:
 
-```
-import io.getquill.sources.mirror.Row
+```scala
+import io.getquill.naming.Literal
+import io.getquill.sources.jdbc.JdbcSource
+import io.getquill.sources.sql.idiom.PostgresDialect
 
-implicit val uuidEncoder = 
-  db.encoder[UUID] {
-    ??? // database-specific implementation
-  }
+trait UUIDEncodingExample {
+  val jdbcSource: JdbcSource[PostgresDialect, Literal] // your source should go here
 
-implicit val uuidDecoder = 
-  db.decoder[UUID] {
-    ??? // database-specific implementation
-  }
+  import jdbcSource._
+
+  implicit val uuidDecoder: Decoder[UUID] =
+    decoder[UUID] {
+      row => index =>
+        UUID.fromString(row.getObject(index).toString) // database-specific implementation
+    }
+  implicit val uuidEncoder: Encoder[UUID] =
+    encoder[UUID] {
+      row => (idx, uuid) =>
+        row.setObject(idx, uuid, java.sql.Types.OTHER) // database-specific implementation
+    }
+}
 ```
 
 Wrapped types
@@ -953,7 +962,7 @@ Quill has three built-in dialects:
 
 #### Naming strategy
 
-The second type parameter defines the naming strategy to be used when translating identifiers (table and column names) to SQL. 
+The second type parameter defines the naming strategy to be used when translating identifiers (table and column names) to SQL.
 
 
 |           strategy                  |          example              |
@@ -967,7 +976,7 @@ The second type parameter defines the naming strategy to be used when translatin
 | `io.getquill.naming.MysqlEscape`    | some_ident  -> \`some_ident\` |
 | `io.getquill.naming.PostgresEscape` | $some_ident -> $some_ident    |
 
-Multiple transformations can be defined using mixin. For instance, the naming strategy 
+Multiple transformations can be defined using mixin. For instance, the naming strategy
 
 ```SnakeCase with UpperCase```
 
@@ -1251,4 +1260,3 @@ The project was created having Philip Wadler's talk ["A practical theory of lang
 * [A Practical Theory of Language-Integrated Query](http://homepages.inf.ed.ac.uk/slindley/papers/practical-theory-of-linq.pdf)
 * [Everything old is new again: Quoted Domain Specific Languages](http://homepages.inf.ed.ac.uk/wadler/papers/qdsl/qdsl.pdf)
 * [The Flatter, the Better](http://db.inf.uni-tuebingen.de/staticfiles/publications/the-flatter-the-better.pdf)
-
