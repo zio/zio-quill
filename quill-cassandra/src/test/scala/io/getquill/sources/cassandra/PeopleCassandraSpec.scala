@@ -1,8 +1,11 @@
-package io.getquill.sources.cassandra
+package io.getquill.context.cassandra
 
 import io.getquill._
 
 class PeopleCassandraSpec extends Spec {
+
+  import testSyncDB._
+
   case class Person(id: Int, name: String, age: Int)
 
   override def beforeAll = {

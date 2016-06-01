@@ -1,7 +1,25 @@
 package io.getquill.norm
 
 import scala.util.Random
-import io.getquill.ast._
+
+import io.getquill.ast.Aggregation
+import io.getquill.ast.AggregationOperator
+import io.getquill.ast.AscNullsFirst
+import io.getquill.ast.BinaryOperation
+import io.getquill.ast.Constant
+import io.getquill.ast.Drop
+import io.getquill.ast.Entity
+import io.getquill.ast.EqualityOperator
+import io.getquill.ast.Filter
+import io.getquill.ast.FlatMap
+import io.getquill.ast.GroupBy
+import io.getquill.ast.Ident
+import io.getquill.ast.Map
+import io.getquill.ast.Property
+import io.getquill.ast.Query
+import io.getquill.ast.SortBy
+import io.getquill.ast.StatefulTransformer
+import io.getquill.ast.Take
 
 class QueryGenerator(seed: Int) {
 

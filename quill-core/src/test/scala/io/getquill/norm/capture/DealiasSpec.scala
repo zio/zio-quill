@@ -1,6 +1,11 @@
 package io.getquill.norm.capture
 
-import io.getquill._
+import io.getquill.Spec
+import io.getquill.testContext.implicitOrd
+import io.getquill.testContext.qr1
+import io.getquill.testContext.qr2
+import io.getquill.testContext.quote
+import io.getquill.testContext.unquote
 
 class DealiasSpec extends Spec {
 

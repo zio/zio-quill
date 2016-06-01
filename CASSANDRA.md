@@ -156,13 +156,14 @@ Phantom requires mapping classes to lift the database model to DSL types. The qu
 **Quill**
 ```scala
 import io.getquill._
-import io.getquill.naming._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object Quill extends App {
 
-  val db = source(new CassandraAsyncSourceConfig[SnakeCase]("DB"))
+  val db = new CassandraAsyncContext[SnakeCase]("DB")
+
+  import db._
 
   case class WeatherStation(country: String, city: String, stationId: String, entry: Int, value: Int)
 
@@ -309,13 +310,14 @@ Phantom allows the user certain level of composability, but it gets a bit verbos
 **Quill**
 ```scala
 import io.getquill._
-import io.getquill.naming._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object Quill extends App {
 
-  val db = source(new CassandraAsyncSourceConfig[SnakeCase]("DB"))
+  val db = new CassandraAsyncContext[SnakeCase]("DB")
+
+  import db._
 
   case class WeatherStation(country: String, city: String, stationId: String, entry: Int, value: Int)
 
@@ -533,14 +535,14 @@ It is necessary to define a new `Column` type to be used when defining the data 
 **Quill**
 ```scala
 import io.getquill._
-import io.getquill.naming._
-import io.getquill.sources.MappedEncoding
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object Quill extends App {
 
-  val db = source(new CassandraAsyncSourceConfig[SnakeCase]("DB"))
+  val db = new CassandraAsyncContext[SnakeCase]("DB")
+
+  import db._
 
   case class Country(code: String) extends AnyVal
 

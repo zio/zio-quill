@@ -1,16 +1,16 @@
 package io.getquill
 
-import io.getquill.TestSource.mirrorSource
+object iqContext extends MirrorContext with ImplicitQuery with TestEntities
 
 class ImplicitQuerySpec extends Spec {
 
-  import ImplicitQuery._
+  import iqContext._
 
   "allows querying a case class companion" in {
     val q = quote {
       TestEntity.filter(t => t.s == "s")
     }
-    mirrorSource.run(q).ast.toString mustEqual
+    iqContext.run(q).ast.toString mustEqual
       """query[TestEntity].filter(t => t.s == "s").map(t => (t.s, t.i, t.l, t.o))"""
   }
 

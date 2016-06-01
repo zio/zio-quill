@@ -1,4 +1,4 @@
-package io.getquill.sources.cassandra.cluster
+package io.getquill.context.cassandra.cluster
 
 import java.net.InetSocketAddress
 

@@ -1,9 +1,14 @@
 package io.getquill.norm.select
 
-import io.getquill._
-import io.getquill.sources.mirror.Row
-import io.getquill.TestSource.mirrorSource
-import io.getquill.sources.Decoder
+import io.getquill.Spec
+import io.getquill.context.mirror.Row
+import io.getquill.testContext
+import io.getquill.testContext.Decoder
+import io.getquill.testContext.qr1
+import io.getquill.testContext.qr2
+import io.getquill.testContext.query
+import io.getquill.testContext.quote
+import io.getquill.testContext.unquote
 
 class SelectFlatteningSpec extends Spec {
 
@@ -13,7 +18,7 @@ class SelectFlatteningSpec extends Spec {
       val q = quote {
         qr1.map(t => t.s)
       }
-      mirrorSource.run(q).ast mustEqual q.ast
+      testContext.run(q).ast mustEqual q.ast
     }
 
     "flattens a case class select" - {
@@ -21,7 +26,7 @@ class SelectFlatteningSpec extends Spec {
         val n = quote {
           qr1.map(x => (x.s, x.i, x.l, x.o))
         }
-        mirrorSource.run(qr1).ast mustEqual n.ast
+        testContext.run(qr1).ast mustEqual n.ast
       }
       "with type param" in {
         case class Test[T](v: T)
@@ -31,7 +36,7 @@ class SelectFlatteningSpec extends Spec {
         val n = quote {
           query[Test[Int]].map(x => x.v)
         }
-        mirrorSource.run(q).ast mustEqual n.ast
+        testContext.run(q).ast mustEqual n.ast
       }
     }
 
@@ -43,7 +48,7 @@ class SelectFlatteningSpec extends Spec {
         val n = quote {
           qr1.map(x => (x.s, x.i, x.l, x.o, x.s, x.i, x.l))
         }
-        mirrorSource.run(q).ast mustEqual n.ast
+        testContext.run(q).ast mustEqual n.ast
       }
       "case class in the middle of the select" in {
         val q = quote {
@@ -52,7 +57,7 @@ class SelectFlatteningSpec extends Spec {
         val n = quote {
           qr1.map(x => (x.s, x.s, x.i, x.l, x.o, x.i, x.l))
         }
-        mirrorSource.run(q).ast mustEqual n.ast
+        testContext.run(q).ast mustEqual n.ast
       }
       "case class in the end of the select" in {
         val q = quote {
@@ -61,7 +66,7 @@ class SelectFlatteningSpec extends Spec {
         val n = quote {
           qr1.map(x => (x.s, x.i, x.l, x.s, x.i, x.l, x.o))
         }
-        mirrorSource.run(q).ast mustEqual n.ast
+        testContext.run(q).ast mustEqual n.ast
       }
       "two case classes" in {
         val q = quote {
@@ -70,35 +75,35 @@ class SelectFlatteningSpec extends Spec {
         val n = quote {
           qr1.flatMap(x => qr2.map(y => (x.s, x.i, x.l, x.o, x.s, y.s, y.i, y.l, y.o)))
         }
-        mirrorSource.run(q).ast mustEqual n.ast
+        testContext.run(q).ast mustEqual n.ast
       }
     }
   }
 
-  "fails if the source doesn't know how to encode the type" - {
+  "fails if the context doesn't know how to encode the type" - {
     case class Evil(x: Thread)
     "simple value" in {
       val q = quote {
         query[Evil].map(_.x)
       }
-      "mirrorSource.run(q)" mustNot compile
+      "testContext.run(q)" mustNot compile
     }
     "case class" in {
       val q = quote {
         query[Evil]
       }
-      "mirrorSource.run(q)" mustNot compile
+      "testContext.run(q)" mustNot compile
     }
   }
 
   "uses a custom implicit decoder" in {
     case class Value(s: String)
     case class Test(v: Value)
-    implicit val valueDecoder = new Decoder[Row, Value] {
+    implicit val valueDecoder = new Decoder[Value] {
       override def apply(index: Int, row: Row) =
         Value(row[String](index))
     }
     val q = quote(query[Test])
-    mirrorSource.run(q).extractor(Row("test")) mustEqual Test(Value("test"))
+    testContext.run(q).extractor(Row("test")) mustEqual Test(Value("test"))
   }
 }

@@ -1,15 +1,11 @@
-package io.getquill.sources.cassandra
+package io.getquill.context.cassandra
 
-import io.getquill._
-import monifu.reactive.Observable
-import org.scalatest.BeforeAndAfterAll
-import org.scalatest.FreeSpec
-import org.scalatest.MustMatchers
-import scala.concurrent.{ Await, Future }
-import scala.concurrent.duration.Duration
-import scala.concurrent.ExecutionContext.Implicits.global
+import io.getquill.Spec
 
-class QueryResultTypeCassandraSpec extends FreeSpec with BeforeAndAfterAll with MustMatchers {
+trait QueryResultTypeCassandraSpec extends Spec {
+
+  val context: CassandraContext[_, _, _]
+  import context._
 
   case class OrderTestEntity(id: Int, i: Int)
 
@@ -32,97 +28,4 @@ class QueryResultTypeCassandraSpec extends FreeSpec with BeforeAndAfterAll with 
     query[OrderTestEntity].filter(_.id == id).size
   }
   val distinct = quote(query[OrderTestEntity].map(_.id).distinct)
-
-  override def beforeAll = {
-    val r1 = testSyncDB.run(deleteAll)
-    val r2 = testSyncDB.run(insert)(entries)
-  }
-
-  "async" - {
-    val db = testAsyncDB
-    def await[T](r: Future[T]) = Await.result(r, Duration.Inf)
-    "return list" - {
-      "select" in {
-        await(db.run(selectAll)) must contain theSameElementsAs (entries)
-      }
-      "map" in {
-        await(db.run(map)) must contain theSameElementsAs (entries.map(_.id))
-      }
-      "filter" in {
-        await(db.run(filter)) mustEqual entries.take(1)
-      }
-      "withFilter" in {
-        await(db.run(withFilter)) mustEqual entries.take(1)
-      }
-      "sortBy" in {
-        await(db.run(sortBy)) mustEqual entries.take(1)
-      }
-      "take" in {
-        await(db.run(take)) must contain theSameElementsAs (entries)
-      }
-    }
-
-    "return single result" - {
-      "size" in {
-        await(db.run(entitySize)) mustEqual entries.size
-      }
-      "paramlize size" in {
-        await(db.run(parametrizedSize)(10000)) mustEqual 0
-      }
-    }
-  }
-
-  "sync" - {
-    val db = testSyncDB
-    def await[T](r: T) = r
-    "return list" - {
-      "select" in {
-        await(db.run(selectAll)) must contain theSameElementsAs (entries)
-      }
-      "map" in {
-        await(db.run(map)) must contain theSameElementsAs (entries.map(_.id))
-      }
-      "filter" in {
-        await(db.run(filter)) mustEqual entries.take(1)
-      }
-      "withFilter" in {
-        await(db.run(withFilter)) mustEqual entries.take(1)
-      }
-      "sortBy" in {
-        await(db.run(sortBy)) mustEqual entries.take(1)
-      }
-      "take" in {
-        await(db.run(take)) must contain theSameElementsAs (entries)
-      }
-    }
-
-    "return single result" - {
-      "size" in {
-        await(db.run(entitySize)) mustEqual entries.size
-      }
-      "paramlize size" in {
-        await(db.run(parametrizedSize)(10000)) mustEqual 0
-      }
-    }
-  }
-  "stream" - {
-    import monifu.concurrent.Implicits.globalScheduler
-    val db = testStreamDB
-    def await[T](t: Observable[T]) = {
-      val f = t.foldLeft(List.empty[T])(_ :+ _).asFuture
-      Await.result(f, Duration.Inf)
-    }
-    "query" in {
-      await(db.run(selectAll)) mustEqual Some(entries)
-    }
-
-    "querySingle" - {
-      "size" in {
-        await(db.run(entitySize)) mustEqual Some(List(3))
-      }
-      "parametrized size" in {
-        await(db.run(parametrizedSize)(10000)) mustEqual Some(List(0))
-      }
-    }
-  }
 }

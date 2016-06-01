@@ -1,11 +1,13 @@
-package io.getquill.sources.cassandra
+package io.getquill.context.cassandra
 
 import io.getquill.util.Show._
 import io.getquill._
-import io.getquill.naming.Literal
+import io.getquill.Literal
 import io.getquill.ast.Ast
 
 class CqlQuerySpec extends Spec {
+
+  import mirrorContext._
 
   import CqlIdiom._
 
