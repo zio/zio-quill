@@ -2,9 +2,11 @@ package io.getquill.sources.jdbc.postgres
 
 import io.getquill._
 
-class JdbcSourceSpec extends Spec {
+class JdbcSourceSpec extends SourceSpec(testPostgresDB) {
 
-  "probes sqls" - {
+  import testPostgresDB._
+
+  "probes sqls" in {
     val p = testPostgresDB.probe("DELETE FROM TestEntity")
   }
 

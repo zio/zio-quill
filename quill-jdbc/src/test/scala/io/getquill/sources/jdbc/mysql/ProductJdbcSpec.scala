@@ -1,9 +1,10 @@
 package io.getquill.sources.jdbc.mysql
 
-import io.getquill._
 import io.getquill.sources.sql.ProductSpec
 
-class ProductJdbcSpec extends ProductSpec {
+class ProductJdbcSpec extends ProductSpec(testMysqlDB) {
+
+  import testMysqlDB._
 
   override def beforeAll = {
     testMysqlDB.run(quote(query[Product].delete))

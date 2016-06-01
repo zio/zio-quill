@@ -1,8 +1,8 @@
 package io.getquill.sources.sql
 
-import io.getquill._
+import mirrorSource._
 
-class SqlMirrorSourceSpec extends Spec {
+class SqlMirrorSourceSpec extends SqlSpec {
   "run non-batched action" in {
     val insert = quote { (i: Int) =>
       qr1.insert(_.i -> i)

@@ -9,7 +9,7 @@ import com.twitter.finagle.exp.mysql.Parameter.wrap
 import io.getquill.sources.BindedStatementBuilder
 
 trait FinagleMysqlEncoders {
-  this: FinagleMysqlSource[_] =>
+  this: FinagleMysqlSourceBase[_] =>
 
   def encoder[T](implicit cbp: CanBeParameter[T]): Encoder[T] =
     encoder[T]((v: T) => v: Parameter)

@@ -9,18 +9,13 @@ import io.getquill.ast._
 
 import scala.reflect.NameTransformer
 
-trait Quoted[+T] {
-  def ast: Ast
-}
-
 case class QuotedAst(ast: Ast) extends StaticAnnotation
 
 trait Quotation extends Liftables with Unliftables with Parsing {
-
   val c: Context
   import c.universe._
 
-  def quote[T: WeakTypeTag](body: Expr[T]) = {
+  def quote[T](body: Expr[T])(implicit t: WeakTypeTag[T]) = {
 
     def bindingName(s: String) =
       TermName(NameTransformer.encode(s))
@@ -64,7 +59,7 @@ trait Quotation extends Liftables with Unliftables with Parsing {
     val quotation =
       q"""
         {
-          new ${c.weakTypeOf[Quoted[T]]} { 
+          new ${c.prefix}.Quoted[$t] { 
     
             @${c.weakTypeOf[QuotedAst]}($ast)
             def quoted = ast
@@ -83,20 +78,20 @@ trait Quotation extends Liftables with Unliftables with Parsing {
       """
 
     IsDynamic(ast) match {
-      case true  => q"$quotation: ${c.weakTypeOf[Quoted[T]]}"
+      case true  => q"$quotation: ${c.prefix}.Quoted[$t]"
       case false => quotation
     }
   }
 
-  def doubleQuote[T: WeakTypeTag](body: Expr[Quoted[T]]) =
+  def doubleQuote[T: WeakTypeTag](body: Expr[Any]) =
     body.tree match {
       case q"null" => c.fail("Can't quote null")
-      case tree    => q"io.getquill.unquote($tree)"
+      case tree    => q"${c.prefix}.unquote($tree)"
     }
 
   def quotedFunctionBody(func: Expr[Any]) =
     func.tree match {
-      case q"(..$p) => $b" => q"io.getquill.quote((..$p) => io.getquill.unquote($b))"
+      case q"(..$p) => $b" => q"${c.prefix}.quote((..$p) => ${c.prefix}.unquote($b))"
     }
 
   protected def unquote[T](tree: Tree)(implicit ct: ClassTag[T]) =

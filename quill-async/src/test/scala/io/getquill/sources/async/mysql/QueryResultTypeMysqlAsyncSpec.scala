@@ -7,7 +7,10 @@ import scala.concurrent.{ Await, Future }
 import scala.concurrent.duration.Duration
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class QueryResultTypeMysqlAsyncSpec extends QueryResultTypeSpec {
+class QueryResultTypeMysqlAsyncSpec extends QueryResultTypeSpec(testMysqlDB) {
+
+  import testMysqlDB._
+
   val db = testMysqlDB
 
   def await[T](r: Future[T]) = Await.result(r, Duration.Inf)

@@ -2,25 +2,29 @@ package io.getquill.sources.jdbc
 
 import java.sql.{ Connection, PreparedStatement, ResultSet }
 
-import scala.util.DynamicVariable
-
-import io.getquill.naming.NamingStrategy
-import io.getquill.sources.sql.{ SqlBindedStatementBuilder, SqlSource }
-import scala.util.Try
-
-import io.getquill.sources.sql.idiom.SqlIdiom
-import scala.util.control.NonFatal
-import scala.annotation.tailrec
-
-import io.getquill.JdbcSourceConfig
-import io.getquill.sources.BindedStatementBuilder
 import com.typesafe.scalalogging.Logger
+import io.getquill.naming.NamingStrategy
+import io.getquill.sources.BindedStatementBuilder
+import io.getquill.sources.sql.idiom.SqlIdiom
+import io.getquill.sources.sql.{ SqlBindedStatementBuilder, SqlSource }
 import org.slf4j.LoggerFactory
 
-class JdbcSource[D <: SqlIdiom, N <: NamingStrategy](config: JdbcSourceConfig[D, N])
+import scala.annotation.tailrec
+
+import scala.util.Try
+import scala.util.control.NonFatal
+import com.typesafe.config.Config
+import java.io.Closeable
+import javax.sql.DataSource
+import io.getquill.util.LoadConfig
+
+class JdbcSource[D <: SqlIdiom, N <: NamingStrategy](dataSource: DataSource with Closeable)
   extends SqlSource[D, N, ResultSet, BindedStatementBuilder[PreparedStatement]]
   with JdbcEncoders
   with JdbcDecoders {
+
+  def this(config: Config) = this(CreateDataSource(config))
+  def this(configPrefix: String) = this(LoadConfig(configPrefix))
 
   protected val logger: Logger =
     Logger(LoggerFactory.getLogger(classOf[JdbcSource[_, _]]))
@@ -32,52 +36,48 @@ class JdbcSource[D <: SqlIdiom, N <: NamingStrategy](config: JdbcSourceConfig[D,
 
   class ActionApply[T](f: List[T] => List[Long]) extends Function1[List[T], List[Long]] {
     def apply(params: List[T]) = f(params)
+
     def apply(param: T) = f(List(param)).head
   }
 
-  private val dataSource = config.dataSource
+  protected def withConnection[T](f: Connection => T): T = {
+    val conn = dataSource.getConnection
+    try f(conn)
+    finally conn.close
+  }
 
-  override def close = dataSource.close
-
-  private val currentConnection = new DynamicVariable[Option[Connection]](None)
-
-  protected def withConnection[T](f: Connection => T) =
-    currentConnection.value.map(f).getOrElse {
-      val conn = dataSource.getConnection
-      try f(conn)
-      finally conn.close
-    }
+  def close = dataSource.close()
 
   def probe(sql: String) =
-    withConnection { conn =>
-      Try {
-        conn.createStatement.execute(sql)
-      }
+    Try {
+      withConnection(_.createStatement.execute(sql))
     }
 
-  def transaction[T](f: => T) =
+  def transaction[T](f: JdbcSource[D, N] => T) =
     withConnection { conn =>
-      currentConnection.withValue(Some(conn)) {
-        conn.setAutoCommit(false)
-        try {
-          val res = f
-          conn.commit
-          res
-        } catch {
-          case NonFatal(e) =>
-            conn.rollback
-            throw e
-        } finally {
-          conn.setAutoCommit(true)
-        }
+      val autoCommit = conn.getAutoCommit
+      conn.setAutoCommit(false)
+      val transactional = new JdbcSource[D, N](dataSource) {
+        override protected def withConnection[R](f: Connection => R): R =
+          f(conn)
       }
+      try {
+        val res = f(transactional)
+        conn.commit
+        res
+      } catch {
+        case NonFatal(e) =>
+          conn.rollback
+          throw e
+      } finally
+        conn.setAutoCommit(autoCommit)
     }
 
-  def execute(sql: String, bind: BindedStatementBuilder[PreparedStatement] => BindedStatementBuilder[PreparedStatement] = identity, generated: Option[String] = None): Long = {
-    logger.info(sql)
-    val (expanded, setValues) = bind(new SqlBindedStatementBuilder[PreparedStatement]).build(sql)
-    logger.info(expanded)
+  def executeAction(sql: String, bind: BindedStatementBuilder[PreparedStatement] => BindedStatementBuilder[PreparedStatement] = identity, generated: Option[String] = None): Long =
     withConnection { conn =>
+      logger.info(sql)
+      val (expanded, setValues) = bind(new SqlBindedStatementBuilder[PreparedStatement]).build(sql)
+      logger.info(expanded)
       generated match {
         case None =>
           val ps = setValues(conn.prepareStatement(expanded))
@@ -88,15 +88,14 @@ class JdbcSource[D <: SqlIdiom, N <: NamingStrategy](config: JdbcSourceConfig[D,
           extractResult(ps.getGeneratedKeys, _.getLong(1)).head
       }
     }
-  }
 
-  def executeBatch[T](sql: String, bindParams: T => BindedStatementBuilder[PreparedStatement] => BindedStatementBuilder[PreparedStatement] = (_: T) => identity[BindedStatementBuilder[PreparedStatement]] _,
-                      generated: Option[String] = None): ActionApply[T] = {
+  def executeActionBatch[T](sql: String, bindParams: T => BindedStatementBuilder[PreparedStatement] => BindedStatementBuilder[PreparedStatement] = (_: T) => identity[BindedStatementBuilder[PreparedStatement]] _,
+                            generated: Option[String] = None): ActionApply[T] = {
     val func = { (values: List[T]) =>
-      val groups = values.map(bindParams(_)(new SqlBindedStatementBuilder[PreparedStatement]).build(sql)).groupBy(_._1)
-      (for ((sql, setValues) <- groups.toList) yield {
-        logger.info(sql)
-        withConnection { conn =>
+      withConnection { conn =>
+        val groups = values.map(bindParams(_)(new SqlBindedStatementBuilder[PreparedStatement]).build(sql)).groupBy(_._1)
+        (for ((sql, setValues) <- groups.toList) yield {
+          logger.info(sql)
           val ps = generated.fold(conn.prepareStatement(sql))(c => conn.prepareStatement(sql, Array(c)))
           for ((_, set) <- setValues) {
             set(ps)
@@ -104,24 +103,23 @@ class JdbcSource[D <: SqlIdiom, N <: NamingStrategy](config: JdbcSourceConfig[D,
           }
           val updateCount = ps.executeBatch.toList.map(_.toLong)
           generated.fold(updateCount)(_ => extractResult(ps.getGeneratedKeys, _.getLong(1)))
-        }
-      }).flatten
+        }).flatten
+      }
     }
     new ActionApply(func)
   }
 
-  def query[T](sql: String, extractor: ResultSet => T = identity[ResultSet] _, bind: BindedStatementBuilder[PreparedStatement] => BindedStatementBuilder[PreparedStatement] = identity): List[T] = {
-    val (expanded, setValues) = bind(new SqlBindedStatementBuilder[PreparedStatement]).build(sql)
-    logger.info(expanded)
+  def executeQuery[T](sql: String, extractor: ResultSet => T = identity[ResultSet] _, bind: BindedStatementBuilder[PreparedStatement] => BindedStatementBuilder[PreparedStatement] = identity): List[T] =
     withConnection { conn =>
+      val (expanded, setValues) = bind(new SqlBindedStatementBuilder[PreparedStatement]).build(sql)
+      logger.info(expanded)
       val ps = setValues(conn.prepareStatement(expanded))
       val rs = ps.executeQuery
       extractResult(rs, extractor)
     }
-  }
 
-  def querySingle[T](sql: String, extractor: ResultSet => T = identity[ResultSet] _, bind: BindedStatementBuilder[PreparedStatement] => BindedStatementBuilder[PreparedStatement] = identity): T =
-    handleSingleResult(query(sql, extractor, bind))
+  def executeQuerySingle[T](sql: String, extractor: ResultSet => T = identity[ResultSet] _, bind: BindedStatementBuilder[PreparedStatement] => BindedStatementBuilder[PreparedStatement] = identity): T =
+    handleSingleResult(executeQuery(sql, extractor, bind))
 
   @tailrec
   private def extractResult[T](rs: ResultSet, extractor: ResultSet => T, acc: List[T] = List()): List[T] =

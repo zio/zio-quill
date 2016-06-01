@@ -1,12 +1,15 @@
 package io.getquill
 
-import language.experimental.macros
 import language.implicitConversions
+import language.experimental.macros
 import scala.reflect.macros.whitebox.Context
 import io.getquill.util.Messages._
 import scala.runtime._
+import io.getquill.sources.Source
 
-object ImplicitQuery {
+trait ImplicitQuery {
+  this: Source[_, _] =>
+
   implicit def toQuery[P <: Product](f: AbstractFunction1[_, P]): Query[P] = macro ImplicitQueryMacro.toQuery[P]
   implicit def toQuery[P <: Product](f: AbstractFunction2[_, _, P]): Query[P] = macro ImplicitQueryMacro.toQuery[P]
   implicit def toQuery[P <: Product](f: AbstractFunction3[_, _, _, P]): Query[P] = macro ImplicitQueryMacro.toQuery[P]
@@ -38,6 +41,6 @@ private[getquill] class ImplicitQueryMacro(val c: Context) {
     if (!p.tpe.typeSymbol.asClass.isCaseClass || !f.actualType.typeSymbol.isModuleClass)
       c.fail("Can't query a non-case class")
 
-    q"io.getquill.query[$p]"
+    q"${c.prefix}.query[$p]"
   }
 }

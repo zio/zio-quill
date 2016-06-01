@@ -1,9 +1,10 @@
 package io.getquill.sources.jdbc.h2
 
-import io.getquill._
 import io.getquill.sources.sql.PeopleSpec
 
-class PeopleJdbcSpec extends PeopleSpec {
+class PeopleJdbcSpec extends PeopleSpec(testH2DB) {
+
+  import testH2DB._
 
   override def beforeAll = {
     val t = testH2DB.transaction {

@@ -1,8 +1,8 @@
 package io.getquill.sources.sql
 
-import io.getquill._
+import mirrorSource._
 
-class VerifySqlQuerySpec extends Spec {
+class VerifySqlQuerySpec extends SqlSpec {
 
   "fails if the query can't be translated to applicative joins" - {
     "sortBy" in {

@@ -3,12 +3,10 @@ package io.getquill.sources.sql
 import scala.language.reflectiveCalls
 
 import io.getquill.Query
-import io.getquill.Spec
-import io.getquill.query
-import io.getquill.quote
-import io.getquill.unquote
+import mirrorSource._
+import io.getquill.SourceSpec
 
-trait DepartmentsSpec extends Spec {
+abstract class DepartmentsSpec(source: SqlSource[_, _, _, _]) extends SourceSpec(source) {
 
   case class Department(dpt: String)
   case class Employee(emp: String, dpt: String, salary: Int)

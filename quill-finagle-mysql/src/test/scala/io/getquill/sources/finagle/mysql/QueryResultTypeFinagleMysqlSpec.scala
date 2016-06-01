@@ -5,7 +5,9 @@ import com.twitter.util.{ Await, Future }
 import java.util.concurrent.ConcurrentLinkedQueue
 import scala.collection.JavaConverters._
 
-class QueryResultTypeFinagleMysqlSpec extends QueryResultTypeSpec {
+class QueryResultTypeFinagleMysqlSpec extends QueryResultTypeSpec(testDB) {
+
+  import testDB._
   val db = testDB
 
   def await[T](r: Future[T]) = Await.result(r)

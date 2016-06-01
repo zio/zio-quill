@@ -1,9 +1,9 @@
 package io.getquill.sources.sql
 
-import io.getquill._
+import mirrorSource._
 import io.getquill.sources.mirror.Row
 
-class BindVariablesSpec extends Spec {
+class BindVariablesSpec extends SqlSpec {
 
   "binds values according to the sql terms order" - {
     "drop.take" in {

@@ -1,14 +1,12 @@
 package io.getquill.sources.sql
 
 import java.util.Date
-
 import scala.BigDecimal
 
-import io.getquill.Spec
-import io.getquill.query
-import io.getquill.quote
+import mirrorSource._
+import io.getquill.SourceSpec
 
-class EncodingSpec extends Spec {
+abstract class EncodingSpec(source: SqlSource[_, _, _, _]) extends SourceSpec(source) {
 
   case class EncodingTestEntity(
     v1:  String,

@@ -1,8 +1,7 @@
 package io.getquill.ast
 
-import io.getquill._
-import io.getquill.query
-import io.getquill.quote
+import io.getquill.Spec
+import io.getquill.testSource._
 
 class AstSpec extends Spec {
 

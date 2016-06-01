@@ -1,13 +1,15 @@
 package io.getquill.sources
 
+import io.getquill.testSource._
+import io.getquill.testSource
 import io.getquill._
-import io.getquill.TestSource.mirrorSource
+
 import io.getquill.sources.mirror.Row
 
 case class WrappedEncodable(value: Int)
   extends AnyVal with WrappedValue[Int]
 
-class SourceSpec extends Spec {
+class SourceInstanceSpec extends Spec {
 
   "provides mapped encoding" - {
 
@@ -19,7 +21,7 @@ class SourceSpec extends Spec {
       val q = quote {
         (s: StringValue) => query[Entity].insert(_.s -> s)
       }
-      mirrorSource.run(q)(List(StringValue("s"))).bindList mustEqual List(Row("s"))
+      testSource.run(q)(List(StringValue("s"))).bindList mustEqual List(Row("s"))
     }
 
     "decoding" in {
@@ -27,7 +29,7 @@ class SourceSpec extends Spec {
       val q = quote {
         query[Entity]
       }
-      mirrorSource.run(q).extractor(Row("s")) mustEqual Entity(StringValue("s"))
+      testSource.run(q).extractor(Row("s")) mustEqual Entity(StringValue("s"))
     }
   }
 
@@ -36,7 +38,7 @@ class SourceSpec extends Spec {
     val q = quote { (is: Set[Int]) =>
       query[Entity].filter(e => is.contains(e.i))
     }
-    mirrorSource.run(q)(Set(1)).binds mustEqual Row(Set(1))
+    testSource.run(q)(Set(1)).binds mustEqual Row(Set(1))
   }
 
   "encodes `WrappedValue` extended value class" - {
@@ -46,7 +48,7 @@ class SourceSpec extends Spec {
       val q = quote {
         (x: WrappedEncodable) => query[Entity].insert(_.x -> x, _.s -> s"$x")
       }
-      mirrorSource.run(q)(List(WrappedEncodable(1))).bindList mustEqual List(Row(1))
+      testSource.run(q)(List(WrappedEncodable(1))).bindList mustEqual List(Row(1))
     }
 
     "decoding" in {
@@ -54,7 +56,7 @@ class SourceSpec extends Spec {
         query[Entity]
       }
       val wrapped = WrappedEncodable(1)
-      mirrorSource.run(q).extractor(Row(1, "1")) mustEqual Entity(wrapped, wrapped.toString)
+      testSource.run(q).extractor(Row(1, "1")) mustEqual Entity(wrapped, wrapped.toString)
     }
   }
 
@@ -68,14 +70,14 @@ class SourceSpec extends Spec {
       val q = quote {
         (x: Wrapped) => query[Entity].insert(_.x -> x)
       }
-      mirrorSource.run(q)(List((Wrapped(1)))).bindList mustEqual List(Row(1))
+      testSource.run(q)(List((Wrapped(1)))).bindList mustEqual List(Row(1))
     }
 
     "decoding" in {
       val q = quote {
         query[Entity]
       }
-      mirrorSource.run(q).extractor(Row(1)) mustEqual Entity(Wrapped(1))
+      testSource.run(q).extractor(Row(1)) mustEqual Entity(Wrapped(1))
     }
   }
 
@@ -88,6 +90,6 @@ class SourceSpec extends Spec {
     val q = quote {
       query[Entity]
     }
-    "mirrorSource.run(q).extractor(Row(1))" mustNot compile
+    "testSource.run(q).extractor(Row(1))" mustNot compile
   }
 }

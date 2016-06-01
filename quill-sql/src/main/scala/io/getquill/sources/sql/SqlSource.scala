@@ -1,17 +1,17 @@
 package io.getquill.sources.sql
 
 import language.higherKinds
-import io.getquill.Query
-import io.getquill.Action
 import java.util.Date
 import language.experimental.macros
 import scala.reflect.ClassTag
 import scala.util.Try
 import io.getquill.naming.NamingStrategy
-import io.getquill.quotation.Quoted
+import io.getquill.Quoted
 import io.getquill.sources.sql.idiom.SqlIdiom
 
-abstract class SqlSource[D <: SqlIdiom, N <: NamingStrategy, R: ClassTag, S: ClassTag] extends io.getquill.sources.Source[R, S] {
+abstract class SqlSource[D <: SqlIdiom, N <: NamingStrategy, R: ClassTag, S: ClassTag]
+  extends io.getquill.sources.Source[R, S]
+  with Ops {
 
   type QueryResult[T]
   type SingleQueryResult[T]

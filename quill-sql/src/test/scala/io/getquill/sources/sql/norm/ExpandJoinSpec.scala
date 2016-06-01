@@ -1,10 +1,9 @@
 package io.getquill.sources.sql.norm
 
-import io.getquill._
-import io.getquill.quote
-import io.getquill.unquote
+import io.getquill.sources.sql.mirrorSource._
+import io.getquill.sources.sql.SqlSpec
 
-class ExpandJoinSpec extends Spec {
+class ExpandJoinSpec extends SqlSpec {
 
   "expands the outer join by mapping the result" - {
     "simple" in {

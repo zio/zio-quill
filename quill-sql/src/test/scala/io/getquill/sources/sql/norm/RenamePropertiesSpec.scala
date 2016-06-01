@@ -1,9 +1,12 @@
 package io.getquill.sources.sql.norm
 
 import io.getquill.sources.sql.mirrorSource
-import io.getquill._
+import io.getquill.sources.sql.mirrorSource._
+import io.getquill.sources.sql.mirrorSource
+import io.getquill.sources.sql.SqlSpec
+import io.getquill.Quoted
 
-class RenamePropertiesSpec extends Spec {
+class RenamePropertiesSpec extends SqlSpec {
 
   val e = quote {
     query[TestEntity].schema(_.entity("test_entity").columns(_.s -> "field_s", _.i -> "field_i").generated(_.i))

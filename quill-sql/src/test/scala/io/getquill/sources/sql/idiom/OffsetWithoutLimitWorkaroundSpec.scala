@@ -1,11 +1,12 @@
 package io.getquill.sources.sql.idiom
 
 import io.getquill.naming.Literal
+import io.getquill.sources.sql.mirrorSource._
 import io.getquill.util.Show._
-import io.getquill._
 import io.getquill.sources.sql.SqlQuery
+import io.getquill.sources.sql.SqlSpec
 
-class OffsetWithoutLimitWorkaroundSpec extends Spec {
+class OffsetWithoutLimitWorkaroundSpec extends SqlSpec {
 
   val subject = new SqlIdiom with OffsetWithoutLimitWorkaround {
     def prepare(sql: String) = sql

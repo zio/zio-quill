@@ -3,7 +3,9 @@ package io.getquill.sources.cassandra.norm
 import io.getquill._
 import io.getquill.sources.cassandra.mirrorSource
 
-class RenamePropertiesSpec extends Spec {
+class RenamePropertiesSpec extends SourceSpec(mirrorSource) {
+
+  import mirrorSource._
 
   val e = quote {
     query[TestEntity].schema(_.entity("test_entity").columns(_.s -> "field_s", _.i -> "field_i"))

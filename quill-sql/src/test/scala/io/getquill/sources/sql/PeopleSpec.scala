@@ -1,8 +1,9 @@
 package io.getquill.sources.sql
 
 import io.getquill._
+import mirrorSource._
 
-trait PeopleSpec extends Spec {
+abstract class PeopleSpec(source: SqlSource[_, _, _, _]) extends SourceSpec(source) {
 
   case class Person(name: String, age: Int)
   case class Couple(her: String, him: String)

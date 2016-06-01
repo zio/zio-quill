@@ -1,9 +1,10 @@
 package io.getquill.sources.jdbc.postgres
 
-import io.getquill._
 import io.getquill.sources.sql.ProductSpec
 
-class ProductJdbcSpec extends ProductSpec {
+class ProductJdbcSpec extends ProductSpec(testPostgresDB) {
+
+  import testPostgresDB._
 
   override def beforeAll = {
     testPostgresDB.run(quote(query[Product].delete))

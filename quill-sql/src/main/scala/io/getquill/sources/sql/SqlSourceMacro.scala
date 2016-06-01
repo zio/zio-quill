@@ -1,7 +1,6 @@
 package io.getquill.sources.sql
 
 import scala.reflect.macros.whitebox.Context
-import scala.util.Failure
 import io.getquill.ast._
 import io.getquill.naming.NamingStrategy
 import io.getquill.sources.SourceMacro
@@ -34,12 +33,7 @@ class SqlSourceMacro(val c: Context) extends SourceMacro {
   }
 
   private def probe(sql: String, d: SqlIdiom) =
-    resolveSource[SqlSource[SqlIdiom, NamingStrategy, Any, Any]].map {
-      _.probe(d.prepare(sql))
-    } match {
-      case Some(Failure(e)) => c.error(s"The sql query probing failed. Reason '$e'")
-      case other            =>
-    }
+    probeQuery[SqlSource[SqlIdiom, NamingStrategy, Any, Any]](_.probe(d.prepare(sql)))
 
   private def dialectAndNaming = {
     val (idiom :: n :: _) =

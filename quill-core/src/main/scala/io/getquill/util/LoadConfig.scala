@@ -2,7 +2,7 @@ package io.getquill.util
 
 import com.typesafe.config.ConfigFactory
 
-object Config {
+object LoadConfig {
 
   def apply(configPrefix: String) = {
     val factory = ConfigFactory.load(getClass.getClassLoader)

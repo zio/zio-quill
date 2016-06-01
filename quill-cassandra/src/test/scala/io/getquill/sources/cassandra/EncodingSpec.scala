@@ -9,12 +9,14 @@ class EncodingSpec extends Spec {
   "encodes and decodes types" - {
 
     "sync" in {
+      import testSyncDB._
       testSyncDB.run(query[EncodingTestEntity].delete)
       testSyncDB.run(query[EncodingTestEntity].insert)(insertValues)
       verify(testSyncDB.run(query[EncodingTestEntity]))
     }
 
     "async" in {
+      import testAsyncDB._
       import scala.concurrent.ExecutionContext.Implicits.global
       await {
         for {
@@ -28,6 +30,7 @@ class EncodingSpec extends Spec {
     }
 
     "stream" in {
+      import testStreamDB._
       import monifu.concurrent.Implicits.globalScheduler
       val result =
         for {
@@ -44,19 +47,24 @@ class EncodingSpec extends Spec {
   }
 
   "encodes collections" - {
-    val q = quote {
-      (list: List[Int]) =>
-        query[EncodingTestEntity].filter(t => list.contains(t.id))
-    }
-
     "sync" in {
+      import testSyncDB._
+      val q = quote {
+        (list: List[Int]) =>
+          query[EncodingTestEntity].filter(t => list.contains(t.id))
+      }
       testSyncDB.run(query[EncodingTestEntity])
       testSyncDB.run(query[EncodingTestEntity].insert)(insertValues)
       verify(testSyncDB.run(q)(insertValues.map(_.id)))
     }
 
     "async" in {
+      import testAsyncDB._
       import scala.concurrent.ExecutionContext.Implicits.global
+      val q = quote {
+        (list: List[Int]) =>
+          query[EncodingTestEntity].filter(t => list.contains(t.id))
+      }
       await {
         for {
           _ <- testAsyncDB.run(query[EncodingTestEntity].delete)
@@ -69,7 +77,12 @@ class EncodingSpec extends Spec {
     }
 
     "stream" in {
+      import testStreamDB._
       import monifu.concurrent.Implicits.globalScheduler
+      val q = quote {
+        (list: List[Int]) =>
+          query[EncodingTestEntity].filter(t => list.contains(t.id))
+      }
       val result =
         for {
           _ <- testStreamDB.run(query[EncodingTestEntity].delete)

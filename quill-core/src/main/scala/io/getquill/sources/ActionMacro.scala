@@ -2,9 +2,9 @@ package io.getquill.sources
 
 import scala.reflect.macros.whitebox.Context
 
-import io.getquill._
 import io.getquill.ast._
 import io.getquill.util.Messages.fail
+import io.getquill.dsl.CoreDsl
 
 trait ActionMacro extends EncodingMacro {
   this: SourceMacro =>
@@ -27,7 +27,7 @@ trait ActionMacro extends EncodingMacro {
         val encodedParams = EncodeParams[S](c)(inPlaceParams, collection.Map())
         expandedTreeSingle(quotedTree, action, inPlaceParams.map(_._1).toList, encodedParams)
 
-      case List((param, tpe)) if (t.tpe.erasure <:< c.weakTypeOf[UnassignedAction[Any]].erasure) =>
+      case List((param, tpe)) if (t.tpe.erasure <:< c.weakTypeOf[CoreDsl#UnassignedAction[Any]].erasure) =>
         val encodingValue = encoding(param, Encoding.inferEncoder[S](c))(c.WeakTypeTag(tpe))
         val bindings = bindingMap(encodingValue)
         val idents = bindings.map(_._1).toList
@@ -48,7 +48,7 @@ trait ActionMacro extends EncodingMacro {
       val (sql, bindings: List[io.getquill.ast.Ident], generated) =
         ${prepare(action, idents)}
 
-      ${c.prefix}.execute(
+      ${c.prefix}.executeAction(
         sql,
         $encodedParams(bindings.map(_.name)),
         generated
@@ -64,7 +64,7 @@ trait ActionMacro extends EncodingMacro {
       val (sql, bindings: List[io.getquill.ast.Ident], generated) =
         ${prepare(action, idents)}
 
-      ${c.prefix}.executeBatch[(..$paramsTypes)](
+      ${c.prefix}.executeActionBatch[(..$paramsTypes)](
         sql,
         value => $encodedParams(bindings.map(_.name)),
         generated

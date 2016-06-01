@@ -1,9 +1,10 @@
 package io.getquill.sources.jdbc.postgres
 
-import io.getquill._
 import io.getquill.sources.sql.DepartmentsSpec
 
-class DepartmentsJdbcSpec extends DepartmentsSpec {
+class DepartmentsJdbcSpec extends DepartmentsSpec(testPostgresDB) {
+
+  import testPostgresDB._
 
   override def beforeAll = {
     val t = testPostgresDB.transaction {

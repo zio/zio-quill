@@ -1,20 +1,22 @@
 package io.getquill.sources.jdbc.mysql
 
-import io.getquill._
 import io.getquill.sources.sql.DepartmentsSpec
 
-class DepartmentsJdbcSpec extends DepartmentsSpec {
+class DepartmentsJdbcSpec extends DepartmentsSpec(testMysqlDB) {
+
+  import testMysqlDB._
 
   override def beforeAll = {
-    val t = testMysqlDB.transaction {
-      testMysqlDB.run(query[Department].delete)
-      testMysqlDB.run(query[Employee].delete)
-      testMysqlDB.run(query[Task].delete)
+    testMysqlDB.transaction { transactional =>
+      transactional.run(query[Department].delete)
+      transactional.run(query[Employee].delete)
+      transactional.run(query[Task].delete)
 
-      testMysqlDB.run(departmentInsert)(departmentEntries)
-      testMysqlDB.run(employeeInsert)(employeeEntries)
-      testMysqlDB.run(taskInsert)(taskEntries)
+      transactional.run(departmentInsert)(departmentEntries)
+      transactional.run(employeeInsert)(employeeEntries)
+      transactional.run(taskInsert)(taskEntries)
     }
+    ()
   }
 
   "Example 8 - nested naive" in {

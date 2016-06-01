@@ -1,13 +1,14 @@
 package io.getquill.sources.async.postgres
 
-import io.getquill._
 import io.getquill.sources.sql.PeopleSpec
 import scala.concurrent.Future
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 import scala.concurrent.ExecutionContext.Implicits.{ global => ec }
 
-class PeoplePostgresAsyncSpec extends PeopleSpec {
+class PeoplePostgresAsyncSpec extends PeopleSpec(testPostgresDB) {
+
+  import testPostgresDB._
 
   def await[T](future: Future[T]) = Await.result(future, Duration.Inf)
 

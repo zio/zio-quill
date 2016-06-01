@@ -1,11 +1,13 @@
 package test
 
-import io.getquill._
 import io.getquill.ast.{ Query => _, _ }
 import io.getquill.quotation.NonQuotedException
-import io.getquill.quotation.Quoted
+import io.getquill.testSource
+import io.getquill.Spec
 
-class PackageSpec extends Spec {
+class OpsSpec extends Spec {
+
+  import testSource._
 
   "quotes asts" - {
     "explicitly" in {

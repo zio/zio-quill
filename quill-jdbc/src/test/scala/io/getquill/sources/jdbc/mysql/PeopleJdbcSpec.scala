@@ -1,9 +1,10 @@
 package io.getquill.sources.jdbc.mysql
 
-import io.getquill._
 import io.getquill.sources.sql.PeopleSpec
 
-class PeopleJdbcSpec extends PeopleSpec {
+class PeopleJdbcSpec extends PeopleSpec(testMysqlDB) {
+
+  import testMysqlDB._
 
   override def beforeAll = {
     val t = testMysqlDB.transaction {

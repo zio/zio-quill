@@ -1,8 +1,9 @@
 package io.getquill.sources.sql
 
-import io.getquill._
+import mirrorSource._
+import io.getquill.SourceSpec
 
-trait ProductSpec extends Spec {
+abstract class ProductSpec(source: SqlSource[_, _, _, _]) extends SourceSpec(source) {
 
   case class Product(id: Long, description: String, sku: Long)
 

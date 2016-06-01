@@ -1,9 +1,10 @@
 package io.getquill.sources.jdbc.h2
 
-import io.getquill._
 import io.getquill.sources.sql.ProductSpec
 
-class ProductJdbcSpec extends ProductSpec {
+class ProductJdbcSpec extends ProductSpec(testH2DB) {
+
+  import testH2DB._
 
   override def beforeAll = {
     testH2DB.run(quote(query[Product].delete))

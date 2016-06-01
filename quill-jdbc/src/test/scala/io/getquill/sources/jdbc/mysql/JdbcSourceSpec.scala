@@ -2,13 +2,15 @@ package io.getquill.sources.jdbc.mysql
 
 import io.getquill._
 
-class JdbcSourceSpec extends Spec {
+class JdbcSourceSpec extends SourceSpec(testMysqlDB) {
 
-  "probes sqls" - {
+  import testMysqlDB._
+
+  "probes sqls" in {
     val p = testMysqlDB.probe("DELETE FROM TestEntity")
   }
 
-  "run non-batched action" - {
+  "run non-batched action" in {
     val insert = quote { (i: Int) =>
       qr1.insert(_.i -> i)
     }

@@ -4,12 +4,13 @@ import scala.language.higherKinds
 import scala.language.experimental.macros
 import scala.util.Try
 import io.getquill._
-import io.getquill.quotation.Quoted
+import io.getquill.Quoted
 import io.getquill.naming.NamingStrategy
 import io.getquill.sources.Source
 
 trait CassandraSource[N <: NamingStrategy, R, S]
-  extends Source[R, S] {
+  extends Source[R, S]
+  with Ops {
 
   def probe(cql: String): Try[Unit]
 

@@ -1,14 +1,16 @@
 package io.getquill.sources.sql.idiom
 
-import io.getquill._
-import io.getquill.Spec
+import io.getquill.sources.sql.mirrorSource._
 import io.getquill.sources.mirror.Row
 import io.getquill.sources.sql.mirrorSource
 import io.getquill.ast.Ast
 import io.getquill.naming.Literal
 import io.getquill.util.Show.Shower
+import io.getquill.sources.sql.mirrorSource._
+import io.getquill.sources.sql.mirrorSource
+import io.getquill.sources.sql.SqlSpec
 
-class SqlIdiomSpec extends Spec {
+class SqlIdiomSpec extends SqlSpec {
 
   "shows the sql representation of normalized asts" - {
     "query" - {

@@ -1,9 +1,10 @@
 package io.getquill.sources.sql.norm
 
-import io.getquill._
+import io.getquill.sources.sql.mirrorSource._
 import io.getquill.sources.sql.mirrorSource
+import io.getquill.sources.sql.SqlSpec
 
-class ExpandNestedQueriesSpec extends Spec {
+class ExpandNestedQueriesSpec extends SqlSpec {
 
   "keeps the initial table alias" in {
     val q = quote {

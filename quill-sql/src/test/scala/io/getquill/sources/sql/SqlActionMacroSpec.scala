@@ -1,10 +1,9 @@
 package io.getquill.sources.sql
 
-import io.getquill._
-import io.getquill.Spec
+import mirrorSource._
 import io.getquill.sources.mirror.Row
 
-class SqlActionMacroSpec extends Spec {
+class SqlActionMacroSpec extends SqlSpec {
 
   "runs actions" - {
     "without bindings" - {

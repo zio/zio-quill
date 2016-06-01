@@ -1,14 +1,15 @@
 package io.getquill.sources.sql
 
-import io.getquill._
+import mirrorSource._
 import io.getquill.naming.NamingStrategy
 import io.getquill.sources.sql.idiom.SqlIdiom
 import scala.util.Try
 import java.util.Date
 import io.getquill.sources.mirror.Row
 import io.getquill.naming.Literal
+import io.getquill.sources.sql.mirror.SqlMirrorSourceWithQueryProbing
 
-class SqlSourceMacroSpec extends Spec {
+class SqlSourceMacroSpec extends SqlSpec {
 
   "binds inputs according to the sql terms order" - {
     "filter.update" in {
@@ -33,7 +34,7 @@ class SqlSourceMacroSpec extends Spec {
 
   "fails if the sql probing fails" in {
     case class Fail()
-    val s = source(new SqlMirrorSourceConfig[Literal]("test") with QueryProbing)
+    val s = new SqlMirrorSourceWithQueryProbing[Literal]
     "s.run(query[Fail])" mustNot compile
   }
 

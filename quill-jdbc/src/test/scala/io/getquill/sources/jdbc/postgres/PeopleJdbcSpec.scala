@@ -1,9 +1,10 @@
 package io.getquill.sources.jdbc.postgres
 
-import io.getquill._
 import io.getquill.sources.sql.PeopleSpec
 
-class PeopleJdbcSpec extends PeopleSpec {
+class PeopleJdbcSpec extends PeopleSpec(testPostgresDB) {
+
+  import testPostgresDB._
 
   override def beforeAll = {
     val t = testPostgresDB.transaction {

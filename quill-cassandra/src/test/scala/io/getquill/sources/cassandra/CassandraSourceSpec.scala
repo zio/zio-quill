@@ -6,6 +6,8 @@ import scala.concurrent.ExecutionContext.Implicits.{ global => ec }
 
 class CassandraSourceSpec extends Spec {
 
+  import testSyncDB._
+
   "run non-batched action" - {
 
     case class TestEntity(id: Int, s: String, i: Int, l: Long, o: Int)

@@ -2,18 +2,12 @@ package io.getquill.sources.jdbc.h2
 
 import io.getquill._
 
-class JdbcSourceSpec extends Spec {
+class JdbcSourceSpec extends SourceSpec(testH2DB) {
+
+  import testH2DB._
 
   val badEntity = quote {
     query[TestEntity].schema(_.entity("TestEntity").columns(_.s -> "a", _.i -> "i", _.l -> "l", _.o -> "o"))
-  }
-
-  "probes valid sqls" - {
-    """testH2DBWithQueryProbing.run(qr1.filter(_.i == 0))""" must compile
-  }
-
-  "probes invalid sqls" - {
-    """testH2DBWithQueryProbing.run(badEntity.map(_.s))""" mustNot compile
   }
 
   "provides transaction support" - {

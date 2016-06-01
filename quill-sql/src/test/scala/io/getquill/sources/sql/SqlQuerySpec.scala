@@ -1,13 +1,13 @@
 package io.getquill.sources.sql
 
-import io.getquill._
+import mirrorSource._
 import io.getquill.naming.Literal
 import io.getquill.norm.QueryGenerator
 import io.getquill.norm.Normalize
 import io.getquill.sources.sql.idiom.SqlIdiom
 import io.getquill.util.Show._
 
-class SqlQuerySpec extends Spec {
+class SqlQuerySpec extends SqlSpec {
 
   val idiom = new SqlIdiom {
     def prepare(sql: String) = sql

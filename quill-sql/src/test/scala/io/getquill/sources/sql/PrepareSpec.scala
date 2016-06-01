@@ -1,8 +1,8 @@
 package io.getquill.sources.sql
 
-import io.getquill._
+import mirrorSource._
 
-class PrepareSpec extends Spec {
+class PrepareSpec extends SqlSpec {
 
   "nested and mapped outer joins" in {
     val q = quote {

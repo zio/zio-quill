@@ -3,10 +3,11 @@ package io.getquill.sources.finagle.mysql
 import com.twitter.util.Await
 import com.twitter.util.Future
 
-import io.getquill._
 import io.getquill.sources.sql.PeopleSpec
 
-class PeopleFinagleMysqlSpec extends PeopleSpec {
+class PeopleFinagleMysqlSpec extends PeopleSpec(testDB) {
+
+  import testDB._
 
   def await[T](future: Future[T]) = Await.result(future)
 

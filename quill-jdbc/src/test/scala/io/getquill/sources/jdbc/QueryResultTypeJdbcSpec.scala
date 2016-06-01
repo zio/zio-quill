@@ -4,7 +4,7 @@ import io.getquill.sources.sql._
 import java.util.concurrent.ConcurrentLinkedQueue
 import scala.collection.JavaConverters._
 
-class QueryResultTypeJdbcSpec extends QueryResultTypeSpec {
+class QueryResultTypeJdbcSpec extends QueryResultTypeSpec(mysql.testMysqlDB) {
 
   val db = mysql.testMysqlDB
 

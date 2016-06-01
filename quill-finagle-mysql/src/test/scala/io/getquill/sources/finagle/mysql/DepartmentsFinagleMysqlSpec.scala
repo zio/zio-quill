@@ -3,10 +3,11 @@ package io.getquill.sources.finagle.mysql
 import com.twitter.util.Await
 import com.twitter.util.Future
 
-import io.getquill._
 import io.getquill.sources.sql.DepartmentsSpec
 
-class DepartmentsFinagleMysqlSpec extends DepartmentsSpec {
+class DepartmentsFinagleMysqlSpec extends DepartmentsSpec(testDB) {
+
+  import testDB._
 
   def await[T](future: Future[T]) = Await.result(future)
 

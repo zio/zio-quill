@@ -1,8 +1,13 @@
 package io.getquill.sources.cassandra
 
-import io.getquill._
+trait Ops {
+  this: CassandraSource[_, _, _] =>
 
-package object ops {
+  abstract class Options[A](q: A) {
+    def usingTimestamp(ts: Int) = quote(infix"$q USING TIMESTAMP $ts".as[A])
+    def usingTtl(ttl: Int) = quote(infix"$q USING TTL $ttl".as[A])
+    def using(ts: Int, ttl: Int) = quote(infix"$q USING TIMESTAMP $ts AND TTL $ttl".as[A])
+  }
 
   implicit class QueryOps[Q <: Query[_]](q: Q) {
     def allowFiltering = quote(infix"$q ALLOW FILTERING".as[Q])

@@ -3,8 +3,9 @@ package io.getquill.sources
 import scala.reflect.ClassTag
 import scala.util.DynamicVariable
 import java.io.Closeable
+import io.getquill.dsl.CoreDsl
 
-abstract class Source[R: ClassTag, S: ClassTag] extends Closeable {
+abstract class Source[R: ClassTag, S: ClassTag] extends Closeable with CoreDsl {
 
   type Decoder[T] = io.getquill.sources.Decoder[R, T]
   type Encoder[T] = io.getquill.sources.Encoder[S, T]

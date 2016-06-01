@@ -4,8 +4,10 @@ import io.getquill.naming.Literal
 import io.getquill.util.Show._
 import io.getquill._
 import io.getquill.ast._
+import io.getquill.sources.sql.mirrorSource._
+import io.getquill.sources.sql.SqlSpec
 
-class MySQLDialectSpec extends Spec {
+class MySQLDialectSpec extends SqlSpec {
 
   import MySQLDialect._
 

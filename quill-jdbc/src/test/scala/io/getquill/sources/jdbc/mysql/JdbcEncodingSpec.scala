@@ -1,9 +1,10 @@
 package io.getquill.sources.jdbc.mysql
 
-import io.getquill._
 import io.getquill.sources.sql.EncodingSpec
 
-class JdbcEncodingSpec extends EncodingSpec {
+class JdbcEncodingSpec extends EncodingSpec(testMysqlDB) {
+
+  import testMysqlDB._
 
   "encodes and decodes types" in {
     testMysqlDB.run(delete)

@@ -1,10 +1,11 @@
 package io.getquill.sources.sql.norm
 
-import io.getquill._
 import io.getquill.ast.{ Query => _, _ }
 import io.getquill.ast.AggregationOperator
+import io.getquill.sources.sql.mirrorSource._
+import io.getquill.sources.sql.SqlSpec
 
-class FlattenGroupByAggregationSpec extends Spec {
+class FlattenGroupByAggregationSpec extends SqlSpec {
 
   "flattens mapped aggregation" - {
     "simple" in {

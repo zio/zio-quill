@@ -1,9 +1,10 @@
 package io.getquill.sources.jdbc.h2
 
-import io.getquill._
 import io.getquill.sources.sql.EncodingSpec
 
-class JdbcEncodingSpec extends EncodingSpec {
+class JdbcEncodingSpec extends EncodingSpec(testH2DB) {
+
+  import testH2DB._
 
   "encodes and decodes types" in {
     testH2DB.run(delete)

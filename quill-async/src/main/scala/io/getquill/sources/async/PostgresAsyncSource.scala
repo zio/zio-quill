@@ -1,12 +1,21 @@
 package io.getquill.sources.async
 
-import com.github.mauricio.async.db.{ QueryResult => DBQueryResult, Connection }
+import com.github.mauricio.async.db.{ QueryResult => DBQueryResult }
+import com.github.mauricio.async.db.postgresql.PostgreSQLConnection
+import com.github.mauricio.async.db.postgresql.pool.PostgreSQLConnectionFactory
 import io.getquill.naming.NamingStrategy
-import io.getquill.sources.sql.idiom.SqlIdiom
+import io.getquill.sources.sql.idiom.PostgresDialect
+import com.github.mauricio.async.db.{ QueryResult => DBQueryResult }
+import com.typesafe.config.Config
+import io.getquill.util.LoadConfig
 
-class PostgresAsyncSource[D <: SqlIdiom, N <: NamingStrategy, C <: Connection](config: AsyncSourceConfig[D, N, C]) extends AsyncSource[D, N, C](config) {
+class PostgresAsyncSource[N <: NamingStrategy](config: AsyncSourceConfig)
+  extends PoolAsyncSource[PostgresDialect, N, PostgreSQLConnection](config, new PostgreSQLConnectionFactory(_)) {
 
-  override protected def extractActionResult(generated: Option[String])(result: DBQueryResult): Long = (generated, result) match {
+  def this(config: Config) = this(AsyncSourceConfig(config))
+  def this(configPrefix: String) = this(LoadConfig(configPrefix))
+
+  def extractActionResult(generated: Option[String])(result: DBQueryResult): Long = (generated, result) match {
     case (None, r) =>
       r.rowsAffected
     case (Some(col), r) =>
@@ -18,6 +27,6 @@ class PostgresAsyncSource[D <: SqlIdiom, N <: NamingStrategy, C <: Connection](c
       }
   }
 
-  override protected def expandAction(sql: String, generated: Option[String]): String =
+  override def expandAction(sql: String, generated: Option[String]): String =
     sql + generated.fold("")(id => s" RETURNING $id")
 }

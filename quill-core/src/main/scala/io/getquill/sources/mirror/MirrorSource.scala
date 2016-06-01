@@ -4,15 +4,16 @@ import scala.reflect.macros.whitebox.Context
 import language.experimental.macros
 import scala.util.Failure
 import scala.util.Success
-import io.getquill._
 import io.getquill.ast.{ Ast, Ident }
-import io.getquill.quotation.Quoted
 import io.getquill.sources._
 import io.getquill.util.Messages.RichContext
 import io.getquill.norm.Normalize
 import io.getquill.quotation.IsDynamic
+import io.getquill.QueryProbing
 
-class MirrorSource(config: SourceConfig[MirrorSource])
+class MirrorSourceTemplateWithQueryProbing extends MirrorSource with QueryProbing
+
+class MirrorSource
   extends Source[Row, Row]
   with MirrorEncoders
   with MirrorDecoders {
@@ -34,8 +35,6 @@ class MirrorSource(config: SourceConfig[MirrorSource])
   def run[P1, P2, T](quoted: Quoted[(P1, P2) => T]): (P1, P2) => QueryMirror[T] = macro MirrorSourceMacro.run[Row, Row]
   def run[P1, P2, P3, T](quoted: Quoted[(P1, P2, P3) => T]): (P1, P2, P3) => QueryMirror[T] = macro MirrorSourceMacro.run[Row, Row]
 
-  def mirrorConfig = config
-
   def probe(ast: Ast) =
     if (ast.toString.contains("Fail"))
       Failure(new IllegalStateException("The ast contains 'Fail'"))
@@ -44,21 +43,23 @@ class MirrorSource(config: SourceConfig[MirrorSource])
 
   case class ActionMirror(ast: Ast, bind: Row)
 
-  def execute(ast: Ast, bindParams: Row => Row = identity, generated: Option[String] = None) =
+  def transaction[T](f: MirrorSource => T) = f(this)
+
+  def executeAction(ast: Ast, bindParams: Row => Row = identity, generated: Option[String] = None) =
     ActionMirror(ast, bindParams(Row()))
 
   case class BatchActionMirror(ast: Ast, bindList: List[Row])
 
-  def executeBatch[T](ast: Ast, bindParams: T => Row => Row = (_: T) => identity[Row] _, generated: Option[String] = None) =
+  def executeActionBatch[T](ast: Ast, bindParams: T => Row => Row = (_: T) => identity[Row] _, generated: Option[String] = None) =
     (values: List[T]) =>
       BatchActionMirror(ast, values.map(bindParams).map(_(Row())))
 
   case class QueryMirror[T](ast: Ast, binds: Row, extractor: Row => T)
 
-  def querySingle[T](ast: Ast, extractor: Row => T = identity[Row] _, bind: Row => Row = identity) =
+  def executeQuerySingle[T](ast: Ast, extractor: Row => T = identity[Row] _, bind: Row => Row = identity) =
     QueryMirror(ast, bind(Row()), extractor)
 
-  def query[T](ast: Ast, extractor: Row => T = identity[Row] _, bind: Row => Row = identity) = QueryMirror(ast, bind(Row()), extractor)
+  def executeQuery[T](ast: Ast, extractor: Row => T = identity[Row] _, bind: Row => Row = identity) = QueryMirror(ast, bind(Row()), extractor)
 }
 
 class MirrorSourceMacro(val c: Context) extends SourceMacro {
@@ -68,10 +69,7 @@ class MirrorSourceMacro(val c: Context) extends SourceMacro {
     IsDynamic(ast) match {
       case false =>
         val normalized = Normalize(ast)
-        resolveSource[MirrorSource].map(_.probe(normalized)) match {
-          case Some(Failure(e)) => c.error(s"Probe failed. Reason $e")
-          case other            =>
-        }
+        probeQuery[MirrorSource](_.probe(normalized))
         c.info(normalized.toString)
         val (entity, insert) = ExtractEntityAndInsertAction(normalized)
         val isInsert = insert.isDefined

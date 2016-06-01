@@ -3,7 +3,9 @@ package io.getquill.sources.cassandra
 import io.getquill._
 import io.getquill.ast.Ast
 
-class ExpandMappedInfixSpec extends Spec {
+class ExpandMappedInfixSpec extends SourceSpec(mirrorSource) {
+
+  import mirrorSource._
 
   "removes identity map" in {
     val i = quote {

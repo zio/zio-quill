@@ -1,9 +1,11 @@
 package io.getquill.sources.sql.ops
 
-import io.getquill._
+import io.getquill.sources.sql.mirrorSource._
 import io.getquill.sources.sql.mirrorSource
+import io.getquill.sources.sql.mirrorSource
+import io.getquill.sources.sql.SqlSpec
 
-class PackageSpec extends Spec {
+class PackageSpec extends SqlSpec {
 
   "like" - {
     "constant" in {

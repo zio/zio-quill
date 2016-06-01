@@ -7,9 +7,11 @@ import scala.util.Success
 import scala.util.Failure
 import io.getquill.sources.mirror.MirrorEncoders
 import io.getquill.sources.mirror.MirrorDecoders
-import io.getquill.SqlMirrorSourceConfig
+import io.getquill.QueryProbing
 
-class SqlMirrorSource[N <: NamingStrategy](config: SqlMirrorSourceConfig[N])
+class SqlMirrorSourceWithQueryProbing[N <: NamingStrategy] extends SqlMirrorSource[N] with QueryProbing
+
+class SqlMirrorSource[N <: NamingStrategy]
   extends SqlSource[MirrorDialect, N, Row, Row]
   with MirrorEncoders
   with MirrorDecoders {
@@ -38,12 +40,12 @@ class SqlMirrorSource[N <: NamingStrategy](config: SqlMirrorSourceConfig[N])
 
   case class ActionMirror(sql: String, bind: Row, generated: Option[String])
 
-  def execute(sql: String, bind: Row => Row = identity, generated: Option[String] = None) =
+  def executeAction(sql: String, bind: Row => Row = identity, generated: Option[String] = None) =
     ActionMirror(sql, bind(Row()), generated)
 
   case class BatchActionMirror(sql: String, bindList: List[Row], generated: Option[String])
 
-  def executeBatch[T](sql: String, bindParams: T => Row => Row = (_: T) => identity[Row] _, generated: Option[String] = None) = {
+  def executeActionBatch[T](sql: String, bindParams: T => Row => Row = (_: T) => identity[Row] _, generated: Option[String] = None) = {
     val func = (values: List[T]) =>
       BatchActionMirror(sql, values.map(bindParams).map(_(Row())), generated)
     new ActionApply(func)
@@ -51,9 +53,9 @@ class SqlMirrorSource[N <: NamingStrategy](config: SqlMirrorSourceConfig[N])
 
   case class QueryMirror[T](sql: String, binds: Row, extractor: Row => T)
 
-  def query[T](sql: String, extractor: Row => T = identity[Row] _, bind: Row => Row = identity) =
+  def executeQuery[T](sql: String, extractor: Row => T = identity[Row] _, bind: Row => Row = identity) =
     QueryMirror(sql, bind(Row()), extractor)
 
-  def querySingle[T](sql: String, extractor: Row => T = identity[Row] _, bind: Row => Row = identity) =
-    query(sql, extractor, bind)
+  def executeQuerySingle[T](sql: String, extractor: Row => T = identity[Row] _, bind: Row => Row = identity) =
+    executeQuery(sql, extractor, bind)
 }

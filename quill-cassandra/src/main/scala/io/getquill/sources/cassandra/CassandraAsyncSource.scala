@@ -8,11 +8,15 @@ import com.datastax.driver.core.ResultSet
 import com.datastax.driver.core.Row
 import io.getquill.naming.NamingStrategy
 import io.getquill.sources.cassandra.util.FutureConversions.toScalaFuture
-import io.getquill.CassandraSourceConfig
 import io.getquill.sources.BindedStatementBuilder
+import io.getquill.util.LoadConfig
+import com.typesafe.config.Config
 
-class CassandraAsyncSource[N <: NamingStrategy](config: CassandraSourceConfig[N, CassandraAsyncSource[N]])
+class CassandraAsyncSource[N <: NamingStrategy](config: CassandraSourceConfig)
   extends CassandraSourceSession[N](config) {
+
+  def this(config: Config) = this(CassandraSourceConfig(config))
+  def this(configPrefix: String) = this(LoadConfig(configPrefix))
 
   override type QueryResult[T] = Future[List[T]]
   override type SingleQueryResult[T] = Future[T]
@@ -25,17 +29,17 @@ class CassandraAsyncSource[N <: NamingStrategy](config: CassandraSourceConfig[N,
     def apply(param: T) = f(List(param)).map(_.head)
   }
 
-  def query[T](cql: String, extractor: Row => T = identity[Row] _, bind: BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement] = identity)(implicit ec: ExecutionContext): Future[List[T]] =
+  def executeQuery[T](cql: String, extractor: Row => T = identity[Row] _, bind: BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement] = identity)(implicit ec: ExecutionContext): Future[List[T]] =
     session.executeAsync(prepare(cql, bind))
       .map(_.all.toList.map(extractor))
 
-  def querySingle[T](cql: String, extractor: Row => T = identity[Row] _, bind: BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement] = identity)(implicit ec: ExecutionContext): Future[T] =
-    query(cql, extractor, bind).map(handleSingleResult)
+  def executeQuerySingle[T](cql: String, extractor: Row => T = identity[Row] _, bind: BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement] = identity)(implicit ec: ExecutionContext): Future[T] =
+    executeQuery(cql, extractor, bind).map(handleSingleResult)
 
-  def execute(cql: String, bind: BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement] = identity, generated: Option[String] = None)(implicit ec: ExecutionContext): Future[ResultSet] =
+  def executeAction(cql: String, bind: BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement] = identity, generated: Option[String] = None)(implicit ec: ExecutionContext): Future[ResultSet] =
     session.executeAsync(prepare(cql, bind))
 
-  def executeBatch[T](cql: String, bindParams: T => BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement] = (_: T) => identity[BindedStatementBuilder[BoundStatement]] _, generated: Option[String] = None)(implicit ec: ExecutionContext): ActionApply[T] = {
+  def executeActionBatch[T](cql: String, bindParams: T => BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement] = (_: T) => identity[BindedStatementBuilder[BoundStatement]] _, generated: Option[String] = None)(implicit ec: ExecutionContext): ActionApply[T] = {
     def run(values: List[T]): Future[List[ResultSet]] =
       values match {
         case Nil => Future.successful(List())

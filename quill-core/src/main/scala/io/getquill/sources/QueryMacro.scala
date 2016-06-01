@@ -27,7 +27,7 @@ trait QueryMacro extends SelectFlattening with SelectResultExtraction {
       case q: Query => q
       case q        => Map(q, Ident("x"), Ident("x"))
     }
-    val queryMethod = if (returnList) TermName("query") else TermName("querySingle")
+    val queryMethod = if (returnList) TermName("executeQuery") else TermName("executeQuerySingle")
     val (flattenQuery, selectValues) = flattenSelect[T](query, Encoding.inferDecoder[R](c))
     val extractor = selectResultExtractor[R](selectValues)
     val encodedParams = EncodeParams[S](c)(bindingMap(functionParams) ++ inPlaceParams, collection.Map())

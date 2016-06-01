@@ -1,7 +1,6 @@
 package io.getquill.sources.cassandra
 
 import scala.reflect.macros.whitebox.Context
-import scala.util.Failure
 
 import com.datastax.driver.core.BoundStatement
 import com.datastax.driver.core.Row
@@ -34,12 +33,7 @@ class CassandraSourceMacro(val c: Context) extends SourceMacro {
     }
 
   private def probe(cql: String) =
-    resolveSource[CassandraSource[NamingStrategy, Row, BoundStatement]].map {
-      _.probe(cql)
-    } match {
-      case Some(Failure(e)) => c.error(s"The sql query probing failed. Reason '$e'")
-      case other            =>
-    }
+    probeQuery[CassandraSource[NamingStrategy, Row, BoundStatement]](_.probe(cql))
 
   private def namingType =
     c.prefix.actualType

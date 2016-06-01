@@ -1,9 +1,10 @@
 package io.getquill.sources
 
 import io.getquill.Spec
-import io.getquill.quote
+import io.getquill.testSource._
 
 class ExtractSchmeaAndInsertActionSpec extends Spec {
+
   "Extract should work" in {
     val q = quote {
       qr1.schema(_.entity("test").columns(_.i -> "'i", _.o -> "'i").generated(_.i)).insert

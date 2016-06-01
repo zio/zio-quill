@@ -1,8 +1,10 @@
 package io.getquill.sources.sql
 
 import io.getquill._
+import mirrorSource._
 
-trait QueryResultTypeSpec extends ProductSpec {
+abstract class QueryResultTypeSpec(source: SqlSource[_, _, _, _]) extends ProductSpec(source) {
+
   val deleteAll = quote(query[Product].delete)
   val selectAll = quote(query[Product])
   val map = quote(query[Product].map(_.id))

@@ -1,26 +1,25 @@
 package io.getquill.sources
 
 import scala.reflect.macros.whitebox.Context
-import io.getquill._
 import io.getquill.ast.{ Action => _, Query => _, _ }
 import io.getquill.quotation.Quotation
-import io.getquill.quotation.Quoted
 import io.getquill.quotation.FreeVariables
 import io.getquill.util.Messages._
 import io.getquill.quotation.Bindings
+import io.getquill.dsl.CoreDsl
 
-trait SourceMacro extends Quotation with ActionMacro with QueryMacro with ResolveSourceMacro {
+trait SourceMacro extends Quotation with ActionMacro with QueryMacro with QueryProbingMacro {
   val c: Context
   import c.universe.{ Function => _, Ident => _, _ }
 
   protected def prepare(ast: Ast, params: List[Ident]): Tree
 
-  def run[R, S](quoted: Expr[Quoted[Any]])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S]): Tree = runExpr(quoted, true)(r, s)
+  def run[R, S](quoted: Expr[_])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S]): Tree = runExpr(quoted, true)(r, s)
 
-  def runSingle[R, S](quoted: Expr[Quoted[Any]])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S]): Tree = runExpr(quoted, false)(r, s)
+  def runSingle[R, S](quoted: Expr[_])(implicit r: WeakTypeTag[R], s: WeakTypeTag[S]): Tree = runExpr(quoted, false)(r, s)
 
-  private def runExpr[R, S](quoted: Expr[Quoted[Any]], returnList: Boolean)(implicit r: WeakTypeTag[R], s: WeakTypeTag[S]): Tree = {
-    implicit val t = c.WeakTypeTag(quoted.actualType.baseType(c.weakTypeOf[Quoted[Any]].typeSymbol).typeArgs.head)
+  private def runExpr[R, S](quoted: Expr[_], returnList: Boolean)(implicit r: WeakTypeTag[R], s: WeakTypeTag[S]): Tree = {
+    implicit val t = c.WeakTypeTag(quoted.actualType.baseType(c.weakTypeOf[CoreDsl#Quoted[Any]].typeSymbol).typeArgs.head)
 
     val ast = this.ast(quoted)
 
@@ -59,7 +58,7 @@ trait SourceMacro extends Quotation with ActionMacro with QueryMacro with Resolv
 
   private def run[R, S, T](quotedTree: Tree, ast: Ast, inPlaceParams: collection.Map[Ident, (Type, Tree)], params: List[(Ident, Type)], returnList: Boolean)(implicit r: WeakTypeTag[R], s: WeakTypeTag[S], t: WeakTypeTag[T]): Tree =
     ast match {
-      case ast if ((t.tpe.erasure <:< c.weakTypeTag[Action[Any]].tpe.erasure)) =>
+      case ast if ((t.tpe.erasure <:< c.weakTypeTag[CoreDsl#Action[Any]].tpe.erasure)) =>
         runAction[S, T](quotedTree, ast, inPlaceParams, params)
 
       case ast =>
@@ -67,12 +66,12 @@ trait SourceMacro extends Quotation with ActionMacro with QueryMacro with Resolv
     }
 
   private def queryType(tpe: Type) =
-    if (tpe <:< c.typeOf[Query[_]])
-      c.WeakTypeTag(tpe.baseType(c.typeOf[Query[_]].typeSymbol).typeArgs.head)
+    if (tpe <:< c.typeOf[CoreDsl#Query[_]])
+      c.WeakTypeTag(tpe.baseType(c.typeOf[CoreDsl#Query[_]].typeSymbol).typeArgs.head)
     else
       c.WeakTypeTag(tpe)
 
-  private def ast[T](quoted: Expr[Quoted[T]]) =
+  private def ast[T](quoted: Expr[_]) =
     unquote[Ast](quoted.tree).getOrElse {
       Dynamic(quoted.tree)
     }

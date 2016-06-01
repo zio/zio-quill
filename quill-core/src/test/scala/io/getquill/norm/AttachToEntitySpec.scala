@@ -1,6 +1,7 @@
 package io.getquill.norm
 
 import io.getquill._
+import io.getquill.testSource._
 import io.getquill.ast._
 
 class AttachToEntitySpec extends Spec {

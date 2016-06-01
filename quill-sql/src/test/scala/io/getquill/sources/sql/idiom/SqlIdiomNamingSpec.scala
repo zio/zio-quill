@@ -1,25 +1,27 @@
 package io.getquill.sources.sql.idiom
 
-import io.getquill.Spec
+import io.getquill.sources.sql.mirrorSource._
 import io.getquill.naming._
-import io.getquill._
 import io.getquill.util.Show._
 import io.getquill.ast.Ast
 import FallbackDialect._
+import io.getquill.sources.sql.mirrorSource._
+import io.getquill.sources.sql.mirror.SqlMirrorSource
+import io.getquill.sources.sql.SqlSpec
 
-class SqlIdiomNamingSpec extends Spec {
+class SqlIdiomNamingSpec extends SqlSpec {
 
   "uses the naming strategy" - {
 
     case class TestEntity(someColumn: Int)
 
     "one transformation" in {
-      val db = source(new SqlMirrorSourceConfig[SnakeCase]("test"))
+      val db = new SqlMirrorSource[SnakeCase]
       db.run(query[TestEntity]).sql mustEqual
         "SELECT x.some_column FROM test_entity x"
     }
     "mutiple transformations" in {
-      val db = source(new SqlMirrorSourceConfig[SnakeCase with UpperCase with Escape]("test"))
+      val db = new SqlMirrorSource[SnakeCase with UpperCase with Escape]
       db.run(query[TestEntity]).sql mustEqual
         """SELECT "X"."SOME_COLUMN" FROM "TEST_ENTITY" "X""""
     }
@@ -48,7 +50,7 @@ class SqlIdiomNamingSpec extends Spec {
         "SELECT t.c_somecolumn FROM test_entity t"
     }
 
-    val db = source(new SqlMirrorSourceConfig[SnakeCase]("test"))
+    val db = new SqlMirrorSource[SnakeCase]
 
     "actions" - {
       "insert" in {

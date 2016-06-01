@@ -3,7 +3,9 @@ package io.getquill.sources.cassandra
 import io.getquill._
 import io.getquill.naming.Literal
 
-class CqlIdiomSpec extends Spec {
+class CqlIdiomSpec extends SourceSpec(mirrorSource) {
+
+  import mirrorSource._
 
   "query" - {
     "map" in {

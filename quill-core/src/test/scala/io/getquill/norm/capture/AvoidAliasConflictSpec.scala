@@ -1,6 +1,7 @@
 package io.getquill.norm.capture
 
-import io.getquill._
+import io.getquill.Spec
+import io.getquill.testSource._
 
 class AvoidAliasConflictSpec extends Spec {
 

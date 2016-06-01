@@ -2,10 +2,11 @@ package io.getquill.sources.finagle.mysql
 
 import com.twitter.util.Await
 
-import io.getquill._
 import io.getquill.sources.sql.EncodingSpec
 
-class FinagleMysqlEncodingSpec extends EncodingSpec {
+class FinagleMysqlEncodingSpec extends EncodingSpec(testDB) {
+
+  import testDB._
 
   "encodes and decodes types" in {
     val r =
