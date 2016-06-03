@@ -5,12 +5,12 @@ import com.typesafe.scalalogging.Logger
 import io.getquill.naming.NamingStrategy
 import io.getquill.sources.BindedStatementBuilder
 import io.getquill.sources.sql.idiom.SqlIdiom
-import io.getquill.sources.sql.{SqlBindedStatementBuilder, SqlSource}
+import io.getquill.sources.sql.{ SqlBindedStatementBuilder, SqlSource }
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, ExecutionContext, Future}
-import scala.language.experimental.macros
+import scala.concurrent.ExecutionContext.Implicits.{ global => ec }
+import scala.concurrent.{ Await, ExecutionContext, Future }
 import scala.util.Try
 
 abstract class AsyncSource[D <: SqlIdiom, N <: NamingStrategy, C <: Connection](config: AsyncSourceConfig[D, N, C])
@@ -33,22 +33,15 @@ abstract class AsyncSource[D <: SqlIdiom, N <: NamingStrategy, C <: Connection](
     def apply(param: T) = f(List(param)).map(_.head)
   }
 
-  private val pool = config.pool
-
-  override def close = {
-    Await.result(pool.close, Duration.Inf)
-    ()
-  }
-
   protected def connection: Connection
 
   def probe(sql: String) =
     Try {
-      Await.result(pool.sendQuery(sql), Duration.Inf)
+      Await.result(connection.sendQuery(sql), Duration.Inf)
     }
 
   def transaction[T](f: AsyncSource[D, N, C] => Future[T]) =
-    pool.inTransaction(c => f(new TransactionalAsyncSource(config, c)))
+    connection.inTransaction(c => f(new TransactionalAsyncSource(config, c)))
 
   def execute(sql: String, bind: BindedStatementBuilder[List[Any]] => BindedStatementBuilder[List[Any]] = identity, generated: Option[String] = None)(implicit ec: ExecutionContext) = {
     logger.info(sql)

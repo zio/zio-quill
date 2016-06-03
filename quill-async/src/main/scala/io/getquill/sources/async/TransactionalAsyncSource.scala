@@ -8,4 +8,6 @@ class TransactionalAsyncSource[D <: SqlIdiom, N <: NamingStrategy, C <: Connecti
   extends AsyncSource[D, N, C](config) {
 
   def connection: Connection = conn
+
+  override def close = ()
 }

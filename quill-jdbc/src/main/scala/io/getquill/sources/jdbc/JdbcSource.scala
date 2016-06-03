@@ -3,18 +3,18 @@ package io.getquill.sources.jdbc
 import java.sql.{ Connection, PreparedStatement, ResultSet }
 
 import com.typesafe.scalalogging.Logger
-import io.getquill.JdbcSourceConfig
 import io.getquill.naming.NamingStrategy
 import io.getquill.sources.BindedStatementBuilder
 import io.getquill.sources.sql.idiom.SqlIdiom
-import io.getquill.sources.sql.{SqlBindedStatementBuilder, SqlSource}
+import io.getquill.sources.sql.{ SqlBindedStatementBuilder, SqlSource }
 import org.slf4j.LoggerFactory
 
 import scala.annotation.tailrec
 
 import scala.util.Try
+import scala.util.control.NonFatal
 
-abstract class JdbcSource[D <: SqlIdiom, N <: NamingStrategy](config: JdbcSourceConfig[D, N])
+trait JdbcSource[D <: SqlIdiom, N <: NamingStrategy]
   extends SqlSource[D, N, ResultSet, BindedStatementBuilder[PreparedStatement]]
   with JdbcEncoders
   with JdbcDecoders {
@@ -33,10 +33,6 @@ abstract class JdbcSource[D <: SqlIdiom, N <: NamingStrategy](config: JdbcSource
     def apply(param: T) = f(List(param)).head
   }
 
-  protected val dataSource = config.dataSource
-
-  override def close = dataSource.close
-
   protected def connection: Connection
 
   def probe(sql: String) =
@@ -44,7 +40,20 @@ abstract class JdbcSource[D <: SqlIdiom, N <: NamingStrategy](config: JdbcSource
       connection.createStatement.execute(sql)
     }
 
-  def transaction[T](f: JdbcSource[D, N] => T) = new TransactionalJdbcSource(config, connection).execute(f)
+  def transaction[T](f: JdbcSource[D, N] => T) = {
+    val transactional = new TransactionalJdbcSource[D, N](connection)
+    try {
+      val res = f(transactional)
+      transactional.commit
+      res
+    } catch {
+      case NonFatal(e) =>
+        transactional.rollback
+        throw e
+    } finally {
+      transactional.release
+    }
+  }
 
   def execute(sql: String, bind: BindedStatementBuilder[PreparedStatement] => BindedStatementBuilder[PreparedStatement] = identity, generated: Option[String] = None): Long = {
     logger.info(sql)

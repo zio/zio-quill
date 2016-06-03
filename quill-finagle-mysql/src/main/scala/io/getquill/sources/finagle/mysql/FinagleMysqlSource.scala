@@ -1,13 +1,13 @@
 package io.getquill.sources.finagle.mysql
 
 import com.twitter.finagle.exp.mysql.{ Client, Error, OK, Parameter, Result, Row }
-import com.twitter.util.{Await, Future}
+import com.twitter.util.{ Await, Future }
 import com.typesafe.scalalogging.Logger
 import io.getquill.FinagleMysqlSourceConfig
 import io.getquill.naming.NamingStrategy
 import io.getquill.sources.BindedStatementBuilder
 import io.getquill.sources.sql.idiom.MySQLDialect
-import io.getquill.sources.sql.{SqlBindedStatementBuilder, SqlSource}
+import io.getquill.sources.sql.{ SqlBindedStatementBuilder, SqlSource }
 import org.slf4j.LoggerFactory
 
 import scala.util.Try
