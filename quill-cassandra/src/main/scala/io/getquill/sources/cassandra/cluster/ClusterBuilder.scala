@@ -6,6 +6,7 @@ import com.typesafe.config.Config
 import com.typesafe.config.ConfigValueType
 import java.lang.reflect.Method
 import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import com.datastax.driver.core.Cluster
 
 object ClusterBuilder {
@@ -58,10 +59,14 @@ object ClusterBuilder {
     instance
   }
 
+  val stringArrayClass = java.lang.reflect.Array.newInstance(classOf[String], 0).getClass()
+
   private def param(key: String, tpe: Class[_], cfg: Config) =
     Try {
       if (tpe == classOf[String])
         cfg.getString(key)
+      else if (tpe == stringArrayClass)
+        cfg.getStringList(key).asScala.toArray
       else if (tpe == classOf[Int] || tpe == classOf[Integer])
         cfg.getInt(key)
       else if (tpe.isEnum)
