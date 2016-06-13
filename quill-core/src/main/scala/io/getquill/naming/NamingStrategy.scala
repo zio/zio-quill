@@ -80,6 +80,14 @@ trait CamelCase extends NamingStrategy {
 }
 object CamelCase extends CamelCase
 
+trait PluralizedTableNames extends NamingStrategy {
+  override def default(s: String) = s
+  override def table(s: String) =
+    if (s.endsWith("s")) s
+    else s + "s"
+}
+object PluralizedTableNames extends PluralizedTableNames
+
 trait PostgresEscape extends Escape {
   override def column(s: String) = if (s.startsWith("$")) s else super.column(s)
 }
