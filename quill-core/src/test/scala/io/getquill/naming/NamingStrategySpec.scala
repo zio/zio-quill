@@ -86,6 +86,18 @@ class NamingStrategySpec extends Spec {
     }
   }
 
+  "pluralized table names" - {
+    val s = new NamingStrategy with PluralizedTableNames
+
+    "ending with s" in {
+      s.table("kittens") mustEqual "kittens"
+    }
+
+    "ending with something other than s" in {
+      s.table("kitten") mustEqual "kittens"
+    }
+  }
+
   "postgres quote" - {
     val s = new NamingStrategy with PostgresEscape
 
