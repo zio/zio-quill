@@ -1,15 +1,16 @@
 package io.getquill
 
-import scala.collection.JavaConversions._
 import java.util.Properties
-import com.zaxxer.hikari.HikariConfig
-import com.zaxxer.hikari.HikariDataSource
-import io.getquill.sources.sql.idiom.SqlIdiom
+
+import com.zaxxer.hikari.{ HikariConfig, HikariDataSource }
 import io.getquill.naming.NamingStrategy
 import io.getquill.sources.SourceConfig
-import io.getquill.sources.jdbc.JdbcSource
+import io.getquill.sources.jdbc.ConnectionJdbcSource
+import io.getquill.sources.sql.idiom.SqlIdiom
 
-class JdbcSourceConfig[D <: SqlIdiom, N <: NamingStrategy](val name: String) extends SourceConfig[JdbcSource[D, N]] {
+import scala.collection.JavaConversions._
+
+class JdbcSourceConfig[D <: SqlIdiom, N <: NamingStrategy](val name: String) extends SourceConfig[ConnectionJdbcSource[D, N]] {
 
   def configProperties = {
     val p = new Properties

@@ -12,15 +12,15 @@ class DepartmentsFinagleMysqlSpec extends DepartmentsSpec {
 
   override def beforeAll =
     await {
-      testDB.transaction {
+      testDB.transaction { transactional =>
         for {
-          _ <- testDB.run(query[Department].delete)
-          _ <- testDB.run(query[Employee].delete)
-          _ <- testDB.run(query[Task].delete)
+          _ <- transactional.run(query[Department].delete)
+          _ <- transactional.run(query[Employee].delete)
+          _ <- transactional.run(query[Task].delete)
 
-          _ <- testDB.run(departmentInsert)(departmentEntries)
-          _ <- testDB.run(employeeInsert)(employeeEntries)
-          _ <- testDB.run(taskInsert)(taskEntries)
+          _ <- transactional.run(departmentInsert)(departmentEntries)
+          _ <- transactional.run(employeeInsert)(employeeEntries)
+          _ <- transactional.run(taskInsert)(taskEntries)
         } yield {}
       }
     }

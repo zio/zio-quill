@@ -614,6 +614,22 @@ db.run(a)
 // DELETE FROM Person WHERE name = ''
 ```
 
+Transactions
+------------
+You can use the `JdbcSource` object’s `transaction` method to create a transaction when you need one:
+
+```scala
+val a = quote(query[Contact].insert)
+
+db.transaction { transactional =>
+  transactional.run(a)(Contact(555, "+4410488555"))
+  transactional.run(a)(Contact(999, "+1510488988"))
+}
+```
+
+The code passed to it is executed in a single transaction. If an exception is thrown, Quill rolls back the transaction
+at the end of the block.
+
 Implicit query
 --------------
 
