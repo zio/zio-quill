@@ -13,15 +13,15 @@ class DepartmentsMysqlAsyncSpec extends DepartmentsSpec {
 
   override def beforeAll =
     await {
-      testMysqlDB.transaction { transactional =>
+      testMysqlDB.transaction { implicit ec =>
         for {
-          _ <- transactional.run(query[Department].delete)
-          _ <- transactional.run(query[Employee].delete)
-          _ <- transactional.run(query[Task].delete)
+          _ <- testMysqlDB.run(query[Department].delete)
+          _ <- testMysqlDB.run(query[Employee].delete)
+          _ <- testMysqlDB.run(query[Task].delete)
 
-          _ <- transactional.run(departmentInsert)(departmentEntries)
-          _ <- transactional.run(employeeInsert)(employeeEntries)
-          _ <- transactional.run(taskInsert)(taskEntries)
+          _ <- testMysqlDB.run(departmentInsert)(departmentEntries)
+          _ <- testMysqlDB.run(employeeInsert)(employeeEntries)
+          _ <- testMysqlDB.run(taskInsert)(taskEntries)
         } yield {}
       }
     }

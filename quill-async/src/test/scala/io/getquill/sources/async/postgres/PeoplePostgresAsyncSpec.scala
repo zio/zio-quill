@@ -13,12 +13,12 @@ class PeoplePostgresAsyncSpec extends PeopleSpec {
 
   override def beforeAll =
     await {
-      testPostgresDB.transaction { transactional =>
+      testPostgresDB.transaction { implicit ec =>
         for {
-          _ <- transactional.run(query[Couple].delete)
-          _ <- transactional.run(query[Person].filter(_.age > 0).delete)
-          _ <- transactional.run(peopleInsert)(peopleEntries)
-          _ <- transactional.run(couplesInsert)(couplesEntries)
+          _ <- testPostgresDB.run(query[Couple].delete)
+          _ <- testPostgresDB.run(query[Person].filter(_.age > 0).delete)
+          _ <- testPostgresDB.run(peopleInsert)(peopleEntries)
+          _ <- testPostgresDB.run(couplesInsert)(couplesEntries)
         } yield {}
       }
     }

@@ -1,12 +1,14 @@
 package io.getquill.sources.async
 
-import com.github.mauricio.async.db.{ Configuration, Connection, QueryResult }
-import com.github.mauricio.async.db.pool.{ ObjectFactory, PartitionedConnectionPool, PoolConfiguration }
-import io.getquill.naming.NamingStrategy
 import io.getquill.sources.SourceConfig
-import io.getquill.sources.sql.idiom.SqlIdiom
-
+import com.github.mauricio.async.db.Configuration
+import com.github.mauricio.async.db.Connection
+import com.github.mauricio.async.db.pool.ObjectFactory
+import com.github.mauricio.async.db.pool.PartitionedConnectionPool
+import com.github.mauricio.async.db.pool.PoolConfiguration
 import scala.util.Try
+import io.getquill.sources.sql.idiom.SqlIdiom
+import io.getquill.naming.NamingStrategy
 
 abstract class AsyncSourceConfig[D <: SqlIdiom, N <: NamingStrategy, C <: Connection](
   val name:          String,
@@ -31,10 +33,6 @@ abstract class AsyncSourceConfig[D <: SqlIdiom, N <: NamingStrategy, C <: Connec
     )
 
   private val defaultPoolConfig = PoolConfiguration.Default
-
-  def extractActionResult(generated: Option[String])(result: QueryResult): Long
-
-  def expandAction(sql: String, generated: Option[String]) = sql
 
   def poolMaxObjects = Try(config.getInt("poolMaxObjects")).getOrElse(defaultPoolConfig.maxObjects)
   def poolMaxIdle = Try(config.getLong("poolMaxIdle")).getOrElse(defaultPoolConfig.maxIdle)

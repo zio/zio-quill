@@ -6,14 +6,14 @@ import io.getquill.sources.sql.DepartmentsSpec
 class DepartmentsJdbcSpec extends DepartmentsSpec {
 
   override def beforeAll = {
-    val t = testH2DB.transaction { transactional =>
-      transactional.run(query[Department].delete)
-      transactional.run(query[Employee].delete)
-      transactional.run(query[Task].delete)
+    val t = testH2DB.transaction {
+      testH2DB.run(query[Department].delete)
+      testH2DB.run(query[Employee].delete)
+      testH2DB.run(query[Task].delete)
 
-      transactional.run(departmentInsert)(departmentEntries)
-      transactional.run(employeeInsert)(employeeEntries)
-      transactional.run(taskInsert)(taskEntries)
+      testH2DB.run(departmentInsert)(departmentEntries)
+      testH2DB.run(employeeInsert)(employeeEntries)
+      testH2DB.run(taskInsert)(taskEntries)
     }
   }
 

@@ -12,12 +12,12 @@ class PeopleFinagleMysqlSpec extends PeopleSpec {
 
   override def beforeAll =
     await {
-      testDB.transaction { transactional =>
+      testDB.transaction {
         for {
-          _ <- transactional.run(query[Couple].delete)
-          _ <- transactional.run(query[Person].filter(_.age > 0).delete)
-          _ <- transactional.run(peopleInsert)(peopleEntries)
-          _ <- transactional.run(couplesInsert)(couplesEntries)
+          _ <- testDB.run(query[Couple].delete)
+          _ <- testDB.run(query[Person].filter(_.age > 0).delete)
+          _ <- testDB.run(peopleInsert)(peopleEntries)
+          _ <- testDB.run(couplesInsert)(couplesEntries)
         } yield {}
       }
     }
