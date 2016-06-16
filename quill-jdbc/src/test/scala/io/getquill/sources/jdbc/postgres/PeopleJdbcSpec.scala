@@ -6,11 +6,11 @@ import io.getquill.sources.sql.PeopleSpec
 class PeopleJdbcSpec extends PeopleSpec {
 
   override def beforeAll = {
-    val t = testPostgresDB.transaction { transactional =>
-      transactional.run(query[Couple].delete)
-      transactional.run(query[Person].filter(_.age > 0).delete)
-      transactional.run(peopleInsert)(peopleEntries)
-      transactional.run(couplesInsert)(couplesEntries)
+    val t = testPostgresDB.transaction {
+      testPostgresDB.run(query[Couple].delete)
+      testPostgresDB.run(query[Person].filter(_.age > 0).delete)
+      testPostgresDB.run(peopleInsert)(peopleEntries)
+      testPostgresDB.run(couplesInsert)(couplesEntries)
     }
   }
 

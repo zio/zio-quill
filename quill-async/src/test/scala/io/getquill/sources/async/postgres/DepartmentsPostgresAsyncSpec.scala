@@ -13,15 +13,15 @@ class DepartmentsPostgresAsyncSpec extends DepartmentsSpec {
 
   override def beforeAll =
     await {
-      testPostgresDB.transaction { transactional =>
+      testPostgresDB.transaction { implicit ec =>
         for {
-          _ <- transactional.run(query[Department].delete)
-          _ <- transactional.run(query[Employee].delete)
-          _ <- transactional.run(query[Task].delete)
+          _ <- testPostgresDB.run(query[Department].delete)
+          _ <- testPostgresDB.run(query[Employee].delete)
+          _ <- testPostgresDB.run(query[Task].delete)
 
-          _ <- transactional.run(departmentInsert)(departmentEntries)
-          _ <- transactional.run(employeeInsert)(employeeEntries)
-          _ <- transactional.run(taskInsert)(taskEntries)
+          _ <- testPostgresDB.run(departmentInsert)(departmentEntries)
+          _ <- testPostgresDB.run(employeeInsert)(employeeEntries)
+          _ <- testPostgresDB.run(taskInsert)(taskEntries)
         } yield {}
       }
     }

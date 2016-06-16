@@ -13,12 +13,12 @@ class PeopleMysqlAsyncSpec extends PeopleSpec {
 
   override def beforeAll =
     await {
-      testMysqlDB.transaction { transactional =>
+      testMysqlDB.transaction { implicit ec =>
         for {
-          _ <- transactional.run(query[Couple].delete)
-          _ <- transactional.run(query[Person].filter(_.age > 0).delete)
-          _ <- transactional.run(peopleInsert)(peopleEntries)
-          _ <- transactional.run(couplesInsert)(couplesEntries)
+          _ <- testMysqlDB.run(query[Couple].delete)
+          _ <- testMysqlDB.run(query[Person].filter(_.age > 0).delete)
+          _ <- testMysqlDB.run(peopleInsert)(peopleEntries)
+          _ <- testMysqlDB.run(couplesInsert)(couplesEntries)
         } yield {}
       }
     }
