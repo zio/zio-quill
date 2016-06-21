@@ -7,8 +7,12 @@ Instructions on how to contribute to Quill project.
 The only dependency you need to build Quill locally is [Docker](https://www.docker.com/).
 Instructions on how to install Docker can be found in this [page](https://docs.docker.com/mac/).
 
-After installing Docker, you have to run the command bellow in order to setup the
-databases' schemas. If you don't change any schemas, you will only need to do this once.
+If you are running Linux, you should also install Docker Compose separately, as described
+[here](https://docs.docker.com/compose/install/).
+
+After installing Docker and Docker Compose, you have to run the command bellow in
+order to setup the databases' schemas. If you don't change any schemas, you will
+only need to do this once.
 
 `docker-compose run --rm setup`
 
@@ -19,7 +23,7 @@ After that, just run the command bellow to build and test the project.
 ## Changing database schema
 
 If you have changed any file that creates a database schema, you will
- have to setup the databases again. To do this, just run the command bellow.
+have to setup the databases again. To do this, just run the command bellow.
 
 `docker-compose stop && docker-compose rm && docker-compose run --rm setup`
 
@@ -37,12 +41,14 @@ In order to contribute to the project, just do as follows:
 
 ### Improve build performance with Docker *(for Mac users only)*
 
-Please, install and run [docker-machine-nfs](https://github.com/adlogix/docker-machine-nfs). It will change the default file sharing
-of your [docker-machine](https://docs.docker.com/machine/) from Virtual Box Shared Folders to NFS, which is a lot faster. 
+Please, install and run [docker-machine-nfs](https://github.com/adlogix/docker-machine-nfs).
+It will change the default file sharing of your [docker-machine](https://docs.docker.com/machine/)
+from Virtual Box Shared Folders to NFS, which is a lot faster. 
 
 ## File Formatting 
 
-[Scalariform](http://mdr.github.io/scalariform/) is used as file formatting tool in this project. Every time you compile the project in sbt, file formatting will be triggered.
+[Scalariform](http://mdr.github.io/scalariform/) is used as file formatting tool in this project.
+Every time you compile the project in sbt, file formatting will be triggered.
 
 ## Building locally without Docker
 
@@ -61,10 +67,11 @@ export POSTGRES_PORT_5432_TCP_ADDR=<docker host address>
 export POSTGRES_PORT_5432_TCP_PORT=15432
 ```
 
-For Mac users, the docker host address is the address of the [docker-machine](https://docs.docker.com/machine/), it's usually
- 192.168.99.100. You can check it by running `docker-machine ps`. For Linux users, the host address is your localhost.
+For Mac users, the docker host address is the address of the [docker-machine](https://docs.docker.com/machine/),
+it's usually 192.168.99.100. You can check it by running `docker-machine ps`. For Linux users, the host address
+is your localhost.
 
-Therefor, for Mac users the environment variables should be:
+Therefore, for Mac users the environment variables should be:
 
 ```
 export CASSANDRA_PORT_9042_TCP_ADDR=192.168.99.100
