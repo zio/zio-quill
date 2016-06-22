@@ -1,13 +1,14 @@
 package io.getquill.context.sql.mirror
 
-import io.getquill.naming.NamingStrategy
+import scala.util.Failure
+import scala.util.Success
+
+import io.getquill.QueryProbing
+import io.getquill.context.mirror.MirrorDecoders
+import io.getquill.context.mirror.MirrorEncoders
 import io.getquill.context.mirror.Row
 import io.getquill.context.sql.SqlContext
-import scala.util.Success
-import scala.util.Failure
-import io.getquill.context.mirror.MirrorEncoders
-import io.getquill.context.mirror.MirrorDecoders
-import io.getquill.QueryProbing
+import io.getquill.naming.NamingStrategy
 
 class SqlMirrorContextWithQueryProbing[N <: NamingStrategy] extends SqlMirrorContext[N] with QueryProbing
 

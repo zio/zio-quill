@@ -1,10 +1,13 @@
 package io.getquill.context.sql.norm
 
-import io.getquill.context.sql.mirrorContext._
-import io.getquill.context.sql.mirrorContext
-import io.getquill.context.sql.SqlSpec
+import io.getquill.Spec
+import io.getquill.context.sql.testContext
+import io.getquill.context.sql.testContext.qr1
+import io.getquill.context.sql.testContext.qr2
+import io.getquill.context.sql.testContext.quote
+import io.getquill.context.sql.testContext.unquote
 
-class ExpandNestedQueriesSpec extends SqlSpec {
+class ExpandNestedQueriesSpec extends Spec {
 
   "keeps the initial table alias" in {
     val q = quote {
@@ -14,7 +17,7 @@ class ExpandNestedQueriesSpec extends SqlSpec {
       } yield b).take(10)
     }
 
-    mirrorContext.run(q).sql mustEqual
+    testContext.run(q).sql mustEqual
       "SELECT x.s, x.i, x.l, x.o FROM (SELECT x.s, x.i, x.l, x.o FROM TestEntity a, TestEntity2 x) x LIMIT 10"
   }
 
@@ -25,7 +28,7 @@ class ExpandNestedQueriesSpec extends SqlSpec {
         b <- qr2
       } yield b.i).take(10)
     }
-    mirrorContext.run(q).sql mustEqual
+    testContext.run(q).sql mustEqual
       "SELECT x.* FROM (SELECT b.i FROM TestEntity a, TestEntity2 b) x LIMIT 10"
   }
 }

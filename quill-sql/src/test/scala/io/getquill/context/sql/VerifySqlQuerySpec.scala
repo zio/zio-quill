@@ -1,8 +1,13 @@
 package io.getquill.context.sql
 
-import mirrorContext._
+import io.getquill.Spec
+import io.getquill.context.sql.testContext.implicitOrd
+import io.getquill.context.sql.testContext.qr1
+import io.getquill.context.sql.testContext.qr2
+import io.getquill.context.sql.testContext.quote
+import io.getquill.context.sql.testContext.unquote
 
-class VerifySqlQuerySpec extends SqlSpec {
+class VerifySqlQuerySpec extends Spec {
 
   "fails if the query can't be translated to applicative joins" - {
     "sortBy" in {

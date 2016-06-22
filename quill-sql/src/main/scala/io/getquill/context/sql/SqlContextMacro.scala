@@ -1,6 +1,6 @@
 package io.getquill.context.sql
 
-import scala.reflect.macros.whitebox.{Context => MacroContext}
+import scala.reflect.macros.whitebox.{ Context => MacroContext }
 import io.getquill.ast._
 import io.getquill.naming.NamingStrategy
 import io.getquill.context.ContextMacro
@@ -25,7 +25,7 @@ class SqlContextMacro(val c: MacroContext) extends ContextMacro {
       q"""
       {
         implicit val (d, n) = $dialectAndNamingDynamic
-        io.getquill.sources.sql.Prepare($ast, $params)
+        io.getquill.context.sql.Prepare($ast, $params)
       }
       """
     }

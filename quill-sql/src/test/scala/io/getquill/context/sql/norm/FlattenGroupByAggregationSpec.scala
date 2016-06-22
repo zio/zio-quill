@@ -1,11 +1,20 @@
 package io.getquill.context.sql.norm
 
-import io.getquill.ast.{ Query => _, _ }
+import io.getquill.Spec
+import io.getquill.ast.Aggregation
 import io.getquill.ast.AggregationOperator
-import io.getquill.context.sql.mirrorContext._
-import io.getquill.context.sql.SqlSpec
+import io.getquill.ast.Ident
+import io.getquill.ast.Property
+import io.getquill.context.sql.testContext.InfixInterpolator
+import io.getquill.context.sql.testContext.TestEntity
+import io.getquill.context.sql.testContext.implicitOrd
+import io.getquill.context.sql.testContext.qr1
+import io.getquill.context.sql.testContext.qr2
+import io.getquill.context.sql.testContext.quote
+import io.getquill.context.sql.testContext.unquote
+import io.getquill.context.sql.testContext.Query
 
-class FlattenGroupByAggregationSpec extends SqlSpec {
+class FlattenGroupByAggregationSpec extends Spec {
 
   "flattens mapped aggregation" - {
     "simple" in {

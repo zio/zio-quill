@@ -1,13 +1,15 @@
 package io.getquill.context.sql.idiom
 
+import io.getquill.Spec
+import io.getquill.ast.Ast
+import io.getquill.context.sql.testContext.Ord
+import io.getquill.context.sql.testContext.qr1
+import io.getquill.context.sql.testContext.quote
+import io.getquill.context.sql.testContext.unquote
 import io.getquill.naming.Literal
-import io.getquill.util.Show._
-import io.getquill._
-import io.getquill.ast._
-import io.getquill.context.sql.mirrorContext._
-import io.getquill.context.sql.SqlSpec
+import io.getquill.util.Show.Shower
 
-class MySQLDialectSpec extends SqlSpec {
+class MySQLDialectSpec extends Spec {
 
   import MySQLDialect._
 

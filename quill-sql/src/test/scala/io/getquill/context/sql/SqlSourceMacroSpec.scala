@@ -1,15 +1,21 @@
 package io.getquill.context.sql
 
-import mirrorContext._
-import io.getquill.naming.NamingStrategy
-import io.getquill.context.sql.idiom.SqlIdiom
-import scala.util.Try
 import java.util.Date
-import io.getquill.context.mirror.Row
-import io.getquill.naming.Literal
-import io.getquill.context.sql.mirror.SqlMirrorContextWithQueryProbing
 
-class SqlContextMacroSpec extends SqlSpec {
+import scala.util.Try
+
+import io.getquill.Spec
+import io.getquill.context.mirror.Row
+import io.getquill.context.sql.idiom.SqlIdiom
+import io.getquill.context.sql.mirror.SqlMirrorContextWithQueryProbing
+import io.getquill.context.sql.testContext.qr1
+import io.getquill.context.sql.testContext.qr2
+import io.getquill.context.sql.testContext.quote
+import io.getquill.context.sql.testContext.unquote
+import io.getquill.naming.Literal
+import io.getquill.naming.NamingStrategy
+
+class SqlContextMacroSpec extends Spec {
 
   "binds inputs according to the sql terms order" - {
     "filter.update" in {
@@ -17,7 +23,7 @@ class SqlContextMacroSpec extends SqlSpec {
         (i: Int, l: Long) =>
           qr1.filter(t => t.i == i).update(t => t.l -> l)
       }
-      val mirror = mirrorContext.run(q)(List((1, 2L)))
+      val mirror = testContext.run(q)(List((1, 2L)))
       mirror.sql mustEqual "UPDATE TestEntity SET l = ? WHERE i = ?"
       mirror.bindList mustEqual List(Row(2l, 1))
     }
@@ -26,7 +32,7 @@ class SqlContextMacroSpec extends SqlSpec {
         (i: Int, l: Long) =>
           qr1.filter(t => t.i == i).map(t => l)
       }
-      val mirror = mirrorContext.run(q)(1, 2L)
+      val mirror = testContext.run(q)(1, 2L)
       mirror.sql mustEqual "SELECT ? FROM TestEntity t WHERE t.i = ?"
       mirror.binds mustEqual Row(2l, 1)
     }
@@ -42,7 +48,7 @@ class SqlContextMacroSpec extends SqlSpec {
     val q = quote {
       qr1.flatMap(a => qr2.filter(b => b.s == a.s).take(1))
     }
-    "io.getquill.sources.sql.mirror.mirrorContext.run(q)" mustNot compile
+    "io.getquill.sources.sql.mirror.testContext.run(q)" mustNot compile
   }
 
   "fails if the sql dialect is not valid" in {

@@ -1,8 +1,8 @@
 package io.getquill.context.sql.idiom
 
-import io.getquill.context.sql.SqlSpec
+import io.getquill.Spec
 
-class PostgresDialectSpec extends SqlSpec {
+class PostgresDialectSpec extends Spec {
 
   "supports the `prepare` statement" in {
     val sql = "test"

@@ -1,9 +1,14 @@
 package io.getquill.context.sql
 
-import mirrorContext._
+import io.getquill.Spec
 import io.getquill.context.mirror.Row
+import io.getquill.context.sql.testContext.TestEntity
+import io.getquill.context.sql.testContext.qr1
+import io.getquill.context.sql.testContext.query
+import io.getquill.context.sql.testContext.quote
+import io.getquill.context.sql.testContext.unquote
 
-class SqlActionMacroSpec extends SqlSpec {
+class SqlActionMacroSpec extends Spec {
 
   "runs actions" - {
     "without bindings" - {
@@ -11,21 +16,21 @@ class SqlActionMacroSpec extends SqlSpec {
         val q = quote {
           qr1.filter(t => t.s == null).update(_.s -> "s")
         }
-        mirrorContext.run(q).sql mustEqual
+        testContext.run(q).sql mustEqual
           "UPDATE TestEntity SET s = 's' WHERE s IS NULL"
       }
       "insert" in {
         val q = quote {
           qr1.insert(_.s -> "s")
         }
-        mirrorContext.run(q).sql mustEqual
+        testContext.run(q).sql mustEqual
           "INSERT INTO TestEntity (s) VALUES ('s')"
       }
       "delete" in {
         val q = quote {
           qr1.filter(t => t.s == null).delete
         }
-        mirrorContext.run(q).sql mustEqual
+        testContext.run(q).sql mustEqual
           "DELETE FROM TestEntity WHERE s IS NULL"
       }
     }
@@ -34,7 +39,7 @@ class SqlActionMacroSpec extends SqlSpec {
         val q = quote {
           (s: String) => qr1.insert(_.s -> s)
         }
-        val mirror = mirrorContext.run(q)(List("s"))
+        val mirror = testContext.run(q)(List("s"))
         mirror.sql mustEqual "INSERT INTO TestEntity (s) VALUES (?)"
         mirror.bindList mustEqual List(Row("s"))
       }
@@ -42,7 +47,7 @@ class SqlActionMacroSpec extends SqlSpec {
         val q = quote {
           (s: String, i: Int) => qr1.insert(_.s -> s, _.i -> i)
         }
-        val mirror = mirrorContext.run(q)(List(("s", 1)))
+        val mirror = testContext.run(q)(List(("s", 1)))
         mirror.sql mustEqual "INSERT INTO TestEntity (s,i) VALUES (?, ?)"
         mirror.bindList mustEqual List(Row("s", 1))
       }
@@ -51,7 +56,7 @@ class SqlActionMacroSpec extends SqlSpec {
       val q = quote {
         query[TestEntity].schema(_.generated(_.i)).insert
       }
-      val mirror = mirrorContext.run(q)(List(TestEntity("s", 0, 1L, None)))
+      val mirror = testContext.run(q)(List(TestEntity("s", 0, 1L, None)))
       mirror.sql mustEqual "INSERT INTO TestEntity (s,l,o) VALUES (?, ?, ?)"
       mirror.generated mustEqual Some("i")
     }

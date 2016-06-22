@@ -1,21 +1,27 @@
 package io.getquill.context.sql
 
-import io.getquill.ast._
-import io.getquill.norm.{ RenameProperties, RenameAssignments, Normalize, FlattenOptionOperation }
-import io.getquill.naming.NamingStrategy
+import io.getquill.ast.Ast
+import io.getquill.ast.Entity
+import io.getquill.ast.Ident
+import io.getquill.ast.Query
 import io.getquill.context.ExtractEntityAndInsertAction
 import io.getquill.context.sql.idiom.SqlIdiom
-import io.getquill.util.Show._
-import io.getquill.util.Messages._
 import io.getquill.context.sql.norm.ExpandJoin
 import io.getquill.context.sql.norm.ExpandNestedQueries
 import io.getquill.context.sql.norm.MergeSecondaryJoin
+import io.getquill.naming.NamingStrategy
+import io.getquill.norm.FlattenOptionOperation
+import io.getquill.norm.Normalize
+import io.getquill.norm.RenameAssignments
+import io.getquill.norm.RenameProperties
+import io.getquill.util.Messages.fail
+import io.getquill.util.Show.Shower
 
 object Prepare {
 
   def apply(ast: Ast, params: List[Ident])(implicit d: SqlIdiom, n: NamingStrategy) = {
-    import d._
     val (bindedAst, idents) = BindVariables(normalize(ast), params)
+    import d._
     val sqlString =
       bindedAst match {
         case q: Query =>

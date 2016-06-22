@@ -1,9 +1,13 @@
 package io.getquill.context.sql.norm
 
-import io.getquill.context.sql.mirrorContext._
-import io.getquill.context.sql.SqlSpec
+import io.getquill.Spec
+import io.getquill.context.sql.testContext.qr1
+import io.getquill.context.sql.testContext.qr2
+import io.getquill.context.sql.testContext.qr3
+import io.getquill.context.sql.testContext.quote
+import io.getquill.context.sql.testContext.unquote
 
-class ExpandJoinSpec extends SqlSpec {
+class ExpandJoinSpec extends Spec {
 
   "expands the outer join by mapping the result" - {
     "simple" in {

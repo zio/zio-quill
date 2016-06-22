@@ -1,9 +1,19 @@
 package io.getquill.context.sql.idiom
 
-import io.getquill.ast._
-import io.getquill.naming.NamingStrategy
-import io.getquill.util.Show._
+import io.getquill.ast.Asc
+import io.getquill.ast.AscNullsFirst
+import io.getquill.ast.AscNullsLast
+import io.getquill.ast.BinaryOperation
+import io.getquill.ast.Desc
+import io.getquill.ast.DescNullsFirst
+import io.getquill.ast.DescNullsLast
+import io.getquill.ast.Operation
+import io.getquill.ast.Property
+import io.getquill.ast.StringOperator
 import io.getquill.context.sql.OrderByCriteria
+import io.getquill.naming.NamingStrategy
+import io.getquill.util.Show.Show
+import io.getquill.util.Show.Shower
 
 trait MySQLDialect
   extends SqlIdiom

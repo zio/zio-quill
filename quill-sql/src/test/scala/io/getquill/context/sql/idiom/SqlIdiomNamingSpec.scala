@@ -1,77 +1,84 @@
 package io.getquill.context.sql.idiom
 
-import io.getquill.context.sql.mirrorContext._
-import io.getquill.naming._
-import io.getquill.util.Show._
-import io.getquill.ast.Ast
 import FallbackDialect._
-import io.getquill.context.sql.mirrorContext._
+import io.getquill.Spec
+import io.getquill.ast.Ast
 import io.getquill.context.sql.mirror.SqlMirrorContext
-import io.getquill.context.sql.SqlSpec
+import io.getquill.context.sql.testContext
+import io.getquill.naming.Escape
+import io.getquill.naming.SnakeCase
+import io.getquill.naming.UpperCase
+import io.getquill.util.Show._
 
-class SqlIdiomNamingSpec extends SqlSpec {
+class SqlIdiomNamingSpec extends Spec {
 
   "uses the naming strategy" - {
 
-    case class TestEntity(someColumn: Int)
+    case class SomeEntity(someColumn: Int)
 
     "one transformation" in {
       val db = new SqlMirrorContext[SnakeCase]
-      db.run(query[TestEntity]).sql mustEqual
-        "SELECT x.some_column FROM test_entity x"
+      import db._
+      db.run(query[SomeEntity]).sql mustEqual
+        "SELECT x.some_column FROM some_entity x"
     }
     "mutiple transformations" in {
       val db = new SqlMirrorContext[SnakeCase with UpperCase with Escape]
-      db.run(query[TestEntity]).sql mustEqual
-        """SELECT "X"."SOME_COLUMN" FROM "TEST_ENTITY" "X""""
+      import db._
+      db.run(query[SomeEntity]).sql mustEqual
+        """SELECT "X"."SOME_COLUMN" FROM "SOME_ENTITY" "X""""
     }
     "specific table strategy" in {
+      import testContext._
       implicit object CustomTableStrategy extends SnakeCase {
         override def table(s: String) = s"t_$s".toLowerCase
       }
 
       val q = quote {
-        query[TestEntity].map(t => t.someColumn)
+        query[SomeEntity].map(t => t.someColumn)
       }
 
       (q.ast: Ast).show mustEqual
-        "SELECT t.some_column FROM t_testentity t"
+        "SELECT t.some_column FROM t_someentity t"
     }
     "specific column strategy" in {
+      import testContext._
       implicit object CustomTableStrategy extends SnakeCase {
         override def column(s: String) = s"c_$s".toLowerCase
       }
 
       val q = quote {
-        query[TestEntity].map(t => t.someColumn)
+        query[SomeEntity].map(t => t.someColumn)
       }
 
       (q.ast: Ast).show mustEqual
-        "SELECT t.c_somecolumn FROM test_entity t"
+        "SELECT t.c_somecolumn FROM some_entity t"
     }
 
     val db = new SqlMirrorContext[SnakeCase]
 
+    import db._
+
     "actions" - {
       "insert" in {
-        db.run(query[TestEntity].insert)(List()).sql mustEqual
-          "INSERT INTO test_entity (some_column) VALUES (?)"
+        db.run(query[SomeEntity].insert)(List()).sql mustEqual
+          "INSERT INTO some_entity (some_column) VALUES (?)"
       }
       "update" in {
-        db.run(query[TestEntity].update)(List()).sql mustEqual
-          "UPDATE test_entity SET some_column = ?"
+        db.run(query[SomeEntity].update)(List()).sql mustEqual
+          "UPDATE some_entity SET some_column = ?"
       }
       "delete" in {
-        db.run(query[TestEntity].delete).sql mustEqual
-          "DELETE FROM test_entity"
+        db.run(query[SomeEntity].delete).sql mustEqual
+          "DELETE FROM some_entity"
       }
     }
 
     "queries" - {
       "property empty check" in {
-        case class TestEntity(optionValue: Option[Int])
-        db.run(query[TestEntity].filter(t => t.optionValue.isEmpty)).sql mustEqual
-          "SELECT t.option_value FROM test_entity t WHERE t.option_value IS NULL"
+        case class SomeEntity(optionValue: Option[Int])
+        db.run(query[SomeEntity].filter(t => t.optionValue.isEmpty)).sql mustEqual
+          "SELECT t.option_value FROM some_entity t WHERE t.option_value IS NULL"
       }
     }
   }

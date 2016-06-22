@@ -1,6 +1,11 @@
 package io.getquill.context.sql.norm
 
-import io.getquill.ast._
+import io.getquill.ast.Ident
+import io.getquill.ast.Join
+import io.getquill.ast.Map
+import io.getquill.ast.Query
+import io.getquill.ast.StatelessTransformer
+import io.getquill.ast.Tuple
 import io.getquill.norm.BetaReduction
 
 object ExpandJoin extends StatelessTransformer {

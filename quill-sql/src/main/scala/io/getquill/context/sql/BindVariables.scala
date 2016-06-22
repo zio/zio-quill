@@ -1,6 +1,19 @@
 package io.getquill.context.sql
 
-import io.getquill.ast._
+import io.getquill.ast.Action
+import io.getquill.ast.AssignedAction
+import io.getquill.ast.Ast
+import io.getquill.ast.Drop
+import io.getquill.ast.Entity
+import io.getquill.ast.Filter
+import io.getquill.ast.Ident
+import io.getquill.ast.Insert
+import io.getquill.ast.Map
+import io.getquill.ast.Query
+import io.getquill.ast.RuntimeBinding
+import io.getquill.ast.StatefulTransformer
+import io.getquill.ast.Take
+import io.getquill.ast.Update
 
 private[context] case class BindVariables(state: (List[Ident], List[Ident]))
   extends StatefulTransformer[(List[Ident], List[Ident])] {

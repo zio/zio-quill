@@ -1,7 +1,19 @@
 package io.getquill.context.sql.norm
 
-import io.getquill.ast._
-import io.getquill.context.sql._
+import io.getquill.ast.Ast
+import io.getquill.ast.Ident
+import io.getquill.ast.Property
+import io.getquill.ast.StatefulTransformer
+import io.getquill.context.sql.FlattenSqlQuery
+import io.getquill.context.sql.FromContext
+import io.getquill.context.sql.InfixContext
+import io.getquill.context.sql.JoinContext
+import io.getquill.context.sql.QueryContext
+import io.getquill.context.sql.SelectValue
+import io.getquill.context.sql.SetOperationSqlQuery
+import io.getquill.context.sql.SqlQuery
+import io.getquill.context.sql.TableContext
+import io.getquill.context.sql.UnaryOperationSqlQuery
 
 object ExpandNestedQueries {
 

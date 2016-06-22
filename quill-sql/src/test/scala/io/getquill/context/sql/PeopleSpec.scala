@@ -1,9 +1,12 @@
 package io.getquill.context.sql
 
-import io.getquill._
-import mirrorContext._
+import io.getquill.Spec
 
-abstract class PeopleSpec(source: SqlContext[_, _, _, _]) extends ContextSpec(source) {
+trait PeopleSpec extends Spec {
+
+  val context: SqlContext[_, _, _, _]
+
+  import context._
 
   case class Person(name: String, age: Int)
   case class Couple(her: String, him: String)

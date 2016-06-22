@@ -1,9 +1,12 @@
 package io.getquill.context.sql
 
-import mirrorContext._
-import io.getquill.ContextSpec
+import io.getquill.Spec
 
-abstract class ProductSpec(source: SqlContext[_, _, _, _]) extends ContextSpec(source) {
+trait ProductSpec extends Spec {
+
+  val context: SqlContext[_, _, _, _]
+
+  import context._
 
   case class Product(id: Long, description: String, sku: Long)
 

@@ -1,9 +1,21 @@
 package io.getquill.context.sql.norm
 
+import io.getquill.ast.Aggregation
+import io.getquill.ast.Ast
+import io.getquill.ast.Drop
+import io.getquill.ast.Filter
+import io.getquill.ast.FlatMap
+import io.getquill.ast.Ident
+import io.getquill.ast.Join
+import io.getquill.ast.Map
+import io.getquill.ast.Query
+import io.getquill.ast.SortBy
 import io.getquill.ast.StatelessTransformer
-import io.getquill.ast._
+import io.getquill.ast.Take
+import io.getquill.ast.Union
+import io.getquill.ast.UnionAll
 import io.getquill.norm.BetaReduction
-import io.getquill.util.Messages._
+import io.getquill.util.Messages.fail
 
 case class FlattenGroupByAggregation(agg: Ident) extends StatelessTransformer {
 

@@ -1,9 +1,8 @@
 package io.getquill.context.sql
 
-import io.getquill._
-import mirrorContext._
+trait QueryResultTypeSpec extends ProductSpec {
 
-abstract class QueryResultTypeSpec(source: SqlContext[_, _, _, _]) extends ProductSpec(source) {
+  import context._
 
   val deleteAll = quote(query[Product].delete)
   val selectAll = quote(query[Product])

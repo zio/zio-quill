@@ -2,11 +2,13 @@ package io.getquill.context.sql
 
 import scala.language.reflectiveCalls
 
-import io.getquill.Query
-import mirrorContext._
-import io.getquill.ContextSpec
+import io.getquill.Spec
 
-abstract class DepartmentsSpec(source: SqlContext[_, _, _, _]) extends ContextSpec(source) {
+trait DepartmentsSpec extends Spec {
+
+  val context: SqlContext[_, _, _, _]
+
+  import context._
 
   case class Department(dpt: String)
   case class Employee(emp: String, dpt: String, salary: Int)

@@ -1,12 +1,16 @@
 package io.getquill.context.sql
 
 import java.util.Date
+
 import scala.BigDecimal
 
-import mirrorContext._
-import io.getquill.ContextSpec
+import io.getquill.Spec
 
-abstract class EncodingSpec(source: SqlContext[_, _, _, _]) extends ContextSpec(source) {
+trait EncodingSpec extends Spec {
+
+  val context: SqlContext[_, _, _, _]
+
+  import context._
 
   case class EncodingTestEntity(
     v1:  String,

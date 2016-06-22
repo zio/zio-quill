@@ -1,16 +1,19 @@
 package io.getquill.context.sql.mirror
 
-import io.getquill.context.sql.mirrorContext._
-import io.getquill.context.sql.EncodingSpec
 import io.getquill.context.mirror.Row
-import io.getquill.context.sql.mirrorContext
+import io.getquill.context.sql.EncodingSpec
+import io.getquill.context.sql.testContext
+import io.getquill.context.sql.testContext.query
+import io.getquill.context.sql.testContext.quote
 
-class MirrorContextEncodingSpec extends EncodingSpec(mirrorContext) {
+class MirrorContextEncodingSpec extends EncodingSpec {
+
+  val context = testContext
 
   "encodes and decodes types" in {
     val rows = insertValues.map(r => Row(r.productIterator.toList: _*))
-    mirrorContext.run(insert).apply(insertValues).bindList mustEqual rows
-    val mirror = mirrorContext.run(query[EncodingTestEntity])
+    testContext.run(insert).apply(insertValues).bindList mustEqual rows
+    val mirror = testContext.run(query[EncodingTestEntity])
     verify(rows.map(mirror.extractor))
   }
 }

@@ -1,13 +1,15 @@
 package io.getquill.context.sql
 
-import language.higherKinds
 import java.util.Date
-import language.experimental.macros
+
+import scala.language.higherKinds
+import scala.language.experimental.macros
 import scala.reflect.ClassTag
 import scala.util.Try
-import io.getquill.naming.NamingStrategy
-import io.getquill.context.sql.idiom.SqlIdiom
+
 import io.getquill.context.Context
+import io.getquill.context.sql.idiom.SqlIdiom
+import io.getquill.naming.NamingStrategy
 
 abstract class SqlContext[D <: SqlIdiom, N <: NamingStrategy, R: ClassTag, S: ClassTag]
   extends Context[R, S]

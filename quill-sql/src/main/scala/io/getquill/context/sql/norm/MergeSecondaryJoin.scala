@@ -1,6 +1,10 @@
 package io.getquill.context.sql.norm
 
-import io.getquill.ast._
+import io.getquill.ast.FlatMap
+import io.getquill.ast.Join
+import io.getquill.ast.Map
+import io.getquill.ast.Query
+import io.getquill.ast.StatelessTransformer
 
 object MergeSecondaryJoin extends StatelessTransformer {
 

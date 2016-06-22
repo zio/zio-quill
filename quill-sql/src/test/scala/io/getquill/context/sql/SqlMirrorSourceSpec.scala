@@ -1,12 +1,15 @@
 package io.getquill.context.sql
 
-import mirrorContext._
+import io.getquill.Spec
+import io.getquill.context.sql.testContext.qr1
+import io.getquill.context.sql.testContext.quote
+import io.getquill.context.sql.testContext.unquote
 
-class SqlMirrorContextSpec extends SqlSpec {
+class SqlMirrorContextSpec extends Spec {
   "run non-batched action" in {
     val insert = quote { (i: Int) =>
       qr1.insert(_.i -> i)
     }
-    mirrorContext.run(insert)(1) mustBe an[mirrorContext.ActionMirror]
+    testContext.run(insert)(1) mustBe an[testContext.ActionMirror]
   }
 }

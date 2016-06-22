@@ -1,6 +1,7 @@
 package io.getquill.context.sql
 
-import io.getquill.ast._
+import io.getquill.ast.Ast
+import io.getquill.ast.Ident
 import io.getquill.quotation.FreeVariables
 
 case class Error(free: List[Ident], ast: Ast)

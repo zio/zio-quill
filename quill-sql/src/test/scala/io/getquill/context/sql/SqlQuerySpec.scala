@@ -1,13 +1,24 @@
 package io.getquill.context.sql
 
-import mirrorContext._
-import io.getquill.naming.Literal
-import io.getquill.norm.QueryGenerator
-import io.getquill.norm.Normalize
+import io.getquill.Spec
 import io.getquill.context.sql.idiom.SqlIdiom
-import io.getquill.util.Show._
+import io.getquill.context.sql.testContext.InfixInterpolator
+import io.getquill.context.sql.testContext.Ord
+import io.getquill.context.sql.testContext.TestEntity
+import io.getquill.context.sql.testContext.TestEntity2
+import io.getquill.context.sql.testContext.implicitOrd
+import io.getquill.context.sql.testContext.qr1
+import io.getquill.context.sql.testContext.qr2
+import io.getquill.context.sql.testContext.query
+import io.getquill.context.sql.testContext.quote
+import io.getquill.context.sql.testContext.unquote
+import io.getquill.context.sql.testContext.Query
+import io.getquill.naming.Literal
+import io.getquill.norm.Normalize
+import io.getquill.norm.QueryGenerator
+import io.getquill.util.Show.Shower
 
-class SqlQuerySpec extends SqlSpec {
+class SqlQuerySpec extends Spec {
 
   val idiom = new SqlIdiom {
     def prepare(sql: String) = sql
