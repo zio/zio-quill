@@ -1,13 +1,13 @@
-package io.getquill.sources
+package io.getquill.context
 
-import scala.reflect.macros.whitebox.Context
+import scala.reflect.macros.whitebox.{Context => MacroContext}
 
 import io.getquill.ast._
 import io.getquill.util.Messages._
 
 object EncodeParams {
 
-  def apply[S](c: Context)(
+  def apply[S](c: MacroContext)(
     params: collection.Map[Ident, (c.Type, c.Tree)],
     raw:    collection.Map[Ident, (c.Tree, c.Tree)]
   )(
@@ -19,12 +19,12 @@ object EncodeParams {
         case (ident, (tpe, tree)) =>
           val encoder =
             Encoding.inferEncoder(c)(tpe)(s)
-              .getOrElse(c.fail(s"Source doesn't know how to encode '$ident: $tpe'"))
+              .getOrElse(c.fail(s"Context doesn't know how to encode '$ident: $tpe'"))
           (ident, (encoder, tree))
       }.toMap ++ raw
     }
 
-  private def expand[S](c: Context)(
+  private def expand[S](c: MacroContext)(
     params: collection.Map[Ident, (c.Tree, c.Tree)]
   )(
     implicit

@@ -2,13 +2,13 @@ package io.getquill
 
 import language.implicitConversions
 import language.experimental.macros
-import scala.reflect.macros.whitebox.Context
+import scala.reflect.macros.whitebox.{Context => MacroContext}
 import io.getquill.util.Messages._
 import scala.runtime._
-import io.getquill.sources.Source
+import io.getquill.context.Context
 
 trait ImplicitQuery {
-  this: Source[_, _] =>
+  this: Context[_, _] =>
 
   implicit def toQuery[P <: Product](f: AbstractFunction1[_, P]): Query[P] = macro ImplicitQueryMacro.toQuery[P]
   implicit def toQuery[P <: Product](f: AbstractFunction2[_, _, P]): Query[P] = macro ImplicitQueryMacro.toQuery[P]
@@ -34,7 +34,7 @@ trait ImplicitQuery {
   implicit def toQuery[P <: Product](f: AbstractFunction22[_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, P]): Query[P] = macro ImplicitQueryMacro.toQuery[P]
 }
 
-private[getquill] class ImplicitQueryMacro(val c: Context) {
+private[getquill] class ImplicitQueryMacro(val c: MacroContext) {
   import c.universe._
 
   def toQuery[P <: Product](f: Expr[Any])(implicit p: WeakTypeTag[P]): Tree = {

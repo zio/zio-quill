@@ -1,10 +1,10 @@
-package io.getquill.sources.mirror
+package io.getquill.context.mirror
 
 import java.util.Date
-import io.getquill.sources.Source
+import io.getquill.context.Context
 
 trait MirrorEncoders {
-  this: Source[Row, Row] =>
+  this: Context[Row, Row] =>
 
   private def encoder[T] = new Encoder[T] {
     def apply(index: Int, value: T, row: Row) =

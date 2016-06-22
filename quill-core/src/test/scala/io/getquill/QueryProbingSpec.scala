@@ -1,30 +1,30 @@
 package io.getquill
 
-import io.getquill.testSource._
-import io.getquill.sources.mirror._
+import io.getquill.testContext._
+import io.getquill.context.mirror._
 
 class QueryProbingSpec extends Spec {
 
-  "fails if the source can't be resolved at compile time" in {
-    object s extends MirrorSource with QueryProbing
-    "buggySource.run(qr1)" mustNot compile
+  "fails if the context can't be resolved at compile time" in {
+    object c extends MirrorContext with QueryProbing
+    "c.run(qr1)" mustNot compile
   }
 
-  "doesn't warn if query probing is disabled and the source can't be resolved at compile time" in {
-    object s extends TestSourceTemplate
-    import s._
-    s.run(qr1.delete)
+  "doesn't warn if query probing is disabled and the context can't be resolved at compile time" in {
+    object c extends TestContextTemplate
+    import c._
+    c.run(qr1.delete)
     ()
   }
 
   "fails compilation if the query probing fails" - {
     case class Fail()
-    "object source" in {
-      "testSource.run(query[Fail].delete)" mustNot compile
+    "object context" in {
+      "testContext.run(query[Fail].delete)" mustNot compile
     }
-    "class source" in {
-      def test(s: MirrorSourceTemplateWithQueryProbing) =
-        "testSource.run(query[Fail].delete)" mustNot compile
+    "class context" in {
+      def test(s: MirrorContextTemplateWithQueryProbing) =
+        "testContext.run(query[Fail].delete)" mustNot compile
     }
   }
 }

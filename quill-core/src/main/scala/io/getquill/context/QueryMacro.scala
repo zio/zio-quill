@@ -1,15 +1,15 @@
-package io.getquill.sources
+package io.getquill.context
 
-import scala.reflect.macros.whitebox.Context
+import scala.reflect.macros.whitebox.{Context => MacroContext}
 import io.getquill.ast._
 import io.getquill.norm.select.SelectFlattening
 import io.getquill.norm.select.SelectResultExtraction
 import io.getquill.norm.Normalize
 
 trait QueryMacro extends SelectFlattening with SelectResultExtraction {
-  this: SourceMacro =>
+  this: ContextMacro =>
 
-  val c: Context
+  val c: MacroContext
   import c.universe.{ Ident => _, _ }
 
   def runQuery[R, S, T](

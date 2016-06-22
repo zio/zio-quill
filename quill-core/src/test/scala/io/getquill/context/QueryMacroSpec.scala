@@ -1,9 +1,9 @@
-package io.getquill.sources
+package io.getquill.context
 
 import io.getquill._
-import io.getquill.testSource._
-import io.getquill.testSource
-import io.getquill.sources.mirror.Row
+import io.getquill.testContext._
+import io.getquill.testContext
+import io.getquill.context.mirror.Row
 
 import io.getquill.ast.Function
 
@@ -13,7 +13,7 @@ class QueryMacroSpec extends Spec {
     val q = quote {
       qr1.map(_.i)
     }
-    testSource.run(q).ast mustEqual q.ast
+    testContext.run(q).ast mustEqual q.ast
   }
 
   "runs binded query" - {
@@ -21,7 +21,7 @@ class QueryMacroSpec extends Spec {
       val q = quote {
         (p1: Int) => qr1.filter(t => t.i == p1).map(t => t.i)
       }
-      val r = testSource.run(q)(1)
+      val r = testContext.run(q)(1)
       r.ast mustEqual q.ast.body
       r.binds mustEqual Row(1)
     }
@@ -29,7 +29,7 @@ class QueryMacroSpec extends Spec {
       val q = quote {
         (p1: Int, p2: String) => qr1.filter(t => t.i == p1 && t.s == p2).map(t => t.i)
       }
-      val r = testSource.run(q)(1, "a")
+      val r = testContext.run(q)(1, "a")
       r.ast mustEqual q.ast.body
       r.binds mustEqual Row(1, "a")
     }
@@ -38,7 +38,7 @@ class QueryMacroSpec extends Spec {
         (p1: Int) => qr1.filter(t => t.i == p1).map(t => t.i)
       }
       val p1 = 1
-      val r = testSource.run(q(lift(p1)))
+      val r = testContext.run(q(lift(p1)))
       r.binds mustEqual Row(p1)
     }
     "in-place param and function param" in {
@@ -46,7 +46,7 @@ class QueryMacroSpec extends Spec {
       }
       val v1 = 1
       val v2 = 2
-      val r = testSource.run(q(lift(v1)))(v2)
+      val r = testContext.run(q(lift(v1)))(v2)
 
       q.ast.body match {
         case f: Function => r.ast mustEqual r.ast
@@ -56,7 +56,7 @@ class QueryMacroSpec extends Spec {
     }
     "inline" in {
       def q(i: Int) =
-        testSource.run(qr1.filter(_.i == lift(i)))
+        testContext.run(qr1.filter(_.i == lift(i)))
       q(1).binds mustEqual Row(1)
     }
   }

@@ -1,4 +1,4 @@
-package io.getquill.sources.mirror
+package io.getquill.context.mirror
 
 import scala.reflect.ClassTag
 

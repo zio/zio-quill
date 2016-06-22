@@ -1,12 +1,12 @@
 package io.getquill.quotation
 
 import io.getquill.Spec
-import io.getquill.testSource
+import io.getquill.testContext
 import io.getquill.ast._
 
 class IsDynamicSpec extends Spec {
 
-  import testSource._
+  import testContext._
 
   "detects if the quotation has dynamic parts" - {
     "true" - {

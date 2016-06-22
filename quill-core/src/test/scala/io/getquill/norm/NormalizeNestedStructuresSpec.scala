@@ -1,7 +1,7 @@
 package io.getquill.norm
 
 import io.getquill.Spec
-import io.getquill.testSource._
+import io.getquill.testContext._
 
 class NormalizeNestedStructuresSpec extends Spec {
 

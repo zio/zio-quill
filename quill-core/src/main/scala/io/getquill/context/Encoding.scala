@@ -1,4 +1,4 @@
-package io.getquill.sources
+package io.getquill.context
 
 import scala.reflect.macros.whitebox.Context
 

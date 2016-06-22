@@ -1,4 +1,4 @@
-package io.getquill.sources
+package io.getquill.context
 
 trait WrappedValue[T] extends Any with WrappedType { self: AnyVal =>
   type Type = T

@@ -1,4 +1,4 @@
-package io.getquill.sources.mirror
+package io.getquill.context.mirror
 
 import io.getquill._
 
@@ -20,5 +20,4 @@ class RowSpec extends Spec {
       r[String](0)
     }
   }
-
 }

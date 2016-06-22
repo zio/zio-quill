@@ -1,7 +1,7 @@
 package io.getquill.quotation
 
 import io.getquill.Spec
-import io.getquill.testSource._
+import io.getquill.testContext._
 import io.getquill.ast.{ Query => _, _ }
 import scala.reflect.ClassTag
 

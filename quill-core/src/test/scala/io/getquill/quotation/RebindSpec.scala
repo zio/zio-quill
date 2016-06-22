@@ -1,8 +1,8 @@
 package io.getquill.quotation
 
 import io.getquill.Spec
-import io.getquill.testSource._
-import io.getquill.testSource
+import io.getquill.testContext._
+import io.getquill.testContext
 
 class RebindSpec extends Spec {
 
@@ -14,7 +14,7 @@ class RebindSpec extends Spec {
       val q = quote { (i: Int) =>
         unquote(query[TestEntity].insert(e => e.i -> i).returnId[Long])
       }
-      testSource.run(q)(List(1)).ast.toString must equal("infix\"" + "$" + "{query[TestEntity].insert(e => e.i -> p1)} RETURNING ID\"")
+      testContext.run(q)(List(1)).ast.toString must equal("infix\"" + "$" + "{query[TestEntity].insert(e => e.i -> p1)} RETURNING ID\"")
     }
 
     "with no type param" in {
@@ -24,7 +24,7 @@ class RebindSpec extends Spec {
       val q = quote { (i: Int) =>
         unquote(query[TestEntity].insert(e => e.i -> i).returnId)
       }
-      testSource.run(q)(List(1)).ast.toString must equal("infix\"" + "$" + "{query[TestEntity].insert(e => e.i -> p1)} RETURNING ID\"")
+      testContext.run(q)(List(1)).ast.toString must equal("infix\"" + "$" + "{query[TestEntity].insert(e => e.i -> p1)} RETURNING ID\"")
     }
   }
 
@@ -35,7 +35,7 @@ class RebindSpec extends Spec {
       }
 
       val q = quote(query[TestEntity].map(e => unquote(e.i.plus(10))))
-      testSource.run(q).ast.toString must equal("query[TestEntity].map(e => infix\"" + "$" + "{e.i} + " + "$" + "{10}\")")
+      testContext.run(q).ast.toString must equal("query[TestEntity].map(e => infix\"" + "$" + "{e.i} + " + "$" + "{10}\")")
     }
 
     "no type param" in {
@@ -44,7 +44,7 @@ class RebindSpec extends Spec {
       }
 
       val q = quote(query[TestEntity].map(e => unquote(e.i.plus(10))))
-      testSource.run(q).ast.toString must equal("query[TestEntity].map(e => infix\"" + "$" + "{e.i} + " + "$" + "{10}\")")
+      testContext.run(q).ast.toString must equal("query[TestEntity].map(e => infix\"" + "$" + "{e.i} + " + "$" + "{10}\")")
     }
   }
 }

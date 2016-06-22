@@ -1,10 +1,10 @@
-package io.getquill.sources
+package io.getquill.context
 
 import io.getquill.util.Messages._
 import scala.concurrent.duration.DurationInt
 import scala.language.existentials
 import scala.reflect.api.Types
-import scala.reflect.macros.whitebox.Context
+import scala.reflect.macros.whitebox.{Context => MacroContext}
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
@@ -13,13 +13,13 @@ import io.getquill._
 import io.getquill.util.Cache
 
 trait QueryProbingMacro {
-  val c: Context
+  val c: MacroContext
   import c.universe.{ Try => _, _ }
 
-  def probeQuery[T <: Source[_, _]](f: T => Try[_]) = {
+  def probeQuery[T <: Context[_, _]](f: T => Try[_]) = {
     val tpe = c.prefix.tree.tpe
     QueryProbingMacro.cache
-      .getOrElseUpdate(tpe, resolveSource(tpe), 30.seconds)
+      .getOrElseUpdate(tpe, resolveContext(tpe), 30.seconds)
       .asInstanceOf[Option[T]]
       .map(f)
       .map {
@@ -29,21 +29,21 @@ trait QueryProbingMacro {
       }
   }
 
-  private def resolveSource(tpe: Type) =
+  private def resolveContext(tpe: Type) =
     tpe match {
       case tpe if (tpe <:< c.weakTypeOf[QueryProbing]) =>
-        loadSource(tpe) match {
-          case Success(source) =>
-            Some(source)
+        loadContext(tpe) match {
+          case Success(context) =>
+            Some(context)
           case Failure(ex) =>
-            c.error(s"Can't load the source of type '$tpe' for compile-time query probing. Reason: '$ex'")
+            c.error(s"Can't load the context of type '$tpe' for compile-time query probing. Reason: '$ex'")
             None
         }
       case other =>
         None
     }
 
-  private def loadSource(tpe: Type): Try[Source[_, _]] =
+  private def loadContext(tpe: Type): Try[Context[_, _]] =
     Try {
       tpe match {
         case tpe if (tpe <:< c.weakTypeOf[Singleton]) =>
@@ -53,9 +53,9 @@ trait QueryProbingMacro {
         case tpe =>
           Class.forName(tpe.typeSymbol.fullName).newInstance
       }
-    }.asInstanceOf[Try[Source[_, _]]]
+    }.asInstanceOf[Try[Context[_, _]]]
 }
 
 object QueryProbingMacro {
-  private val cache = new Cache[Types#Type, Source[_, _]]
+  private val cache = new Cache[Types#Type, Context[_, _]]
 }

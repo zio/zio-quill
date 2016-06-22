@@ -1,7 +1,7 @@
-package io.getquill.sources
+package io.getquill.context
 
 import io.getquill.Spec
-import io.getquill.testSource._
+import io.getquill.testContext._
 
 class ExtractSchmeaAndInsertActionSpec extends Spec {
 

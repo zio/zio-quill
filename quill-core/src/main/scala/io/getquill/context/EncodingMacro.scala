@@ -1,11 +1,11 @@
-package io.getquill.sources
+package io.getquill.context
 
-import scala.reflect.macros.whitebox.Context
+import scala.reflect.macros.whitebox.{Context => MacroContext}
 import io.getquill.ast._
 import io.getquill.util.Messages._
 
 trait EncodingMacro {
-  val c: Context
+  val c: MacroContext
 
   import c.universe._
 
@@ -26,7 +26,7 @@ trait EncodingMacro {
       case (None, _, ast) if (typ.typeSymbol.asClass.isCaseClass) =>
         caseClassValue(typ, ast, inferEncoding)
       case other =>
-        c.fail(s"Source doesn't know how to decode '$ast: $typ'")
+        c.fail(s"Context doesn't know how to decode '$ast: $typ'")
     }
 
   private def optionType[T](implicit t: WeakTypeTag[T]) =

@@ -1,11 +1,10 @@
 package io.getquill
 
-import io.getquill.sources.mirror.MirrorSource
+import io.getquill.context.Context
 
-object testSource extends TestSourceTemplate with QueryProbing
-
-class TestSourceTemplate extends MirrorSource {
-
+trait TestEntities {
+  this: Context[_, _] =>
+  
   case class TestEntity(s: String, i: Int, l: Long, o: Option[Int])
   case class TestEntity2(s: String, i: Int, l: Long, o: Option[Int])
   case class TestEntity3(s: String, i: Int, l: Long, o: Option[Int])

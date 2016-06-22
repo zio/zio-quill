@@ -1,13 +1,13 @@
 package io.getquill.ast
 
-import io.getquill.testSource
+import io.getquill.testContext
 import io.getquill.Spec
 import io.getquill.ast.AstShow.astShow
 import io.getquill.util.Show.Shower
 
 class AstShowSpec extends Spec {
 
-  import testSource._
+  import testContext._
   import io.getquill.util.Show._
   import io.getquill.ast.AstShow._
 

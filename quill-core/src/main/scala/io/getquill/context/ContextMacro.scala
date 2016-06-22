@@ -1,6 +1,6 @@
-package io.getquill.sources
+package io.getquill.context
 
-import scala.reflect.macros.whitebox.Context
+import scala.reflect.macros.whitebox.{Context => MacroContext}
 import io.getquill.ast.{ Action => _, Query => _, _ }
 import io.getquill.quotation.Quotation
 import io.getquill.quotation.FreeVariables
@@ -8,8 +8,8 @@ import io.getquill.util.Messages._
 import io.getquill.quotation.Bindings
 import io.getquill.dsl.CoreDsl
 
-trait SourceMacro extends Quotation with ActionMacro with QueryMacro with QueryProbingMacro {
-  val c: Context
+trait ContextMacro extends Quotation with ActionMacro with QueryMacro with QueryProbingMacro {
+  val c: MacroContext
   import c.universe.{ Function => _, Ident => _, _ }
 
   protected def prepare(ast: Ast, params: List[Ident]): Tree

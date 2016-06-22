@@ -1,14 +1,14 @@
-package io.getquill.sources
+package io.getquill.context
 
 import scala.reflect.ClassTag
 import scala.util.DynamicVariable
 import java.io.Closeable
 import io.getquill.dsl.CoreDsl
 
-abstract class Source[R: ClassTag, S: ClassTag] extends Closeable with CoreDsl {
+abstract class Context[R: ClassTag, S: ClassTag] extends Closeable with CoreDsl {
 
-  type Decoder[T] = io.getquill.sources.Decoder[R, T]
-  type Encoder[T] = io.getquill.sources.Encoder[S, T]
+  type Decoder[T] = io.getquill.context.Decoder[R, T]
+  type Encoder[T] = io.getquill.context.Encoder[S, T]
 
   implicit def mappedDecoder[I, O](implicit mapped: MappedEncoding[I, O], decoder: Decoder[I]): Decoder[O] =
     new Decoder[O] {
@@ -32,7 +32,7 @@ abstract class Source[R: ClassTag, S: ClassTag] extends Closeable with CoreDsl {
     }
 }
 
-object Source {
+object Context {
 
   private[getquill] val configPrefix = new DynamicVariable[Option[String]](None)
 }
