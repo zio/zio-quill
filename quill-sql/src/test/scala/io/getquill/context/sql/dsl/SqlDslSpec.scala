@@ -1,4 +1,4 @@
-package io.getquill.context.sql.ops
+package io.getquill.context.sql.dsl
 
 import io.getquill.Spec
 import io.getquill.context.sql.testContext.Like
@@ -8,7 +8,7 @@ import io.getquill.context.sql.testContext.quote
 import io.getquill.context.sql.testContext.unquote
 import io.getquill.context.sql.testContext
 
-class PackageSpec extends Spec {
+class SqlDslSpec extends Spec {
 
   "like" - {
     "constant" in {

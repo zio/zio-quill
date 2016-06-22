@@ -10,10 +10,11 @@ import scala.util.Try
 import io.getquill.context.Context
 import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.naming.NamingStrategy
+import io.getquill.context.sql.dsl.SqlDsl
 
 abstract class SqlContext[D <: SqlIdiom, N <: NamingStrategy, R: ClassTag, S: ClassTag]
   extends Context[R, S]
-  with Ops {
+  with SqlDsl {
 
   type QueryResult[T]
   type SingleQueryResult[T]

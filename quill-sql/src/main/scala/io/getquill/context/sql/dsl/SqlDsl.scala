@@ -1,6 +1,8 @@
-package io.getquill.context.sql
+package io.getquill.context.sql.dsl
 
-trait Ops {
+import io.getquill.context.sql.SqlContext
+
+trait SqlDsl {
   this: SqlContext[_, _, _, _] =>
 
   implicit class Like(s1: String) {
