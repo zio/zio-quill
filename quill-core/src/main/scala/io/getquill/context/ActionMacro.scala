@@ -1,10 +1,14 @@
 package io.getquill.context
 
-import scala.reflect.macros.whitebox.{Context => MacroContext}
+import scala.reflect.macros.whitebox.{ Context => MacroContext }
 
-import io.getquill.ast._
-import io.getquill.util.Messages.fail
+import io.getquill.ast.AssignedAction
+import io.getquill.ast.Assignment
+import io.getquill.ast.Ast
+import io.getquill.ast.Ident
+import io.getquill.ast.Property
 import io.getquill.dsl.CoreDsl
+import io.getquill.util.Messages.fail
 
 trait ActionMacro extends EncodingMacro {
   this: ContextMacro =>

@@ -1,15 +1,19 @@
 package io.getquill.context.mirror
 
-import scala.reflect.macros.whitebox.{Context => MacroContext}
-import language.experimental.macros
+import scala.language.experimental.macros
+import scala.reflect.macros.whitebox.{ Context => MacroContext }
 import scala.util.Failure
 import scala.util.Success
-import io.getquill.ast.{ Ast, Ident }
-import io.getquill.context._
-import io.getquill.util.Messages.RichContext
+
+import io.getquill.QueryProbing
+import io.getquill.ast.Ast
+import io.getquill.ast.Ident
+import io.getquill.context.Context
+import io.getquill.context.ContextMacro
+import io.getquill.context.ExtractEntityAndInsertAction
 import io.getquill.norm.Normalize
 import io.getquill.quotation.IsDynamic
-import io.getquill.QueryProbing
+import io.getquill.util.Messages.RichContext
 
 class MirrorContextTemplateWithQueryProbing extends MirrorContext with QueryProbing
 

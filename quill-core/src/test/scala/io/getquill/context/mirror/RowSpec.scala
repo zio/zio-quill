@@ -1,6 +1,6 @@
 package io.getquill.context.mirror
 
-import io.getquill._
+import io.getquill.Spec
 
 class RowSpec extends Spec {
 

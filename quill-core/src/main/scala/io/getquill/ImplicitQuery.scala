@@ -1,10 +1,32 @@
 package io.getquill
 
-import language.implicitConversions
-import language.experimental.macros
-import scala.reflect.macros.whitebox.{Context => MacroContext}
-import io.getquill.util.Messages._
-import scala.runtime._
+import scala.language.experimental.macros
+import scala.language.implicitConversions
+import scala.reflect.macros.whitebox.{ Context => MacroContext }
+import scala.runtime.AbstractFunction1
+import scala.runtime.AbstractFunction10
+import scala.runtime.AbstractFunction11
+import scala.runtime.AbstractFunction12
+import scala.runtime.AbstractFunction13
+import scala.runtime.AbstractFunction14
+import scala.runtime.AbstractFunction15
+import scala.runtime.AbstractFunction16
+import scala.runtime.AbstractFunction17
+import scala.runtime.AbstractFunction18
+import scala.runtime.AbstractFunction19
+import scala.runtime.AbstractFunction2
+import scala.runtime.AbstractFunction20
+import scala.runtime.AbstractFunction21
+import scala.runtime.AbstractFunction22
+import scala.runtime.AbstractFunction3
+import scala.runtime.AbstractFunction4
+import scala.runtime.AbstractFunction5
+import scala.runtime.AbstractFunction6
+import scala.runtime.AbstractFunction7
+import scala.runtime.AbstractFunction8
+import scala.runtime.AbstractFunction9
+
+import io.getquill.util.Messages.RichContext
 import io.getquill.context.Context
 
 trait ImplicitQuery {

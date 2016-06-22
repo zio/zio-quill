@@ -1,7 +1,7 @@
 package io.getquill
 
-import io.getquill.testContext._
-import io.getquill.context.mirror._
+import io.getquill.context.mirror.MirrorContext
+import io.getquill.context.mirror.MirrorContextTemplateWithQueryProbing
 
 class QueryProbingSpec extends Spec {
 

@@ -1,11 +1,20 @@
 package io.getquill.context
 
-import io.getquill.Spec
-import io.getquill.testContext._
-import io.getquill.testContext
-
-import mirror.Row
 import scala.reflect.ClassTag
+
+import io.getquill.Spec
+import io.getquill.testContext
+import io.getquill.testContext.Action
+import io.getquill.testContext.InfixInterpolator
+import io.getquill.testContext.Query
+import io.getquill.testContext.Quoted
+import io.getquill.testContext.TestEntity
+import io.getquill.testContext.lift
+import io.getquill.testContext.qr1
+import io.getquill.testContext.query
+import io.getquill.testContext.quote
+import io.getquill.testContext.unquote
+import mirror.Row
 
 class ContextMacroSpec extends Spec {
 

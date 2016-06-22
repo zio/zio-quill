@@ -149,7 +149,7 @@ trait Parsing extends EntityConfigParsing {
     case q"$pack.query[$_]($ct)" =>
       Dynamic {
         c.typecheck(q"""
-          new ${c.prefix}.Quoted[EntityQuery[T]] {
+          new ${c.prefix}.Quoted[${c.prefix}.EntityQuery[T]] {
             override def ast = io.getquill.ast.SimpleEntity($ct.runtimeClass.getSimpleName)
           }  
         """)

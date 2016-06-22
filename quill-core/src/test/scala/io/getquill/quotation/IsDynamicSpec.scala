@@ -1,8 +1,9 @@
 package io.getquill.quotation
 
 import io.getquill.Spec
-import io.getquill.testContext._
-import io.getquill.ast._
+import io.getquill.ast.Dynamic
+import io.getquill.ast.Property
+import io.getquill.testContext.qr1
 
 class IsDynamicSpec extends Spec {
 

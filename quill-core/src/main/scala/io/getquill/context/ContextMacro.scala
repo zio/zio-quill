@@ -1,12 +1,16 @@
 package io.getquill.context
 
-import scala.reflect.macros.whitebox.{Context => MacroContext}
-import io.getquill.ast.{ Action => _, Query => _, _ }
-import io.getquill.quotation.Quotation
-import io.getquill.quotation.FreeVariables
-import io.getquill.util.Messages._
-import io.getquill.quotation.Bindings
+import scala.reflect.macros.whitebox.{ Context => MacroContext }
+
+import io.getquill.ast.Ast
+import io.getquill.ast.Dynamic
+import io.getquill.ast.FunctionApply
+import io.getquill.ast.Ident
 import io.getquill.dsl.CoreDsl
+import io.getquill.quotation.Bindings
+import io.getquill.quotation.FreeVariables
+import io.getquill.quotation.Quotation
+import io.getquill.util.Messages.RichContext
 
 trait ContextMacro extends Quotation with ActionMacro with QueryMacro with QueryProbingMacro {
   val c: MacroContext

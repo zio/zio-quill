@@ -1,6 +1,29 @@
 package io.getquill.norm
 
-import io.getquill.ast._
+import io.getquill.ast.Aggregation
+import io.getquill.ast.Ast
+import io.getquill.ast.Block
+import io.getquill.ast.Distinct
+import io.getquill.ast.Drop
+import io.getquill.ast.Entity
+import io.getquill.ast.Filter
+import io.getquill.ast.FlatMap
+import io.getquill.ast.Function
+import io.getquill.ast.FunctionApply
+import io.getquill.ast.GroupBy
+import io.getquill.ast.Ident
+import io.getquill.ast.Join
+import io.getquill.ast.Map
+import io.getquill.ast.OptionOperation
+import io.getquill.ast.Property
+import io.getquill.ast.Query
+import io.getquill.ast.SortBy
+import io.getquill.ast.StatelessTransformer
+import io.getquill.ast.Take
+import io.getquill.ast.Tuple
+import io.getquill.ast.Union
+import io.getquill.ast.UnionAll
+import io.getquill.ast.Val
 
 case class BetaReduction(map: collection.Map[Ident, Ast])
   extends StatelessTransformer {

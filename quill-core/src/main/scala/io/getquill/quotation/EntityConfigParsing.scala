@@ -1,8 +1,8 @@
 package io.getquill.quotation
 
-import io.getquill.ast.PropertyAlias
-
 import scala.reflect.macros.whitebox.Context
+
+import io.getquill.ast.PropertyAlias
 
 case class EntityConfig(
   alias:      Option[String]      = None,

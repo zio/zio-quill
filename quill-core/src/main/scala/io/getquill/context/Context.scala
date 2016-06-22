@@ -1,8 +1,10 @@
 package io.getquill.context
 
+import java.io.Closeable
+
 import scala.reflect.ClassTag
 import scala.util.DynamicVariable
-import java.io.Closeable
+
 import io.getquill.dsl.CoreDsl
 
 abstract class Context[R: ClassTag, S: ClassTag] extends Closeable with CoreDsl {

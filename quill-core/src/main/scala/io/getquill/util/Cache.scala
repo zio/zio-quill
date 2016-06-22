@@ -1,14 +1,15 @@
 package io.getquill.util
 
-import java.lang.System.{ currentTimeMillis => now }
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
-import scala.concurrent.duration.Duration
-import java.util.concurrent.ConcurrentHashMap
-import scala.collection.JavaConverters._
 import java.io.Closeable
+import java.lang.System.{ currentTimeMillis => now }
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledThreadPoolExecutor
 import java.util.concurrent.ThreadFactory
+import java.util.concurrent.TimeUnit
+
+import scala.collection.JavaConverters.mapAsScalaConcurrentMapConverter
+import scala.concurrent.duration.Duration
 
 class Cache[K, V <: Closeable] {
 

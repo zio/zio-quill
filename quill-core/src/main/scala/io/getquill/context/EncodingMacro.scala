@@ -1,8 +1,10 @@
 package io.getquill.context
 
-import scala.reflect.macros.whitebox.{Context => MacroContext}
-import io.getquill.ast._
-import io.getquill.util.Messages._
+import scala.reflect.macros.whitebox.{ Context => MacroContext }
+
+import io.getquill.ast.Ast
+import io.getquill.ast.Property
+import io.getquill.util.Messages.RichContext
 
 trait EncodingMacro {
   val c: MacroContext

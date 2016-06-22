@@ -1,11 +1,13 @@
 package io.getquill.context
 
-import io.getquill._
-import io.getquill.testContext._
-import io.getquill.testContext
-import io.getquill.context.mirror.Row
-
+import io.getquill.Spec
 import io.getquill.ast.Function
+import io.getquill.context.mirror.Row
+import io.getquill.testContext
+import io.getquill.testContext.lift
+import io.getquill.testContext.qr1
+import io.getquill.testContext.quote
+import io.getquill.testContext.unquote
 
 class QueryMacroSpec extends Spec {
 

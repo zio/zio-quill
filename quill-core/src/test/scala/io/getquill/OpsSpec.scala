@@ -1,9 +1,22 @@
 package test
 
-import io.getquill.ast.{ Query => _, _ }
-import io.getquill.quotation.NonQuotedException
-import io.getquill.testContext._
 import io.getquill.Spec
+import io.getquill.ast.Entity
+import io.getquill.ast.Ident
+import io.getquill.ast.Infix
+import io.getquill.ast.Map
+import io.getquill.quotation.NonQuotedException
+import io.getquill.testContext.EntityQuery
+import io.getquill.testContext.InfixInterpolator
+import io.getquill.testContext.Ord
+import io.getquill.testContext.Query
+import io.getquill.testContext.TestEntity
+import io.getquill.testContext.implicitOrd
+import io.getquill.testContext.qr1
+import io.getquill.testContext.query
+import io.getquill.testContext.quote
+import io.getquill.testContext.unquote
+import io.getquill.testContext.Quoted
 
 class OpsSpec extends Spec {
 

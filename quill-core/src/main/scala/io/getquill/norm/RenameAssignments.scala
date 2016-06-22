@@ -1,6 +1,13 @@
 package io.getquill.norm
 
-import io.getquill.ast._
+import io.getquill.ast.Action
+import io.getquill.ast.AssignedAction
+import io.getquill.ast.Assignment
+import io.getquill.ast.Entity
+import io.getquill.ast.Filter
+import io.getquill.ast.Insert
+import io.getquill.ast.StatelessTransformer
+import io.getquill.ast.Update
 
 object RenameAssignments extends StatelessTransformer {
 

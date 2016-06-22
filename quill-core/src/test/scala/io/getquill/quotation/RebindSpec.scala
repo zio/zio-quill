@@ -1,7 +1,12 @@
 package io.getquill.quotation
 
 import io.getquill.Spec
-import io.getquill.testContext._
+import io.getquill.testContext.Action
+import io.getquill.testContext.InfixInterpolator
+import io.getquill.testContext.TestEntity
+import io.getquill.testContext.query
+import io.getquill.testContext.quote
+import io.getquill.testContext.unquote
 import io.getquill.testContext
 
 class RebindSpec extends Spec {

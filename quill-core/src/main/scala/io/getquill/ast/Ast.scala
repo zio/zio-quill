@@ -1,14 +1,11 @@
 package io.getquill.ast
 
-import io.getquill.ast.AstShow.astShow
-import io.getquill.util.Show.Shower
-
 //************************************************************
 
 sealed trait Ast {
   override def toString = {
-    import io.getquill.util.Show._
     import io.getquill.ast.AstShow._
+    import io.getquill.util.Show._
     this.show
   }
 }

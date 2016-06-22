@@ -1,6 +1,7 @@
 package io.getquill.dsl
 
 import scala.reflect.ClassTag
+
 import io.getquill.quotation.NonQuotedException
 
 private[dsl] trait QueryDsl {

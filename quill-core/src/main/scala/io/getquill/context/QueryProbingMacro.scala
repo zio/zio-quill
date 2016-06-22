@@ -1,16 +1,16 @@
 package io.getquill.context
 
-import io.getquill.util.Messages._
 import scala.concurrent.duration.DurationInt
 import scala.language.existentials
 import scala.reflect.api.Types
-import scala.reflect.macros.whitebox.{Context => MacroContext}
+import scala.reflect.macros.whitebox.{ Context => MacroContext }
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
 
 import io.getquill._
 import io.getquill.util.Cache
+import io.getquill.util.Messages.RichContext
 
 trait QueryProbingMacro {
   val c: MacroContext

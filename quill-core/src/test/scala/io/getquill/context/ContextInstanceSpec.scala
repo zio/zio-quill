@@ -1,10 +1,11 @@
 package io.getquill.context
 
-import io.getquill.testContext._
-import io.getquill.testContext
-import io.getquill._
-
+import io.getquill.Spec
 import io.getquill.context.mirror.Row
+import io.getquill.testContext
+import io.getquill.testContext.mappedEncoding
+import io.getquill.testContext.query
+import io.getquill.testContext.quote
 
 case class WrappedEncodable(value: Int)
   extends AnyVal with WrappedValue[Int]

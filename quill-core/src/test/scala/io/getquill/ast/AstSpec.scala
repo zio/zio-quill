@@ -1,7 +1,9 @@
 package io.getquill.ast
 
 import io.getquill.Spec
-import io.getquill.testContext._
+import io.getquill.testContext.TestEntity
+import io.getquill.testContext.query
+import io.getquill.testContext.quote
 
 class AstSpec extends Spec {
 

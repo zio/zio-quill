@@ -1,8 +1,8 @@
 package io.getquill.norm
 
-import io.getquill.ast.StatelessTransformer
 import io.getquill.ast.Ast
 import io.getquill.ast.OptionOperation
+import io.getquill.ast.StatelessTransformer
 
 object FlattenOptionOperation extends StatelessTransformer {
 

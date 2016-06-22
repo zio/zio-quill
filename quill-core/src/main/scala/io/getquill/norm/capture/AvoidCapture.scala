@@ -1,6 +1,6 @@
 package io.getquill.norm.capture
 
-import io.getquill.ast._
+import io.getquill.ast.Query
 
 object AvoidCapture {
 

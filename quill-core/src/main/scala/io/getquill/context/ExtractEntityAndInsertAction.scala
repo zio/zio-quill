@@ -1,6 +1,11 @@
 package io.getquill.context
 
-import io.getquill.ast._
+import io.getquill.ast.Action
+import io.getquill.ast.Ast
+import io.getquill.ast.Entity
+import io.getquill.ast.Insert
+import io.getquill.ast.Query
+import io.getquill.ast.StatefulTransformer
 
 case class EntityAndInsertAction(entity: Option[Entity], insert: Option[Insert])
 

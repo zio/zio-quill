@@ -3,12 +3,13 @@ package io.getquill.context
 import java.util.Date
 
 import scala.BigDecimal
+
 import io.getquill.Spec
 
 trait EncodingSpec extends Spec {
-  
+
   val c: Context[_, _]
-  
+
   import c._
 
   case class EncodingTestEntity(

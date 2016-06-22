@@ -1,7 +1,11 @@
 package io.getquill.norm
 
 import io.getquill.Spec
-import io.getquill.testContext._
+import io.getquill.testContext.qr1
+import io.getquill.testContext.qr2
+import io.getquill.testContext.qr3
+import io.getquill.testContext.quote
+import io.getquill.testContext.unquote
 
 class SymbolicReductionSpec extends Spec {
 

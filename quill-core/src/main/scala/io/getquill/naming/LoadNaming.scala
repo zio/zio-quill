@@ -1,6 +1,7 @@
 package io.getquill.naming
 
 import scala.reflect.macros.whitebox.Context
+
 import io.getquill.util.LoadObject
 
 object LoadNaming {

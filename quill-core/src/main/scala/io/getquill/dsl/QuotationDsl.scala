@@ -1,12 +1,12 @@
 package io.getquill.dsl
 
+import scala.language.experimental.macros
+import scala.language.implicitConversions
+import scala.reflect.macros.whitebox.Context
+
+import io.getquill.ast.Ast
 import io.getquill.quotation.NonQuotedException
 import io.getquill.quotation.Quotation
-import language.experimental.macros
-import language.implicitConversions
-import scala.reflect.macros.whitebox.Context
-import io.getquill.quotation.Quotation
-import io.getquill.ast.Ast
 
 private[dsl] trait QuotationDsl {
 
