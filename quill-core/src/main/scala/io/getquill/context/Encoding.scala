@@ -1,6 +1,6 @@
 package io.getquill.context
 
-import scala.reflect.macros.whitebox.Context
+import scala.reflect.macros.whitebox.{Context => MacroContext}
 
 import io.getquill.util.InferImplicitValueWithFallback
 
@@ -14,12 +14,12 @@ trait Encoder[S, -T] {
 
 object Encoding {
 
-  def inferDecoder[R](c: Context)(tpe: c.Type)(implicit r: c.WeakTypeTag[R]) = {
+  def inferDecoder[R](c: MacroContext)(tpe: c.Type)(implicit r: c.WeakTypeTag[R]) = {
     def decoderType[T](implicit t: c.WeakTypeTag[T]) = c.weakTypeTag[Decoder[R, T]]
     InferImplicitValueWithFallback(c)(decoderType(c.WeakTypeTag(tpe)).tpe, c.prefix.tree)
   }
 
-  def inferEncoder[R](c: Context)(tpe: c.Type)(implicit r: c.WeakTypeTag[R]) = {
+  def inferEncoder[R](c: MacroContext)(tpe: c.Type)(implicit r: c.WeakTypeTag[R]) = {
     def encoderType[T](implicit t: c.WeakTypeTag[T]) = c.weakTypeTag[Encoder[R, T]]
     InferImplicitValueWithFallback(c)(encoderType(c.WeakTypeTag(tpe)).tpe, c.prefix.tree)
   }
