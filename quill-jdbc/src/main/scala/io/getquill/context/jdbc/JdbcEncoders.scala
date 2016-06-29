@@ -1,22 +1,23 @@
-package io.getquill.sources.jdbc
+package io.getquill.context.jdbc
 
 import java.sql
+import java.sql.PreparedStatement
+import java.sql.Types
 import java.util
 import java.util.Calendar
 import java.util.TimeZone
-import java.sql.Types
-import java.sql.PreparedStatement
-import io.getquill.sources.BindedStatementBuilder
+
+import io.getquill.context.BindedStatementBuilder
 
 trait JdbcEncoders {
-  this: JdbcSource[_, _] =>
+  this: JdbcContext[_, _] =>
 
   protected val dateTimeZone = TimeZone.getDefault
 
   def encoder[T](f: PreparedStatement => (Int, T) => Unit): Encoder[T] =
     new Encoder[T] {
       override def apply(index: Int, value: T, row: BindedStatementBuilder[PreparedStatement]) = {
-        val raw = new io.getquill.sources.Encoder[PreparedStatement, T] {
+        val raw = new io.getquill.context.Encoder[PreparedStatement, T] {
           override def apply(index: Int, value: T, row: PreparedStatement) = {
             f(row)(index + 1, value)
             row

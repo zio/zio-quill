@@ -1,13 +1,14 @@
-package io.getquill.sources.jdbc.h2
+package io.getquill.context.jdbc.h2
 
-import io.getquill.sources.sql.ProductSpec
+import io.getquill.context.sql.ProductSpec
 
-class ProductJdbcSpec extends ProductSpec(testH2DB) {
+class ProductJdbcSpec extends ProductSpec {
 
-  import testH2DB._
+  val context = testContext
+  import testContext._
 
   override def beforeAll = {
-    testH2DB.run(quote(query[Product].delete))
+    testContext.run(quote(query[Product].delete))
     ()
   }
 
@@ -17,22 +18,22 @@ class ProductJdbcSpec extends ProductSpec(testH2DB) {
       H2 does not support returning generated keys for batch insert.
       So we have to insert one entry at a time in order to get the generated values.
      */
-      val inserted = productEntries.map(product => testH2DB.run(productInsert)(product))
-      val product = testH2DB.run(productById(inserted(2))).head
+      val inserted = productEntries.map(product => testContext.run(productInsert)(product))
+      val product = testContext.run(productById(inserted(2))).head
       product.description mustEqual productEntries(2).description
       product.id mustEqual inserted(2)
     }
     "Single insert product" in {
-      val inserted = testH2DB.run(productSingleInsert)
-      val product = testH2DB.run(productById(inserted)).head
+      val inserted = testContext.run(productSingleInsert)
+      val product = testContext.run(productById(inserted)).head
       product.description mustEqual "Window"
       product.id mustEqual inserted
     }
 
     "Single insert with inlined free variable" in {
       val prd = Product(0L, "test1", 1L)
-      val inserted = testH2DB.run(product.insert(_.sku -> lift(prd.sku), _.description -> lift(prd.description)))
-      val returnedProduct = testH2DB.run(productById(inserted)).head
+      val inserted = testContext.run(product.insert(_.sku -> lift(prd.sku), _.description -> lift(prd.description)))
+      val returnedProduct = testContext.run(productById(inserted)).head
       returnedProduct.description mustEqual "test1"
       returnedProduct.sku mustEqual 1L
       returnedProduct.id mustEqual inserted
@@ -41,8 +42,8 @@ class ProductJdbcSpec extends ProductSpec(testH2DB) {
     "Single insert with free variable and explicit quotation" in {
       val prd = Product(0L, "test2", 2L)
       val q1 = quote { product.insert(_.sku -> lift(prd.sku), _.description -> lift(prd.description)) }
-      val inserted = testH2DB.run(q1)
-      val returnedProduct = testH2DB.run(productById(inserted)).head
+      val inserted = testContext.run(q1)
+      val returnedProduct = testContext.run(productById(inserted)).head
       returnedProduct.description mustEqual "test2"
       returnedProduct.sku mustEqual 2L
       returnedProduct.id mustEqual inserted
@@ -50,8 +51,8 @@ class ProductJdbcSpec extends ProductSpec(testH2DB) {
 
     "Single product insert with a method quotation" in {
       val prd = Product(0L, "test3", 3L)
-      val inserted = testH2DB.run(productInsert(prd))
-      val returnedProduct = testH2DB.run(productById(inserted)).head
+      val inserted = testContext.run(productInsert(prd))
+      val returnedProduct = testContext.run(productById(inserted)).head
       returnedProduct.description mustEqual "test3"
       returnedProduct.sku mustEqual 3L
       returnedProduct.id mustEqual inserted

@@ -1,25 +1,30 @@
-package io.getquill.sources.jdbc
+package io.getquill.context.jdbc
 
-import java.sql.{ Connection, PreparedStatement, ResultSet }
-
+import com.typesafe.config.Config
 import com.typesafe.scalalogging.Logger
-import io.getquill.naming.NamingStrategy
-import io.getquill.sources.BindedStatementBuilder
-import io.getquill.sources.sql.idiom.SqlIdiom
-import io.getquill.sources.sql.{ SqlBindedStatementBuilder, SqlSource }
+
+import java.io.Closeable
+import java.sql.Connection
+import java.sql.PreparedStatement
+import java.sql.ResultSet
+
 import org.slf4j.LoggerFactory
 
 import scala.annotation.tailrec
-
 import scala.util.Try
 import scala.util.control.NonFatal
-import com.typesafe.config.Config
-import java.io.Closeable
-import javax.sql.DataSource
-import io.getquill.util.LoadConfig
 
-class JdbcSource[D <: SqlIdiom, N <: NamingStrategy](dataSource: DataSource with Closeable)
-  extends SqlSource[D, N, ResultSet, BindedStatementBuilder[PreparedStatement]]
+import io.getquill.context.BindedStatementBuilder
+import io.getquill.context.sql.SqlBindedStatementBuilder
+import io.getquill.context.sql.SqlContext
+import io.getquill.context.sql.idiom.SqlIdiom
+import io.getquill.naming.NamingStrategy
+import io.getquill.util.LoadConfig
+import javax.sql.DataSource
+import scala.util.DynamicVariable
+
+class JdbcContext[D <: SqlIdiom, N <: NamingStrategy](dataSource: DataSource with Closeable)
+  extends SqlContext[D, N, ResultSet, BindedStatementBuilder[PreparedStatement]]
   with JdbcEncoders
   with JdbcDecoders {
 
@@ -27,7 +32,7 @@ class JdbcSource[D <: SqlIdiom, N <: NamingStrategy](dataSource: DataSource with
   def this(configPrefix: String) = this(LoadConfig(configPrefix))
 
   protected val logger: Logger =
-    Logger(LoggerFactory.getLogger(classOf[JdbcSource[_, _]]))
+    Logger(LoggerFactory.getLogger(classOf[JdbcContext[_, _]]))
 
   type QueryResult[T] = List[T]
   type SingleQueryResult[T] = T
@@ -40,11 +45,14 @@ class JdbcSource[D <: SqlIdiom, N <: NamingStrategy](dataSource: DataSource with
     def apply(param: T) = f(List(param)).head
   }
 
-  protected def withConnection[T](f: Connection => T): T = {
-    val conn = dataSource.getConnection
-    try f(conn)
-    finally conn.close
-  }
+  private val currentConnection = new DynamicVariable[Option[Connection]](None)
+
+  protected def withConnection[T](f: Connection => T) =
+    currentConnection.value.map(f).getOrElse {
+      val conn = dataSource.getConnection
+      try f(conn)
+      finally conn.close
+    }
 
   def close = dataSource.close()
 
@@ -53,24 +61,22 @@ class JdbcSource[D <: SqlIdiom, N <: NamingStrategy](dataSource: DataSource with
       withConnection(_.createStatement.execute(sql))
     }
 
-  def transaction[T](f: JdbcSource[D, N] => T) =
+  def transaction[T](f: => T) =
     withConnection { conn =>
-      val autoCommit = conn.getAutoCommit
-      conn.setAutoCommit(false)
-      val transactional = new JdbcSource[D, N](dataSource) {
-        override protected def withConnection[R](f: Connection => R): R =
-          f(conn)
+      currentConnection.withValue(Some(conn)) {
+        val wasAutoCommit = conn.getAutoCommit
+        conn.setAutoCommit(false)
+        try {
+          val res = f
+          conn.commit
+          res
+        } catch {
+          case NonFatal(e) =>
+            conn.rollback
+            throw e
+        } finally
+          conn.setAutoCommit(wasAutoCommit)
       }
-      try {
-        val res = f(transactional)
-        conn.commit
-        res
-      } catch {
-        case NonFatal(e) =>
-          conn.rollback
-          throw e
-      } finally
-        conn.setAutoCommit(autoCommit)
     }
 
   def executeAction(sql: String, bind: BindedStatementBuilder[PreparedStatement] => BindedStatementBuilder[PreparedStatement] = identity, generated: Option[String] = None): Long =

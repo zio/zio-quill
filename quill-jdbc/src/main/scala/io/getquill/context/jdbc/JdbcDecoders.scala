@@ -1,13 +1,14 @@
-package io.getquill.sources.jdbc
+package io.getquill.context.jdbc
 
 import java.sql.ResultSet
 import java.util
 import java.util.Calendar
 
+import scala.BigDecimal
 import scala.math.BigDecimal.javaBigDecimal2bigDecimal
 
 trait JdbcDecoders {
-  this: JdbcSource[_, _] =>
+  this: JdbcContext[_, _] =>
 
   def decoder[T](f: ResultSet => Int => T): Decoder[T] =
     new Decoder[T] {
