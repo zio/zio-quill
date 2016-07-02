@@ -6,9 +6,9 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.{ Await, Future }
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class ProductAsyncSpec extends ProductSpec(testPostgresDB) {
+import io.getquill._
 
-  import testPostgresDB._
+class ProductAsyncSpec extends ProductSpec {
 
   def await[T](future: Future[T]) = Await.result(future, Duration.Inf)
 

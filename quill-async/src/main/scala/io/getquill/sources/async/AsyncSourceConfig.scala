@@ -1,12 +1,21 @@
 package io.getquill.sources.async
 
-import com.github.mauricio.async.db.pool.PoolConfiguration
-
-import scala.util.Try
-import com.typesafe.config.Config
+import io.getquill.sources.SourceConfig
 import com.github.mauricio.async.db.Configuration
+import com.github.mauricio.async.db.Connection
+import com.github.mauricio.async.db.pool.ObjectFactory
+import com.github.mauricio.async.db.pool.PartitionedConnectionPool
+import com.github.mauricio.async.db.pool.PoolConfiguration
+import scala.util.Try
+import io.getquill.sources.sql.idiom.SqlIdiom
+import io.getquill.naming.NamingStrategy
 
-case class AsyncSourceConfig(config: Config) {
+abstract class AsyncSourceConfig[D <: SqlIdiom, N <: NamingStrategy, C <: Connection](
+  val name:          String,
+  connectionFactory: Configuration => ObjectFactory[C]
+) {
+
+  this: SourceConfig[_] =>
 
   def user = config.getString("user")
   def password = Try(config.getString("password")).toOption
@@ -39,4 +48,11 @@ case class AsyncSourceConfig(config: Config) {
     )
 
   def numberOfPartitions = Try(config.getInt("poolNumberOfPartitions")).getOrElse(4)
+
+  def pool =
+    new PartitionedConnectionPool[C](
+      connectionFactory(configuration),
+      poolConfiguration,
+      numberOfPartitions
+    )
 }

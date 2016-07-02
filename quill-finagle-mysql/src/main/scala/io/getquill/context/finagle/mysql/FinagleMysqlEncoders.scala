@@ -1,4 +1,4 @@
-package io.getquill.sources.finagle.mysql
+package io.getquill.context.finagle.mysql
 
 import java.util.Date
 import com.twitter.finagle.exp.mysql.BigDecimalValue
@@ -6,10 +6,10 @@ import com.twitter.finagle.exp.mysql.CanBeParameter
 import com.twitter.finagle.exp.mysql.CanBeParameter._
 import com.twitter.finagle.exp.mysql.Parameter
 import com.twitter.finagle.exp.mysql.Parameter.wrap
-import io.getquill.sources.BindedStatementBuilder
+import io.getquill.context.BindedStatementBuilder
 
 trait FinagleMysqlEncoders {
-  this: FinagleMysqlSourceBase[_] =>
+  this: FinagleMysqlContext[_] =>
 
   def encoder[T](implicit cbp: CanBeParameter[T]): Encoder[T] =
     encoder[T]((v: T) => v: Parameter)
@@ -17,7 +17,7 @@ trait FinagleMysqlEncoders {
   def encoder[T](f: T => Parameter): Encoder[T] =
     new Encoder[T] {
       def apply(idx: Int, value: T, row: BindedStatementBuilder[List[Parameter]]) = {
-        val raw = new io.getquill.sources.Encoder[List[Parameter], T] {
+        val raw = new io.getquill.context.Encoder[List[Parameter], T] {
           override def apply(idx: Int, value: T, row: List[Parameter]) =
             row :+ f(value)
         }

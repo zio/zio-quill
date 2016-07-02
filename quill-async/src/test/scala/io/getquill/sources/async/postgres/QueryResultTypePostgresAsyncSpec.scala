@@ -7,10 +7,7 @@ import scala.concurrent.{ Await, Future }
 import scala.concurrent.duration.Duration
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class QueryResultTypePostgresAsyncSpec extends QueryResultTypeSpec(testPostgresDB) {
-
-  import testPostgresDB._
-
+class QueryResultTypePostgresAsyncSpec extends QueryResultTypeSpec {
   val db = testPostgresDB
 
   def await[T](r: Future[T]) = Await.result(r, Duration.Inf)

@@ -1,14 +1,13 @@
 package io.getquill.sources.async.postgres
 
+import io.getquill._
 import io.getquill.sources.sql.DepartmentsSpec
 import scala.concurrent.Future
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 import scala.concurrent.ExecutionContext.Implicits.{ global => ec }
 
-class DepartmentsPostgresAsyncSpec extends DepartmentsSpec(testPostgresDB) {
-
-  import testPostgresDB._
+class DepartmentsPostgresAsyncSpec extends DepartmentsSpec {
 
   def await[T](future: Future[T]) = Await.result(future, Duration.Inf)
 

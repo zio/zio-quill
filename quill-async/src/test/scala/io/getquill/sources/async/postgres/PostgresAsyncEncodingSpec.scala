@@ -1,5 +1,6 @@
 package io.getquill.sources.async.postgres
 
+import io.getquill._
 import io.getquill.sources.sql.EncodingSpec
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Await
@@ -7,9 +8,7 @@ import scala.concurrent.duration.Duration
 import java.util.Date
 import java.util.UUID
 
-class PostgresAsyncEncodingSpec extends EncodingSpec(testPostgresDB) {
-
-  import testPostgresDB._
+class PostgresAsyncEncodingSpec extends EncodingSpec {
 
   "encodes and decodes types" in {
     val r =

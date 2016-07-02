@@ -1,4 +1,4 @@
-package io.getquill
+package io.getquill.context.finagle.mysql
 
 import java.util.TimeZone
 

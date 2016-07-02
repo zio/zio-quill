@@ -1,29 +1,30 @@
-package io.getquill.sources.finagle.mysql
+package io.getquill.context.finagle.mysql
 
 import com.twitter.util.Await
 
-import io.getquill.sources.sql.EncodingSpec
+import io.getquill.context.sql.EncodingSpec
 
-class FinagleMysqlEncodingSpec extends EncodingSpec(testDB) {
+class FinagleMysqlEncodingSpec extends EncodingSpec {
 
-  import testDB._
+  val context = testContext
+  import testContext._
 
   "encodes and decodes types" in {
     val r =
       for {
-        _ <- testDB.run(delete)
-        _ <- testDB.run(insert)(insertValues)
-        result <- testDB.run(query[EncodingTestEntity])
+        _ <- testContext.run(delete)
+        _ <- testContext.run(insert)(insertValues)
+        result <- testContext.run(query[EncodingTestEntity])
       } yield result
 
     verify(Await.result(r).toList)
   }
 
   "fails if the column has the wrong type" in {
-    Await.result(testDB.run(insert)(insertValues))
+    Await.result(testContext.run(insert)(insertValues))
     case class EncodingTestEntity(v1: Int)
     val e = intercept[IllegalStateException] {
-      Await.result(testDB.run(query[EncodingTestEntity]))
+      Await.result(testContext.run(query[EncodingTestEntity]))
     }
   }
 
@@ -34,9 +35,9 @@ class FinagleMysqlEncodingSpec extends EncodingSpec(testDB) {
     }
     Await.result {
       for {
-        _ <- testDB.run(query[EncodingTestEntity].delete)
-        _ <- testDB.run(query[EncodingTestEntity].insert)(insertValues)
-        r <- testDB.run(q)(insertValues.map(_.v6).toSet)
+        _ <- testContext.run(query[EncodingTestEntity].delete)
+        _ <- testContext.run(query[EncodingTestEntity].insert)(insertValues)
+        r <- testContext.run(q)(insertValues.map(_.v6).toSet)
       } yield {
         verify(r)
       }
@@ -57,9 +58,9 @@ class FinagleMysqlEncodingSpec extends EncodingSpec(testDB) {
       val delete = quote(query[BooleanEncodingTestEntity].delete)
       val insert = quote(query[BooleanEncodingTestEntity].insert)
       val r = for {
-        _ <- testDB.run(delete)
-        _ <- testDB.run(insert)(List(entity))
-        result <- testDB.run(query[BooleanEncodingTestEntity])
+        _ <- testContext.run(delete)
+        _ <- testContext.run(insert)(List(entity))
+        result <- testContext.run(query[BooleanEncodingTestEntity])
       } yield result
       Await.result(r).head
     }

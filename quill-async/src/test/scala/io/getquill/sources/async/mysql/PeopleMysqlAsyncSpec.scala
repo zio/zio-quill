@@ -1,14 +1,13 @@
 package io.getquill.sources.async.mysql
 
+import io.getquill._
 import io.getquill.sources.sql.PeopleSpec
 import scala.concurrent.Future
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 import scala.concurrent.ExecutionContext.Implicits.{ global => ec }
 
-class PeopleMysqlAsyncSpec extends PeopleSpec(testMysqlDB) {
-
-  import testMysqlDB._
+class PeopleMysqlAsyncSpec extends PeopleSpec {
 
   def await[T](future: Future[T]) = Await.result(future, Duration.Inf)
 

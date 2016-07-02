@@ -1,4 +1,4 @@
-package io.getquill.sources.finagle.mysql
+package io.getquill.context.finagle.mysql
 
 import java.util.Date
 import scala.reflect.ClassTag
@@ -20,7 +20,7 @@ import io.getquill.util.Messages.fail
 import com.twitter.finagle.exp.mysql.NullValue
 
 trait FinagleMysqlDecoders {
-  this: FinagleMysqlSourceBase[_] =>
+  this: FinagleMysqlContext[_] =>
 
   protected val timestampValue =
     new TimestampValue(
