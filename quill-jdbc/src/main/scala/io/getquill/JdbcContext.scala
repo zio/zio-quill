@@ -1,19 +1,15 @@
-package io.getquill.context.jdbc
+package io.getquill
 
 import com.typesafe.config.Config
 import com.typesafe.scalalogging.Logger
-
 import java.io.Closeable
 import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.ResultSet
-
 import org.slf4j.LoggerFactory
-
 import scala.annotation.tailrec
 import scala.util.Try
 import scala.util.control.NonFatal
-
 import io.getquill.context.BindedStatementBuilder
 import io.getquill.context.sql.SqlBindedStatementBuilder
 import io.getquill.context.sql.SqlContext
@@ -22,28 +18,26 @@ import io.getquill.naming.NamingStrategy
 import io.getquill.util.LoadConfig
 import javax.sql.DataSource
 import scala.util.DynamicVariable
+import io.getquill.context.jdbc.JdbcDecoders
+import io.getquill.context.jdbc.JdbcEncoders
+import io.getquill.context.jdbc.ActionApply
 
 class JdbcContext[D <: SqlIdiom, N <: NamingStrategy](dataSource: DataSource with Closeable)
   extends SqlContext[D, N, ResultSet, BindedStatementBuilder[PreparedStatement]]
   with JdbcEncoders
   with JdbcDecoders {
 
-  def this(config: Config) = this(CreateDataSource(config))
+  def this(config: JdbcContextConfig) = this(config.dataSource)
+  def this(config: Config) = this(JdbcContextConfig(config))
   def this(configPrefix: String) = this(LoadConfig(configPrefix))
 
-  protected val logger: Logger =
+  private val logger: Logger =
     Logger(LoggerFactory.getLogger(classOf[JdbcContext[_, _]]))
 
-  type QueryResult[T] = List[T]
-  type SingleQueryResult[T] = T
-  type ActionResult[T] = Long
-  type BatchedActionResult[T] = List[Long]
-
-  class ActionApply[T](f: List[T] => List[Long]) extends Function1[List[T], List[Long]] {
-    def apply(params: List[T]) = f(params)
-
-    def apply(param: T) = f(List(param)).head
-  }
+  protected type QueryResult[T] = List[T]
+  protected type SingleQueryResult[T] = T
+  protected type ActionResult[T] = Long
+  protected type BatchedActionResult[T] = List[Long]
 
   private val currentConnection = new DynamicVariable[Option[Connection]](None)
 
@@ -133,5 +127,4 @@ class JdbcContext[D <: SqlIdiom, N <: NamingStrategy](dataSource: DataSource wit
       extractResult(rs, extractor, acc :+ extractor(rs))
     else
       acc
-
 }

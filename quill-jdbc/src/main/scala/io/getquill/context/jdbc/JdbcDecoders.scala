@@ -6,6 +6,7 @@ import java.util.Calendar
 
 import scala.BigDecimal
 import scala.math.BigDecimal.javaBigDecimal2bigDecimal
+import io.getquill.JdbcContext
 
 trait JdbcDecoders {
   this: JdbcContext[_, _] =>

@@ -16,10 +16,10 @@ abstract class SqlContext[D <: SqlIdiom, N <: NamingStrategy, R: ClassTag, S: Cl
   extends Context[R, S]
   with SqlDsl {
 
-  type QueryResult[T]
-  type SingleQueryResult[T]
-  type ActionResult[T]
-  type BatchedActionResult[T]
+  protected type QueryResult[T]
+  protected type SingleQueryResult[T]
+  protected type ActionResult[T]
+  protected type BatchedActionResult[T]
 
   def probe(sql: String): Try[Any]
 

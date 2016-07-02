@@ -18,6 +18,7 @@ import com.twitter.finagle.exp.mysql.Type
 import com.twitter.finagle.exp.mysql.Value
 import io.getquill.util.Messages.fail
 import com.twitter.finagle.exp.mysql.NullValue
+import io.getquill.FinagleMysqlContext
 
 trait FinagleMysqlDecoders {
   this: FinagleMysqlContext[_] =>
@@ -25,8 +26,7 @@ trait FinagleMysqlDecoders {
   protected val timestampValue =
     new TimestampValue(
       dateTimezone,
-      dateTimezone
-    )
+      dateTimezone)
 
   def decoder[T: ClassTag](f: PartialFunction[Value, T]): Decoder[T] =
     new Decoder[T] {

@@ -1,14 +1,13 @@
-package io.getquill.context.finagle.mysql
+package io.getquill
 
 import java.util.TimeZone
-
 import com.twitter.finagle.client.DefaultPool
 import com.twitter.finagle.exp.Mysql
 import com.twitter.util.Try
 import com.typesafe.config.Config
 import com.twitter.util.TimeConversions._
 
-case class FinagleMysqlSourceConfig(config: Config) {
+case class FinagleMysqlContextConfig(config: Config) {
 
   def dateTimezone = TimeZone.getDefault
   def user = config.getString("user")

@@ -8,6 +8,7 @@ import java.util.Calendar
 import java.util.TimeZone
 
 import io.getquill.context.BindedStatementBuilder
+import io.getquill.JdbcContext
 
 trait JdbcEncoders {
   this: JdbcContext[_, _] =>

@@ -1,4 +1,4 @@
-package io.getquill.context.finagle.mysql
+package io.getquill
 
 import com.twitter.finagle.exp.mysql.Client
 import com.twitter.finagle.exp.mysql.Parameter
@@ -9,10 +9,8 @@ import com.twitter.util.Local
 import io.getquill.naming.NamingStrategy
 import io.getquill.context.sql.{ SqlBindedStatementBuilder, SqlContext }
 import io.getquill.context.sql.idiom.MySQLDialect
-
 import com.twitter.util.Await
 import scala.util.Try
-
 import io.getquill.context.BindedStatementBuilder
 import com.typesafe.scalalogging.Logger
 import org.slf4j.LoggerFactory
@@ -20,32 +18,30 @@ import com.twitter.finagle.exp.mysql.OK
 import com.twitter.finagle.exp.mysql.Error
 import io.getquill.util.LoadConfig
 import com.typesafe.config.Config
+import io.getquill.context.finagle.mysql.FinagleMysqlDecoders
+import io.getquill.context.finagle.mysql.FinagleMysqlEncoders
+import io.getquill.context.finagle.mysql.ActionApply
+import com.twitter.finagle.exp.mysql.Transactions
+import java.util.TimeZone
 
-class FinagleMysqlContext[N <: NamingStrategy](config: FinagleMysqlSourceConfig)
+class FinagleMysqlContext[N <: NamingStrategy](
+  client: Client with Transactions,
+  private[getquill] val dateTimezone: TimeZone = TimeZone.getDefault)
   extends SqlContext[MySQLDialect, N, Row, BindedStatementBuilder[List[Parameter]]]
   with FinagleMysqlDecoders
   with FinagleMysqlEncoders {
-  
-  def this(config: Config) = this(FinagleMysqlSourceConfig(config))
+
+  def this(config: FinagleMysqlContextConfig) = this(config.client, config.dateTimezone)
+  def this(config: Config) = this(FinagleMysqlContextConfig(config))
   def this(configPrefix: String) = this(LoadConfig(configPrefix))
 
   protected val logger: Logger =
     Logger(LoggerFactory.getLogger(classOf[FinagleMysqlContext[_]]))
 
-  type QueryResult[T] = Future[List[T]]
-  type SingleQueryResult[T] = Future[T]
-  type ActionResult[T] = Future[Long]
-  type BatchedActionResult[T] = Future[List[Long]]
-
-  class ActionApply[T](f: List[T] => Future[List[Long]])
-    extends Function1[List[T], Future[List[Long]]] {
-    def apply(params: List[T]) = f(params)
-    def apply(param: T) = f(List(param)).map(_.head)
-  }
-
-  private[mysql] def dateTimezone = config.dateTimezone
-
-  private val client = config.client
+  protected type QueryResult[T] = Future[List[T]]
+  protected type SingleQueryResult[T] = Future[T]
+  protected type ActionResult[T] = Future[Long]
+  protected type BatchedActionResult[T] = Future[List[Long]]
 
   Await.result(client.ping)
 

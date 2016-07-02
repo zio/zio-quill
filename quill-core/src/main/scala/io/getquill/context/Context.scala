@@ -1,16 +1,18 @@
 package io.getquill.context
 
-import java.io.Closeable
-
 import scala.reflect.ClassTag
-import scala.util.DynamicVariable
 
 import io.getquill.dsl.CoreDsl
+import java.io.Closeable
 
 abstract class Context[R: ClassTag, S: ClassTag] extends Closeable with CoreDsl {
 
   type Decoder[T] = io.getquill.context.Decoder[R, T]
   type Encoder[T] = io.getquill.context.Encoder[S, T]
+
+  case class MappedEncoding[I, O](f: I => O)
+
+  def mappedEncoding[I, O](f: I => O) = MappedEncoding(f)
 
   implicit def mappedDecoder[I, O](implicit mapped: MappedEncoding[I, O], decoder: Decoder[I]): Decoder[O] =
     new Decoder[O] {
@@ -32,9 +34,4 @@ abstract class Context[R: ClassTag, S: ClassTag] extends Closeable with CoreDsl 
       case value :: Nil => value
       case other        => throw new IllegalStateException(s"Expected a single result but got $other")
     }
-}
-
-object Context {
-
-  private[getquill] val configPrefix = new DynamicVariable[Option[String]](None)
 }

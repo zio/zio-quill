@@ -7,6 +7,7 @@ import com.twitter.finagle.exp.mysql.CanBeParameter._
 import com.twitter.finagle.exp.mysql.Parameter
 import com.twitter.finagle.exp.mysql.Parameter.wrap
 import io.getquill.context.BindedStatementBuilder
+import io.getquill.FinagleMysqlContext
 
 trait FinagleMysqlEncoders {
   this: FinagleMysqlContext[_] =>
