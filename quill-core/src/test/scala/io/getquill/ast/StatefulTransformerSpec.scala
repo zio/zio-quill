@@ -23,6 +23,14 @@ class StatefulTransformerSpec extends Spec {
             att.state mustEqual Nil
         }
       }
+      "configuredEntity" in {
+        val ast: Ast = ConfiguredEntity(Entity("a"))
+        Subject(Nil, Entity("a") -> Entity("a'"))(ast) match {
+          case (at, att) =>
+            at mustEqual ConfiguredEntity(Entity("a'"))
+            att.state mustEqual List(Entity("a"))
+        }
+      }
       "filter" in {
         val ast: Ast = Filter(Ident("a"), Ident("b"), Ident("c"))
         Subject(Nil, Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) match {
