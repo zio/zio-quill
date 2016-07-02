@@ -1,7 +1,7 @@
-FROM alpine:3.3
+FROM alpine:3.4
 MAINTAINER gustavo.amigo@gmail.com
 
-RUN apk update; apk add git openssh openjdk8 bash
+RUN apk update; apk add git openssh openjdk8 bash curl openssl
 
 ENV SBT_VERSION 0.13.11
 ENV SBT_HOME /usr/local/sbt

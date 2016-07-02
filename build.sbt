@@ -32,9 +32,9 @@ lazy val `quill-jdbc` =
     .settings(mimaSettings)
     .settings(
       libraryDependencies ++= Seq(
-        "com.zaxxer"     % "HikariCP"             % "2.4.5",
+        "com.zaxxer"     % "HikariCP"             % "2.4.6",
         "mysql"          % "mysql-connector-java" % "5.1.38"  % "test",
-        "com.h2database" % "h2"                   % "1.4.191" % "test",
+        "com.h2database" % "h2"                   % "1.4.192" % "test",
         "org.postgresql" % "postgresql"           % "9.4.1208" % "test"
       ),
       parallelExecution in Test := false
@@ -47,7 +47,7 @@ lazy val `quill-finagle-mysql` =
     .settings(mimaSettings)
     .settings(
       libraryDependencies ++= Seq(
-        "com.twitter" %% "finagle-mysql" % "6.34.0"
+        "com.twitter" %% "finagle-mysql" % "6.35.0"
       ),
       parallelExecution in Test := false
     )
@@ -59,9 +59,9 @@ lazy val `quill-async` =
     .settings(mimaSettings)
     .settings(
       libraryDependencies ++= Seq(
-        "com.github.mauricio" %% "db-async-common"  % "0.2.19",
-        "com.github.mauricio" %% "mysql-async"      % "0.2.19",
-        "com.github.mauricio" %% "postgresql-async" % "0.2.19"
+        "com.github.mauricio" %% "db-async-common"  % "0.2.20",
+        "com.github.mauricio" %% "mysql-async"      % "0.2.20",
+        "com.github.mauricio" %% "postgresql-async" % "0.2.20"
       ),
       parallelExecution in Test := false
     )
@@ -73,7 +73,7 @@ lazy val `quill-cassandra` =
     .settings(mimaSettings)
     .settings(
       libraryDependencies ++= Seq(
-        "com.datastax.cassandra" %  "cassandra-driver-core" % "3.0.1",
+        "com.datastax.cassandra" %  "cassandra-driver-core" % "3.0.2",
         "org.monifu"             %% "monifu"                % "1.2"
       ),
       parallelExecution in Test := false
