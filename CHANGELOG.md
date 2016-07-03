@@ -1,3 +1,19 @@
+# 0.7.0 / 2-Jul-2016
+
+* [transform quoted reference](https://github.com/getquill/quill/pull/416)
+* [simplify `finagle-mysql` action result type](https://github.com/getquill/quill/pull/358)
+* [provide default values for plain-sql query execution](https://github.com/getquill/quill/pull/360)
+* [quotation: fix binding conflict](https://github.com/getquill/quill/pull/363)
+* [don't consider `?` a binding if inside a quote](https://github.com/getquill/quill/pull/361)
+* [fix query generation for wrapped types](https://github.com/getquill/quill/pull/364)
+* [use querySingle/query for parametrized query according to return type](https://github.com/getquill/quill/pull/375)
+* [remove implicit ordering](https://github.com/getquill/quill/pull/378)
+* [remove implicit from max and min](https://github.com/getquill/quill/pull/384)
+* [support explicit `Predef.ArrowAssoc` call](https://github.com/getquill/quill/pull/386)
+* [added handling for string lists in ClusterBuilder](https://github.com/getquill/quill/pull/395)
+* [add naming strategy for pluralized table names](https://github.com/getquill/quill/pull/396)
+* [transform ConfiguredEntity](https://github.com/getquill/quill/pull/409)
+
 # 0.6.0 / 9-May-2016
 
 * [explicit bindings using `lift`](https://github.com/getquill/quill/pull/335/files#diff-04c6e90faac2675aa89e2176d2eec7d8R157)

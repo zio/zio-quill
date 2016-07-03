@@ -1014,7 +1014,7 @@ sbt dependencies
 ```
 libraryDependencies ++= Seq(
   "mysql" % "mysql-connector-java" % "5.1.36",
-  "io.getquill" %% "quill-jdbc" % "0.6.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "0.7.0"
 )
 ```
 
@@ -1045,7 +1045,7 @@ sbt dependencies
 ```
 libraryDependencies ++= Seq(
   "org.postgresql" % "postgresql" % "9.4-1206-jdbc41",
-  "io.getquill" %% "quill-jdbc" % "0.6.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "0.7.0"
 )
 ```
 
@@ -1076,7 +1076,7 @@ db.connectionTimeout=30000
 sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async" % "0.6.1-SNAPSHOT"
+  "io.getquill" %% "quill-async" % "0.7.0"
 )
 ```
 
@@ -1106,7 +1106,7 @@ db.poolValidationInterval=100
 sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async" % "0.6.1-SNAPSHOT"
+  "io.getquill" %% "quill-async" % "0.7.0"
 )
 ```
 
@@ -1136,7 +1136,7 @@ db.poolValidationInterval=100
 sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-finagle-mysql" % "0.6.1-SNAPSHOT"
+  "io.getquill" %% "quill-finagle-mysql" % "0.7.0"
 )
 ```
 
@@ -1167,7 +1167,7 @@ Cassandra Sources
 sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-cassandra" % "0.6.1-SNAPSHOT"
+  "io.getquill" %% "quill-cassandra" % "0.7.0"
 )
 ```
 
