@@ -265,6 +265,15 @@ class StatefulTransformerSpec extends Spec {
       }
     }
 
+    "quotedReference" in {
+      val ast: Ast = QuotedReference(1, RuntimeBinding("a"))
+      Subject(Nil, RuntimeBinding("a") -> RuntimeBinding("a'"))(ast) match {
+        case (at, att) =>
+          at mustEqual QuotedReference(1, RuntimeBinding("a'"))
+          att.state mustEqual List(RuntimeBinding("a"))
+      }
+    }
+
     "infix" in {
       val ast: Ast = Infix(List("test"), List(Ident("a")))
       Subject(Nil, Ident("a") -> Ident("a'"))(ast) match {
