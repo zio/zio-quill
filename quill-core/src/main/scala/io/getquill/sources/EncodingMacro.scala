@@ -3,6 +3,7 @@ package io.getquill.sources
 import scala.reflect.macros.whitebox.Context
 import io.getquill.ast._
 import io.getquill.util.Messages._
+import io.getquill.Embedded
 
 trait EncodingMacro {
   val c: Context
@@ -12,7 +13,20 @@ trait EncodingMacro {
   sealed trait Value
   case class OptionValue(value: Value) extends Value
   case class SimpleValue(ast: Ast, encoding: c.Tree, optionEncoding: c.Tree) extends Value
-  case class CaseClassValue(tpe: c.Type, params: List[List[Value]]) extends Value
+
+  sealed trait NestedValue extends Value
+
+  object NestedValue {
+    def unapply(value: Value): Option[(c.Type, List[List[Value]])] =
+      value match {
+        case CaseClassValue(tpe, params) => Some((tpe, params))
+        case EmbeddedValue(tpe, params)  => Some((tpe, params))
+        case other                       => None
+      }
+  }
+
+  case class CaseClassValue(tpe: c.Type, params: List[List[Value]]) extends NestedValue
+  case class EmbeddedValue(tpe: c.Type, params: List[List[Value]]) extends NestedValue
 
   protected def encoding[T](ast: Ast, inferEncoding: Type => Option[Tree])(implicit t: WeakTypeTag[T]): Value =
     encoding(ast, t.tpe, inferEncoding)
@@ -23,17 +37,22 @@ trait EncodingMacro {
         OptionValue(encoding(ast, typ.typeArgs.head, inferEncoding))
       case (Some(encoding), Some(optionEncoding), ast) =>
         SimpleValue(ast, encoding, optionEncoding)
+      case (None, _, ast) if (isEmbeddable(typ)) =>
+        EmbeddedValue(typ, valuesForCaseClass(typ, ast, inferEncoding))
       case (None, _, ast) if (typ.typeSymbol.asClass.isCaseClass) =>
-        caseClassValue(typ, ast, inferEncoding)
+        CaseClassValue(typ, valuesForCaseClass(typ, ast, inferEncoding))
       case other =>
         c.fail(s"Source doesn't know how to decode '$ast: $typ'")
     }
 
+  private def isEmbeddable(typ: c.Type) =
+    typ.typeSymbol.asClass.isCaseClass &&
+      (typ <:< c.weakTypeOf[Embedded] ||
+        typ <:< c.weakTypeOf[WrappedType] ||
+        typ.typeSymbol.fullName.toString.startsWith("scala.Tuple"))
+
   private def optionType[T](implicit t: WeakTypeTag[T]) =
     c.weakTypeOf[Option[T]]
-
-  private def caseClassValue(typ: Type, ast: Ast, inferEncoding: Type => Option[Tree]) =
-    CaseClassValue(typ, valuesForCaseClass(typ, ast, inferEncoding))
 
   private def valuesForCaseClass(typ: Type, ast: Ast, inferEncoding: Type => Option[Tree]) =
     valuesForConstructor(typ, caseClassConstructor(typ), ast, inferEncoding)
@@ -43,7 +62,7 @@ trait EncodingMacro {
       param =>
         val paramType = param.typeSignature.asSeenFrom(typ, typ.typeSymbol)
         val nestedAst =
-          if (typ.baseType(c.weakTypeOf[WrappedType].typeSymbol) != NoType)
+          if (typ <:< c.weakTypeOf[WrappedType])
             ast
           else
             Property(ast, param.name.decodedName.toString)
