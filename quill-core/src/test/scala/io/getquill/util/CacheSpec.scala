@@ -1,8 +1,10 @@
 package io.getquill.util
 
-import io.getquill.Spec
 import java.io.Closeable
-import scala.concurrent.duration._
+
+import scala.concurrent.duration.DurationInt
+
+import io.getquill.Spec
 
 class CacheSpec extends Spec {
 

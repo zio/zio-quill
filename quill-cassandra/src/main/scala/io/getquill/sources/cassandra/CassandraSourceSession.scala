@@ -6,12 +6,11 @@ import com.datastax.driver.core.Row
 import io.getquill.naming.NamingStrategy
 import io.getquill.sources.cassandra.encoding.Decoders
 import io.getquill.sources.cassandra.encoding.Encoders
-import io.getquill.CassandraSourceConfig
 import io.getquill.sources.BindedStatementBuilder
 import com.typesafe.scalalogging.Logger
 import org.slf4j.LoggerFactory
 
-abstract class CassandraSourceSession[N <: NamingStrategy](config: CassandraSourceConfig[N, _])
+abstract class CassandraSourceSession[N <: NamingStrategy](config: CassandraSourceConfig)
   extends CassandraSource[N, Row, BindedStatementBuilder[BoundStatement]]
   with Encoders
   with Decoders {

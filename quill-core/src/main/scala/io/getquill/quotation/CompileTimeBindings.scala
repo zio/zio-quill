@@ -1,8 +1,10 @@
 package io.getquill.quotation
 
-import io.getquill.ast.{ Ast, CompileTimeBinding, StatefulTransformer }
-
 import scala.reflect.macros.whitebox.Context
+
+import io.getquill.ast.Ast
+import io.getquill.ast.CompileTimeBinding
+import io.getquill.ast.StatefulTransformer
 
 case class CompileTimeBindings[T](state: List[CompileTimeBinding])
   extends StatefulTransformer[List[CompileTimeBinding]] {

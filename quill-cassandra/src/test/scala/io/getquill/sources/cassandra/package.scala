@@ -5,17 +5,16 @@ import scala.concurrent.Future
 import scala.concurrent.duration.Duration
 
 import io.getquill.naming.Literal
-import io.getquill._
 
 package object cassandra {
 
-  val mirrorSource = source(new CassandraMirrorSourceConfig("test"))
+  val mirrorSource = mirror.cassandraMirrorSource
 
-  val testSyncDB = source(new CassandraSyncSourceConfig[Literal]("testSyncDB"))
+  val testSyncDB = new CassandraSyncSource[Literal]("testSyncDB")
 
-  val testAsyncDB = source(new CassandraAsyncSourceConfig[Literal]("testAsyncDB"))
+  val testAsyncDB = new CassandraAsyncSource[Literal]("testAsyncDB")
 
-  val testStreamDB = source(new CassandraStreamSourceConfig[Literal]("testStreamDB"))
+  val testStreamDB = new CassandraStreamSource[Literal]("testStreamDB")
 
   def await[T](f: Future[T]): T = Await.result(f, Duration.Inf)
 }

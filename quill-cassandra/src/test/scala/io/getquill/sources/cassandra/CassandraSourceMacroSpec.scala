@@ -3,7 +3,9 @@ package io.getquill.sources.cassandra
 import io.getquill._
 import io.getquill.sources.mirror.Row
 
-class CassandraSourceMacroSpec extends Spec {
+class CassandraSourceMacroSpec extends SourceSpec(mirrorSource) {
+
+  import mirrorSource._
 
   "runs queries" - {
     "static" in {
@@ -28,8 +30,7 @@ class CassandraSourceMacroSpec extends Spec {
     val q = quote {
       qr1.filter(_.s == "fail")
     }
-    val s = source(new CassandraMirrorSourceConfig("test") with QueryProbing)
-    "s.run(q)" mustNot compile
+    "mirrorSource.run(q)" mustNot compile
   }
 
   "binds inputs according to the cql terms order" - {

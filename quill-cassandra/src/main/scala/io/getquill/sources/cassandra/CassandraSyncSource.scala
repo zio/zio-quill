@@ -6,11 +6,15 @@ import com.datastax.driver.core.BoundStatement
 import com.datastax.driver.core.ResultSet
 import com.datastax.driver.core.Row
 import io.getquill.naming.NamingStrategy
-import io.getquill.CassandraSourceConfig
 import io.getquill.sources.BindedStatementBuilder
+import com.typesafe.config.Config
+import io.getquill.util.LoadConfig
 
-class CassandraSyncSource[N <: NamingStrategy](config: CassandraSourceConfig[N, CassandraSyncSource[N]])
+class CassandraSyncSource[N <: NamingStrategy](config: CassandraSourceConfig)
   extends CassandraSourceSession[N](config) {
+
+  def this(config: Config) = this(CassandraSourceConfig(config))
+  def this(configPrefix: String) = this(LoadConfig(configPrefix))
 
   override type QueryResult[T] = List[T]
   override type SingleQueryResult[T] = T
@@ -23,17 +27,17 @@ class CassandraSyncSource[N <: NamingStrategy](config: CassandraSourceConfig[N, 
     def apply(param: T) = f(List(param)).head
   }
 
-  def query[T](cql: String, extractor: Row => T = identity[Row] _, bind: BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement] = identity): List[T] =
+  def executeQuery[T](cql: String, extractor: Row => T = identity[Row] _, bind: BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement] = identity): List[T] =
     session.execute(prepare(cql, bind))
       .all.toList.map(extractor)
 
-  def querySingle[T](cql: String, extractor: Row => T = identity[Row] _, bind: BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement] = identity): T =
-    handleSingleResult(query(cql, extractor, bind))
+  def executeQuerySingle[T](cql: String, extractor: Row => T = identity[Row] _, bind: BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement] = identity): T =
+    handleSingleResult(executeQuery(cql, extractor, bind))
 
-  def execute(cql: String, bind: BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement] = identity, generated: Option[String] = None): ResultSet =
+  def executeAction(cql: String, bind: BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement] = identity, generated: Option[String] = None): ResultSet =
     session.execute(prepare(cql, bind))
 
-  def executeBatch[T](cql: String, bindParams: T => BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement] = (_: T) => identity[BindedStatementBuilder[BoundStatement]] _, generated: Option[String] = None): ActionApply[T] = {
+  def executeActionBatch[T](cql: String, bindParams: T => BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement] = (_: T) => identity[BindedStatementBuilder[BoundStatement]] _, generated: Option[String] = None): ActionApply[T] = {
     val func = { (values: List[T]) =>
       @tailrec
       def run(values: List[T], acc: List[ResultSet]): List[ResultSet] =

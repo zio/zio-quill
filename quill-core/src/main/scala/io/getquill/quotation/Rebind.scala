@@ -1,7 +1,9 @@
 package io.getquill.quotation
 
 import scala.reflect.macros.whitebox.Context
-import io.getquill.ast._
+
+import io.getquill.ast.Ast
+import io.getquill.ast.Ident
 import io.getquill.norm.BetaReduction
 
 object Rebind {

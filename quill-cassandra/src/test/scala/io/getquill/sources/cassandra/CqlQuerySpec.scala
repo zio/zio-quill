@@ -5,7 +5,9 @@ import io.getquill._
 import io.getquill.naming.Literal
 import io.getquill.ast.Ast
 
-class CqlQuerySpec extends Spec {
+class CqlQuerySpec extends SourceSpec(mirrorSource) {
+
+  import mirrorSource._
 
   import CqlIdiom._
 

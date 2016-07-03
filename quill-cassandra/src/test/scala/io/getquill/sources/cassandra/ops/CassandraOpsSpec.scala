@@ -3,7 +3,9 @@ package io.getquill.sources.cassandra.ops
 import io.getquill._
 import io.getquill.sources.cassandra.mirrorSource
 
-class CassandraOpsSpec extends Spec {
+class CassandraOpsSpec extends SourceSpec(mirrorSource) {
+
+  import mirrorSource._
 
   "query" - {
     "allowFiltering" in {

@@ -7,9 +7,11 @@ import io.getquill.sources.mirror.MirrorEncoders
 import io.getquill.sources.mirror.MirrorDecoders
 import scala.util.Failure
 import scala.util.Success
-import io.getquill.CassandraMirrorSourceConfig
+import io.getquill.QueryProbing
 
-class CassandraMirrorSource(config: CassandraMirrorSourceConfig)
+object cassandraMirrorSource extends CassandraMirrorSourceTemplate with QueryProbing
+
+class CassandraMirrorSourceTemplate
   extends CassandraSource[Literal, Row, Row]
   with MirrorEncoders
   with MirrorDecoders {
@@ -35,12 +37,12 @@ class CassandraMirrorSource(config: CassandraMirrorSourceConfig)
 
   case class ActionMirror(cql: String, bind: Row)
 
-  def execute(cql: String, bind: Row => Row = identity, generated: Option[String] = None) =
+  def executeAction(cql: String, bind: Row => Row = identity, generated: Option[String] = None) =
     ActionMirror(cql, bind(Row()))
 
   case class BatchActionMirror(cql: String, bindList: List[Row])
 
-  def executeBatch[T](cql: String, bindParams: T => Row => Row = (_: T) => identity[Row] _, generated: Option[String] = None) = {
+  def executeActionBatch[T](cql: String, bindParams: T => Row => Row = (_: T) => identity[Row] _, generated: Option[String] = None) = {
     val f = (values: List[T]) =>
       BatchActionMirror(cql, values.map(bindParams).map(_(Row())))
     new ActionApply[T](f)
@@ -48,9 +50,9 @@ class CassandraMirrorSource(config: CassandraMirrorSourceConfig)
 
   case class QueryMirror[T](cql: String, binds: Row, extractor: Row => T)
 
-  def query[T](cql: String, extractor: Row => T = identity[Row] _, bind: Row => Row = identity) =
+  def executeQuery[T](cql: String, extractor: Row => T = identity[Row] _, bind: Row => Row = identity) =
     QueryMirror(cql, bind(Row()), extractor)
 
-  def querySingle[T](cql: String, extractor: Row => T = identity[Row] _, bind: Row => Row = identity) =
-    query(cql, extractor, bind)
+  def executeQuerySingle[T](cql: String, extractor: Row => T = identity[Row] _, bind: Row => Row = identity) =
+    executeQuery(cql, extractor, bind)
 }

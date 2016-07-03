@@ -1,8 +1,9 @@
 package io.getquill.util
 
-import io.getquill.util.Messages._
-import scala.reflect.macros.whitebox.Context
 import scala.reflect.ClassTag
+import scala.reflect.macros.whitebox.Context
+
+import io.getquill.util.Messages.RichContext
 
 object LoadObject {
 

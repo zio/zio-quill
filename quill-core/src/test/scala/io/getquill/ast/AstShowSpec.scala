@@ -1,12 +1,11 @@
 package io.getquill.ast
 
-import io.getquill._
-import io.getquill.{ Query => QueryInterface }
-import io.getquill.ast.AstShow.astShow
-import io.getquill.util.Show.Shower
+import io.getquill.Spec
+import io.getquill.testContext
 
 class AstShowSpec extends Spec {
 
+  import testContext._
   import io.getquill.util.Show._
   import io.getquill.ast.AstShow._
 
@@ -171,14 +170,14 @@ class AstShowSpec extends Spec {
   "shows operations" - {
     "unary" in {
       val q = quote {
-        (xs: QueryInterface[_]) => !xs.nonEmpty
+        (xs: Query[_]) => !xs.nonEmpty
       }
       (q.ast: Ast).show mustEqual
         """(xs) => !xs.nonEmpty"""
     }
     "binary" in {
       val q = quote {
-        (xs: QueryInterface[_]) => xs.nonEmpty && xs != null
+        (xs: Query[_]) => xs.nonEmpty && xs != null
       }
       (q.ast: Ast).show mustEqual
         """(xs) => xs.nonEmpty && (xs != null)"""
@@ -252,14 +251,14 @@ class AstShowSpec extends Spec {
     "prostfix" - {
       "isEmpty" in {
         val q = quote {
-          (xs: QueryInterface[_]) => xs.isEmpty
+          (xs: Query[_]) => xs.isEmpty
         }
         (q.ast: Ast).show mustEqual
           """(xs) => xs.isEmpty"""
       }
       "nonEmpty" in {
         val q = quote {
-          (xs: QueryInterface[_]) => xs.nonEmpty
+          (xs: Query[_]) => xs.nonEmpty
         }
         (q.ast: Ast).show mustEqual
           """(xs) => xs.nonEmpty"""

@@ -1,6 +1,5 @@
 package io.getquill.sources.cassandra
 
-import io.getquill._
 import monifu.reactive.Observable
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.FreeSpec
@@ -8,6 +7,7 @@ import org.scalatest.MustMatchers
 import scala.concurrent.{ Await, Future }
 import scala.concurrent.duration.Duration
 import scala.concurrent.ExecutionContext.Implicits.global
+import io.getquill.naming.NamingStrategy
 
 class QueryResultTypeCassandraSpec extends FreeSpec with BeforeAndAfterAll with MustMatchers {
 
@@ -19,27 +19,36 @@ class QueryResultTypeCassandraSpec extends FreeSpec with BeforeAndAfterAll with 
     OrderTestEntity(3, 3)
   )
 
-  val insert = quote(query[OrderTestEntity].insert)
-  val deleteAll = quote(query[OrderTestEntity].delete)
-  val selectAll = quote(query[OrderTestEntity])
-  val map = quote(query[OrderTestEntity].map(_.id))
-  val filter = quote(query[OrderTestEntity].filter(_.id == 1))
-  val withFilter = quote(query[OrderTestEntity].withFilter(_.id == 1))
-  val sortBy = quote(query[OrderTestEntity].filter(_.id == 1).sortBy(_.i)(Ord.asc))
-  val take = quote(query[OrderTestEntity].take(10))
-  val entitySize = quote(query[OrderTestEntity].size)
-  val parametrizedSize = quote { (id: Int) =>
-    query[OrderTestEntity].filter(_.id == id).size
+  case class Context[N <: NamingStrategy, R, S](source: CassandraSource[N, R, S]) {
+
+    import source._
+
+    val insert = quote(query[OrderTestEntity].insert)
+    val deleteAll = quote(query[OrderTestEntity].delete)
+    val selectAll = quote(query[OrderTestEntity])
+    val map = quote(query[OrderTestEntity].map(_.id))
+    val filter = quote(query[OrderTestEntity].filter(_.id == 1))
+    val withFilter = quote(query[OrderTestEntity].withFilter(_.id == 1))
+    val sortBy = quote(query[OrderTestEntity].filter(_.id == 1).sortBy(_.i)(Ord.asc))
+    val take = quote(query[OrderTestEntity].take(10))
+    val entitySize = quote(query[OrderTestEntity].size)
+    val parametrizedSize = quote { (id: Int) =>
+      query[OrderTestEntity].filter(_.id == id).size
+    }
+    val distinct = quote(query[OrderTestEntity].map(_.id).distinct)
   }
-  val distinct = quote(query[OrderTestEntity].map(_.id).distinct)
 
   override def beforeAll = {
+    val ctx = Context(testSyncDB)
+    import ctx._
     val r1 = testSyncDB.run(deleteAll)
     val r2 = testSyncDB.run(insert)(entries)
   }
 
   "async" - {
     val db = testAsyncDB
+    val ctx = Context(db)
+    import ctx._
     def await[T](r: Future[T]) = Await.result(r, Duration.Inf)
     "return list" - {
       "select" in {
@@ -74,6 +83,8 @@ class QueryResultTypeCassandraSpec extends FreeSpec with BeforeAndAfterAll with 
 
   "sync" - {
     val db = testSyncDB
+    val ctx = Context(db)
+    import ctx._
     def await[T](r: T) = r
     "return list" - {
       "select" in {
@@ -108,6 +119,8 @@ class QueryResultTypeCassandraSpec extends FreeSpec with BeforeAndAfterAll with 
   "stream" - {
     import monifu.concurrent.Implicits.globalScheduler
     val db = testStreamDB
+    val ctx = Context(db)
+    import ctx._
     def await[T](t: Observable[T]) = {
       val f = t.foldLeft(List.empty[T])(_ :+ _).asFuture
       Await.result(f, Duration.Inf)
