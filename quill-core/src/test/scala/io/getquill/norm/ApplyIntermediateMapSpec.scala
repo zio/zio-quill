@@ -36,6 +36,18 @@ class ApplyIntermediateMapSpec extends Spec {
       }
       ApplyIntermediateMap.unapply(q.ast) mustEqual None
     }
+    "take" in {
+      val q = quote {
+        qr1.groupBy(t => t.i).map(y => y._1).take(1)
+      }
+      ApplyIntermediateMap.unapply(q.ast) mustEqual None
+    }
+    "drop" in {
+      val q = quote {
+        qr1.groupBy(t => t.i).map(y => y._1).drop(1)
+      }
+      ApplyIntermediateMap.unapply(q.ast) mustEqual None
+    }
     "identity map" in {
       val q = quote {
         qr1.groupBy(t => t.i).map(y => y)
@@ -96,6 +108,24 @@ class ApplyIntermediateMapSpec extends Spec {
       }
       val n = quote {
         query[TestEntity].map(i => (i.i, i.l)).distinct
+      }
+      ApplyIntermediateMap.unapply(q.ast) mustEqual Some(n.ast)
+    }
+    "take" in {
+      val q = quote {
+        qr1.map(y => y.s).take(1)
+      }
+      val n = quote {
+        qr1.take(1).map(y => y.s)
+      }
+      ApplyIntermediateMap.unapply(q.ast) mustEqual Some(n.ast)
+    }
+    "drop" in {
+      val q = quote {
+        qr1.map(y => y.s).drop(1)
+      }
+      val n = quote {
+        qr1.drop(1).map(y => y.s)
       }
       ApplyIntermediateMap.unapply(q.ast) mustEqual Some(n.ast)
     }

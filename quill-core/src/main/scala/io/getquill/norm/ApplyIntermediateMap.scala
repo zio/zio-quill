@@ -9,6 +9,8 @@ import io.getquill.ast.Ident
 import io.getquill.ast.Map
 import io.getquill.ast.Query
 import io.getquill.ast.SortBy
+import io.getquill.ast.Drop
+import io.getquill.ast.Take
 
 object ApplyIntermediateMap {
 
@@ -21,6 +23,8 @@ object ApplyIntermediateMap {
       case FlatMap(Map(a: GroupBy, b, c), d, e)   => None
       case Filter(Map(a: GroupBy, b, c), d, e)    => None
       case SortBy(Map(a: GroupBy, b, c), d, e, f) => None
+      case Take(Map(a: GroupBy, b, c), d)         => None
+      case Drop(Map(a: GroupBy, b, c), d)         => None
       case Map(a: GroupBy, b, c) if (b == c)      => None
 
       //  map(i => (i.i, i.l)).distinct.map(x => (x._1, x._2)) =>
@@ -56,6 +60,16 @@ object ApplyIntermediateMap {
       case SortBy(Map(a, b, c), d, e, f) =>
         val er = BetaReduction(e, d -> c)
         Some(Map(SortBy(a, b, er, f), b, c))
+
+      // a.map(b => c).drop(d) =>
+      //    a.drop(d).map(b => c)
+      case Drop(Map(a, b, c), d) =>
+        Some(Map(Drop(a, d), b, c))
+
+      // a.map(b => c).take(d) =>
+      //    a.drop(d).map(b => c)
+      case Take(Map(a, b, c), d) =>
+        Some(Map(Take(a, d), b, c))
 
       case other => None
     }
