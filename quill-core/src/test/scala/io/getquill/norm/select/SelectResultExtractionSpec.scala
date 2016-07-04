@@ -38,6 +38,14 @@ class SelectResultExtractionSpec extends Spec {
         testContext.run(q)
           .extractor(Row("a", 1L)) mustEqual Outer("a", Inner(1L))
       }
+      "one param" in {
+        case class OneParam(i: Int)
+        val q = quote {
+          query[OneParam]
+        }
+        testContext.run(q)
+          .extractor(Row(1)) mustEqual OneParam(1)
+      }
     }
     "tuple" - {
       "simple" in {

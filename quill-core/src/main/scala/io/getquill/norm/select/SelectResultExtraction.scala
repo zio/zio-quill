@@ -50,10 +50,17 @@ trait SelectResultExtraction extends EncodingMacro {
           if (tpe.typeSymbol.fullName.startsWith("scala.Tuple"))
             joinOptions(decodedParams.map(joinOptions(_)))
           else
-            q"""
-            val tuple = ${joinOptions(decodedParams.map(joinOptions(_)))}
-            tuple.map((${tpe.typeSymbol.companion}.apply _).tupled)
-          """
+            decodedParams match {
+              case (param :: Nil) :: Nil =>
+                q"""
+                  ${param}.map(${tpe.typeSymbol.companion})
+                """
+              case _ =>
+                q"""
+                  val tuple = ${joinOptions(decodedParams.map(joinOptions(_)))}
+                  tuple.map((${tpe.typeSymbol.companion}.apply _).tupled)
+                """
+            }
         (tree, paramsIndex)
     }
 
