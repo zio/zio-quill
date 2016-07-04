@@ -98,6 +98,13 @@ trait Parsing extends EntityConfigParsing {
   }
 
   val bindingParser: Parser[Binding] = Parser[Binding] {
+    case q"$pack.lift[$t]($value)" if(t.tpe <:< c.weakTypeOf[AnyVal]) => 
+      t.tpe.members.collect {
+        case m: MethodSymbol if (m.isPrimaryConstructor) => m.paramLists.flatten
+      }.flatten.headOption match {
+        case Some(param) => CompileTimeBinding(c.typecheck(q"$value.${param.name.toTermName}"))
+        case None => CompileTimeBinding(value)
+      }
     case q"$pack.lift[$t]($value)" => CompileTimeBinding(value)
   }
 
