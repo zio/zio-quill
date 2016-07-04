@@ -1,6 +1,8 @@
 package io.getquill.norm
 
-import io.getquill.ast._
+import io.getquill.ast.Ast
+import io.getquill.ast.Query
+import io.getquill.ast.StatelessTransformer
 import io.getquill.norm.capture.AvoidCapture
 
 object Normalize extends StatelessTransformer {

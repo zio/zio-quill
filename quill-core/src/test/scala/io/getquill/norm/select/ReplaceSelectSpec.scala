@@ -1,7 +1,12 @@
 package io.getquill.norm.select
 
-import io.getquill._
-import io.getquill.ast._
+import io.getquill.Spec
+import io.getquill.ast.Ident
+import io.getquill.ast.Property
+import io.getquill.testContext.qr1
+import io.getquill.testContext.qr2
+import io.getquill.testContext.quote
+import io.getquill.testContext.unquote
 
 class ReplaceSelectSpec extends Spec {
 

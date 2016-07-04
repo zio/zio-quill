@@ -1,6 +1,10 @@
 package io.getquill.norm
 
-import io.getquill.ast._
+import io.getquill.ast.Filter
+import io.getquill.ast.FlatMap
+import io.getquill.ast.Query
+import io.getquill.ast.Union
+import io.getquill.ast.UnionAll
 
 object SymbolicReduction {
 

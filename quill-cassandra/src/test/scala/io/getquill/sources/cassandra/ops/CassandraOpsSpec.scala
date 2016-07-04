@@ -1,16 +1,18 @@
-package io.getquill.sources.cassandra.ops
+package io.getquill.context.cassandra.ops
 
 import io.getquill._
-import io.getquill.sources.cassandra.mirrorSource
+import io.getquill.context.cassandra.mirrorContext
 
 class CassandraOpsSpec extends Spec {
+
+  import mirrorContext._
 
   "query" - {
     "allowFiltering" in {
       val q = quote {
         query[TestEntity].filter(t => t.i > 10).allowFiltering
       }
-      mirrorSource.run(q).cql mustEqual
+      mirrorContext.run(q).cql mustEqual
         "SELECT s, i, l, o FROM TestEntity WHERE i > 10 ALLOW FILTERING"
     }
   }
@@ -20,7 +22,7 @@ class CassandraOpsSpec extends Spec {
       val q = quote {
         query[TestEntity].insert(_.s -> "s").ifNotExists
       }
-      mirrorSource.run(q).cql mustEqual
+      mirrorContext.run(q).cql mustEqual
         "INSERT INTO TestEntity (s) VALUES ('s') IF NOT EXISTS"
     }
     "options" - {
@@ -28,21 +30,21 @@ class CassandraOpsSpec extends Spec {
         val q = quote {
           query[TestEntity].insert(_.s -> "s").usingTimestamp(1)
         }
-        mirrorSource.run(q).cql mustEqual
+        mirrorContext.run(q).cql mustEqual
           "INSERT INTO TestEntity (s) VALUES ('s') USING TIMESTAMP 1"
       }
       "ttl" in {
         val q = quote {
           query[TestEntity].insert(_.s -> "s").usingTtl(1)
         }
-        mirrorSource.run(q).cql mustEqual
+        mirrorContext.run(q).cql mustEqual
           "INSERT INTO TestEntity (s) VALUES ('s') USING TTL 1"
       }
       "both" in {
         val q = quote {
           query[TestEntity].insert(_.s -> "s").using(1, 2)
         }
-        mirrorSource.run(q).cql mustEqual
+        mirrorContext.run(q).cql mustEqual
           "INSERT INTO TestEntity (s) VALUES ('s') USING TIMESTAMP 1 AND TTL 2"
       }
     }
@@ -54,21 +56,21 @@ class CassandraOpsSpec extends Spec {
         val q = quote {
           query[TestEntity].usingTimestamp(99).update
         }
-        mirrorSource.run(q)(List()).cql mustEqual
+        mirrorContext.run(q)(List()).cql mustEqual
           "UPDATE TestEntity USING TIMESTAMP 99 SET s = ?, i = ?, l = ?, o = ?"
       }
       "ttl" in {
         val q = quote {
           query[TestEntity].usingTtl(1).update
         }
-        mirrorSource.run(q)(List()).cql mustEqual
+        mirrorContext.run(q)(List()).cql mustEqual
           "UPDATE TestEntity USING TTL 1 SET s = ?, i = ?, l = ?, o = ?"
       }
       "both" in {
         val q = quote {
           query[TestEntity].using(1, 2).update
         }
-        mirrorSource.run(q)(List()).cql mustEqual
+        mirrorContext.run(q)(List()).cql mustEqual
           "UPDATE TestEntity USING TIMESTAMP 1 AND TTL 2 SET s = ?, i = ?, l = ?, o = ?"
       }
     }
@@ -77,7 +79,7 @@ class CassandraOpsSpec extends Spec {
       val q = quote {
         query[TestEntity].update(t => t.s -> "b").ifCond(t => t.s == "a")
       }
-      mirrorSource.run(q).cql mustEqual
+      mirrorContext.run(q).cql mustEqual
         "UPDATE TestEntity SET s = 'b' IF s = 'a'"
     }
   }
@@ -87,7 +89,7 @@ class CassandraOpsSpec extends Spec {
       val q = quote {
         query[TestEntity].filter(t => t.i == 1).map(t => t.i).delete
       }
-      mirrorSource.run(q).cql mustEqual
+      mirrorContext.run(q).cql mustEqual
         "DELETE i FROM TestEntity WHERE i = 1"
     }
     "options" - {
@@ -95,21 +97,21 @@ class CassandraOpsSpec extends Spec {
         val q = quote {
           query[TestEntity].usingTimestamp(9).filter(t => t.i == 1).delete
         }
-        mirrorSource.run(q).cql mustEqual
+        mirrorContext.run(q).cql mustEqual
           "DELETE FROM TestEntity USING TIMESTAMP 9 WHERE i = 1"
       }
       "ttl" in {
         val q = quote {
           query[TestEntity].usingTtl(9).filter(t => t.i == 1).delete
         }
-        mirrorSource.run(q).cql mustEqual
+        mirrorContext.run(q).cql mustEqual
           "DELETE FROM TestEntity USING TTL 9 WHERE i = 1"
       }
       "both" in {
         val q = quote {
           query[TestEntity].using(ts = 9, ttl = 10).filter(t => t.i == 1).delete
         }
-        mirrorSource.run(q).cql mustEqual
+        mirrorContext.run(q).cql mustEqual
           "DELETE FROM TestEntity USING TIMESTAMP 9 AND TTL 10 WHERE i = 1"
       }
     }
@@ -117,14 +119,14 @@ class CassandraOpsSpec extends Spec {
       val q = quote {
         query[TestEntity].filter(t => t.i == 1).delete.ifCond(t => t.s == "s")
       }
-      mirrorSource.run(q).cql mustEqual
+      mirrorContext.run(q).cql mustEqual
         "DELETE FROM TestEntity WHERE i = 1 IF s = 's'"
     }
     "ifExists" in {
       val q = quote {
         query[TestEntity].delete.ifExists
       }
-      mirrorSource.run(q).cql mustEqual
+      mirrorContext.run(q).cql mustEqual
         "TRUNCATE TestEntity IF EXISTS"
     }
   }

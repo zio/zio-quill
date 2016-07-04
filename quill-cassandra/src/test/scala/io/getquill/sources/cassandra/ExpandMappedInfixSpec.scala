@@ -1,9 +1,11 @@
-package io.getquill.sources.cassandra
+package io.getquill.context.cassandra
 
 import io.getquill._
 import io.getquill.ast.Ast
 
 class ExpandMappedInfixSpec extends Spec {
+
+  import mirrorContext._
 
   "removes identity map" in {
     val i = quote {

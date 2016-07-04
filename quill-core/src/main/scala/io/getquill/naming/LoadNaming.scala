@@ -1,6 +1,7 @@
-package io.getquill.naming
+package io.getquill
 
 import scala.reflect.macros.whitebox.Context
+
 import io.getquill.util.LoadObject
 
 object LoadNaming {
@@ -8,7 +9,7 @@ object LoadNaming {
   def dynamic(c: Context)(tpe: c.Type) = {
     import c.universe._
     val list = strategies(c)(tpe).map(s => q"${s.typeSymbol.companion}")
-    q"io.getquill.naming.NamingStrategy($list)"
+    q"io.getquill.NamingStrategy($list)"
   }
 
   def static(c: Context)(tpe: c.Type) =
