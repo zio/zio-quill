@@ -1,13 +1,11 @@
 package io.getquill
 
-import com.twitter.finagle.exp.mysql.Client
-import com.twitter.finagle.exp.mysql.Parameter
-import com.twitter.finagle.exp.mysql.Result
-import com.twitter.finagle.exp.mysql.Row
+import com.twitter.finagle.exp.mysql._
 import com.twitter.util.Future
 import com.twitter.util.Local
 import io.getquill.context.sql.{ SqlBindedStatementBuilder, SqlContext }
 import com.twitter.util.Await
+
 import scala.util.Try
 import io.getquill.context.BindedStatementBuilder
 import com.typesafe.scalalogging.Logger
@@ -41,6 +39,12 @@ class FinagleMysqlContext[N <: NamingStrategy](
   protected type SingleQueryResult[T] = Future[T]
   protected type ActionResult[T] = Future[Long]
   protected type BatchedActionResult[T] = Future[List[Long]]
+
+  protected val timestampValue =
+    new TimestampValue(
+      dateTimezone,
+      dateTimezone
+    )
 
   Await.result(client.ping)
 
