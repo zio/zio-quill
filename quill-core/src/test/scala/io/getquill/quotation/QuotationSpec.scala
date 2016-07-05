@@ -75,6 +75,9 @@ import io.getquill.testContext.query
 import io.getquill.testContext.quote
 import io.getquill.testContext.Quoted
 import io.getquill.testContext.unquote
+import io.getquill.context.WrappedEncodable
+
+case class CustomAnyValue(i: Int) extends AnyVal
 
 class QuotationSpec extends Spec {
 
@@ -893,6 +896,20 @@ class QuotationSpec extends Spec {
         q3.bindings.`q2.b` mustEqual b
         q3.bindings.c mustEqual c
       }
+    }
+
+    "supports WrappedValue" in {
+      def q(v: WrappedEncodable) = quote {
+        lift(v)
+      }
+      q(WrappedEncodable(1)).bindings.`v.value` mustEqual 1
+    }
+
+    "supports custom anyval" in {
+      def q(v: CustomAnyValue) = quote {
+        lift(v)
+      }
+      q(CustomAnyValue(1)).bindings.`v.i` mustEqual 1
     }
   }
 
