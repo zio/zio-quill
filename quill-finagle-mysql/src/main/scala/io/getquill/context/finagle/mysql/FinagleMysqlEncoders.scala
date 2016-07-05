@@ -1,7 +1,6 @@
 package io.getquill.context.finagle.mysql
 
 import java.util.Date
-
 import com.twitter.finagle.exp.mysql.BigDecimalValue
 import com.twitter.finagle.exp.mysql.CanBeParameter
 import com.twitter.finagle.exp.mysql.CanBeParameter._
@@ -57,7 +56,5 @@ trait FinagleMysqlEncoders {
   implicit val floatEncoder: Encoder[Float] = encoder[Float]
   implicit val doubleEncoder: Encoder[Double] = encoder[Double]
   implicit val byteArrayEncoder: Encoder[Array[Byte]] = encoder[Array[Byte]]
-  implicit val dateEncoder: Encoder[Date] = encoder[Date] { (value: Date) =>
-    timestampValue(new java.sql.Timestamp(value.getTime)): Parameter
-  }
+  implicit val dateEncoder: Encoder[Date] = encoder[Date]
 }

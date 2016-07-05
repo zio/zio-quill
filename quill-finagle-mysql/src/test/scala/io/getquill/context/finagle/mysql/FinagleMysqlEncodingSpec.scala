@@ -1,13 +1,8 @@
 package io.getquill.context.finagle.mysql
 
-import java.util.{ Date, TimeZone }
-
 import com.twitter.util.Await
-import io.getquill.{ FinagleMysqlContext, FinagleMysqlContextConfig, Literal }
-import io.getquill.context.sql.EncodingSpec
-import io.getquill.util.LoadConfig
 
-import scala.concurrent.duration._
+import io.getquill.context.sql.EncodingSpec
 
 class FinagleMysqlEncodingSpec extends EncodingSpec {
 
@@ -91,57 +86,6 @@ class FinagleMysqlEncodingSpec extends EncodingSpec {
       r.v5 mustEqual false
       r.v6 mustEqual false
       r.v7 mustEqual false
-    }
-
-  }
-
-  "decode date types" - {
-
-    case class DateEncodingTestEntity(
-      v1: Date,
-      v2: Date,
-      v3: Date
-    )
-
-    def round(milliseconds: Long, duration: Duration): Long = Math.round(milliseconds / duration.toMillis.toDouble) * duration.toMillis
-
-    val entity = DateEncodingTestEntity(new Date, new Date, new Date)
-
-    def verify(result: DateEncodingTestEntity) = {
-      round(result.v1.getTime, 24.hours) mustEqual round(entity.v1.getTime, 24.hours)
-      result.v2.getTime mustEqual round(entity.v2.getTime, 1.second)
-      result.v3.getTime mustEqual round(entity.v3.getTime, 1.second)
-    }
-
-    "default timezone" in {
-      val delete = quote(query[DateEncodingTestEntity].delete)
-      val insert = quote(query[DateEncodingTestEntity].insert)
-      val r = for {
-        _ <- testContext.run(delete)
-        _ <- testContext.run(insert)(List(entity))
-        result <- testContext.run(query[DateEncodingTestEntity])
-      } yield result
-
-      val result = Await.result(r).head
-      verify(result)
-    }
-
-    "different timezone" in {
-      val config = FinagleMysqlContextConfig(LoadConfig("testDB"))
-      val testTimezoneContext = new FinagleMysqlContext[Literal](config.client, TimeZone.getTimeZone("UTC"))
-      import testTimezoneContext._
-      TimeZone.setDefault(TimeZone.getTimeZone("Asia/Seoul"))
-
-      val delete = quote(query[DateEncodingTestEntity].delete)
-      val insert = quote(query[DateEncodingTestEntity].insert)
-      val r = for {
-        _ <- testTimezoneContext.run(delete)
-        _ <- testTimezoneContext.run(insert)(List(entity))
-        result <- testTimezoneContext.run(query[DateEncodingTestEntity])
-      } yield result
-
-      val result = Await.result(r).head
-      verify(result)
     }
   }
 }

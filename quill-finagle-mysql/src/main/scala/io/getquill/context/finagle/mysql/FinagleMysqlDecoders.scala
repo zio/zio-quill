@@ -1,16 +1,33 @@
 package io.getquill.context.finagle.mysql
 
 import java.util.Date
-
 import scala.reflect.ClassTag
 import scala.reflect.classTag
-import com.twitter.finagle.exp.mysql._
+import com.twitter.finagle.exp.mysql.BigDecimalValue
+import com.twitter.finagle.exp.mysql.ByteValue
+import com.twitter.finagle.exp.mysql.DoubleValue
+import com.twitter.finagle.exp.mysql.FloatValue
+import com.twitter.finagle.exp.mysql.IntValue
+import com.twitter.finagle.exp.mysql.LongValue
+import com.twitter.finagle.exp.mysql.RawValue
+import com.twitter.finagle.exp.mysql.Row
+import com.twitter.finagle.exp.mysql.ShortValue
+import com.twitter.finagle.exp.mysql.StringValue
+import com.twitter.finagle.exp.mysql.TimestampValue
+import com.twitter.finagle.exp.mysql.Type
+import com.twitter.finagle.exp.mysql.Value
 import io.getquill.util.Messages.fail
 import com.twitter.finagle.exp.mysql.NullValue
 import io.getquill.FinagleMysqlContext
 
 trait FinagleMysqlDecoders {
   this: FinagleMysqlContext[_] =>
+
+  protected val timestampValue =
+    new TimestampValue(
+      dateTimezone,
+      dateTimezone
+    )
 
   def decoder[T: ClassTag](f: PartialFunction[Value, T]): Decoder[T] =
     new Decoder[T] {
@@ -78,7 +95,6 @@ trait FinagleMysqlDecoders {
     }
   implicit val dateDecoder: Decoder[Date] =
     decoder[Date] {
-      case DateValue(v)        => v
       case `timestampValue`(v) => new Date(v.getTime)
     }
 }
