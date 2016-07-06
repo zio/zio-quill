@@ -186,7 +186,7 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
     pushChanges
   ),
   pomExtra := (
-    <url>http://github.com/fwbrasil/quill</url>
+    <url>http://github.com/getquill/quill</url>
     <licenses>
       <license>
         <name>Apache License 2.0</name>
@@ -195,8 +195,8 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
       </license>
     </licenses>
     <scm>
-      <url>git@github.com:fwbrasil/quill.git</url>
-      <connection>scm:git:git@github.com:fwbrasil/quill.git</connection>
+      <url>git@github.com:getquill/quill.git</url>
+      <connection>scm:git:git@github.com:getquill/quill.git</connection>
     </scm>
     <developers>
       <developer>
