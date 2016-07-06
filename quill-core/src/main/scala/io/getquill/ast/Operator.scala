@@ -22,6 +22,8 @@ object StringOperator {
   case object `+` extends BinaryOperator
   case object `toUpperCase` extends PostfixUnaryOperator
   case object `toLowerCase` extends PostfixUnaryOperator
+  case object `toLong` extends PostfixUnaryOperator
+  case object `toInt` extends PostfixUnaryOperator
 }
 
 object NumericOperator {

@@ -6,6 +6,7 @@ import io.getquill.norm.BetaReduction
 import io.getquill.util.Messages.RichContext
 import io.getquill.util.Interleave
 import io.getquill.dsl.CoreDsl
+import scala.collection.immutable.StringOps
 
 trait Parsing extends EntityConfigParsing {
   this: Quotation =>
@@ -133,6 +134,8 @@ trait Parsing extends EntityConfigParsing {
     case q"$pack.float2Float(${ astParser(v) })"               => v
     case q"$pack.double2Double(${ astParser(v) })"             => v
     case q"$pack.boolean2Boolean(${ astParser(v) })"           => v
+    case q"$pack.augmentString(${ astParser(v) })"           => v
+    case q"$pack.unaugmentString(${ astParser(v) })"           => v
 
     case q"$pack.Byte2byte(${ astParser(v) })"                 => v
     case q"$pack.Short2short(${ astParser(v) })"               => v
@@ -335,10 +338,12 @@ trait Parsing extends EntityConfigParsing {
   }
 
   val stringOperationParser: Parser[Operation] =
-    operationParser(is[String](_)) {
+    operationParser(t => is[String](t) || is[StringOps](t)) {
       case "+"           => StringOperator.`+`
       case "toUpperCase" => StringOperator.`toUpperCase`
       case "toLowerCase" => StringOperator.`toLowerCase`
+      case "toLong"       => StringOperator.`toLong`
+      case "toInt"       => StringOperator.`toInt`
     }
 
   val numericOperationParser: Parser[Operation] =

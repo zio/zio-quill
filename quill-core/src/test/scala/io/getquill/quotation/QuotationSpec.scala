@@ -697,6 +697,18 @@ class QuotationSpec extends Spec {
         }
         quote(unquote(q)).ast mustEqual Map(Entity("TestEntity"), Ident("t"), UnaryOperation(StringOperator.`toLowerCase`, Property(Ident("t"), "s")))
       }
+      "toLong" in {
+        val q = quote {
+          qr1.map(t => t.s.toLong)
+        }
+        quote(unquote(q)).ast mustEqual Map(Entity("TestEntity"), Ident("t"), UnaryOperation(StringOperator.`toLong`, Property(Ident("t"), "s")))
+      }
+      "toInt" in {
+        val q = quote {
+          qr1.map(t => t.s.toInt)
+        }
+        quote(unquote(q)).ast mustEqual Map(Entity("TestEntity"), Ident("t"), UnaryOperation(StringOperator.`toInt`, Property(Ident("t"), "s")))
+      }
     }
     "infix" - {
       "without `as`" in {

@@ -428,6 +428,20 @@ class SqlIdiomSpec extends Spec {
           testContext.run(q).sql mustEqual
             "SELECT LOWER (t.s) FROM TestEntity t"
         }
+        "toLong" in {
+          val q = quote {
+            qr1.map(t => t.s.toLong)
+          }
+          testContext.run(q).sql mustEqual
+            "SELECT  (t.s) FROM TestEntity t"
+        }
+        "toInt" in {
+          val q = quote {
+            qr1.map(t => t.s.toInt)
+          }
+          testContext.run(q).sql mustEqual
+            "SELECT  (t.s) FROM TestEntity t"
+        }
       }
       "binary operation" - {
         "-" in {

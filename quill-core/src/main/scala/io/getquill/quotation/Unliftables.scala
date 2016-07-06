@@ -126,6 +126,8 @@ trait Unliftables {
     case q"$pack.BooleanOperator.`!`"          => BooleanOperator.`!`
     case q"$pack.StringOperator.`toUpperCase`" => StringOperator.`toUpperCase`
     case q"$pack.StringOperator.`toLowerCase`" => StringOperator.`toLowerCase`
+    case q"$pack.StringOperator.`toLong`"      => StringOperator.`toLong`
+    case q"$pack.StringOperator.`toInt`"       => StringOperator.`toInt`
     case q"$pack.SetOperator.`nonEmpty`"       => SetOperator.`nonEmpty`
     case q"$pack.SetOperator.`isEmpty`"        => SetOperator.`isEmpty`
   }
