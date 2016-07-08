@@ -28,5 +28,14 @@ class JdbcContextSpec extends Spec {
       }
       testContext.run(qr1).isEmpty mustEqual true
     }
+    "nested" in {
+      testContext.run(qr1.delete)
+      testContext.transaction {
+        testContext.transaction {
+          testContext.run(qr1.insert(_.i -> 33))
+        }
+      }
+      testContext.run(qr1).map(_.i) mustEqual List(33)
+    }
   }
 }
