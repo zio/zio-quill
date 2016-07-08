@@ -55,21 +55,25 @@ class JdbcContext[D <: SqlIdiom, N <: NamingStrategy](dataSource: DataSource wit
     }
 
   def transaction[T](f: => T) =
-    withConnection { conn =>
-      currentConnection.withValue(Some(conn)) {
-        val wasAutoCommit = conn.getAutoCommit
-        conn.setAutoCommit(false)
-        try {
-          val res = f
-          conn.commit
-          res
-        } catch {
-          case NonFatal(e) =>
-            conn.rollback
-            throw e
-        } finally
-          conn.setAutoCommit(wasAutoCommit)
-      }
+    currentConnection.value match {
+      case Some(_) => f // already in transaction
+      case None =>
+        withConnection { conn =>
+          currentConnection.withValue(Some(conn)) {
+            val wasAutoCommit = conn.getAutoCommit
+            conn.setAutoCommit(false)
+            try {
+              val res = f
+              conn.commit
+              res
+            } catch {
+              case NonFatal(e) =>
+                conn.rollback
+                throw e
+            } finally
+              conn.setAutoCommit(wasAutoCommit)
+          }
+        }
     }
 
   def executeAction(sql: String, bind: BindedStatementBuilder[PreparedStatement] => BindedStatementBuilder[PreparedStatement] = identity, generated: Option[String] = None): Long =
