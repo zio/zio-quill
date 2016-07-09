@@ -1,36 +1,39 @@
-package io.getquill.context.jdbc.postgres
+package io.getquill.context.finagle.mysql
 
 import io.getquill.context.sql.ProductSpec
+import com.twitter.util.Await
+import com.twitter.util.Future
 
-class ProductJdbcSpec extends ProductSpec {
+class ProductFinagleMysqlSpec extends ProductSpec {
 
   val context = testContext
   import testContext._
 
+  def await[T](r: Future[T]) = Await.result(r)
+
   override def beforeAll = {
-    testContext.run(quote(query[Product].delete))
+    await(testContext.run(quote(query[Product].delete)))
     ()
   }
 
   "Product" - {
     "Insert multiple products" in {
-      val inserted = testContext.run(productInsert)(productEntries)
-      val product = testContext.run(productById(inserted(2))).head
+      val inserted = await(Future.collect(productEntries.map(product => testContext.run(productInsert)(product))))
+      val product = await(testContext.run(productById(inserted(2)))).head
       product.description mustEqual productEntries(2).description
       product.id mustEqual inserted(2)
     }
-
     "Single insert product" in {
-      val inserted = testContext.run(productSingleInsert)
-      val product = testContext.run(productById(inserted)).head
+      val inserted = await(testContext.run(productSingleInsert))
+      val product = await(testContext.run(productById(inserted))).head
       product.description mustEqual "Window"
       product.id mustEqual inserted
     }
 
     "Single insert with inlined free variable" in {
       val prd = Product(0L, "test1", 1L)
-      val inserted = testContext.run(product.insert(_.sku -> lift(prd.sku), _.description -> lift(prd.description)))
-      val returnedProduct = testContext.run(productById(inserted)).head
+      val inserted = await(testContext.run(product.insert(_.sku -> lift(prd.sku), _.description -> lift(prd.description))))
+      val returnedProduct = await(testContext.run(productById(inserted))).head
       returnedProduct.description mustEqual "test1"
       returnedProduct.sku mustEqual 1L
       returnedProduct.id mustEqual inserted
@@ -39,8 +42,8 @@ class ProductJdbcSpec extends ProductSpec {
     "Single insert with free variable and explicit quotation" in {
       val prd = Product(0L, "test2", 2L)
       val q1 = quote { product.insert(_.sku -> lift(prd.sku), _.description -> lift(prd.description)) }
-      val inserted = testContext.run(q1)
-      val returnedProduct = testContext.run(productById(inserted)).head
+      val inserted = await(testContext.run(q1))
+      val returnedProduct = await(testContext.run(productById(inserted))).head
       returnedProduct.description mustEqual "test2"
       returnedProduct.sku mustEqual 2L
       returnedProduct.id mustEqual inserted
@@ -48,8 +51,8 @@ class ProductJdbcSpec extends ProductSpec {
 
     "Single product insert with a method quotation" in {
       val prd = Product(0L, "test3", 3L)
-      val inserted = testContext.run(productInsert(prd))
-      val returnedProduct = testContext.run(productById(inserted)).head
+      val inserted = await(testContext.run(productInsert(prd)))
+      val returnedProduct = await(testContext.run(productById(inserted))).head
       returnedProduct.description mustEqual "test3"
       returnedProduct.sku mustEqual 3L
       returnedProduct.id mustEqual inserted
@@ -57,14 +60,18 @@ class ProductJdbcSpec extends ProductSpec {
 
     "supports casts from string to number" - {
       "toInt" in {
-        val queried = testContext.run {
-          query[Product].filter(_.sku == lift("1004").toInt)
+        val queried = await {
+          testContext.run {
+            query[Product].filter(_.sku == lift("1004").toInt)
+          }
         }.head
         queried.sku mustEqual 1004L
       }
       "toLong" in {
-        val queried = testContext.run {
-          query[Product].filter(_.sku == lift("1004").toLong)
+        val queried = await {
+          testContext.run {
+            query[Product].filter(_.sku == lift("1004").toLong)
+          }
         }.head
         queried.sku mustEqual 1004L
       }

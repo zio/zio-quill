@@ -223,6 +223,8 @@ trait SqlIdiom {
     case BooleanOperator.`!`          => "NOT"
     case StringOperator.`toUpperCase` => "UPPER"
     case StringOperator.`toLowerCase` => "LOWER"
+    case StringOperator.`toLong`      => "" // cast is implicit
+    case StringOperator.`toInt`       => "" // cast is implicit
     case SetOperator.`isEmpty`        => "NOT EXISTS"
     case SetOperator.`nonEmpty`       => "EXISTS"
   }
@@ -314,7 +316,7 @@ trait SqlIdiom {
     case ConfiguredEntity(source, _, _, _)                 => source.show
   }
 
-  private def scopedShow[A <: Ast](ast: A)(implicit show: Show[A]) =
+  protected def scopedShow[A <: Ast](ast: A)(implicit show: Show[A]) =
     ast match {
       case _: Query           => s"(${ast.show})"
       case _: BinaryOperation => s"(${ast.show})"

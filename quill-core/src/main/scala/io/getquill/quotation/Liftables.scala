@@ -131,6 +131,8 @@ trait Liftables {
     case BooleanOperator.`!`          => q"$pack.BooleanOperator.`!`"
     case StringOperator.`toUpperCase` => q"$pack.StringOperator.`toUpperCase`"
     case StringOperator.`toLowerCase` => q"$pack.StringOperator.`toLowerCase`"
+    case StringOperator.`toLong`      => q"$pack.StringOperator.`toLong`"
+    case StringOperator.`toInt`       => q"$pack.StringOperator.`toInt`"
     case SetOperator.`nonEmpty`       => q"$pack.SetOperator.`nonEmpty`"
     case SetOperator.`isEmpty`        => q"$pack.SetOperator.`isEmpty`"
   }
