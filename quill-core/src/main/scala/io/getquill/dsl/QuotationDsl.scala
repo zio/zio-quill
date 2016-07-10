@@ -7,6 +7,7 @@ import scala.reflect.macros.whitebox.Context
 import io.getquill.ast.Ast
 import io.getquill.quotation.NonQuotedException
 import io.getquill.quotation.Quotation
+import scala.annotation.compileTimeOnly
 
 private[dsl] trait QuotationDsl {
 
@@ -14,6 +15,7 @@ private[dsl] trait QuotationDsl {
     def ast: Ast
   }
 
+  @compileTimeOnly(NonQuotedException.message)
   def lift[T](v: T): T = NonQuotedException()
 
   def quote[T](body: Quoted[T]): Quoted[T] = macro QuotationMacro.doubleQuote[T]
@@ -29,6 +31,8 @@ private[dsl] trait QuotationDsl {
   def quote[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, R](func: (T1, T2, T3, T4, T5, T6, T7, T8, T9, T10) => Quoted[R]): Quoted[(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10) => R] = macro QuotationMacro.quotedFunctionBody
 
   implicit def quote[T](body: T): Quoted[T] = macro QuotationMacro.quote[T]
+
+  @compileTimeOnly(NonQuotedException.message)
   implicit def unquote[T](quoted: Quoted[T]): T = NonQuotedException()
 }
 
