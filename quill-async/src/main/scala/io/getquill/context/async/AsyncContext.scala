@@ -30,8 +30,8 @@ abstract class AsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: Connection]
 
   protected type QueryResult[T] = Future[List[T]]
   protected type SingleQueryResult[T] = Future[T]
-  protected type ActionResult[T] = Future[Long]
-  protected type BatchedActionResult[T] = Future[List[Long]]
+  protected type ActionResult[T] = Future[Any]
+  protected type BatchedActionResult[T] = Future[List[Any]]
 
   override def close = {
     Await.result(pool.close, Duration.Inf)
@@ -44,7 +44,7 @@ abstract class AsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: Connection]
       case other                                   => f(pool)
     }
 
-  protected def extractActionResult(generated: Option[String])(result: DBQueryResult): Long
+  protected def extractActionResult(generated: Option[String])(result: DBQueryResult): Any
 
   protected def expandAction(sql: String, generated: Option[String]) = sql
 
@@ -65,7 +65,7 @@ abstract class AsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: Connection]
   }
 
   def executeActionBatch[T](sql: String, bindParams: T => BindedStatementBuilder[List[Any]] => BindedStatementBuilder[List[Any]] = (_: T) => identity[BindedStatementBuilder[List[Any]]] _, generated: Option[String] = None)(implicit ec: ExecutionContext): ActionApply[T] = {
-    def run(values: List[T]): Future[List[Long]] =
+    def run(values: List[T]): Future[List[Any]] =
       values match {
         case Nil =>
           Future.successful(List())
