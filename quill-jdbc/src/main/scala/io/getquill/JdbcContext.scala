@@ -35,8 +35,8 @@ class JdbcContext[D <: SqlIdiom, N <: NamingStrategy](dataSource: DataSource wit
 
   protected type QueryResult[T] = List[T]
   protected type SingleQueryResult[T] = T
-  protected type ActionResult[T] = Long
-  protected type BatchedActionResult[T] = List[Long]
+  protected type ActionResult[T] = Any
+  protected type BatchedActionResult[T] = List[Any]
 
   private val currentConnection = new DynamicVariable[Option[Connection]](None)
 
@@ -76,7 +76,7 @@ class JdbcContext[D <: SqlIdiom, N <: NamingStrategy](dataSource: DataSource wit
         }
     }
 
-  def executeAction(sql: String, bind: BindedStatementBuilder[PreparedStatement] => BindedStatementBuilder[PreparedStatement] = identity, generated: Option[String] = None): Long =
+  def executeAction(sql: String, bind: BindedStatementBuilder[PreparedStatement] => BindedStatementBuilder[PreparedStatement] = identity, generated: Option[String] = None): Any =
     withConnection { conn =>
       logger.info(sql)
       val (expanded, setValues) = bind(new SqlBindedStatementBuilder[PreparedStatement]).build(sql)
@@ -88,7 +88,10 @@ class JdbcContext[D <: SqlIdiom, N <: NamingStrategy](dataSource: DataSource wit
         case Some(column) =>
           val ps = setValues(conn.prepareStatement(expanded, Array(column)))
           val rs = ps.executeUpdate
-          extractResult(ps.getGeneratedKeys, _.getLong(1)).head
+          extractResult(ps.getGeneratedKeys, _.getObject(1) match {
+            case l: java.lang.Long   => l.toLong
+            case s: java.lang.String => s.toString
+          }).head
       }
     }
 
