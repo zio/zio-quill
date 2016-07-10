@@ -9,4 +9,6 @@ This template isn't a strict requirement to open issues, but please try to provi
 
 ### Steps to reproduce the behavior
 
+### Workaround
+
 @getquill/maintainers
