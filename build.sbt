@@ -111,6 +111,47 @@ lazy val mimaSettings = MimaPlugin.mimaDefaultSettings ++ Seq(
   }
 )
 
+commands += Command.command("checkUnformattedFiles") { st =>
+  val vcs = Project.extract(st).get(releaseVcs).get
+  if(vcs.hasModifiedFiles)
+    throw new IllegalStateException("Found unformatted files. Please run `sbt scalariformFormat test:scalariformFormat` and resubmit your pull request.")
+  st
+}
+
+def updateReadmeVersion(selectVersion: sbtrelease.Versions => String) = 
+  ReleaseStep(action = st => {
+
+    val newVersion = selectVersion(st.get(ReleaseKeys.versions).get)
+
+    import scala.io.Source
+    import java.io.PrintWriter
+
+    val pattern = """"io.getquill" %% "quill-.*" % "(.*)"""".r
+
+    val fileName = "README.md"
+    val content = Source.fromFile(fileName).getLines.mkString("\n")
+
+    val newContent =
+      pattern.replaceAllIn(content,
+        m => m.matched.replaceAllLiterally(m.subgroups.head, newVersion))
+
+    new PrintWriter(fileName) { write(newContent); close }
+
+    val vcs = Project.extract(st).get(releaseVcs).get
+    vcs.add(fileName).!
+
+    st
+  })
+
+def updateWebsiteTag = 
+  ReleaseStep(action = st => {
+
+    val vcs = Project.extract(st).get(releaseVcs).get
+    vcs.tag("website", "update website", force = true).!
+
+    st
+  })
+
 lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
   organization := "io.getquill",
   scalaVersion := "2.11.8",
@@ -177,10 +218,13 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
     runClean,
     runTest,
     setReleaseVersion,
+    updateReadmeVersion(_._1),
     commitReleaseVersion,
+    updateWebsiteTag,
     tagRelease,
     ReleaseStep(action = Command.process("publishSigned", _)),
     setNextVersion,
+    updateReadmeVersion(_._2),
     commitNextVersion,
     ReleaseStep(action = Command.process("sonatypeReleaseAll", _)),
     pushChanges

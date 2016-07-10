@@ -3,6 +3,7 @@ services:
 branches:
   except:
     - release
+    - website
 before_script:
 - docker-compose run setup
 script:
