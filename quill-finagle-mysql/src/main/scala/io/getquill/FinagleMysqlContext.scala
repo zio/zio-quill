@@ -37,10 +37,10 @@ class FinagleMysqlContext[N <: NamingStrategy](
   protected val logger: Logger =
     Logger(LoggerFactory.getLogger(classOf[FinagleMysqlContext[_]]))
 
-  protected type QueryResult[T] = Future[List[T]]
-  protected type SingleQueryResult[T] = Future[T]
-  protected type ActionResult[T] = Future[Long]
-  protected type BatchedActionResult[T] = Future[List[Long]]
+  type QueryResult[T] = Future[List[T]]
+  type SingleQueryResult[T] = Future[T]
+  type ActionResult[T] = Future[Long]
+  type BatchedActionResult[T] = Future[List[Long]]
 
   Await.result(client.ping)
 
