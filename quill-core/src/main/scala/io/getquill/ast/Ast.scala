@@ -17,7 +17,6 @@ sealed trait Query extends Ast
 sealed trait Entity extends Query {
   def properties: List[PropertyAlias]
   def alias: Option[String]
-  def generated: Option[String]
 }
 
 object Entity {
@@ -27,14 +26,12 @@ object Entity {
 case class SimpleEntity(name: String) extends Entity {
   def properties: List[PropertyAlias] = List()
   def alias: Option[String] = None
-  def generated: Option[String] = None
 }
 
 case class ConfiguredEntity(
   source:     Ast,
   alias:      Option[String]      = None,
-  properties: List[PropertyAlias] = List(),
-  generated:  Option[String]      = None
+  properties: List[PropertyAlias] = List()
 ) extends Entity
 
 case class PropertyAlias(property: String, alias: String)
@@ -123,6 +120,8 @@ case class Insert(query: Ast) extends Action
 case class Delete(query: Ast) extends Action
 
 case class AssignedAction(action: Ast, assignments: List[Assignment]) extends Action
+
+case class Returning(action: Ast, property: String) extends Action
 
 case class Assignment(input: Ident, property: String, value: Ast)
 

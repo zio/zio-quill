@@ -93,8 +93,7 @@ object AstShow {
       val alias = c.alias.map(s => s""".entity("$s")""")
       val properties = c.properties.map(p => s"""_.${p.property} -> "${p.alias}"""")
       val columns = if (properties.isEmpty) None else Some(s""".columns(${properties.mkString(", ")})""")
-      val generated = c.generated.map(g => s""".generated(_.$g)""")
-      val params = alias.toList ::: columns.toList ::: generated.toList
+      val params = alias.toList ::: columns.toList
       s"${c.source.show}.schema(_${params.mkString("")})"
   }
 
@@ -162,6 +161,7 @@ object AstShow {
     case Update(query)                       => s"${query.show}.update"
     case Insert(query)                       => s"${query.show}.insert"
     case Delete(query)                       => s"${query.show}.delete"
+    case Returning(query, property)          => s"${query.show}.returning(_.$property)"
   }
 
   implicit val assignmentShow: Show[Assignment] = Show[Assignment] {

@@ -15,7 +15,7 @@ class JdbcContextSpec extends Spec {
     val insert = quote { (i: Int) =>
       qr1.insert(_.i -> i)
     }
-    testContext.run(insert)(1) mustEqual (1)
+    testContext.run(insert)(List(1)) mustEqual (List(1))
   }
 
   "provides transaction support" - {

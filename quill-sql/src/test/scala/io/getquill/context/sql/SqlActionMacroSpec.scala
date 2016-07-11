@@ -4,7 +4,6 @@ import io.getquill.Spec
 import io.getquill.context.mirror.Row
 import io.getquill.context.sql.testContext.TestEntity
 import io.getquill.context.sql.testContext.qr1
-import io.getquill.context.sql.testContext.query
 import io.getquill.context.sql.testContext.quote
 import io.getquill.context.sql.testContext.unquote
 
@@ -52,13 +51,24 @@ class SqlActionMacroSpec extends Spec {
         mirror.bindList mustEqual List(Row("s", 1))
       }
     }
-    "with generated values" in {
+    "with returning" in {
       val q = quote {
-        query[TestEntity].schema(_.generated(_.i)).insert
+        qr1.insert.returning(_.l)
       }
+      val a = TestEntity
       val mirror = testContext.run(q)(List(TestEntity("s", 0, 1L, None)))
-      mirror.sql mustEqual "INSERT INTO TestEntity (s,l,o) VALUES (?, ?, ?)"
-      mirror.generated mustEqual Some("i")
+      mirror.sql mustEqual "INSERT INTO TestEntity (s,i,o) VALUES (?, ?, ?)"
+      mirror.generated mustEqual Some("l")
+    }
+    "with assigned values and returning" in {
+      val q = quote {
+        qr1.insert(_.s -> "s", _.i -> 0).returning(_.l)
+      }
+      val a = TestEntity
+      val mirror = testContext.run(q)
+      mirror.sql mustEqual "INSERT INTO TestEntity (s,i) VALUES ('s', 0)"
+      mirror.generated mustEqual Some("l")
+
     }
   }
 }

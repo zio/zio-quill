@@ -144,14 +144,17 @@ object CqlIdiom {
       case Delete(table) =>
         s"TRUNCATE ${table.show}"
 
+      case Returning(_, _) =>
+        fail(s"Cql doesn't support returning generated during insertion")
+
       case other =>
         fail(s"Action ast can't be translated to sql: '$other'")
     }
   }
 
   implicit def entityShow(implicit strategy: NamingStrategy): Show[Entity] = Show[Entity] {
-    case e if e.generated.isDefined                        => fail(s"Cql doesn't support returning generated during insertion")
-    case SimpleEntity(name)                                => strategy.table(name)
-    case ConfiguredEntity(SimpleEntity(name), alias, _, _) => strategy.table(alias.getOrElse(name))
+    case SimpleEntity(name)                             => strategy.table(name)
+    case ConfiguredEntity(SimpleEntity(name), alias, _) => strategy.table(alias.getOrElse(name))
+    case ConfiguredEntity(source, _, _)                 => source.show
   }
 }

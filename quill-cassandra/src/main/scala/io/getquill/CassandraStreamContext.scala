@@ -48,10 +48,10 @@ class CassandraStreamContext[N <: NamingStrategy](config: CassandraContextConfig
   def executeQuerySingle[T](cql: String, extractor: Row => T = identity[Row] _, bind: BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement] = identity) =
     executeQuery(cql, extractor, bind)
 
-  def executeAction(cql: String, bind: BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement] = identity, generated: Option[String] = None): Observable[ResultSet] =
+  def executeAction[O](cql: String, bind: BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement] = identity, generated: Option[String] = None, returningExtractor: Row => O = identity[Row] _): Observable[ResultSet] =
     Observable.fromFuture(session.executeAsync(prepare(cql, bind)))
 
-  def executeActionBatch[T](cql: String, bindParams: T => BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement] = (_: T) => identity[BindedStatementBuilder[BoundStatement]] _, generated: Option[String] = None): Observable[T] => Observable[ResultSet] =
+  def executeActionBatch[T, O](cql: String, bindParams: T => BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement] = (_: T) => identity[BindedStatementBuilder[BoundStatement]] _, generated: Option[String] = None, returningExtractor: Row => O = identity[Row] _): Observable[T] => Observable[ResultSet] =
     (values: Observable[T]) =>
       values.flatMap { value =>
         Observable.fromFuture(session.executeAsync(prepare(cql, bindParams(value))))

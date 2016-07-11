@@ -16,18 +16,18 @@ trait Ops {
   implicit class EntityOps[A <: EntityQuery[_]](q: A)
     extends Options(q)
 
-  implicit class InsertOps[A <: Insert[_]](q: A)
+  implicit class InsertOps[A <: Insert[_, _]](q: A)
     extends Options(q) {
     def ifNotExists = quote(infix"$q IF NOT EXISTS".as[A])
   }
 
-  implicit class DeleteOps[A <: Delete[_]](q: A)
+  implicit class DeleteOps[A <: Delete[_, _]](q: A)
     extends Options(q) {
     def ifExists = quote(infix"$q IF EXISTS".as[A])
   }
 
-  implicit class ActionOps[T](q: Action[T]) {
+  implicit class ActionOps[T, O](q: Action[T, O]) {
     def ifCond(cond: T => Boolean) =
-      quote(infix"$q IF $cond".as[Action[T]])
+      quote(infix"$q IF $cond".as[Action[T, O]])
   }
 }

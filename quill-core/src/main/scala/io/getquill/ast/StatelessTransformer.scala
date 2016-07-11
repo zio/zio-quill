@@ -62,6 +62,7 @@ trait StatelessTransformer {
       case Update(query)                       => Update(apply(query))
       case Insert(query)                       => Insert(apply(query))
       case Delete(query)                       => Delete(apply(query))
+      case Returning(query, property)          => Returning(apply(query), property)
     }
 
   private def apply(e: Assignment): Assignment =

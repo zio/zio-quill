@@ -31,10 +31,10 @@ class CassandraSyncContext[N <: NamingStrategy](config: CassandraContextConfig)
   def executeQuerySingle[T](cql: String, extractor: Row => T = identity[Row] _, bind: BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement] = identity): T =
     handleSingleResult(executeQuery(cql, extractor, bind))
 
-  def executeAction(cql: String, bind: BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement] = identity, generated: Option[String] = None): ResultSet =
+  def executeAction[O](cql: String, bind: BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement] = identity, generated: Option[String] = None, returningExtractor: Row => O = identity[Row] _): ResultSet =
     session.execute(prepare(cql, bind))
 
-  def executeActionBatch[T](cql: String, bindParams: T => BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement] = (_: T) => identity[BindedStatementBuilder[BoundStatement]] _, generated: Option[String] = None): ActionApply[T] = {
+  def executeActionBatch[T, O](cql: String, bindParams: T => BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement] = (_: T) => identity[BindedStatementBuilder[BoundStatement]] _, generated: Option[String] = None, returningExtractor: Row => O = identity[Row] _): ActionApply[T] = {
     val func = { (values: List[T]) =>
       @tailrec
       def run(values: List[T], acc: List[ResultSet]): List[ResultSet] =

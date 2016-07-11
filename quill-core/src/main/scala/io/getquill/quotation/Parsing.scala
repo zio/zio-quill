@@ -151,7 +151,7 @@ trait Parsing extends EntityConfigParsing {
 
     case q"$source.schema(($alias) => $body)" =>
       val config = parseEntityConfig(body)
-      ConfiguredEntity(astParser(source), config.alias, config.properties, config.generated)
+      ConfiguredEntity(astParser(source), config.alias, config.properties)
 
     case q"$pack.query[${ t: Type }]($ct)" if (t.typeSymbol.isClass) =>
       SimpleEntity(t.typeSymbol.name.decodedName.toString)
@@ -401,6 +401,10 @@ trait Parsing extends EntityConfigParsing {
       Function(List(Ident("x1")), Insert(astParser(query)))
     case q"$query.delete" =>
       Delete(astParser(query))
+    case q"$pack.InsertAssignedAction[$t]($query).returning[$r](($alias) => $e.$property)" =>
+      Returning(astParser(query), property.decodedName.toString)
+    case q"$pack.InsertUnassignedAction[$t]($query).returning[$r](($alias) => $e.$property)" =>
+      Returning(astParser(query), property.decodedName.toString)
   }
 
   private val assignmentParser: Parser[Assignment] = Parser[Assignment] {

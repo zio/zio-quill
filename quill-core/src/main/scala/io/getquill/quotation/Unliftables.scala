@@ -2,71 +2,7 @@ package io.getquill.quotation
 
 import scala.reflect.macros.whitebox.Context
 
-import io.getquill.ast.Action
-import io.getquill.ast.Aggregation
-import io.getquill.ast.AggregationOperator
-import io.getquill.ast.Asc
-import io.getquill.ast.AscNullsFirst
-import io.getquill.ast.AscNullsLast
-import io.getquill.ast.AssignedAction
-import io.getquill.ast.Assignment
-import io.getquill.ast.Ast
-import io.getquill.ast.BinaryOperation
-import io.getquill.ast.BinaryOperator
-import io.getquill.ast.BooleanOperator
-import io.getquill.ast.Collection
-import io.getquill.ast.ConfiguredEntity
-import io.getquill.ast.Constant
-import io.getquill.ast.Delete
-import io.getquill.ast.Desc
-import io.getquill.ast.DescNullsFirst
-import io.getquill.ast.DescNullsLast
-import io.getquill.ast.Distinct
-import io.getquill.ast.Drop
-import io.getquill.ast.Dynamic
-import io.getquill.ast.Entity
-import io.getquill.ast.EqualityOperator
-import io.getquill.ast.Filter
-import io.getquill.ast.FlatMap
-import io.getquill.ast.FullJoin
-import io.getquill.ast.Function
-import io.getquill.ast.FunctionApply
-import io.getquill.ast.GroupBy
-import io.getquill.ast.Ident
-import io.getquill.ast.If
-import io.getquill.ast.Infix
-import io.getquill.ast.InnerJoin
-import io.getquill.ast.Insert
-import io.getquill.ast.Join
-import io.getquill.ast.JoinType
-import io.getquill.ast.LeftJoin
-import io.getquill.ast.Map
-import io.getquill.ast.NullValue
-import io.getquill.ast.NumericOperator
-import io.getquill.ast.OptionExists
-import io.getquill.ast.OptionForall
-import io.getquill.ast.OptionMap
-import io.getquill.ast.OptionOperation
-import io.getquill.ast.OptionOperationType
-import io.getquill.ast.Ordering
-import io.getquill.ast.Property
-import io.getquill.ast.PropertyAlias
-import io.getquill.ast.Query
-import io.getquill.ast.RightJoin
-import io.getquill.ast.RuntimeBinding
-import io.getquill.ast.SetOperator
-import io.getquill.ast.SimpleEntity
-import io.getquill.ast.SortBy
-import io.getquill.ast.StringOperator
-import io.getquill.ast.Take
-import io.getquill.ast.Tuple
-import io.getquill.ast.TupleOrdering
-import io.getquill.ast.UnaryOperation
-import io.getquill.ast.UnaryOperator
-import io.getquill.ast.Union
-import io.getquill.ast.UnionAll
-import io.getquill.ast.Update
-import io.getquill.ast.Value
+import io.getquill.ast._
 import io.getquill.util.Messages.RichContext
 
 trait Unliftables {
@@ -159,12 +95,12 @@ trait Unliftables {
 
   implicit val entityUnliftable: Unliftable[Entity] = Unliftable[Entity] {
     case q"$pack.SimpleEntity.apply(${ a: String })" => SimpleEntity(a)
-    case q"$pack.ConfiguredEntity.apply(${ a: Ast }, ${ b: Option[String] }, ${ c: List[PropertyAlias] }, ${ d: Option[String] })" => ConfiguredEntity(a, b, c, d)
+    case q"$pack.ConfiguredEntity.apply(${ a: Ast }, ${ b: Option[String] }, ${ c: List[PropertyAlias] })" => ConfiguredEntity(a, b, c)
   }
 
   implicit val entityConfigUnliftable: Unliftable[EntityConfig] = Unliftable[EntityConfig] {
-    case q"$pack.EntityConfig.apply(${ a: Option[String] }, ${ b: List[PropertyAlias] }, ${ c: Option[String] })" =>
-      EntityConfig(a, b, c)
+    case q"$pack.EntityConfig.apply(${ a: Option[String] }, ${ b: List[PropertyAlias] })" =>
+      EntityConfig(a, b)
   }
 
   implicit val orderingUnliftable: Unliftable[Ordering] = Unliftable[Ordering] {
@@ -198,6 +134,7 @@ trait Unliftables {
     case q"$pack.Update.apply(${ a: Ast })"                                   => Update(a)
     case q"$pack.Insert.apply(${ a: Ast })"                                   => Insert(a)
     case q"$pack.Delete.apply(${ a: Ast })"                                   => Delete(a)
+    case q"$pack.Returning.apply(${ a: Ast }, ${ b: String })"                => Returning(a, b)
   }
 
   implicit val assignmentUnliftable: Unliftable[Assignment] = Unliftable[Assignment] {

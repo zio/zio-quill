@@ -39,8 +39,8 @@ class FinagleMysqlContext[N <: NamingStrategy](
 
   type QueryResult[T] = Future[List[T]]
   type SingleQueryResult[T] = Future[T]
-  type ActionResult[T] = Future[Long]
-  type BatchedActionResult[T] = Future[List[Long]]
+  type ActionResult[T, O] = Future[Long]
+  type BatchedActionResult[T, O] = Future[List[Long]]
 
   Await.result(client.ping)
 
@@ -58,14 +58,14 @@ class FinagleMysqlContext[N <: NamingStrategy](
         f.ensure(currentClient.clear)
     }
 
-  def executeAction(sql: String, bind: BindedStatementBuilder[List[Parameter]] => BindedStatementBuilder[List[Parameter]] = identity, generated: Option[String] = None): Future[Long] = {
+  def executeAction[O](sql: String, bind: BindedStatementBuilder[List[Parameter]] => BindedStatementBuilder[List[Parameter]] = identity, generated: Option[String] = None, returningExtractor: Row => O = identity[Row] _): Future[Long] = {
     val (expanded, params) = bind(new SqlBindedStatementBuilder).build(sql)
     logger.info(expanded)
     withClient(_.prepare(expanded)(params(List()): _*))
       .map(resultToLong(_, generated))
   }
 
-  def executeActionBatch[T](sql: String, bindParams: T => BindedStatementBuilder[List[Parameter]] => BindedStatementBuilder[List[Parameter]] = (_: T) => identity[BindedStatementBuilder[List[Parameter]]] _, generated: Option[String] = None): ActionApply[T] = {
+  def executeActionBatch[T, O](sql: String, bindParams: T => BindedStatementBuilder[List[Parameter]] => BindedStatementBuilder[List[Parameter]] = (_: T) => identity[BindedStatementBuilder[List[Parameter]]] _, generated: Option[String] = None, returningExtractor: Row => O = identity[Row] _): ActionApply[T] = {
     def run(values: List[T]): Future[List[Long]] =
       values match {
         case Nil =>

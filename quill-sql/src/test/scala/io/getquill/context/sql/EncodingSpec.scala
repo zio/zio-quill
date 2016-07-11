@@ -1,9 +1,8 @@
 package io.getquill.context.sql
 
-import java.util.Date
+import java.util.{ Date, UUID }
 
 import scala.BigDecimal
-
 import io.getquill.Spec
 
 trait EncodingSpec extends Spec {
@@ -149,4 +148,10 @@ trait EncodingSpec extends Spec {
         e2.o10 mustEqual None
         e2.o11 mustEqual None
     }
+
+  case class BarCode(description: String, uuid: Option[UUID] = None)
+  val insertBarCode = quote(query[BarCode].insert.returning(_.uuid))
+  val barCodeEntry = List(BarCode("returning UUID"))
+  def findBarCodeByUuid(uuid: UUID) = quote(query[BarCode].filter(_.uuid == lift(uuid)))
+  def verifyBarcode(barCode: BarCode) = barCode.description mustEqual "returning UUID"
 }

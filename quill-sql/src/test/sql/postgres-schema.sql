@@ -76,3 +76,10 @@ CREATE TABLE Product(
     id SERIAL PRIMARY KEY,
     sku BIGINT
 );
+
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+CREATE TABLE Barcode(
+    uuid UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    description TEXT
+);

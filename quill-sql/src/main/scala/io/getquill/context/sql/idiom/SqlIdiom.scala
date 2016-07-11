@@ -311,9 +311,9 @@ trait SqlIdiom {
   }
 
   implicit def entityShow(implicit strategy: NamingStrategy): Show[Entity] = Show[Entity] {
-    case SimpleEntity(name)                                => strategy.table(name)
-    case ConfiguredEntity(SimpleEntity(name), alias, _, _) => strategy.table(alias.getOrElse(name))
-    case ConfiguredEntity(source, _, _, _)                 => source.show
+    case SimpleEntity(name)                             => strategy.table(name)
+    case ConfiguredEntity(SimpleEntity(name), alias, _) => strategy.table(alias.getOrElse(name))
+    case ConfiguredEntity(source, _, _)                 => source.show
   }
 
   protected def scopedShow[A <: Ast](ast: A)(implicit show: Show[A]) =

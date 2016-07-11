@@ -33,10 +33,10 @@ class CassandraAsyncContext[N <: NamingStrategy](config: CassandraContextConfig)
   def executeQuerySingle[T](cql: String, extractor: Row => T = identity[Row] _, bind: BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement] = identity)(implicit ec: ExecutionContext): Future[T] =
     executeQuery(cql, extractor, bind).map(handleSingleResult)
 
-  def executeAction(cql: String, bind: BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement] = identity, generated: Option[String] = None)(implicit ec: ExecutionContext): Future[ResultSet] =
+  def executeAction[O](cql: String, bind: BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement] = identity, generated: Option[String] = None, returningExtractor: Row => O = identity[Row] _)(implicit ec: ExecutionContext): Future[ResultSet] =
     session.executeAsync(prepare(cql, bind))
 
-  def executeActionBatch[T](cql: String, bindParams: T => BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement] = (_: T) => identity[BindedStatementBuilder[BoundStatement]] _, generated: Option[String] = None)(implicit ec: ExecutionContext): ActionApply[T] = {
+  def executeActionBatch[T, O](cql: String, bindParams: T => BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement] = (_: T) => identity[BindedStatementBuilder[BoundStatement]] _, generated: Option[String] = None, returningExtractor: Row => O = identity[Row] _)(implicit ec: ExecutionContext): ActionApply[T] = {
     def run(values: List[T]): Future[List[ResultSet]] =
       values match {
         case Nil => Future.successful(List())

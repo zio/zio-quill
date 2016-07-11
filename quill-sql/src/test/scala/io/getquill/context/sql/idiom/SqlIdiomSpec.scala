@@ -654,12 +654,12 @@ class SqlIdiomSpec extends Spec {
           testContext.run(q).sql mustEqual
             "INSERT INTO TestEntity (i,s) VALUES ((SELECT MAX(t.i) FROM TestEntity2 t), 's')"
         }
-        "generated" in {
+        "returning" in {
           val q = quote {
-            query[TestEntity].schema(_.generated(_.i)).insert
+            query[TestEntity].insert.returning(_.l)
           }
           val run = testContext.run(q)(List(TestEntity("s", 1, 2L, Some(1)))).sql mustEqual
-            "INSERT INTO TestEntity (s,l,o) VALUES (?, ?, ?)"
+            "INSERT INTO TestEntity (s,i,o) VALUES (?, ?, ?)"
         }
       }
       "update" - {
@@ -806,7 +806,7 @@ class SqlIdiomSpec extends Spec {
           "SELECT x.s, x.i, x.l, x.o FROM (SELECT * FROM TestEntity) x"
       }
       "full infix action" in {
-        testContext.run(infix"DELETE FROM TestEntity".as[Action[TestEntity]]).sql mustEqual
+        testContext.run(infix"DELETE FROM TestEntity".as[Action[TestEntity, Long]]).sql mustEqual
           "DELETE FROM TestEntity"
       }
     }

@@ -57,9 +57,9 @@ trait StatefulTransformer[T] {
 
   def apply(e: Query): (Query, StatefulTransformer[T]) =
     e match {
-      case ConfiguredEntity(a, b, c, d) =>
+      case ConfiguredEntity(a, b, c) =>
         val (at, att) = apply(a)
-        (ConfiguredEntity(at, b, c, d), att)
+        (ConfiguredEntity(at, b, c), att)
       case e: Entity => (e, this)
       case Filter(a, b, c) =>
         val (at, att) = apply(a)
@@ -152,6 +152,9 @@ trait StatefulTransformer[T] {
       case Delete(a) =>
         val (at, att) = apply(a)
         (Delete(at), att)
+      case Returning(a, b) =>
+        val (at, att) = apply(a)
+        (Returning(at, b), att)
     }
 
   def apply(e: Assignment): (Assignment, StatefulTransformer[T]) =

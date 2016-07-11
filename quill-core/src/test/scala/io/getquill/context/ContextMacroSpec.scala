@@ -28,12 +28,12 @@ class ContextMacroSpec extends Spec {
       }
       "infix" in {
         val q = quote {
-          infix"STRING".as[Action[TestEntity]]
+          infix"STRING".as[Action[TestEntity, Long]]
         }
         testContext.run(q).ast mustEqual q.ast
       }
       "dynamic" in {
-        val q: Quoted[Action[TestEntity]] = quote {
+        val q: Quoted[Action[TestEntity, Long]] = quote {
           qr1.delete
         }
         testContext.run(q).ast mustEqual q.ast
@@ -55,15 +55,15 @@ class ContextMacroSpec extends Spec {
       }
       "infix" in {
         val q = quote {
-          (p1: String) => infix"t = $p1".as[Action[TestEntity]]
+          (p1: String) => infix"t = $p1".as[Action[TestEntity, Long]]
         }
         val r = testContext.run(q)(List("a"))
         r.ast.toString mustEqual """infix"t = $p1""""
         r.bindList mustEqual List(Row("a"))
       }
       "dynamic" in {
-        val q: Quoted[String => Action[TestEntity]] = quote {
-          (p1: String) => infix"t = $p1".as[Action[TestEntity]]
+        val q: Quoted[String => Action[TestEntity, Long]] = quote {
+          (p1: String) => infix"t = $p1".as[Action[TestEntity, Long]]
         }
         val r = testContext.run(q)(List("a"))
         r.ast.toString mustEqual """infix"t = $p1""""

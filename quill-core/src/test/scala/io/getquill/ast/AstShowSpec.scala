@@ -24,19 +24,12 @@ class AstShowSpec extends Spec {
       (q.ast: Ast).show mustEqual
         """query[TestEntity].schema(_.columns(_.i -> "'i", _.o -> "'o"))"""
     }
-    "generated" in {
-      val q = quote {
-        query[TestEntity].schema(_.generated(c => c.i))
-      }
-      (q.ast: Ast).show mustEqual
-        """query[TestEntity].schema(_.generated(_.i))"""
-    }
     "composed" in {
       val q = quote {
-        query[TestEntity].schema(_.entity("entity_alias").columns(_.s -> "s_alias", _.i -> "i_alias").generated(_.i))
+        query[TestEntity].schema(_.entity("entity_alias").columns(_.s -> "s_alias", _.i -> "i_alias"))
       }
       (q.ast: Ast).show mustEqual
-        """query[TestEntity].schema(_.entity("entity_alias").columns(_.s -> "s_alias", _.i -> "i_alias").generated(_.i))"""
+        """query[TestEntity].schema(_.entity("entity_alias").columns(_.s -> "s_alias", _.i -> "i_alias"))"""
     }
   }
 
@@ -468,6 +461,22 @@ class AstShowSpec extends Spec {
         }
         (q.ast: Ast).show mustEqual
           """(x1) => query[TestEntity].insert"""
+      }
+
+      "returning assigned" in {
+        val q = quote {
+          query[TestEntity].insert(t => t.s -> "a").returning(_.l)
+        }
+        (q.ast: Ast).show mustEqual
+          """query[TestEntity].insert(t => t.s -> "a").returning(_.l)"""
+      }
+
+      "returning unassigned" in {
+        val q = quote {
+          query[TestEntity].insert.returning(_.l)
+        }
+        (q.ast: Ast).show mustEqual
+          """(x1) => query[TestEntity].insert.returning(_.l)"""
       }
     }
 
