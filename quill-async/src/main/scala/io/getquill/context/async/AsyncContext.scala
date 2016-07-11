@@ -28,10 +28,10 @@ abstract class AsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: Connection]
   private val logger: Logger =
     Logger(LoggerFactory.getLogger(classOf[AsyncContext[_, _, _]]))
 
-  protected type QueryResult[T] = Future[List[T]]
-  protected type SingleQueryResult[T] = Future[T]
-  protected type ActionResult[T] = Future[Long]
-  protected type BatchedActionResult[T] = Future[List[Long]]
+  type QueryResult[T] = Future[List[T]]
+  type SingleQueryResult[T] = Future[T]
+  type ActionResult[T] = Future[Long]
+  type BatchedActionResult[T] = Future[List[Long]]
 
   override def close = {
     Await.result(pool.close, Duration.Inf)
