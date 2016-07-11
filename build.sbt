@@ -36,8 +36,7 @@ lazy val `quill-jdbc` =
         "mysql"          % "mysql-connector-java" % "5.1.38"  % "test",
         "com.h2database" % "h2"                   % "1.4.192" % "test",
         "org.postgresql" % "postgresql"           % "9.4.1208" % "test"
-      ),
-      parallelExecution in Test := false
+      )
     )
     .dependsOn(`quill-sql` % "compile->compile;test->test")
 
@@ -48,8 +47,7 @@ lazy val `quill-finagle-mysql` =
     .settings(
       libraryDependencies ++= Seq(
         "com.twitter" %% "finagle-mysql" % "6.35.0"
-      ),
-      parallelExecution in Test := false
+      )
     )
     .dependsOn(`quill-sql` % "compile->compile;test->test")
 
@@ -62,8 +60,7 @@ lazy val `quill-async` =
         "com.github.mauricio" %% "db-async-common"  % "0.2.20",
         "com.github.mauricio" %% "mysql-async"      % "0.2.20",
         "com.github.mauricio" %% "postgresql-async" % "0.2.20"
-      ),
-      parallelExecution in Test := false
+      )
     )
     .dependsOn(`quill-sql` % "compile->compile;test->test")
 
@@ -75,8 +72,7 @@ lazy val `quill-cassandra` =
       libraryDependencies ++= Seq(
         "com.datastax.cassandra" %  "cassandra-driver-core" % "3.0.2",
         "org.monifu"             %% "monifu"                % "1.2"
-      ),
-      parallelExecution in Test := false
+      )
     )
     .dependsOn(`quill-core` % "compile->compile;test->test")
 
@@ -180,6 +176,7 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
     "-Ywarn-unused-import"
   ),
   fork in Test := true,
+  concurrentRestrictions in Global += Tags.limit(Tags.Test, 1),
   releasePublishArtifactsAction := PgpKeys.publishSigned.value,
   scoverage.ScoverageKeys.coverageMinimum := 96,
   scoverage.ScoverageKeys.coverageFailOnMinimum := false,
