@@ -22,13 +22,12 @@ then
 		git checkout master || git checkout -b master
 		git reset --hard origin/master
 		sbt tut 'release with-defaults'
-		git push --delete origin release
 	elif [[ $TRAVIS_BRANCH == "master" ]]
 	then
-		sbt clean coverage test tut coverageAggregate release-vcs-checks
+		sbt clean coverage test tut coverageAggregate checkUnformattedFiles
 		sbt coverageOff publish
 	else
-		sbt clean coverage test tut coverageAggregate release-vcs-checks
+		sbt clean coverage test tut coverageAggregate checkUnformattedFiles
 		echo "version in ThisBuild := \"$TRAVIS_BRANCH-SNAPSHOT\"" > version.sbt
 		sbt coverageOff publish
 	fi
