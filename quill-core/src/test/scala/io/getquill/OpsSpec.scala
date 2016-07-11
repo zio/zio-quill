@@ -5,13 +5,10 @@ import io.getquill.ast.Entity
 import io.getquill.ast.Ident
 import io.getquill.ast.Infix
 import io.getquill.ast.Map
-import io.getquill.quotation.NonQuotedException
 import io.getquill.testContext.EntityQuery
 import io.getquill.testContext.InfixInterpolator
-import io.getquill.testContext.Ord
 import io.getquill.testContext.Query
 import io.getquill.testContext.TestEntity
-import io.getquill.testContext.implicitOrd
 import io.getquill.testContext.qr1
 import io.getquill.testContext.query
 import io.getquill.testContext.quote
@@ -87,36 +84,6 @@ class OpsSpec extends Spec {
           query[TestEntity].allowFiltering
       }
       q.toString mustEqual "(i, j, k) => infix\"" + "$" + "{query[TestEntity]} ALLOW FILTERING\""
-    }
-  }
-
-  "fails if the infix is used outside of a quotation" in {
-    val e = intercept[NonQuotedException] {
-      infix"true"
-    }
-  }
-
-  "fails if a query is used ouside of a quotation" in {
-    val e = intercept[NonQuotedException] {
-      query[TestEntity]
-    }
-  }
-
-  "fails if a quotation is unquoted ouside of a quotation" in {
-    val e = intercept[NonQuotedException] {
-      unquote(qr1)
-    }
-  }
-
-  "fails if ord is unquoted ouside of a quotation" in {
-    val e = intercept[NonQuotedException] {
-      Ord.asc[Int]
-    }
-  }
-
-  "fails if orderingToOrd is unquoted ouside of a quotation" in {
-    val e = intercept[NonQuotedException] {
-      implicitOrd[Int]
     }
   }
 }
