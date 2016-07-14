@@ -33,9 +33,10 @@ lazy val `quill-jdbc` =
     .settings(
       libraryDependencies ++= Seq(
         "com.zaxxer"     % "HikariCP"             % "2.4.6",
-        "mysql"          % "mysql-connector-java" % "5.1.38"  % "test",
-        "com.h2database" % "h2"                   % "1.4.192" % "test",
-        "org.postgresql" % "postgresql"           % "9.4.1208" % "test"
+        "mysql"          % "mysql-connector-java" % "5.1.38"   % "test",
+        "com.h2database" % "h2"                   % "1.4.192"  % "test",
+        "org.postgresql" % "postgresql"           % "9.4.1208" % "test",
+        "org.xerial"     % "sqlite-jdbc"          % "3.8.11.2" % "test"
       )
     )
     .dependsOn(`quill-sql` % "compile->compile;test->test")
