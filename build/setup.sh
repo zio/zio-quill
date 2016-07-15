@@ -1,5 +1,15 @@
 #!/bin/sh
 
+echo "Waiting for Sqlite"
+until sqlite3 quill_test.db "SELECT 1" &> /dev/null
+do
+  printf "."
+  sleep 1
+done
+echo -e "\nSqlite ready"
+
+sqlite3 quill_test.db < quill-jdbc/src/test/resources/sql/sqlite-schema.sql
+
 echo "Waiting for Mysql"
 until mysql -u root -proot -h mysql -e "SELECT 1" &> /dev/null
 do

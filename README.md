@@ -940,6 +940,7 @@ Quill has three built-in dialects:
 - `io.getquill.context.sql.idiom.H2Dialect`
 - `io.getquill.context.sql.idiom.MySQLDialect`
 - `io.getquill.context.sql.idiom.PostgresDialect`
+- `io.getquill.context.sql.idiom.SqliteDialect`
 
 #### Naming strategy
 
@@ -1003,7 +1004,7 @@ The body of `transaction` can contain calls to other methods and multiple `run` 
 sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "mysql" % "mysql-connector-java" % "5.1.36",
+  "mysql" % "mysql-connector-java" % "5.1.38",
   "io.getquill" %% "quill-jdbc" % "0.7.1-SNAPSHOT"
 )
 ```
@@ -1015,7 +1016,7 @@ lazy val ctx = new JdbcContext[MySQLDialect, SnakeCase]("db")
 
 application.properties
 ```
-ctx.dataContextClassName=com.mysql.jdbc.jdbc2.optional.MysqlDataContext
+ctx.dataContextClassName=com.mysql.jdbc.jdbc2.optional.MysqlDataSource
 ctx.dataContext.url=jdbc:mysql://host/database
 ctx.dataContext.user=root
 ctx.dataContext.password=root
@@ -1030,7 +1031,7 @@ ctx.connectionTimeout=30000
 sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "org.postgresql" % "postgresql" % "9.4-1206-jdbc41",
+  "org.postgresql" % "postgresql" % "9.4.1208",
   "io.getquill" %% "quill-jdbc" % "0.7.1-SNAPSHOT"
 )
 ```
@@ -1049,6 +1050,27 @@ ctx.dataContext.databaseName=database
 ctx.dataContext.portNumber=5432
 ctx.dataContext.serverName=host
 ctx.connectionTimeout=30000
+```
+
+**Sqlite**
+
+sbt dependencies
+```
+libraryDependencies ++= Seq(
+  "org.xerial" % "sqlite-jdbc" % "3.8.11.2",
+  "io.getquill" %% "quill-jdbc" % "0.7.1-SNAPSHOT"
+)
+```
+
+context definition
+```scala
+lazy val ctx = new JdbcContext[SqliteDialect, SnakeCase]("db")
+```
+
+application.properties
+```
+ctx.driverClassName=org.sqlite.JDBC
+ctx.jdbcUrl="jdbc:sqlite:/path/to/db/file.db"
 ```
 
 ##### quill-async
