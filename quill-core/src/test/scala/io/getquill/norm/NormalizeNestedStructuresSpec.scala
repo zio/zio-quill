@@ -129,7 +129,7 @@ class NormalizeNestedStructuresSpec extends Spec {
         NormalizeNestedStructures.unapply(q.ast) mustEqual Some(n.ast)
       }
     }
-    "distinct" - {
+    "distinct" in {
       val q = quote {
         qr1.filter(t => t.s == ("a", "b")._1).distinct
       }

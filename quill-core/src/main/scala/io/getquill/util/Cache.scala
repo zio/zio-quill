@@ -2,55 +2,34 @@ package io.getquill.util
 
 import java.io.Closeable
 import java.lang.System.{ currentTimeMillis => now }
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.Executors
-import java.util.concurrent.ScheduledThreadPoolExecutor
-import java.util.concurrent.ThreadFactory
-import java.util.concurrent.TimeUnit
 
-import scala.collection.JavaConverters.mapAsScalaConcurrentMapConverter
 import scala.concurrent.duration.Duration
 
 class Cache[K, V <: Closeable] {
 
   private case class Entry(value: Option[V], expiration: Long)
 
-  private val cache = new ConcurrentHashMap[K, Entry]().asScala
+  private var cache = Map[K, Entry]()
 
-  private val scheduler =
-    new ScheduledThreadPoolExecutor(
-      1,
-      new ThreadFactory {
-        override def newThread(r: Runnable) = {
-          val thread = Executors.defaultThreadFactory().newThread(r)
-          thread.setName("io.getquill.util.Cache.scheduler")
-          thread.setDaemon(true)
-          thread
-        }
+  def getOrElseUpdate(key: K, value: => Option[V], ttl: Duration): Option[V] =
+    synchronized {
+      evict()
+      val expiration = now + ttl.toMillis
+      cache.get(key) match {
+        case Some(entry) =>
+          cache += key -> entry.copy(expiration = expiration)
+          entry.value
+        case None =>
+          val v = value
+          cache += key -> Entry(v, expiration)
+          v
       }
-    )
-
-  private val evict = new Runnable {
-    override def run =
-      for ((key, Entry(value, expiration)) <- cache)
-        if (expiration <= now) {
-          value.map(_.close)
-          cache -= key
-        }
-  }
-
-  scheduler.scheduleAtFixedRate(evict, 2, 2, TimeUnit.SECONDS)
-
-  def getOrElseUpdate(key: K, value: => Option[V], ttl: Duration): Option[V] = {
-    val expiration = now + ttl.toMillis
-    cache.get(key) match {
-      case Some(entry) =>
-        cache.put(key, entry.copy(expiration = expiration))
-        entry.value
-      case None =>
-        val v = value
-        cache.put(key, Entry(v, expiration))
-        v
     }
-  }
+
+  private def evict() =
+    for ((key, Entry(value, expiration)) <- cache)
+      if (now > expiration) {
+        value.map(_.close)
+        cache -= key
+      }
 }

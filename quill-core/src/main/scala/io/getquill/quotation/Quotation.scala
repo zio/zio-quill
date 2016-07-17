@@ -53,7 +53,7 @@ trait Quotation extends Liftables with Unliftables with Parsing {
           name -> q"val $name = $tree"
       }.toMap.values
 
-    val id = TermName(s"id${ast.hashCode}")
+    val id = TermName(s"id${ast.hashCode.abs}")
 
     val reifiedAst =
       Transform(ast) {

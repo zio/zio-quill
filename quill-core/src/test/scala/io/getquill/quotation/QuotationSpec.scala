@@ -956,23 +956,25 @@ class QuotationSpec extends Spec {
     }
   }
 
-  "unquotes referenced quotations" - {
+  "unquotes referenced quotations" in {
     val q = quote(1)
     val q2 = quote(q + 1)
     quote(unquote(q2)).ast mustEqual BinaryOperation(Constant(1), NumericOperator.`+`, Constant(1))
   }
 
-  "ignores the ifrefutable call" - {
+  "ignores the ifrefutable call" in {
     val q = quote {
       qr1.map(t => (t.i, t.l))
     }
-    val n = quote {
-      for {
-        (a, b) <- q
-      } yield {
-        a + b
+    """
+      quote {
+        for {
+          (a, b) <- q
+        } yield {
+          a + b
+        }
       }
-    }
+    """ must compile
   }
 
   "supports implicit quotations" - {

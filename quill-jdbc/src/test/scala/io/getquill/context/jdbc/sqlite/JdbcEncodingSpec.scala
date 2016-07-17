@@ -11,6 +11,7 @@ class JdbcEncodingSpec extends EncodingSpec {
     testContext.run(delete)
     testContext.run(insert)(insertValues)
     verify(testContext.run(query[EncodingTestEntity]))
+    ()
   }
 
   // Remove this workaround once the issue is fixed

@@ -13,7 +13,7 @@ class MysqlAsyncContextSpec extends Spec {
 
   def await[T](f: Future[T]) = Await.result(f, Duration.Inf)
 
-  "run non-batched action" - {
+  "run non-batched action" in {
     val insert = quote { (i: Int) =>
       qr1.insert(_.i -> i)
     }

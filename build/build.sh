@@ -24,13 +24,13 @@ then
 		sbt tut 'release with-defaults'
 	elif [[ $TRAVIS_BRANCH == "master" ]]
 	then
-		sbt clean coverage test tut coverageAggregate checkUnformattedFiles
-		sbt coverageOff publish
+		sbt "project quill-with-js" clean coverage test tut coverageAggregate checkUnformattedFiles
+		sbt "project quill-with-js" coverageOff publish
 	else
-		sbt clean coverage test tut coverageAggregate checkUnformattedFiles
+		sbt "project quill-with-js" clean coverage test tut coverageAggregate checkUnformattedFiles
 		echo "version in ThisBuild := \"$TRAVIS_BRANCH-SNAPSHOT\"" > version.sbt
-		sbt coverageOff publish
+		sbt "project quill-with-js" coverageOff publish
 	fi
 else
-	sbt clean coverage test tut coverageAggregate release-vcs-checks
+	sbt "project quill-with-js" clean coverage test tut coverageAggregate release-vcs-checks
 fi

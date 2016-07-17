@@ -7,30 +7,60 @@ lazy val quill =
   (project in file("."))
     .settings(tutSettings ++ commonSettings)
     .settings(`tut-settings`:_*)
-    .dependsOn(`quill-core`, `quill-sql`, `quill-jdbc`, `quill-finagle-mysql`, `quill-async`, `quill-cassandra`)
-    .aggregate(`quill-core`, `quill-sql`, `quill-jdbc`, `quill-finagle-mysql`, `quill-async`, `quill-cassandra`)
+    .dependsOn(
+      `quill-core-jvm`, `quill-sql-jvm`,
+      `quill-jdbc`, `quill-finagle-mysql`, `quill-async`, `quill-cassandra`
+    ).aggregate(
+      `quill-core-jvm`, `quill-sql-jvm`,
+      `quill-jdbc`, `quill-finagle-mysql`, `quill-async`, `quill-cassandra`
+    )
+
+lazy val `quill-with-js` = 
+  (project in file("."))
+    .settings(tutSettings ++ commonSettings)
+    .settings(`tut-settings`:_*)
+    .dependsOn(
+      `quill-core-jvm`, `quill-core-js`, `quill-sql-jvm`, `quill-sql-js`,
+      `quill-jdbc`, `quill-finagle-mysql`, `quill-async`, `quill-cassandra`
+    ).aggregate(
+      `quill-core-jvm`, `quill-core-js`, `quill-sql-jvm`, `quill-sql-js`,
+      `quill-jdbc`, `quill-finagle-mysql`, `quill-async`, `quill-cassandra`
+    )
 
 lazy val `quill-core` = 
-  (project in file("quill-core"))
+  crossProject.crossType(CrossType.Pure)
     .settings(commonSettings: _*)
-    .settings(mimaSettings)
+    .settings(mimaSettings: _*)
     .settings(libraryDependencies ++= Seq(
       "com.typesafe"               %  "config"        % "1.3.0",
       "com.typesafe.scala-logging" %% "scala-logging" % "3.4.0",
       "org.scala-lang"             %  "scala-reflect" % scalaVersion.value
     ))
+    .jsSettings(
+      coverageExcludedPackages := ".*"
+    )
+
+lazy val `quill-core-jvm` = `quill-core`.jvm
+lazy val `quill-core-js` = `quill-core`.js
 
 lazy val `quill-sql` = 
-  (project in file("quill-sql"))
+  crossProject.crossType(CrossType.Pure)
     .settings(commonSettings: _*)
-    .settings(mimaSettings)
+    .settings(mimaSettings: _*)
+    .jsSettings(
+      coverageExcludedPackages := ".*"
+    )
     .dependsOn(`quill-core` % "compile->compile;test->test")
+
+lazy val `quill-sql-jvm` = `quill-sql`.jvm
+lazy val `quill-sql-js` = `quill-sql`.js
 
 lazy val `quill-jdbc` = 
   (project in file("quill-jdbc"))
     .settings(commonSettings: _*)
-    .settings(mimaSettings)
+    .settings(mimaSettings: _*)
     .settings(
+      fork in Test := true,
       libraryDependencies ++= Seq(
         "com.zaxxer"     % "HikariCP"             % "2.4.6",
         "mysql"          % "mysql-connector-java" % "5.1.38"   % "test",
@@ -39,43 +69,46 @@ lazy val `quill-jdbc` =
         "org.xerial"     % "sqlite-jdbc"          % "3.8.11.2" % "test"
       )
     )
-    .dependsOn(`quill-sql` % "compile->compile;test->test")
+    .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
 
 lazy val `quill-finagle-mysql` = 
   (project in file("quill-finagle-mysql"))
     .settings(commonSettings: _*)
-    .settings(mimaSettings)
+    .settings(mimaSettings: _*)
     .settings(
+      fork in Test := true,
       libraryDependencies ++= Seq(
         "com.twitter" %% "finagle-mysql" % "6.35.0"
       )
     )
-    .dependsOn(`quill-sql` % "compile->compile;test->test")
+    .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
 
 lazy val `quill-async` = 
   (project in file("quill-async"))
     .settings(commonSettings: _*)
-    .settings(mimaSettings)
+    .settings(mimaSettings: _*)
     .settings(
+      fork in Test := true,
       libraryDependencies ++= Seq(
         "com.github.mauricio" %% "db-async-common"  % "0.2.20",
         "com.github.mauricio" %% "mysql-async"      % "0.2.20",
         "com.github.mauricio" %% "postgresql-async" % "0.2.20"
       )
     )
-    .dependsOn(`quill-sql` % "compile->compile;test->test")
+    .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
 
 lazy val `quill-cassandra` = 
   (project in file("quill-cassandra"))
     .settings(commonSettings: _*)
-    .settings(mimaSettings)
+    .settings(mimaSettings: _*)
     .settings(
+      fork in Test := true,
       libraryDependencies ++= Seq(
         "com.datastax.cassandra" %  "cassandra-driver-core" % "3.0.2",
         "org.monifu"             %% "monifu"                % "1.2"
       )
     )
-    .dependsOn(`quill-core` % "compile->compile;test->test")
+    .dependsOn(`quill-core-jvm` % "compile->compile;test->test")
 
 lazy val `tut-sources` = Seq(
   "CASSANDRA.md",
@@ -154,11 +187,12 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
   scalaVersion := "2.11.8",
   libraryDependencies ++= Seq(
     "org.scalamacros" %% "resetallattrs"  % "1.0.0",
-    "org.scalatest"   %% "scalatest"      % "2.2.6" % "test",
-    "ch.qos.logback"  % "logback-classic" % "1.1.7" % "test",
-    "com.google.code.findbugs" % "jsr305" % "3.0.1" % "provided" // just to avoid warnings during compilation
+    "org.scalatest"   %%% "scalatest"     % "3.0.0-RC2" % "test",
+    "ch.qos.logback"  % "logback-classic" % "1.1.7"     % "test",
+    "com.google.code.findbugs" % "jsr305" % "3.0.1"     % "provided" // just to avoid warnings during compilation
   ),
   EclipseKeys.createSrc := EclipseCreateSrc.Default + EclipseCreateSrc.Resource,
+  EclipseKeys.useProjectId := true,
   unmanagedClasspath in Test ++= Seq(
     baseDirectory.value / "src" / "test" / "resources"
   ),
@@ -176,7 +210,6 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
     "-Xfuture",
     "-Ywarn-unused-import"
   ),
-  fork in Test := true,
   concurrentRestrictions in Global += Tags.limit(Tags.Test, 1),
   releasePublishArtifactsAction := PgpKeys.publishSigned.value,
   scoverage.ScoverageKeys.coverageMinimum := 96,

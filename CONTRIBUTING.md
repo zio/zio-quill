@@ -20,6 +20,11 @@ After that, just run the command bellow to build and test the project.
 
 `docker-compose run --rm sbt sbt test`
 
+## Building Scala.js targets
+
+The Scala.js targets are disabled by default, use `sbt "project quill-with-js"` to enable them.
+The CI build also sets this `project quill-with-js` to force the Scala.js compilation.
+
 ## Changing database schema
 
 If you have changed any file that creates a database schema, you will
@@ -41,9 +46,7 @@ In order to contribute to the project, just do as follows:
 
 ### Improve build performance with Docker *(for Mac users only)*
 
-Please, install and run [docker-machine-nfs](https://github.com/adlogix/docker-machine-nfs).
-It will change the default file sharing of your [docker-machine](https://docs.docker.com/machine/)
-from Virtual Box Shared Folders to NFS, which is a lot faster. 
+Use [docker for mac](https://docs.docker.com/engine/installation/mac/#/docker-for-mac).
 
 ## File Formatting 
 

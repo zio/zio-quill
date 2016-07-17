@@ -126,6 +126,8 @@ class EncodingSpec extends Spec {
     e.o7 mustEqual a.o7
     e.o8.map(_.toList) mustEqual a.o8.map(_.toList)
     e.o9 mustEqual a.o9
+
+    ()
   }
 
   case class EncodingTestEntity(
