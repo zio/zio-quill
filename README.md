@@ -972,14 +972,14 @@ The transformations are applied from left to right.
 
 The string passed to the context is used as the key to obtain configurations using the [typesafe config](http://github.com/typesafehub/config) library.
 
-Additionally, any member of a context can be overriden. Example:
+Additionally, the contexts provide multiple constructors. For instance, with `JdbcContext` it's possible to specify a `DataSource` directly, without using the configuration:
 
-```
-lazy val ctx = new JdbcContext[MySQLDialect, SnakeCase]("db") {
-  override def dataContext = ??? // create the datasource manually
-}
+```scala
+def createDataSource: javax.sql.DataSource with java.io.Closeable = ???
 
+lazy val ctx = new JdbcContext[MySQLDialect, SnakeCase](createDataSource)
 ```
+
 ##### quill-jdbc
 
 Quill uses [HikariCP](https://github.com/brettwooldridge/HikariCP) for connection pooling. Please refer to HikariCP's [documentation](https://github.com/brettwooldridge/HikariCP#configuration-knobs-baby) for a detailed explanation of the available configurations.
