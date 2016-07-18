@@ -1055,7 +1055,7 @@ sbt dependencies
 ```
 libraryDependencies ++= Seq(
   "mysql" % "mysql-connector-java" % "5.1.38",
-  "io.getquill" %% "quill-jdbc" % "0.8.0"
+  "io.getquill" %% "quill-jdbc" % "0.8.1-SNAPSHOT"
 )
 ```
 
@@ -1082,7 +1082,7 @@ sbt dependencies
 ```
 libraryDependencies ++= Seq(
   "org.postgresql" % "postgresql" % "9.4.1208",
-  "io.getquill" %% "quill-jdbc" % "0.8.0"
+  "io.getquill" %% "quill-jdbc" % "0.8.1-SNAPSHOT"
 )
 ```
 
@@ -1108,7 +1108,7 @@ sbt dependencies
 ```
 libraryDependencies ++= Seq(
   "org.xerial" % "sqlite-jdbc" % "3.8.11.2",
-  "io.getquill" %% "quill-jdbc" % "0.8.0"
+  "io.getquill" %% "quill-jdbc" % "0.8.1-SNAPSHOT"
 )
 ```
 
@@ -1167,7 +1167,7 @@ Note that the global execution context is renamed to ec.
 sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async" % "0.8.0"
+  "io.getquill" %% "quill-async" % "0.8.1-SNAPSHOT"
 )
 ```
 
@@ -1194,7 +1194,7 @@ ctx.poolValidationInterval=100
 sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async" % "0.8.0"
+  "io.getquill" %% "quill-async" % "0.8.1-SNAPSHOT"
 )
 ```
 
@@ -1234,7 +1234,7 @@ The body of `transaction` can contain calls to other methods and multiple `run` 
 sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-finagle-mysql" % "0.8.0"
+  "io.getquill" %% "quill-finagle-mysql" % "0.8.1-SNAPSHOT"
 )
 ```
 
@@ -1262,7 +1262,7 @@ Cassandra Contexts
 sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-cassandra" % "0.8.0"
+  "io.getquill" %% "quill-cassandra" % "0.8.1-SNAPSHOT"
 )
 ```
 
