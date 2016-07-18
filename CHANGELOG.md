@@ -1,3 +1,32 @@
+# 0.8.0 / 17-Jul-2016
+
+**see migration notes below**
+
+* [introduce contexts](https://github.com/getquill/quill/pull/417)
+* [sqlite support](https://github.com/getquill/quill/pull/449)
+* [scala.js support](https://github.com/getquill/quill/pull/452)
+* [support `toInt` and `toLong`](https://github.com/getquill/quill/pull/428)
+* [quill-jdbc: support nested `transaction` calls](https://github.com/getquill/quill/pull/430)
+* [fix bind order for take/drop with extra param](https://github.com/getquill/quill/pull/429)
+* [quotation: allow lifting of `AnyVal`s ](https://github.com/getquill/quill/pull/421)
+* [make liftable values work for the cassandra module](https://github.com/getquill/quill/pull/425)
+* [apply intermediate map before take/drop](https://github.com/getquill/quill/pull/419)
+* [support decoding of optional single-value case classes](https://github.com/getquill/quill/pull/420)
+* [make type aliases for `run` results public](https://github.com/getquill/quill/pull/440)
+* [fail compilation if query is defined outside a `quote`](https://github.com/getquill/quill/pull/433)
+* [fix empty sql string](https://github.com/getquill/quill/pull/443)
+
+### Migration notes
+
+This version [introduces `Context`](https://github.com/getquill/quill/pull/417) as a relacement for `Source`. This change makes the quotation creation dependent on the context to open the path for a few refactorings and improvements we're planning to work on before the `1.0-RC1` release.
+
+Migration steps:
+
+- Remove any import that is not `import io.getquill._`
+- Replace the `Source` creation by a `Context` creation. See the [readme](https://github.com/getquill/quill#contexts) for more details. All types necessary to create the context instances are provided by `import io.getquill._`.
+- Instead of importing from `io.getquill._` to create quotations, import from you context instance `import myContext._`. The context import will provide all types and methods to interact with quotations and the database.
+- See the documentation about [dependent contexts](https://github.com/getquill/quill#dependent-contexts) in case you get compilation errors because of type mismatches.
+
 # 0.7.0 / 2-Jul-2016
 
 * [transform quoted reference](https://github.com/getquill/quill/pull/416)
