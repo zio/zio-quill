@@ -21,6 +21,7 @@ then
 		git fetch --unshallow
 		git checkout master || git checkout -b master
 		git reset --hard origin/master
+		git push --delete origin website
 		sbt tut 'release with-defaults'
 	elif [[ $TRAVIS_BRANCH == "master" ]]
 	then
