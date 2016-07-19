@@ -17,6 +17,7 @@ lazy val quill =
 
 lazy val `quill-with-js` = 
   (project in file("."))
+    .settings(name := "quill")
     .settings(tutSettings ++ commonSettings)
     .settings(`tut-settings`:_*)
     .dependsOn(
