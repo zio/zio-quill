@@ -228,7 +228,7 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
     .setPreference(SpaceBeforeColon, false)
     .setPreference(SpaceInsideBrackets, false)
     .setPreference(SpaceInsideParentheses, false)
-    .setPreference(PreserveDanglingCloseParenthesis, false)
+    .setPreference(DanglingCloseParenthesis, Force)
     .setPreference(IndentSpaces, 2)
     .setPreference(IndentLocalDefs, false)
     .setPreference(SpacesWithinPatternBinders, true)
