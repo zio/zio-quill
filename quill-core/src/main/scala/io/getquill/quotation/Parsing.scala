@@ -99,12 +99,12 @@ trait Parsing extends EntityConfigParsing {
   }
 
   val bindingParser: Parser[Binding] = Parser[Binding] {
-    case q"$pack.lift[$t]($value)" if(t.tpe <:< c.weakTypeOf[AnyVal]) => 
+    case q"$pack.lift[$t]($value)" if (t.tpe <:< c.weakTypeOf[AnyVal]) =>
       t.tpe.members.collect {
         case m: MethodSymbol if (m.isPrimaryConstructor) => m.paramLists.flatten
       }.flatten.headOption match {
         case Some(param) => CompileTimeBinding(c.typecheck(q"$value.${param.name.toTermName}"))
-        case None => CompileTimeBinding(value)
+        case None        => CompileTimeBinding(value)
       }
     case q"$pack.lift[$t]($value)" => CompileTimeBinding(value)
   }
@@ -134,7 +134,7 @@ trait Parsing extends EntityConfigParsing {
     case q"$pack.float2Float(${ astParser(v) })"               => v
     case q"$pack.double2Double(${ astParser(v) })"             => v
     case q"$pack.boolean2Boolean(${ astParser(v) })"           => v
-    case q"$pack.augmentString(${ astParser(v) })"           => v
+    case q"$pack.augmentString(${ astParser(v) })"             => v
     case q"$pack.unaugmentString(${ astParser(v) })"           => v
 
     case q"$pack.Byte2byte(${ astParser(v) })"                 => v
@@ -153,16 +153,16 @@ trait Parsing extends EntityConfigParsing {
       val config = parseEntityConfig(body)
       ConfiguredEntity(astParser(source), config.alias, config.properties, config.generated)
 
-    case q"$pack.query[${ t: Type }]($ct)" if(t.typeSymbol.isClass) =>
+    case q"$pack.query[${ t: Type }]($ct)" if (t.typeSymbol.isClass) =>
       SimpleEntity(t.typeSymbol.name.decodedName.toString)
-      
-    case q"$pack.query[$_]($ct)" =>
+
+    case q"$pack.query[${ _ }]($ct)" =>
       Dynamic {
         c.typecheck(q"""
-          new ${c.prefix}.Quoted[${c.prefix}.EntityQuery[T]] {
-            override def ast = io.getquill.ast.SimpleEntity($ct.runtimeClass.getSimpleName)
-          }  
-        """)
+              new ${c.prefix}.Quoted[${c.prefix}.EntityQuery[T]] {
+                override def ast = io.getquill.ast.SimpleEntity($ct.runtimeClass.getSimpleName)
+              }
+            """)
       }
 
     case q"$source.filter(($alias) => $body)" if (is[CoreDsl#Query[Any]](source)) =>
@@ -183,8 +183,8 @@ trait Parsing extends EntityConfigParsing {
     case q"$source.groupBy[$t](($alias) => $body)" if (is[CoreDsl#Query[Any]](source)) =>
       GroupBy(astParser(source), identParser(alias), astParser(body))
 
-    case q"$a.min[$t]" if (is[CoreDsl#Query[Any]](a)) => Aggregation(AggregationOperator.`min`, astParser(a))
-    case q"$a.max[$t]" if (is[CoreDsl#Query[Any]](a)) => Aggregation(AggregationOperator.`max`, astParser(a))
+    case q"$a.min[$t]" if (is[CoreDsl#Query[Any]](a))     => Aggregation(AggregationOperator.`min`, astParser(a))
+    case q"$a.max[$t]" if (is[CoreDsl#Query[Any]](a))     => Aggregation(AggregationOperator.`max`, astParser(a))
     case q"$a.avg[$t]($n)" if (is[CoreDsl#Query[Any]](a)) => Aggregation(AggregationOperator.`avg`, astParser(a))
     case q"$a.sum[$t]($n)" if (is[CoreDsl#Query[Any]](a)) => Aggregation(AggregationOperator.`sum`, astParser(a))
     case q"$a.size" if (is[CoreDsl#Query[Any]](a))        => Aggregation(AggregationOperator.`size`, astParser(a))
@@ -220,14 +220,14 @@ trait Parsing extends EntityConfigParsing {
   }
 
   implicit val orderingParser: Parser[Ordering] = Parser[Ordering] {
-    case q"$pack.implicitOrd[$t]"            => AscNullsFirst
-    case q"$pack.Ord.apply[..$t](..$elems)"  => TupleOrdering(elems.map(orderingParser(_)))
-    case q"$pack.Ord.asc[$t]"                => Asc
-    case q"$pack.Ord.desc[$t]"               => Desc
-    case q"$pack.Ord.ascNullsFirst[$t]"      => AscNullsFirst
-    case q"$pack.Ord.descNullsFirst[$t]"     => DescNullsFirst
-    case q"$pack.Ord.ascNullsLast[$t]"       => AscNullsLast
-    case q"$pack.Ord.descNullsLast[$t]"      => DescNullsLast
+    case q"$pack.implicitOrd[$t]"           => AscNullsFirst
+    case q"$pack.Ord.apply[..$t](..$elems)" => TupleOrdering(elems.map(orderingParser(_)))
+    case q"$pack.Ord.asc[$t]"               => Asc
+    case q"$pack.Ord.desc[$t]"              => Desc
+    case q"$pack.Ord.ascNullsFirst[$t]"     => AscNullsFirst
+    case q"$pack.Ord.descNullsFirst[$t]"    => DescNullsFirst
+    case q"$pack.Ord.ascNullsLast[$t]"      => AscNullsLast
+    case q"$pack.Ord.descNullsLast[$t]"     => DescNullsLast
   }
 
   implicit val propertyAliasParser: Parser[PropertyAlias] = Parser[PropertyAlias] {
@@ -342,7 +342,7 @@ trait Parsing extends EntityConfigParsing {
       case "+"           => StringOperator.`+`
       case "toUpperCase" => StringOperator.`toUpperCase`
       case "toLowerCase" => StringOperator.`toLowerCase`
-      case "toLong"       => StringOperator.`toLong`
+      case "toLong"      => StringOperator.`toLong`
       case "toInt"       => StringOperator.`toInt`
     }
 
