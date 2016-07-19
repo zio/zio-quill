@@ -74,7 +74,7 @@ class BindedStatementBuilder[S] {
     if (bindings.isEmpty)
       (query, identity[S] _)
     else
-      (expandedQuery.mkString.replaceAll("[0-9a-zA-Z\\.\\`]+\\s+IN\\s+\\(\\s*\\)", "FALSE"), (setValues _).andThen(_._1))
+      (expandedQuery.mkString.replaceAll("[_0-9a-zA-Z\\.\\`]+\\s+IN\\s+\\(\\s*\\)", "FALSE"), (setValues _).andThen(_._1))
   }
 
   def emptySet = ""
