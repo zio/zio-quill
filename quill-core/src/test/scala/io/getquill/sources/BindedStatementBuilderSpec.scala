@@ -52,6 +52,18 @@ class BindedStatementBuilderSpec extends Spec {
     bind(List()) mustEqual List(1, 2)
   }
 
+  "empty set binding" in {
+    val subject = new Subject
+    val query = "SELECT * FROM Test WHERE id IN (?)"
+
+    subject.coll(0, Set.empty[Int], enc)
+
+    val (expanded, bind) = subject.build(query)
+
+    expanded mustEqual "SELECT * FROM Test WHERE FALSE"
+    bind(List()) mustEqual List()
+  }
+
   "mixed" in {
     val subject = new Subject
     val query = "SELECT age - ? FROM Test WHERE id IN (?) AND age > ?"

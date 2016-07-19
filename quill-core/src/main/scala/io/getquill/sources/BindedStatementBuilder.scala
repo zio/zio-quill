@@ -46,11 +46,7 @@ class BindedStatementBuilder[S] {
         case ('?' :: qtail, (bind: SingleBinding[_, _]) :: btail) =>
           expand(qtail, btail, acc :+ '?')
         case ('?' :: qtail, (bind: SetBinding[_, _]) :: btail) =>
-          val expanded = if (bind.values.isEmpty) {
-            emptySet.toList
-          } else {
-            List.fill(bind.values.size)('?').mkString(", ").toList
-          }
+          val expanded = List.fill(bind.values.size)('?').mkString(", ").toList
           expand(qtail, btail, acc ++ expanded)
         case other =>
           throw new IllegalStateException("Number of bindings doesn't match the question marks.")
@@ -78,7 +74,7 @@ class BindedStatementBuilder[S] {
     if (bindings.isEmpty)
       (query, identity[S] _)
     else
-      (expandedQuery.mkString, (setValues _).andThen(_._1))
+      (expandedQuery.mkString.replaceAll("\\S+\\s+IN\\s+\\(\\s*\\)", "FALSE"), (setValues _).andThen(_._1))
   }
 
   def emptySet = ""
