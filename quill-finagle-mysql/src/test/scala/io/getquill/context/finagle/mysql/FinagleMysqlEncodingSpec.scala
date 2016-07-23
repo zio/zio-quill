@@ -44,6 +44,19 @@ class FinagleMysqlEncodingSpec extends EncodingSpec {
     }
   }
 
+  "Integer type with Long" in {
+    case class IntLong(o6: Long)
+    val entity = quote { query[IntLong].schema(_.entity("EncodingTestEntity")) }
+    val insert = quote {
+      entity.insert(_.o6 -> 5589)
+    }
+    val q = quote {
+      entity.filter(_.o6 == 5589)
+    }
+    Await.result(testContext.run(insert))
+    Await.result(testContext.run(q)).nonEmpty mustEqual true
+  }
+
   "decode boolean types" - {
     case class BooleanEncodingTestEntity(
       v1: Boolean,

@@ -79,6 +79,7 @@ trait FinagleMysqlDecoders {
     }
   implicit val longDecoder: Decoder[Long] =
     decoder[Long] {
+      case IntValue(v)  => v.toLong
       case LongValue(v) => v
     }
   implicit val floatDecoder: Decoder[Float] =
