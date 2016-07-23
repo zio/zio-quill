@@ -1317,6 +1317,17 @@ Cassandra libraries comparison
 
 Please refer to [CASSANDRA.md](https://github.com/getquill/quill/blob/master/CASSANDRA.md) for a detailed comparison between Quill and other main alternatives for interaction with Cassandra in Scala.
 
+External content
+----------------
+
+**Talks**
+
+ScalaDays Berlin 2016 - [Scylla, Charybdis, and the mystery of Quill](https://www.youtube.com/watch?v=nqSYccoSeio)
+
+**Blog posts**
+
+Scalac.io blog - [Compile-time Queries with Quill](http://blog.scalac.io/2016/07/21/compile-time-queries-with-quill.html)
+
 Code of Conduct
 ---------------
 
