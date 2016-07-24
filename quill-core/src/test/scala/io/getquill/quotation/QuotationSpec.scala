@@ -839,6 +839,10 @@ class QuotationSpec extends Spec {
           test[TestEntity].ast mustEqual Map(Entity("TestEntity"), Ident("t"), Constant(1))
         }
       }
+      "forced" in {
+        val q = quote(1).dynamic
+        "q.ast: Constant" mustNot compile
+      }
     }
     "if" - {
       "simple" in {
