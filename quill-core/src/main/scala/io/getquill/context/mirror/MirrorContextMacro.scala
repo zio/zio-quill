@@ -3,10 +3,8 @@ package io.getquill.context.mirror
 import scala.reflect.macros.whitebox.{ Context => MacroContext }
 
 import io.getquill.MirrorContext
-import io.getquill.ast.Ast
-import io.getquill.ast.Ident
+import io.getquill.ast.{ Ast, CollectAst, Ident, Returning }
 import io.getquill.context.ContextMacro
-import io.getquill.context.ExtractEntityAndInsertAction
 import io.getquill.norm.Normalize
 import io.getquill.quotation.IsDynamic
 import io.getquill.util.Messages.RichContext
@@ -17,25 +15,30 @@ class MirrorContextMacro(val c: MacroContext) extends ContextMacro {
   override protected def prepare(ast: Ast, params: List[Ident]) =
     IsDynamic(ast) match {
       case false =>
+        val returning = CollectAst(ast) {
+          case Returning(_, property) => property
+        }.headOption
+
         val normalized = Normalize(ast)
+
         probeQuery[MirrorContext](_.probe(normalized))
         c.info(normalized.toString)
-        val (entity, insert) = ExtractEntityAndInsertAction(normalized)
-        val isInsert = insert.isDefined
-        val generated = if (isInsert) entity.flatMap(_.generated) else None
-        q"($normalized, $params, $generated)"
+
+        q"($normalized, $params, $returning)"
       case true =>
         q"""
           import io.getquill.norm._
           import io.getquill.ast._
-          import io.getquill.context.ExtractEntityAndInsertAction
 
-          val normalized = Normalize($ast: Ast)
-          val (entity, insert) = ExtractEntityAndInsertAction(normalized)
-          val isInsert = insert.isDefined
-          val generated = if (isInsert) entity.flatMap(_.generated) else None
+          val ast = ${ast: Ast}: Ast
 
-          (normalized, $params, generated)
+          val returning = CollectAst(ast) {
+            case Returning(_, property) => property
+          }.headOption
+
+          val normalized = Normalize(ast)
+
+          (normalized, $params, returning)
         """
     }
 }

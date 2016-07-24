@@ -16,66 +16,79 @@ trait ActionMacro extends EncodingMacro {
   val c: MacroContext
   import c.universe.{ Ident => _, _ }
 
-  def runAction[S, T](
+  def runAction[R, S, T](
     quotedTree:     Tree,
     action:         Ast,
     inPlaceParams:  collection.Map[Ident, (c.Type, c.Tree)],
     functionParams: List[(Ident, c.Type)]
   )(
     implicit
+    r: WeakTypeTag[R],
     s: WeakTypeTag[S],
     t: WeakTypeTag[T]
-  ): Tree =
+  ): Tree = {
+
     functionParams match {
       case Nil =>
         val encodedParams = EncodeParams[S](c)(inPlaceParams, collection.Map())
-        expandedTreeSingle(quotedTree, action, inPlaceParams.map(_._1).toList, encodedParams)
+        expandedTreeSingle[R](quotedTree, action, inPlaceParams.map(_._1).toList, encodedParams, returningType(t.tpe))
 
-      case List((param, tpe)) if (t.tpe.erasure <:< c.weakTypeOf[CoreDsl#UnassignedAction[Any]].erasure) =>
+      case List((param, tpe)) if (t.tpe.erasure <:< c.weakTypeOf[CoreDsl#UnassignedAction[Any, Any]].erasure) =>
         val encodingValue = encoding(param, Encoding.inferEncoder[S](c))(c.WeakTypeTag(tpe))
         val bindings = bindingMap(encodingValue)
         val idents = bindings.map(_._1).toList
         val assignedAction = AssignedAction(action, idents.map(k => Assignment(Ident("x"), k.name, k)))
         val encodedParams = EncodeParams[S](c)(inPlaceParams, bindings.toMap)
 
-        expandedTreeBatch(quotedTree, assignedAction, idents.toList ++ inPlaceParams.map(_._1), List(tpe), encodedParams)
+        expandedTreeBatch[R](quotedTree, assignedAction, idents.toList ++ inPlaceParams.map(_._1), List(tpe), encodedParams, returningType(t.tpe))
 
       case functionParams =>
         val encodedParams = EncodeParams[S](c)(bindingMap(functionParams) ++ inPlaceParams, collection.Map())
-        expandedTreeBatch(quotedTree, action, functionParams.map(_._1) ++ inPlaceParams.map(_._1), functionParams.map(_._2), encodedParams)
+        expandedTreeBatch[R](quotedTree, action, functionParams.map(_._1) ++ inPlaceParams.map(_._1), functionParams.map(_._2), encodedParams, returningType(t.tpe))
     }
+  }
 
-  private def expandedTreeSingle(quotedTree: Tree, action: Ast, idents: List[Ident], encodedParams: Tree) = {
+  private def returningExtractor[R](returnType: c.Type)(implicit r: WeakTypeTag[R]) = {
+    val returnWeakTypeTag = c.WeakTypeTag(returnType)
+    val selectValues = encoding(Ident("X"), Encoding.inferDecoder[R](c))(returnWeakTypeTag)
+    selectResultExtractor[R](selectValues)
+  }
+
+  private def expandedTreeSingle[R](quotedTree: Tree, action: Ast, idents: List[Ident], encodedParams: Tree, returningType: Type)(implicit r: WeakTypeTag[R]) = {
     q"""
     {
       val quoted = $quotedTree
-      val (sql, bindings: List[io.getquill.ast.Ident], generated) =
+      val (sql, bindings: List[io.getquill.ast.Ident], returning) =
         ${prepare(action, idents)}
 
-      ${c.prefix}.executeAction(
+      ${c.prefix}.executeAction[$returningType](
         sql,
         $encodedParams(bindings.map(_.name)),
-        generated
+        returning,
+        ${returningExtractor(returningType)(r)}
         )
     }
     """
   }
 
-  private def expandedTreeBatch(quotedTree: Tree, action: Ast, idents: List[Ident], paramsTypes: List[Type], encodedParams: Tree) = {
+  private def expandedTreeBatch[R](quotedTree: Tree, action: Ast, idents: List[Ident], paramsTypes: List[Type], encodedParams: Tree, returningType: Type)(implicit r: WeakTypeTag[R]) = {
     q"""
     {
       val quoted = $quotedTree
-      val (sql, bindings: List[io.getquill.ast.Ident], generated) =
+      val (sql, bindings: List[io.getquill.ast.Ident], returning) =
         ${prepare(action, idents)}
 
-      ${c.prefix}.executeActionBatch[(..$paramsTypes)](
+      ${c.prefix}.executeActionBatch[(..$paramsTypes), $returningType](
         sql,
         value => $encodedParams(bindings.map(_.name)),
-        generated
+        returning,
+        ${returningExtractor(returningType)(r)}
         )
     }
     """
   }
+
+  private def returningType(tpe: Type): Type = tpe.baseType(c.typeOf[CoreDsl#Action[_, _]].typeSymbol).typeArgs(1)
 
   private def bindingMap(value: Value, option: Boolean = false): List[(Ident, (Tree, Tree))] =
     value match {

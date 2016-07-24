@@ -1,25 +1,17 @@
 package io.getquill.context.sql
 
-import io.getquill.ast.Ast
-import io.getquill.ast.Entity
-import io.getquill.ast.Ident
-import io.getquill.ast.Query
-import io.getquill.context.ExtractEntityAndInsertAction
-import io.getquill.context.sql.idiom.SqlIdiom
-import io.getquill.context.sql.norm.ExpandJoin
-import io.getquill.context.sql.norm.ExpandNestedQueries
-import io.getquill.context.sql.norm.MergeSecondaryJoin
+import io.getquill.ast._
+import io.getquill.context.sql.idiom.{ ReturningColumn, SqlIdiom }
+import io.getquill.context.sql.norm.{ ExpandJoin, ExpandNestedQueries, MergeSecondaryJoin, NormalizeReturning }
 import io.getquill.NamingStrategy
-import io.getquill.norm.FlattenOptionOperation
-import io.getquill.norm.Normalize
-import io.getquill.norm.RenameAssignments
-import io.getquill.norm.RenameProperties
+import io.getquill.norm._
 import io.getquill.util.Messages.fail
 import io.getquill.util.Show.Shower
 
 object Prepare {
 
   def apply(ast: Ast, params: List[Ident])(implicit d: SqlIdiom, n: NamingStrategy) = {
+    val returningColumn = ReturningColumn(ast)
     val (bindedAst, idents) = BindVariables(normalize(ast), params)
     import d._
     val sqlString =
@@ -32,21 +24,12 @@ object Prepare {
           other.show
       }
 
-    val (entity, insert) = ExtractEntityAndInsertAction(bindedAst)
-    val isInsert = insert.isDefined
-
-    val generated = if (isInsert) entity.flatMap(nameGeneratedColumn) else None
-
-    (sqlString, idents, generated)
-  }
-
-  private def nameGeneratedColumn(entity: Entity)(implicit n: NamingStrategy): Option[String] = {
-    val propertyAlias = entity.properties.map(p => p.property -> p.alias).toMap
-    entity.generated.map(g => propertyAlias.getOrElse(g, n.column(g)))
+    (sqlString, idents, returningColumn)
   }
 
   private[this] val normalize =
     (identity[Ast] _)
+      .andThen(NormalizeReturning.apply _)
       .andThen(Normalize.apply _)
       .andThen(ExpandJoin.apply _)
       .andThen(Normalize.apply _)

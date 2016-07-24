@@ -21,7 +21,8 @@ class ProductMysqlAsyncSpec extends ProductSpec {
 
   "Product" - {
     "Insert multiple products" in {
-      val inserted = await(Future.sequence(productEntries.map(product => testContext.run(productInsert)(product))))
+      val inserted =
+        await(Future.sequence(productEntries.map(product => testContext.run(productInsert)(List(product)).map(_.head))))
       val product = await(testContext.run(productById(inserted(2)))).head
       product.description mustEqual productEntries(2).description
       product.id mustEqual inserted(2)
@@ -35,7 +36,11 @@ class ProductMysqlAsyncSpec extends ProductSpec {
 
     "Single insert with inlined free variable" in {
       val prd = Product(0L, "test1", 1L)
-      val inserted = await(testContext.run(product.insert(_.sku -> lift(prd.sku), _.description -> lift(prd.description))))
+      val inserted = await {
+        testContext.run {
+          product.insert(_.sku -> lift(prd.sku), _.description -> lift(prd.description)).returning(_.id)
+        }
+      }
       val returnedProduct = await(testContext.run(productById(inserted))).head
       returnedProduct.description mustEqual "test1"
       returnedProduct.sku mustEqual 1L
@@ -44,7 +49,9 @@ class ProductMysqlAsyncSpec extends ProductSpec {
 
     "Single insert with free variable and explicit quotation" in {
       val prd = Product(0L, "test2", 2L)
-      val q1 = quote { product.insert(_.sku -> lift(prd.sku), _.description -> lift(prd.description)) }
+      val q1 = quote {
+        product.insert(_.sku -> lift(prd.sku), _.description -> lift(prd.description)).returning(_.id)
+      }
       val inserted = await(testContext.run(q1))
       val returnedProduct = await(testContext.run(productById(inserted))).head
       returnedProduct.description mustEqual "test2"

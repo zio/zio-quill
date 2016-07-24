@@ -28,10 +28,10 @@ class MirrorContext
   def run[P1, P2, T](quoted: Quoted[(P1, P2) => Query[T]]): (P1, P2) => QueryMirror[T] = macro MirrorContextMacro.run[Row, Row]
   def run[P1, P2, P3, T](quoted: Quoted[(P1, P2, P3) => Query[T]]): (P1, P2, P3) => QueryMirror[T] = macro MirrorContextMacro.run[Row, Row]
 
-  def run[T](quoted: Quoted[Action[T]]): ActionMirror = macro MirrorContextMacro.run[Row, Row]
-  def run[P1, T](quoted: Quoted[P1 => Action[T]]): List[P1] => BatchActionMirror = macro MirrorContextMacro.run[Row, Row]
-  def run[P1, P2, T](quoted: Quoted[(P1, P2) => Action[T]]): List[(P1, P2)] => BatchActionMirror = macro MirrorContextMacro.run[Row, Row]
-  def run[P1, P2, P3, T](quoted: Quoted[(P1, P2, P3) => Action[T]]): List[(P1, P2, P3)] => BatchActionMirror = macro MirrorContextMacro.run[Row, Row]
+  def run[T, O](quoted: Quoted[Action[T, O]]): ActionMirror = macro MirrorContextMacro.run[Row, Row]
+  def run[P1, T, O](quoted: Quoted[P1 => Action[T, O]]): List[P1] => BatchActionMirror = macro MirrorContextMacro.run[Row, Row]
+  def run[P1, P2, T, O](quoted: Quoted[(P1, P2) => Action[T, O]]): List[(P1, P2)] => BatchActionMirror = macro MirrorContextMacro.run[Row, Row]
+  def run[P1, P2, P3, T, O](quoted: Quoted[(P1, P2, P3) => Action[T, O]]): List[(P1, P2, P3)] => BatchActionMirror = macro MirrorContextMacro.run[Row, Row]
 
   def run[T](quoted: Quoted[T]): QueryMirror[T] = macro MirrorContextMacro.run[Row, Row]
   def run[P1, T](quoted: Quoted[P1 => T]): P1 => QueryMirror[T] = macro MirrorContextMacro.run[Row, Row]
@@ -44,18 +44,18 @@ class MirrorContext
     else
       Success(())
 
-  case class ActionMirror(ast: Ast, bind: Row)
+  case class ActionMirror(ast: Ast, bind: Row, returning: Option[String])
 
   def transaction[T](f: MirrorContext => T) = f(this)
 
-  def executeAction(ast: Ast, bindParams: Row => Row = identity, generated: Option[String] = None) =
-    ActionMirror(ast, bindParams(Row()))
+  def executeAction[O](ast: Ast, bindParams: Row => Row = identity, returning: Option[String] = None, returningExtractor: Row => O = identity[Row] _) =
+    ActionMirror(ast, bindParams(Row()), returning)
 
-  case class BatchActionMirror(ast: Ast, bindList: List[Row])
+  case class BatchActionMirror(ast: Ast, bindList: List[Row], returning: Option[String])
 
-  def executeActionBatch[T](ast: Ast, bindParams: T => Row => Row = (_: T) => identity[Row] _, generated: Option[String] = None) =
+  def executeActionBatch[T, O](ast: Ast, bindParams: T => Row => Row = (_: T) => identity[Row] _, returning: Option[String] = None, returningExtractor: Row => O = identity[Row] _) =
     (values: List[T]) =>
-      BatchActionMirror(ast, values.map(bindParams).map(_(Row())))
+      BatchActionMirror(ast, values.map(bindParams).map(_(Row())), returning)
 
   case class QueryMirror[T](ast: Ast, binds: Row, extractor: Row => T)
 

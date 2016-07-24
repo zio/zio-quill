@@ -6,8 +6,7 @@ import io.getquill.ast.PropertyAlias
 
 case class EntityConfig(
   alias:      Option[String]      = None,
-  properties: List[PropertyAlias] = List(),
-  generated:  Option[String]      = None
+  properties: List[PropertyAlias] = List()
 )
 
 trait EntityConfigParsing extends UnicodeArrowParsing {
@@ -22,8 +21,6 @@ trait EntityConfigParsing extends UnicodeArrowParsing {
         parseEntityConfig(e).copy(alias = Some(name))
       case q"$e.columns(..$propertyAliases)" =>
         parseEntityConfig(e).copy(properties = propertyAliases.map(propertyAliasParser(_)))
-      case q"$e.generated(($alias) => $body)" =>
-        parseEntityConfig(e).copy(generated = Some(parseProperty(body)))
       case _ =>
         EntityConfig()
     }

@@ -19,8 +19,8 @@ class SqlMirrorContext[N <: NamingStrategy]
 
   type SingleQueryResult[T] = QueryMirror[T]
   type QueryResult[T] = QueryMirror[T]
-  type ActionResult[T] = ActionMirror
-  type BatchedActionResult[T] = BatchActionMirror
+  type ActionResult[T, O] = ActionMirror
+  type BatchedActionResult[T, O] = BatchActionMirror
 
   class ActionApply[T](f: List[T] => BatchActionMirror)
     extends Function1[List[T], BatchActionMirror] {
@@ -39,12 +39,12 @@ class SqlMirrorContext[N <: NamingStrategy]
 
   case class ActionMirror(sql: String, bind: Row, generated: Option[String])
 
-  def executeAction(sql: String, bind: Row => Row = identity, generated: Option[String] = None) =
+  def executeAction[O](sql: String, bind: Row => Row = identity, generated: Option[String] = None, returningExtractor: Row => O = identity[Row] _) =
     ActionMirror(sql, bind(Row()), generated)
 
   case class BatchActionMirror(sql: String, bindList: List[Row], generated: Option[String])
 
-  def executeActionBatch[T](sql: String, bindParams: T => Row => Row = (_: T) => identity[Row] _, generated: Option[String] = None) = {
+  def executeActionBatch[T, O](sql: String, bindParams: T => Row => Row = (_: T) => identity[Row] _, generated: Option[String] = None, returningExtractor: Row => O = identity[Row] _) = {
     val func = (values: List[T]) =>
       BatchActionMirror(sql, values.map(bindParams).map(_(Row())), generated)
     new ActionApply(func)

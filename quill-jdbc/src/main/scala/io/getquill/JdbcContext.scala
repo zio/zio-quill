@@ -3,10 +3,10 @@ package io.getquill
 import com.typesafe.config.Config
 import com.typesafe.scalalogging.Logger
 import java.io.Closeable
-import java.sql.Connection
-import java.sql.PreparedStatement
-import java.sql.ResultSet
+import java.sql.{ Connection, PreparedStatement, ResultSet }
+
 import org.slf4j.LoggerFactory
+
 import scala.annotation.tailrec
 import scala.util.Try
 import scala.util.control.NonFatal
@@ -16,10 +16,14 @@ import io.getquill.context.sql.SqlContext
 import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.util.LoadConfig
 import javax.sql.DataSource
+
 import scala.util.DynamicVariable
 import io.getquill.context.jdbc.JdbcDecoders
 import io.getquill.context.jdbc.JdbcEncoders
-import io.getquill.context.jdbc.ActionApply
+
+import scala.reflect.runtime.universe._
+
+//import io.getquill.context.jdbc.ActionApply
 
 class JdbcContext[D <: SqlIdiom, N <: NamingStrategy](dataSource: DataSource with Closeable)
   extends SqlContext[D, N, ResultSet, BindedStatementBuilder[PreparedStatement]]
@@ -35,8 +39,8 @@ class JdbcContext[D <: SqlIdiom, N <: NamingStrategy](dataSource: DataSource wit
 
   type QueryResult[T] = List[T]
   type SingleQueryResult[T] = T
-  type ActionResult[T] = Long
-  type BatchedActionResult[T] = List[Long]
+  type ActionResult[T, O] = O
+  type BatchedActionResult[T, O] = List[O]
 
   private val currentConnection = new DynamicVariable[Option[Connection]](None)
 
@@ -76,43 +80,54 @@ class JdbcContext[D <: SqlIdiom, N <: NamingStrategy](dataSource: DataSource wit
         }
     }
 
-  def executeAction(sql: String, bind: BindedStatementBuilder[PreparedStatement] => BindedStatementBuilder[PreparedStatement] = identity, generated: Option[String] = None): Long =
+  def executeAction[O](
+    sql:                String,
+    bind:               BindedStatementBuilder[PreparedStatement] => BindedStatementBuilder[PreparedStatement] = identity,
+    returning:          Option[String]                                                                         = None,
+    returningExtractor: ResultSet => O                                                                         = identity[ResultSet] _
+  ): O =
     withConnection { conn =>
       logger.info(sql)
       val (expanded, setValues) = bind(new SqlBindedStatementBuilder[PreparedStatement]).build(sql)
       logger.info(expanded)
-      generated match {
-        case None =>
-          val ps = setValues(conn.prepareStatement(expanded))
-          ps.executeUpdate.toLong
-        case Some(column) =>
-          val ps = setValues(conn.prepareStatement(expanded, Array(column)))
-          val rs = ps.executeUpdate
-          extractResult(ps.getGeneratedKeys, _.getLong(1)).head
+
+      val ps = setValues(returning.fold(conn.prepareStatement(sql))(c => conn.prepareStatement(sql, Array(c))))
+      val updateCount = ps.executeUpdate.toLong
+      returning match {
+        case None    => updateCount.asInstanceOf[O] // TODO: get rid of this ugly asInstanceOf
+        case Some(_) => extractResult(ps.getGeneratedKeys, returningExtractor).head
       }
     }
 
-  def executeActionBatch[T](sql: String, bindParams: T => BindedStatementBuilder[PreparedStatement] => BindedStatementBuilder[PreparedStatement] = (_: T) => identity[BindedStatementBuilder[PreparedStatement]] _,
-                            generated: Option[String] = None): ActionApply[T] = {
+  def executeActionBatch[T, O](
+    sql:                String,
+    bindParams:         T => BindedStatementBuilder[PreparedStatement] => BindedStatementBuilder[PreparedStatement] = (_: T) => identity[BindedStatementBuilder[PreparedStatement]] _,
+    returning:          Option[String]                                                                              = None,
+    returningExtractor: ResultSet => O                                                                              = identity[ResultSet] _
+  ): List[T] => List[O] = {
     val func = { (values: List[T]) =>
       withConnection { conn =>
         val groups = values.map(bindParams(_)(new SqlBindedStatementBuilder[PreparedStatement]).build(sql)).groupBy(_._1)
         (for ((sql, setValues) <- groups.toList) yield {
           logger.info(sql)
-          val ps = generated.fold(conn.prepareStatement(sql))(c => conn.prepareStatement(sql, Array(c)))
+          val ps = returning.fold(conn.prepareStatement(sql))(c => conn.prepareStatement(sql, Array(c)))
           for ((_, set) <- setValues) {
             set(ps)
             ps.addBatch
           }
           val updateCount = ps.executeBatch.toList.map(_.toLong)
-          generated.fold(updateCount)(_ => extractResult(ps.getGeneratedKeys, _.getLong(1)))
+          returning match {
+            case None    => updateCount.asInstanceOf[List[O]]
+            case Some(_) => extractResult(ps.getGeneratedKeys, returningExtractor)
+          }
         }).flatten
       }
     }
-    new ActionApply(func)
+    func
   }
 
-  def executeQuery[T](sql: String, extractor: ResultSet => T = identity[ResultSet] _, bind: BindedStatementBuilder[PreparedStatement] => BindedStatementBuilder[PreparedStatement] = identity): List[T] =
+  def executeQuery[T](sql: String, extractor: ResultSet => T = identity[ResultSet] _,
+                      bind: BindedStatementBuilder[PreparedStatement] => BindedStatementBuilder[PreparedStatement] = identity): List[T] =
     withConnection { conn =>
       val (expanded, setValues) = bind(new SqlBindedStatementBuilder[PreparedStatement]).build(sql)
       logger.info(expanded)
