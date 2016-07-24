@@ -13,6 +13,7 @@ private[dsl] trait QuotationDsl {
 
   trait Quoted[+T] {
     def ast: Ast
+    def dynamic: Quoted[T] = this
   }
 
   @compileTimeOnly(NonQuotedException.message)
