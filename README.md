@@ -987,10 +987,10 @@ The SQL dialect to be used by the context is defined by the first type parameter
 
 Quill has three built-in dialects:
 
-- `io.getquill.context.sql.idiom.H2Dialect`
-- `io.getquill.context.sql.idiom.MySQLDialect`
-- `io.getquill.context.sql.idiom.PostgresDialect`
-- `io.getquill.context.sql.idiom.SqliteDialect`
+- `io.getquill.H2Dialect`
+- `io.getquill.MySQLDialect`
+- `io.getquill.PostgresDialect`
+- `io.getquill.SqliteDialect`
 
 #### Naming strategy
 
@@ -1121,6 +1121,28 @@ application.properties
 ```
 ctx.driverClassName=org.sqlite.JDBC
 ctx.jdbcUrl="jdbc:sqlite:/path/to/db/file.db"
+```
+
+**H2**
+
+sbt dependencies
+```
+libraryDependencies ++= Seq(
+  "com.h2database" % "h2" % "1.4.192",
+  "io.getquill" %% "quill-jdbc" % "0.8.1-SNAPSHOT"
+)
+```
+
+context definition
+```scala
+lazy val ctx = new JdbcContext[H2Dialect, SnakeCase]("db")
+```
+
+application.properties
+```
+testH2DB.dataSourceClassName=org.h2.jdbcx.JdbcDataSource
+testH2DB.dataSource.url="jdbc:h2:mem:yourdbname"
+testH2DB.dataSource.user=sa
 ```
 
 ##### quill-async
