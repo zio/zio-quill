@@ -80,6 +80,13 @@ class SqlIdiomSpec extends Spec {
           testContext.run(q).sql mustEqual
             "SELECT x + 1 FROM (SELECT DISTINCT i.i FROM TestEntity i) x"
         }
+        "distinct followed by aggregation" in {
+          val q = quote {
+            qr1.map(i => i.i).distinct.size
+          }
+          testContext.run(q).sql mustEqual
+            "SELECT COUNT(*) FROM (SELECT DISTINCT i.i FROM TestEntity i) x"
+        }
       }
       "sorted" - {
         "simple" in {
