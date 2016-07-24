@@ -161,7 +161,7 @@ object SqlQuery {
       case Aggregation(op, q: Query) =>
         val b = flatten(q, alias)
         b.select match {
-          case head :: Nil =>
+          case head :: Nil if !b.distinct =>
             b.copy(select = List(head.copy(ast = Aggregation(op, head.ast))))
           case other =>
             FlattenSqlQuery(
