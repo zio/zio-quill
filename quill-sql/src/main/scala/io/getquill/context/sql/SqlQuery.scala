@@ -14,6 +14,7 @@ import io.getquill.ast.Join
 import io.getquill.ast.JoinType
 import io.getquill.ast.Map
 import io.getquill.ast.Operation
+import io.getquill.ast.OptionProperty
 import io.getquill.ast.Property
 import io.getquill.ast.PropertyOrdering
 import io.getquill.ast.Query
@@ -76,6 +77,7 @@ object SqlQuery {
       case Union(a, b)                  => SetOperationSqlQuery(apply(a), UnionOperation, apply(b))
       case UnionAll(a, b)               => SetOperationSqlQuery(apply(a), UnionAllOperation, apply(b))
       case UnaryOperation(op, q: Query) => UnaryOperationSqlQuery(op, apply(q))
+      case OptionProperty(a, "get")     => apply(a)
       case _: Operation | _: Value      => FlattenSqlQuery(select = List(SelectValue(query)))
       case q: Query                     => flatten(q, "x")
       case other                        => fail(s"Query not properly normalized. Please open a bug report. Ast: '$other'")

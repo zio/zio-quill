@@ -292,6 +292,15 @@ class StatefulTransformerSpec extends Spec {
       }
     }
 
+    "option property" in {
+      val ast = OptionProperty(Ident("a"), "b")
+      Subject(Nil, Ident("a") -> Ident("a'"))(ast) match {
+        case (at, att) =>
+          at mustEqual OptionProperty(Ident("a'"), "b")
+          att.state mustEqual List(Ident("a"))
+      }
+    }
+
     "if" in {
       val ast: Ast = If(Ident("a"), Ident("b"), Ident("c"))
       Subject(Nil, Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) match {

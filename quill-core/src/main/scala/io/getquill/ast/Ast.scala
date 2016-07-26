@@ -83,6 +83,8 @@ case class Property(ast: Ast, name: String) extends Ast
 
 case class OptionOperation(t: OptionOperationType, ast: Ast, alias: Ident, body: Ast) extends Ast
 
+case class OptionProperty(ast: Ast, property: String) extends Ast
+
 case class If(condition: Ast, `then`: Ast, `else`: Ast) extends Ast
 
 //************************************************************

@@ -16,6 +16,7 @@ object AstShow {
     case ast: Property         => ast.show
     case ast: Infix            => ast.show
     case ast: OptionOperation  => ast.show
+    case ast: OptionProperty   => ast.show
     case ast: Dynamic          => ast.show
     case ast: Binding          => ast.show
     case ast: If               => ast.show
@@ -115,6 +116,10 @@ object AstShow {
         case OptionExists => "exists"
       }
       s"${q.ast}.$method((${q.alias.show}) => ${q.body.show})"
+  }
+
+  implicit val optionPropertyShow: Show[OptionProperty] = Show[OptionProperty] {
+    case OptionProperty(ast, prop) => s"${ast.show}.${prop}"
   }
 
   implicit val joinTypeShow: Show[JoinType] = Show[JoinType] {

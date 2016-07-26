@@ -23,7 +23,7 @@ object CqlIdiom {
       case Infix(parts, params) =>
         StringContext(parts: _*).s(params.map(_.show): _*)
       case a @ (
-        _: Function | _: FunctionApply | _: Dynamic | _: If | _: OptionOperation |
+        _: Function | _: FunctionApply | _: Dynamic | _: If | _: OptionOperation | _: OptionProperty |
         _: Query | _: Block | _: Val | _: Ordering | _: Binding | _: QuotedReference[_]
         ) =>
         fail(s"Invalid cql: '$a'")
