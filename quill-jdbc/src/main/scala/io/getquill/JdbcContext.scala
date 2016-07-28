@@ -142,7 +142,7 @@ class JdbcContext[D <: SqlIdiom, N <: NamingStrategy](dataSource: DataSource wit
   @tailrec
   private def extractResult[T](rs: ResultSet, extractor: ResultSet => T, acc: List[T] = List()): List[T] =
     if (rs.next)
-      extractResult(rs, extractor, acc :+ extractor(rs))
+      extractResult(rs, extractor, extractor(rs) :: acc)
     else
-      acc
+      acc.reverse
 }
