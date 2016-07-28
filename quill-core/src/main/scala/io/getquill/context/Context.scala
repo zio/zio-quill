@@ -18,6 +18,13 @@ abstract class Context[R: ClassTag, S: ClassTag] extends Closeable with CoreDsl 
   type Decoder[T] = io.getquill.context.Decoder[R, T]
   type Encoder[T] = io.getquill.context.Encoder[S, T]
 
+  abstract class ActionApply[T, O](f: Params[T] => BatchedActionResult[T, O]) {
+    def apply(params: Params[T]): BatchedActionResult[T, O] = f(params)
+    def apply(param: T)(implicit dummy: DummyImplicit): ActionResult[T, O]
+  }
+
+  def actionApply[T, O](f: Params[T] => BatchedActionResult[T, O]): ActionApply[T, O]
+
   case class MappedEncoding[I, O](f: I => O)
 
   def mappedEncoding[I, O](f: I => O) = MappedEncoding(f)

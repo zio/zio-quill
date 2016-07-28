@@ -23,15 +23,30 @@ class MirrorContext
 
   override def close = ()
 
+  type QueryResult[T] = QueryMirror[T]
+  type SingleQueryResult[T] = QueryMirror[T]
+  type ActionResult[T, O] = ActionMirror
+  type BatchedActionResult[T, O] = BatchActionMirror
+  type Params[T] = List[T]
+
+  override def actionApply[T, O](f: (Params[T]) => BatchedActionResult[T, O]) = new ActionApply[T, O](f) {
+    override def apply(param: T)(implicit dummy: DummyImplicit): ActionResult[T, O] =
+      {
+        val result = f(List(param))
+        ActionMirror(result.ast, result.bindList.head, result.returning)
+      }
+
+  }
+
   def run[T](quoted: Quoted[Query[T]]): QueryMirror[T] = macro MirrorContextMacro.run[Row, Row]
   def run[P1, T](quoted: Quoted[P1 => Query[T]]): P1 => QueryMirror[T] = macro MirrorContextMacro.run[Row, Row]
   def run[P1, P2, T](quoted: Quoted[(P1, P2) => Query[T]]): (P1, P2) => QueryMirror[T] = macro MirrorContextMacro.run[Row, Row]
   def run[P1, P2, P3, T](quoted: Quoted[(P1, P2, P3) => Query[T]]): (P1, P2, P3) => QueryMirror[T] = macro MirrorContextMacro.run[Row, Row]
 
   def run[T, O](quoted: Quoted[Action[T, O]]): ActionMirror = macro MirrorContextMacro.run[Row, Row]
-  def run[P1, T, O](quoted: Quoted[P1 => Action[T, O]]): List[P1] => BatchActionMirror = macro MirrorContextMacro.run[Row, Row]
-  def run[P1, P2, T, O](quoted: Quoted[(P1, P2) => Action[T, O]]): List[(P1, P2)] => BatchActionMirror = macro MirrorContextMacro.run[Row, Row]
-  def run[P1, P2, P3, T, O](quoted: Quoted[(P1, P2, P3) => Action[T, O]]): List[(P1, P2, P3)] => BatchActionMirror = macro MirrorContextMacro.run[Row, Row]
+  def run[P1, T, O](quoted: Quoted[P1 => Action[T, O]]): ActionApply[P1, O] = macro MirrorContextMacro.run[Row, Row]
+  def run[P1, P2, T, O](quoted: Quoted[(P1, P2) => Action[T, O]]): ActionApply[(P1, P2), O] = macro MirrorContextMacro.run[Row, Row]
+  def run[P1, P2, P3, T, O](quoted: Quoted[(P1, P2, P3) => Action[T, O]]): ActionApply[(P1, P2, P3), O] = macro MirrorContextMacro.run[Row, Row]
 
   def run[T](quoted: Quoted[T]): QueryMirror[T] = macro MirrorContextMacro.run[Row, Row]
   def run[P1, T](quoted: Quoted[P1 => T]): P1 => QueryMirror[T] = macro MirrorContextMacro.run[Row, Row]

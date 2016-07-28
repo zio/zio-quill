@@ -78,12 +78,14 @@ trait ActionMacro extends EncodingMacro {
       val (sql, bindings: List[io.getquill.ast.Ident], returning) =
         ${prepare(action, idents)}
 
-      ${c.prefix}.executeActionBatch[(..$paramsTypes), $returningType](
+      val func = ${c.prefix}.executeActionBatch[(..$paramsTypes), $returningType](
         sql,
         value => $encodedParams(bindings.map(_.name)),
         returning,
         ${returningExtractor(returningType)(r)}
         )
+
+      ${c.prefix}.actionApply[(..$paramsTypes), $returningType](func)
     }
     """
   }
