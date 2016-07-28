@@ -20,11 +20,11 @@ class CassandraAsyncContext[N <: NamingStrategy](config: CassandraContextConfig)
   def this(config: Config) = this(CassandraContextConfig(config))
   def this(configPrefix: String) = this(LoadConfig(configPrefix))
 
-  override protected type QueryResult[T] = Future[List[T]]
-  override protected type SingleQueryResult[T] = Future[T]
-  override protected type ActionResult[T] = Future[ResultSet]
-  override protected type BatchedActionResult[T] = Future[List[ResultSet]]
-  override protected type Params[T] = List[T]
+  type QueryResult[T] = Future[List[T]]
+  type SingleQueryResult[T] = Future[T]
+  type ActionResult[T, O] = Future[ResultSet]
+  type BatchedActionResult[T, O] = Future[List[ResultSet]]
+  type Params[T] = List[T]
 
   def executeQuery[T](cql: String, extractor: Row => T = identity[Row] _, bind: BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement] = identity)(implicit ec: ExecutionContext): Future[List[T]] =
     session.executeAsync(prepare(cql, bind))
