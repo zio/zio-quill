@@ -6,7 +6,7 @@ import scala.collection.JavaConverters._
 
 class QueryResultTypeJdbcSpec extends QueryResultTypeSpec {
 
-  val context = mysql.testContext
+  override val context = mysql.testContext
   import context._
 
   def await[T](r: T) = r
@@ -15,7 +15,7 @@ class QueryResultTypeJdbcSpec extends QueryResultTypeSpec {
 
   override def beforeAll = {
     context.run(deleteAll)
-    val ids = context.run(productInsert)(productEntries)
+    val ids = context.run(liftQuery(productEntries).foreach(p => productInsert(p)))
     val inserted = (ids zip productEntries).map {
       case (id, prod) => prod.copy(id = id)
     }
@@ -93,7 +93,7 @@ class QueryResultTypeJdbcSpec extends QueryResultTypeSpec {
       await(context.run(productSize)) mustEqual products.size
     }
     "parametrized size" in {
-      await(context.run(parametrizedSize)(10000)) mustEqual 0
+      await(context.run(parametrizedSize(lift(10000)))) mustEqual 0
     }
     "nonEmpty" in {
       await(context.run(nonEmpty)) mustEqual true

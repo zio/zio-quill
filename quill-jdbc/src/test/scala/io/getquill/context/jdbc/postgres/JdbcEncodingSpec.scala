@@ -12,18 +12,18 @@ class JdbcEncodingSpec extends EncodingSpec {
 
   "encodes and decodes types" in {
     testContext.run(delete)
-    testContext.run(insert)(insertValues)
+    testContext.run(liftQuery(insertValues).foreach(e => insert(e)))
     verify(testContext.run(query[EncodingTestEntity]))
   }
 
   "encodes sets" in {
     testContext.run(query[EncodingTestEntity].delete)
-    testContext.run(query[EncodingTestEntity].insert)(insertValues)
+    testContext.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insert(e)))
     val q = quote {
-      (set: Set[Int]) =>
+      (set: Query[Int]) =>
         query[EncodingTestEntity].filter(t => set.contains(t.v6))
     }
-    verify(testContext.run(q)(insertValues.map(_.v6).toSet))
+    verify(testContext.run(q(liftQuery(insertValues.map(_.v6)))))
   }
 
   "returning custom type" in {
@@ -34,15 +34,9 @@ class JdbcEncodingSpec extends EncodingSpec {
       encoder[UUID](row => (idx, uuid) =>
         row.setObject(idx, uuid, Types.OTHER), Types.OTHER)
 
-    val success = for {
-      uuidOpt <- testContext.run(insertBarCode)(barCodeEntry).headOption
-      uuid <- uuidOpt
-      barCode <- testContext.run(findBarCodeByUuid(uuid)).headOption
-    } yield {
-      verifyBarcode(barCode)
-    }
+    val uuid = testContext.run(insertBarCode(lift(barCodeEntry))).get
+    val (barCode :: Nil) = testContext.run(findBarCodeByUuid(uuid))
 
-    success must not be empty
-
+    verifyBarcode(barCode)
   }
 }

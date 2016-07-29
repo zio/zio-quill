@@ -11,7 +11,7 @@ class EncodingSpec extends Spec {
     "sync" in {
       import testSyncDB._
       testSyncDB.run(query[EncodingTestEntity].delete)
-      testSyncDB.run(query[EncodingTestEntity].insert)(insertValues)
+      testSyncDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insert(e)))
       verify(testSyncDB.run(query[EncodingTestEntity]))
     }
 
@@ -21,7 +21,7 @@ class EncodingSpec extends Spec {
       await {
         for {
           _ <- testAsyncDB.run(query[EncodingTestEntity].delete)
-          _ <- testAsyncDB.run(query[EncodingTestEntity].insert)(insertValues)
+          _ <- testAsyncDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insert(e)))
           result <- testAsyncDB.run(query[EncodingTestEntity])
         } yield {
           verify(result)
@@ -36,7 +36,7 @@ class EncodingSpec extends Spec {
         for {
           _ <- testStreamDB.run(query[EncodingTestEntity].delete)
           inserts = Observable.from(insertValues: _*)
-          _ <- testStreamDB.run(query[EncodingTestEntity].insert)(inserts).count
+          _ <- testStreamDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insert(e))).count
           result <- testStreamDB.run(query[EncodingTestEntity])
         } yield {
           result
@@ -50,26 +50,26 @@ class EncodingSpec extends Spec {
     "sync" in {
       import testSyncDB._
       val q = quote {
-        (list: List[Int]) =>
+        (list: Query[Int]) =>
           query[EncodingTestEntity].filter(t => list.contains(t.id))
       }
       testSyncDB.run(query[EncodingTestEntity])
-      testSyncDB.run(query[EncodingTestEntity].insert)(insertValues)
-      verify(testSyncDB.run(q)(insertValues.map(_.id)))
+      testSyncDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insert(e)))
+      verify(testSyncDB.run(q(liftQuery(insertValues.map(_.id)))))
     }
 
     "async" in {
       import testAsyncDB._
       import scala.concurrent.ExecutionContext.Implicits.global
       val q = quote {
-        (list: List[Int]) =>
+        (list: Query[Int]) =>
           query[EncodingTestEntity].filter(t => list.contains(t.id))
       }
       await {
         for {
           _ <- testAsyncDB.run(query[EncodingTestEntity].delete)
-          _ <- testAsyncDB.run(query[EncodingTestEntity].insert)(insertValues)
-          r <- testAsyncDB.run(q)(insertValues.map(_.id))
+          _ <- testAsyncDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insert(e)))
+          r <- testAsyncDB.run(q(liftQuery(insertValues.map(_.id))))
         } yield {
           verify(r)
         }
@@ -80,15 +80,15 @@ class EncodingSpec extends Spec {
       import testStreamDB._
       import monifu.concurrent.Implicits.globalScheduler
       val q = quote {
-        (list: List[Int]) =>
+        (list: Query[Int]) =>
           query[EncodingTestEntity].filter(t => list.contains(t.id))
       }
       val result =
         for {
           _ <- testStreamDB.run(query[EncodingTestEntity].delete)
           inserts = Observable.from(insertValues: _*)
-          _ <- testStreamDB.run(query[EncodingTestEntity].insert)(inserts).count
-          result <- testStreamDB.run(q)(insertValues.map(_.id))
+          _ <- testStreamDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insert(e))).count
+          result <- testStreamDB.run(q(liftQuery(insertValues.map(_.id))))
         } yield {
           result
         }

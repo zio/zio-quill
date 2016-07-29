@@ -4,7 +4,7 @@ import io.getquill.Spec
 
 trait ProductSpec extends Spec {
 
-  val context: SqlContext[_, _, _, _]
+  val context: SqlContext[_, _]
 
   import context._
 
@@ -15,11 +15,15 @@ trait ProductSpec extends Spec {
   }
 
   val productInsert = quote {
-    query[Product].insert.returning(_.id)
+    (p: Product) => query[Product].insert(p).returning(_.id)
   }
 
-  def productById(id: Long) = quote {
-    product.filter(_.id == lift(id))
+  val productInsertBatch = quote {
+    (b: Query[Product]) => b.foreach(p => productInsert.apply(p))
+  }
+
+  def productById = quote {
+    (id: Long) => product.filter(_.id == id)
   }
 
   val productEntries = List(
@@ -31,9 +35,4 @@ trait ProductSpec extends Spec {
   val productSingleInsert = quote {
     product.insert(_.id -> 0, _.description -> "Window", _.sku -> 1004L).returning(_.id)
   }
-
-  def productInsert(prd: Product) = quote {
-    product.insert(_.description -> lift(prd.description), _.sku -> lift(prd.sku)).returning(_.id)
-  }
-
 }

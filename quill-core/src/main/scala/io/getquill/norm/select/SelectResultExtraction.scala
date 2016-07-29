@@ -9,10 +9,10 @@ trait SelectResultExtraction extends EncodingMacro {
   val c: Context
   import c.universe._
 
-  def selectResultExtractor[R](value: Value)(implicit r: WeakTypeTag[R]) = {
+  def selectResultExtractor(value: Value) = {
     val (tree, _) = extractor(value)
     q"""
-    (row: $r) => $tree
+    (row: ${c.prefix}.ResultRow) => $tree
     """
   }
 

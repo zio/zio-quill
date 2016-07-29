@@ -8,7 +8,7 @@ class QueryResultTypeCassandraSyncSpec extends QueryResultTypeCassandraSpec {
 
   override def beforeAll = {
     context.run(deleteAll)
-    context.run(insert)(entries)
+    context.run(liftQuery(entries).foreach(e => insert(e)))
     ()
   }
 
@@ -38,7 +38,7 @@ class QueryResultTypeCassandraSyncSpec extends QueryResultTypeCassandraSpec {
       context.run(entitySize) mustEqual entries.size
     }
     "paramlize size" in {
-      context.run(parametrizedSize)(10000) mustEqual 0
+      context.run(parametrizedSize(lift(10000))) mustEqual 0
     }
   }
 }

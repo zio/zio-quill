@@ -18,15 +18,15 @@ class ProductJdbcSpec extends ProductSpec {
       H2 does not support returning generated keys for batch insert.
       So we have to insert one entry at a time in order to get the generated values.
      */
-      val inserted = productEntries.map(product => testContext.run(productInsert)(List(product))).flatten
+      val inserted = productEntries.map(product => testContext.run(productInsert(lift(product))))
       val id: Long = inserted(2)
-      val product = testContext.run(productById(id)).head
+      val product = testContext.run(productById(lift(id))).head
       product.description mustEqual productEntries(2).description
       product.id mustEqual inserted(2)
     }
     "Single insert product" in {
       val inserted = testContext.run(productSingleInsert)
-      val product = testContext.run(productById(inserted)).head
+      val product = testContext.run(productById(lift(inserted))).head
       product.description mustEqual "Window"
       product.id mustEqual inserted
     }
@@ -36,7 +36,7 @@ class ProductJdbcSpec extends ProductSpec {
       val inserted = testContext.run {
         product.insert(_.sku -> lift(prd.sku), _.description -> lift(prd.description)).returning(_.id)
       }
-      val returnedProduct = testContext.run(productById(inserted)).head
+      val returnedProduct = testContext.run(productById(lift(inserted))).head
       returnedProduct.description mustEqual "test1"
       returnedProduct.sku mustEqual 1L
       returnedProduct.id mustEqual inserted
@@ -48,7 +48,7 @@ class ProductJdbcSpec extends ProductSpec {
         product.insert(_.sku -> lift(prd.sku), _.description -> lift(prd.description)).returning(_.id)
       }
       val inserted = testContext.run(q1)
-      val returnedProduct = testContext.run(productById(inserted)).head
+      val returnedProduct = testContext.run(productById(lift(inserted))).head
       returnedProduct.description mustEqual "test2"
       returnedProduct.sku mustEqual 2L
       returnedProduct.id mustEqual inserted
@@ -56,8 +56,8 @@ class ProductJdbcSpec extends ProductSpec {
 
     "Single product insert with a method quotation" in {
       val prd = Product(0L, "test3", 3L)
-      val inserted = testContext.run(productInsert(prd))
-      val returnedProduct = testContext.run(productById(inserted)).head
+      val inserted = testContext.run(productInsert(lift(prd)))
+      val returnedProduct = testContext.run(productById(lift(inserted))).head
       returnedProduct.description mustEqual "test3"
       returnedProduct.sku mustEqual 3L
       returnedProduct.id mustEqual inserted

@@ -2,7 +2,6 @@ package io.getquill.context.async
 
 import java.util.{ Date, UUID }
 
-import io.getquill.context.BindedStatementBuilder
 import org.joda.time.LocalDateTime
 
 trait Encoders {
@@ -13,24 +12,13 @@ trait Encoders {
 
   def encoder[T](f: T => Any): Encoder[T] =
     new Encoder[T] {
-      def apply(index: Int, value: T, row: BindedStatementBuilder[List[Any]]) = {
-        val raw = new io.getquill.context.Encoder[List[Any], T] {
-          override def apply(index: Int, value: T, row: List[Any]) =
-            row :+ f(value)
-        }
-        row.single(index, value, raw)
-      }
-    }
-
-  implicit def traversableEncoder[T](implicit e: Encoder[T]): Encoder[Traversable[T]] =
-    new Encoder[Traversable[T]] {
-      def apply(index: Int, values: Traversable[T], row: BindedStatementBuilder[List[Any]]) =
-        row.coll[T](index, values, e)
+      def apply(index: Int, value: T, row: List[Any]) =
+        row :+ f(value)
     }
 
   implicit def optionEncoder[T](implicit d: Encoder[T]): Encoder[Option[T]] =
     new Encoder[Option[T]] {
-      def apply(index: Int, value: Option[T], row: BindedStatementBuilder[List[Any]]) = {
+      def apply(index: Int, value: Option[T], row: List[Any]) = {
         value match {
           case None    => nullEncoder(index, null, row)
           case Some(v) => d(index, v, row)

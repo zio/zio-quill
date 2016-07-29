@@ -1,58 +1,38 @@
 package io.getquill
 
-import scala.annotation.tailrec
 import com.datastax.driver.core.BoundStatement
-import com.datastax.driver.core.ResultSet
 import com.datastax.driver.core.Row
-import io.getquill.context.BindedStatementBuilder
 import com.typesafe.config.Config
 import io.getquill.util.LoadConfig
-import io.getquill.context.cassandra.CassandraContextSession
+import io.getquill.context.cassandra.CassandraSessionContext
 import scala.collection.JavaConverters._
 
 class CassandraSyncContext[N <: NamingStrategy](config: CassandraContextConfig)
-  extends CassandraContextSession[N](config) {
-
-  import CassandraSyncContext._
+  extends CassandraSessionContext[N](config) {
 
   def this(config: Config) = this(CassandraContextConfig(config))
   def this(configPrefix: String) = this(LoadConfig(configPrefix))
 
-  override type QueryResult[T] = List[T]
-  override type SingleQueryResult[T] = T
-  override type ActionResult[T] = ResultSet
-  override type BatchedActionResult[T] = List[ResultSet]
-  override type Params[T] = List[T]
+  override type RunQueryResult[T] = List[T]
+  override type RunQuerySingleResult[T] = T
+  override type RunActionResult = Unit
+  override type RunBatchActionResult = Unit
 
-  def executeQuery[T](cql: String, extractor: Row => T = identity[Row] _, bind: BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement] = identity): List[T] =
-    session.execute(prepare(cql, bind))
+  def executeQuery[T](cql: String, prepare: BoundStatement => BoundStatement = identity, extractor: Row => T = identity[Row] _): List[T] =
+    session.execute(prepare(super.prepare(cql)))
       .all.asScala.toList.map(extractor)
 
-  def executeQuerySingle[T](cql: String, extractor: Row => T = identity[Row] _, bind: BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement] = identity): T =
-    handleSingleResult(executeQuery(cql, extractor, bind))
+  def executeQuerySingle[T](cql: String, prepare: BoundStatement => BoundStatement = identity, extractor: Row => T = identity[Row] _): T =
+    handleSingleResult(executeQuery(cql, prepare, extractor))
 
-  def executeAction[O](cql: String, bind: BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement] = identity, generated: Option[String] = None, returningExtractor: Row => O = identity[Row] _): ResultSet =
-    session.execute(prepare(cql, bind))
+  def executeAction[T](cql: String, prepare: BoundStatement => BoundStatement = identity): Unit = {
+    session.execute(prepare(super.prepare(cql)))
+    ()
+  }
 
-  def executeActionBatch[T, O](cql: String, bindParams: T => BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement] = (_: T) => identity[BindedStatementBuilder[BoundStatement]] _, generated: Option[String] = None, returningExtractor: Row => O = identity[Row] _): ActionApply[T] = {
-    val func = { (values: List[T]) =>
-      @tailrec
-      def run(values: List[T], acc: List[ResultSet]): List[ResultSet] =
-        values match {
-          case Nil => acc
-          case head :: tail =>
-            run(tail, acc :+ session.execute(prepare(cql, bindParams(head))))
-        }
-      run(values, List.empty)
+  def executeBatchAction(groups: List[BatchGroup]): Unit =
+    groups.foreach {
+      case BatchGroup(cql, prepare) =>
+        prepare.foreach(executeAction(cql, _))
     }
-    new ActionApply(func)
-  }
-}
-
-object CassandraSyncContext {
-
-  class ActionApply[T](f: List[T] => List[ResultSet]) extends Function1[List[T], List[ResultSet]] {
-    def apply(params: List[T]) = f(params)
-    def apply(param: T) = f(List(param)).head
-  }
 }

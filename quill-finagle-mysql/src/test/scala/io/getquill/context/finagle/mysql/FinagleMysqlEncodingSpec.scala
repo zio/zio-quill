@@ -13,7 +13,7 @@ class FinagleMysqlEncodingSpec extends EncodingSpec {
     val r =
       for {
         _ <- testContext.run(delete)
-        _ <- testContext.run(insert)(insertValues)
+        _ <- testContext.run(liftQuery(insertValues).foreach(e => insert(e)))
         result <- testContext.run(query[EncodingTestEntity])
       } yield result
 
@@ -21,7 +21,7 @@ class FinagleMysqlEncodingSpec extends EncodingSpec {
   }
 
   "fails if the column has the wrong type" in {
-    Await.result(testContext.run(insert)(insertValues))
+    Await.result(testContext.run(liftQuery(insertValues).foreach(e => insert(e))))
     case class EncodingTestEntity(v1: Int)
     val e = intercept[IllegalStateException] {
       Await.result(testContext.run(query[EncodingTestEntity]))
@@ -30,14 +30,14 @@ class FinagleMysqlEncodingSpec extends EncodingSpec {
 
   "encodes sets" in {
     val q = quote {
-      (set: Set[Int]) =>
+      (set: Query[Int]) =>
         query[EncodingTestEntity].filter(t => set.contains(t.v6))
     }
     Await.result {
       for {
         _ <- testContext.run(query[EncodingTestEntity].delete)
-        _ <- testContext.run(query[EncodingTestEntity].insert)(insertValues)
-        r <- testContext.run(q)(insertValues.map(_.v6).toSet)
+        _ <- testContext.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insert(e)))
+        r <- testContext.run(q(liftQuery(insertValues.map(_.v6))))
       } yield {
         verify(r)
       }
@@ -68,11 +68,9 @@ class FinagleMysqlEncodingSpec extends EncodingSpec {
       v7: Boolean
     )
     val decodeBoolean = (entity: BooleanEncodingTestEntity) => {
-      val delete = quote(query[BooleanEncodingTestEntity].delete)
-      val insert = quote(query[BooleanEncodingTestEntity].insert)
       val r = for {
-        _ <- testContext.run(delete)
-        _ <- testContext.run(insert)(List(entity))
+        _ <- testContext.run(query[BooleanEncodingTestEntity].delete)
+        _ <- testContext.run(query[BooleanEncodingTestEntity].insert(lift(entity)))
         result <- testContext.run(query[BooleanEncodingTestEntity])
       } yield result
       Await.result(r).head

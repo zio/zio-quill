@@ -1,7 +1,6 @@
 package io.getquill.context.cassandra
 
 import io.getquill._
-import monifu.reactive.Observable
 
 class DecodeNullSpec extends Spec {
 
@@ -12,7 +11,7 @@ class DecodeNullSpec extends Spec {
       val writeEntities = quote(query[DecodeNullTestWriteEntity].schema(_.entity("DecodeNullTestEntity")))
 
       testSyncDB.run(writeEntities.delete)
-      testSyncDB.run(writeEntities.insert)(insertValue)
+      testSyncDB.run(writeEntities.insert(lift(insertValue)))
       intercept[IllegalStateException] {
         testSyncDB.run(query[DecodeNullTestEntity])
       }
@@ -26,7 +25,7 @@ class DecodeNullSpec extends Spec {
       val result =
         for {
           _ <- testAsyncDB.run(writeEntities.delete)
-          _ <- testAsyncDB.run(writeEntities.insert)(insertValue)
+          _ <- testAsyncDB.run(writeEntities.insert(lift(insertValue)))
           result <- testAsyncDB.run(query[DecodeNullTestEntity])
         } yield {
           result
@@ -46,8 +45,7 @@ class DecodeNullSpec extends Spec {
       val result =
         for {
           _ <- testStreamDB.run(writeEntities.delete)
-          inserts = Observable.from(insertValue)
-          _ <- testStreamDB.run(writeEntities.insert)(inserts).count
+          _ <- testStreamDB.run(writeEntities.insert(lift(insertValue))).count
           result <- testStreamDB.run(query[DecodeNullTestEntity])
         } yield {
           result

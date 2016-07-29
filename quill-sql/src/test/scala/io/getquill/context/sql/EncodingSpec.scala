@@ -2,13 +2,14 @@ package io.getquill.context.sql
 
 import java.util.{ Date, UUID }
 
+import scala.BigDecimal
 import io.getquill.Spec
 
 case class EncodingTestType(value: String)
 
 trait EncodingSpec extends Spec {
 
-  val context: SqlContext[_, _, _, _]
+  val context: SqlContext[_, _]
 
   import context._
 
@@ -44,7 +45,7 @@ trait EncodingSpec extends Spec {
   }
 
   val insert = quote {
-    query[EncodingTestEntity].insert
+    (e: EncodingTestEntity) => query[EncodingTestEntity].insert(e)
   }
 
   val insertValues =
@@ -162,10 +163,10 @@ trait EncodingSpec extends Spec {
 
   case class BarCode(description: String, uuid: Option[UUID] = None)
 
-  val insertBarCode = quote(query[BarCode].insert.returning(_.uuid))
-  val barCodeEntry = List(BarCode("returning UUID"))
+  val insertBarCode = quote((b: BarCode) => query[BarCode].insert(b).returning(_.uuid))
+  val barCodeEntry = BarCode("returning UUID")
 
-  def findBarCodeByUuid(uuid: UUID) = quote(query[BarCode].filter(_.uuid == lift(uuid)))
+  def findBarCodeByUuid(uuid: UUID)(implicit enc: Encoder[UUID]) = quote(query[BarCode].filter(_.uuid == lift(uuid)))
 
   def verifyBarcode(barCode: BarCode) = barCode.description mustEqual "returning UUID"
 }

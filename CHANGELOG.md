@@ -1,3 +1,15 @@
+# 0.9.0 - To be released
+
+
+### Migration notes
+
+- The fallback mechanism that looks for implicit encoders defined in the context instance has been removed. This means that if you don't `import context._`, you have to change the specific imports to include the encoders that are being used.
+- `context.run` now receives only one parameter. The second parameter that used to receive runtime values now doesn't exist any more. Use [`lift` or `liftQuery`](https://github.com/getquill/quill/tree/new-encoding#bindings) instead.
+- Use [`liftQuery` + `foreach`](https://github.com/getquill/quill/tree/new-encoding#bindings) to perform batch actions and define contains/in queries.
+- `insert` now always receives a parameter, that [can be a case class](https://github.com/getquill/quill/tree/new-encoding#actions).
+- Non-lifted collections aren't supported anymore. Example: `query[Person].filter(t => List(10, 20).contains(p.age))`. Use `liftQuery` instead.
+- `schema(_.generated())` has been replaced by [`returning`](https://github.com/getquill/quill/tree/new-encoding#schema).
+
 # 0.8.0 / 17-Jul-2016
 
 **see migration notes below**

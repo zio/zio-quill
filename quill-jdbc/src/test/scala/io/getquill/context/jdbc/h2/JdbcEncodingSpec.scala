@@ -9,7 +9,7 @@ class JdbcEncodingSpec extends EncodingSpec {
 
   "encodes and decodes types" in {
     testContext.run(delete)
-    testContext.run(insert)(insertValues)
+    testContext.run(liftQuery(insertValues).foreach(p => insert(p)))
     verify(testContext.run(query[EncodingTestEntity]))
   }
 }

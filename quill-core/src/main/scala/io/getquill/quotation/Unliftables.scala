@@ -10,6 +10,7 @@ trait Unliftables {
   import c.universe.{ Ident => _, Constant => _, Function => _, If => _, _ }
 
   implicit val astUnliftable: Unliftable[Ast] = Unliftable[Ast] {
+    case liftUnliftable(ast) => ast
     case queryUnliftable(ast) => ast
     case actionUnliftable(ast) => ast
     case valueUnliftable(ast) => ast
@@ -25,7 +26,6 @@ trait Unliftables {
     case q"$pack.OptionOperation.apply(${ a: OptionOperationType }, ${ b: Ast }, ${ c: Ident }, ${ d: Ast })" => OptionOperation(a, b, c, d)
     case q"$pack.If.apply(${ a: Ast }, ${ b: Ast }, ${ c: Ast })" => If(a, b, c)
     case q"$tree.ast" => Dynamic(tree)
-    case q"$pack.RuntimeBinding.apply(${ a: String })" => RuntimeBinding(a)
   }
 
   implicit val optionOperationTypeUnliftable: Unliftable[OptionOperationType] = Unliftable[OptionOperationType] {
@@ -130,25 +130,30 @@ trait Unliftables {
   }
 
   implicit val actionUnliftable: Unliftable[Action] = Unliftable[Action] {
-    case q"$pack.AssignedAction.apply(${ a: Ast }, ${ b: List[Assignment] })" => AssignedAction(a, b)
-    case q"$pack.Update.apply(${ a: Ast })"                                   => Update(a)
-    case q"$pack.Insert.apply(${ a: Ast })"                                   => Insert(a)
-    case q"$pack.Delete.apply(${ a: Ast })"                                   => Delete(a)
-    case q"$pack.Returning.apply(${ a: Ast }, ${ b: String })"                => Returning(a, b)
+    case q"$pack.Update.apply(${ a: Ast }, ${ b: List[Assignment] })"      => Update(a, b)
+    case q"$pack.Insert.apply(${ a: Ast }, ${ b: List[Assignment] })"      => Insert(a, b)
+    case q"$pack.Delete.apply(${ a: Ast })"                                => Delete(a)
+    case q"$pack.Returning.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => Returning(a, b, c)
+    case q"$pack.Foreach.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })"   => Foreach(a, b, c)
   }
 
   implicit val assignmentUnliftable: Unliftable[Assignment] = Unliftable[Assignment] {
-    case q"$pack.Assignment.apply(${ a: Ident }, ${ b: String }, ${ c: Ast })" => Assignment(a, b, c)
+    case q"$pack.Assignment.apply(${ a: Ident }, ${ b: Ast }, ${ c: Ast })" => Assignment(a, b, c)
   }
 
   implicit val valueUnliftable: Unliftable[Value] = Unliftable[Value] {
     case q"$pack.NullValue" => NullValue
     case q"$pack.Constant.apply(${ Literal(c.universe.Constant(a)) })" => Constant(a)
     case q"$pack.Tuple.apply(${ a: List[Ast] })" => Tuple(a)
-    case q"$pack.Collection.apply(${ a: List[Ast] })" => Collection(a)
   }
   implicit val identUnliftable: Unliftable[Ident] = Unliftable[Ident] {
     case q"$pack.Ident.apply(${ a: String })" => Ident(a)
   }
 
+  implicit val liftUnliftable: Unliftable[Lift] = Unliftable[Lift] {
+    case q"$pack.ScalarValueLift.apply(${ a: String }, $b, $c)" => ScalarValueLift(a, b, c)
+    case q"$pack.CaseClassValueLift.apply(${ a: String }, $b)"  => CaseClassValueLift(a, b)
+    case q"$pack.ScalarQueryLift.apply(${ a: String }, $b, $c)" => ScalarQueryLift(a, b, c)
+    case q"$pack.CaseClassQueryLift.apply(${ a: String }, $b)"  => CaseClassQueryLift(a, b)
+  }
 }

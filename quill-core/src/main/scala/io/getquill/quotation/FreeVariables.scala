@@ -1,25 +1,6 @@
 package io.getquill.quotation
 
-import io.getquill.ast.Aggregation
-import io.getquill.ast.Assignment
-import io.getquill.ast.Ast
-import io.getquill.ast.Distinct
-import io.getquill.ast.Drop
-import io.getquill.ast.Entity
-import io.getquill.ast.Filter
-import io.getquill.ast.FlatMap
-import io.getquill.ast.Function
-import io.getquill.ast.GroupBy
-import io.getquill.ast.Ident
-import io.getquill.ast.Join
-import io.getquill.ast.Map
-import io.getquill.ast.OptionOperation
-import io.getquill.ast.Query
-import io.getquill.ast.SortBy
-import io.getquill.ast.StatefulTransformer
-import io.getquill.ast.Take
-import io.getquill.ast.Union
-import io.getquill.ast.UnionAll
+import io.getquill.ast._
 
 case class State(seen: collection.Set[Ident], free: collection.Set[Ident])
 
@@ -35,6 +16,25 @@ case class FreeVariables(state: State)
         (f, FreeVariables(State(state.seen, state.free ++ t.state.free)))
       case OptionOperation(t, a, b, c) =>
         (ast, free(a, b, c))
+      case q @ Foreach(a, b, c) =>
+        (q, free(a, b, c))
+      case other =>
+        super.apply(other)
+    }
+
+  override def apply(e: Assignment): (Assignment, StatefulTransformer[State]) =
+    e match {
+      case Assignment(a, b, c) =>
+        val t = FreeVariables(State(state.seen + a, state.free))
+        val (bt, btt) = t(b)
+        val (ct, ctt) = t(c)
+        (Assignment(a, bt, ct), FreeVariables(State(state.seen, state.free ++ btt.state.free ++ ctt.state.free)))
+    }
+
+  override def apply(action: Action): (Action, StatefulTransformer[State]) =
+    action match {
+      case q @ Returning(a, b, c) =>
+        (q, free(a, b, c))
       case other =>
         super.apply(other)
     }
@@ -53,13 +53,6 @@ case class FreeVariables(state: State)
         (q, FreeVariables(State(state.seen, state.free ++ freeA.state.free ++ freeB.state.free ++ freeOn.state.free)))
       case _: Entity | _: Take | _: Drop | _: Union | _: UnionAll | _: Aggregation | _: Distinct =>
         super.apply(query)
-    }
-
-  override def apply(e: Assignment): (Assignment, StatefulTransformer[State]) =
-    e match {
-      case Assignment(a, b, c) =>
-        val (ct, ctt) = FreeVariables(State(state.seen + a, state.free))(c)
-        (Assignment(a, b, ct), ctt)
     }
 
   private def free(a: Ast, ident: Ident, c: Ast) = {

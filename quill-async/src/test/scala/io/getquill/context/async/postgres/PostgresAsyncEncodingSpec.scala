@@ -16,7 +16,7 @@ class PostgresAsyncEncodingSpec extends EncodingSpec {
     val r =
       for {
         _ <- testContext.run(delete)
-        _ <- testContext.run(insert)(insertValues)
+        _ <- testContext.run(liftQuery(insertValues).foreach(e => insert(e)))
         result <- testContext.run(query[EncodingTestEntity])
       } yield result
 
@@ -32,8 +32,7 @@ class PostgresAsyncEncodingSpec extends EncodingSpec {
     val rez0 = Await.result(testContext.run(q0), Duration.Inf)
 
     //insert new uuid
-    val q1 = quote(query[EncodingUUIDTestEntity].insert)
-    val rez1 = Await.result(testContext.run(q1)(List(EncodingUUIDTestEntity(testUUID))), Duration.Inf)
+    val rez1 = Await.result(testContext.run(query[EncodingUUIDTestEntity].insert(lift(EncodingUUIDTestEntity(testUUID)))), Duration.Inf)
 
     //verify you can get the uuid back from the db
     val q2 = quote(query[EncodingUUIDTestEntity].map(p => p.v1))
@@ -44,14 +43,14 @@ class PostgresAsyncEncodingSpec extends EncodingSpec {
 
   "fails if the column has the wrong type" - {
     "numeric" in {
-      Await.result(testContext.run(insert)(insertValues), Duration.Inf)
+      Await.result(testContext.run(liftQuery(insertValues).foreach(e => insert(e))), Duration.Inf)
       case class EncodingTestEntity(v1: Int)
       val e = intercept[IllegalStateException] {
         Await.result(testContext.run(query[EncodingTestEntity]), Duration.Inf)
       }
     }
     "non-numeric" in {
-      Await.result(testContext.run(insert)(insertValues), Duration.Inf)
+      Await.result(testContext.run(liftQuery(insertValues).foreach(e => insert(e))), Duration.Inf)
       case class EncodingTestEntity(v1: Date)
       val e = intercept[IllegalStateException] {
         Await.result(testContext.run(query[EncodingTestEntity]), Duration.Inf)
@@ -61,14 +60,14 @@ class PostgresAsyncEncodingSpec extends EncodingSpec {
 
   "encodes sets" in {
     val q = quote {
-      (set: Set[Int]) =>
+      (set: Query[Int]) =>
         query[EncodingTestEntity].filter(t => set.contains(t.v6))
     }
     val fut =
       for {
         _ <- testContext.run(query[EncodingTestEntity].delete)
-        _ <- testContext.run(query[EncodingTestEntity].insert)(insertValues)
-        r <- testContext.run(q)(insertValues.map(_.v6).toSet)
+        _ <- testContext.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insert(e)))
+        r <- testContext.run(q(liftQuery(insertValues.map(_.v6))))
       } yield {
         r
       }
@@ -77,8 +76,7 @@ class PostgresAsyncEncodingSpec extends EncodingSpec {
 
   "returning UUID" in {
     val success = for {
-      uuidOpt <- Await.result(testContext.run(insertBarCode)(barCodeEntry), Duration.Inf).headOption
-      uuid <- uuidOpt
+      uuid <- Await.result(testContext.run(insertBarCode(lift(barCodeEntry))), Duration.Inf)
       barCode <- Await.result(testContext.run(findBarCodeByUuid(uuid)), Duration.Inf).headOption
     } yield {
       verifyBarcode(barCode)

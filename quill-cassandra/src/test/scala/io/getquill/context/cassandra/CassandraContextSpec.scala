@@ -1,6 +1,5 @@
 package io.getquill.context.cassandra
 
-import com.datastax.driver.core.ResultSet
 import io.getquill._
 import scala.concurrent.ExecutionContext.Implicits.{ global => ec }
 
@@ -11,18 +10,18 @@ class CassandraContextSpec extends Spec {
     "async" in {
       import testAsyncDB._
       case class TestEntity(id: Int, s: String, i: Int, l: Long, o: Int)
-      val update = quote { (id: Int, i: Int) =>
-        query[TestEntity].filter(_.id == id).update(_.i -> i)
+      val update = quote {
+        query[TestEntity].filter(_.id == lift(1)).update(_.i -> lift(1))
       }
-      await(testAsyncDB.run(update)(1 -> 1)) mustBe an[ResultSet]
+      await(testAsyncDB.run(update)) mustEqual (())
     }
     "sync" in {
       import testSyncDB._
       case class TestEntity(id: Int, s: String, i: Int, l: Long, o: Int)
-      val update = quote { (id: Int, i: Int) =>
-        query[TestEntity].filter(_.id == id).update(_.i -> i)
+      val update = quote {
+        query[TestEntity].filter(_.id == lift(1)).update(_.i -> lift(1))
       }
-      testSyncDB.run(update)(1 -> 1) mustBe an[ResultSet]
+      testSyncDB.run(update) mustEqual (())
     }
   }
 }

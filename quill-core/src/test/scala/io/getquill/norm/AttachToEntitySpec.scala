@@ -130,8 +130,9 @@ class AttachToEntitySpec extends Spec {
   }
 
   "fails if the entity isn't found" in {
-    val e = intercept[IllegalStateException] {
+    intercept[IllegalStateException] {
       attachToEntity(Map(Ident("a"), Ident("b"), Ident("c")))
     }
+    ()
   }
 }

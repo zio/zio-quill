@@ -1,13 +1,13 @@
 package io.getquill.util
 
-import scala.reflect.macros.whitebox.Context
+import scala.reflect.macros.whitebox.{ Context => MacroContext }
 
 object Messages {
 
   def fail(msg: String) =
     throw new IllegalStateException(msg)
 
-  implicit class RichContext(c: Context) {
+  implicit class RichContext(c: MacroContext) {
 
     def error(msg: String) =
       c.error(c.enclosingPosition, msg)

@@ -10,7 +10,7 @@ class QueryResultTypeCassandraAsyncSpec extends QueryResultTypeCassandraSpec {
 
   override def beforeAll = {
     await(context.run(deleteAll))
-    await(context.run(insert)(entries))
+    await(context.run(liftQuery(entries).foreach(e => insert(e))))
     ()
   }
 
@@ -40,7 +40,7 @@ class QueryResultTypeCassandraAsyncSpec extends QueryResultTypeCassandraSpec {
       await(context.run(entitySize)) mustEqual entries.size
     }
     "paramlize size" in {
-      await(context.run(parametrizedSize)(10000)) mustEqual 0
+      await(context.run(parametrizedSize(lift(10000)))) mustEqual 0
     }
   }
 }

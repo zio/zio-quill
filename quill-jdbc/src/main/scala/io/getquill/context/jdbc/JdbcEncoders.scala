@@ -5,7 +5,6 @@ import java.util.{ Calendar, TimeZone }
 import java.{ sql, util }
 
 import io.getquill.JdbcContext
-import io.getquill.context.BindedStatementBuilder
 import io.getquill.util.Messages.fail
 
 import scala.reflect.ClassTag
@@ -16,34 +15,23 @@ trait JdbcEncoders {
   protected val dateTimeZone = TimeZone.getDefault
 
   case class JdbcEncoder[T](sqlType: Int)(implicit encoder: Encoder[T]) extends Encoder[T] {
-    def apply(index: Int, value: T, row: BindedStatementBuilder[PreparedStatement]) =
+    def apply(index: Int, value: T, row: PreparedStatement) =
       encoder.apply(index, value, row)
   }
 
   def encoder[T: ClassTag](f: PreparedStatement => (Int, T) => Unit, sqlType: Int): JdbcEncoder[T] =
     JdbcEncoder(sqlType)(new Encoder[T] {
-      override def apply(index: Int, value: T, row: BindedStatementBuilder[PreparedStatement]) = {
-        val raw = new io.getquill.context.Encoder[PreparedStatement, T] {
-          override def apply(index: Int, value: T, row: PreparedStatement) = {
-            f(row)(index + 1, value)
-            row
-          }
-        }
-        row.single(index, value, raw)
+      override def apply(index: Int, value: T, row: PreparedStatement) = {
+        f(row)(index + 1, value)
+        row
       }
     })
-
-  implicit def traversableEncoder[T](implicit enc: Encoder[T]): Encoder[Traversable[T]] =
-    new Encoder[Traversable[T]] {
-      override def apply(index: Int, values: Traversable[T], row: BindedStatementBuilder[PreparedStatement]) =
-        row.coll(index, values, enc)
-    }
 
   private[this] val nullEncoder = encoder[Int](_.setNull, Types.INTEGER)
 
   implicit def optionEncoder[T](implicit d: Encoder[T]): Encoder[Option[T]] =
     new Encoder[Option[T]] {
-      override def apply(idx: Int, value: Option[T], row: BindedStatementBuilder[PreparedStatement]) =
+      override def apply(idx: Int, value: Option[T], row: PreparedStatement) =
         value match {
           case Some(v) => d(idx, v, row)
           case None => d match {

@@ -3,11 +3,9 @@ package io.getquill.context
 import io.getquill.Spec
 import io.getquill.context.mirror.Row
 import io.getquill.testContext
-import io.getquill.testContext.mappedEncoding
-import io.getquill.testContext.query
-import io.getquill.testContext.quote
-import io.getquill.WrappedValue
+import io.getquill.testContext._
 import io.getquill.WrappedType
+import io.getquill.WrappedValue
 
 case class WrappedEncodable(value: Int)
   extends AnyVal with WrappedValue[Int]
@@ -22,9 +20,9 @@ class ContextInstanceSpec extends Spec {
     "encoding" in {
       implicit val testToString = mappedEncoding[StringValue, String](_.s)
       val q = quote {
-        (s: StringValue) => query[Entity].insert(_.s -> s)
+        query[Entity].insert(_.s -> lift(StringValue("s")))
       }
-      testContext.run(q)(List(StringValue("s"))).bindList mustEqual List(Row("s"))
+      testContext.run(q).prepareRow mustEqual Row("s")
     }
 
     "decoding" in {
@@ -38,10 +36,10 @@ class ContextInstanceSpec extends Spec {
 
   "encoding set" in {
     case class Entity(i: Int)
-    val q = quote { (is: Set[Int]) =>
-      query[Entity].filter(e => is.contains(e.i))
+    val q = quote {
+      query[Entity].filter(e => liftQuery(Set(1)).contains(e.i))
     }
-    testContext.run(q)(Set(1)).binds mustEqual Row(Set(1))
+    testContext.run(q).prepareRow mustEqual Row(1)
   }
 
   "encodes `WrappedValue` extended value class" - {
@@ -49,9 +47,9 @@ class ContextInstanceSpec extends Spec {
 
     "encoding" in {
       val q = quote {
-        (x: WrappedEncodable) => query[Entity].insert(_.x -> x, _.s -> s"$x")
+        query[Entity].insert(_.x -> lift(WrappedEncodable(1)), _.s -> s"string")
       }
-      testContext.run(q)(List(WrappedEncodable(1))).bindList mustEqual List(Row(1))
+      testContext.run(q).prepareRow mustEqual Row(1)
     }
 
     "decoding" in {
@@ -71,9 +69,9 @@ class ContextInstanceSpec extends Spec {
 
     "encoding" in {
       val q = quote {
-        (x: Wrapped) => query[Entity].insert(_.x -> x)
+        query[Entity].insert(_.x -> lift(Wrapped(1)))
       }
-      testContext.run(q)(List((Wrapped(1)))).bindList mustEqual List(Row(1))
+      testContext.run(q).prepareRow mustEqual Row(1)
     }
 
     "decoding" in {

@@ -1,5 +1,6 @@
 package io.getquill
 
+import io.getquill.idiom.StatementInterpolator._
 import io.getquill.ast.Asc
 import io.getquill.ast.AscNullsFirst
 import io.getquill.ast.AscNullsLast
@@ -10,30 +11,32 @@ import io.getquill.ast.DescNullsLast
 import io.getquill.ast.Operation
 import io.getquill.ast.Property
 import io.getquill.ast.StringOperator
-import io.getquill.context.sql.OrderByCriteria
-import io.getquill.util.Show.Show
-import io.getquill.util.Show.Shower
 import io.getquill.context.sql.idiom.OffsetWithoutLimitWorkaround
 import io.getquill.context.sql.idiom.SqlIdiom
+import io.getquill.context.sql.OrderByCriteria
+import io.getquill.context.sql.idiom.QuestionMarkBindVariables
 
 trait MySQLDialect
   extends SqlIdiom
-  with OffsetWithoutLimitWorkaround {
+  with OffsetWithoutLimitWorkaround
+  with QuestionMarkBindVariables {
 
-  override def prepare(sql: String) =
-    s"PREPARE p${sql.hashCode.abs} FROM '${sql.replace("'", "\\'")}'"
+  override def prepareForProbing(string: String) = {
+    val quoted = string.replace("'", "\\'")
+    s"PREPARE p${quoted.hashCode.abs.toString.token} FROM '$quoted'"
+  }
 
-  override implicit def operationShow(implicit propertyShow: Show[Property], strategy: NamingStrategy): Show[Operation] =
-    Show[Operation] {
-      case BinaryOperation(a, StringOperator.`+`, b) => s"CONCAT(${a.show}, ${b.show})"
-      case other                                     => super.operationShow.show(other)
+  override implicit def operationTokenizer(implicit propertyTokenizer: Tokenizer[Property], strategy: NamingStrategy): Tokenizer[Operation] =
+    Tokenizer[Operation] {
+      case BinaryOperation(a, StringOperator.`+`, b) => stmt"CONCAT(${a.token}, ${b.token})"
+      case other                                     => super.operationTokenizer.token(other)
     }
 
-  override implicit def orderByCriteriaShow(implicit strategy: NamingStrategy): Show[OrderByCriteria] = Show[OrderByCriteria] {
-    case OrderByCriteria(prop, AscNullsFirst | Asc)  => s"${prop.show} ASC"
-    case OrderByCriteria(prop, DescNullsFirst)       => s"ISNULL(${prop.show}) DESC, ${prop.show} DESC"
-    case OrderByCriteria(prop, AscNullsLast)         => s"ISNULL(${prop.show}) ASC, ${prop.show} ASC"
-    case OrderByCriteria(prop, DescNullsLast | Desc) => s"${prop.show} DESC"
+  override implicit def orderByCriteriaTokenizer(implicit strategy: NamingStrategy): Tokenizer[OrderByCriteria] = Tokenizer[OrderByCriteria] {
+    case OrderByCriteria(prop, AscNullsFirst | Asc)  => stmt"${prop.token} ASC"
+    case OrderByCriteria(prop, DescNullsFirst)       => stmt"ISNULL(${prop.token}) DESC, ${prop.token} DESC"
+    case OrderByCriteria(prop, AscNullsLast)         => stmt"ISNULL(${prop.token}) ASC, ${prop.token} ASC"
+    case OrderByCriteria(prop, DescNullsLast | Desc) => stmt"${prop.token} DESC"
   }
 }
 

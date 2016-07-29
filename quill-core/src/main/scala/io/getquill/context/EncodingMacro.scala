@@ -17,10 +17,7 @@ trait EncodingMacro {
   case class SimpleValue(ast: Ast, encoding: c.Tree, optionEncoding: c.Tree) extends Value
   case class CaseClassValue(tpe: c.Type, params: List[List[Value]]) extends Value
 
-  protected def encoding[T](ast: Ast, inferEncoding: Type => Option[Tree])(implicit t: WeakTypeTag[T]): Value =
-    encoding(ast, t.tpe, inferEncoding)
-
-  private def encoding(ast: Ast, typ: Type, inferEncoding: Type => Option[Tree]): Value =
+  protected def encoding(ast: Ast, typ: Type, inferEncoding: Type => Option[Tree]): Value =
     (inferEncoding(typ), inferEncoding(optionType(c.WeakTypeTag(typ))), ast) match {
       case (_, _, ast) if (typ <:< c.weakTypeOf[Option[Any]]) =>
         OptionValue(encoding(ast, typ.typeArgs.head, inferEncoding))

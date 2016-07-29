@@ -2,12 +2,7 @@ package io.getquill.context.sql
 
 import io.getquill.Spec
 import io.getquill.context.mirror.Row
-import io.getquill.context.sql.testContext.TestEntity
-import io.getquill.context.sql.testContext.TestEntity2
-import io.getquill.context.sql.testContext.qr1
-import io.getquill.context.sql.testContext.qr2
-import io.getquill.context.sql.testContext.quote
-import io.getquill.context.sql.testContext.unquote
+import io.getquill.context.sql.testContext._
 
 class SqlQueryMacroSpec extends Spec {
 
@@ -18,46 +13,46 @@ class SqlQueryMacroSpec extends Spec {
           qr1.filter(t => t.s != null)
         }
         val mirror = testContext.run(q)
-        mirror.binds mustEqual Row()
+        mirror.prepareRow mustEqual Row()
         mirror.extractor(Row("s", 1, 2L, None)) mustEqual TestEntity("s", 1, 2L, None)
-        mirror.sql mustEqual "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.s IS NOT NULL"
+        mirror.string mustEqual "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.s IS NOT NULL"
       }
       "with map" in {
         val q = quote {
           qr1.map(t => (t.s, t.i, t.l))
         }
         val mirror = testContext.run(q)
-        mirror.binds mustEqual Row()
+        mirror.prepareRow mustEqual Row()
         mirror.extractor(Row("s", 1, 2L)) mustEqual (("s", 1, 2L))
-        mirror.sql mustEqual "SELECT t.s, t.i, t.l FROM TestEntity t"
+        mirror.string mustEqual "SELECT t.s, t.i, t.l FROM TestEntity t"
       }
       "with flatMap" in {
         val q = quote {
           qr1.flatMap(t => qr2)
         }
         val mirror = testContext.run(q)
-        mirror.binds mustEqual Row()
+        mirror.prepareRow mustEqual Row()
         mirror.extractor(Row("s", 1, 2L, None)) mustEqual TestEntity2("s", 1, 2L, None)
-        mirror.sql mustEqual "SELECT x.s, x.i, x.l, x.o FROM TestEntity t, TestEntity2 x"
+        mirror.string mustEqual "SELECT x.s, x.i, x.l, x.o FROM TestEntity t, TestEntity2 x"
       }
     }
     "with bindigns" - {
       "one" in {
         val q = quote {
-          (s: String) => qr1.filter(t => t.s != s)
+          qr1.filter(t => t.s != lift("s"))
         }
-        val mirror = testContext.run(q)("s")
-        mirror.binds mustEqual Row("s")
-        mirror.sql mustEqual
+        val mirror = testContext.run(q)
+        mirror.prepareRow mustEqual Row("s")
+        mirror.string mustEqual
           "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.s <> ?"
       }
       "two" in {
         val q = quote {
-          (l: Long, i: Int) => qr1.filter(t => t.l != l && t.i != i)
+          qr1.filter(t => t.l != lift(2L) && t.i != lift(1))
         }
-        val mirror = testContext.run(q)(2L, 1)
-        mirror.binds mustEqual Row(2L, 1)
-        mirror.sql mustEqual
+        val mirror = testContext.run(q)
+        mirror.prepareRow mustEqual Row(2L, 1)
+        mirror.string mustEqual
           "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE (t.l <> ?) AND (t.i <> ?)"
       }
     }

@@ -30,26 +30,24 @@ trait Parsing extends EntityConfigParsing {
   }
 
   val astParser: Parser[Ast] = Parser[Ast] {
-    case `bindingParser`(value)             => value
+    case q"$i: $typ"                        => astParser(i)
+    case `liftParser`(value)                => value
     case `valParser`(value)                 => value
     case `patMatchValParser`(value)         => value
     case `valueParser`(value)               => value
     case `quotedAstParser`(value)           => value
-    case `queryParser`(query)               => query
-    case `functionParser`(function)         => function
-    case `actionParser`(action)             => action
+    case `queryParser`(value)               => value
+    case `functionParser`(value)            => value
+    case `actionParser`(value)              => value
     case `infixParser`(value)               => value
     case `orderingParser`(value)            => value
     case `operationParser`(value)           => value
-    case `identParser`(ident)               => ident
+    case `identParser`(value)               => value
     case `propertyParser`(value)            => value
     case `stringInterpolationParser`(value) => value
     case `optionOperationParser`(value)     => value
     case `boxingParser`(value)              => value
     case `ifParser`(value)                  => value
-
-    case q"$i: $typ"                        => astParser(i)
-
     case `patMatchParser`(value)            => value
     case `blockParser`(block)               => block
   }
@@ -98,23 +96,33 @@ trait Parsing extends EntityConfigParsing {
     case q"if($a) $b else $c" => If(astParser(a), astParser(b), astParser(c))
   }
 
-  val bindingParser: Parser[Binding] = Parser[Binding] {
-    case q"$pack.lift[$t]($value)" if (t.tpe <:< c.weakTypeOf[AnyVal]) =>
-      t.tpe.members.collect {
-        case m: MethodSymbol if (m.isPrimaryConstructor) => m.paramLists.flatten
-      }.flatten.headOption match {
-        case Some(param) => CompileTimeBinding(c.typecheck(q"$value.${param.name.toTermName}"))
-        case None        => CompileTimeBinding(value)
-      }
-    case q"$pack.lift[$t]($value)" => CompileTimeBinding(value)
+  val liftParser: Parser[Lift] = Parser[Lift] {
+
+    case q"$pack.liftScalar[$t]($value)($encoder)"          => ScalarValueLift(value.toString, value, encoder)
+    case q"$pack.liftCaseClass[$t]($value)"                 => CaseClassValueLift(value.toString, value)
+
+    case q"$pack.liftQueryScalar[$t, $u]($value)($encoder)" => ScalarQueryLift(value.toString, value, encoder)
+    case q"$pack.liftQueryCaseClass[$t, $u]($value)"        => CaseClassQueryLift(value.toString, value)
+
+    // Unused, it's here only to make eclipse's presentation compiler happy :(
+    case q"$pack.lift[$t]($value)"                          => ScalarValueLift(value.toString, value, q"null")
+    case q"$pack.liftQuery[$t, $u]($value)"                 => ScalarQueryLift(value.toString, value, q"null")
   }
 
   val quotedAstParser: Parser[Ast] = Parser[Ast] {
     case q"$pack.unquote[$t]($quoted)" => astParser(quoted)
     case t if (t.tpe <:< c.weakTypeOf[CoreDsl#Quoted[Any]]) =>
       unquote[Ast](t) match {
-        case Some(ast) if (!IsDynamic(ast)) => QuotedReference(t, Rebind(c)(t, ast, astParser(_)))
-        case other                          => Dynamic(t)
+        case Some(ast) if (!IsDynamic(ast)) =>
+          t match {
+            case t: c.universe.Block => ast // expand quote(quote(body)) locally
+            case t =>
+              Rebind(c)(t, ast, astParser(_)) match {
+                case Some(ast) => ast
+                case None      => QuotedReference(t, ast)
+              }
+          }
+        case other => Dynamic(t)
       }
   }
 
@@ -367,8 +375,9 @@ trait Parsing extends EntityConfigParsing {
         case "nonEmpty" => SetOperator.`nonEmpty`
       }
     Parser[Operation] {
-      case q"$a.contains[..$t]($b)" => BinaryOperation(astParser(a), SetOperator.`contains`, astParser(b))
-      case unary(op)                => op
+      case q"$a.contains[$t]($b)" if (is[CoreDsl#Query[Any]])(a) =>
+        BinaryOperation(astParser(a), SetOperator.`contains`, astParser(b))
+      case unary(op) => op
     }
   }
 
@@ -378,38 +387,32 @@ trait Parsing extends EntityConfigParsing {
   private def is[T](tree: Tree)(implicit t: TypeTag[T]) =
     tree.tpe <:< t.tpe
 
-  private def isTraversable(tree: Tree) = {
-    tree.tpe <:< typeOf[Traversable[_]]
-  }
-
   val valueParser: Parser[Value] = Parser[Value] {
     case q"null" => NullValue
     case Literal(c.universe.Constant(v)) => Constant(v)
     case q"((..$v))" if (v.size > 1) => Tuple(v.map(astParser(_)))
-    case tree @ q"$pack.$coll.apply[..$t](..$v)" if isTraversable(tree) => Collection(v.map(astParser(_)))
     case q"(($pack.Predef.ArrowAssoc[$t1]($v1).$arrow[$t2]($v2)))" => Tuple(List(astParser(v1), astParser(v2)))
   }
 
   val actionParser: Parser[Ast] = Parser[Ast] {
     case q"$query.$method(..$assignments)" if (method.decodedName.toString == "update") =>
-      AssignedAction(Update(astParser(query)), assignments.map(assignmentParser(_)))
+      Update(astParser(query), assignments.map(assignmentParser(_)))
     case q"$query.insert(..$assignments)" =>
-      AssignedAction(Insert(astParser(query)), assignments.map(assignmentParser(_)))
-    case q"$query.$method" if (method.decodedName.toString == "update") =>
-      Function(List(Ident("x1")), Update(astParser(query)))
-    case q"$query.insert" =>
-      Function(List(Ident("x1")), Insert(astParser(query)))
+      Insert(astParser(query), assignments.map(assignmentParser(_)))
     case q"$query.delete" =>
       Delete(astParser(query))
-    case q"$pack.InsertAssignedAction[$t]($query).returning[$r](($alias) => $e.$property)" =>
-      Returning(astParser(query), property.decodedName.toString)
-    case q"$pack.InsertUnassignedAction[$t]($query).returning[$r](($alias) => $e.$property)" =>
-      Returning(astParser(query), property.decodedName.toString)
+    case q"$action.returning[$r](($alias) => $body)" =>
+      Returning(astParser(action), identParser(alias), astParser(body))
+    case tree @ q"$query.foreach[$t](($alias) => $body)" if (is[CoreDsl#Query[Any]](query)) =>
+      Foreach(astParser(query), identParser(alias), astParser(body))
   }
 
   private val assignmentParser: Parser[Assignment] = Parser[Assignment] {
     case q"((${ identParser(i1) }) => $pack.Predef.ArrowAssoc[$t](${ identParser(i2) }.$prop).$arrow[$v]($value))" if (i1 == i2) =>
-      Assignment(i1, prop.decodedName.toString, astParser(value))
+      Assignment(i1, Property(i2, prop.decodedName.toString), astParser(value))
+
+    // Unused, it's here only to make eclipse's presentation compiler happy
+    case astParser(ast) => Assignment(Ident("unused"), Ident("unused"), Constant("unused"))
   }
 
 }

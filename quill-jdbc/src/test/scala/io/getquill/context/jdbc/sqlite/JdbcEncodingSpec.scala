@@ -9,7 +9,7 @@ class JdbcEncodingSpec extends EncodingSpec {
 
   "encodes and decodes types" in pendingUntilFixed {
     testContext.run(delete)
-    testContext.run(insert)(insertValues)
+    testContext.run(liftQuery(insertValues).foreach(e => insert(e)))
     verify(testContext.run(query[EncodingTestEntity]))
     ()
   }
@@ -18,7 +18,7 @@ class JdbcEncodingSpec extends EncodingSpec {
   // https://bitbucket.org/xerial/sqlite-jdbc/issues/155/empty-blobs-are-returned-as-null-instead
   "(with workaround) encodes and decodes types" in {
     testContext.run(delete)
-    testContext.run(insert)(insertValues)
+    testContext.run(liftQuery(insertValues).foreach(e => insert(e)))
     val result = testContext.run(query[EncodingTestEntity])
     verify(workaroundSqliteJdbcBug(result))
   }

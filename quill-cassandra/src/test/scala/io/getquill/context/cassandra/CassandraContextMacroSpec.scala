@@ -11,19 +11,19 @@ class CassandraContextMacroSpec extends Spec {
   "runs queries" - {
     "static" in {
       val q = quote {
-        (a: Int) => qr1.filter(t => t.i == a)
+        qr1.filter(t => t.i == lift(1))
       }
-      val mirror = mirrorContext.run(q)(1)
-      mirror.cql mustEqual "SELECT s, i, l, o FROM TestEntity WHERE i = ?"
-      mirror.binds mustEqual Row(1)
+      val mirror = mirrorContext.run(q)
+      mirror.string mustEqual "SELECT s, i, l, o FROM TestEntity WHERE i = ?"
+      mirror.prepareRow mustEqual Row(1)
     }
     "dynamic" in {
-      val q: Quoted[Int => Query[TestEntity]] = quote {
-        (a: Int) => qr1.filter(t => t.i == a)
+      val q: Quoted[Query[TestEntity]] = quote {
+        qr1.filter(t => t.i == lift(1))
       }
-      val mirror = mirrorContext.run(q)(1)
-      mirror.cql mustEqual "SELECT s, i, l, o FROM TestEntity WHERE i = ?"
-      mirror.binds mustEqual Row(1)
+      val mirror = mirrorContext.run(q)
+      mirror.string mustEqual "SELECT s, i, l, o FROM TestEntity WHERE i = ?"
+      mirror.prepareRow mustEqual Row(1)
     }
   }
 
@@ -39,21 +39,19 @@ class CassandraContextMacroSpec extends Spec {
   "binds inputs according to the cql terms order" - {
     "filter.update" in {
       val q = quote {
-        (i: Int, l: Long) =>
-          qr1.filter(t => t.i == i).update(t => t.l -> l)
+        qr1.filter(t => t.i == lift(1)).update(t => t.l -> lift(2L))
       }
-      val mirror = mirrorContext.run(q)(List((1, 2L)))
-      mirror.cql mustEqual "UPDATE TestEntity SET l = ? WHERE i = ?"
-      mirror.bindList mustEqual List(Row(2l, 1))
+      val mirror = mirrorContext.run(q)
+      mirror.string mustEqual "UPDATE TestEntity SET l = ? WHERE i = ?"
+      mirror.prepareRow mustEqual Row(2l, 1)
     }
     "filter.map" in {
       val q = quote {
-        (i: Int, l: Long) =>
-          qr1.filter(t => t.i == i).map(t => l)
+        qr1.filter(t => t.i == lift(1)).map(t => lift(2L))
       }
-      val mirror = mirrorContext.run(q)(1, 2L)
-      mirror.cql mustEqual "SELECT ? FROM TestEntity WHERE i = ?"
-      mirror.binds mustEqual Row(2l, 1)
+      val mirror = mirrorContext.run(q)
+      mirror.string mustEqual "SELECT ? FROM TestEntity WHERE i = ?"
+      mirror.prepareRow mustEqual Row(2l, 1)
     }
   }
 }

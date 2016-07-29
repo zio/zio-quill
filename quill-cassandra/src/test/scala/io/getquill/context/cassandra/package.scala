@@ -10,13 +10,13 @@ import io.getquill.CassandraStreamContext
 
 package object cassandra {
 
-  val mirrorContext = new CassandraMirrorContext with TestEntities
+  lazy val mirrorContext = new CassandraMirrorContext with TestEntities
 
-  val testSyncDB = new CassandraSyncContext[Literal]("testSyncDB") with TestEntities
+  lazy val testSyncDB = new CassandraSyncContext[Literal]("testSyncDB") with TestEntities
 
-  val testAsyncDB = new CassandraAsyncContext[Literal]("testAsyncDB") with TestEntities
+  lazy val testAsyncDB = new CassandraAsyncContext[Literal]("testAsyncDB") with TestEntities
 
-  val testStreamDB = new CassandraStreamContext[Literal]("testStreamDB") with TestEntities
+  lazy val testStreamDB = new CassandraStreamContext[Literal]("testStreamDB") with TestEntities
 
   def await[T](f: Future[T]): T = Await.result(f, Duration.Inf)
 }

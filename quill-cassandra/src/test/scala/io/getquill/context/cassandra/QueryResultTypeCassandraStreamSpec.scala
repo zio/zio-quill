@@ -14,7 +14,7 @@ class QueryResultTypeCassandraStreamSpec extends QueryResultTypeCassandraSpec {
 
   override def beforeAll = {
     result(context.run(deleteAll))
-    result(context.run(insert)(Observable.apply(entries: _*)))
+    result(context.run(liftQuery(entries).foreach(e => insert(e))))
     ()
   }
 
@@ -27,7 +27,7 @@ class QueryResultTypeCassandraStreamSpec extends QueryResultTypeCassandraSpec {
       result(context.run(entitySize)) mustEqual Some(List(3))
     }
     "parametrized size" in {
-      result(context.run(parametrizedSize)(10000)) mustEqual Some(List(0))
+      result(context.run(parametrizedSize(lift(10000)))) mustEqual Some(List(0))
     }
   }
 }

@@ -4,7 +4,7 @@ import io.getquill.Spec
 
 trait PeopleSpec extends Spec {
 
-  val context: SqlContext[_, _, _, _]
+  val context: SqlContext[_, _]
 
   import context._
 
@@ -12,7 +12,7 @@ trait PeopleSpec extends Spec {
   case class Couple(her: String, him: String)
 
   val peopleInsert =
-    quote(query[Person].insert)
+    quote((p: Person) => query[Person].insert(p))
 
   val peopleEntries = List(
     Person("Alex", 60),
@@ -24,7 +24,7 @@ trait PeopleSpec extends Spec {
   )
 
   val couplesInsert =
-    quote(query[Couple].insert)
+    quote((c: Couple) => query[Couple].insert(c))
 
   val couplesEntries = List(
     Couple("Alex", "Bert"),
@@ -127,7 +127,7 @@ trait PeopleSpec extends Spec {
 
   val `Ex 8 and 9 contains` =
     quote {
-      (set: Set[Int]) =>
+      (set: Query[Int]) =>
         query[Person].filter(p => set.contains(p.age))
     }
 

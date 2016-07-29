@@ -9,7 +9,7 @@ case class EntityConfig(
   properties: List[PropertyAlias] = List()
 )
 
-trait EntityConfigParsing extends UnicodeArrowParsing {
+trait EntityConfigParsing {
   this: Parsing =>
   val c: Context
 
@@ -23,11 +23,6 @@ trait EntityConfigParsing extends UnicodeArrowParsing {
         parseEntityConfig(e).copy(properties = propertyAliases.map(propertyAliasParser(_)))
       case _ =>
         EntityConfig()
-    }
-
-  private def parseProperty(t: Tree): String =
-    t match {
-      case q"$e.$property" => property.decodedName.toString
     }
 
   val propertyAliasParser: Parser[PropertyAlias]

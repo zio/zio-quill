@@ -3,14 +3,12 @@ package io.getquill.norm.select
 import io.getquill.Spec
 import io.getquill.context.mirror.Row
 import io.getquill.testContext
-import io.getquill.testContext.Decoder
-import io.getquill.testContext.qr1
-import io.getquill.testContext.qr2
-import io.getquill.testContext.query
-import io.getquill.testContext.quote
-import io.getquill.testContext.unquote
+import io.getquill.testContext._
 
 class SelectFlatteningSpec extends Spec {
+
+  case class Test[T](v: T)
+  case class Evil(x: Thread)
 
   "flattens the final map (select) of queries" - {
 
@@ -18,25 +16,21 @@ class SelectFlatteningSpec extends Spec {
       val q = quote {
         qr1.map(t => t.s)
       }
-      testContext.run(q).ast mustEqual q.ast
+      testContext.run(q).string mustEqual
+        "query[TestEntity].map(t => t.s)"
     }
 
     "flattens a case class select" - {
       "normal" in {
-        val n = quote {
-          qr1.map(x => (x.s, x.i, x.l, x.o))
-        }
-        testContext.run(qr1).ast mustEqual n.ast
+        testContext.run(qr1).string mustEqual
+          "query[TestEntity].map(x => (x.s, x.i, x.l, x.o))"
       }
       "with type param" in {
-        case class Test[T](v: T)
         val q = quote {
           query[Test[Int]]
         }
-        val n = quote {
-          query[Test[Int]].map(x => x.v)
-        }
-        testContext.run(q).ast mustEqual n.ast
+        testContext.run(q).string mustEqual
+          "query[Test].map(x => x.v)"
       }
     }
 
@@ -45,54 +39,39 @@ class SelectFlatteningSpec extends Spec {
         val q = quote {
           qr1.map(x => (x, x.s, x.i, x.l))
         }
-        val n = quote {
-          qr1.map(x => (x.s, x.i, x.l, x.o, x.s, x.i, x.l))
-        }
-        testContext.run(q).ast mustEqual n.ast
+        testContext.run(q).string mustEqual
+          "query[TestEntity].map(x => (x.s, x.i, x.l, x.o, x.s, x.i, x.l))"
       }
       "case class in the middle of the select" in {
         val q = quote {
           qr1.map(x => (x.s, x, x.i, x.l))
         }
-        val n = quote {
-          qr1.map(x => (x.s, x.s, x.i, x.l, x.o, x.i, x.l))
-        }
-        testContext.run(q).ast mustEqual n.ast
+        testContext.run(q).string mustEqual
+          "query[TestEntity].map(x => (x.s, x.s, x.i, x.l, x.o, x.i, x.l))"
       }
       "case class in the end of the select" in {
         val q = quote {
           qr1.map(x => (x.s, x.i, x.l, x))
         }
-        val n = quote {
-          qr1.map(x => (x.s, x.i, x.l, x.s, x.i, x.l, x.o))
-        }
-        testContext.run(q).ast mustEqual n.ast
+        testContext.run(q).string mustEqual
+          "query[TestEntity].map(x => (x.s, x.i, x.l, x.s, x.i, x.l, x.o))"
       }
       "two case classes" in {
         val q = quote {
           qr1.flatMap(x => qr2.map(y => (x, x.s, y)))
         }
-        val n = quote {
-          qr1.flatMap(x => qr2.map(y => (x.s, x.i, x.l, x.o, x.s, y.s, y.i, y.l, y.o)))
-        }
-        testContext.run(q).ast mustEqual n.ast
+        testContext.run(q).string mustEqual
+          "query[TestEntity].flatMap(x => query[TestEntity2].map(y => (x.s, x.i, x.l, x.o, x.s, y.s, y.i, y.l, y.o)))"
       }
     }
   }
 
   "fails if the context doesn't know how to encode the type" - {
-    case class Evil(x: Thread)
     "simple value" in {
-      val q = quote {
-        query[Evil].map(_.x)
-      }
-      "testContext.run(q)" mustNot compile
+      "testContext.run(query[Evil].map(_.x))" mustNot compile
     }
     "case class" in {
-      val q = quote {
-        query[Evil]
-      }
-      "testContext.run(q)" mustNot compile
+      "testContext.run(query[Evil])" mustNot compile
     }
   }
 

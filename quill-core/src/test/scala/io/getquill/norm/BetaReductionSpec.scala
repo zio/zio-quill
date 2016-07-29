@@ -46,7 +46,7 @@ class BetaReductionSpec extends Spec {
       val entity = Entity("a")
       val (a, b, c) = (Ident("a"), Ident("b"), Ident("c"))
       val (c1, c2, c3) = (Constant(1), Constant(2), Constant(3))
-      val map = collection.Map[Ident, Ast](c -> b, b -> a)
+      val map = collection.Map[Ast, Ast](c -> b, b -> a)
 
       "top level block" in {
         val block = Block(List(

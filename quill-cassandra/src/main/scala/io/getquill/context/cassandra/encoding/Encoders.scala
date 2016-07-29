@@ -3,28 +3,15 @@ package io.getquill.context.cassandra.encoding
 import java.util.UUID
 import com.datastax.driver.core.BoundStatement
 import java.nio.ByteBuffer
-import io.getquill.context.cassandra.CassandraContext
-import com.datastax.driver.core.Row
-import io.getquill.context.BindedStatementBuilder
+import io.getquill.context.cassandra.CassandraSessionContext
 
 trait Encoders {
-  this: CassandraContext[_, Row, BindedStatementBuilder[BoundStatement]] =>
+  this: CassandraSessionContext[_] =>
 
   def encoder[T](f: BoundStatement => (Int, T) => BoundStatement): Encoder[T] =
     new Encoder[T] {
-      override def apply(idx: Int, value: T, row: BindedStatementBuilder[BoundStatement]) = {
-        val raw = new io.getquill.context.Encoder[BoundStatement, T] {
-          override def apply(idx: Int, value: T, row: BoundStatement) =
-            f(row)(idx, value)
-        }
-        row.single(idx, value, raw)
-      }
-    }
-
-  implicit def traversableEncoder[T](implicit e: Encoder[T]): Encoder[Traversable[T]] =
-    new Encoder[Traversable[T]] {
-      override def apply(idx: Int, values: Traversable[T], row: BindedStatementBuilder[BoundStatement]) =
-        row.coll(idx, values, e)
+      override def apply(idx: Int, value: T, row: BoundStatement) =
+        f(row)(idx, value)
     }
 
   private[this] val nullEncoder = encoder[Null] { row => (idx, v) =>
@@ -33,7 +20,7 @@ trait Encoders {
 
   implicit def optionEncoder[T](implicit d: Encoder[T]): Encoder[Option[T]] =
     new Encoder[Option[T]] {
-      override def apply(idx: Int, value: Option[T], row: BindedStatementBuilder[BoundStatement]) =
+      override def apply(idx: Int, value: Option[T], row: BoundStatement) =
         value match {
           case None    => nullEncoder(idx, null, row)
           case Some(v) => d(idx, v, row)

@@ -1,29 +1,28 @@
 package io.getquill.context.sql.idiom
 
 import io.getquill.Spec
-import io.getquill.context.sql.SqlQuery
-import io.getquill.context.sql.testContext.qr1
-import io.getquill.context.sql.testContext.quote
-import io.getquill.context.sql.testContext.unquote
 import io.getquill.Literal
-import io.getquill.util.Show.Shower
+import io.getquill.SqlMirrorContext
+import io.getquill.TestEntities
+import io.getquill.MySQLDialect
+import scala.util.Try
 
 class OffsetWithoutLimitWorkaroundSpec extends Spec {
 
-  val subject = new SqlIdiom with OffsetWithoutLimitWorkaround {
-    def prepare(sql: String) = sql
+  val ctx = new SqlMirrorContext[MySQLDialect, Literal] with TestEntities {
+    override def probe(statement: String) =
+      Try {
+        statement mustEqual
+          "PREPARE p603247403 FROM 'SELECT x.s, x.i, x.l, x.o FROM TestEntity x LIMIT 18446744073709551610 OFFSET 1'"
+      }
   }
-
-  implicit val naming = new Literal {}
-
-  import subject._
+  import ctx._
 
   "creates a synthectic limit" in {
     val q = quote {
       qr1.drop(1)
     }
-    SqlQuery(q.ast).show mustEqual
-      "SELECT x.* FROM TestEntity x LIMIT 18446744073709551610 OFFSET 1"
+    ctx.run(q)
+    ()
   }
-
 }
