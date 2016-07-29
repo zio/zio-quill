@@ -962,7 +962,7 @@ SQL Contexts
 Contexts represent the database and provide an execution interface for queries. Example:
 
 ```scala
-lazy val ctx = new JdbcContext[MySQLDialect, SnakeCase]("db")
+lazy val ctx = new JdbcContext[MySQLDialect, SnakeCase]("ctx")
 ```
 
 #### Dialect
@@ -1045,7 +1045,7 @@ libraryDependencies ++= Seq(
 
 context definition
 ```scala
-lazy val ctx = new JdbcContext[MySQLDialect, SnakeCase]("db")
+lazy val ctx = new JdbcContext[MySQLDialect, SnakeCase]("ctx")
 ```
 
 application.properties
@@ -1072,7 +1072,7 @@ libraryDependencies ++= Seq(
 
 context definition
 ```scala
-lazy val ctx = new JdbcContext[PostgresDialect, SnakeCase]("db")
+lazy val ctx = new JdbcContext[PostgresDialect, SnakeCase]("ctx")
 ```
 
 application.properties
@@ -1098,7 +1098,7 @@ libraryDependencies ++= Seq(
 
 context definition
 ```scala
-lazy val ctx = new JdbcContext[SqliteDialect, SnakeCase]("db")
+lazy val ctx = new JdbcContext[SqliteDialect, SnakeCase]("ctx")
 ```
 
 application.properties
@@ -1119,14 +1119,14 @@ libraryDependencies ++= Seq(
 
 context definition
 ```scala
-lazy val ctx = new JdbcContext[H2Dialect, SnakeCase]("db")
+lazy val ctx = new JdbcContext[H2Dialect, SnakeCase]("ctx")
 ```
 
 application.properties
 ```
-testH2DB.dataSourceClassName=org.h2.jdbcx.JdbcDataSource
-testH2DB.dataSource.url="jdbc:h2:mem:yourdbname"
-testH2DB.dataSource.user=sa
+ctx.dataSourceClassName=org.h2.jdbcx.JdbcDataSource
+ctx.dataSource.url="jdbc:h2:mem:yourdbname"
+ctx.dataSource.user=sa
 ```
 
 ##### quill-async
@@ -1179,7 +1179,7 @@ libraryDependencies ++= Seq(
 
 context definition
 ```scala
-lazy val ctx = new MysqlAsyncContext[SnakeCase]("db")
+lazy val ctx = new MysqlAsyncContext[SnakeCase]("ctx")
 ```
 
 application.properties
@@ -1206,7 +1206,7 @@ libraryDependencies ++= Seq(
 
 context definition
 ```scala
-lazy val ctx = new PostgresAsyncContext[SnakeCase]("db")
+lazy val ctx = new PostgresAsyncContext[SnakeCase]("ctx")
 ```
 
 application.properties
@@ -1246,7 +1246,7 @@ libraryDependencies ++= Seq(
 
 context definition
 ```scala
-lazy val ctx = new FinagleMysqlContext[SnakeCase]("db")
+lazy val ctx = new FinagleMysqlContext[SnakeCase]("ctx")
 ```
 
 application.properties
@@ -1274,17 +1274,17 @@ libraryDependencies ++= Seq(
 
 **synchronous context**
 ```scala
-lazy val ctx = new CassandraSyncContext[SnakeCase]("db")
+lazy val ctx = new CassandraSyncContext[SnakeCase]("ctx")
 ```
 
 **asynchronous context**
 ```scala
-lazy val ctx = new CassandraAsyncContext[SnakeCase]("db")
+lazy val ctx = new CassandraAsyncContext[SnakeCase]("ctx")
 ```
 
 **stream context**
 ```scala
-lazy val ctx = new CassandraStreamContext[SnakeCase]("db")
+lazy val ctx = new CassandraStreamContext[SnakeCase]("ctx")
 ```
 
 The configurations are set using runtime reflection on the [`Cluster.builder`](https://docs.datastax.com/en/drivers/java/2.1/com/datastax/driver/core/Cluster.Builder.html) instance. It is possible to set nested structures like `queryOptions.consistencyLevel`, use enum values like `LOCAL_QUORUM`, and set multiple parameters like in `credentials`.
