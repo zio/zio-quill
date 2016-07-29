@@ -75,6 +75,20 @@ class ActionMacroSpec extends Spec {
       }
       r.bindList mustEqual List(Row(1, v), Row(2, v))
     }
+    "single action" in {
+      val q = quote {
+        (p1: Int) => qr1.insert(_.i -> p1)
+      }
+      val r = testContext.run(q)(1)
+      r.bind mustEqual Row(1)
+    }
+    "single action with case class" in {
+      val q = quote {
+        qr1.insert
+      }
+      val r = testContext.run(q)(TestEntity("1", 1, 1L, None))
+      r.bind mustEqual Row("1", 1, 1L, None)
+    }
   }
 
   "expands unassigned actions" - {

@@ -19,11 +19,11 @@ class CassandraStreamContext[N <: NamingStrategy](config: CassandraContextConfig
   def this(config: Config) = this(CassandraContextConfig(config))
   def this(configPrefix: String) = this(LoadConfig(configPrefix))
 
-  override type QueryResult[T] = Observable[T]
-  override type SingleQueryResult[T] = Observable[T]
-  override type ActionResult[T] = Observable[ResultSet]
-  override type BatchedActionResult[T] = Observable[ResultSet]
-  override type Params[T] = Observable[T]
+  type QueryResult[T] = Observable[T]
+  type SingleQueryResult[T] = Observable[T]
+  type ActionResult[T, O] = Observable[ResultSet]
+  type BatchedActionResult[T, O] = Observable[ResultSet]
+  type Params[T] = Observable[T]
 
   protected def page(rs: ResultSet): Observable[Iterable[Row]] = {
     val available = rs.getAvailableWithoutFetching

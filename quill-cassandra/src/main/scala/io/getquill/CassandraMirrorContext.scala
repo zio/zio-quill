@@ -14,11 +14,11 @@ class CassandraMirrorContext
   with MirrorEncoders
   with MirrorDecoders {
 
-  override type QueryResult[T] = QueryMirror[T]
-  override type SingleQueryResult[T] = QueryMirror[T]
-  override type ActionResult[T] = ActionMirror
-  override type BatchedActionResult[T] = BatchActionMirror
-  override type Params[T] = List[T]
+  type QueryResult[T] = QueryMirror[T]
+  type SingleQueryResult[T] = QueryMirror[T]
+  type ActionResult[T, O] = ActionMirror
+  type BatchedActionResult[T, O] = BatchActionMirror
+  type Params[T] = List[T]
 
   class ActionApply[T](f: Params[T] => BatchActionMirror) extends (Params[T] => BatchActionMirror) {
     def apply(params: Params[T]) = f(params)
