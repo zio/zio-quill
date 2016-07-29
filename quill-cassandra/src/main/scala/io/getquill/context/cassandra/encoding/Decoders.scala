@@ -10,7 +10,7 @@ import io.getquill.context.BindedStatementBuilder
 trait Decoders {
   this: CassandraContext[_, Row, BindedStatementBuilder[BoundStatement]] =>
 
-  private def decoder[T](f: Row => Int => T): Decoder[T] =
+  def decoder[T](f: Row => Int => T): Decoder[T] =
     new Decoder[T] {
       def apply(index: Int, row: Row) =
         f(row)(index)
