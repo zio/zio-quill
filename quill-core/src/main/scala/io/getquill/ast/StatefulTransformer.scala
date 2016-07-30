@@ -30,6 +30,9 @@ trait StatefulTransformer[T] {
         val (ct, ctt) = att.apply(c)
         (OptionOperation(t, at, b, ct), ctt)
 
+      case OptionProperty(a, b) =>
+        val (at, att) = apply(a)
+        (OptionProperty(at, b), att)
       case If(a, b, c) =>
         val (at, att) = apply(a)
         val (bt, btt) = att.apply(b)

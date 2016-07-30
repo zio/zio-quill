@@ -762,13 +762,14 @@ class SqlIdiomSpec extends Spec {
           "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE (1, 2) = t.i"
       }
     }
-    "property" - {
-      "column" in {
-        val q = quote {
-          qr1.map(t => t.s)
-        }
-        testContext.run(q).sql mustEqual
-          "SELECT t.s FROM TestEntity t"
+    "option property" - {
+      "get option column" in {
+        val q = quote(qr1.map(t => t.o.get))
+        testContext.run(q).sql mustEqual "SELECT t.o FROM TestEntity t"
+      }
+      "get sum" in {
+        val q = quote(qr1.map(t => t.i).sum.get)
+        testContext.run(q).sql mustEqual "SELECT x.* FROM (SELECT SUM(t.i) FROM TestEntity t) x"
       }
       "isEmpty" in {
         val q = quote {
@@ -790,6 +791,15 @@ class SqlIdiomSpec extends Spec {
         }
         testContext.run(q).sql mustEqual
           "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o IS NOT NULL"
+      }
+    }
+    "property" - {
+      "column" in {
+        val q = quote {
+          qr1.map(t => t.s)
+        }
+        testContext.run(q).sql mustEqual
+          "SELECT t.s FROM TestEntity t"
       }
     }
     "infix" - {

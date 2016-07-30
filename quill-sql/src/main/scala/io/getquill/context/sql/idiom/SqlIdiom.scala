@@ -39,6 +39,7 @@ import io.getquill.ast.NullValue
 import io.getquill.ast.NumericOperator
 import io.getquill.ast.Operation
 import io.getquill.ast.OptionOperation
+import io.getquill.ast.OptionProperty
 import io.getquill.ast.Ordering
 import io.getquill.ast.Property
 import io.getquill.ast.Query
@@ -84,6 +85,7 @@ trait SqlIdiom {
       case Infix(parts, params) => StringContext(parts: _*).s(params.map(_.show): _*)
       case a: Action            => a.show
       case a: Ident             => a.show
+      case a: OptionProperty    => a.show
       case a: Property          => a.show
       case a: Value             => a.show
       case a: If                => a.show
@@ -257,12 +259,16 @@ trait SqlIdiom {
 
   implicit def propertyShow(implicit valueShow: Show[Value], identShow: Show[Ident], strategy: NamingStrategy): Show[Property] =
     Show[Property] {
-      case Property(ident, "isEmpty")      => s"${ident.show} IS NULL"
-      case Property(ident, "nonEmpty")     => s"${ident.show} IS NOT NULL"
-      case Property(ident, "isDefined")    => s"${ident.show} IS NOT NULL"
       case Property(Property(ident, a), b) => s"${ident.show}.$a$b"
       case Property(ast, name)             => s"${scopedShow(ast)}.${strategy.column(name)}"
     }
+
+  implicit def optionPropertyShow(implicit strategy: NamingStrategy): Show[OptionProperty] = Show[OptionProperty] {
+    case OptionProperty(ast, "get")       => ast.show
+    case OptionProperty(ast, "isEmpty")   => s"${ast.show} IS NULL"
+    case OptionProperty(ast, "nonEmpty")  => s"${ast.show} IS NOT NULL"
+    case OptionProperty(ast, "isDefined") => s"${ast.show} IS NOT NULL"
+  }
 
   implicit def valueShow(implicit strategy: NamingStrategy): Show[Value] = Show[Value] {
     case Constant(v: String) => s"'$v'"

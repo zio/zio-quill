@@ -23,6 +23,7 @@ trait Unliftables {
     case q"$pack.Aggregation.apply(${ a: AggregationOperator }, ${ b: Ast })" => Aggregation(a, b)
     case q"$pack.Infix.apply(${ a: List[String] }, ${ b: List[Ast] })" => Infix(a, b)
     case q"$pack.OptionOperation.apply(${ a: OptionOperationType }, ${ b: Ast }, ${ c: Ident }, ${ d: Ast })" => OptionOperation(a, b, c, d)
+    case q"$pack.OptionProperty.apply(${ a: Ast }, ${ b: String })" => OptionProperty(a, b)
     case q"$pack.If.apply(${ a: Ast }, ${ b: Ast }, ${ c: Ast })" => If(a, b, c)
     case q"$tree.ast" => Dynamic(tree)
     case q"$pack.RuntimeBinding.apply(${ a: String })" => RuntimeBinding(a)

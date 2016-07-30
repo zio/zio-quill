@@ -42,6 +42,7 @@ trait Parsing extends EntityConfigParsing {
     case `orderingParser`(value)            => value
     case `operationParser`(value)           => value
     case `identParser`(ident)               => ident
+    case `optionPropertyParser`(value)      => value
     case `propertyParser`(value)            => value
     case `stringInterpolationParser`(value) => value
     case `optionOperationParser`(value)     => value
@@ -277,6 +278,14 @@ trait Parsing extends EntityConfigParsing {
       OptionOperation(OptionForall, astParser(o), identParser(alias), astParser(body))
     case q"$o.exists({($alias) => $body})" if (is[Option[Any]](o)) =>
       OptionOperation(OptionExists, astParser(o), identParser(alias), astParser(body))
+  }
+
+  val optionPropertyParser: Parser[OptionProperty] = {
+    val props = Set("get", "isEmpty", "isDefined", "nonEmpty")
+    Parser[OptionProperty] {
+      case q"$o.$p" if (is[Option[Any]](o)) && props.contains(p.decodedName.toString) =>
+        OptionProperty(astParser(o), p.decodedName.toString)
+    }
   }
 
   val propertyParser: Parser[Ast] = Parser[Ast] {

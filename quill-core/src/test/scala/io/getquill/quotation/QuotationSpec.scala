@@ -49,6 +49,7 @@ import io.getquill.ast.OptionExists
 import io.getquill.ast.OptionForall
 import io.getquill.ast.OptionMap
 import io.getquill.ast.OptionOperation
+import io.getquill.ast.OptionProperty
 import io.getquill.ast.Property
 import io.getquill.ast.PropertyAlias
 import io.getquill.ast.RightJoin
@@ -722,6 +723,24 @@ class QuotationSpec extends Spec {
             infix"$a || $b".as[String]
         }
         quote(unquote(q)).ast.body mustEqual Infix(List("", " || ", ""), List(Ident("a"), Ident("b")))
+      }
+    }
+    "option property" - {
+      "get" in {
+        val q = quote { (o: Option[Int]) => o.get }
+        quote(unquote(q)).ast.body mustEqual OptionProperty(Ident("o"), "get")
+      }
+      "isEmpty" in {
+        val q = quote { (o: Option[Int]) => o.isEmpty }
+        quote(unquote(q)).ast.body mustEqual OptionProperty(Ident("o"), "isEmpty")
+      }
+      "nonEmpty" in {
+        val q = quote { (o: Option[Int]) => o.nonEmpty }
+        quote(unquote(q)).ast.body mustEqual OptionProperty(Ident("o"), "nonEmpty")
+      }
+      "isDefined" in {
+        val q = quote { (o: Option[Int]) => o.isDefined }
+        quote(unquote(q)).ast.body mustEqual OptionProperty(Ident("o"), "isDefined")
       }
     }
     "option operation" - {
