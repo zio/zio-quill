@@ -18,11 +18,11 @@ class CassandraSyncContext[N <: NamingStrategy](config: CassandraContextConfig)
   def this(config: Config) = this(CassandraContextConfig(config))
   def this(configPrefix: String) = this(LoadConfig(configPrefix))
 
-  override protected type QueryResult[T] = List[T]
-  override protected type SingleQueryResult[T] = T
-  override protected type ActionResult[T] = ResultSet
-  override protected type BatchedActionResult[T] = List[ResultSet]
-  override protected type Params[T] = List[T]
+  override type QueryResult[T] = List[T]
+  override type SingleQueryResult[T] = T
+  override type ActionResult[T] = ResultSet
+  override type BatchedActionResult[T] = List[ResultSet]
+  override type Params[T] = List[T]
 
   def executeQuery[T](cql: String, extractor: Row => T = identity[Row] _, bind: BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement] = identity): List[T] =
     session.execute(prepare(cql, bind))
