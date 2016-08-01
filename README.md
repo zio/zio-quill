@@ -1018,7 +1018,7 @@ lazy val ctx = new JdbcContext[MySQLDialect, SnakeCase](createDataSource)
 
 Quill uses [HikariCP](https://github.com/brettwooldridge/HikariCP) for connection pooling. Please refer to HikariCP's [documentation](https://github.com/brettwooldridge/HikariCP#configuration-knobs-baby) for a detailed explanation of the available configurations.
 
-Note that there are `dataContext` configurations, that go under `dataContext`, like `user` and `password`, but some pool settings may go under the root config, like `connectionTimeout`.
+Note that there are `dataSource` configurations, that go under `dataSource`, like `user` and `password`, but some pool settings may go under the root config, like `connectionTimeout`.
 
 **Transactions**
 
@@ -1050,13 +1050,13 @@ lazy val ctx = new JdbcContext[MySQLDialect, SnakeCase]("ctx")
 
 application.properties
 ```
-ctx.dataContextClassName=com.mysql.jdbc.jdbc2.optional.MysqlDataSource
-ctx.dataContext.url=jdbc:mysql://host/database
-ctx.dataContext.user=root
-ctx.dataContext.password=root
-ctx.dataContext.cachePrepStmts=true
-ctx.dataContext.prepStmtCacheSize=250
-ctx.dataContext.prepStmtCacheSqlLimit=2048
+ctx.dataSourceClassName=com.mysql.jdbc.jdbc2.optional.MysqlDataSource
+ctx.dataSource.url=jdbc:mysql://host/database
+ctx.dataSource.user=root
+ctx.dataSource.password=root
+ctx.dataSource.cachePrepStmts=true
+ctx.dataSource.prepStmtCacheSize=250
+ctx.dataSource.prepStmtCacheSqlLimit=2048
 ctx.connectionTimeout=30000
 ```
 
@@ -1077,12 +1077,12 @@ lazy val ctx = new JdbcContext[PostgresDialect, SnakeCase]("ctx")
 
 application.properties
 ```
-ctx.dataContextClassName=org.postgresql.ds.PGSimpleDataContext
-ctx.dataContext.user=root
-ctx.dataContext.password=root
-ctx.dataContext.databaseName=database
-ctx.dataContext.portNumber=5432
-ctx.dataContext.serverName=host
+ctx.dataSourceClassName=org.postgresql.ds.PGSimpledataSource
+ctx.dataSource.user=root
+ctx.dataSource.password=root
+ctx.dataSource.databaseName=database
+ctx.dataSource.portNumber=5432
+ctx.dataSource.serverName=host
 ctx.connectionTimeout=30000
 ```
 
