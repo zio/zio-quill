@@ -6,14 +6,19 @@ import com.datastax.driver.core.Row
 import io.getquill.context.cassandra.CassandraContext
 import com.datastax.driver.core.BoundStatement
 import io.getquill.context.BindedStatementBuilder
+import io.getquill.util.Messages.fail
 
 trait Decoders {
   this: CassandraContext[_, Row, BindedStatementBuilder[BoundStatement]] =>
 
   def decoder[T](f: Row => Int => T): Decoder[T] =
     new Decoder[T] {
-      def apply(index: Int, row: Row) =
-        f(row)(index)
+      def apply(index: Int, row: Row) = {
+        row.isNull(index) match {
+          case true  => fail(s"Expected column at index $index to be defined but is was empty")
+          case false => f(row)(index)
+        }
+      }
     }
 
   implicit def optionDecoder[T](implicit d: Decoder[T]): Decoder[Option[T]] =
