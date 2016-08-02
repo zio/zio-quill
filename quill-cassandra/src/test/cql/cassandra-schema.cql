@@ -28,6 +28,11 @@ CREATE TABLE Task(
     tsk VARCHAR
 );
 
+CREATE TABLE DecodeNullTestEntity(
+    id INT PRIMARY KEY,
+    value INT
+);
+
 CREATE TABLE EncodingTestEntity(
     id INT,
     v1 VARCHAR,
