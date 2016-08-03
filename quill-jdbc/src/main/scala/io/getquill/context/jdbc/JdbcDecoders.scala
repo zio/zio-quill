@@ -23,7 +23,7 @@ trait JdbcDecoders {
         // don't invoke the parent decoder before the value was null checked
         row.wasNull match {
           case true  => None
-          case false => Some(d(index, row))
+          case false => Option(d(index, row))
         }
       }
     }
