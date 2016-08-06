@@ -18,7 +18,7 @@ trait Encoders {
       def apply(index: Int, value: T, row: BindedStatementBuilder[List[Any]]) = {
         val raw = new io.getquill.context.Encoder[List[Any], T] {
           override def apply(index: Int, value: T, row: List[Any]) =
-            row :+ value
+            row :+ f(value)
         }
         row.single(index, value, raw)
       }
