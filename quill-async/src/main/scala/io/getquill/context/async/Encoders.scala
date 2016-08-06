@@ -11,7 +11,7 @@ trait Encoders {
   this: AsyncContext[_, _, _] =>
 
   def encoder[T]: Encoder[T] =
-    encoder(identity[T] _)
+    encoder(identity[T])
 
   def encoder[T](f: T => Any): Encoder[T] =
     new Encoder[T] {
