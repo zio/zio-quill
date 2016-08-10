@@ -770,26 +770,74 @@ class SqlIdiomSpec extends Spec {
         testContext.run(q).sql mustEqual
           "SELECT t.s FROM TestEntity t"
       }
-      "isEmpty" in {
-        val q = quote {
-          qr1.filter(t => t.o.isEmpty)
+      "isEmpty" - {
+        "query" in {
+          val q = quote {
+            qr1.filter(t => t.o.isEmpty)
+          }
+          testContext.run(q).sql mustEqual
+            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o IS NULL"
         }
-        testContext.run(q).sql mustEqual
-          "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o IS NULL"
+        "update" in {
+          val q = quote {
+            qr1.filter(t => t.o.isEmpty).update(_.i -> 1)
+          }
+          testContext.run(q).sql mustEqual
+            "UPDATE TestEntity SET i = 1 WHERE o IS NULL"
+        }
+        "delete" in {
+          val q = quote {
+            qr1.filter(t => t.o.isEmpty).delete
+          }
+          testContext.run(q).sql mustEqual
+            "DELETE FROM TestEntity WHERE o IS NULL"
+        }
       }
-      "nonEmpty" in {
-        val q = quote {
-          qr1.filter(t => t.o.nonEmpty)
+      "nonEmpty" - {
+        "query" in {
+          val q = quote {
+            qr1.filter(t => t.o.nonEmpty)
+          }
+          testContext.run(q).sql mustEqual
+            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o IS NOT NULL"
         }
-        testContext.run(q).sql mustEqual
-          "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o IS NOT NULL"
+        "update" in {
+          val q = quote {
+            qr1.filter(t => t.o.nonEmpty).update(_.i -> 1)
+          }
+          testContext.run(q).sql mustEqual
+            "UPDATE TestEntity SET i = 1 WHERE o IS NOT NULL"
+        }
+        "delete" in {
+          val q = quote {
+            qr1.filter(t => t.o.nonEmpty).delete
+          }
+          testContext.run(q).sql mustEqual
+            "DELETE FROM TestEntity WHERE o IS NOT NULL"
+        }
       }
-      "isDefined" in {
-        val q = quote {
-          qr1.filter(t => t.o.isDefined)
+      "isDefined" - {
+        "query" in {
+          val q = quote {
+            qr1.filter(t => t.o.isDefined)
+          }
+          testContext.run(q).sql mustEqual
+            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o IS NOT NULL"
         }
-        testContext.run(q).sql mustEqual
-          "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o IS NOT NULL"
+        "update" in {
+          val q = quote {
+            qr1.filter(t => t.o.isDefined).update(_.i -> 1)
+          }
+          testContext.run(q).sql mustEqual
+            "UPDATE TestEntity SET i = 1 WHERE o IS NOT NULL"
+        }
+        "delete" in {
+          val q = quote {
+            qr1.filter(t => t.o.isDefined).delete
+          }
+          testContext.run(q).sql mustEqual
+            "DELETE FROM TestEntity WHERE o IS NOT NULL"
+        }
       }
     }
     "infix" - {

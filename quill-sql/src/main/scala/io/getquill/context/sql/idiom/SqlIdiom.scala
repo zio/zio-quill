@@ -283,7 +283,11 @@ trait SqlIdiom {
       assignments.map(a => s"${strategy.column(a.property)} = ${scopedShow(a.value)}").mkString(", ")
 
     implicit def propertyShow: Show[Property] = Show[Property] {
-      case Property(_, name) => strategy.column(name)
+      case Property(Property(_, name), "isEmpty")   => s"${strategy.column(name)} IS NULL"
+      case Property(Property(_, name), "isDefined") => s"${strategy.column(name)} IS NOT NULL"
+      case Property(Property(_, name), "nonEmpty")  => s"${strategy.column(name)} IS NOT NULL"
+      case Property(Property(_, name), prop)        => s"${strategy.column(name)}.$prop"
+      case Property(_, name)                        => strategy.column(name)
     }
 
     Show[Action] {
