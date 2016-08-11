@@ -1294,6 +1294,7 @@ application.properties
 ctx.keyspace=quill_test
 ctx.preparedStatementCacheSize=1000
 ctx.session.contactPoint=127.0.0.1
+ctx.session.withPort=9042
 ctx.session.queryOptions.consistencyLevel=LOCAL_QUORUM
 ctx.session.withoutMetrics=true
 ctx.session.withoutJMXReporting=false
