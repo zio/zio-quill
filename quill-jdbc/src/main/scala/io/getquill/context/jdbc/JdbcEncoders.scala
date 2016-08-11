@@ -6,6 +6,7 @@ import java.{ sql, util }
 
 import io.getquill.JdbcContext
 import io.getquill.context.BindedStatementBuilder
+import io.getquill.util.Messages.fail
 
 import scala.reflect.ClassTag
 
@@ -44,10 +45,10 @@ trait JdbcEncoders {
     new Encoder[Option[T]] {
       override def apply(idx: Int, value: Option[T], row: BindedStatementBuilder[PreparedStatement]) =
         value match {
-          case Some(value) => d(idx, value, row)
+          case Some(v) => d(idx, v, row)
           case None => d match {
             case JdbcEncoder(sqlType) => nullEncoder(idx, sqlType, row)
-            case _                    => throw new NotImplementedError("")
+            case _                    => fail("Can't determine SQL data type. JdbcEncoder is expected.")
           }
         }
     }
@@ -67,7 +68,7 @@ trait JdbcEncoders {
   implicit val dateEncoder: Encoder[util.Date] =
     encoder[util.Date](
       row => (idx, value) =>
-      row.setTimestamp(idx, new sql.Timestamp(value.getTime), Calendar.getInstance(dateTimeZone)),
+        row.setTimestamp(idx, new sql.Timestamp(value.getTime), Calendar.getInstance(dateTimeZone)),
       Types.TIMESTAMP
     )
 }
