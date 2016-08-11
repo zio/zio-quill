@@ -34,7 +34,8 @@ CREATE TABLE IF NOT EXISTS EncodingTestEntity(
     v8 FLOAT,
     v9 DOUBLE PRECISIOn,
     v10 BLOB,
-    v11 TIMESTAMP,
+    v11 BIGINT,
+    v12 VARCHAR(255),
     o1 VARCHAR(255),
     o2 DECIMAL(5,2),
     o3 BOOLEAN,
@@ -45,7 +46,8 @@ CREATE TABLE IF NOT EXISTS EncodingTestEntity(
     o8 FLOAT,
     o9 DOUBLE PRECISIOn,
     o10 BLOB,
-    o11 TIMESTAMP
+    o11 BIGINT,
+    o12 VARCHAR(255)
 );
 
 CREATE TABLE IF NOT EXISTS TestEntity(

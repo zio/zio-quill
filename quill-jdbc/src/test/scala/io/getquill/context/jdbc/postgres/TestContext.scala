@@ -1,8 +1,7 @@
 package io.getquill.context.jdbc.postgres
 
-import io.getquill.TestEntities
-import io.getquill.Literal
-import io.getquill.JdbcContext
-import io.getquill.PostgresDialect
+import io.getquill.{ JdbcContext, Literal, PostgresDialect, TestEntities }
+import io.getquill.context.jdbc.TestEncoders
+import io.getquill.context.sql.TestDecoders
 
-object testContext extends JdbcContext[PostgresDialect, Literal]("testPostgresDB") with TestEntities
+object testContext extends JdbcContext[PostgresDialect, Literal]("testPostgresDB") with TestEntities with TestEncoders with TestDecoders

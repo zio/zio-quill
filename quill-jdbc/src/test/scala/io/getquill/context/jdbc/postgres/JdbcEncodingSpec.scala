@@ -31,9 +31,8 @@ class JdbcEncodingSpec extends EncodingSpec {
       decoder[UUID] { row => index => UUID.fromString(row.getObject(index).toString)
       }
     implicit val uuidEncoder: Encoder[UUID] =
-      encoder[UUID] { row => (idx, uuid) =>
-        row.setObject(idx, uuid, Types.OTHER)
-      }
+      encoder[UUID](row => (idx, uuid) =>
+        row.setObject(idx, uuid, Types.OTHER), Types.OTHER)
 
     val success = for {
       uuidOpt <- testContext.run(insertBarCode)(barCodeEntry).headOption

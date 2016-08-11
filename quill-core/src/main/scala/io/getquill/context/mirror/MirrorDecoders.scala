@@ -2,8 +2,9 @@ package io.getquill.context.mirror
 
 import java.util.Date
 
-import scala.reflect.ClassTag
 import io.getquill.context.Context
+
+import scala.reflect.ClassTag
 
 trait MirrorDecoders {
   this: Context[Row, Row] =>
@@ -16,7 +17,10 @@ trait MirrorDecoders {
   implicit def optionDecoder[T](implicit d: Decoder[T]): Decoder[Option[T]] =
     new Decoder[Option[T]] {
       def apply(index: Int, row: Row) =
-        row[Option[T]](index)
+        row[Option[Any]](index) match {
+          case Some(v) => Some(d(0, Row(v)))
+          case None    => None
+        }
     }
 
   implicit val stringDecoder: Decoder[String] = decoder[String]
