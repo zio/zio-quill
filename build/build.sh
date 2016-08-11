@@ -33,5 +33,5 @@ then
 		sbt "project quill-with-js" coverageOff publish
 	fi
 else
-	sbt "project quill-with-js" clean coverage test tut coverageAggregate release-vcs-checks
+	sbt "project quill-with-js" clean coverage test tut coverageAggregate checkUnformattedFiles
 fi
