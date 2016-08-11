@@ -1,24 +1,22 @@
 package io.getquill.context.async
 
-import java.util.Date
-import java.util.UUID
-
-import org.joda.time.LocalDateTime
+import java.util.{ Date, UUID }
 
 import io.getquill.context.BindedStatementBuilder
+import org.joda.time.LocalDateTime
 
 trait Encoders {
   this: AsyncContext[_, _, _] =>
 
   def encoder[T]: Encoder[T] =
-    encoder(identity[T] _)
+    encoder(identity[T])
 
   def encoder[T](f: T => Any): Encoder[T] =
     new Encoder[T] {
       def apply(index: Int, value: T, row: BindedStatementBuilder[List[Any]]) = {
         val raw = new io.getquill.context.Encoder[List[Any], T] {
           override def apply(index: Int, value: T, row: List[Any]) =
-            row :+ value
+            row :+ f(value)
         }
         row.single(index, value, raw)
       }
@@ -31,12 +29,16 @@ trait Encoders {
     }
 
   implicit def optionEncoder[T](implicit d: Encoder[T]): Encoder[Option[T]] =
-    encoder[Option[T]] { (value: Option[T]) =>
-      value match {
-        case None        => null
-        case Some(value) => value
+    new Encoder[Option[T]] {
+      def apply(index: Int, value: Option[T], row: BindedStatementBuilder[List[Any]]) = {
+        value match {
+          case None    => nullEncoder(index, null, row)
+          case Some(v) => d(index, v, row)
+        }
       }
     }
+
+  private[this] val nullEncoder: Encoder[Null] = encoder[Null]
 
   implicit val stringEncoder: Encoder[String] = encoder[String]
   implicit val bigDecimalEncoder: Encoder[BigDecimal] = encoder[BigDecimal]

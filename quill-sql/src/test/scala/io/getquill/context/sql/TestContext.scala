@@ -6,4 +6,4 @@ import io.getquill.Literal
 
 object testContext extends TestContextTemplate
 
-class TestContextTemplate extends SqlMirrorContext[Literal] with TestEntities
+class TestContextTemplate extends SqlMirrorContext[Literal] with TestEntities with TestEncoders with TestDecoders

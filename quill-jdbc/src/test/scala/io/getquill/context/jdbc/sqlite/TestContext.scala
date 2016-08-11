@@ -1,8 +1,7 @@
 package io.getquill.context.jdbc.sqlite
 
-import io.getquill.TestEntities
-import io.getquill.Literal
-import io.getquill.JdbcContext
-import io.getquill.SqliteDialect
+import io.getquill.{ JdbcContext, Literal, SqliteDialect, TestEntities }
+import io.getquill.context.jdbc.TestEncoders
+import io.getquill.context.sql.TestDecoders
 
-object testContext extends JdbcContext[SqliteDialect, Literal]("testSqliteDB") with TestEntities
+object testContext extends JdbcContext[SqliteDialect, Literal]("testSqliteDB") with TestEntities with TestEncoders with TestDecoders

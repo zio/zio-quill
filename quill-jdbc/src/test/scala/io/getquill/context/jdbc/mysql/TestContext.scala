@@ -1,8 +1,7 @@
 package io.getquill.context.jdbc.mysql
 
-import io.getquill.TestEntities
-import io.getquill.Literal
-import io.getquill.JdbcContext
-import io.getquill.MySQLDialect
+import io.getquill.context.jdbc.TestEncoders
+import io.getquill.context.sql.TestDecoders
+import io.getquill.{ JdbcContext, Literal, MySQLDialect, TestEntities }
 
-object testContext extends JdbcContext[MySQLDialect, Literal]("testMysqlDB") with TestEntities
+object testContext extends JdbcContext[MySQLDialect, Literal]("testMysqlDB") with TestEntities with TestEncoders with TestDecoders

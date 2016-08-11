@@ -1,6 +1,7 @@
 package io.getquill.context.mirror
 
 import java.util.Date
+
 import io.getquill.context.Context
 
 trait MirrorEncoders {
@@ -13,8 +14,12 @@ trait MirrorEncoders {
 
   implicit def optionEncoder[T](implicit d: Encoder[T]): Encoder[Option[T]] =
     new Encoder[Option[T]] {
-      def apply(index: Int, value: Option[T], row: Row) =
-        row.add(value)
+      def apply(index: Int, value: Option[T], row: Row) = {
+        value match {
+          case None    => row.add(None)
+          case Some(v) => row.add(d(index, v, Row()).data.headOption)
+        }
+      }
     }
 
   implicit def traversableEncoder[T](implicit d: Encoder[T]): Encoder[Traversable[T]] =

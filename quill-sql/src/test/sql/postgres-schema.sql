@@ -35,6 +35,7 @@ CREATE TABLE EncodingTestEntity(
     v9 DOUBLE PRECISION,
     v10 BYTEA,
     v11 TIMESTAMP,
+    v12 VARCHAR(255),
     o1 VARCHAR(255),
     o2 DECIMAL(5,2),
     o3 BOOLEAN,
@@ -45,7 +46,8 @@ CREATE TABLE EncodingTestEntity(
     o8 FLOAT,
     o9 DOUBLE PRECISION,
     o10 BYTEA,
-    o11 TIMESTAMP
+    o11 TIMESTAMP,
+    o12 VARCHAR(255)
 );
 
 CREATE TABLE EncodingUUIDTestEntity(

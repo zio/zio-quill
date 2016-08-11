@@ -118,7 +118,7 @@ class NamingStrategySpec extends Spec {
       s.column("count") mustEqual "`count`"
     }
 
-    "persevere default naming strategy" in {
+    "preserve default naming strategy" in {
       s.default("test") mustEqual ("test")
     }
   }

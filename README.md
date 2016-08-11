@@ -866,10 +866,9 @@ trait UUIDEncodingExample {
         UUID.fromString(row.getObject(index).toString) // database-specific implementation
     }
   implicit val uuidEncoder: Encoder[UUID] =
-    encoder[UUID] {
-      row => (idx, uuid) =>
-        row.setObject(idx, uuid, java.sql.Types.OTHER) // database-specific implementation
-    }
+    encoder[UUID](row => (idx, uuid) =>
+        row.setObject(idx, uuid, java.sql.Types.OTHER), // database-specific implementation
+        java.sql.Types.OTHER)
 }
 ```
 
