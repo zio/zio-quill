@@ -339,14 +339,14 @@ class SqlQuerySpec extends Spec {
           qr1.union(qr1)
         }
         SqlQuery(q.ast).show mustEqual
-          "SELECT x.* FROM TestEntity x UNION SELECT x.* FROM TestEntity x"
+          "(SELECT x.* FROM TestEntity x) UNION (SELECT x.* FROM TestEntity x)"
       }
       "unionAll" in {
         val q = quote {
           qr1.unionAll(qr1)
         }
         SqlQuery(q.ast).show mustEqual
-          "SELECT x.* FROM TestEntity x UNION ALL SELECT x.* FROM TestEntity x"
+          "(SELECT x.* FROM TestEntity x) UNION ALL (SELECT x.* FROM TestEntity x)"
       }
     }
     "unary operation query" - {
