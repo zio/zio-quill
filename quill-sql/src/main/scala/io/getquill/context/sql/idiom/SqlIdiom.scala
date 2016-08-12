@@ -152,7 +152,7 @@ trait SqlIdiom {
         case (None, Some(offset))        => withOrderBy + showOffsetWithoutLimit(offset)
       }
     case SetOperationSqlQuery(a, op, b) =>
-      s"${a.show} ${op.show} ${b.show}"
+      s"(${a.show}) ${op.show} (${b.show})"
     case UnaryOperationSqlQuery(op, q) =>
       s"SELECT ${op.show} (${q.show})"
   }
