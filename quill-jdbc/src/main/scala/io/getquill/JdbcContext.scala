@@ -52,7 +52,7 @@ class JdbcContext[D <: SqlIdiom, N <: NamingStrategy](dataSource: DataSource)
     }
 
   def close = dataSource match {
-    case _: DataSource with Closeable =>
+    case _: Closeable =>
       dataSource.asInstanceOf[DataSource with Closeable].close()
     case _ => ()
   }
