@@ -25,7 +25,7 @@ import scala.reflect.runtime.universe._
 
 //import io.getquill.context.jdbc.ActionApply
 
-class JdbcContext[D <: SqlIdiom, N <: NamingStrategy](dataSource: DataSource with Closeable)
+class JdbcContext[D <: SqlIdiom, N <: NamingStrategy](dataSource: DataSource)
   extends SqlContext[D, N, ResultSet, BindedStatementBuilder[PreparedStatement]]
   with JdbcEncoders
   with JdbcDecoders {
@@ -51,7 +51,11 @@ class JdbcContext[D <: SqlIdiom, N <: NamingStrategy](dataSource: DataSource wit
       finally conn.close
     }
 
-  def close = dataSource.close()
+  def close = dataSource match {
+    case _: DataSource with Closeable =>
+      dataSource.asInstanceOf[DataSource with Closeable].close()
+    case _ => ()
+  }
 
   def probe(sql: String) =
     Try {
