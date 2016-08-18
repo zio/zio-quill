@@ -1076,7 +1076,7 @@ lazy val ctx = new JdbcContext[PostgresDialect, SnakeCase]("ctx")
 
 application.properties
 ```
-ctx.dataSourceClassName=org.postgresql.ds.PGSimpledataSource
+ctx.dataSourceClassName=org.postgresql.ds.PGSimpleDataSource
 ctx.dataSource.user=root
 ctx.dataSource.password=root
 ctx.dataSource.databaseName=database
