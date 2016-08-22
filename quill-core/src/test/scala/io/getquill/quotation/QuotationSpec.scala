@@ -931,12 +931,6 @@ class QuotationSpec extends Spec {
 
           q.liftings.`t.o`.value mustEqual t.o
         }
-        "invalid nested case class" in {
-          case class Inner(s: String)
-          case class Outer(inner: Inner)
-          val o = Outer(Inner("s"))
-          "quote(lift(o).inner)" mustNot compile
-        }
       }
     }
 

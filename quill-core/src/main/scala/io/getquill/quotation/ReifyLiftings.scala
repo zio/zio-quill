@@ -40,9 +40,16 @@ trait ReifyLiftings extends LiftingMacro {
 
         case Property(CaseClassValueLift(name, v: Tree), prop) =>
           val term = TermName(prop)
-          val tpe = v.tpe.member(term).typeSignature
-          val merge = q"$v.$term"
-          apply(ScalarValueLift(merge.toString, merge, inferRequiredEncoder(tpe)))
+          val tpe = v.tpe.member(term).typeSignatureIn(v.tpe)
+          val merge = c.typecheck(q"$v.$term")
+          inferEncoder(tpe) match {
+            case Some(enc) => apply(ScalarValueLift(merge.toString, merge, enc))
+            case None =>
+              tpe.baseType(c.symbolOf[Product]) match {
+                case NoType => failEncoder(tpe)
+                case _      => apply(CaseClassValueLift(merge.toString, merge))
+              }
+          }
 
         case QuotedReference(ref: Tree, refAst) =>
           val newAst =

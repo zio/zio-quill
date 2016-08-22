@@ -124,6 +124,19 @@ class ActionMacroSpec extends Spec {
           List(Row("s", "s1", 2, 3L, Some(4)), Row("s", "s5", 6, 7L, Some(8)))
       )
     }
+    "zipWithIndex" in {
+      val nested = quote {
+        (e: TestEntity, i: Int) => qr1.filter(t => t.i == i).update(e)
+      }
+      val q = quote {
+        liftQuery(entities.zipWithIndex).foreach(p => nested(p._1, p._2))
+      }
+      val r = testContext.run(q)
+      r.groups mustEqual List(
+        "query[TestEntity].filter(t => t.i == ?).update(v => v.s -> ?, v => v.i -> ?, v => v.l -> ?, v => v.o -> ?)" ->
+          List(Row(0, "s1", 2, 3, Some(4)), Row(1, "s5", 6, 7, Some(8)))
+      )
+    }
     "scalar + returning" in {
       val insert = quote {
         (p: Int) => qr1.insert(t => t.i -> p).returning(t => t.l)

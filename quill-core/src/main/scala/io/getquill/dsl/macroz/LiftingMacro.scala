@@ -25,17 +25,11 @@ trait LiftingMacro {
         }
     }
 
-  protected def inferRequiredEncoder(tpe: Type) =
-    inferEncoder(tpe) match {
-      case None      => failEncoder(tpe)
-      case Some(enc) => enc
-    }
-
-  private def inferEncoder(tpe: Type) =
+  protected def inferEncoder(tpe: Type) =
     regularEncoder(tpe)
       .orElse(anyValEncoder(tpe))
 
-  private def failEncoder(t: Type) =
+  protected def failEncoder(t: Type) =
     c.fail(s"Can't find encoder for type '$t'")
 
   private def regularEncoder(tpe: Type): Option[Tree] =
