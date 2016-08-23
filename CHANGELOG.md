@@ -1,14 +1,27 @@
-# 0.9.0 - To be released
+# 0.9.0 - 22-Aug-2016
 
+**see migration notes below**
+
+* [new encoding, macros refactoring, and additional fixes](https://github.com/getquill/quill/pull/512)
+* [Refactor generated to returning keyword in order to return the correct type](https://github.com/getquill/quill/pull/444)
+* [Allow finagle-mysql to use Long with INT columns](https://github.com/getquill/quill/pull/467)
+* [create sub query if aggregation on distinct query](https://github.com/getquill/quill/pull/472)
+* [upgrade dependency to finagle 6.36.0](https://github.com/getquill/quill/pull/479)
+* [Make decoder function public](https://github.com/getquill/quill/pull/487)
+* [set the scope of all cassandra context type definitions to public](https://github.com/getquill/quill/pull/492)
+* [make the cassandra decoder fail when encountering a column with value null](https://github.com/getquill/quill/pull/499)
+* [fix Option.{isEmpty, isDefined, nonEmpty} show on action.filter](https://github.com/getquill/quill/pull/505)
+* [Encoder fix](https://github.com/getquill/quill/pull/503/files)
+* [enclose operand-queries of SetOperation in parentheses](https://github.com/getquill/quill/pull/510)
 
 ### Migration notes
 
-- The fallback mechanism that looks for implicit encoders defined in the context instance has been removed. This means that if you don't `import context._`, you have to change the specific imports to include the encoders that are being used.
-- `context.run` now receives only one parameter. The second parameter that used to receive runtime values now doesn't exist any more. Use [`lift` or `liftQuery`](https://github.com/getquill/quill/tree/new-encoding#bindings) instead.
-- Use [`liftQuery` + `foreach`](https://github.com/getquill/quill/tree/new-encoding#bindings) to perform batch actions and define contains/in queries.
-- `insert` now always receives a parameter, that [can be a case class](https://github.com/getquill/quill/tree/new-encoding#actions).
+* The fallback mechanism that looks for implicit encoders defined in the context instance has been removed. This means that if you don't `import context._`, you have to change the specific imports to include the encoders in use.
+* `context.run` now receives only one parameter. The second parameter that used to receive runtime values now doesn't exist any more. Use [`lift` or `liftQuery`](https://github.com/getquill/quill/tree/new-encoding#bindings) instead.
+* Use [`liftQuery` + `foreach`](https://github.com/getquill/quill/tree/new-encoding#bindings) to perform batch actions and define contains/in queries.
+* `insert` now always receives a parameter, that [can be a case class](https://github.com/getquill/quill/tree/new-encoding#actions).
 - Non-lifted collections aren't supported anymore. Example: `query[Person].filter(t => List(10, 20).contains(p.age))`. Use `liftQuery` instead.
-- `schema(_.generated())` has been replaced by [`returning`](https://github.com/getquill/quill/tree/new-encoding#schema).
+* `schema(_.generated())` has been replaced by [`returning`](https://github.com/getquill/quill/tree/new-encoding#schema).
 
 # 0.8.0 / 17-Jul-2016
 
