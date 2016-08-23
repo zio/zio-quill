@@ -97,6 +97,9 @@ class MirrorIdiom extends Idiom {
 
     case Distinct(a) =>
       stmt"${a.token}.distinct"
+
+    case Nested(a) =>
+      stmt"${a.token}.nested"
   }
 
   implicit val entityTokenizer: Tokenizer[Entity] = Tokenizer[Entity] {

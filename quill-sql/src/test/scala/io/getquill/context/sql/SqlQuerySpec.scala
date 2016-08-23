@@ -327,7 +327,7 @@ class SqlQuerySpec extends Spec {
           "SELECT x.* FROM (SELECT NOT EXISTS (SELECT x.* FROM TestEntity x)) x"
       }
     }
-    "nested, aggregated, and mapped query" in {
+    "aggregated and mapped query" in {
       val q = quote {
         (for {
           q1 <- qr1
@@ -338,6 +338,29 @@ class SqlQuerySpec extends Spec {
       }
       testContext.run(q).string mustEqual
         "SELECT MIN(q2.i) FROM TestEntity q1, TestEntity2 q2"
+    }
+    "nested" - {
+      "pointless nesting" in {
+        val q = quote {
+          qr1.nested
+        }
+        testContext.run(q).string mustEqual
+          "SELECT x.s, x.i, x.l, x.o FROM (SELECT x.s, x.i, x.l, x.o FROM TestEntity x) x"
+      }
+      "mapped" in {
+        val q = quote {
+          qr1.nested.map(t => t.i)
+        }
+        testContext.run(q).string mustEqual
+          "SELECT t.i FROM (SELECT x.i FROM TestEntity x) t"
+      }
+      "filter + map" in {
+        val q = quote {
+          qr1.filter(t => t == 1).nested.map(t => t.i)
+        }
+        testContext.run(q).string mustEqual
+          "SELECT t.i FROM (SELECT t.i FROM TestEntity t WHERE t = 1) t"
+      }
     }
   }
 }

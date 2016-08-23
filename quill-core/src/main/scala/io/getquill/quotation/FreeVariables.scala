@@ -51,7 +51,7 @@ case class FreeVariables(state: State)
         val (_, freeB) = apply(a)
         val (_, freeOn) = FreeVariables(State(state.seen + iA + iB, collection.Set.empty))(on)
         (q, FreeVariables(State(state.seen, state.free ++ freeA.state.free ++ freeB.state.free ++ freeOn.state.free)))
-      case _: Entity | _: Take | _: Drop | _: Union | _: UnionAll | _: Aggregation | _: Distinct =>
+      case _: Entity | _: Take | _: Drop | _: Union | _: UnionAll | _: Aggregation | _: Distinct | _: Nested =>
         super.apply(query)
     }
 

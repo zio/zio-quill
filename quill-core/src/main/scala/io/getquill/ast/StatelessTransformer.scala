@@ -40,6 +40,7 @@ trait StatelessTransformer {
       case Join(t, a, b, iA, iB, on) =>
         Join(t, apply(a), apply(b), iA, iB, apply(on))
       case Distinct(a) => Distinct(apply(a))
+      case Nested(a)   => Nested(apply(a))
     }
 
   def apply(e: Assignment): Assignment =
