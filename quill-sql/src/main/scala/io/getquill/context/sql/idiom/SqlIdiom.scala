@@ -29,7 +29,7 @@ trait SqlIdiom extends Idiom {
 
   override def prepareForProbing(string: String): String
 
-  override def emptyQuery = "SELECT 0 FROM (SELECT 0) AS QUILL_EMPTY_SET WHERE 1 = 0"
+  override def emptyQuery = "SELECT 0 LIMIT 0"
 
   override def translate(ast: Ast)(implicit naming: NamingStrategy) = {
     val normalizedAst = SqlNormalize(ast)
