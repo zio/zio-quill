@@ -48,9 +48,8 @@ trait EncodingDsl {
 
   /* ************************************************************************** */
 
-  case class MappedEncoding[I, O](f: I => O)
-
-  def mappedEncoding[I, O](f: I => O) = MappedEncoding(f)
+  type MappedEncoding[I, O] = io.getquill.MappedEncoding[I, O]
+  val MappedEncoding = io.getquill.MappedEncoding
 
   implicit def mappedDecoder[I, O](implicit mapped: MappedEncoding[I, O], decoder: Decoder[I]): Decoder[O] =
     new Decoder[O] {

@@ -548,8 +548,8 @@ object Quill extends App {
 
   object Country {
 
-    implicit val decode: MappedEncoding[String, Country] = mappedEncoding[String, Country](Country(_))
-    implicit val encode: MappedEncoding[Country, String] = mappedEncoding[Country, String](_.code)
+    implicit val decode: MappedEncoding[String, Country] = MappedEncoding[String, Country](Country(_))
+    implicit val encode: MappedEncoding[Country, String] = MappedEncoding[Country, String](_.code)
   }
   case class WeatherStation(country: Country, city: String, stationId: String, entry: Int, value: Int)
 

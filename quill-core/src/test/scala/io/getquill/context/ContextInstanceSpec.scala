@@ -17,20 +17,40 @@ class ContextInstanceSpec extends Spec {
     case class StringValue(s: String)
     case class Entity(s: StringValue)
 
-    "encoding" in {
-      implicit val testToString = mappedEncoding[StringValue, String](_.s)
-      val q = quote {
-        query[Entity].insert(_.s -> lift(StringValue("s")))
+    "context-based" - {
+      "encoding" in {
+        implicit val testToString = MappedEncoding[StringValue, String](_.s)
+        val q = quote {
+          query[Entity].insert(_.s -> lift(StringValue("s")))
+        }
+        testContext.run(q).prepareRow mustEqual Row("s")
       }
-      testContext.run(q).prepareRow mustEqual Row("s")
-    }
 
-    "decoding" in {
-      implicit val stringToTest = mappedEncoding[String, StringValue](StringValue)
-      val q = quote {
-        query[Entity]
+      "decoding" in {
+        implicit val stringToTest = MappedEncoding[String, StringValue](StringValue)
+        val q = quote {
+          query[Entity]
+        }
+        testContext.run(q).extractor(Row("s")) mustEqual Entity(StringValue("s"))
       }
-      testContext.run(q).extractor(Row("s")) mustEqual Entity(StringValue("s"))
+    }
+    "package-based" - {
+      import io.getquill.MappedEncoding
+      "encoding" in {
+        implicit val testToString = MappedEncoding[StringValue, String](_.s)
+        val q = quote {
+          query[Entity].insert(_.s -> lift(StringValue("s")))
+        }
+        testContext.run(q).prepareRow mustEqual Row("s")
+      }
+
+      "decoding" in {
+        implicit val stringToTest = MappedEncoding[String, StringValue](StringValue)
+        val q = quote {
+          query[Entity]
+        }
+        testContext.run(q).extractor(Row("s")) mustEqual Entity(StringValue("s"))
+      }
     }
   }
 

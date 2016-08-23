@@ -1,3 +1,9 @@
+# To be released
+
+### Migration notes
+
+- `mappedEncoding` has been renamed to `MappedEncoding`.
+
 # 0.9.0 - 22-Aug-2016
 
 **see migration notes below**
