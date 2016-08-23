@@ -393,10 +393,10 @@ class MirrorIdiomSpec extends Spec {
     }
     "null" in {
       val q = quote {
-        1 != null
+        "a" != null
       }
       stmt"${(q.ast: Ast).token}" mustEqual
-        stmt"""1 != null"""
+        stmt""""a" != null"""
     }
     "tuple" in {
       val q = quote {

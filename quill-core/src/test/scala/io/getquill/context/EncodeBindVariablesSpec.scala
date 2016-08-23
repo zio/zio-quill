@@ -29,7 +29,7 @@ class EncodeBindVariablesSpec extends Spec {
 
   "fails if there isn't an encoder for the binded value" in {
     val q = quote {
-      (i: Thread) => qr1.filter(_.i == i)
+      (i: Thread) => qr1.map(t => i)
     }
     "testContext.run(q)(new Thread)" mustNot compile
   }
@@ -41,7 +41,7 @@ class EncodeBindVariablesSpec extends Spec {
     }
     val d = 1D
     val q = quote {
-      qr1.filter(_.i == lift(d))
+      qr1.map(t => lift(d))
     }
     testContext.run(q).prepareRow mustEqual Row(1D)
   }
@@ -51,10 +51,10 @@ class EncodeBindVariablesSpec extends Spec {
     "encodes `WrappedValue` extended value class" in {
       case class Entity(x: WrappedEncodable)
       val q = quote {
-        query[Entity].filter(_.x == lift(WrappedEncodable(1)))
+        query[Entity].filter(t => t.x == lift(WrappedEncodable(1)))
       }
       val r = testContext.run(q)
-      r.string mustEqual "query[Entity].filter(x3 => x3.x == ?).map(x3 => x3.x)"
+      r.string mustEqual "query[Entity].filter(t => t.x == ?).map(t => t.x)"
       r.prepareRow mustEqual Row(1)
     }
 
@@ -65,10 +65,10 @@ class EncodeBindVariablesSpec extends Spec {
       case class Entity(x: Wrapped)
 
       val q = quote {
-        query[Entity].filter(_.x == lift(Wrapped(1)))
+        query[Entity].filter(t => t.x == lift(Wrapped(1)))
       }
       val r = testContext.run(q)
-      r.string mustEqual "query[Entity].filter(x4 => x4.x == ?).map(x4 => x4.x)"
+      r.string mustEqual "query[Entity].filter(t => t.x == ?).map(t => t.x)"
       r.prepareRow mustEqual Row(1)
     }
 

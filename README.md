@@ -541,17 +541,6 @@ ctx.run(a)
 // INSERT INTO Contact (personId,phone) VALUES (?, ?)
 ```
 
-Or column queries:
-
-```scala
-val a = quote {
-  query[Person].insert(_.id -> lift(999), _.age -> query[Person].map(p => p.age).max)
-}
-
-ctx.run(a)
-// INSERT INTO Person (id,age) VALUES (?, (SELECT MAX(p.age) FROM Person p))
-```
-
 **batch insert**
 
 ```scala
@@ -593,17 +582,6 @@ val a = quote {
 
 ctx.run(a)
 // UPDATE Person SET age = (age + 1) WHERE id = ?
-```
-
-Using column a query:
-
-```scala
-val a = quote {
-  query[Person].filter(p => p.id == lift(999)).update(_.age -> query[Person].map(p => p.age).max)
-}
-
-ctx.run(a)
-// UPDATE Person SET age = (SELECT MAX(p.age) FROM Person p) WHERE id = ?
 ```
 
 **batch update**

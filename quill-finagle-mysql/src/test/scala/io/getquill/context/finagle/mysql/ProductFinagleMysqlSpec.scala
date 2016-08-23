@@ -66,6 +66,7 @@ class ProductFinagleMysqlSpec extends ProductSpec {
 
     "supports casts from string to number" - {
       "toInt" in {
+        case class Product(id: Long, description: String, sku: Int)
         val queried = await {
           testContext.run {
             query[Product].filter(_.sku == lift("1004").toInt)
