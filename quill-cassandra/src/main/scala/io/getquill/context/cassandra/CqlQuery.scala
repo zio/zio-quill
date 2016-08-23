@@ -1,9 +1,7 @@
 package io.getquill.context.cassandra
 
 import io.getquill.ast._
-import io.getquill.ast.AstShow._
 import io.getquill.util.Messages.fail
-import io.getquill.util.Show._
 
 case class CqlQuery(
   entity:   Entity,
@@ -72,7 +70,7 @@ object CqlQuery {
       case (_: Union) | (_: UnionAll) =>
         fail(s"Cql doesn't support union/unionAll.")
       case Join(joinType, _, _, _, _, _) =>
-        fail(s"Cql doesn't support ${joinType.show}.")
+        fail(s"Cql doesn't support $joinType.")
       case _: GroupBy =>
         fail(s"Cql doesn't support groupBy.")
       case q =>
@@ -81,11 +79,11 @@ object CqlQuery {
 
   private def select(ast: Ast): List[Ast] =
     ast match {
-      case Tuple(values)  => values.flatMap(select)
-      case p: Property    => List(p)
-      case i @ Ident("?") => List(i)
-      case i: Ident       => List()
-      case other          => fail(s"Cql supports only properties as select elements. Found: $other")
+      case Tuple(values) => values.flatMap(select)
+      case p: Property   => List(p)
+      case i: Ident      => List()
+      case l: Lift       => List(l)
+      case other         => fail(s"Cql supports only properties as select elements. Found: $other")
     }
 
   private def orderByCriterias(ast: Ast, ordering: Ast): List[OrderByCriteria] =

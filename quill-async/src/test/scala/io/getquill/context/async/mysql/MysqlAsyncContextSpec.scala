@@ -17,6 +17,6 @@ class MysqlAsyncContextSpec extends Spec {
     val insert = quote { (i: Int) =>
       qr1.insert(_.i -> i)
     }
-    await(testContext.run(insert)(List(1))) mustEqual (List(1))
+    await(testContext.run(insert(lift(1)))) mustEqual 1
   }
 }

@@ -3,13 +3,11 @@ package io.getquill.context.cassandra.encoding
 import java.util.UUID
 import scala.math.BigDecimal.javaBigDecimal2bigDecimal
 import com.datastax.driver.core.Row
-import io.getquill.context.cassandra.CassandraContext
-import com.datastax.driver.core.BoundStatement
-import io.getquill.context.BindedStatementBuilder
 import io.getquill.util.Messages.fail
+import io.getquill.context.cassandra.CassandraSessionContext
 
 trait Decoders {
-  this: CassandraContext[_, Row, BindedStatementBuilder[BoundStatement]] =>
+  this: CassandraSessionContext[_] =>
 
   def decoder[T](f: Row => Int => T): Decoder[T] =
     new Decoder[T] {

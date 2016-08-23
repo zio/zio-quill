@@ -7,23 +7,21 @@ import com.typesafe.config.Config
 
 import scala.collection.JavaConverters._
 
-import io.getquill.context.BindedStatementBuilder
-import io.getquill.context.cassandra.CassandraContextSession
+import io.getquill.context.cassandra.CassandraSessionContext
 import io.getquill.context.cassandra.util.FutureConversions.toScalaFuture
 import monifu.reactive.Observable
 import io.getquill.util.LoadConfig
 
 class CassandraStreamContext[N <: NamingStrategy](config: CassandraContextConfig)
-  extends CassandraContextSession[N](config) {
+  extends CassandraSessionContext[N](config) {
 
   def this(config: Config) = this(CassandraContextConfig(config))
   def this(configPrefix: String) = this(LoadConfig(configPrefix))
 
-  override type QueryResult[T] = Observable[T]
-  override type SingleQueryResult[T] = Observable[T]
-  override type ActionResult[T] = Observable[ResultSet]
-  override type BatchedActionResult[T] = Observable[ResultSet]
-  override type Params[T] = Observable[T]
+  override type RunQueryResult[T] = Observable[T]
+  override type RunQuerySingleResult[T] = Observable[T]
+  override type RunActionResult = Observable[Unit]
+  override type RunBatchActionResult = Observable[Unit]
 
   protected def page(rs: ResultSet): Observable[Iterable[Row]] = {
     val available = rs.getAvailableWithoutFetching
@@ -35,25 +33,26 @@ class CassandraStreamContext[N <: NamingStrategy](config: CassandraContextConfig
       Observable.fromFuture(rs.fetchMoreResults()).map(_ => page)
   }
 
-  def executeQuery[T](cql: String, extractor: Row => T = identity[Row] _, bind: BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement] = identity): Observable[T] = {
+  def executeQuery[T](cql: String, prepare: BoundStatement => BoundStatement = identity, extractor: Row => T = identity[Row] _): Observable[T] =
     Observable
-      .fromFuture(session.executeAsync(prepare(cql, bind)))
+      .fromFuture(session.executeAsync(prepare(super.prepare(cql))))
       .flatMap(Observable.fromStateAction((rs: ResultSet) => (page(rs), rs)))
       .flatten
       .takeWhile(_.nonEmpty)
       .flatMap(Observable.fromIterable)
       .map(extractor)
-  }
 
-  def executeQuerySingle[T](cql: String, extractor: Row => T = identity[Row] _, bind: BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement] = identity) =
-    executeQuery(cql, extractor, bind)
+  def executeQuerySingle[T](cql: String, prepare: BoundStatement => BoundStatement = identity, extractor: Row => T = identity[Row] _): Observable[T] =
+    executeQuery(cql, prepare, extractor)
 
-  def executeAction[O](cql: String, bind: BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement] = identity, generated: Option[String] = None, returningExtractor: Row => O = identity[Row] _): Observable[ResultSet] =
-    Observable.fromFuture(session.executeAsync(prepare(cql, bind)))
+  def executeAction[T](cql: String, prepare: BoundStatement => BoundStatement = identity): Observable[Unit] =
+    Observable.fromFuture(session.executeAsync(prepare(super.prepare(cql)))).map(_ => ())
 
-  def executeActionBatch[T, O](cql: String, bindParams: T => BindedStatementBuilder[BoundStatement] => BindedStatementBuilder[BoundStatement] = (_: T) => identity[BindedStatementBuilder[BoundStatement]] _, generated: Option[String] = None, returningExtractor: Row => O = identity[Row] _): Observable[T] => Observable[ResultSet] =
-    (values: Observable[T]) =>
-      values.flatMap { value =>
-        Observable.fromFuture(session.executeAsync(prepare(cql, bindParams(value))))
-      }
+  def executeBatchAction(groups: List[BatchGroup]): Observable[Unit] =
+    Observable.fromIterable(groups).flatMap {
+      case BatchGroup(cql, prepare) =>
+        Observable.fromIterable(prepare)
+          .flatMap(executeAction(cql, _))
+          .map(_ => ())
+    }
 }

@@ -12,10 +12,10 @@ class JdbcContextSpec extends Spec {
   }
 
   "run non-batched action" in {
-    val insert = quote { (i: Int) =>
-      qr1.insert(_.i -> i)
+    val insert = quote {
+      qr1.insert(_.i -> lift(1))
     }
-    testContext.run(insert)(List(1)) mustEqual (List(1))
+    testContext.run(insert) mustEqual 1
   }
 
   "provides transaction support" - {

@@ -14,14 +14,9 @@ class PostgresAsyncContext[N <: NamingStrategy](pool: PartitionedConnectionPool[
   def this(config: Config) = this(PostgresAsyncContextConfig(config))
   def this(configPrefix: String) = this(LoadConfig(configPrefix))
 
-  override protected def extractActionResult[O](generated: Option[String], returningExtractor: RowData => O)(result: DBQueryResult): O = (generated, result) match {
-    case (None, r) =>
-      r.rowsAffected.asInstanceOf[O]
-    case (Some(col), r) =>
-      returningExtractor(r.rows.get(0))
+  override protected def extractActionResult[O](returningColumn: String, returningExtractor: RowData => O)(result: DBQueryResult): O =
+    returningExtractor(result.rows.get(0))
 
-  }
-
-  override protected def expandAction(sql: String, generated: Option[String]): String =
-    sql + generated.fold("")(id => s" RETURNING $id")
+  override protected def expandAction(sql: String, returningColumn: String): String =
+    s"$sql RETURNING $returningColumn"
 }

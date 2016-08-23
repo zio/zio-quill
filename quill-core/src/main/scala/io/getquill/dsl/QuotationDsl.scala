@@ -16,9 +16,6 @@ private[dsl] trait QuotationDsl {
     def dynamic: Quoted[T] = this
   }
 
-  @compileTimeOnly(NonQuotedException.message)
-  def lift[T](v: T): T = NonQuotedException()
-
   def quote[T](body: Quoted[T]): Quoted[T] = macro QuotationMacro.doubleQuote[T]
   def quote[T1, R](func: T1 => Quoted[R]): Quoted[T1 => R] = macro QuotationMacro.quotedFunctionBody
   def quote[T1, T2, R](func: (T1, T2) => Quoted[R]): Quoted[(T1, T2) => R] = macro QuotationMacro.quotedFunctionBody

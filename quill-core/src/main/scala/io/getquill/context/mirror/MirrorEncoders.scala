@@ -5,9 +5,11 @@ import java.util.Date
 import io.getquill.context.Context
 
 trait MirrorEncoders {
-  this: Context[Row, Row] =>
+  this: Context[_, _] =>
 
-  private def encoder[T] = new Encoder[T] {
+  type PrepareRow = Row
+
+  def encoder[T] = new Encoder[T] {
     def apply(index: Int, value: T, row: Row) =
       row.add(value)
   }
@@ -20,11 +22,6 @@ trait MirrorEncoders {
           case Some(v) => row.add(d(index, v, Row()).data.headOption)
         }
       }
-    }
-
-  implicit def traversableEncoder[T](implicit d: Encoder[T]): Encoder[Traversable[T]] =
-    new Encoder[Traversable[T]] {
-      def apply(index: Int, value: Traversable[T], row: Row) = row.add(value)
     }
 
   implicit val stringEncoder = encoder[String]

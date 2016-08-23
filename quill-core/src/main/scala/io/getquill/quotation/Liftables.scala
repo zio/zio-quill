@@ -17,6 +17,8 @@ trait Liftables {
     case ast: Value => valueLiftable(ast)
     case ast: Ident => identLiftable(ast)
     case ast: Ordering => orderingLiftable(ast)
+    case ast: Lift => liftLiftable(ast)
+    case ast: Assignment => assignmentLiftable(ast)
     case Val(name, body) => q"$pack.Val($name, $body)"
     case Block(statements) => q"$pack.Block($statements)"
     case Property(a, b) => q"$pack.Property($a, $b)"
@@ -30,8 +32,6 @@ trait Liftables {
     case Dynamic(tree: Tree) if (tree.tpe <:< c.weakTypeOf[CoreDsl#Quoted[Any]]) => q"$tree.ast"
     case Dynamic(tree: Tree) => q"$pack.Constant($tree)"
     case QuotedReference(tree: Tree, ast) => q"$ast"
-    case CompileTimeBinding(tree: Tree) => q"$pack.RuntimeBinding(${tree.toString})"
-    case RuntimeBinding(name) => q"$pack.RuntimeBinding($name)"
   }
 
   implicit val optionOperationTypeLiftable: Liftable[OptionOperationType] = Liftable[OptionOperationType] {
@@ -120,11 +120,11 @@ trait Liftables {
   }
 
   implicit val actionLiftable: Liftable[Action] = Liftable[Action] {
-    case AssignedAction(a, b) => q"$pack.AssignedAction($a, $b)"
-    case Update(a)            => q"$pack.Update($a)"
-    case Insert(a)            => q"$pack.Insert($a)"
-    case Delete(a)            => q"$pack.Delete($a)"
-    case Returning(a, b)      => q"$pack.Returning($a, $b)"
+    case Update(a, b)       => q"$pack.Update($a, $b)"
+    case Insert(a, b)       => q"$pack.Insert($a, $b)"
+    case Delete(a)          => q"$pack.Delete($a)"
+    case Returning(a, b, c) => q"$pack.Returning($a, $b, $c)"
+    case Foreach(a, b, c)   => q"$pack.Foreach($a, $b, $c)"
   }
 
   implicit val assignmentLiftable: Liftable[Assignment] = Liftable[Assignment] {
@@ -132,12 +132,18 @@ trait Liftables {
   }
 
   implicit val valueLiftable: Liftable[Value] = Liftable[Value] {
-    case NullValue     => q"$pack.NullValue"
-    case Constant(a)   => q"$pack.Constant(${Literal(c.universe.Constant(a))})"
-    case Tuple(a)      => q"$pack.Tuple($a)"
-    case Collection(a) => q"$pack.Collection($a)"
+    case NullValue   => q"$pack.NullValue"
+    case Constant(a) => q"$pack.Constant(${Literal(c.universe.Constant(a))})"
+    case Tuple(a)    => q"$pack.Tuple($a)"
   }
   implicit val identLiftable: Liftable[Ident] = Liftable[Ident] {
     case Ident(a) => q"$pack.Ident($a)"
+  }
+
+  implicit val liftLiftable: Liftable[Lift] = Liftable[Lift] {
+    case ScalarValueLift(a, b: Tree, c: Tree) => q"$pack.ScalarValueLift($a, $b, $c)"
+    case CaseClassValueLift(a, b: Tree)       => q"$pack.CaseClassValueLift($a, $b)"
+    case ScalarQueryLift(a, b: Tree, c: Tree) => q"$pack.ScalarQueryLift($a, $b, $c)"
+    case CaseClassQueryLift(a, b: Tree)       => q"$pack.CaseClassQueryLift($a, $b)"
   }
 }

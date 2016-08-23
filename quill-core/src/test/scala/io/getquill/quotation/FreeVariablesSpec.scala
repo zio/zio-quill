@@ -10,14 +10,15 @@ import io.getquill.testContext.unquote
 
 class FreeVariablesSpec extends Spec {
 
+  val s = "s"
+  val i = 10
+
   "detects references to values outside of the quotation (free variables)" - {
     "ident" in {
-      val s = "s"
       val q = quote(s)
       FreeVariables(q.ast) mustEqual Set(Ident("s"))
     }
     "function" in {
-      val s = "s"
       val q =
         quote {
           (a: String) => s
@@ -25,7 +26,6 @@ class FreeVariablesSpec extends Spec {
       FreeVariables(q.ast) mustEqual Set(Ident("s"))
     }
     "filter" in {
-      val s = "s"
       val q =
         quote {
           qr1.filter(_.s == s)
@@ -33,7 +33,6 @@ class FreeVariablesSpec extends Spec {
       FreeVariables(q.ast) mustEqual Set(Ident("s"))
     }
     "map" in {
-      val s = "s"
       val q =
         quote {
           qr1.map(_ => s)
@@ -41,7 +40,6 @@ class FreeVariablesSpec extends Spec {
       FreeVariables(q.ast) mustEqual Set(Ident("s"))
     }
     "flatMap" in {
-      val s = "s"
       val q =
         quote {
           qr1.map(_ => s).flatMap(_ => qr2)
@@ -49,7 +47,6 @@ class FreeVariablesSpec extends Spec {
       FreeVariables(q.ast) mustEqual Set(Ident("s"))
     }
     "sortBy" in {
-      val s = "s"
       val q =
         quote {
           qr1.sortBy(_ => s)
@@ -57,7 +54,6 @@ class FreeVariablesSpec extends Spec {
       FreeVariables(q.ast) mustEqual Set(Ident("s"))
     }
     "groupBy" in {
-      val s = "s"
       val q =
         quote {
           qr1.groupBy(_ => s)
@@ -65,15 +61,13 @@ class FreeVariablesSpec extends Spec {
       FreeVariables(q.ast) mustEqual Set(Ident("s"))
     }
     "take" in {
-      val s = 10
       val q =
         quote {
-          qr1.take(s)
+          qr1.take(i)
         }
-      FreeVariables(q.ast) mustEqual Set(Ident("s"))
+      FreeVariables(q.ast) mustEqual Set(Ident("i"))
     }
     "conditional outer join" in {
-      val s = 10
       val q =
         quote {
           qr1.leftJoin(qr2).on((a, b) => a.s == s)
@@ -81,11 +75,10 @@ class FreeVariablesSpec extends Spec {
       FreeVariables(q.ast) mustEqual Set(Ident("s"))
     }
     "assignment" in {
-      val s = 10
       val q = quote {
-        qr1.insert(_.i -> s)
+        qr1.insert(_.i -> i)
       }
-      FreeVariables(q.ast) mustEqual Set(Ident("s"))
+      FreeVariables(q.ast) mustEqual Set(Ident("i"))
     }
   }
 

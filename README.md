@@ -33,7 +33,7 @@ For this documentation, a special type of context that acts as a [mirror](#mirro
 ```scala
 import io.getquill._
 
-val ctx = new SqlMirrorContext[Literal]
+val ctx = new SqlMirrorContext[MirrorSqlDialect, Literal]
 ```
 
 The context instance provides all types and methods to deal quotations:
@@ -134,21 +134,27 @@ def biggerThan(i: Float) = quote {
 ctx.run(biggerThan(10)) // SELECT r.radius FROM Circle r WHERE r.radius > ?
 ```
 
-#### Parametrized quotations
+#### Lifted queries
 
-A quotation can be defined as a function:
+A `Traversable` instance can be lifted as a `Query`. There are two main usages for lifted queries:
+
+**contains**
 
 ```scala
-val biggerThan = quote {
-  (i: Int) =>
-    query[Circle].filter(r => r.radius > i)
+def find(radiusList: List[Float]) = quote {
+  query[Circle].filter(r => liftQuery(radiusList).contains(r.radius))
 }
+ctx.run(find(List(1.1F, 1.2F))) 
+// SELECT r.radius FROM Circle r WHERE r.radius IN (?)
 ```
 
-And a runtime value can be specified when running it:
-
+**batch action**
 ```scala
-ctx.run(biggerThan)(10) // SELECT r.radius FROM Circle r WHERE r.radius > ?
+def insert(circles: List[Circle]) = quote {
+  liftQuery(circles).foreach(c => query[Circle].insert(c))
+}
+ctx.run(insert(List(Circle(1.1F), Circle(1.2F)))) 
+// INSERT INTO Circle (radius) VALUES (?)
 ```
 
 Schema
@@ -209,10 +215,10 @@ a returning value.
 case class Product(id: Long, description: String, sku: Long)
 
 val q = quote {
-  query[Product].insert.returning(_.id)
+  query[Product].insert(lift(Product(0L, "My Product", 1011L))).returning(_.id)
 }
 
-val returnedIds = ctx.run(q)(List(Product(0L, "My Product", 1011L)))
+val returnedIds = ctx.run(q)
 // INSERT INTO Product (description,sku) VALUES (?, ?)
 ```
 
@@ -389,18 +395,18 @@ ctx.run(q2)
 **contains**
 ```scala
 val q = quote {
-  query[Person].filter(p => Set(1, 2).contains(p.id))
+  query[Person].filter(p => liftQuery(Set(1, 2)).contains(p.id))
 }
 
 ctx.run(q)
-// SELECT p.id, p.name, p.age FROM Person p WHERE p.id IN (1, 2)
+// SELECT p.id, p.name, p.age FROM Person p WHERE p.id IN (?, ?)
 
-val q1 = quote { (ids: Set[Int]) =>
+val q1 = quote { (ids: Query[Int]) =>
   query[Person].filter(p => ids.contains(p.id))
 }
 
-ctx.run(q1)
-// SELECT p.id, p.name, p.age FROM Person p WHERE p.id IN (?)
+ctx.run(q1(liftQuery(List(1, 2))))
+// SELECT p.id, p.name, p.age FROM Person p WHERE p.id IN (?, ?)
 
 val peopleWithContacts = quote {
   query[Person].filter(p => query[Contact].filter(c => c.personId == p.id).nonEmpty)
@@ -506,24 +512,22 @@ Database actions are defined using quotations as well. These actions don't have 
   Note: Actions take either a List (in which case the query is batched) or a single value.
 
 **insert**
-```scala
-val a = quote(query[Contact].insert)
 
-ctx.run(a)(List(Contact(999, "+1510488988")))
+```scala
+val a = quote(query[Contact].insert(lift(Contact(999, "+1510488988"))))
+
+ctx.run(a)
 // INSERT INTO Contact (personId,phone) VALUES (?, ?)
-ctx.run(a)(Contact(999, "+1510488988"))
-// insert single item
 ```
 
 It is also possible to insert specific columns:
 
 ```scala
 val a = quote {
-  (personId: Int, phone: String) =>
-    query[Contact].insert(_.personId -> personId, _.phone -> phone)
+  query[Contact].insert(_.personId -> lift(999), _.phone -> lift("+1510488988"))
 }
 
-ctx.run(a)(List((999, "+1510488988")))
+ctx.run(a)
 // INSERT INTO Contact (personId,phone) VALUES (?, ?)
 ```
 
@@ -531,35 +535,42 @@ Or column queries:
 
 ```scala
 val a = quote {
-  (id: Int) =>
-    query[Person].insert(_.id -> id, _.age -> query[Person].map(p => p.age).max)
+  query[Person].insert(_.id -> lift(999), _.age -> query[Person].map(p => p.age).max)
 }
 
-ctx.run(a)(List(999))
+ctx.run(a)
 // INSERT INTO Person (id,age) VALUES (?, (SELECT MAX(p.age) FROM Person p))
+```
+
+**batch insert**
+
+```scala
+val a = quote {
+  liftQuery(List(Person(0, "John", 31))).foreach(e => query[Person].insert(e))
+}
+
+ctx.run(a)
+// INSERT INTO Person (id,name,age) VALUES (?, ?, ?)
 ```
 
 **update**
 ```scala
 val a = quote {
-  query[Person].filter(_.id == 999).update
+  query[Person].filter(_.id == 999).update(lift(Person(999, "John", 22)))
 }
 
-ctx.run(a)(List(Person(999, "John", 22)))
+ctx.run(a)
 // UPDATE Person SET id = ?, name = ?, age = ? WHERE id = 999
-ctx.run(a)(Person(999, "John", 22))
-// update single item
 ```
 
 Using specific columns:
 
 ```scala
 val a = quote {
-  (id: Int, age: Int) =>
-    query[Person].filter(p => p.id == id).update(_.age -> age)
+  query[Person].filter(p => p.id == lift(999)).update(_.age -> lift(18))
 }
 
-ctx.run(a)(List((999, 18)))
+ctx.run(a)
 // UPDATE Person SET age = ? WHERE id = ?
 ```
 
@@ -567,11 +578,10 @@ Using columns as part of the update:
 
 ```scala
 val a = quote {
-  (id: Int) =>
-    query[Person].filter(p => p.id == id).update(p => p.age -> (p.age + 1))
+  query[Person].filter(p => p.id == lift(999)).update(p => p.age -> (p.age + 1))
 }
 
-ctx.run(a)(List(999))
+ctx.run(a)
 // UPDATE Person SET age = (age + 1) WHERE id = ?
 ```
 
@@ -579,12 +589,24 @@ Using column a query:
 
 ```scala
 val a = quote {
-  (id: Int) =>
-    query[Person].filter(p => p.id == id).update(_.age -> query[Person].map(p => p.age).max)
+  query[Person].filter(p => p.id == lift(999)).update(_.age -> query[Person].map(p => p.age).max)
 }
 
-ctx.run(a)(List(999))
+ctx.run(a)
 // UPDATE Person SET age = (SELECT MAX(p.age) FROM Person p) WHERE id = ?
+```
+
+**batch update**
+
+```scala
+val a = quote {
+  liftQuery(List(Person(1, "name", 31))).foreach { person =>
+     query[Person].filter(_.id == person.id).update(_.name -> person.name, _.age -> person.age)
+  }
+}
+
+ctx.run(a)
+// UPDATE Person SET name = ?, age = ? WHERE id = ?
 ```
 
 **delete**
@@ -603,7 +625,7 @@ Implicit query
 Quill provides implicit conversions from case class companion objects to `query[T]` through an additional trait:
 
 ```scala
-val ctx = new SqlMirrorContext with ImplicitQuery
+val ctx = new SqlMirrorContext[MirrorSqlDialect, Literal] with ImplicitQuery
 
 import ctx._
 
@@ -628,7 +650,7 @@ SQL-specific operations
 Some operations are sql-specific and not provided with the generic quotation mechanism. The sql contexts provide implicit classes for this kind of operation:
 
 ```scala
-val ctx = new SqlMirrorContext
+val ctx = new SqlMirrorContext[MirrorSqlDialect, Literal]
 import ctx._
 ```
 
@@ -767,7 +789,7 @@ Dynamic queries
 Quill's default operation mode is compile-time, but there are queries that have their structure defined only at runtime. Quill automatically falls back to runtime normalization and query generation if the query's structure is not static. Example:
 
 ```scala
-val ctx = new SqlMirrorContext
+val ctx = new SqlMirrorContext[MirrorSqlDialect, Literal]
 
 import ctx._
 
@@ -882,11 +904,11 @@ case class UserId(value: Int) extends AnyVal with WrappedValue[Int]
 case class User(id: UserId, name: String)
 
 val q = quote {
-  (id: UserId) => for {
-    u <- query[User] if u.id == id
+  for {
+    u <- query[User] if u.id == lift(UserId(1))
   } yield u
 }
-ctx.run(q)(UserId(1))
+ctx.run(q)
 
 // SELECT u.id, u.name FROM User u WHERE (u.id = 1)
 ```
@@ -913,7 +935,7 @@ The context instance provides all methods and types to interact with quotations 
 For instance, this example **will not** compile:
 
 ```
-class MyContext extends SqlMirrorContext
+class MyContext extends SqlMirrorContext[MirrorSqlDialect, Literal]
 
 case class MySchema(c: MyContext) {
 
@@ -936,7 +958,7 @@ case class MyDao(c: MyContext, schema: MySchema) {
 One alternative to work with this kind of context import is use traits with abstract context values:
 
 ```scala
-class MyContext extends SqlMirrorContext
+class MyContext extends SqlMirrorContext[MirrorSqlDialect, Literal]
 
 trait MySchema {
 

@@ -24,7 +24,7 @@ class QueryResultTypeMysqlAsyncSpec extends QueryResultTypeSpec {
 
   override def beforeAll = {
     await(testContext.run(deleteAll))
-    val ids = await(testContext.run(productInsert)(productEntries))
+    val ids = await(testContext.run(liftQuery(productEntries).foreach(e => productInsert(e))))
     val inserted = (ids zip productEntries).map {
       case (id, prod) => prod.copy(id = id)
     }
@@ -102,7 +102,7 @@ class QueryResultTypeMysqlAsyncSpec extends QueryResultTypeSpec {
       await(testContext.run(productSize)) mustEqual products.size
     }
     "parametrized size" in {
-      await(testContext.run(parametrizedSize)(10000)) mustEqual 0
+      await(testContext.run(parametrizedSize(lift(10000)))) mustEqual 0
     }
     "nonEmpty" in {
       await(testContext.run(nonEmpty)) mustEqual true

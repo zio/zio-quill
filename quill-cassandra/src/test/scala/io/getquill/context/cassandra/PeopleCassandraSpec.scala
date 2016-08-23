@@ -17,17 +17,17 @@ class PeopleCassandraSpec extends Spec {
       Person(5, "Dre", 60)
     )
     testSyncDB.run(query[Person].delete)
-    testSyncDB.run(query[Person].insert)(entries)
+    testSyncDB.run(liftQuery(entries).foreach(e => query[Person].insert(e)))
     ()
   }
 
   val q = quote {
-    (ids: Set[Int]) => query[Person].filter(p => ids.contains(p.id))
+    (ids: Query[Int]) => query[Person].filter(p => ids.contains(p.id))
   }
 
   "Contains id" - {
     "empty" in {
-      testSyncDB.run(q)(Set.empty[Int]) mustEqual List.empty[Person]
+      testSyncDB.run(q(liftQuery(Set.empty[Int]))) mustEqual List.empty[Person]
     }
 
   }

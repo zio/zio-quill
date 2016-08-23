@@ -11,9 +11,9 @@ trait SelectFlattening extends EncodingMacro {
 
   import c.universe._
 
-  protected def flattenSelect[T](q: Query, inferDecoder: Type => Option[Tree])(implicit t: WeakTypeTag[T]) = {
+  protected def flattenSelect(q: Query, tpe: Type, inferDecoder: Type => Option[Tree]) = {
     val (query, mapAst) = ExtractSelect(q)
-    val selectValues = encoding[T](mapAst, inferDecoder)
+    val selectValues = encoding(mapAst, tpe, inferDecoder)
     (ReplaceSelect(query, selectAsts(selectValues)), selectValues)
   }
 

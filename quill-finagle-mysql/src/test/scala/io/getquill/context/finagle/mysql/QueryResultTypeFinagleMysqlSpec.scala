@@ -16,7 +16,7 @@ class QueryResultTypeFinagleMysqlSpec extends QueryResultTypeSpec {
 
   override def beforeAll = {
     await(testContext.run(deleteAll))
-    val rs = await(testContext.run(productInsert)(productEntries))
+    val rs = await(testContext.run(liftQuery(productEntries).foreach(e => productInsert(e))))
     val inserted = (rs zip productEntries).map {
       case (r, prod) => prod.copy(id = r)
     }
@@ -94,7 +94,7 @@ class QueryResultTypeFinagleMysqlSpec extends QueryResultTypeSpec {
       await(testContext.run(productSize)) mustEqual products.size
     }
     "parametrized size" in {
-      await(testContext.run(parametrizedSize)(10000)) mustEqual 0
+      await(testContext.run(parametrizedSize(lift(10000)))) mustEqual 0
     }
     "nonEmpty" in {
       await(testContext.run(nonEmpty)) mustEqual true

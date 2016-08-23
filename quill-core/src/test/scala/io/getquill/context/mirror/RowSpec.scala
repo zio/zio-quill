@@ -16,8 +16,9 @@ class RowSpec extends Spec {
 
   "fails if the value doesn't match the expected type" in {
     val r = Row(1, 2)
-    val e = intercept[IllegalStateException] {
+    intercept[IllegalStateException] {
       r[String](0)
     }
+    ()
   }
 }

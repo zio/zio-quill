@@ -3,26 +3,27 @@ package io.getquill.context
 import io.getquill.Spec
 import io.getquill.context.mirror.Row
 import io.getquill.testContext
-import io.getquill.testContext.qr1
-import io.getquill.testContext.query
-import io.getquill.testContext.quote
-import io.getquill.testContext.unquote
+import io.getquill.testContext._
 import io.getquill.WrappedType
 
 class EncodeBindVariablesSpec extends Spec {
 
   "encodes bind variables" - {
     "one" in {
+      val i = 1
       val q = quote {
-        (i: Int) => qr1.filter(t => t.i == i)
+        qr1.filter(t => t.i == lift(i))
       }
-      testContext.run(q)(1).binds mustEqual Row(1)
+      testContext.run(q).prepareRow mustEqual Row(i)
     }
-    "two" in {
+    "three" in {
+      val i = 1
+      val j = 2
+      val o = Option(3)
       val q = quote {
-        (i: Int, j: Long, o: Option[Int]) => qr1.filter(t => t.i == i && t.i > j && t.o == o)
+        qr1.filter(t => t.i == lift(i) && t.i > lift(j) && t.o == lift(o))
       }
-      testContext.run(q)(1, 2, None).binds mustEqual Row(1, 2L, None)
+      testContext.run(q).prepareRow mustEqual Row(i, j, o)
     }
   }
 
@@ -38,10 +39,11 @@ class EncodeBindVariablesSpec extends Spec {
       override def apply(index: Int, value: Double, row: Row) =
         row.add(value)
     }
+    val d = 1D
     val q = quote {
-      (d: Double) => qr1.filter(_.i == d)
+      qr1.filter(_.i == lift(d))
     }
-    testContext.run(q)(1D).binds mustEqual Row(1D)
+    testContext.run(q).prepareRow mustEqual Row(1D)
   }
 
   "encodes bind variables for wrapped types" - {
@@ -49,11 +51,11 @@ class EncodeBindVariablesSpec extends Spec {
     "encodes `WrappedValue` extended value class" in {
       case class Entity(x: WrappedEncodable)
       val q = quote {
-        (x: WrappedEncodable) => query[Entity].filter(_.x == x)
+        query[Entity].filter(_.x == lift(WrappedEncodable(1)))
       }
-      val r = testContext.run(q)(WrappedEncodable(1))
-      r.ast.toString mustEqual "query[Entity].filter(x3 => x3.x == p1).map(x3 => x3.x)"
-      r.binds mustEqual Row(1)
+      val r = testContext.run(q)
+      r.string mustEqual "query[Entity].filter(x3 => x3.x == ?).map(x3 => x3.x)"
+      r.prepareRow mustEqual Row(1)
     }
 
     "encodes constructable `WrappedType` extended class" in {
@@ -63,11 +65,11 @@ class EncodeBindVariablesSpec extends Spec {
       case class Entity(x: Wrapped)
 
       val q = quote {
-        (x: Wrapped) => query[Entity].filter(_.x == x)
+        query[Entity].filter(_.x == lift(Wrapped(1)))
       }
-      val r = testContext.run(q)(Wrapped(1))
-      r.ast.toString mustEqual "query[Entity].filter(x4 => x4.x == p1).map(x4 => x4.x)"
-      r.binds mustEqual Row(1)
+      val r = testContext.run(q)
+      r.string mustEqual "query[Entity].filter(x4 => x4.x == ?).map(x4 => x4.x)"
+      r.prepareRow mustEqual Row(1)
     }
 
     "fails for unwrapped class" in {

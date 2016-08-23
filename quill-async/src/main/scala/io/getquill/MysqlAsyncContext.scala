@@ -15,12 +15,10 @@ class MysqlAsyncContext[N <: NamingStrategy](pool: PartitionedConnectionPool[MyS
   def this(config: Config) = this(MysqlAsyncContextConfig(config))
   def this(configPrefix: String) = this(LoadConfig(configPrefix))
 
-  override protected def extractActionResult[O](generated: Option[String], returningExtractor: RowData => O)(result: DBQueryResult): O = {
-    (generated, result) match {
-      case (None, r)                      => r.rowsAffected.asInstanceOf[O]
-      case (Some(_), r: MySQLQueryResult) => r.lastInsertId.asInstanceOf[O]
-      case _                              => throw new IllegalStateException("This is a bug. Cannot extract returning value.")
+  override protected def extractActionResult[O](returningColumn: String, returningExtractor: RowData => O)(result: DBQueryResult): O = {
+    result match {
+      case r: MySQLQueryResult => r.lastInsertId.asInstanceOf[O]
+      case _                   => throw new IllegalStateException("This is a bug. Cannot extract returning value.")
     }
   }
-
 }

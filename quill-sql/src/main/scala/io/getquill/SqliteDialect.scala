@@ -1,11 +1,13 @@
 package io.getquill
 
 import io.getquill.context.sql.idiom.SqlIdiom
+import io.getquill.context.sql.idiom.QuestionMarkBindVariables
 
 trait SqliteDialect
-  extends SqlIdiom {
+  extends SqlIdiom
+  with QuestionMarkBindVariables {
 
-  override def prepare(sql: String) = s"sqlite3_prepare_v2($sql)"
+  override def prepareForProbing(string: String) = s"sqlite3_prepare_v2($string)"
 }
 
 object SqliteDialect extends SqliteDialect

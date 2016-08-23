@@ -5,14 +5,7 @@ import io.getquill.ast.Aggregation
 import io.getquill.ast.AggregationOperator
 import io.getquill.ast.Ident
 import io.getquill.ast.Property
-import io.getquill.context.sql.testContext.InfixInterpolator
-import io.getquill.context.sql.testContext.TestEntity
-import io.getquill.context.sql.testContext.implicitOrd
-import io.getquill.context.sql.testContext.qr1
-import io.getquill.context.sql.testContext.qr2
-import io.getquill.context.sql.testContext.quote
-import io.getquill.context.sql.testContext.unquote
-import io.getquill.context.sql.testContext.Query
+import io.getquill.context.sql.testContext._
 
 class FlattenGroupByAggregationSpec extends Spec {
 

@@ -1,11 +1,13 @@
 package io.getquill.dsl
 
+import scala.language.experimental.macros
 import scala.reflect.ClassTag
 
 import io.getquill.quotation.NonQuotedException
 import scala.annotation.compileTimeOnly
 
 private[dsl] trait QueryDsl {
+  this: CoreDsl =>
 
   @compileTimeOnly(NonQuotedException.message)
   def query[T](implicit ct: ClassTag[T]): EntityQuery[T] = NonQuotedException()
@@ -47,6 +49,8 @@ private[dsl] trait QueryDsl {
     def contains[B >: T](value: B): Boolean
 
     def distinct: Query[T]
+
+    def foreach[A <: Action[_]](f: T => A): BatchAction[A]
   }
 
   sealed trait JoinQuery[A, B, R] extends Query[R] {
@@ -62,21 +66,13 @@ private[dsl] trait QueryDsl {
     override def filter(f: T => Boolean): EntityQuery[T]
     override def map[R](f: T => R): EntityQuery[R]
 
-    def insert: T => UnassignedAction[T, Long] with Insert[T, Long]
-    def insert(f: (T => (Any, Any)), f2: (T => (Any, Any))*): Insert[T, Long]
-    def update: T => UnassignedAction[T, Long] with Update[T, Long]
-    def update(f: (T => (Any, Any)), f2: (T => (Any, Any))*): Update[T, Long]
-    def delete: Delete[T, Long]
-  }
+    def insert(value: T): Insert[T] = macro macroz.DslMacro.expandInsert[T]
+    def insert(f: (T => (Any, Any)), f2: (T => (Any, Any))*): Insert[T]
 
-  implicit class InsertUnassignedAction[T](i: T => UnassignedAction[T, _] with Insert[T, _]) {
-    @compileTimeOnly(NonQuotedException.message)
-    def returning[R](f: T => R): T => UnassignedAction[T, R] with Insert[T, R] = NonQuotedException()
-  }
+    def update(value: T): Update[T] = macro macroz.DslMacro.expandUpdate[T]
+    def update(f: (T => (Any, Any)), f2: (T => (Any, Any))*): Update[T]
 
-  implicit class InsertAssignedAction[T](i: Insert[T, _]) {
-    @compileTimeOnly(NonQuotedException.message)
-    def returning[R](f: T => R): Insert[T, R] = NonQuotedException()
+    def delete: Delete[T]
   }
 
   sealed trait Schema[T] {
@@ -84,11 +80,16 @@ private[dsl] trait QueryDsl {
     def columns(propertyAlias: (T => (Any, String))*): Schema[T]
   }
 
-  sealed trait Action[T, O]
+  sealed trait Action[Entity]
 
-  sealed trait Insert[T, O] extends Action[T, O]
-  sealed trait Update[T, O] extends Action[T, O]
-  sealed trait Delete[T, O] extends Action[T, O]
+  sealed trait Insert[Entity] extends Action[Entity] {
+    @compileTimeOnly(NonQuotedException.message)
+    def returning[R](f: Entity => R): ActionReturning[Entity, R] = NonQuotedException()
+  }
 
-  sealed trait UnassignedAction[T, O] extends Action[T, O]
+  sealed trait ActionReturning[Entity, Output] extends Action[Entity]
+  sealed trait Update[Entity] extends Action[Entity]
+  sealed trait Delete[Entity] extends Action[Entity]
+
+  sealed trait BatchAction[+A <: Action[_]]
 }

@@ -11,8 +11,8 @@ class PeopleJdbcSpec extends PeopleSpec {
     testContext.transaction {
       testContext.run(query[Couple].delete)
       testContext.run(query[Person].filter(_.age > 0).delete)
-      testContext.run(peopleInsert)(peopleEntries)
-      testContext.run(couplesInsert)(couplesEntries)
+      testContext.run(liftQuery(peopleEntries).foreach(p => peopleInsert(p)))
+      testContext.run(liftQuery(couplesEntries).foreach(p => couplesInsert(p)))
     }
     ()
   }
@@ -22,7 +22,7 @@ class PeopleJdbcSpec extends PeopleSpec {
   }
 
   "Example 2 - range simple" in {
-    testContext.run(`Ex 2 rangeSimple`)(`Ex 2 param 1`, `Ex 2 param 2`) mustEqual `Ex 2 expected result`
+    testContext.run(`Ex 2 rangeSimple`(lift(`Ex 2 param 1`), lift(`Ex 2 param 2`))) mustEqual `Ex 2 expected result`
   }
 
   "Example 3 - satisfies" in {
@@ -34,7 +34,7 @@ class PeopleJdbcSpec extends PeopleSpec {
   }
 
   "Example 5 - compose" in {
-    testContext.run(`Ex 5 compose`)(`Ex 5 param 1`, `Ex 5 param 2`) mustEqual `Ex 5 expected result`
+    testContext.run(`Ex 5 compose`(lift(`Ex 5 param 1`), lift(`Ex 5 param 2`))) mustEqual `Ex 5 expected result`
   }
 
   "Example 6 - predicate 0" in {
@@ -46,10 +46,10 @@ class PeopleJdbcSpec extends PeopleSpec {
   }
 
   "Example 8 - contains empty" in {
-    testContext.run(`Ex 8 and 9 contains`)(`Ex 8 param`) mustEqual `Ex 8 expected result`
+    testContext.run(`Ex 8 and 9 contains`(liftQuery(`Ex 8 param`))) mustEqual `Ex 8 expected result`
   }
 
   "Example 9 - contains non empty" in {
-    testContext.run(`Ex 8 and 9 contains`)(`Ex 9 param`) mustEqual `Ex 9 expected result`
+    testContext.run(`Ex 8 and 9 contains`(liftQuery(`Ex 9 param`))) mustEqual `Ex 9 expected result`
   }
 }

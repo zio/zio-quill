@@ -175,7 +175,7 @@ object Quill extends App {
     }
   }
 
-  val result = db.run(WeatherStation.getAllByCountry)("UK")
+  val result = db.run(WeatherStation.getAllByCountry(lift("UK")))
 
   result.onComplete(_ => db.close())
 }
@@ -339,7 +339,7 @@ object Quill extends App {
     }
   }
 
-  val result = db.run(WeatherStation.getAllByCountryCityAndId)("UK", "London", "SW27")
+  val result = db.run(WeatherStation.getAllByCountryCityAndId("UK", "London", "SW2"))
 
   result.onComplete(_ => db.close())
 }
@@ -561,7 +561,7 @@ object Quill extends App {
     }
   }
 
-  val result = db.run(WeatherStation.getAllByCountry)(Country("UK"))
+  val result = db.run(WeatherStation.getAllByCountry(lift(Country("UK"))))
 
   result.onComplete(_ => db.close())
 }

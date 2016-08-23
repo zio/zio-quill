@@ -6,55 +6,60 @@ import io.getquill.Spec
 
 trait DepartmentsSpec extends Spec {
 
-  val context: SqlContext[_, _, _, _]
+  val context: SqlContext[_, _]
 
   import context._
 
   case class Department(dpt: String)
-  case class Employee(emp: String, dpt: String, salary: Int)
+  case class Employee(emp: String, dpt: String)
   case class Task(emp: String, tsk: String)
 
   val departmentInsert =
     quote {
-      (dpt: String) => query[Department].insert(_.dpt -> dpt)
+      (dpt: Department) => query[Department].insert(dpt)
     }
 
   val departmentEntries =
-    List("Product", "Quality", "Research", "Sales")
+    List(
+      Department("Product"),
+      Department("Quality"),
+      Department("Research"),
+      Department("Sales")
+    )
 
   val employeeInsert =
     quote {
-      (dpt: String, emp: String) => query[Employee].insert(_.dpt -> dpt, _.emp -> emp)
+      (emp: Employee) => query[Employee].insert(emp)
     }
 
   val employeeEntries =
     List(
-      ("Product", "Alex"),
-      ("Product", "Bert"),
-      ("Research", "Cora"),
-      ("Research", "Drew"),
-      ("Research", "Edna"),
-      ("Sales", "Fred")
+      Employee("Alex", "Product"),
+      Employee("Bert", "Product"),
+      Employee("Cora", "Research"),
+      Employee("Drew", "Research"),
+      Employee("Edna", "Research"),
+      Employee("Fred", "Sales")
     )
 
   val taskInsert =
     quote {
-      (emp: String, tsk: String) => query[Task].insert(_.emp -> emp, _.tsk -> tsk)
+      (tsk: Task) => query[Task].insert(tsk)
     }
 
   val taskEntries =
     List(
-      ("Alex", "build"),
-      ("Bert", "build"),
-      ("Cora", "abstract"),
-      ("Cora", "build"),
-      ("Cora", "design"),
-      ("Drew", "abstract"),
-      ("Drew", "design"),
-      ("Edna", "abstract"),
-      ("Edna", "call"),
-      ("Edna", "design"),
-      ("Fred", "call")
+      Task("Alex", "build"),
+      Task("Bert", "build"),
+      Task("Cora", "abstract"),
+      Task("Cora", "build"),
+      Task("Cora", "design"),
+      Task("Drew", "abstract"),
+      Task("Drew", "design"),
+      Task("Edna", "abstract"),
+      Task("Edna", "call"),
+      Task("Edna", "design"),
+      Task("Fred", "call")
     )
 
   val `Example 8 expertise naive` =

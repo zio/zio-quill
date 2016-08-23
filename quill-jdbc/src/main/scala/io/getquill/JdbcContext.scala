@@ -10,8 +10,6 @@ import org.slf4j.LoggerFactory
 import scala.annotation.tailrec
 import scala.util.Try
 import scala.util.control.NonFatal
-import io.getquill.context.BindedStatementBuilder
-import io.getquill.context.sql.SqlBindedStatementBuilder
 import io.getquill.context.sql.SqlContext
 import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.util.LoadConfig
@@ -23,10 +21,8 @@ import io.getquill.context.jdbc.JdbcEncoders
 
 import scala.reflect.runtime.universe._
 
-//import io.getquill.context.jdbc.ActionApply
-
-class JdbcContext[D <: SqlIdiom, N <: NamingStrategy](dataSource: DataSource with Closeable)
-  extends SqlContext[D, N, ResultSet, BindedStatementBuilder[PreparedStatement]]
+class JdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](dataSource: DataSource with Closeable)
+  extends SqlContext[Dialect, Naming]
   with JdbcEncoders
   with JdbcDecoders {
 
@@ -37,10 +33,15 @@ class JdbcContext[D <: SqlIdiom, N <: NamingStrategy](dataSource: DataSource wit
   private val logger: Logger =
     Logger(LoggerFactory.getLogger(classOf[JdbcContext[_, _]]))
 
-  type QueryResult[T] = List[T]
-  type SingleQueryResult[T] = T
-  type ActionResult[T, O] = O
-  type BatchedActionResult[T, O] = List[O]
+  override type PrepareRow = PreparedStatement
+  override type ResultRow = ResultSet
+
+  override type RunQueryResult[T] = List[T]
+  override type RunQuerySingleResult[T] = T
+  override type RunActionResult = Long
+  override type RunActionReturningResult[T] = T
+  override type RunBatchActionResult = List[Long]
+  override type RunBatchActionReturningResult[T] = List[T]
 
   private val currentConnection = new DynamicVariable[Option[Connection]](None)
 
@@ -80,64 +81,59 @@ class JdbcContext[D <: SqlIdiom, N <: NamingStrategy](dataSource: DataSource wit
         }
     }
 
-  def executeAction[O](
-    sql:                String,
-    bind:               BindedStatementBuilder[PreparedStatement] => BindedStatementBuilder[PreparedStatement] = identity,
-    returning:          Option[String]                                                                         = None,
-    returningExtractor: ResultSet => O                                                                         = identity[ResultSet] _
-  ): O =
+  def executeQuery[T](sql: String, prepare: PreparedStatement => PreparedStatement = identity, extractor: ResultSet => T = identity[ResultSet] _): List[T] =
     withConnection { conn =>
       logger.info(sql)
-      val (expanded, setValues) = bind(new SqlBindedStatementBuilder[PreparedStatement]).build(sql)
-      logger.info(expanded)
-
-      val ps = setValues(returning.fold(conn.prepareStatement(sql))(c => conn.prepareStatement(sql, Array(c))))
-      val updateCount = ps.executeUpdate.toLong
-      returning match {
-        case None    => updateCount.asInstanceOf[O] // TODO: get rid of this ugly asInstanceOf
-        case Some(_) => extractResult(ps.getGeneratedKeys, returningExtractor).head
-      }
-    }
-
-  def executeActionBatch[T, O](
-    sql:                String,
-    bindParams:         T => BindedStatementBuilder[PreparedStatement] => BindedStatementBuilder[PreparedStatement] = (_: T) => identity[BindedStatementBuilder[PreparedStatement]] _,
-    returning:          Option[String]                                                                              = None,
-    returningExtractor: ResultSet => O                                                                              = identity[ResultSet] _
-  ): List[T] => List[O] = {
-    val func = { (values: List[T]) =>
-      withConnection { conn =>
-        val groups = values.map(bindParams(_)(new SqlBindedStatementBuilder[PreparedStatement]).build(sql)).groupBy(_._1)
-        (for ((sql, setValues) <- groups.toList) yield {
-          logger.info(sql)
-          val ps = returning.fold(conn.prepareStatement(sql))(c => conn.prepareStatement(sql, Array(c)))
-          for ((_, set) <- setValues) {
-            set(ps)
-            ps.addBatch
-          }
-          val updateCount = ps.executeBatch.toList.map(_.toLong)
-          returning match {
-            case None    => updateCount.asInstanceOf[List[O]]
-            case Some(_) => extractResult(ps.getGeneratedKeys, returningExtractor)
-          }
-        }).flatten
-      }
-    }
-    func
-  }
-
-  def executeQuery[T](sql: String, extractor: ResultSet => T = identity[ResultSet] _,
-                      bind: BindedStatementBuilder[PreparedStatement] => BindedStatementBuilder[PreparedStatement] = identity): List[T] =
-    withConnection { conn =>
-      val (expanded, setValues) = bind(new SqlBindedStatementBuilder[PreparedStatement]).build(sql)
-      logger.info(expanded)
-      val ps = setValues(conn.prepareStatement(expanded))
-      val rs = ps.executeQuery
+      val ps = prepare(conn.prepareStatement(sql))
+      val rs = ps.executeQuery()
       extractResult(rs, extractor)
     }
 
-  def executeQuerySingle[T](sql: String, extractor: ResultSet => T = identity[ResultSet] _, bind: BindedStatementBuilder[PreparedStatement] => BindedStatementBuilder[PreparedStatement] = identity): T =
-    handleSingleResult(executeQuery(sql, extractor, bind))
+  def executeQuerySingle[T](sql: String, prepare: PreparedStatement => PreparedStatement = identity, extractor: ResultSet => T = identity[ResultSet] _): T =
+    handleSingleResult(executeQuery(sql, prepare, extractor))
+
+  def executeAction[T](sql: String, prepare: PreparedStatement => PreparedStatement = identity): Long =
+    withConnection { conn =>
+      logger.info(sql)
+      prepare(conn.prepareStatement(sql)).executeUpdate().toLong
+    }
+
+  def executeActionReturning[O](sql: String, prepare: PreparedStatement => PreparedStatement = identity, extractor: ResultSet => O, returningColumn: String): O =
+    withConnection { conn =>
+      logger.info(sql)
+      val ps = prepare(conn.prepareStatement(sql, Array(returningColumn)))
+      ps.executeUpdate()
+      handleSingleResult(extractResult(ps.getGeneratedKeys, extractor))
+    }
+
+  def executeBatchAction(groups: List[BatchGroup]): List[Long] =
+    withConnection { conn =>
+      groups.map {
+        case BatchGroup(sql, prepare) =>
+          logger.info(sql)
+          val ps = conn.prepareStatement(sql)
+          prepare.foreach { f =>
+            f(ps)
+            ps.addBatch()
+          }
+          ps.executeBatch().map(_.toLong)
+      }.flatten
+    }
+
+  def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: ResultSet => T): List[T] =
+    withConnection { conn =>
+      groups.map {
+        case BatchGroupReturning(sql, column, prepare) =>
+          logger.info(sql)
+          val ps = conn.prepareStatement(sql, Array(column))
+          prepare.foreach { f =>
+            f(ps)
+            ps.addBatch()
+          }
+          ps.executeBatch()
+          extractResult(ps.getGeneratedKeys, extractor)
+      }.flatten
+    }
 
   @tailrec
   private def extractResult[T](rs: ResultSet, extractor: ResultSet => T, acc: List[T] = List()): List[T] =

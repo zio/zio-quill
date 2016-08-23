@@ -27,6 +27,7 @@ class OpsSpec extends Spec {
     "implicitly" in {
       val q: Quoted[Query[TestEntity]] =
         query[TestEntity]
+      q.ast mustEqual Entity("TestEntity")
     }
   }
 
@@ -64,26 +65,38 @@ class OpsSpec extends Spec {
     val q: Quoted[EntityQuery[TestEntity]] = quote {
       quote(query[TestEntity])
     }
-    q.toString mustEqual "query[TestEntity]"
+    val n = quote {
+      query[TestEntity]
+    }
+    q.ast mustEqual n.ast
+  }
+
+  implicit class QueryOps[Q <: Query[_]](q: Q) {
+    def allowFiltering = quote(infix"$q ALLOW FILTERING".as[Q])
   }
 
   "unquotes quoted function bodies automatically" - {
-    implicit class QueryOps[Q <: Query[_]](q: Q) {
-      def allowFiltering = quote(infix"$q ALLOW FILTERING".as[Q])
-    }
     "one param" in {
       val q: Quoted[Int => EntityQuery[TestEntity]] = quote {
         (i: Int) =>
           query[TestEntity].allowFiltering
       }
-      q.toString mustEqual "(i) => infix\"" + "$" + "{query[TestEntity]} ALLOW FILTERING\""
+      val n = quote {
+        (i: Int) =>
+          unquote(query[TestEntity].allowFiltering)
+      }
+      q.ast mustEqual n.ast
     }
     "multiple params" in {
       val q: Quoted[(Int, Int, Int) => EntityQuery[TestEntity]] = quote {
         (i: Int, j: Int, k: Int) =>
           query[TestEntity].allowFiltering
       }
-      q.toString mustEqual "(i, j, k) => infix\"" + "$" + "{query[TestEntity]} ALLOW FILTERING\""
+      val n = quote {
+        (i: Int, j: Int, k: Int) =>
+          unquote(query[TestEntity].allowFiltering)
+      }
+      q.ast mustEqual n.ast
     }
   }
 }

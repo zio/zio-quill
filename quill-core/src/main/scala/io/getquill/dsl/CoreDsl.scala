@@ -5,3 +5,4 @@ private[getquill] trait CoreDsl
   with OrdDsl
   with QueryDsl
   with QuotationDsl
+  with EncodingDsl

@@ -14,24 +14,27 @@ import scala.concurrent.Future
 import scala.concurrent.duration.Duration
 import scala.util.Try
 
-import io.getquill.context.BindedStatementBuilder
-import io.getquill.context.sql.SqlBindedStatementBuilder
 import io.getquill.context.sql.SqlContext
 import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.NamingStrategy
 
 abstract class AsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: Connection](pool: PartitionedConnectionPool[C])
-  extends SqlContext[D, N, RowData, BindedStatementBuilder[List[Any]]]
+  extends SqlContext[D, N]
   with Decoders
   with Encoders {
 
   private val logger: Logger =
     Logger(LoggerFactory.getLogger(classOf[AsyncContext[_, _, _]]))
 
-  type QueryResult[T] = Future[List[T]]
-  type SingleQueryResult[T] = Future[T]
-  type ActionResult[T, O] = Future[O]
-  type BatchedActionResult[T, O] = Future[List[O]]
+  override type PrepareRow = List[Any]
+  override type ResultRow = RowData
+
+  override type RunQueryResult[T] = Future[List[T]]
+  override type RunQuerySingleResult[T] = Future[T]
+  override type RunActionResult = Future[Long]
+  override type RunActionReturningResult[T] = Future[T]
+  override type RunBatchActionResult = Future[List[Long]]
+  override type RunBatchActionReturningResult[T] = Future[List[T]]
 
   override def close = {
     Await.result(pool.close, Duration.Inf)
@@ -44,9 +47,9 @@ abstract class AsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: Connection]
       case other                                   => f(pool)
     }
 
-  protected def extractActionResult[O](generated: Option[String], returningExtractor: RowData => O)(result: DBQueryResult): O
+  protected def extractActionResult[O](returningColumn: String, extractor: RowData => O)(result: DBQueryResult): O
 
-  protected def expandAction(sql: String, generated: Option[String]) = sql
+  protected def expandAction(sql: String, returningColumn: String) = sql
 
   def probe(sql: String) =
     Try {
@@ -58,40 +61,9 @@ abstract class AsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: Connection]
       f(TransactionalExecutionContext(ec, c))
     }
 
-  def executeAction[O](
-    sql:                String,
-    bind:               BindedStatementBuilder[List[Any]] => BindedStatementBuilder[List[Any]] = identity,
-    generated:          Option[String]                                                         = None,
-    returningExtractor: RowData => O                                                           = identity[RowData] _
-  )(implicit ec: ExecutionContext) = {
+  def executeQuery[T](sql: String, prepare: List[Any] => List[Any] = identity, extractor: RowData => T = identity[RowData] _)(implicit ec: ExecutionContext): Future[List[T]] = {
     logger.info(sql)
-    val (expanded, params) = bind(new SqlBindedStatementBuilder).build(sql)
-    withConnection(_.sendPreparedStatement(expandAction(expanded, generated), params(List()))).map(extractActionResult(generated, returningExtractor)(_))
-  }
-
-  def executeActionBatch[T, O](
-    sql:                String,
-    bindParams:         T => BindedStatementBuilder[List[Any]] => BindedStatementBuilder[List[Any]] = (_: T) => identity[BindedStatementBuilder[List[Any]]] _,
-    generated:          Option[String]                                                              = None,
-    returningExtractor: RowData => O                                                                = identity[RowData] _
-  )(implicit ec: ExecutionContext): List[T] => Future[List[O]] = {
-    def run(values: List[T]): Future[List[O]] =
-      values match {
-        case Nil =>
-          Future.successful(List())
-        case value :: tail =>
-          val (expanded, params) = bindParams(value)(new SqlBindedStatementBuilder).build(sql)
-          logger.info(expanded.toString)
-          withConnection(conn => conn.sendPreparedStatement(expandAction(expanded, generated), params(List())).map(extractActionResult(generated, returningExtractor)(_)))
-            .flatMap(r => run(tail).map(r +: _))
-      }
-    run _
-  }
-
-  def executeQuery[T](sql: String, extractor: RowData => T = identity[RowData] _, bind: BindedStatementBuilder[List[Any]] => BindedStatementBuilder[List[Any]] = identity)(implicit ec: ExecutionContext) = {
-    val (expanded, params) = bind(new SqlBindedStatementBuilder).build(sql)
-    logger.info(expanded.toString)
-    withConnection(_.sendPreparedStatement(expanded, params(List()))).map {
+    withConnection(_.sendPreparedStatement(sql, prepare(List()))).map {
       _.rows match {
         case Some(rows) => rows.map(extractor).toList
         case None       => List()
@@ -99,8 +71,44 @@ abstract class AsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: Connection]
     }
   }
 
-  def executeQuerySingle[T](sql: String, extractor: RowData => T = identity[RowData] _, bind: BindedStatementBuilder[List[Any]] => BindedStatementBuilder[List[Any]] = identity)(implicit ec: ExecutionContext) = {
-    executeQuery(sql, extractor, bind).map(handleSingleResult)
+  def executeQuerySingle[T](sql: String, prepare: List[Any] => List[Any] = identity, extractor: RowData => T = identity[RowData] _)(implicit ec: ExecutionContext): Future[T] =
+    executeQuery(sql, prepare, extractor).map(handleSingleResult)
+
+  def executeAction[T](sql: String, prepare: List[Any] => List[Any] = identity)(implicit ec: ExecutionContext): Future[Long] = {
+    logger.info(sql)
+    withConnection(_.sendPreparedStatement(sql, prepare(List()))).map(_.rowsAffected)
   }
 
+  def executeActionReturning[T](sql: String, prepare: List[Any] => List[Any] = identity, extractor: RowData => T, returningColumn: String)(implicit ec: ExecutionContext): Future[T] = {
+    val expanded = expandAction(sql, returningColumn)
+    logger.info(expanded)
+    withConnection(_.sendPreparedStatement(expanded, prepare(List())))
+      .map(extractActionResult(returningColumn, extractor))
+  }
+
+  def executeBatchAction(groups: List[BatchGroup])(implicit ec: ExecutionContext): Future[List[Long]] =
+    Future.sequence {
+      groups.map {
+        case BatchGroup(sql, prepare) =>
+          prepare.foldLeft(Future.successful(List.empty[Long])) {
+            case (acc, prepare) =>
+              acc.flatMap { list =>
+                executeAction(sql, prepare).map(list :+ _)
+              }
+          }
+      }
+    }.map(_.flatten.toList)
+
+  def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: RowData => T)(implicit ec: ExecutionContext): Future[List[T]] =
+    Future.sequence {
+      groups.map {
+        case BatchGroupReturning(sql, column, prepare) =>
+          prepare.foldLeft(Future.successful(List.empty[T])) {
+            case (acc, prepare) =>
+              acc.flatMap { list =>
+                executeActionReturning(sql, prepare, extractor, column).map(list :+ _)
+              }
+          }
+      }
+    }.map(_.flatten.toList)
 }

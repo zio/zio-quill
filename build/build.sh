@@ -22,16 +22,16 @@ then
 		git checkout master || git checkout -b master
 		git reset --hard origin/master
 		git push --delete origin website
-		sbt "project quill-with-js" tut 'release with-defaults'
+		sbt tut 'release with-defaults'
 	elif [[ $TRAVIS_BRANCH == "master" ]]
 	then
-		sbt "project quill-with-js" clean coverage test tut coverageAggregate checkUnformattedFiles
-		sbt "project quill-with-js" coverageOff publish
+		sbt clean coverage test tut coverageAggregate checkUnformattedFiles
+		sbt coverageOff publish
 	else
-		sbt "project quill-with-js" clean coverage test tut coverageAggregate checkUnformattedFiles
+		sbt clean coverage test tut coverageAggregate checkUnformattedFiles
 		echo "version in ThisBuild := \"$TRAVIS_BRANCH-SNAPSHOT\"" > version.sbt
-		sbt "project quill-with-js" coverageOff publish
+		sbt coverageOff publish
 	fi
 else
-	sbt "project quill-with-js" clean coverage test tut coverageAggregate checkUnformattedFiles
+	sbt clean coverage test tut coverageAggregate checkUnformattedFiles
 fi

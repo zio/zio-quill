@@ -1,22 +1,6 @@
 package io.getquill.norm.capture
 
-import io.getquill.ast.Aggregation
-import io.getquill.ast.Ast
-import io.getquill.ast.Distinct
-import io.getquill.ast.Drop
-import io.getquill.ast.Entity
-import io.getquill.ast.Filter
-import io.getquill.ast.FlatMap
-import io.getquill.ast.GroupBy
-import io.getquill.ast.Ident
-import io.getquill.ast.Join
-import io.getquill.ast.Map
-import io.getquill.ast.Query
-import io.getquill.ast.SortBy
-import io.getquill.ast.StatefulTransformer
-import io.getquill.ast.Take
-import io.getquill.ast.Union
-import io.getquill.ast.UnionAll
+import io.getquill.ast._
 import io.getquill.norm.BetaReduction
 
 case class Dealias(state: Option[Ident]) extends StatefulTransformer[Option[Ident]] {
@@ -37,8 +21,6 @@ case class Dealias(state: Option[Ident]) extends StatefulTransformer[Option[Iden
         dealias(a, b, c)(SortBy(_, _, _, d))
       case GroupBy(a, b, c) =>
         dealias(a, b, c)(GroupBy)
-      case q: Aggregation =>
-        (q, Dealias(None))
       case Take(a, b) =>
         val (an, ant) = apply(a)
         (Take(an, b), ant)
@@ -55,9 +37,9 @@ case class Dealias(state: Option[Ident]) extends StatefulTransformer[Option[Iden
         (UnionAll(an, bn), Dealias(None))
       case Join(t, a, b, iA, iB, o) =>
         val ((an, iAn, on), ont) = dealias(a, iA, o)((_, _, _))
-        val ((bn, iBn, onn), onnt) = ont.dealias(b, iB, on)((_, _, _))
+        val ((bn, iBn, onn), _) = ont.dealias(b, iB, on)((_, _, _))
         (Join(t, an, bn, iAn, iBn, onn), Dealias(None))
-      case _: Entity | _: Distinct =>
+      case _: Entity | _: Distinct | _: Aggregation =>
         (q, Dealias(None))
     }
 

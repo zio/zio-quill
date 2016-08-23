@@ -1,32 +1,34 @@
 package io.getquill
 
+import java.util.TimeZone
+
+import scala.util.Try
+
+import org.slf4j.LoggerFactory
+
 import com.twitter.finagle.exp.mysql.Client
+import com.twitter.finagle.exp.mysql.OK
 import com.twitter.finagle.exp.mysql.Parameter
 import com.twitter.finagle.exp.mysql.Result
 import com.twitter.finagle.exp.mysql.Row
+import com.twitter.finagle.exp.mysql.Transactions
+import com.twitter.util.Await
 import com.twitter.util.Future
 import com.twitter.util.Local
-import io.getquill.context.sql.{ SqlBindedStatementBuilder, SqlContext }
-import com.twitter.util.Await
-import scala.util.Try
-import io.getquill.context.BindedStatementBuilder
-import com.typesafe.scalalogging.Logger
-import org.slf4j.LoggerFactory
-import com.twitter.finagle.exp.mysql.OK
-import com.twitter.finagle.exp.mysql.Error
-import io.getquill.util.LoadConfig
 import com.typesafe.config.Config
+import com.typesafe.scalalogging.Logger
+
 import io.getquill.context.finagle.mysql.FinagleMysqlDecoders
 import io.getquill.context.finagle.mysql.FinagleMysqlEncoders
-import io.getquill.context.finagle.mysql.ActionApply
-import com.twitter.finagle.exp.mysql.Transactions
-import java.util.TimeZone
+import io.getquill.context.sql.SqlContext
+import io.getquill.util.LoadConfig
+import io.getquill.util.Messages.fail
 
 class FinagleMysqlContext[N <: NamingStrategy](
   client:                             Client with Transactions,
   private[getquill] val dateTimezone: TimeZone                 = TimeZone.getDefault
 )
-  extends SqlContext[MySQLDialect, N, Row, BindedStatementBuilder[List[Parameter]]]
+  extends SqlContext[MySQLDialect, N]
   with FinagleMysqlDecoders
   with FinagleMysqlEncoders {
 
@@ -37,10 +39,15 @@ class FinagleMysqlContext[N <: NamingStrategy](
   protected val logger: Logger =
     Logger(LoggerFactory.getLogger(classOf[FinagleMysqlContext[_]]))
 
-  type QueryResult[T] = Future[List[T]]
-  type SingleQueryResult[T] = Future[T]
-  type ActionResult[T, O] = Future[Long]
-  type BatchedActionResult[T, O] = Future[List[Long]]
+  override type PrepareRow = List[Parameter]
+  override type ResultRow = Row
+
+  override type RunQueryResult[T] = Future[List[T]]
+  override type RunQuerySingleResult[T] = Future[T]
+  override type RunActionResult = Future[Long]
+  override type RunActionReturningResult[T] = Future[Long]
+  override type RunBatchActionResult = Future[List[Long]]
+  override type RunBatchActionReturningResult[T] = Future[List[Long]]
 
   Await.result(client.ping)
 
@@ -58,42 +65,56 @@ class FinagleMysqlContext[N <: NamingStrategy](
         f.ensure(currentClient.clear)
     }
 
-  def executeAction[O](sql: String, bind: BindedStatementBuilder[List[Parameter]] => BindedStatementBuilder[List[Parameter]] = identity, generated: Option[String] = None, returningExtractor: Row => O = identity[Row] _): Future[Long] = {
-    val (expanded, params) = bind(new SqlBindedStatementBuilder).build(sql)
-    logger.info(expanded)
-    withClient(_.prepare(expanded)(params(List()): _*))
-      .map(resultToLong(_, generated))
+  def executeQuery[T](sql: String, prepare: List[Parameter] => List[Parameter] = identity, extractor: Row => T = identity[Row] _): Future[List[T]] = {
+    logger.info(sql)
+    withClient(_.prepare(sql).select(prepare(List()): _*)(extractor)).map(_.toList)
   }
 
-  def executeActionBatch[T, O](sql: String, bindParams: T => BindedStatementBuilder[List[Parameter]] => BindedStatementBuilder[List[Parameter]] = (_: T) => identity[BindedStatementBuilder[List[Parameter]]] _, generated: Option[String] = None, returningExtractor: Row => O = identity[Row] _): ActionApply[T] = {
-    def run(values: List[T]): Future[List[Long]] =
-      values match {
-        case Nil =>
-          Future.value(List())
-        case value :: tail =>
-          val (expanded, params) = bindParams(value)(new SqlBindedStatementBuilder).build(sql)
-          logger.info(expanded)
-          withClient(_.prepare(expanded)(params(List()): _*))
-            .map(resultToLong(_, generated))
-            .flatMap(r => run(tail).map(r +: _))
+  def executeQuerySingle[T](sql: String, prepare: List[Parameter] => List[Parameter] = identity, extractor: Row => T = identity[Row] _): Future[T] =
+    executeQuery(sql, prepare, extractor).map(handleSingleResult)
+
+  def executeAction[T](sql: String, prepare: List[Parameter] => List[Parameter] = identity): Future[Long] = {
+    logger.info(sql)
+    withClient(_.prepare(sql)(prepare(List()): _*))
+      .map(r => toOk(r).affectedRows)
+  }
+
+  def executeActionReturning[O](sql: String, prepare: List[Parameter] => List[Parameter] = identity, extractor: Row => O, returningColumn: String): Future[Long] = {
+    logger.info(sql)
+    withClient(_.prepare(sql)(prepare(List()): _*))
+      .map(r => toOk(r).insertId)
+  }
+
+  def executeBatchAction[B](groups: List[BatchGroup]): Future[List[Long]] =
+    Future.collect {
+      groups.map {
+        case BatchGroup(sql, prepare) =>
+          prepare.foldLeft(Future.value(List.empty[Long])) {
+            case (acc, prepare) =>
+              acc.flatMap { list =>
+                executeAction(sql, prepare).map(list :+ _)
+              }
+          }
       }
-    new ActionApply(run _)
-  }
+    }.map(_.flatten.toList)
 
-  def executeQuery[T](sql: String, extractor: Row => T = identity[Row] _, bind: BindedStatementBuilder[List[Parameter]] => BindedStatementBuilder[List[Parameter]] = identity): Future[List[T]] = {
-    val (expanded, params) = bind(new SqlBindedStatementBuilder).build(sql)
-    logger.info(expanded)
-    withClient(_.prepare(expanded).select(params(List()): _*)(extractor)).map(_.toList)
-  }
+  def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Row => T): Future[List[Long]] =
+    Future.collect {
+      groups.map {
+        case BatchGroupReturning(sql, column, prepare) =>
+          prepare.foldLeft(Future.value(List.empty[Long])) {
+            case (acc, prepare) =>
+              acc.flatMap { list =>
+                executeActionReturning(sql, prepare, extractor, column).map(list :+ _)
+              }
+          }
+      }
+    }.map(_.flatten.toList)
 
-  def executeQuerySingle[T](sql: String, extractor: Row => T = identity[Row] _, bind: BindedStatementBuilder[List[Parameter]] => BindedStatementBuilder[List[Parameter]]): Future[T] =
-    executeQuery(sql, extractor, bind).map(handleSingleResult)
-
-  private def resultToLong(result: Result, generated: Option[String]) =
+  private def toOk(result: Result) =
     result match {
-      case ok: OK if (generated.isDefined) => ok.insertId
-      case ok: OK                          => ok.affectedRows
-      case error: Error                    => throw new IllegalStateException(error.toString)
+      case ok: OK => ok
+      case error  => fail(error.toString)
     }
 
   private def withClient[T](f: Client => T) =

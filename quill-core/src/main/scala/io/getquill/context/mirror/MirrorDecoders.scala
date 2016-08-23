@@ -7,9 +7,11 @@ import io.getquill.context.Context
 import scala.reflect.ClassTag
 
 trait MirrorDecoders {
-  this: Context[Row, Row] =>
+  this: Context[_, _] =>
 
-  private def decoder[T: ClassTag]: Decoder[T] = new Decoder[T] {
+  type ResultRow = Row
+
+  def decoder[T: ClassTag]: Decoder[T] = new Decoder[T] {
     def apply(index: Int, row: Row) =
       row[T](index)
   }

@@ -17,6 +17,6 @@ class PostgresAsyncContextSpec extends Spec {
     val insert = quote { (i: Int) =>
       qr1.insert(_.i -> i)
     }
-    await(testContext.run(insert)(List(1))) must contain(1)
+    await(testContext.run(insert(lift(1)))) mustEqual 1
   }
 }

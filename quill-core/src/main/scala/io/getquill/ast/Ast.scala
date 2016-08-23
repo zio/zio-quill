@@ -4,9 +4,11 @@ package io.getquill.ast
 
 sealed trait Ast {
   override def toString = {
-    import io.getquill.ast.AstShow._
-    import io.getquill.util.Show._
-    this.show
+    import io.getquill.MirrorIdiom._
+    import io.getquill.idiom.StatementInterpolator._
+    implicit def liftTokenizer: Tokenizer[Lift] =
+      Tokenizer[Lift](_ => stmt"?")
+    this.token.toString
   }
 }
 
@@ -85,6 +87,8 @@ case class OptionOperation(t: OptionOperationType, ast: Ast, alias: Ident, body:
 
 case class If(condition: Ast, `then`: Ast, `else`: Ast) extends Ast
 
+case class Assignment(alias: Ident, property: Ast, value: Ast) extends Ast
+
 //************************************************************
 
 sealed trait Operation extends Ast
@@ -103,8 +107,6 @@ object NullValue extends Value
 
 case class Tuple(values: List[Ast]) extends Value
 
-case class Collection(values: List[Ast]) extends Value
-
 //************************************************************
 
 case class Block(statements: List[Ast]) extends Ast
@@ -115,21 +117,31 @@ case class Val(name: Ident, body: Ast) extends Ast
 
 sealed trait Action extends Ast
 
-case class Update(query: Ast) extends Action
-case class Insert(query: Ast) extends Action
+case class Update(query: Ast, assignments: List[Assignment]) extends Action
+case class Insert(query: Ast, assignments: List[Assignment]) extends Action
 case class Delete(query: Ast) extends Action
 
-case class AssignedAction(action: Ast, assignments: List[Assignment]) extends Action
+case class Returning(action: Ast, alias: Ident, property: Ast) extends Action
 
-case class Returning(action: Ast, property: String) extends Action
-
-case class Assignment(input: Ident, property: String, value: Ast)
+case class Foreach(query: Ast, alias: Ident, body: Ast) extends Action
 
 //************************************************************
 
 case class Dynamic(tree: Any) extends Ast
 
-sealed trait Binding extends Ast
-case class QuotedReference[T](tree: T, ast: Ast) extends Ast
-case class RuntimeBinding(name: String) extends Binding
-case class CompileTimeBinding(tree: Any) extends Binding
+case class QuotedReference(tree: Any, ast: Ast) extends Ast
+
+sealed trait Lift extends Ast {
+  val name: String
+  val value: Any
+}
+
+sealed trait ScalarLift extends Lift {
+  val encoder: Any
+}
+case class ScalarValueLift(name: String, value: Any, encoder: Any) extends ScalarLift
+case class ScalarQueryLift(name: String, value: Any, encoder: Any) extends ScalarLift
+
+sealed trait CaseClassLift extends Lift
+case class CaseClassValueLift(name: String, value: Any) extends CaseClassLift
+case class CaseClassQueryLift(name: String, value: Any) extends CaseClassLift

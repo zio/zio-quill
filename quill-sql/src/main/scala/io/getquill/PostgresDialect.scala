@@ -1,29 +1,29 @@
 package io.getquill
 
+import io.getquill.idiom.StatementInterpolator._
 import java.util.concurrent.atomic.AtomicInteger
-import io.getquill.context.sql.idiom.PositionalVariables
 import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.ast.UnaryOperation
 import io.getquill.ast.Operation
-import io.getquill.util.Show.Show
 import io.getquill.ast.Property
 import io.getquill.ast.StringOperator
+import io.getquill.context.sql.idiom.QuestionMarkBindVariables
 
 trait PostgresDialect
   extends SqlIdiom
-  with PositionalVariables {
+  with QuestionMarkBindVariables {
 
-  override implicit def operationShow(implicit propertyShow: Show[Property], strategy: NamingStrategy): Show[Operation] =
-    Show[Operation] {
-      case UnaryOperation(StringOperator.`toLong`, ast) => s"${scopedShow(ast)}::bigint"
-      case UnaryOperation(StringOperator.`toInt`, ast)  => s"${scopedShow(ast)}::integer"
-      case operation                                    => super.operationShow.show(operation)
+  override implicit def operationTokenizer(implicit propertyTokenizer: Tokenizer[Property], strategy: NamingStrategy): Tokenizer[Operation] =
+    Tokenizer[Operation] {
+      case UnaryOperation(StringOperator.`toLong`, ast) => stmt"${scopedTokenizer(ast)}::bigint"
+      case UnaryOperation(StringOperator.`toInt`, ast)  => stmt"${scopedTokenizer(ast)}::integer"
+      case operation                                    => super.operationTokenizer.token(operation)
     }
 
   private[getquill] val preparedStatementId = new AtomicInteger
 
-  override def prepare(sql: String) =
-    s"PREPARE p${preparedStatementId.incrementAndGet} AS ${positionalVariables(sql)}"
+  override def prepareForProbing(string: String) =
+    s"PREPARE p${preparedStatementId.incrementAndGet.toString.token} AS $string"
 }
 
 object PostgresDialect extends PostgresDialect

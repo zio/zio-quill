@@ -2,83 +2,39 @@ package io.getquill.quotation
 
 import scala.annotation.StaticAnnotation
 import scala.reflect.ClassTag
-import scala.reflect.NameTransformer
 import scala.reflect.macros.whitebox.Context
 
-import io.getquill.ast.Ast
-import io.getquill.ast.CollectAst
-import io.getquill.ast.CompileTimeBinding
-import io.getquill.ast.Dynamic
-import io.getquill.ast.QuotedReference
-import io.getquill.ast.RuntimeBinding
-import io.getquill.ast.Transform
+import io.getquill.ast._
 import io.getquill.util.Messages.RichContext
+import io.getquill.norm.BetaReduction
 
 case class QuotedAst(ast: Ast) extends StaticAnnotation
 
-trait Quotation extends Liftables with Unliftables with Parsing {
+trait Quotation extends Liftables with Unliftables with Parsing with ReifyLiftings {
   val c: Context
   import c.universe._
 
-  def quote[T](body: Expr[T])(implicit t: WeakTypeTag[T]) = {
+  def quote[T](body: Tree)(implicit t: WeakTypeTag[T]) = {
 
-    def bindingName(s: String) =
-      TermName(NameTransformer.encode(s))
-
-    val ast =
-      Transform(astParser(body.tree)) {
-        case QuotedReference(nested: Tree, nestedAst) =>
-          val ast =
-            Transform(nestedAst) {
-              case RuntimeBinding(name) =>
-                RuntimeBinding(s"$nested.$name")
-            }
-          QuotedReference(nested, ast)
-      }
-
-    val nestedBindings =
-      CollectAst(ast) {
-        case QuotedReference(nested: Tree, nestedAst) =>
-          Bindings(c)(nested, nested.tpe).map {
-            case (symbol, tree) =>
-              val nestedName = bindingName(s"$nested.${symbol.name.decodedName}")
-              q"val $nestedName = $tree"
-          }
-      }.flatten
-
-    val bindings =
-      CollectAst(ast) {
-        case CompileTimeBinding(tree: Tree) =>
-          val name = bindingName(tree.toString)
-          name -> q"val $name = $tree"
-      }.toMap.values
+    val ast = BetaReduction(astParser(body))
 
     val id = TermName(s"id${ast.hashCode.abs}")
 
-    val reifiedAst =
-      Transform(ast) {
-        case CompileTimeBinding(tree: Tree) =>
-          Dynamic(tree)
-      }
+    val (reifiedAst, liftings) = reifyLiftings(ast)
 
     val quotation =
       q"""
-        {
-          new ${c.prefix}.Quoted[$t] { 
-    
-            @${c.weakTypeOf[QuotedAst]}($ast)
-            def quoted = ast
-    
-            override def ast = $reifiedAst
-            override def toString = ast.toString
-    
-            def $id() = ()
-            
-            val bindings = new {
-              ..$bindings
-              ..$nestedBindings
-            }
-          }
+        new ${c.prefix}.Quoted[$t] { 
+  
+          @${c.weakTypeOf[QuotedAst]}($reifiedAst)
+          def quoted = ast
+  
+          override def ast = $reifiedAst
+          override def toString = ast.toString
+  
+          def $id() = ()
+          
+          $liftings
         }
       """
 
