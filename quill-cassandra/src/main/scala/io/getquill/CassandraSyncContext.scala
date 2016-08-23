@@ -6,10 +6,16 @@ import com.typesafe.config.Config
 import io.getquill.util.LoadConfig
 import io.getquill.context.cassandra.CassandraSessionContext
 import scala.collection.JavaConverters._
+import com.datastax.driver.core.Cluster
 
-class CassandraSyncContext[N <: NamingStrategy](config: CassandraContextConfig)
-  extends CassandraSessionContext[N](config) {
+class CassandraSyncContext[N <: NamingStrategy](
+  cluster:                    Cluster,
+  keyspace:                   String,
+  preparedStatementCacheSize: Long
+)
+  extends CassandraSessionContext[N](cluster, keyspace, preparedStatementCacheSize) {
 
+  def this(config: CassandraContextConfig) = this(config.cluster, config.keyspace, config.preparedStatementCacheSize)
   def this(config: Config) = this(CassandraContextConfig(config))
   def this(configPrefix: String) = this(LoadConfig(configPrefix))
 

@@ -8,13 +8,17 @@ import com.datastax.driver.core.BoundStatement
 import com.datastax.driver.core.Row
 import com.typesafe.scalalogging.Logger
 
-import io.getquill.CassandraContextConfig
 import io.getquill.NamingStrategy
 import io.getquill.context.cassandra.encoding.Decoders
 import io.getquill.context.cassandra.encoding.Encoders
 import io.getquill.util.Messages.fail
+import com.datastax.driver.core.Cluster
 
-abstract class CassandraSessionContext[N <: NamingStrategy](config: CassandraContextConfig)
+abstract class CassandraSessionContext[N <: NamingStrategy](
+  cluster:                    Cluster,
+  keyspace:                   String,
+  preparedStatementCacheSize: Long
+)
   extends CassandraContext[N]
   with Encoders
   with Decoders {
@@ -28,11 +32,10 @@ abstract class CassandraSessionContext[N <: NamingStrategy](config: CassandraCon
   protected val logger: Logger =
     Logger(LoggerFactory.getLogger(classOf[CassandraSessionContext[_]]))
 
-  private val cluster = config.cluster
-  protected val session = cluster.connect(config.keyspace)
-
   private val preparedStatementCache =
-    new PrepareStatementCache(config.preparedStatementCacheSize)
+    new PrepareStatementCache(preparedStatementCacheSize)
+
+  protected val session = cluster.connect(keyspace)
 
   protected def prepare(cql: String): BoundStatement =
     preparedStatementCache(cql)(session.prepare)
