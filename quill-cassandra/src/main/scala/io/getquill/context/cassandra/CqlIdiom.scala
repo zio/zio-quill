@@ -92,7 +92,7 @@ trait CqlIdiom extends Idiom {
 
   implicit val aggregationOperatorTokenizer: Tokenizer[AggregationOperator] = Tokenizer[AggregationOperator] {
     case AggregationOperator.`size` => stmt"COUNT"
-    case o                          => fail(s"Cql doesn't support '$o' aggregationstmt")
+    case o                          => fail(s"Cql doesn't support '$o' aggregations")
   }
 
   implicit val binaryOperatorTokenizer: Tokenizer[BinaryOperator] = Tokenizer[BinaryOperator] {
@@ -102,6 +102,7 @@ trait CqlIdiom extends Idiom {
     case NumericOperator.`>=`   => stmt">="
     case NumericOperator.`<`    => stmt"<"
     case NumericOperator.`<=`   => stmt"<="
+    case NumericOperator.`+`    => stmt"+"
     case SetOperator.`contains` => stmt"IN"
     case other                  => fail(s"Cql doesn't support the '$other' operator.")
   }
