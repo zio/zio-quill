@@ -80,6 +80,14 @@ class FreeVariablesSpec extends Spec {
       }
       FreeVariables(q.ast) mustEqual Set(Ident("i"))
     }
+    "join" in {
+      val i = 1
+      val q = quote {
+        qr1.join(qr2.filter(_.i == i))
+          .on((t1, t2) => t1.i == t2.i)
+      }
+      FreeVariables(q.ast) mustEqual Set(Ident("i"))
+    }
   }
 
   "takes in consideration variables defined in the quotation" - {

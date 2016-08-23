@@ -48,7 +48,7 @@ case class FreeVariables(state: State)
       case q @ GroupBy(a, b, c)   => (q, free(a, b, c))
       case q @ Join(t, a, b, iA, iB, on) =>
         val (_, freeA) = apply(a)
-        val (_, freeB) = apply(a)
+        val (_, freeB) = apply(b)
         val (_, freeOn) = FreeVariables(State(state.seen + iA + iB, collection.Set.empty))(on)
         (q, FreeVariables(State(state.seen, state.free ++ freeA.state.free ++ freeB.state.free ++ freeOn.state.free)))
       case _: Entity | _: Take | _: Drop | _: Union | _: UnionAll | _: Aggregation | _: Distinct =>
