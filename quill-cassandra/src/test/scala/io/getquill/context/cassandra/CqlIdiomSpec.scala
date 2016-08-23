@@ -194,6 +194,13 @@ class CqlIdiomSpec extends Spec {
       mirrorContext.run(q).string mustEqual
         "SELECT s, i, l, o FROM TestEntity WHERE i <= 1"
     }
+    "+" in {
+      val q = quote {
+        qr1.update(t => t.i -> (t.i + 1))
+      }
+      mirrorContext.run(q).string mustEqual
+        "UPDATE TestEntity SET i = i + 1"
+    }
     "invalid" in {
       val q = quote {
         qr1.filter(t => t.i * 2 == 4)
