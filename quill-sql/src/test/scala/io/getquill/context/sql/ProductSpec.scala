@@ -1,6 +1,9 @@
 package io.getquill.context.sql
 
 import io.getquill.Spec
+import io.getquill.WrappedValue
+
+case class Id(value: Long) extends AnyVal with WrappedValue[Long]
 
 trait ProductSpec extends Spec {
 

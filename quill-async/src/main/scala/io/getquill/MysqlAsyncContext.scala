@@ -7,6 +7,7 @@ import com.github.mauricio.async.db.pool.PartitionedConnectionPool
 import com.typesafe.config.Config
 import io.getquill.context.async.AsyncContext
 import io.getquill.util.LoadConfig
+import com.github.mauricio.async.db.general.ArrayRowData
 
 class MysqlAsyncContext[N <: NamingStrategy](pool: PartitionedConnectionPool[MySQLConnection])
   extends AsyncContext[MySQLDialect, N, MySQLConnection](pool) {
@@ -17,8 +18,10 @@ class MysqlAsyncContext[N <: NamingStrategy](pool: PartitionedConnectionPool[MyS
 
   override protected def extractActionResult[O](returningColumn: String, returningExtractor: RowData => O)(result: DBQueryResult): O = {
     result match {
-      case r: MySQLQueryResult => r.lastInsertId.asInstanceOf[O]
-      case _                   => throw new IllegalStateException("This is a bug. Cannot extract returning value.")
+      case r: MySQLQueryResult =>
+        returningExtractor(new ArrayRowData(0, Map.empty, Array(r.lastInsertId)))
+      case _ =>
+        throw new IllegalStateException("This is a bug. Cannot extract returning value.")
     }
   }
 }
