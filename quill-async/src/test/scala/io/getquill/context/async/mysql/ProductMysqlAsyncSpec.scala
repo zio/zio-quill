@@ -6,6 +6,7 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.ExecutionContext.Implicits.global
 
 import io.getquill.context.sql.ProductSpec
+import io.getquill.context.sql.Id
 
 class ProductMysqlAsyncSpec extends ProductSpec {
 
@@ -57,6 +58,15 @@ class ProductMysqlAsyncSpec extends ProductSpec {
       returnedProduct.description mustEqual "test2"
       returnedProduct.sku mustEqual 2L
       returnedProduct.id mustEqual inserted
+    }
+
+    "Single insert with wrapped value" in {
+      case class Product(id: Id, description: String, sku: Long)
+      val prd = Product(Id(0L), "test2", 2L)
+      val q1 = quote {
+        query[Product].insert(_.sku -> lift(prd.sku), _.description -> lift(prd.description)).returning(_.id)
+      }
+      await(testContext.run(q1)) mustBe a[Id]
     }
 
     "Single product insert with a method quotation" in {
