@@ -27,10 +27,10 @@ class RenamePropertiesSpec extends Spec {
 
       "insert assigned" in {
         val q = quote {
-          e.insert(_.i -> 1, _.l -> 1L, _.o -> 1, _.s -> "test")
+          e.insert(_.i -> lift(1), _.l -> lift(1L), _.o -> lift(Option(1)), _.s -> lift("test"))
         }
         mirrorContext.run(q).string mustEqual
-          "INSERT INTO test_entity (field_i,l,o,field_s) VALUES (1, 1, 1, 'test')"
+          "INSERT INTO test_entity (field_i,l,o,field_s) VALUES (?, ?, ?, ?)"
       }
       "update" in {
         val q = quote {

@@ -218,11 +218,12 @@ class CqlIdiomSpec extends Spec {
         "SELECT s, i, l, o FROM TestEntity WHERE s = 's'"
     }
     "unit" in {
+      case class Test(u: Unit)
       val q = quote {
-        qr1.filter(t => t.i == (()))
+        query[Test].filter(t => t.u == (())).size
       }
       mirrorContext.run(q).string mustEqual
-        "SELECT s, i, l, o FROM TestEntity WHERE i = 1"
+        "SELECT COUNT(1) FROM Test WHERE u = 1"
     }
     "int" in {
       val q = quote {

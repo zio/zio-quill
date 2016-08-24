@@ -368,10 +368,10 @@ class SqlIdiomSpec extends Spec {
       }
       "without from" in {
         val q = quote {
-          qr1.map(t => t.i).max == 1
+          qr1.map(t => t.i).size == 1L
         }
         testContext.run(q).string mustEqual
-          "SELECT x.* FROM (SELECT (SELECT MAX(t.i) FROM TestEntity t) = 1) x"
+          "SELECT x.* FROM (SELECT (SELECT COUNT(t.i) FROM TestEntity t) = 1) x"
       }
     }
     "operations" - {
@@ -516,17 +516,17 @@ class SqlIdiomSpec extends Spec {
         }
         "&&" in {
           val q = quote {
-            qr1.filter(t => t.i != null && t.s == "s")
+            qr1.filter(t => t.s != null && t.s == "s")
           }
           testContext.run(q).string mustEqual
-            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE (t.i IS NOT NULL) AND (t.s = 's')"
+            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE (t.s IS NOT NULL) AND (t.s = 's')"
         }
         "||" in {
           val q = quote {
-            qr1.filter(t => t.i != null || t.s == "s")
+            qr1.filter(t => t.s != null || t.s == "s")
           }
           testContext.run(q).string mustEqual
-            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE (t.i IS NOT NULL) OR (t.s = 's')"
+            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE (t.s IS NOT NULL) OR (t.s = 's')"
         }
         ">" in {
           val q = quote {
@@ -592,10 +592,10 @@ class SqlIdiomSpec extends Spec {
         }
         "using nested select" in {
           val q = quote {
-            qr1.insert(_.i -> qr2.map(t => t.i).max, _.s -> "s")
+            qr1.insert(_.l -> qr2.map(t => t.i).size, _.s -> "s")
           }
           testContext.run(q).string mustEqual
-            "INSERT INTO TestEntity (i,s) VALUES ((SELECT MAX(t.i) FROM TestEntity2 t), 's')"
+            "INSERT INTO TestEntity (l,s) VALUES ((SELECT COUNT(t.i) FROM TestEntity2 t), 's')"
         }
         "returning" in {
           val q = quote {
@@ -629,10 +629,10 @@ class SqlIdiomSpec extends Spec {
         }
         "using nested select" in {
           val q = quote {
-            qr1.update(_.i -> qr2.map(t => t.i).max)
+            qr1.update(_.l -> qr2.map(t => t.i).size)
           }
           testContext.run(q).string mustEqual
-            "UPDATE TestEntity SET i = (SELECT MAX(t.i) FROM TestEntity2 t)"
+            "UPDATE TestEntity SET l = (SELECT COUNT(t.i) FROM TestEntity2 t)"
         }
       }
       "delete" - {
@@ -692,10 +692,10 @@ class SqlIdiomSpec extends Spec {
       }
       "tuple" in {
         val q = quote {
-          qr1.filter(t => (1, 2) == t.i)
+          qr1.map(t => (1, 2))
         }
         testContext.run(q).string mustEqual
-          "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE (1, 2) = t.i"
+          "SELECT 1, 2 FROM TestEntity t"
       }
     }
     "property" - {
@@ -861,12 +861,5 @@ class SqlIdiomSpec extends Spec {
           "SELECT (SELECT SUM(t.i) FROM TestEntity2 t), (SELECT SUM(t1.i) FROM TestEntity3 t1), (SELECT SUM((a.i + t2.i) + t3.i) FROM TestEntity2 t2, TestEntity3 t3) FROM TestEntity a"
       }
     }
-  }
-
-  "fails if the query is malformed" in {
-    val q = quote {
-      qr1.filter(t => t == ((s: String) => s))
-    }
-    "testContext.run(q)" mustNot compile
   }
 }

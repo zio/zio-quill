@@ -356,10 +356,10 @@ class SqlQuerySpec extends Spec {
       }
       "filter + map" in {
         val q = quote {
-          qr1.filter(t => t == 1).nested.map(t => t.i)
+          qr1.filter(t => t.i == 1).nested.map(t => t.i)
         }
         testContext.run(q).string mustEqual
-          "SELECT t.i FROM (SELECT t.i FROM TestEntity t WHERE t = 1) t"
+          "SELECT t.i FROM (SELECT t.i FROM TestEntity t WHERE t.i = 1) t"
       }
     }
   }

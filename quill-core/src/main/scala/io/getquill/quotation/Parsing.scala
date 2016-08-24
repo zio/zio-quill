@@ -7,6 +7,7 @@ import io.getquill.util.Messages.RichContext
 import io.getquill.util.Interleave
 import io.getquill.dsl.CoreDsl
 import scala.collection.immutable.StringOps
+import scala.reflect.macros.TypecheckException
 
 trait Parsing extends EntityConfigParsing {
   this: Quotation =>
@@ -324,11 +325,17 @@ trait Parsing extends EntityConfigParsing {
     case q"${ astParser(a) }.apply[..$t](...$values)" => FunctionApply(a, values.flatten.map(astParser(_)))
   }
 
-  val equalityOperationParser: Parser[Operation] =
-    operationParser(_ => true) {
-      case "==" | "equals" => EqualityOperator.`==`
-      case "!="            => EqualityOperator.`!=`
-    }
+  val equalityOperationParser: Parser[Operation] = Parser[Operation] {
+    case q"$a.==($b)" =>
+      checkTypes(a, b)
+      BinaryOperation(astParser(a), EqualityOperator.`==`, astParser(b))
+    case q"$a.equals($b)" =>
+      checkTypes(a, b)
+      BinaryOperation(astParser(a), EqualityOperator.`==`, astParser(b))
+    case q"$a.!=($b)" =>
+      checkTypes(a, b)
+      BinaryOperation(astParser(a), EqualityOperator.`!=`, astParser(b))
+  }
 
   val booleanOperationParser: Parser[Operation] =
     operationParser(is[Boolean](_)) {
@@ -411,11 +418,35 @@ trait Parsing extends EntityConfigParsing {
   }
 
   private val assignmentParser: Parser[Assignment] = Parser[Assignment] {
-    case q"((${ identParser(i1) }) => $pack.Predef.ArrowAssoc[$t](${ identParser(i2) }.$prop).$arrow[$v]($value))" if (i1 == i2) =>
-      Assignment(i1, Property(i2, prop.decodedName.toString), astParser(value))
+    case q"((${ identParser(i1) }) => $pack.Predef.ArrowAssoc[$t]($prop).$arrow[$v]($value))" =>
+      checkTypes(prop, value)
+      prop match {
+        case q"${ identParser(i2) }.$prop" if (i1 == i2) =>
+          Assignment(i1, Property(i2, prop.decodedName.toString), astParser(value))
+        case prop =>
+          c.fail(s"Invalid assignment property: '$prop'")
+      }
 
     // Unused, it's here only to make eclipse's presentation compiler happy
     case astParser(ast) => Assignment(Ident("unused"), Ident("unused"), Constant("unused"))
   }
 
+  private def checkTypes(lhs: Tree, rhs: Tree): Unit = {
+    def unquoted(tree: Tree) =
+      is[CoreDsl#Quoted[Any]](tree) match {
+        case false => tree
+        case true  => q"unquote($tree)"
+      }
+    val t = TypeName(c.freshName("T"))
+    try c.typecheck(
+      q"""
+        def apply[$t](lhs: $t)(rhs: $t) = ()
+        apply(${unquoted(lhs)})($rhs)
+      """,
+      c.TYPEmode
+    ) catch {
+      case t: TypecheckException => c.error(t.msg)
+    }
+    ()
+  }
 }
