@@ -862,13 +862,24 @@ Quill uses `Encoder`s to encode query inputs and `Decoder`s to read values retur
 Mapped Encoding
 ---------------
 
-If the correspondent database type is already supported, use `mappedEncoding`. In this example, `String` is already supported by Quill and the `UUID` encoding from/to `String` is defined through mapped encoding:
+If the correspondent database type is already supported, use `MappedEncoding`. In this example, `String` is already supported by Quill and the `UUID` encoding from/to `String` is defined through mapped encoding:
 
 ```scala
+import ctx._
 import java.util.UUID
 
-implicit val encodeUUID = mappedEncoding[UUID, String](_.toString)
-implicit val decodeUUID = mappedEncoding[String, UUID](UUID.fromString(_))
+implicit val encodeUUID = MappedEncoding[UUID, String](_.toString)
+implicit val decodeUUID = MappedEncoding[String, UUID](UUID.fromString(_))
+```
+
+A mapped encoding also can be defined without a context instance by importing `io.getquill.MappedEncoding`:
+
+```scala
+import io.getquill.MappedEncoding
+import java.util.UUID
+
+implicit val encodeUUID = MappedEncoding[UUID, String](_.toString)
+implicit val decodeUUID = MappedEncoding[String, UUID](UUID.fromString(_))
 ```
 
 Raw Encoding
