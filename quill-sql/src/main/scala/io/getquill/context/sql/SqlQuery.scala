@@ -1,31 +1,6 @@
 package io.getquill.context.sql
 
-import io.getquill.ast.Aggregation
-import io.getquill.ast.Ast
-import io.getquill.ast.Distinct
-import io.getquill.ast.Drop
-import io.getquill.ast.Entity
-import io.getquill.ast.Filter
-import io.getquill.ast.FlatMap
-import io.getquill.ast.GroupBy
-import io.getquill.ast.Ident
-import io.getquill.ast.Infix
-import io.getquill.ast.Join
-import io.getquill.ast.JoinType
-import io.getquill.ast.Map
-import io.getquill.ast.Operation
-import io.getquill.ast.Property
-import io.getquill.ast.PropertyOrdering
-import io.getquill.ast.Query
-import io.getquill.ast.SortBy
-import io.getquill.ast.Take
-import io.getquill.ast.Tuple
-import io.getquill.ast.TupleOrdering
-import io.getquill.ast.UnaryOperation
-import io.getquill.ast.UnaryOperator
-import io.getquill.ast.Union
-import io.getquill.ast.UnionAll
-import io.getquill.ast.Value
+import io.getquill.ast._
 import io.getquill.context.sql.norm.FlattenGroupByAggregation
 import io.getquill.norm.BetaReduction
 import io.getquill.util.Messages.fail
@@ -102,13 +77,16 @@ object SqlQuery {
 
     def select(alias: String) = SelectValue(Ident(alias), None) :: Nil
 
-    def base(q: Ast, alias: String) =
+    def base(q: Ast, alias: String) = {
+      def nest(ctx: FromContext) = FlattenSqlQuery(from = sources :+ ctx, select = select(alias))
       q match {
-        case Map(_: GroupBy, _, _)                => FlattenSqlQuery(from = sources :+ source(q, alias), select = select(alias))
+        case Map(_: GroupBy, _, _)                => nest(source(q, alias))
+        case Nested(q)                            => nest(QueryContext(apply(q), alias))
         case q @ (_: Map | _: Filter | _: Entity) => flatten(sources, q, alias)
         case q if (sources == Nil)                => flatten(sources, q, alias)
-        case other                                => FlattenSqlQuery(from = sources :+ source(q, alias), select = select(alias))
+        case other                                => nest(source(q, alias))
       }
+    }
 
     finalFlatMapBody match {
 

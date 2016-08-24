@@ -429,6 +429,16 @@ ctx.run(q)
 // SELECT DISTINCT p.age FROM Person p
 ```
 
+**nested**
+```scala
+val q = quote {
+  query[Person].filter(p => p.name == "John").nested.map(p => p.age)
+}
+
+ctx.run(q)
+// SELECT p.age FROM (SELECT p.age FROM Person p WHERE p.name = 'John') p
+```
+
 **joins**
 
 In addition to applicative joins Quill also supports explicit joins (both inner and left/right/full outer joins).

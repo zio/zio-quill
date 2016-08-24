@@ -225,6 +225,9 @@ trait Parsing extends EntityConfigParsing {
     case q"$source.distinct" if (is[CoreDsl#Query[Any]](source)) =>
       Distinct(astParser(source))
 
+    case q"$source.nested" if (is[CoreDsl#Query[Any]](source)) =>
+      Nested(astParser(source))
+
   }
 
   implicit val orderingParser: Parser[Ordering] = Parser[Ordering] {

@@ -91,6 +91,7 @@ trait Unliftables {
       Join(t, a, b, iA, iB, on)
 
     case q"$pack.Distinct.apply(${ a: Ast })" => Distinct(a)
+    case q"$pack.Nested.apply(${ a: Ast })"   => Nested(a)
   }
 
   implicit val entityUnliftable: Unliftable[Entity] = Unliftable[Entity] {

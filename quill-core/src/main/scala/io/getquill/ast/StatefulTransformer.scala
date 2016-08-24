@@ -109,6 +109,9 @@ trait StatefulTransformer[T] {
       case Distinct(a) =>
         val (at, att) = apply(a)
         (Distinct(at), att)
+      case Nested(a) =>
+        val (at, att) = apply(a)
+        (Nested(at), att)
     }
 
   def apply(e: Assignment): (Assignment, StatefulTransformer[T]) =

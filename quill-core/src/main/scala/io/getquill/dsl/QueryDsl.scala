@@ -50,6 +50,8 @@ private[dsl] trait QueryDsl {
 
     def distinct: Query[T]
 
+    def nested: Query[T]
+
     def foreach[A <: Action[_]](f: T => A): BatchAction[A]
   }
 

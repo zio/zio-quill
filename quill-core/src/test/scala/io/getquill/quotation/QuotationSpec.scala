@@ -189,7 +189,12 @@ class QuotationSpec extends Spec {
         }
         quote(unquote(q)).ast mustEqual Distinct(Entity("TestEntity"))
       }
-
+      "nested" in {
+        val q = quote {
+          qr1.nested
+        }
+        quote(unquote(q)).ast mustEqual Nested(Entity("TestEntity"))
+      }
       "take" in {
         val q = quote {
           qr1.take(10)

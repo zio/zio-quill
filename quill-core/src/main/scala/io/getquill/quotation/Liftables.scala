@@ -91,6 +91,7 @@ trait Liftables {
     case UnionAll(a, b)         => q"$pack.UnionAll($a, $b)"
     case Join(a, b, c, d, e, f) => q"$pack.Join($a, $b, $c, $d, $e, $f)"
     case Distinct(a)            => q"$pack.Distinct($a)"
+    case Nested(a)              => q"$pack.Nested($a)"
   }
 
   implicit val entityLiftable: Liftable[Entity] = Liftable[Entity] {

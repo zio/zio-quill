@@ -1,20 +1,6 @@
 package io.getquill.norm
 
-import io.getquill.ast.Aggregation
-import io.getquill.ast.Ast
-import io.getquill.ast.Distinct
-import io.getquill.ast.Drop
-import io.getquill.ast.Entity
-import io.getquill.ast.Filter
-import io.getquill.ast.FlatMap
-import io.getquill.ast.GroupBy
-import io.getquill.ast.Join
-import io.getquill.ast.Map
-import io.getquill.ast.Query
-import io.getquill.ast.SortBy
-import io.getquill.ast.Take
-import io.getquill.ast.Union
-import io.getquill.ast.UnionAll
+import io.getquill.ast._
 
 object NormalizeNestedStructures {
 
@@ -32,6 +18,7 @@ object NormalizeNestedStructures {
       case Union(a, b)        => apply(a, b)(Union)
       case UnionAll(a, b)     => apply(a, b)(UnionAll)
       case Distinct(a)        => apply(a)(Distinct)
+      case Nested(a)          => apply(a)(Nested)
       case Join(t, a, b, iA, iB, on) =>
         (Normalize(a), Normalize(b), Normalize(on)) match {
           case (`a`, `b`, `on`) => None
