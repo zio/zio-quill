@@ -11,10 +11,16 @@ import io.getquill.context.cassandra.CassandraSessionContext
 import io.getquill.context.cassandra.util.FutureConversions.toScalaFuture
 import monifu.reactive.Observable
 import io.getquill.util.LoadConfig
+import com.datastax.driver.core.Cluster
 
-class CassandraStreamContext[N <: NamingStrategy](config: CassandraContextConfig)
-  extends CassandraSessionContext[N](config) {
+class CassandraStreamContext[N <: NamingStrategy](
+  cluster:                    Cluster,
+  keyspace:                   String,
+  preparedStatementCacheSize: Long
+)
+  extends CassandraSessionContext[N](cluster, keyspace, preparedStatementCacheSize) {
 
+  def this(config: CassandraContextConfig) = this(config.cluster, config.keyspace, config.preparedStatementCacheSize)
   def this(config: Config) = this(CassandraContextConfig(config))
   def this(configPrefix: String) = this(LoadConfig(configPrefix))
 
