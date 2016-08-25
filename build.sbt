@@ -9,10 +9,12 @@ lazy val `quill` =
     .settings(`tut-settings`:_*)
     .dependsOn(
       `quill-core-jvm`, `quill-core-js`, `quill-sql-jvm`, `quill-sql-js`,
-      `quill-jdbc`, `quill-finagle-mysql`, `quill-async`, `quill-cassandra`
+      `quill-jdbc`, `quill-finagle-mysql`, `quill-async`, `quill-async-mysql`,
+      `quill-async-postgresql`, `quill-cassandra`
     ).aggregate(
       `quill-core-jvm`, `quill-core-js`, `quill-sql-jvm`, `quill-sql-js`,
-      `quill-jdbc`, `quill-finagle-mysql`, `quill-async`, `quill-cassandra`
+      `quill-jdbc`, `quill-finagle-mysql`, `quill-async`, `quill-async-mysql`,
+      `quill-async-postgresql`, `quill-cassandra`
     )
 
 lazy val superPure = new org.scalajs.sbtplugin.cross.CrossType {
@@ -82,19 +84,41 @@ lazy val `quill-finagle-mysql` =
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
 
-lazy val `quill-async` = 
+lazy val `quill-async` =
   (project in file("quill-async"))
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.github.mauricio" %% "db-async-common"  % "0.2.20",
-        "com.github.mauricio" %% "mysql-async"      % "0.2.20",
-        "com.github.mauricio" %% "postgresql-async" % "0.2.20"
+        "com.github.mauricio" %% "db-async-common"  % "0.2.20"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
+
+lazy val `quill-async-mysql` =
+  (project in file("quill-async-mysql"))
+    .settings(commonSettings: _*)
+    .settings(mimaSettings: _*)
+    .settings(
+      fork in Test := true,
+      libraryDependencies ++= Seq(
+        "com.github.mauricio" %% "mysql-async"      % "0.2.20"
+      )
+    )
+    .dependsOn(`quill-async` % "compile->compile;test->test")
+
+lazy val `quill-async-postgresql` =
+  (project in file("quill-async-postgresql"))
+    .settings(commonSettings: _*)
+    .settings(mimaSettings: _*)
+    .settings(
+      fork in Test := true,
+      libraryDependencies ++= Seq(
+        "com.github.mauricio" %% "postgresql-async" % "0.2.20"
+      )
+    )
+    .dependsOn(`quill-async` % "compile->compile;test->test")
 
 lazy val `quill-cassandra` = 
   (project in file("quill-cassandra"))
