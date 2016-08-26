@@ -1355,6 +1355,10 @@ ScalaDays Berlin 2016 - [Scylla, Charybdis, and the mystery of Quill](https://ww
 
 Scalac.io blog - [Compile-time Queries with Quill](http://blog.scalac.io/2016/07/21/compile-time-queries-with-quill.html)
 
+**Tools**
+
+Code/boilerplate generator from db schema - [scala-db-codegen](https://github.com/olafurpg/scala-db-codegen)
+
 Code of Conduct
 ---------------
 
