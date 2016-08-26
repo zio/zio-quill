@@ -1193,7 +1193,7 @@ Note that the global execution context is renamed to ec.
 sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async" % "0.9.1-SNAPSHOT"
+  "io.getquill" %% "quill-async-mysql" % "0.9.1-SNAPSHOT"
 )
 ```
 
@@ -1220,7 +1220,7 @@ ctx.poolValidationInterval=100
 sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async" % "0.9.1-SNAPSHOT"
+  "io.getquill" %% "quill-async-postgres" % "0.9.1-SNAPSHOT"
 )
 ```
 
