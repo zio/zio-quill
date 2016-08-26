@@ -2,13 +2,13 @@
 
 **see migration notes below**
 
-* [Split quill-async into quill-async-mysql and quill-async-postgresql](https://github.com/getquill/quill/pull/540)
+* [Split quill-async into quill-async-mysql and quill-async-postgres](https://github.com/getquill/quill/pull/540)
 
 ### Migration notes
 
 - `mappedEncoding` has been renamed to `MappedEncoding`.
 * The way we add async drivers has been changed. To add mysql async to your project use `quill-async-mysql` and for postgre async
-`quill-async-postgresql`. It is no longer necessary to add `quill-async` by yourself.
+`quill-async-postgres`. It is no longer necessary to add `quill-async` by yourself.
 
 # 0.9.0 - 22-Aug-2016
 

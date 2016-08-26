@@ -10,11 +10,11 @@ lazy val `quill` =
     .dependsOn(
       `quill-core-jvm`, `quill-core-js`, `quill-sql-jvm`, `quill-sql-js`,
       `quill-jdbc`, `quill-finagle-mysql`, `quill-async`, `quill-async-mysql`,
-      `quill-async-postgresql`, `quill-cassandra`
+      `quill-async-postgres`, `quill-cassandra`
     ).aggregate(
       `quill-core-jvm`, `quill-core-js`, `quill-sql-jvm`, `quill-sql-js`,
       `quill-jdbc`, `quill-finagle-mysql`, `quill-async`, `quill-async-mysql`,
-      `quill-async-postgresql`, `quill-cassandra`
+      `quill-async-postgres`, `quill-cassandra`
     )
 
 lazy val superPure = new org.scalajs.sbtplugin.cross.CrossType {
@@ -108,8 +108,8 @@ lazy val `quill-async-mysql` =
     )
     .dependsOn(`quill-async` % "compile->compile;test->test")
 
-lazy val `quill-async-postgresql` =
-  (project in file("quill-async-postgresql"))
+lazy val `quill-async-postgres` =
+  (project in file("quill-async-postgres"))
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .settings(

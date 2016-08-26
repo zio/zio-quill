@@ -1220,7 +1220,7 @@ ctx.poolValidationInterval=100
 sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async-postgresql" % "0.9.1-SNAPSHOT"
+  "io.getquill" %% "quill-async-postgres" % "0.9.1-SNAPSHOT"
 )
 ```
 
