@@ -1,11 +1,11 @@
 package io.getquill.context.finagle.mysql
 
 import java.util.Date
-import com.twitter.finagle.exp.mysql.BigDecimalValue
-import com.twitter.finagle.exp.mysql.CanBeParameter
-import com.twitter.finagle.exp.mysql.CanBeParameter._
-import com.twitter.finagle.exp.mysql.Parameter
-import com.twitter.finagle.exp.mysql.Parameter.wrap
+import com.twitter.finagle.mysql.BigDecimalValue
+import com.twitter.finagle.mysql.CanBeParameter
+import com.twitter.finagle.mysql.CanBeParameter._
+import com.twitter.finagle.mysql.Parameter
+import com.twitter.finagle.mysql.Parameter.wrap
 import io.getquill.FinagleMysqlContext
 
 trait FinagleMysqlEncoders {

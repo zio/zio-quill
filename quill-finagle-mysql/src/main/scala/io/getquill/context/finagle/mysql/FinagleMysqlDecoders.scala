@@ -3,21 +3,21 @@ package io.getquill.context.finagle.mysql
 import java.util.Date
 import scala.reflect.ClassTag
 import scala.reflect.classTag
-import com.twitter.finagle.exp.mysql.BigDecimalValue
-import com.twitter.finagle.exp.mysql.ByteValue
-import com.twitter.finagle.exp.mysql.DoubleValue
-import com.twitter.finagle.exp.mysql.FloatValue
-import com.twitter.finagle.exp.mysql.IntValue
-import com.twitter.finagle.exp.mysql.LongValue
-import com.twitter.finagle.exp.mysql.RawValue
-import com.twitter.finagle.exp.mysql.Row
-import com.twitter.finagle.exp.mysql.ShortValue
-import com.twitter.finagle.exp.mysql.StringValue
-import com.twitter.finagle.exp.mysql.TimestampValue
-import com.twitter.finagle.exp.mysql.Type
-import com.twitter.finagle.exp.mysql.Value
+import com.twitter.finagle.mysql.BigDecimalValue
+import com.twitter.finagle.mysql.ByteValue
+import com.twitter.finagle.mysql.DoubleValue
+import com.twitter.finagle.mysql.FloatValue
+import com.twitter.finagle.mysql.IntValue
+import com.twitter.finagle.mysql.LongValue
+import com.twitter.finagle.mysql.NullValue
+import com.twitter.finagle.mysql.RawValue
+import com.twitter.finagle.mysql.Row
+import com.twitter.finagle.mysql.ShortValue
+import com.twitter.finagle.mysql.StringValue
+import com.twitter.finagle.mysql.TimestampValue
+import com.twitter.finagle.mysql.Type
+import com.twitter.finagle.mysql.Value
 import io.getquill.util.Messages.fail
-import com.twitter.finagle.exp.mysql.NullValue
 import io.getquill.FinagleMysqlContext
 
 trait FinagleMysqlDecoders {
