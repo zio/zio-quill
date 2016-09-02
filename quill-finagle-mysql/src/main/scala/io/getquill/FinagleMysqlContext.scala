@@ -6,12 +6,13 @@ import scala.util.Try
 
 import org.slf4j.LoggerFactory
 
-import com.twitter.finagle.exp.mysql.Client
-import com.twitter.finagle.exp.mysql.OK
-import com.twitter.finagle.exp.mysql.Parameter
-import com.twitter.finagle.exp.mysql.Result
-import com.twitter.finagle.exp.mysql.Row
-import com.twitter.finagle.exp.mysql.Transactions
+import com.twitter.finagle.mysql.Client
+import com.twitter.finagle.mysql.LongValue
+import com.twitter.finagle.mysql.OK
+import com.twitter.finagle.mysql.Parameter
+import com.twitter.finagle.mysql.Result
+import com.twitter.finagle.mysql.Row
+import com.twitter.finagle.mysql.Transactions
 import com.twitter.util.Await
 import com.twitter.util.Future
 import com.twitter.util.Local
@@ -20,11 +21,10 @@ import com.typesafe.scalalogging.Logger
 
 import io.getquill.context.finagle.mysql.FinagleMysqlDecoders
 import io.getquill.context.finagle.mysql.FinagleMysqlEncoders
+import io.getquill.context.finagle.mysql.SingleValueRow
 import io.getquill.context.sql.SqlContext
 import io.getquill.util.LoadConfig
 import io.getquill.util.Messages.fail
-import io.getquill.context.finagle.mysql.SingleValueRow
-import com.twitter.finagle.exp.mysql.LongValue
 
 class FinagleMysqlContext[N <: NamingStrategy](
   client:                             Client with Transactions,
