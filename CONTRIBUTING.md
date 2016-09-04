@@ -20,6 +20,10 @@ After that, just run the command bellow to build and test the project.
 
 `docker-compose run --rm sbt sbt test`
 
+### Improve build performance with Docker *(for Mac users only)*
+
+Use [docker for mac](https://docs.docker.com/engine/installation/mac/#/docker-for-mac).
+
 ## Building Scala.js targets
 
 The Scala.js targets are disabled by default, use `sbt "project quill-with-js"` to enable them.
@@ -43,10 +47,6 @@ In order to contribute to the project, just do as follows:
 5. Run the tests through `docker-compose run sbt sbt test`
 6. If everything is ok, commit and push to your fork
 7. Create a Pull Request, we'll be glad to review it
-
-### Improve build performance with Docker *(for Mac users only)*
-
-Use [docker for mac](https://docs.docker.com/engine/installation/mac/#/docker-for-mac).
 
 ## File Formatting 
 
