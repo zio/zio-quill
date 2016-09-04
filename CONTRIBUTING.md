@@ -36,6 +36,43 @@ have to setup the databases again. To do this, just run the command bellow.
 
 `docker-compose stop && docker-compose rm && docker-compose run --rm setup`
 
+## Tests
+
+### Running tests
+
+Run all tests:
+```
+docker-compose run --rm sbt sbt test
+```
+
+Run specific test:
+```
+docker-compose run --rm sbt sbt "test-only io.getquill.context.sql.SqlQuerySpec"
+```
+
+Run all tests in specific sub-project:
+```
+docker-compose run --rm sbt sbt "project quill-async" test
+```
+
+Run specific test in specific sub-project:
+```
+docker-compose run --rm sbt sbt "project quill-sqlJVM" "test-only io.getquill.context.sql.SqlQuerySpec"
+```
+
+### Debugging tests
+1. Run sbt in interactive mode with docker container ports mapped to the host: 
+```
+docker-compose-run --service-ports --rm sbt
+```
+
+2. Attach debugger to port 15005 of your docker host. In IntelliJ IDEA you should create Remote Run/Debug Configuration, 
+change it port to 15005.
+3. In sbt command line run tests with `test` or test specific spec by passing full name to `test-only`:
+```
+> test-only io.getquill.context.sql.SqlQuerySpec
+```
+
 ## Pull Request
 
 In order to contribute to the project, just do as follows:
