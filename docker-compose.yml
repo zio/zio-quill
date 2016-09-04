@@ -40,6 +40,8 @@ setup:
 sbt:
   build: .
   dockerfile: ./build/Dockerfile-sbt
+  ports:
+    - "15005:5005"
   command: sbt
   links:
     - postgres:postgres
