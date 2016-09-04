@@ -14,15 +14,19 @@ After installing Docker and Docker Compose, you have to run the command bellow i
 order to setup the databases' schemas. If you don't change any schemas, you will
 only need to do this once.
 
-`docker-compose run --rm setup`
+```
+docker-compose run --rm setup
+```
 
 After that, just run the command bellow to build and test the project.
 
-`docker-compose run --rm sbt sbt test`
+```
+docker-compose run --rm sbt sbt test
+```
 
 ### Improve build performance with Docker *(for Mac users only)*
 
-Use [docker for mac](https://docs.docker.com/engine/installation/mac/#/docker-for-mac).
+Use [Docker for mac](https://docs.docker.com/engine/installation/mac/#/docker-for-mac).
 
 ## Building Scala.js targets
 
@@ -34,7 +38,9 @@ The CI build also sets this `project quill-with-js` to force the Scala.js compil
 If you have changed any file that creates a database schema, you will
 have to setup the databases again. To do this, just run the command bellow.
 
-`docker-compose stop && docker-compose rm && docker-compose run --rm setup`
+```
+docker-compose stop && docker-compose rm && docker-compose run --rm setup
+```
 
 ## Tests
 
@@ -94,7 +100,9 @@ Every time you compile the project in sbt, file formatting will be triggered.
 
 Run the following command, it will restart your database service with database ports exposed to your host machine. 
 
-`docker-compose stop && docker-compose rm && docker-compose run --rm --service-ports setup`
+```
+docker-compose stop && docker-compose rm && docker-compose run --rm --service-ports setup
+```
 
 After that, we need to set some environment variables in order to run `sbt` locally.  
 
