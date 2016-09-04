@@ -14,11 +14,19 @@ After installing Docker and Docker Compose, you have to run the command bellow i
 order to setup the databases' schemas. If you don't change any schemas, you will
 only need to do this once.
 
-`docker-compose run --rm setup`
+```
+docker-compose run --rm setup
+```
 
 After that, just run the command bellow to build and test the project.
 
-`docker-compose run --rm sbt sbt test`
+```
+docker-compose run --rm sbt sbt test
+```
+
+### Improve build performance with Docker *(for Mac users only)*
+
+Use [Docker for mac](https://docs.docker.com/engine/installation/mac/#/docker-for-mac).
 
 ## Building Scala.js targets
 
@@ -30,7 +38,46 @@ The CI build also sets this `project quill-with-js` to force the Scala.js compil
 If you have changed any file that creates a database schema, you will
 have to setup the databases again. To do this, just run the command bellow.
 
-`docker-compose stop && docker-compose rm && docker-compose run --rm setup`
+```
+docker-compose stop && docker-compose rm && docker-compose run --rm setup
+```
+
+## Tests
+
+### Running tests
+
+Run all tests:
+```
+docker-compose run --rm sbt sbt test
+```
+
+Run specific test:
+```
+docker-compose run --rm sbt sbt "test-only io.getquill.context.sql.SqlQuerySpec"
+```
+
+Run all tests in specific sub-project:
+```
+docker-compose run --rm sbt sbt "project quill-async" test
+```
+
+Run specific test in specific sub-project:
+```
+docker-compose run --rm sbt sbt "project quill-sqlJVM" "test-only io.getquill.context.sql.SqlQuerySpec"
+```
+
+### Debugging tests
+1. Run sbt in interactive mode with docker container ports mapped to the host: 
+```
+docker-compose-run --service-ports --rm sbt
+```
+
+2. Attach debugger to port 15005 of your docker host. In IntelliJ IDEA you should create Remote Run/Debug Configuration, 
+change it port to 15005.
+3. In sbt command line run tests with `test` or test specific spec by passing full name to `test-only`:
+```
+> test-only io.getquill.context.sql.SqlQuerySpec
+```
 
 ## Pull Request
 
@@ -44,10 +91,6 @@ In order to contribute to the project, just do as follows:
 6. If everything is ok, commit and push to your fork
 7. Create a Pull Request, we'll be glad to review it
 
-### Improve build performance with Docker *(for Mac users only)*
-
-Use [docker for mac](https://docs.docker.com/engine/installation/mac/#/docker-for-mac).
-
 ## File Formatting 
 
 [Scalariform](http://mdr.github.io/scalariform/) is used as file formatting tool in this project.
@@ -57,7 +100,9 @@ Every time you compile the project in sbt, file formatting will be triggered.
 
 Run the following command, it will restart your database service with database ports exposed to your host machine. 
 
-`docker-compose stop && docker-compose rm && docker-compose run --rm --service-ports setup`
+```
+docker-compose stop && docker-compose rm && docker-compose run --rm --service-ports setup
+```
 
 After that, we need to set some environment variables in order to run `sbt` locally.  
 
