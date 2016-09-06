@@ -1,15 +1,10 @@
 package io.getquill.context
 
+import io.getquill.ast._
 import scala.reflect.macros.whitebox.{ Context => MacroContext }
+import io.getquill.util.OptionalTypecheck
 
-import io.getquill.ast.Ident
-import io.getquill.ast.Map
-import io.getquill.ast.Query
-import io.getquill.norm.Normalize
-import io.getquill.norm.select.SelectFlattening
-import io.getquill.norm.select.SelectResultExtraction
-
-class QueryMacro(val c: MacroContext) extends ContextMacro with SelectFlattening with SelectResultExtraction {
+class QueryMacro(val c: MacroContext) extends ContextMacro {
   import c.universe.{ Ident => _, _ }
 
   def runQuery[T](quoted: Tree)(implicit t: WeakTypeTag[T]): Tree =
@@ -18,20 +13,34 @@ class QueryMacro(val c: MacroContext) extends ContextMacro with SelectFlattening
   def runQuerySingle[T](quoted: Tree)(implicit t: WeakTypeTag[T]): Tree =
     expandQuery[T](quoted, "executeQuerySingle")
 
-  private def expandQuery[T](quoted: Tree, method: String)(implicit t: WeakTypeTag[T]) = {
-    val ast = extractAst(quoted)
-    val query = Normalize(ast) match {
-      case q: Query => q
-      case q        => Map(q, Ident("x"), Ident("x"))
+  private def expandQuery[T](quoted: Tree, method: String)(implicit t: WeakTypeTag[T]) =
+    OptionalTypecheck(c)(q"implicitly[${c.prefix}.Decoder[$t]]") match {
+      case Some(decoder) => expandQueryWithDecoder(quoted, method, decoder)
+      case None          => expandQueryWithMeta[T](quoted, method)
     }
-    val (flattenAst, selectValues) = flattenSelect(query, t.tpe, Encoding.inferDecoder(c))
-    val extractor = selectResultExtractor(selectValues)
+
+  private def expandQueryWithDecoder(quoted: Tree, method: String, decoder: Tree) = {
+    val ast = Map(extractAst(quoted), Ident("x"), Ident("x"))
     q"""
-      val expanded = ${expand(flattenAst)}
+      val expanded = ${expand(ast)}
       ${c.prefix}.${TermName(method)}(
         expanded.string,
         expanded.prepare,
-        $extractor
+        row => $decoder(0, row)
+      )  
+    """
+  }
+
+  private def expandQueryWithMeta[T](quoted: Tree, method: String)(implicit t: WeakTypeTag[T]) = {
+    val metaTpe = c.typecheck(tq"${c.prefix}.QueryMeta[$t]", c.TYPEmode).tpe
+    val meta = c.inferImplicitValue(metaTpe).orElse(q"${c.prefix}.materializeQueryMeta[$t]")
+    val ast = extractAst(c.typecheck(q"${c.prefix}.quote($meta.expand($quoted))"))
+    q"""
+      val expanded = ${expand(ast)}
+      ${c.prefix}.${TermName(method)}(
+        expanded.string,
+        expanded.prepare,
+        $meta.extract
       )  
     """
   }

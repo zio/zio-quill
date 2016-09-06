@@ -28,7 +28,7 @@ object StatementInterpolator {
   implicit def liftTokenizer: Tokenizer[Lift] =
     Tokenizer[Lift] {
       case lift: ScalarLift => ScalarLiftToken(lift)
-      case lift             => fail(s"Can't tokenize a non-scalar lifting.")
+      case lift             => fail(s"Can't tokenize a non-scalar lifting. ${lift.name}")
     }
 
   implicit def tokenTokenizer: Tokenizer[Token] = Tokenizer[Token](identity)

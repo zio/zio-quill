@@ -34,7 +34,7 @@ class JdbcEncodingSpec extends EncodingSpec {
       encoder[UUID](row => (idx, uuid) =>
         row.setObject(idx, uuid, Types.OTHER), Types.OTHER)
 
-    val uuid = testContext.run(insertBarCode(lift(barCodeEntry))).get
+    val uuid = testContext.run(insertBarCode.apply(lift(barCodeEntry))).get
     val (barCode :: Nil) = testContext.run(findBarCodeByUuid(uuid))
 
     verifyBarcode(barCode)

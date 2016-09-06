@@ -1,6 +1,6 @@
 package io.getquill.context.jdbc.mysql
 
-import io.getquill.context.jdbc.TestEncoders
+import io.getquill.context.sql.TestEncoders
 import io.getquill.context.sql.TestDecoders
 import io.getquill.{ JdbcContext, Literal, MySQLDialect, TestEntities }
 

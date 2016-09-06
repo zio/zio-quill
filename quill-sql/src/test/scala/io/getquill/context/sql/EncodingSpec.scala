@@ -9,7 +9,7 @@ case class EncodingTestType(value: String)
 
 trait EncodingSpec extends Spec {
 
-  val context: SqlContext[_, _]
+  val context: SqlContext[_, _] with TestEncoders with TestDecoders
 
   import context._
 
@@ -163,7 +163,7 @@ trait EncodingSpec extends Spec {
 
   case class BarCode(description: String, uuid: Option[UUID] = None)
 
-  val insertBarCode = quote((b: BarCode) => query[BarCode].insert(b).returning(_.uuid))
+  def insertBarCode(implicit e: Encoder[UUID]) = quote((b: BarCode) => query[BarCode].insert(b).returning(_.uuid))
   val barCodeEntry = BarCode("returning UUID")
 
   def findBarCodeByUuid(uuid: UUID)(implicit enc: Encoder[UUID]) = quote(query[BarCode].filter(_.uuid == lift(Option(uuid))))

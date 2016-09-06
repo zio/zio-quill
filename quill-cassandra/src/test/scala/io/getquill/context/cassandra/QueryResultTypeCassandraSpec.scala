@@ -1,10 +1,12 @@
 package io.getquill.context.cassandra
 
 import io.getquill.Spec
+import io.getquill.context.cassandra.encoding.Encoders
+import io.getquill.context.cassandra.encoding.Decoders
 
 trait QueryResultTypeCassandraSpec extends Spec {
 
-  val context: CassandraContext[_]
+  val context: CassandraContext[_] with Encoders with Decoders
   import context._
 
   case class OrderTestEntity(id: Int, i: Int)

@@ -115,7 +115,7 @@ trait Unliftables {
   }
 
   implicit val propertyAliasUnliftable: Unliftable[PropertyAlias] = Unliftable[PropertyAlias] {
-    case q"$pack.PropertyAlias.apply(${ a: String }, ${ b: String })" => PropertyAlias(a, b)
+    case q"$pack.PropertyAlias.apply(${ a: List[String] }, ${ b: String })" => PropertyAlias(a, b)
   }
 
   implicit def optionUnliftable[T](implicit u: Unliftable[T]): Unliftable[Option[T]] = Unliftable[Option[T]] {

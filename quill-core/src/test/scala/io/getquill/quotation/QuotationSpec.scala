@@ -32,19 +32,19 @@ class QuotationSpec extends Spec {
           val q = quote {
             query[TestEntity].schema(_.entity("SomeAlias").columns(_.s -> "theS", _.i -> "theI"))
           }
-          quote(unquote(q)).ast mustEqual ConfiguredEntity(Entity("TestEntity"), Some("SomeAlias"), List(PropertyAlias("s", "theS"), PropertyAlias("i", "theI")))
+          quote(unquote(q)).ast mustEqual ConfiguredEntity(Entity("TestEntity"), Some("SomeAlias"), List(PropertyAlias(List("s"), "theS"), PropertyAlias(List("i"), "theI")))
         }
         "explicit `Predef.ArrowAssoc`" in {
           val q = quote {
             query[TestEntity].schema(_.columns(e => Predef.ArrowAssoc(e.s). -> [String]("theS")))
           }
-          quote(unquote(q)).ast mustEqual ConfiguredEntity(Entity("TestEntity"), properties = List(PropertyAlias("s", "theS")))
+          quote(unquote(q)).ast mustEqual ConfiguredEntity(Entity("TestEntity"), properties = List(PropertyAlias(List("s"), "theS")))
         }
         "with property alias and unicode arrow" in {
           val q = quote {
             query[TestEntity].schema(_.entity("SomeAlias").columns(_.s → "theS", _.i → "theI"))
           }
-          quote(unquote(q)).ast mustEqual ConfiguredEntity(Entity("TestEntity"), Some("SomeAlias"), List(PropertyAlias("s", "theS"), PropertyAlias("i", "theI")))
+          quote(unquote(q)).ast mustEqual ConfiguredEntity(Entity("TestEntity"), Some("SomeAlias"), List(PropertyAlias(List("s"), "theS"), PropertyAlias(List("i"), "theI")))
         }
       }
       "filter" in {

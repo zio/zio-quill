@@ -226,14 +226,19 @@ trait SqlIdiom extends Idiom {
     case SetOperator.`contains` => stmt"IN"
   }
 
-  implicit def propertyTokenizer(implicit valueTokenizer: Tokenizer[Value], identTokenizer: Tokenizer[Ident], strategy: NamingStrategy): Tokenizer[Property] =
+  implicit def propertyTokenizer(implicit valueTokenizer: Tokenizer[Value], identTokenizer: Tokenizer[Ident], strategy: NamingStrategy): Tokenizer[Property] = {
+    def unnest(ast: Ast): Ast =
+      ast match {
+        case Property(a, b) => unnest(a)
+        case a              => a
+      }
     Tokenizer[Property] {
-      case Property(ident, "isEmpty")      => stmt"${ident.token} IS NULL"
-      case Property(ident, "nonEmpty")     => stmt"${ident.token} IS NOT NULL"
-      case Property(ident, "isDefined")    => stmt"${ident.token} IS NOT NULL"
-      case Property(Property(ident, a), b) => stmt"${ident.token}.${a.token}${b.token}"
-      case Property(ast, name)             => stmt"${scopedTokenizer(ast)}.${strategy.column(name).token}"
+      case Property(ast, "isEmpty")   => stmt"${ast.token} IS NULL"
+      case Property(ast, "nonEmpty")  => stmt"${ast.token} IS NOT NULL"
+      case Property(ast, "isDefined") => stmt"${ast.token} IS NOT NULL"
+      case Property(ast, name)        => stmt"${scopedTokenizer(unnest(ast))}.${strategy.column(name).token}"
     }
+  }
 
   implicit def valueTokenizer(implicit strategy: NamingStrategy): Tokenizer[Value] = Tokenizer[Value] {
     case Constant(v: String) => stmt"'${v.token}'"
@@ -265,7 +270,6 @@ trait SqlIdiom extends Idiom {
       case Property(Property(_, name), "isEmpty")   => stmt"${strategy.column(name).token} IS NULL"
       case Property(Property(_, name), "isDefined") => stmt"${strategy.column(name).token} IS NOT NULL"
       case Property(Property(_, name), "nonEmpty")  => stmt"${strategy.column(name).token} IS NOT NULL"
-      case Property(Property(_, name), prop)        => stmt"${strategy.column(name).token}.${prop.token}"
       case Property(_, name)                        => strategy.column(name).token
     }
 

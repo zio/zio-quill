@@ -25,5 +25,15 @@ trait EntityConfigParsing {
         EntityConfig()
     }
 
-  val propertyAliasParser: Parser[PropertyAlias]
+  private val propertyAliasParser: Parser[PropertyAlias] = Parser[PropertyAlias] {
+    case q"(($x1) => $pack.Predef.ArrowAssoc[$t]($prop).$arrow[$v](${ alias: String }))" =>
+      def path(tree: Tree): List[String] =
+        tree match {
+          case q"$a.$b" =>
+            path(a) :+ b.decodedName.toString
+          case _ =>
+            Nil
+        }
+      PropertyAlias(path(prop), alias)
+  }
 }

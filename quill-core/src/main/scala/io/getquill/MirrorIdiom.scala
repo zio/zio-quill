@@ -106,7 +106,7 @@ class MirrorIdiom extends Idiom {
     case SimpleEntity(name) => stmt"query[${name.token}]"
     case c: ConfiguredEntity =>
       val alias = c.alias.map(s => stmt""".entity("${s.token}")""")
-      val properties = c.properties.map(p => stmt"""_.${p.property.token} -> "${p.alias.token}"""")
+      val properties = c.properties.map(p => stmt"""_.${p.path.mkStmt(".")} -> "${p.alias.token}"""")
       val columns = if (properties.isEmpty) None else Some(stmt""".columns(${properties.mkStmt()})""")
       val params = alias.toList ::: columns.toList
       stmt"${c.source.token}.schema(_${params.mkStmt("")})"
