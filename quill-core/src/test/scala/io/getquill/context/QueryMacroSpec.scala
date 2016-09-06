@@ -7,6 +7,13 @@ import io.getquill.testContext._
 
 class QueryMacroSpec extends Spec {
 
+  "runs query with nested optional case class" in {
+    val q = quote {
+      qr1.leftJoin(qr2).on((a, b) => a.i == b.i)
+    }
+    testContext.run(q)
+  }
+
   "runs query without liftings" in {
     val q = quote {
       qr1.map(t => t.i)

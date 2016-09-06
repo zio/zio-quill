@@ -6,3 +6,4 @@ private[getquill] trait CoreDsl
   with QueryDsl
   with QuotationDsl
   with EncodingDsl
+  with MetaDsl

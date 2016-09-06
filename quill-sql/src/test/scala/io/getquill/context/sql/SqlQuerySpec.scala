@@ -10,7 +10,7 @@ class SqlQuerySpec extends Spec {
 
   "transforms the ast into a flatten sql-like structure" - {
 
-    "join query" in {
+    "inner join query" in {
       val q = quote {
         for {
           a <- qr1
@@ -21,6 +21,14 @@ class SqlQuerySpec extends Spec {
       }
       testContext.run(q).string mustEqual
         "SELECT a.i, b.i FROM TestEntity a, TestEntity2 b WHERE (a.s IS NOT NULL) AND (b.i > a.i)"
+    }
+
+    "outer join query" in {
+      val q = quote {
+        qr1.leftJoin(qr2).on((a, b) => a.s != null && b.i > a.i)
+      }
+      testContext.run(q).string mustEqual
+        "SELECT a.s, a.i, a.l, a.o, b.s, b.i, b.l, b.o FROM TestEntity a LEFT JOIN TestEntity2 b ON (a.s IS NOT NULL) AND (b.i > a.i)"
     }
 
     "value query" - {
@@ -140,7 +148,7 @@ class SqlQuerySpec extends Spec {
           qr1.groupBy(t => t.i).map(t => t._1)
         }
         testContext.run(q).string mustEqual
-          "SELECT t.i FROM TestEntity t GROUP BY t.i"
+          "SELECT t.* FROM (SELECT t.i FROM TestEntity t GROUP BY t.i) t"
       }
       "nested" in {
         val q = quote {
@@ -162,7 +170,7 @@ class SqlQuerySpec extends Spec {
           qr1.groupBy(t => (t.i, t.l)).map(t => t._1)
         }
         testContext.run(q).string mustEqual
-          "SELECT t.i, t.l FROM TestEntity t GROUP BY t.i, t.l"
+          "SELECT t._1, t._2 FROM (SELECT t.i _1, t.l _2 FROM TestEntity t GROUP BY t.i, t.l) t"
       }
       "aggregated" - {
         "simple" in {
@@ -171,7 +179,8 @@ class SqlQuerySpec extends Spec {
               case (i, entities) => (i, entities.size)
             }
           }
-          testContext.run(q).string mustEqual "SELECT t.i, COUNT(*) FROM TestEntity t GROUP BY t.i"
+          testContext.run(q).string mustEqual
+            "SELECT t._1, t._2 FROM (SELECT t.i _1, COUNT(*) _2 FROM TestEntity t GROUP BY t.i) t"
         }
         "mapped" in {
           val q = quote {
@@ -179,7 +188,8 @@ class SqlQuerySpec extends Spec {
               case (i, entities) => (i, entities.map(_.l).max)
             }
           }
-          testContext.run(q).string mustEqual "SELECT t.i, MAX(t.l) FROM TestEntity t GROUP BY t.i"
+          testContext.run(q).string mustEqual
+            "SELECT t._1, t._2 FROM (SELECT t.i _1, MAX(t.l) _2 FROM TestEntity t GROUP BY t.i) t"
         }
       }
       "invalid groupby criteria" in {

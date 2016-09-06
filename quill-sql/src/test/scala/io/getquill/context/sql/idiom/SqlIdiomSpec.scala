@@ -37,7 +37,7 @@ class SqlIdiomSpec extends Spec {
             qr1.distinct
           }
           testContext.run(q).string mustEqual
-            "SELECT DISTINCT x.* FROM TestEntity x"
+            "SELECT x.s, x.i, x.l, x.o FROM (SELECT DISTINCT x.s, x.i, x.l, x.o FROM TestEntity x) x"
         }
 
         "distinct single" in {
@@ -156,7 +156,7 @@ class SqlIdiomSpec extends Spec {
             }
           }
           testContext.run(q).string mustEqual
-            "SELECT t.i, COUNT(*) FROM TestEntity t GROUP BY t.i"
+            "SELECT t._1, t._2 FROM (SELECT t.i _1, COUNT(*) _2 FROM TestEntity t GROUP BY t.i) t"
         }
         "nested" in {
           val q = quote {
@@ -300,8 +300,8 @@ class SqlIdiomSpec extends Spec {
           val q = quote {
             j.union(j).map(u => (u._1.s, u._2.i))
           }
-          testContext.run(q).string mustEqual
-            "SELECT u._1s, u._2i FROM ((SELECT a.s _1s, b.i _2i FROM TestEntity a, TestEntity2 b) UNION (SELECT a1.s _1s, b1.i _2i FROM TestEntity a1, TestEntity2 b1)) u"
+          testContext.run(q.dynamic).string mustEqual
+            "SELECT u.s, u.i FROM ((SELECT a.s s, b.i i FROM TestEntity a, TestEntity2 b) UNION (SELECT a1.s s, b1.i i FROM TestEntity a1, TestEntity2 b1)) u"
         }
       }
       "unionAll" - {
@@ -706,6 +706,12 @@ class SqlIdiomSpec extends Spec {
         testContext.run(q).string mustEqual
           "SELECT t.s FROM TestEntity t"
       }
+      "nested" in {
+        case class A(s: String) extends Embedded
+        case class B(a: A)
+        testContext.run(query[B]).string mustEqual
+          "SELECT x.s FROM B x"
+      }
       "isEmpty" - {
         "query" in {
           val q = quote {
@@ -846,7 +852,6 @@ class SqlIdiomSpec extends Spec {
         testContext.run(q).string mustEqual
           "SELECT a.s, a.i, a.l, a.o, b.s, b.i, b.l, b.o, t.s, t.i, t.l, t.o, 1 + t.i FROM TestEntity a, TestEntity2 b, TestEntity3 t WHERE (a.i = b.i) AND ((t.i = 1) AND (b.i = t.i))"
       }
-
       "aggregated" in {
         val q = quote {
           query[TestEntity].map { a =>

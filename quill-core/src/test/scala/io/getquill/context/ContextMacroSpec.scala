@@ -26,10 +26,10 @@ class ContextMacroSpec extends Spec {
           """infix"STRING""""
       }
       "dynamic" in {
-        val q: Quoted[Action[TestEntity]] = quote {
+        val q = quote {
           qr1.delete
         }
-        testContext.run(q).string mustEqual
+        testContext.run(q.dynamic).string mustEqual
           "query[TestEntity].delete"
       }
       "dynamic type param" in {
@@ -56,10 +56,10 @@ class ContextMacroSpec extends Spec {
         r.prepareRow mustEqual Row("a")
       }
       "dynamic" in {
-        val q: Quoted[Action[TestEntity]] = quote {
+        val q = quote {
           infix"t = ${lift("a")}".as[Action[TestEntity]]
         }
-        val r = testContext.run(q)
+        val r = testContext.run(q.dynamic)
         r.string mustEqual s"""infix"t = $${?}""""
         r.prepareRow mustEqual Row("a")
       }
@@ -92,10 +92,10 @@ class ContextMacroSpec extends Spec {
           """infix"STRING".map(t => t.s)"""
       }
       "dynamic" in {
-        val q: Quoted[Query[String]] = quote {
+        val q = quote {
           qr1.map(t => t.s)
         }
-        testContext.run(q).string mustEqual
+        testContext.run(q.dynamic).string mustEqual
           "query[TestEntity].map(t => t.s)"
       }
       "dynamic type param" in {
@@ -132,10 +132,10 @@ class ContextMacroSpec extends Spec {
         r.prepareRow mustEqual Row("a")
       }
       "dynamic" in {
-        val q: Quoted[Query[TestEntity]] = quote {
+        val q = quote {
           qr1.filter(t => t.s == lift("a"))
         }
-        val r = testContext.run(q)
+        val r = testContext.run(q.dynamic)
         r.string mustEqual "query[TestEntity].filter(t => t.s == ?).map(t => (t.s, t.i, t.l, t.o))"
         r.prepareRow mustEqual Row("a")
       }

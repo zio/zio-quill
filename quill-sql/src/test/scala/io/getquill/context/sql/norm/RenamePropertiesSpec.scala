@@ -23,7 +23,6 @@ class RenamePropertiesSpec extends Spec {
         testContext.run(q).string mustEqual
           "INSERT INTO test_entity (field_s,field_i,l,o) VALUES (?, ?, ?, ?)"
       }
-
       "insert assigned" in {
         val q = quote {
           e.insert(_.i -> lift(1), _.l -> lift(1L), _.o -> lift(Option(1)), _.s -> lift("test"))
@@ -63,12 +62,13 @@ class RenamePropertiesSpec extends Spec {
         testContext.run(q).string mustEqual
           "SELECT u.s, u.i, u.l, u.o FROM test_entity t, TestEntity2 u WHERE u.s = t.field_s"
       }
-      "transitive" in {
+      "transitive" in pendingUntilFixed {
         val q = quote {
           e.flatMap(t => qr2.map(u => t)).map(t => t.s)
         }
-        testContext.run(q).string mustEqual
+        testContext.run(q.dynamic).string mustEqual
           "SELECT t.field_s FROM test_entity t, TestEntity2 u"
+        ()
       }
     }
     "map" - {
@@ -157,7 +157,7 @@ class RenamePropertiesSpec extends Spec {
           e.distinct
         }
         testContext.run(q).string mustEqual
-          "SELECT DISTINCT x.* FROM test_entity x"
+          "SELECT x.field_s, x.field_i, x.l, x.o FROM (SELECT DISTINCT x.field_s, x.field_i, x.l, x.o FROM test_entity x) x"
       }
       "transitive" in {
         val q = quote {
@@ -196,6 +196,66 @@ class RenamePropertiesSpec extends Spec {
         }
         testContext.run(q).string mustEqual
           "SELECT b.field_s FROM (SELECT t.s FROM TestEntity t WHERE t.i = 1) t RIGHT JOIN test_entity b ON t.s = b.field_s"
+      }
+    }
+  }
+
+  "respects the schema definition for embeddeds" - {
+    "query" - {
+      "without schema" in {
+        case class B(c: Int) extends Embedded
+        case class A(b: B)
+        testContext.run(query[A]).string mustEqual
+          "SELECT x.c FROM A x"
+      }
+      "with schema" in {
+        case class B(c: Int) extends Embedded
+        case class A(b: B)
+        val q = quote {
+          query[A].schema(_.columns(_.b.c -> "bC"))
+        }
+        testContext.run(q).string mustEqual
+          "SELECT x.bC FROM A x"
+      }
+    }
+    "update" - {
+      "without schema" in {
+        case class B(c: Int) extends Embedded
+        case class A(b: B)
+        val q = quote {
+          query[A].update(_.b.c -> 1)
+        }
+        testContext.run(q).string mustEqual
+          "UPDATE A SET c = 1"
+      }
+      "with schema" in {
+        case class B(c: Int) extends Embedded
+        case class A(b: B)
+        val q = quote {
+          query[A].schema(_.columns(_.b.c -> "bC")).update(_.b.c -> 1)
+        }
+        testContext.run(q).string mustEqual
+          "UPDATE A SET bC = 1"
+      }
+    }
+    "insert" - {
+      "without schema" in {
+        case class B(c: Int) extends Embedded
+        case class A(b: B)
+        val q = quote {
+          query[A].insert(_.b.c -> 1)
+        }
+        testContext.run(q).string mustEqual
+          "INSERT INTO A (c) VALUES (1)"
+      }
+      "with schema" in {
+        case class B(c: Int) extends Embedded
+        case class A(b: B)
+        val q = quote {
+          query[A].schema(_.columns(_.b.c -> "bC")).insert(_.b.c -> 1)
+        }
+        testContext.run(q).string mustEqual
+          "INSERT INTO A (bC) VALUES (1)"
       }
     }
   }

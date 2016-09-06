@@ -1,20 +1,11 @@
 package io.getquill.norm
 
-import io.getquill.ast.Ast
-import io.getquill.ast.Distinct
-import io.getquill.ast.Filter
-import io.getquill.ast.FlatMap
-import io.getquill.ast.GroupBy
-import io.getquill.ast.Ident
-import io.getquill.ast.Map
-import io.getquill.ast.Query
-import io.getquill.ast.SortBy
-import io.getquill.ast.Drop
-import io.getquill.ast.Take
+import io.getquill.ast._
 
-object ApplyIntermediateMap {
+object ApplyMap {
 
-  private def isomorphic(e: Ast, c: Ast, alias: Ident) = BetaReduction(e, alias -> c) == c
+  private def isomorphic(e: Ast, c: Ast, alias: Ident) =
+    BetaReduction(e, alias -> c) == c
 
   def unapply(q: Query): Option[Query] =
     q match {

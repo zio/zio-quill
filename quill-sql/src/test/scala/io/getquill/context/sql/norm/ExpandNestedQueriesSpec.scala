@@ -15,7 +15,7 @@ class ExpandNestedQueriesSpec extends Spec {
     }
 
     testContext.run(q).string mustEqual
-      "SELECT x.s, x.i, x.l, x.o FROM (SELECT x.s, x.i, x.l, x.o FROM TestEntity a, TestEntity2 x) x LIMIT 10"
+      "SELECT b.s, b.i, b.l, b.o FROM (SELECT x.s, x.i, x.l, x.o FROM TestEntity a, TestEntity2 x) b LIMIT 10"
   }
 
   "partial select" in {

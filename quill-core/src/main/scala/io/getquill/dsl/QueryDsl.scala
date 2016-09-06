@@ -7,7 +7,7 @@ import io.getquill.quotation.NonQuotedException
 import scala.annotation.compileTimeOnly
 
 private[dsl] trait QueryDsl {
-  this: CoreDsl =>
+  dsl: CoreDsl =>
 
   @compileTimeOnly(NonQuotedException.message)
   def query[T](implicit ct: ClassTag[T]): EntityQuery[T] = NonQuotedException()
@@ -68,10 +68,10 @@ private[dsl] trait QueryDsl {
     override def filter(f: T => Boolean): EntityQuery[T]
     override def map[R](f: T => R): EntityQuery[R]
 
-    def insert(value: T): Insert[T] = macro macroz.DslMacro.expandInsert[T]
+    def insert(value: T): Insert[T] = macro QueryDslMacro.expandInsert[T]
     def insert(f: (T => (Any, Any)), f2: (T => (Any, Any))*): Insert[T]
 
-    def update(value: T): Update[T] = macro macroz.DslMacro.expandUpdate[T]
+    def update(value: T): Update[T] = macro QueryDslMacro.expandUpdate[T]
     def update(f: (T => (Any, Any)), f2: (T => (Any, Any))*): Update[T]
 
     def delete: Delete[T]

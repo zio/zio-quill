@@ -51,7 +51,7 @@ object ExpandNestedQueries {
         refs.map {
           case Property(Property(_, tupleElem), prop) =>
             val p = Property(select(tupleElem.drop(1).toInt - 1).ast, prop)
-            SelectValue(p, Some(tupleElem + prop))
+            SelectValue(p, Some(prop))
           case Property(_, tupleElem) if (tupleElem.matches("_[0-9]*")) =>
             SelectValue(select(tupleElem.drop(1).toInt - 1).ast, Some(tupleElem))
           case Property(_, name) =>

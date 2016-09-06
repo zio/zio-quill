@@ -77,7 +77,6 @@ class SqlIdiomNamingSpec extends Spec {
           "DELETE FROM some_entity"
       }
     }
-
     "queries" - {
       "property empty check" in {
         case class SomeEntity(optionValue: Option[Int])

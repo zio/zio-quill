@@ -27,6 +27,16 @@ trait JdbcEncoders {
       }
     })
 
+  override protected def mappedEncoderImpl[I, O](implicit mapped: MappedEncoding[I, O], e: Encoder[O]): Encoder[I] =
+    e match {
+      case e @ JdbcEncoder(sqlType) =>
+        val enc = new Encoder[I] {
+          override def apply(index: Int, value: I, row: PreparedStatement) =
+            e(index, mapped.f(value), row)
+        }
+        JdbcEncoder(sqlType)(enc)
+    }
+
   private[this] val nullEncoder = encoder[Int](_.setNull, Types.INTEGER)
 
   implicit def optionEncoder[T](implicit d: Encoder[T]): Encoder[Option[T]] =

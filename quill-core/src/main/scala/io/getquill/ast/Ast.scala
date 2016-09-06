@@ -36,7 +36,7 @@ case class ConfiguredEntity(
   properties: List[PropertyAlias] = List()
 ) extends Entity
 
-case class PropertyAlias(property: String, alias: String)
+case class PropertyAlias(path: List[String], alias: String)
 
 case class Filter(query: Ast, alias: Ident, body: Ast) extends Query
 
