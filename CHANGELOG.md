@@ -1,14 +1,22 @@
-# To be released
+# 0.10.0 - 5-Sep-2016
 
 **see migration notes below**
 
+* [check types when parsing assignments and equality operations](https://github.com/getquill/quill/pull/532)
+* [Update finagle-mysql to finagle 6.37.0](https://github.com/getquill/quill/pull/549/files)
 * [Split quill-async into quill-async-mysql and quill-async-postgres](https://github.com/getquill/quill/pull/540)
+* [cql: support `+` operator](https://github.com/getquill/quill/pull/530)
+* [cassandra context constructor with ready-made Cluster](https://github.com/getquill/quill/pull/529)
+* [support forced nested queries](https://github.com/getquill/quill/pull/527)
+* [support mapped encoding definition without a context instance](https://github.com/getquill/quill/pull/526)
+* [fix class cast exception for returned values](https://github.com/getquill/quill/pull/536)
+* [fix free variables detection for the rhs of joins](https://github.com/getquill/quill/pull/528)
 
 ### Migration notes
 
 - `mappedEncoding` has been renamed to `MappedEncoding`.
-* The way we add async drivers has been changed. To add mysql async to your project use `quill-async-mysql` and for postgre async
-`quill-async-postgres`. It is no longer necessary to add `quill-async` by yourself.
+- The way we add async drivers has been changed. To add mysql async to your project use `quill-async-mysql` and for postgre async `quill-async-postgres`. It is no longer necessary to add `quill-async` by yourself.
+- Action assignments and equality operations are now typesafe. If there's a type mismatch between the operands, the quotation will not compile.
 
 # 0.9.0 - 22-Aug-2016
 
