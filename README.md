@@ -1282,6 +1282,46 @@ ctx.pool.bufferSize=0
 ctx.pool.maxWaiters=2147483647
 ```
 
+##### quill-finagle-postgres
+
+**Transactions**
+
+The finagle context provides transaction support through a `Local` value. See twitter util's [scaladoc](https://github.com/twitter/util/blob/ee8d3140ba0ecc16b54591bd9d8961c11b999c0d/util-core/src/main/scala/com/twitter/util/Local.scala#L96) for more details.
+
+```
+ctx.transaction {
+  ctx.run(query[Person].delete)
+  // other transactional code
+}
+```
+
+The body of `transaction` can contain calls to other methods and multiple `run` calls, since the transaction is automatically propagated through the `Local` value.
+
+sbt dependencies
+```
+libraryDependencies ++= Seq(
+  "io.getquill" %% "quill-finagle-postgres" % "0.10.1-SNAPSHOT"
+)
+```
+
+context definition
+```scala
+lazy val ctx = new FinaglePostgresContext[SnakeCase]("ctx")
+```
+
+application.properties
+```
+ctx.host=localhost:3306
+ctx.user=root
+ctx.password=root
+ctx.database=database
+ctx.useSsl=false
+ctx.hostConnectionLimit=1
+ctx.numRetries=4
+ctx.binaryResults=false
+ctx.binaryParams=false
+```
+
 Cassandra Contexts
 -----------------
 
