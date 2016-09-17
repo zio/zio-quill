@@ -49,10 +49,13 @@ class FinaglePostgresContext[N <: NamingStrategy](client: Client) extends SqlCon
     withClient(_.prepareAndQuery(sql, prepare(Nil): _*)(extractor).map(_.toList))
   }
 
-  def executeQuerySingle[T](sql: String, prepare: PrepareRow => PrepareRow = identity, extractor: Row => T = identity[Row] _): Future[T] = executeQuery(sql, prepare, extractor).map(handleSingleResult)
+  def executeQuerySingle[T](sql: String, prepare: PrepareRow => PrepareRow = identity, extractor: Row => T = identity[Row] _): Future[T] =
+    executeQuery(sql, prepare, extractor).map(handleSingleResult)
 
-  def executeAction[T](sql: String, prepare: PrepareRow => PrepareRow = identity, extractor: Row => T = identity[Row] _): Future[Long] =
+  def executeAction[T](sql: String, prepare: PrepareRow => PrepareRow = identity, extractor: Row => T = identity[Row] _): Future[Long] = {
+    logger.info(sql)
     withClient(_.prepareAndExecute(sql, prepare(Nil): _*)).map(_.toLong)
+  }
 
   def executeBatchAction[B](groups: List[BatchGroup]): Future[List[Long]] = Future.collect {
     groups.map {
