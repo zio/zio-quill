@@ -116,7 +116,16 @@ val q: Quoted[Query[Circle]] = quote {
 ctx.run(q) // Dynamic query
 ```
 
-Quill falls back to runtime normalization and query generation if the quotation's AST can't be read at compile-time. Please refer to [dynamic queries](#dynamic-queries) for more information
+Quill falls back to runtime normalization and query generation if the quotation's AST can't be read at compile-time. Please refer to [dynamic queries](#dynamic-queries) for more information.
+
+#### Inline queries
+
+Quoting is implicit when writing a query in a `run` statement.
+
+```scala
+ctx.run(query[Circle].map(_.radius))
+// SELECT r.radius FROM Circle r
+```
 
 Bindings
 --------
