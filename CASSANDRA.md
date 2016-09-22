@@ -41,6 +41,8 @@ db.session.contactPoint=127.0.0.1
 db.session.queryOptions.consistencyLevel=ONE
 ```
 
+Add your project's `build.sbt` dependencies as described in [Cassandra Contexts](https://github.com/getquill/quill#cassandra-contexts)
+
 ## Abstraction level ##
 
 The Datastax Java driver provides simple abstractions that let you either write you queries as plain strings or to use a declarative Query Builder. It also provides a higher level [Object Mapper](https://github.com/datastax/java-driver/tree/2.1/manual/object_mapper). For this comparison we will only use the Query Builder.
