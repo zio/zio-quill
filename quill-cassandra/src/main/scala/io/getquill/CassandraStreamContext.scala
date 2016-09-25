@@ -9,7 +9,7 @@ import scala.collection.JavaConverters._
 
 import io.getquill.context.cassandra.CassandraSessionContext
 import io.getquill.context.cassandra.util.FutureConversions.toScalaFuture
-import monifu.reactive.Observable
+import monix.reactive.Observable
 import io.getquill.util.LoadConfig
 import com.datastax.driver.core.Cluster
 
@@ -34,7 +34,7 @@ class CassandraStreamContext[N <: NamingStrategy](
     val page = rs.asScala.take(available)
 
     if (rs.isFullyFetched)
-      Observable.unit(page)
+      Observable.now(page)
     else
       Observable.fromFuture(rs.fetchMoreResults()).map(_ => page)
   }
@@ -42,7 +42,7 @@ class CassandraStreamContext[N <: NamingStrategy](
   def executeQuery[T](cql: String, prepare: BoundStatement => BoundStatement = identity, extractor: Row => T = identity[Row] _): Observable[T] =
     Observable
       .fromFuture(session.executeAsync(prepare(super.prepare(cql))))
-      .flatMap(Observable.fromStateAction((rs: ResultSet) => (page(rs), rs)))
+      .flatMap(Observable.fromStateAction((rs: ResultSet) => (page(rs), rs))(_))
       .flatten
       .takeWhile(_.nonEmpty)
       .flatMap(Observable.fromIterable)
