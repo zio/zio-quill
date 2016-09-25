@@ -2,7 +2,7 @@ package io.getquill.context.cassandra
 
 import io.getquill._
 import java.util.{ UUID, Date }
-import monifu.reactive.Observable
+import monix.reactive.Observable
 
 class EncodingSpec extends Spec {
 
@@ -31,18 +31,18 @@ class EncodingSpec extends Spec {
 
     "stream" in {
       import testStreamDB._
-      import monifu.concurrent.Implicits.globalScheduler
+      import monix.execution.Scheduler.Implicits.global
       val result =
         for {
           _ <- testStreamDB.run(query[EncodingTestEntity].delete)
-          inserts = Observable.from(insertValues: _*)
-          _ <- testStreamDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insert(e))).count
+          inserts = Observable(insertValues: _*)
+          _ <- Observable.fromTask(testStreamDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insert(e))).countL)
           result <- testStreamDB.run(query[EncodingTestEntity])
         } yield {
           result
         }
-      val f = result.foldLeft(List.empty[EncodingTestEntity])(_ :+ _).asFuture
-      verify(await(f).getOrElse(List()))
+      val f = result.foldLeftL(List.empty[EncodingTestEntity])(_ :+ _).runAsync
+      verify(await(f))
     }
   }
 
@@ -78,7 +78,7 @@ class EncodingSpec extends Spec {
 
     "stream" in {
       import testStreamDB._
-      import monifu.concurrent.Implicits.globalScheduler
+      import monix.execution.Scheduler.Implicits.global
       val q = quote {
         (list: Query[Int]) =>
           query[EncodingTestEntity].filter(t => list.contains(t.id))
@@ -86,14 +86,14 @@ class EncodingSpec extends Spec {
       val result =
         for {
           _ <- testStreamDB.run(query[EncodingTestEntity].delete)
-          inserts = Observable.from(insertValues: _*)
-          _ <- testStreamDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insert(e))).count
+          inserts = Observable(insertValues: _*)
+          _ <- Observable.fromTask(testStreamDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insert(e))).countL)
           result <- testStreamDB.run(q(liftQuery(insertValues.map(_.id))))
         } yield {
           result
         }
-      val f = result.foldLeft(List.empty[EncodingTestEntity])(_ :+ _).asFuture
-      verify(await(f).getOrElse(List()))
+      val f = result.foldLeftL(List.empty[EncodingTestEntity])(_ :+ _).runAsync
+      verify(await(f))
     }
   }
 
