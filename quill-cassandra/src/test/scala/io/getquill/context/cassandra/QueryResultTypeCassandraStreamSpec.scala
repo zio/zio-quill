@@ -1,7 +1,7 @@
 package io.getquill.context.cassandra
 
-import monifu.concurrent.Implicits.globalScheduler
-import monifu.reactive.Observable
+import monix.execution.Scheduler.Implicits.global
+import monix.reactive.Observable
 
 class QueryResultTypeCassandraStreamSpec extends QueryResultTypeCassandraSpec {
 
@@ -10,7 +10,7 @@ class QueryResultTypeCassandraStreamSpec extends QueryResultTypeCassandraSpec {
   import context._
 
   def result[T](t: Observable[T]) =
-    await(t.foldLeft(List.empty[T])(_ :+ _).asFuture)
+    await(t.foldLeftL(List.empty[T])(_ :+ _).runAsync)
 
   override def beforeAll = {
     result(context.run(deleteAll))

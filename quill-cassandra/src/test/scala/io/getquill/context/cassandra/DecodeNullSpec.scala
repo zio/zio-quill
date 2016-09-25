@@ -1,6 +1,7 @@
 package io.getquill.context.cassandra
 
 import io.getquill._
+import monix.reactive.Observable
 
 class DecodeNullSpec extends Spec {
 
@@ -39,20 +40,20 @@ class DecodeNullSpec extends Spec {
 
     "stream" in {
       import testStreamDB._
-      import monifu.concurrent.Implicits.globalScheduler
+      import monix.execution.Scheduler.Implicits.global
       val writeEntities = quote(query[DecodeNullTestWriteEntity].schema(_.entity("DecodeNullTestEntity")))
 
       val result =
         for {
           _ <- testStreamDB.run(writeEntities.delete)
-          _ <- testStreamDB.run(writeEntities.insert(lift(insertValue))).count
+          _ <- Observable.fromTask(testStreamDB.run(writeEntities.insert(lift(insertValue))).countL)
           result <- testStreamDB.run(query[DecodeNullTestEntity])
         } yield {
           result
         }
       intercept[IllegalStateException] {
         await {
-          result.asFuture
+          result.headL.runAsync
         }
       }
     }
