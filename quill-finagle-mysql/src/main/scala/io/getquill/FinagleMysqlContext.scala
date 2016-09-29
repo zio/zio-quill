@@ -122,7 +122,7 @@ class FinagleMysqlContext[N <: NamingStrategy](
       case error  => fail(error.toString)
     }
 
-  private def withClient[T](f: Client => T) =
+  def withClient[T](f: Client => T) =
     currentClient().map {
       client => f(client)
     }.getOrElse {
