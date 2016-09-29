@@ -21,8 +21,6 @@ case class Dealias(state: Option[Ident]) extends StatefulTransformer[Option[Iden
         dealias(a, b, c)(SortBy(_, _, _, d))
       case GroupBy(a, b, c) =>
         dealias(a, b, c)(GroupBy)
-      case q: Aggregation =>
-        (q, Dealias(None))
       case Take(a, b) =>
         val (an, ant) = apply(a)
         (Take(an, b), ant)
@@ -39,9 +37,9 @@ case class Dealias(state: Option[Ident]) extends StatefulTransformer[Option[Iden
         (UnionAll(an, bn), Dealias(None))
       case Join(t, a, b, iA, iB, o) =>
         val ((an, iAn, on), ont) = dealias(a, iA, o)((_, _, _))
-        val ((bn, iBn, onn), onnt) = ont.dealias(b, iB, on)((_, _, _))
+        val ((bn, iBn, onn), _) = ont.dealias(b, iB, on)((_, _, _))
         (Join(t, an, bn, iAn, iBn, onn), Dealias(None))
-      case _: Entity | _: Distinct =>
+      case _: Entity | _: Distinct | _: Aggregation | _: Nested =>
         (q, Dealias(None))
     }
 

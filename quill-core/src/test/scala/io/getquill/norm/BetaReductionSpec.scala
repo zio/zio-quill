@@ -1,7 +1,26 @@
 package io.getquill.norm
 
-import io.getquill._
-import io.getquill.ast._
+import io.getquill.Spec
+import io.getquill.ast.AscNullsFirst
+import io.getquill.ast.Ast
+import io.getquill.ast.Block
+import io.getquill.ast.Constant
+import io.getquill.ast.Entity
+import io.getquill.ast.Filter
+import io.getquill.ast.FlatMap
+import io.getquill.ast.Function
+import io.getquill.ast.FunctionApply
+import io.getquill.ast.GroupBy
+import io.getquill.ast.Ident
+import io.getquill.ast.Join
+import io.getquill.ast.LeftJoin
+import io.getquill.ast.Map
+import io.getquill.ast.OptionMap
+import io.getquill.ast.OptionOperation
+import io.getquill.ast.Property
+import io.getquill.ast.SortBy
+import io.getquill.ast.Tuple
+import io.getquill.ast.Val
 
 class BetaReductionSpec extends Spec {
 
@@ -27,7 +46,7 @@ class BetaReductionSpec extends Spec {
       val entity = Entity("a")
       val (a, b, c) = (Ident("a"), Ident("b"), Ident("c"))
       val (c1, c2, c3) = (Constant(1), Constant(2), Constant(3))
-      val map = collection.Map[Ident, Ast](c -> b, b -> a)
+      val map = collection.Map[Ast, Ast](c -> b, b -> a)
 
       "top level block" in {
         val block = Block(List(

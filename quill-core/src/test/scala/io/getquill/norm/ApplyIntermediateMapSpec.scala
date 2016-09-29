@@ -1,96 +1,76 @@
 package io.getquill.norm
 
-import io.getquill._
+import io.getquill.ast.Ast
+import io.getquill.ast.Distinct
+import io.getquill.ast.Filter
+import io.getquill.ast.FlatMap
+import io.getquill.ast.GroupBy
+import io.getquill.ast.Ident
+import io.getquill.ast.Map
+import io.getquill.ast.Query
+import io.getquill.ast.SortBy
+import io.getquill.ast.Drop
+import io.getquill.ast.Take
 
-class ApplyIntermediateMapSpec extends Spec {
+object ApplyIntermediateMap {
 
-  "avoids applying the intermmediate map after a groupBy" - {
-    "flatMap" in {
-      val q = quote {
-        qr1.groupBy(t => t.i).map(y => y._1).flatMap(s => qr2.filter(z => z.s == s))
-      }
-      ApplyIntermediateMap.unapply(q.ast) mustEqual None
-    }
-    "filter" in {
-      val q = quote {
-        qr1.groupBy(t => t.i).map(y => y._1).filter(s => s == "s")
-      }
-      ApplyIntermediateMap.unapply(q.ast) mustEqual None
-    }
-    "map" in {
-      val q = quote {
-        qr1.groupBy(t => t.i).map(y => y._1).map(s => s)
-      }
-      ApplyIntermediateMap.unapply(q.ast) mustEqual None
-    }
-    "sortBy" in {
-      val q = quote {
-        qr1.groupBy(t => t.i).map(y => y._1).sortBy(s => s)
-      }
-      ApplyIntermediateMap.unapply(q.ast) mustEqual None
-    }
-    "identity map" in {
-      val q = quote {
-        qr1.groupBy(t => t.i).map(y => y)
-      }
-      ApplyIntermediateMap.unapply(q.ast) mustEqual None
-    }
-  }
+  private def isomorphic(e: Ast, c: Ast, alias: Ident) = BetaReduction(e, alias -> c) == c
 
-  "applies intermediate map" - {
-    "flatMap" in {
-      val q = quote {
-        qr1.map(y => y.s).flatMap(s => qr2.filter(z => z.s == s))
-      }
-      val n = quote {
-        qr1.flatMap(y => qr2.filter(z => z.s == y.s))
-      }
-      ApplyIntermediateMap.unapply(q.ast) mustEqual Some(n.ast)
+  def unapply(q: Query): Option[Query] =
+    q match {
+
+      case Map(Map(a: GroupBy, b, c), d, e)       => None
+      case FlatMap(Map(a: GroupBy, b, c), d, e)   => None
+      case Filter(Map(a: GroupBy, b, c), d, e)    => None
+      case SortBy(Map(a: GroupBy, b, c), d, e, f) => None
+      case Take(Map(a: GroupBy, b, c), d)         => None
+      case Drop(Map(a: GroupBy, b, c), d)         => None
+      case Map(a: GroupBy, b, c) if (b == c)      => None
+
+      //  map(i => (i.i, i.l)).distinct.map(x => (x._1, x._2)) =>
+      //    map(i => (i.i, i.l)).distinct
+      case Map(Distinct(Map(a, b, c)), d, e) if isomorphic(e, c, d) =>
+        Some(Distinct(Map(a, b, c)))
+
+      // a.map(b => b) =>
+      //    a
+      case Map(a: Query, b, c) if (b == c) =>
+        Some(a)
+
+      // a.map(b => c).map(d => e) =>
+      //    a.map(b => e[d := c])
+      case Map(Map(a, b, c), d, e) =>
+        val er = BetaReduction(e, d -> c)
+        Some(Map(a, b, er))
+
+      // a.map(b => c).flatMap(d => e) =>
+      //    a.flatMap(b => e[d := c])
+      case FlatMap(Map(a, b, c), d, e) =>
+        val er = BetaReduction(e, d -> c)
+        Some(FlatMap(a, b, er))
+
+      // a.map(b => c).filter(d => e) =>
+      //    a.filter(b => e[d := c]).map(b => c)
+      case Filter(Map(a, b, c), d, e) =>
+        val er = BetaReduction(e, d -> c)
+        Some(Map(Filter(a, b, er), b, c))
+
+      // a.map(b => c).sortBy(d => e) =>
+      //    a.sortBy(b => e[d := c]).map(b => c)
+      case SortBy(Map(a, b, c), d, e, f) =>
+        val er = BetaReduction(e, d -> c)
+        Some(Map(SortBy(a, b, er, f), b, c))
+
+      // a.map(b => c).drop(d) =>
+      //    a.drop(d).map(b => c)
+      case Drop(Map(a, b, c), d) =>
+        Some(Map(Drop(a, d), b, c))
+
+      // a.map(b => c).take(d) =>
+      //    a.drop(d).map(b => c)
+      case Take(Map(a, b, c), d) =>
+        Some(Map(Take(a, d), b, c))
+
+      case other => None
     }
-    "filter" in {
-      val q = quote {
-        qr1.map(y => y.s).filter(s => s == "s")
-      }
-      val n = quote {
-        qr1.filter(y => y.s == "s").map(y => y.s)
-      }
-      ApplyIntermediateMap.unapply(q.ast) mustEqual Some(n.ast)
-    }
-    "map" in {
-      val q = quote {
-        qr1.map(y => y.s).map(s => s)
-      }
-      val n = quote {
-        qr1.map(y => y.s)
-      }
-      ApplyIntermediateMap.unapply(q.ast) mustEqual Some(n.ast)
-    }
-    "sortBy" in {
-      val q = quote {
-        qr1.map(y => y.s).sortBy(s => s)
-      }
-      val n = quote {
-        qr1.sortBy(y => y.s).map(y => y.s)
-      }
-      ApplyIntermediateMap.unapply(q.ast) mustEqual Some(n.ast)
-    }
-    "identity map" in {
-      val q = quote {
-        qr1.sortBy(y => y.s).map(y => y)
-      }
-      val n = quote {
-        qr1.sortBy(y => y.s)
-      }
-      ApplyIntermediateMap.unapply(q.ast) mustEqual Some(n.ast)
-    }
-    "distinct" in {
-      val q = quote {
-        query[TestEntity].map(i => (i.i, i.l)).distinct.map(x => (x._1, x._2))
-      }
-      val n = quote {
-        query[TestEntity].map(i => (i.i, i.l)).distinct
-      }
-      ApplyIntermediateMap.unapply(q.ast) mustEqual Some(n.ast)
-    }
-  }
 }

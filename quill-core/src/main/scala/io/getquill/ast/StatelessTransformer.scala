@@ -8,6 +8,7 @@ trait StatelessTransformer {
       case e: Operation                => apply(e)
       case e: Action                   => apply(e)
       case e: Value                    => apply(e)
+      case e: Assignment               => apply(e)
 
       case Function(params, body)      => Function(params, apply(body))
       case e: Ident                    => e
@@ -16,8 +17,8 @@ trait StatelessTransformer {
       case OptionOperation(t, a, b, c) => OptionOperation(t, apply(a), b, apply(c))
       case If(a, b, c)                 => If(apply(a), apply(b), apply(c))
       case e: Dynamic                  => e
-      case e: Binding                  => e
-      case e: QuotedReference[_]       => e
+      case e: Lift                     => e
+      case e: QuotedReference          => e
       case Block(statements)           => Block(statements.map(apply))
       case Val(name, body)             => Val(name, apply(body))
       case o: Ordering                 => o
@@ -39,6 +40,12 @@ trait StatelessTransformer {
       case Join(t, a, b, iA, iB, on) =>
         Join(t, apply(a), apply(b), iA, iB, apply(on))
       case Distinct(a) => Distinct(apply(a))
+      case Nested(a)   => Nested(apply(a))
+    }
+
+  def apply(e: Assignment): Assignment =
+    e match {
+      case Assignment(a, b, c) => Assignment(a, apply(b), apply(c))
     }
 
   def apply(e: Operation): Operation =
@@ -50,23 +57,18 @@ trait StatelessTransformer {
 
   def apply(e: Value): Value =
     e match {
-      case e: Constant        => e
-      case NullValue          => NullValue
-      case Tuple(values)      => Tuple(values.map(apply))
-      case Collection(values) => Collection(values.map(apply))
+      case e: Constant   => e
+      case NullValue     => NullValue
+      case Tuple(values) => Tuple(values.map(apply))
     }
 
   def apply(e: Action): Action =
     e match {
-      case AssignedAction(action, assignments) => AssignedAction(apply(action), assignments.map(apply))
-      case Update(query)                       => Update(apply(query))
-      case Insert(query)                       => Insert(apply(query))
-      case Delete(query)                       => Delete(apply(query))
-    }
-
-  private def apply(e: Assignment): Assignment =
-    e match {
-      case Assignment(input, property, value) => Assignment(input, property, apply(value))
+      case Update(query, assignments)        => Update(apply(query), assignments.map(apply))
+      case Insert(query, assignments)        => Insert(apply(query), assignments.map(apply))
+      case Delete(query)                     => Delete(apply(query))
+      case Returning(query, alias, property) => Returning(apply(query), alias, apply(property))
+      case Foreach(query, alias, body)       => Foreach(apply(query), alias, apply(body))
     }
 
 }

@@ -1,7 +1,12 @@
 package io.getquill.norm.select
 
-import io.getquill._
-import io.getquill.ast._
+import io.getquill.Spec
+import io.getquill.ast.Ident
+import io.getquill.ast.Property
+import io.getquill.testContext.qr1
+import io.getquill.testContext.qr2
+import io.getquill.testContext.quote
+import io.getquill.testContext.unquote
 
 class ReplaceSelectSpec extends Spec {
 
@@ -54,17 +59,19 @@ class ReplaceSelectSpec extends Spec {
       val q = quote {
         qr1.filter(t => t.s == "s1")
       }
-      val e = intercept[IllegalStateException] {
+      intercept[IllegalStateException] {
         ReplaceSelect(q.ast, Nil)
       }
+      ()
     }
     "nested query" in {
       val q = quote {
         qr1.flatMap(u => qr2)
       }
-      val e = intercept[IllegalStateException] {
+      intercept[IllegalStateException] {
         ReplaceSelect(q.ast, Nil)
       }
+      ()
     }
   }
 }

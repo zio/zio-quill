@@ -1,3 +1,93 @@
+# 0.10.0 - 5-Sep-2016
+
+**see migration notes below**
+
+* [check types when parsing assignments and equality operations](https://github.com/getquill/quill/pull/532)
+* [Update finagle-mysql to finagle 6.37.0](https://github.com/getquill/quill/pull/549/files)
+* [Split quill-async into quill-async-mysql and quill-async-postgres](https://github.com/getquill/quill/pull/540)
+* [cql: support `+` operator](https://github.com/getquill/quill/pull/530)
+* [cassandra context constructor with ready-made Cluster](https://github.com/getquill/quill/pull/529)
+* [support forced nested queries](https://github.com/getquill/quill/pull/527)
+* [support mapped encoding definition without a context instance](https://github.com/getquill/quill/pull/526)
+* [fix class cast exception for returned values](https://github.com/getquill/quill/pull/536)
+* [fix free variables detection for the rhs of joins](https://github.com/getquill/quill/pull/528)
+
+### Migration notes
+
+- `mappedEncoding` has been renamed to `MappedEncoding`.
+- The way we add async drivers has been changed. To add mysql async to your project use `quill-async-mysql` and for postgre async `quill-async-postgres`. It is no longer necessary to add `quill-async` by yourself.
+- Action assignments and equality operations are now typesafe. If there's a type mismatch between the operands, the quotation will not compile.
+
+# 0.9.0 - 22-Aug-2016
+
+**see migration notes below**
+
+* [new encoding, macros refactoring, and additional fixes](https://github.com/getquill/quill/pull/512)
+* [Refactor generated to returning keyword in order to return the correct type](https://github.com/getquill/quill/pull/444)
+* [Allow finagle-mysql to use Long with INT columns](https://github.com/getquill/quill/pull/467)
+* [create sub query if aggregation on distinct query](https://github.com/getquill/quill/pull/472)
+* [upgrade dependency to finagle 6.36.0](https://github.com/getquill/quill/pull/479)
+* [Make decoder function public](https://github.com/getquill/quill/pull/487)
+* [set the scope of all cassandra context type definitions to public](https://github.com/getquill/quill/pull/492)
+* [make the cassandra decoder fail when encountering a column with value null](https://github.com/getquill/quill/pull/499)
+* [fix Option.{isEmpty, isDefined, nonEmpty} show on action.filter](https://github.com/getquill/quill/pull/505)
+* [Encoder fix](https://github.com/getquill/quill/pull/503/files)
+* [enclose operand-queries of SetOperation in parentheses](https://github.com/getquill/quill/pull/510)
+
+### Migration notes
+
+* The fallback mechanism that looks for implicit encoders defined in the context instance has been removed. This means that if you don't `import context._`, you have to change the specific imports to include the encoders in use.
+* `context.run` now receives only one parameter. The second parameter that used to receive runtime values now doesn't exist any more. Use [`lift` or `liftQuery`](https://github.com/getquill/quill/#bindings) instead.
+* Use [`liftQuery` + `foreach`](https://github.com/getquill/quill/#bindings) to perform batch actions and define contains/in queries.
+* `insert` now always receives a parameter, that [can be a case class](https://github.com/getquill/quill/#actions).
+- Non-lifted collections aren't supported anymore. Example: `query[Person].filter(t => List(10, 20).contains(p.age))`. Use `liftQuery` instead.
+* `schema(_.generated())` has been replaced by [`returning`](https://github.com/getquill/quill/#schema).
+
+# 0.8.0 / 17-Jul-2016
+
+**see migration notes below**
+
+* [introduce contexts](https://github.com/getquill/quill/pull/417)
+* [sqlite support](https://github.com/getquill/quill/pull/449)
+* [scala.js support](https://github.com/getquill/quill/pull/452)
+* [support `toInt` and `toLong`](https://github.com/getquill/quill/pull/428)
+* [quill-jdbc: support nested `transaction` calls](https://github.com/getquill/quill/pull/430)
+* [fix bind order for take/drop with extra param](https://github.com/getquill/quill/pull/429)
+* [quotation: allow lifting of `AnyVal`s ](https://github.com/getquill/quill/pull/421)
+* [make liftable values work for the cassandra module](https://github.com/getquill/quill/pull/425)
+* [apply intermediate map before take/drop](https://github.com/getquill/quill/pull/419)
+* [support decoding of optional single-value case classes](https://github.com/getquill/quill/pull/420)
+* [make type aliases for `run` results public](https://github.com/getquill/quill/pull/440)
+* [fail compilation if query is defined outside a `quote`](https://github.com/getquill/quill/pull/433)
+* [fix empty sql string](https://github.com/getquill/quill/pull/443)
+
+### Migration notes
+
+This version [introduces `Context`](https://github.com/getquill/quill/pull/417) as a relacement for `Source`. This change makes the quotation creation dependent on the context to open the path for a few refactorings and improvements we're planning to work on before the `1.0-RC1` release.
+
+Migration steps:
+
+- Remove any import that is not `import io.getquill._`
+- Replace the `Source` creation by a `Context` creation. See the [readme](https://github.com/getquill/quill#contexts) for more details. All types necessary to create the context instances are provided by `import io.getquill._`.
+- Instead of importing from `io.getquill._` to create quotations, import from you context instance `import myContext._`. The context import will provide all types and methods to interact with quotations and the database.
+- See the documentation about [dependent contexts](https://github.com/getquill/quill#dependent-contexts) in case you get compilation errors because of type mismatches.
+
+# 0.7.0 / 2-Jul-2016
+
+* [transform quoted reference](https://github.com/getquill/quill/pull/416)
+* [simplify `finagle-mysql` action result type](https://github.com/getquill/quill/pull/358)
+* [provide default values for plain-sql query execution](https://github.com/getquill/quill/pull/360)
+* [quotation: fix binding conflict](https://github.com/getquill/quill/pull/363)
+* [don't consider `?` a binding if inside a quote](https://github.com/getquill/quill/pull/361)
+* [fix query generation for wrapped types](https://github.com/getquill/quill/pull/364)
+* [use querySingle/query for parametrized query according to return type](https://github.com/getquill/quill/pull/375)
+* [remove implicit ordering](https://github.com/getquill/quill/pull/378)
+* [remove implicit from max and min](https://github.com/getquill/quill/pull/384)
+* [support explicit `Predef.ArrowAssoc` call](https://github.com/getquill/quill/pull/386)
+* [added handling for string lists in ClusterBuilder](https://github.com/getquill/quill/pull/395)
+* [add naming strategy for pluralized table names](https://github.com/getquill/quill/pull/396)
+* [transform ConfiguredEntity](https://github.com/getquill/quill/pull/409)
+
 # 0.6.0 / 9-May-2016
 
 * [explicit bindings using `lift`](https://github.com/getquill/quill/pull/335/files#diff-04c6e90faac2675aa89e2176d2eec7d8R157)

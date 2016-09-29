@@ -1,10 +1,11 @@
 services:
-- docker
+  - docker
 branches:
   except:
     - release
+    - website
 before_script:
-- docker-compose run setup
+- travis_retry docker-compose run setup
 script:
 - docker-compose run sbt bash -c "./build/build.sh"
 after_success:

@@ -35,6 +35,7 @@ CREATE TABLE EncodingTestEntity(
     v9 DOUBLE,
     v10 VARBINARY(255),
     v11 DATETIME,
+    v12 VARCHAR(255),
     o1 VARCHAR(255),
     o2 DECIMAL(5,2),
     o3 BOOLEAN,
@@ -45,7 +46,8 @@ CREATE TABLE EncodingTestEntity(
     o8 FLOAT,
     o9 DOUBLE,
     o10 VARBINARY(255),
-    o11 DATETIME
+    o11 DATETIME,
+    o12 VARCHAR(255)
 );
 
 Create TABLE DateEncodingTestEntity(

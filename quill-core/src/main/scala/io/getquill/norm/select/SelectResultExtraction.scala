@@ -1,17 +1,18 @@
 package io.getquill.norm.select
 
 import scala.reflect.macros.whitebox.Context
-import io.getquill.sources.EncodingMacro
+
+import io.getquill.context.EncodingMacro
 
 trait SelectResultExtraction extends EncodingMacro {
 
   val c: Context
   import c.universe._
 
-  def selectResultExtractor[R](value: Value)(implicit r: WeakTypeTag[R]) = {
+  def selectResultExtractor(value: Value) = {
     val (tree, _) = extractor(value)
     q"""
-    (row: $r) => $tree
+    (row: ${c.prefix}.ResultRow) => $tree
     """
   }
 
@@ -49,10 +50,17 @@ trait SelectResultExtraction extends EncodingMacro {
           if (tpe.typeSymbol.fullName.startsWith("scala.Tuple"))
             joinOptions(decodedParams.map(joinOptions(_)))
           else
-            q"""
-            val tuple = ${joinOptions(decodedParams.map(joinOptions(_)))}
-            tuple.map((${tpe.typeSymbol.companion}.apply _).tupled)
-          """
+            decodedParams match {
+              case (param :: Nil) :: Nil =>
+                q"""
+                  ${param}.map(${tpe.typeSymbol.companion})
+                """
+              case _ =>
+                q"""
+                  val tuple = ${joinOptions(decodedParams.map(joinOptions(_)))}
+                  tuple.map((${tpe.typeSymbol.companion}.apply _).tupled)
+                """
+            }
         (tree, paramsIndex)
     }
 

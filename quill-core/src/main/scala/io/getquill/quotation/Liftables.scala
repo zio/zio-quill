@@ -1,7 +1,9 @@
 package io.getquill.quotation
 
 import scala.reflect.macros.whitebox.Context
-import io.getquill.ast.{ CompileTimeBinding, _ }
+
+import io.getquill.ast._
+import io.getquill.dsl.CoreDsl
 
 trait Liftables {
   val c: Context
@@ -15,6 +17,8 @@ trait Liftables {
     case ast: Value => valueLiftable(ast)
     case ast: Ident => identLiftable(ast)
     case ast: Ordering => orderingLiftable(ast)
+    case ast: Lift => liftLiftable(ast)
+    case ast: Assignment => assignmentLiftable(ast)
     case Val(name, body) => q"$pack.Val($name, $body)"
     case Block(statements) => q"$pack.Block($statements)"
     case Property(a, b) => q"$pack.Property($a, $b)"
@@ -25,11 +29,9 @@ trait Liftables {
     case Infix(a, b) => q"$pack.Infix($a, $b)"
     case OptionOperation(a, b, c, d) => q"$pack.OptionOperation($a, $b, $c, $d)"
     case If(a, b, c) => q"$pack.If($a, $b, $c)"
-    case Dynamic(tree: Tree) if (tree.tpe <:< c.weakTypeOf[Quoted[Any]]) => q"$tree.ast"
+    case Dynamic(tree: Tree) if (tree.tpe <:< c.weakTypeOf[CoreDsl#Quoted[Any]]) => q"$tree.ast"
     case Dynamic(tree: Tree) => q"$pack.Constant($tree)"
     case QuotedReference(tree: Tree, ast) => q"$ast"
-    case CompileTimeBinding(tree: Tree) => q"$pack.RuntimeBinding(${tree.toString})"
-    case RuntimeBinding(name) => q"$pack.RuntimeBinding($name)"
   }
 
   implicit val optionOperationTypeLiftable: Liftable[OptionOperationType] = Liftable[OptionOperationType] {
@@ -61,6 +63,8 @@ trait Liftables {
     case BooleanOperator.`!`          => q"$pack.BooleanOperator.`!`"
     case StringOperator.`toUpperCase` => q"$pack.StringOperator.`toUpperCase`"
     case StringOperator.`toLowerCase` => q"$pack.StringOperator.`toLowerCase`"
+    case StringOperator.`toLong`      => q"$pack.StringOperator.`toLong`"
+    case StringOperator.`toInt`       => q"$pack.StringOperator.`toInt`"
     case SetOperator.`nonEmpty`       => q"$pack.SetOperator.`nonEmpty`"
     case SetOperator.`isEmpty`        => q"$pack.SetOperator.`isEmpty`"
   }
@@ -87,11 +91,12 @@ trait Liftables {
     case UnionAll(a, b)         => q"$pack.UnionAll($a, $b)"
     case Join(a, b, c, d, e, f) => q"$pack.Join($a, $b, $c, $d, $e, $f)"
     case Distinct(a)            => q"$pack.Distinct($a)"
+    case Nested(a)              => q"$pack.Nested($a)"
   }
 
   implicit val entityLiftable: Liftable[Entity] = Liftable[Entity] {
-    case SimpleEntity(a)              => q"$pack.SimpleEntity($a)"
-    case ConfiguredEntity(a, b, c, d) => q"$pack.ConfiguredEntity($a, $b, $c, $d)"
+    case SimpleEntity(a)           => q"$pack.SimpleEntity($a)"
+    case ConfiguredEntity(a, b, c) => q"$pack.ConfiguredEntity($a, $b, $c)"
   }
 
   implicit val propertyAliasLiftable: Liftable[PropertyAlias] = Liftable[PropertyAlias] {
@@ -116,10 +121,11 @@ trait Liftables {
   }
 
   implicit val actionLiftable: Liftable[Action] = Liftable[Action] {
-    case AssignedAction(a, b) => q"$pack.AssignedAction($a, $b)"
-    case Update(a)            => q"$pack.Update($a)"
-    case Insert(a)            => q"$pack.Insert($a)"
-    case Delete(a)            => q"$pack.Delete($a)"
+    case Update(a, b)       => q"$pack.Update($a, $b)"
+    case Insert(a, b)       => q"$pack.Insert($a, $b)"
+    case Delete(a)          => q"$pack.Delete($a)"
+    case Returning(a, b, c) => q"$pack.Returning($a, $b, $c)"
+    case Foreach(a, b, c)   => q"$pack.Foreach($a, $b, $c)"
   }
 
   implicit val assignmentLiftable: Liftable[Assignment] = Liftable[Assignment] {
@@ -127,12 +133,18 @@ trait Liftables {
   }
 
   implicit val valueLiftable: Liftable[Value] = Liftable[Value] {
-    case NullValue     => q"$pack.NullValue"
-    case Constant(a)   => q"$pack.Constant(${Literal(c.universe.Constant(a))})"
-    case Tuple(a)      => q"$pack.Tuple($a)"
-    case Collection(a) => q"$pack.Collection($a)"
+    case NullValue   => q"$pack.NullValue"
+    case Constant(a) => q"$pack.Constant(${Literal(c.universe.Constant(a))})"
+    case Tuple(a)    => q"$pack.Tuple($a)"
   }
   implicit val identLiftable: Liftable[Ident] = Liftable[Ident] {
     case Ident(a) => q"$pack.Ident($a)"
+  }
+
+  implicit val liftLiftable: Liftable[Lift] = Liftable[Lift] {
+    case ScalarValueLift(a, b: Tree, c: Tree) => q"$pack.ScalarValueLift($a, $b, $c)"
+    case CaseClassValueLift(a, b: Tree)       => q"$pack.CaseClassValueLift($a, $b)"
+    case ScalarQueryLift(a, b: Tree, c: Tree) => q"$pack.ScalarQueryLift($a, $b, $c)"
+    case CaseClassQueryLift(a, b: Tree)       => q"$pack.CaseClassQueryLift($a, $b)"
   }
 }

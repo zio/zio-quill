@@ -1,17 +1,19 @@
 package io.getquill.norm.select
 
 import scala.reflect.macros.whitebox.Context
-import io.getquill.ast._
-import io.getquill.sources.EncodingMacro
+
+import io.getquill.ast.Ast
+import io.getquill.ast.Query
+import io.getquill.context.EncodingMacro
 
 trait SelectFlattening extends EncodingMacro {
   val c: Context
 
   import c.universe._
 
-  protected def flattenSelect[T](q: Query, inferDecoder: Type => Option[Tree])(implicit t: WeakTypeTag[T]) = {
+  protected def flattenSelect(q: Query, tpe: Type, inferDecoder: Type => Option[Tree]) = {
     val (query, mapAst) = ExtractSelect(q)
-    val selectValues = encoding[T](mapAst, inferDecoder)
+    val selectValues = encoding(mapAst, tpe, inferDecoder)
     (ReplaceSelect(query, selectAsts(selectValues)), selectValues)
   }
 

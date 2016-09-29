@@ -2,14 +2,15 @@ package io.getquill.quotation
 
 import scala.reflect.macros.whitebox.Context
 
-import io.getquill.util.Messages._
 import io.getquill.ast._
+import io.getquill.util.Messages.RichContext
 
 trait Unliftables {
   val c: Context
   import c.universe.{ Ident => _, Constant => _, Function => _, If => _, _ }
 
   implicit val astUnliftable: Unliftable[Ast] = Unliftable[Ast] {
+    case liftUnliftable(ast) => ast
     case queryUnliftable(ast) => ast
     case actionUnliftable(ast) => ast
     case valueUnliftable(ast) => ast
@@ -25,7 +26,6 @@ trait Unliftables {
     case q"$pack.OptionOperation.apply(${ a: OptionOperationType }, ${ b: Ast }, ${ c: Ident }, ${ d: Ast })" => OptionOperation(a, b, c, d)
     case q"$pack.If.apply(${ a: Ast }, ${ b: Ast }, ${ c: Ast })" => If(a, b, c)
     case q"$tree.ast" => Dynamic(tree)
-    case q"$pack.RuntimeBinding.apply(${ a: String })" => RuntimeBinding(a)
   }
 
   implicit val optionOperationTypeUnliftable: Unliftable[OptionOperationType] = Unliftable[OptionOperationType] {
@@ -62,6 +62,8 @@ trait Unliftables {
     case q"$pack.BooleanOperator.`!`"          => BooleanOperator.`!`
     case q"$pack.StringOperator.`toUpperCase`" => StringOperator.`toUpperCase`
     case q"$pack.StringOperator.`toLowerCase`" => StringOperator.`toLowerCase`
+    case q"$pack.StringOperator.`toLong`"      => StringOperator.`toLong`
+    case q"$pack.StringOperator.`toInt`"       => StringOperator.`toInt`
     case q"$pack.SetOperator.`nonEmpty`"       => SetOperator.`nonEmpty`
     case q"$pack.SetOperator.`isEmpty`"        => SetOperator.`isEmpty`
   }
@@ -89,16 +91,17 @@ trait Unliftables {
       Join(t, a, b, iA, iB, on)
 
     case q"$pack.Distinct.apply(${ a: Ast })" => Distinct(a)
+    case q"$pack.Nested.apply(${ a: Ast })"   => Nested(a)
   }
 
   implicit val entityUnliftable: Unliftable[Entity] = Unliftable[Entity] {
     case q"$pack.SimpleEntity.apply(${ a: String })" => SimpleEntity(a)
-    case q"$pack.ConfiguredEntity.apply(${ a: Ast }, ${ b: Option[String] }, ${ c: List[PropertyAlias] }, ${ d: Option[String] })" => ConfiguredEntity(a, b, c, d)
+    case q"$pack.ConfiguredEntity.apply(${ a: Ast }, ${ b: Option[String] }, ${ c: List[PropertyAlias] })" => ConfiguredEntity(a, b, c)
   }
 
   implicit val entityConfigUnliftable: Unliftable[EntityConfig] = Unliftable[EntityConfig] {
-    case q"$pack.EntityConfig.apply(${ a: Option[String] }, ${ b: List[PropertyAlias] }, ${ c: Option[String] })" =>
-      EntityConfig(a, b, c)
+    case q"$pack.EntityConfig.apply(${ a: Option[String] }, ${ b: List[PropertyAlias] })" =>
+      EntityConfig(a, b)
   }
 
   implicit val orderingUnliftable: Unliftable[Ordering] = Unliftable[Ordering] {
@@ -128,24 +131,30 @@ trait Unliftables {
   }
 
   implicit val actionUnliftable: Unliftable[Action] = Unliftable[Action] {
-    case q"$pack.AssignedAction.apply(${ a: Ast }, ${ b: List[Assignment] })" => AssignedAction(a, b)
-    case q"$pack.Update.apply(${ a: Ast })"                                   => Update(a)
-    case q"$pack.Insert.apply(${ a: Ast })"                                   => Insert(a)
-    case q"$pack.Delete.apply(${ a: Ast })"                                   => Delete(a)
+    case q"$pack.Update.apply(${ a: Ast }, ${ b: List[Assignment] })"      => Update(a, b)
+    case q"$pack.Insert.apply(${ a: Ast }, ${ b: List[Assignment] })"      => Insert(a, b)
+    case q"$pack.Delete.apply(${ a: Ast })"                                => Delete(a)
+    case q"$pack.Returning.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => Returning(a, b, c)
+    case q"$pack.Foreach.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })"   => Foreach(a, b, c)
   }
 
   implicit val assignmentUnliftable: Unliftable[Assignment] = Unliftable[Assignment] {
-    case q"$pack.Assignment.apply(${ a: Ident }, ${ b: String }, ${ c: Ast })" => Assignment(a, b, c)
+    case q"$pack.Assignment.apply(${ a: Ident }, ${ b: Ast }, ${ c: Ast })" => Assignment(a, b, c)
   }
 
   implicit val valueUnliftable: Unliftable[Value] = Unliftable[Value] {
     case q"$pack.NullValue" => NullValue
     case q"$pack.Constant.apply(${ Literal(c.universe.Constant(a)) })" => Constant(a)
     case q"$pack.Tuple.apply(${ a: List[Ast] })" => Tuple(a)
-    case q"$pack.Collection.apply(${ a: List[Ast] })" => Collection(a)
   }
   implicit val identUnliftable: Unliftable[Ident] = Unliftable[Ident] {
     case q"$pack.Ident.apply(${ a: String })" => Ident(a)
   }
 
+  implicit val liftUnliftable: Unliftable[Lift] = Unliftable[Lift] {
+    case q"$pack.ScalarValueLift.apply(${ a: String }, $b, $c)" => ScalarValueLift(a, b, c)
+    case q"$pack.CaseClassValueLift.apply(${ a: String }, $b)"  => CaseClassValueLift(a, b)
+    case q"$pack.ScalarQueryLift.apply(${ a: String }, $b, $c)" => ScalarQueryLift(a, b, c)
+    case q"$pack.CaseClassQueryLift.apply(${ a: String }, $b)"  => CaseClassQueryLift(a, b)
+  }
 }

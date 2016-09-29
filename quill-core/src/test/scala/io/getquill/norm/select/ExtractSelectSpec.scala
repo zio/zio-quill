@@ -1,6 +1,7 @@
 package io.getquill.norm.select
 
-import io.getquill._
+import io.getquill.Spec
+import io.getquill.testContext._
 import io.getquill.ast._
 
 class ExtractSelectSpec extends Spec {
