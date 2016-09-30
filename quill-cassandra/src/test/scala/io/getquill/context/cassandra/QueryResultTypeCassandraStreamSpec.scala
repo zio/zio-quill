@@ -19,15 +19,15 @@ class QueryResultTypeCassandraStreamSpec extends QueryResultTypeCassandraSpec {
   }
 
   "query" in {
-    result(context.run(selectAll)) mustEqual Some(entries)
+    result(context.run(selectAll)) mustEqual entries
   }
 
   "querySingle" - {
     "size" in {
-      result(context.run(entitySize)) mustEqual Some(List(3))
+      result(context.run(entitySize)) mustEqual List(3)
     }
     "parametrized size" in {
-      result(context.run(parametrizedSize(lift(10000)))) mustEqual Some(List(0))
+      result(context.run(parametrizedSize(lift(10000)))) mustEqual List(0)
     }
   }
 }
