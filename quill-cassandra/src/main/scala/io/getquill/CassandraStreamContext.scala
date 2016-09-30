@@ -29,7 +29,7 @@ class CassandraStreamContext[N <: NamingStrategy](
   override type RunActionResult = Observable[Unit]
   override type RunBatchActionResult = Observable[Unit]
 
-  protected def page(rs: ResultSet): Task[Iterable[Row]] = {
+  protected def page(rs: ResultSet): Task[Iterable[Row]] = Task.defer {
     val available = rs.getAvailableWithoutFetching
     val page = rs.asScala.take(available)
 
