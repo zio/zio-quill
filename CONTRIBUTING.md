@@ -69,7 +69,7 @@ docker-compose run --rm sbt sbt "project quill-sqlJVM" "test-only io.getquill.co
 ### Debugging tests
 1. Run sbt in interactive mode with docker container ports mapped to the host: 
 ```
-docker-compose-run --service-ports --rm sbt
+docker-compose run --service-ports --rm sbt
 ```
 
 2. Attach debugger to port 15005 of your docker host. In IntelliJ IDEA you should create Remote Run/Debug Configuration, 
