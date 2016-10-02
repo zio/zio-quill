@@ -7,7 +7,7 @@ import io.getquill.context.sql.testContext
 class RenamePropertiesSpec extends Spec {
 
   val e = quote {
-    query[TestEntity].schema(_.entity("test_entity").columns(_.s -> "field_s", _.i -> "field_i"))
+    querySchema[TestEntity]("test_entity", _.s -> "field_s", _.i -> "field_i")
   }
 
   val f = quote {
@@ -212,7 +212,7 @@ class RenamePropertiesSpec extends Spec {
         case class B(c: Int) extends Embedded
         case class A(b: B)
         val q = quote {
-          query[A].schema(_.columns(_.b.c -> "bC"))
+          querySchema[A]("A", _.b.c -> "bC")
         }
         testContext.run(q).string mustEqual
           "SELECT x.bC FROM A x"
@@ -232,7 +232,7 @@ class RenamePropertiesSpec extends Spec {
         case class B(c: Int) extends Embedded
         case class A(b: B)
         val q = quote {
-          query[A].schema(_.columns(_.b.c -> "bC")).update(_.b.c -> 1)
+          querySchema[A]("A", _.b.c -> "bC").update(_.b.c -> 1)
         }
         testContext.run(q).string mustEqual
           "UPDATE A SET bC = 1"
@@ -252,7 +252,7 @@ class RenamePropertiesSpec extends Spec {
         case class B(c: Int) extends Embedded
         case class A(b: B)
         val q = quote {
-          query[A].schema(_.columns(_.b.c -> "bC")).insert(_.b.c -> 1)
+          querySchema[A]("A", _.b.c -> "bC").insert(_.b.c -> 1)
         }
         testContext.run(q).string mustEqual
           "INSERT INTO A (bC) VALUES (1)"

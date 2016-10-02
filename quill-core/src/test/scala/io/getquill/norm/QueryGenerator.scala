@@ -2,24 +2,7 @@ package io.getquill.norm
 
 import scala.util.Random
 
-import io.getquill.ast.Aggregation
-import io.getquill.ast.AggregationOperator
-import io.getquill.ast.AscNullsFirst
-import io.getquill.ast.BinaryOperation
-import io.getquill.ast.Constant
-import io.getquill.ast.Drop
-import io.getquill.ast.Entity
-import io.getquill.ast.EqualityOperator
-import io.getquill.ast.Filter
-import io.getquill.ast.FlatMap
-import io.getquill.ast.GroupBy
-import io.getquill.ast.Ident
-import io.getquill.ast.Map
-import io.getquill.ast.Property
-import io.getquill.ast.Query
-import io.getquill.ast.SortBy
-import io.getquill.ast.StatefulTransformer
-import io.getquill.ast.Take
+import io.getquill.ast._
 
 class QueryGenerator(seed: Int) {
 
@@ -27,7 +10,8 @@ class QueryGenerator(seed: Int) {
 
   def apply(i: Int): Query =
     if (i <= 2) {
-      Entity(string(3))
+      val s = string(3)
+      Entity(s, Nil)
     } else {
       random.nextInt(8) match {
         case 0 => map(i)

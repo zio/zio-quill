@@ -13,7 +13,7 @@ class ActionMacroSpec extends Spec {
         qr1.delete
       }
       val r = testContext.run(q)
-      r.string mustEqual "query[TestEntity].delete"
+      r.string mustEqual """querySchema("TestEntity").delete"""
       r.prepareRow mustEqual Row()
     }
     "scalar lifting" in {
@@ -21,7 +21,7 @@ class ActionMacroSpec extends Spec {
         qr1.insert(t => t.i -> lift(1))
       }
       val r = testContext.run(q)
-      r.string mustEqual "query[TestEntity].insert(t => t.i -> ?)"
+      r.string mustEqual """querySchema("TestEntity").insert(t => t.i -> ?)"""
       r.prepareRow mustEqual Row(1)
     }
     "case class lifting" in {
@@ -29,7 +29,7 @@ class ActionMacroSpec extends Spec {
         qr1.insert(lift(TestEntity("s", 1, 2L, None)))
       }
       val r = testContext.run(q)
-      r.string mustEqual "query[TestEntity].insert(v => v.s -> ?, v => v.i -> ?, v => v.l -> ?, v => v.o -> ?)"
+      r.string mustEqual """querySchema("TestEntity").insert(v => v.s -> ?, v => v.i -> ?, v => v.l -> ?, v => v.o -> ?)"""
       r.prepareRow mustEqual Row("s", 1, 2L, None)
     }
     "nexted case class lifting" in {
@@ -37,7 +37,7 @@ class ActionMacroSpec extends Spec {
         (t: TestEntity) => qr1.insert(t)
       }
       val r = testContext.run(q(lift(TestEntity("s", 1, 2L, None))))
-      r.string mustEqual "query[TestEntity].insert(v => v.s -> ?, v => v.i -> ?, v => v.l -> ?, v => v.o -> ?)"
+      r.string mustEqual """querySchema("TestEntity").insert(v => v.s -> ?, v => v.i -> ?, v => v.l -> ?, v => v.o -> ?)"""
       r.prepareRow mustEqual Row("s", 1, 2L, None)
     }
     "returning value" in {
@@ -45,7 +45,7 @@ class ActionMacroSpec extends Spec {
         qr1.insert(t => t.i -> 1).returning(t => t.l)
       }
       val r = testContext.run(q)
-      r.string mustEqual "query[TestEntity].insert(t => t.i -> 1).returning((t) => t.l)"
+      r.string mustEqual """querySchema("TestEntity").insert(t => t.i -> 1).returning((t) => t.l)"""
       r.prepareRow mustEqual Row()
       r.returningColumn mustEqual "l"
     }
@@ -54,7 +54,7 @@ class ActionMacroSpec extends Spec {
         qr1.insert(t => t.i -> lift(1)).returning(t => t.l)
       }
       val r = testContext.run(q)
-      r.string mustEqual "query[TestEntity].insert(t => t.i -> ?).returning((t) => t.l)"
+      r.string mustEqual """querySchema("TestEntity").insert(t => t.i -> ?).returning((t) => t.l)"""
       r.prepareRow mustEqual Row(1)
       r.returningColumn mustEqual "l"
     }
@@ -63,7 +63,7 @@ class ActionMacroSpec extends Spec {
         qr1.insert(lift(TestEntity("s", 1, 2L, None))).returning(t => t.l)
       }
       val r = testContext.run(q)
-      r.string mustEqual "query[TestEntity].insert(v => v.s -> ?, v => v.i -> ?, v => v.o -> ?).returning((t) => t.l)"
+      r.string mustEqual """querySchema("TestEntity").insert(v => v.s -> ?, v => v.i -> ?, v => v.o -> ?).returning((t) => t.l)"""
       r.prepareRow mustEqual Row("s", 1, None)
       r.returningColumn mustEqual "l"
     }
@@ -85,7 +85,7 @@ class ActionMacroSpec extends Spec {
       }
       val r = testContext.run(q)
       r.groups mustEqual List(
-        "query[TestEntity].insert(t => t.i -> ?)" -> List(Row(1), Row(2))
+        """querySchema("TestEntity").insert(t => t.i -> ?)""" -> List(Row(1), Row(2))
       )
     }
     "case class" in {
@@ -94,7 +94,7 @@ class ActionMacroSpec extends Spec {
       }
       val r = testContext.run(q)
       r.groups mustEqual List(
-        "query[TestEntity].insert(v => v.s -> ?, v => v.i -> ?, v => v.l -> ?, v => v.o -> ?)" ->
+        """querySchema("TestEntity").insert(v => v.s -> ?, v => v.i -> ?, v => v.l -> ?, v => v.o -> ?)""" ->
           List(Row("s1", 2, 3L, Some(4)), Row("s5", 6, 7L, Some(8)))
       )
     }
@@ -107,7 +107,7 @@ class ActionMacroSpec extends Spec {
       }
       val r = testContext.run(q)
       r.groups mustEqual List(
-        "query[TestEntity].insert(v => v.s -> ?, v => v.i -> ?, v => v.l -> ?, v => v.o -> ?)" ->
+        """querySchema("TestEntity").insert(v => v.s -> ?, v => v.i -> ?, v => v.l -> ?, v => v.o -> ?)""" ->
           List(Row("s1", 2, 3L, Some(4)), Row("s5", 6, 7L, Some(8)))
       )
     }
@@ -120,7 +120,7 @@ class ActionMacroSpec extends Spec {
       }
       val r = testContext.run(q)
       r.groups mustEqual List(
-        "query[TestEntity].filter(t => t.s == ?).update(v => v.s -> ?, v => v.i -> ?, v => v.l -> ?, v => v.o -> ?)" ->
+        """querySchema("TestEntity").filter(t => t.s == ?).update(v => v.s -> ?, v => v.i -> ?, v => v.l -> ?, v => v.o -> ?)""" ->
           List(Row("s", "s1", 2, 3L, Some(4)), Row("s", "s5", 6, 7L, Some(8)))
       )
     }
@@ -133,7 +133,7 @@ class ActionMacroSpec extends Spec {
       }
       val r = testContext.run(q)
       r.groups mustEqual List(
-        "query[TestEntity].filter(t => t.i == ?).update(v => v.s -> ?, v => v.i -> ?, v => v.l -> ?, v => v.o -> ?)" ->
+        """querySchema("TestEntity").filter(t => t.i == ?).update(v => v.s -> ?, v => v.i -> ?, v => v.l -> ?, v => v.o -> ?)""" ->
           List(Row(0, "s1", 2, 3, Some(4)), Row(1, "s5", 6, 7, Some(8)))
       )
     }
@@ -146,7 +146,7 @@ class ActionMacroSpec extends Spec {
       }
       val r = testContext.run(q)
       r.groups mustEqual List(
-        ("query[TestEntity].insert(t => t.i -> ?).returning((t) => t.l)", "l", List(Row(1), Row(2)))
+        ("""querySchema("TestEntity").insert(t => t.i -> ?).returning((t) => t.l)""", "l", List(Row(1), Row(2)))
       )
     }
     "case class + returning" in {
@@ -155,7 +155,7 @@ class ActionMacroSpec extends Spec {
       }
       val r = testContext.run(q)
       r.groups mustEqual List(
-        ("query[TestEntity].insert(v => v.s -> ?, v => v.i -> ?, v => v.o -> ?).returning((t) => t.l)", "l",
+        ("""querySchema("TestEntity").insert(v => v.s -> ?, v => v.i -> ?, v => v.o -> ?).returning((t) => t.l)""", "l",
           List(Row("s1", 2, Some(4)), Row("s5", 6, Some(8))))
       )
     }
@@ -165,7 +165,7 @@ class ActionMacroSpec extends Spec {
       }
       val r = testContext.run(liftQuery(entities).foreach(p => insert(p)))
       r.groups mustEqual List(
-        ("query[TestEntity].insert(v => v.s -> ?, v => v.i -> ?, v => v.o -> ?).returning((t) => t.l)", "l",
+        ("""querySchema("TestEntity").insert(v => v.s -> ?, v => v.i -> ?, v => v.o -> ?).returning((t) => t.l)""", "l",
           List(Row("s1", 2, Some(4)), Row("s5", 6, Some(8))))
       )
     }

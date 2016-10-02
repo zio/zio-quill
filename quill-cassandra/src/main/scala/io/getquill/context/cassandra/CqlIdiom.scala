@@ -177,8 +177,6 @@ trait CqlIdiom extends Idiom {
   }
 
   implicit def entityTokenizer(implicit strategy: NamingStrategy): Tokenizer[Entity] = Tokenizer[Entity] {
-    case SimpleEntity(name)                             => strategy.table(name).token
-    case ConfiguredEntity(SimpleEntity(name), alias, _) => strategy.table(alias.getOrElse(name)).token
-    case ConfiguredEntity(source, _, _)                 => source.token
+    case Entity(name, properties) => strategy.table(name).token
   }
 }

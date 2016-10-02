@@ -16,19 +16,11 @@ class StatefulTransformerSpec extends Spec {
   "transforms asts using a transformation state" - {
     "query" - {
       "entity" in {
-        val ast: Ast = Entity("a")
+        val ast: Ast = Entity("a", Nil)
         Subject(Nil)(ast) match {
           case (at, att) =>
             at mustEqual ast
             att.state mustEqual Nil
-        }
-      }
-      "configuredEntity" in {
-        val ast: Ast = ConfiguredEntity(Entity("a"))
-        Subject(Nil, Entity("a") -> Entity("a'"))(ast) match {
-          case (at, att) =>
-            at mustEqual ConfiguredEntity(Entity("a'"))
-            att.state mustEqual List(Entity("a"))
         }
       }
       "filter" in {
@@ -284,25 +276,25 @@ class StatefulTransformerSpec extends Spec {
 
     "block" in {
       val ast: Ast = Block(List(
-        Val(Ident("a"), Entity("a")),
-        Val(Ident("b"), Entity("b"))
+        Val(Ident("a"), Entity("a", Nil)),
+        Val(Ident("b"), Entity("b", Nil))
       ))
-      Subject(Nil, Entity("a") -> Entity("b"), Entity("b") -> Entity("c"))(ast) match {
+      Subject(Nil, Entity("a", Nil) -> Entity("b", Nil), Entity("b", Nil) -> Entity("c", Nil))(ast) match {
         case (at, att) =>
           at mustEqual Block(List(
-            Val(Ident("a"), Entity("b")),
-            Val(Ident("b"), Entity("c"))
+            Val(Ident("a"), Entity("b", Nil)),
+            Val(Ident("b"), Entity("c", Nil))
           ))
-          att.state mustEqual List(Entity("a"), Entity("b"))
+          att.state mustEqual List(Entity("a", Nil), Entity("b", Nil))
       }
     }
 
     "val" in {
-      val ast: Ast = Val(Ident("a"), Entity("a"))
-      Subject(Nil, Entity("a") -> Entity("b"))(ast) match {
+      val ast: Ast = Val(Ident("a"), Entity("a", Nil))
+      Subject(Nil, Entity("a", Nil) -> Entity("b", Nil))(ast) match {
         case (at, att) =>
-          at mustEqual Val(Ident("a"), Entity("b"))
-          att.state mustEqual List(Entity("a"))
+          at mustEqual Val(Ident("a"), Entity("b", Nil))
+          att.state mustEqual List(Entity("a", Nil))
       }
     }
   }

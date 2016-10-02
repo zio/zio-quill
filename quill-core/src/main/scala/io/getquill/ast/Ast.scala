@@ -16,25 +16,7 @@ sealed trait Ast {
 
 sealed trait Query extends Ast
 
-sealed trait Entity extends Query {
-  def properties: List[PropertyAlias]
-  def alias: Option[String]
-}
-
-object Entity {
-  def apply(name: String) = SimpleEntity(name)
-}
-
-case class SimpleEntity(name: String) extends Entity {
-  def properties: List[PropertyAlias] = List()
-  def alias: Option[String] = None
-}
-
-case class ConfiguredEntity(
-  source:     Ast,
-  alias:      Option[String]      = None,
-  properties: List[PropertyAlias] = List()
-) extends Entity
+case class Entity(name: String, properties: List[PropertyAlias]) extends Query
 
 case class PropertyAlias(path: List[String], alias: String)
 

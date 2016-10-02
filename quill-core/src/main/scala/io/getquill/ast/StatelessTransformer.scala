@@ -9,7 +9,6 @@ trait StatelessTransformer {
       case e: Action                   => apply(e)
       case e: Value                    => apply(e)
       case e: Assignment               => apply(e)
-
       case Function(params, body)      => Function(params, apply(body))
       case e: Ident                    => e
       case Property(a, name)           => Property(apply(a), name)

@@ -11,7 +11,6 @@ trait StatefulTransformer[T] {
       case e: Action     => apply(e)
       case e: Value      => apply(e)
       case e: Assignment => apply(e)
-
       case e: Ident      => (e, this)
 
       case Function(a, b) =>
@@ -58,9 +57,6 @@ trait StatefulTransformer[T] {
 
   def apply(e: Query): (Query, StatefulTransformer[T]) =
     e match {
-      case ConfiguredEntity(a, b, c) =>
-        val (at, att) = apply(a)
-        (ConfiguredEntity(at, b, c), att)
       case e: Entity => (e, this)
       case Filter(a, b, c) =>
         val (at, att) = apply(a)

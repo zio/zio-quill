@@ -179,8 +179,9 @@ lazy val mimaSettings = MimaPlugin.mimaDefaultSettings ++ Seq(
 
 commands += Command.command("checkUnformattedFiles") { st =>
   val vcs = Project.extract(st).get(releaseVcs).get
-  if(vcs.hasModifiedFiles)
-    throw new IllegalStateException("Found unformatted files. Please run `sbt scalariformFormat test:scalariformFormat` and resubmit your pull request.")
+  val modified = vcs.cmd("ls-files", "--modified", "--exclude-standard").!!.trim
+  if(modified.nonEmpty)
+    throw new IllegalStateException(s"Please run `sbt scalariformFormat test:scalariformFormat` and resubmit your pull request. Found unformatted files: \n$modified")
   st
 }
 

@@ -12,7 +12,7 @@ class StatelessTransformerSpec extends Spec {
   "transforms asts" - {
     "query" - {
       "entity" in {
-        val ast: Ast = Entity("a")
+        val ast: Ast = Entity("a", Nil)
         Subject()(ast) mustEqual ast
       }
       "filter" in {
@@ -172,20 +172,20 @@ class StatelessTransformerSpec extends Spec {
 
     "block" in {
       val ast: Ast = Block(List(
-        Val(Ident("a"), Entity("a")),
-        Val(Ident("b"), Entity("b"))
+        Val(Ident("a"), Entity("a", Nil)),
+        Val(Ident("b"), Entity("b", Nil))
       ))
-      Subject(Entity("a") -> Entity("b"), Entity("b") -> Entity("c"))(ast) mustEqual
+      Subject(Entity("a", Nil) -> Entity("b", Nil), Entity("b", Nil) -> Entity("c", Nil))(ast) mustEqual
         Block(List(
-          Val(Ident("a"), Entity("b")),
-          Val(Ident("b"), Entity("c"))
+          Val(Ident("a"), Entity("b", Nil)),
+          Val(Ident("b"), Entity("c", Nil))
         ))
     }
 
     "val" in {
-      val ast: Ast = Val(Ident("a"), Entity("a"))
-      Subject(Entity("a") -> Entity("b"))(ast) mustEqual
-        Val(Ident("a"), Entity("b"))
+      val ast: Ast = Val(Ident("a"), Entity("a", Nil))
+      Subject(Entity("a", Nil) -> Entity("b", Nil))(ast) mustEqual
+        Val(Ident("a"), Entity("b", Nil))
     }
   }
 }
