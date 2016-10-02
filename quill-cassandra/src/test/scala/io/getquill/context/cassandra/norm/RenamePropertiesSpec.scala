@@ -8,7 +8,7 @@ class RenamePropertiesSpec extends Spec {
   import mirrorContext._
 
   val e = quote {
-    query[TestEntity].schema(_.entity("test_entity").columns(_.s -> "field_s", _.i -> "field_i"))
+    querySchema[TestEntity]("test_entity", _.s -> "field_s", _.i -> "field_i")
   }
 
   val f = quote {

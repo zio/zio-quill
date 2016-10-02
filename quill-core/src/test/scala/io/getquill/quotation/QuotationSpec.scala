@@ -4,7 +4,6 @@ import scala.math.BigDecimal.double2bigDecimal
 import scala.math.BigDecimal.int2bigDecimal
 import scala.math.BigDecimal.javaBigDecimal2bigDecimal
 import scala.math.BigDecimal.long2bigDecimal
-import scala.reflect.ClassTag
 
 import io.getquill.Spec
 import io.getquill.ast.{ Query => _, _ }
@@ -18,114 +17,114 @@ class QuotationSpec extends Spec {
   "quotes and unquotes asts" - {
 
     "query" - {
-      "entity" - {
+      "schema" - {
         "without aliases" in {
-          quote(unquote(qr1)).ast mustEqual Entity("TestEntity")
+          quote(unquote(qr1)).ast mustEqual Entity("TestEntity", Nil)
         }
         "with alias" in {
           val q = quote {
-            query[TestEntity].schema(_.entity("SomeAlias"))
+            querySchema[TestEntity]("SomeAlias")
           }
-          quote(unquote(q)).ast mustEqual ConfiguredEntity(SimpleEntity("TestEntity"), Some("SomeAlias"))
+          quote(unquote(q)).ast mustEqual Entity("SomeAlias", Nil)
         }
         "with property alias" in {
           val q = quote {
-            query[TestEntity].schema(_.entity("SomeAlias").columns(_.s -> "theS", _.i -> "theI"))
+            querySchema[TestEntity]("SomeAlias", _.s -> "theS", _.i -> "theI")
           }
-          quote(unquote(q)).ast mustEqual ConfiguredEntity(Entity("TestEntity"), Some("SomeAlias"), List(PropertyAlias(List("s"), "theS"), PropertyAlias(List("i"), "theI")))
+          quote(unquote(q)).ast mustEqual Entity("SomeAlias", List(PropertyAlias(List("s"), "theS"), PropertyAlias(List("i"), "theI")))
         }
         "explicit `Predef.ArrowAssoc`" in {
           val q = quote {
-            query[TestEntity].schema(_.columns(e => Predef.ArrowAssoc(e.s). -> [String]("theS")))
+            querySchema[TestEntity]("TestEntity", e => Predef.ArrowAssoc(e.s). -> [String]("theS"))
           }
-          quote(unquote(q)).ast mustEqual ConfiguredEntity(Entity("TestEntity"), properties = List(PropertyAlias(List("s"), "theS")))
+          quote(unquote(q)).ast mustEqual Entity("TestEntity", List(PropertyAlias(List("s"), "theS")))
         }
         "with property alias and unicode arrow" in {
           val q = quote {
-            query[TestEntity].schema(_.entity("SomeAlias").columns(_.s → "theS", _.i → "theI"))
+            querySchema[TestEntity]("SomeAlias", _.s → "theS", _.i → "theI")
           }
-          quote(unquote(q)).ast mustEqual ConfiguredEntity(Entity("TestEntity"), Some("SomeAlias"), List(PropertyAlias(List("s"), "theS"), PropertyAlias(List("i"), "theI")))
+          quote(unquote(q)).ast mustEqual Entity("SomeAlias", List(PropertyAlias(List("s"), "theS"), PropertyAlias(List("i"), "theI")))
         }
       }
       "filter" in {
         val q = quote {
           qr1.filter(t => t.s == "s")
         }
-        quote(unquote(q)).ast mustEqual Filter(Entity("TestEntity"), Ident("t"), BinaryOperation(Property(Ident("t"), "s"), EqualityOperator.`==`, Constant("s")))
+        quote(unquote(q)).ast mustEqual Filter(Entity("TestEntity", Nil), Ident("t"), BinaryOperation(Property(Ident("t"), "s"), EqualityOperator.`==`, Constant("s")))
       }
       "withFilter" in {
         val q = quote {
           qr1.withFilter(t => t.s == "s")
         }
-        quote(unquote(q)).ast mustEqual Filter(Entity("TestEntity"), Ident("t"), BinaryOperation(Property(Ident("t"), "s"), EqualityOperator.`==`, Constant("s")))
+        quote(unquote(q)).ast mustEqual Filter(Entity("TestEntity", Nil), Ident("t"), BinaryOperation(Property(Ident("t"), "s"), EqualityOperator.`==`, Constant("s")))
       }
       "map" in {
         val q = quote {
           qr1.map(t => t.s)
         }
-        quote(unquote(q)).ast mustEqual Map(Entity("TestEntity"), Ident("t"), Property(Ident("t"), "s"))
+        quote(unquote(q)).ast mustEqual Map(Entity("TestEntity", Nil), Ident("t"), Property(Ident("t"), "s"))
       }
       "flatMap" in {
         val q = quote {
           qr1.flatMap(t => qr2)
         }
-        quote(unquote(q)).ast mustEqual FlatMap(Entity("TestEntity"), Ident("t"), Entity("TestEntity2"))
+        quote(unquote(q)).ast mustEqual FlatMap(Entity("TestEntity", Nil), Ident("t"), Entity("TestEntity2", Nil))
       }
       "sortBy" - {
         "default ordering" in {
           val q = quote {
             qr1.sortBy(t => t.s)
           }
-          quote(unquote(q)).ast mustEqual SortBy(Entity("TestEntity"), Ident("t"), Property(Ident("t"), "s"), AscNullsFirst)
+          quote(unquote(q)).ast mustEqual SortBy(Entity("TestEntity", Nil), Ident("t"), Property(Ident("t"), "s"), AscNullsFirst)
         }
         "asc" in {
           val q = quote {
             qr1.sortBy(t => t.s)(Ord.asc)
           }
-          quote(unquote(q)).ast mustEqual SortBy(Entity("TestEntity"), Ident("t"), Property(Ident("t"), "s"), Asc)
+          quote(unquote(q)).ast mustEqual SortBy(Entity("TestEntity", Nil), Ident("t"), Property(Ident("t"), "s"), Asc)
         }
         "desc" in {
           val q = quote {
             qr1.sortBy(t => t.s)(Ord.desc)
           }
-          quote(unquote(q)).ast mustEqual SortBy(Entity("TestEntity"), Ident("t"), Property(Ident("t"), "s"), Desc)
+          quote(unquote(q)).ast mustEqual SortBy(Entity("TestEntity", Nil), Ident("t"), Property(Ident("t"), "s"), Desc)
         }
         "ascNullsFirst" in {
           val q = quote {
             qr1.sortBy(t => t.s)(Ord.ascNullsFirst)
           }
-          quote(unquote(q)).ast mustEqual SortBy(Entity("TestEntity"), Ident("t"), Property(Ident("t"), "s"), AscNullsFirst)
+          quote(unquote(q)).ast mustEqual SortBy(Entity("TestEntity", Nil), Ident("t"), Property(Ident("t"), "s"), AscNullsFirst)
         }
         "descNullsFirst" in {
           val q = quote {
             qr1.sortBy(t => t.s)(Ord.descNullsFirst)
           }
-          quote(unquote(q)).ast mustEqual SortBy(Entity("TestEntity"), Ident("t"), Property(Ident("t"), "s"), DescNullsFirst)
+          quote(unquote(q)).ast mustEqual SortBy(Entity("TestEntity", Nil), Ident("t"), Property(Ident("t"), "s"), DescNullsFirst)
         }
         "ascNullsLast" in {
           val q = quote {
             qr1.sortBy(t => t.s)(Ord.ascNullsLast)
           }
-          quote(unquote(q)).ast mustEqual SortBy(Entity("TestEntity"), Ident("t"), Property(Ident("t"), "s"), AscNullsLast)
+          quote(unquote(q)).ast mustEqual SortBy(Entity("TestEntity", Nil), Ident("t"), Property(Ident("t"), "s"), AscNullsLast)
         }
         "descNullsLast" in {
           val q = quote {
             qr1.sortBy(t => t.s)(Ord.descNullsLast)
           }
-          quote(unquote(q)).ast mustEqual SortBy(Entity("TestEntity"), Ident("t"), Property(Ident("t"), "s"), DescNullsLast)
+          quote(unquote(q)).ast mustEqual SortBy(Entity("TestEntity", Nil), Ident("t"), Property(Ident("t"), "s"), DescNullsLast)
         }
         "tuple" - {
           "simple" in {
             val q = quote {
               qr1.sortBy(t => (t.s, t.i))(Ord.desc)
             }
-            quote(unquote(q)).ast mustEqual SortBy(Entity("TestEntity"), Ident("t"), Tuple(List(Property(Ident("t"), "s"), Property(Ident("t"), "i"))), Desc)
+            quote(unquote(q)).ast mustEqual SortBy(Entity("TestEntity", Nil), Ident("t"), Tuple(List(Property(Ident("t"), "s"), Property(Ident("t"), "i"))), Desc)
           }
           "by element" in {
             val q = quote {
               qr1.sortBy(t => (t.s, t.i))(Ord(Ord.desc, Ord.asc))
             }
-            quote(unquote(q)).ast mustEqual SortBy(Entity("TestEntity"), Ident("t"), Tuple(List(Property(Ident("t"), "s"), Property(Ident("t"), "i"))), TupleOrdering(List(Desc, Asc)))
+            quote(unquote(q)).ast mustEqual SortBy(Entity("TestEntity", Nil), Ident("t"), Tuple(List(Property(Ident("t"), "s"), Property(Ident("t"), "i"))), TupleOrdering(List(Desc, Asc)))
           }
         }
       }
@@ -133,7 +132,7 @@ class QuotationSpec extends Spec {
         val q = quote {
           qr1.groupBy(t => t.s)
         }
-        quote(unquote(q)).ast mustEqual GroupBy(Entity("TestEntity"), Ident("t"), Property(Ident("t"), "s"))
+        quote(unquote(q)).ast mustEqual GroupBy(Entity("TestEntity", Nil), Ident("t"), Property(Ident("t"), "s"))
       }
 
       "aggregation" - {
@@ -141,31 +140,31 @@ class QuotationSpec extends Spec {
           val q = quote {
             qr1.map(t => t.i).min
           }
-          quote(unquote(q)).ast mustEqual Aggregation(AggregationOperator.`min`, Map(Entity("TestEntity"), Ident("t"), Property(Ident("t"), "i")))
+          quote(unquote(q)).ast mustEqual Aggregation(AggregationOperator.`min`, Map(Entity("TestEntity", Nil), Ident("t"), Property(Ident("t"), "i")))
         }
         "max" in {
           val q = quote {
             qr1.map(t => t.i).max
           }
-          quote(unquote(q)).ast mustEqual Aggregation(AggregationOperator.`max`, Map(Entity("TestEntity"), Ident("t"), Property(Ident("t"), "i")))
+          quote(unquote(q)).ast mustEqual Aggregation(AggregationOperator.`max`, Map(Entity("TestEntity", Nil), Ident("t"), Property(Ident("t"), "i")))
         }
         "avg" in {
           val q = quote {
             qr1.map(t => t.i).avg
           }
-          quote(unquote(q)).ast mustEqual Aggregation(AggregationOperator.`avg`, Map(Entity("TestEntity"), Ident("t"), Property(Ident("t"), "i")))
+          quote(unquote(q)).ast mustEqual Aggregation(AggregationOperator.`avg`, Map(Entity("TestEntity", Nil), Ident("t"), Property(Ident("t"), "i")))
         }
         "sum" in {
           val q = quote {
             qr1.map(t => t.i).sum
           }
-          quote(unquote(q)).ast mustEqual Aggregation(AggregationOperator.`sum`, Map(Entity("TestEntity"), Ident("t"), Property(Ident("t"), "i")))
+          quote(unquote(q)).ast mustEqual Aggregation(AggregationOperator.`sum`, Map(Entity("TestEntity", Nil), Ident("t"), Property(Ident("t"), "i")))
         }
         "size" in {
           val q = quote {
             qr1.map(t => t.i).size
           }
-          quote(unquote(q)).ast mustEqual Aggregation(AggregationOperator.`size`, Map(Entity("TestEntity"), Ident("t"), Property(Ident("t"), "i")))
+          quote(unquote(q)).ast mustEqual Aggregation(AggregationOperator.`size`, Map(Entity("TestEntity", Nil), Ident("t"), Property(Ident("t"), "i")))
         }
       }
 
@@ -174,63 +173,63 @@ class QuotationSpec extends Spec {
           val q = quote {
             qr1.map(t => t.s).min
           }
-          quote(unquote(q)).ast mustEqual Aggregation(AggregationOperator.`min`, Map(Entity("TestEntity"), Ident("t"), Property(Ident("t"), "s")))
+          quote(unquote(q)).ast mustEqual Aggregation(AggregationOperator.`min`, Map(Entity("TestEntity", Nil), Ident("t"), Property(Ident("t"), "s")))
         }
         "max" in {
           val q = quote {
             qr1.map(t => t.s).max
           }
-          quote(unquote(q)).ast mustEqual Aggregation(AggregationOperator.`max`, Map(Entity("TestEntity"), Ident("t"), Property(Ident("t"), "s")))
+          quote(unquote(q)).ast mustEqual Aggregation(AggregationOperator.`max`, Map(Entity("TestEntity", Nil), Ident("t"), Property(Ident("t"), "s")))
         }
       }
       "distinct" in {
         val q = quote {
           qr1.distinct
         }
-        quote(unquote(q)).ast mustEqual Distinct(Entity("TestEntity"))
+        quote(unquote(q)).ast mustEqual Distinct(Entity("TestEntity", Nil))
       }
       "nested" in {
         val q = quote {
           qr1.nested
         }
-        quote(unquote(q)).ast mustEqual Nested(Entity("TestEntity"))
+        quote(unquote(q)).ast mustEqual Nested(Entity("TestEntity", Nil))
       }
       "take" in {
         val q = quote {
           qr1.take(10)
         }
-        quote(unquote(q)).ast mustEqual Take(Entity("TestEntity"), Constant(10))
+        quote(unquote(q)).ast mustEqual Take(Entity("TestEntity", Nil), Constant(10))
       }
       "drop" in {
         val q = quote {
           qr1.drop(10)
         }
-        quote(unquote(q)).ast mustEqual Drop(Entity("TestEntity"), Constant(10))
+        quote(unquote(q)).ast mustEqual Drop(Entity("TestEntity", Nil), Constant(10))
       }
       "union" in {
         val q = quote {
           qr1.union(qr2)
         }
-        quote(unquote(q)).ast mustEqual Union(Entity("TestEntity"), Entity("TestEntity2"))
+        quote(unquote(q)).ast mustEqual Union(Entity("TestEntity", Nil), Entity("TestEntity2", Nil))
       }
       "unionAll" - {
         "unionAll" in {
           val q = quote {
             qr1.union(qr2)
           }
-          quote(unquote(q)).ast mustEqual Union(Entity("TestEntity"), Entity("TestEntity2"))
+          quote(unquote(q)).ast mustEqual Union(Entity("TestEntity", Nil), Entity("TestEntity2", Nil))
         }
         "++" in {
           val q = quote {
             qr1 ++ qr2
           }
-          quote(unquote(q)).ast mustEqual UnionAll(Entity("TestEntity"), Entity("TestEntity2"))
+          quote(unquote(q)).ast mustEqual UnionAll(Entity("TestEntity", Nil), Entity("TestEntity2", Nil))
         }
       }
       "join" - {
 
         def tree(t: JoinType) =
-          Join(t, Entity("TestEntity"), Entity("TestEntity2"), Ident("a"), Ident("b"), BinaryOperation(Property(Ident("a"), "s"), EqualityOperator.`==`, Property(Ident("b"), "s")))
+          Join(t, Entity("TestEntity", Nil), Entity("TestEntity2", Nil), Ident("a"), Ident("b"), BinaryOperation(Property(Ident("a"), "s"), EqualityOperator.`==`, Property(Ident("b"), "s")))
 
         "inner join" in {
           val q = quote {
@@ -272,13 +271,13 @@ class QuotationSpec extends Spec {
           val q = quote {
             qr1.update(t => t.s -> "s")
           }
-          quote(unquote(q)).ast mustEqual Update(Entity("TestEntity"), List(Assignment(Ident("t"), Property(Ident("t"), "s"), Constant("s"))))
+          quote(unquote(q)).ast mustEqual Update(Entity("TestEntity", Nil), List(Assignment(Ident("t"), Property(Ident("t"), "s"), Constant("s"))))
         }
         "set field using another field" in {
           val q = quote {
             qr1.update(t => t.i -> (t.i + 1))
           }
-          quote(unquote(q)).ast mustEqual Update(Entity("TestEntity"), List(Assignment(Ident("t"), Property(Ident("t"), "i"), BinaryOperation(Property(Ident("t"), "i"), NumericOperator.`+`, Constant(1)))))
+          quote(unquote(q)).ast mustEqual Update(Entity("TestEntity", Nil), List(Assignment(Ident("t"), Property(Ident("t"), "i"), BinaryOperation(Property(Ident("t"), "i"), NumericOperator.`+`, Constant(1)))))
         }
         "case class" in {
           val q = quote {
@@ -299,7 +298,7 @@ class QuotationSpec extends Spec {
           val q = quote {
             qr1.update(t => Predef.ArrowAssoc(t.s). -> [String]("s"))
           }
-          quote(unquote(q)).ast mustEqual Update(Entity("TestEntity"), List(Assignment(Ident("t"), Property(Ident("t"), "s"), Constant("s"))))
+          quote(unquote(q)).ast mustEqual Update(Entity("TestEntity", Nil), List(Assignment(Ident("t"), Property(Ident("t"), "s"), Constant("s"))))
         }
         "unicode arrow must compile" in {
           """|quote {
@@ -313,7 +312,7 @@ class QuotationSpec extends Spec {
           val q = quote {
             qr1.insert(t => t.s -> "s")
           }
-          quote(unquote(q)).ast mustEqual Insert(Entity("TestEntity"), List(Assignment(Ident("t"), Property(Ident("t"), "s"), Constant("s"))))
+          quote(unquote(q)).ast mustEqual Insert(Entity("TestEntity", Nil), List(Assignment(Ident("t"), Property(Ident("t"), "s"), Constant("s"))))
         }
         "case class" in {
           val q = quote {
@@ -350,7 +349,7 @@ class QuotationSpec extends Spec {
         val q = quote {
           qr1.delete
         }
-        quote(unquote(q)).ast mustEqual Delete(Entity("TestEntity"))
+        quote(unquote(q)).ast mustEqual Delete(Entity("TestEntity", Nil))
       }
       "fails if the assignment types don't match" in {
         """
@@ -612,37 +611,37 @@ class QuotationSpec extends Spec {
         val q = quote {
           qr1.nonEmpty
         }
-        quote(unquote(q)).ast mustEqual UnaryOperation(SetOperator.`nonEmpty`, Entity("TestEntity"))
+        quote(unquote(q)).ast mustEqual UnaryOperation(SetOperator.`nonEmpty`, Entity("TestEntity", Nil))
       }
       "isEmpty" in {
         val q = quote {
           qr1.isEmpty
         }
-        quote(unquote(q)).ast mustEqual UnaryOperation(SetOperator.`isEmpty`, Entity("TestEntity"))
+        quote(unquote(q)).ast mustEqual UnaryOperation(SetOperator.`isEmpty`, Entity("TestEntity", Nil))
       }
       "toUpperCase" in {
         val q = quote {
           qr1.map(t => t.s.toUpperCase)
         }
-        quote(unquote(q)).ast mustEqual Map(Entity("TestEntity"), Ident("t"), UnaryOperation(StringOperator.`toUpperCase`, Property(Ident("t"), "s")))
+        quote(unquote(q)).ast mustEqual Map(Entity("TestEntity", Nil), Ident("t"), UnaryOperation(StringOperator.`toUpperCase`, Property(Ident("t"), "s")))
       }
       "toLowerCase" in {
         val q = quote {
           qr1.map(t => t.s.toLowerCase)
         }
-        quote(unquote(q)).ast mustEqual Map(Entity("TestEntity"), Ident("t"), UnaryOperation(StringOperator.`toLowerCase`, Property(Ident("t"), "s")))
+        quote(unquote(q)).ast mustEqual Map(Entity("TestEntity", Nil), Ident("t"), UnaryOperation(StringOperator.`toLowerCase`, Property(Ident("t"), "s")))
       }
       "toLong" in {
         val q = quote {
           qr1.map(t => t.s.toLong)
         }
-        quote(unquote(q)).ast mustEqual Map(Entity("TestEntity"), Ident("t"), UnaryOperation(StringOperator.`toLong`, Property(Ident("t"), "s")))
+        quote(unquote(q)).ast mustEqual Map(Entity("TestEntity", Nil), Ident("t"), UnaryOperation(StringOperator.`toLong`, Property(Ident("t"), "s")))
       }
       "toInt" in {
         val q = quote {
           qr1.map(t => t.s.toInt)
         }
-        quote(unquote(q)).ast mustEqual Map(Entity("TestEntity"), Ident("t"), UnaryOperation(StringOperator.`toInt`, Property(Ident("t"), "s")))
+        quote(unquote(q)).ast mustEqual Map(Entity("TestEntity", Nil), Ident("t"), UnaryOperation(StringOperator.`toInt`, Property(Ident("t"), "s")))
       }
     }
     "infix" - {
@@ -767,12 +766,13 @@ class QuotationSpec extends Spec {
       }
       "type param" - {
         "simple" in {
-          def test[T: ClassTag] = quote(query[T])
-          test[TestEntity].ast mustEqual Entity("TestEntity")
+          def test[T: SchemaMeta] = quote(query[T])
+
+          test[TestEntity].ast mustEqual Entity("TestEntity", Nil)
         }
         "nested" in {
-          def test[T: ClassTag] = quote(query[T].map(t => 1))
-          test[TestEntity].ast mustEqual Map(Entity("TestEntity"), Ident("t"), Constant(1))
+          def test[T: SchemaMeta] = quote(query[T].map(t => 1))
+          test[TestEntity].ast mustEqual Map(Entity("TestEntity", Nil), Ident("t"), Constant(1))
         }
       }
       "forced" in {

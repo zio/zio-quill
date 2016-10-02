@@ -187,7 +187,7 @@ Alternatively, the identifiers can be customized:
 
 ```scala
 val circles = quote {
-  query[Circle].schema(_.entity("circle_table").columns(_.radius -> "radius_column"))
+  querySchema[Circle]("circle_table", _.radius -> "radius_column")
 }
 
 val q = quote {
@@ -205,16 +205,15 @@ case class Circle(radius: Int)
 case class Rectangle(length: Int, width: Int)
 object schema {
   val circles = quote {
-    query[Circle].schema(
-        _.entity("circle_table")
-        .columns(_.radius -> "radius_column"))
+    querySchema[Circle](
+        "circle_table",
+        _.radius -> "radius_column")
   }
   val rectangles = quote {
-    query[Rectangle].schema(
-        _.entity("rectangle_table")
-        .columns(
-          _.length -> "length_column",
-          _.width -> "width_column"))
+    querySchema[Rectangle](
+        "rectangle_table",
+        _.length -> "length_column",
+        _.width -> "width_column")
   }
 }
 ```
@@ -254,13 +253,12 @@ case class Contact(phone: String, address: String) extends Embedded
 case class Person(id: Int, name: String, homeContact: Contact, workContact: Contact)
 
 val q = quote {
-  query[Person].schema(
-    _.columns(
-      _.homeContact.phone   -> "homePhone",
-      _.homeContact.address -> "homeAdress",
-      _.workContact.phone   -> "workPhone",
-      _.workContact.address -> "workAdress"
-    ) 
+  querySchema[Person](
+    "Person",
+    _.homeContact.phone   -> "homePhone",
+    _.homeContact.address -> "homeAdress",
+    _.workContact.phone   -> "workPhone",
+    _.workContact.address -> "workAdress"
   )
 }
 
@@ -951,10 +949,70 @@ val q = quote {
     u <- query[User] if u.id == lift(UserId(1))
   } yield u
 }
-ctx.run(q)
 
+ctx.run(q)
 // SELECT u.id, u.name FROM User u WHERE (u.id = 1)
 ```
+
+Meta DSL
+--------
+
+The meta DSL allows the user to customize how Quill handles the expansion and execution of quotations through implicit meta instances.
+
+**Schema meta**
+
+By default, quill expands `query[Person]` to `querySchema[Person]("Person")`. It's possible to customize this behavior using an implicit instance of `SchemaMeta`:
+
+```scala
+implicit val personSchemaMeta = schemaMeta[Person]("people", _.id -> "person_id")
+
+ctx.run(query[Person])
+// SELECT x.person_id, x.name, x.age FROM people x
+```
+
+**Insert meta**
+
+`InsertMeta` customizes the expansion of case classes for insert actions (`query[Person].insert(p)`). By default, all columns are expanded and through an implicit `InsertMeta`, it's possible to exclude columns from the expansion:
+
+```scala
+implicit val personInsertMeta = insertMeta[Person](_.id)
+
+ctx.run(query[Person].insert(lift(Person(-1, "John", 22))))
+// INSERT INTO Person (name,age) VALUES (?, ?)
+```
+
+Note that the parameter of `insertMeta` is called `exclude`, but it isn't possible to use named parameters for macro invocations.
+
+**Update meta**
+
+`UpdateMeta` customizes the expansion of case classes for update actions (`query[Person].update(p)`). By default, all columns are expanded, and through an implicit `UpdateMeta`, it's possible to exclude columns from the expansion:
+
+```scala
+implicit val personUpdateMeta = updateMeta[Person](_.id)
+
+ctx.run(query[Person].filter(_.id == 1).update(lift(Person(1, "John", 22))))
+// UPDATE Person SET name = ?, age = ? WHERE id = 1
+```
+
+Note that the parameter of `updateMeta` is called `exclude`, but it isn't possible to use named parameters for macro invocations.
+
+**Query meta**
+
+This kind of meta instance customizes the expansion of query types and extraction of the final value. For instance, it's possible to use this feature to normalize values before reading them from the database:
+
+```scala
+implicit val personQueryMeta = 
+  queryMeta(
+    (q: Query[Person]) =>
+      q.map(p => (p.id, infix"CONVERT(${p.name} USING utf8)".as[String], p.age))
+  ) {
+    case (id, name, age) =>
+      Person(id, name, age)
+  }
+```
+
+The query meta definition is open and allows the user to even join values from other tables before reading the final value. This kind of usage is not encouraged.
+
 
 Contexts
 =======
@@ -985,7 +1043,7 @@ case class MySchema(c: MyContext) {
   import c._
   val people = quote {
 
-    query[Person].schema(_.entity("people"))
+    querySchema[Person]("people")
   }
 }
 
@@ -1009,7 +1067,7 @@ trait MySchema {
   import c._
 
   val people = quote {
-    query[Person].schema(_.entity("people"))
+    querySchema[Person]("people")
   }
 }
 

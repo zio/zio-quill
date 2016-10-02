@@ -19,7 +19,7 @@ class QueryMacroSpec extends Spec {
       qr1.map(t => t.i)
     }
     testContext.run(q).string mustEqual
-      "query[TestEntity].map(t => t.i)"
+      """querySchema("TestEntity").map(t => t.i)"""
   }
 
   "runs query with liftings" - {
@@ -29,7 +29,7 @@ class QueryMacroSpec extends Spec {
           qr1.filter(t => t.i == lift(1)).map(t => t.i)
         }
         val r = testContext.run(q)
-        r.string mustEqual "query[TestEntity].filter(t => t.i == ?).map(t => t.i)"
+        r.string mustEqual """querySchema("TestEntity").filter(t => t.i == ?).map(t => t.i)"""
         r.prepareRow mustEqual Row(1)
       }
       "two" in {
@@ -37,7 +37,7 @@ class QueryMacroSpec extends Spec {
           qr1.filter(t => t.i == lift(1) && t.s == lift("a")).map(t => t.i)
         }
         val r = testContext.run(q)
-        r.string mustEqual "query[TestEntity].filter(t => (t.i == ?) && (t.s == ?)).map(t => t.i)"
+        r.string mustEqual """querySchema("TestEntity").filter(t => (t.i == ?) && (t.s == ?)).map(t => t.i)"""
         r.prepareRow mustEqual Row(1, "a")
       }
       "nested" in {
@@ -48,7 +48,7 @@ class QueryMacroSpec extends Spec {
           qr1.filter(t => c(t) && t.s == lift("a")).map(t => t.i)
         }
         val r = testContext.run(q)
-        r.string mustEqual "query[TestEntity].filter(t => (t.i == ?) && (t.s == ?)).map(t => t.i)"
+        r.string mustEqual """querySchema("TestEntity").filter(t => (t.i == ?) && (t.s == ?)).map(t => t.i)"""
         r.prepareRow mustEqual Row(1, "a")
       }
     }
@@ -58,7 +58,7 @@ class QueryMacroSpec extends Spec {
           qr1.filter(t => t.i == lift(1)).map(t => t.i)
         }
         val r = testContext.run(q.dynamic)
-        r.string mustEqual "query[TestEntity].filter(t => t.i == ?).map(t => t.i)"
+        r.string mustEqual """querySchema("TestEntity").filter(t => t.i == ?).map(t => t.i)"""
         r.prepareRow mustEqual Row(1)
       }
       "two" in {
@@ -66,7 +66,7 @@ class QueryMacroSpec extends Spec {
           qr1.filter(t => t.i == lift(1) && t.s == lift("a")).map(t => t.i)
         }
         val r = testContext.run(q.dynamic)
-        r.string mustEqual "query[TestEntity].filter(t => (t.i == ?) && (t.s == ?)).map(t => t.i)"
+        r.string mustEqual """querySchema("TestEntity").filter(t => (t.i == ?) && (t.s == ?)).map(t => t.i)"""
         r.prepareRow mustEqual Row(1, "a")
       }
       "nested" in {
@@ -77,7 +77,7 @@ class QueryMacroSpec extends Spec {
           qr1.filter(t => c(t) && t.s == lift("a")).map(t => t.i)
         }
         val r = testContext.run(q.dynamic)
-        r.string mustEqual "query[TestEntity].filter(t => (t.i == ?) && (t.s == ?)).map(t => t.i)"
+        r.string mustEqual """querySchema("TestEntity").filter(t => (t.i == ?) && (t.s == ?)).map(t => t.i)"""
         r.prepareRow mustEqual Row(1, "a")
       }
     }

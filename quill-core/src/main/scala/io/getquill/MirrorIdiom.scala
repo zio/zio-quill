@@ -60,7 +60,11 @@ class MirrorIdiom extends Idiom {
 
   implicit def queryTokenizer(implicit liftTokenizer: Tokenizer[Lift]): Tokenizer[Query] = Tokenizer[Query] {
 
-    case e: Entity => e.token
+    case Entity(name, Nil) => stmt"querySchema(${s""""$name"""".token})"
+
+    case Entity(name, prop) =>
+      val properties = prop.map(p => stmt"""_.${p.path.mkStmt(".")} -> "${p.alias.token}"""")
+      stmt"querySchema(${s""""$name"""".token}, ${properties.token})"
 
     case Filter(source, alias, body) =>
       stmt"${source.token}.filter(${alias.token} => ${body.token})"
@@ -100,16 +104,6 @@ class MirrorIdiom extends Idiom {
 
     case Nested(a) =>
       stmt"${a.token}.nested"
-  }
-
-  implicit val entityTokenizer: Tokenizer[Entity] = Tokenizer[Entity] {
-    case SimpleEntity(name) => stmt"query[${name.token}]"
-    case c: ConfiguredEntity =>
-      val alias = c.alias.map(s => stmt""".entity("${s.token}")""")
-      val properties = c.properties.map(p => stmt"""_.${p.path.mkStmt(".")} -> "${p.alias.token}"""")
-      val columns = if (properties.isEmpty) None else Some(stmt""".columns(${properties.mkStmt()})""")
-      val params = alias.toList ::: columns.toList
-      stmt"${c.source.token}.schema(_${params.mkStmt("")})"
   }
 
   implicit val orderingTokenizer: Tokenizer[Ordering] = Tokenizer[Ordering] {

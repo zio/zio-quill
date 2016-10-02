@@ -15,38 +15,30 @@ class MirrorIdiomSpec extends Spec {
 
   implicit val naming = Literal
 
-  "shows schema" - {
-    "table" in {
+  "shows schema query" - {
+    "entity" in {
       val q = quote {
-        query[TestEntity].schema(_.entity("test"))
+        querySchema[TestEntity]("test")
       }
       stmt"${(q.ast: Ast).token}" mustEqual
-        stmt"""query[TestEntity].schema(_.entity("test"))"""
+        stmt"""querySchema("test")"""
     }
     "columns" in {
       val q = quote {
-        query[TestEntity].schema(_.columns(_.i -> "'i", _.o -> "'o"))
+        querySchema[TestEntity]("TestEntity", _.i -> "'i", _.o -> "'o")
       }
       stmt"${(q.ast: Ast).token}" mustEqual
-        stmt"""query[TestEntity].schema(_.columns(_.i -> "'i", _.o -> "'o"))"""
-    }
-    "composed" in {
-      val q = quote {
-        query[TestEntity].schema(_.entity("entity_alias").columns(_.s -> "s_alias", _.i -> "i_alias"))
-      }
-      stmt"${(q.ast: Ast).token}" mustEqual
-        stmt"""query[TestEntity].schema(_.entity("entity_alias").columns(_.s -> "s_alias", _.i -> "i_alias"))"""
+        stmt"""querySchema("TestEntity", _.i -> "'i", _.o -> "'o")"""
     }
   }
 
   "shows queries" - {
-
     "complex" in {
       val q = quote {
         query[TestEntity].filter(t => t.s == "test").flatMap(t => query[TestEntity]).drop(9).take(10).map(t => t)
       }
       stmt"${(q.ast: Ast).token}" mustEqual
-        stmt"""query[TestEntity].filter(t => t.s == "test").flatMap(t => query[TestEntity]).drop(9).take(10).map(t => t)"""
+        stmt"""querySchema("TestEntity").filter(t => t.s == "test").flatMap(t => querySchema("TestEntity")).drop(9).take(10).map(t => t)"""
     }
   }
 
@@ -56,14 +48,14 @@ class MirrorIdiomSpec extends Spec {
         qr1.filter(a => a.s == "s").union(qr1.filter(b => b.i == 1))
       }
       stmt"${(q.ast: Ast).token}" mustEqual
-        stmt"""query[TestEntity].filter(a => a.s == "s").union(query[TestEntity].filter(b => b.i == 1))"""
+        stmt"""querySchema("TestEntity").filter(a => a.s == "s").union(querySchema("TestEntity").filter(b => b.i == 1))"""
     }
     "unionAll" in {
       val q = quote {
         qr1.filter(a => a.s == "s").unionAll(qr1.filter(b => b.i == 1))
       }
       stmt"${(q.ast: Ast).token}" mustEqual
-        stmt"""query[TestEntity].filter(a => a.s == "s").unionAll(query[TestEntity].filter(b => b.i == 1))"""
+        stmt"""querySchema("TestEntity").filter(a => a.s == "s").unionAll(querySchema("TestEntity").filter(b => b.i == 1))"""
     }
   }
 
@@ -73,28 +65,28 @@ class MirrorIdiomSpec extends Spec {
         qr1.join(qr2).on((a, b) => a.s == b.s)
       }
       stmt"${(q.ast: Ast).token}" mustEqual
-        stmt"""query[TestEntity].join(query[TestEntity2]).on((a, b) => a.s == b.s)"""
+        stmt"""querySchema("TestEntity").join(querySchema("TestEntity2")).on((a, b) => a.s == b.s)"""
     }
     "left join" in {
       val q = quote {
         qr1.leftJoin(qr2).on((a, b) => a.s == b.s)
       }
       stmt"${(q.ast: Ast).token}" mustEqual
-        stmt"""query[TestEntity].leftJoin(query[TestEntity2]).on((a, b) => a.s == b.s)"""
+        stmt"""querySchema("TestEntity").leftJoin(querySchema("TestEntity2")).on((a, b) => a.s == b.s)"""
     }
     "right join" in {
       val q = quote {
         qr1.rightJoin(qr2).on((a, b) => a.s == b.s)
       }
       stmt"${(q.ast: Ast).token}" mustEqual
-        stmt"""query[TestEntity].rightJoin(query[TestEntity2]).on((a, b) => a.s == b.s)"""
+        stmt"""querySchema("TestEntity").rightJoin(querySchema("TestEntity2")).on((a, b) => a.s == b.s)"""
     }
     "full join" in {
       val q = quote {
         qr1.fullJoin(qr2).on((a, b) => a.s == b.s)
       }
       stmt"${(q.ast: Ast).token}" mustEqual
-        stmt"""query[TestEntity].fullJoin(query[TestEntity2]).on((a, b) => a.s == b.s)"""
+        stmt"""querySchema("TestEntity").fullJoin(querySchema("TestEntity2")).on((a, b) => a.s == b.s)"""
     }
   }
 
@@ -104,49 +96,49 @@ class MirrorIdiomSpec extends Spec {
         qr1.sortBy(t => t.i)(Ord.asc)
       }
       stmt"${(q.ast: Ast).token}" mustEqual
-        stmt"""query[TestEntity].sortBy(t => t.i)(Ord.asc)"""
+        stmt"""querySchema("TestEntity").sortBy(t => t.i)(Ord.asc)"""
     }
     "desc" in {
       val q = quote {
         qr1.sortBy(t => t.i)(Ord.desc)
       }
       stmt"${(q.ast: Ast).token}" mustEqual
-        stmt"""query[TestEntity].sortBy(t => t.i)(Ord.desc)"""
+        stmt"""querySchema("TestEntity").sortBy(t => t.i)(Ord.desc)"""
     }
     "ascNullsFirst" in {
       val q = quote {
         qr1.sortBy(t => t.i)(Ord.ascNullsFirst)
       }
       stmt"${(q.ast: Ast).token}" mustEqual
-        stmt"""query[TestEntity].sortBy(t => t.i)(Ord.ascNullsFirst)"""
+        stmt"""querySchema("TestEntity").sortBy(t => t.i)(Ord.ascNullsFirst)"""
     }
     "descNullsFirst" in {
       val q = quote {
         qr1.sortBy(t => t.i)(Ord.descNullsFirst)
       }
       stmt"${(q.ast: Ast).token}" mustEqual
-        stmt"""query[TestEntity].sortBy(t => t.i)(Ord.descNullsFirst)"""
+        stmt"""querySchema("TestEntity").sortBy(t => t.i)(Ord.descNullsFirst)"""
     }
     "ascNullsLast" in {
       val q = quote {
         qr1.sortBy(t => t.i)(Ord.ascNullsLast)
       }
       stmt"${(q.ast: Ast).token}" mustEqual
-        stmt"""query[TestEntity].sortBy(t => t.i)(Ord.ascNullsLast)"""
+        stmt"""querySchema("TestEntity").sortBy(t => t.i)(Ord.ascNullsLast)"""
     }
     "descNullsLast" in {
       val q = quote {
         qr1.sortBy(t => t.i)(Ord.descNullsLast)
       }
       stmt"${(q.ast: Ast).token}" mustEqual
-        stmt"""query[TestEntity].sortBy(t => t.i)(Ord.descNullsLast)"""
+        stmt"""querySchema("TestEntity").sortBy(t => t.i)(Ord.descNullsLast)"""
     }
     "tuple" in {
       val q = quote {
         qr1.sortBy(t => (t.i, t.s))(Ord(Ord.descNullsLast, Ord.ascNullsLast))
       }
       stmt"${(q.ast: Ast).token}" mustEqual
-        stmt"""query[TestEntity].sortBy(t => (t.i, t.s))(Ord(Ord.descNullsLast, Ord.ascNullsLast))"""
+        stmt"""querySchema("TestEntity").sortBy(t => (t.i, t.s))(Ord(Ord.descNullsLast, Ord.ascNullsLast))"""
     }
   }
 
@@ -155,7 +147,7 @@ class MirrorIdiomSpec extends Spec {
       qr1.groupBy(t => t.i)
     }
     stmt"${(q.ast: Ast).token}" mustEqual
-      stmt"""query[TestEntity].groupBy(t => t.i)"""
+      stmt"""querySchema("TestEntity").groupBy(t => t.i)"""
   }
 
   "shows functions" in {
@@ -205,35 +197,35 @@ class MirrorIdiomSpec extends Spec {
         qr1.map(t => t.i).min
       }
       stmt"${(q.ast: Ast).token}" mustEqual
-        stmt"query[TestEntity].map(t => t.i).min"
+        stmt"""querySchema("TestEntity").map(t => t.i).min"""
     }
     "max" in {
       val q = quote {
         qr1.map(t => t.i).max
       }
       stmt"${(q.ast: Ast).token}" mustEqual
-        stmt"query[TestEntity].map(t => t.i).max"
+        stmt"""querySchema("TestEntity").map(t => t.i).max"""
     }
     "avg" in {
       val q = quote {
         qr1.map(t => t.i).avg
       }
       stmt"${(q.ast: Ast).token}" mustEqual
-        stmt"query[TestEntity].map(t => t.i).avg"
+        stmt"""querySchema("TestEntity").map(t => t.i).avg"""
     }
     "sum" in {
       val q = quote {
         qr1.map(t => t.i).sum
       }
       stmt"${(q.ast: Ast).token}" mustEqual
-        stmt"query[TestEntity].map(t => t.i).sum"
+        stmt"""querySchema("TestEntity").map(t => t.i).sum"""
     }
     "size" in {
       val q = quote {
         qr1.map(t => t.i).size
       }
       stmt"${(q.ast: Ast).token}" mustEqual
-        stmt"query[TestEntity].map(t => t.i).size"
+        stmt"""querySchema("TestEntity").map(t => t.i).size"""
     }
   }
 
@@ -421,7 +413,7 @@ class MirrorIdiomSpec extends Spec {
         query[TestEntity].filter(t => t.s == "test").update(t => t.s -> "a")
       }
       stmt"${(q.ast: Ast).token}" mustEqual
-        stmt"""query[TestEntity].filter(t => t.s == "test").update(t => t.s -> "a")"""
+        stmt"""querySchema("TestEntity").filter(t => t.s == "test").update(t => t.s -> "a")"""
     }
     "insert" - {
       "normal" in {
@@ -429,7 +421,7 @@ class MirrorIdiomSpec extends Spec {
           query[TestEntity].insert(t => t.s -> "a")
         }
         stmt"${(q.ast: Ast).token}" mustEqual
-          stmt"""query[TestEntity].insert(t => t.s -> "a")"""
+          stmt"""querySchema("TestEntity").insert(t => t.s -> "a")"""
       }
 
       "returning" in {
@@ -437,7 +429,7 @@ class MirrorIdiomSpec extends Spec {
           query[TestEntity].insert(t => t.s -> "a").returning(t => t.l)
         }
         stmt"${(q.ast: Ast).token}" mustEqual
-          stmt"""query[TestEntity].insert(t => t.s -> "a").returning((t) => t.l)"""
+          stmt"""querySchema("TestEntity").insert(t => t.s -> "a").returning((t) => t.l)"""
       }
     }
 
@@ -446,7 +438,7 @@ class MirrorIdiomSpec extends Spec {
         query[TestEntity].delete
       }
       stmt"${(q.ast: Ast).token}" mustEqual
-        stmt"""query[TestEntity].delete"""
+        stmt"""querySchema("TestEntity").delete"""
     }
   }
 
@@ -456,14 +448,14 @@ class MirrorIdiomSpec extends Spec {
         qr1.filter(t => infix"true".as[Boolean])
       }
       stmt"${(q.ast: Ast).token}" mustEqual
-        stmt"""query[TestEntity].filter(t => infix"true")"""
+        stmt"""querySchema("TestEntity").filter(t => infix"true")"""
     }
     "with params" in {
       val q = quote {
         qr1.filter(t => infix"${t.s} == 's'".as[Boolean])
       }
       stmt"${(q.ast: Ast).token}" mustEqual
-        stmt"""query[TestEntity].filter(t => infix"$${t.s} == 's'")"""
+        stmt"""querySchema("TestEntity").filter(t => infix"$${t.s} == 's'")"""
     }
   }
 
@@ -534,6 +526,6 @@ class MirrorIdiomSpec extends Spec {
       query[TestEntity].distinct
     }
     stmt"${(q.ast: Ast).token}" mustEqual
-      stmt"""query[TestEntity].distinct"""
+      stmt"""querySchema("TestEntity").distinct"""
   }
 }

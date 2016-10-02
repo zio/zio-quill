@@ -53,7 +53,7 @@ class EncodeBindVariablesSpec extends Spec {
         query[Entity].filter(t => t.x == lift(WrappedEncodable(1)))
       }
       val r = testContext.run(q)
-      r.string mustEqual "query[Entity].filter(t => t.x == ?).map(t => t.x)"
+      r.string mustEqual """querySchema("Entity").filter(t => t.x == ?).map(t => t.x)"""
       r.prepareRow mustEqual Row(1)
     }
 
