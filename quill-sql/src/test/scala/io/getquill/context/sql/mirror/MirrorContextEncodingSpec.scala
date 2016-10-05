@@ -11,8 +11,8 @@ class MirrorContextEncodingSpec extends EncodingSpec {
 
   "encodes and decodes types" in {
     val rows = insertValues.map(v =>
-      Row(v.v1, v.v2, v.v3, v.v4, v.v5, v.v6, v.v7, v.v8, v.v9, v.v10, v.v11, v.v12.value,
-        v.o1, v.o2, v.o3, v.o4, v.o5, v.o6, v.o7, v.o8, v.o9, v.o10, v.o11, v.o12.map(_.value)))
+      Row(v.v1, v.v2, v.v3, v.v4, v.v5, v.v6, v.v7, v.v8, v.v9, v.v10, v.v11, v.v12.value, v.v13,
+        v.o1, v.o2, v.o3, v.o4, v.o5, v.o6, v.o7, v.o8, v.o9, v.o10, v.o11, v.o12.map(_.value), v.o13))
     context.run(liftQuery(insertValues).foreach(p => insert(p))).groups.map(_._2).flatten mustEqual rows
 
     val mirror = context.run(query[EncodingTestEntity])

@@ -1,10 +1,11 @@
 package io.getquill.context.finagle.mysql
 
+import java.sql.Timestamp
+import java.time.{ LocalDate, LocalDateTime }
 import java.util.Date
-import com.twitter.finagle.mysql.BigDecimalValue
-import com.twitter.finagle.mysql.CanBeParameter
+
+import com.twitter.finagle.mysql._
 import com.twitter.finagle.mysql.CanBeParameter._
-import com.twitter.finagle.mysql.Parameter
 import com.twitter.finagle.mysql.Parameter.wrap
 import io.getquill.FinagleMysqlContext
 
@@ -46,4 +47,10 @@ trait FinagleMysqlEncoders {
   implicit val doubleEncoder: Encoder[Double] = encoder[Double]
   implicit val byteArrayEncoder: Encoder[Array[Byte]] = encoder[Array[Byte]]
   implicit val dateEncoder: Encoder[Date] = encoder[Date]
+  implicit val localDateEncoder: Encoder[LocalDate] = encoder[LocalDate] {
+    (d: LocalDate) => DateValue(java.sql.Date.valueOf(d)): Parameter
+  }
+  implicit val localDateTimeEncoder: Encoder[LocalDateTime] = encoder[LocalDateTime] {
+    (d: LocalDateTime) => new TimestampValue(dateTimezone, dateTimezone).apply(Timestamp.valueOf(d)): Parameter
+  }
 }

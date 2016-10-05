@@ -1,6 +1,7 @@
 package io.getquill.context.jdbc
 
 import java.sql.ResultSet
+import java.time.{ LocalDate, LocalDateTime }
 import java.util
 import java.util.Calendar
 
@@ -55,6 +56,26 @@ trait JdbcDecoders {
           new util.Date(0)
         else
           new util.Date(v.getTime)
+      }
+    }
+  implicit val localDateDecoder: Decoder[LocalDate] =
+    new Decoder[LocalDate] {
+      def apply(index: Int, row: ResultSet) = {
+        val v = row.getDate(index + 1, Calendar.getInstance(dateTimeZone))
+        if (v == null)
+          LocalDate.ofEpochDay(0)
+        else
+          v.toLocalDate
+      }
+    }
+  implicit val localDateTimeDecoder: Decoder[LocalDateTime] =
+    new Decoder[LocalDateTime] {
+      def apply(index: Int, row: ResultSet) = {
+        val v = row.getTimestamp(index + 1, Calendar.getInstance(dateTimeZone))
+        if (v == null)
+          LocalDate.ofEpochDay(0).atStartOfDay()
+        else
+          v.toLocalDateTime
       }
     }
 }

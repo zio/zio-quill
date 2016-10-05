@@ -1,17 +1,16 @@
 package io.getquill.context.async
 
-import com.github.mauricio.async.db.RowData
+import java.time.{ LocalDate, LocalDateTime, ZoneId }
 
+import com.github.mauricio.async.db.RowData
 import java.util.Date
 import java.util.UUID
 
-import org.joda.time.LocalDate
-import org.joda.time.LocalDateTime
+import org.joda.time.{ LocalDate => JodaLocalDate }
+import org.joda.time.{ LocalDateTime => JodaLocalDateTime }
 
-import scala.BigDecimal
 import scala.reflect.ClassTag
 import scala.reflect.classTag
-
 import io.getquill.util.Messages.fail
 
 trait Decoders {
@@ -106,10 +105,26 @@ trait Decoders {
 
   implicit val dateDecoder: Decoder[Date] =
     decoder[Date] {
-      case localDateTime: LocalDateTime =>
+      case localDateTime: JodaLocalDateTime =>
         localDateTime.toDate
-      case localDate: LocalDate =>
+      case localDate: JodaLocalDate =>
         localDate.toDate
+    }
+
+  implicit val localDateDecoder: Decoder[LocalDate] =
+    decoder[LocalDate] {
+      case localDateTime: JodaLocalDateTime => LocalDate.of(
+        localDateTime.getYear,
+        localDateTime.getMonthOfYear,
+        localDateTime.getDayOfMonth
+      )
+      case localDate: JodaLocalDate => LocalDate.of(localDate.getYear, localDate.getMonthOfYear, localDate.getDayOfMonth)
+    }
+
+  implicit val localDateTimeDecoder: Decoder[LocalDateTime] =
+    decoder[LocalDateTime] {
+      case localDateTime: JodaLocalDateTime => LocalDateTime.ofInstant(localDateTime.toDate.toInstant, ZoneId.systemDefault())
+      case localDate: JodaLocalDate         => LocalDateTime.ofInstant(localDate.toDate.toInstant, ZoneId.systemDefault())
     }
 
   implicit val uuidDecoder: Decoder[UUID] = new Decoder[UUID] {

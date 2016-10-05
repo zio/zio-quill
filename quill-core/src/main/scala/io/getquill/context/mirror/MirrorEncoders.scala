@@ -1,5 +1,6 @@
 package io.getquill.context.mirror
 
+import java.time.LocalDate
 import java.util.Date
 
 import io.getquill.context.Context
@@ -35,4 +36,5 @@ trait MirrorEncoders {
   implicit val doubleEncoder = encoder[Double]
   implicit val byteArrayEncoder = encoder[Array[Byte]]
   implicit val dateEncoder = encoder[Date]
+  implicit val localDateEncoder = encoder[LocalDate]
 }

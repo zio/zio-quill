@@ -1,8 +1,9 @@
 package io.getquill.context.async
 
+import java.time.{ LocalDate, LocalDateTime, ZoneId }
 import java.util.{ Date, UUID }
 
-import org.joda.time.LocalDateTime
+import org.joda.time.{ LocalDate => JodaLocalDate, LocalDateTime => JodaLocalDateTime }
 
 trait Encoders {
   this: AsyncContext[_, _, _] =>
@@ -40,7 +41,15 @@ trait Encoders {
   implicit val byteArrayEncoder: Encoder[Array[Byte]] = encoder[Array[Byte]]
   implicit val dateEncoder: Encoder[Date] =
     encoder[Date] { (value: Date) =>
-      new LocalDateTime(value)
+      new JodaLocalDateTime(value)
     }
   implicit val uuidEncoder: Encoder[UUID] = encoder[UUID]
+  implicit val localDateEncoder: Encoder[LocalDate] =
+    encoder[LocalDate] { (value: LocalDate) =>
+      new JodaLocalDate(value.getYear, value.getMonthValue, value.getDayOfMonth)
+    }
+  implicit val localDateTimeEncoder: Encoder[LocalDateTime] =
+    encoder[LocalDateTime] { (value: LocalDateTime) =>
+      new JodaLocalDateTime(value.atZone(ZoneId.systemDefault()).toInstant.toEpochMilli)
+    }
 }

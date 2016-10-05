@@ -36,6 +36,8 @@ CREATE TABLE EncodingTestEntity(
     v10 BYTEA,
     v11 TIMESTAMP,
     v12 VARCHAR(255),
+    v13 DATE,
+    v14 TIMESTAMP,
     o1 VARCHAR(255),
     o2 DECIMAL(5,2),
     o3 BOOLEAN,
@@ -47,7 +49,9 @@ CREATE TABLE EncodingTestEntity(
     o9 DOUBLE PRECISION,
     o10 BYTEA,
     o11 TIMESTAMP,
-    o12 VARCHAR(255)
+    o12 VARCHAR(255),
+    o13 DATE,
+    o14 TIMESTAMP
 );
 
 CREATE TABLE EncodingUUIDTestEntity(
@@ -84,4 +88,9 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TABLE Barcode(
     uuid UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     description TEXT
+);
+
+CREATE TABLE DateEncodingTestEntity (
+    v1 DATE,
+    v2 TIMESTAMP
 );

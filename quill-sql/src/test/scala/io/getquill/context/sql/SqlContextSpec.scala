@@ -1,9 +1,9 @@
 package io.getquill.context.sql
 
+import java.time.LocalDate
 import java.util.Date
 
 import scala.util.Try
-
 import io.getquill.Spec
 import io.getquill.context.mirror.Row
 import io.getquill.context.sql.idiom.SqlIdiom
@@ -73,8 +73,9 @@ class SqlContextSpec extends Spec {
       implicit val floatDecoder: Decoder[Float] = null
       implicit val doubleDecoder: Decoder[Double] = null
       implicit val byteArrayDecoder: Decoder[Array[Byte]] = null
-      implicit val dateDecoder: Decoder[Date] = null
+      implicit val localDateDecoder: Decoder[LocalDate] = null
 
+      implicit val dateDecoder: Decoder[Date] = null
       implicit val stringEncoder: Encoder[String] = null
       implicit val bigDecimalEncoder: Encoder[BigDecimal] = null
       implicit val booleanEncoder: Encoder[Boolean] = null
@@ -86,6 +87,7 @@ class SqlContextSpec extends Spec {
       implicit val doubleEncoder: Encoder[Double] = null
       implicit val byteArrayEncoder: Encoder[Array[Byte]] = null
       implicit val dateEncoder: Encoder[Date] = null
+      implicit val localDateEncoder: Encoder[LocalDate] = null
     }
   }
 }

@@ -38,6 +38,7 @@ lazy val `quill-core` =
       "org.scala-lang"             %  "scala-reflect" % scalaVersion.value
     ))
     .jsSettings(
+      libraryDependencies += "org.scala-js" %%% "scalajs-java-time" % "0.2.0",
       coverageExcludedPackages := ".*"
     )
 

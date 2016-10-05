@@ -47,5 +47,7 @@ trait FinaglePostgresEncoders {
   implicit val doubleEncoder: Encoder[Double] = encoder[Double]
   implicit val byteArrayEncoder: Encoder[Array[Byte]] = encoder[Array[Byte]](bytea)
   implicit val dateEncoder: Encoder[Date] = encoder[LocalDateTime, Date]((v: Date) => LocalDateTime.ofInstant(v.toInstant(), ZoneId.systemDefault()))
+  implicit val localDateEncoder: Encoder[LocalDate] = encoder[LocalDate]
+  implicit val localDateTimeEncoder: Encoder[LocalDateTime] = encoder[LocalDateTime]
   implicit val uuidEncoder: Encoder[UUID] = encoder[UUID]
 }

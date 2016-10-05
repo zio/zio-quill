@@ -1,5 +1,6 @@
 package io.getquill.context.sql
 
+import java.time.LocalDate
 import java.util.{ Date, UUID }
 
 import scala.BigDecimal
@@ -26,6 +27,7 @@ trait EncodingSpec extends Spec {
     v10: Array[Byte],
     v11: Date,
     v12: EncodingTestType,
+    v13: LocalDate,
     o1:  Option[String],
     o2:  Option[BigDecimal],
     o3:  Option[Boolean],
@@ -37,7 +39,8 @@ trait EncodingSpec extends Spec {
     o9:  Option[Double],
     o10: Option[Array[Byte]],
     o11: Option[Date],
-    o12: Option[EncodingTestType]
+    o12: Option[EncodingTestType],
+    o13: Option[LocalDate]
   )
 
   val delete = quote {
@@ -63,6 +66,7 @@ trait EncodingSpec extends Spec {
         Array(1.toByte, 2.toByte),
         new Date(31200000),
         EncodingTestType("s"),
+        LocalDate.of(2013, 11, 23),
         Some("s"),
         Some(BigDecimal(1.1)),
         Some(true),
@@ -74,7 +78,8 @@ trait EncodingSpec extends Spec {
         Some(42d),
         Some(Array(1.toByte, 2.toByte)),
         Some(new Date(31200000)),
-        Some(EncodingTestType("s"))
+        Some(EncodingTestType("s")),
+        Some(LocalDate.of(2013, 11, 23))
       ),
       EncodingTestEntity(
         "",
@@ -89,6 +94,8 @@ trait EncodingSpec extends Spec {
         Array(),
         new Date(0),
         EncodingTestType(""),
+        LocalDate.ofEpochDay(0),
+        None,
         None,
         None,
         None,
@@ -120,6 +127,7 @@ trait EncodingSpec extends Spec {
         e1.v10.toList mustEqual List(1.toByte, 2.toByte)
         e1.v11 mustEqual new Date(31200000)
         e1.v12 mustEqual EncodingTestType("s")
+        e1.v13 mustEqual LocalDate.of(2013, 11, 23)
 
         e1.o1 mustEqual Some("s")
         e1.o2 mustEqual Some(BigDecimal(1.1))
@@ -133,6 +141,7 @@ trait EncodingSpec extends Spec {
         e1.o10.map(_.toList) mustEqual Some(List(1.toByte, 2.toByte))
         e1.o11 mustEqual Some(new Date(31200000))
         e1.o12 mustEqual Some(EncodingTestType("s"))
+        e1.o13 mustEqual Some(LocalDate.of(2013, 11, 23))
 
         e2.v1 mustEqual ""
         e2.v2 mustEqual BigDecimal(0)
@@ -146,6 +155,7 @@ trait EncodingSpec extends Spec {
         e2.v10.toList mustEqual Nil
         e2.v11 mustEqual new Date(0)
         e2.v12 mustEqual EncodingTestType("")
+        e2.v13 mustEqual LocalDate.ofEpochDay(0)
 
         e2.o1 mustEqual None
         e2.o2 mustEqual None
@@ -159,6 +169,7 @@ trait EncodingSpec extends Spec {
         e2.o10 mustEqual None
         e2.o11 mustEqual None
         e2.o12 mustEqual None
+        e2.o13 mustEqual None
     }
 
   case class BarCode(description: String, uuid: Option[UUID] = None)

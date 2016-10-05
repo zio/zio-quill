@@ -61,6 +61,14 @@ trait FinaglePostgresDecoders {
     decoder[Date] {
       case d: LocalDateTime => Date.from(d.atZone(ZoneId.systemDefault()).toInstant());
     }
+  implicit val localDateDecoder: Decoder[LocalDate] = decoder[LocalDate] {
+    case d: LocalDateTime => d.toLocalDate
+    case d: LocalDate     => d
+  }
+  implicit val localDateTimeDecoder: Decoder[LocalDateTime] = decoder[LocalDateTime] {
+    case d: LocalDateTime => d
+    case d: LocalDate     => d.atStartOfDay()
+  }
 
   implicit val uuidDecoder: Decoder[UUID] = decoderDirectly[UUID]
 }
