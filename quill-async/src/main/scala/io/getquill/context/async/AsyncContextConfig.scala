@@ -2,6 +2,7 @@ package io.getquill.context.async
 
 import com.github.mauricio.async.db.Configuration
 import com.github.mauricio.async.db.Connection
+import com.github.mauricio.async.db.SSLConfiguration
 import com.github.mauricio.async.db.pool.ObjectFactory
 import com.github.mauricio.async.db.pool.PartitionedConnectionPool
 import com.github.mauricio.async.db.pool.PoolConfiguration
@@ -19,6 +20,10 @@ abstract class AsyncContextConfig[C <: Connection](
   def database = Try(config.getString("database")).toOption
   def port = config.getInt("port")
   def host = config.getString("host")
+  def sslProps = Map(
+    "sslmode" -> Try(config.getString("sslmode")).toOption,
+    "sslrootcert" -> Try(config.getString("sslrootcert")).toOption
+  ).collect { case (key, Some(value)) => key -> value }
 
   def configuration =
     new Configuration(
@@ -26,7 +31,8 @@ abstract class AsyncContextConfig[C <: Connection](
       password = password,
       database = database,
       port = port,
-      host = host
+      host = host,
+      ssl = SSLConfiguration(sslProps)
     )
 
   private val defaultPoolConfig = PoolConfiguration.Default
