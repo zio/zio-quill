@@ -1,21 +1,25 @@
 package io.getquill.context.jdbc
 
-import java.sql.ResultSet
+import java.sql.{ ResultSet, Types }
 import java.time.{ LocalDate, LocalDateTime }
 import java.util
 import java.util.Calendar
-
-import scala.BigDecimal
 import scala.math.BigDecimal.javaBigDecimal2bigDecimal
 import io.getquill.JdbcContext
 
-trait JdbcDecoders {
-  this: JdbcContext[_, _] =>
+trait JdbcDecoders { this: JdbcContext[_, _] =>
 
-  def decoder[T](f: ResultSet => Int => T): Decoder[T] =
-    new Decoder[T] {
-      def apply(index: Int, row: ResultSet) =
-        f(row)(index + 1)
+  case class JdbcDecoder[T](sqlType: Int)(implicit decoder: Decoder[T])
+    extends Decoder[T] {
+    def apply(index: Int, row: ResultSet) = decoder.apply(index, row)
+  }
+
+  def decoder[T](f: ResultSet => Int => T, sqlType: Int): JdbcDecoder[T] =
+    JdbcDecoder[T](sqlType) {
+      new Decoder[T] {
+        def apply(index: Int, row: ResultSet) =
+          f(row)(index + 1)
+      }
     }
 
   implicit def optionDecoder[T](implicit d: Decoder[T]): Decoder[Option[T]] =
@@ -29,9 +33,9 @@ trait JdbcDecoders {
       }
     }
 
-  implicit val stringDecoder = decoder(_.getString)
-  implicit val bigDecimalDecoder: Decoder[BigDecimal] =
-    new Decoder[BigDecimal] {
+  implicit val stringDecoder = decoder(_.getString, Types.VARCHAR)
+  implicit val bigDecimalDecoder: JdbcDecoder[BigDecimal] =
+    JdbcDecoder[BigDecimal](Types.REAL)(new Decoder[BigDecimal] {
       def apply(index: Int, row: ResultSet) = {
         val v = row.getBigDecimal(index + 1)
         if (v == null)
@@ -39,17 +43,17 @@ trait JdbcDecoders {
         else
           v
       }
-    }
-  implicit val booleanDecoder = decoder(_.getBoolean)
-  implicit val byteDecoder = decoder(_.getByte)
-  implicit val shortDecoder = decoder(_.getShort)
-  implicit val intDecoder = decoder(_.getInt)
-  implicit val longDecoder = decoder(_.getLong)
-  implicit val floatDecoder = decoder(_.getFloat)
-  implicit val doubleDecoder = decoder(_.getDouble)
-  implicit val byteArrayDecoder = decoder(_.getBytes)
-  implicit val dateDecoder: Decoder[util.Date] =
-    new Decoder[util.Date] {
+    })
+  implicit val booleanDecoder = decoder(_.getBoolean, Types.BOOLEAN)
+  implicit val byteDecoder = decoder(_.getByte, Types.TINYINT)
+  implicit val shortDecoder = decoder(_.getShort, Types.SMALLINT)
+  implicit val intDecoder = decoder(_.getInt, Types.INTEGER)
+  implicit val longDecoder = decoder(_.getLong, Types.BIGINT)
+  implicit val floatDecoder = decoder(_.getFloat, Types.FLOAT)
+  implicit val doubleDecoder = decoder(_.getDouble, Types.DOUBLE)
+  implicit val byteArrayDecoder = decoder(_.getBytes, Types.ARRAY)
+  implicit val dateDecoder: JdbcDecoder[util.Date] =
+    JdbcDecoder[util.Date](Types.TIMESTAMP)(new Decoder[util.Date] {
       def apply(index: Int, row: ResultSet) = {
         val v = row.getTimestamp(index + 1, Calendar.getInstance(dateTimeZone))
         if (v == null)
@@ -57,9 +61,9 @@ trait JdbcDecoders {
         else
           new util.Date(v.getTime)
       }
-    }
-  implicit val localDateDecoder: Decoder[LocalDate] =
-    new Decoder[LocalDate] {
+    })
+  implicit val localDateDecoder: JdbcDecoder[LocalDate] =
+    JdbcDecoder(Types.DATE)(new Decoder[LocalDate] {
       def apply(index: Int, row: ResultSet) = {
         val v = row.getDate(index + 1, Calendar.getInstance(dateTimeZone))
         if (v == null)
@@ -67,9 +71,9 @@ trait JdbcDecoders {
         else
           v.toLocalDate
       }
-    }
+    })
   implicit val localDateTimeDecoder: Decoder[LocalDateTime] =
-    new Decoder[LocalDateTime] {
+    JdbcDecoder(Types.TIMESTAMP)(new Decoder[LocalDateTime] {
       def apply(index: Int, row: ResultSet) = {
         val v = row.getTimestamp(index + 1, Calendar.getInstance(dateTimeZone))
         if (v == null)
@@ -77,5 +81,5 @@ trait JdbcDecoders {
         else
           v.toLocalDateTime
       }
-    }
+    })
 }
