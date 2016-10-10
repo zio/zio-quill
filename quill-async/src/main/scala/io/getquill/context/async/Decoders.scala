@@ -13,20 +13,28 @@ import scala.reflect.ClassTag
 import scala.reflect.classTag
 import io.getquill.util.Messages.fail
 
-trait Decoders {
-  this: AsyncContext[_, _, _] =>
+trait Decoders { this: AsyncContext[_, _, _] =>
 
-  def decoder[T: ClassTag](f: PartialFunction[Any, T] = PartialFunction.empty): Decoder[T] =
-    new Decoder[T] {
+  case class AsyncDecoder[T](sqlType: SqlTypes.SqlTypes)(implicit decoder: Decoder[T])
+    extends Decoder[T] {
+    def apply(index: Int, row: RowData) = decoder.apply(index, row)
+  }
+
+  def decoder[T: ClassTag](
+    f: PartialFunction[Any, T] = PartialFunction.empty, sqlType: SqlTypes.SqlTypes
+  ): AsyncDecoder[T] =
+    AsyncDecoder[T](sqlType)(new Decoder[T] {
       def apply(index: Int, row: RowData) = {
         row(index) match {
           case value: T                        => value
           case value if (f.isDefinedAt(value)) => f(value)
           case value =>
-            fail(s"Value '$value' at index $index can't be decoded to '${classTag[T].runtimeClass}'")
+            fail(
+              s"Value '$value' at index $index can't be decoded to '${classTag[T].runtimeClass}'"
+            )
         }
       }
-    }
+    })
 
   trait NumericDecoder[T] extends Decoder[T] {
     def apply(index: Int, row: RowData) =
@@ -54,83 +62,97 @@ trait Decoders {
       }
     }
 
-  implicit val stringDecoder: Decoder[String] = decoder[String]()
+  implicit val stringDecoder: AsyncDecoder[String] = decoder[String](PartialFunction.empty, SqlTypes.VARCHAR)
 
-  implicit val bigDecimalDecoder: Decoder[BigDecimal] =
-    new NumericDecoder[BigDecimal] {
+  implicit val bigDecimalDecoder: AsyncDecoder[BigDecimal] =
+    AsyncDecoder(SqlTypes.REAL)(new NumericDecoder[BigDecimal] {
       def decode[U](v: U)(implicit n: Numeric[U]) =
         BigDecimal(n.toDouble(v))
-    }
+    })
 
-  implicit val booleanDecoder: Decoder[Boolean] = decoder[Boolean] {
+  implicit val booleanDecoder: AsyncDecoder[Boolean] = decoder[Boolean]({
     case v: Byte  => v == (1: Byte)
     case v: Short => v == (1: Short)
     case v: Int   => v == 1
     case v: Long  => v == 1L
-  }
+  }, SqlTypes.BOOLEAN)
 
-  implicit val byteDecoder: Decoder[Byte] = decoder[Byte] {
+  implicit val byteDecoder: AsyncDecoder[Byte] = decoder[Byte]({
     case v: Short => v.toByte
-  }
+  }, SqlTypes.TINYINT)
 
-  implicit val shortDecoder: Decoder[Short] = decoder[Short] {
+  implicit val shortDecoder: AsyncDecoder[Short] = decoder[Short]({
     case v: Byte => v.toShort
-  }
+  }, SqlTypes.SMALLINT)
 
-  implicit val intDecoder: Decoder[Int] =
-    new NumericDecoder[Int] {
+  implicit val intDecoder: AsyncDecoder[Int] =
+    AsyncDecoder(SqlTypes.INTEGER)(new NumericDecoder[Int] {
       def decode[U](v: U)(implicit n: Numeric[U]) =
         n.toInt(v)
-    }
+    })
 
-  implicit val longDecoder: Decoder[Long] =
-    new NumericDecoder[Long] {
+  implicit val longDecoder: AsyncDecoder[Long] =
+    AsyncDecoder(SqlTypes.BIGINT)(new NumericDecoder[Long] {
       def decode[U](v: U)(implicit n: Numeric[U]) =
         n.toLong(v)
-    }
+    })
 
-  implicit val floatDecoder: Decoder[Float] =
-    new NumericDecoder[Float] {
+  implicit val floatDecoder: AsyncDecoder[Float] =
+    AsyncDecoder(SqlTypes.FLOAT)(new NumericDecoder[Float] {
       def decode[U](v: U)(implicit n: Numeric[U]) =
         n.toFloat(v)
-    }
+    })
 
-  implicit val doubleDecoder: Decoder[Double] =
-    new NumericDecoder[Double] {
+  implicit val doubleDecoder: AsyncDecoder[Double] =
+    AsyncDecoder(SqlTypes.DOUBLE)(new NumericDecoder[Double] {
       def decode[U](v: U)(implicit n: Numeric[U]) =
         n.toDouble(v)
-    }
+    })
 
-  implicit val byteArrayDecoder: Decoder[Array[Byte]] = decoder[Array[Byte]]()
+  implicit val byteArrayDecoder: AsyncDecoder[Array[Byte]] = decoder[Array[Byte]](PartialFunction.empty, SqlTypes.TINYINT)
 
-  implicit val dateDecoder: Decoder[Date] =
-    decoder[Date] {
+  implicit val dateDecoder: AsyncDecoder[Date] =
+    decoder[Date]({
       case localDateTime: JodaLocalDateTime =>
         localDateTime.toDate
       case localDate: JodaLocalDate =>
         localDate.toDate
-    }
+    }, SqlTypes.TIMESTAMP)
 
-  implicit val localDateDecoder: Decoder[LocalDate] =
-    decoder[LocalDate] {
-      case localDateTime: JodaLocalDateTime => LocalDate.of(
-        localDateTime.getYear,
-        localDateTime.getMonthOfYear,
-        localDateTime.getDayOfMonth
-      )
-      case localDate: JodaLocalDate => LocalDate.of(localDate.getYear, localDate.getMonthOfYear, localDate.getDayOfMonth)
-    }
+  implicit val localDateDecoder: AsyncDecoder[LocalDate] =
+    decoder[LocalDate]({
+      case localDateTime: JodaLocalDateTime =>
+        LocalDate.of(
+          localDateTime.getYear,
+          localDateTime.getMonthOfYear,
+          localDateTime.getDayOfMonth
+        )
+      case localDate: JodaLocalDate =>
+        LocalDate.of(
+          localDate.getYear,
+          localDate.getMonthOfYear,
+          localDate.getDayOfMonth
+        )
+    }, SqlTypes.DATE)
 
-  implicit val localDateTimeDecoder: Decoder[LocalDateTime] =
-    decoder[LocalDateTime] {
-      case localDateTime: JodaLocalDateTime => LocalDateTime.ofInstant(localDateTime.toDate.toInstant, ZoneId.systemDefault())
-      case localDate: JodaLocalDate         => LocalDateTime.ofInstant(localDate.toDate.toInstant, ZoneId.systemDefault())
-    }
+  implicit val localDateTimeDecoder: AsyncDecoder[LocalDateTime] =
+    decoder[LocalDateTime]({
+      case localDateTime: JodaLocalDateTime =>
+        LocalDateTime.ofInstant(
+          localDateTime.toDate.toInstant,
+          ZoneId.systemDefault()
+        )
+      case localDate: JodaLocalDate =>
+        LocalDateTime.ofInstant(
+          localDate.toDate.toInstant,
+          ZoneId.systemDefault()
+        )
+    }, SqlTypes.TIMESTAMP)
 
-  implicit val uuidDecoder: Decoder[UUID] = new Decoder[UUID] {
+  implicit val uuidDecoder: AsyncDecoder[UUID] = AsyncDecoder(SqlTypes.UUID)(new Decoder[UUID] {
     def apply(index: Int, row: RowData): UUID = row(index) match {
       case value: UUID => value
     }
-  }
+  })
 
 }
