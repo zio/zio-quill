@@ -11,7 +11,7 @@ class MetaDslMacro(val c: MacroContext) {
     c.untypecheck {
       q"""
         new ${c.prefix}.SchemaMeta[$t] {
-          override val entity =
+          val entity =
             ${c.prefix}.quote {
               ${c.prefix}.querySchema[$t]($entity, ..$columns)
             }
@@ -23,8 +23,8 @@ class MetaDslMacro(val c: MacroContext) {
     c.untypecheck {
       q"""
         new ${c.prefix}.QueryMeta[$t] {
-          override val expand = $expand
-          override val extract =
+          val expand = $expand
+          val extract =
             (r: ${c.prefix}.ResultRow) => $extract(implicitly[${c.prefix}.QueryMeta[$r]].extract(r))
         }
       """
@@ -40,8 +40,8 @@ class MetaDslMacro(val c: MacroContext) {
     val value = this.value("Decoder", t.tpe)
     q"""
       new ${c.prefix}.QueryMeta[$t] {
-        override val expand = ${expandQuery[T](value)}
-        override val extract = ${extract[T](value)}
+        val expand = ${expandQuery[T](value)}
+        val extract = ${extract[T](value)}
       }
     """
   }
@@ -57,7 +57,7 @@ class MetaDslMacro(val c: MacroContext) {
       case true =>
         q"""
           new ${c.prefix}.SchemaMeta[$t] {
-            override val entity =
+            val entity =
               ${c.prefix}.quote(${c.prefix}.querySchema[$t](${t.tpe.typeSymbol.name.decodedName.toString}))
           }
         """
@@ -119,7 +119,7 @@ class MetaDslMacro(val c: MacroContext) {
     c.untypecheck {
       q"""
         new ${c.prefix}.${TypeName(method.capitalize + "Meta")}[$t] {
-          override val expand =
+          val expand =
             ${c.prefix}.quote((q: ${c.prefix}.EntityQuery[$t], value: $t) => q.${TermName(method)}(..$assignments))
         }
       """

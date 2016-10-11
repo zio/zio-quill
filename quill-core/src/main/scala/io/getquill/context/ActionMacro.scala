@@ -12,24 +12,28 @@ class ActionMacro(val c: MacroContext)
   import c.universe.{ Ident => _, Function => _, _ }
 
   def runAction(quoted: Tree): Tree =
-    q"""
-      val expanded = ${expand(extractAst(quoted))}
-      ${c.prefix}.executeAction(
-        expanded.string,
-        expanded.prepare
-      )
-    """
+    c.untypecheck {
+      q"""
+        val expanded = ${expand(extractAst(quoted))}
+        ${c.prefix}.executeAction(
+          expanded.string,
+          expanded.prepare
+        )
+      """
+    }
 
   def runActionReturning[T](quoted: Tree)(implicit t: WeakTypeTag[T]): Tree =
-    q"""
-      val expanded = ${expand(extractAst(quoted))}
-      ${c.prefix}.executeActionReturning(
-        expanded.string,
-        expanded.prepare,
-        ${returningExtractor[T]},
-        $returningColumn
-      )
-    """
+    c.untypecheck {
+      q"""
+        val expanded = ${expand(extractAst(quoted))}
+        ${c.prefix}.executeActionReturning(
+          expanded.string,
+          expanded.prepare,
+          ${returningExtractor[T]},
+          $returningColumn
+        )
+      """
+    }
 
   def runBatchAction(quoted: Tree): Tree =
     expandBatchAction(quoted) {
