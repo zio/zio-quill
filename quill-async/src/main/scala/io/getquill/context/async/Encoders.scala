@@ -25,6 +25,16 @@ trait Encoders { this: AsyncContext[_, _, _] =>
         row :+ f(value)
     })
 
+  override protected def mappedEncoderImpl[I, O](implicit mapped: MappedEncoding[I, O], e: Encoder[O]): Encoder[I] =
+    e match {
+      case e @ AsyncEncoder(sqlType) =>
+        val enc = new Encoder[I] {
+          def apply(index: Int, value: I, row: List[Any]) =
+            e(index, mapped.f(value), row)
+        }
+        AsyncEncoder(sqlType)(enc)
+    }
+
   implicit def optionEncoder[T](implicit d: Encoder[T]): Encoder[Option[T]] =
     new Encoder[Option[T]] {
       def apply(index: Int, value: Option[T], row: List[Any]) = {
