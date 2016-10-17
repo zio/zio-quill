@@ -7,7 +7,7 @@ class JdbcContextSpec extends Spec {
   import testContext._
 
   val badEntity = quote {
-    query[TestEntity].schema(_.entity("TestEntity").columns(_.s -> "a", _.i -> "i", _.l -> "l", _.o -> "o"))
+    querySchema[TestEntity]("TestEntity", _.s -> "a", _.i -> "i", _.l -> "l", _.o -> "o")
   }
 
   "provides transaction support" - {

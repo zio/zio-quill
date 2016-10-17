@@ -1,7 +1,5 @@
 package io.getquill.context
 
-import scala.reflect.ClassTag
-
 import io.getquill.Spec
 import io.getquill.testContext
 import io.getquill.testContext._
@@ -16,7 +14,7 @@ class ContextMacroSpec extends Spec {
           qr1.delete
         }
         testContext.run(q).string mustEqual
-          "query[TestEntity].delete"
+          """querySchema("TestEntity").delete"""
       }
       "infix" in {
         val q = quote {
@@ -30,12 +28,12 @@ class ContextMacroSpec extends Spec {
           qr1.delete
         }
         testContext.run(q.dynamic).string mustEqual
-          "query[TestEntity].delete"
+          """querySchema("TestEntity").delete"""
       }
       "dynamic type param" in {
-        def test[T: ClassTag] = quote(query[T].delete)
+        def test[T: SchemaMeta] = quote(query[T].delete)
         val r = testContext.run(test[TestEntity])
-        r.string mustEqual "query[TestEntity].delete"
+        r.string mustEqual """querySchema("TestEntity").delete"""
       }
     }
     "parametrized" - {
@@ -44,7 +42,7 @@ class ContextMacroSpec extends Spec {
           qr1.filter(t => t.s == lift("a")).delete
         }
         val r = testContext.run(q)
-        r.string mustEqual "query[TestEntity].filter(t => t.s == ?).delete"
+        r.string mustEqual """querySchema("TestEntity").filter(t => t.s == ?).delete"""
         r.prepareRow mustEqual Row("a")
       }
       "infix" in {
@@ -65,11 +63,11 @@ class ContextMacroSpec extends Spec {
       }
       "dynamic type param" in {
         import language.reflectiveCalls
-        def test[T <: { def i: Int }: ClassTag] = quote {
+        def test[T <: { def i: Int }: SchemaMeta] = quote {
           query[T].filter(t => t.i == lift(1)).delete
         }
         val r = testContext.run(test[TestEntity])
-        r.string mustEqual "query[TestEntity].filter(t => t.i == ?).delete"
+        r.string mustEqual """querySchema("TestEntity").filter(t => t.i == ?).delete"""
         r.prepareRow mustEqual Row(1)
       }
     }
@@ -82,7 +80,7 @@ class ContextMacroSpec extends Spec {
           qr1.map(t => t.s)
         }
         testContext.run(q).string mustEqual
-          "query[TestEntity].map(t => t.s)"
+          """querySchema("TestEntity").map(t => t.s)"""
       }
       "infix" in {
         val q = quote {
@@ -96,12 +94,12 @@ class ContextMacroSpec extends Spec {
           qr1.map(t => t.s)
         }
         testContext.run(q.dynamic).string mustEqual
-          "query[TestEntity].map(t => t.s)"
+          """querySchema("TestEntity").map(t => t.s)"""
       }
       "dynamic type param" in {
-        def test[T: ClassTag] = quote(query[T])
+        def test[T: SchemaMeta] = quote(query[T])
         val r = testContext.run(test[TestEntity])
-        r.string mustEqual "query[TestEntity].map(x => (x.s, x.i, x.l, x.o))"
+        r.string mustEqual """querySchema("TestEntity").map(x => (x.s, x.i, x.l, x.o))"""
       }
     }
     "parametrized" - {
@@ -110,7 +108,7 @@ class ContextMacroSpec extends Spec {
           qr1.filter(t => t.s == lift("a"))
         }
         val r = testContext.run(q)
-        r.string mustEqual "query[TestEntity].filter(t => t.s == ?).map(t => (t.s, t.i, t.l, t.o))"
+        r.string mustEqual """querySchema("TestEntity").filter(t => t.s == ?).map(t => (t.s, t.i, t.l, t.o))"""
         r.prepareRow mustEqual Row("a")
       }
 
@@ -120,7 +118,7 @@ class ContextMacroSpec extends Spec {
           query[Entity].filter(t => t.x == lift(WrappedEncodable(1)))
         }
         val r = testContext.run(q)
-        r.string mustEqual "query[Entity].filter(t => t.x == ?).map(t => t.x)"
+        r.string mustEqual """querySchema("Entity").filter(t => t.x == ?).map(t => t.x)"""
         r.prepareRow mustEqual Row(1)
       }
       "infix" in {
@@ -136,15 +134,15 @@ class ContextMacroSpec extends Spec {
           qr1.filter(t => t.s == lift("a"))
         }
         val r = testContext.run(q.dynamic)
-        r.string mustEqual "query[TestEntity].filter(t => t.s == ?).map(t => (t.s, t.i, t.l, t.o))"
+        r.string mustEqual """querySchema("TestEntity").filter(t => t.s == ?).map(t => (t.s, t.i, t.l, t.o))"""
         r.prepareRow mustEqual Row("a")
       }
       "dynamic type param" in {
-        def test[T: ClassTag] = quote {
+        def test[T: SchemaMeta: QueryMeta] = quote {
           query[T].map(t => lift(1))
         }
         val r = testContext.run(test[TestEntity])
-        r.string mustEqual "query[TestEntity].map(t => ?)"
+        r.string mustEqual """querySchema("TestEntity").map(t => ?)"""
         r.prepareRow mustEqual Row(1)
       }
     }
@@ -153,7 +151,7 @@ class ContextMacroSpec extends Spec {
         qr1.map(t => t.i).max
       }
       testContext.run(q).string mustEqual
-        "query[TestEntity].map(t => t.i).max"
+        """querySchema("TestEntity").map(t => t.i).max"""
     }
   }
 

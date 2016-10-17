@@ -9,7 +9,7 @@ import io.getquill.dsl.CoreDsl
 import scala.collection.immutable.StringOps
 import scala.reflect.macros.TypecheckException
 
-trait Parsing extends EntityConfigParsing {
+trait Parsing {
   this: Quotation =>
 
   import c.universe.{ Ident => _, Constant => _, Function => _, If => _, Block => _, _ }
@@ -32,12 +32,12 @@ trait Parsing extends EntityConfigParsing {
 
   val astParser: Parser[Ast] = Parser[Ast] {
     case q"$i: $typ"                        => astParser(i)
+    case `queryParser`(value)               => value
     case `liftParser`(value)                => value
     case `valParser`(value)                 => value
     case `patMatchValParser`(value)         => value
     case `valueParser`(value)               => value
     case `quotedAstParser`(value)           => value
-    case `queryParser`(value)               => value
     case `functionParser`(value)            => value
     case `actionParser`(value)              => value
     case `infixParser`(value)               => value
@@ -158,21 +158,12 @@ trait Parsing extends EntityConfigParsing {
 
   val queryParser: Parser[Ast] = Parser[Ast] {
 
-    case q"$source.schema(($alias) => $body)" =>
-      val config = parseEntityConfig(body)
-      ConfiguredEntity(astParser(source), config.alias, config.properties)
+    case q"$pack.query[$t]" =>
+      // Unused, it's here only to make eclipse's presentation compiler happy
+      Entity("unused", Nil)
 
-    case q"$pack.query[${ t: Type }]($ct)" if (t.typeSymbol.isClass) =>
-      SimpleEntity(t.typeSymbol.name.decodedName.toString)
-
-    case q"$pack.query[${ _ }]($ct)" =>
-      Dynamic {
-        c.typecheck(q"""
-              new ${c.prefix}.Quoted[${c.prefix}.EntityQuery[T]] {
-                override def ast = io.getquill.ast.SimpleEntity($ct.runtimeClass.getSimpleName)
-              }
-            """)
-      }
+    case q"$pack.querySchema[$t](${ name: String }, ..$properties)" =>
+      Entity(name, properties.map(propertyAliasParser(_)))
 
     case q"$source.filter(($alias) => $body)" if (is[CoreDsl#Query[Any]](source)) =>
       Filter(astParser(source), identParser(alias), astParser(body))
@@ -229,6 +220,18 @@ trait Parsing extends EntityConfigParsing {
     case q"$source.nested" if (is[CoreDsl#Query[Any]](source)) =>
       Nested(astParser(source))
 
+  }
+
+  implicit val propertyAliasParser: Parser[PropertyAlias] = Parser[PropertyAlias] {
+    case q"(($x1) => $pack.Predef.ArrowAssoc[$t]($prop).$arrow[$v](${ alias: String }))" =>
+      def path(tree: Tree): List[String] =
+        tree match {
+          case q"$a.$b" =>
+            path(a) :+ b.decodedName.toString
+          case _ =>
+            Nil
+        }
+      PropertyAlias(path(prop), alias)
   }
 
   implicit val orderingParser: Parser[Ordering] = Parser[Ordering] {

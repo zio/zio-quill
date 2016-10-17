@@ -13,7 +13,7 @@ class RebindSpec extends Spec {
     val q = quote {
       unquote(query[TestEntity].insert(e => e.i -> lift(1)).returnId)
     }
-    testContext.run(q).string must equal("infix\"" + "$" + "{query[TestEntity].insert(e => e.i -> ?)} RETURNING ID\"")
+    testContext.run(q).string mustEqual s"""infix"$${querySchema("TestEntity").insert(e => e.i -> ?)} RETURNING ID""""
   }
 
   "rebind function with args and" - {
@@ -23,7 +23,7 @@ class RebindSpec extends Spec {
       }
 
       val q = quote(query[TestEntity].map(e => unquote(e.i.plus(10))))
-      testContext.run(q).string must equal("query[TestEntity].map(e => infix\"" + "$" + "{e.i} + " + "$" + "{10}\")")
+      testContext.run(q).string mustEqual s"""querySchema("TestEntity").map(e => infix"$${e.i} + $${10}")"""
     }
 
     "no type param" in {
@@ -32,7 +32,7 @@ class RebindSpec extends Spec {
       }
 
       val q = quote(query[TestEntity].map(e => unquote(e.i.plus(10))))
-      testContext.run(q).string must equal("query[TestEntity].map(e => infix\"" + "$" + "{e.i} + " + "$" + "{10}\")")
+      testContext.run(q).string mustEqual s"""querySchema("TestEntity").map(e => infix"$${e.i} + $${10}")"""
     }
   }
 }

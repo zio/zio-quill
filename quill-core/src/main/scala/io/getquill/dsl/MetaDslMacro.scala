@@ -7,29 +7,63 @@ import io.getquill.util.OptionalTypecheck
 class MetaDslMacro(val c: MacroContext) {
   import c.universe._
 
+  def schemaMeta[T](entity: Tree, columns: Tree*)(implicit t: WeakTypeTag[T]): Tree =
+    c.untypecheck {
+      q"""
+        new ${c.prefix}.SchemaMeta[$t] {
+          val entity =
+            ${c.prefix}.quote {
+              ${c.prefix}.querySchema[$t]($entity, ..$columns)
+            }
+        }
+      """
+    }
+
+  def queryMeta[T, R](expand: Tree)(extract: Tree)(implicit t: WeakTypeTag[T], r: WeakTypeTag[R]): Tree =
+    c.untypecheck {
+      q"""
+        new ${c.prefix}.QueryMeta[$t] {
+          val expand = $expand
+          val extract =
+            (r: ${c.prefix}.ResultRow) => $extract(implicitly[${c.prefix}.QueryMeta[$r]].extract(r))
+        }
+      """
+    }
+
+  def insertMeta[T](exclude: Tree*)(implicit t: WeakTypeTag[T]): Tree =
+    actionMeta[T](value("Encoder", t.tpe, exclude: _*), "insert")
+
+  def updateMeta[T](exclude: Tree*)(implicit t: WeakTypeTag[T]): Tree =
+    actionMeta[T](value("Encoder", t.tpe, exclude: _*), "update")
+
   def materializeQueryMeta[T](implicit t: WeakTypeTag[T]): Tree = {
     val value = this.value("Decoder", t.tpe)
     q"""
       new ${c.prefix}.QueryMeta[$t] {
-        override val expand = ${expandQuery[T](value)}
-        override val extract = ${extract[T](value)}
+        val expand = ${expandQuery[T](value)}
+        val extract = ${extract[T](value)}
       }
     """
   }
 
   def materializeUpdateMeta[T](implicit t: WeakTypeTag[T]): Tree =
-    q"""
-      new ${c.prefix}.UpdateMeta[$t] {
-        override val expand = ${expandAction[T]("update")}
-      }
-    """
+    actionMeta[T](value("Encoder", t.tpe), "update")
 
   def materializeInsertMeta[T](implicit t: WeakTypeTag[T]): Tree =
-    q"""
-      new ${c.prefix}.InsertMeta[$t] {
-        override val expand = ${expandAction[T]("insert")}
-      }
-    """
+    actionMeta[T](value("Encoder", t.tpe), "insert")
+
+  def materializeSchemaMeta[T](implicit t: WeakTypeTag[T]): Tree =
+    (t.tpe.typeSymbol.isClass && t.tpe.typeSymbol.asClass.isCaseClass) match {
+      case true =>
+        q"""
+          new ${c.prefix}.SchemaMeta[$t] {
+            val entity =
+              ${c.prefix}.quote(${c.prefix}.querySchema[$t](${t.tpe.typeSymbol.name.decodedName.toString}))
+          }
+        """
+      case false =>
+        c.fail(s"Can't materialize a `SchemaMeta` for non-case-class type '${t.tpe}', please provide an implicit `SchemaMeta`.")
+    }
 
   private def expandQuery[T](value: Value)(implicit t: WeakTypeTag[T]) = {
     val elements = flatten(q"x", value)
@@ -74,8 +108,7 @@ class MetaDslMacro(val c: MacroContext) {
     q"(row: ${c.prefix}.ResultRow) => ${expand(value)}"
   }
 
-  private def expandAction[T](method: String)(implicit t: WeakTypeTag[T]): Tree = {
-    val value = this.value("Encoder", t.tpe)
+  private def actionMeta[T](value: Value, method: String)(implicit t: WeakTypeTag[T]) = {
     val assignments =
       flatten(q"v", value)
         .zip(flatten(q"value", value))
@@ -83,7 +116,14 @@ class MetaDslMacro(val c: MacroContext) {
           case (vTree, valueTree) =>
             q"(v: $t) => $vTree -> $valueTree"
         }
-    q"${c.prefix}.quote((q: ${c.prefix}.EntityQuery[$t], value: $t) => q.${TermName(method)}(..$assignments))"
+    c.untypecheck {
+      q"""
+        new ${c.prefix}.${TypeName(method.capitalize + "Meta")}[$t] {
+          val expand =
+            ${c.prefix}.quote((q: ${c.prefix}.EntityQuery[$t], value: $t) => q.${TermName(method)}(..$assignments))
+        }
+      """
+    }
   }
 
   def flatten(base: Tree, value: Value): List[Tree] = {
@@ -105,7 +145,9 @@ class MetaDslMacro(val c: MacroContext) {
     }
   }
 
-  sealed trait Value
+  sealed trait Value {
+    val term: Option[TermName]
+  }
   case class Nested(term: Option[TermName], tpe: Type, params: List[List[Value]]) extends Value
   case class OptionalNested(term: Option[TermName], tpe: Type, params: List[List[Value]]) extends Value
   case class Scalar(term: Option[TermName], tpe: Type, decoder: Tree) extends Value
@@ -113,7 +155,7 @@ class MetaDslMacro(val c: MacroContext) {
   private def is[T](tpe: Type)(implicit t: TypeTag[T]) =
     tpe <:< t.tpe
 
-  private def value(encoding: String, tpe: Type): Value = {
+  private def value(encoding: String, tpe: Type, exclude: Tree*): Value = {
 
     def nest(tpe: Type, term: Option[TermName]): Nested =
       caseClassConstructor(tpe) match {
@@ -137,24 +179,60 @@ class MetaDslMacro(val c: MacroContext) {
       OptionalTypecheck(c)(q"implicitly[${c.prefix}.${TypeName(encoding)}[$tpe]]") match {
         case Some(encoding) => Scalar(term, tpe, encoding)
         case None =>
-          tpe match {
 
-            case tpe if (!is[MetaDsl#Embedded](tpe) && nested) =>
-              c.fail(
-                s"Can't expand nested value '$tpe', please make it an `Embedded` " +
-                  s"case class or provide an implicit $encoding for it."
-              )
+          def value(tpe: Type) =
+            tpe match {
+              case tpe if (!is[MetaDsl#Embedded](tpe) && nested) =>
+                c.fail(
+                  s"Can't expand nested value '$tpe', please make it an `Embedded` " +
+                    s"case class or provide an implicit $encoding for it."
+                )
 
-            case tpe if (is[Option[Any]](tpe)) =>
-              val nested = nest(tpe.typeArgs.head, term)
+              case tpe =>
+                nest(tpe, term)
+            }
+
+          is[Option[Any]](tpe) match {
+            case false =>
+              value(tpe)
+            case true =>
+              val nested = value(tpe.typeArgs.head)
               OptionalNested(nested.term, nested.tpe, nested.params)
-
-            case tpe =>
-              nest(tpe, term)
           }
       }
     }
-    apply(tpe, term = None, nested = false)
+
+    def filterExcludes(value: Value) = {
+      val paths =
+        exclude.map {
+          case f: Function =>
+            def path(tree: Tree): List[TermName] =
+              tree match {
+                case q"$a.$b"                => path(a) :+ b
+                case q"$a.map[$t]($b => $c)" => path(a) ++ path(c)
+                case other                   => Nil
+              }
+            path(f.body)
+        }
+
+      def filter(value: Value, path: List[TermName] = Nil): Option[Value] =
+        value match {
+          case value if (paths.contains(path ++ value.term)) =>
+            None
+          case Nested(term, tpe, params) =>
+            Some(Nested(term, tpe, params.map(_.map(filter(_, path ++ term)).flatten)))
+          case OptionalNested(term, tpe, params) =>
+            Some(OptionalNested(term, tpe, params.map(_.map(filter(_, path ++ term)).flatten)))
+          case value =>
+            Some(value)
+        }
+
+      filter(value).getOrElse {
+        c.fail("Can't exclude all entity properties")
+      }
+    }
+
+    filterExcludes(apply(tpe, term = None, nested = false))
   }
 
   private def isTuple(tpe: Type) =

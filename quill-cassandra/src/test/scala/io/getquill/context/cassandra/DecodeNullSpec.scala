@@ -9,7 +9,7 @@ class DecodeNullSpec extends Spec {
 
     "sync" in {
       import testSyncDB._
-      val writeEntities = quote(query[DecodeNullTestWriteEntity].schema(_.entity("DecodeNullTestEntity")))
+      val writeEntities = quote(querySchema[DecodeNullTestWriteEntity]("DecodeNullTestEntity"))
 
       testSyncDB.run(writeEntities.delete)
       testSyncDB.run(writeEntities.insert(lift(insertValue)))
@@ -21,7 +21,7 @@ class DecodeNullSpec extends Spec {
     "async" in {
       import testAsyncDB._
       import scala.concurrent.ExecutionContext.Implicits.global
-      val writeEntities = quote(query[DecodeNullTestWriteEntity].schema(_.entity("DecodeNullTestEntity")))
+      val writeEntities = quote(querySchema[DecodeNullTestWriteEntity]("DecodeNullTestEntity"))
 
       val result =
         for {
@@ -41,7 +41,7 @@ class DecodeNullSpec extends Spec {
     "stream" in {
       import testStreamDB._
       import monix.execution.Scheduler.Implicits.global
-      val writeEntities = quote(query[DecodeNullTestWriteEntity].schema(_.entity("DecodeNullTestEntity")))
+      val writeEntities = quote(querySchema[DecodeNullTestWriteEntity]("DecodeNullTestEntity"))
 
       val result =
         for {

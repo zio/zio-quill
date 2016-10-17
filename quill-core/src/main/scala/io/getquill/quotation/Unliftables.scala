@@ -77,31 +77,21 @@ trait Unliftables {
   }
 
   implicit val queryUnliftable: Unliftable[Query] = Unliftable[Query] {
-    case q"${ entityUnliftable(entity) }" => entity
-    case q"$pack.Filter.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => Filter(a, b, c)
-    case q"$pack.Map.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => Map(a, b, c)
-    case q"$pack.FlatMap.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => FlatMap(a, b, c)
+    case q"$pack.Entity.apply(${ a: String }, ${ b: List[PropertyAlias] })"          => Entity(a, b)
+    case q"$pack.Filter.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })"              => Filter(a, b, c)
+    case q"$pack.Map.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })"                 => Map(a, b, c)
+    case q"$pack.FlatMap.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })"             => FlatMap(a, b, c)
     case q"$pack.SortBy.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast }, ${ d: Ast })" => SortBy(a, b, c, d)
-    case q"$pack.GroupBy.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => GroupBy(a, b, c)
-    case q"$pack.Take.apply(${ a: Ast }, ${ b: Ast })" => Take(a, b)
-    case q"$pack.Drop.apply(${ a: Ast }, ${ b: Ast })" => Drop(a, b)
-    case q"$pack.Union.apply(${ a: Ast }, ${ b: Ast })" => Union(a, b)
-    case q"$pack.UnionAll.apply(${ a: Ast }, ${ b: Ast })" => UnionAll(a, b)
+    case q"$pack.GroupBy.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })"             => GroupBy(a, b, c)
+    case q"$pack.Take.apply(${ a: Ast }, ${ b: Ast })"                               => Take(a, b)
+    case q"$pack.Drop.apply(${ a: Ast }, ${ b: Ast })"                               => Drop(a, b)
+    case q"$pack.Union.apply(${ a: Ast }, ${ b: Ast })"                              => Union(a, b)
+    case q"$pack.UnionAll.apply(${ a: Ast }, ${ b: Ast })"                           => UnionAll(a, b)
     case q"$pack.Join.apply(${ t: JoinType }, ${ a: Ast }, ${ b: Ast }, ${ iA: Ident }, ${ iB: Ident }, ${ on: Ast })" =>
       Join(t, a, b, iA, iB, on)
 
     case q"$pack.Distinct.apply(${ a: Ast })" => Distinct(a)
     case q"$pack.Nested.apply(${ a: Ast })"   => Nested(a)
-  }
-
-  implicit val entityUnliftable: Unliftable[Entity] = Unliftable[Entity] {
-    case q"$pack.SimpleEntity.apply(${ a: String })" => SimpleEntity(a)
-    case q"$pack.ConfiguredEntity.apply(${ a: Ast }, ${ b: Option[String] }, ${ c: List[PropertyAlias] })" => ConfiguredEntity(a, b, c)
-  }
-
-  implicit val entityConfigUnliftable: Unliftable[EntityConfig] = Unliftable[EntityConfig] {
-    case q"$pack.EntityConfig.apply(${ a: Option[String] }, ${ b: List[PropertyAlias] })" =>
-      EntityConfig(a, b)
   }
 
   implicit val orderingUnliftable: Unliftable[Ordering] = Unliftable[Ordering] {

@@ -23,20 +23,22 @@ trait Quotation extends Liftables with Unliftables with Parsing with ReifyLiftin
     val (reifiedAst, liftings) = reifyLiftings(ast)
 
     val quotation =
-      q"""
-        new ${c.prefix}.Quoted[$t] { 
-  
-          @${c.weakTypeOf[QuotedAst]}($reifiedAst)
-          def quoted = ast
-  
-          override def ast = $reifiedAst
-          override def toString = ast.toString
-  
-          def $id() = ()
-          
-          $liftings
-        }
-      """
+      c.untypecheck {
+        q"""
+          new ${c.prefix}.Quoted[$t] { 
+    
+            @${c.weakTypeOf[QuotedAst]}($reifiedAst)
+            def quoted = ast
+    
+            override def ast = $reifiedAst
+            override def toString = ast.toString
+    
+            def $id() = ()
+            
+            $liftings
+          }
+        """
+      }
 
     IsDynamic(ast) match {
       case true  => q"$quotation: ${c.prefix}.Quoted[$t]"
