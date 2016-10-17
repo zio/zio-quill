@@ -36,6 +36,17 @@ trait Decoders { this: AsyncContext[_, _, _] =>
       }
     })
 
+  override protected def mappedDecoderImpl[I, O](implicit mapped: MappedEncoding[I, O], d: Decoder[I]): Decoder[O] =
+    d match {
+      case d @ AsyncDecoder(sqlType) =>
+        val dec = new Decoder[O] {
+          override def apply(index: Int, row: ResultRow): O = {
+            mapped.f(d(index, row))
+          }
+        }
+        AsyncDecoder(sqlType)(dec)
+    }
+
   trait NumericDecoder[T] extends Decoder[T] {
     def apply(index: Int, row: RowData) =
       row(index) match {
