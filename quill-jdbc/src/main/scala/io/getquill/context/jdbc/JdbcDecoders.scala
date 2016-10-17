@@ -22,6 +22,17 @@ trait JdbcDecoders { this: JdbcContext[_, _] =>
       }
     }
 
+  override protected def mappedDecoderImpl[I, O](implicit mapped: MappedEncoding[I, O], d: Decoder[I]): Decoder[O] =
+    d match {
+      case d @ JdbcDecoder(sqlType) =>
+        val dec = new Decoder[O] {
+          override def apply(index: Int, row: ResultRow): O = {
+            mapped.f(d(index, row))
+          }
+        }
+        JdbcDecoder(sqlType)(dec)
+    }
+
   implicit def optionDecoder[T](implicit d: Decoder[T]): Decoder[Option[T]] =
     new Decoder[Option[T]] {
       def apply(index: Int, row: ResultSet) = {
