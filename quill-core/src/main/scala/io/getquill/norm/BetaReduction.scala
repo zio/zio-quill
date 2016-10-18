@@ -36,6 +36,10 @@ case class BetaReduction(map: collection.Map[Ast, Ast])
         val t = BetaReduction(map - alias)
         Returning(apply(action), alias, t(prop))
 
+      case Conflict(action, alias, prop) =>
+        val t = BetaReduction(map - alias)
+        Conflict(apply(action), alias, t(prop))
+
       case other =>
         super.apply(other)
     }

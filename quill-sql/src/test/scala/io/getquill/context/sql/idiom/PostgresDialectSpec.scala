@@ -24,5 +24,16 @@ class PostgresDialectSpec extends Spec {
       }
       context.run(q).string mustEqual "SELECT t.s::integer FROM TestEntity t"
     }
+    "upsert" in {
+      val e = TestEntity("", 1, 1L, Some(1))
+      val q = quote {
+        qr1.upsert(lift(e)).conflict(_.i)
+      }
+      val i = quote {
+        qr1.insert(lift(TestEntity("", 1, 1L, Some(1))))
+      }
+      println(context.run(i).string)
+      println(context.run(q).string)
+    }
   }
 }

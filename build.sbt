@@ -252,6 +252,7 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
     "-Xfatal-warnings",
     "-deprecation",
     "-encoding", "UTF-8",
+    "-Xmax-classfile-name", "140",
     "-feature",
     "-unchecked",
     "-Yno-adapted-args",

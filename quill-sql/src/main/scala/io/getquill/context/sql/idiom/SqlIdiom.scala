@@ -288,6 +288,8 @@ trait SqlIdiom extends Idiom {
         val values = assignments.map(_.value)
         stmt"INSERT INTO ${table.token} (${columns.mkStmt(",")}) VALUES (${values.map(scopedTokenizer(_)).mkStmt(", ")})"
 
+      case Upsert(table: Entity, assignments) => actionTokenizer.token(Insert(table, assignments))
+
       case Update(table: Entity, assignments) =>
         stmt"UPDATE ${table.token} SET ${assignments.token}"
 
@@ -299,6 +301,9 @@ trait SqlIdiom extends Idiom {
 
       case Delete(table: Entity) =>
         stmt"DELETE FROM ${table.token}"
+
+      case Conflict(action, prop, value) =>
+        stmt"${action.token} ON CONFLICT(${value.token}) UPDATE ${prop.name.token}"
 
       case Returning(action, prop, value) =>
         action.token

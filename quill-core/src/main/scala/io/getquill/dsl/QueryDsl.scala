@@ -78,6 +78,9 @@ private[dsl] trait QueryDsl {
     def update(value: T): Update[T] = macro QueryDslMacro.expandUpdate[T]
     def update(f: (T => (Any, Any)), f2: (T => (Any, Any))*): Update[T]
 
+    def upsert(value: T): Upsert[T] = macro QueryDslMacro.expandUpsert[T]
+    def upsert(f: (T => (Any, Any)), f2: (T => (Any, Any))*): Upsert[T]
+
     def delete: Delete[T]
   }
 
@@ -89,8 +92,24 @@ private[dsl] trait QueryDsl {
   }
 
   sealed trait ActionReturning[E, Output] extends Action[E]
+  sealed trait ConflictAction[E, Output] extends Action[E]
+
   sealed trait Update[E] extends Action[E]
   sealed trait Delete[E] extends Action[E]
+
+  sealed trait Upsert[E] extends Action[E]{
+    @compileTimeOnly(NonQuotedException.message)
+    def update(value: E): Action[E] = NonQuotedException()
+
+    @compileTimeOnly(NonQuotedException.message)
+    def update(f: (E => (Any, Any)), f2: (E => (Any, Any))*): Action[E] = NonQuotedException()
+
+    @compileTimeOnly(NonQuotedException.message)
+    def conflict[R](f: E => R): ConflictAction[E, R] = NonQuotedException()
+
+    @compileTimeOnly(NonQuotedException.message)
+    def returning[R](f: E => R): ActionReturning[E, R] = NonQuotedException()
+  }
 
   sealed trait BatchAction[+A <: Action[_]]
 }

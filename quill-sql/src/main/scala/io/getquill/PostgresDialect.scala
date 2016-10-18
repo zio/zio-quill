@@ -1,13 +1,10 @@
 package io.getquill
 
-import io.getquill.idiom.StatementInterpolator._
 import java.util.concurrent.atomic.AtomicInteger
-import io.getquill.context.sql.idiom.SqlIdiom
-import io.getquill.ast.UnaryOperation
-import io.getquill.ast.Operation
-import io.getquill.ast.Property
-import io.getquill.ast.StringOperator
-import io.getquill.context.sql.idiom.QuestionMarkBindVariables
+
+import io.getquill.ast._
+import io.getquill.context.sql.idiom.{QuestionMarkBindVariables, SqlIdiom}
+import io.getquill.idiom.StatementInterpolator._
 
 trait PostgresDialect
   extends SqlIdiom
@@ -24,6 +21,15 @@ trait PostgresDialect
 
   override def prepareForProbing(string: String) =
     s"PREPARE p${preparedStatementId.incrementAndGet.toString.token} AS $string"
+
+  /*
+  override implicit def actionTokenizer(implicit strategy: NamingStrategy): Tokenizer[Action] = {
+    Tokenizer[Action] {
+      case Upsert(table: Entity, assignments) => super.actionTokenizer.token(Upsert(table, assignments))
+      case action => super.actionTokenizer.token(action)
+    }
+  }
+  */
 }
 
 object PostgresDialect extends PostgresDialect

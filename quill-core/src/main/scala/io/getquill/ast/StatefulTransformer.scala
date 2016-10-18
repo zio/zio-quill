@@ -172,6 +172,14 @@ trait StatefulTransformer[T] {
         val (at, att) = apply(a)
         val (bt, btt) = att.apply(b)(_.apply)
         (Update(at, bt), btt)
+      case Upsert(a, b) =>
+        val (at, att) = apply(a)
+        val (bt, btt) = att.apply(b)(_.apply)
+        (Upsert(at, bt), btt)
+      case Conflict(a, b, c) =>
+        val (at, att) = apply(a)
+        val (ct, ctt) = att.apply(c)
+        (Conflict(at, b, ct), ctt)
       case Delete(a) =>
         val (at, att) = apply(a)
         (Delete(at), att)
