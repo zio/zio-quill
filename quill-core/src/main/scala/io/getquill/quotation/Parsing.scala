@@ -408,14 +408,25 @@ trait Parsing {
   }
 
   val actionParser: Parser[Ast] = Parser[Ast] {
+
     case q"$query.$method(..$assignments)" if (method.decodedName.toString == "update") =>
       Update(astParser(query), assignments.map(assignmentParser(_)))
+
     case q"$query.insert(..$assignments)" =>
       Insert(astParser(query), assignments.map(assignmentParser(_)))
+
+    case q"$query.$method(..$assignments)" if (method.decodedName.toString == "upsert") =>
+      Upsert(astParser(query), assignments.map(assignmentParser(_)))
+
     case q"$query.delete" =>
       Delete(astParser(query))
+
+    case q"$action.conflict[$r](($alias) => $body)" =>
+      Conflict(astParser(action), identParser(alias), astParser(body))
+
     case q"$action.returning[$r](($alias) => $body)" =>
       Returning(astParser(action), identParser(alias), astParser(body))
+    
     case q"$query.foreach[$t1, $t2](($alias) => $body)($f)" if (is[CoreDsl#Query[Any]](query)) =>
       Foreach(astParser(query), identParser(alias), astParser(body))
   }
