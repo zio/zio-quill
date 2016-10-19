@@ -288,7 +288,7 @@ trait SqlIdiom extends Idiom {
         val values = assignments.map(_.value)
         stmt"INSERT INTO ${table.token} (${columns.mkStmt(",")}) VALUES (${values.map(scopedTokenizer(_)).mkStmt(", ")})"
 
-      case Upsert(table: Entity, assignments) => actionTokenizer.token(Insert(table, assignments))
+      //case Upsert(table: Entity, assignments) => fail(s"Your dialect does not support upserts. :-(")
 
       case Update(table: Entity, assignments) =>
         stmt"UPDATE ${table.token} SET ${assignments.token}"
@@ -302,14 +302,25 @@ trait SqlIdiom extends Idiom {
       case Delete(table: Entity) =>
         stmt"DELETE FROM ${table.token}"
 
-      case Conflict(action, prop, value) =>
-        stmt"${action.token} ON CONFLICT(${value.token}) UPDATE ${prop.name.token}"
+      //case Conflict(action, prop, value) => fail(s"Your dialect does not support upserts. :-(")
 
       case Returning(action, prop, value) =>
         action.token
 
+      //case ConflictUpdate(action, assignments) => fail(s"Your dialect does not support upserts. :-(")
+      /*
+      When implemented here, the query is correct, why?
+      INSERT INTO TestEntity (s,l,o) VALUES (?, ?, ?) ON CONFLICT(i) DO UPDATE SET i = ?, l = ?, s = ?
+      */
+      case Upsert(table: Entity, assignments) =>
+        val columns = assignments.map(_.property.token)
+        val values = assignments.map(_.value)
+        stmt"INSERT INTO ${table.token} (${columns.mkStmt(",")}) VALUES (${values.map(scopedTokenizer(_)).mkStmt(", ")})"
+      case Conflict(action, prop, value) => stmt"${action.token} ON CONFLICT(${value.token})"
+      case ConflictUpdate(action, assignments) => stmt"${action.token} DO UPDATE SET ${assignments.mkStmt()}"
+
       case other =>
-        fail(s"Action ast can't be translated to sql: '$other'")
+        fail(s"Action ast can't be translated to sql: '$other' ${other.getClass}")
     }
   }
 

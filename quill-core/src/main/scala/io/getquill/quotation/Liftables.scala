@@ -122,6 +122,7 @@ trait Liftables {
     case Insert(a, b)       => q"$pack.Insert($a, $b)"
     case Upsert(a, b)       => q"$pack.Upsert($a, $b)"
     case Conflict(a, b, c)    => q"$pack.Conflict($a, $b, $c)"
+    case ConflictUpdate(a, b) => q"$pack.ConflictUpdate($a, $b)"
     case Delete(a)          => q"$pack.Delete($a)"
     case Returning(a, b, c) => q"$pack.Returning($a, $b, $c)"
     case Foreach(a, b, c)   => q"$pack.Foreach($a, $b, $c)"

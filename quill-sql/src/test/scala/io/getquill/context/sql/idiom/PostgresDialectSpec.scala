@@ -27,12 +27,9 @@ class PostgresDialectSpec extends Spec {
     "upsert" in {
       val e = TestEntity("", 1, 1L, Some(1))
       val q = quote {
-        qr1.upsert(lift(e)).conflict(_.i)
+        query[TestEntity].upsert(lift(e)).conflict(_.i).conflictUpdate(_.i -> lift(2), _.l -> lift(1L), _.s -> lift("Test String"))
       }
-      val i = quote {
-        qr1.insert(lift(TestEntity("", 1, 1L, Some(1))))
-      }
-      println(context.run(i).string)
+
       println(context.run(q).string)
     }
   }

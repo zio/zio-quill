@@ -92,23 +92,21 @@ private[dsl] trait QueryDsl {
   }
 
   sealed trait ActionReturning[E, Output] extends Action[E]
-  sealed trait ConflictAction[E, Output] extends Action[E]
+
+  sealed trait ActionConflict[E, Output] extends Action[E] {
+    @compileTimeOnly(NonQuotedException.message)
+    def conflictUpdate(value: E): Action[E] = NonQuotedException()
+
+    @compileTimeOnly(NonQuotedException.message)
+    def conflictUpdate(f: (E => (Any, Any)), f2: (E => (Any, Any))*): Action[E] = NonQuotedException()
+  }
 
   sealed trait Update[E] extends Action[E]
   sealed trait Delete[E] extends Action[E]
 
   sealed trait Upsert[E] extends Action[E]{
     @compileTimeOnly(NonQuotedException.message)
-    def update(value: E): Action[E] = NonQuotedException()
-
-    @compileTimeOnly(NonQuotedException.message)
-    def update(f: (E => (Any, Any)), f2: (E => (Any, Any))*): Action[E] = NonQuotedException()
-
-    @compileTimeOnly(NonQuotedException.message)
-    def conflict[R](f: E => R): ConflictAction[E, R] = NonQuotedException()
-
-    @compileTimeOnly(NonQuotedException.message)
-    def returning[R](f: E => R): ActionReturning[E, R] = NonQuotedException()
+    def conflict[R](f: E => R): ActionConflict[E, R] = NonQuotedException()
   }
 
   sealed trait BatchAction[+A <: Action[_]]

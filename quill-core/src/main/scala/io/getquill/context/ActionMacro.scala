@@ -36,6 +36,7 @@ class ActionMacro(val c: MacroContext)
         )
       """
     }
+
   def runActionReturning[T](quoted: Tree)(implicit t: WeakTypeTag[T]): Tree =
     c.untypecheck {
       q"""

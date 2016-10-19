@@ -180,6 +180,10 @@ trait StatefulTransformer[T] {
         val (at, att) = apply(a)
         val (ct, ctt) = att.apply(c)
         (Conflict(at, b, ct), ctt)
+      case ConflictUpdate(a, b) =>
+        val (at, att) = apply(a)
+        val (bt, btt) = att.apply(b)(_.apply)
+        (ConflictUpdate(at, bt), btt)
       case Delete(a) =>
         val (at, att) = apply(a)
         (Delete(at), att)

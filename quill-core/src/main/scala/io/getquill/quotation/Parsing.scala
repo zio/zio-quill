@@ -418,6 +418,9 @@ trait Parsing {
     case q"$query.$method(..$assignments)" if (method.decodedName.toString == "upsert") =>
       Upsert(astParser(query), assignments.map(assignmentParser(_)))
 
+    case q"$action.$method(..$assignments)" if (method.decodedName.toString == "conflictUpdate") =>
+      ConflictUpdate(astParser(action), assignments.map(assignmentParser(_)))
+
     case q"$query.delete" =>
       Delete(astParser(query))
 
