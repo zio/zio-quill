@@ -1,5 +1,12 @@
-# To be released
+# 1.0.0-RC1 - 20-Oct-2016
 
+- [introduce `finagle-postgres`](https://github.com/getquill/quill/pull/560)
+- [introduce meta dsl](https://github.com/getquill/quill/pull/554)
+- [expand meta dsl](https://github.com/getquill/quill/pull/590)
+- [encoder for java 8 LocalDate & LocalDateTime](https://github.com/getquill/quill/pull/583)
+- [Upgraded to Monix 2.x](https://github.com/getquill/quill/pull/578)
+- [Make withClient function not private](https://github.com/getquill/quill/pull/575)
+- [pass ssl settings to async driver](https://github.com/getquill/quill/pull/587)
 
 ### Migration notes
 
