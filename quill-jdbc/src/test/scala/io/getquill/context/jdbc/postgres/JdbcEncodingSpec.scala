@@ -28,8 +28,8 @@ class JdbcEncodingSpec extends EncodingSpec {
 
   "returning custom type" in {
     implicit val uuidDecoder: Decoder[UUID] =
-      decoder[UUID] { row => index => UUID.fromString(row.getObject(index).toString)
-      }
+      decoder[UUID]({ row => index => UUID.fromString(row.getObject(index).toString)
+      }, java.sql.Types.OTHER)
     implicit val uuidEncoder: Encoder[UUID] =
       encoder[UUID](row => (idx, uuid) =>
         row.setObject(idx, uuid, Types.OTHER), Types.OTHER)
