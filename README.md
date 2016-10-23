@@ -1535,4 +1535,4 @@ The project was created having Philip Wadler's talk ["A practical theory of lang
 
 * [A Practical Theory of Language-Integrated Query](http://homepages.inf.ed.ac.uk/slindley/papers/practical-theory-of-linq.pdf)
 * [Everything old is new again: Quoted Domain Specific Languages](http://homepages.inf.ed.ac.uk/wadler/papers/qdsl/qdsl.pdf)
-* [The Flatter, the Better](http://ctx.inf.uni-tuebingen.de/staticfiles/publications/the-flatter-the-better.pdf)
+* [The Flatter, the Better](http://db.inf.uni-tuebingen.de/staticfiles/publications/the-flatter-the-better.pdf)
