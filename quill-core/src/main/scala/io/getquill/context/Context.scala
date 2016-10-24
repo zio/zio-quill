@@ -7,7 +7,7 @@ import java.io.Closeable
 import scala.util.Try
 import io.getquill.NamingStrategy
 
-trait Context[Idiom <: io.getquill.idiom.Idiom, Naming <: NamingStrategy]
+trait Context[+Idiom <: io.getquill.idiom.Idiom, +Naming <: NamingStrategy]
   extends Closeable
   with CoreDsl {
 
