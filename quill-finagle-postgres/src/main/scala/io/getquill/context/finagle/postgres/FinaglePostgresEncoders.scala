@@ -11,14 +11,14 @@ import org.jboss.netty.buffer.ChannelBuffers
 trait FinaglePostgresEncoders {
   this: FinaglePostgresContext[_] =>
 
-  protected case class ValueEncoderEncoder[T](encoder: ValueEncoder[T]) extends Encoder[T] {
+  case class ValueEncoderEncoder[T](encoder: ValueEncoder[T]) extends Encoder[T] {
     def apply(idx: Int, value: T, row: PrepareRow) = {
       row :+ Param(value)(encoder)
     }
   }
 
-  protected def encoder[T](implicit e: ValueEncoder[T]): Encoder[T] = new ValueEncoderEncoder(e)
-  protected def encoder[T, U](f: U => T)(implicit e: ValueEncoder[T]): Encoder[U] = new ValueEncoderEncoder[U](e.contraMap(f))
+  def encoder[T](implicit e: ValueEncoder[T]): Encoder[T] = new ValueEncoderEncoder(e)
+  def encoder[T, U](f: U => T)(implicit e: ValueEncoder[T]): Encoder[U] = new ValueEncoderEncoder[U](e.contraMap(f))
 
   override protected def mappedEncoderImpl[I, O](implicit mapped: MappedEncoding[I, O], e: Encoder[O]): Encoder[I] =
     e match {
