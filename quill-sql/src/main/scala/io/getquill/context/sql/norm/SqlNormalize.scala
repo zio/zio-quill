@@ -10,8 +10,8 @@ object SqlNormalize {
   private val normalize =
     (identity[Ast] _)
       .andThen(FlattenOptionOperation.apply _)
-      .andThen(RenameProperties.apply _)
       .andThen(Normalize.apply _)
+      .andThen(RenameProperties.apply _)
       .andThen(ExpandJoin.apply _)
       .andThen(Normalize.apply _)
       .andThen(MergeSecondaryJoin.apply _)

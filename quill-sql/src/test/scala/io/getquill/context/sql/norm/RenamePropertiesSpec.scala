@@ -62,13 +62,24 @@ class RenamePropertiesSpec extends Spec {
         testContext.run(q).string mustEqual
           "SELECT u.s, u.i, u.l, u.o FROM test_entity t, TestEntity2 u WHERE u.s = t.field_s"
       }
-      "transitive" in pendingUntilFixed {
+      "transitive" in {
         val q = quote {
           e.flatMap(t => qr2.map(u => t)).map(t => t.s)
         }
         testContext.run(q.dynamic).string mustEqual
           "SELECT t.field_s FROM test_entity t, TestEntity2 u"
-        ()
+      }
+      "with filter" in {
+        val q = quote {
+          for {
+            a <- e
+            b <- qr2 if (a.s == b.s)
+          } yield {
+            (a, b)
+          }
+        }
+        testContext.run(q).string mustEqual
+          "SELECT a.field_s, a.field_i, a.l, a.o, b.s, b.i, b.l, b.o FROM test_entity a, TestEntity2 b WHERE a.field_s = b.s"
       }
     }
     "map" - {
