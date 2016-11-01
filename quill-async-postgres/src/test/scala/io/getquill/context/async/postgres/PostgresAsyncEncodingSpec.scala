@@ -23,7 +23,7 @@ class PostgresAsyncEncodingSpec extends EncodingSpec {
         result <- testContext.run(query[EncodingTestEntity])
       } yield result
 
-    verify(Await.result(r, Duration.Inf).toList)
+    verify(Await.result(r, Duration.Inf))
   }
 
   "encodes and decodes uuids" in {
@@ -89,7 +89,7 @@ class PostgresAsyncEncodingSpec extends EncodingSpec {
 
   "encodes localdate type" in {
     case class DateEncodingTestEntity(v1: LocalDate, v2: LocalDate)
-    val entity = new DateEncodingTestEntity(LocalDate.now, LocalDate.now)
+    val entity = DateEncodingTestEntity(LocalDate.now, LocalDate.now)
     val r = for {
       _ <- testContext.run(query[DateEncodingTestEntity].delete)
       _ <- testContext.run(query[DateEncodingTestEntity].insert(lift(entity)))
@@ -100,7 +100,7 @@ class PostgresAsyncEncodingSpec extends EncodingSpec {
 
   "encodes localdatetime type" in {
     case class DateEncodingTestEntity(v1: LocalDateTime, v2: LocalDateTime)
-    val entity = new DateEncodingTestEntity(LocalDateTime.now, LocalDateTime.now)
+    val entity = DateEncodingTestEntity(LocalDateTime.now, LocalDateTime.now)
     val r = for {
       _ <- testContext.run(query[DateEncodingTestEntity].delete)
       _ <- testContext.run(query[DateEncodingTestEntity].insert(lift(entity)))
