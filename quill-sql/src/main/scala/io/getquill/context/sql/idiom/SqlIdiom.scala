@@ -24,6 +24,7 @@ import io.getquill.idiom.Statement
 import io.getquill.context.sql.norm.SqlNormalize
 import io.getquill.util.Interleave
 import io.getquill.ast.Lift
+import io.getquill.context.sql.FlatJoinContext
 
 trait SqlIdiom extends Idiom {
 
@@ -97,8 +98,16 @@ trait SqlIdiom extends Idiom {
 
       val withFrom =
         from match {
-          case Nil  => selectClause
-          case from => stmt"$selectClause FROM ${from.token}"
+          case Nil => selectClause
+          case head :: tail =>
+            val t = tail.foldLeft(stmt"${head.token}") {
+              case (a, b: FlatJoinContext) =>
+                stmt"$a ${(b: FromContext).token}"
+              case (a, b) =>
+                stmt"$a, ${b.token}"
+            }
+
+            stmt"$selectClause FROM $t"
         }
 
       val withWhere =
@@ -171,6 +180,7 @@ trait SqlIdiom extends Idiom {
     case QueryContext(query, alias) => stmt"(${query.token}) ${strategy.default(alias).token}"
     case InfixContext(infix, alias) => stmt"(${(infix: Ast).token}) ${strategy.default(alias).token}"
     case JoinContext(t, a, b, on)   => stmt"${a.token} ${t.token} ${b.token} ON ${on.token}"
+    case FlatJoinContext(t, a, on)  => stmt"${t.token} ${a.token} ON ${on.token}"
   }
 
   implicit val joinTypeTokenizer: Tokenizer[JoinType] = Tokenizer[JoinType] {

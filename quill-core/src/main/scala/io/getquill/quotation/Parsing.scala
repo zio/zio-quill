@@ -207,9 +207,8 @@ trait Parsing {
     case q"${ joinCallParser(typ, a, Some(b)) }.on(($aliasA, $aliasB) => $body)" =>
       Join(typ, a, b, identParser(aliasA), identParser(aliasB), astParser(body))
 
-    case q"${ joinCallParser(typ, a, None) }($aliasA => $body)" =>
-      val alias = identParser(aliasA)
-      Join(typ, a, a, alias, alias, astParser(body))
+    case q"${ joinCallParser(typ, a, None) }($alias => $body)" =>
+      FlatJoin(typ, a, identParser(alias), astParser(body))
 
     case q"${ joinCallParser(typ, a, b) }" =>
       c.fail("a join clause must be followed by 'on'.")

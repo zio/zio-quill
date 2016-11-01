@@ -31,13 +31,24 @@ class SqlQuerySpec extends Spec {
         "SELECT a.s, a.i, a.l, a.o, b.s, b.i, b.l, b.o FROM TestEntity a LEFT JOIN TestEntity2 b ON (a.s IS NOT NULL) AND (b.i > a.i)"
     }
 
+    "flat outer join" in {
+      val q = quote {
+        for {
+          e1 <- qr1
+          e2 <- qr2.leftJoin(e2 => e2.i == e1.i)
+        } yield (e1.i, e2.map(e => e.i))
+      }
+      testContext.run(q.dynamic).string mustEqual
+        "SELECT e1.i, e2.i FROM TestEntity e1 LEFT JOIN TestEntity2 e2 ON e2.i = e1.i"
+    }
+
     "value query" - {
       "operation" in {
         val q = quote {
-          qr1.map(_.i).contains(1)
+          qr1.map(t => t.i).contains(1)
         }
         testContext.run(q).string mustEqual
-          "SELECT x1.* FROM (SELECT 1 IN (SELECT x1.i FROM TestEntity x1)) x1"
+          "SELECT t.* FROM (SELECT 1 IN (SELECT t.i FROM TestEntity t)) t"
       }
       "simple value" in {
         val q = quote(1)

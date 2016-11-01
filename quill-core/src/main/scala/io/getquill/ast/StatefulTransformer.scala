@@ -102,6 +102,10 @@ trait StatefulTransformer[T] {
         val (bt, btt) = att.apply(b)
         val (ont, ontt) = btt.apply(on)
         (Join(t, at, bt, iA, iB, ont), ontt)
+      case FlatJoin(t, a, iA, on) =>
+        val (at, att) = apply(a)
+        val (ont, ontt) = att.apply(on)
+        (FlatJoin(t, at, iA, ont), ontt)
       case Distinct(a) =>
         val (at, att) = apply(a)
         (Distinct(at), att)

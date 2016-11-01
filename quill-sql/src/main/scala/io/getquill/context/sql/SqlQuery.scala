@@ -12,6 +12,7 @@ case class TableContext(entity: Entity, alias: String) extends FromContext
 case class QueryContext(query: SqlQuery, alias: String) extends FromContext
 case class InfixContext(infix: Infix, alias: String) extends FromContext
 case class JoinContext(t: JoinType, a: FromContext, b: FromContext, on: Ast) extends FromContext
+case class FlatJoinContext(t: JoinType, a: FromContext, on: Ast) extends FromContext
 
 sealed trait SqlQuery
 
@@ -190,6 +191,7 @@ object SqlQuery {
       case entity: Entity            => TableContext(entity, alias)
       case infix: Infix              => InfixContext(infix, alias)
       case Join(t, a, b, ia, ib, on) => JoinContext(t, source(a, ia.name), source(b, ib.name), on)
+      case FlatJoin(t, a, ia, on)    => FlatJoinContext(t, source(a, ia.name), on)
       case other                     => QueryContext(apply(other), alias)
     }
 
