@@ -3,6 +3,7 @@ package io.getquill.context
 import io.getquill.ast._
 import scala.reflect.macros.whitebox.{ Context => MacroContext }
 import io.getquill.util.OptionalTypecheck
+import io.getquill.util.EnableReflectiveCalls
 
 class QueryMacro(val c: MacroContext) extends ContextMacro {
   import c.universe.{ Ident => _, _ }
@@ -23,6 +24,7 @@ class QueryMacro(val c: MacroContext) extends ContextMacro {
     val ast = Map(extractAst(quoted), Ident("x"), Ident("x"))
     c.untypecheck {
       q"""
+        ..${EnableReflectiveCalls(c)}
         val expanded = ${expand(ast)}
         ${c.prefix}.${TermName(method)}(
           expanded.string,
@@ -39,6 +41,7 @@ class QueryMacro(val c: MacroContext) extends ContextMacro {
     val ast = extractAst(c.typecheck(q"${c.prefix}.quote($meta.expand($quoted))"))
     c.untypecheck {
       q"""
+        ..${EnableReflectiveCalls(c)}
         val expanded = ${expand(ast)}
         ${c.prefix}.${TermName(method)}(
           expanded.string,

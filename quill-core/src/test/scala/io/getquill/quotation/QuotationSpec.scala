@@ -1078,4 +1078,12 @@ class QuotationSpec extends Spec {
 
     quote(unquote(q)).ast mustEqual q2.ast
   }
+
+  // nested quotation with lifting compiles as a type member
+  def quote1(i: Int) = quote {
+    qr1.filter(_.i == lift(i))
+  }
+  def quote2 = quote {
+    quote1(1)
+  }
 }
