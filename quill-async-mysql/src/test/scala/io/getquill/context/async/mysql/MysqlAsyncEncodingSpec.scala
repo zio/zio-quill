@@ -5,7 +5,7 @@ import java.time.{ LocalDate, LocalDateTime }
 import io.getquill.context.sql.EncodingSpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Await
+import scala.concurrent.{ Await, ExecutionContext }
 import scala.concurrent.duration.Duration
 import java.util.Date
 
@@ -139,6 +139,21 @@ class MysqlAsyncEncodingSpec extends EncodingSpec {
         r
       }
     verify(Await.result(fut, Duration.Inf))
+  }
+
+  "encodes custom type inside singleton object" in {
+    object Singleton {
+      def apply()(implicit c: TestContext, ec: ExecutionContext) = {
+        import c._
+        for {
+          _ <- c.run(query[EncodingTestEntity].delete)
+          result <- c.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insert(e)))
+        } yield result
+      }
+    }
+
+    implicit val c = testContext
+    Await.result(Singleton(), Duration.Inf)
   }
 
   private def prepareEncodingTestEntity() = {
