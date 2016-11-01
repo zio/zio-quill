@@ -12,8 +12,8 @@ object CqlNormalize {
 
   private[this] val normalize =
     (identity[Ast] _)
-      .andThen(RenameProperties.apply _)
-      .andThen(Normalize.apply _)
-      .andThen(ExpandMappedInfix.apply _)
       .andThen(FlattenOptionOperation.apply _)
+      .andThen(Normalize.apply _)
+      .andThen(RenameProperties.apply _)
+      .andThen(ExpandMappedInfix.apply _)
 }
