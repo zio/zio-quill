@@ -47,23 +47,23 @@ trait Encoders { this: AsyncContext[_, _, _] =>
 
   private[this] val nullEncoder: Encoder[Null] = encoder[Null](SqlTypes.NULL)
 
-  implicit val stringEncoder = encoder[String](SqlTypes.VARCHAR)
-  implicit val bigDecimalEncoder = encoder[BigDecimal](SqlTypes.REAL)
-  implicit val booleanEncoder = encoder[Boolean](SqlTypes.BOOLEAN)
-  implicit val byteEncoder = encoder[Byte](SqlTypes.TINYINT)
-  implicit val shortEncoder = encoder[Short](SqlTypes.SMALLINT)
-  implicit val intEncoder = encoder[Int](SqlTypes.INTEGER)
-  implicit val longEncoder = encoder[Long](SqlTypes.BIGINT)
-  implicit val floatEncoder = encoder[Float](SqlTypes.FLOAT)
-  implicit val doubleEncoder = encoder[Double](SqlTypes.DOUBLE)
-  implicit val byteArrayEncoder =
+  implicit val stringEncoder: Encoder[String] = encoder[String](SqlTypes.VARCHAR)
+  implicit val bigDecimalEncoder: Encoder[BigDecimal] = encoder[BigDecimal](SqlTypes.REAL)
+  implicit val booleanEncoder: Encoder[Boolean] = encoder[Boolean](SqlTypes.BOOLEAN)
+  implicit val byteEncoder: Encoder[Byte] = encoder[Byte](SqlTypes.TINYINT)
+  implicit val shortEncoder: Encoder[Short] = encoder[Short](SqlTypes.SMALLINT)
+  implicit val intEncoder: Encoder[Int] = encoder[Int](SqlTypes.INTEGER)
+  implicit val longEncoder: Encoder[Long] = encoder[Long](SqlTypes.BIGINT)
+  implicit val floatEncoder: Encoder[Float] = encoder[Float](SqlTypes.FLOAT)
+  implicit val doubleEncoder: Encoder[Double] = encoder[Double](SqlTypes.DOUBLE)
+  implicit val byteArrayEncoder: Encoder[Array[Byte]] =
     encoder[Array[Byte]](SqlTypes.VARBINARY)
-  implicit val dateEncoder =
+  implicit val dateEncoder: Encoder[Date] =
     encoder[Date]({ (value: Date) =>
       new JodaLocalDateTime(value)
     }, SqlTypes.TIMESTAMP)
-  implicit val uuidEncoder = encoder[UUID](SqlTypes.UUID)
-  implicit val localDateEncoder: AsyncEncoder[LocalDate] =
+  implicit val uuidEncoder: Encoder[UUID] = encoder[UUID](SqlTypes.UUID)
+  implicit val localDateEncoder: Encoder[LocalDate] =
     encoder[LocalDate]({ (value: LocalDate) =>
       new JodaLocalDate(
         value.getYear,
@@ -71,7 +71,7 @@ trait Encoders { this: AsyncContext[_, _, _] =>
         value.getDayOfMonth
       )
     }, SqlTypes.DATE)
-  implicit val localDateTimeEncoder =
+  implicit val localDateTimeEncoder: Encoder[LocalDateTime] =
     encoder[LocalDateTime]({ (value: LocalDateTime) =>
       new JodaLocalDateTime(
         value.atZone(ZoneId.systemDefault()).toInstant.toEpochMilli
