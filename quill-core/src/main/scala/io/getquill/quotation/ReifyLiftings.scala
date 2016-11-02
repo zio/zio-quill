@@ -57,10 +57,7 @@ trait ReifyLiftings {
             Transform(refAst) {
               case lift: Lift =>
                 val nested =
-                  q"""
-                    import scala.language.reflectiveCalls
-                    $ref.$liftings.${encode(lift.name)}
-                  """
+                  q"$ref.$liftings.${encode(lift.name)}"
                 lift match {
                   case ScalarValueLift(name, value, encoder) =>
                     ScalarValueLift(s"$ref.$name", q"$nested.value", q"$nested.encoder")
