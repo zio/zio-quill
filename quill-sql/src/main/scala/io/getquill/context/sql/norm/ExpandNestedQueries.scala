@@ -14,6 +14,7 @@ import io.getquill.context.sql.SetOperationSqlQuery
 import io.getquill.context.sql.SqlQuery
 import io.getquill.context.sql.TableContext
 import io.getquill.context.sql.UnaryOperationSqlQuery
+import io.getquill.context.sql.FlatJoinContext
 
 object ExpandNestedQueries {
 
@@ -41,6 +42,8 @@ object ExpandNestedQueries {
         QueryContext(apply(q, references(alias, asts)), alias)
       case JoinContext(t, a, b, on) =>
         JoinContext(t, expandContext(a, asts :+ on), expandContext(b, asts :+ on), on)
+      case FlatJoinContext(t, a, on) =>
+        FlatJoinContext(t, expandContext(a, asts :+ on), on)
       case _: TableContext | _: InfixContext => s
     }
 

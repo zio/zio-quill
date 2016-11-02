@@ -12,6 +12,7 @@ import io.getquill.context.sql.SetOperationSqlQuery
 import io.getquill.context.sql.SqlQuery
 import io.getquill.context.sql.TableContext
 import io.getquill.context.sql.UnaryOperationSqlQuery
+import io.getquill.context.sql.FlatJoinContext
 
 case class Error(free: List[Ident], ast: Ast)
 case class InvalidSqlQuery(errors: List[Error]) {
@@ -62,9 +63,10 @@ object VerifySqlQuery {
 
   private def aliases(s: FromContext): List[String] =
     s match {
-      case s: TableContext => List(s.alias)
-      case s: QueryContext => List(s.alias)
-      case s: InfixContext => List(s.alias)
-      case s: JoinContext  => aliases(s.a) ++ aliases(s.b)
+      case s: TableContext    => List(s.alias)
+      case s: QueryContext    => List(s.alias)
+      case s: InfixContext    => List(s.alias)
+      case s: JoinContext     => aliases(s.a) ++ aliases(s.b)
+      case s: FlatJoinContext => aliases(s.a)
     }
 }
