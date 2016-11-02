@@ -116,6 +116,19 @@ class AvoidAliasConflictSpec extends Spec {
         }
         AvoidAliasConflict(q.ast) mustEqual n.ast
       }
+      "multiple" in {
+        val q = quote {
+          qr1.leftJoin(qr2).on((a, b) => a.i == b.i)
+            .leftJoin(qr1).on((a, b) => a._2.forall(v => v.i == b.i))
+            .map(t => 1)
+        }
+        val n = quote {
+          qr1.leftJoin(qr2).on((a, b) => a.i == b.i)
+            .leftJoin(qr1).on((a1, b1) => a1._2.forall(v => v.i == b1.i))
+            .map(t => 1)
+        }
+        AvoidAliasConflict(q.ast) mustEqual n.ast
+      }
     }
   }
 
