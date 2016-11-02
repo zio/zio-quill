@@ -5,6 +5,7 @@ import io.getquill.ast._
 import io.getquill.quotation.ReifyLiftings
 import io.getquill.util.Messages._
 import io.getquill.norm.BetaReduction
+import io.getquill.util.EnableReflectiveCalls
 
 class ActionMacro(val c: MacroContext)
   extends ContextMacro
@@ -14,6 +15,7 @@ class ActionMacro(val c: MacroContext)
   def runAction(quoted: Tree): Tree =
     c.untypecheck {
       q"""
+        ..${EnableReflectiveCalls(c)}
         val expanded = ${expand(extractAst(quoted))}
         ${c.prefix}.executeAction(
           expanded.string,
@@ -25,6 +27,7 @@ class ActionMacro(val c: MacroContext)
   def runActionReturning[T](quoted: Tree)(implicit t: WeakTypeTag[T]): Tree =
     c.untypecheck {
       q"""
+        ..${EnableReflectiveCalls(c)}
         val expanded = ${expand(extractAst(quoted))}
         ${c.prefix}.executeActionReturning(
           expanded.string,
@@ -39,6 +42,7 @@ class ActionMacro(val c: MacroContext)
     expandBatchAction(quoted) {
       case (batch, param, expanded) =>
         q"""
+          ..${EnableReflectiveCalls(c)}
           ${c.prefix}.executeBatchAction(
             $batch.map { $param => 
               val expanded = $expanded
@@ -55,6 +59,7 @@ class ActionMacro(val c: MacroContext)
     expandBatchAction(quoted) {
       case (batch, param, expanded) =>
         q"""
+          ..${EnableReflectiveCalls(c)}
           ${c.prefix}.executeBatchActionReturning(
             $batch.map { $param => 
               val expanded = $expanded

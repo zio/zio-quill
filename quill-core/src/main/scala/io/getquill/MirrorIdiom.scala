@@ -99,6 +99,9 @@ class MirrorIdiom extends Idiom {
     case Join(t, a, b, iA, iB, on) =>
       stmt"${a.token}.${t.token}(${b.token}).on((${iA.token}, ${iB.token}) => ${on.token})"
 
+    case FlatJoin(t, a, iA, on) =>
+      stmt"${a.token}.${t.token}((${iA.token}) => ${on.token})"
+
     case Distinct(a) =>
       stmt"${a.token}.distinct"
 

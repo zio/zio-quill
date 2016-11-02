@@ -14,7 +14,6 @@ object SqlNormalize {
       .andThen(RenameProperties.apply _)
       .andThen(ExpandJoin.apply _)
       .andThen(Normalize.apply _)
-      .andThen(MergeSecondaryJoin.apply _)
 
   def apply(ast: Ast) = normalize(ast)
 }

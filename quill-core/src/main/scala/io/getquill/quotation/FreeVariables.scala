@@ -41,11 +41,12 @@ case class FreeVariables(state: State)
 
   override def apply(query: Query): (Query, StatefulTransformer[State]) =
     query match {
-      case q @ Filter(a, b, c)    => (q, free(a, b, c))
-      case q @ Map(a, b, c)       => (q, free(a, b, c))
-      case q @ FlatMap(a, b, c)   => (q, free(a, b, c))
-      case q @ SortBy(a, b, c, d) => (q, free(a, b, c))
-      case q @ GroupBy(a, b, c)   => (q, free(a, b, c))
+      case q @ Filter(a, b, c)      => (q, free(a, b, c))
+      case q @ Map(a, b, c)         => (q, free(a, b, c))
+      case q @ FlatMap(a, b, c)     => (q, free(a, b, c))
+      case q @ SortBy(a, b, c, d)   => (q, free(a, b, c))
+      case q @ GroupBy(a, b, c)     => (q, free(a, b, c))
+      case q @ FlatJoin(t, a, b, c) => (q, free(a, b, c))
       case q @ Join(t, a, b, iA, iB, on) =>
         val (_, freeA) = apply(a)
         val (_, freeB) = apply(b)

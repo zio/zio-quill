@@ -11,6 +11,7 @@ import io.getquill.ast.Query
 import io.getquill.ast.SortBy
 import io.getquill.ast.StatefulTransformer
 import io.getquill.norm.BetaReduction
+import io.getquill.ast.FlatJoin
 
 private case class AvoidAliasConflict(state: collection.Set[Ident])
   extends StatefulTransformer[collection.Set[Ident]] {
@@ -38,6 +39,13 @@ private case class AvoidAliasConflict(state: collection.Set[Ident])
         val or = BetaReduction(o, iA -> freshA, iB -> freshB)
         val (orr, orrt) = AvoidAliasConflict(brt.state + freshA + freshB)(or)
         (Join(t, ar, br, freshA, freshB, orr), orrt)
+
+      case FlatJoin(t, a, iA, o) =>
+        val (ar, art) = apply(a)
+        val freshA = freshIdent(iA)
+        val or = BetaReduction(o, iA -> freshA)
+        val (orr, orrt) = AvoidAliasConflict(art.state + freshA)(or)
+        (FlatJoin(t, ar, freshA, orr), orrt)
 
       case other => super.apply(other)
     }
