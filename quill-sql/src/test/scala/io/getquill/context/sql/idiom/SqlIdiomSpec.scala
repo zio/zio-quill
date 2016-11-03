@@ -183,6 +183,16 @@ class SqlIdiomSpec extends Spec {
           testContext.run(q).string mustEqual
             "SELECT t._1, t._2 FROM (SELECT t.i _1, MIN(t.l) _2 FROM TestEntity t GROUP BY t.i) t LIMIT 10"
         }
+        "filter.flatMap(groupBy)" in {
+          val q = quote {
+            for {
+              a <- qr1 if a.i == 1
+              b <- qr2.groupBy(t => t.i).map { case _ => 1 }
+            } yield b
+          }
+          testContext.run(q).string mustEqual
+            "SELECT t.* FROM TestEntity a, (SELECT 1 FROM TestEntity2 t GROUP BY t.i) t WHERE a.i = 1"
+        }
       }
       "aggregated" - {
         "min" in {
