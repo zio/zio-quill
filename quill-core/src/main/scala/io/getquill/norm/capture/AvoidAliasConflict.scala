@@ -34,8 +34,8 @@ private case class AvoidAliasConflict(state: collection.Set[Ident])
       case Join(t, a, b, iA, iB, o) =>
         val (ar, art) = apply(a)
         val (br, brt) = art.apply(b)
-        val freshA = freshIdent(iA)
-        val freshB = freshIdent(iB)
+        val freshA = freshIdent(iA, brt.state)
+        val freshB = freshIdent(iB, brt.state)
         val or = BetaReduction(o, iA -> freshA, iB -> freshB)
         val (orr, orrt) = AvoidAliasConflict(brt.state + freshA + freshB)(or)
         (Join(t, ar, br, freshA, freshB, orr), orrt)
@@ -57,7 +57,7 @@ private case class AvoidAliasConflict(state: collection.Set[Ident])
     (f(fresh, prr), t)
   }
 
-  private def freshIdent(x: Ident): Ident =
+  private def freshIdent(x: Ident, state: collection.Set[Ident] = state): Ident =
     if (!state.contains(x))
       x
     else

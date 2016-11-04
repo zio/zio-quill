@@ -78,15 +78,6 @@ class AttachToEntitySpec extends Spec {
         }
         attachToEntity(q.ast) mustEqual n.ast
       }
-      "groupBy" in {
-        val q = quote {
-          qr1.groupBy(b => b.s)
-        }
-        val n = quote {
-          qr1.sortBy(b => 1).groupBy(b => b.s)
-        }
-        attachToEntity(q.ast) mustEqual n.ast
-      }
       "distinct" in {
         val q = quote {
           qr1.sortBy(b => b.s).drop(1).distinct
@@ -124,6 +115,15 @@ class AttachToEntitySpec extends Spec {
       }
       val n = quote {
         qr1.leftJoin(qr2).on((a, b) => true).sortBy(x => 1)
+      }
+      attachToEntity(q.ast) mustEqual n.ast
+    }
+    "groupBy.map" in {
+      val q = quote {
+        qr1.groupBy(a => a.i).map(a => 1)
+      }
+      val n = quote {
+        qr1.groupBy(a => a.i).map(a => 1).sortBy(x => 1)
       }
       attachToEntity(q.ast) mustEqual n.ast
     }

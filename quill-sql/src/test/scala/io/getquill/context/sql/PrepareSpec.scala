@@ -15,7 +15,7 @@ class PrepareSpec extends Spec {
       }
     }
     testContext.run(q).string mustEqual
-      "SELECT t._1, t1._2 FROM TestEntity a LEFT JOIN (SELECT t.i _1 FROM TestEntity2 t) t ON a.i > t._1, TestEntity a1 LEFT JOIN (SELECT t1.l _2 FROM TestEntity2 t1) t1 ON a1.l < t1._2"
+      "SELECT t._1, t11._2 FROM TestEntity a LEFT JOIN (SELECT t.i _1 FROM TestEntity2 t) t ON a.i > t._1, TestEntity a1 LEFT JOIN (SELECT t11.l _2 FROM TestEntity2 t11) t11 ON a1.l < t11._2"
   }
 
   "mirror sql joins" - {
