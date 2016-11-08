@@ -1,6 +1,6 @@
 package io.getquill.dsl
 
-import io.getquill.{ Embedded, Spec }
+import io.getquill.Spec
 import io.getquill.testContext._
 import io.getquill.context.mirror.Row
 
