@@ -1,5 +1,6 @@
 package io.getquill.dsl
 
+import io.getquill.Embedded
 import io.getquill.util.Messages._
 import scala.reflect.macros.whitebox.{ Context => MacroContext }
 import io.getquill.util.OptionalTypecheck
@@ -182,7 +183,7 @@ class MetaDslMacro(val c: MacroContext) {
 
           def value(tpe: Type) =
             tpe match {
-              case tpe if (!is[MetaDsl#Embedded](tpe) && nested) =>
+              case tpe if (!is[Embedded](tpe) && nested) =>
                 c.fail(
                   s"Can't expand nested value '$tpe', please make it an `Embedded` " +
                     s"case class or provide an implicit $encoding for it."

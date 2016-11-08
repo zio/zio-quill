@@ -14,8 +14,6 @@ trait MetaDslLowPriorityImplicits {
 trait MetaDsl extends MetaDslLowPriorityImplicits {
   this: CoreDsl =>
 
-  trait Embedded
-
   def schemaMeta[T](entity: String, columns: (T => (Any, String))*): SchemaMeta[T] = macro MetaDslMacro.schemaMeta[T]
   def queryMeta[T, R](expand: Quoted[Query[T] => Query[R]])(extract: R => T): QueryMeta[T] = macro MetaDslMacro.queryMeta[T, R]
   def updateMeta[T](exclude: (T => Any)*): UpdateMeta[T] = macro MetaDslMacro.updateMeta[T]

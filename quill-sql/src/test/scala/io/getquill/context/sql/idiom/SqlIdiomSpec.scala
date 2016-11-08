@@ -1,6 +1,6 @@
 package io.getquill.context.sql.idiom
 
-import io.getquill.Spec
+import io.getquill.{ Embedded, Spec }
 import io.getquill.context.sql.testContext
 import io.getquill.context.sql.testContext._
 
