@@ -34,10 +34,7 @@ class EncodeBindVariablesSpec extends Spec {
   }
 
   "uses a custom implicit encoder" in {
-    implicit val doubleEncoder = new testContext.Encoder[Double] {
-      override def apply(index: Int, value: Double, row: Row) =
-        row.add(value)
-    }
+    implicit val doubleEncoder = testContext.encoder[Double]
     val d = 1D
     val q = quote {
       qr1.map(t => lift(d))

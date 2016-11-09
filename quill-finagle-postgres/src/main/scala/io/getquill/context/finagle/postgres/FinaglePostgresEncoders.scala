@@ -11,23 +11,23 @@ import org.jboss.netty.buffer.ChannelBuffers
 trait FinaglePostgresEncoders {
   this: FinaglePostgresContext[_] =>
 
-  case class ValueEncoderEncoder[T](encoder: ValueEncoder[T]) extends Encoder[T] {
-    def apply(idx: Int, value: T, row: PrepareRow) = {
+  type Encoder[T] = FinanglePostgresEncoder[T]
+
+  case class FinanglePostgresEncoder[T](encoder: ValueEncoder[T]) extends BaseEncoder[T] {
+    override def apply(index: Index, value: T, row: PrepareRow) =
       row :+ Param(value)(encoder)
-    }
   }
 
-  def encoder[T](implicit e: ValueEncoder[T]): Encoder[T] = new ValueEncoderEncoder(e)
-  def encoder[T, U](f: U => T)(implicit e: ValueEncoder[T]): Encoder[U] = new ValueEncoderEncoder[U](e.contraMap(f))
+  def encoder[T](implicit e: ValueEncoder[T]): Encoder[T] = FinanglePostgresEncoder(e)
 
-  override protected def mappedEncoderImpl[I, O](implicit mapped: MappedEncoding[I, O], e: Encoder[O]): Encoder[I] =
-    e match {
-      case v: ValueEncoderEncoder[O] => encoder[O, I](mapped.f)(v.encoder)
-    }
+  def encoder[T, U](f: U => T)(implicit e: ValueEncoder[T]): Encoder[U] =
+    encoder[U](e.contraMap(f))
 
-  implicit def optionEncoder[T](implicit e: Encoder[T]): Encoder[Option[T]] = e match {
-    case v: ValueEncoderEncoder[T] => encoder[Option[T]](option(v.encoder))
-  }
+  implicit def mappedEncoder[I, O](implicit mapped: MappedEncoding[I, O], e: Encoder[O]): Encoder[I] =
+    FinanglePostgresEncoder(e.encoder.contraMap(mapped.f))
+
+  implicit def optionEncoder[T](implicit e: Encoder[T]): Encoder[Option[T]] =
+    FinanglePostgresEncoder[Option[T]](option(e.encoder))
 
   //Workaround for https://github.com/finagle/finagle-postgres/pull/28
   implicit val bytea: ValueEncoder[Array[Byte]] = instance(
@@ -46,7 +46,8 @@ trait FinaglePostgresEncoders {
   implicit val floatEncoder: Encoder[Float] = encoder[Float]
   implicit val doubleEncoder: Encoder[Double] = encoder[Double]
   implicit val byteArrayEncoder: Encoder[Array[Byte]] = encoder[Array[Byte]](bytea)
-  implicit val dateEncoder: Encoder[Date] = encoder[LocalDateTime, Date]((v: Date) => LocalDateTime.ofInstant(v.toInstant(), ZoneId.systemDefault()))
+  implicit val dateEncoder: Encoder[Date] =
+    encoder[LocalDateTime, Date]((v: Date) => LocalDateTime.ofInstant(v.toInstant, ZoneId.systemDefault()))
   implicit val localDateEncoder: Encoder[LocalDate] = encoder[LocalDate]
   implicit val localDateTimeEncoder: Encoder[LocalDateTime] = encoder[LocalDateTime]
   implicit val uuidEncoder: Encoder[UUID] = encoder[UUID]

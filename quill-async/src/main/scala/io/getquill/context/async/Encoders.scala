@@ -3,47 +3,43 @@ package io.getquill.context.async
 import java.time.{ LocalDate, LocalDateTime, ZoneId }
 import java.util.{ Date, UUID }
 
-import org.joda.time.{
-  LocalDate => JodaLocalDate,
-  LocalDateTime => JodaLocalDateTime
-}
+import org.joda.time.{ LocalDate => JodaLocalDate, LocalDateTime => JodaLocalDateTime }
 
-trait Encoders { this: AsyncContext[_, _, _] =>
+trait Encoders {
+  this: AsyncContext[_, _, _] =>
 
-  case class AsyncEncoder[T](sqlType: SqlTypes.SqlTypes)(implicit encoder: Encoder[T])
-    extends Encoder[T] {
-    def apply(index: Int, value: T, row: List[Any]) =
+  type Encoder[T] = AsyncEncoder[T]
+
+  case class AsyncEncoder[T](sqlType: SqlTypes.SqlTypes)(implicit encoder: BaseEncoder[T])
+    extends BaseEncoder[T] {
+    override def apply(index: Index, value: T, row: PrepareRow) =
       encoder.apply(index, value, row)
   }
 
-  def encoder[T](sqlType: SqlTypes.SqlTypes): AsyncEncoder[T] =
+  def encoder[T](sqlType: SqlTypes.SqlTypes): Encoder[T] =
     encoder(identity[T], sqlType)
 
-  def encoder[T](f: T => Any, sqlType: SqlTypes.SqlTypes): AsyncEncoder[T] =
-    AsyncEncoder[T](sqlType)(new Encoder[T] {
-      def apply(index: Int, value: T, row: List[Any]) =
+  def encoder[T](f: T => Any, sqlType: SqlTypes.SqlTypes): Encoder[T] =
+    AsyncEncoder[T](sqlType)(new BaseEncoder[T] {
+      def apply(index: Index, value: T, row: PrepareRow) =
         row :+ f(value)
     })
 
-  override protected def mappedEncoderImpl[I, O](implicit mapped: MappedEncoding[I, O], e: Encoder[O]): Encoder[I] =
-    e match {
-      case e @ AsyncEncoder(sqlType) =>
-        val enc = new Encoder[I] {
-          def apply(index: Int, value: I, row: List[Any]) =
-            e(index, mapped.f(value), row)
-        }
-        AsyncEncoder(sqlType)(enc)
-    }
+  implicit def mappedEncoder[I, O](implicit mapped: MappedEncoding[I, O], e: Encoder[O]): Encoder[I] =
+    AsyncEncoder(e.sqlType)(new BaseEncoder[I] {
+      def apply(index: Index, value: I, row: PrepareRow) =
+        e(index, mapped.f(value), row)
+    })
 
   implicit def optionEncoder[T](implicit d: Encoder[T]): Encoder[Option[T]] =
-    new Encoder[Option[T]] {
-      def apply(index: Int, value: Option[T], row: List[Any]) = {
+    AsyncEncoder(d.sqlType)(new BaseEncoder[Option[T]] {
+      def apply(index: Index, value: Option[T], row: PrepareRow) = {
         value match {
           case None    => nullEncoder(index, null, row)
           case Some(v) => d(index, v, row)
         }
       }
-    }
+    })
 
   private[this] val nullEncoder: Encoder[Null] = encoder[Null](SqlTypes.NULL)
 
@@ -56,8 +52,7 @@ trait Encoders { this: AsyncContext[_, _, _] =>
   implicit val longEncoder: Encoder[Long] = encoder[Long](SqlTypes.BIGINT)
   implicit val floatEncoder: Encoder[Float] = encoder[Float](SqlTypes.FLOAT)
   implicit val doubleEncoder: Encoder[Double] = encoder[Double](SqlTypes.DOUBLE)
-  implicit val byteArrayEncoder: Encoder[Array[Byte]] =
-    encoder[Array[Byte]](SqlTypes.VARBINARY)
+  implicit val byteArrayEncoder: Encoder[Array[Byte]] = encoder[Array[Byte]](SqlTypes.VARBINARY)
   implicit val dateEncoder: Encoder[Date] =
     encoder[Date]({ (value: Date) =>
       new JodaLocalDateTime(value)

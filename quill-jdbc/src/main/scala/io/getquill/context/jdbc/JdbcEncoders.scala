@@ -1,83 +1,68 @@
 package io.getquill.context.jdbc
 
-import java.sql.{ Date, PreparedStatement, Timestamp, Types }
+import java.sql.{ Date, Timestamp, Types }
 import java.time.{ LocalDate, LocalDateTime }
 import java.util.{ Calendar, TimeZone }
 import java.{ sql, util }
 
 import io.getquill.JdbcContext
-import io.getquill.util.Messages.fail
 
 import scala.reflect.ClassTag
 
 trait JdbcEncoders {
   this: JdbcContext[_, _] =>
 
+  type Encoder[T] = JdbcEncoder[T]
+
   protected val dateTimeZone = TimeZone.getDefault
 
-  case class JdbcEncoder[T](sqlType: Int)(implicit encoder: Encoder[T]) extends Encoder[T] {
-    def apply(index: Int, value: T, row: PreparedStatement) =
-      encoder.apply(index, value, row)
+  case class JdbcEncoder[T](sqlType: Int, encoder: BaseEncoder[T]) extends BaseEncoder[T] {
+    override def apply(index: Index, value: T, row: PrepareRow) =
+      encoder(index + 1, value, row)
   }
 
-  def encoder[T: ClassTag](f: PreparedStatement => (Int, T) => Unit, sqlType: Int): JdbcEncoder[T] =
-    JdbcEncoder(sqlType)(new Encoder[T] {
-      override def apply(index: Int, value: T, row: PreparedStatement) = {
-        f(row)(index + 1, value)
-        row
-      }
+  def encoder[T: ClassTag](sqlType: Int, f: (Index, T, PrepareRow) => Unit): Encoder[T] =
+    JdbcEncoder(sqlType, (index: Index, value: T, row: PrepareRow) => {
+      f(index, value, row)
+      row
     })
 
-  override protected def mappedEncoderImpl[I, O](implicit mapped: MappedEncoding[I, O], e: Encoder[O]): Encoder[I] =
-    e match {
-      case e @ JdbcEncoder(sqlType) =>
-        val enc = new Encoder[I] {
-          override def apply(index: Int, value: I, row: PreparedStatement) =
-            e(index, mapped.f(value), row)
-        }
-        JdbcEncoder(sqlType)(enc)
-    }
+  def encoder[T: ClassTag](sqlType: Int, f: PrepareRow => (Index, T) => Unit): Encoder[T] =
+    encoder(sqlType, (index: Index, value: T, row: PrepareRow) => f(row)(index, value))
 
-  private[this] val nullEncoder = encoder[Int](_.setNull, Types.INTEGER)
+  implicit def mappedEncoder[I, O](implicit mapped: MappedEncoding[I, O], e: Encoder[O]): Encoder[I] =
+    JdbcEncoder(e.sqlType, mappedBaseEncoder(mapped, e.encoder))
+
+  private[this] val nullEncoder: Encoder[Int] = encoder(Types.INTEGER, _.setNull)
 
   implicit def optionEncoder[T](implicit d: Encoder[T]): Encoder[Option[T]] =
-    new Encoder[Option[T]] {
-      override def apply(idx: Int, value: Option[T], row: PreparedStatement) =
+    JdbcEncoder(
+      d.sqlType,
+      (index, value, row) =>
         value match {
-          case Some(v) => d(idx, v, row)
-          case None => d match {
-            case JdbcEncoder(sqlType) => nullEncoder(idx, sqlType, row)
-            case _                    => fail("Can't determine SQL data type. JdbcEncoder is expected.")
-          }
+          case Some(v) => d.encoder(index, v, row)
+          case None    => nullEncoder.encoder(index, d.sqlType, row)
         }
-    }
-
-  implicit val stringEncoder: Encoder[String] = encoder(_.setString, Types.VARCHAR)
-  implicit val bigDecimalEncoder: Encoder[BigDecimal] =
-    encoder[BigDecimal](row => (idx, value) =>
-      row.setBigDecimal(idx, value.bigDecimal), Types.NUMERIC)
-  implicit val booleanEncoder: Encoder[Boolean] = encoder(_.setBoolean, Types.BOOLEAN)
-  implicit val byteEncoder: Encoder[Byte] = encoder(_.setByte, Types.TINYINT)
-  implicit val shortEncoder: Encoder[Short] = encoder(_.setShort, Types.SMALLINT)
-  implicit val intEncoder: Encoder[Int] = encoder(_.setInt, Types.INTEGER)
-  implicit val longEncoder: Encoder[Long] = encoder(_.setLong, Types.BIGINT)
-  implicit val floatEncoder: Encoder[Float] = encoder(_.setFloat, Types.FLOAT)
-  implicit val doubleEncoder: Encoder[Double] = encoder(_.setDouble, Types.DOUBLE)
-  implicit val byteArrayEncoder: Encoder[Array[Byte]] = encoder(_.setBytes, Types.VARBINARY)
-  implicit val dateEncoder: Encoder[util.Date] =
-    encoder[util.Date](
-      row => (idx, value) =>
-        row.setTimestamp(idx, new sql.Timestamp(value.getTime), Calendar.getInstance(dateTimeZone)),
-      Types.TIMESTAMP
     )
-  implicit val localDateEncoder: Encoder[LocalDate] = encoder[LocalDate](
-    row => (idx, value) =>
-      row.setDate(idx, Date.valueOf(value), Calendar.getInstance(dateTimeZone)),
-    Types.DATE
-  )
-  implicit val localDateTimeEncoder: Encoder[LocalDateTime] = encoder[LocalDateTime](
-    row => (idx, value) =>
-      row.setTimestamp(idx, Timestamp.valueOf(value), Calendar.getInstance(dateTimeZone)),
-    Types.TIMESTAMP
-  )
+
+  implicit val stringEncoder: Encoder[String] = encoder(Types.VARCHAR, _.setString)
+  implicit val bigDecimalEncoder: Encoder[BigDecimal] =
+    encoder(Types.NUMERIC, (index, value, row) => row.setBigDecimal(index, value.bigDecimal))
+  implicit val booleanEncoder: Encoder[Boolean] = encoder(Types.BOOLEAN, _.setBoolean)
+  implicit val byteEncoder: Encoder[Byte] = encoder(Types.TINYINT, _.setByte)
+  implicit val shortEncoder: Encoder[Short] = encoder(Types.SMALLINT, _.setShort)
+  implicit val intEncoder: Encoder[Int] = encoder(Types.INTEGER, _.setInt)
+  implicit val longEncoder: Encoder[Long] = encoder(Types.BIGINT, _.setLong)
+  implicit val floatEncoder: Encoder[Float] = encoder(Types.FLOAT, _.setFloat)
+  implicit val doubleEncoder: Encoder[Double] = encoder(Types.DOUBLE, _.setDouble)
+  implicit val byteArrayEncoder: Encoder[Array[Byte]] = encoder(Types.VARBINARY, _.setBytes)
+  implicit val dateEncoder: Encoder[util.Date] =
+    encoder(Types.TIMESTAMP, (index, value, row) =>
+      row.setTimestamp(index, new sql.Timestamp(value.getTime), Calendar.getInstance(dateTimeZone)))
+  implicit val localDateEncoder: Encoder[LocalDate] =
+    encoder(Types.DATE, (index, value, row) =>
+      row.setDate(index, Date.valueOf(value), Calendar.getInstance(dateTimeZone)))
+  implicit val localDateTimeEncoder: Encoder[LocalDateTime] =
+    encoder(Types.TIMESTAMP, (index, value, row) =>
+      row.setTimestamp(index, Timestamp.valueOf(value), Calendar.getInstance(dateTimeZone)))
 }
