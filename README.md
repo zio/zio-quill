@@ -925,15 +925,12 @@ trait UUIDEncodingExample {
   import jdbcContext._
 
   implicit val uuidDecoder: Decoder[UUID] =
-    decoder[UUID] ({
-      row => index =>
-        UUID.fromString(row.getObject(index).toString)}
-        , java.sql.Types.OTHER) // database-specific implementation
+    decoder(java.sql.Types.OTHER, (index, row) => 
+      UUID.fromString(row.getObject(index).toString)) // database-specific implementation
     
   implicit val uuidEncoder: Encoder[UUID] =
-    encoder[UUID](row => (idx, uuid) =>
-        row.setObject(idx, uuid, java.sql.Types.OTHER), // database-specific implementation
-        java.sql.Types.OTHER)
+    encoder(java.sql.Types.OTHER, (index, value, row) =>
+        row.setObject(index, value, java.sql.Types.OTHER)) // database-specific implementation
 }
 ```
 
