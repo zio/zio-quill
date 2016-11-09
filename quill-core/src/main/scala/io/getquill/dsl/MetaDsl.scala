@@ -14,7 +14,7 @@ trait MetaDslLowPriorityImplicits {
 trait MetaDsl extends MetaDslLowPriorityImplicits {
   this: CoreDsl =>
 
-  trait Embedded
+  type Embedded = io.getquill.Embedded
 
   def schemaMeta[T](entity: String, columns: (T => (Any, String))*): SchemaMeta[T] = macro MetaDslMacro.schemaMeta[T]
   def queryMeta[T, R](expand: Quoted[Query[T] => Query[R]])(extract: R => T): QueryMeta[T] = macro MetaDslMacro.queryMeta[T, R]
