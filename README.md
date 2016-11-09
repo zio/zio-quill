@@ -1317,7 +1317,7 @@ ctx.database=database
 ctx.poolMaxQueueSize=4
 ctx.poolMaxObjects=4
 ctx.poolMaxIdle=999999999
-ctx.poolValidationInterval=100
+ctx.poolValidationInterval=10000
 ctx.sslmode=disable # optional, one of [disable|prefer|require|verify-ca|verify-full]
 ctx.sslrootcert="./path/to/cert/file" # optional, required for sslmode=verify-ca or verify-full
 ```
@@ -1346,7 +1346,7 @@ ctx.database=database
 ctx.poolMaxQueueSize=4
 ctx.poolMaxObjects=4
 ctx.poolMaxIdle=999999999
-ctx.poolValidationInterval=100
+ctx.poolValidationInterval=10000
 ctx.sslmode=disable # optional, one of [disable|prefer|require|verify-ca|verify-full]
 ctx.sslrootcert="./path/to/cert/file" # optional, required for sslmode=verify-ca or verify-full
 ```
