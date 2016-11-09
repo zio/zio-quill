@@ -155,24 +155,25 @@ lazy val `tut-settings` = Seq(
   tutScalacOptions := Seq(),
   tutSourceDirectory := baseDirectory.value / "target" / "tut",
   tutNameFilter := `tut-sources`.map(_.replaceAll("""\.""", """\.""")).mkString("(", "|", ")").r,
-  sourceGenerators in Compile <+= Def.task {
-    `tut-sources`.foreach { name =>
-      val source = baseDirectory.value / name
-      val file = baseDirectory.value / "target" / "tut" / name
-      val str = IO.read(source).replace("```scala", "```tut")
-      IO.write(file, str)
-    }
-    Seq()
-  }
+  sourceGenerators in Compile +=
+    Def.task {
+      `tut-sources`.foreach { name =>
+        val source = baseDirectory.value / name
+        val file = baseDirectory.value / "target" / "tut" / name
+        val str = IO.read(source).replace("```scala", "```tut")
+        IO.write(file, str)
+      }
+      Seq()
+    }.taskValue
 )
 
 lazy val mimaSettings = MimaPlugin.mimaDefaultSettings ++ Seq(
-  previousArtifact := {
+  mimaPreviousArtifacts := {
     CrossVersion.partialVersion(scalaVersion.value) match {
       case Some((2, scalaMajor)) if scalaMajor <= 11 =>
-        Some(organization.value % s"${name.value}_${scalaBinaryVersion.value}" % "0.5.0")
+        Set(organization.value % s"${name.value}_${scalaBinaryVersion.value}" % "0.5.0")
       case _ =>
-        None
+        Set()
     }
   }
 )
@@ -228,7 +229,7 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
     "ch.qos.logback"  % "logback-classic" % "1.1.7"     % "test",
     "com.google.code.findbugs" % "jsr305" % "3.0.1"     % "provided" // just to avoid warnings during compilation
   ),
-  EclipseKeys.createSrc := EclipseCreateSrc.Default + EclipseCreateSrc.Resource,
+  EclipseKeys.createSrc := EclipseCreateSrc.Default,
   unmanagedClasspath in Test ++= Seq(
     baseDirectory.value / "src" / "test" / "resources"
   ),
