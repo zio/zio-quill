@@ -5,7 +5,7 @@ import java.time.{ LocalDate, LocalDateTime }
 import io.getquill.context.sql.EncodingSpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Await
+import scala.concurrent.{ Await, ExecutionContext }
 import scala.concurrent.duration.Duration
 import java.util.Date
 
@@ -22,7 +22,7 @@ class MysqlAsyncEncodingSpec extends EncodingSpec {
         result <- testContext.run(query[EncodingTestEntity])
       } yield result
 
-    verify(Await.result(r, Duration.Inf).toList)
+    verify(Await.result(r, Duration.Inf))
   }
 
   "decode numeric types correctly" - {
@@ -31,19 +31,19 @@ class MysqlAsyncEncodingSpec extends EncodingSpec {
         prepareEncodingTestEntity()
         case class EncodingTestEntity(v3: Short)
         val v3List = Await.result(testContext.run(query[EncodingTestEntity]), Duration.Inf)
-        v3List.map(_.v3) must contain theSameElementsAs (List(1: Byte, 0: Byte))
+        v3List.map(_.v3) must contain theSameElementsAs List(1: Byte, 0: Byte)
       }
       "int" in {
         prepareEncodingTestEntity()
         case class EncodingTestEntity(v3: Int)
         val v3List = Await.result(testContext.run(query[EncodingTestEntity]), Duration.Inf)
-        v3List.map(_.v3) must contain theSameElementsAs (List(1, 0))
+        v3List.map(_.v3) must contain theSameElementsAs List(1, 0)
       }
       "long" in {
         prepareEncodingTestEntity()
         case class EncodingTestEntity(v3: Long)
         val v3List = Await.result(testContext.run(query[EncodingTestEntity]), Duration.Inf)
-        v3List.map(_.v3) must contain theSameElementsAs (List(1L, 0L))
+        v3List.map(_.v3) must contain theSameElementsAs List(1L, 0L)
       }
     }
     "decode short to" - {
@@ -51,19 +51,19 @@ class MysqlAsyncEncodingSpec extends EncodingSpec {
         prepareEncodingTestEntity()
         case class EncodingTestEntity(v5: Int)
         val v5List = Await.result(testContext.run(query[EncodingTestEntity]), Duration.Inf)
-        v5List.map(_.v5) must contain theSameElementsAs (List(23, 0))
+        v5List.map(_.v5) must contain theSameElementsAs List(23, 0)
       }
       "long" in {
         prepareEncodingTestEntity()
         case class EncodingTestEntity(v5: Long)
         val v5List = Await.result(testContext.run(query[EncodingTestEntity]), Duration.Inf)
-        v5List.map(_.v5) must contain theSameElementsAs (List(23L, 0L))
+        v5List.map(_.v5) must contain theSameElementsAs List(23L, 0L)
       }
     }
     "decode int to long" in {
       case class EncodingTestEntity(v6: Long)
       val v6List = Await.result(testContext.run(query[EncodingTestEntity]), Duration.Inf)
-      v6List.map(_.v6) must contain theSameElementsAs (List(33L, 0L))
+      v6List.map(_.v6) must contain theSameElementsAs List(33L, 0L)
     }
 
     "decode and encode any numeric as boolean" in {
@@ -75,7 +75,7 @@ class MysqlAsyncEncodingSpec extends EncodingSpec {
 
   "decode date types" in {
     case class DateEncodingTestEntity(v1: Date, v2: Date, v3: Date)
-    val entity = new DateEncodingTestEntity(new Date, new Date, new Date)
+    val entity = DateEncodingTestEntity(new Date, new Date, new Date)
     val r = for {
       _ <- testContext.run(query[DateEncodingTestEntity].delete)
       _ <- testContext.run(query[DateEncodingTestEntity].insert(lift(entity)))
@@ -87,7 +87,7 @@ class MysqlAsyncEncodingSpec extends EncodingSpec {
 
   "decode local date types" in {
     case class DateEncodingTestEntity(v1: LocalDate, v2: LocalDate, v3: LocalDate)
-    val entity = new DateEncodingTestEntity(LocalDate.now, LocalDate.now, LocalDate.now)
+    val entity = DateEncodingTestEntity(LocalDate.now, LocalDate.now, LocalDate.now)
     val r = for {
       _ <- testContext.run(query[DateEncodingTestEntity].delete)
       _ <- testContext.run(query[DateEncodingTestEntity].insert(lift(entity)))
@@ -99,7 +99,7 @@ class MysqlAsyncEncodingSpec extends EncodingSpec {
   "decode local date time types" in {
     case class DateEncodingTestEntity(v1: LocalDateTime, v2: LocalDateTime, v3: LocalDateTime)
     //since localdatetime is converted to joda which doesn't store nanos need to zero the nano part
-    val entity = new DateEncodingTestEntity(LocalDate.now().atStartOfDay(), LocalDateTime.now.withNano(0), LocalDateTime.now.withNano(0))
+    val entity = DateEncodingTestEntity(LocalDate.now().atStartOfDay(), LocalDateTime.now.withNano(0), LocalDateTime.now.withNano(0))
     val r = for {
       _ <- testContext.run(query[DateEncodingTestEntity].delete)
       _ <- testContext.run(query[DateEncodingTestEntity].insert(lift(entity)))
@@ -139,6 +139,21 @@ class MysqlAsyncEncodingSpec extends EncodingSpec {
         r
       }
     verify(Await.result(fut, Duration.Inf))
+  }
+
+  "encodes custom type inside singleton object" in {
+    object Singleton {
+      def apply()(implicit c: TestContext, ec: ExecutionContext) = {
+        import c._
+        for {
+          _ <- c.run(query[EncodingTestEntity].delete)
+          result <- c.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insert(e)))
+        } yield result
+      }
+    }
+
+    implicit val c = testContext
+    Await.result(Singleton(), Duration.Inf)
   }
 
   private def prepareEncodingTestEntity() = {

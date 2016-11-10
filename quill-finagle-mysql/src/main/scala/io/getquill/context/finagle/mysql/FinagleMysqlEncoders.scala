@@ -4,34 +4,39 @@ import java.sql.Timestamp
 import java.time.{ LocalDate, LocalDateTime }
 import java.util.Date
 
-import com.twitter.finagle.mysql._
 import com.twitter.finagle.mysql.CanBeParameter._
 import com.twitter.finagle.mysql.Parameter.wrap
+import com.twitter.finagle.mysql._
 import io.getquill.FinagleMysqlContext
 
 trait FinagleMysqlEncoders {
   this: FinagleMysqlContext[_] =>
 
-  def encoder[T](implicit cbp: CanBeParameter[T]): Encoder[T] =
-    encoder[T]((v: T) => v: Parameter)
+  type Encoder[T] = FinangleMySqlEncoder[T]
+
+  case class FinangleMySqlEncoder[T](encoder: BaseEncoder[T]) extends BaseEncoder[T] {
+    override def apply(index: Index, value: T, row: PrepareRow) =
+      encoder(index, value, row)
+  }
 
   def encoder[T](f: T => Parameter): Encoder[T] =
-    new Encoder[T] {
-      def apply(idx: Int, value: T, row: List[Parameter]) = {
-        row :+ f(value)
-      }
-    }
+    FinangleMySqlEncoder((index, value, row) => row :+ f(value))
+
+  def encoder[T](implicit cbp: CanBeParameter[T]): Encoder[T] =
+    encoder[T]((v: T) => v: Parameter)
 
   private[this] val nullEncoder = encoder((_: Null) => Parameter.NullParameter)
 
   implicit def optionEncoder[T](implicit e: Encoder[T]): Encoder[Option[T]] =
-    new Encoder[Option[T]] {
-      def apply(idx: Int, value: Option[T], row: List[Parameter]) =
-        value match {
-          case None        => nullEncoder(idx, null, row)
-          case Some(value) => e(idx, value, row)
-        }
+    FinangleMySqlEncoder { (index, value, row) =>
+      value match {
+        case None    => nullEncoder.encoder(index, null, row)
+        case Some(v) => e.encoder(index, v, row)
+      }
     }
+
+  implicit def mappedEncoder[I, O](implicit mapped: MappedEncoding[I, O], e: Encoder[O]): Encoder[I] =
+    FinangleMySqlEncoder(mappedBaseEncoder(mapped, e.encoder))
 
   implicit val stringEncoder: Encoder[String] = encoder[String]
   implicit val bigDecimalEncoder: Encoder[BigDecimal] =

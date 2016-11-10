@@ -40,7 +40,7 @@ class EncodingDslMacro(val c: MacroContext) {
     withAnyValParam(tpe) { param =>
       q"""
         ${c.prefix}.mappedDecoder(
-          ${c.prefix}.MappedEncoding((p: ${param.typeSignature}) => new $tpe(p)), 
+          io.getquill.MappedEncoding((p: ${param.typeSignature}) => new $tpe(p)),
           implicitly[${c.prefix}.Decoder[${param.typeSignature}]]
         )
       """
@@ -50,7 +50,7 @@ class EncodingDslMacro(val c: MacroContext) {
     withAnyValParam(tpe) { param =>
       q"""
         ${c.prefix}.mappedEncoder(
-          ${c.prefix}.MappedEncoding((v: $tpe) => v.${param.name.toTermName}), 
+          io.getquill.MappedEncoding((v: $tpe) => v.${param.name.toTermName}),
           implicitly[${c.prefix}.Encoder[${param.typeSignature}]]
         )
       """

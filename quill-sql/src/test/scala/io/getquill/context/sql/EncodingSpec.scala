@@ -3,7 +3,6 @@ package io.getquill.context.sql
 import java.time.LocalDate
 import java.util.{ Date, UUID }
 
-import scala.BigDecimal
 import io.getquill.Spec
 
 case class EncodingTestType(value: String)

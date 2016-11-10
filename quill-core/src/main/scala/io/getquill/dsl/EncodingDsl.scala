@@ -1,15 +1,17 @@
 package io.getquill.dsl
 
-import scala.language.higherKinds
-import scala.annotation.compileTimeOnly
 import io.getquill.quotation.NonQuotedException
+
+import scala.annotation.compileTimeOnly
 import scala.language.experimental.macros
+import scala.language.higherKinds
 
 trait LowPriorityImplicits {
   this: EncodingDsl =>
 
-  implicit def materializeEncoder[T]: Encoder[T] = macro EncodingDslMacro.materializeEncoder[T]
-  implicit def materializeDecoder[T]: Decoder[T] = macro EncodingDslMacro.materializeDecoder[T]
+  implicit def materializeEncoder[T <: AnyVal]: Encoder[T] = macro EncodingDslMacro.materializeEncoder[T]
+
+  implicit def materializeDecoder[T <: AnyVal]: Decoder[T] = macro EncodingDslMacro.materializeDecoder[T]
 }
 
 trait EncodingDsl extends LowPriorityImplicits {
@@ -18,25 +20,15 @@ trait EncodingDsl extends LowPriorityImplicits {
   type PrepareRow
   type ResultRow
 
-  trait Decoder[T] {
-    def apply(index: Int, row: ResultRow): T
-  }
+  type Index = Int
 
-  def Decoder[T](f: (Int, ResultRow) => T) =
-    new Decoder[T] {
-      override def apply(index: Int, row: ResultRow) =
-        f(index, row)
-    }
+  type BaseEncoder[T] = (Index, T, PrepareRow) => PrepareRow
 
-  trait Encoder[T] {
-    def apply(index: Int, value: T, row: PrepareRow): PrepareRow
-  }
+  type Encoder[T] <: BaseEncoder[T]
 
-  def Encoder[T](f: (Int, T, PrepareRow) => PrepareRow) =
-    new Encoder[T] {
-      override def apply(index: Int, value: T, row: PrepareRow) =
-        f(index, value, row)
-    }
+  type BaseDecoder[T] = (Index, ResultRow) => T
+
+  type Decoder[T] <: BaseDecoder[T]
 
   /* ************************************************************************** */
 
@@ -63,21 +55,13 @@ trait EncodingDsl extends LowPriorityImplicits {
   type MappedEncoding[I, O] = io.getquill.MappedEncoding[I, O]
   val MappedEncoding = io.getquill.MappedEncoding
 
-  implicit def mappedDecoder[I, O](implicit mapped: MappedEncoding[I, O], decoder: Decoder[I]): Decoder[O] =
-    mappedDecoderImpl[I, O]
+  implicit def mappedEncoder[I, O](implicit mapped: MappedEncoding[I, O], encoder: Encoder[O]): Encoder[I]
 
-  protected def mappedDecoderImpl[I, O](implicit mapped: MappedEncoding[I, O], decoder: Decoder[I]): Decoder[O] =
-    new Decoder[O] {
-      def apply(index: Int, row: ResultRow) =
-        mapped.f(decoder(index, row))
-    }
+  implicit def mappedDecoder[I, O](implicit mapped: MappedEncoding[I, O], decoder: Decoder[I]): Decoder[O]
 
-  implicit def mappedEncoder[I, O](implicit mapped: MappedEncoding[I, O], encoder: Encoder[O]): Encoder[I] =
-    mappedEncoderImpl[I, O]
+  protected def mappedBaseEncoder[I, O](mapped: MappedEncoding[I, O], encoder: BaseEncoder[O]): BaseEncoder[I] =
+    (index, value, row) => encoder(index, mapped.f(value), row)
 
-  protected def mappedEncoderImpl[I, O](implicit mapped: MappedEncoding[I, O], encoder: Encoder[O]): Encoder[I] =
-    new Encoder[I] {
-      def apply(index: Int, value: I, row: PrepareRow) =
-        encoder(index, mapped.f(value), row)
-    }
+  protected def mappedBaseDecoder[I, O](mapped: MappedEncoding[I, O], decoder: BaseDecoder[I]): BaseDecoder[O] =
+    (index, row) => mapped.f(decoder(index, row))
 }

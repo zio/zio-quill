@@ -1,16 +1,17 @@
 package io.getquill.dsl
 
 import io.getquill.Spec
-import io.getquill.testContext._
 import io.getquill.context.mirror.Row
-import io.getquill.quotation.ScalarValueLifting
-import io.getquill.quotation.CaseClassValueLifting
+import io.getquill.quotation.{ CaseClassValueLifting, ScalarValueLifting }
+import io.getquill.testContext._
+
 import scala.language.reflectiveCalls
 
 case class CustomValue(i: Int) extends AnyVal
 
 // Tests self lifting of `AnyVal`
 case class Address(id: AddressId)
+
 case class AddressId(value: Long) extends AnyVal {
 
   def `inside quotation` = quote {
@@ -36,24 +37,24 @@ class EncodingDslSpec extends Spec {
     val idx = 1
     val row = Row(2)
     "Decoder" in {
-      val decoder = Decoder[Boolean] {
-        (i, r) =>
+      val decoder =
+        (i: Index, r: ResultRow) => {
           i mustEqual idx
           r mustEqual row
           true
-      }
+        }
       decoder(idx, row) mustEqual true
     }
 
     "Encoder" in {
       val value = 3
-      val encoder = Encoder[Int] {
-        (i, v, r) =>
+      val encoder =
+        (i: Index, v: Int, r: ResultRow) => {
           i mustEqual idx
           v mustEqual value
           r mustEqual row
           row
-      }
+        }
       encoder(idx, value, row) mustEqual row
     }
   }

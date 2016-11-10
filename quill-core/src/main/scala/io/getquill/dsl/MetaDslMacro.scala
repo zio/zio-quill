@@ -183,7 +183,7 @@ class MetaDslMacro(val c: MacroContext) {
 
           def value(tpe: Type) =
             tpe match {
-              case tpe if (!is[Embedded](tpe) && nested) =>
+              case tpe if !is[Embedded](tpe) && nested =>
                 c.fail(
                   s"Can't expand nested value '$tpe', please make it an `Embedded` " +
                     s"case class or provide an implicit $encoding for it."

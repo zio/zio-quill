@@ -1,7 +1,7 @@
 package io.getquill.context.sql
 
-trait TestDecoders {
-  this: SqlContext[_, _] =>
+import io.getquill.MappedEncoding
 
+trait TestDecoders {
   implicit val encodingTestTypeDecoder = MappedEncoding[String, EncodingTestType](EncodingTestType)
 }
