@@ -43,7 +43,7 @@ class JdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](dataSource: Dat
   override type RunBatchActionResult = List[Long]
   override type RunBatchActionReturningResult[T] = List[T]
 
-  private val currentConnection = new DynamicVariable[Option[Connection]](None)
+  protected val currentConnection = new DynamicVariable[Option[Connection]](None)
 
   protected def withConnection[T](f: Connection => T) =
     currentConnection.value.map(f).getOrElse {
