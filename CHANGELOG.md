@@ -11,6 +11,7 @@
 ### Migration notes
 
 - New API for schema definition: `query[Person].schema(_.entity("people").columns(_.id -> "person_id")` becomes `querySchema[Person]("People", _.id -> "person_id")`. Note that the entity name ("People") is now always required.
+- `WrappedValue[T]` no longer exists, Quill can now automatically encode `AnyVal`s.
 
 # 0.10.0 - 5-Sep-2016
 
