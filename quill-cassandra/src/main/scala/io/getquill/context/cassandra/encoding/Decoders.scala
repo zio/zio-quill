@@ -15,9 +15,10 @@ trait Decoders {
 
   def decoder[T](d: BaseDecoder[T]): Decoder[T] = CassandraDecoder(
     (index, row) => {
-      row.isNull(index) match {
-        case true  => fail(s"Expected column at index $index to be defined but is was empty")
-        case false => d(index, row)
+      if (row.isNull(index)) {
+        fail(s"Expected column at index $index to be defined but is was empty")
+      } else {
+        d(index, row)
       }
     }
   )
@@ -27,9 +28,10 @@ trait Decoders {
 
   implicit def optionDecoder[T](implicit d: Decoder[T]): Decoder[Option[T]] =
     CassandraDecoder((index, row) => {
-      row.isNull(index) match {
-        case true  => None
-        case false => Some(d(index, row))
+      if (row.isNull(index)) {
+        None
+      } else {
+        Some(d(index, row))
       }
     })
 
