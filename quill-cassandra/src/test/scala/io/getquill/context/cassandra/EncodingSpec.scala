@@ -35,7 +35,7 @@ class EncodingSpec extends Spec {
       val result =
         for {
           _ <- testStreamDB.run(query[EncodingTestEntity].delete)
-          inserts = Observable(insertValues: _*)
+          _ = Observable(insertValues: _*)
           _ <- Observable.fromTask(testStreamDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insert(e))).countL)
           result <- testStreamDB.run(query[EncodingTestEntity])
         } yield {
@@ -150,7 +150,8 @@ class EncodingSpec extends Spec {
     o6:  Option[Float],
     o7:  Option[Double],
     o8:  Option[Array[Byte]],
-    o9:  Option[Date]
+    o9:  Option[Date],
+    o10: Option[UUID]
   )
 
   private val fixUUID: UUID = UUID.fromString("606c79e8-a331-4810-8bd7-0668ff7a23ef")
@@ -177,7 +178,8 @@ class EncodingSpec extends Spec {
         o6 = Some(34.4f),
         o7 = Some(42d),
         o8 = Some(Array(1.toByte, 2.toByte)),
-        o9 = Some(new Date(31200000))
+        o9 = Some(new Date(31200000)),
+        o10 = Some(fixUUID)
       ),
       EncodingTestEntity(
         id = 2,
@@ -199,7 +201,8 @@ class EncodingSpec extends Spec {
         o6 = None,
         o7 = None,
         o8 = None,
-        o9 = None
+        o9 = None,
+        o10 = None
       )
     )
 }
