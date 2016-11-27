@@ -46,7 +46,7 @@ class EncodingSpec extends Spec {
     }
   }
 
-  "encodes collections" - {
+  "encodes collections in liftQuery" - {
     "sync" in {
       import testSyncDB._
       val q = quote {
