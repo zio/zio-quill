@@ -1,11 +1,9 @@
 package io.getquill.context.sql
 
 import java.time.LocalDate
-import java.util.{ Date, UUID }
+import java.util.{Date, UUID}
 
-import io.getquill.Spec
-
-case class EncodingTestType(value: String)
+import io.getquill.{EncodingTestType, Spec, TestDecoders, TestEncoders}
 
 trait EncodingSpec extends Spec {
 

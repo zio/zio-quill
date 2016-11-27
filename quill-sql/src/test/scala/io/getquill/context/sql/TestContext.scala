@@ -1,9 +1,6 @@
 package io.getquill.context.sql
 
-import io.getquill.TestEntities
-import io.getquill.Literal
-import io.getquill.MirrorSqlDialect
-import io.getquill.SqlMirrorContext
+import io.getquill._
 
 object testContext extends TestContextTemplate
 
