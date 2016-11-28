@@ -1523,6 +1523,7 @@ Maintainers
 - @gustavoamigo
 - @jilen
 - @lvicentesanchez
+- @mxl
 
 You can notify all maintainers using the handle `@getquill/maintainers`.
 
