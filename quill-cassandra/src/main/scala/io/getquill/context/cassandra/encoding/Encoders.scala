@@ -65,6 +65,11 @@ trait Encoders {
         converter[O](value.map(f).asJava)
     }
 
+    class RefItemType[I <: AnyRef: ClassTag] extends ItemType[I] {
+      override def apply(value: Set[I], converter: CollectionItemEncoder) =
+        apply[I](value, converter)
+    }
+
     implicit object Int extends ItemType[Int] {
       override def apply(value: Set[Int], converter: CollectionItemEncoder) =
         apply[java.lang.Integer](value, converter)
@@ -75,6 +80,8 @@ trait Encoders {
         apply[java.lang.Long](value, converter)
     }
 
+    implicit object String extends RefItemType[String]
+
   }
 
   case class CollectionItemRowEncoder(index: Index, r: PrepareRow) extends CollectionItemEncoder {
@@ -83,10 +90,15 @@ trait Encoders {
     }
   }
 
-  implicit def setEncoder[I](implicit cit: CollectionItemEncodingType[I]): Encoder[Set[I]] =
+  implicit def setMappedEncoder[I, O](implicit mapped: MappedEncoding[I, O], cit: CollectionItemEncodingType[O]): Encoder[Set[I]] =
     encoder((index, value, row) => {
-      cit(value, CollectionItemRowEncoder(index, row))
+      cit(value.map(mapped.f), CollectionItemRowEncoder(index, row))
       row
     })
+
+  implicit def setEncoder[I](implicit cit: CollectionItemEncodingType[I]): Encoder[Set[I]] = {
+    implicit val mapped = MappedEncoding[I, I](identity)
+    setMappedEncoder[I, I]
+  }
 
 }

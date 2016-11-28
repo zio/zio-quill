@@ -46,6 +46,7 @@ CREATE TABLE EncodingTestEntity(
     v9 TIMESTAMP,
     v10 UUID,
     v11 SET<INT>,
+    v12 SET<VARCHAR>,
     o1 VARCHAR,
     o2 DECIMAL,
     o3 BOOLEAN,

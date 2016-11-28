@@ -77,6 +77,11 @@ trait Decoders {
         converter[O]().asScala.map(f).toSet
     }
 
+    class RefItemType[I <: AnyRef: ClassTag] extends ItemType[I] {
+      override def apply(converter: CollectionItemDecoder) =
+        apply[I](converter)
+    }
+
     implicit object Int extends ItemType[Int] {
       override def apply(converter: CollectionItemDecoder) =
         apply[java.lang.Integer](converter)
@@ -87,6 +92,8 @@ trait Decoders {
         apply[java.lang.Long](converter)
     }
 
+    implicit object String extends RefItemType[String]
+
   }
 
   case class CollectionItemRowDecoder(index: Index, r: ResultRow) extends CollectionItemDecoder {
@@ -94,7 +101,12 @@ trait Decoders {
       r.getSet(index, implicitly[ClassTag[T]].runtimeClass.asInstanceOf[Class[T]])
   }
 
-  implicit def setDecoder[I: TypeTag](implicit cit: CollectionItemDecodingType[I], t: ClassTag[I]): Decoder[Set[I]] =
+  implicit def setMappedDecoder[O: TypeTag, I](implicit mapped: MappedEncoding[I, O], cit: CollectionItemDecodingType[I]): Decoder[Set[O]] =
     decoder((index, row) =>
-      Option(cit.apply(CollectionItemRowDecoder(index, row))).getOrElse(Set()))
+      Option(cit.apply(CollectionItemRowDecoder(index, row))).getOrElse(Set()).map(mapped.f))
+
+  implicit def setDecoder[O: TypeTag](implicit cit: CollectionItemDecodingType[O]): Decoder[Set[O]] = {
+    implicit val mapped = MappedEncoding[O, O](identity)
+    setMappedDecoder[O, O]
+  }
 }
