@@ -65,10 +65,10 @@ lazy val `quill-jdbc` =
       fork in Test := true,
       libraryDependencies ++= Seq(
         "com.zaxxer"     % "HikariCP"             % "2.4.6",
-        "mysql"          % "mysql-connector-java" % "5.1.38"   % "test",
-        "com.h2database" % "h2"                   % "1.4.192"  % "test",
-        "org.postgresql" % "postgresql"           % "9.4.1208" % "test",
-        "org.xerial"     % "sqlite-jdbc"          % "3.8.11.2" % "test"
+        "mysql"          % "mysql-connector-java" % "5.1.38"   % Test,
+        "com.h2database" % "h2"                   % "1.4.192"  % Test,
+        "org.postgresql" % "postgresql"           % "9.4.1208" % Test,
+        "org.xerial"     % "sqlite-jdbc"          % "3.8.11.2" % Test
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -225,9 +225,9 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
   scalaVersion := "2.11.8",
   libraryDependencies ++= Seq(
     "org.scalamacros" %% "resetallattrs"  % "1.0.0",
-    "org.scalatest"   %%% "scalatest"     % "3.0.0-RC2" % "test",
-    "ch.qos.logback"  % "logback-classic" % "1.1.7"     % "test",
-    "com.google.code.findbugs" % "jsr305" % "3.0.1"     % "provided" // just to avoid warnings during compilation
+    "org.scalatest"   %%% "scalatest"     % "3.0.1"     % Test,
+    "ch.qos.logback"  % "logback-classic" % "1.1.7"     % Test,
+    "com.google.code.findbugs" % "jsr305" % "3.0.1"     % Provided // just to avoid warnings during compilation
   ),
   EclipseKeys.createSrc := EclipseCreateSrc.Default,
   unmanagedClasspath in Test ++= Seq(
