@@ -1,5 +1,7 @@
 package io.getquill.context.cassandra.encoding
 
+import java.util.{ Date, UUID }
+
 import io.getquill.context.cassandra.CassandraSessionContext
 import io.getquill.util.Messages.fail
 
@@ -42,23 +44,23 @@ trait Decoders {
   implicit def mappedDecoder[I, O](implicit mapped: MappedEncoding[I, O], decoder: Decoder[I]): Decoder[O] =
     CassandraDecoder(mappedBaseDecoder(mapped, decoder.decoder))
 
-  implicit val stringDecoder = decoder(_.getString)
+  implicit val stringDecoder: Decoder[String] = decoder(_.getString)
   implicit val bigDecimalDecoder: Decoder[BigDecimal] =
     decoder((index, row) => row.getDecimal(index))
-  implicit val booleanDecoder = decoder(_.getBool)
-  implicit val intDecoder = decoder(_.getInt)
-  implicit val longDecoder = decoder(_.getLong)
-  implicit val floatDecoder = decoder(_.getFloat)
-  implicit val doubleDecoder = decoder(_.getDouble)
-  implicit val byteArrayDecoder =
+  implicit val booleanDecoder: Decoder[Boolean] = decoder(_.getBool)
+  implicit val intDecoder: Decoder[Int] = decoder(_.getInt)
+  implicit val longDecoder: Decoder[Long] = decoder(_.getLong)
+  implicit val floatDecoder: Decoder[Float] = decoder(_.getFloat)
+  implicit val doubleDecoder: Decoder[Double] = decoder(_.getDouble)
+  implicit val byteArrayDecoder: Decoder[Array[Byte]] =
     decoder((index, row) => {
       val bb = row.getBytes(index)
       val b = new Array[Byte](bb.remaining())
       bb.get(b)
       b
     })
-  implicit val uuidDecoder = decoder(_.getUUID)
-  implicit val dateDecoder = decoder(_.getTimestamp)
+  implicit val uuidDecoder: Decoder[UUID] = decoder(_.getUUID)
+  implicit val dateDecoder: Decoder[Date] = decoder(_.getTimestamp)
 
   trait CollectionItemDecoder {
     def apply[T <: AnyRef: ClassTag](): java.util.Set[T]

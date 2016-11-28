@@ -1,6 +1,7 @@
 package io.getquill.context.cassandra.encoding
 
 import java.nio.ByteBuffer
+import java.util.{ Date, UUID }
 
 import io.getquill.context.cassandra.CassandraSessionContext
 
@@ -36,18 +37,18 @@ trait Encoders {
   implicit def mappedEncoder[I, O](implicit mapped: MappedEncoding[I, O], encoder: Encoder[O]): Encoder[I] =
     CassandraEncoder(mappedBaseEncoder(mapped, encoder.encoder))
 
-  implicit val stringEncoder = encoder(_.setString)
+  implicit val stringEncoder: Encoder[String] = encoder(_.setString)
   implicit val bigDecimalEncoder: Encoder[BigDecimal] =
     encoder((index, value, row) => row.setDecimal(index, value.bigDecimal))
-  implicit val booleanEncoder = encoder(_.setBool)
-  implicit val intEncoder = encoder(_.setInt)
-  implicit val longEncoder = encoder(_.setLong)
-  implicit val floatEncoder = encoder(_.setFloat)
-  implicit val doubleEncoder = encoder(_.setDouble)
+  implicit val booleanEncoder: Encoder[Boolean] = encoder(_.setBool)
+  implicit val intEncoder: Encoder[Int] = encoder(_.setInt)
+  implicit val longEncoder: Encoder[Long] = encoder(_.setLong)
+  implicit val floatEncoder: Encoder[Float] = encoder(_.setFloat)
+  implicit val doubleEncoder: Encoder[Double] = encoder(_.setDouble)
   implicit val byteArrayEncoder: Encoder[Array[Byte]] =
     encoder((index, value, row) => row.setBytes(index, ByteBuffer.wrap(value)))
-  implicit val uuidEncoder = encoder(_.setUUID)
-  implicit val dateEncoder = encoder(_.setTimestamp)
+  implicit val uuidEncoder: Encoder[UUID] = encoder(_.setUUID)
+  implicit val dateEncoder: Encoder[Date] = encoder(_.setTimestamp)
 
   trait CollectionItemEncoder {
     def apply[T <: AnyRef: ClassTag](value: java.util.Set[T]): Unit
