@@ -4,6 +4,9 @@ import java.nio.ByteBuffer
 
 import io.getquill.context.cassandra.CassandraSessionContext
 
+import scala.collection.JavaConverters._
+import scala.reflect.ClassTag
+
 trait Encoders {
   this: CassandraSessionContext[_] =>
 
@@ -45,4 +48,44 @@ trait Encoders {
     encoder((index, value, row) => row.setBytes(index, ByteBuffer.wrap(value)))
   implicit val uuidEncoder = encoder(_.setUUID)
   implicit val dateEncoder = encoder(_.setTimestamp)
+
+  trait CollectionItemEncoder {
+    def apply[T <: AnyRef: ClassTag](value: java.util.Set[T]): Unit
+  }
+
+  sealed trait CollectionItemEncodingType[I] {
+    def apply(value: Set[I], converter: CollectionItemEncoder): Unit
+  }
+
+  object CollectionItemEncodingType {
+
+    abstract class ItemType[I] extends CollectionItemEncodingType[I] {
+      def apply[O <: AnyRef: ClassTag](value: Set[I], converter: CollectionItemEncoder)(implicit f: I => O): Unit =
+        converter[O](value.map(f).asJava)
+    }
+
+    implicit object Int extends ItemType[Int] {
+      override def apply(value: Set[Int], converter: CollectionItemEncoder) =
+        apply[java.lang.Integer](value, converter)
+    }
+
+    implicit object Long extends ItemType[Long] {
+      override def apply(value: Set[Long], converter: CollectionItemEncoder) =
+        apply[java.lang.Long](value, converter)
+    }
+
+  }
+
+  case class CollectionItemRowEncoder(index: Index, r: PrepareRow) extends CollectionItemEncoder {
+    override def apply[T <: AnyRef: ClassTag](value: java.util.Set[T]) = {
+      val _ = r.setSet(index, value, implicitly[ClassTag[T]].runtimeClass.asInstanceOf[Class[T]])
+    }
+  }
+
+  implicit def setEncoder[I](implicit cit: CollectionItemEncodingType[I]): Encoder[Set[I]] =
+    encoder((index, value, row) => {
+      cit(value, CollectionItemRowEncoder(index, row))
+      row
+    })
+
 }

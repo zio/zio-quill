@@ -142,6 +142,7 @@ class EncodingSpec extends Spec {
     v8:  Array[Byte],
     v9:  Date,
     v10: UUID,
+    v11: Set[Int],
     o1:  Option[String],
     o2:  Option[BigDecimal],
     o3:  Option[Boolean],
@@ -155,6 +156,7 @@ class EncodingSpec extends Spec {
   )
 
   private val fixUUID: UUID = UUID.fromString("606c79e8-a331-4810-8bd7-0668ff7a23ef")
+  private val intSet = Set[Int](1, 2, 3)
 
   val insertValues =
     List(
@@ -170,6 +172,7 @@ class EncodingSpec extends Spec {
         v8 = Array(1.toByte, 2.toByte),
         v9 = new Date(31200000),
         v10 = fixUUID,
+        v11 = intSet,
         o1 = Some("s"),
         o2 = Some(BigDecimal(1.1)),
         o3 = Some(true),
@@ -193,6 +196,7 @@ class EncodingSpec extends Spec {
         v8 = Array(),
         v9 = new Date(0),
         v10 = fixUUID,
+        v11 = Set(),
         o1 = None,
         o2 = None,
         o3 = None,
