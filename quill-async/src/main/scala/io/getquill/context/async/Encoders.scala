@@ -10,16 +10,18 @@ trait Encoders {
 
   type Encoder[T] = AsyncEncoder[T]
 
-  case class AsyncEncoder[T](sqlType: SqlTypes.SqlTypes)(implicit encoder: BaseEncoder[T])
+  type EncoderSqlType = SqlTypes.SqlTypes
+
+  case class AsyncEncoder[T](sqlType: DecoderSqlType)(implicit encoder: BaseEncoder[T])
     extends BaseEncoder[T] {
     override def apply(index: Index, value: T, row: PrepareRow) =
       encoder.apply(index, value, row)
   }
 
-  def encoder[T](sqlType: SqlTypes.SqlTypes): Encoder[T] =
+  def encoder[T](sqlType: DecoderSqlType): Encoder[T] =
     encoder(identity[T], sqlType)
 
-  def encoder[T](f: T => Any, sqlType: SqlTypes.SqlTypes): Encoder[T] =
+  def encoder[T](f: T => Any, sqlType: DecoderSqlType): Encoder[T] =
     AsyncEncoder[T](sqlType)(new BaseEncoder[T] {
       def apply(index: Index, value: T, row: PrepareRow) =
         row :+ f(value)

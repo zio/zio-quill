@@ -14,7 +14,9 @@ trait Decoders {
 
   type Decoder[T] = AsyncDecoder[T]
 
-  case class AsyncDecoder[T](sqlType: SqlTypes.SqlTypes)(implicit decoder: BaseDecoder[T])
+  type DecoderSqlType = SqlTypes.SqlTypes
+
+  case class AsyncDecoder[T](sqlType: DecoderSqlType)(implicit decoder: BaseDecoder[T])
     extends BaseDecoder[T] {
     override def apply(index: Index, row: ResultRow) =
       decoder(index, row)
@@ -22,7 +24,7 @@ trait Decoders {
 
   def decoder[T: ClassTag](
     f:       PartialFunction[Any, T] = PartialFunction.empty,
-    sqlType: SqlTypes.SqlTypes
+    sqlType: DecoderSqlType
   ): Decoder[T] =
     AsyncDecoder[T](sqlType)(new BaseDecoder[T] {
       def apply(index: Int, row: RowData) = {
