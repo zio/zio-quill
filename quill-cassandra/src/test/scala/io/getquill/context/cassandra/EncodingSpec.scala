@@ -117,6 +117,8 @@ class EncodingSpec extends Spec {
     e.v8.toList mustEqual a.v8.toList
     e.v9 mustEqual a.v9
     e.v10 mustEqual a.v10
+    e.v11 mustEqual e.v11
+    e.v12 mustEqual e.v12
     e.o1 mustEqual a.o1
     e.o2 mustEqual a.o2
     e.o3 mustEqual a.o3
@@ -126,7 +128,9 @@ class EncodingSpec extends Spec {
     e.o7 mustEqual a.o7
     e.o8.map(_.toList) mustEqual a.o8.map(_.toList)
     e.o9 mustEqual a.o9
-
+    e.o10 mustEqual a.o10
+    e.o11 mustEqual a.o11
+    e.o12 mustEqual a.o12
     ()
   }
 
@@ -153,7 +157,9 @@ class EncodingSpec extends Spec {
     o7:  Option[Double],
     o8:  Option[Array[Byte]],
     o9:  Option[Date],
-    o10: Option[UUID]
+    o10: Option[UUID],
+    o11: Option[Set[Int]],
+    o12: Option[Set[EncodingTestType]]
   )
 
   private val fixUUID: UUID = UUID.fromString("606c79e8-a331-4810-8bd7-0668ff7a23ef")
@@ -185,7 +191,9 @@ class EncodingSpec extends Spec {
         o7 = Some(42d),
         o8 = Some(Array(1.toByte, 2.toByte)),
         o9 = Some(new Date(31200000)),
-        o10 = Some(fixUUID)
+        o10 = Some(fixUUID),
+        o11 = Some(intSet),
+        o12 = Some(testTypeSet)
       ),
       EncodingTestEntity(
         id = 2,
@@ -210,7 +218,9 @@ class EncodingSpec extends Spec {
         o7 = None,
         o8 = None,
         o9 = None,
-        o10 = None
+        o10 = None,
+        o11 = None,
+        o12 = None
       )
     )
 }

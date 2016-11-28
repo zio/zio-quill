@@ -57,6 +57,8 @@ CREATE TABLE EncodingTestEntity(
     o8 BLOB,
     o9 TIMESTAMP,
     o10 UUID,
+    o11 SET<INT>,
+    o12 SET<VARCHAR>,
     PRIMARY KEY(id, v1)
 );
 
