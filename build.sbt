@@ -64,7 +64,7 @@ lazy val `quill-jdbc` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.zaxxer"     % "HikariCP"             % "2.4.6",
+        "com.zaxxer"     % "HikariCP"             % "2.5.1",
         "mysql"          % "mysql-connector-java" % "5.1.38"   % "test",
         "com.h2database" % "h2"                   % "1.4.192"  % "test",
         "org.postgresql" % "postgresql"           % "9.4.1208" % "test",
