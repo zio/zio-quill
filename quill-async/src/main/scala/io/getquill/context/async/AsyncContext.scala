@@ -17,11 +17,13 @@ import scala.util.Try
 import io.getquill.context.sql.SqlContext
 import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.NamingStrategy
+import io.getquill.monad.ScalaFutureIOMonad
 
 abstract class AsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: Connection](pool: PartitionedConnectionPool[C])
   extends SqlContext[D, N]
   with Decoders
-  with Encoders {
+  with Encoders
+  with ScalaFutureIOMonad {
 
   private val logger: Logger =
     Logger(LoggerFactory.getLogger(classOf[AsyncContext[_, _, _]]))
@@ -29,12 +31,13 @@ abstract class AsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: Connection]
   override type PrepareRow = List[Any]
   override type ResultRow = RowData
 
-  override type RunQueryResult[T] = Future[List[T]]
-  override type RunQuerySingleResult[T] = Future[T]
-  override type RunActionResult = Future[Long]
-  override type RunActionReturningResult[T] = Future[T]
-  override type RunBatchActionResult = Future[List[Long]]
-  override type RunBatchActionReturningResult[T] = Future[List[T]]
+  override type Result[T] = Future[T]
+  override type RunQueryResult[T] = List[T]
+  override type RunQuerySingleResult[T] = T
+  override type RunActionResult = Long
+  override type RunActionReturningResult[T] = T
+  override type RunBatchActionResult = List[Long]
+  override type RunBatchActionReturningResult[T] = List[T]
 
   override def close = {
     Await.result(pool.close, Duration.Inf)
@@ -59,6 +62,12 @@ abstract class AsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: Connection]
   def transaction[T](f: TransactionalExecutionContext => Future[T])(implicit ec: ExecutionContext) =
     pool.inTransaction { c =>
       f(TransactionalExecutionContext(ec, c))
+    }
+
+  override def unsafePerformIO[T](io: IO[T, _], transactional: Boolean = false)(implicit ec: ExecutionContext): Result[T] =
+    transactional match {
+      case false => super.unsafePerformIO(io)
+      case true  => transaction(super.unsafePerformIO(io)(_))
     }
 
   def executeQuery[T](sql: String, prepare: List[Any] => List[Any] = identity, extractor: RowData => T = identity[RowData] _)(implicit ec: ExecutionContext): Future[List[T]] = {

@@ -10,22 +10,30 @@ import com.typesafe.config.Config
 import scala.collection.JavaConverters._
 import io.getquill.context.cassandra.CassandraSessionContext
 import com.datastax.driver.core.Cluster
+import io.getquill.monad.ScalaFutureIOMonad
 
 class CassandraAsyncContext[N <: NamingStrategy](
   cluster:                    Cluster,
   keyspace:                   String,
   preparedStatementCacheSize: Long
 )
-  extends CassandraSessionContext[N](cluster, keyspace, preparedStatementCacheSize) {
+  extends CassandraSessionContext[N](cluster, keyspace, preparedStatementCacheSize)
+  with ScalaFutureIOMonad {
 
   def this(config: CassandraContextConfig) = this(config.cluster, config.keyspace, config.preparedStatementCacheSize)
   def this(config: Config) = this(CassandraContextConfig(config))
   def this(configPrefix: String) = this(LoadConfig(configPrefix))
 
-  override type RunQueryResult[T] = Future[List[T]]
-  override type RunQuerySingleResult[T] = Future[T]
-  override type RunActionResult = Future[Unit]
-  override type RunBatchActionResult = Future[Unit]
+  override type Result[T] = Future[T]
+  override type RunQueryResult[T] = List[T]
+  override type RunQuerySingleResult[T] = T
+  override type RunActionResult = Unit
+  override type RunBatchActionResult = Unit
+
+  override def unsafePerformIO[T](io: IO[T, _], transactional: Boolean = false)(implicit ec: ExecutionContext): Result[T] = {
+    if (transactional) logger.warn("Cassandra doesn't support transactions, ignoring `io.transactional`")
+    unsafePerformIO(io)
+  }
 
   def executeQuery[T](cql: String, prepare: BoundStatement => BoundStatement = identity, extractor: Row => T = identity[Row] _)(implicit ec: ExecutionContext): Future[List[T]] =
     session.executeAsync(prepare(super.prepare(cql)))

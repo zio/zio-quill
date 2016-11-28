@@ -7,22 +7,30 @@ import io.getquill.util.LoadConfig
 import io.getquill.context.cassandra.CassandraSessionContext
 import scala.collection.JavaConverters._
 import com.datastax.driver.core.Cluster
+import io.getquill.monad.SyncIOMonad
 
 class CassandraSyncContext[N <: NamingStrategy](
   cluster:                    Cluster,
   keyspace:                   String,
   preparedStatementCacheSize: Long
 )
-  extends CassandraSessionContext[N](cluster, keyspace, preparedStatementCacheSize) {
+  extends CassandraSessionContext[N](cluster, keyspace, preparedStatementCacheSize)
+  with SyncIOMonad {
 
   def this(config: CassandraContextConfig) = this(config.cluster, config.keyspace, config.preparedStatementCacheSize)
   def this(config: Config) = this(CassandraContextConfig(config))
   def this(configPrefix: String) = this(LoadConfig(configPrefix))
 
+  override type Result[T] = T
   override type RunQueryResult[T] = List[T]
   override type RunQuerySingleResult[T] = T
   override type RunActionResult = Unit
   override type RunBatchActionResult = Unit
+
+  override def unsafePerformIO[T](io: IO[T, _], transactional: Boolean = false): Result[T] = {
+    if (transactional) logger.warn("Cassandra doesn't support transactions, ignoring `io.transactional`")
+    unsafePerformIO(io)
+  }
 
   def executeQuery[T](cql: String, prepare: BoundStatement => BoundStatement = identity, extractor: Row => T = identity[Row] _): List[T] =
     session.execute(prepare(super.prepare(cql)))
