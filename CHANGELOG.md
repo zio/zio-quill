@@ -1,3 +1,18 @@
+# 1.0.1
+
+- [include SQL type info in Encoder/Decoder](https://github.com/getquill/quill/pull/588)
+- [make encoder helpers and wrapper type public for quill-finangle-postgres](https://github.com/getquill/quill/pull/608)
+- [fix property renaming normalization order](https://github.com/getquill/quill/pull/609)
+- [workaround compiler bug involving reflective calls](https://github.com/getquill/quill/pull/612)
+- [fix flat joins support](https://github.com/getquill/quill/pull/613)
+- [encoders and decoders refactoring](https://github.com/getquill/quill/pull/614)
+- [avoid alias conflict for multiple nested explicit joins](https://github.com/getquill/quill/pull/616)
+- [avoid merging filter condition into a groupBy.map](https://github.com/getquill/quill/pull/618)
+- [move Embedded from `io.getquill.dsl.MetaDsl` inner context to `io.getquill` package](https://github.com/getquill/quill/pull/621)
+- [make `currentConnection` protected](https://github.com/getquill/quill/pull/628)
+- [add abstract encoders/decoders to CassandraContext and uuid mirror encoder/decoder](https://github.com/getquill/quill/pull/635)
+- [made the SQL types for AsyncEncoder/AsyncDecoder generic](https://github.com/getquill/quill/pull/637)
+
 # 1.0.0-RC1 - 20-Oct-2016
 
 - [introduce `finagle-postgres`](https://github.com/getquill/quill/pull/560)
