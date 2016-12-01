@@ -141,7 +141,7 @@ lazy val `quill-cassandra` =
       fork in Test := true,
       libraryDependencies ++= Seq(
         "com.datastax.cassandra" %  "cassandra-driver-core" % "3.1.2",
-        "io.monix"               %% "monix"                % "2.0.2"
+        "io.monix"               %% "monix"                % "2.1.1"
       )
     )
     .dependsOn(`quill-core-jvm` % "compile->compile;test->test")
