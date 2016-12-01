@@ -33,8 +33,8 @@ lazy val `quill-core` =
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .settings(libraryDependencies ++= Seq(
-      "com.typesafe"               %  "config"        % "1.3.0",
-      "com.typesafe.scala-logging" %% "scala-logging" % "3.4.0",
+      "com.typesafe"               %  "config"        % "1.3.1",
+      "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0",
       "org.scala-lang"             %  "scala-reflect" % scalaVersion.value
     ))
     .jsSettings(
@@ -80,7 +80,7 @@ lazy val `quill-finagle-mysql` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.twitter" %% "finagle-mysql" % "6.37.0"
+        "com.twitter" %% "finagle-mysql" % "6.40.0"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
