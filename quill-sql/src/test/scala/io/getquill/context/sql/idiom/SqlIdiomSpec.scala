@@ -255,11 +255,11 @@ class SqlIdiomSpec extends Spec {
       "unary operation" - {
         "nonEmpty" in {
           testContext.run(qr1.nonEmpty).string mustEqual
-            "SELECT x.* FROM (SELECT EXISTS (SELECT x.* FROM TestEntity x)) x"
+            "SELECT EXISTS (SELECT x.* FROM TestEntity x)"
         }
         "isEmpty" in {
           testContext.run(qr1.isEmpty).string mustEqual
-            "SELECT x.* FROM (SELECT NOT EXISTS (SELECT x.* FROM TestEntity x)) x"
+            "SELECT NOT EXISTS (SELECT x.* FROM TestEntity x)"
         }
       }
       "limited" - {
@@ -381,7 +381,7 @@ class SqlIdiomSpec extends Spec {
           qr1.map(t => t.i).size == 1L
         }
         testContext.run(q).string mustEqual
-          "SELECT x.* FROM (SELECT (SELECT COUNT(t.i) FROM TestEntity t) = 1) x"
+          "SELECT (SELECT COUNT(t.i) FROM TestEntity t) = 1"
       }
     }
     "operations" - {

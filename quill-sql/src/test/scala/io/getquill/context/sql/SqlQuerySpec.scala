@@ -48,12 +48,12 @@ class SqlQuerySpec extends Spec {
           qr1.map(t => t.i).contains(1)
         }
         testContext.run(q).string mustEqual
-          "SELECT t.* FROM (SELECT 1 IN (SELECT t.i FROM TestEntity t)) t"
+          "SELECT 1 IN (SELECT t.i FROM TestEntity t)"
       }
       "simple value" in {
         val q = quote(1)
         testContext.run(q).string mustEqual
-          "SELECT x.* FROM (SELECT 1) x"
+          "SELECT 1"
       }
     }
 
@@ -159,7 +159,7 @@ class SqlQuerySpec extends Spec {
           qr1.groupBy(t => t.i).map(t => t._1)
         }
         testContext.run(q).string mustEqual
-          "SELECT t.* FROM (SELECT t.i FROM TestEntity t GROUP BY t.i) t"
+          "SELECT t.i FROM TestEntity t GROUP BY t.i"
       }
       "nested" in {
         val q = quote {
@@ -338,14 +338,14 @@ class SqlQuerySpec extends Spec {
           qr1.nonEmpty
         }
         testContext.run(q).string mustEqual
-          "SELECT x.* FROM (SELECT EXISTS (SELECT x.* FROM TestEntity x)) x"
+          "SELECT EXISTS (SELECT x.* FROM TestEntity x)"
       }
       "isEmpty" in {
         val q = quote {
           qr1.isEmpty
         }
         testContext.run(q).string mustEqual
-          "SELECT x.* FROM (SELECT NOT EXISTS (SELECT x.* FROM TestEntity x)) x"
+          "SELECT NOT EXISTS (SELECT x.* FROM TestEntity x)"
       }
     }
     "aggregated and mapped query" in {
