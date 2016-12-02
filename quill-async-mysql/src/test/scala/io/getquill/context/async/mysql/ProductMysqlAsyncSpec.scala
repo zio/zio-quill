@@ -60,7 +60,7 @@ class ProductMysqlAsyncSpec extends ProductSpec {
       returnedProduct.id mustEqual inserted
     }
 
-    "Single insert with wrapped value" in {
+    "Single insert with value class" in {
       case class Product(id: Id, description: String, sku: Long)
       val prd = Product(Id(0L), "test2", 2L)
       val q1 = quote {

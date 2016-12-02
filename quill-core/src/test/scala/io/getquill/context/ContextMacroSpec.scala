@@ -112,10 +112,19 @@ class ContextMacroSpec extends Spec {
         r.prepareRow mustEqual Row("a")
       }
 
-      "wrapped" in {
-        case class Entity(x: WrappedEncodable)
+      "value class" in {
+        case class Entity(x: ValueClass)
         val q = quote {
-          query[Entity].filter(t => t.x == lift(WrappedEncodable(1)))
+          query[Entity].filter(t => t.x == lift(ValueClass(1)))
+        }
+        val r = testContext.run(q)
+        r.string mustEqual """querySchema("Entity").filter(t => t.x == ?).map(t => t.x)"""
+        r.prepareRow mustEqual Row(1)
+      }
+      "generic value class" in {
+        case class Entity(x: GenericValueClass[Int])
+        val q = quote {
+          query[Entity].filter(t => t.x == lift(GenericValueClass(1)))
         }
         val r = testContext.run(q)
         r.string mustEqual """querySchema("Entity").filter(t => t.x == ?).map(t => t.x)"""
