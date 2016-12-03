@@ -1,8 +1,8 @@
 package io.getquill.dsl
 
 import io.getquill.Spec
-import io.getquill.testContext._
 import io.getquill.context.mirror.Row
+import io.getquill.testContext._
 
 class MetaDslSpec extends Spec {
 
@@ -73,8 +73,22 @@ class MetaDslSpec extends Spec {
       "> 22 fields" in {
         val meta = materializeQueryMeta[MoreThan22]
         meta.expand.toString mustEqual "(q) => q.map(x => (x.v0, x.v1, x.v2, x.v3, x.v4, x.v5, x.v6, x.v7, x.v8, x.v9, x.x0, x.x1, x.x2, x.x3, x.x4, x.x5, x.x6, x.x7, x.x8, x.x9, x.y0, x.y1, x.y2, x.y3, x.y4, x.y5, x.y6, x.y7, x.y8, x.y9))"
-        meta.extract(Row((0 until 30): _*)) mustEqual
+        meta.extract(Row(0 until 30: _*)) mustEqual
           MoreThan22(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29)
+      }
+    }
+    "private val" - {
+      "only" in {
+        case class Entity(private val a: Int)
+        val meta = materializeQueryMeta[Entity]
+        meta.expand.toString mustEqual "(q) => q.map(x => ())"
+        meta.extract(Row(1)) mustEqual Entity(1)
+      }
+      "mixed" in {
+        case class Entity(a: Int, private val b: Int)
+        val meta = materializeQueryMeta[Entity]
+        meta.expand.toString mustEqual "(q) => q.map(x => x.a)"
+        meta.extract(Row(1, 2)) mustEqual Entity(1, 2)
       }
     }
     "custom" in {
@@ -132,6 +146,17 @@ class MetaDslSpec extends Spec {
       "> 22 fields" in {
         val meta = materializeUpdateMeta[MoreThan22]
         meta.expand.toString mustEqual "(q, value) => q.update(v => v.v0 -> value.v0, v => v.v1 -> value.v1, v => v.v2 -> value.v2, v => v.v3 -> value.v3, v => v.v4 -> value.v4, v => v.v5 -> value.v5, v => v.v6 -> value.v6, v => v.v7 -> value.v7, v => v.v8 -> value.v8, v => v.v9 -> value.v9, v => v.x0 -> value.x0, v => v.x1 -> value.x1, v => v.x2 -> value.x2, v => v.x3 -> value.x3, v => v.x4 -> value.x4, v => v.x5 -> value.x5, v => v.x6 -> value.x6, v => v.x7 -> value.x7, v => v.x8 -> value.x8, v => v.x9 -> value.x9, v => v.y0 -> value.y0, v => v.y1 -> value.y1, v => v.y2 -> value.y2, v => v.y3 -> value.y3, v => v.y4 -> value.y4, v => v.y5 -> value.y5, v => v.y6 -> value.y6, v => v.y7 -> value.y7, v => v.y8 -> value.y8, v => v.y9 -> value.y9)"
+      }
+      "private val" - {
+        "only" in {
+          case class Entity(private val a: Int)
+          "materializeUpdateMeta[Entity]" mustNot compile
+        }
+        "mixed" in {
+          case class Entity(a: Int, private val b: Int)
+          val meta = materializeUpdateMeta[Entity]
+          meta.expand.toString mustEqual "(q, value) => q.update(v => v.a -> value.a)"
+        }
       }
     }
     "custom" - {
@@ -202,6 +227,17 @@ class MetaDslSpec extends Spec {
       "> 22 fields" in {
         val meta = materializeInsertMeta[MoreThan22]
         meta.expand.toString mustEqual "(q, value) => q.insert(v => v.v0 -> value.v0, v => v.v1 -> value.v1, v => v.v2 -> value.v2, v => v.v3 -> value.v3, v => v.v4 -> value.v4, v => v.v5 -> value.v5, v => v.v6 -> value.v6, v => v.v7 -> value.v7, v => v.v8 -> value.v8, v => v.v9 -> value.v9, v => v.x0 -> value.x0, v => v.x1 -> value.x1, v => v.x2 -> value.x2, v => v.x3 -> value.x3, v => v.x4 -> value.x4, v => v.x5 -> value.x5, v => v.x6 -> value.x6, v => v.x7 -> value.x7, v => v.x8 -> value.x8, v => v.x9 -> value.x9, v => v.y0 -> value.y0, v => v.y1 -> value.y1, v => v.y2 -> value.y2, v => v.y3 -> value.y3, v => v.y4 -> value.y4, v => v.y5 -> value.y5, v => v.y6 -> value.y6, v => v.y7 -> value.y7, v => v.y8 -> value.y8, v => v.y9 -> value.y9)"
+      }
+      "private val" - {
+        "only" in {
+          case class Entity(private val a: Int)
+          "materializeInsertMeta[Entity]" mustNot compile
+        }
+        "mixed" in {
+          case class Entity(a: Int, private val b: Int)
+          val meta = materializeInsertMeta[Entity]
+          meta.expand.toString mustEqual "(q, value) => q.insert(v => v.a -> value.a)"
+        }
       }
     }
     "custom" - {
