@@ -139,7 +139,6 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
     "-Ywarn-unused-import"
   ),
   fork in Test := true,
-  releasePublishArtifactsAction := PgpKeys.publishSigned.value,
   scoverage.ScoverageKeys.coverageMinimum := 96,
   scoverage.ScoverageKeys.coverageFailOnMinimum := false,
   ScalariformKeys.preferences := ScalariformKeys.preferences.value
@@ -160,50 +159,5 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
     .setPreference(IndentLocalDefs, false)
     .setPreference(SpacesWithinPatternBinders, true)
     .setPreference(SpacesAroundMultiImports, true),
-  EclipseKeys.eclipseOutput := Some("bin"),
-  publishMavenStyle := true,
-  publishTo := {
-    val nexus = "https://oss.sonatype.org/"
-    if (isSnapshot.value)
-      Some("snapshots" at nexus + "content/repositories/snapshots")
-    else
-      Some("releases"  at nexus + "service/local/staging/deploy/maven2")
-  },
-  pgpSecretRing := file("local.secring.gpg"),
-  pgpPublicRing := file("local.pubring.gpg"),
-  releaseProcess := Seq[ReleaseStep](
-    checkSnapshotDependencies,
-    inquireVersions,
-    runClean,
-    runTest,
-    setReleaseVersion,
-    commitReleaseVersion,
-    tagRelease,
-    ReleaseStep(action = Command.process("publishSigned", _)),
-    setNextVersion,
-    commitNextVersion,
-    ReleaseStep(action = Command.process("sonatypeReleaseAll", _)),
-    pushChanges
-  ),
-  pomExtra := (
-    <url>http://github.com/fwbrasil/quill</url>
-    <licenses>
-      <license>
-        <name>Apache License 2.0</name>
-        <url>https://raw.githubusercontent.com/getquill/quill/master/LICENSE.txt</url>
-        <distribution>repo</distribution>
-      </license>
-    </licenses>
-    <scm>
-      <url>git@github.com:fwbrasil/quill.git</url>
-      <connection>scm:git:git@github.com:fwbrasil/quill.git</connection>
-    </scm>
-    <developers>
-      <developer>
-        <id>fwbrasil</id>
-        <name>Flavio W. Brasil</name>
-        <url>http://github.com/fwbrasil/</url>
-      </developer>
-    </developers>)
+  EclipseKeys.eclipseOutput := Some("bin")
 )
-

@@ -242,11 +242,11 @@ class SqlIdiomSpec extends Spec {
       "unary operation" - {
         "nonEmpty" in {
           mirrorSource.run(qr1.nonEmpty).sql mustEqual
-            "SELECT x.* FROM (SELECT EXISTS (SELECT x.* FROM TestEntity x)) x"
+            "SELECT EXISTS (SELECT x.* FROM TestEntity x)"
         }
         "isEmpty" in {
           mirrorSource.run(qr1.isEmpty).sql mustEqual
-            "SELECT x.* FROM (SELECT NOT EXISTS (SELECT x.* FROM TestEntity x)) x"
+            "SELECT NOT EXISTS (SELECT x.* FROM TestEntity x)"
         }
       }
       "limited" - {
@@ -368,7 +368,7 @@ class SqlIdiomSpec extends Spec {
           qr1.map(_.i).max == 1
         }
         mirrorSource.run(q).sql mustEqual
-          "SELECT x.* FROM (SELECT (SELECT MAX(x10.i) FROM TestEntity x10) = 1) x"
+          "SELECT (SELECT MAX(x10.i) FROM TestEntity x10) = 1"
       }
     }
     "operations" - {

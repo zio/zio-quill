@@ -53,6 +53,8 @@ object SqlQuery {
       case UnionAll(a, b)               => SetOperationSqlQuery(apply(a), UnionAllOperation, apply(b))
       case UnaryOperation(op, q: Query) => UnaryOperationSqlQuery(op, apply(q))
       case _: Operation | _: Value      => FlattenSqlQuery(select = List(SelectValue(query)))
+      case q @ Map(_: GroupBy, _, _)    => flatten(q, "x")
+      case Map(q, a, b) if a == b       => apply(q)
       case q: Query                     => flatten(q, "x")
       case other                        => fail(s"Query not properly normalized. Please open a bug report. Ast: '$other'")
     }
