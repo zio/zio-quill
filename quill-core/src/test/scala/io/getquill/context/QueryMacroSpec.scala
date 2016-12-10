@@ -82,4 +82,12 @@ class QueryMacroSpec extends Spec {
       }
     }
   }
+  "runs query with case class with private val" in {
+    case class Entity(a: Int, private val b: Int)
+    val q = quote {
+      query[Entity]
+    }
+    testContext.run(q).string mustEqual
+      """querySchema("Entity").map(x => (x.a, x.b))"""
+  }
 }
