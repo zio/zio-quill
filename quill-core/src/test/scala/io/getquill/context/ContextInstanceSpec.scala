@@ -5,8 +5,9 @@ import io.getquill.context.mirror.Row
 import io.getquill.testContext
 import io.getquill.testContext._
 
-case class WrappedEncodable(value: Int)
-  extends AnyVal
+case class ValueClass(value: Int) extends AnyVal
+
+case class GenericValueClass[T](value: T) extends AnyVal
 
 class ContextInstanceSpec extends Spec {
 
@@ -60,12 +61,12 @@ class ContextInstanceSpec extends Spec {
     testContext.run(q).prepareRow mustEqual Row(1)
   }
 
-  "encodes `WrappedValue` extended value class" - {
-    case class Entity(x: WrappedEncodable, s: String)
+  "encodes value class" - {
+    case class Entity(x: ValueClass, s: String)
 
     "encoding" in {
       val q = quote {
-        query[Entity].insert(_.x -> lift(WrappedEncodable(1)), _.s -> s"string")
+        query[Entity].insert(_.x -> lift(ValueClass(1)), _.s -> "string")
       }
       testContext.run(q).prepareRow mustEqual Row(1)
     }
@@ -74,8 +75,27 @@ class ContextInstanceSpec extends Spec {
       val q = quote {
         query[Entity]
       }
-      val wrapped = WrappedEncodable(1)
-      testContext.run(q).extractor(Row(1, "1")) mustEqual Entity(wrapped, "1")
+      val v = ValueClass(1)
+      testContext.run(q).extractor(Row(1, "1")) mustEqual Entity(v, "1")
+    }
+  }
+
+  "encodes generic value class" - {
+    case class Entity(x: GenericValueClass[Int], s: String)
+
+    "encoding" in {
+      val q = quote {
+        query[Entity].insert(_.x -> lift(GenericValueClass(1)), _.s -> "string")
+      }
+      testContext.run(q).prepareRow mustEqual Row(1)
+    }
+
+    "decoding" in {
+      val q = quote {
+        query[Entity]
+      }
+      val v = GenericValueClass(1)
+      testContext.run(q).extractor(Row(1, "1")) mustEqual Entity(v, "1")
     }
   }
 }

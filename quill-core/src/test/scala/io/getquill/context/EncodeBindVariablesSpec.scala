@@ -1,8 +1,7 @@
 package io.getquill.context
 
-import io.getquill.Spec
 import io.getquill.context.mirror.Row
-import io.getquill.testContext
+import io.getquill.{ Spec, testContext }
 import io.getquill.testContext._
 
 class EncodeBindVariablesSpec extends Spec {
@@ -42,25 +41,12 @@ class EncodeBindVariablesSpec extends Spec {
     testContext.run(q).prepareRow mustEqual Row(1D)
   }
 
-  "encodes bind variables for wrapped types" - {
-
-    "encodes `WrappedValue` extended value class" in {
-      case class Entity(x: WrappedEncodable)
-      val q = quote {
-        query[Entity].filter(t => t.x == lift(WrappedEncodable(1)))
-      }
-      val r = testContext.run(q)
-      r.string mustEqual """querySchema("Entity").filter(t => t.x == ?).map(t => t.x)"""
-      r.prepareRow mustEqual Row(1)
+  "fails for not value class without encoder" in {
+    case class NotValueClass(value: Int)
+    case class Entity(x: NotValueClass)
+    val q = quote {
+      (x: NotValueClass) => query[Entity].filter(_.x == x)
     }
-
-    "fails for unwrapped class" in {
-      case class WrappedNotEncodable(value: Int)
-      case class Entity(x: WrappedNotEncodable)
-      val q = quote {
-        (x: WrappedNotEncodable) => query[Entity].filter(_.x == x)
-      }
-      "testContext.run(q)(WrappedNotEncodable(1))" mustNot compile
-    }
+    "testContext.run(q)(NotValueClass(1))" mustNot compile
   }
 }

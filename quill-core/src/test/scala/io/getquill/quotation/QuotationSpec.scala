@@ -8,7 +8,7 @@ import scala.math.BigDecimal.long2bigDecimal
 import io.getquill.Spec
 import io.getquill.ast.{ Query => _, _ }
 import io.getquill.testContext._
-import io.getquill.context.WrappedEncodable
+import io.getquill.context.ValueClass
 
 case class CustomAnyValue(i: Int) extends AnyVal
 
@@ -955,14 +955,14 @@ class QuotationSpec extends Spec {
       }
     }
 
-    "supports WrappedValue" in {
-      def q(v: WrappedEncodable) = quote {
+    "supports value class" in {
+      def q(v: ValueClass) = quote {
         lift(v)
       }
-      q(WrappedEncodable(1)).liftings.`v`.value mustEqual WrappedEncodable(1)
+      q(ValueClass(1)).liftings.`v`.value mustEqual ValueClass(1)
     }
 
-    "supports custom anyval" in {
+    "supports custom AnyVal" in {
       def q(v: CustomAnyValue) = quote {
         lift(v)
       }

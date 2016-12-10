@@ -67,6 +67,6 @@ class EncodingDslMacro(val c: MacroContext) {
 
   private def primaryConstructor(t: Type) =
     t.members.collect {
-      case m: MethodSymbol if (m.isPrimaryConstructor) => m
+      case m: MethodSymbol if m.isPrimaryConstructor => m.typeSignature.asSeenFrom(t, t.typeSymbol)
     }.headOption
 }

@@ -9,6 +9,8 @@ import scala.language.reflectiveCalls
 
 case class CustomValue(i: Int) extends AnyVal
 
+case class CustomGenericValue[T](v: T) extends AnyVal
+
 // Tests self lifting of `AnyVal`
 case class Address(id: AddressId)
 
@@ -94,6 +96,17 @@ class EncodingDslSpec extends Spec {
     "decoder" in {
       val dec = implicitly[Decoder[CustomValue]]
       dec(0, Row(1)) mustEqual CustomValue(1)
+    }
+  }
+
+  "materializes encoding for generic AnyVal" - {
+    "encoder" in {
+      val enc = implicitly[Encoder[CustomGenericValue[Int]]]
+      enc(0, CustomGenericValue(1), Row()) mustEqual Row(1)
+    }
+    "decoder" in {
+      val dec = implicitly[Decoder[CustomGenericValue[Int]]]
+      dec(0, Row(1)) mustEqual CustomGenericValue(1)
     }
   }
 }
