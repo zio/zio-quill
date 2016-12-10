@@ -937,7 +937,7 @@ trait UUIDEncodingExample {
 `AnyVal`
 --------
 
-Quill automatically encodes `AnyVal`s:
+Quill automatically encodes `AnyVal`s (value classes):
 
 ```scala
 case class UserId(value: Int) extends AnyVal
