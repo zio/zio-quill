@@ -66,7 +66,7 @@ class MetaDslMacro(val c: MacroContext) {
     }
 
   private def expandQuery[T](value: Value)(implicit t: WeakTypeTag[T]) = {
-    val elements = flatten(q"x", value, publicOnly = true)
+    val elements = flatten(q"x", value)
     q"${c.prefix}.quote((q: ${c.prefix}.Query[$t]) => q.map(x => io.getquill.dsl.UnlimitedTuple(..$elements)))"
   }
 
@@ -109,8 +109,8 @@ class MetaDslMacro(val c: MacroContext) {
 
   private def actionMeta[T](value: Value, method: String)(implicit t: WeakTypeTag[T]) = {
     val assignments =
-      flatten(q"v", value, publicOnly = true)
-        .zip(flatten(q"value", value, publicOnly = true))
+      flatten(q"v", value)
+        .zip(flatten(q"value", value))
         .map {
           case (vTree, valueTree) =>
             q"(v: $t) => $vTree -> $valueTree"
@@ -125,17 +125,17 @@ class MetaDslMacro(val c: MacroContext) {
     }
   }
 
-  def flatten(base: Tree, value: Value, publicOnly: Boolean): List[Tree] = {
+  def flatten(base: Tree, value: Value): List[Tree] = {
     def nest(tree: Tree, term: Option[TermName]) =
       term match {
         case None       => tree
         case Some(term) => q"$tree.$term"
       }
     def apply(base: Tree, params: List[List[Value]]): List[Tree] =
-      params.flatten.flatMap(flatten(base, _, publicOnly))
+      params.flatten.flatMap(flatten(base, _))
     value match {
       case Scalar(term, tpe, decoder, isPublic) =>
-        if (!publicOnly || isPublic) List(nest(base, term)) else Nil
+        if (isPublic) List(nest(base, term)) else Nil
       case Nested(term, tpe, params) =>
         apply(nest(base, term), params)
       case OptionalNested(term, tpe, params) =>
