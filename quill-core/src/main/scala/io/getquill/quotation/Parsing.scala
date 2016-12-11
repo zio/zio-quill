@@ -40,6 +40,7 @@ trait Parsing {
     case `valueParser`(value)               => value
     case `quotedAstParser`(value)           => value
     case `functionParser`(value)            => value
+    case `notPublicWrapperParser`(value)    => value
     case `actionParser`(value)              => value
     case `infixParser`(value)               => value
     case `orderingParser`(value)            => value
@@ -52,7 +53,6 @@ trait Parsing {
     case `ifParser`(value)                  => value
     case `patMatchParser`(value)            => value
     case `blockParser`(block)               => block
-    case `notPublicWrapperParser`(value)    => value
   }
 
   val blockParser: Parser[Block] = Parser[Block] {
@@ -290,8 +290,16 @@ trait Parsing {
       OptionOperation(OptionExists, astParser(o), identParser(alias), astParser(body))
   }
 
+  object NotPublicWrapped {
+    def unapply(args: List[Tree]): Option[Tree] = {
+      args.collect {
+        case q"def $t: $tpt = $x;" if t.decodedName.toString.startsWith(NotPublicWrapper.prefix) => x
+      }.headOption
+    }
+  }
+
   val notPublicWrapperParser: Parser[Ast] = Parser[Ast] {
-    case q"new $w($x)" if w.symbol.typeSignature.baseClasses.contains(typeOf[NotPublicWrapper].typeSymbol) =>
+    case q"new ..$w {..${ NotPublicWrapped(x) }}" if w.exists(_.symbol.typeSignature.baseClasses.contains(typeOf[NotPublicWrapper].typeSymbol)) =>
       astParser(x)
   }
   val propertyParser: Parser[Ast] = Parser[Ast] {

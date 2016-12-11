@@ -43,7 +43,6 @@ class MetaDslMacro(val c: MacroContext) {
     val value = this.value("Decoder", t.tpe)
     q"""
       new ${c.prefix}.QueryMeta[$t] {
-        ..${notPublicWrappers(value)}
         val expand = ${expandQuery[T](value)}
         val extract = ${extract[T](value)}
       }
@@ -123,7 +122,6 @@ class MetaDslMacro(val c: MacroContext) {
     c.untypecheck {
       q"""
         new ${c.prefix}.${TypeName(method.capitalize + "Meta")}[$t] {
-          ..${notPublicWrappers(value)}
           val expand =
             ${c.prefix}.quote((q: ${c.prefix}.EntityQuery[$t], value: $t) => q.${TermName(method)}(..$assignments))
         }
@@ -144,68 +142,39 @@ class MetaDslMacro(val c: MacroContext) {
     def apply(base: Tree, params: List[List[Value]]): List[Tree] =
       params.flatten.flatMap(flatten(base, _))
 
-    def wrap(tree: Tree, term: TermName, tpe: Type): Tree = {
-      val t = TypeName(impName(term, tpe))
-      q"new $t($base)"
+    def wrapNotPublic(term: TermName, tpe: Type, position: Option[Int]): Tree = {
+      val get = s"get${position.map(p => s"._${p + 1}").getOrElse("")}"
+      val d = NotPublicWrapper.prefix + term.decodedName.toString
+      c.parse(s"new ${typeOf[NotPublicWrapper]} { def $d = $base; def $term = $tpe.unapply($d).$get }")
     }
 
     value match {
       case Scalar(termOption, _, _, accessLevel) =>
         (termOption, accessLevel) match {
-          case (Some(term), Other(parentTpe, _)) =>
-            List(nest(wrap(base, term, parentTpe), term))
+          case (Some(term), Other(parentTpe, position)) =>
+            List(nest(wrapNotPublic(term, parentTpe, position), term))
           case _ => List(nestOpt(base, termOption))
         }
       case Nested(termOption, _, params, accessLevel) =>
-        (termOption, accessLevel) match {
-          case (Some(term), Other(parentTpe, _)) =>
-            apply(nest(wrap(base, term, parentTpe), term), params)
-          case _ => apply(nestOpt(base, termOption), params)
-        }
+        val nested =
+          (termOption, accessLevel) match {
+            case (Some(term), Other(parentTpe, position)) =>
+              nest(wrapNotPublic(term, parentTpe, position), term)
+            case _ =>
+              nestOpt(base, termOption)
+          }
+        apply(nested, params)
       case OptionalNested(termOption, _, params, accessLevel) =>
-        (termOption, accessLevel) match {
-          case (Some(term), Other(parentTpe, _)) =>
-            apply(q"v", params)
-              .map(body => q"${nest(wrap(base, term, parentTpe), term)}.map(v => $body)")
-          case _ =>
-            apply(q"v", params)
-              .map(body => q"${nestOpt(base, termOption)}.map(v => $body)")
-        }
+        val nested =
+          (termOption, accessLevel) match {
+            case (Some(term), Other(parentTpe, position)) =>
+              nest(wrapNotPublic(term, parentTpe, position), term)
+            case _ =>
+              nestOpt(base, termOption)
+          }
 
-    }
-  }
-
-  def impName(term: TermName, parentTpe: Type): String =
-    "Private" + parentTpe.typeSymbol.name.toTypeName.decodedName + term.decodedName.toString
-
-  def notPublicWrappers(value: Value): List[Tree] = {
-    def apply(params: List[List[Value]]): List[Tree] =
-      params.flatten.flatMap(notPublicWrappers)
-
-    def wrap(term: TermName, parentTpe: Type, position: Option[Int]): List[Tree] = {
-      val get = s"class ${impName(term, parentTpe)}(x: $parentTpe) extends io.getquill.dsl.NotPublicWrapper { def ${term.toTermName} = $parentTpe.unapply(x).get${position.map(p => s"._${p + 1}").getOrElse("")} }"
-      val s = c.parse(get)
-      List(
-        s
-      )
-    }
-
-    value match {
-      case Scalar(Some(term), _, _, Other(parentTpe, position)) =>
-        wrap(term, parentTpe, position)
-      case Nested(term, _, params, accessLevel) =>
-        apply(params) ++
-          ((term, accessLevel) match {
-            case (Some(t), Other(parentTpe, position)) => wrap(t, parentTpe, position)
-            case _                                     => Nil
-          })
-      case OptionalNested(term, _, params, accessLevel) =>
-        apply(params) ++
-          ((term, accessLevel) match {
-            case (Some(t), Other(parentTpe, position)) => wrap(t, parentTpe, position)
-            case _                                     => Nil
-          })
-      case _ => Nil
+        apply(q"v", params)
+          .map(body => q"$nested.map(v => $body)")
     }
   }
 
