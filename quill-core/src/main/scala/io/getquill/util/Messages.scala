@@ -4,6 +4,11 @@ import scala.reflect.macros.blackbox.{ Context => MacroContext }
 
 object Messages {
 
+  private val debugEnabled = {
+    !sys.env.get("quill.macro.log").filterNot(_.isEmpty).map(_.toLowerCase).contains("false") &&
+      !Option(System.getProperty("quill.macro.log")).filterNot(_.isEmpty).map(_.toLowerCase).contains("false")
+  }
+
   def fail(msg: String) =
     throw new IllegalStateException(msg)
 
@@ -19,7 +24,7 @@ object Messages {
       c.warning(c.enclosingPosition, msg)
 
     def info(msg: String): Unit =
-      c.info(c.enclosingPosition, msg, force = true)
+      if (debugEnabled) c.info(c.enclosingPosition, msg, force = true)
 
     def debug[T](v: T): T = {
       info(v.toString)
