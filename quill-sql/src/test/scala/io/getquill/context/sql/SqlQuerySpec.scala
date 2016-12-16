@@ -57,6 +57,16 @@ class SqlQuerySpec extends Spec {
       }
     }
 
+    "raw queries with infix" - {
+      "using tuples" in {
+        val q = quote {
+          infix"""SELECT t.s AS "_1", t.i AS "_2" FROM TestEntity t""".as[Query[(String, Int)]]
+        }
+        testContext.run(q).string mustEqual
+          """SELECT x._1, x._2 FROM (SELECT t.s AS "_1", t.i AS "_2" FROM TestEntity t) x"""
+      }
+    }
+
     "nested infix query" - {
       "as source" in {
         val q = quote {
