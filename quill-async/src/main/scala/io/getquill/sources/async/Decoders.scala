@@ -1,16 +1,17 @@
 package io.getquill.sources.async
 
+import com.github.mauricio.async.db.RowData
+import io.getquill.util.Messages.fail
+import io.getquill.sources.sql._
 import java.util.Date
 import java.util.UUID
 import scala.reflect.ClassTag
 import scala.reflect.classTag
 import org.joda.time.LocalDate
 import org.joda.time.LocalDateTime
-import com.github.mauricio.async.db.RowData
-import io.getquill.util.Messages.fail
 
 trait Decoders {
-  this: AsyncSource[_, _, _] =>
+  this: SqlSource[_, _, RowData, _] =>
 
   def decoder[T: ClassTag](f: PartialFunction[Any, T] = PartialFunction.empty): Decoder[T] =
     new Decoder[T] {

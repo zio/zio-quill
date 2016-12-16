@@ -1,12 +1,14 @@
 package io.getquill.sources.async
 
+import com.github.mauricio.async.db.RowData
 import java.util.Date
 import java.util.UUID
 import org.joda.time.LocalDateTime
 import io.getquill.sources.BindedStatementBuilder
+import io.getquill.sources.sql._
 
 trait Encoders {
-  this: AsyncSource[_, _, _] =>
+  this: SqlSource[_, _, RowData, BindedStatementBuilder[List[Any]]] =>
 
   def encoder[T]: Encoder[T] =
     encoder(identity[T] _)
