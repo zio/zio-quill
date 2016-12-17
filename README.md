@@ -885,6 +885,18 @@ ctx.run(q)
 // SELECT MY_FUNCTION(p.age) FROM Person p
 ```
 
+You can also use infix to port raw SQL queries to Quill and map it to regular scala tuples.
+ 
+```scala
+val rawQuery = quote {
+  (id: Int) => infix"""SELECT id AS "_1", name AS "_2" FROM my_entity WHERE id = $id""".as[Query[(Int, String)]]
+}
+ctx.run(rawQuery(1))
+//SELECT id AS "_1", name AS "_2" FROM my_entity WHERE id = 1
+```
+
+
+
 Custom encoding
 ---------------
 
