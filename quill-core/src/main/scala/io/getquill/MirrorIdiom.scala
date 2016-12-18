@@ -120,13 +120,10 @@ class MirrorIdiom extends Idiom {
   }
 
   implicit def optionOperationTokenizer(implicit liftTokenizer: Tokenizer[Lift]): Tokenizer[OptionOperation] = Tokenizer[OptionOperation] {
-    case q: OptionOperation =>
-      val method = q.t match {
-        case OptionMap    => "map"
-        case OptionForall => "forall"
-        case OptionExists => "exists"
-      }
-      stmt"${q.ast.token}.${method.token}((${q.alias.token}) => ${q.body.token})"
+    case OptionMap(ast, alias, body)    => stmt"${ast.token}.map((${alias.token}) => ${body.token})"
+    case OptionForall(ast, alias, body) => stmt"${ast.token}.forall((${alias.token}) => ${body.token})"
+    case OptionExists(ast, alias, body) => stmt"${ast.token}.exists((${alias.token}) => ${body.token})"
+    case OptionContains(ast, body)      => stmt"${ast.token}.contains(${body.token})"
   }
 
   implicit val joinTypeTokenizer: Tokenizer[JoinType] = Tokenizer[JoinType] {
