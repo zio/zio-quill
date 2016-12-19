@@ -1482,6 +1482,17 @@ ctx.session.maxSchemaAgreementWaitSeconds=1
 ctx.session.addressTranslater=com.datastax.driver.core.policies.IdentityTranslater
 ```
 
+Logging
+=======
+
+Compile-time
+------------
+
+To disable logging of queries during compilation use `quill.macro.log` option:
+```
+sbt -Dquill.macro.log=false
+```
+
 Additional resources
 ====================
 
