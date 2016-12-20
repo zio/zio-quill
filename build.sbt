@@ -59,9 +59,9 @@ lazy val `quill-async` =
     .settings(mimaSettings)
     .settings(
       libraryDependencies ++= Seq(
-        "com.github.mauricio" %% "db-async-common"  % "0.2.20-DRIP-2",
-        "com.github.mauricio" %% "mysql-async"      % "0.2.20-DRIP-2",
-        "com.github.mauricio" %% "postgresql-async" % "0.2.20-DRIP-2"
+        "com.github.mauricio" %% "db-async-common"  % "0.2.20-DRIP-4",
+        "com.github.mauricio" %% "mysql-async"      % "0.2.20-DRIP-4",
+        "com.github.mauricio" %% "postgresql-async" % "0.2.20-DRIP-4"
       ),
       parallelExecution in Test := false
     )

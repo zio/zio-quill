@@ -24,10 +24,10 @@ abstract class Source[R: ClassTag, S: ClassTag] extends Closeable {
   implicit def wrappedTypeDecoder[T <: WrappedType] =
     MappedEncoding[T, T#Type](_.value)
 
-  protected def handleSingleResult[T](list: List[T]) =
+  protected def handleSingleResult[T](list: Seq[T]) =
     list match {
-      case value :: Nil => value
-      case other        => throw new IllegalStateException(s"Expected a single result but got $other")
+      case Seq(v) => v
+      case other  => throw new IllegalStateException(s"Expected a single result but got $other")
     }
 }
 
