@@ -107,7 +107,6 @@ class QueuedConnection(
 
   private val running = new AtomicBoolean(false)
   private val timeouts = new AtomicInteger(0)
-  private val cf = c.connect
 
   def close() = {
     queue.clear()
@@ -177,12 +176,12 @@ class QueuedConnection(
       case AsyncIOValue(v) =>
         Future.successful(v)
       case ExecuteCmd(sql, params, e) =>
-        cf.flatMap(_.sendPreparedStatement(sql, params).map(e))
+        c.sendPreparedStatement(sql, params).map(e)
       case TransCmd(action) =>
         if (insideTrans) {
           Future.failed(TransactionAlreadyStarted)
         } else {
-          cf.flatMap(_.inTransaction(_ => performIO(action, true)))
+          c.inTransaction(_ => performIO(action, true))
         }
       case MapCmd(io, f) =>
         performIO(io, insideTrans).map(f)
@@ -191,8 +190,8 @@ class QueuedConnection(
           performIO(f(ra), insideTrans)
         }
       case QueryCmd(sql, p, e) =>
-        cf.flatMap(_.sendPreparedStatement(sql, p).map(e))
-      case SqlCmd(sql, e) => cf.flatMap(_.sendQuery(sql).map(e))
+        c.sendPreparedStatement(sql, p).map(e)
+      case SqlCmd(sql, e) => c.sendQuery(sql).map(e)
     }
   }
 }

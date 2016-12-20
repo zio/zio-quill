@@ -5,6 +5,7 @@ import com.github.mauricio.async.db.Connection
 import com.github.mauricio.async.db.mysql.MySQLConnection
 import io.getquill.naming.Literal
 import io.getquill.sources.sql.idiom.MySQLDialect
+import scala.concurrent._
 import scala.concurrent.duration._
 
 package object mysqlio {
@@ -16,7 +17,7 @@ package object mysqlio {
       database = Some(cfg.database),
       port = cfg.port
     )
-    new MySQLConnection(conCfg)
+    Await.result(new MySQLConnection(conCfg).connect, 10.seconds)
   }
 
   implicit val testAsyncPool = new DefaultAsyncPool(
