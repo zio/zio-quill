@@ -29,9 +29,10 @@ trait Unliftables {
   }
 
   implicit val optionOperationTypeUnliftable: Unliftable[OptionOperationType] = Unliftable[OptionOperationType] {
-    case q"$pack.OptionMap"    => OptionMap
-    case q"$pack.OptionForall" => OptionForall
-    case q"$pack.OptionExists" => OptionExists
+    case q"$pack.OptionMap"      => OptionMap
+    case q"$pack.OptionContains" => OptionContains
+    case q"$pack.OptionForall"   => OptionForall
+    case q"$pack.OptionExists"   => OptionExists
   }
 
   implicit def listUnliftable[T](implicit u: Unliftable[T]): Unliftable[List[T]] = Unliftable[List[T]] {

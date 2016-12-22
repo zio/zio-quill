@@ -672,6 +672,12 @@ class QuotationSpec extends Spec {
         }
         quote(unquote(q)).ast.body mustEqual OptionOperation(OptionMap, Ident("o"), Ident("v"), Ident("v"))
       }
+      "contains" in {
+        val q = quote {
+          (o: Option[Int]) => o.contains(1)
+        }
+        quote(unquote(q)).ast.body mustEqual OptionOperation(OptionContains, Ident("o"), Ident("qmarkqmarkqmark"), Constant(1))
+      }
       "forall" in {
         val q = quote {
           (o: Option[Boolean]) => o.forall(v => v)

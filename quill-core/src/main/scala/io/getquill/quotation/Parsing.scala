@@ -282,6 +282,8 @@ trait Parsing {
   val optionOperationParser: Parser[OptionOperation] = Parser[OptionOperation] {
     case q"$o.map[$t]({($alias) => $body})" if (is[Option[Any]](o)) =>
       OptionOperation(OptionMap, astParser(o), identParser(alias), astParser(body))
+    case q"$o.contains[$t]($body)" if (is[Option[Any]](o)) =>
+      OptionOperation(OptionContains, astParser(o), identParser(q"???"), astParser(body))
     case q"$o.forall({($alias) => $body})" if (is[Option[Any]](o)) =>
       OptionOperation(OptionForall, astParser(o), identParser(alias), astParser(body))
     case q"$o.exists({($alias) => $body})" if (is[Option[Any]](o)) =>
