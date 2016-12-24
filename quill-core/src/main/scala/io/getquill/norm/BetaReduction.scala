@@ -25,9 +25,6 @@ case class BetaReduction(map: collection.Map[Ast, Ast])
       case Function(params, body) =>
         Function(params, BetaReduction(map -- params)(body))
 
-      case OptionOperation(t, a, b, c) =>
-        OptionOperation(t, apply(a), b, BetaReduction(map - b)(c))
-
       case Block(statements) =>
         val vals = statements.collect { case x: Val => x.name -> x.body }
         BetaReduction(map ++ vals)(statements.last)
@@ -39,6 +36,18 @@ case class BetaReduction(map: collection.Map[Ast, Ast])
         val t = BetaReduction(map - alias)
         Returning(apply(action), alias, t(prop))
 
+      case other =>
+        super.apply(other)
+    }
+
+  override def apply(o: OptionOperation) =
+    o match {
+      case OptionMap(a, b, c) =>
+        OptionMap(apply(a), b, BetaReduction(map - b)(c))
+      case OptionForall(a, b, c) =>
+        OptionForall(apply(a), b, BetaReduction(map - b)(c))
+      case OptionExists(a, b, c) =>
+        OptionExists(apply(a), b, BetaReduction(map - b)(c))
       case other =>
         super.apply(other)
     }

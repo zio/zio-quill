@@ -14,9 +14,19 @@ case class FreeVariables(state: State)
       case f @ Function(params, body) =>
         val (_, t) = FreeVariables(State(state.seen ++ params, state.free))(body)
         (f, FreeVariables(State(state.seen, state.free ++ t.state.free)))
-      case OptionOperation(t, a, b, c) =>
-        (ast, free(a, b, c))
       case q @ Foreach(a, b, c) =>
+        (q, free(a, b, c))
+      case other =>
+        super.apply(other)
+    }
+
+  override def apply(o: OptionOperation): (OptionOperation, StatefulTransformer[State]) =
+    o match {
+      case q @ OptionMap(a, b, c) =>
+        (q, free(a, b, c))
+      case q @ OptionForall(a, b, c) =>
+        (q, free(a, b, c))
+      case q @ OptionExists(a, b, c) =>
         (q, free(a, b, c))
       case other =>
         super.apply(other)

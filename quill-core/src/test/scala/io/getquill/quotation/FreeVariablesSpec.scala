@@ -88,6 +88,37 @@ class FreeVariablesSpec extends Spec {
       }
       FreeVariables(q.ast) mustEqual Set(Ident("i"))
     }
+    "option operators" - {
+      "map" in {
+        val i = 1
+        val q = quote {
+          qr1.map(_.o.map(_ == i))
+        }
+        FreeVariables(q.ast) mustEqual Set(Ident("i"))
+      }
+      "forall" in {
+        val i = 1
+        val q = quote {
+          qr1.filter(_.o.forall(_ == i))
+        }
+        FreeVariables(q.ast) mustEqual Set(Ident("i"))
+
+      }
+      "exists" in {
+        val i = 1
+        val q = quote {
+          qr1.filter(_.o.exists(_ == i))
+        }
+        FreeVariables(q.ast) mustEqual Set(Ident("i"))
+      }
+      "contains" in {
+        val i = 1
+        val q = quote {
+          qr1.filter(_.o.contains(i))
+        }
+        FreeVariables(q.ast) mustEqual Set(Ident("i"))
+      }
+    }
   }
 
   "takes in consideration variables defined in the quotation" - {
@@ -121,11 +152,36 @@ class FreeVariablesSpec extends Spec {
       }
       FreeVariables(q.ast) mustBe empty
     }
-    "option operator" in {
-      val q = quote {
-        qr1.filter(t => t.s == "s1")
+    "option operators" - {
+      "map" in {
+        val i = 1
+        val q = quote {
+          qr1.map(t => t.o.map(_ == t.i))
+        }
+        FreeVariables(q.ast) mustBe empty
       }
-      FreeVariables(q.ast) mustBe empty
+      "forall" in {
+        val i = 1
+        val q = quote {
+          qr1.filter(t => t.o.forall(_ == t.i))
+        }
+        FreeVariables(q.ast) mustBe empty
+
+      }
+      "exists" in {
+        val i = 1
+        val q = quote {
+          qr1.filter(t => t.o.exists(_ == t.i))
+        }
+        FreeVariables(q.ast) mustBe empty
+      }
+      "contains" in {
+        val i = 1
+        val q = quote {
+          qr1.filter(t => t.o.contains(t.i))
+        }
+        FreeVariables(q.ast) mustBe empty
+      }
     }
     "assignment" in {
       val q = quote {

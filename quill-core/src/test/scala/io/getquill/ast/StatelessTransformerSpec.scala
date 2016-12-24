@@ -153,10 +153,27 @@ class StatelessTransformerSpec extends Spec {
         Infix(List("test"), List(Ident("a'"), Ident("b'")))
     }
 
-    "option operation" in {
-      val ast: Ast = OptionOperation(OptionForall, Ident("a"), Ident("b"), Ident("c"))
-      Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) mustEqual
-        OptionOperation(OptionForall, Ident("a'"), Ident("b"), Ident("c'"))
+    "option operation" - {
+      "map" in {
+        val ast: Ast = OptionMap(Ident("a"), Ident("b"), Ident("c"))
+        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) mustEqual
+          OptionMap(Ident("a'"), Ident("b"), Ident("c'"))
+      }
+      "forall" in {
+        val ast: Ast = OptionForall(Ident("a"), Ident("b"), Ident("c"))
+        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) mustEqual
+          OptionForall(Ident("a'"), Ident("b"), Ident("c'"))
+      }
+      "exists" in {
+        val ast: Ast = OptionExists(Ident("a"), Ident("b"), Ident("c"))
+        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) mustEqual
+          OptionExists(Ident("a'"), Ident("b"), Ident("c'"))
+      }
+      "contains" in {
+        val ast: Ast = OptionContains(Ident("a"), Ident("c"))
+        Subject(Ident("a") -> Ident("a'"), Ident("c") -> Ident("c'"))(ast) mustEqual
+          OptionContains(Ident("a'"), Ident("c'"))
+      }
     }
 
     "if" in {
