@@ -2,10 +2,12 @@ package io.getquill.dsl
 
 import io.getquill.Embedded
 import io.getquill.util.Messages._
-import scala.reflect.macros.whitebox.{ Context => MacroContext }
 import io.getquill.util.OptionalTypecheck
 
+import scala.reflect.macros.whitebox.{ Context => MacroContext }
+
 class MetaDslMacro(val c: MacroContext) {
+
   import c.universe._
 
   def schemaMeta[T](entity: Tree, columns: Tree*)(implicit t: WeakTypeTag[T]): Tree =
@@ -54,16 +56,15 @@ class MetaDslMacro(val c: MacroContext) {
     actionMeta[T](value("Encoder", t.tpe), "insert")
 
   def materializeSchemaMeta[T](implicit t: WeakTypeTag[T]): Tree =
-    (t.tpe.typeSymbol.isClass && t.tpe.typeSymbol.asClass.isCaseClass) match {
-      case true =>
-        q"""
+    if (t.tpe.typeSymbol.isClass && t.tpe.typeSymbol.asClass.isCaseClass) {
+      q"""
           new ${c.prefix}.SchemaMeta[$t] {
             val entity =
               ${c.prefix}.quote(${c.prefix}.querySchema[$t](${t.tpe.typeSymbol.name.decodedName.toString}))
           }
         """
-      case false =>
-        c.fail(s"Can't materialize a `SchemaMeta` for non-case-class type '${t.tpe}', please provide an implicit `SchemaMeta`.")
+    } else {
+      c.fail(s"Can't materialize a `SchemaMeta` for non-case-class type '${t.tpe}', please provide an implicit `SchemaMeta`.")
     }
 
   private def expandQuery[T](value: Value)(implicit t: WeakTypeTag[T]) = {
@@ -73,39 +74,40 @@ class MetaDslMacro(val c: MacroContext) {
 
   private def extract[T](value: Value)(implicit t: WeakTypeTag[T]): Tree = {
     var index = -1
+
     def expand(value: Value, optional: Boolean = false): Tree =
       value match {
 
-        case Scalar(path, tpe, decoder) =>
+        case Scalar(path, tpe, decoder, _) =>
           index += 1
-          optional match {
-            case true =>
-              q"implicitly[${c.prefix}.Decoder[Option[$tpe]]].apply($index, row)"
-            case false =>
-              q"$decoder($index, row)"
+          if (optional) {
+            q"implicitly[${c.prefix}.Decoder[Option[$tpe]]].apply($index, row)"
+          } else {
+            q"$decoder($index, row)"
           }
 
-        case Nested(term, tpe, params) =>
+        case Nested(term, tpe, params, _) =>
           q"new $tpe(...${params.map(_.map(expand(_)))})"
 
-        case OptionalNested(term, tpe, params) =>
+        case OptionalNested(term, tpe, params, _) =>
           val groups = params.map(_.map(expand(_, optional = true)))
           val terms =
             groups.zipWithIndex.map {
               case (options, idx1) =>
-                (0 until options.size).map { idx2 =>
-                  TermName(s"o_${idx1}_${idx2}")
+                options.indices.map { idx2 =>
+                  TermName(s"o_${idx1}_$idx2")
                 }
             }
           groups.zipWithIndex.foldLeft(q"Some(new $tpe(...$terms))") {
             case (body, (options, idx1)) =>
               options.zipWithIndex.foldLeft(body) {
                 case (body, (option, idx2)) =>
-                  val o = q"val ${TermName(s"o_${idx1}_${idx2}")} = $EmptyTree"
+                  val o = q"val ${TermName(s"o_${idx1}_$idx2")} = $EmptyTree"
                   q"$option.flatMap($o => $body)"
               }
           }
       }
+
     q"(row: ${c.prefix}.ResultRow) => ${expand(value)}"
   }
 
@@ -128,57 +130,104 @@ class MetaDslMacro(val c: MacroContext) {
   }
 
   def flatten(base: Tree, value: Value): List[Tree] = {
-    def nest(tree: Tree, term: Option[TermName]) =
+    def nest(tree: Tree, term: TermName) =
+      q"$tree.$term"
+
+    def nestOpt(tree: Tree, term: Option[TermName]) =
       term match {
-        case None       => tree
-        case Some(term) => q"$tree.$term"
+        case None    => tree
+        case Some(t) => nest(tree, t)
       }
+
     def apply(base: Tree, params: List[List[Value]]): List[Tree] =
-      params.flatten.map(flatten(base, _)).flatten
+      params.flatten.flatMap(flatten(base, _))
+
+    def wrapNotPublic(term: TermName, tpe: Type, position: Option[Int]): Tree = {
+      val get = s"get${position.map(p => s"._${p + 1}").getOrElse("")}"
+      val d = NotPublicWrapper.prefix + term.decodedName.toString
+      c.parse(s"new ${typeOf[NotPublicWrapper]} { def $d = $base; def $term = $tpe.unapply($d).$get }")
+    }
+
     value match {
-      case Scalar(term, tpe, decoder) =>
-        List(nest(base, term))
-      case Nested(term, tpe, params) =>
-        apply(nest(base, term), params)
-      case OptionalNested(term, tpe, params) =>
+      case Scalar(termOption, _, _, accessLevel) =>
+        (termOption, accessLevel) match {
+          case (Some(term), Other(parentTpe, position)) =>
+            List(nest(wrapNotPublic(term, parentTpe, position), term))
+          case _ => List(nestOpt(base, termOption))
+        }
+      case Nested(termOption, _, params, accessLevel) =>
+        val nested =
+          (termOption, accessLevel) match {
+            case (Some(term), Other(parentTpe, position)) =>
+              nest(wrapNotPublic(term, parentTpe, position), term)
+            case _ =>
+              nestOpt(base, termOption)
+          }
+        apply(nested, params)
+      case OptionalNested(termOption, _, params, accessLevel) =>
+        val nested =
+          (termOption, accessLevel) match {
+            case (Some(term), Other(parentTpe, position)) =>
+              nest(wrapNotPublic(term, parentTpe, position), term)
+            case _ =>
+              nestOpt(base, termOption)
+          }
+
         apply(q"v", params)
-          .map(body => q"${nest(base, term)}.map(v => $body)")
+          .map(body => q"$nested.map(v => $body)")
     }
   }
 
   sealed trait Value {
     val term: Option[TermName]
   }
-  case class Nested(term: Option[TermName], tpe: Type, params: List[List[Value]]) extends Value
-  case class OptionalNested(term: Option[TermName], tpe: Type, params: List[List[Value]]) extends Value
-  case class Scalar(term: Option[TermName], tpe: Type, decoder: Tree) extends Value
+
+  case class Nested(term: Option[TermName], tpe: Type, params: List[List[Value]], accessLevel: ValueAccessLevel) extends Value
+
+  case class OptionalNested(term: Option[TermName], tpe: Type, params: List[List[Value]], accessLevel: ValueAccessLevel) extends Value
+
+  case class Scalar(term: Option[TermName], tpe: Type, decoder: Tree, accessLevel: ValueAccessLevel) extends Value
+
+  sealed trait ValueAccessLevel
+
+  object Public extends ValueAccessLevel
+
+  case class Other(parent: Type, position: Option[Int]) extends ValueAccessLevel
 
   private def is[T](tpe: Type)(implicit t: TypeTag[T]) =
     tpe <:< t.tpe
 
+  private def constructorParamHasPublicAccessor(tpe: Type, param: Symbol): Boolean =
+    tpe.members.collect {
+      case m: MethodSymbol if m.isPublic && m.isGetter && m.name == param.name.toTermName => m
+    }.nonEmpty
+
   private def value(encoding: String, tpe: Type, exclude: Tree*): Value = {
 
-    def nest(tpe: Type, term: Option[TermName]): Nested =
+    def nest(tpe: Type, term: Option[TermName], accessLevel: ValueAccessLevel): Nested =
       caseClassConstructor(tpe) match {
         case None =>
           c.fail(s"Found the embedded '$tpe', but it is not a case class")
         case Some(constructor) =>
           val params =
-            constructor.paramLists.map {
-              _.map { param =>
-                apply(
-                  param.typeSignature.asSeenFrom(tpe, tpe.typeSymbol),
-                  Some(param.name.toTermName),
-                  nested = !isTuple(tpe)
-                )
+            constructor.paramLists.map { params =>
+              params.zipWithIndex.map {
+                case (param, index) =>
+                  apply(
+                    param.typeSignature.asSeenFrom(tpe, tpe.typeSymbol),
+                    Some(param.name.toTermName),
+                    nested = !isTuple(tpe),
+                    if (constructorParamHasPublicAccessor(tpe, param)) Public
+                    else Other(tpe, if (params.size > 1) Some(index) else None)
+                  )
               }
             }
-          Nested(term, tpe, params)
+          Nested(term, tpe, params, accessLevel)
       }
 
-    def apply(tpe: Type, term: Option[TermName], nested: Boolean): Value = {
+    def apply(tpe: Type, term: Option[TermName], nested: Boolean, accessLevel: ValueAccessLevel): Value = {
       OptionalTypecheck(c)(q"implicitly[${c.prefix}.${TypeName(encoding)}[$tpe]]") match {
-        case Some(encoding) => Scalar(term, tpe, encoding)
+        case Some(encoding) => Scalar(term, tpe, encoding, accessLevel)
         case None =>
 
           def value(tpe: Type) =
@@ -190,15 +239,14 @@ class MetaDslMacro(val c: MacroContext) {
                 )
 
               case tpe =>
-                nest(tpe, term)
+                nest(tpe, term, accessLevel)
             }
 
-          is[Option[Any]](tpe) match {
-            case false =>
-              value(tpe)
-            case true =>
-              val nested = value(tpe.typeArgs.head)
-              OptionalNested(nested.term, nested.tpe, nested.params)
+          if (is[Option[Any]](tpe)) {
+            val nested = value(tpe.typeArgs.head)
+            OptionalNested(nested.term, nested.tpe, nested.params, nested.accessLevel)
+          } else {
+            value(tpe)
           }
       }
     }
@@ -213,17 +261,18 @@ class MetaDslMacro(val c: MacroContext) {
                 case q"$a.map[$t]($b => $c)" => path(a) ++ path(c)
                 case other                   => Nil
               }
+
             path(f.body)
         }
 
       def filter(value: Value, path: List[TermName] = Nil): Option[Value] =
         value match {
-          case value if (paths.contains(path ++ value.term)) =>
+          case value if paths.contains(path ++ value.term) =>
             None
-          case Nested(term, tpe, params) =>
-            Some(Nested(term, tpe, params.map(_.map(filter(_, path ++ term)).flatten)))
-          case OptionalNested(term, tpe, params) =>
-            Some(OptionalNested(term, tpe, params.map(_.map(filter(_, path ++ term)).flatten)))
+          case Nested(term, tpe, params, accessLevel) =>
+            Some(Nested(term, tpe, params.map(_.flatMap(filter(_, path ++ term))), accessLevel))
+          case OptionalNested(term, tpe, params, accessLevel) =>
+            Some(OptionalNested(term, tpe, params.map(_.flatMap(filter(_, path ++ term))), accessLevel))
           case value =>
             Some(value)
         }
@@ -233,7 +282,7 @@ class MetaDslMacro(val c: MacroContext) {
       }
     }
 
-    filterExcludes(apply(tpe, term = None, nested = false))
+    filterExcludes(apply(tpe, term = None, nested = false, Public))
   }
 
   private def isTuple(tpe: Type) =
@@ -241,6 +290,6 @@ class MetaDslMacro(val c: MacroContext) {
 
   private def caseClassConstructor(t: Type) =
     t.members.collect {
-      case m: MethodSymbol if (m.isPrimaryConstructor) => m
+      case m: MethodSymbol if m.isPrimaryConstructor => m
     }.headOption
 }

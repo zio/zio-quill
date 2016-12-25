@@ -5,7 +5,8 @@ import io.getquill.ast._
 import io.getquill.norm.BetaReduction
 import io.getquill.util.Messages.RichContext
 import io.getquill.util.Interleave
-import io.getquill.dsl.CoreDsl
+import io.getquill.dsl.{ CoreDsl, NotPublicWrapper }
+
 import scala.collection.immutable.StringOps
 import scala.reflect.macros.TypecheckException
 
@@ -39,6 +40,7 @@ trait Parsing {
     case `valueParser`(value)               => value
     case `quotedAstParser`(value)           => value
     case `functionParser`(value)            => value
+    case `notPublicWrapperParser`(value)    => value
     case `actionParser`(value)              => value
     case `infixParser`(value)               => value
     case `orderingParser`(value)            => value
@@ -290,6 +292,18 @@ trait Parsing {
       OptionContains(astParser(o), astParser(body))
   }
 
+  object NotPublicWrapped {
+    def unapply(args: List[Tree]): Option[Tree] = {
+      args.collect {
+        case q"def $t: $tpt = $x;" if t.decodedName.toString.startsWith(NotPublicWrapper.prefix) => x
+      }.headOption
+    }
+  }
+
+  val notPublicWrapperParser: Parser[Ast] = Parser[Ast] {
+    case q"new ..$w {..${ NotPublicWrapped(x) }}" if w.exists(_.symbol.typeSignature.baseClasses.contains(typeOf[NotPublicWrapper].typeSymbol)) =>
+      astParser(x)
+  }
   val propertyParser: Parser[Ast] = Parser[Ast] {
     case q"$e.$property" => Property(astParser(e), property.decodedName.toString)
   }
