@@ -1,12 +1,12 @@
 package io.getquill.context.sql.norm
 
-import io.getquill.Spec
+import io.getquill.{ MirrorSqlDialect, SnakeCase, Spec, SqlMirrorContext }
 import io.getquill.context.sql.testContext
-import io.getquill.context.sql.testContext._
 
 class ExpandNestedQueriesSpec extends Spec {
 
   "keeps the initial table alias" in {
+    import testContext._
     val q = quote {
       (for {
         a <- qr1
@@ -19,6 +19,7 @@ class ExpandNestedQueriesSpec extends Spec {
   }
 
   "partial select" in {
+    import testContext._
     val q = quote {
       (for {
         a <- qr1
@@ -27,5 +28,19 @@ class ExpandNestedQueriesSpec extends Spec {
     }
     testContext.run(q).string mustEqual
       "SELECT x.* FROM (SELECT b.i FROM TestEntity a, TestEntity2 b) x LIMIT 10"
+  }
+
+  "tokenize property" in {
+    object testContext extends SqlMirrorContext[MirrorSqlDialect, SnakeCase]
+    import testContext._
+
+    case class Entity(camelCase: String)
+
+    testContext.run(
+      query[Entity]
+      .map(e => (e, 1))
+      .nested
+    ).string mustEqual
+      "SELECT x.camel_case, x._2 FROM (SELECT e.camel_case camel_case, 1 _2 FROM entity e) x"
   }
 }
