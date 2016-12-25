@@ -6,12 +6,13 @@ trait StatefulTransformer[T] {
 
   def apply(e: Ast): (Ast, StatefulTransformer[T]) =
     e match {
-      case e: Query      => apply(e)
-      case e: Operation  => apply(e)
-      case e: Action     => apply(e)
-      case e: Value      => apply(e)
-      case e: Assignment => apply(e)
-      case e: Ident      => (e, this)
+      case e: Query           => apply(e)
+      case e: Operation       => apply(e)
+      case e: Action          => apply(e)
+      case e: Value           => apply(e)
+      case e: Assignment      => apply(e)
+      case e: Ident           => (e, this)
+      case e: OptionOperation => apply(e)
 
       case Function(a, b) =>
         val (bt, btt) = apply(b)
@@ -24,11 +25,6 @@ trait StatefulTransformer[T] {
       case Infix(a, b) =>
         val (bt, btt) = apply(b)(_.apply)
         (Infix(a, bt), btt)
-
-      case OptionOperation(t, a, b, c) =>
-        val (at, att) = apply(a)
-        val (ct, ctt) = att.apply(c)
-        (OptionOperation(t, at, b, ct), ctt)
 
       case If(a, b, c) =>
         val (at, att) = apply(a)
@@ -53,6 +49,26 @@ trait StatefulTransformer[T] {
         (Val(a, at), att)
 
       case o: Ordering => (o, this)
+    }
+
+  def apply(o: OptionOperation): (OptionOperation, StatefulTransformer[T]) =
+    o match {
+      case OptionMap(a, b, c) =>
+        val (at, att) = apply(a)
+        val (ct, ctt) = att.apply(c)
+        (OptionMap(at, b, ct), ctt)
+      case OptionForall(a, b, c) =>
+        val (at, att) = apply(a)
+        val (ct, ctt) = att.apply(c)
+        (OptionForall(at, b, ct), ctt)
+      case OptionExists(a, b, c) =>
+        val (at, att) = apply(a)
+        val (ct, ctt) = att.apply(c)
+        (OptionExists(at, b, ct), ctt)
+      case OptionContains(a, c) =>
+        val (at, att) = apply(a)
+        val (ct, ctt) = att.apply(c)
+        (OptionContains(at, ct), ctt)
     }
 
   def apply(e: Query): (Query, StatefulTransformer[T]) =

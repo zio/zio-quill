@@ -895,7 +895,17 @@ ctx.run(rawQuery(1))
 //SELECT id AS "_1", name AS "_2" FROM my_entity WHERE id = 1
 ```
 
+You can implement comparison operators by defining implicit conversion and using infix.
 
+```scala
+import java.util.Date
+
+implicit class DateQuotes(left: Date) {
+  def >(right: Date) = quote(infix"$left > $right".as[Boolean])
+
+  def <(right: Date) = quote(infix"$left < $right".as[Boolean])
+}
+```
 
 Custom encoding
 ---------------

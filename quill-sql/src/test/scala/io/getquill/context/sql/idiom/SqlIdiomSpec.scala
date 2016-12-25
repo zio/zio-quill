@@ -588,6 +588,13 @@ class SqlIdiomSpec extends Spec {
             testContext.run(q).string mustEqual
               "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.i IN (SELECT p.i FROM TestEntity2 p)"
           }
+          "option" in {
+            val q = quote {
+              qr1.filter(t => t.o.contains(1))
+            }
+            testContext.run(q).string mustEqual
+              "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o = 1"
+          }
         }
       }
     }
