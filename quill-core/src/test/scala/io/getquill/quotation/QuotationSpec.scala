@@ -670,19 +670,25 @@ class QuotationSpec extends Spec {
         val q = quote {
           (o: Option[Int]) => o.map(v => v)
         }
-        quote(unquote(q)).ast.body mustEqual OptionOperation(OptionMap, Ident("o"), Ident("v"), Ident("v"))
+        quote(unquote(q)).ast.body mustEqual OptionMap(Ident("o"), Ident("v"), Ident("v"))
       }
       "forall" in {
         val q = quote {
           (o: Option[Boolean]) => o.forall(v => v)
         }
-        quote(unquote(q)).ast.body mustEqual OptionOperation(OptionForall, Ident("o"), Ident("v"), Ident("v"))
+        quote(unquote(q)).ast.body mustEqual OptionForall(Ident("o"), Ident("v"), Ident("v"))
       }
       "exists" in {
         val q = quote {
           (o: Option[Boolean]) => o.exists(v => v)
         }
-        quote(unquote(q)).ast.body mustEqual OptionOperation(OptionExists, Ident("o"), Ident("v"), Ident("v"))
+        quote(unquote(q)).ast.body mustEqual OptionExists(Ident("o"), Ident("v"), Ident("v"))
+      }
+      "contains" in {
+        val q = quote {
+          (o: Option[Boolean], v: Int) => o.contains(v)
+        }
+        quote(unquote(q)).ast.body mustEqual OptionContains(Ident("o"), Ident("v"))
       }
     }
     "boxed numbers" - {

@@ -16,6 +16,7 @@ trait Unliftables {
     case valueUnliftable(ast) => ast
     case identUnliftable(ast) => ast
     case orderingUnliftable(ast) => ast
+    case optionOperationUnliftable(ast) => ast
     case q"$pack.Property.apply(${ a: Ast }, ${ b: String })" => Property(a, b)
     case q"$pack.Function.apply(${ a: List[Ident] }, ${ b: Ast })" => Function(a, b)
     case q"$pack.FunctionApply.apply(${ a: Ast }, ${ b: List[Ast] })" => FunctionApply(a, b)
@@ -23,15 +24,15 @@ trait Unliftables {
     case q"$pack.UnaryOperation.apply(${ a: UnaryOperator }, ${ b: Ast })" => UnaryOperation(a, b)
     case q"$pack.Aggregation.apply(${ a: AggregationOperator }, ${ b: Ast })" => Aggregation(a, b)
     case q"$pack.Infix.apply(${ a: List[String] }, ${ b: List[Ast] })" => Infix(a, b)
-    case q"$pack.OptionOperation.apply(${ a: OptionOperationType }, ${ b: Ast }, ${ c: Ident }, ${ d: Ast })" => OptionOperation(a, b, c, d)
     case q"$pack.If.apply(${ a: Ast }, ${ b: Ast }, ${ c: Ast })" => If(a, b, c)
     case q"$tree.ast" => Dynamic(tree)
   }
 
-  implicit val optionOperationTypeUnliftable: Unliftable[OptionOperationType] = Unliftable[OptionOperationType] {
-    case q"$pack.OptionMap"    => OptionMap
-    case q"$pack.OptionForall" => OptionForall
-    case q"$pack.OptionExists" => OptionExists
+  implicit val optionOperationUnliftable: Unliftable[OptionOperation] = Unliftable[OptionOperation] {
+    case q"$pack.OptionMap.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })"    => OptionMap(a, b, c)
+    case q"$pack.OptionForall.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => OptionForall(a, b, c)
+    case q"$pack.OptionExists.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => OptionExists(a, b, c)
+    case q"$pack.OptionContains.apply(${ a: Ast }, ${ b: Ident })"            => OptionContains(a, b)
   }
 
   implicit def listUnliftable[T](implicit u: Unliftable[T]): Unliftable[List[T]] = Unliftable[List[T]] {

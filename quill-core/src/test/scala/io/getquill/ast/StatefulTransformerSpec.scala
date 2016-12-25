@@ -247,12 +247,38 @@ class StatefulTransformerSpec extends Spec {
       }
     }
 
-    "option operation" in {
-      val ast: Ast = OptionOperation(OptionMap, Ident("a"), Ident("b"), Ident("c"))
-      Subject(Nil, Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) match {
-        case (at, att) =>
-          at mustEqual OptionOperation(OptionMap, Ident("a'"), Ident("b"), Ident("c'"))
-          att.state mustEqual List(Ident("a"), Ident("c"))
+    "option operation" - {
+      "map" in {
+        val ast: Ast = OptionMap(Ident("a"), Ident("b"), Ident("c"))
+        Subject(Nil, Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) match {
+          case (at, att) =>
+            at mustEqual OptionMap(Ident("a'"), Ident("b"), Ident("c'"))
+            att.state mustEqual List(Ident("a"), Ident("c"))
+        }
+      }
+      "forall" in {
+        val ast: Ast = OptionForall(Ident("a"), Ident("b"), Ident("c"))
+        Subject(Nil, Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) match {
+          case (at, att) =>
+            at mustEqual OptionForall(Ident("a'"), Ident("b"), Ident("c'"))
+            att.state mustEqual List(Ident("a"), Ident("c"))
+        }
+      }
+      "exists" in {
+        val ast: Ast = OptionExists(Ident("a"), Ident("b"), Ident("c"))
+        Subject(Nil, Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) match {
+          case (at, att) =>
+            at mustEqual OptionExists(Ident("a'"), Ident("b"), Ident("c'"))
+            att.state mustEqual List(Ident("a"), Ident("c"))
+        }
+      }
+      "contains" in {
+        val ast: Ast = OptionContains(Ident("a"), Ident("c"))
+        Subject(Nil, Ident("a") -> Ident("a'"), Ident("c") -> Ident("c'"))(ast) match {
+          case (at, att) =>
+            at mustEqual OptionContains(Ident("a'"), Ident("c'"))
+            att.state mustEqual List(Ident("a"), Ident("c"))
+        }
       }
     }
 
