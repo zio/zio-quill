@@ -70,10 +70,30 @@ class MetaDslSpec extends Spec {
           meta.extract(Row("a", Some("1"), None)) mustEqual (("a", None))
         }
       }
+      "optional deep nested" - {
+        case class Entity1(a: String, b: Int)
+        case class Entity2(a: Option[Int])
+
+        val meta = materializeQueryMeta[(String, Option[(Entity1, Entity2)])]
+        meta.expand.toString mustEqual "(q) => q.map(x => (x._1, x._2.map((v) => v._1.a), x._2.map((v) => v._1.b), x._2.map((v) => v._2.a)))"
+
+        "extracts Some if all columns are defined" in {
+          meta.extract(Row("a", Some("1"), Some(2), Some(3))) mustEqual
+            (("a", Some((Entity1("1", 2), Entity2(Some(3))))))
+        }
+        "extracts Some if optional column is undefined" in {
+          meta.extract(Row("a", Some("1"), Some(2), None)) mustEqual
+            (("a", Some((Entity1("1", 2), Entity2(None)))))
+        }
+        "extracts None if one column is undefined" in {
+          meta.extract(Row("a", Some("1"), None, Some(3))) mustEqual
+            (("a", None))
+        }
+      }
       "> 22 fields" in {
         val meta = materializeQueryMeta[MoreThan22]
         meta.expand.toString mustEqual "(q) => q.map(x => (x.v0, x.v1, x.v2, x.v3, x.v4, x.v5, x.v6, x.v7, x.v8, x.v9, x.x0, x.x1, x.x2, x.x3, x.x4, x.x5, x.x6, x.x7, x.x8, x.x9, x.y0, x.y1, x.y2, x.y3, x.y4, x.y5, x.y6, x.y7, x.y8, x.y9))"
-        meta.extract(Row((0 until 30): _*)) mustEqual
+        meta.extract(Row(0 until 30: _*)) mustEqual
           MoreThan22(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29)
       }
     }
