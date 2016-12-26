@@ -1,9 +1,8 @@
 package io.getquill.context.async
 
 import java.time.{ LocalDate, LocalDateTime, ZoneId }
-import java.util.{ Date, UUID }
+import java.util.Date
 
-import com.github.mauricio.async.db.RowData
 import io.getquill.util.Messages.fail
 import org.joda.time.{ LocalDate => JodaLocalDate, LocalDateTime => JodaLocalDateTime }
 
@@ -27,7 +26,7 @@ trait Decoders {
     sqlType: DecoderSqlType
   ): Decoder[T] =
     AsyncDecoder[T](sqlType)(new BaseDecoder[T] {
-      def apply(index: Int, row: RowData) = {
+      def apply(index: Index, row: ResultRow) = {
         row(index) match {
           case value: T                      => value
           case value if f.isDefinedAt(value) => f(value)
@@ -46,7 +45,7 @@ trait Decoders {
     })
 
   trait NumericDecoder[T] extends BaseDecoder[T] {
-    def apply(index: Int, row: RowData) =
+    def apply(index: Index, row: ResultRow) =
       row(index) match {
         case v: Byte       => decode(v)
         case v: Short      => decode(v)
@@ -64,7 +63,7 @@ trait Decoders {
 
   implicit def optionDecoder[T](implicit d: Decoder[T]): Decoder[Option[T]] =
     AsyncDecoder(d.sqlType)(new BaseDecoder[Option[T]] {
-      def apply(index: Int, row: RowData) = {
+      def apply(index: Index, row: ResultRow) = {
         row(index) match {
           case null  => None
           case value => Some(d(index, row))
@@ -161,12 +160,5 @@ trait Decoders {
           ZoneId.systemDefault()
         )
     }, SqlTypes.TIMESTAMP)
-
-  implicit val uuidDecoder: Decoder[UUID] =
-    AsyncDecoder(SqlTypes.UUID)(new BaseDecoder[UUID] {
-      def apply(index: Int, row: RowData): UUID = row(index) match {
-        case value: UUID => value
-      }
-    })
 
 }

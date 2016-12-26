@@ -1,7 +1,7 @@
 package io.getquill.context.finagle.mysql
 
 import java.time.{ LocalDate, LocalDateTime }
-import java.util.Date
+import java.util.{ Date, UUID }
 
 import com.twitter.finagle.mysql._
 import io.getquill.FinagleMysqlContext
@@ -35,7 +35,7 @@ trait FinagleMysqlDecoders {
     FinangleMysqlDecoder((index, row) => {
       row.values(index) match {
         case NullValue => None
-        case other     => Some(d.decoder(index, row))
+        case _         => Some(d.decoder(index, row))
       }
     })
 
@@ -102,4 +102,6 @@ trait FinagleMysqlDecoders {
   implicit val localDateTimeDecoder: Decoder[LocalDateTime] = decoder[LocalDateTime] {
     case `timestampValue`(v) => v.toLocalDateTime
   }
+
+  implicit val uuidDecoder: Decoder[UUID] = mappedDecoder(MappedEncoding(UUID.fromString), stringDecoder)
 }

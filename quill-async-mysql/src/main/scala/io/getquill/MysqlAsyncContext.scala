@@ -5,12 +5,12 @@ import com.github.mauricio.async.db.mysql.MySQLConnection
 import com.github.mauricio.async.db.mysql.MySQLQueryResult
 import com.github.mauricio.async.db.pool.PartitionedConnectionPool
 import com.typesafe.config.Config
-import io.getquill.context.async.AsyncContext
+import io.getquill.context.async.{ AsyncContext, UUIDStringEncoding }
 import io.getquill.util.LoadConfig
 import com.github.mauricio.async.db.general.ArrayRowData
 
 class MysqlAsyncContext[N <: NamingStrategy](pool: PartitionedConnectionPool[MySQLConnection])
-  extends AsyncContext[MySQLDialect, N, MySQLConnection](pool) {
+  extends AsyncContext[MySQLDialect, N, MySQLConnection](pool) with UUIDStringEncoding {
 
   def this(config: MysqlAsyncContextConfig) = this(config.pool)
   def this(config: Config) = this(MysqlAsyncContextConfig(config))

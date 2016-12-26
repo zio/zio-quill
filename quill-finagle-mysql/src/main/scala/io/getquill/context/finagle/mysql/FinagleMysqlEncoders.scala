@@ -2,7 +2,7 @@ package io.getquill.context.finagle.mysql
 
 import java.sql.Timestamp
 import java.time.{ LocalDate, LocalDateTime }
-import java.util.Date
+import java.util.{ Date, UUID }
 
 import com.twitter.finagle.mysql.CanBeParameter._
 import com.twitter.finagle.mysql.Parameter.wrap
@@ -58,4 +58,5 @@ trait FinagleMysqlEncoders {
   implicit val localDateTimeEncoder: Encoder[LocalDateTime] = encoder[LocalDateTime] {
     (d: LocalDateTime) => new TimestampValue(dateTimezone, dateTimezone).apply(Timestamp.valueOf(d)): Parameter
   }
+  implicit val uuidEncoder: Encoder[UUID] = mappedEncoder(MappedEncoding(_.toString), stringEncoder)
 }

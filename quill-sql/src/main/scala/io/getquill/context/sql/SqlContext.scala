@@ -3,7 +3,7 @@ package io.getquill.context.sql
 import java.time.LocalDate
 
 import io.getquill.idiom.{ Idiom => BaseIdiom }
-import java.util.Date
+import java.util.{ Date, UUID }
 
 import io.getquill.context.Context
 import io.getquill.context.sql.dsl.SqlDsl
@@ -28,6 +28,7 @@ trait SqlContext[Idiom <: BaseIdiom, Naming <: NamingStrategy]
   implicit val byteArrayDecoder: Decoder[Array[Byte]]
   implicit val dateDecoder: Decoder[Date]
   implicit val localDateDecoder: Decoder[LocalDate]
+  implicit val uuidDecoder: Decoder[UUID]
 
   implicit val stringEncoder: Encoder[String]
   implicit val bigDecimalEncoder: Encoder[BigDecimal]
@@ -41,4 +42,5 @@ trait SqlContext[Idiom <: BaseIdiom, Naming <: NamingStrategy]
   implicit val byteArrayEncoder: Encoder[Array[Byte]]
   implicit val dateEncoder: Encoder[Date]
   implicit val localDateEncoder: Encoder[LocalDate]
+  implicit val uuidEncoder: Encoder[UUID]
 }

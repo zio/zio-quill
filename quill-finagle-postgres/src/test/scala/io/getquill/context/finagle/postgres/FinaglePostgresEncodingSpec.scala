@@ -73,7 +73,7 @@ class FinaglePostgresEncodingSpec extends EncodingSpec {
 
   "returning UUID" in {
     val success = for {
-      uuid <- Await.result(testContext.run(insertBarCode.apply(lift(barCodeEntry))))
+      uuid <- Await.result(testContext.run(insertBarCode(lift(barCodeEntry))))
       barCode <- Await.result(testContext.run(findBarCodeByUuid(uuid))).headOption
     } yield {
       verifyBarcode(barCode)

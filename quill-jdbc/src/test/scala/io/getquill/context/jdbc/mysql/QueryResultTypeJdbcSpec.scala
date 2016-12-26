@@ -1,12 +1,14 @@
-package io.getquill.context.jdbc
+package io.getquill.context.jdbc.mysql
+
+import java.util.concurrent.ConcurrentLinkedQueue
 
 import io.getquill.context.sql._
-import java.util.concurrent.ConcurrentLinkedQueue
+
 import scala.collection.JavaConverters._
 
 class QueryResultTypeJdbcSpec extends QueryResultTypeSpec {
 
-  override val context = mysql.testContext
+  override val context = testContext
   import context._
 
   def await[T](r: T) = r

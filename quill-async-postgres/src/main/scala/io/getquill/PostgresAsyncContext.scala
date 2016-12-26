@@ -4,11 +4,11 @@ import com.github.mauricio.async.db.{ RowData, QueryResult => DBQueryResult }
 import com.github.mauricio.async.db.pool.PartitionedConnectionPool
 import com.github.mauricio.async.db.postgresql.PostgreSQLConnection
 import com.typesafe.config.Config
-import io.getquill.context.async.AsyncContext
+import io.getquill.context.async.{ AsyncContext, UUIDObjectEncoding }
 import io.getquill.util.LoadConfig
 
 class PostgresAsyncContext[N <: NamingStrategy](pool: PartitionedConnectionPool[PostgreSQLConnection])
-  extends AsyncContext[PostgresDialect, N, PostgreSQLConnection](pool) {
+  extends AsyncContext[PostgresDialect, N, PostgreSQLConnection](pool) with UUIDObjectEncoding {
 
   def this(config: PostgresAsyncContextConfig) = this(config.pool)
   def this(config: Config) = this(PostgresAsyncContextConfig(config))

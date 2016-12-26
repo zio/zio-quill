@@ -1,7 +1,7 @@
 package io.getquill.context.async
 
 import java.time.{ LocalDate, LocalDateTime, ZoneId }
-import java.util.{ Date, UUID }
+import java.util.Date
 
 import org.joda.time.{ LocalDate => JodaLocalDate, LocalDateTime => JodaLocalDateTime }
 
@@ -59,7 +59,6 @@ trait Encoders {
     encoder[Date]({ (value: Date) =>
       new JodaLocalDateTime(value)
     }, SqlTypes.TIMESTAMP)
-  implicit val uuidEncoder: Encoder[UUID] = encoder[UUID](SqlTypes.UUID)
   implicit val localDateEncoder: Encoder[LocalDate] =
     encoder[LocalDate]({ (value: LocalDate) =>
       new JodaLocalDate(

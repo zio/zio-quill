@@ -1,34 +1,23 @@
-package io.getquill
+package io.getquill.context.jdbc
 
-import com.typesafe.config.Config
-import com.typesafe.scalalogging.Logger
 import java.io.Closeable
 import java.sql.{ Connection, PreparedStatement, ResultSet }
+import javax.sql.DataSource
 
+import com.typesafe.scalalogging.Logger
+import io.getquill.context.sql.SqlContext
+import io.getquill.context.sql.idiom.SqlIdiom
+import io.getquill.NamingStrategy
 import org.slf4j.LoggerFactory
 
 import scala.annotation.tailrec
-import scala.util.Try
+import scala.util.{ DynamicVariable, Try }
 import scala.util.control.NonFatal
-import io.getquill.context.sql.SqlContext
-import io.getquill.context.sql.idiom.SqlIdiom
-import io.getquill.util.LoadConfig
-import javax.sql.DataSource
 
-import scala.util.DynamicVariable
-import io.getquill.context.jdbc.JdbcDecoders
-import io.getquill.context.jdbc.JdbcEncoders
-
-import scala.reflect.runtime.universe._
-
-class JdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](dataSource: DataSource with Closeable)
+abstract class JdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](dataSource: DataSource with Closeable)
   extends SqlContext[Dialect, Naming]
-  with JdbcEncoders
-  with JdbcDecoders {
-
-  def this(config: JdbcContextConfig) = this(config.dataSource)
-  def this(config: Config) = this(JdbcContextConfig(config))
-  def this(configPrefix: String) = this(LoadConfig(configPrefix))
+  with Encoders
+  with Decoders {
 
   private val logger: Logger =
     Logger(LoggerFactory.getLogger(classOf[JdbcContext[_, _]]))
@@ -49,10 +38,10 @@ class JdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](dataSource: Dat
     currentConnection.value.map(f).getOrElse {
       val conn = dataSource.getConnection
       try f(conn)
-      finally conn.close
+      finally conn.close()
     }
 
-  def close = dataSource.close()
+  def close() = dataSource.close()
 
   def probe(sql: String) =
     Try {
@@ -69,11 +58,11 @@ class JdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](dataSource: Dat
             conn.setAutoCommit(false)
             try {
               val res = f
-              conn.commit
+              conn.commit()
               res
             } catch {
               case NonFatal(e) =>
-                conn.rollback
+                conn.rollback()
                 throw e
             } finally
               conn.setAutoCommit(wasAutoCommit)
@@ -108,7 +97,7 @@ class JdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](dataSource: Dat
 
   def executeBatchAction(groups: List[BatchGroup]): List[Long] =
     withConnection { conn =>
-      groups.map {
+      groups.flatMap {
         case BatchGroup(sql, prepare) =>
           logger.info(sql)
           val ps = conn.prepareStatement(sql)
@@ -117,12 +106,12 @@ class JdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](dataSource: Dat
             ps.addBatch()
           }
           ps.executeBatch().map(_.toLong)
-      }.flatten
+      }
     }
 
   def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: ResultSet => T): List[T] =
     withConnection { conn =>
-      groups.map {
+      groups.flatMap {
         case BatchGroupReturning(sql, column, prepare) =>
           logger.info(sql)
           val ps = conn.prepareStatement(sql, Array(column))
@@ -132,7 +121,7 @@ class JdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](dataSource: Dat
           }
           ps.executeBatch()
           extractResult(ps.getGeneratedKeys, extractor)
-      }.flatten
+      }
     }
 
   @tailrec
