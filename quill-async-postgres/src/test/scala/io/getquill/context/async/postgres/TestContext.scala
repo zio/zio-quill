@@ -1,7 +1,6 @@
 package io.getquill.context.async.postgres
 
-import io.getquill.context.sql.{ TestDecoders, TestEncoders }
-import io.getquill.{ Literal, PostgresAsyncContext, TestEntities }
+import io.getquill.{ Literal, PostgresAsyncContext, TestExtras }
 
 class TestContext
-  extends PostgresAsyncContext[Literal]("testPostgresDB") with TestEntities with TestEncoders with TestDecoders
+  extends PostgresAsyncContext[Literal]("testPostgresDB") with TestExtras

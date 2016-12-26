@@ -1,7 +1,5 @@
 package io.getquill.context.finagle.postgres
 
-import io.getquill._
-import io.getquill.context.sql.{ TestDecoders, TestEncoders }
-import io.getquill.FinaglePostgresContext
+import io.getquill.{ FinaglePostgresContext, Literal, TestExtras }
 
-object testContext extends FinaglePostgresContext[Literal]("testPostgresDB") with TestEntities with TestEncoders with TestDecoders
+object testContext extends FinaglePostgresContext[Literal]("testPostgresDB") with TestExtras

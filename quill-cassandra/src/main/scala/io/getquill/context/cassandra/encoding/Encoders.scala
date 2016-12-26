@@ -5,6 +5,9 @@ import java.util.{ Date, UUID }
 
 import io.getquill.context.cassandra.CassandraSessionContext
 
+import scala.collection.JavaConverters._
+import scala.reflect.ClassTag
+
 trait Encoders {
   this: CassandraSessionContext[_] =>
 
@@ -46,4 +49,56 @@ trait Encoders {
     encoder((index, value, row) => row.setBytes(index, ByteBuffer.wrap(value)))
   implicit val uuidEncoder: Encoder[UUID] = encoder(_.setUUID)
   implicit val dateEncoder: Encoder[Date] = encoder(_.setTimestamp)
+
+  trait CollectionItemEncoder {
+    def apply[T <: AnyRef: ClassTag](value: java.util.Set[T]): Unit
+  }
+
+  sealed trait CollectionItemEncodingType[I] {
+    def apply(value: Set[I], converter: CollectionItemEncoder): Unit
+  }
+
+  object CollectionItemEncodingType {
+
+    abstract class ItemType[I] extends CollectionItemEncodingType[I] {
+      def apply[O <: AnyRef: ClassTag](value: Set[I], converter: CollectionItemEncoder)(implicit f: I => O): Unit =
+        converter[O](value.map(f).asJava)
+    }
+
+    class RefItemType[I <: AnyRef: ClassTag] extends ItemType[I] {
+      override def apply(value: Set[I], converter: CollectionItemEncoder) =
+        apply[I](value, converter)
+    }
+
+    implicit object Int extends ItemType[Int] {
+      override def apply(value: Set[Int], converter: CollectionItemEncoder) =
+        apply[java.lang.Integer](value, converter)
+    }
+
+    implicit object Long extends ItemType[Long] {
+      override def apply(value: Set[Long], converter: CollectionItemEncoder) =
+        apply[java.lang.Long](value, converter)
+    }
+
+    implicit object String extends RefItemType[String]
+
+  }
+
+  case class CollectionItemRowEncoder(index: Index, r: PrepareRow) extends CollectionItemEncoder {
+    override def apply[T <: AnyRef: ClassTag](value: java.util.Set[T]) = {
+      val _ = r.setSet(index, value, implicitly[ClassTag[T]].runtimeClass.asInstanceOf[Class[T]])
+    }
+  }
+
+  implicit def setMappedEncoder[I, O](implicit mapped: MappedEncoding[I, O], cit: CollectionItemEncodingType[O]): Encoder[Set[I]] =
+    encoder((index, value, row) => {
+      cit(value.map(mapped.f), CollectionItemRowEncoder(index, row))
+      row
+    })
+
+  implicit def setEncoder[I](implicit cit: CollectionItemEncodingType[I]): Encoder[Set[I]] = {
+    implicit val mapped = MappedEncoding[I, I](identity)
+    setMappedEncoder[I, I]
+  }
+
 }

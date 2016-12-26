@@ -35,7 +35,7 @@ class EncodingSpec extends Spec {
       val result =
         for {
           _ <- testStreamDB.run(query[EncodingTestEntity].delete)
-          inserts = Observable(insertValues: _*)
+          _ = Observable(insertValues: _*)
           _ <- Observable.fromTask(testStreamDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insert(e))).countL)
           result <- testStreamDB.run(query[EncodingTestEntity])
         } yield {
@@ -46,7 +46,7 @@ class EncodingSpec extends Spec {
     }
   }
 
-  "encodes collections" - {
+  "encodes collections in liftQuery" - {
     "sync" in {
       import testSyncDB._
       val q = quote {
@@ -117,6 +117,8 @@ class EncodingSpec extends Spec {
     e.v8.toList mustEqual a.v8.toList
     e.v9 mustEqual a.v9
     e.v10 mustEqual a.v10
+    e.v11 mustEqual e.v11
+    e.v12 mustEqual e.v12
     e.o1 mustEqual a.o1
     e.o2 mustEqual a.o2
     e.o3 mustEqual a.o3
@@ -126,7 +128,9 @@ class EncodingSpec extends Spec {
     e.o7 mustEqual a.o7
     e.o8.map(_.toList) mustEqual a.o8.map(_.toList)
     e.o9 mustEqual a.o9
-
+    e.o10 mustEqual a.o10
+    e.o11 mustEqual a.o11
+    e.o12 mustEqual a.o12
     ()
   }
 
@@ -142,6 +146,8 @@ class EncodingSpec extends Spec {
     v8:  Array[Byte],
     v9:  Date,
     v10: UUID,
+    v11: Set[Int],
+    v12: Set[EncodingTestType],
     o1:  Option[String],
     o2:  Option[BigDecimal],
     o3:  Option[Boolean],
@@ -150,10 +156,15 @@ class EncodingSpec extends Spec {
     o6:  Option[Float],
     o7:  Option[Double],
     o8:  Option[Array[Byte]],
-    o9:  Option[Date]
+    o9:  Option[Date],
+    o10: Option[UUID],
+    o11: Option[Set[Int]],
+    o12: Option[Set[EncodingTestType]]
   )
 
   private val fixUUID: UUID = UUID.fromString("606c79e8-a331-4810-8bd7-0668ff7a23ef")
+  private val intSet = Set[Int](1, 2, 3)
+  private val testTypeSet = Set[EncodingTestType](EncodingTestType("a"), EncodingTestType("b"), EncodingTestType("c"))
 
   val insertValues =
     List(
@@ -169,6 +180,8 @@ class EncodingSpec extends Spec {
         v8 = Array(1.toByte, 2.toByte),
         v9 = new Date(31200000),
         v10 = fixUUID,
+        v11 = intSet,
+        v12 = testTypeSet,
         o1 = Some("s"),
         o2 = Some(BigDecimal(1.1)),
         o3 = Some(true),
@@ -177,7 +190,10 @@ class EncodingSpec extends Spec {
         o6 = Some(34.4f),
         o7 = Some(42d),
         o8 = Some(Array(1.toByte, 2.toByte)),
-        o9 = Some(new Date(31200000))
+        o9 = Some(new Date(31200000)),
+        o10 = Some(fixUUID),
+        o11 = Some(intSet),
+        o12 = Some(testTypeSet)
       ),
       EncodingTestEntity(
         id = 2,
@@ -191,6 +207,8 @@ class EncodingSpec extends Spec {
         v8 = Array(),
         v9 = new Date(0),
         v10 = fixUUID,
+        v11 = Set(),
+        v12 = Set(),
         o1 = None,
         o2 = None,
         o3 = None,
@@ -199,7 +217,10 @@ class EncodingSpec extends Spec {
         o6 = None,
         o7 = None,
         o8 = None,
-        o9 = None
+        o9 = None,
+        o10 = None,
+        o11 = None,
+        o12 = None
       )
     )
 }
