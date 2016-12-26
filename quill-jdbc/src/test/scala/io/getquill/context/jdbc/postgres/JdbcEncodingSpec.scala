@@ -1,8 +1,5 @@
 package io.getquill.context.jdbc.postgres
 
-import java.sql.Types
-import java.util.UUID
-
 import io.getquill.context.sql.EncodingSpec
 
 class JdbcEncodingSpec extends EncodingSpec {
@@ -27,13 +24,7 @@ class JdbcEncodingSpec extends EncodingSpec {
   }
 
   "returning custom type" in {
-    implicit val uuidDecoder: Decoder[UUID] =
-      decoder(Types.OTHER, (index, row) => UUID.fromString(row.getObject(index).toString))
-
-    implicit val uuidEncoder: Encoder[UUID] =
-      encoder(Types.OTHER, (index, value, row) => row.setObject(index, value, Types.OTHER))
-
-    val uuid = testContext.run(insertBarCode.apply(lift(barCodeEntry))).get
+    val uuid = testContext.run(insertBarCode(lift(barCodeEntry))).get
     val (barCode :: Nil) = testContext.run(findBarCodeByUuid(uuid))
 
     verifyBarcode(barCode)

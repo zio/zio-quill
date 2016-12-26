@@ -5,11 +5,9 @@ import java.time.{ LocalDate, LocalDateTime }
 import java.util
 import java.util.Calendar
 
-import io.getquill.JdbcContext
-
 import scala.math.BigDecimal.javaBigDecimal2bigDecimal
 
-trait JdbcDecoders {
+trait Decoders {
   this: JdbcContext[_, _] =>
 
   type Decoder[T] = JdbcDecoder[T]
@@ -32,10 +30,15 @@ trait JdbcDecoders {
     JdbcDecoder(
       d.sqlType,
       (index, row) => {
-        val res = d.decoder(index, row)
-        row.wasNull match {
-          case true  => None
-          case false => Some(res)
+        try {
+          val res = d.decoder(index, row)
+          if (row.wasNull()) {
+            None
+          } else {
+            Some(res)
+          }
+        } catch {
+          case _: NullPointerException if row.wasNull() => None
         }
       }
     )

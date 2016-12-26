@@ -942,7 +942,7 @@ If the database type is not supported by Quill, it is possible to provide "raw" 
 
 ```scala
 trait UUIDEncodingExample {
-  val jdbcContext: JdbcContext[PostgresDialect, Literal] // your context should go here
+  val jdbcContext: PostgresJdbcContext[Literal] // your context should go here
 
   import jdbcContext._
 
@@ -1106,7 +1106,7 @@ SQL Contexts
 Example:
 
 ```scala
-lazy val ctx = new JdbcContext[MySQLDialect, SnakeCase]("ctx")
+lazy val ctx = new MysqlJdbcContext[SnakeCase]("ctx")
 ```
 
 #### Dialect
@@ -1155,7 +1155,7 @@ Additionally, the contexts provide multiple constructors. For instance, with `Jd
 ```scala
 def createDataSource: javax.sql.DataSource with java.io.Closeable = ???
 
-lazy val ctx = new JdbcContext[MySQLDialect, SnakeCase](createDataSource)
+lazy val ctx = new MysqlJdbcContext[SnakeCase](createDataSource)
 ```
 
 ##### quill-jdbc
@@ -1189,7 +1189,7 @@ libraryDependencies ++= Seq(
 
 context definition
 ```scala
-lazy val ctx = new JdbcContext[MySQLDialect, SnakeCase]("ctx")
+lazy val ctx = new MysqlJdbcContext[SnakeCase]("ctx")
 ```
 
 application.properties
@@ -1216,7 +1216,7 @@ libraryDependencies ++= Seq(
 
 context definition
 ```scala
-lazy val ctx = new JdbcContext[PostgresDialect, SnakeCase]("ctx")
+lazy val ctx = new PostgresJdbcContext[SnakeCase]("ctx")
 ```
 
 application.properties
@@ -1242,7 +1242,7 @@ libraryDependencies ++= Seq(
 
 context definition
 ```scala
-lazy val ctx = new JdbcContext[SqliteDialect, SnakeCase]("ctx")
+lazy val ctx = new SqliteJdbcContext[SnakeCase]("ctx")
 ```
 
 application.properties
@@ -1263,7 +1263,7 @@ libraryDependencies ++= Seq(
 
 context definition
 ```scala
-lazy val ctx = new JdbcContext[H2Dialect, SnakeCase]("ctx")
+lazy val ctx = new H2JdbcContext[SnakeCase]("ctx")
 ```
 
 application.properties

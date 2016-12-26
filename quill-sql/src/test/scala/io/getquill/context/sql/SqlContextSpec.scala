@@ -1,7 +1,7 @@
 package io.getquill.context.sql
 
 import java.time.LocalDate
-import java.util.Date
+import java.util.{ Date, UUID }
 
 import io.getquill._
 import io.getquill.context.mirror.Row
@@ -84,6 +84,7 @@ class SqlContextSpec extends Spec {
       implicit val byteArrayEncoder: Encoder[Array[Byte]] = encoder[Array[Byte]]
       implicit val dateEncoder: Encoder[Date] = encoder[Date]
       implicit val localDateEncoder: Encoder[LocalDate] = encoder[LocalDate]
+      implicit val uuidEncoder: Encoder[UUID] = encoder[UUID]
 
       implicit def optionDecoder[T](implicit d: Decoder[T]): Decoder[Option[T]] = decoder[Option[T]]
 
@@ -99,6 +100,7 @@ class SqlContextSpec extends Spec {
       implicit val byteArrayDecoder: Decoder[Array[Byte]] = decoder[Array[Byte]]
       implicit val localDateDecoder: Decoder[LocalDate] = decoder[LocalDate]
       implicit val dateDecoder: Decoder[Date] = decoder[Date]
+      implicit val uuidDecoder: Decoder[UUID] = decoder[UUID]
 
       implicit def mappedEncoder[I, O](implicit mapped: MappedEncoding[I, O], e: Encoder[O]): Encoder[I] =
         encoder[I]

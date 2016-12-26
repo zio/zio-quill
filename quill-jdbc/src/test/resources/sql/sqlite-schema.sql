@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS EncodingTestEntity(
     v11 BIGINT,
     v12 VARCHAR(255),
     v13 BIGINT,
-    v14 BIGINT,
+    v14 VARCHAR(36),
     o1 VARCHAR(255),
     o2 DECIMAL(5,2),
     o3 BOOLEAN,
@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS EncodingTestEntity(
     o11 BIGINT,
     o12 VARCHAR(255),
     o13 BIGINT,
-    o14 BIGINT
+    o14 VARCHAR(36)
 );
 
 CREATE TABLE IF NOT EXISTS TestEntity(

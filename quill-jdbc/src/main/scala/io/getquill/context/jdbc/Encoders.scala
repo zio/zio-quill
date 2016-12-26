@@ -5,11 +5,9 @@ import java.time.{ LocalDate, LocalDateTime }
 import java.util.{ Calendar, TimeZone }
 import java.{ sql, util }
 
-import io.getquill.JdbcContext
-
 import scala.reflect.ClassTag
 
-trait JdbcEncoders {
+trait Encoders {
   this: JdbcContext[_, _] =>
 
   type Encoder[T] = JdbcEncoder[T]

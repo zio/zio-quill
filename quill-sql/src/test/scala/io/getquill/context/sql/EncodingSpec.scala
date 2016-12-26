@@ -27,6 +27,7 @@ trait EncodingSpec extends Spec {
     v11: Date,
     v12: EncodingTestType,
     v13: LocalDate,
+    v14: UUID,
     o1:  Option[String],
     o2:  Option[BigDecimal],
     o3:  Option[Boolean],
@@ -39,7 +40,8 @@ trait EncodingSpec extends Spec {
     o10: Option[Array[Byte]],
     o11: Option[Date],
     o12: Option[EncodingTestType],
-    o13: Option[LocalDate]
+    o13: Option[LocalDate],
+    o14: Option[UUID]
   )
 
   val delete = quote {
@@ -66,6 +68,7 @@ trait EncodingSpec extends Spec {
         new Date(31200000),
         EncodingTestType("s"),
         LocalDate.of(2013, 11, 23),
+        UUID.randomUUID(),
         Some("s"),
         Some(BigDecimal(1.1)),
         Some(true),
@@ -78,7 +81,8 @@ trait EncodingSpec extends Spec {
         Some(Array(1.toByte, 2.toByte)),
         Some(new Date(31200000)),
         Some(EncodingTestType("s")),
-        Some(LocalDate.of(2013, 11, 23))
+        Some(LocalDate.of(2013, 11, 23)),
+        Some(UUID.randomUUID())
       ),
       EncodingTestEntity(
         "",
@@ -94,6 +98,8 @@ trait EncodingSpec extends Spec {
         new Date(0),
         EncodingTestType(""),
         LocalDate.ofEpochDay(0),
+        UUID.randomUUID(),
+        None,
         None,
         None,
         None,
@@ -110,73 +116,48 @@ trait EncodingSpec extends Spec {
       )
     )
 
-  def verify(result: List[EncodingTestEntity]) =
-    result match {
-      case List(e1, e2) =>
+  def verify(result: List[EncodingTestEntity]) = {
+    result.size mustEqual insertValues.size
+    result.zip(insertValues).foreach {
+      case (e1, e2) =>
+        e1.v1 mustEqual e2.v1
+        e1.v2 mustEqual e2.v2
+        e1.v3 mustEqual e2.v3
+        e1.v4 mustEqual e2.v4
+        e1.v5 mustEqual e2.v5
+        e1.v6 mustEqual e2.v6
+        e1.v7 mustEqual e2.v7
+        e1.v8 mustEqual e2.v8
+        e1.v9 mustEqual e2.v9
+        e1.v10 mustEqual e2.v10
+        e1.v11 mustEqual e2.v11
+        e1.v12 mustEqual e2.v12
+        e1.v13 mustEqual e2.v13
+        e1.v14 mustEqual e2.v14
 
-        e1.v1 mustEqual "s"
-        e1.v2 mustEqual BigDecimal(1.1)
-        e1.v3 mustEqual true
-        e1.v4 mustEqual 11.toByte
-        e1.v5 mustEqual 23.toShort
-        e1.v6 mustEqual 33
-        e1.v7 mustEqual 431L
-        e1.v8 mustEqual 34.4f
-        e1.v9 mustEqual 42d
-        e1.v10.toList mustEqual List(1.toByte, 2.toByte)
-        e1.v11 mustEqual new Date(31200000)
-        e1.v12 mustEqual EncodingTestType("s")
-        e1.v13 mustEqual LocalDate.of(2013, 11, 23)
-
-        e1.o1 mustEqual Some("s")
-        e1.o2 mustEqual Some(BigDecimal(1.1))
-        e1.o3 mustEqual Some(true)
-        e1.o4 mustEqual Some(11.toByte)
-        e1.o5 mustEqual Some(23.toShort)
-        e1.o6 mustEqual Some(33)
-        e1.o7 mustEqual Some(431L)
-        e1.o8 mustEqual Some(34.4f)
-        e1.o9 mustEqual Some(42d)
-        e1.o10.map(_.toList) mustEqual Some(List(1.toByte, 2.toByte))
-        e1.o11 mustEqual Some(new Date(31200000))
-        e1.o12 mustEqual Some(EncodingTestType("s"))
-        e1.o13 mustEqual Some(LocalDate.of(2013, 11, 23))
-
-        e2.v1 mustEqual ""
-        e2.v2 mustEqual BigDecimal(0)
-        e2.v3 mustEqual false
-        e2.v4 mustEqual 0.toByte
-        e2.v5 mustEqual 0.toShort
-        e2.v6 mustEqual 0
-        e2.v7 mustEqual 0L
-        e2.v8 mustEqual 0f
-        e2.v9 mustEqual 0d
-        e2.v10.toList mustEqual Nil
-        e2.v11 mustEqual new Date(0)
-        e2.v12 mustEqual EncodingTestType("")
-        e2.v13 mustEqual LocalDate.ofEpochDay(0)
-
-        e2.o1 mustEqual None
-        e2.o2 mustEqual None
-        e2.o3 mustEqual None
-        e2.o4 mustEqual None
-        e2.o5 mustEqual None
-        e2.o6 mustEqual None
-        e2.o7 mustEqual None
-        e2.o8 mustEqual None
-        e2.o9 mustEqual None
-        e2.o10 mustEqual None
-        e2.o11 mustEqual None
-        e2.o12 mustEqual None
-        e2.o13 mustEqual None
+        e1.o1 mustEqual e2.o1
+        e1.o2 mustEqual e2.o2
+        e1.o3 mustEqual e2.o3
+        e1.o4 mustEqual e2.o4
+        e1.o5 mustEqual e2.o5
+        e1.o6 mustEqual e2.o6
+        e1.o7 mustEqual e2.o7
+        e1.o8 mustEqual e2.o8
+        e1.o9 mustEqual e2.o9
+        e1.o10.getOrElse(Array()) mustEqual e2.o10.getOrElse(Array())
+        e1.o11 mustEqual e2.o11
+        e1.o12 mustEqual e2.o12
+        e1.o13 mustEqual e2.o13
+        e1.o14 mustEqual e2.o14
     }
+  }
 
   case class BarCode(description: String, uuid: Option[UUID] = None)
 
-  def insertBarCode(implicit e: Encoder[UUID]) = quote((b: BarCode) => query[BarCode].insert(b).returning(_.uuid))
+  val insertBarCode = quote((b: BarCode) => query[BarCode].insert(b).returning(_.uuid))
   val barCodeEntry = BarCode("returning UUID")
 
-  def findBarCodeByUuid(uuid: UUID)(implicit enc: Encoder[UUID]) = quote(query[BarCode].filter(_.uuid == lift(Option(uuid))))
+  def findBarCodeByUuid(uuid: UUID) = quote(query[BarCode].filter(_.uuid == lift(Option(uuid))))
 
   def verifyBarcode(barCode: BarCode) = barCode.description mustEqual "returning UUID"
 }
