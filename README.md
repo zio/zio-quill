@@ -1248,7 +1248,7 @@ lazy val ctx = new SqliteJdbcContext[SnakeCase]("ctx")
 application.properties
 ```
 ctx.driverClassName=org.sqlite.JDBC
-ctx.jdbcUrl="jdbc:sqlite:/path/to/db/file.db"
+ctx.jdbcUrl=jdbc:sqlite:/path/to/db/file.db
 ```
 
 **H2**
@@ -1269,7 +1269,7 @@ lazy val ctx = new H2JdbcContext[SnakeCase]("ctx")
 application.properties
 ```
 ctx.dataSourceClassName=org.h2.jdbcx.JdbcDataSource
-ctx.dataSource.url="jdbc:h2:mem:yourdbname"
+ctx.dataSource.url=jdbc:h2:mem:yourdbname
 ctx.dataSource.user=sa
 ```
 
@@ -1338,7 +1338,7 @@ ctx.poolMaxObjects=4
 ctx.poolMaxIdle=999999999
 ctx.poolValidationInterval=10000
 ctx.sslmode=disable # optional, one of [disable|prefer|require|verify-ca|verify-full]
-ctx.sslrootcert="./path/to/cert/file" # optional, required for sslmode=verify-ca or verify-full
+ctx.sslrootcert=./path/to/cert/file # optional, required for sslmode=verify-ca or verify-full
 ```
 
 **Postgres Async**
@@ -1367,7 +1367,7 @@ ctx.poolMaxObjects=4
 ctx.poolMaxIdle=999999999
 ctx.poolValidationInterval=10000
 ctx.sslmode=disable # optional, one of [disable|prefer|require|verify-ca|verify-full]
-ctx.sslrootcert="./path/to/cert/file" # optional, required for sslmode=verify-ca or verify-full
+ctx.sslrootcert=./path/to/cert/file # optional, required for sslmode=verify-ca or verify-full
 ```
 
 ##### quill-finagle-mysql
