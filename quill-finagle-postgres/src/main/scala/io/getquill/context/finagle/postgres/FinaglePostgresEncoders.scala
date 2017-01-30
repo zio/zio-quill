@@ -29,13 +29,6 @@ trait FinaglePostgresEncoders {
   implicit def optionEncoder[T](implicit e: Encoder[T]): Encoder[Option[T]] =
     FinanglePostgresEncoder[Option[T]](option(e.encoder))
 
-  //Workaround for https://github.com/finagle/finagle-postgres/pull/28
-  implicit val bytea: ValueEncoder[Array[Byte]] = instance(
-    "bytea",
-    bytes => "\\x" + bytes.map("%02x".format(_)).mkString,
-    (b, c) => Some(ChannelBuffers.copiedBuffer(b))
-  )
-
   implicit val stringEncoder: Encoder[String] = encoder[String]
   implicit val bigDecimalEncoder: Encoder[BigDecimal] = encoder[BigDecimal]
   implicit val booleanEncoder: Encoder[Boolean] = encoder[Boolean]
