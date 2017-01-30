@@ -10,7 +10,7 @@ import io.getquill.util.LoadConfig
 import org.slf4j.LoggerFactory
 import scala.util.Try
 
-class FinaglePostgresContext[N <: NamingStrategy](client: Client) extends SqlContext[FinaglePostgresDialect, N] with FinaglePostgresEncoders with FinaglePostgresDecoders {
+class FinaglePostgresContext[N <: NamingStrategy](client: PostgresClient) extends SqlContext[FinaglePostgresDialect, N] with FinaglePostgresEncoders with FinaglePostgresDecoders {
 
   def this(config: FinaglePostgresContextConfig) = this(config.client)
   def this(config: Config) = this(FinaglePostgresContextConfig(config))
@@ -30,7 +30,7 @@ class FinaglePostgresContext[N <: NamingStrategy](client: Client) extends SqlCon
   override type RunBatchActionResult = Future[List[Long]]
   override type RunBatchActionReturningResult[T] = Future[List[T]]
 
-  private val currentClient = new Local[Client]
+  private val currentClient = new Local[PostgresClient]
 
   override def close = Await.result(client.close())
 
@@ -87,6 +87,6 @@ class FinaglePostgresContext[N <: NamingStrategy](client: Client) extends SqlCon
       }
     }.map(_.flatten.toList)
 
-  private def withClient[T](f: Client => T) =
+  private def withClient[T](f: PostgresClient => T) =
     currentClient().map(f).getOrElse(f(client))
 }

@@ -6,7 +6,6 @@ import com.twitter.finagle.postgres.values.ValueEncoder._
 import io.getquill.FinaglePostgresContext
 import java.util.{ Date, UUID }
 import java.time._
-import org.jboss.netty.buffer.ChannelBuffers
 
 trait FinaglePostgresEncoders {
   this: FinaglePostgresContext[_] =>
