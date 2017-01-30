@@ -29,7 +29,7 @@ trait FinaglePostgresDecoders {
 
   def decoder[T: ClassTag, U: ClassTag](f: PartialFunction[Any, T])(implicit decoder: ValueDecoder[U]): Decoder[T] =
     FinaglePostgresDecoder[T]((index, row) => {
-      row.getAnyOption(index).map(f).getOrElse(fail(s"Value  at index $index can't be decoded to '${classTag[T].runtimeClass}'"))
+      row.getOption[U](index).map(f).getOrElse(fail(s"Value  at index $index can't be decoded to '${classTag[T].runtimeClass}'"))
       //      val value = row.vals(index).value
       //      f.lift(value).getOrElse(fail(s"Value '$value' at index $index can't be decoded to '${classTag[T].runtimeClass}'"))
     })
@@ -38,7 +38,7 @@ trait FinaglePostgresDecoders {
     FinaglePostgresDecoder((index, row) =>
       row.getOption[T](index) match {
         case Some(v) => v
-        case None    => fail(s"Cannot decode value at index $index to ${classTag[T]}")
+        case v    => fail(s"Cannot decode value $v at index $index to ${classTag[T]}")
       })
 
   //      implicit def optionDecoder[T](implicit d: Decoder[T]): Decoder[Option[T]] =
