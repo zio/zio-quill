@@ -64,10 +64,10 @@ lazy val `quill-jdbc` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.zaxxer"     % "HikariCP"             % "2.5.1",
-        "mysql"          % "mysql-connector-java" % "5.1.38"   % Test,
-        "com.h2database" % "h2"                   % "1.4.192"  % Test,
-        "org.postgresql" % "postgresql"           % "9.4.1208" % Test,
+        "com.zaxxer"     % "HikariCP"             % "2.6.0",
+        "mysql"          % "mysql-connector-java" % "5.1.40"   % Test,
+        "com.h2database" % "h2"                   % "1.4.193"  % Test,
+        "org.postgresql" % "postgresql"           % "9.4.1212" % Test,
         "org.xerial"     % "sqlite-jdbc"          % "3.8.11.2" % Test
       )
     )
@@ -80,7 +80,7 @@ lazy val `quill-finagle-mysql` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.twitter" %% "finagle-mysql" % "6.40.0"
+        "com.twitter" %% "finagle-mysql" % "6.41.0"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -92,7 +92,7 @@ lazy val `quill-finagle-postgres` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "io.github.finagle" %% "finagle-postgres" % "0.2.0"
+        "io.github.finagle" %% "finagle-postgres" % "0.3.2"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -104,7 +104,7 @@ lazy val `quill-async` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.github.mauricio" %% "db-async-common"  % "0.2.20"
+        "com.github.mauricio" %% "db-async-common"  % "0.2.21"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -116,7 +116,7 @@ lazy val `quill-async-mysql` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.github.mauricio" %% "mysql-async"      % "0.2.20"
+        "com.github.mauricio" %% "mysql-async"      % "0.2.21"
       )
     )
     .dependsOn(`quill-async` % "compile->compile;test->test")
@@ -128,7 +128,7 @@ lazy val `quill-async-postgres` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.github.mauricio" %% "postgresql-async" % "0.2.20"
+        "com.github.mauricio" %% "postgresql-async" % "0.2.21"
       )
     )
     .dependsOn(`quill-async` % "compile->compile;test->test")
@@ -140,8 +140,8 @@ lazy val `quill-cassandra` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.datastax.cassandra" %  "cassandra-driver-core" % "3.1.2",
-        "io.monix"               %% "monix"                % "2.1.1"
+        "com.datastax.cassandra" %  "cassandra-driver-core" % "3.1.3",
+        "io.monix"               %% "monix"                 % "2.2.1"
       )
     )
     .dependsOn(`quill-core-jvm` % "compile->compile;test->test")
@@ -226,7 +226,7 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
   libraryDependencies ++= Seq(
     "org.scalamacros" %% "resetallattrs"  % "1.0.0",
     "org.scalatest"   %%% "scalatest"     % "3.0.1"     % Test,
-    "ch.qos.logback"  % "logback-classic" % "1.1.7"     % Test,
+    "ch.qos.logback"  % "logback-classic" % "1.1.9"     % Test,
     "com.google.code.findbugs" % "jsr305" % "3.0.1"     % Provided // just to avoid warnings during compilation
   ),
   EclipseKeys.createSrc := EclipseCreateSrc.Default,
