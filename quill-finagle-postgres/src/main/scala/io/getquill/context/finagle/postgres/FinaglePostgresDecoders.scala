@@ -11,33 +11,33 @@ import scala.reflect.{ ClassTag, classTag }
 trait FinaglePostgresDecoders {
   this: FinaglePostgresContext[_] =>
 
-  type Decoder[T] = FinanglePostgresDecoder[T]
+  type Decoder[T] = FinaglePostgresDecoder[T]
 
-  case class FinanglePostgresDecoder[T](decoder: BaseDecoder[T]) extends BaseDecoder[T] {
+  case class FinaglePostgresDecoder[T](decoder: BaseDecoder[T]) extends BaseDecoder[T] {
     override def apply(index: Index, row: ResultRow) =
       decoder(index, row)
   }
 
   def decoder[T: ClassTag](f: PartialFunction[Any, T]): Decoder[T] =
-    FinanglePostgresDecoder((index, row) => {
+    FinaglePostgresDecoder((index, row) => {
       val value = row.vals(index).value
       f.lift(value).getOrElse(fail(s"Value '$value' at index $index can't be decoded to '${classTag[T].runtimeClass}'"))
     })
 
   def decoderDirectly[T: ClassTag]: Decoder[T] =
-    FinanglePostgresDecoder((index, row) =>
+    FinaglePostgresDecoder((index, row) =>
       row.vals(index).value match {
         case v: T => v
         case v    => fail(s"Cannot decode value $v at index $index to ${classTag[T]}")
       })
 
   implicit def optionDecoder[T](implicit d: Decoder[T]): Decoder[Option[T]] =
-    FinanglePostgresDecoder((index, row) => {
+    FinaglePostgresDecoder((index, row) => {
       if (row.vals == null || row.vals(index) == null) None else Some(d.decoder(index, row))
     })
 
   implicit def mappedDecoder[I, O](implicit mapped: MappedEncoding[I, O], d: Decoder[I]): Decoder[O] =
-    FinanglePostgresDecoder(mappedBaseDecoder(mapped, d.decoder))
+    FinaglePostgresDecoder(mappedBaseDecoder(mapped, d.decoder))
 
   implicit val stringDecoder: Decoder[String] = decoderDirectly[String]
   implicit val bigDecimalDecoder: Decoder[BigDecimal] = decoderDirectly[BigDecimal]
