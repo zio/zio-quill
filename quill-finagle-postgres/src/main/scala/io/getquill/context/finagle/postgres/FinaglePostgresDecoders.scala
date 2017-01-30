@@ -48,7 +48,8 @@ trait FinaglePostgresDecoders {
 
   implicit def optionDecoder[T](implicit d: Decoder[T]): Decoder[Option[T]] =
     FinaglePostgresDecoder[Option[T]]((index, row) => {
-      row.getAnyOption(index).map(_.asInstanceOf[T])
+      //row.getAnyOption(index).map(_.asInstanceOf[T])
+      Some(d.decoder(index, row))
     })
   //
   //  def decoder[T](f: ResultRow => Int => T): Decoder[Option[T]] =
