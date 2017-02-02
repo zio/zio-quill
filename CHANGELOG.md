@@ -1,3 +1,20 @@
+# 1.1.0
+
+**see migration notes below**
+
+- [materialize encoding for generic value classes](https://github.com/getquill/quill/pull/657)
+- [sbt option to hide debug messages during compilation](https://github.com/getquill/quill/pull/633)
+- [support Option.contains](https://github.com/getquill/quill/pull/669)
+- [recursive optional nested expanding](https://github.com/getquill/quill/pull/681)
+- [apply naming strategy to column alias](https://github.com/getquill/quill/pull/676)
+- [fix existing and add missing encoders and decoders for java.util.UUID](https://github.com/getquill/quill/pull/665)
+- [upgrade finagle-postgres to 0.3.2](https://github.com/getquill/quill/pull/692)
+
+### Migration notes
+
+- JDBC contexts are implemented in separate classes - `PostgresJdbcContext`, `MysqlJdbcContext`, `SqliteJdbcContext`, `H2JdbcContext`
+- all contexts are supplied with default `java.util.UUID` encoder and decoder
+
 # 1.0.1
 
 - [include SQL type info in Encoder/Decoder](https://github.com/getquill/quill/pull/588)
