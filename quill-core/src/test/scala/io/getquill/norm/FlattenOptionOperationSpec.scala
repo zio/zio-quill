@@ -20,7 +20,11 @@ class FlattenOptionOperationSpec extends Spec {
         (o: Option[Int]) => o.forall(i => i != 1)
       }
       FlattenOptionOperation(q.ast.body: Ast) mustEqual
-        BinaryOperation(Ident("o"), EqualityOperator.`!=`, Constant(1))
+        BinaryOperation(
+          BinaryOperation(Ident("o"), EqualityOperator.`==`, NullValue),
+          BooleanOperator.`||`,
+          BinaryOperation(Ident("o"), EqualityOperator.`!=`, Constant(1))
+        )
     }
 
     "exists" in {
