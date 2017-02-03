@@ -580,6 +580,13 @@ class SqlIdiomSpec extends Spec {
           testContext.run(q).string mustEqual
             "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE (t.i % t.l) = 0"
         }
+        "forall" in {
+          val q = quote {
+            qr1.filter(t => t.i != 1 && t.o.forall(op => op == 1))
+          }
+          testContext.run(q).string mustEqual
+            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE (t.i <> 1) AND ((t.o IS NULL) OR (t.o = 1))"
+        }
         "contains" - {
           "query" in {
             val q = quote {
@@ -595,6 +602,7 @@ class SqlIdiomSpec extends Spec {
             testContext.run(q).string mustEqual
               "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o = 1"
           }
+
         }
       }
     }
