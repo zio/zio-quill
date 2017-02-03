@@ -32,7 +32,7 @@ trait Unliftables {
     case q"$pack.OptionMap.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })"    => OptionMap(a, b, c)
     case q"$pack.OptionForall.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => OptionForall(a, b, c)
     case q"$pack.OptionExists.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => OptionExists(a, b, c)
-    case q"$pack.OptionContains.apply(${ a: Ast }, ${ b: Ident })"            => OptionContains(a, b)
+    case q"$pack.OptionContains.apply(${ a: Ast }, ${ b: Ast })"              => OptionContains(a, b)
   }
 
   implicit def listUnliftable[T](implicit u: Unliftable[T]): Unliftable[List[T]] = Unliftable[List[T]] {
