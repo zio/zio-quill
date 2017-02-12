@@ -68,7 +68,7 @@ class FinagleMysqlContext[N <: NamingStrategy](
     }
 
   def executeQuery[T](sql: String, prepare: List[Parameter] => List[Parameter] = identity, extractor: Row => T = identity[Row] _): Future[List[T]] = {
-    logger.info(sql)
+    logger.debug(sql)
     withClient(_.prepare(sql).select(prepare(List()): _*)(extractor)).map(_.toList)
   }
 
@@ -76,13 +76,13 @@ class FinagleMysqlContext[N <: NamingStrategy](
     executeQuery(sql, prepare, extractor).map(handleSingleResult)
 
   def executeAction[T](sql: String, prepare: List[Parameter] => List[Parameter] = identity): Future[Long] = {
-    logger.info(sql)
+    logger.debug(sql)
     withClient(_.prepare(sql)(prepare(List()): _*))
       .map(r => toOk(r).affectedRows)
   }
 
   def executeActionReturning[T](sql: String, prepare: List[Parameter] => List[Parameter] = identity, extractor: Row => T, returningColumn: String): Future[T] = {
-    logger.info(sql)
+    logger.debug(sql)
     withClient(_.prepare(sql)(prepare(List()): _*))
       .map(extractReturningValue(_, extractor))
   }
