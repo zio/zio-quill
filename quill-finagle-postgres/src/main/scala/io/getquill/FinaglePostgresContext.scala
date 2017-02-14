@@ -45,7 +45,7 @@ class FinaglePostgresContext[N <: NamingStrategy](client: Client) extends SqlCon
   }
 
   def executeQuery[T](sql: String, prepare: PrepareRow => PrepareRow = identity, extractor: Row => T = identity[Row] _): Future[List[T]] = {
-    logger.info(sql)
+    logger.debug(sql)
     withClient(_.prepareAndQuery(sql, prepare(Nil): _*)(extractor).map(_.toList))
   }
 
@@ -53,7 +53,7 @@ class FinaglePostgresContext[N <: NamingStrategy](client: Client) extends SqlCon
     executeQuery(sql, prepare, extractor).map(handleSingleResult)
 
   def executeAction[T](sql: String, prepare: PrepareRow => PrepareRow = identity, extractor: Row => T = identity[Row] _): Future[Long] = {
-    logger.info(sql)
+    logger.debug(sql)
     withClient(_.prepareAndExecute(sql, prepare(Nil): _*)).map(_.toLong)
   }
 
@@ -70,7 +70,7 @@ class FinaglePostgresContext[N <: NamingStrategy](client: Client) extends SqlCon
   }.map(_.flatten.toList)
 
   def executeActionReturning[T](sql: String, prepare: PrepareRow => PrepareRow = identity, extractor: Row => T, returningColumn: String): Future[T] = {
-    logger.info(sql)
+    logger.debug(sql)
     withClient(_.prepareAndQuery(expandAction(sql, returningColumn), prepare(List()): _*)(extractor)).map(v => handleSingleResult(v.toList))
   }
 

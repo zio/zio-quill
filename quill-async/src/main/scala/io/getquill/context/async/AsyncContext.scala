@@ -62,7 +62,7 @@ abstract class AsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: Connection]
     }
 
   def executeQuery[T](sql: String, prepare: List[Any] => List[Any] = identity, extractor: RowData => T = identity[RowData] _)(implicit ec: ExecutionContext): Future[List[T]] = {
-    logger.info(sql)
+    logger.debug(sql)
     withConnection(_.sendPreparedStatement(sql, prepare(List()))).map {
       _.rows match {
         case Some(rows) => rows.map(extractor).toList
@@ -75,13 +75,13 @@ abstract class AsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: Connection]
     executeQuery(sql, prepare, extractor).map(handleSingleResult)
 
   def executeAction[T](sql: String, prepare: List[Any] => List[Any] = identity)(implicit ec: ExecutionContext): Future[Long] = {
-    logger.info(sql)
+    logger.debug(sql)
     withConnection(_.sendPreparedStatement(sql, prepare(List()))).map(_.rowsAffected)
   }
 
   def executeActionReturning[T](sql: String, prepare: List[Any] => List[Any] = identity, extractor: RowData => T, returningColumn: String)(implicit ec: ExecutionContext): Future[T] = {
     val expanded = expandAction(sql, returningColumn)
-    logger.info(expanded)
+    logger.debug(expanded)
     withConnection(_.sendPreparedStatement(expanded, prepare(List())))
       .map(extractActionResult(returningColumn, extractor))
   }

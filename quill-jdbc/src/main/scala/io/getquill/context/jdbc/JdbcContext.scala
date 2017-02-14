@@ -72,7 +72,7 @@ abstract class JdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](dataSo
 
   def executeQuery[T](sql: String, prepare: PreparedStatement => PreparedStatement = identity, extractor: ResultSet => T = identity[ResultSet] _): List[T] =
     withConnection { conn =>
-      logger.info(sql)
+      logger.debug(sql)
       val ps = prepare(conn.prepareStatement(sql))
       val rs = ps.executeQuery()
       extractResult(rs, extractor)
@@ -83,13 +83,13 @@ abstract class JdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](dataSo
 
   def executeAction[T](sql: String, prepare: PreparedStatement => PreparedStatement = identity): Long =
     withConnection { conn =>
-      logger.info(sql)
+      logger.debug(sql)
       prepare(conn.prepareStatement(sql)).executeUpdate().toLong
     }
 
   def executeActionReturning[O](sql: String, prepare: PreparedStatement => PreparedStatement = identity, extractor: ResultSet => O, returningColumn: String): O =
     withConnection { conn =>
-      logger.info(sql)
+      logger.debug(sql)
       val ps = prepare(conn.prepareStatement(sql, Array(returningColumn)))
       ps.executeUpdate()
       handleSingleResult(extractResult(ps.getGeneratedKeys, extractor))
@@ -99,7 +99,7 @@ abstract class JdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](dataSo
     withConnection { conn =>
       groups.flatMap {
         case BatchGroup(sql, prepare) =>
-          logger.info(sql)
+          logger.debug(sql)
           val ps = conn.prepareStatement(sql)
           prepare.foreach { f =>
             f(ps)
@@ -113,7 +113,7 @@ abstract class JdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](dataSo
     withConnection { conn =>
       groups.flatMap {
         case BatchGroupReturning(sql, column, prepare) =>
-          logger.info(sql)
+          logger.debug(sql)
           val ps = conn.prepareStatement(sql, Array(column))
           prepare.foreach { f =>
             f(ps)
