@@ -67,6 +67,12 @@ class ActionMacroSpec extends Spec {
       r.prepareRow mustEqual Row("s", 1, None)
       r.returningColumn mustEqual "l"
     }
+    "embedded 2nd level" in {
+      val parent = TestEntityParent(TestEntityEmbedded2(TestEntityEmbedded("sValue")))
+      val r = testContext.run(qEmbedded.insert(lift(parent)))
+      r.string mustEqual """querySchema("TestEntityParent").insert(v => v.embedded2.embedded.s -> ?)"""
+      r.prepareRow mustEqual Row("sValue")
+    }
   }
 
   "runs batched action" - {
@@ -169,5 +175,21 @@ class ActionMacroSpec extends Spec {
           List(Row("s1", 2, Some(4)), Row("s5", 6, Some(8))))
       )
     }
+    "embedded 1st level" in {
+      val parent = TestEntityEmbedded2(TestEntityEmbedded("sValue"))
+      val list = List(parent)
+      val q = quote(query[TestEntityEmbedded2])
+      val r = testContext.run(liftQuery(list).foreach(p => q.insert(p)))
+      r.groups mustEqual 
+        List(("""querySchema("TestEntityEmbedded2").insert(v => v.embedded.s -> ?)""", List(Row("sValue"))))
+    }
+    "embedded 2nd level" in {
+      val parent = TestEntityParent(TestEntityEmbedded2(TestEntityEmbedded("sValue")))
+      val list = List(parent)
+      val r = testContext.run(liftQuery(list).foreach(p => qEmbedded.insert(p)))
+      r.groups mustEqual
+        List(("""querySchema("TestEntityParent").insert(v => v.embedded2.embedded.s -> ?)""", List(Row("sValue"))))
+    }
+
   }
 }
