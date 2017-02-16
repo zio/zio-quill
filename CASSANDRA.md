@@ -45,7 +45,7 @@ Add your project's `build.sbt` dependencies as described in [Cassandra Contexts]
 
 ## Abstraction level ##
 
-The Datastax Java driver provides simple abstractions that let you either write you queries as plain strings or to use a declarative Query Builder. It also provides a higher level [Object Mapper](https://github.com/datastax/java-driver/tree/2.1/manual/object_mapper). For this comparison we will only use the Query Builder.
+The Datastax Java driver provides simple abstractions that let you either write your queries as plain strings or use a declarative Query Builder. It also provides a higher level [Object Mapper](https://github.com/datastax/java-driver/tree/2.1/manual/object_mapper). For this comparison we will only use the Query Builder.
 
 Although both Quill and Phantom represent column family rows as flat immutable structures (case classes without nested data) and provide a type-safe composable query DSL, they work at a different abstraction level. 
 
