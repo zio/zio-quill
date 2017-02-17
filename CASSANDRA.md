@@ -125,7 +125,7 @@ object Phantom extends App {
     object country extends StringColumn(this) with PartitionKey
     object city extends StringColumn(this) with PrimaryKey
     object stationId extends StringColumn(this) with PrimaryKey
-    object entry extends IntColumn(this) with PrimaryKey[Int]
+    object entry extends IntColumn(this) with PrimaryKey
     object value extends IntColumn(this)
 
     def getAllByCountry(country: String): Future[List[WeatherStation]] =
@@ -464,11 +464,9 @@ object Phantom extends App {
 
   abstract class WeatherStationCF extends CassandraTable[WeatherStationCF, WeatherStation] with RootConnector {
 
-    object country extends Country.Column(this) with PartitionKey[Country]
-    object city extends StringColumn(this) with PrimaryKey[String]
-    object stationId extends StringColumn(this) with PrimaryKey[String] {
-      override lazy val name: String = "station_id"
-    }
+    object country extends Col[Country](this) with PartitionKey
+    object city extends StringColumn(this) with PrimaryKey
+    object stationId extends StringColumn(this) with PrimaryKey
     object entry extends IntColumn(this) with PrimaryKey
     object value extends IntColumn(this)
 
