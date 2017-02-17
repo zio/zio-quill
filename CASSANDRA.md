@@ -1,5 +1,5 @@
 
-This document compares Quill to the [Datastax Java](https://github.com/datastax/java-driver) driver and the [Phantom](http://websudos.github.io/phantom/) library. This is an incomplete comparison, additions and corrections are welcome.
+This document compares Quill to the [Datastax Java](https://github.com/datastax/java-driver) driver and the [Phantom](http://outworkers.github.io/phantom/) library. This is an incomplete comparison, additions and corrections are welcome.
 
 All examples have been properly tested, and they should work out of the box.
 
@@ -16,7 +16,7 @@ All examples have been properly tested, and they should work out of the box.
 
 ## Prerequisites ##
 
-The keyspace and column family needed for all examples are defined in this CQL script:
+The keyspace and column family needed for all examples are defined in this CQL script. This step can be entirely skipped in Phantom were schema is auto-generated.
 
 ```
 CREATE KEYSPACE IF NOT EXISTS db
@@ -120,29 +120,20 @@ object Phantom extends App {
 
   case class WeatherStation(country: String, city: String, stationId: String, entry: Int, value: Int)
 
-  abstract class WeatherStationCF(override val tableName: String) extends CassandraTable[WeatherStationCF, WeatherStation] with RootConnector {
+  abstract class WeatherStationCF extends CassandraTable[WeatherStationCF, WeatherStation] with RootConnector {
 
-    object country extends StringColumn(this) with PartitionKey[String]
-    object city extends StringColumn(this) with PrimaryKey[String]
-    object stationId extends StringColumn(this) with PrimaryKey[String] {
-      override lazy val name: String = "station_id"
-    }
+    object country extends StringColumn(this) with PartitionKey
+    object city extends StringColumn(this) with PrimaryKey
+    object stationId extends StringColumn(this) with PrimaryKey
     object entry extends IntColumn(this) with PrimaryKey[Int]
     object value extends IntColumn(this)
-
-    override def fromRow(r: Row): WeatherStation =
-      WeatherStation(country(r), city(r), stationId(r), entry(r), value(r))
-  }
-
-  abstract class WeatherStationQueries extends WeatherStationCF("weather_station") {
 
     def getAllByCountry(country: String): Future[List[WeatherStation]] =
       select.where(_.country eqs country).fetch()
   }
 
-  class DB(ks: KeySpaceDef) extends DatabaseImpl(ks) {
-
-    object stations extends WeatherStationQueries with connector.Connector
+  class DB(ks: CassandraConnection) extends Database[DB](ks) {
+    object stations extends WeatherStationCF with Connector
   }
 
   val db = new DB(ContactPoint.local.keySpace("db"))
@@ -249,11 +240,11 @@ object JavaDriver extends App {
 
 The DSL has limited composition compatibility.
 
-**Phantom (v1.22.0)**
+**Phantom (v2.3.1)**
 ```
-import com.websudos.phantom.connectors.RootConnector
-import com.websudos.phantom.db._
-import com.websudos.phantom.dsl._
+import com.outworkers.phantom.connectors.RootConnector
+import com.outworkers.phantom.db._
+import com.outworkers.phantom.dsl._
 
 import scala.concurrent.Future
 
@@ -261,19 +252,13 @@ object Phantom extends App {
 
   case class WeatherStation(country: String, city: String, stationId: String, entry: Int, value: Int)
 
-  abstract class WeatherStationCF(override val tableName: String) extends CassandraTable[WeatherStationCF, WeatherStation] with RootConnector {
+  abstract class WeatherStationCF extends CassandraTable[WeatherStationCF, WeatherStation] with RootConnector {
 
-    object country extends StringColumn(this) with PartitionKey[String]
-    object city extends StringColumn(this) with PrimaryKey[String]
-    object stationId extends StringColumn(this) with PrimaryKey[String]
-    object entry extends IntColumn(this) with PrimaryKey[Int]
+    object country extends StringColumn(this) with PartitionKey
+    object city extends StringColumn(this) with PrimaryKey
+    object stationId extends StringColumn(this) with PrimaryKey
+    object entry extends IntColumn(this) with PrimaryKey
     object value extends IntColumn(this)
-
-    override def fromRow(r: Row): WeatherStation =
-      WeatherStation(country(r), city(r), stationId(r), entry(r), value(r))
-  }
-
-  abstract class WeatherStationQueries extends WeatherStationCF("weather_station") {
 
     def getAllByCountry(country: String): Future[List[WeatherStation]] =
       findAllByCountry(country).fetch()
@@ -294,9 +279,9 @@ object Phantom extends App {
       findAllByCountryAndCity(country, city).and(_.stationId eqs stationId)
   }
 
-  class DB(ks: KeySpaceDef) extends DatabaseImpl(ks) {
+  class DB(ks: CassandraConnection) extends Database[DB](ks) {
 
-    object stations extends WeatherStationQueries with connector.Connector
+    object stations extends WeatherStationQueries with Connector
   }
 
   val db = new DB(ContactPoint.local.keySpace("db"))
@@ -357,9 +342,9 @@ This section explores the extensibility capabilities of each library .
 
 There is no much offered by the driver to extend the Query Builder, e.g. add a missing CQL feature.
 
-**Phantom (v1.22.0)**
+**Phantom (v2.1.3)**
 
-You could extend Phantom by extending the DSL to add new features, although it might not be a straightforward process.
+You could extend Phantom by extending the DSL to add new features, and the process is very simple, as phantom relies on composition through implicit augmentation. Natively supporting new types is also simple to achieve through primitives.
 
 **Quill**
 
@@ -454,16 +439,12 @@ object JavaDriver extends App {
 }
 ```
 
-It is necessary to create a new `TypeCodec` and register it in the `CodecRegistry`.
+Phantom uses `Primitive.derive` and implicit lookup to allow you to support "new" types based on existing ones.
 
-**Phantom (v1.22.0)**
+**Phantom (v2.1.3)**
+
 ```
-import com.websudos.phantom.builder.primitives.Primitive
-import com.websudos.phantom.builder.query.CQLQuery
-import com.websudos.phantom.builder.syntax.CQLSyntax
-import com.websudos.phantom.connectors.RootConnector
-import com.websudos.phantom.db._
-import com.websudos.phantom.dsl._
+import com.outworkers.phantom.dsl._
 
 import scala.concurrent.Future
 import scala.util.Try
@@ -474,54 +455,30 @@ object Phantom extends App {
 
   object Country {
 
-    implicit object CountryIsPrimitive extends Primitive[Country] {
-
-      override type PrimitiveType = Country
-
-      override def fromRow(column: String, row: Row): Try[Country] =
-        nullCheck(column, row) {
-          r => Country(r.getString(column))
-        }
-
-      override val cassandraType: String = CQLSyntax.Types.Text
-
-      override def fromString(code: String): Country = Country(code)
-
-      override def asCql(country: Country): String = CQLQuery.empty.singleQuote(country.code)
-
-      override val clz: Class[CountryIsPrimitive.PrimitiveType] = classOf[Country]
-    }
-
-    type Column[Owner <: CassandraTable[Owner, Record], Record] = PrimitiveColumn[Owner, Record, Country]
+    implicit val CountryIsPrimitive = Primitive.derive[String, Country](_.code)(Country.apply)
   }
 
   case class WeatherStation(country: Country, city: String, stationId: String, entry: Int, value: Int)
 
   case class People(name: String, age: Int)
 
-  abstract class WeatherStationCF(override val tableName: String) extends CassandraTable[WeatherStationCF, WeatherStation] with RootConnector {
+  abstract class WeatherStationCF extends CassandraTable[WeatherStationCF, WeatherStation] with RootConnector {
 
     object country extends Country.Column(this) with PartitionKey[Country]
     object city extends StringColumn(this) with PrimaryKey[String]
     object stationId extends StringColumn(this) with PrimaryKey[String] {
       override lazy val name: String = "station_id"
     }
-    object entry extends IntColumn(this) with PrimaryKey[Int]
+    object entry extends IntColumn(this) with PrimaryKey
     object value extends IntColumn(this)
-
-    override def fromRow(r: Row): WeatherStation =
-      WeatherStation(country(r), city(r), stationId(r), entry(r), value(r))
-  }
-
-  abstract class WeatherStationQueries extends WeatherStationCF("weather_station") {
 
     def getAllByCountry(country: Country): Future[List[WeatherStation]] =
       select.where(_.country eqs country).fetch()
   }
 
-  class DB(ks: KeySpaceDef) extends DatabaseImpl(ks) {
+  class DB(ks: CassandraConnection) extends Database[DB](ks) {
 
-    object stations extends WeatherStationQueries with connector.Connector
+    object stations extends WeatherStationQueries with Connector
   }
 
   val db = new DB(ContactPoint.local.keySpace("db"))
@@ -532,7 +489,7 @@ object Phantom extends App {
 }
 ```
 
-It is necessary to define a new `Column` type to be used when defining the data model.
+Quill requires two separate `MappedEncoding` definitions to quote a new type.
 
 **Quill**
 ```scala
@@ -579,9 +536,9 @@ This section compares the different options the libraries offer to do non-blocki
 
 The Datastax driver allows the user to execute queries [asynchronously](https://github.com/datastax/java-driver/tree/2.1/manual/async), returning `ListenableFuture`s.
    
-**Phantom (v1.22.0)**
+**Phantom (v2.1.3)**
 
-Phantom is asynchronous by default and all operations return `Future`s. It also allows users to process the data coming from Cassandra in a streaming fashion using [`play-iteratees`](https://www.playframework.com/documentation/2.4.x/Iteratees) or [`play-streams-experimental`](https://www.playframework.com/documentation/2.4.x/ReactiveStreamsIntegration), that make it possible to integrate with other software that support [reactive-streams](https://github.com/reactive-streams/reactive-streams-jvm).
+Phantom is asynchronous by default and all operations return `Future`s. It also allows users to process the data coming from Cassandra in a streaming fashion using [`play-iteratees`](https://www.playframework.com/documentation/2.4.x/Iteratees) or [`play-streams`](https://www.playframework.com/documentation/2.4.x/ReactiveStreamsIntegration), that make it possible to integrate with other software that support [reactive-streams](https://github.com/reactive-streams/reactive-streams-jvm).
 
 **Quill (v0.4.0)**
 
