@@ -108,11 +108,11 @@ object JavaDriver extends App {
 
 The Java driver requires explicit handling of a `PreparedStatement`s cache to avoid preparing the same statement more that once, that could affect performance.
 
-**Phantom (v1.22.0)**
+**Phantom (v2.1.3)**
 ```
-import com.websudos.phantom.connectors.RootConnector
-import com.websudos.phantom.db._
-import com.websudos.phantom.dsl._
+import com.outworkers.phantom.connectors.RootConnector
+import com.outworkers.phantom.db._
+import com.outworkers.phantom.dsl._
 
 import scala.concurrent.Future
 
@@ -548,4 +548,6 @@ Quill provides blocking, asynchronous and streaming sources for Cassandra. The a
 
 There other aspects the user might want to take into account like 3rd party dependencies. As both Phantom and Quill depend on the Datastax Java Driver, we are going to pay attention to which additional dependencies each of them add.
 
-Phantom is composed by several modules, each of them with their 3rd party dependencies. Overall it adds more 3rd party dependencies than Quill and it has dependencies on libraries like shapeless, play-iteratees, play-streams-experimental or akka-actor. Quill, on the other hand, only adds dependencies on monix and scalamacros resetallattrs.
+`phantom-dsl` depends on Shapeless, macro-compat and the `diesel-engine`, all of which have no other transitive dependencies. Phantom is however composed by several modules, each of them with their 3rd party dependencies.
+
+Quill, on the other hand, only adds dependencies on monix and scalamacros resetallattrs, which is a bit more lightweight than shapless.
