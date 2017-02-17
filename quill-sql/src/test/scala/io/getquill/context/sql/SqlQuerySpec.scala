@@ -65,6 +65,13 @@ class SqlQuerySpec extends Spec {
         testContext.run(q).string mustEqual
           """SELECT x._1, x._2 FROM (SELECT t.s AS "_1", t.i AS "_2" FROM TestEntity t) x"""
       }
+      "using single value" in {
+        val q = quote {
+          infix"""SELECT t.i FROM TestEntity t""".as[Query[Int]]
+        }
+        testContext.run(q).string mustEqual
+          """SELECT x.* FROM (SELECT t.i FROM TestEntity t) x"""
+      }
     }
 
     "nested infix query" - {

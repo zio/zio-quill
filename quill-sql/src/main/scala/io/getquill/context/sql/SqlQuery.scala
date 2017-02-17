@@ -55,15 +55,16 @@ object SqlQuery {
       case _: Operation | _: Value      => FlattenSqlQuery(select = List(SelectValue(query)))
       case Map(q, a, b) if a == b       => apply(q)
       case q: Query                     => flatten(q, "x")
+      case infix: Infix                 => flatten(infix, "x")
       case other                        => fail(s"Query not properly normalized. Please open a bug report. Ast: '$other'")
     }
 
-  private def flatten(query: Query, alias: String): FlattenSqlQuery = {
+  private def flatten(query: Ast, alias: String): FlattenSqlQuery = {
     val (sources, finalFlatMapBody) = flattenContexts(query)
     flatten(sources, finalFlatMapBody, alias)
   }
 
-  private def flattenContexts(query: Query): (List[FromContext], Query) =
+  private def flattenContexts(query: Ast): (List[FromContext], Ast) =
     query match {
       case FlatMap(q: Query, Ident(alias), p: Query) =>
         val source = this.source(q, alias)
