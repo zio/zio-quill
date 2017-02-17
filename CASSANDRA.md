@@ -110,8 +110,6 @@ The Java driver requires explicit handling of a `PreparedStatement`s cache to av
 
 **Phantom (v2.1.3)**
 ```
-import com.outworkers.phantom.connectors.RootConnector
-import com.outworkers.phantom.db._
 import com.outworkers.phantom.dsl._
 
 import scala.concurrent.Future
@@ -241,9 +239,8 @@ object JavaDriver extends App {
 The DSL has limited composition compatibility.
 
 **Phantom (v2.3.1)**
+
 ```
-import com.outworkers.phantom.connectors.RootConnector
-import com.outworkers.phantom.db._
 import com.outworkers.phantom.dsl._
 
 import scala.concurrent.Future
