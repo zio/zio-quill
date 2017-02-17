@@ -548,4 +548,4 @@ There other aspects the user might want to take into account like 3rd party depe
 
 `phantom-dsl` depends on Shapeless, macro-compat and the `diesel-engine`, all of which have no other transitive dependencies. Phantom is however composed by several modules, each of them with their 3rd party dependencies.
 
-Quill, on the other hand, only adds dependencies on monix and scalamacros resetallattrs, which is a bit more lightweight than shapless.
+Quill, on the other hand, only adds dependencies on monix and scalamacros resetallattrs.
