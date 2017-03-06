@@ -43,8 +43,9 @@ CREATE TABLE EncodingTestEntity(
     v6 FLOAT,
     v7 DOUBLE,
     v8 BLOB,
-    v9 TIMESTAMP,
+    v9 DATE,
     v10 UUID,
+    v11 TIMESTAMP,
     o1 VARCHAR,
     o2 DECIMAL,
     o3 BOOLEAN,
@@ -54,6 +55,7 @@ CREATE TABLE EncodingTestEntity(
     o7 DOUBLE,
     o8 BLOB,
     o9 TIMESTAMP,
+    o10 DATE,
     PRIMARY KEY(id, v1)
 );
 

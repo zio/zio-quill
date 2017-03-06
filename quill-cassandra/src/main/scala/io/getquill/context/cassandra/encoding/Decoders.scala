@@ -1,5 +1,6 @@
 package io.getquill.context.cassandra.encoding
 
+import com.datastax.driver.core.LocalDate
 import java.util.{ Date, UUID }
 
 import io.getquill.context.cassandra.CassandraSessionContext
@@ -55,4 +56,5 @@ trait Decoders {
     })
   implicit val uuidDecoder: Decoder[UUID] = decoder(_.getUUID)
   implicit val dateDecoder: Decoder[Date] = decoder(_.getTimestamp)
+  implicit val localDateDecoder: Decoder[LocalDate] = decoder(_.getDate)
 }

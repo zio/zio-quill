@@ -3,6 +3,7 @@ package io.getquill.context.cassandra.encoding
 import java.nio.ByteBuffer
 import java.util.{ Date, UUID }
 
+import com.datastax.driver.core.LocalDate
 import io.getquill.context.cassandra.CassandraSessionContext
 
 trait Encoders {
@@ -46,4 +47,5 @@ trait Encoders {
     encoder((index, value, row) => row.setBytes(index, ByteBuffer.wrap(value)))
   implicit val uuidEncoder: Encoder[UUID] = encoder(_.setUUID)
   implicit val dateEncoder: Encoder[Date] = encoder(_.setTimestamp)
+  implicit val localDateEncoder: Encoder[LocalDate] = encoder(_.setDate)
 }
