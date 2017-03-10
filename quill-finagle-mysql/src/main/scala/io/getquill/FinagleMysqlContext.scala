@@ -13,6 +13,7 @@ import com.twitter.finagle.mysql.Parameter
 import com.twitter.finagle.mysql.Result
 import com.twitter.finagle.mysql.Row
 import com.twitter.finagle.mysql.Transactions
+import com.twitter.finagle.mysql.TimestampValue
 import com.twitter.util.Await
 import com.twitter.util.Future
 import com.twitter.util.Local
@@ -27,14 +28,15 @@ import io.getquill.util.LoadConfig
 import io.getquill.util.Messages.fail
 
 class FinagleMysqlContext[N <: NamingStrategy](
-  client:                             Client with Transactions,
-  private[getquill] val dateTimezone: TimeZone                 = TimeZone.getDefault
+  client:                                   Client with Transactions,
+  private[getquill] val injectionTimeZone:  TimeZone                 = TimeZone.getDefault,
+  private[getquill] val extractionTimeZone: TimeZone                 = TimeZone.getDefault
 )
   extends SqlContext[MySQLDialect, N]
   with FinagleMysqlDecoders
   with FinagleMysqlEncoders {
 
-  def this(config: FinagleMysqlContextConfig) = this(config.client, config.dateTimezone)
+  def this(config: FinagleMysqlContextConfig) = this(config.client, config.injectionTimeZone, config.extractionTimeZone)
   def this(config: Config) = this(FinagleMysqlContextConfig(config))
   def this(configPrefix: String) = this(LoadConfig(configPrefix))
 
@@ -50,6 +52,12 @@ class FinagleMysqlContext[N <: NamingStrategy](
   override type RunActionReturningResult[T] = Future[T]
   override type RunBatchActionResult = Future[List[Long]]
   override type RunBatchActionReturningResult[T] = Future[List[T]]
+
+  protected val timestampValue =
+    new TimestampValue(
+      injectionTimeZone,
+      extractionTimeZone
+    )
 
   Await.result(client.ping)
 
