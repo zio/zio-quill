@@ -11,6 +11,7 @@ Compile-time Language Integrated Query for Scala
 [![Join the chat at https://gitter.im/getquill/quill](https://img.shields.io/badge/gitter-join%20chat-green.svg)](https://gitter.im/getquill/quill?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Dependency Status](https://www.versioneye.com/user/projects/56ea4da64e714c0035e76353/badge.svg?style=flat)](https://www.versioneye.com/user/projects/56ea4da64e714c0035e76353)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.getquill/quill_2.11/badge.svg)](https://maven-badges.herokuapp.com/maven-central/io.getquill/quill_2.11)
+[![Javadocs](https://www.javadoc.io/badge/io.getquill/quill_2.11.svg)](https://www.javadoc.io/doc/io.getquill/quill-core_2.11)
 
 Quill provides a Quoted Domain Specific Language ([QDSL](http://homepages.inf.ed.ac.uk/wadler/papers/qdsl/qdsl.pdf)) to express queries in Scala and execute them in a target language. The library's core is designed to support multiple target languages, currently featuring specializations for Structured Query Language ([SQL](https://en.wikipedia.org/wiki/SQL)) and Cassandra Query Language ([CQL](https://cassandra.apache.org/doc/cql3/CQL.html#selectStmt)).
 
