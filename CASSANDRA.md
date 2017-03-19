@@ -47,7 +47,7 @@ Add your project's `build.sbt` dependencies as described in [Cassandra Contexts]
 
 The Datastax Java driver provides simple abstractions that let you either write your queries as plain strings or use a declarative Query Builder. It also provides a higher level [Object Mapper](https://github.com/datastax/java-driver/tree/2.1/manual/object_mapper). For this comparison we will only use the Query Builder.
 
-Although both Quill and Phantom represent column family rows as flat immutable structures (case classes without nested data) and provide a type-safe composable query DSL, they work at a different abstraction level. 
+Although both Quill and Phantom represent column family rows as flat immutable structures (case classes without nested data) and provide a type-safe composable query DSL, they work at a different abstraction level.
 
 Phantom provides an embedded DSL that help you write CQL queries in a type-safe manner. Quill is referred as a Language Integrated Query library to match the available publications on the subject. The paper ["Language-integrated query using comprehension syntax: state of the art, open problems, and work in progress"](http://research.microsoft.com/en-us/events/dcp2014/cheney.pdf) has an overview with some of the available implementations of language integrated queries.
 
@@ -108,7 +108,7 @@ object JavaDriver extends App {
 
 The Java driver requires explicit handling of a `PreparedStatement`s cache to avoid preparing the same statement more that once, that could affect performance.
 
-**Phantom (v2.1.3)**
+**Phantom (v2.3.1)**
 ```
 import com.outworkers.phantom.dsl._
 
@@ -178,7 +178,7 @@ During the compilation of this example, as the quotation is known statically, Qu
 
 This section compares how the different libraries let the user compose queries.
 
-**Java Driver (v3.0.0)** 
+**Java Driver (v3.0.0)**
 
 The Query Builder allows the user to partially construct queries and add filters later:
 
@@ -289,7 +289,7 @@ object Phantom extends App {
 }
 ```
 
-Phantom allows the user certain level of composability, but it gets a bit verbose due to the nature of the DSL. 
+Phantom allows the user certain level of composability, but it gets a bit verbose due to the nature of the DSL.
 
 **Quill**
 ```scala
@@ -339,9 +339,9 @@ This section explores the extensibility capabilities of each library .
 
 There is no much offered by the driver to extend the Query Builder, e.g. add a missing CQL feature.
 
-**Phantom (v2.1.3)**
+**Phantom (v2.3.1)**
 
-You could extend Phantom by extending the DSL to add new features, and the process is very simple, as phantom relies on composition through implicit augmentation. Natively supporting new types is also simple to achieve through primitives.
+You could extend Phantom by extending the DSL to add new features, and the process is very simple, as phantom relies on composition through implicit augmentation. Natively supporting new types is also simple to achieve through primitives, using `Primitive.derive[NewType, OldType](oldToNewFn)(newToOldFn)`. Such an example is possible through:
 
 **Quill**
 
@@ -438,7 +438,7 @@ object JavaDriver extends App {
 
 Phantom uses `Primitive.derive` and implicit lookup to allow you to support "new" types based on existing ones.
 
-**Phantom (v2.1.3)**
+**Phantom (v2.3.1)**
 
 ```
 import com.outworkers.phantom.dsl._
@@ -484,8 +484,6 @@ object Phantom extends App {
 }
 ```
 
-Quill requires two separate `MappedEncoding` definitions to quote a new type.
-
 **Quill**
 ```scala
 import io.getquill._
@@ -530,8 +528,8 @@ This section compares the different options the libraries offer to do non-blocki
 **Java Driver (v3.0.0)**
 
 The Datastax driver allows the user to execute queries [asynchronously](https://github.com/datastax/java-driver/tree/2.1/manual/async), returning `ListenableFuture`s.
-   
-**Phantom (v2.1.3)**
+
+**Phantom (v2.3.1)**
 
 Phantom is asynchronous by default and all operations return `Future`s. It also allows users to process the data coming from Cassandra in a streaming fashion using [`play-iteratees`](https://www.playframework.com/documentation/2.4.x/Iteratees) or [`play-streams`](https://www.playframework.com/documentation/2.4.x/ReactiveStreamsIntegration), that make it possible to integrate with other software that support [reactive-streams](https://github.com/reactive-streams/reactive-streams-jvm).
 
@@ -543,6 +541,6 @@ Quill provides blocking, asynchronous and streaming sources for Cassandra. The a
 
 There other aspects the user might want to take into account like 3rd party dependencies. As both Phantom and Quill depend on the Datastax Java Driver, we are going to pay attention to which additional dependencies each of them add.
 
-`phantom-dsl` depends on Shapeless, macro-compat and the `diesel-engine`, all of which have no other transitive dependencies. Phantom is however composed by several modules, each of them with their 3rd party dependencies.
+`phantom-dsl` depends only on Shapeless, macro-compat, all of which have no other transitive dependencies. Phantom is however composed by several modules, each of them with their individual 3rd party dependencies.
 
 Quill, on the other hand, only adds dependencies on monix and scalamacros resetallattrs.
