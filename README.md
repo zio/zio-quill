@@ -1553,13 +1553,16 @@ Maintainers
 ===========
 
 - @fwbrasil
-- @godenji
 - @gustavoamigo
 - @jilen
-- @lvicentesanchez
 - @mxl
 
-You can notify all maintainers using the handle `@getquill/maintainers`.
+Former maintainers:
+
+- @godenji
+- @lvicentesanchez
+
+You can notify all current maintainers using the handle `@getquill/maintainers`.
 
 Acknowledgments
 ===============
