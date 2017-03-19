@@ -51,12 +51,14 @@ trait FinagleMysqlEncoders {
   implicit val floatEncoder: Encoder[Float] = encoder[Float]
   implicit val doubleEncoder: Encoder[Double] = encoder[Double]
   implicit val byteArrayEncoder: Encoder[Array[Byte]] = encoder[Array[Byte]]
-  implicit val dateEncoder: Encoder[Date] = encoder[Date]
+  implicit val dateEncoder: Encoder[Date] = encoder[Date] {
+    (value: Date) => timestampValue(new Timestamp(value.getTime)): Parameter
+  }
   implicit val localDateEncoder: Encoder[LocalDate] = encoder[LocalDate] {
     (d: LocalDate) => DateValue(java.sql.Date.valueOf(d)): Parameter
   }
   implicit val localDateTimeEncoder: Encoder[LocalDateTime] = encoder[LocalDateTime] {
-    (d: LocalDateTime) => new TimestampValue(dateTimezone, dateTimezone).apply(Timestamp.valueOf(d)): Parameter
+    (d: LocalDateTime) => timestampValue(Timestamp.valueOf(d)): Parameter
   }
   implicit val uuidEncoder: Encoder[UUID] = mappedEncoder(MappedEncoding(_.toString), stringEncoder)
 }

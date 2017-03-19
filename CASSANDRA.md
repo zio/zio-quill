@@ -152,7 +152,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 object Quill extends App {
 
-  val db = new CassandraAsyncContext[SnakeCase]("DB")
+  val db = new CassandraAsyncContext[SnakeCase]("db")
 
   import db._
 
@@ -299,7 +299,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 object Quill extends App {
 
-  val db = new CassandraAsyncContext[SnakeCase]("DB")
+  val db = new CassandraAsyncContext[SnakeCase]("db")
 
   import db._
 
@@ -494,7 +494,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 object Quill extends App {
 
-  val db = new CassandraAsyncContext[SnakeCase]("DB")
+  val db = new CassandraAsyncContext[SnakeCase]("db")
 
   import db._
 

@@ -1,7 +1,8 @@
 package io.getquill.context.cassandra
 
 import io.getquill._
-import java.util.{ UUID, Date }
+import java.util.{ Date, UUID }
+import com.datastax.driver.core.LocalDate
 import monix.reactive.Observable
 
 class EncodingSpec extends Spec {
@@ -117,6 +118,7 @@ class EncodingSpec extends Spec {
     e.v8.toList mustEqual a.v8.toList
     e.v9 mustEqual a.v9
     e.v10 mustEqual a.v10
+    e.v11 mustEqual a.v11
     e.o1 mustEqual a.o1
     e.o2 mustEqual a.o2
     e.o3 mustEqual a.o3
@@ -126,6 +128,7 @@ class EncodingSpec extends Spec {
     e.o7 mustEqual a.o7
     e.o8.map(_.toList) mustEqual a.o8.map(_.toList)
     e.o9 mustEqual a.o9
+    e.o10 mustEqual a.o10
 
     ()
   }
@@ -140,8 +143,9 @@ class EncodingSpec extends Spec {
     v6:  Float,
     v7:  Double,
     v8:  Array[Byte],
-    v9:  Date,
+    v9:  LocalDate,
     v10: UUID,
+    v11: Date,
     o1:  Option[String],
     o2:  Option[BigDecimal],
     o3:  Option[Boolean],
@@ -150,7 +154,8 @@ class EncodingSpec extends Spec {
     o6:  Option[Float],
     o7:  Option[Double],
     o8:  Option[Array[Byte]],
-    o9:  Option[Date]
+    o9:  Option[Date],
+    o10: Option[LocalDate]
   )
 
   private val fixUUID: UUID = UUID.fromString("606c79e8-a331-4810-8bd7-0668ff7a23ef")
@@ -167,8 +172,9 @@ class EncodingSpec extends Spec {
         v6 = 34.4f,
         v7 = 42d,
         v8 = Array(1.toByte, 2.toByte),
-        v9 = new Date(31200000),
+        v9 = LocalDate.fromYearMonthDay(2014, 11, 11),
         v10 = fixUUID,
+        v11 = new Date(31202000),
         o1 = Some("s"),
         o2 = Some(BigDecimal(1.1)),
         o3 = Some(true),
@@ -177,7 +183,8 @@ class EncodingSpec extends Spec {
         o6 = Some(34.4f),
         o7 = Some(42d),
         o8 = Some(Array(1.toByte, 2.toByte)),
-        o9 = Some(new Date(31200000))
+        o9 = Some(new Date(31200000)),
+        o10 = Some(LocalDate.fromYearMonthDay(2014, 11, 11))
       ),
       EncodingTestEntity(
         id = 2,
@@ -189,8 +196,9 @@ class EncodingSpec extends Spec {
         v6 = 0F,
         v7 = 0D,
         v8 = Array(),
-        v9 = new Date(0),
+        v9 = LocalDate.fromMillisSinceEpoch(0),
         v10 = fixUUID,
+        v11 = new Date(0),
         o1 = None,
         o2 = None,
         o3 = None,
@@ -199,7 +207,8 @@ class EncodingSpec extends Spec {
         o6 = None,
         o7 = None,
         o8 = None,
-        o9 = None
+        o9 = None,
+        o10 = None
       )
     )
 }
