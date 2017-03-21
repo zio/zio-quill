@@ -108,7 +108,7 @@ object JavaDriver extends App {
 
 The Java driver requires explicit handling of a `PreparedStatement`s cache to avoid preparing the same statement more that once, that could affect performance.
 
-**Phantom (v2.3.1)**
+**Phantom (v2.5.0)**
 ```
 import com.outworkers.phantom.dsl._
 
@@ -116,7 +116,13 @@ import scala.concurrent.Future
 
 object Phantom extends App {
 
-  case class WeatherStation(country: String, city: String, stationId: String, entry: Int, value: Int)
+  case class WeatherStation(
+    country: String,
+    city: String,
+    stationId: String,
+    entry: Int,
+    value: Int
+  )
 
   abstract class WeatherStationCF extends CassandraTable[WeatherStationCF, WeatherStation] with RootConnector {
 
@@ -142,9 +148,14 @@ object Phantom extends App {
 }
 ```
 
-Phantom requires mapping classes to lift the database model to DSL types. The query definition also requires special equality operators.
+Phantom requires mapping classes to lift the database model to DSL types. The query definition also requires special equality operators. The database model however adds fully type-safe schema compatible operations at compile time, meaning
+phantom will not allow you to produce invalid queries with respect to the Cassandra schema.
+
+As opposed to Quill and the Java Driver, phantom is schema aware, whereas the other two tools simply generate
+the correct CQL string with respect to the Scala type, but not with respect to the schema.
 
 **Quill**
+
 ```scala
 import io.getquill._
 
@@ -238,7 +249,7 @@ object JavaDriver extends App {
 
 The DSL has limited composition compatibility.
 
-**Phantom (v2.3.1)**
+**Phantom (v2.5.0)**
 
 ```
 import com.outworkers.phantom.dsl._
@@ -290,8 +301,33 @@ object Phantom extends App {
 ```
 
 Phantom allows the user certain level of composability, but it gets a bit verbose due to the nature of the DSL.
+However, phantom does not encourage this inherent duplication of concern because it doesn't add any value
+to an application, and instead generally prefers to duplicate from the start.
+
+On a character count, this is likely to be the shortest approach of all frameworks.
+
+```scala
+    def getAllByCountry(country: String): Future[List[WeatherStation]] =
+      select.where(_.country eqs country).fetch()
+
+    def getAllByCountryAndCity(country: String, city: String): Future[List[WeatherStation]] =
+      select.where(_.country eqs country).and(_.city eqs city).fetch()
+
+    def getAllByCountryCityAndId(
+      country: String,
+      city: String,
+      stationId: String
+    ): Future[List[WeatherStation]] = {
+      select
+        .where(_.country eqs country)
+        .and(_city eqs city)
+        .and(_.stationId eqs stationId)
+        .fetch()  
+    }
+```
 
 **Quill**
+
 ```scala
 import io.getquill._
 
@@ -339,9 +375,24 @@ This section explores the extensibility capabilities of each library .
 
 There is no much offered by the driver to extend the Query Builder, e.g. add a missing CQL feature.
 
-**Phantom (v2.3.1)**
+**Phantom (v2.5.0)**
 
-You could extend Phantom by extending the DSL to add new features, and the process is very simple, as phantom relies on composition through implicit augmentation. Natively supporting new types is also simple to achieve through primitives, using `Primitive.derive[NewType, OldType](oldToNewFn)(newToOldFn)`. Such an example is possible through:
+You could extend Phantom by extending the DSL to add new features, however this is probably not trivial. Natively supporting new types is trivial to achieve through primitives, using `Primitive.derive[NewType, OldType](oldToNewFn)(newToOldFn)`.
+
+However, adding new query features is very rarely necessary, and phantom does not make it trivial to extend its
+inner structures. However, this is done for the user benefit to mask away the type level complexity of
+having a schema safe DSL.
+
+It is also possible to by-pass the entire abtraction layer provided by phantom and execute a query simply by using:
+
+```scala
+  import com.outworkers.phantom.dsl._
+
+  val res: Future[ResultSet] = cql("SELECT * FROM keyspace.table WHERE a = 'b' LIMIT 1;")
+```
+
+This relies on having an `implicit keySpace` and `implicit session` in scope, so it leverages connectors to offer
+this kind of functionality.
 
 **Quill**
 
@@ -438,7 +489,7 @@ object JavaDriver extends App {
 
 Phantom uses `Primitive.derive` and implicit lookup to allow you to support "new" types based on existing ones.
 
-**Phantom (v2.3.1)**
+**Phantom (v2.5.0)**
 
 ```
 import com.outworkers.phantom.dsl._
@@ -529,7 +580,7 @@ This section compares the different options the libraries offer to do non-blocki
 
 The Datastax driver allows the user to execute queries [asynchronously](https://github.com/datastax/java-driver/tree/2.1/manual/async), returning `ListenableFuture`s.
 
-**Phantom (v2.3.1)**
+**Phantom (v2.5.0)**
 
 Phantom is asynchronous by default and all operations return `Future`s. It also allows users to process the data coming from Cassandra in a streaming fashion using [`play-iteratees`](https://www.playframework.com/documentation/2.4.x/Iteratees) or [`play-streams`](https://www.playframework.com/documentation/2.4.x/ReactiveStreamsIntegration), that make it possible to integrate with other software that support [reactive-streams](https://github.com/reactive-streams/reactive-streams-jvm).
 
