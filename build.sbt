@@ -10,11 +10,11 @@ lazy val `quill` =
     .dependsOn(
       `quill-core-jvm`, `quill-core-js`, `quill-sql-jvm`, `quill-sql-js`,
       `quill-jdbc`, `quill-finagle-mysql`, `quill-finagle-postgres`, `quill-async`,
-      `quill-async-mysql`, `quill-async-postgres`, `quill-cassandra`
+      `quill-async-mysql`, `quill-async-postgres`, `quill-cassandra`, `quill-sqlserver`
     ).aggregate(
       `quill-core-jvm`, `quill-core-js`, `quill-sql-jvm`, `quill-sql-js`,
       `quill-jdbc`, `quill-finagle-mysql`, `quill-finagle-postgres`, `quill-async`,
-      `quill-async-mysql`, `quill-async-postgres`, `quill-cassandra`
+      `quill-async-mysql`, `quill-async-postgres`, `quill-cassandra`, `quill-sqlserver`
     )
 
 lazy val superPure = new org.scalajs.sbtplugin.cross.CrossType {
@@ -72,6 +72,18 @@ lazy val `quill-jdbc` =
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
+
+lazy val `quill-sqlserver` =
+  (project in file("quill-sqlserver"))
+    .settings(commonSettings: _*)
+    .settings(mimaSettings: _*)
+    .settings(
+      fork in Test := true,
+      libraryDependencies ++= Seq(
+        "com.microsoft.sqlserver" % "mssql-jdbc" % "6.1.0.jre8" % Test
+      )
+    )
+    .dependsOn(`quill-jdbc` % "compile->compile;test->test")
 
 lazy val `quill-finagle-mysql` =
   (project in file("quill-finagle-mysql"))
