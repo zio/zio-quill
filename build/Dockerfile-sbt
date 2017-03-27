@@ -1,4 +1,4 @@
-FROM alpine:3.4
+FROM alpine:3.5
 MAINTAINER gustavo.amigo@gmail.com
 
 RUN apk update; apk add git openssh openjdk8 bash curl openssl nodejs tar

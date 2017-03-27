@@ -64,10 +64,10 @@ lazy val `quill-jdbc` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.zaxxer"     % "HikariCP"             % "2.6.0",
-        "mysql"          % "mysql-connector-java" % "5.1.40"   % Test,
-        "com.h2database" % "h2"                   % "1.4.193"  % Test,
-        "org.postgresql" % "postgresql"           % "9.4.1212" % Test,
+        "com.zaxxer"     % "HikariCP"             % "2.6.1",
+        "mysql"          % "mysql-connector-java" % "5.1.41"   % Test,
+        "com.h2database" % "h2"                   % "1.4.194"  % Test,
+        "org.postgresql" % "postgresql"           % "42.0.0" % Test,
         "org.xerial"     % "sqlite-jdbc"          % "3.8.11.2" % Test
       )
     )
@@ -140,8 +140,8 @@ lazy val `quill-cassandra` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.datastax.cassandra" %  "cassandra-driver-core" % "3.1.3",
-        "io.monix"               %% "monix"                 % "2.2.1"
+        "com.datastax.cassandra" %  "cassandra-driver-core" % "3.1.4",
+        "io.monix"               %% "monix"                 % "2.2.3"
       )
     )
     .dependsOn(`quill-core-jvm` % "compile->compile;test->test")
@@ -226,7 +226,7 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
   libraryDependencies ++= Seq(
     "org.scalamacros" %% "resetallattrs"  % "1.0.0",
     "org.scalatest"   %%% "scalatest"     % "3.0.1"     % Test,
-    "ch.qos.logback"  % "logback-classic" % "1.1.9"     % Test,
+    "ch.qos.logback"  % "logback-classic" % "1.2.2"     % Test,
     "com.google.code.findbugs" % "jsr305" % "3.0.1"     % Provided // just to avoid warnings during compilation
   ),
   EclipseKeys.createSrc := EclipseCreateSrc.Default,
