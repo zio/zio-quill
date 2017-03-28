@@ -271,7 +271,7 @@ ctx.run(q)
 Queries
 -------
 
-The overall abstraction of quill queries is use database tables as if they were in-memory collections. Scala for-comprehensions provide syntatic sugar to deal with this kind of monadic operations:
+The overall abstraction of quill queries uses database tables as if they were in-memory collections. Scala for-comprehensions provide syntatic sugar to deal with these kind of monadic operations:
 
 ```scala
 case class Person(id: Int, name: String, age: Int)
