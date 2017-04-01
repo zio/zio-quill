@@ -47,7 +47,7 @@ trait ContextMacro extends Quotation {
   private implicit val tokenLiftable: Liftable[Token] = Liftable[Token] {
     case StringToken(string)   => q"io.getquill.idiom.StringToken($string)"
     case ScalarLiftToken(lift) => q"io.getquill.idiom.ScalarLiftToken(${lift: Lift})"
-    case Statement(tokens)     => q"io.getquill.idiom.Statement(List(..$tokens))"
+    case Statement(tokens)     => q"io.getquill.idiom.Statement(scala.List(..$tokens))"
   }
 
   private def translateStatic(ast: Ast): Tree = {
