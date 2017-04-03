@@ -140,8 +140,8 @@ lazy val `quill-cassandra` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.datastax.cassandra" %  "cassandra-driver-core" % "3.1.4",
-        "io.monix"               %% "monix"                 % "2.2.3"
+        "com.datastax.cassandra" %  "cassandra-driver-core" % "3.2.0",
+        "io.monix"               %% "monix"                 % "2.2.4"
       )
     )
     .dependsOn(`quill-core-jvm` % "compile->compile;test->test")
@@ -222,12 +222,12 @@ def updateWebsiteTag =
 
 lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
   organization := "io.getquill",
-  scalaVersion := "2.11.8",
+  scalaVersion := "2.11.9",
   libraryDependencies ++= Seq(
     "org.scalamacros" %% "resetallattrs"  % "1.0.0",
     "org.scalatest"   %%% "scalatest"     % "3.0.1"     % Test,
-    "ch.qos.logback"  % "logback-classic" % "1.2.2"     % Test,
-    "com.google.code.findbugs" % "jsr305" % "3.0.1"     % Provided // just to avoid warnings during compilation
+    "ch.qos.logback"  % "logback-classic" % "1.2.3"     % Test,
+    "com.google.code.findbugs" % "jsr305" % "3.0.2"     % Provided // just to avoid warnings during compilation
   ),
   EclipseKeys.createSrc := EclipseCreateSrc.Default,
   unmanagedClasspath in Test ++= Seq(
