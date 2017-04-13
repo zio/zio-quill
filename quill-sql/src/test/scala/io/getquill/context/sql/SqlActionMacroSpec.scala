@@ -1,12 +1,12 @@
 package io.getquill.context.sql
 
-import io.getquill.Spec
+import io.getquill._
 import io.getquill.context.mirror.Row
-import io.getquill.context.sql.testContext._
 
 class SqlActionMacroSpec extends Spec {
 
   "runs actions" - {
+    import testContext._
     "without bindings" - {
       "update" in {
         val q = quote {
@@ -66,5 +66,15 @@ class SqlActionMacroSpec extends Spec {
       mirror.string mustEqual "INSERT INTO TestEntity (s,i) VALUES ('s', 0)"
       mirror.returningColumn mustEqual "l"
     }
+  }
+  "apply naming strategy to returning action" in testContext.withNaming[SnakeCase] { ctx =>
+    import ctx._
+    case class TestEntity4(intId: Int, textCol: String)
+    val q = quote {
+      query[TestEntity4].insert(lift(TestEntity4(1, "s"))).returning(_.intId)
+    }
+    val mirror = ctx.run(q)
+    mirror.string mustEqual "INSERT INTO test_entity4 (text_col) VALUES (?)"
+    mirror.returningColumn mustEqual "int_id"
   }
 }

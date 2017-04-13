@@ -1,14 +1,18 @@
 package io.getquill.context.sql
 
-import io.getquill.TestEntities
-import io.getquill.Literal
-import io.getquill.MirrorSqlDialect
-import io.getquill.SqlMirrorContext
+import io.getquill._
 
-object testContext extends TestContextTemplate
+object testContext extends TestContextTemplate[Literal] {
 
-class TestContextTemplate
-  extends SqlMirrorContext[MirrorSqlDialect, Literal]
+  def withNaming[N <: NamingStrategy](f: TestContextTemplate[N] => Any): Unit = {
+    val ctx = new TestContextTemplate[N]
+    f(ctx)
+    ctx.close
+  }
+}
+
+class TestContextTemplate[N <: NamingStrategy]
+  extends SqlMirrorContext[MirrorSqlDialect, N]
   with TestEntities
   with TestEncoders
   with TestDecoders
