@@ -56,7 +56,7 @@ Phantom provides an embedded DSL that help you write CQL queries in a type-safe 
 This section compares how the different libraries let the user query a column family to obtain some elements.
 
 **Java Driver (v3.0.0)**
-```
+```scala
 import com.datastax.driver.core._
 import com.datastax.driver.core.querybuilder.QueryBuilder
 import com.google.common.cache.{ CacheBuilder, CacheLoader, LoadingCache }
@@ -109,7 +109,7 @@ object JavaDriver extends App {
 The Java driver requires explicit handling of a `PreparedStatement`s cache to avoid preparing the same statement more that once, that could affect performance.
 
 **Phantom (v1.22.0)**
-```
+```scala
 import com.websudos.phantom.connectors.RootConnector
 import com.websudos.phantom.db._
 import com.websudos.phantom.dsl._
@@ -193,7 +193,7 @@ This section compares how the different libraries let the user compose queries.
 
 The Query Builder allows the user to partially construct queries and add filters later:
 
-```
+```scala
 import com.datastax.driver.core._
 import com.datastax.driver.core.querybuilder.{ QueryBuilder, Select}
 import com.google.common.cache.{ CacheBuilder, CacheLoader, LoadingCache }
@@ -250,7 +250,7 @@ object JavaDriver extends App {
 The DSL has limited composition compatibility.
 
 **Phantom (v1.22.0)**
-```
+```scala
 import com.websudos.phantom.connectors.RootConnector
 import com.websudos.phantom.db._
 import com.websudos.phantom.dsl._
@@ -370,7 +370,7 @@ Quill provides an easy mechanism to add non-supported features through [infix](h
 This section would allow us to compare how the different libraries let us read custom data types in a seamless way.
 
 **Java Driver (v3.0.0)**
-```
+```scala
 import java.nio.ByteBuffer
 import java.nio.charset.Charset
 
@@ -457,7 +457,7 @@ object JavaDriver extends App {
 It is necessary to create a new `TypeCodec` and register it in the `CodecRegistry`.
 
 **Phantom (v1.22.0)**
-```
+```scala
 import com.websudos.phantom.builder.primitives.Primitive
 import com.websudos.phantom.builder.query.CQLQuery
 import com.websudos.phantom.builder.syntax.CQLSyntax
