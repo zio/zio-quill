@@ -1,5 +1,6 @@
 package io.getquill.context.finagle.mysql
 
+import java.time.{ LocalDateTime, ZoneId }
 import java.util.{ Date, TimeZone }
 
 import com.twitter.util.Await
@@ -105,7 +106,7 @@ class FinagleMysqlEncodingSpec extends EncodingSpec {
     }
   }
 
-  "decode data types" - {
+  "decode date types" - {
     case class DateEncodingTestEntity(
       v1: Date,
       v2: Date,
@@ -143,6 +144,40 @@ class FinagleMysqlEncodingSpec extends EncodingSpec {
         _ <- testTimezoneContext.run(query[DateEncodingTestEntity].insert(lift(entity)))
         result <- testTimezoneContext.run(query[DateEncodingTestEntity])
       } yield result
+
+      verify(Await.result(r).head)
+    }
+  }
+
+  "decode LocalDateTime types" - {
+    case class LocalDateTimeEncodingTestEntity(
+      v1: LocalDateTime,
+      v2: LocalDateTime
+    )
+
+    val dt = LocalDateTime.parse("2017-01-01T00:00:00")
+    val entity = LocalDateTimeEncodingTestEntity(dt, dt)
+
+    def verify(result: LocalDateTimeEncodingTestEntity) = {
+      result.v1 mustEqual entity.v1
+      result.v2 mustEqual entity.v2
+    }
+
+    "TimeZone.setDefault() to different timezone than that of FinagleMysqlContext" in {
+      val config = FinagleMysqlContextConfig(LoadConfig("testDB"))
+      val testTimezoneContext = new FinagleMysqlContext[Literal](config.client, TimeZone.getTimeZone(ZoneId.of("Asia/Tokyo")), TimeZone.getTimeZone(ZoneId.of("Asia/Tokyo")))
+      import testTimezoneContext._
+
+      val zone = TimeZone.getDefault
+      TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
+
+      val r = for {
+        _ <- testTimezoneContext.run(query[LocalDateTimeEncodingTestEntity].delete)
+        _ <- testTimezoneContext.run(query[LocalDateTimeEncodingTestEntity].insert(lift(entity)))
+        result <- testTimezoneContext.run(query[LocalDateTimeEncodingTestEntity])
+      } yield result
+
+      TimeZone.setDefault(zone)
 
       verify(Await.result(r).head)
     }
