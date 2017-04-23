@@ -28,18 +28,26 @@ import io.getquill.util.LoadConfig
 import io.getquill.util.Messages.fail
 
 class FinagleMysqlContext[N <: NamingStrategy](
-  client:                                  Client with Transactions,
-  private[getquill] val injectionTimeZone: TimeZone                 = TimeZone.getDefault
-)(
-  private[getquill] val extractionTimeZone: TimeZone = injectionTimeZone
+  client:                                   Client with Transactions,
+  private[getquill] val injectionTimeZone:  TimeZone,
+  private[getquill] val extractionTimeZone: TimeZone
 )
   extends SqlContext[MySQLDialect, N]
   with FinagleMysqlDecoders
   with FinagleMysqlEncoders {
 
-  def this(config: FinagleMysqlContextConfig) = this(config.client, config.injectionTimeZone)(config.extractionTimeZone)
+  def this(config: FinagleMysqlContextConfig) = this(config.client, config.injectionTimeZone, config.extractionTimeZone)
   def this(config: Config) = this(FinagleMysqlContextConfig(config))
   def this(configPrefix: String) = this(LoadConfig(configPrefix))
+
+  def this(client: Client with Transactions, timeZone: TimeZone) = this(client, timeZone, timeZone)
+  def this(config: FinagleMysqlContextConfig, timeZone: TimeZone) = this(config.client, timeZone)
+  def this(config: Config, timeZone: TimeZone) = this(FinagleMysqlContextConfig(config), timeZone)
+  def this(configPrefix: String, timeZone: TimeZone) = this(LoadConfig(configPrefix), timeZone)
+
+  def this(config: FinagleMysqlContextConfig, injectionTimeZone: TimeZone, extractionTimeZone: TimeZone) = this(config.client, injectionTimeZone, extractionTimeZone)
+  def this(config: Config, injectionTimeZone: TimeZone, extractionTimeZone: TimeZone) = this(FinagleMysqlContextConfig(config), injectionTimeZone, extractionTimeZone)
+  def this(configPrefix: String, injectionTimeZone: TimeZone, extractionTimeZone: TimeZone) = this(LoadConfig(configPrefix), injectionTimeZone, extractionTimeZone)
 
   protected val logger: Logger =
     Logger(LoggerFactory.getLogger(classOf[FinagleMysqlContext[_]]))
