@@ -105,7 +105,6 @@ CREATE TABLE ArraysTestEntity (
     longs BIGINT[],
     floats FLOAT[],
     doubles DOUBLE PRECISION[],
-    dates1 TIMESTAMP[],
     timestamps TIMESTAMP[],
-    dates2 DATE[]
+    dates DATE[]
 );

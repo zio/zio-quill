@@ -1,5 +1,6 @@
 package io.getquill.context.jdbc.postgres
 
+import java.sql.Timestamp
 import java.time.LocalDate
 
 import io.getquill.{ Literal, PostgresJdbcContext }
@@ -20,7 +21,15 @@ class ArrayJdbcEncodingSpec extends ArrayEncodingSpec {
   implicit val strWrapDecode: MappedEncoding[String, StrWrap] = MappedEncoding(StrWrap.apply)
   "Support Traversable encoding basing on MappedEncoding" in {
     ctx.run(wrapQ.insert(lift(wrapE)))
-    ctx.run(wrapQ).head mustBe wrapE
+    ctx.run(wrapQ).head.texts mustBe wrapE.texts
+  }
+
+  "Timestamps" in {
+    case class Timestamps(timestamps: List[Timestamp])
+    val tE = Timestamps(List(new Timestamp(System.currentTimeMillis())))
+    val tQ = quote(querySchema[Timestamps]("ArraysTestEntity"))
+    ctx.run(tQ.insert(lift(tE)))
+    ctx.run(tQ).head.timestamps mustBe tE.timestamps
   }
 
   "Catch invalid decoders" in {
@@ -31,7 +40,7 @@ class ArrayJdbcEncodingSpec extends ArrayEncodingSpec {
     }
     import newCtx._
     newCtx.run(query[ArraysTestEntity].insert(lift(e)))
-    intercept[IllegalArgumentException] {
+    intercept[IllegalStateException] {
       newCtx.run(query[ArraysTestEntity]).head mustBe e
     }
     newCtx.close()

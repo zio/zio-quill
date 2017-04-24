@@ -6,7 +6,7 @@ import java.util.Date
 
 import io.getquill.Spec
 import io.getquill.context.sql.SqlContext
-import org.scalatest.{Assertion, BeforeAndAfterEach}
+import org.scalatest.{ Assertion, BeforeAndAfterEach }
 
 import scala.collection.mutable.ListBuffer
 
@@ -23,17 +23,15 @@ trait ArrayEncodingSpec extends Spec with BeforeAndAfterEach {
     shorts:     Iterable[Short],
     ints:       IndexedSeq[Int],
     longs:      Set[Long],
-    floats:     Seq[Float],
+    floats:     Traversable[Float],
     doubles:    Seq[Double],
-    dates1:     Seq[Date],
-    timestamps: Seq[Timestamp],
-    dates2:     Seq[LocalDate]
+    timestamps: Seq[Date],
+    dates:      Seq[LocalDate]
   )
   val q = quote(query[ArraysTestEntity])
   val e = ArraysTestEntity(List("test"), Seq(BigDecimal(2.33)), Vector(true, true), ListBuffer(1),
-    Iterable(3), IndexedSeq(2), Set(1, 2, 3), Seq(1f, 2f), Seq(4d, 3d),
-    Seq(new Timestamp(System.currentTimeMillis())), Seq(new Timestamp(System.currentTimeMillis())),
-    Seq(LocalDate.now()))
+    Iterable(3), IndexedSeq(2), Set(1, 2, 3), Traversable(1f, 2f), Seq(4d, 3d),
+    Seq(new Timestamp(System.currentTimeMillis())), Seq(LocalDate.now()))
 
   // casting types can be dangerous so we need to ensure that everything is ok
   def baseEntityDeepCheck(e1: ArraysTestEntity, e2: ArraysTestEntity): Assertion = {
@@ -46,9 +44,8 @@ trait ArrayEncodingSpec extends Spec with BeforeAndAfterEach {
     e1.longs.head mustBe e2.longs.head
     e1.floats.head mustBe e2.floats.head
     e1.doubles.head mustBe e2.doubles.head
-    e1.dates1.head mustBe e2.dates1.head
     e1.timestamps.head mustBe e2.timestamps.head
-    e1.dates2.head mustBe e2.dates2.head
+    e1.dates.head mustBe e2.dates.head
   }
 
   // Support Traversable encoding basing on MappedEncoding

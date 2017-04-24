@@ -7,6 +7,7 @@ import java.sql.{ Date => SqlDate }
 import java.math.{ BigDecimal => JBigDecimal }
 
 import io.getquill.context.sql.dsl.ArrayEncoding
+import io.getquill.util.Messages.fail
 
 import scala.collection.generic.CanBuildFrom
 import scala.reflect.ClassTag
@@ -98,9 +99,8 @@ trait ArrayJdbcEncoding extends ArrayEncoding {
         arr.getArray.asInstanceOf[Array[AnyRef]].foldLeft(bf()) {
           case (b, x: I)                => b += mapper(x)
           case (b, x: java.lang.Number) => b += mapper(x.asInstanceOf[I])
-          case (_, x) => throw new IllegalArgumentException(
-            s"Retrieved ${x.getClass.getCanonicalName} type from JDBC array, but expected $tag. Re-check your decoder implementation"
-          )
+          case (_, x) =>
+            fail(s"Retrieved ${x.getClass.getCanonicalName} type from JDBC array, but expected $tag. Re-check your decoder implementation")
         }.result()
       }
     })
