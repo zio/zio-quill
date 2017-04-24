@@ -2,6 +2,7 @@ package io.getquill
 
 import io.getquill.context.Context
 import io.getquill.context.mirror.{ MirrorDecoders, MirrorEncoders, Row }
+import io.getquill.dsl.TraversableEncoding
 import io.getquill.idiom.{ Idiom => BaseIdiom }
 
 import scala.util.{ Failure, Success, Try }
@@ -11,6 +12,7 @@ class MirrorContextWithQueryProbing[Idiom <: BaseIdiom, Naming <: NamingStrategy
 
 class MirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy]
   extends Context[Idiom, Naming]
+  with TraversableEncoding
   with MirrorEncoders
   with MirrorDecoders {
 

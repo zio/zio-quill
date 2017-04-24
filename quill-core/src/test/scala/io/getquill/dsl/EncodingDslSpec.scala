@@ -6,6 +6,7 @@ import io.getquill.quotation.{ CaseClassValueLifting, ScalarValueLifting }
 import io.getquill.testContext._
 
 import scala.language.reflectiveCalls
+import scala.reflect.ClassTag
 
 case class CustomValue(i: Int) extends AnyVal
 
@@ -107,6 +108,35 @@ class EncodingDslSpec extends Spec {
     "decoder" in {
       val dec = implicitly[Decoder[CustomGenericValue[Int]]]
       dec(0, Row(1)) mustEqual CustomGenericValue(1)
+    }
+  }
+
+  "provide mapped encoding for traversables collections" - {
+    case class Wrap(intStr: String)
+
+    implicit def encoderTravInt[T <: Traversable[Int]]: Encoder[T] = encoder[T]
+    implicit def decoderTravInt[T <: Traversable[Int]: ClassTag]: Decoder[T] = decoder[T]
+
+    implicit val encoderWrap = MappedEncoding[Wrap, Int](_.intStr.toInt)
+    implicit val decoderWrap = MappedEncoding[Int, Wrap](x => Wrap(x.toString))
+
+    "encoder" in {
+      val enc = implicitly[Encoder[Seq[Wrap]]]
+      enc(0, Seq(Wrap("123")), Row()) mustEqual Row(Seq(123))
+    }
+
+    "decoder" in {
+      val dec = implicitly[Decoder[List[Wrap]]]
+      dec(0, Row(List(123))) mustEqual List(Wrap("123"))
+    }
+
+    case class Wrap2(str: String)
+    implicit val encoderWrap2 = MappedEncoding[Wrap2, String](_.str)
+    implicit val decoderWrap2 = MappedEncoding[String, Wrap2](Wrap2.apply)
+
+    "mapped trav encoding should not compile without base trav encoders/decoders" in {
+      "implicitly[Encoder[Seq[Wrap2]]]" mustNot compile
+      "implicitly[Decoder[Seq[Wrap2]]]" mustNot compile
     }
   }
 }
