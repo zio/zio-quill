@@ -86,3 +86,32 @@ CREATE TABLE TestEntity3(
     i INT,
     l BIGINT
 );
+
+CREATE TABLE ListsEntity(
+    id INT PRIMARY KEY,
+    texts LIST<VARCHAR>,
+    decimals LIST<DECIMAL>,
+    bools LIST<BOOLEAN>,
+    ints LIST<INT>,
+    longs LIST<BIGINT>,
+    floats LIST<FLOAT>,
+    doubles LIST<DOUBLE>
+);
+
+CREATE TABLE SetsEntity(
+    id INT PRIMARY KEY,
+    texts Set<VARCHAR>,
+    decimals Set<DECIMAL>,
+    bools Set<BOOLEAN>,
+    ints Set<INT>,
+    longs Set<BIGINT>,
+    floats Set<FLOAT>,
+    doubles Set<DOUBLE>
+);
+
+CREATE TABLE MapsEntity(
+    id INT PRIMARY KEY,
+    textsDoubles Map<VARCHAR, DOUBLE>,
+    intsBools Map<INT, BOOLEAN>,
+    longsFloats Map<BIGINT, FLOAT>
+);

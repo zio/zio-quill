@@ -10,11 +10,11 @@ lazy val `quill` =
     .dependsOn(
       `quill-core-jvm`, `quill-core-js`, `quill-sql-jvm`, `quill-sql-js`,
       `quill-jdbc`, `quill-finagle-mysql`, `quill-finagle-postgres`, `quill-async`,
-      `quill-async-mysql`, `quill-async-postgres`, `quill-cassandra`
+      `quill-async-mysql`, `quill-async-postgres`, `quill-cassandra-macros`, `quill-cassandra`
     ).aggregate(
       `quill-core-jvm`, `quill-core-js`, `quill-sql-jvm`, `quill-sql-js`,
       `quill-jdbc`, `quill-finagle-mysql`, `quill-finagle-postgres`, `quill-async`,
-      `quill-async-mysql`, `quill-async-postgres`, `quill-cassandra`
+      `quill-async-mysql`, `quill-async-postgres`, `quill-cassandra-macros`, `quill-cassandra`
     )
 
 lazy val superPure = new org.scalajs.sbtplugin.cross.CrossType {
@@ -133,6 +133,12 @@ lazy val `quill-async-postgres` =
     )
     .dependsOn(`quill-async` % "compile->compile;test->test")
 
+lazy val `quill-cassandra-macros` =
+  (project in file("quill-cassandra-macros"))
+    .settings(commonSettings: _*)
+    .settings(mimaSettings: _*)
+    .dependsOn(`quill-core-jvm` % "compile->compile;test->test")
+
 lazy val `quill-cassandra` =
   (project in file("quill-cassandra"))
     .settings(commonSettings: _*)
@@ -144,7 +150,7 @@ lazy val `quill-cassandra` =
         "io.monix"               %% "monix"                 % "2.2.4"
       )
     )
-    .dependsOn(`quill-core-jvm` % "compile->compile;test->test")
+    .dependsOn(`quill-cassandra-macros` % "compile->compile;test->test")
 
 lazy val `tut-sources` = Seq(
   "CASSANDRA.md",
