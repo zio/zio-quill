@@ -28,16 +28,23 @@ trait CassandraTypes {
     }
   )
 
-  implicit val stringCassandraType: CassandraType[String] = supportedType[String]
-  implicit val uuidCassandraType: CassandraType[UUID] = supportedType[UUID]
-  implicit val dateCassandraType: CassandraType[Date] = supportedType[Date]
-  implicit val localDateCassandraType: CassandraType[LocalDate] = supportedType[LocalDate]
+  implicit val stringCassandraType: CassandraType[String] = supportedCassandraType[String]
+  implicit val uuidCassandraType: CassandraType[UUID] = supportedCassandraType[UUID]
+  implicit val dateCassandraType: CassandraType[Date] = supportedCassandraType[Date]
+  implicit val localDateCassandraType: CassandraType[LocalDate] = supportedCassandraType[LocalDate]
 
-  implicit def mappedEncodingMappedType[I, O](
+  implicit def mappedEncodingForSupportedType[T, Cas](
     implicit
-    m1: MappedEncoding[I, O],
-    m2: MappedEncoding[O, I]
-  ): MappedType[I, O] = MappedType(m1.f, m2.f)
+    m1:         MappedEncoding[T, Cas],
+    m2:         MappedEncoding[Cas, T],
+    mappedType: CassandraType[Cas]
+  ): MappedType[T, Cas] = MappedType(m1.f, m2.f)
 
-  private def supportedType[T]: CassandraType[T] = MappedType(identity, identity)
+  implicit def mappedEncodingForMappedType[I, O, Cas](
+    m1:         MappedEncoding[I, O],
+    m2:         MappedEncoding[O, I],
+    mappedType: MappedType[O, Cas]
+  ): MappedType[I, Cas] = MappedType(m1.f.andThen(mappedType.encode), mappedType.decode.andThen(m2.f))
+
+  def supportedCassandraType[T]: CassandraType[T] = MappedType(identity, identity)
 }
