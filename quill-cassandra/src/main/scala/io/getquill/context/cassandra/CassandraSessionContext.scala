@@ -16,9 +16,9 @@ abstract class CassandraSessionContext[N <: NamingStrategy](
   preparedStatementCacheSize: Long
 )
   extends CassandraContext[N]
-  with CassandraTypes
   with Encoders
-  with Decoders {
+  with Decoders
+  with CassandraTypes {
 
   override type PrepareRow = BoundStatement
   override type ResultRow = Row

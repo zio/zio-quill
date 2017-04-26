@@ -11,6 +11,8 @@ class ListsEncodingSpec extends Spec with BeforeAndAfterEach {
   val ctx = testSyncDB
   import ctx._
 
+  println(implicitly[MappedType[Int, java.lang.Integer]])
+
   case class ListsEntity(
     id:         Int,
     texts:      List[String],
