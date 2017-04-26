@@ -1490,7 +1490,7 @@ ctx.session.withoutJMXReporting=false
 ctx.session.credentials.0=root
 ctx.session.credentials.1=pass
 ctx.session.maxSchemaAgreementWaitSeconds=1
-ctx.session.addressTranslater=com.datastax.driver.core.policies.IdentityTranslater
+ctx.session.addressTranslator=com.datastax.driver.core.policies.IdentityTranslator
 ```
 
 Logging
@@ -1513,6 +1513,7 @@ Templates
 In order to quickly start with Quill, we have setup some template projects:
 
 * [Play Framework with Quill JDBC](https://github.com/getquill/play-quill-jdbc)
+* [Play Framework with Quill async-postgres](https://github.com/jeffmath/play-quill-async-postgres-example)
 
 Slick comparison
 ----------------
