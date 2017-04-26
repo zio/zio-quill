@@ -95,23 +95,33 @@ CREATE TABLE ListsEntity(
     ints LIST<INT>,
     longs LIST<BIGINT>,
     floats LIST<FLOAT>,
-    doubles LIST<DOUBLE>
+    doubles LIST<DOUBLE>,
+    blobs LIST<BLOB>,
+    dates LIST<DATE>,
+    timestamps LIST<TIMESTAMP>,
+    uuids LIST<UUID>
 );
 
 CREATE TABLE SetsEntity(
     id INT PRIMARY KEY,
-    texts Set<VARCHAR>,
-    decimals Set<DECIMAL>,
-    bools Set<BOOLEAN>,
-    ints Set<INT>,
-    longs Set<BIGINT>,
-    floats Set<FLOAT>,
-    doubles Set<DOUBLE>
+    texts SET<VARCHAR>,
+    decimals SET<DECIMAL>,
+    bools SET<BOOLEAN>,
+    ints SET<INT>,
+    longs SET<BIGINT>,
+    floats SET<FLOAT>,
+    doubles SET<DOUBLE>,
+    blobs SET<BLOB>,
+    dates SET<DATE>,
+    timestamps SET<TIMESTAMP>,
+    uuids SET<UUID>
 );
 
 CREATE TABLE MapsEntity(
     id INT PRIMARY KEY,
-    textsDoubles Map<VARCHAR, DOUBLE>,
-    intsBools Map<INT, BOOLEAN>,
-    longsFloats Map<BIGINT, FLOAT>
+    textDecimal MAP<VARCHAR, DECIMAL>,
+    intDouble MAP<INT, DOUBLE>,
+    longFloat MAP<BIGINT, FLOAT>,
+    boolBlob MAP<BOOLEAN, BLOB>,
+    uuidTimestamp MAP<UUID, TIMESTAMP>
 );

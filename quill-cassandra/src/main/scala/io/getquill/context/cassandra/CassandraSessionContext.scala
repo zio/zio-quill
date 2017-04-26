@@ -6,7 +6,7 @@ import com.datastax.driver.core.BoundStatement
 import com.datastax.driver.core.Row
 import com.typesafe.scalalogging.Logger
 import io.getquill.NamingStrategy
-import io.getquill.context.cassandra.encoding.{ CollectionsEncoding, Decoders, Encoders }
+import io.getquill.context.cassandra.encoding.{ CassandraTypes, Decoders, Encoders }
 import io.getquill.util.Messages.fail
 import com.datastax.driver.core.Cluster
 
@@ -16,9 +16,9 @@ abstract class CassandraSessionContext[N <: NamingStrategy](
   preparedStatementCacheSize: Long
 )
   extends CassandraContext[N]
+  with CassandraTypes
   with Encoders
-  with Decoders
-  with CollectionsEncoding {
+  with Decoders {
 
   override type PrepareRow = BoundStatement
   override type ResultRow = Row
