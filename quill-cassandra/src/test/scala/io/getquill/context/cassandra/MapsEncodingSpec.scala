@@ -1,8 +1,8 @@
 package io.getquill.context.cassandra
 
-import java.sql.Timestamp
-import java.util.UUID
+import java.util.{ Date, UUID }
 
+import com.datastax.driver.core.LocalDate
 import io.getquill.Spec
 import org.scalatest.BeforeAndAfterEach
 
@@ -15,11 +15,12 @@ class MapsEncodingSpec extends Spec with BeforeAndAfterEach {
     textDecimal:   Map[String, BigDecimal],
     intDouble:     Map[Int, Double],
     longFloat:     Map[Long, Float],
-    boolBlob:      Map[Boolean, Array[Byte]],
-    uuidTimestamp: Map[UUID, Timestamp]
+    boolDate:      Map[Boolean, LocalDate],
+    uuidTimestamp: Map[UUID, Date]
   )
   val e = MapsEntity(1, Map("1" -> BigDecimal(1)), Map(1 -> 1d, 2 -> 2d, 3 -> 3d), Map(1l -> 3f),
-    Map(true -> Array(1, 2, 3).map(_.toByte)), Map(UUID.randomUUID() -> new Timestamp(System.currentTimeMillis())))
+    Map(true -> LocalDate.fromMillisSinceEpoch(System.currentTimeMillis())),
+    Map(UUID.randomUUID() -> new Date))
   val q = quote(query[MapsEntity])
 
   "Map encoders/decoders" in {

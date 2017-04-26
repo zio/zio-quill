@@ -1,7 +1,6 @@
 package io.getquill.context.cassandra
 
-import java.sql.Timestamp
-import java.util.UUID
+import java.util.{ Date, UUID }
 
 import com.datastax.driver.core.LocalDate
 import io.getquill.Spec
@@ -22,14 +21,13 @@ class ListsEncodingSpec extends Spec with BeforeAndAfterEach {
     longs:      List[Long],
     floats:     List[Float],
     doubles:    List[Double],
-    blobs:      List[Array[Byte]],
     dates:      List[LocalDate],
-    timestamps: List[Timestamp],
+    timestamps: List[Date],
     uuids:      List[UUID]
   )
   val e = ListsEntity(1, List("c"), List(BigDecimal(1.33)), List(true), List(1, 2), List(2, 3), List(1f, 3f),
-    List(5d), List(Array(1.toByte)), List(new LocalDate(System.currentTimeMillis())),
-    List(new Timestamp(System.currentTimeMillis())), List(UUID.randomUUID()))
+    List(5d), List(LocalDate.fromMillisSinceEpoch(System.currentTimeMillis())),
+    List(new Date), List(UUID.randomUUID()))
   val q = quote(query[ListsEntity])
 
   "List encoders/decoders" in {

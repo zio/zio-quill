@@ -5,8 +5,7 @@ import java.math.{ BigDecimal => JBigDecimal }
 import java.nio.ByteBuffer
 import java.util.{ Date, UUID }
 
-import com.datastax.driver.core.{ LocalDate, TypeCodec }
-import com.datastax.driver.core.TypeCodec._
+import com.datastax.driver.core.LocalDate
 import io.getquill.MappedEncoding
 import io.getquill.context.cassandra.MappedType
 
@@ -29,10 +28,10 @@ trait CassandraTypes {
     }
   )
 
-  implicit val stringCassandraType: CassandraType[String] = supportedType[String](varchar)
-  implicit val uuidCassandraType: CassandraType[UUID] = supportedType[UUID](uuid)
-  implicit val dateCassandraType: CassandraType[Date] = supportedType[Date](timestamp)
-  implicit val localDateCassandraType: CassandraType[LocalDate] = supportedType[LocalDate](date)
+  implicit val stringCassandraType: CassandraType[String] = supportedType[String]
+  implicit val uuidCassandraType: CassandraType[UUID] = supportedType[UUID]
+  implicit val dateCassandraType: CassandraType[Date] = supportedType[Date]
+  implicit val localDateCassandraType: CassandraType[LocalDate] = supportedType[LocalDate]
 
   implicit def mappedEncodingMappedType[I, O](
     implicit
@@ -40,5 +39,5 @@ trait CassandraTypes {
     m2: MappedEncoding[O, I]
   ): MappedType[I, O] = MappedType(m1.f, m2.f)
 
-  private def supportedType[T](codec: TypeCodec[T]): CassandraType[T] = MappedType(identity, identity)
+  private def supportedType[T]: CassandraType[T] = MappedType(identity, identity)
 }

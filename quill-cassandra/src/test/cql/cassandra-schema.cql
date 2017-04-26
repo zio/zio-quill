@@ -122,6 +122,6 @@ CREATE TABLE MapsEntity(
     textDecimal MAP<VARCHAR, DECIMAL>,
     intDouble MAP<INT, DOUBLE>,
     longFloat MAP<BIGINT, FLOAT>,
-    boolBlob MAP<BOOLEAN, BLOB>,
+    boolDate MAP<BOOLEAN, DATE>,
     uuidTimestamp MAP<UUID, TIMESTAMP>
 );
