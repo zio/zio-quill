@@ -28,7 +28,7 @@ trait CassandraTypes extends CassandraMappedTypes {
 
 /**
  * `MappedTypes` contains implicit `CassandraMapper` for Scala primitive/common types
- * which are not in covariance with CassandraTypes but can be represented as ones.
+ * which are not in relation with CassandraTypes but can be represented as ones.
  */
 trait CassandraMappedTypes {
   implicit val encodeInt: CassandraMapper[Int, JInt] = CassandraMapper(int2Integer)
