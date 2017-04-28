@@ -10,16 +10,17 @@ class ArrayJdbcEncodingSpec extends ArrayEncodingSpec {
   val ctx = testContext
   import ctx._
 
-  "Support all sql base types and `Traversable` implementers" in {
+  val q = quote(query[ArraysTestEntity])
+
+  "Support all sql base types and `Seq` implementers" in {
     ctx.run(q.insert(lift(e)))
     val actual = ctx.run(q).head
     actual mustEqual e
     baseEntityDeepCheck(actual, e)
   }
 
-  implicit val strWrapEncode: MappedEncoding[StrWrap, String] = MappedEncoding(_.str)
-  implicit val strWrapDecode: MappedEncoding[String, StrWrap] = MappedEncoding(StrWrap.apply)
   "Support Traversable encoding basing on MappedEncoding" in {
+    val wrapQ = quote(querySchema[WrapEntity]("ArraysTestEntity"))
     ctx.run(wrapQ.insert(lift(wrapE)))
     ctx.run(wrapQ).head.texts mustBe wrapE.texts
   }
@@ -35,7 +36,7 @@ class ArrayJdbcEncodingSpec extends ArrayEncodingSpec {
   "Catch invalid decoders" in {
     val newCtx = new PostgresJdbcContext[Literal]("testPostgresDB") {
       // avoid transforming from java.sql.Date to java.time.LocalDate
-      override implicit def arrayLocalDateDecoder[Col <: Traversable[LocalDate]](implicit bf: CBF[LocalDate, Col]): Decoder[Col] =
+      override implicit def arrayLocalDateDecoder[Col <: Seq[LocalDate]](implicit bf: CBF[LocalDate, Col]): Decoder[Col] =
         arrayDecoder[LocalDate, LocalDate, Col](identity)
     }
     import newCtx._

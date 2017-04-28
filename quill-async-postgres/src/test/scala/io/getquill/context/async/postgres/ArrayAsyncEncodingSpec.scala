@@ -11,6 +11,8 @@ class ArrayAsyncEncodingSpec extends ArrayEncodingSpec {
   val ctx = testContext
   import ctx._
 
+  val q = quote(query[ArraysTestEntity])
+
   "Support all sql base types and `Traversable` implementers" in {
     await(ctx.run(q.insert(lift(e))))
     val actual = await(ctx.run(q)).head
@@ -28,9 +30,8 @@ class ArrayAsyncEncodingSpec extends ArrayEncodingSpec {
     actual.dates mustBe jE.dates
   }
 
-  implicit val strWrapEncode: MappedEncoding[StrWrap, String] = MappedEncoding(_.str)
-  implicit val strWrapDecode: MappedEncoding[String, StrWrap] = MappedEncoding(StrWrap.apply)
   "Support Traversable encoding basing on MappedEncoding" in {
+    val wrapQ = quote(querySchema[WrapEntity]("ArraysTestEntity"))
     await(ctx.run(wrapQ.insert(lift(wrapE))))
     await(ctx.run(wrapQ)).head mustBe wrapE
   }
@@ -38,7 +39,7 @@ class ArrayAsyncEncodingSpec extends ArrayEncodingSpec {
   "Catch invalid decoders" in {
     val newCtx = new TestContext {
       // avoid transforming from org.joda.time.LocalDate to java.time.LocalDate
-      override implicit def arrayLocalDateDecoder[Col <: Traversable[LocalDate]](implicit bf: CBF[LocalDate, Col]): Decoder[Col] =
+      override implicit def arrayLocalDateDecoder[Col <: Seq[LocalDate]](implicit bf: CBF[LocalDate, Col]): Decoder[Col] =
         arrayDecoder[LocalDate, LocalDate, Col](identity)
     }
     import newCtx._
