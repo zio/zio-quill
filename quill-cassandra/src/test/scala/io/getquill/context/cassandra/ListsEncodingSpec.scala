@@ -11,9 +11,9 @@ class ListsEncodingSpec extends Spec with BeforeAndAfterEach {
   import ctx._
 
   case class ListsEntity(
-    id:         Int,
-    texts:      List[String],
-    decimals:   List[BigDecimal],
+    id:    Int,
+    texts: List[String],
+    //decimals:   List[BigDecimal],
     bools:      List[Boolean],
     ints:       List[Int],
     longs:      List[Long],
@@ -23,7 +23,7 @@ class ListsEncodingSpec extends Spec with BeforeAndAfterEach {
     timestamps: List[Date],
     uuids:      List[UUID]
   )
-  val e = ListsEntity(1, List("c"), List(BigDecimal(1.33)), List(true), List(1, 2), List(2, 3), List(1f, 3f),
+  val e = ListsEntity(1, List("c"), /*List(BigDecimal(1.33)),*/ List(true), List(1, 2), List(2, 3), List(1f, 3f),
     List(5d), List(LocalDate.fromMillisSinceEpoch(System.currentTimeMillis())),
     List(new Date), List(UUID.randomUUID()))
   val q = quote(query[ListsEntity])
@@ -51,18 +51,18 @@ class ListsEncodingSpec extends Spec with BeforeAndAfterEach {
     ctx.run(q.filter(_.id == 1)).head mustBe e
   }
 
-  /* implicit def mappedEncodingForMappedType[I, O, Cas] is not working!!!
   "Mapped encoding for mapped type" in {
     case class IntWrap(x: Int)
     implicit val encodeIntWrap = MappedEncoding[IntWrap, Int](_.x)
     implicit val decodeIntWrap = MappedEncoding[Int, IntWrap](IntWrap.apply)
+
     case class IntEntity(id: Int, ints: List[IntWrap])
     val e = IntEntity(1, List(1, 2).map(IntWrap.apply))
     val q = quote(querySchema[IntEntity]("ListsEntity"))
 
     ctx.run(q.insert(lift(e)))
     ctx.run(q.filter(_.id == 1)).head mustBe e
-  }*/
+  }
 
   "Blob (Array[Byte]) support" in {
     case class BlobsEntity(id: Int, blobs: List[Array[Byte]])

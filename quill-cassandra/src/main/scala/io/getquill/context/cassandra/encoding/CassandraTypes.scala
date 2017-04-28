@@ -6,45 +6,53 @@ import java.nio.ByteBuffer
 import java.util.{ Date, UUID }
 
 import com.datastax.driver.core.LocalDate
-import io.getquill.MappedEncoding
-import io.getquill.context.cassandra.MappedType
 
-trait CassandraTypes {
+/**
+ * `CassandraTypes` contains implicit markers for already supported types by Cassandra.
+ * Any of this type can be used in raw encoders/decoders as well as in collections encoding.
+ * For custom types please use `MappedEncoding` as in `MappedTypes` trait for example.
+ */
+trait CassandraTypes extends CassandraMappedTypes {
+  implicit val integerCassandraType: CassandraType[JInt] = CassandraType.of[JInt]
+  implicit val longCassandraType: CassandraType[JLong] = CassandraType.of[JLong]
+  implicit val floatCassandraType: CassandraType[JFloat] = CassandraType.of[JFloat]
+  implicit val doubleCassandraType: CassandraType[JDouble] = CassandraType.of[JDouble]
+  implicit val booleanCassandraType: CassandraType[JBoolean] = CassandraType.of[JBoolean]
+  implicit val decimalCassandraType: CassandraType[JBigDecimal] = CassandraType.of[JBigDecimal]
+  implicit val stringCassandraType: CassandraType[String] = CassandraType.of[String]
+  implicit val byteBufferCassandraType: CassandraType[ByteBuffer] = CassandraType.of[ByteBuffer]
+  implicit val uuidCassandraType: CassandraType[UUID] = CassandraType.of[UUID]
+  implicit val dateCassandraType: CassandraType[Date] = CassandraType.of[Date]
+  implicit val localDateCassandraType: CassandraType[LocalDate] = CassandraType.of[LocalDate]
+}
 
-  type CassandraType[T] = MappedType[T, T]
+/**
+ * `MappedTypes` contains implicit `CassandraMapper` for Scala primitive/common types
+ * which are not in covariance with CassandraTypes but can be represented as ones.
+ */
+trait CassandraMappedTypes {
+  implicit val encodeInt: CassandraMapper[Int, JInt] = CassandraMapper(int2Integer)
+  implicit val decodeInt: CassandraMapper[JInt, Int] = CassandraMapper(Integer2int)
 
-  implicit val intMappedType: MappedType[Int, JInt] = MappedType(int2Integer, Integer2int)
-  implicit val longMappedType: MappedType[Long, JLong] = MappedType(long2Long, Long2long)
-  implicit val floatMappedType: MappedType[Float, JFloat] = MappedType(float2Float, Float2float)
-  implicit val doubleMappedType: MappedType[Double, JDouble] = MappedType(double2Double, Double2double)
-  implicit val booleanMappedType: MappedType[Boolean, JBoolean] = MappedType(boolean2Boolean, Boolean2boolean)
-  implicit val decimalMappedType: MappedType[BigDecimal, JBigDecimal] = MappedType(_.bigDecimal, BigDecimal.apply)
-  implicit val byteArrayCassandraType: MappedType[Array[Byte], ByteBuffer] = MappedType(
-    ByteBuffer.wrap,
-    bb => {
-      val b = new Array[Byte](bb.remaining())
-      bb.get(b)
-      b
-    }
-  )
+  implicit val encodeLong: CassandraMapper[Long, JLong] = CassandraMapper(long2Long)
+  implicit val decodeLong: CassandraMapper[JLong, Long] = CassandraMapper(Long2long)
 
-  implicit val stringCassandraType: CassandraType[String] = supportedCassandraType[String]
-  implicit val uuidCassandraType: CassandraType[UUID] = supportedCassandraType[UUID]
-  implicit val dateCassandraType: CassandraType[Date] = supportedCassandraType[Date]
-  implicit val localDateCassandraType: CassandraType[LocalDate] = supportedCassandraType[LocalDate]
+  implicit val encodeFloat: CassandraMapper[Float, JFloat] = CassandraMapper(float2Float)
+  implicit val decodeFloat: CassandraMapper[JFloat, Float] = CassandraMapper(Float2float)
 
-  implicit def mappedEncodingForSupportedType[T, Cas](
-    implicit
-    m1:         MappedEncoding[T, Cas],
-    m2:         MappedEncoding[Cas, T],
-    mappedType: CassandraType[Cas]
-  ): MappedType[T, Cas] = MappedType(m1.f, m2.f)
+  implicit val encodeDouble: CassandraMapper[Double, JDouble] = CassandraMapper(double2Double)
+  implicit val decodeDouble: CassandraMapper[JDouble, Double] = CassandraMapper(Double2double)
 
-  implicit def mappedEncodingForMappedType[I, O, Cas](
-    m1:         MappedEncoding[I, O],
-    m2:         MappedEncoding[O, I],
-    mappedType: MappedType[O, Cas]
-  ): MappedType[I, Cas] = MappedType(m1.f.andThen(mappedType.encode), mappedType.decode.andThen(m2.f))
+  implicit val encodeBoolean: CassandraMapper[Boolean, JBoolean] = CassandraMapper(boolean2Boolean)
+  implicit val decodeBoolean: CassandraMapper[JBoolean, Boolean] = CassandraMapper(Boolean2boolean)
 
-  def supportedCassandraType[T]: CassandraType[T] = MappedType(identity, identity)
+  implicit val encodeBigDecimal: CassandraMapper[BigDecimal, JBigDecimal] = CassandraMapper(_.bigDecimal)
+  implicit val decodeBigDecimal: CassandraMapper[JBigDecimal, BigDecimal] = CassandraMapper(BigDecimal.apply)
+
+  implicit val encodeByteArray: CassandraMapper[Array[Byte], ByteBuffer] = CassandraMapper(ByteBuffer.wrap)
+  implicit val decodeByteArray: CassandraMapper[ByteBuffer, Array[Byte]] = CassandraMapper(bb => {
+    val b = new Array[Byte](bb.remaining())
+    bb.get(b)
+    b
+  })
 }

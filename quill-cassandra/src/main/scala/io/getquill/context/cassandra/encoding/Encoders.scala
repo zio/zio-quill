@@ -4,11 +4,9 @@ import java.nio.ByteBuffer
 import java.util.{ Date, UUID }
 
 import com.datastax.driver.core.LocalDate
-import io.getquill.context.cassandra.{ CassandraSessionContext, MappedType }
+import io.getquill.context.cassandra.CassandraSessionContext
 
-import scala.collection.JavaConverters._
-
-trait Encoders {
+trait Encoders extends CollectionEncoders {
   this: CassandraSessionContext[_] =>
 
   type Encoder[T] = CassandraEncoder[T]
@@ -50,17 +48,4 @@ trait Encoders {
   implicit val uuidEncoder: Encoder[UUID] = encoder(_.setUUID)
   implicit val dateEncoder: Encoder[Date] = encoder(_.setTimestamp)
   implicit val localDateEncoder: Encoder[LocalDate] = encoder(_.setDate)
-
-  implicit def listEncoder[T, Cas](implicit mapped: MappedType[T, Cas]): Encoder[List[T]] =
-    encoder((index, list, row) => row.setList[Cas](index, list.map(mapped.encode).asJava))
-
-  implicit def setEncoder[T, Cas](implicit mapped: MappedType[T, Cas]): Encoder[Set[T]] =
-    encoder((index, set, row) => row.setSet[Cas](index, set.map(mapped.encode).asJava))
-
-  implicit def mapEncoder[K, V, KCas, VCas](
-    implicit
-    km: MappedType[K, KCas],
-    vm: MappedType[V, VCas]
-  ): Encoder[Map[K, V]] =
-    encoder((index, map, row) => row.setMap[KCas, VCas](index, map.map(kv => (km.encode(kv._1), vm.encode(kv._2))).asJava))
 }

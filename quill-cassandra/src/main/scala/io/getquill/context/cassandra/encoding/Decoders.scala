@@ -3,13 +3,10 @@ package io.getquill.context.cassandra.encoding
 import java.util.{ Date, UUID }
 
 import com.datastax.driver.core.LocalDate
-import io.getquill.context.cassandra.{ CassandraSessionContext, MappedType }
+import io.getquill.context.cassandra.CassandraSessionContext
 import io.getquill.util.Messages.fail
 
-import scala.collection.JavaConverters._
-import scala.reflect.ClassTag
-
-trait Decoders {
+trait Decoders extends CollectionDecoders {
   this: CassandraSessionContext[_] =>
 
   type Decoder[T] = CassandraDecoder[T]
@@ -60,20 +57,6 @@ trait Decoders {
   implicit val dateDecoder: Decoder[Date] = decoder(_.getTimestamp)
   implicit val localDateDecoder: Decoder[LocalDate] = decoder(_.getDate)
 
-  implicit def listDecoder[T: ClassTag, Cas: ClassTag](implicit mapped: MappedType[T, Cas]): Decoder[List[T]] =
-    decoder((index, row) => row.getList[Cas](index, javaClass[Cas]).asScala.map(mapped.decode).toList)
-
-  implicit def setDecoder[T: ClassTag, Cas: ClassTag](implicit mapped: MappedType[T, Cas]): Decoder[Set[T]] =
-    decoder((index, row) => row.getSet[Cas](index, javaClass[Cas]).asScala.map(mapped.decode).toSet)
-
-  implicit def mapDecoder[K: ClassTag, V: ClassTag, KCas: ClassTag, VCas: ClassTag](
-    implicit
-    km: MappedType[K, KCas],
-    vm: MappedType[V, VCas]
-  ): Decoder[Map[K, V]] =
-    decoder((index, row) => row.getMap[KCas, VCas](index, javaClass[KCas], javaClass[VCas]).asScala.map {
-      case (k, v) => km.decode(k) -> vm.decode(v)
-    }.toMap)
-
-  private def javaClass[T](implicit tag: ClassTag[T]): Class[T] = tag.runtimeClass.asInstanceOf[Class[T]]
+  /*implicit def genericDecoder[T: ClassTag](implicit casType: CassandraType[T]): Decoder[T] =
+    decoder((index, row) => row.get[T](index, asClassOf[T]))*/
 }
