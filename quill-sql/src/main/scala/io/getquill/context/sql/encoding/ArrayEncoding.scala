@@ -1,4 +1,4 @@
-package io.getquill.context.sql.dsl
+package io.getquill.context.sql.encoding
 
 import java.time.LocalDate
 import java.util.Date

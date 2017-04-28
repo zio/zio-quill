@@ -4,9 +4,9 @@ import java.time.LocalDate
 import java.util.Date
 
 import io.getquill.PostgresAsyncContext
-import io.getquill.context.sql.dsl.ArrayEncoding
+import io.getquill.context.sql.encoding.ArrayEncoding
 import io.getquill.util.Messages.fail
-import org.joda.time.{ LocalDate => JodaLocalDate, LocalDateTime => JodaLocalDateTime }
+import org.joda.time.{LocalDate => JodaLocalDate, LocalDateTime => JodaLocalDateTime}
 
 import scala.reflect.ClassTag
 

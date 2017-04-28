@@ -1,4 +1,4 @@
-package io.getquill.context.sql.dsl
+package io.getquill.context.sql.encoding
 
 import java.sql.Timestamp
 import java.time.LocalDate
@@ -9,9 +9,9 @@ import org.scalatest.{ Assertion, BeforeAndAfterEach }
 
 import scala.collection.mutable.ListBuffer
 
-trait ArrayEncodingSpec extends Spec with BeforeAndAfterEach {
+trait ArrayEncodingBaseSpec extends Spec with BeforeAndAfterEach {
 
-  // Support all sql base types and `Traversable` implementers
+  // Support all sql base types and `Seq` implementers
   case class ArraysTestEntity(
     texts:      List[String],
     decimals:   Seq[BigDecimal],
@@ -45,7 +45,7 @@ trait ArrayEncodingSpec extends Spec with BeforeAndAfterEach {
     e1.dates.head mustBe e2.dates.head
   }
 
-  // Support Traversable encoding basing on MappedEncoding
+  // Support Seq encoding basing on MappedEncoding
   case class StrWrap(str: String)
   implicit val strWrapEncode: MappedEncoding[StrWrap, String] = MappedEncoding(_.str)
   implicit val strWrapDecode: MappedEncoding[String, StrWrap] = MappedEncoding(StrWrap.apply)

@@ -3,10 +3,10 @@ package io.getquill.context.jdbc.postgres
 import java.sql.Timestamp
 import java.time.LocalDate
 
-import io.getquill.{ Literal, PostgresJdbcContext }
-import io.getquill.context.sql.dsl.ArrayEncodingSpec
+import io.getquill.context.sql.encoding.ArrayEncodingBaseSpec
+import io.getquill.{Literal, PostgresJdbcContext}
 
-class ArrayJdbcEncodingSpec extends ArrayEncodingSpec {
+class ArrayJdbcEncodingSpec extends ArrayEncodingBaseSpec {
   val ctx = testContext
   import ctx._
 
@@ -19,7 +19,7 @@ class ArrayJdbcEncodingSpec extends ArrayEncodingSpec {
     baseEntityDeepCheck(actual, e)
   }
 
-  "Support Traversable encoding basing on MappedEncoding" in {
+  "Support Seq encoding basing on MappedEncoding" in {
     val wrapQ = quote(querySchema[WrapEntity]("ArraysTestEntity"))
     ctx.run(wrapQ.insert(lift(wrapE)))
     ctx.run(wrapQ).head.texts mustBe wrapE.texts

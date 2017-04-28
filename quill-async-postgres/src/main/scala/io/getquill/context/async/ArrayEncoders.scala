@@ -4,8 +4,8 @@ import java.time.LocalDate
 import java.util.Date
 
 import io.getquill.PostgresAsyncContext
-import io.getquill.context.sql.dsl.ArrayEncoding
-import org.joda.time.{ LocalDate => JodaLocalDate, LocalDateTime => JodaLocalDateTime }
+import io.getquill.context.sql.encoding.ArrayEncoding
+import org.joda.time.{LocalDate => JodaLocalDate, LocalDateTime => JodaLocalDateTime}
 
 trait ArrayEncoders extends ArrayEncoding {
   self: PostgresAsyncContext[_] =>

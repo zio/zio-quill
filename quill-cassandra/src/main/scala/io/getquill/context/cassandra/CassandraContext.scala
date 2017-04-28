@@ -39,9 +39,9 @@ trait CassandraContext[N <: NamingStrategy]
   implicit val uuidEncoder: Encoder[UUID]
   implicit val dateEncoder: Encoder[Date]
 
-  implicit def listDecoder[T: ClassTag, Cas: ClassTag](implicit mapper: CassandraMapper[Cas, T]): Decoder[List[T]]
-  implicit def setDecoder[T: ClassTag, Cas: ClassTag](implicit mapper: CassandraMapper[Cas, T]): Decoder[Set[T]]
-  implicit def mapDecoder[K: ClassTag, V: ClassTag, KCas: ClassTag, VCas: ClassTag](
+  implicit def listDecoder[T, Cas: ClassTag](implicit mapper: CassandraMapper[Cas, T]): Decoder[List[T]]
+  implicit def setDecoder[T, Cas: ClassTag](implicit mapper: CassandraMapper[Cas, T]): Decoder[Set[T]]
+  implicit def mapDecoder[K, V, KCas: ClassTag, VCas: ClassTag](
     implicit
     keyMapper: CassandraMapper[KCas, K],
     valMapper: CassandraMapper[VCas, V]

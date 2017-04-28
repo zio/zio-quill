@@ -1,10 +1,10 @@
 package io.getquill.context.jdbc
 
-import java.sql.{ Timestamp, Types, Date => SqlDate }
+import java.sql.{Timestamp, Types, Date => SqlDate}
 import java.time.LocalDate
 import java.util.Date
 
-import io.getquill.context.sql.dsl.ArrayEncoding
+import io.getquill.context.sql.encoding.ArrayEncoding
 
 import scala.collection.generic.CanBuildFrom
 

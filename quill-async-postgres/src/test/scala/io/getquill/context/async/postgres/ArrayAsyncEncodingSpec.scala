@@ -2,12 +2,12 @@ package io.getquill.context.async.postgres
 
 import java.time.LocalDate
 
-import io.getquill.context.sql.dsl.ArrayEncodingSpec
-import org.joda.time.{ LocalDate => JodaLocalDate, LocalDateTime => JodaLocalDateTime }
+import io.getquill.context.sql.encoding.ArrayEncodingBaseSpec
+import org.joda.time.{LocalDate => JodaLocalDate, LocalDateTime => JodaLocalDateTime}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class ArrayAsyncEncodingSpec extends ArrayEncodingSpec {
+class ArrayAsyncEncodingSpec extends ArrayEncodingBaseSpec {
   val ctx = testContext
   import ctx._
 

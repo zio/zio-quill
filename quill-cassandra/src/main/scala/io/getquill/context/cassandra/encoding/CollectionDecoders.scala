@@ -9,13 +9,13 @@ import scala.collection.JavaConverters._
 trait CollectionDecoders {
   this: CassandraSessionContext[_] =>
 
-  implicit def listDecoder[T: ClassTag, Cas: ClassTag](implicit mapper: CassandraMapper[Cas, T]): Decoder[List[T]] =
+  implicit def listDecoder[T, Cas: ClassTag](implicit mapper: CassandraMapper[Cas, T]): Decoder[List[T]] =
     decoder((index, row) => row.getList[Cas](index, asClassOf[Cas]).asScala.map(mapper.f).toList)
 
-  implicit def setDecoder[T: ClassTag, Cas: ClassTag](implicit mapper: CassandraMapper[Cas, T]): Decoder[Set[T]] =
+  implicit def setDecoder[T, Cas: ClassTag](implicit mapper: CassandraMapper[Cas, T]): Decoder[Set[T]] =
     decoder((index, row) => row.getSet[Cas](index, asClassOf[Cas]).asScala.map(mapper.f).toSet)
 
-  implicit def mapDecoder[K: ClassTag, V: ClassTag, KCas: ClassTag, VCas: ClassTag](
+  implicit def mapDecoder[K, V, KCas: ClassTag, VCas: ClassTag](
     implicit
     keyMapper: CassandraMapper[KCas, K],
     valMapper: CassandraMapper[VCas, V]
