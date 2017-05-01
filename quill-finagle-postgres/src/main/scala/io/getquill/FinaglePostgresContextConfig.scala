@@ -2,7 +2,7 @@ package io.getquill
 
 import com.twitter.finagle.Postgres
 import com.twitter.finagle.Postgres.{ Client, CustomTypes }
-import com.twitter.finagle.postgres.{ Client => RichClient }
+import com.twitter.finagle.postgres.{ PostgresClient => RichClient }
 import com.typesafe.config.Config
 import com.twitter.finagle.postgres.values._
 import com.twitter.finagle.service.RetryPolicy
@@ -18,7 +18,7 @@ case class FinaglePostgresContextConfig(config: Config) {
   def hostConnectionLimit: Int = Try(config.getInt("hostConnectionLimit")).getOrElse(1)
   def numRetries: Int = Try(config.getInt("numRetries")).getOrElse(4)
   def customTypes: Boolean = Try(config.getBoolean("customTypes")).getOrElse(false)
-  def customReceiveFunctions: PartialFunction[String, ValueDecoder[T] forSome { type T }] = { case "noop" => ValueDecoder.Unknown }
+  def customReceiveFunctions: PartialFunction[String, ValueDecoder[T] forSome { type T }] = { case "noop" => ValueDecoder.unknown }
   def binaryResults: Boolean = Try(config.getBoolean("binaryResults")).getOrElse(false)
   def binaryParams: Boolean = Try(config.getBoolean("binaryParams")).getOrElse(false)
 

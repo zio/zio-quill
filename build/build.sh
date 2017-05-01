@@ -25,13 +25,13 @@ then
 		sbt tut 'release with-defaults'
 	elif [[ $TRAVIS_BRANCH == "master" ]]
 	then
-		sbt clean coverage test tut coverageReport coverageAggregate checkUnformattedFiles
+		sbt clean coverage testOnly io.getquill.context.finagle.postgres.* tut coverageReport coverageAggregate checkUnformattedFiles
 		sbt coverageOff publish
 	else
-		sbt clean coverage test tut coverageReport coverageAggregate checkUnformattedFiles
+		sbt clean coverage testOnly io.getquill.context.finagle.postgres.* tut coverageReport coverageAggregate checkUnformattedFiles
 		echo "version in ThisBuild := \"$TRAVIS_BRANCH-SNAPSHOT\"" > version.sbt
 		sbt coverageOff publish
 	fi
 else
-	sbt clean coverage test tut coverageReport coverageAggregate checkUnformattedFiles
+	sbt clean coverage testOnly io.getquill.context.finagle.postgres.* tut coverageReport coverageAggregate checkUnformattedFiles
 fi
