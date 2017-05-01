@@ -1,3 +1,27 @@
+# 1.1.1
+
+**see migration notes below**
+
+- [avoid dynamic query generation for option.contains](https://github.com/getquill/quill/pull/696)
+- [fix forall behaviour in quotation](https://github.com/getquill/quill/pull/699)
+- [change query compilation log level to debug](https://github.com/getquill/quill/pull/709)
+- [fix infix query compilation](https://github.com/getquill/quill/pull/711)
+- [add support for Cassandra DATE type](https://github.com/getquill/quill/pull/723)
+- [fix finagle timezone issues](https://github.com/getquill/quill/pull/722)
+- [add max prepare statement configuration](https://github.com/getquill/quill/pull/722)
+- [upgrade finagle-mysql to 6.43.0](https://github.com/getquill/quill/pull/726)
+- [fix compilation issue when import List type](https://github.com/getquill/quill/pull/735)
+- [upgrade cassandra-driver to 3.2.0](https://github.com/getquill/quill/pull/736)
+- [apply NamingStrategy to returning column](https://github.com/getquill/quill/pull/734)
+- [upgrade scala to 2.11.11](https://github.com/getquill/quill/pull/752)
+- [fix finagle mysql context constructor with timezone](https://github.com/getquill/quill/pull/744)
+- [rename Cassandra property address translater to translator](https://github.com/getquill/quill/pull/757)
+- [fix timezone handling for finagle-mysql)](https://github.com/getquill/quill/pull/754)
+
+### Migration notes
+
+- Cassandra context property `ctx.session.addressTranslater` is renamed to `ctx.session.addressTranslator`
+
 # 1.1.0
 
 **see migration notes below**
