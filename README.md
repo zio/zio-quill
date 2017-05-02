@@ -702,7 +702,7 @@ SQL-specific encoding
 **Arrays**
 
 Quill provides SQL Arrays support. In Scala we represent them as any collection that implements `Seq`:
-```scala
+```
 import java.util.Date
 
 case class Person(id: Int, phones: List[String], cards: Vector[Int], dates: Seq[Date])
@@ -838,7 +838,7 @@ Cassandra-specific encoding
 **Collections**
 
 Quill provides List, Set and Map encoding:
-```scala
+```
 import java.util.Date
 
 case class Person(id: Int, phones: Set[String], cards: List[Int], dates: Map[Date, Boolean])
