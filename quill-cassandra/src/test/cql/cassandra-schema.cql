@@ -102,6 +102,10 @@ CREATE TABLE ListsEntity(
     uuids LIST<UUID>
 );
 
+CREATE TABLE ListFrozen(
+    id frozen <LIST<INT>> PRIMARY KEY
+);
+
 CREATE TABLE SetsEntity(
     id INT PRIMARY KEY,
     texts SET<VARCHAR>,
@@ -117,6 +121,10 @@ CREATE TABLE SetsEntity(
     uuids SET<UUID>
 );
 
+CREATE TABLE SetFrozen(
+    id frozen <SET<INT>> PRIMARY KEY
+);
+
 CREATE TABLE MapsEntity(
     id INT PRIMARY KEY,
     textDecimal MAP<VARCHAR, DECIMAL>,
@@ -124,4 +132,8 @@ CREATE TABLE MapsEntity(
     longFloat MAP<BIGINT, FLOAT>,
     boolDate MAP<BOOLEAN, DATE>,
     uuidTimestamp MAP<UUID, TIMESTAMP>
+);
+
+CREATE TABLE MapFrozen(
+    id frozen <MAP<INT, BOOLEAN>> PRIMARY KEY
 );

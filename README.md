@@ -696,6 +696,23 @@ ctx.run(q)
 // SELECT p.id, p.name, p.age FROM Person p WHERE p.name like '%John%'
 ```
 
+SQL-specific encoding
+---------------------
+
+**Arrays**
+
+Quill provides SQL Arrays support. In Scala we represent them as any collection that implements `Seq`:
+```scala
+import java.util.Date
+
+case class Person(id: Int, phones: List[String], cards: Vector[Int], dates: Seq[Date])
+
+ctx.run(query[Person])
+// SELECT x.id, x.phones, x.cards, x.dates FROM Person x
+```
+Note that not all drivers/databases provides such feature hence only `PostgresJdbcContext` and
+`PostgresAsyncContext` support SQL Arrays.
+
 Cassandra-specific operations
 -----------------------------
 
@@ -813,6 +830,21 @@ val q = quote {
 }
 ctx.run(q)
 // DELETE p.age FROM Person
+```
+
+Cassandra-specific encoding
+---------------------------
+
+**Collections**
+
+Quill provides List, Set and Map encoding:
+```scala
+import java.util.Date
+
+case class Person(id: Int, phones: Set[String], cards: List[Int], dates: Map[Date, Boolean])
+
+ctx.run(query[Person])
+// SELECT id, phones, cards, dates FROM Person
 ```
 
 Dynamic queries
@@ -935,6 +967,7 @@ import java.util.UUID
 implicit val encodeUUID = MappedEncoding[UUID, String](_.toString)
 implicit val decodeUUID = MappedEncoding[String, UUID](UUID.fromString(_))
 ```
+Note that can it be also used to provide mapping for element types of collection (SQL Arrays or Cassandra Collections).
 
 Raw Encoding
 ------------
@@ -954,6 +987,11 @@ trait UUIDEncodingExample {
   implicit val uuidEncoder: Encoder[UUID] =
     encoder(java.sql.Types.OTHER, (index, value, row) =>
         row.setObject(index, value, java.sql.Types.OTHER)) // database-specific implementation
+
+  // Only for postgres
+  implicit def arrayUUIDEncoder[Col <: Seq[UUID]]: Encoder[Col] = arrayRawEncoder[UUID, Col]("uuid")
+  implicit def arrayUUIDDecoder[Col <: Seq[UUID]](implicit bf: CBF[UUID, Col]): Decoder[Col] =
+    arrayRawDecoder[UUID, Col]
 }
 ```
 

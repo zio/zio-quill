@@ -3,7 +3,7 @@ package io.getquill.context.async.postgres
 import java.time.LocalDate
 
 import io.getquill.context.sql.encoding.ArrayEncodingBaseSpec
-import org.joda.time.{LocalDate => JodaLocalDate, LocalDateTime => JodaLocalDateTime}
+import org.joda.time.{ LocalDate => JodaLocalDate, LocalDateTime => JodaLocalDateTime }
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -48,6 +48,14 @@ class ArrayAsyncEncodingSpec extends ArrayEncodingBaseSpec {
       await(newCtx.run(query[ArraysTestEntity])).head mustBe e
     }
     newCtx.close()
+  }
+
+  "Arrays in where clause" in {
+    await(ctx.run(q.insert(lift(e))))
+    val actual1 = await(ctx.run(q.filter(_.texts == lift(List("test")))))
+    val actual2 = await(ctx.run(q.filter(_.texts == lift(List("test2")))))
+    actual1 mustEqual List(e)
+    actual2 mustEqual List()
   }
 
   override protected def beforeEach(): Unit = {

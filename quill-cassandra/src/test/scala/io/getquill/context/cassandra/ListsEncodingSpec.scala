@@ -68,6 +68,15 @@ class ListsEncodingSpec extends CollectionsSpec {
       .head.blobs.map(_.toList) mustBe e.blobs.map(_.toList)
   }
 
+  "List in where clause" in {
+    case class ListFrozen(id: List[Int])
+    val e = ListFrozen(List(1, 2))
+    val q = quote(query[ListFrozen])
+    ctx.run(q.insert(lift(e)))
+    ctx.run(q.filter(_.id == lift(List(1, 2)))) mustBe List(e)
+    ctx.run(q.filter(_.id == lift(List(1)))) mustBe Nil
+  }
+
   override protected def beforeEach(): Unit = {
     ctx.run(q.delete)
   }

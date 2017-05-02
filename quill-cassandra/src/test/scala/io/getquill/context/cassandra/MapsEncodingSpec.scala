@@ -58,6 +58,15 @@ class MapsEncodingSpec extends CollectionsSpec {
     ctx.run(q.filter(_.id == 1)).head mustBe e
   }
 
+  "Map in where clause" in {
+    case class MapFrozen(id: Map[Int, Boolean])
+    val e = MapFrozen(Map(1 -> true))
+    val q = quote(query[MapFrozen])
+    ctx.run(q.insert(lift(e)))
+    ctx.run(q.filter(_.id == lift(Map(1 -> true)))) mustBe List(e)
+    ctx.run(q.filter(_.id == lift(Map(1 -> false)))) mustBe List()
+  }
+
   override protected def beforeEach(): Unit = {
     ctx.run(q.delete)
   }

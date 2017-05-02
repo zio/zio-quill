@@ -106,5 +106,6 @@ CREATE TABLE ArraysTestEntity (
     floats FLOAT[],
     doubles DOUBLE PRECISION[],
     timestamps TIMESTAMP[],
-    dates DATE[]
+    dates DATE[],
+    uuids UUID[]
 );

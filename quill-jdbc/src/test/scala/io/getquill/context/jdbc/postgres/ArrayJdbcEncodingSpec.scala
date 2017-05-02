@@ -2,9 +2,10 @@ package io.getquill.context.jdbc.postgres
 
 import java.sql.Timestamp
 import java.time.LocalDate
+import java.util.UUID
 
 import io.getquill.context.sql.encoding.ArrayEncodingBaseSpec
-import io.getquill.{Literal, PostgresJdbcContext}
+import io.getquill.{ Literal, PostgresJdbcContext }
 
 class ArrayJdbcEncodingSpec extends ArrayEncodingBaseSpec {
   val ctx = testContext
@@ -45,6 +46,26 @@ class ArrayJdbcEncodingSpec extends ArrayEncodingBaseSpec {
       newCtx.run(query[ArraysTestEntity]).head mustBe e
     }
     newCtx.close()
+  }
+
+  "Custom decoders/encoders" in {
+    case class Entity(uuids: List[UUID])
+    val e = Entity(List(UUID.randomUUID(), UUID.randomUUID()))
+    val q = quote(querySchema[Entity]("ArraysTestEntity"))
+
+    implicit def arrayUUIDEncoder[Col <: Seq[UUID]]: Encoder[Col] = arrayRawEncoder[UUID, Col]("uuid")
+    implicit def arrayUUIDDecoder[Col <: Seq[UUID]](implicit bf: CBF[UUID, Col]): Decoder[Col] = arrayRawDecoder[UUID, Col]
+
+    ctx.run(q.insert(lift(e)))
+    ctx.run(q).head.uuids mustBe e.uuids
+  }
+
+  "Arrays in where clause" in {
+    ctx.run(q.insert(lift(e)))
+    val actual1 = ctx.run(q.filter(_.texts == lift(List("test"))))
+    val actual2 = ctx.run(q.filter(_.texts == lift(List("test2"))))
+    actual1 mustEqual List(e)
+    actual2 mustEqual List()
   }
 
   override protected def beforeEach(): Unit = {
