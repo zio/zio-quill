@@ -1,5 +1,7 @@
 package io.getquill.context.finagle.postgres
 
+import java.time.{ LocalDate, LocalDateTime }
+
 import io.getquill.context.sql.EncodingSpec
 import com.twitter.util.Await
 import java.util.Date
@@ -79,5 +81,27 @@ class FinaglePostgresEncodingSpec extends EncodingSpec {
       verifyBarcode(barCode)
     }
     success must not be empty
+  }
+
+  "encodes localdate type" in {
+    case class DateEncodingTestEntity(v1: LocalDate, v2: LocalDate)
+    val entity = DateEncodingTestEntity(LocalDate.now, LocalDate.now)
+    val r = for {
+      _ <- testContext.run(query[DateEncodingTestEntity].delete)
+      _ <- testContext.run(query[DateEncodingTestEntity].insert(lift(entity)))
+      result <- testContext.run(query[DateEncodingTestEntity])
+    } yield result
+    Await.result(r) must contain(entity)
+  }
+
+  "encodes localdatetime type" in {
+    case class DateEncodingTestEntity(v1: LocalDateTime, v2: LocalDateTime)
+    val entity = DateEncodingTestEntity(LocalDateTime.now, LocalDateTime.now)
+    val r = for {
+      _ <- testContext.run(query[DateEncodingTestEntity].delete)
+      _ <- testContext.run(query[DateEncodingTestEntity].insert(lift(entity)))
+      result <- testContext.run(query[DateEncodingTestEntity])
+    } yield result
+    Await.result(r)
   }
 }
