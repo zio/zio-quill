@@ -60,6 +60,11 @@ Create TABLE DateEncodingTestEntity(
     v3 timestamp
 );
 
+Create TABLE LocalDateTimeEncodingTestEntity(
+    v1 datetime,
+    v2 timestamp
+);
+
 Create TABLE BooleanEncodingTestEntity(
     v1 BOOLEAN,
     v2 BIT(1),
