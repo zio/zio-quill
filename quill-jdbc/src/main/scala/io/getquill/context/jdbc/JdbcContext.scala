@@ -1,7 +1,7 @@
 package io.getquill.context.jdbc
 
 import java.io.Closeable
-import java.sql.{ Connection, PreparedStatement, ResultSet }
+import java.sql.{ Connection, JDBCType, PreparedStatement, ResultSet }
 import javax.sql.DataSource
 
 import com.typesafe.scalalogging.Logger
@@ -123,6 +123,16 @@ abstract class JdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](dataSo
           extractResult(ps.getGeneratedKeys, extractor)
       }
     }
+
+  /**
+   * Parses instances of java.sql.Types to string form so it can be used in creation of sql arrays.
+   * Some databases does not support each of generic types, hence it's welcome to override this method
+   * and provide alternatives to non-existent types.
+   *
+   * @param intType one of java.sql.Types
+   * @return JDBC type in string form
+   */
+  def parseJdbcType(intType: Int): String = JDBCType.valueOf(intType).getName
 
   @tailrec
   private def extractResult[T](rs: ResultSet, extractor: ResultSet => T, acc: List[T] = List()): List[T] =

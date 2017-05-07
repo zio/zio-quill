@@ -5,8 +5,6 @@ import java.time.{ LocalDate, LocalDateTime }
 import java.util.{ Calendar, TimeZone }
 import java.{ sql, util }
 
-import scala.reflect.ClassTag
-
 trait Encoders {
   this: JdbcContext[_, _] =>
 
@@ -19,13 +17,13 @@ trait Encoders {
       encoder(index + 1, value, row)
   }
 
-  def encoder[T: ClassTag](sqlType: Int, f: (Index, T, PrepareRow) => Unit): Encoder[T] =
+  def encoder[T](sqlType: Int, f: (Index, T, PrepareRow) => Unit): Encoder[T] =
     JdbcEncoder(sqlType, (index: Index, value: T, row: PrepareRow) => {
       f(index, value, row)
       row
     })
 
-  def encoder[T: ClassTag](sqlType: Int, f: PrepareRow => (Index, T) => Unit): Encoder[T] =
+  def encoder[T](sqlType: Int, f: PrepareRow => (Index, T) => Unit): Encoder[T] =
     encoder(sqlType, (index: Index, value: T, row: PrepareRow) => f(row)(index, value))
 
   implicit def mappedEncoder[I, O](implicit mapped: MappedEncoding[I, O], e: Encoder[O]): Encoder[I] =

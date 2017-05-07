@@ -4,9 +4,14 @@ import java.util.{ Date, UUID }
 
 import io.getquill.NamingStrategy
 import io.getquill.context.Context
+import io.getquill.context.cassandra.encoding.{ CassandraMapper, CassandraMapperConversions, CassandraTypes }
+
+import scala.reflect.ClassTag
 
 trait CassandraContext[N <: NamingStrategy]
   extends Context[CqlIdiom, N]
+  with CassandraMapperConversions
+  with CassandraTypes
   with Ops {
 
   implicit def optionDecoder[T](implicit d: Decoder[T]): Decoder[Option[T]]
@@ -33,4 +38,20 @@ trait CassandraContext[N <: NamingStrategy]
   implicit val byteArrayEncoder: Encoder[Array[Byte]]
   implicit val uuidEncoder: Encoder[UUID]
   implicit val dateEncoder: Encoder[Date]
+
+  implicit def listDecoder[T, Cas: ClassTag](implicit mapper: CassandraMapper[Cas, T]): Decoder[List[T]]
+  implicit def setDecoder[T, Cas: ClassTag](implicit mapper: CassandraMapper[Cas, T]): Decoder[Set[T]]
+  implicit def mapDecoder[K, V, KCas: ClassTag, VCas: ClassTag](
+    implicit
+    keyMapper: CassandraMapper[KCas, K],
+    valMapper: CassandraMapper[VCas, V]
+  ): Decoder[Map[K, V]]
+
+  implicit def listEncoder[T, Cas](implicit mapper: CassandraMapper[T, Cas]): Encoder[List[T]]
+  implicit def setEncoder[T, Cas](implicit mapper: CassandraMapper[T, Cas]): Encoder[Set[T]]
+  implicit def mapEncoder[K, V, KCas, VCas](
+    implicit
+    keyMapper: CassandraMapper[K, KCas],
+    valMapper: CassandraMapper[V, VCas]
+  ): Encoder[Map[K, V]]
 }

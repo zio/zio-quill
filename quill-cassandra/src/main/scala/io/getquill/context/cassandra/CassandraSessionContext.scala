@@ -1,16 +1,12 @@
 package io.getquill.context.cassandra
 
 import scala.util.Try
-
 import org.slf4j.LoggerFactory
-
 import com.datastax.driver.core.BoundStatement
 import com.datastax.driver.core.Row
 import com.typesafe.scalalogging.Logger
-
 import io.getquill.NamingStrategy
-import io.getquill.context.cassandra.encoding.Decoders
-import io.getquill.context.cassandra.encoding.Encoders
+import io.getquill.context.cassandra.encoding.{ CassandraTypes, Decoders, Encoders }
 import io.getquill.util.Messages.fail
 import com.datastax.driver.core.Cluster
 
@@ -21,7 +17,8 @@ abstract class CassandraSessionContext[N <: NamingStrategy](
 )
   extends CassandraContext[N]
   with Encoders
-  with Decoders {
+  with Decoders
+  with CassandraTypes {
 
   override type PrepareRow = BoundStatement
   override type ResultRow = Row

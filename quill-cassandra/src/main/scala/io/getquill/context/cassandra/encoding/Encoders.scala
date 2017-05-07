@@ -6,7 +6,7 @@ import java.util.{ Date, UUID }
 import com.datastax.driver.core.LocalDate
 import io.getquill.context.cassandra.CassandraSessionContext
 
-trait Encoders {
+trait Encoders extends CollectionEncoders {
   this: CassandraSessionContext[_] =>
 
   type Encoder[T] = CassandraEncoder[T]

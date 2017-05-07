@@ -1,12 +1,12 @@
 package io.getquill.context.cassandra.encoding
 
-import com.datastax.driver.core.LocalDate
 import java.util.{ Date, UUID }
 
+import com.datastax.driver.core.LocalDate
 import io.getquill.context.cassandra.CassandraSessionContext
 import io.getquill.util.Messages.fail
 
-trait Decoders {
+trait Decoders extends CollectionDecoders {
   this: CassandraSessionContext[_] =>
 
   type Decoder[T] = CassandraDecoder[T]
@@ -17,12 +17,11 @@ trait Decoders {
   }
 
   def decoder[T](d: BaseDecoder[T]): Decoder[T] = CassandraDecoder(
-    (index, row) => {
-      row.isNull(index) match {
-        case true  => fail(s"Expected column at index $index to be defined but is was empty")
-        case false => d(index, row)
-      }
-    }
+    (index, row) =>
+      if (row.isNull(index) && !row.getColumnDefinitions.getType(index).isCollection)
+        fail(s"Expected column at index $index to be defined but is was empty")
+      else d(index, row)
+
   )
 
   def decoder[T](f: ResultRow => Index => T): Decoder[T] =
