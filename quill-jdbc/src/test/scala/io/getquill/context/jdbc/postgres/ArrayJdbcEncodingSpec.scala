@@ -12,12 +12,13 @@ class ArrayJdbcEncodingSpec extends ArrayEncodingBaseSpec {
   import ctx._
 
   val q = quote(query[ArraysTestEntity])
+  val corrected = e.copy(timestamps = e.timestamps.map(d => new Timestamp(d.getTime)))
 
   "Support all sql base types and `Seq` implementers" in {
-    ctx.run(q.insert(lift(e)))
+    ctx.run(q.insert(lift(corrected)))
     val actual = ctx.run(q).head
-    actual mustEqual e
-    baseEntityDeepCheck(actual, e)
+    actual mustEqual corrected
+    baseEntityDeepCheck(actual, corrected)
   }
 
   "Support Seq encoding basing on MappedEncoding" in {
@@ -41,9 +42,9 @@ class ArrayJdbcEncodingSpec extends ArrayEncodingBaseSpec {
         arrayDecoder[LocalDate, LocalDate, Col](identity)
     }
     import newCtx._
-    newCtx.run(query[ArraysTestEntity].insert(lift(e)))
+    newCtx.run(query[ArraysTestEntity].insert(lift(corrected)))
     intercept[IllegalStateException] {
-      newCtx.run(query[ArraysTestEntity]).head mustBe e
+      newCtx.run(query[ArraysTestEntity]).head mustBe corrected
     }
     newCtx.close()
   }
@@ -61,10 +62,10 @@ class ArrayJdbcEncodingSpec extends ArrayEncodingBaseSpec {
   }
 
   "Arrays in where clause" in {
-    ctx.run(q.insert(lift(e)))
+    ctx.run(q.insert(lift(corrected)))
     val actual1 = ctx.run(q.filter(_.texts == lift(List("test"))))
     val actual2 = ctx.run(q.filter(_.texts == lift(List("test2"))))
-    actual1 mustEqual List(e)
+    actual1 mustEqual List(corrected)
     actual2 mustEqual List()
   }
 

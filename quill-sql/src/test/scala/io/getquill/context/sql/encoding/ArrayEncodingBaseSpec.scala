@@ -1,6 +1,5 @@
 package io.getquill.context.sql.encoding
 
-import java.sql.Timestamp
 import java.time.LocalDate
 import java.util.Date
 
@@ -28,7 +27,7 @@ trait ArrayEncodingBaseSpec extends Spec with BeforeAndAfterEach {
 
   val e = ArraysTestEntity(List("test"), Seq(BigDecimal(2.33)), Vector(true, true), ListBuffer(1),
     IndexedSeq(3), Seq(2), Seq(1, 2, 3), Seq(1f, 2f), Seq(4d, 3d),
-    Seq(new Timestamp(System.currentTimeMillis())), Seq(LocalDate.now()))
+    Seq(new Date(System.currentTimeMillis())), Seq(LocalDate.now()))
 
   // casting types can be dangerous so we need to ensure that everything is ok
   def baseEntityDeepCheck(e1: ArraysTestEntity, e2: ArraysTestEntity): Assertion = {
