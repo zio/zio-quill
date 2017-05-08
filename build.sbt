@@ -223,6 +223,7 @@ def updateWebsiteTag =
 lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
   organization := "io.getquill",
   scalaVersion := "2.11.11",
+  crossScalaVersions := Seq("2.11.11","2.12.2"),
   libraryDependencies ++= Seq(
     "org.scalamacros" %% "resetallattrs"  % "1.0.0",
     "org.scalatest"   %%% "scalatest"     % "3.0.1"     % Test,
@@ -317,4 +318,10 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
         <url>http://github.com/fwbrasil/</url>
       </developer>
     </developers>)
+) ++ update2_12
+
+lazy val update2_12 = Seq(
+  scalacOptions -= (
+    if (scalaVersion.value.startsWith("2.12.")) "-Xfatal-warnings" else ""
+  )
 )
