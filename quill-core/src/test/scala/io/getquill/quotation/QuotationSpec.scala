@@ -11,6 +11,7 @@ import io.getquill.testContext._
 import io.getquill.context.ValueClass
 
 case class CustomAnyValue(i: Int) extends AnyVal
+case class EmbeddedValue(s: String, i: Int) extends Embedded
 
 class QuotationSpec extends Spec {
 
@@ -32,6 +33,20 @@ class QuotationSpec extends Spec {
             querySchema[TestEntity]("SomeAlias", _.s -> "theS", _.i -> "theI")
           }
           quote(unquote(q)).ast mustEqual Entity("SomeAlias", List(PropertyAlias(List("s"), "theS"), PropertyAlias(List("i"), "theI")))
+        }
+        "with embedded property alias" in {
+          case class TestEnt(ev: EmbeddedValue)
+          val q = quote {
+            querySchema[TestEnt]("SomeAlias", _.ev.s -> "theS", _.ev.i -> "theI")
+          }
+          quote(unquote(q)).ast mustEqual Entity("SomeAlias", List(PropertyAlias(List("ev", "s"), "theS"), PropertyAlias(List("ev", "i"), "theI")))
+        }
+        "with embedded option property alias" in {
+          case class TestEnt(ev: Option[EmbeddedValue])
+          val q = quote {
+            querySchema[TestEnt]("SomeAlias", _.ev.map(_.s) -> "theS", _.ev.map(_.i) -> "theI")
+          }
+          quote(unquote(q)).ast mustEqual Entity("SomeAlias", List(PropertyAlias(List("ev", "s"), "theS"), PropertyAlias(List("ev", "i"), "theI")))
         }
         "explicit `Predef.ArrowAssoc`" in {
           val q = quote {

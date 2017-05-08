@@ -252,20 +252,20 @@ Note that default naming behavior uses the name of the nested case class propert
 
 ```scala
 case class Contact(phone: String, address: String) extends Embedded
-case class Person(id: Int, name: String, homeContact: Contact, workContact: Contact)
+case class Person(id: Int, name: String, homeContact: Contact, workContact: Option[Contact])
 
 val q = quote {
   querySchema[Person](
     "Person",
-    _.homeContact.phone   -> "homePhone",
-    _.homeContact.address -> "homeAdress",
-    _.workContact.phone   -> "workPhone",
-    _.workContact.address -> "workAdress"
+    _.homeContact.phone          -> "homePhone",
+    _.homeContact.address        -> "homeAddress",
+    _.workContact.map(_.phone)   -> "workPhone",
+    _.workContact.map(_.address) -> "workAddress"
   )
 }
 
 ctx.run(q)
-// SELECT x.id, x.name, x.homePhone, x.homeAdress, x.workPhone, x.workAdress FROM Person x
+// SELECT x.id, x.name, x.homePhone, x.homeAddress, x.workPhone, x.workAddress FROM Person x
 ```
 
 Queries
