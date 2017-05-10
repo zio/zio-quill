@@ -1594,6 +1594,7 @@ Maintainers
 - @fwbrasil
 - @gustavoamigo
 - @jilen
+- @mentegy
 - @mxl
 
 Former maintainers:
