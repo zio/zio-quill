@@ -1,7 +1,7 @@
 package io.getquill.context.sql.encoding
 
 import io.getquill.Spec
-import io.getquill.context.sql.{ testContextWithArrays => ctx }
+import io.getquill.context.sql.{ testContext => ctx }
 
 class ArrayEncodingSpec extends Spec {
   import ctx._

@@ -702,13 +702,13 @@ SQL-specific encoding
 **Arrays**
 
 Quill provides SQL Arrays support. In Scala we represent them as any collection that implements `Seq`:
-```
+```scala
 import java.util.Date
 
-case class Person(id: Int, phones: List[String], cards: Vector[Int], dates: Seq[Date])
+case class Book(id: Int, notes: List[String], pages: Vector[Int], history: Seq[Date])
 
-ctx.run(query[Person])
-// SELECT x.id, x.phones, x.cards, x.dates FROM Person x
+ctx.run(query[Book])
+// SELECT x.id, x.notes, x.pages, x.history FROM Book x
 ```
 Note that not all drivers/databases provides such feature hence only `PostgresJdbcContext` and
 `PostgresAsyncContext` support SQL Arrays.
@@ -838,13 +838,13 @@ Cassandra-specific encoding
 **Collections**
 
 Quill provides List, Set and Map encoding:
-```
+```scala
 import java.util.Date
 
-case class Person(id: Int, phones: Set[String], cards: List[Int], dates: Map[Date, Boolean])
+case class Book(id: Int, notes: Set[String], pages: List[Int], history: Map[Date, Boolean])
 
-ctx.run(query[Person])
-// SELECT id, phones, cards, dates FROM Person
+ctx.run(query[Book])
+// SELECT id, notes, pages, history FROM Book
 ```
 
 Dynamic queries
