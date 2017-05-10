@@ -12,6 +12,8 @@ class MetaDslSpec extends Spec {
     y0: Int, y1: Int, y2: Int, y3: Int, y4: Int, y5: Int, y6: Int, y7: Int, y8: Int, y9: Int
   )
 
+  case class EmbValue(i: Int) extends Embedded
+
   "schema meta" - {
     "materialized" in {
       val meta = materializeSchemaMeta[TestEntity]
@@ -20,6 +22,16 @@ class MetaDslSpec extends Spec {
     "custom" in {
       val meta = schemaMeta[TestEntity]("test_entity", _.i -> "ii")
       meta.entity.toString mustEqual """querySchema("test_entity", _.i -> "ii")"""
+    }
+    "custom with embedded" in {
+      case class Entity(emb: EmbValue)
+      val meta = schemaMeta[Entity]("test_entity", _.emb.i -> "ii")
+      meta.entity.toString mustEqual """querySchema("test_entity", _.emb.i -> "ii")"""
+    }
+    "custom with optional embedded" in {
+      case class Entity(emb: Option[EmbValue])
+      val meta = schemaMeta[Entity]("test_entity", _.emb.map(_.i) -> "ii")
+      meta.entity.toString mustEqual """querySchema("test_entity", _.emb.i -> "ii")"""
     }
   }
 
