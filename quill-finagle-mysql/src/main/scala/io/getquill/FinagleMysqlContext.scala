@@ -74,6 +74,14 @@ class FinagleMysqlContext[N <: NamingStrategy](
 
   private val currentClient = new Local[Client]
 
+  private def mkStringParameter(param: List[Parameter] => List[Parameter]): String = {
+    val paramList = param(List.empty)
+    if (paramList.isEmpty)
+      ""
+    else
+      " : (" + paramList.map(_.value).mkString(",") + ")"
+  }
+
   def probe(sql: String) =
     Try(Await.result(client.query(sql)))
 
@@ -85,7 +93,7 @@ class FinagleMysqlContext[N <: NamingStrategy](
     }
 
   def executeQuery[T](sql: String, prepare: List[Parameter] => List[Parameter] = identity, extractor: Row => T = identity[Row] _): Future[List[T]] = {
-    logger.debug(sql)
+    logger.debug(sql + mkStringParameter(prepare))
     withClient(_.prepare(sql).select(prepare(List()): _*)(extractor)).map(_.toList)
   }
 
@@ -93,13 +101,13 @@ class FinagleMysqlContext[N <: NamingStrategy](
     executeQuery(sql, prepare, extractor).map(handleSingleResult)
 
   def executeAction[T](sql: String, prepare: List[Parameter] => List[Parameter] = identity): Future[Long] = {
-    logger.debug(sql)
+    logger.debug(sql + mkStringParameter(prepare))
     withClient(_.prepare(sql)(prepare(List()): _*))
       .map(r => toOk(r).affectedRows)
   }
 
   def executeActionReturning[T](sql: String, prepare: List[Parameter] => List[Parameter] = identity, extractor: Row => T, returningColumn: String): Future[T] = {
-    logger.debug(sql)
+    logger.debug(sql + mkStringParameter(prepare))
     withClient(_.prepare(sql)(prepare(List()): _*))
       .map(extractReturningValue(_, extractor))
   }
@@ -111,6 +119,7 @@ class FinagleMysqlContext[N <: NamingStrategy](
           prepare.foldLeft(Future.value(List.empty[Long])) {
             case (acc, prepare) =>
               acc.flatMap { list =>
+                logger.debug(sql + mkStringParameter(prepare))
                 executeAction(sql, prepare).map(list :+ _)
               }
           }

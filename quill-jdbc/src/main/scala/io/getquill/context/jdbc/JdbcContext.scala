@@ -72,8 +72,8 @@ abstract class JdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](dataSo
 
   def executeQuery[T](sql: String, prepare: PreparedStatement => PreparedStatement = identity, extractor: ResultSet => T = identity[ResultSet] _): List[T] =
     withConnection { conn =>
-      logger.debug(sql)
       val ps = prepare(conn.prepareStatement(sql))
+      logger.debug(ps.toString())
       val rs = ps.executeQuery()
       extractResult(rs, extractor)
     }
@@ -83,14 +83,15 @@ abstract class JdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](dataSo
 
   def executeAction[T](sql: String, prepare: PreparedStatement => PreparedStatement = identity): Long =
     withConnection { conn =>
-      logger.debug(sql)
-      prepare(conn.prepareStatement(sql)).executeUpdate().toLong
+      val ps = prepare(conn.prepareStatement(sql))
+      logger.debug(ps.toString())
+      ps.executeUpdate().toLong
     }
 
   def executeActionReturning[O](sql: String, prepare: PreparedStatement => PreparedStatement = identity, extractor: ResultSet => O, returningColumn: String): O =
     withConnection { conn =>
-      logger.debug(sql)
       val ps = prepare(conn.prepareStatement(sql, Array(returningColumn)))
+      logger.debug(ps.toString())
       ps.executeUpdate()
       handleSingleResult(extractResult(ps.getGeneratedKeys, extractor))
     }
@@ -99,12 +100,12 @@ abstract class JdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](dataSo
     withConnection { conn =>
       groups.flatMap {
         case BatchGroup(sql, prepare) =>
-          logger.debug(sql)
           val ps = conn.prepareStatement(sql)
           prepare.foreach { f =>
             f(ps)
             ps.addBatch()
           }
+          logger.debug(ps.toString())
           ps.executeBatch().map(_.toLong)
       }
     }
@@ -113,12 +114,12 @@ abstract class JdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](dataSo
     withConnection { conn =>
       groups.flatMap {
         case BatchGroupReturning(sql, column, prepare) =>
-          logger.debug(sql)
           val ps = conn.prepareStatement(sql, Array(column))
           prepare.foreach { f =>
             f(ps)
             ps.addBatch()
           }
+          logger.debug(ps.toString())
           ps.executeBatch()
           extractResult(ps.getGeneratedKeys, extractor)
       }
