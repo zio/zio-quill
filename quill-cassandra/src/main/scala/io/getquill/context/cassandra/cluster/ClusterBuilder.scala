@@ -5,7 +5,6 @@ import scala.util.Try
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigValueType
 import java.lang.reflect.Method
-import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
 import com.datastax.driver.core.Cluster
 
@@ -15,7 +14,7 @@ object ClusterBuilder {
     set(Cluster.builder, cfg)
 
   private def set[T](instance: T, cfg: Config): T = {
-    for (key <- cfg.entrySet.map(_.getKey.split('.').head)) {
+    for (key <- cfg.entrySet.asScala.map(_.getKey.split('.').head)) {
 
       def tryMethod(m: Method) =
         m.getParameterTypes.toList match {

@@ -241,14 +241,19 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
     "-encoding", "UTF-8",
     "-feature",
     "-unchecked",
-    "-Xlint",
     "-Yno-adapted-args",
     "-Ywarn-dead-code",
     "-Ywarn-numeric-widen",
     "-Ywarn-value-discard",
-    "-Xfuture",
-    "-Ywarn-unused-import"
+    "-Xfuture"
   ),
+  scalacOptions ++= {
+    CrossVersion.partialVersion(scalaVersion.value) match {
+      case Some((2, 11)) => Seq("-Xlint", "-Ywarn-unused-import")
+      case Some((2, 12)) => Seq("-Xlint:-unused,_", "-Ywarn-unused:imports")
+      case _ => Seq()
+    }
+  },
   concurrentRestrictions in Global += Tags.limit(Tags.Test, 1),
   releasePublishArtifactsAction := PgpKeys.publishSigned.value,
   scoverage.ScoverageKeys.coverageMinimum := 96,
@@ -318,10 +323,4 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
         <url>http://github.com/fwbrasil/</url>
       </developer>
     </developers>)
-) ++ update2_12
-
-lazy val update2_12 = Seq(
-  scalacOptions -= (
-    if (scalaVersion.value.startsWith("2.12.")) "-Xfatal-warnings" else ""
-  )
 )
