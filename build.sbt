@@ -38,7 +38,7 @@ lazy val `quill-core` =
       "org.scala-lang"             %  "scala-reflect" % scalaVersion.value
     ))
     .jsSettings(
-      libraryDependencies += "org.scala-js" %%% "scalajs-java-time" % "0.2.0",
+      libraryDependencies += "org.scala-js" %%% "scalajs-java-time" % "0.2.1",
       coverageExcludedPackages := ".*"
     )
 
@@ -65,9 +65,9 @@ lazy val `quill-jdbc` =
       fork in Test := true,
       libraryDependencies ++= Seq(
         "com.zaxxer"     % "HikariCP"             % "2.6.1",
-        "mysql"          % "mysql-connector-java" % "5.1.41"   % Test,
-        "com.h2database" % "h2"                   % "1.4.194"  % Test,
-        "org.postgresql" % "postgresql"           % "42.0.0" % Test,
+        "mysql"          % "mysql-connector-java" % "5.1.42"   % Test,
+        "com.h2database" % "h2"                   % "1.4.195"  % Test,
+        "org.postgresql" % "postgresql"           % "42.1.1" % Test,
         "org.xerial"     % "sqlite-jdbc"          % "3.8.11.2" % Test
       )
     )
@@ -141,7 +141,7 @@ lazy val `quill-cassandra` =
       fork in Test := true,
       libraryDependencies ++= Seq(
         "com.datastax.cassandra" %  "cassandra-driver-core" % "3.2.0",
-        "io.monix"               %% "monix"                 % "2.2.4"
+        "io.monix"               %% "monix"                 % "2.3.0"
       )
     )
     .dependsOn(`quill-core-jvm` % "compile->compile;test->test")
@@ -226,7 +226,7 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
   crossScalaVersions := Seq("2.11.11","2.12.2"),
   libraryDependencies ++= Seq(
     "org.scalamacros" %% "resetallattrs"  % "1.0.0",
-    "org.scalatest"   %%% "scalatest"     % "3.0.1"     % Test,
+    "org.scalatest"   %%% "scalatest"     % "3.0.3"     % Test,
     "ch.qos.logback"  % "logback-classic" % "1.2.3"     % Test,
     "com.google.code.findbugs" % "jsr305" % "3.0.2"     % Provided // just to avoid warnings during compilation
   ),

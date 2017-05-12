@@ -227,6 +227,8 @@ trait Parsing {
         tree match {
           case q"$a.$b" =>
             path(a) :+ b.decodedName.toString
+          case q"$a.$b.map[$_]((..$_) => $_.$c)" =>
+            path(a) ++ List(b.decodedName.toString, c.decodedName.toString)
           case _ =>
             Nil
         }
