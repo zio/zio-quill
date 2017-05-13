@@ -26,11 +26,11 @@ then
 	elif [[ $TRAVIS_BRANCH == "master" ]]
 	then
 		sbt clean ++2.12.2 test ++2.11.11 coverage test tut coverageReport coverageAggregate checkUnformattedFiles
-		sbt coverageOff publish
+		sbt coverageOff +publish
 	else
 		sbt clean ++2.12.2 test ++2.11.11 coverage test tut coverageReport coverageAggregate checkUnformattedFiles
 		echo "version in ThisBuild := \"$TRAVIS_BRANCH-SNAPSHOT\"" > version.sbt
-		sbt coverageOff publish
+		sbt coverageOff +publish
 	fi
 else
 	sbt clean ++2.12.2 test ++2.11.11 coverage test tut coverageReport coverageAggregate checkUnformattedFiles
