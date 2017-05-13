@@ -1222,7 +1222,7 @@ sbt dependencies
 ```
 libraryDependencies ++= Seq(
   "mysql" % "mysql-connector-java" % "5.1.38",
-  "io.getquill" %% "quill-jdbc" % "1.2.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "1.2.1"
 )
 ```
 
@@ -1249,7 +1249,7 @@ sbt dependencies
 ```
 libraryDependencies ++= Seq(
   "org.postgresql" % "postgresql" % "9.4.1208",
-  "io.getquill" %% "quill-jdbc" % "1.2.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "1.2.1"
 )
 ```
 
@@ -1275,7 +1275,7 @@ sbt dependencies
 ```
 libraryDependencies ++= Seq(
   "org.xerial" % "sqlite-jdbc" % "3.8.11.2",
-  "io.getquill" %% "quill-jdbc" % "1.2.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "1.2.1"
 )
 ```
 
@@ -1296,7 +1296,7 @@ sbt dependencies
 ```
 libraryDependencies ++= Seq(
   "com.h2database" % "h2" % "1.4.192",
-  "io.getquill" %% "quill-jdbc" % "1.2.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "1.2.1"
 )
 ```
 
@@ -1356,7 +1356,7 @@ Note that the global execution context is renamed to ec.
 sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async-mysql" % "1.2.1-SNAPSHOT"
+  "io.getquill" %% "quill-async-mysql" % "1.2.1"
 )
 ```
 
@@ -1385,7 +1385,7 @@ ctx.sslrootcert=./path/to/cert/file # optional, required for sslmode=verify-ca o
 sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async-postgres" % "1.2.1-SNAPSHOT"
+  "io.getquill" %% "quill-async-postgres" % "1.2.1"
 )
 ```
 
@@ -1427,7 +1427,7 @@ The body of `transaction` can contain calls to other methods and multiple `run` 
 sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-finagle-mysql" % "1.2.1-SNAPSHOT"
+  "io.getquill" %% "quill-finagle-mysql" % "1.2.1"
 )
 ```
 
@@ -1467,7 +1467,7 @@ The body of `transaction` can contain calls to other methods and multiple `run` 
 sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-finagle-postgres" % "1.2.1-SNAPSHOT"
+  "io.getquill" %% "quill-finagle-postgres" % "1.2.1"
 )
 ```
 
@@ -1495,7 +1495,7 @@ Cassandra Contexts
 sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-cassandra" % "1.2.1-SNAPSHOT"
+  "io.getquill" %% "quill-cassandra" % "1.2.1"
 )
 ```
 
