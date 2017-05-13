@@ -51,6 +51,7 @@ sbt:
     - ./:/app
     - ~/.ivy2:/root/.ivy2
     - ~/.m2:/root/.m2
+    - ~/.sbt/boot:/root/.sbt/boot
     - ~/.ssh/:/root/.ssh/
   environment:
     - TRAVIS_PULL_REQUEST

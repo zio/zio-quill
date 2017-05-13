@@ -13,6 +13,7 @@ after_success:
 cache:
   directories:
   - $HOME/.ivy2/cache
+  - $HOME/.m2
   - $HOME/.sbt/boot/
 sudo: false
 env:
