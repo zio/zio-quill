@@ -1,3 +1,11 @@
+# 1.2.0
+
+- [upgrade finagle-postgres to 0.4.2](https://github.com/getquill/quill/pull/759)
+- [add collections support for row elements (SQL Arrays, Cassandra Collection)](https://github.com/getquill/quill/pull/758)
+- [allow querySchema/schemaMeta to rename optional embedded case classes](https://github.com/getquill/quill/pull/767)
+- [make Quill compatible with Scala 2.12.2](https://github.com/getquill/quill/pull/770)
+- [upgrade finagle-mysql to 6.44.0](https://github.com/getquill/quill/pull/772)
+
 # 1.1.1
 
 **see migration notes below**
