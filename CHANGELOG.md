@@ -1,4 +1,4 @@
-# 1.2.0
+# 1.2.1
 
 - [upgrade finagle-postgres to 0.4.2](https://github.com/getquill/quill/pull/759)
 - [add collections support for row elements (SQL Arrays, Cassandra Collection)](https://github.com/getquill/quill/pull/758)
