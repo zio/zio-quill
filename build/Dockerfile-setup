@@ -1,10 +1,17 @@
-FROM alpine:3.5
+FROM debian:jessie
 MAINTAINER gustavo.amigo@gmail.com
 
-RUN apk update; apk add postgresql-client mysql-client curl python tar sqlite
+RUN apt-get update; DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    ca-certificates \
+    curl \
+    mysql-client \
+    netcat \
+    postgresql-client \
+    python \
+    sqlite3 \
+    tar
 
-RUN  mkdir /opt; \
-     cd /opt ; \
+RUN  cd /opt ; \
      curl http://archive.apache.org/dist/cassandra/3.7/apache-cassandra-3.7-bin.tar.gz | tar zx
 
 RUN rm /opt/apache-cassandra-3.7/lib/cassandra-driver-internal-only*

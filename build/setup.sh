@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 DB_FILE=quill_test.db
 
@@ -40,13 +40,12 @@ psql -h postgres -U postgres -c "CREATE DATABASE quill_test"
 psql -h postgres -U postgres -d quill_test -a -f quill-sql/src/test/sql/postgres-schema.sql
 
 echo "Waiting for Cassandra"
-if ! nc -z cassandra 9042; then
-    while ! nc -z cassandra 9042; do
-       printf "."
-       sleep 1
-    done
-    echo -e "\nCassandra ready"
-fi
+until nc -z cassandra 9042
+do
+  printf "."
+  sleep 1
+done
+echo -e "\nCassandra ready"
 
 echo "CREATE KEYSPACE quill_test WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};" > /tmp/create-keyspace.cql
 cqlsh cassandra -f /tmp/create-keyspace.cql
