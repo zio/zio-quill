@@ -61,3 +61,6 @@ services:
       - TRAVIS_BRANCH
       - ENCRYPTION_PASSWORD
       - SBT_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005 -Dfile.encoding=UTF-8 -Xms512m -Xmx1536m -Xss2m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC
+      - POSTGRES_HOST=postgres
+      - MYSQL_HOST=mysql
+      - CASSANDRA_HOST=cassandra

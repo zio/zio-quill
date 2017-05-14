@@ -107,12 +107,12 @@ docker-compose stop && docker-compose rm && docker-compose run --rm --service-po
 After that, we need to set some environment variables in order to run `sbt` locally.  
 
 ```
-export CASSANDRA_PORT_9042_TCP_ADDR=<docker host address>
-export CASSANDRA_PORT_9042_TCP_PORT=19042 
-export MYSQL_PORT_3306_TCP_ADDR=<docker host address>
-export MYSQL_PORT_3306_TCP_PORT=13306 
-export POSTGRES_PORT_5432_TCP_ADDR=<docker host address> 
-export POSTGRES_PORT_5432_TCP_PORT=15432
+export CASSANDRA_HOST=<docker host address>
+export CASSANDRA_PORT=19042
+export MYSQL_HOST=<docker host address>
+export MYSQL_PORT=13306
+export POSTGRES_HOST=<docker host address>
+export POSTGRES_PORT=15432
 ```
 
 For Mac users, the docker host address is the address of the [docker-machine](https://docs.docker.com/machine/),
@@ -122,23 +122,23 @@ is your localhost.
 Therefore, for Mac users the environment variables should be:
 
 ```
-export CASSANDRA_PORT_9042_TCP_ADDR=192.168.99.100
-export CASSANDRA_PORT_9042_TCP_PORT=19042 
-export MYSQL_PORT_3306_TCP_ADDR=192.168.99.100
-export MYSQL_PORT_3306_TCP_PORT=13306 
-export POSTGRES_PORT_5432_TCP_ADDR=192.168.99.100 
-export POSTGRES_PORT_5432_TCP_PORT=15432
+export CASSANDRA_HOST=192.168.99.100
+export CASSANDRA_PORT=19042
+export MYSQL_HOST=192.168.99.100
+export MYSQL_PORT=13306
+export POSTGRES_HOST=192.168.99.100
+export POSTGRES_PORT=15432
 ```
 
 For Linux users, the environment variables should be:
 
 ```
-export CASSANDRA_PORT_9042_TCP_ADDR=127.0.0.1
-export CASSANDRA_PORT_9042_TCP_PORT=19042 
-export MYSQL_PORT_3306_TCP_ADDR=127.0.0.1
-export MYSQL_PORT_3306_TCP_PORT=13306 
-export POSTGRES_PORT_5432_TCP_ADDR=127.0.0.1 
-export POSTGRES_PORT_5432_TCP_PORT=15432
+export CASSANDRA_HOST=127.0.0.1
+export CASSANDRA_PORT=19042
+export MYSQL_HOST=127.0.0.1
+export MYSQL_PORT=13306
+export POSTGRES_HOST=127.0.0.1
+export POSTGRES_PORT=15432
 ```
 
 Finally, you can use `sbt` locally.
