@@ -62,5 +62,8 @@ services:
       - ENCRYPTION_PASSWORD
       - SBT_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005 -Dfile.encoding=UTF-8 -Xms512m -Xmx1536m -Xss2m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC
       - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
       - MYSQL_HOST=mysql
+      - MYSQL_PORT=3306
       - CASSANDRA_HOST=cassandra
+      - CASSANDRA_PORT=9042
