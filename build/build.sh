@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
 set -e # Any subsequent(*) commands which fail will cause the shell script to exit immediately
 chown root ~/.ssh/config
 chmod 644 ~/.ssh/config
