@@ -2,31 +2,32 @@
 
 Instructions on how to contribute to Quill project.
 
-## Building the project
+## Building the project using Docker
 
 The only dependency you need to build Quill locally is [Docker](https://www.docker.com/).
-Instructions on how to install Docker can be found in this [page](https://docs.docker.com/mac/).
+Instructions on how to install Docker can be found [here](https://docs.docker.com/engine/installation/).
 
 If you are running Linux, you should also install Docker Compose separately, as described
 [here](https://docs.docker.com/compose/install/).
 
-After installing Docker and Docker Compose, you have to run the command bellow in
-order to setup the databases' schemas. If you don't change any schemas, you will
-only need to do this once.
+After installing Docker and Docker Compose you have to setup databases:
 
-```
+```bash
 docker-compose run --rm setup
 ```
 
-After that, just run the command bellow to build and test the project.
+When running the first time docker will also build images. To skip building you can pull images from Docker Hub before executing the above setup command:
 
+```bash
+docker-compose pull
 ```
+
+
+After that you are ready to build and test the project.
+
+```bash
 docker-compose run --rm sbt sbt test
 ```
-
-### Improve build performance with Docker *(for Mac users only)*
-
-Use [Docker for mac](https://docs.docker.com/engine/installation/mac/#/docker-for-mac).
 
 ## Building Scala.js targets
 
@@ -35,11 +36,18 @@ The CI build also sets this `project quill-with-js` to force the Scala.js compil
 
 ## Changing database schema
 
-If you have changed any file that creates a database schema, you will
-have to setup the databases again. To do this, just run the command bellow.
+If any file that creates a database schema was changed then you have to setup the databases again:
 
+```bash
+docker-compose down && docker-compose run --rm setup
 ```
-docker-compose stop && docker-compose rm && docker-compose run --rm setup
+
+## Changing docker configuration
+
+If `build/Dockerfile-sbt`, `build/Dockerfile-setup`, `docker-compose.yml` or any file used by them was changed then you have to rebuild docker images and to setup the databases again:
+
+```bash
+docker-compose down && docker-compose build && docker-compose run --rm setup
 ```
 
 ## Tests
@@ -47,35 +55,35 @@ docker-compose stop && docker-compose rm && docker-compose run --rm setup
 ### Running tests
 
 Run all tests:
-```
+```bash
 docker-compose run --rm sbt sbt test
 ```
 
 Run specific test:
-```
+```bash
 docker-compose run --rm sbt sbt "test-only io.getquill.context.sql.SqlQuerySpec"
 ```
 
 Run all tests in specific sub-project:
-```
+```bash
 docker-compose run --rm sbt sbt "project quill-async" test
 ```
 
 Run specific test in specific sub-project:
-```
+```bash
 docker-compose run --rm sbt sbt "project quill-sqlJVM" "test-only io.getquill.context.sql.SqlQuerySpec"
 ```
 
 ### Debugging tests
 1. Run sbt in interactive mode with docker container ports mapped to the host: 
-```
+```bash
 docker-compose run --service-ports --rm sbt
 ```
 
 2. Attach debugger to port 15005 of your docker host. In IntelliJ IDEA you should create Remote Run/Debug Configuration, 
 change it port to 15005.
 3. In sbt command line run tests with `test` or test specific spec by passing full name to `test-only`:
-```
+```bash
 > test-only io.getquill.context.sql.SqlQuerySpec
 ```
 
@@ -96,17 +104,17 @@ In order to contribute to the project, just do as follows:
 [Scalariform](http://mdr.github.io/scalariform/) is used as file formatting tool in this project.
 Every time you compile the project in sbt, file formatting will be triggered.
 
-## Building locally without Docker
+## Building locally using Docker only for databases
 
-Run the following command, it will restart your database service with database ports exposed to your host machine. 
+To restart your database service with database ports exposed to your host machine run:
 
+```bash
+docker-compose down && docker-compose run --rm --service-ports setup
 ```
-docker-compose stop && docker-compose rm && docker-compose run --rm --service-ports setup
-```
 
-After that, we need to set some environment variables in order to run `sbt` locally.  
+After that we need to set some environment variables in order to run `sbt` locally.
 
-```
+```bash
 export CASSANDRA_HOST=<docker host address>
 export CASSANDRA_PORT=19042
 export MYSQL_HOST=<docker host address>
@@ -115,30 +123,6 @@ export POSTGRES_HOST=<docker host address>
 export POSTGRES_PORT=15432
 ```
 
-For Mac users, the docker host address is the address of the [docker-machine](https://docs.docker.com/machine/),
-it's usually 192.168.99.100. You can check it by running `docker-machine ps`. For Linux users, the host address
-is your localhost.
-
-Therefore, for Mac users the environment variables should be:
-
-```
-export CASSANDRA_HOST=192.168.99.100
-export CASSANDRA_PORT=19042
-export MYSQL_HOST=192.168.99.100
-export MYSQL_PORT=13306
-export POSTGRES_HOST=192.168.99.100
-export POSTGRES_PORT=15432
-```
-
-For Linux users, the environment variables should be:
-
-```
-export CASSANDRA_HOST=127.0.0.1
-export CASSANDRA_PORT=19042
-export MYSQL_HOST=127.0.0.1
-export MYSQL_PORT=13306
-export POSTGRES_HOST=127.0.0.1
-export POSTGRES_PORT=15432
-```
+If you run docker locally then usually docker host address is `localhost` or `127.0.0.1`.
 
 Finally, you can use `sbt` locally.
