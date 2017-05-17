@@ -1,3 +1,4 @@
+language: generic
 services:
   - docker
 branches:
