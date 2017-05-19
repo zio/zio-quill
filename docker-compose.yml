@@ -65,6 +65,7 @@ services:
       - postgres:postgres
       - mysql:mysql
       - cassandra:cassandra
+      - sqlserver:sqlserver
     volumes:
       - ./:/app
       - ~/.ivy2:/root/.ivy2
