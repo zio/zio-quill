@@ -10,11 +10,11 @@ lazy val `quill` =
     .dependsOn(
       `quill-core-jvm`, `quill-core-js`, `quill-sql-jvm`, `quill-sql-js`,
       `quill-jdbc`, `quill-finagle-mysql`, `quill-finagle-postgres`, `quill-async`,
-      `quill-async-mysql`, `quill-async-postgres`, `quill-cassandra`, `quill-sqlserver`
+      `quill-async-mysql`, `quill-async-postgres`, `quill-cassandra`
     ).aggregate(
       `quill-core-jvm`, `quill-core-js`, `quill-sql-jvm`, `quill-sql-js`,
       `quill-jdbc`, `quill-finagle-mysql`, `quill-finagle-postgres`, `quill-async`,
-      `quill-async-mysql`, `quill-async-postgres`, `quill-cassandra`, `quill-sqlserver`
+      `quill-async-mysql`, `quill-async-postgres`, `quill-cassandra`
     )
 
 lazy val superPure = new org.scalajs.sbtplugin.cross.CrossType {
@@ -64,26 +64,15 @@ lazy val `quill-jdbc` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.zaxxer"     % "HikariCP"             % "2.6.1",
-        "mysql"          % "mysql-connector-java" % "5.1.42"   % Test,
-        "com.h2database" % "h2"                   % "1.4.195"  % Test,
-        "org.postgresql" % "postgresql"           % "42.1.1" % Test,
-        "org.xerial"     % "sqlite-jdbc"          % "3.8.11.2" % Test
+        "com.zaxxer"              % "HikariCP"             % "2.6.1",
+        "mysql"                   % "mysql-connector-java" % "5.1.42"     % Test,
+        "com.h2database"          % "h2"                   % "1.4.195"    % Test,
+        "org.postgresql"          % "postgresql"           % "42.1.1"     % Test,
+        "org.xerial"              % "sqlite-jdbc"          % "3.8.11.2"   % Test,
+        "com.microsoft.sqlserver" % "mssql-jdbc"           % "6.1.0.jre8" % Test
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
-
-lazy val `quill-sqlserver` =
-  (project in file("quill-sqlserver"))
-    .settings(commonSettings: _*)
-    .settings(mimaSettings: _*)
-    .settings(
-      fork in Test := true,
-      libraryDependencies ++= Seq(
-        "com.microsoft.sqlserver" % "mssql-jdbc" % "6.1.0.jre8" % Test
-      )
-    )
-    .dependsOn(`quill-jdbc` % "compile->compile;test->test")
 
 lazy val `quill-finagle-mysql` =
   (project in file("quill-finagle-mysql"))
