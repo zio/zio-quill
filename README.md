@@ -1313,10 +1313,6 @@ ctx.dataSource.url=jdbc:h2:mem:yourdbname
 ctx.dataSource.user=sa
 ```
 
-##### quill-sqlserver
-
-`quill-sqlserver` follows the same definitions of `quill-jdbc`, it is in a different project for organization purposes.
-
 **SQL Server**
 
 sbt dependencies
