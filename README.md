@@ -1152,12 +1152,13 @@ lazy val ctx = new MysqlJdbcContext[SnakeCase]("ctx")
 
 The SQL dialect to be used by the context is defined by the first type parameter. Some context types are specific to a database and thus not require it.
 
-Quill has three built-in dialects:
+Quill has five built-in dialects:
 
 - `io.getquill.H2Dialect`
 - `io.getquill.MySQLDialect`
 - `io.getquill.PostgresDialect`
 - `io.getquill.SqliteDialect`
+- `io.getquill.SQLServerDialect`
 
 #### Naming strategy
 
@@ -1310,6 +1311,31 @@ application.properties
 ctx.dataSourceClassName=org.h2.jdbcx.JdbcDataSource
 ctx.dataSource.url=jdbc:h2:mem:yourdbname
 ctx.dataSource.user=sa
+```
+
+**SQL Server**
+
+sbt dependencies
+```
+libraryDependencies ++= Seq(
+  "com.microsoft.sqlserver" % "mssql-jdbc" % "6.1.0.jre8",
+  "io.getquill" %% "quill-sqlserver" % "1.1.1-SNAPSHOT"
+)
+```
+
+context definition
+```scala
+lazy val ctx = new SqlServerJdbcContext[SnakeCase]("ctx")
+```
+
+application.properties
+```
+ctx.dataSourceClassName=com.microsoft.sqlserver.jdbc.SQLServerDataSource
+ctx.dataSource.user=user
+ctx.dataSource.password=YourStrongPassword
+ctx.dataSource.databaseName=database
+ctx.dataSource.portNumber=1433
+ctx.dataSource.serverName=host
 ```
 
 ##### quill-async
