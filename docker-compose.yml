@@ -1,4 +1,4 @@
-version: '3.2'
+version: '2'
 
 services:
   postgres:
@@ -36,8 +36,6 @@ services:
 
   setup:
     build:
-      cache_from:
-        - quillscala/setup:latest
       context: .
       dockerfile: ./build/Dockerfile-setup
     image: quillscala/setup
@@ -53,8 +51,6 @@ services:
 
   sbt:
     build:
-      cache_from:
-        - quillscala/sbt:latest
       context: .
       dockerfile: ./build/Dockerfile-sbt
     image: quillscala/sbt
