@@ -1,5 +1,6 @@
 package io.getquill.context.cassandra.encoding
 
+import com.datastax.driver.core.LocalDate
 import java.util.{ Date, UUID }
 
 import com.datastax.driver.core.LocalDate
