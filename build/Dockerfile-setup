@@ -18,8 +18,7 @@ RUN echo "deb http://deb.debian.org/debian stretch main" > /etc/apt/sources.list
     curl https://packages.microsoft.com/config/ubuntu/16.04/prod.list | tee /etc/apt/sources.list.d/msprod.list && \
     apt-get update && ACCEPT_EULA=Y apt-get install -y \
     msodbcsql=13.1.4.0-1 \
-    mssql-tools \
-    unixodbc-dev
+    mssql-tools
 
 RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
     echo 'LANG="en_US.UTF-8"'>/etc/default/locale && \

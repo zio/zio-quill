@@ -5,16 +5,11 @@ branches:
   except:
     - release
     - website
-before_install:
-  - ./build/update_docker.sh
-  - ./build/update_docker-compose.sh
 before_script:
-  - ./build/pull_docker_images.sh
   - travis_retry docker-compose run setup
 script:
   - docker-compose run sbt bash -c "./build/build.sh"
 after_success:
-  - ./build/push_docker_images.sh
   - pip install --user codecov && codecov
 before_cache:
   - ./build/cleanup_cache.sh

@@ -1,4 +1,4 @@
-version: '3.2'
+version: '2'
 
 services:
   postgres:
@@ -29,15 +29,13 @@ services:
   sqlserver:
     image: microsoft/mssql-server-linux
     ports:
-      - "1433:1433"
+      - "11433:1433"
     environment:
       - ACCEPT_EULA=Y
       - SA_PASSWORD=QuillRocks!
 
   setup:
     build:
-      cache_from:
-        - quillscala/setup:latest
       context: .
       dockerfile: ./build/Dockerfile-setup
     image: quillscala/setup
@@ -53,8 +51,6 @@ services:
 
   sbt:
     build:
-      cache_from:
-        - quillscala/sbt:latest
       context: .
       dockerfile: ./build/Dockerfile-sbt
     image: quillscala/sbt
@@ -82,5 +78,7 @@ services:
       - POSTGRES_PORT=5432
       - MYSQL_HOST=mysql
       - MYSQL_PORT=3306
+      - SQL_SERVER_HOST=sqlserver
+      - SQL_SERVER_PORT=1433
       - CASSANDRA_HOST=cassandra
       - CASSANDRA_PORT=9042
