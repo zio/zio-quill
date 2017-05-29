@@ -58,7 +58,7 @@ trait FinagleMysqlEncoders {
     (d: LocalDate) => DateValue(java.sql.Date.valueOf(d)): Parameter
   }
   implicit val localDateTimeEncoder: Encoder[LocalDateTime] = encoder[LocalDateTime] {
-    (d: LocalDateTime) => timestampValue(Timestamp.valueOf(d)): Parameter
+    (d: LocalDateTime) => timestampValue(new Timestamp(d.atZone(injectionTimeZone.toZoneId).toInstant.toEpochMilli)): Parameter
   }
   implicit val uuidEncoder: Encoder[UUID] = mappedEncoder(MappedEncoding(_.toString), stringEncoder)
 }

@@ -5,7 +5,7 @@ import java.time.{ LocalDate, LocalDateTime }
 import io.getquill.context.sql.EncodingSpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{ Await, ExecutionContext }
+import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 import java.util.Date
 
@@ -143,7 +143,7 @@ class MysqlAsyncEncodingSpec extends EncodingSpec {
 
   "encodes custom type inside singleton object" in {
     object Singleton {
-      def apply()(implicit c: TestContext, ec: ExecutionContext) = {
+      def apply()(implicit c: TestContext) = {
         import c._
         for {
           _ <- c.run(query[EncodingTestEntity].delete)

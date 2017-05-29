@@ -86,3 +86,54 @@ CREATE TABLE TestEntity3(
     i INT,
     l BIGINT
 );
+
+CREATE TABLE ListsEntity(
+    id INT PRIMARY KEY,
+    texts LIST<VARCHAR>,
+    decimals LIST<DECIMAL>,
+    bools LIST<BOOLEAN>,
+    ints LIST<INT>,
+    longs LIST<BIGINT>,
+    floats LIST<FLOAT>,
+    doubles LIST<DOUBLE>,
+    blobs LIST<BLOB>,
+    dates LIST<DATE>,
+    timestamps LIST<TIMESTAMP>,
+    uuids LIST<UUID>
+);
+
+CREATE TABLE ListFrozen(
+    id frozen <LIST<INT>> PRIMARY KEY
+);
+
+CREATE TABLE SetsEntity(
+    id INT PRIMARY KEY,
+    texts SET<VARCHAR>,
+    decimals SET<DECIMAL>,
+    bools SET<BOOLEAN>,
+    ints SET<INT>,
+    longs SET<BIGINT>,
+    floats SET<FLOAT>,
+    doubles SET<DOUBLE>,
+    blobs SET<BLOB>,
+    dates SET<DATE>,
+    timestamps SET<TIMESTAMP>,
+    uuids SET<UUID>
+);
+
+CREATE TABLE SetFrozen(
+    id frozen <SET<INT>> PRIMARY KEY
+);
+
+CREATE TABLE MapsEntity(
+    id INT PRIMARY KEY,
+    textDecimal MAP<VARCHAR, DECIMAL>,
+    intDouble MAP<INT, DOUBLE>,
+    longFloat MAP<BIGINT, FLOAT>,
+    boolDate MAP<BOOLEAN, DATE>,
+    uuidTimestamp MAP<UUID, TIMESTAMP>
+);
+
+CREATE TABLE MapFrozen(
+    id frozen <MAP<INT, BOOLEAN>> PRIMARY KEY
+);

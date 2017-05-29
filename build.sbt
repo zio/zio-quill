@@ -38,7 +38,7 @@ lazy val `quill-core` =
       "org.scala-lang"             %  "scala-reflect" % scalaVersion.value
     ))
     .jsSettings(
-      libraryDependencies += "org.scala-js" %%% "scalajs-java-time" % "0.2.0",
+      libraryDependencies += "org.scala-js" %%% "scalajs-java-time" % "0.2.1",
       coverageExcludedPackages := ".*"
     )
 
@@ -64,11 +64,12 @@ lazy val `quill-jdbc` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.zaxxer"     % "HikariCP"             % "2.6.0",
-        "mysql"          % "mysql-connector-java" % "5.1.40"   % Test,
-        "com.h2database" % "h2"                   % "1.4.193"  % Test,
-        "org.postgresql" % "postgresql"           % "9.4.1212" % Test,
-        "org.xerial"     % "sqlite-jdbc"          % "3.8.11.2" % Test
+        "com.zaxxer"              % "HikariCP"             % "2.6.1",
+        "mysql"                   % "mysql-connector-java" % "5.1.42"             % Test,
+        "com.h2database"          % "h2"                   % "1.4.195"            % Test,
+        "org.postgresql"          % "postgresql"           % "42.1.1"             % Test,
+        "org.xerial"              % "sqlite-jdbc"          % "3.8.11.2"           % Test,
+        "com.microsoft.sqlserver" % "mssql-jdbc"           % "6.1.7.jre8-preview" % Test
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -80,7 +81,7 @@ lazy val `quill-finagle-mysql` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.twitter" %% "finagle-mysql" % "6.43.0"
+        "com.twitter" %% "finagle-mysql" % "6.44.0"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -92,7 +93,7 @@ lazy val `quill-finagle-postgres` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "io.github.finagle" %% "finagle-postgres" % "0.3.2"
+        "io.github.finagle" %% "finagle-postgres" % "0.4.2"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -140,8 +141,8 @@ lazy val `quill-cassandra` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.datastax.cassandra" %  "cassandra-driver-core" % "3.1.3",
-        "io.monix"               %% "monix"                 % "2.2.1"
+        "com.datastax.cassandra" %  "cassandra-driver-core" % "3.2.0",
+        "io.monix"               %% "monix"                 % "2.3.0"
       )
     )
     .dependsOn(`quill-core-jvm` % "compile->compile;test->test")
@@ -222,12 +223,13 @@ def updateWebsiteTag =
 
 lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
   organization := "io.getquill",
-  scalaVersion := "2.11.8",
+  scalaVersion := "2.11.11",
+  crossScalaVersions := Seq("2.11.11","2.12.2"),
   libraryDependencies ++= Seq(
     "org.scalamacros" %% "resetallattrs"  % "1.0.0",
-    "org.scalatest"   %%% "scalatest"     % "3.0.1"     % Test,
-    "ch.qos.logback"  % "logback-classic" % "1.1.9"     % Test,
-    "com.google.code.findbugs" % "jsr305" % "3.0.1"     % Provided // just to avoid warnings during compilation
+    "org.scalatest"   %%% "scalatest"     % "3.0.3"     % Test,
+    "ch.qos.logback"  % "logback-classic" % "1.2.3"     % Test,
+    "com.google.code.findbugs" % "jsr305" % "3.0.2"     % Provided // just to avoid warnings during compilation
   ),
   EclipseKeys.createSrc := EclipseCreateSrc.Default,
   unmanagedClasspath in Test ++= Seq(
@@ -240,14 +242,19 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
     "-encoding", "UTF-8",
     "-feature",
     "-unchecked",
-    "-Xlint",
     "-Yno-adapted-args",
     "-Ywarn-dead-code",
     "-Ywarn-numeric-widen",
     "-Ywarn-value-discard",
-    "-Xfuture",
-    "-Ywarn-unused-import"
+    "-Xfuture"
   ),
+  scalacOptions ++= {
+    CrossVersion.partialVersion(scalaVersion.value) match {
+      case Some((2, 11)) => Seq("-Xlint", "-Ywarn-unused-import")
+      case Some((2, 12)) => Seq("-Xlint:-unused,_", "-Ywarn-unused:imports")
+      case _ => Seq()
+    }
+  },
   concurrentRestrictions in Global += Tags.limit(Tags.Test, 1),
   releasePublishArtifactsAction := PgpKeys.publishSigned.value,
   scoverage.ScoverageKeys.coverageMinimum := 96,
@@ -280,17 +287,17 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
   },
   pgpSecretRing := file("local.secring.gpg"),
   pgpPublicRing := file("local.pubring.gpg"),
+  releasePublishArtifactsAction := PgpKeys.publishSigned.value,
   releaseProcess := Seq[ReleaseStep](
     checkSnapshotDependencies,
     inquireVersions,
     runClean,
-    runTest,
     setReleaseVersion,
     updateReadmeVersion(_._1),
     commitReleaseVersion,
     updateWebsiteTag,
     tagRelease,
-    ReleaseStep(action = Command.process("publishSigned", _)),
+    publishArtifacts,
     setNextVersion,
     updateReadmeVersion(_._2),
     commitNextVersion,

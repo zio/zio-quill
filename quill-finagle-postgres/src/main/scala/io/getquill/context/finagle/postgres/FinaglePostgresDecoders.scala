@@ -1,8 +1,9 @@
 package io.getquill.context.finagle.postgres
 
-import java.time._
+import java.time.{ LocalDate, LocalDateTime, ZoneId }
 import java.util.{ Date, UUID }
 
+import com.twitter.finagle.postgres.values.ValueDecoder
 import io.getquill.FinaglePostgresContext
 import io.getquill.util.Messages.fail
 
@@ -11,29 +12,34 @@ import scala.reflect.{ ClassTag, classTag }
 trait FinaglePostgresDecoders {
   this: FinaglePostgresContext[_] =>
 
+  import ValueDecoder._
+
   type Decoder[T] = FinanglePostgresDecoder[T]
 
   case class FinanglePostgresDecoder[T](decoder: BaseDecoder[T]) extends BaseDecoder[T] {
-    override def apply(index: Index, row: ResultRow) =
+    override def apply(index: Index, row: ResultRow): T =
       decoder(index, row)
   }
 
   def decoder[T: ClassTag](f: PartialFunction[Any, T]): Decoder[T] =
     FinanglePostgresDecoder((index, row) => {
-      val value = row.vals(index).value
-      f.lift(value).getOrElse(fail(s"Value '$value' at index $index can't be decoded to '${classTag[T].runtimeClass}'"))
+      row.getAnyOption(index) match {
+        case Some(v: T)                  => v
+        case Some(v) if f.isDefinedAt(v) => f(v)
+        case v                           => fail(s"Cannot decode value $v at index $index to ${classTag[T]}")
+      }
     })
 
-  def decoderDirectly[T: ClassTag]: Decoder[T] =
+  implicit def decoderDirectly[T: ClassTag](implicit vd: ValueDecoder[T]): Decoder[T] =
     FinanglePostgresDecoder((index, row) =>
-      row.vals(index).value match {
+      row.get[T](index) match {
         case v: T => v
         case v    => fail(s"Cannot decode value $v at index $index to ${classTag[T]}")
       })
 
   implicit def optionDecoder[T](implicit d: Decoder[T]): Decoder[Option[T]] =
     FinanglePostgresDecoder((index, row) => {
-      if (row.vals == null || row.vals(index) == null) None else Some(d.decoder(index, row))
+      row.getAnyOption(index).map(_ => d.decoder(index, row))
     })
 
   implicit def mappedDecoder[I, O](implicit mapped: MappedEncoding[I, O], d: Decoder[I]): Decoder[O] =

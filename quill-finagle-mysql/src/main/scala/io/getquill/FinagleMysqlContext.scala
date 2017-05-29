@@ -29,8 +29,8 @@ import io.getquill.util.Messages.fail
 
 class FinagleMysqlContext[N <: NamingStrategy](
   client:                                   Client with Transactions,
-  private[getquill] val injectionTimeZone:  TimeZone                 = TimeZone.getDefault,
-  private[getquill] val extractionTimeZone: TimeZone                 = TimeZone.getDefault
+  private[getquill] val injectionTimeZone:  TimeZone,
+  private[getquill] val extractionTimeZone: TimeZone
 )
   extends SqlContext[MySQLDialect, N]
   with FinagleMysqlDecoders
@@ -39,6 +39,15 @@ class FinagleMysqlContext[N <: NamingStrategy](
   def this(config: FinagleMysqlContextConfig) = this(config.client, config.injectionTimeZone, config.extractionTimeZone)
   def this(config: Config) = this(FinagleMysqlContextConfig(config))
   def this(configPrefix: String) = this(LoadConfig(configPrefix))
+
+  def this(client: Client with Transactions, timeZone: TimeZone) = this(client, timeZone, timeZone)
+  def this(config: FinagleMysqlContextConfig, timeZone: TimeZone) = this(config.client, timeZone)
+  def this(config: Config, timeZone: TimeZone) = this(FinagleMysqlContextConfig(config), timeZone)
+  def this(configPrefix: String, timeZone: TimeZone) = this(LoadConfig(configPrefix), timeZone)
+
+  def this(config: FinagleMysqlContextConfig, injectionTimeZone: TimeZone, extractionTimeZone: TimeZone) = this(config.client, injectionTimeZone, extractionTimeZone)
+  def this(config: Config, injectionTimeZone: TimeZone, extractionTimeZone: TimeZone) = this(FinagleMysqlContextConfig(config), injectionTimeZone, extractionTimeZone)
+  def this(configPrefix: String, injectionTimeZone: TimeZone, extractionTimeZone: TimeZone) = this(LoadConfig(configPrefix), injectionTimeZone, extractionTimeZone)
 
   protected val logger: Logger =
     Logger(LoggerFactory.getLogger(classOf[FinagleMysqlContext[_]]))
@@ -65,6 +74,14 @@ class FinagleMysqlContext[N <: NamingStrategy](
 
   private val currentClient = new Local[Client]
 
+  private def mkStringParameter(param: List[Parameter] => List[Parameter]): String = {
+    val paramList = param(List.empty)
+    if (paramList.isEmpty)
+      ""
+    else
+      " : (" + paramList.map(_.value).mkString(",") + ")"
+  }
+
   def probe(sql: String) =
     Try(Await.result(client.query(sql)))
 
@@ -76,7 +93,7 @@ class FinagleMysqlContext[N <: NamingStrategy](
     }
 
   def executeQuery[T](sql: String, prepare: List[Parameter] => List[Parameter] = identity, extractor: Row => T = identity[Row] _): Future[List[T]] = {
-    logger.debug(sql)
+    logger.debug(sql + mkStringParameter(prepare))
     withClient(_.prepare(sql).select(prepare(List()): _*)(extractor)).map(_.toList)
   }
 
@@ -84,13 +101,13 @@ class FinagleMysqlContext[N <: NamingStrategy](
     executeQuery(sql, prepare, extractor).map(handleSingleResult)
 
   def executeAction[T](sql: String, prepare: List[Parameter] => List[Parameter] = identity): Future[Long] = {
-    logger.debug(sql)
+    logger.debug(sql + mkStringParameter(prepare))
     withClient(_.prepare(sql)(prepare(List()): _*))
       .map(r => toOk(r).affectedRows)
   }
 
   def executeActionReturning[T](sql: String, prepare: List[Parameter] => List[Parameter] = identity, extractor: Row => T, returningColumn: String): Future[T] = {
-    logger.debug(sql)
+    logger.debug(sql + mkStringParameter(prepare))
     withClient(_.prepare(sql)(prepare(List()): _*))
       .map(extractReturningValue(_, extractor))
   }
@@ -102,6 +119,7 @@ class FinagleMysqlContext[N <: NamingStrategy](
           prepare.foldLeft(Future.value(List.empty[Long])) {
             case (acc, prepare) =>
               acc.flatMap { list =>
+                logger.debug(sql + mkStringParameter(prepare))
                 executeAction(sql, prepare).map(list :+ _)
               }
           }

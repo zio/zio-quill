@@ -252,26 +252,26 @@ Note that default naming behavior uses the name of the nested case class propert
 
 ```scala
 case class Contact(phone: String, address: String) extends Embedded
-case class Person(id: Int, name: String, homeContact: Contact, workContact: Contact)
+case class Person(id: Int, name: String, homeContact: Contact, workContact: Option[Contact])
 
 val q = quote {
   querySchema[Person](
     "Person",
-    _.homeContact.phone   -> "homePhone",
-    _.homeContact.address -> "homeAdress",
-    _.workContact.phone   -> "workPhone",
-    _.workContact.address -> "workAdress"
+    _.homeContact.phone          -> "homePhone",
+    _.homeContact.address        -> "homeAddress",
+    _.workContact.map(_.phone)   -> "workPhone",
+    _.workContact.map(_.address) -> "workAddress"
   )
 }
 
 ctx.run(q)
-// SELECT x.id, x.name, x.homePhone, x.homeAdress, x.workPhone, x.workAdress FROM Person x
+// SELECT x.id, x.name, x.homePhone, x.homeAddress, x.workPhone, x.workAddress FROM Person x
 ```
 
 Queries
 -------
 
-The overall abstraction of quill queries is use database tables as if they were in-memory collections. Scala for-comprehensions provide syntatic sugar to deal with this kind of monadic operations:
+The overall abstraction of quill queries uses database tables as if they were in-memory collections. Scala for-comprehensions provide syntatic sugar to deal with these kind of monadic operations:
 
 ```scala
 case class Person(id: Int, name: String, age: Int)
@@ -696,6 +696,23 @@ ctx.run(q)
 // SELECT p.id, p.name, p.age FROM Person p WHERE p.name like '%John%'
 ```
 
+SQL-specific encoding
+---------------------
+
+**Arrays**
+
+Quill provides SQL Arrays support. In Scala we represent them as any collection that implements `Seq`:
+```scala
+import java.util.Date
+
+case class Book(id: Int, notes: List[String], pages: Vector[Int], history: Seq[Date])
+
+ctx.run(query[Book])
+// SELECT x.id, x.notes, x.pages, x.history FROM Book x
+```
+Note that not all drivers/databases provides such feature hence only `PostgresJdbcContext` and
+`PostgresAsyncContext` support SQL Arrays.
+
 Cassandra-specific operations
 -----------------------------
 
@@ -813,6 +830,21 @@ val q = quote {
 }
 ctx.run(q)
 // DELETE p.age FROM Person
+```
+
+Cassandra-specific encoding
+---------------------------
+
+**Collections**
+
+Quill provides List, Set and Map encoding:
+```scala
+import java.util.Date
+
+case class Book(id: Int, notes: Set[String], pages: List[Int], history: Map[Date, Boolean])
+
+ctx.run(query[Book])
+// SELECT id, notes, pages, history FROM Book
 ```
 
 Dynamic queries
@@ -935,6 +967,7 @@ import java.util.UUID
 implicit val encodeUUID = MappedEncoding[UUID, String](_.toString)
 implicit val decodeUUID = MappedEncoding[String, UUID](UUID.fromString(_))
 ```
+Note that can it be also used to provide mapping for element types of collection (SQL Arrays or Cassandra Collections).
 
 Raw Encoding
 ------------
@@ -954,6 +987,11 @@ trait UUIDEncodingExample {
   implicit val uuidEncoder: Encoder[UUID] =
     encoder(java.sql.Types.OTHER, (index, value, row) =>
         row.setObject(index, value, java.sql.Types.OTHER)) // database-specific implementation
+
+  // Only for postgres
+  implicit def arrayUUIDEncoder[Col <: Seq[UUID]]: Encoder[Col] = arrayRawEncoder[UUID, Col]("uuid")
+  implicit def arrayUUIDDecoder[Col <: Seq[UUID]](implicit bf: CBF[UUID, Col]): Decoder[Col] =
+    arrayRawDecoder[UUID, Col]
 }
 ```
 
@@ -1114,12 +1152,13 @@ lazy val ctx = new MysqlJdbcContext[SnakeCase]("ctx")
 
 The SQL dialect to be used by the context is defined by the first type parameter. Some context types are specific to a database and thus not require it.
 
-Quill has three built-in dialects:
+Quill has five built-in dialects:
 
 - `io.getquill.H2Dialect`
 - `io.getquill.MySQLDialect`
 - `io.getquill.PostgresDialect`
 - `io.getquill.SqliteDialect`
+- `io.getquill.SQLServerDialect`
 
 #### Naming strategy
 
@@ -1184,7 +1223,7 @@ sbt dependencies
 ```
 libraryDependencies ++= Seq(
   "mysql" % "mysql-connector-java" % "5.1.38",
-  "io.getquill" %% "quill-jdbc" % "1.1.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "1.2.2-SNAPSHOT"
 )
 ```
 
@@ -1211,7 +1250,7 @@ sbt dependencies
 ```
 libraryDependencies ++= Seq(
   "org.postgresql" % "postgresql" % "9.4.1208",
-  "io.getquill" %% "quill-jdbc" % "1.1.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "1.2.2-SNAPSHOT"
 )
 ```
 
@@ -1237,7 +1276,7 @@ sbt dependencies
 ```
 libraryDependencies ++= Seq(
   "org.xerial" % "sqlite-jdbc" % "3.8.11.2",
-  "io.getquill" %% "quill-jdbc" % "1.1.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "1.2.2-SNAPSHOT"
 )
 ```
 
@@ -1258,7 +1297,7 @@ sbt dependencies
 ```
 libraryDependencies ++= Seq(
   "com.h2database" % "h2" % "1.4.192",
-  "io.getquill" %% "quill-jdbc" % "1.1.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "1.2.2-SNAPSHOT"
 )
 ```
 
@@ -1272,6 +1311,31 @@ application.properties
 ctx.dataSourceClassName=org.h2.jdbcx.JdbcDataSource
 ctx.dataSource.url=jdbc:h2:mem:yourdbname
 ctx.dataSource.user=sa
+```
+
+**SQL Server**
+
+sbt dependencies
+```
+libraryDependencies ++= Seq(
+  "com.microsoft.sqlserver" % "mssql-jdbc" % "6.1.7.jre8-preview",
+  "io.getquill" %% "quill-jdbc" % "1.2.2-SNAPSHOT"
+)
+```
+
+context definition
+```scala
+lazy val ctx = new SqlServerJdbcContext[SnakeCase]("ctx")
+```
+
+application.properties
+```
+ctx.dataSourceClassName=com.microsoft.sqlserver.jdbc.SQLServerDataSource
+ctx.dataSource.user=user
+ctx.dataSource.password=YourStrongPassword
+ctx.dataSource.databaseName=database
+ctx.dataSource.portNumber=1433
+ctx.dataSource.serverName=host
 ```
 
 ##### quill-async
@@ -1318,7 +1382,7 @@ Note that the global execution context is renamed to ec.
 sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async-mysql" % "1.1.1-SNAPSHOT"
+  "io.getquill" %% "quill-async-mysql" % "1.2.2-SNAPSHOT"
 )
 ```
 
@@ -1347,7 +1411,7 @@ ctx.sslrootcert=./path/to/cert/file # optional, required for sslmode=verify-ca o
 sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async-postgres" % "1.1.1-SNAPSHOT"
+  "io.getquill" %% "quill-async-postgres" % "1.2.2-SNAPSHOT"
 )
 ```
 
@@ -1389,7 +1453,7 @@ The body of `transaction` can contain calls to other methods and multiple `run` 
 sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-finagle-mysql" % "1.1.1-SNAPSHOT"
+  "io.getquill" %% "quill-finagle-mysql" % "1.2.2-SNAPSHOT"
 )
 ```
 
@@ -1429,7 +1493,7 @@ The body of `transaction` can contain calls to other methods and multiple `run` 
 sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-finagle-postgres" % "1.1.1-SNAPSHOT"
+  "io.getquill" %% "quill-finagle-postgres" % "1.2.2-SNAPSHOT"
 )
 ```
 
@@ -1457,7 +1521,7 @@ Cassandra Contexts
 sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-cassandra" % "1.1.1-SNAPSHOT"
+  "io.getquill" %% "quill-cassandra" % "1.2.2-SNAPSHOT"
 )
 ```
 
@@ -1490,7 +1554,7 @@ ctx.session.withoutJMXReporting=false
 ctx.session.credentials.0=root
 ctx.session.credentials.1=pass
 ctx.session.maxSchemaAgreementWaitSeconds=1
-ctx.session.addressTranslater=com.datastax.driver.core.policies.IdentityTranslater
+ctx.session.addressTranslator=com.datastax.driver.core.policies.IdentityTranslator
 ```
 
 Logging
@@ -1513,6 +1577,7 @@ Templates
 In order to quickly start with Quill, we have setup some template projects:
 
 * [Play Framework with Quill JDBC](https://github.com/getquill/play-quill-jdbc)
+* [Play Framework with Quill async-postgres](https://github.com/jeffmath/play-quill-async-postgres-example)
 
 Slick comparison
 ----------------
@@ -1553,13 +1618,17 @@ Maintainers
 ===========
 
 - @fwbrasil
-- @godenji
 - @gustavoamigo
 - @jilen
-- @lvicentesanchez
+- @mentegy
 - @mxl
 
-You can notify all maintainers using the handle `@getquill/maintainers`.
+Former maintainers:
+
+- @godenji
+- @lvicentesanchez
+
+You can notify all current maintainers using the handle `@getquill/maintainers`.
 
 Acknowledgments
 ===============

@@ -4,13 +4,14 @@ import scala.math.BigDecimal.double2bigDecimal
 import scala.math.BigDecimal.int2bigDecimal
 import scala.math.BigDecimal.javaBigDecimal2bigDecimal
 import scala.math.BigDecimal.long2bigDecimal
-
 import io.getquill.Spec
 import io.getquill.ast.{ Query => _, _ }
 import io.getquill.testContext._
 import io.getquill.context.ValueClass
+import io.getquill.util.Messages
 
 case class CustomAnyValue(i: Int) extends AnyVal
+case class EmbeddedValue(s: String, i: Int) extends Embedded
 
 class QuotationSpec extends Spec {
 
@@ -32,6 +33,20 @@ class QuotationSpec extends Spec {
             querySchema[TestEntity]("SomeAlias", _.s -> "theS", _.i -> "theI")
           }
           quote(unquote(q)).ast mustEqual Entity("SomeAlias", List(PropertyAlias(List("s"), "theS"), PropertyAlias(List("i"), "theI")))
+        }
+        "with embedded property alias" in {
+          case class TestEnt(ev: EmbeddedValue)
+          val q = quote {
+            querySchema[TestEnt]("SomeAlias", _.ev.s -> "theS", _.ev.i -> "theI")
+          }
+          quote(unquote(q)).ast mustEqual Entity("SomeAlias", List(PropertyAlias(List("ev", "s"), "theS"), PropertyAlias(List("ev", "i"), "theI")))
+        }
+        "with embedded option property alias" in {
+          case class TestEnt(ev: Option[EmbeddedValue])
+          val q = quote {
+            querySchema[TestEnt]("SomeAlias", _.ev.map(_.s) -> "theS", _.ev.map(_.i) -> "theI")
+          }
+          quote(unquote(q)).ast mustEqual Entity("SomeAlias", List(PropertyAlias(List("ev", "s"), "theS"), PropertyAlias(List("ev", "i"), "theI")))
         }
         "explicit `Predef.ArrowAssoc`" in {
           val q = quote {
@@ -711,6 +726,7 @@ class QuotationSpec extends Spec {
           quote(unquote(q)).ast match {
             case Function(params, Tuple(values)) =>
               values mustEqual params
+            case _ => Messages.fail("Should not happen")
           }
         }
         "java to scala" in {
@@ -724,6 +740,7 @@ class QuotationSpec extends Spec {
           quote(unquote(q)).ast match {
             case Function(params, Tuple(values)) =>
               values mustEqual params
+            case _ => Messages.fail("Should not happen")
           }
         }
       }
@@ -832,8 +849,8 @@ class QuotationSpec extends Spec {
         l.encoder mustEqual intEncoder
       }
       "property" in {
-        case class Test(a: String)
-        val t = Test("a")
+        case class TestEntity(a: String)
+        val t = TestEntity("a")
         val q = quote(lift(t.a))
 
         val l = q.liftings.`t.a`
@@ -841,8 +858,9 @@ class QuotationSpec extends Spec {
         l.encoder mustEqual stringEncoder
       }
       "abritrary" in {
-        val q = quote(lift(String.valueOf(1)))
-        q.liftings.`java.this.lang.String.valueOf(1)`.value mustEqual String.valueOf(1)
+        class A { def x = 1 }
+        val q = quote(lift(new A().x))
+        q.liftings.`new A().x`.value mustEqual new A().x
       }
       "duplicate" in {
         val i = 1

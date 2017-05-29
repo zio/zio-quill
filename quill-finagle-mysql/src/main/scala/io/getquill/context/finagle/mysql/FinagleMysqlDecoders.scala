@@ -95,7 +95,7 @@ trait FinagleMysqlDecoders {
   }
 
   implicit val localDateTimeDecoder: Decoder[LocalDateTime] = decoder[LocalDateTime] {
-    case `timestampValue`(v) => v.toLocalDateTime
+    case `timestampValue`(v) => v.toInstant.atZone(extractionTimeZone.toZoneId).toLocalDateTime
   }
 
   implicit val uuidDecoder: Decoder[UUID] = mappedDecoder(MappedEncoding(UUID.fromString), stringDecoder)

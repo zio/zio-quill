@@ -229,6 +229,23 @@ class RenamePropertiesSpec extends Spec {
           "SELECT x.bC FROM A x"
       }
     }
+    "query for Option embeddeds" - {
+      "without schema" in {
+        case class B(c1: Int, c2: Int) extends Embedded
+        case class A(b: Option[B])
+        testContext.run(query[A]).string mustEqual
+          "SELECT x.c1, x.c2 FROM A x"
+      }
+      "with schema" in {
+        case class B(c1: Int, c2: Int) extends Embedded
+        case class A(b: Option[B])
+        val q = quote {
+          querySchema[A]("A", _.b.map(_.c1) -> "bC1", _.b.map(_.c2) -> "bC2")
+        }
+        testContext.run(q).string mustEqual
+          "SELECT x.bC1, x.bC2 FROM A x"
+      }
+    }
     "update" - {
       "without schema" in {
         case class B(c: Int) extends Embedded
