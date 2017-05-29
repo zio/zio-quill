@@ -308,9 +308,12 @@ object Phantom extends App {
 Phantom allows the user certain level of composability, but it gets a bit verbose due to the nature of the DSL.
 However, phantom does not encourage this pattern, and instead prefers to allow duplication of queries.
 
-If the concern here is only the amount of typing effort, Quill and Phantom are on par.
+If the concern here is only the amount of typing effort, Quill is marginally less verbose than phantom.
 
 ```scala
+    import scala.concurrent.Future
+    import com.outworkers.phantom.dsl._
+
     def getAllByCountry(country: String): Future[List[WeatherStation]] =
       select.where(_.country eqs country).fetch()
 
