@@ -16,7 +16,7 @@ All examples have been properly tested, and they should work out of the box.
 
 ## Prerequisites ##
 
-The keyspace and column family needed for all examples are defined in this CQL script. This step can be entirely skipped in Phantom were schema is auto-generated.
+The keyspace and column family needed for all examples are defined in this CQL script. This step can be entirely skipped in Phantom were schema is auto-generated from the mapping DSL, and databases can be auto-generated using `database.create`.
 
 ```
 CREATE KEYSPACE IF NOT EXISTS db
@@ -108,7 +108,7 @@ object JavaDriver extends App {
 
 The Java driver requires explicit handling of a `PreparedStatement`s cache to avoid preparing the same statement more that once, that could affect performance.
 
-**Phantom (v2.5.0)**
+**Phantom (v2.9.2)**
 ```
 import com.outworkers.phantom.dsl._
 
@@ -124,13 +124,13 @@ object Phantom extends App {
     value: Int
   )
 
-  abstract class WeatherStationCF extends CassandraTable[WeatherStationCF, WeatherStation] with RootConnector {
+  abstract class WeatherStationCF extends Table[WeatherStationCF, WeatherStation] {
 
-    object country extends StringColumn(this) with PartitionKey
-    object city extends StringColumn(this) with PrimaryKey
-    object stationId extends StringColumn(this) with PrimaryKey
-    object entry extends IntColumn(this) with PrimaryKey
-    object value extends IntColumn(this)
+    object country extends StringColumn with PartitionKey
+    object city extends StringColumn with PrimaryKey
+    object stationId extends StringColumn with PrimaryKey
+    object entry extends IntColumn with PrimaryKey
+    object value extends IntColumn
 
     def getAllByCountry(country: String): Future[List[WeatherStation]] =
       select.where(_.country eqs country).fetch()
@@ -149,10 +149,15 @@ object Phantom extends App {
 ```
 
 Phantom requires mapping classes to lift the database model to DSL types. The query definition also requires special equality operators. The database model however adds fully type-safe schema compatible operations at compile time, meaning
-phantom will not allow you to produce invalid queries with respect to the Cassandra schema.
+phantom will not allow you to produce invalid queries with respect to the Cassandra schema, but it relies on
+using phantom to produce the schema in the first place.
 
-As opposed to Quill and the Java Driver, phantom is schema aware, whereas the other two tools simply generate
+As opposed to the Java Driver, phantom is schema aware, whereas the other two tools simply generate
 the correct CQL string with respect to the Scala type, but not with respect to the schema.
+
+Quill also has a feature that allows checking query validity against the pre-existing Cassandra schema, but assumes
+the schema has already been created externally. Phantom expects to also manage schema creation for you, and as part of the
+professional edition also offers `phantom-migrations` to automatically handle migrations.
 
 **Quill**
 
@@ -260,13 +265,13 @@ object Phantom extends App {
 
   case class WeatherStation(country: String, city: String, stationId: String, entry: Int, value: Int)
 
-  abstract class WeatherStationCF extends CassandraTable[WeatherStationCF, WeatherStation] with RootConnector {
+  abstract class WeatherStationCF extends Table[WeatherStationCF, WeatherStation] {
 
-    object country extends StringColumn(this) with PartitionKey
-    object city extends StringColumn(this) with PrimaryKey
-    object stationId extends StringColumn(this) with PrimaryKey
-    object entry extends IntColumn(this) with PrimaryKey
-    object value extends IntColumn(this)
+    object country extends StringColumn with PartitionKey
+    object city extends StringColumn with PrimaryKey
+    object stationId extends StringColumn with PrimaryKey
+    object entry extends IntColumn with PrimaryKey
+    object value extends IntColumn
 
     def getAllByCountry(country: String): Future[List[WeatherStation]] =
       findAllByCountry(country).fetch()
@@ -301,10 +306,9 @@ object Phantom extends App {
 ```
 
 Phantom allows the user certain level of composability, but it gets a bit verbose due to the nature of the DSL.
-However, phantom does not encourage this inherent duplication of concern because it doesn't add any value
-to an application, and instead generally prefers to duplicate from the start.
+However, phantom does not encourage this pattern, and instead prefers to allow duplication of queries.
 
-On a character count, this is likely to be the shortest approach of all frameworks.
+If the concern here is only the amount of typing effort, Quill and Phantom are on par.
 
 ```scala
     def getAllByCountry(country: String): Future[List[WeatherStation]] =
@@ -375,7 +379,7 @@ This section explores the extensibility capabilities of each library .
 
 There is no much offered by the driver to extend the Query Builder, e.g. add a missing CQL feature.
 
-**Phantom (v2.5.0)**
+**Phantom (v2.9.2)**
 
 You could extend Phantom by extending the DSL to add new features, however this is probably not trivial. Natively supporting new types is trivial to achieve through primitives, using `Primitive.derive[NewType, OldType](oldToNewFn)(newToOldFn)`.
 
@@ -390,7 +394,7 @@ It is also possible to by-pass the entire abtraction layer provided by phantom a
 
   val res: Future[ResultSet] = cql("SELECT * FROM keyspace.table WHERE a = 'b' LIMIT 1;")
 ```
-
+bra
 This relies on having an `implicit keySpace` and `implicit session` in scope, so it leverages connectors to offer
 this kind of functionality.
 
@@ -489,7 +493,7 @@ object JavaDriver extends App {
 
 Phantom uses `Primitive.derive` and implicit lookup to allow you to support "new" types based on existing ones.
 
-**Phantom (v2.5.0)**
+**Phantom (v2.9.2)**
 
 ```
 import com.outworkers.phantom.dsl._
@@ -499,7 +503,7 @@ import scala.util.Try
 
 object Phantom extends App {
 
-  case class Country(code: String) extends AnyVal
+  case class Country(code: String)
 
   object Country {
 
@@ -510,13 +514,13 @@ object Phantom extends App {
 
   case class People(name: String, age: Int)
 
-  abstract class WeatherStationCF extends CassandraTable[WeatherStationCF, WeatherStation] with RootConnector {
+  abstract class WeatherStationCF extends Table[WeatherStationCF, WeatherStation] {
 
-    object country extends Col[Country](this) with PartitionKey
-    object city extends StringColumn(this) with PrimaryKey
-    object stationId extends StringColumn(this) with PrimaryKey
-    object entry extends IntColumn(this) with PrimaryKey
-    object value extends IntColumn(this)
+    object country extends Col[Country] with PartitionKey
+    object city extends StringColumn with PrimaryKey
+    object stationId extends StringColumn with PrimaryKey
+    object entry extends IntColumn with PrimaryKey
+    object value extends IntColumn
 
     def getAllByCountry(country: Country): Future[List[WeatherStation]] =
       select.where(_.country eqs country).fetch()
@@ -580,9 +584,11 @@ This section compares the different options the libraries offer to do non-blocki
 
 The Datastax driver allows the user to execute queries [asynchronously](https://github.com/datastax/java-driver/tree/2.1/manual/async), returning `ListenableFuture`s.
 
-**Phantom (v2.5.0)**
+**Phantom (v2.9.2)**
 
-Phantom is asynchronous by default and all operations return `Future`s. It also allows users to process the data coming from Cassandra in a streaming fashion using [`play-iteratees`](https://www.playframework.com/documentation/2.4.x/Iteratees) or [`play-streams`](https://www.playframework.com/documentation/2.4.x/ReactiveStreamsIntegration), that make it possible to integrate with other software that support [reactive-streams](https://github.com/reactive-streams/reactive-streams-jvm).
+Phantom is asynchronous by default and all operations return `Future`s.
+
+Using `phantom-streams` it also allows users to process the data coming from Cassandra in a streaming fashion using [`play-iteratees`](https://www.playframework.com/documentation/2.4.x/Iteratees) or [`play-streams`](https://www.playframework.com/documentation/2.4.x/ReactiveStreamsIntegration), that make it possible to integrate with other software that support [reactive-streams](https://github.com/reactive-streams/reactive-streams-jvm).
 
 **Quill (v0.4.0)**
 
