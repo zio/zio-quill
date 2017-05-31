@@ -17,7 +17,7 @@ case class Expand[C <: Context[_, _]](
   val (string, liftings) =
     ReifyStatement(
       idiom.liftingPlaceholder,
-      idiom.emptyQuery,
+      idiom.emptySetContainsToken,
       statement,
       forProbing = false
     )

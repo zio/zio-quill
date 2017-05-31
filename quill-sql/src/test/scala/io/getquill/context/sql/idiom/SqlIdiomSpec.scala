@@ -602,6 +602,20 @@ class SqlIdiomSpec extends Spec {
             testContext.run(q).string mustEqual
               "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o = 1"
           }
+          "set" - {
+            "non-empty" in {
+              val q = quote {
+                qr1.filter(t => liftQuery(Set(1, 2, 3)).contains(t.i))
+              }
+              testContext.run(q).string mustEqual "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.i IN (?, ?, ?)"
+            }
+            "empty" in {
+              val q = quote {
+                qr1.filter(t => liftQuery(Set.empty[Int]).contains(t.i))
+              }
+              testContext.run(q).string mustEqual "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE FALSE"
+            }
+          }
 
         }
       }

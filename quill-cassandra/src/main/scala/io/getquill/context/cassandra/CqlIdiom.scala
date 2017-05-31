@@ -6,6 +6,8 @@ import io.getquill.util.Messages.fail
 import io.getquill.idiom.Idiom
 import io.getquill.idiom.StatementInterpolator._
 import io.getquill.idiom.Statement
+import io.getquill.idiom.SetContainsToken
+import io.getquill.idiom.Token
 import io.getquill.util.Interleave
 
 object CqlIdiom extends CqlIdiom
@@ -14,9 +16,9 @@ trait CqlIdiom extends Idiom {
 
   override def liftingPlaceholder(idx: Int) = "?"
 
-  override def prepareForProbing(string: String) = string
+  override def emptySetContainsToken(field: Token) = stmt"$field IN ()"
 
-  override def emptyQuery = ""
+  override def prepareForProbing(string: String) = string
 
   override def translate(ast: Ast)(implicit naming: NamingStrategy) = {
     val normalizedAst = CqlNormalize(ast)
@@ -84,7 +86,7 @@ trait CqlIdiom extends Idiom {
   }
 
   implicit def operationTokenizer(implicit strategy: NamingStrategy): Tokenizer[Operation] = Tokenizer[Operation] {
-    case BinaryOperation(a, op @ SetOperator.`contains`, b) => stmt"${b.token} ${op.token} (${a.token})"
+    case BinaryOperation(a, op @ SetOperator.`contains`, b) => SetContainsToken(b.token, op.token, a.token)
     case BinaryOperation(a, op, b)                          => stmt"${a.token} ${op.token} ${b.token}"
     case e: UnaryOperation                                  => fail(s"Cql doesn't support unary operations. Found: '$e'")
     case e: FunctionApply                                   => fail(s"Cql doesn't support functions. Found: '$e'")
