@@ -27,9 +27,16 @@ services:
       - "17000:7000"
 
   sqlserver:
-    image: microsoft/mssql-server-linux
+    build:
+      cache_from:
+        - quillscala/sqlserver:latest
+      context: .
+      dockerfile: ./build/Dockerfile-sqlserver
+    image: quillscala/sqlserver
     ports:
       - "1433:1433"
+    volumes:
+      - ./:/app
     environment:
       - ACCEPT_EULA=Y
       - SA_PASSWORD=QuillRocks!
