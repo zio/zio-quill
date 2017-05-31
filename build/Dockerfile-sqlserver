@@ -1,0 +1,4 @@
+FROM microsoft/mssql-server-linux:latest
+MAINTAINER getquill/maintainers
+
+CMD /bin/bash /app/build/entrypoint_sqlserver.sh
