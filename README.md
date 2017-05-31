@@ -1318,8 +1318,8 @@ ctx.dataSource.user=sa
 sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "com.microsoft.sqlserver" % "mssql-jdbc" % "6.1.0.jre8",
-  "io.getquill" %% "quill-sqlserver" % "1.1.1-SNAPSHOT"
+  "com.microsoft.sqlserver" % "mssql-jdbc" % "6.1.7.jre8-preview",
+  "io.getquill" %% "quill-jdbc" % "1.2.2-SNAPSHOT"
 )
 ```
 
