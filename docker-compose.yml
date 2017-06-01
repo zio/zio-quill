@@ -22,9 +22,9 @@ services:
     ports:
       - "19042:9042"
       - "19160:9160"
-      - "17199:7199"
-      - "17001:7001"
-      - "17000:7000"
+    environment:
+      - HEAP_NEWSIZE=128M
+      - MAX_HEAP_SIZE=512M
 
   sqlserver:
     image: microsoft/mssql-server-linux
