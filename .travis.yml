@@ -11,7 +11,7 @@ before_install:
   - ./build/update_docker-compose.sh
 before_script:
   - ./build/pull_docker_images.sh
-  - travis_retry docker-compose run setup
+  - docker-compose run setup
 script:
   - docker-compose run sbt bash -c "./build/build.sh"
 after_success:
