@@ -30,7 +30,7 @@ services:
     image: microsoft/mssql-server-linux
     cpuset: "0"
     ports:
-      - "1433:1433"
+      - "1433:$SQLSERVER_PORT"
     environment:
       - ACCEPT_EULA=Y
       - SA_PASSWORD=$SQLSERVER_PASSWORD
@@ -50,6 +50,7 @@ services:
     volumes:
       - ./:/app
     environment:
+      - SQLSERVER_PORT
       - SQLSERVER_PASSWORD
     command:
       - ./build/setup.sh
@@ -87,4 +88,5 @@ services:
       - MYSQL_PORT=3306
       - CASSANDRA_HOST=cassandra
       - CASSANDRA_PORT=9042
+      - SQLSERVER_PORT
       - SQLSERVER_PASSWORD

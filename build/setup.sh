@@ -51,13 +51,13 @@ echo "CREATE KEYSPACE quill_test WITH replication = {'class': 'SimpleStrategy', 
 cqlsh cassandra -f /tmp/create-keyspace.cql
 cqlsh cassandra -k quill_test -f quill-cassandra/src/test/cql/cassandra-schema.cql
 
-echo "Waiting for Sql Server"
-until sqlcmd -S sqlserver -U SA -P "$SQLSERVER_PASSWORD" -Q "SELECT 1"
+echo "Waiting for Sql Server, $SQLSERVER_PORT"
+until sqlcmd -S sqlserver,$SQLSERVER_PORT -U SA -P "$SQLSERVER_PASSWORD" -l 30 -Q "SELECT 1"
 do
   printf "."
   sleep 1
 done
 echo -e "\nSql Server ready"
 
-sqlcmd -S sqlserver -U SA -P "$SQLSERVER_PASSWORD" -Q "CREATE DATABASE quill_test"
-sqlcmd -S sqlserver -U SA -P "$SQLSERVER_PASSWORD" -d quill_test -i quill-sql/src/test/sql/sqlserver-schema.sql
+sqlcmd -S sqlserver,$SQLSERVER_PORT -U SA -P "$SQLSERVER_PASSWORD" -Q "CREATE DATABASE quill_test"
+sqlcmd -S sqlserver,$SQLSERVER_PORT -U SA -P "$SQLSERVER_PASSWORD" -d quill_test -i quill-sql/src/test/sql/sqlserver-schema.sql
