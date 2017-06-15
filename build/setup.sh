@@ -52,7 +52,7 @@ cqlsh cassandra -f /tmp/create-keyspace.cql
 cqlsh cassandra -k quill_test -f quill-cassandra/src/test/cql/cassandra-schema.cql
 
 echo "Waiting for Sql Server"
-until sqlcmd -S sqlserver -U SA -P "$SQLSERVER_PASSWORD" -Q "SELECT 1" &> /dev/null
+until sqlcmd -S sqlserver -U SA -P "$SQLSERVER_PASSWORD" -Q "SELECT 1"
 do
   printf "."
   sleep 1
