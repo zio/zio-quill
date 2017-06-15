@@ -32,7 +32,7 @@ services:
       - "1433:1433"
     environment:
       - ACCEPT_EULA=Y
-      - SA_PASSWORD=QuillRocks!
+      - SA_PASSWORD=$SQLSERVER_PASSWORD
 
   setup:
     build:
@@ -48,6 +48,8 @@ services:
       - sqlserver:sqlserver
     volumes:
       - ./:/app
+    environment:
+      - SQLSERVER_PASSWORD
     command:
       - ./build/setup.sh
 
@@ -84,3 +86,4 @@ services:
       - MYSQL_PORT=3306
       - CASSANDRA_HOST=cassandra
       - CASSANDRA_PORT=9042
+      - SQLSERVER_PASSWORD
