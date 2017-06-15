@@ -28,6 +28,7 @@ services:
 
   sqlserver:
     image: microsoft/mssql-server-linux
+    cpuset: "0"
     ports:
       - "1433:1433"
     environment:
