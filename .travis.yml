@@ -11,7 +11,7 @@ before_install:
   - ./build/update_docker-compose.sh
 before_script:
   - ./build/pull_docker_images.sh
-  - timeout --foreground 3m docker-compose run setup || docker logs quill_sqlserver_1
+  - docker-compose run setup
 script:
   - docker-compose run sbt bash -c "./build/build.sh"
 after_success:
