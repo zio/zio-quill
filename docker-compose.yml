@@ -29,7 +29,7 @@ services:
 #  sqlserver:
 #    image: microsoft/mssql-server-linux
 #    ports:
-#      - "1433:1433"
+#      - "11433:1433"
 #    environment:
 #      - ACCEPT_EULA=Y
 #      - SA_PASSWORD=QuillRocks!
@@ -82,5 +82,7 @@ services:
       - POSTGRES_PORT=5432
       - MYSQL_HOST=mysql
       - MYSQL_PORT=3306
+      - SQL_SERVER_HOST=sqlserver
+      - SQL_SERVER_PORT=1433
       - CASSANDRA_HOST=cassandra
       - CASSANDRA_PORT=9042
