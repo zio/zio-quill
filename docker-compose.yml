@@ -26,13 +26,13 @@ services:
       - "17001:7001"
       - "17000:7000"
 
-  sqlserver:
-    image: microsoft/mssql-server-linux
-    ports:
-      - "1433:1433"
-    environment:
-      - ACCEPT_EULA=Y
-      - SA_PASSWORD=QuillRocks!
+#  sqlserver:
+#    image: microsoft/mssql-server-linux
+#    ports:
+#      - "1433:1433"
+#    environment:
+#      - ACCEPT_EULA=Y
+#      - SA_PASSWORD=QuillRocks!
 
   setup:
     build:
@@ -45,7 +45,7 @@ services:
       - postgres:postgres
       - mysql:mysql
       - cassandra:cassandra
-      - sqlserver:sqlserver
+#     - sqlserver:sqlserver
     volumes:
       - ./:/app
     command:
@@ -65,7 +65,7 @@ services:
       - postgres:postgres
       - mysql:mysql
       - cassandra:cassandra
-      - sqlserver:sqlserver
+#     - sqlserver:sqlserver
     volumes:
       - ./:/app
       - ~/.ivy2:/root/.ivy2
