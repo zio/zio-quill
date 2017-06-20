@@ -17,6 +17,7 @@ object ApplyMap {
       case Take(Map(a: GroupBy, b, c), d)         => None
       case Drop(Map(a: GroupBy, b, c), d)         => None
       case Map(a: GroupBy, b, c) if (b == c)      => None
+      case Map(a: Nested, b, c) if (b == c)       => None
 
       //  map(i => (i.i, i.l)).distinct.map(x => (x._1, x._2)) =>
       //    map(i => (i.i, i.l)).distinct

@@ -385,6 +385,21 @@ class SqlQuerySpec extends Spec {
         testContext.run(q).string mustEqual
           "SELECT x.s, x.i, x.l, x.o FROM (SELECT x.s, x.i, x.l, x.o FROM TestEntity x) x"
       }
+      "pointless nesting of single yielding element" in {
+        val q = quote {
+          qr1.map(x => x.i).nested
+        }
+        testContext.run(q).string mustEqual "SELECT x.* FROM (SELECT x.i FROM TestEntity x) x"
+      }
+      "pointless nesting in for-comp of single yielding element" in {
+        val q = quote {
+          (for {
+            a <- qr1
+            b <- qr2
+          } yield a.i).nested
+        }
+        testContext.run(q).string mustEqual "SELECT x.* FROM (SELECT a.i FROM TestEntity a, TestEntity2 b) x"
+      }
       "mapped" in {
         val q = quote {
           qr1.nested.map(t => t.i)
