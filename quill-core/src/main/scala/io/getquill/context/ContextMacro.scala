@@ -10,13 +10,7 @@ import io.getquill.util.Messages._
 import io.getquill.quotation.IsDynamic
 import io.getquill.ast.Lift
 import io.getquill.NamingStrategy
-import io.getquill.idiom.Idiom
-import io.getquill.idiom.Statement
-import io.getquill.idiom.Token
-import io.getquill.idiom.StringToken
-import io.getquill.idiom.ScalarLiftToken
-import io.getquill.idiom.ReifyStatement
-import io.getquill.idiom.LoadNaming
+import io.getquill.idiom._
 import scala.util.Success
 import scala.util.Failure
 
@@ -45,9 +39,10 @@ trait ContextMacro extends Quotation {
     }
 
   private implicit val tokenLiftable: Liftable[Token] = Liftable[Token] {
-    case StringToken(string)   => q"io.getquill.idiom.StringToken($string)"
-    case ScalarLiftToken(lift) => q"io.getquill.idiom.ScalarLiftToken(${lift: Lift})"
-    case Statement(tokens)     => q"io.getquill.idiom.Statement(scala.List(..$tokens))"
+    case StringToken(string)        => q"io.getquill.idiom.StringToken($string)"
+    case ScalarLiftToken(lift)      => q"io.getquill.idiom.ScalarLiftToken(${lift: Lift})"
+    case Statement(tokens)          => q"io.getquill.idiom.Statement(scala.List(..$tokens))"
+    case SetContainsToken(a, op, b) => q"io.getquill.idiom.SetContainsToken($a, $op, $b)"
   }
 
   private def translateStatic(ast: Ast): Tree = {
@@ -58,7 +53,7 @@ trait ContextMacro extends Quotation {
         val (string, _) =
           ReifyStatement(
             idiom.liftingPlaceholder,
-            idiom.emptyQuery,
+            idiom.emptySetContainsToken,
             statement,
             forProbing = true
           )

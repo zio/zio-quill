@@ -20,6 +20,7 @@ import io.getquill.context.sql.UnionOperation
 import io.getquill.NamingStrategy
 import io.getquill.util.Messages.fail
 import io.getquill.idiom.Idiom
+import io.getquill.idiom.SetContainsToken
 import io.getquill.idiom.Statement
 import io.getquill.context.sql.norm.SqlNormalize
 import io.getquill.util.Interleave
@@ -29,8 +30,6 @@ import io.getquill.context.sql.FlatJoinContext
 trait SqlIdiom extends Idiom {
 
   override def prepareForProbing(string: String): String
-
-  override def emptyQuery = "SELECT 0 LIMIT 0"
 
   override def translate(ast: Ast)(implicit naming: NamingStrategy) = {
     val normalizedAst = SqlNormalize(ast)
@@ -159,7 +158,7 @@ trait SqlIdiom extends Idiom {
     case BinaryOperation(NullValue, EqualityOperator.`==`, b) => stmt"${scopedTokenizer(b)} IS NULL"
     case BinaryOperation(a, EqualityOperator.`!=`, NullValue) => stmt"${scopedTokenizer(a)} IS NOT NULL"
     case BinaryOperation(NullValue, EqualityOperator.`!=`, b) => stmt"${scopedTokenizer(b)} IS NOT NULL"
-    case BinaryOperation(a, op @ SetOperator.`contains`, b)   => stmt"${scopedTokenizer(b)} ${op.token} (${a.token})"
+    case BinaryOperation(a, op @ SetOperator.`contains`, b)   => SetContainsToken(scopedTokenizer(b), op.token, a.token)
     case BinaryOperation(a, op, b)                            => stmt"${scopedTokenizer(a)} ${op.token} ${scopedTokenizer(b)}"
     case e: FunctionApply                                     => fail(s"Can't translate the ast to sql: '$e'")
   }

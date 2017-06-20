@@ -2,6 +2,7 @@ package io.getquill
 
 import io.getquill.ast._
 import io.getquill.idiom.Idiom
+import io.getquill.idiom.SetContainsToken
 import io.getquill.idiom.Statement
 import io.getquill.idiom.StatementInterpolator._
 import io.getquill.norm.Normalize
@@ -14,8 +15,6 @@ class MirrorIdiom extends Idiom {
   override def prepareForProbing(string: String) = string
 
   override def liftingPlaceholder(index: Int): String = "?"
-
-  override def emptyQuery = ""
 
   override def translate(ast: Ast)(implicit naming: NamingStrategy): (Ast, Statement) = {
     val normalizedAst = Normalize(ast)
@@ -138,10 +137,11 @@ class MirrorIdiom extends Idiom {
   }
 
   implicit def operationTokenizer(implicit liftTokenizer: Tokenizer[Lift]): Tokenizer[Operation] = Tokenizer[Operation] {
-    case UnaryOperation(op: PrefixUnaryOperator, ast)  => stmt"${op.token}${scopedTokenizer(ast)}"
-    case UnaryOperation(op: PostfixUnaryOperator, ast) => stmt"${scopedTokenizer(ast)}.${op.token}"
-    case BinaryOperation(a, op, b)                     => stmt"${scopedTokenizer(a)} ${op.token} ${scopedTokenizer(b)}"
-    case FunctionApply(function, values)               => stmt"${scopedTokenizer(function)}.apply(${values.token})"
+    case UnaryOperation(op: PrefixUnaryOperator, ast)       => stmt"${op.token}${scopedTokenizer(ast)}"
+    case UnaryOperation(op: PostfixUnaryOperator, ast)      => stmt"${scopedTokenizer(ast)}.${op.token}"
+    case BinaryOperation(a, op @ SetOperator.`contains`, b) => SetContainsToken(scopedTokenizer(b), op.token, a.token)
+    case BinaryOperation(a, op, b)                          => stmt"${scopedTokenizer(a)} ${op.token} ${scopedTokenizer(b)}"
+    case FunctionApply(function, values)                    => stmt"${scopedTokenizer(function)}.apply(${values.token})"
   }
 
   implicit def operatorTokenizer[T <: Operator]: Tokenizer[T] = Tokenizer[T] {

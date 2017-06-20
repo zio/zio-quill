@@ -21,8 +21,6 @@ trait MySQLDialect
   with OffsetWithoutLimitWorkaround
   with QuestionMarkBindVariables {
 
-  override def emptyQuery = "SELECT 0 FROM DUAL WHERE FALSE"
-
   override def prepareForProbing(string: String) = {
     val quoted = string.replace("'", "\\'")
     s"PREPARE p${quoted.hashCode.abs.toString.token} FROM '$quoted'"
