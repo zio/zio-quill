@@ -1,7 +1,9 @@
 package io.getquill.context.jdbc.sqlserver
 
 import io.getquill.context.sql.EncodingSpec
+import org.scalatest.DoNotDiscover
 
+@DoNotDiscover
 class JdbcEncodingSpec extends EncodingSpec {
 
   val context = testContext
