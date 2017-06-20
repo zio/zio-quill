@@ -121,6 +121,8 @@ export MYSQL_HOST=<docker host address>
 export MYSQL_PORT=13306
 export POSTGRES_HOST=<docker host address>
 export POSTGRES_PORT=15432
+export SQL_SERVER_HOST=<docker host address>
+export SQL_SERVER_PORT=11433
 ```
 
 If you run docker locally then usually docker host address is `localhost` or `127.0.0.1`.
