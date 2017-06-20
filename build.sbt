@@ -68,7 +68,7 @@ lazy val `quill-jdbc` =
         "mysql"                   % "mysql-connector-java" % "5.1.42"             % Test,
         "com.h2database"          % "h2"                   % "1.4.195"            % Test,
         "org.postgresql"          % "postgresql"           % "42.1.1"             % Test,
-        "org.xerial"              % "sqlite-jdbc"          % "3.8.11.2"           % Test,
+        "org.xerial"              % "sqlite-jdbc"          % "3.18.0"             % Test,
         "com.microsoft.sqlserver" % "mssql-jdbc"           % "6.1.7.jre8-preview" % Test
       )
     )

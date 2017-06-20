@@ -1275,7 +1275,7 @@ ctx.connectionTimeout=30000
 sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "org.xerial" % "sqlite-jdbc" % "3.8.11.2",
+  "org.xerial" % "sqlite-jdbc" % "3.18.0",
   "io.getquill" %% "quill-jdbc" % "1.2.2-SNAPSHOT"
 )
 ```
