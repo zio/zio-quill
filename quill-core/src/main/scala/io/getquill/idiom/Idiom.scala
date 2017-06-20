@@ -5,9 +5,9 @@ import io.getquill.NamingStrategy
 
 trait Idiom {
 
-  def liftingPlaceholder(index: Int): String
+  def emptySetContainsToken(field: Token): Token = StringToken("FALSE")
 
-  def emptyQuery: String
+  def liftingPlaceholder(index: Int): String
 
   def translate(ast: Ast)(implicit naming: NamingStrategy): (Ast, Statement)
 
