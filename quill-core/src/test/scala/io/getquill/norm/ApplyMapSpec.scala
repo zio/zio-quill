@@ -56,6 +56,13 @@ class ApplyMapSpec extends Spec {
     }
   }
 
+  "avoids applying the identity map with nested query" in {
+    val q = quote {
+      qr1.map(x => x.i).nested.map(x => x)
+    }
+    ApplyMap.unapply(q.ast) mustEqual None
+  }
+
   "applies intermediate map" - {
     "flatMap" in {
       val q = quote {
