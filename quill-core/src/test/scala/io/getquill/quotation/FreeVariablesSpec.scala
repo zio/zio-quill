@@ -1,18 +1,24 @@
 package io.getquill.quotation
 
-import io.getquill._
+import io.getquill.Spec
 import io.getquill.ast.Ident
+import io.getquill.testContext.implicitOrd
+import io.getquill.testContext.qr1
+import io.getquill.testContext.qr2
+import io.getquill.testContext.quote
+import io.getquill.testContext.unquote
 
 class FreeVariablesSpec extends Spec {
 
+  val s = "s"
+  val i = 10
+
   "detects references to values outside of the quotation (free variables)" - {
     "ident" in {
-      val s = "s"
       val q = quote(s)
       FreeVariables(q.ast) mustEqual Set(Ident("s"))
     }
     "function" in {
-      val s = "s"
       val q =
         quote {
           (a: String) => s
@@ -20,7 +26,6 @@ class FreeVariablesSpec extends Spec {
       FreeVariables(q.ast) mustEqual Set(Ident("s"))
     }
     "filter" in {
-      val s = "s"
       val q =
         quote {
           qr1.filter(_.s == s)
@@ -28,7 +33,6 @@ class FreeVariablesSpec extends Spec {
       FreeVariables(q.ast) mustEqual Set(Ident("s"))
     }
     "map" in {
-      val s = "s"
       val q =
         quote {
           qr1.map(_ => s)
@@ -36,7 +40,6 @@ class FreeVariablesSpec extends Spec {
       FreeVariables(q.ast) mustEqual Set(Ident("s"))
     }
     "flatMap" in {
-      val s = "s"
       val q =
         quote {
           qr1.map(_ => s).flatMap(_ => qr2)
@@ -44,7 +47,6 @@ class FreeVariablesSpec extends Spec {
       FreeVariables(q.ast) mustEqual Set(Ident("s"))
     }
     "sortBy" in {
-      val s = "s"
       val q =
         quote {
           qr1.sortBy(_ => s)
@@ -52,7 +54,6 @@ class FreeVariablesSpec extends Spec {
       FreeVariables(q.ast) mustEqual Set(Ident("s"))
     }
     "groupBy" in {
-      val s = "s"
       val q =
         quote {
           qr1.groupBy(_ => s)
@@ -60,15 +61,13 @@ class FreeVariablesSpec extends Spec {
       FreeVariables(q.ast) mustEqual Set(Ident("s"))
     }
     "take" in {
-      val s = 10
       val q =
         quote {
-          qr1.take(s)
+          qr1.take(i)
         }
-      FreeVariables(q.ast) mustEqual Set(Ident("s"))
+      FreeVariables(q.ast) mustEqual Set(Ident("i"))
     }
     "conditional outer join" in {
-      val s = 10
       val q =
         quote {
           qr1.leftJoin(qr2).on((a, b) => a.s == s)
@@ -76,11 +75,49 @@ class FreeVariablesSpec extends Spec {
       FreeVariables(q.ast) mustEqual Set(Ident("s"))
     }
     "assignment" in {
-      val s = 10
       val q = quote {
-        qr1.insert(_.i -> s)
+        qr1.insert(_.i -> i)
       }
-      FreeVariables(q.ast) mustEqual Set(Ident("s"))
+      FreeVariables(q.ast) mustEqual Set(Ident("i"))
+    }
+    "join" in {
+      val i = 1
+      val q = quote {
+        qr1.join(qr2.filter(_.i == i))
+          .on((t1, t2) => t1.i == t2.i)
+      }
+      FreeVariables(q.ast) mustEqual Set(Ident("i"))
+    }
+    "option operators" - {
+      "map" in {
+        val i = 1
+        val q = quote {
+          qr1.map(_.o.map(_ == i))
+        }
+        FreeVariables(q.ast) mustEqual Set(Ident("i"))
+      }
+      "forall" in {
+        val i = 1
+        val q = quote {
+          qr1.filter(_.o.forall(_ == i))
+        }
+        FreeVariables(q.ast) mustEqual Set(Ident("i"))
+
+      }
+      "exists" in {
+        val i = 1
+        val q = quote {
+          qr1.filter(_.o.exists(_ == i))
+        }
+        FreeVariables(q.ast) mustEqual Set(Ident("i"))
+      }
+      "contains" in {
+        val i = 1
+        val q = quote {
+          qr1.filter(_.o.contains(i))
+        }
+        FreeVariables(q.ast) mustEqual Set(Ident("i"))
+      }
     }
   }
 
@@ -115,11 +152,36 @@ class FreeVariablesSpec extends Spec {
       }
       FreeVariables(q.ast) mustBe empty
     }
-    "option operator" in {
-      val q = quote {
-        qr1.filter(t => t.s == "s1")
+    "option operators" - {
+      "map" in {
+        val i = 1
+        val q = quote {
+          qr1.map(t => t.o.map(_ == t.i))
+        }
+        FreeVariables(q.ast) mustBe empty
       }
-      FreeVariables(q.ast) mustBe empty
+      "forall" in {
+        val i = 1
+        val q = quote {
+          qr1.filter(t => t.o.forall(_ == t.i))
+        }
+        FreeVariables(q.ast) mustBe empty
+
+      }
+      "exists" in {
+        val i = 1
+        val q = quote {
+          qr1.filter(t => t.o.exists(_ == t.i))
+        }
+        FreeVariables(q.ast) mustBe empty
+      }
+      "contains" in {
+        val i = 1
+        val q = quote {
+          qr1.filter(t => t.o.contains(t.i))
+        }
+        FreeVariables(q.ast) mustBe empty
+      }
     }
     "assignment" in {
       val q = quote {

@@ -32,9 +32,12 @@ CREATE TABLE EncodingTestEntity(
     v6 INTEGER,
     v7 BIGINT,
     v8 FLOAT,
-    v9 DOUBLE PRECISIOn,
+    v9 DOUBLE PRECISION,
     v10 BYTEA,
     v11 TIMESTAMP,
+    v12 VARCHAR(255),
+    v13 DATE,
+    v14 UUID,
     o1 VARCHAR(255),
     o2 DECIMAL(5,2),
     o3 BOOLEAN,
@@ -43,9 +46,12 @@ CREATE TABLE EncodingTestEntity(
     o6 INTEGER,
     o7 BIGINT,
     o8 FLOAT,
-    o9 DOUBLE PRECISIOn,
+    o9 DOUBLE PRECISION,
     o10 BYTEA,
-    o11 TIMESTAMP
+    o11 TIMESTAMP,
+    o12 VARCHAR(255),
+    o13 DATE,
+    o14 UUID
 );
 
 CREATE TABLE EncodingUUIDTestEntity(
@@ -75,4 +81,31 @@ CREATE TABLE Product(
     description VARCHAR(255),
     id SERIAL PRIMARY KEY,
     sku BIGINT
+);
+
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+CREATE TABLE Barcode(
+    uuid UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    description TEXT
+);
+
+CREATE TABLE DateEncodingTestEntity (
+    v1 DATE,
+    v2 TIMESTAMP
+);
+
+CREATE TABLE ArraysTestEntity (
+    texts TEXT[],
+    decimals DECIMAL(5,2)[],
+    bools BOOLEAN[],
+    bytes SMALLINT[],
+    shorts SMALLINT[],
+    ints INTEGER[],
+    longs BIGINT[],
+    floats FLOAT[],
+    doubles DOUBLE PRECISION[],
+    timestamps TIMESTAMP[],
+    dates DATE[],
+    uuids UUID[]
 );

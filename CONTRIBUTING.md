@@ -2,26 +2,90 @@
 
 Instructions on how to contribute to Quill project.
 
-## Building the project
+## Building the project using Docker
 
 The only dependency you need to build Quill locally is [Docker](https://www.docker.com/).
-Instructions on how to install Docker can be found in this [page](https://docs.docker.com/mac/).
+Instructions on how to install Docker can be found [here](https://docs.docker.com/engine/installation/).
 
-After installing Docker, you have to run the command bellow in order to setup the
-databases' schemas. If you don't change any schemas, you will only need to do this once.
+If you are running Linux, you should also install Docker Compose separately, as described
+[here](https://docs.docker.com/compose/install/).
 
-`docker-compose run --rm setup`
+After installing Docker and Docker Compose you have to setup databases:
 
-After that, just run the command bellow to build and test the project.
+```bash
+docker-compose run --rm setup
+```
 
-`docker-compose run --rm sbt sbt test`
+When running the first time docker will also build images. To skip building you can pull images from Docker Hub before executing the above setup command:
+
+```bash
+docker-compose pull
+```
+
+
+After that you are ready to build and test the project.
+
+```bash
+docker-compose run --rm sbt sbt test
+```
+
+## Building Scala.js targets
+
+The Scala.js targets are disabled by default, use `sbt "project quill-with-js"` to enable them.
+The CI build also sets this `project quill-with-js` to force the Scala.js compilation.
 
 ## Changing database schema
 
-If you have changed any file that creates a database schema, you will
- have to setup the databases again. To do this, just run the command bellow.
+If any file that creates a database schema was changed then you have to setup the databases again:
 
-`docker-compose stop && docker-compose rm && docker-compose run --rm setup`
+```bash
+docker-compose down && docker-compose run --rm setup
+```
+
+## Changing docker configuration
+
+If `build/Dockerfile-sbt`, `build/Dockerfile-setup`, `docker-compose.yml` or any file used by them was changed then you have to rebuild docker images and to setup the databases again:
+
+```bash
+docker-compose down && docker-compose build && docker-compose run --rm setup
+```
+
+## Tests
+
+### Running tests
+
+Run all tests:
+```bash
+docker-compose run --rm sbt sbt test
+```
+
+Run specific test:
+```bash
+docker-compose run --rm sbt sbt "test-only io.getquill.context.sql.SqlQuerySpec"
+```
+
+Run all tests in specific sub-project:
+```bash
+docker-compose run --rm sbt sbt "project quill-async" test
+```
+
+Run specific test in specific sub-project:
+```bash
+docker-compose run --rm sbt sbt "project quill-sqlJVM" "test-only io.getquill.context.sql.SqlQuerySpec"
+```
+
+### Debugging tests
+1. Run sbt in interactive mode with docker container ports mapped to the host: 
+```bash
+docker-compose run --service-ports --rm sbt
+```
+
+2. Attach debugger to port 15005 of your docker host. In IntelliJ IDEA you should create Remote Run/Debug Configuration, 
+change it port to 15005.
+3. In sbt command line run tests with `test` or test specific spec by passing full name to `test-only`:
+```bash
+> test-only io.getquill.context.sql.SqlQuerySpec
+```
 
 ## Pull Request
 
@@ -35,55 +99,32 @@ In order to contribute to the project, just do as follows:
 6. If everything is ok, commit and push to your fork
 7. Create a Pull Request, we'll be glad to review it
 
-### Improve build performance with Docker *(for Mac users only)*
-
-Please, install and run [docker-machine-nfs](https://github.com/adlogix/docker-machine-nfs). It will change the default file sharing
-of your [docker-machine](https://docs.docker.com/machine/) from Virtual Box Shared Folders to NFS, which is a lot faster. 
-
 ## File Formatting 
 
-[Scalariform](http://mdr.github.io/scalariform/) is used as file formatting tool in this project. Every time you compile the project in sbt, file formatting will be triggered.
+[Scalariform](http://mdr.github.io/scalariform/) is used as file formatting tool in this project.
+Every time you compile the project in sbt, file formatting will be triggered.
 
-## Building locally without Docker
+## Building locally using Docker only for databases
 
-Run the following command, it will restart your database service with database ports exposed to your host machine. 
+To restart your database service with database ports exposed to your host machine run:
 
-`docker-compose stop && docker-compose rm && docker-compose run --rm --service-ports setup`
-
-After that, we need to set some environment variables in order to run `sbt` locally.  
-
-```
-export CASSANDRA_PORT_9042_TCP_ADDR=<docker host address>
-export CASSANDRA_PORT_9042_TCP_PORT=19042 
-export MYSQL_PORT_3306_TCP_ADDR=<docker host address>
-export MYSQL_PORT_3306_TCP_PORT=13306 
-export POSTGRES_PORT_5432_TCP_ADDR=<docker host address> 
-export POSTGRES_PORT_5432_TCP_PORT=15432
+```bash
+docker-compose down && docker-compose run --rm --service-ports setup
 ```
 
-For Mac users, the docker host address is the address of the [docker-machine](https://docs.docker.com/machine/), it's usually
- 192.168.99.100. You can check it by running `docker-machine ps`. For Linux users, the host address is your localhost.
+After that we need to set some environment variables in order to run `sbt` locally.
 
-Therefor, for Mac users the environment variables should be:
+```bash
+export CASSANDRA_HOST=<docker host address>
+export CASSANDRA_PORT=19042
+export MYSQL_HOST=<docker host address>
+export MYSQL_PORT=13306
+export POSTGRES_HOST=<docker host address>
+export POSTGRES_PORT=15432
+export SQL_SERVER_HOST=<docker host address>
+export SQL_SERVER_PORT=11433
+```
 
-```
-export CASSANDRA_PORT_9042_TCP_ADDR=192.168.99.100
-export CASSANDRA_PORT_9042_TCP_PORT=19042 
-export MYSQL_PORT_3306_TCP_ADDR=192.168.99.100
-export MYSQL_PORT_3306_TCP_PORT=13306 
-export POSTGRES_PORT_5432_TCP_ADDR=192.168.99.100 
-export POSTGRES_PORT_5432_TCP_PORT=15432
-```
-
-For Linux users, the environment variables should be:
-
-```
-export CASSANDRA_PORT_9042_TCP_ADDR=127.0.0.1
-export CASSANDRA_PORT_9042_TCP_PORT=19042 
-export MYSQL_PORT_3306_TCP_ADDR=127.0.0.1
-export MYSQL_PORT_3306_TCP_PORT=13306 
-export POSTGRES_PORT_5432_TCP_ADDR=127.0.0.1 
-export POSTGRES_PORT_5432_TCP_PORT=15432
-```
+If you run docker locally then usually docker host address is `localhost` or `127.0.0.1`.
 
 Finally, you can use `sbt` locally.

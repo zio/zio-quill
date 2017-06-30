@@ -1,7 +1,17 @@
 package io.getquill.norm.capture
 
-import io.getquill.ast._
+import io.getquill.ast.Ast
+import io.getquill.ast.Entity
+import io.getquill.ast.Filter
+import io.getquill.ast.FlatMap
+import io.getquill.ast.Ident
+import io.getquill.ast.Join
+import io.getquill.ast.Map
+import io.getquill.ast.Query
+import io.getquill.ast.SortBy
+import io.getquill.ast.StatefulTransformer
 import io.getquill.norm.BetaReduction
+import io.getquill.ast.FlatJoin
 
 private case class AvoidAliasConflict(state: collection.Set[Ident])
   extends StatefulTransformer[collection.Set[Ident]] {
@@ -24,11 +34,18 @@ private case class AvoidAliasConflict(state: collection.Set[Ident])
       case Join(t, a, b, iA, iB, o) =>
         val (ar, art) = apply(a)
         val (br, brt) = art.apply(b)
-        val freshA = freshIdent(iA)
-        val freshB = freshIdent(iB)
+        val freshA = freshIdent(iA, brt.state)
+        val freshB = freshIdent(iB, brt.state)
         val or = BetaReduction(o, iA -> freshA, iB -> freshB)
         val (orr, orrt) = AvoidAliasConflict(brt.state + freshA + freshB)(or)
         (Join(t, ar, br, freshA, freshB, orr), orrt)
+
+      case FlatJoin(t, a, iA, o) =>
+        val (ar, art) = apply(a)
+        val freshA = freshIdent(iA)
+        val or = BetaReduction(o, iA -> freshA)
+        val (orr, orrt) = AvoidAliasConflict(art.state + freshA)(or)
+        (FlatJoin(t, ar, freshA, orr), orrt)
 
       case other => super.apply(other)
     }
@@ -40,7 +57,7 @@ private case class AvoidAliasConflict(state: collection.Set[Ident])
     (f(fresh, prr), t)
   }
 
-  private def freshIdent(x: Ident): Ident =
+  private def freshIdent(x: Ident, state: collection.Set[Ident] = state): Ident =
     if (!state.contains(x))
       x
     else

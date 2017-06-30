@@ -1,8 +1,12 @@
 package io.getquill.norm.capture
 
-import scala.language.reflectiveCalls
-
-import io.getquill._
+import io.getquill.Spec
+import io.getquill.testContext.implicitOrd
+import io.getquill.testContext.qr1
+import io.getquill.testContext.qr2
+import io.getquill.testContext.qr3
+import io.getquill.testContext.quote
+import io.getquill.testContext.unquote
 
 class AvoidAliasConflictSpec extends Spec {
 
@@ -109,6 +113,19 @@ class AvoidAliasConflictSpec extends Spec {
         }
         val n = quote {
           qr1.map(t => t.i).leftJoin(qr2.map(t1 => t1.i)).on((a, b) => a == b)
+        }
+        AvoidAliasConflict(q.ast) mustEqual n.ast
+      }
+      "multiple" in {
+        val q = quote {
+          qr1.leftJoin(qr2).on((a, b) => a.i == b.i)
+            .leftJoin(qr1).on((a, b) => a._2.forall(v => v.i == b.i))
+            .map(t => 1)
+        }
+        val n = quote {
+          qr1.leftJoin(qr2).on((a, b) => a.i == b.i)
+            .leftJoin(qr1).on((a1, b1) => a1._2.forall(v => v.i == b1.i))
+            .map(t => 1)
         }
         AvoidAliasConflict(q.ast) mustEqual n.ast
       }

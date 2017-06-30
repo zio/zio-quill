@@ -1,19 +1,18 @@
 package io.getquill.ast
 
-import io.getquill.util.Messages.fail
-
 trait StatefulTransformer[T] {
 
   val state: T
 
   def apply(e: Ast): (Ast, StatefulTransformer[T]) =
     e match {
-      case e: Query     => apply(e)
-      case e: Operation => apply(e)
-      case e: Action    => apply(e)
-      case e: Value     => apply(e)
-
-      case e: Ident     => (e, this)
+      case e: Query           => apply(e)
+      case e: Operation       => apply(e)
+      case e: Action          => apply(e)
+      case e: Value           => apply(e)
+      case e: Assignment      => apply(e)
+      case e: Ident           => (e, this)
+      case e: OptionOperation => apply(e)
 
       case Function(a, b) =>
         val (bt, btt) = apply(b)
@@ -27,11 +26,6 @@ trait StatefulTransformer[T] {
         val (bt, btt) = apply(b)(_.apply)
         (Infix(a, bt), btt)
 
-      case OptionOperation(t, a, b, c) =>
-        val (at, att) = apply(a)
-        val (ct, ctt) = att.apply(c)
-        (OptionOperation(t, at, b, ct), ctt)
-
       case If(a, b, c) =>
         val (at, att) = apply(a)
         val (bt, btt) = att.apply(b)
@@ -40,6 +34,12 @@ trait StatefulTransformer[T] {
 
       case l: Dynamic => (l, this)
 
+      case l: Lift    => (l, this)
+
+      case QuotedReference(a, b) =>
+        val (bt, btt) = apply(b)
+        (QuotedReference(a, bt), btt)
+
       case Block(a) =>
         val (at, att) = apply(a)(_.apply)
         (Block(at), att)
@@ -47,6 +47,28 @@ trait StatefulTransformer[T] {
       case Val(a, b) =>
         val (at, att) = apply(b)
         (Val(a, at), att)
+
+      case o: Ordering => (o, this)
+    }
+
+  def apply(o: OptionOperation): (OptionOperation, StatefulTransformer[T]) =
+    o match {
+      case OptionMap(a, b, c) =>
+        val (at, att) = apply(a)
+        val (ct, ctt) = att.apply(c)
+        (OptionMap(at, b, ct), ctt)
+      case OptionForall(a, b, c) =>
+        val (at, att) = apply(a)
+        val (ct, ctt) = att.apply(c)
+        (OptionForall(at, b, ct), ctt)
+      case OptionExists(a, b, c) =>
+        val (at, att) = apply(a)
+        val (ct, ctt) = att.apply(c)
+        (OptionExists(at, b, ct), ctt)
+      case OptionContains(a, c) =>
+        val (at, att) = apply(a)
+        val (ct, ctt) = att.apply(c)
+        (OptionContains(at, ct), ctt)
     }
 
   def apply(e: Query): (Query, StatefulTransformer[T]) =
@@ -96,9 +118,24 @@ trait StatefulTransformer[T] {
         val (bt, btt) = att.apply(b)
         val (ont, ontt) = btt.apply(on)
         (Join(t, at, bt, iA, iB, ont), ontt)
+      case FlatJoin(t, a, iA, on) =>
+        val (at, att) = apply(a)
+        val (ont, ontt) = att.apply(on)
+        (FlatJoin(t, at, iA, ont), ontt)
       case Distinct(a) =>
         val (at, att) = apply(a)
         (Distinct(at), att)
+      case Nested(a) =>
+        val (at, att) = apply(a)
+        (Nested(at), att)
+    }
+
+  def apply(e: Assignment): (Assignment, StatefulTransformer[T]) =
+    e match {
+      case Assignment(a, b, c) =>
+        val (bt, btt) = apply(b)
+        val (ct, ctt) = btt.apply(c)
+        (Assignment(a, bt, ct), ctt)
     }
 
   def apply(e: Operation): (Operation, StatefulTransformer[T]) =
@@ -123,33 +160,29 @@ trait StatefulTransformer[T] {
       case Tuple(a) =>
         val (at, att) = apply(a)(_.apply)
         (Tuple(at), att)
-      case Set(a) =>
-        val (at, att) = apply(a)(_.apply)
-        (Set(at), att)
     }
 
   def apply(e: Action): (Action, StatefulTransformer[T]) =
     e match {
-      case AssignedAction(a, b) =>
+      case Insert(a, b) =>
         val (at, att) = apply(a)
         val (bt, btt) = att.apply(b)(_.apply)
-        (AssignedAction(at, bt), btt)
-      case Update(a) =>
+        (Insert(at, bt), btt)
+      case Update(a, b) =>
         val (at, att) = apply(a)
-        (Update(at), att)
-      case Insert(a) =>
-        val (at, att) = apply(a)
-        (Insert(at), att)
+        val (bt, btt) = att.apply(b)(_.apply)
+        (Update(at, bt), btt)
       case Delete(a) =>
         val (at, att) = apply(a)
         (Delete(at), att)
-    }
-
-  def apply(e: Assignment): (Assignment, StatefulTransformer[T]) =
-    e match {
-      case Assignment(a, b, c) =>
-        val (ct, ctt) = apply(c)
-        (Assignment(a, b, ct), ctt)
+      case Returning(a, b, c) =>
+        val (at, att) = apply(a)
+        val (ct, ctt) = att.apply(c)
+        (Returning(at, b, ct), ctt)
+      case Foreach(a, b, c) =>
+        val (at, att) = apply(a)
+        val (ct, ctt) = att.apply(c)
+        (Foreach(at, b, ct), ctt)
     }
 
   def apply[U, R](list: List[U])(f: StatefulTransformer[T] => U => (R, StatefulTransformer[T])) =

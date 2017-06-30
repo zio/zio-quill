@@ -1,6 +1,6 @@
 package io.getquill.norm
 
-import io.getquill._
+import io.getquill.Spec
 import io.getquill.ast._
 
 class BetaReductionSpec extends Spec {
@@ -24,10 +24,10 @@ class BetaReductionSpec extends Spec {
         Ident("a'")
     }
     "with inline" - {
-      val entity = Entity("a")
+      val entity = Entity("a", Nil)
       val (a, b, c) = (Ident("a"), Ident("b"), Ident("c"))
       val (c1, c2, c3) = (Constant(1), Constant(2), Constant(3))
-      val map = collection.Map[Ident, Ast](c -> b, b -> a)
+      val map = collection.Map[Ast, Ast](c -> b, b -> a)
 
       "top level block" in {
         val block = Block(List(
@@ -82,9 +82,19 @@ class BetaReductionSpec extends Spec {
         val ast: Ast = Join(LeftJoin, Ident("a"), Ident("b"), Ident("c"), Ident("d"), Tuple(List(Ident("c"), Ident("d"))))
         BetaReduction(ast, Ident("c") -> Ident("c'"), Ident("d") -> Ident("d'")) mustEqual ast
       }
-      "option operation" in {
-        val ast: Ast = OptionOperation(OptionMap, Ident("a"), Ident("b"), Ident("b"))
-        BetaReduction(ast, Ident("b") -> Ident("b'")) mustEqual ast
+      "option operation" - {
+        "map" in {
+          val ast: Ast = OptionMap(Ident("a"), Ident("b"), Ident("b"))
+          BetaReduction(ast, Ident("b") -> Ident("b'")) mustEqual ast
+        }
+        "forall" in {
+          val ast: Ast = OptionForall(Ident("a"), Ident("b"), Ident("b"))
+          BetaReduction(ast, Ident("b") -> Ident("b'")) mustEqual ast
+        }
+        "exists" in {
+          val ast: Ast = OptionExists(Ident("a"), Ident("b"), Ident("b"))
+          BetaReduction(ast, Ident("b") -> Ident("b'")) mustEqual ast
+        }
       }
     }
   }

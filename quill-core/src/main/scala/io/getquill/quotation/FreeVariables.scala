@@ -14,33 +14,56 @@ case class FreeVariables(state: State)
       case f @ Function(params, body) =>
         val (_, t) = FreeVariables(State(state.seen ++ params, state.free))(body)
         (f, FreeVariables(State(state.seen, state.free ++ t.state.free)))
-      case OptionOperation(t, a, b, c) =>
-        (ast, free(a, b, c))
+      case q @ Foreach(a, b, c) =>
+        (q, free(a, b, c))
+      case other =>
+        super.apply(other)
+    }
+
+  override def apply(o: OptionOperation): (OptionOperation, StatefulTransformer[State]) =
+    o match {
+      case q @ OptionMap(a, b, c) =>
+        (q, free(a, b, c))
+      case q @ OptionForall(a, b, c) =>
+        (q, free(a, b, c))
+      case q @ OptionExists(a, b, c) =>
+        (q, free(a, b, c))
+      case other =>
+        super.apply(other)
+    }
+
+  override def apply(e: Assignment): (Assignment, StatefulTransformer[State]) =
+    e match {
+      case Assignment(a, b, c) =>
+        val t = FreeVariables(State(state.seen + a, state.free))
+        val (bt, btt) = t(b)
+        val (ct, ctt) = t(c)
+        (Assignment(a, bt, ct), FreeVariables(State(state.seen, state.free ++ btt.state.free ++ ctt.state.free)))
+    }
+
+  override def apply(action: Action): (Action, StatefulTransformer[State]) =
+    action match {
+      case q @ Returning(a, b, c) =>
+        (q, free(a, b, c))
       case other =>
         super.apply(other)
     }
 
   override def apply(query: Query): (Query, StatefulTransformer[State]) =
     query match {
-      case q @ Filter(a, b, c)    => (q, free(a, b, c))
-      case q @ Map(a, b, c)       => (q, free(a, b, c))
-      case q @ FlatMap(a, b, c)   => (q, free(a, b, c))
-      case q @ SortBy(a, b, c, d) => (q, free(a, b, c))
-      case q @ GroupBy(a, b, c)   => (q, free(a, b, c))
+      case q @ Filter(a, b, c)      => (q, free(a, b, c))
+      case q @ Map(a, b, c)         => (q, free(a, b, c))
+      case q @ FlatMap(a, b, c)     => (q, free(a, b, c))
+      case q @ SortBy(a, b, c, d)   => (q, free(a, b, c))
+      case q @ GroupBy(a, b, c)     => (q, free(a, b, c))
+      case q @ FlatJoin(t, a, b, c) => (q, free(a, b, c))
       case q @ Join(t, a, b, iA, iB, on) =>
         val (_, freeA) = apply(a)
-        val (_, freeB) = apply(a)
+        val (_, freeB) = apply(b)
         val (_, freeOn) = FreeVariables(State(state.seen + iA + iB, collection.Set.empty))(on)
         (q, FreeVariables(State(state.seen, state.free ++ freeA.state.free ++ freeB.state.free ++ freeOn.state.free)))
-      case _: Entity | _: Take | _: Drop | _: Union | _: UnionAll | _: Aggregation | _: Distinct =>
+      case _: Entity | _: Take | _: Drop | _: Union | _: UnionAll | _: Aggregation | _: Distinct | _: Nested =>
         super.apply(query)
-    }
-
-  override def apply(e: Assignment): (Assignment, StatefulTransformer[State]) =
-    e match {
-      case Assignment(a, b, c) =>
-        val (ct, ctt) = FreeVariables(State(state.seen + a, state.free))(c)
-        (Assignment(a, b, ct), ctt)
     }
 
   private def free(a: Ast, ident: Ident, c: Ast) = {

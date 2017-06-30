@@ -2,11 +2,15 @@ package io.getquill.norm
 
 import io.getquill.ast._
 
-case class BetaReduction(map: collection.Map[Ident, Ast])
+case class BetaReduction(map: collection.Map[Ast, Ast])
   extends StatelessTransformer {
 
   override def apply(ast: Ast) =
     ast match {
+
+      case ast if (map.contains(ast)) =>
+        BetaReduction(map - ast)(map(ast))
+
       case Property(Tuple(values), name) =>
         val aliases = values.distinct
         aliases match {
@@ -14,19 +18,45 @@ case class BetaReduction(map: collection.Map[Ident, Ast])
             super.apply(Property(alias, name))
           case _ => apply(values(name.drop(1).toInt - 1))
         }
+
       case FunctionApply(Function(params, body), values) =>
-        apply(BetaReduction(map ++ params.zip(values)).apply(body))
-      case ident: Ident =>
-        map.get(ident).map(BetaReduction(map - ident)(_)).getOrElse(ident)
+        apply(BetaReduction(map ++ params.zip(values).toMap).apply(body))
+
       case Function(params, body) =>
         Function(params, BetaReduction(map -- params)(body))
-      case OptionOperation(t, a, b, c) =>
-        OptionOperation(t, apply(a), b, BetaReduction(map - b)(c))
+
       case Block(statements) =>
         val vals = statements.collect { case x: Val => x.name -> x.body }
         BetaReduction(map ++ vals)(statements.last)
+
+      case Foreach(query, alias, body) =>
+        Foreach(query, alias, BetaReduction(map - alias)(body))
+
+      case Returning(action, alias, prop) =>
+        val t = BetaReduction(map - alias)
+        Returning(apply(action), alias, t(prop))
+
       case other =>
         super.apply(other)
+    }
+
+  override def apply(o: OptionOperation) =
+    o match {
+      case OptionMap(a, b, c) =>
+        OptionMap(apply(a), b, BetaReduction(map - b)(c))
+      case OptionForall(a, b, c) =>
+        OptionForall(apply(a), b, BetaReduction(map - b)(c))
+      case OptionExists(a, b, c) =>
+        OptionExists(apply(a), b, BetaReduction(map - b)(c))
+      case other =>
+        super.apply(other)
+    }
+
+  override def apply(e: Assignment) =
+    e match {
+      case Assignment(alias, prop, value) =>
+        val t = BetaReduction(map - alias)
+        Assignment(alias, t(prop), t(value))
     }
 
   override def apply(query: Query) =
@@ -43,14 +73,16 @@ case class BetaReduction(map: collection.Map[Ident, Ast])
         GroupBy(apply(a), b, BetaReduction(map - b)(c))
       case Join(t, a, b, iA, iB, on) =>
         Join(t, apply(a), apply(b), iA, iB, BetaReduction(map - iA - iB)(on))
-      case _: Take | _: Entity | _: Drop | _: Union | _: UnionAll | _: Aggregation | _: Distinct =>
+      case FlatJoin(t, a, iA, on) =>
+        FlatJoin(t, apply(a), iA, BetaReduction(map - iA)(on))
+      case _: Take | _: Entity | _: Drop | _: Union | _: UnionAll | _: Aggregation | _: Distinct | _: Nested =>
         super.apply(query)
     }
 }
 
 object BetaReduction {
 
-  def apply(ast: Ast, t: (Ident, Ast)*): Ast =
+  def apply(ast: Ast, t: (Ast, Ast)*): Ast =
     BetaReduction(t.toMap)(ast) match {
       case `ast` => ast
       case other => apply(other)

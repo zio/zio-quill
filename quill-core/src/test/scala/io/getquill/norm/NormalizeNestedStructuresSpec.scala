@@ -1,8 +1,21 @@
 package io.getquill.norm
 
-import io.getquill._
+import io.getquill.Spec
+import io.getquill.testContext.implicitOrd
+import io.getquill.testContext.qr1
+import io.getquill.testContext.qr2
+import io.getquill.testContext.quote
+import io.getquill.testContext.unquote
 
 class NormalizeNestedStructuresSpec extends Spec {
+
+  val unormalized = quote {
+    qr1.map(x => x.i).take(1).size
+  }
+
+  val normalized = quote {
+    qr1.take(1).map(x => x.i).size
+  }
 
   "returns Some if a nested structure changes" - {
     "flatMap" in {
@@ -34,102 +47,102 @@ class NormalizeNestedStructuresSpec extends Spec {
     }
     "sortBy" in {
       val q = quote {
-        qr1.sortBy(t => (t.i, t.s)._1)
+        qr1.sortBy(t => unormalized)
       }
       val n = quote {
-        qr1.sortBy(t => t.i)
+        qr1.sortBy(t => normalized)
       }
       NormalizeNestedStructures.unapply(q.ast) mustEqual Some(n.ast)
     }
     "groupBy" in {
       val q = quote {
-        qr1.groupBy(t => (t.i, t.s)._1)
+        qr1.groupBy(t => unormalized)
       }
       val n = quote {
-        qr1.groupBy(t => t.i)
+        qr1.groupBy(t => normalized)
       }
       NormalizeNestedStructures.unapply(q.ast) mustEqual Some(n.ast)
     }
     "aggregation" in {
       val q = quote {
-        qr1.map(t => (t.i, t.s)._1).max
+        qr1.map(t => unormalized).max
       }
       val n = quote {
-        qr1.map(t => t.i).max
+        qr1.map(t => normalized).max
       }
       NormalizeNestedStructures.unapply(q.ast) mustEqual Some(n.ast)
     }
     "take" in {
       val q = quote {
-        qr1.sortBy(t => (t.i, t.s)._1).take((1, 2)._2)
+        qr1.sortBy(t => unormalized).take(1)
       }
       val n = quote {
-        qr1.sortBy(t => t.i).take(2)
+        qr1.sortBy(t => normalized).take(1)
       }
       NormalizeNestedStructures.unapply(q.ast) mustEqual Some(n.ast)
     }
     "drop" in {
       val q = quote {
-        qr1.sortBy(t => (t.i, t.s)._1).drop((1, 2)._2)
+        qr1.sortBy(t => unormalized).drop(1)
       }
       val n = quote {
-        qr1.sortBy(t => t.i).drop(2)
+        qr1.sortBy(t => normalized).drop(1)
       }
       NormalizeNestedStructures.unapply(q.ast) mustEqual Some(n.ast)
     }
     "union" in {
       val q = quote {
-        qr1.filter(t => t.s == ("a", "b")._1).union(qr1)
+        qr1.filter(t => unormalized == 1L).union(qr1)
       }
       val n = quote {
-        qr1.filter(t => t.s == "a").union(qr1)
+        qr1.filter(t => normalized == 1L).union(qr1)
       }
       NormalizeNestedStructures.unapply(q.ast) mustEqual Some(n.ast)
     }
     "unionAll" in {
       val q = quote {
-        qr1.filter(t => t.s == ("a", "b")._1).unionAll(qr1)
+        qr1.filter(t => unormalized == 1L).unionAll(qr1)
       }
       val n = quote {
-        qr1.filter(t => t.s == "a").unionAll(qr1)
+        qr1.filter(t => normalized == 1L).unionAll(qr1)
       }
       NormalizeNestedStructures.unapply(q.ast) mustEqual Some(n.ast)
     }
     "outer join" - {
       "left" in {
         val q = quote {
-          qr1.filter(t => t.s == ("a", "b")._1).rightJoin(qr1).on((a, b) => a.s == b.s)
+          qr1.filter(t => unormalized == 1L).rightJoin(qr1).on((a, b) => a.s == b.s)
         }
         val n = quote {
-          qr1.filter(t => t.s == "a").rightJoin(qr1).on((a, b) => a.s == b.s)
+          qr1.filter(t => normalized == 1L).rightJoin(qr1).on((a, b) => a.s == b.s)
         }
         NormalizeNestedStructures.unapply(q.ast) mustEqual Some(n.ast)
       }
       "right" in {
         val q = quote {
-          qr1.rightJoin(qr1.filter(t => t.s == ("a", "b")._1)).on((a, b) => a.s == b.s)
+          qr1.rightJoin(qr1.filter(t => unormalized == 1L)).on((a, b) => a.s == b.s)
         }
         val n = quote {
-          qr1.rightJoin(qr1.filter(t => t.s == "a")).on((a, b) => a.s == b.s)
+          qr1.rightJoin(qr1.filter(t => normalized == 1L)).on((a, b) => a.s == b.s)
         }
         NormalizeNestedStructures.unapply(q.ast) mustEqual Some(n.ast)
       }
       "on" in {
         val q = quote {
-          qr1.rightJoin(qr1).on((a, b) => a.s == (b, 1)._1.s)
+          qr1.rightJoin(qr1).on((a, b) => unormalized == 1L)
         }
         val n = quote {
-          qr1.rightJoin(qr1).on((a, b) => a.s == b.s)
+          qr1.rightJoin(qr1).on((a, b) => normalized == 1L)
         }
         NormalizeNestedStructures.unapply(q.ast) mustEqual Some(n.ast)
       }
     }
-    "distinct" - {
+    "distinct" in {
       val q = quote {
-        qr1.filter(t => t.s == ("a", "b")._1).distinct
+        qr1.filter(t => unormalized == 1L).distinct
       }
       val n = quote {
-        qr1.filter(t => t.s == "a").distinct
+        qr1.filter(t => normalized == 1L).distinct
       }
       NormalizeNestedStructures.unapply(q.ast) mustEqual Some(n.ast)
     }

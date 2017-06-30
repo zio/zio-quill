@@ -1,8 +1,10 @@
 package io.getquill.util
 
-import io.getquill.Spec
 import java.io.Closeable
-import scala.concurrent.duration._
+
+import scala.concurrent.duration.DurationInt
+
+import io.getquill.Spec
 
 class CacheSpec extends Spec {
 
@@ -52,9 +54,8 @@ class CacheSpec extends Spec {
       Some(value)
     }
 
-    cache.getOrElseUpdate(1, _value, 100.milliseconds)
-
-    Thread.sleep(3000)
+    cache.getOrElseUpdate(1, _value, -1.milliseconds)
+    cache.getOrElseUpdate(2, None, -1.milliseconds)
 
     calls mustEqual 1
     value.closes mustEqual 1

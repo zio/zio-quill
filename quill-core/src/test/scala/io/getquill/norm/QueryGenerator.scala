@@ -1,8 +1,8 @@
 package io.getquill.norm
 
 import scala.util.Random
+
 import io.getquill.ast._
-import io.getquill.ast
 
 class QueryGenerator(seed: Int) {
 
@@ -10,7 +10,8 @@ class QueryGenerator(seed: Int) {
 
   def apply(i: Int): Query =
     if (i <= 2) {
-      Entity(string(3))
+      val s = string(3)
+      Entity(s, Nil)
     } else {
       random.nextInt(8) match {
         case 0 => map(i)

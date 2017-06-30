@@ -1,13 +1,15 @@
 package io.getquill.quotation
 
 import scala.reflect.ClassTag
-import io.getquill.{ Query => QuillQuery }
 import io.getquill.ast._
 import io.getquill.norm.BetaReduction
 import io.getquill.util.Messages.RichContext
 import io.getquill.util.Interleave
+import io.getquill.dsl.CoreDsl
+import scala.collection.immutable.StringOps
+import scala.reflect.macros.TypecheckException
 
-trait Parsing extends SchemaConfigParsing {
+trait Parsing {
   this: Quotation =>
 
   import c.universe.{ Ident => _, Constant => _, Function => _, If => _, Block => _, _ }
@@ -29,24 +31,24 @@ trait Parsing extends SchemaConfigParsing {
   }
 
   val astParser: Parser[Ast] = Parser[Ast] {
+    case q"$i: $typ"                        => astParser(i)
+    case `queryParser`(value)               => value
+    case `liftParser`(value)                => value
     case `valParser`(value)                 => value
     case `patMatchValParser`(value)         => value
     case `valueParser`(value)               => value
     case `quotedAstParser`(value)           => value
-    case `queryParser`(query)               => query
-    case `functionParser`(function)         => function
-    case `actionParser`(action)             => action
+    case `functionParser`(value)            => value
+    case `actionParser`(value)              => value
     case `infixParser`(value)               => value
+    case `orderingParser`(value)            => value
     case `operationParser`(value)           => value
-    case `identParser`(ident)               => ident
+    case `identParser`(value)               => value
     case `propertyParser`(value)            => value
     case `stringInterpolationParser`(value) => value
     case `optionOperationParser`(value)     => value
     case `boxingParser`(value)              => value
     case `ifParser`(value)                  => value
-
-    case q"$i: $typ"                        => astParser(i)
-
     case `patMatchParser`(value)            => value
     case `blockParser`(block)               => block
   }
@@ -95,14 +97,33 @@ trait Parsing extends SchemaConfigParsing {
     case q"if($a) $b else $c" => If(astParser(a), astParser(b), astParser(c))
   }
 
+  val liftParser: Parser[Lift] = Parser[Lift] {
+
+    case q"$pack.liftScalar[$t]($value)($encoder)"          => ScalarValueLift(value.toString, value, encoder)
+    case q"$pack.liftCaseClass[$t]($value)"                 => CaseClassValueLift(value.toString, value)
+
+    case q"$pack.liftQueryScalar[$t, $u]($value)($encoder)" => ScalarQueryLift(value.toString, value, encoder)
+    case q"$pack.liftQueryCaseClass[$t, $u]($value)"        => CaseClassQueryLift(value.toString, value)
+
+    // Unused, it's here only to make eclipse's presentation compiler happy :(
+    case q"$pack.lift[$t]($value)"                          => ScalarValueLift(value.toString, value, q"null")
+    case q"$pack.liftQuery[$t, $u]($value)"                 => ScalarQueryLift(value.toString, value, q"null")
+  }
+
   val quotedAstParser: Parser[Ast] = Parser[Ast] {
     case q"$pack.unquote[$t]($quoted)" => astParser(quoted)
-    case q"$pack.lift[$t]($value)"     => Dynamic(value)
-
-    case t if (t.tpe <:< c.weakTypeOf[Quoted[Any]]) =>
+    case t if (t.tpe <:< c.weakTypeOf[CoreDsl#Quoted[Any]]) =>
       unquote[Ast](t) match {
-        case Some(ast) if (!IsDynamic(ast)) => Rebind(c)(t, ast, astParser(_))
-        case other                          => Dynamic(t)
+        case Some(ast) if (!IsDynamic(ast)) =>
+          t match {
+            case t: c.universe.Block => ast // expand quote(quote(body)) locally
+            case t =>
+              Rebind(c)(t, ast, astParser(_)) match {
+                case Some(ast) => ast
+                case None      => QuotedReference(t, ast)
+              }
+          }
+        case other => Dynamic(t)
       }
   }
 
@@ -122,6 +143,8 @@ trait Parsing extends SchemaConfigParsing {
     case q"$pack.float2Float(${ astParser(v) })"               => v
     case q"$pack.double2Double(${ astParser(v) })"             => v
     case q"$pack.boolean2Boolean(${ astParser(v) })"           => v
+    case q"$pack.augmentString(${ astParser(v) })"             => v
+    case q"$pack.unaugmentString(${ astParser(v) })"           => v
 
     case q"$pack.Byte2byte(${ astParser(v) })"                 => v
     case q"$pack.Short2short(${ astParser(v) })"               => v
@@ -133,94 +156,105 @@ trait Parsing extends SchemaConfigParsing {
     case q"$pack.Boolean2boolean(${ astParser(v) })"           => v
   }
 
-  val queryParser: Parser[Query] = Parser[Query] {
+  val queryParser: Parser[Ast] = Parser[Ast] {
 
-    case q"$pack.query[${ t: Type }].apply(($alias) => $body)" =>
-      val config = parseEntityConfig(body)
-      Entity(t.typeSymbol.name.decodedName.toString, config.alias, config.properties, config.generated)
+    case q"$pack.query[$t]" =>
+      // Unused, it's here only to make eclipse's presentation compiler happy
+      Entity("unused", Nil)
 
-    case q"$pack.query[${ t: Type }]" =>
-      Entity(t.typeSymbol.name.decodedName.toString, None, List(), None)
+    case q"$pack.querySchema[$t](${ name: String }, ..$properties)" =>
+      Entity(name, properties.map(propertyAliasParser(_)))
 
-    case q"$source.filter(($alias) => $body)" if (is[QuillQuery[Any]](source)) =>
+    case q"$source.filter(($alias) => $body)" if (is[CoreDsl#Query[Any]](source)) =>
       Filter(astParser(source), identParser(alias), astParser(body))
 
-    case q"$source.withFilter(($alias) => $body)" if (is[QuillQuery[Any]](source)) =>
+    case q"$source.withFilter(($alias) => $body)" if (is[CoreDsl#Query[Any]](source)) =>
       Filter(astParser(source), identParser(alias), astParser(body))
 
-    case q"$source.map[$t](($alias) => $body)" if (is[QuillQuery[Any]](source)) =>
+    case q"$source.map[$t](($alias) => $body)" if (is[CoreDsl#Query[Any]](source)) =>
       Map(astParser(source), identParser(alias), astParser(body))
 
-    case q"$source.flatMap[$t](($alias) => $body)" if (is[QuillQuery[Any]](source)) =>
+    case q"$source.flatMap[$t](($alias) => $body)" if (is[CoreDsl#Query[Any]](source)) =>
       FlatMap(astParser(source), identParser(alias), astParser(body))
 
-    case q"$source.sortBy[$t](($alias) => $body)($ord)" if (is[QuillQuery[Any]](source)) =>
-      SortBy(astParser(source), identParser(alias), astParser(body), orderingParser(ord))
+    case q"$source.sortBy[$t](($alias) => $body)($ord)" if (is[CoreDsl#Query[Any]](source)) =>
+      SortBy(astParser(source), identParser(alias), astParser(body), astParser(ord))
 
-    case q"$source.groupBy[$t](($alias) => $body)" if (is[QuillQuery[Any]](source)) =>
+    case q"$source.groupBy[$t](($alias) => $body)" if (is[CoreDsl#Query[Any]](source)) =>
       GroupBy(astParser(source), identParser(alias), astParser(body))
 
-    case q"$a.min[$t]($o)" if (is[QuillQuery[Any]](a)) => Aggregation(AggregationOperator.`min`, astParser(a))
-    case q"$a.max[$t]($o)" if (is[QuillQuery[Any]](a)) => Aggregation(AggregationOperator.`max`, astParser(a))
-    case q"$a.avg[$t]($n)" if (is[QuillQuery[Any]](a)) => Aggregation(AggregationOperator.`avg`, astParser(a))
-    case q"$a.sum[$t]($n)" if (is[QuillQuery[Any]](a)) => Aggregation(AggregationOperator.`sum`, astParser(a))
-    case q"$a.size" if (is[QuillQuery[Any]](a))        => Aggregation(AggregationOperator.`size`, astParser(a))
+    case q"$a.min[$t]" if (is[CoreDsl#Query[Any]](a))     => Aggregation(AggregationOperator.`min`, astParser(a))
+    case q"$a.max[$t]" if (is[CoreDsl#Query[Any]](a))     => Aggregation(AggregationOperator.`max`, astParser(a))
+    case q"$a.avg[$t]($n)" if (is[CoreDsl#Query[Any]](a)) => Aggregation(AggregationOperator.`avg`, astParser(a))
+    case q"$a.sum[$t]($n)" if (is[CoreDsl#Query[Any]](a)) => Aggregation(AggregationOperator.`sum`, astParser(a))
+    case q"$a.size" if (is[CoreDsl#Query[Any]](a))        => Aggregation(AggregationOperator.`size`, astParser(a))
 
-    case q"$source.take($n)" if (is[QuillQuery[Any]](source)) =>
+    case q"$source.take($n)" if (is[CoreDsl#Query[Any]](source)) =>
       Take(astParser(source), astParser(n))
 
-    case q"$source.drop($n)" if (is[QuillQuery[Any]](source)) =>
+    case q"$source.drop($n)" if (is[CoreDsl#Query[Any]](source)) =>
       Drop(astParser(source), astParser(n))
 
-    case q"$source.union[$t]($n)" if (is[QuillQuery[Any]](source)) =>
+    case q"$source.union[$t]($n)" if (is[CoreDsl#Query[Any]](source)) =>
       Union(astParser(source), astParser(n))
 
-    case q"$source.unionAll[$t]($n)" if (is[QuillQuery[Any]](source)) =>
+    case q"$source.unionAll[$t]($n)" if (is[CoreDsl#Query[Any]](source)) =>
       UnionAll(astParser(source), astParser(n))
 
-    case q"$source.++[$t]($n)" if (is[QuillQuery[Any]](source)) =>
+    case q"$source.++[$t]($n)" if (is[CoreDsl#Query[Any]](source)) =>
       UnionAll(astParser(source), astParser(n))
 
     case q"${ joinCallParser(typ, a, Some(b)) }.on(($aliasA, $aliasB) => $body)" =>
       Join(typ, a, b, identParser(aliasA), identParser(aliasB), astParser(body))
 
-    case q"${ joinCallParser(typ, a, None) }($aliasA => $body)" =>
-      val alias = identParser(aliasA)
-      Join(typ, a, a, alias, alias, astParser(body))
+    case q"${ joinCallParser(typ, a, None) }($alias => $body)" =>
+      FlatJoin(typ, a, identParser(alias), astParser(body))
 
     case q"${ joinCallParser(typ, a, b) }" =>
       c.fail("a join clause must be followed by 'on'.")
 
-    case q"$source.distinct" if (is[QuillQuery[Any]](source)) =>
+    case q"$source.distinct" if (is[CoreDsl#Query[Any]](source)) =>
       Distinct(astParser(source))
 
-  }
+    case q"$source.nested" if (is[CoreDsl#Query[Any]](source)) =>
+      Nested(astParser(source))
 
-  implicit val orderingParser: Parser[Ordering] = Parser[Ordering] {
-    case q"$pack.orderingToOrd[$t]($o)"      => AscNullsFirst
-    case q"$pack.Ord.apply[..$t](..$elems)"  => TupleOrdering(elems.map(orderingParser(_)))
-    case q"$pack.Ord.asc[$t]($o)"            => Asc
-    case q"$pack.Ord.desc[$t]($o)"           => Desc
-    case q"$pack.Ord.ascNullsFirst[$t]($o)"  => AscNullsFirst
-    case q"$pack.Ord.descNullsFirst[$t]($o)" => DescNullsFirst
-    case q"$pack.Ord.ascNullsLast[$t]($o)"   => AscNullsLast
-    case q"$pack.Ord.descNullsLast[$t]($o)"  => DescNullsLast
   }
 
   implicit val propertyAliasParser: Parser[PropertyAlias] = Parser[PropertyAlias] {
-    case q"(($x1) => scala.this.Predef.ArrowAssoc[$t]($x2.$prop).->[$v](${ alias: String }))" =>
-      PropertyAlias(prop.decodedName.toString, alias)
+    case q"(($x1) => $pack.Predef.ArrowAssoc[$t]($prop).$arrow[$v](${ alias: String }))" =>
+      def path(tree: Tree): List[String] =
+        tree match {
+          case q"$a.$b" =>
+            path(a) :+ b.decodedName.toString
+          case q"$a.$b.map[$_]((..$_) => $_.$c)" =>
+            path(a) ++ List(b.decodedName.toString, c.decodedName.toString)
+          case _ =>
+            Nil
+        }
+      PropertyAlias(path(prop), alias)
+  }
+
+  implicit val orderingParser: Parser[Ordering] = Parser[Ordering] {
+    case q"$pack.implicitOrd[$t]"           => AscNullsFirst
+    case q"$pack.Ord.apply[..$t](..$elems)" => TupleOrdering(elems.map(orderingParser(_)))
+    case q"$pack.Ord.asc[$t]"               => Asc
+    case q"$pack.Ord.desc[$t]"              => Desc
+    case q"$pack.Ord.ascNullsFirst[$t]"     => AscNullsFirst
+    case q"$pack.Ord.descNullsFirst[$t]"    => DescNullsFirst
+    case q"$pack.Ord.ascNullsLast[$t]"      => AscNullsLast
+    case q"$pack.Ord.descNullsLast[$t]"     => DescNullsLast
   }
 
   val joinCallParser: Parser[(JoinType, Ast, Option[Ast])] = Parser[(JoinType, Ast, Option[Ast])] {
-    case q"$a.join[$t, $u]($b)" if (is[QuillQuery[Any]](a))      => (InnerJoin, astParser(a), Some(astParser(b)))
-    case q"$a.leftJoin[$t, $u]($b)" if (is[QuillQuery[Any]](a))  => (LeftJoin, astParser(a), Some(astParser(b)))
-    case q"$a.rightJoin[$t, $u]($b)" if (is[QuillQuery[Any]](a)) => (RightJoin, astParser(a), Some(astParser(b)))
-    case q"$a.fullJoin[$t, $u]($b)" if (is[QuillQuery[Any]](a))  => (FullJoin, astParser(a), Some(astParser(b)))
+    case q"$a.join[$t, $u]($b)" if (is[CoreDsl#Query[Any]](a))      => (InnerJoin, astParser(a), Some(astParser(b)))
+    case q"$a.leftJoin[$t, $u]($b)" if (is[CoreDsl#Query[Any]](a))  => (LeftJoin, astParser(a), Some(astParser(b)))
+    case q"$a.rightJoin[$t, $u]($b)" if (is[CoreDsl#Query[Any]](a)) => (RightJoin, astParser(a), Some(astParser(b)))
+    case q"$a.fullJoin[$t, $u]($b)" if (is[CoreDsl#Query[Any]](a))  => (FullJoin, astParser(a), Some(astParser(b)))
 
-    case q"$a.join[$t]" if (is[QuillQuery[Any]](a))              => (InnerJoin, astParser(a), None)
-    case q"$a.leftJoin[$t]" if (is[QuillQuery[Any]](a))          => (LeftJoin, astParser(a), None)
-    case q"$a.rightJoin[$t]" if (is[QuillQuery[Any]](a))         => (RightJoin, astParser(a), None)
+    case q"$a.join[$t]" if (is[CoreDsl#Query[Any]](a))              => (InnerJoin, astParser(a), None)
+    case q"$a.leftJoin[$t]" if (is[CoreDsl#Query[Any]](a))          => (LeftJoin, astParser(a), None)
+    case q"$a.rightJoin[$t]" if (is[CoreDsl#Query[Any]](a))         => (RightJoin, astParser(a), None)
   }
 
   val infixParser: Parser[Infix] = Parser[Infix] {
@@ -249,14 +283,16 @@ trait Parsing extends SchemaConfigParsing {
 
   val optionOperationParser: Parser[OptionOperation] = Parser[OptionOperation] {
     case q"$o.map[$t]({($alias) => $body})" if (is[Option[Any]](o)) =>
-      OptionOperation(OptionMap, astParser(o), identParser(alias), astParser(body))
+      OptionMap(astParser(o), identParser(alias), astParser(body))
     case q"$o.forall({($alias) => $body})" if (is[Option[Any]](o)) =>
-      OptionOperation(OptionForall, astParser(o), identParser(alias), astParser(body))
+      OptionForall(astParser(o), identParser(alias), astParser(body))
     case q"$o.exists({($alias) => $body})" if (is[Option[Any]](o)) =>
-      OptionOperation(OptionExists, astParser(o), identParser(alias), astParser(body))
+      OptionExists(astParser(o), identParser(alias), astParser(body))
+    case q"$o.contains[$t]($body)" if (is[Option[Any]](o)) =>
+      OptionContains(astParser(o), astParser(body))
   }
 
-  val propertyParser: Parser[Property] = Parser[Property] {
+  val propertyParser: Parser[Ast] = Parser[Ast] {
     case q"$e.$property" => Property(astParser(e), property.decodedName.toString)
   }
 
@@ -290,11 +326,17 @@ trait Parsing extends SchemaConfigParsing {
     case q"${ astParser(a) }.apply[..$t](...$values)" => FunctionApply(a, values.flatten.map(astParser(_)))
   }
 
-  val equalityOperationParser: Parser[Operation] =
-    operationParser(_ => true) {
-      case "==" => EqualityOperator.`==`
-      case "!=" => EqualityOperator.`!=`
-    }
+  val equalityOperationParser: Parser[Operation] = Parser[Operation] {
+    case q"$a.==($b)" =>
+      checkTypes(a, b)
+      BinaryOperation(astParser(a), EqualityOperator.`==`, astParser(b))
+    case q"$a.equals($b)" =>
+      checkTypes(a, b)
+      BinaryOperation(astParser(a), EqualityOperator.`==`, astParser(b))
+    case q"$a.!=($b)" =>
+      checkTypes(a, b)
+      BinaryOperation(astParser(a), EqualityOperator.`!=`, astParser(b))
+  }
 
   val booleanOperationParser: Parser[Operation] =
     operationParser(is[Boolean](_)) {
@@ -315,10 +357,12 @@ trait Parsing extends SchemaConfigParsing {
   }
 
   val stringOperationParser: Parser[Operation] =
-    operationParser(is[String](_)) {
+    operationParser(t => is[String](t) || is[StringOps](t)) {
       case "+"           => StringOperator.`+`
       case "toUpperCase" => StringOperator.`toUpperCase`
       case "toLowerCase" => StringOperator.`toLowerCase`
+      case "toLong"      => StringOperator.`toLong`
+      case "toInt"       => StringOperator.`toInt`
     }
 
   val numericOperationParser: Parser[Operation] =
@@ -337,13 +381,14 @@ trait Parsing extends SchemaConfigParsing {
 
   val setOperationParser: Parser[Operation] = {
     val unary =
-      operationParser(is[io.getquill.Query[Any]](_)) {
+      operationParser(is[CoreDsl#Query[Any]](_)) {
         case "isEmpty"  => SetOperator.`isEmpty`
         case "nonEmpty" => SetOperator.`nonEmpty`
       }
     Parser[Operation] {
-      case q"$a.contains[..$t]($b)" => BinaryOperation(astParser(a), SetOperator.`contains`, astParser(b))
-      case unary(op)                => op
+      case q"$a.contains[$t]($b)" if (is[CoreDsl#Query[Any]])(a) =>
+        BinaryOperation(astParser(a), SetOperator.`contains`, astParser(b))
+      case unary(op) => op
     }
   }
 
@@ -353,30 +398,53 @@ trait Parsing extends SchemaConfigParsing {
   private def is[T](tree: Tree)(implicit t: TypeTag[T]) =
     tree.tpe <:< t.tpe
 
-  val valueParser: Parser[Value] = Parser[Value] {
+  val valueParser: Parser[Ast] = Parser[Ast] {
     case q"null" => NullValue
     case Literal(c.universe.Constant(v)) => Constant(v)
     case q"((..$v))" if (v.size > 1) => Tuple(v.map(astParser(_)))
-    case q"$pack.Set.apply[..$t](..$v)" => Set(v.map(astParser(_)))
-    case q"((scala.this.Predef.ArrowAssoc[$t1]($v1).$arrow[$t2]($v2)))" => Tuple(List(astParser(v1), astParser(v2)))
+    case q"(($pack.Predef.ArrowAssoc[$t1]($v1).$arrow[$t2]($v2)))" => Tuple(List(astParser(v1), astParser(v2)))
+    case q"io.getquill.dsl.UnlimitedTuple.apply($v)" => astParser(v)
+    case q"io.getquill.dsl.UnlimitedTuple.apply(..$v)" => Tuple(v.map(astParser(_)))
   }
 
   val actionParser: Parser[Ast] = Parser[Ast] {
     case q"$query.$method(..$assignments)" if (method.decodedName.toString == "update") =>
-      AssignedAction(Update(astParser(query)), assignments.map(assignmentParser(_)))
+      Update(astParser(query), assignments.map(assignmentParser(_)))
     case q"$query.insert(..$assignments)" =>
-      AssignedAction(Insert(astParser(query)), assignments.map(assignmentParser(_)))
-    case q"$query.$method" if (method.decodedName.toString == "update") =>
-      Function(List(Ident("x1")), Update(astParser(query)))
-    case q"$query.insert" =>
-      Function(List(Ident("x1")), Insert(astParser(query)))
+      Insert(astParser(query), assignments.map(assignmentParser(_)))
     case q"$query.delete" =>
       Delete(astParser(query))
+    case q"$action.returning[$r](($alias) => $body)" =>
+      Returning(astParser(action), identParser(alias), astParser(body))
+    case tree @ q"$query.foreach[$t](($alias) => $body)" if (is[CoreDsl#Query[Any]](query)) =>
+      Foreach(astParser(query), identParser(alias), astParser(body))
   }
 
   private val assignmentParser: Parser[Assignment] = Parser[Assignment] {
-    case q"((${ identParser(i1) }) => scala.this.Predef.ArrowAssoc[$t](${ identParser(i2) }.$prop).$arrow[$v]($value))" if (i1 == i2) =>
-      Assignment(i1, prop.decodedName.toString, astParser(value))
+    case q"((${ identParser(i1) }) => $pack.Predef.ArrowAssoc[$t]($prop).$arrow[$v]($value))" =>
+      checkTypes(prop, value)
+      Assignment(i1, astParser(prop), astParser(value))
+
+    // Unused, it's here only to make eclipse's presentation compiler happy
+    case astParser(ast) => Assignment(Ident("unused"), Ident("unused"), Constant("unused"))
   }
 
+  private def checkTypes(lhs: Tree, rhs: Tree): Unit = {
+    def unquoted(tree: Tree) =
+      is[CoreDsl#Quoted[Any]](tree) match {
+        case false => tree
+        case true  => q"unquote($tree)"
+      }
+    val t = TypeName(c.freshName("T"))
+    try c.typecheck(
+      q"""
+        def apply[$t](lhs: $t)(rhs: $t) = ()
+        apply(${unquoted(lhs)})($rhs)
+      """,
+      c.TYPEmode
+    ) catch {
+      case t: TypecheckException => c.error(t.msg)
+    }
+    ()
+  }
 }

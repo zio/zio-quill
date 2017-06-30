@@ -41,9 +41,11 @@ db.session.contactPoint=127.0.0.1
 db.session.queryOptions.consistencyLevel=ONE
 ```
 
+Add your project's `build.sbt` dependencies as described in [Cassandra Contexts](https://github.com/getquill/quill#cassandra-contexts)
+
 ## Abstraction level ##
 
-The Datastax Java driver provides simple abstractions that let you either write you queries as plain strings or to use a declarative Query Builder. It also provides a higher level [Object Mapper](https://github.com/datastax/java-driver/tree/2.1/manual/object_mapper). For this comparison we will only use the Query Builder.
+The Datastax Java driver provides simple abstractions that let you either write your queries as plain strings or use a declarative Query Builder. It also provides a higher level [Object Mapper](https://github.com/datastax/java-driver/tree/2.1/manual/object_mapper). For this comparison we will only use the Query Builder.
 
 Although both Quill and Phantom represent column family rows as flat immutable structures (case classes without nested data) and provide a type-safe composable query DSL, they work at a different abstraction level. 
 
@@ -156,13 +158,14 @@ Phantom requires mapping classes to lift the database model to DSL types. The qu
 **Quill**
 ```scala
 import io.getquill._
-import io.getquill.naming._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object Quill extends App {
 
-  val db = source(new CassandraAsyncSourceConfig[SnakeCase]("DB"))
+  val db = new CassandraAsyncContext[SnakeCase]("db")
+
+  import db._
 
   case class WeatherStation(country: String, city: String, stationId: String, entry: Int, value: Int)
 
@@ -174,7 +177,7 @@ object Quill extends App {
     }
   }
 
-  val result = db.run(WeatherStation.getAllByCountry)("UK")
+  val result = db.run(WeatherStation.getAllByCountry(lift("UK")))
 
   result.onComplete(_ => db.close())
 }
@@ -309,13 +312,14 @@ Phantom allows the user certain level of composability, but it gets a bit verbos
 **Quill**
 ```scala
 import io.getquill._
-import io.getquill.naming._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object Quill extends App {
 
-  val db = source(new CassandraAsyncSourceConfig[SnakeCase]("DB"))
+  val db = new CassandraAsyncContext[SnakeCase]("db")
+
+  import db._
 
   case class WeatherStation(country: String, city: String, stationId: String, entry: Int, value: Int)
 
@@ -337,7 +341,7 @@ object Quill extends App {
     }
   }
 
-  val result = db.run(WeatherStation.getAllByCountryCityAndId)("UK", "London", "SW27")
+  val result = db.run(WeatherStation.getAllByCountryCityAndId("UK", "London", "SW2"))
 
   result.onComplete(_ => db.close())
 }
@@ -533,21 +537,21 @@ It is necessary to define a new `Column` type to be used when defining the data 
 **Quill**
 ```scala
 import io.getquill._
-import io.getquill.naming._
-import io.getquill.sources.MappedEncoding
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object Quill extends App {
 
-  val db = source(new CassandraAsyncSourceConfig[SnakeCase]("DB"))
+  val db = new CassandraAsyncContext[SnakeCase]("db")
+
+  import db._
 
   case class Country(code: String) extends AnyVal
 
   object Country {
 
-    implicit val decode: MappedEncoding[String, Country] = mappedEncoding[String, Country](Country(_))
-    implicit val encode: MappedEncoding[Country, String] = mappedEncoding[Country, String](_.code)
+    implicit val decode: MappedEncoding[String, Country] = MappedEncoding[String, Country](Country(_))
+    implicit val encode: MappedEncoding[Country, String] = MappedEncoding[Country, String](_.code)
   }
   case class WeatherStation(country: Country, city: String, stationId: String, entry: Int, value: Int)
 
@@ -559,7 +563,7 @@ object Quill extends App {
     }
   }
 
-  val result = db.run(WeatherStation.getAllByCountry)(Country("UK"))
+  val result = db.run(WeatherStation.getAllByCountry(lift(Country("UK"))))
 
   result.onComplete(_ => db.close())
 }

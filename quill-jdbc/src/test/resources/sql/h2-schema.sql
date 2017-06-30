@@ -35,6 +35,9 @@ CREATE TABLE IF NOT EXISTS EncodingTestEntity(
     v9 DOUBLE PRECISIOn,
     v10 BYTEA,
     v11 TIMESTAMP,
+    v12 VARCHAR(255),
+    v13 DATE,
+    v14 UUID,
     o1 VARCHAR(255),
     o2 DECIMAL(5,2),
     o3 BOOLEAN,
@@ -45,7 +48,10 @@ CREATE TABLE IF NOT EXISTS EncodingTestEntity(
     o8 FLOAT,
     o9 DOUBLE PRECISIOn,
     o10 BYTEA,
-    o11 TIMESTAMP
+    o11 TIMESTAMP,
+    o12 VARCHAR(255),
+    o13 DATE,
+    o14 UUID
 );
 
 CREATE TABLE IF NOT EXISTS TestEntity(

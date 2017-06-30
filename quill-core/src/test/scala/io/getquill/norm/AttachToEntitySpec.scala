@@ -1,7 +1,16 @@
 package io.getquill.norm
 
-import io.getquill._
-import io.getquill.ast._
+import io.getquill.Spec
+import io.getquill.ast.AscNullsFirst
+import io.getquill.ast.Constant
+import io.getquill.ast.Ident
+import io.getquill.ast.Map
+import io.getquill.ast.SortBy
+import io.getquill.testContext.implicitOrd
+import io.getquill.testContext.qr1
+import io.getquill.testContext.qr2
+import io.getquill.testContext.quote
+import io.getquill.testContext.unquote
 
 class AttachToEntitySpec extends Spec {
 
@@ -69,15 +78,6 @@ class AttachToEntitySpec extends Spec {
         }
         attachToEntity(q.ast) mustEqual n.ast
       }
-      "groupBy" in {
-        val q = quote {
-          qr1.groupBy(b => b.s)
-        }
-        val n = quote {
-          qr1.sortBy(b => 1).groupBy(b => b.s)
-        }
-        attachToEntity(q.ast) mustEqual n.ast
-      }
       "distinct" in {
         val q = quote {
           qr1.sortBy(b => b.s).drop(1).distinct
@@ -118,11 +118,21 @@ class AttachToEntitySpec extends Spec {
       }
       attachToEntity(q.ast) mustEqual n.ast
     }
+    "groupBy.map" in {
+      val q = quote {
+        qr1.groupBy(a => a.i).map(a => 1)
+      }
+      val n = quote {
+        qr1.groupBy(a => a.i).map(a => 1).sortBy(x => 1)
+      }
+      attachToEntity(q.ast) mustEqual n.ast
+    }
   }
 
   "fails if the entity isn't found" in {
-    val e = intercept[IllegalStateException] {
+    intercept[IllegalStateException] {
       attachToEntity(Map(Ident("a"), Ident("b"), Ident("c")))
     }
+    ()
   }
 }

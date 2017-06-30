@@ -3,6 +3,7 @@ package io.getquill.quotation
 import scala.reflect.macros.whitebox.Context
 
 import io.getquill.ast._
+import io.getquill.dsl.CoreDsl
 
 trait Liftables {
   val c: Context
@@ -15,6 +16,10 @@ trait Liftables {
     case ast: Action => actionLiftable(ast)
     case ast: Value => valueLiftable(ast)
     case ast: Ident => identLiftable(ast)
+    case ast: Ordering => orderingLiftable(ast)
+    case ast: Lift => liftLiftable(ast)
+    case ast: Assignment => assignmentLiftable(ast)
+    case ast: OptionOperation => optionOperationLiftable(ast)
     case Val(name, body) => q"$pack.Val($name, $body)"
     case Block(statements) => q"$pack.Block($statements)"
     case Property(a, b) => q"$pack.Property($a, $b)"
@@ -23,16 +28,17 @@ trait Liftables {
     case BinaryOperation(a, b, c) => q"$pack.BinaryOperation($a, $b, $c)"
     case UnaryOperation(a, b) => q"$pack.UnaryOperation($a, $b)"
     case Infix(a, b) => q"$pack.Infix($a, $b)"
-    case OptionOperation(a, b, c, d) => q"$pack.OptionOperation($a, $b, $c, $d)"
     case If(a, b, c) => q"$pack.If($a, $b, $c)"
-    case Dynamic(tree: Tree) if (tree.tpe <:< c.weakTypeOf[Quoted[Any]]) => q"$tree.ast"
+    case Dynamic(tree: Tree) if (tree.tpe <:< c.weakTypeOf[CoreDsl#Quoted[Any]]) => q"$tree.ast"
     case Dynamic(tree: Tree) => q"$pack.Constant($tree)"
+    case QuotedReference(tree: Tree, ast) => q"$ast"
   }
 
-  implicit val optionOperationTypeLiftable: Liftable[OptionOperationType] = Liftable[OptionOperationType] {
-    case OptionMap    => q"$pack.OptionMap"
-    case OptionForall => q"$pack.OptionForall"
-    case OptionExists => q"$pack.OptionExists"
+  implicit val optionOperationLiftable: Liftable[OptionOperation] = Liftable[OptionOperation] {
+    case OptionMap(a, b, c)    => q"$pack.OptionMap($a,$b,$c)"
+    case OptionForall(a, b, c) => q"$pack.OptionForall($a,$b,$c)"
+    case OptionExists(a, b, c) => q"$pack.OptionExists($a,$b,$c)"
+    case OptionContains(a, b)  => q"$pack.OptionContains($a,$b)"
   }
 
   implicit val binaryOperatorLiftable: Liftable[BinaryOperator] = Liftable[BinaryOperator] {
@@ -58,6 +64,8 @@ trait Liftables {
     case BooleanOperator.`!`          => q"$pack.BooleanOperator.`!`"
     case StringOperator.`toUpperCase` => q"$pack.StringOperator.`toUpperCase`"
     case StringOperator.`toLowerCase` => q"$pack.StringOperator.`toLowerCase`"
+    case StringOperator.`toLong`      => q"$pack.StringOperator.`toLong`"
+    case StringOperator.`toInt`       => q"$pack.StringOperator.`toInt`"
     case SetOperator.`nonEmpty`       => q"$pack.SetOperator.`nonEmpty`"
     case SetOperator.`isEmpty`        => q"$pack.SetOperator.`isEmpty`"
   }
@@ -71,7 +79,7 @@ trait Liftables {
   }
 
   implicit val queryLiftable: Liftable[Query] = Liftable[Query] {
-    case Entity(a, b, c, d)     => q"$pack.Entity($a, $b, $c, $d)"
+    case Entity(a, b)           => q"$pack.Entity($a, $b)"
     case Filter(a, b, c)        => q"$pack.Filter($a, $b, $c)"
     case Map(a, b, c)           => q"$pack.Map($a, $b, $c)"
     case FlatMap(a, b, c)       => q"$pack.FlatMap($a, $b, $c)"
@@ -83,7 +91,9 @@ trait Liftables {
     case Union(a, b)            => q"$pack.Union($a, $b)"
     case UnionAll(a, b)         => q"$pack.UnionAll($a, $b)"
     case Join(a, b, c, d, e, f) => q"$pack.Join($a, $b, $c, $d, $e, $f)"
+    case FlatJoin(a, b, c, d)   => q"$pack.FlatJoin($a, $b, $c, $d)"
     case Distinct(a)            => q"$pack.Distinct($a)"
+    case Nested(a)              => q"$pack.Nested($a)"
   }
 
   implicit val propertyAliasLiftable: Liftable[PropertyAlias] = Liftable[PropertyAlias] {
@@ -108,10 +118,11 @@ trait Liftables {
   }
 
   implicit val actionLiftable: Liftable[Action] = Liftable[Action] {
-    case AssignedAction(a, b) => q"$pack.AssignedAction($a, $b)"
-    case Update(a)            => q"$pack.Update($a)"
-    case Insert(a)            => q"$pack.Insert($a)"
-    case Delete(a)            => q"$pack.Delete($a)"
+    case Update(a, b)       => q"$pack.Update($a, $b)"
+    case Insert(a, b)       => q"$pack.Insert($a, $b)"
+    case Delete(a)          => q"$pack.Delete($a)"
+    case Returning(a, b, c) => q"$pack.Returning($a, $b, $c)"
+    case Foreach(a, b, c)   => q"$pack.Foreach($a, $b, $c)"
   }
 
   implicit val assignmentLiftable: Liftable[Assignment] = Liftable[Assignment] {
@@ -122,9 +133,15 @@ trait Liftables {
     case NullValue   => q"$pack.NullValue"
     case Constant(a) => q"$pack.Constant(${Literal(c.universe.Constant(a))})"
     case Tuple(a)    => q"$pack.Tuple($a)"
-    case Set(a)      => q"$pack.Set($a)"
   }
   implicit val identLiftable: Liftable[Ident] = Liftable[Ident] {
     case Ident(a) => q"$pack.Ident($a)"
+  }
+
+  implicit val liftLiftable: Liftable[Lift] = Liftable[Lift] {
+    case ScalarValueLift(a, b: Tree, c: Tree) => q"$pack.ScalarValueLift($a, $b, $c)"
+    case CaseClassValueLift(a, b: Tree)       => q"$pack.CaseClassValueLift($a, $b)"
+    case ScalarQueryLift(a, b: Tree, c: Tree) => q"$pack.ScalarQueryLift($a, $b, $c)"
+    case CaseClassQueryLift(a, b: Tree)       => q"$pack.CaseClassQueryLift($a, $b)"
   }
 }

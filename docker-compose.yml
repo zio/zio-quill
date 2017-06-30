@@ -1,57 +1,88 @@
-postgres:
-  image: postgres
-  ports:
-    - "15432:5432"
-  environment:
-    - POSTGRES_USER=postgres
+version: '3.2'
 
+services:
+  postgres:
+    image: postgres:9.6
+    ports:
+      - "15432:5432"
+    environment:
+      - POSTGRES_USER=postgres
 
-mysql:
-  image: mysql
-  ports:
-    - "13306:3306"
-  environment:
-    - MYSQL_ROOT_PASSWORD=root
-    - MYSQL_DATABASE=quill_test
-    - MYSQL_ALLOW_EMPTY_PASSWORD=yes
+  mysql:
+    image: mysql:5.7
+    ports:
+      - "13306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=quill_test
+      - MYSQL_ALLOW_EMPTY_PASSWORD=yes
 
-cassandra:
-  image: cassandra:3.3
-  ports:
-    - "19042:9042"
-    - "19160:9160"
-    - "17199:7199"
-    - "17001:7001"
-    - "17000:7000"
+  cassandra:
+    image: cassandra:3.7
+    ports:
+      - "19042:9042"
+      - "19160:9160"
+      - "17199:7199"
+      - "17001:7001"
+      - "17000:7000"
 
-setup:
-  build: .
-  dockerfile: ./build/Dockerfile-setup
-  links:
-    - postgres:postgres
-    - mysql:mysql
-    - cassandra:cassandra
-  volumes:
-    - ./:/app
-  command:
-    - ./build/setup.sh
-  working_dir: /app
+#  sqlserver:
+#    image: microsoft/mssql-server-linux
+#    ports:
+#      - "11433:1433"
+#    environment:
+#      - ACCEPT_EULA=Y
+#      - SA_PASSWORD=QuillRocks!
 
-sbt:
-  build: .
-  dockerfile: ./build/Dockerfile-sbt
-  command: sbt
-  links:
-    - postgres:postgres
-    - mysql:mysql
-    - cassandra:cassandra
-  volumes:
-    - ./:/app
-    - ~/.ivy2:/root/.ivy2
-    - ~/.m2:/root/.m2
-    - ~/.ssh/:/root/.ssh/
-  environment:
-    - TRAVIS_PULL_REQUEST
-    - TRAVIS_BRANCH
-    - ENCRYPTION_PASSWORD
-    - SBT_OPTS=-Dfile.encoding=UTF-8 -Xms512m -Xmx1536m -Xss2m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC
+  setup:
+    build:
+      cache_from:
+        - quillscala/setup:latest
+      context: .
+      dockerfile: ./build/Dockerfile-setup
+    image: quillscala/setup
+    links:
+      - postgres:postgres
+      - mysql:mysql
+      - cassandra:cassandra
+#     - sqlserver:sqlserver
+    volumes:
+      - ./:/app
+    command:
+      - ./build/setup.sh
+
+  sbt:
+    build:
+      cache_from:
+        - quillscala/sbt:latest
+      context: .
+      dockerfile: ./build/Dockerfile-sbt
+    image: quillscala/sbt
+    ports:
+      - "15005:5005"
+    command: sbt
+    links:
+      - postgres:postgres
+      - mysql:mysql
+      - cassandra:cassandra
+#     - sqlserver:sqlserver
+    volumes:
+      - ./:/app
+      - ~/.ivy2:/root/.ivy2
+      - ~/.m2:/root/.m2
+      - ~/.sbt:/root/.sbt
+      - ~/.ssh:/root/.ssh
+    environment:
+      - TRAVIS_PULL_REQUEST
+      - TRAVIS_BRANCH
+      - SCALA_VERSION
+      - ENCRYPTION_PASSWORD
+      - SBT_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005 -Dfile.encoding=UTF-8 -Xms512m -Xmx1536m -Xss2m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - MYSQL_HOST=mysql
+      - MYSQL_PORT=3306
+      - SQL_SERVER_HOST=sqlserver
+      - SQL_SERVER_PORT=1433
+      - CASSANDRA_HOST=cassandra
+      - CASSANDRA_PORT=9042
