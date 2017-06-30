@@ -45,6 +45,14 @@ case class FlattenSqlQuery(
 )
   extends SqlQuery
 
+object TakeDropFlatten {
+  def unapply(q: Query): Option[(Query, Option[Ast], Option[Ast])] = q match {
+    case Take(q: FlatMap, n) => Some((q, Some(n), None))
+    case Drop(q: FlatMap, n) => Some((q, None, Some(n)))
+    case _                   => None
+  }
+}
+
 object SqlQuery {
 
   def apply(query: Ast): SqlQuery =
@@ -55,6 +63,7 @@ object SqlQuery {
       case _: Operation | _: Value              => FlattenSqlQuery(select = List(SelectValue(query)))
       case map @ Map(_: Nested, a, b) if a == b => flatten(map, a.name)
       case Map(q, a, b) if a == b               => apply(q)
+      case TakeDropFlatten(q, limit, offset)    => flatten(q, "x").copy(limit = limit, offset = offset)
       case q: Query                             => flatten(q, "x")
       case infix: Infix                         => flatten(infix, "x")
       case other                                => fail(s"Query not properly normalized. Please open a bug report. Ast: '$other'")
