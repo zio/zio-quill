@@ -11,11 +11,11 @@ class ExpandNestedQueriesSpec extends Spec {
       (for {
         a <- qr1
         b <- qr2
-      } yield b).take(10)
+      } yield b).nested
     }
 
     testContext.run(q).string mustEqual
-      "SELECT b.s, b.i, b.l, b.o FROM (SELECT x.s, x.i, x.l, x.o FROM TestEntity a, TestEntity2 x) b LIMIT 10"
+      "SELECT x.s, x.i, x.l, x.o FROM (SELECT x.s, x.i, x.l, x.o FROM TestEntity a, TestEntity2 x) x"
   }
 
   "partial select" in {
@@ -24,10 +24,10 @@ class ExpandNestedQueriesSpec extends Spec {
       (for {
         a <- qr1
         b <- qr2
-      } yield b.i).take(10)
+      } yield (b.i, a.i)).nested
     }
     testContext.run(q).string mustEqual
-      "SELECT x.* FROM (SELECT b.i FROM TestEntity a, TestEntity2 b) x LIMIT 10"
+      "SELECT x._1, x._2 FROM (SELECT b.i _1, a.i _2 FROM TestEntity a, TestEntity2 b) x"
   }
 
   "tokenize property" in {

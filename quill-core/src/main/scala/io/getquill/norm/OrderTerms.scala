@@ -1,11 +1,6 @@
 package io.getquill.norm
 
-import io.getquill.ast.Filter
-import io.getquill.ast.GroupBy
-import io.getquill.ast.Map
-import io.getquill.ast.Query
-import io.getquill.ast.SortBy
-import io.getquill.ast.Take
+import io.getquill.ast._
 
 object OrderTerms {
 
@@ -19,10 +14,15 @@ object OrderTerms {
       case Filter(SortBy(a, b, c, d), e, f) =>
         Some(SortBy(Filter(a, e, f), b, c, d))
 
-      // a.map(b => c).take(d) =>
-      //    a.take(d).map(b => c)
-      case Take(Map(a, b, c), d) =>
-        Some(Map(Take(a, d), b, c))
+      // a.flatMap(b => c).take(n).map(d => e) =>
+      //   a.flatMap(b => c).map(d => e).take(n)
+      case Map(Take(fm: FlatMap, n), ma, mb) =>
+        Some(Take(Map(fm, ma, mb), n))
+
+      // a.flatMap(b => c).drop(n).map(d => e) =>
+      //   a.flatMap(b => c).map(d => e).drop(n)
+      case Map(Drop(fm: FlatMap, n), ma, mb) =>
+        Some(Drop(Map(fm, ma, mb), n))
 
       case other => None
     }

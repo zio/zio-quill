@@ -332,6 +332,21 @@ class SqlQuerySpec extends Spec {
         testContext.run(q).string mustEqual
           "SELECT x.s, x.i, x.l, x.o FROM (SELECT x.s, x.i, x.l, x.o FROM TestEntity x LIMIT 1) x OFFSET 2"
       }
+      "for comprehension" - {
+        val q = quote(for {
+          q1 <- qr1
+          q2 <- qr2 if q1.i == q2.i
+        } yield (q1.i, q2.i, q1.s, q2.s))
+
+        "take" in {
+          testContext.run(q.take(3)).string mustEqual
+            "SELECT q1.i, q2.i, q1.s, q2.s FROM TestEntity q1, TestEntity2 q2 WHERE q1.i = q2.i LIMIT 3"
+        }
+        "drop" in {
+          testContext.run(q.drop(3)).string mustEqual
+            "SELECT q1.i, q2.i, q1.s, q2.s FROM TestEntity q1, TestEntity2 q2 WHERE q1.i = q2.i OFFSET 3"
+        }
+      }
     }
     "set operation query" - {
       "union" in {
