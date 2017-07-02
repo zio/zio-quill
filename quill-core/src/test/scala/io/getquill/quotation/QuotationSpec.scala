@@ -915,6 +915,17 @@ class QuotationSpec extends Spec {
         l.value mustEqual 1
         l.encoder mustEqual intEncoder
       }
+      "embedded" in {
+        case class EmbeddedTestEntity(id: String) extends Embedded
+        case class TestEntity(embedded: EmbeddedTestEntity)
+        val t = TestEntity(EmbeddedTestEntity("test"))
+        val q = quote {
+          query[TestEntity].insert(lift(t))
+        }
+        q.liftings.`t.embedded`.value mustEqual t.embedded
+        val q2 = quote(q)
+        q2.liftings.`q.liftings.t.embedded.value.id`.value mustEqual t.embedded.id
+      }
       "merges properties into the case class lifting" - {
         val t = TestEntity("s", 1, 2L, Some(3))
         "direct access" in {
