@@ -41,8 +41,8 @@ trait ReifyLiftings {
 
         case Property(CaseClassValueLift(name, v: Tree), prop) =>
           val term = TermName(prop)
-          val tpe = v.tpe.member(term).typeSignatureIn(v.tpe)
-          val merge = c.typecheck(q"$v.$term")
+          val merge = q"$v.$term"
+          val tpe = c.typecheck(q"import language.reflectiveCalls; $merge").tpe
           OptionalTypecheck(c)(q"implicitly[${c.prefix}.Encoder[$tpe]]") match {
             case Some(enc) => apply(ScalarValueLift(merge.toString, merge, enc))
             case None =>
