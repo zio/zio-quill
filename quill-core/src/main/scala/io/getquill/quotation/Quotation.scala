@@ -15,6 +15,8 @@ trait Quotation extends Liftables with Unliftables with Parsing with ReifyLiftin
   val c: Context
   import c.universe._
 
+  private val quoted = TermName("quoted")
+
   def quote[T](body: Tree)(implicit t: WeakTypeTag[T]) = {
 
     val ast = BetaReduction(astParser(body))
@@ -31,7 +33,7 @@ trait Quotation extends Liftables with Unliftables with Parsing with ReifyLiftin
             ..${EnableReflectiveCalls(c)}
     
             @${c.weakTypeOf[QuotedAst]}($reifiedAst)
-            def quoted = ast
+            def $quoted = ast
     
             override def ast = $reifiedAst
             override def toString = ast.toString
@@ -44,9 +46,10 @@ trait Quotation extends Liftables with Unliftables with Parsing with ReifyLiftin
         """
       }
 
-    IsDynamic(ast) match {
-      case true  => q"$quotation: ${c.prefix}.Quoted[$t]"
-      case false => quotation
+    if (IsDynamic(ast)) {
+      q"$quotation: ${c.prefix}.Quoted[$t]"
+    } else {
+      quotation
     }
   }
 
@@ -68,8 +71,8 @@ trait Quotation extends Liftables with Unliftables with Parsing with ReifyLiftin
 
   private def astTree(tree: Tree) =
     for {
-      method <- tree.tpe.decls.find(_.name.decodedName.toString == "quoted")
+      method <- tree.tpe.decls.find(_.name == quoted)
       annotation <- method.annotations.headOption
       astTree <- annotation.tree.children.lastOption
-    } yield (astTree)
+    } yield astTree
 }
