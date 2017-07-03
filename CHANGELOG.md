@@ -1,3 +1,14 @@
+# 1.3.0
+
+- [SQLServer support](https://github.com/getquill/quill/pull/731)
+- [Query bind variables logging](https://github.com/getquill/quill/pull/783)
+- [Better support for empty lifted queries](https://github.com/getquill/quill/pull/794)
+- [SQLLite 3.18.0](https://github.com/getquill/quill/pull/792)
+- [Fix nested query stack overflow](https://github.com/getquill/quill/pull/786)
+- [Performance optimization of Interleave](https://github.com/getquill/quill/pull/811)
+- [Fix invalid nested queries with take/drop](https://github.com/getquill/quill/pull/779)
+- [Fix NPE when using nested quoted binding](https://github.com/getquill/quill/pull/818)
+
 # 1.2.1
 
 - [upgrade finagle-postgres to 0.4.2](https://github.com/getquill/quill/pull/759)
