@@ -1534,6 +1534,34 @@ ctx.session.maxSchemaAgreementWaitSeconds=1
 ctx.session.addressTranslator=com.datastax.driver.core.policies.IdentityTranslator
 ```
 
+### OrientDB Contexts
+
+#### sbt dependencies
+```
+libraryDependencies ++= Seq(
+  "io.getquill" %% "quill-orientdb" % "1.2.2-SNAPSHOT"
+)
+```
+
+#### synchronous context
+```scala
+lazy val ctx = new OrientDBSyncContext[SnakeCase]("ctx")
+```
+
+#### asynchronous context
+```scala
+lazy val ctx = new OrientDBAsyncContext[SnakeCase]("ctx")
+```
+
+The configurations are set using [`OPartitionedDatabasePool`](http://orientdb.com/javadoc/latest/com/orientechnologies/orient/core/db/OPartitionedDatabasePool.html) which creates a pool of DB connections from which an instance of connection can be acquired. It is possible to set DB credentials using the parameter called `username` and `password`.
+
+#### application.properties
+```
+ctx.dbUrl=remote:127.0.0.1:2424/GratefulDeadConcerts
+ctx.username=root
+ctx.password=root
+```
+
 # Logging
 
 ## Compile-time

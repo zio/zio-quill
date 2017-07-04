@@ -10,11 +10,11 @@ lazy val `quill` =
     .dependsOn(
       `quill-core-jvm`, `quill-core-js`, `quill-sql-jvm`, `quill-sql-js`,
       `quill-jdbc`, `quill-finagle-mysql`, `quill-finagle-postgres`, `quill-async`,
-      `quill-async-mysql`, `quill-async-postgres`, `quill-cassandra`
+      `quill-async-mysql`, `quill-async-postgres`, `quill-cassandra`, `quill-orientdb`
     ).aggregate(
       `quill-core-jvm`, `quill-core-js`, `quill-sql-jvm`, `quill-sql-js`,
       `quill-jdbc`, `quill-finagle-mysql`, `quill-finagle-postgres`, `quill-async`,
-      `quill-async-mysql`, `quill-async-postgres`, `quill-cassandra`
+      `quill-async-mysql`, `quill-async-postgres`, `quill-cassandra`, `quill-orientdb`
     )
 
 lazy val superPure = new org.scalajs.sbtplugin.cross.CrossType {
@@ -146,6 +146,18 @@ lazy val `quill-cassandra` =
       )
     )
     .dependsOn(`quill-core-jvm` % "compile->compile;test->test")
+
+lazy val `quill-orientdb` =
+  (project in file("quill-orientdb"))
+      .settings(commonSettings: _*)
+      .settings(mimaSettings: _*)
+      .settings(
+        fork in Test := true,
+        libraryDependencies ++= Seq(
+          "com.orientechnologies" % "orientdb-graphdb" % "2.2.21"
+        )
+      )
+      .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
 
 lazy val `tut-sources` = Seq(
   "CASSANDRA.md",
