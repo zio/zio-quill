@@ -1355,6 +1355,48 @@ ctx.transaction { implicit ec =>
 
 Note that the global execution context is renamed to ec.
 
+#### application.properties
+
+##### connection configuration
+```
+ctx.host=host
+ctx.port=1234
+ctx.user=root
+ctx.password=root
+ctx.database=database
+`````
+
+or use connection URL with database-specific scheme (see below):
+
+```
+ctx.url=scheme://host:5432/database?user=root&password=root
+```
+
+##### connection pool configuration
+```
+ctx.poolMaxQueueSize=4
+ctx.poolMaxObjects=4
+ctx.poolMaxIdle=999999999
+ctx.poolValidationInterval=10000
+```
+
+Also see [`PoolConfiguration` documentation](https://github.com/mauricio/postgresql-async/blob/master/db-async-common/src/main/scala/com/github/mauricio/async/db/pool/PoolConfiguration.scala).
+
+##### SSL configuration
+```
+ctx.sslmode=disable # optional, one of [disable|prefer|require|verify-ca|verify-full]
+ctx.sslrootcert=./path/to/cert/file # optional, required for sslmode=verify-ca or verify-full
+```
+
+##### other
+```
+ctx.charset=UTF-8
+ctx.maximumMessageSize=16777216
+ctx.connectTimeout=5s
+ctx.testTimeout=5s
+ctx.queryTimeout=10m
+```
+
 ### quill-async-mysql
 
 #### sbt dependencies
@@ -1370,18 +1412,13 @@ lazy val ctx = new MysqlAsyncContext[SnakeCase]("ctx")
 ```
 
 #### application.properties
+
+See [above](#applicationproperties-5)
+
+For `url` property use `mysql` scheme:
+
 ```
-ctx.host=host
-ctx.port=3306
-ctx.user=root
-ctx.password=root
-ctx.database=database
-ctx.poolMaxQueueSize=4
-ctx.poolMaxObjects=4
-ctx.poolMaxIdle=999999999
-ctx.poolValidationInterval=10000
-ctx.sslmode=disable # optional, one of [disable|prefer|require|verify-ca|verify-full]
-ctx.sslrootcert=./path/to/cert/file # optional, required for sslmode=verify-ca or verify-full
+ctx.url=mysql://host:3306/database?user=root&password=root
 ```
 
 ### quill-async-postgres
@@ -1399,18 +1436,13 @@ lazy val ctx = new PostgresAsyncContext[SnakeCase]("ctx")
 ```
 
 #### application.properties
+
+See [common properties](#applicationproperties-5)
+
+For `url` property use `postgresql` scheme:
+
 ```
-ctx.host=host
-ctx.port=5432
-ctx.user=root
-ctx.password=root
-ctx.database=database
-ctx.poolMaxQueueSize=4
-ctx.poolMaxObjects=4
-ctx.poolMaxIdle=999999999
-ctx.poolValidationInterval=10000
-ctx.sslmode=disable # optional, one of [disable|prefer|require|verify-ca|verify-full]
-ctx.sslrootcert=./path/to/cert/file # optional, required for sslmode=verify-ca or verify-full
+ctx.url=postgresql://host:5432/database?user=root&password=root
 ```
 
 ### quill-finagle-mysql
