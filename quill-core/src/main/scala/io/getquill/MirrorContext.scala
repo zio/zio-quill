@@ -43,24 +43,24 @@ class MirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy]
 
   case class QueryMirror[T](string: String, prepareRow: Row, extractor: Row => T)
 
-  def executeQuery[T](string: String, prepare: Row => Row = identity, extractor: Row => T = identity[Row] _) =
-    QueryMirror(string, prepare(Row()), extractor)
+  def executeQuery[T](string: String, prepare: Row => (List[Any], Row) = row => (Nil, row), extractor: Row => T = identity[Row] _) =
+    QueryMirror(string, prepare(Row())._2, extractor)
 
-  def executeQuerySingle[T](string: String, prepare: Row => Row = identity, extractor: Row => T = identity[Row] _) =
-    QueryMirror(string, prepare(Row()), extractor)
+  def executeQuerySingle[T](string: String, prepare: Row => (List[Any], Row) = row => (Nil, row), extractor: Row => T = identity[Row] _) =
+    QueryMirror(string, prepare(Row())._2, extractor)
 
-  def executeAction(string: String, prepare: Row => Row = identity) =
-    ActionMirror(string, prepare(Row()))
+  def executeAction(string: String, prepare: Row => (List[Any], Row) = row => (Nil, row)) =
+    ActionMirror(string, prepare(Row())._2)
 
-  def executeActionReturning[O](string: String, prepare: Row => Row = identity, extractor: Row => O,
+  def executeActionReturning[O](string: String, prepare: Row => (List[Any], Row) = row => (Nil, row), extractor: Row => O,
                                 returningColumn: String) =
-    ActionReturningMirror[O](string, prepare(Row()), extractor, returningColumn)
+    ActionReturningMirror[O](string, prepare(Row())._2, extractor, returningColumn)
 
   def executeBatchAction(groups: List[BatchGroup]) =
     BatchActionMirror {
       groups.map {
         case BatchGroup(string, prepare) =>
-          (string, prepare.map(_(Row())))
+          (string, prepare.map(_(Row())._2))
       }
     }
 
@@ -68,7 +68,7 @@ class MirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy]
     BatchActionReturningMirror[T](
       groups.map {
         case BatchGroupReturning(string, column, prepare) =>
-          (string, column, prepare.map(_(Row())))
+          (string, column, prepare.map(_(Row())._2))
       }, extractor
     )
 }

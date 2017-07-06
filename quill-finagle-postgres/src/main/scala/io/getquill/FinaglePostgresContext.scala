@@ -3,11 +3,9 @@ package io.getquill
 import com.twitter.util.{ Await, Future, Local }
 import com.twitter.finagle.postgres._
 import com.typesafe.config.Config
-import com.typesafe.scalalogging.Logger
 import io.getquill.context.finagle.postgres._
 import io.getquill.context.sql.SqlContext
-import io.getquill.util.LoadConfig
-import org.slf4j.LoggerFactory
+import io.getquill.util.{ ContextLogger, LoadConfig }
 import scala.util.Try
 
 class FinaglePostgresContext[N <: NamingStrategy](client: PostgresClient) extends SqlContext[FinaglePostgresDialect, N] with FinaglePostgresEncoders with FinaglePostgresDecoders {
@@ -18,8 +16,7 @@ class FinaglePostgresContext[N <: NamingStrategy](client: PostgresClient) extend
     this(LoadConfig(configPrefix))
   }
 
-  protected val logger: Logger =
-    Logger(LoggerFactory.getLogger(classOf[FinaglePostgresContext[_]]))
+  private val logger = ContextLogger(classOf[FinaglePostgresContext[_]])
 
   override type PrepareRow = List[Param[_]]
   override type ResultRow = Row
@@ -44,17 +41,19 @@ class FinaglePostgresContext[N <: NamingStrategy](client: PostgresClient) extend
     f.ensure(currentClient.clear)
   }
 
-  def executeQuery[T](sql: String, prepare: PrepareRow => PrepareRow = identity, extractor: Row => T = identity[Row] _): Future[List[T]] = {
-    logger.debug(sql)
-    withClient(_.prepareAndQuery(sql, prepare(Nil): _*)(extractor).map(_.toList))
+  def executeQuery[T](sql: String, prepare: PrepareRow => (List[Any], PrepareRow) = row => (Nil, row), extractor: Row => T = identity[Row] _): Future[List[T]] = {
+    val (params, prepared) = prepare(Nil)
+    logger.logQuery(sql, params)
+    withClient(_.prepareAndQuery(sql, prepared: _*)(extractor).map(_.toList))
   }
 
-  def executeQuerySingle[T](sql: String, prepare: PrepareRow => PrepareRow = identity, extractor: Row => T = identity[Row] _): Future[T] =
+  def executeQuerySingle[T](sql: String, prepare: PrepareRow => (List[Any], PrepareRow) = row => (Nil, row), extractor: Row => T = identity[Row] _): Future[T] =
     executeQuery(sql, prepare, extractor).map(handleSingleResult)
 
-  def executeAction[T](sql: String, prepare: PrepareRow => PrepareRow = identity, extractor: Row => T = identity[Row] _): Future[Long] = {
-    logger.debug(sql)
-    withClient(_.prepareAndExecute(sql, prepare(Nil): _*)).map(_.toLong)
+  def executeAction[T](sql: String, prepare: PrepareRow => (List[Any], PrepareRow) = row => (Nil, row), extractor: Row => T = identity[Row] _): Future[Long] = {
+    val (params, prepared) = prepare(Nil)
+    logger.logQuery(sql, params)
+    withClient(_.prepareAndExecute(sql, prepared: _*)).map(_.toLong)
   }
 
   def executeBatchAction[B](groups: List[BatchGroup]): Future[List[Long]] = Future.collect {
@@ -69,9 +68,10 @@ class FinaglePostgresContext[N <: NamingStrategy](client: PostgresClient) extend
     }
   }.map(_.flatten.toList)
 
-  def executeActionReturning[T](sql: String, prepare: PrepareRow => PrepareRow = identity, extractor: Row => T, returningColumn: String): Future[T] = {
-    logger.debug(sql)
-    withClient(_.prepareAndQuery(expandAction(sql, returningColumn), prepare(List()): _*)(extractor)).map(v => handleSingleResult(v.toList))
+  def executeActionReturning[T](sql: String, prepare: PrepareRow => (List[Any], PrepareRow) = row => (Nil, row), extractor: Row => T, returningColumn: String): Future[T] = {
+    val (params, prepared) = prepare(Nil)
+    logger.logQuery(sql, params)
+    withClient(_.prepareAndQuery(expandAction(sql, returningColumn), prepared: _*)(extractor)).map(v => handleSingleResult(v.toList))
   }
 
   def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Row => T): Future[List[T]] =

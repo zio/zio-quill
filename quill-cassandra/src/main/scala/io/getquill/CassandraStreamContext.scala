@@ -9,7 +9,7 @@ import scala.collection.JavaConverters._
 import io.getquill.context.cassandra.CassandraSessionContext
 import io.getquill.context.cassandra.util.FutureConversions.toScalaFuture
 import monix.reactive.Observable
-import io.getquill.util.LoadConfig
+import io.getquill.util.{ ContextLogger, LoadConfig }
 import com.datastax.driver.core.Cluster
 import monix.eval.Task
 
@@ -23,6 +23,8 @@ class CassandraStreamContext[N <: NamingStrategy](
   def this(config: CassandraContextConfig) = this(config.cluster, config.keyspace, config.preparedStatementCacheSize)
   def this(config: Config) = this(CassandraContextConfig(config))
   def this(configPrefix: String) = this(LoadConfig(configPrefix))
+
+  private val logger = ContextLogger(classOf[CassandraStreamContext[_]])
 
   override type RunQueryResult[T] = Observable[T]
   override type RunQuerySingleResult[T] = Observable[T]
@@ -39,19 +41,25 @@ class CassandraStreamContext[N <: NamingStrategy](
       Task.fromFuture(rs.fetchMoreResults()).map(_ => page)
   }
 
-  def executeQuery[T](cql: String, prepare: BoundStatement => BoundStatement = identity, extractor: Row => T = identity[Row] _): Observable[T] =
+  def executeQuery[T](cql: String, prepare: BoundStatement => (List[Any], BoundStatement) = row => (Nil, row), extractor: Row => T = identity[Row] _): Observable[T] = {
+    val (params, bs) = prepare(super.prepare(cql))
+    logger.logQuery(cql, params)
     Observable
-      .fromFuture(session.executeAsync(prepare(super.prepare(cql))))
+      .fromFuture(session.executeAsync(bs))
       .flatMap(Observable.fromAsyncStateAction((rs: ResultSet) => page(rs).map((_, rs)))(_))
       .takeWhile(_.nonEmpty)
       .flatMap(Observable.fromIterable)
       .map(extractor)
+  }
 
-  def executeQuerySingle[T](cql: String, prepare: BoundStatement => BoundStatement = identity, extractor: Row => T = identity[Row] _): Observable[T] =
+  def executeQuerySingle[T](cql: String, prepare: BoundStatement => (List[Any], BoundStatement) = row => (Nil, row), extractor: Row => T = identity[Row] _): Observable[T] =
     executeQuery(cql, prepare, extractor)
 
-  def executeAction[T](cql: String, prepare: BoundStatement => BoundStatement = identity): Observable[Unit] =
-    Observable.fromFuture(session.executeAsync(prepare(super.prepare(cql)))).map(_ => ())
+  def executeAction[T](cql: String, prepare: BoundStatement => (List[Any], BoundStatement) = row => (Nil, row)): Observable[Unit] = {
+    val (params, bs) = prepare(super.prepare(cql))
+    logger.logQuery(cql, params)
+    Observable.fromFuture(session.executeAsync(bs)).map(_ => ())
+  }
 
   def executeBatchAction(groups: List[BatchGroup]): Observable[Unit] =
     Observable.fromIterable(groups).flatMap {
