@@ -18,8 +18,8 @@ trait Context[Idiom <: io.getquill.idiom.Idiom, Naming <: NamingStrategy]
   type RunBatchActionResult
   type RunBatchActionReturningResult[T]
 
-  case class BatchGroup(string: String, prepare: List[PrepareRow => PrepareRow])
-  case class BatchGroupReturning(string: String, column: String, prepare: List[PrepareRow => PrepareRow])
+  case class BatchGroup(string: String, prepare: List[PrepareRow => (List[Any], PrepareRow)])
+  case class BatchGroupReturning(string: String, column: String, prepare: List[PrepareRow => (List[Any], PrepareRow)])
 
   def probe(statement: String): Try[_]
 
@@ -35,5 +35,4 @@ trait Context[Idiom <: io.getquill.idiom.Idiom, Naming <: NamingStrategy]
       case value :: Nil => value
       case other        => throw new IllegalStateException(s"Expected a single result but got $other")
     }
-
 }

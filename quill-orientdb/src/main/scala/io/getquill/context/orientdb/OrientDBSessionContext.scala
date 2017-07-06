@@ -3,12 +3,10 @@ package io.getquill.context.orientdb
 import com.orientechnologies.orient.core.db.OPartitionedDatabasePool
 import com.orientechnologies.orient.core.record.impl.ODocument
 import com.orientechnologies.orient.core.sql.query.OSQLQuery
-import com.typesafe.scalalogging.Logger
 import io.getquill.NamingStrategy
 import io.getquill.context.mirror.Row
 import io.getquill.context.orientdb.encoding.{ Decoders, Encoders }
 import io.getquill.util.Messages.fail
-import org.slf4j.LoggerFactory
 
 import scala.collection.mutable.ArrayBuffer
 import scala.util.Try
@@ -26,9 +24,6 @@ abstract class OrientDBSessionContext[N <: NamingStrategy](
 
   override type RunActionReturningResult[T] = Unit
   override type RunBatchActionReturningResult[T] = Unit
-
-  protected val logger: Logger =
-    Logger(LoggerFactory.getLogger(classOf[OrientDBSessionContext[_]]))
 
   protected val session = new OPartitionedDatabasePool(dbUrl, username, password)
   protected val oDatabase = session.acquire()

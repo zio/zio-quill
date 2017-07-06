@@ -9,7 +9,7 @@ import com.orientechnologies.orient.core.sql.OCommandSQL
 import com.orientechnologies.orient.core.sql.query.OSQLNonBlockingQuery
 import com.typesafe.config.Config
 import io.getquill.context.orientdb.OrientDBSessionContext
-import io.getquill.util.LoadConfig
+import io.getquill.util.{ ContextLogger, LoadConfig }
 import io.getquill.util.Messages.fail
 
 import scala.collection.JavaConverters._
@@ -31,10 +31,13 @@ class OrientDBAsyncContext[N <: NamingStrategy](
   override type RunActionResult = Unit
   override type RunBatchActionResult = Unit
 
-  def executeQuery[T](orientQl: String, prepare: ArrayBuffer[Any] => ArrayBuffer[Any] = identity, extractor: ODocument => T = identity[ODocument] _): Future[List[T]] = {
-    val objects = prepare(super.prepare()).asJava
+  private val logger = ContextLogger(classOf[OrientDBSyncContext[_]])
+
+  def executeQuery[T](orientQl: String, prepare: ArrayBuffer[Any] => (List[Any], ArrayBuffer[Any]) = row => (Nil, row), extractor: ODocument => T = identity[ODocument] _): Future[List[T]] = {
+    val (params, objects) = prepare(super.prepare())
+    logger.logQuery(orientQl, params)
     oDatabase.command(new OSQLNonBlockingQuery[ODocument](
-      checkInFilter(orientQl, objects.size()),
+      checkInFilter(orientQl, objects.size),
       new OCommandResultListener {
         var records: List[T] = List()
 
@@ -52,13 +55,14 @@ class OrientDBAsyncContext[N <: NamingStrategy](
 
         override def end(): Unit = ()
       }
-    )).execute[Future[List[T]]](objects)
+    )).execute[Future[List[T]]](objects.asJava)
   }
 
-  def executeQuerySingle[T](orientQl: String, prepare: ArrayBuffer[Any] => ArrayBuffer[Any] = identity, extractor: ODocument => T = identity[ODocument] _): Future[T] = {
-    val objects = prepare(super.prepare()).asJava
+  def executeQuerySingle[T](orientQl: String, prepare: ArrayBuffer[Any] => (List[Any], ArrayBuffer[Any]) = row => (Nil, row), extractor: ODocument => T = identity[ODocument] _): Future[T] = {
+    val (params, objects) = prepare(super.prepare())
+    logger.logQuery(orientQl, params)
     oDatabase.command(new OSQLNonBlockingQuery[ODocument](
-      checkInFilter(orientQl, objects.size()),
+      checkInFilter(orientQl, objects.size),
       new OCommandResultListener {
         var record: T = _
 
@@ -76,15 +80,18 @@ class OrientDBAsyncContext[N <: NamingStrategy](
 
         override def end(): Unit = ()
       }
-    )).execute[Future[T]](objects)
+    )).execute[Future[T]](objects.asJava)
   }
 
-  def executeAction[T](orientQl: String, prepare: ArrayBuffer[Any] => ArrayBuffer[Any] = identity): Unit = {
+  def executeAction[T](orientQl: String, prepare: ArrayBuffer[Any] => (List[Any], ArrayBuffer[Any]) = row => (Nil, row)): Unit = {
+    val (params, objects) = prepare(super.prepare())
+    logger.logQuery(orientQl, params)
+
     oDatabase.command(new OCommandSQL(orientQl).onAsyncReplicationError(new OAsyncReplicationError {
       override def onAsyncReplicationError(iException: Throwable, iRetry: Index): OAsyncReplicationError.ACTION = {
         fail("OrientDB action failed to execute")
       }
-    })).execute(prepare(super.prepare()).toArray)
+    })).execute(objects.toArray)
   }
 
   def executeBatchAction[T](groups: List[BatchGroup]): Unit = {

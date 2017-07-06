@@ -5,7 +5,7 @@ import com.orientechnologies.orient.core.sql.OCommandSQL
 import com.orientechnologies.orient.core.sql.query.OSQLSynchQuery
 import com.typesafe.config.Config
 import io.getquill.context.orientdb.OrientDBSessionContext
-import io.getquill.util.LoadConfig
+import io.getquill.util.{ ContextLogger, LoadConfig }
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
@@ -25,16 +25,21 @@ class OrientDBSyncContext[N <: NamingStrategy](
   override type RunActionResult = Unit
   override type RunBatchActionResult = Unit
 
-  def executeQuery[T](orientQl: String, prepare: ArrayBuffer[Any] => ArrayBuffer[Any] = identity, extractor: ODocument => T = identity[ODocument] _): List[T] = {
-    val objects = prepare(super.prepare()).asJava
-    oDatabase.query[java.util.List[ODocument]](new OSQLSynchQuery[ODocument](checkInFilter(orientQl, objects.size())), objects).asScala.map(extractor).toList
+  private val logger = ContextLogger(classOf[OrientDBSyncContext[_]])
+
+  def executeQuery[T](orientQl: String, prepare: ArrayBuffer[Any] => (List[Any], ArrayBuffer[Any]) = row => (Nil, row), extractor: ODocument => T = identity[ODocument] _): List[T] = {
+    val (params, objects) = prepare(super.prepare())
+    logger.logQuery(orientQl, params)
+    oDatabase.query[java.util.List[ODocument]](new OSQLSynchQuery[ODocument](checkInFilter(orientQl, objects.size)), objects.asJava).asScala.map(extractor).toList
   }
 
-  def executeQuerySingle[T](orientQl: String, prepare: ArrayBuffer[Any] => ArrayBuffer[Any] = identity, extractor: ODocument => T = identity[ODocument] _): T =
+  def executeQuerySingle[T](orientQl: String, prepare: ArrayBuffer[Any] => (List[Any], ArrayBuffer[Any]) = row => (Nil, row), extractor: ODocument => T = identity[ODocument] _): T =
     handleSingleResult(executeQuery(orientQl, prepare, extractor))
 
-  def executeAction[T](orientQl: String, prepare: ArrayBuffer[Any] => ArrayBuffer[Any] = identity): Unit = {
-    oDatabase.command(new OCommandSQL(orientQl)).execute(prepare(super.prepare()).toArray)
+  def executeAction[T](orientQl: String, prepare: ArrayBuffer[Any] => (List[Any], ArrayBuffer[Any]) = row => (Nil, row)): Unit = {
+    val (params, objects) = prepare(super.prepare())
+    logger.logQuery(orientQl, params)
+    oDatabase.command(new OCommandSQL(orientQl)).execute(objects.toArray)
   }
 
   def executeBatchAction[T](groups: List[BatchGroup]): Unit = {
