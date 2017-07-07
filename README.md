@@ -35,7 +35,7 @@ import io.getquill._
 val ctx = new SqlMirrorContext[MirrorSqlDialect, Literal]
 ```
 
-> ### **Note:** [Scalafiddle](http://scalafiddle.io) is a great tool to try out Quill without having to prepare a local environment. It works with [mirror contexts](#mirror-context), see [this](https://scalafiddle.io/sf/pMg4JvY/1) fiddle as an example.
+> ### **Note:** [Scalafiddle](http://scalafiddle.io) is a great tool to try out Quill without having to prepare a local environment. It works with [mirror contexts](#mirror-context), see [this](https://scalafiddle.io/sf/lsmX57J/0) fiddle as an example.
 
 The context instance provides all types and methods to deal quotations:
 
