@@ -4,6 +4,8 @@ import io.getquill.ast._
 import io.getquill.util.Interleave
 import io.getquill.idiom.StatementInterpolator._
 
+import scala.annotation.tailrec
+
 object ReifyStatement {
 
   def apply(
@@ -12,19 +14,33 @@ object ReifyStatement {
     statement:             Statement,
     forProbing:            Boolean
   ): (String, List[ScalarLift]) = {
-    def apply(acc: (String, List[ScalarLift]), token: Token): (String, List[ScalarLift]) =
-      (acc, token) match {
-        case ((s1, liftings), StringToken(s2))            => (s"$s1$s2", liftings)
-        case ((s1, liftings), Statement(tokens))          => tokens.foldLeft((s1, liftings))(apply)
-        case ((s1, liftings), ScalarLiftToken(lift))      => (s"$s1${liftingPlaceholder(liftings.size)}", liftings :+ lift)
-        case ((s1, liftings), SetContainsToken(a, op, b)) => apply(s1 -> liftings, stmt"$a $op ($b)")
-      }
     val expanded =
       forProbing match {
         case true  => statement
         case false => expandLiftings(statement, emptySetContainsToken)
       }
-    apply(("", List.empty), expanded)
+    token2string(expanded, liftingPlaceholder)
+  }
+
+  private def token2string(token: Token, liftingPlaceholder: Int => String): (String, List[ScalarLift]) = {
+    @tailrec
+    def apply(
+      workList:      List[Token],
+      sqlResult:     Seq[String],
+      liftingResult: Seq[ScalarLift],
+      liftingSize:   Int
+    ): (String, List[ScalarLift]) = workList match {
+      case Nil => sqlResult.reverse.mkString("") -> liftingResult.reverse.toList
+      case head :: tail =>
+        head match {
+          case StringToken(s2)            => apply(tail, s2 +: sqlResult, liftingResult, liftingSize)
+          case SetContainsToken(a, op, b) => apply(stmt"$a $op ($b)" +: tail, sqlResult, liftingResult, liftingSize)
+          case ScalarLiftToken(lift)      => apply(tail, liftingPlaceholder(liftingSize) +: sqlResult, lift +: liftingResult, liftingSize + 1)
+          case Statement(tokens)          => apply(tokens.foldRight(tail)(_ +: _), sqlResult, liftingResult, liftingSize)
+        }
+    }
+
+    apply(List(token), Seq(), Seq(), 0)
   }
 
   private def expandLiftings(statement: Statement, emptySetContainsToken: Token => Token) = {
