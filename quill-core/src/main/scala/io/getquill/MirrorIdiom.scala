@@ -169,7 +169,7 @@ class MirrorIdiom extends Idiom {
     case Insert(query, assignments)    => stmt"${query.token}.insert(${assignments.token})"
     case Delete(query)                 => stmt"${query.token}.delete"
     case Returning(query, alias, body) => stmt"${query.token}.returning((${alias.token}) => ${body.token})"
-    case Foreach(query, alias, body)   => stmt"${query.token}.forach((${alias.token}) => ${body.token})"
+    case Foreach(query, alias, body)   => stmt"${query.token}.foreach((${alias.token}) => ${body.token})"
   }
 
   implicit def assignmentTokenizer(implicit liftTokenizer: Tokenizer[Lift]): Tokenizer[Assignment] = Tokenizer[Assignment] {
