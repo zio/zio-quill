@@ -36,7 +36,7 @@ abstract class AsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: Connection]
     ()
   }
 
-  private def withConnection[T](f: Connection => Future[T])(implicit ec: ExecutionContext) =
+  protected def withConnection[T](f: Connection => Future[T])(implicit ec: ExecutionContext) =
     ec match {
       case TransactionalExecutionContext(ec, conn) => f(conn)
       case other                                   => f(pool)
