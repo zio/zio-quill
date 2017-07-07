@@ -1,10 +1,8 @@
 package io.getquill.context.cassandra
 
 import scala.util.Try
-import org.slf4j.LoggerFactory
 import com.datastax.driver.core.BoundStatement
 import com.datastax.driver.core.Row
-import com.typesafe.scalalogging.Logger
 import io.getquill.NamingStrategy
 import io.getquill.context.cassandra.encoding.{ CassandraTypes, Decoders, Encoders }
 import io.getquill.util.Messages.fail
@@ -26,9 +24,6 @@ abstract class CassandraSessionContext[N <: NamingStrategy](
   override type RunActionReturningResult[T] = Unit
   override type RunBatchActionReturningResult[T] = Unit
 
-  protected val logger: Logger =
-    Logger(LoggerFactory.getLogger(classOf[CassandraSessionContext[_]]))
-
   private val preparedStatementCache =
     new PrepareStatementCache(preparedStatementCacheSize)
 
@@ -48,7 +43,7 @@ abstract class CassandraSessionContext[N <: NamingStrategy](
       ()
     }
 
-  def executeActionReturning[O](sql: String, prepare: BoundStatement => BoundStatement = identity, extractor: Row => O, returningColumn: String): Unit =
+  def executeActionReturning[O](sql: String, prepare: BoundStatement => (List[Any], BoundStatement) = row => (Nil, row), extractor: Row => O, returningColumn: String): Unit =
     fail("Cassandra doesn't support `returning`.")
 
   def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Row => T): Unit =
