@@ -96,8 +96,9 @@ In order to contribute to the project, just do as follows:
 3. Code
 4. Compile (file will be formatted)
 5. Run the tests through `docker-compose run sbt sbt test`
-6. If everything is ok, commit and push to your fork
-7. Create a Pull Request, we'll be glad to review it
+6. If you made changes in *.md files, run `docker-compose run sbt sbt tut` to validate them
+7. If everything is ok, commit and push to your fork
+8. Create a Pull Request, we'll be glad to review it
 
 ## File Formatting 
 
