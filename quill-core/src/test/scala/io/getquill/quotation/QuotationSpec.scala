@@ -353,6 +353,17 @@ class QuotationSpec extends Spec {
           quote(unquote(q)).ast mustEqual
             Foreach(ScalarQueryLift("q.list", list, intEncoder), Ident("i"), delete.ast.body)
         }
+        "batch with Quoted[Action[T]]" in {
+          case class TestEntity(id: Int)
+          val list = List(
+            TestEntity(1),
+            TestEntity(2)
+          )
+          val insert = quote((row: TestEntity) => query[TestEntity].insert(row))
+          val q = quote(liftQuery(list).foreach(row => quote(insert(row))))
+          quote(unquote(q)).ast mustEqual
+            Foreach(CaseClassQueryLift("q.list", list), Ident("row"), insert.ast.body)
+        }
         "unicode arrow must compile" in {
           """|quote {
              |  qr1.insert(_.s → "new", _.i → 0)
