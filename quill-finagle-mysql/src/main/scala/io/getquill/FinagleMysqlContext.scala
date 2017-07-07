@@ -3,9 +3,6 @@ package io.getquill
 import java.util.TimeZone
 
 import scala.util.Try
-
-import org.slf4j.LoggerFactory
-
 import com.twitter.finagle.mysql.Client
 import com.twitter.finagle.mysql.LongValue
 import com.twitter.finagle.mysql.OK
@@ -18,13 +15,11 @@ import com.twitter.util.Await
 import com.twitter.util.Future
 import com.twitter.util.Local
 import com.typesafe.config.Config
-import com.typesafe.scalalogging.Logger
-
 import io.getquill.context.finagle.mysql.FinagleMysqlDecoders
 import io.getquill.context.finagle.mysql.FinagleMysqlEncoders
 import io.getquill.context.finagle.mysql.SingleValueRow
 import io.getquill.context.sql.SqlContext
-import io.getquill.util.LoadConfig
+import io.getquill.util.{ ContextLogger, LoadConfig }
 import io.getquill.util.Messages.fail
 
 class FinagleMysqlContext[N <: NamingStrategy](
@@ -49,8 +44,7 @@ class FinagleMysqlContext[N <: NamingStrategy](
   def this(config: Config, injectionTimeZone: TimeZone, extractionTimeZone: TimeZone) = this(FinagleMysqlContextConfig(config), injectionTimeZone, extractionTimeZone)
   def this(configPrefix: String, injectionTimeZone: TimeZone, extractionTimeZone: TimeZone) = this(LoadConfig(configPrefix), injectionTimeZone, extractionTimeZone)
 
-  protected val logger: Logger =
-    Logger(LoggerFactory.getLogger(classOf[FinagleMysqlContext[_]]))
+  private val logger = ContextLogger(classOf[FinagleMysqlContext[_]])
 
   override type PrepareRow = List[Parameter]
   override type ResultRow = Row
@@ -74,14 +68,6 @@ class FinagleMysqlContext[N <: NamingStrategy](
 
   private val currentClient = new Local[Client]
 
-  private def mkStringParameter(param: List[Parameter] => List[Parameter]): String = {
-    val paramList = param(List.empty)
-    if (paramList.isEmpty)
-      ""
-    else
-      " : (" + paramList.map(_.value).mkString(",") + ")"
-  }
-
   def probe(sql: String) =
     Try(Await.result(client.query(sql)))
 
@@ -92,23 +78,26 @@ class FinagleMysqlContext[N <: NamingStrategy](
         f.ensure(currentClient.clear)
     }
 
-  def executeQuery[T](sql: String, prepare: List[Parameter] => List[Parameter] = identity, extractor: Row => T = identity[Row] _): Future[List[T]] = {
-    logger.debug(sql + mkStringParameter(prepare))
-    withClient(_.prepare(sql).select(prepare(List()): _*)(extractor)).map(_.toList)
+  def executeQuery[T](sql: String, prepare: List[Parameter] => (List[Any], List[Parameter]) = row => (Nil, row), extractor: Row => T = identity[Row] _): Future[List[T]] = {
+    val (params, prepared) = prepare(Nil)
+    logger.logQuery(sql, params)
+    withClient(_.prepare(sql).select(prepared: _*)(extractor)).map(_.toList)
   }
 
-  def executeQuerySingle[T](sql: String, prepare: List[Parameter] => List[Parameter] = identity, extractor: Row => T = identity[Row] _): Future[T] =
+  def executeQuerySingle[T](sql: String, prepare: List[Parameter] => (List[Any], List[Parameter]) = row => (Nil, row), extractor: Row => T = identity[Row] _): Future[T] =
     executeQuery(sql, prepare, extractor).map(handleSingleResult)
 
-  def executeAction[T](sql: String, prepare: List[Parameter] => List[Parameter] = identity): Future[Long] = {
-    logger.debug(sql + mkStringParameter(prepare))
-    withClient(_.prepare(sql)(prepare(List()): _*))
+  def executeAction[T](sql: String, prepare: List[Parameter] => (List[Any], List[Parameter]) = row => (Nil, row)): Future[Long] = {
+    val (params, prepared) = prepare(Nil)
+    logger.logQuery(sql, params)
+    withClient(_.prepare(sql)(prepared: _*))
       .map(r => toOk(r).affectedRows)
   }
 
-  def executeActionReturning[T](sql: String, prepare: List[Parameter] => List[Parameter] = identity, extractor: Row => T, returningColumn: String): Future[T] = {
-    logger.debug(sql + mkStringParameter(prepare))
-    withClient(_.prepare(sql)(prepare(List()): _*))
+  def executeActionReturning[T](sql: String, prepare: List[Parameter] => (List[Any], List[Parameter]) = row => (Nil, row), extractor: Row => T, returningColumn: String): Future[T] = {
+    val (params, prepared) = prepare(Nil)
+    logger.logQuery(sql, params)
+    withClient(_.prepare(sql)(prepared: _*))
       .map(extractReturningValue(_, extractor))
   }
 
@@ -119,7 +108,6 @@ class FinagleMysqlContext[N <: NamingStrategy](
           prepare.foldLeft(Future.value(List.empty[Long])) {
             case (acc, prepare) =>
               acc.flatMap { list =>
-                logger.debug(sql + mkStringParameter(prepare))
                 executeAction(sql, prepare).map(list :+ _)
               }
           }

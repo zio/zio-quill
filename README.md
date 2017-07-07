@@ -930,6 +930,21 @@ implicit class DateQuotes(left: Date) {
 }
 ```
 
+### batch with infix
+
+```scala
+implicit class OnDuplicateKeyIgnore[T](q: Insert[T]) {
+  def ignoreDuplicate = quote(infix"$q ON DUPLICATE KEY UPDATE id=id".as[Insert[T]])
+}
+
+ctx.run(
+  liftQuery(List(
+    Person(1, "Test1", 30),
+    Person(2, "Test2", 31)
+  )).foreach(row => query[Person].insert(row).ignoreDuplicate)
+)
+```
+
 ## Custom encoding
 
 Quill uses `Encoder`s to encode query inputs and `Decoder`s to read values returned by queries. The library provides a few built-in encodings and two mechanisms to define custom encodings: mapped encoding and raw encoding.
@@ -1601,6 +1616,14 @@ ctx.password=root
 To disable logging of queries during compilation use `quill.macro.log` option:
 ```
 sbt -Dquill.macro.log=false
+```
+## Runtime
+
+Quill uses SLF4J for logging. Each context logs queries which are currently executed.
+It also logs the list of parameters which are bound into prepared statement if any.
+To disable that use `quill.binds.log` option:
+```
+java -Dquill.binds.log=false -jar myapp.jar
 ```
 
 # Additional resources

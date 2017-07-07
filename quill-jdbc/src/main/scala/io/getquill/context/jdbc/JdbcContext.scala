@@ -4,11 +4,10 @@ import java.io.Closeable
 import java.sql.{ Connection, JDBCType, PreparedStatement, ResultSet }
 import javax.sql.DataSource
 
-import com.typesafe.scalalogging.Logger
 import io.getquill.context.sql.SqlContext
 import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.NamingStrategy
-import org.slf4j.LoggerFactory
+import io.getquill.util.ContextLogger
 
 import scala.annotation.tailrec
 import scala.util.{ DynamicVariable, Try }
@@ -19,8 +18,7 @@ abstract class JdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](dataSo
   with Encoders
   with Decoders {
 
-  private val logger: Logger =
-    Logger(LoggerFactory.getLogger(classOf[JdbcContext[_, _]]))
+  private val logger = ContextLogger(classOf[JdbcContext[_, _]])
 
   override type PrepareRow = PreparedStatement
   override type ResultRow = ResultSet
@@ -70,28 +68,28 @@ abstract class JdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](dataSo
         }
     }
 
-  def executeQuery[T](sql: String, prepare: PreparedStatement => PreparedStatement = identity, extractor: ResultSet => T = identity[ResultSet] _): List[T] =
+  def executeQuery[T](sql: String, prepare: PreparedStatement => (List[Any], PreparedStatement) = row => (Nil, row), extractor: ResultSet => T = identity[ResultSet] _): List[T] =
     withConnection { conn =>
-      val ps = prepare(conn.prepareStatement(sql))
-      logger.debug(ps.toString())
+      val (params, ps) = prepare(conn.prepareStatement(sql))
+      logger.logQuery(sql, params)
       val rs = ps.executeQuery()
       extractResult(rs, extractor)
     }
 
-  def executeQuerySingle[T](sql: String, prepare: PreparedStatement => PreparedStatement = identity, extractor: ResultSet => T = identity[ResultSet] _): T =
+  def executeQuerySingle[T](sql: String, prepare: PreparedStatement => (List[Any], PreparedStatement) = row => (Nil, row), extractor: ResultSet => T = identity[ResultSet] _): T =
     handleSingleResult(executeQuery(sql, prepare, extractor))
 
-  def executeAction[T](sql: String, prepare: PreparedStatement => PreparedStatement = identity): Long =
+  def executeAction[T](sql: String, prepare: PreparedStatement => (List[Any], PreparedStatement) = row => (Nil, row)): Long =
     withConnection { conn =>
-      val ps = prepare(conn.prepareStatement(sql))
-      logger.debug(ps.toString())
+      val (params, ps) = prepare(conn.prepareStatement(sql))
+      logger.logQuery(sql, params)
       ps.executeUpdate().toLong
     }
 
-  def executeActionReturning[O](sql: String, prepare: PreparedStatement => PreparedStatement = identity, extractor: ResultSet => O, returningColumn: String): O =
+  def executeActionReturning[O](sql: String, prepare: PreparedStatement => (List[Any], PreparedStatement) = row => (Nil, row), extractor: ResultSet => O, returningColumn: String): O =
     withConnection { conn =>
-      val ps = prepare(conn.prepareStatement(sql, Array(returningColumn)))
-      logger.debug(ps.toString())
+      val (params, ps) = prepare(conn.prepareStatement(sql, Array(returningColumn)))
+      logger.logQuery(sql, params)
       ps.executeUpdate()
       handleSingleResult(extractResult(ps.getGeneratedKeys, extractor))
     }
@@ -101,11 +99,12 @@ abstract class JdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](dataSo
       groups.flatMap {
         case BatchGroup(sql, prepare) =>
           val ps = conn.prepareStatement(sql)
+          logger.underlying.debug("Batch: {}", sql)
           prepare.foreach { f =>
-            f(ps)
+            val (params, _) = f(ps)
+            logger.logBatchItem(sql, params)
             ps.addBatch()
           }
-          logger.debug(ps.toString())
           ps.executeBatch().map(_.toLong)
       }
     }
@@ -115,11 +114,12 @@ abstract class JdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](dataSo
       groups.flatMap {
         case BatchGroupReturning(sql, column, prepare) =>
           val ps = conn.prepareStatement(sql, Array(column))
+          logger.underlying.debug("Batch: {}", sql)
           prepare.foreach { f =>
-            f(ps)
+            val (params, _) = f(ps)
+            logger.logBatchItem(sql, params)
             ps.addBatch()
           }
-          logger.debug(ps.toString())
           ps.executeBatch()
           extractResult(ps.getGeneratedKeys, extractor)
       }
