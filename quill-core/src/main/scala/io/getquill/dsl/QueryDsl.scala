@@ -53,7 +53,12 @@ private[dsl] trait QueryDsl {
 
     def nested: Query[T]
 
-    def foreach[A <: Action[_]](f: T => A): BatchAction[A]
+    /**
+     *
+     * @param unquote is used for conversion of [[Quoted[A]]] to [[A]] with [[unquote]]
+     * @return
+     */
+    def foreach[A <: Action[_], B](f: T => B)(implicit unquote: B => A): BatchAction[A]
   }
 
   sealed trait JoinQuery[A, B, R] extends Query[R] {

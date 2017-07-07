@@ -26,6 +26,14 @@ services:
       - MAX_HEAP_SIZE=512m
       - HEAP_NEWSIZE=256m
 
+  orientdb:
+    image: orientdb:latest
+    ports:
+      - "12424:2424"
+      - "12480:2480"
+    environment:
+      - ORIENTDB_ROOT_PASSWORD=root
+
 #  sqlserver:
 #    image: microsoft/mssql-server-linux
 #    ports:
@@ -45,6 +53,7 @@ services:
       - postgres:postgres
       - mysql:mysql
       - cassandra:cassandra
+      - orientdb:orientdb
 #     - sqlserver:sqlserver
     volumes:
       - ./:/app
@@ -65,6 +74,7 @@ services:
       - postgres:postgres
       - mysql:mysql
       - cassandra:cassandra
+      - orientdb:orientdb
 #     - sqlserver:sqlserver
     volumes:
       - ./:/app

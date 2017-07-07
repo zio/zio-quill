@@ -930,6 +930,21 @@ implicit class DateQuotes(left: Date) {
 }
 ```
 
+### batch with infix
+
+```scala
+implicit class OnDuplicateKeyIgnore[T](q: Insert[T]) {
+  def ignoreDuplicate = quote(infix"$q ON DUPLICATE KEY UPDATE id=id".as[Insert[T]])
+}
+
+ctx.run(
+  liftQuery(List(
+    Person(1, "Test1", 30),
+    Person(2, "Test2", 31)
+  )).foreach(row => query[Person].insert(row).ignoreDuplicate)
+)
+```
+
 ## Custom encoding
 
 Quill uses `Encoder`s to encode query inputs and `Decoder`s to read values returned by queries. The library provides a few built-in encodings and two mechanisms to define custom encodings: mapped encoding and raw encoding.
@@ -1355,6 +1370,48 @@ ctx.transaction { implicit ec =>
 
 Note that the global execution context is renamed to ec.
 
+#### application.properties
+
+##### connection configuration
+```
+ctx.host=host
+ctx.port=1234
+ctx.user=root
+ctx.password=root
+ctx.database=database
+`````
+
+or use connection URL with database-specific scheme (see below):
+
+```
+ctx.url=scheme://host:5432/database?user=root&password=root
+```
+
+##### connection pool configuration
+```
+ctx.poolMaxQueueSize=4
+ctx.poolMaxObjects=4
+ctx.poolMaxIdle=999999999
+ctx.poolValidationInterval=10000
+```
+
+Also see [`PoolConfiguration` documentation](https://github.com/mauricio/postgresql-async/blob/master/db-async-common/src/main/scala/com/github/mauricio/async/db/pool/PoolConfiguration.scala).
+
+##### SSL configuration
+```
+ctx.sslmode=disable # optional, one of [disable|prefer|require|verify-ca|verify-full]
+ctx.sslrootcert=./path/to/cert/file # optional, required for sslmode=verify-ca or verify-full
+```
+
+##### other
+```
+ctx.charset=UTF-8
+ctx.maximumMessageSize=16777216
+ctx.connectTimeout=5s
+ctx.testTimeout=5s
+ctx.queryTimeout=10m
+```
+
 ### quill-async-mysql
 
 #### sbt dependencies
@@ -1370,18 +1427,13 @@ lazy val ctx = new MysqlAsyncContext[SnakeCase]("ctx")
 ```
 
 #### application.properties
+
+See [above](#applicationproperties-5)
+
+For `url` property use `mysql` scheme:
+
 ```
-ctx.host=host
-ctx.port=3306
-ctx.user=root
-ctx.password=root
-ctx.database=database
-ctx.poolMaxQueueSize=4
-ctx.poolMaxObjects=4
-ctx.poolMaxIdle=999999999
-ctx.poolValidationInterval=10000
-ctx.sslmode=disable # optional, one of [disable|prefer|require|verify-ca|verify-full]
-ctx.sslrootcert=./path/to/cert/file # optional, required for sslmode=verify-ca or verify-full
+ctx.url=mysql://host:3306/database?user=root&password=root
 ```
 
 ### quill-async-postgres
@@ -1399,18 +1451,13 @@ lazy val ctx = new PostgresAsyncContext[SnakeCase]("ctx")
 ```
 
 #### application.properties
+
+See [common properties](#applicationproperties-5)
+
+For `url` property use `postgresql` scheme:
+
 ```
-ctx.host=host
-ctx.port=5432
-ctx.user=root
-ctx.password=root
-ctx.database=database
-ctx.poolMaxQueueSize=4
-ctx.poolMaxObjects=4
-ctx.poolMaxIdle=999999999
-ctx.poolValidationInterval=10000
-ctx.sslmode=disable # optional, one of [disable|prefer|require|verify-ca|verify-full]
-ctx.sslrootcert=./path/to/cert/file # optional, required for sslmode=verify-ca or verify-full
+ctx.url=postgresql://host:5432/database?user=root&password=root
 ```
 
 ### quill-finagle-mysql
@@ -1534,6 +1581,34 @@ ctx.session.maxSchemaAgreementWaitSeconds=1
 ctx.session.addressTranslator=com.datastax.driver.core.policies.IdentityTranslator
 ```
 
+### OrientDB Contexts
+
+#### sbt dependencies
+```
+libraryDependencies ++= Seq(
+  "io.getquill" %% "quill-orientdb" % "1.2.2-SNAPSHOT"
+)
+```
+
+#### synchronous context
+```scala
+lazy val ctx = new OrientDBSyncContext[SnakeCase]("ctx")
+```
+
+#### asynchronous context
+```scala
+lazy val ctx = new OrientDBAsyncContext[SnakeCase]("ctx")
+```
+
+The configurations are set using [`OPartitionedDatabasePool`](http://orientdb.com/javadoc/latest/com/orientechnologies/orient/core/db/OPartitionedDatabasePool.html) which creates a pool of DB connections from which an instance of connection can be acquired. It is possible to set DB credentials using the parameter called `username` and `password`.
+
+#### application.properties
+```
+ctx.dbUrl=remote:127.0.0.1:2424/GratefulDeadConcerts
+ctx.username=root
+ctx.password=root
+```
+
 # Logging
 
 ## Compile-time
@@ -1541,6 +1616,14 @@ ctx.session.addressTranslator=com.datastax.driver.core.policies.IdentityTranslat
 To disable logging of queries during compilation use `quill.macro.log` option:
 ```
 sbt -Dquill.macro.log=false
+```
+## Runtime
+
+Quill uses SLF4J for logging. Each context logs queries which are currently executed.
+It also logs the list of parameters which are bound into prepared statement if any.
+To disable that use `quill.binds.log` option:
+```
+java -Dquill.binds.log=false -jar myapp.jar
 ```
 
 # Additional resources
