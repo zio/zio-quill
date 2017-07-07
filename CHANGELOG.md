@@ -1,13 +1,18 @@
 # 1.3.0
 
 - [SQLServer support](https://github.com/getquill/quill/pull/731)
-- [Query bind variables logging](https://github.com/getquill/quill/pull/783)
+- [OrientDB support](https://github.com/getquill/quill/pull/816)
+- [Query bind variables logging](https://github.com/getquill/quill/pull/809)
+- [Add url configuration property for quill-async](https://github.com/getquill/quill/pull/821)
+- [Add support infix for batch actions](https://github.com/getquill/quill/pull/824)
 - [Better support for empty lifted queries](https://github.com/getquill/quill/pull/794)
 - [SQLLite 3.18.0](https://github.com/getquill/quill/pull/792)
 - [Fix nested query stack overflow](https://github.com/getquill/quill/pull/786)
 - [Performance optimization of Interleave](https://github.com/getquill/quill/pull/811)
+- [Performance optimization of ReifyStatement](https://github.com/getquill/quill/pull/823)
 - [Fix invalid nested queries with take/drop](https://github.com/getquill/quill/pull/779)
-- [Fix NPE when using nested quoted binding](https://github.com/getquill/quill/pull/818)
+- [Fix NPE when using nested quoted binding](https://github.com/getquill/quill/pull/817)
+- [Make `withConnection` method protected in AsyncContext](https://github.com/getquill/quill/pull/826)
 
 # 1.2.1
 
