@@ -1,7 +1,5 @@
 package io.getquill
 
-import com.datastax.driver.core.BoundStatement
-import com.datastax.driver.core.Row
 import com.typesafe.config.Config
 import io.getquill.util.{ ContextLogger, LoadConfig }
 import io.getquill.context.cassandra.CassandraSessionContext
@@ -26,17 +24,17 @@ class CassandraSyncContext[N <: NamingStrategy](
   override type RunActionResult = Unit
   override type RunBatchActionResult = Unit
 
-  def executeQuery[T](cql: String, prepare: BoundStatement => (List[Any], BoundStatement) = row => (Nil, row), extractor: Row => T = identity[Row] _): List[T] = {
+  def executeQuery[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): List[T] = {
     val (params, bs) = prepare(super.prepare(cql))
     logger.logQuery(cql, params)
     session.execute(bs)
       .all.asScala.toList.map(extractor)
   }
 
-  def executeQuerySingle[T](cql: String, prepare: BoundStatement => (List[Any], BoundStatement) = row => (Nil, row), extractor: Row => T = identity[Row] _): T =
+  def executeQuerySingle[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): T =
     handleSingleResult(executeQuery(cql, prepare, extractor))
 
-  def executeAction[T](cql: String, prepare: BoundStatement => (List[Any], BoundStatement) = row => (Nil, row)): Unit = {
+  def executeAction[T](cql: String, prepare: Prepare = identityPrepare): Unit = {
     val (params, bs) = prepare(super.prepare(cql))
     logger.logQuery(cql, params)
     session.execute(bs)

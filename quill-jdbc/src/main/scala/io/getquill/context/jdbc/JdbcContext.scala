@@ -68,7 +68,7 @@ abstract class JdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](dataSo
         }
     }
 
-  def executeQuery[T](sql: String, prepare: PreparedStatement => (List[Any], PreparedStatement) = row => (Nil, row), extractor: ResultSet => T = identity[ResultSet] _): List[T] =
+  def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): List[T] =
     withConnection { conn =>
       val (params, ps) = prepare(conn.prepareStatement(sql))
       logger.logQuery(sql, params)
@@ -76,17 +76,17 @@ abstract class JdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](dataSo
       extractResult(rs, extractor)
     }
 
-  def executeQuerySingle[T](sql: String, prepare: PreparedStatement => (List[Any], PreparedStatement) = row => (Nil, row), extractor: ResultSet => T = identity[ResultSet] _): T =
+  def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): T =
     handleSingleResult(executeQuery(sql, prepare, extractor))
 
-  def executeAction[T](sql: String, prepare: PreparedStatement => (List[Any], PreparedStatement) = row => (Nil, row)): Long =
+  def executeAction[T](sql: String, prepare: Prepare = identityPrepare): Long =
     withConnection { conn =>
       val (params, ps) = prepare(conn.prepareStatement(sql))
       logger.logQuery(sql, params)
       ps.executeUpdate().toLong
     }
 
-  def executeActionReturning[O](sql: String, prepare: PreparedStatement => (List[Any], PreparedStatement) = row => (Nil, row), extractor: ResultSet => O, returningColumn: String): O =
+  def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningColumn: String): O =
     withConnection { conn =>
       val (params, ps) = prepare(conn.prepareStatement(sql, Array(returningColumn)))
       logger.logQuery(sql, params)
@@ -109,7 +109,7 @@ abstract class JdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](dataSo
       }
     }
 
-  def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: ResultSet => T): List[T] =
+  def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T]): List[T] =
     withConnection { conn =>
       groups.flatMap {
         case BatchGroupReturning(sql, column, prepare) =>
@@ -136,7 +136,7 @@ abstract class JdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](dataSo
   def parseJdbcType(intType: Int): String = JDBCType.valueOf(intType).getName
 
   @tailrec
-  private def extractResult[T](rs: ResultSet, extractor: ResultSet => T, acc: List[T] = List()): List[T] =
+  private def extractResult[T](rs: ResultSet, extractor: Extractor[T], acc: List[T] = List()): List[T] =
     if (rs.next)
       extractResult(rs, extractor, extractor(rs) :: acc)
     else

@@ -2,9 +2,7 @@ package io.getquill.context.orientdb
 
 import com.orientechnologies.orient.core.db.OPartitionedDatabasePool
 import com.orientechnologies.orient.core.record.impl.ODocument
-import com.orientechnologies.orient.core.sql.query.OSQLQuery
 import io.getquill.NamingStrategy
-import io.getquill.context.mirror.Row
 import io.getquill.context.orientdb.encoding.{ Decoders, Encoders }
 import io.getquill.util.Messages.fail
 
@@ -41,11 +39,11 @@ abstract class OrientDBSessionContext[N <: NamingStrategy](
       ()
     }
 
-  def executeActionReturning[O](orientDBQl: String, prepare: OSQLQuery[ODocument] => OSQLQuery[ODocument] = identity, extractor: Row => O, returningColumn: String): Unit = {
+  def executeActionReturning[T](orientDBQl: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor, returningColumn: String): Unit = {
     fail("OrientDB doesn't support `returning`.")
   }
 
-  def executeBatchActionReturning[T](groups: List[BatchGroup], extractor: Row => T): Unit = {
+  def executeBatchActionReturning[T](groups: List[BatchGroup], extractor: Extractor[T]): Unit = {
     fail("OrientDB doesn't support `returning`.")
   }
 }
