@@ -43,9 +43,9 @@ abstract class CassandraSessionContext[N <: NamingStrategy](
       ()
     }
 
-  def executeActionReturning[O](sql: String, prepare: BoundStatement => (List[Any], BoundStatement) = row => (Nil, row), extractor: Row => O, returningColumn: String): Unit =
+  def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningColumn: String): Unit =
     fail("Cassandra doesn't support `returning`.")
 
-  def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Row => T): Unit =
+  def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T]): Unit =
     fail("Cassandra doesn't support `returning`.")
 }

@@ -42,7 +42,7 @@ abstract class AsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: Connection]
       case other                                   => f(pool)
     }
 
-  protected def extractActionResult[O](returningColumn: String, extractor: RowData => O)(result: DBQueryResult): O
+  protected def extractActionResult[O](returningColumn: String, extractor: Extractor[O])(result: DBQueryResult): O
 
   protected def expandAction(sql: String, returningColumn: String) = sql
 
@@ -56,7 +56,7 @@ abstract class AsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: Connection]
       f(TransactionalExecutionContext(ec, c))
     }
 
-  def executeQuery[T](sql: String, prepare: List[Any] => (List[Any], List[Any]) = row => (Nil, row), extractor: RowData => T = identity[RowData] _)(implicit ec: ExecutionContext): Future[List[T]] = {
+  def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(implicit ec: ExecutionContext): Future[List[T]] = {
     val (params, values) = prepare(Nil)
     logger.logQuery(sql, params)
     withConnection(_.sendPreparedStatement(sql, values)).map {
@@ -67,16 +67,16 @@ abstract class AsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: Connection]
     }
   }
 
-  def executeQuerySingle[T](sql: String, prepare: List[Any] => (List[Any], List[Any]) = row => (Nil, row), extractor: RowData => T = identity[RowData] _)(implicit ec: ExecutionContext): Future[T] =
+  def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(implicit ec: ExecutionContext): Future[T] =
     executeQuery(sql, prepare, extractor).map(handleSingleResult)
 
-  def executeAction[T](sql: String, prepare: List[Any] => (List[Any], List[Any]) = row => (Nil, row))(implicit ec: ExecutionContext): Future[Long] = {
+  def executeAction[T](sql: String, prepare: Prepare = identityPrepare)(implicit ec: ExecutionContext): Future[Long] = {
     val (params, values) = prepare(Nil)
     logger.logQuery(sql, params)
     withConnection(_.sendPreparedStatement(sql, values)).map(_.rowsAffected)
   }
 
-  def executeActionReturning[T](sql: String, prepare: List[Any] => (List[Any], List[Any]) = row => (Nil, row), extractor: RowData => T, returningColumn: String)(implicit ec: ExecutionContext): Future[T] = {
+  def executeActionReturning[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T], returningColumn: String)(implicit ec: ExecutionContext): Future[T] = {
     val expanded = expandAction(sql, returningColumn)
     val (params, values) = prepare(Nil)
     logger.logQuery(sql, params)
@@ -97,7 +97,7 @@ abstract class AsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: Connection]
       }
     }.map(_.flatten.toList)
 
-  def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: RowData => T)(implicit ec: ExecutionContext): Future[List[T]] =
+  def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T])(implicit ec: ExecutionContext): Future[List[T]] =
     Future.sequence {
       groups.map {
         case BatchGroupReturning(sql, column, prepare) =>

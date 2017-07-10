@@ -35,24 +35,24 @@ class MirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy]
 
   case class ActionMirror(string: String, prepareRow: PrepareRow)
 
-  case class ActionReturningMirror[T](string: String, prepareRow: Row, extractor: Row => T, returningColumn: String)
+  case class ActionReturningMirror[T](string: String, prepareRow: PrepareRow, extractor: Extractor[T], returningColumn: String)
 
   case class BatchActionMirror(groups: List[(String, List[Row])])
 
-  case class BatchActionReturningMirror[T](groups: List[(String, String, List[Row])], extractor: Row => T)
+  case class BatchActionReturningMirror[T](groups: List[(String, String, List[PrepareRow])], extractor: Extractor[T])
 
-  case class QueryMirror[T](string: String, prepareRow: Row, extractor: Row => T)
+  case class QueryMirror[T](string: String, prepareRow: PrepareRow, extractor: Extractor[T])
 
-  def executeQuery[T](string: String, prepare: Row => (List[Any], Row) = row => (Nil, row), extractor: Row => T = identity[Row] _) =
+  def executeQuery[T](string: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor) =
     QueryMirror(string, prepare(Row())._2, extractor)
 
-  def executeQuerySingle[T](string: String, prepare: Row => (List[Any], Row) = row => (Nil, row), extractor: Row => T = identity[Row] _) =
+  def executeQuerySingle[T](string: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor) =
     QueryMirror(string, prepare(Row())._2, extractor)
 
-  def executeAction(string: String, prepare: Row => (List[Any], Row) = row => (Nil, row)) =
+  def executeAction(string: String, prepare: Prepare = identityPrepare) =
     ActionMirror(string, prepare(Row())._2)
 
-  def executeActionReturning[O](string: String, prepare: Row => (List[Any], Row) = row => (Nil, row), extractor: Row => O,
+  def executeActionReturning[O](string: String, prepare: Prepare = identityPrepare, extractor: Extractor[O],
                                 returningColumn: String) =
     ActionReturningMirror[O](string, prepare(Row())._2, extractor, returningColumn)
 
@@ -64,7 +64,7 @@ class MirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy]
       }
     }
 
-  def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Row => T) =
+  def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T]) =
     BatchActionReturningMirror[T](
       groups.map {
         case BatchGroupReturning(string, column, prepare) =>
