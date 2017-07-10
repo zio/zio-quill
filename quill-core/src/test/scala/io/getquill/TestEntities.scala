@@ -9,6 +9,11 @@ trait TestEntities {
   case class TestEntity2(s: String, i: Int, l: Long, o: Option[Int])
   case class TestEntity3(s: String, i: Int, l: Long, o: Option[Int])
 
+  case class TestEntityEmbedded(s: String) extends Embedded
+  case class TestEntityEmbedded2(embedded: TestEntityEmbedded) extends Embedded
+  case class TestEntityParent(embedded2: TestEntityEmbedded2)
+  val qEmbedded = quote(query[TestEntityParent])
+
   val qr1 = quote {
     query[TestEntity]
   }

@@ -640,8 +640,22 @@ class SqlIdiomSpec extends Spec {
           val q = quote {
             query[TestEntity].insert(lift(TestEntity("s", 1, 2L, Some(1)))).returning(_.l)
           }
-          val run = testContext.run(q).string mustEqual
+          testContext.run(q).string mustEqual
             "INSERT INTO TestEntity (s,i,o) VALUES (?, ?, ?)"
+        }
+        "embedded" in {
+          def insert(list: List[TestEntityEmbedded2]) = quote{
+            liftQuery(list).foreach(b => query[TestEntityEmbedded2].insert(b))
+          }
+          testContext.run(insert(List(TestEntityEmbedded2(TestEntityEmbedded("sValue"))))).groups.map(_._1).mkString mustEqual
+          "INSERT INTO TestEntityEmbedded2 (s) VALUES (?)"
+        }
+        "embedded 2nd level" in {
+          def insert(list: List[TestEntityParent]) = quote {
+            liftQuery(list).foreach(c => qEmbedded.insert(c))
+          }
+          testContext.run(insert(List(TestEntityParent(TestEntityEmbedded2(TestEntityEmbedded("sValue")))))).groups.map(_._1).mkString mustEqual
+            "INSERT INTO TestEntityParent (s) VALUES (?)"
         }
       }
       "update" - {
