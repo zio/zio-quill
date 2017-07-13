@@ -74,5 +74,19 @@ class ProductJdbcSpec extends ProductSpec {
         queried.sku mustEqual 1004L
       }
     }
+
+    "headOption" in {
+      val prd = Product(0L, "test1", 1)
+      val inserted = testContext.run(productInsert(lift(prd)))
+      val byRightId = testContext.run(productById(lift(inserted)).headOption)
+      val byWrongId = testContext.run(productById(lift(1234567L)).headOption)
+      byRightId mustEqual Some(prd.copy(id = inserted))
+      byWrongId mustEqual None
+
+      testContext.run(productInsert(lift(Product(0L, "test2", 2))))
+      intercept[IllegalStateException] {
+        testContext.run(query[Product].headOption)
+      }
+    }
   }
 }

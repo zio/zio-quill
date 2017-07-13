@@ -22,6 +22,7 @@ class FinaglePostgresContext[N <: NamingStrategy](client: PostgresClient) extend
   override type ResultRow = Row
   override type RunQueryResult[T] = Future[List[T]]
   override type RunQuerySingleResult[T] = Future[T]
+  override type RunQueryHeadOptionResult[T] = Future[Option[T]]
   override type RunActionResult = Future[Long]
   override type RunActionReturningResult[T] = Future[T]
   override type RunBatchActionResult = Future[List[Long]]
@@ -49,6 +50,9 @@ class FinaglePostgresContext[N <: NamingStrategy](client: PostgresClient) extend
 
   def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): Future[T] =
     executeQuery(sql, prepare, extractor).map(handleSingleResult)
+
+  def executeQueryHeadOption[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): Future[Option[T]] =
+    executeQuery(sql, prepare, extractor).map(handleHeadOptionResult)
 
   def executeAction[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): Future[Long] = {
     val (params, prepared) = prepare(Nil)

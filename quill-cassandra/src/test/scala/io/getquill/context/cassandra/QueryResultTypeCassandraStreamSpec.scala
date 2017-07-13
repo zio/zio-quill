@@ -30,4 +30,10 @@ class QueryResultTypeCassandraStreamSpec extends QueryResultTypeCassandraSpec {
       result(context.run(parametrizedSize(lift(10000)))) mustEqual List(0)
     }
   }
+
+  "headOption" - {
+    result(context.run(headOptionSome)) mustEqual List(Some(entries.head))
+    result(context.run(headOptionNone)) mustEqual List(None)
+    result(context.run(headOptionError)) mustEqual List(Some(entries.head))
+  }
 }

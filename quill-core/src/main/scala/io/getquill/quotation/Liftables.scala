@@ -32,6 +32,7 @@ trait Liftables {
     case Dynamic(tree: Tree) if (tree.tpe <:< c.weakTypeOf[CoreDsl#Quoted[Any]]) => q"$tree.ast"
     case Dynamic(tree: Tree) => q"$pack.Constant($tree)"
     case QuotedReference(tree: Tree, ast) => q"$ast"
+    case HeadOption(ast) => q"$ast"
   }
 
   implicit val optionOperationLiftable: Liftable[OptionOperation] = Liftable[OptionOperation] {

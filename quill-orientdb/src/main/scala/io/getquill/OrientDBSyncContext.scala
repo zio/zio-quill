@@ -21,6 +21,7 @@ class OrientDBSyncContext[N <: NamingStrategy](
 
   override type RunQueryResult[T] = List[T]
   override type RunQuerySingleResult[T] = T
+  override type RunQueryHeadOptionResult[T] = Option[T]
   override type RunActionResult = Unit
   override type RunBatchActionResult = Unit
 
@@ -34,6 +35,9 @@ class OrientDBSyncContext[N <: NamingStrategy](
 
   def executeQuerySingle[T](orientQl: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): T =
     handleSingleResult(executeQuery(orientQl, prepare, extractor))
+
+  def executeQueryHeadOption[T](orientQl: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): Option[T] =
+    handleHeadOptionResult(executeQuery(orientQl, prepare, extractor))
 
   def executeAction[T](orientQl: String, prepare: Prepare = identityPrepare): Unit = {
     val (params, objects) = prepare(super.prepare())

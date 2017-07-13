@@ -27,6 +27,7 @@ class OrientDBAsyncContext[N <: NamingStrategy](
 
   override type RunQueryResult[T] = Future[List[T]]
   override type RunQuerySingleResult[T] = Future[T]
+  override type RunQueryHeadOptionResult[T] = Future[Option[T]]
   override type RunActionResult = Unit
   override type RunBatchActionResult = Unit
 
@@ -81,6 +82,34 @@ class OrientDBAsyncContext[N <: NamingStrategy](
       }
     )).execute[Future[T]](objects.asJava)
   }
+
+  def executeQueryHeadOption[T](orientQl: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): Future[Option[T]] = {
+    val (params, objects) = prepare(super.prepare())
+    logger.logQuery(orientQl, params)
+    oDatabase.command(new OSQLNonBlockingQuery[ODocument](
+      checkInFilter(orientQl, objects.size),
+      new OCommandResultListener {
+        var record: Option[T] = None
+
+        override def result(iRecord: scala.Any): Boolean = {
+          iRecord match {
+            case oRecord: ODocument if record.isEmpty =>
+              record = Option(extractor(oRecord))
+              false
+            case oRecord: ODocument =>
+              fail(s"Expected a single result or none but got ${List(record.get, oRecord)}")
+            case _ =>
+              fail("invalid record received")
+          }
+        }
+
+        override def getResult: AnyRef = record
+
+        override def end(): Unit = ()
+      }
+    )).execute[Future[Option[T]]](objects.asJava)
+  }
+
 
   def executeAction[T](orientQl: String, prepare: Prepare = identityPrepare): Unit = {
     val (params, objects) = prepare(super.prepare())

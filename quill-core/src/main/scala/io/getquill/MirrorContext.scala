@@ -18,6 +18,7 @@ class MirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy]
   override type ResultRow = Row
   override type RunQueryResult[T] = QueryMirror[T]
   override type RunQuerySingleResult[T] = QueryMirror[T]
+  override type RunQueryHeadOptionResult[T] = QueryMirror[T]
   override type RunActionResult = ActionMirror
   override type RunActionReturningResult[T] = ActionReturningMirror[T]
   override type RunBatchActionResult = BatchActionMirror
@@ -47,6 +48,9 @@ class MirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy]
     QueryMirror(string, prepare(Row())._2, extractor)
 
   def executeQuerySingle[T](string: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor) =
+    QueryMirror(string, prepare(Row())._2, extractor)
+
+  def executeQueryHeadOption[T](string: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor) =
     QueryMirror(string, prepare(Row())._2, extractor)
 
   def executeAction(string: String, prepare: Prepare = identityPrepare) =

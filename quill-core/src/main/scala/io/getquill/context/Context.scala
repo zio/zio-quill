@@ -12,6 +12,7 @@ trait Context[Idiom <: io.getquill.idiom.Idiom, Naming <: NamingStrategy]
   with CoreDsl {
 
   type RunQuerySingleResult[T]
+  type RunQueryHeadOptionResult[T]
   type RunQueryResult[T]
   type RunActionResult
   type RunActionReturningResult[T]
@@ -27,6 +28,7 @@ trait Context[Idiom <: io.getquill.idiom.Idiom, Naming <: NamingStrategy]
   def probe(statement: String): Try[_]
 
   def run[T](quoted: Quoted[T]): RunQuerySingleResult[T] = macro QueryMacro.runQuerySingle[T]
+  def run[T](quoted: Quoted[OptionQuery[T]]): RunQueryHeadOptionResult[T] = macro QueryMacro.runQueryHeadOption[T]
   def run[T](quoted: Quoted[Query[T]]): RunQueryResult[T] = macro QueryMacro.runQuery[T]
   def run(quoted: Quoted[Action[_]]): RunActionResult = macro ActionMacro.runAction
   def run[T](quoted: Quoted[ActionReturning[_, T]]): RunActionReturningResult[T] = macro ActionMacro.runActionReturning[T]
@@ -40,5 +42,12 @@ trait Context[Idiom <: io.getquill.idiom.Idiom, Naming <: NamingStrategy]
     list match {
       case value :: Nil => value
       case other        => throw new IllegalStateException(s"Expected a single result but got $other")
+    }
+
+  protected def handleHeadOptionResult[T](list: List[T]) =
+    list match {
+      case Nil          => None
+      case value :: Nil => Some(value)
+      case other        => throw new IllegalStateException(s"Expected a single result or none but got $other")
     }
 }

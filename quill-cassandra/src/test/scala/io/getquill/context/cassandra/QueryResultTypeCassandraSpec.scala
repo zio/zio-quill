@@ -30,4 +30,7 @@ trait QueryResultTypeCassandraSpec extends Spec {
     query[OrderTestEntity].filter(_.id == id).size
   }
   val distinct = quote(query[OrderTestEntity].map(_.id).distinct)
+  val headOptionSome = quote(query[OrderTestEntity].filter(_.id == 1).headOption)
+  val headOptionNone = quote(query[OrderTestEntity].filter(_.id == 4).headOption)
+  val headOptionError = quote(query[OrderTestEntity].headOption)
 }
