@@ -1,10 +1,10 @@
 package io.getquill.context.async
 
-import java.time.{ LocalDate, LocalDateTime, ZoneId }
+import java.time.{ LocalDate, LocalDateTime, ZoneId, ZonedDateTime }
 import java.util.Date
 
 import io.getquill.util.Messages.fail
-import org.joda.time.{ LocalDate => JodaLocalDate, LocalDateTime => JodaLocalDateTime }
+import org.joda.time.{ LocalDate => JodaLocalDate, LocalDateTime => JodaLocalDateTime, DateTime => JodaDateTime }
 
 import scala.reflect.{ ClassTag, classTag }
 
@@ -161,4 +161,22 @@ trait Decoders {
         )
     }, SqlTypes.TIMESTAMP)
 
+  implicit val zonedDateTimeDecoder: Decoder[ZonedDateTime] =
+    decoder[ZonedDateTime]({
+      case localDateTime: JodaLocalDateTime =>
+        ZonedDateTime.ofInstant(
+          localDateTime.toDate.toInstant,
+          ZoneId.systemDefault()
+        )
+      case localDate: JodaLocalDate =>
+        ZonedDateTime.ofInstant(
+          localDate.toDate.toInstant,
+          ZoneId.systemDefault()
+        )
+      case dateTime: JodaDateTime =>
+        ZonedDateTime.ofInstant(
+          dateTime.toDate.toInstant,
+          dateTime.getZone.toTimeZone.toZoneId
+        )
+    }, SqlTypes.TIMESTAMP_WITH_TIMEZONE)
 }
