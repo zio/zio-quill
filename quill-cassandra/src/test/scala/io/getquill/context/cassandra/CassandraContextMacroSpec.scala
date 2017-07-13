@@ -54,4 +54,20 @@ class CassandraContextMacroSpec extends Spec {
       mirror.prepareRow mustEqual Row(2l, 1)
     }
   }
+
+  "multi-level embedded case class with optionals lifting" in {
+    case class TestEntity(level1: Level1)
+    case class Level1(level2: Level2, optionalLevel2: Option[Level2]) extends Embedded
+    case class Level2(level3: Level3, optionalLevel3: Option[Level3]) extends Embedded
+    case class Level3(value: Option[String], optionalLevel4: Option[Level4]) extends Embedded
+    case class Level4(id: Int) extends Embedded
+
+    val e = TestEntity(Level1(Level2(Level3(Some("test"), None), Some(Level3(None, Some(Level4(1))))), None))
+    val q = quote {
+      query[TestEntity].insert(lift(e))
+    }
+    val r = mirrorContext.run(q)
+    r.string mustEqual "INSERT INTO TestEntity (value,id,value,id,value,id,value,id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+    r.prepareRow mustEqual Row(Some("test"), None, Some(None), Some(Some(1)), None, None, None, None)
+  }
 }

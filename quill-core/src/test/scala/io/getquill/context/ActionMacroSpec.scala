@@ -67,6 +67,29 @@ class ActionMacroSpec extends Spec {
       r.prepareRow mustEqual Row("s", 1, None)
       r.returningColumn mustEqual "l"
     }
+    "multi-level embedded case class with optionals lifting" in {
+      case class TestEntity(level1: Level1)
+      case class Level1(level2: Level2, optionalLevel2: Option[Level2]) extends Embedded
+      case class Level2(level3: Level3, optionalLevel3: Option[Level3]) extends Embedded
+      case class Level3(value: Option[String], optionalLevel4: Option[Level4]) extends Embedded
+      case class Level4(id: Int) extends Embedded
+
+      val e = TestEntity(Level1(Level2(Level3(Some("test"), None), Some(Level3(None, Some(Level4(1))))), None))
+      val q = quote {
+        query[TestEntity].insert(lift(e))
+      }
+      val r = testContext.run(q)
+      r.string mustEqual
+        "querySchema(\"TestEntity\").insert(v => v.level1.level2.level3.value -> ?, " +
+        "v => v.level1.level2.level3.optionalLevel4.map((v) => v.id) -> ?, " +
+        "v => v.level1.level2.optionalLevel3.map((v) => v.value) -> ?, " +
+        "v => v.level1.level2.optionalLevel3.map((v) => v.optionalLevel4.map((v) => v.id)) -> ?, " +
+        "v => v.level1.optionalLevel2.map((v) => v.level3.value) -> ?, " +
+        "v => v.level1.optionalLevel2.map((v) => v.level3.optionalLevel4.map((v) => v.id)) -> ?, " +
+        "v => v.level1.optionalLevel2.map((v) => v.optionalLevel3.map((v) => v.value)) -> ?, " +
+        "v => v.level1.optionalLevel2.map((v) => v.optionalLevel3.map((v) => v.optionalLevel4.map((v) => v.id))) -> ?)"
+      r.prepareRow mustEqual Row(Some("test"), None, Some(None), Some(Some(1)), None, None, None, None)
+    }
   }
 
   "runs batched action" - {
@@ -167,6 +190,33 @@ class ActionMacroSpec extends Spec {
       r.groups mustEqual List(
         ("""querySchema("TestEntity").insert(v => v.s -> ?, v => v.i -> ?, v => v.o -> ?).returning((t) => t.l)""", "l",
           List(Row("s1", 2, Some(4)), Row("s5", 6, Some(8))))
+      )
+    }
+    "multi-level embedded case class with optionals lifting" in {
+      case class TestEntity(level1: Level1)
+      case class Level1(level2: Level2, optionalLevel2: Option[Level2]) extends Embedded
+      case class Level2(level3: Level3, optionalLevel3: Option[Level3]) extends Embedded
+      case class Level3(value: Option[String], optionalLevel4: Option[Level4]) extends Embedded
+      case class Level4(id: Int) extends Embedded
+
+      val e = TestEntity(Level1(Level2(Level3(Some("test"), None), Some(Level3(None, Some(Level4(1))))), None))
+      val q = quote {
+        query[TestEntity].insert(lift(e))
+      }
+
+      val r = testContext.run(liftQuery(List(e)).foreach(e => query[TestEntity].insert(e)))
+      r.groups mustEqual List(
+        (
+          "querySchema(\"TestEntity\").insert(v => v.level1.level2.level3.value -> ?, " +
+          "v => v.level1.level2.level3.optionalLevel4.map((v) => v.id) -> ?, " +
+          "v => v.level1.level2.optionalLevel3.map((v) => v.value) -> ?, " +
+          "v => v.level1.level2.optionalLevel3.map((v) => v.optionalLevel4.map((v) => v.id)) -> ?, " +
+          "v => v.level1.optionalLevel2.map((v) => v.level3.value) -> ?, " +
+          "v => v.level1.optionalLevel2.map((v) => v.level3.optionalLevel4.map((v) => v.id)) -> ?, " +
+          "v => v.level1.optionalLevel2.map((v) => v.optionalLevel3.map((v) => v.value)) -> ?, " +
+          "v => v.level1.optionalLevel2.map((v) => v.optionalLevel3.map((v) => v.optionalLevel4.map((v) => v.id))) -> ?)",
+          List(Row(Some("test"), None, Some(None), Some(Some(1)), None, None, None, None))
+        )
       )
     }
   }
