@@ -24,6 +24,7 @@ class CassandraAsyncContext[N <: NamingStrategy](
 
   override type RunQueryResult[T] = Future[List[T]]
   override type RunQuerySingleResult[T] = Future[T]
+  override type RunQueryHeadOptionResult[T] = Future[Option[T]]
   override type RunActionResult = Future[Unit]
   override type RunBatchActionResult = Future[Unit]
 
@@ -36,6 +37,9 @@ class CassandraAsyncContext[N <: NamingStrategy](
 
   def executeQuerySingle[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(implicit ec: ExecutionContext): Future[T] =
     executeQuery(cql, prepare, extractor).map(handleSingleResult)
+
+  def executeQueryHeadOption[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(implicit ec: ExecutionContext): Future[Option[T]] =
+    executeQuery(cql, prepare, extractor).map(handleHeadOptionResult)
 
   def executeAction[T](cql: String, prepare: Prepare = identityPrepare)(implicit ec: ExecutionContext): Future[Unit] = {
     val (params, bs) = prepare(super.prepare(cql))

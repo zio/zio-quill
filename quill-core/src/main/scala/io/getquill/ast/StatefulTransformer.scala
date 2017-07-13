@@ -49,6 +49,10 @@ trait StatefulTransformer[T] {
         (Val(a, at), att)
 
       case o: Ordering => (o, this)
+
+      case HeadOption(a) =>
+        val (at, att) = apply(a)
+        (HeadOption(at), att)
     }
 
   def apply(o: OptionOperation): (OptionOperation, StatefulTransformer[T]) =

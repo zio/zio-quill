@@ -53,6 +53,9 @@ private[dsl] trait QueryDsl {
 
     def nested: Query[T]
 
+    // TODO we should return Query but not with provided methods above. So new trait ?
+    def headOption: OptionQuery[T]
+
     /**
      *
      * @param unquote is used for conversion of [[Quoted[A]]] to [[A]] with [[unquote]]
@@ -60,6 +63,8 @@ private[dsl] trait QueryDsl {
      */
     def foreach[A <: Action[_], B](f: T => B)(implicit unquote: B => A): BatchAction[A]
   }
+
+  sealed trait OptionQuery[+T] extends Query[T]
 
   sealed trait JoinQuery[A, B, R] extends Query[R] {
     def on(f: (A, B) => Boolean): Query[R]

@@ -41,4 +41,12 @@ class QueryResultTypeCassandraSyncSpec extends QueryResultTypeCassandraSpec {
       context.run(parametrizedSize(lift(10000))) mustEqual 0
     }
   }
+
+  "headOption" - {
+    context.run(headOptionSome) mustEqual Some(entries.head)
+    context.run(headOptionNone) mustEqual None
+    intercept[IllegalStateException] {
+      context.run(headOptionError)
+    }
+  }
 }

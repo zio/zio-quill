@@ -21,6 +21,7 @@ trait StatelessTransformer {
       case Block(statements)      => Block(statements.map(apply))
       case Val(name, body)        => Val(name, apply(body))
       case o: Ordering            => o
+      case HeadOption(ast)        => HeadOption(apply(ast))
     }
 
   def apply(o: OptionOperation): OptionOperation =

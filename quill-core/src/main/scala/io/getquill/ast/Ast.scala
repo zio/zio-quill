@@ -135,3 +135,5 @@ case class ScalarQueryLift(name: String, value: Any, encoder: Any) extends Scala
 sealed trait CaseClassLift extends Lift
 case class CaseClassValueLift(name: String, value: Any) extends CaseClassLift
 case class CaseClassQueryLift(name: String, value: Any) extends CaseClassLift
+
+case class HeadOption(ast: Ast) extends Ast

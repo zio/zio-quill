@@ -70,4 +70,15 @@ class QueryResultTypeOrientDBAsync extends Spec {
       ctx.run(quote { query[OrderTestEntity].filter(_.id == lift(0)).size }).get() == 0
     }
   }
+
+  "headOption" - {
+    val ctx = orientdb.testAsyncDB
+    import ctx._
+    ctx.run(quote(query[OrderTestEntity].filter(_.id == 1)).headOption).get() mustEqual Some(entries(1))
+    ctx.run(quote(query[OrderTestEntity].filter(_.id == 4)).headOption).get() mustEqual None
+    intercept[IllegalStateException] {
+      ctx.run(quote(query[OrderTestEntity].headOption))
+    }
+    ctx.run(quote(query[OrderTestEntity])).get()
+  }
 }

@@ -21,6 +21,7 @@ class CassandraSyncContext[N <: NamingStrategy](
 
   override type RunQueryResult[T] = List[T]
   override type RunQuerySingleResult[T] = T
+  override type RunQueryHeadOptionResult[T] = Option[T]
   override type RunActionResult = Unit
   override type RunBatchActionResult = Unit
 
@@ -33,6 +34,9 @@ class CassandraSyncContext[N <: NamingStrategy](
 
   def executeQuerySingle[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): T =
     handleSingleResult(executeQuery(cql, prepare, extractor))
+
+  def executeQueryHeadOption[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): Option[T] =
+    handleHeadOptionResult(executeQuery(cql, prepare, extractor))
 
   def executeAction[T](cql: String, prepare: Prepare = identityPrepare): Unit = {
     val (params, bs) = prepare(super.prepare(cql))

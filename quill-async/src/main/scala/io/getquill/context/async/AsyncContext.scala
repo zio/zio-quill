@@ -26,6 +26,7 @@ abstract class AsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: Connection]
 
   override type RunQueryResult[T] = Future[List[T]]
   override type RunQuerySingleResult[T] = Future[T]
+  override type RunQueryHeadOptionResult[T] = Future[Option[T]]
   override type RunActionResult = Future[Long]
   override type RunActionReturningResult[T] = Future[T]
   override type RunBatchActionResult = Future[List[Long]]
@@ -69,6 +70,9 @@ abstract class AsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: Connection]
 
   def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(implicit ec: ExecutionContext): Future[T] =
     executeQuery(sql, prepare, extractor).map(handleSingleResult)
+
+  def executeQueryHeadOption[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(implicit ec: ExecutionContext): Future[Option[T]] =
+    executeQuery(sql, prepare, extractor).map(handleHeadOptionResult)
 
   def executeAction[T](sql: String, prepare: Prepare = identityPrepare)(implicit ec: ExecutionContext): Future[Long] = {
     val (params, values) = prepare(Nil)

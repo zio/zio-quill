@@ -39,6 +39,7 @@ class MirrorIdiom extends Idiom {
     case ast: QuotedReference => ast.ast.token
     case ast: Lift            => ast.token
     case ast: Assignment      => ast.token
+    case ast: HeadOption      => ast.token
   }
 
   implicit def ifTokenizer(implicit liftTokenizer: Tokenizer[Lift]): Tokenizer[If] = Tokenizer[If] {
@@ -55,6 +56,10 @@ class MirrorIdiom extends Idiom {
 
   implicit def valTokenizer(implicit liftTokenizer: Tokenizer[Lift]): Tokenizer[Val] = Tokenizer[Val] {
     case Val(name, body) => stmt"val ${name.token} = ${body.token}"
+  }
+
+  implicit def headOptionTokenizer(implicit liftTokenizer: Tokenizer[Lift]): Tokenizer[HeadOption] = Tokenizer[HeadOption] {
+    case HeadOption(body) => stmt"${body.token}"
   }
 
   implicit def queryTokenizer(implicit liftTokenizer: Tokenizer[Lift]): Tokenizer[Query] = Tokenizer[Query] {

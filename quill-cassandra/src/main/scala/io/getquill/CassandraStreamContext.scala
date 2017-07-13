@@ -27,6 +27,7 @@ class CassandraStreamContext[N <: NamingStrategy](
 
   override type RunQueryResult[T] = Observable[T]
   override type RunQuerySingleResult[T] = Observable[T]
+  override type RunQueryHeadOptionResult[T] = Observable[Option[T]]
   override type RunActionResult = Observable[Unit]
   override type RunBatchActionResult = Observable[Unit]
 
@@ -53,6 +54,18 @@ class CassandraStreamContext[N <: NamingStrategy](
 
   def executeQuerySingle[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): Observable[T] =
     executeQuery(cql, prepare, extractor)
+
+  def executeQueryHeadOption[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): Observable[Option[T]] = {
+    val (params, bs) = prepare(super.prepare(cql))
+    logger.logQuery(cql, params)
+    Observable
+      .fromFuture(session.executeAsync(bs))
+      .take(1)
+      .flatMap(Observable.fromAsyncStateAction((rs: ResultSet) => page(rs).map((_, rs)))(_))
+      .flatMap(Observable.fromIterable)
+      .map(extractor andThen Some.apply)
+      .headOrElseF(None)
+  }
 
   def executeAction[T](cql: String, prepare: Prepare = identityPrepare): Observable[Unit] = {
     val (params, bs) = prepare(super.prepare(cql))

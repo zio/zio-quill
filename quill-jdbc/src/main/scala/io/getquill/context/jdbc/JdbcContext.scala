@@ -25,6 +25,7 @@ abstract class JdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](dataSo
 
   override type RunQueryResult[T] = List[T]
   override type RunQuerySingleResult[T] = T
+  override type RunQueryHeadOptionResult[T] = Option[T]
   override type RunActionResult = Long
   override type RunActionReturningResult[T] = T
   override type RunBatchActionResult = List[Long]
@@ -78,6 +79,9 @@ abstract class JdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](dataSo
 
   def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): T =
     handleSingleResult(executeQuery(sql, prepare, extractor))
+
+  def executeQueryHeadOption[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): Option[T] =
+    handleHeadOptionResult(executeQuery(sql, prepare, extractor))
 
   def executeAction[T](sql: String, prepare: Prepare = identityPrepare): Long =
     withConnection { conn =>

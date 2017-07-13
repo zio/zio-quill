@@ -219,6 +219,8 @@ trait Parsing {
     case q"$source.nested" if (is[CoreDsl#Query[Any]](source)) =>
       Nested(astParser(source))
 
+    case q"$source.headOption" if (is[CoreDsl#Query[Any]](source)) =>
+      HeadOption(astParser(source))
   }
 
   implicit val propertyAliasParser: Parser[PropertyAlias] = Parser[PropertyAlias] {

@@ -43,4 +43,12 @@ class QueryResultTypeCassandraAsyncSpec extends QueryResultTypeCassandraSpec {
       await(context.run(parametrizedSize(lift(10000)))) mustEqual 0
     }
   }
+
+  "headOption" - {
+    await(context.run(headOptionSome)) mustEqual Some(entries.head)
+    await(context.run(headOptionNone)) mustEqual None
+    intercept[IllegalStateException] {
+      await(context.run(headOptionError))
+    }
+  }
 }

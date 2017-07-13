@@ -58,6 +58,7 @@ trait SqlIdiom extends Idiom {
       case a: If         => a.token
       case a: Lift       => a.token
       case a: Assignment => a.token
+      case a: HeadOption => a.ast.token
       case a @ (
         _: Function | _: FunctionApply | _: Dynamic | _: OptionOperation | _: Block |
         _: Val | _: Ordering | _: QuotedReference
