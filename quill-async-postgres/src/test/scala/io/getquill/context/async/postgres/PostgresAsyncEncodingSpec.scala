@@ -1,6 +1,6 @@
 package io.getquill.context.async.postgres
 
-import java.time.{ LocalDate, LocalDateTime }
+import java.time.{ LocalDate, LocalDateTime, ZonedDateTime }
 
 import io.getquill.context.sql.EncodingSpec
 
@@ -107,6 +107,28 @@ class PostgresAsyncEncodingSpec extends EncodingSpec {
       result <- testContext.run(query[DateEncodingTestEntity])
     } yield result
     Await.result(r, Duration.Inf)
+  }
+
+  "encodes zoneddatetime type" in {
+    case class DateEncodingTestEntity(v1: ZonedDateTime, v2: ZonedDateTime)
+    val entity = DateEncodingTestEntity(ZonedDateTime.now, ZonedDateTime.now)
+    val r = for {
+      _ <- testContext.run(query[DateEncodingTestEntity].delete)
+      _ <- testContext.run(query[DateEncodingTestEntity].insert(lift(entity)))
+      result <- testContext.run(query[DateEncodingTestEntity])
+    } yield result
+    Await.result(r, Duration.Inf)
+  }
+
+  "encodes zoneddatetime type to/from timestampz" in {
+    case class ZonedDateEncodingTestEntity(v1: ZonedDateTime)
+    val entity = ZonedDateEncodingTestEntity(ZonedDateTime.now)
+    val r = for {
+      _ <- testContext.run(query[ZonedDateEncodingTestEntity].delete)
+      _ <- testContext.run(query[ZonedDateEncodingTestEntity].insert(lift(entity)))
+      result <- testContext.run(query[ZonedDateEncodingTestEntity])
+    } yield result
+    Await.result(r, Duration.Inf) must contain(entity)
   }
 
   "encodes custom type inside singleton object" in {

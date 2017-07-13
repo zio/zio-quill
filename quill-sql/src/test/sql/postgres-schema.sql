@@ -95,6 +95,10 @@ CREATE TABLE DateEncodingTestEntity (
     v2 TIMESTAMP
 );
 
+CREATE TABLE ZonedDateEncodingTestEntity (
+  v1 TIMESTAMP WITH TIME ZONE
+);
+
 CREATE TABLE ArraysTestEntity (
     texts TEXT[],
     decimals DECIMAL(5,2)[],

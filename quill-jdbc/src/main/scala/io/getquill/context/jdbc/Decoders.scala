@@ -1,7 +1,7 @@
 package io.getquill.context.jdbc
 
 import java.sql.Types
-import java.time.{ LocalDate, LocalDateTime }
+import java.time.{ LocalDate, LocalDateTime, ZonedDateTime }
 import java.util
 import java.util.Calendar
 
@@ -83,5 +83,13 @@ trait Decoders {
         LocalDate.ofEpochDay(0).atStartOfDay()
       else
         v.toLocalDateTime
+    })
+  implicit val zonedDateTimeDecoder: Decoder[ZonedDateTime] =
+    decoder(Types.TIMESTAMP_WITH_TIMEZONE, (index, row) => {
+      val v = row.getTimestamp(index, Calendar.getInstance(dateTimeZone))
+      if (v == null)
+        LocalDate.ofEpochDay(0).atStartOfDay(dateTimeZone.toZoneId)
+      else
+        ZonedDateTime.ofInstant(v.toInstant, dateTimeZone.toZoneId)
     })
 }
