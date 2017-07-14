@@ -41,16 +41,16 @@ class FinaglePostgresContext[N <: NamingStrategy](client: PostgresClient) extend
     f.ensure(currentClient.clear)
   }
 
-  def executeQuery[T](sql: String, prepare: PrepareRow => (List[Any], PrepareRow) = row => (Nil, row), extractor: Row => T = identity[Row] _): Future[List[T]] = {
+  def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): Future[List[T]] = {
     val (params, prepared) = prepare(Nil)
     logger.logQuery(sql, params)
     withClient(_.prepareAndQuery(sql, prepared: _*)(extractor).map(_.toList))
   }
 
-  def executeQuerySingle[T](sql: String, prepare: PrepareRow => (List[Any], PrepareRow) = row => (Nil, row), extractor: Row => T = identity[Row] _): Future[T] =
+  def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): Future[T] =
     executeQuery(sql, prepare, extractor).map(handleSingleResult)
 
-  def executeAction[T](sql: String, prepare: PrepareRow => (List[Any], PrepareRow) = row => (Nil, row), extractor: Row => T = identity[Row] _): Future[Long] = {
+  def executeAction[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): Future[Long] = {
     val (params, prepared) = prepare(Nil)
     logger.logQuery(sql, params)
     withClient(_.prepareAndExecute(sql, prepared: _*)).map(_.toLong)
@@ -68,13 +68,13 @@ class FinaglePostgresContext[N <: NamingStrategy](client: PostgresClient) extend
     }
   }.map(_.flatten.toList)
 
-  def executeActionReturning[T](sql: String, prepare: PrepareRow => (List[Any], PrepareRow) = row => (Nil, row), extractor: Row => T, returningColumn: String): Future[T] = {
+  def executeActionReturning[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T], returningColumn: String): Future[T] = {
     val (params, prepared) = prepare(Nil)
     logger.logQuery(sql, params)
     withClient(_.prepareAndQuery(expandAction(sql, returningColumn), prepared: _*)(extractor)).map(v => handleSingleResult(v.toList))
   }
 
-  def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Row => T): Future[List[T]] =
+  def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T]): Future[List[T]] =
     Future.collect {
       groups.map {
         case BatchGroupReturning(sql, column, prepare) =>

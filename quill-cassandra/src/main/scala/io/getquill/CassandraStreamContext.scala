@@ -1,6 +1,5 @@
 package io.getquill
 
-import com.datastax.driver.core.BoundStatement
 import com.datastax.driver.core.ResultSet
 import com.datastax.driver.core.Row
 import com.typesafe.config.Config
@@ -41,7 +40,7 @@ class CassandraStreamContext[N <: NamingStrategy](
       Task.fromFuture(rs.fetchMoreResults()).map(_ => page)
   }
 
-  def executeQuery[T](cql: String, prepare: BoundStatement => (List[Any], BoundStatement) = row => (Nil, row), extractor: Row => T = identity[Row] _): Observable[T] = {
+  def executeQuery[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): Observable[T] = {
     val (params, bs) = prepare(super.prepare(cql))
     logger.logQuery(cql, params)
     Observable
@@ -52,10 +51,10 @@ class CassandraStreamContext[N <: NamingStrategy](
       .map(extractor)
   }
 
-  def executeQuerySingle[T](cql: String, prepare: BoundStatement => (List[Any], BoundStatement) = row => (Nil, row), extractor: Row => T = identity[Row] _): Observable[T] =
+  def executeQuerySingle[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): Observable[T] =
     executeQuery(cql, prepare, extractor)
 
-  def executeAction[T](cql: String, prepare: BoundStatement => (List[Any], BoundStatement) = row => (Nil, row)): Observable[Unit] = {
+  def executeAction[T](cql: String, prepare: Prepare = identityPrepare): Observable[Unit] = {
     val (params, bs) = prepare(super.prepare(cql))
     logger.logQuery(cql, params)
     Observable.fromFuture(session.executeAsync(bs)).map(_ => ())

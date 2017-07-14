@@ -13,7 +13,6 @@ import io.getquill.util.{ ContextLogger, LoadConfig }
 import io.getquill.util.Messages.fail
 
 import scala.collection.JavaConverters._
-import scala.collection.mutable.ArrayBuffer
 
 class OrientDBAsyncContext[N <: NamingStrategy](
   dbUrl:    String,
@@ -33,7 +32,7 @@ class OrientDBAsyncContext[N <: NamingStrategy](
 
   private val logger = ContextLogger(classOf[OrientDBSyncContext[_]])
 
-  def executeQuery[T](orientQl: String, prepare: ArrayBuffer[Any] => (List[Any], ArrayBuffer[Any]) = row => (Nil, row), extractor: ODocument => T = identity[ODocument] _): Future[List[T]] = {
+  def executeQuery[T](orientQl: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): Future[List[T]] = {
     val (params, objects) = prepare(super.prepare())
     logger.logQuery(orientQl, params)
     oDatabase.command(new OSQLNonBlockingQuery[ODocument](
@@ -58,7 +57,7 @@ class OrientDBAsyncContext[N <: NamingStrategy](
     )).execute[Future[List[T]]](objects.asJava)
   }
 
-  def executeQuerySingle[T](orientQl: String, prepare: ArrayBuffer[Any] => (List[Any], ArrayBuffer[Any]) = row => (Nil, row), extractor: ODocument => T = identity[ODocument] _): Future[T] = {
+  def executeQuerySingle[T](orientQl: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): Future[T] = {
     val (params, objects) = prepare(super.prepare())
     logger.logQuery(orientQl, params)
     oDatabase.command(new OSQLNonBlockingQuery[ODocument](
@@ -83,7 +82,7 @@ class OrientDBAsyncContext[N <: NamingStrategy](
     )).execute[Future[T]](objects.asJava)
   }
 
-  def executeAction[T](orientQl: String, prepare: ArrayBuffer[Any] => (List[Any], ArrayBuffer[Any]) = row => (Nil, row)): Unit = {
+  def executeAction[T](orientQl: String, prepare: Prepare = identityPrepare): Unit = {
     val (params, objects) = prepare(super.prepare())
     logger.logQuery(orientQl, params)
 

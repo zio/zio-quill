@@ -7,7 +7,7 @@ object FlattenOptionOperation extends StatelessTransformer {
   override def apply(ast: Ast) =
     ast match {
       case OptionMap(ast, alias, body) =>
-        BetaReduction(body, alias -> ast)
+        apply(BetaReduction(body, alias -> ast))
       case OptionForall(ast, alias, body) =>
         val isEmpty = BinaryOperation(ast, EqualityOperator.`==`, NullValue)
         val exists = BetaReduction(body, alias -> ast)

@@ -13,7 +13,7 @@ case class CaseClassValueLifting[T](value: T)
 
 trait ReifyLiftings {
   val c: MacroContext
-  import c.universe._
+  import c.universe.{ Ident => _, _ }
 
   private val liftings = TermName("liftings")
 
@@ -33,23 +33,44 @@ trait ReifyLiftings {
         case CaseClassQueryLift(name, value: Tree)             => Reified(value, None)
       }
 
+    private def unparse(ast: Ast): Tree =
+      ast match {
+        case Property(Ident(alias), name) => q"${TermName(alias)}.${TermName(name)}"
+        case Property(nested, name)       => q"${unparse(nested)}.${TermName(name)}"
+        case OptionMap(ast2, Ident(alias), body) =>
+          q"${unparse(ast2)}.map((${TermName(alias)}: ${tq""}) => ${unparse(body)})"
+        case CaseClassValueLift(_, v: Tree) => v
+        case other                          => c.fail(s"Unsupported AST: $other")
+      }
+
+    private def lift(v: Tree): Lift = {
+      val tpe = c.typecheck(q"import language.reflectiveCalls; $v").tpe
+      OptionalTypecheck(c)(q"implicitly[${c.prefix}.Encoder[$tpe]]") match {
+        case Some(enc) => ScalarValueLift(v.toString, v, enc)
+        case None =>
+          tpe.baseType(c.symbolOf[Product]) match {
+            case NoType => c.fail(s"Can't find an encoder for the lifted case class property '$v'")
+            case _      => CaseClassValueLift(v.toString, v)
+          }
+      }
+    }
+
     override def apply(ast: Ast) =
       ast match {
 
         case ast: Lift =>
           (ast, ReifyLiftings(state + (encode(ast.name) -> reify(ast))))
 
-        case Property(CaseClassValueLift(name, v: Tree), prop) =>
-          val term = TermName(prop)
-          val merge = q"$v.$term"
-          val tpe = c.typecheck(q"import language.reflectiveCalls; $merge").tpe
-          OptionalTypecheck(c)(q"implicitly[${c.prefix}.Encoder[$tpe]]") match {
-            case Some(enc) => apply(ScalarValueLift(merge.toString, merge, enc))
-            case None =>
-              tpe.baseType(c.symbolOf[Product]) match {
-                case NoType => c.fail(s"Can't find an encoder for the lifted case class property '$merge'")
-                case _      => apply(CaseClassValueLift(merge.toString, merge))
-              }
+        case p: OptionMap =>
+          super.apply(p) match {
+            case (p2 @ OptionMap(_: CaseClassValueLift, _, _), _) => apply(lift(unparse(p2)))
+            case other => other
+          }
+
+        case p: Property =>
+          super.apply(p) match {
+            case (p2 @ Property(_: CaseClassValueLift, _), _) => apply(lift(unparse(p2)))
+            case other                                        => other
           }
 
         case QuotedReference(ref: Tree, refAst) =>

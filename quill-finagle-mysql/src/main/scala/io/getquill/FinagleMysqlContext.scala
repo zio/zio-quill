@@ -78,23 +78,23 @@ class FinagleMysqlContext[N <: NamingStrategy](
         f.ensure(currentClient.clear)
     }
 
-  def executeQuery[T](sql: String, prepare: List[Parameter] => (List[Any], List[Parameter]) = row => (Nil, row), extractor: Row => T = identity[Row] _): Future[List[T]] = {
+  def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): Future[List[T]] = {
     val (params, prepared) = prepare(Nil)
     logger.logQuery(sql, params)
     withClient(_.prepare(sql).select(prepared: _*)(extractor)).map(_.toList)
   }
 
-  def executeQuerySingle[T](sql: String, prepare: List[Parameter] => (List[Any], List[Parameter]) = row => (Nil, row), extractor: Row => T = identity[Row] _): Future[T] =
+  def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): Future[T] =
     executeQuery(sql, prepare, extractor).map(handleSingleResult)
 
-  def executeAction[T](sql: String, prepare: List[Parameter] => (List[Any], List[Parameter]) = row => (Nil, row)): Future[Long] = {
+  def executeAction[T](sql: String, prepare: Prepare = identityPrepare): Future[Long] = {
     val (params, prepared) = prepare(Nil)
     logger.logQuery(sql, params)
     withClient(_.prepare(sql)(prepared: _*))
       .map(r => toOk(r).affectedRows)
   }
 
-  def executeActionReturning[T](sql: String, prepare: List[Parameter] => (List[Any], List[Parameter]) = row => (Nil, row), extractor: Row => T, returningColumn: String): Future[T] = {
+  def executeActionReturning[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T], returningColumn: String): Future[T] = {
     val (params, prepared) = prepare(Nil)
     logger.logQuery(sql, params)
     withClient(_.prepare(sql)(prepared: _*))
@@ -114,7 +114,7 @@ class FinagleMysqlContext[N <: NamingStrategy](
       }
     }.map(_.flatten.toList)
 
-  def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Row => T): Future[List[T]] =
+  def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T]): Future[List[T]] =
     Future.collect {
       groups.map {
         case BatchGroupReturning(sql, column, prepare) =>
@@ -127,7 +127,7 @@ class FinagleMysqlContext[N <: NamingStrategy](
       }
     }.map(_.flatten.toList)
 
-  private def extractReturningValue[T](result: Result, extractor: Row => T) =
+  private def extractReturningValue[T](result: Result, extractor: Extractor[T]) =
     extractor(SingleValueRow(LongValue(toOk(result).insertId)))
 
   private def toOk(result: Result) =

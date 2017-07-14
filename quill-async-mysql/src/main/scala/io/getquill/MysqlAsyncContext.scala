@@ -1,6 +1,6 @@
 package io.getquill
 
-import com.github.mauricio.async.db.{ RowData, QueryResult => DBQueryResult }
+import com.github.mauricio.async.db.{ QueryResult => DBQueryResult }
 import com.github.mauricio.async.db.mysql.MySQLConnection
 import com.github.mauricio.async.db.mysql.MySQLQueryResult
 import com.github.mauricio.async.db.pool.PartitionedConnectionPool
@@ -16,7 +16,7 @@ class MysqlAsyncContext[N <: NamingStrategy](pool: PartitionedConnectionPool[MyS
   def this(config: Config) = this(MysqlAsyncContextConfig(config))
   def this(configPrefix: String) = this(LoadConfig(configPrefix))
 
-  override protected def extractActionResult[O](returningColumn: String, returningExtractor: RowData => O)(result: DBQueryResult): O = {
+  override protected def extractActionResult[O](returningColumn: String, returningExtractor: Extractor[O])(result: DBQueryResult): O = {
     result match {
       case r: MySQLQueryResult =>
         returningExtractor(new ArrayRowData(0, Map.empty, Array(r.lastInsertId)))

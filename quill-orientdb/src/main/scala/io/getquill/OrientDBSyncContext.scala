@@ -8,7 +8,6 @@ import io.getquill.context.orientdb.OrientDBSessionContext
 import io.getquill.util.{ ContextLogger, LoadConfig }
 
 import scala.collection.JavaConverters._
-import scala.collection.mutable.ArrayBuffer
 
 class OrientDBSyncContext[N <: NamingStrategy](
   dbUrl:    String,
@@ -27,16 +26,16 @@ class OrientDBSyncContext[N <: NamingStrategy](
 
   private val logger = ContextLogger(classOf[OrientDBSyncContext[_]])
 
-  def executeQuery[T](orientQl: String, prepare: ArrayBuffer[Any] => (List[Any], ArrayBuffer[Any]) = row => (Nil, row), extractor: ODocument => T = identity[ODocument] _): List[T] = {
+  def executeQuery[T](orientQl: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): List[T] = {
     val (params, objects) = prepare(super.prepare())
     logger.logQuery(orientQl, params)
     oDatabase.query[java.util.List[ODocument]](new OSQLSynchQuery[ODocument](checkInFilter(orientQl, objects.size)), objects.asJava).asScala.map(extractor).toList
   }
 
-  def executeQuerySingle[T](orientQl: String, prepare: ArrayBuffer[Any] => (List[Any], ArrayBuffer[Any]) = row => (Nil, row), extractor: ODocument => T = identity[ODocument] _): T =
+  def executeQuerySingle[T](orientQl: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): T =
     handleSingleResult(executeQuery(orientQl, prepare, extractor))
 
-  def executeAction[T](orientQl: String, prepare: ArrayBuffer[Any] => (List[Any], ArrayBuffer[Any]) = row => (Nil, row)): Unit = {
+  def executeAction[T](orientQl: String, prepare: Prepare = identityPrepare): Unit = {
     val (params, objects) = prepare(super.prepare())
     logger.logQuery(orientQl, params)
     oDatabase.command(new OCommandSQL(orientQl)).execute(objects.toArray)

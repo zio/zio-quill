@@ -933,9 +933,9 @@ class QuotationSpec extends Spec {
         val q = quote {
           query[TestEntity].insert(lift(t))
         }
-        q.liftings.`t.embedded`.value mustEqual t.embedded
+        q.liftings.`t.embedded.id`.value mustEqual t.embedded.id
         val q2 = quote(q)
-        q2.liftings.`q.liftings.t.embedded.value.id`.value mustEqual t.embedded.id
+        q2.liftings.`q.t.embedded.id`.value mustEqual t.embedded.id
       }
       "merges properties into the case class lifting" - {
         val t = TestEntity("s", 1, 2L, Some(3))
