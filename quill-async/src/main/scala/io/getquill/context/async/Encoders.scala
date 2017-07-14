@@ -1,9 +1,9 @@
 package io.getquill.context.async
 
-import java.time.{ LocalDate, LocalDateTime, ZoneId }
+import java.time.{ LocalDate, LocalDateTime, ZoneId, ZonedDateTime }
 import java.util.Date
 
-import org.joda.time.{ LocalDate => JodaLocalDate, LocalDateTime => JodaLocalDateTime }
+import org.joda.time.{ LocalDate => JodaLocalDate, LocalDateTime => JodaLocalDateTime, DateTime => JodaDateTime }
 
 trait Encoders {
   this: AsyncContext[_, _, _] =>
@@ -73,4 +73,11 @@ trait Encoders {
         value.atZone(ZoneId.systemDefault()).toInstant.toEpochMilli
       )
     }, SqlTypes.TIMESTAMP)
+  implicit val zonedDateTimeEncoder: Encoder[ZonedDateTime] =
+    encoder[ZonedDateTime]({ (value: ZonedDateTime) =>
+      new JodaDateTime(
+        value.toInstant.toEpochMilli
+      )
+    }, SqlTypes.TIMESTAMP_WITH_TIMEZONE)
+
 }
