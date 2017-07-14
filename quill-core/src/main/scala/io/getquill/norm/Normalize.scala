@@ -11,8 +11,8 @@ object Normalize extends StatelessTransformer {
   override def apply(q: Action): Action =
     q match {
       case Returning(_, _, _) => NormalizeReturning(super.apply(q))
-      case Conflict(_, _, _) => NormalizeConflict(super.apply(q))
-      case _ => NormalizeReturning(super.apply(q))
+      case Conflict(_, _, _)  => NormalizeConflict(super.apply(q))
+      case _                  => NormalizeReturning(super.apply(q))
     }
 
   override def apply(q: Query): Query =

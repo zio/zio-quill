@@ -1,16 +1,7 @@
 package io.getquill
 
 import io.getquill.idiom.StatementInterpolator._
-import io.getquill.ast.Asc
-import io.getquill.ast.AscNullsFirst
-import io.getquill.ast.AscNullsLast
-import io.getquill.ast.BinaryOperation
-import io.getquill.ast.Desc
-import io.getquill.ast.DescNullsFirst
-import io.getquill.ast.DescNullsLast
-import io.getquill.ast.Operation
-import io.getquill.ast.Property
-import io.getquill.ast.StringOperator
+import io.getquill.ast._
 import io.getquill.context.sql.idiom.OffsetWithoutLimitWorkaround
 import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.context.sql.OrderByCriteria
@@ -38,6 +29,30 @@ trait MySQLDialect
     case OrderByCriteria(prop, AscNullsLast)         => stmt"ISNULL(${prop.token}) ASC, ${prop.token} ASC"
     case OrderByCriteria(prop, DescNullsLast | Desc) => stmt"${prop.token} DESC"
   }
+
+  override implicit def actionTokenizer(implicit strategy: NamingStrategy): Tokenizer[Action] = {
+
+    implicit def propertyTokenizer: Tokenizer[Property] = Tokenizer[Property] {
+      case Property(Property(_, name), "isEmpty")   => stmt"${strategy.column(name).token} IS NULL"
+      case Property(Property(_, name), "isDefined") => stmt"${strategy.column(name).token} IS NOT NULL"
+      case Property(Property(_, name), "nonEmpty")  => stmt"${strategy.column(name).token} IS NOT NULL"
+      case Property(_, name)                        => strategy.column(name).token
+    }
+
+    Tokenizer[Action] {
+      case Upsert(table: Entity, assignments) =>
+        val columns = assignments.map(_.property.token)
+        val values = assignments.map(_.value)
+        stmt"INSERT INTO ${table.token} (${columns.mkStmt()}) VALUES (${values.map(scopedTokenizer(_)).mkStmt()})"
+
+      case Conflict(action, _, _)              => stmt"${action.token} ON DUPLICATE KEY UPDATE"
+
+      case ConflictUpdate(action, assignments) => stmt"${action.token} ${assignments.mkStmt()}"
+
+      case action                              => super.actionTokenizer.token(action)
+    }
+  }
+
 }
 
 object MySQLDialect extends MySQLDialect

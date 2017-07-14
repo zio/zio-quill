@@ -74,4 +74,37 @@ class MySQLDialectSpec extends Spec {
         "SELECT t.s, t.i, t.l, t.o FROM TestEntity t ORDER BY t.s DESC"
     }
   }
+  "upserts" - {
+    "upsert" in {
+      val e = TestEntity("", 1, 1L, Some(1))
+      val q = quote {
+        query[TestEntity]
+          .upsert(lift(e))
+          .conflict(_.i)
+          .conflictUpdate(_.i -> lift(1), _.l -> lift(1L), _.s -> lift("Test String"))
+      }
+
+      val q2 = quote {
+        query[TestEntity]
+          .upsert(lift(e))
+          .conflict(_.i)
+          .conflictUpdate(_.l -> 1L)
+      }
+      val q3 = quote {
+        query[TestEntity]
+          .upsert(_.s -> "Hi", _.l -> 10L)
+          .conflict(_.i)
+          .conflictUpdate(_.s -> "Hihi")
+      }
+
+      println(ctx.run(q).string)
+      println(ctx.run(q2).string)
+      println(ctx.run(q3).string)
+      /*
+      INSERT INTO TestEntity (s, l, o) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE i = ?, l = ?, s = ?
+      INSERT INTO TestEntity (s, l, o) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE l = 1
+      INSERT INTO TestEntity (s, l) VALUES ('Hi', 10) ON DUPLICATE KEY UPDATE s = 'Hihi'
+      */
+    }
+  }
 }

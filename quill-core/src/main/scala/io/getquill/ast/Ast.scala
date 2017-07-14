@@ -112,7 +112,7 @@ case class Insert(query: Ast, assignments: List[Assignment]) extends Action
 case class Upsert(query: Ast, assignments: List[Assignment]) extends Action
 case class Delete(query: Ast) extends Action
 case class Conflict(query: Ast, alias: Ident, property: Ast) extends Action
-
+case class Nothing(query: Ast) extends Action
 case class ConflictUpdate(query: Ast, assignments: List[Assignment]) extends Action
 case class Returning(action: Ast, alias: Ident, property: Ast) extends Action
 

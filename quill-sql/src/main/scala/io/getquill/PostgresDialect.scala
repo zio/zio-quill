@@ -3,7 +3,7 @@ package io.getquill
 import java.util.concurrent.atomic.AtomicInteger
 
 import io.getquill.ast._
-import io.getquill.context.sql.idiom.{QuestionMarkBindVariables, SqlIdiom}
+import io.getquill.context.sql.idiom.{ QuestionMarkBindVariables, SqlIdiom }
 import io.getquill.idiom.StatementInterpolator._
 
 trait PostgresDialect
@@ -22,26 +22,30 @@ trait PostgresDialect
   override def prepareForProbing(string: String) =
     s"PREPARE p${preparedStatementId.incrementAndGet.toString.token} AS $string"
 
-
-  /*
-  This doesn't work correctly...
-  INSERT INTO TestEntity (v.s,v.l,v.o) VALUES (?, ?, ?) ON CONFLICT(x1.i) DO UPDATE SET x2.i = ?, x3.l = ?, x4.s = ?
-
   override implicit def actionTokenizer(implicit strategy: NamingStrategy): Tokenizer[Action] = {
+
+    implicit def propertyTokenizer: Tokenizer[Property] = Tokenizer[Property] {
+      case Property(Property(_, name), "isEmpty")   => stmt"${strategy.column(name).token} IS NULL"
+      case Property(Property(_, name), "isDefined") => stmt"${strategy.column(name).token} IS NOT NULL"
+      case Property(Property(_, name), "nonEmpty")  => stmt"${strategy.column(name).token} IS NOT NULL"
+      case Property(_, name)                        => strategy.column(name).token
+    }
+
     Tokenizer[Action] {
       case Upsert(table: Entity, assignments) =>
         val columns = assignments.map(_.property.token)
         val values = assignments.map(_.value)
-        stmt"INSERT INTO ${table.token} (${columns.mkStmt(",")}) VALUES (${values.map(scopedTokenizer(_)).mkStmt(", ")})"
+        stmt"INSERT INTO ${table.token} (${columns.mkStmt()}) VALUES (${values.map(scopedTokenizer(_)).mkStmt()})"
 
-      case Conflict(action, prop, value) => stmt"${action.token} ON CONFLICT(${value.token})"
+      case Conflict(action, _, value)          => stmt"${action.token} ON CONFLICT(${value.token})"
 
       case ConflictUpdate(action, assignments) => stmt"${action.token} DO UPDATE SET ${assignments.mkStmt()}"
 
-      case action => super.actionTokenizer.token(action)
+      case Nothing(query)                      => stmt"${query.token} DO NOTHING"
+
+      case action                              => super.actionTokenizer.token(action)
     }
   }
-  */
 }
 
 object PostgresDialect extends PostgresDialect
