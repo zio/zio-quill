@@ -53,7 +53,7 @@ trait EncodingSpec extends Spec {
   }
 
   val insertValues =
-    List(
+    Seq(
       EncodingTestEntity(
         "s",
         BigDecimal(1.1),
