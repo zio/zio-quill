@@ -1,6 +1,6 @@
 package io.getquill.context.async
 
-import java.time.LocalDate
+import java.time.{ LocalDate, ZonedDateTime }
 import java.util.Date
 
 import io.getquill.PostgresAsyncContext
@@ -23,6 +23,7 @@ trait ArrayEncoders extends ArrayEncoding {
   implicit def arrayLocalDateTimeJodaEncoder[Col <: Seq[JodaLocalDateTime]]: Encoder[Col] = arrayRawEncoder[JodaLocalDateTime, Col]
   implicit def arrayLocalDateJodaEncoder[Col <: Seq[JodaLocalDate]]: Encoder[Col] = arrayRawEncoder[JodaLocalDate, Col]
   implicit def arrayLocalDateEncoder[Col <: Seq[LocalDate]]: Encoder[Col] = arrayRawEncoder[LocalDate, Col]
+  implicit def arrayZonedDateTimeEncoder[Col <: Seq[ZonedDateTime]]: Encoder[Col] = arrayRawEncoder[ZonedDateTime, Col]
 
   def arrayEncoder[T, Col <: Seq[T]](mapper: T => Any): Encoder[Col] =
     encoder[Col]((col: Col) => col.toIndexedSeq.map(mapper), SqlTypes.ARRAY)

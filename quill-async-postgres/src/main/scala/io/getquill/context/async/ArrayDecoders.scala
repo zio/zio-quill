@@ -1,12 +1,12 @@
 package io.getquill.context.async
 
-import java.time.LocalDate
+import java.time.{ LocalDate, ZonedDateTime }
 import java.util.Date
 
 import io.getquill.PostgresAsyncContext
 import io.getquill.context.sql.encoding.ArrayEncoding
 import io.getquill.util.Messages.fail
-import org.joda.time.{ LocalDate => JodaLocalDate, LocalDateTime => JodaLocalDateTime }
+import org.joda.time.{ LocalDate => JodaLocalDate, LocalDateTime => JodaLocalDateTime, DateTime => JodaDateTime }
 
 import scala.reflect.ClassTag
 
@@ -27,6 +27,8 @@ trait ArrayDecoders extends ArrayEncoding {
   implicit def arrayLocalDateJodaDecoder[Col <: Seq[JodaLocalDate]](implicit bf: CBF[JodaLocalDate, Col]): Decoder[Col] = arrayRawEncoder[JodaLocalDate, Col]
   implicit def arrayLocalDateDecoder[Col <: Seq[LocalDate]](implicit bf: CBF[LocalDate, Col]): Decoder[Col] =
     arrayDecoder[JodaLocalDate, LocalDate, Col](d => LocalDate.of(d.getYear, d.getMonthOfYear, d.getDayOfMonth))
+  implicit def arrayZonedDateTimeDecoder[Col <: Seq[ZonedDateTime]](implicit bf: CBF[ZonedDateTime, Col]): Decoder[Col] =
+    arrayDecoder[JodaDateTime, ZonedDateTime, Col](d => ZonedDateTime.ofInstant(d.toDate.toInstant, d.getZone.toTimeZone.toZoneId))
 
   def arrayDecoder[I, O, Col <: Seq[O]](mapper: I => O)(implicit bf: CBF[O, Col], iTag: ClassTag[I], oTag: ClassTag[O]): Decoder[Col] =
     AsyncDecoder[Col](SqlTypes.ARRAY)(new BaseDecoder[Col] {

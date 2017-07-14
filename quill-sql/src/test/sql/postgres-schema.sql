@@ -113,3 +113,7 @@ CREATE TABLE ArraysTestEntity (
     dates DATE[],
     uuids UUID[]
 );
+
+CREATE TABLE ArraysExtraTestEntity (
+  dates TIMESTAMP WITH TIME ZONE[]
+);
