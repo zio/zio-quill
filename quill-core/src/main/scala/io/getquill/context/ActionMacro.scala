@@ -49,7 +49,7 @@ class ActionMacro(val c: MacroContext)
               (expanded.string, expanded.prepare)
             }.groupBy(_._1).map {
               case (string, items) =>
-                ${c.prefix}.BatchGroup(string, items.map(_._2))
+                ${c.prefix}.BatchGroup(string, items.map(_._2).toList)
             }.toList
           )
         """
@@ -66,7 +66,7 @@ class ActionMacro(val c: MacroContext)
               ((expanded.string, $returningColumn), expanded.prepare)
             }.groupBy(_._1).map {
               case ((string, column), items) =>
-                ${c.prefix}.BatchGroupReturning(string, column, items.map(_._2))
+                ${c.prefix}.BatchGroupReturning(string, column, items.map(_._2).toList)
             }.toList,
             ${returningExtractor[T]}
           )

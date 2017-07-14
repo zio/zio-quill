@@ -57,9 +57,9 @@ trait SnakeCase extends NamingStrategy {
 
   private def snakeCase(s: List[Char]): List[Char] =
     s match {
-      case c :: tail if (c.isUpper) => List('_', c.toLower) ++ snakeCase(tail)
-      case c :: tail                => c +: snakeCase(tail)
-      case Nil                      => Nil
+      case c :: tail if c.isUpper => List('_', c.toLower) ++ snakeCase(tail)
+      case c :: tail              => c +: snakeCase(tail)
+      case Nil                    => Nil
     }
 }
 object SnakeCase extends SnakeCase
@@ -67,14 +67,14 @@ object SnakeCase extends SnakeCase
 trait CamelCase extends NamingStrategy {
 
   override def default(s: String) =
-    calmelCase(s.toList).mkString
+    camelCase(s.toList).mkString
 
-  private def calmelCase(s: List[Char]): List[Char] =
+  private def camelCase(s: List[Char]): List[Char] =
     s match {
       case '_' :: Nil         => Nil
-      case '_' :: '_' :: tail => calmelCase('_' :: tail)
-      case '_' :: c :: tail   => c.toUpper +: calmelCase(tail)
-      case c :: tail          => c +: calmelCase(tail)
+      case '_' :: '_' :: tail => camelCase('_' :: tail)
+      case '_' :: c :: tail   => c.toUpper +: camelCase(tail)
+      case c :: tail          => c +: camelCase(tail)
       case Nil                => Nil
     }
 }
