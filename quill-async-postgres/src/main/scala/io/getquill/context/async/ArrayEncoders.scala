@@ -22,7 +22,7 @@ trait ArrayEncoders extends ArrayEncoding {
   implicit def arrayDateEncoder[Col <: Seq[Date]]: Encoder[Col] = arrayRawEncoder[Date, Col]
   implicit def arrayLocalDateTimeJodaEncoder[Col <: Seq[JodaLocalDateTime]]: Encoder[Col] = arrayRawEncoder[JodaLocalDateTime, Col]
   implicit def arrayLocalDateJodaEncoder[Col <: Seq[JodaLocalDate]]: Encoder[Col] = arrayRawEncoder[JodaLocalDate, Col]
-  implicit def arrayLocalDateEncoder[Col <: Seq[LocalDate]]: Encoder[Col] = arrayRawEncoder[LocalDate, Col]
+  implicit def arrayLocalDateEncoder[Col <: Seq[LocalDate]]: Encoder[Col] = arrayEncoder[LocalDate, Col](encodeLocalDate.f)
 
   def arrayEncoder[T, Col <: Seq[T]](mapper: T => Any): Encoder[Col] =
     encoder[Col]((col: Col) => col.toIndexedSeq.map(mapper), SqlTypes.ARRAY)
