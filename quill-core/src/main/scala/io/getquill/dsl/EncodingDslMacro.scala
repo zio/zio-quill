@@ -7,13 +7,25 @@ import scala.reflect.macros.blackbox.{ Context => MacroContext }
 class EncodingDslMacro(val c: MacroContext) {
   import c.universe._
 
-  def materializeEncoder[T](implicit t: WeakTypeTag[T]): Tree =
-    anyValEncoder(t.tpe)
-      .getOrElse(fail("Encoder", t.tpe))
+  def anyValEncoder[T](implicit t: WeakTypeTag[T]): Tree =
+    withAnyValParam(t.tpe) { param =>
+      q"""
+        ${c.prefix}.mappedEncoder(
+          io.getquill.MappedEncoding((v: ${t.tpe}) => v.${param.name.toTermName}),
+          implicitly[${c.prefix}.Encoder[${param.typeSignature}]]
+        )
+      """
+    }.getOrElse(fail("Encoder", t.tpe))
 
-  def materializeDecoder[T](implicit t: WeakTypeTag[T]): Tree =
-    anyValDecoder(t.tpe)
-      .getOrElse(fail("Decoder", t.tpe))
+  def anyValDecoder[T](implicit t: WeakTypeTag[T]): Tree =
+    withAnyValParam(t.tpe) { param =>
+      q"""
+        ${c.prefix}.mappedDecoder(
+          io.getquill.MappedEncoding((p: ${param.typeSignature}) => new ${t.tpe}(p)),
+          implicitly[${c.prefix}.Decoder[${param.typeSignature}]]
+        )
+      """
+    }.getOrElse(fail("Decoder", t.tpe))
 
   def lift[T](v: Tree)(implicit t: WeakTypeTag[T]): Tree =
     lift[T](v, "lift")
@@ -35,26 +47,6 @@ class EncodingDslMacro(val c: MacroContext) {
 
   private def fail(enc: String, t: Type) =
     c.fail(s"Can't find $enc for type '$t'")
-
-  private def anyValDecoder(tpe: Type): Option[Tree] =
-    withAnyValParam(tpe) { param =>
-      q"""
-        ${c.prefix}.mappedDecoder(
-          io.getquill.MappedEncoding((p: ${param.typeSignature}) => new $tpe(p)),
-          implicitly[${c.prefix}.Decoder[${param.typeSignature}]]
-        )
-      """
-    }
-
-  private def anyValEncoder(tpe: Type): Option[Tree] =
-    withAnyValParam(tpe) { param =>
-      q"""
-        ${c.prefix}.mappedEncoder(
-          io.getquill.MappedEncoding((v: $tpe) => v.${param.name.toTermName}),
-          implicitly[${c.prefix}.Encoder[${param.typeSignature}]]
-        )
-      """
-    }
 
   private def withAnyValParam[R](tpe: Type)(f: Symbol => R): Option[R] =
     tpe.baseType(c.symbolOf[AnyVal]) match {

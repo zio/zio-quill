@@ -9,9 +9,9 @@ import scala.language.higherKinds
 trait LowPriorityImplicits {
   this: EncodingDsl =>
 
-  implicit def materializeEncoder[T <: AnyVal]: Encoder[T] = macro EncodingDslMacro.materializeEncoder[T]
+  implicit def anyValEncoder[T <: AnyVal]: Encoder[T] = macro EncodingDslMacro.anyValEncoder[T]
 
-  implicit def materializeDecoder[T <: AnyVal]: Decoder[T] = macro EncodingDslMacro.materializeDecoder[T]
+  implicit def anyValDecoder[T <: AnyVal]: Decoder[T] = macro EncodingDslMacro.anyValDecoder[T]
 }
 
 trait EncodingDsl extends LowPriorityImplicits {
@@ -54,6 +54,10 @@ trait EncodingDsl extends LowPriorityImplicits {
 
   type MappedEncoding[I, O] = io.getquill.MappedEncoding[I, O]
   val MappedEncoding = io.getquill.MappedEncoding
+
+  implicit def anyValMappedEncoder[I <: AnyVal, O](implicit mapped: MappedEncoding[I, O], encoder: Encoder[O]): Encoder[I] = mappedEncoder
+
+  implicit def anyValMappedDecoder[I, O <: AnyVal](implicit mapped: MappedEncoding[I, O], decoder: Decoder[I]): Decoder[O] = mappedDecoder
 
   implicit def mappedEncoder[I, O](implicit mapped: MappedEncoding[I, O], encoder: Encoder[O]): Encoder[I]
 
