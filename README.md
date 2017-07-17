@@ -983,7 +983,7 @@ trait UUIDEncodingExample {
   import jdbcContext._
 
   implicit val uuidDecoder: Decoder[UUID] =
-    decoder(java.sql.Types.OTHER, (index, row) => 
+    decoder((index, row) =>
       UUID.fromString(row.getObject(index).toString)) // database-specific implementation
     
   implicit val uuidEncoder: Encoder[UUID] =
