@@ -1,7 +1,9 @@
 package io.getquill.quotation
 
+
 import scala.reflect.ClassTag
 import io.getquill.ast._
+import io.getquill.Embedded
 import io.getquill.norm.BetaReduction
 import io.getquill.util.Messages.RichContext
 import io.getquill.util.Interleave
@@ -282,13 +284,17 @@ trait Parsing {
   private def ident(x: TermName): Ident = identClean(Ident(x.decodedName.toString))
 
   val optionOperationParser: Parser[OptionOperation] = Parser[OptionOperation] {
-    case q"$o.map[$t]({($alias) => $body})" if (is[Option[Any]](o)) =>
+    case q"$o.map[$t]({($alias) => $body})" if is[Option[Any]](o) =>
       OptionMap(astParser(o), identParser(alias), astParser(body))
-    case q"$o.forall({($alias) => $body})" if (is[Option[Any]](o)) =>
-      OptionForall(astParser(o), identParser(alias), astParser(body))
-    case q"$o.exists({($alias) => $body})" if (is[Option[Any]](o)) =>
+    case q"$o.forall({($alias) => $body})"  if is[Option[Any]](o) =>
+      if (is[Option[Embedded]](o)) {
+        c.fail("Please use Option.exists() instead of Option.forall() with embedded case classes.")
+      } else {
+        OptionForall(astParser(o), identParser(alias), astParser(body))
+      }
+    case q"$o.exists({($alias) => $body})" if is[Option[Any]](o) =>
       OptionExists(astParser(o), identParser(alias), astParser(body))
-    case q"$o.contains[$t]($body)" if (is[Option[Any]](o)) =>
+    case q"$o.contains[$t]($body)" if is[Option[Any]](o) =>
       OptionContains(astParser(o), astParser(body))
   }
 
