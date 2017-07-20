@@ -1643,6 +1643,10 @@ Please refer to [SLICK.md](https://github.com/getquill/quill/blob/master/SLICK.m
 
 Please refer to [CASSANDRA.md](https://github.com/getquill/quill/blob/master/CASSANDRA.md) for a detailed comparison between Quill and other main alternatives for interaction with Cassandra in Scala.
 
+## Related Projects
+ * [quill-cache](https://github.com/mslinn/quill-cache/) - Caching layer for Quill
+ * [quill-gen](https://github.com/mslinn/quill-gen/) - a DAO generator for `quill-cache`
+ 
 ## External content
 
 ### Talks
