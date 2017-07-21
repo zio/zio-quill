@@ -1643,6 +1643,11 @@ Please refer to [SLICK.md](https://github.com/getquill/quill/blob/master/SLICK.m
 
 Please refer to [CASSANDRA.md](https://github.com/getquill/quill/blob/master/CASSANDRA.md) for a detailed comparison between Quill and other main alternatives for interaction with Cassandra in Scala.
 
+## Related Projects
+ * [scala-db-codegen](https://github.com/olafurpg/scala-db-codegen) - Code/boilerplate generator from db schema
+ * [quill-cache](https://github.com/mslinn/quill-cache/) - Caching layer for Quill
+ * [quill-gen](https://github.com/mslinn/quill-gen/) - a DAO generator for `quill-cache`
+ 
 ## External content
 
 ### Talks
@@ -1652,10 +1657,6 @@ ScalaDays Berlin 2016 - [Scylla, Charybdis, and the mystery of Quill](https://ww
 ### Blog posts
 
 Scalac.io blog - [Compile-time Queries with Quill](http://blog.scalac.io/2016/07/21/compile-time-queries-with-quill.html)
-
-### Tools
-
-Code/boilerplate generator from db schema - [scala-db-codegen](https://github.com/olafurpg/scala-db-codegen)
 
 ## Code of Conduct
 
