@@ -10,6 +10,7 @@ import io.getquill.util.LoadConfig
 import io.getquill.util.Messages.fail
 import com.github.mauricio.async.db.general.ArrayRowData
 
+@deprecated("The mysql-async driver is not maintained anymore. Consider migrating to the NDBC module.", "11/2018")
 class MysqlAsyncContext[N <: NamingStrategy](naming: N, pool: PartitionedConnectionPool[MySQLConnection])
   extends AsyncContext(MySQLDialect, naming, pool) with UUIDStringEncoding {
 

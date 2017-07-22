@@ -8,6 +8,7 @@ import io.getquill.context.async.{ ArrayDecoders, ArrayEncoders, AsyncContext, U
 import io.getquill.util.LoadConfig
 import io.getquill.util.Messages.fail
 
+@deprecated("The postgresql-async driver is not maintained anymore. Consider migrating to the NDBC module.", "11/2018")
 class PostgresAsyncContext[N <: NamingStrategy](naming: N, pool: PartitionedConnectionPool[PostgreSQLConnection])
   extends AsyncContext(PostgresDialect, naming, pool)
   with ArrayEncoders
