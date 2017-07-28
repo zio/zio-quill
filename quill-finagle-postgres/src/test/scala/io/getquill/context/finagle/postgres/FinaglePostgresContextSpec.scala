@@ -16,4 +16,12 @@ class FinaglePostgresContextSpec extends Spec {
     }
     await(context.run(insert(lift(1)))) mustEqual 1
   }
+
+  "Insert with returning with single column table" in {
+    val inserted: Long = await(testContext.run {
+      qr4.insert(lift(TestEntity4(0))).returning(_.i)
+    })
+    await(testContext.run(qr4.filter(_.i == lift(inserted))))
+      .head.i mustBe inserted
+  }
 }

@@ -695,6 +695,13 @@ class SqlIdiomSpec extends Spec {
           val run = testContext.run(q).string mustEqual
             "INSERT INTO TestEntity (s,i,o) VALUES (?, ?, ?)"
         }
+        "returning with single column table" in {
+          val q = quote {
+            qr4.insert(lift(TestEntity4(0))).returning(_.i)
+          }
+          testContext.run(q).string mustEqual
+            "INSERT INTO TestEntity4 DEFAULT VALUES"
+        }
       }
       "update" - {
         "with filter" in {

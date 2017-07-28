@@ -74,4 +74,12 @@ class MySQLDialectSpec extends Spec {
         "SELECT t.s, t.i, t.l, t.o FROM TestEntity t ORDER BY t.s DESC"
     }
   }
+
+  "Insert with returning with single column table" in {
+    val q = quote {
+      qr4.insert(lift(TestEntity4(0))).returning(_.i)
+    }
+    ctx.run(q).string mustEqual
+      "INSERT INTO TestEntity4 (i) VALUES (DEFAULT)"
+  }
 }

@@ -73,6 +73,10 @@ CREATE TABLE IF NOT EXISTS TestEntity3(
     l BIGINT
 );
 
+CREATE TABLE IF NOT EXISTS TestEntity4(
+    i identity
+);
+
 CREATE TABLE IF NOT EXISTS Product(
     description VARCHAR(255),
     id identity,

@@ -77,6 +77,10 @@ CREATE TABLE TestEntity3(
     l BIGINT
 );
 
+CREATE TABLE TestEntity4(
+    i SERIAL PRIMARY KEY
+);
+
 CREATE TABLE Product(
     description VARCHAR(255),
     id SERIAL PRIMARY KEY,
