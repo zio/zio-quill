@@ -34,11 +34,11 @@ lazy val `quill-core` =
     .settings(mimaSettings: _*)
     .settings(libraryDependencies ++= Seq(
       "com.typesafe"               %  "config"        % "1.3.1",
-      "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0",
+      "com.typesafe.scala-logging" %% "scala-logging" % "3.7.2",
       "org.scala-lang"             %  "scala-reflect" % scalaVersion.value
     ))
     .jsSettings(
-      libraryDependencies += "org.scala-js" %%% "scalajs-java-time" % "0.2.1",
+      libraryDependencies += "org.scala-js" %%% "scalajs-java-time" % "0.2.2",
       coverageExcludedPackages := ".*"
     )
 
@@ -236,7 +236,7 @@ def updateWebsiteTag =
 lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
   organization := "io.getquill",
   scalaVersion := "2.11.11",
-  crossScalaVersions := Seq("2.11.11","2.12.2"),
+  crossScalaVersions := Seq("2.11.11","2.12.3"),
   libraryDependencies ++= Seq(
     "org.scalamacros" %% "resetallattrs"  % "1.0.0",
     "org.scalatest"   %%% "scalatest"     % "3.0.3"     % Test,
