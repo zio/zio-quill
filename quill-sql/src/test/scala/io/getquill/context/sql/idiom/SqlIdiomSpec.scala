@@ -23,7 +23,7 @@ class SqlIdiomSpec extends Spec {
         val q = quote {
           for {
             a <- qr1
-            b <- qr2 if (a.s == b.s)
+            b <- qr2 if a.s == b.s
           } yield {
             a.s
           }
@@ -40,7 +40,7 @@ class SqlIdiomSpec extends Spec {
             "SELECT x.s, x.i, x.l, x.o FROM (SELECT DISTINCT x.s, x.i, x.l, x.o FROM TestEntity x) x"
         }
 
-        "distinct single" in {
+        "single" in {
           val q = quote {
             qr1.map(i => i.i).distinct
           }
@@ -48,7 +48,7 @@ class SqlIdiomSpec extends Spec {
             "SELECT DISTINCT i.i FROM TestEntity i"
         }
 
-        "distinct tuple" in {
+        "tuple" in {
           val q = quote {
             qr1.map(i => (i.i, i.l)).distinct
           }
@@ -56,14 +56,14 @@ class SqlIdiomSpec extends Spec {
             "SELECT DISTINCT i.i, i.l FROM TestEntity i"
         }
 
-        "distinct nesting" in {
+        "nesting" in {
           val q = quote {
             qr1.map(i => i.i).distinct.map(x => x + 1)
           }
           testContext.run(q).string mustEqual
             "SELECT x + 1 FROM (SELECT DISTINCT i.i FROM TestEntity i) x"
         }
-        "distinct followed by aggregation" in {
+        "followed by aggregation" in {
           val q = quote {
             qr1.map(i => i.i).distinct.size
           }
@@ -164,7 +164,7 @@ class SqlIdiomSpec extends Spec {
               (a, b) <- qr1.groupBy(t => t.i).map {
                 case (i, entities) => (i, entities.size)
               }
-              c <- qr2 if (c.i == a)
+              c <- qr2 if c.i == a
             } yield {
               (a, b, c)
             }
@@ -174,10 +174,10 @@ class SqlIdiomSpec extends Spec {
         }
         "limited" in {
           val q = quote {
-            (qr1.groupBy(t => t.i).map {
+            qr1.groupBy(t => t.i).map {
               case (i, e) =>
                 (i, e.map(_.l).min)
-            }).take(10)
+            }.take(10)
           }
 
           testContext.run(q).string mustEqual
@@ -383,6 +383,28 @@ class SqlIdiomSpec extends Spec {
         testContext.run(q).string mustEqual
           "SELECT (SELECT COUNT(t.i) FROM TestEntity t) = 1"
       }
+      "contains" in {
+        val q = quote {
+          qr1.filter(t => qr2.map(p => p.i).contains(t.i))
+        }
+        testContext.run(q).string mustEqual
+          "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.i IN (SELECT p.i FROM TestEntity2 p)"
+      }
+
+      "set" - {
+        "non-empty" in {
+          val q = quote {
+            qr1.filter(t => liftQuery(Set(1, 2, 3)).contains(t.i))
+          }
+          testContext.run(q).string mustEqual "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.i IN (?, ?, ?)"
+        }
+        "empty" in {
+          val q = quote {
+            qr1.filter(t => liftQuery(Set.empty[Int]).contains(t.i))
+          }
+          testContext.run(q).string mustEqual "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE FALSE"
+        }
+      }
     }
     "operations" - {
       "unary operation" - {
@@ -580,6 +602,22 @@ class SqlIdiomSpec extends Spec {
           testContext.run(q).string mustEqual
             "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE (t.i % t.l) = 0"
         }
+      }
+      "option operation" - {
+        "contains" in {
+          val q = quote {
+            qr1.filter(t => t.o.contains(1))
+          }
+          testContext.run(q).string mustEqual
+            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o = 1"
+        }
+        "exists" in {
+          val q = quote {
+            qr1.filter(t => t.o.exists(op => op != 1))
+          }
+          testContext.run(q).string mustEqual
+            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o <> 1"
+        }
         "forall" in {
           val q = quote {
             qr1.filter(t => t.i != 1 && t.o.forall(op => op == 1))
@@ -587,36 +625,50 @@ class SqlIdiomSpec extends Spec {
           testContext.run(q).string mustEqual
             "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE (t.i <> 1) AND ((t.o IS NULL) OR (t.o = 1))"
         }
-        "contains" - {
-          "query" in {
-            val q = quote {
-              qr1.filter(t => qr2.map(p => p.i).contains(t.i))
-            }
-            testContext.run(q).string mustEqual
-              "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.i IN (SELECT p.i FROM TestEntity2 p)"
-          }
-          "option" in {
-            val q = quote {
-              qr1.filter(t => t.o.contains(1))
-            }
-            testContext.run(q).string mustEqual
-              "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o = 1"
-          }
-          "set" - {
-            "non-empty" in {
-              val q = quote {
-                qr1.filter(t => liftQuery(Set(1, 2, 3)).contains(t.i))
-              }
-              testContext.run(q).string mustEqual "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.i IN (?, ?, ?)"
-            }
-            "empty" in {
-              val q = quote {
-                qr1.filter(t => liftQuery(Set.empty[Int]).contains(t.i))
-              }
-              testContext.run(q).string mustEqual "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE FALSE"
-            }
-          }
+        "embedded" - {
+          case class TestEntity(optionalEmbedded: Option[EmbeddedEntity])
+          case class EmbeddedEntity(value: Int) extends Embedded
 
+          "exists" in {
+            val q = quote {
+              query[TestEntity].filter(t => t.optionalEmbedded.exists(_.value == 1))
+            }
+
+            testContext.run(q).string mustEqual
+              "SELECT t.value FROM TestEntity t WHERE t.value = 1"
+          }
+          "forall" in {
+            "quote(query[TestEntity].filter(t => t.optionalEmbedded.forall(_.value == 1)))" mustNot compile
+          }
+        }
+        "nested" - {
+          case class TestEntity(optionalEmbedded: Option[EmbeddedEntity])
+          case class EmbeddedEntity(optionalValue: Option[Int]) extends Embedded
+
+          "contains" in {
+            val q = quote {
+              query[TestEntity].filter(t => t.optionalEmbedded.exists(_.optionalValue.contains(1)))
+            }
+
+            testContext.run(q).string mustEqual
+              "SELECT t.optionalValue FROM TestEntity t WHERE t.optionalValue = 1"
+          }
+          "exists" in {
+            val q = quote {
+              query[TestEntity].filter(t => t.optionalEmbedded.exists(_.optionalValue.exists(_ == 1)))
+            }
+
+            testContext.run(q).string mustEqual
+              "SELECT t.optionalValue FROM TestEntity t WHERE t.optionalValue = 1"
+          }
+          "forall" in {
+            val q = quote {
+              query[TestEntity].filter(t => t.optionalEmbedded.exists(_.optionalValue.forall(_ == 1)))
+            }
+
+            testContext.run(q).string mustEqual
+              "SELECT t.optionalValue FROM TestEntity t WHERE (t.optionalValue IS NULL) OR (t.optionalValue = 1)"
+          }
         }
       }
     }

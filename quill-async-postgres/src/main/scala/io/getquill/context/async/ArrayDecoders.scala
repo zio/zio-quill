@@ -25,8 +25,7 @@ trait ArrayDecoders extends ArrayEncoding {
   implicit def arrayDateDecoder[Col <: Seq[Date]](implicit bf: CBF[Date, Col]): Decoder[Col] = arrayDecoder[JodaLocalDateTime, Date, Col](_.toDate)
   implicit def arrayLocalDateTimeJodaDecoder[Col <: Seq[JodaLocalDateTime]](implicit bf: CBF[JodaLocalDateTime, Col]): Decoder[Col] = arrayRawEncoder[JodaLocalDateTime, Col]
   implicit def arrayLocalDateJodaDecoder[Col <: Seq[JodaLocalDate]](implicit bf: CBF[JodaLocalDate, Col]): Decoder[Col] = arrayRawEncoder[JodaLocalDate, Col]
-  implicit def arrayLocalDateDecoder[Col <: Seq[LocalDate]](implicit bf: CBF[LocalDate, Col]): Decoder[Col] =
-    arrayDecoder[JodaLocalDate, LocalDate, Col](d => LocalDate.of(d.getYear, d.getMonthOfYear, d.getDayOfMonth))
+  implicit def arrayLocalDateDecoder[Col <: Seq[LocalDate]](implicit bf: CBF[LocalDate, Col]): Decoder[Col] = arrayDecoder[JodaLocalDate, LocalDate, Col](decodeLocalDate.f)
 
   def arrayDecoder[I, O, Col <: Seq[O]](mapper: I => O)(implicit bf: CBF[O, Col], iTag: ClassTag[I], oTag: ClassTag[O]): Decoder[Col] =
     AsyncDecoder[Col](SqlTypes.ARRAY)(new BaseDecoder[Col] {

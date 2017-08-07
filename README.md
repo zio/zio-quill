@@ -545,7 +545,7 @@ This feature is disabled by default. To enable it, mix the `QueryProbing` trait 
 lazy val ctx = new MyContext("configKey") with QueryProbing
 ```
 
-The context must be created in a separate compilation unit in order to be loaded at compile time. Please use [this guide](http://www.scala-sbt.org/0.12.1/docs/Detailed-Topics/Macro-Projects.html) that explains how to create a separate compilation unit for macros, that also serves to the purpose of defining a query-probing-capable context. `context` could be used instead of `macros` as the name of the separate compilation unit.
+The context must be created in a separate compilation unit in order to be loaded at compile time. Please use [this guide](http://www.scala-sbt.org/0.13/docs/Macro-Projects.html) that explains how to create a separate compilation unit for macros, that also serves to the purpose of defining a query-probing-capable context. `context` could be used instead of `macros` as the name of the separate compilation unit.
 
 The configurations correspondent to the config key must be available at compile time. You can achieve it by adding this line to your project settings:
 
@@ -983,7 +983,7 @@ trait UUIDEncodingExample {
   import jdbcContext._
 
   implicit val uuidDecoder: Decoder[UUID] =
-    decoder(java.sql.Types.OTHER, (index, row) => 
+    decoder((index, row) =>
       UUID.fromString(row.getObject(index).toString)) // database-specific implementation
     
   implicit val uuidEncoder: Encoder[UUID] =
@@ -1643,6 +1643,11 @@ Please refer to [SLICK.md](https://github.com/getquill/quill/blob/master/SLICK.m
 
 Please refer to [CASSANDRA.md](https://github.com/getquill/quill/blob/master/CASSANDRA.md) for a detailed comparison between Quill and other main alternatives for interaction with Cassandra in Scala.
 
+## Related Projects
+ * [scala-db-codegen](https://github.com/olafurpg/scala-db-codegen) - Code/boilerplate generator from db schema
+ * [quill-cache](https://github.com/mslinn/quill-cache/) - Caching layer for Quill
+ * [quill-gen](https://github.com/mslinn/quill-gen/) - a DAO generator for `quill-cache`
+ 
 ## External content
 
 ### Talks
@@ -1652,10 +1657,6 @@ ScalaDays Berlin 2016 - [Scylla, Charybdis, and the mystery of Quill](https://ww
 ### Blog posts
 
 Scalac.io blog - [Compile-time Queries with Quill](http://blog.scalac.io/2016/07/21/compile-time-queries-with-quill.html)
-
-### Tools
-
-Code/boilerplate generator from db schema - [scala-db-codegen](https://github.com/olafurpg/scala-db-codegen)
 
 ## Code of Conduct
 

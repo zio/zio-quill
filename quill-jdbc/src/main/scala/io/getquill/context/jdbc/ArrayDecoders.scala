@@ -1,6 +1,6 @@
 package io.getquill.context.jdbc
 
-import java.sql.{ Timestamp, Types }
+import java.sql.Timestamp
 import java.time.LocalDate
 import java.util.Date
 import java.sql.{ Date => SqlDate }
@@ -39,7 +39,7 @@ trait ArrayDecoders extends ArrayEncoding {
    * @return JDBC array decoder
    */
   def arrayDecoder[I, O, Col <: Seq[O]](mapper: I => O)(implicit bf: CanBuildFrom[Nothing, O, Col], tag: ClassTag[I]): Decoder[Col] = {
-    decoder[Col](Types.ARRAY, (idx: Index, row: ResultRow) => {
+    decoder[Col]((idx: Index, row: ResultRow) => {
       val arr = row.getArray(idx)
       if (arr == null) bf().result()
       else arr.getArray.asInstanceOf[Array[AnyRef]].foldLeft(bf()) {

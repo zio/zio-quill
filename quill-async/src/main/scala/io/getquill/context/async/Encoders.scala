@@ -55,22 +55,15 @@ trait Encoders {
   implicit val floatEncoder: Encoder[Float] = encoder[Float](SqlTypes.FLOAT)
   implicit val doubleEncoder: Encoder[Double] = encoder[Double](SqlTypes.DOUBLE)
   implicit val byteArrayEncoder: Encoder[Array[Byte]] = encoder[Array[Byte]](SqlTypes.VARBINARY)
-  implicit val dateEncoder: Encoder[Date] =
-    encoder[Date]({ (value: Date) =>
-      new JodaLocalDateTime(value)
-    }, SqlTypes.TIMESTAMP)
-  implicit val localDateEncoder: Encoder[LocalDate] =
-    encoder[LocalDate]({ (value: LocalDate) =>
-      new JodaLocalDate(
-        value.getYear,
-        value.getMonthValue,
-        value.getDayOfMonth
-      )
-    }, SqlTypes.DATE)
-  implicit val localDateTimeEncoder: Encoder[LocalDateTime] =
-    encoder[LocalDateTime]({ (value: LocalDateTime) =>
-      new JodaLocalDateTime(
-        value.atZone(ZoneId.systemDefault()).toInstant.toEpochMilli
-      )
-    }, SqlTypes.TIMESTAMP)
+  implicit val jodaLocalDateEncoder: Encoder[JodaLocalDate] = encoder[JodaLocalDate](SqlTypes.DATE)
+  implicit val jodaLocalDateTimeEncoder: Encoder[JodaLocalDateTime] = encoder[JodaLocalDateTime](SqlTypes.TIMESTAMP)
+  implicit val dateEncoder: Encoder[Date] = encoder[Date]((d: Date) => new JodaLocalDateTime(d), SqlTypes.TIMESTAMP)
+
+  implicit val encodeLocalDate: MappedEncoding[LocalDate, JodaLocalDate] =
+    MappedEncoding(ld => new JodaLocalDate(ld.getYear, ld.getMonthValue, ld.getDayOfMonth))
+
+  implicit val encodeLocalDateTime: MappedEncoding[LocalDateTime, JodaLocalDateTime] =
+    MappedEncoding(ldt => new JodaLocalDateTime(ldt.atZone(ZoneId.systemDefault()).toInstant.toEpochMilli))
+
+  implicit val localDateEncoder: Encoder[LocalDate] = mappedEncoder(encodeLocalDate, jodaLocalDateEncoder)
 }

@@ -194,8 +194,10 @@ class MetaDslMacro(val c: MacroContext) {
             tpe match {
               case tpe if !is[Embedded](tpe) && nested =>
                 c.fail(
-                  s"Can't expand nested value '$tpe', please make it an `Embedded` " +
-                    s"case class or provide an implicit $encoding for it."
+                  s"""Can't find implicit `$encoding[$tpe]`. Please, do one of the following things:
+                     |1. ensure that implicit `$encoding[$tpe]` is provided and there are no other conflicting implicits;
+                     |2. make `$tpe` `Embedded` case class or `AnyVal`.
+                   """.stripMargin
                 )
 
               case tpe =>

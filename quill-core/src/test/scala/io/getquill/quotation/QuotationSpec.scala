@@ -698,17 +698,33 @@ class QuotationSpec extends Spec {
         }
         quote(unquote(q)).ast.body mustEqual OptionMap(Ident("o"), Ident("v"), Ident("v"))
       }
-      "forall" in {
-        val q = quote {
-          (o: Option[Boolean]) => o.forall(v => v)
+      "forall" - {
+        "simple" in {
+          val q = quote {
+            (o: Option[Boolean]) => o.forall(v => v)
+          }
+          quote(unquote(q)).ast.body mustEqual OptionForall(Ident("o"), Ident("v"), Ident("v"))
         }
-        quote(unquote(q)).ast.body mustEqual OptionForall(Ident("o"), Ident("v"), Ident("v"))
+        "embedded" in {
+          case class EmbeddedEntity(id: Int) extends Embedded
+          "quote((o: Option[EmbeddedEntity]) => o.forall(v => v.id == 1))" mustNot compile
+        }
       }
-      "exists" in {
-        val q = quote {
-          (o: Option[Boolean]) => o.exists(v => v)
+      "exists" - {
+        "simple" in {
+          val q = quote {
+            (o: Option[Boolean]) => o.exists(v => v)
+          }
+          quote(unquote(q)).ast.body mustEqual OptionExists(Ident("o"), Ident("v"), Ident("v"))
         }
-        quote(unquote(q)).ast.body mustEqual OptionExists(Ident("o"), Ident("v"), Ident("v"))
+        "embedded" in {
+          case class EmbeddedEntity(id: Int) extends Embedded
+          val q = quote {
+            (o: Option[EmbeddedEntity]) => o.exists(v => v.id == 1)
+          }
+          quote(unquote(q)).ast.body mustEqual OptionExists(Ident("o"), Ident("v"),
+            BinaryOperation(Property(Ident("v"), "id"), EqualityOperator.`==`, Constant(1)))
+        }
       }
       "contains" in {
         val q = quote {
@@ -933,9 +949,9 @@ class QuotationSpec extends Spec {
         val q = quote {
           query[TestEntity].insert(lift(t))
         }
-        q.liftings.`t.embedded`.value mustEqual t.embedded
+        q.liftings.`t.embedded.id`.value mustEqual t.embedded.id
         val q2 = quote(q)
-        q2.liftings.`q.liftings.t.embedded.value.id`.value mustEqual t.embedded.id
+        q2.liftings.`q.t.embedded.id`.value mustEqual t.embedded.id
       }
       "merges properties into the case class lifting" - {
         val t = TestEntity("s", 1, 2L, Some(3))

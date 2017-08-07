@@ -1,6 +1,6 @@
 package io.getquill.context.async.postgres
 
-import java.time.LocalDate
+import java.time.{ LocalDate, LocalDateTime }
 
 import io.getquill.context.sql.encoding.ArrayEncodingBaseSpec
 import org.joda.time.{ LocalDate => JodaLocalDate, LocalDateTime => JodaLocalDateTime }
@@ -24,6 +24,16 @@ class ArrayAsyncEncodingSpec extends ArrayEncodingBaseSpec {
     case class JodaTimes(timestamps: Seq[JodaLocalDateTime], dates: Seq[JodaLocalDate])
     val jE = JodaTimes(Seq(JodaLocalDateTime.now()), Seq(JodaLocalDate.now()))
     val jQ = quote(querySchema[JodaTimes]("ArraysTestEntity"))
+    await(ctx.run(jQ.insert(lift(jE))))
+    val actual = await(ctx.run(jQ)).head
+    actual.timestamps mustBe jE.timestamps
+    actual.dates mustBe jE.dates
+  }
+
+  "Java8 times" in {
+    case class Java8Times(timestamps: Seq[LocalDateTime], dates: Seq[LocalDate])
+    val jE = Java8Times(Seq(LocalDateTime.now()), Seq(LocalDate.now()))
+    val jQ = quote(querySchema[Java8Times]("ArraysTestEntity"))
     await(ctx.run(jQ.insert(lift(jE))))
     val actual = await(ctx.run(jQ)).head
     actual.timestamps mustBe jE.timestamps

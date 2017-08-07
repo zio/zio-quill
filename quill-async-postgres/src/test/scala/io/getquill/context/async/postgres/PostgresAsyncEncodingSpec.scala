@@ -3,6 +3,7 @@ package io.getquill.context.async.postgres
 import java.time.{ LocalDate, LocalDateTime }
 
 import io.getquill.context.sql.EncodingSpec
+import org.joda.time.{ LocalDate => JodaLocalDate, LocalDateTime => JodaLocalDateTime }
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Await
@@ -87,20 +88,20 @@ class PostgresAsyncEncodingSpec extends EncodingSpec {
     success must not be empty
   }
 
-  "encodes localdate type" in {
-    case class DateEncodingTestEntity(v1: LocalDate, v2: LocalDate)
-    val entity = DateEncodingTestEntity(LocalDate.now, LocalDate.now)
+  "decode joda LocalDate and LocalDateTime types" in {
+    case class DateEncodingTestEntity(v1: JodaLocalDate, v2: JodaLocalDateTime)
+    val entity = DateEncodingTestEntity(JodaLocalDate.now, JodaLocalDateTime.now)
     val r = for {
       _ <- testContext.run(query[DateEncodingTestEntity].delete)
       _ <- testContext.run(query[DateEncodingTestEntity].insert(lift(entity)))
       result <- testContext.run(query[DateEncodingTestEntity])
     } yield result
-    Await.result(r, Duration.Inf) must contain(entity)
+    Await.result(r, Duration.Inf)
   }
 
-  "encodes localdatetime type" in {
-    case class DateEncodingTestEntity(v1: LocalDateTime, v2: LocalDateTime)
-    val entity = DateEncodingTestEntity(LocalDateTime.now, LocalDateTime.now)
+  "decode LocalDate and LocalDateTime types" in {
+    case class DateEncodingTestEntity(v1: LocalDate, v2: LocalDateTime)
+    val entity = DateEncodingTestEntity(LocalDate.now, LocalDateTime.now)
     val r = for {
       _ <- testContext.run(query[DateEncodingTestEntity].delete)
       _ <- testContext.run(query[DateEncodingTestEntity].insert(lift(entity)))
