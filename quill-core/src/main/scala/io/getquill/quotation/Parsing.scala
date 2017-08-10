@@ -449,7 +449,7 @@ trait Parsing {
       """,
       c.TYPEmode
     ) catch {
-      case t: TypecheckException => c.error(t.msg)
+      case t: TypecheckException => c.error(lhs.pos, t.msg)
     }
     ()
   }
