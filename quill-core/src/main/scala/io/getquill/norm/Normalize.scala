@@ -1,10 +1,7 @@
 package io.getquill.norm
 
-import io.getquill.ast.Ast
-import io.getquill.ast.Query
-import io.getquill.ast.StatelessTransformer
+import io.getquill.ast._
 import io.getquill.norm.capture.AvoidCapture
-import io.getquill.ast.Action
 
 object Normalize extends StatelessTransformer {
 
@@ -12,7 +9,11 @@ object Normalize extends StatelessTransformer {
     super.apply(BetaReduction(q))
 
   override def apply(q: Action): Action =
-    NormalizeReturning(super.apply(q))
+    q match {
+      case Returning(_, _, _) => NormalizeReturning(super.apply(q))
+      case Conflict(_, _, _)  => NormalizeConflict(super.apply(q))
+      case _                  => NormalizeReturning(super.apply(q))
+    }
 
   override def apply(q: Query): Query =
     norm(AvoidCapture(q))

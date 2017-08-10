@@ -109,8 +109,11 @@ sealed trait Action extends Ast
 
 case class Update(query: Ast, assignments: List[Assignment]) extends Action
 case class Insert(query: Ast, assignments: List[Assignment]) extends Action
+case class Upsert(query: Ast, assignments: List[Assignment]) extends Action
 case class Delete(query: Ast) extends Action
-
+case class Conflict(query: Ast, alias: Ident, property: Ast) extends Action
+case class Nothing(query: Ast) extends Action
+case class ConflictUpdate(query: Ast, assignments: List[Assignment]) extends Action
 case class Returning(action: Ast, alias: Ident, property: Ast) extends Action
 
 case class Foreach(query: Ast, alias: Ident, body: Ast) extends Action

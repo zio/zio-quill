@@ -73,11 +73,15 @@ trait StatelessTransformer {
 
   def apply(e: Action): Action =
     e match {
-      case Update(query, assignments)        => Update(apply(query), assignments.map(apply))
-      case Insert(query, assignments)        => Insert(apply(query), assignments.map(apply))
-      case Delete(query)                     => Delete(apply(query))
-      case Returning(query, alias, property) => Returning(apply(query), alias, apply(property))
-      case Foreach(query, alias, body)       => Foreach(apply(query), alias, apply(body))
+      case Update(query, assignments)         => Update(apply(query), assignments.map(apply))
+      case Insert(query, assignments)         => Insert(apply(query), assignments.map(apply))
+      case Upsert(query, assignments)         => Upsert(apply(query), assignments.map(apply))
+      case Conflict(query, alias, property)   => Conflict(apply(query), alias, apply(property))
+      case ConflictUpdate(query, assignments) => ConflictUpdate(apply(query), assignments.map(apply))
+      case Nothing(query)                     => Nothing(apply(query))
+      case Delete(query)                      => Delete(apply(query))
+      case Returning(query, alias, property)  => Returning(apply(query), alias, apply(property))
+      case Foreach(query, alias, body)        => Foreach(apply(query), alias, apply(body))
     }
 
 }

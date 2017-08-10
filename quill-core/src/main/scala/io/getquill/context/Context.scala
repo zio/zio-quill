@@ -30,6 +30,7 @@ trait Context[Idiom <: io.getquill.idiom.Idiom, Naming <: NamingStrategy]
   def run[T](quoted: Quoted[Query[T]]): RunQueryResult[T] = macro QueryMacro.runQuery[T]
   def run(quoted: Quoted[Action[_]]): RunActionResult = macro ActionMacro.runAction
   def run[T](quoted: Quoted[ActionReturning[_, T]]): RunActionReturningResult[T] = macro ActionMacro.runActionReturning[T]
+  def run[T](quoted: Quoted[ActionConflict[_, T]]): RunActionReturningResult[T] = macro ActionMacro.runActionConflict[T]
   def run(quoted: Quoted[BatchAction[Action[_]]]): RunBatchActionResult = macro ActionMacro.runBatchAction
   def run[T](quoted: Quoted[BatchAction[ActionReturning[_, T]]]): RunBatchActionReturningResult[T] = macro ActionMacro.runBatchActionReturning[T]
 

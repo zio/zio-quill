@@ -125,6 +125,9 @@ trait Unliftables {
   implicit val actionUnliftable: Unliftable[Action] = Unliftable[Action] {
     case q"$pack.Update.apply(${ a: Ast }, ${ b: List[Assignment] })"      => Update(a, b)
     case q"$pack.Insert.apply(${ a: Ast }, ${ b: List[Assignment] })"      => Insert(a, b)
+    case q"$pack.Upsert.apply(${ a: Ast }, ${ b: List[Assignment] })"      => Upsert(a, b)
+    case q"$pack.Conflict.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })"  => Conflict(a, b, c)
+    case q"$pack.Delete.apply(${ a: Ast })"                                => Nothing(a)
     case q"$pack.Delete.apply(${ a: Ast })"                                => Delete(a)
     case q"$pack.Returning.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => Returning(a, b, c)
     case q"$pack.Foreach.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })"   => Foreach(a, b, c)

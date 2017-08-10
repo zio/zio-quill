@@ -24,6 +24,19 @@ class ActionMacro(val c: MacroContext)
       """
     }
 
+  def runActionConflict[T](quoted: Tree)(implicit t: WeakTypeTag[T]): Tree =
+    c.untypecheck{
+      q"""
+        val expanded = ${expand(extractAst(quoted))}
+        ${c.prefix}.executeActionConflict(
+          expanded.string,
+          expanded.prepare,
+          ${conflictExtractor[T]},
+          $conflictColumn
+        )
+      """
+    }
+
   def runActionReturning[T](quoted: Tree)(implicit t: WeakTypeTag[T]): Tree =
     c.untypecheck {
       q"""
@@ -106,6 +119,19 @@ class ActionMacro(val c: MacroContext)
       }
     """
 
+  private def conflictColumn =
+    q"""
+      expanded.ast match {
+        case io.getquill.ast.Conflict(_, _, io.getquill.ast.Property(_, property)) =>
+        property
+        case ast =>
+          io.getquill.util.Messages.fail(s"Can't find conflict column. Ast: '$$ast'")
+      }
+    """
+
   private def returningExtractor[T](implicit t: WeakTypeTag[T]) =
+    q"(row: ${c.prefix}.ResultRow) => implicitly[Decoder[$t]].apply(0, row)"
+
+  private def conflictExtractor[T](implicit t: WeakTypeTag[T]) =
     q"(row: ${c.prefix}.ResultRow) => implicitly[Decoder[$t]].apply(0, row)"
 }

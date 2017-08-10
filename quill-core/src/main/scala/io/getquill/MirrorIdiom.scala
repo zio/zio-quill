@@ -165,11 +165,15 @@ class MirrorIdiom extends Idiom {
   }
 
   implicit def actionTokenizer(implicit liftTokenizer: Tokenizer[Lift]): Tokenizer[Action] = Tokenizer[Action] {
-    case Update(query, assignments)    => stmt"${query.token}.update(${assignments.token})"
-    case Insert(query, assignments)    => stmt"${query.token}.insert(${assignments.token})"
-    case Delete(query)                 => stmt"${query.token}.delete"
-    case Returning(query, alias, body) => stmt"${query.token}.returning((${alias.token}) => ${body.token})"
-    case Foreach(query, alias, body)   => stmt"${query.token}.foreach((${alias.token}) => ${body.token})"
+    case Update(query, assignments)         => stmt"${query.token}.update(${assignments.token})"
+    case Insert(query, assignments)         => stmt"${query.token}.insert(${assignments.token})"
+    case Upsert(query, assignments)         => stmt"${query.token}.upsert(${assignments.token})"
+    case Conflict(query, alias, body)       => stmt"${query.token}.conflict((${alias.token}) => ${body.token})"
+    case ConflictUpdate(query, assignments) => stmt"${query.token}.conflictUpdate(${assignments.token})"
+    case Nothing(query)                     => stmt"${query.token}.doNothing()"
+    case Delete(query)                      => stmt"${query.token}.delete"
+    case Returning(query, alias, body)      => stmt"${query.token}.returning((${alias.token}) => ${body.token})"
+    case Foreach(query, alias, body)        => stmt"${query.token}.foreach((${alias.token}) => ${body.token})"
   }
 
   implicit def assignmentTokenizer(implicit liftTokenizer: Tokenizer[Lift]): Tokenizer[Assignment] = Tokenizer[Assignment] {

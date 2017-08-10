@@ -288,6 +288,15 @@ trait SqlIdiom extends Idiom {
         val values = assignments.map(_.value)
         stmt"INSERT INTO ${table.token} (${columns.mkStmt(",")}) VALUES (${values.map(scopedTokenizer(_)).mkStmt(", ")})"
 
+      case Upsert(_, _) =>
+        fail(s"Your dialect does not support upserts. :-(")
+
+      case Conflict(_, _, _) =>
+        fail(s"Your dialect does not support upserts. :-(")
+
+      case Nothing(_) =>
+        fail(s"Your dialect does not support upserts. :-(")
+
       case Update(table: Entity, assignments) =>
         stmt"UPDATE ${table.token} SET ${assignments.token}"
 
@@ -304,7 +313,7 @@ trait SqlIdiom extends Idiom {
         action.token
 
       case other =>
-        fail(s"Action ast can't be translated to sql: '$other'")
+        fail(s"Action ast can't be translated to sql: '$other' ${other.getClass}")
     }
   }
 

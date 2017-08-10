@@ -16,6 +16,9 @@ class QueryDslMacro(val c: MacroContext) {
   def expandUpdate[T](value: Tree)(implicit t: WeakTypeTag[T]): Tree =
     expandAction(value, "Update")
 
+  def expandUpsert[T](value: Tree)(implicit t: WeakTypeTag[T]): Tree =
+    expandAction(value, "Upsert")
+
   private def expandAction[T](value: Tree, prefix: String)(implicit t: WeakTypeTag[T]) =
     q"${meta(prefix)}.expand(${c.prefix}, $value)"
 

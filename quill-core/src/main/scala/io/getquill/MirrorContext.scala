@@ -56,6 +56,9 @@ class MirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy]
                                 returningColumn: String) =
     ActionReturningMirror[O](string, prepare(Row())._2, extractor, returningColumn)
 
+  def executeActionConflict[O](string: String, prepare: Row => Row = identity, extractor: Row => O, returningColumn: String) =
+    ActionReturningMirror[O](string, prepare(Row()), extractor, returningColumn)
+
   def executeBatchAction(groups: List[BatchGroup]) =
     BatchActionMirror {
       groups.map {
