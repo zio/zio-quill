@@ -13,7 +13,7 @@ RUN apt-get update; \
     curl -sL https://deb.nodesource.com/setup_7.x | bash -; \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends nodejs
 
-ENV SBT_VERSION 0.13.15
+ENV SBT_VERSION 0.13.16
 ENV SBT_HOME /usr/local/sbt
 ENV PATH ${PATH}:${SBT_HOME}/bin
 

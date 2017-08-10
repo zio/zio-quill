@@ -34,11 +34,11 @@ lazy val `quill-core` =
     .settings(mimaSettings: _*)
     .settings(libraryDependencies ++= Seq(
       "com.typesafe"               %  "config"        % "1.3.1",
-      "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0",
+      "com.typesafe.scala-logging" %% "scala-logging" % "3.7.2",
       "org.scala-lang"             %  "scala-reflect" % scalaVersion.value
     ))
     .jsSettings(
-      libraryDependencies += "org.scala-js" %%% "scalajs-java-time" % "0.2.1",
+      libraryDependencies += "org.scala-js" %%% "scalajs-java-time" % "0.2.2",
       coverageExcludedPackages := ".*"
     )
 
@@ -64,9 +64,9 @@ lazy val `quill-jdbc` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.zaxxer"              % "HikariCP"             % "2.6.1",
+        "com.zaxxer"              % "HikariCP"             % "2.6.3",
         "mysql"                   % "mysql-connector-java" % "5.1.42"             % Test,
-        "com.h2database"          % "h2"                   % "1.4.195"            % Test,
+        "com.h2database"          % "h2"                   % "1.4.196"            % Test,
         "org.postgresql"          % "postgresql"           % "42.1.1"             % Test,
         "org.xerial"              % "sqlite-jdbc"          % "3.18.0"             % Test,
         "com.microsoft.sqlserver" % "mssql-jdbc"           % "6.1.7.jre8-preview" % Test
@@ -81,7 +81,7 @@ lazy val `quill-finagle-mysql` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.twitter" %% "finagle-mysql" % "6.44.0"
+        "com.twitter" %% "finagle-mysql" % "6.45.0"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -236,7 +236,7 @@ def updateWebsiteTag =
 lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
   organization := "io.getquill",
   scalaVersion := "2.11.11",
-  crossScalaVersions := Seq("2.11.11","2.12.2"),
+  crossScalaVersions := Seq("2.11.11","2.12.3"),
   libraryDependencies ++= Seq(
     "org.scalamacros" %% "resetallattrs"  % "1.0.0",
     "org.scalatest"   %%% "scalatest"     % "3.0.3"     % Test,
