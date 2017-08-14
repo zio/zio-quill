@@ -18,7 +18,7 @@ services:
       - MYSQL_ALLOW_EMPTY_PASSWORD=yes
 
   cassandra:
-    image: cassandra:3.7
+    image: cassandra:3.11
     ports:
       - "19042:9042"
       - "19160:9160"

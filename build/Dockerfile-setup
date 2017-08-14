@@ -29,12 +29,12 @@ RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
 #ENV PATH $PATH:/opt/mssql-tools/bin
 
 RUN  cd /opt ; \
-     curl http://archive.apache.org/dist/cassandra/3.7/apache-cassandra-3.7-bin.tar.gz | tar zx
+     curl http://apache.volia.net/cassandra/3.11.0/apache-cassandra-3.11.0-bin.tar.gz | tar zx
 
-RUN rm /opt/apache-cassandra-3.7/lib/cassandra-driver-internal-only*
+RUN rm /opt/apache-cassandra-3.11.0/lib/cassandra-driver-internal-only*
 
-RUN curl https://raw.githubusercontent.com/stef1927/cassandra/ab6ba9568e7500be2e42ade2c158552dfc812ff5/lib/cassandra-driver-internal-only-3.4.0.zip > /opt/apache-cassandra-3.7/lib/cassandra-driver-internal-only-3.4.0.zip
+RUN curl https://raw.githubusercontent.com/stef1927/cassandra/ab6ba9568e7500be2e42ade2c158552dfc812ff5/lib/cassandra-driver-internal-only-3.4.0.zip > /opt/apache-cassandra-3.11.0/lib/cassandra-driver-internal-only-3.4.0.zip
 
-ENV PATH /opt/apache-cassandra-3.7/bin:$PATH
+ENV PATH /opt/apache-cassandra-3.11.0/bin:$PATH
 
 WORKDIR /app
