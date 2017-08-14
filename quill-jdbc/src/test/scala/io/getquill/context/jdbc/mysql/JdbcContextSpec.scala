@@ -46,4 +46,11 @@ class JdbcContextSpec extends Spec {
       testContext.run(qr1).map(_.i) mustEqual List(33)
     }
   }
+
+  "Insert with returning with single column table" in {
+    val inserted = testContext.run {
+      qr4.insert(lift(TestEntity4(0))).returning(_.i)
+    }
+    testContext.run(qr4.filter(_.i == lift(inserted))).head.i mustBe inserted
+  }
 }

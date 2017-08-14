@@ -73,6 +73,10 @@ CREATE TABLE TestEntity3(
     l BIGINT
 );
 
+CREATE TABLE TestEntity4(
+    i BIGINT IDENTITY(1,1) PRIMARY KEY,
+);
+
 CREATE TABLE Product(
     id INTEGER IDENTITY(1,1) PRIMARY KEY,
     description VARCHAR(255),

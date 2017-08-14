@@ -94,6 +94,11 @@ CREATE TABLE TestEntity3(
     l BIGINT
 );
 
+CREATE TABLE TestEntity4(
+    i BIGINT NOT NULL AUTO_INCREMENT,
+    PRIMARY KEY (i)
+);
+
 CREATE TABLE Product(
     description VARCHAR(255),
     id BIGINT NOT NULL AUTO_INCREMENT,
