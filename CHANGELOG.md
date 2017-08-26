@@ -1,3 +1,27 @@
+# 1.4.0
+
+- [Allow unlimited nesting of embedded case classes and optionals](https://github.com/getquill/quill/pull/660)
+- [Accept traversables for batch action](https://github.com/getquill/quill/pull/682)
+- [Add joda time encoding to `quill-async`](https://github.com/getquill/quill/pull/837)
+- [Remove unnecessary `java.sql.Types` usage in JDBC decoders](https://github.com/getquill/quill/pull/841)
+- [Add mappedEncoder and mappedDecoder for AnyVal](https://github.com/getquill/quill/pull/839)
+- [Support contains, exists, forall for optional embedded case classes with optional fields](https://github.com/getquill/quill/pull/838)
+- [Improve error message for "Can't expand nested value ..." error](https://github.com/getquill/quill/pull/840)
+- [Improve error message for query probing](https://github.com/getquill/quill/pull/845)
+- [Report the exactly tree position while typechecking the query](https://github.com/getquill/quill/pull/854)
+- [Fix inserting single auto generated column](https://github.com/getquill/quill/pull/850)
+- [Update finagle to 7.0.0](https://github.com/getquill/quill/pull/858)
+- [Dependency updates](https://github.com/getquill/quill/pull/856)
+
+
+### Migration notes
+
+- `quill-async` contexts: `java.time.LocalDate` now supports only `date` sql types, `java.time.LocalDateTime` -
+only `timestamp` sql types. Joda times follow this conventions accordingly.
+Exception is made to `java.util.Date` it supports both `date` and `timestamp` types due to
+historical moments (`java.sql.Timestamp` extents `java.util.Date`).
+- `quill-jdbc` encoders do not accept `java.sql.Types` as a first parameter anymore.
+
 # 1.3.0
 
 - [SQLServer support](https://github.com/getquill/quill/pull/731)
