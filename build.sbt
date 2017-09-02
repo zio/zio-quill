@@ -300,22 +300,37 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
   pgpSecretRing := file("local.secring.gpg"),
   pgpPublicRing := file("local.pubring.gpg"),
   releasePublishArtifactsAction := PgpKeys.publishSigned.value,
-  releaseProcess := Seq[ReleaseStep](
-    checkSnapshotDependencies,
-    inquireVersions,
-    runClean,
-    setReleaseVersion,
-    updateReadmeVersion(_._1),
-    commitReleaseVersion,
-    updateWebsiteTag,
-    tagRelease,
-    publishArtifacts,
-    setNextVersion,
-    updateReadmeVersion(_._2),
-    commitNextVersion,
-    ReleaseStep(action = Command.process("sonatypeReleaseAll", _)),
-    pushChanges
-  ),
+  releaseProcess := {
+    CrossVersion.partialVersion(scalaVersion.value) match {
+      case Some((2, 11)) =>
+        Seq[ReleaseStep](
+          checkSnapshotDependencies,
+          inquireVersions,
+          runClean,
+          setReleaseVersion,
+          updateReadmeVersion(_._1),
+          commitReleaseVersion,
+          updateWebsiteTag,
+          tagRelease,
+          publishArtifacts,
+          setNextVersion,
+          updateReadmeVersion(_._2),
+          commitNextVersion,
+          ReleaseStep(action = Command.process("sonatypeReleaseAll", _)),
+          pushChanges
+        )
+      case Some((2, 12)) =>
+        Seq[ReleaseStep](
+          checkSnapshotDependencies,
+          inquireVersions,
+          runClean,
+          setReleaseVersion,
+          publishArtifacts,
+          ReleaseStep(action = Command.process("sonatypeReleaseAll", _))
+        )
+      case _ => Seq[ReleaseStep]()
+    }
+  },
   pomExtra := (
     <url>http://github.com/getquill/quill</url>
     <licenses>
