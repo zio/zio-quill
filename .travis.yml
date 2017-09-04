@@ -37,14 +37,15 @@ env:
     - SCALA_VERSION=2.12
 jobs:
   include:
+    - stage: release 2.12
+      env:
+        - SCALA_VERSION=2.12.3
+      script:
+        - docker-compose run sbt bash -c "./build/release.sh"
+
     - stage: release 2.11
       env:
         - SCALA_VERSION=2.11.11
       script:
         - docker-compose run sbt bash -c "./build/release.sh"
 
-    - stage: release 2.12
-      env:
-        - SCALA_VERSION=2.12.3
-      script:
-        - docker-compose run sbt bash -c "./build/release.sh"
