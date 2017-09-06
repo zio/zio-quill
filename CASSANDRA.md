@@ -1,5 +1,5 @@
 
-This document compares Quill to the [Datastax Java](https://github.com/datastax/java-driver) driver and the [Phantom](http://websudos.github.io/phantom/) library. This is an incomplete comparison, additions and corrections are welcome.
+This document compares Quill to the [Datastax Java](https://github.com/datastax/java-driver) driver and the [Phantom](http://outworkers.github.io/phantom/) library. This is an incomplete comparison, additions and corrections are welcome.
 
 All examples have been properly tested, and they should work out of the box.
 
@@ -16,7 +16,7 @@ All examples have been properly tested, and they should work out of the box.
 
 ## Prerequisites ##
 
-The keyspace and column family needed for all examples are defined in this CQL script:
+The keyspace and column family needed for all examples are defined in this CQL script. This step can be entirely skipped in Phantom were schema is auto-generated from the mapping DSL, and databases can be auto-generated using `database.create`.
 
 ```
 CREATE KEYSPACE IF NOT EXISTS db
@@ -47,7 +47,7 @@ Add your project's `build.sbt` dependencies as described in [Cassandra Contexts]
 
 The Datastax Java driver provides simple abstractions that let you either write your queries as plain strings or use a declarative Query Builder. It also provides a higher level [Object Mapper](https://github.com/datastax/java-driver/tree/2.1/manual/object_mapper). For this comparison we will only use the Query Builder.
 
-Although both Quill and Phantom represent column family rows as flat immutable structures (case classes without nested data) and provide a type-safe composable query DSL, they work at a different abstraction level. 
+Although both Quill and Phantom represent column family rows as flat immutable structures (case classes without nested data) and provide a type-safe composable query DSL, they work at a different abstraction level.
 
 Phantom provides an embedded DSL that help you write CQL queries in a type-safe manner. Quill is referred as a Language Integrated Query library to match the available publications on the subject. The paper ["Language-integrated query using comprehension syntax: state of the art, open problems, and work in progress"](http://research.microsoft.com/en-us/events/dcp2014/cheney.pdf) has an overview with some of the available implementations of language integrated queries.
 
@@ -108,41 +108,36 @@ object JavaDriver extends App {
 
 The Java driver requires explicit handling of a `PreparedStatement`s cache to avoid preparing the same statement more that once, that could affect performance.
 
-**Phantom (v1.22.0)**
+**Phantom (v2.9.2)**
 ```
-import com.websudos.phantom.connectors.RootConnector
-import com.websudos.phantom.db._
-import com.websudos.phantom.dsl._
+import com.outworkers.phantom.dsl._
 
 import scala.concurrent.Future
 
 object Phantom extends App {
 
-  case class WeatherStation(country: String, city: String, stationId: String, entry: Int, value: Int)
+  case class WeatherStation(
+    country: String,
+    city: String,
+    stationId: String,
+    entry: Int,
+    value: Int
+  )
 
-  abstract class WeatherStationCF(override val tableName: String) extends CassandraTable[WeatherStationCF, WeatherStation] with RootConnector {
+  abstract class WeatherStationCF extends Table[WeatherStationCF, WeatherStation] {
 
-    object country extends StringColumn(this) with PartitionKey[String]
-    object city extends StringColumn(this) with PrimaryKey[String]
-    object stationId extends StringColumn(this) with PrimaryKey[String] {
-      override lazy val name: String = "station_id"
-    }
-    object entry extends IntColumn(this) with PrimaryKey[Int]
-    object value extends IntColumn(this)
-
-    override def fromRow(r: Row): WeatherStation =
-      WeatherStation(country(r), city(r), stationId(r), entry(r), value(r))
-  }
-
-  abstract class WeatherStationQueries extends WeatherStationCF("weather_station") {
+    object country extends StringColumn with PartitionKey
+    object city extends StringColumn with PrimaryKey
+    object stationId extends StringColumn with PrimaryKey
+    object entry extends IntColumn with PrimaryKey
+    object value extends IntColumn
 
     def getAllByCountry(country: String): Future[List[WeatherStation]] =
       select.where(_.country eqs country).fetch()
   }
 
-  class DB(ks: KeySpaceDef) extends DatabaseImpl(ks) {
-
-    object stations extends WeatherStationQueries with connector.Connector
+  class DB(ks: CassandraConnection) extends Database[DB](ks) {
+    object stations extends WeatherStationCF with Connector
   }
 
   val db = new DB(ContactPoint.local.keySpace("db"))
@@ -153,9 +148,19 @@ object Phantom extends App {
 }
 ```
 
-Phantom requires mapping classes to lift the database model to DSL types. The query definition also requires special equality operators.
+Phantom requires mapping classes to lift the database model to DSL types. The query definition also requires special equality operators. The database model however adds fully type-safe schema compatible operations at compile time, meaning
+phantom will not allow you to produce invalid queries with respect to the Cassandra schema, but it relies on
+using phantom to produce the schema in the first place.
+
+As opposed to the Java Driver, phantom is schema aware, whereas the other two tools simply generate
+the correct CQL string with respect to the Scala type, but not with respect to the schema.
+
+Quill also has a feature that allows checking query validity against the pre-existing Cassandra schema, but assumes
+the schema has already been created externally. Phantom expects to also manage schema creation for you, and as part of the
+professional edition also offers `phantom-migrations` to automatically handle migrations.
 
 **Quill**
+
 ```scala
 import io.getquill._
 
@@ -189,7 +194,7 @@ During the compilation of this example, as the quotation is known statically, Qu
 
 This section compares how the different libraries let the user compose queries.
 
-**Java Driver (v3.0.0)** 
+**Java Driver (v3.0.0)**
 
 The Query Builder allows the user to partially construct queries and add filters later:
 
@@ -249,11 +254,10 @@ object JavaDriver extends App {
 
 The DSL has limited composition compatibility.
 
-**Phantom (v1.22.0)**
+**Phantom (v2.5.0)**
+
 ```
-import com.websudos.phantom.connectors.RootConnector
-import com.websudos.phantom.db._
-import com.websudos.phantom.dsl._
+import com.outworkers.phantom.dsl._
 
 import scala.concurrent.Future
 
@@ -261,19 +265,13 @@ object Phantom extends App {
 
   case class WeatherStation(country: String, city: String, stationId: String, entry: Int, value: Int)
 
-  abstract class WeatherStationCF(override val tableName: String) extends CassandraTable[WeatherStationCF, WeatherStation] with RootConnector {
+  abstract class WeatherStationCF extends Table[WeatherStationCF, WeatherStation] {
 
-    object country extends StringColumn(this) with PartitionKey[String]
-    object city extends StringColumn(this) with PrimaryKey[String]
-    object stationId extends StringColumn(this) with PrimaryKey[String]
-    object entry extends IntColumn(this) with PrimaryKey[Int]
-    object value extends IntColumn(this)
-
-    override def fromRow(r: Row): WeatherStation =
-      WeatherStation(country(r), city(r), stationId(r), entry(r), value(r))
-  }
-
-  abstract class WeatherStationQueries extends WeatherStationCF("weather_station") {
+    object country extends StringColumn with PartitionKey
+    object city extends StringColumn with PrimaryKey
+    object stationId extends StringColumn with PrimaryKey
+    object entry extends IntColumn with PrimaryKey
+    object value extends IntColumn
 
     def getAllByCountry(country: String): Future[List[WeatherStation]] =
       findAllByCountry(country).fetch()
@@ -294,9 +292,9 @@ object Phantom extends App {
       findAllByCountryAndCity(country, city).and(_.stationId eqs stationId)
   }
 
-  class DB(ks: KeySpaceDef) extends DatabaseImpl(ks) {
+  class DB(ks: CassandraConnection) extends Database[DB](ks) {
 
-    object stations extends WeatherStationQueries with connector.Connector
+    object stations extends WeatherStationQueries with Connector
   }
 
   val db = new DB(ContactPoint.local.keySpace("db"))
@@ -307,9 +305,36 @@ object Phantom extends App {
 }
 ```
 
-Phantom allows the user certain level of composability, but it gets a bit verbose due to the nature of the DSL. 
+Phantom allows the user certain level of composability, but it gets a bit verbose due to the nature of the DSL.
+However, phantom does not encourage this pattern, and instead prefers to allow duplication of queries.
+
+If the concern here is only the amount of typing effort, Quill is marginally less verbose than phantom.
+
+```scala
+    import scala.concurrent.Future
+    import com.outworkers.phantom.dsl._
+
+    def getAllByCountry(country: String): Future[List[WeatherStation]] =
+      select.where(_.country eqs country).fetch()
+
+    def getAllByCountryAndCity(country: String, city: String): Future[List[WeatherStation]] =
+      select.where(_.country eqs country).and(_.city eqs city).fetch()
+
+    def getAllByCountryCityAndId(
+      country: String,
+      city: String,
+      stationId: String
+    ): Future[List[WeatherStation]] = {
+      select
+        .where(_.country eqs country)
+        .and(_city eqs city)
+        .and(_.stationId eqs stationId)
+        .fetch()  
+    }
+```
 
 **Quill**
+
 ```scala
 import io.getquill._
 
@@ -357,9 +382,24 @@ This section explores the extensibility capabilities of each library .
 
 There is no much offered by the driver to extend the Query Builder, e.g. add a missing CQL feature.
 
-**Phantom (v1.22.0)**
+**Phantom (v2.9.2)**
 
-You could extend Phantom by extending the DSL to add new features, although it might not be a straightforward process.
+You could extend Phantom by extending the DSL to add new features, however this is probably not trivial. Natively supporting new types is trivial to achieve through primitives, using `Primitive.derive[NewType, OldType](oldToNewFn)(newToOldFn)`.
+
+However, adding new query features is very rarely necessary, and phantom does not make it trivial to extend its
+inner structures. However, this is done for the user benefit to mask away the type level complexity of
+having a schema safe DSL.
+
+It is also possible to by-pass the entire abtraction layer provided by phantom and execute a query simply by using:
+
+```scala
+  import com.outworkers.phantom.dsl._
+
+  val res: Future[ResultSet] = cql("SELECT * FROM keyspace.table WHERE a = 'b' LIMIT 1;")
+```
+bra
+This relies on having an `implicit keySpace` and `implicit session` in scope, so it leverages connectors to offer
+this kind of functionality.
 
 **Quill**
 
@@ -454,74 +494,44 @@ object JavaDriver extends App {
 }
 ```
 
-It is necessary to create a new `TypeCodec` and register it in the `CodecRegistry`.
+Phantom uses `Primitive.derive` and implicit lookup to allow you to support "new" types based on existing ones.
 
-**Phantom (v1.22.0)**
+**Phantom (v2.9.2)**
+
 ```
-import com.websudos.phantom.builder.primitives.Primitive
-import com.websudos.phantom.builder.query.CQLQuery
-import com.websudos.phantom.builder.syntax.CQLSyntax
-import com.websudos.phantom.connectors.RootConnector
-import com.websudos.phantom.db._
-import com.websudos.phantom.dsl._
+import com.outworkers.phantom.dsl._
 
 import scala.concurrent.Future
 import scala.util.Try
 
 object Phantom extends App {
 
-  case class Country(code: String) extends AnyVal
+  case class Country(code: String)
 
   object Country {
 
-    implicit object CountryIsPrimitive extends Primitive[Country] {
-
-      override type PrimitiveType = Country
-
-      override def fromRow(column: String, row: Row): Try[Country] =
-        nullCheck(column, row) {
-          r => Country(r.getString(column))
-        }
-
-      override val cassandraType: String = CQLSyntax.Types.Text
-
-      override def fromString(code: String): Country = Country(code)
-
-      override def asCql(country: Country): String = CQLQuery.empty.singleQuote(country.code)
-
-      override val clz: Class[CountryIsPrimitive.PrimitiveType] = classOf[Country]
-    }
-
-    type Column[Owner <: CassandraTable[Owner, Record], Record] = PrimitiveColumn[Owner, Record, Country]
+    implicit val CountryIsPrimitive = Primitive.derive[String, Country](_.code)(Country.apply)
   }
 
   case class WeatherStation(country: Country, city: String, stationId: String, entry: Int, value: Int)
 
   case class People(name: String, age: Int)
 
-  abstract class WeatherStationCF(override val tableName: String) extends CassandraTable[WeatherStationCF, WeatherStation] with RootConnector {
+  abstract class WeatherStationCF extends Table[WeatherStationCF, WeatherStation] {
 
-    object country extends Country.Column(this) with PartitionKey[Country]
-    object city extends StringColumn(this) with PrimaryKey[String]
-    object stationId extends StringColumn(this) with PrimaryKey[String] {
-      override lazy val name: String = "station_id"
-    }
-    object entry extends IntColumn(this) with PrimaryKey[Int]
-    object value extends IntColumn(this)
-
-    override def fromRow(r: Row): WeatherStation =
-      WeatherStation(country(r), city(r), stationId(r), entry(r), value(r))
-  }
-
-  abstract class WeatherStationQueries extends WeatherStationCF("weather_station") {
+    object country extends Col[Country] with PartitionKey
+    object city extends StringColumn with PrimaryKey
+    object stationId extends StringColumn with PrimaryKey
+    object entry extends IntColumn with PrimaryKey
+    object value extends IntColumn
 
     def getAllByCountry(country: Country): Future[List[WeatherStation]] =
       select.where(_.country eqs country).fetch()
   }
 
-  class DB(ks: KeySpaceDef) extends DatabaseImpl(ks) {
+  class DB(ks: CassandraConnection) extends Database[DB](ks) {
 
-    object stations extends WeatherStationQueries with connector.Connector
+    object stations extends WeatherStationQueries with Connector
   }
 
   val db = new DB(ContactPoint.local.keySpace("db"))
@@ -531,8 +541,6 @@ object Phantom extends App {
   result.onComplete(_ => db.shutdown())
 }
 ```
-
-It is necessary to define a new `Column` type to be used when defining the data model.
 
 **Quill**
 ```scala
@@ -578,10 +586,12 @@ This section compares the different options the libraries offer to do non-blocki
 **Java Driver (v3.0.0)**
 
 The Datastax driver allows the user to execute queries [asynchronously](https://github.com/datastax/java-driver/tree/2.1/manual/async), returning `ListenableFuture`s.
-   
-**Phantom (v1.22.0)**
 
-Phantom is asynchronous by default and all operations return `Future`s. It also allows users to process the data coming from Cassandra in a streaming fashion using [`play-iteratees`](https://www.playframework.com/documentation/2.4.x/Iteratees) or [`play-streams-experimental`](https://www.playframework.com/documentation/2.4.x/ReactiveStreamsIntegration), that make it possible to integrate with other software that support [reactive-streams](https://github.com/reactive-streams/reactive-streams-jvm).
+**Phantom (v2.9.2)**
+
+Phantom is asynchronous by default and all operations return `Future`s.
+
+Using `phantom-streams` it also allows users to process the data coming from Cassandra in a streaming fashion using [`play-iteratees`](https://www.playframework.com/documentation/2.4.x/Iteratees) or [`play-streams`](https://www.playframework.com/documentation/2.4.x/ReactiveStreamsIntegration), that make it possible to integrate with other software that support [reactive-streams](https://github.com/reactive-streams/reactive-streams-jvm).
 
 **Quill (v0.4.0)**
 
@@ -591,4 +601,6 @@ Quill provides blocking, asynchronous and streaming sources for Cassandra. The a
 
 There other aspects the user might want to take into account like 3rd party dependencies. As both Phantom and Quill depend on the Datastax Java Driver, we are going to pay attention to which additional dependencies each of them add.
 
-Phantom is composed by several modules, each of them with their 3rd party dependencies. Overall it adds more 3rd party dependencies than Quill and it has dependencies on libraries like shapeless, play-iteratees, play-streams-experimental or akka-actor. Quill, on the other hand, only adds dependencies on monix and scalamacros resetallattrs.
+`phantom-dsl` depends only on Shapeless, macro-compat, all of which have no other transitive dependencies. Phantom is however composed by several modules, each of them with their individual 3rd party dependencies.
+
+Quill, on the other hand, only adds dependencies on monix and scalamacros resetallattrs.
