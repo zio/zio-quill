@@ -80,7 +80,7 @@ object RenameProperties extends StatelessTransformer {
           case (a, schemaA) =>
             val replaceA = replacements(iA, schemaA)
             val onr = BetaReduction(on, replaceA: _*)
-            (FlatJoin(typ, a, iA, onr), Tuple(List(schemaA)))
+            (FlatJoin(typ, a, iA, onr), schemaA)
         }
 
       case q =>

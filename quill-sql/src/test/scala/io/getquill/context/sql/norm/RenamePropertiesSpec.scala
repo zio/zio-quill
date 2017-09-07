@@ -208,6 +208,36 @@ class RenamePropertiesSpec extends Spec {
         testContext.run(q).string mustEqual
           "SELECT b.field_s FROM (SELECT t.s FROM TestEntity t WHERE t.i = 1) t RIGHT JOIN test_entity b ON t.s = b.field_s"
       }
+      "flat inner" in {
+        val q = quote {
+          for {
+            a <- qr2
+            x <- e.join(b => a.s == b.s)
+          } yield (x.s, x.i)
+        }
+        testContext.run(q).string mustEqual
+          "SELECT b.field_s, b.field_i FROM TestEntity2 a INNER JOIN test_entity b ON a.s = b.field_s"
+      }
+      "flat left" in {
+        val q = quote {
+          for {
+            a <- qr2
+            x <- e.leftJoin(b => a.s == b.s)
+          } yield x.map(x => x.i -> x.s)
+        }
+        testContext.run(q).string mustEqual
+          "SELECT b.field_i, b.field_s FROM TestEntity2 a LEFT JOIN test_entity b ON a.s = b.field_s"
+      }
+      "flat right" in {
+        val q = quote {
+          for {
+            a <- qr2
+            x <- e.rightJoin(b => a.s == b.s)
+          } yield x.map(x => x.i -> x.s)
+        }
+        testContext.run(q).string mustEqual
+          "SELECT b.field_i, b.field_s FROM TestEntity2 a RIGHT JOIN test_entity b ON a.s = b.field_s"
+      }
     }
   }
 
