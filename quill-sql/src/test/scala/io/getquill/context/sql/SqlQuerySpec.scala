@@ -404,7 +404,7 @@ class SqlQuerySpec extends Spec {
         val q = quote {
           qr1.map(x => x.i).nested
         }
-        testContext.run(q).string mustEqual "SELECT x.* FROM (SELECT x.i FROM TestEntity x) x"
+        testContext.run(q).string mustEqual "SELECT x.i FROM (SELECT x.i FROM TestEntity x) x"
       }
       "pointless nesting in for-comp of single yielding element" in {
         val q = quote {

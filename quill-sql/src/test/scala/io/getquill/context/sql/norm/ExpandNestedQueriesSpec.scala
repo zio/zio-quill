@@ -41,6 +41,6 @@ class ExpandNestedQueriesSpec extends Spec {
       .map(e => (e, 1))
       .nested
     ).string mustEqual
-      "SELECT x.camel_case, x._2 FROM (SELECT e.camel_case camel_case, 1 _2 FROM entity e) x"
+      "SELECT e.camel_case, 1 FROM (SELECT x.camel_case FROM entity x) e"
   }
 }

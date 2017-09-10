@@ -136,5 +136,43 @@ class ApplyMapSpec extends Spec {
       }
       ApplyMap.unapply(q.ast) mustEqual Some(n.ast)
     }
+    "nested" in {
+      val q = quote {
+        qr1.map(y => y.s).nested
+      }
+      val n = quote {
+        qr1.nested.map(y => y.s)
+      }
+      ApplyMap.unapply(q.ast) mustEqual Some(n.ast)
+    }
+    "mapped join" - {
+      "left" in {
+        val q = quote {
+          qr1.map(y => y.s).join(qr2).on((a, b) => a == b.s)
+        }
+        val n = quote {
+          qr1.join(qr2).on((y, b) => y.s == b.s).map(t => (t._1.s, t._2))
+        }
+        ApplyMap.unapply(q.ast) mustEqual Some(n.ast)
+      }
+      "right" in {
+        val q = quote {
+          qr1.join(qr2.map(y => y.s)).on((a, b) => a.s == b)
+        }
+        val n = quote {
+          qr1.join(qr2).on((a, y) => a.s == y.s).map(t => (t._1, t._2.s))
+        }
+        ApplyMap.unapply(q.ast) mustEqual Some(n.ast)
+      }
+      "both" in {
+        val q = quote {
+          qr1.map(y => y.s).join(qr2.map(u => u.s)).on((a, b) => a == b)
+        }
+        val n = quote {
+          qr1.join(qr2).on((y, u) => y.s == u.s).map(t => (t._1.s, t._2.s))
+        }
+        ApplyMap.unapply(q.ast) mustEqual Some(n.ast)
+      }
+    }
   }
 }
