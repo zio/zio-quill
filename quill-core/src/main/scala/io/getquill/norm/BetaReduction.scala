@@ -20,10 +20,23 @@ case class BetaReduction(map: collection.Map[Ast, Ast])
         }
 
       case FunctionApply(Function(params, body), values) =>
-        apply(BetaReduction(map ++ params.zip(values).toMap).apply(body))
+        val conflicts = values.flatMap(CollectAst.byType[Ident]).map { i =>
+          i -> Ident(s"tmp_${i.name}")
+        }.toMap[Ast, Ast]
+        val newParams = params.map { p =>
+          conflicts.getOrElse(p, p)
+        }
+        val bodyr = BetaReduction(conflicts ++ params.zip(newParams)).apply(body)
+        apply(BetaReduction(map ++ newParams.zip(values).toMap).apply(bodyr))
 
       case Function(params, body) =>
-        Function(params, BetaReduction(map -- params)(body))
+        val newParams = params.map { p =>
+          (map.get(p) match {
+            case Some(i: Ident) => i
+            case _              => p
+          })
+        }
+        Function(newParams, BetaReduction(map ++ params.zip(newParams))(body))
 
       case Block(statements) =>
         val vals = statements.collect { case x: Val => x.name -> x.body }
