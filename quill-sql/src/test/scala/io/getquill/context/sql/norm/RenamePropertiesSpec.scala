@@ -49,7 +49,7 @@ class RenamePropertiesSpec extends Spec {
           val q = quote {
             e.insert(lift(TestEntity("s", 1, 1L, None))).returning(_.i)
           }
-          val mirror = testContext.run(q.dynamic)
+          val mirror = testContext.run(q)
           mirror.returningColumn mustEqual "field_i"
         }
       }
@@ -66,7 +66,7 @@ class RenamePropertiesSpec extends Spec {
         val q = quote {
           e.flatMap(t => qr2.map(u => t)).map(t => t.s)
         }
-        testContext.run(q.dynamic).string mustEqual
+        testContext.run(q).string mustEqual
           "SELECT t.field_s FROM test_entity t, TestEntity2 u"
       }
       "with filter" in {
@@ -207,6 +207,70 @@ class RenamePropertiesSpec extends Spec {
         }
         testContext.run(q).string mustEqual
           "SELECT b.field_s FROM (SELECT t.s FROM TestEntity t WHERE t.i = 1) t RIGHT JOIN test_entity b ON t.s = b.field_s"
+      }
+      "flat inner" in {
+        val q = quote {
+          for {
+            a <- qr2
+            x <- e.join(b => a.s == b.s)
+          } yield (x.s, x.i)
+        }
+        testContext.run(q).string mustEqual
+          "SELECT b.field_s, b.field_i FROM TestEntity2 a INNER JOIN test_entity b ON a.s = b.field_s"
+      }
+      "flat left" in {
+        val q = quote {
+          for {
+            a <- qr2
+            x <- e.leftJoin(b => a.s == b.s)
+          } yield x.map(x => x.i -> x.s)
+        }
+        testContext.run(q).string mustEqual
+          "SELECT b.field_i, b.field_s FROM TestEntity2 a LEFT JOIN test_entity b ON a.s = b.field_s"
+      }
+      "flat right" in {
+        val q = quote {
+          for {
+            a <- qr2
+            x <- e.rightJoin(b => a.s == b.s)
+          } yield x.map(x => x.i -> x.s)
+        }
+        testContext.run(q).string mustEqual
+          "SELECT b.field_i, b.field_s FROM TestEntity2 a RIGHT JOIN test_entity b ON a.s = b.field_s"
+      }
+    }
+
+    "nested" - {
+      "body" in {
+        val q = quote {
+          e.nested
+        }
+        testContext.run(q).string mustEqual
+          "SELECT x.field_s, x.field_i, x.l, x.o FROM (SELECT x.field_s, x.field_i, x.l, x.o FROM test_entity x) x"
+      }
+      "transitive" in {
+        val q = quote {
+          e.nested.map(t => t.s)
+        }
+        testContext.run(q).string mustEqual
+          "SELECT t.field_s FROM (SELECT x.field_s FROM test_entity x) t"
+      }
+    }
+
+    "infix" - {
+      "body" in {
+        val q = quote {
+          infix"$e".as[Query[TestEntity]]
+        }
+        testContext.run(q).string mustEqual
+          "SELECT x.field_s, x.field_i, x.l, x.o FROM (SELECT x.* FROM test_entity x) x"
+      }
+      "transitive" in {
+        val q = quote {
+          infix"$e".as[Query[TestEntity]].map(t => t.s)
+        }
+        testContext.run(q).string mustEqual
+          "SELECT t.field_s FROM (SELECT x.* FROM test_entity x) t"
       }
     }
   }

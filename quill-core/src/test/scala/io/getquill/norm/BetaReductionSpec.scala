@@ -54,10 +54,6 @@ class BetaReductionSpec extends Spec {
       }
     }
     "avoids replacing idents of an outer scope" - {
-      "function" in {
-        val ast: Ast = Function(List(Ident("a")), Ident("a"))
-        BetaReduction(ast, Ident("a") -> Ident("a'")) mustEqual ast
-      }
       "filter" in {
         val ast: Ast = Filter(Ident("a"), Ident("b"), Ident("b"))
         BetaReduction(ast, Ident("b") -> Ident("b'")) mustEqual ast
@@ -96,6 +92,19 @@ class BetaReductionSpec extends Spec {
           BetaReduction(ast, Ident("b") -> Ident("b'")) mustEqual ast
         }
       }
+    }
+  }
+
+  "doesn't shadow identifiers" - {
+    "function apply" in {
+      val ast: Ast = FunctionApply(Function(List(Ident("a"), Ident("b")), BinaryOperation(Ident("a"), NumericOperator.`/`, Ident("b"))), List(Ident("b"), Ident("a")))
+      BetaReduction(ast) mustEqual BinaryOperation(Ident("b"), NumericOperator.`/`, Ident("a"))
+    }
+    "nested function apply" in {
+      val f1 = Function(List(Ident("b")), BinaryOperation(Ident("a"), NumericOperator.`/`, Ident("b")))
+      val f2 = Function(List(Ident("a")), f1)
+      val ast: Ast = FunctionApply(FunctionApply(f2, List(Ident("b"))), List(Ident("a")))
+      BetaReduction(ast) mustEqual BinaryOperation(Ident("b"), NumericOperator.`/`, Ident("a"))
     }
   }
 
