@@ -337,4 +337,19 @@ class CqlIdiomSpec extends Spec {
       }
     }
   }
+
+  "collections operations" - {
+    "map.contains" in {
+      mirrorContext.run(mapFroz.filter(x => x.id.contains(1))).string mustEqual
+        "SELECT id FROM MapFrozen WHERE id CONTAINS KEY 1"
+    }
+    "set.contains" in {
+      mirrorContext.run(setFroz.filter(x => x.id.contains(2))).string mustEqual
+        "SELECT id FROM SetFrozen WHERE id CONTAINS 2"
+    }
+    "list.contains" in {
+      mirrorContext.run(listFroz.filter(x => x.id.contains(3))).string mustEqual
+        "SELECT id FROM ListFrozen WHERE id CONTAINS 3"
+    }
+  }
 }

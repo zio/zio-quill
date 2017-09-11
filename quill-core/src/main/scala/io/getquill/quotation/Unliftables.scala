@@ -17,6 +17,7 @@ trait Unliftables {
     case identUnliftable(ast) => ast
     case orderingUnliftable(ast) => ast
     case optionOperationUnliftable(ast) => ast
+    case traversableOperationUnliftable(ast) => ast
     case q"$pack.Property.apply(${ a: Ast }, ${ b: String })" => Property(a, b)
     case q"$pack.Function.apply(${ a: List[Ident] }, ${ b: Ast })" => Function(a, b)
     case q"$pack.FunctionApply.apply(${ a: Ast }, ${ b: List[Ast] })" => FunctionApply(a, b)
@@ -33,6 +34,12 @@ trait Unliftables {
     case q"$pack.OptionForall.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => OptionForall(a, b, c)
     case q"$pack.OptionExists.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => OptionExists(a, b, c)
     case q"$pack.OptionContains.apply(${ a: Ast }, ${ b: Ast })"              => OptionContains(a, b)
+  }
+
+  implicit val traversableOperationUnliftable: Unliftable[TraversableOperation] = Unliftable[TraversableOperation] {
+    case q"$pack.MapContains.apply(${ a: Ast }, ${ b: Ast })"  => MapContains(a, b)
+    case q"$pack.SetContains.apply(${ a: Ast }, ${ b: Ast })"  => SetContains(a, b)
+    case q"$pack.ListContains.apply(${ a: Ast }, ${ b: Ast })" => ListContains(a, b)
   }
 
   implicit def listUnliftable[T](implicit u: Unliftable[T]): Unliftable[List[T]] = Unliftable[List[T]] {

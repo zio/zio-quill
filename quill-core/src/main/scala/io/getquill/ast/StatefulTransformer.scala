@@ -6,13 +6,14 @@ trait StatefulTransformer[T] {
 
   def apply(e: Ast): (Ast, StatefulTransformer[T]) =
     e match {
-      case e: Query           => apply(e)
-      case e: Operation       => apply(e)
-      case e: Action          => apply(e)
-      case e: Value           => apply(e)
-      case e: Assignment      => apply(e)
-      case e: Ident           => (e, this)
-      case e: OptionOperation => apply(e)
+      case e: Query                => apply(e)
+      case e: Operation            => apply(e)
+      case e: Action               => apply(e)
+      case e: Value                => apply(e)
+      case e: Assignment           => apply(e)
+      case e: Ident                => (e, this)
+      case e: OptionOperation      => apply(e)
+      case e: TraversableOperation => apply(e)
 
       case Function(a, b) =>
         val (bt, btt) = apply(b)
@@ -69,6 +70,22 @@ trait StatefulTransformer[T] {
         val (at, att) = apply(a)
         val (ct, ctt) = att.apply(c)
         (OptionContains(at, ct), ctt)
+    }
+
+  def apply(e: TraversableOperation): (TraversableOperation, StatefulTransformer[T]) =
+    e match {
+      case MapContains(a, c) =>
+        val (at, att) = apply(a)
+        val (ct, ctt) = att.apply(c)
+        (MapContains(at, ct), ctt)
+      case SetContains(a, c) =>
+        val (at, att) = apply(a)
+        val (ct, ctt) = att.apply(c)
+        (SetContains(at, ct), ctt)
+      case ListContains(a, c) =>
+        val (at, att) = apply(a)
+        val (ct, ctt) = att.apply(c)
+        (ListContains(at, ct), ctt)
     }
 
   def apply(e: Query): (Query, StatefulTransformer[T]) =

@@ -30,4 +30,8 @@ trait Ops {
     def ifCond(cond: T => Boolean) =
       quote(infix"$q IF $cond".as[Action[T]])
   }
+
+  implicit class MapOps[K, V](map: Map[K, V]) {
+    def containsValue(value: V) = quote(infix"$map CONTAINS $value".as[Boolean])
+  }
 }

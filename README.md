@@ -493,7 +493,7 @@ val q = quote {
 }
 
 ctx.run(q)
-// SELECT p.id, p.name, p.age, c.personId, c.phone•
+// SELECT p.id, p.name, p.age, c.personId, c.phone
 // FROM Person p INNER JOIN Contact c ON c.personId = p.id
 
 val q = quote {
@@ -501,7 +501,7 @@ val q = quote {
 }
 
 ctx.run(q)
-// SELECT p.id, p.name, p.age, c.personId, c.phone•
+// SELECT p.id, p.name, p.age, c.personId, c.phone
 // FROM Person p LEFT JOIN Contact c ON c.personId = p.id
 
 ```
@@ -533,7 +533,7 @@ val qNested = quote {
 
 ctx.run(qFlat)
 ctx.run(qNested)
-// SELECT p.id, p.name, p.age, e.id, e.personId, e.name, c.id, c.phone•
+// SELECT p.id, p.name, p.age, e.id, e.personId, e.name, c.id, c.phone
 // FROM Person p INNER JOIN Employer e ON p.id = e.personId LEFT JOIN Contact c ON c.personId = p.id
 ```
 
@@ -705,14 +705,29 @@ ctx.run(query[Book])
 Note that not all drivers/databases provides such feature hence only `PostgresJdbcContext` and
 `PostgresAsyncContext` support SQL Arrays.
 
-## Cassandra-specific operations
 
-The cassandra context also provides a few additional operations:
+## Cassandra-specific encoding
 
 ```scala
 val ctx = new CassandraMirrorContext
 import ctx._
 ```
+
+### Collections
+
+The cassandra context provides List, Set and Map encoding:
+
+```scala
+
+case class Book(id: Int, notes: Set[String], pages: List[Int], history: Map[Int, Boolean])
+
+ctx.run(query[Book])
+// SELECT id, notes, pages, history FROM Book
+```
+
+## Cassandra-specific operations
+
+The cassandra context also provides a few additional operations:
 
 ### allowFiltering
 ```scala
@@ -822,18 +837,34 @@ ctx.run(q)
 // DELETE p.age FROM Person
 ```
 
-## Cassandra-specific encoding
-
-### Collections
-
-Quill provides List, Set and Map encoding:
+### list.contains / set.contains
+requires `allowFiltering`
 ```scala
-import java.util.Date
+val q = quote {
+  query[Book].filter(p => p.pages.contains(25)).allowFiltering
+}
+ctx.run(q)
+// SELECT id, notes, pages, history FROM Book WHERE pages CONTAINS 25 ALLOW FILTERING
+```
 
-case class Book(id: Int, notes: Set[String], pages: List[Int], history: Map[Date, Boolean])
+### map.contains
+requires `allowFiltering`
+```scala
+val q = quote {
+  query[Book].filter(p => p.history.contains(12)).allowFiltering
+}
+ctx.run(q)
+// SELECT id, notes, pages, history FROM book WHERE history CONTAINS 12 ALLOW FILTERING
+```
 
-ctx.run(query[Book])
-// SELECT id, notes, pages, history FROM Book
+### map.containsValue
+requires `allowFiltering`
+```scala
+val q = quote {
+  query[Book].filter(p => p.history.containsValue(true)).allowFiltering
+}
+ctx.run(q)
+// SELECT id, notes, pages, history FROM book WHERE history CONTAINS true ALLOW FILTERING
 ```
 
 ## Dynamic queries
