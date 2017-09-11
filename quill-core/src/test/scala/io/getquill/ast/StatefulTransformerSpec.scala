@@ -282,6 +282,33 @@ class StatefulTransformerSpec extends Spec {
       }
     }
 
+    "traversable operations" - {
+      "map.contains" in {
+        val ast: Ast = MapContains(Ident("a"), Ident("c"))
+        Subject(Nil, Ident("a") -> Ident("a'"), Ident("c") -> Ident("c'"))(ast) match {
+          case (at, att) =>
+            at mustEqual MapContains(Ident("a'"), Ident("c'"))
+            att.state mustEqual List(Ident("a"), Ident("c"))
+        }
+      }
+      "set.contains" in {
+        val ast: Ast = SetContains(Ident("a"), Ident("c"))
+        Subject(Nil, Ident("a") -> Ident("a'"), Ident("c") -> Ident("c'"))(ast) match {
+          case (at, att) =>
+            at mustEqual SetContains(Ident("a'"), Ident("c'"))
+            att.state mustEqual List(Ident("a"), Ident("c"))
+        }
+      }
+      "list.contains" in {
+        val ast: Ast = ListContains(Ident("a"), Ident("c"))
+        Subject(Nil, Ident("a") -> Ident("a'"), Ident("c") -> Ident("c'"))(ast) match {
+          case (at, att) =>
+            at mustEqual ListContains(Ident("a'"), Ident("c'"))
+            att.state mustEqual List(Ident("a"), Ident("c"))
+        }
+      }
+    }
+
     "if" in {
       val ast: Ast = If(Ident("a"), Ident("b"), Ident("c"))
       Subject(Nil, Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) match {

@@ -69,15 +69,14 @@ class SetsEncodingSpec extends CollectionsSpec {
   }
 
   "Set in where clause" in {
-    case class SetFrozen(id: Set[Int])
     val e = SetFrozen(Set(1, 2))
-    val q = quote(query[SetFrozen])
-    ctx.run(q.insert(lift(e)))
-    ctx.run(q.filter(_.id == lift(Set(1, 2)))) mustBe List(e)
-    ctx.run(q.filter(_.id == lift(Set(1)))) mustBe List()
+    ctx.run(setFroz.insert(lift(e)))
+    ctx.run(setFroz.filter(_.id == lift(Set(1, 2)))) mustBe List(e)
+    ctx.run(setFroz.filter(_.id == lift(Set(1)))) mustBe List()
   }
 
   override protected def beforeEach(): Unit = {
     ctx.run(q.delete)
+    ctx.run(setFroz.delete)
   }
 }

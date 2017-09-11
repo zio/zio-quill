@@ -4,23 +4,24 @@ trait StatelessTransformer {
 
   def apply(e: Ast): Ast =
     e match {
-      case e: Query               => apply(e)
-      case e: Operation           => apply(e)
-      case e: Action              => apply(e)
-      case e: Value               => apply(e)
-      case e: Assignment          => apply(e)
-      case Function(params, body) => Function(params, apply(body))
-      case e: Ident               => e
-      case Property(a, name)      => Property(apply(a), name)
-      case Infix(a, b)            => Infix(a, b.map(apply))
-      case e: OptionOperation     => apply(e)
-      case If(a, b, c)            => If(apply(a), apply(b), apply(c))
-      case e: Dynamic             => e
-      case e: Lift                => e
-      case e: QuotedReference     => e
-      case Block(statements)      => Block(statements.map(apply))
-      case Val(name, body)        => Val(name, apply(body))
-      case o: Ordering            => o
+      case e: Query                => apply(e)
+      case e: Operation            => apply(e)
+      case e: Action               => apply(e)
+      case e: Value                => apply(e)
+      case e: Assignment           => apply(e)
+      case Function(params, body)  => Function(params, apply(body))
+      case e: Ident                => e
+      case Property(a, name)       => Property(apply(a), name)
+      case Infix(a, b)             => Infix(a, b.map(apply))
+      case e: OptionOperation      => apply(e)
+      case e: TraversableOperation => apply(e)
+      case If(a, b, c)             => If(apply(a), apply(b), apply(c))
+      case e: Dynamic              => e
+      case e: Lift                 => e
+      case e: QuotedReference      => e
+      case Block(statements)       => Block(statements.map(apply))
+      case Val(name, body)         => Val(name, apply(body))
+      case o: Ordering             => o
     }
 
   def apply(o: OptionOperation): OptionOperation =
@@ -29,6 +30,13 @@ trait StatelessTransformer {
       case OptionForall(a, b, c) => OptionForall(apply(a), b, apply(c))
       case OptionExists(a, b, c) => OptionExists(apply(a), b, apply(c))
       case OptionContains(a, b)  => OptionContains(apply(a), apply(b))
+    }
+
+  def apply(o: TraversableOperation): TraversableOperation =
+    o match {
+      case MapContains(a, b)  => MapContains(apply(a), apply(b))
+      case SetContains(a, b)  => SetContains(apply(a), apply(b))
+      case ListContains(a, b) => ListContains(apply(a), apply(b))
     }
 
   def apply(e: Query): Query =

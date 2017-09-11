@@ -22,23 +22,24 @@ class MirrorIdiom extends Idiom {
   }
 
   implicit def astTokenizer(implicit liftTokenizer: Tokenizer[Lift]): Tokenizer[Ast] = Tokenizer[Ast] {
-    case ast: Query           => ast.token
-    case ast: Function        => ast.token
-    case ast: Value           => ast.token
-    case ast: Operation       => ast.token
-    case ast: Action          => ast.token
-    case ast: Ident           => ast.token
-    case ast: Property        => ast.token
-    case ast: Infix           => ast.token
-    case ast: OptionOperation => ast.token
-    case ast: Dynamic         => ast.token
-    case ast: If              => ast.token
-    case ast: Block           => ast.token
-    case ast: Val             => ast.token
-    case ast: Ordering        => ast.token
-    case ast: QuotedReference => ast.ast.token
-    case ast: Lift            => ast.token
-    case ast: Assignment      => ast.token
+    case ast: Query                => ast.token
+    case ast: Function             => ast.token
+    case ast: Value                => ast.token
+    case ast: Operation            => ast.token
+    case ast: Action               => ast.token
+    case ast: Ident                => ast.token
+    case ast: Property             => ast.token
+    case ast: Infix                => ast.token
+    case ast: OptionOperation      => ast.token
+    case ast: TraversableOperation => ast.token
+    case ast: Dynamic              => ast.token
+    case ast: If                   => ast.token
+    case ast: Block                => ast.token
+    case ast: Val                  => ast.token
+    case ast: Ordering             => ast.token
+    case ast: QuotedReference      => ast.ast.token
+    case ast: Lift                 => ast.token
+    case ast: Assignment           => ast.token
   }
 
   implicit def ifTokenizer(implicit liftTokenizer: Tokenizer[Lift]): Tokenizer[If] = Tokenizer[If] {
@@ -123,6 +124,12 @@ class MirrorIdiom extends Idiom {
     case OptionForall(ast, alias, body) => stmt"${ast.token}.forall((${alias.token}) => ${body.token})"
     case OptionExists(ast, alias, body) => stmt"${ast.token}.exists((${alias.token}) => ${body.token})"
     case OptionContains(ast, body)      => stmt"${ast.token}.contains(${body.token})"
+  }
+
+  implicit def traversableOperationTokenizer(implicit liftTokenizer: Tokenizer[Lift]): Tokenizer[TraversableOperation] = Tokenizer[TraversableOperation] {
+    case MapContains(ast, body)  => stmt"${ast.token}.contains(${body.token})"
+    case SetContains(ast, body)  => stmt"${ast.token}.contains(${body.token})"
+    case ListContains(ast, body) => stmt"${ast.token}.contains(${body.token})"
   }
 
   implicit val joinTypeTokenizer: Tokenizer[JoinType] = Tokenizer[JoinType] {

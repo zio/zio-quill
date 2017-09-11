@@ -33,26 +33,27 @@ trait Parsing {
   }
 
   val astParser: Parser[Ast] = Parser[Ast] {
-    case q"$i: $typ"                        => astParser(i)
-    case `queryParser`(value)               => value
-    case `liftParser`(value)                => value
-    case `valParser`(value)                 => value
-    case `patMatchValParser`(value)         => value
-    case `valueParser`(value)               => value
-    case `quotedAstParser`(value)           => value
-    case `functionParser`(value)            => value
-    case `actionParser`(value)              => value
-    case `infixParser`(value)               => value
-    case `orderingParser`(value)            => value
-    case `operationParser`(value)           => value
-    case `identParser`(value)               => value
-    case `propertyParser`(value)            => value
-    case `stringInterpolationParser`(value) => value
-    case `optionOperationParser`(value)     => value
-    case `boxingParser`(value)              => value
-    case `ifParser`(value)                  => value
-    case `patMatchParser`(value)            => value
-    case `blockParser`(block)               => block
+    case q"$i: $typ"                         => astParser(i)
+    case `queryParser`(value)                => value
+    case `liftParser`(value)                 => value
+    case `valParser`(value)                  => value
+    case `patMatchValParser`(value)          => value
+    case `valueParser`(value)                => value
+    case `quotedAstParser`(value)            => value
+    case `functionParser`(value)             => value
+    case `actionParser`(value)               => value
+    case `infixParser`(value)                => value
+    case `orderingParser`(value)             => value
+    case `operationParser`(value)            => value
+    case `identParser`(value)                => value
+    case `propertyParser`(value)             => value
+    case `stringInterpolationParser`(value)  => value
+    case `optionOperationParser`(value)      => value
+    case `traversableOperationParser`(value) => value
+    case `boxingParser`(value)               => value
+    case `ifParser`(value)                   => value
+    case `patMatchParser`(value)             => value
+    case `blockParser`(block)                => block
   }
 
   val blockParser: Parser[Block] = Parser[Block] {
@@ -298,6 +299,15 @@ trait Parsing {
       OptionContains(astParser(o), astParser(body))
   }
 
+  val traversableOperationParser: Parser[TraversableOperation] = Parser[TraversableOperation] {
+    case q"$col.contains($body)" if isBaseType[collection.Map[Any, Any]](col) =>
+      MapContains(astParser(col), astParser(body))
+    case q"$col.contains($body)" if isBaseType[Set[Any]](col) =>
+      SetContains(astParser(col), astParser(body))
+    case q"$col.contains[$t]($body)" if is[List[Any]](col) =>
+      ListContains(astParser(col), astParser(body))
+  }
+
   val propertyParser: Parser[Ast] = Parser[Ast] {
     case q"$e.$property" => Property(astParser(e), property.decodedName.toString)
   }
@@ -397,6 +407,9 @@ trait Parsing {
       case unary(op) => op
     }
   }
+
+  private def isBaseType[T](col: Tree)(implicit t: TypeTag[T]) =
+    !(col.tpe.baseType(t.tpe.typeSymbol) =:= NoType)
 
   private def isNumeric[T: WeakTypeTag] =
     c.inferImplicitValue(c.weakTypeOf[Numeric[T]]) != EmptyTree

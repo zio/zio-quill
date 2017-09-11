@@ -20,6 +20,7 @@ trait Liftables {
     case ast: Lift => liftLiftable(ast)
     case ast: Assignment => assignmentLiftable(ast)
     case ast: OptionOperation => optionOperationLiftable(ast)
+    case ast: TraversableOperation => traversableOperationLiftable(ast)
     case Val(name, body) => q"$pack.Val($name, $body)"
     case Block(statements) => q"$pack.Block($statements)"
     case Property(a, b) => q"$pack.Property($a, $b)"
@@ -39,6 +40,12 @@ trait Liftables {
     case OptionForall(a, b, c) => q"$pack.OptionForall($a,$b,$c)"
     case OptionExists(a, b, c) => q"$pack.OptionExists($a,$b,$c)"
     case OptionContains(a, b)  => q"$pack.OptionContains($a,$b)"
+  }
+
+  implicit val traversableOperationLiftable: Liftable[TraversableOperation] = Liftable[TraversableOperation] {
+    case MapContains(a, b)  => q"$pack.MapContains($a,$b)"
+    case SetContains(a, b)  => q"$pack.SetContains($a,$b)"
+    case ListContains(a, b) => q"$pack.ListContains($a,$b)"
   }
 
   implicit val binaryOperatorLiftable: Liftable[BinaryOperator] = Liftable[BinaryOperator] {

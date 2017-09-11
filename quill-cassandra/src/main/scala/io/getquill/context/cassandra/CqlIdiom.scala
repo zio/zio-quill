@@ -1,6 +1,6 @@
 package io.getquill.context.cassandra
 
-import io.getquill.ast._
+import io.getquill.ast.{ TraversableOperation, _ }
 import io.getquill.NamingStrategy
 import io.getquill.util.Messages.fail
 import io.getquill.idiom.Idiom
@@ -29,16 +29,17 @@ trait CqlIdiom extends Idiom {
     Tokenizer[Ast] {
       case Aggregation(AggregationOperator.`size`, Constant(1)) =>
         "COUNT(1)".token
-      case a: Query      => a.token
-      case a: Operation  => a.token
-      case a: Action     => a.token
-      case a: Ident      => a.token
-      case a: Property   => a.token
-      case a: Value      => a.token
-      case a: Function   => a.body.token
-      case a: Infix      => a.token
-      case a: Lift       => a.token
-      case a: Assignment => a.token
+      case a: Query                => a.token
+      case a: Operation            => a.token
+      case a: Action               => a.token
+      case a: Ident                => a.token
+      case a: Property             => a.token
+      case a: Value                => a.token
+      case a: Function             => a.body.token
+      case a: Infix                => a.token
+      case a: Lift                 => a.token
+      case a: Assignment           => a.token
+      case a: TraversableOperation => a.token
       case a @ (
         _: Function | _: FunctionApply | _: Dynamic | _: OptionOperation | _: Block |
         _: Val | _: Ordering | _: QuotedReference | _: If
@@ -181,4 +182,11 @@ trait CqlIdiom extends Idiom {
   implicit def entityTokenizer(implicit strategy: NamingStrategy): Tokenizer[Entity] = Tokenizer[Entity] {
     case Entity(name, properties) => strategy.table(name).token
   }
+
+  implicit def traversableTokenizer(implicit strategy: NamingStrategy): Tokenizer[TraversableOperation] =
+    Tokenizer[TraversableOperation] {
+      case MapContains(ast, body)  => stmt"${ast.token} CONTAINS KEY ${body.token}"
+      case SetContains(ast, body)  => stmt"${ast.token} CONTAINS ${body.token}"
+      case ListContains(ast, body) => stmt"${ast.token} CONTAINS ${body.token}"
+    }
 }

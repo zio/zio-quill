@@ -176,6 +176,24 @@ class StatelessTransformerSpec extends Spec {
       }
     }
 
+    "traversable operations" - {
+      "map.contains" in {
+        val ast: Ast = MapContains(Ident("a"), Ident("c"))
+        Subject(Ident("a") -> Ident("a'"), Ident("c") -> Ident("c'"))(ast) mustEqual
+          MapContains(Ident("a'"), Ident("c'"))
+      }
+      "set.contains" in {
+        val ast: Ast = SetContains(Ident("a"), Ident("c"))
+        Subject(Ident("a") -> Ident("a'"), Ident("c") -> Ident("c'"))(ast) mustEqual
+          SetContains(Ident("a'"), Ident("c'"))
+      }
+      "list.contains" in {
+        val ast: Ast = ListContains(Ident("a"), Ident("c"))
+        Subject(Ident("a") -> Ident("a'"), Ident("c") -> Ident("c'"))(ast) mustEqual
+          ListContains(Ident("a'"), Ident("c'"))
+      }
+    }
+
     "if" in {
       val ast: Ast = If(Ident("a"), Ident("b"), Ident("c"))
       Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) mustEqual

@@ -60,9 +60,9 @@ trait SqlIdiom extends Idiom {
       case a: Assignment => a.token
       case a @ (
         _: Function | _: FunctionApply | _: Dynamic | _: OptionOperation | _: Block |
-        _: Val | _: Ordering | _: QuotedReference
+        _: Val | _: Ordering | _: QuotedReference | _: TraversableOperation
         ) =>
-        fail(s"Malformed query $a.")
+        fail(s"Malformed or unsupported construct: $a.")
     }
 
   implicit def ifTokenizer(implicit strategy: NamingStrategy): Tokenizer[If] = Tokenizer[If] {

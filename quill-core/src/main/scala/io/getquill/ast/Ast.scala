@@ -75,6 +75,11 @@ case class OptionForall(ast: Ast, alias: Ident, body: Ast) extends OptionOperati
 case class OptionExists(ast: Ast, alias: Ident, body: Ast) extends OptionOperation
 case class OptionContains(ast: Ast, body: Ast) extends OptionOperation
 
+sealed trait TraversableOperation extends Ast
+case class MapContains(ast: Ast, body: Ast) extends TraversableOperation
+case class SetContains(ast: Ast, body: Ast) extends TraversableOperation
+case class ListContains(ast: Ast, body: Ast) extends TraversableOperation
+
 case class If(condition: Ast, `then`: Ast, `else`: Ast) extends Ast
 
 case class Assignment(alias: Ident, property: Ast, value: Ast) extends Ast

@@ -130,4 +130,11 @@ class CassandraOpsSpec extends Spec {
         "TRUNCATE TestEntity IF EXISTS"
     }
   }
+
+  "collection" - {
+    "map.containsValue" in {
+      mirrorContext.run(mapFroz.filter(x => x.id.containsValue(true))).string mustEqual
+        "SELECT id FROM MapFrozen WHERE id CONTAINS true"
+    }
+  }
 }

@@ -733,6 +733,26 @@ class QuotationSpec extends Spec {
         quote(unquote(q)).ast.body mustEqual OptionContains(Ident("o"), Ident("v"))
       }
     }
+    "traversable operations" - {
+      "map.contains" in {
+        val q = quote {
+          (m: collection.Map[Int, String], k: Int) => m.contains(k)
+        }
+        quote(unquote(q)).ast.body mustEqual MapContains(Ident("m"), Ident("k"))
+      }
+      "set.contains" in {
+        val q = quote {
+          (s: Set[Int], v: Int) => s.contains(v)
+        }
+        quote(unquote(q)).ast.body mustEqual SetContains(Ident("s"), Ident("v"))
+      }
+      "list.contains" in {
+        val q = quote {
+          (l: List[Int], v: Int) => l.contains(v)
+        }
+        quote(unquote(q)).ast.body mustEqual ListContains(Ident("l"), Ident("v"))
+      }
+    }
     "boxed numbers" - {
       "big decimal" in {
         quote {
