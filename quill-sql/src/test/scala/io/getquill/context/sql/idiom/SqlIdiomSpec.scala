@@ -375,6 +375,15 @@ class SqlIdiomSpec extends Spec {
               "SELECT x.s, x.i, x.l, x.o FROM TestEntity a LEFT JOIN TestEntity2 b ON a.s = b.s, TestEntity3 x"
           }
         }
+        "with map" - {
+          "left" in {
+            val q = quote {
+              qr1.map(y => y.s).join(qr2).on((a, b) => a == b.s)
+            }
+            testContext.run(q).string mustEqual
+              "SELECT y.s, b.s, b.i, b.l, b.o FROM TestEntity y INNER JOIN TestEntity2 b ON y.s = b.s"
+          }
+        }
       }
       "without from" in {
         val q = quote {
@@ -405,6 +414,13 @@ class SqlIdiomSpec extends Spec {
           testContext.run(q).string mustEqual "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE FALSE"
         }
       }
+    }
+    "nested" in {
+      val q = quote {
+        qr1.map(t => t.i).nested.filter(i => i > 1)
+      }
+      testContext.run(q).string mustEqual
+        "SELECT t.i FROM (SELECT x.i FROM TestEntity x) t WHERE t.i > 1"
     }
     "operations" - {
       "unary operation" - {

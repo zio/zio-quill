@@ -63,6 +63,38 @@ object ApplyMap {
       case Take(Map(a, b, c), d) =>
         Some(Map(Take(a, d), b, c))
 
+      // a.map(b => c).nested =>
+      //    a.nested.map(b => c)
+      case Nested(Map(a, b, c)) =>
+        Some(Map(Nested(a), b, c))
+
+      // a.map(b => c).*join(d.map(e => f)).on((iA, iB) => on)
+      //    a.*join(d).on((b, e) => on[iA := c, iB := f]).map(t => (c[b := t._1], f[e := t._2]))
+      case Join(tpe, Map(a, b, c), Map(d, e, f), iA, iB, on) =>
+        val onr = BetaReduction(on, iA -> c, iB -> f)
+        val t = Ident("t")
+        val t1 = BetaReduction(c, b -> Property(t, "_1"))
+        val t2 = BetaReduction(f, e -> Property(t, "_2"))
+        Some(Map(Join(tpe, a, d, b, e, onr), t, Tuple(List(t1, t2))))
+
+      // a.*join(b.map(c => d)).on((iA, iB) => on)
+      //    a.*join(b).on((iA, c) => on[iB := d]).map(t => (t._1, d[c := t._2]))
+      case Join(tpe, a, Map(b, c, d), iA, iB, on) =>
+        val onr = BetaReduction(on, iB -> d)
+        val t = Ident("t")
+        val t1 = Property(t, "_1")
+        val t2 = BetaReduction(d, c -> Property(t, "_2"))
+        Some(Map(Join(tpe, a, b, iA, c, onr), t, Tuple(List(t1, t2))))
+
+      // a.map(b => c).*join(d).on((iA, iB) => on)
+      //    a.*join(d).on((b, iB) => on[iA := c]).map(t => (c[b := t._1], t._2))
+      case Join(tpe, Map(a, b, c), d, iA, iB, on) =>
+        val onr = BetaReduction(on, iA -> c)
+        val t = Ident("t")
+        val t1 = BetaReduction(c, b -> Property(t, "_1"))
+        val t2 = Property(t, "_2")
+        Some(Map(Join(tpe, a, d, b, iB, onr), t, Tuple(List(t1, t2))))
+
       case other => None
     }
 }

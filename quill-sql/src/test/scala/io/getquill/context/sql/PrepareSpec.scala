@@ -5,7 +5,7 @@ import io.getquill.context.sql.testContext._
 
 class PrepareSpec extends Spec {
 
-  "nested and mapped outer joins" in {
+  "nested and mapped outer joins" in pendingUntilFixed {
     val q = quote {
       for {
         a <- qr1.leftJoin(qr2.map(t => (t.i, t.l))).on((a, b) => a.i > b._1)
@@ -15,7 +15,8 @@ class PrepareSpec extends Spec {
       }
     }
     testContext.run(q).string mustEqual
-      "SELECT t._1, t11._2 FROM TestEntity a LEFT JOIN (SELECT t.i _1 FROM TestEntity2 t) t ON a.i > t._1, TestEntity a1 LEFT JOIN (SELECT t11.l _2 FROM TestEntity2 t11) t11 ON a1.l < t11._2"
+      "SELECT t.i, t1.l FROM TestEntity a LEFT JOIN TestEntity2 t ON a.i > t.i, TestEntity a1 LEFT JOIN  TestEntity2 t1 ON a1.l < t1.l"
+    ()
   }
 
   "mirror sql joins" - {
