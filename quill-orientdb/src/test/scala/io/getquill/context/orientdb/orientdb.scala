@@ -58,9 +58,4 @@ object orientdb {
     if (!setupDone) { setup(); setupDone = true }
     new OrientDBSyncContext[Literal](s"$dbUrl/$databaseName", username, password)
   }
-
-  def testAsyncDB = {
-    if (!setupDone) { setup(); setupDone = true }
-    new OrientDBAsyncContext[Literal](s"$dbUrl/$databaseName", username, password)
-  }
 }

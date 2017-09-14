@@ -16,15 +16,6 @@ class EncodingSpec extends Spec {
       verify(ctx.run(query[EncodingTestEntity]))
       ctx.close()
     }
-
-    "async" in {
-      val ctx = orientdb.testAsyncDB
-      import ctx._
-      ctx.run(query[EncodingTestEntity].delete)
-      ctx.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insert(e)))
-      verify(ctx.run(query[EncodingTestEntity]).get())
-      ctx.close()
-    }
   }
 
   "encodes collections" - {
@@ -39,19 +30,6 @@ class EncodingSpec extends Spec {
       ctx.run(query[EncodingTestEntity].delete)
       ctx.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insert(e)))
       verify(ctx.run(q(liftQuery(insertValues.map(_.id)))))
-      ctx.close()
-    }
-
-    "async" in {
-      val ctx = orientdb.testAsyncDB
-      import ctx._
-      val q = quote {
-        (list: Query[Int]) =>
-          query[EncodingTestEntity].filter(t => list.contains(t.id))
-      }
-      ctx.run(query[EncodingTestEntity].delete)
-      ctx.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insert(e)))
-      verify(ctx.run(q(liftQuery(insertValues.map(_.id)))).get())
       ctx.close()
     }
   }
