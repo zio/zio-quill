@@ -67,7 +67,7 @@ class SqlActionMacroSpec extends Spec {
       mirror.returningColumn mustEqual "l"
     }
   }
-  "apply naming strategy to returning action" in testContext.withNaming[SnakeCase] { ctx =>
+  "apply naming strategy to returning action" in testContext.withNaming(SnakeCase) { ctx =>
     import ctx._
     case class TestEntity4(intId: Int, textCol: String)
     val q = quote {

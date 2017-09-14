@@ -22,29 +22,34 @@ import io.getquill.context.sql.SqlContext
 import io.getquill.util.{ ContextLogger, LoadConfig }
 import io.getquill.util.Messages.fail
 import io.getquill.monad.TwitterFutureIOMonad
+import io.getquill.context.Context
 
 class FinagleMysqlContext[N <: NamingStrategy](
+  val naming:                               N,
   client:                                   Client with Transactions,
   private[getquill] val injectionTimeZone:  TimeZone,
   private[getquill] val extractionTimeZone: TimeZone
 )
-  extends SqlContext[MySQLDialect, N]
+  extends Context[MySQLDialect, N]
+  with SqlContext[MySQLDialect, N]
   with FinagleMysqlDecoders
   with FinagleMysqlEncoders
   with TwitterFutureIOMonad {
 
-  def this(config: FinagleMysqlContextConfig) = this(config.client, config.injectionTimeZone, config.extractionTimeZone)
-  def this(config: Config) = this(FinagleMysqlContextConfig(config))
-  def this(configPrefix: String) = this(LoadConfig(configPrefix))
+  def this(naming: N, config: FinagleMysqlContextConfig) = this(naming, config.client, config.injectionTimeZone, config.extractionTimeZone)
+  def this(naming: N, config: Config) = this(naming, FinagleMysqlContextConfig(config))
+  def this(naming: N, configPrefix: String) = this(naming, LoadConfig(configPrefix))
 
-  def this(client: Client with Transactions, timeZone: TimeZone) = this(client, timeZone, timeZone)
-  def this(config: FinagleMysqlContextConfig, timeZone: TimeZone) = this(config.client, timeZone)
-  def this(config: Config, timeZone: TimeZone) = this(FinagleMysqlContextConfig(config), timeZone)
-  def this(configPrefix: String, timeZone: TimeZone) = this(LoadConfig(configPrefix), timeZone)
+  def this(naming: N, client: Client with Transactions, timeZone: TimeZone) = this(naming, client, timeZone, timeZone)
+  def this(naming: N, config: FinagleMysqlContextConfig, timeZone: TimeZone) = this(naming, config.client, timeZone)
+  def this(naming: N, config: Config, timeZone: TimeZone) = this(naming, FinagleMysqlContextConfig(config), timeZone)
+  def this(naming: N, configPrefix: String, timeZone: TimeZone) = this(naming, LoadConfig(configPrefix), timeZone)
 
-  def this(config: FinagleMysqlContextConfig, injectionTimeZone: TimeZone, extractionTimeZone: TimeZone) = this(config.client, injectionTimeZone, extractionTimeZone)
-  def this(config: Config, injectionTimeZone: TimeZone, extractionTimeZone: TimeZone) = this(FinagleMysqlContextConfig(config), injectionTimeZone, extractionTimeZone)
-  def this(configPrefix: String, injectionTimeZone: TimeZone, extractionTimeZone: TimeZone) = this(LoadConfig(configPrefix), injectionTimeZone, extractionTimeZone)
+  def this(naming: N, config: FinagleMysqlContextConfig, injectionTimeZone: TimeZone, extractionTimeZone: TimeZone) = this(naming, config.client, injectionTimeZone, extractionTimeZone)
+  def this(naming: N, config: Config, injectionTimeZone: TimeZone, extractionTimeZone: TimeZone) = this(naming, FinagleMysqlContextConfig(config), injectionTimeZone, extractionTimeZone)
+  def this(naming: N, configPrefix: String, injectionTimeZone: TimeZone, extractionTimeZone: TimeZone) = this(naming, LoadConfig(configPrefix), injectionTimeZone, extractionTimeZone)
+
+  val idiom = MySQLDialect
 
   private val logger = ContextLogger(classOf[FinagleMysqlContext[_]])
 

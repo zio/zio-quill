@@ -4,6 +4,15 @@ import io.getquill.Spec
 import io.getquill.testContext
 import io.getquill.testContext._
 import mirror.Row
+import io.getquill.MirrorContext
+import io.getquill.NamingStrategy
+import io.getquill.idiom.Idiom
+import io.getquill.MirrorIdiom
+import io.getquill.TestEntities
+import io.getquill.Literal
+import io.getquill.Escape
+import io.getquill.UpperCase
+import io.getquill.SnakeCase
 
 class ContextMacroSpec extends Spec {
 
@@ -177,5 +186,32 @@ class ContextMacroSpec extends Spec {
       }
     }
     "testContext.run(q)" mustNot compile
+  }
+
+  "falls back to dynamic queries if idiom/naming are not known" in {
+    import language.existentials
+    def test(ctx: MirrorContext[_ <: Idiom, _ <: NamingStrategy]) = {
+      import ctx._
+      ctx.run(query[TestEntity])
+    }
+    test(testContext).string mustEqual """querySchema("TestEntity").map(x => (x.s, x.i, x.l, x.o))"""
+  }
+
+  "supports composite naming strategies" - {
+    "two" in {
+      object ctx extends MirrorContext(MirrorIdiom, NamingStrategy(Literal, Escape)) with TestEntities
+      import ctx._
+      ctx.run(query[TestEntity]).string mustEqual """querySchema("TestEntity").map(x => (x.s, x.i, x.l, x.o))"""
+    }
+    "three" in {
+      object ctx extends MirrorContext(MirrorIdiom, NamingStrategy(Literal, Escape, UpperCase)) with TestEntities
+      import ctx._
+      ctx.run(query[TestEntity]).string mustEqual """querySchema("TestEntity").map(x => (x.s, x.i, x.l, x.o))"""
+    }
+    "four" in {
+      object ctx extends MirrorContext(MirrorIdiom, NamingStrategy(Literal, Escape, UpperCase, SnakeCase)) with TestEntities
+      import ctx._
+      ctx.run(query[TestEntity]).string mustEqual """querySchema("TestEntity").map(x => (x.s, x.i, x.l, x.o))"""
+    }
   }
 }

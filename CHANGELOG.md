@@ -1,3 +1,11 @@
+# 2.0.0-M1
+
+
+### Migration notes
+
+- Sources now take a parameter for idiom and naming strategy instead of just type parameters. For instance, `new SqlSource[MysqlDialect, Literal]` becomes `new SqlSource(MysqlDialect, Literal)`.
+- Composite naming strategies don't use mixing anymore. Instead of the type `Literal with UpperCase`, use parameter value `NamingStrategy(Literal, UpperCase)`.
+
 # 1.4.0
 
 - [Allow unlimited nesting of embedded case classes and optionals](https://github.com/getquill/quill/pull/660)

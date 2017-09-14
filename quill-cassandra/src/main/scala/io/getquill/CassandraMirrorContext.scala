@@ -5,10 +5,10 @@ import io.getquill.context.cassandra.{ CassandraContext, CqlIdiom }
 
 import scala.reflect.ClassTag
 
-class CassandraMirrorContextWithQueryProbing extends CassandraMirrorContext with QueryProbing
+class CassandraMirrorContextWithQueryProbing extends CassandraMirrorContext(Literal) with QueryProbing
 
-class CassandraMirrorContext[Naming <: NamingStrategy]
-  extends MirrorContext[CqlIdiom, Naming] with CassandraContext[Naming] {
+class CassandraMirrorContext[Naming <: NamingStrategy](naming: Naming)
+  extends MirrorContext[CqlIdiom, Naming](CqlIdiom, naming) with CassandraContext[Naming] {
 
   implicit def listDecoder[T, Cas: ClassTag](implicit mapper: CassandraMapper[Cas, T]): Decoder[List[T]] = decoderUnsafe[List[T]]
   implicit def setDecoder[T, Cas: ClassTag](implicit mapper: CassandraMapper[Cas, T]): Decoder[Set[T]] = decoderUnsafe[Set[T]]

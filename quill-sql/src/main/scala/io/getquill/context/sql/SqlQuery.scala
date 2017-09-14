@@ -4,6 +4,7 @@ import io.getquill.ast._
 import io.getquill.context.sql.norm.FlattenGroupByAggregation
 import io.getquill.norm.BetaReduction
 import io.getquill.util.Messages.fail
+import io.getquill.Literal
 
 case class OrderByCriteria(ast: Ast, ordering: PropertyOrdering)
 
@@ -14,7 +15,16 @@ case class InfixContext(infix: Infix, alias: String) extends FromContext
 case class JoinContext(t: JoinType, a: FromContext, b: FromContext, on: Ast) extends FromContext
 case class FlatJoinContext(t: JoinType, a: FromContext, on: Ast) extends FromContext
 
-sealed trait SqlQuery
+sealed trait SqlQuery {
+  override def toString = {
+    import io.getquill.MirrorSqlDialect._
+    import io.getquill.idiom.StatementInterpolator._
+    implicit val naming = Literal
+    implicit def liftTokenizer: Tokenizer[Lift] =
+      Tokenizer[Lift](_ => stmt"?")
+    this.token.toString
+  }
+}
 
 sealed trait SetOperation
 case object UnionOperation extends SetOperation

@@ -27,6 +27,9 @@ trait Context[Idiom <: io.getquill.idiom.Idiom, Naming <: NamingStrategy]
 
   def probe(statement: String): Try[_]
 
+  def idiom: Idiom
+  def naming: Naming
+
   def run[T](quoted: Quoted[T]): Result[RunQuerySingleResult[T]] = macro QueryMacro.runQuerySingle[T]
   def run[T](quoted: Quoted[Query[T]]): Result[RunQueryResult[T]] = macro QueryMacro.runQuery[T]
   def run(quoted: Quoted[Action[_]]): Result[RunActionResult] = macro ActionMacro.runAction

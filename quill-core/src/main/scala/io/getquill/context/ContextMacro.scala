@@ -64,7 +64,7 @@ trait ContextMacro extends Quotation {
 
         q"($normalizedAst, ${statement: Token})"
       case Failure(ex) =>
-        c.warn(s"Can't translate query at compile time. Reason: $ex")
+        c.info(s"Can't translate query at compile time because the idiom and/or the naming strategy aren't known at this point.")
         translateDynamic(ast)
     }
   }
@@ -85,10 +85,8 @@ trait ContextMacro extends Quotation {
     (idiom, n)
   }
 
-  private def idiomAndNamingDynamic = {
-    val (idiom, naming) = idiomAndNaming
-    q"(${idiom.typeSymbol.companion}, ${LoadNaming.dynamic(c)(naming)})"
-  }
+  private def idiomAndNamingDynamic =
+    q"(${c.prefix}.idiom, ${c.prefix}.naming)"
 
   private def idiomAndNamingStatic = {
     val (idiom, naming) = idiomAndNaming

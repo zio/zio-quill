@@ -7,16 +7,21 @@ import io.getquill.NamingStrategy
 import io.getquill.context.cassandra.encoding.{ CassandraTypes, Decoders, Encoders }
 import io.getquill.util.Messages.fail
 import com.datastax.driver.core.Cluster
+import io.getquill.context.Context
 
 abstract class CassandraSessionContext[N <: NamingStrategy](
+  val naming:                 N,
   cluster:                    Cluster,
   keyspace:                   String,
   preparedStatementCacheSize: Long
 )
-  extends CassandraContext[N]
+  extends Context[CqlIdiom, N]
+  with CassandraContext[N]
   with Encoders
   with Decoders
   with CassandraTypes {
+
+  val idiom = CqlIdiom
 
   override type PrepareRow = BoundStatement
   override type ResultRow = Row

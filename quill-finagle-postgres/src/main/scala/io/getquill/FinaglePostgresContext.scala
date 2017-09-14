@@ -7,19 +7,21 @@ import io.getquill.context.finagle.postgres._
 import io.getquill.context.sql.SqlContext
 import io.getquill.util.{ ContextLogger, LoadConfig }
 import scala.util.Try
+import io.getquill.context.Context
 import io.getquill.monad.TwitterFutureIOMonad
 
-class FinaglePostgresContext[N <: NamingStrategy](client: PostgresClient)
-  extends SqlContext[FinaglePostgresDialect, N]
+class FinaglePostgresContext[N <: NamingStrategy](val naming: N, client: PostgresClient)
+  extends Context[FinaglePostgresDialect, N]
+  with SqlContext[FinaglePostgresDialect, N]
   with FinaglePostgresEncoders
   with FinaglePostgresDecoders
   with TwitterFutureIOMonad {
 
-  def this(config: FinaglePostgresContextConfig) = this(config.client)
-  def this(config: Config) = this(FinaglePostgresContextConfig(config))
-  def this(configPrefix: String) = {
-    this(LoadConfig(configPrefix))
-  }
+  def this(naming: N, config: FinaglePostgresContextConfig) = this(naming, config.client)
+  def this(naming: N, config: Config) = this(naming, FinaglePostgresContextConfig(config))
+  def this(naming: N, configPrefix: String) = this(naming, LoadConfig(configPrefix))
+
+  val idiom = FinaglePostgresDialect
 
   private val logger = ContextLogger(classOf[FinaglePostgresContext[_]])
 

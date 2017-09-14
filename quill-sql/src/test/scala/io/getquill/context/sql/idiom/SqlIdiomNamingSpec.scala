@@ -7,6 +7,7 @@ import io.getquill.SnakeCase
 import io.getquill.UpperCase
 import io.getquill.MirrorSqlDialect
 import io.getquill.SqlMirrorContext
+import io.getquill.NamingStrategy
 
 trait CustomTableStrategy extends SnakeCase {
   override def table(s: String) = s"t_$s".toLowerCase
@@ -25,19 +26,19 @@ class SqlIdiomNamingSpec extends Spec {
     case class SomeEntity(someColumn: Int)
 
     "one transformation" in {
-      val db = new SqlMirrorContext[MirrorSqlDialect, SnakeCase]
+      val db = new SqlMirrorContext(MirrorSqlDialect, SnakeCase)
       import db._
       db.run(query[SomeEntity]).string mustEqual
         "SELECT x.some_column FROM some_entity x"
     }
     "mutiple transformations" in {
-      val db = new SqlMirrorContext[MirrorSqlDialect, SnakeCase with UpperCase with Escape]
+      val db = new SqlMirrorContext(MirrorSqlDialect, NamingStrategy(SnakeCase, UpperCase, Escape))
       import db._
       db.run(query[SomeEntity]).string mustEqual
         """SELECT "X"."SOME_COLUMN" FROM "SOME_ENTITY" "X""""
     }
     "specific table strategy" in {
-      val db = new SqlMirrorContext[MirrorSqlDialect, CustomTableStrategy]
+      val db = new SqlMirrorContext(MirrorSqlDialect, CustomTableStrategy)
       import db._
 
       val q = quote {
@@ -48,7 +49,7 @@ class SqlIdiomNamingSpec extends Spec {
         "SELECT t.some_column FROM t_someentity t"
     }
     "specific column strategy" in {
-      val db = new SqlMirrorContext[MirrorSqlDialect, CustomColumnStrategy]
+      val db = new SqlMirrorContext(MirrorSqlDialect, CustomColumnStrategy)
       import db._
 
       val q = quote {
@@ -59,7 +60,7 @@ class SqlIdiomNamingSpec extends Spec {
         "SELECT t.c_somecolumn FROM some_entity t"
     }
 
-    val db = new SqlMirrorContext[MirrorSqlDialect, SnakeCase]
+    val db = new SqlMirrorContext(MirrorSqlDialect, SnakeCase)
 
     import db._
 

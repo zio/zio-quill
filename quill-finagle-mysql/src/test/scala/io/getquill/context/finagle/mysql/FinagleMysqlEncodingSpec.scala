@@ -136,7 +136,7 @@ class FinagleMysqlEncodingSpec extends EncodingSpec {
 
     "different timezone" in {
       val config = FinagleMysqlContextConfig(LoadConfig("testDB"))
-      val testTimezoneContext = new FinagleMysqlContext[Literal](config.client, TimeZone.getTimeZone("KST"), TimeZone.getTimeZone("UTC"))
+      val testTimezoneContext = new FinagleMysqlContext(Literal, config.client, TimeZone.getTimeZone("KST"), TimeZone.getTimeZone("UTC"))
       import testTimezoneContext._
 
       val r = for {
@@ -165,7 +165,7 @@ class FinagleMysqlEncodingSpec extends EncodingSpec {
 
     "TimeZone.setDefault() to different timezone than that of FinagleMysqlContext" in {
       val config = FinagleMysqlContextConfig(LoadConfig("testDB"))
-      val testTimezoneContext = new FinagleMysqlContext[Literal](config.client, TimeZone.getTimeZone(ZoneId.of("Asia/Tokyo")), TimeZone.getTimeZone(ZoneId.of("Asia/Tokyo")))
+      val testTimezoneContext = new FinagleMysqlContext(Literal, config.client, TimeZone.getTimeZone(ZoneId.of("Asia/Tokyo")), TimeZone.getTimeZone(ZoneId.of("Asia/Tokyo")))
       import testTimezoneContext._
 
       val zone = TimeZone.getDefault

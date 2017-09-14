@@ -34,7 +34,7 @@ For this documentation, a special type of context that acts as a [mirror](#mirro
 ```scala
 import io.getquill._
 
-val ctx = new SqlMirrorContext[MirrorSqlDialect, Literal]
+val ctx = new SqlMirrorContext(MirrorSqlDialect, Literal)
 ```
 
 > ### **Note:** [Scalafiddle](http://scalafiddle.io) is a great tool to try out Quill without having to prepare a local environment. It works with [mirror contexts](#mirror-context), see [this](https://scalafiddle.io/sf/lsmX57J/0) fiddle as an example.
@@ -544,7 +544,7 @@ Query probing validates queries against the database at compile time, failing th
 This feature is disabled by default. To enable it, mix the `QueryProbing` trait to the database configuration:
 
 ```
-lazy val ctx = new MyContext("configKey") with QueryProbing
+object myContext extends YourContextType with QueryProbing
 ```
 
 The context must be created in a separate compilation unit in order to be loaded at compile time. Please use [this guide](http://www.scala-sbt.org/0.13/docs/Macro-Projects.html) that explains how to create a separate compilation unit for macros, that also serves to the purpose of defining a query-probing-capable context. `context` could be used instead of `macros` as the name of the separate compilation unit.
@@ -729,7 +729,7 @@ This mechanism is useful to limit the kind of operations that can be performed. 
 Quill provides implicit conversions from case class companion objects to `query[T]` through an additional trait:
 
 ```scala
-val ctx = new SqlMirrorContext[MirrorSqlDialect, Literal] with ImplicitQuery
+val ctx = new SqlMirrorContext(MirrorSqlDialect, Literal) with ImplicitQuery
 
 import ctx._
 
@@ -753,7 +753,7 @@ Note the usage of `Person` and `Contact` instead of `query[Person]` and `query[C
 Some operations are sql-specific and not provided with the generic quotation mechanism. The sql contexts provide implicit classes for this kind of operation:
 
 ```scala
-val ctx = new SqlMirrorContext[MirrorSqlDialect, Literal]
+val ctx = new SqlMirrorContext(MirrorSqlDialect, Literal)
 import ctx._
 ```
 
@@ -787,7 +787,7 @@ Note that not all drivers/databases provides such feature hence only `PostgresJd
 ## Cassandra-specific encoding
 
 ```scala
-val ctx = new CassandraMirrorContext
+val ctx = new CassandraMirrorContext(Literal)
 import ctx._
 ```
 
@@ -950,7 +950,7 @@ ctx.run(q)
 Quill's default operation mode is compile-time, but there are queries that have their structure defined only at runtime. Quill automatically falls back to runtime normalization and query generation if the query's structure is not static. Example:
 
 ```scala
-val ctx = new SqlMirrorContext[MirrorSqlDialect, Literal]
+val ctx = new SqlMirrorContext(MirrorSqlDialect, Literal)
 
 import ctx._
 
@@ -1203,7 +1203,7 @@ The context instance provides all methods and types to interact with quotations 
 For instance, this example **will not** compile:
 
 ```
-class MyContext extends SqlMirrorContext[MirrorSqlDialect, Literal]
+class MyContext extends SqlMirrorContext(MirrorSqlDialect, Literal)
 
 case class MySchema(c: MyContext) {
 
@@ -1225,7 +1225,7 @@ case class MyDao(c: MyContext, schema: MySchema) {
 One alternative to work with this kind of context import is use traits with abstract context values:
 
 ```scala
-class MyContext extends SqlMirrorContext[MirrorSqlDialect, Literal]
+class MyContext extends SqlMirrorContext(MirrorSqlDialect, Literal)
 
 trait MySchema {
 
@@ -1250,12 +1250,12 @@ case class MyDao(c: MyContext) extends MySchema {
 Example:
 
 ```scala
-lazy val ctx = new MysqlJdbcContext[SnakeCase]("ctx")
+lazy val ctx = new MysqlJdbcContext(SnakeCase, "ctx")
 ```
 
 ### Dialect
 
-The SQL dialect to be used by the context is defined by the first type parameter. Some context types are specific to a database and thus not require it.
+The SQL dialect parameter defines the specific database dialect to be used. Some context types are specific to a database and thus not require it.
 
 Quill has five built-in dialects:
 
@@ -1267,7 +1267,7 @@ Quill has five built-in dialects:
 
 ### Naming strategy
 
-The second type parameter defines the naming strategy to be used when translating identifiers (table and column names) to SQL.
+The naming strategy parameter defines the behavior when translating identifiers (table and column names) to SQL.
 
 |           strategy                  |          example              |
 |-------------------------------------|-------------------------------|
@@ -1280,9 +1280,9 @@ The second type parameter defines the naming strategy to be used when translatin
 | `io.getquill.naming.MysqlEscape`    | some_ident  -> \`some_ident\` |
 | `io.getquill.naming.PostgresEscape` | $some_ident -> $some_ident    |
 
-Multiple transformations can be defined using mixin. For instance, the naming strategy
+Multiple transformations can be defined using `NamingStrategy()`. For instance, the naming strategy
 
-```SnakeCase with UpperCase```
+```NamingStrategy(SnakeCase, UpperCase)```
 
 produces the following transformation:
 
@@ -1299,7 +1299,7 @@ Additionally, the contexts provide multiple constructors. For instance, with `Jd
 ```scala
 def createDataSource: javax.sql.DataSource with java.io.Closeable = ???
 
-lazy val ctx = new MysqlJdbcContext[SnakeCase](createDataSource)
+lazy val ctx = new MysqlJdbcContext(SnakeCase, createDataSource)
 ```
 
 ### quill-jdbc
@@ -1333,7 +1333,7 @@ libraryDependencies ++= Seq(
 
 #### context definition
 ```scala
-lazy val ctx = new MysqlJdbcContext[SnakeCase]("ctx")
+lazy val ctx = new MysqlJdbcContext(SnakeCase, "ctx")
 ```
 
 #### application.properties
@@ -1360,7 +1360,7 @@ libraryDependencies ++= Seq(
 
 #### context definition
 ```scala
-lazy val ctx = new PostgresJdbcContext[SnakeCase]("ctx")
+lazy val ctx = new PostgresJdbcContext(SnakeCase, "ctx")
 ```
 
 #### application.properties
@@ -1386,7 +1386,7 @@ libraryDependencies ++= Seq(
 
 #### context definition
 ```scala
-lazy val ctx = new SqliteJdbcContext[SnakeCase]("ctx")
+lazy val ctx = new SqliteJdbcContext(SnakeCase, "ctx")
 ```
 
 #### application.properties
@@ -1407,7 +1407,7 @@ libraryDependencies ++= Seq(
 
 #### context definition
 ```scala
-lazy val ctx = new H2JdbcContext[SnakeCase]("ctx")
+lazy val ctx = new H2JdbcContext(SnakeCase, "ctx")
 ```
 
 #### application.properties
@@ -1429,7 +1429,7 @@ libraryDependencies ++= Seq(
 
 #### context definition
 ```scala
-lazy val ctx = new SqlServerJdbcContext[SnakeCase]("ctx")
+lazy val ctx = new SqlServerJdbcContext(SnakeCase, "ctx")
 ```
 
 #### application.properties
@@ -1534,7 +1534,7 @@ libraryDependencies ++= Seq(
 
 #### context definition
 ```scala
-lazy val ctx = new MysqlAsyncContext[SnakeCase]("ctx")
+lazy val ctx = new MysqlAsyncContext(SnakeCase, "ctx")
 ```
 
 #### application.properties
@@ -1558,7 +1558,7 @@ libraryDependencies ++= Seq(
 
 #### context definition
 ```scala
-lazy val ctx = new PostgresAsyncContext[SnakeCase]("ctx")
+lazy val ctx = new PostgresAsyncContext(SnakeCase, "ctx")
 ```
 
 #### application.properties
@@ -1595,7 +1595,7 @@ libraryDependencies ++= Seq(
 
 #### context definition
 ```scala
-lazy val ctx = new FinagleMysqlContext[SnakeCase]("ctx")
+lazy val ctx = new FinagleMysqlContext(SnakeCase, "ctx")
 ```
 
 #### application.properties
@@ -1635,7 +1635,7 @@ libraryDependencies ++= Seq(
 
 #### context definition
 ```scala
-lazy val ctx = new FinaglePostgresContext[SnakeCase]("ctx")
+lazy val ctx = new FinaglePostgresContext(SnakeCase, "ctx")
 ```
 
 #### application.properties
@@ -1662,17 +1662,17 @@ libraryDependencies ++= Seq(
 
 #### synchronous context
 ```scala
-lazy val ctx = new CassandraSyncContext[SnakeCase]("ctx")
+lazy val ctx = new CassandraSyncContext(SnakeCase, "ctx")
 ```
 
 #### asynchronous context
 ```scala
-lazy val ctx = new CassandraAsyncContext[SnakeCase]("ctx")
+lazy val ctx = new CassandraAsyncContext(SnakeCase, "ctx")
 ```
 
 #### stream context
 ```scala
-lazy val ctx = new CassandraStreamContext[SnakeCase]("ctx")
+lazy val ctx = new CassandraStreamContext(SnakeCase, "ctx")
 ```
 
 The configurations are set using runtime reflection on the [`Cluster.builder`](https://docs.datastax.com/en/drivers/java/2.1/com/datastax/driver/core/Cluster.Builder.html) instance. It is possible to set nested structures like `queryOptions.consistencyLevel`, use enum values like `LOCAL_QUORUM`, and set multiple parameters like in `credentials`.
@@ -1703,7 +1703,7 @@ libraryDependencies ++= Seq(
 
 #### synchronous context
 ```scala
-lazy val ctx = new OrientDBSyncContext[SnakeCase]("ctx")
+lazy val ctx = new OrientDBSyncContext(SnakeCase, "ctx")
 ```
 
 The configurations are set using [`OPartitionedDatabasePool`](http://orientdb.com/javadoc/latest/com/orientechnologies/orient/core/db/OPartitionedDatabasePool.html) which creates a pool of DB connections from which an instance of connection can be acquired. It is possible to set DB credentials using the parameter called `username` and `password`.

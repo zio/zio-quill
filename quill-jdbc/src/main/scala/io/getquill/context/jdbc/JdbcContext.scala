@@ -16,9 +16,11 @@ import scala.util.DynamicVariable
 
 import scala.reflect.runtime.universe._
 import io.getquill.monad.SyncIOMonad
+import io.getquill.context.Context
 
 abstract class JdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](dataSource: DataSource with Closeable)
-  extends SqlContext[Dialect, Naming]
+  extends Context[Dialect, Naming]
+  with SqlContext[Dialect, Naming]
   with Encoders
   with Decoders
   with SyncIOMonad {

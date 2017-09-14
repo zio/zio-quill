@@ -1,13 +1,12 @@
 package io.getquill.monad
 
-import io.getquill.TestEntities
 import scala.concurrent.ExecutionContext
 import scala.util.Failure
 import scala.util.Try
 
 class ScalaFutureIOMonadSpec extends IOMonadSpec {
 
-  override val ctx = new AsyncMirrorContext with TestEntities
+  override val ctx = io.getquill.testAsyncContext
   import ctx._
 
   override def eval[T](io: IO[T, _]) = {
@@ -19,7 +18,7 @@ class ScalaFutureIOMonadSpec extends IOMonadSpec {
     }
 
     var res: Try[T] = Failure(new IllegalStateException())
-    performIO(io.liftToTry).map(res = _)
+    ctx.performIO(io.liftToTry).map(res = _)
     res.get
   }
 }

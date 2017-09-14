@@ -8,7 +8,7 @@ import io.getquill.TestEntities
 
 class PostgresDialectSpec extends Spec {
 
-  val context = new SqlMirrorContext[PostgresDialect, Literal] with TestEntities
+  val context = new SqlMirrorContext(PostgresDialect, Literal) with TestEntities
   import context._
 
   "applies explicit casts" - {

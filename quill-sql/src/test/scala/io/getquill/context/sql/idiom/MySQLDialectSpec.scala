@@ -9,7 +9,7 @@ import io.getquill.idiom.StringToken
 
 class MySQLDialectSpec extends Spec {
 
-  val ctx = new SqlMirrorContext[MySQLDialect, Literal] with TestEntities
+  val ctx = new SqlMirrorContext(MySQLDialect, Literal) with TestEntities
   import ctx._
 
   "mixes the workaround for offset without limit" in {

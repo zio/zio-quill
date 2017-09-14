@@ -7,15 +7,15 @@ import com.typesafe.config.Config
 import io.getquill.context.async.{ ArrayDecoders, ArrayEncoders, AsyncContext, UUIDObjectEncoding }
 import io.getquill.util.LoadConfig
 
-class PostgresAsyncContext[N <: NamingStrategy](pool: PartitionedConnectionPool[PostgreSQLConnection])
-  extends AsyncContext[PostgresDialect, N, PostgreSQLConnection](pool)
+class PostgresAsyncContext[N <: NamingStrategy](naming: N, pool: PartitionedConnectionPool[PostgreSQLConnection])
+  extends AsyncContext(PostgresDialect, naming, pool)
   with ArrayEncoders
   with ArrayDecoders
   with UUIDObjectEncoding {
 
-  def this(config: PostgresAsyncContextConfig) = this(config.pool)
-  def this(config: Config) = this(PostgresAsyncContextConfig(config))
-  def this(configPrefix: String) = this(LoadConfig(configPrefix))
+  def this(naming: N, config: PostgresAsyncContextConfig) = this(naming, config.pool)
+  def this(naming: N, config: Config) = this(naming, PostgresAsyncContextConfig(config))
+  def this(naming: N, configPrefix: String) = this(naming, LoadConfig(configPrefix))
 
   override protected def extractActionResult[O](returningColumn: String, returningExtractor: Extractor[O])(result: DBQueryResult): O =
     returningExtractor(result.rows.get(0))
