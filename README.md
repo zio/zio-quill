@@ -1628,11 +1628,6 @@ libraryDependencies ++= Seq(
 lazy val ctx = new OrientDBSyncContext[SnakeCase]("ctx")
 ```
 
-#### asynchronous context
-```scala
-lazy val ctx = new OrientDBAsyncContext[SnakeCase]("ctx")
-```
-
 The configurations are set using [`OPartitionedDatabasePool`](http://orientdb.com/javadoc/latest/com/orientechnologies/orient/core/db/OPartitionedDatabasePool.html) which creates a pool of DB connections from which an instance of connection can be acquired. It is possible to set DB credentials using the parameter called `username` and `password`.
 
 #### application.properties
