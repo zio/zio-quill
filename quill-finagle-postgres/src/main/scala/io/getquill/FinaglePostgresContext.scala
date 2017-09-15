@@ -7,8 +7,13 @@ import io.getquill.context.finagle.postgres._
 import io.getquill.context.sql.SqlContext
 import io.getquill.util.{ ContextLogger, LoadConfig }
 import scala.util.Try
+import io.getquill.monad.TwitterFutureIOMonad
 
-class FinaglePostgresContext[N <: NamingStrategy](client: PostgresClient) extends SqlContext[FinaglePostgresDialect, N] with FinaglePostgresEncoders with FinaglePostgresDecoders {
+class FinaglePostgresContext[N <: NamingStrategy](client: PostgresClient)
+  extends SqlContext[FinaglePostgresDialect, N]
+  with FinaglePostgresEncoders
+  with FinaglePostgresDecoders
+  with TwitterFutureIOMonad {
 
   def this(config: FinaglePostgresContextConfig) = this(config.client)
   def this(config: Config) = this(FinaglePostgresContextConfig(config))
@@ -20,12 +25,14 @@ class FinaglePostgresContext[N <: NamingStrategy](client: PostgresClient) extend
 
   override type PrepareRow = List[Param[_]]
   override type ResultRow = Row
-  override type RunQueryResult[T] = Future[List[T]]
-  override type RunQuerySingleResult[T] = Future[T]
-  override type RunActionResult = Future[Long]
-  override type RunActionReturningResult[T] = Future[T]
-  override type RunBatchActionResult = Future[List[Long]]
-  override type RunBatchActionReturningResult[T] = Future[List[T]]
+
+  override type Result[T] = Future[T]
+  override type RunQueryResult[T] = List[T]
+  override type RunQuerySingleResult[T] = T
+  override type RunActionResult = Long
+  override type RunActionReturningResult[T] = T
+  override type RunBatchActionResult = List[Long]
+  override type RunBatchActionReturningResult[T] = List[T]
 
   private val currentClient = new Local[PostgresClient]
 
@@ -36,10 +43,17 @@ class FinaglePostgresContext[N <: NamingStrategy](client: PostgresClient) extend
 
   def probe(sql: String) = Try(Await.result(client.query(sql)))
 
-  def transaction[T](f: => Future[T]) = client.inTransaction { c =>
-    currentClient.update(c)
-    f.ensure(currentClient.clear)
-  }
+  def transaction[T](f: => Future[T]) =
+    client.inTransaction { c =>
+      currentClient.update(c)
+      f.ensure(currentClient.clear)
+    }
+
+  override def performIO[T](io: IO[T, _], transactional: Boolean = false): Result[T] =
+    transactional match {
+      case false => super.performIO(io)
+      case true  => transaction(super.performIO(io))
+    }
 
   def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): Future[List[T]] = {
     val (params, prepared) = prepare(Nil)

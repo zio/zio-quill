@@ -3,13 +3,14 @@ package io.getquill.context.mirror
 import java.time.LocalDate
 import java.util.{ Date, UUID }
 
-import io.getquill.MirrorContext
-
 import scala.reflect.ClassTag
+import io.getquill.context.Context
 
 trait MirrorDecoders {
-  this: MirrorContext[_, _] =>
+  this: Context[_, _] =>
 
+  override type PrepareRow = Row
+  override type ResultRow = Row
   override type Decoder[T] = MirrorDecoder[T]
 
   case class MirrorDecoder[T](decoder: BaseDecoder[T]) extends BaseDecoder[T] {

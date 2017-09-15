@@ -3,11 +3,14 @@ package io.getquill.context.mirror
 import java.time.LocalDate
 import java.util.{ Date, UUID }
 
-import io.getquill.MirrorContext
+import java.util.Date
+import io.getquill.context.Context
 
 trait MirrorEncoders {
-  this: MirrorContext[_, _] =>
+  this: Context[_, _] =>
 
+  override type PrepareRow = Row
+  override type ResultRow = Row
   override type Encoder[T] = MirrorEncoder[T]
 
   case class MirrorEncoder[T](encoder: BaseEncoder[T]) extends BaseEncoder[T] {

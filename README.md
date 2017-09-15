@@ -645,6 +645,84 @@ val a = quote {
 ctx.run(a)
 // DELETE FROM Person WHERE name = ''
 ```
+ 
+## IO Monad
+
+Quill provides an IO monad that allows the user to express multiple computations and execute them separately. This mechanism is also known as a free monad, which provides a way of expressing computations as referentially-transparent values and isolates the unsafe IO operations into a single operation. For instance:
+
+```
+// this code using Future
+
+val p = Person(0, "John", 22)
+ctx.run(query[Person].insert(lift(p))).flatMap { _ =>
+  ctx.run(query[Person])
+}
+
+// isn't referentially transparent because if you refactor the second database 
+// interaction into a value, the result will be different:
+
+val allPeople = ctx.run(query[Person])
+ctx.run(query[Person].insert(lift(p))).flatMap { _ =>
+  allPeople
+}
+
+// this happens because `ctx.run` executes the side-effect (database IO) immediately
+```
+
+```scala
+// The IO monad doesn't perform IO immediately, so both computations:
+
+val p = Person(0, "John", 22)
+
+val a =
+  ctx.runIO(query[Person].insert(lift(p))).flatMap { _ =>
+    ctx.runIO(query[Person])
+  }
+
+
+val allPeople = ctx.runIO(query[Person])
+
+val b =
+  ctx.runIO(query[Person].insert(lift(p))).flatMap { _ =>
+    allPeople
+  }
+
+// produce the same result when executed
+
+performIO(a) == performIO(b)
+```
+
+The IO monad has an interface similar to `Future`; please refer to [the class](https://github.com/getquill/quill/master/quill-core/src/main/scala/io/getquill/monad/IOMonad.scala#L38) for more information regarding the available operations. 
+
+The return type of `performIO` varies according to the context. For instance, async contexts return `Future`s while JDBC returns values synchronously.
+
+***NOTE***: Avoid using the variable name `io` since it conflicts with Quill's package `io.getquill`.
+
+### IO Monad and transactions
+
+`IO` also provides the `transactional` method that delimits a transaction:
+
+```scala
+val a =
+  ctx.runIO(query[Person].insert(lift(p))).flatMap { _ =>
+    ctx.runIO(query[Person])
+  }
+
+performIO(a.transactional) // note: transactional can be used outside of `performIO`
+```
+
+### Effect tracking
+
+The IO monad tracks the effects that a computation performs in its second type parameter:
+
+```scala
+val a: IO[ctx.RunQueryResult[Person], Effect.Write with Effect.Read] =
+  ctx.runIO(query[Person].insert(lift(p))).flatMap { _ =>
+    ctx.runIO(query[Person])
+  }
+```
+
+This mechanism is useful to limit the kind of operations that can be performed. See this [blog post](http://danielwestheide.com/blog/2015/06/28/put-your-writes-where-your-master-is-compile-time-restriction-of-slick-effect-types.html) as an example.
 
 ## Implicit query
 
