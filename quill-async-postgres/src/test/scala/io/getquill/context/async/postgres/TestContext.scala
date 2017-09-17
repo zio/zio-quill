@@ -6,7 +6,7 @@ import io.getquill.{ Literal, PostgresAsyncContext, TestEntities }
 import scala.concurrent.{ Await, Future }
 import scala.concurrent.duration.Duration
 
-class TestContext extends PostgresAsyncContext[Literal]("testPostgresDB")
+class TestContext extends PostgresAsyncContext(Literal, "testPostgresDB")
   with TestEntities
   with TestEncoders
   with TestDecoders {

@@ -6,10 +6,10 @@ import io.getquill.idiom.{ Idiom => BaseIdiom }
 import scala.util.{ Failure, Success, Try }
 import io.getquill.monad.SyncIOMonad
 
-class MirrorContextWithQueryProbing[Idiom <: BaseIdiom, Naming <: NamingStrategy]
-  extends MirrorContext[Idiom, Naming] with QueryProbing
+object mirrorContextWithQueryProbing
+  extends MirrorContext(MirrorIdiom, Literal) with QueryProbing
 
-class MirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy]
+class MirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy](val idiom: Idiom, val naming: Naming)
   extends Context[Idiom, Naming]
   with MirrorEncoders
   with MirrorDecoders

@@ -9,7 +9,7 @@ import scala.util.Try
 
 class OffsetWithoutLimitWorkaroundSpec extends Spec {
 
-  val ctx = new SqlMirrorContext[MySQLDialect, Literal] with TestEntities {
+  val ctx = new SqlMirrorContext(MySQLDialect, Literal) with TestEntities {
     override def probe(statement: String) =
       Try {
         statement mustEqual

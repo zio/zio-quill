@@ -9,12 +9,12 @@ import io.getquill.context.async.{ AsyncContext, UUIDStringEncoding }
 import io.getquill.util.LoadConfig
 import com.github.mauricio.async.db.general.ArrayRowData
 
-class MysqlAsyncContext[N <: NamingStrategy](pool: PartitionedConnectionPool[MySQLConnection])
-  extends AsyncContext[MySQLDialect, N, MySQLConnection](pool) with UUIDStringEncoding {
+class MysqlAsyncContext[N <: NamingStrategy](naming: N, pool: PartitionedConnectionPool[MySQLConnection])
+  extends AsyncContext(MySQLDialect, naming, pool) with UUIDStringEncoding {
 
-  def this(config: MysqlAsyncContextConfig) = this(config.pool)
-  def this(config: Config) = this(MysqlAsyncContextConfig(config))
-  def this(configPrefix: String) = this(LoadConfig(configPrefix))
+  def this(naming: N, config: MysqlAsyncContextConfig) = this(naming, config.pool)
+  def this(naming: N, config: Config) = this(naming, MysqlAsyncContextConfig(config))
+  def this(naming: N, configPrefix: String) = this(naming, LoadConfig(configPrefix))
 
   override protected def extractActionResult[O](returningColumn: String, returningExtractor: Extractor[O])(result: DBQueryResult): O = {
     result match {

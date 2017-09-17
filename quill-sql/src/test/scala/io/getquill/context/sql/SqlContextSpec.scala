@@ -9,6 +9,7 @@ import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.context.sql.testContext._
 
 import scala.util.Try
+import io.getquill.context.Context
 
 class SqlContextSpec extends Spec {
 
@@ -31,20 +32,6 @@ class SqlContextSpec extends Spec {
     }
   }
 
-  "fails if the sql probing fails" in {
-    case class Fail()
-    val s = new MirrorContextWithQueryProbing[MirrorSqlDialect, Literal]
-    "s.run(query[Fail])" mustNot compile
-  }
-
-  "fails if the query can't be translated to sql" in {
-    val ctx = new MirrorContextWithQueryProbing[MirrorSqlDialect, Literal]
-    val q = quote {
-      qr1.flatMap(a => qr2.filter(b => b.s == a.s).take(1))
-    }
-    "testContext.run(q)" mustNot compile
-  }
-
   "fails if the sql dialect is not valid" in {
 
     "testContext.run(qr1.delete)" mustNot compile
@@ -54,7 +41,10 @@ class SqlContextSpec extends Spec {
 
       override def prepareForProbing(string: String) = string
     }
-    object testContext extends SqlContext[MirrorSqlDialect, Literal] {
+    object testContext extends Context[MirrorSqlDialect, Literal] with SqlContext[MirrorSqlDialect, Literal] {
+
+      val idiom = MirrorSqlDialect
+      val naming = Literal
 
       override type PrepareRow = List[Any]
       override type ResultRow = List[Any]

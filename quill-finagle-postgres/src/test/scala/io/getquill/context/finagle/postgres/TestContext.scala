@@ -4,4 +4,4 @@ import io.getquill._
 import io.getquill.context.sql.{ TestDecoders, TestEncoders }
 import io.getquill.FinaglePostgresContext
 
-object testContext extends FinaglePostgresContext[Literal]("testPostgresDB") with TestEntities with TestEncoders with TestDecoders
+object testContext extends FinaglePostgresContext(Literal, "testPostgresDB") with TestEntities with TestEncoders with TestDecoders

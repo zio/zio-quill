@@ -7,10 +7,12 @@ import com.typesafe.config.Config
 import io.getquill.context.jdbc.{ JdbcContext, UUIDStringEncoding }
 import io.getquill.util.LoadConfig
 
-class SqlServerJdbcContext[N <: NamingStrategy](dataSource: DataSource with Closeable)
+class SqlServerJdbcContext[N <: NamingStrategy](val naming: N, dataSource: DataSource with Closeable)
   extends JdbcContext[SQLServerDialect, N](dataSource) with UUIDStringEncoding {
 
-  def this(config: JdbcContextConfig) = this(config.dataSource)
-  def this(config: Config) = this(JdbcContextConfig(config))
-  def this(configPrefix: String) = this(LoadConfig(configPrefix))
+  def this(naming: N, config: JdbcContextConfig) = this(naming, config.dataSource)
+  def this(naming: N, config: Config) = this(naming, JdbcContextConfig(config))
+  def this(naming: N, configPrefix: String) = this(naming, LoadConfig(configPrefix))
+
+  val idiom = SQLServerDialect
 }

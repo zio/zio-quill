@@ -31,7 +31,7 @@ class ExpandNestedQueriesSpec extends Spec {
   }
 
   "tokenize property" in {
-    object testContext extends SqlMirrorContext[MirrorSqlDialect, SnakeCase]
+    object testContext extends SqlMirrorContext(MirrorSqlDialect, SnakeCase)
     import testContext._
 
     case class Entity(camelCase: String)

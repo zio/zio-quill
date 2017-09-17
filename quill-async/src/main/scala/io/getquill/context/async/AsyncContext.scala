@@ -14,9 +14,11 @@ import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.NamingStrategy
 import io.getquill.util.ContextLogger
 import io.getquill.monad.ScalaFutureIOMonad
+import io.getquill.context.Context
 
-abstract class AsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: Connection](pool: PartitionedConnectionPool[C])
-  extends SqlContext[D, N]
+abstract class AsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: Connection](val idiom: D, val naming: N, pool: PartitionedConnectionPool[C])
+  extends Context[D, N]
+  with SqlContext[D, N]
   with Decoders
   with Encoders
   with ScalaFutureIOMonad {

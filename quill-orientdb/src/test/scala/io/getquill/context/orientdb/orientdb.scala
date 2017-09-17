@@ -51,11 +51,11 @@ object orientdb {
 
   def mirrorContext = {
     if (!setupDone) { setup(); setupDone = true }
-    new OrientDBMirrorContext with TestEntities
+    new OrientDBMirrorContext(Literal) with TestEntities
   }
 
   def testSyncDB = {
     if (!setupDone) { setup(); setupDone = true }
-    new OrientDBSyncContext[Literal](s"$dbUrl/$databaseName", username, password)
+    new OrientDBSyncContext(Literal, s"$dbUrl/$databaseName", username, password)
   }
 }

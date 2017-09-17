@@ -13,15 +13,16 @@ import com.datastax.driver.core.Cluster
 import monix.eval.Task
 
 class CassandraStreamContext[N <: NamingStrategy](
+  naming:                     N,
   cluster:                    Cluster,
   keyspace:                   String,
   preparedStatementCacheSize: Long
 )
-  extends CassandraSessionContext[N](cluster, keyspace, preparedStatementCacheSize) {
+  extends CassandraSessionContext[N](naming, cluster, keyspace, preparedStatementCacheSize) {
 
-  def this(config: CassandraContextConfig) = this(config.cluster, config.keyspace, config.preparedStatementCacheSize)
-  def this(config: Config) = this(CassandraContextConfig(config))
-  def this(configPrefix: String) = this(LoadConfig(configPrefix))
+  def this(naming: N, config: CassandraContextConfig) = this(naming, config.cluster, config.keyspace, config.preparedStatementCacheSize)
+  def this(naming: N, config: Config) = this(naming, CassandraContextConfig(config))
+  def this(naming: N, configPrefix: String) = this(naming, LoadConfig(configPrefix))
 
   private val logger = ContextLogger(classOf[CassandraStreamContext[_]])
 

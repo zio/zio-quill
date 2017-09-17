@@ -8,12 +8,15 @@ import io.getquill.util.Messages.fail
 
 import scala.collection.mutable.ArrayBuffer
 import scala.util.Try
+import io.getquill.context.Context
 
 abstract class OrientDBSessionContext[N <: NamingStrategy](
-  dbUrl:    String,
-  username: String,
-  password: String
-) extends OrientDBContext[N]
+  val naming: N,
+  dbUrl:      String,
+  username:   String,
+  password:   String
+) extends Context[OrientDBIdiom, N]
+  with OrientDBContext[N]
   with Encoders
   with Decoders {
 
@@ -25,6 +28,8 @@ abstract class OrientDBSessionContext[N <: NamingStrategy](
 
   protected val session = new OPartitionedDatabasePool(dbUrl, username, password)
   protected val oDatabase = session.acquire()
+
+  val idiom = OrientDBIdiom
 
   protected def prepare() = new ArrayBuffer[Any]()
 

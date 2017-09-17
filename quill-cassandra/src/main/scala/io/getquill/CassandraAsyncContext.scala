@@ -11,16 +11,17 @@ import com.datastax.driver.core.Cluster
 import io.getquill.monad.ScalaFutureIOMonad
 
 class CassandraAsyncContext[N <: NamingStrategy](
+  naming:                     N,
   cluster:                    Cluster,
   keyspace:                   String,
   preparedStatementCacheSize: Long
 )
-  extends CassandraSessionContext[N](cluster, keyspace, preparedStatementCacheSize)
+  extends CassandraSessionContext[N](naming, cluster, keyspace, preparedStatementCacheSize)
   with ScalaFutureIOMonad {
 
-  def this(config: CassandraContextConfig) = this(config.cluster, config.keyspace, config.preparedStatementCacheSize)
-  def this(config: Config) = this(CassandraContextConfig(config))
-  def this(configPrefix: String) = this(LoadConfig(configPrefix))
+  def this(naming: N, config: CassandraContextConfig) = this(naming, config.cluster, config.keyspace, config.preparedStatementCacheSize)
+  def this(naming: N, config: Config) = this(naming, CassandraContextConfig(config))
+  def this(naming: N, configPrefix: String) = this(naming, LoadConfig(configPrefix))
 
   private val logger = ContextLogger(classOf[CassandraAsyncContext[_]])
 

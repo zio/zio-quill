@@ -11,15 +11,16 @@ import scala.collection.JavaConverters._
 import io.getquill.monad.SyncIOMonad
 
 class OrientDBSyncContext[N <: NamingStrategy](
+  naming:   N,
   dbUrl:    String,
   username: String,
   password: String
-) extends OrientDBSessionContext[N](dbUrl, username, password)
+) extends OrientDBSessionContext[N](naming, dbUrl, username, password)
   with SyncIOMonad {
 
-  def this(config: OrientDBContextConfig) = this(config.dbUrl, config.username, config.password)
-  def this(config: Config) = this(OrientDBContextConfig(config))
-  def this(configPrefix: String) = this(LoadConfig(configPrefix))
+  def this(naming: N, config: OrientDBContextConfig) = this(naming: N, config.dbUrl, config.username, config.password)
+  def this(naming: N, config: Config) = this(naming: N, OrientDBContextConfig(config))
+  def this(naming: N, configPrefix: String) = this(naming: N, LoadConfig(configPrefix))
 
   override type Result[T] = T
   override type RunQueryResult[T] = List[T]
