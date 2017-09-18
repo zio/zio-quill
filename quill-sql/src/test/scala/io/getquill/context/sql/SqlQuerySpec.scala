@@ -159,6 +159,19 @@ class SqlQuerySpec extends Spec {
             "SELECT t.s, t.i, t.l, t.o FROM TestEntity t ORDER BY (t.l - t.i) ASC NULLS FIRST"
         }
       }
+      "after flatMap" in {
+        val q = quote {
+          (for {
+            a <- qr1
+            b <- qr2 if a.i == b.i
+          } yield {
+            (a.s, b.s)
+          })
+            .sortBy(_._2)(Ord.desc)
+        }
+        testContext.run(q).string mustEqual
+          "SELECT b._1, b._2 FROM (SELECT b.s _2, a.s _1 FROM TestEntity a, TestEntity2 b WHERE a.i = b.i) b ORDER BY b._2 DESC"
+      }
       "fails if the sortBy criteria is malformed" in {
         case class Test(a: (Int, Int))
         implicit val o: Ordering[TestEntity] = null
