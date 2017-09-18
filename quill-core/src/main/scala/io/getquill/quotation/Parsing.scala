@@ -268,8 +268,6 @@ trait Parsing {
   }
 
   val functionParser: Parser[Function] = Parser[Function] {
-    case q"new { def apply[..$t1](...$params) = $body }" =>
-      Function(params.flatten.map(p => p: Tree).map(identParser(_)), astParser(body))
     case q"(..$params) => $body" =>
       Function(params.map(identParser(_)), astParser(body))
   }

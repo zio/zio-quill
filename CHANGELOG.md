@@ -5,6 +5,7 @@
 
 - Sources now take a parameter for idiom and naming strategy instead of just type parameters. For instance, `new SqlSource[MysqlDialect, Literal]` becomes `new SqlSource(MysqlDialect, Literal)`.
 - Composite naming strategies don't use mixing anymore. Instead of the type `Literal with UpperCase`, use parameter value `NamingStrategy(Literal, UpperCase)`.
+- Anonymous classes aren't supported for function declaration anymore. Use a method with a type parameter instead. For instance, replace `val q = quote { new { def apply[T](q: Query[T]) = ... } }` by `def q[T] = quote { (q: Query[T] => ... }`
 
 # 1.4.0
 
