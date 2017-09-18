@@ -440,12 +440,11 @@ class QuotationSpec extends Spec {
         }
         quote(unquote(q)).ast mustEqual Function(List(Ident("s")), Ident("s"))
       }
-      "anonymous class" in {
-        val q = quote {
-          new {
-            def apply[T](q: Query[T]) = q
-          }
+      "with type parameter" in {
+        def q[T] = quote {
+          (q: Query[T]) => q
         }
+        IsDynamic(q.ast) mustEqual false
         quote(unquote(q)).ast mustEqual Function(List(Ident("q")), Ident("q"))
       }
     }

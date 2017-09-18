@@ -86,14 +86,12 @@ val areas = quote {
 }
 ```
 
-Scala doesn't have support for high-order functions with type parameters. Quill supports anonymous classes with an apply method for this purpose:
+Scala doesn't have support for high-order functions with type parameters. It's possible to use method type parameter for this purpose:
 
 ```scala
-val existsAny = quote {
-  new {
-    def apply[T](xs: Query[T])(p: T => Boolean) =
+def existsAny[T] = quote {
+  (xs: Query[T]) => (p: T => Boolean) =>
     	xs.filter(p(_)).nonEmpty
-  }
 }
 
 val q = quote {

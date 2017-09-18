@@ -1,7 +1,5 @@
 package io.getquill.context.sql
 
-import scala.language.reflectiveCalls
-
 import io.getquill.Spec
 
 trait DepartmentsSpec extends Spec {
@@ -84,14 +82,11 @@ trait DepartmentsSpec extends Spec {
 
   val `Example 8 expected result` = List("Quality", "Research")
 
-  val any =
-    quote {
-      new {
-        def apply[T](xs: Query[T])(p: T => Boolean) =
-          (for {
-            x <- xs if (p(x))
-          } yield {}).nonEmpty
-      }
+  def any[T] =
+    quote { (xs: Query[T]) => (p: T => Boolean) =>
+      (for {
+        x <- xs if (p(x))
+      } yield {}).nonEmpty
     }
 
   val `Example 9 expertise` = {
@@ -114,20 +109,14 @@ trait DepartmentsSpec extends Spec {
         }
       }
 
-    val all =
-      quote {
-        new {
-          def apply[T](xs: Query[T])(p: T => Boolean) =
-            !any(xs)(x => !p(x))
-        }
+    def all[T] =
+      quote { (xs: Query[T]) => (p: T => Boolean) =>
+        !any(xs)(x => !p(x))
       }
 
-    def contains =
-      quote {
-        new {
-          def apply[T](xs: Query[T])(u: T) =
-            any(xs)(x => x == u)
-        }
+    def contains[T] =
+      quote { (xs: Query[T]) => (u: T) =>
+        any(xs)(x => x == u)
       }
 
     quote {
