@@ -9,13 +9,22 @@ import io.getquill.testContext.unquote
 
 class AdHocReductionSpec extends Spec {
 
-  "filter.filter" - {
+  "*.filter" - {
     "a.filter(b => c).filter(d => e)" in {
       val q = quote {
         qr1.filter(b => b.s == "s1").filter(d => d.s == "s2")
       }
       val n = quote {
         qr1.filter(b => b.s == "s1" && b.s == "s2")
+      }
+      AdHocReduction.unapply(q.ast) mustEqual Some(n.ast)
+    }
+    "a.join(b).on((c, d) => e).filter(f => g)" in {
+      val q = quote {
+        qr1.join(qr2).on((c, d) => c.i == d.i).filter(t => t._1.i == 1)
+      }
+      val n = quote {
+        qr1.join(qr2).on((c, d) => c.i == d.i && c.i == 1)
       }
       AdHocReduction.unapply(q.ast) mustEqual Some(n.ast)
     }
