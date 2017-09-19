@@ -46,7 +46,7 @@ class EncodingDslMacro(val c: MacroContext) {
     }
 
   private def fail(enc: String, t: Type) =
-    c.fail(s"Can't find $enc for type '$t'")
+    c.fail(s"Can't find $enc for type '$t'. Note that ${enc}s are invariant. For example, use `lift(Option(1))` instead of `lift(Some(1))` since the available encoder is for `Option`, not `Some`. As an alternative for types that don't provide a method like `Option.apply`, you can use type widening: `lift(MyEnum.SomeValue: MyEnum.Value)`")
 
   private def withAnyValParam[R](tpe: Type)(f: Symbol => R): Option[R] =
     tpe.baseType(c.symbolOf[AnyVal]) match {
