@@ -70,8 +70,6 @@ class FinagleMysqlContext[N <: NamingStrategy](
       extractionTimeZone
     )
 
-  Await.result(client.ping)
-
   override def close = Await.result(client.close())
 
   private val currentClient = new Local[Client]
