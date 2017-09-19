@@ -3,33 +3,31 @@ package io.getquill.quotation
 import scala.reflect.macros.whitebox.Context
 
 import io.getquill.ast.Ast
+import io.getquill.ast.Function
+import io.getquill.ast.FunctionApply
 import io.getquill.ast.Ident
-import io.getquill.norm.BetaReduction
+import io.getquill.ast.QuotedReference
 
 object Rebind {
 
   def apply(c: Context)(tree: c.Tree, ast: Ast, astParser: c.Tree => Ast): Option[Ast] = {
-    import c.universe.{ Ident => _, _ }
+    import c.universe.{ Function => _, Ident => _, _ }
 
     def toIdent(s: Symbol) =
       Ident(s.name.decodedName.toString)
 
-    def origRebind(conv: Tree, orig: Tree, astParser: Tree => Ast) = {
-      val paramSymbol = conv.symbol.asMethod.paramLists.flatten.head
-      (toIdent(paramSymbol) -> astParser(orig))
-    }
+    def paramIdents(method: MethodSymbol) =
+      method.paramLists.flatten.map(toIdent)
 
     tree match {
-      case q"$conv($orig).$method[..$t]" =>
-        Some(BetaReduction(ast, origRebind(conv, orig, astParser)))
       case q"$conv($orig).$m[..$t](...$params)" =>
-        val method =
-          conv.symbol.asMethod.returnType.member(m)
-        val paramsIdents =
-          method.asMethod.paramLists.flatten.map(toIdent)
-        val paramsRebind =
-          paramsIdents.zip(params.flatten.map(astParser))
-        Some(BetaReduction(ast, (origRebind(conv, orig, astParser) +: paramsRebind): _*))
+        val convMethod = conv.symbol.asMethod
+        val origIdent = paramIdents(convMethod).head
+        val paramsIdents = paramIdents(convMethod.returnType.member(m).asMethod)
+        val paramsAsts = params.flatten.map(astParser)
+        val function = QuotedReference(tree, Function(origIdent :: paramsIdents, ast))
+        val apply = FunctionApply(function, astParser(orig) :: paramsAsts)
+        Some(apply)
       case _ =>
         None
     }
