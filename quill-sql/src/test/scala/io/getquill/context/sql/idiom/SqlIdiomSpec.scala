@@ -251,6 +251,15 @@ class SqlIdiomSpec extends Spec {
           testContext.run(q).string mustEqual
             "SELECT COUNT(*) FROM (SELECT t.s, COUNT(*) FROM TestEntity t GROUP BY t.s) x"
         }
+        "group by + binary op select" in {
+          val q = quote {
+            qr1.groupBy(t => t.i).map {
+              case (i, list) => (i, list.size + 1)
+            }
+          }
+          testContext.run(q).string mustEqual
+            "SELECT t._1, t._2 FROM (SELECT t.i _1, (COUNT(*)) + 1 _2 FROM TestEntity t GROUP BY t.i) t"
+        }
       }
       "unary operation" - {
         "nonEmpty" in {
@@ -310,7 +319,7 @@ class SqlIdiomSpec extends Spec {
           val q = quote {
             j.union(j).map(u => (u._1.s, u._2.i))
           }
-          testContext.run(q.dynamic).string mustEqual
+          testContext.run(q).string mustEqual
             "SELECT u.s, u.i FROM ((SELECT a.s s, b.i i FROM TestEntity a, TestEntity2 b) UNION (SELECT a1.s s, b1.i i FROM TestEntity a1, TestEntity2 b1)) u"
         }
       }
@@ -390,7 +399,7 @@ class SqlIdiomSpec extends Spec {
           qr1.map(t => t.i).size == 1L
         }
         testContext.run(q).string mustEqual
-          "SELECT (SELECT COUNT(t.i) FROM TestEntity t) = 1"
+          "SELECT ((SELECT COUNT(t.i) FROM TestEntity t)) = 1"
       }
       "contains" in {
         val q = quote {

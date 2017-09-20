@@ -20,6 +20,7 @@ sealed trait SqlQuery {
     import io.getquill.MirrorSqlDialect._
     import io.getquill.idiom.StatementInterpolator._
     implicit val naming = Literal
+    implicit val tokenizer = defaultTokenizer
     implicit def liftTokenizer: Tokenizer[Lift] =
       Tokenizer[Lift](_ => stmt"?")
     this.token.toString
