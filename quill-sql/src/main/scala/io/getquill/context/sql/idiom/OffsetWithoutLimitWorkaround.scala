@@ -7,6 +7,6 @@ import io.getquill.NamingStrategy
 trait OffsetWithoutLimitWorkaround {
   self: SqlIdiom =>
 
-  override protected def tokenOffsetWithoutLimit(offset: Ast)(implicit strategy: NamingStrategy) =
+  override protected def tokenOffsetWithoutLimit(offset: Ast)(implicit astTokernizer: Tokenizer[Ast], strategy: NamingStrategy) =
     stmt" LIMIT 18446744073709551610 OFFSET ${offset.token}"
 }

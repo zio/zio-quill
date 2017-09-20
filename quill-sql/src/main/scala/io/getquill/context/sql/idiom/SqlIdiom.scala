@@ -33,6 +33,9 @@ trait SqlIdiom extends Idiom {
 
   override def translate(ast: Ast)(implicit naming: NamingStrategy) = {
     val normalizedAst = SqlNormalize(ast)
+
+    implicit val tokernizer = defaultTokenizer
+
     val token =
       normalizedAst match {
         case q: Query =>
@@ -46,7 +49,14 @@ trait SqlIdiom extends Idiom {
     (normalizedAst, stmt"$token")
   }
 
-  implicit def astTokenizer(implicit propertyTokenizer: Tokenizer[Property], strategy: NamingStrategy): Tokenizer[Ast] =
+  def defaultTokenizer(implicit naming: NamingStrategy): Tokenizer[Ast] =
+    new Tokenizer[Ast] {
+      private val stableTokenizer = astTokenizer(this, naming)
+
+      def token(v: Ast) = stableTokenizer.token(v)
+    }
+
+  def astTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Ast] =
     Tokenizer[Ast] {
       case a: Query      => SqlQuery(a).token
       case a: Operation  => a.token
@@ -65,7 +75,7 @@ trait SqlIdiom extends Idiom {
         fail(s"Malformed or unsupported construct: $a.")
     }
 
-  implicit def ifTokenizer(implicit strategy: NamingStrategy): Tokenizer[If] = Tokenizer[If] {
+  implicit def ifTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[If] = Tokenizer[If] {
     case ast: If =>
       def flatten(ast: Ast): (List[(Ast, Ast)], Ast) =
         ast match {
@@ -84,7 +94,7 @@ trait SqlIdiom extends Idiom {
       stmt"CASE ${conditions.mkStmt(" ")} ELSE ${e.token} END"
   }
 
-  implicit def sqlQueryTokenizer(implicit strategy: NamingStrategy): Tokenizer[SqlQuery] = Tokenizer[SqlQuery] {
+  implicit def sqlQueryTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[SqlQuery] = Tokenizer[SqlQuery] {
     case FlattenSqlQuery(from, where, groupBy, orderBy, limit, offset, select, distinct) =>
 
       val distinctTokenizer = (if (distinct) " DISTINCT" else "").token
@@ -136,23 +146,27 @@ trait SqlIdiom extends Idiom {
       stmt"SELECT ${op.token} (${q.token})"
   }
 
-  implicit def selectValueTokenizer(implicit strategy: NamingStrategy): Tokenizer[SelectValue] = {
-    def tokenValue(ast: Ast) =
-      ast match {
-        case Aggregation(op, Ident(_)) => stmt"${op.token}(*)"
-        case Aggregation(op, _: Query) => scopedTokenizer(ast)
-        case Aggregation(op, ast)      => stmt"${op.token}(${ast.token})"
-        case _                         => ast.token
+  implicit def selectValueTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[SelectValue] = {
+
+    def tokenizer(implicit astTokenizer: Tokenizer[Ast]) =
+      Tokenizer[SelectValue] {
+        case SelectValue(ast, Some(alias)) => stmt"${ast.token} ${strategy.column(alias).token}"
+        case SelectValue(Ident("?"), None) => "?".token
+        case SelectValue(ast: Ident, None) => stmt"${ast.token}.*"
+        case SelectValue(ast, None)        => ast.token
       }
-    Tokenizer[SelectValue] {
-      case SelectValue(ast, Some(alias)) => stmt"${tokenValue(ast)} ${strategy.column(alias).token}"
-      case SelectValue(Ident("?"), None) => "?".token
-      case SelectValue(ast: Ident, None) => stmt"${tokenValue(ast)}.*"
-      case SelectValue(ast, None)        => tokenValue(ast)
-    }
+
+    val customAstTokenizer =
+      Tokenizer.withFallback[Ast](SqlIdiom.this.astTokenizer(_, strategy)) {
+        case Aggregation(op, Ident(_))       => stmt"${op.token}(*)"
+        case ast @ Aggregation(op, _: Query) => scopedTokenizer(ast)
+        case Aggregation(op, ast)            => stmt"${op.token}(${ast.token})"
+      }
+
+    tokenizer(customAstTokenizer)
   }
 
-  implicit def operationTokenizer(implicit propertyTokenizer: Tokenizer[Property], strategy: NamingStrategy): Tokenizer[Operation] = Tokenizer[Operation] {
+  implicit def operationTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Operation] = Tokenizer[Operation] {
     case UnaryOperation(op, ast)                              => stmt"${op.token} (${ast.token})"
     case BinaryOperation(a, EqualityOperator.`==`, NullValue) => stmt"${scopedTokenizer(a)} IS NULL"
     case BinaryOperation(NullValue, EqualityOperator.`==`, b) => stmt"${scopedTokenizer(b)} IS NULL"
@@ -168,13 +182,13 @@ trait SqlIdiom extends Idiom {
     case UnionAllOperation => stmt"UNION ALL"
   }
 
-  protected def tokenOffsetWithoutLimit(offset: Ast)(implicit strategy: NamingStrategy) =
+  protected def tokenOffsetWithoutLimit(offset: Ast)(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy) =
     stmt"OFFSET ${offset.token}"
 
-  protected def tokenOrderBy(criterias: List[OrderByCriteria])(implicit strategy: NamingStrategy) =
+  protected def tokenOrderBy(criterias: List[OrderByCriteria])(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy) =
     stmt"ORDER BY ${criterias.token}"
 
-  implicit def sourceTokenizer(implicit strategy: NamingStrategy): Tokenizer[FromContext] = Tokenizer[FromContext] {
+  implicit def sourceTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[FromContext] = Tokenizer[FromContext] {
     case TableContext(name, alias)  => stmt"${name.token} ${strategy.default(alias).token}"
     case QueryContext(query, alias) => stmt"(${query.token}) ${strategy.default(alias).token}"
     case InfixContext(infix, alias) => stmt"(${(infix: Ast).token}) ${strategy.default(alias).token}"
@@ -189,7 +203,7 @@ trait SqlIdiom extends Idiom {
     case FullJoin  => stmt"FULL JOIN"
   }
 
-  implicit def orderByCriteriaTokenizer(implicit strategy: NamingStrategy): Tokenizer[OrderByCriteria] = Tokenizer[OrderByCriteria] {
+  implicit def orderByCriteriaTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[OrderByCriteria] = Tokenizer[OrderByCriteria] {
     case OrderByCriteria(ast, Asc)            => stmt"${scopedTokenizer(ast)} ASC"
     case OrderByCriteria(ast, Desc)           => stmt"${scopedTokenizer(ast)} DESC"
     case OrderByCriteria(ast, AscNullsFirst)  => stmt"${scopedTokenizer(ast)} ASC NULLS FIRST"
@@ -235,7 +249,7 @@ trait SqlIdiom extends Idiom {
     case SetOperator.`contains` => stmt"IN"
   }
 
-  implicit def propertyTokenizer(implicit valueTokenizer: Tokenizer[Value], identTokenizer: Tokenizer[Ident], strategy: NamingStrategy): Tokenizer[Property] = {
+  implicit def propertyTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Property] = {
     def unnest(ast: Ast): Ast =
       ast match {
         case Property(a, _) => unnest(a)
@@ -249,7 +263,7 @@ trait SqlIdiom extends Idiom {
     }
   }
 
-  implicit def valueTokenizer(implicit strategy: NamingStrategy): Tokenizer[Value] = Tokenizer[Value] {
+  implicit def valueTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Value] = Tokenizer[Value] {
     case Constant(v: String) => stmt"'${v.token}'"
     case Constant(())        => stmt"1"
     case Constant(v)         => stmt"${v.toString.token}"
@@ -257,65 +271,70 @@ trait SqlIdiom extends Idiom {
     case Tuple(values)       => stmt"${values.token}"
   }
 
-  implicit def infixTokenizer(implicit propertyTokenizer: Tokenizer[Property], strategy: NamingStrategy): Tokenizer[Infix] = Tokenizer[Infix] {
+  implicit def infixTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Infix] = Tokenizer[Infix] {
     case Infix(parts, params) =>
       val pt = parts.map(_.token)
       val pr = params.map(_.token)
       Statement(Interleave(pt, pr))
   }
 
-  implicit def identTokenizer(implicit strategy: NamingStrategy): Tokenizer[Ident] =
+  implicit def identTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Ident] =
     Tokenizer[Ident](e => strategy.default(e.name).token)
 
-  implicit def assignmentTokenizer(implicit propertyTokenizer: Tokenizer[Property], strategy: NamingStrategy): Tokenizer[Assignment] = Tokenizer[Assignment] {
+  implicit def assignmentTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Assignment] = Tokenizer[Assignment] {
     case Assignment(alias, prop, value) =>
       stmt"${prop.token} = ${scopedTokenizer(value)}"
   }
 
-  implicit def actionTokenizer(implicit strategy: NamingStrategy): Tokenizer[Action] = {
+  implicit def actionTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Action] = {
 
-    implicit def propertyTokenizer: Tokenizer[Property] = Tokenizer[Property] {
-      case Property(Property(_, name), "isEmpty")   => stmt"${strategy.column(name).token} IS NULL"
-      case Property(Property(_, name), "isDefined") => stmt"${strategy.column(name).token} IS NOT NULL"
-      case Property(Property(_, name), "nonEmpty")  => stmt"${strategy.column(name).token} IS NOT NULL"
-      case Property(_, name)                        => strategy.column(name).token
-    }
+    def tokenizer(implicit astTokenizer: Tokenizer[Ast]) =
+      Tokenizer[Action] {
 
-    Tokenizer[Action] {
+        case Insert(table: Entity, assignments) =>
+          val columns = assignments.map(_.property.token)
+          val values = assignments.map(_.value)
+          stmt"INSERT INTO ${table.token} (${columns.mkStmt(",")}) VALUES (${values.map(scopedTokenizer(_)).mkStmt(", ")})"
 
-      case Insert(table: Entity, assignments) =>
-        val columns = assignments.map(_.property.token)
-        val values = assignments.map(_.value)
-        stmt"INSERT INTO ${table.token} (${columns.mkStmt(",")}) VALUES (${values.map(scopedTokenizer(_)).mkStmt(", ")})"
+        case Update(table: Entity, assignments) =>
+          stmt"UPDATE ${table.token} SET ${assignments.token}"
 
-      case Update(table: Entity, assignments) =>
-        stmt"UPDATE ${table.token} SET ${assignments.token}"
+        case Update(Filter(table: Entity, x, where), assignments) =>
+          stmt"UPDATE ${table.token} SET ${assignments.token} WHERE ${where.token}"
 
-      case Update(Filter(table: Entity, x, where), assignments) =>
-        stmt"UPDATE ${table.token} SET ${assignments.token} WHERE ${where.token}"
+        case Delete(Filter(table: Entity, x, where)) =>
+          stmt"DELETE FROM ${table.token} WHERE ${where.token}"
 
-      case Delete(Filter(table: Entity, x, where)) =>
-        stmt"DELETE FROM ${table.token} WHERE ${where.token}"
+        case Delete(table: Entity) =>
+          stmt"DELETE FROM ${table.token}"
 
-      case Delete(table: Entity) =>
-        stmt"DELETE FROM ${table.token}"
+        case Returning(Insert(table: Entity, Nil), alias, prop) =>
+          stmt"INSERT INTO ${table.token} ${defaultAutoGeneratedToken(prop.token)}"
 
-      case Returning(Insert(table: Entity, Nil), alias, prop) =>
-        stmt"INSERT INTO ${table.token} ${defaultAutoGeneratedToken(prop.token)}"
+        case Returning(action, alias, prop) =>
+          action.token
 
-      case Returning(action, alias, prop) =>
-        action.token
+        case other =>
+          fail(s"Action ast can't be translated to sql: '$other'")
+      }
 
-      case other =>
-        fail(s"Action ast can't be translated to sql: '$other'")
-    }
+    val customAstTokenizer =
+      Tokenizer.withFallback[Ast](SqlIdiom.this.astTokenizer(_, strategy)) {
+        case q: Query                                 => astTokenizer.token(q)
+        case Property(Property(_, name), "isEmpty")   => stmt"${strategy.column(name).token} IS NULL"
+        case Property(Property(_, name), "isDefined") => stmt"${strategy.column(name).token} IS NOT NULL"
+        case Property(Property(_, name), "nonEmpty")  => stmt"${strategy.column(name).token} IS NOT NULL"
+        case Property(_, name)                        => strategy.column(name).token
+      }
+
+    tokenizer(customAstTokenizer)
   }
 
-  implicit def entityTokenizer(implicit strategy: NamingStrategy): Tokenizer[Entity] = Tokenizer[Entity] {
+  implicit def entityTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Entity] = Tokenizer[Entity] {
     case Entity(name, _) => strategy.table(name).token
   }
 
-  protected def scopedTokenizer[A <: Ast](ast: A)(implicit token: Tokenizer[A]) =
+  protected def scopedTokenizer(ast: Ast)(implicit tokenizer: Tokenizer[Ast]) =
     ast match {
       case _: Query           => stmt"(${ast.token})"
       case _: BinaryOperation => stmt"(${ast.token})"

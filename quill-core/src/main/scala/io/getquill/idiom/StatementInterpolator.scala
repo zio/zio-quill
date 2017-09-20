@@ -14,6 +14,11 @@ object StatementInterpolator {
     def apply[T](f: T => Token) = new Tokenizer[T] {
       def token(v: T) = f(v)
     }
+    def withFallback[T](fallback: Tokenizer[T] => Tokenizer[T])(pf: PartialFunction[T, Token]) =
+      new Tokenizer[T] {
+        private val stable = fallback(this)
+        override def token(v: T) = pf.applyOrElse(v, stable.token)
+      }
   }
 
   implicit class TokenImplicit[T](v: T)(implicit tokenizer: Tokenizer[T]) {

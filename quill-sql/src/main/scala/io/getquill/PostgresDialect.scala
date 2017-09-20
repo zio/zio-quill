@@ -5,15 +5,15 @@ import java.util.concurrent.atomic.AtomicInteger
 import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.ast.UnaryOperation
 import io.getquill.ast.Operation
-import io.getquill.ast.Property
 import io.getquill.ast.StringOperator
 import io.getquill.context.sql.idiom.QuestionMarkBindVariables
+import io.getquill.ast.Ast
 
 trait PostgresDialect
   extends SqlIdiom
   with QuestionMarkBindVariables {
 
-  override implicit def operationTokenizer(implicit propertyTokenizer: Tokenizer[Property], strategy: NamingStrategy): Tokenizer[Operation] =
+  override implicit def operationTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Operation] =
     Tokenizer[Operation] {
       case UnaryOperation(StringOperator.`toLong`, ast) => stmt"${scopedTokenizer(ast)}::bigint"
       case UnaryOperation(StringOperator.`toInt`, ast)  => stmt"${scopedTokenizer(ast)}::integer"
