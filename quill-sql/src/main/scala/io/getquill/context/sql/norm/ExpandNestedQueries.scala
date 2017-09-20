@@ -62,7 +62,7 @@ object ExpandNestedQueries {
               case List(SelectValue(i: Ident, _)) =>
                 SelectValue(Property(i, name))
               case other =>
-                SelectValue(Ident(name))
+                SelectValue(Ident(name), Some(name))
             }
         }
     }

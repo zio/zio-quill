@@ -26,7 +26,7 @@ class ApplyMapSpec extends Spec {
     }
     "map" in {
       val q = quote {
-        qr1.groupBy(t => t.i).map(y => y._1).map(s => s)
+        qr1.groupBy(t => t.i).map(y => y._1).filter(i => i == 1)
       }
       ApplyMap.unapply(q.ast) mustEqual None
     }
@@ -48,11 +48,32 @@ class ApplyMapSpec extends Spec {
       }
       ApplyMap.unapply(q.ast) mustEqual None
     }
+
     "identity map" in {
       val q = quote {
         qr1.groupBy(t => t.i).map(y => y)
       }
       ApplyMap.unapply(q.ast) mustEqual None
+    }
+    "mapped join" - {
+      "left" in {
+        val q = quote {
+          qr1.groupBy(t => t.i).map(t => t._1).join(qr2).on((a, b) => a == b.i)
+        }
+        ApplyMap.unapply(q.ast) mustEqual None
+      }
+      "right" in {
+        val q = quote {
+          qr1.join(qr2.groupBy(t => t.i).map(t => t._1)).on((a, b) => a.i == b)
+        }
+        ApplyMap.unapply(q.ast) mustEqual None
+      }
+      "both" in {
+        val q = quote {
+          qr1.groupBy(t => t.i).map(t => t._1).join(qr2.groupBy(t => t.i).map(t => t._1)).on((a, b) => a == b)
+        }
+        ApplyMap.unapply(q.ast) mustEqual None
+      }
     }
   }
 

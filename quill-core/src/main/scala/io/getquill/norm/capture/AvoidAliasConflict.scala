@@ -1,6 +1,6 @@
 package io.getquill.norm.capture
 
-import io.getquill.ast.Ast
+import io.getquill.ast._
 import io.getquill.ast.Entity
 import io.getquill.ast.Filter
 import io.getquill.ast.FlatMap
@@ -12,6 +12,7 @@ import io.getquill.ast.SortBy
 import io.getquill.ast.StatefulTransformer
 import io.getquill.norm.BetaReduction
 import io.getquill.ast.FlatJoin
+import io.getquill.ast.GroupBy
 
 private case class AvoidAliasConflict(state: collection.Set[Ident])
   extends StatefulTransformer[collection.Set[Ident]] {
@@ -31,6 +32,9 @@ private case class AvoidAliasConflict(state: collection.Set[Ident])
       case SortBy(q: Entity, x, p, o) =>
         apply(x, p)(SortBy(q, _, _, o))
 
+      case GroupBy(q: Entity, x, p) =>
+        apply(x, p)(GroupBy(q, _, _))
+
       case Join(t, a, b, iA, iB, o) =>
         val (ar, art) = apply(a)
         val (br, brt) = art.apply(b)
@@ -47,7 +51,9 @@ private case class AvoidAliasConflict(state: collection.Set[Ident])
         val (orr, orrt) = AvoidAliasConflict(art.state + freshA)(or)
         (FlatJoin(t, ar, freshA, orr), orrt)
 
-      case other => super.apply(other)
+      case _: Entity | _: FlatMap | _: Map | _: Filter | _: SortBy | _: GroupBy | _: Aggregation |
+        _: Take | _: Drop | _: Union | _: UnionAll | _: Distinct | _: Nested =>
+        super.apply(q)
     }
 
   private def apply(x: Ident, p: Ast)(f: (Ident, Ast) => Query): (Query, StatefulTransformer[collection.Set[Ident]]) = {
