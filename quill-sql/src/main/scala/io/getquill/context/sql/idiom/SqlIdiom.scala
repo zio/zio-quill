@@ -250,16 +250,28 @@ trait SqlIdiom extends Idiom {
   }
 
   implicit def propertyTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Property] = {
-    def unnest(ast: Ast): Ast =
+    def unnest(ast: Ast): (Ast, String) =
       ast match {
-        case Property(a, _) => unnest(a)
-        case a              => a
+        case Property(a, name) if (name.matches("_[0-9]*")) =>
+          unnest(a) match {
+            case (ast, nestedName) =>
+              (ast, s"$nestedName$name")
+          }
+        case Property(a, name) =>
+          unnest(a) match {
+            case (a, _) => (a, name)
+          }
+        case a => (a, "")
       }
     Tokenizer[Property] {
       case Property(ast, "isEmpty")   => stmt"${ast.token} IS NULL"
       case Property(ast, "nonEmpty")  => stmt"${ast.token} IS NOT NULL"
       case Property(ast, "isDefined") => stmt"${ast.token} IS NOT NULL"
-      case Property(ast, name)        => stmt"${scopedTokenizer(unnest(ast))}.${strategy.column(name).token}"
+      case ast =>
+        unnest(ast) match {
+          case (ast, name) =>
+            stmt"${scopedTokenizer(ast)}.${strategy.column(name).token}"
+        }
     }
   }
 
