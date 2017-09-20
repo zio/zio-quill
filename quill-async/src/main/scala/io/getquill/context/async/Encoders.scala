@@ -1,9 +1,9 @@
 package io.getquill.context.async
 
-import java.time.{ LocalDate, LocalDateTime, ZoneId }
+import java.time.{ LocalDate, LocalDateTime, ZoneId, ZonedDateTime }
 import java.util.Date
 
-import org.joda.time.{ LocalDate => JodaLocalDate, LocalDateTime => JodaLocalDateTime }
+import org.joda.time.{ DateTimeZone => JodaDateTimeZone, DateTime => JodaDateTime, LocalDate => JodaLocalDate, LocalDateTime => JodaLocalDateTime }
 
 trait Encoders {
   this: AsyncContext[_, _, _] =>
@@ -55,9 +55,13 @@ trait Encoders {
   implicit val floatEncoder: Encoder[Float] = encoder[Float](SqlTypes.FLOAT)
   implicit val doubleEncoder: Encoder[Double] = encoder[Double](SqlTypes.DOUBLE)
   implicit val byteArrayEncoder: Encoder[Array[Byte]] = encoder[Array[Byte]](SqlTypes.VARBINARY)
+  implicit val jodaDateTimeEncoder: Encoder[JodaDateTime] = encoder[JodaDateTime](SqlTypes.TIMESTAMP)
   implicit val jodaLocalDateEncoder: Encoder[JodaLocalDate] = encoder[JodaLocalDate](SqlTypes.DATE)
   implicit val jodaLocalDateTimeEncoder: Encoder[JodaLocalDateTime] = encoder[JodaLocalDateTime](SqlTypes.TIMESTAMP)
   implicit val dateEncoder: Encoder[Date] = encoder[Date]((d: Date) => new JodaLocalDateTime(d), SqlTypes.TIMESTAMP)
+
+  implicit val encodeZonedDateTime: MappedEncoding[ZonedDateTime, JodaDateTime] =
+    MappedEncoding(zdt => new JodaDateTime(zdt.toInstant.toEpochMilli, JodaDateTimeZone.forID(zdt.getZone.getId)))
 
   implicit val encodeLocalDate: MappedEncoding[LocalDate, JodaLocalDate] =
     MappedEncoding(ld => new JodaLocalDate(ld.getYear, ld.getMonthValue, ld.getDayOfMonth))

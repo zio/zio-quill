@@ -96,7 +96,8 @@ CREATE TABLE Barcode(
 
 CREATE TABLE DateEncodingTestEntity (
     v1 DATE,
-    v2 TIMESTAMP
+    v2 TIMESTAMP,
+    v3 TIMESTAMP WITH TIME ZONE
 );
 
 CREATE TABLE ArraysTestEntity (
