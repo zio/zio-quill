@@ -6,7 +6,7 @@ import java.util.Date
 import io.getquill.PostgresAsyncContext
 import io.getquill.context.sql.encoding.ArrayEncoding
 import io.getquill.util.Messages.fail
-import org.joda.time.{ LocalDate => JodaLocalDate, LocalDateTime => JodaLocalDateTime }
+import org.joda.time.{ DateTime => JodaDateTime, LocalDate => JodaLocalDate, LocalDateTime => JodaLocalDateTime }
 
 import scala.reflect.ClassTag
 
@@ -23,8 +23,9 @@ trait ArrayDecoders extends ArrayEncoding {
   implicit def arrayFloatDecoder[Col <: Seq[Float]](implicit bf: CBF[Float, Col]): Decoder[Col] = arrayDecoder[Double, Float, Col](_.toFloat)
   implicit def arrayDoubleDecoder[Col <: Seq[Double]](implicit bf: CBF[Double, Col]): Decoder[Col] = arrayRawEncoder[Double, Col]
   implicit def arrayDateDecoder[Col <: Seq[Date]](implicit bf: CBF[Date, Col]): Decoder[Col] = arrayDecoder[JodaLocalDateTime, Date, Col](_.toDate)
-  implicit def arrayLocalDateTimeJodaDecoder[Col <: Seq[JodaLocalDateTime]](implicit bf: CBF[JodaLocalDateTime, Col]): Decoder[Col] = arrayRawEncoder[JodaLocalDateTime, Col]
-  implicit def arrayLocalDateJodaDecoder[Col <: Seq[JodaLocalDate]](implicit bf: CBF[JodaLocalDate, Col]): Decoder[Col] = arrayRawEncoder[JodaLocalDate, Col]
+  implicit def arrayJodaDateTimeDecoder[Col <: Seq[JodaDateTime]](implicit bf: CBF[JodaDateTime, Col]): Decoder[Col] = arrayRawEncoder[JodaDateTime, Col]
+  implicit def arrayJodaLocalDateTimeDecoder[Col <: Seq[JodaLocalDateTime]](implicit bf: CBF[JodaLocalDateTime, Col]): Decoder[Col] = arrayRawEncoder[JodaLocalDateTime, Col]
+  implicit def arrayJodaLocalDateDecoder[Col <: Seq[JodaLocalDate]](implicit bf: CBF[JodaLocalDate, Col]): Decoder[Col] = arrayRawEncoder[JodaLocalDate, Col]
   implicit def arrayLocalDateDecoder[Col <: Seq[LocalDate]](implicit bf: CBF[LocalDate, Col]): Decoder[Col] = arrayDecoder[JodaLocalDate, LocalDate, Col](decodeLocalDate.f)
 
   def arrayDecoder[I, O, Col <: Seq[O]](mapper: I => O)(implicit bf: CBF[O, Col], iTag: ClassTag[I], oTag: ClassTag[O]): Decoder[Col] =

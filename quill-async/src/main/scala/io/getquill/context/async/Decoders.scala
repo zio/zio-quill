@@ -1,10 +1,10 @@
 package io.getquill.context.async
 
-import java.time.{ LocalDate, LocalDateTime, ZoneId }
+import java.time._
 import java.util.Date
 
 import io.getquill.util.Messages.fail
-import org.joda.time.{ LocalDate => JodaLocalDate, LocalDateTime => JodaLocalDateTime }
+import org.joda.time.{ DateTime => JodaDateTime, LocalDate => JodaLocalDate, LocalDateTime => JodaLocalDateTime }
 
 import scala.reflect.{ ClassTag, classTag }
 
@@ -123,6 +123,10 @@ trait Decoders {
 
   implicit val byteArrayDecoder: Decoder[Array[Byte]] = decoder[Array[Byte]](PartialFunction.empty, SqlTypes.TINYINT)
 
+  implicit val jodaDateTimeDecoder: Decoder[JodaDateTime] = decoder[JodaDateTime]({
+    case dateTime: JodaDateTime => dateTime
+  }, SqlTypes.TIMESTAMP)
+
   implicit val jodaLocalDateDecoder: Decoder[JodaLocalDate] = decoder[JodaLocalDate]({
     case localDate: JodaLocalDate => localDate
   }, SqlTypes.DATE)
@@ -135,6 +139,9 @@ trait Decoders {
     case localDateTime: JodaLocalDateTime => localDateTime.toDate
     case localDate: JodaLocalDate         => localDate.toDate
   }, SqlTypes.TIMESTAMP)
+
+  implicit val decodeZonedDateTime: MappedEncoding[JodaDateTime, ZonedDateTime] =
+    MappedEncoding(jdt => ZonedDateTime.ofInstant(Instant.ofEpochMilli(jdt.getMillis), ZoneId.of(jdt.getZone.getID)))
 
   implicit val decodeLocalDate: MappedEncoding[JodaLocalDate, LocalDate] =
     MappedEncoding(jld => LocalDate.of(jld.getYear, jld.getMonthOfYear, jld.getDayOfMonth))
