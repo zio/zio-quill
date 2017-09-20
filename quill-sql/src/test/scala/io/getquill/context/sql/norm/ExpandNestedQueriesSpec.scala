@@ -43,4 +43,16 @@ class ExpandNestedQueriesSpec extends Spec {
     ).string mustEqual
       "SELECT e.camel_case, 1 FROM (SELECT x.camel_case FROM entity x) e"
   }
+
+  "expands nested tuple select" in {
+    import testContext._
+    val q = quote {
+      qr1.groupBy(s => (s.i, s.s)).map {
+        case (group, items) =>
+          (group, items.size)
+      }
+    }
+    testContext.run(q).string mustEqual
+      "SELECT s._1_1, s._1_2, s._2 FROM (SELECT s.i _1_1, s.s _1_2, COUNT(*) _2 FROM TestEntity s GROUP BY s.i, s.s) s"
+  }
 }

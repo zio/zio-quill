@@ -2,7 +2,7 @@ package io.getquill.context.sql.norm
 
 import io.getquill.ast.Ast
 import io.getquill.ast.Ident
-import io.getquill.ast.Property
+import io.getquill.ast._
 import io.getquill.ast.StatefulTransformer
 import io.getquill.context.sql.FlattenSqlQuery
 import io.getquill.context.sql.FromContext
@@ -47,25 +47,54 @@ object ExpandNestedQueries {
       case _: TableContext | _: InfixContext => s
     }
 
-  private def expandSelect(select: List[SelectValue], references: collection.Set[Property]) =
-    references.toList match {
-      case Nil => select
-      case refs =>
-        refs.map {
-          case Property(Property(_, tupleElem), prop) =>
-            val p = Property(select(tupleElem.drop(1).toInt - 1).ast, prop)
-            SelectValue(p, Some(prop))
-          case Property(_, tupleElem) if (tupleElem.matches("_[0-9]*")) =>
-            SelectValue(select(tupleElem.drop(1).toInt - 1).ast, Some(tupleElem))
-          case Property(_, name) =>
-            select match {
-              case List(SelectValue(i: Ident, _)) =>
-                SelectValue(Property(i, name))
-              case other =>
-                SelectValue(Ident(name), Some(name))
-            }
-        }
+  private def expandSelect(select: List[SelectValue], references: collection.Set[Property]) = {
+
+    object TupleIndex {
+      def unapply(s: String): Option[Int] =
+        if (s.matches("_[0-9]*"))
+          Some(s.drop(1).toInt - 1)
+        else
+          None
     }
+
+    def expandReference(ref: Property): SelectValue = {
+
+      def concat(alias: Option[String], idx: Int) =
+        Some(s"${alias.getOrElse("")}_${idx + 1}")
+
+      ref match {
+        case Property(ast: Property, TupleIndex(idx)) =>
+          expandReference(ast) match {
+            case SelectValue(Tuple(elems), alias) =>
+              SelectValue(elems(idx), concat(alias, idx))
+            case SelectValue(ast, alias) =>
+              SelectValue(ast, concat(alias, idx))
+          }
+        case Property(ast: Property, name) =>
+          expandReference(ast) match {
+            case SelectValue(ast, _) =>
+              SelectValue(Property(ast, name), Some(name))
+          }
+        case Property(_, TupleIndex(idx)) =>
+          select(idx) match {
+            case SelectValue(ast, alias) =>
+              SelectValue(ast, concat(alias, idx))
+          }
+        case Property(_, name) =>
+          select match {
+            case List(SelectValue(i: Ident, _)) =>
+              SelectValue(Property(i, name))
+            case other =>
+              SelectValue(Ident(name), Some(name))
+          }
+      }
+    }
+
+    references.toList match {
+      case Nil  => select
+      case refs => refs.map(expandReference)
+    }
+  }
 
   private def references(alias: String, asts: List[Ast]) =
     References(State(Ident(alias), Nil))(asts)(_.apply)._2.state.references.toSet
