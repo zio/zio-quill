@@ -47,6 +47,15 @@ class AvoidAliasConflictSpec extends Spec {
       }
       AvoidAliasConflict(q.ast) mustEqual n.ast
     }
+    "groupBy" in {
+      val q = quote {
+        qr1.flatMap(a => qr2.groupBy(a => a.s))
+      }
+      val n = quote {
+        qr1.flatMap(a => qr2.groupBy(a1 => a1.s))
+      }
+      AvoidAliasConflict(q.ast) mustEqual n.ast
+    }
     "outer join" - {
       "both sides" in {
         val q = quote {

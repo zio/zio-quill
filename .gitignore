@@ -8,3 +8,4 @@ target
 **/.tmpBin
 local.*
 quill_test.db
+Bug.scala
