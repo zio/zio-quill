@@ -11,7 +11,7 @@ class RebindSpec extends Spec {
       def returnId = quote(infix"$action RETURNING ID".as[Action[T]])
     }
     val q = quote {
-      unquote(query[TestEntity].insert(e => e.i -> lift(1)).returnId)
+      query[TestEntity].insert(e => e.i -> lift(1)).returnId
     }
     testContext.run(q).string mustEqual s"""infix"$${querySchema("TestEntity").insert(e => e.i -> ?)} RETURNING ID""""
   }

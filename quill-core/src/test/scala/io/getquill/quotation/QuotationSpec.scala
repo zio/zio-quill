@@ -961,16 +961,35 @@ class QuotationSpec extends Spec {
         l.value mustEqual 1
         l.encoder mustEqual intEncoder
       }
-      "with implicit class" in {
-        trait Implicits {
-          def random = util.Random.nextInt
-          implicit class PlusRadom(q: Int) {
-            def plusRandom = quote(q + lift(random))
+      "with implicit class" - {
+        "constant" in {
+          trait Implicits {
+            var random = 999
+            implicit class PlusRadom(q: Int) {
+              def plusRandom = quote(q + lift(random))
+            }
           }
+          object implicits extends Implicits
+          import implicits._
+          val q = quote(1.plusRandom)
+          val l = q.liftings.`implicits.PlusRadom(1).plusRandom.Implicits.this.random`
+          l.value mustEqual 999
+          l.encoder mustEqual intEncoder
         }
-        object implicits extends Implicits
-        import implicits._
-        val q = quote(1.plusRandom)
+        "query" in {
+          trait Implicits {
+            var random = 999
+            implicit class ToRadom(q: Query[TestEntity]) {
+              def toRandom = quote(q.map(_ => lift(random)))
+            }
+          }
+          object implicits extends Implicits
+          import implicits._
+          val q = quote(query[TestEntity].toRandom)
+          val l = q.liftings.`implicits.ToRadom(null).toRandom.Implicits.this.random`
+          l.value mustEqual 999
+          l.encoder mustEqual intEncoder
+        }
       }
       "embedded" in {
         case class EmbeddedTestEntity(id: String) extends Embedded
