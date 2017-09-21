@@ -46,9 +46,9 @@ trait Parsing {
     case `orderingParser`(value)             => value
     case `operationParser`(value)            => value
     case `identParser`(value)                => value
+    case `optionOperationParser`(value)      => value
     case `propertyParser`(value)             => value
     case `stringInterpolationParser`(value)  => value
-    case `optionOperationParser`(value)      => value
     case `traversableOperationParser`(value) => value
     case `boxingParser`(value)               => value
     case `ifParser`(value)                   => value
@@ -295,6 +295,12 @@ trait Parsing {
       OptionExists(astParser(o), identParser(alias), astParser(body))
     case q"$o.contains[$t]($body)" if is[Option[Any]](o) =>
       OptionContains(astParser(o), astParser(body))
+    case q"$o.isEmpty" if is[Option[Any]](o) =>
+      OptionIsEmpty(astParser(o))
+    case q"$o.nonEmpty" if is[Option[Any]](o) =>
+      OptionNonEmpty(astParser(o))
+    case q"$o.isDefined" if is[Option[Any]](o) =>
+      OptionIsDefined(astParser(o))
   }
 
   val traversableOperationParser: Parser[TraversableOperation] = Parser[TraversableOperation] {

@@ -40,6 +40,9 @@ trait Liftables {
     case OptionForall(a, b, c) => q"$pack.OptionForall($a,$b,$c)"
     case OptionExists(a, b, c) => q"$pack.OptionExists($a,$b,$c)"
     case OptionContains(a, b)  => q"$pack.OptionContains($a,$b)"
+    case OptionIsEmpty(a)      => q"$pack.OptionIsEmpty($a)"
+    case OptionNonEmpty(a)     => q"$pack.OptionNonEmpty($a)"
+    case OptionIsDefined(a)    => q"$pack.OptionIsDefined($a)"
   }
 
   implicit val traversableOperationLiftable: Liftable[TraversableOperation] = Liftable[TraversableOperation] {

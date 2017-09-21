@@ -280,6 +280,30 @@ class StatefulTransformerSpec extends Spec {
             att.state mustEqual List(Ident("a"), Ident("c"))
         }
       }
+      "isEmpty" in {
+        val ast: Ast = OptionIsEmpty(Ident("a"))
+        Subject(Nil, Ident("a") -> Ident("a'"))(ast) match {
+          case (at, att) =>
+            at mustEqual OptionIsEmpty(Ident("a'"))
+            att.state mustEqual List(Ident("a"))
+        }
+      }
+      "nonEmpty" in {
+        val ast: Ast = OptionNonEmpty(Ident("a"))
+        Subject(Nil, Ident("a") -> Ident("a'"))(ast) match {
+          case (at, att) =>
+            at mustEqual OptionNonEmpty(Ident("a'"))
+            att.state mustEqual List(Ident("a"))
+        }
+      }
+      "isDefined" in {
+        val ast: Ast = OptionIsDefined(Ident("a"))
+        Subject(Nil, Ident("a") -> Ident("a'"))(ast) match {
+          case (at, att) =>
+            at mustEqual OptionIsDefined(Ident("a'"))
+            att.state mustEqual List(Ident("a"))
+        }
+      }
     }
 
     "traversable operations" - {

@@ -124,6 +124,9 @@ class MirrorIdiom extends Idiom {
     case OptionForall(ast, alias, body) => stmt"${ast.token}.forall((${alias.token}) => ${body.token})"
     case OptionExists(ast, alias, body) => stmt"${ast.token}.exists((${alias.token}) => ${body.token})"
     case OptionContains(ast, body)      => stmt"${ast.token}.contains(${body.token})"
+    case OptionIsEmpty(ast)             => stmt"${ast.token}.isEmpty"
+    case OptionNonEmpty(ast)            => stmt"${ast.token}.nonEmpty"
+    case OptionIsDefined(ast)           => stmt"${ast.token}.isDefined"
   }
 
   implicit def traversableOperationTokenizer(implicit liftTokenizer: Tokenizer[Lift]): Tokenizer[TraversableOperation] = Tokenizer[TraversableOperation] {

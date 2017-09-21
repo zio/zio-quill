@@ -174,6 +174,21 @@ class StatelessTransformerSpec extends Spec {
         Subject(Ident("a") -> Ident("a'"), Ident("c") -> Ident("c'"))(ast) mustEqual
           OptionContains(Ident("a'"), Ident("c'"))
       }
+      "isEmpty" in {
+        val ast: Ast = OptionIsEmpty(Ident("a"))
+        Subject(Ident("a") -> Ident("a'"))(ast) mustEqual
+          OptionIsEmpty(Ident("a'"))
+      }
+      "nonEmpty" in {
+        val ast: Ast = OptionNonEmpty(Ident("a"))
+        Subject(Ident("a") -> Ident("a'"))(ast) mustEqual
+          OptionNonEmpty(Ident("a'"))
+      }
+      "isDefined" in {
+        val ast: Ast = OptionIsDefined(Ident("a"))
+        Subject(Ident("a") -> Ident("a'"))(ast) mustEqual
+          OptionIsDefined(Ident("a'"))
+      }
     }
 
     "traversable operations" - {

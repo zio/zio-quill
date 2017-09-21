@@ -763,6 +763,24 @@ class QuotationSpec extends Spec {
         }
         quote(unquote(q)).ast.body mustEqual OptionContains(Ident("o"), Ident("v"))
       }
+      "isEmpty" in {
+        val q = quote {
+          (o: Option[Boolean]) => o.isEmpty
+        }
+        quote(unquote(q)).ast.body mustEqual OptionIsEmpty(Ident("o"))
+      }
+      "nonEmpty" in {
+        val q = quote {
+          (o: Option[Boolean]) => o.nonEmpty
+        }
+        quote(unquote(q)).ast.body mustEqual OptionNonEmpty(Ident("o"))
+      }
+      "isDefined" in {
+        val q = quote {
+          (o: Option[Boolean]) => o.isDefined
+        }
+        quote(unquote(q)).ast.body mustEqual OptionIsDefined(Ident("o"))
+      }
     }
     "traversable operations" - {
       "map.contains" in {
