@@ -421,11 +421,20 @@ class QuotationSpec extends Spec {
       }
       quote(unquote(q)).ast.body mustEqual Ident("s")
     }
-    "property" in {
-      val q = quote {
-        qr1.map(t => t.s)
+    "property" - {
+      "class field" in {
+        val q = quote {
+          qr1.map(t => t.s)
+        }
+        quote(unquote(q)).ast.body mustEqual Property(Ident("t"), "s")
       }
-      quote(unquote(q)).ast.body mustEqual Property(Ident("t"), "s")
+      "option.get fails" in {
+        """
+          quote {
+            (o: Option[Int]) => o.get
+          }
+        """ mustNot compile
+      }
     }
     "property anonymous" in {
       val q = quote {

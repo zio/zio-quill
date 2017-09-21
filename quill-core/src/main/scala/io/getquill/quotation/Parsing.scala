@@ -307,6 +307,8 @@ trait Parsing {
   }
 
   val propertyParser: Parser[Ast] = Parser[Ast] {
+    case q"$e.get" if is[Option[Any]](e) =>
+      c.fail("Option.get is not supported since it's an unsafe operation. Use `forall` or `exists` instead.")
     case q"$e.$property" => Property(astParser(e), property.decodedName.toString)
   }
 
