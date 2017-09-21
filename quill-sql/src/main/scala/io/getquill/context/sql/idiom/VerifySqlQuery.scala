@@ -13,6 +13,8 @@ import io.getquill.context.sql.SqlQuery
 import io.getquill.context.sql.TableContext
 import io.getquill.context.sql.UnaryOperationSqlQuery
 import io.getquill.context.sql.FlatJoinContext
+import io.getquill.ast.CollectAst
+import io.getquill.ast.Property
 
 case class Error(free: List[Ident], ast: Ast)
 case class InvalidSqlQuery(errors: List[Error]) {
@@ -37,25 +39,45 @@ object VerifySqlQuery {
 
     val aliases = query.from.map(this.aliases).flatten.map(Ident(_)) :+ Ident("*") :+ Ident("?")
 
+    def verifyTableReference(ast: Ast) =
+      (CollectAst(ast) {
+        case p: Property => None
+        case i: Ident    => Some(Error(i :: Nil, ast))
+      }).flatten
+
     def verifyFreeVars(ast: Ast) =
       (FreeVariables(ast) -- aliases).toList match {
         case Nil  => None
         case free => Some(Error(free, ast))
       }
 
-    val errors: List[Error] =
+    val tableReferenceErrors =
+      query.where.toList.flatMap(verifyTableReference) ++
+        query.orderBy.map(_.ast).flatMap(verifyTableReference) ++
+        query.limit.toList.flatMap(verifyTableReference) ++
+        query.from.flatMap {
+          case j: JoinContext     => verifyTableReference(j.on)
+          case j: FlatJoinContext => verifyTableReference(j.on)
+          case _                  => Nil
+        }
+
+    val freeVariableErrors: List[Error] =
       query.where.flatMap(verifyFreeVars).toList ++
         query.orderBy.map(_.ast).flatMap(verifyFreeVars) ++
         query.limit.flatMap(verifyFreeVars) ++
-        query.select.map(_.ast).map(verifyFreeVars).flatten
+        query.select.map(_.ast).map(verifyFreeVars).flatten ++
+        query.from.flatMap {
+          case j: JoinContext     => verifyFreeVars(j.on)
+          case j: FlatJoinContext => verifyFreeVars(j.on)
+          case _                  => Nil
+        }
 
     val nestedErrors =
       query.from.collect {
         case QueryContext(query, alias) => verify(query).map(_.errors)
       }.flatten.flatten
 
-    (errors ++ nestedErrors) match {
-
+    (tableReferenceErrors ++ freeVariableErrors ++ nestedErrors) match {
       case Nil    => None
       case errors => Some(InvalidSqlQuery(errors))
     }

@@ -30,6 +30,9 @@ trait StatelessTransformer {
       case OptionForall(a, b, c) => OptionForall(apply(a), b, apply(c))
       case OptionExists(a, b, c) => OptionExists(apply(a), b, apply(c))
       case OptionContains(a, b)  => OptionContains(apply(a), apply(b))
+      case OptionIsEmpty(a)      => OptionIsEmpty(apply(a))
+      case OptionNonEmpty(a)     => OptionNonEmpty(apply(a))
+      case OptionIsDefined(a)    => OptionIsDefined(apply(a))
     }
 
   def apply(o: TraversableOperation): TraversableOperation =

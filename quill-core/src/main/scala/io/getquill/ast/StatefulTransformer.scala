@@ -70,6 +70,15 @@ trait StatefulTransformer[T] {
         val (at, att) = apply(a)
         val (ct, ctt) = att.apply(c)
         (OptionContains(at, ct), ctt)
+      case OptionIsEmpty(a) =>
+        val (at, att) = apply(a)
+        (OptionIsEmpty(at), att)
+      case OptionNonEmpty(a) =>
+        val (at, att) = apply(a)
+        (OptionNonEmpty(at), att)
+      case OptionIsDefined(a) =>
+        val (at, att) = apply(a)
+        (OptionIsDefined(at), att)
     }
 
   def apply(e: TraversableOperation): (TraversableOperation, StatefulTransformer[T]) =

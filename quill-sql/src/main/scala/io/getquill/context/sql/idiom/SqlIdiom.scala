@@ -58,16 +58,17 @@ trait SqlIdiom extends Idiom {
 
   def astTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Ast] =
     Tokenizer[Ast] {
-      case a: Query      => SqlQuery(a).token
-      case a: Operation  => a.token
-      case a: Infix      => a.token
-      case a: Action     => a.token
-      case a: Ident      => a.token
-      case a: Property   => a.token
-      case a: Value      => a.token
-      case a: If         => a.token
-      case a: Lift       => a.token
-      case a: Assignment => a.token
+      case a: Query           => SqlQuery(a).token
+      case a: Operation       => a.token
+      case a: Infix           => a.token
+      case a: Action          => a.token
+      case a: Ident           => a.token
+      case a: Property        => a.token
+      case a: Value           => a.token
+      case a: If              => a.token
+      case a: Lift            => a.token
+      case a: Assignment      => a.token
+      case a: OptionOperation => a.token
       case a @ (
         _: Function | _: FunctionApply | _: Dynamic | _: OptionOperation | _: Block |
         _: Val | _: Ordering | _: QuotedReference | _: TraversableOperation
@@ -177,6 +178,13 @@ trait SqlIdiom extends Idiom {
     case e: FunctionApply                                     => fail(s"Can't translate the ast to sql: '$e'")
   }
 
+  implicit def optionOperationTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[OptionOperation] = Tokenizer[OptionOperation] {
+    case OptionIsEmpty(ast)   => stmt"${ast.token} IS NULL"
+    case OptionNonEmpty(ast)  => stmt"${ast.token} IS NOT NULL"
+    case OptionIsDefined(ast) => stmt"${ast.token} IS NOT NULL"
+    case other                => fail(s"Malformed or unsupported construct: $other.")
+  }
+
   implicit val setOperationTokenizer: Tokenizer[SetOperation] = Tokenizer[SetOperation] {
     case UnionOperation    => stmt"UNION"
     case UnionAllOperation => stmt"UNION ALL"
@@ -264,9 +272,6 @@ trait SqlIdiom extends Idiom {
         case a => (a, "")
       }
     Tokenizer[Property] {
-      case Property(ast, "isEmpty")   => stmt"${ast.token} IS NULL"
-      case Property(ast, "nonEmpty")  => stmt"${ast.token} IS NOT NULL"
-      case Property(ast, "isDefined") => stmt"${ast.token} IS NOT NULL"
       case ast =>
         unnest(ast) match {
           case (ast, name) =>
