@@ -17,9 +17,9 @@ class EncodeBindVariablesSpec extends Spec {
     "three" in {
       val i = 1
       val j = 2
-      val o = Option(3)
+      val o = 3
       val q = quote {
-        qr1.filter(t => t.i == lift(i) && t.i > lift(j) && t.o == lift(o))
+        qr1.filter(t => t.i == lift(i) && t.i > lift(j) && t.o.forall(_ == lift(o)))
       }
       testContext.run(q).prepareRow mustEqual Row(i, j, o)
     }
