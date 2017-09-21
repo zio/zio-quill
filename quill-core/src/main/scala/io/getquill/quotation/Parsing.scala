@@ -340,15 +340,23 @@ trait Parsing {
     case q"${ astParser(a) }.apply[..$t](...$values)" => FunctionApply(a, values.flatten.map(astParser(_)))
   }
 
+  private def rejectOptions(a: Tree, b: Tree) = {
+    if((!is[Null](a) && is[Option[_]](a)) || (!is[Null](b) && is[Option[_]](b))) 
+      c.fail("Can't compare `Option` values since databases have different behavior for null comparison. Use `Option` methods like `forall` and `exists` instead.")
+  }
+  
   val equalityOperationParser: Parser[Operation] = Parser[Operation] {
     case q"$a.==($b)" =>
       checkTypes(a, b)
+      rejectOptions(a, b)
       BinaryOperation(astParser(a), EqualityOperator.`==`, astParser(b))
     case q"$a.equals($b)" =>
       checkTypes(a, b)
+      rejectOptions(a, b)
       BinaryOperation(astParser(a), EqualityOperator.`==`, astParser(b))
     case q"$a.!=($b)" =>
       checkTypes(a, b)
+      rejectOptions(a, b)
       BinaryOperation(astParser(a), EqualityOperator.`!=`, astParser(b))
   }
 

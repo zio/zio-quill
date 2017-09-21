@@ -480,6 +480,29 @@ class QuotationSpec extends Spec {
             }
           """ mustNot compile
         }
+        "fails if comparing options" - {
+          "Option/Option" in {
+            """
+              quote {
+                (a: Option[Int], b: Option[Int]) => a == b
+              }
+            """ mustNot compile
+          }
+          "Option/None" in {
+            """
+              quote {
+                (a: Option[Int]) => a == None
+              }
+            """ mustNot compile
+          }
+          "None/Option" in {
+            """
+              quote {
+                (a: Option[Int]) => None == a
+              }
+            """ mustNot compile
+          }
+        }
       }
       "equals" in {
         val q = quote {
