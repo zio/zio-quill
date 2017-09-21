@@ -17,22 +17,45 @@ import io.getquill.ast.GroupBy
 private case class AvoidAliasConflict(state: collection.Set[Ident])
   extends StatefulTransformer[collection.Set[Ident]] {
 
+  object Unaliased {
+
+    private def isUnaliased(q: Query): Boolean =
+      q match {
+        case Nested(q: Query)         => isUnaliased(q)
+        case Take(q: Query, _)        => isUnaliased(q)
+        case Drop(q: Query, _)        => isUnaliased(q)
+        case Aggregation(_, q: Query) => isUnaliased(q)
+        case Distinct(q: Query)       => isUnaliased(q)
+        case _: Entity                => true
+        case _: Nested | _: Take | _: Drop | _: Aggregation |
+          _: Distinct | _: FlatMap | _: Map | _: Filter | _: SortBy |
+          _: GroupBy | _: Union | _: UnionAll | _: Join | _: FlatJoin =>
+          false
+      }
+
+    def unapply(q: Ast): Option[Query] =
+      q match {
+        case q: Query if (isUnaliased(q)) => Some(q)
+        case _                            => None
+      }
+  }
+
   override def apply(q: Query): (Query, StatefulTransformer[collection.Set[Ident]]) =
     q match {
 
-      case FlatMap(q: Entity, x, p) =>
+      case FlatMap(Unaliased(q), x, p) =>
         apply(x, p)(FlatMap(q, _, _))
 
-      case Map(q: Entity, x, p) =>
+      case Map(Unaliased(q), x, p) =>
         apply(x, p)(Map(q, _, _))
 
-      case Filter(q: Entity, x, p) =>
+      case Filter(Unaliased(q), x, p) =>
         apply(x, p)(Filter(q, _, _))
 
-      case SortBy(q: Entity, x, p, o) =>
+      case SortBy(Unaliased(q), x, p, o) =>
         apply(x, p)(SortBy(q, _, _, o))
 
-      case GroupBy(q: Entity, x, p) =>
+      case GroupBy(Unaliased(q), x, p) =>
         apply(x, p)(GroupBy(q, _, _))
 
       case Join(t, a, b, iA, iB, o) =>
