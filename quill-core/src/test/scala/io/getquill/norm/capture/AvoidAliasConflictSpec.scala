@@ -125,6 +125,25 @@ class AvoidAliasConflictSpec extends Spec {
         }
         AvoidAliasConflict(q.ast) mustEqual n.ast
       }
+      "nested unaliased" in {
+        val q = quote {
+          for {
+            a <- qr1.nested.groupBy(a => a.i).map(t => (t._1, t._2.map(v => v.i).sum))
+            b <- qr1.nested.groupBy(a => a.i).map(t => (t._1, t._2.map(v => v.i).sum))
+          } yield {
+            (a, b)
+          }
+        }
+        val n = quote {
+          for {
+            a <- qr1.nested.groupBy(a => a.i).map(t => (t._1, t._2.map(v => v.i).sum))
+            b <- qr1.nested.groupBy(a1 => a1.i).map(t => (t._1, t._2.map(v => v.i).sum))
+          } yield {
+            (a, b)
+          }
+        }
+        AvoidAliasConflict(q.ast) mustEqual n.ast
+      }
       "multiple" in {
         val q = quote {
           qr1.leftJoin(qr2).on((a, b) => a.i == b.i)
