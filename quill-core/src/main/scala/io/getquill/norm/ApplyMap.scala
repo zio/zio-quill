@@ -19,8 +19,9 @@ object ApplyMap {
   def unapply(q: Query): Option[Query] =
     q match {
 
-      case Map(a: GroupBy, b, c) if (b == c) => None
-      case Map(a: Nested, b, c) if (b == c)  => None
+      case Map(a: GroupBy, b, c) if (b == c)    => None
+      case Map(a: Nested, b, c) if (b == c)     => None
+      case Nested(DetachableMap(a: Join, b, c)) => None
 
       //  map(i => (i.i, i.l)).distinct.map(x => (x._1, x._2)) =>
       //    map(i => (i.i, i.l)).distinct
@@ -29,7 +30,7 @@ object ApplyMap {
 
       // a.map(b => c).map(d => e) =>
       //    a.map(b => e[d := c])
-      case Map(DetachableMap(a, b, c), d, e) =>
+      case Map(Map(a, b, c), d, e) =>
         val er = BetaReduction(e, d -> c)
         Some(Map(a, b, er))
 
@@ -55,6 +56,16 @@ object ApplyMap {
       case SortBy(DetachableMap(a, b, c), d, e, f) =>
         val er = BetaReduction(e, d -> c)
         Some(Map(SortBy(a, b, er, f), b, c))
+
+      // a.map(b => c).groupBy(d => e) =>
+      //    a.groupBy(b => e[d := c]).map(x => (x._1, x._2.map(b => c)))
+      case GroupBy(DetachableMap(a, b, c), d, e) =>
+        val er = BetaReduction(e, d -> c)
+        val x = Ident("x")
+        val x1 = Property(Ident("x"), "_1")
+        val x2 = Property(Ident("x"), "_2")
+        val body = Tuple(List(x1, Map(x2, b, c)))
+        Some(Map(GroupBy(a, b, er), x, body))
 
       // a.map(b => c).drop(d) =>
       //    a.drop(d).map(b => c)
