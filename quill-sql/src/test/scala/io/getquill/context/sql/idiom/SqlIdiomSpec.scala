@@ -37,7 +37,7 @@ class SqlIdiomSpec extends Spec {
             qr1.distinct
           }
           testContext.run(q).string mustEqual
-            "SELECT x.s, x.i, x.l, x.o FROM (SELECT DISTINCT x.s, x.i, x.l, x.o FROM TestEntity x) x"
+            "SELECT x.s, x.i, x.l, x.o FROM (SELECT DISTINCT x.* FROM TestEntity x) x"
         }
 
         "single" in {
