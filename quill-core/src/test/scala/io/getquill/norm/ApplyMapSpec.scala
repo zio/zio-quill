@@ -48,7 +48,6 @@ class ApplyMapSpec extends Spec {
       }
       ApplyMap.unapply(q.ast) mustEqual None
     }
-
     "identity map" in {
       val q = quote {
         qr1.groupBy(t => t.i).map(y => y)
@@ -77,11 +76,19 @@ class ApplyMapSpec extends Spec {
     }
   }
 
-  "avoids applying the identity map with nested query" in {
-    val q = quote {
-      qr1.map(x => x.i).nested.map(x => x)
+  "avoids applying map with nested query" - {
+    "identity map" in {
+      val q = quote {
+        qr1.map(x => x.i).nested.map(x => x)
+      }
+      ApplyMap.unapply(q.ast) mustEqual None
     }
-    ApplyMap.unapply(q.ast) mustEqual None
+    "join" in {
+      val q = quote {
+        qr1.join(qr2).on((a, b) => a.i == b.i).map(t => t).nested
+      }
+      ApplyMap.unapply(q.ast) mustEqual None
+    }
   }
 
   "applies intermediate map" - {

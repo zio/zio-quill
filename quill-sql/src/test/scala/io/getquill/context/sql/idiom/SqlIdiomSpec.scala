@@ -156,7 +156,7 @@ class SqlIdiomSpec extends Spec {
             }
           }
           testContext.run(q).string mustEqual
-            "SELECT t._1, t._2 FROM (SELECT t.i _1, COUNT(*) _2 FROM TestEntity t GROUP BY t.i) t"
+            "SELECT t.i, COUNT(*) FROM TestEntity t GROUP BY t.i"
         }
         "nested" in {
           val q = quote {
@@ -258,7 +258,7 @@ class SqlIdiomSpec extends Spec {
             }
           }
           testContext.run(q).string mustEqual
-            "SELECT t._1, t._2 FROM (SELECT t.i _1, (COUNT(*)) + 1 _2 FROM TestEntity t GROUP BY t.i) t"
+            "SELECT t.i, (COUNT(*)) + 1 FROM TestEntity t GROUP BY t.i"
         }
       }
       "unary operation" - {
@@ -428,7 +428,7 @@ class SqlIdiomSpec extends Spec {
       val q = quote {
         qr1.map(t => t.i).nested.filter(i => i > 1)
       }
-      testContext.run(q).string mustEqual
+      testContext.run(q.dynamic).string mustEqual
         "SELECT t.i FROM (SELECT x.i FROM TestEntity x) t WHERE t.i > 1"
     }
     "operations" - {

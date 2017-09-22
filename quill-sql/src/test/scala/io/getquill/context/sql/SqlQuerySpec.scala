@@ -211,7 +211,7 @@ class SqlQuerySpec extends Spec {
           qr1.groupBy(t => (t.i, t.l)).map(t => t._1)
         }
         testContext.run(q).string mustEqual
-          "SELECT t._1, t._2 FROM (SELECT t.i _1, t.l _2 FROM TestEntity t GROUP BY t.i, t.l) t"
+          "SELECT t.i, t.l FROM TestEntity t GROUP BY t.i, t.l"
       }
       "aggregated" - {
         "simple" in {
@@ -221,7 +221,7 @@ class SqlQuerySpec extends Spec {
             }
           }
           testContext.run(q).string mustEqual
-            "SELECT t._1, t._2 FROM (SELECT t.i _1, COUNT(*) _2 FROM TestEntity t GROUP BY t.i) t"
+            "SELECT t.i, COUNT(*) FROM TestEntity t GROUP BY t.i"
         }
         "mapped" in {
           val q = quote {
@@ -230,7 +230,34 @@ class SqlQuerySpec extends Spec {
             }
           }
           testContext.run(q).string mustEqual
-            "SELECT t._1, t._2 FROM (SELECT t.i _1, MAX(t.l) _2 FROM TestEntity t GROUP BY t.i) t"
+            "SELECT t.i, MAX(t.l) FROM TestEntity t GROUP BY t.i"
+        }
+      }
+      "with map" - {
+        "not nested" in {
+          val q = quote {
+            qr1.join(qr2).on((a, b) => a.s == b.s)
+              .groupBy(t => t._2.i)
+              .map {
+                case (i, l) =>
+                  (i, l.map(_._1.i).sum)
+              }
+          }
+          testContext.run(q).string mustEqual
+            "SELECT b.i, SUM(a.i) FROM TestEntity a INNER JOIN TestEntity2 b ON a.s = b.s GROUP BY b.i"
+        }
+        "nested" in {
+          val q = quote {
+            qr1.join(qr2).on((a, b) => a.s == b.s)
+              .nested
+              .groupBy(t => t._2.i)
+              .map {
+                case (i, l) =>
+                  (i, l.map(_._1.i).sum)
+              }
+          }
+          testContext.run(q).string mustEqual
+            "SELECT t.i, SUM(t.i) FROM (SELECT b.i i, a.i i FROM TestEntity a INNER JOIN TestEntity2 b ON a.s = b.s) t GROUP BY t.i"
         }
       }
       "invalid groupby criteria" in {
