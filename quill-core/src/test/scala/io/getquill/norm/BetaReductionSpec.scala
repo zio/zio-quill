@@ -25,17 +25,16 @@ class BetaReductionSpec extends Spec {
     }
     "with inline" - {
       val entity = Entity("a", Nil)
-      val (a, b, c) = (Ident("a"), Ident("b"), Ident("c"))
+      val (a, b, c, d) = (Ident("a"), Ident("b"), Ident("c"), Ident("d"))
       val (c1, c2, c3) = (Constant(1), Constant(2), Constant(3))
-      val map = collection.Map[Ast, Ast](c -> b, b -> a)
 
       "top level block" in {
         val block = Block(List(
           Val(a, entity),
           Val(b, a),
-          Map(c, b, c1)
+          Map(b, d, c1)
         ))
-        BetaReduction(map)(block) mustEqual Map(entity, b, c1)
+        BetaReduction(block) mustEqual Map(entity, d, c1)
       }
       "nested blocks" in {
         val inner = Block(List(
@@ -50,7 +49,7 @@ class BetaReductionSpec extends Spec {
           Val(c, b),
           c
         ))
-        BetaReduction(map)(outer) mustEqual Tuple(List(entity, c2, c3))
+        BetaReduction(outer) mustEqual Tuple(List(entity, c2, c3))
       }
     }
     "avoids replacing idents of an outer scope" - {
@@ -118,5 +117,11 @@ class BetaReductionSpec extends Spec {
     val ast: Ast = Property(Ident("a"), "_1")
     BetaReduction(ast, Ident("a") -> Tuple(List(Ident("a'")))) mustEqual
       Ident("a'")
+  }
+
+  "applies reduction only once" in {
+    val ast: Ast = Ident("a")
+    BetaReduction(ast, Ident("a") -> Ident("b"), Ident("b") -> Ident("c")) mustEqual
+      Ident("b")
   }
 }

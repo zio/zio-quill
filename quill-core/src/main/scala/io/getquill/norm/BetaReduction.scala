@@ -9,7 +9,7 @@ case class BetaReduction(map: collection.Map[Ast, Ast])
     ast match {
 
       case ast if (map.contains(ast)) =>
-        BetaReduction(map - ast)(map(ast))
+        BetaReduction(map - ast - map(ast))(map(ast))
 
       case Property(Tuple(values), name) =>
         val aliases = values.distinct
@@ -39,8 +39,19 @@ case class BetaReduction(map: collection.Map[Ast, Ast])
         Function(newParams, BetaReduction(map ++ params.zip(newParams))(body))
 
       case Block(statements) =>
-        val vals = statements.collect { case x: Val => x.name -> x.body }
-        BetaReduction(map ++ vals)(statements.last)
+        apply {
+          statements.reverse.tail.foldLeft((collection.Map[Ast, Ast](), statements.last)) {
+            case ((map, stmt), line) =>
+              BetaReduction(map)(line) match {
+                case Val(name, body) =>
+                  val newMap = map + (name -> body)
+                  val newStmt = BetaReduction(stmt, newMap.toSeq: _*)
+                  (newMap, newStmt)
+                case other =>
+                  (map, stmt)
+              }
+          }._2
+        }
 
       case Foreach(query, alias, body) =>
         Foreach(query, alias, BetaReduction(map - alias)(body))
