@@ -168,14 +168,14 @@ class RenamePropertiesSpec extends Spec {
           e.distinct
         }
         testContext.run(q).string mustEqual
-          "SELECT x.field_s, x.field_i, x.l, x.o FROM (SELECT DISTINCT x.field_s, x.field_i, x.l, x.o FROM test_entity x) x"
+          "SELECT x.field_s, x.field_i, x.l, x.o FROM (SELECT DISTINCT x.* FROM test_entity x) x"
       }
       "transitive" in {
         val q = quote {
           e.distinct.map(t => t.s)
         }
         testContext.run(q).string mustEqual
-          "SELECT t.field_s FROM (SELECT DISTINCT x.field_s FROM test_entity x) t"
+          "SELECT t.field_s FROM (SELECT DISTINCT x.* FROM test_entity x) t"
       }
     }
 

@@ -21,7 +21,10 @@ object ExpandNestedQueries {
   def apply(q: SqlQuery, references: collection.Set[Property]): SqlQuery =
     q match {
       case q: FlattenSqlQuery =>
-        expandNested(q.copy(select = expandSelect(q.select, references)))
+        q.distinct match {
+          case false => expandNested(q.copy(select = expandSelect(q.select, references)))
+          case true  => q
+        }
       case SetOperationSqlQuery(a, op, b) =>
         SetOperationSqlQuery(apply(a, references), op, apply(b, references))
       case UnaryOperationSqlQuery(op, q) =>

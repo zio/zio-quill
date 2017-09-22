@@ -55,4 +55,18 @@ class ExpandNestedQueriesSpec extends Spec {
     testContext.run(q).string mustEqual
       "SELECT s.i, s.s, COUNT(*) FROM TestEntity s GROUP BY s.i, s.s"
   }
+
+  "doesn't expand nested distinct query" in {
+    import testContext._
+    val q = quote {
+      (for {
+        a <- qr1
+        b <- qr2
+      } yield {
+        (a, b)
+      }).distinct
+    }
+    testContext.run(q).string mustEqual
+      "SELECT x.s, x.i, x.l, x.o, x.s, x.i, x.l, x.o FROM (SELECT DISTINCT x.* FROM (SELECT a.*, b.* FROM TestEntity a, TestEntity2 b) x) x"
+  }
 }
