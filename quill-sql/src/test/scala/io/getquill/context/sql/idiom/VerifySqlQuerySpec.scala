@@ -3,6 +3,7 @@ package io.getquill.context.sql.idiom
 import io.getquill.Spec
 import io.getquill.context.sql.testContext._
 import io.getquill.context.sql.SqlQuery
+import scala.util.Try
 
 class VerifySqlQuerySpec extends Spec {
 
@@ -32,5 +33,17 @@ class VerifySqlQuerySpec extends Spec {
       VerifySqlQuery(SqlQuery(q.ast)).toString mustEqual
         "Some(The monad composition can't be expressed using applicative joins. Faulty expression: 'x01._2.isDefined'. Free variables: 'List(x01)'., Faulty expression: 'x01'. Free variables: 'List(x01)'.)"
     }
+
+    "invalid flatJoin on" in {
+      val q = quote {
+        for {
+          a <- qr1
+          b <- qr2 if a.i == b.i
+          c <- qr1.leftJoin(_.i == a.i)
+        } yield (a.i, b.i, c.map(_.i))
+      }
+      Try(VerifySqlQuery(SqlQuery(q.ast))).isFailure mustEqual true
+    }
+
   }
 }

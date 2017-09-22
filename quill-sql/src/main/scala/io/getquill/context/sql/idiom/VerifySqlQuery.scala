@@ -1,8 +1,10 @@
 package io.getquill.context.sql.idiom
 
 import io.getquill.ast.Ast
+import io.getquill.ast.CollectAst
 import io.getquill.ast.Ident
-import io.getquill.quotation.FreeVariables
+import io.getquill.ast.Property
+import io.getquill.context.sql.FlatJoinContext
 import io.getquill.context.sql.FlattenSqlQuery
 import io.getquill.context.sql.FromContext
 import io.getquill.context.sql.InfixContext
@@ -12,9 +14,7 @@ import io.getquill.context.sql.SetOperationSqlQuery
 import io.getquill.context.sql.SqlQuery
 import io.getquill.context.sql.TableContext
 import io.getquill.context.sql.UnaryOperationSqlQuery
-import io.getquill.context.sql.FlatJoinContext
-import io.getquill.ast.CollectAst
-import io.getquill.ast.Property
+import io.getquill.quotation.FreeVariables
 
 case class Error(free: List[Ident], ast: Ast)
 case class InvalidSqlQuery(errors: List[Error]) {
@@ -35,7 +35,32 @@ object VerifySqlQuery {
       case UnaryOperationSqlQuery(op, q)  => verify(q)
     }
 
+  private def verifyFlatJoins(q: FlattenSqlQuery) = {
+
+    def loop(l: List[FromContext], available: Set[String]): Set[String] =
+      l.foldLeft(available) {
+        case (av, TableContext(_, alias)) => Set(alias)
+        case (av, InfixContext(_, alias)) => Set(alias)
+        case (av, QueryContext(_, alias)) => Set(alias)
+        case (av, JoinContext(_, a, b, on)) =>
+          av ++ loop(a :: Nil, av) ++ loop(b :: Nil, av)
+        case (av, FlatJoinContext(_, a, on)) =>
+          val nav = av ++ loop(a :: Nil, av)
+          val free = FreeVariables(on).map(_.name)
+          val invalid = free -- nav
+          require(
+            invalid.isEmpty,
+            s"Found an `ON` table reference of a table that is not available: $invalid. " +
+              "The `ON` condition can only use tables defined through explicit joins.."
+          )
+          nav
+      }
+    loop(q.from, Set())
+  }
+
   private def verify(query: FlattenSqlQuery): Option[InvalidSqlQuery] = {
+
+    verifyFlatJoins(query)
 
     val aliases = query.from.map(this.aliases).flatten.map(Ident(_)) :+ Ident("*") :+ Ident("?")
 
