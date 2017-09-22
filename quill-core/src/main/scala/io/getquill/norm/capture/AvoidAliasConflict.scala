@@ -86,20 +86,19 @@ private case class AvoidAliasConflict(state: collection.Set[Ident])
     (f(fresh, prr), t)
   }
 
-  private def freshIdent(x: Ident, state: collection.Set[Ident] = state): Ident =
+  private def freshIdent(x: Ident, state: collection.Set[Ident] = state): Ident = {
+    def loop(x: Ident, n: Int): Ident = {
+      val fresh = Ident(s"${x.name}$n")
+      if (!state.contains(fresh))
+        fresh
+      else
+        loop(x, n + 1)
+    }
     if (!state.contains(x))
       x
     else
-      freshIdent(x, 1)
-
-  private def freshIdent(x: Ident, n: Int): Ident = {
-    val fresh = Ident(s"${x.name}$n")
-    if (!state.contains(fresh))
-      fresh
-    else
-      freshIdent(x, n + 1)
+      loop(x, 1)
   }
-
 }
 
 private[capture] object AvoidAliasConflict {

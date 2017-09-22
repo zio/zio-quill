@@ -226,6 +226,19 @@ class AvoidAliasConflictSpec extends Spec {
         AvoidAliasConflict(q.ast) mustEqual n.ast
       }
     }
+    "join + filter" in {
+      val q = quote {
+        qr1.filter(x1 => x1.i == 1)
+          .join(qr2.filter(x1 => x1.i == 1))
+          .on((a, b) => a.i == b.i)
+      }
+      val n = quote {
+        qr1.filter(x1 => x1.i == 1)
+          .join(qr2.filter(x11 => x11.i == 1))
+          .on((a, b) => a.i == b.i)
+      }
+      AvoidAliasConflict(q.ast) mustEqual n.ast
+    }
   }
 
   "handles many alias conflicts" in {
