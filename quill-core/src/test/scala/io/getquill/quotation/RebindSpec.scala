@@ -6,7 +6,7 @@ import io.getquill.testContext
 
 class RebindSpec extends Spec {
 
-  "rebind non-arg function" in {
+  "rebinds non-arg function" in {
     implicit class ReturnId[T](action: Action[T]) {
       def returnId = quote(infix"$action RETURNING ID".as[Action[T]])
     }
@@ -16,7 +16,20 @@ class RebindSpec extends Spec {
     testContext.run(q).string mustEqual s"""infix"$${querySchema("TestEntity").insert(e => e.i -> ?)} RETURNING ID""""
   }
 
-  "rebind function with args and" - {
+  "rebinds property arg" in {
+    implicit class OptionalCompare(left: Option[Long]) {
+      def valid = quote {
+        val now = lift(System.currentTimeMillis)
+        infix"($left IS NULL OR $left > $now)".as[Boolean]
+      }
+    }
+
+    case class A(date: Option[Long] = None)
+    testContext.run(query[A].filter(a => a.date.valid)).string mustEqual
+      s"""querySchema("A").filter(a => infix"($${a.date} IS NULL OR $${a.date} > $${?})").map(a => a.date)"""
+  }
+
+  "rebinds function with args and" - {
     "type param" in {
       implicit class Inc(field: Int) {
         def plus[T](delta: T) = quote(infix"$field + $delta".as[T])
