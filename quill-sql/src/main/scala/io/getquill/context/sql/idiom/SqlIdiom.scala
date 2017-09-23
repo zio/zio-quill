@@ -159,9 +159,9 @@ trait SqlIdiom extends Idiom {
 
     val customAstTokenizer =
       Tokenizer.withFallback[Ast](SqlIdiom.this.astTokenizer(_, strategy)) {
-        case Aggregation(op, Ident(_))       => stmt"${op.token}(*)"
-        case ast @ Aggregation(op, _: Query) => scopedTokenizer(ast)
-        case Aggregation(op, ast)            => stmt"${op.token}(${ast.token})"
+        case Aggregation(op, Ident(_) | Tuple(_)) => stmt"${op.token}(*)"
+        case ast @ Aggregation(op, _: Query)      => scopedTokenizer(ast)
+        case Aggregation(op, ast)                 => stmt"${op.token}(${ast.token})"
       }
 
     tokenizer(customAstTokenizer)
