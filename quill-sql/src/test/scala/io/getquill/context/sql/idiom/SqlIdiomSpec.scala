@@ -223,12 +223,23 @@ class SqlIdiomSpec extends Spec {
           testContext.run(q).string mustEqual
             "SELECT SUM(t.i) FROM TestEntity t"
         }
-        "size" in {
-          val q = quote {
-            qr1.size
+        "size" - {
+          "regular" in {
+            val q = quote {
+              qr1.size
+            }
+            testContext.run(q).string mustEqual
+              "SELECT COUNT(*) FROM TestEntity x"
           }
-          testContext.run(q).string mustEqual
-            "SELECT COUNT(*) FROM TestEntity x"
+          "with groupBy" in {
+            val q = quote {
+              qr1.map(t => (t.i, t.s)).groupBy(t => t._1).map {
+                case (i, l) => l.size
+              }
+            }
+            testContext.run(q).string mustEqual
+              "SELECT COUNT(*) FROM TestEntity t GROUP BY t.i"
+          }
         }
         "with filter" in {
           val q = quote {
