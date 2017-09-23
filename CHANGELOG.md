@@ -1,4 +1,4 @@
-# 2.0.0-M1
+# 2.0.0-SNAPSHOT
 
 
 ### Migration notes
