@@ -18,11 +18,8 @@ object Rebind {
     def paramIdents(method: MethodSymbol) =
       method.paramLists.flatten.map(toIdent)
 
-    def reify(t: Tree): Tree =
-      if (t.tpe.typeSymbol.fullName.toString.startsWith("io.getquill.dsl"))
-        q"null"
-      else
-        t
+    def placeholder(t: Tree): Tree =
+      q"null.asInstanceOf[${t.tpe}]"
 
     tree match {
       case q"$conv($orig).$m[..$t](...$params)" =>
@@ -30,7 +27,7 @@ object Rebind {
         val origIdent = paramIdents(convMethod).head
         val paramsIdents = paramIdents(convMethod.returnType.member(m).asMethod)
         val paramsAsts = params.flatten.map(astParser)
-        val reifiedTree = q"$conv(${reify(orig)}).$m[..$t](...${params.map(_.map(reify(_)))})"
+        val reifiedTree = q"$conv(${placeholder(orig)}).$m[..$t](...${params.map(_.map(placeholder(_)))})"
         val function = QuotedReference(reifiedTree, Function(origIdent :: paramsIdents, ast))
         val apply = FunctionApply(function, astParser(orig) :: paramsAsts)
         Some(apply)

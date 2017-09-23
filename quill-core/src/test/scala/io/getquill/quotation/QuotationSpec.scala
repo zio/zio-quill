@@ -1022,7 +1022,7 @@ class QuotationSpec extends Spec {
           object implicits extends Implicits
           import implicits._
           val q = quote(1.plusRandom)
-          val l = q.liftings.`implicits.PlusRadom(1).plusRandom.Implicits.this.random`
+          val l = q.liftings.`implicits.PlusRadom(null.asInstanceOf[Int(1)]).plusRandom.Implicits.this.random`
           l.value mustEqual 999
           l.encoder mustEqual intEncoder
         }
@@ -1036,7 +1036,7 @@ class QuotationSpec extends Spec {
           object implicits extends Implicits
           import implicits._
           val q = quote(query[TestEntity].toRandom)
-          val l = q.liftings.`implicits.ToRadom(null).toRandom.Implicits.this.random`
+          val l = q.liftings.`implicits.ToRadom(null.asInstanceOf[io.getquill.testContext.EntityQuery[io.getquill.testContext.TestEntity]]).toRandom.Implicits.this.random`
           l.value mustEqual 999
           l.encoder mustEqual intEncoder
         }
