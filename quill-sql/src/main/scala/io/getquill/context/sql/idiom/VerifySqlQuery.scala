@@ -51,7 +51,7 @@ object VerifySqlQuery {
           require(
             invalid.isEmpty,
             s"Found an `ON` table reference of a table that is not available: $invalid. " +
-              "The `ON` condition can only use tables defined through explicit joins.."
+              "The `ON` condition can only use tables defined through explicit joins."
           )
           nav
       }
