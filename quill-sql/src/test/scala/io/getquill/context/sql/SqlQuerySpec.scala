@@ -31,6 +31,18 @@ class SqlQuerySpec extends Spec {
         "SELECT a.s, a.i, a.l, a.o, b.s, b.i, b.l, b.o FROM TestEntity a LEFT JOIN TestEntity2 b ON (a.s IS NOT NULL) AND (b.i > a.i)"
     }
 
+    "join + map + filter" in {
+      val q = quote {
+        qr1
+          .leftJoin(qr2)
+          .on((a, b) => a.i == b.i)
+          .map(t => (t._1.i, t._2.map(_.i)))
+          .filter(_._2.forall(_ == 1))
+      }
+      testContext.run(q).string mustEqual
+        "SELECT a.i, b.i FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i WHERE (b.i IS NULL) OR (b.i = 1)"
+    }
+
     "flat outer join" in {
       val q = quote {
         for {
