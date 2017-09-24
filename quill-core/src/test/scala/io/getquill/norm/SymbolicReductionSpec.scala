@@ -59,4 +59,24 @@ class SymbolicReductionSpec extends Spec {
     }
     SymbolicReduction.unapply(q.ast) mustEqual Some(n.ast)
   }
+
+  "a.filter(b => c).join(d).on((e, f) => g) => a.join(d).on((e, f) => g).filter(x => c[b := x._1])" in {
+    val q = quote {
+      qr1.filter(a => a.i == 1).join(qr2).on((a, b) => a.i == b.i)
+    }
+    val n = quote {
+      qr1.join(qr2).on((a, b) => a.i == b.i).filter(x => x._1.i == 1)
+    }
+    SymbolicReduction.unapply(q.ast) mustEqual Some(n.ast)
+  }
+
+  "a.join(b.filter(c => d)).on((e, f) => g) => a.join(b).on((e, f) => g).filter(x => d[c := x._2])" in {
+    val q = quote {
+      qr1.join(qr2.filter(b => b.i == 1)).on((a, b) => a.i == b.i)
+    }
+    val n = quote {
+      qr1.join(qr2).on((a, b) => a.i == b.i).filter(x => x._2.i == 1)
+    }
+    SymbolicReduction.unapply(q.ast) mustEqual Some(n.ast)
+  }
 }

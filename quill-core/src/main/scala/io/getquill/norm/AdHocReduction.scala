@@ -4,10 +4,8 @@ import io.getquill.ast.BinaryOperation
 import io.getquill.ast.BooleanOperator
 import io.getquill.ast.Filter
 import io.getquill.ast.FlatMap
-import io.getquill.ast.Join
 import io.getquill.ast.Map
 import io.getquill.ast.Query
-import io.getquill.ast.Tuple
 import io.getquill.ast.Union
 import io.getquill.ast.UnionAll
 
@@ -24,12 +22,6 @@ object AdHocReduction {
       case Filter(Filter(a, b, c), d, e) =>
         val er = BetaReduction(e, d -> b)
         Some(Filter(a, b, BinaryOperation(c, BooleanOperator.`&&`, er)))
-
-      // a.join(b).on((c, d) => e).filter(f => g)
-      //    a.join(b).on((c, d) => e && g[f := (c, d)])
-      case Filter(Join(t, a, b, c, d, e), f, g) =>
-        val gr = BetaReduction(g, f -> Tuple(List(c, d)))
-        Some(Join(t, a, b, c, d, BinaryOperation(e, BooleanOperator.`&&`, gr)))
 
       // ---------------------------
       // flatMap.*
