@@ -37,6 +37,21 @@ class FlattenOptionOperationSpec extends Spec {
           BinaryOperation(Property(Ident("o"), "i"), EqualityOperator.`!=`, Constant(1))
         )
     }
+    "map + forall + binop" in {
+      val q = quote {
+        (o: Option[TestEntity]) => o.map(_.i).forall(i => i != 1) && true
+      }
+      FlattenOptionOperation(q.ast.body: Ast) mustEqual
+        BinaryOperation(
+          BinaryOperation(
+            BinaryOperation(Property(Ident("o"), "i"), EqualityOperator.`==`, NullValue),
+            BooleanOperator.`||`,
+            BinaryOperation(Property(Ident("o"), "i"), EqualityOperator.`!=`, Constant(1))
+          ),
+          BooleanOperator.`&&`,
+          Constant(true)
+        )
+    }
     "exists" in {
       val q = quote {
         (o: Option[Int]) => o.exists(i => i > 1)

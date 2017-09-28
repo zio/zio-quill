@@ -8,6 +8,7 @@ import io.getquill.ast.UnionAll
 import io.getquill.ast.Join
 import io.getquill.ast.Ident
 import io.getquill.ast.Property
+import io.getquill.ast.InnerJoin
 
 object SymbolicReduction {
 
@@ -38,19 +39,19 @@ object SymbolicReduction {
 
       // a.filter(b => c).join(d).on((e, f) => g) =>
       //      a.join(d).on((e, f) => g).filter(x => c[b := x._1])
-      case Join(tpe, Filter(a, b, c), d, e, f, g) =>
+      case Join(InnerJoin, Filter(a, b, c), d, e, f, g) =>
         val x = Ident("x")
         val x1 = Property(x, "_1")
         val cr = BetaReduction(c, b -> x1)
-        Some(Filter(Join(tpe, a, d, e, f, g), x, cr))
+        Some(Filter(Join(InnerJoin, a, d, e, f, g), x, cr))
 
       // a.join(b.filter(c => d)).on((e, f) => g) =>
       //      a.join(b).on((e, f) => g).filter(x => d[c := x._2])
-      case Join(tpe, a, Filter(b, c, d), e, f, g) =>
+      case Join(InnerJoin, a, Filter(b, c, d), e, f, g) =>
         val x = Ident("x")
         val x2 = Property(x, "_2")
         val dr = BetaReduction(d, c -> x2)
-        Some(Filter(Join(tpe, a, b, e, f, g), x, dr))
+        Some(Filter(Join(InnerJoin, a, b, e, f, g), x, dr))
 
       case other => None
     }
