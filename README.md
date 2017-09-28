@@ -801,6 +801,34 @@ ctx.run(query[Book])
 // SELECT id, notes, pages, history FROM Book
 ```
 
+### User-Defined Types
+
+The cassandra context provides encoding of UDT (user-defined types).
+```scala
+import io.getquill.context.cassandra.Udt
+
+case class Name(firstName: String, lastName: String) extends Udt
+```
+
+To encode UDT and bind it into the query (insert/update queries), context needs to retrieve UDT metadata from
+cluster object. By default, context looks for UDT within currently logged keyspace, but it's also possible to specify
+concrete keyspace with `udtMeta`:
+
+```scala
+implicit val nameMeta = udtMeta[Name]("keyspace2.my_name")
+```
+When keyspace is not set in `udtMeta` then the currently logged is used.
+
+Since it's possible to create context without
+specifying keyspace, e.g. keyspace parameter is null and session is not bound to any keyspace, UDT metadata is being
+resolved among all cluster.
+
+It's also possible to rename UDT columns with `udtMeta`:
+
+```scala
+implicit val nameMeta = udtMeta[Name]("name", _.firstName -> "first", _.lastName -> "last")
+```
+
 ## Cassandra-specific operations
 
 The cassandra context also provides a few additional operations:

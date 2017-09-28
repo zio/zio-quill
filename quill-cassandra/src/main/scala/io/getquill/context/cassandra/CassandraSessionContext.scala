@@ -1,13 +1,13 @@
 package io.getquill.context.cassandra
 
-import scala.util.Try
-import com.datastax.driver.core.BoundStatement
-import com.datastax.driver.core.Row
+import com.datastax.driver.core.{ Cluster, _ }
 import io.getquill.NamingStrategy
-import io.getquill.context.cassandra.encoding.{ CassandraTypes, Decoders, Encoders }
-import io.getquill.util.Messages.fail
-import com.datastax.driver.core.Cluster
 import io.getquill.context.Context
+import io.getquill.context.cassandra.encoding.{ CassandraTypes, Decoders, Encoders, UdtEncoding }
+import io.getquill.util.Messages.fail
+
+import scala.collection.JavaConverters._
+import scala.util.Try
 
 abstract class CassandraSessionContext[N <: NamingStrategy](
   val naming:                 N,
@@ -19,7 +19,8 @@ abstract class CassandraSessionContext[N <: NamingStrategy](
   with CassandraContext[N]
   with Encoders
   with Decoders
-  with CassandraTypes {
+  with CassandraTypes
+  with UdtEncoding {
 
   val idiom = CqlIdiom
 
@@ -33,6 +34,22 @@ abstract class CassandraSessionContext[N <: NamingStrategy](
     new PrepareStatementCache(preparedStatementCacheSize)
 
   protected val session = cluster.connect(keyspace)
+
+  protected val udtMetadata: Map[String, List[UserType]] = cluster.getMetadata.getKeyspaces.asScala.toList
+    .flatMap(_.getUserTypes.asScala)
+    .groupBy(_.getTypeName)
+
+  def udtValueOf(udtName: String, keyspace: Option[String] = None): UDTValue =
+    udtMetadata.getOrElse(udtName.toLowerCase, Nil) match {
+      case udt :: Nil => udt.newValue()
+      case Nil =>
+        fail(s"Could not find UDT `$udtName` in any keyspace")
+      case udts => udts
+        .find(udt => keyspace.contains(udt.getKeyspace) || udt.getKeyspace == session.getLoggedKeyspace)
+        .map(_.newValue())
+        .getOrElse(fail(s"Could not determine to which keyspace `$udtName` UDT belongs. " +
+          s"Please specify desired keyspace using UdtMeta"))
+    }
 
   protected def prepare(cql: String): BoundStatement =
     preparedStatementCache(cql)(session.prepare)
