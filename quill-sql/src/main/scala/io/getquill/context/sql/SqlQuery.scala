@@ -104,8 +104,13 @@ object SqlQuery {
     def base(q: Ast, alias: String) = {
       def nest(ctx: FromContext) = FlattenSqlQuery(from = sources :+ ctx, select = select(alias))
       q match {
-        case Map(_: GroupBy, _, _)                => nest(source(q, alias))
-        case Nested(q)                            => nest(QueryContext(apply(q), alias))
+        case Map(_: GroupBy, _, _) => nest(source(q, alias))
+        case Nested(q)             => nest(QueryContext(apply(q), alias))
+        case Join(tpe, a, b, iA, iB, on) =>
+          FlattenSqlQuery(
+            from = source(q, alias) :: Nil,
+            select = SelectValue(iA, None) :: SelectValue(iB, None) :: Nil
+          )
         case q @ (_: Map | _: Filter | _: Entity) => flatten(sources, q, alias)
         case q if (sources == Nil)                => flatten(sources, q, alias)
         case other                                => nest(source(q, alias))

@@ -93,7 +93,7 @@ object ExpandNestedQueries {
       }
     }
 
-    references.toList match {
+    references.toList.sortBy(_.ast.toString).toList match {
       case Nil  => select
       case refs => refs.map(expandReference)
     }
