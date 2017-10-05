@@ -1,7 +1,7 @@
 package io.getquill
 
-import io.getquill.context.cassandra.encoding.CassandraMapper
-import io.getquill.context.cassandra.{ CassandraContext, CqlIdiom }
+import io.getquill.context.cassandra.encoding.{ CassandraMapper, CassandraType }
+import io.getquill.context.cassandra.{ CassandraContext, CqlIdiom, Udt }
 
 import scala.reflect.ClassTag
 
@@ -25,4 +25,8 @@ class CassandraMirrorContext[Naming <: NamingStrategy](naming: Naming)
     keyMapper: CassandraMapper[K, KCas],
     valMapper: CassandraMapper[V, VCas]
   ): Encoder[Map[K, V]] = encoder[Map[K, V]]
+
+  implicit def udtCassandraType[T <: Udt]: CassandraType[T] = CassandraType.of[T]
+  implicit def udtDecoder[T <: Udt: ClassTag]: Decoder[T] = decoder[T]
+  implicit def udtEncoder[T <: Udt]: Encoder[T] = encoder[T]
 }

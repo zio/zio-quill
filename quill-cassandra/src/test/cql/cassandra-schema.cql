@@ -137,3 +137,36 @@ CREATE TABLE MapsEntity(
 CREATE TABLE MapFrozen(
     id frozen <MAP<INT, BOOLEAN>> PRIMARY KEY
 );
+
+CREATE TYPE Name(
+    firstName TEXT,
+    lastName TEXT
+);
+
+CREATE TYPE Personal(
+    number INT,
+    street TEXT,
+    name frozen<Name>
+);
+
+CREATE TABLE WithEverything(
+    id INT PRIMARY KEY,
+    name Name,
+    frozenName frozen <Name>,
+    nameList LIST<frozen <Name>>,
+    nameSet SET<frozen <Name>>,
+    nameMap MAP<INT, frozen <Name>>,
+    personal frozen<Personal>
+);
+
+CREATE KEYSPACE quill_test_2 WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};
+
+CREATE TYPE quill_test_2.name(
+    first_name TEXT,
+    last_name TEXT
+);
+
+CREATE TABLE quill_test_2.with_udt(
+    id INT PRIMARY KEY,
+    name frozen <quill_test_2.Name>
+);
