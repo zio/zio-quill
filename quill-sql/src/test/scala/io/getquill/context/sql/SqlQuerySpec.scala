@@ -43,6 +43,23 @@ class SqlQuerySpec extends Spec {
         "SELECT a.i, b.i FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i WHERE (b.i IS NULL) OR (b.i = 1)"
     }
 
+    "nested join" in {
+      val q = quote {
+        qr1.leftJoin(qr2).on {
+          case (a, b) =>
+            a.i == b.i
+        }.filter {
+          case (a, b) =>
+            b.map(_.l).contains(3L)
+        }.leftJoin(qr3).on {
+          case ((a, b), c) =>
+            b.map(_.i).contains(a.i) && b.map(_.i).contains(c.i)
+        }
+      }
+      testContext.run(q).string mustEqual
+        "SELECT x01x11.s, x01x11.i, x01x11.l, x01x11.o, x01x11.s, x01x11.i, x01x11.l, x01x11.o, x12.s, x12.i, x12.l, x12.o FROM (SELECT x01.s s, x01.i i, x01.o o, x01.l l, x11.s s, x11.i i, x11.l l, x11.o o FROM TestEntity x01 LEFT JOIN TestEntity2 x11 ON x01.i = x11.i WHERE x11.l = 3) x01x11 LEFT JOIN TestEntity3 x12 ON (x01x11.i = x01x11.i) AND (x01x11.i = x12.i)"
+    }
+
     "flat outer join" in {
       val q = quote {
         for {
@@ -269,7 +286,7 @@ class SqlQuerySpec extends Spec {
               }
           }
           testContext.run(q).string mustEqual
-            "SELECT t.i, SUM(t.i) FROM (SELECT b.i i, a.i i FROM TestEntity a INNER JOIN TestEntity2 b ON a.s = b.s) t GROUP BY t.i"
+            "SELECT t.i, SUM(t.i) FROM (SELECT a.i i, b.i i FROM TestEntity a INNER JOIN TestEntity2 b ON a.s = b.s) t GROUP BY t.i"
         }
       }
       "invalid groupby criteria" in {

@@ -31,7 +31,7 @@ class VerifySqlQuerySpec extends Spec {
         }
       }
       VerifySqlQuery(SqlQuery(q.ast)).toString mustEqual
-        "Some(The monad composition can't be expressed using applicative joins. Faulty expression: 'x01._2.isDefined'. Free variables: 'List(x01)'., Faulty expression: 'x01'. Free variables: 'List(x01)'.)"
+        "Some(The monad composition can't be expressed using applicative joins. Faulty expression: 'x01._2.isDefined'. Free variables: 'List(x01)'.)"
     }
 
     "invalid flatJoin on" in {
