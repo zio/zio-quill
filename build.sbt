@@ -64,7 +64,7 @@ lazy val `quill-jdbc` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.zaxxer"              % "HikariCP"             % "2.6.3",
+        "com.zaxxer"              % "HikariCP"             % "2.7.2",
         "mysql"                   % "mysql-connector-java" % "5.1.42"             % Test,
         "com.h2database"          % "h2"                   % "1.4.196"            % Test,
         "org.postgresql"          % "postgresql"           % "42.1.4"             % Test,
@@ -81,7 +81,7 @@ lazy val `quill-finagle-mysql` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.twitter" %% "finagle-mysql" % "7.0.0"
+        "com.twitter" %% "finagle-mysql" % "7.1.0"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -93,7 +93,7 @@ lazy val `quill-finagle-postgres` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "io.github.finagle" %% "finagle-postgres" % "0.4.2"
+        "io.github.finagle" %% "finagle-postgres" % "0.4.3"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -154,7 +154,7 @@ lazy val `quill-orientdb` =
       .settings(
         fork in Test := true,
         libraryDependencies ++= Seq(
-          "com.orientechnologies" % "orientdb-graphdb" % "2.2.21"
+          "com.orientechnologies" % "orientdb-graphdb" % "2.2.29"
         )
       )
       .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -239,7 +239,7 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
   crossScalaVersions := Seq("2.11.11","2.12.3"),
   libraryDependencies ++= Seq(
     "org.scalamacros" %% "resetallattrs"  % "1.0.0",
-    "org.scalatest"   %%% "scalatest"     % "3.0.3"     % Test,
+    "org.scalatest"   %%% "scalatest"     % "3.0.4"     % Test,
     "ch.qos.logback"  % "logback-classic" % "1.2.3"     % Test,
     "com.google.code.findbugs" % "jsr305" % "3.0.2"     % Provided // just to avoid warnings during compilation
   ),
