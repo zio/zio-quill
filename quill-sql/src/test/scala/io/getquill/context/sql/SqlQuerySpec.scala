@@ -57,7 +57,7 @@ class SqlQuerySpec extends Spec {
         }
       }
       testContext.run(q).string mustEqual
-        "SELECT x01x11.s, x01x11.i, x01x11.l, x01x11.o, x01x11.s, x01x11.i, x01x11.l, x01x11.o, x12.s, x12.i, x12.l, x12.o FROM (SELECT x01.s s, x01.i i, x01.o o, x01.l l, x11.s s, x11.i i, x11.l l, x11.o o FROM TestEntity x01 LEFT JOIN TestEntity2 x11 ON x01.i = x11.i WHERE x11.l = 3) x01x11 LEFT JOIN TestEntity3 x12 ON (x01x11.i = x01x11.i) AND (x01x11.i = x12.i)"
+        "SELECT x02.s, x02.i, x02.l, x02.o, x02.s, x02.i, x02.l, x02.o, x12.s, x12.i, x12.l, x12.o FROM (SELECT x01.s s, x01.l l, x01.o o, x01.i i, x11.i i, x11.o o, x11.l l, x11.s s FROM TestEntity x01 LEFT JOIN TestEntity2 x11 ON x01.i = x11.i WHERE x11.l = 3) x02 LEFT JOIN TestEntity3 x12 ON (x02.i = x02.i) AND (x02.i = x12.i)"
     }
 
     "flat outer join" in {
