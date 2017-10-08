@@ -18,7 +18,7 @@ import io.getquill.context.sql.UnaryOperationSqlQuery
 import io.getquill.context.sql.UnionAllOperation
 import io.getquill.context.sql.UnionOperation
 import io.getquill.NamingStrategy
-import io.getquill.util.Messages.fail
+import io.getquill.util.Messages.{ fail, trace }
 import io.getquill.idiom.Idiom
 import io.getquill.idiom.SetContainsToken
 import io.getquill.idiom.Statement
@@ -40,8 +40,11 @@ trait SqlIdiom extends Idiom {
       normalizedAst match {
         case q: Query =>
           val sql = SqlQuery(q)
+          trace("sql")(sql)
           VerifySqlQuery(sql).map(fail)
-          ExpandNestedQueries(sql, collection.Set.empty).token
+          val expanded = ExpandNestedQueries(sql, collection.Set.empty).token
+          trace("expanded sql")(expanded)
+          expanded
         case other =>
           other.token
       }

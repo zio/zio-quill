@@ -4,29 +4,23 @@ import io.getquill.norm.FlattenOptionOperation
 import io.getquill.norm.Normalize
 import io.getquill.ast.Ast
 import io.getquill.norm.RenameProperties
+import io.getquill.util.Messages.trace
 
 object SqlNormalize {
 
-  private val debugEnabled = false
-
   private val normalize =
     (identity[Ast] _)
-      .andThen(debug("original"))
+      .andThen(trace("original"))
       .andThen(FlattenOptionOperation.apply _)
-      .andThen(debug("FlattenOptionOperation"))
+      .andThen(trace("FlattenOptionOperation"))
       .andThen(Normalize.apply _)
-      .andThen(debug("Normalize"))
+      .andThen(trace("Normalize"))
       .andThen(RenameProperties.apply _)
-      .andThen(debug("RenameProperties"))
+      .andThen(trace("RenameProperties"))
       .andThen(ExpandJoin.apply _)
-      .andThen(debug("ExpandJoin"))
+      .andThen(trace("ExpandJoin"))
       .andThen(Normalize.apply _)
-      .andThen(debug("Normalize"))
-
-  def debug(name: String)(ast: Ast) = {
-    if (debugEnabled) println(s"$name:\n 		$ast")
-    ast
-  }
+      .andThen(trace("Normalize"))
 
   def apply(ast: Ast) = normalize(ast)
 }

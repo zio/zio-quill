@@ -107,9 +107,18 @@ object SqlQuery {
         case Map(_: GroupBy, _, _) => nest(source(q, alias))
         case Nested(q)             => nest(QueryContext(apply(q), alias))
         case Join(tpe, a, b, iA, iB, on) =>
+          val ctx = source(q, alias)
+          def aliases(ctx: FromContext): List[String] =
+            ctx match {
+              case TableContext(_, alias)   => alias :: Nil
+              case QueryContext(_, alias)   => alias :: Nil
+              case InfixContext(_, alias)   => alias :: Nil
+              case JoinContext(_, a, b, _)  => aliases(a) ::: aliases(b)
+              case FlatJoinContext(_, a, _) => aliases(a)
+            }
           FlattenSqlQuery(
-            from = source(q, alias) :: Nil,
-            select = SelectValue(iA, None) :: SelectValue(iB, None) :: Nil
+            from = ctx :: Nil,
+            select = aliases(ctx).map(a => SelectValue(Ident(a), None))
           )
         case q @ (_: Map | _: Filter | _: Entity) => flatten(sources, q, alias)
         case q if (sources == Nil)                => flatten(sources, q, alias)
@@ -220,6 +229,7 @@ object SqlQuery {
       case infix: Infix              => InfixContext(infix, alias)
       case Join(t, a, b, ia, ib, on) => JoinContext(t, source(a, ia.name), source(b, ib.name), on)
       case FlatJoin(t, a, ia, on)    => FlatJoinContext(t, source(a, ia.name), on)
+      case Nested(q)                 => QueryContext(apply(q), alias)
       case other                     => QueryContext(apply(other), alias)
     }
 

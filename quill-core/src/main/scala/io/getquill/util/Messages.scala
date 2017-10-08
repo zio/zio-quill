@@ -9,8 +9,17 @@ object Messages {
       !Option(System.getProperty("quill.macro.log")).filterNot(_.isEmpty).map(_.toLowerCase).contains("false")
   }
 
+  private val traceEnabled = false
+
   def fail(msg: String) =
     throw new IllegalStateException(msg)
+
+  def trace[T](label: String) =
+    (v: T) => {
+      if (traceEnabled)
+        println(s"$label:\n 		$v")
+      v
+    }
 
   implicit class RichContext(c: MacroContext) {
 

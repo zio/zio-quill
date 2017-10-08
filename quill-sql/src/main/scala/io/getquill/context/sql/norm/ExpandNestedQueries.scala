@@ -23,7 +23,7 @@ object ExpandNestedQueries {
       case q: FlattenSqlQuery =>
         q.distinct match {
           case false => expandNested(q.copy(select = expandSelect(q.select, references)))
-          case true  => q
+          case true  => expandNested(q.copy(select = expandSelect(q.select, Set.empty)))
         }
       case SetOperationSqlQuery(a, op, b) =>
         SetOperationSqlQuery(apply(a, references), op, apply(b, references))
