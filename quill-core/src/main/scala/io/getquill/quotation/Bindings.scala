@@ -12,7 +12,7 @@ object Bindings {
           m ->
             q"""
               {
-                import language.reflectiveCalls
+                import _root_.scala.language.reflectiveCalls
                 $quoted.bindings.$m
               }
             """

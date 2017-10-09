@@ -268,6 +268,9 @@ trait Parsing {
   }
 
   val functionParser: Parser[Function] = Parser[Function] {
+    case q"new { def apply[..$t1](...$params) = $body }" =>
+      c.fail("Anonymous classes aren't supported for function declaration anymore. Use a method with a type parameter instead. " + 
+        "For instance, replace `val q = quote { new { def apply[T](q: Query[T]) = ... } }` by `def q[T] = quote { (q: Query[T] => ... }`")
     case q"(..$params) => $body" =>
       Function(params.map(identParser(_)), astParser(body))
   }

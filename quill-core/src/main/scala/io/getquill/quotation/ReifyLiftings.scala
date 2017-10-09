@@ -44,7 +44,7 @@ trait ReifyLiftings {
       }
 
     private def lift(v: Tree): Lift = {
-      val tpe = c.typecheck(q"import language.reflectiveCalls; $v").tpe
+      val tpe = c.typecheck(q"import _root_.scala.language.reflectiveCalls; $v").tpe
       OptionalTypecheck(c)(q"implicitly[${c.prefix}.Encoder[$tpe]]") match {
         case Some(enc) => ScalarValueLift(v.toString, v, enc)
         case None =>
