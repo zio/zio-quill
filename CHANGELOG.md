@@ -1,5 +1,21 @@
-# 2.0.0-SNAPSHOT
+# 2.0.0
 
+We're proud to announce the Quill 2.0. **All** bugs were fixed, so this release doesn't have any known bugs!
+
+- [IO monad](https://github.com/getquill/quill/pull/881)
+- [fall back to dynamic queries if dialect/naming isn't available](https://github.com/getquill/quill/pull/886)
+- [Cassandra UDT encoding](https://github.com/getquill/quill/pull/852)
+- [Add support of 'contains' operation on Cassandra collections](https://github.com/getquill/quill/pull/813)
+- [Add org.joda.time.DateTime and java.time.ZonedDateTime encoding for quill-async-postgres](https://github.com/getquill/quill/pull/896)
+- [Update dependencies](https://github.com/getquill/quill/pull/927)
+- [give a better error message for option.get](https://github.com/getquill/quill/pull/905)
+- [Remove OrientDB async context](https://github.com/getquill/quill/pull/884)
+- [remove anonymous class support](https://github.com/getquill/quill/pull/891)
+- [Remove client.ping from the FinagleMysqlContext constructor](https://github.com/getquill/quill/pull/895)
+
+## Fixes
+
+[#872](https://github.com/getquill/quill/pull/872), [#874](https://github.com/getquill/quill/pull/874), [#875](https://github.com/getquill/quill/pull/875), [#877](https://github.com/getquill/quill/pull/877), [#879](https://github.com/getquill/quill/pull/879), [#889](https://github.com/getquill/quill/pull/889), [#890](https://github.com/getquill/quill/pull/890), [#892](https://github.com/getquill/quill/pull/892), [#894](https://github.com/getquill/quill/pull/894), [#897](https://github.com/getquill/quill/pull/897), [#899](https://github.com/getquill/quill/pull/899), [#900](https://github.com/getquill/quill/pull/900), [#903](https://github.com/getquill/quill/pull/903), [#902](https://github.com/getquill/quill/pull/902), [#904](https://github.com/getquill/quill/pull/904), [#906](https://github.com/getquill/quill/pull/906), [#907](https://github.com/getquill/quill/pull/907), [#908](https://github.com/getquill/quill/pull/908), [#909](https://github.com/getquill/quill/pull/909), [#910](https://github.com/getquill/quill/pull/910), [#913](https://github.com/getquill/quill/pull/913), [#915](https://github.com/getquill/quill/pull/915), [#917](https://github.com/getquill/quill/pull/917), [#920](https://github.com/getquill/quill/pull/920), [#921](https://github.com/getquill/quill/pull/921), [#925](https://github.com/getquill/quill/pull/925), [#928](https://github.com/getquill/quill/pull/928)
 
 ### Migration notes
 
