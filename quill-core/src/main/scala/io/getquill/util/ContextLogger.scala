@@ -22,7 +22,11 @@ class ContextLogger(name: String) {
     }
   }
 
-  private def prepareParams(params: Seq[Any]): String = params.map(prepareParam).mkString("[", ", ", "]")
+  private def prepareParams(params: Seq[Any]): String = params
+    .reverse
+    .map(prepareParam)
+    .mkString("[", ", ", "]")
+
   private def prepareParam(param: Any): String = param match {
     case None | null => nullToken
     case Some(x)     => prepareParam(x)
