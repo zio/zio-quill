@@ -12,8 +12,6 @@ class DepartmentsPostgresAsyncSpec extends DepartmentsSpec {
   val context = testContext
   import testContext._
 
-  def await[T](future: Future[T]) = Await.result(future, Duration.Inf)
-
   override def beforeAll =
     await {
       testContext.transaction { implicit ec =>

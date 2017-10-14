@@ -28,6 +28,9 @@ class CqlQuerySpec extends Spec {
       intercept[IllegalStateException] {
         CqlQuery(q.ast)
       }
+      intercept[IllegalStateException] {
+        CqlQuery(ast.Map(ast.Ident("b"), ast.Ident("x"), ast.Ident("a")))
+      }
       ()
     }
   }
