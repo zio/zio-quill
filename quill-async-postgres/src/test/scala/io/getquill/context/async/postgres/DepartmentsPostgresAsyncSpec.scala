@@ -1,9 +1,6 @@
 package io.getquill.context.async.postgres
 
-import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.{ global => ec }
-import scala.concurrent.Future
-import scala.concurrent.duration.Duration
 
 import io.getquill.context.sql.DepartmentsSpec
 
@@ -33,5 +30,9 @@ class DepartmentsPostgresAsyncSpec extends DepartmentsSpec {
 
   "Example 9 - nested db" in {
     await(testContext.run(`Example 9 expertise`(lift(`Example 9 param`)))) mustEqual `Example 9 expected result`
+  }
+
+  "performIO" in {
+    await(performIO(runIO(query[Task]).transactional))
   }
 }

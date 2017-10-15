@@ -1,7 +1,6 @@
 package io.getquill.context.async.postgres
 
 import scala.concurrent.ExecutionContext.Implicits.global
-
 import io.getquill.Spec
 
 class PostgresAsyncContextSpec extends Spec {
@@ -21,5 +20,13 @@ class PostgresAsyncContextSpec extends Spec {
     })
     await(testContext.run(qr4.filter(_.i == lift(inserted))))
       .head.i mustBe inserted
+  }
+
+  "performIO" in {
+    await(performIO(runIO(qr4).transactional))
+  }
+
+  "probe" in {
+    probe("select 1").toOption mustBe defined
   }
 }

@@ -1,9 +1,6 @@
 package io.getquill.context.async.mysql
 
-import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.{ global => ec }
-import scala.concurrent.Future
-import scala.concurrent.duration.Duration
 
 import io.getquill.context.sql.DepartmentsSpec
 

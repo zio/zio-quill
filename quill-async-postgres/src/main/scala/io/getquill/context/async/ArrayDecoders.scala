@@ -23,7 +23,7 @@ trait ArrayDecoders extends ArrayEncoding {
   implicit def arrayFloatDecoder[Col <: Seq[Float]](implicit bf: CBF[Float, Col]): Decoder[Col] = arrayDecoder[Double, Float, Col](_.toFloat)
   implicit def arrayDoubleDecoder[Col <: Seq[Double]](implicit bf: CBF[Double, Col]): Decoder[Col] = arrayRawEncoder[Double, Col]
   implicit def arrayDateDecoder[Col <: Seq[Date]](implicit bf: CBF[Date, Col]): Decoder[Col] = arrayDecoder[JodaLocalDateTime, Date, Col](_.toDate)
-  implicit def arrayJodaDateTimeDecoder[Col <: Seq[JodaDateTime]](implicit bf: CBF[JodaDateTime, Col]): Decoder[Col] = arrayRawEncoder[JodaDateTime, Col]
+  implicit def arrayJodaDateTimeDecoder[Col <: Seq[JodaDateTime]](implicit bf: CBF[JodaDateTime, Col]): Decoder[Col] = arrayDecoder[JodaLocalDateTime, JodaDateTime, Col](_.toDateTime)
   implicit def arrayJodaLocalDateTimeDecoder[Col <: Seq[JodaLocalDateTime]](implicit bf: CBF[JodaLocalDateTime, Col]): Decoder[Col] = arrayRawEncoder[JodaLocalDateTime, Col]
   implicit def arrayJodaLocalDateDecoder[Col <: Seq[JodaLocalDate]](implicit bf: CBF[JodaLocalDate, Col]): Decoder[Col] = arrayRawEncoder[JodaLocalDate, Col]
   implicit def arrayLocalDateDecoder[Col <: Seq[LocalDate]](implicit bf: CBF[LocalDate, Col]): Decoder[Col] = arrayDecoder[JodaLocalDate, LocalDate, Col](decodeLocalDate.f)
