@@ -1,6 +1,6 @@
 package io.getquill.context.finagle.mysql
 
-import java.time.{ LocalDateTime, ZoneId }
+import java.time.{ LocalDate, LocalDateTime, ZoneId }
 import java.util.{ Date, TimeZone }
 
 import com.twitter.util.Await
@@ -180,6 +180,19 @@ class FinagleMysqlEncodingSpec extends EncodingSpec {
       TimeZone.setDefault(zone)
 
       verify(Await.result(r).head)
+    }
+
+    "timestamp as localdate" in {
+      case class LocalDateTimeEncodingTestEntity(v2: LocalDate)
+      val e = LocalDateTimeEncodingTestEntity(LocalDate.now())
+
+      val r = for {
+        _ <- testContext.run(query[LocalDateTimeEncodingTestEntity].delete)
+        _ <- testContext.run(query[LocalDateTimeEncodingTestEntity].insert(lift(e)))
+        result <- testContext.run(query[LocalDateTimeEncodingTestEntity])
+      } yield result
+
+      Await.result(r).headOption.map(_.v2) mustBe Some(e.v2)
     }
   }
 }

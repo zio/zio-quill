@@ -142,7 +142,7 @@ class FinagleMysqlContext[N <: NamingStrategy](
   private def extractReturningValue[T](result: MysqlResult, extractor: Extractor[T]) =
     extractor(SingleValueRow(LongValue(toOk(result).insertId)))
 
-  private def toOk(result: MysqlResult) =
+  protected def toOk(result: MysqlResult) =
     result match {
       case ok: OK => ok
       case error  => fail(error.toString)
