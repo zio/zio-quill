@@ -70,6 +70,11 @@ class StatelessTransformerSpec extends Spec {
         Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("e") -> Ident("e'"))(ast) mustEqual
           Join(FullJoin, Ident("a'"), Ident("b'"), Ident("c"), Ident("d"), Ident("e'"))
       }
+      "flat join" in {
+        val ast: Ast = FlatJoin(InnerJoin, Ident("a"), Ident("b"), Ident("c"))
+        Subject(Ident("a") -> Ident("a'"), Ident("c") -> Ident("c'"))(ast) mustEqual
+          FlatJoin(InnerJoin, Ident("a'"), Ident("b"), Ident("c'"))
+      }
 
       "distinct" in {
         val ast: Ast = Distinct(Ident("a"))
@@ -109,6 +114,12 @@ class StatelessTransformerSpec extends Spec {
         Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) mustEqual
           Tuple(List(Ident("a'"), Ident("b'"), Ident("c'")))
       }
+    }
+
+    "Assignment" in {
+      val ast: Ast = Assignment(Ident("a"), Ident("b"), Ident("b"))
+      Subject(Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) mustEqual
+        Assignment(Ident("a"), Ident("b'"), Ident("b'"))
     }
 
     "action" - {

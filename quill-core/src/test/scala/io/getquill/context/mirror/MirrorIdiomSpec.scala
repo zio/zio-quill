@@ -88,6 +88,13 @@ class MirrorIdiomSpec extends Spec {
       stmt"${(q.ast: Ast).token}" mustEqual
         stmt"""querySchema("TestEntity").fullJoin(querySchema("TestEntity2")).on((a, b) => a.s == b.s)"""
     }
+    "flat join" in {
+      val q = quote {
+        qr1.join(x => true)
+      }
+      stmt"${(q.ast: Ast).token}" mustEqual
+        stmt"""querySchema("TestEntity").join((x) => true)"""
+    }
   }
 
   "shows sorted queries" - {
@@ -457,6 +464,17 @@ class MirrorIdiomSpec extends Spec {
       stmt"${(q.ast: Ast).token}" mustEqual
         stmt"""querySchema("TestEntity").filter(t => infix"$${t.s} == 's'")"""
     }
+    "as quoted" in {
+      implicit class RichQuoted[T](q: Quoted[testContext.Query[T]]) {
+        def func = quote(infix"$q.func".as[testContext.Query[T]])
+      }
+      val q = quote {
+        qr1.func
+      }
+      stmt"${(q.ast: Ast).token}" mustEqual
+        stmt"""infix"$${querySchema("TestEntity")}.func""""
+
+    }
   }
 
   "shows inline statement" in {
@@ -488,6 +506,58 @@ class MirrorIdiomSpec extends Spec {
       }
       stmt"${(q.ast: Ast).token}" mustEqual
         stmt"(o) => o.exists((v) => v)"
+    }
+    "contains" in {
+      val q = quote {
+        (o: Option[Boolean]) => o.contains(true)
+      }
+      stmt"${(q.ast: Ast).token}" mustEqual
+        stmt"(o) => o.contains(true)"
+    }
+    "isEmpty" in {
+      val q = quote {
+        (o: Option[Boolean]) => o.isEmpty
+      }
+      stmt"${(q.ast: Ast).token}" mustEqual
+        stmt"(o) => o.isEmpty"
+    }
+    "nonEmpty" in {
+      val q = quote {
+        (o: Option[Boolean]) => o.nonEmpty
+      }
+      stmt"${(q.ast: Ast).token}" mustEqual
+        stmt"(o) => o.nonEmpty"
+    }
+    "isDefined" in {
+      val q = quote {
+        (o: Option[Boolean]) => o.isDefined
+      }
+      stmt"${(q.ast: Ast).token}" mustEqual
+        stmt"(o) => o.isDefined"
+    }
+  }
+
+  "show traversable operation" - {
+    "MapContains" in {
+      val q = quote {
+        (m: Predef.Map[Int, Int]) => m.contains(1)
+      }
+      stmt"${(q.ast: Ast).token}" mustEqual
+        stmt"(m) => m.contains(1)"
+    }
+    "SetContains" in {
+      val q = quote {
+        (s: Set[Int]) => s.contains(1)
+      }
+      stmt"${(q.ast: Ast).token}" mustEqual
+        stmt"(s) => s.contains(1)"
+    }
+    "ListContains" in {
+      val q = quote {
+        (l: List[Int]) => l.contains(1)
+      }
+      stmt"${(q.ast: Ast).token}" mustEqual
+        stmt"(l) => l.contains(1)"
     }
   }
 
@@ -527,5 +597,20 @@ class MirrorIdiomSpec extends Spec {
     }
     stmt"${(q.ast: Ast).token}" mustEqual
       stmt"""querySchema("TestEntity").distinct"""
+  }
+
+  "shows nested" in {
+    val q = quote {
+      query[TestEntity].nested
+    }
+    stmt"${(q.ast: Ast).token}" mustEqual
+      stmt"""querySchema("TestEntity").nested"""
+  }
+
+  "liftTokenizer" in {
+    val q = quote {
+      qr1.map(x => lift(1))
+    }
+    q.ast.toString mustEqual """querySchema("TestEntity").map(x => ?)"""
   }
 }
