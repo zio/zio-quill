@@ -22,6 +22,14 @@ class MapsEncodingSpec extends Spec {
     true
   }
 
+  "mirror" in {
+    val ctx = orientdb.mirrorContext
+    import ctx._
+    val q = quote(query[MapsEntity])
+    ctx.run(q.insert(lift(e)))
+    ctx.run(q)
+  }
+
   "Map encoders/decoders" in {
     val ctx = orientdb.testSyncDB
     import ctx._

@@ -116,16 +116,19 @@ docker-compose down && docker-compose run --rm --service-ports setup
 After that we need to set some environment variables in order to run `sbt` locally.
 
 ```bash
-export CASSANDRA_HOST=<docker host address>
+export CASSANDRA_HOST=127.0.0.1
 export CASSANDRA_PORT=19042
-export MYSQL_HOST=<docker host address>
+export MYSQL_HOST=127.0.0.1
 export MYSQL_PORT=13306
-export POSTGRES_HOST=<docker host address>
+export POSTGRES_HOST=127.0.0.1
 export POSTGRES_PORT=15432
-export SQL_SERVER_HOST=<docker host address>
+export SQL_SERVER_HOST=127.0.0.1
 export SQL_SERVER_PORT=11433
+export ORIENTDB_HOST=127.0.0.1
+export ORIENTDB_PORT=12424
 ```
 
-If you run docker locally then usually docker host address is `localhost` or `127.0.0.1`.
+Where `127.0.0.1` is address of local docker.
+If you have non-local docker change it depending on your settings.
 
 Finally, you can use `sbt` locally.

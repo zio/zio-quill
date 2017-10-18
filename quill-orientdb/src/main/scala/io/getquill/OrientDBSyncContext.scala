@@ -31,7 +31,7 @@ class OrientDBSyncContext[N <: NamingStrategy](
   private val logger = ContextLogger(classOf[OrientDBSyncContext[_]])
 
   override def performIO[T](io: IO[T, _], transactional: Boolean = false): Result[T] = {
-    if (transactional) logger.underlying.warn("Cassandra doesn't support transactions, ignoring `io.transactional`")
+    if (transactional) logger.underlying.warn("OrientDB doesn't support transactions, ignoring `io.transactional`")
     super.performIO(io)
   }
 

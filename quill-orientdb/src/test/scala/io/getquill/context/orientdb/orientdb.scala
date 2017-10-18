@@ -4,27 +4,26 @@ import com.orientechnologies.orient.client.remote.OServerAdmin
 import com.orientechnologies.orient.core.db.OPartitionedDatabasePool
 import com.orientechnologies.orient.core.metadata.schema.OSchemaProxy
 import io.getquill._
+import io.getquill.util.LoadConfig
 
 object orientdb {
-  private val dbUrl = "remote:orientdb:2424"
+  private val conf = OrientDBContextConfig(LoadConfig("ctx"))
   private val databaseName = "GratefulDeadConcerts"
   private val databaseType = "document"
   private val storageMode = "memory"
-  private val username = "root"
-  private val password = "root"
   private var setupDone = false
 
   private def setup(): Unit = {
-    val existsDatabase = new OServerAdmin(dbUrl)
-      .connect(username, password)
+    val existsDatabase = new OServerAdmin(conf.dbUrl)
+      .connect(conf.username, conf.password)
       .existsDatabase(databaseName, storageMode)
 
     if (!existsDatabase) {
-      new OServerAdmin(dbUrl)
-        .connect(username, password)
+      new OServerAdmin(conf.dbUrl)
+        .connect(conf.username, conf.password)
         .createDatabase(databaseName, databaseType, storageMode).close()
     }
-    val dbConnection = new OPartitionedDatabasePool(s"$dbUrl/$databaseName", username, password).acquire()
+    val dbConnection = new OPartitionedDatabasePool(s"${conf.dbUrl}/$databaseName", conf.username, conf.password).acquire()
     val schema = dbConnection.getMetadata.getSchema
     getOrCreateClass(schema, "DecodeNullTestEntity")
     getOrCreateClass(schema, "EncodingTestEntity")
@@ -56,6 +55,6 @@ object orientdb {
 
   def testSyncDB = {
     if (!setupDone) { setup(); setupDone = true }
-    new OrientDBSyncContext(Literal, s"$dbUrl/$databaseName", username, password)
+    new OrientDBSyncContext(Literal, "ctx")
   }
 }

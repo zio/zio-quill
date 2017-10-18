@@ -3,7 +3,7 @@ package io.getquill.context.async.mysql
 import java.nio.charset.Charset
 
 import com.typesafe.config.ConfigFactory
-import io.getquill.{MysqlAsyncContextConfig, Spec}
+import io.getquill.{ MysqlAsyncContextConfig, Spec }
 
 import scala.collection.JavaConverters._
 import scala.concurrent.duration.Duration
@@ -17,7 +17,7 @@ class MysqlAsyncContextConfigSpec extends Spec {
         "queryTimeout" -> "123",
         "charset" -> "UTF-8",
         "maximumMessageSize" -> "123",
-        "connectTimeout" -> "123",
+        "connectTimeout" -> "123"
       ).asJava)
       val conf = MysqlAsyncContextConfig(c)
 

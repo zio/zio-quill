@@ -30,6 +30,14 @@ class ListsEncodingSpec extends Spec {
     true
   }
 
+  "mirror" in {
+    val ctx = orientdb.mirrorContext
+    import ctx._
+    val q = quote(query[ListsEntity])
+    ctx.run(q.insert(lift(e)))
+    ctx.run(q)
+  }
+
   "List encoders/decoders for OrientDB Types" in {
     val ctx = orientdb.testSyncDB
     import ctx._

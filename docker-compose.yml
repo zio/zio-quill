@@ -96,3 +96,5 @@ services:
       - SQL_SERVER_PORT=1433
       - CASSANDRA_HOST=cassandra
       - CASSANDRA_PORT=9042
+      - ORIENTDB_HOST=orientdb
+      - ORIENTDB_PORT=2424
