@@ -1,6 +1,5 @@
 package io.getquill.quotation
 
-
 import scala.reflect.ClassTag
 import io.getquill.ast._
 import io.getquill.Embedded
@@ -230,8 +229,8 @@ trait Parsing {
         tree match {
           case q"$a.$b" =>
             path(a) :+ b.decodedName.toString
-          case q"$a.$b.map[$_]((..$_) => $_.$c)" =>
-            path(a) ++ List(b.decodedName.toString, c.decodedName.toString)
+          case q"$a.$b.map[$tpe]((..$args) => $tr)" =>
+            path(a) ++ (b.decodedName.toString :: path(tr))
           case _ =>
             Nil
         }
@@ -269,7 +268,7 @@ trait Parsing {
 
   val functionParser: Parser[Function] = Parser[Function] {
     case q"new { def apply[..$t1](...$params) = $body }" =>
-      c.fail("Anonymous classes aren't supported for function declaration anymore. Use a method with a type parameter instead. " + 
+      c.fail("Anonymous classes aren't supported for function declaration anymore. Use a method with a type parameter instead. " +
         "For instance, replace `val q = quote { new { def apply[T](q: Query[T]) = ... } }` by `def q[T] = quote { (q: Query[T] => ... }`")
     case q"(..$params) => $body" =>
       Function(params.map(identParser(_)), astParser(body))
@@ -288,7 +287,7 @@ trait Parsing {
   val optionOperationParser: Parser[OptionOperation] = Parser[OptionOperation] {
     case q"$o.map[$t]({($alias) => $body})" if is[Option[Any]](o) =>
       OptionMap(astParser(o), identParser(alias), astParser(body))
-    case q"$o.forall({($alias) => $body})"  if is[Option[Any]](o) =>
+    case q"$o.forall({($alias) => $body})" if is[Option[Any]](o) =>
       if (is[Option[Embedded]](o)) {
         c.fail("Please use Option.exists() instead of Option.forall() with embedded case classes.")
       } else {
@@ -352,10 +351,10 @@ trait Parsing {
   }
 
   private def rejectOptions(a: Tree, b: Tree) = {
-    if((!is[Null](a) && is[Option[_]](a)) || (!is[Null](b) && is[Option[_]](b))) 
+    if ((!is[Null](a) && is[Option[_]](a)) || (!is[Null](b) && is[Option[_]](b)))
       c.fail("Can't compare `Option` values since databases have different behavior for null comparison. Use `Option` methods like `forall` and `exists` instead.")
   }
-  
+
   val equalityOperationParser: Parser[Operation] = Parser[Operation] {
     case q"$a.==($b)" =>
       checkTypes(a, b)
