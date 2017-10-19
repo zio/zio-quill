@@ -17,8 +17,14 @@ class PostgresAsyncContext[N <: NamingStrategy](naming: N, pool: PartitionedConn
   def this(naming: N, config: Config) = this(naming, PostgresAsyncContextConfig(config))
   def this(naming: N, configPrefix: String) = this(naming, LoadConfig(configPrefix))
 
-  override protected def extractActionResult[O](returningColumn: String, returningExtractor: Extractor[O])(result: DBQueryResult): O =
-    returningExtractor(result.rows.get(0))
+  override protected def extractActionResult[O](returningColumn: String, returningExtractor: Extractor[O])(result: DBQueryResult): O = {
+    result.rows match {
+      case Some(r) if r.nonEmpty =>
+        returningExtractor(r.head)
+      case _ =>
+        throw new IllegalStateException("This is a bug. Cannot extract returning value.")
+    }
+  }
 
   override protected def expandAction(sql: String, returningColumn: String): String =
     s"$sql RETURNING $returningColumn"
