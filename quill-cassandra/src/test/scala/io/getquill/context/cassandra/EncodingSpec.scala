@@ -98,6 +98,16 @@ class EncodingSpec extends Spec {
     }
   }
 
+  "mappedEncoding" in {
+    import testSyncDB._
+    case class A()
+    case class B()
+    val a1: Encoder[A] = encoder((b, c, d) => d)
+    val a2: Decoder[A] = decoder((b, c) => A())
+    mappedDecoder(MappedEncoding[A, B](_ => B()), a2).isInstanceOf[CassandraDecoder[B]] mustBe true
+    mappedEncoder(MappedEncoding[B, A](_ => A()), a1).isInstanceOf[CassandraEncoder[B]] mustBe true
+  }
+
   private def verify(result: List[EncodingTestEntity]): Unit =
     result.zip(insertValues) match {
       case List((e1, a1), (e2, a2)) =>

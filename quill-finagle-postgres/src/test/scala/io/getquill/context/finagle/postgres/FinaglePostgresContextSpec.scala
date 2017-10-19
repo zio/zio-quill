@@ -24,4 +24,14 @@ class FinaglePostgresContextSpec extends Spec {
     await(testContext.run(qr4.filter(_.i == lift(inserted))))
       .head.i mustBe inserted
   }
+
+  "performIo" in {
+    await(performIO(runIO(qr1.filter(_.i == 123)).transactional)) mustBe Nil
+  }
+
+  "probe" in {
+    val ctx = new FinaglePostgresContext(Literal, "testPostgresDB")
+    ctx.probe("select 1").toOption mustBe defined
+    ctx.close
+  }
 }

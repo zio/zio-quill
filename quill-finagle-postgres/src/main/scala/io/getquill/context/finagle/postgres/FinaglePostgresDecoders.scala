@@ -66,10 +66,7 @@ trait FinaglePostgresDecoders {
     case v: Double => v.toFloat
     case v: Float  => v
   }
-  implicit val doubleDecoder: Decoder[Double] = decoder[Double] {
-    case v: Double => v
-    case v: Float  => v.toDouble
-  }
+  implicit val doubleDecoder: Decoder[Double] = decoderDirectly[Double]
   implicit val byteArrayDecoder: Decoder[Array[Byte]] = decoderDirectly[Array[Byte]]
   implicit val dateDecoder: Decoder[Date] =
     decoder[Date] {

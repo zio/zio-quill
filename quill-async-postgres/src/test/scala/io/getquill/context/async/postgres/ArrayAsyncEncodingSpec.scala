@@ -3,7 +3,7 @@ package io.getquill.context.async.postgres
 import java.time.{ LocalDate, LocalDateTime }
 
 import io.getquill.context.sql.encoding.ArrayEncodingBaseSpec
-import org.joda.time.{ LocalDate => JodaLocalDate, LocalDateTime => JodaLocalDateTime }
+import org.joda.time.{ DateTime => JodaDateTime, LocalDate => JodaLocalDate, LocalDateTime => JodaLocalDateTime }
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -28,6 +28,15 @@ class ArrayAsyncEncodingSpec extends ArrayEncodingBaseSpec {
     val actual = await(ctx.run(jQ)).head
     actual.timestamps mustBe jE.timestamps
     actual.dates mustBe jE.dates
+  }
+
+  "Joda times 2" in {
+    case class JodaTimes(timestamps: Seq[JodaDateTime])
+    val jE = JodaTimes(Seq(JodaDateTime.now()))
+    val jQ = quote(querySchema[JodaTimes]("ArraysTestEntity"))
+    await(ctx.run(jQ.insert(lift(jE))))
+    val actual = await(ctx.run(jQ)).head
+    actual.timestamps mustBe jE.timestamps
   }
 
   "Java8 times" in {
@@ -66,6 +75,11 @@ class ArrayAsyncEncodingSpec extends ArrayEncodingBaseSpec {
     val actual2 = await(ctx.run(q.filter(_.texts == lift(List("test2")))))
     actual1 mustEqual List(e)
     actual2 mustEqual List()
+  }
+
+  "fail if found not an array" in {
+    case class EncodingTestEntity(v1: List[String])
+    intercept[IllegalStateException](await(ctx.run(query[EncodingTestEntity])))
   }
 
   override protected def beforeEach(): Unit = {

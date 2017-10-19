@@ -2,12 +2,8 @@ package io.getquill.context.async.mysql
 
 import java.util.concurrent.ConcurrentLinkedQueue
 
-import scala.BigDecimal
 import scala.collection.JavaConverters.collectionAsScalaIterableConverter
 import scala.collection.JavaConverters.seqAsJavaListConverter
-import scala.concurrent.Await
-import scala.concurrent.Future
-import scala.concurrent.duration.Duration
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.math.BigDecimal.int2bigDecimal
 
@@ -17,8 +13,6 @@ class QueryResultTypeMysqlAsyncSpec extends QueryResultTypeSpec {
 
   val context = testContext
   import testContext._
-
-  def await[T](r: Future[T]) = Await.result(r, Duration.Inf)
 
   val insertedProducts = new ConcurrentLinkedQueue[Product]
 

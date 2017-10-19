@@ -1,6 +1,8 @@
 package io.getquill.context.cassandra
 
 import io.getquill._
+import io.getquill.idiom.StatementInterpolator._
+import io.getquill.ast.{ Action => AstAction, _ }
 
 class CqlIdiomSpec extends Spec {
 
@@ -350,6 +352,42 @@ class CqlIdiomSpec extends Spec {
     "list.contains" in {
       mirrorContext.run(listFroz.filter(x => x.id.contains(3))).string mustEqual
         "SELECT id FROM ListFrozen WHERE id CONTAINS 3"
+    }
+  }
+
+  "tokenizer" - {
+    implicit val n = Literal
+    import CqlIdiom._
+
+    "ident" in {
+      val a: Ast = Ident("a")
+      translate(a) mustBe (a -> stmt"a")
+    }
+    "assignment" in {
+      val a: Ast = Assignment(Ident("a"), Ident("b"), Ident("c"))
+      translate(a: Ast) mustBe (a -> stmt"b = c")
+    }
+    "aggregation" in {
+      val t = implicitly[Tokenizer[AggregationOperator]]
+      t.token(AggregationOperator.`size`) mustBe stmt"COUNT"
+      intercept[IllegalStateException](t.token(AggregationOperator.`max`))
+    }
+    "cql" in {
+      val t = implicitly[Tokenizer[CqlQuery]]
+      val e = CqlQuery(Entity("name", Nil), None, Nil, None, Nil, distinct = true)
+      intercept[IllegalStateException](t.token(e))
+      t.token(e.copy(distinct = false)) mustBe stmt"SELECT * FROM name"
+    }
+    "fail on invalid" in {
+      intercept[IllegalStateException](implicitly[Tokenizer[Ast]].token(Block(Nil)))
+    }
+    "value" in {
+      implicitly[Tokenizer[Value]].token(Tuple(List(Ident("a")))) mustBe stmt"a"
+    }
+    "action" in {
+      val t = implicitly[Tokenizer[AstAction]]
+      intercept[IllegalStateException](t.token(null: AstAction))
+      intercept[IllegalStateException](t.token(Insert(Nested(Ident("a")), Nil)))
     }
   }
 }

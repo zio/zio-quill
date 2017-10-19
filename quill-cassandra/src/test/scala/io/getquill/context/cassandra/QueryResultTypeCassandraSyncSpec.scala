@@ -41,4 +41,8 @@ class QueryResultTypeCassandraSyncSpec extends QueryResultTypeCassandraSpec {
       context.run(parametrizedSize(lift(10000))) mustEqual 0
     }
   }
+
+  "io monad" in {
+    performIO(runIO(selectAll)) mustEqual performIO(runIO(selectAll).transactional)
+  }
 }

@@ -56,3 +56,9 @@ class JdbcContextSpec extends Spec {
     testContext.run(qr4.filter(_.i == lift(inserted))).head.i mustBe inserted
   }
 }
+
+class PendingUntilFixed extends Spec {
+  "remove this once sqlserver build established" in {
+    new SqlServerJdbcContext(Literal, "testPostgresDB").close()
+  }
+}

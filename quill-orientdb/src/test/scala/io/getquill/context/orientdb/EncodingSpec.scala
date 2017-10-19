@@ -18,6 +18,18 @@ class EncodingSpec extends Spec {
     }
   }
 
+  "mapped" in {
+    val ctx = orientdb.testSyncDB
+    import ctx._
+    // 100% coverage
+    case class A()
+    case class B()
+    val a1: Encoder[A] = encoder((b, c, d) => d)
+    val a2: Decoder[A] = decoder(b => c => A())
+    mappedDecoder(MappedEncoding[A, B](_ => B()), a2).isInstanceOf[OrientDBDecoder[B]] mustBe true
+    mappedEncoder(MappedEncoding[B, A](_ => A()), a1).isInstanceOf[OrientDBEncoder[B]] mustBe true
+  }
+
   "encodes collections" - {
 
     "sync" in {
@@ -77,6 +89,7 @@ class EncodingSpec extends Spec {
     v7:  Double,
     v8:  Array[Byte],
     v11: Date,
+    v12: Short,
     o1:  Option[String],
     o2:  Option[BigDecimal],
     o3:  Option[Boolean],
@@ -101,6 +114,7 @@ class EncodingSpec extends Spec {
         v7 = 42.4d,
         v8 = Array(1.toByte, 2.toByte),
         v11 = new Date(31202000),
+        v12 = 1,
         o1 = Some("s"),
         o2 = Some(BigDecimal(1.1)),
         o3 = Some(true),
@@ -122,6 +136,7 @@ class EncodingSpec extends Spec {
         v7 = 0.0D,
         v8 = Array(),
         v11 = new Date(0),
+        v12 = 2,
         o1 = None,
         o2 = None,
         o3 = None,

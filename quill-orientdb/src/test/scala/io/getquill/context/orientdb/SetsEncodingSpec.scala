@@ -29,6 +29,14 @@ class SetsEncodingSpec extends Spec {
     expected.timestamps.isInstanceOf[Date]
   }
 
+  "mirror" in {
+    val ctx = orientdb.mirrorContext
+    import ctx._
+    val q = quote(query[SetsEntity])
+    ctx.run(q.insert(lift(e)))
+    ctx.run(q)
+  }
+
   "Set encoders/decoders" in {
     val ctx = orientdb.testSyncDB
     import ctx._

@@ -122,4 +122,20 @@ class NamingStrategySpec extends Spec {
       s.default("test") mustEqual ("test")
     }
   }
+
+  "composite" - {
+    val s = NamingStrategy(SnakeCase, MysqlEscape)
+
+    "table name" in {
+      s.table("someValue") mustEqual "`some_value`"
+    }
+
+    "column name" in {
+      s.column("someValue") mustEqual "`some_value`"
+    }
+
+    "default" in {
+      s.default("someValue") mustEqual "some_value"
+    }
+  }
 }
