@@ -39,7 +39,7 @@ jobs:
   include:
     - stage: release 2.12
       env:
-        - SCALA_VERSION=2.12.3
+        - SCALA_VERSION=2.12.4
       script:
         - docker-compose run sbt bash -c "./build/release.sh"
 
