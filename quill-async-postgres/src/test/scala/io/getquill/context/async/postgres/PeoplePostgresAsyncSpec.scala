@@ -1,9 +1,6 @@
 package io.getquill.context.async.postgres
 
-import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.{ global => ec }
-import scala.concurrent.Future
-import scala.concurrent.duration.Duration
 
 import io.getquill.context.sql.PeopleSpec
 
@@ -11,8 +8,6 @@ class PeoplePostgresAsyncSpec extends PeopleSpec {
 
   val context = testContext
   import testContext._
-
-  def await[T](future: Future[T]) = Await.result(future, Duration.Inf)
 
   override def beforeAll =
     await {

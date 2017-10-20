@@ -43,4 +43,8 @@ class QueryResultTypeCassandraAsyncSpec extends QueryResultTypeCassandraSpec {
       await(context.run(parametrizedSize(lift(10000)))) mustEqual 0
     }
   }
+
+  "io monad" in {
+    await(performIO(runIO(selectAll))) mustEqual await(performIO(runIO(selectAll).transactional))
+  }
 }

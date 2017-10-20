@@ -1,17 +1,11 @@
 package io.getquill.context.async.postgres
 
-import scala.concurrent.Await
-import scala.concurrent.Future
-import scala.concurrent.duration.Duration
 import scala.concurrent.ExecutionContext.Implicits.global
-
 import io.getquill.Spec
 
 class PostgresAsyncContextSpec extends Spec {
 
   import testContext._
-
-  def await[T](f: Future[T]) = Await.result(f, Duration.Inf)
 
   "run non-batched action" in {
     val insert = quote { (i: Int) =>
@@ -26,5 +20,13 @@ class PostgresAsyncContextSpec extends Spec {
     })
     await(testContext.run(qr4.filter(_.i == lift(inserted))))
       .head.i mustBe inserted
+  }
+
+  "performIO" in {
+    await(performIO(runIO(qr4).transactional))
+  }
+
+  "probe" in {
+    probe("select 1").toOption mustBe defined
   }
 }

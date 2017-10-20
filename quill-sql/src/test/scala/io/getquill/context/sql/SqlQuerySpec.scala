@@ -290,12 +290,8 @@ class SqlQuerySpec extends Spec {
         }
       }
       "invalid groupby criteria" in {
-        val q = quote {
-          qr1.groupBy(t => t).map(t => t)
-        }
-        val e = intercept[IllegalStateException] {
-          SqlQuery(q.ast)
-        }
+        intercept[IllegalStateException](SqlQuery(quote(qr1.groupBy(t => t).map(t => t)).ast))
+        intercept[IllegalStateException](SqlQuery(quote(qr1.groupBy(t => "1").map(_._1)).ast))
       }
     }
     "aggregated query" in {
@@ -305,6 +301,13 @@ class SqlQuerySpec extends Spec {
       testContext.run(q).string mustEqual
         "SELECT MAX(t.i) FROM TestEntity t"
     }
+    "aggregated query multiple select" in {
+      val q = quote {
+        qr1.map(t => t.i -> t.s).size
+      }
+      testContext.run(q).string mustEqual
+        "SELECT COUNT(*) FROM (SELECT t.i, t.s FROM TestEntity t) x"
+    }
     "distinct query" in {
       val q = quote {
         qr1.map(t => t.i).distinct
@@ -312,6 +315,21 @@ class SqlQuerySpec extends Spec {
       testContext.run(q).string mustEqual
         "SELECT DISTINCT t.i FROM TestEntity t"
     }
+    "distinct and map query" in {
+      val q = quote {
+        qr1.map(t => t.i).distinct.map(t => 1)
+      }
+      testContext.run(q).string mustEqual
+        "SELECT 1 FROM (SELECT DISTINCT t.i FROM TestEntity t) t"
+    }
+    "nested where" in {
+      val q = quote {
+        qr4.filter(t => t.i == 1).nested.filter(t => t.i == 2)
+      }
+      testContext.run(q).string mustEqual
+        "SELECT t.i FROM (SELECT t.i FROM TestEntity4 t WHERE t.i = 1) t WHERE t.i = 2"
+    }
+
     "limited query" - {
       "simple" in {
         val q = quote {
@@ -464,10 +482,11 @@ class SqlQuerySpec extends Spec {
     "nested" - {
       "pointless nesting" in {
         val q = quote {
-          qr1.nested
+          qr4.nested
         }
-        testContext.run(q).string mustEqual
-          "SELECT x.s, x.i, x.l, x.o FROM (SELECT x.s, x.i, x.l, x.o FROM TestEntity x) x"
+        testContext.run(q).string mustEqual "SELECT x.i FROM (SELECT x.i FROM TestEntity4 x) x"
+        // not normalized
+        SqlQuery(q.ast).toString mustEqual "SELECT x.* FROM (SELECT x.* FROM TestEntity4 x) x"
       }
       "pointless nesting of single yielding element" in {
         val q = quote {
@@ -498,6 +517,17 @@ class SqlQuerySpec extends Spec {
         testContext.run(q).string mustEqual
           "SELECT t.i FROM (SELECT t.i FROM TestEntity t WHERE t.i = 1) t"
       }
+    }
+  }
+
+  "SqlQuery" - {
+    import io.getquill.ast._
+
+    "toString" in {
+      SqlQuery(qr4.ast).toString mustBe "SELECT x.* FROM TestEntity4 x"
+    }
+    "catch invalid" in {
+      intercept[IllegalStateException](SqlQuery(Ident("i"))).getMessage must startWith("Query not properly normalized.")
     }
   }
 }

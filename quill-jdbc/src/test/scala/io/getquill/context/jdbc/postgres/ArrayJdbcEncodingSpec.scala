@@ -69,6 +69,14 @@ class ArrayJdbcEncodingSpec extends ArrayEncodingBaseSpec {
     actual2 mustEqual List()
   }
 
+  "empty array on found null" in {
+    case class ArraysTestEntity(texts: Option[List[String]])
+    ctx.run(query[ArraysTestEntity].insert(lift(ArraysTestEntity(None))))
+
+    case class E(texts: List[String])
+    ctx.run(querySchema[E]("ArraysTestEntity")).headOption.map(_.texts) mustBe Some(Nil)
+  }
+
   override protected def beforeEach(): Unit = {
     ctx.run(q.delete)
     ()

@@ -5,7 +5,7 @@ import io.getquill.context.cassandra.cluster.ClusterBuilder
 import com.typesafe.config.Config
 
 case class CassandraContextConfig(config: Config) {
-  def preparedStatementCacheSize =
+  def preparedStatementCacheSize: Long =
     if (config.hasPath("preparedStatementCacheSize"))
       config.getLong("preparedStatementCacheSize")
     else

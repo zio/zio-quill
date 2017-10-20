@@ -226,12 +226,6 @@ trait OrientDBIdiom extends Idiom {
   }
 
   implicit def propertyTokenizer(implicit valueTokenizer: Tokenizer[Value], identTokenizer: Tokenizer[Ident], strategy: NamingStrategy): Tokenizer[Property] = {
-    def unnest(ast: Ast): Ast = {
-      ast match {
-        case Property(a, _) => unnest(a)
-        case a              => a
-      }
-    }
     Tokenizer[Property] {
       case Property(ast, "isEmpty")   => stmt"${ast.token} IS NULL"
       case Property(ast, "nonEmpty")  => stmt"${ast.token} IS NOT NULL"

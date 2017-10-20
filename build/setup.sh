@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-DB_FILE=quill_test.db
+DB_FILE=quill-jdbc/quill_test.db
 
 rm $DB_FILE
 
@@ -11,6 +11,7 @@ do
   sleep 1
 done
 echo -e "\nSqlite ready"
+chmod a+rw $DB_FILE
 
 sqlite3 $DB_FILE < quill-jdbc/src/test/resources/sql/sqlite-schema.sql
 

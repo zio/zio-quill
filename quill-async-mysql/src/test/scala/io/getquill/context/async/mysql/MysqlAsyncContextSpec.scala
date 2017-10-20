@@ -1,17 +1,13 @@
 package io.getquill.context.async.mysql
 
-import scala.concurrent.Await
-import scala.concurrent.Future
-import scala.concurrent.duration.Duration
-import scala.concurrent.ExecutionContext.Implicits.global
+import com.github.mauricio.async.db.QueryResult
 
-import io.getquill.Spec
+import scala.concurrent.ExecutionContext.Implicits.global
+import io.getquill.{ Literal, MysqlAsyncContext, Spec }
 
 class MysqlAsyncContextSpec extends Spec {
 
   import testContext._
-
-  def await[T](f: Future[T]) = Await.result(f, Duration.Inf)
 
   "run non-batched action" in {
     val insert = quote { (i: Int) =>
@@ -26,5 +22,27 @@ class MysqlAsyncContextSpec extends Spec {
     })
     await(testContext.run(qr4.filter(_.i == lift(inserted))))
       .head.i mustBe inserted
+  }
+
+  "performIO" in {
+    await(performIO(runIO(qr4).transactional))
+  }
+
+  "probe" in {
+    probe("select 1").toOption mustBe defined
+  }
+
+  "cannot extract" in {
+    object ctx extends MysqlAsyncContext(Literal, "testMysqlDB") {
+      override def extractActionResult[O](
+        returningColumn:    String,
+        returningExtractor: ctx.Extractor[O]
+      )(result: QueryResult) =
+        super.extractActionResult(returningColumn, returningExtractor)(result)
+    }
+    intercept[IllegalStateException] {
+      ctx.extractActionResult("w/e", row => 1)(new QueryResult(0, "w/e"))
+    }
+    ctx.close
   }
 }
