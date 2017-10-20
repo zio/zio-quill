@@ -25,4 +25,12 @@ class PostgresDialectSpec extends Spec {
       context.run(q).string mustEqual "SELECT t.s::integer FROM TestEntity t"
     }
   }
+
+  "Array Operations" - {
+    case class ArrayOps(id: Int, numbers: Vector[Int])
+    "contains" in {
+      context.run(query[ArrayOps].filter(_.numbers.contains(10))).string mustEqual
+        "SELECT x1.id, x1.numbers FROM ArrayOps x1 WHERE 10 = ANY(x1.numbers)"
+    }
+  }
 }

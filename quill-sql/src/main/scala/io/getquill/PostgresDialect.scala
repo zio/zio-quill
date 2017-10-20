@@ -1,17 +1,20 @@
 package io.getquill
 
-import io.getquill.idiom.StatementInterpolator._
 import java.util.concurrent.atomic.AtomicInteger
-import io.getquill.context.sql.idiom.SqlIdiom
-import io.getquill.ast.UnaryOperation
-import io.getquill.ast.Operation
-import io.getquill.ast.StringOperator
-import io.getquill.context.sql.idiom.QuestionMarkBindVariables
-import io.getquill.ast.Ast
+
+import io.getquill.ast._
+import io.getquill.context.sql.idiom.{ QuestionMarkBindVariables, SqlIdiom }
+import io.getquill.idiom.StatementInterpolator._
 
 trait PostgresDialect
   extends SqlIdiom
   with QuestionMarkBindVariables {
+
+  override def astTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Ast] =
+    Tokenizer[Ast] {
+      case ListContains(ast, body) => stmt"${body.token} = ANY(${ast.token})"
+      case ast                     => super.astTokenizer.token(ast)
+    }
 
   override implicit def operationTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Operation] =
     Tokenizer[Operation] {

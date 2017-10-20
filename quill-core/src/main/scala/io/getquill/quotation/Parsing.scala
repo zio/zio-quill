@@ -310,7 +310,7 @@ trait Parsing {
       MapContains(astParser(col), astParser(body))
     case q"$col.contains($body)" if isBaseType[Set[Any]](col) =>
       SetContains(astParser(col), astParser(body))
-    case q"$col.contains[$t]($body)" if is[List[Any]](col) =>
+    case q"$col.contains[$t]($body)" if is[Seq[Any]](col) =>
       ListContains(astParser(col), astParser(body))
   }
 
