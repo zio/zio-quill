@@ -19,24 +19,21 @@ private case class AvoidAliasConflict(state: collection.Set[Ident])
 
   object Unaliased {
 
-    private def isUnaliased(q: Query): Boolean =
+    private def isUnaliased(q: Ast): Boolean =
       q match {
         case Nested(q: Query)         => isUnaliased(q)
         case Take(q: Query, _)        => isUnaliased(q)
         case Drop(q: Query, _)        => isUnaliased(q)
         case Aggregation(_, q: Query) => isUnaliased(q)
         case Distinct(q: Query)       => isUnaliased(q)
-        case _: Entity                => true
-        case _: Nested | _: Take | _: Drop | _: Aggregation |
-          _: Distinct | _: FlatMap | _: Map | _: Filter | _: SortBy |
-          _: GroupBy | _: Union | _: UnionAll | _: Join | _: FlatJoin =>
-          false
+        case _: Entity | _: Infix     => true
+        case _                        => false
       }
 
-    def unapply(q: Ast): Option[Query] =
+    def unapply(q: Ast): Option[Ast] =
       q match {
-        case q: Query if (isUnaliased(q)) => Some(q)
-        case _                            => None
+        case q if (isUnaliased(q)) => Some(q)
+        case _                     => None
       }
   }
 

@@ -3,19 +3,22 @@ import com.typesafe.sbt.SbtScalariform.ScalariformKeys
 import scalariform.formatter.preferences._
 import sbtrelease.ReleasePlugin
 
+lazy val scalaVersionProperty = Option(System.getProperty("scalaVersion"))
+
+lazy val modules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
+  `quill-core-jvm`, `quill-core-js`, `quill-sql-jvm`, `quill-sql-js`,
+  `quill-jdbc`, `quill-finagle-mysql`, `quill-finagle-postgres`, `quill-async`,
+  `quill-async-mysql`, `quill-async-postgres`, `quill-cassandra`, `quill-orientdb`
+) ++ 
+  Seq[sbt.ClasspathDep[sbt.ProjectReference]](`quill-spark`)
+    .filter(_ => scalaVersionProperty.map(_.startsWith("2.11")).getOrElse(true))
+
 lazy val `quill` =
   (project in file("."))
     .settings(tutSettings ++ commonSettings)
     .settings(`tut-settings`:_*)
-    .dependsOn(
-      `quill-core-jvm`, `quill-core-js`, `quill-sql-jvm`, `quill-sql-js`,
-      `quill-jdbc`, `quill-finagle-mysql`, `quill-finagle-postgres`, `quill-async`,
-      `quill-async-mysql`, `quill-async-postgres`, `quill-cassandra`, `quill-orientdb`
-    ).aggregate(
-      `quill-core-jvm`, `quill-core-js`, `quill-sql-jvm`, `quill-sql-js`,
-      `quill-jdbc`, `quill-finagle-mysql`, `quill-finagle-postgres`, `quill-async`,
-      `quill-async-mysql`, `quill-async-postgres`, `quill-cassandra`, `quill-orientdb`
-    )
+    .aggregate(modules.map(_.project): _*)
+    .dependsOn(modules: _*)
 
 lazy val superPure = new org.scalajs.sbtplugin.cross.CrossType {
   def projectDir(crossBase: File, projectType: String): File =
@@ -70,6 +73,19 @@ lazy val `quill-jdbc` =
         "org.postgresql"          % "postgresql"           % "42.1.4"             % Test,
         "org.xerial"              % "sqlite-jdbc"          % "3.18.0"             % Test,
         "com.microsoft.sqlserver" % "mssql-jdbc"           % "6.1.7.jre8-preview" % Test
+      )
+    )
+    .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
+
+lazy val `quill-spark` =
+  (project in file("quill-spark"))
+    .settings(commonSettings: _*)
+    .settings(mimaSettings: _*)
+    .settings(
+      crossScalaVersions := Seq("2.11.11"),
+      fork in Test := true,
+      libraryDependencies ++= Seq(
+        "org.apache.spark" %% "spark-sql" % "2.2.0"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")

@@ -1271,6 +1271,57 @@ case class MyDao(c: MyContext) extends MySchema {
 }
 ```
 
+## Spark Context
+
+Quill provides a fully type-safe way to use Spark's highly-optimized SQL engine. It's an alternative to `Dataset`'s weakly-typed API.
+
+### sbt dependency
+```
+libraryDependencies ++= Seq(
+  "io.getquill" %% "quill-spark" % "2.0.1-SNAPSHOT"
+)
+```
+
+### Usage
+
+Differently from the other modules, the context is a companion object and doesn't depend on a spark session. To use it, add the following import:
+
+```scala
+import io.getquill.QuillSparkContext._
+```
+
+The spark session must be provided by the user through an **implicit** value:
+
+```scala
+import org.apache.spark.sql.SparkSession
+
+// Replace by your spark sql context creation
+implicit lazy val sqlContext =
+  SparkSession.builder().master("local").appName("spark test").getOrCreate().sqlContext
+```
+
+Quill decoders and meta instances are not used by the quill-spark module, Spark's `Encoder`s are used instead. Add this import to have them in scope:
+
+```scala
+import sqlContext.implicits._
+```
+
+The `toQuery` method converts `Dataset`, `RDD`, and `Seq` values to Quill queries:
+
+```scala
+import org.apache.spark.sql.Dataset
+
+def filter(myDataset: Dataset[Person], name: String): Dataset[Int] =
+  run {
+    myDataset.toQuery.filter(_.name == lift(name)).map(_.age)
+  }
+  // SELECT x1.age _1 FROM (?) x1 WHERE x1.name = ?
+```
+
+Note that the `run` method returns a `Dataset` transformed by the Quill query using the SQL engine.
+
+**Important**: Spark doesn't support transformations of inner classes. Use top-level classes.
+
 ## SQL Contexts
 
 Example:

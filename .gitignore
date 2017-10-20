@@ -9,3 +9,5 @@ target
 local.*
 quill_test.db
 Bug.scala
+*.gz
+
