@@ -1,7 +1,9 @@
 package io.getquill.context.async.postgres
 
+import com.github.mauricio.async.db.QueryResult
+
 import scala.concurrent.ExecutionContext.Implicits.global
-import io.getquill.Spec
+import io.getquill.{ Literal, PostgresAsyncContext, Spec }
 
 class PostgresAsyncContextSpec extends Spec {
 
@@ -28,5 +30,19 @@ class PostgresAsyncContextSpec extends Spec {
 
   "probe" in {
     probe("select 1").toOption mustBe defined
+  }
+
+  "cannot extract" in {
+    object ctx extends PostgresAsyncContext(Literal, "testPostgresDB") {
+      override def extractActionResult[O](
+        returningColumn:    String,
+        returningExtractor: ctx.Extractor[O]
+      )(result: QueryResult) =
+        super.extractActionResult(returningColumn, returningExtractor)(result)
+    }
+    intercept[IllegalStateException] {
+      ctx.extractActionResult("w/e", row => 1)(new QueryResult(0, "w/e"))
+    }
+    ctx.close
   }
 }
