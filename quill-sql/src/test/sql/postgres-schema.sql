@@ -114,3 +114,8 @@ CREATE TABLE ArraysTestEntity (
     dates DATE[],
     uuids UUID[]
 );
+
+CREATE TABLE ArrayOps (
+  id int,
+  numbers int[]
+);
