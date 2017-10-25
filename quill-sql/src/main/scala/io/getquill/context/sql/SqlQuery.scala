@@ -85,11 +85,11 @@ object SqlQuery {
 
   private def flattenContexts(query: Ast): (List[FromContext], Ast) =
     query match {
-      case FlatMap(q: Query, Ident(alias), p: Query) =>
+      case FlatMap(q @ (_: Query | _: Infix), Ident(alias), p: Query) =>
         val source = this.source(q, alias)
         val (nestedContexts, finalFlatMapBody) = flattenContexts(p)
         (source +: nestedContexts, finalFlatMapBody)
-      case FlatMap(q: Query, Ident(alias), p: Infix) =>
+      case FlatMap(q @ (_: Query | _: Infix), Ident(alias), p: Infix) =>
         fail(s"Infix can't be use as a `flatMap` body. $query")
       case other =>
         (List.empty, other)

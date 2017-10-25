@@ -1,12 +1,7 @@
 package io.getquill.norm.capture
 
 import io.getquill.Spec
-import io.getquill.testContext.implicitOrd
-import io.getquill.testContext.qr1
-import io.getquill.testContext.qr2
-import io.getquill.testContext.qr3
-import io.getquill.testContext.quote
-import io.getquill.testContext.unquote
+import io.getquill.testContext._
 
 class AvoidAliasConflictSpec extends Spec {
 
@@ -158,6 +153,19 @@ class AvoidAliasConflictSpec extends Spec {
         AvoidAliasConflict(q.ast) mustEqual n.ast
       }
     }
+  }
+
+  "considers infix as unaliased" in {
+    val i = quote {
+      infix"$qr1".as[Query[TestEntity]]
+    }
+    val q = quote {
+      i.flatMap(a => qr2.flatMap(a => qr3))
+    }
+    val n = quote {
+      i.flatMap(a => qr2.flatMap(a1 => qr3))
+    }
+    AvoidAliasConflict(q.ast) mustEqual n.ast
   }
 
   "takes in consideration the aliases already defined" - {

@@ -119,7 +119,7 @@ class DealiasSpec extends Spec {
         Dealias(q.ast) mustEqual n.ast
       }
     }
-    "outer join" - {
+    "join" - {
       "left" in {
         val q = quote {
           qr1.filter(a => a.s == "s").map(b => b.s).fullJoin(qr1).on((a, b) => a == b.s)
@@ -146,6 +146,12 @@ class DealiasSpec extends Spec {
           qr1.filter(a => a.s == "s").leftJoin(qr1.filter(b => b.s == "s")).on((a, b) => a.s == b.s)
         }
         Dealias(q.ast) mustEqual n.ast
+      }
+      "self join" in {
+        val q = quote {
+          qr1.join(qr1).on((a, b) => a.i == b.i)
+        }
+        Dealias(q.ast) mustEqual q.ast
       }
     }
     "entity" in {
