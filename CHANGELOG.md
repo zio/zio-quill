@@ -1,3 +1,13 @@
+# 2.1.0
+
+- [Spark SQL support](https://github.com/getquill/quill/pull/941)
+- [Add support of postgres sql arrays operators](https://github.com/getquill/quill/pull/940)
+- [Fix reversed log parameter binds](https://github.com/getquill/quill/pull/931)
+- [Fix renaming properties for unlimited optional and raw `Embedded` case classes](https://github.com/getquill/quill/pull/934)
+- [Improve coverage](https://github.com/getquill/quill/pull/933)
+- [Dependency updates](https://github.com/getquill/quill/pull/937)
+- [Converge of PostgreSQL and MySQL behavior](https://github.com/getquill/quill/pull/938)
+
 # 2.0.0
 
 We're proud to announce the Quill 2.0. **All** bugs were fixed, so this release doesn't have any known bugs!
