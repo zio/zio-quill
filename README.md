@@ -1278,7 +1278,7 @@ Quill provides a fully type-safe way to use Spark's highly-optimized SQL engine.
 ### sbt dependency
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-spark" % "2.0.1-SNAPSHOT"
+  "io.getquill" %% "quill-spark" % "2.1.0"
 )
 ```
 
@@ -1404,7 +1404,7 @@ The body of `transaction` can contain calls to other methods and multiple `run` 
 ```
 libraryDependencies ++= Seq(
   "mysql" % "mysql-connector-java" % "5.1.38",
-  "io.getquill" %% "quill-jdbc" % "2.0.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "2.1.0"
 )
 ```
 
@@ -1431,7 +1431,7 @@ ctx.connectionTimeout=30000
 ```
 libraryDependencies ++= Seq(
   "org.postgresql" % "postgresql" % "9.4.1208",
-  "io.getquill" %% "quill-jdbc" % "2.0.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "2.1.0"
 )
 ```
 
@@ -1457,7 +1457,7 @@ ctx.connectionTimeout=30000
 ```
 libraryDependencies ++= Seq(
   "org.xerial" % "sqlite-jdbc" % "3.18.0",
-  "io.getquill" %% "quill-jdbc" % "2.0.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "2.1.0"
 )
 ```
 
@@ -1478,7 +1478,7 @@ ctx.jdbcUrl=jdbc:sqlite:/path/to/db/file.db
 ```
 libraryDependencies ++= Seq(
   "com.h2database" % "h2" % "1.4.192",
-  "io.getquill" %% "quill-jdbc" % "2.0.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "2.1.0"
 )
 ```
 
@@ -1500,7 +1500,7 @@ ctx.dataSource.user=sa
 ```
 libraryDependencies ++= Seq(
   "com.microsoft.sqlserver" % "mssql-jdbc" % "6.1.7.jre8-preview",
-  "io.getquill" %% "quill-jdbc" % "2.0.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "2.1.0"
 )
 ```
 
@@ -1605,7 +1605,7 @@ ctx.queryTimeout=10m
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async-mysql" % "2.0.1-SNAPSHOT"
+  "io.getquill" %% "quill-async-mysql" % "2.1.0"
 )
 ```
 
@@ -1629,7 +1629,7 @@ ctx.url=mysql://host:3306/database?user=root&password=root
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async-postgres" % "2.0.1-SNAPSHOT"
+  "io.getquill" %% "quill-async-postgres" % "2.1.0"
 )
 ```
 
@@ -1666,7 +1666,7 @@ The body of `transaction` can contain calls to other methods and multiple `run` 
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-finagle-mysql" % "2.0.1-SNAPSHOT"
+  "io.getquill" %% "quill-finagle-mysql" % "2.1.0"
 )
 ```
 
@@ -1706,7 +1706,7 @@ The body of `transaction` can contain calls to other methods and multiple `run` 
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-finagle-postgres" % "2.0.1-SNAPSHOT"
+  "io.getquill" %% "quill-finagle-postgres" % "2.1.0"
 )
 ```
 
@@ -1733,7 +1733,7 @@ ctx.binaryParams=false
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-cassandra" % "2.0.1-SNAPSHOT"
+  "io.getquill" %% "quill-cassandra" % "2.1.0"
 )
 ```
 
@@ -1774,7 +1774,7 @@ ctx.session.addressTranslator=com.datastax.driver.core.policies.IdentityTranslat
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-orientdb" % "2.0.1-SNAPSHOT"
+  "io.getquill" %% "quill-orientdb" % "2.1.0"
 )
 ```
 
