@@ -23,7 +23,7 @@ then
     git reset --hard origin/master
     git push --delete origin website || true
 
-    sbt ++$SCALA_VERSION 'release with-defaults'
+    sbt -DscalaVersion=$SCALA_VERSION ++$SCALA_VERSION 'release with-defaults'
 else
     echo Nothing to release
     exit 0
