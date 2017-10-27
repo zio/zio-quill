@@ -6,7 +6,7 @@ chmod 644 ~/.ssh/config
 
 SBT_CMD="sbt"   
 SBT_CMD_2_11=" -DscalaVersion=2.11.11 ++2.11.11 clean coverage test tut coverageReport coverageAggregate checkUnformattedFiles"
-SBT_CMD_2_12=" -DscalaVersion=2.12.3 ++2.12.3 clean test"
+SBT_CMD_2_12=" -DscalaVersion=2.12.4 ++2.12.4 clean test"
 SBT_PUBLISH=" coverageOff publish"
 
 if [[ $SCALA_VERSION == "2.11" ]]

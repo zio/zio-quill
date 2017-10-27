@@ -137,7 +137,8 @@ trait EncodingSpec extends Spec {
         None,
         None,
         None,
-        None)
+        None
+      )
     )
 
   def verify(result: List[EncodingTestEntity]) =

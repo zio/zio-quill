@@ -156,7 +156,8 @@ class ActionMacroSpec extends Spec {
       val r = testContext.run(q)
       r.groups mustEqual List(
         ("""querySchema("TestEntity").insert(v => v.s -> ?, v => v.i -> ?, v => v.o -> ?).returning((t) => t.l)""", "l",
-          List(Row("s1", 2, Some(4)), Row("s5", 6, Some(8))))
+          List(Row("s1", 2, Some(4)), Row("s5", 6, Some(8)))
+        )
       )
     }
     "case class + returning + nested action" in {
@@ -166,7 +167,8 @@ class ActionMacroSpec extends Spec {
       val r = testContext.run(liftQuery(entities).foreach(p => insert(p)))
       r.groups mustEqual List(
         ("""querySchema("TestEntity").insert(v => v.s -> ?, v => v.i -> ?, v => v.o -> ?).returning((t) => t.l)""", "l",
-          List(Row("s1", 2, Some(4)), Row("s5", 6, Some(8))))
+          List(Row("s1", 2, Some(4)), Row("s5", 6, Some(8)))
+        )
       )
     }
   }

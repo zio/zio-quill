@@ -99,7 +99,7 @@ trait ReifyLiftings {
   protected def reifyLiftings(ast: Ast): (Ast, Tree) =
     ReifyLiftings(collection.Map.empty)(ast) match {
       case (ast, _) =>
-        // reify again with beta reduction, given that the first pass will remove `QuotedReference`s 
+        // reify again with beta reduction, given that the first pass will remove `QuotedReference`s
         ReifyLiftings(collection.Map.empty)(BetaReduction(ast)) match {
           case (ast, transformer) =>
             val trees =

@@ -6,19 +6,23 @@ RUN apt-get update; \
         bash \
         curl \
         git \
+        bc \
         openjdk-8-jdk \
+        default-jre \
         openssh-client \
         openssl \
         tar; \
-    curl -sL https://deb.nodesource.com/setup_7.x | bash -; \
+    update-alternatives --config java; \
+    update-java-alternatives -s java-1.8.0-openjdk-amd64; \
+    curl -sL https://deb.nodesource.com/setup_8.x | bash -; \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends nodejs
 
-ENV SBT_VERSION 0.13.15
+ENV SBT_VERSION 1.0.3
 ENV SBT_HOME /usr/local/sbt
 ENV PATH ${PATH}:${SBT_HOME}/bin
 
 # Install sbt
-RUN curl -sL "http://dl.bintray.com/sbt/native-packages/sbt/$SBT_VERSION/sbt-$SBT_VERSION.tgz" | gunzip | tar -x -C /usr/local --strip-components=1 && \
+RUN curl -sL "https://github.com/sbt/sbt/releases/download/v$SBT_VERSION/sbt-$SBT_VERSION.tgz" | gunzip | tar -x -C /usr/local --strip-components=1 && \
     echo -ne "- with sbt $SBT_VERSION\n" >> /root/.built
 
 WORKDIR /app

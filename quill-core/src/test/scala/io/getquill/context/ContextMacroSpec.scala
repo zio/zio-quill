@@ -173,11 +173,6 @@ class ContextMacroSpec extends Spec {
     }
   }
 
-  "can't be used as a var" in {
-    var db = testContext
-    "db.run(qr1)" mustNot compile
-  }
-
   "fails if there's a free variable" in {
     val q = {
       val i = 1

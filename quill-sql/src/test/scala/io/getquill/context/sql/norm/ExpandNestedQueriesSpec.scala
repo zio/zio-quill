@@ -38,8 +38,8 @@ class ExpandNestedQueriesSpec extends Spec {
 
     testContext.run(
       query[Entity]
-      .map(e => (e, 1))
-      .nested
+        .map(e => (e, 1))
+        .nested
     ).string mustEqual
       "SELECT e.camel_case, 1 FROM (SELECT x.camel_case FROM entity x) e"
   }
