@@ -125,8 +125,8 @@ trait OrientDBIdiom extends Idiom {
 
       val withGroupBy =
         groupBy match {
-          case Nil     => withWhere
-          case groupBy => stmt"$withWhere GROUP BY ${groupBy.token}"
+          case None          => withWhere
+          case Some(groupBy) => stmt"$withWhere GROUP BY ${groupBy.token}"
         }
 
       val withOrderBy =
@@ -218,10 +218,11 @@ trait OrientDBIdiom extends Idiom {
         case _                         => ast.token
       }
     Tokenizer[SelectValue] {
-      case SelectValue(ast, Some(alias)) => stmt"${tokenValue(ast)} ${strategy.column(alias).token}"
-      case SelectValue(Ident("?"), None) => "?".token
-      case SelectValue(ast: Ident, None) => stmt"*" //stmt"${tokenValue(ast)}.*"
-      case SelectValue(ast, None)        => tokenValue(ast)
+      case SelectValue(ast, Some(alias), false) => stmt"${tokenValue(ast)} ${strategy.column(alias).token}"
+      case SelectValue(Ident("?"), None, false) => "?".token
+      case SelectValue(ast: Ident, None, false) => stmt"*" //stmt"${tokenValue(ast)}.*"
+      case SelectValue(ast, None, false)        => tokenValue(ast)
+      case SelectValue(_, _, true)              => fail("OrientDB doesn't support `concatMap`")
     }
   }
 

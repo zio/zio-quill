@@ -16,11 +16,13 @@ import io.getquill.context.sql.OrderByCriteria
 import io.getquill.context.sql.idiom.QuestionMarkBindVariables
 import io.getquill.idiom.Token
 import io.getquill.ast.Ast
+import io.getquill.context.sql.idiom.NoConcatSupport
 
 trait MySQLDialect
   extends SqlIdiom
   with OffsetWithoutLimitWorkaround
-  with QuestionMarkBindVariables {
+  with QuestionMarkBindVariables
+  with NoConcatSupport {
 
   override def prepareForProbing(string: String) = {
     val quoted = string.replace("'", "\\'")

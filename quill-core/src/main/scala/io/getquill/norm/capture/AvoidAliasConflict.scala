@@ -43,6 +43,9 @@ private case class AvoidAliasConflict(state: collection.Set[Ident])
       case FlatMap(Unaliased(q), x, p) =>
         apply(x, p)(FlatMap(q, _, _))
 
+      case ConcatMap(Unaliased(q), x, p) =>
+        apply(x, p)(ConcatMap(q, _, _))
+
       case Map(Unaliased(q), x, p) =>
         apply(x, p)(Map(q, _, _))
 
@@ -71,8 +74,8 @@ private case class AvoidAliasConflict(state: collection.Set[Ident])
         val (orr, orrt) = AvoidAliasConflict(art.state + freshA)(or)
         (FlatJoin(t, ar, freshA, orr), orrt)
 
-      case _: Entity | _: FlatMap | _: Map | _: Filter | _: SortBy | _: GroupBy | _: Aggregation |
-        _: Take | _: Drop | _: Union | _: UnionAll | _: Distinct | _: Nested =>
+      case _: Entity | _: FlatMap | _: ConcatMap | _: Map | _: Filter | _: SortBy | _: GroupBy |
+        _: Aggregation | _: Take | _: Drop | _: Union | _: UnionAll | _: Distinct | _: Nested =>
         super.apply(q)
     }
 

@@ -75,6 +75,9 @@ class MirrorIdiom extends Idiom {
     case FlatMap(source, alias, body) =>
       stmt"${source.token}.flatMap(${alias.token} => ${body.token})"
 
+    case ConcatMap(source, alias, body) =>
+      stmt"${source.token}.concatMap(${alias.token} => ${body.token})"
+
     case SortBy(source, alias, body, ordering) =>
       stmt"${source.token}.sortBy(${alias.token} => ${body.token})(${ordering.token})"
 

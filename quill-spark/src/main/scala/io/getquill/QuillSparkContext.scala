@@ -6,15 +6,12 @@ import org.apache.spark.sql.Dataset
 import org.apache.spark.sql.{ Encoder => SparkEncoder }
 import org.apache.spark.sql.SQLContext
 import io.getquill.context.Context
-import org.apache.spark.rdd.RDD
-import language.implicitConversions
 import io.getquill.context.spark.Encoders
 import io.getquill.context.spark.Decoders
 import io.getquill.context.spark.SparkDialect
 import io.getquill.context.spark.Binding
 import io.getquill.context.spark.DatasetBinding
 import io.getquill.context.spark.ValueBinding
-import scala.reflect.ClassTag
 
 object QuillSparkContext extends QuillSparkContext
 
@@ -38,22 +35,10 @@ trait QuillSparkContext
     (idx: Int, ds: Dataset[T], row: List[Binding]) =>
       row :+ DatasetBinding(ds)
 
-  case class ToQuery[T](ds: Dataset[T]) {
-    def toQuery =
-      quote {
-        infix"${lift(ds)}".as[Query[T]]
-      }
-  }
-
-  implicit def seqToQuery[T: SparkEncoder: ClassTag](t: Seq[T])(implicit spark: SQLContext) =
-    rddToQuery(spark.sparkContext.parallelize(t))
-
-  implicit def datasetToQuery[T](ds: Dataset[T]) = ToQuery(ds)
-
-  implicit def rddToQuery[T: SparkEncoder](ds: RDD[T])(implicit spark: SQLContext) = {
-    import spark.implicits._
-    ToQuery(ds.toDS)
-  }
+  def liftQuery[T](ds: Dataset[T]) =
+    quote {
+      infix"${lift(ds)}".as[Query[T]]
+    }
 
   def executeQuery[T](string: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(implicit enc: SparkEncoder[T], spark: SQLContext) =
     spark.sql(prepareString(string, prepare)).as[T]

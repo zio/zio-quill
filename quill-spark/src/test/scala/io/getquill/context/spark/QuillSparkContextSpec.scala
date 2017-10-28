@@ -8,25 +8,11 @@ class QuillSparkContextSpec extends Spec {
   import sqlContext.implicits._
   import testContext._
 
-  val entities = Seq(Test(1, 2))
+  val entities = Seq(Test(1, 2, "3"))
 
-  "toQuery" - {
-    "seq" in {
-      testContext.run(entities.toQuery).collect.toList mustEqual
-        entities
-    }
-
-    "dataset" in {
-      val q = sqlContext.createDataset(entities).toQuery
-      testContext.run(q).collect.toList mustEqual
-        entities
-    }
-
-    "rdd" in {
-      val q = sqlContext.sparkContext.parallelize(entities).toQuery
-      testContext.run(q).collect.toList mustEqual
-        entities
-    }
+  "toQuery" in {
+    testContext.run(liftQuery(entities.toDS)).collect.toList mustEqual
+      entities
   }
 
   "close is a no-op" in {
@@ -55,7 +41,7 @@ class QuillSparkContextSpec extends Spec {
 
   "query single" in {
     val q = quote {
-      entities.toQuery.map(t => t.i).max
+      liftQuery(entities.toDS).map(t => t.i).max
     }
     testContext.run(q).collect.toList mustEqual
       List(Some(1))

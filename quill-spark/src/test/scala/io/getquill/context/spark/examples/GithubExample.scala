@@ -1,13 +1,10 @@
-package io.getquill.context.spark
+package io.getquill.context.spark.examples
 
 import java.io.File
 import java.net.URL
-
 import scala.language.postfixOps
 import scala.sys.process._
-
 import org.apache.spark.sql.SparkSession
-
 import io.getquill.QuillSparkContext.Ord
 import io.getquill.QuillSparkContext._
 
@@ -62,7 +59,7 @@ object GithubExample extends App {
 
   import sqlContext.implicits._
 
-  val activities = sqlContext.read.json(files.map(n => s"$n.json.gz"): _*).as[Activity].toQuery
+  val activities = liftQuery(sqlContext.read.json(files.map(n => s"$n.json.gz"): _*).as[Activity])
 
   val topStargazers = quote {
     activities

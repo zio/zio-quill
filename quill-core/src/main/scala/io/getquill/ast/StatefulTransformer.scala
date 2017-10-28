@@ -112,6 +112,10 @@ trait StatefulTransformer[T] {
         val (at, att) = apply(a)
         val (ct, ctt) = att.apply(c)
         (FlatMap(at, b, ct), ctt)
+      case ConcatMap(a, b, c) =>
+        val (at, att) = apply(a)
+        val (ct, ctt) = att.apply(c)
+        (ConcatMap(at, b, ct), ctt)
       case SortBy(a, b, c, d) =>
         val (at, att) = apply(a)
         val (ct, ctt) = att.apply(c)

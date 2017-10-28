@@ -46,6 +46,14 @@ class FreeVariablesSpec extends Spec {
         }
       FreeVariables(q.ast) mustEqual Set(Ident("s"))
     }
+    "concatMap" in {
+      val a = Seq(1, 2)
+      val q =
+        quote {
+          qr1.concatMap(_ => a).flatMap(_ => qr2)
+        }
+      FreeVariables(q.ast) mustEqual Set(Ident("a"))
+    }
     "sortBy" in {
       val q =
         quote {

@@ -298,10 +298,6 @@ class SqlQuerySpec extends Spec {
             "SELECT t.i, SUM(t.i) FROM (SELECT a.i i, b.i i FROM TestEntity a INNER JOIN TestEntity2 b ON a.s = b.s) t GROUP BY t.i"
         }
       }
-      "invalid groupby criteria" in {
-        intercept[IllegalStateException](SqlQuery(quote(qr1.groupBy(t => t).map(t => t)).ast))
-        intercept[IllegalStateException](SqlQuery(quote(qr1.groupBy(t => "1").map(_._1)).ast))
-      }
     }
     "aggregated query" in {
       val q = quote {

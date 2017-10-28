@@ -15,6 +15,15 @@ class AvoidAliasConflictSpec extends Spec {
       }
       AvoidAliasConflict(q.ast) mustEqual n.ast
     }
+    "concatMap" in {
+      val q = quote {
+        qr1.flatMap(a => qr2.concatMap(a => a.s.split(" ")))
+      }
+      val n = quote {
+        qr1.flatMap(a => qr2.concatMap(a1 => a1.s.split(" ")))
+      }
+      AvoidAliasConflict(q.ast) mustEqual n.ast
+    }
     "map" in {
       val q = quote {
         qr1.flatMap(a => qr2.map(a => a.s))

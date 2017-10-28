@@ -38,6 +38,15 @@ class AttachToEntitySpec extends Spec {
         }
         attachToEntity(q.ast) mustEqual n.ast
       }
+      "concatMap" in {
+        val q = quote {
+          qr1.filter(t => t.i == 1).concatMap(t => t.s.split(" "))
+        }
+        val n = quote {
+          qr1.sortBy(t => 1).filter(t => t.i == 1).concatMap(t => t.s.split(" "))
+        }
+        attachToEntity(q.ast) mustEqual n.ast
+      }
       "filter" in {
         val q = quote {
           qr1.filter(t => t.i == 1).filter(t => t.s == "s1")
@@ -113,6 +122,15 @@ class AttachToEntitySpec extends Spec {
         }
         val n = quote {
           iqr1.sortBy(t => 1).filter(t => t.i == 1).flatMap(t => qr2)
+        }
+        attachToEntity(q.ast) mustEqual n.ast
+      }
+      "concatMap" in {
+        val q = quote {
+          iqr1.filter(t => t.i == 1).concatMap(t => t.s.split(" "))
+        }
+        val n = quote {
+          iqr1.sortBy(t => 1).filter(t => t.i == 1).concatMap(t => t.s.split(" "))
         }
         attachToEntity(q.ast) mustEqual n.ast
       }

@@ -19,6 +19,7 @@ object AttachToEntity {
 
       case Map(IsEntity(a), b, c) => Map(f(a, b), b, c)
       case FlatMap(IsEntity(a), b, c) => FlatMap(f(a, b), b, c)
+      case ConcatMap(IsEntity(a), b, c) => ConcatMap(f(a, b), b, c)
       case Filter(IsEntity(a), b, c) => Filter(f(a, b), b, c)
       case SortBy(IsEntity(a), b, c, d) => SortBy(f(a, b), b, c, d)
 
@@ -26,6 +27,7 @@ object AttachToEntity {
 
       case Map(a: Query, b, c) => Map(apply(f, Some(b))(a), b, c)
       case FlatMap(a: Query, b, c) => FlatMap(apply(f, Some(b))(a), b, c)
+      case ConcatMap(a: Query, b, c) => ConcatMap(apply(f, Some(b))(a), b, c)
       case Filter(a: Query, b, c) => Filter(apply(f, Some(b))(a), b, c)
       case SortBy(a: Query, b, c, d) => SortBy(apply(f, Some(b))(a), b, c, d)
       case Take(a: Query, b) => Take(apply(f, alias)(a), b)

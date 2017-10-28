@@ -2,17 +2,17 @@ package io.getquill.context.spark
 
 import io.getquill.Spec
 
-case class Test(i: Int, j: Int)
+case class Test(i: Int, j: Int, s: String)
 
 class AliasNestedQueryColumnsSpec extends Spec {
 
   import testContext._
   import sqlContext.implicits._
 
-  val entities = Seq(Test(1, 2))
+  val entities = Seq(Test(1, 2, "3"))
 
-  val qr1 = entities.toQuery
-  val qr2 = entities.toQuery
+  val qr1 = liftQuery(entities.toDS)
+  val qr2 = liftQuery(entities.toDS)
 
   "adds tuple alias" - {
     "flatten query" in {

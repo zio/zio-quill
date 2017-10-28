@@ -319,6 +319,18 @@ ctx.run(q)
 // SELECT c.personId, c.phone FROM Person p, Contact c WHERE (p.age > 18) AND (c.personId = p.id)
 ```
 
+### concatMap
+```scala
+// similar to `flatMap` but for transformations that return a traversable instead of `Query`
+
+val q = quote {
+  query[Person].concatMap(p => p.name.split(" "))
+}
+
+ctx.run(q)
+// SELECT UNNEST(SPLIT(p.name, " ")) FROM Person p
+```
+
 ### sortBy
 ```scala
 val q1 = quote {
@@ -1306,14 +1318,14 @@ Quill decoders and meta instances are not used by the quill-spark module, Spark'
 import sqlContext.implicits._
 ```
 
-The `toQuery` method converts `Dataset`, `RDD`, and `Seq` values to Quill queries:
+The `liftQuery` method converts `Dataset`s to Quill queries:
 
 ```scala
 import org.apache.spark.sql.Dataset
 
 def filter(myDataset: Dataset[Person], name: String): Dataset[Int] =
   run {
-    myDataset.toQuery.filter(_.name == lift(name)).map(_.age)
+    liftQuery(myDataset).filter(_.name == lift(name)).map(_.age)
   }
   // SELECT x1.age _1 FROM (?) x1 WHERE x1.name = ?
 ```

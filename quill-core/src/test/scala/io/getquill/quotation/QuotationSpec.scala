@@ -115,6 +115,12 @@ class QuotationSpec extends Spec {
         }
         quote(unquote(q)).ast mustEqual FlatMap(Entity("TestEntity", Nil), Ident("t"), Entity("TestEntity2", Nil))
       }
+      "concatMap" in {
+        val q = quote {
+          qr1.concatMap(t => t.s.split(" "))
+        }
+        quote(unquote(q)).ast mustEqual ConcatMap(Entity("TestEntity", Nil), Ident("t"), BinaryOperation(Property(Ident("t"), "s"), StringOperator.`split`, Constant(" ")))
+      }
       "sortBy" - {
         "default ordering" in {
           val q = quote {
@@ -678,6 +684,18 @@ class QuotationSpec extends Spec {
             }
             quote(unquote(q)).ast.body mustBe an[OptionOperation]
           }
+        }
+        "split" in {
+          val q = quote {
+            (s: String) => s.split(" ")
+          }
+          quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("s"), StringOperator.`split`, Constant(" "))
+        }
+        "startsWith" in {
+          val q = quote {
+            (s: String) => s.startsWith(" ")
+          }
+          quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("s"), StringOperator.`startsWith`, Constant(" "))
         }
       }
     }

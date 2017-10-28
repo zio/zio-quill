@@ -98,6 +98,8 @@ trait SqlIdiom extends Idiom {
       stmt"CASE ${conditions.mkStmt(" ")} ELSE ${e.token} END"
   }
 
+  def concatFunction: String
+
   implicit def sqlQueryTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[SqlQuery] = Tokenizer[SqlQuery] {
     case FlattenSqlQuery(from, where, groupBy, orderBy, limit, offset, select, distinct) =>
 
@@ -130,8 +132,8 @@ trait SqlIdiom extends Idiom {
         }
       val withGroupBy =
         groupBy match {
-          case Nil     => withWhere
-          case groupBy => stmt"$withWhere GROUP BY ${groupBy.token}"
+          case None          => withWhere
+          case Some(groupBy) => stmt"$withWhere GROUP BY ${groupBy.token}"
         }
       val withOrderBy =
         orderBy match {
@@ -154,10 +156,19 @@ trait SqlIdiom extends Idiom {
 
     def tokenizer(implicit astTokenizer: Tokenizer[Ast]) =
       Tokenizer[SelectValue] {
-        case SelectValue(ast, Some(alias)) => stmt"${ast.token} ${strategy.column(alias).token}"
-        case SelectValue(Ident("?"), None) => "?".token
-        case SelectValue(ast: Ident, None) => stmt"${ast.token}.*"
-        case SelectValue(ast, None)        => ast.token
+        case SelectValue(ast, Some(alias), false) => stmt"${ast.token} ${strategy.column(alias).token}"
+        case SelectValue(ast, Some(alias), true)  => stmt"${concatFunction.token}(${ast.token}) ${strategy.column(alias).token}"
+        case selectValue =>
+          val value =
+            selectValue match {
+              case SelectValue(Ident("?"), _, _)  => "?".token
+              case SelectValue(Ident(name), _, _) => stmt"${name.token}.*"
+              case SelectValue(ast, _, _)         => ast.token
+            }
+          selectValue.concat match {
+            case true  => stmt"${concatFunction.token}(${value.token})"
+            case false => value
+          }
       }
 
     val customAstTokenizer =
@@ -177,6 +188,8 @@ trait SqlIdiom extends Idiom {
     case BinaryOperation(NullValue, EqualityOperator.`==`, b) => stmt"${scopedTokenizer(b)} IS NULL"
     case BinaryOperation(a, EqualityOperator.`!=`, NullValue) => stmt"${scopedTokenizer(a)} IS NOT NULL"
     case BinaryOperation(NullValue, EqualityOperator.`!=`, b) => stmt"${scopedTokenizer(b)} IS NOT NULL"
+    case BinaryOperation(a, StringOperator.`startsWith`, b)   => stmt"${scopedTokenizer(a)} LIKE (${(BinaryOperation(b, StringOperator.`+`, Constant("%")): Ast).token})"
+    case BinaryOperation(a, op @ StringOperator.`split`, b)   => stmt"${op.token}(${scopedTokenizer(a)}, ${scopedTokenizer(b)})"
     case BinaryOperation(a, op @ SetOperator.`contains`, b)   => SetContainsToken(scopedTokenizer(b), op.token, a.token)
     case BinaryOperation(a, op, b)                            => stmt"${scopedTokenizer(a)} ${op.token} ${scopedTokenizer(b)}"
     case e: FunctionApply                                     => fail(s"Can't translate the ast to sql: '$e'")
@@ -244,21 +257,23 @@ trait SqlIdiom extends Idiom {
   }
 
   implicit val binaryOperatorTokenizer: Tokenizer[BinaryOperator] = Tokenizer[BinaryOperator] {
-    case EqualityOperator.`==`  => stmt"="
-    case EqualityOperator.`!=`  => stmt"<>"
-    case BooleanOperator.`&&`   => stmt"AND"
-    case BooleanOperator.`||`   => stmt"OR"
-    case StringOperator.`+`     => stmt"||"
-    case NumericOperator.`-`    => stmt"-"
-    case NumericOperator.`+`    => stmt"+"
-    case NumericOperator.`*`    => stmt"*"
-    case NumericOperator.`>`    => stmt">"
-    case NumericOperator.`>=`   => stmt">="
-    case NumericOperator.`<`    => stmt"<"
-    case NumericOperator.`<=`   => stmt"<="
-    case NumericOperator.`/`    => stmt"/"
-    case NumericOperator.`%`    => stmt"%"
-    case SetOperator.`contains` => stmt"IN"
+    case EqualityOperator.`==`       => stmt"="
+    case EqualityOperator.`!=`       => stmt"<>"
+    case BooleanOperator.`&&`        => stmt"AND"
+    case BooleanOperator.`||`        => stmt"OR"
+    case StringOperator.`+`          => stmt"||"
+    case StringOperator.`startsWith` => fail("bug: this code should be unreachable")
+    case StringOperator.`split`      => stmt"SPLIT"
+    case NumericOperator.`-`         => stmt"-"
+    case NumericOperator.`+`         => stmt"+"
+    case NumericOperator.`*`         => stmt"*"
+    case NumericOperator.`>`         => stmt">"
+    case NumericOperator.`>=`        => stmt">="
+    case NumericOperator.`<`         => stmt"<"
+    case NumericOperator.`<=`        => stmt"<="
+    case NumericOperator.`/`         => stmt"/"
+    case NumericOperator.`%`         => stmt"%"
+    case SetOperator.`contains`      => stmt"IN"
   }
 
   implicit def propertyTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Property] = {

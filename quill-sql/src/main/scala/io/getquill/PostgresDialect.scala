@@ -5,10 +5,12 @@ import java.util.concurrent.atomic.AtomicInteger
 import io.getquill.ast._
 import io.getquill.context.sql.idiom.{ QuestionMarkBindVariables, SqlIdiom }
 import io.getquill.idiom.StatementInterpolator._
+import io.getquill.context.sql.idiom.ConcatSupport
 
 trait PostgresDialect
   extends SqlIdiom
-  with QuestionMarkBindVariables {
+  with QuestionMarkBindVariables
+  with ConcatSupport {
 
   override def astTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Ast] =
     Tokenizer[Ast] {

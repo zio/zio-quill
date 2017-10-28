@@ -65,6 +65,10 @@ class BetaReductionSpec extends Spec {
         val ast: Ast = FlatMap(Ident("a"), Ident("b"), Ident("b"))
         BetaReduction(ast, Ident("b") -> Ident("b'")) mustEqual ast
       }
+      "concatMap" in {
+        val ast: Ast = ConcatMap(Ident("a"), Ident("b"), Ident("b"))
+        BetaReduction(ast, Ident("b") -> Ident("b'")) mustEqual ast
+      }
       "sortBy" in {
         val ast: Ast = SortBy(Ident("a"), Ident("b"), Ident("b"), AscNullsFirst)
         BetaReduction(ast, Ident("b") -> Ident("b'")) mustEqual ast

@@ -66,6 +66,15 @@ object RenameProperties extends StatelessTransformer {
             (flatMap, Tuple(List.empty))
         }
 
+      case ConcatMap(q: Query, x, p) =>
+        applySchema(q, x, p, ConcatMap) match {
+          case (ConcatMap(q, x, p: Query), oldSchema) =>
+            val (pr, newSchema) = applySchema(p)
+            (ConcatMap(q, x, pr), newSchema)
+          case (concatMap, oldSchema) =>
+            (concatMap, Tuple(List.empty))
+        }
+
       case Join(typ, a: Query, b: Query, iA, iB, on) =>
         (applySchema(a), applySchema(b)) match {
           case ((a, schemaA), (b, schemaB)) =>

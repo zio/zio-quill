@@ -27,6 +27,15 @@ class NormalizeNestedStructuresSpec extends Spec {
       }
       NormalizeNestedStructures.unapply(q.ast) mustEqual Some(n.ast)
     }
+    "concatMap" in {
+      val q = quote {
+        qr1.map(y => y.s).filter(s => s == "s").concatMap(s => s.split(" "))
+      }
+      val n = quote {
+        qr1.filter(y => y.s == "s").map(y => y.s).concatMap(s => s.split(" "))
+      }
+      NormalizeNestedStructures.unapply(q.ast) mustEqual Some(n.ast)
+    }
     "filter" in {
       val q = quote {
         qr1.filter(x => qr2.map(y => y.s).filter(s => s == "s").isEmpty)
@@ -152,6 +161,12 @@ class NormalizeNestedStructuresSpec extends Spec {
     "flatMap" in {
       val q = quote {
         qr1.flatMap(x => qr2)
+      }
+      NormalizeNestedStructures.unapply(q.ast) mustEqual None
+    }
+    "concatMap" in {
+      val q = quote {
+        qr1.concatMap(x => x.s.split(" "))
       }
       NormalizeNestedStructures.unapply(q.ast) mustEqual None
     }

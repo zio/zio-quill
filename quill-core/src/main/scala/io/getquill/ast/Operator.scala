@@ -20,6 +20,8 @@ object BooleanOperator {
 
 object StringOperator {
   case object `+` extends BinaryOperator
+  case object `startsWith` extends BinaryOperator
+  case object `split` extends BinaryOperator
   case object `toUpperCase` extends PostfixUnaryOperator
   case object `toLowerCase` extends PostfixUnaryOperator
   case object `toLong` extends PostfixUnaryOperator

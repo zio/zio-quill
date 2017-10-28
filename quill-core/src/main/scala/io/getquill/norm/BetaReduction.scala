@@ -91,6 +91,8 @@ case class BetaReduction(map: collection.Map[Ast, Ast])
         Map(apply(a), b, BetaReduction(map - b)(c))
       case FlatMap(a, b, c) =>
         FlatMap(apply(a), b, BetaReduction(map - b)(c))
+      case ConcatMap(a, b, c) =>
+        ConcatMap(apply(a), b, BetaReduction(map - b)(c))
       case SortBy(a, b, c, d) =>
         SortBy(apply(a), b, BetaReduction(map - b)(c), d)
       case GroupBy(a, b, c) =>
