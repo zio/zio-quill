@@ -6,6 +6,8 @@ import io.getquill.ast.StatelessTransformer
 import io.getquill.norm.capture.AvoidCapture
 import io.getquill.ast.Action
 
+import scala.annotation.tailrec
+
 object Normalize extends StatelessTransformer {
 
   override def apply(q: Ast): Ast =
@@ -17,6 +19,7 @@ object Normalize extends StatelessTransformer {
   override def apply(q: Query): Query =
     norm(AvoidCapture(q))
 
+  @tailrec
   private def norm(q: Query): Query =
     q match {
       case NormalizeNestedStructures(query) => norm(query)

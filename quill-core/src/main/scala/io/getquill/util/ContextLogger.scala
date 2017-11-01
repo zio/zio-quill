@@ -3,6 +3,8 @@ package io.getquill.util
 import com.typesafe.scalalogging.Logger
 import org.slf4j.LoggerFactory
 
+import scala.annotation.tailrec
+
 class ContextLogger(name: String) {
   val underlying = Logger(LoggerFactory.getLogger(name))
 
@@ -27,6 +29,7 @@ class ContextLogger(name: String) {
     .map(prepareParam)
     .mkString("[", ", ", "]")
 
+  @tailrec
   private def prepareParam(param: Any): String = param match {
     case None | null => nullToken
     case Some(x)     => prepareParam(x)
