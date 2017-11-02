@@ -1,5 +1,8 @@
 package io.getquill
 
+import java.util.Date
+
+import com.datastax.driver.core.LocalDate
 import io.getquill.context.cassandra.encoding.{ CassandraMapper, CassandraType }
 import io.getquill.context.cassandra.{ CassandraContext, CqlIdiom, Udt }
 
@@ -9,6 +12,11 @@ class CassandraMirrorContextWithQueryProbing extends CassandraMirrorContext(Lite
 
 class CassandraMirrorContext[Naming <: NamingStrategy](naming: Naming)
   extends MirrorContext[CqlIdiom, Naming](CqlIdiom, naming) with CassandraContext[Naming] {
+
+  implicit val timestampDecoder: Decoder[Date] = decoder[Date]
+  implicit val timestampEncoder: Encoder[Date] = encoder[Date]
+  implicit val cassandraLocalDateDecoder: Decoder[LocalDate] = decoder[LocalDate]
+  implicit val cassandraLocalDateEncoder: Encoder[LocalDate] = encoder[LocalDate]
 
   implicit def listDecoder[T, Cas: ClassTag](implicit mapper: CassandraMapper[Cas, T]): Decoder[List[T]] = decoderUnsafe[List[T]]
   implicit def setDecoder[T, Cas: ClassTag](implicit mapper: CassandraMapper[Cas, T]): Decoder[Set[T]] = decoderUnsafe[Set[T]]

@@ -2,6 +2,7 @@ package io.getquill.context.cassandra
 
 import io.getquill._
 import java.util.{ Date, UUID }
+import java.time.{ LocalDate => Java8LocalDate, Instant }
 import com.datastax.driver.core.LocalDate
 import monix.reactive.Observable
 
@@ -106,6 +107,40 @@ class EncodingSpec extends Spec {
     val a2: Decoder[A] = decoder((b, c) => A())
     mappedDecoder(MappedEncoding[A, B](_ => B()), a2).isInstanceOf[CassandraDecoder[B]] mustBe true
     mappedEncoder(MappedEncoding[B, A](_ => A()), a1).isInstanceOf[CassandraEncoder[B]] mustBe true
+  }
+
+  "date and timestamps" - {
+    case class Java8Types(v9: Java8LocalDate, v11: Instant, id: Int = 1, v1: String = "")
+    case class CasTypes(v9: LocalDate, v11: Date, id: Int = 1, v1: String = "")
+
+    "mirror" in {
+      import mirrorContext._
+      implicitly[Encoder[Java8LocalDate]]
+      implicitly[Decoder[Java8LocalDate]]
+      implicitly[Encoder[Instant]]
+      implicitly[Decoder[Instant]]
+    }
+
+    "session" in {
+      val ctx = testSyncDB
+      import ctx._
+
+      val epoh = System.currentTimeMillis()
+      val epohDay = epoh / 86400000L
+
+      val jq = quote(querySchema[Java8Types]("EncodingTestEntity"))
+      val j = Java8Types(Java8LocalDate.ofEpochDay(epohDay), Instant.ofEpochMilli(epoh))
+      val cq = quote(querySchema[CasTypes]("EncodingTestEntity"))
+      val c = CasTypes(LocalDate.fromMillisSinceEpoch(epoh), new Date(epoh))
+
+      ctx.run(jq.delete)
+      ctx.run(jq.insert(lift(j)))
+      ctx.run(cq).headOption mustBe Some(c)
+
+      ctx.run(cq.delete)
+      ctx.run(cq.insert(lift(c)))
+      ctx.run(jq).headOption mustBe Some(j)
+    }
   }
 
   private def verify(result: List[EncodingTestEntity]): Unit =

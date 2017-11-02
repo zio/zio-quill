@@ -54,6 +54,6 @@ trait Decoders extends CollectionDecoders {
       b
     })
   implicit val uuidDecoder: Decoder[UUID] = decoder(_.getUUID)
-  implicit val dateDecoder: Decoder[Date] = decoder(_.getTimestamp)
-  implicit val localDateDecoder: Decoder[LocalDate] = decoder(_.getDate)
+  implicit val timestampDecoder: Decoder[Date] = decoder(_.getTimestamp)
+  implicit val cassandraLocalDateDecoder: Decoder[LocalDate] = decoder(_.getDate)
 }
