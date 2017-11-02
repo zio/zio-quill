@@ -46,6 +46,6 @@ trait Encoders extends CollectionEncoders {
   implicit val byteArrayEncoder: Encoder[Array[Byte]] =
     encoder((index, value, row) => row.setBytes(index, ByteBuffer.wrap(value)))
   implicit val uuidEncoder: Encoder[UUID] = encoder(_.setUUID)
-  implicit val dateEncoder: Encoder[Date] = encoder(_.setTimestamp)
-  implicit val localDateEncoder: Encoder[LocalDate] = encoder(_.setDate)
+  implicit val timestampEncoder: Encoder[Date] = encoder(_.setTimestamp)
+  implicit val cassandraLocalDateEncoder: Encoder[LocalDate] = encoder(_.setDate)
 }

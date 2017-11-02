@@ -2,16 +2,16 @@ package io.getquill.context.cassandra
 
 import java.util.{ Date, UUID }
 
+import com.datastax.driver.core.LocalDate
 import io.getquill.NamingStrategy
 import io.getquill.context.Context
-import io.getquill.context.cassandra.encoding.{ CassandraMapper, CassandraMapperConversions, CassandraTypes }
+import io.getquill.context.cassandra.encoding.{ CassandraMapper, Encodings }
 
 import scala.reflect.ClassTag
 
 trait CassandraContext[N <: NamingStrategy]
   extends Context[CqlIdiom, N]
-  with CassandraMapperConversions
-  with CassandraTypes
+  with Encodings
   with UdtMetaDsl
   with Ops {
 
@@ -27,7 +27,8 @@ trait CassandraContext[N <: NamingStrategy]
   implicit val doubleDecoder: Decoder[Double]
   implicit val byteArrayDecoder: Decoder[Array[Byte]]
   implicit val uuidDecoder: Decoder[UUID]
-  implicit val dateDecoder: Decoder[Date]
+  implicit val timestampDecoder: Decoder[Date]
+  implicit val cassandraLocalDateDecoder: Decoder[LocalDate]
 
   implicit val stringEncoder: Encoder[String]
   implicit val bigDecimalEncoder: Encoder[BigDecimal]
@@ -38,7 +39,8 @@ trait CassandraContext[N <: NamingStrategy]
   implicit val doubleEncoder: Encoder[Double]
   implicit val byteArrayEncoder: Encoder[Array[Byte]]
   implicit val uuidEncoder: Encoder[UUID]
-  implicit val dateEncoder: Encoder[Date]
+  implicit val timestampEncoder: Encoder[Date]
+  implicit val cassandraLocalDateEncoder: Encoder[LocalDate]
 
   implicit def listDecoder[T, Cas: ClassTag](implicit mapper: CassandraMapper[Cas, T]): Decoder[List[T]]
   implicit def setDecoder[T, Cas: ClassTag](implicit mapper: CassandraMapper[Cas, T]): Decoder[Set[T]]
