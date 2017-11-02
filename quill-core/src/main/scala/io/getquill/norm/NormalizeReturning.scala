@@ -15,7 +15,7 @@ object NormalizeReturning {
   }
 
   private def filterReturnedColumn(assignments: List[Assignment], column: Ast): List[Assignment] =
-    assignments.map(filterReturnedColumn(_, column)).flatten
+    assignments.flatMap(filterReturnedColumn(_, column))
 
   private def filterReturnedColumn(assignment: Assignment, column: Ast): Option[Assignment] =
     (assignment, column) match {

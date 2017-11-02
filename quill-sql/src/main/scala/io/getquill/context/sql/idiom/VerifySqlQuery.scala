@@ -62,7 +62,7 @@ object VerifySqlQuery {
 
     verifyFlatJoins(query)
 
-    val aliases = query.from.map(this.aliases).flatten.map(Ident(_)) :+ Ident("*") :+ Ident("?")
+    val aliases = query.from.flatMap(this.aliases).map(Ident(_)) :+ Ident("*") :+ Ident("?")
 
     def verifyTableReference(ast: Ast) =
       (CollectAst(ast) {
@@ -90,7 +90,7 @@ object VerifySqlQuery {
       query.where.flatMap(verifyFreeVars).toList ++
         query.orderBy.map(_.ast).flatMap(verifyFreeVars) ++
         query.limit.flatMap(verifyFreeVars) ++
-        query.select.map(_.ast).map(verifyFreeVars).flatten ++
+        query.select.map(_.ast).flatMap(verifyFreeVars) ++
         query.from.flatMap {
           case j: JoinContext     => verifyFreeVars(j.on)
           case j: FlatJoinContext => verifyFreeVars(j.on)
