@@ -163,6 +163,7 @@ trait SqlIdiom extends Idiom {
     val customAstTokenizer =
       Tokenizer.withFallback[Ast](SqlIdiom.this.astTokenizer(_, strategy)) {
         case Aggregation(op, Ident(_) | Tuple(_)) => stmt"${op.token}(*)"
+        case Aggregation(op, Distinct(ast))       => stmt"${op.token}(DISTINCT ${ast.token})"
         case ast @ Aggregation(op, _: Query)      => scopedTokenizer(ast)
         case Aggregation(op, ast)                 => stmt"${op.token}(${ast.token})"
       }
