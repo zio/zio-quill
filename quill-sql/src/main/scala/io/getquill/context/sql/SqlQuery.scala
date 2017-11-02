@@ -234,14 +234,14 @@ object SqlQuery {
   private def groupByCriterias(ast: Ast): List[Property] =
     ast match {
       case a: Property       => List(a)
-      case Tuple(properties) => properties.map(groupByCriterias).flatten
+      case Tuple(properties) => properties.flatMap(groupByCriterias)
       case other             => fail(s"Invalid group by criteria $ast")
     }
 
   private def orderByCriterias(ast: Ast, ordering: Ast): List[OrderByCriteria] =
     (ast, ordering) match {
-      case (Tuple(properties), ord: PropertyOrdering) => properties.map(orderByCriterias(_, ord)).flatten
-      case (Tuple(properties), TupleOrdering(ord))    => properties.zip(ord).map { case (a, o) => orderByCriterias(a, o) }.flatten
+      case (Tuple(properties), ord: PropertyOrdering) => properties.flatMap(orderByCriterias(_, ord))
+      case (Tuple(properties), TupleOrdering(ord))    => properties.zip(ord).flatMap { case (a, o) => orderByCriterias(a, o) }
       case (a, o: PropertyOrdering)                   => List(OrderByCriteria(a, o))
       case other                                      => fail(s"Invalid order by criteria $ast")
     }

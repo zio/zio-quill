@@ -114,9 +114,9 @@ object RenameProperties extends StatelessTransformer {
             apply(base, path) -> Property(base, alias)
         }
       case Tuple(values) =>
-        values.zipWithIndex.map {
+        values.zipWithIndex.flatMap {
           case (value, idx) =>
             replacements(Property(base, s"_${idx + 1}"), value)
-        }.flatten
+        }
     }
 }
