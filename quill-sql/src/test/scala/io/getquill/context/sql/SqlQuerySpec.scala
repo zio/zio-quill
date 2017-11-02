@@ -261,6 +261,15 @@ class SqlQuerySpec extends Spec {
           testContext.run(q).string mustEqual
             "SELECT t.i, MAX(t.l) FROM TestEntity t GROUP BY t.i"
         }
+        "distinct" in {
+          val q = quote {
+            qr1.groupBy(t => t.s).map {
+              case (s, entities) => (s, entities.map(_.i).distinct.size)
+            }
+          }
+          testContext.run(q).string mustEqual
+            "SELECT t.s, COUNT(DISTINCT t.i) FROM TestEntity t GROUP BY t.s"
+        }
       }
       "with map" - {
         "not nested" in {
