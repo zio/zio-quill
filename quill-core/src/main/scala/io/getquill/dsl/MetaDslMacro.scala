@@ -92,18 +92,21 @@ class MetaDslMacro(val c: MacroContext) {
 
         case Nested(_, tpe, params, optional) =>
           if (parentOptional || optional) {
-            val groups = params.map(_.map(expand(_, parentOptional = true)))
+            val groups = params.map(_.map(v => expand(v, parentOptional = true) -> v.nestedAndOptional))
             val terms =
               groups.zipWithIndex.map {
                 case (options, idx1) =>
-                  options.indices.map { idx2 =>
-                    TermName(s"o_${idx1}_$idx2")
+                  options.zipWithIndex.map {
+                    case ((_, opt), idx2) =>
+                      val term = TermName(s"o_${idx1}_$idx2")
+                      if (opt) q"Some($term)"
+                      else q"$term"
                   }
               }
             groups.zipWithIndex.foldLeft(q"Some(new $tpe(...$terms))") {
               case (body, (options, idx1)) =>
                 options.zipWithIndex.foldLeft(body) {
-                  case (body, (option, idx2)) =>
+                  case (body, ((option, _), idx2)) =>
                     val o = q"val ${TermName(s"o_${idx1}_$idx2")} = $EmptyTree"
                     q"$option.flatMap($o => $body)"
                 }
@@ -157,9 +160,14 @@ class MetaDslMacro(val c: MacroContext) {
 
   sealed trait Value {
     val term: Option[TermName]
+    def nestedAndOptional: Boolean
   }
-  case class Nested(term: Option[TermName], tpe: Type, params: List[List[Value]], optional: Boolean) extends Value
-  case class Scalar(term: Option[TermName], tpe: Type, decoder: Tree, optional: Boolean) extends Value
+  case class Nested(term: Option[TermName], tpe: Type, params: List[List[Value]], optional: Boolean) extends Value {
+    def nestedAndOptional: Boolean = optional
+  }
+  case class Scalar(term: Option[TermName], tpe: Type, decoder: Tree, optional: Boolean) extends Value {
+    def nestedAndOptional: Boolean = false
+  }
 
   private def is[T](tpe: Type)(implicit t: TypeTag[T]) =
     tpe <:< t.tpe
