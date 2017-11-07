@@ -48,36 +48,6 @@ class QuotationSpec extends Spec {
           }
           quote(unquote(q)).ast mustEqual Entity("SomeAlias", List(PropertyAlias(List("ev", "s"), "theS"), PropertyAlias(List("ev", "i"), "theI")))
         }
-        "with mixing embedded option/raw property alias" in {
-          case class Emb3(value: String) extends Embedded
-          case class Emb2(e1: Emb3, e2: Option[Emb3]) extends Embedded
-          case class Emb1(e1: Emb2, e2: Option[Emb2]) extends Embedded
-          case class TestEnt(e1: Emb1, e2: Option[Emb1])
-          val q = quote {
-            querySchema[TestEnt](
-              "Entity",
-              _.e1.e1.e1.value -> "value111",
-              _.e1.e1.e2.map(_.value) -> "value112",
-              _.e1.e2.map(_.e1.value) -> "value121",
-              _.e1.e2.map(_.e2.map(_.value)) -> "value122",
-              _.e2.map(_.e1.e1.value) -> "value211",
-              _.e2.map(_.e1.e2.map(_.value)) -> "value212",
-              _.e2.map(_.e2.map(_.e1.value)) -> "value221",
-              _.e2.map(_.e2.map(_.e2.map(_.value))) -> "value222"
-            )
-          }
-
-          quote(unquote(q)).ast mustEqual Entity("Entity", List(
-            PropertyAlias(List("e1", "e1", "e1", "value"), "value111"),
-            PropertyAlias(List("e1", "e1", "e2", "value"), "value112"),
-            PropertyAlias(List("e1", "e2", "e1", "value"), "value121"),
-            PropertyAlias(List("e1", "e2", "e2", "value"), "value122"),
-            PropertyAlias(List("e2", "e1", "e1", "value"), "value211"),
-            PropertyAlias(List("e2", "e1", "e2", "value"), "value212"),
-            PropertyAlias(List("e2", "e2", "e1", "value"), "value221"),
-            PropertyAlias(List("e2", "e2", "e2", "value"), "value222")
-          ))
-        }
         "explicit `Predef.ArrowAssoc`" in {
           val q = quote {
             querySchema[TestEntity]("TestEntity", e => Predef.ArrowAssoc(e.s). -> [String]("theS"))
