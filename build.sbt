@@ -2,6 +2,9 @@ import ReleaseTransformations._
 import com.typesafe.sbt.SbtScalariform.ScalariformKeys
 import scalariform.formatter.preferences._
 import sbtrelease.ReleasePlugin
+import scala.sys.process.Process
+
+enablePlugins(TutPlugin)
 
 lazy val scalaVersionProperty = Option(System.getProperty("scalaVersion"))
 
@@ -15,7 +18,7 @@ lazy val modules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
 
 lazy val `quill` =
   (project in file("."))
-    .settings(tutSettings ++ commonSettings)
+    .settings(commonSettings)
     .settings(`tut-settings`:_*)
     .aggregate(modules.map(_.project): _*)
     .dependsOn(modules: _*)
@@ -181,7 +184,7 @@ lazy val `tut-sources` = Seq(
 )
 
 lazy val `tut-settings` = Seq(
-  tutScalacOptions := Seq(),
+  scalacOptions in Tut := Seq(),
   tutSourceDirectory := baseDirectory.value / "target" / "tut",
   tutNameFilter := `tut-sources`.map(_.replaceAll("""\.""", """\.""")).mkString("(", "|", ")").r,
   sourceGenerators in Compile +=
@@ -244,7 +247,7 @@ def updateWebsiteTag =
   ReleaseStep(action = st => {
 
     val vcs = Project.extract(st).get(releaseVcs).get
-    vcs.tag("website", "update website", force = true).!
+    vcs.tag("website", "update website", false).!
 
     st
   })
@@ -332,7 +335,7 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
           setNextVersion,
           updateReadmeVersion(_._2),
           commitNextVersion,
-          ReleaseStep(action = Command.process("sonatypeReleaseAll", _)),
+          releaseStepCommand("sonatypeReleaseAll"),
           pushChanges
         )
       case Some((2, 12)) =>
@@ -342,7 +345,7 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
           runClean,
           setReleaseVersion,
           publishArtifacts,
-          ReleaseStep(action = Command.process("sonatypeReleaseAll", _))
+          releaseStepCommand("sonatypeReleaseAll")
         )
       case _ => Seq[ReleaseStep]()
     }

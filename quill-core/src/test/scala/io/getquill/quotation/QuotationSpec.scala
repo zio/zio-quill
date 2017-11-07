@@ -50,7 +50,7 @@ class QuotationSpec extends Spec {
         }
         "explicit `Predef.ArrowAssoc`" in {
           val q = quote {
-            querySchema[TestEntity]("TestEntity", e => Predef.ArrowAssoc(e.s). -> [String]("theS"))
+            querySchema[TestEntity]("TestEntity", e => Predef.ArrowAssoc(e.s).->[String]("theS"))
           }
           quote(unquote(q)).ast mustEqual Entity("TestEntity", List(PropertyAlias(List("s"), "theS")))
         }
@@ -317,7 +317,7 @@ class QuotationSpec extends Spec {
         }
         "explicit `Predef.ArrowAssoc`" in {
           val q = quote {
-            qr1.update(t => Predef.ArrowAssoc(t.s). -> [String]("s"))
+            qr1.update(t => Predef.ArrowAssoc(t.s).->[String]("s"))
           }
           quote(unquote(q)).ast mustEqual Update(Entity("TestEntity", Nil), List(Assignment(Ident("t"), Property(Ident("t"), "s"), Constant("s"))))
         }
@@ -415,7 +415,7 @@ class QuotationSpec extends Spec {
             quote(unquote(q)).ast mustEqual Tuple(List(Tuple(List(Constant(1), Constant("a"))), Constant("b")))
           }
           "explicit `Predef.ArrowAssoc`" in {
-            val q = quote(Predef.ArrowAssoc("a"). -> [String]("b"))
+            val q = quote(Predef.ArrowAssoc("a").->[String]("b"))
             quote(unquote(q)).ast mustEqual Tuple(List(Constant("a"), Constant("b")))
           }
         }
