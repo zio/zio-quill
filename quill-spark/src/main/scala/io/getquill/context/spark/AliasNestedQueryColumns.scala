@@ -12,8 +12,8 @@ object AliasNestedQueryColumns {
       case q: FlattenSqlQuery =>
         val aliased =
           q.select.zipWithIndex.map {
-            case (s @ SelectValue(i: Ident, alias), idx) => s
-            case (f, idx)                                => f.copy(alias = f.alias.orElse(Some(s"_${idx + 1}")))
+            case (s @ SelectValue(i: Ident, alias, concat), idx) => s
+            case (f, idx)                                        => f.copy(alias = f.alias.orElse(Some(s"_${idx + 1}")))
           }
 
         q.copy(from = q.from.map(apply), select = aliased)

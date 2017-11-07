@@ -46,4 +46,25 @@ class SparkDialectSpec extends Spec {
     norm mustEqual ast
     stmt.toString mustEqual "SELECT (t.i, t.j) _1, t.i + 1 _2 FROM Test t"
   }
+
+  "concatMap" in {
+    val ast = query[Test].concatMap(t => t.s.split(" ")).ast
+    val (norm, stmt) = SparkDialect.translate(ast)(Literal)
+    norm mustEqual ast
+    stmt.toString mustEqual "SELECT explode(SPLIT(t.s, ' ')) _1 FROM Test t"
+  }
+
+  "non-tuple select" in {
+    val ast = query[Test].concatMap(t => t.s.split(" ")).filter(s => s == "s").ast
+    val (norm, stmt) = SparkDialect.translate(ast)(Literal)
+    norm mustEqual ast
+    stmt.toString mustEqual "SELECT s.* FROM (SELECT explode(SPLIT(t.s, ' ')) _1 FROM Test t) s WHERE s._1 = 's'"
+  }
+
+  "concat string" in {
+    val ast = query[Test].map(t => t.s + " ").ast
+    val (norm, stmt) = SparkDialect.translate(ast)(Literal)
+    norm mustEqual ast
+    stmt.toString mustEqual "SELECT concat(t.s, ' ') _1 FROM Test t"
+  }
 }

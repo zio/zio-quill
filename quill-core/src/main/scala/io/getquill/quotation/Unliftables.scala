@@ -51,21 +51,23 @@ trait Unliftables {
   }
 
   implicit val binaryOperatorUnliftable: Unliftable[BinaryOperator] = Unliftable[BinaryOperator] {
-    case q"$pack.EqualityOperator.`==`"  => EqualityOperator.`==`
-    case q"$pack.EqualityOperator.`!=`"  => EqualityOperator.`!=`
-    case q"$pack.BooleanOperator.`&&`"   => BooleanOperator.`&&`
-    case q"$pack.BooleanOperator.`||`"   => BooleanOperator.`||`
-    case q"$pack.StringOperator.`+`"     => StringOperator.`+`
-    case q"$pack.NumericOperator.`-`"    => NumericOperator.`-`
-    case q"$pack.NumericOperator.`+`"    => NumericOperator.`+`
-    case q"$pack.NumericOperator.`*`"    => NumericOperator.`*`
-    case q"$pack.NumericOperator.`>`"    => NumericOperator.`>`
-    case q"$pack.NumericOperator.`>=`"   => NumericOperator.`>=`
-    case q"$pack.NumericOperator.`<`"    => NumericOperator.`<`
-    case q"$pack.NumericOperator.`<=`"   => NumericOperator.`<=`
-    case q"$pack.NumericOperator.`/`"    => NumericOperator.`/`
-    case q"$pack.NumericOperator.`%`"    => NumericOperator.`%`
-    case q"$pack.SetOperator.`contains`" => SetOperator.`contains`
+    case q"$pack.EqualityOperator.`==`"       => EqualityOperator.`==`
+    case q"$pack.EqualityOperator.`!=`"       => EqualityOperator.`!=`
+    case q"$pack.BooleanOperator.`&&`"        => BooleanOperator.`&&`
+    case q"$pack.BooleanOperator.`||`"        => BooleanOperator.`||`
+    case q"$pack.StringOperator.`+`"          => StringOperator.`+`
+    case q"$pack.StringOperator.`startsWith`" => StringOperator.`startsWith`
+    case q"$pack.StringOperator.`split`"      => StringOperator.`split`
+    case q"$pack.NumericOperator.`-`"         => NumericOperator.`-`
+    case q"$pack.NumericOperator.`+`"         => NumericOperator.`+`
+    case q"$pack.NumericOperator.`*`"         => NumericOperator.`*`
+    case q"$pack.NumericOperator.`>`"         => NumericOperator.`>`
+    case q"$pack.NumericOperator.`>=`"        => NumericOperator.`>=`
+    case q"$pack.NumericOperator.`<`"         => NumericOperator.`<`
+    case q"$pack.NumericOperator.`<=`"        => NumericOperator.`<=`
+    case q"$pack.NumericOperator.`/`"         => NumericOperator.`/`
+    case q"$pack.NumericOperator.`%`"         => NumericOperator.`%`
+    case q"$pack.SetOperator.`contains`"      => SetOperator.`contains`
   }
 
   implicit val unaryOperatorUnliftable: Unliftable[UnaryOperator] = Unliftable[UnaryOperator] {
@@ -92,6 +94,7 @@ trait Unliftables {
     case q"$pack.Filter.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })"              => Filter(a, b, c)
     case q"$pack.Map.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })"                 => Map(a, b, c)
     case q"$pack.FlatMap.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })"             => FlatMap(a, b, c)
+    case q"$pack.ConcatMap.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })"           => ConcatMap(a, b, c)
     case q"$pack.SortBy.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast }, ${ d: Ast })" => SortBy(a, b, c, d)
     case q"$pack.GroupBy.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })"             => GroupBy(a, b, c)
     case q"$pack.Take.apply(${ a: Ast }, ${ b: Ast })"                               => Take(a, b)

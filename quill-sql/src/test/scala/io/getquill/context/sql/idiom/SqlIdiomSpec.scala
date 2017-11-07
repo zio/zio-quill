@@ -31,6 +31,20 @@ class SqlIdiomSpec extends Spec {
         testContext.run(q).string mustEqual
           "SELECT a.s FROM TestEntity a, TestEntity2 b WHERE a.s = b.s"
       }
+      "concatMap + split" in {
+        val q = quote {
+          qr1.concatMap(t => t.s.split(" "))
+        }
+        testContext.run(q).string mustEqual
+          "SELECT UNNEST(SPLIT(t.s, ' ')) FROM TestEntity t"
+      }
+      "startsWith" in {
+        val q = quote {
+          qr1.filter(t => t.s.startsWith(" "))
+        }
+        testContext.run(q).string mustEqual
+          "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.s LIKE (' ' || '%')"
+      }
       "distinct" - {
         "simple" in {
           val q = quote {

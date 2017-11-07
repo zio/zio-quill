@@ -68,27 +68,27 @@ object ExpandNestedQueries {
       ref match {
         case Property(ast: Property, TupleIndex(idx)) =>
           expandReference(ast) match {
-            case SelectValue(Tuple(elems), alias) =>
-              SelectValue(elems(idx), concat(alias, idx))
-            case SelectValue(ast, alias) =>
-              SelectValue(ast, concat(alias, idx))
+            case SelectValue(Tuple(elems), alias, c) =>
+              SelectValue(elems(idx), concat(alias, idx), c)
+            case SelectValue(ast, alias, c) =>
+              SelectValue(ast, concat(alias, idx), c)
           }
         case Property(ast: Property, name) =>
           expandReference(ast) match {
-            case SelectValue(ast, _) =>
-              SelectValue(Property(ast, name), Some(name))
+            case SelectValue(ast, _, c) =>
+              SelectValue(Property(ast, name), Some(name), c)
           }
         case Property(_, TupleIndex(idx)) =>
           select(idx) match {
-            case SelectValue(ast, alias) =>
-              SelectValue(ast, concat(alias, idx))
+            case SelectValue(ast, alias, c) =>
+              SelectValue(ast, concat(alias, idx), c)
           }
         case Property(_, name) =>
           select match {
-            case List(SelectValue(i: Ident, _)) =>
-              SelectValue(Property(i, name))
+            case List(SelectValue(i: Ident, _, c)) =>
+              SelectValue(Property(i, name), None, c)
             case other =>
-              SelectValue(Ident(name), Some(name))
+              SelectValue(Ident(name), Some(name), false)
           }
       }
     }

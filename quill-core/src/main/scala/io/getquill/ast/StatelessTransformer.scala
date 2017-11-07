@@ -48,6 +48,7 @@ trait StatelessTransformer {
       case Filter(a, b, c)    => Filter(apply(a), b, apply(c))
       case Map(a, b, c)       => Map(apply(a), b, apply(c))
       case FlatMap(a, b, c)   => FlatMap(apply(a), b, apply(c))
+      case ConcatMap(a, b, c) => ConcatMap(apply(a), b, apply(c))
       case SortBy(a, b, c, d) => SortBy(apply(a), b, apply(c), d)
       case GroupBy(a, b, c)   => GroupBy(apply(a), b, apply(c))
       case Aggregation(o, a)  => Aggregation(o, apply(a))

@@ -40,12 +40,12 @@ case class UnaryOperationSqlQuery(
   q:  SqlQuery
 ) extends SqlQuery
 
-case class SelectValue(ast: Ast, alias: Option[String] = None)
+case class SelectValue(ast: Ast, alias: Option[String] = None, concat: Boolean = false)
 
 case class FlattenSqlQuery(
   from:     List[FromContext]     = List(),
   where:    Option[Ast]           = None,
-  groupBy:  List[Property]        = Nil,
+  groupBy:  Option[Ast]           = None,
   orderBy:  List[OrderByCriteria] = Nil,
   limit:    Option[Ast]           = None,
   offset:   Option[Ast]           = None,
@@ -104,6 +104,7 @@ object SqlQuery {
       q match {
         case Map(_: GroupBy, _, _) => nest(source(q, alias))
         case Nested(q)             => nest(QueryContext(apply(q), alias))
+        case q: ConcatMap          => nest(QueryContext(apply(q), alias))
         case Join(tpe, a, b, iA, iB, on) =>
           val ctx = source(q, alias)
           def aliases(ctx: FromContext): List[String] =
@@ -126,12 +127,17 @@ object SqlQuery {
 
     finalFlatMapBody match {
 
+      case ConcatMap(q, Ident(alias), p) =>
+        FlattenSqlQuery(
+          from = source(q, alias) :: Nil,
+          select = selectValues(p).map(_.copy(concat = true))
+        )
+
       case Map(GroupBy(q, x @ Ident(alias), g), a, p) =>
         val b = base(q, alias)
-        val criterias = groupByCriterias(g)
         val select = BetaReduction(p, a -> Tuple(List(g, x)))
         val flattenSelect = FlattenGroupByAggregation(x)(select)
-        b.copy(groupBy = criterias, select = this.selectValues(flattenSelect))
+        b.copy(groupBy = Some(g), select = this.selectValues(flattenSelect))
 
       case GroupBy(q, Ident(alias), p) =>
         fail("A `groupBy` clause must be followed by `map`.")
@@ -139,7 +145,7 @@ object SqlQuery {
       case Map(q, Ident(alias), p) =>
         val b = base(q, alias)
         val agg = b.select.collect {
-          case s @ SelectValue(_: Aggregation, _) => s
+          case s @ SelectValue(_: Aggregation, _, _) => s
         }
         if (!b.distinct && agg.isEmpty)
           b.copy(select = selectValues(p))
@@ -229,13 +235,6 @@ object SqlQuery {
       case FlatJoin(t, a, ia, on)    => FlatJoinContext(t, source(a, ia.name), on)
       case Nested(q)                 => QueryContext(apply(q), alias)
       case other                     => QueryContext(apply(other), alias)
-    }
-
-  private def groupByCriterias(ast: Ast): List[Property] =
-    ast match {
-      case a: Property       => List(a)
-      case Tuple(properties) => properties.flatMap(groupByCriterias)
-      case other             => fail(s"Invalid group by criteria $ast")
     }
 
   private def orderByCriterias(ast: Ast, ordering: Ast): List[OrderByCriteria] =

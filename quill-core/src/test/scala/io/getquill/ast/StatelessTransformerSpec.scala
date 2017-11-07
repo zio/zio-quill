@@ -30,6 +30,11 @@ class StatelessTransformerSpec extends Spec {
         Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) mustEqual
           FlatMap(Ident("a'"), Ident("b"), Ident("c'"))
       }
+      "concatMap" in {
+        val ast: Ast = ConcatMap(Ident("a"), Ident("b"), Ident("c"))
+        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) mustEqual
+          ConcatMap(Ident("a'"), Ident("b"), Ident("c'"))
+      }
       "sortBy" in {
         val ast: Ast = SortBy(Ident("a"), Ident("b"), Ident("c"), AscNullsFirst)
         Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) mustEqual

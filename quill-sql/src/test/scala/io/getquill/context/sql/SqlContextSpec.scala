@@ -10,6 +10,7 @@ import io.getquill.context.sql.testContext._
 
 import scala.util.Try
 import io.getquill.context.Context
+import io.getquill.context.sql.idiom.ConcatSupport
 
 class SqlContextSpec extends Spec {
 
@@ -36,7 +37,7 @@ class SqlContextSpec extends Spec {
 
     "testContext.run(qr1.delete)" mustNot compile
 
-    class EvilDBDialect extends SqlIdiom {
+    class EvilDBDialect extends SqlIdiom with ConcatSupport {
       override def liftingPlaceholder(index: Int): String = "?"
 
       override def prepareForProbing(string: String) = string

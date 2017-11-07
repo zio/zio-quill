@@ -121,7 +121,7 @@ class EncodingSparkSpec extends Spec {
     implicitly[Encoder[Temp]]
   }
 
-  val entities =
+  val entities = liftQuery {
     Seq(
       EncodingTestEntity(
         "s",
@@ -163,7 +163,8 @@ class EncodingSparkSpec extends Spec {
         None,
         None
       )
-    ).toQuery
+    ).toDS
+  }
 
   def verify(result: List[EncodingTestEntity]) =
     result match {

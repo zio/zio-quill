@@ -6,40 +6,46 @@ case class Department(dpt: String)
 case class Employee(emp: String, dpt: String)
 case class Task(emp: String, tsk: String)
 
-class DepartmentsJdbcSpec extends Spec {
+class DepartmentsSparkSpec extends Spec {
 
   import testContext._
   import sqlContext.implicits._
 
-  val departments = Seq(
-    Department("Product"),
-    Department("Quality"),
-    Department("Research"),
-    Department("Sales")
-  ).toQuery
+  val departments = liftQuery {
+    Seq(
+      Department("Product"),
+      Department("Quality"),
+      Department("Research"),
+      Department("Sales")
+    ).toDS
+  }
 
-  val employees = Seq(
-    Employee("Alex", "Product"),
-    Employee("Bert", "Product"),
-    Employee("Cora", "Research"),
-    Employee("Drew", "Research"),
-    Employee("Edna", "Research"),
-    Employee("Fred", "Sales")
-  ).toQuery
+  val employees = liftQuery {
+    Seq(
+      Employee("Alex", "Product"),
+      Employee("Bert", "Product"),
+      Employee("Cora", "Research"),
+      Employee("Drew", "Research"),
+      Employee("Edna", "Research"),
+      Employee("Fred", "Sales")
+    ).toDS
+  }
 
-  val tasks = Seq(
-    Task("Alex", "build"),
-    Task("Bert", "build"),
-    Task("Cora", "abstract"),
-    Task("Cora", "build"),
-    Task("Cora", "design"),
-    Task("Drew", "abstract"),
-    Task("Drew", "design"),
-    Task("Edna", "abstract"),
-    Task("Edna", "call"),
-    Task("Edna", "design"),
-    Task("Fred", "call")
-  ).toQuery
+  val tasks = liftQuery {
+    Seq(
+      Task("Alex", "build"),
+      Task("Bert", "build"),
+      Task("Cora", "abstract"),
+      Task("Cora", "build"),
+      Task("Cora", "design"),
+      Task("Drew", "abstract"),
+      Task("Drew", "design"),
+      Task("Edna", "abstract"),
+      Task("Edna", "call"),
+      Task("Edna", "design"),
+      Task("Fred", "call")
+    ).toDS
+  }
 
   "Example 8 - nested naive" in {
     val q = quote {
@@ -59,7 +65,7 @@ class DepartmentsJdbcSpec extends Spec {
         } yield d.dpt
     }
     testContext.run(q("abstract")).collect().toList mustEqual
-      List("Research", "Quality")
+      List("Quality", "Research")
   }
 
   "Example 9 - nested db" in {
@@ -110,6 +116,6 @@ class DepartmentsJdbcSpec extends Spec {
       }
     }
     testContext.run(q("abstract")).collect().toList mustEqual
-      List("Research", "Quality")
+      List("Quality", "Research")
   }
 }

@@ -16,6 +16,7 @@ import io.getquill.ast.Union
 import io.getquill.ast.UnionAll
 import io.getquill.norm.BetaReduction
 import io.getquill.util.Messages.fail
+import io.getquill.ast.ConcatMap
 
 case class FlattenGroupByAggregation(agg: Ident) extends StatelessTransformer {
 
@@ -41,6 +42,7 @@ case class FlattenGroupByAggregation(agg: Ident) extends StatelessTransformer {
       case Aggregation(a, b)         => isGroupByAggregation(b)
       case Map(a, b, c)              => isGroupByAggregation(a)
       case FlatMap(a, b, c)          => isGroupByAggregation(a)
+      case ConcatMap(a, b, c)        => isGroupByAggregation(a)
       case Filter(a, b, c)           => isGroupByAggregation(a)
       case SortBy(a, b, c, d)        => isGroupByAggregation(a)
       case Take(a, b)                => isGroupByAggregation(a)

@@ -82,6 +82,13 @@ class RenamePropertiesSpec extends Spec {
           "SELECT a.field_s, a.field_i, a.l, a.o, b.s, b.i, b.l, b.o FROM test_entity a, TestEntity2 b WHERE a.field_s = b.s"
       }
     }
+    "concatMap" in {
+      val q = quote {
+        e.concatMap(t => t.s.split(" "))
+      }
+      testContext.run(q.dynamic).string mustEqual
+        "SELECT UNNEST(SPLIT(t.field_s, ' ')) FROM test_entity t"
+    }
     "map" - {
       "body" in {
         val q = quote {

@@ -12,20 +12,24 @@ class PeopleJdbcSpec extends Spec {
   import testContext._
   import sqlContext.implicits._
 
-  val couples = Seq(
-    Couple("Alex", "Bert"),
-    Couple("Cora", "Drew"),
-    Couple("Edna", "Fred")
-  ).toQuery
+  val couples = liftQuery {
+    Seq(
+      Couple("Alex", "Bert"),
+      Couple("Cora", "Drew"),
+      Couple("Edna", "Fred")
+    ).toDS
+  }
 
-  val people = Seq(
-    Person("Alex", 60),
-    Person("Bert", 55),
-    Person("Cora", 33),
-    Person("Drew", 31),
-    Person("Edna", 21),
-    Person("Fred", 60)
-  ).toQuery
+  val people = liftQuery {
+    Seq(
+      Person("Alex", 60),
+      Person("Bert", 55),
+      Person("Cora", 33),
+      Person("Drew", 31),
+      Person("Edna", 21),
+      Person("Fred", 60)
+    ).toDS
+  }
 
   "Example 1 - differences" in {
     val q =
@@ -39,7 +43,7 @@ class PeopleJdbcSpec extends Spec {
         }
       }
     testContext.run(q).collect.toList mustEqual
-      List(("Cora", 2), ("Alex", 5))
+      List(("Alex", 5), ("Cora", 2))
   }
 
   "Example 2 - range simple" in {

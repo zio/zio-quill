@@ -19,6 +19,15 @@ class DealiasSpec extends Spec {
       }
       Dealias(q.ast) mustEqual n.ast
     }
+    "concatMap" in {
+      val q = quote {
+        qr1.filter(a => a.s == "s").concatMap(b => b.s.split(" "))
+      }
+      val n = quote {
+        qr1.filter(a => a.s == "s").concatMap(a => a.s.split(" "))
+      }
+      Dealias(q.ast) mustEqual n.ast
+    }
     "map" in {
       val q = quote {
         qr1.filter(a => a.s == "s").map(b => b.s)

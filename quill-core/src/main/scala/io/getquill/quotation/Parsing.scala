@@ -179,6 +179,9 @@ trait Parsing {
     case q"$source.flatMap[$t](($alias) => $body)" if (is[CoreDsl#Query[Any]](source)) =>
       FlatMap(astParser(source), identParser(alias), astParser(body))
 
+    case q"$source.concatMap[$t, $u](($alias) => $body)($ev)" if (is[CoreDsl#Query[Any]](source)) =>
+      ConcatMap(astParser(source), identParser(alias), astParser(body))
+
     case q"$source.sortBy[$t](($alias) => $body)($ord)" if (is[CoreDsl#Query[Any]](source)) =>
       SortBy(astParser(source), identParser(alias), astParser(body), astParser(ord))
 
@@ -395,6 +398,8 @@ trait Parsing {
       case "toLowerCase" => StringOperator.`toLowerCase`
       case "toLong"      => StringOperator.`toLong`
       case "toInt"       => StringOperator.`toInt`
+      case "startsWith"  => StringOperator.`startsWith`
+      case "split"       => StringOperator.`split`
     }
 
   val numericOperationParser: Parser[Operation] =

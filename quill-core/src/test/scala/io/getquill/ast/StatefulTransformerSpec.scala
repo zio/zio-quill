@@ -47,6 +47,14 @@ class StatefulTransformerSpec extends Spec {
             att.state mustEqual List(Ident("a"), Ident("c"))
         }
       }
+      "concatMap" in {
+        val ast: Ast = ConcatMap(Ident("a"), Ident("b"), Ident("c"))
+        Subject(Nil, Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) match {
+          case (at, att) =>
+            at mustEqual ConcatMap(Ident("a'"), Ident("b"), Ident("c'"))
+            att.state mustEqual List(Ident("a"), Ident("c"))
+        }
+      }
       "sortBy" in {
         val ast: Ast = SortBy(Ident("a"), Ident("b"), Ident("c"), AscNullsFirst)
         Subject(Nil, Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) match {
