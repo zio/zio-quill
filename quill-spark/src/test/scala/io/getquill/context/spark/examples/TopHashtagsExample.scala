@@ -57,7 +57,7 @@ object TopHashtagsExample extends App {
         .groupBy($"value") // group by each hashtag  (Dataframe)
         .agg(count("*") as "count") // aggregate the count    (Dataframe)
         .orderBy($"count" desc) // order                  (Datafeame)
-        .limit(n) // limit to top results   (Dataframe) 
+        .limit(n) // limit to top results   (Dataframe)
         .as[(String, BigInt)] // set the type again     (Dataset)
   }
 
