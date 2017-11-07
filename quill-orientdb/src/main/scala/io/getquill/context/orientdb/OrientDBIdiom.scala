@@ -241,6 +241,7 @@ trait OrientDBIdiom extends Idiom {
     case Constant(v)         => stmt"${v.toString.token}"
     case NullValue           => stmt"null"
     case Tuple(values)       => stmt"${values.token}"
+    case CaseClass(values)   => stmt"${values.map(_._2).token}"
   }
 
   implicit def infixTokenizer(implicit propertyTokenizer: Tokenizer[Property], strategy: NamingStrategy): Tokenizer[Infix] = Tokenizer[Infix] {

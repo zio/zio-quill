@@ -119,3 +119,18 @@ CREATE TABLE ArrayOps (
   id int,
   numbers int[]
 );
+
+CREATE TABLE Contact(
+    firstName VARCHAR(255),
+    lastName VARCHAR(255),
+    age int,
+    addressFk int,
+    extraInfo VARCHAR(255)
+);
+
+CREATE TABLE Address(
+    id int,
+    street VARCHAR(255),
+    zip int,
+    otherExtraInfo VARCHAR(255)
+);

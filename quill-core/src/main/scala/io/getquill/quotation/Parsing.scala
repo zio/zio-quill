@@ -438,13 +438,80 @@ trait Parsing {
   private def is[T](tree: Tree)(implicit t: TypeTag[T]) =
     tree.tpe <:< t.tpe
 
+  private def isCaseClass[T: WeakTypeTag] = {
+    val symbol = c.weakTypeTag[T].tpe.typeSymbol
+    symbol.isClass && symbol.asClass.isCaseClass
+  }
+
+  private def firstConstructorParamList[T: WeakTypeTag] = {
+    val tpe = c.weakTypeTag[T].tpe
+    val paramLists = tpe.decls.collect {
+      case m: MethodSymbol if m.isConstructor => m.paramLists.map(_.map(_.name))
+    }
+    paramLists.toList(0)(0).map(_.toString)
+  }
+
   val valueParser: Parser[Ast] = Parser[Ast] {
-    case q"null" => NullValue
+    case q"null"                         => NullValue
     case Literal(c.universe.Constant(v)) => Constant(v)
-    case q"((..$v))" if (v.size > 1) => Tuple(v.map(astParser(_)))
+    case q"((..$v))" if (v.size > 1)     => Tuple(v.map(astParser(_)))
+    case q"new $ccTerm(..$v)" if (isCaseClass(c.WeakTypeTag(ccTerm.tpe.erasure))) => {
+      val values = v.map(astParser(_))
+      val params = firstConstructorParamList(c.WeakTypeTag(ccTerm.tpe.erasure))
+      CaseClass(params.zip(values))
+    }
     case q"(($pack.Predef.ArrowAssoc[$t1]($v1).$arrow[$t2]($v2)))" => Tuple(List(astParser(v1), astParser(v2)))
-    case q"io.getquill.dsl.UnlimitedTuple.apply($v)" => astParser(v)
-    case q"io.getquill.dsl.UnlimitedTuple.apply(..$v)" => Tuple(v.map(astParser(_)))
+    case q"io.getquill.dsl.UnlimitedTuple.apply($v)"               => astParser(v)
+    case q"io.getquill.dsl.UnlimitedTuple.apply(..$v)"             => Tuple(v.map(astParser(_)))
+    case q"$ccCompanion(..$v)" if (
+      ccCompanion.tpe != null &&
+      ccCompanion.children.length > 0 &&
+      isCaseClassCompanion(ccCompanion)
+    ) => {
+      val values = v.map(astParser(_))
+      val params = firstParamList(c.WeakTypeTag(ccCompanion.tpe.erasure))
+      CaseClass(params.zip(values))
+    }
+  }
+
+  private def ifThenSome[T](cond: => Boolean, output: => T): Option[T] =
+    if (cond) Some(output) else None
+
+  private def isCaseClassCompanion(ccCompanion: Tree): Boolean = {
+    val output = for {
+      resultType <- ifThenSome(
+        isTypeConstructor(c.WeakTypeTag(ccCompanion.tpe.erasure)),
+        resultType(c.WeakTypeTag(ccCompanion.tpe.erasure))
+      )
+      firstChild <- ifThenSome(
+        isCaseClass(c.WeakTypeTag(resultType)) && ccCompanion.children.length > 0,
+        ccCompanion.children(0)
+      )
+      moduleClass <- ifThenSome(
+        isModuleClass(c.WeakTypeTag(firstChild.tpe.erasure)),
+        asClass(c.WeakTypeTag(firstChild.tpe.erasure))
+      )
+    } yield (moduleClass.companion == resultType.typeSymbol)
+    output.getOrElse(false)
+  }
+
+  private def isTypeConstructor[T: WeakTypeTag] =
+    c.weakTypeTag[T].tpe != null && c.weakTypeTag[T].tpe.typeConstructor != NoType
+
+  private def isModuleClass[T: WeakTypeTag] = {
+    val typeSymbol = c.weakTypeTag[T].tpe.typeSymbol
+    typeSymbol.isClass && typeSymbol.isModuleClass
+  }
+
+  private def resultType[T: WeakTypeTag] =
+    c.weakTypeTag[T].tpe.resultType
+
+  private def asClass[T: WeakTypeTag] =
+    c.weakTypeTag[T].tpe.typeSymbol.asClass
+
+  private def firstParamList[T: WeakTypeTag] = {
+    val tpe = c.weakTypeTag[T].tpe
+    tpe.paramLists(0).map(_.name.toString)
   }
 
   val actionParser: Parser[Ast] = Parser[Ast] {

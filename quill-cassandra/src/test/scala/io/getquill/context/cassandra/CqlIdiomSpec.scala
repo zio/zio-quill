@@ -384,6 +384,9 @@ class CqlIdiomSpec extends Spec {
     "value" in {
       implicitly[Tokenizer[Value]].token(Tuple(List(Ident("a")))) mustBe stmt"a"
     }
+    "value in caseclass" in {
+      implicitly[Tokenizer[Value]].token(CaseClass(List(("value", Ident("a"))))) mustBe stmt"a"
+    }
     "action" in {
       val t = implicitly[Tokenizer[AstAction]]
       intercept[IllegalStateException](t.token(null: AstAction))

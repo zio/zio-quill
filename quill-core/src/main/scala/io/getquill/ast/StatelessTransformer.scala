@@ -81,6 +81,10 @@ trait StatelessTransformer {
       case e: Constant   => e
       case NullValue     => NullValue
       case Tuple(values) => Tuple(values.map(apply))
+      case CaseClass(tuples) => {
+        val (keys, values) = tuples.unzip
+        CaseClass(keys.zip(values.map(apply)))
+      }
     }
 
   def apply(e: Action): Action =

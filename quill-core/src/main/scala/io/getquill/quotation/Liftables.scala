@@ -143,9 +143,10 @@ trait Liftables {
   }
 
   implicit val valueLiftable: Liftable[Value] = Liftable[Value] {
-    case NullValue   => q"$pack.NullValue"
-    case Constant(a) => q"$pack.Constant(${Literal(c.universe.Constant(a))})"
-    case Tuple(a)    => q"$pack.Tuple($a)"
+    case NullValue    => q"$pack.NullValue"
+    case Constant(a)  => q"$pack.Constant(${Literal(c.universe.Constant(a))})"
+    case Tuple(a)     => q"$pack.Tuple($a)"
+    case CaseClass(a) => q"$pack.CaseClass($a)"
   }
   implicit val identLiftable: Liftable[Ident] = Liftable[Ident] {
     case Ident(a) => q"$pack.Ident($a)"

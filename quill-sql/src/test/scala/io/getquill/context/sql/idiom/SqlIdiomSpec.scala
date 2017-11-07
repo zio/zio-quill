@@ -70,6 +70,15 @@ class SqlIdiomSpec extends Spec {
             "SELECT DISTINCT i.i, i.l FROM TestEntity i"
         }
 
+        "caseclass" in {
+          case class IntLong(i: Int, l: Long)
+          val q = quote {
+            qr1.map(i => new IntLong(i.i, i.l)).distinct
+          }
+          testContext.run(q).string mustEqual
+            "SELECT x.i, x.l FROM (SELECT DISTINCT i.i, i.l FROM TestEntity i) x"
+        }
+
         "nesting" in {
           val q = quote {
             qr1.map(i => i.i).distinct.map(x => x + 1)
@@ -841,6 +850,14 @@ class SqlIdiomSpec extends Spec {
       "tuple" in {
         val q = quote {
           qr1.map(t => (1, 2))
+        }
+        testContext.run(q).string mustEqual
+          "SELECT 1, 2 FROM TestEntity t"
+      }
+      "caseclass" in {
+        case class TwoInts(one: Int, two: Int)
+        val q = quote {
+          qr1.map(t => new TwoInts(1, 2))
         }
         testContext.run(q).string mustEqual
           "SELECT 1, 2 FROM TestEntity t"
