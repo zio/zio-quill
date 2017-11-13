@@ -70,7 +70,7 @@ lazy val `quill-jdbc` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.zaxxer"              % "HikariCP"             % "2.7.2",
+        "com.zaxxer"              % "HikariCP"             % "2.7.3",
         "mysql"                   % "mysql-connector-java" % "5.1.42"             % Test,
         "com.h2database"          % "h2"                   % "1.4.196"            % Test,
         "org.postgresql"          % "postgresql"           % "42.1.4"             % Test,
@@ -160,8 +160,8 @@ lazy val `quill-cassandra` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.datastax.cassandra" %  "cassandra-driver-core" % "3.3.0",
-        "io.monix"               %% "monix"                 % "2.3.0"
+        "com.datastax.cassandra" %  "cassandra-driver-core" % "3.3.1",
+        "io.monix"               %% "monix"                 % "2.3.2"
       )
     )
     .dependsOn(`quill-core-jvm` % "compile->compile;test->test")
