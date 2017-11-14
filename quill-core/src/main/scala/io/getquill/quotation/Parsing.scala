@@ -491,7 +491,10 @@ trait Parsing {
         isModuleClass(c.WeakTypeTag(firstChild.tpe.erasure)),
         asClass(c.WeakTypeTag(firstChild.tpe.erasure))
       )
-    } yield (moduleClass.companion == resultType.typeSymbol)
+      // Fix for SI-7567 Ideally this should be
+      // moduleClass.companion == resultType.typeSymbol but .companion
+      // returns NoSymbol where in a local context (e.g. inside a method).
+    } yield (resultType.typeSymbol.name.toTypeName == moduleClass.name.toTypeName)
     output.getOrElse(false)
   }
 

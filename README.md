@@ -593,8 +593,7 @@ ctx.run(q)
     1. Using the `new` keyword: `new Person("Joe", "Bloggs")`
     2. Using a companion object's apply method:  `Person("Joe", "Bloggs")`
     3. Using a companion object's apply method explicitly: `Person.apply("Joe", "Bloggs")`
-4. The case class *must* be defined in either the root scope or another object. Ad-Hoc Case Classes defined in a local method cannot be constructed with an 'apply' method.
-5. Any custom logic in a constructor/apply-method of a Ad-Hoc case class would not be invoked when it is 'constructed' inside a quotation.
+4. Any custom logic in a constructor/apply-method of a Ad-Hoc case class will not be invoked when it is 'constructed' inside a quotation. To construct an Ad-Hoc case class with custom logic inside a quotation, you can use a quoted method.
 
 ## Query probing
 

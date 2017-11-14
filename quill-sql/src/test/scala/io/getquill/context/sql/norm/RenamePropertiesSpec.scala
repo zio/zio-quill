@@ -6,6 +6,8 @@ import io.getquill.context.sql.testContext
 
 class RenamePropertiesSpec extends Spec {
 
+  case class IntLongCaseClassScope(im: Int, lm: Long)
+
   val e = quote {
     querySchema[TestEntity]("test_entity", _.s -> "field_s", _.i -> "field_i")
   }
@@ -123,6 +125,21 @@ class RenamePropertiesSpec extends Spec {
         case class IntLongCase(im: Int, lm: Long)
         val q = quote {
           e.map(t => new IntLongCase(t.i, t.l))
+        }
+        testContext.run(q).string mustEqual
+          "SELECT t.field_i, t.l FROM test_entity t"
+      }
+      "body with caseclass companion constructed" in {
+        case class IntLongCase(im: Int, lm: Long)
+        val q = quote {
+          e.map(t => IntLongCase(t.i, t.l))
+        }
+        testContext.run(q).string mustEqual
+          "SELECT t.field_i, t.l FROM test_entity t"
+      }
+      "body with caseclass companion in class scope" in {
+        val q = quote {
+          e.map(t => IntLongCaseClassScope(t.i, t.l))
         }
         testContext.run(q).string mustEqual
           "SELECT t.field_i, t.l FROM test_entity t"

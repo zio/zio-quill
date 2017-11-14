@@ -6,6 +6,8 @@ import io.getquill.context.sql.testContext._
 
 class SqlIdiomSpec extends Spec {
 
+  case class TwoIntsClassScope(one: Int, two: Int)
+
   "shows the sql representation of normalized asts" - {
     "query" - {
       "without filter" in {
@@ -70,10 +72,18 @@ class SqlIdiomSpec extends Spec {
             "SELECT DISTINCT i.i, i.l FROM TestEntity i"
         }
 
-        "caseclass" in {
+        "caseclass constructor" in {
           case class IntLong(i: Int, l: Long)
           val q = quote {
             qr1.map(i => new IntLong(i.i, i.l)).distinct
+          }
+          testContext.run(q).string mustEqual
+            "SELECT x.i, x.l FROM (SELECT DISTINCT i.i, i.l FROM TestEntity i) x"
+        }
+        "caseclass companion constructor" in {
+          case class IntLong(i: Int, l: Long)
+          val q = quote {
+            qr1.map(i => IntLong(i.i, i.l)).distinct
           }
           testContext.run(q).string mustEqual
             "SELECT x.i, x.l FROM (SELECT DISTINCT i.i, i.l FROM TestEntity i) x"
@@ -858,6 +868,21 @@ class SqlIdiomSpec extends Spec {
         case class TwoInts(one: Int, two: Int)
         val q = quote {
           qr1.map(t => new TwoInts(1, 2))
+        }
+        testContext.run(q).string mustEqual
+          "SELECT 1, 2 FROM TestEntity t"
+      }
+      "caseclass companion" in {
+        case class TwoInts(one: Int, two: Int)
+        val q = quote {
+          qr1.map(t => TwoInts(1, 2))
+        }
+        testContext.run(q).string mustEqual
+          "SELECT 1, 2 FROM TestEntity t"
+      }
+      "caseclass companion class scope" in {
+        val q = quote {
+          qr1.map(t => TwoIntsClassScope(1, 2))
         }
         testContext.run(q).string mustEqual
           "SELECT 1, 2 FROM TestEntity t"
