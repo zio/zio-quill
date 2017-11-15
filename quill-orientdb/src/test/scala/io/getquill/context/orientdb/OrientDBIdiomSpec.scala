@@ -254,6 +254,14 @@ class OrientDBIdiomSpec extends Spec {
       ctx.run(q).string mustEqual
         "SELECT i, s FROM TestEntity"
     }
+    "caseclass" in {
+      case class IntString(intProp: Int, stringProp: String)
+      val q = quote {
+        qr1.map(t => new IntString(t.i, t.s))
+      }
+      ctx.run(q).string mustEqual
+        "SELECT i, s FROM TestEntity"
+    }
     "null" in {
       val q = quote {
         qr1.filter(t => t.s == null)

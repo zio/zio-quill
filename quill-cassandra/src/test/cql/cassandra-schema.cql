@@ -170,3 +170,19 @@ CREATE TABLE quill_test_2.with_udt(
     id INT PRIMARY KEY,
     name frozen <quill_test_2.Name>
 );
+
+CREATE TABLE Contact(
+    id INT PRIMARY KEY,
+    firstName VARCHAR,
+    lastName VARCHAR,
+    age INT,
+    addressFk INT,
+    extraInfo VARCHAR
+);
+
+CREATE TABLE Address(
+    id INT PRIMARY KEY,
+    street VARCHAR,
+    zip INT,
+    otherExtraInfo VARCHAR
+);

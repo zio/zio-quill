@@ -19,6 +19,9 @@ case class BetaReduction(map: collection.Map[Ast, Ast])
           case _ => apply(values(name.drop(1).toInt - 1))
         }
 
+      case Property(CaseClass(tuples), name) =>
+        apply(tuples.toMap.apply(name))
+
       case FunctionApply(Function(params, body), values) =>
         val conflicts = values.flatMap(CollectAst.byType[Ident]).map { i =>
           i -> Ident(s"tmp_${i.name}")

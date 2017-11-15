@@ -6,12 +6,36 @@ import io.getquill.context.sql.testContext
 
 class RenamePropertiesSpec extends Spec {
 
+  case class IntLongCaseClassScope(im: Int, lm: Long)
+
   val e = quote {
     querySchema[TestEntity]("test_entity", _.s -> "field_s", _.i -> "field_i")
   }
 
+  val tup = quote {
+    querySchema[(String, Int)]("test_tuple", _._1 -> "field_s", _._2 -> "field_i")
+  }
+
   val f = quote {
     qr1.filter(t => t.i == 1)
+  }
+
+  "renames properties of a tuple" - {
+    "body" in {
+      val q = quote {
+        tup.map(t => (t._1, t._2))
+      }
+      testContext.run(q).string mustEqual
+        "SELECT t.field_s, t.field_i FROM test_tuple t"
+    }
+    "mapped to caseclass and filtered" in {
+      case class StringInt(strProp: String, intProp: Int)
+      val q = quote {
+        tup.map(t => new StringInt(t._1, t._2)).filter(_.strProp == "foo")
+      }
+      testContext.run(q).string mustEqual
+        "SELECT t.field_s, t.field_i FROM test_tuple t WHERE t.field_s = 'foo'"
+    }
   }
 
   "renames properties according to the entity aliases" - {
@@ -93,6 +117,29 @@ class RenamePropertiesSpec extends Spec {
       "body" in {
         val q = quote {
           e.map(t => (t.i, t.l))
+        }
+        testContext.run(q).string mustEqual
+          "SELECT t.field_i, t.l FROM test_entity t"
+      }
+      "body with caseclass" in {
+        case class IntLongCase(im: Int, lm: Long)
+        val q = quote {
+          e.map(t => new IntLongCase(t.i, t.l))
+        }
+        testContext.run(q).string mustEqual
+          "SELECT t.field_i, t.l FROM test_entity t"
+      }
+      "body with caseclass companion constructed" in {
+        case class IntLongCase(im: Int, lm: Long)
+        val q = quote {
+          e.map(t => IntLongCase(t.i, t.l))
+        }
+        testContext.run(q).string mustEqual
+          "SELECT t.field_i, t.l FROM test_entity t"
+      }
+      "body with caseclass companion in class scope" in {
+        val q = quote {
+          e.map(t => IntLongCaseClassScope(t.i, t.l))
         }
         testContext.run(q).string mustEqual
           "SELECT t.field_i, t.l FROM test_entity t"

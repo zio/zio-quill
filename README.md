@@ -547,6 +547,54 @@ ctx.run(qNested)
 // FROM Person p INNER JOIN Employer e ON p.id = e.personId LEFT JOIN Contact c ON c.personId = p.id
 ```
 
+### Ad-Hoc Case Classes
+
+Case Classes can also be used inside quotations as output values:
+
+```scala
+case class Person(id: Int, name: String, age: Int)
+case class Contact(personId: Int, phone: String)
+case class ReachablePerson(name:String, phone: String)
+
+val q = quote {
+  for {
+    p <- query[Person] if(p.id == 999)
+    c <- query[Contact] if(c.personId == p.id)
+  } yield {
+    ReachablePerson(p.name, c.phone)
+  }
+}
+
+ctx.run(q)
+// SELECT p.name, c.phone FROM Person p, Contact c WHERE (p.id = 999) AND (c.personId = p.id)
+```
+
+As well as in general:
+
+```scala
+case class IdFilter(id:Int)
+
+val q = quote {
+  val idFilter = new IdFilter(999)
+  for {
+    p <- query[Person] if(p.id == idFilter.id)
+    c <- query[Contact] if(c.personId == p.id)
+  } yield {
+    ReachablePerson(p.name, c.phone)
+  }
+}
+
+ctx.run(q)
+// SELECT p.name, c.phone FROM Person p, Contact c WHERE (p.id = 999) AND (c.personId = p.id)
+```
+***Note*** however that this functionality has the following restrictions:
+1. The Ad-Hoc Case Class can only have one constructor with one set of parameters.
+2. The Ad-Hoc Case Class must be constructed inside the quotation using one of the following methods:
+    1. Using the `new` keyword: `new Person("Joe", "Bloggs")`
+    2. Using a companion object's apply method:  `Person("Joe", "Bloggs")`
+    3. Using a companion object's apply method explicitly: `Person.apply("Joe", "Bloggs")`
+4. Any custom logic in a constructor/apply-method of a Ad-Hoc case class will not be invoked when it is 'constructed' inside a quotation. To construct an Ad-Hoc case class with custom logic inside a quotation, you can use a quoted method.
+
 ## Query probing
 
 Query probing validates queries against the database at compile time, failing the compilation if it is not valid. The query validation does not alter the database state.

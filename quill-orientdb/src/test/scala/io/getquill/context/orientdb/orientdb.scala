@@ -39,6 +39,8 @@ object orientdb {
     getOrCreateClass(schema, "Person")
     getOrCreateClass(schema, "OrderTestEntity")
     getOrCreateClass(schema, "SetsEntity")
+    getOrCreateClass(schema, "Contact")
+    getOrCreateClass(schema, "Address")
   }
 
   private def getOrCreateClass(iSchema: OSchemaProxy, iClassName: String): Unit = {
