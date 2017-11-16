@@ -12,9 +12,7 @@ import io.getquill.util.ContextLogger
 import scala.annotation.tailrec
 import scala.util.{ DynamicVariable, Try }
 import scala.util.control.NonFatal
-import scala.util.DynamicVariable
 
-import scala.reflect.runtime.universe._
 import io.getquill.monad.SyncIOMonad
 import io.getquill.context.Context
 

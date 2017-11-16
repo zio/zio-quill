@@ -3,7 +3,6 @@ package io.getquill.context.mirror
 import java.time.LocalDate
 import java.util.{ Date, UUID }
 
-import java.util.Date
 import io.getquill.context.Context
 
 trait MirrorEncoders {
