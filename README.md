@@ -1899,6 +1899,7 @@ ScalaDays Berlin 2016 - [Scylla, Charybdis, and the mystery of Quill](https://ww
 
 ### Blog posts
 
+[quill-spark: A type-safe Scala API for Spark SQL](https://medium.com/@fwbrasil/quill-spark-a-type-safe-scala-api-for-spark-sql-2672e8582b0d)
 Scalac.io blog - [Compile-time Queries with Quill](http://blog.scalac.io/2016/07/21/compile-time-queries-with-quill.html)
 
 ## Code of Conduct
