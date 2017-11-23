@@ -4,6 +4,7 @@ import io.getquill.Spec
 import io.getquill.context.sql.testContext._
 import io.getquill.context.sql.SqlQuery
 import scala.util.Try
+import io.getquill.context.sql.norm.SqlNormalize
 
 class VerifySqlQuerySpec extends Spec {
 
@@ -24,14 +25,13 @@ class VerifySqlQuerySpec extends Spec {
         "Some(The monad composition can't be expressed using applicative joins. Faulty expression: 'b.s == a.s'. Free variables: 'List(a)'.)"
     }
 
-    "invalid table reference" in {
+    "accepts table reference" in {
       val q = quote {
         qr1.leftJoin(qr2).on((a, b) => a.i == b.i).filter {
           case (a, b) => b.isDefined
         }
       }
-      VerifySqlQuery(SqlQuery(q.ast)).toString mustEqual
-        "Some(The monad composition can't be expressed using applicative joins. Faulty expression: 'x01._2.isDefined'. Free variables: 'List(x01)'.)"
+      VerifySqlQuery(SqlQuery(SqlNormalize(q.ast))) mustEqual None
     }
 
     "invalid flatJoin on" in {
