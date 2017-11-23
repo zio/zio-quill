@@ -1,9 +1,7 @@
 package io.getquill.context.sql.idiom
 
 import io.getquill.ast.Ast
-import io.getquill.ast.CollectAst
 import io.getquill.ast.Ident
-import io.getquill.ast.Property
 import io.getquill.context.sql.FlatJoinContext
 import io.getquill.context.sql.FlattenSqlQuery
 import io.getquill.context.sql.FromContext
@@ -64,27 +62,11 @@ object VerifySqlQuery {
 
     val aliases = query.from.flatMap(this.aliases).map(Ident(_)) :+ Ident("*") :+ Ident("?")
 
-    def verifyTableReference(ast: Ast) =
-      (CollectAst(ast) {
-        case p: Property => None
-        case i: Ident    => Some(Error(i :: Nil, ast))
-      }).flatten
-
     def verifyFreeVars(ast: Ast) =
       (FreeVariables(ast) -- aliases).toList match {
         case Nil  => None
         case free => Some(Error(free, ast))
       }
-
-    val tableReferenceErrors =
-      query.where.toList.flatMap(verifyTableReference) ++
-        query.orderBy.map(_.ast).flatMap(verifyTableReference) ++
-        query.limit.toList.flatMap(verifyTableReference) ++
-        query.from.flatMap {
-          case j: JoinContext     => verifyTableReference(j.on)
-          case j: FlatJoinContext => verifyTableReference(j.on)
-          case _                  => Nil
-        }
 
     val freeVariableErrors: List[Error] =
       query.where.flatMap(verifyFreeVars).toList ++
@@ -102,7 +84,7 @@ object VerifySqlQuery {
         case QueryContext(query, alias) => verify(query).map(_.errors)
       }.flatten.flatten
 
-    (tableReferenceErrors ++ freeVariableErrors ++ nestedErrors) match {
+    (freeVariableErrors ++ nestedErrors) match {
       case Nil    => None
       case errors => Some(InvalidSqlQuery(errors))
     }
