@@ -80,6 +80,19 @@ lazy val `quill-jdbc` =
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
 
+lazy val `quill-doobie` =
+  (project in file("quill-doobie"))
+    .settings(commonSettings: _*)
+    .settings(mimaSettings: _*)
+    .settings(
+      fork in Test := true,
+      libraryDependencies ++= Seq(
+        "org.tpolecat" % "doobie-core_2.11" % "0.5.0-M9",
+        "com.h2database" % "h2"% "1.4.196" % Test
+      )
+    )
+    .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
+
 lazy val `quill-spark` =
   (project in file("quill-spark"))
     .settings(commonSettings: _*)
