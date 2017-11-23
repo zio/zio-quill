@@ -1,3 +1,16 @@
+# 2.3.0
+
+- [Ad-Hoc Tuple Support in Quotations](https://github.com/getquill/quill/pull/957)
+- [fix regression: allow table references](https://github.com/getquill/quill/pull/968)
+
+# 2.2.0
+
+- [Fix StackOverflowError in select distinct with aggregation](https://github.com/getquill/quill/pull/954)
+- [Add support of java.time.Instant/java.time.LocalDate for quill-casandra](https://github.com/getquill/quill/pull/953)
+- [Fix select query for unlimited optional embedded case classes](https://github.com/getquill/quill/pull/955)
+- [`concatMap`, `startsWith`, and `split` support](https://github.com/getquill/quill/pull/956)
+- [Upgrade finagle to 17.10.0](https://github.com/getquill/quill/pull/959)
+
 # 2.1.0
 
 - [Spark SQL support](https://github.com/getquill/quill/pull/941)
