@@ -70,7 +70,7 @@ lazy val `quill-jdbc` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.zaxxer"              % "HikariCP"             % "2.7.3",
+        "com.zaxxer"              % "HikariCP"             % "2.7.4",
         "mysql"                   % "mysql-connector-java" % "5.1.42"             % Test,
         "com.h2database"          % "h2"                   % "1.4.196"            % Test,
         "org.postgresql"          % "postgresql"           % "42.1.4"             % Test,
@@ -85,7 +85,7 @@ lazy val `quill-spark` =
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .settings(
-      crossScalaVersions := Seq("2.11.11"),
+      crossScalaVersions := Seq("2.11.12"),
       fork in Test := true,
       libraryDependencies ++= Seq(
         "org.apache.spark" %% "spark-sql" % "2.2.0"
@@ -100,7 +100,7 @@ lazy val `quill-finagle-mysql` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.twitter" %% "finagle-mysql" % "17.10.0"
+        "com.twitter" %% "finagle-mysql" % "17.11.0"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -173,7 +173,7 @@ lazy val `quill-orientdb` =
       .settings(
         fork in Test := true,
         libraryDependencies ++= Seq(
-          "com.orientechnologies" % "orientdb-graphdb" % "2.2.29"
+          "com.orientechnologies" % "orientdb-graphdb" % "2.2.30"
         )
       )
       .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -254,8 +254,8 @@ def updateWebsiteTag =
 
 lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
   organization := "io.getquill",
-  scalaVersion := "2.11.11",
-  crossScalaVersions := Seq("2.11.11","2.12.4"),
+  scalaVersion := "2.11.12",
+  crossScalaVersions := Seq("2.11.12","2.12.4"),
   libraryDependencies ++= Seq(
     "org.scalamacros" %% "resetallattrs"  % "1.0.0",
     "org.scalatest"   %%% "scalatest"     % "3.0.4"     % Test,
