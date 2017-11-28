@@ -355,7 +355,7 @@ trait Parsing {
 
   private def rejectOptions(a: Tree, b: Tree) = {
     if ((!is[Null](a) && is[Option[_]](a)) || (!is[Null](b) && is[Option[_]](b)))
-      c.fail("Can't compare `Option` values since databases have different behavior for null comparison. Use `Option` methods like `forall` and `exists` instead.")
+      c.abort(a.pos, "Can't compare `Option` values since databases have different behavior for null comparison. Use `Option` methods like `forall` and `exists` instead.")
   }
 
   val equalityOperationParser: Parser[Operation] = Parser[Operation] {
