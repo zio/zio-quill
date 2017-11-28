@@ -1,3 +1,11 @@
+# 2.3.1
+
+- [Fix Ad-Hoc Case Classes for Spark](https://github.com/getquill/quill/pull/981)
+- [Make the error reporting of comparing `Option` to `null` to point actual position](https://github.com/getquill/quill/pull/982)
+- [Fix postgres query probing failing for queries with wildcards](https://github.com/getquill/quill/pull/983)
+- [Dependency updates](https://github.com/getquill/quill/pull/977)
+- [Update finagle to 17.11.0](https://github.com/getquill/quill/pull/976)
+
 # 2.3.0
 
 - [Ad-Hoc Tuple Support in Quotations](https://github.com/getquill/quill/pull/957)
