@@ -27,8 +27,14 @@ trait PostgresDialect
 
   private[getquill] val preparedStatementId = new AtomicInteger
 
-  override def prepareForProbing(string: String) =
-    s"PREPARE p${preparedStatementId.incrementAndGet.toString.token} AS $string"
+  override def prepareForProbing(string: String) = {
+    var i = 0
+    val query = string.flatMap(x => if (x != '?') s"$x" else {
+      i += 1
+      s"$$$i"
+    })
+    s"PREPARE p${preparedStatementId.incrementAndGet.toString.token} AS $query"
+  }
 }
 
 object PostgresDialect extends PostgresDialect
