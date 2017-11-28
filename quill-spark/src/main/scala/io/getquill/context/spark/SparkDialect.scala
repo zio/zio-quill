@@ -10,6 +10,7 @@ import io.getquill.ast.Query
 import io.getquill.ast.StringOperator
 import io.getquill.ast.Tuple
 import io.getquill.ast.Value
+import io.getquill.ast.CaseClass
 import io.getquill.context.sql.SqlQuery
 import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.context.sql.norm.SqlNormalize
@@ -75,8 +76,9 @@ class SparkDialect extends SqlIdiom {
   }
 
   override implicit def valueTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Value] = Tokenizer[Value] {
-    case Tuple(values) => stmt"(${values.token})"
-    case other         => super.valueTokenizer.token(other)
+    case Tuple(values)     => stmt"(${values.token})"
+    case CaseClass(values) => stmt"${values.map({ case (prop, value) => stmt"${value.token} ${prop.token}".token }).token}"
+    case other             => super.valueTokenizer.token(other)
   }
 }
 

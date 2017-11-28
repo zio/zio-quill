@@ -3,7 +3,7 @@ package io.getquill.context.spark
 import io.getquill.context.sql.SqlQuery
 import io.getquill.context.sql.FlattenSqlQuery
 import io.getquill.context.sql._
-import io.getquill.ast.Ident
+import io.getquill.ast.{ CaseClass, Ident }
 
 object AliasNestedQueryColumns {
 
@@ -13,7 +13,8 @@ object AliasNestedQueryColumns {
         val aliased =
           q.select.zipWithIndex.map {
             case (s @ SelectValue(i: Ident, alias, concat), idx) => s
-            case (f, idx)                                        => f.copy(alias = f.alias.orElse(Some(s"_${idx + 1}")))
+            case (s @ SelectValue(cc: CaseClass, alias, concat), idx) => s
+            case (f, idx) => f.copy(alias = f.alias.orElse(Some(s"_${idx + 1}")))
           }
 
         q.copy(from = q.from.map(apply), select = aliased)
