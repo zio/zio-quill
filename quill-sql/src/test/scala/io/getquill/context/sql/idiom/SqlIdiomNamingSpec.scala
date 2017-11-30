@@ -19,6 +19,11 @@ trait CustomColumnStrategy extends SnakeCase {
 }
 object CustomColumnStrategy extends CustomColumnStrategy
 
+trait CustomDefaultStrategy extends SnakeCase {
+  override def default(s: String) = s"d_$s".toLowerCase
+}
+object CustomDefaultStrategy extends CustomDefaultStrategy
+
 class SqlIdiomNamingSpec extends Spec {
 
   "uses the naming strategy" - {
@@ -58,6 +63,14 @@ class SqlIdiomNamingSpec extends Spec {
 
       db.run(q.dynamic).string mustEqual
         "SELECT t.c_somecolumn FROM some_entity t"
+    }
+    "apply strategy to select indent" in {
+      val db = new SqlMirrorContext(MirrorSqlDialect, CustomDefaultStrategy)
+      import db._
+      val q = quote {
+        query[SomeEntity].distinct
+      }
+      db.run(q.dynamic).string mustEqual "SELECT d_x.d_somecolumn FROM (SELECT DISTINCT d_x.* FROM d_someentity d_x) d_x"
     }
 
     val db = new SqlMirrorContext(MirrorSqlDialect, SnakeCase)
