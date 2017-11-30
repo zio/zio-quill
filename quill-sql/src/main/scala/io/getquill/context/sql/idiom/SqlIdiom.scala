@@ -162,7 +162,7 @@ trait SqlIdiom extends Idiom {
           val value =
             selectValue match {
               case SelectValue(Ident("?"), _, _)  => "?".token
-              case SelectValue(Ident(name), _, _) => stmt"${name.token}.*"
+              case SelectValue(Ident(name), _, _) => stmt"${strategy.default(name).token}.*"
               case SelectValue(ast, _, _)         => ast.token
             }
           selectValue.concat match {
