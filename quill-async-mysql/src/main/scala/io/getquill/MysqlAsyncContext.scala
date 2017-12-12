@@ -7,6 +7,7 @@ import com.github.mauricio.async.db.pool.PartitionedConnectionPool
 import com.typesafe.config.Config
 import io.getquill.context.async.{ AsyncContext, UUIDStringEncoding }
 import io.getquill.util.LoadConfig
+import io.getquill.util.Messages.fail
 import com.github.mauricio.async.db.general.ArrayRowData
 
 class MysqlAsyncContext[N <: NamingStrategy](naming: N, pool: PartitionedConnectionPool[MySQLConnection])
@@ -21,7 +22,7 @@ class MysqlAsyncContext[N <: NamingStrategy](naming: N, pool: PartitionedConnect
       case r: MySQLQueryResult =>
         returningExtractor(new ArrayRowData(0, Map.empty, Array(r.lastInsertId)))
       case _ =>
-        throw new IllegalStateException("This is a bug. Cannot extract returning value.")
+        fail("This is a bug. Cannot extract returning value.")
     }
   }
 }

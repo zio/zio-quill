@@ -7,6 +7,7 @@ import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
 import io.getquill.context.Context
+import io.getquill.util.Messages.fail
 
 sealed trait Effect
 
@@ -47,7 +48,7 @@ trait IOMonad {
     def zip[T, E1 <: Effect, S, E2 <: Effect](a: IO[T, E1], b: IO[S, E2]): IO[(T, S), E1 with E2] =
       sequence(List(a, b)).map {
         case a :: b :: Nil => (a.asInstanceOf[T], b.asInstanceOf[S])
-        case other         => throw new IllegalStateException("Sequence returned less than two elements")
+        case _             => fail("Sequence returned less than two elements")
       }
 
     def failed[T](exception: Throwable): IO[T, Effect] = fromTry(Failure(exception))
