@@ -6,6 +6,7 @@ import com.github.mauricio.async.db.postgresql.PostgreSQLConnection
 import com.typesafe.config.Config
 import io.getquill.context.async.{ ArrayDecoders, ArrayEncoders, AsyncContext, UUIDObjectEncoding }
 import io.getquill.util.LoadConfig
+import io.getquill.util.Messages.fail
 
 class PostgresAsyncContext[N <: NamingStrategy](naming: N, pool: PartitionedConnectionPool[PostgreSQLConnection])
   extends AsyncContext(PostgresDialect, naming, pool)
@@ -22,7 +23,7 @@ class PostgresAsyncContext[N <: NamingStrategy](naming: N, pool: PartitionedConn
       case Some(r) if r.nonEmpty =>
         returningExtractor(r.head)
       case _ =>
-        throw new IllegalStateException("This is a bug. Cannot extract returning value.")
+        fail("This is a bug. Cannot extract returning value.")
     }
   }
 

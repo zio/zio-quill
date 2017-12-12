@@ -3,6 +3,7 @@ package io.getquill.context
 import scala.language.higherKinds
 import scala.language.experimental.macros
 import io.getquill.dsl.CoreDsl
+import io.getquill.util.Messages.fail
 import java.io.Closeable
 import scala.util.Try
 import io.getquill.NamingStrategy
@@ -43,6 +44,6 @@ trait Context[Idiom <: io.getquill.idiom.Idiom, Naming <: NamingStrategy]
   protected def handleSingleResult[T](list: List[T]) =
     list match {
       case value :: Nil => value
-      case other        => throw new IllegalStateException(s"Expected a single result but got $other")
+      case other        => fail(s"Expected a single result but got $other")
     }
 }
