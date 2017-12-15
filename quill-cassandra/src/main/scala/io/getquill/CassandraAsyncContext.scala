@@ -36,20 +36,23 @@ class CassandraAsyncContext[N <: NamingStrategy](
     super.performIO(io)
   }
 
-  def executeQuery[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(implicit ec: ExecutionContext): Future[List[T]] = {
-    val (params, bs) = prepare(super.prepare(cql))
-    logger.logQuery(cql, params)
-    session.executeAsync(bs)
-      .map(_.all.asScala.toList.map(extractor))
-  }
+  def executeQuery[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(implicit ec: ExecutionContext): Future[List[T]] =
+    Future(prepare(super.prepare(cql))).flatMap {
+      case (params, bs) =>
+        logger.logQuery(cql, params)
+        session.executeAsync(bs)
+          .map(_.all.asScala.toList.map(extractor))
+    }
 
   def executeQuerySingle[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(implicit ec: ExecutionContext): Future[T] =
     executeQuery(cql, prepare, extractor).map(handleSingleResult)
 
   def executeAction[T](cql: String, prepare: Prepare = identityPrepare)(implicit ec: ExecutionContext): Future[Unit] = {
-    val (params, bs) = prepare(super.prepare(cql))
-    logger.logQuery(cql, params)
-    session.executeAsync(bs).map(_ => ())
+    Future(prepare(super.prepare(cql))).flatMap {
+      case (params, bs) =>
+        logger.logQuery(cql, params)
+        session.executeAsync(bs).map(_ => ())
+    }
   }
 
   def executeBatchAction(groups: List[BatchGroup])(implicit ec: ExecutionContext): Future[Unit] =

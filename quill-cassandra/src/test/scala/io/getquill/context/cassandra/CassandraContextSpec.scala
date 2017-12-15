@@ -3,7 +3,7 @@ package io.getquill.context.cassandra
 import io.getquill._
 
 import scala.concurrent.ExecutionContext.Implicits.{ global => ec }
-import scala.util.Success
+import scala.util.{ Success, Try }
 
 class CassandraContextSpec extends Spec {
 
@@ -38,5 +38,18 @@ class CassandraContextSpec extends Spec {
 
   "probe" in {
     testSyncDB.probe("SELECT * FROM TestEntity") mustBe Success(())
+  }
+
+  "return failed future on `prepare` error in async context" - {
+    "query" - {
+      val f = testAsyncDB.executeQuery("bad cql")
+      Try(await(f)).isFailure mustEqual true
+      ()
+    }
+    "action" - {
+      val f = testAsyncDB.executeAction("bad cql")
+      Try(await(f)).isFailure mustEqual true
+      ()
+    }
   }
 }
