@@ -151,6 +151,7 @@ trait Unliftables {
     case q"$pack.NullValue" => NullValue
     case q"$pack.Constant.apply(${ Literal(c.universe.Constant(a)) })" => Constant(a)
     case q"$pack.Tuple.apply(${ a: List[Ast] })" => Tuple(a)
+    case q"$pack.CaseClass.apply(${ values: List[(String, Ast)] })" => CaseClass(values)
   }
   implicit val identUnliftable: Unliftable[Ident] = Unliftable[Ident] {
     case q"$pack.Ident.apply(${ a: String })" => Ident(a)
