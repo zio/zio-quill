@@ -750,7 +750,7 @@ val b =
 performIO(a) == performIO(b)
 ```
 
-The IO monad has an interface similar to `Future`; please refer to [the class](https://github.com/getquill/quill/master/quill-core/src/main/scala/io/getquill/monad/IOMonad.scala#L38) for more information regarding the available operations. 
+The IO monad has an interface similar to `Future`; please refer to [the class](https://github.com/getquill/quill/blob/master/quill-core/src/main/scala/io/getquill/monad/IOMonad.scala#L39) for more information regarding the available operations.
 
 The return type of `performIO` varies according to the context. For instance, async contexts return `Future`s while JDBC returns values synchronously.
 
