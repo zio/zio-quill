@@ -9,6 +9,7 @@ trait TestEntities {
   case class TestEntity2(s: String, i: Int, l: Long, o: Option[Int])
   case class TestEntity3(s: String, i: Int, l: Long, o: Option[Int])
   case class TestEntity4(i: Long)
+  case class TestEntity5(s: String, i: Long)
 
   val qr1 = quote {
     query[TestEntity]
@@ -21,5 +22,10 @@ trait TestEntities {
   }
   val qr4 = quote {
     query[TestEntity4]
+  }
+  val qr5 = quote {
+    for {
+      a <- query[TestEntity]
+    } yield TestEntity5(a.s, a.l)
   }
 }
