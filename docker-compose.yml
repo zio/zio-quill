@@ -34,13 +34,13 @@ services:
     environment:
       - ORIENTDB_ROOT_PASSWORD=root
 
-#  sqlserver:
-#    image: microsoft/mssql-server-linux
-#    ports:
-#      - "11433:1433"
-#    environment:
-#      - ACCEPT_EULA=Y
-#      - SA_PASSWORD=QuillRocks!
+  sqlserver:
+    image: microsoft/mssql-server-linux
+    ports:
+      - "11433:1433"
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=QuillRocks!
 
   setup:
     build:
@@ -54,7 +54,7 @@ services:
       - mysql:mysql
       - cassandra:cassandra
       - orientdb:orientdb
-#     - sqlserver:sqlserver
+      - sqlserver:sqlserver
     volumes:
       - ./:/app
     command:
@@ -75,7 +75,7 @@ services:
       - mysql:mysql
       - cassandra:cassandra
       - orientdb:orientdb
-#     - sqlserver:sqlserver
+      - sqlserver:sqlserver
     volumes:
       - ./:/app
       - ~/.ivy2:/root/.ivy2
