@@ -13,7 +13,7 @@ class JoinSpec extends Spec {
         .filter(_._2.map(_.i).forall(_ == 1))
     }
     testContext.run(q).string mustEqual
-      "SELECT a.s, a.i, a.l, a.o, b.s, b.i, b.l, b.o FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i WHERE (b.i IS NULL) OR (b.i = 1)"
+      "SELECT a.s, a.i, a.l, a.o, b.s, b.i, b.l, b.o FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i WHERE b.i IS NULL OR b.i = 1"
   }
 
   "join + map + filter" in {
@@ -24,7 +24,7 @@ class JoinSpec extends Spec {
         .filter(_._2.forall(_ == 1))
     }
     testContext.run(q).string mustEqual
-      "SELECT a.i, b.i FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i WHERE (b.i IS NULL) OR (b.i = 1)"
+      "SELECT a.i, b.i FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i WHERE b.i IS NULL OR b.i = 1"
   }
 
   "join + filter + leftjoin" in {
@@ -40,7 +40,7 @@ class JoinSpec extends Spec {
       }
     }
     testContext.run(q).string mustEqual
-      "SELECT ab.s, ab.i, ab.l, ab.o, ab.s, ab.i, ab.l, ab.o, c.s, c.i, c.l, c.o FROM (SELECT a.s s, a.o o, a.l l, a.i i, b.l l, b.i i, b.o o, b.s s FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i WHERE b.l = 3) ab LEFT JOIN TestEntity3 c ON (ab.i = ab.i) AND (ab.i = c.i)"
+      "SELECT ab.s, ab.i, ab.l, ab.o, ab.s, ab.i, ab.l, ab.o, c.s, c.i, c.l, c.o FROM (SELECT a.s s, a.o o, a.l l, a.i i, b.l l, b.i i, b.o o, b.s s FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i WHERE b.l = 3) ab LEFT JOIN TestEntity3 c ON ab.i = ab.i AND ab.i = c.i"
   }
 
   "join + distinct + leftjoin" in {
@@ -53,7 +53,7 @@ class JoinSpec extends Spec {
       }
     }
     testContext.run(q).string mustEqual
-      "SELECT ab.s, ab.i, ab.l, ab.o, ab.s, ab.i, ab.l, ab.o, c.s, c.i, c.l, c.o FROM (SELECT DISTINCT a.*, b.* FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i) ab LEFT JOIN TestEntity3 c ON (ab.i = ab.i) AND (ab.i = c.i)"
+      "SELECT ab.s, ab.i, ab.l, ab.o, ab.s, ab.i, ab.l, ab.o, c.s, c.i, c.l, c.o FROM (SELECT DISTINCT a.*, b.* FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i) ab LEFT JOIN TestEntity3 c ON ab.i = ab.i AND ab.i = c.i"
   }
 
   "multiple joins + filter + map + distinct" in {

@@ -20,7 +20,7 @@ class SqlQuerySpec extends Spec {
         }
       }
       testContext.run(q).string mustEqual
-        "SELECT a.i, b.i FROM TestEntity a, TestEntity2 b WHERE (a.s IS NOT NULL) AND (b.i > a.i)"
+        "SELECT a.i, b.i FROM TestEntity a, TestEntity2 b WHERE a.s IS NOT NULL AND b.i > a.i"
     }
 
     "outer join query" in {
@@ -28,7 +28,7 @@ class SqlQuerySpec extends Spec {
         qr1.leftJoin(qr2).on((a, b) => a.s != null && b.i > a.i)
       }
       testContext.run(q).string mustEqual
-        "SELECT a.s, a.i, a.l, a.o, b.s, b.i, b.l, b.o FROM TestEntity a LEFT JOIN TestEntity2 b ON (a.s IS NOT NULL) AND (b.i > a.i)"
+        "SELECT a.s, a.i, a.l, a.o, b.s, b.i, b.l, b.o FROM TestEntity a LEFT JOIN TestEntity2 b ON a.s IS NOT NULL AND b.i > a.i"
     }
 
     "join + map + filter" in {
@@ -40,7 +40,7 @@ class SqlQuerySpec extends Spec {
           .filter(_._2.forall(_ == 1))
       }
       testContext.run(q).string mustEqual
-        "SELECT a.i, b.i FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i WHERE (b.i IS NULL) OR (b.i = 1)"
+        "SELECT a.i, b.i FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i WHERE b.i IS NULL OR b.i = 1"
     }
 
     "nested join" in {
@@ -57,7 +57,7 @@ class SqlQuerySpec extends Spec {
         }
       }
       testContext.run(q).string mustEqual
-        "SELECT x02.s, x02.i, x02.l, x02.o, x02.s, x02.i, x02.l, x02.o, x12.s, x12.i, x12.l, x12.o FROM (SELECT x01.s s, x01.l l, x01.o o, x01.i i, x11.i i, x11.o o, x11.l l, x11.s s FROM TestEntity x01 LEFT JOIN TestEntity2 x11 ON x01.i = x11.i WHERE x11.l = 3) x02 LEFT JOIN TestEntity3 x12 ON (x02.i = x02.i) AND (x02.i = x12.i)"
+        "SELECT x02.s, x02.i, x02.l, x02.o, x02.s, x02.i, x02.l, x02.o, x12.s, x12.i, x12.l, x12.o FROM (SELECT x01.s s, x01.l l, x01.o o, x01.i i, x11.i i, x11.o o, x11.l l, x11.s s FROM TestEntity x01 LEFT JOIN TestEntity2 x11 ON x01.i = x11.i WHERE x11.l = 3) x02 LEFT JOIN TestEntity3 x12 ON x02.i = x02.i AND x02.i = x12.i"
     }
 
     "flat outer join" in {

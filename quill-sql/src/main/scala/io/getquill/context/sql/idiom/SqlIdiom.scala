@@ -191,8 +191,15 @@ trait SqlIdiom extends Idiom {
     case BinaryOperation(a, StringOperator.`startsWith`, b)   => stmt"${scopedTokenizer(a)} LIKE (${(BinaryOperation(b, StringOperator.`+`, Constant("%")): Ast).token})"
     case BinaryOperation(a, op @ StringOperator.`split`, b)   => stmt"${op.token}(${scopedTokenizer(a)}, ${scopedTokenizer(b)})"
     case BinaryOperation(a, op @ SetOperator.`contains`, b)   => SetContainsToken(scopedTokenizer(b), op.token, a.token)
-    case BinaryOperation(a, op, b)                            => stmt"${scopedTokenizer(a)} ${op.token} ${scopedTokenizer(b)}"
-    case e: FunctionApply                                     => fail(s"Can't translate the ast to sql: '$e'")
+    case BinaryOperation(a, op @ BooleanOperator.`&&`, b) => (a, b) match {
+      case (BinaryOperation(_, aOp @ BooleanOperator.`||`, _), BinaryOperation(_, bOp @ BooleanOperator.`||`, _)) => stmt"${scopedTokenizer(a)} ${op.token} ${scopedTokenizer(b)}"
+      case (BinaryOperation(_, aOp @ BooleanOperator.`||`, _), _) => stmt"${scopedTokenizer(a)} ${op.token} ${b.token}"
+      case (_, BinaryOperation(_, bOp @ BooleanOperator.`||`, _)) => stmt"${a.token} ${op.token} ${scopedTokenizer(b)}"
+      case _ => stmt"${a.token} ${op.token} ${b.token}"
+    }
+    case BinaryOperation(a, op @ BooleanOperator.`||`, b) => stmt"${a.token} ${op.token} ${b.token}"
+    case BinaryOperation(a, op, b)                        => stmt"${scopedTokenizer(a)} ${op.token} ${scopedTokenizer(b)}"
+    case e: FunctionApply                                 => fail(s"Can't translate the ast to sql: '$e'")
   }
 
   implicit def optionOperationTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[OptionOperation] = Tokenizer[OptionOperation] {
