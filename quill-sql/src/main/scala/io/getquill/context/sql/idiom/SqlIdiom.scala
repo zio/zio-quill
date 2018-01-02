@@ -1,29 +1,17 @@
 package io.getquill.context.sql.idiom
 
-import io.getquill.idiom.StatementInterpolator._
-import io.getquill.context.sql.norm._
 import io.getquill.ast._
-import io.getquill.context.sql.FlattenSqlQuery
-import io.getquill.context.sql.FromContext
-import io.getquill.context.sql.InfixContext
-import io.getquill.context.sql.JoinContext
-import io.getquill.context.sql.OrderByCriteria
-import io.getquill.context.sql.QueryContext
-import io.getquill.context.sql.SelectValue
-import io.getquill.context.sql.SetOperation
-import io.getquill.context.sql.SetOperationSqlQuery
-import io.getquill.context.sql.SqlQuery
-import io.getquill.context.sql.TableContext
-import io.getquill.context.sql.UnaryOperationSqlQuery
-import io.getquill.context.sql.UnionAllOperation
-import io.getquill.context.sql.UnionOperation
-import io.getquill.NamingStrategy
-import io.getquill.util.Messages.{ fail, trace }
-import io.getquill.idiom.{ Idiom, SetContainsToken, Statement }
-import io.getquill.context.sql.norm.SqlNormalize
-import io.getquill.util.Interleave
+import io.getquill.ast.BooleanOperator._
 import io.getquill.ast.Lift
-import io.getquill.context.sql.FlatJoinContext
+import io.getquill.context.sql._
+import io.getquill.context.sql.norm._
+import io.getquill.idiom.Idiom
+import io.getquill.idiom.SetContainsToken
+import io.getquill.idiom.Statement
+import io.getquill.idiom.StatementInterpolator._
+import io.getquill.NamingStrategy
+import io.getquill.util.Interleave
+import io.getquill.util.Messages.{ fail, trace }
 
 trait SqlIdiom extends Idiom {
 
@@ -185,8 +173,15 @@ trait SqlIdiom extends Idiom {
     case BinaryOperation(a, StringOperator.`startsWith`, b)   => stmt"${scopedTokenizer(a)} LIKE (${(BinaryOperation(b, StringOperator.`+`, Constant("%")): Ast).token})"
     case BinaryOperation(a, op @ StringOperator.`split`, b)   => stmt"${op.token}(${scopedTokenizer(a)}, ${scopedTokenizer(b)})"
     case BinaryOperation(a, op @ SetOperator.`contains`, b)   => SetContainsToken(scopedTokenizer(b), op.token, a.token)
-    case BinaryOperation(a, op, b)                            => stmt"${scopedTokenizer(a)} ${op.token} ${scopedTokenizer(b)}"
-    case e: FunctionApply                                     => fail(s"Can't translate the ast to sql: '$e'")
+    case BinaryOperation(a, op @ `&&`, b) => (a, b) match {
+      case (BinaryOperation(_, `||`, _), BinaryOperation(_, `||`, _)) => stmt"${scopedTokenizer(a)} ${op.token} ${scopedTokenizer(b)}"
+      case (BinaryOperation(_, `||`, _), _) => stmt"${scopedTokenizer(a)} ${op.token} ${b.token}"
+      case (_, BinaryOperation(_, `||`, _)) => stmt"${a.token} ${op.token} ${scopedTokenizer(b)}"
+      case _ => stmt"${a.token} ${op.token} ${b.token}"
+    }
+    case BinaryOperation(a, op @ `||`, b) => stmt"${a.token} ${op.token} ${b.token}"
+    case BinaryOperation(a, op, b)        => stmt"${scopedTokenizer(a)} ${op.token} ${scopedTokenizer(b)}"
+    case e: FunctionApply                 => fail(s"Can't translate the ast to sql: '$e'")
   }
 
   implicit def optionOperationTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[OptionOperation] = Tokenizer[OptionOperation] {

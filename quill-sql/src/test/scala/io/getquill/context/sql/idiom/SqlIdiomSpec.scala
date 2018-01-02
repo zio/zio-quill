@@ -21,6 +21,54 @@ class SqlIdiomSpec extends Spec {
         testContext.run(q).string mustEqual
           "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.s = 's'"
       }
+      "multiple filters" - {
+        "ANDs" in {
+          val q = quote {
+            qr1.filter(t => t.s == "a").filter(t => t.i == 1).filter(t => t.l == 2L)
+          }
+          testContext.run(q).string mustEqual
+            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.s = 'a' AND t.i = 1 AND t.l = 2"
+        }
+        "ORs" in {
+          val q = quote {
+            qr1.filter(t => t.s == "a" || t.i == 1 || t.i == 2)
+          }
+          testContext.run(q).string mustEqual
+            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.s = 'a' OR t.i = 1 OR t.i = 2"
+        }
+        "ANDs and ORs" in {
+          val q = quote {
+            qr1.filter(t => t.s == "a" && t.i == 1 || t.i == 2)
+          }
+          testContext.run(q).string mustEqual
+            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.s = 'a' AND t.i = 1 OR t.i = 2"
+        }
+
+        "ensure precedence" - {
+          "OR AND OR" in {
+            val q = quote {
+              qr1.filter(t => t.s == "a" || t.s == "x").filter(t => t.i == 1 || t.i == 2)
+            }
+            testContext.run(q).string mustEqual
+              "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE (t.s = 'a' OR t.s = 'x') AND (t.i = 1 OR t.i = 2)"
+          }
+          "AND + scoped ORs" in {
+            val q = quote {
+              qr1.filter(t => t.s == "s").filter(t => t.i == 1 || t.i == 2 || t.i == 3)
+            }
+            testContext.run(q).string mustEqual
+              "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.s = 's' AND (t.i = 1 OR t.i = 2 OR t.i = 3)"
+          }
+          "scoped ORs + AND" in {
+            val q = quote {
+              qr1.filter(t => t.i == 1 || t.i == 2 || t.i == 3).filter(t => t.s == "s")
+            }
+            testContext.run(q).string mustEqual
+              "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE (t.i = 1 OR t.i = 2 OR t.i = 3) AND t.s = 's'"
+          }
+        }
+      }
+
       "multiple entities" in {
         val q = quote {
           for {
@@ -620,14 +668,14 @@ class SqlIdiomSpec extends Spec {
             qr1.filter(t => t.s != null && t.s == "s")
           }
           testContext.run(q).string mustEqual
-            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE (t.s IS NOT NULL) AND (t.s = 's')"
+            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.s IS NOT NULL AND t.s = 's'"
         }
         "||" in {
           val q = quote {
             qr1.filter(t => t.s != null || t.s == "s")
           }
           testContext.run(q).string mustEqual
-            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE (t.s IS NOT NULL) OR (t.s = 's')"
+            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.s IS NOT NULL OR t.s = 's'"
         }
         ">" in {
           val q = quote {
@@ -692,7 +740,7 @@ class SqlIdiomSpec extends Spec {
             qr1.filter(t => t.i != 1 && t.o.forall(op => op == 1))
           }
           testContext.run(q).string mustEqual
-            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE (t.i <> 1) AND ((t.o IS NULL) OR (t.o = 1))"
+            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.i <> 1 AND (t.o IS NULL OR t.o = 1)"
         }
         "embedded" - {
           case class TestEntity(optionalEmbedded: Option[EmbeddedEntity])
@@ -736,7 +784,7 @@ class SqlIdiomSpec extends Spec {
             }
 
             testContext.run(q).string mustEqual
-              "SELECT t.optionalValue FROM TestEntity t WHERE (t.optionalValue IS NULL) OR (t.optionalValue = 1)"
+              "SELECT t.optionalValue FROM TestEntity t WHERE t.optionalValue IS NULL OR t.optionalValue = 1"
           }
         }
       }
@@ -1040,7 +1088,7 @@ class SqlIdiomSpec extends Spec {
           } yield (a, b, c, inner)
         }
         testContext.run(q).string mustEqual
-          "SELECT a.s, a.i, a.l, a.o, b.s, b.i, b.l, b.o, t.s, t.i, t.l, t.o, 1 + t.i FROM TestEntity a, TestEntity2 b, TestEntity3 t WHERE (a.i = b.i) AND ((t.i = 1) AND (b.i = t.i))"
+          "SELECT a.s, a.i, a.l, a.o, b.s, b.i, b.l, b.o, t.s, t.i, t.l, t.o, 1 + t.i FROM TestEntity a, TestEntity2 b, TestEntity3 t WHERE a.i = b.i AND t.i = 1 AND b.i = t.i"
       }
       "aggregated" in {
         val q = quote {
