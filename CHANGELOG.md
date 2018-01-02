@@ -1,3 +1,13 @@
+# 2.3.2
+
+- [Simplify multiple `AND` `OR` sql generation](https://github.com/getquill/quill/pull/1003)
+- [Fix SQLServer take/drop SQL syntax](https://github.com/getquill/quill/pull/1005)
+- [Fix for Ad-Hoc Case Class producing Dynamic Queries](https://github.com/getquill/quill/pull/1000)
+- [Fix throwing exception instead of failed future in cassandra async prepare](https://github.com/getquill/quill/pull/996)
+- [Fix invalid alias with distinct](https://github.com/getquill/quill/pull/986)
+- [Log errors instead of throwing exception directly in several places](https://github.com/getquill/quill/pull/995)
+- [Update finagle to 17.12.0](https://github.com/getquill/quill/pull/999)
+
 # 2.3.1
 
 - [Fix Ad-Hoc Case Classes for Spark](https://github.com/getquill/quill/pull/981)
