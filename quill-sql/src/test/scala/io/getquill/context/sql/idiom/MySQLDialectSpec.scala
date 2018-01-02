@@ -12,8 +12,12 @@ class MySQLDialectSpec extends Spec {
   val ctx = new SqlMirrorContext(MySQLDialect, Literal) with TestEntities
   import ctx._
 
-  "mixes the workaround for offset without limit" in {
-    MySQLDialect.isInstanceOf[OffsetWithoutLimitWorkaround] mustEqual true
+  "workaround for offset without limit" in {
+    val q = quote {
+      qr1.drop(1).map(t => t.s)
+    }
+    ctx.run(q).string mustEqual
+      "SELECT t.s FROM TestEntity t LIMIT 18446744073709551610 OFFSET 1"
   }
 
   "uses CONCAT instead of ||" in {

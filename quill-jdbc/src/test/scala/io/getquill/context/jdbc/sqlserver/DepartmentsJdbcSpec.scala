@@ -1,9 +1,7 @@
 package io.getquill.context.jdbc.sqlserver
 
 import io.getquill.context.sql.DepartmentsSpec
-import org.scalatest.DoNotDiscover
 
-@DoNotDiscover
 class DepartmentsJdbcSpec extends DepartmentsSpec {
 
   val context = testContext

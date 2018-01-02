@@ -10,17 +10,15 @@ import io.getquill.ast.DescNullsFirst
 import io.getquill.ast.DescNullsLast
 import io.getquill.ast.Operation
 import io.getquill.ast.StringOperator
-import io.getquill.context.sql.idiom.OffsetWithoutLimitWorkaround
 import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.context.sql.OrderByCriteria
 import io.getquill.context.sql.idiom.QuestionMarkBindVariables
-import io.getquill.idiom.Token
+import io.getquill.idiom.{ Statement, Token }
 import io.getquill.ast.Ast
 import io.getquill.context.sql.idiom.NoConcatSupport
 
 trait MySQLDialect
   extends SqlIdiom
-  with OffsetWithoutLimitWorkaround
   with QuestionMarkBindVariables
   with NoConcatSupport {
 
@@ -43,6 +41,12 @@ trait MySQLDialect
     case OrderByCriteria(prop, AscNullsLast)         => stmt"ISNULL(${prop.token}) ASC, ${prop.token} ASC"
     case OrderByCriteria(prop, DescNullsLast | Desc) => stmt"${prop.token} DESC"
   }
+
+  override protected def limitOffsetToken(query: Statement)(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy) =
+    Tokenizer[(Option[Ast], Option[Ast])] {
+      case (None, Some(offset)) => stmt"$query LIMIT 18446744073709551610 OFFSET ${offset.token}"
+      case other                => super.limitOffsetToken(query).token(other)
+    }
 }
 
 object MySQLDialect extends MySQLDialect

@@ -52,4 +52,9 @@ class PeopleJdbcSpec extends PeopleSpec {
   "Example 9 - contains non empty" in {
     testContext.run(`Ex 8 and 9 contains`(liftQuery(`Ex 9 param`))) mustEqual `Ex 9 expected result`
   }
+
+  "Example 10 - pagination" in {
+    testContext.run(`Ex 10 page 1 query`) mustEqual `Ex 10 page 1 expected`
+    testContext.run(`Ex 10 page 2 query`) mustEqual `Ex 10 page 2 expected`
+  }
 }
