@@ -89,17 +89,17 @@ trait SqlIdiom extends Idiom {
   implicit def sqlQueryTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[SqlQuery] = Tokenizer[SqlQuery] {
     case FlattenSqlQuery(from, where, groupBy, orderBy, limit, offset, select, distinct) =>
 
-      val distinctTokenizer = (if (distinct) " DISTINCT" else "").token
+      val distinctTokenizer = (if (distinct) "DISTINCT " else "").token
 
-      val selectClause =
+      val withDistinct =
         select match {
-          case Nil => stmt"SELECT$distinctTokenizer *"
-          case _   => stmt"SELECT$distinctTokenizer ${select.token}"
+          case Nil => stmt"$distinctTokenizer*"
+          case _   => stmt"$distinctTokenizer${select.token}"
         }
 
       val withFrom =
         from match {
-          case Nil => selectClause
+          case Nil => withDistinct
           case head :: tail =>
             val t = tail.foldLeft(stmt"${head.token}") {
               case (a, b: FlatJoinContext) =>
@@ -108,7 +108,7 @@ trait SqlIdiom extends Idiom {
                 stmt"$a, ${b.token}"
             }
 
-            stmt"$selectClause FROM $t"
+            stmt"$withDistinct FROM $t"
         }
 
       val withWhere =
@@ -126,12 +126,8 @@ trait SqlIdiom extends Idiom {
           case Nil     => withGroupBy
           case orderBy => stmt"$withGroupBy ${tokenOrderBy(orderBy)}"
         }
-      (limit, offset) match {
-        case (None, None)                => withOrderBy
-        case (Some(limit), None)         => stmt"$withOrderBy LIMIT ${limit.token}"
-        case (Some(limit), Some(offset)) => stmt"$withOrderBy LIMIT ${limit.token} OFFSET ${offset.token}"
-        case (None, Some(offset))        => stmt"$withOrderBy ${tokenOffsetWithoutLimit(offset)}"
-      }
+      val withLimitOffset = limitOffsetToken(withOrderBy).token((limit, offset))
+      stmt"SELECT $withLimitOffset"
     case SetOperationSqlQuery(a, op, b) =>
       stmt"(${a.token}) ${op.token} (${b.token})"
     case UnaryOperationSqlQuery(op, q) =>
@@ -200,8 +196,13 @@ trait SqlIdiom extends Idiom {
     case UnionAllOperation => stmt"UNION ALL"
   }
 
-  protected def tokenOffsetWithoutLimit(offset: Ast)(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy) =
-    stmt"OFFSET ${offset.token}"
+  protected def limitOffsetToken(query: Statement)(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy) =
+    Tokenizer[(Option[Ast], Option[Ast])] {
+      case (None, None)                => query
+      case (Some(limit), None)         => stmt"$query LIMIT ${limit.token}"
+      case (Some(limit), Some(offset)) => stmt"$query LIMIT ${limit.token} OFFSET ${offset.token}"
+      case (None, Some(offset))        => stmt"$query OFFSET ${offset.token}"
+    }
 
   protected def tokenOrderBy(criterias: List[OrderByCriteria])(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy) =
     stmt"ORDER BY ${criterias.token}"
