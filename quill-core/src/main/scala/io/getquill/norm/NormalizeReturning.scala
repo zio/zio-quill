@@ -19,9 +19,15 @@ object NormalizeReturning {
 
   private def filterReturnedColumn(assignment: Assignment, column: Ast): Option[Assignment] =
     (assignment, column) match {
-      case (Assignment(_, Property(_, p1), _), Property(_, p2)) if (p1 == p2) =>
+      case (Assignment(_, p1: Property, _), p2: Property) if p1.name == p2.name && isSameProperties(p1, p2) =>
         None
       case (assignment, column) =>
         Some(assignment)
     }
+
+  private def isSameProperties(p1: Property, p2: Property): Boolean = (p1.ast, p2.ast) match {
+    case (_: Ident, _: Ident)           => p1.name == p2.name
+    case (pp1: Property, pp2: Property) => isSameProperties(pp1, pp2)
+    case _                              => false
+  }
 }
