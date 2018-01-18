@@ -90,7 +90,7 @@ trait Unliftables {
   }
 
   implicit val queryUnliftable: Unliftable[Query] = Unliftable[Query] {
-    case q"$pack.Entity.apply(${ a: String }, ${ b: List[PropertyAlias] })"          => Entity(a, b)
+    case q"$pack.Entity.apply(${ a: EntityName }, ${ b: List[PropertyAlias] })"      => Entity(a, b)
     case q"$pack.Filter.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })"              => Filter(a, b, c)
     case q"$pack.Map.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })"                 => Map(a, b, c)
     case q"$pack.FlatMap.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })"             => FlatMap(a, b, c)
@@ -107,6 +107,11 @@ trait Unliftables {
       FlatJoin(t, a, iA, on)
     case q"$pack.Distinct.apply(${ a: Ast })" => Distinct(a)
     case q"$pack.Nested.apply(${ a: Ast })"   => Nested(a)
+  }
+
+  implicit val entityNameUnliftable: Unliftable[EntityName] = Unliftable[EntityName] {
+    case q"$pack.StaticName.apply(${ a: String })" => StaticName(a)
+    case q"$pack.DynamicName.apply(${ a: Tree })"  => DynamicName(a)
   }
 
   implicit val orderingUnliftable: Unliftable[Ordering] = Unliftable[Ordering] {

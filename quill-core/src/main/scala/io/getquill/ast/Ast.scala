@@ -16,7 +16,11 @@ sealed trait Ast {
 
 sealed trait Query extends Ast
 
-case class Entity(name: String, properties: List[PropertyAlias]) extends Query
+trait EntityName
+case class DynamicName(name: Any) extends EntityName
+case class StaticName(name: String) extends EntityName
+
+case class Entity(name: EntityName, properties: List[PropertyAlias]) extends Query
 
 case class PropertyAlias(path: List[String], alias: String)
 

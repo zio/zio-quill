@@ -60,11 +60,17 @@ class MirrorIdiom extends Idiom {
 
   implicit def queryTokenizer(implicit liftTokenizer: Tokenizer[Lift]): Tokenizer[Query] = Tokenizer[Query] {
 
-    case Entity(name, Nil) => stmt"querySchema(${s""""$name"""".token})"
+    case Entity(name, Nil) => name match {
+      case StaticName(n)  => stmt"querySchema(${s""""$n"""".token})"
+      case DynamicName(t) => stmt"querySchemaDynamicName(${t.toString.token})"
+    }
 
     case Entity(name, prop) =>
       val properties = prop.map(p => stmt"""_.${p.path.mkStmt(".")} -> "${p.alias.token}"""")
-      stmt"querySchema(${s""""$name"""".token}, ${properties.token})"
+      name match {
+        case StaticName(n)  => stmt"querySchema(${s""""$n"""".token}, ${properties.token})"
+        case DynamicName(t) => stmt"querySchemaDynamicName(${t.toString.token}, ${properties.token})"
+      }
 
     case Filter(source, alias, body) =>
       stmt"${source.token}.filter(${alias.token} => ${body.token})"
