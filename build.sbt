@@ -63,6 +63,12 @@ lazy val `quill-sql` =
 lazy val `quill-sql-jvm` = `quill-sql`.jvm
 lazy val `quill-sql-js` = `quill-sql`.js
 
+lazy val `quill-test` =
+  (project in file("quill-test"))
+    .settings(commonSettings: _*)
+    .settings(mimaSettings: _*)
+    .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
+
 lazy val `quill-jdbc` =
   (project in file("quill-jdbc"))
     .settings(commonSettings: _*)

@@ -368,7 +368,8 @@ trait SqlIdiom extends Idiom {
   }
 
   implicit def entityTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Entity] = Tokenizer[Entity] {
-    case Entity(name, _) => strategy.table(name).token
+    case Entity(StaticName(n), _)  => strategy.table(n).token
+    case Entity(DynamicName(n), _) => stmt"$${{${n.toString.token}}}"
   }
 
   protected def scopedTokenizer(ast: Ast)(implicit tokenizer: Tokenizer[Ast]) =

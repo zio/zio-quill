@@ -109,6 +109,12 @@ trait Liftables {
     case Nested(a)              => q"$pack.Nested($a)"
   }
 
+  implicit val entityNameLiftable: Liftable[EntityName] = Liftable[EntityName] {
+    case StaticName(a)        => q"$pack.StaticName($a)"
+    //case DynamicName(a: String) => q"$pack.StaticName($a)"
+    case DynamicName(a: Tree) => q"$pack.DynamicName($a)"
+  }
+
   implicit val propertyAliasLiftable: Liftable[PropertyAlias] = Liftable[PropertyAlias] {
     case PropertyAlias(a, b) => q"$pack.PropertyAlias($a, $b)"
   }

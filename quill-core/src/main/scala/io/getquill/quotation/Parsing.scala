@@ -162,10 +162,13 @@ trait Parsing {
 
     case q"$pack.query[$t]" =>
       // Unused, it's here only to make eclipse's presentation compiler happy
-      Entity("unused", Nil)
+      Entity(StaticName("unused"), Nil)
 
     case q"$pack.querySchema[$t](${ name: String }, ..$properties)" =>
-      Entity(name, properties.map(propertyAliasParser(_)))
+      Entity(StaticName(name), properties.map(propertyAliasParser(_)))
+
+    case q"$pack.querySchemaDynamicName[$t]($name, ..$properties)" if is[String](name) =>
+      Entity(DynamicName(name), properties.map(propertyAliasParser(_)))
 
     case q"$source.filter(($alias) => $body)" if (is[CoreDsl#Query[Any]](source)) =>
       Filter(astParser(source), identParser(alias), astParser(body))
