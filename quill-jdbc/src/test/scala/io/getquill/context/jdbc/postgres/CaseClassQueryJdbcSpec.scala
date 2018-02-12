@@ -35,4 +35,24 @@ class CaseClassQueryJdbcSpec extends CaseClassQuerySpec {
   "Example 3 - Inline Record as Filter" in {
     testContext.run(`Ex 3 Inline Record Usage`) should contain theSameElementsAs `Ex 3 Inline Record Usage exepected result`
   }
+
+  "Example 4 - Ex 4 Mapped Union of Nicknames" in {
+    testContext.run(`Ex 4 Mapped Union of Nicknames`) should contain theSameElementsAs `Ex 4 Mapped Union of Nicknames expected result`
+  }
+
+  "Example 4 - Ex 4 Mapped Union All of Nicknames" in {
+    testContext.run(`Ex 4 Mapped Union All of Nicknames`) should contain theSameElementsAs `Ex 4 Mapped Union All of Nicknames expected result`
+  }
+
+  "Example 4 - Ex 4 Mapped Union All of Nicknames Filtered" in {
+    testContext.run(`Ex 4 Mapped Union All of Nicknames Filtered`) should contain theSameElementsAs `Ex 4 Mapped Union All of Nicknames Filtered expected result`
+  }
+
+  "Example 4 - Ex 4 Mapped Union All of Nicknames Same Field" in {
+    testContext.run(`Ex 4 Mapped Union All of Nicknames Same Field`) should contain theSameElementsAs `Ex 4 Mapped Union All of Nicknames Same Field expected result`
+  }
+
+  "Example 4 - Ex 4 Mapped Union All of Nicknames Same Field Filtered" in {
+    testContext.run(`Ex 4 Mapped Union All of Nicknames Same Field Filtered`) should contain theSameElementsAs `Ex 4 Mapped Union All of Nicknames Same Field Filtered expected result`
+  }
 }

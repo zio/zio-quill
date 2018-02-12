@@ -10,6 +10,8 @@ trait CaseClassQuerySpec extends Spec {
 
   case class Contact(firstName: String, lastName: String, age: Int, addressFk: Int, extraInfo: String)
   case class Address(id: Int, street: String, zip: Int, otherExtraInfo: String)
+  case class Nickname(nickname: String)
+  case class NicknameSameField(firstName: String)
 
   val peopleInsert =
     quote((p: Contact) => query[Contact].insert(p))
@@ -73,4 +75,52 @@ trait CaseClassQuerySpec extends Spec {
   val `Ex 3 Inline Record Usage exepected result` = List(
     new Contact("Alex", "Jones", 60, 2, "foo")
   )
+
+  val `Ex 4 Mapped Union of Nicknames` = quote {
+    query[Contact].map(c => Nickname(c.firstName)) union query[Contact].map(c => Nickname(c.firstName))
+  }
+
+  val `Ex 4 Mapped Union All of Nicknames` = quote {
+    query[Contact].map(c => Nickname(c.firstName)) ++ query[Contact].map(c => Nickname(c.firstName))
+  }
+
+  val `Ex 4 Mapped Union All of Nicknames Filtered` = quote {
+    `Ex 4 Mapped Union All of Nicknames`.filter(_.nickname == "Alex")
+  }
+
+  val `Ex 4 Mapped Union All of Nicknames Same Field` = quote {
+    query[Contact].map(c => NicknameSameField(c.firstName)) ++ query[Contact].map(c => NicknameSameField(c.firstName))
+  }
+
+  val `Ex 4 Mapped Union All of Nicknames Same Field Filtered` = quote {
+    `Ex 4 Mapped Union All of Nicknames Same Field`.filter(_.firstName == "Alex")
+  }
+
+  val `Ex 4 Mapped Union of Nicknames expected result` =
+    List(Nickname("Alex"), Nickname("Bert"), Nickname("Cora"))
+
+  val `Ex 4 Mapped Union All of Nicknames expected result` =
+    List(Nickname("Alex"), Nickname("Bert"), Nickname("Cora"), Nickname("Alex"), Nickname("Bert"), Nickname("Cora"))
+
+  val `Ex 4 Mapped Union All of Nicknames Same Field expected result` =
+    List(
+      NicknameSameField("Alex"),
+      NicknameSameField("Bert"),
+      NicknameSameField("Cora"),
+      NicknameSameField("Alex"),
+      NicknameSameField("Bert"),
+      NicknameSameField("Cora")
+    )
+
+  val `Ex 4 Mapped Union All of Nicknames Filtered expected result` =
+    List(
+      Nickname("Alex"),
+      Nickname("Alex")
+    )
+
+  val `Ex 4 Mapped Union All of Nicknames Same Field Filtered expected result` =
+    List(
+      NicknameSameField("Alex"),
+      NicknameSameField("Alex")
+    )
 }
