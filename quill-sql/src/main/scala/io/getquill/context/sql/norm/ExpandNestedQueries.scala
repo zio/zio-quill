@@ -85,6 +85,8 @@ object ExpandNestedQueries {
           }
         case Property(_, name) =>
           select match {
+            case List(SelectValue(cc: CaseClass, alias, c)) =>
+              SelectValue(cc.values.toMap.apply(name), Some(name), c)
             case List(SelectValue(i: Ident, _, c)) =>
               SelectValue(Property(i, name), None, c)
             case other =>

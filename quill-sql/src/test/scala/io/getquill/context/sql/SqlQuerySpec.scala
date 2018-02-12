@@ -523,6 +523,41 @@ class SqlQuerySpec extends Spec {
           "SELECT t.i FROM (SELECT t.i FROM TestEntity t WHERE t.i = 1) t"
       }
     }
+
+    "case class queries" - {
+      case class TrivialEntity(str: String)
+
+      "in single join" in {
+        val q = quote {
+          for {
+            a <- qr1
+            b <- qr2 if (b.i > a.i)
+          } yield {
+            TrivialEntity(b.s)
+          }
+        }
+        testContext.run(q).string mustEqual
+          "SELECT b.s FROM TestEntity a, TestEntity2 b WHERE b.i > a.i"
+      }
+
+      "in union" in {
+        val q = quote {
+          qr1.map(q => TrivialEntity(q.s)) ++ qr1.map(q => TrivialEntity(q.s))
+        }
+        testContext.run(q).string mustEqual
+          "SELECT x.str FROM ((SELECT q.s str FROM TestEntity q) UNION ALL (SELECT q1.s str FROM TestEntity q1)) x"
+      }
+
+      "in union same field name" in {
+        case class TrivialEntitySameField(s: String)
+
+        val q = quote {
+          qr1.map(q => TrivialEntitySameField(q.s)) ++ qr1.map(q => TrivialEntitySameField(q.s))
+        }
+        testContext.run(q).string mustEqual
+          "SELECT x.s FROM ((SELECT q.s s FROM TestEntity q) UNION ALL (SELECT q1.s s FROM TestEntity q1)) x"
+      }
+    }
   }
 
   "SqlQuery" - {
