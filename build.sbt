@@ -112,7 +112,7 @@ lazy val `quill-finagle-postgres` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "io.github.finagle" %% "finagle-postgres" % "0.4.3"
+        "io.github.finagle" %% "finagle-postgres" % "0.6.0"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
