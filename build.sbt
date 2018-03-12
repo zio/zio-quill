@@ -88,7 +88,7 @@ lazy val `quill-spark` =
       crossScalaVersions := Seq("2.11.12"),
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "org.apache.spark" %% "spark-sql" % "2.2.0"
+        "org.apache.spark" %% "spark-sql" % "2.3.0"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -100,7 +100,7 @@ lazy val `quill-finagle-mysql` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.twitter" %% "finagle-mysql" % "17.12.0"
+        "com.twitter" %% "finagle-mysql" % "18.2.0"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -112,7 +112,7 @@ lazy val `quill-finagle-postgres` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "io.github.finagle" %% "finagle-postgres" % "0.6.0"
+        "io.github.finagle" %% "finagle-postgres" % "0.7.0"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -160,8 +160,8 @@ lazy val `quill-cassandra` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.datastax.cassandra" %  "cassandra-driver-core" % "3.3.1",
-        "io.monix"               %% "monix"                 % "2.3.2"
+        "com.datastax.cassandra" %  "cassandra-driver-core" % "3.4.0",
+        "io.monix"               %% "monix"                 % "2.3.3"
       )
     )
     .dependsOn(`quill-core-jvm` % "compile->compile;test->test")
