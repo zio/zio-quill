@@ -26,13 +26,16 @@ trait StatelessTransformer {
 
   def apply(o: OptionOperation): OptionOperation =
     o match {
-      case OptionMap(a, b, c)    => OptionMap(apply(a), b, apply(c))
-      case OptionForall(a, b, c) => OptionForall(apply(a), b, apply(c))
-      case OptionExists(a, b, c) => OptionExists(apply(a), b, apply(c))
-      case OptionContains(a, b)  => OptionContains(apply(a), apply(b))
-      case OptionIsEmpty(a)      => OptionIsEmpty(apply(a))
-      case OptionNonEmpty(a)     => OptionNonEmpty(apply(a))
-      case OptionIsDefined(a)    => OptionIsDefined(apply(a))
+      case OptionFlatten(a)       => OptionFlatten(apply(a))
+      case OptionGetOrElse(a, b)  => OptionGetOrElse(apply(a), apply(b))
+      case OptionFlatMap(a, b, c) => OptionFlatMap(apply(a), b, apply(c))
+      case OptionMap(a, b, c)     => OptionMap(apply(a), b, apply(c))
+      case OptionForall(a, b, c)  => OptionForall(apply(a), b, apply(c))
+      case OptionExists(a, b, c)  => OptionExists(apply(a), b, apply(c))
+      case OptionContains(a, b)   => OptionContains(apply(a), apply(b))
+      case OptionIsEmpty(a)       => OptionIsEmpty(apply(a))
+      case OptionNonEmpty(a)      => OptionNonEmpty(apply(a))
+      case OptionIsDefined(a)     => OptionIsDefined(apply(a))
     }
 
   def apply(o: TraversableOperation): TraversableOperation =

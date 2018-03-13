@@ -396,6 +396,22 @@ class QuotationSpec extends Spec {
         val q = quote("s" != null)
         quote(unquote(q)).ast.b mustEqual NullValue
       }
+      "None" in {
+        val q = quote(None)
+        quote(unquote(q)).ast mustEqual NullValue
+      }
+      "Option.empty" in {
+        val q = quote(Option.empty[String])
+        quote(unquote(q)).ast mustEqual NullValue
+      }
+      "Option.apply" in {
+        val q = quote(Option.apply("a"))
+        quote(unquote(q)).ast mustEqual Constant("a")
+      }
+      "Some" in {
+        val q = quote(Some("a"))
+        quote(unquote(q)).ast mustEqual Constant("a")
+      }
       "constant" in {
         val q = quote(11L)
         quote(unquote(q)).ast mustEqual Constant(11L)
@@ -746,6 +762,24 @@ class QuotationSpec extends Spec {
           (o: Option[Int]) => o.map(v => v)
         }
         quote(unquote(q)).ast.body mustEqual OptionMap(Ident("o"), Ident("v"), Ident("v"))
+      }
+      "flatMap" in {
+        val q = quote {
+          (o: Option[Int]) => o.flatMap(v => Option(v))
+        }
+        quote(unquote(q)).ast.body mustEqual OptionFlatMap(Ident("o"), Ident("v"), Ident("v"))
+      }
+      "getOrElse" in {
+        val q = quote {
+          (o: Option[Int]) => o.getOrElse(11)
+        }
+        quote(unquote(q)).ast.body mustEqual OptionGetOrElse(Ident("o"), Constant(11))
+      }
+      "flatten" in {
+        val q = quote {
+          (o: Option[Option[Int]]) => o.flatten
+        }
+        quote(unquote(q)).ast.body mustEqual OptionFlatten(Ident("o"))
       }
       "forall" - {
         "simple" in {

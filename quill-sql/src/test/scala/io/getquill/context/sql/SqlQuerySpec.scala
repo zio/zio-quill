@@ -524,6 +524,48 @@ class SqlQuerySpec extends Spec {
       }
     }
 
+    "queries using options" - {
+      case class Entity(id: Int, s: String, o: Option[String], fk: Int, io: Option[Int])
+      case class EntityA(id: Int, s: String, o: Option[String])
+      case class EntityB(id: Int, s: String, o: Option[String])
+
+      val e = quote(query[Entity])
+      val ea = quote(query[EntityA])
+      val eb = quote(query[EntityB])
+
+      "flatten in left join" in {
+        val q = quote {
+          e.leftJoin(ea).on((e, a) => e.fk == a.id).map(_._2.map(_.o).flatten)
+        }
+        testContext.run(q).string mustEqual
+          "SELECT a.o FROM Entity e LEFT JOIN EntityA a ON e.fk = a.id"
+      }
+
+      "flatMap in left join" in {
+        val q = quote {
+          e.leftJoin(ea).on((e, a) => e.fk == a.id).map(_._2.flatMap(_.o))
+        }
+        testContext.run(q).string mustEqual
+          "SELECT a.o FROM Entity e LEFT JOIN EntityA a ON e.fk = a.id"
+      }
+
+      "flatMap in left join with getOrElse" in {
+        val q = quote {
+          e.leftJoin(ea).on((e, a) => e.fk == a.id).map(_._2.flatMap(_.o).getOrElse("alternative"))
+        }
+        testContext.run(q).string mustEqual
+          "SELECT CASE WHEN a.o IS NOT NULL THEN a.o ELSE 'alternative' END FROM Entity e LEFT JOIN EntityA a ON e.fk = a.id"
+      }
+
+      "getOrElse should produce null check" in {
+        val q = quote {
+          e.map(em => em.io.map(_ + 1).getOrElse(2))
+        }
+        testContext.run(q).string mustEqual
+          "SELECT CASE WHEN (em.io + 1) IS NOT NULL THEN em.io + 1 ELSE 2 END FROM Entity em"
+      }
+    }
+
     "case class queries" - {
       case class TrivialEntity(str: String)
 

@@ -288,6 +288,12 @@ trait Parsing {
   private def ident(x: TermName): Ident = identClean(Ident(x.decodedName.toString))
 
   val optionOperationParser: Parser[OptionOperation] = Parser[OptionOperation] {
+    case q"$o.flatten[$t]($implicitBody)" if is[Option[Any]](o) =>
+      OptionFlatten(astParser(o))
+    case q"$o.getOrElse[$t]($body)" if is[Option[Any]](o) =>
+      OptionGetOrElse(astParser(o), astParser(body))
+    case q"$o.flatMap[$t]({($alias) => $body})" if is[Option[Any]](o) =>
+      OptionFlatMap(astParser(o), identParser(alias), astParser(body))
     case q"$o.map[$t]({($alias) => $body})" if is[Option[Any]](o) =>
       OptionMap(astParser(o), identParser(alias), astParser(body))
     case q"$o.forall({($alias) => $body})" if is[Option[Any]](o) =>
@@ -453,6 +459,10 @@ trait Parsing {
 
   val valueParser: Parser[Ast] = Parser[Ast] {
     case q"null"                         => NullValue
+    case q"scala.None"                   => NullValue
+    case q"scala.Option.empty[$t]"       => NullValue
+    case q"scala.Some.apply[$t]($v)"     => astParser(v)
+    case q"scala.Option.apply[$t]($v)"   => astParser(v)
     case Literal(c.universe.Constant(v)) => Constant(v)
     case q"((..$v))" if (v.size > 1)     => Tuple(v.map(astParser(_)))
     case q"new $ccTerm(..$v)" if (isCaseClass(c.WeakTypeTag(ccTerm.tpe.erasure))) => {
