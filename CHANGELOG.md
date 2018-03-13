@@ -1,3 +1,10 @@
+# 2.3.3
+
+- [Dependency updates](https://github.com/getquill/quill/pull/1042)
+- [update finagle-postgres to 0.7.0](https://github.com/getquill/quill/pull/1030)
+- [fixing unions with Ad-Hoc tuples](https://github.com/getquill/quill/pull/1026)
+- [Fix removing assignment in returning insert if embedded field has columns with the same name as in parent case class](https://github.com/getquill/quill/pull/1010)
+
 # 2.3.2
 
 - [Simplify multiple `AND` `OR` sql generation](https://github.com/getquill/quill/pull/1003)
