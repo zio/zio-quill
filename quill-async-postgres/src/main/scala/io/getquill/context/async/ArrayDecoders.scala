@@ -34,7 +34,8 @@ trait ArrayDecoders extends ArrayEncoding {
         row(index) match {
           case seq: IndexedSeq[Any] => seq.foldLeft(bf()) {
             case (b, x: I) => b += mapper(x)
-            case (_, x)    => fail(s"Array at index $index contains element of ${x.getClass.getCanonicalName}, but expected $iTag")
+            case (_, null) => fail(s"Array at index $index contains NULL element, but expected $iTag")
+            case (_, x)    => fail(s"Array at index $index contains element of type '${x.getClass.getCanonicalName}', but expected $iTag")
           }.result()
           case value => fail(
             s"Value '$value' at index $index is not an array so it cannot be decoded to collection of $oTag"
