@@ -3,21 +3,19 @@ package io.getquill.context.jdbc
 import java.io.Closeable
 import java.sql.{ Connection, JDBCType, PreparedStatement, ResultSet }
 import javax.sql.DataSource
-
 import io.getquill.context.sql.SqlContext
 import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.NamingStrategy
 import io.getquill.util.ContextLogger
-
 import scala.annotation.tailrec
 import scala.util.{ DynamicVariable, Try }
 import scala.util.control.NonFatal
-
 import io.getquill.monad.SyncIOMonad
-import io.getquill.context.Context
+import io.getquill.context.{ Context, TranslateContext }
 
 abstract class JdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](dataSource: DataSource with Closeable)
   extends Context[Dialect, Naming]
+  with TranslateContext
   with SqlContext[Dialect, Naming]
   with Encoders
   with Decoders
@@ -136,6 +134,12 @@ abstract class JdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](dataSo
           extractResult(ps.getGeneratedKeys, extractor)
       }
     }
+
+  override protected def prepareParams(statement: String, prepare: Prepare): Seq[String] = {
+    withConnection { conn =>
+      prepare(conn.prepareStatement(statement))._1.reverse.map(prepareParam)
+    }
+  }
 
   /**
    * Parses instances of java.sql.Types to string form so it can be used in creation of sql arrays.

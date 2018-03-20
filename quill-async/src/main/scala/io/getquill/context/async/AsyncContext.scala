@@ -14,10 +14,11 @@ import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.NamingStrategy
 import io.getquill.util.ContextLogger
 import io.getquill.monad.ScalaFutureIOMonad
-import io.getquill.context.Context
+import io.getquill.context.{ Context, TranslateContext }
 
 abstract class AsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: Connection](val idiom: D, val naming: N, pool: PartitionedConnectionPool[C])
   extends Context[D, N]
+  with TranslateContext
   with SqlContext[D, N]
   with Decoders
   with Encoders
@@ -120,4 +121,8 @@ abstract class AsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: Connection]
           }.map(_.result())
       }
     }.map(_.flatten.toList)
+
+  override protected def prepareParams(statement: String, prepare: Prepare): Seq[String] = {
+    prepare(Nil)._2.map(param => prepareParam(param))
+  }
 }

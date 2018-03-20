@@ -1,6 +1,6 @@
 package io.getquill
 
-import io.getquill.context.Context
+import io.getquill.context.{ Context, TranslateContext }
 import io.getquill.context.mirror.{ MirrorDecoders, MirrorEncoders, Row }
 import io.getquill.idiom.{ Idiom => BaseIdiom }
 import scala.util.{ Failure, Success, Try }
@@ -11,6 +11,7 @@ object mirrorContextWithQueryProbing
 
 class MirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy](val idiom: Idiom, val naming: Naming)
   extends Context[Idiom, Naming]
+  with TranslateContext
   with MirrorEncoders
   with MirrorDecoders
   with SyncIOMonad {
@@ -74,4 +75,7 @@ class MirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy](val idiom: Idi
           (string, column, prepare.map(_(Row())._2))
       }, extractor
     )
+
+  override def prepareParams(statement: String, prepare: Prepare): Seq[String] =
+    prepare(Row())._2.data.map(prepareParam)
 }
