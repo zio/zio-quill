@@ -7,15 +7,18 @@ import io.getquill.context.finagle.postgres._
 import io.getquill.context.sql.SqlContext
 import io.getquill.util.{ ContextLogger, LoadConfig }
 import scala.util.Try
-import io.getquill.context.Context
+import io.getquill.context.{ Context, TranslateContext }
 import io.getquill.monad.TwitterFutureIOMonad
 
 class FinaglePostgresContext[N <: NamingStrategy](val naming: N, client: PostgresClient)
   extends Context[FinaglePostgresDialect, N]
+  with TranslateContext
   with SqlContext[FinaglePostgresDialect, N]
   with FinaglePostgresEncoders
   with FinaglePostgresDecoders
   with TwitterFutureIOMonad {
+
+  import FinaglePostgresContext._
 
   def this(naming: N, config: FinaglePostgresContextConfig) = this(naming, config.client)
   def this(naming: N, config: Config) = this(naming, FinaglePostgresContextConfig(config))
@@ -103,6 +106,16 @@ class FinaglePostgresContext[N <: NamingStrategy](val naming: N, client: Postgre
       }
     }.map(_.flatten.toList)
 
+  override protected def prepareParams(statement: String, prepare: Prepare): Seq[String] = {
+    prepare(Nil)._2.map(param => prepareParam(param.encode()))
+  }
+
   private def withClient[T](f: PostgresClient => T) =
     currentClient().map(f).getOrElse(f(client))
+}
+
+object FinaglePostgresContext {
+  implicit class EncodeParam[T](val param: Param[T]) extends AnyVal {
+    def encode(): Option[String] = param.encoder.encodeText(param.value)
+  }
 }
