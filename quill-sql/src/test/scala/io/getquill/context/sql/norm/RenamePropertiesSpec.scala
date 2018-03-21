@@ -293,6 +293,18 @@ class RenamePropertiesSpec extends Spec {
           "SELECT b.field_i, b.field_s FROM TestEntity2 a RIGHT JOIN test_entity b ON a.s = b.field_s"
       }
     }
+
+    "aggregation" - {
+      "groupBy" in {
+        val q = quote {
+          e.groupBy(a => a.s).map {
+            case (s, eq) => s -> eq.map(_.i).sum
+          }
+        }
+        testContext.run(q).string mustEqual
+          "SELECT a.field_s, SUM(a.field_i) FROM test_entity a GROUP BY a.field_s"
+      }
+    }
   }
 
   "respects the schema definition for embeddeds" - {
