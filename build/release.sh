@@ -3,9 +3,7 @@ set -e # Any subsequent(*) commands which fail will cause the shell script to ex
 chown root ~/.ssh/config
 chmod 644 ~/.ssh/config
 
-
-if [[ -n $SCALA_VERSION && $TRAVIS_PULL_REQUEST == "false" &&
-    $TRAVIS_BRANCH == "master" && $(cat version.sbt) != *"SNAPSHOT"* ]]
+if [[ -n $SCALA_VERSION && $TRAVIS_PULL_REQUEST == "false" && $TRAVIS_BRANCH == "master" && $(cat version.sbt) != *"SNAPSHOT"* ]]
 then
     openssl aes-256-cbc -pass pass:$ENCRYPTION_PASSWORD -in ./build/secring.gpg.enc -out local.secring.gpg -d
     openssl aes-256-cbc -pass pass:$ENCRYPTION_PASSWORD -in ./build/pubring.gpg.enc -out local.pubring.gpg -d
