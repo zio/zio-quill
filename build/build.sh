@@ -4,24 +4,21 @@ set -e # Any subsequent(*) commands which fail will cause the shell script to ex
 chown root ~/.ssh/config
 chmod 644 ~/.ssh/config
 
-SBT_CMD="sbt"   
-SBT_CMD_2_11=" -DscalaVersion=2.11.12 ++2.11.12 clean coverage test tut coverageReport coverageAggregate checkUnformattedFiles"
-SBT_CMD_2_12=" -DscalaVersion=2.12.4 ++2.12.4 clean test"
-SBT_PUBLISH=" coverageOff publish"
+SBT_CMD="sbt -DscalaVersion=$SCALA_VERSION ++$SCALA_VERSION clean"
 
-if [[ $SCALA_VERSION == "2.11" ]]
+if [[ $SCALA_VERSION == 2.11* ]]
 then
-    SBT_CMD+=$SBT_CMD_2_11
-elif [[ $SCALA_VERSION == "2.12" ]]
+    SBT_CMD+=" coverage test tut coverageReport coverageAggregate checkUnformattedFiles"
+elif [[ $SCALA_VERSION == 2.12* ]]
 then
-    SBT_CMD+=$SBT_CMD_2_12
+    SBT_CMD+=" test"
 else
     exit 1
 fi
 
 if [[ $TRAVIS_PULL_REQUEST == "false" ]]
 then
-    SBT_CMD+=$SBT_PUBLISH
+    SBT_CMD+=" coverageOff publish"
     openssl aes-256-cbc -pass pass:$ENCRYPTION_PASSWORD -in ./build/secring.gpg.enc -out local.secring.gpg -d
     openssl aes-256-cbc -pass pass:$ENCRYPTION_PASSWORD -in ./build/pubring.gpg.enc -out local.pubring.gpg -d
     openssl aes-256-cbc -pass pass:$ENCRYPTION_PASSWORD -in ./build/credentials.sbt.enc -out local.credentials.sbt -d
