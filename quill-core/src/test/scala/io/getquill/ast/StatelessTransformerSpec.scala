@@ -175,6 +175,21 @@ class StatelessTransformerSpec extends Spec {
     }
 
     "option operation" - {
+      "flatten" in {
+        val ast: Ast = OptionFlatten(Ident("a"))
+        Subject(Ident("a") -> Ident("a'"))(ast) mustEqual
+          OptionFlatten(Ident("a'"))
+      }
+      "getOrElse" in {
+        val ast: Ast = OptionGetOrElse(Ident("a"), Ident("b"))
+        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"))(ast) mustEqual
+          OptionGetOrElse(Ident("a'"), Ident("b'"))
+      }
+      "flatMap" in {
+        val ast: Ast = OptionFlatMap(Ident("a"), Ident("b"), Ident("c"))
+        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) mustEqual
+          OptionFlatMap(Ident("a'"), Ident("b"), Ident("c'"))
+      }
       "map" in {
         val ast: Ast = OptionMap(Ident("a"), Ident("b"), Ident("c"))
         Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) mustEqual

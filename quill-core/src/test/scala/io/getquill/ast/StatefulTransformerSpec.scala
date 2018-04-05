@@ -264,6 +264,30 @@ class StatefulTransformerSpec extends Spec {
     }
 
     "option operation" - {
+      "flatten" in {
+        val ast: Ast = OptionFlatten(Ident("a"))
+        Subject(Nil, Ident("a") -> Ident("a'"))(ast) match {
+          case (at, att) =>
+            at mustEqual OptionFlatten(Ident("a'"))
+            att.state mustEqual List(Ident("a"))
+        }
+      }
+      "getOrElse" in {
+        val ast: Ast = OptionGetOrElse(Ident("a"), Ident("b"))
+        Subject(Nil, Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"))(ast) match {
+          case (at, att) =>
+            at mustEqual OptionGetOrElse(Ident("a'"), Ident("b'"))
+            att.state mustEqual List(Ident("a"), Ident("b"))
+        }
+      }
+      "flatMap" in {
+        val ast: Ast = OptionFlatMap(Ident("a"), Ident("b"), Ident("c"))
+        Subject(Nil, Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) match {
+          case (at, att) =>
+            at mustEqual OptionFlatMap(Ident("a'"), Ident("b"), Ident("c'"))
+            att.state mustEqual List(Ident("a"), Ident("c"))
+        }
+      }
       "map" in {
         val ast: Ast = OptionMap(Ident("a"), Ident("b"), Ident("c"))
         Subject(Nil, Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) match {

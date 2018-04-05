@@ -36,13 +36,16 @@ trait Liftables {
   }
 
   implicit val optionOperationLiftable: Liftable[OptionOperation] = Liftable[OptionOperation] {
-    case OptionMap(a, b, c)    => q"$pack.OptionMap($a,$b,$c)"
-    case OptionForall(a, b, c) => q"$pack.OptionForall($a,$b,$c)"
-    case OptionExists(a, b, c) => q"$pack.OptionExists($a,$b,$c)"
-    case OptionContains(a, b)  => q"$pack.OptionContains($a,$b)"
-    case OptionIsEmpty(a)      => q"$pack.OptionIsEmpty($a)"
-    case OptionNonEmpty(a)     => q"$pack.OptionNonEmpty($a)"
-    case OptionIsDefined(a)    => q"$pack.OptionIsDefined($a)"
+    case OptionFlatten(a)       => q"$pack.OptionFlatten($a)"
+    case OptionGetOrElse(a, b)  => q"$pack.OptionGetOrElse($a,$b)"
+    case OptionFlatMap(a, b, c) => q"$pack.OptionFlatMap($a,$b,$c)"
+    case OptionMap(a, b, c)     => q"$pack.OptionMap($a,$b,$c)"
+    case OptionForall(a, b, c)  => q"$pack.OptionForall($a,$b,$c)"
+    case OptionExists(a, b, c)  => q"$pack.OptionExists($a,$b,$c)"
+    case OptionContains(a, b)   => q"$pack.OptionContains($a,$b)"
+    case OptionIsEmpty(a)       => q"$pack.OptionIsEmpty($a)"
+    case OptionNonEmpty(a)      => q"$pack.OptionNonEmpty($a)"
+    case OptionIsDefined(a)     => q"$pack.OptionIsDefined($a)"
   }
 
   implicit val traversableOperationLiftable: Liftable[TraversableOperation] = Liftable[TraversableOperation] {

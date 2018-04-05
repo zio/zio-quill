@@ -486,6 +486,27 @@ class MirrorIdiomSpec extends Spec {
   }
 
   "shows option operations" - {
+    "getOrElse" in {
+      val q = quote {
+        (o: Option[Int]) => o.getOrElse(1)
+      }
+      stmt"${(q.ast: Ast).token}" mustEqual
+        stmt"(o) => o.getOrElse(1)"
+    }
+    "flatten" in {
+      val q = quote {
+        (o: Option[Option[Int]]) => o.flatten
+      }
+      stmt"${(q.ast: Ast).token}" mustEqual
+        stmt"(o) => o.flatten"
+    }
+    "flatMap" in {
+      val q = quote {
+        (o: Option[Option[Int]]) => o.flatMap(v => v)
+      }
+      stmt"${(q.ast: Ast).token}" mustEqual
+        stmt"(o) => o.flatMap((v) => v)"
+    }
     "map" in {
       val q = quote {
         (o: Option[Int]) => o.map(v => v)

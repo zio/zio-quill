@@ -101,6 +101,10 @@ class BetaReductionSpec extends Spec {
         BetaReduction(ast, Ident("c") -> Ident("c'"), Ident("d") -> Ident("d'")) mustEqual ast
       }
       "option operation" - {
+        "flatMap" in {
+          val ast: Ast = OptionFlatMap(Ident("a"), Ident("b"), Ident("b"))
+          BetaReduction(ast, Ident("b") -> Ident("b'")) mustEqual ast
+        }
         "map" in {
           val ast: Ast = OptionMap(Ident("a"), Ident("b"), Ident("b"))
           BetaReduction(ast, Ident("b") -> Ident("b'")) mustEqual ast

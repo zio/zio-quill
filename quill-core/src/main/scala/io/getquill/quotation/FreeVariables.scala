@@ -22,6 +22,8 @@ case class FreeVariables(state: State)
 
   override def apply(o: OptionOperation): (OptionOperation, StatefulTransformer[State]) =
     o match {
+      case q @ OptionFlatMap(a, b, c) =>
+        (q, free(a, b, c))
       case q @ OptionMap(a, b, c) =>
         (q, free(a, b, c))
       case q @ OptionForall(a, b, c) =>

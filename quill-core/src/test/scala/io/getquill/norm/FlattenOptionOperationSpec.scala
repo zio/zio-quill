@@ -8,6 +8,27 @@ import io.getquill.ast.NumericOperator
 class FlattenOptionOperationSpec extends Spec {
 
   "transforms option operations into simple properties" - {
+    "getOrElse" in {
+      val q = quote {
+        (o: Option[Int]) => o.getOrElse(1)
+      }
+      FlattenOptionOperation(q.ast.body: Ast) mustEqual
+        If(BinaryOperation(Ident("o"), EqualityOperator.`!=`, NullValue), Ident("o"), Constant(1))
+    }
+    "flatten" in {
+      val q = quote {
+        (o: Option[Option[Int]]) => o.flatten.map(i => i + 1)
+      }
+      FlattenOptionOperation(q.ast.body: Ast) mustEqual
+        BinaryOperation(Ident("o"), NumericOperator.`+`, Constant(1))
+    }
+    "flatMap" in {
+      val q = quote {
+        (o: Option[Option[Int]]) => o.flatMap(i => i.map(j => j + 1))
+      }
+      FlattenOptionOperation(q.ast.body: Ast) mustEqual
+        BinaryOperation(Ident("o"), NumericOperator.`+`, Constant(1))
+    }
     "map" in {
       val q = quote {
         (o: Option[Int]) => o.map(i => i + 1)

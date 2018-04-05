@@ -9,7 +9,7 @@ before_script:
   - ./build/pull_docker_images.sh
 script:
   - travis_retry docker-compose run setup
-  - docker-compose run sbt bash -c "./build/build.sh"
+  - travis_wait 120 docker-compose run sbt bash -c "./build/build.sh"
 after_success:
   - ./build/push_docker_images.sh
   - pip install --user codecov && codecov
