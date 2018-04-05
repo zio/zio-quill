@@ -1913,6 +1913,7 @@ See the [LICENSE](https://github.com/getquill/quill/blob/master/LICENSE.txt) fil
 # Maintainers
 
 - @fwbrasil (creator)
+- @deusaquilus
 - @gustavoamigo
 - @jilen
 - @mentegy
