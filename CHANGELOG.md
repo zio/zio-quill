@@ -1,3 +1,11 @@
+# 2.3.4
+
+- [`quill-cassandra`: Add encoding for `Byte` and `Short`](https://github.com/getquill/quill/pull/1049)
+- [Change referencing `super.prepare` call to `this.prepare` in quill-cassandra contexts](https://github.com/getquill/quill/pull/1067)
+- [Adding flatMap, flatten, getOrElse, and Option.apply](https://github.com/getquill/quill/pull/1044)
+- [Optimize build](https://github.com/getquill/quill/pull/1060)
+- [Fix renaming aggregated properties in groupBy with custom querySchema](https://github.com/getquill/quill/pull/1038)
+
 # 2.3.3
 
 - [Dependency updates](https://github.com/getquill/quill/pull/1042)
