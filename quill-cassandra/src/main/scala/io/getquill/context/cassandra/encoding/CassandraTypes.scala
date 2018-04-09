@@ -1,6 +1,6 @@
 package io.getquill.context.cassandra.encoding
 
-import java.lang.{ Boolean => JBoolean, Double => JDouble, Float => JFloat, Integer => JInt, Long => JLong }
+import java.lang.{ Boolean => JBoolean, Double => JDouble, Float => JFloat, Integer => JInt, Long => JLong, Short => JShort, Byte => JByte }
 import java.math.{ BigDecimal => JBigDecimal }
 import java.nio.ByteBuffer
 import java.util.{ Date, UUID }
@@ -13,6 +13,8 @@ import com.datastax.driver.core.LocalDate
  * For custom types please use `MappedEncoding` as in `MappedTypes` trait for example.
  */
 trait CassandraTypes extends CassandraMappedTypes {
+  implicit val byteCassandraType: CassandraType[JByte] = CassandraType.of[JByte]
+  implicit val shortCassandraType: CassandraType[JShort] = CassandraType.of[JShort]
   implicit val integerCassandraType: CassandraType[JInt] = CassandraType.of[JInt]
   implicit val longCassandraType: CassandraType[JLong] = CassandraType.of[JLong]
   implicit val floatCassandraType: CassandraType[JFloat] = CassandraType.of[JFloat]
@@ -31,6 +33,13 @@ trait CassandraTypes extends CassandraMappedTypes {
  * which are not in relation with CassandraTypes but can be represented as ones.
  */
 trait CassandraMappedTypes {
+
+  implicit val encodeByte: CassandraMapper[Byte, JByte] = CassandraMapper(byte2Byte)
+  implicit val decodeByte: CassandraMapper[JByte, Byte] = CassandraMapper(Byte2byte)
+
+  implicit val encodeShort: CassandraMapper[Short, JShort] = CassandraMapper(short2Short)
+  implicit val decodeShort: CassandraMapper[JShort, Short] = CassandraMapper(Short2short)
+
   implicit val encodeInt: CassandraMapper[Int, JInt] = CassandraMapper(int2Integer)
   implicit val decodeInt: CassandraMapper[JInt, Int] = CassandraMapper(Integer2int)
 

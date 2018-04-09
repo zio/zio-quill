@@ -39,6 +39,8 @@ trait Encoders extends CollectionEncoders {
   implicit val bigDecimalEncoder: Encoder[BigDecimal] =
     encoder((index, value, row) => row.setDecimal(index, value.bigDecimal))
   implicit val booleanEncoder: Encoder[Boolean] = encoder(_.setBool)
+  implicit val byteEncoder: Encoder[Byte] = encoder(_.setByte)
+  implicit val shortEncoder: Encoder[Short] = encoder(_.setShort)
   implicit val intEncoder: Encoder[Int] = encoder(_.setInt)
   implicit val longEncoder: Encoder[Long] = encoder(_.setLong)
   implicit val floatEncoder: Encoder[Float] = encoder(_.setFloat)
