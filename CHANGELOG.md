@@ -1,4 +1,4 @@
-# 2.4.0
+# 2.4.1
 
 - [Add support of upsert for Postgres and MySQL](https://github.com/getquill/quill/pull/987)
 - [Add flatMap, flatten, getOrElse and Option.apply](https://github.com/getquill/quill/pull/1044)
