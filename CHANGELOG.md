@@ -1,10 +1,11 @@
-# 2.3.4
+# 2.4.0
 
+- [Add support of upsert for Postgres and MySQL](https://github.com/getquill/quill/pull/987)
+- [Add flatMap, flatten, getOrElse and Option.apply](https://github.com/getquill/quill/pull/1044)
 - [`quill-cassandra`: Add encoding for `Byte` and `Short`](https://github.com/getquill/quill/pull/1049)
-- [Change referencing `super.prepare` call to `this.prepare` in quill-cassandra contexts](https://github.com/getquill/quill/pull/1067)
-- [Adding flatMap, flatten, getOrElse, and Option.apply](https://github.com/getquill/quill/pull/1044)
-- [Optimize build](https://github.com/getquill/quill/pull/1060)
 - [Fix renaming aggregated properties in groupBy with custom querySchema](https://github.com/getquill/quill/pull/1038)
+- [Change referencing `super.prepare` call to `this.prepare` in quill-cassandra contexts](https://github.com/getquill/quill/pull/1067)
+- [Add connectTimeout option into FinagleMysqlContextConfig](https://github.com/getquill/quill/pull/1070)
 
 # 2.3.3
 
