@@ -51,6 +51,8 @@ case class FreeVariables(state: State)
         super.apply(other)
     }
 
+  override def apply(e: OnConflict.Target): (OnConflict.Target, StatefulTransformer[State]) = (e, this)
+
   override def apply(query: Query): (Query, StatefulTransformer[State]) =
     query match {
       case q @ Filter(a, b, c)      => (q, free(a, b, c))

@@ -77,7 +77,7 @@ Create TABLE BooleanEncodingTestEntity(
 
 CREATE TABLE TestEntity(
     s VARCHAR(255),
-    i INTEGER,
+    i INTEGER primary key,
     l BIGINT,
     o INTEGER
 );

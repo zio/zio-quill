@@ -53,4 +53,9 @@ class FinagleMysqlContextSpec extends Spec {
     intercept[IllegalStateException](ctx.toOk(Error(-1, "no ok", "test")))
     ctx.close
   }
+
+  override protected def beforeAll(): Unit = {
+    await(testContext.run(qr1.delete))
+    ()
+  }
 }
