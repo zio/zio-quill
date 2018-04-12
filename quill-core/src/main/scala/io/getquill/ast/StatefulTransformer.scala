@@ -14,14 +14,13 @@ trait StatefulTransformer[T] {
       case e: Ident                => (e, this)
       case e: OptionOperation      => apply(e)
       case e: TraversableOperation => apply(e)
+      case e: Property             => apply(e)
+      case e: OnConflict.Existing  => (e, this)
+      case e: OnConflict.Excluded  => (e, this)
 
       case Function(a, b) =>
         val (bt, btt) = apply(b)
         (Function(a, bt), btt)
-
-      case Property(a, b) =>
-        val (at, att) = apply(a)
-        (Property(at, b), att)
 
       case Infix(a, b) =>
         val (bt, btt) = apply(b)(_.apply)
@@ -179,6 +178,13 @@ trait StatefulTransformer[T] {
         (Assignment(a, bt, ct), ctt)
     }
 
+  def apply(e: Property): (Property, StatefulTransformer[T]) =
+    e match {
+      case Property(a, b) =>
+        val (at, att) = apply(a)
+        (Property(at, b), att)
+    }
+
   def apply(e: Operation): (Operation, StatefulTransformer[T]) =
     e match {
       case UnaryOperation(o, a) =>
@@ -228,6 +234,27 @@ trait StatefulTransformer[T] {
         val (at, att) = apply(a)
         val (ct, ctt) = att.apply(c)
         (Foreach(at, b, ct), ctt)
+      case OnConflict(a, b, c) =>
+        val (at, att) = apply(a)
+        val (bt, btt) = att.apply(b)
+        val (ct, ctt) = btt.apply(c)
+        (OnConflict(at, bt, ct), ctt)
+    }
+
+  def apply(e: OnConflict.Target): (OnConflict.Target, StatefulTransformer[T]) =
+    e match {
+      case OnConflict.NoTarget => (e, this)
+      case OnConflict.Properties(a) =>
+        val (at, att) = apply(a)(_.apply)
+        (OnConflict.Properties(at), att)
+    }
+
+  def apply(e: OnConflict.Action): (OnConflict.Action, StatefulTransformer[T]) =
+    e match {
+      case OnConflict.Ignore => (e, this)
+      case OnConflict.Update(a) =>
+        val (at, att) = apply(a)(_.apply)
+        (OnConflict.Update(at), att)
     }
 
   def apply[U, R](list: List[U])(f: StatefulTransformer[T] => U => (R, StatefulTransformer[T])) =

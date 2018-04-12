@@ -703,7 +703,74 @@ val a = quote {
 ctx.run(a)
 // DELETE FROM Person WHERE name = ''
 ```
- 
+
+### insert or update (upsert, conflict)
+
+Upsert is only supported by Postgres and MySQL
+
+#### Postgres
+Ignore conflict
+```scala
+val a = quote {
+  query[Product].insert(_.id -> 1, _.sku -> 10).onConflictIgnore
+}
+
+// INSERT INTO Product AS t (id,sku) VALUES (1, 10) ON CONFLICT DO NOTHING
+```
+
+Ignore conflict by explicitly setting conflict target
+```scala
+val a = quote {
+  query[Product].insert(_.id -> 1, _.sku -> 10).onConflictIgnore(_.id)
+}
+
+// INSERT INTO Product AS t (id,sku) VALUES (1, 10) ON CONFLICT (id) DO NOTHING
+```
+
+Resolve conflict by updating existing row if needed. In `onConflictUpdate(target)((t, e) => assignment)`: `target` refers to
+conflict target, `t` - to existing row and `e` - to excluded, e.g. row proposed for insert.
+```scala
+val a = quote {
+  query[Product]
+    .insert(_.id -> 1, _.sku -> 10)
+    .onConflictUpdate(_.id)((t, e) => t.sku -> (t.sku + e.sku))
+}
+
+// INSERT INTO Product AS t (id,sku) VALUES (1, 10) ON CONFLICT (id) DO UPDATE SET sku = (t.sku + EXCLUDED.sku)
+```
+
+#### MySQL
+
+Ignore any conflict, e.g. `insert ignore`
+```scala
+val a = quote {
+  query[Product].insert(_.id -> 1, _.sku -> 10).onConflictIgnore
+}
+
+// INSERT IGNORE INTO Product (id,sku) VALUES (1, 10)
+```
+
+Ignore duplicate key conflict by explicitly setting it
+```scala
+val a = quote {
+  query[Product].insert(_.id -> 1, _.sku -> 10).onConflictIgnore(_.id)
+}
+
+// INSERT INTO Product (id,sku) VALUES (1, 10) ON DUPLICATE KEY UPDATE id=id
+```
+
+Resolve duplicate key by updating existing row if needed. In `onConflictUpdate((t, e) => assignment)`: `t` refers to
+existing row and `e` - to values, e.g. values proposed for insert.
+```scala
+val a = quote {
+  query[Product]
+    .insert(_.id -> 1, _.sku -> 10)
+    .onConflictUpdate((t, e) => t.sku -> (t.sku + e.sku))
+}
+
+// INSERT INTO Product (id,sku) VALUES (1, 10) ON DUPLICATE KEY UPDATE sku = (sku + VALUES(sku))
+```
+
 ## IO Monad
 
 Quill provides an IO monad that allows the user to express multiple computations and execute them separately. This mechanism is also known as a free monad, which provides a way of expressing computations as referentially-transparent values and isolates the unsafe IO operations into a single operation. For instance:

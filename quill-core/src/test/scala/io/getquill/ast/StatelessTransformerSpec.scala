@@ -148,6 +148,45 @@ class StatelessTransformerSpec extends Spec {
         Subject(Ident("a") -> Ident("a'"))(ast) mustEqual
           Delete(Ident("a'"))
       }
+      "onConflict" in {
+        val ast: Ast = OnConflict(Insert(Ident("a"), Nil), OnConflict.NoTarget, OnConflict.Ignore)
+        Subject(Ident("a") -> Ident("a'"))(ast) mustEqual
+          OnConflict(Insert(Ident("a'"), Nil), OnConflict.NoTarget, OnConflict.Ignore)
+      }
+    }
+
+    "onConflict.target" - {
+      "no" in {
+        val target: OnConflict.Target = OnConflict.NoTarget
+        Subject()(target) mustEqual target
+      }
+      "properties" in {
+        val target: OnConflict.Target = OnConflict.Properties(List(Property(Ident("a"), "b")))
+        Subject(Ident("a") -> Ident("a'"))(target) mustEqual
+          OnConflict.Properties(List(Property(Ident("a'"), "b")))
+      }
+    }
+
+    "onConflict.action" - {
+      "ignore" in {
+        val action: OnConflict.Action = OnConflict.Ignore
+        Subject()(action) mustEqual action
+      }
+      "update" in {
+        val action: OnConflict.Action = OnConflict.Update(List(Assignment(Ident("a"), Ident("b"), Ident("c"))))
+        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(action) mustEqual
+          OnConflict.Update(List(Assignment(Ident("a"), Ident("b'"), Ident("c'"))))
+      }
+    }
+
+    "onConflict.excluded" in {
+      val ast: Ast = OnConflict.Excluded(Ident("a"))
+      Subject()(ast) mustEqual ast
+    }
+
+    "onConflict.existing" in {
+      val ast: Ast = OnConflict.Existing(Ident("a"))
+      Subject()(ast) mustEqual ast
     }
 
     "function" in {

@@ -60,7 +60,7 @@ trait OrientDBIdiom extends Idiom {
         a.token
       case a @ (
         _: Function | _: FunctionApply | _: Dynamic | _: OptionOperation | _: Block |
-        _: Val | _: Ordering | _: QuotedReference | _: TraversableOperation
+        _: Val | _: Ordering | _: QuotedReference | _: TraversableOperation | _: OnConflict.Excluded | _: OnConflict.Existing
         ) =>
         fail(s"Malformed or unsupported construct: $a.")
     }

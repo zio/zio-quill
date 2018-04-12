@@ -11,7 +11,7 @@ trait StatelessTransformer {
       case e: Assignment           => apply(e)
       case Function(params, body)  => Function(params, apply(body))
       case e: Ident                => e
-      case Property(a, name)       => Property(apply(a), name)
+      case e: Property             => apply(e)
       case Infix(a, b)             => Infix(a, b.map(apply))
       case e: OptionOperation      => apply(e)
       case e: TraversableOperation => apply(e)
@@ -22,6 +22,8 @@ trait StatelessTransformer {
       case Block(statements)       => Block(statements.map(apply))
       case Val(name, body)         => Val(name, apply(body))
       case o: Ordering             => o
+      case e: OnConflict.Excluded  => e
+      case e: OnConflict.Existing  => e
     }
 
   def apply(o: OptionOperation): OptionOperation =
@@ -72,6 +74,11 @@ trait StatelessTransformer {
       case Assignment(a, b, c) => Assignment(a, apply(b), apply(c))
     }
 
+  def apply(e: Property): Property =
+    e match {
+      case Property(a, name) => Property(apply(a), name)
+    }
+
   def apply(e: Operation): Operation =
     e match {
       case UnaryOperation(o, a)            => UnaryOperation(o, apply(a))
@@ -97,6 +104,19 @@ trait StatelessTransformer {
       case Delete(query)                     => Delete(apply(query))
       case Returning(query, alias, property) => Returning(apply(query), alias, apply(property))
       case Foreach(query, alias, body)       => Foreach(apply(query), alias, apply(body))
+      case OnConflict(query, target, action) => OnConflict(apply(query), apply(target), apply(action))
+    }
+
+  def apply(e: OnConflict.Target): OnConflict.Target =
+    e match {
+      case OnConflict.NoTarget          => e
+      case OnConflict.Properties(props) => OnConflict.Properties(props.map(apply))
+    }
+
+  def apply(e: OnConflict.Action): OnConflict.Action =
+    e match {
+      case OnConflict.Ignore          => e
+      case OnConflict.Update(assigns) => OnConflict.Update(assigns.map(apply))
     }
 
 }

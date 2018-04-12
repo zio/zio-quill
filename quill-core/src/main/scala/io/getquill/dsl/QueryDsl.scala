@@ -91,6 +91,35 @@ private[dsl] trait QueryDsl {
   sealed trait Insert[E] extends Action[E] {
     @compileTimeOnly(NonQuotedException.message)
     def returning[R](f: E => R): ActionReturning[E, R] = NonQuotedException()
+
+    @compileTimeOnly(NonQuotedException.message)
+    def onConflictIgnore: Insert[E] = NonQuotedException()
+
+    @compileTimeOnly(NonQuotedException.message)
+    def onConflictIgnore(target: E => Any, targets: (E => Any)*): Insert[E] = NonQuotedException()
+
+    @compileTimeOnly(NonQuotedException.message)
+    def onConflictUpdate(assign: ((E, E) => (Any, Any)), assigns: ((E, E) => (Any, Any))*): Insert[E] = NonQuotedException()
+
+    /**
+     * Generates an atomic INSERT or UPDATE (upsert) action if supported.
+     *
+     * @param targets - conflict target
+     * @param assigns - update statement, declared as function: `(table, excluded) => (assign, result)`
+     *                `table` - is used to extract column for update assignment and reference existing row
+     *                `excluded` - aliases excluded table, e.g. row proposed for insertion.
+     *                `assign` - left hand side of assignment. Should be accessed from `table` argument
+     *                `result` - right hand side of assignment.
+     *
+     * Example usage:
+     * {{{
+     *   insert.onConflictUpdate(_.id)((t, e) => t.col -> (e.col + t.col))
+     * }}}
+     * If insert statement violates conflict target then the column `col` of row will be updated with sum of
+     * existing value and and proposed `col` in insert.
+     */
+    @compileTimeOnly(NonQuotedException.message)
+    def onConflictUpdate(target: E => Any, targets: (E => Any)*)(assign: ((E, E) => (Any, Any)), assigns: ((E, E) => (Any, Any))*): Insert[E] = NonQuotedException()
   }
 
   sealed trait ActionReturning[E, Output] extends Action[E]

@@ -34,4 +34,9 @@ class FinaglePostgresContextSpec extends Spec {
     ctx.probe("select 1").toOption mustBe defined
     ctx.close
   }
+
+  override protected def beforeAll(): Unit = {
+    await(testContext.run(qr1.delete))
+    ()
+  }
 }

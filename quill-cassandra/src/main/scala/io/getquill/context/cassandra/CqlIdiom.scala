@@ -42,7 +42,7 @@ trait CqlIdiom extends Idiom {
       case a: TraversableOperation => a.token
       case a @ (
         _: Function | _: FunctionApply | _: Dynamic | _: OptionOperation | _: Block |
-        _: Val | _: Ordering | _: QuotedReference | _: If
+        _: Val | _: Ordering | _: QuotedReference | _: If | _: OnConflict.Excluded | _: OnConflict.Existing
         ) =>
         fail(s"Invalid cql: '$a'")
     }
