@@ -10,4 +10,10 @@ local.*
 quill_test.db
 Bug.scala
 *.gz
-
+quill-jdbc/io/
+quill-sql/io/
+MyTest.scala
+MySparkTest.scala
+MyTestJdbc.scala
+quill-core/src/main/resources/logback.xml
+quill-jdbc/src/main/resources/logback.xml
