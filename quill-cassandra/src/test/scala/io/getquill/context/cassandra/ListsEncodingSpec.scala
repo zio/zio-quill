@@ -13,6 +13,8 @@ class ListsEncodingSpec extends CollectionsSpec {
     texts:      List[String],
     decimals:   List[BigDecimal],
     bools:      List[Boolean],
+    bytes:      List[Byte],
+    shorts:     List[Short],
     ints:       List[Int],
     longs:      List[Long],
     floats:     List[Float],
@@ -21,8 +23,8 @@ class ListsEncodingSpec extends CollectionsSpec {
     timestamps: List[Date],
     uuids:      List[UUID]
   )
-  val e = ListsEntity(1, List("c"), List(BigDecimal(1.33)), List(true), List(1, 2), List(2, 3), List(1f, 3f),
-    List(5d), List(LocalDate.fromMillisSinceEpoch(System.currentTimeMillis())),
+  val e = ListsEntity(1, List("c"), List(BigDecimal(1.33)), List(true), List(0, 1), List(3, 2), List(1, 2), List(2, 3),
+    List(1f, 3f), List(5d), List(LocalDate.fromMillisSinceEpoch(System.currentTimeMillis())),
     List(new Date), List(UUID.randomUUID()))
   val q = quote(query[ListsEntity])
 

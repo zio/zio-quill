@@ -216,6 +216,70 @@ class StatefulTransformerSpec extends Spec {
             att.state mustEqual List(Ident("a"))
         }
       }
+      "onConflict" in {
+        val ast: Ast = OnConflict(Insert(Ident("a"), Nil), OnConflict.NoTarget, OnConflict.Ignore)
+        Subject(Nil, Ident("a") -> Ident("a'"))(ast) match {
+          case (at, att) =>
+            at mustEqual OnConflict(Insert(Ident("a'"), Nil), OnConflict.NoTarget, OnConflict.Ignore)
+            att.state mustEqual List(Ident("a"))
+        }
+      }
+    }
+
+    "onConflict.target" - {
+      "no" in {
+        val target: OnConflict.Target = OnConflict.NoTarget
+        Subject(Nil)(target) match {
+          case (at, att) =>
+            at mustEqual target
+            att.state mustEqual Nil
+        }
+      }
+      "properties" in {
+        val target: OnConflict.Target = OnConflict.Properties(List(Property(Ident("a"), "b")))
+        Subject(Nil, Ident("a") -> Ident("a'"))(target) match {
+          case (at, att) =>
+            at mustEqual OnConflict.Properties(List(Property(Ident("a'"), "b")))
+            att.state mustEqual List(Ident("a"))
+        }
+      }
+    }
+
+    "onConflict.action" - {
+      "ignore" in {
+        val action: OnConflict.Action = OnConflict.Ignore
+        Subject(Nil)(action) match {
+          case (at, att) =>
+            at mustEqual action
+            att.state mustEqual Nil
+        }
+      }
+      "update" in {
+        val action: OnConflict.Action = OnConflict.Update(List(Assignment(Ident("a"), Ident("b"), Ident("c"))))
+        Subject(Nil, Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(action) match {
+          case (at, att) =>
+            at mustEqual OnConflict.Update(List(Assignment(Ident("a"), Ident("b'"), Ident("c'"))))
+            att.state mustEqual List(Ident("b"), Ident("c"))
+        }
+      }
+    }
+
+    "onConflict.excluded" in {
+      val ast: Ast = OnConflict.Excluded(Ident("a"))
+      Subject(Nil)(ast) match {
+        case (at, att) =>
+          at mustEqual ast
+          att.state mustEqual Nil
+      }
+    }
+
+    "onConflict.existing" in {
+      val ast: Ast = OnConflict.Existing(Ident("a"))
+      Subject(Nil)(ast) match {
+        case (at, att) =>
+          at mustEqual ast
+          att.state mustEqual Nil
+      }
     }
 
     "function" in {
@@ -264,6 +328,30 @@ class StatefulTransformerSpec extends Spec {
     }
 
     "option operation" - {
+      "flatten" in {
+        val ast: Ast = OptionFlatten(Ident("a"))
+        Subject(Nil, Ident("a") -> Ident("a'"))(ast) match {
+          case (at, att) =>
+            at mustEqual OptionFlatten(Ident("a'"))
+            att.state mustEqual List(Ident("a"))
+        }
+      }
+      "getOrElse" in {
+        val ast: Ast = OptionGetOrElse(Ident("a"), Ident("b"))
+        Subject(Nil, Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"))(ast) match {
+          case (at, att) =>
+            at mustEqual OptionGetOrElse(Ident("a'"), Ident("b'"))
+            att.state mustEqual List(Ident("a"), Ident("b"))
+        }
+      }
+      "flatMap" in {
+        val ast: Ast = OptionFlatMap(Ident("a"), Ident("b"), Ident("c"))
+        Subject(Nil, Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) match {
+          case (at, att) =>
+            at mustEqual OptionFlatMap(Ident("a'"), Ident("b"), Ident("c'"))
+            att.state mustEqual List(Ident("a"), Ident("c"))
+        }
+      }
       "map" in {
         val ast: Ast = OptionMap(Ident("a"), Ident("b"), Ident("c"))
         Subject(Nil, Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) match {

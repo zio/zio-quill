@@ -4,8 +4,17 @@ import io.getquill.ast._
 
 object FlattenOptionOperation extends StatelessTransformer {
 
-  override def apply(ast: Ast) =
+  private def isNotEmpty(ast: Ast) =
+    BinaryOperation(ast, EqualityOperator.`!=`, NullValue)
+
+  override def apply(ast: Ast): Ast =
     ast match {
+      case OptionFlatten(ast) =>
+        apply(ast)
+      case OptionGetOrElse(ast, body) =>
+        apply(If(isNotEmpty(ast), ast, body))
+      case OptionFlatMap(ast, alias, body) =>
+        apply(BetaReduction(body, alias -> ast))
       case OptionMap(ast, alias, body) =>
         apply(BetaReduction(body, alias -> ast))
       case OptionForall(ast, alias, body) =>

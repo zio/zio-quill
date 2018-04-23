@@ -9,7 +9,7 @@ before_script:
   - ./build/pull_docker_images.sh
 script:
   - travis_retry docker-compose run setup
-  - docker-compose run sbt bash -c "./build/build.sh"
+  - travis_wait 120 docker-compose run sbt bash -c "./build/build.sh"
 after_success:
   - ./build/push_docker_images.sh
   - pip install --user codecov && codecov
@@ -33,7 +33,8 @@ env:
 jobs:
   include:
     - stage: release
-      env: SCALA_VERSION
+      env:
+        - SCALA_VERSION_2_11=2.11.11
+        - SCALA_VERSION_2_12=2.12.4
       script:
-        - docker-compose run sbt bash -c "SCALA_VERSION=2.12.4 ./build/release.sh"
-        - docker-compose run sbt bash -c "SCALA_VERSION=2.11.11 ./build/release.sh"
+        - docker-compose run release

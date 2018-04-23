@@ -18,7 +18,7 @@ trait Unliftables {
     case orderingUnliftable(ast) => ast
     case optionOperationUnliftable(ast) => ast
     case traversableOperationUnliftable(ast) => ast
-    case q"$pack.Property.apply(${ a: Ast }, ${ b: String })" => Property(a, b)
+    case propertyUnliftable(ast) => ast
     case q"$pack.Function.apply(${ a: List[Ident] }, ${ b: Ast })" => Function(a, b)
     case q"$pack.FunctionApply.apply(${ a: Ast }, ${ b: List[Ast] })" => FunctionApply(a, b)
     case q"$pack.BinaryOperation.apply(${ a: Ast }, ${ b: BinaryOperator }, ${ c: Ast })" => BinaryOperation(a, b, c)
@@ -26,17 +26,22 @@ trait Unliftables {
     case q"$pack.Aggregation.apply(${ a: AggregationOperator }, ${ b: Ast })" => Aggregation(a, b)
     case q"$pack.Infix.apply(${ a: List[String] }, ${ b: List[Ast] })" => Infix(a, b)
     case q"$pack.If.apply(${ a: Ast }, ${ b: Ast }, ${ c: Ast })" => If(a, b, c)
+    case q"$pack.OnConflict.Excluded.apply(${ a: Ident })" => OnConflict.Excluded(a)
+    case q"$pack.OnConflict.Existing.apply(${ a: Ident })" => OnConflict.Existing(a)
     case q"$tree.ast" => Dynamic(tree)
   }
 
   implicit val optionOperationUnliftable: Unliftable[OptionOperation] = Unliftable[OptionOperation] {
-    case q"$pack.OptionMap.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })"    => OptionMap(a, b, c)
-    case q"$pack.OptionForall.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => OptionForall(a, b, c)
-    case q"$pack.OptionExists.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => OptionExists(a, b, c)
-    case q"$pack.OptionContains.apply(${ a: Ast }, ${ b: Ast })"              => OptionContains(a, b)
-    case q"$pack.OptionIsEmpty.apply(${ a: Ast })"                            => OptionIsEmpty(a)
-    case q"$pack.OptionNonEmpty.apply(${ a: Ast })"                           => OptionNonEmpty(a)
-    case q"$pack.OptionIsDefined.apply(${ a: Ast })"                          => OptionIsDefined(a)
+    case q"$pack.OptionFlatten.apply(${ a: Ast })"                             => OptionFlatten(a)
+    case q"$pack.OptionGetOrElse.apply(${ a: Ast }, ${ b: Ast })"              => OptionGetOrElse(a, b)
+    case q"$pack.OptionFlatMap.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => OptionFlatMap(a, b, c)
+    case q"$pack.OptionMap.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })"     => OptionMap(a, b, c)
+    case q"$pack.OptionForall.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })"  => OptionForall(a, b, c)
+    case q"$pack.OptionExists.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })"  => OptionExists(a, b, c)
+    case q"$pack.OptionContains.apply(${ a: Ast }, ${ b: Ast })"               => OptionContains(a, b)
+    case q"$pack.OptionIsEmpty.apply(${ a: Ast })"                             => OptionIsEmpty(a)
+    case q"$pack.OptionNonEmpty.apply(${ a: Ast })"                            => OptionNonEmpty(a)
+    case q"$pack.OptionIsDefined.apply(${ a: Ast })"                           => OptionIsDefined(a)
   }
 
   implicit val traversableOperationUnliftable: Unliftable[TraversableOperation] = Unliftable[TraversableOperation] {
@@ -123,6 +128,10 @@ trait Unliftables {
     case q"$pack.PropertyAlias.apply(${ a: List[String] }, ${ b: String })" => PropertyAlias(a, b)
   }
 
+  implicit val propertyUnliftable: Unliftable[Property] = Unliftable[Property] {
+    case q"$pack.Property.apply(${ a: Ast }, ${ b: String })" => Property(a, b)
+  }
+
   implicit def optionUnliftable[T](implicit u: Unliftable[T]): Unliftable[Option[T]] = Unliftable[Option[T]] {
     case q"scala.None"               => None
     case q"scala.Some.apply[$t]($v)" => Some(u.unapply(v).get)
@@ -136,11 +145,22 @@ trait Unliftables {
   }
 
   implicit val actionUnliftable: Unliftable[Action] = Unliftable[Action] {
-    case q"$pack.Update.apply(${ a: Ast }, ${ b: List[Assignment] })"      => Update(a, b)
-    case q"$pack.Insert.apply(${ a: Ast }, ${ b: List[Assignment] })"      => Insert(a, b)
-    case q"$pack.Delete.apply(${ a: Ast })"                                => Delete(a)
+    case q"$pack.Update.apply(${ a: Ast }, ${ b: List[Assignment] })" => Update(a, b)
+    case q"$pack.Insert.apply(${ a: Ast }, ${ b: List[Assignment] })" => Insert(a, b)
+    case q"$pack.Delete.apply(${ a: Ast })" => Delete(a)
     case q"$pack.Returning.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => Returning(a, b, c)
-    case q"$pack.Foreach.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })"   => Foreach(a, b, c)
+    case q"$pack.Foreach.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => Foreach(a, b, c)
+    case q"$pack.OnConflict.apply(${ a: Ast }, ${ b: OnConflict.Target }, ${ c: OnConflict.Action })" => OnConflict(a, b, c)
+  }
+
+  implicit val conflictTargetUnliftable: Unliftable[OnConflict.Target] = Unliftable[OnConflict.Target] {
+    case q"$pack.OnConflict.NoTarget"                                 => OnConflict.NoTarget
+    case q"$pack.OnConflict.Properties.apply(${ a: List[Property] })" => OnConflict.Properties(a)
+  }
+
+  implicit val conflictActionUnliftable: Unliftable[OnConflict.Action] = Unliftable[OnConflict.Action] {
+    case q"$pack.OnConflict.Ignore"                                 => OnConflict.Ignore
+    case q"$pack.OnConflict.Update.apply(${ a: List[Assignment] })" => OnConflict.Update(a)
   }
 
   implicit val assignmentUnliftable: Unliftable[Assignment] = Unliftable[Assignment] {

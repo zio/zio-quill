@@ -3,7 +3,7 @@ set -e # Any subsequent(*) commands which fail will cause the shell script to ex
 chown root ~/.ssh/config
 chmod 644 ~/.ssh/config
 
-if [[ -n $SCALA_VERSION && $TRAVIS_PULL_REQUEST == "false" && $TRAVIS_BRANCH == "master" && $(cat version.sbt) != *"SNAPSHOT"* ]]
+if [[ $TRAVIS_PULL_REQUEST == "false" && $TRAVIS_BRANCH == "master" && $(cat version.sbt) != *"SNAPSHOT"* ]]
 then
     openssl aes-256-cbc -pass pass:$ENCRYPTION_PASSWORD -in ./build/secring.gpg.enc -out local.secring.gpg -d
     openssl aes-256-cbc -pass pass:$ENCRYPTION_PASSWORD -in ./build/pubring.gpg.enc -out local.pubring.gpg -d
@@ -21,7 +21,8 @@ then
     git reset --hard origin/master
     git push --delete origin website || true
 
-    sbt -DscalaVersion=$SCALA_VERSION ++$SCALA_VERSION 'release with-defaults'
+    sbt -DscalaVersion=$SCALA_VERSION_2_12 ++$SCALA_VERSION_2_12 'release with-defaults'
+    sbt -DscalaVersion=$SCALA_VERSION_2_11 ++$SCALA_VERSION_2_11 'release with-defaults'
 else
     echo Nothing to release
     exit 0

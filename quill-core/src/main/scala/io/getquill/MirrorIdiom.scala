@@ -40,6 +40,8 @@ class MirrorIdiom extends Idiom {
     case ast: QuotedReference      => ast.ast.token
     case ast: Lift                 => ast.token
     case ast: Assignment           => ast.token
+    case ast: OnConflict.Excluded  => ast.token
+    case ast: OnConflict.Existing  => ast.token
   }
 
   implicit def ifTokenizer(implicit liftTokenizer: Tokenizer[Lift]): Tokenizer[If] = Tokenizer[If] {
@@ -123,13 +125,16 @@ class MirrorIdiom extends Idiom {
   }
 
   implicit def optionOperationTokenizer(implicit liftTokenizer: Tokenizer[Lift]): Tokenizer[OptionOperation] = Tokenizer[OptionOperation] {
-    case OptionMap(ast, alias, body)    => stmt"${ast.token}.map((${alias.token}) => ${body.token})"
-    case OptionForall(ast, alias, body) => stmt"${ast.token}.forall((${alias.token}) => ${body.token})"
-    case OptionExists(ast, alias, body) => stmt"${ast.token}.exists((${alias.token}) => ${body.token})"
-    case OptionContains(ast, body)      => stmt"${ast.token}.contains(${body.token})"
-    case OptionIsEmpty(ast)             => stmt"${ast.token}.isEmpty"
-    case OptionNonEmpty(ast)            => stmt"${ast.token}.nonEmpty"
-    case OptionIsDefined(ast)           => stmt"${ast.token}.isDefined"
+    case OptionFlatten(ast)              => stmt"${ast.token}.flatten"
+    case OptionGetOrElse(ast, body)      => stmt"${ast.token}.getOrElse(${body.token})"
+    case OptionFlatMap(ast, alias, body) => stmt"${ast.token}.flatMap((${alias.token}) => ${body.token})"
+    case OptionMap(ast, alias, body)     => stmt"${ast.token}.map((${alias.token}) => ${body.token})"
+    case OptionForall(ast, alias, body)  => stmt"${ast.token}.forall((${alias.token}) => ${body.token})"
+    case OptionExists(ast, alias, body)  => stmt"${ast.token}.exists((${alias.token}) => ${body.token})"
+    case OptionContains(ast, body)       => stmt"${ast.token}.contains(${body.token})"
+    case OptionIsEmpty(ast)              => stmt"${ast.token}.isEmpty"
+    case OptionNonEmpty(ast)             => stmt"${ast.token}.nonEmpty"
+    case OptionIsDefined(ast)            => stmt"${ast.token}.isDefined"
   }
 
   implicit def traversableOperationTokenizer(implicit liftTokenizer: Tokenizer[Lift]): Tokenizer[TraversableOperation] = Tokenizer[TraversableOperation] {
@@ -178,12 +183,45 @@ class MirrorIdiom extends Idiom {
     case e => stmt"${e.name.token}"
   }
 
+  implicit val excludedTokenizer: Tokenizer[OnConflict.Excluded] = Tokenizer[OnConflict.Excluded] {
+    case OnConflict.Excluded(ident) => stmt"${ident.token}"
+  }
+
+  implicit val existingTokenizer: Tokenizer[OnConflict.Existing] = Tokenizer[OnConflict.Existing] {
+    case OnConflict.Existing(ident) => stmt"${ident.token}"
+  }
+
   implicit def actionTokenizer(implicit liftTokenizer: Tokenizer[Lift]): Tokenizer[Action] = Tokenizer[Action] {
     case Update(query, assignments)    => stmt"${query.token}.update(${assignments.token})"
     case Insert(query, assignments)    => stmt"${query.token}.insert(${assignments.token})"
     case Delete(query)                 => stmt"${query.token}.delete"
     case Returning(query, alias, body) => stmt"${query.token}.returning((${alias.token}) => ${body.token})"
     case Foreach(query, alias, body)   => stmt"${query.token}.foreach((${alias.token}) => ${body.token})"
+    case c: OnConflict                 => stmt"${c.token}"
+  }
+
+  implicit def conflictTokenizer(implicit liftTokenizer: Tokenizer[Lift]): Tokenizer[OnConflict] = {
+
+    def targetProps(l: List[Property]) = l.map(p => Transform(p) {
+      case Ident(_) => Ident("_")
+    })
+
+    implicit val conflictTargetTokenizer = Tokenizer[OnConflict.Target] {
+      case OnConflict.NoTarget          => stmt""
+      case OnConflict.Properties(props) => stmt"(${targetProps(props).token})"
+    }
+
+    val updateAssignsTokenizer = Tokenizer[Assignment] {
+      case Assignment(i, p, v) =>
+        stmt"(${i.token}, e) => ${p.token} -> ${scopedTokenizer(v)}"
+    }
+
+    Tokenizer[OnConflict] {
+      case OnConflict(i, t, OnConflict.Update(assign)) =>
+        stmt"${i.token}.onConflictUpdate${t.token}(${assign.map(updateAssignsTokenizer.token).mkStmt()})"
+      case OnConflict(i, t, OnConflict.Ignore) =>
+        stmt"${i.token}.onConflictIgnore${t.token}"
+    }
   }
 
   implicit def assignmentTokenizer(implicit liftTokenizer: Tokenizer[Lift]): Tokenizer[Assignment] = Tokenizer[Assignment] {

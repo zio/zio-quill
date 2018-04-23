@@ -61,6 +61,12 @@ trait ReifyLiftings {
         case ast: Lift =>
           (ast, ReifyLiftings(state + (encode(ast.name) -> reify(ast))))
 
+        case p: OptionFlatMap =>
+          super.apply(p) match {
+            case (p2 @ OptionFlatMap(_: CaseClassValueLift, _, _), _) => apply(lift(unparse(p2)))
+            case other => other
+          }
+
         case p: OptionMap =>
           super.apply(p) match {
             case (p2 @ OptionMap(_: CaseClassValueLift, _, _), _) => apply(lift(unparse(p2)))
