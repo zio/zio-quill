@@ -1,3 +1,7 @@
+# 2.4.2
+
+- [Fix for Nested Objects with Spark](https://github.com/getquill/quill/pull/1074)
+
 # 2.4.1
 
 - [Add support of upsert for Postgres and MySQL](https://github.com/getquill/quill/pull/987)
