@@ -24,6 +24,12 @@ import io.getquill.util.Messages.fail
 import io.getquill.monad.TwitterFutureIOMonad
 import io.getquill.context.Context
 
+sealed trait OperationType
+object OperationType {
+  case object Read extends OperationType
+  case object Write extends OperationType
+}
+
 class FinagleMysqlContext[N <: NamingStrategy](
   val naming:                               N,
   client:                                   OperationType => Client with Transactions,
@@ -43,8 +49,8 @@ class FinagleMysqlContext[N <: NamingStrategy](
 
   def this(naming: N, master: Client with Transactions, slave: Client with Transactions, timeZone: TimeZone) = {
     this(naming, _ match {
-      case Read  => slave
-      case Write => master
+      case OperationType.Read  => slave
+      case OperationType.Write => master
     }, timeZone, timeZone)
   }
 
@@ -87,7 +93,7 @@ class FinagleMysqlContext[N <: NamingStrategy](
       Future.join(
         client(Write).close(),
         client(Read).close()
-      )
+      ).unit
     )
 
   private val currentClient = new Local[Client]
@@ -172,10 +178,4 @@ class FinagleMysqlContext[N <: NamingStrategy](
     }.getOrElse {
       f(client(op))
     }
-}
-
-private sealed trait OperationType
-private object OperationType {
-  case object Read extends OperationType
-  case object Write extends OperationType
 }
