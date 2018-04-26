@@ -50,8 +50,7 @@ class FinagleMysqlContextSpec extends Spec {
     master: mysql.Client with mysql.Transactions,
     slave:  mysql.Client with mysql.Transactions
   ): FinagleMysqlContext[Literal] = {
-    new FinagleMysqlContext[Literal](Literal, master, slave, TimeZone.getDefault)
-      with TestEntities with TestEncoders with TestDecoders
+    new FinagleMysqlContext[Literal](Literal, master, slave, TimeZone.getDefault) with TestEntities with TestEncoders with TestDecoders
   }
 
   "master & slave client writes to master" in {
@@ -60,7 +59,7 @@ class FinagleMysqlContextSpec extends Spec {
     val context = masterSlaveContext(master, slave)
 
     import context._
-    await(context.run(qr4.insert(TestEntity4(0))))
+    await(context.run(query[TestEntity4].insert(TestEntity4(0))))
 
     master.methodCount.get() mustBe 1
     slave.methodCount.get() mustBe 0
@@ -72,7 +71,7 @@ class FinagleMysqlContextSpec extends Spec {
     val context = masterSlaveContext(master, slave)
 
     import context._
-    await(context.run(qr4))
+    await(context.run(query[TestEntity4]))
 
     master.methodCount.get() mustBe 0
     slave.methodCount.get() mustBe 1
