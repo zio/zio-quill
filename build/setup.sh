@@ -2,7 +2,7 @@
 
 DB_FILE=quill-jdbc/quill_test.db
 
-rm $DB_FILE
+rm -f $DB_FILE
 
 echo "Waiting for Sqlite"
 until sqlite3 $DB_FILE "SELECT 1" &> /dev/null
