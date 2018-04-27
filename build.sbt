@@ -277,8 +277,7 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
     "-Ywarn-dead-code",
     "-Ywarn-numeric-widen",
     "-Ywarn-value-discard",
-    "-Xfuture",
-    "-Ycache-macro-class-loader:last-modified"
+    "-Xfuture"
   ),
   scalacOptions ++= {
     CrossVersion.partialVersion(scalaVersion.value) match {
