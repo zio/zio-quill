@@ -296,7 +296,7 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
     .setPreference(IndentPackageBlocks, true)
     .setPreference(FormatXml, true)
     .setPreference(PreserveSpaceBeforeArguments, false)
-    .setPreference(DoubleIndentClassDeclaration, false)
+    .setPreference(DoubleIndentConstructorArguments, false)
     .setPreference(RewriteArrowSymbols, false)
     .setPreference(AlignSingleLineCaseStatements, true)
     .setPreference(AlignSingleLineCaseStatements.MaxArrowIndent, 40)
