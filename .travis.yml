@@ -33,6 +33,7 @@ env:
 jobs:
   include:
     - stage: release
+      if: branch = master
       env:
         - SCALA_VERSION_2_11=2.11.11
         - SCALA_VERSION_2_12=2.12.4
