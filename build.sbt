@@ -255,7 +255,7 @@ def updateWebsiteTag =
 lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
   organization := "io.getquill",
   scalaVersion := "2.11.12",
-  crossScalaVersions := Seq("2.11.12","2.12.4"),
+  crossScalaVersions := Seq("2.11.12","2.12.6"),
   libraryDependencies ++= Seq(
     "org.scalamacros" %% "resetallattrs"  % "1.0.0",
     "org.scalatest"   %%% "scalatest"     % "3.0.4"     % Test,
@@ -296,7 +296,7 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
     .setPreference(IndentPackageBlocks, true)
     .setPreference(FormatXml, true)
     .setPreference(PreserveSpaceBeforeArguments, false)
-    .setPreference(DoubleIndentClassDeclaration, false)
+    .setPreference(DoubleIndentConstructorArguments, false)
     .setPreference(RewriteArrowSymbols, false)
     .setPreference(AlignSingleLineCaseStatements, true)
     .setPreference(AlignSingleLineCaseStatements.MaxArrowIndent, 40)
