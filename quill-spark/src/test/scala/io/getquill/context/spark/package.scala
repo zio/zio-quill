@@ -13,6 +13,8 @@ package object spark {
       .appName("spark test")
       .getOrCreate()
 
+  sparkSession.sparkContext.setLogLevel("WARN")
+
   implicit val sqlContext = sparkSession.sqlContext
 
   val testContext = QuillSparkContext

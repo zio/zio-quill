@@ -281,11 +281,16 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
   ),
   scalacOptions ++= {
     CrossVersion.partialVersion(scalaVersion.value) match {
-      case Some((2, 11)) => Seq("-Xlint", "-Ywarn-unused-import")
-      case Some((2, 12)) => Seq("-Xlint:-unused,_", "-Ywarn-unused:imports")
+      case Some((2, 11)) => 
+        Seq("-Xlint", "-Ywarn-unused-import")
+      case Some((2, 12)) => 
+        Seq("-Xlint:-unused,_", 
+            "-Ywarn-unused:imports", 
+            "-Ycache-macro-class-loader:last-modified")
       case _ => Seq()
     }
   },
+  javaOptions ++= Seq("-Xms2G", "-Xmx2G")
   concurrentRestrictions in Global += Tags.limit(Tags.Test, 1),
   releasePublishArtifactsAction := PgpKeys.publishSigned.value,
   scoverage.ScoverageKeys.coverageMinimum := 96,
