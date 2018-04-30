@@ -88,7 +88,7 @@ lazy val `quill-spark` =
     .settings(mimaSettings: _*)
     .settings(
       crossScalaVersions := Seq("2.11.12"),
-      fork in Test := true,
+      fork in Test := false,
       libraryDependencies ++= Seq(
         "org.apache.spark" %% "spark-sql" % "2.2.0"
       )
