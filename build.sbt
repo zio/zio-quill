@@ -45,7 +45,8 @@ lazy val `quill-core` =
     ))
     .jsSettings(
       libraryDependencies += "org.scala-js" %%% "scalajs-java-time" % "0.2.2",
-      coverageExcludedPackages := ".*"
+      coverageExcludedPackages := ".*",
+      javaOptions := Seq()
     )
 
 lazy val `quill-core-jvm` = `quill-core`.jvm
@@ -56,7 +57,8 @@ lazy val `quill-sql` =
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .jsSettings(
-      coverageExcludedPackages := ".*"
+      coverageExcludedPackages := ".*",
+      javaOptions := Seq()
     )
     .dependsOn(`quill-core` % "compile->compile;test->test")
 
@@ -290,7 +292,7 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
       case _ => Seq()
     }
   },
-  javaOptions ++= Seq("-Xms2G", "-Xmx2G"),
+  javaOptions ++= Seq("-Xmx1G"),
   concurrentRestrictions in Global += Tags.limit(Tags.Test, 1),
   releasePublishArtifactsAction := PgpKeys.publishSigned.value,
   scoverage.ScoverageKeys.coverageMinimum := 96,
