@@ -447,6 +447,29 @@ class MirrorIdiomSpec extends Spec {
       stmt"${(q.ast: Ast).token}" mustEqual
         stmt"""querySchema("TestEntity").delete"""
     }
+
+    "onConflict" - {
+      val i = quote {
+        query[TestEntity].insert(t => t.s -> "a")
+      }
+      val t = stmt"""querySchema("TestEntity").insert(t => t.s -> "a")"""
+      "onConflictIgnore" in {
+        stmt"${(i.onConflictIgnore.ast: Ast).token}" mustEqual
+          stmt"$t.onConflictIgnore"
+      }
+      "onConflictIgnore(targets*)" in {
+        stmt"${(i.onConflictIgnore(_.i, _.s).ast: Ast).token}" mustEqual
+          stmt"$t.onConflictIgnore(_.i, _.s)"
+      }
+      "onConflictUpdate(assigns*)" in {
+        stmt"${(i.onConflictUpdate((t, e) => t.s -> e.s, (t, e) => t.i -> (t.i + 1)).ast: Ast).token}" mustEqual
+          stmt"$t.onConflictUpdate((t, e) => t.s -> e.s, (t, e) => t.i -> (t.i + 1))"
+      }
+      "onConflictUpdate(targets*)(assigns*)" in {
+        stmt"${(i.onConflictUpdate(_.i)((t, e) => t.s -> e.s).ast: Ast).token}" mustEqual
+          stmt"$t.onConflictUpdate(_.i)((t, e) => t.s -> e.s)"
+      }
+    }
   }
 
   "shows infix" - {
@@ -486,6 +509,27 @@ class MirrorIdiomSpec extends Spec {
   }
 
   "shows option operations" - {
+    "getOrElse" in {
+      val q = quote {
+        (o: Option[Int]) => o.getOrElse(1)
+      }
+      stmt"${(q.ast: Ast).token}" mustEqual
+        stmt"(o) => o.getOrElse(1)"
+    }
+    "flatten" in {
+      val q = quote {
+        (o: Option[Option[Int]]) => o.flatten
+      }
+      stmt"${(q.ast: Ast).token}" mustEqual
+        stmt"(o) => o.flatten"
+    }
+    "flatMap" in {
+      val q = quote {
+        (o: Option[Option[Int]]) => o.flatMap(v => v)
+      }
+      stmt"${(q.ast: Ast).token}" mustEqual
+        stmt"(o) => o.flatMap((v) => v)"
+    }
     "map" in {
       val q = quote {
         (o: Option[Int]) => o.map(v => v)

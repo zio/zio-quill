@@ -45,7 +45,8 @@ lazy val `quill-core` =
     ))
     .jsSettings(
       libraryDependencies += "org.scala-js" %%% "scalajs-java-time" % "0.2.2",
-      coverageExcludedPackages := ".*"
+      coverageExcludedPackages := ".*",
+      javaOptions := Seq()
     )
 
 lazy val `quill-core-jvm` = `quill-core`.jvm
@@ -56,7 +57,8 @@ lazy val `quill-sql` =
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .jsSettings(
-      coverageExcludedPackages := ".*"
+      coverageExcludedPackages := ".*",
+      javaOptions := Seq()
     )
     .dependsOn(`quill-core` % "compile->compile;test->test")
 
@@ -255,7 +257,7 @@ def updateWebsiteTag =
 lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
   organization := "io.getquill",
   scalaVersion := "2.11.12",
-  crossScalaVersions := Seq("2.11.12","2.12.4"),
+  crossScalaVersions := Seq("2.11.12","2.12.6"),
   libraryDependencies ++= Seq(
     "org.scalamacros" %% "resetallattrs"  % "1.0.0",
     "org.scalatest"   %%% "scalatest"     % "3.0.4"     % Test,
@@ -281,11 +283,16 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
   ),
   scalacOptions ++= {
     CrossVersion.partialVersion(scalaVersion.value) match {
-      case Some((2, 11)) => Seq("-Xlint", "-Ywarn-unused-import")
-      case Some((2, 12)) => Seq("-Xlint:-unused,_", "-Ywarn-unused:imports")
+      case Some((2, 11)) => 
+        Seq("-Xlint", "-Ywarn-unused-import")
+      case Some((2, 12)) => 
+        Seq("-Xlint:-unused,_", 
+            "-Ywarn-unused:imports", 
+            "-Ycache-macro-class-loader:last-modified")
       case _ => Seq()
     }
   },
+  javaOptions ++= Seq("-Xmx1G"),
   concurrentRestrictions in Global += Tags.limit(Tags.Test, 1),
   releasePublishArtifactsAction := PgpKeys.publishSigned.value,
   scoverage.ScoverageKeys.coverageMinimum := 96,
@@ -296,7 +303,7 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
     .setPreference(IndentPackageBlocks, true)
     .setPreference(FormatXml, true)
     .setPreference(PreserveSpaceBeforeArguments, false)
-    .setPreference(DoubleIndentClassDeclaration, false)
+    .setPreference(DoubleIndentConstructorArguments, false)
     .setPreference(RewriteArrowSymbols, false)
     .setPreference(AlignSingleLineCaseStatements, true)
     .setPreference(AlignSingleLineCaseStatements.MaxArrowIndent, 40)

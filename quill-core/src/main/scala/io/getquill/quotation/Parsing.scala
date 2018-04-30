@@ -41,6 +41,7 @@ trait Parsing {
     case `quotedAstParser`(value)            => value
     case `functionParser`(value)             => value
     case `actionParser`(value)               => value
+    case `conflictParser`(value)             => value
     case `infixParser`(value)                => value
     case `orderingParser`(value)             => value
     case `operationParser`(value)            => value
@@ -288,6 +289,12 @@ trait Parsing {
   private def ident(x: TermName): Ident = identClean(Ident(x.decodedName.toString))
 
   val optionOperationParser: Parser[OptionOperation] = Parser[OptionOperation] {
+    case q"$o.flatten[$t]($implicitBody)" if is[Option[Any]](o) =>
+      OptionFlatten(astParser(o))
+    case q"$o.getOrElse[$t]($body)" if is[Option[Any]](o) =>
+      OptionGetOrElse(astParser(o), astParser(body))
+    case q"$o.flatMap[$t]({($alias) => $body})" if is[Option[Any]](o) =>
+      OptionFlatMap(astParser(o), identParser(alias), astParser(body))
     case q"$o.map[$t]({($alias) => $body})" if is[Option[Any]](o) =>
       OptionMap(astParser(o), identParser(alias), astParser(body))
     case q"$o.forall({($alias) => $body})" if is[Option[Any]](o) =>
@@ -317,7 +324,7 @@ trait Parsing {
       ListContains(astParser(col), astParser(body))
   }
 
-  val propertyParser: Parser[Ast] = Parser[Ast] {
+  val propertyParser: Parser[Property] = Parser[Property] {
     case q"$e.get" if is[Option[Any]](e) =>
       c.fail("Option.get is not supported since it's an unsafe operation. Use `forall` or `exists` instead.")
     case q"$e.$property" => Property(astParser(e), property.decodedName.toString)
@@ -453,6 +460,10 @@ trait Parsing {
 
   val valueParser: Parser[Ast] = Parser[Ast] {
     case q"null"                         => NullValue
+    case q"scala.None"                   => NullValue
+    case q"scala.Option.empty[$t]"       => NullValue
+    case q"scala.Some.apply[$t]($v)"     => astParser(v)
+    case q"scala.Option.apply[$t]($v)"   => astParser(v)
     case Literal(c.universe.Constant(v)) => Constant(v)
     case q"((..$v))" if (v.size > 1)     => Tuple(v.map(astParser(_)))
     case q"new $ccTerm(..$v)" if (isCaseClass(c.WeakTypeTag(ccTerm.tpe.erasure))) => {
@@ -535,9 +546,38 @@ trait Parsing {
       checkTypes(prop, value)
       Assignment(i1, astParser(prop), astParser(value))
 
+    case q"((${ identParser(i1) }, ${ identParser(i2) }) => $pack.Predef.ArrowAssoc[$t]($prop).$arrow[$v]($value))" =>
+      checkTypes(prop, value)
+      val valueAst = Transform(astParser(value)) {
+        case `i1` => OnConflict.Existing(i1)
+        case `i2` => OnConflict.Excluded(i2)
+      }
+      Assignment(i1, astParser(prop), valueAst)
     // Unused, it's here only to make eclipse's presentation compiler happy
     case astParser(ast) => Assignment(Ident("unused"), Ident("unused"), Constant("unused"))
   }
+
+  val conflictParser: Parser[Ast] = Parser[Ast] {
+    case q"$query.onConflictIgnore" =>
+      OnConflict(astParser(query), OnConflict.NoTarget, OnConflict.Ignore)
+    case q"$query.onConflictIgnore(..$targets)" =>
+      OnConflict(astParser(query), parseConflictProps(targets), OnConflict.Ignore)
+
+    case q"$query.onConflictUpdate(..$assigns)" =>
+      OnConflict(astParser(query), OnConflict.NoTarget, parseConflictAssigns(assigns))
+    case q"$query.onConflictUpdate(..$targets)(..$assigns)" =>
+      OnConflict(astParser(query), parseConflictProps(targets), parseConflictAssigns(assigns))
+  }
+
+  private def parseConflictProps(targets: List[Tree]) = OnConflict.Properties {
+    targets.map {
+      case q"($e) => $prop" => propertyParser(prop)
+      case tree             => c.fail(s"Tree '$tree' can't be parsed as conflict target")
+    }
+  }
+
+  private def parseConflictAssigns(targets: List[Tree]) =
+    OnConflict.Update(targets.map(assignmentParser(_)))
 
   private def checkTypes(lhs: Tree, rhs: Tree): Unit = {
     def unquoted(tree: Tree) =

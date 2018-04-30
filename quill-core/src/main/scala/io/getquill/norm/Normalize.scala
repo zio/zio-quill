@@ -27,6 +27,7 @@ object Normalize extends StatelessTransformer {
       case SymbolicReduction(query)         => norm(query)
       case AdHocReduction(query)            => norm(query)
       case OrderTerms(query)                => norm(query)
+      case NormalizeAggregationIdent(query) => norm(query)
       case other                            => other
     }
 }

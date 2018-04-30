@@ -29,6 +29,10 @@ object RenameProperties extends StatelessTransformer {
             val bodyr = BetaReduction(body, replace: _*)
             (Returning(action, alias, bodyr), schema)
         }
+      case OnConflict(a: Action, target, act) =>
+        applySchema(a) match {
+          case (action, schema) => (OnConflict(action, target, act), schema)
+        }
       case q => (q, Tuple(List.empty))
     }
 

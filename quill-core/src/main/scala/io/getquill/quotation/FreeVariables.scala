@@ -22,6 +22,8 @@ case class FreeVariables(state: State)
 
   override def apply(o: OptionOperation): (OptionOperation, StatefulTransformer[State]) =
     o match {
+      case q @ OptionFlatMap(a, b, c) =>
+        (q, free(a, b, c))
       case q @ OptionMap(a, b, c) =>
         (q, free(a, b, c))
       case q @ OptionForall(a, b, c) =>
@@ -48,6 +50,8 @@ case class FreeVariables(state: State)
       case other =>
         super.apply(other)
     }
+
+  override def apply(e: OnConflict.Target): (OnConflict.Target, StatefulTransformer[State]) = (e, this)
 
   override def apply(query: Query): (Query, StatefulTransformer[State]) =
     query match {

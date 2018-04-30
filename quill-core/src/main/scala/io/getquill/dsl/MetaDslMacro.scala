@@ -212,7 +212,9 @@ class MetaDslMacro(val c: MacroContext) {
                 nest(tpe, term)
             }
 
-          if (is[Option[Any]](tpe)) {
+          if (isNone(tpe)) {
+            c.fail("Cannot handle untyped `None` objects. Use a cast e.g. `None:Option[String]` or `Option.empty`.")
+          } else if (is[Option[Any]](tpe)) {
             value(tpe.typeArgs.head).copy(optional = true)
           } else {
             value(tpe)
@@ -250,6 +252,9 @@ class MetaDslMacro(val c: MacroContext) {
 
     filterExcludes(apply(tpe, term = None, nested = false))
   }
+
+  private def isNone(tpe: Type) =
+    tpe.typeSymbol.name.toString == "None"
 
   private def isTuple(tpe: Type) =
     tpe.typeSymbol.name.toString.startsWith("Tuple")

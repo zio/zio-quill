@@ -703,7 +703,74 @@ val a = quote {
 ctx.run(a)
 // DELETE FROM Person WHERE name = ''
 ```
- 
+
+### insert or update (upsert, conflict)
+
+Upsert is only supported by Postgres and MySQL
+
+#### Postgres
+Ignore conflict
+```scala
+val a = quote {
+  query[Product].insert(_.id -> 1, _.sku -> 10).onConflictIgnore
+}
+
+// INSERT INTO Product AS t (id,sku) VALUES (1, 10) ON CONFLICT DO NOTHING
+```
+
+Ignore conflict by explicitly setting conflict target
+```scala
+val a = quote {
+  query[Product].insert(_.id -> 1, _.sku -> 10).onConflictIgnore(_.id)
+}
+
+// INSERT INTO Product AS t (id,sku) VALUES (1, 10) ON CONFLICT (id) DO NOTHING
+```
+
+Resolve conflict by updating existing row if needed. In `onConflictUpdate(target)((t, e) => assignment)`: `target` refers to
+conflict target, `t` - to existing row and `e` - to excluded, e.g. row proposed for insert.
+```scala
+val a = quote {
+  query[Product]
+    .insert(_.id -> 1, _.sku -> 10)
+    .onConflictUpdate(_.id)((t, e) => t.sku -> (t.sku + e.sku))
+}
+
+// INSERT INTO Product AS t (id,sku) VALUES (1, 10) ON CONFLICT (id) DO UPDATE SET sku = (t.sku + EXCLUDED.sku)
+```
+
+#### MySQL
+
+Ignore any conflict, e.g. `insert ignore`
+```scala
+val a = quote {
+  query[Product].insert(_.id -> 1, _.sku -> 10).onConflictIgnore
+}
+
+// INSERT IGNORE INTO Product (id,sku) VALUES (1, 10)
+```
+
+Ignore duplicate key conflict by explicitly setting it
+```scala
+val a = quote {
+  query[Product].insert(_.id -> 1, _.sku -> 10).onConflictIgnore(_.id)
+}
+
+// INSERT INTO Product (id,sku) VALUES (1, 10) ON DUPLICATE KEY UPDATE id=id
+```
+
+Resolve duplicate key by updating existing row if needed. In `onConflictUpdate((t, e) => assignment)`: `t` refers to
+existing row and `e` - to values, e.g. values proposed for insert.
+```scala
+val a = quote {
+  query[Product]
+    .insert(_.id -> 1, _.sku -> 10)
+    .onConflictUpdate((t, e) => t.sku -> (t.sku + e.sku))
+}
+
+// INSERT INTO Product (id,sku) VALUES (1, 10) ON DUPLICATE KEY UPDATE sku = (sku + VALUES(sku))
+```
+
 ## IO Monad
 
 Quill provides an IO monad that allows the user to express multiple computations and execute them separately. This mechanism is also known as a free monad, which provides a way of expressing computations as referentially-transparent values and isolates the unsafe IO operations into a single operation. For instance:
@@ -1338,7 +1405,7 @@ Quill provides a fully type-safe way to use Spark's highly-optimized SQL engine.
 ### sbt dependency
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-spark" % "2.3.4-SNAPSHOT"
+  "io.getquill" %% "quill-spark" % "2.4.3-SNAPSHOT"
 )
 ```
 
@@ -1464,7 +1531,7 @@ The body of `transaction` can contain calls to other methods and multiple `run` 
 ```
 libraryDependencies ++= Seq(
   "mysql" % "mysql-connector-java" % "5.1.38",
-  "io.getquill" %% "quill-jdbc" % "2.3.4-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "2.4.3-SNAPSHOT"
 )
 ```
 
@@ -1491,7 +1558,7 @@ ctx.connectionTimeout=30000
 ```
 libraryDependencies ++= Seq(
   "org.postgresql" % "postgresql" % "9.4.1208",
-  "io.getquill" %% "quill-jdbc" % "2.3.4-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "2.4.3-SNAPSHOT"
 )
 ```
 
@@ -1517,7 +1584,7 @@ ctx.connectionTimeout=30000
 ```
 libraryDependencies ++= Seq(
   "org.xerial" % "sqlite-jdbc" % "3.18.0",
-  "io.getquill" %% "quill-jdbc" % "2.3.4-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "2.4.3-SNAPSHOT"
 )
 ```
 
@@ -1538,7 +1605,7 @@ ctx.jdbcUrl=jdbc:sqlite:/path/to/db/file.db
 ```
 libraryDependencies ++= Seq(
   "com.h2database" % "h2" % "1.4.192",
-  "io.getquill" %% "quill-jdbc" % "2.3.4-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "2.4.3-SNAPSHOT"
 )
 ```
 
@@ -1560,7 +1627,7 @@ ctx.dataSource.user=sa
 ```
 libraryDependencies ++= Seq(
   "com.microsoft.sqlserver" % "mssql-jdbc" % "6.1.7.jre8-preview",
-  "io.getquill" %% "quill-jdbc" % "2.3.4-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "2.4.3-SNAPSHOT"
 )
 ```
 
@@ -1665,7 +1732,7 @@ ctx.queryTimeout=10m
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async-mysql" % "2.3.4-SNAPSHOT"
+  "io.getquill" %% "quill-async-mysql" % "2.4.3-SNAPSHOT"
 )
 ```
 
@@ -1689,7 +1756,7 @@ ctx.url=mysql://host:3306/database?user=root&password=root
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async-postgres" % "2.3.4-SNAPSHOT"
+  "io.getquill" %% "quill-async-postgres" % "2.4.3-SNAPSHOT"
 )
 ```
 
@@ -1726,7 +1793,7 @@ The body of `transaction` can contain calls to other methods and multiple `run` 
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-finagle-mysql" % "2.3.4-SNAPSHOT"
+  "io.getquill" %% "quill-finagle-mysql" % "2.4.3-SNAPSHOT"
 )
 ```
 
@@ -1766,7 +1833,7 @@ The body of `transaction` can contain calls to other methods and multiple `run` 
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-finagle-postgres" % "2.3.4-SNAPSHOT"
+  "io.getquill" %% "quill-finagle-postgres" % "2.4.3-SNAPSHOT"
 )
 ```
 
@@ -1793,7 +1860,7 @@ ctx.binaryParams=false
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-cassandra" % "2.3.4-SNAPSHOT"
+  "io.getquill" %% "quill-cassandra" % "2.4.3-SNAPSHOT"
 )
 ```
 
@@ -1834,7 +1901,7 @@ ctx.session.addressTranslator=com.datastax.driver.core.policies.IdentityTranslat
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-orientdb" % "2.3.4-SNAPSHOT"
+  "io.getquill" %% "quill-orientdb" % "2.4.3-SNAPSHOT"
 )
 ```
 
@@ -1913,6 +1980,7 @@ See the [LICENSE](https://github.com/getquill/quill/blob/master/LICENSE.txt) fil
 # Maintainers
 
 - @fwbrasil (creator)
+- @deusaquilus
 - @gustavoamigo
 - @jilen
 - @mentegy

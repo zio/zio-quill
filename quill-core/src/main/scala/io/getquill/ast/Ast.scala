@@ -72,6 +72,9 @@ case class Ident(name: String) extends Ast
 case class Property(ast: Ast, name: String) extends Ast
 
 sealed trait OptionOperation extends Ast
+case class OptionFlatten(ast: Ast) extends OptionOperation
+case class OptionGetOrElse(ast: Ast, body: Ast) extends OptionOperation
+case class OptionFlatMap(ast: Ast, alias: Ident, body: Ast) extends OptionOperation
 case class OptionMap(ast: Ast, alias: Ident, body: Ast) extends OptionOperation
 case class OptionForall(ast: Ast, alias: Ident, body: Ast) extends OptionOperation
 case class OptionExists(ast: Ast, alias: Ident, body: Ast) extends OptionOperation
@@ -126,6 +129,20 @@ case class Returning(action: Ast, alias: Ident, property: Ast) extends Action
 
 case class Foreach(query: Ast, alias: Ident, body: Ast) extends Action
 
+case class OnConflict(insert: Ast, target: OnConflict.Target, action: OnConflict.Action) extends Action
+object OnConflict {
+
+  case class Excluded(alias: Ident) extends Ast
+  case class Existing(alias: Ident) extends Ast
+
+  sealed trait Target
+  case object NoTarget extends Target
+  case class Properties(props: List[Property]) extends Target
+
+  sealed trait Action
+  case object Ignore extends Action
+  case class Update(assignments: List[Assignment]) extends Action
+}
 //************************************************************
 
 case class Dynamic(tree: Any) extends Ast
