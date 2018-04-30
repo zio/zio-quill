@@ -292,7 +292,7 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
       case _ => Seq()
     }
   },
-  javaOptions ++= Seq("-Xmx2G"),
+  javaOptions ++= Seq("-Xmx1G"),
   concurrentRestrictions in Global += Tags.limit(Tags.Test, 1),
   releasePublishArtifactsAction := PgpKeys.publishSigned.value,
   scoverage.ScoverageKeys.coverageMinimum := 96,
