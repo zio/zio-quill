@@ -6,12 +6,16 @@ object NormalizeReturning {
 
   def apply(e: Action): Action = {
     e match {
-      case Returning(Insert(query, assignments), alias, body) =>
-        Returning(Insert(query, filterReturnedColumn(assignments, body)), alias, body)
-      case Returning(Update(query, assignments), alias, body) =>
-        Returning(Update(query, filterReturnedColumn(assignments, body)), alias, body)
-      case e => e
+      case Returning(a: Action, alias, body) => Returning(apply(a, body), alias, body)
+      case _                                 => e
     }
+  }
+
+  private def apply(e: Action, body: Ast): Action = e match {
+    case Insert(query, assignments)         => Insert(query, filterReturnedColumn(assignments, body))
+    case Update(query, assignments)         => Update(query, filterReturnedColumn(assignments, body))
+    case OnConflict(a: Action, target, act) => OnConflict(apply(a, body), target, act)
+    case _                                  => e
   }
 
   private def filterReturnedColumn(assignments: List[Assignment], column: Ast): List[Assignment] =

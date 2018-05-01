@@ -17,9 +17,10 @@ RUN apt-get update; \
     curl -sL https://deb.nodesource.com/setup_8.x | bash -; \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends nodejs
 
-ENV SBT_VERSION 1.0.4
+ENV SBT_VERSION 1.1.1
 ENV SBT_HOME /usr/local/sbt
 ENV PATH ${PATH}:${SBT_HOME}/bin
+ENV JAVA_OPTS "-Dquill.macro.log=false -Xmx2G"
 
 # Install sbt
 RUN curl -sL "https://github.com/sbt/sbt/releases/download/v$SBT_VERSION/sbt-$SBT_VERSION.tgz" | gunzip | tar -x -C /usr/local --strip-components=1 && \

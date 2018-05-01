@@ -1,13 +1,9 @@
 package io.getquill.context.sql.idiom
 
-import io.getquill.Spec
-import io.getquill.Literal
-import io.getquill.MySQLDialect
-import io.getquill.SqlMirrorContext
-import io.getquill.TestEntities
+import io.getquill._
 import io.getquill.idiom.StringToken
 
-class MySQLDialectSpec extends Spec {
+class MySQLDialectSpec extends OnConflictSpec {
 
   val ctx = new SqlMirrorContext(MySQLDialect, Literal) with TestEntities
   import ctx._
@@ -85,5 +81,26 @@ class MySQLDialectSpec extends Spec {
     }
     ctx.run(q).string mustEqual
       "INSERT INTO TestEntity4 (i) VALUES (DEFAULT)"
+  }
+
+  "OnConflict" - {
+    "no target - ignore" in {
+      ctx.run(`no target - ignore`.dynamic).string mustEqual
+        "INSERT IGNORE INTO TestEntity (s,i,l,o) VALUES (?, ?, ?, ?)"
+
+    }
+    "cols target - ignore" in {
+      ctx.run(`cols target - ignore`.dynamic).string mustEqual
+        "INSERT INTO TestEntity (s,i,l,o) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE i=i"
+    }
+    "no target - update" in {
+      ctx.run(`no target - update`).string mustEqual
+        "INSERT INTO TestEntity (s,i,l,o) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE l = ((l + VALUES(l)) / 2), s = VALUES(s)"
+    }
+    "cols target - update" in {
+      intercept[IllegalStateException] {
+        ctx.run(`cols target - update`.dynamic)
+      }
+    }
   }
 }

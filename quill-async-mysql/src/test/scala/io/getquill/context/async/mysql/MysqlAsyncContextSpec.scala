@@ -45,4 +45,9 @@ class MysqlAsyncContextSpec extends Spec {
     }
     ctx.close
   }
+
+  override protected def beforeAll(): Unit = {
+    await(testContext.run(qr1.delete))
+    ()
+  }
 }

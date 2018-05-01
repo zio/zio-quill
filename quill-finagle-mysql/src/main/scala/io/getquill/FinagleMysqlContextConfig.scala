@@ -21,12 +21,15 @@ case class FinagleMysqlContextConfig(config: Config) {
   def bufferSize = Try(config.getInt("pool.bufferSize")).getOrElse(0)
   def maxWaiters = Try(config.getInt("pool.maxWaiters")).getOrElse(Int.MaxValue)
   def maxPrepareStatements = Try(config.getInt("maxPrepareStatements")).getOrElse(20)
+  def connectTimeout = Try(config.getInt("connectTimeout")).getOrElse(1)
 
   def client =
     Mysql.client
       .withCredentials(user, password)
       .withDatabase(database)
       .withMaxConcurrentPrepareStatements(maxPrepareStatements)
+      .withTransport
+      .connectTimeout(connectTimeout.second)
       .configured(DefaultPool.Param(
         low = lowWatermark, high = highWatermark,
         idleTime = idleTime.seconds,

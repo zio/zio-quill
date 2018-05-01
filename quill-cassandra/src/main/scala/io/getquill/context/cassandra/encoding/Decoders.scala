@@ -42,6 +42,8 @@ trait Decoders extends CollectionDecoders {
   implicit val bigDecimalDecoder: Decoder[BigDecimal] =
     decoder((index, row) => row.getDecimal(index))
   implicit val booleanDecoder: Decoder[Boolean] = decoder(_.getBool)
+  implicit val byteDecoder: Decoder[Byte] = decoder(_.getByte)
+  implicit val shortDecoder: Decoder[Short] = decoder(_.getShort)
   implicit val intDecoder: Decoder[Int] = decoder(_.getInt)
   implicit val longDecoder: Decoder[Long] = decoder(_.getLong)
   implicit val floatDecoder: Decoder[Float] = decoder(_.getFloat)

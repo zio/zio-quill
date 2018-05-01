@@ -41,6 +41,7 @@ trait Parsing {
     case `quotedAstParser`(value)            => value
     case `functionParser`(value)             => value
     case `actionParser`(value)               => value
+    case `conflictParser`(value)             => value
     case `infixParser`(value)                => value
     case `orderingParser`(value)             => value
     case `operationParser`(value)            => value
@@ -323,7 +324,7 @@ trait Parsing {
       ListContains(astParser(col), astParser(body))
   }
 
-  val propertyParser: Parser[Ast] = Parser[Ast] {
+  val propertyParser: Parser[Property] = Parser[Property] {
     case q"$e.get" if is[Option[Any]](e) =>
       c.fail("Option.get is not supported since it's an unsafe operation. Use `forall` or `exists` instead.")
     case q"$e.$property" => Property(astParser(e), property.decodedName.toString)
@@ -545,9 +546,38 @@ trait Parsing {
       checkTypes(prop, value)
       Assignment(i1, astParser(prop), astParser(value))
 
+    case q"((${ identParser(i1) }, ${ identParser(i2) }) => $pack.Predef.ArrowAssoc[$t]($prop).$arrow[$v]($value))" =>
+      checkTypes(prop, value)
+      val valueAst = Transform(astParser(value)) {
+        case `i1` => OnConflict.Existing(i1)
+        case `i2` => OnConflict.Excluded(i2)
+      }
+      Assignment(i1, astParser(prop), valueAst)
     // Unused, it's here only to make eclipse's presentation compiler happy
     case astParser(ast) => Assignment(Ident("unused"), Ident("unused"), Constant("unused"))
   }
+
+  val conflictParser: Parser[Ast] = Parser[Ast] {
+    case q"$query.onConflictIgnore" =>
+      OnConflict(astParser(query), OnConflict.NoTarget, OnConflict.Ignore)
+    case q"$query.onConflictIgnore(..$targets)" =>
+      OnConflict(astParser(query), parseConflictProps(targets), OnConflict.Ignore)
+
+    case q"$query.onConflictUpdate(..$assigns)" =>
+      OnConflict(astParser(query), OnConflict.NoTarget, parseConflictAssigns(assigns))
+    case q"$query.onConflictUpdate(..$targets)(..$assigns)" =>
+      OnConflict(astParser(query), parseConflictProps(targets), parseConflictAssigns(assigns))
+  }
+
+  private def parseConflictProps(targets: List[Tree]) = OnConflict.Properties {
+    targets.map {
+      case q"($e) => $prop" => propertyParser(prop)
+      case tree             => c.fail(s"Tree '$tree' can't be parsed as conflict target")
+    }
+  }
+
+  private def parseConflictAssigns(targets: List[Tree]) =
+    OnConflict.Update(targets.map(assignmentParser(_)))
 
   private def checkTypes(lhs: Tree, rhs: Tree): Unit = {
     def unquoted(tree: Tree) =

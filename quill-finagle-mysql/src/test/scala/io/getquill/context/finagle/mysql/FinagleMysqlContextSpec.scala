@@ -1,10 +1,10 @@
 package io.getquill.context.finagle.mysql
 
 import java.util.TimeZone
-
 import com.twitter.finagle.mysql
 import com.twitter.finagle.mysql.{ EmptyValue, Error }
 import com.twitter.util._
+import io.getquill.context.sql.{ TestDecoders, TestEncoders }
 import io.getquill.{ FinagleMysqlContext, _ }
 
 class FinagleMysqlContextSpec extends Spec {
@@ -46,11 +46,47 @@ class FinagleMysqlContextSpec extends Spec {
     new FinagleMysqlContext(Literal, "testDB", TimeZone.getDefault, TimeZone.getDefault).close
   }
 
+  def masterSlaveContext(
+    master: mysql.Client with mysql.Transactions,
+    slave:  mysql.Client with mysql.Transactions
+  ): FinagleMysqlContext[Literal] = {
+    new FinagleMysqlContext[Literal](Literal, master, slave, TimeZone.getDefault) with TestEntities with TestEncoders with TestDecoders
+  }
+
+  "master & slave client writes to master" in {
+    val master = new OkTestClient
+    val slave = new OkTestClient
+    val context = masterSlaveContext(master, slave)
+
+    import context._
+    await(context.run(query[TestEntity4].insert(TestEntity4(0))))
+
+    master.methodCount.get() mustBe 1
+    slave.methodCount.get() mustBe 0
+  }
+
+  "master & slave client reads from slave" in {
+    val master = new OkTestClient
+    val slave = new OkTestClient
+    val context = masterSlaveContext(master, slave)
+
+    import context._
+    await(context.run(query[TestEntity4]))
+
+    master.methodCount.get() mustBe 0
+    slave.methodCount.get() mustBe 1
+  }
+
   "fail in toOk" in {
     object ctx extends FinagleMysqlContext(Literal, "testDB") {
       override def toOk(result: mysql.Result) = super.toOk(result)
     }
     intercept[IllegalStateException](ctx.toOk(Error(-1, "no ok", "test")))
     ctx.close
+  }
+
+  override protected def beforeAll(): Unit = {
+    await(testContext.run(qr1.delete))
+    ()
   }
 }

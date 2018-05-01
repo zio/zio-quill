@@ -11,6 +11,9 @@ case class AddressableContact(firstName: String, lastName: String, age: Int, str
 case class ContactSimplified(firstName: String, lastNameRenamed: String, firstReverse: String)
 case class ContactSimplifiedMapped(firstNameMapped: String, lastNameMapped: String, firstReverseMapped: String)
 
+case class ContactAndAddress(c: Contact, a: Address)
+case class Note(owner: String, content: String)
+
 class CaseClassQuerySpec extends Spec {
 
   val context = io.getquill.context.sql.testContext
@@ -24,21 +27,27 @@ class CaseClassQuerySpec extends Spec {
   import testContext._
   import sqlContext.implicits._
 
-  val peopleEntries = liftQuery {
-    Seq(
-      Contact("Alex", "Jones", 60, 2, "foo"),
-      Contact("Bert", "James", 55, 3, "bar"),
-      Contact("Cora", "Jasper", 33, 3, "baz")
-    ).toDS()
-  }
+  val peopleList = Seq(
+    Contact("Alex", "Jones", 60, 2, "foo"),
+    Contact("Bert", "James", 55, 3, "bar"),
+    Contact("Cora", "Jasper", 33, 3, "baz")
+  )
+  val peopleEntries = liftQuery(peopleList.toDS())
 
-  val addressEntries = liftQuery {
-    Seq(
-      Address(1, "123 Fake Street", 11234, "something"),
-      Address(2, "456 Old Street", 45678, "something else"),
-      Address(3, "789 New Street", 89010, "another thing")
-    ).toDS()
-  }
+  val addressList = Seq(
+    Address(1, "123 Fake Street", 11234, "something"),
+    Address(2, "456 Old Street", 45678, "something else"),
+    Address(3, "789 New Street", 89010, "another thing")
+  )
+  val addressEntries = liftQuery(addressList.toDS())
+
+  val noteList = Seq(
+    Note("Alex", "Foo"),
+    Note("Alex", "Bar"),
+    Note("Bert", "Baz"),
+    Note("Bert", "Taz")
+  )
+  val noteEntries = liftQuery(noteList.toDS())
 
   val reverse = quote {
     (str: String) => infix"reverse(${str})".as[String]
@@ -61,6 +70,163 @@ class CaseClassQuerySpec extends Spec {
     )
   }
 
+  "Simple Join, Ad-Hoc Case Class, Filtered Union" in {
+    val q = quote {
+      for {
+        p <- (peopleEntries.filter(_.age >= 60)) ++ (peopleEntries.filter(_.age < 60))
+        a <- addressEntries if p.addressFk == a.id
+      } yield {
+        new AddressableContact(p.firstName, p.lastName, p.age, a.street, a.zip)
+      }
+    }
+
+    testContext.run(q).collect() should contain theSameElementsAs Seq(
+      AddressableContact("Alex", "Jones", 60, "456 Old Street", 45678),
+      AddressableContact("Bert", "James", 55, "789 New Street", 89010),
+      AddressableContact("Cora", "Jasper", 33, "789 New Street", 89010)
+    )
+  }
+
+  "Simple Join, Ad-Hoc Case Class, Filtered Union Distinct" in {
+    val q = quote {
+      (for {
+        // returns a duplicate record that should be deduped
+        p <- (peopleEntries.filter(_.age >= 60)) ++ (peopleEntries.filter(_.age <= 60))
+        a <- addressEntries if p.addressFk == a.id
+      } yield {
+        new AddressableContact(p.firstName, p.lastName, p.age, a.street, a.zip)
+      }).distinct
+    }
+
+    testContext.run(q).collect() should contain theSameElementsAs Seq(
+      AddressableContact("Alex", "Jones", 60, "456 Old Street", 45678),
+      AddressableContact("Bert", "James", 55, "789 New Street", 89010),
+      AddressableContact("Cora", "Jasper", 33, "789 New Street", 89010)
+    )
+  }
+
+  "Simple Join Nested Objects Explicit and Ad-Hoc Case Class" in {
+    val q = quote {
+      for {
+        p <- peopleEntries
+        a <- addressEntries if p.addressFk == a.id
+      } yield (p, a, AddressableContact(p.firstName, p.lastName, p.age, a.street, a.zip))
+    }
+    testContext.run(q).collect() should contain theSameElementsAs Seq(
+      (Contact("Alex", "Jones", 60, 2, "foo"), Address(2, "456 Old Street", 45678, "something else"), AddressableContact("Alex", "Jones", 60, "456 Old Street", 45678)),
+      (Contact("Bert", "James", 55, 3, "bar"), Address(3, "789 New Street", 89010, "another thing"), AddressableContact("Bert", "James", 55, "789 New Street", 89010)),
+      (Contact("Cora", "Jasper", 33, 3, "baz"), Address(3, "789 New Street", 89010, "another thing"), AddressableContact("Cora", "Jasper", 33, "789 New Street", 89010))
+    )
+  }
+
+  "Simple Join Nested Objects" in {
+    val q = quote {
+      peopleEntries.join(addressEntries).on(_.addressFk == _.id)
+    }
+    testContext.run(q).collect() should contain theSameElementsAs Seq(
+      (Contact("Alex", "Jones", 60, 2, "foo"), Address(2, "456 Old Street", 45678, "something else")),
+      (Contact("Bert", "James", 55, 3, "bar"), Address(3, "789 New Street", 89010, "another thing")),
+      (Contact("Cora", "Jasper", 33, 3, "baz"), Address(3, "789 New Street", 89010, "another thing"))
+    )
+  }
+
+  "Simple Join Nested Object" in {
+    val q = quote {
+      for {
+        p <- peopleEntries
+        a <- addressEntries if p.addressFk == a.id
+      } yield (p, a)
+    }
+  }
+
+  "Simple Join Nested Objects Explicit Distinct" in {
+    val q = quote {
+      (for {
+        p <- peopleEntries
+        a <- addressEntries if p.addressFk == a.id
+      } yield (p, a)).distinct
+    }
+    testContext.run(q).show()
+    testContext.run(q).collect() should contain theSameElementsAs Seq(
+      (Contact("Alex", "Jones", 60, 2, "foo"), Address(2, "456 Old Street", 45678, "something else")),
+      (Contact("Bert", "James", 55, 3, "bar"), Address(3, "789 New Street", 89010, "another thing")),
+      (Contact("Cora", "Jasper", 33, 3, "baz"), Address(3, "789 New Street", 89010, "another thing"))
+    )
+  }
+
+  "Simple Join Nested Objects Explicit Union Distinct" in {
+    val q = quote {
+      (for {
+        p <- (peopleEntries ++ peopleEntries)
+        a <- addressEntries if p.addressFk == a.id
+      } yield (p, a)).distinct
+    }
+    testContext.run(q).collect() should contain theSameElementsAs Seq(
+      (Contact("Alex", "Jones", 60, 2, "foo"), Address(2, "456 Old Street", 45678, "something else")),
+      (Contact("Bert", "James", 55, 3, "bar"), Address(3, "789 New Street", 89010, "another thing")),
+      (Contact("Cora", "Jasper", 33, 3, "baz"), Address(3, "789 New Street", 89010, "another thing"))
+    )
+  }
+
+  "Simple Join Nested Objects Explicit Union Distinct with Filters" in {
+    val q = quote {
+      (for {
+        p <- (peopleEntries.filter(_.age == 55) ++ peopleEntries.filter(_.age == 33) ++ peopleEntries.filter(_.age <= 33))
+        a <- addressEntries if p.addressFk == a.id
+      } yield (p, a)).distinct
+    }
+    testContext.run(q).collect() should contain theSameElementsAs Seq(
+      (Contact("Bert", "James", 55, 3, "bar"), Address(3, "789 New Street", 89010, "another thing")),
+      (Contact("Cora", "Jasper", 33, 3, "baz"), Address(3, "789 New Street", 89010, "another thing"))
+    )
+  }
+
+  "Three Level Join with Two Nested Distincts and Nested Objects" in {
+    val peopleAndIds = quote {
+      for {
+        id <- noteEntries
+        person <- peopleEntries if person.firstName == id.owner
+      } yield (person)
+    }
+
+    val q = quote {
+      (for {
+        p <- peopleAndIds.distinct
+        a <- addressEntries if p.addressFk == a.id
+      } yield (p, a)).distinct
+    }
+
+    testContext.run(q).collect() should contain theSameElementsAs Seq(
+      (Contact("Bert", "James", 55, 3, "bar"), Address(3, "789 New Street", 89010, "another thing")),
+      (Contact("Alex", "Jones", 60, 2, "foo"), Address(2, "456 Old Street", 45678, "something else"))
+    )
+  }
+
+  "Simple Join Nested Objects Case Class" in {
+    val q = quote {
+      for {
+        p <- peopleEntries
+        a <- addressEntries if p.addressFk == a.id
+      } yield ContactAndAddress(p, a)
+    }
+    testContext.run(q).collect() should contain theSameElementsAs Seq(
+      ContactAndAddress(Contact("Alex", "Jones", 60, 2, "foo"), Address(2, "456 Old Street", 45678, "something else")),
+      ContactAndAddress(Contact("Bert", "James", 55, 3, "bar"), Address(3, "789 New Street", 89010, "another thing")),
+      ContactAndAddress(Contact("Cora", "Jasper", 33, 3, "baz"), Address(3, "789 New Street", 89010, "another thing"))
+    )
+  }
+
+  "Simple Left Join Optional Objects" in {
+    val q = quote {
+      peopleEntries.leftJoin(addressEntries).on(_.addressFk == _.id)
+    }
+    testContext.run(q).collect() should contain theSameElementsAs Seq(
+      (Contact("Alex", "Jones", 60, 2, "foo"), Some(Address(2, "456 Old Street", 45678, "something else"))),
+      (Contact("Bert", "James", 55, 3, "bar"), Some(Address(3, "789 New Street", 89010, "another thing"))),
+      (Contact("Cora", "Jasper", 33, 3, "baz"), Some(Address(3, "789 New Street", 89010, "another thing")))
+    )
+  }
+
   "Simple Join - External Map" in {
     val q = quote {
       for {
@@ -75,7 +241,6 @@ class CaseClassQuerySpec extends Spec {
     val mapped = dataset.map(ac => ContactSimplified(ac.firstName, ac.lastName, ac.firstName.reverse))
 
     mapped.collect() should contain theSameElementsAs expectedData
-
   }
 
   "Simple Select" in {
@@ -165,4 +330,15 @@ class CaseClassQuerySpec extends Spec {
     )
   }
 
+  "Nested Class Right Join" in {
+    val q = quote {
+      for {
+        a <- addressEntries
+        p <- peopleEntries if p.addressFk == a.id
+      } yield (a, p)
+    }
+
+    val expected = addressList.flatMap(a => peopleList.filter(_.addressFk == a.id).map(p => (a, p)))
+    testContext.run(q).collect() should contain theSameElementsAs expected
+  }
 }

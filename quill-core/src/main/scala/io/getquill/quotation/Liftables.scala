@@ -21,9 +21,9 @@ trait Liftables {
     case ast: Assignment => assignmentLiftable(ast)
     case ast: OptionOperation => optionOperationLiftable(ast)
     case ast: TraversableOperation => traversableOperationLiftable(ast)
+    case ast: Property => propertyLiftable(ast)
     case Val(name, body) => q"$pack.Val($name, $body)"
     case Block(statements) => q"$pack.Block($statements)"
-    case Property(a, b) => q"$pack.Property($a, $b)"
     case Function(a, b) => q"$pack.Function($a, $b)"
     case FunctionApply(a, b) => q"$pack.FunctionApply($a, $b)"
     case BinaryOperation(a, b, c) => q"$pack.BinaryOperation($a, $b, $c)"
@@ -33,6 +33,8 @@ trait Liftables {
     case Dynamic(tree: Tree) if (tree.tpe <:< c.weakTypeOf[CoreDsl#Quoted[Any]]) => q"$tree.ast"
     case Dynamic(tree: Tree) => q"$pack.Constant($tree)"
     case QuotedReference(tree: Tree, ast) => q"$ast"
+    case OnConflict.Excluded(a) => q"$pack.OnConflict.Excluded($a)"
+    case OnConflict.Existing(a) => q"$pack.OnConflict.Existing($a)"
   }
 
   implicit val optionOperationLiftable: Liftable[OptionOperation] = Liftable[OptionOperation] {
@@ -116,6 +118,10 @@ trait Liftables {
     case PropertyAlias(a, b) => q"$pack.PropertyAlias($a, $b)"
   }
 
+  implicit val propertyLiftable: Liftable[Property] = Liftable[Property] {
+    case Property(a, b) => q"$pack.Property($a, $b)"
+  }
+
   implicit val orderingLiftable: Liftable[Ordering] = Liftable[Ordering] {
     case TupleOrdering(elems) => q"$pack.TupleOrdering($elems)"
     case Asc                  => q"$pack.Asc"
@@ -134,11 +140,22 @@ trait Liftables {
   }
 
   implicit val actionLiftable: Liftable[Action] = Liftable[Action] {
-    case Update(a, b)       => q"$pack.Update($a, $b)"
-    case Insert(a, b)       => q"$pack.Insert($a, $b)"
-    case Delete(a)          => q"$pack.Delete($a)"
-    case Returning(a, b, c) => q"$pack.Returning($a, $b, $c)"
-    case Foreach(a, b, c)   => q"$pack.Foreach($a, $b, $c)"
+    case Update(a, b)        => q"$pack.Update($a, $b)"
+    case Insert(a, b)        => q"$pack.Insert($a, $b)"
+    case Delete(a)           => q"$pack.Delete($a)"
+    case Returning(a, b, c)  => q"$pack.Returning($a, $b, $c)"
+    case Foreach(a, b, c)    => q"$pack.Foreach($a, $b, $c)"
+    case OnConflict(a, b, c) => q"$pack.OnConflict($a, $b, $c)"
+  }
+
+  implicit val conflictTargetLiftable: Liftable[OnConflict.Target] = Liftable[OnConflict.Target] {
+    case OnConflict.NoTarget      => q"$pack.OnConflict.NoTarget"
+    case OnConflict.Properties(a) => q"$pack.OnConflict.Properties.apply($a)"
+  }
+
+  implicit val conflictActionLiftable: Liftable[OnConflict.Action] = Liftable[OnConflict.Action] {
+    case OnConflict.Ignore    => q"$pack.OnConflict.Ignore"
+    case OnConflict.Update(a) => q"$pack.OnConflict.Update.apply($a)"
   }
 
   implicit val assignmentLiftable: Liftable[Assignment] = Liftable[Assignment] {

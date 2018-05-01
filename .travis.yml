@@ -9,7 +9,7 @@ before_script:
   - ./build/pull_docker_images.sh
 script:
   - travis_retry docker-compose run setup
-  - travis_wait 120 docker-compose run sbt bash -c "./build/build.sh"
+  - docker-compose run sbt bash -c "./build/build.sh"
 after_success:
   - ./build/push_docker_images.sh
   - pip install --user codecov && codecov
@@ -29,11 +29,13 @@ env:
     - secure: YWJ9ho4mwXjy4GrnbjehDlP5wFA6P8KLZMb+jOCEFNI9wKSiKzUUeIqGNog6Q9KCHE+RMEFz/kqE+7jNhhOgGGv0mRF0RVfHL0SkamhD0NMxiC1vITk3+oqMi/v1sK/V88WbfM4+1sAcFqV7yoptyWw/Db7U/MdLcRZaVe2zMz6s4P811CZjpT2Y/EkwxWcxejTCxptAvAkIfrgIyI28xW9hgA9oWvQJjD42ShKd445AC9qNq8E2cY8ukFIMik/FNHYWQMmdUTYOqX68O6fn2lPcIayPNCl0UuY6L9DB0KS0ZxrItX6/0JQU/CR8iFHWxshACvxLAMLUofPl/0QVkoSVaCGrKCX8WpjQ4K2FV/xiXa6xPXSFcI4RRsGkpXe3S6BHdWdH7whEsLDhvIJN3WQREWYqujXNi2imCO08+N0/GuDxfIcCzkrsEZYk5d1h8HQTk6Ml9ahhbL5EbrgEO6z8C/cLoSwebeYPeO7Wlw8y1f0pT8yIMH0cAI0PrdUzhQOgSgMUZGgntCynHyJymwtlHV7y829qsxvf3M0IpjCwK3VAdQLQKt2evFOT2hIbubpzvR6u26zeflpiMr/U8/uZnu3XYCPFLwkAZEDLb1LNfDiXOZY+cG+aX0R/m3hPDv5G5iH0OCTCwJ/usGSRMxdhwgQqltXrhGLUkvKcy8w=
   matrix:
     - SCALA_VERSION=2.11.11
-    - SCALA_VERSION=2.12.4
+    - SCALA_VERSION=2.12.6
 jobs:
   include:
     - stage: release
-      env: SCALA_VERSION
+      if: branch = master
+      env:
+        - SCALA_VERSION_2_11=2.11.11
+        - SCALA_VERSION_2_12=2.12.6
       script:
-        - docker-compose run sbt bash -c "SCALA_VERSION=2.12.4 ./build/release.sh"
-        - docker-compose run sbt bash -c "SCALA_VERSION=2.11.11 ./build/release.sh"
+        - docker-compose run release

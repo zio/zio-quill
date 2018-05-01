@@ -77,7 +77,7 @@ Create TABLE BooleanEncodingTestEntity(
 
 CREATE TABLE TestEntity(
     s VARCHAR(255),
-    i INTEGER,
+    i INTEGER primary key,
     l BIGINT,
     o INTEGER
 );
@@ -127,26 +127,4 @@ CREATE TABLE Contact(
     age int,
     addressFk int,
     extraInfo VARCHAR(255)
-);
-
-CREATE TABLE Address(
-    id int,
-    street VARCHAR(255),
-    zip int,
-    otherExtraInfo VARCHAR(255)
-);
-
-CREATE TABLE Contact(
-    firstName VARCHAR(255),
-    lastName VARCHAR(255),
-    age int,
-    addressFk int,
-    extraInfo VARCHAR(255)
-);
-
-CREATE TABLE Address(
-    id int,
-    street VARCHAR(255),
-    zip int,
-    otherExtraInfo VARCHAR(255)
 );
