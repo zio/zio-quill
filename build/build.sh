@@ -6,6 +6,7 @@ chmod 644 ~/.ssh/config
 
 SBT_CMD="sbt 'project $PROJECT' -DscalaVersion=$TRAVIS_SCALA_VERSION ++$TRAVIS_SCALA_VERSION clean"
 echo $SBT_CMD
+echo TRAVIS_PULL_REQUEST $TRAVIS_PULL_REQUEST
 
 if [[ $TRAVIS_SCALA_VERSION == 2.11* ]]
 then
