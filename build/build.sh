@@ -4,17 +4,17 @@ set -e # Any subsequent(*) commands which fail will cause the shell script to ex
 chown root ~/.ssh/config
 chmod 644 ~/.ssh/config
 
-SBT_CMD="sbt 'project $PROJECT' -DscalaVersion=$SCALA_VERSION ++$SCALA_VERSION clean"
+SBT_CMD="sbt 'project $PROJECT' -DscalaVersion=$TRAVIS_SCALA_VERSION ++$TRAVIS_SCALA_VERSION clean"
 echo $SBT_CMD
 
-if [[ $SCALA_VERSION == 2.11* ]]
+if [[ $TRAVIS_SCALA_VERSION == 2.11* ]]
 then
     SBT_CMD+=" coverage test tut coverageReport coverageAggregate checkUnformattedFiles"
-elif [[ $SCALA_VERSION == 2.12* ]]
+elif [[ $TRAVIS_SCALA_VERSION == 2.12* ]]
 then
     SBT_CMD+=" test"
 else
-    echo "Invalid scala version $SCALA_VERSION"
+    echo "Invalid scala version $TRAVIS_SCALA_VERSION"
     exit 1
 fi
 
