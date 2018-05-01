@@ -35,7 +35,6 @@ abstract class CassandraSessionContext[N <: NamingStrategy](
 
   protected lazy val session = cluster.connect(keyspace)
 
-
   protected val udtMetadata: Map[String, List[UserType]] = cluster.getMetadata.getKeyspaces.asScala.toList
     .flatMap(_.getUserTypes.asScala)
     .groupBy(_.getTypeName)
