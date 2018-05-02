@@ -1,6 +1,6 @@
 package io.getquill
 
-import io.getquill.ast.Ast
+import io.getquill.ast._
 import io.getquill.context.sql.{ FlattenSqlQuery, SqlQuery }
 import io.getquill.idiom.{ Statement, StringToken, Token }
 import io.getquill.context.sql.idiom.SqlIdiom
@@ -31,6 +31,12 @@ trait SQLServerDialect
       case flatten: FlattenSqlQuery if flatten.orderBy.isEmpty && flatten.offset.nonEmpty =>
         fail(s"SQLServer does not support OFFSET without ORDER BY")
       case other => super.sqlQueryTokenizer.token(other)
+    }
+
+  override implicit def operationTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Operation] =
+    Tokenizer[Operation] {
+      case BinaryOperation(a, StringOperator.`+`, b) => stmt"${scopedTokenizer(a)} + ${scopedTokenizer(b)}"
+      case other                                     => super.operationTokenizer.token(other)
     }
 }
 
