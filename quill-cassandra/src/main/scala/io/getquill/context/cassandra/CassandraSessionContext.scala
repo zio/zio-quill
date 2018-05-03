@@ -33,7 +33,7 @@ abstract class CassandraSessionContext[N <: NamingStrategy](
   private val preparedStatementCache =
     new PrepareStatementCache(preparedStatementCacheSize)
 
-  protected val session = cluster.connect(keyspace)
+  protected lazy val session = cluster.connect(keyspace)
 
   protected val udtMetadata: Map[String, List[UserType]] = cluster.getMetadata.getKeyspaces.asScala.toList
     .flatMap(_.getUserTypes.asScala)
