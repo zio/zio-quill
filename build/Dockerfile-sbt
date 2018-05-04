@@ -20,7 +20,7 @@ RUN apt-get update; \
 ENV SBT_VERSION 1.1.1
 ENV SBT_HOME /usr/local/sbt
 ENV PATH ${PATH}:${SBT_HOME}/bin
-ENV JAVA_OPTS "-Dquill.macro.log=false -Xmx1G"
+ENV JAVA_OPTS "-Dquill.macro.log=false -Xmx3G"
 
 # Install sbt
 RUN curl -sL "https://github.com/sbt/sbt/releases/download/v$SBT_VERSION/sbt-$SBT_VERSION.tgz" | gunzip | tar -x -C /usr/local --strip-components=1 && \

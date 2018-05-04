@@ -12,6 +12,14 @@ class SQLServerDialectSpec extends Spec {
   val ctx = new SqlMirrorContext(SQLServerDialect, Literal) with TestEntities
   import ctx._
 
+  "uses + instead of ||" in {
+    val q = quote {
+      qr1.map(t => t.s + t.s)
+    }
+    ctx.run(q).string mustEqual
+      "SELECT t.s + t.s FROM TestEntity t"
+  }
+
   "top" in {
     val q = quote {
       qr1.take(15).map(t => t.i)
