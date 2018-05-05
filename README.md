@@ -1931,9 +1931,9 @@ sbt -Dquill.macro.log=false
 
 Quill uses SLF4J for logging. Each context logs queries which are currently executed.
 It also logs the list of parameters which are bound into prepared statement if any.
-To disable that use `quill.binds.log` option:
+To enable that use `quill.binds.log` option:
 ```
-java -Dquill.binds.log=false -jar myapp.jar
+java -Dquill.binds.log=true -jar myapp.jar
 ```
 
 # Additional resources
