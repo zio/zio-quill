@@ -8,13 +8,15 @@ enablePlugins(TutPlugin)
 
 lazy val scalaVersionProperty = Option(System.getProperty("scalaVersion"))
 
+lazy val isScala211 = scalaVersionProperty.map(_.startsWith("2.11")).getOrElse(true)
+
 lazy val modules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-core-jvm`, `quill-core-js`, `quill-sql-jvm`, `quill-sql-js`,
   `quill-jdbc`, `quill-finagle-mysql`, `quill-finagle-postgres`, `quill-async`,
   `quill-async-mysql`, `quill-async-postgres`, `quill-cassandra`, `quill-orientdb`
 ) ++ 
   Seq[sbt.ClasspathDep[sbt.ProjectReference]](`quill-spark`)
-    .filter(_ => scalaVersionProperty.map(_.startsWith("2.11")).getOrElse(true))
+    .filter(_ => isScala211)
 
 lazy val `quill` =
   (project in file("."))
@@ -188,7 +190,7 @@ lazy val `tut-settings` = Seq(
       }
       Seq()
     }.taskValue
-)
+).filter(_ => isScala211)
 
 lazy val mimaSettings = MimaPlugin.mimaDefaultSettings ++ Seq(
   mimaPreviousArtifacts := {

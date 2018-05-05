@@ -1,0 +1,19 @@
+[0m[[0m[0minfo[0m] [0m[0mLoading settings from plugins.sbt ...[0m
+[0m[[0m[0minfo[0m] [0m[0mLoading project definition from /Users/fbrasil/workspace/quill/project[0m
+[0m[[0m[0minfo[0m] [0m[0mLoading settings from version.sbt,build.sbt ...[0m
+[0m[[0m[0minfo[0m] [0m[0mSet current project to quill (in build file:/Users/fbrasil/workspace/quill/)[0m
+[0m[[0m[0minfo[0m] [0m[0mIn file:/Users/fbrasil/workspace/quill/[0m
+[0m[[0m[0minfo[0m] [0m[0m	 * quill[0m
+[0m[[0m[0minfo[0m] [0m[0m	   quill-async[0m
+[0m[[0m[0minfo[0m] [0m[0m	   quill-async-mysql[0m
+[0m[[0m[0minfo[0m] [0m[0m	   quill-async-postgres[0m
+[0m[[0m[0minfo[0m] [0m[0m	   quill-cassandra[0m
+[0m[[0m[0minfo[0m] [0m[0m	   quill-coreJS[0m
+[0m[[0m[0minfo[0m] [0m[0m	   quill-coreJVM[0m
+[0m[[0m[0minfo[0m] [0m[0m	   quill-finagle-mysql[0m
+[0m[[0m[0minfo[0m] [0m[0m	   quill-finagle-postgres[0m
+[0m[[0m[0minfo[0m] [0m[0m	   quill-jdbc[0m
+[0m[[0m[0minfo[0m] [0m[0m	   quill-orientdb[0m
+[0m[[0m[0minfo[0m] [0m[0m	   quill-spark[0m
+[0m[[0m[0minfo[0m] [0m[0m	   quill-sqlJS[0m
+[0m[[0m[0minfo[0m] [0m[0m	   quill-sqlJVM[0m
