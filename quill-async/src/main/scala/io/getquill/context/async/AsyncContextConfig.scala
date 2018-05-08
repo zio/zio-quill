@@ -55,7 +55,7 @@ abstract class AsyncContextConfig[C <: Connection](
     maximumMessageSize.foreach(p => c = c.copy(maximumMessageSize = p))
     connectTimeout.foreach(p => c = c.copy(connectTimeout = p))
     testTimeout.foreach(p => c = c.copy(testTimeout = p))
-    queryTimeout.foreach(p => c = c.copy(queryTimeout = p))
+    c = c.copy(queryTimeout = queryTimeout)
     c
   }
 
