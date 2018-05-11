@@ -97,7 +97,7 @@ lazy val `quill-finagle-mysql` =
     .settings(mimaSettings: _*)
     .settings(
       libraryDependencies ++= Seq(
-        "com.twitter" %% "finagle-mysql" % "18.2.0"
+        "com.twitter" %% "finagle-mysql" % "18.5.0"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
