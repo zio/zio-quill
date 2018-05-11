@@ -12,6 +12,9 @@ case class ContactSimplified(firstName: String, lastNameRenamed: String, firstRe
 case class ContactSimplifiedMapped(firstNameMapped: String, lastNameMapped: String, firstReverseMapped: String)
 
 case class ContactAndAddress(c: Contact, a: Address)
+case class AddressAndOptionalContext(a: Address, c: Option[Contact])
+case class OptionalContextAndOptionalContext(c1: Option[Contact], c2: Option[Contact])
+case class AddressAndOptionalContextHolder(i: Int, aoc: Option[AddressAndOptionalContext])
 case class Note(owner: String, content: String)
 
 class CaseClassQuerySpec extends Spec {
@@ -130,12 +133,132 @@ class CaseClassQuerySpec extends Spec {
     )
   }
 
-  "Simple Join Nested Object" in {
+  "Simple Join Nested Object For Comprehension" in {
     val q = quote {
       for {
         p <- peopleEntries
         a <- addressEntries if p.addressFk == a.id
       } yield (p, a)
+    }
+    testContext.run(q).collect() should contain theSameElementsAs Seq(
+      (Contact("Alex", "Jones", 60, 2, "foo"), Address(2, "456 Old Street", 45678, "something else")),
+      (Contact("Bert", "James", 55, 3, "bar"), Address(3, "789 New Street", 89010, "another thing")),
+      (Contact("Cora", "Jasper", 33, 3, "baz"), Address(3, "789 New Street", 89010, "another thing"))
+    )
+  }
+
+  "Simple Left Join Nested Object Left For Comprehension" in {
+    val q = quote {
+      for {
+        a <- addressEntries
+        p <- peopleEntries.leftJoin(_.addressFk == a.id)
+      } yield (a, p)
+    }
+    testContext.run(q).collect() should contain theSameElementsAs Seq(
+      (Address(1, "123 Fake Street", 11234, "something"), None),
+      (Address(2, "456 Old Street", 45678, "something else"), Some(Contact("Alex", "Jones", 60, 2, "foo"))),
+      (Address(3, "789 New Street", 89010, "another thing"), Some(Contact("Bert", "James", 55, 3, "bar"))),
+      (Address(3, "789 New Street", 89010, "another thing"), Some(Contact("Cora", "Jasper", 33, 3, "baz")))
+    )
+  }
+
+  "Simple Left Join Nested Object For Comprehension Recursive" in {
+    val q = quote {
+      for {
+        a <- addressEntries
+        p <- peopleEntries.leftJoin(_.addressFk == a.id)
+      } yield AddressAndOptionalContext(a, p)
+    }
+    testContext.run(q).collect() should contain theSameElementsAs Seq(
+      AddressAndOptionalContext(Address(1, "123 Fake Street", 11234, "something"), None),
+      AddressAndOptionalContext(Address(2, "456 Old Street", 45678, "something else"), Some(Contact("Alex", "Jones", 60, 2, "foo"))),
+      AddressAndOptionalContext(Address(3, "789 New Street", 89010, "another thing"), Some(Contact("Bert", "James", 55, 3, "bar"))),
+      AddressAndOptionalContext(Address(3, "789 New Street", 89010, "another thing"), Some(Contact("Cora", "Jasper", 33, 3, "baz")))
+    )
+  }
+
+  "Simple Left Join Nested Object For Comprehension Recursive Two Level" in {
+    val q = quote {
+      for {
+        a <- addressEntries
+        p <- peopleEntries.leftJoin(_.addressFk == a.id)
+      } yield AddressAndOptionalContextHolder(1, Option(AddressAndOptionalContext(a, p)))
+    }
+    testContext.run(q).collect() should contain theSameElementsAs Seq(
+      AddressAndOptionalContextHolder(1, Some(AddressAndOptionalContext(Address(1, "123 Fake Street", 11234, "something"), None))),
+      AddressAndOptionalContextHolder(1, Some(AddressAndOptionalContext(Address(2, "456 Old Street", 45678, "something else"), Some(Contact("Alex", "Jones", 60, 2, "foo"))))),
+      AddressAndOptionalContextHolder(1, Some(AddressAndOptionalContext(Address(3, "789 New Street", 89010, "another thing"), Some(Contact("Bert", "James", 55, 3, "bar"))))),
+      AddressAndOptionalContextHolder(1, Some(AddressAndOptionalContext(Address(3, "789 New Street", 89010, "another thing"), Some(Contact("Cora", "Jasper", 33, 3, "baz")))))
+    )
+  }
+
+  "Left Join Nested Object Advanced Cases" - {
+    val a1 = Address(1, "123 Fake Street", 11234, "something")
+    val a2 = Address(2, "456 Old Street", 45678, "something else")
+    val a3 = Address(3, "789 New Street", 89010, "another thing")
+
+    val c2 = Contact("Alex", "Jones", 60, 2, "foo")
+    val c3a = Contact("Bert", "James", 55, 3, "bar")
+    val c3b = Contact("Cora", "Jasper", 33, 3, "baz")
+
+    "Multi Level Tuple" in {
+      val q = quote {
+        for {
+          a <- addressEntries
+          p <- peopleEntries.leftJoin(_.addressFk == a.id)
+        } yield (a, (a, p))
+      }
+      testContext.run(q).collect() should contain theSameElementsAs Seq(
+        (a1, (a1, None)),
+        (a2, (a2, Some(c2))),
+        (a3, (a3, Some(c3a))),
+        (a3, (a3, Some(c3b)))
+      )
+    }
+
+    "Multi Level Tuple Double Null" in {
+      val q = quote {
+        for {
+          a <- addressEntries
+          p <- peopleEntries.leftJoin(_.addressFk == a.id)
+        } yield (a, Option((p, p)))
+      }
+      testContext.run(q).collect() should contain theSameElementsAs Seq(
+        (a1, None),
+        (a2, Some((Some(c2), Some(c2)))),
+        (a3, Some((Some(c3a), Some(c3a)))),
+        (a3, Some((Some(c3b), Some(c3b))))
+      )
+    }
+
+    "Tuple with Multilevel Object" in {
+      val q = quote {
+        for {
+          a <- addressEntries
+          p <- peopleEntries.leftJoin(_.addressFk == a.id)
+        } yield (a, AddressAndOptionalContext(a, p))
+      }
+      testContext.run(q).collect() should contain theSameElementsAs Seq(
+        (a1, AddressAndOptionalContext(a1, None)),
+        (a2, AddressAndOptionalContext(a2, Some(c2))),
+        (a3, AddressAndOptionalContext(a3, Some(c3a))),
+        (a3, AddressAndOptionalContext(a3, Some(c3b)))
+      )
+    }
+
+    "Multi Level Tuple Double Null Case Class" in {
+      val q = quote {
+        for {
+          a <- addressEntries
+          p <- peopleEntries.leftJoin(_.addressFk == a.id)
+        } yield (a, Option(OptionalContextAndOptionalContext(p, p)))
+      }
+      testContext.run(q).collect() should contain theSameElementsAs Seq(
+        (a1, None),
+        (a2, Some(OptionalContextAndOptionalContext(Some(c2), Some(c2)))),
+        (a3, Some(OptionalContextAndOptionalContext(Some(c3a), Some(c3a)))),
+        (a3, Some(OptionalContextAndOptionalContext(Some(c3b), Some(c3b))))
+      )
     }
   }
 
@@ -146,7 +269,6 @@ class CaseClassQuerySpec extends Spec {
         a <- addressEntries if p.addressFk == a.id
       } yield (p, a)).distinct
     }
-    testContext.run(q).show()
     testContext.run(q).collect() should contain theSameElementsAs Seq(
       (Contact("Alex", "Jones", 60, 2, "foo"), Address(2, "456 Old Street", 45678, "something else")),
       (Contact("Bert", "James", 55, 3, "bar"), Address(3, "789 New Street", 89010, "another thing")),
