@@ -8,18 +8,18 @@ import scala.annotation.tailrec
 class ContextLogger(name: String) {
   val underlying = Logger(LoggerFactory.getLogger(name))
 
-  private val bindsDisabled = sys.props.get("quill.binds.log").contains("false")
+  private val bindsEnabled = sys.props.get("quill.binds.log").contains("true")
   private val nullToken = "null"
 
   def logQuery(query: String, params: Seq[Any]): Unit = {
-    if (bindsDisabled || params.isEmpty) underlying.debug(query)
+    if (!bindsEnabled || params.isEmpty) underlying.debug(query)
     else {
       underlying.debug("{} - binds: {}", query, prepareParams(params))
     }
   }
 
   def logBatchItem(query: String, params: Seq[Any]): Unit = {
-    if (!bindsDisabled) {
+    if (bindsEnabled) {
       underlying.debug("{} - batch item: {}", query, prepareParams(params))
     }
   }
