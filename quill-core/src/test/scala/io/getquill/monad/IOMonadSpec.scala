@@ -15,6 +15,8 @@ trait IOMonadSpec extends Spec {
 
   def eval[T](io: IO[T, _]): T
 
+  def resultValue[T](x: T): Result[T]
+
   "IO companion object" - {
 
     "fromTry" - {
@@ -383,6 +385,20 @@ trait IOMonadSpec extends Spec {
         val t = Failure[Int](new Exception)
         val io = IO.fromTry(t).recoverWith { case _ => IO(2) }
         eval(io) mustEqual 2
+      }
+      "flatMap and recoverWith" in {
+        var evalCount = 0
+        val e = new Exception("failure")
+        val io = Run(() => {
+          evalCount += 1
+          resultValue[Int](1)
+        }).flatMap { _ =>
+          IO.failed(e)
+        }.recoverWith {
+          case _: VirtualMachineError => IO.successful(-1) // won't match the error
+        }
+        Try(eval(io)) mustEqual Failure(e)
+        evalCount mustEqual 1
       }
     }
 

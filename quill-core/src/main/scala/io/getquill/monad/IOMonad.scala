@@ -80,10 +80,7 @@ trait IOMonad {
       }
 
     def lowerFromTry[U](implicit ev: T => Try[U]) =
-      map(ev).flatMap {
-        case Success(v) => IO.successful(v)
-        case Failure(e) => IO.failed(e)
-      }
+      transform(_.flatMap(ev))
 
     def liftToTry: IO[Try[T], E] =
       transformWith(IO.successful)
@@ -91,15 +88,15 @@ trait IOMonad {
     def failed: IO[Throwable, E] =
       transform {
         case Failure(t) => Success(t)
-        case Success(v) => Failure(new NoSuchElementException("IO.failed not completed with a throwable."))
+        case Success(_) => Failure(new NoSuchElementException("IO.failed not completed with a throwable."))
       }
 
     def map[S](f: T => S): IO[S, E] = transform(_.map(f))
 
     def flatMap[S, E2 <: Effect](f: T => IO[S, E2]): IO[S, E with E2] =
       transformWith {
-        case Success(s) => f(s)
-        case Failure(_) => this.asInstanceOf[IO[S, E with E2]]
+        case Success(s)     => f(s)
+        case f @ Failure(_) => IO.fromTry[S](f.asInstanceOf[Failure[S]]).asInstanceOf[IO[S, E with E2]]
       }
 
     def filter(p: T => Boolean): IO[T, E] =
@@ -117,8 +114,8 @@ trait IOMonad {
 
     def recoverWith[U >: T, E2 <: Effect](pf: PartialFunction[Throwable, IO[U, E2]]): IO[U, E with E2] =
       transformWith {
-        case Failure(t) => pf.applyOrElse(t, (_: Throwable) => this)
-        case Success(_) => this
+        case Failure(t)     => pf.applyOrElse(t, (t: Throwable) => IO.failed(t))
+        case s @ Success(_) => IO.fromTry(s)
       }
 
     def zip[S, E2 <: Effect](io: IO[S, E2]): IO[(T, S), E with E2] =
