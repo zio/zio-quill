@@ -37,9 +37,9 @@ class OkTestClient extends mysql.Client with mysql.Transactions {
     }
   }
 
-  override def ping(): Future[mysql.Result] = {
+  override def ping(): Future[Unit] = {
     methodCount.incrementAndGet()
-    Future(ok)
+    Future.Unit
   }
 
   override def transaction[T](f: mysql.Client => Future[T]): Future[T] = {

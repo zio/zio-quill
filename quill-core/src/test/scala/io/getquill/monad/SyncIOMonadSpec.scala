@@ -8,6 +8,8 @@ class SyncIOMonadSpec extends IOMonadSpec {
   override def eval[T](io: IO[T, _]) =
     performIO[T](io)
 
+  override def resultValue[T](x: T): Result[T] = x
+
   "runIO" - {
     "RunQuerySingleResult" in {
       val q = quote(qr1.map(_.i).max)
