@@ -114,7 +114,7 @@ trait IOMonad {
 
     def recoverWith[U >: T, E2 <: Effect](pf: PartialFunction[Throwable, IO[U, E2]]): IO[U, E with E2] =
       transformWith {
-        case Failure(t)     => pf.applyOrElse(t, (t: Throwable) => IO.failed(t))
+        case Failure(t)     => pf.applyOrElse(t, IO.failed _)
         case s @ Success(_) => IO.fromTry(s)
       }
 

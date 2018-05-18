@@ -5,7 +5,7 @@ import com.twitter.util.{ Await, Future }
 
 class TwitterFutureIOMonadSpec extends IOMonadSpec {
 
-  val ctx = testContext
+  override val ctx = testContext
   import ctx._
 
   override def eval[T](io: IO[T, _]): T = Await.result(performIO(io))

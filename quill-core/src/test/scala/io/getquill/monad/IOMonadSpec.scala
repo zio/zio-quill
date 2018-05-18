@@ -1,6 +1,9 @@
 package io.getquill.monad
 
+import java.util.concurrent.atomic.AtomicInteger
+
 import io.getquill.Spec
+
 import scala.util.Success
 import scala.util.Try
 import scala.util.Failure
@@ -387,18 +390,17 @@ trait IOMonadSpec extends Spec {
         eval(io) mustEqual 2
       }
       "flatMap and recoverWith" in {
-        var evalCount = 0
+        val evalCount = new AtomicInteger(0)
         val e = new Exception("failure")
         val io = Run(() => {
-          evalCount += 1
-          resultValue[Int](1)
+          resultValue[Int](evalCount.incrementAndGet())
         }).flatMap { _ =>
           IO.failed(e)
         }.recoverWith {
           case _: VirtualMachineError => IO.successful(-1) // won't match the error
         }
         Try(eval(io)) mustEqual Failure(e)
-        evalCount mustEqual 1
+        evalCount.get() mustEqual 1
       }
     }
 
