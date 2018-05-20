@@ -14,7 +14,6 @@ services:
       - "13306:3306"
     environment:
       - MYSQL_ROOT_PASSWORD=root
-      - MYSQL_DATABASE=quill_test
       - MYSQL_ALLOW_EMPTY_PASSWORD=yes
 
   cassandra:
@@ -40,13 +39,12 @@ services:
       - ACCEPT_EULA=Y
       - SA_PASSWORD=QuillRocks!
 
+  # These 2 are only kept for local development
+
   setup:
     build:
-      cache_from:
-        - quillscala/setup:latest
       context: .
       dockerfile: ./build/Dockerfile-setup
-    image: quillscala/setup
     links:
       - postgres:postgres
       - mysql:mysql
@@ -56,15 +54,12 @@ services:
     volumes:
       - ./:/app
     command:
-      - ./build/setup.sh
+      - ./build/setup_local.sh
 
   sbt:
     build:
-      cache_from:
-        - quillscala/sbt:latest
       context: .
       dockerfile: ./build/Dockerfile-sbt
-    image: quillscala/sbt
     ports:
       - "15005:5005"
     command: sbt
@@ -79,12 +74,7 @@ services:
       - ~/.ivy2:/root/.ivy2
       - ~/.m2:/root/.m2
       - ~/.sbt:/root/.sbt
-      - ~/.ssh:/root/.ssh
     environment:
-      - TRAVIS_PULL_REQUEST
-      - TRAVIS_BRANCH
-      - SCALA_VERSION
-      - ENCRYPTION_PASSWORD
       - SBT_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005 -Dfile.encoding=UTF-8 -Xms512m -Xmx1536m -Xss2m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC
       - POSTGRES_HOST=postgres
       - POSTGRES_PORT=5432
@@ -96,27 +86,3 @@ services:
       - CASSANDRA_PORT=9042
       - ORIENTDB_HOST=orientdb
       - ORIENTDB_PORT=2424
-
-  release:
-    build:
-      cache_from:
-        - quillscala/sbt:latest
-      context: .
-      dockerfile: ./build/Dockerfile-sbt
-    image: quillscala/release
-    command:
-      - ./build/release.sh
-    volumes:
-      - ./:/app
-      - ~/.ivy2:/root/.ivy2
-      - ~/.m2:/root/.m2
-      - ~/.sbt:/root/.sbt
-      - ~/.ssh:/root/.ssh
-    environment:
-      - TRAVIS_PULL_REQUEST
-      - TRAVIS_BRANCH
-      - SCALA_VERSION
-      - ENCRYPTION_PASSWORD
-      - SCALA_VERSION_2_11
-      - SCALA_VERSION_2_12
-      - SBT_OPTS=-Dfile.encoding=UTF-8 -Xms512m -Xmx1536m -Xss2m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC

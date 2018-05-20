@@ -1,52 +1,80 @@
 #!/usr/bin/env bash
 
-set -e # Any subsequent(*) commands which fail will cause the shell script to exit immediately
-chown root ~/.ssh/config
-chmod 644 ~/.ssh/config
+set -e
 
-SCALA_VERSION=$1
-PROJECT=$2
+function show_mem() {
+    free -m | awk 'NR==2{printf "Memory Usage: %s/%sMB (%.2f%%)\n", $3,$2,$3*100/$2 }'
+}
+export -f show_mem
 
-if [[ $SCALA_VERSION == 2.12* && $PROJECT == "quill-spark" ]]
-then
-    echo "Spark doesn't support Scala 2.12"
-    exit 0
+export POSTGRES_HOST=127.0.0.1
+export POSTGRES_PORT=5432
+
+export MYSQL_HOST=127.0.0.1
+export MYSQL_PORT=3306
+
+export SQL_SERVER_HOST=127.0.0.1
+export SQL_SERVER_PORT=11433
+
+export CASSANDRA_HOST=127.0.0.1
+export CASSANDRA_PORT=19042
+
+export ORIENTDB_HOST=127.0.0.1
+export ORIENTDB_PORT=12424
+
+export SBT_ARGS="-Dquill.macro.log=false -Xms512m -Xmx1536m -Xss2m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC ++$TRAVIS_SCALA_VERSION"
+
+if [[ $TRAVIS_SCALA_VERSION == 2.11* ]]; then
+    export SBT_ARGS="$SBT_ARGS coverage"
 fi
 
-SBT_CMD="sbt -DscalaVersion=$SCALA_VERSION ++$SCALA_VERSION $PROJECT/clean"
+show_mem
 
-if [[ $SCALA_VERSION == 2.11* ]]
-then
-    SBT_CMD+=" coverage $PROJECT/test checkUnformattedFiles $PROJECT/coverageReport $PROJECT/coverageAggregate"
+# Start sbt compilation and database setup in parallel
+sbt clean $SBT_ARGS scalariformFormat test:scalariformFormat quill-coreJVM/test:compile & COMPILE=$!
+./build/setup_travis.sh & SETUP=$!
+
+# Wait on database setup. If it has failed then kill compilation process and exit with error
+wait $SETUP
+
+if [[ "$?" != "0" ]]; then
+   echo "Database setup failed"
+   sleep 10
+   kill -9 $COMPILE
+   exit 1
+fi
+echo "Setup is finished, waiting for the compilation of core module"
+
+wait $COMPILE
+if [[ "$?" != "0" ]]; then
+   echo "Compilation of core module has failed"
+   sleep 10
+   exit 1
+fi
+show_mem
+
+echo "Running tests"
+time sbt $SBT_ARGS checkUnformattedFiles test
+
+show_mem
+
+time docker-compose down
+# for 2.11 we run spark module and publish coverage
+if [[ $TRAVIS_SCALA_VERSION == 2.11* ]]; then
+
+    echo "Running tests for Spark"
+    time sbt $SBT_ARGS quill-spark/test
+
+    echo "Coverage"
+    time sbt $SBT_ARGS coverageReport coverageAggregate
+    pip install --user codecov && codecov
+
+# for 2.12 we run tut
 elif [[ $SCALA_VERSION == 2.12* ]]
 then
-    SBT_CMD+=" $PROJECT/test"
-else
-    exit 1
+    time sbt tut
 fi
 
-if [[ $TRAVIS_PULL_REQUEST == "false" ]]
-then
-    SBT_CMD+=" coverageOff $PROJECT/publish"
-    echo $SBT_CMD
+show_mem
 
-    openssl aes-256-cbc -pass pass:$ENCRYPTION_PASSWORD -in ./build/secring.gpg.enc -out local.secring.gpg -d
-    openssl aes-256-cbc -pass pass:$ENCRYPTION_PASSWORD -in ./build/pubring.gpg.enc -out local.pubring.gpg -d
-    openssl aes-256-cbc -pass pass:$ENCRYPTION_PASSWORD -in ./build/credentials.sbt.enc -out local.credentials.sbt -d
-    openssl aes-256-cbc -pass pass:$ENCRYPTION_PASSWORD -in ./build/deploy_key.pem.enc -out local.deploy_key.pem -d
-
-    if [[ $TRAVIS_BRANCH == "master" && $(cat version.sbt) != *"SNAPSHOT"* ]]
-    then
-        echo Release is scheduled to next jobs
-        exit 0
-    elif [[ $TRAVIS_BRANCH == "master" ]]
-    then
-        $SBT_CMD
-    else
-        echo "version in ThisBuild := \"$TRAVIS_BRANCH-SNAPSHOT\"" > version.sbt
-        $SBT_CMD
-    fi
-else
-    echo $SBT_CMD
-    $SBT_CMD
-fi
+sleep 10
