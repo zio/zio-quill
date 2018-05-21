@@ -1,3 +1,10 @@
+# 2.5.0
+
+- [Adds master-slave capability to FinagleMysqlContext](https://github.com/getquill/quill/pull/1079)
+- [Fix concatenation operator for SQL Server](https://github.com/getquill/quill/commit/83b80a1e894e53608e1ccca80a85038e7351b0e1)
+- [Use PreparedStatement.getConnection for JDBC Array Encoders](https://github.com/getquill/quill/pull/1086)
+- [CassandraSessionContext : change session to a lazy val](https://github.com/getquill/quill/pull/1082)
+
 # 2.4.2
 
 - [Fix for Nested Objects with Spark](https://github.com/getquill/quill/pull/1074)
