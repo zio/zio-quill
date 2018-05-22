@@ -24,14 +24,14 @@ then
         git reset --hard origin/master
         git push --delete origin website || true
 
-        $SBT_CMD -Dspark.include=true ++2.11.11 'release with-defaults'
         $SBT_CMD ++2.12.6 'release with-defaults'
+        $SBT_CMD -Dspark.include=true ++2.11.11 'release with-defaults'
 
     elif [[ $TRAVIS_BRANCH == "master" ]]
     then
-        $SBT_CMD publish
+        $SBT_CMD -Dspark.include=true +publish
     else
         echo "version in ThisBuild := \"$TRAVIS_BRANCH-SNAPSHOT\"" > version.sbt
-        $SBT_CMD publish
+        $SBT_CMD -Dspark.include=true +publish
     fi
 fi
