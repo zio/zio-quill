@@ -32,5 +32,4 @@ jobs:
       stage: release
       if: type != pull_request
       script: 
-        - TRAVIS_SCALA_VERSION=2.12.6 ./build/release.sh
-        - TRAVIS_SCALA_VERSION=2.11.11 ./build/release.sh
+        - ./build/release.sh

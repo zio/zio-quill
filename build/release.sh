@@ -3,11 +3,6 @@ set -e # Any subsequent(*) commands which fail will cause the shell script to ex
 
 SBT_CMD="sbt"
 
-if [[ $TRAVIS_SCALA_VERSION == 2.11* ]]; then
-    SBT_CMD+=" -Dspark.include=true"
-fi
-
-SBT_CMD+=" ++$TRAVIS_SCALA_VERSION"
 echo $SBT_CMD
 if [[ $TRAVIS_PULL_REQUEST == "false" ]]
 then
@@ -28,7 +23,10 @@ then
         git checkout master || git checkout -b master
         git reset --hard origin/master
         git push --delete origin website || true
-        $SBT_CMD 'release with-defaults'
+
+        $SBT_CMD -Dspark.include=true ++2.11.11 'release with-defaults'
+        $SBT_CMD ++2.12.6 'release with-defaults'
+
     elif [[ $TRAVIS_BRANCH == "master" ]]
     then
         $SBT_CMD publish
