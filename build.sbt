@@ -6,7 +6,7 @@ import scala.sys.process.Process
 
 enablePlugins(TutPlugin)
 
-lazy val scalaVersionProperty = Option(System.getProperty("scalaVersion"))
+lazy val sparkIncludeProp = Option(System.getProperty("spark.include"))
 
 lazy val modules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-core-jvm`, `quill-core-js`, `quill-sql-jvm`, `quill-sql-js`,
@@ -14,7 +14,7 @@ lazy val modules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-async-mysql`, `quill-async-postgres`, `quill-cassandra`, `quill-orientdb`
 ) ++ 
   Seq[sbt.ClasspathDep[sbt.ProjectReference]](`quill-spark`)
-    .filter(_ => scalaVersionProperty.map(_.startsWith("2.11")).getOrElse(true))
+    .filter(_ => sparkIncludeProp.contains("true"))
 
 lazy val `quill` =
   (project in file("."))
@@ -68,6 +68,7 @@ lazy val `quill-jdbc` =
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .settings(
+      fork in Test := true,
       libraryDependencies ++= Seq(
         "com.zaxxer"              % "HikariCP"             % "2.7.4",
         "mysql"                   % "mysql-connector-java" % "5.1.42"             % Test,
@@ -85,6 +86,7 @@ lazy val `quill-spark` =
     .settings(mimaSettings: _*)
     .settings(
       crossScalaVersions := Seq("2.11.12"),
+      fork in Test := true,
       libraryDependencies ++= Seq(
         "org.apache.spark" %% "spark-sql" % "2.2.0"
       )
@@ -96,6 +98,7 @@ lazy val `quill-finagle-mysql` =
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .settings(
+      fork in Test := true,
       libraryDependencies ++= Seq(
         "com.twitter" %% "finagle-mysql" % "18.5.0"
       )
@@ -107,6 +110,7 @@ lazy val `quill-finagle-postgres` =
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .settings(
+      fork in Test := true,
       libraryDependencies ++= Seq(
         "io.github.finagle" %% "finagle-postgres" % "0.7.0"
       )
@@ -118,6 +122,7 @@ lazy val `quill-async` =
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .settings(
+      fork in Test := true,
       libraryDependencies ++= Seq(
         "com.github.mauricio" %% "db-async-common"  % "0.2.21"
       )
@@ -129,6 +134,7 @@ lazy val `quill-async-mysql` =
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .settings(
+      fork in Test := true,
       libraryDependencies ++= Seq(
         "com.github.mauricio" %% "mysql-async"      % "0.2.21"
       )
@@ -140,6 +146,7 @@ lazy val `quill-async-postgres` =
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .settings(
+      fork in Test := true,
       libraryDependencies ++= Seq(
         "com.github.mauricio" %% "postgresql-async" % "0.2.21"
       )
@@ -151,6 +158,7 @@ lazy val `quill-cassandra` =
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .settings(
+      fork in Test := true,
       libraryDependencies ++= Seq(
         "com.datastax.cassandra" %  "cassandra-driver-core" % "3.4.0",
         "io.monix"               %% "monix"                 % "2.3.3"
@@ -163,6 +171,7 @@ lazy val `quill-orientdb` =
       .settings(commonSettings: _*)
       .settings(mimaSettings: _*)
       .settings(
+        fork in Test := true,
         libraryDependencies ++= Seq(
           "com.orientechnologies" % "orientdb-graphdb" % "2.2.30"
         )
