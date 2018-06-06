@@ -1447,6 +1447,21 @@ def filter(myDataset: Dataset[Person], name: String): Dataset[Int] =
 
 Note that the `run` method returns a `Dataset` transformed by the Quill query using the SQL engine.
 
+Additionally, note that the queries printed from `run(myQuery)` during compile time escape question marks via a backslash them in order to
+be able to substitute liftings properly. They are then returned back to their original form before running.
+```scala
+import org.apache.spark.sql.Dataset
+
+run {
+  liftQuery(myDataset).filter(_.field == "?").map(_.anotherField)
+}
+// This is generated during compile time:
+// SELECT x1.anotherField _1 FROM (?) x1 WHERE x1.field = '\?'
+// It is reverted upon run-time:
+// SELECT x1.anotherField _1 FROM (ds1) x1 WHERE x1.field = '?'
+```
+
+
 **Important**: Spark doesn't support transformations of inner classes. Use top-level classes.
 
 ## SQL Contexts
