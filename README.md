@@ -821,7 +821,10 @@ The IO monad has an interface similar to `Future`; please refer to [the class](h
 
 The return type of `performIO` varies according to the context. For instance, async contexts return `Future`s while JDBC returns values synchronously.
 
-***NOTE***: Avoid using the variable name `io` since it conflicts with Quill's package `io.getquill`.
+***NOTE***: Avoid using the variable name `io` since it conflicts with Quill's package `io.getquill`, otherwise you will get following error.
+```
+recursive value io needs type
+```
 
 ### IO Monad and transactions
 
