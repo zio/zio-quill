@@ -120,8 +120,8 @@ class FinagleMysqlEncodingSpec extends EncodingSpec {
 
     def verify(result: DateEncodingTestEntity) = {
       round(result.v1.getTime, 24.hours) mustEqual round(entity.v1.getTime, 24.hours)
-      result.v2.getTime mustEqual round(entity.v2.getTime, 1.second)
-      result.v3.getTime mustEqual round(entity.v3.getTime, 1.second)
+      result.v2.getTime mustEqual entity.v2.getTime
+      result.v3.getTime mustEqual entity.v3.getTime
     }
 
     "default timezone" in {

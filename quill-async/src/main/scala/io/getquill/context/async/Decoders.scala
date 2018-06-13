@@ -124,7 +124,8 @@ trait Decoders {
   implicit val byteArrayDecoder: Decoder[Array[Byte]] = decoder[Array[Byte]](PartialFunction.empty, SqlTypes.TINYINT)
 
   implicit val jodaDateTimeDecoder: Decoder[JodaDateTime] = decoder[JodaDateTime]({
-    case dateTime: JodaDateTime => dateTime
+    case dateTime: JodaDateTime           => dateTime
+    case localDateTime: JodaLocalDateTime => localDateTime.toDateTime
   }, SqlTypes.TIMESTAMP)
 
   implicit val jodaLocalDateDecoder: Decoder[JodaLocalDate] = decoder[JodaLocalDate]({
