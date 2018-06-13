@@ -12,6 +12,7 @@ import io.getquill.context.spark.Binding
 import io.getquill.context.spark.DatasetBinding
 import io.getquill.context.spark.ValueBinding
 import org.apache.spark.sql.types.{ StructField, StructType }
+import io.getquill.context.spark.norm.QuestionMarkEscaper._
 
 object QuillSparkContext extends QuillSparkContext
 
@@ -96,14 +97,16 @@ trait QuillSparkContext
 
   private def prepareString(string: String, prepare: Prepare)(implicit spark: SQLContext) = {
     var dsId = 0
-    prepare(Nil)._2.foldLeft(string) {
-      case (string, DatasetBinding(ds)) =>
-        dsId += 1
-        val name = s"ds$dsId"
-        ds.createOrReplaceTempView(name)
-        string.replaceFirst("\\?", name)
-      case (string, ValueBinding(value)) =>
-        string.replaceFirst("\\?", value)
-    }
+    val withSubstitutions =
+      prepare(Nil)._2.foldLeft(string) {
+        case (string, DatasetBinding(ds)) =>
+          dsId += 1
+          val name = s"ds$dsId"
+          ds.createOrReplaceTempView(name)
+          pluginValueSafe(string, name)
+        case (string, ValueBinding(value)) =>
+          pluginValueSafe(string, value)
+      }
+    unescape(withSubstitutions)
   }
 }
