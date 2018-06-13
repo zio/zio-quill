@@ -1984,13 +1984,13 @@ See the [LICENSE](https://github.com/getquill/quill/blob/master/LICENSE.txt) fil
 
 - @fwbrasil (creator)
 - @deusaquilus
-- @gustavoamigo
 - @jilen
 - @mentegy
 - @mxl
 
 ## Former maintainers:
 
+- @gustavoamigo
 - @godenji
 - @lvicentesanchez
 
