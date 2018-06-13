@@ -27,7 +27,7 @@ function setup_sqlite() {
 function setup_mysql() {
     connection=$2
     if [[ "$2" == "mysql" ]]; then
-       conn="mysql -proot"
+       connection="mysql -proot"
        hacks="mysql -h mysql -u root -proot -e \"ALTER USER 'root'@'%' IDENTIFIED BY ''\""
     fi
 
