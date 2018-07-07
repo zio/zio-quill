@@ -3,6 +3,7 @@ import com.typesafe.sbt.SbtScalariform.ScalariformKeys
 import scalariform.formatter.preferences._
 import sbtrelease.ReleasePlugin
 import scala.sys.process.Process
+import sbtcrossproject.crossProject
 
 enablePlugins(TutPlugin)
 
@@ -23,7 +24,7 @@ lazy val `quill` =
     .aggregate(modules.map(_.project): _*)
     .dependsOn(modules: _*)
 
-lazy val superPure = new org.scalajs.sbtplugin.cross.CrossType {
+lazy val superPure = new sbtcrossproject.CrossType {
   def projectDir(crossBase: File, projectType: String): File =
     projectType match {
       case "jvm" => crossBase
@@ -32,10 +33,16 @@ lazy val superPure = new org.scalajs.sbtplugin.cross.CrossType {
 
   def sharedSrcDir(projectBase: File, conf: String): Option[File] =
     Some(projectBase.getParentFile / "src" / conf / "scala")
+
+  override def projectDir(crossBase: File, projectType: sbtcrossproject.Platform): File =
+    projectType match {
+      case JVMPlatform => crossBase
+      case JSPlatform  => crossBase / ".js"
+    }
 }
 
 lazy val `quill-core` =
-  crossProject.crossType(superPure)
+  crossProject(JVMPlatform, JSPlatform).crossType(superPure)
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .settings(libraryDependencies ++= Seq(
@@ -52,7 +59,7 @@ lazy val `quill-core-jvm` = `quill-core`.jvm
 lazy val `quill-core-js` = `quill-core`.js
 
 lazy val `quill-sql` =
-  crossProject.crossType(superPure)
+  crossProject(JVMPlatform, JSPlatform).crossType(superPure)
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .jsSettings(
