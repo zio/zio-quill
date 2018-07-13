@@ -25,7 +25,7 @@ then
         git push --delete origin website || true
 
         $SBT_CMD ++2.12.6 'release with-defaults'
-        $SBT_CMD -Dspark.include=true ++2.11.11 'release with-defaults'
+        $SBT_CMD -Dspark.include=true ++2.11.12 'release with-defaults'
 
     elif [[ $TRAVIS_BRANCH == "master" ]]
     then
