@@ -5,13 +5,24 @@ import io.getquill.ast._
 object RenameProperties extends StatelessTransformer {
 
   override def apply(q: Query): Query =
-    applySchema(q) match {
-      case (q, schema) => q
-    }
+    applySchemaOnly(q)
 
   override def apply(q: Action): Action =
     applySchema(q) match {
       case (q, schema) => q
+    }
+
+  override def apply(e: Operation): Operation =
+    e match {
+      case UnaryOperation(o, c: Query) =>
+        UnaryOperation(o, applySchemaOnly(apply(c)))
+      case BinaryOperation(a, b, c) =>
+        def applyIfQuery(a: Ast) = a match {
+          case q: Query => applySchemaOnly(apply(q))
+          case _        => a
+        }
+        BinaryOperation(applyIfQuery(a), b, applyIfQuery(c))
+      case _ => super.apply(e)
     }
 
   private def applySchema(q: Action): (Action, Ast) =
@@ -47,6 +58,11 @@ object RenameProperties extends StatelessTransformer {
             Assignment(alias, propr, valuer)
         }
         (f(q, ar), schema)
+    }
+
+  private def applySchemaOnly(q: Query): Query =
+    applySchema(q) match {
+      case (q, _) => q
     }
 
   private def applySchema(q: Query): (Query, Ast) =
@@ -96,6 +112,9 @@ object RenameProperties extends StatelessTransformer {
             (FlatJoin(typ, a, iA, onr), schemaA)
         }
 
+      case Map(q: Operation, x, p) if x == p =>
+        (Map(apply(q), x, p), Tuple(List.empty))
+
       case q =>
         (q, Tuple(List.empty))
     }
@@ -111,7 +130,8 @@ object RenameProperties extends StatelessTransformer {
       case (q, schema) =>
         val replace = replacements(x, schema)
         val pr = BetaReduction(p, replace: _*)
-        (f(q, x, pr), schema)
+        val prr = apply(pr)
+        (f(q, x, prr), schema)
     }
 
   private def replacements(base: Ast, schema: Ast): List[(Ast, Ast)] =
