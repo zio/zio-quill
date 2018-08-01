@@ -16,12 +16,6 @@ object RenameProperties extends StatelessTransformer {
     e match {
       case UnaryOperation(o, c: Query) =>
         UnaryOperation(o, applySchemaOnly(apply(c)))
-      case BinaryOperation(a, b, c) =>
-        def applyIfQuery(a: Ast) = a match {
-          case q: Query => applySchemaOnly(apply(q))
-          case _        => a
-        }
-        BinaryOperation(applyIfQuery(a), b, applyIfQuery(c))
       case _ => super.apply(e)
     }
 
