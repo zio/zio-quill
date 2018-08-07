@@ -1149,7 +1149,7 @@ val a = quote {
 }
 
 ctx.run(a)
-// SELECT p.id, p.name, p.age FROM (SELECT * FROM Person p WHERE p.age < 18 FOR UPDATE) p
+// SELECT p.name, p.age FROM person p WHERE p.age < 18 FOR UPDATE
 ```
 
 The `forUpdate` quotation can be reused for multiple queries.

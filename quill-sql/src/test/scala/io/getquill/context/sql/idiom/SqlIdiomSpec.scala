@@ -1044,6 +1044,15 @@ class SqlIdiomSpec extends Spec {
         testContext.run(infix"DELETE FROM TestEntity".as[Action[TestEntity]]).string mustEqual
           "DELETE FROM TestEntity"
       }
+      "do not nest query if infix starts with input query" in {
+        case class Entity(i: Int)
+        val forUpdate = quote {
+          q: Query[Entity] => infix"$q FOR UPDATE".as[Query[Entity]].map(a => a.i)
+        }
+        testContext.run(forUpdate(query[Entity])).string mustEqual
+          "SELECT a.i FROM Entity a FOR UPDATE"
+      }
+
     }
     "if" - {
       "simple" in {
