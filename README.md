@@ -1149,10 +1149,26 @@ val a = quote {
 }
 
 ctx.run(a)
-// SELECT p.id, p.name, p.age FROM (SELECT * FROM Person p WHERE p.age < 18 FOR UPDATE) p
+// SELECT p.name, p.age FROM person p WHERE p.age < 18 FOR UPDATE
 ```
 
 The `forUpdate` quotation can be reused for multiple queries.
+
+### Raw SQL queries
+
+You can also use infix to port raw SQL queries to Quill and map it to regular scala tuples.
+
+```scala
+val rawQuery = quote {
+  (id: Int) => infix"""SELECT id, name FROM my_entity WHERE id = $id""".as[Query[(Int, String)]]
+}
+ctx.run(rawQuery(1))
+//SELECT x._1, x._2 FROM (SELECT id AS "_1", name AS "_2" FROM my_entity WHERE id = 1) x
+```
+
+Note that in this case the result query is nested.
+It's required since quill is not aware of a query tree and cannot safely unnest it.
+This is different to the example above because infix starts with the query `infix"$q...` where its tree is already compiled
 
 ### Database functions
 
@@ -1169,18 +1185,6 @@ val q = quote {
 
 ctx.run(q)
 // SELECT MY_FUNCTION(p.age) FROM Person p
-```
-
-### Raw SQL queries
-
-You can also use infix to port raw SQL queries to Quill and map it to regular scala tuples.
- 
-```scala
-val rawQuery = quote {
-  (id: Int) => infix"""SELECT id AS "_1", name AS "_2" FROM my_entity WHERE id = $id""".as[Query[(Int, String)]]
-}
-ctx.run(rawQuery(1))
-//SELECT id AS "_1", name AS "_2" FROM my_entity WHERE id = 1
 ```
 
 ### Comparison operators

@@ -1,3 +1,11 @@
+# 2.6.0-SNAPSHOT
+
+- [Fix unnecessary nesting of infix queries](https://github.com/getquill/quill/pull/1131)
+
+### Migration notes
+
+- When the infix starts with a query, the resulting sql query won't be nested
+
 # 2.5.4
 
 - [Adds master-slave capability to FinagleMysqlContext](https://github.com/getquill/quill/pull/1079)

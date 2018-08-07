@@ -19,6 +19,8 @@ object SqlNormalize {
       .andThen(trace("RenameProperties"))
       .andThen(ExpandJoin.apply _)
       .andThen(trace("ExpandJoin"))
+      .andThen(ExpandMappedInfix.apply _)
+      .andThen(trace("ExpandMappedInfix"))
       .andThen(Normalize.apply _)
       .andThen(trace("Normalize"))
 
