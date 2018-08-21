@@ -66,6 +66,7 @@ class EncodingSpec extends Spec {
     e.v7 mustEqual a.v7
     e.v8.toList mustEqual a.v8.toList
     e.v11.isInstanceOf[Date]
+    e.v13 mustEqual a.v13
     e.o1 mustEqual a.o1
     e.o2 mustEqual a.o2
     e.o3 mustEqual a.o3
@@ -74,6 +75,7 @@ class EncodingSpec extends Spec {
     e.o6 mustEqual a.o6
     e.o7 mustEqual a.o7
     e.o8.map(_.toList) mustEqual a.o8.map(_.toList)
+    e.o10 mustEqual a.o10
 
     ()
   }
@@ -90,6 +92,7 @@ class EncodingSpec extends Spec {
     v8:  Array[Byte],
     v11: Date,
     v12: Short,
+    v13: Byte,
     o1:  Option[String],
     o2:  Option[BigDecimal],
     o3:  Option[Boolean],
@@ -98,7 +101,8 @@ class EncodingSpec extends Spec {
     o6:  Option[Float],
     o7:  Option[Double],
     o8:  Option[Array[Byte]],
-    o9:  Option[Date]
+    o9:  Option[Date],
+    o10: Option[Byte]
   )
 
   val insertValues =
@@ -115,6 +119,7 @@ class EncodingSpec extends Spec {
         v8 = Array(1.toByte, 2.toByte),
         v11 = new Date(31202000),
         v12 = 1,
+        v13 = 8.toByte,
         o1 = Some("s"),
         o2 = Some(BigDecimal(1.1)),
         o3 = Some(true),
@@ -123,7 +128,8 @@ class EncodingSpec extends Spec {
         o6 = Some(34.4f),
         o7 = Some(42.4d),
         o8 = Some(Array(1.toByte, 2.toByte)),
-        o9 = Some(new Date(31200000))
+        o9 = Some(new Date(31200000)),
+        o10 = Some(8.toByte)
       ),
       EncodingTestEntity(
         id = 2,
@@ -137,6 +143,7 @@ class EncodingSpec extends Spec {
         v8 = Array(),
         v11 = new Date(0),
         v12 = 2,
+        v13 = 7.toByte,
         o1 = None,
         o2 = None,
         o3 = None,
@@ -145,7 +152,8 @@ class EncodingSpec extends Spec {
         o6 = None,
         o7 = None,
         o8 = None,
-        o9 = None
+        o9 = None,
+        o10 = None
       )
     )
 }
