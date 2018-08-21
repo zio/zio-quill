@@ -775,6 +775,16 @@ class QuotationSpec extends Spec {
         }
         quote(unquote(q)).ast.body mustEqual OptionGetOrElse(Ident("o"), Constant(11))
       }
+      "map + getOrElse" in {
+        val q = quote {
+          (o: Option[Int]) => o.map(i => i < 10).getOrElse(true)
+        }
+        quote(unquote(q)).ast.body mustEqual
+          OptionGetOrElse(
+            OptionMap(Ident("o"), Ident("i"), BinaryOperation(Ident("i"), NumericOperator.`<`, Constant(10))),
+            Constant(true)
+          )
+      }
       "flatten" in {
         val q = quote {
           (o: Option[Option[Int]]) => o.flatten
