@@ -36,6 +36,28 @@ class FlattenOptionOperationSpec extends Spec {
       FlattenOptionOperation(q.ast.body: Ast) mustEqual
         BinaryOperation(Ident("o"), NumericOperator.`+`, Constant(1))
     }
+    "map + getOrElse(true)" in {
+      val q = quote {
+        (o: Option[Int]) => o.map(_ < 1).getOrElse(true)
+      }
+      FlattenOptionOperation(q.ast.body: Ast) mustEqual
+        BinaryOperation(
+          BinaryOperation(Ident("o"), NumericOperator.`<`, Constant(1)),
+          BooleanOperator.`||`,
+          OptionIsEmpty(Ident("o"))
+        )
+    }
+    "map + getOrElse(false)" in {
+      val q = quote {
+        (o: Option[Int]) => o.map(_ < 1).getOrElse(false)
+      }
+      FlattenOptionOperation(q.ast.body: Ast) mustEqual
+        BinaryOperation(
+          BinaryOperation(Ident("o"), NumericOperator.`<`, Constant(1)),
+          BooleanOperator.`||`,
+          OptionNonEmpty(Ident("o"))
+        )
+    }
     "forall" in {
       val q = quote {
         (o: Option[Int]) => o.forall(i => i != 1)
