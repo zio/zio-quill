@@ -38,6 +38,8 @@ trait IOMonad {
 
   object IO {
 
+    def lift[T](result: => Result[T]): IO[T, Effect] = Run(() => result)
+
     def fromTry[T](result: Try[T]): IO[T, Effect] = FromTry(result)
 
     def sequence[A, M[X] <: TraversableOnce[X], E <: Effect](in: M[IO[A, E]])(implicit cbfIOToResult: CanBuildFrom[M[IO[A, E]], Result[A], M[Result[A]]], cbfResultToValue: CanBuildFrom[M[Result[A]], A, M[A]]): IO[M[A], E] =
