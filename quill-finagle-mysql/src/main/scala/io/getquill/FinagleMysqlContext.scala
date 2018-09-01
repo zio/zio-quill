@@ -141,12 +141,12 @@ class FinagleMysqlContext[N <: NamingStrategy](
     Future.collect {
       groups.map {
         case BatchGroup(sql, prepare) =>
-          prepare.foldLeft(Future.value(List.empty[Long])) {
+          prepare.foldLeft(Future.value(List.newBuilder[Long])) {
             case (acc, prepare) =>
               acc.flatMap { list =>
-                executeAction(sql, prepare).map(list :+ _)
+                executeAction(sql, prepare).map(list += _)
               }
-          }
+          }.map(_.result())
       }
     }.map(_.flatten.toList)
 
@@ -154,12 +154,12 @@ class FinagleMysqlContext[N <: NamingStrategy](
     Future.collect {
       groups.map {
         case BatchGroupReturning(sql, column, prepare) =>
-          prepare.foldLeft(Future.value(List.empty[T])) {
+          prepare.foldLeft(Future.value(List.newBuilder[T])) {
             case (acc, prepare) =>
               acc.flatMap { list =>
-                executeActionReturning(sql, prepare, extractor, column).map(list :+ _)
+                executeActionReturning(sql, prepare, extractor, column).map(list += _)
               }
-          }
+          }.map(_.result())
       }
     }.map(_.flatten.toList)
 
