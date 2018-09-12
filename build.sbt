@@ -167,7 +167,7 @@ lazy val `quill-cassandra` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.datastax.cassandra" %  "cassandra-driver-core" % "3.4.0",
+        "com.datastax.cassandra" %  "cassandra-driver-core" % "3.6.0",
         "io.monix"               %% "monix"                 % "2.3.3"
       )
     )
