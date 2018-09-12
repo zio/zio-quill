@@ -22,6 +22,12 @@ trait IOMonadSpec extends Spec {
 
   "IO companion object" - {
 
+    "lift" in {
+      val t = Success(1)
+      val io = IO.lift(resultValue(1))
+      Try(eval(io)) mustEqual t
+    }
+
     "fromTry" - {
       "success" in {
         val t = Success(1)
