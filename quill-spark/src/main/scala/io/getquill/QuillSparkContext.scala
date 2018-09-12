@@ -69,7 +69,7 @@ trait QuillSparkContext
    */
   private def perculateNullArrays[T: SparkEncoder](ds: Dataset[T]) = {
     def nullifyNullArray(schema: StructType) = udf(
-      (row: Row) => if ((0 until row.length).map(row.isNullAt(_)).forall(n => n)) null else row,
+      (row: Row) => if ((0 until row.length).forall(row.isNullAt)) null else row,
       schema
     )
 

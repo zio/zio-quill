@@ -99,12 +99,12 @@ abstract class AsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: Connection]
     Future.sequence {
       groups.map {
         case BatchGroup(sql, prepare) =>
-          prepare.foldLeft(Future.successful(List.empty[Long])) {
+          prepare.foldLeft(Future.successful(List.newBuilder[Long])) {
             case (acc, prepare) =>
               acc.flatMap { list =>
-                executeAction(sql, prepare).map(list :+ _)
+                executeAction(sql, prepare).map(list += _)
               }
-          }
+          }.map(_.result())
       }
     }.map(_.flatten.toList)
 
@@ -112,12 +112,12 @@ abstract class AsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: Connection]
     Future.sequence {
       groups.map {
         case BatchGroupReturning(sql, column, prepare) =>
-          prepare.foldLeft(Future.successful(List.empty[T])) {
+          prepare.foldLeft(Future.successful(List.newBuilder[T])) {
             case (acc, prepare) =>
               acc.flatMap { list =>
-                executeActionReturning(sql, prepare, extractor, column).map(list :+ _)
+                executeActionReturning(sql, prepare, extractor, column).map(list += _)
               }
-          }
+          }.map(_.result())
       }
     }.map(_.flatten.toList)
 }
