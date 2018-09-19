@@ -76,12 +76,12 @@ class CassandraStreamContext[N <: NamingStrategy](
 
 
   private def prepareRowAndLog(cql: String, prepare: Prepare = identityPrepare): Task[PrepareRow] = {
-    Task.async[PrepareRow] {(scheduler, callback) =>
+    Task.async[PrepareRow] { (scheduler, callback) =>
       implicit val executor: Scheduler = scheduler
 
       super.prepareAsync(cql)
         .map(prepare)
-        .onComplete{
+        .onComplete {
           case Success((params, bs)) =>
             logger.logQuery(cql, params)
             callback.onSuccess(bs)
