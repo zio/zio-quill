@@ -47,7 +47,7 @@ lazy val `quill-core` =
     .settings(mimaSettings: _*)
     .settings(libraryDependencies ++= Seq(
       "com.typesafe"               %  "config"        % "1.3.3",
-      "com.typesafe.scala-logging" %% "scala-logging" % "3.7.2",
+      "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0",
       "org.scala-lang"             %  "scala-reflect" % scalaVersion.value
     ))
     .jsSettings(
