@@ -47,11 +47,11 @@ lazy val `quill-core` =
     .settings(mimaSettings: _*)
     .settings(libraryDependencies ++= Seq(
       "com.typesafe"               %  "config"        % "1.3.3",
-      "com.typesafe.scala-logging" %% "scala-logging" % "3.7.2",
+      "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0",
       "org.scala-lang"             %  "scala-reflect" % scalaVersion.value
     ))
     .jsSettings(
-      libraryDependencies += "org.scala-js" %%% "scalajs-java-time" % "0.2.2",
+      libraryDependencies += "org.scala-js" %%% "scalajs-java-time" % "0.2.5",
       coverageExcludedPackages := ".*"
     )
 
@@ -77,10 +77,10 @@ lazy val `quill-jdbc` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.zaxxer"              % "HikariCP"             % "2.7.4",
-        "mysql"                   % "mysql-connector-java" % "5.1.42"             % Test,
+        "com.zaxxer"              % "HikariCP"             % "2.7.9",
+        "mysql"                   % "mysql-connector-java" % "5.1.47"             % Test,
         "com.h2database"          % "h2"                   % "1.4.197"            % Test,
-        "org.postgresql"          % "postgresql"           % "42.1.4"             % Test,
+        "org.postgresql"          % "postgresql"           % "42.2.5"             % Test,
         "org.xerial"              % "sqlite-jdbc"          % "3.23.1"             % Test,
         "com.microsoft.sqlserver" % "mssql-jdbc"           % "6.1.7.jre8-preview" % Test
       )
@@ -180,7 +180,7 @@ lazy val `quill-orientdb` =
       .settings(
         fork in Test := true,
         libraryDependencies ++= Seq(
-          "com.orientechnologies" % "orientdb-graphdb" % "2.2.36"
+          "com.orientechnologies" % "orientdb-graphdb" % "2.2.37"
         )
       )
       .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -265,7 +265,7 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
   crossScalaVersions := Seq("2.11.12","2.12.6"),
   libraryDependencies ++= Seq(
     "org.scalamacros" %% "resetallattrs"  % "1.0.0",
-    "org.scalatest"   %%% "scalatest"     % "3.0.4"     % Test,
+    "org.scalatest"   %%% "scalatest"     % "3.0.5"     % Test,
     "ch.qos.logback"  % "logback-classic" % "1.2.3"     % Test,
     "com.google.code.findbugs" % "jsr305" % "3.0.2"     % Provided // just to avoid warnings during compilation
   ),
