@@ -47,7 +47,7 @@ lazy val `quill-core` =
     .settings(mimaSettings: _*)
     .settings(libraryDependencies ++= Seq(
       "com.typesafe"               %  "config"        % "1.3.3",
-      "com.typesafe.scala-logging" %% "scala-logging" % "3.7.2",
+      "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0",
       "org.scala-lang"             %  "scala-reflect" % scalaVersion.value
     ))
     .jsSettings(
@@ -77,7 +77,7 @@ lazy val `quill-jdbc` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.zaxxer"              % "HikariCP"             % "2.7.4",
+        "com.zaxxer"              % "HikariCP"             % "2.7.9",
         "mysql"                   % "mysql-connector-java" % "5.1.47"             % Test,
         "com.h2database"          % "h2"                   % "1.4.197"            % Test,
         "org.postgresql"          % "postgresql"           % "42.1.4"             % Test,
