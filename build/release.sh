@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -e # Any subsequent(*) commands which fail will cause the shell script to exit immediately
 
-SBT_CMD="sbt"
+SBT_2_12="sbt ++2.12.6"
+SBT_2_11="sbt -Dspark.include=true ++2.11.12"
 
 echo $SBT_CMD
 if [[ $TRAVIS_PULL_REQUEST == "false" ]]
@@ -24,14 +25,16 @@ then
         git reset --hard origin/master
         git push --delete origin website || true
 
-        $SBT_CMD ++2.12.6 'release with-defaults'
-        $SBT_CMD -Dspark.include=true ++2.11.12 'release with-defaults'
+        $SBT_2_12 'release with-defaults'
+        $SBT_2_11 'release with-defaults'
 
     elif [[ $TRAVIS_BRANCH == "master" ]]
     then
-        $SBT_CMD -Dspark.include=true +publish
+        $SBT_2_12 publish
+        $SBT_2_11 publish
     else
         echo "version in ThisBuild := \"$TRAVIS_BRANCH-SNAPSHOT\"" > version.sbt
-        $SBT_CMD -Dspark.include=true +publish
+        $SBT_2_12 publish
+        $SBT_2_11 publish
     fi
 fi
