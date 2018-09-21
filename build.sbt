@@ -82,7 +82,7 @@ lazy val `quill-jdbc` =
         "com.h2database"          % "h2"                   % "1.4.197"            % Test,
         "org.postgresql"          % "postgresql"           % "42.1.4"             % Test,
         "org.xerial"              % "sqlite-jdbc"          % "3.18.0"             % Test,
-        "com.microsoft.sqlserver" % "mssql-jdbc"           % "6.1.7.jre8-preview" % Test
+        "com.microsoft.sqlserver" % "mssql-jdbc"           % "6.5.4.jre10-preview" % Test
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
