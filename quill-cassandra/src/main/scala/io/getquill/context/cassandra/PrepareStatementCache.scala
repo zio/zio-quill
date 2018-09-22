@@ -2,12 +2,12 @@ package io.getquill.context.cassandra
 
 import java.util.concurrent.Callable
 
-import com.datastax.driver.core.{BoundStatement, PreparedStatement}
+import com.datastax.driver.core.{ BoundStatement, PreparedStatement }
 import com.google.common.base.Charsets
 import com.google.common.cache.CacheBuilder
 import com.google.common.hash.Hashing
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.Success
 
 class PrepareStatementCache(size: Long) {
@@ -28,9 +28,7 @@ class PrepareStatementCache(size: Long) {
       }
     ).bind
 
-  def async(stmt: String)
-           (prepare: String => Future[PreparedStatement])
-           (implicit context: ExecutionContext): Future[BoundStatement] = {
+  def async(stmt: String)(prepare: String => Future[PreparedStatement])(implicit context: ExecutionContext): Future[BoundStatement] = {
     val key = hash(stmt)
     val found = cache.getIfPresent(key)
 
@@ -39,7 +37,6 @@ class PrepareStatementCache(size: Long) {
       case Success(s) => cache.put(key, s)
     }.map(_.bind())
   }
-
 
   private def hash(string: String): java.lang.Long = {
     hasher

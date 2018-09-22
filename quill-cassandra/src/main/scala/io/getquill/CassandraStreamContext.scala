@@ -8,12 +8,12 @@ import scala.collection.JavaConverters._
 import io.getquill.context.cassandra.CassandraSessionContext
 import io.getquill.context.cassandra.util.FutureConversions.toScalaFuture
 import monix.reactive.Observable
-import io.getquill.util.{ContextLogger, LoadConfig}
+import io.getquill.util.{ ContextLogger, LoadConfig }
 import com.datastax.driver.core.Cluster
 import monix.eval.Task
-import monix.execution.{Cancelable, Scheduler}
+import monix.execution.{ Cancelable, Scheduler }
 
-import scala.util.{Failure, Success}
+import scala.util.{ Failure, Success }
 
 class CassandraStreamContext[N <: NamingStrategy](
   naming:                     N,
@@ -73,7 +73,6 @@ class CassandraStreamContext[N <: NamingStrategy](
           .flatMap(executeAction(cql, _))
           .map(_ => ())
     }
-
 
   private def prepareRowAndLog(cql: String, prepare: Prepare = identityPrepare): Task[PrepareRow] = {
     Task.async[PrepareRow] { (scheduler, callback) =>
