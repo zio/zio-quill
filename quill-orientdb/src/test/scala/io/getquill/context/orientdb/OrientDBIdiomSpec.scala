@@ -327,7 +327,12 @@ class OrientDBIdiomSpec extends Spec {
           infix"SELECT MODE(i) FROM TestEntity".as[Query[Int]]
         }
         ctx.run(q).string mustEqual
-          "SELECT * FROM (SELECT MODE(i) FROM TestEntity)"
+          "SELECT MODE(i) FROM TestEntity"
+      }
+      "as select context" in {
+        val es = quote(infix"SELECT 1 FROM Test_Entity".as[Query[Int]])
+        val q = quote(es.map(i => i + 1))
+        ctx.run(q).string must equal("SELECT i + 1 FROM (SELECT 1 FROM Test_Entity) i")
       }
     }
     "action" - {

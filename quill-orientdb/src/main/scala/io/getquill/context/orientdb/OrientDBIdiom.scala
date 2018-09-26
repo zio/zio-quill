@@ -170,7 +170,7 @@ trait OrientDBIdiom extends Idiom {
   implicit def sourceTokenizer(implicit strategy: NamingStrategy): Tokenizer[FromContext] = Tokenizer[FromContext] {
     case TableContext(name, alias)  => stmt"${name.token}"
     case QueryContext(query, alias) => stmt"(${query.token})"
-    case InfixContext(infix, alias) => stmt"(${(infix: Ast).token})"
+    case InfixContext(infix, alias) => stmt"(${(infix: Ast).token}) ${alias.token}"
     case _                          => fail("OrientDB sql doesn't support joins")
   }
 
