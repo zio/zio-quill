@@ -2005,6 +2005,7 @@ See the [LICENSE](https://github.com/getquill/quill/blob/master/LICENSE.txt) fil
 - @jilen
 - @mentegy
 - @mxl
+- @juliano
 
 ## Former maintainers:
 
