@@ -1,6 +1,6 @@
 package io.getquill.context.cassandra.encoding
 
-import java.time.{ Instant, LocalDate }
+import java.time.{ Instant, LocalDate, ZonedDateTime, ZoneId }
 import java.util.Date
 
 import com.datastax.driver.core.{ LocalDate => CasLocalDate }
@@ -16,4 +16,9 @@ trait Encodings extends CassandraMapperConversions with CassandraTypes {
 
   implicit val encodeJava8Instant: MappedEncoding[Instant, Date] = MappedEncoding(Date.from)
   implicit val decodeJava8Instant: MappedEncoding[Date, Instant] = MappedEncoding(_.toInstant)
+
+  implicit val encodeJava8ZonedDateTime: MappedEncoding[ZonedDateTime, Date] = MappedEncoding(zdt =>
+    Date.from(zdt.toInstant))
+  implicit val decodeJava8ZonedDateTime: MappedEncoding[Date, ZonedDateTime] = MappedEncoding(d =>
+    ZonedDateTime.ofInstant(d.toInstant, ZoneId.systemDefault))
 }
