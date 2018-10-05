@@ -37,7 +37,7 @@ class CassandraAsyncContext[N <: NamingStrategy](
   }
 
   def executeQuery[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(implicit ec: ExecutionContext): Future[List[T]] =
-    Future(prepare(this.prepare(cql))).flatMap {
+    this.prepareAsync(cql).map(prepare).flatMap {
       case (params, bs) =>
         logger.logQuery(cql, params)
         session.executeAsync(bs)
@@ -48,7 +48,7 @@ class CassandraAsyncContext[N <: NamingStrategy](
     executeQuery(cql, prepare, extractor).map(handleSingleResult)
 
   def executeAction[T](cql: String, prepare: Prepare = identityPrepare)(implicit ec: ExecutionContext): Future[Unit] = {
-    Future(prepare(this.prepare(cql))).flatMap {
+    this.prepareAsync(cql).map(prepare).flatMap {
       case (params, bs) =>
         logger.logQuery(cql, params)
         session.executeAsync(bs).map(_ => ())
