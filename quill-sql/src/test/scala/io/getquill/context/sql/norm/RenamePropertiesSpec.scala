@@ -406,6 +406,19 @@ class RenamePropertiesSpec extends Spec {
           "INSERT INTO A (bC) VALUES (1)"
       }
     }
+
+    "infix" - {
+      "does not break schema" in {
+        case class B(b: Int) extends Embedded
+        case class A(u: Long, v: Int, w: B)
+        val q = quote {
+          infix"${querySchema[A]("C", _.v -> "m", _.w.b -> "n")} LIMIT 10".as[Query[A]]
+        }
+
+        testContext.run(q).string mustEqual
+          "SELECT x.u, x.m, x.n FROM C x LIMIT 10"
+      }
+    }
   }
 
 }

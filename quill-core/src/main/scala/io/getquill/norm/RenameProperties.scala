@@ -109,6 +109,21 @@ object RenameProperties extends StatelessTransformer {
       case Map(q: Operation, x, p) if x == p =>
         (Map(apply(q), x, p), Tuple(List.empty))
 
+      case Map(Infix(parts, params), x, p) =>
+        val schema = params.collect {
+          case q: Query =>
+            val (_, schema) = applySchema(q)
+            schema
+        } match {
+          case e :: Nil => e
+          case ls       => Tuple(ls)
+        }
+        val replace = replacements(x, schema)
+        val pr = BetaReduction(p, replace: _*)
+        val prr = apply(pr)
+
+        (Map(Infix(parts, params), x, prr), schema)
+
       case q =>
         (q, Tuple(List.empty))
     }
