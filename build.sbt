@@ -81,7 +81,7 @@ lazy val `quill-jdbc` =
         "mysql"                   % "mysql-connector-java" % "5.1.47"             % Test,
         "com.h2database"          % "h2"                   % "1.4.197"            % Test,
         "org.postgresql"          % "postgresql"           % "42.2.5"             % Test,
-        "org.xerial"              % "sqlite-jdbc"          % "3.23.1"             % Test,
+        "org.xerial"              % "sqlite-jdbc"          % "3.25.2"             % Test,
         "com.microsoft.sqlserver" % "mssql-jdbc"           % "6.1.7.jre8-preview" % Test
       )
     )
@@ -107,7 +107,7 @@ lazy val `quill-finagle-mysql` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.twitter" %% "finagle-mysql" % "18.9.0"
+        "com.twitter" %% "finagle-mysql" % "18.9.1"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")

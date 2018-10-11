@@ -705,9 +705,9 @@ ctx.run(a)
 
 ### insert or update (upsert, conflict)
 
-Upsert is only supported by Postgres and MySQL
+Upsert is supported by Postgres, SQLite and MySQL
 
-#### Postgres
+#### Postgres and SQLite
 Ignore conflict
 ```scala
 val a = quote {
@@ -2005,6 +2005,7 @@ See the [LICENSE](https://github.com/getquill/quill/blob/master/LICENSE.txt) fil
 - @jilen
 - @mentegy
 - @mxl
+- @juliano
 
 ## Former maintainers:
 

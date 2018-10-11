@@ -5,8 +5,9 @@ import io.getquill.NamingStrategy
 import io.getquill.context.Context
 import io.getquill.context.cassandra.encoding.{ CassandraTypes, Decoders, Encoders, UdtEncoding }
 import io.getquill.util.Messages.fail
-
+import io.getquill.context.cassandra.util.FutureConversions._
 import scala.collection.JavaConverters._
+import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.Try
 
 abstract class CassandraSessionContext[N <: NamingStrategy](
@@ -53,6 +54,9 @@ abstract class CassandraSessionContext[N <: NamingStrategy](
 
   protected def prepare(cql: String): BoundStatement =
     preparedStatementCache(cql)(session.prepare)
+
+  protected def prepareAsync(cql: String)(implicit executionContext: ExecutionContext): Future[BoundStatement] =
+    preparedStatementCache.async(cql)(session.prepareAsync(_))
 
   def close() = {
     session.close
