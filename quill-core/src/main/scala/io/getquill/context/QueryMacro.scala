@@ -21,7 +21,11 @@ class QueryMacro(val c: MacroContext) extends ContextMacro {
     }
 
   private def expandQueryWithDecoder(quoted: Tree, method: String, decoder: Tree) = {
-    val ast = Map(extractAst(quoted), Ident("x"), Ident("x"))
+    val extracted = extractAst(quoted)
+    val ast = extracted match {
+      case i: Infix => i
+      case _        => Map(extracted, Ident("x"), Ident("x"))
+    }
     c.untypecheck {
       q"""
         ..${EnableReflectiveCalls(c)}

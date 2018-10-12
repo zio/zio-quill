@@ -38,7 +38,7 @@ trait QuillSparkContext
 
   def liftQuery[T](ds: Dataset[T]) =
     quote {
-      infix"${lift(ds)}".as[Query[T]]
+      infix"SELECT * FROM (${lift(ds)})".as[Query[T]]
     }
 
   // Helper class for the perculateNullArrays method
