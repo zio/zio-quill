@@ -95,7 +95,7 @@ lazy val `quill-spark` =
       crossScalaVersions := Seq("2.11.12"),
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "org.apache.spark" %% "spark-sql" % "2.2.0"
+        "org.apache.spark" %% "spark-sql" % "2.3.2"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
