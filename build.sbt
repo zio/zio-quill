@@ -82,7 +82,7 @@ lazy val `quill-jdbc` =
         "com.h2database"          % "h2"                   % "1.4.197"            % Test,
         "org.postgresql"          % "postgresql"           % "42.2.5"             % Test,
         "org.xerial"              % "sqlite-jdbc"          % "3.25.2"             % Test,
-        "com.microsoft.sqlserver" % "mssql-jdbc"           % "6.1.7.jre8-preview" % Test
+        "com.microsoft.sqlserver" % "mssql-jdbc"           % "7.1.1.jre8-preview" % Test
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -95,7 +95,7 @@ lazy val `quill-spark` =
       crossScalaVersions := Seq("2.11.12"),
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "org.apache.spark" %% "spark-sql" % "2.2.0"
+        "org.apache.spark" %% "spark-sql" % "2.3.2"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
