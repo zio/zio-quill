@@ -9,6 +9,8 @@ import io.getquill.context.cassandra.CassandraContext
 trait Encodings extends CassandraMapperConversions with CassandraTypes {
   this: CassandraContext[_] =>
 
+  protected val zoneId = ZoneId.systemDefault
+
   implicit val encodeJava8LocalDate: MappedEncoding[LocalDate, CasLocalDate] = MappedEncoding(ld =>
     CasLocalDate.fromYearMonthDay(ld.getYear, ld.getMonthValue, ld.getDayOfMonth))
   implicit val decodeJava8LocalDate: MappedEncoding[CasLocalDate, LocalDate] = MappedEncoding(ld =>
@@ -20,5 +22,5 @@ trait Encodings extends CassandraMapperConversions with CassandraTypes {
   implicit val encodeJava8ZonedDateTime: MappedEncoding[ZonedDateTime, Date] = MappedEncoding(zdt =>
     Date.from(zdt.toInstant))
   implicit val decodeJava8ZonedDateTime: MappedEncoding[Date, ZonedDateTime] = MappedEncoding(d =>
-    ZonedDateTime.ofInstant(d.toInstant, ZoneId.systemDefault))
+    ZonedDateTime.ofInstant(d.toInstant, zoneId))
 }
