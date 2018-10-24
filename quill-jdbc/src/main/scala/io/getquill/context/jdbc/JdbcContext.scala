@@ -135,7 +135,7 @@ abstract class JdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](dataSo
       }
     }
 
-  override protected def prepareParams(statement: String, prepare: Prepare): Seq[String] = {
+  override private[getquill] def prepareParams(statement: String, prepare: Prepare): Seq[String] = {
     withConnection { conn =>
       prepare(conn.prepareStatement(statement))._1.reverse.map(prepareParam)
     }

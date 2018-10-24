@@ -76,6 +76,6 @@ class MirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy](val idiom: Idi
       }, extractor
     )
 
-  override def prepareParams(statement: String, prepare: Prepare): Seq[String] =
+  override private[getquill] def prepareParams(statement: String, prepare: Prepare): Seq[String] =
     prepare(Row())._2.data.map(prepareParam)
 }

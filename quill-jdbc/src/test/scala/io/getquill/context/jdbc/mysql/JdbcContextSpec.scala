@@ -45,6 +45,11 @@ class JdbcContextSpec extends Spec {
       }
       testContext.run(qr1).map(_.i) mustEqual List(33)
     }
+    "prepare" in {
+      testContext.prepareParams(
+        "select * from Person where name=? and age > ?", ps => (List("Sarah", 127), ps)
+      ) mustEqual List("127", "'Sarah'")
+    }
   }
 
   "Insert with returning with single column table" in {

@@ -32,6 +32,10 @@ class AsyncMirrorContextSpec extends Spec {
     })
   }
 
+  "prepare" in {
+    ctx.prepareParams("", ps => (Nil, ps.add("Sarah").add(127))) mustEqual List("'Sarah'", "127")
+  }
+
   "probe" in {
     ctx.probe("Ok").toOption mustBe defined
     ctx.probe("Fail").toOption mustBe empty

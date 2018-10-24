@@ -31,7 +31,7 @@ trait TranslateContext {
       }
     }
 
-  protected def prepareParams(statement: String, prepare: Prepare): Seq[String]
+  private[getquill] def prepareParams(statement: String, prepare: Prepare): Seq[String]
 
   @tailrec
   final protected def prepareParam(param: Any): String = param match {

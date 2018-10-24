@@ -83,6 +83,6 @@ class AsyncMirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy](val idiom
       )
     }
 
-  override protected def prepareParams(statement: String, prepare: Prepare): Seq[String] =
+  override private[getquill] def prepareParams(statement: String, prepare: Prepare): Seq[String] =
     prepare(Row())._2.data.map(prepareParam)
 }

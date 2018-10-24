@@ -85,6 +85,14 @@ class FinagleMysqlContextSpec extends Spec {
     ctx.close
   }
 
+  "prepare" in {
+    import com.twitter.finagle.mysql.Parameter
+
+    testContext.prepareParams(
+      "", ps => (Nil, ps ++: List(Parameter.of("Sarah"), Parameter.of(127)))
+    ) mustEqual List("'Sarah'", "127")
+  }
+
   override protected def beforeAll(): Unit = {
     await(testContext.run(qr1.delete))
     ()

@@ -46,6 +46,10 @@ class PostgresAsyncContextSpec extends Spec {
     ctx.close
   }
 
+  "prepare" in {
+    testContext.prepareParams("", ps => (Nil, ps ++ List("Sarah", 127))) mustEqual List("'Sarah'", "127")
+  }
+
   override protected def beforeAll(): Unit = {
     await(testContext.run(qr1.delete))
     ()

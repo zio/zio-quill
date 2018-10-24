@@ -106,7 +106,7 @@ class FinaglePostgresContext[N <: NamingStrategy](val naming: N, client: Postgre
       }
     }.map(_.flatten.toList)
 
-  override protected def prepareParams(statement: String, prepare: Prepare): Seq[String] = {
+  override private[getquill] def prepareParams(statement: String, prepare: Prepare): Seq[String] = {
     prepare(Nil)._2.map(param => prepareParam(param.encode()))
   }
 

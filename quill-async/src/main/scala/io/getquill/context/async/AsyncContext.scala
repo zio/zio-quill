@@ -122,7 +122,7 @@ abstract class AsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: Connection]
       }
     }.map(_.flatten.toList)
 
-  override protected def prepareParams(statement: String, prepare: Prepare): Seq[String] = {
+  override private[getquill] def prepareParams(statement: String, prepare: Prepare): Seq[String] = {
     prepare(Nil)._2.map(param => prepareParam(param))
   }
 }
