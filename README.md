@@ -8,7 +8,6 @@
 [![Codacy Badge](https://api.codacy.com/project/badge/grade/36ab84c7ff43480489df9b7312a4bdc1)](https://www.codacy.com/app/fwbrasil/quill)
 [![codecov.io](https://codecov.io/github/getquill/quill/coverage.svg?branch=master)](https://codecov.io/github/getquill/quill?branch=master)
 [![Join the chat at https://gitter.im/getquill/quill](https://img.shields.io/badge/gitter-join%20chat-green.svg)](https://gitter.im/getquill/quill?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![Dependency Status](https://www.versioneye.com/user/projects/56ea4da64e714c0035e76353/badge.svg?style=flat)](https://www.versioneye.com/user/projects/56ea4da64e714c0035e76353)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.getquill/quill_2.11/badge.svg)](https://maven-badges.herokuapp.com/maven-central/io.getquill/quill_2.11)
 [![Javadocs](https://www.javadoc.io/badge/io.getquill/quill_2.11.svg)](https://www.javadoc.io/doc/io.getquill/quill-core_2.11)
 
@@ -706,9 +705,9 @@ ctx.run(a)
 
 ### insert or update (upsert, conflict)
 
-Upsert is only supported by Postgres and MySQL
+Upsert is supported by Postgres, SQLite and MySQL
 
-#### Postgres
+#### Postgres and SQLite
 Ignore conflict
 ```scala
 val a = quote {
@@ -821,7 +820,10 @@ The IO monad has an interface similar to `Future`; please refer to [the class](h
 
 The return type of `performIO` varies according to the context. For instance, async contexts return `Future`s while JDBC returns values synchronously.
 
-***NOTE***: Avoid using the variable name `io` since it conflicts with Quill's package `io.getquill`.
+***NOTE***: Avoid using the variable name `io` since it conflicts with Quill's package `io.getquill`, otherwise you will get following error.
+```
+recursive value io needs type
+```
 
 ### IO Monad and transactions
 
@@ -1146,10 +1148,26 @@ val a = quote {
 }
 
 ctx.run(a)
-// SELECT p.id, p.name, p.age FROM (SELECT * FROM Person p WHERE p.age < 18 FOR UPDATE) p
+// SELECT p.name, p.age FROM person p WHERE p.age < 18 FOR UPDATE
 ```
 
 The `forUpdate` quotation can be reused for multiple queries.
+
+### Raw SQL queries
+
+You can also use infix to port raw SQL queries to Quill and map it to regular scala tuples.
+
+```scala
+val rawQuery = quote {
+  (id: Int) => infix"""SELECT id, name FROM my_entity WHERE id = $id""".as[Query[(Int, String)]]
+}
+ctx.run(rawQuery(1))
+//SELECT x._1, x._2 FROM (SELECT id AS "_1", name AS "_2" FROM my_entity WHERE id = 1) x
+```
+
+Note that in this case the result query is nested.
+It's required since quill is not aware of a query tree and cannot safely unnest it.
+This is different to the example above because infix starts with the query `infix"$q...` where its tree is already compiled
 
 ### Database functions
 
@@ -1166,18 +1184,6 @@ val q = quote {
 
 ctx.run(q)
 // SELECT MY_FUNCTION(p.age) FROM Person p
-```
-
-### Raw SQL queries
-
-You can also use infix to port raw SQL queries to Quill and map it to regular scala tuples.
- 
-```scala
-val rawQuery = quote {
-  (id: Int) => infix"""SELECT id AS "_1", name AS "_2" FROM my_entity WHERE id = $id""".as[Query[(Int, String)]]
-}
-ctx.run(rawQuery(1))
-//SELECT id AS "_1", name AS "_2" FROM my_entity WHERE id = 1
 ```
 
 ### Comparison operators
@@ -1405,7 +1411,7 @@ Quill provides a fully type-safe way to use Spark's highly-optimized SQL engine.
 ### sbt dependency
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-spark" % "2.4.2-SNAPSHOT"
+  "io.getquill" %% "quill-spark" % "2.5.5-SNAPSHOT"
 )
 ```
 
@@ -1446,6 +1452,21 @@ def filter(myDataset: Dataset[Person], name: String): Dataset[Int] =
 ```
 
 Note that the `run` method returns a `Dataset` transformed by the Quill query using the SQL engine.
+
+Additionally, note that the queries printed from `run(myQuery)` during compile time escape question marks via a backslash them in order to
+be able to substitute liftings properly. They are then returned back to their original form before running.
+```scala
+import org.apache.spark.sql.Dataset
+
+run {
+  liftQuery(myDataset).filter(_.field == "?").map(_.anotherField)
+}
+// This is generated during compile time:
+// SELECT x1.anotherField _1 FROM (?) x1 WHERE x1.field = '\?'
+// It is reverted upon run-time:
+// SELECT x1.anotherField _1 FROM (ds1) x1 WHERE x1.field = '?'
+```
+
 
 **Important**: Spark doesn't support transformations of inner classes. Use top-level classes.
 
@@ -1531,7 +1552,7 @@ The body of `transaction` can contain calls to other methods and multiple `run` 
 ```
 libraryDependencies ++= Seq(
   "mysql" % "mysql-connector-java" % "5.1.38",
-  "io.getquill" %% "quill-jdbc" % "2.4.2-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "2.5.5-SNAPSHOT"
 )
 ```
 
@@ -1558,7 +1579,7 @@ ctx.connectionTimeout=30000
 ```
 libraryDependencies ++= Seq(
   "org.postgresql" % "postgresql" % "9.4.1208",
-  "io.getquill" %% "quill-jdbc" % "2.4.2-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "2.5.5-SNAPSHOT"
 )
 ```
 
@@ -1584,7 +1605,7 @@ ctx.connectionTimeout=30000
 ```
 libraryDependencies ++= Seq(
   "org.xerial" % "sqlite-jdbc" % "3.18.0",
-  "io.getquill" %% "quill-jdbc" % "2.4.2-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "2.5.5-SNAPSHOT"
 )
 ```
 
@@ -1605,7 +1626,7 @@ ctx.jdbcUrl=jdbc:sqlite:/path/to/db/file.db
 ```
 libraryDependencies ++= Seq(
   "com.h2database" % "h2" % "1.4.192",
-  "io.getquill" %% "quill-jdbc" % "2.4.2-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "2.5.5-SNAPSHOT"
 )
 ```
 
@@ -1627,7 +1648,7 @@ ctx.dataSource.user=sa
 ```
 libraryDependencies ++= Seq(
   "com.microsoft.sqlserver" % "mssql-jdbc" % "6.1.7.jre8-preview",
-  "io.getquill" %% "quill-jdbc" % "2.4.2-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "2.5.5-SNAPSHOT"
 )
 ```
 
@@ -1732,7 +1753,7 @@ ctx.queryTimeout=10m
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async-mysql" % "2.4.2-SNAPSHOT"
+  "io.getquill" %% "quill-async-mysql" % "2.5.5-SNAPSHOT"
 )
 ```
 
@@ -1756,7 +1777,7 @@ ctx.url=mysql://host:3306/database?user=root&password=root
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async-postgres" % "2.4.2-SNAPSHOT"
+  "io.getquill" %% "quill-async-postgres" % "2.5.5-SNAPSHOT"
 )
 ```
 
@@ -1793,7 +1814,7 @@ The body of `transaction` can contain calls to other methods and multiple `run` 
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-finagle-mysql" % "2.4.2-SNAPSHOT"
+  "io.getquill" %% "quill-finagle-mysql" % "2.5.5-SNAPSHOT"
 )
 ```
 
@@ -1833,7 +1854,7 @@ The body of `transaction` can contain calls to other methods and multiple `run` 
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-finagle-postgres" % "2.4.2-SNAPSHOT"
+  "io.getquill" %% "quill-finagle-postgres" % "2.5.5-SNAPSHOT"
 )
 ```
 
@@ -1860,7 +1881,7 @@ ctx.binaryParams=false
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-cassandra" % "2.4.2-SNAPSHOT"
+  "io.getquill" %% "quill-cassandra" % "2.5.5-SNAPSHOT"
 )
 ```
 
@@ -1901,7 +1922,7 @@ ctx.session.addressTranslator=com.datastax.driver.core.policies.IdentityTranslat
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-orientdb" % "2.4.2-SNAPSHOT"
+  "io.getquill" %% "quill-orientdb" % "2.5.5-SNAPSHOT"
 )
 ```
 
@@ -1931,9 +1952,9 @@ sbt -Dquill.macro.log=false
 
 Quill uses SLF4J for logging. Each context logs queries which are currently executed.
 It also logs the list of parameters which are bound into prepared statement if any.
-To disable that use `quill.binds.log` option:
+To enable that use `quill.binds.log` option:
 ```
-java -Dquill.binds.log=false -jar myapp.jar
+java -Dquill.binds.log=true -jar myapp.jar
 ```
 
 # Additional resources
@@ -1981,13 +2002,14 @@ See the [LICENSE](https://github.com/getquill/quill/blob/master/LICENSE.txt) fil
 
 - @fwbrasil (creator)
 - @deusaquilus
-- @gustavoamigo
 - @jilen
 - @mentegy
 - @mxl
+- @juliano
 
 ## Former maintainers:
 
+- @gustavoamigo
 - @godenji
 - @lvicentesanchez
 

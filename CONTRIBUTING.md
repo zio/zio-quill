@@ -16,14 +16,11 @@ After installing Docker and Docker Compose you have to setup databases:
 docker-compose run --rm setup
 ```
 
-When running the first time docker will also build images. To skip building you can pull images from Docker Hub before executing the above setup command:
+After that you are ready to build and test the project. The following setp describes how to test the project with
+sbt built within docker image. If you would like to use your local sbt,
+please visit [Building locally](#building-locally-using-docker-only-for-databases).
 
-```bash
-docker-compose pull
-```
-
-
-After that you are ready to build and test the project.
+To build and test the project:
 
 ```bash
 docker-compose run --rm sbt sbt test

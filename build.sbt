@@ -3,10 +3,11 @@ import com.typesafe.sbt.SbtScalariform.ScalariformKeys
 import scalariform.formatter.preferences._
 import sbtrelease.ReleasePlugin
 import scala.sys.process.Process
+import sbtcrossproject.crossProject
 
 enablePlugins(TutPlugin)
 
-lazy val scalaVersionProperty = Option(System.getProperty("scalaVersion"))
+lazy val sparkIncludeProp = Option(System.getProperty("spark.include"))
 
 lazy val modules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-core-jvm`, `quill-core-js`, `quill-sql-jvm`, `quill-sql-js`,
@@ -14,7 +15,7 @@ lazy val modules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-async-mysql`, `quill-async-postgres`, `quill-cassandra`, `quill-orientdb`
 ) ++ 
   Seq[sbt.ClasspathDep[sbt.ProjectReference]](`quill-spark`)
-    .filter(_ => scalaVersionProperty.map(_.startsWith("2.11")).getOrElse(true))
+    .filter(_ => sparkIncludeProp.contains("true"))
 
 lazy val `quill` =
   (project in file("."))
@@ -23,7 +24,7 @@ lazy val `quill` =
     .aggregate(modules.map(_.project): _*)
     .dependsOn(modules: _*)
 
-lazy val superPure = new org.scalajs.sbtplugin.cross.CrossType {
+lazy val superPure = new sbtcrossproject.CrossType {
   def projectDir(crossBase: File, projectType: String): File =
     projectType match {
       case "jvm" => crossBase
@@ -32,19 +33,25 @@ lazy val superPure = new org.scalajs.sbtplugin.cross.CrossType {
 
   def sharedSrcDir(projectBase: File, conf: String): Option[File] =
     Some(projectBase.getParentFile / "src" / conf / "scala")
+
+  override def projectDir(crossBase: File, projectType: sbtcrossproject.Platform): File =
+    projectType match {
+      case JVMPlatform => crossBase
+      case JSPlatform  => crossBase / ".js"
+    }
 }
 
 lazy val `quill-core` =
-  crossProject.crossType(superPure)
+  crossProject(JVMPlatform, JSPlatform).crossType(superPure)
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .settings(libraryDependencies ++= Seq(
-      "com.typesafe"               %  "config"        % "1.3.2",
-      "com.typesafe.scala-logging" %% "scala-logging" % "3.7.2",
+      "com.typesafe"               %  "config"        % "1.3.3",
+      "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0",
       "org.scala-lang"             %  "scala-reflect" % scalaVersion.value
     ))
     .jsSettings(
-      libraryDependencies += "org.scala-js" %%% "scalajs-java-time" % "0.2.2",
+      libraryDependencies += "org.scala-js" %%% "scalajs-java-time" % "0.2.5",
       coverageExcludedPackages := ".*"
     )
 
@@ -52,7 +59,7 @@ lazy val `quill-core-jvm` = `quill-core`.jvm
 lazy val `quill-core-js` = `quill-core`.js
 
 lazy val `quill-sql` =
-  crossProject.crossType(superPure)
+  crossProject(JVMPlatform, JSPlatform).crossType(superPure)
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .jsSettings(
@@ -70,12 +77,12 @@ lazy val `quill-jdbc` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.zaxxer"              % "HikariCP"             % "2.7.4",
-        "mysql"                   % "mysql-connector-java" % "5.1.42"             % Test,
-        "com.h2database"          % "h2"                   % "1.4.196"            % Test,
-        "org.postgresql"          % "postgresql"           % "42.1.4"             % Test,
-        "org.xerial"              % "sqlite-jdbc"          % "3.18.0"             % Test,
-        "com.microsoft.sqlserver" % "mssql-jdbc"           % "6.1.7.jre8-preview" % Test
+        "com.zaxxer"              % "HikariCP"             % "3.2.0",
+        "mysql"                   % "mysql-connector-java" % "5.1.47"             % Test,
+        "com.h2database"          % "h2"                   % "1.4.197"            % Test,
+        "org.postgresql"          % "postgresql"           % "42.2.5"             % Test,
+        "org.xerial"              % "sqlite-jdbc"          % "3.25.2"             % Test,
+        "com.microsoft.sqlserver" % "mssql-jdbc"           % "7.1.1.jre8-preview" % Test
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -88,7 +95,7 @@ lazy val `quill-spark` =
       crossScalaVersions := Seq("2.11.12"),
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "org.apache.spark" %% "spark-sql" % "2.2.0"
+        "org.apache.spark" %% "spark-sql" % "2.3.2"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -100,7 +107,7 @@ lazy val `quill-finagle-mysql` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.twitter" %% "finagle-mysql" % "18.2.0"
+        "com.twitter" %% "finagle-mysql" % "18.9.1"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -160,7 +167,7 @@ lazy val `quill-cassandra` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.datastax.cassandra" %  "cassandra-driver-core" % "3.4.0",
+        "com.datastax.cassandra" %  "cassandra-driver-core" % "3.6.0",
         "io.monix"               %% "monix"                 % "2.3.3"
       )
     )
@@ -173,7 +180,7 @@ lazy val `quill-orientdb` =
       .settings(
         fork in Test := true,
         libraryDependencies ++= Seq(
-          "com.orientechnologies" % "orientdb-graphdb" % "2.2.30"
+          "com.orientechnologies" % "orientdb-graphdb" % "2.2.37"
         )
       )
       .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -255,10 +262,10 @@ def updateWebsiteTag =
 lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
   organization := "io.getquill",
   scalaVersion := "2.11.12",
-  crossScalaVersions := Seq("2.11.12","2.12.4"),
+  crossScalaVersions := Seq("2.11.12","2.12.6"),
   libraryDependencies ++= Seq(
     "org.scalamacros" %% "resetallattrs"  % "1.0.0",
-    "org.scalatest"   %%% "scalatest"     % "3.0.4"     % Test,
+    "org.scalatest"   %%% "scalatest"     % "3.0.5"     % Test,
     "ch.qos.logback"  % "logback-classic" % "1.2.3"     % Test,
     "com.google.code.findbugs" % "jsr305" % "3.0.2"     % Provided // just to avoid warnings during compilation
   ),
@@ -281,8 +288,12 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
   ),
   scalacOptions ++= {
     CrossVersion.partialVersion(scalaVersion.value) match {
-      case Some((2, 11)) => Seq("-Xlint", "-Ywarn-unused-import")
-      case Some((2, 12)) => Seq("-Xlint:-unused,_", "-Ywarn-unused:imports")
+      case Some((2, 11)) => 
+        Seq("-Xlint", "-Ywarn-unused-import")
+      case Some((2, 12)) => 
+        Seq("-Xlint:-unused,_", 
+            "-Ywarn-unused:imports", 
+            "-Ycache-macro-class-loader:last-modified")
       case _ => Seq()
     }
   },
@@ -296,7 +307,7 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
     .setPreference(IndentPackageBlocks, true)
     .setPreference(FormatXml, true)
     .setPreference(PreserveSpaceBeforeArguments, false)
-    .setPreference(DoubleIndentClassDeclaration, false)
+    .setPreference(DoubleIndentConstructorArguments, false)
     .setPreference(RewriteArrowSymbols, false)
     .setPreference(AlignSingleLineCaseStatements, true)
     .setPreference(AlignSingleLineCaseStatements.MaxArrowIndent, 40)

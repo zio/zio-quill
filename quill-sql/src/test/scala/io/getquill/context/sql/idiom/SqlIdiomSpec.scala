@@ -1019,6 +1019,22 @@ class SqlIdiomSpec extends Spec {
             "DELETE FROM TestEntity WHERE o IS NOT NULL"
         }
       }
+      "getOrElse" - {
+        "is null" in {
+          val q = quote {
+            qr1.filter { t => t.o.map(_ < 10).getOrElse(true) }.map(t => t.i)
+          }
+          testContext.run(q).string mustEqual
+            "SELECT t.i FROM TestEntity t WHERE t.o < 10 OR t.o IS NULL"
+        }
+        "is not null" in {
+          val q = quote {
+            qr1.filter { t => t.o.map(_ < 10).getOrElse(false) }.map(t => t.i)
+          }
+          testContext.run(q).string mustEqual
+            "SELECT t.i FROM TestEntity t WHERE t.o < 10 OR t.o IS NOT NULL"
+        }
+      }
     }
     "infix" - {
       "part of the query" in {
@@ -1044,6 +1060,15 @@ class SqlIdiomSpec extends Spec {
         testContext.run(infix"DELETE FROM TestEntity".as[Action[TestEntity]]).string mustEqual
           "DELETE FROM TestEntity"
       }
+      "do not nest query if infix starts with input query" in {
+        case class Entity(i: Int)
+        val forUpdate = quote {
+          q: Query[Entity] => infix"$q FOR UPDATE".as[Query[Entity]].map(a => a.i)
+        }
+        testContext.run(forUpdate(query[Entity])).string mustEqual
+          "SELECT a.i FROM Entity a FOR UPDATE"
+      }
+
     }
     "if" - {
       "simple" in {

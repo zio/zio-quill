@@ -1,3 +1,26 @@
+# 2.6.0-SNAPSHOT
+
+- [Fix unnecessary nesting of infix queries](https://github.com/getquill/quill/pull/1131)
+
+### Migration notes
+
+- When the infix starts with a query, the resulting sql query won't be nested
+
+# 2.5.4
+
+- [Adds master-slave capability to FinagleMysqlContext](https://github.com/getquill/quill/pull/1079)
+- [Fix concatenation operator for SQL Server](https://github.com/getquill/quill/commit/83b80a1e894e53608e1ccca80a85038e7351b0e1)
+- [Use PreparedStatement.getConnection for JDBC Array Encoders](https://github.com/getquill/quill/pull/1086)
+- [CassandraSessionContext : change session to a lazy val](https://github.com/getquill/quill/pull/1082)
+
+# 2.5.0, 2.5.1, 2.5.2, and 2.5.3
+
+Broken releases, do not use.
+
+# 2.4.2
+
+- [Fix for Nested Objects with Spark](https://github.com/getquill/quill/pull/1074)
+
 # 2.4.1
 
 - [Add support of upsert for Postgres and MySQL](https://github.com/getquill/quill/pull/987)

@@ -11,6 +11,7 @@ import io.getquill.ast.StringOperator
 import io.getquill.ast.Tuple
 import io.getquill.ast.Value
 import io.getquill.ast.CaseClass
+import io.getquill.context.spark.norm.{EscapeQuestionMarks, ExpandEntityIds}
 import io.getquill.context.sql.SqlQuery
 import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.context.sql.norm.SqlNormalize
@@ -29,7 +30,7 @@ class SparkDialect extends SqlIdiom {
   override def prepareForProbing(string: String) = string
 
   override def translate(ast: Ast)(implicit naming: NamingStrategy) = {
-    val normalizedAst = SqlNormalize(ast)
+    val normalizedAst = EscapeQuestionMarks(SqlNormalize(ast))
 
     implicit val tokernizer = defaultTokenizer
 
@@ -38,7 +39,9 @@ class SparkDialect extends SqlIdiom {
         case q: Query =>
           val sql = SqlQuery(q)
           trace("sql")(sql)
-          sql.token
+          val expanded = ExpandEntityIds(sql)
+          trace("expanded sql")(expanded)
+          expanded.token
         case other =>
           other.token
       }

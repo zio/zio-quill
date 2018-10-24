@@ -23,9 +23,15 @@ import io.getquill.util.Messages.fail
 import io.getquill.monad.TwitterFutureIOMonad
 import io.getquill.context.{ Context, TranslateContext }
 
+sealed trait OperationType
+object OperationType {
+  case object Read extends OperationType
+  case object Write extends OperationType
+}
+
 class FinagleMysqlContext[N <: NamingStrategy](
   val naming:                               N,
-  client:                                   Client with Transactions,
+  client:                                   OperationType => Client with Transactions,
   private[getquill] val injectionTimeZone:  TimeZone,
   private[getquill] val extractionTimeZone: TimeZone
 )
@@ -35,6 +41,18 @@ class FinagleMysqlContext[N <: NamingStrategy](
   with FinagleMysqlDecoders
   with FinagleMysqlEncoders
   with TwitterFutureIOMonad {
+
+  import OperationType._
+
+  def this(naming: N, client: Client with Transactions, injectionTimeZone: TimeZone, extractionTimeZone: TimeZone) =
+    this(naming, _ => client, injectionTimeZone, extractionTimeZone)
+
+  def this(naming: N, master: Client with Transactions, slave: Client with Transactions, timeZone: TimeZone) = {
+    this(naming, _ match {
+      case OperationType.Read  => slave
+      case OperationType.Write => master
+    }, timeZone, timeZone)
+  }
 
   def this(naming: N, config: FinagleMysqlContextConfig) = this(naming, config.client, config.injectionTimeZone, config.extractionTimeZone)
   def this(naming: N, config: Config) = this(naming, FinagleMysqlContextConfig(config))
@@ -70,15 +88,21 @@ class FinagleMysqlContext[N <: NamingStrategy](
       extractionTimeZone
     )
 
-  override def close = Await.result(client.close())
+  override def close =
+    Await.result(
+      Future.join(
+        client(Write).close(),
+        client(Read).close()
+      ).unit
+    )
 
   private val currentClient = new Local[Client]
 
   def probe(sql: String) =
-    Try(Await.result(client.query(sql)))
+    Try(Await.result(client(Write).query(sql)))
 
   def transaction[T](f: => Future[T]) =
-    client.transaction {
+    client(Write).transaction {
       transactional =>
         currentClient.update(transactional)
         f.ensure(currentClient.clear)
@@ -93,7 +117,7 @@ class FinagleMysqlContext[N <: NamingStrategy](
   def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): Future[List[T]] = {
     val (params, prepared) = prepare(Nil)
     logger.logQuery(sql, params)
-    withClient(_.prepare(sql).select(prepared: _*)(extractor)).map(_.toList)
+    withClient(Read)(_.prepare(sql).select(prepared: _*)(extractor)).map(_.toList)
   }
 
   def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): Future[T] =
@@ -102,14 +126,14 @@ class FinagleMysqlContext[N <: NamingStrategy](
   def executeAction[T](sql: String, prepare: Prepare = identityPrepare): Future[Long] = {
     val (params, prepared) = prepare(Nil)
     logger.logQuery(sql, params)
-    withClient(_.prepare(sql)(prepared: _*))
+    withClient(Write)(_.prepare(sql)(prepared: _*))
       .map(r => toOk(r).affectedRows)
   }
 
   def executeActionReturning[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T], returningColumn: String): Future[T] = {
     val (params, prepared) = prepare(Nil)
     logger.logQuery(sql, params)
-    withClient(_.prepare(sql)(prepared: _*))
+    withClient(Write)(_.prepare(sql)(prepared: _*))
       .map(extractReturningValue(_, extractor))
   }
 
@@ -117,12 +141,12 @@ class FinagleMysqlContext[N <: NamingStrategy](
     Future.collect {
       groups.map {
         case BatchGroup(sql, prepare) =>
-          prepare.foldLeft(Future.value(List.empty[Long])) {
+          prepare.foldLeft(Future.value(List.newBuilder[Long])) {
             case (acc, prepare) =>
               acc.flatMap { list =>
-                executeAction(sql, prepare).map(list :+ _)
+                executeAction(sql, prepare).map(list += _)
               }
-          }
+          }.map(_.result())
       }
     }.map(_.flatten.toList)
 
@@ -130,12 +154,12 @@ class FinagleMysqlContext[N <: NamingStrategy](
     Future.collect {
       groups.map {
         case BatchGroupReturning(sql, column, prepare) =>
-          prepare.foldLeft(Future.value(List.empty[T])) {
+          prepare.foldLeft(Future.value(List.newBuilder[T])) {
             case (acc, prepare) =>
               acc.flatMap { list =>
-                executeActionReturning(sql, prepare, extractor, column).map(list :+ _)
+                executeActionReturning(sql, prepare, extractor, column).map(list += _)
               }
-          }
+          }.map(_.result())
       }
     }.map(_.flatten.toList)
 
@@ -152,10 +176,10 @@ class FinagleMysqlContext[N <: NamingStrategy](
       case error  => fail(error.toString)
     }
 
-  def withClient[T](f: Client => T) =
+  def withClient[T](op: OperationType)(f: Client => T) =
     currentClient().map {
       client => f(client)
     }.getOrElse {
-      f(client)
+      f(client(op))
     }
 }

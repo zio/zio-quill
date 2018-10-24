@@ -5,13 +5,18 @@ import io.getquill.ast._
 object RenameProperties extends StatelessTransformer {
 
   override def apply(q: Query): Query =
-    applySchema(q) match {
-      case (q, schema) => q
-    }
+    applySchemaOnly(q)
 
   override def apply(q: Action): Action =
     applySchema(q) match {
       case (q, schema) => q
+    }
+
+  override def apply(e: Operation): Operation =
+    e match {
+      case UnaryOperation(o, c: Query) =>
+        UnaryOperation(o, applySchemaOnly(apply(c)))
+      case _ => super.apply(e)
     }
 
   private def applySchema(q: Action): (Action, Ast) =
@@ -47,6 +52,11 @@ object RenameProperties extends StatelessTransformer {
             Assignment(alias, propr, valuer)
         }
         (f(q, ar), schema)
+    }
+
+  private def applySchemaOnly(q: Query): Query =
+    applySchema(q) match {
+      case (q, _) => q
     }
 
   private def applySchema(q: Query): (Query, Ast) =
@@ -96,6 +106,24 @@ object RenameProperties extends StatelessTransformer {
             (FlatJoin(typ, a, iA, onr), schemaA)
         }
 
+      case Map(q: Operation, x, p) if x == p =>
+        (Map(apply(q), x, p), Tuple(List.empty))
+
+      case Map(Infix(parts, params), x, p) =>
+        val schema = params.collect {
+          case q: Query =>
+            val (_, schema) = applySchema(q)
+            schema
+        } match {
+          case e :: Nil => e
+          case ls       => Tuple(ls)
+        }
+        val replace = replacements(x, schema)
+        val pr = BetaReduction(p, replace: _*)
+        val prr = apply(pr)
+
+        (Map(Infix(parts, params), x, prr), schema)
+
       case q =>
         (q, Tuple(List.empty))
     }
@@ -111,7 +139,8 @@ object RenameProperties extends StatelessTransformer {
       case (q, schema) =>
         val replace = replacements(x, schema)
         val pr = BetaReduction(p, replace: _*)
-        (f(q, x, pr), schema)
+        val prr = apply(pr)
+        (f(q, x, prr), schema)
     }
 
   private def replacements(base: Ast, schema: Ast): List[(Ast, Ast)] =

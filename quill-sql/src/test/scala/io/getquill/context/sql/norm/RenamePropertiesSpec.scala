@@ -305,6 +305,30 @@ class RenamePropertiesSpec extends Spec {
           "SELECT a.field_s, SUM(a.field_i) FROM test_entity a GROUP BY a.field_s"
       }
     }
+
+    "operation" - {
+      "unary" in {
+        val q = quote {
+          e.filter(a => e.filter(b => b.i > 0).isEmpty).map(_.i)
+        }
+        testContext.run(q).string mustEqual
+          "SELECT a.field_i FROM test_entity a WHERE NOT EXISTS (SELECT b.* FROM test_entity b WHERE b.field_i > 0)"
+      }
+      "binary" in {
+        val q = quote {
+          e.filter(a => e.filter(b => b.i > 0).isEmpty && a.s == "test").map(_.i)
+        }
+        testContext.run(q).string mustEqual
+          "SELECT a.field_i FROM test_entity a WHERE NOT EXISTS (SELECT b.* FROM test_entity b WHERE b.field_i > 0) AND a.field_s = 'test'"
+      }
+      "query body" in {
+        val q = quote {
+          e.filter(a => a.i > 0).isEmpty
+        }
+        testContext.run(q).string mustEqual
+          "SELECT NOT EXISTS (SELECT a.* FROM test_entity a WHERE a.field_i > 0)"
+      }
+    }
   }
 
   "respects the schema definition for embeddeds" - {
@@ -380,6 +404,19 @@ class RenamePropertiesSpec extends Spec {
         }
         testContext.run(q).string mustEqual
           "INSERT INTO A (bC) VALUES (1)"
+      }
+    }
+
+    "infix" - {
+      "does not break schema" in {
+        case class B(b: Int) extends Embedded
+        case class A(u: Long, v: Int, w: B)
+        val q = quote {
+          infix"${querySchema[A]("C", _.v -> "m", _.w.b -> "n")} LIMIT 10".as[Query[A]]
+        }
+
+        testContext.run(q).string mustEqual
+          "SELECT x.u, x.m, x.n FROM C x LIMIT 10"
       }
     }
   }

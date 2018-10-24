@@ -47,6 +47,7 @@ trait Decoders extends CollectionDecoders {
   implicit val booleanDecoder: Decoder[Boolean] = decoder((index, row) => row.field[Boolean](row.fieldNames()(index)))
   implicit val intDecoder: Decoder[Int] = decoder((index, row) => row.field[Int](row.fieldNames()(index)))
   implicit val shortDecoder: Decoder[Short] = decoder((index, row) => row.field[Int](row.fieldNames()(index)).toShort)
+  implicit val byteDecoder: Decoder[Byte] = decoder((index, row) => row.field[Int](row.fieldNames()(index)).toByte)
   implicit val longDecoder: Decoder[Long] = decoder((index, row) => {
     if (row.fieldValues()(index).isInstanceOf[Int]) {
       row.field[Int](row.fieldNames()(index)).toLong

@@ -38,6 +38,7 @@ trait Encoders extends CollectionEncoders {
   implicit val booleanEncoder: Encoder[Boolean] = encoder((index, value, row) => { row.insert(index, value); row })
   implicit val intEncoder: Encoder[Int] = encoder((index, value, row) => { row.insert(index, value); row })
   implicit val shortEncoder: Encoder[Short] = encoder((index, value, row) => { row.insert(index, value); row })
+  implicit val byteEncoder: Encoder[Byte] = encoder((index, value, row) => { row.insert(index, value); row })
   implicit val longEncoder: Encoder[Long] = encoder((index, value, row) => { row.insert(index, value); row })
   implicit val floatEncoder: Encoder[Float] = encoder((index, value, row) => { row.insert(index, value); row })
   implicit val doubleEncoder: Encoder[Double] = encoder((index, value, row) => { row.insert(index, value); row })

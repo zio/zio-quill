@@ -41,10 +41,10 @@ trait ArrayEncoders extends ArrayEncoding {
       val bf = implicitly[CanBuildFrom[Nothing, AnyRef, Array[AnyRef]]]
       row.setArray(
         idx,
-        withConnection(_.createArrayOf(
+        row.getConnection.createArrayOf(
           jdbcType,
           seq.foldLeft(bf())((b, x) => b += mapper(x)).result()
-        ))
+        )
       )
     })
   }

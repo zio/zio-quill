@@ -1,3 +1,8 @@
+CREATE KEYSPACE IF NOT EXISTS quill_test
+    WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};
+
+use quill_test;
+
 CREATE TABLE Person(
     id INT PRIMARY KEY,
     name VARCHAR,

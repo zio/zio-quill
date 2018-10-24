@@ -56,8 +56,8 @@ CREATE TABLE EncodingTestEntity(
 
 Create TABLE DateEncodingTestEntity(
     v1 date,
-    v2 datetime,
-    v3 timestamp
+    v2 datetime(6),
+    v3 timestamp(6)
 );
 
 Create TABLE LocalDateTimeEncodingTestEntity(
@@ -104,36 +104,6 @@ CREATE TABLE Product(
     id BIGINT NOT NULL AUTO_INCREMENT,
     sku BIGINT,
     PRIMARY KEY (id)
-);
-
-CREATE TABLE Contact(
-    firstName VARCHAR(255),
-    lastName VARCHAR(255),
-    age int,
-    addressFk int,
-    extraInfo VARCHAR(255)
-);
-
-CREATE TABLE Address(
-    id int,
-    street VARCHAR(255),
-    zip int,
-    otherExtraInfo VARCHAR(255)
-);
-
-CREATE TABLE Contact(
-    firstName VARCHAR(255),
-    lastName VARCHAR(255),
-    age int,
-    addressFk int,
-    extraInfo VARCHAR(255)
-);
-
-CREATE TABLE Address(
-    id int,
-    street VARCHAR(255),
-    zip int,
-    otherExtraInfo VARCHAR(255)
 );
 
 CREATE TABLE Contact(
