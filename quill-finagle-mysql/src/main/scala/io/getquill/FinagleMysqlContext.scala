@@ -11,6 +11,7 @@ import com.twitter.finagle.mysql.{ Result => MysqlResult }
 import com.twitter.finagle.mysql.Row
 import com.twitter.finagle.mysql.Transactions
 import com.twitter.finagle.mysql.TimestampValue
+import com.twitter.finagle.mysql.IsolationLevel
 import com.twitter.util.Await
 import com.twitter.util.Future
 import com.twitter.util.Local
@@ -103,6 +104,13 @@ class FinagleMysqlContext[N <: NamingStrategy](
 
   def transaction[T](f: => Future[T]) =
     client(Write).transaction {
+      transactional =>
+        currentClient.update(transactional)
+        f.ensure(currentClient.clear)
+    }
+
+  def transactionWithIsolation[T](isolationLevel: IsolationLevel)(f: => Future[T]) =
+    client(Write).transactionWithIsolation(isolationLevel) {
       transactional =>
         currentClient.update(transactional)
         f.ensure(currentClient.clear)
