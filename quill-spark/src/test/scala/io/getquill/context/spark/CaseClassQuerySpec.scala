@@ -8,7 +8,8 @@ case class Contact(firstName: String, lastName: String, age: Int, addressFk: Int
 case class Address(id: Int, street: String, zip: Int, otherExtraInfo: String)
 case class AddressableContact(firstName: String, lastName: String, age: Int, street: String, zip: Int)
 
-case class ContactSimplified(firstName: String, lastNameRenamed: String, firstReverse: String)
+case class ContactSimplifiedWithAddress(firstName: String, lastName: String, addressFk: Int)
+case class ContactSimplifiedRenamed(firstName: String, lastNameRenamed: String, firstReverse: String)
 case class ContactSimplifiedMapped(firstNameMapped: String, lastNameMapped: String, firstReverseMapped: String)
 
 case class ContactAndAddress(c: Contact, a: Address)
@@ -22,9 +23,9 @@ class CaseClassQuerySpec extends Spec {
   val context = io.getquill.context.sql.testContext
 
   val expectedData = Seq(
-    ContactSimplified("Alex", "Jones", "Alex".reverse),
-    ContactSimplified("Bert", "James", "Bert".reverse),
-    ContactSimplified("Cora", "Jasper", "Cora".reverse)
+    ContactSimplifiedRenamed("Alex", "Jones", "Alex".reverse),
+    ContactSimplifiedRenamed("Bert", "James", "Bert".reverse),
+    ContactSimplifiedRenamed("Cora", "Jasper", "Cora".reverse)
   )
 
   import testContext._
@@ -360,7 +361,7 @@ class CaseClassQuerySpec extends Spec {
     }
 
     val dataset: Dataset[AddressableContact] = testContext.run(q)
-    val mapped = dataset.map(ac => ContactSimplified(ac.firstName, ac.lastName, ac.firstName.reverse))
+    val mapped = dataset.map(ac => ContactSimplifiedRenamed(ac.firstName, ac.lastName, ac.firstName.reverse))
 
     mapped.collect() should contain theSameElementsAs expectedData
   }
@@ -369,7 +370,7 @@ class CaseClassQuerySpec extends Spec {
     val q = quote {
       for {
         p <- peopleEntries
-      } yield ContactSimplified(p.firstName, p.lastName, reverse(p.firstName))
+      } yield ContactSimplifiedRenamed(p.firstName, p.lastName, reverse(p.firstName))
     }
     testContext.run(q).collect() should contain theSameElementsAs expectedData
   }
@@ -378,13 +379,13 @@ class CaseClassQuerySpec extends Spec {
     val q = quote {
       for {
         p <- peopleEntries
-      } yield ContactSimplified(p.firstName, p.lastName, reverse(p.firstName))
+      } yield ContactSimplifiedRenamed(p.firstName, p.lastName, reverse(p.firstName))
     }
 
     val q2 = quote {
       for {
         p <- q
-      } yield ContactSimplified(p.firstName, p.lastNameRenamed, reverse(p.firstName))
+      } yield ContactSimplifiedRenamed(p.firstName, p.lastNameRenamed, reverse(p.firstName))
     }
     testContext.run(q2).collect() should contain theSameElementsAs expectedData
   }
@@ -393,13 +394,13 @@ class CaseClassQuerySpec extends Spec {
     val q = quote {
       for {
         p <- peopleEntries if (p.firstName == "Bert")
-      } yield ContactSimplified(p.firstName, p.lastName, reverse(p.firstName))
+      } yield ContactSimplifiedRenamed(p.firstName, p.lastName, reverse(p.firstName))
     }
 
     val q2 = quote {
       for {
         p <- q
-      } yield ContactSimplified(p.firstName, p.lastNameRenamed, reverse(p.firstName))
+      } yield ContactSimplifiedRenamed(p.firstName, p.lastNameRenamed, reverse(p.firstName))
     }
     testContext.run(q2).collect() should contain theSameElementsAs expectedData.filter(_.firstName == "Bert")
   }
@@ -408,13 +409,13 @@ class CaseClassQuerySpec extends Spec {
     val q = quote {
       for {
         p <- peopleEntries
-      } yield ContactSimplified(p.firstName, p.lastName, reverse(p.firstName))
+      } yield ContactSimplifiedRenamed(p.firstName, p.lastName, reverse(p.firstName))
     }
 
     val q2 = quote {
       for {
         p <- q if (p.lastNameRenamed == "James")
-      } yield ContactSimplified(p.firstName, p.lastNameRenamed, reverse(p.firstName))
+      } yield ContactSimplifiedRenamed(p.firstName, p.lastNameRenamed, reverse(p.firstName))
     }
     testContext.run(q2).collect() should contain theSameElementsAs expectedData.filter(_.firstName == "Bert")
   }
@@ -423,13 +424,13 @@ class CaseClassQuerySpec extends Spec {
     val q = quote {
       for {
         p <- peopleEntries if (p.firstName == "Bert" || p.firstName == "Alex")
-      } yield ContactSimplified(p.firstName, p.lastName, reverse(p.firstName))
+      } yield ContactSimplifiedRenamed(p.firstName, p.lastName, reverse(p.firstName))
     }
 
     val q2 = quote {
       for {
         p <- q if (p.lastNameRenamed == "James")
-      } yield ContactSimplified(p.firstName, p.lastNameRenamed, reverse(p.firstName))
+      } yield ContactSimplifiedRenamed(p.firstName, p.lastNameRenamed, reverse(p.firstName))
     }
     testContext.run(q2).collect() should contain theSameElementsAs expectedData.filter(_.firstName == "Bert")
   }
@@ -462,5 +463,42 @@ class CaseClassQuerySpec extends Spec {
 
     val expected = addressList.flatMap(a => peopleList.filter(_.addressFk == a.id).map(p => (a, p)))
     testContext.run(q).collect() should contain theSameElementsAs expected
+  }
+
+  "Case Class Union inside for comprehension" in {
+    val q = quote {
+      for {
+        a <- addressEntries if a.id > 1
+        p <- (
+          peopleEntries.filter(_.age > 33) unionAll peopleEntries.filter(_.firstName != "Bert")
+        ) if (a.id == p.addressFk)
+      } yield (p, a)
+    }
+
+    testContext.run(q).collect() should contain theSameElementsAs Seq(
+      (Contact("Alex", "Jones", 60, 2, "foo"), Address(2, "456 Old Street", 45678, "something else")),
+      (Contact("Alex", "Jones", 60, 2, "foo"), Address(2, "456 Old Street", 45678, "something else")),
+      (Contact("Bert", "James", 55, 3, "bar"), Address(3, "789 New Street", 89010, "another thing")),
+      (Contact("Cora", "Jasper", 33, 3, "baz"), Address(3, "789 New Street", 89010, "another thing"))
+    )
+  }
+
+  "Case Class Union with ad-hoc case class inside for comprehension" in {
+    val q = quote {
+      for {
+        a <- addressEntries if a.id > 1
+        p <- (
+          peopleEntries.filter(_.age > 33).map(p => ContactSimplifiedWithAddress(p.firstName, p.lastName, p.addressFk)) unionAll
+          peopleEntries.filter(_.firstName != "Bert").map(p => ContactSimplifiedWithAddress(p.firstName, p.lastName, p.addressFk))
+        ) if (a.id == p.addressFk)
+      } yield (p, a)
+    }
+
+    testContext.run(q).collect() should contain theSameElementsAs Seq(
+      (ContactSimplifiedWithAddress("Alex", "Jones", 2), Address(2, "456 Old Street", 45678, "something else")),
+      (ContactSimplifiedWithAddress("Alex", "Jones", 2), Address(2, "456 Old Street", 45678, "something else")),
+      (ContactSimplifiedWithAddress("Bert", "James", 3), Address(3, "789 New Street", 89010, "another thing")),
+      (ContactSimplifiedWithAddress("Cora", "Jasper", 3), Address(3, "789 New Street", 89010, "another thing"))
+    )
   }
 }
