@@ -12,6 +12,35 @@ class ActionMacro(val c: MacroContext)
   with ReifyLiftings {
   import c.universe.{ Ident => _, Function => _, _ }
 
+  def translateQuery(quoted: Tree): Tree =
+    c.untypecheck {
+      q"""
+        ..${EnableReflectiveCalls(c)}
+        val expanded = ${expand(extractAst(quoted))}
+        ${c.prefix}.translateQuery(
+          expanded.string,
+          expanded.prepare
+        )
+      """
+    }
+
+  def translateBatchQuery(quoted: Tree): Tree =
+    expandBatchAction(quoted) {
+      case (batch, param, expanded) =>
+        q"""
+          ..${EnableReflectiveCalls(c)}
+          ${c.prefix}.translateBatchQuery(
+            $batch.map { $param =>
+              val expanded = $expanded
+              (expanded.string, expanded.prepare)
+            }.groupBy(_._1).map {
+              case (string, items) =>
+                ${c.prefix}.BatchGroup(string, items.map(_._2).toList)
+            }.toList
+          )
+        """
+    }
+
   def runAction(quoted: Tree): Tree =
     c.untypecheck {
       q"""
