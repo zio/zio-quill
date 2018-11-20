@@ -1,3 +1,30 @@
+# 2.6.0
+
+- [add noFailFast option to FinagleMysqlContextConfig](https://github.com/getquill/quill/pull/1212)
+- [add transactionWithIsolation to FinagleMysqlContext](https://github.com/getquill/quill/pull/1213)
+- [Add encoding between java.time.ZonedDateTime and java.util.Date](https://github.com/getquill/quill/pull/1189)
+- [Fix Infix causing ignoring renamings](https://github.com/getquill/quill/pull/1183)
+- [Cassandra async improvements](https://github.com/getquill/quill/pull/1149)
+- [Add upsert support for SQLite](https://github.com/getquill/quill/pull/1191)
+- [I am a maintainer now. Such a honor! =')](https://github.com/getquill/quill/pull/1190)
+- [Fix CI snapshots publish](https://github.com/getquill/quill/pull/1135)
+- [add IO.lift](https://github.com/getquill/quill/pull/1146)
+- [Minor performance improvements](https://github.com/getquill/quill/pull/1148)
+- [Add encoder/decoder for Byte](https://github.com/getquill/quill/pull/1143)
+- [Use Option.getOrElse(boolean) to generate ... OR IS [NOT] NULL queries](https://github.com/getquill/quill/pull/1142)
+- [Upgrade finagle to 18.8.0](https://github.com/getquill/quill/pull/1144)
+- [Fix cassandra setup](https://github.com/getquill/quill/pull/1141)
+- [Fix renaming fields with schema/query meta for queries where unary/binary operation produces nested query](https://github.com/getquill/quill/pull/1134)
+- [use Scala 2.11.12 in Travis build](https://github.com/getquill/quill/pull/1127)
+- [sbt 1.1.6](https://github.com/getquill/quill/pull/1126)
+- [scala-js 0.6.24](https://github.com/getquill/quill/pull/1125)
+- [Add question mark escaping for Spark](https://github.com/getquill/quill/pull/1112)
+- [Fix typo in setup_mysql of setup_db_scripts.sh](https://github.com/getquill/quill/pull/1115)
+- [Allow mapping MySQL `TIMESTAMP` and `DATETIME` to Joda `DateTime` type.](https://github.com/getquill/quill/pull/1116)
+- [added error message example in the documentation.](https://github.com/getquill/quill/pull/1113)
+- [Wrong timeout configs](https://github.com/getquill/quill/pull/1089)
+
+
 # 2.6.0-SNAPSHOT
 
 - [Fix unnecessary nesting of infix queries](https://github.com/getquill/quill/pull/1131)
