@@ -9,7 +9,7 @@ enablePlugins(TutPlugin)
 
 lazy val modules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-core-jvm`, `quill-core-js`, `quill-sql-jvm`, `quill-sql-js`,
-  `quill-jdbc`, `quill-finagle-mysql`, `quill-finagle-postgres`, `quill-async`,
+  `quill-jdbc`, `quill-jdbc-monix`, `quill-finagle-mysql`, `quill-finagle-postgres`, `quill-async`,
   `quill-async-mysql`, `quill-async-postgres`, `quill-cassandra`, `quill-orientdb`,
   `quill-spark`
 )
@@ -83,6 +83,51 @@ lazy val `quill-jdbc` =
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
+
+lazy val `quill-monix` =
+  (project in file("quill-monix"))
+    .settings(commonSettings: _*)
+    .settings(mimaSettings: _*)
+    .settings(
+      fork in Test := true,
+      libraryDependencies ++= Seq(
+        "io.monix"                %% "monix-eval"          % "3.0.0-RC2",
+        "io.monix"                %% "monix-reactive"      % "3.0.0-RC2"
+      )
+    )
+    .dependsOn(`quill-core-jvm` % "compile->compile;test->test")
+
+lazy val `quill-jdbc-monix` =
+  (project in file("quill-jdbc-monix"))
+    .settings(commonSettings: _*)
+    .settings(mimaSettings: _*)
+    .settings(
+      fork in Test := true,
+      libraryDependencies ++= Seq(
+        "io.monix"                %% "monix-eval"          % "3.0.0-RC2",
+        "io.monix"                %% "monix-reactive"      % "3.0.0-RC2",
+        "com.zaxxer"              % "HikariCP"             % "3.2.0",
+        "mysql"                   % "mysql-connector-java" % "5.1.47"             % Test,
+        "com.h2database"          % "h2"                   % "1.4.197"            % Test,
+        "org.postgresql"          % "postgresql"           % "42.2.5"             % Test,
+        "org.xerial"              % "sqlite-jdbc"          % "3.25.2"             % Test,
+        "com.microsoft.sqlserver" % "mssql-jdbc"           % "7.1.1.jre8-preview" % Test,
+        "org.mockito"             %% "mockito-scala"       % "1.0.6"              % Test
+      ),
+      testGrouping in Test := {
+        (definedTests in Test).value map { test =>
+          if (test.name endsWith "IntegrationSpec")
+            Tests.Group(name = test.name, tests = Seq(test), runPolicy = Tests.SubProcess(
+              ForkOptions().withRunJVMOptions(Vector("-Xmx200m"))
+            ))
+          else
+            Tests.Group(name = test.name, tests = Seq(test), runPolicy = Tests.SubProcess(ForkOptions()))
+        }
+      }
+    )
+    .dependsOn(`quill-monix` % "compile->compile;test->test")
+    .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
+    .dependsOn(`quill-jdbc` % "compile->compile;test->test")
 
 lazy val `quill-spark` =
   (project in file("quill-spark"))
@@ -284,11 +329,11 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
   ),
   scalacOptions ++= {
     CrossVersion.partialVersion(scalaVersion.value) match {
-      case Some((2, 11)) => 
+      case Some((2, 11)) =>
         Seq("-Xlint", "-Ywarn-unused-import")
-      case Some((2, 12)) => 
-        Seq("-Xlint:-unused,_", 
-            "-Ywarn-unused:imports", 
+      case Some((2, 12)) =>
+        Seq("-Xlint:-unused,_",
+            "-Ywarn-unused:imports",
             "-Ycache-macro-class-loader:last-modified"
         )
       case _ => Seq()
