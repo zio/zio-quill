@@ -2,9 +2,9 @@ package io.getquill.context.orientdb
 
 import com.orientechnologies.orient.client.remote.OServerAdmin
 import com.orientechnologies.orient.core.db.OPartitionedDatabasePool
-import com.orientechnologies.orient.core.metadata.schema.OSchemaProxy
 import io.getquill._
 import io.getquill.util.LoadConfig
+import com.orientechnologies.orient.core.metadata.schema.OSchema
 
 object orientdb {
   private val conf = OrientDBContextConfig(LoadConfig("ctx"))
@@ -43,7 +43,7 @@ object orientdb {
     getOrCreateClass(schema, "Address")
   }
 
-  private def getOrCreateClass(iSchema: OSchemaProxy, iClassName: String): Unit = {
+  private def getOrCreateClass(iSchema: OSchema, iClassName: String): Unit = {
     if (!iSchema.existsClass(iClassName)) {
       iSchema.createClass(iClassName)
       ()
