@@ -22,7 +22,7 @@ object orientdb {
   private def setup(): Unit = {
     val orientDB = new OrientDB(conf.dbUrl, "root", "root", OrientDBConfig.defaultConfig());
     orientDB.createIfNotExists(databaseName, ODatabaseType.MEMORY);
-    
+
     val pool = new ODatabasePool(conf.dbUrl, "root", "root")
     val schema = pool.acquire().getMetadata.getSchema
     getOrCreateClass(schema, "DecodeNullTestEntity")
