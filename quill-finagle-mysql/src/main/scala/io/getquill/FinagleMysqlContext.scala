@@ -1,7 +1,6 @@
 package io.getquill
 
 import java.util.TimeZone
-
 import scala.util.Try
 import com.twitter.finagle.mysql.Client
 import com.twitter.finagle.mysql.LongValue
@@ -11,6 +10,7 @@ import com.twitter.finagle.mysql.{ Result => MysqlResult }
 import com.twitter.finagle.mysql.Row
 import com.twitter.finagle.mysql.Transactions
 import com.twitter.finagle.mysql.TimestampValue
+import com.twitter.finagle.mysql.IsolationLevel
 import com.twitter.util.Await
 import com.twitter.util.Future
 import com.twitter.util.Local
@@ -22,7 +22,7 @@ import io.getquill.context.sql.SqlContext
 import io.getquill.util.{ ContextLogger, LoadConfig }
 import io.getquill.util.Messages.fail
 import io.getquill.monad.TwitterFutureIOMonad
-import io.getquill.context.Context
+import io.getquill.context.{ Context, TranslateContext }
 
 sealed trait OperationType
 object OperationType {
@@ -37,6 +37,7 @@ class FinagleMysqlContext[N <: NamingStrategy](
   private[getquill] val extractionTimeZone: TimeZone
 )
   extends Context[MySQLDialect, N]
+  with TranslateContext
   with SqlContext[MySQLDialect, N]
   with FinagleMysqlDecoders
   with FinagleMysqlEncoders
@@ -108,6 +109,13 @@ class FinagleMysqlContext[N <: NamingStrategy](
         f.ensure(currentClient.clear)
     }
 
+  def transactionWithIsolation[T](isolationLevel: IsolationLevel)(f: => Future[T]) =
+    client(Write).transactionWithIsolation(isolationLevel) {
+      transactional =>
+        currentClient.update(transactional)
+        f.ensure(currentClient.clear)
+    }
+
   override def performIO[T](io: IO[T, _], transactional: Boolean = false): Result[T] =
     transactional match {
       case false => super.performIO(io)
@@ -162,6 +170,10 @@ class FinagleMysqlContext[N <: NamingStrategy](
           }.map(_.result())
       }
     }.map(_.flatten.toList)
+
+  override private[getquill] def prepareParams(statement: String, prepare: Prepare): Seq[String] = {
+    prepare(Nil)._2.map(param => prepareParam(param.value))
+  }
 
   private def extractReturningValue[T](result: MysqlResult, extractor: Extractor[T]) =
     extractor(SingleValueRow(LongValue(toOk(result).insertId)))

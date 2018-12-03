@@ -22,9 +22,10 @@ case class FinagleMysqlContextConfig(config: Config) {
   def maxWaiters = Try(config.getInt("pool.maxWaiters")).getOrElse(Int.MaxValue)
   def maxPrepareStatements = Try(config.getInt("maxPrepareStatements")).getOrElse(20)
   def connectTimeout = Try(config.getInt("connectTimeout")).getOrElse(1)
+  def noFailFast = Try(config.getBoolean("noFailFast")).getOrElse(false)
 
-  def client =
-    Mysql.client
+  def client = {
+    var client = Mysql.client
       .withCredentials(user, password)
       .withDatabase(database)
       .withMaxConcurrentPrepareStatements(maxPrepareStatements)
@@ -36,5 +37,10 @@ case class FinagleMysqlContextConfig(config: Config) {
         bufferSize = bufferSize,
         maxWaiters = maxWaiters
       ))
-      .newRichClient(dest)
+    if (noFailFast) {
+      client = client.withSessionQualifier.noFailFast
+    }
+    client.newRichClient(dest)
+  }
+
 }

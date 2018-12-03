@@ -1,8 +1,9 @@
 package io.getquill.context.finagle.mysql
 
 import java.util.TimeZone
+
 import com.twitter.finagle.mysql
-import com.twitter.finagle.mysql.{ EmptyValue, Error }
+import com.twitter.finagle.mysql.{ EmptyValue, Error, IsolationLevel }
 import com.twitter.util._
 import io.getquill.context.sql.{ TestDecoders, TestEncoders }
 import io.getquill.{ FinagleMysqlContext, _ }
@@ -39,6 +40,12 @@ class FinagleMysqlContextSpec extends Spec {
 
   "performIO" in {
     await(performIO(runIO(qr1.filter(_.s == "w/e")).transactional)) mustBe Nil
+  }
+
+  "transactionWithIsolation" in {
+    await(testContext.transactionWithIsolation(IsolationLevel.ReadCommitted) {
+      testContext.run(qr1.filter(_.s == "w/e"))
+    }) mustBe Nil
   }
 
   "different constructors" in {
@@ -83,6 +90,14 @@ class FinagleMysqlContextSpec extends Spec {
     }
     intercept[IllegalStateException](ctx.toOk(Error(-1, "no ok", "test")))
     ctx.close
+  }
+
+  "prepare" in {
+    import com.twitter.finagle.mysql.Parameter
+
+    testContext.prepareParams(
+      "", ps => (Nil, ps ++: List(Parameter.of("Sarah"), Parameter.of(127)))
+    ) mustEqual List("'Sarah'", "127")
   }
 
   override protected def beforeAll(): Unit = {

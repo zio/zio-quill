@@ -1,6 +1,6 @@
 package io.getquill
 
-import io.getquill.context.Context
+import io.getquill.context.{ Context, TranslateContext }
 import io.getquill.context.mirror.Row
 import scala.concurrent.Future
 import io.getquill.context.mirror.MirrorEncoders
@@ -14,6 +14,7 @@ import scala.util.Success
 
 class AsyncMirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy](val idiom: Idiom, val naming: Naming)
   extends Context[Idiom, Naming]
+  with TranslateContext
   with MirrorEncoders
   with MirrorDecoders
   with ScalaFutureIOMonad {
@@ -95,4 +96,7 @@ class AsyncMirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy](val idiom
         }, extractor
       )
     }
+
+  override private[getquill] def prepareParams(statement: String, prepare: Prepare): Seq[String] =
+    prepare(Row())._2.data.map(prepareParam)
 }

@@ -81,8 +81,8 @@ lazy val `quill-jdbc` =
         "mysql"                   % "mysql-connector-java" % "5.1.47"             % Test,
         "com.h2database"          % "h2"                   % "1.4.197"            % Test,
         "org.postgresql"          % "postgresql"           % "42.2.5"             % Test,
-        "org.xerial"              % "sqlite-jdbc"          % "3.23.1"             % Test,
-        "com.microsoft.sqlserver" % "mssql-jdbc"           % "6.1.7.jre8-preview" % Test
+        "org.xerial"              % "sqlite-jdbc"          % "3.25.2"             % Test,
+        "com.microsoft.sqlserver" % "mssql-jdbc"           % "7.1.1.jre8-preview" % Test
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -95,7 +95,7 @@ lazy val `quill-spark` =
       crossScalaVersions := Seq("2.11.12"),
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "org.apache.spark" %% "spark-sql" % "2.2.0"
+        "org.apache.spark" %% "spark-sql" % "2.3.2"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -107,7 +107,7 @@ lazy val `quill-finagle-mysql` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.twitter" %% "finagle-mysql" % "18.9.0"
+        "com.twitter" %% "finagle-mysql" % "18.9.1"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -119,7 +119,7 @@ lazy val `quill-finagle-postgres` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "io.github.finagle" %% "finagle-postgres" % "0.7.0"
+        "io.github.finagle" %% "finagle-postgres" % "0.8.2"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -180,7 +180,7 @@ lazy val `quill-orientdb` =
       .settings(
         fork in Test := true,
         libraryDependencies ++= Seq(
-          "com.orientechnologies" % "orientdb-graphdb" % "2.2.37"
+          "com.orientechnologies" % "orientdb-graphdb" % "3.0.11"
         )
       )
       .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")

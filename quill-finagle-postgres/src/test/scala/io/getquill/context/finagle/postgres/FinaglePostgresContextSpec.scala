@@ -35,6 +35,15 @@ class FinaglePostgresContextSpec extends Spec {
     ctx.close
   }
 
+  "prepare" in {
+    import com.twitter.finagle.postgres.Param
+    import com.twitter.finagle.postgres.values.ValueEncoder._
+
+    testContext.prepareParams(
+      "", ps => (Nil, ps ++: List(Param("Sarah"), Param(127)))
+    ) mustEqual List("'Sarah'", "'127'")
+  }
+
   override protected def beforeAll(): Unit = {
     await(testContext.run(qr1.delete))
     ()

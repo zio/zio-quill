@@ -1,7 +1,6 @@
 package io.getquill
 
 import com.orientechnologies.orient.core.record.impl.ODocument
-import com.orientechnologies.orient.core.sql.OCommandSQL
 import com.orientechnologies.orient.core.sql.query.OSQLSynchQuery
 import com.typesafe.config.Config
 import io.getquill.context.orientdb.OrientDBSessionContext
@@ -47,7 +46,8 @@ class OrientDBSyncContext[N <: NamingStrategy](
   def executeAction[T](orientQl: String, prepare: Prepare = identityPrepare): Unit = {
     val (params, objects) = prepare(super.prepare())
     logger.logQuery(orientQl, params)
-    oDatabase.command(new OCommandSQL(orientQl)).execute(objects.toArray)
+    oDatabase.command(orientQl, objects.asInstanceOf[Seq[Object]]: _*)
+    ()
   }
 
   def executeBatchAction[T](groups: List[BatchGroup]): Unit = {
