@@ -5,7 +5,7 @@ import com.twitter.finagle.client.DefaultPool
 import com.twitter.finagle.Mysql
 import com.twitter.util.Try
 import com.typesafe.config.Config
-import com.twitter.util.TimeConversions._
+import com.twitter.conversions.time._
 
 case class FinagleMysqlContextConfig(config: Config) {
 
