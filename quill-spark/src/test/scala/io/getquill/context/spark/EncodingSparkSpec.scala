@@ -42,6 +42,38 @@ class EncodingSparkSpec extends Spec {
     testContext.run(q).collect.toList mustEqual List(v)
   }
 
+  "string with ' " in {
+    val v = "will'break"
+
+    val entities = liftQuery(Seq(
+      EncodingTestEntity(
+        v,
+        BigDecimal(1.1),
+        true,
+        11.toByte,
+        23.toShort,
+        33,
+        431L,
+        42d,
+        Array(1.toByte, 2.toByte),
+        Some("s"),
+        Some(BigDecimal(1.1)),
+        Some(true),
+        Some(11.toByte),
+        Some(23.toShort),
+        Some(33),
+        Some(431L),
+        Some(42d),
+        Some(Array(1.toByte, 2.toByte))
+      )
+    ).toDS)
+
+    val q = quote {
+      entities.filter(_.v1 == lift(v)).map(_.v1)
+    }
+    testContext.run(q).collect.toList mustEqual List(v)
+  }
+
   "bigDecimal" in {
     val v = BigDecimal(1.1)
     val q = quote {

@@ -41,7 +41,7 @@ object StatementInterpolator {
   implicit def stringTokenTokenizer: Tokenizer[StringToken] = Tokenizer[StringToken](identity)
   implicit def liftingTokenTokenizer: Tokenizer[ScalarLiftToken] = Tokenizer[ScalarLiftToken](identity)
 
-  implicit class TokenList[T](list: List[T])(implicit tokenize: Tokenizer[T]) {
+  implicit class TokenList[T](list: List[T]) {
     def mkStmt(sep: String = ", ")(implicit tokenize: Tokenizer[T]) = {
       val l1 = list.map(_.token)
       val l2 = List.fill(l1.size - 1)(StringToken(sep))
