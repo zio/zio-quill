@@ -1,6 +1,5 @@
 package io.getquill.monad
 
-import scala.language.experimental.macros
 import scala.collection.generic.CanBuildFrom
 import scala.language.higherKinds
 import scala.util.Failure
@@ -23,22 +22,12 @@ trait IOMonad {
   type Effect = io.getquill.monad.Effect
   val Effect = io.getquill.monad.Effect
 
-  def runIO[T](quoted: Quoted[T]): IO[RunQuerySingleResult[T], Effect.Read] = macro IOMonadMacro.runIO
-  def runIO[T](quoted: Quoted[Query[T]]): IO[RunQueryResult[T], Effect.Read] = macro IOMonadMacro.runIO
-  def runIO(quoted: Quoted[Action[_]]): IO[RunActionResult, Effect.Write] = macro IOMonadMacro.runIO
-  def runIO[T](quoted: Quoted[ActionReturning[_, T]]): IO[RunActionReturningResult[T], Effect.Write] = macro IOMonadMacro.runIO
-  def runIO(quoted: Quoted[BatchAction[Action[_]]]): IO[RunBatchActionResult, Effect.Write] = macro IOMonadMacro.runIO
-  def runIO[T](quoted: Quoted[BatchAction[ActionReturning[_, T]]]): IO[RunBatchActionReturningResult[T], Effect.Write] = macro IOMonadMacro.runIO
-
-  case class Run[T, E <: Effect](f: () => Result[T]) extends IO[T, E]
   protected case class FromTry[T](t: Try[T]) extends IO[T, Effect]
   protected case class Sequence[A, M[X] <: TraversableOnce[X], E <: Effect](in: M[IO[A, E]], cbfIOToResult: CanBuildFrom[M[IO[A, E]], Result[A], M[Result[A]]], cbfResultToValue: CanBuildFrom[M[Result[A]], A, M[A]]) extends IO[M[A], E]
   protected case class TransformWith[T, S, E1 <: Effect, E2 <: Effect](io: IO[T, E1], f: Try[T] => IO[S, E2]) extends IO[S, E1 with E2]
   protected case class Transactional[T, E <: Effect](io: IO[T, E]) extends IO[T, E with Effect.Transaction]
 
   object IO {
-
-    def lift[T](result: => Result[T]): IO[T, Effect] = Run(() => result)
 
     def fromTry[T](result: Try[T]): IO[T, Effect] = FromTry(result)
 
@@ -69,7 +58,7 @@ trait IOMonad {
       sequence(in.map(fn)).map(r => cbf().++=(r).result)
   }
 
-  sealed trait IO[+T, -E <: Effect] {
+  trait IO[+T, -E <: Effect] {
 
     def transactional: IO[T, E with Effect.Transaction] = Transactional(this)
 
