@@ -492,32 +492,184 @@ ctx.run(q)
 ```
 
 ### joins
+Joins are arguably the largest source of complexity in most SQL queries.
+Quill offers a few different syntaxes so you can choose the right one for your use-case!
 
-In addition to applicative joins Quill also supports explicit joins (both inner and left/right/full outer joins).
+````scala
+// Applicative Joins: 
+A.join(B).on(_.id == _.fk)
+ 
+// Implicit Joins:
+for {
+  a <- A
+  b <- B if (a.id == b.fk) 
+} yield (a, b)
+ 
+// Flat Joins:
+for {
+  a <- A
+  b <- B.join(_.fk == a.id)
+} yield (a, b)
+````
+
+Let's see them one by one assuming the following schema:
+````scala
+case class Person(id:Int, name:String)
+case class Address(street:String, zip:Int, fk:Int)
+````
+(Note: If your use case involves lots and lots of joins, both inner and outer. Skip right to the flat-joins section!)
+
+#### applicative joins
+
+Applicative joins are useful for joining two tables together,
+they are straightforward to understand, and typically look good on one line.
+Quill supports inner, left-outer, right-outer, and full-outer (i.e. cross) applicative joins.
 
 ```scala
-
+// Inner Join
 val q = quote {
-  query[Person].join(query[Contact]).on((p, c) => c.personId == p.id)
+  query[Person].join(query[Address]).on(_.id == _.fk)
 }
-
-ctx.run(q)
-// SELECT p.id, p.name, p.age, c.personId, c.phone
-// FROM Person p INNER JOIN Contact c ON c.personId = p.id
-
+ 
+ctx.run(q): List[(Person, Address)]
+// SELECT x1.id, x1.name, x2.street, x2.zip, x2.fk 
+// FROM Person x1 INNER JOIN Address x2 ON x1.id = x2.fk
+ 
+// Left (Outer) Join
 val q = quote {
-  query[Person].leftJoin(query[Contact]).on((p, c) => c.personId == p.id)
+  query[Person].leftJoin(query[Address]).on((p, a) => p.id == a.fk)
 }
+ 
+ctx.run(q): List[(Person, Option[Address])]
+// Note that when you use named-variables in your comprehension, quill do it's best to honor them in the query.
+// SELECT p.id, p.name, a.street, a.zip, a.fk 
+// FROM Person p LEFT JOIN Address a ON p.id = a.fk
+ 
+// Right (Outer) Join
+val q = quote {
+  query[Person].rightJoin(query[Address]).on((p, a) => p.id == a.fk)
+}
+ 
+ctx.run(q): List[(Option[Person], Address)]
+// SELECT p.id, p.name, a.street, a.zip, a.fk 
+// FROM Person p RIGHT JOIN Address a ON p.id = a.fk
+ 
+// Full (Outer) Join
+val q = quote {
+  query[Person].fullJoin(query[Address]).on((p, a) => p.id == a.fk)
+}
+ 
+ctx.run(q): List[(Option[Person], Option[Address])]
+// SELECT p.id, p.name, a.street, a.zip, a.fk 
+// FROM Person p FULL JOIN Address a ON p.id = a.fk
+````
+ 
+What about joining more then two tables with the applicative syntax?
+Here's how to do that:
+````scala
+// All is well for two tables but for three or more, the nesting mess begins:
+val q = quote {
+  query[Person]
+    .join(query[Address]).on({case (p, a) => p.id == a.fk}) // Let's use 'case' here to stay consistent
+    .join(query[Company]).on({case ((p, a), c) => a.zip == c.zip})
+}
+ 
+ctx.run(q): List[((Person, Address), Company)]
+// (Unfortunately when you use 'case' statements, Quill can't help you with the variables names either!)
+// SELECT x01.id, x01.name, x11.street, x11.zip, x11.fk, x12.name, x12.zip 
+// FROM Person x01 INNER JOIN Address x11 ON x01.id = x11.fk INNER JOIN Company x12 ON x11.zip = x12.zip
+````
+No worries though, implicit joins and flat joins have your other use-cases covered!
 
-ctx.run(q)
-// SELECT p.id, p.name, p.age, c.personId, c.phone
-// FROM Person p LEFT JOIN Contact c ON c.personId = p.id
+#### implicit joins
 
-```
+Quill's implicit joins use a monadic syntax making them pleasant to use for joining many tables together.
+They look a lot like Scala collections when used in for-comprehensions
+making them familiar to a typical Scala developer. 
+What's the catch? They can only do inner-joins.
 
-The example joins above cover the simple case. What do you do when a query requires joining more than 2 tables?
+````scala
+val q = quote {
+  for {
+    p <- query[Person]
+    a <- query[Address] if (p.id == a.fk)
+  } yield (p, a)
+}
+ 
+run(q): List[(Person, Address)]
+// SELECT p.id, p.name, a.street, a.zip, a.fk 
+// FROM Person p, Address a WHERE p.id = a.fk
+ ````
+ 
+Now this is great because you can keep adding more and more joins
+without having to do any pesky nesting.
+ ````scala
+val q = quote {
+  for {
+    p <- query[Person]
+    a <- query[Address] if (p.id == a.fk)
+    a <- query[Address] if (c.zip == a.zip)
+  } yield (p, a, c)
+}
+ 
+run(q): List[(Person, Address, Company)]
+// SELECT p.id, p.name, a.street, a.zip, a.fk, c.name, c.zip 
+// FROM Person p, Address a, Company c WHERE p.id = a.fk AND c.zip = a.zip
+````
+Well that looks nice but wait! What If I need to inner, **and** outer join lots of tables nicely?
+No worries, flat-joins are here to help!
 
-With Quill the following multi-join queries are equivalent, choose according to preference:
+### flat joins
+
+Flat Joins give you the best of both worlds! In the monadic syntax, you can use both inner joins,
+and left-outer joins together without any of that pesky nesting.
+
+````scala
+// Inner Join
+val q = quote {
+  for { 
+    p <- query[Person]
+    a <- query[Address].join(a => a.fk == p.id)
+  } yield (p,a)
+}
+ 
+ctx.run(q): List[(Person, Address)]
+// SELECT p.id, p.name, a.street, a.zip, a.fk
+// FROM Person p LEFT JOIN Address a ON a.fk = p.id
+ 
+// Left (Outer) Join
+val q = quote {
+  for { 
+    p <- query[Person]
+    a <- query[Address].leftJoin(a => a.fk == p.id)
+  } yield (p,a)
+}
+ 
+ctx.run(q): List[(Person, Option[Address])]
+// SELECT p.id, p.name, a.street, a.zip, a.fk 
+// FROM Person p LEFT JOIN Address a ON a.fk = p.id
+````
+ 
+Now you can keep adding both right and left joins without nesting!
+````scala
+val q = quote {
+  for { 
+    p <- query[Person]
+    a <- query[Address].join(a => a.fk == p.id)
+    c <- query[Company].leftJoin(c => c.zip == a.zip)
+  } yield (p,a,c)
+}
+ 
+ctx.run(q): List[(Person, Address, Option[Company])]
+// SELECT p.id, p.name, a.street, a.zip, a.fk, c.name, c.zip 
+// FROM Person p 
+// INNER JOIN Address a ON a.fk = p.id 
+// LEFT JOIN Company c ON c.zip = a.zip
+````
+
+Can't figure out what kind of join you want to use? Who says you have to choose?
+
+With Quill the following multi-join queries are equivalent, use them according to preference:
 
 ```scala
 
@@ -545,6 +697,258 @@ ctx.run(qNested)
 // SELECT p.id, p.name, p.age, e.id, e.personId, e.name, c.id, c.phone
 // FROM Person p INNER JOIN Employer e ON p.id = e.personId LEFT JOIN Contact c ON c.personId = p.id
 ```
+
+Note that in some cases implicit and flat joins cannot be used together, for example, the following
+query will fail.
+````scala
+val q = quote {
+  for {
+    p <- query[Person]
+    p1 <- query[Person] if (p1.name == p.name)
+    c <- query[Contact].leftJoin(_.personId == p.id)
+  } yield (p, c)
+}
+ 
+ct.run(q)
+// java.lang.IllegalArgumentException: requirement failed: Found an `ON` table reference of a table that is 
+// not available: Set(p). The `ON` condition can only use tables defined through explicit joins.
+````
+This happens because a explicit join typically cannot be done after an implicit join in the same query.
+ 
+A good guideline is in any query or subquery, choose one of the following:
+ * Use flat-joins + applicative joins or
+ * Use implicit joins
+ 
+Also, note that not all Option operations are available on outer-joined tables (i.e. tables wrapped in an `Option` object),
+only a specific subset. This is mostly due to the inherent limitations of SQL itself. For more information, see the
+'Optional Tables' section.
+
+### Optionals / Nullable Fields
+Option objects are used to encode nullable fields.
+Say you have the following schema:
+````sql
+CREATE TABLE Person(
+  id INT NOT NULL PRIMARY KEY,
+  name VARCHAR(255) -- This is nullable!
+);
+CREATE TABLE Address(
+  fk INT, -- This is nullable!
+  street VARCHAR(255) NOT NULL,
+  zip INT NOT NULL,
+  CONSTRAINT a_to_p FOREIGN KEY (fk) REFERENCES Person(id)
+);
+CREATE TABLE Company(
+  name VARCHAR(255) NOT NULL,
+  zip INT NOT NULL
+)
+````
+This would encode to the following:
+````scala
+case class Person(id:Int, name:Option[String])
+case class Address(fk:Option[Int], street:String, zip:Int)
+case class Company(name:String, zip:Int)
+````
+Let's go through the typical operations of optionals.
+(Note that as of now, you cannot compare two optional fields directly, see the 'exists' section on how to do that.)
+
+#### isDefined / isEmpty
+
+The `isDefined` method is generally a good way to null-check a nullable field:
+````scala
+val q = quote {
+  query[Address].filter(a => a.fk.isDefined)
+}
+ctx.run(q)
+// SELECT a.fk, a.street, a.zip FROM Address a WHERE a.fk IS NOT NULL
+````
+The `isEmpty` method works the same way:
+````scala
+val q = quote {
+  query[Address].filter(a => a.fk.isEmpty)
+}
+ctx.run(q)
+// SELECT a.fk, a.street, a.zip FROM Address a WHERE a.fk IS NULL
+````
+
+ 
+#### exists
+
+This method is typically used for inspecting nullable fields inside of boolean conditions, most notably joining!
+````scala
+val q = quote {
+  query[Person].join(query[Address]).on((p, a)=> a.fk.exists(_ == p.id))
+}
+ctx.run(q)
+// SELECT p.id, p.name, a.fk, a.street, a.zip FROM Person p INNER JOIN Address a ON a.fk = p.id
+````
+It is also useful for comparing two optional values:
+````scala
+val q = quote {
+  for { 
+    pa <- query[Person] 
+    pb <- query[Person] if (pa.name.exists(na => pb.name.exists(nb => na == nb))) 
+  } yield (pa, pb) 
+}
+ctx.run(q)
+// SELECT pa.id, pa.name, pb.id, pb.name FROM Person pa, Person pb WHERE pa.name = pb.name
+````
+Note however that as you can see from the examples above, the `exists` method does not cause the generated
+SQL to do an explicit null-check in order to express the `False` case. This is because Quill relies on the
+typical database behavior of immediately falsifying a statement that has `null` on one side of the equation.
+
+#### forall
+
+Use this method in boolean conditions that should succeed in the null case.
+````scala
+val q = quote {
+  query[Person].join(query[Address]).on((p, a)=> a.fk.forall(_ == p.id))
+}
+ctx.run(q)
+SELECT p.id, p.name, a.fk, a.street, a.zip FROM Person p INNER JOIN Address a ON a.fk IS NULL OR a.fk = p.id
+````
+Typically this is useful when doing negative conditions, e.g. when a field is **not** some specified value (e.g. `"Joe"`).
+Being `null` in this case is typically a matching result.
+````scala
+val q = quote {
+  query[Person].filter(p => p.name.forall(_ != "Joe"))
+}
+ 
+ctx.run(q)
+// SELECT p.id, p.name FROM Person p WHERE p.name IS NULL OR p.name <> 'Joe'
+````
+
+#### map
+As in regular Scala code, performing any operation on an optional value typically requires using the `map` function.
+````scala
+val q = quote {
+ for {
+    p <- query[Person]
+  } yield (p.id, p.name.map("Dear " + _))
+}
+ 
+ctx.run(q)
+// SELECT p.id, 'Dear ' || p.name FROM Person p
+````
+
+Additionally, this this method is useful when you want to get a non-optional field out of a outer-joined table
+(i.e. a table wrapped in an `Option` object).
+
+````scala
+val q = quote {
+  query[Company].leftJoin(query[Address])
+    .on((c, a) => c.zip == a.zip)
+    .map({case(c,a) =>                          // Row type is (Company, Option[Address])
+      (c.name, a.map(_.street), a.map(_.zip))   // Use `Option.map` to get `street` and `zip` fields
+    }) 
+}
+````
+
+For more details about this operation (and some caveats), see the 'Optional Tables' section.
+
+#### flatMap and flatten
+
+Use these when the `Option.map` functionality is not sufficient. This typically happens when you need to manipulate
+multiple nullable fields in a way which would otherwise result in `Option[Option[T]]`.
+````scala
+val q = quote {
+  for {
+    a <- query[Person]
+    b <- query[Person] if (a.id > b.id)
+  } yield (
+    // If this was `a.name.map`, resulting record type would be Option[Option[String]]
+    a.name.flatMap(an =>
+      b.name.map(bn => 
+        an+" comes after "+bn)))
+}
+ 
+ctx.run(q): List[Option[String]]
+// SELECT (a.name || ' comes after ') || b.name FROM Person a, Person b WHERE a.id > b.id
+ 
+// Alternatively, you can use `flatten`
+val q = quote {
+  for {
+    a <- query[Person]
+    b <- query[Person] if (a.id > b.id)
+  } yield (
+    a.name.map(an => 
+      b.name.map(bn => 
+        an + " comes after " + bn)).flatten)
+}
+ 
+ctx.run(q): List[Option[String]]
+// SELECT (a.name || ' comes after ') || b.name FROM Person a, Person b WHERE a.id > b.id
+```` 
+This is also very useful when selecting from outer-joined tables i.e. where the entire table
+is inside of an `Option` object. Note how below we get the `fk` field from `Option[Address]`.
+
+````scala
+val q = quote {
+  query[Person].leftJoin(query[Address])
+    .on((p, a)=> a.fk.exists(_ == p.id))
+    .map({case (p /*Person*/, a /*Option[Address]*/) => (p.name, a.flatMap(_.fk))})
+}
+ 
+ctx.run(q): List[(Option[String], Option[Int])]
+// SELECT p.name, a.fk FROM Person p LEFT JOIN Address a ON a.fk = p.id
+````
+
+#### Optional Tables
+
+As we have seen in the examples above, only the `map` and `flatMap` methods are available on outer-joined tables
+(i.e. tables wrapped in a `Option` object).
+ 
+Since you cannot use `Option[Table].isDefined`, if you want to null-check a whole table
+(e.g. if a left-join was not matched), you have to `map` to a specific field on which you can do the null-check.
+
+````scala
+val q = quote {
+  query[Company].leftJoin(query[Address])
+    .on((c, a) => c.zip == a.zip)         // Row type is (Company, Option[Address])
+    .filter({case(c,a) => a.isDefined})   // You cannot null-check a whole table
+}
+````
+ 
+Instead, map the row-variable to a specific field and then check that field.
+````scala
+val q = quote {
+  query[Company].leftJoin(query[Address])
+    .on((c, a) => c.zip == a.zip)                     // Row type is (Company, Option[Address])
+    .filter({case(c,a) => a.map(_.street).isDefined}) // Null-check a non-nullable field instead
+}
+ctx.run(q)
+// SELECT c.name, c.zip, a.fk, a.street, a.zip 
+// FROM Company c 
+// LEFT JOIN Address a ON c.zip = a.zip 
+// WHERE a.street IS NOT NULL
+````
+ 
+Finally, it is worth noting that a whole table can be wrapped into an `Option` object. This is particularily
+useful when doing a union on table-sets that are both right-joined and left-joined together.
+````scala
+val aCompanies = quote {
+  for {
+    c <- query[Company] if (c.name like "A%")
+    a <- query[Address].join(_.zip == c.zip)
+  } yield (c, Option(a))  // change (Company, Address) to (Company, Option[Address]) 
+}
+val bCompanies = quote {
+  for {
+    c <- query[Company] if (c.name like "A%")
+    a <- query[Address].leftJoin(_.zip == c.zip)
+  } yield (c, a) // (Company, Option[Address])
+}
+val union = quote {
+  aCompanies union bCompanies
+}
+ctx.run(union)
+// SELECT x.name, x.zip, x.fk, x.street, x.zip FROM (
+// (SELECT c.name name, c.zip zip, x1.zip zip, x1.fk fk, x1.street street 
+// FROM Company c INNER JOIN Address x1 ON x1.zip = c.zip WHERE c.name like 'A%') 
+// UNION 
+// (SELECT c1.name name, c1.zip zip, x2.zip zip, x2.fk fk, x2.street street 
+// FROM Company c1 LEFT JOIN Address x2 ON x2.zip = c1.zip WHERE c1.name like 'A%')
+// ) x
+````
 
 ### Ad-Hoc Case Classes
 
