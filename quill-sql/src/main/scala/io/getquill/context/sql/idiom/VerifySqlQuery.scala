@@ -13,6 +13,9 @@ import io.getquill.context.sql.SqlQuery
 import io.getquill.context.sql.TableContext
 import io.getquill.context.sql.UnaryOperationSqlQuery
 import io.getquill.quotation.FreeVariables
+import io.getquill.ast.CollectAst
+import io.getquill.ast.Property
+import io.getquill.ast.Aggregation
 
 case class Error(free: List[Ident], ast: Ast)
 case class InvalidSqlQuery(errors: List[Error]) {
@@ -62,20 +65,29 @@ object VerifySqlQuery {
 
     val aliases = query.from.flatMap(this.aliases).map(Ident(_)) :+ Ident("*") :+ Ident("?")
 
-    def verifyFreeVars(ast: Ast) =
-      (FreeVariables(ast) -- aliases).toList match {
+    def verifyAst(ast: Ast) = {
+      val freeVariables =
+        (FreeVariables(ast) -- aliases).toList
+      val freeIdents =
+        (CollectAst(ast) {
+          case ast: Property            => None
+          case Aggregation(_, _: Ident) => None
+          case ast: Ident               => Some(ast)
+        }).flatten
+      (freeVariables ++ freeIdents) match {
         case Nil  => None
         case free => Some(Error(free, ast))
       }
+    }
 
     val freeVariableErrors: List[Error] =
-      query.where.flatMap(verifyFreeVars).toList ++
-        query.orderBy.map(_.ast).flatMap(verifyFreeVars) ++
-        query.limit.flatMap(verifyFreeVars) ++
-        query.select.map(_.ast).flatMap(verifyFreeVars) ++
+      query.where.flatMap(verifyAst).toList ++
+        query.orderBy.map(_.ast).flatMap(verifyAst) ++
+        query.limit.flatMap(verifyAst) ++
+        query.select.map(_.ast).filterNot(_.isInstanceOf[Ident]).flatMap(verifyAst) ++
         query.from.flatMap {
-          case j: JoinContext     => verifyFreeVars(j.on)
-          case j: FlatJoinContext => verifyFreeVars(j.on)
+          case j: JoinContext     => verifyAst(j.on)
+          case j: FlatJoinContext => verifyAst(j.on)
           case _                  => Nil
         }
 
