@@ -11,15 +11,11 @@ import io.getquill.ast.StringOperator
 import io.getquill.ast.Tuple
 import io.getquill.ast.Value
 import io.getquill.ast.CaseClass
-import io.getquill.context.spark.norm.{EscapeQuestionMarks, ExpandEntityIds}
+import io.getquill.context.spark.norm.{ EscapeQuestionMarks, ExpandEntityIds }
 import io.getquill.context.sql.SqlQuery
 import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.context.sql.norm.SqlNormalize
-import io.getquill.idiom.StatementInterpolator.Impl
-import io.getquill.idiom.StatementInterpolator.TokenImplicit
-import io.getquill.idiom.StatementInterpolator.Tokenizer
-import io.getquill.idiom.StatementInterpolator.stringTokenizer
-import io.getquill.idiom.StatementInterpolator.tokenTokenizer
+import io.getquill.idiom.StatementInterpolator._
 import io.getquill.idiom.Token
 import io.getquill.util.Messages.trace
 
@@ -83,6 +79,12 @@ class SparkDialect extends SqlIdiom {
     case CaseClass(values) => stmt"${values.map({ case (prop, value) => stmt"${value.token} ${prop.token}".token }).token}"
     case other             => super.valueTokenizer.token(other)
   }
+
+  override protected def tokenizeGroupBy(values: Ast)(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Token =
+    values match {
+      case Tuple(items) => items.mkStmt()
+      case values       => values.token
+    }
 }
 
 object SparkDialect extends SparkDialect
