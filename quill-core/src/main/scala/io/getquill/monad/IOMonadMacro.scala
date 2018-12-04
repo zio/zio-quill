@@ -11,7 +11,14 @@ class IOMonadMacro(val c: MacroContext) {
 
   def runIOEC(quoted: Tree): Tree = {
     // make sure we're shadowing the current ec implicit
-    val ecName = c.inferImplicitValue(c.weakTypeOf[ExecutionContext]).symbol.name.decodedName.toString
+    val ecName =
+      c.inferImplicitValue(c.weakTypeOf[ExecutionContext]) match {
+        case Select(_, name) =>
+          name.decodedName.toString
+        case tree =>
+          tree.symbol.name.decodedName.toString
+      }
+
     val v = q"implicit val ${TermName(ecName)}: scala.concurrent.ExecutionContext"
     q"${c.prefix}.Run($v => ${c.prefix}.run($quoted))"
   }
