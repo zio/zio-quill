@@ -408,15 +408,23 @@ class RenamePropertiesSpec extends Spec {
     }
 
     "infix" - {
+      case class B(b: Int) extends Embedded
+      case class A(u: Long, v: Int, w: B)
       "does not break schema" in {
-        case class B(b: Int) extends Embedded
-        case class A(u: Long, v: Int, w: B)
         val q = quote {
           infix"${querySchema[A]("C", _.v -> "m", _.w.b -> "n")} LIMIT 10".as[Query[A]]
         }
 
         testContext.run(q).string mustEqual
           "SELECT x.u, x.m, x.n FROM C x LIMIT 10"
+      }
+      "with filter" in {
+        val q = quote {
+          infix"${querySchema[A]("C", _.v -> "m", _.w.b -> "n").filter(x => x.v == 1)} LIMIT 10".as[Query[A]]
+        }
+
+        testContext.run(q).string mustEqual
+          "SELECT x.u, x.m, x.n FROM C x WHERE x.m = 1 LIMIT 10"
       }
     }
   }
