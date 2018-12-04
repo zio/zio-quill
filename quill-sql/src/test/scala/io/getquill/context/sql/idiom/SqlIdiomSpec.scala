@@ -126,7 +126,7 @@ class SqlIdiomSpec extends Spec {
             qr1.map(i => new IntLong(i.i, i.l)).distinct
           }
           testContext.run(q).string mustEqual
-            "SELECT x.i, x.l FROM (SELECT DISTINCT i.i, i.l FROM TestEntity i) x"
+            "SELECT i.i, i.l FROM (SELECT DISTINCT i.i, i.l FROM TestEntity i) i"
         }
         "caseclass companion constructor" in {
           case class IntLong(i: Int, l: Long)
@@ -134,7 +134,7 @@ class SqlIdiomSpec extends Spec {
             qr1.map(i => IntLong(i.i, i.l)).distinct
           }
           testContext.run(q).string mustEqual
-            "SELECT x.i, x.l FROM (SELECT DISTINCT i.i, i.l FROM TestEntity i) x"
+            "SELECT i.i, i.l FROM (SELECT DISTINCT i.i, i.l FROM TestEntity i) i"
         }
 
         "nesting" in {
@@ -142,8 +142,31 @@ class SqlIdiomSpec extends Spec {
             qr1.map(i => i.i).distinct.map(x => x + 1)
           }
           testContext.run(q).string mustEqual
-            "SELECT x + 1 FROM (SELECT DISTINCT i.i FROM TestEntity i) x"
+            "SELECT i.i + 1 FROM (SELECT DISTINCT i.i FROM TestEntity i) i"
         }
+
+        "with join + filter" in {
+          val q = quote {
+            for {
+              v1 <- qr1.map(i => i.i).distinct
+              v2 <- qr2.filter(_.i == v1)
+            } yield (v1, v2)
+          }
+          testContext.run(q).string mustEqual
+            "SELECT i.i, x1.s, x1.i, x1.l, x1.o FROM (SELECT DISTINCT i.i FROM TestEntity i) i, TestEntity2 x1 WHERE x1.i = i.i"
+        }
+
+        "with two joins" in {
+          val q = quote {
+            for {
+              v1 <- qr1.map(i => i.i).distinct
+              v2 <- qr2.sortBy(_.l).join(_.i == v1)
+            } yield (v1, v2)
+          }
+          testContext.run(q).string mustEqual
+            "SELECT i.i, x2.s, x2.i, x2.l, x2.o FROM (SELECT DISTINCT i.i FROM TestEntity i) i INNER JOIN (SELECT x2.s, x2.i, x2.l, x2.o FROM TestEntity2 x2 ORDER BY x2.l ASC NULLS FIRST) x2 ON x2.i = i.i"
+        }
+
         "followed by aggregation" in {
           val q = quote {
             qr1.map(i => i.i).distinct.size
@@ -520,7 +543,7 @@ class SqlIdiomSpec extends Spec {
       val q = quote {
         qr1.map(t => t.i).nested.filter(i => i > 1)
       }
-      testContext.run(q.dynamic).string mustEqual
+      testContext.run(q).string mustEqual
         "SELECT t.i FROM (SELECT x.i FROM TestEntity x) t WHERE t.i > 1"
     }
     "operations" - {
