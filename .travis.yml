@@ -32,4 +32,4 @@ jobs:
       stage: release
       if: type != pull_request
       script: 
-        - ./build/release.sh
+        - travis_retry ./build/release.sh
