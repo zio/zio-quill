@@ -10,6 +10,7 @@ import io.getquill.idiom.StatementInterpolator._
 import io.getquill.NamingStrategy
 import io.getquill.util.Interleave
 import io.getquill.util.Messages.{ fail, trace }
+import io.getquill.idiom.Token
 
 trait SqlIdiom extends Idiom {
 
@@ -84,6 +85,9 @@ trait SqlIdiom extends Idiom {
 
   def concatFunction: String
 
+  protected def tokenizeGroupBy(values: Ast)(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Token =
+    values.token
+
   implicit def sqlQueryTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[SqlQuery] = Tokenizer[SqlQuery] {
     case FlattenSqlQuery(from, where, groupBy, orderBy, limit, offset, select, distinct) =>
 
@@ -117,7 +121,7 @@ trait SqlIdiom extends Idiom {
       val withGroupBy =
         groupBy match {
           case None          => withWhere
-          case Some(groupBy) => stmt"$withWhere GROUP BY ${groupBy.token}"
+          case Some(groupBy) => stmt"$withWhere GROUP BY ${tokenizeGroupBy(groupBy)}"
         }
       val withOrderBy =
         orderBy match {

@@ -67,4 +67,11 @@ class SparkDialectSpec extends Spec {
     norm mustEqual ast
     stmt.toString mustEqual "SELECT concat(t.s, ' ') _1 FROM Test t"
   }
+
+  "groupBy with multiple columns" in {
+    val ast = query[Test].groupBy(t => (t.i, t.j)).map(t => t._2).ast
+    val (norm, stmt) = SparkDialect.translate(ast)(Literal)
+    norm mustEqual ast
+    stmt.toString mustEqual "SELECT t.* FROM Test t GROUP BY t.i, t.j"
+  }
 }
