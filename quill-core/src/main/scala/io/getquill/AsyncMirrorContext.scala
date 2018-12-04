@@ -40,15 +40,29 @@ class AsyncMirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy](val idiom
 
   def transaction[T](f: => T) = f
 
-  case class ActionMirror(string: String, prepareRow: PrepareRow)
+  case class TransactionalExecutionContext(ec: ExecutionContext) extends ExecutionContext {
+    def execute(runnable: Runnable): Unit =
+      ec.execute(runnable)
 
-  case class ActionReturningMirror[T](string: String, prepareRow: PrepareRow, extractor: Extractor[T], returningColumn: String)
+    def reportFailure(cause: Throwable): Unit =
+      ec.reportFailure(cause)
+  }
 
-  case class BatchActionMirror(groups: List[(String, List[Row])])
+  override def performIO[T](io: IO[T, _], transactional: Boolean = false)(implicit ec: ExecutionContext): Result[T] =
+    transactional match {
+      case true  => super.performIO(io, transactional)(TransactionalExecutionContext(ec))
+      case false => super.performIO(io, transactional)
+    }
 
-  case class BatchActionReturningMirror[T](groups: List[(String, String, List[PrepareRow])], extractor: Extractor[T])
+  case class ActionMirror(string: String, prepareRow: PrepareRow)(implicit val ec: ExecutionContext)
 
-  case class QueryMirror[T](string: String, prepareRow: PrepareRow, extractor: Extractor[T])
+  case class ActionReturningMirror[T](string: String, prepareRow: PrepareRow, extractor: Extractor[T], returningColumn: String)(implicit val ec: ExecutionContext)
+
+  case class BatchActionMirror(groups: List[(String, List[Row])])(implicit val ec: ExecutionContext)
+
+  case class BatchActionReturningMirror[T](groups: List[(String, String, List[PrepareRow])], extractor: Extractor[T])(implicit val ec: ExecutionContext)
+
+  case class QueryMirror[T](string: String, prepareRow: PrepareRow, extractor: Extractor[T])(implicit val ec: ExecutionContext)
 
   def executeQuery[T](string: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(implicit ec: ExecutionContext) =
     Future(QueryMirror(string, prepare(Row())._2, extractor))
