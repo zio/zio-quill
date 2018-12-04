@@ -25,7 +25,7 @@ services:
       - HEAP_NEWSIZE=64m
 
   orientdb:
-    image: orientdb@sha256:4e5305d089aa1a1c2c9934f4110a6ded38b26ba89c75975e75043e2b88594aee
+    image: orientdb:3.0.11
     ports:
       - "12424:2424"
     environment:
