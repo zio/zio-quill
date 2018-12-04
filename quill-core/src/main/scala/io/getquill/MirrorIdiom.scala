@@ -33,6 +33,7 @@ class MirrorIdiom extends Idiom {
     case ast: OptionOperation      => ast.token
     case ast: TraversableOperation => ast.token
     case ast: Dynamic              => ast.token
+    case ast: Splice               => ast.token
     case ast: If                   => ast.token
     case ast: Block                => ast.token
     case ast: Val                  => ast.token
@@ -183,6 +184,10 @@ class MirrorIdiom extends Idiom {
     case e => stmt"${e.name.token}"
   }
 
+  implicit val spliceTokenizer: Tokenizer[Splice] = Tokenizer[Splice] {
+    case Splice(tree) => stmt"${tree.toString.token}"
+  }
+
   implicit val excludedTokenizer: Tokenizer[OnConflict.Excluded] = Tokenizer[OnConflict.Excluded] {
     case OnConflict.Excluded(ident) => stmt"${ident.token}"
   }
@@ -232,8 +237,10 @@ class MirrorIdiom extends Idiom {
     case Infix(parts, params) =>
       def tokenParam(ast: Ast) =
         ast match {
-          case ast: Ident => stmt"$$${ast.token}"
-          case other      => stmt"$${${ast.token}}"
+          case ast: Ident            => stmt"$$${ast.token}"
+          case Splice(value: String) => value.token
+          case Splice(tree)          => stmt"#$${${tree.toString.token}}"
+          case other                 => stmt"$${${ast.token}}"
         }
 
       val pt = parts.map(_.token)

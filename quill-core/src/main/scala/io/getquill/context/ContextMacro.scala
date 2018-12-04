@@ -34,8 +34,9 @@ trait ContextMacro extends Quotation {
 
   private def translate(ast: Ast): Tree =
     IsDynamic(ast) match {
-      case false => translateStatic(ast)
-      case true  => translateDynamic(ast)
+      case IsDynamic.No        => translateStatic(ast)
+      case IsDynamic.Yes       => translateDynamic(ast)
+      case IsDynamic.Partially => translatePartiallyDynamic(ast)
     }
 
   private implicit val tokenLiftable: Liftable[Token] = Liftable[Token] {
@@ -75,6 +76,36 @@ trait ContextMacro extends Quotation {
       val (idiom, naming) = ${idiomAndNamingDynamic}
       idiom.translate($ast)(naming)
     """
+  }
+
+  private def translatePartiallyDynamic(ast: Ast): Tree = {
+    // TODO DRY COPY PASTE
+    idiomAndNamingStatic match {
+      case Success((idiom, naming)) =>
+        val (normalizedAst, statement) = idiom.translate(ast)(naming)
+
+        val (string, _) =
+          ReifyStatement(
+            idiom.liftingPlaceholder,
+            idiom.emptySetContainsToken,
+            statement,
+            forProbing = false
+          )
+
+        //ProbeStatement(idiom.prepareForProbing(string), c)
+
+        c.info(string)
+        //q"($normalizedAst, ${statement: Token})"
+
+        // from dynamic
+        q"""
+          val (idiom, naming) = ${idiomAndNamingDynamic}
+          idiom.translate($ast)(naming)
+        """
+      case Failure(ex) =>
+        c.info(s"Can't translate query at compile time because the idiom and/or the naming strategy aren't known at this point.")
+        translateDynamic(ast)
+    }
   }
 
   private def idiomAndNaming = {

@@ -28,6 +28,7 @@ trait Unliftables {
     case q"$pack.If.apply(${ a: Ast }, ${ b: Ast }, ${ c: Ast })" => If(a, b, c)
     case q"$pack.OnConflict.Excluded.apply(${ a: Ident })" => OnConflict.Excluded(a)
     case q"$pack.OnConflict.Existing.apply(${ a: Ident })" => OnConflict.Existing(a)
+    case q"$pack.Splice.apply($a)" => Splice(a)
     case q"$tree.ast" => Dynamic(tree)
   }
 

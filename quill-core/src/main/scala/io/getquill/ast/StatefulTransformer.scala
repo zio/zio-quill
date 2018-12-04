@@ -34,6 +34,8 @@ trait StatefulTransformer[T] {
 
       case l: Dynamic => (l, this)
 
+      case e: Splice  => (e, this)
+
       case l: Lift    => (l, this)
 
       case QuotedReference(a, b) =>

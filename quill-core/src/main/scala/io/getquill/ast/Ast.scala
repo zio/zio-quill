@@ -147,6 +147,8 @@ object OnConflict {
 
 case class Dynamic(tree: Any) extends Ast
 
+case class Splice(tree: Any) extends Ast
+
 case class QuotedReference(tree: Any, ast: Ast) extends Ast
 
 sealed trait Lift extends Ast {

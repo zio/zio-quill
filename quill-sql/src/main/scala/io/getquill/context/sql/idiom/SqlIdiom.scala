@@ -56,6 +56,7 @@ trait SqlIdiom extends Idiom {
       case a: Lift            => a.token
       case a: Assignment      => a.token
       case a: OptionOperation => a.token
+      case a: Splice          => a.token
       case a @ (
         _: Function | _: FunctionApply | _: Dynamic | _: OptionOperation | _: Block |
         _: Val | _: Ordering | _: QuotedReference | _: TraversableOperation | _: OnConflict.Excluded | _: OnConflict.Existing
@@ -309,6 +310,11 @@ trait SqlIdiom extends Idiom {
 
   implicit def identTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Ident] =
     Tokenizer[Ident](e => strategy.default(e.name).token)
+
+  implicit def spliceTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Splice] = Tokenizer[Splice] {
+    case Splice(value: String) => value.token
+    case Splice(value)         => stmt"#$${${value.toString.token}}"
+  }
 
   implicit def assignmentTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Assignment] = Tokenizer[Assignment] {
     case Assignment(alias, prop, value) =>

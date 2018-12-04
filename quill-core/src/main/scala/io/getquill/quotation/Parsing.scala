@@ -7,7 +7,9 @@ import io.getquill.norm.BetaReduction
 import io.getquill.util.Messages.RichContext
 import io.getquill.util.Interleave
 import io.getquill.dsl.CoreDsl
+
 import scala.collection.immutable.StringOps
+import scala.collection.mutable.ListBuffer
 import scala.reflect.macros.TypecheckException
 
 trait Parsing {
@@ -117,7 +119,7 @@ trait Parsing {
     case q"$pack.unquote[$t]($quoted)" => astParser(quoted)
     case t if (t.tpe <:< c.weakTypeOf[CoreDsl#Quoted[Any]]) =>
       unquote[Ast](t) match {
-        case Some(ast) if (!IsDynamic(ast)) =>
+        case Some(ast) if IsDynamic(ast) != IsDynamic.Yes =>
           t match {
             case t: c.universe.Block => ast // expand quote(quote(body)) locally
             case t =>
@@ -267,7 +269,21 @@ trait Parsing {
     case q"$infix.as[$t]" =>
       infixParser(infix)
     case q"$pack.InfixInterpolator(scala.StringContext.apply(..${ parts: List[String] })).infix(..$params)" =>
-      Infix(parts, params.map(astParser(_)))
+      val trees = params.toArray
+      val buf = ListBuffer.empty[Ast]
+      val slices = parts.zipWithIndex.collect {
+        case (part, i) if i < trees.length =>
+          if (part.endsWith("#")) {
+            val t = trees(i)
+            buf.append(Splice(t))
+            part.substring(0, part.length - 1)
+          } else {
+            buf.append(astParser(trees(i)))
+            part
+          }
+        case (part, _) => part
+      }
+      Infix(slices, buf.toList)
   }
 
   val functionParser: Parser[Function] = Parser[Function] {

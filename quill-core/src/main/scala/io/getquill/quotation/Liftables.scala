@@ -35,6 +35,7 @@ trait Liftables {
     case QuotedReference(tree: Tree, ast) => q"$ast"
     case OnConflict.Excluded(a) => q"$pack.OnConflict.Excluded($a)"
     case OnConflict.Existing(a) => q"$pack.OnConflict.Existing($a)"
+    case Splice(tree: Tree) => q"$pack.Splice($tree)"
   }
 
   implicit val optionOperationLiftable: Liftable[OptionOperation] = Liftable[OptionOperation] {
