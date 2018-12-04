@@ -4,6 +4,9 @@ import com.twitter.concurrent.AsyncStream
 import com.twitter.finagle.mysql
 import com.twitter.util.{ Future, Time }
 import java.util.concurrent.atomic.AtomicInteger
+import com.twitter.finagle.mysql.Transactions
+import com.twitter.finagle.mysql.Session
+import com.twitter.finagle.mysql.Client
 
 class OkTestClient extends mysql.Client with mysql.Transactions {
   val methodCount = new AtomicInteger
@@ -50,4 +53,8 @@ class OkTestClient extends mysql.Client with mysql.Transactions {
   }
 
   override def close(deadline: Time): Future[Unit] = Future.Unit
+
+  def session[T](f: Client with Transactions with Session => Future[T]): Future[T] = {
+    ???
+  }
 }
