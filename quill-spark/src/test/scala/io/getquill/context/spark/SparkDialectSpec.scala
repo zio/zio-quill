@@ -31,6 +31,13 @@ class SparkDialectSpec extends Spec {
     }
   }
 
+  "escapes ' " in {
+    val ast = query[Test].map(t => "test'").ast
+    val (norm, stmt) = SparkDialect.translate(ast)(Literal)
+    norm mustEqual ast
+    stmt.toString mustEqual "SELECT 'test\\'' _1 FROM Test t"
+  }
+
   "nested property" in {
     case class Inner(i: Int)
     case class Outer(inner: Inner)
