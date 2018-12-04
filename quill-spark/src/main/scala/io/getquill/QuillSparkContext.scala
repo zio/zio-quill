@@ -3,7 +3,7 @@ package io.getquill
 import scala.util.Success
 import scala.util.Try
 import org.apache.spark.sql.{ Column, Dataset, Row, SQLContext, Encoder => SparkEncoder }
-import org.apache.spark.sql.functions.{ udf, struct, col }
+import org.apache.spark.sql.functions.{ struct, col }
 import io.getquill.context.Context
 import io.getquill.context.spark.Encoders
 import io.getquill.context.spark.Decoders
@@ -13,6 +13,7 @@ import io.getquill.context.spark.DatasetBinding
 import io.getquill.context.spark.ValueBinding
 import org.apache.spark.sql.types.{ StructField, StructType }
 import io.getquill.context.spark.norm.QuestionMarkEscaper._
+import org.apache.spark.sql.TypedUDF
 
 object QuillSparkContext extends QuillSparkContext
 
@@ -68,7 +69,8 @@ trait QuillSparkContext
    * As a result of these two steps, arrays whose values are all null should be recursively translated to single null objects.
    */
   private def perculateNullArrays[T: SparkEncoder](ds: Dataset[T]) = {
-    def nullifyNullArray(schema: StructType) = udf(
+
+    def nullifyNullArray(schema: StructType) = TypedUDF(
       (row: Row) => if ((0 until row.length).forall(row.isNullAt)) null else row,
       schema
     )
