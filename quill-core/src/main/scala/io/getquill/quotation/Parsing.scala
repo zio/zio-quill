@@ -327,7 +327,17 @@ trait Parsing {
   val propertyParser: Parser[Property] = Parser[Property] {
     case q"$e.get" if is[Option[Any]](e) =>
       c.fail("Option.get is not supported since it's an unsafe operation. Use `forall` or `exists` instead.")
-    case q"$e.$property" => Property(astParser(e), property.decodedName.toString)
+    case q"$e.$property" =>
+
+      val caseAccessors =
+        e.tpe.members.collect {
+          case m: MethodSymbol if m.isCaseAccessor => m.name
+        }.toSet
+
+      if (caseAccessors.nonEmpty && !caseAccessors.contains(property))
+        c.fail(s"Can't find case class property: ${property.decodedName.toString}")
+
+      Property(astParser(e), property.decodedName.toString)
   }
 
   val operationParser: Parser[Operation] = Parser[Operation] {
