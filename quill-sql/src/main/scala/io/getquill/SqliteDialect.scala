@@ -1,9 +1,17 @@
 package io.getquill
 
+import io.getquill.idiom.StatementInterpolator._
 import io.getquill.ast.{ Ast, OnConflict }
 import io.getquill.context.sql.idiom._
 import io.getquill.idiom.StatementInterpolator.Tokenizer
 import io.getquill.idiom.{ StringToken, Token }
+import io.getquill.ast.AscNullsLast
+import io.getquill.ast.DescNullsLast
+import io.getquill.ast.Desc
+import io.getquill.context.sql.OrderByCriteria
+import io.getquill.ast.Asc
+import io.getquill.ast.DescNullsFirst
+import io.getquill.ast.AscNullsFirst
 
 trait SqliteDialect
   extends SqlIdiom
@@ -20,6 +28,25 @@ trait SqliteDialect
       case c: OnConflict => conflictTokenizer.token(c)
       case ast           => super.astTokenizer.token(ast)
     }
+
+  private[this] val omittedNullsOrdering = stmt"omitted (not supported by sqlite)"
+  private[this] val omittedNullsFirst = stmt"/* NULLS FIRST $omittedNullsOrdering */"
+  private[this] val omittedNullsLast = stmt"/* NULLS LAST $omittedNullsOrdering */"
+
+  override implicit def orderByCriteriaTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[OrderByCriteria] = Tokenizer[OrderByCriteria] {
+    case OrderByCriteria(ast, Asc) =>
+      stmt"${scopedTokenizer(ast)} ASC"
+    case OrderByCriteria(ast, Desc) =>
+      stmt"${scopedTokenizer(ast)} DESC"
+    case OrderByCriteria(ast, AscNullsFirst) =>
+      stmt"${scopedTokenizer(ast)} ASC $omittedNullsFirst"
+    case OrderByCriteria(ast, DescNullsFirst) =>
+      stmt"${scopedTokenizer(ast)} DESC $omittedNullsFirst"
+    case OrderByCriteria(ast, AscNullsLast) =>
+      stmt"${scopedTokenizer(ast)} ASC $omittedNullsLast"
+    case OrderByCriteria(ast, DescNullsLast) =>
+      stmt"${scopedTokenizer(ast)} DESC $omittedNullsLast"
+  }
 }
 
 object SqliteDialect extends SqliteDialect
