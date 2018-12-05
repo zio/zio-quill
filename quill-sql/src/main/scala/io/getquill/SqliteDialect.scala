@@ -1,17 +1,11 @@
 package io.getquill
 
 import io.getquill.idiom.StatementInterpolator._
-import io.getquill.ast.{ Ast, OnConflict }
 import io.getquill.context.sql.idiom._
 import io.getquill.idiom.StatementInterpolator.Tokenizer
 import io.getquill.idiom.{ StringToken, Token }
-import io.getquill.ast.AscNullsLast
-import io.getquill.ast.DescNullsLast
-import io.getquill.ast.Desc
+import io.getquill.ast._
 import io.getquill.context.sql.OrderByCriteria
-import io.getquill.ast.Asc
-import io.getquill.ast.DescNullsFirst
-import io.getquill.ast.AscNullsFirst
 
 trait SqliteDialect
   extends SqlIdiom
@@ -46,6 +40,12 @@ trait SqliteDialect
       stmt"${scopedTokenizer(ast)} ASC $omittedNullsLast"
     case OrderByCriteria(ast, DescNullsLast) =>
       stmt"${scopedTokenizer(ast)} DESC $omittedNullsLast"
+  }
+
+  override implicit def valueTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Value] = Tokenizer[Value] {
+    case Constant(v: Boolean) if v  => stmt"1"
+    case Constant(v: Boolean) if !v => stmt"0"
+    case value                      => super.valueTokenizer.token(value)
   }
 }
 
