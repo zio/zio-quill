@@ -15,7 +15,7 @@ class ExpandNestedQueriesSpec extends Spec {
     }
 
     testContext.run(q).string mustEqual
-      "SELECT x.s, x.i, x.l, x.o FROM (SELECT x.s, x.i, x.l, x.o FROM TestEntity a, TestEntity2 x) x"
+      "SELECT x.s, x.i, x.l, x.o FROM (SELECT x.s, x.i, x.l, x.o FROM TestEntity a, TestEntity2 x) AS x"
   }
 
   "partial select" in {
@@ -27,7 +27,7 @@ class ExpandNestedQueriesSpec extends Spec {
       } yield (b.i, a.i)).nested
     }
     testContext.run(q).string mustEqual
-      "SELECT x._1, x._2 FROM (SELECT b.i _1, a.i _2 FROM TestEntity a, TestEntity2 b) x"
+      "SELECT x._1, x._2 FROM (SELECT b.i AS _1, a.i AS _2 FROM TestEntity a, TestEntity2 b) AS x"
   }
 
   "tokenize property" in {
@@ -41,7 +41,7 @@ class ExpandNestedQueriesSpec extends Spec {
         .map(e => (e, 1))
         .nested
     ).string mustEqual
-      "SELECT e.camel_case, 1 FROM (SELECT x.camel_case FROM entity x) e"
+      "SELECT e.camel_case, 1 FROM (SELECT x.camel_case FROM entity x) AS e"
   }
 
   "expands nested tuple select" in {
@@ -67,6 +67,6 @@ class ExpandNestedQueriesSpec extends Spec {
       }).distinct
     }
     testContext.run(q).string mustEqual
-      "SELECT x.s, x.i, x.l, x.o, x.s, x.i, x.l, x.o FROM (SELECT DISTINCT x.* FROM (SELECT a.*, b.* FROM TestEntity a, TestEntity2 b) x) x"
+      "SELECT x.s, x.i, x.l, x.o, x.s, x.i, x.l, x.o FROM (SELECT DISTINCT x.* FROM (SELECT a.*, b.* FROM TestEntity a, TestEntity2 b) AS x) AS x"
   }
 }

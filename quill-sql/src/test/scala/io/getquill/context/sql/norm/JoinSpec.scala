@@ -40,7 +40,7 @@ class JoinSpec extends Spec {
       }
     }
     testContext.run(q).string mustEqual
-      "SELECT ab.s, ab.i, ab.l, ab.o, ab.s, ab.i, ab.l, ab.o, c.s, c.i, c.l, c.o FROM (SELECT a.s s, a.o o, a.l l, a.i i, b.l l, b.i i, b.o o, b.s s FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i WHERE b.l = 3) ab LEFT JOIN TestEntity3 c ON ab.i = ab.i AND ab.i = c.i"
+      "SELECT ab.s, ab.i, ab.l, ab.o, ab.s, ab.i, ab.l, ab.o, c.s, c.i, c.l, c.o FROM (SELECT a.s AS s, a.o AS o, a.l AS l, a.i AS i, b.l AS l, b.i AS i, b.o AS o, b.s AS s FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i WHERE b.l = 3) AS ab LEFT JOIN TestEntity3 c ON ab.i = ab.i AND ab.i = c.i"
   }
 
   "join + distinct + leftjoin" in {
@@ -53,7 +53,7 @@ class JoinSpec extends Spec {
       }
     }
     testContext.run(q).string mustEqual
-      "SELECT ab.s, ab.i, ab.l, ab.o, ab.s, ab.i, ab.l, ab.o, c.s, c.i, c.l, c.o FROM (SELECT DISTINCT a.*, b.* FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i) ab LEFT JOIN TestEntity3 c ON ab.i = ab.i AND ab.i = c.i"
+      "SELECT ab.s, ab.i, ab.l, ab.o, ab.s, ab.i, ab.l, ab.o, c.s, c.i, c.l, c.o FROM (SELECT DISTINCT a.*, b.* FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i) AS ab LEFT JOIN TestEntity3 c ON ab.i = ab.i AND ab.i = c.i"
   }
 
   "multiple joins + filter + map + distinct" in {
@@ -70,7 +70,7 @@ class JoinSpec extends Spec {
         .distinct
     }
     testContext.run(q).string mustEqual
-      "SELECT DISTINCT a.s, d.l, n.i FROM TestEntity d INNER JOIN TestEntity2 a ON d.i = a.i INNER JOIN (SELECT rp.l, rp.i FROM TestEntity3 rp WHERE rp.s = ?) rp ON d.i = rp.i LEFT JOIN TestEntity4 n ON rp.l = n.i"
+      "SELECT DISTINCT a.s, d.l, n.i FROM TestEntity d INNER JOIN TestEntity2 a ON d.i = a.i INNER JOIN (SELECT rp.l, rp.i FROM TestEntity3 rp WHERE rp.s = ?) AS rp ON d.i = rp.i LEFT JOIN TestEntity4 n ON rp.l = n.i"
   }
 
   "multiple joins + map" in {

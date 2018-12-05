@@ -40,7 +40,7 @@ class CassandraContextSpec extends Spec {
     testSyncDB.probe("SELECT * FROM TestEntity") mustBe Success(())
   }
 
-  "return failed future on `prepare` error in async context" - {
+1  "return failed future on `prepare` error in async context" - {
     "query" - {
       val f = testAsyncDB.executeQuery("bad cql")
       Try(await(f)).isFailure mustEqual true
