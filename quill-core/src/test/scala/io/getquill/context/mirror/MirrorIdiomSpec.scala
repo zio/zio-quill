@@ -42,6 +42,28 @@ class MirrorIdiomSpec extends Spec {
     }
   }
 
+  "should not fail with stack overflow" - {
+    "insert" in {
+      type InsertEntity = testContext.Insert[TestEntity]
+
+      val testEntity = TestEntity("s", 1, 2, Some(3))
+      val lotsOfEntities = (1 to 1000).map(_ => testEntity)
+
+      val bigInsertQuery = lotsOfEntities.map { entity =>
+        quote {
+          query[TestEntity].insert(lift(entity))
+        }: Quoted[InsertEntity]
+      }.reduce {
+        quote {
+          (insert1: InsertEntity, insert2: InsertEntity) =>
+            infix"$insert1;$insert2".as[InsertEntity]
+        }(_, _)
+      }
+
+      stmt"${(bigInsertQuery.ast: Ast).token}"
+    }
+  }
+
   "shows set operation queries" - {
     "union" in {
       val q = quote {

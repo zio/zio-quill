@@ -229,6 +229,9 @@ class MirrorIdiom extends Idiom {
   }
 
   implicit def infixTokenizer(implicit liftTokenizer: Tokenizer[Lift]): Tokenizer[Infix] = Tokenizer[Infix] {
+    case infix@Infix(_, Infix(_, _) :: _) =>
+      val unnested = unnestInfix(infix)
+      infixTokenizer.token(unnested)
     case Infix(parts, params) =>
       def tokenParam(ast: Ast) =
         ast match {
@@ -240,6 +243,24 @@ class MirrorIdiom extends Idiom {
       val pr = params.map(tokenParam)
       val body = Statement(Interleave(pt, pr))
       stmt"""infix"${body.token}""""
+  }
+
+  // unnest infix to prevent stack overflow
+  private def unnestInfix(infix: Infix): Infix = {
+
+    def handleAstInfix(ast: Ast): Ast = ast match {
+      case i: Infix => unnestInfix(i)
+      case x => x
+    }
+
+    infix match {
+      case Infix(parts, Infix(innerParts, innerParams) :: nextParams) =>
+        val newParts = parts ++ innerParts
+        val newParams = innerParams.map(handleAstInfix) ++ nextParams.map(handleAstInfix)
+        val newInfix = Infix(newParts, newParams)
+        newInfix
+      case x => x
+    }
   }
 
   private def scopedTokenizer(ast: Ast)(implicit liftTokenizer: Tokenizer[Lift]) =
