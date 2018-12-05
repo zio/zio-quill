@@ -25,13 +25,25 @@ class VerifySqlQuerySpec extends Spec {
         "Some(The monad composition can't be expressed using applicative joins. Faulty expression: 'b.s == a.s'. Free variables: 'List(a)'.)"
     }
 
-    "accepts table reference" in {
-      val q = quote {
-        qr1.leftJoin(qr2).on((a, b) => a.i == b.i).filter {
-          case (a, b) => b.isDefined
+    "doesn't accept table reference" - {
+      "with filter" in {
+        val q = quote {
+          qr1.leftJoin(qr2).on((a, b) => a.i == b.i).filter {
+            case (a, b) => b.isDefined
+          }
         }
+        VerifySqlQuery(SqlQuery(SqlNormalize(q.ast))).toString mustEqual
+          "Some(The monad composition can't be expressed using applicative joins. Faulty expression: 'b.isDefined'. Free variables: 'List(b)'.)"
       }
-      VerifySqlQuery(SqlQuery(SqlNormalize(q.ast))) mustEqual None
+      "with map" in {
+        val q = quote {
+          qr1.leftJoin(qr2).on((a, b) => a.i == b.i)
+            .map(pcTup => if (pcTup._2.isDefined) "bar" else "baz")
+        }
+
+        VerifySqlQuery(SqlQuery(SqlNormalize(q.ast))).toString mustEqual
+          "Some(The monad composition can't be expressed using applicative joins. Faulty expression: 'if(b.isDefined) \"bar\" else \"baz\"'. Free variables: 'List(b)'.)"
+      }
     }
 
     "invalid flatJoin on" in {
