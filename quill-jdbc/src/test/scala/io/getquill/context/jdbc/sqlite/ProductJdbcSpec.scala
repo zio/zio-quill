@@ -27,6 +27,17 @@ class ProductJdbcSpec extends ProductSpec {
       product.id mustEqual inserted
     }
 
+    "Multiple insert product returning id" in {
+      val list = List(Product(0L, "test1", 1L))
+      val result =
+        testContext.run {
+          liftQuery(list).foreach { prd =>
+            query[Product].insert(prd).returning(_.id)
+          }
+        }
+      result.size mustEqual list.size
+    }
+
     "Single insert with inlined free variable" in {
       val prd = Product(0L, "test1", 1L)
       val inserted = testContext.run {
