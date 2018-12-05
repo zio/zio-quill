@@ -457,6 +457,28 @@ class QuotationSpec extends Spec {
           }
         """ mustNot compile
       }
+      "fails if not case class property" - {
+        "val" in {
+          case class T(s: String) {
+            val boom = 1
+          }
+          """
+          quote {
+            (o: T) => o.boom
+          }
+          """ mustNot compile
+        }
+        "def" in {
+          case class T(s: String) {
+            def boom = 1
+          }
+          """
+          quote {
+            (o: T) => o.boom
+          }
+          """ mustNot compile
+        }
+      }
     }
     "property anonymous" in {
       val q = quote {
