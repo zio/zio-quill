@@ -101,7 +101,7 @@ class SqlIdiomSpec extends Spec {
             qr1.distinct
           }
           testContext.run(q).string mustEqual
-            "SELECT x.s, x.i, x.l, x.o FROM (SELECT DISTINCT x.* FROM TestEntity x) AS x"
+            "SELECT x.s, x.i, x.l, x.o FROM (SELECT DISTINCT x.s, x.i, x.l, x.o FROM TestEntity x) AS x"
         }
 
         "single" in {
@@ -126,7 +126,7 @@ class SqlIdiomSpec extends Spec {
             qr1.map(i => new IntLong(i.i, i.l)).distinct
           }
           testContext.run(q).string mustEqual
-            "SELECT i.i, i.l FROM (SELECT DISTINCT i.i, i.l FROM TestEntity i) AS i"
+            "SELECT i.i, i.l FROM (SELECT DISTINCT i.i AS i, i.l AS l FROM TestEntity i) AS i"
         }
         "caseclass companion constructor" in {
           case class IntLong(i: Int, l: Long)
@@ -134,7 +134,7 @@ class SqlIdiomSpec extends Spec {
             qr1.map(i => IntLong(i.i, i.l)).distinct
           }
           testContext.run(q).string mustEqual
-            "SELECT i.i, i.l FROM (SELECT DISTINCT i.i, i.l FROM TestEntity i) AS i"
+            "SELECT i.i, i.l FROM (SELECT DISTINCT i.i AS i, i.l AS l FROM TestEntity i) AS i"
         }
 
         "nesting" in {
@@ -142,7 +142,7 @@ class SqlIdiomSpec extends Spec {
             qr1.map(i => i.i).distinct.map(x => x + 1)
           }
           testContext.run(q).string mustEqual
-            "SELECT i.i + 1 FROM (SELECT DISTINCT i.i FROM TestEntity i) AS i"
+            "SELECT i.i + 1 FROM (SELECT DISTINCT i AS i FROM TestEntity i) AS i"
         }
 
         "with join + filter" in {
@@ -153,7 +153,7 @@ class SqlIdiomSpec extends Spec {
             } yield (v1, v2)
           }
           testContext.run(q).string mustEqual
-            "SELECT i.i, x1.s, x1.i, x1.l, x1.o FROM (SELECT DISTINCT i.i FROM TestEntity i) AS i, TestEntity2 x1 WHERE x1.i = i.i"
+            "SELECT i.i, x1.s, x1.i, x1.l, x1.o FROM (SELECT DISTINCT i AS i FROM TestEntity i) AS i, TestEntity2 x1 WHERE x1.i = i.i"
         }
 
         "with two joins" in {
@@ -164,7 +164,7 @@ class SqlIdiomSpec extends Spec {
             } yield (v1, v2)
           }
           testContext.run(q).string mustEqual
-            "SELECT i.i, x2.s, x2.i, x2.l, x2.o FROM (SELECT DISTINCT i.i FROM TestEntity i) AS i INNER JOIN (SELECT x2.s, x2.i, x2.l, x2.o FROM TestEntity2 x2 ORDER BY x2.l ASC NULLS FIRST) AS x2 ON x2.i = i.i"
+            "SELECT i.i, x2.s, x2.i, x2.l, x2.o FROM (SELECT DISTINCT i AS i FROM TestEntity i) AS i INNER JOIN (SELECT x2.s, x2.i, x2.l, x2.o FROM TestEntity2 x2 ORDER BY x2.l ASC NULLS FIRST) AS x2 ON x2.i = i.i"
         }
 
         "followed by aggregation" in {
@@ -435,7 +435,7 @@ class SqlIdiomSpec extends Spec {
             j.union(j).map(u => (u._1.s, u._2.i))
           }
           testContext.run(q).string mustEqual
-            "SELECT u.s, u.i FROM ((SELECT a.s AS s, b.i AS i FROM TestEntity a, TestEntity2 b) UNION (SELECT a1.s AS s, b1.i AS i FROM TestEntity a1, TestEntity2 b1)) AS u"
+            "SELECT u._1s, u._2i FROM ((SELECT a.s AS _1s, b.i AS _2i FROM TestEntity a, TestEntity2 b) UNION (SELECT a1.s AS _1s, b1.i AS _2i FROM TestEntity a1, TestEntity2 b1)) AS u"
         }
       }
       "unionAll" - {

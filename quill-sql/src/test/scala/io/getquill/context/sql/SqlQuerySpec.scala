@@ -57,7 +57,7 @@ class SqlQuerySpec extends Spec {
         }
       }
       testContext.run(q).string mustEqual
-        "SELECT x02.s, x02.i, x02.l, x02.o, x02.s, x02.i, x02.l, x02.o, x12.s, x12.i, x12.l, x12.o FROM (SELECT x01.s AS s, x01.l AS l, x01.o AS o, x01.i AS i, x11.i AS i, x11.o AS o, x11.l AS l, x11.s AS s FROM TestEntity x01 LEFT JOIN TestEntity2 x11 ON x01.i = x11.i WHERE x11.l = 3) AS x02 LEFT JOIN TestEntity3 x12 ON x02.i = x02.i AND x02.i = x12.i"
+        "SELECT x02._1s, x02._1i, x02._1l, x02._1o, x02._2s, x02._2i, x02._2l, x02._2o, x12.s, x12.i, x12.l, x12.o FROM (SELECT x01.s AS _1s, x01.l AS _1l, x01.o AS _1o, x01.i AS _1i, x11.i AS _2i, x11.o AS _2o, x11.l AS _2l, x11.s AS _2s FROM TestEntity x01 LEFT JOIN TestEntity2 x11 ON x01.i = x11.i WHERE x11.l = 3) AS x02 LEFT JOIN TestEntity3 x12 ON x02._2i = x02._1i AND x02._2i = x12.i"
     }
 
     "flat outer join" in {
@@ -295,7 +295,7 @@ class SqlQuerySpec extends Spec {
               }
           }
           testContext.run(q).string mustEqual
-            "SELECT t.i, SUM(t.i) FROM (SELECT a.i AS i, b.i AS i FROM TestEntity a INNER JOIN TestEntity2 b ON a.s = b.s) AS t GROUP BY t.i"
+            "SELECT t._2i, SUM(t._1i) FROM (SELECT a.i AS _1i, b.i AS _2i FROM TestEntity a INNER JOIN TestEntity2 b ON a.s = b.s) AS t GROUP BY t._2i"
         }
       }
     }
