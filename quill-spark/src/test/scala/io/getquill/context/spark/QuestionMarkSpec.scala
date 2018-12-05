@@ -27,7 +27,7 @@ class QuestionMarkSpec extends Spec {
   }
 
   "simple variable usage must work in the middle of a stirng" in {
-    val newContact = Contact("Moe","Rabbenu", 123, 2, "Something ? Something ? Else")
+    val newContact = Contact("Moe", "Rabbenu", 123, 2, "Something ? Something ? Else")
     val extraPeopleList = peopleList :+ newContact
 
     val q = quote {
