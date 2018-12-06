@@ -10,6 +10,7 @@ import io.getquill.idiom.StatementInterpolator._
 import io.getquill.NamingStrategy
 import io.getquill.util.Interleave
 import io.getquill.util.Messages.{ fail, trace }
+import io.getquill.idiom.Token
 
 trait SqlIdiom extends Idiom {
 
@@ -84,6 +85,9 @@ trait SqlIdiom extends Idiom {
 
   def concatFunction: String
 
+  protected def tokenizeGroupBy(values: Ast)(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Token =
+    values.token
+
   implicit def sqlQueryTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[SqlQuery] = Tokenizer[SqlQuery] {
     case FlattenSqlQuery(from, where, groupBy, orderBy, limit, offset, select, distinct) =>
 
@@ -117,7 +121,7 @@ trait SqlIdiom extends Idiom {
       val withGroupBy =
         groupBy match {
           case None          => withWhere
-          case Some(groupBy) => stmt"$withWhere GROUP BY ${groupBy.token}"
+          case Some(groupBy) => stmt"$withWhere GROUP BY ${tokenizeGroupBy(groupBy)}"
         }
       val withOrderBy =
         orderBy match {
@@ -136,8 +140,8 @@ trait SqlIdiom extends Idiom {
 
     def tokenizer(implicit astTokenizer: Tokenizer[Ast]) =
       Tokenizer[SelectValue] {
-        case SelectValue(ast, Some(alias), false) => stmt"${ast.token} ${strategy.column(alias).token}"
-        case SelectValue(ast, Some(alias), true)  => stmt"${concatFunction.token}(${ast.token}) ${strategy.column(alias).token}"
+        case SelectValue(ast, Some(alias), false) => stmt"${ast.token} AS ${strategy.column(alias).token}"
+        case SelectValue(ast, Some(alias), true)  => stmt"${concatFunction.token}(${ast.token}) AS ${strategy.column(alias).token}"
         case selectValue =>
           val value =
             selectValue match {
@@ -207,8 +211,8 @@ trait SqlIdiom extends Idiom {
 
   implicit def sourceTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[FromContext] = Tokenizer[FromContext] {
     case TableContext(name, alias)  => stmt"${name.token} ${strategy.default(alias).token}"
-    case QueryContext(query, alias) => stmt"(${query.token}) ${strategy.default(alias).token}"
-    case InfixContext(infix, alias) => stmt"(${(infix: Ast).token}) ${strategy.default(alias).token}"
+    case QueryContext(query, alias) => stmt"(${query.token}) AS ${strategy.default(alias).token}"
+    case InfixContext(infix, alias) => stmt"(${(infix: Ast).token}) AS ${strategy.default(alias).token}"
     case JoinContext(t, a, b, on)   => stmt"${a.token} ${t.token} ${b.token} ON ${on.token}"
     case FlatJoinContext(t, a, on)  => stmt"${t.token} ${a.token} ON ${on.token}"
   }

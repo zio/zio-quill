@@ -56,8 +56,8 @@ CREATE TABLE EncodingTestEntity(
 
 Create TABLE DateEncodingTestEntity(
     v1 date,
-    v2 datetime,
-    v3 timestamp
+    v2 datetime(6),
+    v3 timestamp(6)
 );
 
 Create TABLE LocalDateTimeEncodingTestEntity(

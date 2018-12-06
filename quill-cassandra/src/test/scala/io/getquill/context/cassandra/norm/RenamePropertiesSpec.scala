@@ -16,6 +16,15 @@ class RenamePropertiesSpec extends Spec {
   }
 
   "renames properties according to the entity aliases" - {
+
+    "allowFiltering" in {
+      val q = quote {
+        e.filter(_.i == 1).allowFiltering
+      }
+      mirrorContext.run(q).string mustEqual
+        "SELECT field_s, field_i, l, o FROM test_entity WHERE field_i = 1 ALLOW FILTERING"
+    }
+
     "action" - {
       "insert" in {
         val q = quote {

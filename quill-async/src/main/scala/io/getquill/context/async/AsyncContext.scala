@@ -14,10 +14,11 @@ import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.NamingStrategy
 import io.getquill.util.ContextLogger
 import io.getquill.monad.ScalaFutureIOMonad
-import io.getquill.context.Context
+import io.getquill.context.{ Context, TranslateContext }
 
 abstract class AsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: Connection](val idiom: D, val naming: N, pool: PartitionedConnectionPool[C])
   extends Context[D, N]
+  with TranslateContext
   with SqlContext[D, N]
   with Decoders
   with Encoders
@@ -99,12 +100,12 @@ abstract class AsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: Connection]
     Future.sequence {
       groups.map {
         case BatchGroup(sql, prepare) =>
-          prepare.foldLeft(Future.successful(List.empty[Long])) {
+          prepare.foldLeft(Future.successful(List.newBuilder[Long])) {
             case (acc, prepare) =>
               acc.flatMap { list =>
-                executeAction(sql, prepare).map(list :+ _)
+                executeAction(sql, prepare).map(list += _)
               }
-          }
+          }.map(_.result())
       }
     }.map(_.flatten.toList)
 
@@ -112,12 +113,16 @@ abstract class AsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: Connection]
     Future.sequence {
       groups.map {
         case BatchGroupReturning(sql, column, prepare) =>
-          prepare.foldLeft(Future.successful(List.empty[T])) {
+          prepare.foldLeft(Future.successful(List.newBuilder[T])) {
             case (acc, prepare) =>
               acc.flatMap { list =>
-                executeActionReturning(sql, prepare, extractor, column).map(list :+ _)
+                executeActionReturning(sql, prepare, extractor, column).map(list += _)
               }
-          }
+          }.map(_.result())
       }
     }.map(_.flatten.toList)
+
+  override private[getquill] def prepareParams(statement: String, prepare: Prepare): Seq[String] = {
+    prepare(Nil)._2.map(param => prepareParam(param))
+  }
 }

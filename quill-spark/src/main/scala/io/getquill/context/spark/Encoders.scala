@@ -14,8 +14,6 @@ trait Encoders {
 
   private def toStringEncoder[T]: Encoder[T] = encoder((v: T) => s"$v")
 
-  private def quotedToStringEncoder[T]: Encoder[T] = encoder(v => s""""$v"""")
-
   implicit def mappedEncoder[I, O](implicit mapped: MappedEncoding[I, O], e: Encoder[O]): Encoder[I] =
     mappedBaseEncoder(mapped, e)
 
@@ -26,7 +24,7 @@ trait Encoders {
         case Some(v) => d(index, v, row)
       }
 
-  implicit val stringEncoder: Encoder[String] = quotedToStringEncoder
+  implicit val stringEncoder: Encoder[String] = encoder(v => s"'${v.replaceAll("""[\\']""", """\\$0""")}'")
   implicit val bigDecimalEncoder: Encoder[BigDecimal] = toStringEncoder
   implicit val booleanEncoder: Encoder[Boolean] = toStringEncoder
   implicit val byteEncoder: Encoder[Byte] = toStringEncoder

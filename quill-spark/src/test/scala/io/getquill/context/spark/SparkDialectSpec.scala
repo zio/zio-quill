@@ -31,6 +31,13 @@ class SparkDialectSpec extends Spec {
     }
   }
 
+  "escapes ' " in {
+    val ast = query[Test].map(t => "test'").ast
+    val (norm, stmt) = SparkDialect.translate(ast)(Literal)
+    norm mustEqual ast
+    stmt.toString mustEqual "SELECT 'test\\'' AS _1 FROM Test t"
+  }
+
   "nested property" in {
     case class Inner(i: Int)
     case class Outer(inner: Inner)
@@ -44,27 +51,34 @@ class SparkDialectSpec extends Spec {
     val ast = query[Test].map(t => ((t.i, t.j), t.i + 1)).ast
     val (norm, stmt) = SparkDialect.translate(ast)(Literal)
     norm mustEqual ast
-    stmt.toString mustEqual "SELECT (t.i, t.j) _1, t.i + 1 _2 FROM Test t"
+    stmt.toString mustEqual "SELECT (t.i, t.j) AS _1, t.i + 1 AS _2 FROM Test t"
   }
 
   "concatMap" in {
     val ast = query[Test].concatMap(t => t.s.split(" ")).ast
     val (norm, stmt) = SparkDialect.translate(ast)(Literal)
     norm mustEqual ast
-    stmt.toString mustEqual "SELECT explode(SPLIT(t.s, ' ')) _1 FROM Test t"
+    stmt.toString mustEqual "SELECT explode(SPLIT(t.s, ' ')) AS _1 FROM Test t"
   }
 
   "non-tuple select" in {
     val ast = query[Test].concatMap(t => t.s.split(" ")).filter(s => s == "s").ast
     val (norm, stmt) = SparkDialect.translate(ast)(Literal)
     norm mustEqual ast
-    stmt.toString mustEqual "SELECT s.* FROM (SELECT explode(SPLIT(t.s, ' ')) _1 FROM Test t) s WHERE s._1 = 's'"
+    stmt.toString mustEqual "SELECT s.* FROM (SELECT explode(SPLIT(t.s, ' ')) AS _1 FROM Test t) AS s WHERE s._1 = 's'"
   }
 
   "concat string" in {
     val ast = query[Test].map(t => t.s + " ").ast
     val (norm, stmt) = SparkDialect.translate(ast)(Literal)
     norm mustEqual ast
-    stmt.toString mustEqual "SELECT concat(t.s, ' ') _1 FROM Test t"
+    stmt.toString mustEqual "SELECT concat(t.s, ' ') AS _1 FROM Test t"
+  }
+
+  "groupBy with multiple columns" in {
+    val ast = query[Test].groupBy(t => (t.i, t.j)).map(t => t._2).ast
+    val (norm, stmt) = SparkDialect.translate(ast)(Literal)
+    norm mustEqual ast
+    stmt.toString mustEqual "SELECT t.* FROM Test t GROUP BY t.i, t.j"
   }
 }

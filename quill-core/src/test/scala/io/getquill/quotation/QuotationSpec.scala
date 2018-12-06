@@ -457,6 +457,28 @@ class QuotationSpec extends Spec {
           }
         """ mustNot compile
       }
+      "fails if not case class property" - {
+        "val" in {
+          case class T(s: String) {
+            val boom = 1
+          }
+          """
+          quote {
+            (o: T) => o.boom
+          }
+          """ mustNot compile
+        }
+        "def" in {
+          case class T(s: String) {
+            def boom = 1
+          }
+          """
+          quote {
+            (o: T) => o.boom
+          }
+          """ mustNot compile
+        }
+      }
     }
     "property anonymous" in {
       val q = quote {
@@ -774,6 +796,16 @@ class QuotationSpec extends Spec {
           (o: Option[Int]) => o.getOrElse(11)
         }
         quote(unquote(q)).ast.body mustEqual OptionGetOrElse(Ident("o"), Constant(11))
+      }
+      "map + getOrElse" in {
+        val q = quote {
+          (o: Option[Int]) => o.map(i => i < 10).getOrElse(true)
+        }
+        quote(unquote(q)).ast.body mustEqual
+          OptionGetOrElse(
+            OptionMap(Ident("o"), Ident("i"), BinaryOperation(Ident("i"), NumericOperator.`<`, Constant(10))),
+            Constant(true)
+          )
       }
       "flatten" in {
         val q = quote {

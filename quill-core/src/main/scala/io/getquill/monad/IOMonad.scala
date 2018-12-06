@@ -1,6 +1,5 @@
 package io.getquill.monad
 
-import scala.language.experimental.macros
 import scala.collection.generic.CanBuildFrom
 import scala.language.higherKinds
 import scala.util.Failure
@@ -23,14 +22,6 @@ trait IOMonad {
   type Effect = io.getquill.monad.Effect
   val Effect = io.getquill.monad.Effect
 
-  def runIO[T](quoted: Quoted[T]): IO[RunQuerySingleResult[T], Effect.Read] = macro IOMonadMacro.runIO
-  def runIO[T](quoted: Quoted[Query[T]]): IO[RunQueryResult[T], Effect.Read] = macro IOMonadMacro.runIO
-  def runIO(quoted: Quoted[Action[_]]): IO[RunActionResult, Effect.Write] = macro IOMonadMacro.runIO
-  def runIO[T](quoted: Quoted[ActionReturning[_, T]]): IO[RunActionReturningResult[T], Effect.Write] = macro IOMonadMacro.runIO
-  def runIO(quoted: Quoted[BatchAction[Action[_]]]): IO[RunBatchActionResult, Effect.Write] = macro IOMonadMacro.runIO
-  def runIO[T](quoted: Quoted[BatchAction[ActionReturning[_, T]]]): IO[RunBatchActionReturningResult[T], Effect.Write] = macro IOMonadMacro.runIO
-
-  case class Run[T, E <: Effect](f: () => Result[T]) extends IO[T, E]
   protected case class FromTry[T](t: Try[T]) extends IO[T, Effect]
   protected case class Sequence[A, M[X] <: TraversableOnce[X], E <: Effect](in: M[IO[A, E]], cbfIOToResult: CanBuildFrom[M[IO[A, E]], Result[A], M[Result[A]]], cbfResultToValue: CanBuildFrom[M[Result[A]], A, M[A]]) extends IO[M[A], E]
   protected case class TransformWith[T, S, E1 <: Effect, E2 <: Effect](io: IO[T, E1], f: Try[T] => IO[S, E2]) extends IO[S, E1 with E2]
@@ -67,7 +58,7 @@ trait IOMonad {
       sequence(in.map(fn)).map(r => cbf().++=(r).result)
   }
 
-  sealed trait IO[+T, -E <: Effect] {
+  trait IO[+T, -E <: Effect] {
 
     def transactional: IO[T, E with Effect.Transaction] = Transactional(this)
 
@@ -80,10 +71,7 @@ trait IOMonad {
       }
 
     def lowerFromTry[U](implicit ev: T => Try[U]) =
-      map(ev).flatMap {
-        case Success(v) => IO.successful(v)
-        case Failure(e) => IO.failed(e)
-      }
+      transform(_.flatMap(ev))
 
     def liftToTry: IO[Try[T], E] =
       transformWith(IO.successful)
@@ -91,15 +79,15 @@ trait IOMonad {
     def failed: IO[Throwable, E] =
       transform {
         case Failure(t) => Success(t)
-        case Success(v) => Failure(new NoSuchElementException("IO.failed not completed with a throwable."))
+        case Success(_) => Failure(new NoSuchElementException("IO.failed not completed with a throwable."))
       }
 
     def map[S](f: T => S): IO[S, E] = transform(_.map(f))
 
     def flatMap[S, E2 <: Effect](f: T => IO[S, E2]): IO[S, E with E2] =
       transformWith {
-        case Success(s) => f(s)
-        case Failure(_) => this.asInstanceOf[IO[S, E with E2]]
+        case Success(s)     => f(s)
+        case f @ Failure(_) => IO.fromTry[S](f.asInstanceOf[Failure[S]]).asInstanceOf[IO[S, E with E2]]
       }
 
     def filter(p: T => Boolean): IO[T, E] =
@@ -117,8 +105,8 @@ trait IOMonad {
 
     def recoverWith[U >: T, E2 <: Effect](pf: PartialFunction[Throwable, IO[U, E2]]): IO[U, E with E2] =
       transformWith {
-        case Failure(t) => pf.applyOrElse(t, (_: Throwable) => this)
-        case Success(_) => this
+        case Failure(t)     => pf.applyOrElse(t, IO.failed _)
+        case s @ Success(_) => IO.fromTry(s)
       }
 
     def zip[S, E2 <: Effect](io: IO[S, E2]): IO[(T, S), E with E2] =

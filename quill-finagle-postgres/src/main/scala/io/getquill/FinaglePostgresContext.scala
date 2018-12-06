@@ -7,15 +7,18 @@ import io.getquill.context.finagle.postgres._
 import io.getquill.context.sql.SqlContext
 import io.getquill.util.{ ContextLogger, LoadConfig }
 import scala.util.Try
-import io.getquill.context.Context
+import io.getquill.context.{ Context, TranslateContext }
 import io.getquill.monad.TwitterFutureIOMonad
 
 class FinaglePostgresContext[N <: NamingStrategy](val naming: N, client: PostgresClient)
   extends Context[FinaglePostgresDialect, N]
+  with TranslateContext
   with SqlContext[FinaglePostgresDialect, N]
   with FinaglePostgresEncoders
   with FinaglePostgresDecoders
   with TwitterFutureIOMonad {
+
+  import FinaglePostgresContext._
 
   def this(naming: N, config: FinaglePostgresContextConfig) = this(naming, config.client)
   def this(naming: N, config: Config) = this(naming, FinaglePostgresContextConfig(config))
@@ -75,12 +78,12 @@ class FinaglePostgresContext[N <: NamingStrategy](val naming: N, client: Postgre
   def executeBatchAction[B](groups: List[BatchGroup]): Future[List[Long]] = Future.collect {
     groups.map {
       case BatchGroup(sql, prepare) =>
-        prepare.foldLeft(Future.value(List.empty[Long])) {
+        prepare.foldLeft(Future.value(List.newBuilder[Long])) {
           case (acc, prepare) =>
             acc.flatMap { list =>
-              executeAction(sql, prepare).map(list :+ _)
+              executeAction(sql, prepare).map(list += _)
             }
-        }
+        }.map(_.result())
     }
   }.map(_.flatten.toList)
 
@@ -94,15 +97,25 @@ class FinaglePostgresContext[N <: NamingStrategy](val naming: N, client: Postgre
     Future.collect {
       groups.map {
         case BatchGroupReturning(sql, column, prepare) =>
-          prepare.foldLeft(Future.value(List.empty[T])) {
+          prepare.foldLeft(Future.value(List.newBuilder[T])) {
             case (acc, prepare) =>
               acc.flatMap { list =>
-                executeActionReturning(sql, prepare, extractor, column).map(list :+ _)
+                executeActionReturning(sql, prepare, extractor, column).map(list += _)
               }
-          }
+          }.map(_.result())
       }
     }.map(_.flatten.toList)
 
+  override private[getquill] def prepareParams(statement: String, prepare: Prepare): Seq[String] = {
+    prepare(Nil)._2.map(param => prepareParam(param.encode()))
+  }
+
   private def withClient[T](f: PostgresClient => T) =
     currentClient().map(f).getOrElse(f(client))
+}
+
+object FinaglePostgresContext {
+  implicit class EncodeParam[T](val param: Param[T]) extends AnyVal {
+    def encode(): Option[String] = param.encoder.encodeText(param.value)
+  }
 }

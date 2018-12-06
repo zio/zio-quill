@@ -222,14 +222,14 @@ class RenamePropertiesSpec extends Spec {
           e.distinct
         }
         testContext.run(q).string mustEqual
-          "SELECT x.field_s, x.field_i, x.l, x.o FROM (SELECT DISTINCT x.* FROM test_entity x) x"
+          "SELECT x.field_s, x.field_i, x.l, x.o FROM (SELECT DISTINCT x.* FROM test_entity x) AS x"
       }
       "transitive" in {
         val q = quote {
           e.distinct.map(t => t.s)
         }
         testContext.run(q).string mustEqual
-          "SELECT t.field_s FROM (SELECT DISTINCT x.* FROM test_entity x) t"
+          "SELECT t.field_s FROM (SELECT DISTINCT x.* FROM test_entity x) AS t"
       }
     }
 
@@ -246,21 +246,21 @@ class RenamePropertiesSpec extends Spec {
           e.join(f).on((a, b) => a.s == b.s).map(t => t._1.s)
         }
         testContext.run(q).string mustEqual
-          "SELECT a.field_s FROM test_entity a INNER JOIN (SELECT t.s FROM TestEntity t WHERE t.i = 1) t ON a.field_s = t.s"
+          "SELECT a.field_s FROM test_entity a INNER JOIN (SELECT t.s FROM TestEntity t WHERE t.i = 1) AS t ON a.field_s = t.s"
       }
       "left" in {
         val q = quote {
           e.leftJoin(f).on((a, b) => a.s == b.s).map(t => t._1.s)
         }
         testContext.run(q).string mustEqual
-          "SELECT a.field_s FROM test_entity a LEFT JOIN (SELECT t.s FROM TestEntity t WHERE t.i = 1) t ON a.field_s = t.s"
+          "SELECT a.field_s FROM test_entity a LEFT JOIN (SELECT t.s FROM TestEntity t WHERE t.i = 1) AS t ON a.field_s = t.s"
       }
       "right" in {
         val q = quote {
           f.rightJoin(e).on((a, b) => a.s == b.s).map(t => t._2.s)
         }
         testContext.run(q).string mustEqual
-          "SELECT b.field_s FROM (SELECT t.s FROM TestEntity t WHERE t.i = 1) t RIGHT JOIN test_entity b ON t.s = b.field_s"
+          "SELECT b.field_s FROM (SELECT t.s FROM TestEntity t WHERE t.i = 1) AS t RIGHT JOIN test_entity b ON t.s = b.field_s"
       }
       "flat inner" in {
         val q = quote {
@@ -303,6 +303,30 @@ class RenamePropertiesSpec extends Spec {
         }
         testContext.run(q).string mustEqual
           "SELECT a.field_s, SUM(a.field_i) FROM test_entity a GROUP BY a.field_s"
+      }
+    }
+
+    "operation" - {
+      "unary" in {
+        val q = quote {
+          e.filter(a => e.filter(b => b.i > 0).isEmpty).map(_.i)
+        }
+        testContext.run(q).string mustEqual
+          "SELECT a.field_i FROM test_entity a WHERE NOT EXISTS (SELECT b.* FROM test_entity b WHERE b.field_i > 0)"
+      }
+      "binary" in {
+        val q = quote {
+          e.filter(a => e.filter(b => b.i > 0).isEmpty && a.s == "test").map(_.i)
+        }
+        testContext.run(q).string mustEqual
+          "SELECT a.field_i FROM test_entity a WHERE NOT EXISTS (SELECT b.* FROM test_entity b WHERE b.field_i > 0) AND a.field_s = 'test'"
+      }
+      "query body" in {
+        val q = quote {
+          e.filter(a => a.i > 0).isEmpty
+        }
+        testContext.run(q).string mustEqual
+          "SELECT NOT EXISTS (SELECT a.* FROM test_entity a WHERE a.field_i > 0)"
       }
     }
   }
@@ -380,6 +404,27 @@ class RenamePropertiesSpec extends Spec {
         }
         testContext.run(q).string mustEqual
           "INSERT INTO A (bC) VALUES (1)"
+      }
+    }
+
+    "infix" - {
+      case class B(b: Int) extends Embedded
+      case class A(u: Long, v: Int, w: B)
+      "does not break schema" in {
+        val q = quote {
+          infix"${querySchema[A]("C", _.v -> "m", _.w.b -> "n")} LIMIT 10".as[Query[A]]
+        }
+
+        testContext.run(q).string mustEqual
+          "SELECT x.u, x.m, x.n FROM C x LIMIT 10"
+      }
+      "with filter" in {
+        val q = quote {
+          infix"${querySchema[A]("C", _.v -> "m", _.w.b -> "n").filter(x => x.v == 1)} LIMIT 10".as[Query[A]]
+        }
+
+        testContext.run(q).string mustEqual
+          "SELECT x.u, x.m, x.n FROM C x WHERE x.m = 1 LIMIT 10"
       }
     }
   }

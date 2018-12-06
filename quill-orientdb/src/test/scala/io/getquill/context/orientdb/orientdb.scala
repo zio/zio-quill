@@ -1,30 +1,30 @@
 package io.getquill.context.orientdb
 
-import com.orientechnologies.orient.client.remote.OServerAdmin
-import com.orientechnologies.orient.core.db.OPartitionedDatabasePool
-import com.orientechnologies.orient.core.metadata.schema.OSchemaProxy
-import io.getquill._
+import com.orientechnologies.orient.core.db.ODatabasePool
+import com.orientechnologies.orient.core.db.ODatabaseType
+import com.orientechnologies.orient.core.db.OrientDB
+import com.orientechnologies.orient.core.db.OrientDBConfig
+import com.orientechnologies.orient.core.metadata.schema.OSchema
+
+import io.getquill.Literal
+import io.getquill.OrientDBContextConfig
+import io.getquill.OrientDBMirrorContext
+import io.getquill.OrientDBSyncContext
+import io.getquill.TestEntities
 import io.getquill.util.LoadConfig
 
 object orientdb {
-  private val conf = OrientDBContextConfig(LoadConfig("ctx"))
   private val databaseName = "GratefulDeadConcerts"
-  private val databaseType = "document"
-  private val storageMode = "memory"
   private var setupDone = false
 
-  private def setup(): Unit = {
-    val existsDatabase = new OServerAdmin(conf.dbUrl)
-      .connect(conf.username, conf.password)
-      .existsDatabase(databaseName, storageMode)
+  private val conf = OrientDBContextConfig(LoadConfig("ctx"))
 
-    if (!existsDatabase) {
-      new OServerAdmin(conf.dbUrl)
-        .connect(conf.username, conf.password)
-        .createDatabase(databaseName, databaseType, storageMode).close()
-    }
-    val dbConnection = new OPartitionedDatabasePool(s"${conf.dbUrl}/$databaseName", conf.username, conf.password).acquire()
-    val schema = dbConnection.getMetadata.getSchema
+  private def setup(): Unit = {
+    val orientDB = new OrientDB(conf.dbUrl, "root", "root", OrientDBConfig.defaultConfig());
+    orientDB.createIfNotExists(databaseName, ODatabaseType.MEMORY);
+
+    val pool = new ODatabasePool(conf.dbUrl, "root", "root")
+    val schema = pool.acquire().getMetadata.getSchema
     getOrCreateClass(schema, "DecodeNullTestEntity")
     getOrCreateClass(schema, "EncodingTestEntity")
     getOrCreateClass(schema, "ListEntity")
@@ -43,7 +43,7 @@ object orientdb {
     getOrCreateClass(schema, "Address")
   }
 
-  private def getOrCreateClass(iSchema: OSchemaProxy, iClassName: String): Unit = {
+  private def getOrCreateClass(iSchema: OSchema, iClassName: String): Unit = {
     if (!iSchema.existsClass(iClassName)) {
       iSchema.createClass(iClassName)
       ()
