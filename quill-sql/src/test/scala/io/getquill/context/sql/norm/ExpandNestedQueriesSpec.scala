@@ -56,17 +56,23 @@ class ExpandNestedQueriesSpec extends Spec {
       "SELECT s.i, s.s, COUNT(*) FROM TestEntity s GROUP BY s.i, s.s"
   }
 
-  "doesn't expand nested distinct query" in {
+  "expands nested distinct query" in {
     import testContext._
     val q = quote {
-      (for {
-        a <- qr1
-        b <- qr2
-      } yield {
-        (a, b)
-      }).distinct
+      qr1.fullJoin(qr2).on((a, b) => a.i == b.i).distinct
     }
-    testContext.run(q).string mustEqual
-      "SELECT x.s, x.i, x.l, x.o, x.s, x.i, x.l, x.o FROM (SELECT DISTINCT x.* FROM (SELECT a.*, b.* FROM TestEntity a, TestEntity2 b) AS x) AS x"
+    testContext.run(q.dynamic).string mustEqual
+      "SELECT x._1s, x._1i, x._1l, x._1o, x._2s, x._2i, x._2l, x._2o FROM (SELECT DISTINCT a.l AS _1l, a.o AS _1o, a.s AS _1s, a.i AS _1i, b.o AS _2o, b.s AS _2s, b.i AS _2i, b.l AS _2l FROM TestEntity a FULL JOIN TestEntity2 b ON a.i = b.i) AS x"
+  }
+
+  "handles column alias conflict" in {
+    import testContext._
+    val q = quote {
+      qr1.join(qr2).on((a, b) => a.i == b.i).nested.map {
+        case (a, b) => (a.i, b.i)
+      }
+    }
+    testContext.run(q.dynamic).string mustEqual
+      "SELECT x02._1i, x02._2i FROM (SELECT a.i AS _1i, b.i AS _2i FROM TestEntity a INNER JOIN TestEntity2 b ON a.i = b.i) AS x02"
   }
 }

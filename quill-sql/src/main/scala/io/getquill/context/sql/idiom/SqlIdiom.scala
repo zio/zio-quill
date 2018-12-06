@@ -27,9 +27,10 @@ trait SqlIdiom extends Idiom {
           val sql = SqlQuery(q)
           trace("sql")(sql)
           VerifySqlQuery(sql).map(fail)
-          val expanded = ExpandNestedQueries(sql, collection.Set.empty).token
-          trace("expanded sql")(expanded)
-          expanded
+          val expanded = ExpandNestedQueries(sql, collection.Set.empty)
+          val tokenized = expanded.token
+          trace("expanded sql")(tokenized)
+          tokenized
         case other =>
           other.token
       }
@@ -273,24 +274,25 @@ trait SqlIdiom extends Idiom {
   }
 
   implicit def propertyTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Property] = {
-    def unnest(ast: Ast): (Ast, String) =
+
+    def unnest(ast: Ast): (Ast, List[String]) =
       ast match {
         case Property(a, name) if (name.matches("_[0-9]*")) =>
           unnest(a) match {
             case (ast, nestedName) =>
-              (ast, s"$nestedName$name")
+              (ast, nestedName :+ name)
           }
         case Property(a, name) =>
           unnest(a) match {
-            case (a, _) => (a, name)
+            case (a, nestedName) => (a, nestedName)
           }
-        case a => (a, "")
+        case a => (a, Nil)
       }
     Tokenizer[Property] {
-      case ast =>
+      case Property(ast, name) =>
         unnest(ast) match {
-          case (ast, name) =>
-            stmt"${scopedTokenizer(ast)}.${strategy.column(name).token}"
+          case (ast, prefix) =>
+            stmt"${scopedTokenizer(ast)}.${strategy.column(prefix.mkString + name).token}"
         }
     }
   }

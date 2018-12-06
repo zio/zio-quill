@@ -70,7 +70,7 @@ class SqlIdiomNamingSpec extends Spec {
       val q = quote {
         query[SomeEntity].distinct
       }
-      db.run(q.dynamic).string mustEqual "SELECT d_x.d_somecolumn FROM (SELECT DISTINCT d_x.* FROM d_someentity d_x) AS d_x"
+      db.run(q.dynamic).string mustEqual "SELECT d_x.d_somecolumn FROM (SELECT DISTINCT d_x.d_somecolumn FROM d_someentity d_x) AS d_x"
     }
 
     val db = new SqlMirrorContext(MirrorSqlDialect, SnakeCase)
