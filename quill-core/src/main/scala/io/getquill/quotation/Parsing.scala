@@ -263,11 +263,51 @@ trait Parsing {
     case q"$a.rightJoin[$t]" if (is[CoreDsl#Query[Any]](a))         => (RightJoin, astParser(a), None)
   }
 
-  val infixParser: Parser[Infix] = Parser[Infix] {
+  val infixParser: Parser[Ast] = Parser[Ast] {
     case q"$infix.as[$t]" =>
       infixParser(infix)
     case q"$pack.InfixInterpolator(scala.StringContext.apply(..${ parts: List[String] })).infix(..$params)" =>
-      Infix(parts, params.map(astParser(_)))
+
+      if (parts.find(_.endsWith("#")).isDefined) {
+
+        val elements =
+          parts.zipWithIndex.flatMap {
+            case (part, idx) if idx < params.length =>
+              if (part.endsWith("#")) {
+                Left(q"${part.dropRight(1)} + String.valueOf(${params(idx)})") :: Nil
+              } else {
+                Left(q"$part") :: Right(params(idx)) :: Nil
+              }
+            case (part, idx) =>
+              Left(q"$part") :: Nil
+          }
+
+        val fused =
+          (elements.foldLeft(List[Either[Tree, Tree]]()) {
+            case (Left(a) :: tail, Left(b)) =>
+              Left(q"$a + $b") :: tail
+            case (list, b) =>
+              b :: list
+          }).reverse
+
+        val newParts =
+          fused.collect {
+            case Left(a) => a
+          }
+
+        val newParams =
+          fused.collect {
+            case Right(a) => astParser(a)
+          }
+        Dynamic {
+          c.typecheck(q"""
+            new ${c.prefix}.Quoted[Any] {
+              override def ast = io.getquill.ast.Infix($newParts, $newParams)
+            }
+          """)
+        }
+      } else
+        Infix(parts, params.map(astParser(_)))
   }
 
   val functionParser: Parser[Function] = Parser[Function] {

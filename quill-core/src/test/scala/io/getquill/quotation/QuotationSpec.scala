@@ -777,6 +777,51 @@ class QuotationSpec extends Spec {
         }
         quote(unquote(q)).ast.body mustEqual Infix(List("", " || ", ""), List(Ident("a"), Ident("b")))
       }
+      "with dynamic string" - {
+        "at the end" in {
+          val b = "dyn"
+          val q = quote {
+            (a: String) =>
+              infix"$a || #$b".as[String]
+          }
+          quote(unquote(q)).ast must matchPattern {
+            case Function(_, Infix(List("", " || dyn"), List(Ident("a")))) =>
+          }
+        }
+        "at the beginning" in {
+          val a = "dyn"
+          val q = quote {
+            (b: String) =>
+              infix"#$a || $b".as[String]
+          }
+          quote(unquote(q)).ast must matchPattern {
+            case Function(_, Infix(List("dyn || ", ""), List(Ident("b")))) =>
+          }
+        }
+        "only" in {
+          val a = "dyn1"
+          val q = quote {
+            infix"#$a".as[String]
+          }
+          quote(unquote(q)).ast mustEqual Infix(List("dyn1"), List())
+        }
+        "sequential" in {
+          val a = "dyn1"
+          val b = "dyn2"
+          val q = quote {
+            infix"#$a#$b".as[String]
+          }
+          quote(unquote(q)).ast mustEqual Infix(List("dyn1dyn2"), List())
+        }
+        "non-string value" in {
+          case class Value(a: String)
+          val a = Value("dyn")
+          val q = quote {
+            infix"#$a".as[String]
+          }
+          quote(unquote(q)).ast mustEqual Infix(List("Value(dyn)"), List())
+        }
+      }
     }
     "option operation" - {
       "map" in {
