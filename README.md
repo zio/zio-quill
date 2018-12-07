@@ -541,7 +541,7 @@ val q = quote {
 }
  
 ctx.run(q): List[(Person, Option[Address])]
-// Note that when you use named-variables in your comprehension, quill do it's best to honor them in the query.
+// Note that when you use named-variables in your comprehension, Quill does its best to honor them in the query.
 // SELECT p.id, p.name, a.street, a.zip, a.fk 
 // FROM Person p LEFT JOIN Address a ON p.id = a.fk
  
@@ -570,12 +570,12 @@ Here's how to do that:
 // All is well for two tables but for three or more, the nesting mess begins:
 val q = quote {
   query[Person]
-    .join(query[Address]).on({case (p, a) => p.id == a.fk}) // Let's use 'case' here to stay consistent
+    .join(query[Address]).on({case (p, a) => p.id == a.fk}) // Let's use `case` here to stay consistent
     .join(query[Company]).on({case ((p, a), c) => a.zip == c.zip})
 }
  
 ctx.run(q): List[((Person, Address), Company)]
-// (Unfortunately when you use 'case' statements, Quill can't help you with the variables names either!)
+// (Unfortunately when you use `case` statements, Quill can't help you with the variables names either!)
 // SELECT x01.id, x01.name, x11.street, x11.zip, x11.fk, x12.name, x12.zip 
 // FROM Person x01 INNER JOIN Address x11 ON x01.id = x11.fk INNER JOIN Company x12 ON x11.zip = x12.zip
 ````
