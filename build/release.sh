@@ -2,7 +2,7 @@
 set -e # Any subsequent(*) commands which fail will cause the shell script to exit immediately
 
 SBT_2_12="sbt ++2.12.6"
-SBT_2_11="sbt -Dspark.include=true ++2.11.12"
+SBT_2_11="sbt ++2.11.12"
 
 echo $SBT_CMD
 if [[ $TRAVIS_PULL_REQUEST == "false" ]]

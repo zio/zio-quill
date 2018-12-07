@@ -2,8 +2,8 @@ package io.getquill
 
 import scala.util.Success
 import scala.util.Try
-import org.apache.spark.sql.{ Column, Dataset, Row, SQLContext, Encoder => SparkEncoder }
-import org.apache.spark.sql.functions.{ udf, struct, col }
+import org.apache.spark.sql.{ Column, Dataset, SQLContext, Encoder => SparkEncoder }
+import org.apache.spark.sql.functions.{ struct, col }
 import io.getquill.context.Context
 import io.getquill.context.spark.Encoders
 import io.getquill.context.spark.Decoders
@@ -13,6 +13,7 @@ import io.getquill.context.spark.DatasetBinding
 import io.getquill.context.spark.ValueBinding
 import org.apache.spark.sql.types.{ StructField, StructType }
 import io.getquill.context.spark.norm.QuestionMarkEscaper._
+import org.apache.spark.sql.functions._
 
 object QuillSparkContext extends QuillSparkContext
 
@@ -67,33 +68,38 @@ trait QuillSparkContext
    *
    * As a result of these two steps, arrays whose values are all null should be recursively translated to single null objects.
    */
-  private def perculateNullArrays[T: SparkEncoder](ds: Dataset[T]) = {
-    def nullifyNullArray(schema: StructType) = udf(
-      (row: Row) => if ((0 until row.length).forall(row.isNullAt)) null else row,
-      schema
-    )
+  private def percolateNullArrays[T: SparkEncoder](ds: Dataset[T]) = {
 
-    def perculateNullArraysRecursive(node: StructElement): Column =
+    def percolateNullArraysRecursive(node: StructElement): Column =
       node.structField.dataType match {
         case st: StructType =>
           // Recursively convert all parent array columns to single null values if all their children are null
-          val preculatedColumn = struct(node.children.map(perculateNullArraysRecursive(_)): _*)
+          val preculatedColumn = struct(node.children.map(percolateNullArraysRecursive(_)): _*)
           // Then express that column back out the schema
-          nullifyNullArray(st)(preculatedColumn).as(node.structField.name)
+
+          val mapped =
+            (c: Column) => {
+              when(
+                st.fieldNames.map(c.getField(_)).foldLeft(lit(true))({ case (curr, col) => curr && col.isNull }),
+                lit(null: Column)
+              ).otherwise(c)
+            }
+
+          mapped(preculatedColumn).as(node.structField.name)
         case _ =>
           node.column.as(node.structField.name)
       }
 
     ds.select(
-      ds.schema.fields.map(f => perculateNullArraysRecursive(StructElement(col(f.name), f))): _*
+      ds.schema.fields.map(f => percolateNullArraysRecursive(StructElement(col(f.name), f))): _*
     ).as[T]
   }
 
   def executeQuery[T](string: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(implicit enc: SparkEncoder[T], spark: SQLContext) =
-    perculateNullArrays(spark.sql(prepareString(string, prepare)).as[T])
+    percolateNullArrays(spark.sql(prepareString(string, prepare)).as[T])
 
   def executeQuerySingle[T](string: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(implicit enc: SparkEncoder[T], spark: SQLContext) =
-    perculateNullArrays(spark.sql(prepareString(string, prepare)).as[T])
+    percolateNullArrays(spark.sql(prepareString(string, prepare)).as[T])
 
   private def prepareString(string: String, prepare: Prepare)(implicit spark: SQLContext) = {
     var dsId = 0

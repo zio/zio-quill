@@ -7,15 +7,12 @@ import sbtcrossproject.crossProject
 
 enablePlugins(TutPlugin)
 
-lazy val sparkIncludeProp = Option(System.getProperty("spark.include"))
-
 lazy val modules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-core-jvm`, `quill-core-js`, `quill-sql-jvm`, `quill-sql-js`,
   `quill-jdbc`, `quill-finagle-mysql`, `quill-finagle-postgres`, `quill-async`,
-  `quill-async-mysql`, `quill-async-postgres`, `quill-cassandra`, `quill-orientdb`
-) ++ 
-  Seq[sbt.ClasspathDep[sbt.ProjectReference]](`quill-spark`)
-    .filter(_ => sparkIncludeProp.contains("true"))
+  `quill-async-mysql`, `quill-async-postgres`, `quill-cassandra`, `quill-orientdb`,
+  `quill-spark`
+)
 
 lazy val `quill` =
   (project in file("."))
@@ -92,10 +89,9 @@ lazy val `quill-spark` =
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .settings(
-      crossScalaVersions := Seq("2.11.12"),
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "org.apache.spark" %% "spark-sql" % "2.3.2"
+        "org.apache.spark" %% "spark-sql" % "2.4.0"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -262,7 +258,7 @@ def updateWebsiteTag =
 lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
   organization := "io.getquill",
   scalaVersion := "2.11.12",
-  crossScalaVersions := Seq("2.11.12","2.12.6"),
+  crossScalaVersions := Seq("2.11.12","2.12.7"),
   libraryDependencies ++= Seq(
     "org.scalamacros" %% "resetallattrs"  % "1.0.0",
     "org.scalatest"   %%% "scalatest"     % "3.0.5"     % Test,
@@ -293,7 +289,8 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
       case Some((2, 12)) => 
         Seq("-Xlint:-unused,_", 
             "-Ywarn-unused:imports", 
-            "-Ycache-macro-class-loader:last-modified")
+            "-Ycache-macro-class-loader:last-modified"
+        )
       case _ => Seq()
     }
   },
