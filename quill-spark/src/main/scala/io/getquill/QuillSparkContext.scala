@@ -14,6 +14,7 @@ import io.getquill.context.spark.ValueBinding
 import org.apache.spark.sql.types.{ StructField, StructType }
 import io.getquill.context.spark.norm.QuestionMarkEscaper._
 import org.apache.spark.sql.functions._
+import scala.reflect.runtime.universe.TypeTag
 
 object QuillSparkContext extends QuillSparkContext
 
@@ -51,7 +52,7 @@ trait QuillSparkContext
   }
 
   /**
-   * As a result of converting product objects from <code>value.*</code> selects in <code>ExpandEntityIds</code>,
+   * As a result of converting product objects from <code>value.*</code> selects in the <code>SparkDialect</code> tokenizer,
    * when expressing empty options (e.g. as a result of left joins), we will get a array of null values instead of
    * a single null value like the Spark decode expects. See the issue #123 for more details.
    *
@@ -95,11 +96,45 @@ trait QuillSparkContext
     ).as[T]
   }
 
-  def executeQuery[T](string: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(implicit enc: SparkEncoder[T], spark: SQLContext) =
-    percolateNullArrays(spark.sql(prepareString(string, prepare)).as[T])
+  /**
+   * As a result of expanding <code>value.*</code> selects in <code>SparkDialect</code>, the aliases
+   * of the elements must align with the outermost object Typically this will be a tuple
+   * but can be an ad-hoc case class as well. For example say that the user makes the following query:
+   * <br/><code>Query[Foo].join(Query[Bar]).on(_.id == _.fk)</code>
+   *
+   * The resulting query would be the following:
+   * <br/><code>select struct(f.*), struct(b.*) from Foo f join Bar b on f.id = b.fk</code>
+   *
+   * However, since the outermost return type must be a tuple, the query must be the following:
+   * <br/><code>select struct(f.*) _1, struct(b.*) _2 from Foo f join Bar b on f.id = b.fk</code>
+   *
+   * These <code>_1</code> and <code>_2</code> aliases are added by this object. In the edge case
+   * where they cannot be found (typically this happens when single primitive values are selected),
+   * the outputs are assumed to be tuple indexes i.e. _1, _2, etc...
+   */
+  private[getquill] object CaseAccessors {
+    import scala.reflect.runtime.universe._
 
-  def executeQuerySingle[T](string: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(implicit enc: SparkEncoder[T], spark: SQLContext) =
-    percolateNullArrays(spark.sql(prepareString(string, prepare)).as[T])
+    def apply[T: TypeTag](schema: StructType): List[String] = {
+      val out =
+        typeOf[T].members.collect {
+          case m: MethodSymbol if m.isCaseAccessor => m.name.toString
+        }.toList.reverse
+
+      if (out.size == schema.size) out
+      else (1 to schema.size).map(i => s"_${i}").toList
+    }
+  }
+
+  def executeQuery[T: TypeTag](string: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(implicit enc: SparkEncoder[T], spark: SQLContext) = {
+    val ds = spark.sql(prepareString(string, prepare))
+    percolateNullArrays(ds.toDF(CaseAccessors[T](ds.schema): _*).as[T])
+  }
+
+  def executeQuerySingle[T: TypeTag](string: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(implicit enc: SparkEncoder[T], spark: SQLContext) = {
+    val ds = spark.sql(prepareString(string, prepare))
+    percolateNullArrays(ds.toDF(CaseAccessors[T](ds.schema): _*).as[T])
+  }
 
   private def prepareString(string: String, prepare: Prepare)(implicit spark: SQLContext) = {
     var dsId = 0
