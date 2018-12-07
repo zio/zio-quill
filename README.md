@@ -2647,11 +2647,6 @@ lazy val ctx = new CassandraSyncContext(SnakeCase, "ctx")
 lazy val ctx = new CassandraAsyncContext(SnakeCase, "ctx")
 ```
 
-#### stream context
-```scala
-lazy val ctx = new CassandraStreamContext(SnakeCase, "ctx")
-```
-
 The configurations are set using runtime reflection on the [`Cluster.builder`](https://docs.datastax.com/en/drivers/java/2.1/com/datastax/driver/core/Cluster.Builder.html) instance. It is possible to set nested structures like `queryOptions.consistencyLevel`, use enum values like `LOCAL_QUORUM`, and set multiple parameters like in `credentials`.
 
 #### application.properties
@@ -2667,6 +2662,20 @@ ctx.session.credentials.0=root
 ctx.session.credentials.1=pass
 ctx.session.maxSchemaAgreementWaitSeconds=1
 ctx.session.addressTranslator=com.datastax.driver.core.policies.IdentityTranslator
+```
+
+## quill-cassandra-streaming-monix
+
+#### sbt dependencies
+```
+libraryDependencies ++= Seq(
+  "io.getquill" %% "quill-cassandra-streaming-monix" % "2.6.1-SNAPSHOT"
+)
+```
+
+#### stream context
+```scala
+lazy val ctx = new CassandraStreamContext(SnakeCase, "ctx")
 ```
 
 ## OrientDB Contexts

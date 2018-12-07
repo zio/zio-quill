@@ -208,11 +208,22 @@ lazy val `quill-cassandra` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.datastax.cassandra" %  "cassandra-driver-core" % "3.6.0",
-        "io.monix"               %% "monix"                 % "2.3.3"
+        "com.datastax.cassandra" %  "cassandra-driver-core" % "3.6.0"
       )
     )
     .dependsOn(`quill-core-jvm` % "compile->compile;test->test")
+
+lazy val `quill-cassandra-streaming-monix` =
+  (project in file("quill-cassandra-streaming-monix"))
+    .settings(commonSettings: _*)
+    .settings(mimaSettings: _*)
+    .settings(
+      fork in Test := true,
+      libraryDependencies ++= Seq(
+        "io.monix" %% "monix" % "2.3.3"
+      )
+    )
+    .dependsOn(`quill-cassandra` % "compile->compile;test->test")
 
 lazy val `quill-orientdb` =
   (project in file("quill-orientdb"))
