@@ -1,3 +1,9 @@
+# 3.0.0-SNAPSHOT
+
+### Migration notes
+
+- `io.getquill.CassandraStreamContext` is moved into `quill-cassandra-monix` module
+
 # 2.6.0
 
 - [add noFailFast option to FinagleMysqlContextConfig](https://github.com/getquill/quill/pull/1212)

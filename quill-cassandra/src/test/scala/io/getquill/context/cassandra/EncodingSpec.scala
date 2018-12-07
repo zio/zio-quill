@@ -5,9 +5,8 @@ import java.util.{ Date, UUID }
 import java.time.{ LocalDate => Java8LocalDate, Instant, ZonedDateTime, ZoneId }
 
 import com.datastax.driver.core.LocalDate
-import monix.reactive.Observable
 
-class EncodingSpec extends Spec {
+class EncodingSpec extends EncodingSpecHelper {
 
   "encodes and decodes types" - {
 
@@ -30,22 +29,6 @@ class EncodingSpec extends Spec {
           verify(result)
         }
       }
-    }
-
-    "stream" in {
-      import testStreamDB._
-      import monix.execution.Scheduler.Implicits.global
-      val result =
-        for {
-          _ <- testStreamDB.run(query[EncodingTestEntity].delete)
-          inserts = Observable(insertValues: _*)
-          _ <- Observable.fromTask(testStreamDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insert(e))).countL)
-          result <- testStreamDB.run(query[EncodingTestEntity])
-        } yield {
-          result
-        }
-      val f = result.foldLeftL(List.empty[EncodingTestEntity])(_ :+ _).runAsync
-      verify(await(f))
     }
   }
 
@@ -77,26 +60,6 @@ class EncodingSpec extends Spec {
           verify(r)
         }
       }
-    }
-
-    "stream" in {
-      import testStreamDB._
-      import monix.execution.Scheduler.Implicits.global
-      val q = quote {
-        (list: Query[Int]) =>
-          query[EncodingTestEntity].filter(t => list.contains(t.id))
-      }
-      val result =
-        for {
-          _ <- testStreamDB.run(query[EncodingTestEntity].delete)
-          inserts = Observable(insertValues: _*)
-          _ <- Observable.fromTask(testStreamDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insert(e))).countL)
-          result <- testStreamDB.run(q(liftQuery(insertValues.map(_.id))))
-        } yield {
-          result
-        }
-      val f = result.foldLeftL(List.empty[EncodingTestEntity])(_ :+ _).runAsync
-      verify(await(f))
     }
   }
 
@@ -147,15 +110,17 @@ class EncodingSpec extends Spec {
       ctx.run(jq).headOption mustBe Some(j)
     }
   }
+}
 
-  private def verify(result: List[EncodingTestEntity]): Unit =
+abstract class EncodingSpecHelper extends Spec {
+  protected def verify(result: List[EncodingTestEntity]): Unit =
     result.zip(insertValues) match {
       case List((e1, a1), (e2, a2)) =>
         verify(e1, a1)
         verify(e2, a2)
     }
 
-  private def verify(e: EncodingTestEntity, a: EncodingTestEntity): Unit = {
+  protected def verify(e: EncodingTestEntity, a: EncodingTestEntity): Unit = {
     e.id mustEqual a.id
 
     e.v1 mustEqual a.v1
@@ -210,7 +175,7 @@ class EncodingSpec extends Spec {
     o10: Option[LocalDate]
   )
 
-  private val fixUUID: UUID = UUID.fromString("606c79e8-a331-4810-8bd7-0668ff7a23ef")
+  protected val fixUUID: UUID = UUID.fromString("606c79e8-a331-4810-8bd7-0668ff7a23ef")
 
   val insertValues =
     List(
