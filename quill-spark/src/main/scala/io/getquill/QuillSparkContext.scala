@@ -1,9 +1,11 @@
 package io.getquill
 
+import java.util.concurrent.atomic.AtomicInteger
+
 import scala.util.Success
 import scala.util.Try
 import org.apache.spark.sql.{ Column, Dataset, SQLContext, Encoder => SparkEncoder }
-import org.apache.spark.sql.functions.{ struct, col }
+import org.apache.spark.sql.functions.{ col, struct }
 import io.getquill.context.Context
 import io.getquill.context.spark.Encoders
 import io.getquill.context.spark.Decoders
@@ -12,6 +14,7 @@ import io.getquill.context.spark.Binding
 import io.getquill.context.spark.DatasetBinding
 import io.getquill.context.spark.ValueBinding
 import org.apache.spark.sql.types.{ StructField, StructType }
+
 import io.getquill.context.spark.norm.QuestionMarkEscaper._
 import org.apache.spark.sql.functions._
 import scala.reflect.runtime.universe.TypeTag
@@ -26,6 +29,8 @@ trait QuillSparkContext
   type Result[T] = Dataset[T]
   type RunQuerySingleResult[T] = T
   type RunQueryResult[T] = T
+
+  private[getquill] val queryCounter = new AtomicInteger(0)
 
   def close() = {}
 
@@ -136,13 +141,13 @@ trait QuillSparkContext
     percolateNullArrays(ds.toDF(CaseAccessors[T](ds.schema): _*).as[T])
   }
 
-  private def prepareString(string: String, prepare: Prepare)(implicit spark: SQLContext) = {
+  private[getquill] def prepareString(string: String, prepare: Prepare)(implicit spark: SQLContext) = {
     var dsId = 0
     val withSubstitutions =
       prepare(Nil)._2.foldLeft(string) {
         case (string, DatasetBinding(ds)) =>
           dsId += 1
-          val name = s"ds$dsId"
+          val name = s"ds${queryCounter.incrementAndGet()}"
           ds.createOrReplaceTempView(name)
           pluginValueSafe(string, name)
         case (string, ValueBinding(value)) =>
