@@ -1581,6 +1581,92 @@ ctx.run(people(Senior))
 // SELECT p.id, p.name, p.age FROM Person p WHERE p.age > 65
 ```
 
+### Dynamic query API
+
+Addionally, Quill provides a separate query API to facilitate the creation of dynamic queries. This API allows users to easily manipulate quoted values instead of working only with quoted transformations. 
+
+**Important**: A few of the dynamic query methods accept runtime string values. It's important to keep in mind that these methods could be a vector for SQL injection.
+
+Let's use the `filter` transformation as an example. In the regular API, this method has no implementation since it's an abstract member of a trait:
+
+```
+def filter(f: T => Boolean): EntityQuery[T]
+```
+
+In the dynamic API, `filter` is has a different signature and a body that is executed at runtime:
+
+```
+def filter(f: Quoted[T] => Quoted[Boolean]): DynamicQuery[T] =
+  transform(f, Filter)
+```
+
+It takes a `Quoted[T]` as input and produces a `Quoted[Boolean]`. The user is free to use regular scala code within the transformation:
+
+```scala
+def people(onlyMinors: Boolean) =
+  dynamicQuery[Person].filter(p => if(onlyMinors) quote(p.age < 18) else quote(true))
+```
+
+In order to create a dynamic query, use one of the following methods:
+
+```scala
+dynamicQuery[Person]
+dynamicQuerySchema[Person]("people", alias(_.name, "pname"))
+```
+
+It's also possible to transform a `Quoted` into a dynamic query:
+
+```scala
+val q = quote {
+  query[Person]
+}
+q.dynamic.filter(p => quote(p.name == "John"))
+```
+
+The dynamic query API is very similar to the regular API but has a few differences:
+
+**Queries**
+```scala
+// schema queries use `alias` instead of tuples
+dynamicQuerySchema[Person]("people", alias(_.name, "pname"))
+
+// this allows users to use a dynamic list of aliases
+val aliases = List(alias[Person](_.name, "pname"), alias[Person](_.age, "page"))
+dynamicQuerySchema[Person]("people", aliases:_*)
+
+// a few methods have an overload with the `Opt` suffix,
+// which apply the transformation only if the option is defined:
+
+def people(minAge: Option[Int]) =
+  dynamicQuery[Person].filterOpt(minAge)((person, minAge) => quote(person.age >= minAge))
+
+def people(maxRecords: Option[Int]) =
+  dynamicQuery[Person].takeOpt(maxRecords)
+
+def people(dropFirst: Option[Int]) =
+  dynamicQuery[Person].dropOpt(dropFirst)
+```
+
+**Actions**
+```scala
+// actions use `set` 
+dynamicQuery[Person].update(set(_.name, quote("John")))
+
+// or `setValue` if the value is not quoted
+dynamicQuery[Person].insert(setValue(_.name, "John"))
+
+// or `setOpt` that will be applied only the option is defined
+dynamicQuery[Person].insert(setOpt(_.name, Some("John")))
+
+// it's also possible to use a runtime string value as the column name
+dynamicQuery[Person].update(set("name", quote("John")))
+
+// to insert or update a case class instance, use `insertValue`/`updateValue`
+val p = Person(0, "John", 21)
+dynamicQuery[Person].insertValue(p)
+dynamicQuery[Person].updateValue(p)
+```
+
 # Extending quill
 
 ## Infix
@@ -1603,6 +1689,15 @@ ctx.run(a)
 ```
 
 The `forUpdate` quotation can be reused for multiple queries.
+
+### Dynamic infix
+
+Infix supprts runtime string values through the `#$` prefix. Example:
+
+```scala
+def test(functionName: String) =
+  ctx.run(query[Person].map(p => infix"#$functionName(${p.name})".as[Int]))
+```
 
 ### Raw SQL queries
 
