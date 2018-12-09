@@ -11,7 +11,7 @@ lazy val modules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-core-jvm`, `quill-core-js`, `quill-sql-jvm`, `quill-sql-js`,
   `quill-jdbc`, `quill-finagle-mysql`, `quill-finagle-postgres`, `quill-async`,
   `quill-async-mysql`, `quill-async-postgres`, `quill-cassandra`, `quill-orientdb`,
-  `quill-spark`
+  `quill-spark`, `quill-streaming-cats`, `quill-streaming-monix`
 )
 
 lazy val `quill` =
@@ -180,6 +180,41 @@ lazy val `quill-orientdb` =
         )
       )
       .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
+
+lazy val `quill-streaming-cats` = 
+  (project in file("quill-streaming-cats"))
+    .settings(commonSettings: _*)
+    .settings(mimaSettings: _*)
+    .settings(
+      fork in Test := true,
+      libraryDependencies ++= Seq(
+        "com.zaxxer"    % "HikariCP"     % "3.2.0",
+        "org.typelevel" %% "cats-effect" % "1.1.0"
+      ),
+      scalacOptions ++= Seq(
+        "-language:higherKinds",
+        "-language:existentials",
+        "-Ypartial-unification"
+      )
+    )
+    .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
+
+lazy val `quill-streaming-monix` =
+  (project in file("quill-streaming-monix"))
+    .settings(commonSettings: _*)
+    .settings(mimaSettings: _*)
+    .settings(
+      fork in Test := true,
+      libraryDependencies ++= Seq(
+        "io.monix" %% "monix" % "3.0.0-RC2"
+      ),
+      scalacOptions ++= Seq(
+        "-language:higherKinds",
+        "-language:existentials",
+        "-Ypartial-unification"
+      )
+    )
+    .dependsOn(`quill-streaming-cats` % "compile->compile;test->test")
 
 lazy val `tut-sources` = Seq(
   "CASSANDRA.md",
