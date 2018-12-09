@@ -206,7 +206,8 @@ lazy val `quill-streaming-monix` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "io.monix" %% "monix" % "3.0.0-RC2"
+        "io.monix" %% "monix" % "3.0.0-RC2",
+        "org.postgresql" % "postgresql" % "42.2.5" % Test,
       ),
       scalacOptions ++= Seq(
         "-language:higherKinds",
@@ -214,7 +215,7 @@ lazy val `quill-streaming-monix` =
         "-Ypartial-unification"
       )
     )
-    .dependsOn(`quill-streaming-cats` % "compile->compile;test->test")
+    .dependsOn(`quill-sql-jvm` % "compile->compile;test->test", `quill-streaming-cats` % "compile->compile;test->test")
 
 lazy val `tut-sources` = Seq(
   "CASSANDRA.md",
