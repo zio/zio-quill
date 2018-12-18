@@ -49,7 +49,7 @@ class UdtEncodingSessionContextSpec extends UdtSpec {
     "without meta" in {
       case class WithEverything(id: Int, personal: Personal, nameList: List[Name])
 
-      val e = WithEverything(1, Personal(1, "strt", Name("first", "last")), List(Name("first", "last")))
+      val e = WithEverything(1, Personal(1, "strt", Name("first", Some("last")), Some(Name("f", None))), List(Name("first", None)))
       ctx1.run(query[WithEverything].insert(lift(e)))
       ctx1.run(query[WithEverything].filter(_.id == 1)).headOption must contain(e)
     }
@@ -88,7 +88,7 @@ class UdtEncodingSessionContextSpec extends UdtSpec {
   "naming strategy" in {
     import ctx2._
     case class WithUdt(id: Int, name: Name)
-    val e = WithUdt(1, Name("first", "second"))
+    val e = WithUdt(1, Name("first", Some("second")))
     // quill_test_2 uses snake case
     ctx2.run(query[WithUdt].insert(lift(e)))
     ctx2.run(query[WithUdt].filter(_.id == 1)).headOption must contain(e)

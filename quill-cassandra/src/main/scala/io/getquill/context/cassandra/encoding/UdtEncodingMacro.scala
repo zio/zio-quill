@@ -4,6 +4,7 @@ import com.datastax.driver.core.UDTValue
 import io.getquill.util.Messages._
 import io.getquill.util.OptionalTypecheck
 
+import scala.collection.mutable.ListBuffer
 import scala.reflect.macros.blackbox.{ Context => MacroContext }
 
 class UdtEncodingMacro(val c: MacroContext) {
@@ -49,7 +50,7 @@ class UdtEncodingMacro(val c: MacroContext) {
       q"""
          ${buildUdtMeta(t.tpe)}
          def udtencoder[..$typeDefs](implicit ..${params.flatten}): $prefix.Encoder[${t.tpe}] = {
-           $prefix.encoder[$t]((i: $prefix.Index, x: ${t.tpe}, row: $prefix.PrepareRow) => row.setUDTValue(i, $body))
+           $prefix.encoder[$t]((i: $prefix.Index, x: ${t.tpe}, row: $prefix.PrepareRow) => row.setUDTValue(i, {..$body}))
          }
          udtencoder
        """
@@ -62,7 +63,7 @@ class UdtEncodingMacro(val c: MacroContext) {
       q"""
          ${buildUdtMeta(t.tpe)}
          def udtencodemapper[..$typeDefs](implicit ..${params.flatten}): $encoding.CassandraMapper[${t.tpe}, $udtRaw] = {
-           $encoding.CassandraMapper(x => $body)
+           $encoding.CassandraMapper(x => {..$body})
          }
          udtencodemapper
        """
@@ -71,25 +72,41 @@ class UdtEncodingMacro(val c: MacroContext) {
 
   private def decodeUdt[T](udtType: Type) = {
     udtFields(udtType).map {
-      case (name, _, tpe, mapper, absType, absTypeDef, tag) => (
-        absTypeDef,
-        List(q"$mapper: $encoding.CassandraMapper[$absType, $tpe]", q"$tag: scala.reflect.ClassTag[$absType]"),
-        q"$mapper.f(udt.get[$absType]($name, $tag.runtimeClass.asInstanceOf[Class[$absType]]))"
-      )
+      case (name, _, tpe, mapper, absType, absTypeDef, tag) =>
+        val getTree = q"$mapper.f(udt.get[$absType]($name, $tag.runtimeClass.asInstanceOf[Class[$absType]]))"
+        val (newTpe, tree) =
+          if (tpe <:< typeOf[Option[Any]]) tpe.typeArgs.head -> q"Option($getTree)"
+          else tpe -> getTree
+        val params = List(q"$mapper: $encoding.CassandraMapper[$absType, $newTpe]", q"$tag: scala.reflect.ClassTag[$absType]")
+        (absTypeDef, params, tree)
     }.unzip3
   }
 
   private def encodeUdt[T](udtType: Type) = {
-    var acc = q"$prefix.udtValueOf(meta.name, meta.keyspace)"
+    val list = ListBuffer[Tree](q"val udt = $prefix.udtValueOf(meta.name, meta.keyspace)")
     val (typeDefs, params) = udtFields(udtType).map {
       case (name, field, tpe, mapper, absType, absTypeDef, tag) =>
-        acc = q"$acc.set[$absType]($name, $mapper.f(x.$field), $tag.runtimeClass.asInstanceOf[Class[$absType]])"
+        val newTpe =
+          if (tpe <:< typeOf[Option[Any]]) {
+            list.append {
+              q"""
+               x.$field.map($mapper.f) match {
+                  case None => udt.setToNull($name)
+                  case Some(value) => udt.set[$absType]($name, value, $tag.runtimeClass.asInstanceOf[Class[$absType]])
+               }
+             """
+            }
+            tpe.typeArgs.head
+          } else {
+            list.append(q"udt.set[$absType]($name, $mapper.f(x.$field), $tag.runtimeClass.asInstanceOf[Class[$absType]])")
+            tpe
+          }
         absTypeDef -> List(
-          q"$mapper: $encoding.CassandraMapper[$tpe, $absType]",
+          q"$mapper: $encoding.CassandraMapper[$newTpe, $absType]",
           q"$tag: scala.reflect.ClassTag[$absType]"
         )
     }.unzip
-    (typeDefs, params, acc)
+    (typeDefs, params, list.toList)
   }
 
   private def udtFields(udt: Type) = {
