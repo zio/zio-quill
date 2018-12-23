@@ -17,10 +17,18 @@ function get_host() {
 # usage: setup_x <script>
 
 function setup_sqlite() {
+    # DB File in quill-jdbc
     DB_FILE=quill-jdbc/quill_test.db
     rm -f $DB_FILE
     sqlite3 $DB_FILE < $1
     chmod a+rw $DB_FILE
+
+    # DB File in quill-jdbc-monix
+    DB_FILE=quill-jdbc-monix/quill_test.db
+    rm -f $DB_FILE
+    sqlite3 $DB_FILE < $1
+    chmod a+rw $DB_FILE
+
     echo "Sqlite ready!"
 }
 
