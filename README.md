@@ -495,7 +495,7 @@ ctx.run(q)
 Joins are arguably the largest source of complexity in most SQL queries.
 Quill offers a few different syntaxes so you can choose the right one for your use-case!
 
-````scala
+```scala
 // Applicative Joins: 
 A.join(B).on(_.id == _.fk)
  
@@ -510,13 +510,13 @@ for {
   a <- A
   b <- B.join(_.fk == a.id)
 } yield (a, b)
-````
+```
 
 Let's see them one by one assuming the following schema:
-````scala
+```scala
 case class Person(id:Int, name:String)
 case class Address(street:String, zip:Int, fk:Int)
-````
+```
 (Note: If your use case involves lots and lots of joins, both inner and outer. Skip right to the flat-joins section!)
 
 #### applicative joins
@@ -562,11 +562,11 @@ val q = quote {
 ctx.run(q): List[(Option[Person], Option[Address])]
 // SELECT p.id, p.name, a.street, a.zip, a.fk 
 // FROM Person p FULL JOIN Address a ON p.id = a.fk
-````
+```
  
 What about joining more then two tables with the applicative syntax?
 Here's how to do that:
-````scala
+```scala
 // All is well for two tables but for three or more, the nesting mess begins:
 val q = quote {
   query[Person]
@@ -578,7 +578,7 @@ ctx.run(q): List[((Person, Address), Company)]
 // (Unfortunately when you use `case` statements, Quill can't help you with the variables names either!)
 // SELECT x01.id, x01.name, x11.street, x11.zip, x11.fk, x12.name, x12.zip 
 // FROM Person x01 INNER JOIN Address x11 ON x01.id = x11.fk INNER JOIN Company x12 ON x11.zip = x12.zip
-````
+```
 No worries though, implicit joins and flat joins have your other use-cases covered!
 
 #### implicit joins
@@ -588,7 +588,7 @@ They look a lot like Scala collections when used in for-comprehensions
 making them familiar to a typical Scala developer. 
 What's the catch? They can only do inner-joins.
 
-````scala
+```scala
 val q = quote {
   for {
     p <- query[Person]
@@ -599,11 +599,11 @@ val q = quote {
 run(q): List[(Person, Address)]
 // SELECT p.id, p.name, a.street, a.zip, a.fk 
 // FROM Person p, Address a WHERE p.id = a.fk
- ````
+ ```
  
 Now this is great because you can keep adding more and more joins
 without having to do any pesky nesting.
- ````scala
+ ```scala
 val q = quote {
   for {
     p <- query[Person]
@@ -615,7 +615,7 @@ val q = quote {
 run(q): List[(Person, Address, Company)]
 // SELECT p.id, p.name, a.street, a.zip, a.fk, c.name, c.zip 
 // FROM Person p, Address a, Company c WHERE p.id = a.fk AND c.zip = a.zip
-````
+```
 Well that looks nice but wait! What If I need to inner, **and** outer join lots of tables nicely?
 No worries, flat-joins are here to help!
 
@@ -624,7 +624,7 @@ No worries, flat-joins are here to help!
 Flat Joins give you the best of both worlds! In the monadic syntax, you can use both inner joins,
 and left-outer joins together without any of that pesky nesting.
 
-````scala
+```scala
 // Inner Join
 val q = quote {
   for { 
@@ -648,10 +648,10 @@ val q = quote {
 ctx.run(q): List[(Person, Option[Address])]
 // SELECT p.id, p.name, a.street, a.zip, a.fk 
 // FROM Person p LEFT JOIN Address a ON a.fk = p.id
-````
+```
  
 Now you can keep adding both right and left joins without nesting!
-````scala
+```scala
 val q = quote {
   for { 
     p <- query[Person]
@@ -665,7 +665,7 @@ ctx.run(q): List[(Person, Address, Option[Company])]
 // FROM Person p 
 // INNER JOIN Address a ON a.fk = p.id 
 // LEFT JOIN Company c ON c.zip = a.zip
-````
+```
 
 Can't figure out what kind of join you want to use? Who says you have to choose?
 
@@ -700,7 +700,7 @@ ctx.run(qNested)
 
 Note that in some cases implicit and flat joins cannot be used together, for example, the following
 query will fail.
-````scala
+```scala
 val q = quote {
   for {
     p <- query[Person]
@@ -712,7 +712,7 @@ val q = quote {
 ct.run(q)
 // java.lang.IllegalArgumentException: requirement failed: Found an `ON` table reference of a table that is 
 // not available: Set(p). The `ON` condition can only use tables defined through explicit joins.
-````
+```
 This happens because a explicit join typically cannot be done after an implicit join in the same query.
  
 A good guideline is in any query or subquery, choose one of the following:
@@ -726,7 +726,7 @@ only a specific subset. This is mostly due to the inherent limitations of SQL it
 ### Optionals / Nullable Fields
 Option objects are used to encode nullable fields.
 Say you have the following schema:
-````sql
+```sql
 CREATE TABLE Person(
   id INT NOT NULL PRIMARY KEY,
   name VARCHAR(255) -- This is nullable!
@@ -741,48 +741,48 @@ CREATE TABLE Company(
   name VARCHAR(255) NOT NULL,
   zip INT NOT NULL
 )
-````
+```
 This would encode to the following:
-````scala
+```scala
 case class Person(id:Int, name:Option[String])
 case class Address(fk:Option[Int], street:String, zip:Int)
 case class Company(name:String, zip:Int)
-````
+```
 Let's go through the typical operations of optionals.
 (Note that as of now, you cannot compare two optional fields directly, see the 'exists' section on how to do that.)
 
 #### isDefined / isEmpty
 
 The `isDefined` method is generally a good way to null-check a nullable field:
-````scala
+```scala
 val q = quote {
   query[Address].filter(a => a.fk.isDefined)
 }
 ctx.run(q)
 // SELECT a.fk, a.street, a.zip FROM Address a WHERE a.fk IS NOT NULL
-````
+```
 The `isEmpty` method works the same way:
-````scala
+```scala
 val q = quote {
   query[Address].filter(a => a.fk.isEmpty)
 }
 ctx.run(q)
 // SELECT a.fk, a.street, a.zip FROM Address a WHERE a.fk IS NULL
-````
+```
 
  
 #### exists
 
 This method is typically used for inspecting nullable fields inside of boolean conditions, most notably joining!
-````scala
+```scala
 val q = quote {
   query[Person].join(query[Address]).on((p, a)=> a.fk.exists(_ == p.id))
 }
 ctx.run(q)
 // SELECT p.id, p.name, a.fk, a.street, a.zip FROM Person p INNER JOIN Address a ON a.fk = p.id
-````
+```
 It is also useful for comparing two optional values:
-````scala
+```scala
 val q = quote {
   for { 
     pa <- query[Person] 
@@ -791,7 +791,7 @@ val q = quote {
 }
 ctx.run(q)
 // SELECT pa.id, pa.name, pb.id, pb.name FROM Person pa, Person pb WHERE pa.name = pb.name
-````
+```
 Note however that as you can see from the examples above, the `exists` method does not cause the generated
 SQL to do an explicit null-check in order to express the `False` case. This is because Quill relies on the
 typical database behavior of immediately falsifying a statement that has `null` on one side of the equation.
@@ -799,27 +799,27 @@ typical database behavior of immediately falsifying a statement that has `null` 
 #### forall
 
 Use this method in boolean conditions that should succeed in the null case.
-````scala
+```scala
 val q = quote {
   query[Person].join(query[Address]).on((p, a)=> a.fk.forall(_ == p.id))
 }
 ctx.run(q)
 SELECT p.id, p.name, a.fk, a.street, a.zip FROM Person p INNER JOIN Address a ON a.fk IS NULL OR a.fk = p.id
-````
+```
 Typically this is useful when doing negative conditions, e.g. when a field is **not** some specified value (e.g. `"Joe"`).
 Being `null` in this case is typically a matching result.
-````scala
+```scala
 val q = quote {
   query[Person].filter(p => p.name.forall(_ != "Joe"))
 }
  
 ctx.run(q)
 // SELECT p.id, p.name FROM Person p WHERE p.name IS NULL OR p.name <> 'Joe'
-````
+```
 
 #### map
 As in regular Scala code, performing any operation on an optional value typically requires using the `map` function.
-````scala
+```scala
 val q = quote {
  for {
     p <- query[Person]
@@ -828,12 +828,12 @@ val q = quote {
  
 ctx.run(q)
 // SELECT p.id, 'Dear ' || p.name FROM Person p
-````
+```
 
 Additionally, this this method is useful when you want to get a non-optional field out of a outer-joined table
 (i.e. a table wrapped in an `Option` object).
 
-````scala
+```scala
 val q = quote {
   query[Company].leftJoin(query[Address])
     .on((c, a) => c.zip == a.zip)
@@ -841,7 +841,7 @@ val q = quote {
       (c.name, a.map(_.street), a.map(_.zip))   // Use `Option.map` to get `street` and `zip` fields
     }) 
 }
-````
+```
 
 For more details about this operation (and some caveats), see the 'Optional Tables' section.
 
@@ -849,7 +849,7 @@ For more details about this operation (and some caveats), see the 'Optional Tabl
 
 Use these when the `Option.map` functionality is not sufficient. This typically happens when you need to manipulate
 multiple nullable fields in a way which would otherwise result in `Option[Option[T]]`.
-````scala
+```scala
 val q = quote {
   for {
     a <- query[Person]
@@ -877,11 +877,11 @@ val q = quote {
  
 ctx.run(q): List[Option[String]]
 // SELECT (a.name || ' comes after ') || b.name FROM Person a, Person b WHERE a.id > b.id
-```` 
+``` 
 This is also very useful when selecting from outer-joined tables i.e. where the entire table
 is inside of an `Option` object. Note how below we get the `fk` field from `Option[Address]`.
 
-````scala
+```scala
 val q = quote {
   query[Person].leftJoin(query[Address])
     .on((p, a)=> a.fk.exists(_ == p.id))
@@ -890,7 +890,7 @@ val q = quote {
  
 ctx.run(q): List[(Option[String], Option[Int])]
 // SELECT p.name, a.fk FROM Person p LEFT JOIN Address a ON a.fk = p.id
-````
+```
 
 #### Optional Tables
 
@@ -900,16 +900,16 @@ As we have seen in the examples above, only the `map` and `flatMap` methods are 
 Since you cannot use `Option[Table].isDefined`, if you want to null-check a whole table
 (e.g. if a left-join was not matched), you have to `map` to a specific field on which you can do the null-check.
 
-````scala
+```scala
 val q = quote {
   query[Company].leftJoin(query[Address])
     .on((c, a) => c.zip == a.zip)         // Row type is (Company, Option[Address])
     .filter({case(c,a) => a.isDefined})   // You cannot null-check a whole table
 }
-````
+```
  
 Instead, map the row-variable to a specific field and then check that field.
-````scala
+```scala
 val q = quote {
   query[Company].leftJoin(query[Address])
     .on((c, a) => c.zip == a.zip)                     // Row type is (Company, Option[Address])
@@ -920,11 +920,11 @@ ctx.run(q)
 // FROM Company c 
 // LEFT JOIN Address a ON c.zip = a.zip 
 // WHERE a.street IS NOT NULL
-````
+```
  
 Finally, it is worth noting that a whole table can be wrapped into an `Option` object. This is particularily
 useful when doing a union on table-sets that are both right-joined and left-joined together.
-````scala
+```scala
 val aCompanies = quote {
   for {
     c <- query[Company] if (c.name like "A%")
@@ -948,7 +948,7 @@ ctx.run(union)
 // (SELECT c1.name name, c1.zip zip, x2.zip zip, x2.fk fk, x2.street street 
 // FROM Company c1 LEFT JOIN Address x2 ON x2.zip = c1.zip WHERE c1.name like 'A%')
 // ) x
-````
+```
 
 ### Ad-Hoc Case Classes
 
@@ -1173,6 +1173,38 @@ val a = quote {
 
 // INSERT INTO Product (id,sku) VALUES (1, 10) ON DUPLICATE KEY UPDATE sku = (sku + VALUES(sku))
 ```
+
+## Printing Queries
+
+The `translate` method is used to convert a Quill query into a string which can then be printed.
+
+```scala
+val str = ctx.translate(query[Person])
+println(str)
+// SELECT x.name, x.age FROM Person x
+```
+
+Insert queries can also be printed:
+
+```scala
+val str = ctx.translate(query[Person].insert(lift(Person("Joe", 45))))
+println(str)
+// INSERT INTO Person (name,age) VALUES ('Joe', 45)
+```
+
+As well as batch insertions:
+
+```scala
+val strs:List[String] = ctx.translate(liftQuery(
+                          List(Person("Joe",44), Person("Jack",45))
+                        ).foreach(e => query[Person].insert(e)))
+strs.map(println(_))
+// INSERT INTO Person (name,age) VALUES ('Joe', 44)
+// INSERT INTO Person (name,age) VALUES ('Jack', 45)
+```
+
+The `translate` method is available in every Quill context as well as the Cassandra and OrientDB contexts,
+the latter two however do not support Insert and Batch Insert query printing.
 
 ## IO Monad
 
@@ -1931,7 +1963,9 @@ def createDataSource: javax.sql.DataSource with java.io.Closeable = ???
 lazy val ctx = new MysqlJdbcContext(SnakeCase, createDataSource)
 ```
 
-### quill-jdbc
+## quill-jdbc
+
+The `quill-jdbc` module provides a simple blocking JDBC context for standard use-cases. For transactions, the JDBC connection is kept in a thread-local variable.
 
 Quill uses [HikariCP](https://github.com/brettwooldridge/HikariCP) for connection pooling. Please refer to HikariCP's [documentation](https://github.com/brettwooldridge/HikariCP#configuration-knobs-baby) for a detailed explanation of the available configurations.
 
@@ -1941,7 +1975,7 @@ Note that there are `dataSource` configurations, that go under `dataSource`, lik
 
 The `JdbcContext` provides thread-local transaction support:
 
-```
+```scala
 ctx.transaction {
   ctx.run(query[Person].delete)
   // other transactional code
@@ -2071,13 +2105,206 @@ ctx.dataSource.portNumber=1433
 ctx.dataSource.serverName=host
 ```
 
-### quill-async
+## quill-jdbc-monix
+
+The `quill-jdbc-monix` module integrates the Monix asynchronous programming framework with Quill,
+supporting all of the database vendors of the `quill-jdbc` module. 
+The Quill Monix contexts encapsulate JDBC Queries and Actions into Monix `Task`s 
+and also include support for streaming queries via `Observable`.
+
+#### streaming
+
+The `MonixJdbcContext` can stream using Monix Observables:
+
+```scala
+ctx.stream(query[Person]) // returns: Observable[Person]
+  .foreachL(println(_))
+  .runSyncUnsafe()
+```
+
+#### transactions
+
+The `MonixJdbcContext` provides support for transactions by storing the connection into a Monix `Local`. 
+This process is designed to be completely transparent to the user. As with the other contexts,
+if an exception is thrown anywhere inside a task or sub-task within a `transaction` block, the entire block
+will be rolled back by the database.
+
+Basic syntax:
+```scala
+val trans =
+  ctx.transaction {
+    for {
+      _ <- ctx.run(query[Person].delete)
+      _ <- ctx.run(query[Person].insert(Person("Joe", 123)))
+      p <- ctx.run(query[Person])
+    } yield p
+  } //returns: Task[List[Person]]
+
+val result = trans.runSyncUnsafe() //returns: List[Person]
+```
+
+Streaming can also be done inside of `transaction` block so long as the result is converted to a task beforehand.
+```scala
+val trans =
+  ctx.transaction {
+    for {
+      _   <- ctx.run(query[Person].insert(Person("Joe", 123)))
+      ppl <- ctx
+              .stream(query[Person])                               // Observable[Person]
+              .foldLeftL(List[Person]())({case (l, p) => p +: l})  // ... becomes Task[List[Person]]
+    } yield ppl
+  } //returns: Task[List[Person]]
+
+val result = trans.runSyncUnsafe() //returns: List[Person]
+```
+
+#### runners
+
+Use a `Runner` object to create the different `MonixJdbcContext`s. 
+The Runner does the actual wrapping of JDBC calls into Monix Tasks.
+
+```scala
+// You can use the default Runner when constructing a Monix jdbc contexts. 
+// The resulting tasks will be wrapped with whatever Scheduler is 
+// defined when you do task.syncRunUnsafe(), typically a global implicit.
+val ctx = new MysqlMonixJdbcContext(SnakeCase, "ctx", Runner.default)
+
+// However...
+// Monix strongly suggests that you use a separate thread pool for database IO 
+// operations. `Runner` provides a convenience method in order to do this.
+val ctx = new MysqlMonixJdbcContext(SnakeCase, "ctx", Runner.using(Scheduler.io()))
+```
+
+### MySQL (quill-jdbc-monix)
+
+#### sbt dependencies
+```
+libraryDependencies ++= Seq(
+  "mysql" % "mysql-connector-java" % "5.1.38",
+  "io.getquill" %% "quill-jdbc-monix" % "3.0.0-SNAPSHOT"
+)
+```
+
+#### context definition
+```scala
+lazy val ctx = new MysqlMonixJdbcContext(SnakeCase, "ctx", Runner.default)
+```
+
+#### application.properties
+```
+ctx.dataSourceClassName=com.mysql.jdbc.jdbc2.optional.MysqlDataSource
+ctx.dataSource.url=jdbc:mysql://host/database
+ctx.dataSource.user=root
+ctx.dataSource.password=root
+ctx.dataSource.cachePrepStmts=true
+ctx.dataSource.prepStmtCacheSize=250
+ctx.dataSource.prepStmtCacheSqlLimit=2048
+ctx.connectionTimeout=30000
+```
+
+### Postgres (quill-jdbc-monix)
+
+#### sbt dependencies
+```
+libraryDependencies ++= Seq(
+  "org.postgresql" % "postgresql" % "9.4.1208",
+  "io.getquill" %% "quill-jdbc-monix" % "3.0.0-SNAPSHOT"
+)
+```
+
+#### context definition
+```scala
+lazy val ctx = new PostgresMonixJdbcContext(SnakeCase, "ctx", Runner.default)
+```
+
+#### application.properties
+```
+ctx.dataSourceClassName=org.postgresql.ds.PGSimpleDataSource
+ctx.dataSource.user=root
+ctx.dataSource.password=root
+ctx.dataSource.databaseName=database
+ctx.dataSource.portNumber=5432
+ctx.dataSource.serverName=host
+ctx.connectionTimeout=30000
+```
+
+### Sqlite (quill-jdbc-monix)
+
+#### sbt dependencies
+```
+libraryDependencies ++= Seq(
+  "org.xerial" % "sqlite-jdbc" % "3.18.0",
+  "io.getquill" %% "quill-jdbc-monix" % "3.0.0-SNAPSHOT"
+)
+```
+
+#### context definition
+```scala
+lazy val ctx = new SqliteMonixJdbcContext(SnakeCase, "ctx", Runner.default)
+```
+
+#### application.properties
+```
+ctx.driverClassName=org.sqlite.JDBC
+ctx.jdbcUrl=jdbc:sqlite:/path/to/db/file.db
+```
+
+### H2 (quill-jdbc-monix)
+
+#### sbt dependencies
+```
+libraryDependencies ++= Seq(
+  "com.h2database" % "h2" % "1.4.192",
+  "io.getquill" %% "quill-jdbc-monix" % "3.0.0-SNAPSHOT"
+)
+```
+
+#### context definition
+```scala
+lazy val ctx = new H2MonixJdbcContext(SnakeCase, "ctx", Runner.default)
+```
+
+#### application.properties
+```
+ctx.dataSourceClassName=org.h2.jdbcx.JdbcDataSource
+ctx.dataSource.url=jdbc:h2:mem:yourdbname
+ctx.dataSource.user=sa
+```
+
+### SQL Server (quill-jdbc-monix)
+
+#### sbt dependencies
+```
+libraryDependencies ++= Seq(
+  "com.microsoft.sqlserver" % "mssql-jdbc" % "6.1.7.jre8-preview",
+  "io.getquill" %% "quill-jdbc" % "3.0.0-SNAPSHOT"
+)
+```
+
+#### context definition
+```scala
+lazy val ctx = new SqlServerMonixJdbcContext(SnakeCase, "ctx", Runner.default)
+```
+
+#### application.properties
+```
+ctx.dataSourceClassName=com.microsoft.sqlserver.jdbc.SQLServerDataSource
+ctx.dataSource.user=user
+ctx.dataSource.password=YourStrongPassword
+ctx.dataSource.databaseName=database
+ctx.dataSource.portNumber=1433
+ctx.dataSource.serverName=host
+```
+
+## quill-async
+
+The `quill-async` module provides simple async support for MySQL and Postgres databases.
 
 #### transactions
 
 The async module provides transaction support based on a custom implicit execution context:
 
-```
+```scala
 ctx.transaction { implicit ec =>
   ctx.run(query[Person].delete)
   // other transactional code
@@ -2086,7 +2313,7 @@ ctx.transaction { implicit ec =>
 
 The body of `transaction` can contain calls to other methods and multiple `run` calls, but the transactional code must be done using the provided implicit execution context. For instance:
 
-```
+```scala
 def deletePerson(name: String)(implicit ec: ExecutionContext) = 
   ctx.run(query[Person].filter(_.name == lift(name)).delete)
 
@@ -2097,7 +2324,7 @@ ctx.transaction { implicit ec =>
 
 Depending on how the main execution context is imported, it is possible to produce an ambigous implicit resolution. A way to solve this problem is shadowing the multiple implicits by using the same name:
 
-```
+```scala
 import scala.concurrent.ExecutionContext.Implicits.{ global => ec }
 
 def deletePerson(name: String)(implicit ec: ExecutionContext) = 
@@ -2119,7 +2346,7 @@ ctx.port=1234
 ctx.user=root
 ctx.password=root
 ctx.database=database
-`````
+````
 
 or use connection URL with database-specific scheme (see below):
 
@@ -2200,13 +2427,17 @@ For `url` property use `postgresql` scheme:
 ctx.url=postgresql://host:5432/database?user=root&password=root
 ```
 
+## Finagle Contexts
+
+Support for the Twitter Finagle library is available with MySQL and Postgres databases.
+
 ### quill-finagle-mysql
 
 #### transactions
 
 The finagle context provides transaction support through a `Local` value. See twitter util's [scaladoc](https://github.com/twitter/util/blob/ee8d3140ba0ecc16b54591bd9d8961c11b999c0d/util-core/src/main/scala/com/twitter/util/Local.scala#L96) for more details.
 
-```
+```scala
 ctx.transaction {
   ctx.run(query[Person].delete)
   // other transactional code
@@ -2246,7 +2477,7 @@ ctx.pool.maxWaiters=2147483647
 
 The finagle context provides transaction support through a `Local` value. See twitter util's [scaladoc](https://github.com/twitter/util/blob/ee8d3140ba0ecc16b54591bd9d8961c11b999c0d/util-core/src/main/scala/com/twitter/util/Local.scala#L96) for more details.
 
-```
+```scala
 ctx.transaction {
   ctx.run(query[Person].delete)
   // other transactional code
@@ -2280,7 +2511,7 @@ ctx.binaryResults=false
 ctx.binaryParams=false
 ```
 
-### quill-cassandra
+## quill-cassandra
 
 #### sbt dependencies
 ```
@@ -2321,7 +2552,7 @@ ctx.session.maxSchemaAgreementWaitSeconds=1
 ctx.session.addressTranslator=com.datastax.driver.core.policies.IdentityTranslator
 ```
 
-### OrientDB Contexts
+## OrientDB Contexts
 
 #### sbt dependencies
 ```
