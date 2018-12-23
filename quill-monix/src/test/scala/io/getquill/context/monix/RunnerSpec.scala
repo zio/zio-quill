@@ -25,9 +25,9 @@ class RunnerSpec extends Spec {
     "should lazily evaluate" in {
       val sideEffect = new SideEffect
       val task = wrap(sideEffect())
-      sideEffect.applied should equal (false)
+      sideEffect.applied should equal(false)
       task.runSyncUnsafe()
-      sideEffect.applied should equal (true)
+      sideEffect.applied should equal(true)
     }
 
     "should encapsulate exception throw" in {
@@ -37,16 +37,16 @@ class RunnerSpec extends Spec {
     }
 
     "should push an effect correctly" in {
-      push(Task(1))(_ + 1).runSyncUnsafe() should equal (2)
+      push(Task(1))(_ + 1).runSyncUnsafe() should equal(2)
     }
 
     "should convert a sequence correctly" in {
-      seq(List(Task(1), Task(2), Task(3))).runSyncUnsafe() should equal (List(1,2,3))
+      seq(List(Task(1), Task(2), Task(3))).runSyncUnsafe() should equal(List(1, 2, 3))
     }
 
     "plain schedule should be a no-op" in {
       val t = Task(1)
-      (schedule(t) eq (t)) must equal (true)
+      (schedule(t) eq (t)) must equal(true)
     }
 
     "boundary operator must force async boundary" in {
@@ -69,7 +69,7 @@ class RunnerSpec extends Spec {
       val threadName =
         schedule(Task(Thread.currentThread().getName)).runSyncUnsafe()(Scheduler.global, CanBlock.permit)
 
-      threadName.startsWith(prefix) must equal (true)
+      threadName.startsWith(prefix) must equal(true)
     }
 
     "should async-boundary in specified scheduler" in {
@@ -77,7 +77,7 @@ class RunnerSpec extends Spec {
       val threadName =
         boundary(Task(Thread.currentThread().getName)).runSyncUnsafe()(Scheduler.global, CanBlock.permit)
 
-      threadName.startsWith(prefix) must equal (true)
+      threadName.startsWith(prefix) must equal(true)
     }
 
     "should async-boundary correctly" in {
@@ -89,8 +89,8 @@ class RunnerSpec extends Spec {
           .flatMap(prevName => boundary(Task((prevName, Thread.currentThread().getName))))
           .runSyncUnsafe()(Scheduler.global, CanBlock.permit)
 
-      first.startsWith(prefix2) must equal (true)
-      second.startsWith(prefix) must equal (true)
+      first.startsWith(prefix2) must equal(true)
+      second.startsWith(prefix) must equal(true)
       first must not equal second
     }
   }

@@ -19,9 +19,9 @@ trait Runner extends ContextEffect[Task] {
   def boundary[T](t: Task[T]): Task[T] = t.asyncBoundary
 
   /**
-  * Use this method whenever a ResultSet is being wrapped. This has a distinct
-    * method because the client may prefer to fail silently on a ResultSet close
-    * as opposed to failing the surrounding task.
-    */
+   * Use this method whenever a ResultSet is being wrapped. This has a distinct
+   * method because the client may prefer to fail silently on a ResultSet close
+   * as opposed to failing the surrounding task.
+   */
   def wrapClose(t: => Unit): Task[Unit] = Task(t)
 }
