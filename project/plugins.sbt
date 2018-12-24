@@ -2,11 +2,6 @@ resolvers += Classpaths.sbtPluginReleases
 
 resolvers += "Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/"
 
-resolvers += Resolver.url(
-  "tpolecat-sbt-plugin-releases",
-    url("http://dl.bintray.com/content/tpolecat/sbt-plugin-releases"))(
-        Resolver.ivyStylePatterns)
-
 addSbtPlugin("org.tpolecat" % "tut-plugin" % "0.6.10")
 
 addSbtPlugin("org.scoverage" % "sbt-scoverage" % "1.5.1")

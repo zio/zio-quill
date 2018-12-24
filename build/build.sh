@@ -59,21 +59,16 @@ time sbt $SBT_ARGS checkUnformattedFiles test
 show_mem
 
 time docker-compose down
-# for 2.11 we run spark module and publish coverage
+# for 2.11 publish coverage
 if [[ $TRAVIS_SCALA_VERSION == 2.11* ]]; then
-
-    echo "Running tests for Spark"
-    time sbt $SBT_ARGS quill-spark/test
 
     echo "Coverage"
     time sbt $SBT_ARGS coverageReport coverageAggregate
     pip install --user codecov && codecov
-
-# for 2.12 we run tut
-elif [[ $SCALA_VERSION == 2.12* ]]
-then
-    time sbt tut
 fi
+
+# for 2.11 and 2.12 we run tut
+time sbt tut
 
 show_mem
 

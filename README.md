@@ -496,26 +496,35 @@ Joins are arguably the largest source of complexity in most SQL queries.
 Quill offers a few different syntaxes so you can choose the right one for your use-case!
 
 ```scala
-// Applicative Joins: 
-A.join(B).on(_.id == _.fk)
+case class A(id: Int)
+case class B(fk: Int)
+
+// Applicative Joins:
+quote {
+  query[A].join(query[B]).on(_.id == _.fk)
+}
  
 // Implicit Joins:
-for {
-  a <- A
-  b <- B if (a.id == b.fk) 
-} yield (a, b)
+quote {
+  for {
+    a <- query[A]
+    b <- query[B] if (a.id == b.fk) 
+  } yield (a, b)
+}
  
 // Flat Joins:
-for {
-  a <- A
-  b <- B.join(_.fk == a.id)
-} yield (a, b)
+quote {
+  for {
+    a <- query[A]
+    b <- query[B].join(_.fk == a.id)
+  } yield (a, b)
+}
 ```
 
 Let's see them one by one assuming the following schema:
 ```scala
-case class Person(id:Int, name:String)
-case class Address(street:String, zip:Int, fk:Int)
+case class Person(id: Int, name: String)
+case class Address(street: String, zip: Int, fk: Int)
 ```
 (Note: If your use case involves lots and lots of joins, both inner and outer. Skip right to the flat-joins section!)
 
@@ -531,7 +540,7 @@ val q = quote {
   query[Person].join(query[Address]).on(_.id == _.fk)
 }
  
-ctx.run(q): List[(Person, Address)]
+ctx.run(q) //: List[(Person, Address)]
 // SELECT x1.id, x1.name, x2.street, x2.zip, x2.fk 
 // FROM Person x1 INNER JOIN Address x2 ON x1.id = x2.fk
  
@@ -540,7 +549,7 @@ val q = quote {
   query[Person].leftJoin(query[Address]).on((p, a) => p.id == a.fk)
 }
  
-ctx.run(q): List[(Person, Option[Address])]
+ctx.run(q) //: List[(Person, Option[Address])]
 // Note that when you use named-variables in your comprehension, Quill does its best to honor them in the query.
 // SELECT p.id, p.name, a.street, a.zip, a.fk 
 // FROM Person p LEFT JOIN Address a ON p.id = a.fk
@@ -550,7 +559,7 @@ val q = quote {
   query[Person].rightJoin(query[Address]).on((p, a) => p.id == a.fk)
 }
  
-ctx.run(q): List[(Option[Person], Address)]
+ctx.run(q) //: List[(Option[Person], Address)]
 // SELECT p.id, p.name, a.street, a.zip, a.fk 
 // FROM Person p RIGHT JOIN Address a ON p.id = a.fk
  
@@ -559,7 +568,7 @@ val q = quote {
   query[Person].fullJoin(query[Address]).on((p, a) => p.id == a.fk)
 }
  
-ctx.run(q): List[(Option[Person], Option[Address])]
+ctx.run(q) //: List[(Option[Person], Option[Address])]
 // SELECT p.id, p.name, a.street, a.zip, a.fk 
 // FROM Person p FULL JOIN Address a ON p.id = a.fk
 ```
@@ -567,6 +576,8 @@ ctx.run(q): List[(Option[Person], Option[Address])]
 What about joining more then two tables with the applicative syntax?
 Here's how to do that:
 ```scala
+case class Company(zip: Int)
+
 // All is well for two tables but for three or more, the nesting mess begins:
 val q = quote {
   query[Person]
@@ -574,7 +585,7 @@ val q = quote {
     .join(query[Company]).on({case ((p, a), c) => a.zip == c.zip})
 }
  
-ctx.run(q): List[((Person, Address), Company)]
+ctx.run(q) //: List[((Person, Address), Company)]
 // (Unfortunately when you use `case` statements, Quill can't help you with the variables names either!)
 // SELECT x01.id, x01.name, x11.street, x11.zip, x11.fk, x12.name, x12.zip 
 // FROM Person x01 INNER JOIN Address x11 ON x01.id = x11.fk INNER JOIN Company x12 ON x11.zip = x12.zip
@@ -596,23 +607,23 @@ val q = quote {
   } yield (p, a)
 }
  
-run(q): List[(Person, Address)]
+run(q) //: List[(Person, Address)]
 // SELECT p.id, p.name, a.street, a.zip, a.fk 
 // FROM Person p, Address a WHERE p.id = a.fk
- ```
+```
  
 Now this is great because you can keep adding more and more joins
 without having to do any pesky nesting.
- ```scala
+```scala
 val q = quote {
   for {
     p <- query[Person]
     a <- query[Address] if (p.id == a.fk)
-    a <- query[Address] if (c.zip == a.zip)
+    c <- query[Address] if (c.zip == a.zip)
   } yield (p, a, c)
 }
  
-run(q): List[(Person, Address, Company)]
+run(q) //: List[(Person, Address, Company)]
 // SELECT p.id, p.name, a.street, a.zip, a.fk, c.name, c.zip 
 // FROM Person p, Address a, Company c WHERE p.id = a.fk AND c.zip = a.zip
 ```
@@ -633,7 +644,7 @@ val q = quote {
   } yield (p,a)
 }
  
-ctx.run(q): List[(Person, Address)]
+ctx.run(q) //: List[(Person, Address)]
 // SELECT p.id, p.name, a.street, a.zip, a.fk
 // FROM Person p LEFT JOIN Address a ON a.fk = p.id
  
@@ -645,7 +656,7 @@ val q = quote {
   } yield (p,a)
 }
  
-ctx.run(q): List[(Person, Option[Address])]
+ctx.run(q) //: List[(Person, Option[Address])]
 // SELECT p.id, p.name, a.street, a.zip, a.fk 
 // FROM Person p LEFT JOIN Address a ON a.fk = p.id
 ```
@@ -660,7 +671,7 @@ val q = quote {
   } yield (p,a,c)
 }
  
-ctx.run(q): List[(Person, Address, Option[Company])]
+ctx.run(q) //: List[(Person, Address, Option[Company])]
 // SELECT p.id, p.name, a.street, a.zip, a.fk, c.name, c.zip 
 // FROM Person p 
 // INNER JOIN Address a ON a.fk = p.id 
@@ -709,7 +720,7 @@ val q = quote {
   } yield (p, c)
 }
  
-ct.run(q)
+// ctx.run(q)
 // java.lang.IllegalArgumentException: requirement failed: Found an `ON` table reference of a table that is 
 // not available: Set(p). The `ON` condition can only use tables defined through explicit joins.
 ```
@@ -804,7 +815,7 @@ val q = quote {
   query[Person].join(query[Address]).on((p, a)=> a.fk.forall(_ == p.id))
 }
 ctx.run(q)
-SELECT p.id, p.name, a.fk, a.street, a.zip FROM Person p INNER JOIN Address a ON a.fk IS NULL OR a.fk = p.id
+// SELECT p.id, p.name, a.fk, a.street, a.zip FROM Person p INNER JOIN Address a ON a.fk IS NULL OR a.fk = p.id
 ```
 Typically this is useful when doing negative conditions, e.g. when a field is **not** some specified value (e.g. `"Joe"`).
 Being `null` in this case is typically a matching result.
@@ -861,7 +872,7 @@ val q = quote {
         an+" comes after "+bn)))
 }
  
-ctx.run(q): List[Option[String]]
+ctx.run(q) //: List[Option[String]]
 // SELECT (a.name || ' comes after ') || b.name FROM Person a, Person b WHERE a.id > b.id
  
 // Alternatively, you can use `flatten`
@@ -875,7 +886,7 @@ val q = quote {
         an + " comes after " + bn)).flatten)
 }
  
-ctx.run(q): List[Option[String]]
+ctx.run(q) //: List[Option[String]]
 // SELECT (a.name || ' comes after ') || b.name FROM Person a, Person b WHERE a.id > b.id
 ``` 
 This is also very useful when selecting from outer-joined tables i.e. where the entire table
@@ -888,7 +899,7 @@ val q = quote {
     .map({case (p /*Person*/, a /*Option[Address]*/) => (p.name, a.flatMap(_.fk))})
 }
  
-ctx.run(q): List[(Option[String], Option[Int])]
+ctx.run(q) //: List[(Option[String], Option[Int])]
 // SELECT p.name, a.fk FROM Person p LEFT JOIN Address a ON a.fk = p.id
 ```
 
@@ -1181,26 +1192,28 @@ The `translate` method is used to convert a Quill query into a string which can 
 ```scala
 val str = ctx.translate(query[Person])
 println(str)
-// SELECT x.name, x.age FROM Person x
+// SELECT x.id, x.name, x.age FROM Person x
 ```
 
 Insert queries can also be printed:
 
 ```scala
-val str = ctx.translate(query[Person].insert(lift(Person("Joe", 45))))
+val str = ctx.translate(query[Person].insert(lift(Person(0, "Joe", 45))))
 println(str)
-// INSERT INTO Person (name,age) VALUES ('Joe', 45)
+// INSERT INTO Person (id,name,age) VALUES (0, 'Joe', 45)
 ```
 
 As well as batch insertions:
 
 ```scala
-val strs:List[String] = ctx.translate(liftQuery(
-                          List(Person("Joe",44), Person("Jack",45))
-                        ).foreach(e => query[Person].insert(e)))
-strs.map(println(_))
-// INSERT INTO Person (name,age) VALUES ('Joe', 44)
-// INSERT INTO Person (name,age) VALUES ('Jack', 45)
+val q = quote {
+  liftQuery(List(Person(0, "Joe",44), Person(1, "Jack",45)))
+    .foreach(e => query[Person].insert(e))
+}
+val strs: List[String] = ctx.translate(q)
+strs.map(println)
+// INSERT INTO Person (id, name,age) VALUES (0, 'Joe', 44)
+// INSERT INTO Person (id, name,age) VALUES (1, 'Jack', 45)
 ```
 
 The `translate` method is available in every Quill context as well as the Cassandra and OrientDB contexts,
@@ -1212,6 +1225,8 @@ Quill provides an IO monad that allows the user to express multiple computations
 
 ```
 // this code using Future
+
+case class Person(id: Int, name: String, age: Int)
 
 val p = Person(0, "John", 22)
 ctx.run(query[Person].insert(lift(p))).flatMap { _ =>
@@ -1730,10 +1745,12 @@ The meta DSL allows the user to customize how Quill handles the expansion and ex
 By default, quill expands `query[Person]` to `querySchema[Person]("Person")`. It's possible to customize this behavior using an implicit instance of `SchemaMeta`:
 
 ```scala
-implicit val personSchemaMeta = schemaMeta[Person]("people", _.id -> "person_id")
+def example = {
+  implicit val personSchemaMeta = schemaMeta[Person]("people", _.id -> "person_id")
 
-ctx.run(query[Person])
-// SELECT x.person_id, x.name, x.age FROM people x
+  ctx.run(query[Person])
+  // SELECT x.person_id, x.name, x.age FROM people x
+}
 ```
 
 ### Insert meta
@@ -1884,7 +1901,7 @@ def filter(myDataset: Dataset[Person], name: String): Dataset[Int] =
   run {
     liftQuery(myDataset).filter(_.name == lift(name)).map(_.age)
   }
-  // SELECT x1.age _1 FROM (?) x1 WHERE x1.name = ?
+// SELECT x1.age _1 FROM (?) x1 WHERE x1.name = ?
 ```
 
 Note that the `run` method returns a `Dataset` transformed by the Quill query using the SQL engine.
@@ -1894,13 +1911,14 @@ be able to substitute liftings properly. They are then returned back to their or
 ```scala
 import org.apache.spark.sql.Dataset
 
-run {
-  liftQuery(myDataset).filter(_.field == "?").map(_.anotherField)
-}
+def filter(myDataset: Dataset[Person]): Dataset[Int] =
+  run {
+    liftQuery(myDataset).filter(_.name == "?").map(_.age)
+  }
 // This is generated during compile time:
-// SELECT x1.anotherField _1 FROM (?) x1 WHERE x1.field = '\?'
+// SELECT x1.age _1 FROM (?) x1 WHERE x1.name = '\?'
 // It is reverted upon run-time:
-// SELECT x1.anotherField _1 FROM (ds1) x1 WHERE x1.field = '?'
+// SELECT x1.age _1 FROM (ds1) x1 WHERE x1.name = '?'
 ```
 
 
@@ -1975,7 +1993,7 @@ Note that there are `dataSource` configurations, that go under `dataSource`, lik
 
 The `JdbcContext` provides thread-local transaction support:
 
-```scala
+```
 ctx.transaction {
   ctx.run(query[Person].delete)
   // other transactional code
@@ -2116,7 +2134,7 @@ and also include support for streaming queries via `Observable`.
 
 The `MonixJdbcContext` can stream using Monix Observables:
 
-```scala
+```
 ctx.stream(query[Person]) // returns: Observable[Person]
   .foreachL(println(_))
   .runSyncUnsafe()
@@ -2130,7 +2148,7 @@ if an exception is thrown anywhere inside a task or sub-task within a `transacti
 will be rolled back by the database.
 
 Basic syntax:
-```scala
+```
 val trans =
   ctx.transaction {
     for {
@@ -2144,7 +2162,7 @@ val result = trans.runSyncUnsafe() //returns: List[Person]
 ```
 
 Streaming can also be done inside of `transaction` block so long as the result is converted to a task beforehand.
-```scala
+```
 val trans =
   ctx.transaction {
     for {
@@ -2164,15 +2182,19 @@ Use a `Runner` object to create the different `MonixJdbcContext`s.
 The Runner does the actual wrapping of JDBC calls into Monix Tasks.
 
 ```scala
+
+import monix.execution.Scheduler
+import io.getquill.context.monix.Runner
+
 // You can use the default Runner when constructing a Monix jdbc contexts. 
 // The resulting tasks will be wrapped with whatever Scheduler is 
 // defined when you do task.syncRunUnsafe(), typically a global implicit.
-val ctx = new MysqlMonixJdbcContext(SnakeCase, "ctx", Runner.default)
+lazy val ctx = new MysqlMonixJdbcContext(SnakeCase, "ctx", Runner.default)
 
 // However...
 // Monix strongly suggests that you use a separate thread pool for database IO 
 // operations. `Runner` provides a convenience method in order to do this.
-val ctx = new MysqlMonixJdbcContext(SnakeCase, "ctx", Runner.using(Scheduler.io()))
+lazy val ctx = new MysqlMonixJdbcContext(SnakeCase, "ctx", Runner.using(Scheduler.io()))
 ```
 
 ### MySQL (quill-jdbc-monix)
@@ -2304,7 +2326,7 @@ The `quill-async` module provides simple async support for MySQL and Postgres da
 
 The async module provides transaction support based on a custom implicit execution context:
 
-```scala
+```
 ctx.transaction { implicit ec =>
   ctx.run(query[Person].delete)
   // other transactional code
@@ -2313,7 +2335,7 @@ ctx.transaction { implicit ec =>
 
 The body of `transaction` can contain calls to other methods and multiple `run` calls, but the transactional code must be done using the provided implicit execution context. For instance:
 
-```scala
+```
 def deletePerson(name: String)(implicit ec: ExecutionContext) = 
   ctx.run(query[Person].filter(_.name == lift(name)).delete)
 
@@ -2324,7 +2346,7 @@ ctx.transaction { implicit ec =>
 
 Depending on how the main execution context is imported, it is possible to produce an ambigous implicit resolution. A way to solve this problem is shadowing the multiple implicits by using the same name:
 
-```scala
+```
 import scala.concurrent.ExecutionContext.Implicits.{ global => ec }
 
 def deletePerson(name: String)(implicit ec: ExecutionContext) = 
@@ -2346,7 +2368,7 @@ ctx.port=1234
 ctx.user=root
 ctx.password=root
 ctx.database=database
-````
+```
 
 or use connection URL with database-specific scheme (see below):
 
@@ -2437,7 +2459,7 @@ Support for the Twitter Finagle library is available with MySQL and Postgres dat
 
 The finagle context provides transaction support through a `Local` value. See twitter util's [scaladoc](https://github.com/twitter/util/blob/ee8d3140ba0ecc16b54591bd9d8961c11b999c0d/util-core/src/main/scala/com/twitter/util/Local.scala#L96) for more details.
 
-```scala
+```
 ctx.transaction {
   ctx.run(query[Person].delete)
   // other transactional code
@@ -2477,7 +2499,7 @@ ctx.pool.maxWaiters=2147483647
 
 The finagle context provides transaction support through a `Local` value. See twitter util's [scaladoc](https://github.com/twitter/util/blob/ee8d3140ba0ecc16b54591bd9d8961c11b999c0d/util-core/src/main/scala/com/twitter/util/Local.scala#L96) for more details.
 
-```scala
+```
 ctx.transaction {
   ctx.run(query[Person].delete)
   // other transactional code
