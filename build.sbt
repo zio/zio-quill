@@ -8,7 +8,7 @@ import sbtcrossproject.crossProject
 enablePlugins(TutPlugin)
 
 lazy val modules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
-  `quill-core-jvm`, `quill-core-js`, `quill-sql-jvm`, `quill-sql-js`,
+  `quill-core-jvm`, `quill-core-js`, `quill-monix`, `quill-sql-jvm`, `quill-sql-js`,
   `quill-jdbc`, `quill-jdbc-monix`, `quill-finagle-mysql`, `quill-finagle-postgres`, `quill-async`,
   `quill-async-mysql`, `quill-async-postgres`, `quill-cassandra`, `quill-orientdb`,
   `quill-spark`
