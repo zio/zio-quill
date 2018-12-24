@@ -241,7 +241,9 @@ lazy val `tut-settings` = Seq(
         val source = baseDirectory.value / name
         val file = baseDirectory.value / "target" / "tut" / name
         val str = IO.read(source).replace("```scala", "```tut")
-        IO.write(file, str)
+        // workaround tut bug due to https://github.com/tpolecat/tut/pull/220
+        val fixed = str.replaceAll("\\n//.*", "\n1").replaceAll("//.*", "")
+        IO.write(file, fixed)
       }
       Seq()
     }.taskValue
