@@ -155,7 +155,8 @@ CREATE TYPE Name(
 CREATE TYPE Personal(
     number INT,
     street TEXT,
-    name frozen<Name>
+    name frozen<Name>,
+    optName frozen<Name>
 );
 
 CREATE TABLE WithEverything(
