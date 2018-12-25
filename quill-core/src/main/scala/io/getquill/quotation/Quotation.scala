@@ -36,8 +36,6 @@ trait Quotation extends Liftables with Unliftables with Parsing with ReifyLiftin
             def $quoted = ast
     
             override def ast = $reifiedAst
-            override def toString = ast.toString
-
     
             def $id() = ()
             

@@ -70,6 +70,8 @@ class MetaDslMacro(val c: MacroContext) {
 
   private def expandQuery[T](value: Value)(implicit t: WeakTypeTag[T]) = {
     val elements = flatten(q"x", value)
+    if (elements.size == 0)
+      c.fail("Case class has no values")
     q"${c.prefix}.quote((q: ${c.prefix}.Query[$t]) => q.map(x => io.getquill.dsl.UnlimitedTuple(..$elements)))"
   }
 

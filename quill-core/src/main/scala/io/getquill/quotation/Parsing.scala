@@ -639,7 +639,7 @@ trait Parsing {
     try c.typecheck(
       q"""
         def apply[$t](lhs: $t)(rhs: $t) = ()
-        apply(${unquoted(lhs)})($rhs)
+        apply(${unquoted(lhs)})(${unquoted(rhs)})
       """,
       c.TYPEmode
     ) catch {

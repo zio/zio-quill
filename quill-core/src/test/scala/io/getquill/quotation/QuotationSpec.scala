@@ -1024,8 +1024,8 @@ class QuotationSpec extends Spec {
         }
       }
       "forced" in {
-        val q = quote(1).dynamic
-        "q.ast: Constant" mustNot compile
+        val q = qr1.dynamic
+        "q.ast: Query[_]" mustNot compile
       }
     }
     "if" - {
