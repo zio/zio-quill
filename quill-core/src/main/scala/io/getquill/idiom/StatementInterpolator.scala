@@ -4,6 +4,8 @@ import io.getquill.ast._
 import io.getquill.util.Interleave
 import io.getquill.util.Messages._
 
+import scala.collection.mutable.ListBuffer
+
 object StatementInterpolator {
 
   trait Tokenizer[T] {
@@ -58,31 +60,33 @@ object StatementInterpolator {
 
     private def flatten(tokens: List[Token]): List[Token] = {
 
-      def unestStatements(tokens: List[Token]): List[Token] =
-        tokens.foldLeft(List.empty[Token]) {
-          case (acc, Statement(tokens)) =>
-            acc ++ unestStatements(tokens)
-          case (acc, token) =>
-            acc :+ token
+      def unestStatements(tokens: List[Token]): List[Token] = {
+        tokens.flatMap {
+          case Statement(innerTokens) => unestStatements(innerTokens)
+          case token                  => token :: Nil
         }
+      }
 
-      def mergeStringTokens(tokens: List[Token]) =
-        (tokens.foldLeft((List[Token](), StringToken(""): Token)) {
-          case ((acc, a: StringToken), b: StringToken) =>
-            val merged = StringToken(s"${a.string}${b.string}")
-            (acc, merged)
-          case ((acc, a), b) =>
-            (acc :+ a, b)
-        }) match {
-          case (acc, b) => acc :+ b
+      def mergeStringTokens(tokens: List[Token]): List[Token] = {
+        val (resultBuilder, leftTokens) = tokens.foldLeft((new ListBuffer[Token], new ListBuffer[String])) {
+          case ((builder, acc), stringToken: StringToken) =>
+            val str = stringToken.string
+            if (str.nonEmpty)
+              acc += stringToken.string
+            (builder, acc)
+          case ((builder, prev), b) if prev.isEmpty => (builder += b.token, prev)
+          case ((builder, prev), b) /** if prev.nonEmpty */ =>
+            builder += StringToken(prev.result().mkString)
+            builder += b.token
+            (builder, new ListBuffer[String])
         }
-
-      def removeEmptyStringTokens(tokens: List[Token]) =
-        tokens.filterNot(_ == StringToken(""))
+        if (leftTokens.nonEmpty)
+          resultBuilder += StringToken(leftTokens.result().mkString)
+        resultBuilder.result()
+      }
 
       (unestStatements _)
         .andThen(mergeStringTokens _)
-        .andThen(removeEmptyStringTokens _)
         .apply(tokens)
     }
 
