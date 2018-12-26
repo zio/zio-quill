@@ -10,7 +10,7 @@ class QueryResultTypeCassandraStreamSpec extends QueryResultTypeCassandraSpec {
   import context._
 
   def result[T](t: Observable[T]) =
-    await(t.foldLeftL(List.empty[T])(_ :+ _).runAsync)
+    await(t.foldLeftL(List.empty[T])(_ :+ _).runToFuture)
 
   override def beforeAll = {
     result(context.run(deleteAll))

@@ -6,7 +6,7 @@ import java.time.{ LocalDate => Java8LocalDate, Instant, ZonedDateTime, ZoneId }
 
 import com.datastax.driver.core.LocalDate
 
-class EncodingSpec extends EncodingSpecHelper {
+class EncodingSpec extends Spec {
 
   "encodes and decodes types" - {
 
@@ -110,17 +110,15 @@ class EncodingSpec extends EncodingSpecHelper {
       ctx.run(jq).headOption mustBe Some(j)
     }
   }
-}
 
-abstract class EncodingSpecHelper extends Spec {
-  protected def verify(result: List[EncodingTestEntity]): Unit =
+  private def verify(result: List[EncodingTestEntity]): Unit =
     result.zip(insertValues) match {
       case List((e1, a1), (e2, a2)) =>
         verify(e1, a1)
         verify(e2, a2)
     }
 
-  protected def verify(e: EncodingTestEntity, a: EncodingTestEntity): Unit = {
+  private def verify(e: EncodingTestEntity, a: EncodingTestEntity): Unit = {
     e.id mustEqual a.id
 
     e.v1 mustEqual a.v1
@@ -175,7 +173,7 @@ abstract class EncodingSpecHelper extends Spec {
     o10: Option[LocalDate]
   )
 
-  protected val fixUUID: UUID = UUID.fromString("606c79e8-a331-4810-8bd7-0668ff7a23ef")
+  private val fixUUID: UUID = UUID.fromString("606c79e8-a331-4810-8bd7-0668ff7a23ef")
 
   val insertValues =
     List(
