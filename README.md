@@ -2664,13 +2664,18 @@ ctx.session.maxSchemaAgreementWaitSeconds=1
 ctx.session.addressTranslator=com.datastax.driver.core.policies.IdentityTranslator
 ```
 
-## quill-cassandra-streaming-monix
+## quill-cassandra-monix
 
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-cassandra-streaming-monix" % "2.6.1-SNAPSHOT"
+  "io.getquill" %% "quill-cassandra-monix" % "2.6.1-SNAPSHOT"
 )
+```
+
+#### monix context
+```scala
+lazy val ctx = new CassandraMonixContext(SnakeCase, "ctx")
 ```
 
 #### stream context
