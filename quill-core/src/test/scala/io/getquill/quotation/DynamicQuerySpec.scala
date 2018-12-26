@@ -197,6 +197,23 @@ class DynamicQuerySpec extends Spec {
       }
     }
 
+    "filterIf" - {
+      "true" in {
+        val ids = Seq(1)
+        test(
+          dynamicQuery[TestEntity].filterIf(ids.nonEmpty)(v0 => quote(liftQuery(ids).contains(v0.i))),
+          query[TestEntity].filter(v0 => quote(liftQuery(ids).contains(v0.i)))
+        )
+      }
+      "false" in {
+        val ids = Seq.empty[Int]
+        test(
+          dynamicQuery[TestEntity].filterIf(ids.nonEmpty)(v0 => quote(liftQuery(ids).contains(v0.i))),
+          query[TestEntity]
+        )
+      }
+    }
+
     "concatMap" in {
       test(
         dynamicQuery[TestEntity].concatMap[String, Array[String]](v0 => quote(v0.s.split(" "))),
