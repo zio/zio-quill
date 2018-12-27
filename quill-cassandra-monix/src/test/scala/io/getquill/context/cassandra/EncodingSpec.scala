@@ -16,7 +16,7 @@ class EncodingSpec extends EncodingSpecHelper {
         } yield {
           result
         }
-      val f = result.foldLeftL(List.empty[EncodingTestEntity])(_ :+ _).runAsync
+      val f = result.foldLeftL(List.empty[EncodingTestEntity])(_ :+ _).runToFuture
       verify(await(f))
     }
   }
@@ -38,7 +38,7 @@ class EncodingSpec extends EncodingSpecHelper {
         } yield {
           result
         }
-      val f = result.foldLeftL(List.empty[EncodingTestEntity])(_ :+ _).runAsync
+      val f = result.foldLeftL(List.empty[EncodingTestEntity])(_ :+ _).runToFuture
       verify(await(f))
     }
   }

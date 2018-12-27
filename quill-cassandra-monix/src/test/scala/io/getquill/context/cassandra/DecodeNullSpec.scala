@@ -21,7 +21,7 @@ class DecodeNullSpec extends Spec {
         }
       intercept[IllegalStateException] {
         await {
-          result.headL.runAsync
+          result.headL.runToFuture
         }
       }
     }
