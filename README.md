@@ -1645,6 +1645,10 @@ def people(maxRecords: Option[Int]) =
 
 def people(dropFirst: Option[Int]) =
   dynamicQuery[Person].dropOpt(dropFirst)
+  
+// method with `If` suffix, for better chaining  
+def people(userIds: Seq[Int]) =
+  dynamicQuery[Person].filterIf(userIds.nonEmpty)(person => quote(liftQuery(userIds).contains(person.id)))
 ```
 
 **Actions**

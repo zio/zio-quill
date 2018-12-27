@@ -165,6 +165,10 @@ trait DynamicQueryDsl {
     def filterOpt[O](opt: Option[O])(f: (Quoted[T], Quoted[O]) => Quoted[Boolean])(implicit enc: Encoder[O]): DynamicQuery[T] =
       transformOpt(opt, f, filter, this)
 
+    def filterIf(cond: Boolean)(f: Quoted[T] => Quoted[Boolean]): DynamicQuery[T] =
+      if (cond) filter(f)
+      else this
+
     def concatMap[R, U](f: Quoted[T] => Quoted[U])(implicit ev: U => Traversable[R]): DynamicQuery[R] =
       transform(f, ConcatMap)
 
