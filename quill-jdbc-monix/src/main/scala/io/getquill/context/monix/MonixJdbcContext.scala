@@ -29,6 +29,13 @@ abstract class MonixJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](
 
   override private[getquill] val logger = ContextLogger(classOf[MonixJdbcContext[_, _]])
 
+  override type PrepareRow = PreparedStatement
+  override type ResultRow = ResultSet
+  override type RunActionResult = Long
+  override type RunActionReturningResult[T] = T
+  override type RunBatchActionResult = List[Long]
+  override type RunBatchActionReturningResult[T] = List[T]
+
   // Need explicit return-type annotations due to scala/bug#8356. Otherwise macro system will not understand Result[Long]=Task[Long] etc...
   override def executeAction[T](sql: String, prepare: Prepare = identityPrepare): Task[Long] =
     super.executeAction(sql, prepare)

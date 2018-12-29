@@ -1,18 +1,15 @@
 package io.getquill
 
-import com.datastax.driver.core.ResultSet
-import com.datastax.driver.core.Row
+import com.datastax.driver.core.{ Cluster, ResultSet, Row }
 import com.typesafe.config.Config
-
-import scala.collection.JavaConverters._
 import io.getquill.context.cassandra.CassandraSessionContext
 import io.getquill.context.cassandra.util.FutureConversions.toScalaFuture
-import monix.reactive.Observable
 import io.getquill.util.{ ContextLogger, LoadConfig }
-import com.datastax.driver.core.Cluster
 import monix.eval.Task
-import monix.execution.{ Cancelable, Scheduler }
+import monix.execution.Scheduler
+import monix.reactive.Observable
 
+import scala.collection.JavaConverters._
 import scala.util.{ Failure, Success }
 
 class CassandraStreamContext[N <: NamingStrategy](
@@ -49,7 +46,7 @@ class CassandraStreamContext[N <: NamingStrategy](
 
     Observable
       .fromTask(prepareRowAndLog(cql, prepare))
-      .mapFuture(session.executeAsync(_))
+      .mapEvalF(p => toScalaFuture(session.executeAsync(p)))
       .flatMap(Observable.fromAsyncStateAction((rs: ResultSet) => page(rs).map((_, rs)))(_))
       .takeWhile(_.nonEmpty)
       .flatMap(Observable.fromIterable)
@@ -62,7 +59,7 @@ class CassandraStreamContext[N <: NamingStrategy](
   def executeAction[T](cql: String, prepare: Prepare = identityPrepare): Observable[Unit] = {
     Observable
       .fromTask(prepareRowAndLog(cql, prepare))
-      .mapFuture(session.executeAsync(_))
+      .mapEvalF(p => toScalaFuture(session.executeAsync(p)))
       .map(_ => ())
   }
 
@@ -75,7 +72,7 @@ class CassandraStreamContext[N <: NamingStrategy](
     }
 
   private def prepareRowAndLog(cql: String, prepare: Prepare = identityPrepare): Task[PrepareRow] = {
-    Task.async[PrepareRow] { (scheduler, callback) =>
+    Task.async0[PrepareRow] { (scheduler, callback) =>
       implicit val executor: Scheduler = scheduler
 
       super.prepareAsync(cql)
@@ -87,8 +84,6 @@ class CassandraStreamContext[N <: NamingStrategy](
           case Failure(ex) =>
             callback.onError(ex)
         }
-
-      Cancelable.empty
     }
   }
 }
