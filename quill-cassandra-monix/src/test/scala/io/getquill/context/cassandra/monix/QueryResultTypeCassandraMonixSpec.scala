@@ -1,13 +1,18 @@
-package io.getquill.context.cassandra
+package io.getquill.context.cassandra.monix
 
+import io.getquill.context.cassandra.QueryResultTypeCassandraSpec
+import monix.eval.Task
 import monix.execution.Scheduler.Implicits.global
 import monix.reactive.Observable
 
-class QueryResultTypeCassandraStreamSpec extends QueryResultTypeCassandraSpec {
+class QueryResultTypeCassandraMonixSpec extends QueryResultTypeCassandraSpec {
 
-  val context = testStreamDB
+  val context = testMonixDB
 
   import context._
+
+  def result[T](t: Task[T]) =
+    await(t.runToFuture(global))
 
   def result[T](t: Observable[T]) =
     await(t.foldLeftL(List.empty[T])(_ :+ _).runToFuture)
@@ -22,12 +27,16 @@ class QueryResultTypeCassandraStreamSpec extends QueryResultTypeCassandraSpec {
     result(context.run(selectAll)) mustEqual entries
   }
 
+  "stream" in {
+    result(context.stream(selectAll)) mustEqual entries
+  }
+
   "querySingle" - {
     "size" in {
-      result(context.run(entitySize)) mustEqual List(3)
+      result(context.run(entitySize)) mustEqual 3
     }
     "parametrized size" in {
-      result(context.run(parametrizedSize(lift(10000)))) mustEqual List(0)
+      result(context.run(parametrizedSize(lift(10000)))) mustEqual 0
     }
   }
 }
