@@ -37,7 +37,7 @@ class CassandraMonixContext[N <: NamingStrategy](
 
   override type RunQueryResult[T] = List[T]
   override type RunQuerySingleResult[T] = T
-  override type RunBatchActionResult = List[Unit]
+  override type RunBatchActionResult = Unit
 
   protected def page(rs: ResultSet): Task[Iterable[Row]] = Task.defer {
     val available = rs.getAvailableWithoutFetching

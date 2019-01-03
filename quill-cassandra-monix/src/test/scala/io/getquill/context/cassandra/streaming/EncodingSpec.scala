@@ -1,12 +1,13 @@
-package io.getquill.context.cassandra
+package io.getquill.context.cassandra.streaming
 
+import io.getquill.context.cassandra.EncodingSpecHelper
 import monix.reactive.Observable
 
 class EncodingSpec extends EncodingSpecHelper {
   "encodes and decodes types" - {
     "stream" in {
-      import testStreamDB._
       import monix.execution.Scheduler.Implicits.global
+      import testStreamDB._
       val result =
         for {
           _ <- testStreamDB.run(query[EncodingTestEntity].delete)
@@ -23,8 +24,8 @@ class EncodingSpec extends EncodingSpecHelper {
 
   "encodes collections" - {
     "stream" in {
-      import testStreamDB._
       import monix.execution.Scheduler.Implicits.global
+      import testStreamDB._
       val q = quote {
         (list: Query[Int]) =>
           query[EncodingTestEntity].filter(t => list.contains(t.id))
