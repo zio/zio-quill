@@ -16,13 +16,16 @@ export MYSQL_PORT=3306
 export SQL_SERVER_HOST=127.0.0.1
 export SQL_SERVER_PORT=11433
 
+export ORACLE_HOST=127.0.0.1
+export ORACLE_PORT=11521
+
 export CASSANDRA_HOST=127.0.0.1
 export CASSANDRA_PORT=19042
 
 export ORIENTDB_HOST=127.0.0.1
 export ORIENTDB_PORT=12424
 
-export SBT_ARGS="-Dquill.macro.log=false -Xms512m -Xmx1536m -Xss2m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC ++$TRAVIS_SCALA_VERSION"
+export SBT_ARGS="-Doracle=true -Dquill.macro.log=false -Xms512m -Xmx1536m -Xss2m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC ++$TRAVIS_SCALA_VERSION"
 
 if [[ $TRAVIS_SCALA_VERSION == 2.11* ]]; then
     export SBT_ARGS="$SBT_ARGS coverage"
@@ -53,10 +56,11 @@ if [[ "$?" != "0" ]]; then
 fi
 show_mem
 
-echo "Running tests"
 time sbt $SBT_ARGS checkUnformattedFiles test tut doc
 
 show_mem
+
+echo "Tests completed. Shutting down"
 
 time docker-compose down
 # for 2.11 publish coverage

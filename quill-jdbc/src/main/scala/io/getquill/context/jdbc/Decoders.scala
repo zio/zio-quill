@@ -50,7 +50,6 @@ trait Decoders {
       else
         v
     })
-  implicit val booleanDecoder: Decoder[Boolean] = decoder(_.getBoolean)
   implicit val byteDecoder: Decoder[Byte] = decoder(_.getByte)
   implicit val shortDecoder: Decoder[Short] = decoder(_.getShort)
   implicit val intDecoder: Decoder[Int] = decoder(_.getInt)

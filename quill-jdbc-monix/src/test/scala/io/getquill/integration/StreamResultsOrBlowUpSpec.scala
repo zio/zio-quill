@@ -45,7 +45,7 @@ class StreamResultsOrBlowUpSpec extends Spec {
   }
   import ctx.{ run => runQuill, _ }
 
-  val numRows = 2000000L
+  val numRows = 1000000L
 
   "stream a large result set without blowing up" in {
     val deletes = runQuill { query[Person].delete }
@@ -59,7 +59,17 @@ class StreamResultsOrBlowUpSpec extends Spec {
     runQuill(inserts(lift(numRows))).runSyncUnsafe(Duration.Inf)(scheduler, CanBlock.permit)
 
     // not sure why but foreachL causes a OutOfMemory exception anyhow, and firstL causes a ResultSet Closed exception
-    val result = stream(query[Person], 10).foldLeftL(0L)(_ + _.age).runSyncUnsafe(Duration.Inf)(scheduler, CanBlock.permit)
+    val result = stream(query[Person], 100)
+      .zipWithIndex
+      .foldLeftL(0L)({
+        case (totalYears, (person, index)) => {
+          // Need to print something out as we stream or travis will thing the build is stalled and kill it with the following message:
+          // "No output has been received in the last 10m0s..."
+          if (index % 10000 == 0) println(s"Streaming Test Row: ${index}")
+          totalYears + person.age
+        }
+      })
+      .runSyncUnsafe(Duration.Inf)(scheduler, CanBlock.permit)
     result should be > numRows
   }
 }
