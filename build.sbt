@@ -208,6 +208,7 @@ lazy val `quill-cassandra` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
+        "com.google.guava" % "guava" % "27.0.1-jre",
         "com.datastax.cassandra" %  "cassandra-driver-core" % "3.6.0"
       )
     )

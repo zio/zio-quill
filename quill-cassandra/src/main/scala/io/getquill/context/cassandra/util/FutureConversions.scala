@@ -1,9 +1,9 @@
 package io.getquill.context.cassandra.util
 
-import com.google.common.util.concurrent.{ FutureCallback, Futures, ListenableFuture }
-import scala.concurrent.Promise
-import scala.concurrent.Future
-import language.implicitConversions
+import com.google.common.util.concurrent.{ FutureCallback, Futures, ListenableFuture, MoreExecutors }
+
+import scala.concurrent.{ Future, Promise }
+import scala.language.implicitConversions
 
 object FutureConversions {
 
@@ -20,7 +20,8 @@ object FutureConversions {
           p.failure(t)
           ()
         }
-      }
+      },
+      MoreExecutors.directExecutor()
     )
     p.future
   }
