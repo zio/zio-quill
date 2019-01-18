@@ -75,7 +75,7 @@ object StatementInterpolator {
               acc += stringToken.string
             (builder, acc)
           case ((builder, prev), b) if prev.isEmpty => (builder += b.token, prev)
-          case ((builder, prev), b) /** if prev.nonEmpty */ =>
+          case ((builder, prev), b) /* if prev.nonEmpty */ =>
             builder += StringToken(prev.result().mkString)
             builder += b.token
             (builder, new ListBuffer[String])

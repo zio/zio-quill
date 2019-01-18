@@ -54,7 +54,7 @@ fi
 show_mem
 
 echo "Running tests"
-time sbt $SBT_ARGS checkUnformattedFiles test
+time sbt $SBT_ARGS checkUnformattedFiles test tut doc
 
 show_mem
 
@@ -66,9 +66,6 @@ if [[ $TRAVIS_SCALA_VERSION == 2.11* ]]; then
     time sbt $SBT_ARGS coverageReport coverageAggregate
     pip install --user codecov && codecov
 fi
-
-# for 2.11 and 2.12 we run tut
-time sbt tut
 
 show_mem
 
