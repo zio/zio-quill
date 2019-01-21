@@ -509,6 +509,8 @@ class MirrorIdiomSpec extends Spec {
   }
 
   "shows option operations" - {
+    case class Row(id: Int, value: String)
+
     "getOrElse" in {
       val q = quote {
         (o: Option[Int]) => o.getOrElse(1)
@@ -523,33 +525,69 @@ class MirrorIdiomSpec extends Spec {
       stmt"${(q.ast: Ast).token}" mustEqual
         stmt"(o) => o.flatten"
     }
-    "flatMap" in {
-      val q = quote {
-        (o: Option[Option[Int]]) => o.flatMap(v => v)
+    "flatMap" - {
+      "regular" in {
+        val q = quote {
+          (o: Option[Option[Int]]) => o.flatMap(v => v)
+        }
+        stmt"${(q.ast: Ast).token}" mustEqual
+          stmt"(o) => o.flatMap((v) => v)"
       }
-      stmt"${(q.ast: Ast).token}" mustEqual
-        stmt"(o) => o.flatMap((v) => v)"
+      "row" in {
+        val q = quote {
+          (o: Option[Option[Row]]) => o.flatMap(v => v)
+        }
+        stmt"${(q.ast: Ast).token}" mustEqual
+          stmt"(o) => o.flatMap((v) => v)"
+      }
     }
-    "map" in {
-      val q = quote {
-        (o: Option[Int]) => o.map(v => v)
+    "map" - {
+      "regular" in {
+        val q = quote {
+          (o: Option[Int]) => o.map(v => v)
+        }
+        stmt"${(q.ast: Ast).token}" mustEqual
+          stmt"(o) => o.map((v) => v)"
       }
-      stmt"${(q.ast: Ast).token}" mustEqual
-        stmt"(o) => o.map((v) => v)"
+      "row" in {
+        val q = quote {
+          (o: Option[Row]) => o.map(v => v)
+        }
+        stmt"${(q.ast: Ast).token}" mustEqual
+          stmt"(o) => o.map((v) => v)"
+      }
     }
-    "forall" in {
-      val q = quote {
-        (o: Option[Boolean]) => o.forall(v => v)
+    "forall" - {
+      "regular" in {
+        val q = quote {
+          (o: Option[Boolean]) => o.forall(v => v)
+        }
+        stmt"${(q.ast: Ast).token}" mustEqual
+          stmt"(o) => o.forall((v) => v)"
       }
-      stmt"${(q.ast: Ast).token}" mustEqual
-        stmt"(o) => o.forall((v) => v)"
+      "row" in {
+        val q = quote {
+          (o: Option[Row]) => o.forall(v => v.id == 1)
+        }
+        stmt"${(q.ast: Ast).token}" mustEqual
+          stmt"(o) => o.forall((v) => v.id == 1)"
+      }
     }
-    "exists" in {
-      val q = quote {
-        (o: Option[Boolean]) => o.exists(v => v)
+    "exists" - {
+      "regular" in {
+        val q = quote {
+          (o: Option[Boolean]) => o.exists(v => v)
+        }
+        stmt"${(q.ast: Ast).token}" mustEqual
+          stmt"(o) => o.exists((v) => v)"
       }
-      stmt"${(q.ast: Ast).token}" mustEqual
-        stmt"(o) => o.exists((v) => v)"
+      "row" in {
+        val q = quote {
+          (o: Option[Row]) => o.exists(v => v.id == 1)
+        }
+        stmt"${(q.ast: Ast).token}" mustEqual
+          stmt"(o) => o.exists((v) => v.id == 1)"
+      }
     }
     "contains" in {
       val q = quote {

@@ -40,7 +40,7 @@ class SqlQuerySpec extends Spec {
           .filter(_._2.forall(_ == 1))
       }
       testContext.run(q).string mustEqual
-        "SELECT a.i, b.i FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i WHERE b.i IS NULL OR b.i = 1"
+        "SELECT a.i, b.i FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i WHERE b.i IS NULL OR b.i IS NOT NULL AND b.i = 1"
     }
 
     "nested join" in {
@@ -562,7 +562,7 @@ class SqlQuerySpec extends Spec {
           e.map(em => em.io.map(_ + 1).getOrElse(2))
         }
         testContext.run(q).string mustEqual
-          "SELECT CASE WHEN (em.io + 1) IS NOT NULL THEN em.io + 1 ELSE 2 END FROM Entity em"
+          "SELECT CASE WHEN em.io IS NOT NULL AND (em.io + 1) IS NOT NULL THEN em.io + 1 ELSE 2 END FROM Entity em"
       }
     }
 

@@ -69,6 +69,14 @@ case class BetaReduction(map: collection.Map[Ast, Ast])
 
   override def apply(o: OptionOperation) =
     o match {
+      case other @ OptionTableFlatMap(a, b, c) =>
+        OptionTableFlatMap(apply(a), b, BetaReduction(map - b)(c))
+      case OptionTableMap(a, b, c) =>
+        OptionTableMap(apply(a), b, BetaReduction(map - b)(c))
+      case OptionTableExists(a, b, c) =>
+        OptionTableExists(apply(a), b, BetaReduction(map - b)(c))
+      case OptionTableForall(a, b, c) =>
+        OptionTableForall(apply(a), b, BetaReduction(map - b)(c))
       case other @ OptionFlatMap(a, b, c) =>
         OptionFlatMap(apply(a), b, BetaReduction(map - b)(c))
       case OptionMap(a, b, c) =>

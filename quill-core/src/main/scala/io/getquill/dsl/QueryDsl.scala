@@ -1,8 +1,8 @@
 package io.getquill.dsl
 
 import scala.language.experimental.macros
-
 import io.getquill.quotation.NonQuotedException
+
 import scala.annotation.compileTimeOnly
 
 private[dsl] trait QueryDsl {
@@ -12,6 +12,14 @@ private[dsl] trait QueryDsl {
 
   @compileTimeOnly(NonQuotedException.message)
   def querySchema[T](entity: String, columns: (T => (Any, String))*): EntityQuery[T] = NonQuotedException()
+
+  implicit class NullableColumnExtensions[A](o: Option[A]) {
+    @compileTimeOnly(NonQuotedException.message)
+    def getOrNull: A =
+      throw new IllegalArgumentException(
+        "Cannot use getOrNull outside of database queries since only database value-types (e.g. Int, Double, etc...) can be null."
+      )
+  }
 
   sealed trait Query[+T] {
 
