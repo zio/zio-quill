@@ -13,6 +13,13 @@ private[dsl] trait QueryDsl {
   @compileTimeOnly(NonQuotedException.message)
   def querySchema[T](entity: String, columns: (T => (Any, String))*): EntityQuery[T] = NonQuotedException()
 
+  implicit class NullableColumnExtensions[A](o: Option[A]) {
+    def mapUnchecked[B](f: A => B): Option[B] = o.map(f)
+    def flatMapUnchecked[B](f: A => Option[B]): Option[B] = o.flatMap(f)
+    def existsUnchecked(p: A => Boolean): Boolean = o.exists(p)
+    def forallUnchecked(p: A => Boolean): Boolean = o.forall(p)
+  }
+
   sealed trait Query[+T] {
 
     def map[R](f: T => R): Query[R]

@@ -101,6 +101,14 @@ class BetaReductionSpec extends Spec {
         BetaReduction(ast, Ident("c") -> Ident("c'"), Ident("d") -> Ident("d'")) mustEqual ast
       }
       "option operation" - {
+        "flatMapUnchecked" in {
+          val ast: Ast = UncheckedOptionFlatMap(Ident("a"), Ident("b"), Ident("b"))
+          BetaReduction(ast, Ident("b") -> Ident("b'")) mustEqual ast
+        }
+        "mapUnchecked" in {
+          val ast: Ast = UncheckedOptionMap(Ident("a"), Ident("b"), Ident("b"))
+          BetaReduction(ast, Ident("b") -> Ident("b'")) mustEqual ast
+        }
         "flatMap" in {
           val ast: Ast = OptionFlatMap(Ident("a"), Ident("b"), Ident("b"))
           BetaReduction(ast, Ident("b") -> Ident("b'")) mustEqual ast
@@ -113,8 +121,16 @@ class BetaReductionSpec extends Spec {
           val ast: Ast = OptionForall(Ident("a"), Ident("b"), Ident("b"))
           BetaReduction(ast, Ident("b") -> Ident("b'")) mustEqual ast
         }
+        "forallUnchecked" in {
+          val ast: Ast = UncheckedOptionForall(Ident("a"), Ident("b"), Ident("b"))
+          BetaReduction(ast, Ident("b") -> Ident("b'")) mustEqual ast
+        }
         "exists" in {
           val ast: Ast = OptionExists(Ident("a"), Ident("b"), Ident("b"))
+          BetaReduction(ast, Ident("b") -> Ident("b'")) mustEqual ast
+        }
+        "existsUnchecked" in {
+          val ast: Ast = UncheckedOptionExists(Ident("a"), Ident("b"), Ident("b"))
           BetaReduction(ast, Ident("b") -> Ident("b'")) mustEqual ast
         }
       }

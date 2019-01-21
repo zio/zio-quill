@@ -344,6 +344,22 @@ class StatefulTransformerSpec extends Spec {
             att.state mustEqual List(Ident("a"), Ident("b"))
         }
       }
+      "flatMapUnchecked" in {
+        val ast: Ast = UncheckedOptionFlatMap(Ident("a"), Ident("b"), Ident("c"))
+        Subject(Nil, Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) match {
+          case (at, att) =>
+            at mustEqual UncheckedOptionFlatMap(Ident("a'"), Ident("b"), Ident("c'"))
+            att.state mustEqual List(Ident("a"), Ident("c"))
+        }
+      }
+      "mapUnchecked" in {
+        val ast: Ast = UncheckedOptionMap(Ident("a"), Ident("b"), Ident("c"))
+        Subject(Nil, Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) match {
+          case (at, att) =>
+            at mustEqual UncheckedOptionMap(Ident("a'"), Ident("b"), Ident("c'"))
+            att.state mustEqual List(Ident("a"), Ident("c"))
+        }
+      }
       "flatMap" in {
         val ast: Ast = OptionFlatMap(Ident("a"), Ident("b"), Ident("c"))
         Subject(Nil, Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) match {
@@ -365,6 +381,22 @@ class StatefulTransformerSpec extends Spec {
         Subject(Nil, Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) match {
           case (at, att) =>
             at mustEqual OptionForall(Ident("a'"), Ident("b"), Ident("c'"))
+            att.state mustEqual List(Ident("a"), Ident("c"))
+        }
+      }
+      "forallUnchecked" in {
+        val ast: Ast = UncheckedOptionForall(Ident("a"), Ident("b"), Ident("c"))
+        Subject(Nil, Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) match {
+          case (at, att) =>
+            at mustEqual UncheckedOptionForall(Ident("a'"), Ident("b"), Ident("c'"))
+            att.state mustEqual List(Ident("a"), Ident("c"))
+        }
+      }
+      "existsUnchecked" in {
+        val ast: Ast = UncheckedOptionExists(Ident("a"), Ident("b"), Ident("c"))
+        Subject(Nil, Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) match {
+          case (at, att) =>
+            at mustEqual UncheckedOptionExists(Ident("a'"), Ident("b"), Ident("c'"))
             att.state mustEqual List(Ident("a"), Ident("c"))
         }
       }

@@ -38,20 +38,30 @@ trait OptionQuerySpec extends Spec {
   val `Simple Map with Condition Result` = List(
     ("123 Fake Street", Some("one")),
     ("456 Old Street", Some("two")),
-    // Technically the below tuples' second member should be None according to functor laws
-    // but due to issue #1053 they are not properly null checked in the SQL output.
-    ("789 New Street", Some("two")),
-    ("111 Default Address", Some("two"))
+    ("789 New Street", None),
+    ("111 Default Address", None)
   )
 
-  val `Simple Map with Condition and GetOrElse` = quote {
+  val `Simple Map with GetOrElse` = quote {
     query[Address].map(
       a => (a.street, a.otherExtraInfo.map(info => info + " suffix").getOrElse("baz"))
     )
   }
-  val `Simple Map with Condition and GetOrElse Result` = List(
+  val `Simple Map with GetOrElse Result` = List(
     ("123 Fake Street", "something suffix"),
     ("456 Old Street", "something else suffix"),
+    ("789 New Street", "baz"),
+    ("111 Default Address", "baz")
+  )
+
+  val `Simple Map with Condition and GetOrElse` = quote {
+    query[Address].map(
+      a => (a.street, a.otherExtraInfo.map(info => if (info == "something") "foo" else "bar").getOrElse("baz"))
+    )
+  }
+  val `Simple Map with Condition and GetOrElse Result` = List(
+    ("123 Fake Street", "foo"),
+    ("456 Old Street", "bar"),
     ("789 New Street", "baz"),
     ("111 Default Address", "baz")
   )

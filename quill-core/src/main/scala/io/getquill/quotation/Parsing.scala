@@ -7,6 +7,8 @@ import io.getquill.norm.BetaReduction
 import io.getquill.util.Messages.RichContext
 import io.getquill.util.Interleave
 import io.getquill.dsl.CoreDsl
+
+import scala.annotation.tailrec
 import scala.collection.immutable.StringOps
 import scala.reflect.macros.TypecheckException
 
@@ -329,22 +331,48 @@ trait Parsing {
   private def ident(x: TermName): Ident = identClean(Ident(x.decodedName.toString))
 
   val optionOperationParser: Parser[OptionOperation] = Parser[OptionOperation] {
+
+    // For tables or specifically where the user want an unchecked map/flatMap
+    case q"$o.flatMap[$t]({($alias) => $body})" if is[Option[Any]](o) =>
+      if (isOptionRowType(o) || isOptionEmbedded(o))
+        UncheckedOptionFlatMap(astParser(o), identParser(alias), astParser(body))
+      else
+        OptionFlatMap(astParser(o), identParser(alias), astParser(body))
+
+    case q"$o.map[$t]({($alias) => $body})" if is[Option[Any]](o) =>
+      if (isOptionRowType(o) || isOptionEmbedded(o))
+        UncheckedOptionMap(astParser(o), identParser(alias), astParser(body))
+      else
+        OptionMap(astParser(o), identParser(alias), astParser(body))
+
+    case q"$o.exists({($alias) => $body})" if is[Option[Any]](o) =>
+      if (isOptionRowType(o) || isOptionEmbedded(o))
+        UncheckedOptionExists(astParser(o), identParser(alias), astParser(body))
+      else
+        OptionExists(astParser(o), identParser(alias), astParser(body))
+
+    case q"$o.forall({($alias) => $body})" if is[Option[Any]](o) =>
+      if (isOptionEmbedded(o)) {
+        c.fail("Please use Option.exists() instead of Option.forall() with embedded case classes and row objects.")
+      } else {
+        OptionForall(astParser(o), identParser(alias), astParser(body))
+      }
+
+    // Column extneions for row types
+    case q"$prefix.NullableColumnExtensions[$nt]($o).flatMapUnchecked[$t]({($alias) => $body})" if is[Option[Any]](o) =>
+      UncheckedOptionFlatMap(astParser(o), identParser(alias), astParser(body))
+    case q"$prefix.NullableColumnExtensions[$nt]($o).mapUnchecked[$t]({($alias) => $body})" if is[Option[Any]](o) =>
+      UncheckedOptionMap(astParser(o), identParser(alias), astParser(body))
+    case q"$prefix.NullableColumnExtensions[$nt]($o).existsUnchecked({($alias) => $body})" if is[Option[Any]](o) =>
+      UncheckedOptionExists(astParser(o), identParser(alias), astParser(body))
+    case q"$prefix.NullableColumnExtensions[$nt]($o).forallUnchecked({($alias) => $body})" if is[Option[Any]](o) =>
+      UncheckedOptionForall(astParser(o), identParser(alias), astParser(body))
+
+    // For column values
     case q"$o.flatten[$t]($implicitBody)" if is[Option[Any]](o) =>
       OptionFlatten(astParser(o))
     case q"$o.getOrElse[$t]($body)" if is[Option[Any]](o) =>
       OptionGetOrElse(astParser(o), astParser(body))
-    case q"$o.flatMap[$t]({($alias) => $body})" if is[Option[Any]](o) =>
-      OptionFlatMap(astParser(o), identParser(alias), astParser(body))
-    case q"$o.map[$t]({($alias) => $body})" if is[Option[Any]](o) =>
-      OptionMap(astParser(o), identParser(alias), astParser(body))
-    case q"$o.forall({($alias) => $body})" if is[Option[Any]](o) =>
-      if (is[Option[Embedded]](o)) {
-        c.fail("Please use Option.exists() instead of Option.forall() with embedded case classes.")
-      } else {
-        OptionForall(astParser(o), identParser(alias), astParser(body))
-      }
-    case q"$o.exists({($alias) => $body})" if is[Option[Any]](o) =>
-      OptionExists(astParser(o), identParser(alias), astParser(body))
     case q"$o.contains[$t]($body)" if is[Option[Any]](o) =>
       OptionContains(astParser(o), astParser(body))
     case q"$o.isEmpty" if is[Option[Any]](o) =>
@@ -495,10 +523,42 @@ trait Parsing {
   private def is[T](tree: Tree)(implicit t: TypeTag[T]) =
     tree.tpe <:< t.tpe
 
-  private def isCaseClass[T: WeakTypeTag] = {
-    val symbol = c.weakTypeTag[T].tpe.typeSymbol
+  private def isTypeCaseClass(tpe: Type) = {
+    val symbol = tpe.typeSymbol
     symbol.isClass && symbol.asClass.isCaseClass
   }
+
+  private def isTypeTuple(tpe: Type) =
+    tpe.typeSymbol.fullName startsWith "scala.Tuple"
+
+  /**
+   * Recursively traverse an `Option[T]` or `Option[Option[T]]`, or `Option[Option[Option[T]]]` etc...
+   * until we find the `T`
+   */
+  @tailrec
+  private def innerOptionParam(tpe: Type): Type = tpe match {
+    // If it's a ref-type and an Option, pull out the argument
+    case TypeRef(_, cls, List(arg)) if (cls.isClass && cls.asClass.fullName == "scala.Option") =>
+      innerOptionParam(arg)
+    // If it's not a ref-type but an Option, convert to a ref-type and reprocess
+    case _ if (tpe <:< typeOf[Option[Any]]) =>
+      innerOptionParam(tpe.baseType(typeOf[Option[Any]].typeSymbol))
+    // Otherwise we have gotten to the actual type inside the nesting. Check what it is.
+    case other => other
+  }
+
+  private def isOptionEmbedded(tree: Tree) = {
+    val param = innerOptionParam(tree.tpe)
+    param <:< typeOf[Embedded]
+  }
+
+  private def isOptionRowType(tree: Tree) = {
+    val param = innerOptionParam(tree.tpe)
+    isTypeCaseClass(param) || isTypeTuple(param)
+  }
+
+  private def isCaseClass[T: WeakTypeTag] =
+    isTypeCaseClass(c.weakTypeTag[T].tpe)
 
   private def firstConstructorParamList[T: WeakTypeTag] = {
     val tpe = c.weakTypeTag[T].tpe

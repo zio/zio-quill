@@ -1,35 +1,57 @@
 package io.getquill.norm
 
 import io.getquill.ast._
+import io.getquill.ast.Implicits._
 
 object FlattenOptionOperation extends StatelessTransformer {
-
-  private def isNotEmpty(ast: Ast) =
-    BinaryOperation(ast, EqualityOperator.`!=`, NullValue)
 
   private def emptyOrNot(b: Boolean, ast: Ast) =
     if (b) OptionIsEmpty(ast) else OptionNonEmpty(ast)
 
   override def apply(ast: Ast): Ast =
     ast match {
+
+      case UncheckedOptionFlatMap(ast, alias, body) =>
+        apply(body.reduce(alias -> ast))
+
+      case UncheckedOptionMap(ast, alias, body) =>
+        apply(body.reduce(alias -> ast))
+
+      case UncheckedOptionExists(ast, alias, body) =>
+        apply(body.reduce(alias -> ast))
+
+      case UncheckedOptionForall(ast, alias, body) =>
+        val reduced = body.reduce(alias -> ast)
+        apply((Empty(ast) +||+ reduced): Ast)
+
       case OptionFlatten(ast) =>
         apply(ast)
+
       case OptionGetOrElse(OptionMap(ast, alias, body), Constant(b: Boolean)) =>
-        apply(BinaryOperation(BetaReduction(body, alias -> ast), BooleanOperator.`||`, emptyOrNot(b, ast)): Ast)
+        apply((body.reduce(alias -> ast) +||+ emptyOrNot(b, ast)): Ast)
+
       case OptionGetOrElse(ast, body) =>
-        apply(If(isNotEmpty(ast), ast, body))
+        apply(If(Exist(ast), ast, body))
+
       case OptionFlatMap(ast, alias, body) =>
-        apply(BetaReduction(body, alias -> ast))
+        val reduced = body.reduce(alias -> ast)
+        apply(IfExistElseNull(ast, reduced))
+
       case OptionMap(ast, alias, body) =>
-        apply(BetaReduction(body, alias -> ast))
+        val reduced = body.reduce(alias -> ast)
+        apply(IfExistElseNull(ast, reduced))
+
       case OptionForall(ast, alias, body) =>
-        val isEmpty = BinaryOperation(ast, EqualityOperator.`==`, NullValue)
-        val exists = BetaReduction(body, alias -> ast)
-        apply(BinaryOperation(isEmpty, BooleanOperator.`||`, exists): Ast)
+        val reduction = body.reduce(alias -> ast)
+        apply((Empty(ast) +||+ (Exist(ast) +&&+ reduction)): Ast)
+
       case OptionExists(ast, alias, body) =>
-        apply(BetaReduction(body, alias -> ast))
+        val reduction = body.reduce(alias -> ast)
+        apply((Exist(ast) +&&+ reduction): Ast)
+
       case OptionContains(ast, body) =>
-        apply(BinaryOperation(ast, EqualityOperator.`==`, body): Ast)
+        apply((ast +==+ body): Ast)
+
       case other =>
         super.apply(other)
     }

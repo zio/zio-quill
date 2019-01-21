@@ -72,13 +72,13 @@ class MetaDslSpec extends Spec {
         "extracts Some if all columns are defined" in {
           case class Entity(a: String, b: Int)
           val meta = materializeQueryMeta[(String, Option[Entity])]
-          meta.expand.toString mustEqual "(q) => q.map(x => (x._1, x._2.map((v) => v.a), x._2.map((v) => v.b)))"
+          meta.expand.toString mustEqual "(q) => q.map(x => (x._1, x._2.mapUnchecked((v) => v.a), x._2.mapUnchecked((v) => v.b)))"
           meta.extract(Row("a", Some("1"), Some(2))) mustEqual (("a", Some(Entity("1", 2))))
         }
         "extracts None if one column is undefined" in {
           case class Entity(a: String, b: Int)
           val meta = materializeQueryMeta[(String, Option[Entity])]
-          meta.expand.toString mustEqual "(q) => q.map(x => (x._1, x._2.map((v) => v.a), x._2.map((v) => v.b)))"
+          meta.expand.toString mustEqual "(q) => q.map(x => (x._1, x._2.mapUnchecked((v) => v.a), x._2.mapUnchecked((v) => v.b)))"
           meta.extract(Row("a", Some("1"), None)) mustEqual (("a", None))
         }
       }
@@ -87,7 +87,7 @@ class MetaDslSpec extends Spec {
         case class Entity2(a: Option[Int])
 
         val meta = materializeQueryMeta[(String, Option[(Entity1, Entity2)])]
-        meta.expand.toString mustEqual "(q) => q.map(x => (x._1, x._2.map((v) => v._1.a), x._2.map((v) => v._1.b), x._2.map((v) => v._2.a)))"
+        meta.expand.toString mustEqual "(q) => q.map(x => (x._1, x._2.mapUnchecked((v) => v._1.a), x._2.mapUnchecked((v) => v._1.b), x._2.mapUnchecked((v) => v._2.a)))"
 
         "extracts Some if all columns are defined" in {
           meta.extract(Row("a", Some("1"), Some(2), Some(3))) mustEqual
@@ -159,7 +159,7 @@ class MetaDslSpec extends Spec {
       "optional nested" in {
         case class Entity(a: String, b: Int)
         val meta = materializeUpdateMeta[(String, Option[Entity])]
-        meta.expand.toString mustEqual "(q, value) => q.update(v => v._1 -> value._1, v => v._2.map((v) => v.a) -> value._2.map((v) => v.a), v => v._2.map((v) => v.b) -> value._2.map((v) => v.b))"
+        meta.expand.toString mustEqual "(q, value) => q.update(v => v._1 -> value._1, v => v._2.mapUnchecked((v) => v.a) -> value._2.mapUnchecked((v) => v.a), v => v._2.mapUnchecked((v) => v.b) -> value._2.mapUnchecked((v) => v.b))"
       }
       "> 22 fields" in {
         val meta = materializeUpdateMeta[MoreThan22]
@@ -173,17 +173,17 @@ class MetaDslSpec extends Spec {
       "exclude column" in {
         val meta = updateMeta[Entity](_.a)
         meta.expand.toString mustEqual
-          "(q, value) => q.update(v => v.b.i -> value.b.i, v => v.b.l -> value.b.l, v => v.c.map((v) => v.i) -> value.c.map((v) => v.i), v => v.c.map((v) => v.l) -> value.c.map((v) => v.l))"
+          "(q, value) => q.update(v => v.b.i -> value.b.i, v => v.b.l -> value.b.l, v => v.c.mapUnchecked((v) => v.i) -> value.c.mapUnchecked((v) => v.i), v => v.c.mapUnchecked((v) => v.l) -> value.c.mapUnchecked((v) => v.l))"
       }
       "exclude embedded" in {
         val meta = updateMeta[Entity](_.b)
         meta.expand.toString mustEqual
-          "(q, value) => q.update(v => v.a -> value.a, v => v.c.map((v) => v.i) -> value.c.map((v) => v.i), v => v.c.map((v) => v.l) -> value.c.map((v) => v.l))"
+          "(q, value) => q.update(v => v.a -> value.a, v => v.c.mapUnchecked((v) => v.i) -> value.c.mapUnchecked((v) => v.i), v => v.c.mapUnchecked((v) => v.l) -> value.c.mapUnchecked((v) => v.l))"
       }
       "exclude nested column" in {
         val meta = updateMeta[Entity](_.b.i)
         meta.expand.toString mustEqual
-          "(q, value) => q.update(v => v.a -> value.a, v => v.b.l -> value.b.l, v => v.c.map((v) => v.i) -> value.c.map((v) => v.i), v => v.c.map((v) => v.l) -> value.c.map((v) => v.l))"
+          "(q, value) => q.update(v => v.a -> value.a, v => v.b.l -> value.b.l, v => v.c.mapUnchecked((v) => v.i) -> value.c.mapUnchecked((v) => v.i), v => v.c.mapUnchecked((v) => v.l) -> value.c.mapUnchecked((v) => v.l))"
       }
       "exclude option embedded" in {
         val meta = updateMeta[Entity](_.c)
@@ -193,7 +193,7 @@ class MetaDslSpec extends Spec {
       "exclude option nested column" in {
         val meta = updateMeta[Entity](_.c.map(_.i))
         meta.expand.toString mustEqual
-          "(q, value) => q.update(v => v.a -> value.a, v => v.b.i -> value.b.i, v => v.b.l -> value.b.l, v => v.c.map((v) => v.l) -> value.c.map((v) => v.l))"
+          "(q, value) => q.update(v => v.a -> value.a, v => v.b.i -> value.b.i, v => v.b.l -> value.b.l, v => v.c.mapUnchecked((v) => v.l) -> value.c.mapUnchecked((v) => v.l))"
       }
     }
   }
@@ -229,7 +229,7 @@ class MetaDslSpec extends Spec {
       "optional nested" in {
         case class Entity(a: String, b: Int)
         val meta = materializeInsertMeta[(String, Option[Entity])]
-        meta.expand.toString mustEqual "(q, value) => q.insert(v => v._1 -> value._1, v => v._2.map((v) => v.a) -> value._2.map((v) => v.a), v => v._2.map((v) => v.b) -> value._2.map((v) => v.b))"
+        meta.expand.toString mustEqual "(q, value) => q.insert(v => v._1 -> value._1, v => v._2.mapUnchecked((v) => v.a) -> value._2.mapUnchecked((v) => v.a), v => v._2.mapUnchecked((v) => v.b) -> value._2.mapUnchecked((v) => v.b))"
       }
       "> 22 fields" in {
         val meta = materializeInsertMeta[MoreThan22]
@@ -243,17 +243,17 @@ class MetaDslSpec extends Spec {
       "exclude column" in {
         val meta = insertMeta[Entity](_.a)
         meta.expand.toString mustEqual
-          "(q, value) => q.insert(v => v.b.i -> value.b.i, v => v.b.l -> value.b.l, v => v.c.map((v) => v.i) -> value.c.map((v) => v.i), v => v.c.map((v) => v.l) -> value.c.map((v) => v.l))"
+          "(q, value) => q.insert(v => v.b.i -> value.b.i, v => v.b.l -> value.b.l, v => v.c.mapUnchecked((v) => v.i) -> value.c.mapUnchecked((v) => v.i), v => v.c.mapUnchecked((v) => v.l) -> value.c.mapUnchecked((v) => v.l))"
       }
       "exclude embedded" in {
         val meta = insertMeta[Entity](_.b)
         meta.expand.toString mustEqual
-          "(q, value) => q.insert(v => v.a -> value.a, v => v.c.map((v) => v.i) -> value.c.map((v) => v.i), v => v.c.map((v) => v.l) -> value.c.map((v) => v.l))"
+          "(q, value) => q.insert(v => v.a -> value.a, v => v.c.mapUnchecked((v) => v.i) -> value.c.mapUnchecked((v) => v.i), v => v.c.mapUnchecked((v) => v.l) -> value.c.mapUnchecked((v) => v.l))"
       }
       "exclude nested column" in {
         val meta = insertMeta[Entity](_.b.i)
         meta.expand.toString mustEqual
-          "(q, value) => q.insert(v => v.a -> value.a, v => v.b.l -> value.b.l, v => v.c.map((v) => v.i) -> value.c.map((v) => v.i), v => v.c.map((v) => v.l) -> value.c.map((v) => v.l))"
+          "(q, value) => q.insert(v => v.a -> value.a, v => v.b.l -> value.b.l, v => v.c.mapUnchecked((v) => v.i) -> value.c.mapUnchecked((v) => v.i), v => v.c.mapUnchecked((v) => v.l) -> value.c.mapUnchecked((v) => v.l))"
       }
       "exclude option embedded" in {
         val meta = insertMeta[Entity](_.c)
@@ -263,7 +263,7 @@ class MetaDslSpec extends Spec {
       "exclude option nested column" in {
         val meta = insertMeta[Entity](_.c.map(_.i))
         meta.expand.toString mustEqual
-          "(q, value) => q.insert(v => v.a -> value.a, v => v.b.i -> value.b.i, v => v.b.l -> value.b.l, v => v.c.map((v) => v.l) -> value.c.map((v) => v.l))"
+          "(q, value) => q.insert(v => v.a -> value.a, v => v.b.i -> value.b.i, v => v.b.l -> value.b.l, v => v.c.mapUnchecked((v) => v.l) -> value.c.mapUnchecked((v) => v.l))"
       }
     }
   }

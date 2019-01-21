@@ -824,17 +824,33 @@ class QuotationSpec extends Spec {
       }
     }
     "option operation" - {
-      "map" in {
-        val q = quote {
-          (o: Option[Int]) => o.map(v => v)
+      "map" - {
+        "simple" in {
+          val q = quote {
+            (o: Option[Int]) => o.map(v => v)
+          }
+          quote(unquote(q)).ast.body mustEqual OptionMap(Ident("o"), Ident("v"), Ident("v"))
         }
-        quote(unquote(q)).ast.body mustEqual OptionMap(Ident("o"), Ident("v"), Ident("v"))
+        "unchecked" in {
+          val q = quote {
+            (o: Option[Int]) => o.mapUnchecked(v => v)
+          }
+          quote(unquote(q)).ast.body mustEqual UncheckedOptionMap(Ident("o"), Ident("v"), Ident("v"))
+        }
       }
-      "flatMap" in {
-        val q = quote {
-          (o: Option[Int]) => o.flatMap(v => Option(v))
+      "flatMap" - {
+        "simple" in {
+          val q = quote {
+            (o: Option[Int]) => o.flatMap(v => Option(v))
+          }
+          quote(unquote(q)).ast.body mustEqual OptionFlatMap(Ident("o"), Ident("v"), Ident("v"))
         }
-        quote(unquote(q)).ast.body mustEqual OptionFlatMap(Ident("o"), Ident("v"), Ident("v"))
+        "unchecked" in {
+          val q = quote {
+            (o: Option[Int]) => o.flatMapUnchecked(v => Option(v))
+          }
+          quote(unquote(q)).ast.body mustEqual UncheckedOptionFlatMap(Ident("o"), Ident("v"), Ident("v"))
+        }
       }
       "getOrElse" in {
         val q = quote {
@@ -865,6 +881,12 @@ class QuotationSpec extends Spec {
           }
           quote(unquote(q)).ast.body mustEqual OptionForall(Ident("o"), Ident("v"), Ident("v"))
         }
+        "unchecked" in {
+          val q = quote {
+            (o: Option[Boolean]) => o.forallUnchecked(v => v)
+          }
+          quote(unquote(q)).ast.body mustEqual UncheckedOptionForall(Ident("o"), Ident("v"), Ident("v"))
+        }
         "embedded" in {
           case class EmbeddedEntity(id: Int) extends Embedded
           "quote((o: Option[EmbeddedEntity]) => o.forall(v => v.id == 1))" mustNot compile
@@ -877,12 +899,18 @@ class QuotationSpec extends Spec {
           }
           quote(unquote(q)).ast.body mustEqual OptionExists(Ident("o"), Ident("v"), Ident("v"))
         }
+        "unchecked" in {
+          val q = quote {
+            (o: Option[Boolean]) => o.existsUnchecked(v => v)
+          }
+          quote(unquote(q)).ast.body mustEqual UncheckedOptionExists(Ident("o"), Ident("v"), Ident("v"))
+        }
         "embedded" in {
           case class EmbeddedEntity(id: Int) extends Embedded
           val q = quote {
             (o: Option[EmbeddedEntity]) => o.exists(v => v.id == 1)
           }
-          quote(unquote(q)).ast.body mustEqual OptionExists(Ident("o"), Ident("v"),
+          quote(unquote(q)).ast.body mustEqual UncheckedOptionExists(Ident("o"), Ident("v"),
             BinaryOperation(Property(Ident("v"), "id"), EqualityOperator.`==`, Constant(1)))
         }
       }
@@ -1375,5 +1403,30 @@ class QuotationSpec extends Spec {
   }
   def quote2 = quote {
     quote1(1)
+  }
+
+  "outside of quoted contexts" - {
+    "forallUnchecked should behave like forall" in {
+      (Option("foo").forallUnchecked(_ == "foo")) == (Option("foo").forallUnchecked(_ == "foo"))
+      (Option("foo").forallUnchecked(_ == "bar")) == (Option("foo").forallUnchecked(_ == "bar"))
+      (Option.empty[String].forallUnchecked(_ == "bar")) == (Option.empty[String].forallUnchecked(_ == "bar"))
+    }
+
+    "existsUnchecked should behave like exists" in {
+      (Option("foo").existsUnchecked(_ == "foo")) == (Option("foo").existsUnchecked(_ == "foo"))
+      (Option("foo").existsUnchecked(_ == "bar")) == (Option("foo").existsUnchecked(_ == "bar"))
+      (Option.empty[String].existsUnchecked(_ == "bar")) == (Option.empty[String].existsUnchecked(_ == "bar"))
+    }
+
+    "mapUnchecked should behave like map" in {
+      (Option("foo").map(_ + "o")) mustEqual (Option("foo").mapUnchecked(_ + "o"))
+      (Option.empty[String].map(_ + "o")) mustEqual (Option.empty[String].mapUnchecked(_ + "o"))
+    }
+
+    "flatMapUnchecked should behave like flatMap" in {
+      (Option("foo").flatMap(v => Option(v + "o"))) mustEqual (Option("foo").flatMapUnchecked(v => Option(v + "o")))
+      (Option("foo").flatMap(v => None)) mustEqual (Option("foo").flatMapUnchecked(v => None))
+      (Option.empty[String].flatMap(v => Option(v + "o"))) mustEqual (Option.empty[String].flatMapUnchecked(v => Option(v + "o")))
+    }
   }
 }

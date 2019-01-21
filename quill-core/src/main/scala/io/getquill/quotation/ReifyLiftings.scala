@@ -37,6 +37,8 @@ trait ReifyLiftings {
       ast match {
         case Property(Ident(alias), name) => q"${TermName(alias)}.${TermName(name)}"
         case Property(nested, name)       => q"${unparse(nested)}.${TermName(name)}"
+        case UncheckedOptionMap(ast2, Ident(alias), body) =>
+          q"${unparse(ast2)}.map((${TermName(alias)}: ${tq""}) => ${unparse(body)})"
         case OptionMap(ast2, Ident(alias), body) =>
           q"${unparse(ast2)}.map((${TermName(alias)}: ${tq""}) => ${unparse(body)})"
         case CaseClassValueLift(_, v: Tree) => v
@@ -60,6 +62,18 @@ trait ReifyLiftings {
 
         case ast: Lift =>
           (ast, ReifyLiftings(state + (encode(ast.name) -> reify(ast))))
+
+        case p: UncheckedOptionFlatMap =>
+          super.apply(p) match {
+            case (p2 @ UncheckedOptionFlatMap(_: CaseClassValueLift, _, _), _) => apply(lift(unparse(p2)))
+            case other => other
+          }
+
+        case p: UncheckedOptionMap =>
+          super.apply(p) match {
+            case (p2 @ UncheckedOptionMap(_: CaseClassValueLift, _, _), _) => apply(lift(unparse(p2)))
+            case other => other
+          }
 
         case p: OptionFlatMap =>
           super.apply(p) match {

@@ -13,6 +13,37 @@ class JoinSpec extends Spec {
         .filter(_._2.map(_.i).forall(_ == 1))
     }
     testContext.run(q).string mustEqual
+      "SELECT a.s, a.i, a.l, a.o, b.s, b.i, b.l, b.o FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i WHERE b.i IS NULL OR b.i IS NOT NULL AND b.i = 1"
+  }
+
+  "join + filter unchecked map" in {
+    val q = quote {
+      qr1.leftJoin(qr2)
+        .on((a, b) => a.i == b.i)
+        .filter(_._2.mapUnchecked(a => a.i).forall(b => b == 1))
+    }
+    testContext.run(q).string mustEqual
+      "SELECT a.s, a.i, a.l, a.o, b.s, b.i, b.l, b.o FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i WHERE b.i IS NULL OR b.i IS NOT NULL AND b.i = 1"
+  }
+
+  // Since all maps of entities are unchecked, should be same as 'join + filter unchecked map,forall' case
+  "join + filter unchecked forall" in {
+    val q = quote {
+      qr1.leftJoin(qr2)
+        .on((a, b) => a.i == b.i)
+        .filter(_._2.map(a => a.i).forallUnchecked(b => b == 1))
+    }
+    testContext.run(q).string mustEqual
+      "SELECT a.s, a.i, a.l, a.o, b.s, b.i, b.l, b.o FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i WHERE b.i IS NULL OR b.i = 1"
+  }
+
+  "join + filter unchecked map,forall" in {
+    val q = quote {
+      qr1.leftJoin(qr2)
+        .on((a, b) => a.i == b.i)
+        .filter(_._2.mapUnchecked(a => a.i).forallUnchecked(b => b == 1))
+    }
+    testContext.run(q).string mustEqual
       "SELECT a.s, a.i, a.l, a.o, b.s, b.i, b.l, b.o FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i WHERE b.i IS NULL OR b.i = 1"
   }
 
@@ -24,7 +55,7 @@ class JoinSpec extends Spec {
         .filter(_._2.forall(_ == 1))
     }
     testContext.run(q).string mustEqual
-      "SELECT a.i, b.i FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i WHERE b.i IS NULL OR b.i = 1"
+      "SELECT a.i, b.i FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i WHERE b.i IS NULL OR b.i IS NOT NULL AND b.i = 1"
   }
 
   "join + filter + leftjoin" in {

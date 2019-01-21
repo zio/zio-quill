@@ -53,6 +53,22 @@ trait StatefulTransformer[T] {
 
   def apply(o: OptionOperation): (OptionOperation, StatefulTransformer[T]) =
     o match {
+      case UncheckedOptionFlatMap(a, b, c) =>
+        val (at, att) = apply(a)
+        val (ct, ctt) = att.apply(c)
+        (UncheckedOptionFlatMap(at, b, ct), ctt)
+      case UncheckedOptionMap(a, b, c) =>
+        val (at, att) = apply(a)
+        val (ct, ctt) = att.apply(c)
+        (UncheckedOptionMap(at, b, ct), ctt)
+      case UncheckedOptionExists(a, b, c) =>
+        val (at, att) = apply(a)
+        val (ct, ctt) = att.apply(c)
+        (UncheckedOptionExists(at, b, ct), ctt)
+      case UncheckedOptionForall(a, b, c) =>
+        val (at, att) = apply(a)
+        val (ct, ctt) = att.apply(c)
+        (UncheckedOptionForall(at, b, ct), ctt)
       case OptionFlatten(a) =>
         val (at, att) = apply(a)
         (OptionFlatten(at), att)

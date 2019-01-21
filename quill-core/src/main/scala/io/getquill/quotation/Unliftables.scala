@@ -32,16 +32,20 @@ trait Unliftables {
   }
 
   implicit val optionOperationUnliftable: Unliftable[OptionOperation] = Unliftable[OptionOperation] {
-    case q"$pack.OptionFlatten.apply(${ a: Ast })"                             => OptionFlatten(a)
-    case q"$pack.OptionGetOrElse.apply(${ a: Ast }, ${ b: Ast })"              => OptionGetOrElse(a, b)
-    case q"$pack.OptionFlatMap.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => OptionFlatMap(a, b, c)
-    case q"$pack.OptionMap.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })"     => OptionMap(a, b, c)
-    case q"$pack.OptionForall.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })"  => OptionForall(a, b, c)
-    case q"$pack.OptionExists.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })"  => OptionExists(a, b, c)
-    case q"$pack.OptionContains.apply(${ a: Ast }, ${ b: Ast })"               => OptionContains(a, b)
-    case q"$pack.OptionIsEmpty.apply(${ a: Ast })"                             => OptionIsEmpty(a)
-    case q"$pack.OptionNonEmpty.apply(${ a: Ast })"                            => OptionNonEmpty(a)
-    case q"$pack.OptionIsDefined.apply(${ a: Ast })"                           => OptionIsDefined(a)
+    case q"$pack.UncheckedOptionFlatMap.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => UncheckedOptionFlatMap(a, b, c)
+    case q"$pack.UncheckedOptionMap.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })"     => UncheckedOptionMap(a, b, c)
+    case q"$pack.UncheckedOptionExists.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })"  => UncheckedOptionExists(a, b, c)
+    case q"$pack.UncheckedOptionForall.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })"  => UncheckedOptionForall(a, b, c)
+    case q"$pack.OptionFlatten.apply(${ a: Ast })"                                      => OptionFlatten(a)
+    case q"$pack.OptionGetOrElse.apply(${ a: Ast }, ${ b: Ast })"                       => OptionGetOrElse(a, b)
+    case q"$pack.OptionFlatMap.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })"          => OptionFlatMap(a, b, c)
+    case q"$pack.OptionMap.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })"              => OptionMap(a, b, c)
+    case q"$pack.OptionForall.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })"           => OptionForall(a, b, c)
+    case q"$pack.OptionExists.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })"           => OptionExists(a, b, c)
+    case q"$pack.OptionContains.apply(${ a: Ast }, ${ b: Ast })"                        => OptionContains(a, b)
+    case q"$pack.OptionIsEmpty.apply(${ a: Ast })"                                      => OptionIsEmpty(a)
+    case q"$pack.OptionNonEmpty.apply(${ a: Ast })"                                     => OptionNonEmpty(a)
+    case q"$pack.OptionIsDefined.apply(${ a: Ast })"                                    => OptionIsDefined(a)
   }
 
   implicit val traversableOperationUnliftable: Unliftable[TraversableOperation] = Unliftable[TraversableOperation] {

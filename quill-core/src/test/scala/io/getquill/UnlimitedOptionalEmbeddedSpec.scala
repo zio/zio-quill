@@ -53,35 +53,35 @@ class UnlimitedOptionalEmbeddedSpec extends Spec {
     "query" in {
       materializeQueryMeta[OptEmd].expand.toString mustEqual "(q) => q.map(x => (" +
         "x.e1.e1.e1.value, " +
-        "x.e1.e1.e2.map((v) => v.value), " +
-        "x.e1.e2.map((v) => v.e1.value), " +
-        "x.e1.e2.map((v) => v.e2.map((v) => v.value)), " +
-        "x.e2.map((v) => v.e1.e1.value), " +
-        "x.e2.map((v) => v.e1.e2.map((v) => v.value)), " +
-        "x.e2.map((v) => v.e2.map((v) => v.e1.value)), " +
-        "x.e2.map((v) => v.e2.map((v) => v.e2.map((v) => v.value)))))"
+        "x.e1.e1.e2.mapUnchecked((v) => v.value), " +
+        "x.e1.e2.mapUnchecked((v) => v.e1.value), " +
+        "x.e1.e2.mapUnchecked((v) => v.e2.mapUnchecked((v) => v.value)), " +
+        "x.e2.mapUnchecked((v) => v.e1.e1.value), " +
+        "x.e2.mapUnchecked((v) => v.e1.e2.mapUnchecked((v) => v.value)), " +
+        "x.e2.mapUnchecked((v) => v.e2.mapUnchecked((v) => v.e1.value)), " +
+        "x.e2.mapUnchecked((v) => v.e2.mapUnchecked((v) => v.e2.mapUnchecked((v) => v.value)))))"
     }
     "update" in {
       materializeUpdateMeta[OptEmd].expand.toString mustEqual "(q, value) => q.update(" +
         "v => v.e1.e1.e1.value -> value.e1.e1.e1.value, " +
-        "v => v.e1.e1.e2.map((v) => v.value) -> value.e1.e1.e2.map((v) => v.value), " +
-        "v => v.e1.e2.map((v) => v.e1.value) -> value.e1.e2.map((v) => v.e1.value), " +
-        "v => v.e1.e2.map((v) => v.e2.map((v) => v.value)) -> value.e1.e2.map((v) => v.e2.map((v) => v.value)), " +
-        "v => v.e2.map((v) => v.e1.e1.value) -> value.e2.map((v) => v.e1.e1.value), " +
-        "v => v.e2.map((v) => v.e1.e2.map((v) => v.value)) -> value.e2.map((v) => v.e1.e2.map((v) => v.value)), " +
-        "v => v.e2.map((v) => v.e2.map((v) => v.e1.value)) -> value.e2.map((v) => v.e2.map((v) => v.e1.value)), " +
-        "v => v.e2.map((v) => v.e2.map((v) => v.e2.map((v) => v.value))) -> value.e2.map((v) => v.e2.map((v) => v.e2.map((v) => v.value))))"
+        "v => v.e1.e1.e2.mapUnchecked((v) => v.value) -> value.e1.e1.e2.mapUnchecked((v) => v.value), " +
+        "v => v.e1.e2.mapUnchecked((v) => v.e1.value) -> value.e1.e2.mapUnchecked((v) => v.e1.value), " +
+        "v => v.e1.e2.mapUnchecked((v) => v.e2.mapUnchecked((v) => v.value)) -> value.e1.e2.mapUnchecked((v) => v.e2.mapUnchecked((v) => v.value)), " +
+        "v => v.e2.mapUnchecked((v) => v.e1.e1.value) -> value.e2.mapUnchecked((v) => v.e1.e1.value), " +
+        "v => v.e2.mapUnchecked((v) => v.e1.e2.mapUnchecked((v) => v.value)) -> value.e2.mapUnchecked((v) => v.e1.e2.mapUnchecked((v) => v.value)), " +
+        "v => v.e2.mapUnchecked((v) => v.e2.mapUnchecked((v) => v.e1.value)) -> value.e2.mapUnchecked((v) => v.e2.mapUnchecked((v) => v.e1.value)), " +
+        "v => v.e2.mapUnchecked((v) => v.e2.mapUnchecked((v) => v.e2.mapUnchecked((v) => v.value))) -> value.e2.mapUnchecked((v) => v.e2.mapUnchecked((v) => v.e2.mapUnchecked((v) => v.value))))"
     }
     "insert" in {
       materializeInsertMeta[OptEmd].expand.toString mustEqual "(q, value) => q.insert(" +
         "v => v.e1.e1.e1.value -> value.e1.e1.e1.value, " +
-        "v => v.e1.e1.e2.map((v) => v.value) -> value.e1.e1.e2.map((v) => v.value), " +
-        "v => v.e1.e2.map((v) => v.e1.value) -> value.e1.e2.map((v) => v.e1.value), " +
-        "v => v.e1.e2.map((v) => v.e2.map((v) => v.value)) -> value.e1.e2.map((v) => v.e2.map((v) => v.value)), " +
-        "v => v.e2.map((v) => v.e1.e1.value) -> value.e2.map((v) => v.e1.e1.value), " +
-        "v => v.e2.map((v) => v.e1.e2.map((v) => v.value)) -> value.e2.map((v) => v.e1.e2.map((v) => v.value)), " +
-        "v => v.e2.map((v) => v.e2.map((v) => v.e1.value)) -> value.e2.map((v) => v.e2.map((v) => v.e1.value)), " +
-        "v => v.e2.map((v) => v.e2.map((v) => v.e2.map((v) => v.value))) -> value.e2.map((v) => v.e2.map((v) => v.e2.map((v) => v.value))))"
+        "v => v.e1.e1.e2.mapUnchecked((v) => v.value) -> value.e1.e1.e2.mapUnchecked((v) => v.value), " +
+        "v => v.e1.e2.mapUnchecked((v) => v.e1.value) -> value.e1.e2.mapUnchecked((v) => v.e1.value), " +
+        "v => v.e1.e2.mapUnchecked((v) => v.e2.mapUnchecked((v) => v.value)) -> value.e1.e2.mapUnchecked((v) => v.e2.mapUnchecked((v) => v.value)), " +
+        "v => v.e2.mapUnchecked((v) => v.e1.e1.value) -> value.e2.mapUnchecked((v) => v.e1.e1.value), " +
+        "v => v.e2.mapUnchecked((v) => v.e1.e2.mapUnchecked((v) => v.value)) -> value.e2.mapUnchecked((v) => v.e1.e2.mapUnchecked((v) => v.value)), " +
+        "v => v.e2.mapUnchecked((v) => v.e2.mapUnchecked((v) => v.e1.value)) -> value.e2.mapUnchecked((v) => v.e2.mapUnchecked((v) => v.e1.value)), " +
+        "v => v.e2.mapUnchecked((v) => v.e2.mapUnchecked((v) => v.e2.mapUnchecked((v) => v.value))) -> value.e2.mapUnchecked((v) => v.e2.mapUnchecked((v) => v.e2.mapUnchecked((v) => v.value))))"
     }
   }
 
@@ -90,13 +90,13 @@ class UnlimitedOptionalEmbeddedSpec extends Spec {
       """_.e1.e2.e1.value -> "value121", _.e1.e2.e2.value -> "value122", _.e2.e1.e1.value -> "value211", """ +
       """_.e2.e1.e2.value -> "value212", _.e2.e2.e1.value -> "value221", _.e2.e2.e2.value -> "value222").insert(""" +
       "v => v.e1.e1.e1.value -> ?, " +
-      "v => v.e1.e1.e2.map((v) => v.value) -> ?, " +
-      "v => v.e1.e2.map((v) => v.e1.value) -> ?, " +
-      "v => v.e1.e2.map((v) => v.e2.map((v) => v.value)) -> ?, " +
-      "v => v.e2.map((v) => v.e1.e1.value) -> ?, " +
-      "v => v.e2.map((v) => v.e1.e2.map((v) => v.value)) -> ?, " +
-      "v => v.e2.map((v) => v.e2.map((v) => v.e1.value)) -> ?, " +
-      "v => v.e2.map((v) => v.e2.map((v) => v.e2.map((v) => v.value))) -> ?)"
+      "v => v.e1.e1.e2.mapUnchecked((v) => v.value) -> ?, " +
+      "v => v.e1.e2.mapUnchecked((v) => v.e1.value) -> ?, " +
+      "v => v.e1.e2.mapUnchecked((v) => v.e2.mapUnchecked((v) => v.value)) -> ?, " +
+      "v => v.e2.mapUnchecked((v) => v.e1.e1.value) -> ?, " +
+      "v => v.e2.mapUnchecked((v) => v.e1.e2.mapUnchecked((v) => v.value)) -> ?, " +
+      "v => v.e2.mapUnchecked((v) => v.e2.mapUnchecked((v) => v.e1.value)) -> ?, " +
+      "v => v.e2.mapUnchecked((v) => v.e2.mapUnchecked((v) => v.e2.mapUnchecked((v) => v.value))) -> ?)"
     val resultRow = Row("111", Some("112"), Some("121"), Some(Some("122")), Some("211"), Some(Some("212")), Some(Some("221")), Some(Some(Some("222"))))
 
     "non-batched" in {

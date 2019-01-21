@@ -12,8 +12,11 @@ Bug.scala
 *.gz
 quill-jdbc/io/
 quill-sql/io/
+/io/
 MyTest.scala
 MySparkTest.scala
 MyTestJdbc.scala
+MyTestSql.scala
 quill-core/src/main/resources/logback.xml
 quill-jdbc/src/main/resources/logback.xml
+log.txt*

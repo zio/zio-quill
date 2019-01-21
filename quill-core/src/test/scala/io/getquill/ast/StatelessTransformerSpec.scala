@@ -224,6 +224,16 @@ class StatelessTransformerSpec extends Spec {
         Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"))(ast) mustEqual
           OptionGetOrElse(Ident("a'"), Ident("b'"))
       }
+      "flatMapUnchecked" in {
+        val ast: Ast = UncheckedOptionFlatMap(Ident("a"), Ident("b"), Ident("c"))
+        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) mustEqual
+          UncheckedOptionFlatMap(Ident("a'"), Ident("b"), Ident("c'"))
+      }
+      "mapUnchecked" in {
+        val ast: Ast = UncheckedOptionMap(Ident("a"), Ident("b"), Ident("c"))
+        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) mustEqual
+          UncheckedOptionMap(Ident("a'"), Ident("b"), Ident("c'"))
+      }
       "flatMap" in {
         val ast: Ast = OptionFlatMap(Ident("a"), Ident("b"), Ident("c"))
         Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) mustEqual
@@ -239,10 +249,20 @@ class StatelessTransformerSpec extends Spec {
         Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) mustEqual
           OptionForall(Ident("a'"), Ident("b"), Ident("c'"))
       }
+      "forallUnchecked" in {
+        val ast: Ast = UncheckedOptionForall(Ident("a"), Ident("b"), Ident("c"))
+        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) mustEqual
+          UncheckedOptionForall(Ident("a'"), Ident("b"), Ident("c'"))
+      }
       "exists" in {
         val ast: Ast = OptionExists(Ident("a"), Ident("b"), Ident("c"))
         Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) mustEqual
           OptionExists(Ident("a'"), Ident("b"), Ident("c'"))
+      }
+      "existsUnchecked" in {
+        val ast: Ast = UncheckedOptionExists(Ident("a"), Ident("b"), Ident("c"))
+        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) mustEqual
+          UncheckedOptionExists(Ident("a'"), Ident("b"), Ident("c'"))
       }
       "contains" in {
         val ast: Ast = OptionContains(Ident("a"), Ident("c"))
