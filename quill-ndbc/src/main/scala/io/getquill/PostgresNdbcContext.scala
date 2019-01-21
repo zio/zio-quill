@@ -18,9 +18,9 @@ class PostgresNdbcContext[N <: NamingStrategy](naming: N, dataSource: DataSource
   with PostgresEncoders
   with PostgresDecoders {
 
-  def this(naming: N, config: NdbcContextConfig) = this(naming, PostgresDataSource.apply(config.dataSource))
+  def this(naming: N, config: NdbcContextConfig) = this(naming, PostgresDataSource.create(config.dataSource))
   def this(naming: N, config: Config) = this(naming, NdbcContextConfig(config))
   def this(naming: N, configPrefix: String) = this(naming, LoadConfig(configPrefix))
 
-  protected def createPreparedStatement(sql: String) = PostgresPreparedStatement.apply(sql)
+  protected def createPreparedStatement(sql: String) = PostgresPreparedStatement.create(sql)
 }

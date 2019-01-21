@@ -15,6 +15,7 @@ import io.trane.ndbc.DataSource
 import io.trane.ndbc.Row
 import java.time.ZoneOffset
 import io.trane.ndbc.PreparedStatement
+import java.util.function.Supplier
 
 abstract class BaseNdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy, P <: PreparedStatement, R <: Row](
   val idiom: Dialect, val naming: Naming, dataSource: DataSource[P, R]
@@ -46,8 +47,11 @@ abstract class BaseNdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy, P 
   def probe(sql: String) =
     Try(dataSource.query(sql))
 
-  def transaction[T](f: => Future[T]): Future[T] =
-    dataSource.transactional(() => f.toJava).toScala
+  def transaction[T](f: => Future[T]): Future[T] = {
+    dataSource.transactional(new Supplier[io.trane.future.Future[T]] {
+      override def get = f.toJava
+    }).toScala
+  }
 
   def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: R => T = identity[R] _): Future[List[T]] = {
     val ps = prepare(createPreparedStatement(sql))._2

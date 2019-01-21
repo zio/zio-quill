@@ -209,10 +209,10 @@ lazy val `quill-ndbc` =
       fork in Test := true,
       libraryDependencies ++= Seq(
         "io.trane" % "future-scala" % "0.3.2",
-        "io.trane" % "ndbc-api" % "0.1.2-SNAPSHOT" changing(),
-        "io.trane" % "ndbc-postgres" % "0.1.2-SNAPSHOT" changing(),
-        ("io.trane" % "ndbc-postgres-netty4" % "0.1.2-SNAPSHOT" changing()) % Test,
-        ("io.trane" % "ndbc-mysql-netty4" % "0.1.2-SNAPSHOT" changing()) % Test
+        "io.trane" % "ndbc-api" % "0.1.3-SNAPSHOT" changing(),
+        "io.trane" % "ndbc-postgres" % "0.1.3-SNAPSHOT" changing(),
+        ("io.trane" % "ndbc-postgres-netty4" % "0.1.3-SNAPSHOT" changing()) % Test,
+        ("io.trane" % "ndbc-mysql-netty4" % "0.1.3-SNAPSHOT" changing()) % Test
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -344,6 +344,7 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
   ),
   EclipseKeys.eclipseOutput := Some("bin"),
   scalacOptions ++= Seq(
+    "-target:jvm-1.8",
     "-Xfatal-warnings",
     "-deprecation",
     "-encoding", "UTF-8",

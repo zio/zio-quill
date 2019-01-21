@@ -1,7 +1,6 @@
 package io.getquill.context.ndbc.postgres
 
 import io.getquill.context.sql.encoding.ArrayEncodingBaseSpec
-import java.time.LocalDate
 
 class ArrayNdbcEncodingSpec extends ArrayEncodingBaseSpec {
   val ctx = testContext
