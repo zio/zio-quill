@@ -1,8 +1,36 @@
-# 3.0.0-SNAPSHOT
+# 3.0.0
+
+- [First-class support for dynamic queries](https://github.com/getquill/quill/pull/1262)
+- [support dynamic strings within infix](https://github.com/getquill/quill/pull/1256)
+- [Create a streaming module for Monix over JDBC - combined approach](https://github.com/getquill/quill/pull/1263)
+- [Better implementation of Spark nested objects.](https://github.com/getquill/quill/pull/1227)
+- [Spark 2.4 (with Scala 2.12 support)](https://github.com/getquill/quill/pull/1250)
+- [Create quill-cassandra-monix](https://github.com/getquill/quill/pull/1278)
+- [Move `io.getquill.CassandraStreamContext` into `quill-cassandra-streaming-monix` module](https://github.com/getquill/quill/pull/1259)
+- [filterIf method for dynamic queries](https://github.com/getquill/quill/pull/1281)
+- [Make UDT encoding to support options](https://github.com/getquill/quill/pull/1266)
+- [fix column name conflict](https://github.com/getquill/quill/pull/1254)
+- [#1204 add explicit `AS` for aliases (except table context)](https://github.com/getquill/quill/pull/1252)
+- [sqlite dialect - translate boolean literals into 1/0](https://github.com/getquill/quill/pull/1248)
+- [sqlite dialect - ignore null ordering](https://github.com/getquill/quill/pull/1247)
+- [fail is property is not a case acessor](https://github.com/getquill/quill/pull/1246)
+- [verify table references](https://github.com/getquill/quill/pull/1244)
+- [fix property renaming for nested queries within infixes](https://github.com/getquill/quill/pull/1243)
+- [expand map.distinct](https://github.com/getquill/quill/pull/1242)
+- [quill-spark: fix groupby with multiple columns](https://github.com/getquill/quill/pull/1240)
+- [quill-spark: escape strings](https://github.com/getquill/quill/pull/1239)
+- [StatementInterpolator performance improvements](https://github.com/getquill/quill/pull/1280)
+- [fix async transactions for scala future + io monad](https://github.com/getquill/quill/pull/1187)
+- [Update orientdb-graphdb to 3.0.13](https://github.com/getquill/quill/pull/1286)
+- [update guava version to 27.0.1-jre](https://github.com/getquill/quill/pull/1294)
+- [documentation improvements](https://github.com/getquill/quill/pull/1241)
 
 ### Migration notes
 
-- `io.getquill.CassandraStreamContext` is moved into `quill-cassandra-monix` module
+- `io.getquill.CassandraStreamContext` is moved into `quill-cassandra-monix` module and now uses Monix 3.
+- `io.getquill.CassandraMonixContext` has been introduced which should eventually replace `io.getquill.CassandraStreamContext`.
+- Spark queries with nested objects will now rely on the star `*` operator and `struct` function to generate sub-schemas as opposed to full expansion of the selection.
+- Most functionality from `JdbcContext` has been moved to `JdbcContextBase` for the sake of re-usability. `JdbcContext` is only intended to be used for synchronous JDBC.
 
 # 2.6.0
 
