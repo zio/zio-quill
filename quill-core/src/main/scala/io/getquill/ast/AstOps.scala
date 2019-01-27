@@ -32,6 +32,15 @@ object +&&+ {
   }
 }
 
+object +==+ {
+  def unapply(a: Ast): Option[(Ast, Ast)] = {
+    a match {
+      case B(one, EQ.`==`, two) => Some((one, two))
+      case _                    => None
+    }
+  }
+}
+
 object Exist {
   def apply(ast: Ast) = B(ast, EQ.`!=`, NullValue)
 
@@ -63,6 +72,7 @@ object IfExistElseNull {
     case _                               => None
   }
 }
+
 object IfExist {
   def apply(exists: Ast, `then`: Ast, otherwise: Ast) =
     If(Exist(exists), `then`, otherwise)

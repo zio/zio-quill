@@ -330,11 +330,6 @@ trait Parsing {
   private def identClean(x: Ident): Ident = x.copy(name = x.name.replace("$", ""))
   private def ident(x: TermName): Ident = identClean(Ident(x.decodedName.toString))
 
-  private def valArgType(tree: Tree) =
-    tree match {
-      case q"$mods val $tname: $tpt" => tpt.tpe
-    }
-
   val optionOperationParser: Parser[OptionOperation] = Parser[OptionOperation] {
 
     // For tables or specifically where the user want an unchecked map/flatMap

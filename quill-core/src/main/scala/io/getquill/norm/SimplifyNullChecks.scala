@@ -50,11 +50,11 @@ object SimplifyNullChecks extends StatelessTransformer {
         ) if (condA == condB && thenA == thenB) =>
         apply(If(Exist(condA) +&&+ Exist(thenA), thenA, otherwise))
 
-      // Right hand rule
+      // Left hand rule
       case IfExist(IfExistElseNull(check, affirm), value, otherwise) =>
         apply(If(Exist(check) +&&+ Exist(affirm), value, otherwise))
 
-      // Left hand rule
+      // Right hand rule
       case IfExistElseNull(cond, IfExistElseNull(innerCond, innerThen)) =>
         apply(If(Exist(cond) +&&+ Exist(innerCond), innerThen, NullValue))
 
