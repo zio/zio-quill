@@ -1,14 +1,13 @@
 package io.getquill
 
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
-import io.getquill.context.cassandra.util.FutureConversions.toScalaFuture
-import io.getquill.util.{ ContextLogger, LoadConfig }
-import com.typesafe.config.Config
-import scala.collection.JavaConverters._
-import io.getquill.context.cassandra.CassandraSessionContext
 import com.datastax.driver.core.Cluster
+import com.typesafe.config.Config
+import io.getquill.context.cassandra.util.FutureConversions._
 import io.getquill.monad.ScalaFutureIOMonad
+import io.getquill.util.{ ContextLogger, LoadConfig }
+
+import scala.collection.JavaConverters._
+import scala.concurrent.{ ExecutionContext, Future }
 
 class CassandraAsyncContext[N <: NamingStrategy](
   naming:                     N,
@@ -16,11 +15,13 @@ class CassandraAsyncContext[N <: NamingStrategy](
   keyspace:                   String,
   preparedStatementCacheSize: Long
 )
-  extends CassandraSessionContext[N](naming, cluster, keyspace, preparedStatementCacheSize)
+  extends CassandraClusterSessionContext[N](naming, cluster, keyspace, preparedStatementCacheSize)
   with ScalaFutureIOMonad {
 
   def this(naming: N, config: CassandraContextConfig) = this(naming, config.cluster, config.keyspace, config.preparedStatementCacheSize)
+
   def this(naming: N, config: Config) = this(naming, CassandraContextConfig(config))
+
   def this(naming: N, configPrefix: String) = this(naming, LoadConfig(configPrefix))
 
   private val logger = ContextLogger(classOf[CassandraAsyncContext[_]])
@@ -36,30 +37,27 @@ class CassandraAsyncContext[N <: NamingStrategy](
     super.performIO(io)
   }
 
-  def executeQuery[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(implicit ec: ExecutionContext): Future[List[T]] =
-    this.prepareAsync(cql).map(prepare).flatMap {
-      case (params, bs) =>
-        logger.logQuery(cql, params)
-        session.executeAsync(bs)
-          .map(_.all.asScala.toList.map(extractor))
-    }
-
-  def executeQuerySingle[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(implicit ec: ExecutionContext): Future[T] =
-    executeQuery(cql, prepare, extractor).map(handleSingleResult)
-
-  def executeAction[T](cql: String, prepare: Prepare = identityPrepare)(implicit ec: ExecutionContext): Future[Unit] = {
-    this.prepareAsync(cql).map(prepare).flatMap {
-      case (params, bs) =>
-        logger.logQuery(cql, params)
-        session.executeAsync(bs).map(_ => ())
-    }
+  def executeQuery[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(implicit executionContext: ExecutionContext): Result[RunQueryResult[T]] = {
+    val statement = prepareAsyncAndGetStatement(cql, prepare, logger)
+    statement.flatMap(st => session.executeAsync(st).asScala)
+      .map(_.all.asScala.toList.map(extractor))
   }
 
-  def executeBatchAction(groups: List[BatchGroup])(implicit ec: ExecutionContext): Future[Unit] =
+  def executeQuerySingle[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(implicit executionContext: ExecutionContext): Result[RunQuerySingleResult[T]] = {
+    executeQuery(cql, prepare, extractor).map(handleSingleResult)
+  }
+
+  def executeAction[T](cql: String, prepare: Prepare = identityPrepare)(implicit executionContext: ExecutionContext): Result[RunActionResult] = {
+    val statement = prepareAsyncAndGetStatement(cql, prepare, logger)
+    statement.flatMap(st => session.executeAsync(st).asScala).map(_ => ())
+  }
+
+  def executeBatchAction(groups: List[BatchGroup])(implicit executionContext: ExecutionContext): Result[RunBatchActionResult] = {
     Future.sequence {
       groups.flatMap {
         case BatchGroup(cql, prepare) =>
           prepare.map(executeAction(cql, _))
       }
     }.map(_ => ())
+  }
 }

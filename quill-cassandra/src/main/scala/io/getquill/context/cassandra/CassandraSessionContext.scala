@@ -1,21 +1,17 @@
 package io.getquill.context.cassandra
 
-import com.datastax.driver.core.{ Cluster, _ }
+import com.datastax.driver.core._
 import io.getquill.NamingStrategy
 import io.getquill.context.Context
 import io.getquill.context.cassandra.encoding.{ CassandraTypes, Decoders, Encoders, UdtEncoding }
+import io.getquill.util.ContextLogger
 import io.getquill.util.Messages.fail
-import io.getquill.context.cassandra.util.FutureConversions._
-import scala.collection.JavaConverters._
-import scala.concurrent.{ ExecutionContext, Future }
+
+import scala.concurrent.{ Await, ExecutionContext, Future }
+import scala.concurrent.duration._
 import scala.util.Try
 
-abstract class CassandraSessionContext[N <: NamingStrategy](
-  val naming:                 N,
-  cluster:                    Cluster,
-  keyspace:                   String,
-  preparedStatementCacheSize: Long
-)
+abstract class CassandraSessionContext[N <: NamingStrategy]
   extends Context[CqlIdiom, N]
   with CassandraContext[N]
   with Encoders
@@ -31,43 +27,24 @@ abstract class CassandraSessionContext[N <: NamingStrategy](
   override type RunActionReturningResult[T] = Unit
   override type RunBatchActionReturningResult[T] = Unit
 
-  private val preparedStatementCache =
-    new PrepareStatementCache(preparedStatementCacheSize)
+  protected def prepareAsync(cql: String)(implicit executionContext: ExecutionContext): Future[BoundStatement]
 
-  protected lazy val session = cluster.connect(keyspace)
-
-  protected val udtMetadata: Map[String, List[UserType]] = cluster.getMetadata.getKeyspaces.asScala.toList
-    .flatMap(_.getUserTypes.asScala)
-    .groupBy(_.getTypeName)
-
-  def udtValueOf(udtName: String, keyspace: Option[String] = None): UDTValue =
-    udtMetadata.getOrElse(udtName.toLowerCase, Nil) match {
-      case udt :: Nil => udt.newValue()
-      case Nil =>
-        fail(s"Could not find UDT `$udtName` in any keyspace")
-      case udts => udts
-        .find(udt => keyspace.contains(udt.getKeyspace) || udt.getKeyspace == session.getLoggedKeyspace)
-        .map(_.newValue())
-        .getOrElse(fail(s"Could not determine to which keyspace `$udtName` UDT belongs. " +
-          s"Please specify desired keyspace using UdtMeta"))
-    }
-
-  protected def prepare(cql: String): BoundStatement =
-    preparedStatementCache(cql)(session.prepare)
-
-  protected def prepareAsync(cql: String)(implicit executionContext: ExecutionContext): Future[BoundStatement] =
-    preparedStatementCache.async(cql)(session.prepareAsync(_))
-
-  def close() = {
-    session.close
-    cluster.close
-  }
-
-  def probe(cql: String) =
+  def probe(cql: String): Try[_] = {
     Try {
-      prepare(cql)
+      Await.result(prepareAsync(cql)(ExecutionContext.Implicits.global), 1.minute)
       ()
     }
+  }
+
+  protected def prepareAsyncAndGetStatement(cql: String, prepare: Prepare, logger: ContextLogger)(implicit executionContext: ExecutionContext): Future[BoundStatement] = {
+    val prepareResult = this.prepareAsync(cql).map(prepare)
+    val preparedRow = prepareResult.map {
+      case (params, bs) =>
+        logger.logQuery(cql, params)
+        bs
+    }
+    preparedRow
+  }
 
   def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningColumn: String): Unit =
     fail("Cassandra doesn't support `returning`.")
@@ -75,3 +52,4 @@ abstract class CassandraSessionContext[N <: NamingStrategy](
   def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T]): Unit =
     fail("Cassandra doesn't support `returning`.")
 }
+

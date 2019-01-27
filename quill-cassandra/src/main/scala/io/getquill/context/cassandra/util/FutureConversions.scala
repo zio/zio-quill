@@ -1,27 +1,30 @@
 package io.getquill.context.cassandra.util
 
-import com.google.common.util.concurrent.{ FutureCallback, Futures, ListenableFuture }
-import scala.concurrent.Promise
-import scala.concurrent.Future
-import language.implicitConversions
+import java.util.concurrent.Executor
+
+import com.google.common.util.concurrent.ListenableFuture
+
+import scala.concurrent.{ ExecutionContext, Future, Promise }
+import scala.util.Try
 
 object FutureConversions {
 
-  implicit def toScalaFuture[T](fut: ListenableFuture[T]): Future[T] = {
-    val p = Promise[T]()
-    Futures.addCallback(
-      fut,
-      new FutureCallback[T] {
-        def onSuccess(r: T) = {
-          p.success(r)
+  implicit class ListenableFutureConverter[A](val lf: ListenableFuture[A]) extends AnyVal {
+    def asScala(implicit ec: ExecutionContext): Future[A] = {
+      val promise = Promise[A]
+      lf.addListener(new Runnable {
+        def run(): Unit = {
+          promise.complete(Try(lf.get()))
           ()
         }
-        def onFailure(t: Throwable) = {
-          p.failure(t)
-          ()
-        }
-      }
-    )
-    p.future
+      }, ec.asInstanceOf[Executor])
+      promise.future
+    }
+
+    def asScalaWithDefaultGlobal: Future[A] = {
+      import scala.concurrent.ExecutionContext.Implicits.global
+      asScala(global)
+    }
   }
+
 }
