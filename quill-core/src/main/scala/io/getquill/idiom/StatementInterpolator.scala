@@ -35,7 +35,18 @@ object StatementInterpolator {
   implicit def liftTokenizer: Tokenizer[Lift] =
     Tokenizer[Lift] {
       case lift: ScalarLift => ScalarLiftToken(lift)
-      case lift             => fail(s"Can't tokenize a non-scalar lifting. ${lift.name}")
+      case lift             => fail(
+        s"Can't tokenize a non-scalar lifting. ${lift.name}\n" +
+        s"\n" +
+        s"This might happen because:\n" +
+        s"* You are trying to insert or update whole Embedded case class. For example:\n" +
+        s"    run(query[Users].update(_.embeddedCaseClass -> lift(someInstance))\n" +
+        s"  In that case, make sure you are updating individual columns, for example:\n" +
+        s"    run(query[Users].update(\n" + 
+        s"       _.embeddedCaseClass.a -> lift(someInstance.a),\n" +
+        s"       _.embeddedCaseClass.b -> lift(someInstance.b)\n" +
+        s"    )"
+      )
     }
 
   implicit def tokenTokenizer: Tokenizer[Token] = Tokenizer[Token](identity)
