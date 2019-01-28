@@ -1,3 +1,8 @@
+#3.0.1
+
+- [Fix Monix JDBC Connection Leak](https://github.com/getquill/quill/pull/1313)
+- [Action task needs to flatMap](https://github.com/getquill/quill/pull/1307)
+
 # 3.0.0
 
 - [First-class support for dynamic queries](https://github.com/getquill/quill/pull/1262)
