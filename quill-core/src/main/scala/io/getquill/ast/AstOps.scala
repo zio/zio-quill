@@ -1,21 +1,24 @@
 package io.getquill.ast
 
+import io.getquill.ast.{ BinaryOperation => B }
+import io.getquill.ast.{ EqualityOperator => EQ }
+import io.getquill.ast.{ BooleanOperator => BO }
 import io.getquill.norm.BetaReduction
 
 object Implicits {
   implicit class AstOpsExt(body: Ast) {
     def reduce(reductions: (Ast, Ast)*) = BetaReduction(body, reductions: _*)
-    def +||+(other: Ast) = BinaryOperation(body, BooleanOperator.`||`, other)
-    def +&&+(other: Ast) = BinaryOperation(body, BooleanOperator.`&&`, other)
-    def +==+(other: Ast) = BinaryOperation(body, EqualityOperator.`==`, other)
+    def +||+(other: Ast) = B(body, BO.`||`, other)
+    def +&&+(other: Ast) = B(body, BO.`&&`, other)
+    def +==+(other: Ast) = B(body, EQ.`==`, other)
   }
 }
 
 object +||+ {
   def unapply(a: Ast): Option[(Ast, Ast)] = {
     a match {
-      case BinaryOperation(one, BooleanOperator.`||`, two) => Some((one, two))
-      case _ => None
+      case B(one, BO.`||`, two) => Some((one, two))
+      case _                    => None
     }
   }
 }
@@ -23,39 +26,30 @@ object +||+ {
 object +&&+ {
   def unapply(a: Ast): Option[(Ast, Ast)] = {
     a match {
-      case BinaryOperation(one, BooleanOperator.`&&`, two) => Some((one, two))
-      case _ => None
-    }
-  }
-}
-
-object +==+ {
-  def unapply(a: Ast): Option[(Ast, Ast)] = {
-    a match {
-      case BinaryOperation(one, EqualityOperator.`==`, two) => Some((one, two))
-      case _ => None
+      case B(one, BO.`&&`, two) => Some((one, two))
+      case _                    => None
     }
   }
 }
 
 object Exist {
-  def apply(ast: Ast) = BinaryOperation(ast, EqualityOperator.`!=`, NullValue)
+  def apply(ast: Ast) = B(ast, EQ.`!=`, NullValue)
 
   def unapply(ast: Ast): Option[Ast] = {
     ast match {
-      case BinaryOperation(cond, EqualityOperator.`!=`, NullValue) => Some(cond)
-      case _ => None
+      case BinaryOperation(cond, EQ.`!=`, NullValue) => Some(cond)
+      case _                                         => None
     }
   }
 }
 
 object Empty {
-  def apply(ast: Ast) = BinaryOperation(ast, EqualityOperator.`==`, NullValue)
+  def apply(ast: Ast) = B(ast, EQ.`==`, NullValue)
 
   def unapply(ast: Ast): Option[Ast] = {
     ast match {
-      case BinaryOperation(cond, EqualityOperator.`==`, NullValue) => Some(cond)
-      case _ => None
+      case BinaryOperation(cond, EQ.`==`, NullValue) => Some(cond)
+      case _                                         => None
     }
   }
 }
@@ -69,7 +63,6 @@ object IfExistElseNull {
     case _                               => None
   }
 }
-
 object IfExist {
   def apply(exists: Ast, `then`: Ast, otherwise: Ast) =
     If(Exist(exists), `then`, otherwise)
