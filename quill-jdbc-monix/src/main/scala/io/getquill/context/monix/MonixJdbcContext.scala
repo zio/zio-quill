@@ -95,6 +95,11 @@ abstract class MonixJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](
       .bracket({ case (conn, _) => f(conn) })(autoCommitBackOn)
   }
 
+  private[getquill] def withCloseBracket[T](conn: Connection, f: Connection => Task[T]): Task[T] = {
+    Task(conn)
+      .bracket(conn => f(conn))(conn => wrapClose(conn.close()))
+  }
+
   private[getquill] def autocommitOff(conn: Connection): (Connection, Boolean) = {
     val ac = conn.getAutoCommit;
     conn.setAutoCommit(false);
@@ -112,19 +117,21 @@ abstract class MonixJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](
         case Some(_) => f // Already in a transaction
         case None =>
           wrap(dataSource.getConnection).bracket { conn =>
-            withAutocommitBracket(conn, conn => {
-              wrap(conn).flatMap { conn =>
-                currentConnection.update(Some(conn))
-                f.onCancelRaiseError(new IllegalStateException(
-                  "The task was cancelled in the middle of a transaction."
-                )).doOnFinish {
-                  case Some(error) =>
-                    conn.rollback()
-                    Task.raiseError(error)
-                  case None =>
-                    wrap(conn.commit())
+            withCloseBracket(conn, conn => {
+              withAutocommitBracket(conn, conn => {
+                wrap(conn).flatMap { conn =>
+                  currentConnection.update(Some(conn))
+                  f.onCancelRaiseError(new IllegalStateException(
+                    "The task was cancelled in the middle of a transaction."
+                  )).doOnFinish {
+                    case Some(error) =>
+                      conn.rollback()
+                      Task.raiseError(error)
+                    case None =>
+                      wrap(conn.commit())
+                  }
                 }
-              }
+              })
             })
           } { conn =>
             wrap(currentConnection.update(None))

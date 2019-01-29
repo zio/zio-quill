@@ -70,7 +70,7 @@ class CassandraMonixContext[N <: NamingStrategy](
 
   def executeAction[T](cql: String, prepare: Prepare = identityPrepare): Task[Unit] = {
     prepareRowAndLog(cql, prepare)
-      .map(r => Task.fromFuture(session.executeAsync(r)))
+      .flatMap(r => Task.fromFuture(session.executeAsync(r)))
       .map(_ => ())
   }
 

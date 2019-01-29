@@ -8,12 +8,12 @@ class ProductJdbcSpec extends ProductSpec {
   val context = testContext
   import testContext._
 
+  implicit val scheduler = Scheduler.global
+
   override def beforeAll = {
-    testContext.run(quote(query[Product].delete))
+    testContext.run(quote(query[Product].delete)).runSyncUnsafe()
     ()
   }
-
-  implicit val scheduler = Scheduler.global
 
   "Product" - {
     "Insert multiple products" in {
