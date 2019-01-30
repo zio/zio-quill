@@ -75,7 +75,7 @@ lazy val `quill-jdbc` =
       fork in Test := true,
       libraryDependencies ++= Seq(
         "com.zaxxer"              % "HikariCP"             % "3.3.0",
-        "mysql"                   % "mysql-connector-java" % "5.1.47"             % Test,
+        "mysql"                   % "mysql-connector-java" % "8.0.14"             % Test,
         "com.h2database"          % "h2"                   % "1.4.197"            % Test,
         "org.postgresql"          % "postgresql"           % "42.2.5"             % Test,
         "org.xerial"              % "sqlite-jdbc"          % "3.25.2"             % Test,
@@ -107,7 +107,7 @@ lazy val `quill-jdbc-monix` =
         "io.monix"                %% "monix-eval"          % "3.0.0-RC2",
         "io.monix"                %% "monix-reactive"      % "3.0.0-RC2",
         "com.zaxxer"              % "HikariCP"             % "3.3.0",
-        "mysql"                   % "mysql-connector-java" % "5.1.47"             % Test,
+        "mysql"                   % "mysql-connector-java" % "8.0.14"             % Test,
         "com.h2database"          % "h2"                   % "1.4.197"            % Test,
         "org.postgresql"          % "postgresql"           % "42.2.5"             % Test,
         "org.xerial"              % "sqlite-jdbc"          % "3.25.2"             % Test,
