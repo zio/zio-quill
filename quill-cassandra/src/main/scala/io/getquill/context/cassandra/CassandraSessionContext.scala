@@ -1,21 +1,16 @@
 package io.getquill.context.cassandra
 
-import com.datastax.driver.core.{ Cluster, _ }
+import com.datastax.driver.core.{Cluster, _}
 import io.getquill.NamingStrategy
 import io.getquill.context.Context
-import io.getquill.context.cassandra.encoding.{ CassandraTypes, Decoders, Encoders, UdtEncoding }
+import io.getquill.context.cassandra.encoding.{CassandraTypes, Decoders, Encoders, UdtEncoding}
+import io.getquill.util.ContextLogger
 import io.getquill.util.Messages.fail
-import io.getquill.context.cassandra.util.FutureConversions._
+
 import scala.collection.JavaConverters._
-import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.Try
 
-abstract class CassandraSessionContext[N <: NamingStrategy](
-  val naming:                 N,
-  cluster:                    Cluster,
-  keyspace:                   String,
-  preparedStatementCacheSize: Long
-)
+abstract class CassandraSessionContext[N <: NamingStrategy]
   extends Context[CqlIdiom, N]
   with CassandraContext[N]
   with Encoders
@@ -23,16 +18,35 @@ abstract class CassandraSessionContext[N <: NamingStrategy](
   with CassandraTypes
   with UdtEncoding {
 
+  val naming:  N
+  val cluster: Cluster
+  val keyspace: String
+  val preparedStatementCacheSize: Long
+
   val idiom = CqlIdiom
+
+  private val logger = ContextLogger(classOf[CassandraSessionContext[_]])
 
   override type PrepareRow = BoundStatement
   override type ResultRow = Row
 
-  override type RunActionReturningResult[T] = Unit
-  override type RunBatchActionReturningResult[T] = Unit
+  type RunContext
+
+  // It can be assumed that all cassandra output contexts will be a singleton-type but it cannot be assumed that it will be scala.Unit.
+  // other frameworks (e.g. Lagom) may have their own singleton-type.
+  type Completed
+  override type RunActionReturningResult[T] = Completed
+  override type RunBatchActionReturningResult[T] = Completed
+
+  def complete:Completed
+
+  protected val effect: CassandraContextEffect[Result, RunContext]
+  val withContextActions = effect.withContextActions
+  import effect.ImplicitsWithContext._
+  import withContextActions._
 
   private val preparedStatementCache =
-    new PrepareStatementCache(preparedStatementCacheSize)
+    new PrepareStatementCache(preparedStatementCacheSize, effect)
 
   protected lazy val session = cluster.connect(keyspace)
 
@@ -55,8 +69,8 @@ abstract class CassandraSessionContext[N <: NamingStrategy](
   protected def prepare(cql: String): BoundStatement =
     preparedStatementCache(cql)(session.prepare)
 
-  protected def prepareAsync(cql: String)(implicit executionContext: ExecutionContext): Future[BoundStatement] =
-    preparedStatementCache.async(cql)(session.prepareAsync(_))
+  protected def prepareAsync(cql: String)(implicit executionContext: RunContext): Result[BoundStatement] =
+    preparedStatementCache.async(cql)(prep => wrapListenableFuture(session.prepareAsync(prep)))
 
   def close() = {
     session.close
@@ -69,9 +83,43 @@ abstract class CassandraSessionContext[N <: NamingStrategy](
       ()
     }
 
-  def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningColumn: String): Unit =
+  // For now leave the IO monad to specifically use scala.Future and not context effects. Maybe in a future refactor...
+  //  override def performIO[T](io: IO[T, _], transactional: Boolean = false)(implicit ec: ExecutionContext): Result[T] = {
+  //    if (transactional) logger.underlying.warn("Cassandra doesn't support transactions, ignoring `io.transactional`")
+  //    super.performIO(io)
+  //  }
+
+  def executeQuery[T](cql: String, prepare: Prepare, extractor: Extractor[T])(implicit ec: RunContext): Result[List[T]] = {
+    this.prepareAsync(cql).map(prepare).flatMap {
+      case (params, bs) =>
+        logger.logQuery(cql, params)
+        wrapListenableFuture(session.executeAsync(bs))
+          .map(_.all.asScala.toList.map(extractor))
+    }
+  }
+
+  def executeQuerySingle[T](cql: String, prepare: Prepare, extractor: Extractor[T])(implicit ec: RunContext): Result[T] =
+    executeQuery(cql, prepare, extractor).map(handleSingleResult)
+
+  def executeAction[T](cql: String, prepare: Prepare)(implicit ec: RunContext): Result[Completed] = {
+    this.prepareAsync(cql).map(prepare).flatMap {
+      case (params, bs) =>
+        logger.logQuery(cql, params)
+        wrapListenableFuture(session.executeAsync(bs)).map(_ => complete)
+    }
+  }
+
+  def executeBatchAction(groups: List[BatchGroup])(implicit ec: RunContext): Result[Completed] =
+    seq {
+      groups.flatMap {
+        case BatchGroup(cql, prepare) =>
+          prepare.map(executeAction(cql, _))
+      }
+    }.map(_ => complete)
+
+  def executeActionReturning[O](sql: String, prepare: Prepare, extractor: Extractor[O], returningColumn: String): Completed =
     fail("Cassandra doesn't support `returning`.")
 
-  def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T]): Unit =
+  def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T]): Completed =
     fail("Cassandra doesn't support `returning`.")
 }
