@@ -125,16 +125,25 @@ class MirrorIdiom extends Idiom {
   }
 
   implicit def optionOperationTokenizer(implicit liftTokenizer: Tokenizer[Lift]): Tokenizer[OptionOperation] = Tokenizer[OptionOperation] {
-    case OptionFlatten(ast)              => stmt"${ast.token}.flatten"
-    case OptionGetOrElse(ast, body)      => stmt"${ast.token}.getOrElse(${body.token})"
-    case OptionFlatMap(ast, alias, body) => stmt"${ast.token}.flatMap((${alias.token}) => ${body.token})"
-    case OptionMap(ast, alias, body)     => stmt"${ast.token}.map((${alias.token}) => ${body.token})"
-    case OptionForall(ast, alias, body)  => stmt"${ast.token}.forall((${alias.token}) => ${body.token})"
-    case OptionExists(ast, alias, body)  => stmt"${ast.token}.exists((${alias.token}) => ${body.token})"
-    case OptionContains(ast, body)       => stmt"${ast.token}.contains(${body.token})"
-    case OptionIsEmpty(ast)              => stmt"${ast.token}.isEmpty"
-    case OptionNonEmpty(ast)             => stmt"${ast.token}.nonEmpty"
-    case OptionIsDefined(ast)            => stmt"${ast.token}.isDefined"
+    case OptionTableFlatMap(ast, alias, body) => stmt"${ast.token}.flatMap((${alias.token}) => ${body.token})"
+    case OptionTableMap(ast, alias, body)     => stmt"${ast.token}.map((${alias.token}) => ${body.token})"
+    case OptionTableExists(ast, alias, body)  => stmt"${ast.token}.exists((${alias.token}) => ${body.token})"
+    case OptionTableForall(ast, alias, body)  => stmt"${ast.token}.forall((${alias.token}) => ${body.token})"
+    case OptionFlatten(ast)                   => stmt"${ast.token}.flatten"
+    case OptionGetOrElse(ast, body)           => stmt"${ast.token}.getOrElse(${body.token})"
+    case OptionFlatMap(ast, alias, body)      => stmt"${ast.token}.flatMap((${alias.token}) => ${body.token})"
+    case OptionMap(ast, alias, body)          => stmt"${ast.token}.map((${alias.token}) => ${body.token})"
+    case OptionForall(ast, alias, body)       => stmt"${ast.token}.forall((${alias.token}) => ${body.token})"
+    case OptionExists(ast, alias, body)       => stmt"${ast.token}.exists((${alias.token}) => ${body.token})"
+    case OptionContains(ast, body)            => stmt"${ast.token}.contains(${body.token})"
+    case OptionIsEmpty(ast)                   => stmt"${ast.token}.isEmpty"
+    case OptionNonEmpty(ast)                  => stmt"${ast.token}.nonEmpty"
+    case OptionIsDefined(ast)                 => stmt"${ast.token}.isDefined"
+    case OptionSome(ast)                      => stmt"Some(${ast.token})"
+    case OptionApply(ast)                     => stmt"Option(${ast.token})"
+    case OptionOrNull(ast)                    => stmt"${ast.token}.orNull"
+    case OptionGetOrNull(ast)                 => stmt"${ast.token}.getOrNull"
+    case OptionNone                           => stmt"None"
   }
 
   implicit def traversableOperationTokenizer(implicit liftTokenizer: Tokenizer[Lift]): Tokenizer[TraversableOperation] = Tokenizer[TraversableOperation] {

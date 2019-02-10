@@ -82,6 +82,15 @@ case class OptionContains(ast: Ast, body: Ast) extends OptionOperation
 case class OptionIsEmpty(ast: Ast) extends OptionOperation
 case class OptionNonEmpty(ast: Ast) extends OptionOperation
 case class OptionIsDefined(ast: Ast) extends OptionOperation
+case class OptionTableFlatMap(ast: Ast, alias: Ident, body: Ast) extends OptionOperation
+case class OptionTableMap(ast: Ast, alias: Ident, body: Ast) extends OptionOperation
+case class OptionTableExists(ast: Ast, alias: Ident, body: Ast) extends OptionOperation
+case class OptionTableForall(ast: Ast, alias: Ident, body: Ast) extends OptionOperation
+object OptionNone extends OptionOperation
+case class OptionSome(ast: Ast) extends OptionOperation
+case class OptionApply(ast: Ast) extends OptionOperation
+case class OptionOrNull(ast: Ast) extends OptionOperation
+case class OptionGetOrNull(ast: Ast) extends OptionOperation
 
 sealed trait TraversableOperation extends Ast
 case class MapContains(ast: Ast, body: Ast) extends TraversableOperation

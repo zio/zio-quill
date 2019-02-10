@@ -1,9 +1,7 @@
 package io.getquill.context.sql.norm
 
-import io.getquill.norm.FlattenOptionOperation
-import io.getquill.norm.Normalize
+import io.getquill.norm._
 import io.getquill.ast.Ast
-import io.getquill.norm.RenameProperties
 import io.getquill.util.Messages.trace
 
 object SqlNormalize {
@@ -13,6 +11,8 @@ object SqlNormalize {
       .andThen(trace("original"))
       .andThen(FlattenOptionOperation.apply _)
       .andThen(trace("FlattenOptionOperation"))
+      .andThen(SimplifyNullChecks.apply _)
+      .andThen(trace("SimplifyNullChecks"))
       .andThen(Normalize.apply _)
       .andThen(trace("Normalize"))
       .andThen(RenameProperties.apply _)

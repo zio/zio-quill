@@ -53,6 +53,22 @@ trait StatefulTransformer[T] {
 
   def apply(o: OptionOperation): (OptionOperation, StatefulTransformer[T]) =
     o match {
+      case OptionTableFlatMap(a, b, c) =>
+        val (at, att) = apply(a)
+        val (ct, ctt) = att.apply(c)
+        (OptionTableFlatMap(at, b, ct), ctt)
+      case OptionTableMap(a, b, c) =>
+        val (at, att) = apply(a)
+        val (ct, ctt) = att.apply(c)
+        (OptionTableMap(at, b, ct), ctt)
+      case OptionTableExists(a, b, c) =>
+        val (at, att) = apply(a)
+        val (ct, ctt) = att.apply(c)
+        (OptionTableExists(at, b, ct), ctt)
+      case OptionTableForall(a, b, c) =>
+        val (at, att) = apply(a)
+        val (ct, ctt) = att.apply(c)
+        (OptionTableForall(at, b, ct), ctt)
       case OptionFlatten(a) =>
         val (at, att) = apply(a)
         (OptionFlatten(at), att)
@@ -89,6 +105,19 @@ trait StatefulTransformer[T] {
       case OptionIsDefined(a) =>
         val (at, att) = apply(a)
         (OptionIsDefined(at), att)
+      case OptionSome(a) =>
+        val (at, att) = apply(a)
+        (OptionSome(at), att)
+      case OptionApply(a) =>
+        val (at, att) = apply(a)
+        (OptionApply(at), att)
+      case OptionOrNull(a) =>
+        val (at, att) = apply(a)
+        (OptionOrNull(at), att)
+      case OptionGetOrNull(a) =>
+        val (at, att) = apply(a)
+        (OptionGetOrNull(at), att)
+      case OptionNone => (o, this)
     }
 
   def apply(e: TraversableOperation): (TraversableOperation, StatefulTransformer[T]) =

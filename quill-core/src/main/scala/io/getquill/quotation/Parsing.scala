@@ -7,6 +7,8 @@ import io.getquill.norm.BetaReduction
 import io.getquill.util.Messages.RichContext
 import io.getquill.util.Interleave
 import io.getquill.dsl.CoreDsl
+
+import scala.annotation.tailrec
 import scala.collection.immutable.StringOps
 import scala.reflect.macros.TypecheckException
 
@@ -328,23 +330,95 @@ trait Parsing {
   private def identClean(x: Ident): Ident = x.copy(name = x.name.replace("$", ""))
   private def ident(x: TermName): Ident = identClean(Ident(x.decodedName.toString))
 
+  /**
+   * In order to guarentee consistent behavior across multiple databases, we have begun to explicitly to null-check
+   * nullable columns that are wrapped inside of `Option[T]` whenever a `Option.map`, `Option.flatMap`, `Option.forall`, and
+   * `Option.exists` are used. However, we would like users to be warned that the behavior of improperly structured queries
+   * may change as a result of this modification (see #1302 for more details). This method search the subtree of the
+   * respective Option methods and creates a warning if any `If(_, _, _)` AST elements are found inside. Since these
+   * can be found deeply nested in the AST (e.g. inside of `BinaryOperation` nodes etc...) it is necessary to recursively
+   * traverse into the subtree via a stateful transformer in order to discovery this.
+   */
+  private def warnConditionalsExist(ast: OptionOperation) = {
+    def searchSubtreeAndWarn(subtree: Ast, warning: String) = {
+      val results = CollectAst.byType[If](subtree)
+      if (results.nonEmpty)
+        c.info(warning)
+    }
+
+    val messageSuffix =
+      s"""\nExpressions like Option(if (v == "foo") else "bar").getOrElse("baz") will now work correctly, """ +
+        """but expressions that relied on the broken behavior (where "bar" would be returned instead) need to be modified (see the "orNull / getOrNull" section of the documentation of more detail)."""
+
+    ast match {
+      case OptionMap(_, _, body) =>
+        searchSubtreeAndWarn(body, s"Conditionals inside of Option.map will create a `CASE` statement in order to properly null-check the sub-query: `${ast}`. " + messageSuffix)
+      case OptionFlatMap(_, _, body) =>
+        searchSubtreeAndWarn(body, s"Conditionals inside of Option.flatMap will create a `CASE` statement in order to properly null-check the sub-query: `${ast}`." + messageSuffix)
+      case OptionForall(_, _, body) =>
+        searchSubtreeAndWarn(body, s"Conditionals inside of Option.forall will create a null-check statement in order to properly null-check the sub-query: `${ast}`." + messageSuffix)
+      case OptionExists(_, _, body) =>
+        searchSubtreeAndWarn(body, s"Conditionals inside of Option.exists will create a null-check statement in order to properly null-check the sub-query: `${ast}`." + messageSuffix)
+      case _ =>
+    }
+
+    ast
+  }
+
+  /**
+   * Process scala Option-related DSL into AST constructs.
+   * In Option[T] if T is a row type (typically a product or instance of Embedded)
+   * the it is impossible to physically null check in SQL (e.g. you cannot do
+   * `select p.* from People p where p is not null`). However, when a column (or "leaf-type")
+   * is encountered, doing a null check during operations such as `map` or `flatMap` is necessary
+   * in order for constructs like case statements to work correctly.
+   * <br>For example,
+   * the statement:
+   *
+   * `<pre>query[Person].map(_.name + " S.r.").getOrElse("unknown")</pre>`
+   * needs to become:
+   *
+   * `<pre>select case when p.name is not null then p.name + 'S.r' else 'unknown' end from ...</pre>`
+   * Otherwise it will not function correctly. This latter kind of operation is involves null checking
+   * versus the former (i.e. the table-select example) which cannot, and is therefore called "Unchecked."
+   *
+   * The `isOptionRowType` method checks if the type-parameter of an option is a Product. The isOptionEmbedded
+   * checks if it an embedded object.
+   */
   val optionOperationParser: Parser[OptionOperation] = Parser[OptionOperation] {
+
+    case q"$o.flatMap[$t]({($alias) => $body})" if is[Option[Any]](o) =>
+      if (isOptionRowType(o) || isOptionEmbedded(o))
+        OptionTableFlatMap(astParser(o), identParser(alias), astParser(body))
+      else
+        warnConditionalsExist(OptionFlatMap(astParser(o), identParser(alias), astParser(body)))
+
+    case q"$o.map[$t]({($alias) => $body})" if is[Option[Any]](o) =>
+      if (isOptionRowType(o) || isOptionEmbedded(o))
+        OptionTableMap(astParser(o), identParser(alias), astParser(body))
+      else
+        warnConditionalsExist(OptionMap(astParser(o), identParser(alias), astParser(body)))
+
+    case q"$o.exists({($alias) => $body})" if is[Option[Any]](o) =>
+      if (isOptionRowType(o) || isOptionEmbedded(o))
+        OptionTableExists(astParser(o), identParser(alias), astParser(body))
+      else
+        warnConditionalsExist(OptionExists(astParser(o), identParser(alias), astParser(body)))
+
+    case q"$o.forall({($alias) => $body})" if is[Option[Any]](o) =>
+      if (isOptionEmbedded(o)) {
+        c.fail("Please use Option.exists() instead of Option.forall() with embedded case classes and other row-objects.")
+      } else if (isOptionRowType(o)) {
+        OptionTableForall(astParser(o), identParser(alias), astParser(body))
+      } else {
+        warnConditionalsExist(OptionForall(astParser(o), identParser(alias), astParser(body)))
+      }
+
+    // For column values
     case q"$o.flatten[$t]($implicitBody)" if is[Option[Any]](o) =>
       OptionFlatten(astParser(o))
     case q"$o.getOrElse[$t]($body)" if is[Option[Any]](o) =>
       OptionGetOrElse(astParser(o), astParser(body))
-    case q"$o.flatMap[$t]({($alias) => $body})" if is[Option[Any]](o) =>
-      OptionFlatMap(astParser(o), identParser(alias), astParser(body))
-    case q"$o.map[$t]({($alias) => $body})" if is[Option[Any]](o) =>
-      OptionMap(astParser(o), identParser(alias), astParser(body))
-    case q"$o.forall({($alias) => $body})" if is[Option[Any]](o) =>
-      if (is[Option[Embedded]](o)) {
-        c.fail("Please use Option.exists() instead of Option.forall() with embedded case classes.")
-      } else {
-        OptionForall(astParser(o), identParser(alias), astParser(body))
-      }
-    case q"$o.exists({($alias) => $body})" if is[Option[Any]](o) =>
-      OptionExists(astParser(o), identParser(alias), astParser(body))
     case q"$o.contains[$t]($body)" if is[Option[Any]](o) =>
       OptionContains(astParser(o), astParser(body))
     case q"$o.isEmpty" if is[Option[Any]](o) =>
@@ -353,6 +427,11 @@ trait Parsing {
       OptionNonEmpty(astParser(o))
     case q"$o.isDefined" if is[Option[Any]](o) =>
       OptionIsDefined(astParser(o))
+
+    case q"$o.orNull[$t]($v)" if is[Option[Any]](o) =>
+      OptionOrNull(astParser(o))
+    case q"$prefix.NullableColumnExtensions[$nt]($o).getOrNull" if is[Option[Any]](o) =>
+      OptionGetOrNull(astParser(o))
   }
 
   val traversableOperationParser: Parser[TraversableOperation] = Parser[TraversableOperation] {
@@ -495,10 +574,42 @@ trait Parsing {
   private def is[T](tree: Tree)(implicit t: TypeTag[T]) =
     tree.tpe <:< t.tpe
 
-  private def isCaseClass[T: WeakTypeTag] = {
-    val symbol = c.weakTypeTag[T].tpe.typeSymbol
+  private def isTypeCaseClass(tpe: Type) = {
+    val symbol = tpe.typeSymbol
     symbol.isClass && symbol.asClass.isCaseClass
   }
+
+  private def isTypeTuple(tpe: Type) =
+    tpe.typeSymbol.fullName startsWith "scala.Tuple"
+
+  /**
+   * Recursively traverse an `Option[T]` or `Option[Option[T]]`, or `Option[Option[Option[T]]]` etc...
+   * until we find the `T`
+   */
+  @tailrec
+  private def innerOptionParam(tpe: Type): Type = tpe match {
+    // If it's a ref-type and an Option, pull out the argument
+    case TypeRef(_, cls, List(arg)) if (cls.isClass && cls.asClass.fullName == "scala.Option") =>
+      innerOptionParam(arg)
+    // If it's not a ref-type but an Option, convert to a ref-type and reprocess
+    case _ if (tpe <:< typeOf[Option[Any]]) =>
+      innerOptionParam(tpe.baseType(typeOf[Option[Any]].typeSymbol))
+    // Otherwise we have gotten to the actual type inside the nesting. Check what it is.
+    case other => other
+  }
+
+  private def isOptionEmbedded(tree: Tree) = {
+    val param = innerOptionParam(tree.tpe)
+    param <:< typeOf[Embedded]
+  }
+
+  private def isOptionRowType(tree: Tree) = {
+    val param = innerOptionParam(tree.tpe)
+    isTypeCaseClass(param) || isTypeTuple(param)
+  }
+
+  private def isCaseClass[T: WeakTypeTag] =
+    isTypeCaseClass(c.weakTypeTag[T].tpe)
 
   private def firstConstructorParamList[T: WeakTypeTag] = {
     val tpe = c.weakTypeTag[T].tpe
@@ -510,10 +621,10 @@ trait Parsing {
 
   val valueParser: Parser[Ast] = Parser[Ast] {
     case q"null"                         => NullValue
-    case q"scala.None"                   => NullValue
-    case q"scala.Option.empty[$t]"       => NullValue
-    case q"scala.Some.apply[$t]($v)"     => astParser(v)
-    case q"scala.Option.apply[$t]($v)"   => astParser(v)
+    case q"scala.Some.apply[$t]($v)"     => OptionSome(astParser(v))
+    case q"scala.Option.apply[$t]($v)"   => OptionApply(astParser(v))
+    case q"scala.None"                   => OptionNone
+    case q"scala.Option.empty[$t]"       => OptionNone
     case Literal(c.universe.Constant(v)) => Constant(v)
     case q"((..$v))" if (v.size > 1)     => Tuple(v.map(astParser(_)))
     case q"new $ccTerm(..$v)" if (isCaseClass(c.WeakTypeTag(ccTerm.tpe.erasure))) => {

@@ -735,6 +735,9 @@ only a specific subset. This is mostly due to the inherent limitations of SQL it
 'Optional Tables' section.
 
 ### Optionals / Nullable Fields
+
+> Note that the behavior of Optionals has recently changed to include stricter null-checks. See the [orNull / getOrNull](#ornull--getornull) section for more details.
+
 Option objects are used to encode nullable fields.
 Say you have the following schema:
 ```sql
@@ -812,7 +815,7 @@ typical database behavior of immediately falsifying a statement that has `null` 
 Use this method in boolean conditions that should succeed in the null case.
 ```scala
 val q = quote {
-  query[Person].join(query[Address]).on((p, a)=> a.fk.forall(_ == p.id))
+  query[Person].join(query[Address]).on((p, a) => a.fk.forall(_ == p.id))
 }
 ctx.run(q)
 // SELECT p.id, p.name, a.fk, a.street, a.zip FROM Person p INNER JOIN Address a ON a.fk IS NULL OR a.fk = p.id
@@ -838,7 +841,7 @@ val q = quote {
 }
  
 ctx.run(q)
-// SELECT p.id, 'Dear ' || p.name FROM Person p
+// SELECT p.id, CASE WHEN p.name IS NOT NULL THEN 'Dear ' || p.name ELSE null END FROM Person p
 ```
 
 Additionally, this this method is useful when you want to get a non-optional field out of a outer-joined table
@@ -848,10 +851,13 @@ Additionally, this this method is useful when you want to get a non-optional fie
 val q = quote {
   query[Company].leftJoin(query[Address])
     .on((c, a) => c.zip == a.zip)
-    .map({case(c,a) =>                          // Row type is (Company, Option[Address])
+    .map {case(c,a) =>                          // Row type is (Company, Option[Address])
       (c.name, a.map(_.street), a.map(_.zip))   // Use `Option.map` to get `street` and `zip` fields
-    }) 
+    }
 }
+ 
+run(q)
+// SELECT c.name, a.street, a.zip FROM Company c LEFT JOIN Address a ON c.zip = a.zip
 ```
 
 For more details about this operation (and some caveats), see the 'Optional Tables' section.
@@ -873,7 +879,7 @@ val q = quote {
 }
  
 ctx.run(q) //: List[Option[String]]
-// SELECT (a.name || ' comes after ') || b.name FROM Person a, Person b WHERE a.id > b.id
+// SELECT CASE WHEN a.name IS NOT NULL AND b.name IS NOT NULL THEN (a.name || ' comes after ') || b.name ELSE null END FROM Person a, Person b WHERE a.id > b.id
  
 // Alternatively, you can use `flatten`
 val q = quote {
@@ -887,7 +893,7 @@ val q = quote {
 }
  
 ctx.run(q) //: List[Option[String]]
-// SELECT (a.name || ' comes after ') || b.name FROM Person a, Person b WHERE a.id > b.id
+// SELECT CASE WHEN a.name IS NOT NULL AND b.name IS NOT NULL THEN (a.name || ' comes after ') || b.name ELSE null END FROM Person a, Person b WHERE a.id > b.id
 ``` 
 This is also very useful when selecting from outer-joined tables i.e. where the entire table
 is inside of an `Option` object. Note how below we get the `fk` field from `Option[Address]`.
@@ -895,12 +901,79 @@ is inside of an `Option` object. Note how below we get the `fk` field from `Opti
 ```scala
 val q = quote {
   query[Person].leftJoin(query[Address])
-    .on((p, a)=> a.fk.exists(_ == p.id))
-    .map({case (p /*Person*/, a /*Option[Address]*/) => (p.name, a.flatMap(_.fk))})
+    .on((p, a) => a.fk.exists(_ == p.id))
+    .map {case (p /*Person*/, a /*Option[Address]*/) => (p.name, a.flatMap(_.fk))}
 }
  
 ctx.run(q) //: List[(Option[String], Option[Int])]
-// SELECT p.name, a.fk FROM Person p LEFT JOIN Address a ON a.fk = p.id
+// SELECT p.name, a.fk FROM Person p LEFT JOIN Address a ON a.fk IS NOT NULL AND a.fk = p.id
+```
+
+#### orNull / getOrNull
+
+The `orNull` method can be used to convert an Option-enclosed row back into a regular row.
+Since `Option[T].orNull` does not work for primitive types (e.g. `Int`, `Double`, etc...),
+you can use the `getOrNull` method inside of quoted blocks to do the same thing.
+
+> Note that since the presence of null columns can cause queries to break in some data sources (e.g. Spark), so use this operation very carefully.
+
+```scala
+val q = quote {
+  query[Person].join(query[Address])
+    .on((p, a) => a.fk.exists(_ == p.id))
+    .filter {case (p /*Person*/, a /*Option[Address]*/) => 
+      a.fk.getOrNull != 123 } // Exclude a particular value from the query.
+                              // Since we already did an inner-join on this value, we know it is not null.
+}
+ 
+ctx.run(q) //: List[(Address, Person)]
+// SELECT p.id, p.name, a.fk, a.street, a.zip FROM Person p INNER JOIN Address a ON a.fk IS NOT NULL AND a.fk = p.id WHERE a.fk <> 123
+```
+
+In previous versions of Quill, null values were not explicitly checked and ANSI-null behavior was relied upon
+in order for option-enclosed values to work properly.
+
+```scala
+val q = quote {
+  query[Person].map(p => p.name.map(n => n + " suffix"))
+}
+ 
+ctx.run(q)
+// Used to be this:
+// SELECT p.name || ' suffix' FROM Person p
+// Now is this:
+// SELECT CASE WHEN p.name IS NOT NULL THEN p.name || ' suffix' ELSE null END FROM Person p
+```
+
+If you wish to simulate this previous behavior, you can use a combination of `Option.apply` and `orNull` (or `getOrNull` where needed).
+
+```scala
+val q = quote {
+  query[Person].map(p => Option(p.name.orNull + " suffix"))
+}
+ 
+ctx.run(q)
+// SELECT p.name || ' suffix' FROM Person p 
+// i.e. same as the previous behavior
+```
+
+Due to the aforementioned change, `case.. if` conditionals will now work correctly when used together with `map` and `getOrElse`.
+However, since technically this changes functionality, the following compile-time warning message has been introduced:
+
+> Conditionals inside of Option.[map | flatMap | exists | forall] will create a `CASE` statement in order to properly null-check the sub-query (...)
+
+```
+val q = quote {
+  query[Person].map(p => p.name.map(n => if (n == "Joe") "foo" else "bar").getOrElse("baz"))
+}
+// Information:(16, 15) Conditionals inside of Option.map will create a `CASE` statement in order to properly null-check the sub-query: `p.name.map((n) => if(n == "Joe") "foo" else "bar")`. 
+// Expressions like Option(if (v == "foo") else "bar").getOrElse("baz") will now work correctly, but expressions that relied on the broken behavior (where "bar" would be returned instead) need to be modified  (see the "orNull / getOrNull" section of the documentation of more detail).
+ 
+ctx.run(a)
+// Used to be this:
+// SELECT CASE WHEN CASE WHEN p.name = 'Joe' THEN 'foo' ELSE 'bar' END IS NOT NULL THEN CASE WHEN p.name = 'Joe' THEN 'foo' ELSE 'bar' END ELSE 'baz' END FROM Person p
+// Now is this:
+// SELECT CASE WHEN p.name IS NOT NULL AND CASE WHEN p.name = 'Joe' THEN 'foo' ELSE 'bar' END IS NOT NULL THEN CASE WHEN p.name = 'Joe' THEN 'foo' ELSE 'bar' END ELSE 'baz' END FROM Person p
 ```
 
 #### Optional Tables

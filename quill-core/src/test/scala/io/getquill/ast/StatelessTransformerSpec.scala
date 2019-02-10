@@ -219,10 +219,44 @@ class StatelessTransformerSpec extends Spec {
         Subject(Ident("a") -> Ident("a'"))(ast) mustEqual
           OptionFlatten(Ident("a'"))
       }
+      "Some" in {
+        val ast: Ast = OptionSome(Ident("a"))
+        Subject(Ident("a") -> Ident("a'"))(ast) mustEqual
+          OptionSome(Ident("a'"))
+      }
+      "apply" in {
+        val ast: Ast = OptionApply(Ident("a"))
+        Subject(Ident("a") -> Ident("a'"))(ast) mustEqual
+          OptionApply(Ident("a'"))
+      }
+      "orNull" in {
+        val ast: Ast = OptionOrNull(Ident("a"))
+        Subject(Ident("a") -> Ident("a'"))(ast) mustEqual
+          OptionOrNull(Ident("a'"))
+      }
+      "getOrNull" in {
+        val ast: Ast = OptionGetOrNull(Ident("a"))
+        Subject(Ident("a") -> Ident("a'"))(ast) mustEqual
+          OptionGetOrNull(Ident("a'"))
+      }
+      "None" in {
+        val ast: Ast = OptionNone
+        Subject()(ast) mustEqual ast
+      }
       "getOrElse" in {
         val ast: Ast = OptionGetOrElse(Ident("a"), Ident("b"))
         Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"))(ast) mustEqual
           OptionGetOrElse(Ident("a'"), Ident("b'"))
+      }
+      "flatMap - Unchecked" in {
+        val ast: Ast = OptionTableFlatMap(Ident("a"), Ident("b"), Ident("c"))
+        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) mustEqual
+          OptionTableFlatMap(Ident("a'"), Ident("b"), Ident("c'"))
+      }
+      "map - Unchecked" in {
+        val ast: Ast = OptionTableMap(Ident("a"), Ident("b"), Ident("c"))
+        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) mustEqual
+          OptionTableMap(Ident("a'"), Ident("b"), Ident("c'"))
       }
       "flatMap" in {
         val ast: Ast = OptionFlatMap(Ident("a"), Ident("b"), Ident("c"))
@@ -239,10 +273,20 @@ class StatelessTransformerSpec extends Spec {
         Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) mustEqual
           OptionForall(Ident("a'"), Ident("b"), Ident("c'"))
       }
+      "forall - Unchecked" in {
+        val ast: Ast = OptionTableForall(Ident("a"), Ident("b"), Ident("c"))
+        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) mustEqual
+          OptionTableForall(Ident("a'"), Ident("b"), Ident("c'"))
+      }
       "exists" in {
         val ast: Ast = OptionExists(Ident("a"), Ident("b"), Ident("c"))
         Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) mustEqual
           OptionExists(Ident("a'"), Ident("b"), Ident("c'"))
+      }
+      "exists - Unchecked" in {
+        val ast: Ast = OptionTableExists(Ident("a"), Ident("b"), Ident("c"))
+        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) mustEqual
+          OptionTableExists(Ident("a'"), Ident("b"), Ident("c'"))
       }
       "contains" in {
         val ast: Ast = OptionContains(Ident("a"), Ident("c"))

@@ -28,16 +28,25 @@ trait StatelessTransformer {
 
   def apply(o: OptionOperation): OptionOperation =
     o match {
-      case OptionFlatten(a)       => OptionFlatten(apply(a))
-      case OptionGetOrElse(a, b)  => OptionGetOrElse(apply(a), apply(b))
-      case OptionFlatMap(a, b, c) => OptionFlatMap(apply(a), b, apply(c))
-      case OptionMap(a, b, c)     => OptionMap(apply(a), b, apply(c))
-      case OptionForall(a, b, c)  => OptionForall(apply(a), b, apply(c))
-      case OptionExists(a, b, c)  => OptionExists(apply(a), b, apply(c))
-      case OptionContains(a, b)   => OptionContains(apply(a), apply(b))
-      case OptionIsEmpty(a)       => OptionIsEmpty(apply(a))
-      case OptionNonEmpty(a)      => OptionNonEmpty(apply(a))
-      case OptionIsDefined(a)     => OptionIsDefined(apply(a))
+      case OptionTableFlatMap(a, b, c) => OptionTableFlatMap(apply(a), b, apply(c))
+      case OptionTableMap(a, b, c)     => OptionTableMap(apply(a), b, apply(c))
+      case OptionTableExists(a, b, c)  => OptionTableExists(apply(a), b, apply(c))
+      case OptionTableForall(a, b, c)  => OptionTableForall(apply(a), b, apply(c))
+      case OptionFlatten(a)            => OptionFlatten(apply(a))
+      case OptionGetOrElse(a, b)       => OptionGetOrElse(apply(a), apply(b))
+      case OptionFlatMap(a, b, c)      => OptionFlatMap(apply(a), b, apply(c))
+      case OptionMap(a, b, c)          => OptionMap(apply(a), b, apply(c))
+      case OptionForall(a, b, c)       => OptionForall(apply(a), b, apply(c))
+      case OptionExists(a, b, c)       => OptionExists(apply(a), b, apply(c))
+      case OptionContains(a, b)        => OptionContains(apply(a), apply(b))
+      case OptionIsEmpty(a)            => OptionIsEmpty(apply(a))
+      case OptionNonEmpty(a)           => OptionNonEmpty(apply(a))
+      case OptionIsDefined(a)          => OptionIsDefined(apply(a))
+      case OptionSome(a)               => OptionSome(apply(a))
+      case OptionApply(a)              => OptionApply(apply(a))
+      case OptionOrNull(a)             => OptionOrNull(apply(a))
+      case OptionGetOrNull(a)          => OptionGetOrNull(apply(a))
+      case OptionNone                  => OptionNone
     }
 
   def apply(o: TraversableOperation): TraversableOperation =

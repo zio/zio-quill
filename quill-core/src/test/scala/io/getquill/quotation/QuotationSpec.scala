@@ -396,22 +396,6 @@ class QuotationSpec extends Spec {
         val q = quote("s" != null)
         quote(unquote(q)).ast.b mustEqual NullValue
       }
-      "None" in {
-        val q = quote(None)
-        quote(unquote(q)).ast mustEqual NullValue
-      }
-      "Option.empty" in {
-        val q = quote(Option.empty[String])
-        quote(unquote(q)).ast mustEqual NullValue
-      }
-      "Option.apply" in {
-        val q = quote(Option.apply("a"))
-        quote(unquote(q)).ast mustEqual Constant("a")
-      }
-      "Some" in {
-        val q = quote(Some("a"))
-        quote(unquote(q)).ast mustEqual Constant("a")
-      }
       "constant" in {
         val q = quote(11L)
         quote(unquote(q)).ast mustEqual Constant(11L)
@@ -824,17 +808,37 @@ class QuotationSpec extends Spec {
       }
     }
     "option operation" - {
-      "map" in {
-        val q = quote {
-          (o: Option[Int]) => o.map(v => v)
+      import io.getquill.ast.Implicits._
+
+      case class Row(id: Int, value: String)
+
+      "map" - {
+        "simple" in {
+          val q = quote {
+            (o: Option[Int]) => o.map(v => v)
+          }
+          quote(unquote(q)).ast.body mustEqual OptionMap(Ident("o"), Ident("v"), Ident("v"))
         }
-        quote(unquote(q)).ast.body mustEqual OptionMap(Ident("o"), Ident("v"), Ident("v"))
+        "unchecked" in {
+          val q = quote {
+            (o: Option[Row]) => o.map(v => v)
+          }
+          quote(unquote(q)).ast.body mustEqual OptionTableMap(Ident("o"), Ident("v"), Ident("v"))
+        }
       }
-      "flatMap" in {
-        val q = quote {
-          (o: Option[Int]) => o.flatMap(v => Option(v))
+      "flatMap" - {
+        "simple" in {
+          val q = quote {
+            (o: Option[Int]) => o.flatMap(v => Option(v))
+          }
+          quote(unquote(q)).ast.body mustEqual OptionFlatMap(Ident("o"), Ident("v"), OptionApply(Ident("v")))
         }
-        quote(unquote(q)).ast.body mustEqual OptionFlatMap(Ident("o"), Ident("v"), Ident("v"))
+        "unchecked" in {
+          val q = quote {
+            (o: Option[Row]) => o.flatMap(v => Option(v))
+          }
+          quote(unquote(q)).ast.body mustEqual OptionTableFlatMap(Ident("o"), Ident("v"), OptionApply(Ident("v")))
+        }
       }
       "getOrElse" in {
         val q = quote {
@@ -858,6 +862,34 @@ class QuotationSpec extends Spec {
         }
         quote(unquote(q)).ast.body mustEqual OptionFlatten(Ident("o"))
       }
+      "Some" in {
+        val q = quote {
+          (i: Int) => Some(i)
+        }
+        quote(unquote(q)).ast.body mustEqual OptionSome(Ident("i"))
+      }
+      "apply" in {
+        val q = quote {
+          (i: Int) => Option(i)
+        }
+        quote(unquote(q)).ast.body mustEqual OptionApply(Ident("i"))
+      }
+      "orNull" in {
+        val q = quote {
+          (o: Option[String]) => o.orNull
+        }
+        quote(unquote(q)).ast.body mustEqual OptionOrNull(Ident("o"))
+      }
+      "getOrNull" in {
+        val q = quote {
+          (o: Option[Int]) => o.getOrNull
+        }
+        quote(unquote(q)).ast.body mustEqual OptionGetOrNull(Ident("o"))
+      }
+      "None" in {
+        val q = quote(None)
+        quote(unquote(q)).ast mustEqual OptionNone
+      }
       "forall" - {
         "simple" in {
           val q = quote {
@@ -877,13 +909,20 @@ class QuotationSpec extends Spec {
           }
           quote(unquote(q)).ast.body mustEqual OptionExists(Ident("o"), Ident("v"), Ident("v"))
         }
+        "unchecked" in {
+          val q = quote {
+            (o: Option[Row]) => o.exists(v => v.id == 4)
+          }
+          quote(unquote(q)).ast.body mustEqual OptionTableExists(Ident("o"), Ident("v"),
+            Property(Ident("v"), "id") +==+ Constant(4))
+        }
         "embedded" in {
           case class EmbeddedEntity(id: Int) extends Embedded
           val q = quote {
             (o: Option[EmbeddedEntity]) => o.exists(v => v.id == 1)
           }
-          quote(unquote(q)).ast.body mustEqual OptionExists(Ident("o"), Ident("v"),
-            BinaryOperation(Property(Ident("v"), "id"), EqualityOperator.`==`, Constant(1)))
+          quote(unquote(q)).ast.body mustEqual OptionTableExists(Ident("o"), Ident("v"),
+            Property(Ident("v"), "id") +==+ Constant(1))
         }
       }
       "contains" in {

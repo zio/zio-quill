@@ -13,7 +13,7 @@ class JoinSpec extends Spec {
         .filter(_._2.map(_.i).forall(_ == 1))
     }
     testContext.run(q).string mustEqual
-      "SELECT a.s, a.i, a.l, a.o, b.s, b.i, b.l, b.o FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i WHERE b.i IS NULL OR b.i = 1"
+      "SELECT a.s, a.i, a.l, a.o, b.s, b.i, b.l, b.o FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i WHERE b.i IS NULL OR b.i IS NOT NULL AND b.i = 1"
   }
 
   "join + map + filter" in {
@@ -24,7 +24,7 @@ class JoinSpec extends Spec {
         .filter(_._2.forall(_ == 1))
     }
     testContext.run(q).string mustEqual
-      "SELECT a.i, b.i FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i WHERE b.i IS NULL OR b.i = 1"
+      "SELECT a.i, b.i FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i WHERE b.i IS NULL OR b.i IS NOT NULL AND b.i = 1"
   }
 
   "join + filter + leftjoin" in {
