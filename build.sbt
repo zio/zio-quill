@@ -79,7 +79,7 @@ lazy val `quill-jdbc` =
         "com.h2database"          % "h2"                   % "1.4.197"            % Test,
         "org.postgresql"          % "postgresql"           % "42.2.5"             % Test,
         "org.xerial"              % "sqlite-jdbc"          % "3.25.2"             % Test,
-        "com.microsoft.sqlserver" % "mssql-jdbc"           % "7.1.1.jre8-preview" % Test
+        "com.microsoft.sqlserver" % "mssql-jdbc"           % "7.1.4.jre11-preview" % Test
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -111,7 +111,7 @@ lazy val `quill-jdbc-monix` =
         "com.h2database"          % "h2"                   % "1.4.197"            % Test,
         "org.postgresql"          % "postgresql"           % "42.2.5"             % Test,
         "org.xerial"              % "sqlite-jdbc"          % "3.25.2"             % Test,
-        "com.microsoft.sqlserver" % "mssql-jdbc"           % "7.1.1.jre8-preview" % Test,
+        "com.microsoft.sqlserver" % "mssql-jdbc"           % "7.1.4.jre11-preview" % Test,
         "org.mockito"             %% "mockito-scala"       % "1.1.2"              % Test
       ),
       testGrouping in Test := {
