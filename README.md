@@ -2006,6 +2006,8 @@ case class MyDao(c: MyContext, schema: MySchema) {
 }
 ```
 
+### Context Traits
+
 One alternative to work with this kind of context import is use traits with abstract context values:
 
 ```scala
@@ -2028,6 +2030,52 @@ case class MyDao(c: MyContext) extends MySchema {
     c.run(people)
 }
 ```
+
+### Extended Contexts
+
+Another simple way to extend contexts is by extending `Context` as a self-type and using mixins. Using this strategy,
+it is possible to create functionality that is fully portable across databases and even types of databases
+(e.g. creating common queries for both Postgres and Spark).
+
+For example, take the following abstract context:
+
+```
+import io.getquill.idiom.Idiom
+import io.getquill.context.Context
+
+trait MultiDbContext[I <: Idiom, N <: NamingStrategy] { this: Context[I, N] =>
+  def peopleOlderThan = quote {
+    (age:Int, q:Query[Person]) => q.filter(p => p.age > age)
+  }
+}
+```
+
+Let's see how this can be used across different kinds of databases and contexts:
+
+```
+// Using it in a mirror context:
+def usingMirrorContext = {
+  // In some cases need to explicitly specify [MirrorSqlDialect, Literal].
+  val ctx = new SqlMirrorContext[MirrorSqlDialect, Literal](MirrorSqlDialect, Literal) with MultiDbContext[MirrorSqlDialect, Literal] 
+  import ctx._ 
+  println( run(peopleOlderThan(22, query[Person])).string )
+}
+ 
+// Using it with a Postgres database:
+def usingPostgresContext = { 
+  val ctx = new PostgresJdbcContext[Literal](Literal, ds) with MultiDbContext[PostgresDialect, Literal] 
+  import ctx._ 
+  val results = run(peopleOlderThan(22, query[Person]))
+}
+ 
+// Using it with Spark:
+object CustomQuillSparkContext extends QuillSparkContext with MultiDbContext[SparkDialect, Literal]
+ 
+def usingSparkContext = { 
+  val results = run(peopleOlderThan(22, liftQuery(dataset)))
+}
+```
+
 
 ## Spark Context
 
