@@ -1,19 +1,20 @@
 package io.getquill
 
 import com.typesafe.config.Config
-import io.getquill.util.{ ContextLogger, LoadConfig }
-import io.getquill.context.cassandra.CassandraSessionContext
+import io.getquill.util.{ContextLogger, LoadConfig}
+import io.getquill.context.cassandra.{CassandraContextEffect, CassandraSessionContext}
+
 import scala.collection.JavaConverters._
 import com.datastax.driver.core.Cluster
 import io.getquill.monad.SyncIOMonad
 
 class CassandraSyncContext[N <: NamingStrategy](
-  naming:                     N,
-  cluster:                    Cluster,
-  keyspace:                   String,
-  preparedStatementCacheSize: Long
+  val naming:                     N,
+  val cluster:                    Cluster,
+  val keyspace:                   String,
+  val preparedStatementCacheSize: Long
 )
-  extends CassandraSessionContext[N](naming, cluster, keyspace, preparedStatementCacheSize)
+  extends CassandraSessionContext[N]
   with SyncIOMonad {
 
   def this(naming: N, config: CassandraContextConfig) = this(naming, config.cluster, config.keyspace, config.preparedStatementCacheSize)
@@ -27,6 +28,20 @@ class CassandraSyncContext[N <: NamingStrategy](
   override type RunQuerySingleResult[T] = T
   override type RunActionResult = Unit
   override type RunBatchActionResult = Unit
+  override type Completed = Unit
+  override type RunContext = Unit
+
+  override def complete: Unit = ()
+
+  // TODO Not using this, as a dummy for now. Maybe will to use a sync context
+  override protected val effect = new CassandraContextEffect[Result, RunContext] {
+    override val executionContext: RunContext = ()
+    override def withContextActions: WithContextActions = ???
+    override def wrap[T](t: => T): T = ???
+    override def push[A, B](result: A)(f: A => B): B = ???
+    override def flatPush[A, B](result: A)(f: A => B): B = ???
+    override def seq[A, B](f: List[A]): List[A] = ???
+  }
 
   override def performIO[T](io: IO[T, _], transactional: Boolean = false): Result[T] = {
     if (transactional) logger.underlying.warn("Cassandra doesn't support transactions, ignoring `io.transactional`")
