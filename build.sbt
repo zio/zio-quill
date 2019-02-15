@@ -112,7 +112,7 @@ lazy val `quill-jdbc-monix` =
         "org.postgresql"          % "postgresql"           % "42.2.5"             % Test,
         "org.xerial"              % "sqlite-jdbc"          % "3.25.2"             % Test,
         "com.microsoft.sqlserver" % "mssql-jdbc"           % "7.1.1.jre8-preview" % Test,
-        "org.mockito"             %% "mockito-scala"       % "1.1.2"              % Test
+        "org.mockito"             %% "mockito-scala"       % "1.1.3"              % Test
       ),
       testGrouping in Test := {
         (definedTests in Test).value map { test =>
@@ -230,7 +230,7 @@ lazy val `quill-orientdb` =
       .settings(
         fork in Test := true,
         libraryDependencies ++= Seq(
-          "com.orientechnologies" % "orientdb-graphdb" % "3.0.14"
+          "com.orientechnologies" % "orientdb-graphdb" % "3.0.15"
         )
       )
       .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")

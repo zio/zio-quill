@@ -178,10 +178,10 @@ trait DynamicQueryDsl {
     def take(n: Quoted[Int]): DynamicQuery[T] =
       dyn(Take(q.ast, n.ast))
 
-    def take(n: Int)(implicit enc: Encoder[Int]): DynamicQuery[T] =
+    def take(n: Int): DynamicQuery[T] =
       take(spliceLift(n))
 
-    def takeOpt(opt: Option[Int])(implicit enc: Encoder[Int]): DynamicQuery[T] =
+    def takeOpt(opt: Option[Int]): DynamicQuery[T] =
       opt match {
         case Some(o) => take(o)
         case None    => this
@@ -190,10 +190,10 @@ trait DynamicQueryDsl {
     def drop(n: Quoted[Int]): DynamicQuery[T] =
       dyn(Drop(q.ast, n.ast))
 
-    def drop(n: Int)(implicit enc: Encoder[Int]): DynamicQuery[T] =
+    def drop(n: Int): DynamicQuery[T] =
       drop(spliceLift(n))
 
-    def dropOpt(opt: Option[Int])(implicit enc: Encoder[Int]): DynamicQuery[T] =
+    def dropOpt(opt: Option[Int]): DynamicQuery[T] =
       opt match {
         case Some(o) => drop(o)
         case None    => this
