@@ -112,7 +112,7 @@ lazy val `quill-jdbc-monix` =
         "org.postgresql"          % "postgresql"           % "42.2.5"             % Test,
         "org.xerial"              % "sqlite-jdbc"          % "3.25.2"             % Test,
         "com.microsoft.sqlserver" % "mssql-jdbc"           % "7.1.1.jre8-preview" % Test,
-        "org.mockito"             %% "mockito-scala"       % "1.1.3"              % Test
+        "org.mockito"             %% "mockito-scala"       % "1.1.4"              % Test
       ),
       testGrouping in Test := {
         (definedTests in Test).value map { test =>
