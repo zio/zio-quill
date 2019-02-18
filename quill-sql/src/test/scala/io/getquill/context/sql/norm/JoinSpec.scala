@@ -13,7 +13,17 @@ class JoinSpec extends Spec {
         .filter(_._2.map(_.i).forall(_ == 1))
     }
     testContext.run(q).string mustEqual
-      "SELECT a.s, a.i, a.l, a.o, b.s, b.i, b.l, b.o FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i WHERE b.i IS NULL OR b.i IS NOT NULL AND b.i = 1"
+      "SELECT a.s, a.i, a.l, a.o, b.s, b.i, b.l, b.o FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i WHERE b.i IS NULL OR b.i = 1"
+  }
+
+  "join + filter with null-check" in {
+    val q = quote {
+      qr1.leftJoin(qr2)
+        .on((a, b) => a.i == b.i)
+        .filter(_._2.map(_.i).forall(b => if (b == 1) true else false))
+    }
+    testContext.run(q).string mustEqual
+      "SELECT a.s, a.i, a.l, a.o, b.s, b.i, b.l, b.o FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i WHERE b.i IS NULL OR b.i IS NOT NULL AND CASE WHEN b.i = 1 THEN true ELSE false END"
   }
 
   "join + map + filter" in {
@@ -24,7 +34,18 @@ class JoinSpec extends Spec {
         .filter(_._2.forall(_ == 1))
     }
     testContext.run(q).string mustEqual
-      "SELECT a.i, b.i FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i WHERE b.i IS NULL OR b.i IS NOT NULL AND b.i = 1"
+      "SELECT a.i, b.i FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i WHERE b.i IS NULL OR b.i = 1"
+  }
+
+  "join + map + filter with null-check" in {
+    val q = quote {
+      qr1.leftJoin(qr2)
+        .on((a, b) => a.i == b.i)
+        .map(t => (t._1.i, t._2.map(_.i)))
+        .filter(_._2.forall(b => if (b == 1) true else false))
+    }
+    testContext.run(q).string mustEqual
+      "SELECT a.i, b.i FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i WHERE b.i IS NULL OR b.i IS NOT NULL AND CASE WHEN b.i = 1 THEN true ELSE false END"
   }
 
   "join + filter + leftjoin" in {
