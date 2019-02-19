@@ -2227,7 +2227,7 @@ The body of `transaction` can contain calls to other methods and multiple `run` 
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "mysql" % "mysql-connector-java" % "5.1.38",
+  "mysql" % "mysql-connector-java" % "8.0.15",
   "io.getquill" %% "quill-jdbc" % "3.0.2-SNAPSHOT"
 )
 ```
@@ -2239,7 +2239,7 @@ lazy val ctx = new MysqlJdbcContext(SnakeCase, "ctx")
 
 #### application.properties
 ```
-ctx.dataSourceClassName=com.mysql.jdbc.jdbc2.optional.MysqlDataSource
+ctx.dataSourceClassName=com.mysql.cj.jdbc.MysqlDataSource
 ctx.dataSource.url=jdbc:mysql://host/database
 ctx.dataSource.user=root
 ctx.dataSource.password=root
@@ -2422,7 +2422,7 @@ lazy val ctx = new MysqlMonixJdbcContext(SnakeCase, "ctx", Runner.using(Schedule
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "mysql" % "mysql-connector-java" % "5.1.38",
+  "mysql" % "mysql-connector-java" % "8.0.15",
   "io.getquill" %% "quill-jdbc-monix" % "3.0.2-SNAPSHOT"
 )
 ```
@@ -2434,7 +2434,7 @@ lazy val ctx = new MysqlMonixJdbcContext(SnakeCase, "ctx", Runner.default)
 
 #### application.properties
 ```
-ctx.dataSourceClassName=com.mysql.jdbc.jdbc2.optional.MysqlDataSource
+ctx.dataSourceClassName=com.mysql.cj.jdbc.MysqlDataSource
 ctx.dataSource.url=jdbc:mysql://host/database
 ctx.dataSource.user=root
 ctx.dataSource.password=root
