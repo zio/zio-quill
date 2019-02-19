@@ -1,8 +1,8 @@
 package io.getquill
 
 import com.datastax.driver.core.Cluster
-import io.getquill.context.cassandra.cluster.ClusterBuilder
 import com.typesafe.config.Config
+import io.getquill.context.cassandra.cluster.ClusterBuilder
 
 case class CassandraContextConfig(config: Config) {
   def preparedStatementCacheSize: Long =

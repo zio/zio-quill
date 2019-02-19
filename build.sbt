@@ -9,9 +9,9 @@ enablePlugins(TutPlugin)
 
 lazy val modules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-core-jvm`, `quill-core-js`, `quill-monix`, `quill-sql-jvm`, `quill-sql-js`,
-  `quill-jdbc`, `quill-jdbc-monix`, `quill-finagle-mysql`, `quill-finagle-postgres`, `quill-async`,
-  `quill-async-mysql`, `quill-async-postgres`, `quill-cassandra`, `quill-cassandra-monix`, `quill-orientdb`,
-  `quill-spark`
+  `quill-jdbc`, `quill-jdbc-monix`, `quill-finagle-mysql`, `quill-finagle-postgres`, 
+  `quill-async`, `quill-async-mysql`, `quill-async-postgres`, `quill-cassandra`,
+  `quill-cassandra-lagom`, `quill-cassandra-monix`, `quill-orientdb`, `quill-spark`
 )
 
 lazy val `quill` =
@@ -218,10 +218,27 @@ lazy val `quill-cassandra-monix` =
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .settings(
-      fork in Test := true,
+      fork in Test := true
     )
     .dependsOn(`quill-cassandra` % "compile->compile;test->test")
     .dependsOn(`quill-monix` % "compile->compile;test->test")
+
+lazy val `quill-cassandra-lagom` =
+   (project in file("quill-cassandra-lagom"))
+    .settings(commonSettings: _*)
+    .settings(mimaSettings: _*)
+    .settings(
+      fork in Test := true,
+      libraryDependencies ++= {
+        val lagomVersion = "1.5.0-RC1"
+        Seq(
+          "com.lightbend.lagom" %% "lagom-scaladsl-persistence-cassandra" % lagomVersion % Provided,
+          "com.lightbend.lagom" %% "lagom-scaladsl-testkit" % lagomVersion % Test
+        )
+      }
+    )
+    .dependsOn(`quill-cassandra` % "compile->compile;test->test")
+
 
 lazy val `quill-orientdb` =
   (project in file("quill-orientdb"))

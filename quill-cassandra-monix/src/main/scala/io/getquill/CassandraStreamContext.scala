@@ -2,11 +2,11 @@ package io.getquill
 
 import com.datastax.driver.core.{ Cluster, ResultSet, Row }
 import com.typesafe.config.Config
-import io.getquill.context.cassandra.CassandraSessionContext
-import io.getquill.context.cassandra.util.FutureConversions.toScalaFuture
+import io.getquill.context.cassandra.util.FutureConversions._
 import io.getquill.util.{ ContextLogger, LoadConfig }
 import monix.eval.Task
 import monix.execution.Scheduler
+import monix.execution.Scheduler.Implicits
 import monix.reactive.Observable
 
 import scala.collection.JavaConverters._
@@ -18,7 +18,7 @@ class CassandraStreamContext[N <: NamingStrategy](
   keyspace:                   String,
   preparedStatementCacheSize: Long
 )
-  extends CassandraSessionContext[N](naming, cluster, keyspace, preparedStatementCacheSize) {
+  extends CassandraClusterSessionContext[N](naming, cluster, keyspace, preparedStatementCacheSize) {
 
   def this(naming: N, config: CassandraContextConfig) = this(naming, config.cluster, config.keyspace, config.preparedStatementCacheSize)
   def this(naming: N, config: Config) = this(naming, CassandraContextConfig(config))
@@ -39,14 +39,14 @@ class CassandraStreamContext[N <: NamingStrategy](
     if (rs.isFullyFetched)
       Task.now(page)
     else
-      Task.fromFuture(rs.fetchMoreResults()).map(_ => page)
+      Task.fromFuture(rs.fetchMoreResults().asScala(Implicits.global)).map(_ => page)
   }
 
   def executeQuery[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): Observable[T] = {
 
     Observable
       .fromTask(prepareRowAndLog(cql, prepare))
-      .mapEvalF(p => toScalaFuture(session.executeAsync(p)))
+      .mapEvalF(p => session.executeAsync(p).asScala(Implicits.global))
       .flatMap(Observable.fromAsyncStateAction((rs: ResultSet) => page(rs).map((_, rs)))(_))
       .takeWhile(_.nonEmpty)
       .flatMap(Observable.fromIterable)
@@ -59,7 +59,7 @@ class CassandraStreamContext[N <: NamingStrategy](
   def executeAction[T](cql: String, prepare: Prepare = identityPrepare): Observable[Unit] = {
     Observable
       .fromTask(prepareRowAndLog(cql, prepare))
-      .mapEvalF(p => toScalaFuture(session.executeAsync(p)))
+      .mapEvalF(p => session.executeAsync(p).asScala(Implicits.global))
       .map(_ => ())
   }
 

@@ -1,11 +1,11 @@
 package io.getquill
 
-import com.typesafe.config.Config
-import io.getquill.util.{ ContextLogger, LoadConfig }
-import io.getquill.context.cassandra.CassandraSessionContext
-import scala.collection.JavaConverters._
 import com.datastax.driver.core.Cluster
+import com.typesafe.config.Config
 import io.getquill.monad.SyncIOMonad
+import io.getquill.util.{ ContextLogger, LoadConfig }
+
+import scala.collection.JavaConverters._
 
 class CassandraSyncContext[N <: NamingStrategy](
   naming:                     N,
@@ -13,7 +13,7 @@ class CassandraSyncContext[N <: NamingStrategy](
   keyspace:                   String,
   preparedStatementCacheSize: Long
 )
-  extends CassandraSessionContext[N](naming, cluster, keyspace, preparedStatementCacheSize)
+  extends CassandraClusterSessionContext[N](naming, cluster, keyspace, preparedStatementCacheSize)
   with SyncIOMonad {
 
   def this(naming: N, config: CassandraContextConfig) = this(naming, config.cluster, config.keyspace, config.preparedStatementCacheSize)

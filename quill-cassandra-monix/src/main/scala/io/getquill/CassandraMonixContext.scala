@@ -2,10 +2,10 @@ package io.getquill
 
 import com.datastax.driver.core.{ Cluster, ResultSet, Row }
 import com.typesafe.config.Config
-import io.getquill.context.cassandra.util.FutureConversions.toScalaFuture
-import io.getquill.context.cassandra.{ CassandraSessionContext, CqlIdiom }
+import io.getquill.context.cassandra.CqlIdiom
 import io.getquill.context.monix.{ MonixContext, Runner }
 import io.getquill.util.{ ContextLogger, LoadConfig }
+import io.getquill.context.cassandra.util.FutureConversions._
 import monix.eval.Task
 import monix.execution.Scheduler
 import monix.reactive.Observable
@@ -19,7 +19,7 @@ class CassandraMonixContext[N <: NamingStrategy](
   keyspace:                   String,
   preparedStatementCacheSize: Long
 )
-  extends CassandraSessionContext[N](naming, cluster, keyspace, preparedStatementCacheSize)
+  extends CassandraClusterSessionContext[N](naming, cluster, keyspace, preparedStatementCacheSize)
   with MonixContext[CqlIdiom, N] {
 
   // not using this here
@@ -46,14 +46,14 @@ class CassandraMonixContext[N <: NamingStrategy](
     if (rs.isFullyFetched)
       Task.now(page)
     else
-      Task.fromFuture(rs.fetchMoreResults()).map(_ => page)
+      Task.fromFuture(rs.fetchMoreResults().asScalaWithDefaultGlobal).map(_ => page)
   }
 
   def streamQuery[T](fetchSize: Option[Int], cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): Observable[T] = {
 
     Observable
       .fromTask(prepareRowAndLog(cql, prepare))
-      .mapEvalF(p => toScalaFuture(session.executeAsync(p)))
+      .mapEvalF(p => session.executeAsync(p).asScalaWithDefaultGlobal)
       .flatMap(Observable.fromAsyncStateAction((rs: ResultSet) => page(rs).map((_, rs)))(_))
       .takeWhile(_.nonEmpty)
       .flatMap(Observable.fromIterable)
@@ -70,7 +70,7 @@ class CassandraMonixContext[N <: NamingStrategy](
 
   def executeAction[T](cql: String, prepare: Prepare = identityPrepare): Task[Unit] = {
     prepareRowAndLog(cql, prepare)
-      .flatMap(r => Task.fromFuture(session.executeAsync(r)))
+      .flatMap(r => Task.fromFuture(session.executeAsync(r).asScalaWithDefaultGlobal))
       .map(_ => ())
   }
 
