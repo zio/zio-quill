@@ -31,16 +31,29 @@ class SqlQuerySpec extends Spec {
         "SELECT a.s, a.i, a.l, a.o, b.s, b.i, b.l, b.o FROM TestEntity a LEFT JOIN TestEntity2 b ON a.s IS NOT NULL AND b.i > a.i"
     }
 
-    "join + map + filter" in {
-      val q = quote {
-        qr1
-          .leftJoin(qr2)
-          .on((a, b) => a.i == b.i)
-          .map(t => (t._1.i, t._2.map(_.i)))
-          .filter(_._2.forall(_ == 1))
+    "join + map + filter" - {
+      "regular" in {
+        val q = quote {
+          qr1
+            .leftJoin(qr2)
+            .on((a, b) => a.i == b.i)
+            .map(t => (t._1.i, t._2.map(_.i)))
+            .filter(_._2.forall(_ == 1))
+        }
+        testContext.run(q).string mustEqual
+          "SELECT a.i, b.i FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i WHERE b.i IS NULL OR b.i = 1"
       }
-      testContext.run(q).string mustEqual
-        "SELECT a.i, b.i FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i WHERE b.i IS NULL OR b.i IS NOT NULL AND b.i = 1"
+      "null-checked" in {
+        val q = quote {
+          qr1
+            .leftJoin(qr2)
+            .on((a, b) => a.i == b.i)
+            .map(t => (t._1.i, t._2.map(_.s)))
+            .filter(_._2.forall(v => if (v == "value") true else false))
+        }
+        testContext.run(q).string mustEqual
+          "SELECT a.i, b.s FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i WHERE b.s IS NULL OR b.s IS NOT NULL AND CASE WHEN b.s = 'value' THEN true ELSE false END"
+      }
     }
 
     "nested join" in {
@@ -557,12 +570,20 @@ class SqlQuerySpec extends Spec {
           "SELECT CASE WHEN a.o IS NOT NULL THEN a.o ELSE 'alternative' END FROM Entity e LEFT JOIN EntityA a ON e.fk = a.id"
       }
 
-      "getOrElse should produce null check" in {
+      "getOrElse should not produce null check for integer" in {
         val q = quote {
           e.map(em => em.io.map(_ + 1).getOrElse(2))
         }
         testContext.run(q).string mustEqual
-          "SELECT CASE WHEN em.io IS NOT NULL AND (em.io + 1) IS NOT NULL THEN em.io + 1 ELSE 2 END FROM Entity em"
+          "SELECT CASE WHEN (em.io + 1) IS NOT NULL THEN em.io + 1 ELSE 2 END FROM Entity em"
+      }
+
+      "getOrElse should not produce null check for conditional" in {
+        val q = quote {
+          e.map(em => em.o.map(v => if (v == "value") "foo" else "bar").getOrElse("baz"))
+        }
+        testContext.run(q).string mustEqual
+          "SELECT CASE WHEN em.o IS NOT NULL AND CASE WHEN em.o = 'value' THEN 'foo' ELSE 'bar' END IS NOT NULL THEN CASE WHEN em.o = 'value' THEN 'foo' ELSE 'bar' END ELSE 'baz' END FROM Entity em"
       }
     }
 

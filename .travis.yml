@@ -11,7 +11,7 @@ services:
 addons:
   postgresql: "9.6"
 script:
-  - ./build/build.sh
+  -        ./build/build.sh
 branches:
   except:
     - release

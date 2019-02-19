@@ -5,11 +5,15 @@ import io.getquill.context.sql._
 import io.getquill.context.sql.idiom._
 import io.getquill.idiom.StatementInterpolator._
 import io.getquill.idiom.{ Statement, StringToken, Token }
+import io.getquill.norm.ConcatBehavior
+import io.getquill.norm.ConcatBehavior.NonAnsiConcat
 
 trait OracleDialect
   extends SqlIdiom
   with QuestionMarkBindVariables
   with ConcatSupport {
+
+  override def concatBehavior: ConcatBehavior = NonAnsiConcat
 
   override def emptySetContainsToken(field: Token) = StringToken("1 <> 1")
 

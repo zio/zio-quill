@@ -11,13 +11,17 @@ import io.getquill.NamingStrategy
 import io.getquill.util.Interleave
 import io.getquill.util.Messages.{ fail, trace }
 import io.getquill.idiom.Token
+import io.getquill.norm.ConcatBehavior
+import io.getquill.norm.ConcatBehavior.AnsiConcat
 
 trait SqlIdiom extends Idiom {
 
   override def prepareForProbing(string: String): String
 
+  protected def concatBehavior: ConcatBehavior = AnsiConcat
+
   override def translate(ast: Ast)(implicit naming: NamingStrategy) = {
-    val normalizedAst = SqlNormalize(ast)
+    val normalizedAst = SqlNormalize(ast, concatBehavior)
 
     implicit val tokernizer = defaultTokenizer
 
