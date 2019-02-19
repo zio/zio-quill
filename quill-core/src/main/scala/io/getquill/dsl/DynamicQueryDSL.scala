@@ -84,7 +84,7 @@ trait DynamicQueryDsl {
     }
 
   def set[T, U](property: String, value: Quoted[U]): DynamicSet[T, U] =
-    set((f: Quoted[T]) => splice(Constant(property)), value)
+    set((f: Quoted[T]) => splice(Property(f.ast, property)), value)
 
   def setValue[T, U](property: String, value: U)(implicit enc: Encoder[U]): DynamicSet[T, U] =
     set(property, spliceLift(value))

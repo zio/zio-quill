@@ -550,8 +550,10 @@ class DynamicQuerySpec extends Spec {
         )
       }
       "string column name" in {
-        val d = dynamicQuery[TestEntity].insert(set("ii", 1), set("ll", 2L))
-        testContext.run(d).string mustEqual """querySchema("TestEntity").insert(v => "ii" -> 1, v => "ll" -> 2)"""
+        test(
+          dynamicQuery[TestEntity].insert(set("i", 1), set("l", 2L)),
+          query[TestEntity].insert(v => v.i -> 1, v => v.l -> 2L)
+        )
       }
       "returning" in {
         test(
@@ -589,8 +591,10 @@ class DynamicQuerySpec extends Spec {
         )
       }
       "string column name" in {
-        val d = dynamicQuery[TestEntity].update(set("ii", 1), set("ll", 2L))
-        testContext.run(d).string mustEqual """querySchema("TestEntity").update(v => "ii" -> 1, v => "ll" -> 2)"""
+        test(
+          dynamicQuery[TestEntity].update(set("i", 1), set("l", 2L)),
+          query[TestEntity].update(v => v.i -> 1, v => v.l -> 2L)
+        )
       }
     }
 
