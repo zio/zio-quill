@@ -646,7 +646,7 @@ val q = quote {
  
 ctx.run(q) //: List[(Person, Address)]
 // SELECT p.id, p.name, a.street, a.zip, a.fk
-// FROM Person p LEFT JOIN Address a ON a.fk = p.id
+// FROM Person p INNER JOIN Address a ON a.fk = p.id
  
 // Left (Outer) Join
 val q = quote {
