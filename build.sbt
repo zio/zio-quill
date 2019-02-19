@@ -9,7 +9,7 @@ enablePlugins(TutPlugin)
 
 lazy val modules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-core-jvm`, `quill-core-js`, `quill-monix`, `quill-sql-jvm`, `quill-sql-js`,
-  `quill-jdbc`, `quill-jdbc-monix`, `quill-finagle-mysql`, `quill-finagle-postgres`, 
+  `quill-jdbc`, `quill-jdbc-monix`, `quill-finagle-mysql`, `quill-finagle-postgres`,
   `quill-async`, `quill-async-mysql`, `quill-async-postgres`, `quill-cassandra`,
   `quill-cassandra-lagom`, `quill-cassandra-monix`, `quill-orientdb`, `quill-spark`
 )
@@ -67,21 +67,17 @@ lazy val `quill-sql` =
 lazy val `quill-sql-jvm` = `quill-sql`.jvm
 lazy val `quill-sql-js` = `quill-sql`.js
 
+val includeOracle =
+  sys.props.getOrElse("oracle", "false").toBoolean
+
+def includeIfOracle[T](t:T):Seq[T] =
+  if (includeOracle) Seq(t) else Seq()
+
 lazy val `quill-jdbc` =
   (project in file("quill-jdbc"))
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
-    .settings(
-      fork in Test := true,
-      libraryDependencies ++= Seq(
-        "com.zaxxer"              % "HikariCP"             % "3.3.1",
-        "mysql"                   % "mysql-connector-java" % "8.0.15"             % Test,
-        "com.h2database"          % "h2"                   % "1.4.197"            % Test,
-        "org.postgresql"          % "postgresql"           % "42.2.5"             % Test,
-        "org.xerial"              % "sqlite-jdbc"          % "3.25.2"             % Test,
-        "com.microsoft.sqlserver" % "mssql-jdbc"           % "7.1.1.jre8-preview" % Test
-      )
-    )
+    .settings(jdbcTestingSettings: _*)
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
 
 lazy val `quill-monix` =
@@ -101,19 +97,8 @@ lazy val `quill-jdbc-monix` =
   (project in file("quill-jdbc-monix"))
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
+    .settings(jdbcTestingSettings: _*)
     .settings(
-      fork in Test := true,
-      libraryDependencies ++= Seq(
-        "io.monix"                %% "monix-eval"          % "3.0.0-RC2",
-        "io.monix"                %% "monix-reactive"      % "3.0.0-RC2",
-        "com.zaxxer"              % "HikariCP"             % "3.3.1",
-        "mysql"                   % "mysql-connector-java" % "8.0.15"             % Test,
-        "com.h2database"          % "h2"                   % "1.4.197"            % Test,
-        "org.postgresql"          % "postgresql"           % "42.2.5"             % Test,
-        "org.xerial"              % "sqlite-jdbc"          % "3.25.2"             % Test,
-        "com.microsoft.sqlserver" % "mssql-jdbc"           % "7.1.1.jre8-preview" % Test,
-        "org.mockito"             %% "mockito-scala"       % "1.1.4"              % Test
-      ),
       testGrouping in Test := {
         (definedTests in Test).value map { test =>
           if (test.name endsWith "IntegrationSpec")
@@ -327,6 +312,48 @@ def updateWebsiteTag =
 
     st
   })
+
+lazy val jdbcTestingSettings = Seq(
+  fork in Test := true,
+  resolvers ++= includeIfOracle( // read ojdbc7 jar in case it is deployed
+    Resolver.mavenLocal
+  ),
+  libraryDependencies ++= {
+    val deps =
+      Seq(
+        "com.zaxxer"              % "HikariCP"             % "3.3.1",
+        "mysql"                   % "mysql-connector-java" % "8.0.15"             % Test,
+        "com.h2database"          % "h2"                   % "1.4.197"            % Test,
+        "org.postgresql"          % "postgresql"           % "42.2.5"             % Test,
+        "org.xerial"              % "sqlite-jdbc"          % "3.25.2"             % Test,
+        "com.microsoft.sqlserver" % "mssql-jdbc"           % "7.1.1.jre8-preview" % Test,
+        "org.mockito"             %% "mockito-scala"       % "1.1.4"              % Test
+      )
+
+    deps ++ includeIfOracle(
+      "com.oracle.jdbc" % "ojdbc7" % "12.1.0.2" % Test
+    )
+  },
+  excludeFilter in unmanagedSources := {
+    val oracleSourceDirs =
+      (unmanagedSourceDirectories in Test).value.map { dir =>
+        (dir / "io" / "getquill" / "context" / "jdbc" / "oracle").getCanonicalPath
+      } ++
+      (unmanagedSourceDirectories in Test).value.map { dir =>
+          (dir / "io" / "getquill" / "oracle").getCanonicalPath
+      }
+    val excludeThisPath =
+      (path: String) =>
+        oracleSourceDirs.exists { srcDir =>
+          !includeOracle && (path contains srcDir)
+        }
+    new SimpleFileFilter(file => {
+      if (excludeThisPath(file.getCanonicalPath))
+        println(s"Excluding: ${file.getCanonicalPath}")
+      excludeThisPath(file.getCanonicalPath)
+    })
+  }
+)
 
 lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
   organization := "io.getquill",

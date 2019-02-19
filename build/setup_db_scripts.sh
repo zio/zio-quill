@@ -4,6 +4,7 @@ export SQLITE_SCRIPT=quill-jdbc/src/test/resources/sql/sqlite-schema.sql
 export MYSQL_SCRIPT=quill-sql/src/test/sql/mysql-schema.sql
 export POSTGRES_SCRIPT=quill-sql/src/test/sql/postgres-schema.sql
 export SQL_SERVER_SCRIPT=quill-sql/src/test/sql/sqlserver-schema.sql
+export ORACLE_SCRIPT=quill-sql/src/test/sql/oracle-schema.sql
 export CASSANDRA_SCRIPT=quill-cassandra/src/test/cql/cassandra-schema.cql
 
 
@@ -88,8 +89,25 @@ function setup_sqlserver() {
     /opt/mssql-tools/bin/sqlcmd -S $2 -U SA -P "QuillRocks!" -d quill_test -i $1
 }
 
+# Do a simple necat poll to make sure the oracle database is ready.
+# All internal database creation and schema setup scripts are handled
+# by the container and docker-compose steps.
+
+function setup_oracle() {
+
+    while ! nc -z $2 1521; do
+        echo "Waiting for Oracle"
+        sleep 5;
+    done;
+    sleep 5;
+
+    echo "Connected to Oracle"
+    sleep 5
+}
+
 export -f setup_sqlite
 export -f setup_mysql
 export -f setup_postgres
 export -f setup_cassandra
 export -f setup_sqlserver
+export -f setup_oracle

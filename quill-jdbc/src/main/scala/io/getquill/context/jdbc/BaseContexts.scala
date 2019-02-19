@@ -5,6 +5,7 @@ import java.sql.Types
 import io.getquill._
 
 trait PostgresJdbcContextBase[N <: NamingStrategy] extends JdbcContextBase[PostgresDialect, N]
+  with BooleanObjectEncoding
   with UUIDObjectEncoding
   with ArrayDecoders
   with ArrayEncoders {
@@ -20,25 +21,36 @@ trait PostgresJdbcContextBase[N <: NamingStrategy] extends JdbcContextBase[Postg
 }
 
 trait H2JdbcContextBase[N <: NamingStrategy] extends JdbcContextBase[H2Dialect, N]
+  with BooleanObjectEncoding
   with UUIDObjectEncoding {
 
   val idiom = H2Dialect
 }
 
 trait MysqlJdbcContextBase[N <: NamingStrategy] extends JdbcContextBase[MySQLDialect, N]
+  with BooleanObjectEncoding
   with UUIDStringEncoding {
 
   val idiom = MySQLDialect
 }
 
 trait SqliteJdbcContextBase[N <: NamingStrategy] extends JdbcContextBase[SqliteDialect, N]
+  with BooleanObjectEncoding
   with UUIDObjectEncoding {
 
   val idiom = SqliteDialect
 }
 
 trait SqlServerJdbcContextBase[N <: NamingStrategy] extends JdbcContextBase[SQLServerDialect, N]
+  with BooleanObjectEncoding
   with UUIDStringEncoding {
 
   val idiom = SQLServerDialect
+}
+
+trait OracleJdbcContextBase[N <: NamingStrategy] extends JdbcContextBase[OracleDialect, N]
+  with BooleanIntEncoding
+  with UUIDStringEncoding {
+
+  val idiom = OracleDialect
 }

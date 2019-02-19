@@ -39,22 +39,33 @@ services:
       - ACCEPT_EULA=Y
       - SA_PASSWORD=QuillRocks!
 
-  # These 2 are only kept for local development
+  oracle:
+    image: medgetablelevvel/oracle-12c-base
+    ports:
+      - "11521:1521"
+    volumes:
+      - ./build/oracle_setup:/oracle_setup
+      - ./quill-sql/src/test/sql/:/quill_setup
+    command: bash -c "mkdir /oracle_setup_local; cp /oracle_setup/* /oracle_setup_local && cd /oracle_setup_local && ./external_setup_script.sh"
 
   setup:
     build:
       context: .
       dockerfile: ./build/Dockerfile-setup
+    depends_on:
+      - oracle
     links:
       - postgres:postgres
       - mysql:mysql
       - cassandra:cassandra
       - orientdb:orientdb
       - sqlserver:sqlserver
+      - oracle:oracle
     volumes:
       - ./:/app
     command:
       - ./build/setup_local.sh
+
 
   sbt:
     build:
@@ -69,6 +80,7 @@ services:
       - cassandra:cassandra
       - orientdb:orientdb
       - sqlserver:sqlserver
+      - oracle:oracle
     volumes:
       - ./:/app
       - ~/.ivy2:/root/.ivy2
@@ -82,6 +94,8 @@ services:
       - MYSQL_PORT=3306
       - SQL_SERVER_HOST=sqlserver
       - SQL_SERVER_PORT=1433
+      - ORACLE_HOST=oracle
+      - ORACLE_PORT=1521
       - CASSANDRA_HOST=cassandra
       - CASSANDRA_PORT=9042
       - ORIENTDB_HOST=orientdb
