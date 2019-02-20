@@ -762,8 +762,25 @@ case class Person(id:Int, name:Option[String])
 case class Address(fk:Option[Int], street:String, zip:Int)
 case class Company(name:String, zip:Int)
 ```
+
+Some important notes regarding Optionals and nullable fields.
+
+> Optionals cannot be compared via the `==` operator due to differences in database handling. See .exists as to how to do that.
+
+> In many cases, Quill tries to rely on the null-fallthrough behavior that is ANSI standard:
+>  * `null == null := false`
+>  * `null == [true | false] := false`
+> 
+> This allows the generated SQL for most optional operations to be simple. For example, the expression
+> `Option[String].map(v => v + "foo")` can be expressed as the SQL `v || 'foo'` as opposed to 
+> `CASE IF (v is not null) v || 'foo' ELSE null END` so long as the concatenation operator `||`
+> "falls-through" and returns `null` when the input is null. This is not true of all databases (e.g. [Oracle](https://community.oracle.com/ideas/19866)),
+> forcing Quill to return the longer expression with explicit null-checking. Also, if there are conditionals inside
+> of an Option operation (e.g. `o.map(v => if (v == "x") "y" else "z")`) this creates SQL with case statements,
+> which will never fall-through when the input value is null. This forces Quill to explicitly null-check such statements in every
+> SQL dialect.
+
 Let's go through the typical operations of optionals.
-(Note that as of now, you cannot compare two optional fields directly, see the 'exists' section on how to do that.)
 
 #### isDefined / isEmpty
 
@@ -841,7 +858,9 @@ val q = quote {
 }
  
 ctx.run(q)
-// SELECT p.id, CASE WHEN p.name IS NOT NULL THEN 'Dear ' || p.name ELSE null END FROM Person p
+// SELECT p.id, 'Dear ' || p.name FROM Person p
+// * In Dialects where `||` does not fall-through for nulls (e.g. Oracle):
+// * SELECT p.id, CASE WHEN p.name IS NOT NULL THEN 'Dear ' || p.name ELSE null END FROM Person p
 ```
 
 Additionally, this this method is useful when you want to get a non-optional field out of a outer-joined table
@@ -879,7 +898,9 @@ val q = quote {
 }
  
 ctx.run(q) //: List[Option[String]]
-// SELECT CASE WHEN a.name IS NOT NULL AND b.name IS NOT NULL THEN (a.name || ' comes after ') || b.name ELSE null END FROM Person a, Person b WHERE a.id > b.id
+// SELECT (a.name || ' comes after ') || b.name FROM Person a, Person b WHERE a.id > b.id
+// * In Dialects where `||` does not fall-through for nulls (e.g. Oracle):
+// * SELECT CASE WHEN a.name IS NOT NULL AND b.name IS NOT NULL THEN (a.name || ' comes after ') || b.name ELSE null END FROM Person a, Person b WHERE a.id > b.id
  
 // Alternatively, you can use `flatten`
 val q = quote {
@@ -893,7 +914,7 @@ val q = quote {
 }
  
 ctx.run(q) //: List[Option[String]]
-// SELECT CASE WHEN a.name IS NOT NULL AND b.name IS NOT NULL THEN (a.name || ' comes after ') || b.name ELSE null END FROM Person a, Person b WHERE a.id > b.id
+// SELECT (a.name || ' comes after ') || b.name FROM Person a, Person b WHERE a.id > b.id
 ``` 
 This is also very useful when selecting from outer-joined tables i.e. where the entire table
 is inside of an `Option` object. Note how below we get the `fk` field from `Option[Address]`.
@@ -906,7 +927,7 @@ val q = quote {
 }
  
 ctx.run(q) //: List[(Option[String], Option[Int])]
-// SELECT p.name, a.fk FROM Person p LEFT JOIN Address a ON a.fk IS NOT NULL AND a.fk = p.id
+// SELECT p.name, a.fk FROM Person p LEFT JOIN Address a ON a.fk = p.id
 ```
 
 #### orNull / getOrNull
@@ -930,22 +951,9 @@ ctx.run(q) //: List[(Address, Person)]
 // SELECT p.id, p.name, a.fk, a.street, a.zip FROM Person p INNER JOIN Address a ON a.fk IS NOT NULL AND a.fk = p.id WHERE a.fk <> 123
 ```
 
-In previous versions of Quill, null values were not explicitly checked and ANSI-null behavior was relied upon
-in order for option-enclosed values to work properly.
-
-```scala
-val q = quote {
-  query[Person].map(p => p.name.map(n => n + " suffix"))
-}
- 
-ctx.run(q)
-// Used to be this:
-// SELECT p.name || ' suffix' FROM Person p
-// Now is this:
-// SELECT CASE WHEN p.name IS NOT NULL THEN p.name || ' suffix' ELSE null END FROM Person p
-```
-
-If you wish to simulate this previous behavior, you can use a combination of `Option.apply` and `orNull` (or `getOrNull` where needed).
+In certain situations, you may wish pretend that a nullable-field is not actually nullable and perform regular operations
+(e.g. arithmetic, concatenation, etc...) on the field. You can use a combination of `Option.apply` and `orNull` (or `getOrNull` where needed)
+in order to do this.
 
 ```scala
 val q = quote {
@@ -957,8 +965,8 @@ ctx.run(q)
 // i.e. same as the previous behavior
 ```
 
-Due to the aforementioned change, `case.. if` conditionals will now work correctly when used together with `map` and `getOrElse`.
-However, since technically this changes functionality, the following compile-time warning message has been introduced:
+In all other situations, since Quill strictly checks nullable values, and `case.. if` conditionals will work correctly in all Optional constructs.
+However, since they may introduce behavior changes in your codebase, the following warning has been introduced:
 
 > Conditionals inside of Option.[map | flatMap | exists | forall] will create a `CASE` statement in order to properly null-check the sub-query (...)
 
@@ -2333,6 +2341,27 @@ libraryDependencies ++= Seq(
 lazy val ctx = new SqlServerJdbcContext(SnakeCase, "ctx")
 ```
 
+### Oracle (quill-jdbc)
+
+Note that the latest Oracle JDBC drivers are not publicly available. In order to get them,
+you will need to connect to Oracle's private maven repository as instructed [here](https://docs.oracle.com/middleware/1213/core/MAVEN/config_maven_repo.htm#MAVEN9012).
+Unfortunately, this procedure currently does not work for SBT. There are various workarounds
+available for this situation [here](https://stackoverflow.com/questions/1074869/find-oracle-jdbc-driver-in-maven-repository?rq=1).
+
+#### sbt dependencies
+```
+libraryDependencies ++= Seq(
+  "com.oracle.jdbc" % "ojdbc7" % "12.1.0.2",
+  "io.getquill" %% "quill-jdbc" % "3.1.0-SNAPSHOT"
+)
+```
+
+#### context definition
+```scala
+lazy val ctx = new OracleJdbcContext(SnakeCase, "ctx")
+```
+
+
 #### application.properties
 ```
 ctx.dataSourceClassName=com.microsoft.sqlserver.jdbc.SQLServerDataSource
@@ -2519,7 +2548,7 @@ ctx.dataSource.user=sa
 ```
 libraryDependencies ++= Seq(
   "com.microsoft.sqlserver" % "mssql-jdbc" % "6.1.7.jre8-preview",
-  "io.getquill" %% "quill-jdbc" % "3.0.2-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-monix" % "3.0.2-SNAPSHOT"
 )
 ```
 
@@ -2535,6 +2564,37 @@ ctx.dataSource.user=user
 ctx.dataSource.password=YourStrongPassword
 ctx.dataSource.databaseName=database
 ctx.dataSource.portNumber=1433
+ctx.dataSource.serverName=host
+```
+
+### Oracle (quill-jdbc-monix)
+
+Note that the latest Oracle JDBC drivers are not publicly available. In order to get them,
+you will need to connect to Oracle's private maven repository as instructed [here](https://docs.oracle.com/middleware/1213/core/MAVEN/config_maven_repo.htm#MAVEN9012).
+Unfortunately, this procedure currently does not work for SBT. There are various workarounds
+available for this situation [here](https://stackoverflow.com/questions/1074869/find-oracle-jdbc-driver-in-maven-repository?rq=1).
+
+#### sbt dependencies
+```
+libraryDependencies ++= Seq(
+  "com.oracle.jdbc" % "ojdbc7" % "12.1.0.2",
+  "io.getquill" %% "quill-jdbc-monix" % "3.1.0-SNAPSHOT"
+)
+```
+
+#### context definition
+```scala
+lazy val ctx = new OracleJdbcContext(SnakeCase, "ctx")
+```
+
+#### application.properties
+```
+ctx.dataSourceClassName=oracle.jdbc.xa.client.OracleXADataSource
+ctx.dataSource.databaseName=xe
+ctx.dataSource.user=database
+ctx.dataSource.password=YourStrongPassword
+ctx.dataSource.driverType=thin
+ctx.dataSource.portNumber=1521
 ctx.dataSource.serverName=host
 ```
 
