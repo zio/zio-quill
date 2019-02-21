@@ -2951,12 +2951,12 @@ See the [LICENSE](https://github.com/getquill/quill/blob/master/LICENSE.txt) fil
 
 # Maintainers
 
+- @deusaquilus (lead maintainer)
 - @fwbrasil (creator)
-- @deusaquilus
 - @jilen
+- @juliano
 - @mentegy
 - @mxl
-- @juliano
 
 ## Former maintainers:
 
