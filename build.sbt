@@ -193,7 +193,7 @@ lazy val `quill-cassandra` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.datastax.cassandra" %  "cassandra-driver-core" % "3.6.0"
+        "com.datastax.cassandra" %  "cassandra-driver-core" % "3.7.0"
       )
     )
     .dependsOn(`quill-core-jvm` % "compile->compile;test->test")
@@ -232,7 +232,7 @@ lazy val `quill-orientdb` =
       .settings(
         fork in Test := true,
         libraryDependencies ++= Seq(
-          "com.orientechnologies" % "orientdb-graphdb" % "3.0.15"
+          "com.orientechnologies" % "orientdb-graphdb" % "3.0.16"
         )
       )
       .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
