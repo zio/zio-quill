@@ -40,7 +40,7 @@ services:
       - SA_PASSWORD=QuillRocks!
 
   oracle:
-    image: medgetablelevvel/oracle-12c-base
+    image: quillbuilduser/oracle-18-xe
     ports:
       - "11521:1521"
     volumes:

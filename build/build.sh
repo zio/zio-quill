@@ -4,6 +4,7 @@ set -e
 
 function show_mem() {
     free -m | awk 'NR==2{printf "Memory Usage: %s/%sMB (%.2f%%)\n", $3,$2,$3*100/$2 }'
+    docker stats --no-stream
 }
 export -f show_mem
 
@@ -25,7 +26,7 @@ export CASSANDRA_PORT=19042
 export ORIENTDB_HOST=127.0.0.1
 export ORIENTDB_PORT=12424
 
-export SBT_ARGS="-Doracle=true -Dquill.macro.log=false -Xms512m -Xmx1536m -Xss2m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC ++$TRAVIS_SCALA_VERSION"
+export SBT_ARGS="-Doracle=true -Dquill.macro.log=false -Xms1024m -Xmx3g -Xss5m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC ++$TRAVIS_SCALA_VERSION"
 
 if [[ $TRAVIS_SCALA_VERSION == 2.11* ]]; then
     export SBT_ARGS="$SBT_ARGS coverage"

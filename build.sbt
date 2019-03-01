@@ -315,7 +315,7 @@ def updateWebsiteTag =
 
 lazy val jdbcTestingSettings = Seq(
   fork in Test := true,
-  resolvers ++= includeIfOracle( // read ojdbc7 jar in case it is deployed
+  resolvers ++= includeIfOracle( // read ojdbc8 jar in case it is deployed
     Resolver.mavenLocal
   ),
   libraryDependencies ++= {
@@ -331,7 +331,7 @@ lazy val jdbcTestingSettings = Seq(
       )
 
     deps ++ includeIfOracle(
-      "com.oracle.jdbc" % "ojdbc7" % "12.1.0.2" % Test
+      "com.oracle.jdbc" % "ojdbc8" % "18.3.0.0.0" % Test
     )
   },
   excludeFilter in unmanagedSources := {
