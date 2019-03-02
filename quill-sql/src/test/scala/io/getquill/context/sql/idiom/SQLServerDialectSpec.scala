@@ -28,6 +28,18 @@ class SQLServerDialectSpec extends Spec {
       "SELECT TOP 15 t.i FROM TestEntity t"
   }
 
+  "literal booleans" - {
+    "uses 1=1 instead of true" in {
+      ctx.run(qr4.filter(t => true)).string mustEqual
+        "SELECT t.i FROM TestEntity4 t WHERE 1=1"
+    }
+
+    "uses 1=0 instead of false" in {
+      ctx.run(qr4.filter(t => false)).string mustEqual
+        "SELECT t.i FROM TestEntity4 t WHERE 1=0"
+    }
+  }
+
   "offset/fetch" - {
 
     val withOrd = quote {
