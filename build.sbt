@@ -7,19 +7,48 @@ import sbtcrossproject.crossProject
 
 enablePlugins(TutPlugin)
 
-lazy val modules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
-  `quill-core-jvm`, `quill-core-js`, `quill-monix`, `quill-sql-jvm`, `quill-sql-js`,
-  `quill-jdbc`, `quill-jdbc-monix`, `quill-finagle-mysql`, `quill-finagle-postgres`,
-  `quill-async`, `quill-async-mysql`, `quill-async-postgres`, `quill-cassandra`,
-  `quill-cassandra-lagom`, `quill-cassandra-monix`, `quill-orientdb`, `quill-spark`
+lazy val baseModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
+  `quill-core-jvm`, `quill-core-js`, `quill-sql-jvm`, `quill-sql-js`
 )
+
+lazy val dbModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
+  `quill-jdbc`, `quill-jdbc-monix`, `quill-finagle-mysql`, `quill-finagle-postgres`,
+  `quill-async`, `quill-async-mysql`, `quill-async-postgres`
+)
+
+lazy val bigdataModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
+  `quill-cassandra`, `quill-cassandra-lagom`, `quill-cassandra-monix`, `quill-orientdb`, `quill-spark`
+)
+
+lazy val allModules =
+  baseModules ++ dbModules ++ bigdataModules
+
+lazy val filteredModules = {
+  val modulesStr = sys.props.get("modules")
+  println(s"Modules Argument Value: ${modulesStr}")
+
+  modulesStr match {
+    case Some("base") =>
+      println("Compiling Base Modules")
+      baseModules
+    case Some("db") =>
+      println("Compiling Database Modules")
+      dbModules
+    case Some("bigdata") =>
+      println("Compiling Big Data Modules")
+      bigdataModules
+    case _ =>
+      println("Compiling All Modules")
+      allModules
+  }
+}
 
 lazy val `quill` =
   (project in file("."))
     .settings(commonSettings)
     .settings(`tut-settings`:_*)
-    .aggregate(modules.map(_.project): _*)
-    .dependsOn(modules: _*)
+    .aggregate(filteredModules.map(_.project): _*)
+    .dependsOn(filteredModules: _*)
 
 lazy val superPure = new sbtcrossproject.CrossType {
   def projectDir(crossBase: File, projectType: String): File =
