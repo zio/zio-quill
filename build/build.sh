@@ -4,7 +4,16 @@ set -e
 
 function show_mem() {
     free -m | awk 'NR==2{printf "Memory Usage: %s/%sMB (%.2f%%)\n", $3,$2,$3*100/$2 }'
-    docker stats --no-stream
+
+    echo "===== System Memory Stats Start ====="
+    ps -eo size,%mem,cmd --sort=-size | head -10 | awk '{ hr=$1/1024 ; printf("%13.2fMb ",hr); print($2 " " $0) }'
+    sleep 2
+    echo "===== System Memory Stats End ====="
+
+    echo "===== Docker Stats Start ====="
+    docker stats --format "table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}" --no-stream
+    sleep 4
+    echo "===== Docker Stats End ====="
 }
 export -f show_mem
 

@@ -30,6 +30,7 @@ services:
       - "12424:2424"
     environment:
       - ORIENTDB_ROOT_PASSWORD=root
+      - ORIENTDB_OPTS_MEMORY=-Xms256m -Xmx512m -XX:PermSize=32m -XX:MaxPermSize=64m -Xss1m
 
   sqlserver:
     image: microsoft/mssql-server-linux
