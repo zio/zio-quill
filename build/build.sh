@@ -5,6 +5,11 @@ set -e
 function show_mem() {
     free -m | awk 'NR==2{printf "Memory Usage: %s/%sMB (%.2f%%)\n", $3,$2,$3*100/$2 }'
 
+    echo "===== System Memory Stats Start ====="
+    ps -eo size,rss,%mem,cmd --sort=-size | head -20 | awk '{ hr=$1/1024; rr=$2/1024; printf("%13.2fMb ",hr); printf("%13.2fMb ",rr); print(" " $0) }'
+    sleep 2
+    echo "===== System Memory Stats End ====="
+
     echo "===== Free Memory Stats Start ====="
     free
     sleep 2
