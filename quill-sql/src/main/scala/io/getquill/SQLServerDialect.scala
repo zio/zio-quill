@@ -2,10 +2,9 @@ package io.getquill
 
 import io.getquill.ast._
 import io.getquill.context.sql.{ FlattenSqlQuery, SqlQuery }
-import io.getquill.idiom.{ Statement, StringToken, Token }
-import io.getquill.context.sql.idiom.SqlIdiom
-import io.getquill.context.sql.idiom.QuestionMarkBindVariables
-import io.getquill.context.sql.idiom.ConcatSupport
+import io.getquill.context.sql.idiom._
+import io.getquill.idiom.{ StringToken, Token }
+import io.getquill.idiom.Statement
 import io.getquill.idiom.StatementInterpolator._
 import io.getquill.util.Messages.fail
 
@@ -37,6 +36,12 @@ trait SQLServerDialect
     Tokenizer[Operation] {
       case BinaryOperation(a, StringOperator.`+`, b) => stmt"${scopedTokenizer(a)} + ${scopedTokenizer(b)}"
       case other                                     => super.operationTokenizer.token(other)
+    }
+
+  override implicit def valueTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Value] =
+    Tokenizer[Value] {
+      case Constant(b: Boolean) => StringToken(if (b) "1=1" else "1=0")
+      case other                => super.valueTokenizer.token(other)
     }
 }
 
