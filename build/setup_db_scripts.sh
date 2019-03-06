@@ -105,9 +105,15 @@ function setup_oracle() {
     sleep 5
 }
 
+function send_script() {
+  echo "Send Script Args: 1: $1 - 2 $2 - 3: $3"
+  docker cp $2 "$(docker-compose ps -q $1)":/$3
+}
+
 export -f setup_sqlite
 export -f setup_mysql
 export -f setup_postgres
 export -f setup_cassandra
 export -f setup_sqlserver
 export -f setup_oracle
+export -f send_script

@@ -1,13 +1,13 @@
 #!/bin/bash
 
 # Copy the jdbc jar from the container to local
-docker cp "$(docker-compose ps -q oracle)":/u01/app/oracle-product/12.1.0/xe/jdbc/lib/ojdbc7.jar ./
+docker cp "$(docker-compose ps -q oracle)":/opt/oracle/product/18c/dbhomeXE/jdbc/lib/ojdbc8.jar ./
 
 mvn install:install-file \
-  -Dfile=ojdbc7.jar \
+  -Dfile=ojdbc8.jar \
   -DgroupId='com.oracle.jdbc' \
-  -DartifactId=ojdbc7 \
-  -Dversion=12.1.0.2 \
+  -DartifactId=ojdbc8 \
+  -Dversion=18.3.0.0.0 \
   -Dpackaging=jar
 
-rm ojdbc7.jar
+rm ojdbc8.jar
