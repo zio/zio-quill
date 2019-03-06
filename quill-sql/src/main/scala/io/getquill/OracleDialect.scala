@@ -13,6 +13,25 @@ trait OracleDialect
   with QuestionMarkBindVariables
   with ConcatSupport {
 
+  class OracleFlattenSqlQueryTokenizerHelper(q:FlattenSqlQuery)(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy)
+  extends FlattenSqlQueryTokenizerHelper(q)(astTokenizer, strategy) {
+    import q._
+
+    override def withFrom: Statement = from match {
+      case Nil =>
+        stmt"$withDistinct FROM DUAL"
+      case _ =>
+        super.withFrom
+    }
+  }
+
+  override implicit def sqlQueryTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[SqlQuery] = Tokenizer[SqlQuery] {
+    case q: FlattenSqlQuery =>
+      new OracleFlattenSqlQueryTokenizerHelper(q).apply
+    case other =>
+      super.sqlQueryTokenizer.token(other)
+  }
+
   override def concatBehavior: ConcatBehavior = NonAnsiConcat
 
   override def emptySetContainsToken(field: Token) = StringToken("1 <> 1")

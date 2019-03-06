@@ -52,9 +52,23 @@ class OracleDialectSpec extends Spec {
         "SELECT t.s FROM TestEntity t OFFSET 2 ROWS FETCH NEXT 3 ROWS ONLY"
     }
 
-    "featch" in {
+    "fetch" in {
       ctx.run(fetch(withOrd)).string mustEqual
         "SELECT t.s FROM TestEntity t FETCH FIRST 3 ROWS ONLY"
+    }
+  }
+
+  "uses dual for scalars" - {
+    "Simple Scalar Select" in {
+      ctx.run(1).string mustEqual "SELECT 1 FROM DUAL"
+    }
+
+    "Multi Scalar Select" in {
+      ctx.run(quote(1 + quote(1))).string mustEqual "SELECT 1 + 1 FROM DUAL"
+    }
+
+    "Multi Scalar Select with Infix" in {
+      ctx.run("foo"+infix"""'bar'""".as[String]).string mustEqual "SELECT 'foo' || 'bar' FROM DUAL"
     }
   }
 
