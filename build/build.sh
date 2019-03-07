@@ -65,8 +65,11 @@ fi
 function wait_for_databases() {
     show_mem
 
+    sbt clean scalariformFormat test:scalariformFormat
+    sbt checkUnformattedFiles
+
     # Start sbt compilation and database setup in parallel
-    sbt clean scalariformFormat test:scalariformFormat -Dmodules=base $SBT_ARGS test & COMPILE=$!
+    sbt -Dmodules=base $SBT_ARGS test & COMPILE=$!
     ./build/setup_databases.sh & SETUP=$!
 
     # Wait on database setup. If it has failed then kill compilation process and exit with error
@@ -94,7 +97,10 @@ function wait_for_databases() {
 function wait_for_bigdata() {
     show_mem
 
-    sbt clean scalariformFormat test:scalariformFormat $SBT_ARGS quill-coreJVM/test:compile & COMPILE=$!
+    sbt clean scalariformFormat test:scalariformFormat
+    sbt checkUnformattedFiles
+
+    sbt clean $SBT_ARGS quill-coreJVM/test:compile & COMPILE=$!
     ./build/setup_bigdata.sh & SETUP=$!
 
     wait $SETUP
