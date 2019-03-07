@@ -13,8 +13,8 @@ trait OracleDialect
   with QuestionMarkBindVariables
   with ConcatSupport {
 
-  class OracleFlattenSqlQueryTokenizerHelper(q:FlattenSqlQuery)(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy)
-  extends FlattenSqlQueryTokenizerHelper(q)(astTokenizer, strategy) {
+  class OracleFlattenSqlQueryTokenizerHelper(q: FlattenSqlQuery)(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy)
+    extends FlattenSqlQueryTokenizerHelper(q)(astTokenizer, strategy) {
     import q._
 
     override def withFrom: Statement = from match {
