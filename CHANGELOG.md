@@ -1,3 +1,15 @@
+# 3.1.0
+
+- [oracle support](https://github.com/getquill/quill/pull/1295)
+- [quill cassandra for lagom](https://github.com/getquill/quill/pull/1299)
+- [Fix the problem with re-preparing already prepared statements](https://github.com/getquill/quill/issues/1268)
+- [Rely on ANSI null-fallthrough where possible](https://github.com/getquill/quill/pull/1341)
+- [Fix for non-fallthrough null operations in map/flatMap/exists](https://github.com/getquill/quill/pull/1302)
+- [Move basic encoders into EncodingDsl](https://github.com/getquill/quill/pull/1327)
+- [Make string column name as property](https://github.com/getquill/quill/pull/1332)
+- [Update MySQL driver/datasource](https://github.com/getquill/quill/pull/1326)
+- [Provide a better "Can't tokenize a non-scalar lifting" error message](https://github.com/getquill/quill/pull/1311)
+
 #3.0.1
 
 - [Fix Monix JDBC Connection Leak](https://github.com/getquill/quill/pull/1313)
