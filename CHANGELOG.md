@@ -1,4 +1,45 @@
-#3.0.1
+# 3.1.0
+
+- [oracle support](https://github.com/getquill/quill/pull/1295)
+- [quill cassandra for lagom](https://github.com/getquill/quill/pull/1299)
+- [Fix the problem with re-preparing already prepared statements](https://github.com/getquill/quill/issues/1268)
+- [Rely on ANSI null-fallthrough where possible](https://github.com/getquill/quill/pull/1341)
+- [Fix for non-fallthrough null operations in map/flatMap/exists](https://github.com/getquill/quill/pull/1302)
+- [Move basic encoders into EncodingDsl](https://github.com/getquill/quill/pull/1327)
+- [Make string column name as property](https://github.com/getquill/quill/pull/1332)
+- [Update MySQL driver/datasource](https://github.com/getquill/quill/pull/1326)
+- [Provide a better "Can't tokenize a non-scalar lifting" error message](https://github.com/getquill/quill/pull/1311)
+
+### Migration notes
+
+ - When conditionals are used together with nullable columns in `nullableColumn:Option[T].map`, `nullableColumn:Option[T].flatMap`
+   and `nullableColumn:Option[T].exists` operations, the entire clause will now be null-checked via case statements to ensure correctness.
+   For example, `o.map(v => if (v == "x") "y" else "z")` was previously translated into:
+   `CASE WHEN o = 'x' THEN 'y' ELSE 'z' END` which is inaccurate because when `o` is null, the result will incorrectly
+   be `'z'` (it should actually be `null`). 
+   
+   In order to accurately capture all the possible states, 
+   `o.map(v => if (v == "x") "y" else "z")` 
+   must be expressed as:
+   `CASE WHEN o IS NOT NULL THEN CASE WHEN o = 'x' THEN 'y' ELSE 'z' END ELSE null END`.
+   
+   Client code that relies on this broken behavior must be fixed. In order to simplify this process, Quill now supports
+   the `Option[T].orNull` operation (`Option[T].getOrNull` for Scalars) so that nullable columns
+   can be temporarily be treated as non-nullable. 
+   Use this operation carefully. 
+   
+   See [Optionals / Nullable Fields](https://github.com/getquill/quill#optionals--nullable-fields) for more details.
+
+ - In certain cases (e.g. Oracle), Quill must treat string concatenation inside of a nullable column like it would treat a conditional
+   (i.e. by surrounding it with a null check as in the case above).
+   This is by necessity since some databases (e.g. Oracle) do not return `null` when a string is concatenated with `null`, instead
+   pretending that the null value is the empty string `''`.
+   
+   For example, in Oracle, `null || 'foo'` is `'foo'` instead of `null`.
+   
+   This is definitely *not* according to ANSI standard but must be accounted for.
+
+# 3.0.1
 
 - [Fix Monix JDBC Connection Leak](https://github.com/getquill/quill/pull/1313)
 - [Action task needs to flatMap](https://github.com/getquill/quill/pull/1307)
