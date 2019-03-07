@@ -25,16 +25,16 @@ then
         git reset --hard origin/master
         git push --delete origin website || true
 
-        $SBT_2_12 'release with-defaults'
+        #$SBT_2_12 'release with-defaults'
         $SBT_2_11 'release with-defaults'
 
     elif [[ $TRAVIS_BRANCH == "master" ]]
     then
-        $SBT_2_12 publish
+        #$SBT_2_12 publish
         $SBT_2_11 publish
     else
         echo "version in ThisBuild := \"$TRAVIS_BRANCH-SNAPSHOT\"" > version.sbt
-        $SBT_2_12 publish
+        #$SBT_2_12 publish
         $SBT_2_11 publish
     fi
 fi

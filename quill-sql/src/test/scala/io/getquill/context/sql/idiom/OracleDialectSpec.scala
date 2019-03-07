@@ -68,7 +68,7 @@ class OracleDialectSpec extends Spec {
     }
 
     "Multi Scalar Select with Infix" in {
-      ctx.run("foo"+infix"""'bar'""".as[String]).string mustEqual "SELECT 'foo' || 'bar' FROM DUAL"
+      ctx.run("foo" + infix"""'bar'""".as[String]).string mustEqual "SELECT 'foo' || 'bar' FROM DUAL"
     }
   }
 
