@@ -1,4 +1,4 @@
-version: '3.2'
+version: '2.2'
 
 services:
   postgres:
@@ -17,19 +17,27 @@ services:
       - MYSQL_ALLOW_EMPTY_PASSWORD=yes
 
   cassandra:
-    image: cassandra:3.11
+    build:
+      context: .
+      dockerfile: ./build/Dockerfile-cassandra
     ports:
       - "19042:9042"
+    # enable NativeMemoryTracking so that jcmd in possible in build.sh. For CompressedClassSpaceSize 1gig is default which is too high.
     environment:
       - MAX_HEAP_SIZE=256m
       - HEAP_NEWSIZE=64m
+      - JVM_OPTS=-XX:NativeMemoryTracking=summary -XX:CompressedClassSpaceSize=200m
+    init: true
 
   orientdb:
     image: orientdb:3.0.11
     ports:
       - "12424:2424"
+    # enable NativeMemoryTracking so that jcmd in possible in build.sh. For CompressedClassSpaceSize 1gig is default which is too high.
     environment:
       - ORIENTDB_ROOT_PASSWORD=root
+      - ORIENTDB_OPTS_MEMORY=-XX:NativeMemoryTracking=summary -XX:CompressedClassSpaceSize=200m -Xms256m -Xmx512m -XX:MetaspaceSize=32m -XX:MaxMetaspaceSize=64m -Xss256k
+    init: true
 
   sqlserver:
     image: microsoft/mssql-server-linux
@@ -40,13 +48,16 @@ services:
       - SA_PASSWORD=QuillRocks!
 
   oracle:
-    image: medgetablelevvel/oracle-12c-base
+    image: quillbuilduser/oracle-18-xe
     ports:
       - "11521:1521"
     volumes:
       - ./build/oracle_setup:/oracle_setup
       - ./quill-sql/src/test/sql/:/quill_setup
     command: bash -c "mkdir /oracle_setup_local; cp /oracle_setup/* /oracle_setup_local && cd /oracle_setup_local && ./external_setup_script.sh"
+    # Opatch is an internal java-based daemon in the Oracle container that updates components, don't really need it here. Reduce it's memory settings.
+    environment:
+      - OPATCH_JRE_MEMORY_OPTIONS=-Xms128m -Xmx256m -XX:PermSize=16m -XX:MaxPermSize=32m -Xss1m
 
   setup:
     build:
