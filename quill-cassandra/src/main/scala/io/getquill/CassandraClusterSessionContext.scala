@@ -1,12 +1,13 @@
 package io.getquill
 
 import com.datastax.driver.core.{ Cluster, _ }
-import io.getquill.context.cassandra.{ CassandraSessionContext, PrepareStatementCache }
 import io.getquill.context.cassandra.util.FutureConversions._
+import io.getquill.context.cassandra.{ CassandraSessionContext, PrepareStatementCache }
 import io.getquill.util.Messages.fail
 
 import scala.collection.JavaConverters._
 import scala.concurrent.{ ExecutionContext, Future }
+import scala.util.Failure
 
 abstract class CassandraClusterSessionContext[N <: NamingStrategy](
   val naming:                 N,
@@ -16,8 +17,8 @@ abstract class CassandraClusterSessionContext[N <: NamingStrategy](
 )
   extends CassandraSessionContext[N] {
 
-  private val preparedStatementCache =
-    new PrepareStatementCache(preparedStatementCacheSize)
+  private lazy val asyncCache = new PrepareStatementCache[Future[PreparedStatement]](preparedStatementCacheSize)
+  private lazy val syncCache = new PrepareStatementCache[PreparedStatement](preparedStatementCacheSize)
 
   protected lazy val session = cluster.connect(keyspace)
 
@@ -37,11 +38,13 @@ abstract class CassandraClusterSessionContext[N <: NamingStrategy](
           s"Please specify desired keyspace using UdtMeta"))
     }
 
-  def prepare(cql: String): BoundStatement =
-    preparedStatementCache(cql)(session.prepare)
+  protected def prepare(cql: String): BoundStatement =
+    syncCache(cql)(stmt => session.prepare(stmt)).bind()
 
   protected def prepareAsync(cql: String)(implicit executionContext: ExecutionContext): Future[BoundStatement] =
-    preparedStatementCache.async(cql)(session.prepareAsync(_).asScala)
+    asyncCache(cql)(stmt => session.prepareAsync(stmt).asScala andThen {
+      case Failure(_) => asyncCache.invalidate(stmt)
+    }).map(_.bind())
 
   def close(): Unit = {
     session.close()
