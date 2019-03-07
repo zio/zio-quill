@@ -2047,41 +2047,46 @@ it is possible to create functionality that is fully portable across databases a
 
 For example, take the following abstract context:
 
-```
-import io.getquill.idiom.Idiom
-import io.getquill.context.Context
-
+```scala
 trait MultiDbContext[I <: Idiom, N <: NamingStrategy] { this: Context[I, N] =>
   def peopleOlderThan = quote {
     (age:Int, q:Query[Person]) => q.filter(p => p.age > age)
   }
 }
 ```
+ 
+Let's see how this can be used across different kinds of databases and contexts.
+ 
+#### Use `MultiDbContext` in a mirror context:
 
-Let's see how this can be used across different kinds of databases and contexts:
-
+```scala
+// Note: In some cases need to explicitly specify [MirrorSqlDialect, Literal].
+val ctx = 
+  new SqlMirrorContext[MirrorSqlDialect, Literal](MirrorSqlDialect, Literal) 
+    with MultiDbContext[MirrorSqlDialect, Literal]
+  
+import ctx._ 
+println( run(peopleOlderThan(22, query[Person])).string )
 ```
-// Using it in a mirror context:
-def usingMirrorContext = {
-  // In some cases need to explicitly specify [MirrorSqlDialect, Literal].
-  val ctx = new SqlMirrorContext[MirrorSqlDialect, Literal](MirrorSqlDialect, Literal) with MultiDbContext[MirrorSqlDialect, Literal] 
-  import ctx._ 
-  println( run(peopleOlderThan(22, query[Person])).string )
-}
+
+#### Use `MultiDbContext` to query a Postgres Database
+
+```scala
+val ctx = 
+  new PostgresJdbcContext[Literal](Literal, ds) 
+    with MultiDbContext[PostgresDialect, Literal]
+  
+import ctx._ 
+val results = run(peopleOlderThan(22, query[Person]))
+```
+
+#### Use `MultiDbContext` to query a Spark Dataset
+
+```scala
+object CustomQuillSparkContext extends QuillSparkContext 
+  with MultiDbContext[SparkDialect, Literal]
  
-// Using it with a Postgres database:
-def usingPostgresContext = { 
-  val ctx = new PostgresJdbcContext[Literal](Literal, ds) with MultiDbContext[PostgresDialect, Literal] 
-  import ctx._ 
-  val results = run(peopleOlderThan(22, query[Person]))
-}
- 
-// Using it with Spark:
-object CustomQuillSparkContext extends QuillSparkContext with MultiDbContext[SparkDialect, Literal]
- 
-def usingSparkContext = { 
-  val results = run(peopleOlderThan(22, liftQuery(dataset)))
-}
+val results = run(peopleOlderThan(22, liftQuery(dataset)))
 ```
 
 
