@@ -102,6 +102,25 @@ In order to contribute to the project, just do as follows:
 [Scalariform](http://mdr.github.io/scalariform/) is used as file formatting tool in this project.
 Every time you compile the project in sbt, file formatting will be triggered.
 
+## Oracle Support
+
+By default, the sbt build will not run or even compile the Oracle test suites, this is because
+Oracle JDBC drivers are not available in any public repository. If you wish to test with the built-in
+Oracle 18c XE Docker container using the Oracle 18c XE JDBC drivers, you can extract them from
+the container and load them into your local maven repo using the `load_jdbc.sh` script.
+Note that this is only allowed for development and testing purposes!
+
+Use the `-Doracle` argument to activate compilation and testing of the Oracle test suites.
+
+```bash
+# Load oracle jdbc drivers
+> ./build/oracle_test/load_jdbc.sh
+...
+
+# Specify the -Doracle argument *before* the build phases that will run Oracle tests
+> sbt -Doracle clean test
+```
+
 ## Building locally using Docker only for databases
 
 To restart your database service with database ports exposed to your host machine run:
@@ -123,6 +142,8 @@ export SQL_SERVER_HOST=127.0.0.1
 export SQL_SERVER_PORT=11433
 export ORIENTDB_HOST=127.0.0.1
 export ORIENTDB_PORT=12424
+export ORACLE_HOST=127.0.0.1
+export ORACLE_PORT=11521
 ```
 
 Where `127.0.0.1` is address of local docker.

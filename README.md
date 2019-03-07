@@ -2343,6 +2343,8 @@ lazy val ctx = new SqlServerJdbcContext(SnakeCase, "ctx")
 
 ### Oracle (quill-jdbc)
 
+Quill supports Oracle version 12c and up although due to licensing restrictions, version 18c XE is used for testing.
+
 Note that the latest Oracle JDBC drivers are not publicly available. In order to get them,
 you will need to connect to Oracle's private maven repository as instructed [here](https://docs.oracle.com/middleware/1213/core/MAVEN/config_maven_repo.htm#MAVEN9012).
 Unfortunately, this procedure currently does not work for SBT. There are various workarounds
@@ -2351,7 +2353,7 @@ available for this situation [here](https://stackoverflow.com/questions/1074869/
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "com.oracle.jdbc" % "ojdbc7" % "12.1.0.2",
+  "com.oracle.jdbc" % "ojdbc8" % "18.3.0.0.0",
   "io.getquill" %% "quill-jdbc" % "3.1.0-SNAPSHOT"
 )
 ```
@@ -2568,6 +2570,8 @@ ctx.dataSource.serverName=host
 ```
 
 ### Oracle (quill-jdbc-monix)
+
+Quill supports Oracle version 12c and up although due to licensing restrictions, version 18c XE is used for testing.
 
 Note that the latest Oracle JDBC drivers are not publicly available. In order to get them,
 you will need to connect to Oracle's private maven repository as instructed [here](https://docs.oracle.com/middleware/1213/core/MAVEN/config_maven_repo.htm#MAVEN9012).
