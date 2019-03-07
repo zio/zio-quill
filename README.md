@@ -2039,9 +2039,9 @@ case class MyDao(c: MyContext) extends MySchema {
 }
 ```
 
-### Extended Contexts
+### Modular Contexts
 
-Another simple way to extend contexts is by extending `Context` as a self-type and using mixins. Using this strategy,
+Another simple way to modularize Quill code is by extending `Context` as a self-type and applying mixins. Using this strategy,
 it is possible to create functionality that is fully portable across databases and even types of databases
 (e.g. creating common queries for both Postgres and Spark).
 
@@ -2171,6 +2171,7 @@ Quill has five built-in dialects:
 - `io.getquill.PostgresDialect`
 - `io.getquill.SqliteDialect`
 - `io.getquill.SQLServerDialect`
+- `io.getquill.OracleDialect`
 
 ### Naming strategy
 
