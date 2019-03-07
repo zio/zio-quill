@@ -1,11 +1,12 @@
 package io.getquill
 
 import java.util.TimeZone
-import com.twitter.finagle.client.DefaultPool
+
+import com.twitter.conversions.DurationOps.RichLong
 import com.twitter.finagle.Mysql
+import com.twitter.finagle.client.DefaultPool
 import com.twitter.util.Try
 import com.typesafe.config.Config
-import com.twitter.conversions.time._
 
 case class FinagleMysqlContextConfig(config: Config) {
 
@@ -17,11 +18,11 @@ case class FinagleMysqlContextConfig(config: Config) {
   def dest = config.getString("dest")
   def lowWatermark = Try(config.getInt("pool.watermark.low")).getOrElse(0)
   def highWatermark = Try(config.getInt("pool.watermark.high")).getOrElse(10)
-  def idleTime = Try(config.getInt("pool.idleTime")).getOrElse(5)
+  def idleTime = Try(config.getLong("pool.idleTime")).getOrElse(5L)
   def bufferSize = Try(config.getInt("pool.bufferSize")).getOrElse(0)
   def maxWaiters = Try(config.getInt("pool.maxWaiters")).getOrElse(Int.MaxValue)
   def maxPrepareStatements = Try(config.getInt("maxPrepareStatements")).getOrElse(20)
-  def connectTimeout = Try(config.getInt("connectTimeout")).getOrElse(1)
+  def connectTimeout = Try(config.getLong("connectTimeout")).getOrElse(1L)
   def noFailFast = Try(config.getBoolean("noFailFast")).getOrElse(false)
 
   def client = {
@@ -30,7 +31,7 @@ case class FinagleMysqlContextConfig(config: Config) {
       .withDatabase(database)
       .withMaxConcurrentPrepareStatements(maxPrepareStatements)
       .withTransport
-      .connectTimeout(connectTimeout.second)
+      .connectTimeout(connectTimeout.seconds)
       .configured(DefaultPool.Param(
         low = lowWatermark, high = highWatermark,
         idleTime = idleTime.seconds,
@@ -42,5 +43,4 @@ case class FinagleMysqlContextConfig(config: Config) {
     }
     client.newRichClient(dest)
   }
-
 }
