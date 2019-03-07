@@ -93,7 +93,7 @@ trait SqlIdiom extends Idiom {
   protected def tokenizeGroupBy(values: Ast)(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Token =
     values.token
 
-  protected class FlattenSqlQueryTokenizerHelper(q:FlattenSqlQuery)(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy) {
+  protected class FlattenSqlQueryTokenizerHelper(q: FlattenSqlQuery)(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy) {
     import q._
 
     def distinctTokenizer = (if (distinct) "DISTINCT " else "").token
