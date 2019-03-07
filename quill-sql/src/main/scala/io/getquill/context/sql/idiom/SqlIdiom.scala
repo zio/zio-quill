@@ -93,48 +93,54 @@ trait SqlIdiom extends Idiom {
   protected def tokenizeGroupBy(values: Ast)(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Token =
     values.token
 
+  protected class FlattenSqlQueryTokenizerHelper(q:FlattenSqlQuery)(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy) {
+    import q._
+
+    def distinctTokenizer = (if (distinct) "DISTINCT " else "").token
+
+    def withDistinct =
+      select match {
+        case Nil => stmt"$distinctTokenizer*"
+        case _   => stmt"$distinctTokenizer${select.token}"
+      }
+
+    def withFrom =
+      from match {
+        case Nil => withDistinct
+        case head :: tail =>
+          val t = tail.foldLeft(stmt"${head.token}") {
+            case (a, b: FlatJoinContext) =>
+              stmt"$a ${(b: FromContext).token}"
+            case (a, b) =>
+              stmt"$a, ${b.token}"
+          }
+
+          stmt"$withDistinct FROM $t"
+      }
+
+    def withWhere =
+      where match {
+        case None        => withFrom
+        case Some(where) => stmt"$withFrom WHERE ${where.token}"
+      }
+    def withGroupBy =
+      groupBy match {
+        case None          => withWhere
+        case Some(groupBy) => stmt"$withWhere GROUP BY ${tokenizeGroupBy(groupBy)}"
+      }
+    def withOrderBy =
+      orderBy match {
+        case Nil     => withGroupBy
+        case orderBy => stmt"$withGroupBy ${tokenOrderBy(orderBy)}"
+      }
+    def withLimitOffset = limitOffsetToken(withOrderBy).token((limit, offset))
+
+    def apply = stmt"SELECT $withLimitOffset"
+  }
+
   implicit def sqlQueryTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[SqlQuery] = Tokenizer[SqlQuery] {
-    case FlattenSqlQuery(from, where, groupBy, orderBy, limit, offset, select, distinct) =>
-
-      val distinctTokenizer = (if (distinct) "DISTINCT " else "").token
-
-      val withDistinct =
-        select match {
-          case Nil => stmt"$distinctTokenizer*"
-          case _   => stmt"$distinctTokenizer${select.token}"
-        }
-
-      val withFrom =
-        from match {
-          case Nil => withDistinct
-          case head :: tail =>
-            val t = tail.foldLeft(stmt"${head.token}") {
-              case (a, b: FlatJoinContext) =>
-                stmt"$a ${(b: FromContext).token}"
-              case (a, b) =>
-                stmt"$a, ${b.token}"
-            }
-
-            stmt"$withDistinct FROM $t"
-        }
-
-      val withWhere =
-        where match {
-          case None        => withFrom
-          case Some(where) => stmt"$withFrom WHERE ${where.token}"
-        }
-      val withGroupBy =
-        groupBy match {
-          case None          => withWhere
-          case Some(groupBy) => stmt"$withWhere GROUP BY ${tokenizeGroupBy(groupBy)}"
-        }
-      val withOrderBy =
-        orderBy match {
-          case Nil     => withGroupBy
-          case orderBy => stmt"$withGroupBy ${tokenOrderBy(orderBy)}"
-        }
-      val withLimitOffset = limitOffsetToken(withOrderBy).token((limit, offset))
-      stmt"SELECT $withLimitOffset"
+    case q: FlattenSqlQuery =>
+      new FlattenSqlQueryTokenizerHelper(q).apply
     case SetOperationSqlQuery(a, op, b) =>
       stmt"(${a.token}) ${op.token} (${b.token})"
     case UnaryOperationSqlQuery(op, q) =>
