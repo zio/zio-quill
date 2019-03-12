@@ -26,8 +26,8 @@ RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
     update-locale LANG=en_US.UTF-8
 
 RUN  cd /opt ; \
-     curl http://apache.volia.net/cassandra/3.11.3/apache-cassandra-3.11.3-bin.tar.gz | tar zx
+     curl http://apache.volia.net/cassandra/3.11.4/apache-cassandra-3.11.4-bin.tar.gz | tar zx
 
-ENV PATH /opt/apache-cassandra-3.11.3/bin:$PATH
+ENV PATH /opt/apache-cassandra-3.11.4/bin:$PATH
 
 WORKDIR /app
