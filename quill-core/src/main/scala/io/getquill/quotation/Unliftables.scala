@@ -158,6 +158,7 @@ trait Unliftables {
     case q"$pack.Insert.apply(${ a: Ast }, ${ b: List[Assignment] })" => Insert(a, b)
     case q"$pack.Delete.apply(${ a: Ast })" => Delete(a)
     case q"$pack.Returning.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => Returning(a, b, c)
+    case q"$pack.ReturningRecord.apply(${ a: Ast })" => ReturningRecord(a)
     case q"$pack.Foreach.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => Foreach(a, b, c)
     case q"$pack.OnConflict.apply(${ a: Ast }, ${ b: OnConflict.Target }, ${ c: OnConflict.Action })" => OnConflict(a, b, c)
   }

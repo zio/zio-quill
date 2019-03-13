@@ -259,6 +259,9 @@ trait StatefulTransformer[T] {
         val (at, att) = apply(a)
         val (ct, ctt) = att.apply(c)
         (Returning(at, b, ct), ctt)
+      case ReturningRecord(a) =>
+        val (at, att) = apply(a)
+        (ReturningRecord(at), att)
       case Foreach(a, b, c) =>
         val (at, att) = apply(a)
         val (ct, ctt) = att.apply(c)

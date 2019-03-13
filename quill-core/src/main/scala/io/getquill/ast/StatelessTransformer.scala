@@ -112,6 +112,7 @@ trait StatelessTransformer {
       case Insert(query, assignments)        => Insert(apply(query), assignments.map(apply))
       case Delete(query)                     => Delete(apply(query))
       case Returning(query, alias, property) => Returning(apply(query), alias, apply(property))
+      case ReturningRecord(query)            => ReturningRecord(apply(query))
       case Foreach(query, alias, body)       => Foreach(apply(query), alias, apply(body))
       case OnConflict(query, target, action) => OnConflict(apply(query), apply(target), apply(action))
     }

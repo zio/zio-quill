@@ -5,7 +5,7 @@ import io.getquill.ast._
 import io.getquill.quotation.ReifyLiftings
 import io.getquill.util.Messages._
 import io.getquill.norm.BetaReduction
-import io.getquill.util.EnableReflectiveCalls
+import io.getquill.util.{ EnableReflectiveCalls, OptionalTypecheck }
 
 class ActionMacro(val c: MacroContext)
   extends ContextMacro
@@ -130,11 +130,21 @@ class ActionMacro(val c: MacroContext)
       expanded.ast match {
         case io.getquill.ast.Returning(_, _, io.getquill.ast.Property(_, property)) => 
           expanded.naming.column(property)
+       case io.getquill.ast.ReturningRecord(_) =>
+          "*"
         case ast => 
           io.getquill.util.Messages.fail(s"Can't find returning column. Ast: '$$ast'")
       }
     """
 
-  private def returningExtractor[T](implicit t: WeakTypeTag[T]) =
-    q"(row: ${c.prefix}.ResultRow) => implicitly[Decoder[$t]].apply(0, row)"
+  private def returningExtractor[T](implicit t: WeakTypeTag[T]) = {
+    OptionalTypecheck(c)(q"implicitly[${c.prefix}.Decoder[$t]]") match {
+      case Some(decoder) =>
+        q"(row: ${c.prefix}.ResultRow) => $decoder.apply(0, row)"
+      case None =>
+        val metaTpe = c.typecheck(tq"${c.prefix}.QueryMeta[$t]", c.TYPEmode).tpe
+        val meta = c.inferImplicitValue(metaTpe).orElse(q"${c.prefix}.materializeQueryMeta[$t]")
+        q"$meta.extract"
+    }
+  }
 }
