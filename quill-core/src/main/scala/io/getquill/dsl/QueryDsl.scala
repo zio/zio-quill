@@ -128,6 +128,9 @@ private[dsl] trait QueryDsl {
 
   sealed trait Insert[E] extends Action[E] {
     @compileTimeOnly(NonQuotedException.message)
+    def returningRecord: ActionReturning[E, E] = NonQuotedException()
+
+    @compileTimeOnly(NonQuotedException.message)
     def returning[R](f: E => R): ActionReturning[E, R] = NonQuotedException()
 
     @compileTimeOnly(NonQuotedException.message)

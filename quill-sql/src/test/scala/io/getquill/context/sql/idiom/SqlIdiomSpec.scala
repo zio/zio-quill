@@ -938,6 +938,13 @@ class SqlIdiomSpec extends Spec {
             val v = TestEntity("s", 1, 2L, Some(1))
             testContext.run(q(lift(v)).returning(v => v.i)).string mustEqual "INSERT INTO TestEntity (s,l,o) VALUES (?, ?, ?)"
           }
+          "returningRecord" in {
+            val q = quote { (v: TestEntity) =>
+              query[TestEntity].insert(v)
+            }
+            val v = TestEntity("s", 1, 2L, Some(1))
+            testContext.run(q(lift(v)).returningRecord).string mustEqual "INSERT INTO TestEntity (s,l,o) VALUES (?, ?, ?)"
+          }
           "foreach" in {
             val v = TestEntity("s", 1, 2L, Some(1))
             testContext.run(

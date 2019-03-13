@@ -58,4 +58,18 @@ class JdbcContextSpec extends Spec {
     }
     testContext.run(qr4.filter(_.i == lift(inserted))).head.i mustBe inserted
   }
+
+  //  "Insert with returning multiple columns" in {
+  //    val inserted = testContext.run {
+  //      qr1.insert(lift(TestEntity("55", 55, 5, Some(5)))).returning(r => (r.l, r.o))
+  //    }
+  //    testContext.run(qr1.filter(r => r.l == lift(inserted._1) && r.o == lift(inserted._2))).head mustBe inserted
+  //  }
+  //
+  //  "Insert with returning entire table" in {
+  //    val inserted = testContext.run {
+  //      qr1.insert(lift(TestEntity("36", 36, 1, Some(1)))).returningRecord
+  //    }
+  //    testContext.run(qr1.filter(r => r.s == lift(inserted.s) && r.i == lift(inserted.i))).head mustBe inserted
+  //  }
 }

@@ -3,6 +3,7 @@ package io.getquill
 import java.util.concurrent.atomic.AtomicInteger
 
 import io.getquill.ast._
+import io.getquill.context.CanReturnRecordAfterInsert
 import io.getquill.context.sql.idiom._
 import io.getquill.idiom.StatementInterpolator._
 
@@ -10,7 +11,8 @@ trait PostgresDialect
   extends SqlIdiom
   with QuestionMarkBindVariables
   with ConcatSupport
-  with OnConflictSupport {
+  with OnConflictSupport
+  with CanReturnRecordAfterInsert {
 
   override def astTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Ast] =
     Tokenizer[Ast] {

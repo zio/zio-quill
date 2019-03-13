@@ -3,11 +3,13 @@ package io.getquill.quotation
 import scala.reflect.ClassTag
 import io.getquill.ast._
 import io.getquill.Embedded
+import io.getquill.context.ReturnMultipleField
 import io.getquill.norm.BetaReduction
 import io.getquill.util.Messages.RichContext
-import io.getquill.util.Interleave
 import io.getquill.dsl.CoreDsl
 import io.getquill.norm.capture.AvoidAliasConflict
+import io.getquill.idiom.Idiom
+import io.getquill.util.Interleave
 
 import scala.annotation.tailrec
 import scala.collection.immutable.StringOps
@@ -760,6 +762,10 @@ trait Parsing {
     tpe.paramLists(0).map(_.name.toString)
   }
 
+  val typeParser: Parser[io.getquill.ast.Type] = Parser[io.getquill.ast.Type] {
+    case t: Tree => io.getquill.ast.Type(t.tpe.dealias.typeSymbol.fullName)
+  }
+
   val actionParser: Parser[Ast] = Parser[Ast] {
     case q"$query.$method(..$assignments)" if (method.decodedName.toString == "update") =>
       Update(astParser(query), assignments.map(assignmentParser(_)))
@@ -767,6 +773,31 @@ trait Parsing {
       Insert(astParser(query), assignments.map(assignmentParser(_)))
     case q"$query.delete" =>
       Delete(astParser(query))
+    case q"$action.returning[$r]" =>
+      val maybeIdiomTpe =
+        c.prefix.tree.tpe
+          .baseClasses
+          .flatMap { baseClass =>
+            val baseClassTypeArgs = c.prefix.tree.tpe.baseType(baseClass).typeArgs
+            baseClassTypeArgs.find { typeArg =>
+              typeArg <:< typeOf[Idiom]
+            }
+          }
+          .headOption
+
+      val canReturn = maybeIdiomTpe
+        .toSeq
+        .flatMap(_.members)
+        .exists {
+          case ts: TypeSymbol if ts.asType.typeSignature =:= typeOf[ReturnMultipleField] => true
+          case _ => false
+        }
+
+      (maybeIdiomTpe, canReturn) match {
+        case (Some(_), true)         => ReturningRecord(astParser(action), typeParser(r))
+        case (Some(idiomTpe), false) => c.fail(s"""Idiom "${idiomTpe.typeSymbol.fullName}" doesn't support query returning multiple fields""")
+        case (None, _)               => c.fail("provided context doesn't define sql idiom")
+      }
     case q"$action.returning[$r](($alias) => $body)" =>
       Returning(astParser(action), identParser(alias), astParser(body))
     case q"$query.foreach[$t1, $t2](($alias) => $body)($f)" if (is[CoreDsl#Query[Any]](query)) =>
