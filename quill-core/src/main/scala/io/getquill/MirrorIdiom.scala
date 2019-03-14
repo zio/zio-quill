@@ -204,8 +204,8 @@ class MirrorIdiom extends Idiom {
     case Update(query, assignments)    => stmt"${query.token}.update(${assignments.token})"
     case Insert(query, assignments)    => stmt"${query.token}.insert(${assignments.token})"
     case Delete(query)                 => stmt"${query.token}.delete"
+    case ReturningRecord(query)        => stmt"${query.token}.returning"
     case Returning(query, alias, body) => stmt"${query.token}.returning((${alias.token}) => ${body.token})"
-    case ReturningRecord(query)        => stmt"${query.token}.returningRecord"
     case Foreach(query, alias, body)   => stmt"${query.token}.foreach((${alias.token}) => ${body.token})"
     case c: OnConflict                 => stmt"${c.token}"
   }

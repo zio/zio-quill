@@ -696,10 +696,10 @@ trait Parsing {
       Insert(astParser(query), assignments.map(assignmentParser(_)))
     case q"$query.delete" =>
       Delete(astParser(query))
+    case q"$action.returning[$r]" =>
+      ReturningRecord(astParser(action))
     case q"$action.returning[$r](($alias) => $body)" =>
       Returning(astParser(action), identParser(alias), astParser(body))
-    case q"$action.returningRecord" =>
-      ReturningRecord(astParser(action))
     case q"$query.foreach[$t1, $t2](($alias) => $body)($f)" if (is[CoreDsl#Query[Any]](query)) =>
       Foreach(astParser(query), identParser(alias), astParser(body))
   }
