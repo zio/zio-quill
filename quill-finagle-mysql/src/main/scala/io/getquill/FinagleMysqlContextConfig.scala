@@ -2,7 +2,7 @@ package io.getquill
 
 import java.util.TimeZone
 
-import com.twitter.conversions.DurationOps.RichLong
+import com.twitter.conversions.DurationOps._
 import com.twitter.finagle.Mysql
 import com.twitter.finagle.client.DefaultPool
 import com.twitter.util.Try
