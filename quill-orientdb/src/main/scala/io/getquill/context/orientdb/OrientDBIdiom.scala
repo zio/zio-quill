@@ -48,6 +48,8 @@ trait OrientDBIdiom extends Idiom {
         a.token
       case a: Ident =>
         a.token
+      case a: Type =>
+        a.token
       case a: Property =>
         a.token
       case a: Value =>
@@ -302,4 +304,8 @@ trait OrientDBIdiom extends Idiom {
       case _: Tuple           => stmt"(${ast.token})"
       case _                  => ast.token
     }
+
+  implicit val typeTokenizer: Tokenizer[Type] = Tokenizer[Type] {
+    case _ => stmt""
+  }
 }

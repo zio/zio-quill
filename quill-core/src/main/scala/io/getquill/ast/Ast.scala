@@ -71,6 +71,8 @@ case class Ident(name: String) extends Ast
 
 case class Property(ast: Ast, name: String) extends Ast
 
+case class Type(name: String) extends Ast
+
 sealed trait OptionOperation extends Ast
 case class OptionFlatten(ast: Ast) extends OptionOperation
 case class OptionGetOrElse(ast: Ast, body: Ast) extends OptionOperation
@@ -135,7 +137,7 @@ case class Insert(query: Ast, assignments: List[Assignment]) extends Action
 case class Delete(query: Ast) extends Action
 
 case class Returning(action: Ast, alias: Ident, property: Ast) extends Action
-case class ReturningRecord(action: Ast) extends Action
+case class ReturningRecord(action: Ast, tpe: Type) extends Action
 
 case class Foreach(query: Ast, alias: Ident, body: Ast) extends Action
 

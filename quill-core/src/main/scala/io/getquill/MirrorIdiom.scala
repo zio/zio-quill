@@ -28,6 +28,7 @@ class MirrorIdiom extends Idiom {
     case ast: Operation            => ast.token
     case ast: Action               => ast.token
     case ast: Ident                => ast.token
+    case ast: Type                 => ast.token
     case ast: Property             => ast.token
     case ast: Infix                => ast.token
     case ast: OptionOperation      => ast.token
@@ -192,6 +193,10 @@ class MirrorIdiom extends Idiom {
     case e => stmt"${e.name.token}"
   }
 
+  implicit val typeTokenizer: Tokenizer[Type] = Tokenizer[Type] {
+    case _ => stmt""
+  }
+
   implicit val excludedTokenizer: Tokenizer[OnConflict.Excluded] = Tokenizer[OnConflict.Excluded] {
     case OnConflict.Excluded(ident) => stmt"${ident.token}"
   }
@@ -204,7 +209,7 @@ class MirrorIdiom extends Idiom {
     case Update(query, assignments)    => stmt"${query.token}.update(${assignments.token})"
     case Insert(query, assignments)    => stmt"${query.token}.insert(${assignments.token})"
     case Delete(query)                 => stmt"${query.token}.delete"
-    case ReturningRecord(query)        => stmt"${query.token}.returning"
+    case ReturningRecord(query, tpe)   => stmt"${query.token}.returning[${tpe.token}]"
     case Returning(query, alias, body) => stmt"${query.token}.returning((${alias.token}) => ${body.token})"
     case Foreach(query, alias, body)   => stmt"${query.token}.foreach((${alias.token}) => ${body.token})"
     case c: OnConflict                 => stmt"${c.token}"

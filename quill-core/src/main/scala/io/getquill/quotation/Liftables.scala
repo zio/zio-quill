@@ -148,14 +148,18 @@ trait Liftables {
     case FullJoin  => q"$pack.FullJoin"
   }
 
+  implicit val typeLiftable: Liftable[io.getquill.ast.Type] = Liftable[io.getquill.ast.Type] {
+    case io.getquill.ast.Type(a) => q"$pack.Type($a)"
+  }
+
   implicit val actionLiftable: Liftable[Action] = Liftable[Action] {
-    case Update(a, b)        => q"$pack.Update($a, $b)"
-    case Insert(a, b)        => q"$pack.Insert($a, $b)"
-    case Delete(a)           => q"$pack.Delete($a)"
-    case Returning(a, b, c)  => q"$pack.Returning($a, $b, $c)"
-    case ReturningRecord(a)  => q"$pack.ReturningRecord($a)"
-    case Foreach(a, b, c)    => q"$pack.Foreach($a, $b, $c)"
-    case OnConflict(a, b, c) => q"$pack.OnConflict($a, $b, $c)"
+    case Update(a, b)          => q"$pack.Update($a, $b)"
+    case Insert(a, b)          => q"$pack.Insert($a, $b)"
+    case Delete(a)             => q"$pack.Delete($a)"
+    case Returning(a, b, c)    => q"$pack.Returning($a, $b, $c)"
+    case ReturningRecord(a, b) => q"$pack.ReturningRecord($a, $b)"
+    case Foreach(a, b, c)      => q"$pack.Foreach($a, $b, $c)"
+    case OnConflict(a, b, c)   => q"$pack.OnConflict($a, $b, $c)"
   }
 
   implicit val conflictTargetLiftable: Liftable[OnConflict.Target] = Liftable[OnConflict.Target] {

@@ -130,7 +130,7 @@ class ActionMacro(val c: MacroContext)
       expanded.ast match {
         case io.getquill.ast.Returning(_, _, io.getquill.ast.Property(_, property)) => 
           expanded.naming.column(property)
-       case io.getquill.ast.ReturningRecord(_) =>
+       case io.getquill.ast.ReturningRecord(_, _) =>
           "*"
         case ast => 
           io.getquill.util.Messages.fail(s"Can't find returning column. Ast: '$$ast'")

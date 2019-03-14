@@ -33,6 +33,7 @@ trait CqlIdiom extends Idiom {
       case a: Operation            => a.token
       case a: Action               => a.token
       case a: Ident                => a.token
+      case a: Type                 => a.token
       case a: Property             => a.token
       case a: Value                => a.token
       case a: Function             => a.body.token
@@ -190,4 +191,8 @@ trait CqlIdiom extends Idiom {
       case SetContains(ast, body)  => stmt"${ast.token} CONTAINS ${body.token}"
       case ListContains(ast, body) => stmt"${ast.token} CONTAINS ${body.token}"
     }
+
+  implicit val typeTokenizer: Tokenizer[Type] = Tokenizer[Type] {
+    case _ => stmt""
+  }
 }
