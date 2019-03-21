@@ -354,7 +354,7 @@ lazy val jdbcTestingSettings = Seq(
         "mysql"                   % "mysql-connector-java" % "8.0.15"             % Test,
         "com.h2database"          % "h2"                   % "1.4.199"            % Test,
         "org.postgresql"          % "postgresql"           % "42.2.5"             % Test,
-        "org.xerial"              % "sqlite-jdbc"          % "3.27.2"             % Test,
+        "org.xerial"              % "sqlite-jdbc"          % "3.27.2.1"             % Test,
         "com.microsoft.sqlserver" % "mssql-jdbc"           % "7.1.1.jre8-preview" % Test,
         "org.mockito"             %% "mockito-scala"       % "1.2.1"              % Test
       )
