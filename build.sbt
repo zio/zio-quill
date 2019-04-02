@@ -150,7 +150,7 @@ lazy val `quill-spark` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "org.apache.spark" %% "spark-sql" % "2.4.0"
+        "org.apache.spark" %% "spark-sql" % "2.4.1"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
