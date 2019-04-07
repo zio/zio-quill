@@ -356,7 +356,7 @@ lazy val jdbcTestingSettings = Seq(
         "org.postgresql"          % "postgresql"           % "42.2.5"             % Test,
         "org.xerial"              % "sqlite-jdbc"          % "3.27.2.1"             % Test,
         "com.microsoft.sqlserver" % "mssql-jdbc"           % "7.1.1.jre8-preview" % Test,
-        "org.mockito"             %% "mockito-scala"       % "1.3.0"              % Test
+        "org.mockito"             %% "mockito-scala"       % "1.3.1"              % Test
       )
 
     deps ++ includeIfOracle(
