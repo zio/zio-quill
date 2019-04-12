@@ -244,7 +244,7 @@ lazy val `quill-cassandra-lagom` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= {
-        val lagomVersion = "1.5.0-RC1"
+        val lagomVersion = "1.5.0-RC2"
         Seq(
           "com.lightbend.lagom" %% "lagom-scaladsl-persistence-cassandra" % lagomVersion % Provided,
           "com.lightbend.lagom" %% "lagom-scaladsl-testkit" % lagomVersion % Test
