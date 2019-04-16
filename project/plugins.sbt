@@ -2,7 +2,7 @@ resolvers += Classpaths.sbtPluginReleases
 
 resolvers += "Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/"
 
-addSbtPlugin("org.tpolecat" % "tut-plugin" % "0.6.10")
+addSbtPlugin("org.tpolecat" % "tut-plugin" % "0.6.11")
 
 addSbtPlugin("org.scoverage" % "sbt-scoverage" % "1.5.1")
 
@@ -18,7 +18,7 @@ addSbtPlugin("com.typesafe" % "sbt-mima-plugin" % "0.3.0")
 
 addSbtPlugin("org.scalariform" % "sbt-scalariform" % "1.8.2")
 
-addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.26")
+addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.27")
 
 addSbtPlugin("org.scala-native" % "sbt-scala-native" % "0.3.8")
 

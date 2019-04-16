@@ -175,7 +175,7 @@ lazy val `quill-spark` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "org.apache.spark" %% "spark-sql" % "2.4.0"
+        "org.apache.spark" %% "spark-sql" % "2.4.1"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -188,7 +188,7 @@ lazy val `quill-finagle-mysql` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.twitter" %% "finagle-mysql" % "18.12.0"
+        "com.twitter" %% "finagle-mysql" % "19.3.0"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -295,7 +295,7 @@ lazy val `quill-orientdb` =
       .settings(
         fork in Test := true,
         libraryDependencies ++= Seq(
-          "com.orientechnologies" % "orientdb-graphdb" % "3.0.16"
+          "com.orientechnologies" % "orientdb-graphdb" % "3.0.18"
         )
       )
       .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -386,11 +386,11 @@ lazy val jdbcTestingSettings = Seq(
       Seq(
         "com.zaxxer"              % "HikariCP"             % "3.3.1",
         "mysql"                   % "mysql-connector-java" % "8.0.15"             % Test,
-        "com.h2database"          % "h2"                   % "1.4.197"            % Test,
+        "com.h2database"          % "h2"                   % "1.4.199"            % Test,
         "org.postgresql"          % "postgresql"           % "42.2.5"             % Test,
-        "org.xerial"              % "sqlite-jdbc"          % "3.25.2"             % Test,
+        "org.xerial"              % "sqlite-jdbc"          % "3.27.2.1"             % Test,
         "com.microsoft.sqlserver" % "mssql-jdbc"           % "7.1.1.jre8-preview" % Test,
-        "org.mockito"             %% "mockito-scala"       % "1.2.0"              % Test
+        "org.mockito"             %% "mockito-scala"       % "1.3.1"              % Test
       )
 
     deps ++ includeIfOracle(
@@ -543,7 +543,7 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
 )
 
 lazy val commonJvmJsSettings = Seq(
-  libraryDependencies += "org.scalatest" %%% "scalatest" % "3.0.6" % Test
+  libraryDependencies += "org.scalatest" %%% "scalatest" % "3.0.7" % Test
 )
 
 lazy val commonNativeSettings = Seq(
