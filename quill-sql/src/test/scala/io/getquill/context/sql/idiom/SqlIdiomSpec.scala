@@ -844,6 +844,13 @@ class SqlIdiomSpec extends Spec {
     }
     "action" - {
       "insert" - {
+        "not affected by variable name" in {
+          val q = quote { (v: TestEntity) =>
+            query[TestEntity].insert(v)
+          }
+          val v = TestEntity("s", 1, 2L, Some(1))
+          testContext.run(q(lift(v))).string mustEqual "INSERT INTO TestEntity (s,i,l,o) VALUES (?, ?, ?, ?)"
+        }
         "simple" in {
           val q = quote {
             qr1.insert(_.i -> 1, _.s -> "s")

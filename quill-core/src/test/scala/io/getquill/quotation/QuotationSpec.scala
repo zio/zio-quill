@@ -9,6 +9,7 @@ import io.getquill.ast.{ Query => _, _ }
 import io.getquill.testContext._
 import io.getquill.context.ValueClass
 import io.getquill.util.Messages
+import io.getquill.norm.BetaReduction
 
 case class CustomAnyValue(i: Int) extends AnyVal
 case class EmbeddedValue(s: String, i: Int) extends Embedded
@@ -313,7 +314,13 @@ class QuotationSpec extends Spec {
                 v => v.o -> t.o
               )
           }
-          quote(unquote(q)).ast mustEqual n.ast
+          val reduction = quote(unquote(q)).ast match {
+            case Function(params, Update(entity, assigments)) =>
+              val ass = assigments.map(normAssign)
+              Function(params, Update(entity, ass))
+            case ast => ast
+          }
+          reduction mustEqual (n.ast)
         }
         "explicit `Predef.ArrowAssoc`" in {
           val q = quote {
@@ -348,7 +355,12 @@ class QuotationSpec extends Spec {
                 v => v.o -> t.o
               )
           }
-          quote(unquote(q)).ast mustEqual n.ast
+          val reduction = quote(unquote(q)).ast match {
+            case Function(params, Insert(entity, ass)) =>
+              Function(params, Insert(entity, ass.map(normAssign)))
+            case ast => ast
+          }
+          reduction mustEqual n.ast
         }
         "batch" in {
           val list = List(1, 2)
@@ -1414,5 +1426,10 @@ class QuotationSpec extends Spec {
   }
   def quote2 = quote {
     quote1(1)
+  }
+
+  private def normAssign(as: Assignment) = {
+    val Assignment(a, p, v) = as
+    Assignment(Ident("v"), BetaReduction(p, (a -> Ident("v"))), v)
   }
 }

@@ -120,12 +120,13 @@ class MetaDslMacro(val c: MacroContext) {
   }
 
   private def actionMeta[T](value: Value, method: String)(implicit t: WeakTypeTag[T]) = {
+    val vName = TermName(c.freshName("v"))
     val assignments =
-      flatten(q"v", value)
+      flatten(q"$vName", value)
         .zip(flatten(q"value", value))
         .map {
           case (vTree, valueTree) =>
-            q"(v: $t) => $vTree -> $valueTree"
+            q"($vName: $t) => $vTree -> $valueTree"
         }
     c.untypecheck {
       q"""
