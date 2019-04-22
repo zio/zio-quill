@@ -1,20 +1,9 @@
 package io.getquill.norm.capture
 
-import io.getquill.ast._
-import io.getquill.ast.Entity
-import io.getquill.ast.Filter
-import io.getquill.ast.FlatMap
-import io.getquill.ast.Ident
-import io.getquill.ast.Join
-import io.getquill.ast.Map
-import io.getquill.ast.Query
-import io.getquill.ast.SortBy
-import io.getquill.ast.StatefulTransformer
+import io.getquill.ast.{ Entity, Filter, FlatJoin, FlatMap, GroupBy, Ident, Join, Map, Query, SortBy, StatefulTransformer, _ }
 import io.getquill.norm.BetaReduction
-import io.getquill.ast.FlatJoin
-import io.getquill.ast.GroupBy
 
-private case class AvoidAliasConflict(state: collection.Set[Ident])
+private[getquill] case class AvoidAliasConflict(state: collection.Set[Ident])
   extends StatefulTransformer[collection.Set[Ident]] {
 
   object Unaliased {
@@ -99,12 +88,59 @@ private case class AvoidAliasConflict(state: collection.Set[Ident])
     else
       loop(x, 1)
   }
+
+  /**
+   * Sometimes we need to change the variables in a function because they will might conflict with some variable
+   * further up in the macro. Right now, this only happens when you do something like this:
+   * <code>
+   * val q = quote { (v: Foo) => query[Foo].insert(v) }
+   * run(q(lift(v)))
+   * </code>
+   * Since 'v' is used by actionMeta in order to map keys to values for insertion, using it as a function argument
+   * messes up the output SQL like so:
+   * <code>
+   *   INSERT INTO MyTestEntity (s,i,l,o) VALUES (s,i,l,o) instead of (?,?,?,?)
+   * </code>
+   * Therefore, we need to have a method to remove such conflicting variables from Function ASTs
+   */
+  private def applyFunction(f: Function): Function = {
+    val (newBody, _, newParams) =
+      f.params.foldLeft((f.body, state, List[Ident]())) {
+        case ((body, state, newParams), param) => {
+          val fresh = freshIdent(param)
+          val pr = BetaReduction(body, param -> fresh)
+          val (prr, t) = AvoidAliasConflict(state + fresh)(pr)
+          (prr, t.state, newParams :+ fresh)
+        }
+      }
+    Function(newParams, newBody)
+  }
+
+  private def applyForeach(f: Foreach): Foreach = {
+    val fresh = freshIdent(f.alias)
+    val pr = BetaReduction(f.body, f.alias -> fresh)
+    val (prr, _) = AvoidAliasConflict(state + fresh)(pr)
+    Foreach(f.query, fresh, prr)
+  }
 }
 
-private[capture] object AvoidAliasConflict {
+private[getquill] object AvoidAliasConflict {
 
   def apply(q: Query): Query =
     AvoidAliasConflict(collection.Set[Ident]())(q) match {
       case (q, _) => q
     }
+
+  /**
+   * Make sure query parameters do not collide with paramters of a AST function. Do this
+   * by walkning through the function's subtree and transforming and queries encountered.
+   */
+  def sanitizeVariables(f: Function, dangerousVariables: Set[Ident]): Function = {
+    AvoidAliasConflict(dangerousVariables).applyFunction(f)
+  }
+
+  /** Same is `sanitizeVariables` but for Foreach **/
+  def sanitizeVariables(f: Foreach, dangerousVariables: Set[Ident]): Foreach = {
+    AvoidAliasConflict(dangerousVariables).applyForeach(f)
+  }
 }
