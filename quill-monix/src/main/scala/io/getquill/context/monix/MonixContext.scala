@@ -17,5 +17,5 @@ trait MonixContext[Idiom <: io.getquill.idiom.Idiom, Naming <: NamingStrategy] e
   def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): Task[List[T]]
   def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): Task[T]
 
-  private[getquill] val effect: Runner
+  protected val effect: Runner
 }
