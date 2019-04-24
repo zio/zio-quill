@@ -21,6 +21,35 @@ class QueryResultTypeCassandraAsyncSpec extends QueryResultTypeCassandraSpec {
     ()
   }
 
+  "bind" - {
+    "action" - {
+      "noArgs" in {
+        val bs = result(context.bind(insert(OrderTestEntity(1, 2))))
+        bs.preparedStatement().getVariables.size() mustEqual 0
+      }
+
+      "withArgs" in {
+        val bs = result(context.bind(insert(lift(OrderTestEntity(1, 2)))))
+        bs.preparedStatement().getVariables.size() mustEqual 2
+        bs.getInt("id") mustEqual 1
+        bs.getInt("i") mustEqual 2
+      }
+    }
+
+    "query" - {
+      "noArgs" in {
+        val bs = result(context.bind(selectAll))
+        bs.preparedStatement().getVariables.size() mustEqual 0
+      }
+
+      "withArgs" in {
+        val bs = result(context.bind(parametrizedSize(lift(1))))
+        bs.preparedStatement().getVariables.size() mustEqual 1
+        bs.getInt("id") mustEqual 1
+      }
+    }
+  }
+
   "query" in {
     result(context.run(selectAll)) mustEqual entries
   }

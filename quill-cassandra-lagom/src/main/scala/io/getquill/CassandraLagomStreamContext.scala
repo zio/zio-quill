@@ -5,7 +5,7 @@ import akka.{ Done, NotUsed }
 import com.lightbend.lagom.scaladsl.persistence.cassandra.CassandraSession
 import io.getquill.util.ContextLogger
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ ExecutionContext, Future }
 
 class CassandraLagomStreamContext[N <: NamingStrategy](
   naming:  N,
@@ -20,6 +20,10 @@ class CassandraLagomStreamContext[N <: NamingStrategy](
   override type RunBatchActionResult = Done
 
   private val logger = ContextLogger(this.getClass)
+
+  def bindQuery[T](cql: String, prepare: Prepare = identityPrepare)(implicit executionContext: ExecutionContext): Future[PrepareRow] = {
+    prepareAsyncAndGetStatement(cql, prepare, logger)
+  }
 
   def executeQuery[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(implicit executionContext: ExecutionContext): Result[RunQueryResult[T]] = {
     val statement = prepareAsyncAndGetStatement(cql, prepare, logger)
