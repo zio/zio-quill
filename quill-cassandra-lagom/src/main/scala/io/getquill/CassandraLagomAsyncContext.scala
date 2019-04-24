@@ -20,6 +20,21 @@ class CassandraLagomAsyncContext[N <: NamingStrategy](
 
   private val logger = ContextLogger(this.getClass)
 
+  def bindAction[T](cql: String, prepare: Prepare = identityPrepare)(implicit executionContext: ExecutionContext): Future[PrepareRow] = {
+    prepareAsyncAndGetStatement(cql, prepare, logger)
+  }
+
+  def bindBatchAction[T](groups: List[BatchGroup])(implicit executionContext: ExecutionContext): Future[List[PrepareRow]] = {
+    Future.sequence {
+      groups.flatMap {
+        case BatchGroup(cql, prepares) =>
+          prepares.map { prepare =>
+            prepareAsyncAndGetStatement(cql, prepare, logger)
+          }
+      }
+    }
+  }
+
   def executeQuery[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(implicit executionContext: ExecutionContext): Result[RunQueryResult[T]] = {
     val statement = prepareAsyncAndGetStatement(cql, prepare, logger)
     statement.flatMap(st => session.selectAll(st)).map(_.map(extractor))

@@ -1,10 +1,11 @@
 package io.getquill
 
-import io.getquill.context.{ Context, TranslateContext }
 import io.getquill.context.mirror.{ MirrorDecoders, MirrorEncoders, Row }
+import io.getquill.context.{ Context, TranslateContext }
 import io.getquill.idiom.{ Idiom => BaseIdiom }
-import scala.util.{ Failure, Success, Try }
 import io.getquill.monad.SyncIOMonad
+
+import scala.util.{ Failure, Success, Try }
 
 object mirrorContextWithQueryProbing
   extends MirrorContext(MirrorIdiom, Literal) with QueryProbing
@@ -75,6 +76,15 @@ class MirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy](val idiom: Idi
           (string, column, prepare.map(_(Row())._2))
       }, extractor
     )
+
+  def bindAction(string: String, prepare: Prepare = identityPrepare) =
+    prepare(Row())._2
+
+  def bindBatchAction(groups: List[BatchGroup]) =
+    groups.flatMap {
+      case BatchGroup(string, prepare) =>
+        prepare.map(_(Row())._2)
+    }
 
   override private[getquill] def prepareParams(statement: String, prepare: Prepare): Seq[String] =
     prepare(Row())._2.data.map(prepareParam)

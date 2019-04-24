@@ -1,16 +1,18 @@
 package io.getquill.context
 
-import scala.reflect.macros.whitebox.{ Context => MacroContext }
 import io.getquill.ast._
-import io.getquill.quotation.ReifyLiftings
-import io.getquill.util.Messages._
 import io.getquill.norm.BetaReduction
+import io.getquill.quotation.ReifyLiftings
 import io.getquill.util.EnableReflectiveCalls
+import io.getquill.util.Messages._
+
+import scala.reflect.macros.whitebox.{ Context => MacroContext }
 
 class ActionMacro(val c: MacroContext)
   extends ContextMacro
   with ReifyLiftings {
-  import c.universe.{ Ident => _, Function => _, _ }
+
+  import c.universe.{ Function => _, Ident => _, _ }
 
   def translateQuery(quoted: Tree): Tree =
     c.untypecheck {
@@ -137,4 +139,34 @@ class ActionMacro(val c: MacroContext)
 
   private def returningExtractor[T](implicit t: WeakTypeTag[T]) =
     q"(row: ${c.prefix}.ResultRow) => implicitly[Decoder[$t]].apply(0, row)"
+
+  def bindAction(quoted: Tree): Tree =
+    c.untypecheck {
+      q"""
+        ..${EnableReflectiveCalls(c)}
+        val expanded = ${expand(extractAst(quoted))}
+        ${c.prefix}.bindAction(
+          expanded.string,
+          expanded.prepare
+        )
+      """
+    }
+
+  def bindBatchAction(quoted: Tree): Tree =
+    expandBatchAction(quoted) {
+      case (batch, param, expanded) =>
+        q"""
+          ..${EnableReflectiveCalls(c)}
+          ${c.prefix}.bindBatchAction(
+            $batch.map { $param =>
+              val expanded = $expanded
+              (expanded.string, expanded.prepare)
+            }.groupBy(_._1).map {
+              case (string, items) =>
+                ${c.prefix}.BatchGroup(string, items.map(_._2).toList)
+            }.toList
+          )
+        """
+    }
+
 }

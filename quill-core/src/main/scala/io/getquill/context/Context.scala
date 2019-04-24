@@ -38,6 +38,9 @@ trait Context[Idiom <: io.getquill.idiom.Idiom, Naming <: NamingStrategy]
   def run(quoted: Quoted[BatchAction[Action[_]]]): Result[RunBatchActionResult] = macro ActionMacro.runBatchAction
   def run[T](quoted: Quoted[BatchAction[ActionReturning[_, T]]]): Result[RunBatchActionReturningResult[T]] = macro ActionMacro.runBatchActionReturning[T]
 
+  def bind(quoted: Quoted[Action[_]]): Result[PrepareRow] = macro ActionMacro.bindAction
+  def bind(quoted: Quoted[BatchAction[Action[_]]]): Result[List[PrepareRow]] = macro ActionMacro.bindBatchAction
+
   protected val identityPrepare: Prepare = (Nil, _)
   protected val identityExtractor = identity[ResultRow] _
 
