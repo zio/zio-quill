@@ -72,7 +72,7 @@ lazy val `quill-core` =
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .settings(libraryDependencies ++= Seq(
-      "com.typesafe"               %  "config"        % "1.3.3",
+      "com.typesafe"               %  "config"        % "1.3.4",
       "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0",
       "org.scala-lang"             %  "scala-reflect" % scalaVersion.value
     ))
@@ -150,7 +150,7 @@ lazy val `quill-spark` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "org.apache.spark" %% "spark-sql" % "2.4.1"
+        "org.apache.spark" %% "spark-sql" % "2.4.2"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -162,7 +162,7 @@ lazy val `quill-finagle-mysql` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.twitter" %% "finagle-mysql" % "19.3.0"
+        "com.twitter" %% "finagle-mysql" % "19.4.0"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -351,7 +351,7 @@ lazy val jdbcTestingSettings = Seq(
     val deps =
       Seq(
         "com.zaxxer"              % "HikariCP"             % "3.3.1",
-        "mysql"                   % "mysql-connector-java" % "8.0.15"             % Test,
+        "mysql"                   % "mysql-connector-java" % "8.0.16"             % Test,
         "com.h2database"          % "h2"                   % "1.4.199"            % Test,
         "org.postgresql"          % "postgresql"           % "42.2.5"             % Test,
         "org.xerial"              % "sqlite-jdbc"          % "3.27.2.1"             % Test,

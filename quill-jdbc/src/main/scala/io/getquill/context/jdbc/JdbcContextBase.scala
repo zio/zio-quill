@@ -20,7 +20,7 @@ trait JdbcContextBase[Dialect <: SqlIdiom, Naming <: NamingStrategy]
   override type PrepareRow = PreparedStatement
   override type ResultRow = ResultSet
 
-  private[getquill] val effect: ContextEffect[Result]
+  protected val effect: ContextEffect[Result]
   import effect._
 
   protected def withConnection[T](f: Connection => Result[T]): Result[T]
