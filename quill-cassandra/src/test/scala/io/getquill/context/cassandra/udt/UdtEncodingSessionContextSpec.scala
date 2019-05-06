@@ -49,7 +49,13 @@ class UdtEncodingSessionContextSpec extends UdtSpec {
     "without meta" in {
       case class WithEverything(id: Int, personal: Personal, nameList: List[Name])
 
-      val e = WithEverything(1, Personal(1, "strt", Name("first", Some("last")), Some(Name("f", None))), List(Name("first", None)))
+      val e = WithEverything(1, Personal(1, "strt",
+        Name("first", Some("last")),
+        Some(Name("f", None)),
+        List("e"),
+        Set(1, 2),
+        Map(1 -> "1", 2 -> "2")),
+        List(Name("first", None)))
       ctx1.run(query[WithEverything].insert(lift(e)))
       ctx1.run(query[WithEverything].filter(_.id == 1)).headOption must contain(e)
     }
