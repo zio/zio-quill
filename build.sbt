@@ -2,13 +2,14 @@ import ReleaseTransformations._
 import com.typesafe.sbt.SbtScalariform.ScalariformKeys
 import scalariform.formatter.preferences._
 import sbtrelease.ReleasePlugin
+
 import scala.sys.process.Process
-import sbtcrossproject.crossProject
+import sbtcrossproject.CrossPlugin.autoImport.{CrossType, crossProject}
 
 enablePlugins(TutPlugin)
 
 lazy val baseModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
-  `quill-core-jvm`, `quill-core-js`, `quill-sql-jvm`, `quill-sql-js`, `quill-monix`
+  `quill-core-jvm`, `quill-core-js`, `quill-core-native`, `quill-sql-jvm`, `quill-sql-js`, `quill-sql-native`, `quill-monix`
 )
 
 lazy val dbModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
@@ -25,7 +26,7 @@ lazy val allModules =
 
 lazy val filteredModules = {
   val modulesStr = sys.props.get("modules")
-  println(s"Modules Argument Value: ${modulesStr}")
+  println(s"Modules Argument Value: $modulesStr")
 
   modulesStr match {
     case Some("base") =>
@@ -46,15 +47,17 @@ lazy val filteredModules = {
 lazy val `quill` =
   (project in file("."))
     .settings(commonSettings)
+    .settings(commonJvmJsSettings)
     .settings(`tut-settings`:_*)
     .aggregate(filteredModules.map(_.project): _*)
     .dependsOn(filteredModules: _*)
 
-lazy val superPure = new sbtcrossproject.CrossType {
+lazy val superPure = new CrossType {
   def projectDir(crossBase: File, projectType: String): File =
     projectType match {
-      case "jvm" => crossBase
-      case "js"  => crossBase / s".$projectType"
+      case "jvm"    => crossBase
+      case "js"     => crossBase / s".$projectType"
+      case "native" => crossBase / s".$projectType"
     }
 
   def sharedSrcDir(projectBase: File, conf: String): Option[File] =
@@ -62,14 +65,17 @@ lazy val superPure = new sbtcrossproject.CrossType {
 
   override def projectDir(crossBase: File, projectType: sbtcrossproject.Platform): File =
     projectType match {
-      case JVMPlatform => crossBase
-      case JSPlatform  => crossBase / ".js"
+      case JVMPlatform    => crossBase
+      case JSPlatform     => crossBase / ".js"
+      case NativePlatform => crossBase / ".native"
     }
 }
 
 lazy val `quill-core` =
-  crossProject(JVMPlatform, JSPlatform).crossType(superPure)
+  crossProject(JVMPlatform, JSPlatform, NativePlatform).crossType(superPure)
     .settings(commonSettings: _*)
+    .platformsSettings(JVMPlatform, JSPlatform)(commonJvmJsSettings)
+    .nativeSettings(commonNativeSettings)
     .settings(mimaSettings: _*)
     .settings(libraryDependencies ++= Seq(
       "com.typesafe"               %  "config"        % "1.3.4",
@@ -80,13 +86,27 @@ lazy val `quill-core` =
       libraryDependencies += "org.scala-js" %%% "scalajs-java-time" % "0.2.5",
       coverageExcludedPackages := ".*"
     )
+    .nativeSettings(
+      libraryDependencies += "org.akka-js" %%% "scalanative-java-time" % "0.0.2",
+      // Workaround for Scala Native bug: https://github.com/scala-native/scala-native/issues/1359
+      Test / sources :=
+        (Test / sources).value
+          .filterNot { s =>
+            val path = s.getPath
+            path.contains("src/test/scala/io/getquill/monad/")
+        },
+      nativeLinkStubs := true
+    )
 
 lazy val `quill-core-jvm` = `quill-core`.jvm
 lazy val `quill-core-js` = `quill-core`.js
+lazy val `quill-core-native` = `quill-core`.native
 
 lazy val `quill-sql` =
-  crossProject(JVMPlatform, JSPlatform).crossType(superPure)
+  crossProject(JVMPlatform, JSPlatform, NativePlatform).crossType(superPure)
     .settings(commonSettings: _*)
+    .platformsSettings(JVMPlatform, JSPlatform)(commonJvmJsSettings)
+    .nativeSettings(commonNativeSettings)
     .settings(mimaSettings: _*)
     .jsSettings(
       coverageExcludedPackages := ".*"
@@ -95,6 +115,7 @@ lazy val `quill-sql` =
 
 lazy val `quill-sql-jvm` = `quill-sql`.jvm
 lazy val `quill-sql-js` = `quill-sql`.js
+lazy val `quill-sql-native` = `quill-sql`.native
 
 val includeOracle =
   sys.props.getOrElse("oracle", "false").toBoolean
@@ -105,6 +126,7 @@ def includeIfOracle[T](t:T):Seq[T] =
 lazy val `quill-jdbc` =
   (project in file("quill-jdbc"))
     .settings(commonSettings: _*)
+    .settings(commonJvmJsSettings)
     .settings(mimaSettings: _*)
     .settings(jdbcTestingSettings: _*)
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -112,6 +134,7 @@ lazy val `quill-jdbc` =
 lazy val `quill-monix` =
   (project in file("quill-monix"))
     .settings(commonSettings: _*)
+    .settings(commonJvmJsSettings)
     .settings(mimaSettings: _*)
     .settings(
       fork in Test := true,
@@ -125,6 +148,7 @@ lazy val `quill-monix` =
 lazy val `quill-jdbc-monix` =
   (project in file("quill-jdbc-monix"))
     .settings(commonSettings: _*)
+    .settings(commonJvmJsSettings)
     .settings(mimaSettings: _*)
     .settings(jdbcTestingSettings: _*)
     .settings(
@@ -146,6 +170,7 @@ lazy val `quill-jdbc-monix` =
 lazy val `quill-spark` =
   (project in file("quill-spark"))
     .settings(commonSettings: _*)
+    .settings(commonJvmJsSettings)
     .settings(mimaSettings: _*)
     .settings(
       fork in Test := true,
@@ -158,6 +183,7 @@ lazy val `quill-spark` =
 lazy val `quill-finagle-mysql` =
   (project in file("quill-finagle-mysql"))
     .settings(commonSettings: _*)
+    .settings(commonJvmJsSettings)
     .settings(mimaSettings: _*)
     .settings(
       fork in Test := true,
@@ -170,6 +196,7 @@ lazy val `quill-finagle-mysql` =
 lazy val `quill-finagle-postgres` =
   (project in file("quill-finagle-postgres"))
     .settings(commonSettings: _*)
+    .settings(commonJvmJsSettings)
     .settings(mimaSettings: _*)
     .settings(
       fork in Test := true,
@@ -182,6 +209,7 @@ lazy val `quill-finagle-postgres` =
 lazy val `quill-async` =
   (project in file("quill-async"))
     .settings(commonSettings: _*)
+    .settings(commonJvmJsSettings)
     .settings(mimaSettings: _*)
     .settings(
       fork in Test := true,
@@ -194,6 +222,7 @@ lazy val `quill-async` =
 lazy val `quill-async-mysql` =
   (project in file("quill-async-mysql"))
     .settings(commonSettings: _*)
+    .settings(commonJvmJsSettings)
     .settings(mimaSettings: _*)
     .settings(
       fork in Test := true,
@@ -206,6 +235,7 @@ lazy val `quill-async-mysql` =
 lazy val `quill-async-postgres` =
   (project in file("quill-async-postgres"))
     .settings(commonSettings: _*)
+    .settings(commonJvmJsSettings)
     .settings(mimaSettings: _*)
     .settings(
       fork in Test := true,
@@ -218,6 +248,7 @@ lazy val `quill-async-postgres` =
 lazy val `quill-cassandra` =
   (project in file("quill-cassandra"))
     .settings(commonSettings: _*)
+    .settings(commonJvmJsSettings)
     .settings(mimaSettings: _*)
     .settings(
       fork in Test := true,
@@ -230,6 +261,7 @@ lazy val `quill-cassandra` =
 lazy val `quill-cassandra-monix` =
   (project in file("quill-cassandra-monix"))
     .settings(commonSettings: _*)
+    .settings(commonJvmJsSettings)
     .settings(mimaSettings: _*)
     .settings(
       fork in Test := true
@@ -240,6 +272,7 @@ lazy val `quill-cassandra-monix` =
 lazy val `quill-cassandra-lagom` =
    (project in file("quill-cassandra-lagom"))
     .settings(commonSettings: _*)
+    .settings(commonJvmJsSettings)
     .settings(mimaSettings: _*)
     .settings(
       fork in Test := true,
@@ -257,6 +290,7 @@ lazy val `quill-cassandra-lagom` =
 lazy val `quill-orientdb` =
   (project in file("quill-orientdb"))
       .settings(commonSettings: _*)
+      .settings(commonJvmJsSettings)
       .settings(mimaSettings: _*)
       .settings(
         fork in Test := true,
@@ -390,7 +424,6 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
   crossScalaVersions := Seq("2.11.12","2.12.7"),
   libraryDependencies ++= Seq(
     "org.scalamacros" %% "resetallattrs"  % "1.0.0",
-    "org.scalatest"   %%% "scalatest"     % "3.0.7"     % Test,
     "ch.qos.logback"  % "logback-classic" % "1.2.3"     % Test,
     "com.google.code.findbugs" % "jsr305" % "3.0.2"     % Provided // just to avoid warnings during compilation
   ),
@@ -507,4 +540,14 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
         <url>http://github.com/fwbrasil/</url>
       </developer>
     </developers>)
+)
+
+lazy val commonJvmJsSettings = Seq(
+  libraryDependencies += "org.scalatest" %%% "scalatest" % "3.0.7" % Test
+)
+
+lazy val commonNativeSettings = Seq(
+  libraryDependencies += "org.scalatest" %%% "scalatest" % "3.1.0-SNAP7" % Test,
+  nativeLinkStubs := true,
+  crossScalaVersions := Seq("2.11.12")
 )
