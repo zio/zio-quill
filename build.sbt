@@ -4,6 +4,7 @@ import scalariform.formatter.preferences._
 import sbtrelease.ReleasePlugin
 import scala.sys.process.Process
 import sbtcrossproject.crossProject
+import java.io.{File => JFile}
 
 enablePlugins(TutPlugin)
 
@@ -12,8 +13,16 @@ lazy val baseModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
 )
 
 lazy val dbModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
-  `quill-jdbc`, `quill-jdbc-monix`, `quill-finagle-mysql`, `quill-finagle-postgres`,
-  `quill-async`, `quill-async-mysql`, `quill-async-postgres`
+  `quill-jdbc`, `quill-jdbc-monix`
+)
+
+lazy val asyncModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
+  `quill-async`, `quill-async-mysql`, `quill-async-postgres`,
+  `quill-finagle-mysql`, `quill-finagle-postgres`
+)
+
+lazy val codegenModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
+  `quill-codegen`, `quill-codegen-jdbc`, `quill-codegen-tests`
 )
 
 lazy val bigdataModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
@@ -21,7 +30,7 @@ lazy val bigdataModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
 )
 
 lazy val allModules =
-  baseModules ++ dbModules ++ bigdataModules
+  baseModules ++ dbModules ++ asyncModules ++ codegenModules ++ bigdataModules
 
 lazy val filteredModules = {
   val modulesStr = sys.props.get("modules")
@@ -34,6 +43,12 @@ lazy val filteredModules = {
     case Some("db") =>
       println("Compiling Database Modules")
       dbModules
+    case Some("async") =>
+      println("Compiling Async Database Modules")
+      asyncModules
+    case Some("codegen") =>
+      println("Compiling Code Generator Modules")
+      codegenModules
     case Some("bigdata") =>
       println("Compiling Big Data Modules")
       bigdataModules
@@ -95,6 +110,74 @@ lazy val `quill-sql` =
 
 lazy val `quill-sql-jvm` = `quill-sql`.jvm
 lazy val `quill-sql-js` = `quill-sql`.js
+
+
+lazy val `quill-codegen` =
+  (project in file("quill-codegen"))
+    .settings(commonSettings)
+    .dependsOn(`quill-core-jvm` % "compile->compile;test->test")
+
+lazy val `quill-codegen-jdbc` =
+  (project in file("quill-codegen-jdbc"))
+    .settings(commonSettings)
+    .settings(
+      fork in Test := true,
+      libraryDependencies ++= Seq(
+        "com.github.choppythelumberjack" %% "tryclose" % "1.0.0",
+        "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test
+      )
+    )
+    .dependsOn(`quill-codegen` % "compile->compile;test->test")
+    .dependsOn(`quill-jdbc` % "compile->compile;test->test")
+
+
+val codeGen = taskKey[Seq[File]]("Run Code Generation Phase for Integration Testing")
+
+lazy val `quill-codegen-tests` =
+  (project in file("quill-codegen-tests"))
+    .settings(basicSettings)
+    .settings(
+      libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test,
+      fork in Test := true,
+      (sourceGenerators in Compile) += (codeGen in Compile),
+      (excludeFilter in unmanagedSources) := excludePathsIfOracle {
+        (unmanagedSourceDirectories in Test).value.map { dir =>
+          (dir / "io" / "getquill" / "codegen" / "OracleCodegenTestCases.scala").getCanonicalPath
+        } ++
+        (unmanagedSourceDirectories in Test).value.map { dir =>
+          (dir / "io" / "getquill" / "codegen" / "util" / "WithOracleContext.scala").getCanonicalPath
+        }
+      },
+      (codeGen in Compile) := {
+        def recrusiveList(file:JFile): List[JFile] = {
+          if (file.isDirectory)
+            Option(file.listFiles()).map(_.flatMap(child=> recrusiveList(child)).toList).toList.flatten
+          else
+            List(file)
+        }
+        val r = (runner in Compile).value
+        val s = streams.value.log
+        val sourcePath = sourceManaged.value
+        val classPath = (fullClasspath in Test in `quill-codegen-jdbc`).value.map(_.data)
+
+        // We could put the code generated products directly in the `sourcePath` directory but for some reason
+        // intellij doesn't like it unless there's a `main` directory inside.
+        val fileDir = new File(sourcePath, "main").getAbsoluteFile
+        val dbs =
+          Seq("testH2DB", "testMysqlDB", "testPostgresDB", "testSqliteDB", "testSqlServerDB"
+          ) ++ includeIfOracle("testOracleDB")
+        println(s"Running code generation for DBs: ${dbs.mkString(", ")}")
+        r.run(
+          "io.getquill.codegen.integration.CodegenTestCaseRunner",
+          classPath,
+          // If oracle tests are included, enable code generation for it
+          fileDir.getAbsolutePath +: dbs,
+          s
+        )
+        recrusiveList(fileDir)
+      }
+    )
+    .dependsOn(`quill-codegen-jdbc` % "compile->test")
 
 val includeOracle =
   sys.props.getOrElse("oracle", "false").toBoolean
@@ -363,28 +446,30 @@ lazy val jdbcTestingSettings = Seq(
       "com.oracle.jdbc" % "ojdbc8" % "18.3.0.0.0" % Test
     )
   },
-  excludeFilter in unmanagedSources := {
-    val oracleSourceDirs =
-      (unmanagedSourceDirectories in Test).value.map { dir =>
-        (dir / "io" / "getquill" / "context" / "jdbc" / "oracle").getCanonicalPath
-      } ++
-      (unmanagedSourceDirectories in Test).value.map { dir =>
-          (dir / "io" / "getquill" / "oracle").getCanonicalPath
-      }
-    val excludeThisPath =
-      (path: String) =>
-        oracleSourceDirs.exists { srcDir =>
-          !includeOracle && (path contains srcDir)
-        }
-    new SimpleFileFilter(file => {
-      if (excludeThisPath(file.getCanonicalPath))
-        println(s"Excluding: ${file.getCanonicalPath}")
-      excludeThisPath(file.getCanonicalPath)
-    })
+  excludeFilter in unmanagedSources := excludePathsIfOracle {
+    (unmanagedSourceDirectories in Test).value.map { dir =>
+      (dir / "io" / "getquill" / "context" / "jdbc" / "oracle").getCanonicalPath
+    } ++
+    (unmanagedSourceDirectories in Test).value.map { dir =>
+        (dir / "io" / "getquill" / "oracle").getCanonicalPath
+    }
   }
 )
 
-lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
+def excludePathsIfOracle(paths:Seq[String]) = {
+  val excludeThisPath =
+    (path: String) =>
+      paths.exists { srcDir =>
+        !includeOracle && (path contains srcDir)
+      }
+  new SimpleFileFilter(file => {
+    if (excludeThisPath(file.getCanonicalPath))
+      println(s"Excluding: ${file.getCanonicalPath}")
+    excludeThisPath(file.getCanonicalPath)
+  })
+}
+
+lazy val basicSettings = Seq(
   organization := "io.getquill",
   scalaVersion := "2.11.12",
   crossScalaVersions := Seq("2.11.12","2.12.7"),
@@ -394,6 +479,24 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
     "ch.qos.logback"  % "logback-classic" % "1.2.3"     % Test,
     "com.google.code.findbugs" % "jsr305" % "3.0.2"     % Provided // just to avoid warnings during compilation
   ),
+  ScalariformKeys.preferences := ScalariformKeys.preferences.value
+    .setPreference(AlignParameters, true)
+    .setPreference(CompactStringConcatenation, false)
+    .setPreference(IndentPackageBlocks, true)
+    .setPreference(FormatXml, true)
+    .setPreference(PreserveSpaceBeforeArguments, false)
+    .setPreference(DoubleIndentConstructorArguments, false)
+    .setPreference(RewriteArrowSymbols, false)
+    .setPreference(AlignSingleLineCaseStatements, true)
+    .setPreference(AlignSingleLineCaseStatements.MaxArrowIndent, 40)
+    .setPreference(SpaceBeforeColon, false)
+    .setPreference(SpaceInsideBrackets, false)
+    .setPreference(SpaceInsideParentheses, false)
+    .setPreference(DanglingCloseParenthesis, Force)
+    .setPreference(IndentSpaces, 2)
+    .setPreference(IndentLocalDefs, false)
+    .setPreference(SpacesWithinPatternBinders, true)
+    .setPreference(SpacesAroundMultiImports, true),
   EclipseKeys.createSrc := EclipseCreateSrc.Default,
   unmanagedClasspath in Test ++= Seq(
     baseDirectory.value / "src" / "test" / "resources"
@@ -414,37 +517,24 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ Seq(
   scalacOptions ++= {
     CrossVersion.partialVersion(scalaVersion.value) match {
       case Some((2, 11)) =>
-        Seq("-Xlint", "-Ywarn-unused-import")
+        Seq("-Xlint", "-Ywarn-unused-import", "" +
+          "-Xsource:2.12" // needed so existential types work correctly
+        )
       case Some((2, 12)) =>
         Seq("-Xlint:-unused,_",
-            "-Ywarn-unused:imports",
-            "-Ycache-macro-class-loader:last-modified"
+          "-Ywarn-unused:imports",
+          "-Ycache-macro-class-loader:last-modified"
         )
       case _ => Seq()
     }
   },
   concurrentRestrictions in Global += Tags.limit(Tags.Test, 1),
-  releasePublishArtifactsAction := PgpKeys.publishSigned.value,
   scoverage.ScoverageKeys.coverageMinimum := 96,
-  scoverage.ScoverageKeys.coverageFailOnMinimum := false,
-  ScalariformKeys.preferences := ScalariformKeys.preferences.value
-    .setPreference(AlignParameters, true)
-    .setPreference(CompactStringConcatenation, false)
-    .setPreference(IndentPackageBlocks, true)
-    .setPreference(FormatXml, true)
-    .setPreference(PreserveSpaceBeforeArguments, false)
-    .setPreference(DoubleIndentConstructorArguments, false)
-    .setPreference(RewriteArrowSymbols, false)
-    .setPreference(AlignSingleLineCaseStatements, true)
-    .setPreference(AlignSingleLineCaseStatements.MaxArrowIndent, 40)
-    .setPreference(SpaceBeforeColon, false)
-    .setPreference(SpaceInsideBrackets, false)
-    .setPreference(SpaceInsideParentheses, false)
-    .setPreference(DanglingCloseParenthesis, Force)
-    .setPreference(IndentSpaces, 2)
-    .setPreference(IndentLocalDefs, false)
-    .setPreference(SpacesWithinPatternBinders, true)
-    .setPreference(SpacesAroundMultiImports, true),
+  scoverage.ScoverageKeys.coverageFailOnMinimum := false
+)
+
+lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ basicSettings ++ Seq(
+  releasePublishArtifactsAction := PgpKeys.publishSigned.value,
   publishMavenStyle := true,
   publishTo := {
     val nexus = "https://oss.sonatype.org/"
