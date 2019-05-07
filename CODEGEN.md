@@ -1,13 +1,12 @@
 # Quill Code Generator
 
-This library is designed to give you a few options as to what kind of 
-schema to generate from JDBC metadata for quill. You can choose to generate
-either simple case classes or a combination of case classes and query schemas,
-as well as whether they should written to one file, multiple files, or
-just a list of strings (useful for streaming directly into a repl).
-Inspired by the Slick code generator albeit a bit simpler,
-the code generator is fairly customizeable and a couple of
-ready-to-use implementations come out of the box. 
+This library gives you a few options as to what kind of 
+schema to generate from JDBC metadata for Quill. You can choose to generate
+simple case classes that are controlled entirely but a Quill Naming Strategy,
+or a combination of case classes and `querySchema`s.
+You can also choose whether they should written to one file, multiple files, or
+just a list of strings (useful for executing directly into a repl).
+Thanks to the Slick code generator creators for providing inspiration for this library!
 
 Currently the code generator is only available for JDBC databases but it will
 be extended in the future for Cassandra as well as others.
@@ -29,11 +28,11 @@ libraryDependencies += "io.getquill" %% "quill-codegen-jdbc" % "3.1.1-SNAPSHOT"
 
 ## SimpleJdbcCodegen
  
-This code generator is to generates simple case classes representing tables
+This code generator generates simple case classes, each representing a table
 in a database. It does not generate Quill `querySchema` objects. 
 Create one or multiple CodeGeneratorConfig objects
 and call the `.writeFiles` or `.writeStrings` methods
-on the code generator and the rest happens automatically.
+on the code generator to generate the code.
 
 Given the following schema:
 ````sql
@@ -64,8 +63,7 @@ gen.writeFiles("src/main/scala/com/my/project")
 ````
 
 You can parse column and table names using either the `SnakeCaseNames` or the and the `LiteralNames` parser
-which are used with the respective Quill Naming Strategies. (For more complex naming rules, use the `ComposeableTraitsJdbcCodegen`
-in order to generate `querySchema` object which can have fully customized column/table names).
+which are used with the respective Quill Naming Strategies. They cannot be customized further with this code generator.
 
 The following case case classes will be generated
 ````scala
@@ -83,14 +81,15 @@ case class Address(personFk: Int, street: Option[String], zip: Option[Int])
 ````
 
 
-If you wish to generate schemas with custom table or column names, you need to use the ComposeableTraitsGen
-in order to generate your schemas.
+If you wish to generate schemas with custom table or column names, you need to use the `ComposeableTraitsJdbcCodegen`
+in order to generate your schemas with `querySchema` objects.
 
 ## Composeable Traits Codegen
 
 The `ComposeableTraitsJdbcCodegen` allows you to customize table/column names in entity case classes
-and generates the necessary `querySchema` object in order to map them. Additionally, it generates a 
-database-independent query schema trait which can be composed with a `Context` object of your choice.
+and generates the necessary `querySchema` object in order to map the fields. 
+Additionally, it generates a database-independent query schema trait which can be composed 
+with a `Context` object of your choice.
 
 Given the following schema:
 ````sql
@@ -168,8 +167,8 @@ object MyCustomContext extends SqlMirrorContext[H2Dialect, Literal](H2Dialect, L
 
 ## Stereotyping
 Frequently in corporate databases, the same kind of table is duplicated across multiple schemas, databases, etc...
-for different business units. Typically, all the duplicates of the table will have almost the same columns
-with only minor differences. Stereotyped code-generation aims to take the 'lowest common denominator' of all these schemas
+for different business units. Typically, all the duplicates of the table will have nearly the same columns
+with just minor differences. Stereotyped code-generation aims to take the 'lowest common denominator' of all these schemas
 in order to produce a case class that can be used across all of them.
 
 Examine the following H2 DDL:
