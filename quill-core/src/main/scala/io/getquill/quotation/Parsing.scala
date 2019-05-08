@@ -3,6 +3,7 @@ package io.getquill.quotation
 import scala.reflect.ClassTag
 import io.getquill.ast._
 import io.getquill.Embedded
+import io.getquill.context.ReturnMultipleField
 import io.getquill.norm.BetaReduction
 import io.getquill.util.Messages.RichContext
 import io.getquill.util.Interleave
@@ -701,7 +702,20 @@ trait Parsing {
     case q"$query.delete" =>
       Delete(astParser(query))
     case q"$action.returning[$r]" =>
-      ReturningRecord(astParser(action), typeParser(r))
+      val canReturnMultipleFields =
+        c.prefix.tree.tpe.typeArgs
+          .headOption
+          .flatMap(_.members.find {
+            case ts: TypeSymbol if ts.asType.typeSignature =:= typeOf[ReturnMultipleField] => true
+            case _ => false
+          })
+          .getOrElse(false)
+
+      if (canReturnMultipleFields) {
+        ReturningRecord(astParser(action), typeParser(r))
+      } else {
+        c.fail("Context doesn't support query returning multiple fields")
+      }
     case q"$action.returning[$r](($alias) => $body)" =>
       Returning(astParser(action), identParser(alias), astParser(body))
     case q"$query.foreach[$t1, $t2](($alias) => $body)($f)" if (is[CoreDsl#Query[Any]](query)) =>
