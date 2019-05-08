@@ -131,16 +131,18 @@ lazy val `quill-codegen-jdbc` =
     .dependsOn(`quill-jdbc` % "compile->compile;test->test")
 
 
-val codeGen = taskKey[Seq[File]]("Run Code Generation Phase for Integration Testing")
+val codegen = taskKey[Seq[File]]("Run Code Generation Phase for Integration Testing")
 
 lazy val `quill-codegen-tests` =
   (project in file("quill-codegen-tests"))
     .settings(basicSettings)
     .settings(
-      publish := { },
+      publish := {},
+      publishLocal := {},
+      publishTo := Some(Resolver.file("Unused transient repository", file("target/unusedrepo"))),
       libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test,
       fork in Test := true,
-      (sourceGenerators in Compile) += (codeGen in Compile),
+      (sourceGenerators in Test) += (codegen in Test),
       (excludeFilter in unmanagedSources) := excludePathsIfOracle {
         (unmanagedSourceDirectories in Test).value.map { dir =>
           (dir / "io" / "getquill" / "codegen" / "OracleCodegenTestCases.scala").getCanonicalPath
@@ -149,7 +151,7 @@ lazy val `quill-codegen-tests` =
           (dir / "io" / "getquill" / "codegen" / "util" / "WithOracleContext.scala").getCanonicalPath
         }
       },
-      (codeGen in Compile) := {
+      (codegen in Test) := {
         def recrusiveList(file:JFile): List[JFile] = {
           if (file.isDirectory)
             Option(file.listFiles()).map(_.flatMap(child=> recrusiveList(child)).toList).toList.flatten
