@@ -135,7 +135,7 @@ val codegen = taskKey[Seq[File]]("Run Code Generation Phase for Integration Test
 
 lazy val `quill-codegen-tests` =
   (project in file("quill-codegen-tests"))
-    .settings(basicSettings)
+    .settings(commonSettings: _*)
     .settings(
       publish := {},
       publishLocal := {},
