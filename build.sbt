@@ -60,7 +60,7 @@ lazy val filteredModules = {
 
 lazy val `quill` =
   (project in file("."))
-    .settings(commonSettings)
+    .settings(commonSettings: _*)
     .settings(`tut-settings`:_*)
     .aggregate(filteredModules.map(_.project): _*)
     .dependsOn(filteredModules: _*)
@@ -114,12 +114,12 @@ lazy val `quill-sql-js` = `quill-sql`.js
 
 lazy val `quill-codegen` =
   (project in file("quill-codegen"))
-    .settings(commonSettings)
+    .settings(commonSettings: _*)
     .dependsOn(`quill-core-jvm` % "compile->compile;test->test")
 
 lazy val `quill-codegen-jdbc` =
   (project in file("quill-codegen-jdbc"))
-    .settings(commonSettings)
+    .settings(commonSettings: _*)
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
