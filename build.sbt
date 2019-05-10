@@ -54,7 +54,7 @@ lazy val filteredModules = {
       bigdataModules
     case _ =>
       println("Compiling All Modules")
-      allModules
+      baseModules ++ dbModules ++ asyncModules ++ bigdataModules
   }
 }
 
