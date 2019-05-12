@@ -8,6 +8,7 @@ import io.getquill.norm.BetaReduction
 import io.getquill.util.Messages.RichContext
 import io.getquill.util.Interleave
 import io.getquill.dsl.CoreDsl
+import io.getquill.idiom.Idiom
 
 import scala.annotation.tailrec
 import scala.collection.immutable.StringOps
@@ -702,19 +703,29 @@ trait Parsing {
     case q"$query.delete" =>
       Delete(astParser(query))
     case q"$action.returning[$r]" =>
-      val canReturnMultipleFields =
-        c.prefix.tree.tpe.typeArgs
+      val maybeIdiomTpe =
+        c.prefix.tree.tpe
+          .baseClasses
+          .flatMap { baseClass =>
+            val baseClassTypeArgs = c.prefix.tree.tpe.baseType(baseClass).typeArgs
+            baseClassTypeArgs.find { typeArg =>
+              typeArg <:< typeOf[Idiom]
+            }
+          }
           .headOption
-          .flatMap(_.members.find {
-            case ts: TypeSymbol if ts.asType.typeSignature =:= typeOf[ReturnMultipleField] => true
-            case _ => false
-          })
-          .getOrElse(false)
 
-      if (canReturnMultipleFields) {
-        ReturningRecord(astParser(action), typeParser(r))
-      } else {
-        c.fail("Context doesn't support query returning multiple fields")
+      val canReturn = maybeIdiomTpe
+        .toSeq
+        .flatMap(_.members)
+        .exists {
+          case ts: TypeSymbol if ts.asType.typeSignature =:= typeOf[ReturnMultipleField] => true
+          case _ => false
+        }
+
+      (maybeIdiomTpe, canReturn) match {
+        case (Some(_), true)         => ReturningRecord(astParser(action), typeParser(r))
+        case (Some(idiomTpe), false) => c.fail(s"""Idiom "${idiomTpe.typeSymbol.fullName}" doesn't support query returning multiple fields""")
+        case (None, _)               => c.fail("provided context doesnt define sql idiom")
       }
     case q"$action.returning[$r](($alias) => $body)" =>
       Returning(astParser(action), identParser(alias), astParser(body))
