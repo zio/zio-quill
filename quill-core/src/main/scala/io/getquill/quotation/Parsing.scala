@@ -8,6 +8,7 @@ import io.getquill.norm.BetaReduction
 import io.getquill.util.Messages.RichContext
 import io.getquill.util.Interleave
 import io.getquill.dsl.CoreDsl
+import io.getquill.norm.capture.AvoidAliasConflict
 import io.getquill.idiom.Idiom
 
 import scala.annotation.tailrec
@@ -18,6 +19,10 @@ trait Parsing {
   this: Quotation =>
 
   import c.universe.{ Ident => _, Constant => _, Function => _, If => _, Block => _, _ }
+
+  // Variables that need to be sanitized out in various places due to internal conflicts with the way
+  // macros hard handeled in MetaDsl
+  private[getquill] val dangerousVariables = Set("v").map(Ident(_))
 
   case class Parser[T](p: PartialFunction[Tree, T])(implicit ct: ClassTag[T]) {
 
@@ -318,8 +323,15 @@ trait Parsing {
     case q"new { def apply[..$t1](...$params) = $body }" =>
       c.fail("Anonymous classes aren't supported for function declaration anymore. Use a method with a type parameter instead. " +
         "For instance, replace `val q = quote { new { def apply[T](q: Query[T]) = ... } }` by `def q[T] = quote { (q: Query[T] => ... }`")
-    case q"(..$params) => $body" =>
-      Function(params.map(identParser(_)), astParser(body))
+    case q"(..$params) => $body" => {
+      val subtree = Function(params.map(identParser(_)), astParser(body))
+      // If there are actions inside the subtree, we need to do some additional sanitizations
+      // of the variables so that their content will not collide with code that we have generated.
+      if (CollectAst.byType[Action](subtree).nonEmpty)
+        AvoidAliasConflict.sanitizeVariables(subtree, dangerousVariables)
+      else
+        subtree
+    }
   }
 
   val identParser: Parser[Ident] = Parser[Ident] {
@@ -730,7 +742,9 @@ trait Parsing {
     case q"$action.returning[$r](($alias) => $body)" =>
       Returning(astParser(action), identParser(alias), astParser(body))
     case q"$query.foreach[$t1, $t2](($alias) => $body)($f)" if (is[CoreDsl#Query[Any]](query)) =>
-      Foreach(astParser(query), identParser(alias), astParser(body))
+      // If there are actions inside the subtree, we need to do some additional sanitizations
+      // of the variables so that their content will not collide with code that we have generated.
+      AvoidAliasConflict.sanitizeVariables(Foreach(astParser(query), identParser(alias), astParser(body)), dangerousVariables)
   }
 
   private val assignmentParser: Parser[Assignment] = Parser[Assignment] {

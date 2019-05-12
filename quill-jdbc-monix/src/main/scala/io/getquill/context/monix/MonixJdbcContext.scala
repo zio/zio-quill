@@ -50,7 +50,7 @@ abstract class MonixJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](
   override def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T]): Task[List[T]] =
     super.executeBatchActionReturning(groups, extractor)
 
-  override private[getquill] val effect: Runner = runner
+  override protected val effect: Runner = runner
   import runner._
 
   private val currentConnection: Local[Option[Connection]] = Local(None)

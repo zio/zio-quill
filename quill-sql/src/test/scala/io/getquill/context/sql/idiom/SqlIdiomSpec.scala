@@ -1,6 +1,7 @@
 package io.getquill.context.sql.idiom
 
 import io.getquill.Spec
+import io.getquill.context.mirror.Row
 import io.getquill.context.sql.testContext
 import io.getquill.context.sql.testContext._
 
@@ -844,6 +845,37 @@ class SqlIdiomSpec extends Spec {
     }
     "action" - {
       "insert" - {
+        "not affected by variable name" - {
+          "simple" in {
+            val q = quote { (v: TestEntity) =>
+              query[TestEntity].insert(v)
+            }
+            val v = TestEntity("s", 1, 2L, Some(1))
+            testContext.run(q(lift(v))).string mustEqual "INSERT INTO TestEntity (s,i,l,o) VALUES (?, ?, ?, ?)"
+          }
+          "returning" in {
+            val q = quote { (v: TestEntity) =>
+              query[TestEntity].insert(v)
+            }
+            val v = TestEntity("s", 1, 2L, Some(1))
+            testContext.run(q(lift(v)).returning(v => v.i)).string mustEqual "INSERT INTO TestEntity (s,l,o) VALUES (?, ?, ?)"
+          }
+          "foreach" in {
+            val v = TestEntity("s", 1, 2L, Some(1))
+            testContext.run(
+              liftQuery(List(v)).foreach(v => query[TestEntity].insert(v))
+            ).groups mustEqual List(("INSERT INTO TestEntity (s,i,l,o) VALUES (?, ?, ?, ?)", List(Row(v.productIterator.toList: _*))))
+          }
+          "foreach returning" in {
+            val v = TestEntity("s", 1, 2L, Some(1))
+            testContext.run(
+              liftQuery(List(v)).foreach(v => query[TestEntity].insert(v).returning(v => v.i))
+            ).groups mustEqual
+              List(("INSERT INTO TestEntity (s,l,o) VALUES (?, ?, ?)", "i",
+                List(Row(v.productIterator.toList.filter(m => !m.isInstanceOf[Int]): _*))
+              ))
+          }
+        }
         "simple" in {
           val q = quote {
             qr1.insert(_.i -> 1, _.s -> "s")

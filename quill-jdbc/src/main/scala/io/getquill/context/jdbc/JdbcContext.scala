@@ -27,7 +27,7 @@ abstract class JdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy]
   override type RunBatchActionResult = List[Long]
   override type RunBatchActionReturningResult[T] = List[T]
 
-  override private[getquill] val effect: ContextEffect[Result] = new ContextEffect[Result] {
+  override protected val effect: ContextEffect[Result] = new ContextEffect[Result] {
     override def wrap[T](t: => T): T = t
     override def push[A, B](result: A)(f: A => B): B = f(result)
     override def seq[A, B](list: List[A]): List[A] = list

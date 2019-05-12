@@ -156,7 +156,10 @@ CREATE TYPE Personal(
     number INT,
     street TEXT,
     name frozen<Name>,
-    optName frozen<Name>
+    optName frozen<Name>,
+    list LIST<TEXT>,
+    sets SET<INT>,
+    map MAP<INT, TEXT>
 );
 
 CREATE TABLE WithEverything(

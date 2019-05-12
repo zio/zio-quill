@@ -1,7 +1,9 @@
 package io.getquill.context.async.postgres
 
 import java.time.{ LocalDate, LocalDateTime }
+import java.util.{ Date, UUID }
 
+import io.getquill.context.sql.EncodingTestType
 import io.getquill.context.sql.encoding.ArrayEncodingBaseSpec
 import org.joda.time.{ DateTime => JodaDateTime, LocalDate => JodaLocalDate, LocalDateTime => JodaLocalDateTime }
 
@@ -77,7 +79,77 @@ class ArrayAsyncEncodingSpec extends ArrayEncodingBaseSpec {
     actual2 mustEqual List()
   }
 
+  // Need to have an actual value in the table in order for the decoder to go off. Previously,
+  // there was guarenteed to be information there due to ordering of build artifacts but not anymore.
   "fail if found not an array" in {
+    case class RealEncodingTestEntity(
+      v1:  String,
+      v2:  BigDecimal,
+      v3:  Boolean,
+      v4:  Byte,
+      v5:  Short,
+      v6:  Int,
+      v7:  Long,
+      v8:  Float,
+      v9:  Double,
+      v10: Array[Byte],
+      v11: Date,
+      v12: EncodingTestType,
+      v13: LocalDate,
+      v14: UUID,
+      o1:  Option[String],
+      o2:  Option[BigDecimal],
+      o3:  Option[Boolean],
+      o4:  Option[Byte],
+      o5:  Option[Short],
+      o6:  Option[Int],
+      o7:  Option[Long],
+      o8:  Option[Float],
+      o9:  Option[Double],
+      o10: Option[Array[Byte]],
+      o11: Option[Date],
+      o12: Option[EncodingTestType],
+      o13: Option[LocalDate],
+      o14: Option[UUID]
+    )
+
+    val insertValue =
+      RealEncodingTestEntity(
+        "s",
+        BigDecimal(1.1),
+        true,
+        11.toByte,
+        23.toShort,
+        33,
+        431L,
+        34.4f,
+        42d,
+        Array(1.toByte, 2.toByte),
+        new Date(31200000),
+        EncodingTestType("s"),
+        LocalDate.of(2013, 11, 23),
+        UUID.randomUUID(),
+        Some("s"),
+        Some(BigDecimal(1.1)),
+        Some(true),
+        Some(11.toByte),
+        Some(23.toShort),
+        Some(33),
+        Some(431L),
+        Some(34.4f),
+        Some(42d),
+        Some(Array(1.toByte, 2.toByte)),
+        Some(new Date(31200000)),
+        Some(EncodingTestType("s")),
+        Some(LocalDate.of(2013, 11, 23)),
+        Some(UUID.randomUUID())
+      )
+
+    val realEntity = quote {
+      querySchema[RealEncodingTestEntity]("EncodingTestEntity")
+    }
+    await(ctx.run(realEntity.insert(lift(insertValue))))
+
     case class EncodingTestEntity(v1: List[String])
     intercept[IllegalStateException](await(ctx.run(query[EncodingTestEntity])))
   }
