@@ -725,7 +725,7 @@ trait Parsing {
       (maybeIdiomTpe, canReturn) match {
         case (Some(_), true)         => ReturningRecord(astParser(action), typeParser(r))
         case (Some(idiomTpe), false) => c.fail(s"""Idiom "${idiomTpe.typeSymbol.fullName}" doesn't support query returning multiple fields""")
-        case (None, _)               => c.fail("provided context doesnt define sql idiom")
+        case (None, _)               => c.fail("provided context doesn't define sql idiom")
       }
     case q"$action.returning[$r](($alias) => $body)" =>
       Returning(astParser(action), identParser(alias), astParser(body))
