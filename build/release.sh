@@ -33,11 +33,11 @@ then
 
     elif [[ $TRAVIS_BRANCH == "master" ]]
     then
-        $SBT_2_12 publish
-        $SBT_2_11 publish
+        $SBT_2_12 -Dmodules=base publish
+        $SBT_2_11 -Dmodules=base publish
     else
         echo "version in ThisBuild := \"$TRAVIS_BRANCH-SNAPSHOT\"" > version.sbt
-        $SBT_2_12 publish
-        $SBT_2_11 publish
+        $SBT_2_12 -Dmodules=base publish
+        $SBT_2_11 -Dmodules=base publish
     fi
 fi
