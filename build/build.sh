@@ -20,7 +20,7 @@ export CASSANDRA_PORT=19042
 export ORIENTDB_HOST=127.0.0.1
 export ORIENTDB_PORT=12424
 
-export SBT_ARGS="-Dquill.macro.log=false -Doracle=true -Xms1024m -Xmx3g -Xss5m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC ++$TRAVIS_SCALA_VERSION"
+export SBT_ARGS="-Dquill.macro.log=false -Xms1024m -Xmx3g -Xss5m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC ++$TRAVIS_SCALA_VERSION"
 
 modules=$1
 
@@ -69,7 +69,7 @@ function wait_for_databases() {
     sbt checkUnformattedFiles
 
     # Start sbt compilation and database setup in parallel
-    sbt -Dmodules=base $SBT_ARGS test & COMPILE=$!
+    sbt -Dmodules=base -Doracle=true $SBT_ARGS test & COMPILE=$!
     ./build/setup_databases.sh & SETUP=$!
 
     # Wait on database setup. If it has failed then kill compilation process and exit with error
@@ -81,6 +81,10 @@ function wait_for_databases() {
        kill -9 $COMPILE
        exit 1
     fi
+
+    echo "Loading Oracle Drivers From Container"
+    ./build/oracle_setup/load_jdbc.sh
+
     echo "Database Setup is finished, waiting for the compilation of core module"
 
     wait $COMPILE
