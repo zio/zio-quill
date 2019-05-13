@@ -26,5 +26,6 @@ env:
 jobs:
   include:
     - stage: release_test
+      scala: 2.12.6
       script:
         - travis_retry ./build/release_test.sh
