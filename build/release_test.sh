@@ -11,5 +11,5 @@ openssl aes-256-cbc -pass pass:$ENCRYPTION_PASSWORD -in ./build/pubring.gpg.enc 
 openssl aes-256-cbc -pass pass:$ENCRYPTION_PASSWORD -in ./build/credentials.sbt.enc -out local.credentials.sbt -d
 openssl aes-256-cbc -pass pass:$ENCRYPTION_PASSWORD -in ./build/deploy_key.pem.enc -out local.deploy_key.pem -d
 
-$SBT_2_12 publish
-$SBT_2_11 publish
+$SBT_2_12 -Dmodules=base publish
+$SBT_2_11 -Dmodules=base publish
