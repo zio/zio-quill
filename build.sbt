@@ -33,28 +33,36 @@ lazy val allModules =
   baseModules ++ dbModules ++ asyncModules ++ codegenModules ++ bigdataModules
 
 lazy val filteredModules = {
-  val modulesStr = sys.props.get("modules")
-  println(s"Modules Argument Value: ${modulesStr}")
+  val modulesCommaList = sys.props.get("modules")
+  println(s"Modules Argument Value: ${modulesCommaList}")
 
-  modulesStr match {
-    case Some("base") =>
-      println("Compiling Base Modules")
-      baseModules
-    case Some("db") =>
-      println("Compiling Database Modules")
-      dbModules
-    case Some("async") =>
-      println("Compiling Async Database Modules")
-      asyncModules
-    case Some("codegen") =>
-      println("Compiling Code Generator Modules")
-      codegenModules
-    case Some("bigdata") =>
-      println("Compiling Big Data Modules")
-      bigdataModules
-    case _ =>
-      println("Compiling All Modules")
-      allModules
+  def printModules(modules: Seq[sbt.ClasspathDep[sbt.ProjectReference]]) =
+    modules.map(_.project.project).mkString(", ")
+
+  def matchModuleStr(moduleStr: String) =
+    moduleStr match {
+      case "base"    => baseModules
+      case "db"      => dbModules
+      case "async"   => asyncModules
+      case "codegen" => codegenModules
+      case "bigdata" => bigdataModules
+      case _         => Seq[sbt.ClasspathDep[sbt.ProjectReference]]()
+    }
+
+  val moduleList =
+    modulesCommaList.map(
+      _.split(",").map(_.trim).map(matchModuleStr(_)).foldLeft(Seq[sbt.ClasspathDep[sbt.ProjectReference]]())(_ ++ _)
+    ) match {
+      case Some(list) => list
+      case None => Seq[sbt.ClasspathDep[sbt.ProjectReference]]()
+    }
+
+  if (moduleList.isEmpty) {
+    println(s"Compiling All Modules: ${printModules(allModules)}")
+    allModules
+  } else {
+    println(s"Compiling Selected Modules: ${printModules(moduleList)}")
+    moduleList
   }
 }
 
