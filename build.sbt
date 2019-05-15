@@ -22,7 +22,7 @@ lazy val asyncModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
 )
 
 lazy val codegenModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
-  `quill-codegen`, `quill-codegen-jdbc`, `quill-codegen-tests`
+  `quill-codegen` //, `quill-codegen-jdbc`, `quill-codegen-tests`
 )
 
 lazy val bigdataModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
