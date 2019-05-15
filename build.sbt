@@ -115,11 +115,13 @@ lazy val `quill-sql-js` = `quill-sql`.js
 lazy val `quill-codegen` =
   (project in file("quill-codegen"))
     .settings(commonSettings: _*)
+    .settings(mimaSettings: _*)
     .dependsOn(`quill-core-jvm` % "compile->compile;test->test")
 
 lazy val `quill-codegen-jdbc` =
   (project in file("quill-codegen-jdbc"))
     .settings(commonSettings: _*)
+    .settings(mimaSettings: _*)
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
@@ -136,6 +138,7 @@ val codegen = taskKey[Seq[File]]("Run Code Generation Phase for Integration Test
 lazy val `quill-codegen-tests` =
   (project in file("quill-codegen-tests"))
     .settings(commonSettings: _*)
+    .settings(mimaSettings: _*)
     .settings(
       libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test,
       fork in Test := true,
