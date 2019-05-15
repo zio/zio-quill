@@ -11,7 +11,7 @@ then
     openssl aes-256-cbc -pass pass:$ENCRYPTION_PASSWORD -in ./build/pubring.gpg.enc -out local.pubring.gpg -d
     openssl aes-256-cbc -pass pass:$ENCRYPTION_PASSWORD -in ./build/credentials.sbt.enc -out local.credentials.sbt -d
     openssl aes-256-cbc -pass pass:$ENCRYPTION_PASSWORD -in ./build/deploy_key.pem.enc -out local.deploy_key.pem -d
-    
+
     ls -ltr
     sleep 3 # Need to wait until credential files fully written or build fails sometimes
 
@@ -33,11 +33,11 @@ then
 
     elif [[ $TRAVIS_BRANCH == "master" ]]
     then
-        $SBT_2_12 publish
-        $SBT_2_11 publish
+        $SBT_2_12 -Dmodules=base,db publish
+        $SBT_2_11 -Dmodules=base,db publish
     else
         echo "version in ThisBuild := \"$TRAVIS_BRANCH-SNAPSHOT\"" > version.sbt
-        $SBT_2_12 publish
-        $SBT_2_11 publish
+        $SBT_2_12 -Dmodules=base,db publish
+        $SBT_2_11 -Dmodules=base,db publish
     fi
 fi
