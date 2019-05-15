@@ -145,6 +145,10 @@ lazy val `quill-codegen-tests` =
   (project in file("quill-codegen-tests"))
     .settings(commonSettings: _*)
     .settings(
+      publishArtifact := false,
+      publishArtifact in (Compile, packageBin) := true
+    )
+    .settings(
       libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test,
       fork in Test := true,
       (sourceGenerators in Test) += (codegen in Test),
