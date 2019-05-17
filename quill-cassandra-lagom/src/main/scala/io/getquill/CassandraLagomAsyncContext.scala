@@ -1,6 +1,7 @@
 package io.getquill
 
 import akka.Done
+import com.datastax.driver.core.BoundStatement
 import com.lightbend.lagom.scaladsl.persistence.cassandra.CassandraSession
 import io.getquill.util.ContextLogger
 
@@ -20,18 +21,25 @@ class CassandraLagomAsyncContext[N <: NamingStrategy](
 
   private val logger = ContextLogger(this.getClass)
 
-  def bindAction[T](cql: String, prepare: Prepare = identityPrepare)(implicit executionContext: ExecutionContext): Future[PrepareRow] = {
-    prepareAsyncAndGetStatement(cql, prepare, logger)
+  def bindAction[T](cql: String, prepare: Prepare = identityPrepare)(implicit executionContext: ExecutionContext): CassandraSession => Future[BoundStatement] = (session: Session) => {
+    val prepareResult = session.prepare(cql).map(bs => prepare(bs.bind()))
+    val preparedRow = prepareResult.map {
+      case (params, bs) =>
+        logger.logQuery(cql, params)
+        bs
+    }
+    preparedRow
   }
 
-  def bindBatchAction[T](groups: List[BatchGroup])(implicit executionContext: ExecutionContext): Future[List[PrepareRow]] = {
-    Future.sequence {
-      groups.flatMap {
-        case BatchGroup(cql, prepares) =>
-          prepares.map { prepare =>
-            prepareAsyncAndGetStatement(cql, prepare, logger)
-          }
-      }
+  def bindBatchAction[T](groups: List[BatchGroup])(implicit executionContext: ExecutionContext): CassandraSession => Future[List[BoundStatement]] = (session: Session) => {
+    val batches = groups.flatMap {
+      case BatchGroup(cql, prepares) =>
+        prepares.map(cql -> _)
+    }
+    Future.traverse(batches) {
+      case (cql, prepare) =>
+        val prepareCql = bindAction(cql, prepare)
+        prepareCql(session)
     }
   }
 

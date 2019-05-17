@@ -19,6 +19,7 @@ trait Context[Idiom <: io.getquill.idiom.Idiom, Naming <: NamingStrategy]
   type RunActionReturningResult[T]
   type RunBatchActionResult
   type RunBatchActionReturningResult[T]
+  type Session
 
   type Prepare = PrepareRow => (List[Any], PrepareRow)
   type Extractor[T] = ResultRow => T
@@ -38,8 +39,8 @@ trait Context[Idiom <: io.getquill.idiom.Idiom, Naming <: NamingStrategy]
   def run(quoted: Quoted[BatchAction[Action[_]]]): Result[RunBatchActionResult] = macro ActionMacro.runBatchAction
   def run[T](quoted: Quoted[BatchAction[ActionReturning[_, T]]]): Result[RunBatchActionReturningResult[T]] = macro ActionMacro.runBatchActionReturning[T]
 
-  def bind(quoted: Quoted[Action[_]]): Result[PrepareRow] = macro ActionMacro.bindAction
-  def bind(quoted: Quoted[BatchAction[Action[_]]]): Result[List[PrepareRow]] = macro ActionMacro.bindBatchAction
+  def prepare(quoted: Quoted[Action[_]]): Session => Result[PrepareRow] = macro ActionMacro.bindAction
+  def prepare(quoted: Quoted[BatchAction[Action[_]]]): Session => Result[List[PrepareRow]] = macro ActionMacro.bindBatchAction
 
   protected val identityPrepare: Prepare = (Nil, _)
   protected val identityExtractor = identity[ResultRow] _
