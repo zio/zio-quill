@@ -13,7 +13,7 @@ class QueryResultTypeCassandraAsyncSpec extends QueryResultTypeCassandraSpec {
 
   import context._
 
-  def result[T](function:CassandraSession => Future[T]): T = {
+  def result[T](function: CassandraSession => Future[T]): T = {
     await(function(context.session))
   }
 
