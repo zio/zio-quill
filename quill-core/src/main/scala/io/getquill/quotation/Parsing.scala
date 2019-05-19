@@ -12,6 +12,7 @@ import io.getquill.norm.capture.AvoidAliasConflict
 import scala.annotation.tailrec
 import scala.collection.immutable.StringOps
 import scala.reflect.macros.TypecheckException
+import io.getquill.ast.Implicits._
 
 trait Parsing {
   this: Quotation =>
@@ -501,24 +502,44 @@ trait Parsing {
     case q"${ astParser(a) }.apply[..$t](...$values)" => FunctionApply(a, values.flatten.map(astParser(_)))
   }
 
-  private def rejectOptions(a: Tree, b: Tree) = {
-    if ((!is[Null](a) && is[Option[_]](a)) || (!is[Null](b) && is[Option[_]](b)))
-      c.abort(a.pos, "Can't compare `Option` values since databases have different behavior for null comparison. Use `Option` methods like `forall` and `exists` instead.")
+  def withInnerTypechecks(left: Tree, right: Tree)(equality: BinaryOperator): Operation = {
+    val (leftIsOptional, rightIsOptional) = checkInnerTypes(left, right)
+    val a = astParser(left)
+    val b = astParser(right)
+    val comparison = BinaryOperation(a, equality, b)
+    (leftIsOptional, rightIsOptional) match {
+      case (true, true)   => OptionIsDefined(a) +&&+ OptionIsDefined(b) +&&+ comparison
+      case (true, false)  => OptionIsDefined(a) +&&+ comparison
+      case (false, true)  => OptionIsDefined(b) +&&+ comparison
+      case (false, false) => comparison
+    }
   }
 
   val equalityOperationParser: Parser[Operation] = Parser[Operation] {
     case q"$a.==($b)" =>
-      checkTypes(a, b)
-      rejectOptions(a, b)
-      BinaryOperation(astParser(a), EqualityOperator.`==`, astParser(b))
+      withInnerTypechecks(a, b)(EqualityOperator.`==`)
     case q"$a.equals($b)" =>
-      checkTypes(a, b)
-      rejectOptions(a, b)
-      BinaryOperation(astParser(a), EqualityOperator.`==`, astParser(b))
+      withInnerTypechecks(a, b)(EqualityOperator.`==`)
     case q"$a.!=($b)" =>
-      checkTypes(a, b)
-      rejectOptions(a, b)
-      BinaryOperation(astParser(a), EqualityOperator.`!=`, astParser(b))
+      withInnerTypechecks(a, b)(EqualityOperator.`!=`)
+
+    case q"$pack.extras.NumericOptionOps[$t]($a)($imp).===[$q]($b)($imp2)" =>
+      withInnerTypechecks(a, b)(EqualityOperator.`==`)
+    case q"$pack.extras.NumericRegOps[$t]($a)($imp).===[$q]($b)($imp2)" =>
+      withInnerTypechecks(a, b)(EqualityOperator.`==`)
+    case q"$pack.extras.NumericOptionOps[$t]($a)($imp).=!=[$q]($b)($imp2)" =>
+      withInnerTypechecks(a, b)(EqualityOperator.`!=`)
+    case q"$pack.extras.NumericRegOps[$t]($a)($imp).=!=[$q]($b)($imp2)" =>
+      withInnerTypechecks(a, b)(EqualityOperator.`!=`)
+
+    case q"$pack.extras.OptionOps[$t]($a).===($b)" =>
+      withInnerTypechecks(a, b)(EqualityOperator.`==`)
+    case q"$pack.extras.RegOps[$t]($a).===($b)" =>
+      withInnerTypechecks(a, b)(EqualityOperator.`==`)
+    case q"$pack.extras.OptionOps[$t]($a).=!=($b)" =>
+      withInnerTypechecks(a, b)(EqualityOperator.`!=`)
+    case q"$pack.extras.RegOps[$t]($a).=!=($b)" =>
+      withInnerTypechecks(a, b)(EqualityOperator.`!=`)
   }
 
   val booleanOperationParser: Parser[Operation] =
@@ -595,6 +616,15 @@ trait Parsing {
     tpe.typeSymbol.fullName startsWith "scala.Tuple"
 
   /**
+   * Need special handling to check if a type is null since need to check if it's Option, Some or None. Don't want
+   * to use `<:<` since that would also match things like `Nothing` and `Null`.
+   */
+  def isOptionType(tpe: Type) = {
+    val era = tpe.erasure
+    era =:= typeOf[Option[Any]] || era =:= typeOf[Some[Any]] || era =:= typeOf[None.type]
+  }
+
+  /**
    * Recursively traverse an `Option[T]` or `Option[Option[T]]`, or `Option[Option[Option[T]]]` etc...
    * until we find the `T`
    */
@@ -604,7 +634,9 @@ trait Parsing {
     case TypeRef(_, cls, List(arg)) if (cls.isClass && cls.asClass.fullName == "scala.Option") =>
       innerOptionParam(arg)
     // If it's not a ref-type but an Option, convert to a ref-type and reprocess
-    case _ if (tpe <:< typeOf[Option[Any]]) =>
+    // also since Nothing is a subtype of everything need to know to stop searching once Nothing
+    // has been reached.
+    case _ if (isOptionType(tpe) && !(tpe =:= typeOf[Nothing])) =>
       innerOptionParam(tpe.baseType(typeOf[Option[Any]].typeSymbol))
     // Otherwise we have gotten to the actual type inside the nesting. Check what it is.
     case other => other
@@ -753,6 +785,48 @@ trait Parsing {
 
   private def parseConflictAssigns(targets: List[Tree]) =
     OnConflict.Update(targets.map(assignmentParser(_)))
+
+  /**
+   * Type-check two trees, if one of them has optionals, go into the optionals to find the root types
+   * in each of them. Then compare the types that are inside. If they are not compareable, abort the build.
+   * Otherwise return type of which side (or both) has the optional. In order to do the actual comparison,
+   * the 'weak conformance' operator is used and a subclass is allowed on either side of the `==`. Weak
+   * conformance is necessary so that Longs can be compared to Ints etc...
+   */
+  private def checkInnerTypes(lhs: Tree, rhs: Tree): (Boolean, Boolean) = {
+    val leftType = typecheckUnquoted(lhs).tpe
+    val rightType = typecheckUnquoted(rhs).tpe
+    val leftInner = innerOptionParam(leftType)
+    val rightInner = innerOptionParam(rightType)
+    val leftIsOptional = isOptionType(leftType) && !is[Nothing](lhs)
+    val rightIsOptional = isOptionType(rightType) && !is[Nothing](rhs)
+
+    if (rightInner.`weak_<:<`(leftInner) ||
+      rightInner.widen.`weak_<:<`(leftInner.widen) ||
+      leftInner.`weak_<:<`(rightInner) ||
+      leftInner.widen.`weak_<:<`(rightInner.widen)) {
+      (leftIsOptional, rightIsOptional)
+    } else {
+      if (leftIsOptional || rightIsOptional)
+        c.abort(lhs.pos, s"${leftType.widen} == ${rightType.widen} is not allowed since ${leftInner.widen}, ${rightInner.widen} are different types.")
+      else
+        c.abort(lhs.pos, s"${leftType.widen} == ${rightType.widen} is not allowed since they are different types.")
+    }
+  }
+
+  private def typecheckUnquoted(tree: Tree): Tree = {
+    def unquoted(maybeQuoted: Tree) =
+      is[CoreDsl#Quoted[Any]](maybeQuoted) match {
+        case false => maybeQuoted
+        case true  => q"unquote($maybeQuoted)"
+      }
+    val t = TypeName(c.freshName("T"))
+    try
+      c.typecheck(unquoted(tree), c.TYPEmode)
+    catch {
+      case t: TypecheckException => c.abort(tree.pos, t.msg)
+    }
+  }
 
   private def checkTypes(lhs: Tree, rhs: Tree): Unit = {
     def unquoted(tree: Tree) =
