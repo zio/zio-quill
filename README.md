@@ -288,6 +288,35 @@ Quill normalizes the quotation and translates the monadic joins to applicative j
 
 Any of the following features can be used together with the others and/or within a for-comprehension:
 
+### equals
+
+The `==`, `!=`, and `.equals` methods can be used to compare regular types as well as types inside of Option.
+```scala
+case class Node(id:Int, status:Option[String])
+
+val q = quote { query[Node].filter(n => n.id == 123) }          // You can do it like this
+val q = quote { query[Node].filter(n => n.id == Option(123)) }  // or like this!
+ctx.run(q)
+// SELECT n.id, n.status FROM Node n WHERE p.id = 123
+
+val q = quote { query[Node].filter(n => n.status == "RUNNING") }          // You can do it like this
+val q = quote { query[Node].filter(n => n.status == Option("RUNNING")) }  // or like this!
+ctx.run(q)
+// SELECT n.id, n.status FROM Node n WHERE p.status = 'RUNNING'
+```
+
+This is quite different then the way `==` behaves in standard Scala code so you can import `===` (and `=!=`)
+from `Context.extras` which works the same way inside and outside of quoted blocks.
+
+```scala
+import ctx.extras._
+
+// === works the same way inside of a quotation
+val q = quote { query[Node].filter(n => n.id === Option(123)) }
+// as well as outside
+(nodes:List[Node]).filter(n => n.id === Option(123))
+```
+
 ### filter
 ```scala
 val q = quote {
@@ -765,8 +794,6 @@ case class Company(name:String, zip:Int)
 
 Some important notes regarding Optionals and nullable fields.
 
-> Optionals cannot be compared via the `==` operator due to differences in database handling. See .exists as to how to do that.
-
 > In many cases, Quill tries to rely on the null-fallthrough behavior that is ANSI standard:
 >  * `null == null := false`
 >  * `null == [true | false] := false`
@@ -812,18 +839,8 @@ val q = quote {
 ctx.run(q)
 // SELECT p.id, p.name, a.fk, a.street, a.zip FROM Person p INNER JOIN Address a ON a.fk = p.id
 ```
-It is also useful for comparing two optional values:
-```scala
-val q = quote {
-  for { 
-    pa <- query[Person] 
-    pb <- query[Person] if (pa.name.exists(na => pb.name.exists(nb => na == nb))) 
-  } yield (pa, pb) 
-}
-ctx.run(q)
-// SELECT pa.id, pa.name, pb.id, pb.name FROM Person pa, Person pb WHERE pa.name = pb.name
-```
-Note however that as you can see from the examples above, the `exists` method does not cause the generated
+
+Note that in the example above, the `exists` method does not cause the generated
 SQL to do an explicit null-check in order to express the `False` case. This is because Quill relies on the
 typical database behavior of immediately falsifying a statement that has `null` on one side of the equation.
 
