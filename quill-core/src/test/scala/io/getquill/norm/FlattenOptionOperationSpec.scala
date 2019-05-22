@@ -6,19 +6,9 @@ import io.getquill.testContext._
 import io.getquill.ast.NumericOperator
 import io.getquill.ast.Implicits._
 import io.getquill.norm.ConcatBehavior.{ AnsiConcat, NonAnsiConcat }
+import io.getquill.MoreAstOps._
 
 class FlattenOptionOperationSpec extends Spec {
-
-  implicit class AstOpsExt2(body: Ast) {
-    def +++(other: Constant) =
-      if (other.v.isInstanceOf[String])
-        BinaryOperation(body, StringOperator.`+`, other)
-      else
-        BinaryOperation(body, NumericOperator.`+`, other)
-
-    def +>+(other: Ast) = BinaryOperation(body, NumericOperator.`>`, other)
-    def +!=+(other: Ast) = BinaryOperation(body, EqualityOperator.`!=`, other)
-  }
 
   def o = Ident("o")
   def c1 = Constant(1)
