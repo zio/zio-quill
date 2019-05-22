@@ -89,7 +89,10 @@ lazy val `quill-core` =
     .settings(libraryDependencies ++= Seq(
       "com.typesafe"               %  "config"        % "1.3.4",
       "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0",
-      "org.scala-lang"             %  "scala-reflect" % scalaVersion.value
+      "org.scala-lang"             %  "scala-reflect" % scalaVersion.value,
+
+      "org.scala-lang"   %  "scala-library"     % "2.11.11",
+      "org.scala-lang"   %  "scala-compiler"     % "2.11.11"
     ))
     .jsSettings(
       libraryDependencies += "org.scala-js" %%% "scalajs-java-time" % "0.2.5",
@@ -474,6 +477,10 @@ lazy val basicSettings = Seq(
   scalaVersion := "2.11.12",
   crossScalaVersions := Seq("2.11.12","2.12.7"),
   libraryDependencies ++= Seq(
+    "org.scala-lang"   %  "scala-library"     % "2.11.11",
+    "org.scala-lang"   %  "scala-compiler"     % "2.11.11",
+    "org.scala-lang"   %  "scala-reflect"     % "2.11.11",
+
     "org.scalamacros" %% "resetallattrs"  % "1.0.0",
     "org.scalatest"   %%% "scalatest"     % "3.0.7"     % Test,
     "ch.qos.logback"  % "logback-classic" % "1.2.3"     % Test,
