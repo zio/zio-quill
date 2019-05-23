@@ -89,10 +89,7 @@ lazy val `quill-core` =
     .settings(libraryDependencies ++= Seq(
       "com.typesafe"               %  "config"        % "1.3.4",
       "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0",
-      "org.scala-lang"             %  "scala-reflect" % scalaVersion.value,
-
-      "org.scala-lang"   %  "scala-library"     % "2.11.11",
-      "org.scala-lang"   %  "scala-compiler"     % "2.11.11"
+      "org.scala-lang"             %  "scala-reflect" % scalaVersion.value
     ))
     .jsSettings(
       libraryDependencies += "org.scala-js" %%% "scalajs-java-time" % "0.2.5",
@@ -184,6 +181,9 @@ lazy val `quill-codegen-tests` =
 
 val includeOracle =
   sys.props.getOrElse("oracle", "false").toBoolean
+
+val debugMacro =
+  sys.props.getOrElse("debugMacro", "false").toBoolean
 
 def includeIfOracle[T](t:T):Seq[T] =
   if (includeOracle) Seq(t) else Seq()
@@ -477,15 +477,18 @@ lazy val basicSettings = Seq(
   scalaVersion := "2.11.12",
   crossScalaVersions := Seq("2.11.12","2.12.7"),
   libraryDependencies ++= Seq(
-    "org.scala-lang"   %  "scala-library"     % "2.11.11",
-    "org.scala-lang"   %  "scala-compiler"     % "2.11.11",
-    "org.scala-lang"   %  "scala-reflect"     % "2.11.11",
-
     "org.scalamacros" %% "resetallattrs"  % "1.0.0",
     "org.scalatest"   %%% "scalatest"     % "3.0.7"     % Test,
     "ch.qos.logback"  % "logback-classic" % "1.2.3"     % Test,
     "com.google.code.findbugs" % "jsr305" % "3.0.2"     % Provided // just to avoid warnings during compilation
-  ),
+  ) ++ {
+    if (debugMacro) Seq(
+      "org.scala-lang"   %  "scala-library"     % scalaVersion.value,
+      "org.scala-lang"   %  "scala-compiler"    % scalaVersion.value,
+      "org.scala-lang"   %  "scala-reflect"     % scalaVersion.value
+    )
+    else Seq()
+  },
   ScalariformKeys.preferences := ScalariformKeys.preferences.value
     .setPreference(AlignParameters, true)
     .setPreference(CompactStringConcatenation, false)
