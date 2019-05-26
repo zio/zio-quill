@@ -1,3 +1,6 @@
+val scalaJSVersion = Option(System.getenv("SCALAJS_VERSION")).getOrElse("0.6.28")
+val scalaNativeVersion = Option(System.getenv("SCALANATIVE_VERSION")).getOrElse("0.3.9")
+
 resolvers += Classpaths.sbtPluginReleases
 
 resolvers += "Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/"
@@ -18,9 +21,9 @@ addSbtPlugin("com.typesafe" % "sbt-mima-plugin" % "0.3.0")
 
 addSbtPlugin("org.scalariform" % "sbt-scalariform" % "1.8.2")
 
-addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.27")
+addSbtPlugin("org.scala-js" % "sbt-scalajs" % scalaJSVersion)
 
-addSbtPlugin("org.scala-native" % "sbt-scala-native" % "0.3.8")
+addSbtPlugin("org.scala-native" % "sbt-scala-native" % scalaNativeVersion)
 
 addSbtPlugin("org.portable-scala" % "sbt-scalajs-crossproject" % "0.6.0")
 

@@ -61,9 +61,9 @@ lazy val filteredModules = {
 
 lazy val `quill` =
   (project in file("."))
-    .settings(commonSettings: _*)
-    .settings(commonJvmJsSettings: _*)
-    .settings(`tut-settings`:_*)
+    .settings(commonSettings)
+    .settings(commonJvmJsSettings)
+    .settings(`tut-settings`)
     .aggregate(filteredModules.map(_.project): _*)
     .dependsOn(filteredModules: _*)
 
@@ -86,19 +86,18 @@ lazy val superPure = new CrossType {
     }
 }
 
+val scala211 = "2.11.12"
+val scala212 = "2.12.8"
+
 lazy val `quill-core` =
   crossProject(JVMPlatform, JSPlatform, NativePlatform).crossType(superPure)
-    .settings(commonSettings: _*)
+    .settings(commonSettings)
     .platformsSettings(JVMPlatform, JSPlatform)(commonJvmJsSettings)
     .nativeSettings(commonNativeSettings)
-    .settings(mimaSettings: _*)
+    .settings(mimaSettings)
     .settings(libraryDependencies ++= Seq(
-      "com.typesafe"               %  "config"        % "1.3.4",
-      "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0",
-      "org.scala-lang"             %  "scala-reflect" % scalaVersion.value,
-
-      "org.scala-lang"   %  "scala-library"     % "2.11.11",
-      "org.scala-lang"   %  "scala-compiler"     % "2.11.11"
+      "com.typesafe"               %  "config"         % "1.3.4",
+      "com.typesafe.scala-logging" %% "scala-logging"  % "3.9.0"
     ))
     .jsSettings(
       libraryDependencies += "org.scala-js" %%% "scalajs-java-time" % "0.2.5",
@@ -112,8 +111,7 @@ lazy val `quill-core` =
           .filterNot { s =>
             val path = s.getPath
             path.contains("src/test/scala/io/getquill/monad/")
-        },
-      nativeLinkStubs := true
+        }
     )
 
 lazy val `quill-core-jvm` = `quill-core`.jvm
@@ -122,10 +120,10 @@ lazy val `quill-core-native` = `quill-core`.native
 
 lazy val `quill-sql` =
   crossProject(JVMPlatform, JSPlatform, NativePlatform).crossType(superPure)
-    .settings(commonSettings: _*)
+    .settings(commonSettings)
     .platformsSettings(JVMPlatform, JSPlatform)(commonJvmJsSettings)
     .nativeSettings(commonNativeSettings)
-    .settings(mimaSettings: _*)
+    .settings(mimaSettings)
     .jsSettings(
       coverageExcludedPackages := ".*"
     )
@@ -138,12 +136,12 @@ lazy val `quill-sql-native` = `quill-sql`.native
 
 lazy val `quill-codegen` =
   (project in file("quill-codegen"))
-    .settings(commonSettings: _*)
+    .settings(commonSettings)
     .dependsOn(`quill-core-jvm` % "compile->compile;test->test")
 
 lazy val `quill-codegen-jdbc` =
   (project in file("quill-codegen-jdbc"))
-    .settings(commonSettings: _*)
+    .settings(commonSettings)
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
@@ -159,7 +157,7 @@ val codegen = taskKey[Seq[File]]("Run Code Generation Phase for Integration Test
 
 lazy val `quill-codegen-tests` =
   (project in file("quill-codegen-tests"))
-    .settings(commonSettings: _*)
+    .settings(commonSettings)
     .settings(
       libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test,
       fork in Test := true,
@@ -211,17 +209,17 @@ def includeIfOracle[T](t:T):Seq[T] =
 
 lazy val `quill-jdbc` =
   (project in file("quill-jdbc"))
-    .settings(commonSettings: _*)
+    .settings(commonSettings)
     .settings(commonJvmJsSettings)
-    .settings(mimaSettings: _*)
-    .settings(jdbcTestingSettings: _*)
+    .settings(mimaSettings)
+    .settings(jdbcTestingSettings)
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
 
 lazy val `quill-monix` =
   (project in file("quill-monix"))
-    .settings(commonSettings: _*)
+    .settings(commonSettings)
     .settings(commonJvmJsSettings)
-    .settings(mimaSettings: _*)
+    .settings(mimaSettings)
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
@@ -233,10 +231,10 @@ lazy val `quill-monix` =
 
 lazy val `quill-jdbc-monix` =
   (project in file("quill-jdbc-monix"))
-    .settings(commonSettings: _*)
+    .settings(commonSettings)
     .settings(commonJvmJsSettings)
-    .settings(mimaSettings: _*)
-    .settings(jdbcTestingSettings: _*)
+    .settings(mimaSettings)
+    .settings(jdbcTestingSettings)
     .settings(
       testGrouping in Test := {
         (definedTests in Test).value map { test =>
@@ -255,9 +253,9 @@ lazy val `quill-jdbc-monix` =
 
 lazy val `quill-spark` =
   (project in file("quill-spark"))
-    .settings(commonSettings: _*)
+    .settings(commonSettings)
     .settings(commonJvmJsSettings)
-    .settings(mimaSettings: _*)
+    .settings(mimaSettings)
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
@@ -268,9 +266,9 @@ lazy val `quill-spark` =
 
 lazy val `quill-finagle-mysql` =
   (project in file("quill-finagle-mysql"))
-    .settings(commonSettings: _*)
+    .settings(commonSettings)
     .settings(commonJvmJsSettings)
-    .settings(mimaSettings: _*)
+    .settings(mimaSettings)
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
@@ -281,9 +279,9 @@ lazy val `quill-finagle-mysql` =
 
 lazy val `quill-finagle-postgres` =
   (project in file("quill-finagle-postgres"))
-    .settings(commonSettings: _*)
+    .settings(commonSettings)
     .settings(commonJvmJsSettings)
-    .settings(mimaSettings: _*)
+    .settings(mimaSettings)
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
@@ -294,9 +292,9 @@ lazy val `quill-finagle-postgres` =
 
 lazy val `quill-async` =
   (project in file("quill-async"))
-    .settings(commonSettings: _*)
+    .settings(commonSettings)
     .settings(commonJvmJsSettings)
-    .settings(mimaSettings: _*)
+    .settings(mimaSettings)
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
@@ -307,9 +305,9 @@ lazy val `quill-async` =
 
 lazy val `quill-async-mysql` =
   (project in file("quill-async-mysql"))
-    .settings(commonSettings: _*)
+    .settings(commonSettings)
     .settings(commonJvmJsSettings)
-    .settings(mimaSettings: _*)
+    .settings(mimaSettings)
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
@@ -320,9 +318,9 @@ lazy val `quill-async-mysql` =
 
 lazy val `quill-async-postgres` =
   (project in file("quill-async-postgres"))
-    .settings(commonSettings: _*)
+    .settings(commonSettings)
     .settings(commonJvmJsSettings)
-    .settings(mimaSettings: _*)
+    .settings(mimaSettings)
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
@@ -333,9 +331,9 @@ lazy val `quill-async-postgres` =
 
 lazy val `quill-cassandra` =
   (project in file("quill-cassandra"))
-    .settings(commonSettings: _*)
+    .settings(commonSettings)
     .settings(commonJvmJsSettings)
-    .settings(mimaSettings: _*)
+    .settings(mimaSettings)
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
@@ -346,9 +344,9 @@ lazy val `quill-cassandra` =
 
 lazy val `quill-cassandra-monix` =
   (project in file("quill-cassandra-monix"))
-    .settings(commonSettings: _*)
+    .settings(commonSettings)
     .settings(commonJvmJsSettings)
-    .settings(mimaSettings: _*)
+    .settings(mimaSettings)
     .settings(
       fork in Test := true
     )
@@ -357,9 +355,9 @@ lazy val `quill-cassandra-monix` =
 
 lazy val `quill-cassandra-lagom` =
    (project in file("quill-cassandra-lagom"))
-    .settings(commonSettings: _*)
+    .settings(commonSettings)
     .settings(commonJvmJsSettings)
-    .settings(mimaSettings: _*)
+    .settings(mimaSettings)
     .settings(
       fork in Test := true,
       libraryDependencies ++= {
@@ -375,9 +373,9 @@ lazy val `quill-cassandra-lagom` =
 
 lazy val `quill-orientdb` =
   (project in file("quill-orientdb"))
-      .settings(commonSettings: _*)
+      .settings(commonSettings)
       .settings(commonJvmJsSettings)
-      .settings(mimaSettings: _*)
+      .settings(mimaSettings)
       .settings(
         fork in Test := true,
         libraryDependencies ++= Seq(
@@ -508,17 +506,16 @@ def excludePathsIfOracle(paths:Seq[String]) = {
 
 lazy val basicSettings = Seq(
   organization := "io.getquill",
-  scalaVersion := "2.11.12",
-  crossScalaVersions := Seq("2.11.12","2.12.7"),
+  scalaVersion := scala211,
+  crossScalaVersions := Seq(scala211, scala212),
   libraryDependencies ++= Seq(
-    "org.scala-lang"   %  "scala-library"     % "2.11.11",
-    "org.scala-lang"   %  "scala-compiler"     % "2.11.11",
-    "org.scala-lang"   %  "scala-reflect"     % "2.11.11",
+    "org.scala-lang" % "scala-library"  % scalaVersion.value,
+    "org.scala-lang" % "scala-compiler" % scalaVersion.value,
+    "org.scala-lang" % "scala-reflect"  % scalaVersion.value,
 
     "org.scalamacros" %% "resetallattrs"  % "1.0.0",
-    "org.scalatest"   %%% "scalatest"     % "3.0.7"     % Test,
-    "ch.qos.logback"  % "logback-classic" % "1.2.3"     % Test,
-    "com.google.code.findbugs" % "jsr305" % "3.0.2"     % Provided // just to avoid warnings during compilation
+    "ch.qos.logback"  % "logback-classic" % "1.2.3" % Test,
+    "com.google.code.findbugs" % "jsr305" % "3.0.2" % Provided // just to avoid warnings during compilation
   ),
   ScalariformKeys.preferences := ScalariformKeys.preferences.value
     .setPreference(AlignParameters, true)
@@ -641,11 +638,12 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ basicSettings ++
 )
 
 lazy val commonJvmJsSettings = Seq(
-  libraryDependencies += "org.scalatest" %%% "scalatest" % "3.0.6" % Test
+  libraryDependencies += "org.scalatest" %%% "scalatest" % "3.0.7" % Test
 )
 
 lazy val commonNativeSettings = Seq(
-  libraryDependencies += "org.scalatest" %%% "scalatest" % "3.1.0-SNAP7" % Test,
+  libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.0-SNAP10" % Test,
   nativeLinkStubs := true,
-  crossScalaVersions := Seq("2.11.12")
+  scalaVersion := scala211,
+  crossScalaVersions := Seq(scala211)
 )
