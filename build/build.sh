@@ -20,7 +20,7 @@ export CASSANDRA_PORT=19042
 export ORIENTDB_HOST=127.0.0.1
 export ORIENTDB_PORT=12424
 
-export SBT_ARGS="-Dquill.macro.log=false -Xms1024m -Xmx3g -Xss5m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC ++$TRAVIS_SCALA_VERSION"
+export SBT_ARGS="-Dquill.macro.log=false -J-Xms1024m -J-Xmx3g -J-Xss5m -J-XX:ReservedCodeCacheSize=256m -J-XX:+TieredCompilation -J-XX:+CMSClassUnloadingEnabled -J-XX:+UseConcMarkSweepGC ++$TRAVIS_SCALA_VERSION"
 
 modules=$1
 
