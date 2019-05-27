@@ -1,3 +1,13 @@
+# 3.2.0
+
+- [Allow == for Option[T] and/or T columns](https://github.com/getquill/quill/pull/1437)
+- [Introducing Code Genereator](https://github.com/getquill/quill/pull/1396)
+- [Fix variable shadowing issue in action metas](https://github.com/getquill/quill/pull/1412)
+- [Change effect to protected](https://github.com/getquill/quill/pull/1413)
+- [Update spark-sql to 2.4.1](https://github.com/getquill/quill/pull/1398)
+- [Update orientdb-graphdb to 3.0.17](https://github.com/getquill/quill/pull/1379)
+- [Update sqlite-jdbc to 3.27.2.1](https://github.com/getquill/quill/pull/1392)
+
 # 3.1.0
 
 - [oracle support](https://github.com/getquill/quill/pull/1295)
