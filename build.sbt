@@ -65,6 +65,8 @@ lazy val `quill` =
     .aggregate(filteredModules.map(_.project): _*)
     .dependsOn(filteredModules: _*)
 
+publishArtifact in `quill` := false
+
 lazy val superPure = new sbtcrossproject.CrossType {
   def projectDir(crossBase: File, projectType: String): File =
     projectType match {
