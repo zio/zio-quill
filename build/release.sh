@@ -29,11 +29,12 @@ then
         git push --delete origin website || true
 
         #$SBT_2_12 -Dmodules=base 'release with-defaults'
-        $SBT_2_12 -Dmodules=db 'release with-defaults'
-        $SBT_2_12 -Dmodules=async 'release with-defaults'
-        $SBT_2_12 -Dmodules=codegen 'release with-defaults'
-        $SBT_2_12 -Dmodules=bigdata 'release with-defaults'
-        $SBT_2_11 -Dmodules=base 'release with-defaults'
+        #$SBT_2_12 -Dmodules=db 'release with-defaults'
+        #$SBT_2_12 -Dmodules=async 'release with-defaults'
+        #$SBT_2_12 -Dmodules=codegen 'release with-defaults'
+        #$SBT_2_12 -Dmodules=bigdata 'release with-defaults'
+
+        #$SBT_2_11 -Dmodules=base 'release with-defaults'
         $SBT_2_11 -Dmodules=db 'release with-defaults'
         $SBT_2_11 -Dmodules=async 'release with-defaults'
         $SBT_2_11 -Dmodules=codegen 'release with-defaults'

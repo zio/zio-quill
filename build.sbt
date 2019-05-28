@@ -571,11 +571,11 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ basicSettings ++
           updateWebsiteTag,
           tagRelease,
           publishArtifacts,
-          setNextVersion,
-          updateReadmeVersion(_._2),
-          commitNextVersion,
-          releaseStepCommand("sonatypeReleaseAll"),
-          pushChanges
+          //setNextVersion,
+          //updateReadmeVersion(_._2),
+          //commitNextVersion,
+          //releaseStepCommand("sonatypeReleaseAll"),
+          //pushChanges
         )
       case Some((2, 12)) =>
         Seq[ReleaseStep](
@@ -584,7 +584,7 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ basicSettings ++
           runClean,
           setReleaseVersion,
           publishArtifacts,
-          releaseStepCommand("sonatypeReleaseAll")
+          //releaseStepCommand("sonatypeReleaseAll")
         )
       case _ => Seq[ReleaseStep]()
     }
