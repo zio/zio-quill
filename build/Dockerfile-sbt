@@ -15,6 +15,7 @@ RUN apt-get update; \
     update-alternatives --config java; \
     update-java-alternatives -s java-1.8.0-openjdk-amd64; \
     curl -sL https://deb.nodesource.com/setup_8.x | bash -; \
+    curl https://raw.githubusercontent.com/scala-native/scala-native/master/scripts/travis_setup.sh | bash -x; \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends nodejs
 
 ENV SBT_VERSION 1.1.1
