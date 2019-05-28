@@ -93,6 +93,7 @@ lazy val `quill-core` =
   crossProject(JVMPlatform, JSPlatform, NativePlatform).crossType(superPure)
     .settings(commonSettings)
     .platformsSettings(JVMPlatform, JSPlatform)(commonJvmJsSettings)
+    .platformsSettings(NativePlatform, JSPlatform)(commonNativeJsSettings)
     .nativeSettings(commonNativeSettings)
     .settings(mimaSettings)
     .settings(libraryDependencies ++= Seq(
@@ -100,8 +101,7 @@ lazy val `quill-core` =
       "com.typesafe.scala-logging" %% "scala-logging"  % "3.9.0"
     ))
     .jsSettings(
-      libraryDependencies += "org.scala-js" %%% "scalajs-java-time" % "0.2.5",
-      coverageExcludedPackages := ".*"
+      libraryDependencies += "org.scala-js" %%% "scalajs-java-time" % "0.2.5"
     )
     .nativeSettings(
       libraryDependencies += "org.akka-js" %%% "scalanative-java-time" % "0.0.2",
@@ -122,11 +122,9 @@ lazy val `quill-sql` =
   crossProject(JVMPlatform, JSPlatform, NativePlatform).crossType(superPure)
     .settings(commonSettings)
     .platformsSettings(JVMPlatform, JSPlatform)(commonJvmJsSettings)
+    .platformsSettings(NativePlatform, JSPlatform)(commonNativeJsSettings)
     .nativeSettings(commonNativeSettings)
     .settings(mimaSettings)
-    .jsSettings(
-      coverageExcludedPackages := ".*"
-    )
     .dependsOn(`quill-core` % "compile->compile;test->test")
 
 lazy val `quill-sql-jvm` = `quill-sql`.jvm
@@ -644,7 +642,11 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ basicSettings ++
 )
 
 lazy val commonJvmJsSettings = Seq(
-  libraryDependencies += "org.scalatest" %%% "scalatest" % "3.0.7" % Test
+  libraryDependencies += "org.scalatest" %%% "scalatest" % "3.0.7" % Test,
+)
+
+lazy val commonNativeJsSettings = Seq(
+  coverageExcludedPackages := ".*"
 )
 
 lazy val commonNativeSettings = Seq(
