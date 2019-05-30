@@ -10,6 +10,5 @@ object MoreAstOps {
         BinaryOperation(body, NumericOperator.`+`, other)
 
     def +>+(other: Ast) = BinaryOperation(body, NumericOperator.`>`, other)
-    def +!=+(other: Ast) = BinaryOperation(body, EqualityOperator.`!=`, other)
   }
 }

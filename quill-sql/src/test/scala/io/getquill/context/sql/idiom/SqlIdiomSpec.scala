@@ -9,6 +9,9 @@ class SqlIdiomSpec extends Spec {
 
   case class TwoIntsClassScope(one: Int, two: Int)
 
+  // remove the === matcher from scalatest so that we can test === in Context.extra
+  override def convertToEqualizer[T](left: T): Equalizer[T] = new Equalizer(left)
+
   "shows the sql representation of normalized asts" - {
     "query" - {
       "without filter" in {
@@ -745,6 +748,81 @@ class SqlIdiomSpec extends Spec {
         }
       }
       "option operation" - {
+        "Option == Option(constant)" in {
+          val q = quote {
+            qr1.filter(t => t.o == Option(1))
+          }
+          testContext.run(q).string mustEqual
+            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o IS NOT NULL AND t.o = 1"
+        }
+        "Option(constant) == Option" in {
+          val q = quote {
+            qr1.filter(t => Option(1) == t.o)
+          }
+          testContext.run(q).string mustEqual
+            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o IS NOT NULL AND 1 = t.o"
+        }
+        "Option != Option(constant)" in {
+          val q = quote {
+            qr1.filter(t => t.o != Option(1))
+          }
+          testContext.run(q).string mustEqual
+            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o IS NULL OR t.o <> 1"
+        }
+        "Option(constant) != Option" in {
+          val q = quote {
+            qr1.filter(t => Option(1) != t.o)
+          }
+          testContext.run(q).string mustEqual
+            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o IS NULL OR 1 <> t.o"
+        }
+        "Database-level === and =!= operators" - {
+          import testContext.extras._
+
+          "Option === Option" in {
+            val q = quote {
+              qr1.filter(t => t.o === t.o)
+            }
+            testContext.run(q).string mustEqual
+              "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o IS NOT NULL AND t.o IS NOT NULL AND t.o = t.o"
+          }
+          "Option === Option(constant)" in {
+            val q = quote {
+              qr1.filter(t => t.o === Option(1))
+            }
+            testContext.run(q).string mustEqual
+              "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o IS NOT NULL AND t.o = 1"
+          }
+          "Option(constant) === Option" in {
+            val q = quote {
+              qr1.filter(t => Option(1) === t.o)
+            }
+            testContext.run(q).string mustEqual
+              "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o IS NOT NULL AND 1 = t.o"
+          }
+
+          "Option =!= Option" in {
+            val q = quote {
+              qr1.filter(t => t.o =!= t.o)
+            }
+            testContext.run(q).string mustEqual
+              "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o IS NOT NULL AND t.o IS NOT NULL AND t.o <> t.o"
+          }
+          "Option =!= Option(constant)" in {
+            val q = quote {
+              qr1.filter(t => t.o =!= Option(1))
+            }
+            testContext.run(q).string mustEqual
+              "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o IS NOT NULL AND t.o <> 1"
+          }
+          "Option(constant) =!= Option" in {
+            val q = quote {
+              qr1.filter(t => Option(1) =!= t.o)
+            }
+            testContext.run(q).string mustEqual
+              "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o IS NOT NULL AND 1 <> t.o"
+          }
+        }
         "contains" in {
           val q = quote {
             qr1.filter(t => t.o.contains(1))

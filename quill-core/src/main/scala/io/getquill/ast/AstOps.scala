@@ -5,6 +5,7 @@ object Implicits {
     def +||+(other: Ast) = BinaryOperation(body, BooleanOperator.`||`, other)
     def +&&+(other: Ast) = BinaryOperation(body, BooleanOperator.`&&`, other)
     def +==+(other: Ast) = BinaryOperation(body, EqualityOperator.`==`, other)
+    def +!=+(other: Ast) = BinaryOperation(body, EqualityOperator.`!=`, other)
   }
 }
 

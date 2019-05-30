@@ -502,11 +502,16 @@ trait Parsing {
     case q"${ astParser(a) }.apply[..$t](...$values)" => FunctionApply(a, values.flatten.map(astParser(_)))
   }
 
-  def withInnerTypechecks(left: Tree, right: Tree)(equality: BinaryOperator): Operation = {
-    val (leftIsOptional, rightIsOptional) = checkInnerTypes(left, right)
+  sealed trait EqualityBehavior { def operator: BinaryOperator }
+  case object Equal extends EqualityBehavior { def operator: BinaryOperator = EqualityOperator.`==` }
+  case object NotEqual extends EqualityBehavior { def operator: BinaryOperator = EqualityOperator.`!=` }
+
+  /** Do equality checking on the database level with the ansi-style truth table (i.e. always false if one side is null) */
+  private def equalityWithInnerTypechecksAnsi(left: Tree, right: Tree)(equalityBehavior: EqualityBehavior) = {
+    val (leftIsOptional, rightIsOptional) = checkInnerTypes(left, right, AllowInnerCompare)
     val a = astParser(left)
     val b = astParser(right)
-    val comparison = BinaryOperation(a, equality, b)
+    val comparison = BinaryOperation(a, equalityBehavior.operator, b)
     (leftIsOptional, rightIsOptional) match {
       case (true, true)   => OptionIsDefined(a) +&&+ OptionIsDefined(b) +&&+ comparison
       case (true, false)  => OptionIsDefined(a) +&&+ comparison
@@ -515,31 +520,53 @@ trait Parsing {
     }
   }
 
+  /** Do equality checking on the database level with the same truth-table as idiomatic scala */
+  private def equalityWithInnerTypechecksIdiomatic(left: Tree, right: Tree)(equalityBehavior: EqualityBehavior) = {
+    val (leftIsOptional, rightIsOptional) = checkInnerTypes(left, right, ForbidInnerCompare)
+    val a = astParser(left)
+    val b = astParser(right)
+    val comparison = BinaryOperation(a, equalityBehavior.operator, b)
+    (leftIsOptional, rightIsOptional, equalityBehavior) match {
+      // == two optional things. Either they are both null or they are both defined and the same
+      case (true, true, Equal)    => (OptionIsEmpty(a) +&&+ OptionIsEmpty(b)) +||+ (OptionIsDefined(a) +&&+ OptionIsDefined(b) +&&+ comparison)
+      // != two optional things. Either one is null and the other isn't. Or they are both defined and have different values
+      case (true, true, NotEqual) => (OptionIsDefined(a) +&&+ OptionIsEmpty(b)) +||+ (OptionIsEmpty(a) +&&+ OptionIsDefined(b)) +||+ comparison
+      // No additional logic when both sides are defined
+      case (false, false, _)      => comparison
+      // Comparing an optional object with a non-optional object is not allowed when using scala-idiomatic optional behavior
+      case (lop, rop, _) => {
+        val lopString = (if (lop) "Optional" else "Non-Optional") + s" ${left}}"
+        val ropString = (if (rop) "Optional" else "Non-Optional") + s" ${right}}"
+        c.abort(left.pos, s"Cannot compare ${lopString} with ${ropString} using operator ${equalityBehavior.operator}");
+      }
+    }
+  }
+
   val equalityOperationParser: Parser[Operation] = Parser[Operation] {
     case q"$a.==($b)" =>
-      withInnerTypechecks(a, b)(EqualityOperator.`==`)
+      equalityWithInnerTypechecksIdiomatic(a, b)(Equal)
     case q"$a.equals($b)" =>
-      withInnerTypechecks(a, b)(EqualityOperator.`==`)
+      equalityWithInnerTypechecksIdiomatic(a, b)(Equal)
     case q"$a.!=($b)" =>
-      withInnerTypechecks(a, b)(EqualityOperator.`!=`)
+      equalityWithInnerTypechecksIdiomatic(a, b)(NotEqual)
 
     case q"$pack.extras.NumericOptionOps[$t]($a)($imp).===[$q]($b)($imp2)" =>
-      withInnerTypechecks(a, b)(EqualityOperator.`==`)
+      equalityWithInnerTypechecksAnsi(a, b)(Equal)
     case q"$pack.extras.NumericRegOps[$t]($a)($imp).===[$q]($b)($imp2)" =>
-      withInnerTypechecks(a, b)(EqualityOperator.`==`)
+      equalityWithInnerTypechecksAnsi(a, b)(Equal)
     case q"$pack.extras.NumericOptionOps[$t]($a)($imp).=!=[$q]($b)($imp2)" =>
-      withInnerTypechecks(a, b)(EqualityOperator.`!=`)
+      equalityWithInnerTypechecksAnsi(a, b)(NotEqual)
     case q"$pack.extras.NumericRegOps[$t]($a)($imp).=!=[$q]($b)($imp2)" =>
-      withInnerTypechecks(a, b)(EqualityOperator.`!=`)
+      equalityWithInnerTypechecksAnsi(a, b)(NotEqual)
 
     case q"$pack.extras.OptionOps[$t]($a).===($b)" =>
-      withInnerTypechecks(a, b)(EqualityOperator.`==`)
+      equalityWithInnerTypechecksAnsi(a, b)(Equal)
     case q"$pack.extras.RegOps[$t]($a).===($b)" =>
-      withInnerTypechecks(a, b)(EqualityOperator.`==`)
+      equalityWithInnerTypechecksAnsi(a, b)(Equal)
     case q"$pack.extras.OptionOps[$t]($a).=!=($b)" =>
-      withInnerTypechecks(a, b)(EqualityOperator.`!=`)
+      equalityWithInnerTypechecksAnsi(a, b)(NotEqual)
     case q"$pack.extras.RegOps[$t]($a).=!=($b)" =>
-      withInnerTypechecks(a, b)(EqualityOperator.`!=`)
+      equalityWithInnerTypechecksAnsi(a, b)(NotEqual)
   }
 
   val booleanOperationParser: Parser[Operation] =
@@ -626,29 +653,29 @@ trait Parsing {
 
   /**
    * Recursively traverse an `Option[T]` or `Option[Option[T]]`, or `Option[Option[Option[T]]]` etc...
-   * until we find the `T`
+   * until we find the `T`. Stop at a specified depth.
    */
   @tailrec
-  private def innerOptionParam(tpe: Type): Type = tpe match {
+  private def innerOptionParam(tpe: Type, maxDepth: Option[Int]): Type = tpe match {
     // If it's a ref-type and an Option, pull out the argument
-    case TypeRef(_, cls, List(arg)) if (cls.isClass && cls.asClass.fullName == "scala.Option") =>
-      innerOptionParam(arg)
+    case TypeRef(_, cls, List(arg)) if (cls.isClass && cls.asClass.fullName == "scala.Option") && maxDepth.forall(_ > 0) =>
+      innerOptionParam(arg, maxDepth.map(_ - 1))
     // If it's not a ref-type but an Option, convert to a ref-type and reprocess
     // also since Nothing is a subtype of everything need to know to stop searching once Nothing
-    // has been reached.
-    case _ if (isOptionType(tpe) && !(tpe =:= typeOf[Nothing])) =>
-      innerOptionParam(tpe.baseType(typeOf[Option[Any]].typeSymbol))
+    // has been reached (since we have not gone inside anything, do not decrement the depth here).
+    case _ if (isOptionType(tpe) && !(tpe =:= typeOf[Nothing])) && maxDepth.forall(_ > 0) =>
+      innerOptionParam(tpe.baseType(typeOf[Option[Any]].typeSymbol), maxDepth)
     // Otherwise we have gotten to the actual type inside the nesting. Check what it is.
     case other => other
   }
 
   private def isOptionEmbedded(tree: Tree) = {
-    val param = innerOptionParam(tree.tpe)
+    val param = innerOptionParam(tree.tpe, None)
     param <:< typeOf[Embedded]
   }
 
   private def isOptionRowType(tree: Tree) = {
-    val param = innerOptionParam(tree.tpe)
+    val param = innerOptionParam(tree.tpe, None)
     isTypeCaseClass(param) || isTypeTuple(param)
   }
 
@@ -786,6 +813,12 @@ trait Parsing {
   private def parseConflictAssigns(targets: List[Tree]) =
     OnConflict.Update(targets.map(assignmentParser(_)))
 
+  trait OptionCheckBehavior
+  /** Allow T == Option[T] comparison **/
+  case object AllowInnerCompare extends OptionCheckBehavior
+  /** Forbid T == Option[T] comparison **/
+  case object ForbidInnerCompare extends OptionCheckBehavior
+
   /**
    * Type-check two trees, if one of them has optionals, go into the optionals to find the root types
    * in each of them. Then compare the types that are inside. If they are not compareable, abort the build.
@@ -793,25 +826,33 @@ trait Parsing {
    * the 'weak conformance' operator is used and a subclass is allowed on either side of the `==`. Weak
    * conformance is necessary so that Longs can be compared to Ints etc...
    */
-  private def checkInnerTypes(lhs: Tree, rhs: Tree): (Boolean, Boolean) = {
+  private def checkInnerTypes(lhs: Tree, rhs: Tree, optionCheckBehavior: OptionCheckBehavior): (Boolean, Boolean) = {
     val leftType = typecheckUnquoted(lhs).tpe
     val rightType = typecheckUnquoted(rhs).tpe
-    val leftInner = innerOptionParam(leftType)
-    val rightInner = innerOptionParam(rightType)
+    val leftInner = innerOptionParam(leftType, Some(1))
+    val rightInner = innerOptionParam(rightType, Some(1))
     val leftIsOptional = isOptionType(leftType) && !is[Nothing](lhs)
     val rightIsOptional = isOptionType(rightType) && !is[Nothing](rhs)
+    val typesMatch = matchTypes(rightInner, leftInner)
 
-    if (rightInner.`weak_<:<`(leftInner) ||
+    optionCheckBehavior match {
+      case AllowInnerCompare if typesMatch =>
+        (leftIsOptional, rightIsOptional)
+      case ForbidInnerCompare if ((leftIsOptional && rightIsOptional) || (!leftIsOptional && !rightIsOptional)) && typesMatch =>
+        (leftIsOptional, rightIsOptional)
+      case _ =>
+        if (leftIsOptional || rightIsOptional)
+          c.abort(lhs.pos, s"${leftType.widen} == ${rightType.widen} is not allowed since ${leftInner.widen}, ${rightInner.widen} are different types.")
+        else
+          c.abort(lhs.pos, s"${leftType.widen} == ${rightType.widen} is not allowed since they are different types.")
+    }
+  }
+
+  private def matchTypes(rightInner: Type, leftInner: Type): Boolean = {
+    (rightInner.`weak_<:<`(leftInner) ||
       rightInner.widen.`weak_<:<`(leftInner.widen) ||
       leftInner.`weak_<:<`(rightInner) ||
-      leftInner.widen.`weak_<:<`(rightInner.widen)) {
-      (leftIsOptional, rightIsOptional)
-    } else {
-      if (leftIsOptional || rightIsOptional)
-        c.abort(lhs.pos, s"${leftType.widen} == ${rightType.widen} is not allowed since ${leftInner.widen}, ${rightInner.widen} are different types.")
-      else
-        c.abort(lhs.pos, s"${leftType.widen} == ${rightType.widen} is not allowed since they are different types.")
-    }
+      leftInner.widen.`weak_<:<`(rightInner.widen))
   }
 
   private def typecheckUnquoted(tree: Tree): Tree = {
