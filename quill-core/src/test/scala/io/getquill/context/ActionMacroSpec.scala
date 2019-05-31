@@ -195,7 +195,7 @@ class ActionMacroSpec extends Spec {
       testContext.translate(q) mustEqual
         """querySchema("TestEntity").insert(v => v.s -> 's', v => v.i -> 1, v => v.l -> 2, v => v.o -> null)"""
     }
-    "nexted case class lifting" in {
+    "nested case class lifting" in {
       val q = quote {
         (t: TestEntity) => qr1.insert(t)
       }
