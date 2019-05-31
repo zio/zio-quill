@@ -58,8 +58,29 @@ object SimplifyNullChecks extends StatelessTransformer {
       case IfExistElseNull(cond, IfExistElseNull(innerCond, innerThen)) =>
         apply(If(IsNotNullCheck(cond) +&&+ IsNotNullCheck(innerCond), innerThen, NullValue))
 
+      case (left +&&+ OptionIsEmpty(Optional(Constant(_)))) +||+ other  => apply(other)
+      case (OptionIsEmpty(Optional(Constant(_))) +&&+ right) +||+ other => apply(other)
+      case other +||+ (left +&&+ OptionIsEmpty(Optional(Constant(_))))  => apply(other)
+      case other +||+ (OptionIsEmpty(Optional(Constant(_))) +&&+ right) => apply(other)
+
+      case (left +&&+ OptionIsDefined(Optional(Constant(_))))           => apply(left)
+      case (OptionIsDefined(Optional(Constant(_))) +&&+ right)          => apply(right)
+      case (left +||+ OptionIsEmpty(Optional(Constant(_))))             => apply(left)
+      case (OptionIsEmpty(OptionSome(Optional(_))) +||+ right)          => apply(right)
+
       case other =>
         super.apply(other)
     }
 
+  /**
+   * Simple extractor that looks inside of an optional values to see if the thing inside can be pulled out.
+   * If not, it just returns whatever element it can find.
+   */
+  object Optional {
+    def unapply(a: Ast): Option[Ast] = a match {
+      case OptionApply(value) => Some(value)
+      case OptionSome(value)  => Some(value)
+      case value              => Some(value)
+    }
+  }
 }

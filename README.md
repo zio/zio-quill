@@ -288,35 +288,6 @@ Quill normalizes the quotation and translates the monadic joins to applicative j
 
 Any of the following features can be used together with the others and/or within a for-comprehension:
 
-### equals
-
-The `==`, `!=`, and `.equals` methods can be used to compare regular types as well as types inside of Option.
-```scala
-case class Node(id:Int, status:Option[String])
-
-val q = quote { query[Node].filter(n => n.id == 123) }          // You can do it like this
-val q = quote { query[Node].filter(n => n.id == Option(123)) }  // or like this!
-ctx.run(q)
-// SELECT n.id, n.status FROM Node n WHERE p.id = 123
-
-val q = quote { query[Node].filter(n => n.status == "RUNNING") }          // You can do it like this
-val q = quote { query[Node].filter(n => n.status == Option("RUNNING")) }  // or like this!
-ctx.run(q)
-// SELECT n.id, n.status FROM Node n WHERE p.status = 'RUNNING'
-```
-
-This is quite different than the way `==` behaves in standard Scala code so you can import `===` (and `=!=`)
-from `Context.extras` which works the same way inside and outside of quoted blocks.
-
-```scala
-import ctx.extras._
-
-// === works the same way inside of a quotation
-val q = quote { query[Node].filter(n => n.id === Option(123)) }
-// as well as outside
-(nodes:List[Node]).filter(n => n.id === Option(123))
-```
-
 ### filter
 ```scala
 val q = quote {
@@ -999,6 +970,61 @@ ctx.run(a)
 // SELECT CASE WHEN CASE WHEN p.name = 'Joe' THEN 'foo' ELSE 'bar' END IS NOT NULL THEN CASE WHEN p.name = 'Joe' THEN 'foo' ELSE 'bar' END ELSE 'baz' END FROM Person p
 // Now is this:
 // SELECT CASE WHEN p.name IS NOT NULL AND CASE WHEN p.name = 'Joe' THEN 'foo' ELSE 'bar' END IS NOT NULL THEN CASE WHEN p.name = 'Joe' THEN 'foo' ELSE 'bar' END ELSE 'baz' END FROM Person p
+```
+
+### equals
+
+The `==`, `!=`, and `.equals` methods can be used to compare regular types as well Option types in a scala-idiomatic way.
+That is to say, either `T == T` or `Option[T] == Option[T]` is supported and the following "truth-table" is observed:
+
+Left         | Right        | Equality   | Result
+-------------|--------------|------------|----------
+`a`          | `b`          | `==`       | `a == b`
+`Some[T](a)` | `Some[T](b)` | `==`       | `a == b`
+`Some[T](a)` | `None`       | `==`       | `false`
+`None      ` | `Some[T](b)` | `==`       | `false`
+`None      ` | `None`       | `==`       | `true`
+`Some[T]   ` | `Some[R]   ` | `==`       | Exception thrown.
+`a`          | `b`          | `!=`       | `a != b`
+`Some[T](a)` | `Some[T](b)` | `!=`       | `a != b`
+`Some[T](a)` | `None`       | `!=`       | `true`
+`None      ` | `Some[T](b)` | `!=`       | `true`
+`Some[T]   ` | `Some[R]   ` | `!=`       | Exception thrown.
+`None      ` | `None`       | `!=`       | `false`
+
+```scala
+case class Node(id:Int, status:Option[String])
+
+val q = quote { query[Node].filter(n => n.id == 123) }
+ctx.run(q)
+// SELECT n.id, n.status FROM Node n WHERE p.id = 123
+
+val q = quote { query[Node].filter(n => n.status == Option("RUNNING")) }
+ctx.run(q)
+// SELECT n.id, n.status FROM node n WHERE n.status IS NOT NULL AND n.status = 'RUNNING'
+
+val q = quote { query[Node].filter(n => n.status != Option("RUNNING")) }
+ctx.run(q)
+// SELECT n.id, n.status FROM node n WHERE n.status IS NULL OR n.status <> 'RUNNING'
+```
+
+If you would like to use an equality operator that follows that ansi-idiomatic approach, failing
+the comparison if either side is null i.e. `null = null := false`, you can import `===` (and `=!=`) 
+from `Context.extras`. These operators work across `T` and `Option[T]` allowing comparisons like `T === Option[T]`,
+`Option[T] == T` etc... to be made. You can use also `===`
+directly in Scala code and it will have the same behavior, returning `false` when other the left-hand
+or right-hand side is `None`. This is particularity useful in paradigms like Spark where
+you will typically transition inside and outside of Quill code.
+
+```scala
+import ctx.extras._
+
+// === works the same way inside of a quotation
+val q = run( query[Node].filter(n => n.status === "RUNNING") )
+// SELECT n.id, n.status FROM node n WHERE n.status IS NOT NULL AND n.status = 'RUNNING'
+
+// as well as outside
+(nodes:List[Node]).filter(n => n.status === "RUNNING")
 ```
 
 #### Optional Tables
