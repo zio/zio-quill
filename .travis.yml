@@ -62,5 +62,6 @@ jobs:
       name: "BigData Databases 2.12 - Cassandra, OrientDB, Spark"
     - stage: release
       if: type != pull_request
+      scala: 2.12.6
       script:
         - travis_retry ./build/release.sh

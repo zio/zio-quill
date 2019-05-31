@@ -3,6 +3,7 @@ package io.getquill.norm
 import io.getquill.Spec
 import io.getquill.ast._
 import io.getquill.ast.Implicits._
+import io.getquill.testContext.{ quote, unquote }
 
 class SimplifyNullChecksSpec extends Spec {
 
@@ -34,6 +35,34 @@ class SimplifyNullChecksSpec extends Spec {
       SimplifyNullChecks(
         IfExistElseNull(ia, IfExistElseNull(ib, it))
       ) mustEqual If(IsNotNullCheck(ia) +&&+ IsNotNullCheck(ib), it, NullValue)
+    }
+
+    "reduces when Option == Option(constant)" in {
+      val q = quote {
+        (a: Option[Int]) => a == Option(1)
+      }
+      SimplifyNullChecks(quote(unquote(q)).ast.body) mustEqual (OptionIsDefined(ia) +&&+ (ia +==+ OptionApply(Constant(1))))
+    }
+
+    "reduces when Option(constant) == Option" in {
+      val q = quote {
+        (a: Option[Int]) => Option(1) == a
+      }
+      SimplifyNullChecks(quote(unquote(q)).ast.body) mustEqual (OptionIsDefined(ia) +&&+ (OptionApply(Constant(1)) +==+ ia))
+    }
+
+    "reduces when Option != Option(constant)" in {
+      val q = quote {
+        (a: Option[Int]) => a != Option(1)
+      }
+      SimplifyNullChecks(quote(unquote(q)).ast.body) mustEqual (OptionIsEmpty(ia) +||+ (ia +!=+ OptionApply(Constant(1))))
+    }
+
+    "reduces when Option(constant) != Option" in {
+      val q = quote {
+        (a: Option[Int]) => Option(1) != a
+      }
+      SimplifyNullChecks(quote(unquote(q)).ast.body) mustEqual (OptionIsEmpty(ia) +||+ (OptionApply(Constant(1)) +!=+ ia))
     }
   }
 }

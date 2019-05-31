@@ -60,10 +60,12 @@ lazy val filteredModules = {
 
 lazy val `quill` =
   (project in file("."))
-    .settings(commonSettings)
+    .settings(commonSettings: _*)
     .settings(`tut-settings`:_*)
     .aggregate(filteredModules.map(_.project): _*)
     .dependsOn(filteredModules: _*)
+
+publishArtifact in `quill` := false
 
 lazy val superPure = new sbtcrossproject.CrossType {
   def projectDir(crossBase: File, projectType: String): File =
@@ -88,7 +90,7 @@ lazy val `quill-core` =
     .settings(mimaSettings: _*)
     .settings(libraryDependencies ++= Seq(
       "com.typesafe"               %  "config"        % "1.3.4",
-      "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0",
+      "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
       "org.scala-lang"             %  "scala-reflect" % scalaVersion.value
     ))
     .jsSettings(
@@ -114,12 +116,12 @@ lazy val `quill-sql-js` = `quill-sql`.js
 
 lazy val `quill-codegen` =
   (project in file("quill-codegen"))
-    .settings(commonSettings)
+    .settings(commonSettings: _*)
     .dependsOn(`quill-core-jvm` % "compile->compile;test->test")
 
 lazy val `quill-codegen-jdbc` =
   (project in file("quill-codegen-jdbc"))
-    .settings(commonSettings)
+    .settings(commonSettings: _*)
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
@@ -135,11 +137,8 @@ val codegen = taskKey[Seq[File]]("Run Code Generation Phase for Integration Test
 
 lazy val `quill-codegen-tests` =
   (project in file("quill-codegen-tests"))
-    .settings(basicSettings)
+    .settings(commonSettings: _*)
     .settings(
-      publish := {},
-      publishLocal := {},
-      publishTo := Some(Resolver.file("Unused transient repository", file("target/unusedrepo"))),
       libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test,
       fork in Test := true,
       (sourceGenerators in Test) += (codegen in Test),
@@ -184,6 +183,9 @@ lazy val `quill-codegen-tests` =
 
 val includeOracle =
   sys.props.getOrElse("oracle", "false").toBoolean
+
+val debugMacro =
+  sys.props.getOrElse("debugMacro", "false").toBoolean
 
 def includeIfOracle[T](t:T):Seq[T] =
   if (includeOracle) Seq(t) else Seq()
@@ -248,7 +250,7 @@ lazy val `quill-finagle-mysql` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.twitter" %% "finagle-mysql" % "19.4.0"
+        "com.twitter" %% "finagle-mysql" % "19.5.1"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -347,7 +349,7 @@ lazy val `quill-orientdb` =
       .settings(
         fork in Test := true,
         libraryDependencies ++= Seq(
-          "com.orientechnologies" % "orientdb-graphdb" % "3.0.18"
+          "com.orientechnologies" % "orientdb-graphdb" % "3.0.19"
         )
       )
       .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -481,7 +483,14 @@ lazy val basicSettings = Seq(
     "org.scalatest"   %%% "scalatest"     % "3.0.7"     % Test,
     "ch.qos.logback"  % "logback-classic" % "1.2.3"     % Test,
     "com.google.code.findbugs" % "jsr305" % "3.0.2"     % Provided // just to avoid warnings during compilation
-  ),
+  ) ++ {
+    if (debugMacro) Seq(
+      "org.scala-lang"   %  "scala-library"     % scalaVersion.value,
+      "org.scala-lang"   %  "scala-compiler"    % scalaVersion.value,
+      "org.scala-lang"   %  "scala-reflect"     % scalaVersion.value
+    )
+    else Seq()
+  },
   ScalariformKeys.preferences := ScalariformKeys.preferences.value
     .setPreference(AlignParameters, true)
     .setPreference(CompactStringConcatenation, false)

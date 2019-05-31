@@ -9,11 +9,15 @@ import io.getquill.ast.{ Query => _, _ }
 import io.getquill.testContext._
 import io.getquill.context.ValueClass
 import io.getquill.util.Messages
+import io.getquill.ast.Implicits._
 
 case class CustomAnyValue(i: Int) extends AnyVal
 case class EmbeddedValue(s: String, i: Int) extends Embedded
 
 class QuotationSpec extends Spec {
+
+  // remove the === matcher from scalatest so that we can test === in Context.extra
+  override def convertToEqualizer[T](left: T): Equalizer[T] = new Equalizer(left)
 
   "quotes and unquotes asts" - {
 
@@ -510,6 +514,18 @@ class QuotationSpec extends Spec {
           }
           quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), EqualityOperator.`==`, Ident("b"))
         }
+        "succeeds when different numerics are used Int/Long" in {
+          val q = quote {
+            (a: Int, b: Long) => a == b
+          }
+          quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), EqualityOperator.`==`, Ident("b"))
+        }
+        "succeeds when different numerics are used Long/Int" in {
+          val q = quote {
+            (a: Long, b: Int) => a == b
+          }
+          quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), EqualityOperator.`==`, Ident("b"))
+        }
         "fails if the types don't match" in {
           """
             quote {
@@ -517,41 +533,388 @@ class QuotationSpec extends Spec {
             }
           """ mustNot compile
         }
-        "fails if comparing options" - {
-          "Option/Option" in {
+        "comparing compatible nested types" - {
+          val ia = Ident("a")
+          val ib = Ident("b")
+
+          "succeeds when Option/Option" in {
+            val q = quote {
+              (a: Option[Int], b: Option[Int]) => a == b
+            }
+
+            quote(unquote(q)).ast.body mustEqual (OptionIsEmpty(ia) +&&+ OptionIsEmpty(ib)) +||+ (OptionIsDefined(ia) +&&+ OptionIsDefined(ib) +&&+ (ia +==+ ib))
+          }
+          "succeeds when Option/T" in {
             """
-              quote {
-                (a: Option[Int], b: Option[Int]) => a == b
-              }
+            val q = quote {
+              (a: Option[Int], b: Int) => a == b
+            }
             """ mustNot compile
           }
-          "Option/None" in {
+          "succeeds when T/Option" in {
             """
-              quote {
-                (a: Option[Int]) => a == None
-              }
+            val q = quote {
+              (a: Int, b: Option[Int]) => a == b
+            }
             """ mustNot compile
           }
-          "None/Option" in {
+          "fails with multiple nesting T/Option[Option]" in {
             """
-              quote {
-                (a: Option[Int]) => None == a
-              }
+            val q = quote {
+              (a: Int, b: Option[Option[Int]]) => a == b
+            }
             """ mustNot compile
+          }
+          "succeeds with multiple nesting Option[Option]/T" in {
+            """
+            val q = quote {
+              (a: Option[Option[Int]], b: Int) => a == b
+            }
+            """ mustNot compile
+          }
+          "succeeds when Option/None" in {
+            """
+            val q = quote {
+              (a: Int) => a == None
+            }
+            """ mustNot compile
+          }
+          "fails when None/Option (left hand bias)" in {
+            """
+            val q = quote {
+              (a: Int) => None == a
+            }
+            """ mustNot compile
+          }
+          "comparing types with suclassing" - {
+            case class Foo(id: Int)
+            trait Foot
+            case class Bar(id: Int)
+            trait Bart
+
+            "succeeds when Option[T]/Option[T]" in {
+              val q = quote {
+                (a: Option[Foo], b: Option[Foo]) => a == b
+              }
+              quote(unquote(q)).ast.body mustEqual (OptionIsEmpty(ia) +&&+ OptionIsEmpty(ib)) +||+ (OptionIsDefined(ia) +&&+ OptionIsDefined(ib) +&&+ (ia +==+ ib))
+            }
+            "succeeds when Option[T]/Option[subclass T]" in {
+              val q = quote {
+                (a: Option[Foo], b: Option[Foo with Foot]) => a == b
+              }
+              quote(unquote(q)).ast.body mustEqual (OptionIsEmpty(ia) +&&+ OptionIsEmpty(ib)) +||+ (OptionIsDefined(ia) +&&+ OptionIsDefined(ib) +&&+ (ia +==+ ib))
+            }
+            "succeeds when Option[subclass T]/Option[T]" in {
+              val q = quote {
+                (a: Option[Foo with Foot], b: Option[Foo]) => a == b
+              }
+              quote(unquote(q)).ast.body mustEqual (OptionIsEmpty(ia) +&&+ OptionIsEmpty(ib)) +||+ (OptionIsDefined(ia) +&&+ OptionIsDefined(ib) +&&+ (ia +==+ ib))
+            }
+            "fails when Option[T]/Option[A]" in {
+              """
+                quote {
+                  (a: Option[Foo], b: Option[Bar]) => a == b
+                }
+              """ mustNot compile
+            }
+            "fails when Option[subclass1 T]/Option[subclass 2T]" in {
+              """
+                quote {
+                  (a: Option[Foo with Foot], b: Option[Foo with Bart]) => a == b
+                }
+              """ mustNot compile
+            }
+          }
+        }
+        "extras" - {
+          import extras._
+          val ia = Ident("a")
+          val ib = Ident("b")
+
+          "normal" in {
+            val q = quote {
+              (a: Int, b: Int) => a === b
+            }
+            quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), EqualityOperator.`==`, Ident("b"))
+          }
+          "normal - string" in {
+            val q = quote {
+              (a: String, b: String) => a === b
+            }
+            quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), EqualityOperator.`==`, Ident("b"))
+          }
+          "succeeds when different numerics are used Int/Long" in {
+            val q = quote {
+              (a: Int, b: Long) => a === b
+            }
+            quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), EqualityOperator.`==`, Ident("b"))
+          }
+          "succeeds when Option/Option" in {
+            val q = quote {
+              (a: Option[Int], b: Option[Int]) => a === b
+            }
+            quote(unquote(q)).ast.body mustEqual OptionIsDefined(ia) +&&+ OptionIsDefined(ib) +&&+ (ia +==+ ib)
+          }
+          "succeeds when Option/T" in {
+            val q = quote {
+              (a: Option[Int], b: Int) => a === b
+            }
+            quote(unquote(q)).ast.body mustEqual OptionIsDefined(ia) +&&+ (ia +==+ ib)
+          }
+          "succeeds when T/Option" in {
+            val q = quote {
+              (a: Int, b: Option[Int]) => a === b
+            }
+            quote(unquote(q)).ast.body mustEqual OptionIsDefined(ib) +&&+ (ia +==+ ib)
+          }
+          "succeeds when Option/Option - Different Numerics" in {
+            val q = quote {
+              (a: Option[Int], b: Option[Long]) => a === b
+            }
+            quote(unquote(q)).ast.body mustEqual OptionIsDefined(ia) +&&+ OptionIsDefined(ib) +&&+ (ia +==+ ib)
+          }
+          "succeeds when Option/T - Different Numerics" in {
+            val q = quote {
+              (a: Option[Int], b: Long) => a === b
+            }
+            quote(unquote(q)).ast.body mustEqual OptionIsDefined(ia) +&&+ (ia +==+ ib)
+          }
+          "succeeds when T/Option - Different Numerics" in {
+            val q = quote {
+              (a: Int, b: Option[Long]) => a === b
+            }
+            quote(unquote(q)).ast.body mustEqual OptionIsDefined(ib) +&&+ (ia +==+ ib)
+          }
+          "succeeds when Option/Option - String" in {
+            val q = quote {
+              (a: Option[String], b: Option[String]) => a === b
+            }
+            quote(unquote(q)).ast.body mustEqual OptionIsDefined(ia) +&&+ OptionIsDefined(ib) +&&+ (ia +==+ ib)
+          }
+          "succeeds when Option/T - String" in {
+            val q = quote {
+              (a: Option[String], b: String) => a === b
+            }
+            quote(unquote(q)).ast.body mustEqual OptionIsDefined(ia) +&&+ (ia +==+ ib)
+          }
+          "succeeds when T/Option - String" in {
+            val q = quote {
+              (a: String, b: Option[String]) => a === b
+            }
+            quote(unquote(q)).ast.body mustEqual OptionIsDefined(ib) +&&+ (ia +==+ ib)
           }
         }
       }
-      "equals" in {
-        val q = quote {
-          (a: Int, b: Int) => a.equals(b)
+      "equals" - {
+        "equals method" in {
+          val q = quote {
+            (a: Int, b: Int) => a.equals(b)
+          }
+          quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), EqualityOperator.`==`, Ident("b"))
         }
-        quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), EqualityOperator.`==`, Ident("b"))
+        "==" in {
+          val q = quote {
+            (a: Int, b: Int) => a == b
+          }
+          quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), EqualityOperator.`==`, Ident("b"))
+        }
+
+        case class Foo(id: Int)
+        trait Foot
+        case class Bar(id: Int)
+        trait Bart
+
+        "should succeed if right is subclass" in {
+          val q = quote {
+            (a: Foo, b: Foo with Foot) => a.equals(b)
+          }
+          quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), EqualityOperator.`==`, Ident("b"))
+        }
+        "should succeed if left is subclass" in {
+          val q = quote {
+            (a: Foo with Foot, b: Foo) => a.equals(b)
+          }
+          quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), EqualityOperator.`==`, Ident("b"))
+        }
+        "should succeed with refinements" in {
+          val q = quote {
+            (a: Foo with Foot, b: Foo with Foot) => a.equals(b)
+          }
+          quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), EqualityOperator.`==`, Ident("b"))
+        }
+        "should fail if both are subclasses" in {
+          "quote{ (a: Foo with Foot, b: Foo with Bart) => a.equals(b) }.ast.body" mustNot compile
+        }
+        "should fail if classes unrelated" in {
+          "quote{ (a: Foo, b: Bar) => a.equals(b) }.ast.body" mustNot compile
+        }
       }
-      "!=" in {
-        val q = quote {
-          (a: Int, b: Int) => a != b
+      "!=" - {
+        "normal" in {
+          val q = quote {
+            (a: Int, b: Int) => a != b
+          }
+          quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), EqualityOperator.`!=`, Ident("b"))
         }
-        quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), EqualityOperator.`!=`, Ident("b"))
+        "succeeds when different numerics are used Int/Long" in {
+          val q = quote {
+            (a: Int, b: Long) => a != b
+          }
+          quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), EqualityOperator.`!=`, Ident("b"))
+        }
+        "succeeds when different numerics are used Long/Int" in {
+          val q = quote {
+            (a: Long, b: Int) => a != b
+          }
+          quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), EqualityOperator.`!=`, Ident("b"))
+        }
+        "fails if the types don't match" in {
+          """
+            quote {
+              (a: Int, b: String) => a != b
+            }
+          """ mustNot compile
+        }
+        "comparing compatible nested types" - {
+          val ia = Ident("a")
+          val ib = Ident("b")
+
+          "succeeds when Option/Option" in {
+            val q = quote {
+              (a: Option[Int], b: Option[Int]) => a != b
+            }
+            quote(unquote(q)).ast.body mustEqual (OptionIsDefined(ia) +&&+ OptionIsEmpty(ib)) +||+ (OptionIsEmpty(ia) +&&+ OptionIsDefined(ib)) +||+ (ia +!=+ ib)
+          }
+          "fails when Option/T" in {
+            """
+            val q = quote {
+              (a: Option[Int], b: Int) => a != b
+            }
+            """ mustNot compile
+          }
+          "fails when T/Option" in {
+            """
+            val q = quote {
+              (a: Int, b: Option[Int]) => a != b
+            }
+            """ mustNot compile
+          }
+          "fails with multiple nesting T/Option[Option]" in {
+            """
+            val q = quote {
+              (a: Int, b: Option[Option[Int]]) => a != b
+            }
+            """ mustNot compile
+          }
+          "fails with multiple nesting Option[Option]/T" in {
+            """
+            val q = quote {
+              (a: Option[Option[Int]], b: Int) => a != b
+            }
+            """ mustNot compile
+          }
+          "succeeds when Option/None" in {
+            """
+            val q = quote {
+              (a: Int) => a != None
+            }
+            """ mustNot compile
+          }
+          "fails when None/Option (left hand bias)" in {
+            """
+            val q = quote {
+              (a: Int) => None != a
+            }
+            """ mustNot compile
+          }
+          "comparing types with suclassing" - {
+            case class Foo(id: Int)
+            trait Foot
+            case class Bar(id: Int)
+            trait Bart
+
+            "succeeds when Option[T]/Option[subclass T]" in {
+              val q = quote {
+                (a: Option[Foo], b: Option[Foo with Foot]) => a != b
+              }
+              quote(unquote(q)).ast.body mustEqual (OptionIsDefined(ia) +&&+ OptionIsEmpty(ib)) +||+ (OptionIsEmpty(ia) +&&+ OptionIsDefined(ib)) +||+ (ia +!=+ ib)
+            }
+            "succeeds when Option[subclass T]/Option[T]" in {
+              val q = quote {
+                (a: Option[Foo with Foot], b: Option[Foo]) => a != b
+              }
+              quote(unquote(q)).ast.body mustEqual (OptionIsDefined(ia) +&&+ OptionIsEmpty(ib) +||+ (OptionIsEmpty(ia) +&&+ OptionIsDefined(ib)) +||+ (ia +!=+ ib))
+            }
+            "fails when Option[T]/Option[A]" in {
+              """
+                quote {
+                  (a: Option[Foo], b: Option[Bar]) => a != b
+                }
+              """ mustNot compile
+            }
+            "fails when Option[subclass1 T]/Option[subclass 2T]" in {
+              """
+                quote {
+                  (a: Option[Foo with Foot], b: Option[Foo with Bart]) => a != b
+                }
+              """ mustNot compile
+            }
+          }
+        }
+        "extras" - {
+          import extras._
+          val ia = Ident("a")
+          val ib = Ident("b")
+
+          "normal" in {
+            val q = quote {
+              (a: Int, b: Int) => a =!= b
+            }
+            quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), EqualityOperator.`!=`, Ident("b"))
+          }
+          "succeeds when different numerics are used Int/Long" in {
+            val q = quote {
+              (a: Int, b: Long) => a =!= b
+            }
+            quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), EqualityOperator.`!=`, Ident("b"))
+          }
+          "succeeds when Option/Option" in {
+            val q = quote {
+              (a: Option[Int], b: Option[Int]) => a =!= b
+            }
+            quote(unquote(q)).ast.body mustEqual OptionIsDefined(ia) +&&+ OptionIsDefined(ib) +&&+ (ia +!=+ ib)
+          }
+          "succeeds when Option/T" in {
+            val q = quote {
+              (a: Option[Int], b: Int) => a =!= b
+            }
+            quote(unquote(q)).ast.body mustEqual OptionIsDefined(ia) +&&+ (ia +!=+ ib)
+          }
+          "succeeds when T/Option" in {
+            val q = quote {
+              (a: Int, b: Option[Int]) => a =!= b
+            }
+            quote(unquote(q)).ast.body mustEqual OptionIsDefined(ib) +&&+ (ia +!=+ ib)
+          }
+          "succeeds when Option/Option - String" in {
+            val q = quote {
+              (a: Option[String], b: Option[String]) => a =!= b
+            }
+            quote(unquote(q)).ast.body mustEqual OptionIsDefined(ia) +&&+ OptionIsDefined(ib) +&&+ (ia +!=+ ib)
+          }
+          "succeeds when Option/T - String" in {
+            val q = quote {
+              (a: Option[String], b: String) => a =!= b
+            }
+            quote(unquote(q)).ast.body mustEqual OptionIsDefined(ia) +&&+ (ia +!=+ ib)
+          }
+          "succeeds when T/Option - String" in {
+            val q = quote {
+              (a: String, b: Option[String]) => a =!= b
+            }
+            quote(unquote(q)).ast.body mustEqual OptionIsDefined(ib) +&&+ (ia +!=+ ib)
+          }
+        }
       }
       "&&" in {
         val q = quote {

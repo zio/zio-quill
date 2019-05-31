@@ -12,6 +12,9 @@ then
     openssl aes-256-cbc -pass pass:$ENCRYPTION_PASSWORD -in ./build/credentials.sbt.enc -out local.credentials.sbt -d
     openssl aes-256-cbc -pass pass:$ENCRYPTION_PASSWORD -in ./build/deploy_key.pem.enc -out local.deploy_key.pem -d
 
+    ls -ltr
+    sleep 3 # Need to wait until credential files fully written or build fails sometimes
+
     if [[ $TRAVIS_BRANCH == "master" && $(cat version.sbt) != *"SNAPSHOT"* ]]
     then
         eval "$(ssh-agent -s)"
@@ -25,16 +28,41 @@ then
         git reset --hard origin/master
         git push --delete origin website || true
 
-        $SBT_2_12 'release with-defaults'
-        $SBT_2_11 'release with-defaults'
+        $SBT_2_12 -Dmodules=base 'release with-defaults'
+        $SBT_2_12 -Dmodules=db 'release with-defaults'
+        $SBT_2_12 -Dmodules=async 'release with-defaults'
+        $SBT_2_12 -Dmodules=codegen 'release with-defaults'
+        $SBT_2_12 -Dmodules=bigdata 'release with-defaults'
+
+        $SBT_2_11 -Dmodules=base 'release with-defaults'
+        $SBT_2_11 -Dmodules=db 'release with-defaults'
+        $SBT_2_11 -Dmodules=async 'release with-defaults'
+        $SBT_2_11 -Dmodules=codegen 'release with-defaults'
+        $SBT_2_11 -Dmodules=bigdata 'release with-defaults'
 
     elif [[ $TRAVIS_BRANCH == "master" ]]
     then
-        $SBT_2_12 publish
-        $SBT_2_11 publish
+        $SBT_2_12 -Dmodules=base publish
+        $SBT_2_12 -Dmodules=db publish
+        $SBT_2_12 -Dmodules=async publish
+        $SBT_2_12 -Dmodules=codegen publish
+        $SBT_2_12 -Dmodules=bigdata publish
+        $SBT_2_11 -Dmodules=base publish
+        $SBT_2_11 -Dmodules=db publish
+        $SBT_2_11 -Dmodules=async publish
+        $SBT_2_11 -Dmodules=codegen publish
+        $SBT_2_11 -Dmodules=bigdata publish
     else
         echo "version in ThisBuild := \"$TRAVIS_BRANCH-SNAPSHOT\"" > version.sbt
-        $SBT_2_12 publish
-        $SBT_2_11 publish
+        $SBT_2_12 -Dmodules=base publish
+        $SBT_2_12 -Dmodules=db publish
+        $SBT_2_12 -Dmodules=async publish
+        $SBT_2_12 -Dmodules=codegen publish
+        $SBT_2_12 -Dmodules=bigdata publish
+        $SBT_2_11 -Dmodules=base publish
+        $SBT_2_11 -Dmodules=db publish
+        $SBT_2_11 -Dmodules=async publish
+        $SBT_2_11 -Dmodules=codegen publish
+        $SBT_2_11 -Dmodules=bigdata publish
     fi
 fi
