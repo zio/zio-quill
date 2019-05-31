@@ -36,6 +36,15 @@ object +==+ {
   }
 }
 
+object +!=+ {
+  def unapply(a: Ast): Option[(Ast, Ast)] = {
+    a match {
+      case BinaryOperation(one, EqualityOperator.`!=`, two) => Some((one, two))
+      case _ => None
+    }
+  }
+}
+
 object IsNotNullCheck {
   def apply(ast: Ast) = BinaryOperation(ast, EqualityOperator.`!=`, NullValue)
 

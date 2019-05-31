@@ -1009,12 +1009,18 @@ ctx.run(q)
 ```
 
 If you would like to use an equality operator that follows that ansi-idiomatic approach, failing
-the comparison if either side is null i.e. `null = null := false`, you can import `===` (and `=!=`) 
+the comparison if either side is null as well as the principle that `null = null := false`, you can import `===` (and `=!=`) 
 from `Context.extras`. These operators work across `T` and `Option[T]` allowing comparisons like `T === Option[T]`,
 `Option[T] == T` etc... to be made. You can use also `===`
 directly in Scala code and it will have the same behavior, returning `false` when other the left-hand
 or right-hand side is `None`. This is particularity useful in paradigms like Spark where
 you will typically transition inside and outside of Quill code.
+
+> When using `a === b` or `a =!= b` sometimes you will see the extra `a IS NOT NULL AND b IS NOT NULL` comparisons
+> and sometimes you will not. This depends on `equalityBehavior` in `SqlIdiom` which determines whether the given SQL
+> dialect already does ansi-idiomatic comparison to `a`, and `b` when an `=` operator is used,
+> this allows us to omit the extra `a IS NOT NULL AND b IS NOT NULL`.
+
 
 ```scala
 import ctx.extras._

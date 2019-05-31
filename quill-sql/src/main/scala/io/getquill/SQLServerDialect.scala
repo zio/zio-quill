@@ -6,6 +6,8 @@ import io.getquill.context.sql.idiom._
 import io.getquill.idiom.{ StringToken, Token }
 import io.getquill.idiom.Statement
 import io.getquill.idiom.StatementInterpolator._
+import io.getquill.norm.EqualityBehavior
+import io.getquill.norm.EqualityBehavior.NonAnsiEquality
 import io.getquill.util.Messages.fail
 
 trait SQLServerDialect
@@ -16,6 +18,10 @@ trait SQLServerDialect
   override def emptySetContainsToken(field: Token) = StringToken("1 <> 1")
 
   override def prepareForProbing(string: String) = string
+
+  // SQL-Server can potentially disable ANSI-null via `SET ANSI_NULLS OFF`. Force more strict checking here
+  // for the sake of consistency with the other contexts.
+  override def equalityBehavior: EqualityBehavior = NonAnsiEquality
 
   override protected def limitOffsetToken(query: Statement)(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy) =
     Tokenizer[(Option[Ast], Option[Ast])] {
