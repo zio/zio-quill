@@ -28,6 +28,9 @@ echo "Modules: $modules"
 
 function show_mem() {
     free -m | awk 'NR==2{printf "Memory Usage: %s/%sMB (%.2f%%)\n", $3,$2,$3*100/$2 }'
+    ulimit -Hn # Let's find out what the hard limit is
+    ulimit -Sn # Let's find out what the soft limit is
+    ps -eaf | egrep -i "sbt|java" | awk '{system("echo "$8"; lsof -p "$2" | wc -l")}' # How many files does SBT/JVM have open? 
     # mem_details
     # free_details
     # docker_stats
