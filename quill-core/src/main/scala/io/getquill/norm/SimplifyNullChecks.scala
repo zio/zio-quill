@@ -2,6 +2,7 @@ package io.getquill.norm
 
 import io.getquill.ast._
 import io.getquill.ast.Implicits._
+import io.getquill.norm.EqualityBehavior.AnsiEquality
 
 /**
  * Due to the introduction of null checks in `map`, `flatMap`, and `exists`, in
@@ -37,7 +38,7 @@ import io.getquill.ast.Implicits._
  * rules as well. Note how we are force to null-check both `h.value` as well as `(h.value || 'foo')` because
  * a user may use `Option[T].flatMap` and explicitly transform a particular value to `null`.
  */
-object SimplifyNullChecks extends StatelessTransformer {
+class SimplifyNullChecks(equalityBehavior: EqualityBehavior) extends StatelessTransformer {
 
   override def apply(ast: Ast): Ast =
     ast match {
@@ -58,19 +59,32 @@ object SimplifyNullChecks extends StatelessTransformer {
       case IfExistElseNull(cond, IfExistElseNull(innerCond, innerThen)) =>
         apply(If(IsNotNullCheck(cond) +&&+ IsNotNullCheck(innerCond), innerThen, NullValue))
 
-      case (left +&&+ OptionIsEmpty(Optional(Constant(_)))) +||+ other  => apply(other)
+      case OptionIsDefined(Optional(a)) +&&+ OptionIsDefined(Optional(b)) +&&+ (exp @ (Optional(a1) `== or !=` Optional(b1))) if (a == a1 && b == b1 && equalityBehavior == AnsiEquality) => apply(exp)
+
+      case OptionIsDefined(Optional(a)) +&&+ (exp @ (Optional(a1) `== or !=` Optional(_))) if (a == a1 && equalityBehavior == AnsiEquality) => apply(exp)
+      case OptionIsDefined(Optional(b)) +&&+ (exp @ (Optional(_) `== or !=` Optional(b1))) if (b == b1 && equalityBehavior == AnsiEquality) => apply(exp)
+
+      case (left +&&+ OptionIsEmpty(Optional(Constant(_)))) +||+ other => apply(other)
       case (OptionIsEmpty(Optional(Constant(_))) +&&+ right) +||+ other => apply(other)
-      case other +||+ (left +&&+ OptionIsEmpty(Optional(Constant(_))))  => apply(other)
+      case other +||+ (left +&&+ OptionIsEmpty(Optional(Constant(_)))) => apply(other)
       case other +||+ (OptionIsEmpty(Optional(Constant(_))) +&&+ right) => apply(other)
 
-      case (left +&&+ OptionIsDefined(Optional(Constant(_))))           => apply(left)
-      case (OptionIsDefined(Optional(Constant(_))) +&&+ right)          => apply(right)
-      case (left +||+ OptionIsEmpty(Optional(Constant(_))))             => apply(left)
-      case (OptionIsEmpty(OptionSome(Optional(_))) +||+ right)          => apply(right)
+      case (left +&&+ OptionIsDefined(Optional(Constant(_)))) => apply(left)
+      case (OptionIsDefined(Optional(Constant(_))) +&&+ right) => apply(right)
+      case (left +||+ OptionIsEmpty(Optional(Constant(_)))) => apply(left)
+      case (OptionIsEmpty(OptionSome(Optional(_))) +||+ right) => apply(right)
 
       case other =>
         super.apply(other)
     }
+
+  object `== or !=` {
+    def unapply(ast: Ast): Option[(Ast, Ast)] = ast match {
+      case a +==+ b => Some((a, b))
+      case a +!=+ b => Some((a, b))
+      case _        => None
+    }
+  }
 
   /**
    * Simple extractor that looks inside of an optional values to see if the thing inside can be pulled out.
