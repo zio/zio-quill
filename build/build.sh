@@ -28,6 +28,9 @@ echo "Modules: $modules"
 
 function show_mem() {
     free -m | awk 'NR==2{printf "Memory Usage: %s/%sMB (%.2f%%)\n", $3,$2,$3*100/$2 }'
+    ulimit -Hn # Let's find out what the hard limit is
+    ulimit -Sn # Let's find out what the soft limit is
+    ps -eaf | egrep -i "sbt|java" | awk '{system("echo "$8"; lsof -p "$2" | wc -l")}' # How many files does SBT/JVM have open? 
     # mem_details
     # free_details
     # docker_stats
@@ -186,22 +189,22 @@ function full_build() {
 
 if [[ $modules == "db" ]]; then
     echo "Build Script: Doing Database Build"
-    db_build
+    db_build || echo "Doing Database Build"; show_mem(); exit 1
 elif [[ $modules == "finagle" ]]; then
     echo "Build Script: Doing Finagle Database Build"
-    finagle_build
+    finagle_build || echo "Doing Finagle Database Build Failed"; show_mem(); exit 1
 elif [[ $modules == "async" ]]; then
     echo "Build Script: Doing Async Database Build"
-    async_build
+    async_build || echo "Async Database Build Failed"; show_mem(); exit 1
 elif [[ $modules == "codegen" ]]; then
     echo "Build Script: Doing Code Generator Build"
-    codegen_build
+    codegen_build || echo "Code Generator Build Failed"; show_mem(); exit 1
 elif [[ $modules == "bigdata" ]]; then
     echo "Build Script: Doing BigData Build"
-    bigdata_build
+    bigdata_build || echo "BigData Build Failed"; show_mem(); exit 1
 else
     echo "Build Script: Doing Full Build"
-    full_build
+    full_build || echo "Full Build Failed"; show_mem(); exit 1
 fi
 
 show_mem
