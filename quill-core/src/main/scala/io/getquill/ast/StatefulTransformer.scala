@@ -12,6 +12,7 @@ trait StatefulTransformer[T] {
       case e: Value                => apply(e)
       case e: Assignment           => apply(e)
       case e: Ident                => (e, this)
+      case e: Type                 => (e, this)
       case e: OptionOperation      => apply(e)
       case e: TraversableOperation => apply(e)
       case e: Property             => apply(e)
@@ -259,6 +260,9 @@ trait StatefulTransformer[T] {
         val (at, att) = apply(a)
         val (ct, ctt) = att.apply(c)
         (Returning(at, b, ct), ctt)
+      case ReturningRecord(a, tpe) =>
+        val (at, att) = apply(a)
+        (ReturningRecord(at, tpe), att)
       case Foreach(a, b, c) =>
         val (at, att) = apply(a)
         val (ct, ctt) = att.apply(c)

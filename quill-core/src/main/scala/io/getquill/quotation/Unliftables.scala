@@ -158,6 +158,7 @@ trait Unliftables {
     case q"$pack.Insert.apply(${ a: Ast }, ${ b: List[Assignment] })" => Insert(a, b)
     case q"$pack.Delete.apply(${ a: Ast })" => Delete(a)
     case q"$pack.Returning.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => Returning(a, b, c)
+    case q"$pack.ReturningRecord.apply(${ a: Ast }, ${ b: io.getquill.ast.Type })" => ReturningRecord(a, b)
     case q"$pack.Foreach.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => Foreach(a, b, c)
     case q"$pack.OnConflict.apply(${ a: Ast }, ${ b: OnConflict.Target }, ${ c: OnConflict.Action })" => OnConflict(a, b, c)
   }
@@ -191,5 +192,9 @@ trait Unliftables {
     case q"$pack.CaseClassValueLift.apply(${ a: String }, $b)"  => CaseClassValueLift(a, b)
     case q"$pack.ScalarQueryLift.apply(${ a: String }, $b, $c)" => ScalarQueryLift(a, b, c)
     case q"$pack.CaseClassQueryLift.apply(${ a: String }, $b)"  => CaseClassQueryLift(a, b)
+  }
+
+  implicit val typeUnliftable: Unliftable[io.getquill.ast.Type] = Unliftable[io.getquill.ast.Type] {
+    case q"$pack.Type.apply(${ a: String })" => io.getquill.ast.Type(a)
   }
 }
