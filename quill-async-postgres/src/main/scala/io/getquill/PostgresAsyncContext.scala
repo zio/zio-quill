@@ -9,7 +9,7 @@ import io.getquill.util.LoadConfig
 import io.getquill.util.Messages.fail
 
 class PostgresAsyncContext[N <: NamingStrategy](naming: N, pool: PartitionedConnectionPool[PostgreSQLConnection])
-  extends AsyncContext(PostgresDialect, naming, pool)
+  extends AsyncContext[PostgresDialect, N, PostgreSQLConnection](PostgresDialect, naming, pool)
   with ArrayEncoders
   with ArrayDecoders
   with UUIDObjectEncoding {

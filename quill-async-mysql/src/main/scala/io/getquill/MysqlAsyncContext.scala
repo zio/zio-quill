@@ -11,7 +11,7 @@ import io.getquill.util.Messages.fail
 import com.github.mauricio.async.db.general.ArrayRowData
 
 class MysqlAsyncContext[N <: NamingStrategy](naming: N, pool: PartitionedConnectionPool[MySQLConnection])
-  extends AsyncContext(MySQLDialect, naming, pool) with UUIDStringEncoding {
+  extends AsyncContext[MySQLDialect, N, MySQLConnection](MySQLDialect, naming, pool) with UUIDStringEncoding {
 
   def this(naming: N, config: MysqlAsyncContextConfig) = this(naming, config.pool)
   def this(naming: N, config: Config) = this(naming, MysqlAsyncContextConfig(config))
