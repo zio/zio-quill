@@ -9,9 +9,9 @@ import io.getquill.util.LoadConfig
 import javax.sql.DataSource
 
 class OracleMonixJdbcContext[N <: NamingStrategy](
-  val naming: N,
-  dataSource: DataSource with Closeable,
-  runner:     Runner
+  val naming:     N,
+  val dataSource: DataSource with Closeable,
+  runner:         Runner
 ) extends MonixJdbcContext[OracleDialect, N](dataSource, runner)
   with OracleJdbcContextBase[N] {
 

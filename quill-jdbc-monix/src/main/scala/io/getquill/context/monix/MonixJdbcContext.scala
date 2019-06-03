@@ -49,6 +49,12 @@ abstract class MonixJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](
     super.executeBatchAction(groups)
   override def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T]): Task[List[T]] =
     super.executeBatchActionReturning(groups, extractor)
+  override def bindQuery[T](sql: String, prepare: Prepare, extractor: Extractor[T] = identityExtractor): Connection => Task[PreparedStatement] =
+    super.bindQuery(sql, prepare, extractor)
+  override def bindAction(sql: String, prepare: Prepare): Connection => Task[PreparedStatement] =
+    super.bindAction(sql, prepare)
+  override def bindBatchAction(groups: List[BatchGroup]): Connection => Task[List[PreparedStatement]] =
+    super.bindBatchAction(groups)
 
   override protected val effect: Runner = runner
   import runner._

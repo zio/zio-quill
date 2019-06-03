@@ -9,9 +9,9 @@ import io.getquill.util.LoadConfig
 import javax.sql.DataSource
 
 class SqlServerMonixJdbcContext[N <: NamingStrategy](
-  val naming: N,
-  dataSource: DataSource with Closeable,
-  runner:     Runner
+  val naming:     N,
+  val dataSource: DataSource with Closeable,
+  runner:         Runner
 ) extends MonixJdbcContext[SQLServerDialect, N](dataSource, runner)
   with SqlServerJdbcContextBase[N] {
 
