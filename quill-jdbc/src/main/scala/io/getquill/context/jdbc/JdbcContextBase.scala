@@ -3,12 +3,10 @@ package io.getquill.context.jdbc
 import java.sql.{ Connection, JDBCType, PreparedStatement, ResultSet }
 
 import io.getquill.NamingStrategy
-import io.getquill.context.{ Context, ContextEffect }
 import io.getquill.context.sql.SqlContext
 import io.getquill.context.sql.idiom.SqlIdiom
+import io.getquill.context.{ Context, ContextEffect }
 import io.getquill.util.ContextLogger
-
-import scala.annotation.tailrec
 
 trait JdbcContextBase[Dialect <: SqlIdiom, Naming <: NamingStrategy]
   extends Context[Dialect, Naming]
@@ -19,6 +17,7 @@ trait JdbcContextBase[Dialect <: SqlIdiom, Naming <: NamingStrategy]
 
   override type PrepareRow = PreparedStatement
   override type ResultRow = ResultSet
+  override type Session = Connection
 
   protected val effect: ContextEffect[Result]
   import effect._
@@ -84,6 +83,33 @@ trait JdbcContextBase[Dialect <: SqlIdiom, Naming <: NamingStrategy]
       }
     }
 
+  def bindQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): Connection => Result[PreparedStatement] =
+    bindSingle(sql, prepare)
+
+  def bindAction(sql: String, prepare: Prepare = identityPrepare): Connection => Result[PreparedStatement] =
+    bindSingle(sql, prepare)
+
+  def bindSingle(sql: String, prepare: Prepare = identityPrepare): Connection => Result[PreparedStatement] =
+    (conn: Connection) => wrap {
+      val (params, ps) = prepare(conn.prepareStatement(sql))
+      logger.logQuery(sql, params)
+      ps
+    }
+
+  def bindBatchAction(groups: List[BatchGroup]): Connection => Result[List[PreparedStatement]] =
+    (session: Connection) =>
+      seq {
+        val batches = groups.flatMap {
+          case BatchGroup(sql, prepares) =>
+            prepares.map(sql -> _)
+        }
+        batches.map {
+          case (sql, prepare) =>
+            val prepareSql = bindAction(sql, prepare)
+            prepareSql(session)
+        }
+      }
+
   protected def handleSingleWrappedResult[T](list: Result[List[T]]): Result[T] =
     push(list)(handleSingleResult(_))
 
@@ -97,10 +123,6 @@ trait JdbcContextBase[Dialect <: SqlIdiom, Naming <: NamingStrategy]
    */
   def parseJdbcType(intType: Int): String = JDBCType.valueOf(intType).getName
 
-  @tailrec
-  private[getquill] final def extractResult[T](rs: ResultSet, extractor: Extractor[T], acc: List[T] = List()): List[T] =
-    if (rs.next)
-      extractResult(rs, extractor, extractor(rs) :: acc)
-    else
-      acc.reverse
+  private[getquill] final def extractResult[T](rs: ResultSet, extractor: Extractor[T]): List[T] =
+    ResultSetExtractor(rs, extractor)
 }

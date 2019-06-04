@@ -70,12 +70,18 @@ class ActionMacro(val c: MacroContext)
     }
 
   def runBatchAction(quoted: Tree): Tree =
+    batchAction(quoted, "executeBatchAction")
+
+  def bindBatchAction(quoted: Tree): Tree =
+    batchAction(quoted, "bindBatchAction")
+
+  def batchAction(quoted: Tree, method: String): Tree =
     expandBatchAction(quoted) {
       case (batch, param, expanded) =>
         q"""
           ..${EnableReflectiveCalls(c)}
-          ${c.prefix}.executeBatchAction(
-            $batch.map { $param => 
+          ${c.prefix}.${TermName(method)}(
+            $batch.map { $param =>
               val expanded = $expanded
               (expanded.string, expanded.prepare)
             }.groupBy(_._1).map {
@@ -92,7 +98,7 @@ class ActionMacro(val c: MacroContext)
         q"""
           ..${EnableReflectiveCalls(c)}
           ${c.prefix}.executeBatchActionReturning(
-            $batch.map { $param => 
+            $batch.map { $param =>
               val expanded = $expanded
               ((expanded.string, $returningColumn), expanded.prepare)
             }.groupBy(_._1).map {
@@ -130,9 +136,9 @@ class ActionMacro(val c: MacroContext)
   private def returningColumn =
     q"""
       expanded.ast match {
-        case io.getquill.ast.Returning(_, _, io.getquill.ast.Property(_, property)) => 
+        case io.getquill.ast.Returning(_, _, io.getquill.ast.Property(_, property)) =>
           expanded.naming.column(property)
-        case ast => 
+        case ast =>
           io.getquill.util.Messages.fail(s"Can't find returning column. Ast: '$$ast'")
       }
     """
@@ -150,23 +156,6 @@ class ActionMacro(val c: MacroContext)
           expanded.prepare
         )
       """
-    }
-
-  def bindBatchAction(quoted: Tree): Tree =
-    expandBatchAction(quoted) {
-      case (batch, param, expanded) =>
-        q"""
-          ..${EnableReflectiveCalls(c)}
-          ${c.prefix}.bindBatchAction(
-            $batch.map { $param =>
-              val expanded = $expanded
-              (expanded.string, expanded.prepare)
-            }.groupBy(_._1).map {
-              case (string, items) =>
-                ${c.prefix}.BatchGroup(string, items.map(_._2).toList)
-            }.toList
-          )
-        """
     }
 
 }
