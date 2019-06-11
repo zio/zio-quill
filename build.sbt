@@ -480,7 +480,7 @@ lazy val basicSettings = Seq(
   crossScalaVersions := Seq("2.11.12","2.12.7"),
   libraryDependencies ++= Seq(
     "org.scalamacros" %% "resetallattrs"  % "1.0.0",
-    "org.scalatest"   %%% "scalatest"     % "3.0.7"          % Test,
+    "org.scalatest"   %%% "scalatest"     % "3.0.8"          % Test,
     "ch.qos.logback"  % "logback-classic" % "1.2.3"          % Test,
     "com.github.choppythelumberjack" %% "tryclose" % "1.0.0" % Test,
     "com.google.code.findbugs" % "jsr305" % "3.0.2"          % Provided // just to avoid warnings during compilation
