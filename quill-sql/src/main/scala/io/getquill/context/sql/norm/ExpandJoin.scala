@@ -1,11 +1,6 @@
 package io.getquill.context.sql.norm
 
-import io.getquill.ast.Ast
-import io.getquill.ast.Ident
-import io.getquill.ast.Join
-import io.getquill.ast.Map
-import io.getquill.ast.Transform
-import io.getquill.ast.Tuple
+import io.getquill.ast._
 import io.getquill.norm.BetaReduction
 import io.getquill.norm.Normalize
 
