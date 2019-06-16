@@ -46,6 +46,6 @@ class DistinctJdbcSpec extends DistinctSpec {
     testContext.run(`Ex 7 Distinct Subquery with Map Multi Field Tuple`) should contain theSameElementsAs `Ex 7 Distinct Subquery with Map Multi Field Tuple Result`
   }
   "Ex 8 Distinct With Sort" in {
-    testContext.run(`Ex 8 Distinct With Sort`.drop(0)) mustEqual `Ex 8 Distinct With Sort Result`
+    testContext.run(`Ex 8 Distinct With Sort`) mustEqual `Ex 8 Distinct With Sort Result`
   }
 }
