@@ -150,12 +150,6 @@ class BetaReductionSpec extends Spec {
     }
   }
 
-  "deduplicates aliases in secondary table join" in {
-    val aliases = List(Ident("x"), Ident("x"))
-    val ast: Ast = Property(Tuple(aliases), "field")
-    BetaReduction(ast, Ident("x") -> Tuple(aliases)) mustEqual ast
-  }
-
   "reapplies the beta reduction if the structure changes" in {
     val ast: Ast = Property(Ident("a"), "_1")
     BetaReduction(ast, Ident("a") -> Tuple(List(Ident("a'")))) mustEqual
