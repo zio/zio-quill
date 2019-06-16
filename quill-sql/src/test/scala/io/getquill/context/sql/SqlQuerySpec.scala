@@ -373,6 +373,20 @@ class SqlQuerySpec extends Spec {
           "SELECT x17.s, x17.i, x17.l, x17.o, q21._1, q21._2 FROM TestEntity x17 INNER JOIN (SELECT DISTINCT q2.i AS _1, q2.l AS _2 FROM TestEntity2 q2) AS q21 ON x17.i = q21._1"
       }
 
+      "with map query inside join with non-distinct tuple identical elements" in {
+        val q = quote {
+          qr1
+            .join(
+              qr2
+                .map(q2 => (q2.i, q2.i))
+                .distinct
+            )
+            .on(_.i == _._1)
+        }
+        testContext.run(q).string mustEqual
+          "SELECT x19.s, x19.i, x19.l, x19.o, q21._1, q21._2 FROM TestEntity x19 INNER JOIN (SELECT DISTINCT q2.i AS _1, q2.i AS _2 FROM TestEntity2 q2) AS q21 ON x19.i = q21._1"
+      }
+
       "with map query inside join with non-distinct tuple with operation" in {
         val q = quote {
           qr1
