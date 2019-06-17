@@ -57,6 +57,12 @@ object ApplyMap {
         val er = BetaReduction(e, d -> c)
         Some(Map(SortBy(a, b, er, f), b, c))
 
+      // a.map(b => c).sortBy(d => e).distinct =>
+      //    a.sortBy(b => e[d := c]).map(b => c).distinct
+      case SortBy(Distinct(DetachableMap(a, b, c)), d, e, f) =>
+        val er = BetaReduction(e, d -> c)
+        Some(Distinct(Map(SortBy(a, b, er, f), b, c)))
+
       // a.map(b => c).groupBy(d => e) =>
       //    a.groupBy(b => e[d := c]).map(x => (x._1, x._2.map(b => c)))
       case GroupBy(DetachableMap(a, b, c), d, e) =>
