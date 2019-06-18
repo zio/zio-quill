@@ -326,20 +326,110 @@ class SqlQuerySpec extends Spec {
       testContext.run(q).string mustEqual
         "SELECT COUNT(*) FROM (SELECT t.i, t.s FROM TestEntity t) AS x"
     }
-    "distinct query" in {
-      val q = quote {
-        qr1.map(t => t.i).distinct
+
+    "distinct" - {
+      "distinct query" in {
+        val q = quote {
+          qr1.map(t => t.i).distinct
+        }
+        testContext.run(q).string mustEqual
+          "SELECT DISTINCT t.i FROM TestEntity t"
       }
-      testContext.run(q).string mustEqual
-        "SELECT DISTINCT t.i FROM TestEntity t"
-    }
-    "distinct and map query" in {
-      val q = quote {
-        qr1.map(t => t.i).distinct.map(t => 1)
+      "with map" in {
+        val q = quote {
+          qr1.map(t => t.i).distinct.map(t => 1)
+        }
+        testContext.run(q).string mustEqual
+          "SELECT 1 FROM (SELECT DISTINCT t.i FROM TestEntity t) AS t"
       }
-      testContext.run(q).string mustEqual
-        "SELECT 1 FROM (SELECT DISTINCT t.i FROM TestEntity t) AS t"
+
+      "with map inside join" in {
+        val q = quote {
+          qr1
+            .join(
+              qr2
+                .map(q2 => q2.i)
+                .distinct
+            )
+            .on(_.i == _)
+        }
+        testContext.run(q).string mustEqual
+          "SELECT x15.s, x15.i, x15.l, x15.o, q21.i FROM TestEntity x15 INNER JOIN (SELECT DISTINCT i AS i FROM TestEntity2 q2) AS q21 ON x15.i = q21.i"
+      }
+
+      // If you look inside BetaReduction, you will see that tuple values that are the same are collapsed via 'distinct'.
+      // In this case, use different values that do not allow this to happen
+      "with map query inside join with non-distinct tuple" in {
+        val q = quote {
+          qr1
+            .join(
+              qr2
+                .map(q2 => (q2.i, q2.l))
+                .distinct
+            )
+            .on(_.i == _._1)
+        }
+        testContext.run(q).string mustEqual
+          "SELECT x17.s, x17.i, x17.l, x17.o, q21._1, q21._2 FROM TestEntity x17 INNER JOIN (SELECT DISTINCT q2.i AS _1, q2.l AS _2 FROM TestEntity2 q2) AS q21 ON x17.i = q21._1"
+      }
+
+      "with map query inside join with non-distinct tuple with operation" in {
+        val q = quote {
+          qr1
+            .join(
+              qr2
+                .map(q2 => (q2.i + 1, q2.l))
+                .distinct
+            )
+            .on(_.i == _._1)
+        }
+        testContext.run(q).string mustEqual
+          "SELECT x19.s, x19.i, x19.l, x19.o, q21._1, q21._2 FROM TestEntity x19 INNER JOIN (SELECT DISTINCT q2.i + 1 AS _1, q2.l AS _2 FROM TestEntity2 q2) AS q21 ON x19.i = q21._1"
+      }
+
+      "with map query inside join with case class" in {
+        case class IntermediateRecord(one: Int, two: Long)
+        val q = quote {
+          qr1
+            .join(
+              qr2
+                .map(q2 => IntermediateRecord(q2.i, q2.l))
+                .distinct
+            )
+            .on(_.i == _.one)
+        }
+        testContext.run(q).string mustEqual
+          "SELECT x21.s, x21.i, x21.l, x21.o, q21.one, q21.two FROM TestEntity x21 INNER JOIN (SELECT DISTINCT q2.i AS one, q2.l AS two FROM TestEntity2 q2) AS q21 ON x21.i = q21.one"
+      }
+
+      "with map query inside join with case class and operation" in {
+        case class IntermediateRecord(one: Int, two: Long)
+        val q = quote {
+          qr1
+            .join(
+              qr2
+                .map(q2 => IntermediateRecord(q2.i, q2.l))
+                .distinct
+            )
+            .on(_.i == _.one)
+        }
+        testContext.run(q).string mustEqual
+          "SELECT x23.s, x23.i, x23.l, x23.o, q21.one, q21.two FROM TestEntity x23 INNER JOIN (SELECT DISTINCT q2.i AS one, q2.l AS two FROM TestEntity2 q2) AS q21 ON x23.i = q21.one"
+      }
+
+      "sort with distinct immediately afterward" in {
+        val q = quote {
+          qr1
+            .join(qr2)
+            .on(_.i == _.i)
+            .distinct
+            .sortBy(_._1.i)(Ord.desc)
+        }
+        testContext.run(q).string mustEqual
+          "SELECT x27._1s, x27._1i, x27._1l, x27._1o, x27._2s, x27._2i, x27._2l, x27._2o FROM (SELECT DISTINCT x25.l AS _1l, x25.o AS _1o, x25.i AS _1i, x25.s AS _1s, x26.s AS _2s, x26.i AS _2i, x26.o AS _2o, x26.l AS _2l FROM TestEntity x25 INNER JOIN TestEntity2 x26 ON x25.i = x26.i ORDER BY x25.i DESC) AS x27"
+      }
     }
+
     "nested where" in {
       val q = quote {
         qr4.filter(t => t.i == 1).nested.filter(t => t.i == 2)
