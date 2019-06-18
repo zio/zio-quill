@@ -12,12 +12,7 @@ case class BetaReduction(map: collection.Map[Ast, Ast])
         BetaReduction(map - ast - map(ast))(map(ast))
 
       case Property(Tuple(values), name) =>
-        val aliases = values.distinct
-        aliases match {
-          case alias :: Nil if values.size > 1 =>
-            super.apply(Property(alias, name))
-          case _ => apply(values(name.drop(1).toInt - 1))
-        }
+        apply(values(name.drop(1).toInt - 1))
 
       case Property(CaseClass(tuples), name) =>
         apply(tuples.toMap.apply(name))
