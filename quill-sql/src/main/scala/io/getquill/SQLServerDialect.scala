@@ -3,6 +3,7 @@ package io.getquill
 import io.getquill.ast._
 import io.getquill.context.sql.{ FlattenSqlQuery, SqlQuery }
 import io.getquill.context.sql.idiom._
+import io.getquill.context.sql.norm.AddDropToNestedOrderBy
 import io.getquill.idiom.{ StringToken, Token }
 import io.getquill.idiom.Statement
 import io.getquill.idiom.StatementInterpolator._
@@ -14,6 +15,8 @@ trait SQLServerDialect
   extends SqlIdiom
   with QuestionMarkBindVariables
   with ConcatSupport {
+
+  override def querifyAst(ast: Ast) = AddDropToNestedOrderBy(SqlQuery(ast))
 
   override def emptySetContainsToken(field: Token) = StringToken("1 <> 1")
 
