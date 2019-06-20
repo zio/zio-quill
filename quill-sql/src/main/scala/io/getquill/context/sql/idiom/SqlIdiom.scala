@@ -22,6 +22,8 @@ trait SqlIdiom extends Idiom {
   protected def concatBehavior: ConcatBehavior = AnsiConcat
   protected def equalityBehavior: EqualityBehavior = AnsiEquality
 
+  def querifyAst(ast: Ast) = SqlQuery(ast)
+
   override def translate(ast: Ast)(implicit naming: NamingStrategy) = {
     val normalizedAst = SqlNormalize(ast, concatBehavior, equalityBehavior)
 
@@ -30,7 +32,7 @@ trait SqlIdiom extends Idiom {
     val token =
       normalizedAst match {
         case q: Query =>
-          val sql = SqlQuery(q)
+          val sql = querifyAst(q)
           trace("sql")(sql)
           VerifySqlQuery(sql).map(fail)
           val expanded = ExpandNestedQueries(sql, collection.Set.empty)

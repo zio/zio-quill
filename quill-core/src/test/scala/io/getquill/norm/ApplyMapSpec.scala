@@ -146,6 +146,15 @@ class ApplyMapSpec extends Spec {
       }
       ApplyMap.unapply(q.ast) mustEqual Some(n.ast)
     }
+    "distinct + sort" in {
+      val q = quote {
+        query[TestEntity].map(i => (i.i, i.l)).distinct.sortBy(_._1)
+      }
+      val n = quote {
+        query[TestEntity].sortBy(i => i.i).map(i => (i.i, i.l)).distinct
+      }
+      ApplyMap.unapply(q.ast) mustEqual Some(n.ast)
+    }
     "take" in {
       val q = quote {
         qr1.map(y => y.s).take(1)
