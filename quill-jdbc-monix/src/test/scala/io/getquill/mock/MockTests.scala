@@ -1,20 +1,20 @@
 package io.getquill.mock
 
 import java.io.Closeable
-import java.sql.{ Connection, PreparedStatement, ResultSet, SQLException }
+import java.sql._
+import javax.sql.DataSource
 
 import io.getquill.context.monix.Runner
 import io.getquill.{ Literal, PostgresMonixJdbcContext, Spec }
-import javax.sql.DataSource
 import monix.eval.Task
 import monix.execution.Scheduler
-import org.mockito.integrations.scalatest.MockitoFixture
+import org.mockito.scalatest.AsyncMockitoSugar
 import org.scalatest.Matchers._
 
 import scala.reflect.ClassTag
 import scala.util.Try
 
-class MockTests extends Spec with MockitoFixture {
+class MockTests extends Spec with AsyncMockitoSugar {
   import scala.reflect.runtime.{ universe => ru }
   implicit val scheduler = Scheduler.io()
 
