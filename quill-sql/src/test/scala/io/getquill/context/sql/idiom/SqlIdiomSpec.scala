@@ -97,7 +97,7 @@ class SqlIdiomSpec extends Spec {
           qr1.filter(t => t.s.startsWith(" "))
         }
         testContext.run(q).string mustEqual
-          "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.s LIKE CONCAT(' ', '%')"
+          "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.s LIKE (CONCAT(' ', '%'))"
       }
       "distinct" - {
         "simple" in {
