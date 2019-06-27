@@ -205,9 +205,10 @@ trait SqlIdiom extends Idiom {
       case (_, BinaryOperation(_, `||`, _)) => stmt"${a.token} ${op.token} ${scopedTokenizer(b)}"
       case _ => stmt"${a.token} ${op.token} ${b.token}"
     }
-    case BinaryOperation(a, op @ `||`, b) => stmt"${a.token} ${op.token} ${b.token}"
-    case BinaryOperation(a, op, b)        => stmt"${scopedTokenizer(a)} ${op.token} ${scopedTokenizer(b)}"
-    case e: FunctionApply                 => fail(s"Can't translate the ast to sql: '$e'")
+    case BinaryOperation(a, op @ `||`, b)          => stmt"${a.token} ${op.token} ${b.token}"
+    case BinaryOperation(a, StringOperator.`+`, b) => stmt"CONCAT(${scopedTokenizer(a)}, ${scopedTokenizer(b)})"
+    case BinaryOperation(a, op, b)                 => stmt"${scopedTokenizer(a)} ${op.token} ${scopedTokenizer(b)}"
+    case e: FunctionApply                          => fail(s"Can't translate the ast to sql: '$e'")
   }
 
   implicit def optionOperationTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[OptionOperation] = Tokenizer[OptionOperation] {
