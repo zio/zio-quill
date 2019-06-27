@@ -9,7 +9,7 @@ import java.io.{File => JFile}
 enablePlugins(TutPlugin)
 
 lazy val baseModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
-  `quill-core-jvm`, `quill-core-js`, `quill-sql-jvm`, `quill-sql-js`, `quill-monix`
+  `quill-core-jvm`, `quill-core-js`, `quill-sql-jvm`, `quill-sql-js`, `quill-monix`, `quill-pluralize`
 )
 
 lazy val dbModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
@@ -353,6 +353,20 @@ lazy val `quill-orientdb` =
         )
       )
       .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
+
+
+lazy val `quill-pluralize` =
+  (project in file("quill-pluralize"))
+    .settings(commonSettings: _*)
+    .settings(mimaSettings: _*)
+    .settings(
+      fork in Test := true,
+      libraryDependencies ++= Seq(
+        "org.atteo" % "evo-inflector" % "1.2.2"
+      )
+    )
+    .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
+
 
 lazy val `tut-sources` = Seq(
   "CASSANDRA.md",
