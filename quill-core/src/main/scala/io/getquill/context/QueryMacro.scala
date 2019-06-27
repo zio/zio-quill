@@ -31,12 +31,13 @@ class QueryMacro(val c: MacroContext) extends ContextMacro {
   def bindQuery[T](quoted: Tree)(implicit t: WeakTypeTag[T]): Tree =
     expandQuery[T](quoted, "bindQuery", DoesNotUseFetch)
 
-  private def expandQuery[T](quoted: Tree, method: String, fetchBehavior: FetchSizeBehavior)(implicit t: WeakTypeTag[T]) =
-    OptionalTypecheck(c)(q"implicitly[${c.prefix}.Decoder[$t]]") match {
+  private def expandQuery[T](quoted: Tree, method: String, fetchBehavior: FetchSizeBehavior)(implicit t: WeakTypeTag[T]): Tree = {
+    val tree = OptionalTypecheck(c)(q"implicitly[${c.prefix}.Decoder[$t]]") match {
       case Some(decoder) => expandQueryWithDecoder(quoted, method, decoder, fetchBehavior)
       case None          => expandQueryWithMeta[T](quoted, method, fetchBehavior)
     }
-
+    q"io.getquill.util.TimeLogger.log($tree)"
+  }
   private def expandQueryWithDecoder(quoted: Tree, method: String, decoder: Tree, fetchBehavior: FetchSizeBehavior) = {
     val ast = Map(extractAst(quoted), Ident("x"), Ident("x"))
     val invocation =
