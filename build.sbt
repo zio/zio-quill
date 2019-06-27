@@ -409,6 +409,18 @@ lazy val `quill-orientdb` =
       )
       .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
 
+lazy val `quill-bigquery` =
+  (project in file("quill-bigquery"))
+    .settings(commonSettings: _*)
+    .settings(mimaSettings: _*)
+    .settings(
+      fork in Test := true,
+      libraryDependencies ++= Seq(
+        "com.google.cloud" % "google-cloud-bigquery" % "1.78.0"
+      )
+    )
+    .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
+
 lazy val `tut-sources` = Seq(
   "CASSANDRA.md",
   "README.md"
