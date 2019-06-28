@@ -2264,6 +2264,25 @@ def createDataSource: javax.sql.DataSource with java.io.Closeable = ???
 lazy val ctx = new MysqlJdbcContext(SnakeCase, createDataSource)
 ```
 
+### Third party naming strategy
+
+Third party naming strategy can be used. 
+
+#### sbt dependencies
+```
+libraryDependencies ++= Seq(
+  "io.getquill" %% "quill-pluralize" % "3.2.2-SNAPSHOT"
+)
+```
+
+#### Configuration
+
+```scala
+def createDataSource: javax.sql.DataSource with java.io.Closeable = ???
+lazy val ctx = new MysqlJdbcContext(Pluralize, createDataSource)
+```
+
+
 ## quill-jdbc
 
 The `quill-jdbc` module provides a simple blocking JDBC context for standard use-cases. For transactions, the JDBC connection is kept in a thread-local variable.
