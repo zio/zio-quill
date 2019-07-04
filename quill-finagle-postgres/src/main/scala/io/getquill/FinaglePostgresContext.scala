@@ -48,11 +48,15 @@ class FinaglePostgresContext[N <: NamingStrategy](val naming: N, client: Postgre
 
   def probe(sql: String) = Try(Await.result(client.query(sql)))
 
-  def transaction[T](f: => Future[T]) =
-    client.inTransaction { c =>
-      currentClient.update(c)
-      f.ensure(currentClient.clear)
-    }
+  // Only create a client if none exists to allow nested transactions.
+  def transaction[T](f: => Future[T]) = currentClient() match {
+    case None =>
+      client.inTransaction { c =>
+        currentClient.let(c) { f }
+      }
+    case Some(c) =>
+      f
+  }
 
   override def performIO[T](io: IO[T, _], transactional: Boolean = false): Result[T] =
     transactional match {
