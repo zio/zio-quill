@@ -81,6 +81,11 @@ CREATE TABLE TestEntity4(
     i SERIAL PRIMARY KEY
 );
 
+CREATE TABLE TestEntity5(
+    i SERIAL PRIMARY KEY,
+    s VARCHAR(255)
+);
+
 CREATE TABLE Product(
     description VARCHAR(255),
     id SERIAL PRIMARY KEY,

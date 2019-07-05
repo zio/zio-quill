@@ -17,7 +17,7 @@ trait ProductSpec extends Spec {
   }
 
   val productInsert = quote {
-    (p: Product) => query[Product].insert(p).returning(_.id)
+    (p: Product) => query[Product].insert(p).returningGenerated(_.id)
   }
 
   val productInsertBatch = quote {
@@ -35,6 +35,6 @@ trait ProductSpec extends Spec {
   )
 
   val productSingleInsert = quote {
-    product.insert(_.id -> 0, _.description -> "Window", _.sku -> 1004L).returning(_.id)
+    product.insert(_.id -> 0, _.description -> "Window", _.sku -> 1004L).returningGenerated(_.id)
   }
 }

@@ -25,12 +25,48 @@ class OracleDialectSpec extends Spec {
     }
   }
 
-  "Insert with returning with single column table" in {
-    val q = quote {
-      qr4.insert(lift(TestEntity4(0))).returning(_.i)
+  "Insert with returning" - {
+    "with single column table" in {
+      val q = quote {
+        qr4.insert(lift(TestEntity4(0))).returning(_.i)
+      }
+      ctx.run(q).string mustEqual
+        "INSERT INTO TestEntity4 (i) VALUES (?)"
     }
-    ctx.run(q).string mustEqual
-      "INSERT INTO TestEntity4 (i) VALUES (DEFAULT)"
+
+    "returning generated with single column table" in {
+      val q = quote {
+        qr4.insert(lift(TestEntity4(0))).returningGenerated(_.i)
+      }
+      ctx.run(q).string mustEqual
+        "INSERT INTO TestEntity4 (i) VALUES (DEFAULT)"
+    }
+    "returning with multi column table" in {
+      val q = quote {
+        qr1.insert(lift(TestEntity("s", 0, 0L, Some(3)))).returning(r => (r.i, r.l))
+      }
+      ctx.run(q).string mustEqual
+        "INSERT INTO TestEntity (s,i,l,o) VALUES (?, ?, ?, ?)"
+    }
+    "returning generated with multi column table" in {
+      val q = quote {
+        qr1.insert(lift(TestEntity("s", 0, 0L, Some(3)))).returningGenerated(r => (r.i, r.l))
+      }
+      ctx.run(q).string mustEqual
+        "INSERT INTO TestEntity (s,o) VALUES (?, ?)"
+    }
+    "returning - multiple fields + operations - should not compile" in {
+      val q = quote {
+        qr1.insert(lift(TestEntity("s", 1, 2L, Some(3))))
+      }
+      "ctx.run(q.returning(r => (r.i, r.l + 1))).string" mustNot compile
+    }
+    "returning generated - multiple fields + operations - should not compile" in {
+      val q = quote {
+        qr1.insert(lift(TestEntity("s", 1, 2L, Some(3))))
+      }
+      "ctx.run(q.returningGenerated(r => (r.i, r.l + 1))).string" mustNot compile
+    }
   }
 
   "offset/fetch" - {

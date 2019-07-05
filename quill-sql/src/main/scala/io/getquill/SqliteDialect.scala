@@ -5,13 +5,15 @@ import io.getquill.context.sql.idiom._
 import io.getquill.idiom.StatementInterpolator.Tokenizer
 import io.getquill.idiom.{ StringToken, Token }
 import io.getquill.ast._
+import io.getquill.context.CanReturnField
 import io.getquill.context.sql.OrderByCriteria
 
 trait SqliteDialect
   extends SqlIdiom
   with QuestionMarkBindVariables
   with NoConcatSupport
-  with OnConflictSupport {
+  with OnConflictSupport
+  with CanReturnField {
 
   override def emptySetContainsToken(field: Token) = StringToken("0")
 
