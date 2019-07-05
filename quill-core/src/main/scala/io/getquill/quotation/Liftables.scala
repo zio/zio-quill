@@ -149,12 +149,13 @@ trait Liftables {
   }
 
   implicit val actionLiftable: Liftable[Action] = Liftable[Action] {
-    case Update(a, b)        => q"$pack.Update($a, $b)"
-    case Insert(a, b)        => q"$pack.Insert($a, $b)"
-    case Delete(a)           => q"$pack.Delete($a)"
-    case Returning(a, b, c)  => q"$pack.Returning($a, $b, $c)"
-    case Foreach(a, b, c)    => q"$pack.Foreach($a, $b, $c)"
-    case OnConflict(a, b, c) => q"$pack.OnConflict($a, $b, $c)"
+    case Update(a, b)                => q"$pack.Update($a, $b)"
+    case Insert(a, b)                => q"$pack.Insert($a, $b)"
+    case Delete(a)                   => q"$pack.Delete($a)"
+    case Returning(a, b, c)          => q"$pack.Returning($a, $b, $c)"
+    case ReturningGenerated(a, b, c) => q"$pack.ReturningGenerated($a, $b, $c)"
+    case Foreach(a, b, c)            => q"$pack.Foreach($a, $b, $c)"
+    case OnConflict(a, b, c)         => q"$pack.OnConflict($a, $b, $c)"
   }
 
   implicit val conflictTargetLiftable: Liftable[OnConflict.Target] = Liftable[OnConflict.Target] {
@@ -179,6 +180,9 @@ trait Liftables {
   }
   implicit val identLiftable: Liftable[Ident] = Liftable[Ident] {
     case Ident(a) => q"$pack.Ident($a)"
+  }
+  implicit val externalIdentLiftable: Liftable[ExternalIdent] = Liftable[ExternalIdent] {
+    case ExternalIdent(a) => q"$pack.ExternalIdent($a)"
   }
 
   implicit val liftLiftable: Liftable[Lift] = Liftable[Lift] {

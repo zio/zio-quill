@@ -69,6 +69,10 @@ case class Function(params: List[Ident], body: Ast) extends Ast
 
 case class Ident(name: String) extends Ast
 
+// Like identity but is but defined in a clause external to the query. Currently this is used
+// for 'returning' clauses to define properties being retruned.
+case class ExternalIdent(name: String) extends Ast
+
 case class Property(ast: Ast, name: String) extends Ast
 
 sealed trait OptionOperation extends Ast
@@ -134,7 +138,18 @@ case class Update(query: Ast, assignments: List[Assignment]) extends Action
 case class Insert(query: Ast, assignments: List[Assignment]) extends Action
 case class Delete(query: Ast) extends Action
 
-case class Returning(action: Ast, alias: Ident, property: Ast) extends Action
+sealed trait ReturningAction extends Action
+object ReturningAction {
+  def unapply(returningClause: ReturningAction): Option[(Ast, Ident, Ast)] =
+    returningClause match {
+      case Returning(action, alias, property) => Some((action, alias, property))
+      case ReturningGenerated(action, alias, property) => Some((action, alias, property))
+      case _ => None
+    }
+
+}
+case class Returning(action: Ast, alias: Ident, property: Ast) extends ReturningAction
+case class ReturningGenerated(action: Ast, alias: Ident, property: Ast) extends ReturningAction
 
 case class Foreach(query: Ast, alias: Ident, body: Ast) extends Action
 

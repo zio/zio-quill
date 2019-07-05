@@ -1,6 +1,7 @@
 package io.getquill
 
 import io.getquill.ast.{ Ast, _ }
+import io.getquill.context.CanReturnField
 import io.getquill.context.sql.OrderByCriteria
 import io.getquill.context.sql.idiom.{ NoConcatSupport, QuestionMarkBindVariables, SqlIdiom }
 import io.getquill.idiom.StatementInterpolator._
@@ -10,7 +11,8 @@ import io.getquill.util.Messages.fail
 trait MySQLDialect
   extends SqlIdiom
   with QuestionMarkBindVariables
-  with NoConcatSupport {
+  with NoConcatSupport
+  with CanReturnField {
 
   override def prepareForProbing(string: String) = {
     val quoted = string.replace("'", "\\'")

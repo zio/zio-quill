@@ -56,6 +56,20 @@ class BindMacroSpec extends Spec {
         qr1.insert(lift(TestEntity("s", 1, 2L, None))).returning(t => t.l)
       }
       val r = testContext.prepare(q)
+      r(session) mustEqual Row("s", 1, 2, None)
+    }
+    "scalar lifting + returning generated value" in {
+      val q = quote {
+        qr1.insert(t => t.i -> lift(1)).returningGenerated(t => t.l)
+      }
+      val r = testContext.prepare(q)
+      r(session) mustEqual Row(1)
+    }
+    "case class lifting + returning generated value" in {
+      val q = quote {
+        qr1.insert(lift(TestEntity("s", 1, 2L, None))).returningGenerated(t => t.l)
+      }
+      val r = testContext.prepare(q)
       r(session) mustEqual Row("s", 1, None)
     }
   }
@@ -137,11 +151,25 @@ class BindMacroSpec extends Spec {
         liftQuery(entities).foreach(p => qr1.insert(p).returning(t => t.l))
       }
       val r = testContext.prepare(q)
+      r(session) mustEqual List(Row("s1", 2, 3L, Some(4)), Row("s5", 6, 7L, Some(8)))
+    }
+    "case class + returning generated" in {
+      val q = quote {
+        liftQuery(entities).foreach(p => qr1.insert(p).returningGenerated(t => t.l))
+      }
+      val r = testContext.prepare(q)
       r(session) mustEqual List(Row("s1", 2, Some(4)), Row("s5", 6, Some(8)))
     }
     "case class + returning + nested action" in {
       val insert = quote {
         (p: TestEntity) => qr1.insert(p).returning(t => t.l)
+      }
+      val r = testContext.prepare(liftQuery(entities).foreach(p => insert(p)))
+      r(session) mustEqual List(Row("s1", 2, 3L, Some(4)), Row("s5", 6, 7L, Some(8)))
+    }
+    "case class + returning generated + nested action" in {
+      val insert = quote {
+        (p: TestEntity) => qr1.insert(p).returningGenerated(t => t.l)
       }
       val r = testContext.prepare(liftQuery(entities).foreach(p => insert(p)))
       r(session) mustEqual List(Row("s1", 2, Some(4)), Row("s5", 6, Some(8)))

@@ -158,6 +158,7 @@ trait Unliftables {
     case q"$pack.Insert.apply(${ a: Ast }, ${ b: List[Assignment] })" => Insert(a, b)
     case q"$pack.Delete.apply(${ a: Ast })" => Delete(a)
     case q"$pack.Returning.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => Returning(a, b, c)
+    case q"$pack.ReturningGenerated.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => ReturningGenerated(a, b, c)
     case q"$pack.Foreach.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => Foreach(a, b, c)
     case q"$pack.OnConflict.apply(${ a: Ast }, ${ b: OnConflict.Target }, ${ c: OnConflict.Action })" => OnConflict(a, b, c)
   }
@@ -184,6 +185,9 @@ trait Unliftables {
   }
   implicit val identUnliftable: Unliftable[Ident] = Unliftable[Ident] {
     case q"$pack.Ident.apply(${ a: String })" => Ident(a)
+  }
+  implicit val externalIdentUnliftable: Unliftable[ExternalIdent] = Unliftable[ExternalIdent] {
+    case q"$pack.ExternalIdent.apply(${ a: String })" => ExternalIdent(a)
   }
 
   implicit val liftUnliftable: Unliftable[Lift] = Unliftable[Lift] {

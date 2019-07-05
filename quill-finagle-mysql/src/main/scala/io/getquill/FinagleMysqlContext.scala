@@ -138,7 +138,7 @@ class FinagleMysqlContext[N <: NamingStrategy](
       .map(r => toOk(r).affectedRows)
   }
 
-  def executeActionReturning[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T], returningColumn: String): Future[T] = {
+  def executeActionReturning[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T], returningAction: ReturnAction): Future[T] = {
     val (params, prepared) = prepare(Nil)
     logger.logQuery(sql, params)
     withClient(Write)(_.prepare(sql)(prepared: _*))

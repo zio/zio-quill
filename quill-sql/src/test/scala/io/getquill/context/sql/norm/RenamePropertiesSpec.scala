@@ -1,6 +1,7 @@
 package io.getquill.context.sql.norm
 
-import io.getquill.Spec
+import io.getquill.{ MirrorSqlDialectWithReturnClause, Spec }
+import io.getquill.ReturnAction.{ ReturnColumns, ReturnRecord }
 import io.getquill.context.sql.testContext._
 import io.getquill.context.sql.testContext
 
@@ -69,12 +70,23 @@ class RenamePropertiesSpec extends Spec {
           "DELETE FROM test_entity WHERE field_i = 999"
       }
       "returning" - {
-        "alias" in {
+        "returning - alias" in testContext.withDialect(MirrorSqlDialectWithReturnClause) { ctx =>
+          import ctx._
+          val e1 = quote {
+            querySchema[TestEntity]("test_entity", _.s -> "field_s", _.i -> "field_i")
+          }
           val q = quote {
-            e.insert(lift(TestEntity("s", 1, 1L, None))).returning(_.i)
+            e1.insert(lift(TestEntity("s", 1, 1L, None))).returning(_.i)
+          }
+          val mirror = ctx.run(q.dynamic)
+          mirror.returningBehavior mustEqual ReturnRecord
+        }
+        "returning generated - alias" in {
+          val q = quote {
+            e.insert(lift(TestEntity("s", 1, 1L, None))).returningGenerated(_.i)
           }
           val mirror = testContext.run(q.dynamic)
-          mirror.returningColumn mustEqual "field_i"
+          mirror.returningBehavior mustEqual ReturnColumns(List("field_i"))
         }
       }
     }
