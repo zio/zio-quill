@@ -38,7 +38,7 @@ val ctx = new SqlMirrorContext(MirrorSqlDialect, Literal)
 
 > ### **Note:** [Scastie](https://scastie.scala-lang.org/) is a great tool to try out Quill without having to prepare a local environment. It works with [mirror contexts](#mirror-context), see [this](https://scastie.scala-lang.org/QwOewNEiR3mFlKIM7v900A) snippet as an example.
 
-The context instance provides all types and methods to deal quotations:
+The context instance provides all the types, methods, and encoders/decoders needed for quotations:
 
 ```scala
 import ctx._
@@ -1101,19 +1101,23 @@ Left         | Right        | Equality   | Result
 `None      ` | `None`       | `!=`       | `false`
 
 ```scala
-case class Node(id:Int, status:Option[String])
+case class Node(id:Int, status:Option[String], otherStatus:Option[String])
 
 val q = quote { query[Node].filter(n => n.id == 123) }
 ctx.run(q)
-// SELECT n.id, n.status FROM Node n WHERE p.id = 123
+// SELECT n.id, n.status, n.otherStatus FROM Node n WHERE p.id = 123
+
+val q = quote { query[Node].filter(r => r.status == r.otherStatus) }
+ctx.run(q)
+// SELECT r.id, r.status, r.otherStatus FROM Node r WHERE r.status IS NULL AND r.otherStatus IS NULL OR r.status = r.otherStatus
 
 val q = quote { query[Node].filter(n => n.status == Option("RUNNING")) }
 ctx.run(q)
-// SELECT n.id, n.status FROM node n WHERE n.status IS NOT NULL AND n.status = 'RUNNING'
+// SELECT n.id, n.status, n.otherStatus FROM node n WHERE n.status IS NOT NULL AND n.status = 'RUNNING'
 
 val q = quote { query[Node].filter(n => n.status != Option("RUNNING")) }
 ctx.run(q)
-// SELECT n.id, n.status FROM node n WHERE n.status IS NULL OR n.status <> 'RUNNING'
+// SELECT n.id, n.status, n.otherStatus FROM node n WHERE n.status IS NULL OR n.status <> 'RUNNING'
 ```
 
 If you would like to use an equality operator that follows that ansi-idiomatic approach, failing
@@ -1361,7 +1365,8 @@ ctx.run(a)
 Upsert is supported by Postgres, SQLite, and MySQL
 
 #### Postgres and SQLite
-Ignore conflict
+
+##### Ignore conflict
 ```scala
 val a = quote {
   query[Product].insert(_.id -> 1, _.sku -> 10).onConflictIgnore
@@ -1379,6 +1384,17 @@ val a = quote {
 // INSERT INTO Product AS t (id,sku) VALUES (1, 10) ON CONFLICT (id) DO NOTHING
 ```
 
+Multiple properties can be used as well.
+```scala
+val a = quote {
+  query[Product].insert(_.id -> 1, _.sku -> 10).onConflictIgnore(_.id, _.description)
+}
+
+// INSERT INTO Product (id,sku) VALUES (1, 10) ON CONFLICT (id,description) DO NOTHING
+```
+
+##### Update on Conflict
+
 Resolve conflict by updating existing row if needed. In `onConflictUpdate(target)((t, e) => assignment)`: `target` refers to
 conflict target, `t` - to existing row and `e` - to excluded, e.g. row proposed for insert.
 ```scala
@@ -1389,6 +1405,16 @@ val a = quote {
 }
 
 // INSERT INTO Product AS t (id,sku) VALUES (1, 10) ON CONFLICT (id) DO UPDATE SET sku = (t.sku + EXCLUDED.sku)
+```
+Multiple properties can be used with `onConflictUpdate` as well.
+```scala
+val a = quote {
+  query[Product]
+    .insert(_.id -> 1, _.sku -> 10)
+    .onConflictUpdate(_.id, _.description)((t, e) => t.sku -> (t.sku + e.sku))
+}
+
+INSERT INTO Product AS t (id,sku) VALUES (1, 10) ON CONFLICT (id,description) DO UPDATE SET sku = (t.sku + EXCLUDED.sku)
 ```
 
 #### MySQL
