@@ -1,16 +1,16 @@
 package io.getquill
 
 import io.getquill.ast._
-import io.getquill.idiom.Idiom
-import io.getquill.idiom.SetContainsToken
-import io.getquill.idiom.Statement
+import io.getquill.context.CanReturnClause
+import io.getquill.idiom.{ Idiom, SetContainsToken, Statement }
 import io.getquill.idiom.StatementInterpolator._
 import io.getquill.norm.Normalize
 import io.getquill.util.Interleave
 
 object MirrorIdiom extends MirrorIdiom
+class MirrorIdiom extends MirrorIdiomBase with CanReturnClause
 
-class MirrorIdiom extends Idiom {
+trait MirrorIdiomBase extends Idiom {
 
   override def prepareForProbing(string: String) = string
 
@@ -28,6 +28,7 @@ class MirrorIdiom extends Idiom {
     case ast: Operation            => ast.token
     case ast: Action               => ast.token
     case ast: Ident                => ast.token
+    case ast: ExternalIdent        => ast.token
     case ast: Property             => ast.token
     case ast: Infix                => ast.token
     case ast: OptionOperation      => ast.token
@@ -176,7 +177,8 @@ class MirrorIdiom extends Idiom {
   }
 
   implicit def propertyTokenizer(implicit liftTokenizer: Tokenizer[Lift]): Tokenizer[Property] = Tokenizer[Property] {
-    case Property(ref, name) => stmt"${scopedTokenizer(ref)}.${name.token}"
+    case Property(ExternalIdent(_), name) => stmt"${name.token}"
+    case Property(ref, name)              => stmt"${scopedTokenizer(ref)}.${name.token}"
   }
 
   implicit val valueTokenizer: Tokenizer[Value] = Tokenizer[Value] {
@@ -192,6 +194,10 @@ class MirrorIdiom extends Idiom {
     case e => stmt"${e.name.token}"
   }
 
+  implicit val typeTokenizer: Tokenizer[ExternalIdent] = Tokenizer[ExternalIdent] {
+    case e => stmt"${e.name.token}"
+  }
+
   implicit val excludedTokenizer: Tokenizer[OnConflict.Excluded] = Tokenizer[OnConflict.Excluded] {
     case OnConflict.Excluded(ident) => stmt"${ident.token}"
   }
@@ -201,12 +207,13 @@ class MirrorIdiom extends Idiom {
   }
 
   implicit def actionTokenizer(implicit liftTokenizer: Tokenizer[Lift]): Tokenizer[Action] = Tokenizer[Action] {
-    case Update(query, assignments)    => stmt"${query.token}.update(${assignments.token})"
-    case Insert(query, assignments)    => stmt"${query.token}.insert(${assignments.token})"
-    case Delete(query)                 => stmt"${query.token}.delete"
-    case Returning(query, alias, body) => stmt"${query.token}.returning((${alias.token}) => ${body.token})"
-    case Foreach(query, alias, body)   => stmt"${query.token}.foreach((${alias.token}) => ${body.token})"
-    case c: OnConflict                 => stmt"${c.token}"
+    case Update(query, assignments)             => stmt"${query.token}.update(${assignments.token})"
+    case Insert(query, assignments)             => stmt"${query.token}.insert(${assignments.token})"
+    case Delete(query)                          => stmt"${query.token}.delete"
+    case Returning(query, alias, body)          => stmt"${query.token}.returning((${alias.token}) => ${body.token})"
+    case ReturningGenerated(query, alias, body) => stmt"${query.token}.returningGenerated((${alias.token}) => ${body.token})"
+    case Foreach(query, alias, body)            => stmt"${query.token}.foreach((${alias.token}) => ${body.token})"
+    case c: OnConflict                          => stmt"${c.token}"
   }
 
   implicit def conflictTokenizer(implicit liftTokenizer: Tokenizer[Lift]): Tokenizer[OnConflict] = {

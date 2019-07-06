@@ -2,8 +2,9 @@ package io.getquill.idiom
 
 import io.getquill.ast._
 import io.getquill.NamingStrategy
+import io.getquill.context.Capabilities
 
-trait Idiom {
+trait Idiom extends Capabilities {
 
   def emptySetContainsToken(field: Token): Token = StringToken("FALSE")
 

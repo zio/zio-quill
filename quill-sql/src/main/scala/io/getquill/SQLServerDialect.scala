@@ -1,6 +1,7 @@
 package io.getquill
 
 import io.getquill.ast._
+import io.getquill.context.CanReturnField
 import io.getquill.context.sql.{ FlattenSqlQuery, SqlQuery }
 import io.getquill.context.sql.idiom._
 import io.getquill.context.sql.norm.AddDropToNestedOrderBy
@@ -14,7 +15,8 @@ import io.getquill.util.Messages.fail
 trait SQLServerDialect
   extends SqlIdiom
   with QuestionMarkBindVariables
-  with ConcatSupport {
+  with ConcatSupport
+  with CanReturnField {
 
   override def querifyAst(ast: Ast) = AddDropToNestedOrderBy(SqlQuery(ast))
 

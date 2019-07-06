@@ -1,7 +1,7 @@
 package io.getquill.norm.capture
 
 import io.getquill.ast.{ Entity, Filter, FlatJoin, FlatMap, GroupBy, Ident, Join, Map, Query, SortBy, StatefulTransformer, _ }
-import io.getquill.norm.BetaReduction
+import io.getquill.norm.{ BetaReduction, Normalize }
 
 private[getquill] case class AvoidAliasConflict(state: collection.Set[Ident])
   extends StatefulTransformer[collection.Set[Ident]] {
@@ -142,5 +142,12 @@ private[getquill] object AvoidAliasConflict {
   /** Same is `sanitizeVariables` but for Foreach **/
   def sanitizeVariables(f: Foreach, dangerousVariables: Set[Ident]): Foreach = {
     AvoidAliasConflict(dangerousVariables).applyForeach(f)
+  }
+
+  def sanitizeQuery(q: Query, dangerousVariables: Set[Ident]): Query = {
+    AvoidAliasConflict(dangerousVariables).apply(q) match {
+      // Propagate aliasing changes to the rest of the query
+      case (q, _) => Normalize(q)
+    }
   }
 }

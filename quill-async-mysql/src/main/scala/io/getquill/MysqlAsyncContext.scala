@@ -17,7 +17,7 @@ class MysqlAsyncContext[N <: NamingStrategy](naming: N, pool: PartitionedConnect
   def this(naming: N, config: Config) = this(naming, MysqlAsyncContextConfig(config))
   def this(naming: N, configPrefix: String) = this(naming, LoadConfig(configPrefix))
 
-  override protected def extractActionResult[O](returningColumn: String, returningExtractor: Extractor[O])(result: DBQueryResult): O = {
+  override protected def extractActionResult[O](returningAction: ReturnAction, returningExtractor: Extractor[O])(result: DBQueryResult): O = {
     result match {
       case r: MySQLQueryResult =>
         returningExtractor(new ArrayRowData(0, Map.empty, Array(r.lastInsertId)))
