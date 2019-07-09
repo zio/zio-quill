@@ -94,21 +94,36 @@ class JdbcContextSpec extends Spec {
   }
 
   "Insert with returning with multiple columns and query" in {
+    testContext.run(qr2.delete)
+    testContext.run(qr2.insert(_.i -> 36, _.l -> 0L, _.s -> "foobar"))
+
     testContext.run(qr1.delete)
-    testContext.run(qr1.insert(lift(TestEntity("one", 1, 18L, Some(1)))))
     val inserted = testContext.run {
-      qr1.insert(lift(TestEntity("two", 2, 18L, Some(123)))).returning(r =>
-        (r.i, r.s + "_s", qr1.filter(rr => rr.o.exists(_ == r.i)).map(_.s).max))
+      qr1.insert(lift(TestEntity("two", 36, 18L, Some(123)))).returning(r =>
+        (r.i, r.s + "_s", qr2.filter(rr => rr.i == r.i).map(_.s).max))
     }
-    (2, "two_s", Some("one")) mustBe inserted
+    (36, "two_s", Some("foobar")) mustBe inserted
   }
 
-  "Insert returning with multiple columns and query" in {
+  "Insert with returning with multiple columns and query - with lifting" in {
+    testContext.run(qr2.delete)
+    testContext.run(qr2.insert(_.i -> 36, _.l -> 0L, _.s -> "foobar"))
+
+    val value = "foobar"
+    testContext.run(qr1.delete)
+    val inserted = testContext.run {
+      qr1.insert(lift(TestEntity("two", 36, 18L, Some(123)))).returning(r =>
+        (r.i, r.s + "_s", qr2.filter(rr => rr.i == r.i && rr.s == lift(value)).map(_.s).max))
+    }
+    (36, "two_s", Some("foobar")) mustBe inserted
+  }
+
+  "Insert with returning with multiple columns and query - same table" in {
     testContext.run(qr1.delete)
     testContext.run(qr1.insert(lift(TestEntity("one", 1, 18L, Some(1)))))
     val inserted = testContext.run {
       qr1.insert(lift(TestEntity("two", 2, 18L, Some(123)))).returning(r =>
-        (r.i, r.s + "_s", qr1.filter(rr => rr.o.exists(_ == r.i)).map(_.s).max))
+        (r.i, r.s + "_s", qr1.filter(rr => rr.o.exists(_ == r.i - 1)).map(_.s).max))
     }
     (2, "two_s", Some("one")) mustBe inserted
   }
