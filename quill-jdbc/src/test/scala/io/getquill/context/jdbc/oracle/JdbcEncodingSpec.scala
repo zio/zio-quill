@@ -63,6 +63,7 @@ class JdbcEncodingSpec extends EncodingSpec {
         e1.o12 mustEqual e2.o12
         e1.o13 mustEqual e2.o13
         e1.o14 mustEqual e2.o14
+        e1.o15 mustEqual e2.o15
     }
   }
 }
