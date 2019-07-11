@@ -1,16 +1,18 @@
 package io.getquill.context
 
-import scala.reflect.macros.whitebox.{ Context => MacroContext }
-import io.getquill.ast._
+import io.getquill.ast._ // Only .returning(r => r.prop) or .returning(r => OneElementCaseClass(r.prop)) is allowed.
+import io.getquill.norm.BetaReduction
 import io.getquill.quotation.ReifyLiftings
 import io.getquill.util.Messages._
-import io.getquill.norm.BetaReduction
-import io.getquill.util.EnableReflectiveCalls
+
+import scala.reflect.macros.whitebox.{ Context => MacroContext }
+import io.getquill.util.{ EnableReflectiveCalls, OptionalTypecheck }
 
 class ActionMacro(val c: MacroContext)
   extends ContextMacro
   with ReifyLiftings {
-  import c.universe.{ Ident => _, Function => _, _ }
+
+  import c.universe.{ Function => _, Ident => _, _ }
 
   def translateQuery(quoted: Tree): Tree =
     c.untypecheck {
@@ -68,12 +70,18 @@ class ActionMacro(val c: MacroContext)
     }
 
   def runBatchAction(quoted: Tree): Tree =
+    batchAction(quoted, "executeBatchAction")
+
+  def bindBatchAction(quoted: Tree): Tree =
+    batchAction(quoted, "bindBatchAction")
+
+  def batchAction(quoted: Tree, method: String): Tree =
     expandBatchAction(quoted) {
       case (batch, param, expanded) =>
         q"""
           ..${EnableReflectiveCalls(c)}
-          ${c.prefix}.executeBatchAction(
-            $batch.map { $param => 
+          ${c.prefix}.${TermName(method)}(
+            $batch.map { $param =>
               val expanded = $expanded
               (expanded.string, expanded.prepare)
             }.groupBy(_._1).map {
@@ -90,7 +98,7 @@ class ActionMacro(val c: MacroContext)
         q"""
           ..${EnableReflectiveCalls(c)}
           ${c.prefix}.executeBatchActionReturning(
-            $batch.map { $param => 
+            $batch.map { $param =>
               val expanded = $expanded
               ((expanded.string, $returningColumn), expanded.prepare)
             }.groupBy(_._1).map {
@@ -127,14 +135,36 @@ class ActionMacro(val c: MacroContext)
 
   private def returningColumn =
     q"""
-      expanded.ast match {
-        case io.getquill.ast.Returning(_, _, io.getquill.ast.Property(_, property)) => 
-          expanded.naming.column(property)
-        case ast => 
+      (expanded.ast match {
+        case ret: io.getquill.ast.ReturningAction =>
+            io.getquill.norm.ExpandReturning.applyMap(ret)(
+              (ast, statement) => io.getquill.context.Expand(${c.prefix}, ast, statement, idiom, naming).string
+            )(idiom, naming)
+        case ast =>
           io.getquill.util.Messages.fail(s"Can't find returning column. Ast: '$$ast'")
-      }
+      })
     """
 
-  private def returningExtractor[T](implicit t: WeakTypeTag[T]) =
-    q"(row: ${c.prefix}.ResultRow) => implicitly[Decoder[$t]].apply(0, row)"
+  def bindAction(quoted: Tree): Tree =
+    c.untypecheck {
+      q"""
+        ..${EnableReflectiveCalls(c)}
+        val expanded = ${expand(extractAst(quoted))}
+        ${c.prefix}.bindAction(
+          expanded.string,
+          expanded.prepare
+        )
+      """
+    }
+
+  private def returningExtractor[T](implicit t: WeakTypeTag[T]) = {
+    OptionalTypecheck(c)(q"implicitly[${c.prefix}.Decoder[$t]]") match {
+      case Some(decoder) =>
+        q"(row: ${c.prefix}.ResultRow) => $decoder.apply(0, row)"
+      case None =>
+        val metaTpe = c.typecheck(tq"${c.prefix}.QueryMeta[$t]", c.TYPEmode).tpe
+        val meta = c.inferImplicitValue(metaTpe).orElse(q"${c.prefix}.materializeQueryMeta[$t]")
+        q"$meta.extract"
+    }
+  }
 }

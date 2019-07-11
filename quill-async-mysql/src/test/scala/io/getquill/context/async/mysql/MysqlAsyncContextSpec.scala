@@ -1,9 +1,10 @@
 package io.getquill.context.async.mysql
 
 import com.github.mauricio.async.db.QueryResult
+import io.getquill.ReturnAction.ReturnColumns
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import io.getquill.{ Literal, MysqlAsyncContext, Spec }
+import io.getquill.{ Literal, MysqlAsyncContext, ReturnAction, Spec }
 
 class MysqlAsyncContextSpec extends Spec {
 
@@ -18,7 +19,7 @@ class MysqlAsyncContextSpec extends Spec {
 
   "Insert with returning with single column table" in {
     val inserted: Long = await(testContext.run {
-      qr4.insert(lift(TestEntity4(0))).returning(_.i)
+      qr4.insert(lift(TestEntity4(0))).returningGenerated(_.i)
     })
     await(testContext.run(qr4.filter(_.i == lift(inserted))))
       .head.i mustBe inserted
@@ -35,13 +36,13 @@ class MysqlAsyncContextSpec extends Spec {
   "cannot extract" in {
     object ctx extends MysqlAsyncContext(Literal, "testMysqlDB") {
       override def extractActionResult[O](
-        returningColumn:    String,
+        returningAction:    ReturnAction,
         returningExtractor: ctx.Extractor[O]
       )(result: QueryResult) =
-        super.extractActionResult(returningColumn, returningExtractor)(result)
+        super.extractActionResult(returningAction, returningExtractor)(result)
     }
     intercept[IllegalStateException] {
-      ctx.extractActionResult("w/e", row => 1)(new QueryResult(0, "w/e"))
+      ctx.extractActionResult(ReturnColumns(List("w/e")), row => 1)(new QueryResult(0, "w/e"))
     }
     ctx.close
   }

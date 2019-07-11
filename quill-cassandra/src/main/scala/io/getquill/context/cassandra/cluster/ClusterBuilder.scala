@@ -71,8 +71,8 @@ object ClusterBuilder {
       else if (tpe.isEnum)
         tpe.getMethod("valueOf", classOf[String]).invoke(tpe, cfg.getString(key))
       else if (cfg.getValue(key).valueType == ConfigValueType.STRING)
-        getClass.getClassLoader.loadClass(cfg.getString(key)).newInstance
+        getClass.getClassLoader.loadClass(cfg.getString(key)).getConstructor().newInstance()
       else
-        set(tpe.newInstance, cfg.getConfig(key))
+        set(tpe.getConstructor().newInstance(), cfg.getConfig(key))
     }
 }

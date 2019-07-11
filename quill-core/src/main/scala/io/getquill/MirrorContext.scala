@@ -1,10 +1,11 @@
 package io.getquill
 
+import io.getquill.context.mirror.{ MirrorDecoders, MirrorEncoders, MirrorSession, Row }
 import io.getquill.context.{ Context, TranslateContext }
-import io.getquill.context.mirror.{ MirrorDecoders, MirrorEncoders, Row }
 import io.getquill.idiom.{ Idiom => BaseIdiom }
-import scala.util.{ Failure, Success, Try }
 import io.getquill.monad.SyncIOMonad
+
+import scala.util.{ Failure, Success, Try }
 
 object mirrorContextWithQueryProbing
   extends MirrorContext(MirrorIdiom, Literal) with QueryProbing
@@ -26,6 +27,7 @@ class MirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy](val idiom: Idi
   override type RunActionReturningResult[T] = ActionReturningMirror[T]
   override type RunBatchActionResult = BatchActionMirror
   override type RunBatchActionReturningResult[T] = BatchActionReturningMirror[T]
+  override type Session = MirrorSession
 
   override def close = ()
 
@@ -39,11 +41,11 @@ class MirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy](val idiom: Idi
 
   case class ActionMirror(string: String, prepareRow: PrepareRow)
 
-  case class ActionReturningMirror[T](string: String, prepareRow: PrepareRow, extractor: Extractor[T], returningColumn: String)
+  case class ActionReturningMirror[T](string: String, prepareRow: PrepareRow, extractor: Extractor[T], returningBehavior: ReturnAction)
 
   case class BatchActionMirror(groups: List[(String, List[Row])])
 
-  case class BatchActionReturningMirror[T](groups: List[(String, String, List[PrepareRow])], extractor: Extractor[T])
+  case class BatchActionReturningMirror[T](groups: List[(String, ReturnAction, List[PrepareRow])], extractor: Extractor[T])
 
   case class QueryMirror[T](string: String, prepareRow: PrepareRow, extractor: Extractor[T])
 
@@ -57,8 +59,8 @@ class MirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy](val idiom: Idi
     ActionMirror(string, prepare(Row())._2)
 
   def executeActionReturning[O](string: String, prepare: Prepare = identityPrepare, extractor: Extractor[O],
-                                returningColumn: String) =
-    ActionReturningMirror[O](string, prepare(Row())._2, extractor, returningColumn)
+                                returningBehavior: ReturnAction) =
+    ActionReturningMirror[O](string, prepare(Row())._2, extractor, returningBehavior)
 
   def executeBatchAction(groups: List[BatchGroup]) =
     BatchActionMirror {
@@ -71,10 +73,21 @@ class MirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy](val idiom: Idi
   def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T]) =
     BatchActionReturningMirror[T](
       groups.map {
-        case BatchGroupReturning(string, column, prepare) =>
-          (string, column, prepare.map(_(Row())._2))
+        case BatchGroupReturning(string, returningBehavior, prepare) =>
+          (string, returningBehavior, prepare.map(_(Row())._2))
       }, extractor
     )
+
+  def bindAction(string: String, prepare: Prepare = identityPrepare) =
+    (session: Session) =>
+      prepare(Row())._2
+
+  def bindBatchAction(groups: List[BatchGroup]) =
+    (session: Session) =>
+      groups.flatMap {
+        case BatchGroup(string, prepare) =>
+          prepare.map(_(Row())._2)
+      }
 
   override private[getquill] def prepareParams(statement: String, prepare: Prepare): Seq[String] =
     prepare(Row())._2.data.map(prepareParam)

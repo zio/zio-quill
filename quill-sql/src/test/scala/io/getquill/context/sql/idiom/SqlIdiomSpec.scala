@@ -1,6 +1,7 @@
 package io.getquill.context.sql.idiom
 
-import io.getquill.Spec
+import io.getquill.ReturnAction.ReturnColumns
+import io.getquill.{ MirrorSqlDialectWithReturnMulti, Spec }
 import io.getquill.context.mirror.Row
 import io.getquill.context.sql.testContext
 import io.getquill.context.sql.testContext._
@@ -747,179 +748,6 @@ class SqlIdiomSpec extends Spec {
             "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE (t.i % t.l) = 0"
         }
       }
-      "option operation" - {
-        "Option == Option(constant)" in {
-          val q = quote {
-            qr1.filter(t => t.o == Option(1))
-          }
-          testContext.run(q).string mustEqual
-            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o IS NOT NULL AND t.o = 1"
-        }
-        "Option(constant) == Option" in {
-          val q = quote {
-            qr1.filter(t => Option(1) == t.o)
-          }
-          testContext.run(q).string mustEqual
-            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o IS NOT NULL AND 1 = t.o"
-        }
-        "Option != Option(constant)" in {
-          val q = quote {
-            qr1.filter(t => t.o != Option(1))
-          }
-          testContext.run(q).string mustEqual
-            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o IS NULL OR t.o <> 1"
-        }
-        "Option(constant) != Option" in {
-          val q = quote {
-            qr1.filter(t => Option(1) != t.o)
-          }
-          testContext.run(q).string mustEqual
-            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o IS NULL OR 1 <> t.o"
-        }
-        "Database-level === and =!= operators" - {
-          import testContext.extras._
-
-          "Option === Option" in {
-            val q = quote {
-              qr1.filter(t => t.o === t.o)
-            }
-            testContext.run(q).string mustEqual
-              "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o IS NOT NULL AND t.o IS NOT NULL AND t.o = t.o"
-          }
-          "Option === Option(constant)" in {
-            val q = quote {
-              qr1.filter(t => t.o === Option(1))
-            }
-            testContext.run(q).string mustEqual
-              "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o IS NOT NULL AND t.o = 1"
-          }
-          "Option(constant) === Option" in {
-            val q = quote {
-              qr1.filter(t => Option(1) === t.o)
-            }
-            testContext.run(q).string mustEqual
-              "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o IS NOT NULL AND 1 = t.o"
-          }
-
-          "Option =!= Option" in {
-            val q = quote {
-              qr1.filter(t => t.o =!= t.o)
-            }
-            testContext.run(q).string mustEqual
-              "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o IS NOT NULL AND t.o IS NOT NULL AND t.o <> t.o"
-          }
-          "Option =!= Option(constant)" in {
-            val q = quote {
-              qr1.filter(t => t.o =!= Option(1))
-            }
-            testContext.run(q).string mustEqual
-              "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o IS NOT NULL AND t.o <> 1"
-          }
-          "Option(constant) =!= Option" in {
-            val q = quote {
-              qr1.filter(t => Option(1) =!= t.o)
-            }
-            testContext.run(q).string mustEqual
-              "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o IS NOT NULL AND 1 <> t.o"
-          }
-        }
-        "contains" in {
-          val q = quote {
-            qr1.filter(t => t.o.contains(1))
-          }
-          testContext.run(q).string mustEqual
-            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o = 1"
-        }
-        "exists" in {
-          val q = quote {
-            qr1.filter(t => t.o.exists(op => op != 1))
-          }
-          testContext.run(q).string mustEqual
-            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o <> 1"
-        }
-        "exists with null-check" in {
-          val q = quote {
-            qr1.filter(t => t.o.exists(op => if (op != 1) false else true))
-          }
-          testContext.run(q).string mustEqual
-            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o IS NOT NULL AND CASE WHEN t.o <> 1 THEN false ELSE true END"
-        }
-        "forall" in {
-          val q = quote {
-            qr1.filter(t => t.i != 1 && t.o.forall(op => op == 1))
-          }
-          testContext.run(q).string mustEqual
-            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.i <> 1 AND (t.o IS NULL OR t.o = 1)"
-        }
-        "forall with null-check" in {
-          val q = quote {
-            qr1.filter(t => t.i != 1 && t.o.forall(op => if (op != 1) false else true))
-          }
-          testContext.run(q).string mustEqual
-            "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.i <> 1 AND (t.o IS NULL OR t.o IS NOT NULL AND CASE WHEN t.o <> 1 THEN false ELSE true END)"
-        }
-        "embedded" - {
-          case class TestEntity(optionalEmbedded: Option[EmbeddedEntity])
-          case class EmbeddedEntity(value: Int) extends Embedded
-
-          "exists" in {
-            val q = quote {
-              query[TestEntity].filter(t => t.optionalEmbedded.exists(_.value == 1))
-            }
-
-            testContext.run(q).string mustEqual
-              "SELECT t.value FROM TestEntity t WHERE t.value = 1"
-          }
-          "forall" in {
-            "quote(query[TestEntity].filter(t => t.optionalEmbedded.forall(_.value == 1)))" mustNot compile
-          }
-        }
-        "nested" - {
-          case class TestEntity(optionalEmbedded: Option[EmbeddedEntity])
-          case class EmbeddedEntity(optionalValue: Option[Int]) extends Embedded
-
-          "contains" in {
-            val q = quote {
-              query[TestEntity].filter(t => t.optionalEmbedded.exists(_.optionalValue.contains(1)))
-            }
-
-            testContext.run(q).string mustEqual
-              "SELECT t.optionalValue FROM TestEntity t WHERE t.optionalValue = 1"
-          }
-          "exists" in {
-            val q = quote {
-              query[TestEntity].filter(t => t.optionalEmbedded.exists(_.optionalValue.exists(_ == 1)))
-            }
-
-            testContext.run(q).string mustEqual
-              "SELECT t.optionalValue FROM TestEntity t WHERE t.optionalValue = 1"
-          }
-          "exists with null-check" in {
-            val q = quote {
-              query[TestEntity].filter(t => t.optionalEmbedded.exists(_.optionalValue.exists(v => if (v == 1) true else false)))
-            }
-
-            testContext.run(q).string mustEqual
-              "SELECT t.optionalValue FROM TestEntity t WHERE t.optionalValue IS NOT NULL AND CASE WHEN t.optionalValue = 1 THEN true ELSE false END"
-          }
-          "forall" in {
-            val q = quote {
-              query[TestEntity].filter(t => t.optionalEmbedded.exists(_.optionalValue.forall(_ == 1)))
-            }
-
-            testContext.run(q).string mustEqual
-              "SELECT t.optionalValue FROM TestEntity t WHERE t.optionalValue IS NULL OR t.optionalValue = 1"
-          }
-          "forall with null-check" in {
-            val q = quote {
-              query[TestEntity].filter(t => t.optionalEmbedded.exists(_.optionalValue.forall(v => if (v == 1) true else false)))
-            }
-
-            testContext.run(q).string mustEqual
-              "SELECT t.optionalValue FROM TestEntity t WHERE t.optionalValue IS NULL OR t.optionalValue IS NOT NULL AND CASE WHEN t.optionalValue = 1 THEN true ELSE false END"
-          }
-        }
-      }
     }
     "action" - {
       "insert" - {
@@ -931,12 +759,20 @@ class SqlIdiomSpec extends Spec {
             val v = TestEntity("s", 1, 2L, Some(1))
             testContext.run(q(lift(v))).string mustEqual "INSERT INTO TestEntity (s,i,l,o) VALUES (?, ?, ?, ?)"
           }
-          "returning" in {
+          "returning" in testContext.withDialect(MirrorSqlDialectWithReturnMulti) { ctx =>
+            import ctx._
             val q = quote { (v: TestEntity) =>
               query[TestEntity].insert(v)
             }
             val v = TestEntity("s", 1, 2L, Some(1))
-            testContext.run(q(lift(v)).returning(v => v.i)).string mustEqual "INSERT INTO TestEntity (s,l,o) VALUES (?, ?, ?)"
+            ctx.run(q(lift(v)).returning(v => v.i)).string mustEqual "INSERT INTO TestEntity (s,i,l,o) VALUES (?, ?, ?, ?)"
+          }
+          "returning generated" in {
+            val q = quote { (v: TestEntity) =>
+              query[TestEntity].insert(v)
+            }
+            val v = TestEntity("s", 1, 2L, Some(1))
+            testContext.run(q(lift(v)).returningGenerated(v => v.i)).string mustEqual "INSERT INTO TestEntity (s,l,o) VALUES (?, ?, ?)"
           }
           "foreach" in {
             val v = TestEntity("s", 1, 2L, Some(1))
@@ -944,12 +780,22 @@ class SqlIdiomSpec extends Spec {
               liftQuery(List(v)).foreach(v => query[TestEntity].insert(v))
             ).groups mustEqual List(("INSERT INTO TestEntity (s,i,l,o) VALUES (?, ?, ?, ?)", List(Row(v.productIterator.toList: _*))))
           }
-          "foreach returning" in {
+          "foreach returning" in testContext.withDialect(MirrorSqlDialectWithReturnMulti) { ctx =>
+            import ctx._
+            val v = TestEntity("s", 1, 2L, Some(1))
+            ctx.run(liftQuery(List(v)).foreach(v => query[TestEntity].insert(v).returning(v => v.i))).groups mustEqual
+              List(("INSERT INTO TestEntity (s,i,l,o) VALUES (?, ?, ?, ?)",
+                ReturnColumns(List("i")),
+                List(Row(v.productIterator.toList: _*))
+              ))
+          }
+          "foreach returning generated" in {
             val v = TestEntity("s", 1, 2L, Some(1))
             testContext.run(
-              liftQuery(List(v)).foreach(v => query[TestEntity].insert(v).returning(v => v.i))
+              liftQuery(List(v)).foreach(v => query[TestEntity].insert(v).returningGenerated(v => v.i))
             ).groups mustEqual
-              List(("INSERT INTO TestEntity (s,l,o) VALUES (?, ?, ?)", "i",
+              List(("INSERT INTO TestEntity (s,l,o) VALUES (?, ?, ?)",
+                ReturnColumns(List("i")),
                 List(Row(v.productIterator.toList.filter(m => !m.isInstanceOf[Int]): _*))
               ))
           }
@@ -968,16 +814,32 @@ class SqlIdiomSpec extends Spec {
           testContext.run(q).string mustEqual
             "INSERT INTO TestEntity (l,s) VALUES ((SELECT COUNT(t.i) FROM TestEntity2 t), 's')"
         }
-        "returning" in {
+        "returning" in testContext.withDialect(MirrorSqlDialectWithReturnMulti) { ctx =>
+          import ctx._
           val q = quote {
             query[TestEntity].insert(lift(TestEntity("s", 1, 2L, Some(1)))).returning(_.l)
+          }
+          val run = ctx.run(q).string mustEqual
+            "INSERT INTO TestEntity (s,i,l,o) VALUES (?, ?, ?, ?)"
+        }
+        "returning generated" in {
+          val q = quote {
+            query[TestEntity].insert(lift(TestEntity("s", 1, 2L, Some(1)))).returningGenerated(_.l)
           }
           val run = testContext.run(q).string mustEqual
             "INSERT INTO TestEntity (s,i,o) VALUES (?, ?, ?)"
         }
-        "returning with single column table" in {
+        "returning with single column table" in testContext.withDialect(MirrorSqlDialectWithReturnMulti) { ctx =>
+          import ctx._
           val q = quote {
             qr4.insert(lift(TestEntity4(0))).returning(_.i)
+          }
+          ctx.run(q).string mustEqual
+            "INSERT INTO TestEntity4 (i) VALUES (?)"
+        }
+        "returning generated with single column table" in {
+          val q = quote {
+            qr4.insert(lift(TestEntity4(0))).returningGenerated(_.i)
           }
           testContext.run(q).string mustEqual
             "INSERT INTO TestEntity4 DEFAULT VALUES"

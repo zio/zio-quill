@@ -12,12 +12,7 @@ case class BetaReduction(map: collection.Map[Ast, Ast])
         BetaReduction(map - ast - map(ast))(map(ast))
 
       case Property(Tuple(values), name) =>
-        val aliases = values.distinct
-        aliases match {
-          case alias :: Nil if values.size > 1 =>
-            super.apply(Property(alias, name))
-          case _ => apply(values(name.drop(1).toInt - 1))
-        }
+        apply(values(name.drop(1).toInt - 1))
 
       case Property(CaseClass(tuples), name) =>
         apply(tuples.toMap.apply(name))
@@ -62,6 +57,10 @@ case class BetaReduction(map: collection.Map[Ast, Ast])
       case Returning(action, alias, prop) =>
         val t = BetaReduction(map - alias)
         Returning(apply(action), alias, t(prop))
+
+      case ReturningGenerated(action, alias, prop) =>
+        val t = BetaReduction(map - alias)
+        ReturningGenerated(apply(action), alias, t(prop))
 
       case other =>
         super.apply(other)

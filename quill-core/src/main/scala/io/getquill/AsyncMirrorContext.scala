@@ -56,11 +56,11 @@ class AsyncMirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy](val idiom
 
   case class ActionMirror(string: String, prepareRow: PrepareRow)(implicit val ec: ExecutionContext)
 
-  case class ActionReturningMirror[T](string: String, prepareRow: PrepareRow, extractor: Extractor[T], returningColumn: String)(implicit val ec: ExecutionContext)
+  case class ActionReturningMirror[T](string: String, prepareRow: PrepareRow, extractor: Extractor[T], returningBehavior: ReturnAction)(implicit val ec: ExecutionContext)
 
   case class BatchActionMirror(groups: List[(String, List[Row])])(implicit val ec: ExecutionContext)
 
-  case class BatchActionReturningMirror[T](groups: List[(String, String, List[PrepareRow])], extractor: Extractor[T])(implicit val ec: ExecutionContext)
+  case class BatchActionReturningMirror[T](groups: List[(String, ReturnAction, List[PrepareRow])], extractor: Extractor[T])(implicit val ec: ExecutionContext)
 
   case class QueryMirror[T](string: String, prepareRow: PrepareRow, extractor: Extractor[T])(implicit val ec: ExecutionContext)
 
@@ -74,8 +74,8 @@ class AsyncMirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy](val idiom
     Future(ActionMirror(string, prepare(Row())._2))
 
   def executeActionReturning[O](string: String, prepare: Prepare = identityPrepare, extractor: Extractor[O],
-                                returningColumn: String)(implicit ec: ExecutionContext) =
-    Future(ActionReturningMirror[O](string, prepare(Row())._2, extractor, returningColumn))
+                                returningBehavior: ReturnAction)(implicit ec: ExecutionContext) =
+    Future(ActionReturningMirror[O](string, prepare(Row())._2, extractor, returningBehavior))
 
   def executeBatchAction(groups: List[BatchGroup])(implicit ec: ExecutionContext) =
     Future {
@@ -91,8 +91,8 @@ class AsyncMirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy](val idiom
     Future {
       BatchActionReturningMirror[T](
         groups.map {
-          case BatchGroupReturning(string, column, prepare) =>
-            (string, column, prepare.map(_(Row())._2))
+          case BatchGroupReturning(string, returningBehavior, prepare) =>
+            (string, returningBehavior, prepare.map(_(Row())._2))
         }, extractor
       )
     }

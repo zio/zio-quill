@@ -204,8 +204,8 @@ lazy val `quill-monix` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "io.monix"                %% "monix-eval"          % "3.0.0-RC2",
-        "io.monix"                %% "monix-reactive"      % "3.0.0-RC2"
+        "io.monix"                %% "monix-eval"          % "3.0.0-RC3",
+        "io.monix"                %% "monix-reactive"      % "3.0.0-RC3"
       )
     )
     .dependsOn(`quill-core-jvm` % "compile->compile;test->test")
@@ -250,7 +250,7 @@ lazy val `quill-finagle-mysql` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.twitter" %% "finagle-mysql" % "19.5.1"
+        "com.twitter" %% "finagle-mysql" % "19.6.0"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -262,7 +262,7 @@ lazy val `quill-finagle-postgres` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "io.github.finagle" %% "finagle-postgres" % "0.10.0"
+        "io.github.finagle" %% "finagle-postgres" % "0.11.0"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -310,7 +310,7 @@ lazy val `quill-cassandra` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.datastax.cassandra" %  "cassandra-driver-core" % "3.7.1"
+        "com.datastax.cassandra" %  "cassandra-driver-core" % "3.7.2"
       )
     )
     .dependsOn(`quill-core-jvm` % "compile->compile;test->test")
@@ -349,7 +349,7 @@ lazy val `quill-orientdb` =
       .settings(
         fork in Test := true,
         libraryDependencies ++= Seq(
-          "com.orientechnologies" % "orientdb-graphdb" % "3.0.19"
+          "com.orientechnologies" % "orientdb-graphdb" % "3.0.21"
         )
       )
       .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -438,13 +438,13 @@ lazy val jdbcTestingSettings = Seq(
   libraryDependencies ++= {
     val deps =
       Seq(
-        "com.zaxxer"              % "HikariCP"             % "3.3.1",
-        "mysql"                   % "mysql-connector-java" % "8.0.16"             % Test,
-        "com.h2database"          % "h2"                   % "1.4.199"            % Test,
-        "org.postgresql"          % "postgresql"           % "42.2.5"             % Test,
-        "org.xerial"              % "sqlite-jdbc"          % "3.27.2.1"             % Test,
-        "com.microsoft.sqlserver" % "mssql-jdbc"           % "7.1.1.jre8-preview" % Test,
-        "org.mockito"             %% "mockito-scala"       % "1.3.1"              % Test
+        "com.zaxxer"              %  "HikariCP"                % "3.3.1",
+        "mysql"                   %  "mysql-connector-java"    % "8.0.16"             % Test,
+        "com.h2database"          %  "h2"                      % "1.4.199"            % Test,
+        "org.postgresql"          %  "postgresql"              % "42.2.6"             % Test,
+        "org.xerial"              %  "sqlite-jdbc"             % "3.28.0"           % Test,
+        "com.microsoft.sqlserver" %  "mssql-jdbc"              % "7.1.1.jre8-preview" % Test,
+        "org.mockito"             %% "mockito-scala-scalatest" % "1.5.11"              % Test
       )
 
     deps ++ includeIfOracle(
@@ -480,9 +480,10 @@ lazy val basicSettings = Seq(
   crossScalaVersions := Seq("2.11.12","2.12.7"),
   libraryDependencies ++= Seq(
     "org.scalamacros" %% "resetallattrs"  % "1.0.0",
-    "org.scalatest"   %%% "scalatest"     % "3.0.7"     % Test,
-    "ch.qos.logback"  % "logback-classic" % "1.2.3"     % Test,
-    "com.google.code.findbugs" % "jsr305" % "3.0.2"     % Provided // just to avoid warnings during compilation
+    "org.scalatest"   %%% "scalatest"     % "3.0.8"          % Test,
+    "ch.qos.logback"  % "logback-classic" % "1.2.3"          % Test,
+    "com.github.choppythelumberjack" %% "tryclose" % "1.0.0" % Test,
+    "com.google.code.findbugs" % "jsr305" % "3.0.2"          % Provided // just to avoid warnings during compilation
   ) ++ {
     if (debugMacro) Seq(
       "org.scala-lang"   %  "scala-library"     % scalaVersion.value,

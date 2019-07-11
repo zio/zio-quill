@@ -3,9 +3,11 @@ package io.getquill
 import com.twitter.util.{ Await, Future, Local }
 import com.twitter.finagle.postgres._
 import com.typesafe.config.Config
+import io.getquill.ReturnAction.{ ReturnColumns, ReturnNothing, ReturnRecord }
 import io.getquill.context.finagle.postgres._
 import io.getquill.context.sql.SqlContext
 import io.getquill.util.{ ContextLogger, LoadConfig }
+
 import scala.util.Try
 import io.getquill.context.{ Context, TranslateContext }
 import io.getquill.monad.TwitterFutureIOMonad
@@ -43,16 +45,27 @@ class FinaglePostgresContext[N <: NamingStrategy](val naming: N, client: Postgre
 
   override def close = Await.result(client.close())
 
-  private def expandAction(sql: String, returningColumn: String): String =
-    s"$sql RETURNING $returningColumn"
+  private def expandAction(sql: String, returningAction: ReturnAction): String =
+    returningAction match {
+      // The Postgres dialect will create SQL that has a 'RETURNING' clause so we don't have to add one.
+      case ReturnRecord           => s"$sql"
+      // The Postgres dialect will not actually use these below variants but in case we decide to plug
+      // in some other dialect into this context...
+      case ReturnColumns(columns) => s"$sql RETURNING ${columns.mkString(", ")}"
+      case ReturnNothing          => s"$sql"
+    }
 
   def probe(sql: String) = Try(Await.result(client.query(sql)))
 
-  def transaction[T](f: => Future[T]) =
-    client.inTransaction { c =>
-      currentClient.update(c)
-      f.ensure(currentClient.clear)
-    }
+  // Only create a client if none exists to allow nested transactions.
+  def transaction[T](f: => Future[T]) = currentClient() match {
+    case None =>
+      client.inTransaction { c =>
+        currentClient.let(c) { f }
+      }
+    case Some(c) =>
+      f
+  }
 
   override def performIO[T](io: IO[T, _], transactional: Boolean = false): Result[T] =
     transactional match {
@@ -87,10 +100,10 @@ class FinaglePostgresContext[N <: NamingStrategy](val naming: N, client: Postgre
     }
   }.map(_.flatten.toList)
 
-  def executeActionReturning[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T], returningColumn: String): Future[T] = {
+  def executeActionReturning[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T], returningAction: ReturnAction): Future[T] = {
     val (params, prepared) = prepare(Nil)
     logger.logQuery(sql, params)
-    withClient(_.prepareAndQuery(expandAction(sql, returningColumn), prepared: _*)(extractor)).map(v => handleSingleResult(v.toList))
+    withClient(_.prepareAndQuery(expandAction(sql, returningAction), prepared: _*)(extractor)).map(v => handleSingleResult(v.toList))
   }
 
   def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T]): Future[List[T]] =

@@ -1,6 +1,7 @@
 package io.getquill
 
 import io.getquill.ast._
+import io.getquill.context.CanReturnMultiField
 import io.getquill.context.sql._
 import io.getquill.context.sql.idiom._
 import io.getquill.idiom.StatementInterpolator._
@@ -11,7 +12,8 @@ import io.getquill.norm.ConcatBehavior.NonAnsiConcat
 trait OracleDialect
   extends SqlIdiom
   with QuestionMarkBindVariables
-  with ConcatSupport {
+  with ConcatSupport
+  with CanReturnMultiField {
 
   class OracleFlattenSqlQueryTokenizerHelper(q: FlattenSqlQuery)(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy)
     extends FlattenSqlQueryTokenizerHelper(q)(astTokenizer, strategy) {

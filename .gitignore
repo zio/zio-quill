@@ -26,3 +26,7 @@ quill-jdbc/src/main/resources/logback.xml
 log.txt*
 tmp
 nohup.out
+.bloop/
+.metals/
+project/.bloop/
+/io/
