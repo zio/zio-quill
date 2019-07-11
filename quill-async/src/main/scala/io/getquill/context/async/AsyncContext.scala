@@ -4,6 +4,7 @@ import com.github.mauricio.async.db.Connection
 import com.github.mauricio.async.db.{ QueryResult => DBQueryResult }
 import com.github.mauricio.async.db.RowData
 import com.github.mauricio.async.db.pool.PartitionedConnectionPool
+
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
@@ -11,7 +12,7 @@ import scala.concurrent.duration.Duration
 import scala.util.Try
 import io.getquill.context.sql.SqlContext
 import io.getquill.context.sql.idiom.SqlIdiom
-import io.getquill.NamingStrategy
+import io.getquill.{ NamingStrategy, ReturnAction }
 import io.getquill.util.ContextLogger
 import io.getquill.monad.ScalaFutureIOMonad
 import io.getquill.context.{ Context, TranslateContext }
@@ -48,9 +49,9 @@ abstract class AsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: Connection]
       case other                                   => f(pool)
     }
 
-  protected def extractActionResult[O](returningColumn: String, extractor: Extractor[O])(result: DBQueryResult): O
+  protected def extractActionResult[O](returningAction: ReturnAction, extractor: Extractor[O])(result: DBQueryResult): O
 
-  protected def expandAction(sql: String, returningColumn: String) = sql
+  protected def expandAction(sql: String, returningAction: ReturnAction) = sql
 
   def probe(sql: String) =
     Try {
@@ -88,12 +89,12 @@ abstract class AsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: Connection]
     withConnection(_.sendPreparedStatement(sql, values)).map(_.rowsAffected)
   }
 
-  def executeActionReturning[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T], returningColumn: String)(implicit ec: ExecutionContext): Future[T] = {
-    val expanded = expandAction(sql, returningColumn)
+  def executeActionReturning[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T], returningAction: ReturnAction)(implicit ec: ExecutionContext): Future[T] = {
+    val expanded = expandAction(sql, returningAction)
     val (params, values) = prepare(Nil)
     logger.logQuery(sql, params)
     withConnection(_.sendPreparedStatement(expanded, values))
-      .map(extractActionResult(returningColumn, extractor))
+      .map(extractActionResult(returningAction, extractor))
   }
 
   def executeBatchAction(groups: List[BatchGroup])(implicit ec: ExecutionContext): Future[List[Long]] =

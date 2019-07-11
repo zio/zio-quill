@@ -4,7 +4,7 @@ import io.getquill.Spec
 import io.getquill.ast.Dynamic
 import io.getquill.ast.Property
 import io.getquill.testContext.qr1
-import io.getquill.testContext.qr5
+import io.getquill.testContext.qrRegular
 
 class IsDynamicSpec extends Spec {
 
@@ -21,7 +21,7 @@ class IsDynamicSpec extends Spec {
       IsDynamic(qr1.ast) mustEqual false
     }
     "false when using CaseClass" in {
-      IsDynamic(qr5.ast) mustEqual false
+      IsDynamic(qrRegular.ast) mustEqual false
     }
   }
 }

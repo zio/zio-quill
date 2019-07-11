@@ -19,6 +19,7 @@ import io.getquill.idiom.StatementInterpolator._
 import io.getquill.idiom.Token
 import io.getquill.util.Messages.trace
 import io.getquill.ast.Constant
+import io.getquill.context.CannotReturn
 
 class SparkDialect extends SparkIdiom
 
@@ -72,7 +73,7 @@ object SparkDialectRecursor {
   }
 }
 
-trait SparkIdiom extends SqlIdiom { self =>
+trait SparkIdiom extends SqlIdiom with CannotReturn { self =>
 
   def parentTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy) = super.sqlQueryTokenizer
 

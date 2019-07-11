@@ -357,6 +357,11 @@ trait DynamicQueryDsl {
         DynamicActionReturning(splice(Returning(q.ast, v, f(splice(v)).ast)))
       }
 
+    def returningGenerated[R](f: Quoted[E] => Quoted[R]): DynamicActionReturning[E, R] =
+      withFreshIdent { v =>
+        DynamicActionReturning(splice(ReturningGenerated(q.ast, v, f(splice(v)).ast)))
+      }
+
     def onConflictIgnore: DynamicInsert[E] =
       dyn(OnConflict(DynamicInsert.this.q.ast, OnConflict.NoTarget, OnConflict.Ignore))
 

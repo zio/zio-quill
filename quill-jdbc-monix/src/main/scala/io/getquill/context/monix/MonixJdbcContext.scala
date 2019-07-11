@@ -3,7 +3,7 @@ package io.getquill.context.monix
 import java.io.Closeable
 import java.sql.{ Array => _, _ }
 
-import io.getquill.NamingStrategy
+import io.getquill.{ NamingStrategy, ReturnAction }
 import io.getquill.context.StreamingContext
 import io.getquill.context.jdbc.JdbcContextBase
 import io.getquill.context.sql.idiom.SqlIdiom
@@ -43,8 +43,8 @@ abstract class MonixJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](
     super.executeQuery(sql, prepare, extractor)
   override def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): Task[T] =
     super.executeQuerySingle(sql, prepare, extractor)
-  override def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningColumn: String): Task[O] =
-    super.executeActionReturning(sql, prepare, extractor, returningColumn)
+  override def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningBehavior: ReturnAction): Task[O] =
+    super.executeActionReturning(sql, prepare, extractor, returningBehavior)
   override def executeBatchAction(groups: List[BatchGroup]): Task[List[Long]] =
     super.executeBatchAction(groups)
   override def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T]): Task[List[T]] =

@@ -1,6 +1,7 @@
 package io.getquill.context.sql.idiom
 
-import io.getquill.Spec
+import io.getquill.ReturnAction.ReturnColumns
+import io.getquill.{ MirrorSqlDialectWithReturnMulti, Spec }
 import io.getquill.context.mirror.Row
 import io.getquill.context.sql.testContext
 import io.getquill.context.sql.testContext._
@@ -758,12 +759,20 @@ class SqlIdiomSpec extends Spec {
             val v = TestEntity("s", 1, 2L, Some(1))
             testContext.run(q(lift(v))).string mustEqual "INSERT INTO TestEntity (s,i,l,o) VALUES (?, ?, ?, ?)"
           }
-          "returning" in {
+          "returning" in testContext.withDialect(MirrorSqlDialectWithReturnMulti) { ctx =>
+            import ctx._
             val q = quote { (v: TestEntity) =>
               query[TestEntity].insert(v)
             }
             val v = TestEntity("s", 1, 2L, Some(1))
-            testContext.run(q(lift(v)).returning(v => v.i)).string mustEqual "INSERT INTO TestEntity (s,l,o) VALUES (?, ?, ?)"
+            ctx.run(q(lift(v)).returning(v => v.i)).string mustEqual "INSERT INTO TestEntity (s,i,l,o) VALUES (?, ?, ?, ?)"
+          }
+          "returning generated" in {
+            val q = quote { (v: TestEntity) =>
+              query[TestEntity].insert(v)
+            }
+            val v = TestEntity("s", 1, 2L, Some(1))
+            testContext.run(q(lift(v)).returningGenerated(v => v.i)).string mustEqual "INSERT INTO TestEntity (s,l,o) VALUES (?, ?, ?)"
           }
           "foreach" in {
             val v = TestEntity("s", 1, 2L, Some(1))
@@ -771,12 +780,22 @@ class SqlIdiomSpec extends Spec {
               liftQuery(List(v)).foreach(v => query[TestEntity].insert(v))
             ).groups mustEqual List(("INSERT INTO TestEntity (s,i,l,o) VALUES (?, ?, ?, ?)", List(Row(v.productIterator.toList: _*))))
           }
-          "foreach returning" in {
+          "foreach returning" in testContext.withDialect(MirrorSqlDialectWithReturnMulti) { ctx =>
+            import ctx._
+            val v = TestEntity("s", 1, 2L, Some(1))
+            ctx.run(liftQuery(List(v)).foreach(v => query[TestEntity].insert(v).returning(v => v.i))).groups mustEqual
+              List(("INSERT INTO TestEntity (s,i,l,o) VALUES (?, ?, ?, ?)",
+                ReturnColumns(List("i")),
+                List(Row(v.productIterator.toList: _*))
+              ))
+          }
+          "foreach returning generated" in {
             val v = TestEntity("s", 1, 2L, Some(1))
             testContext.run(
-              liftQuery(List(v)).foreach(v => query[TestEntity].insert(v).returning(v => v.i))
+              liftQuery(List(v)).foreach(v => query[TestEntity].insert(v).returningGenerated(v => v.i))
             ).groups mustEqual
-              List(("INSERT INTO TestEntity (s,l,o) VALUES (?, ?, ?)", "i",
+              List(("INSERT INTO TestEntity (s,l,o) VALUES (?, ?, ?)",
+                ReturnColumns(List("i")),
                 List(Row(v.productIterator.toList.filter(m => !m.isInstanceOf[Int]): _*))
               ))
           }
@@ -795,16 +814,32 @@ class SqlIdiomSpec extends Spec {
           testContext.run(q).string mustEqual
             "INSERT INTO TestEntity (l,s) VALUES ((SELECT COUNT(t.i) FROM TestEntity2 t), 's')"
         }
-        "returning" in {
+        "returning" in testContext.withDialect(MirrorSqlDialectWithReturnMulti) { ctx =>
+          import ctx._
           val q = quote {
             query[TestEntity].insert(lift(TestEntity("s", 1, 2L, Some(1)))).returning(_.l)
+          }
+          val run = ctx.run(q).string mustEqual
+            "INSERT INTO TestEntity (s,i,l,o) VALUES (?, ?, ?, ?)"
+        }
+        "returning generated" in {
+          val q = quote {
+            query[TestEntity].insert(lift(TestEntity("s", 1, 2L, Some(1)))).returningGenerated(_.l)
           }
           val run = testContext.run(q).string mustEqual
             "INSERT INTO TestEntity (s,i,o) VALUES (?, ?, ?)"
         }
-        "returning with single column table" in {
+        "returning with single column table" in testContext.withDialect(MirrorSqlDialectWithReturnMulti) { ctx =>
+          import ctx._
           val q = quote {
             qr4.insert(lift(TestEntity4(0))).returning(_.i)
+          }
+          ctx.run(q).string mustEqual
+            "INSERT INTO TestEntity4 (i) VALUES (?)"
+        }
+        "returning generated with single column table" in {
+          val q = quote {
+            qr4.insert(lift(TestEntity4(0))).returningGenerated(_.i)
           }
           testContext.run(q).string mustEqual
             "INSERT INTO TestEntity4 DEFAULT VALUES"

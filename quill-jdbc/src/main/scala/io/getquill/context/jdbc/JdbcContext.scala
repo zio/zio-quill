@@ -5,7 +5,7 @@ import java.sql.{ Connection, PreparedStatement }
 
 import javax.sql.DataSource
 import io.getquill.context.sql.idiom.SqlIdiom
-import io.getquill.NamingStrategy
+import io.getquill.{ NamingStrategy, ReturnAction }
 import io.getquill.context.{ ContextEffect, TranslateContext }
 
 import scala.util.{ DynamicVariable, Try }
@@ -40,8 +40,8 @@ abstract class JdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy]
     super.executeQuery(sql, prepare, extractor)
   override def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): T =
     super.executeQuerySingle(sql, prepare, extractor)
-  override def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningColumn: String): O =
-    super.executeActionReturning(sql, prepare, extractor, returningColumn)
+  override def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningBehavior: ReturnAction): O =
+    super.executeActionReturning(sql, prepare, extractor, returningBehavior)
   override def executeBatchAction(groups: List[BatchGroup]): List[Long] =
     super.executeBatchAction(groups)
   override def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T]): List[T] =
