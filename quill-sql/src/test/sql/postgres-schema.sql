@@ -51,7 +51,8 @@ CREATE TABLE EncodingTestEntity(
     o11 TIMESTAMP,
     o12 VARCHAR(255),
     o13 DATE,
-    o14 UUID
+    o14 UUID,
+    o15 TEXT
 );
 
 CREATE TABLE EncodingUUIDTestEntity(

@@ -110,7 +110,8 @@ class ArrayAsyncEncodingSpec extends ArrayEncodingBaseSpec {
       o11: Option[Date],
       o12: Option[EncodingTestType],
       o13: Option[LocalDate],
-      o14: Option[UUID]
+      o14: Option[UUID],
+      o15: Option[io.getquill.context.sql.Number]
     )
 
     val insertValue =
@@ -142,7 +143,8 @@ class ArrayAsyncEncodingSpec extends ArrayEncodingBaseSpec {
         Some(new Date(31200000)),
         Some(EncodingTestType("s")),
         Some(LocalDate.of(2013, 11, 23)),
-        Some(UUID.randomUUID())
+        Some(UUID.randomUUID()),
+        Some(io.getquill.context.sql.Number("0"))
       )
 
     val realEntity = quote {

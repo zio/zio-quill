@@ -7,6 +7,16 @@ import io.getquill.Spec
 
 case class EncodingTestType(value: String)
 
+case class Number(value: String) extends AnyVal
+
+object Number {
+  def withValidation(value: String): Option[Number] =
+    if (value.forall(_.isDigit))
+      Some(Number(value))
+    else
+      None
+}
+
 trait EncodingSpec extends Spec {
 
   val context: SqlContext[_, _] with TestEncoders with TestDecoders
@@ -41,7 +51,8 @@ trait EncodingSpec extends Spec {
     o11: Option[Date],
     o12: Option[EncodingTestType],
     o13: Option[LocalDate],
-    o14: Option[UUID]
+    o14: Option[UUID],
+    o15: Option[Number]
   )
 
   val delete = quote {
@@ -82,7 +93,8 @@ trait EncodingSpec extends Spec {
         Some(new Date(31200000)),
         Some(EncodingTestType("s")),
         Some(LocalDate.of(2013, 11, 23)),
-        Some(UUID.randomUUID())
+        Some(UUID.randomUUID()),
+        Some(Number("0"))
       ),
       EncodingTestEntity(
         "",
@@ -99,6 +111,7 @@ trait EncodingSpec extends Spec {
         EncodingTestType(""),
         LocalDate.ofEpochDay(0),
         UUID.randomUUID(),
+        None,
         None,
         None,
         None,
@@ -149,6 +162,7 @@ trait EncodingSpec extends Spec {
         e1.o12 mustEqual e2.o12
         e1.o13 mustEqual e2.o13
         e1.o14 mustEqual e2.o14
+        e1.o15 mustEqual e2.o15
     }
   }
 
