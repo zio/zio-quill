@@ -16,6 +16,7 @@ trait Liftables {
     case ast: Action => actionLiftable(ast)
     case ast: Value => valueLiftable(ast)
     case ast: Ident => identLiftable(ast)
+    case ast: ExternalIdent => externalIdentLiftable(ast)
     case ast: Ordering => orderingLiftable(ast)
     case ast: Lift => liftLiftable(ast)
     case ast: Assignment => assignmentLiftable(ast)

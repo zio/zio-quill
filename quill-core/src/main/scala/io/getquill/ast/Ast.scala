@@ -138,7 +138,11 @@ case class Update(query: Ast, assignments: List[Assignment]) extends Action
 case class Insert(query: Ast, assignments: List[Assignment]) extends Action
 case class Delete(query: Ast) extends Action
 
-sealed trait ReturningAction extends Action
+sealed trait ReturningAction extends Action {
+  def action: Ast
+  def alias: Ident
+  def property: Ast
+}
 object ReturningAction {
   def unapply(returningClause: ReturningAction): Option[(Ast, Ident, Ast)] =
     returningClause match {
