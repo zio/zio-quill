@@ -75,12 +75,24 @@ class MySQLDialectSpec extends OnConflictSpec {
     }
   }
 
-  "Insert with returning with single column table" in {
+  "Insert with returning generated with single column table" in {
     val q = quote {
-      qr4.insert(lift(TestEntity4(0))).returning(_.i)
+      qr4.insert(lift(TestEntity4(0))).returningGenerated(_.i)
     }
     ctx.run(q).string mustEqual
       "INSERT INTO TestEntity4 (i) VALUES (DEFAULT)"
+  }
+  "Insert with returning generated - multiple fields - should not compile" in {
+    val q = quote {
+      qr1.insert(lift(TestEntity("s", 1, 2L, Some(3))))
+    }
+    "ctx.run(q.returningGenerated(r => (r.i, r.l))).string" mustNot compile
+  }
+  "Insert with returning should not compile" in {
+    val q = quote {
+      qr4.insert(lift(TestEntity4(0)))
+    }
+    "ctx.run(q.returning(_.i)).string" mustNot compile
   }
 
   "OnConflict" - {

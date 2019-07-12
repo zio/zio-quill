@@ -1,9 +1,10 @@
 package io.getquill.context.async.postgres
 
 import com.github.mauricio.async.db.QueryResult
+import io.getquill.ReturnAction.ReturnColumns
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import io.getquill.{ Literal, PostgresAsyncContext, Spec }
+import io.getquill.{ Literal, PostgresAsyncContext, ReturnAction, Spec }
 
 class PostgresAsyncContextSpec extends Spec {
 
@@ -18,10 +19,17 @@ class PostgresAsyncContextSpec extends Spec {
 
   "Insert with returning with single column table" in {
     val inserted: Long = await(testContext.run {
-      qr4.insert(lift(TestEntity4(0))).returning(_.i)
+      qr4.insert(lift(TestEntity4(0))).returningGenerated(_.i)
     })
     await(testContext.run(qr4.filter(_.i == lift(inserted))))
       .head.i mustBe inserted
+  }
+  "Insert with returning with multiple columns" in {
+    await(testContext.run(qr1.delete))
+    val inserted = await(testContext.run {
+      qr1.insert(lift(TestEntity("foo", 1, 18L, Some(123)))).returning(r => (r.i, r.s, r.o))
+    })
+    (1, "foo", Some(123)) mustBe inserted
   }
 
   "performIO" in {
@@ -35,13 +43,13 @@ class PostgresAsyncContextSpec extends Spec {
   "cannot extract" in {
     object ctx extends PostgresAsyncContext(Literal, "testPostgresDB") {
       override def extractActionResult[O](
-        returningColumn:    String,
+        returningAction:    ReturnAction,
         returningExtractor: ctx.Extractor[O]
       )(result: QueryResult) =
-        super.extractActionResult(returningColumn, returningExtractor)(result)
+        super.extractActionResult(returningAction, returningExtractor)(result)
     }
     intercept[IllegalStateException] {
-      ctx.extractActionResult("w/e", row => 1)(new QueryResult(0, "w/e"))
+      ctx.extractActionResult(ReturnColumns(List("w/e")), row => 1)(new QueryResult(0, "w/e"))
     }
     ctx.close
   }

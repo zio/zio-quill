@@ -3,18 +3,20 @@ package io.getquill.quotation
 import scala.reflect.ClassTag
 import io.getquill.ast._
 import io.getquill.Embedded
+import io.getquill.context.{ ReturningMultipleFieldSupported, _ }
 import io.getquill.norm.BetaReduction
 import io.getquill.util.Messages.RichContext
-import io.getquill.util.Interleave
-import io.getquill.dsl.CoreDsl
+import io.getquill.dsl.{ CoreDsl, QueryDsl, ValueComputation }
 import io.getquill.norm.capture.AvoidAliasConflict
+import io.getquill.idiom.Idiom
 
 import scala.annotation.tailrec
 import scala.collection.immutable.StringOps
 import scala.reflect.macros.TypecheckException
 import io.getquill.ast.Implicits._
+import io.getquill.util.Interleave
 
-trait Parsing {
+trait Parsing extends ValueComputation {
   this: Quotation =>
 
   import c.universe.{ Ident => _, Constant => _, Function => _, If => _, Block => _, _ }
@@ -197,6 +199,7 @@ trait Parsing {
     case q"$source.groupBy[$t](($alias) => $body)" if (is[CoreDsl#Query[Any]](source)) =>
       GroupBy(astParser(source), identParser(alias), astParser(body))
 
+    case q"$a.value[$t]" if (is[CoreDsl#Query[Any]](a))   => astParser(a)
     case q"$a.min[$t]" if (is[CoreDsl#Query[Any]](a))     => Aggregation(AggregationOperator.`min`, astParser(a))
     case q"$a.max[$t]" if (is[CoreDsl#Query[Any]](a))     => Aggregation(AggregationOperator.`max`, astParser(a))
     case q"$a.avg[$t]($n)" if (is[CoreDsl#Query[Any]](a)) => Aggregation(AggregationOperator.`avg`, astParser(a))
@@ -231,7 +234,7 @@ trait Parsing {
       Distinct(astParser(source))
 
     case q"$source.nested" if (is[CoreDsl#Query[Any]](source)) =>
-      Nested(astParser(source))
+      io.getquill.ast.Nested(astParser(source))
 
   }
 
@@ -651,6 +654,13 @@ trait Parsing {
     era =:= typeOf[Option[Any]] || era =:= typeOf[Some[Any]] || era =:= typeOf[None.type]
   }
 
+  object ClassTypeRefMatch {
+    def unapply(tpe: Type) = tpe match {
+      case TypeRef(_, cls, args) if (cls.isClass) => Some((cls.asClass, args))
+      case _                                      => None
+    }
+  }
+
   /**
    * Recursively traverse an `Option[T]` or `Option[Option[T]]`, or `Option[Option[Option[T]]]` etc...
    * until we find the `T`. Stop at a specified depth.
@@ -760,6 +770,73 @@ trait Parsing {
     tpe.paramLists(0).map(_.name.toString)
   }
 
+  private[getquill] def currentIdiom: Option[Type] = {
+    c.prefix.tree.tpe
+      .baseClasses
+      .flatMap { baseClass =>
+        val baseClassTypeArgs = c.prefix.tree.tpe.baseType(baseClass).typeArgs
+        baseClassTypeArgs.find { typeArg =>
+          typeArg <:< typeOf[Idiom]
+        }
+      }
+      .headOption
+  }
+
+  private[getquill] def idiomReturnCapability: ReturningCapability = {
+    val returnAfterInsertType =
+      currentIdiom
+        .toSeq
+        .flatMap(_.members)
+        .collect {
+          case ms: MethodSymbol if (ms.name.toString == "idiomReturningCapability") => Some(ms.returnType)
+        }
+        .headOption
+        .flatten
+
+    returnAfterInsertType match {
+      case Some(returnType) if (returnType =:= typeOf[ReturningClauseSupported]) => ReturningClauseSupported
+      case Some(returnType) if (returnType =:= typeOf[ReturningSingleFieldSupported]) => ReturningSingleFieldSupported
+      case Some(returnType) if (returnType =:= typeOf[ReturningMultipleFieldSupported]) => ReturningMultipleFieldSupported
+      case Some(returnType) if (returnType =:= typeOf[ReturningNotSupported]) => ReturningNotSupported
+      // Since most SQL Dialects support returing a single field (that is auto-incrementing) allow a return
+      // of a single field in the case that a dialect is not actually specified. E.g. when SqlContext[_, _]
+      // is used to define `returning` clauses.
+      case other => ReturningSingleFieldSupported
+    }
+  }
+
+  implicit class InsertReturnCapabilityExtension(capability: ReturningCapability) {
+    def verifyAst(returnBody: Ast) = capability match {
+      case ReturningClauseSupported =>
+      // Only .returning(r => r.prop) or .returning(r => OneElementCaseClass(r.prop1..., propN)) or .returning(r => (r.prop1..., propN)) (well actually it's prop22) is allowed.
+      case ReturningMultipleFieldSupported =>
+        returnBody match {
+          case CaseClass(list) if (list.forall {
+            case (_, Property(_, _)) => true
+            case _                   => false
+          }) =>
+          case Tuple(list) if (list.forall {
+            case Property(_, _) => true
+            case _              => false
+          }) =>
+          case Property(_, _) =>
+          case other =>
+            c.fail(s"${currentIdiom.map(n => s"The dialect ${n} only allows").getOrElse("Unspecified dialects only allow")} single a single property or multiple properties in case classes / tuples in 'returning' clauses ${other}.")
+        }
+      // Only .returning(r => r.prop) or .returning(r => OneElementCaseClass(r.prop)) is allowed.
+      case ReturningSingleFieldSupported =>
+        returnBody match {
+          case Property(_, _) =>
+          case other =>
+            c.fail(s"${currentIdiom.map(n => s"The dialect ${n} only allows").getOrElse("Unspecified dialects only allow")} single, auto-incrementing columns in 'returning' clauses.")
+        }
+      // This is not actually the case for unspecified dialects (e.g. when doing `returning` from `SqlContext[_, _]` but error message
+      // says what it would say if either case happened. Otherwise doing currentIdiom.get would be allowed which is bad practice.
+      case ReturningNotSupported =>
+        c.fail(s"${currentIdiom.map(n => s"The dialect ${n} does").getOrElse("Unspecified dialects do")} not allow 'returning' clauses.")
+    }
+  }
+
   val actionParser: Parser[Ast] = Parser[Ast] {
     case q"$query.$method(..$assignments)" if (method.decodedName.toString == "update") =>
       Update(astParser(query), assignments.map(assignmentParser(_)))
@@ -767,12 +844,78 @@ trait Parsing {
       Insert(astParser(query), assignments.map(assignmentParser(_)))
     case q"$query.delete" =>
       Delete(astParser(query))
+    case q"$action.returning[$r]" =>
+      c.fail(s"A 'returning' clause must have arguments.")
     case q"$action.returning[$r](($alias) => $body)" =>
-      Returning(astParser(action), identParser(alias), astParser(body))
+      val ident = identParser(alias)
+      val bodyAst = reprocessReturnClause(ident, astParser(body), action)
+      // Verify that the idiom supports this type of returning clause
+      idiomReturnCapability match {
+        case ReturningMultipleFieldSupported | ReturningClauseSupported =>
+        case ReturningSingleFieldSupported =>
+          c.fail(s"The 'returning' clause is not supported by the ${currentIdiom.getOrElse("specified")} idiom. Use 'returningGenerated' instead.")
+        case ReturningNotSupported =>
+          c.fail(s"The 'returning' or 'returningGenerated' clauses are not supported by the ${currentIdiom.getOrElse("specified")} idiom.")
+      }
+      // Verify that the AST in the returning-body is valid
+      idiomReturnCapability.verifyAst(bodyAst)
+      Returning(astParser(action), ident, bodyAst)
+
+    case q"$action.returningGenerated[$r](($alias) => $body)" =>
+      val ident = identParser(alias)
+      val bodyAst = reprocessReturnClause(ident, astParser(body), action)
+      // Verify that the idiom supports this type of returning clause
+      idiomReturnCapability match {
+        case ReturningNotSupported =>
+          c.fail(s"The 'returning' or 'returningGenerated' clauses are not supported by the ${currentIdiom.getOrElse("specified")} idiom.")
+        case _ =>
+      }
+      // Verify that the AST in the returning-body is valid
+      idiomReturnCapability.verifyAst(bodyAst)
+      ReturningGenerated(astParser(action), ident, bodyAst)
+
     case q"$query.foreach[$t1, $t2](($alias) => $body)($f)" if (is[CoreDsl#Query[Any]](query)) =>
       // If there are actions inside the subtree, we need to do some additional sanitizations
       // of the variables so that their content will not collide with code that we have generated.
       AvoidAliasConflict.sanitizeVariables(Foreach(astParser(query), identParser(alias), astParser(body)), dangerousVariables)
+  }
+
+  /**
+   * In situations where the a `.returning` clause returns the initial record i.e. `.returning(r => r)`,
+   * we need to expand out the record into it's fields i.e. `.returning(r => (r.foo, r.bar))`
+   * otherwise the tokenizer would be force to pass `RETURNING *` to the SQL which is a problem
+   * because the fields inside of the record could arrive out of order in the result set
+   * (e.g. arrive as `r.bar, r.foo`). Use use the value/flatten methods in order to expand
+   * the case-class out into fields.
+   */
+  private def reprocessReturnClause(ident: Ident, originalBody: Ast, action: Tree) = {
+    val actionType = typecheckUnquoted(action)
+
+    (ident == originalBody, actionType.tpe) match {
+      // Note, tuples are also case classes so this also matches for tuples
+      case (true, ClassTypeRefMatch(cls, List(arg))) if (cls == asClass[QueryDsl#Insert[_]] && isTypeCaseClass(arg)) =>
+
+        val elements = flatten(q"${TermName(ident.name)}", value("Decoder", arg))
+        if (elements.size == 0) c.fail("Case class in the 'returning' clause has no values")
+
+        // Create an intermediate scala API that can then be parsed into clauses. This needs to be
+        // typechecked first in order to function properly.
+        val tpe = c.typecheck(
+          q"((${TermName(ident.name)}:$arg) => io.getquill.dsl.UnlimitedTuple.apply(..$elements))"
+        )
+        val newBody =
+          tpe match {
+            case q"(($newAlias) => $newBody)" => newBody
+            case _                            => c.fail("Could not process whole-record 'returning' clause. Consider trying to return individual columns.")
+          }
+        astParser(newBody)
+
+      case (true, _) =>
+        c.fail("Could not process whole-record 'returning' clause. Consider trying to return individual columns.")
+
+      case _ =>
+        originalBody
+    }
   }
 
   private val assignmentParser: Parser[Assignment] = Parser[Assignment] {

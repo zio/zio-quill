@@ -5,13 +5,14 @@ import io.getquill.context.sql.norm._
 import io.getquill.ast.{ AggregationOperator, Lift, _ }
 import io.getquill.context.sql._
 import io.getquill.NamingStrategy
+import io.getquill.context.CannotReturn
 import io.getquill.util.Messages.fail
 import io.getquill.idiom._
 import io.getquill.context.sql.norm.SqlNormalize
 import io.getquill.util.Interleave
 import io.getquill.context.sql.idiom.VerifySqlQuery
 
-object OrientDBIdiom extends OrientDBIdiom
+object OrientDBIdiom extends OrientDBIdiom with CannotReturn
 
 trait OrientDBIdiom extends Idiom {
 
@@ -47,6 +48,8 @@ trait OrientDBIdiom extends Idiom {
       case a: Action =>
         a.token
       case a: Ident =>
+        a.token
+      case a: ExternalIdent =>
         a.token
       case a: Property =>
         a.token
@@ -253,6 +256,9 @@ trait OrientDBIdiom extends Idiom {
 
   implicit def identTokenizer(implicit strategy: NamingStrategy): Tokenizer[Ident] =
     Tokenizer[Ident](e => strategy.default(e.name).token)
+
+  implicit def externalIdentTokenizer(implicit strategy: NamingStrategy): Tokenizer[ExternalIdent] =
+    Tokenizer[ExternalIdent](e => strategy.default(e.name).token)
 
   implicit def assignmentTokenizer(implicit propertyTokenizer: Tokenizer[Property], strategy: NamingStrategy): Tokenizer[Assignment] = Tokenizer[Assignment] {
     case Assignment(alias, prop, value) =>

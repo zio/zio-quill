@@ -5,8 +5,9 @@ import scala.language.experimental.macros
 import io.getquill.dsl.CoreDsl
 import io.getquill.util.Messages.fail
 import java.io.Closeable
+
 import scala.util.Try
-import io.getquill.NamingStrategy
+import io.getquill.{ NamingStrategy, ReturnAction }
 
 trait Context[Idiom <: io.getquill.idiom.Idiom, Naming <: NamingStrategy]
   extends Closeable
@@ -25,7 +26,7 @@ trait Context[Idiom <: io.getquill.idiom.Idiom, Naming <: NamingStrategy]
   type Extractor[T] = ResultRow => T
 
   case class BatchGroup(string: String, prepare: List[Prepare])
-  case class BatchGroupReturning(string: String, column: String, prepare: List[Prepare])
+  case class BatchGroupReturning(string: String, returningBehavior: ReturnAction, prepare: List[Prepare])
 
   def probe(statement: String): Try[_]
 

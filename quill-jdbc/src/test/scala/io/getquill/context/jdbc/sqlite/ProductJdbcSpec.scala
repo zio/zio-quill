@@ -32,7 +32,7 @@ class ProductJdbcSpec extends ProductSpec {
       val result =
         testContext.run {
           liftQuery(list).foreach { prd =>
-            query[Product].insert(prd).returning(_.id)
+            query[Product].insert(prd).returningGenerated(_.id)
           }
         }
       result.size mustEqual list.size
@@ -41,7 +41,7 @@ class ProductJdbcSpec extends ProductSpec {
     "Single insert with inlined free variable" in {
       val prd = Product(0L, "test1", 1L)
       val inserted = testContext.run {
-        product.insert(_.sku -> lift(prd.sku), _.description -> lift(prd.description)).returning(_.id)
+        product.insert(_.sku -> lift(prd.sku), _.description -> lift(prd.description)).returningGenerated(_.id)
       }
       val returnedProduct = testContext.run(productById(lift(inserted))).head
       returnedProduct.description mustEqual "test1"
@@ -52,7 +52,7 @@ class ProductJdbcSpec extends ProductSpec {
     "Single insert with free variable and explicit quotation" in {
       val prd = Product(0L, "test2", 2L)
       val q1 = quote {
-        product.insert(_.sku -> lift(prd.sku), _.description -> lift(prd.description)).returning(_.id)
+        product.insert(_.sku -> lift(prd.sku), _.description -> lift(prd.description)).returningGenerated(_.id)
       }
       val inserted = testContext.run(q1)
       val returnedProduct = testContext.run(productById(lift(inserted))).head

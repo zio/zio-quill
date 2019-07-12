@@ -4,6 +4,7 @@ import io.getquill.norm._
 import io.getquill.ast.Ast
 import io.getquill.norm.ConcatBehavior.AnsiConcat
 import io.getquill.norm.EqualityBehavior.AnsiEquality
+import io.getquill.norm.capture.DemarcateExternalAliases
 import io.getquill.util.Messages.trace
 
 object SqlNormalize {
@@ -16,6 +17,8 @@ class SqlNormalize(concatBehavior: ConcatBehavior, equalityBehavior: EqualityBeh
   private val normalize =
     (identity[Ast] _)
       .andThen(trace("original"))
+      .andThen(DemarcateExternalAliases.apply _)
+      .andThen(trace("DemarcateReturningAliases"))
       .andThen(new FlattenOptionOperation(concatBehavior).apply _)
       .andThen(trace("FlattenOptionOperation"))
       .andThen(new SimplifyNullChecks(equalityBehavior).apply _)

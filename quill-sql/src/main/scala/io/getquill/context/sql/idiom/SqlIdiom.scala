@@ -5,15 +5,18 @@ import io.getquill.ast.BooleanOperator._
 import io.getquill.ast.Lift
 import io.getquill.context.sql._
 import io.getquill.context.sql.norm._
-import io.getquill.idiom.{ Idiom, SetContainsToken, Statement }
+import io.getquill.idiom._
 import io.getquill.idiom.StatementInterpolator._
 import io.getquill.NamingStrategy
+import io.getquill.context.{ ReturningCapability, ReturningClauseSupported }
 import io.getquill.util.Interleave
 import io.getquill.util.Messages.{ fail, trace }
 import io.getquill.idiom.Token
-import io.getquill.norm.{ ConcatBehavior, EqualityBehavior }
+import io.getquill.norm.EqualityBehavior
+import io.getquill.norm.ConcatBehavior
 import io.getquill.norm.ConcatBehavior.AnsiConcat
 import io.getquill.norm.EqualityBehavior.AnsiEquality
+import io.getquill.norm.ExpandReturning
 
 trait SqlIdiom extends Idiom {
 
@@ -21,6 +24,8 @@ trait SqlIdiom extends Idiom {
 
   protected def concatBehavior: ConcatBehavior = AnsiConcat
   protected def equalityBehavior: EqualityBehavior = AnsiEquality
+
+  protected def actionAlias: Option[Ident] = None
 
   def querifyAst(ast: Ast) = SqlQuery(ast)
 
@@ -60,6 +65,7 @@ trait SqlIdiom extends Idiom {
       case a: Infix           => a.token
       case a: Action          => a.token
       case a: Ident           => a.token
+      case a: ExternalIdent   => a.token
       case a: Property        => a.token
       case a: Value           => a.token
       case a: If              => a.token
@@ -313,7 +319,25 @@ trait SqlIdiom extends Idiom {
       }
     Tokenizer[Property] {
       case Property(ast, name) =>
+        // When we have things like Embedded tables, properties inside of one another needs to be un-nested.
+        // E.g. in `Property(Property(Ident("realTable"), embeddedTableAlias), realPropertyAlias)` the inner
+        // property needs to be unwrapped and the result of this should only be `realTable.realPropertyAlias`
+        // as opposed to `realTable.embeddedTableAlias.realPropertyAlias`.
         unnest(ast) match {
+          // When using ExternalIdent such as .returning(eid => eid.idColumn) clauses drop the 'eid' since SQL
+          // returning clauses have no alias for the original table. I.e. INSERT [...] RETURNING idColumn there's no
+          // alias you can assign to the INSERT [...] clause that can be used as a prefix to 'idColumn'.
+          // In this case, `Property(Property(Ident("realTable"), embeddedTableAlias), realPropertyAlias)`
+          // should just be `realPropertyAlias` as opposed to `realTable.realPropertyAlias`.
+          // The exception to this is when a Query inside of a RETURNING clause is used. In that case, assume
+          // that there is an alias for the inserted table (i.e. `INSERT ... as theAlias values ... RETURNING`)
+          // and the instances of ExternalIdent use it.
+          case (ExternalIdent(_), prefix) =>
+            stmt"${
+              actionAlias.map(alias => stmt"${scopedTokenizer(alias)}.").getOrElse(stmt"")
+            }${tokenizeColumn(strategy, prefix.mkString + name).token}"
+          // The normal case where `Property(Property(Ident("realTable"), embeddedTableAlias), realPropertyAlias)`
+          // becomes `realTable.realPropertyAlias`.
           case (ast, prefix) =>
             stmt"${scopedTokenizer(ast)}.${tokenizeColumn(strategy, prefix.mkString + name).token}"
         }
@@ -339,6 +363,9 @@ trait SqlIdiom extends Idiom {
   implicit def identTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Ident] =
     Tokenizer[Ident](e => strategy.default(e.name).token)
 
+  implicit def externalIdentTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[ExternalIdent] =
+    Tokenizer[ExternalIdent](e => strategy.default(e.name).token)
+
   implicit def assignmentTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Assignment] = Tokenizer[Assignment] {
     case Assignment(alias, prop, value) =>
       stmt"${prop.token} = ${scopedTokenizer(value)}"
@@ -360,6 +387,19 @@ trait SqlIdiom extends Idiom {
       case Property(_, name)                        => tokenizeColumn(strategy, name).token
     }
 
+  def returnListTokenizer(implicit tokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[List[Ast]] = {
+    val customAstTokenizer =
+      Tokenizer.withFallback[Ast](SqlIdiom.this.astTokenizer(_, strategy)) {
+        case sq: Query =>
+          stmt"(${tokenizer.token(sq)})"
+      }
+
+    Tokenizer[List[Ast]] {
+      case list =>
+        list.mkStmt(", ")(customAstTokenizer)
+    }
+  }
+
   protected def actionTokenizer(insertEntityTokenizer: Tokenizer[Entity])(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Action] =
     Tokenizer[Action] {
 
@@ -367,13 +407,13 @@ trait SqlIdiom extends Idiom {
         val table = insertEntityTokenizer.token(entity)
         val columns = assignments.map(_.property.token)
         val values = assignments.map(_.value)
-        stmt"INSERT $table (${columns.mkStmt(",")}) VALUES (${values.map(scopedTokenizer(_)).mkStmt(", ")})"
+        stmt"INSERT $table${actionAlias.map(alias => stmt" AS ${alias.token}").getOrElse(stmt"")} (${columns.mkStmt(",")}) VALUES (${values.map(scopedTokenizer(_)).mkStmt(", ")})"
 
       case Update(table: Entity, assignments) =>
-        stmt"UPDATE ${table.token} SET ${assignments.token}"
+        stmt"UPDATE ${table.token}${actionAlias.map(alias => stmt" AS ${alias.token}").getOrElse(stmt"")} SET ${assignments.token}"
 
       case Update(Filter(table: Entity, x, where), assignments) =>
-        stmt"UPDATE ${table.token} SET ${assignments.token} WHERE ${where.token}"
+        stmt"UPDATE ${table.token}${actionAlias.map(alias => stmt" AS ${alias.token}").getOrElse(stmt"")} SET ${assignments.token} WHERE ${where.token}"
 
       case Delete(Filter(table: Entity, x, where)) =>
         stmt"DELETE FROM ${table.token} WHERE ${where.token}"
@@ -381,11 +421,29 @@ trait SqlIdiom extends Idiom {
       case Delete(table: Entity) =>
         stmt"DELETE FROM ${table.token}"
 
-      case Returning(Insert(table: Entity, Nil), alias, prop) =>
-        stmt"INSERT INTO ${table.token} ${defaultAutoGeneratedToken(prop.token)}"
+      case r @ ReturningAction(Insert(table: Entity, Nil), alias, prop) =>
+        idiomReturningCapability match {
+          // If there are queries inside of the returning clause we are forced to alias the inserted table (see #1509). Only do this as
+          // a last resort since it is not even supported in all Postgres versions (i.e. only after 9.5)
+          case ReturningClauseSupported if (CollectAst.byType[Entity](prop).nonEmpty) =>
+            SqlIdiom.withActionAlias(this, r)
+          case ReturningClauseSupported =>
+            stmt"INSERT INTO ${table.token} ${defaultAutoGeneratedToken(prop.token)} RETURNING ${returnListTokenizer.token(ExpandReturning(r)(this, strategy).map(_._1))}"
+          case other =>
+            stmt"INSERT INTO ${table.token} ${defaultAutoGeneratedToken(prop.token)}"
+        }
 
-      case Returning(action, alias, prop) =>
-        action.token
+      case r @ ReturningAction(action, alias, prop) =>
+        idiomReturningCapability match {
+          // If there are queries inside of the returning clause we are forced to alias the inserted table (see #1509). Only do this as
+          // a last resort since it is not even supported in all Postgres versions (i.e. only after 9.5)
+          case ReturningClauseSupported if (CollectAst.byType[Entity](prop).nonEmpty) =>
+            SqlIdiom.withActionAlias(this, r)
+          case ReturningClauseSupported =>
+            stmt"${action.token} RETURNING ${returnListTokenizer.token(ExpandReturning(r)(this, strategy).map(_._1))}"
+          case other =>
+            stmt"${action.token}"
+        }
 
       case other =>
         fail(s"Action ast can't be translated to sql: '$other'")
@@ -402,4 +460,36 @@ trait SqlIdiom extends Idiom {
       case _: Tuple           => stmt"(${ast.token})"
       case _                  => ast.token
     }
+}
+
+object SqlIdiom {
+  private[getquill] def copyIdiom(parent: SqlIdiom, newActionAlias: Option[Ident]) =
+    new SqlIdiom {
+      override protected def actionAlias: Option[Ident] = newActionAlias
+      override def prepareForProbing(string: String): String = parent.prepareForProbing(string)
+      override def concatFunction: String = parent.concatFunction
+      override def liftingPlaceholder(index: Int): String = parent.liftingPlaceholder(index)
+      override def idiomReturningCapability: ReturningCapability = parent.idiomReturningCapability
+    }
+
+  /**
+   * Construct a new instance of the specified idiom with `newActionAlias` variable specified so that actions
+   * (i.e. insert, and update) will be rendered with the specified alias. This is needed for RETURNING clauses that have
+   * queries inside. See #1509 for details.
+   */
+  private[getquill] def withActionAlias(parentIdiom: SqlIdiom, query: ReturningAction)(implicit strategy: NamingStrategy) = {
+    val idiom = copyIdiom(parentIdiom, Some(query.alias))
+    import idiom._
+
+    implicit val stableTokenizer = idiom.astTokenizer(new Tokenizer[Ast] {
+      override def token(v: Ast): Token = astTokenizer(this, strategy).token(v)
+    }, strategy)
+
+    query match {
+      case r @ ReturningAction(Insert(table: Entity, Nil), alias, prop) =>
+        stmt"INSERT INTO ${table.token} AS ${alias.name.token} ${defaultAutoGeneratedToken(prop.token)} RETURNING ${returnListTokenizer.token(ExpandReturning(r)(idiom, strategy).map(_._1))}"
+      case r @ ReturningAction(action, alias, prop) =>
+        stmt"${action.token} RETURNING ${returnListTokenizer.token(ExpandReturning(r)(idiom, strategy).map(_._1))}"
+    }
+  }
 }

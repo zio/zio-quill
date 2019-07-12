@@ -1,8 +1,9 @@
 package io.getquill.context.jdbc
 
-import java.sql.{ Connection, JDBCType, PreparedStatement, ResultSet }
+import java.sql._
 
-import io.getquill.NamingStrategy
+import io.getquill._
+import io.getquill.ReturnAction._
 import io.getquill.context.sql.SqlContext
 import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.context.{ Context, ContextEffect }
@@ -44,12 +45,19 @@ trait JdbcContextBase[Dialect <: SqlIdiom, Naming <: NamingStrategy]
   def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): Result[T] =
     handleSingleWrappedResult(executeQuery(sql, prepare, extractor))
 
-  def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningColumn: String): Result[O] =
+  def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningBehavior: ReturnAction): Result[O] =
     withConnectionWrapped { conn =>
-      val (params, ps) = prepare(conn.prepareStatement(sql, Array(returningColumn)))
+      val (params, ps) = prepare(prepareWithReturning(sql, conn, returningBehavior))
       logger.logQuery(sql, params)
       ps.executeUpdate()
       handleSingleResult(extractResult(ps.getGeneratedKeys, extractor))
+    }
+
+  protected def prepareWithReturning(sql: String, conn: Connection, returningBehavior: ReturnAction) =
+    returningBehavior match {
+      case ReturnRecord           => conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)
+      case ReturnColumns(columns) => conn.prepareStatement(sql, columns.toArray)
+      case ReturnNothing          => conn.prepareStatement(sql)
     }
 
   def executeBatchAction(groups: List[BatchGroup]): Result[List[Long]] =
@@ -70,8 +78,8 @@ trait JdbcContextBase[Dialect <: SqlIdiom, Naming <: NamingStrategy]
   def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T]): Result[List[T]] =
     withConnectionWrapped { conn =>
       groups.flatMap {
-        case BatchGroupReturning(sql, column, prepare) =>
-          val ps = conn.prepareStatement(sql, Array(column))
+        case BatchGroupReturning(sql, returningBehavior, prepare) =>
+          val ps = prepareWithReturning(sql, conn, returningBehavior)
           logger.underlying.debug("Batch: {}", sql)
           prepare.foreach { f =>
             val (params, _) = f(ps)
