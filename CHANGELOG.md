@@ -1,3 +1,35 @@
+# 3.3.0
+
+- [Returning Record](https://github.com/getquill/quill/pull/1489)
+- [Change == and != to be Scala-idiomatic ](https://github.com/getquill/quill/pull/1453)
+- [Optimize === comparisons when ANSI behavior assumed](https://github.com/getquill/quill/pull/1454)
+- [API to get PreparedStatement from Query for Low Level Use-cases](https://github.com/getquill/quill/pull/1459)
+- [Add BoundStatement support for all context.](https://github.com/getquill/quill/pull/1425)
+- [Only decode when field is non-null](https://github.com/getquill/quill/pull/1514)
+- [Fix support of nested transactions in Finagle-Postgres](https://github.com/getquill/quill/pull/1501)
+- [Returning shadow fix](https://github.com/getquill/quill/pull/1509)
+- [Fix SQL Server Subqueries with Order By](https://github.com/getquill/quill/pull/1478)
+- [Explicitly pass AsyncContext type params](https://github.com/getquill/quill/pull/1457)
+- [Remove unneeded Tuple reduction clause](https://github.com/getquill/quill/pull/1481)
+- [Fix join subquery+map+distinct and sortBy+distinct](https://github.com/getquill/quill/pull/1462)
+- [Fix Java9 depreciation message](https://github.com/getquill/quill/pull/1504)
+
+Noteworthy Version Bumps:
+- monix - 3.0.0-RC3
+- cassandra-driver-core - 3.7.2
+- orientdb-graphdb - 3.0.21
+- postgresql - 42.2.6
+- sqlite-jdbc - 3.28.0
+
+Migration Notes:
+- The `returning` method no long excludes the specified ID column from the insertion as it used to.
+Use the `returningGenerated` method in order to achieve that.
+See the 'Database-generated values' section of the documentation for more detail.
+- The `==` method now works Scala-idiomatically.
+That means that when two `Option[T]`-wrapped columns are compared, `None == None` will now yield `true`.
+The `===` operator can be used in order to compare `Option[T]`-wrapped columns in a ANSI-SQL
+idiomatic way i.e. `None == None := false`. See the 'equals' section of the documentation for more detail.
+
 # 3.2.0
 
 - [Allow == for Option[T] and/or T columns](https://github.com/getquill/quill/pull/1437)
