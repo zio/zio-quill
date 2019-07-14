@@ -190,6 +190,9 @@ val debugMacro =
 def includeIfOracle[T](t:T):Seq[T] =
   if (includeOracle) Seq(t) else Seq()
 
+val skipTag =
+  sys.props.getOrElse("skipTag", "false").toBoolean
+
 lazy val `quill-jdbc` =
   (project in file("quill-jdbc"))
     .settings(commonSettings: _*)
@@ -569,9 +572,13 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ basicSettings ++
           setReleaseVersion,
           updateReadmeVersion(_._1),
           commitReleaseVersion,
-          //updateWebsiteTag,
-          //tagRelease,
-          publishArtifacts,
+        ) ++ (
+          skipTag match {
+            case true => Seq[ReleaseStep]()
+            case false => Seq[ReleaseStep](updateWebsiteTag, tagRelease)
+          }
+        ) ++ Seq(
+          publishArtifacts
           //setNextVersion,
           //updateReadmeVersion(_._2),
           //commitNextVersion,
