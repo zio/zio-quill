@@ -34,11 +34,11 @@ then
         $SBT_2_12 -Dmodules=codegen 'release with-defaults'
         $SBT_2_12 -Dmodules=bigdata 'release with-defaults'
 
-        $SBT_2_11 -Dmodules=base 'release with-defaults'
-        $SBT_2_11 -Dmodules=db 'release with-defaults'
-        $SBT_2_11 -Dmodules=async 'release with-defaults'
-        $SBT_2_11 -Dmodules=codegen 'release with-defaults'
-        $SBT_2_11 -Dmodules=bigdata 'release with-defaults'
+        $SBT_2_11 -Dmodules=base -DskipTag=true 'release with-defaults'
+        $SBT_2_11 -Dmodules=db -DskipTag=true 'release with-defaults'
+        $SBT_2_11 -Dmodules=async -DskipTag=true 'release with-defaults'
+        $SBT_2_11 -Dmodules=codegen -DskipTag=true 'release with-defaults'
+        $SBT_2_11 -Dmodules=bigdata -DskipTag=true 'release with-defaults'
 
     elif [[ $TRAVIS_BRANCH == "master" ]]
     then
