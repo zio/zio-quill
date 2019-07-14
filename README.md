@@ -1553,6 +1553,59 @@ val a =
 performIO(a.transactional) // note: transactional can be used outside of `performIO`
 ```
 
+### Getting a ResultSet
+
+Quill JDBC Contexts allow you to use `prepare` in order to get a low-level `ResultSet` that is useful
+for interacting with legacy APIs. This function  returns a `f: (Connection) => (PreparedStatement)` 
+closure as opposed to a `PreparedStatement` in order to guarantee that JDBC Exceptions are not
+thrown until you can wrap them into the appropriate Exception-handling mechanism (e.g.
+`try`/`catch`, `Try` etc...).
+
+```scala
+val q = quote {
+  query[Product].filter(_.id == 1)
+}
+val preparer: (Connection) => (PreparedStatement)  = ctx.prepare(q)
+// SELECT x1.id, x1.description, x1.sku FROM Product x1 WHERE x1.id = 1
+
+// Use ugly stateful code, bracketed effects, or try-with-resources here:
+var preparedStatement: PreparedStatement = _
+var resultSet: ResultSet = _
+
+try {
+  preparedStatement = preparer(myCustomDataSource.getConnection)
+  resultSet = preparedStatement.executeQuery()
+} catch {
+  case e: Exception =>
+    // Close the preparedStatement and catch possible exceptions
+    // Close the resultSet and catch possible exceptions
+}
+```
+
+The `prepare` function can also be used with `insert`, and `update` queries.
+
+```scala
+val q = quote {
+  query[Product].insert(lift(Product(1, "Desc", 123))
+}
+val preparer: (Connection) => (PreparedStatement)  = ctx.prepare(q)
+// INSERT INTO Product (id,description,sku) VALUES (?, ?, ?)
+```
+
+As well as with batch queries.
+> Make sure to first quote your batch query and then pass the result into the `prepare` function
+(as is done in the example below) or the Scala compiler may not type the output correctly
+[#1518](https://github.com/getquill/quill/issues/1518).
+
+```scala
+val q = quote {
+  liftQuery(products).foreach(e => query[Product].insert(e))
+}
+val preparers: Connection => List[PreparedStatement] = ctx.prepare(q)
+val preparedStatement: List[PreparedStatement] = preparers(jdbcConf.dataSource.getConnection)
+```
+
+
 ### Effect tracking
 
 The IO monad tracks the effects that a computation performs in its second type parameter:
