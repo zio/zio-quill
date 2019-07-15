@@ -184,6 +184,9 @@ lazy val `quill-codegen-tests` =
 val includeOracle =
   sys.props.getOrElse("oracle", "false").toBoolean
 
+val skipPush =
+  sys.props.getOrElse("skipPush", "false").toBoolean
+
 val debugMacro =
   sys.props.getOrElse("debugMacro", "false").toBoolean
 
@@ -549,6 +552,15 @@ lazy val basicSettings = Seq(
   scoverage.ScoverageKeys.coverageFailOnMinimum := false
 )
 
+def doOnDefault(steps: ReleaseStep*): Seq[ReleaseStep] =
+  Seq[ReleaseStep](steps: _*)
+
+def doOnPush(steps: ReleaseStep*): Seq[ReleaseStep] =
+  if (skipPush)
+    Seq[ReleaseStep]()
+  else
+    Seq[ReleaseStep](steps: _*)
+
 lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ basicSettings ++ Seq(
   releasePublishArtifactsAction := PgpKeys.publishSigned.value,
   publishMavenStyle := true,
@@ -565,35 +577,27 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ basicSettings ++
   releaseProcess := {
     CrossVersion.partialVersion(scalaVersion.value) match {
       case Some((2, 11)) =>
-        Seq[ReleaseStep](
-          checkSnapshotDependencies,
-          inquireVersions,
-          runClean,
-          setReleaseVersion,
-          updateReadmeVersion(_._1),
-          commitReleaseVersion,
-        ) ++ (
-          skipTag match {
-            case true => Seq[ReleaseStep]()
-            case false => Seq[ReleaseStep](updateWebsiteTag, tagRelease)
-          }
-        ) ++ Seq(
-          publishArtifacts
-          //setNextVersion,
-          //updateReadmeVersion(_._2),
-          //commitNextVersion,
-          //releaseStepCommand("sonatypeReleaseAll"),
-          //pushChanges
-        )
+        doOnDefault(checkSnapshotDependencies) ++
+        doOnDefault(inquireVersions) ++
+        doOnDefault(runClean) ++
+        doOnDefault(setReleaseVersion) ++
+        doOnDefault(updateReadmeVersion(_._1)) ++
+        doOnPush   (commitReleaseVersion) ++
+        doOnPush   (updateWebsiteTag) ++
+        doOnPush   (tagRelease) ++
+        doOnDefault(publishArtifacts) ++
+        doOnPush   (setNextVersion) ++
+        doOnPush   (updateReadmeVersion(_._2)) ++
+        doOnPush   (commitNextVersion) ++
+        //doOnPush(releaseStepCommand("sonatypeReleaseAll")) ++
+        doOnPush   (pushChanges)
       case Some((2, 12)) =>
-        Seq[ReleaseStep](
-          checkSnapshotDependencies,
-          inquireVersions,
-          runClean,
-          setReleaseVersion,
-          publishArtifacts,
-          //releaseStepCommand("sonatypeReleaseAll")
-        )
+        doOnDefault(checkSnapshotDependencies) ++
+        doOnDefault(inquireVersions) ++
+        doOnDefault(runClean) ++
+        doOnDefault(setReleaseVersion) ++
+        doOnDefault(publishArtifacts)
+        //doOnPush   ("sonatypeReleaseAll") ++
       case _ => Seq[ReleaseStep]()
     }
   },
