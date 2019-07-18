@@ -355,7 +355,7 @@ lazy val `quill-orientdb` =
       .settings(
         fork in Test := true,
         libraryDependencies ++= Seq(
-          "com.orientechnologies" % "orientdb-graphdb" % "3.0.21"
+          "com.orientechnologies" % "orientdb-graphdb" % "3.0.22"
         )
       )
       .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -450,7 +450,7 @@ lazy val jdbcTestingSettings = Seq(
         "org.postgresql"          %  "postgresql"              % "42.2.6"             % Test,
         "org.xerial"              %  "sqlite-jdbc"             % "3.28.0"           % Test,
         "com.microsoft.sqlserver" %  "mssql-jdbc"              % "7.1.1.jre8-preview" % Test,
-        "org.mockito"             %% "mockito-scala-scalatest" % "1.5.11"              % Test
+        "org.mockito"             %% "mockito-scala-scalatest" % "1.5.12"              % Test
       )
 
     deps ++ includeIfOracle(
