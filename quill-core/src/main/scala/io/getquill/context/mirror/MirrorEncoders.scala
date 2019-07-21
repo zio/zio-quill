@@ -31,6 +31,7 @@ trait MirrorEncoders {
     })
 
   implicit val stringEncoder: Encoder[String] = encoder[String]
+  implicit val charEncoder: Encoder[Char] = encoder[Char]
   implicit val bigDecimalEncoder: Encoder[BigDecimal] = encoder[BigDecimal]
   implicit val booleanEncoder: Encoder[Boolean] = encoder[Boolean]
   implicit val byteEncoder: Encoder[Byte] = encoder[Byte]

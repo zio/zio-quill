@@ -38,6 +38,7 @@ CREATE TABLE EncodingTestEntity(
     v12 VARCHAR(255),
     v13 DATE,
     v14 VARCHAR(255),
+    v15 VARCHAR(1),
     o1 VARCHAR(255),
     o2 DECIMAL(5,2),
     o3 BIT,
@@ -52,7 +53,8 @@ CREATE TABLE EncodingTestEntity(
     o12 VARCHAR(255),
     o13 DATE,
     o14 VARCHAR(255),
-    o15 VARCHAR(255)
+    o15 VARCHAR(255),
+    o16 VARCHAR(1)
 );
 
 CREATE TABLE TestEntity(

@@ -36,6 +36,8 @@ trait Encoders extends CollectionEncoders {
     CassandraEncoder(mappedBaseEncoder(mapped, encoder.encoder))
 
   implicit val stringEncoder: Encoder[String] = encoder(_.setString)
+  implicit val charEncoder: Encoder[Char] = encoder((index, value, row) =>
+    row.setString(index, String.valueOf(value)))
   implicit val bigDecimalEncoder: Encoder[BigDecimal] =
     encoder((index, value, row) => row.setDecimal(index, value.bigDecimal))
   implicit val booleanEncoder: Encoder[Boolean] = encoder(_.setBool)

@@ -24,6 +24,7 @@ trait EncodingSpec extends Spec {
     v9:  Double,
     v10: Array[Byte],
     v11: Date,
+    v12: Char,
     o1:  Option[String],
     o2:  Option[BigDecimal],
     o3:  Option[Boolean],
@@ -34,7 +35,8 @@ trait EncodingSpec extends Spec {
     o8:  Option[Float],
     o9:  Option[Double],
     o10: Option[Array[Byte]],
-    o11: Option[Date]
+    o11: Option[Date],
+    o12: Option[Char]
   )
 
   val delete = quote {
@@ -53,6 +55,7 @@ trait EncodingSpec extends Spec {
     v9: Double,
     v10: Array[Byte],
     v11: Date,
+    v12: Char,
     o1: Option[String],
     o2: Option[BigDecimal],
     o3: Option[Boolean],
@@ -63,7 +66,8 @@ trait EncodingSpec extends Spec {
     o8: Option[Float],
     o9: Option[Double],
     o10: Option[Array[Byte]],
-    o11: Option[Date]) =>
+    o11: Option[Date],
+    o12: Option[Char]) =>
       query[EncodingTestEntity].insert(
         _.v1 -> v1,
         _.v2 -> v2,
@@ -76,6 +80,7 @@ trait EncodingSpec extends Spec {
         _.v9 -> v9,
         _.v10 -> v10,
         _.v11 -> v11,
+        _.v12 -> v12,
         _.o1 -> o1,
         _.o2 -> o2,
         _.o3 -> o3,
@@ -86,7 +91,8 @@ trait EncodingSpec extends Spec {
         _.o8 -> o8,
         _.o9 -> o9,
         _.o10 -> o10,
-        _.o11 -> o11
+        _.o11 -> o11,
+        _.o12 -> o12
       )
   }
 
@@ -104,6 +110,7 @@ trait EncodingSpec extends Spec {
         42d,
         Array(1.toByte, 2.toByte),
         new Date(31200000),
+        'c',
         Some("s"),
         Some(BigDecimal(1.1)),
         Some(true),
@@ -114,7 +121,8 @@ trait EncodingSpec extends Spec {
         Some(34.4f),
         Some(42d),
         Some(Array(1.toByte, 2.toByte)),
-        Some(new Date(31200000))
+        Some(new Date(31200000)),
+        Some('c')
       ),
       ("",
         BigDecimal(0),
@@ -127,6 +135,8 @@ trait EncodingSpec extends Spec {
         0D,
         Array(),
         new Date(0),
+        '\0',
+        None,
         None,
         None,
         None,
@@ -156,6 +166,7 @@ trait EncodingSpec extends Spec {
         e1.v9 mustEqual 42d
         e1.v10.toList mustEqual List(1.toByte, 2.toByte)
         e1.v11 mustEqual new Date(31200000)
+        e1.v12 mustEqual 'c'
 
         e1.o1 mustEqual Some("s")
         e1.o2 mustEqual Some(BigDecimal(1.1))
@@ -168,6 +179,7 @@ trait EncodingSpec extends Spec {
         e1.o9 mustEqual Some(42d)
         e1.o10.map(_.toList) mustEqual Some(List(1.toByte, 2.toByte))
         e1.o11 mustEqual Some(new Date(31200000))
+        e1.o12 mustEqual Some('c')
 
         e2.v1 mustEqual ""
         e2.v2 mustEqual BigDecimal(0)
@@ -180,6 +192,7 @@ trait EncodingSpec extends Spec {
         e2.v9 mustEqual 0d
         e2.v10.toList mustEqual Nil
         e2.v11 mustEqual new Date(0)
+        e2.v12 mustEqual '\0'
 
         e2.o1 mustEqual None
         e2.o2 mustEqual None
@@ -192,5 +205,6 @@ trait EncodingSpec extends Spec {
         e2.o9 mustEqual None
         e2.o10.map(_.toList) mustEqual None
         e2.o11 mustEqual None
+        e2.o12 mustEqual None
     }
 }

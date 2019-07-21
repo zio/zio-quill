@@ -22,12 +22,13 @@ trait ArrayEncodingBaseSpec extends Spec with BeforeAndAfterEach {
     floats:     Seq[Float],
     doubles:    Seq[Double],
     timestamps: Seq[Date],
-    dates:      Seq[LocalDate]
+    dates:      Seq[LocalDate],
+    chars:      Seq[Char]
   )
 
   val e = ArraysTestEntity(List("test"), Seq(BigDecimal(2.33)), Vector(true, true), ListBuffer(1),
     IndexedSeq(3), Seq(2), Seq(1, 2, 3), Seq(1f, 2f), Seq(4d, 3d),
-    Seq(new Date(System.currentTimeMillis())), Seq(LocalDate.now()))
+    Seq(new Date(System.currentTimeMillis())), Seq(LocalDate.now()), Seq('a', 'b'))
 
   // casting types can be dangerous so we need to ensure that everything is ok
   def baseEntityDeepCheck(e1: ArraysTestEntity, e2: ArraysTestEntity): Assertion = {
@@ -42,6 +43,7 @@ trait ArrayEncodingBaseSpec extends Spec with BeforeAndAfterEach {
     e1.doubles.head mustBe e2.doubles.head
     e1.timestamps.head mustBe e2.timestamps.head
     e1.dates.head mustBe e2.dates.head
+    e1.chars.head mustBe e2.chars.head
   }
 
   // Support Seq encoding basing on MappedEncoding

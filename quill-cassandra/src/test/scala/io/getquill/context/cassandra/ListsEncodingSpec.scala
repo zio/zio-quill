@@ -21,11 +21,12 @@ class ListsEncodingSpec extends CollectionsSpec {
     doubles:    List[Double],
     dates:      List[LocalDate],
     timestamps: List[Date],
-    uuids:      List[UUID]
+    uuids:      List[UUID],
+    chars:      List[Char]
   )
   val e = ListsEntity(1, List("c"), List(BigDecimal(1.33)), List(true), List(0, 1), List(3, 2), List(1, 2), List(2, 3),
     List(1f, 3f), List(5d), List(LocalDate.fromMillisSinceEpoch(System.currentTimeMillis())),
-    List(new Date), List(UUID.randomUUID()))
+    List(new Date), List(UUID.randomUUID()), List('c'))
   val q = quote(query[ListsEntity])
 
   "List encoders/decoders for CassandraTypes and CassandraMappers" in {

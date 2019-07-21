@@ -44,7 +44,6 @@ trait Encoders {
     })
 
   private[this] val nullEncoder: Encoder[Null] = encoder[Null](SqlTypes.NULL)
-
   implicit val stringEncoder: Encoder[String] = encoder[String](SqlTypes.VARCHAR)
   implicit val bigDecimalEncoder: Encoder[BigDecimal] = encoder[BigDecimal](SqlTypes.REAL)
   implicit val booleanEncoder: Encoder[Boolean] = encoder[Boolean](SqlTypes.BOOLEAN)
@@ -59,6 +58,10 @@ trait Encoders {
   implicit val jodaLocalDateEncoder: Encoder[JodaLocalDate] = encoder[JodaLocalDate](SqlTypes.DATE)
   implicit val jodaLocalDateTimeEncoder: Encoder[JodaLocalDateTime] = encoder[JodaLocalDateTime](SqlTypes.TIMESTAMP)
   implicit val dateEncoder: Encoder[Date] = encoder[Date]((d: Date) => new JodaLocalDateTime(d), SqlTypes.TIMESTAMP)
+
+  implicit val encodeChar: MappedEncoding[Char, String] =
+    MappedEncoding(c => String.valueOf(c))
+  implicit val charEncoder: Encoder[Char] = mappedEncoder(encodeChar, stringEncoder)
 
   implicit val encodeZonedDateTime: MappedEncoding[ZonedDateTime, JodaDateTime] =
     MappedEncoding(zdt => new JodaDateTime(zdt.toInstant.toEpochMilli, JodaDateTimeZone.forID(zdt.getZone.getId)))

@@ -42,6 +42,12 @@ trait Decoders extends CollectionDecoders {
   implicit val stringDecoder: Decoder[String] = decoder((index, row) => {
     row.field[String](row.fieldNames()(index))
   })
+  implicit val charDecoder: Decoder[Char] = decoder((index, row) => {
+    val str = row.field[String](row.fieldNames()(index))
+    if (str.length != 1)
+      throw new IllegalStateException(s"""The column number ${index} is being decoded as a Char but it's value "${str}" does not have one character as is required (${str.length} characters).""")
+    str.charAt(0)
+  })
   implicit val doubleDecoder: Decoder[Double] = decoder((index, row) => row.field[Double](row.fieldNames()(index)))
   implicit val bigDecimalDecoder: Decoder[BigDecimal] = decoder((index, row) => row.field[java.math.BigDecimal](row.fieldNames()(index)))
   implicit val booleanDecoder: Decoder[Boolean] = decoder((index, row) => row.field[Boolean](row.fieldNames()(index)))

@@ -13,11 +13,12 @@ class SetsEncodingSpec extends Spec {
     ints:       Set[Int],
     longs:      Set[Long],
     doubles:    Set[Double],
-    timestamps: Set[Date]
+    timestamps: Set[Date],
+    chars:      Set[Char]
   )
 
   val e = SetsEntity(1, Set("c"), Set(true), Set(1), Set(2),
-    Set(5.5d), Set(new Date()))
+    Set(5.5d), Set(new Date()), Set('c'))
 
   private def verify(expected: SetsEntity, actual: SetsEntity): Boolean = {
     expected.id mustEqual actual.id
@@ -26,6 +27,7 @@ class SetsEncodingSpec extends Spec {
     expected.ints mustEqual actual.ints
     expected.longs mustEqual actual.longs
     expected.doubles mustEqual actual.doubles
+    expected.chars mustEqual actual.chars
     expected.timestamps.isInstanceOf[Date]
   }
 

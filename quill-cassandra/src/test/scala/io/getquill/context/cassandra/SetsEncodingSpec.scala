@@ -19,11 +19,12 @@ class SetsEncodingSpec extends CollectionsSpec {
     doubles:    Set[Double],
     dates:      Set[LocalDate],
     timestamps: Set[Date],
-    uuids:      Set[UUID]
+    uuids:      Set[UUID],
+    chars:      Set[Char]
   )
   val e = SetsEntity(1, Set("c"), Set(BigDecimal(1.33)), Set(true), Set(1, 2), Set(2, 3), Set(1f, 3f),
     Set(5d), Set(LocalDate.fromMillisSinceEpoch(System.currentTimeMillis())),
-    Set(new Date), Set(UUID.randomUUID()))
+    Set(new Date), Set(UUID.randomUUID()), Set('a', 'b'))
   val q = quote(query[SetsEntity])
 
   "Set encoders/decoders" in {

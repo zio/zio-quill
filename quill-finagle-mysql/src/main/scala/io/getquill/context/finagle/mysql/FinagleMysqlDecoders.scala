@@ -40,6 +40,18 @@ trait FinagleMysqlDecoders {
     decoder[String] {
       case StringValue(v) => v
     }
+  implicit val charDecoder: Decoder[Char] =
+    FinangleMysqlDecoder((index, row) => {
+      row.values(index) match {
+        case strVal: StringValue =>
+          val str = strVal.s
+          if (str.length != 1)
+            throw new IllegalStateException(s"""The column number ${index} is being decoded as a Char but it's value "${str}" does not have one character as is required (${str.length} characters).""")
+          str.charAt(0)
+        case other =>
+          throw new IllegalStateException(s"""The column number ${index} is being decoded as a Char but it's value was not StringValue as is required. It was ${other}.""")
+      }
+    })
   implicit val bigDecimalDecoder: Decoder[BigDecimal] =
     decoder[BigDecimal] {
       case BigDecimalValue(v) => v
