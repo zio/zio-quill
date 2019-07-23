@@ -24,7 +24,7 @@ trait Unliftables {
     case q"$pack.BinaryOperation.apply(${ a: Ast }, ${ b: BinaryOperator }, ${ c: Ast })" => BinaryOperation(a, b, c)
     case q"$pack.UnaryOperation.apply(${ a: UnaryOperator }, ${ b: Ast })" => UnaryOperation(a, b)
     case q"$pack.Aggregation.apply(${ a: AggregationOperator }, ${ b: Ast })" => Aggregation(a, b)
-    case q"$pack.Infix.apply(${ a: List[String] }, ${ b: List[Ast] })" => Infix(a, b)
+    case q"$pack.Infix.apply(${ a: List[String] }, ${ b: List[Ast] }, ${ pure: Boolean })" => Infix(a, b, pure)
     case q"$pack.If.apply(${ a: Ast }, ${ b: Ast }, ${ c: Ast })" => If(a, b, c)
     case q"$pack.OnConflict.Excluded.apply(${ a: Ident })" => OnConflict.Excluded(a)
     case q"$pack.OnConflict.Existing.apply(${ a: Ident })" => OnConflict.Existing(a)

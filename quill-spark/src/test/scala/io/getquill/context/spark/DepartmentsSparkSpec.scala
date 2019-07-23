@@ -47,26 +47,26 @@ class DepartmentsSparkSpec extends Spec {
     ).toDS
   }
 
-  "Example 8 - nested naive" in {
-    val q = quote {
-      (u: String) =>
-        for {
-          d <- departments if (
-            (for {
-              e <- employees if (
-                e.dpt == d.dpt && (
-                  for {
-                    t <- tasks if (e.emp == t.emp && t.tsk == u)
-                  } yield {}
-                ).isEmpty
-              )
-            } yield {}).isEmpty
-          )
-        } yield d.dpt
-    }
-    testContext.run(q("abstract")).collect().toList mustEqual
-      List("Quality", "Research")
-  }
+//  "Example 8 - nested naive" in {
+//    val q = quote {
+//      (u: String) =>
+//        for {
+//          d <- departments if (
+//            (for {
+//              e <- employees if (
+//                e.dpt == d.dpt && (
+//                  for {
+//                    t <- tasks if (e.emp == t.emp && t.tsk == u)
+//                  } yield {}
+//                ).isEmpty
+//              )
+//            } yield {}).isEmpty
+//          )
+//        } yield d.dpt
+//    }
+//    testContext.run(q("abstract")).collect().toList mustEqual
+//      List("Quality", "Research")
+//  }
 
   "Example 9 - nested db" in {
     val q = {

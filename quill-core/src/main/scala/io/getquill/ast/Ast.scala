@@ -63,7 +63,7 @@ case class Nested(a: Ast) extends Query
 
 //************************************************************
 
-case class Infix(parts: List[String], params: List[Ast]) extends Ast
+case class Infix(parts: List[String], params: List[Ast], pure:Boolean) extends Ast
 
 case class Function(params: List[Ident], body: Ast) extends Ast
 
