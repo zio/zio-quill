@@ -7,12 +7,32 @@ object ApplyMap {
   private def isomorphic(e: Ast, c: Ast, alias: Ident) =
     BetaReduction(e, alias -> c) == c
 
+  object InfixedTailOperation {
+
+    def hasImpureInfix(ast: Ast) =
+      CollectAst(ast) {
+        case i @ Infix(_, _, false) => i
+      }.nonEmpty
+
+    def unapply(ast: Ast): Option[Ast] =
+      ast match {
+        case cc: CaseClass if hasImpureInfix(cc)     => Some(cc)
+        case tup: Tuple if hasImpureInfix(tup)       => Some(tup)
+        case p: Property if hasImpureInfix(p)        => Some(p)
+        case b: BinaryOperation if hasImpureInfix(b) => Some(b)
+        case u: UnaryOperation if hasImpureInfix(u)  => Some(u)
+        case i @ Infix(_, _, false)                  => Some(i)
+        case _                                       => None
+      }
+  }
+
   object DetachableMap {
     def unapply(ast: Ast): Option[(Ast, Ident, Ast)] =
       ast match {
-        case Map(a: GroupBy, b, c) => None
-        case Map(a, b, c)          => Some((a, b, c))
-        case _                     => None
+        case Map(a: GroupBy, b, c)              => None
+        case Map(a, b, InfixedTailOperation(c)) => None
+        case Map(a, b, c)                       => Some((a, b, c))
+        case _                                  => None
       }
   }
 
