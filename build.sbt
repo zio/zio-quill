@@ -94,7 +94,10 @@ lazy val `quill-core` =
       "org.scala-lang"             %  "scala-reflect" % scalaVersion.value
     ))
     .jsSettings(
-      libraryDependencies += "org.scala-js" %%% "scalajs-java-time" % "0.2.5",
+      libraryDependencies ++= Seq(
+        "com.lihaoyi" %%% "pprint" % "0.5.4",
+        "org.scala-js" %%% "scalajs-java-time" % "0.2.5"
+      ),
       coverageExcludedPackages := ".*"
     )
 
@@ -514,6 +517,7 @@ lazy val basicSettings = Seq(
   scalaVersion := "2.11.12",
   crossScalaVersions := Seq("2.11.12","2.12.7"),
   libraryDependencies ++= Seq(
+    "com.lihaoyi"     %% "pprint"         % "0.5.4",
     "org.scalamacros" %% "resetallattrs"  % "1.0.0",
     "org.scalatest"   %%% "scalatest"     % "3.0.8"          % Test,
     "ch.qos.logback"  % "logback-classic" % "1.2.3"          % Test,
