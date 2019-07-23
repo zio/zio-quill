@@ -184,6 +184,9 @@ lazy val `quill-codegen-tests` =
 val includeOracle =
   sys.props.getOrElse("oracle", "false").toBoolean
 
+val excludeTests =
+  sys.props.getOrElse("excludeTests", "false").toBoolean
+
 val skipPush =
   sys.props.getOrElse("skipPush", "false").toBoolean
 
@@ -457,15 +460,35 @@ lazy val jdbcTestingSettings = Seq(
       "com.oracle.jdbc" % "ojdbc8" % "18.3.0.0.0" % Test
     )
   },
-  excludeFilter in unmanagedSources := excludePathsIfOracle {
-    (unmanagedSourceDirectories in Test).value.map { dir =>
-      (dir / "io" / "getquill" / "context" / "jdbc" / "oracle").getCanonicalPath
-    } ++
-    (unmanagedSourceDirectories in Test).value.map { dir =>
-        (dir / "io" / "getquill" / "oracle").getCanonicalPath
+  excludeFilter in unmanagedSources := {
+    excludeTests match {
+      case true =>
+        excludePaths((unmanagedSourceDirectories in Test).value.map(dir => dir.getCanonicalPath))
+      case false =>
+        excludePathsIfOracle {
+          (unmanagedSourceDirectories in Test).value.map { dir =>
+            (dir / "io" / "getquill" / "context" / "jdbc" / "oracle").getCanonicalPath
+          } ++
+            (unmanagedSourceDirectories in Test).value.map { dir =>
+              (dir / "io" / "getquill" / "oracle").getCanonicalPath
+            }
+        }
     }
   }
 )
+
+def excludePaths(paths:Seq[String]) = {
+  val excludeThisPath =
+    (path: String) =>
+      paths.exists { srcDir =>
+        (path contains srcDir)
+      }
+  new SimpleFileFilter(file => {
+    if (excludeThisPath(file.getCanonicalPath))
+      println(s"Excluding: ${file.getCanonicalPath}")
+    excludeThisPath(file.getCanonicalPath)
+  })
+}
 
 def excludePathsIfOracle(paths:Seq[String]) = {
   val excludeThisPath =
@@ -475,12 +498,18 @@ def excludePathsIfOracle(paths:Seq[String]) = {
       }
   new SimpleFileFilter(file => {
     if (excludeThisPath(file.getCanonicalPath))
-      println(s"Excluding: ${file.getCanonicalPath}")
+      println(s"Excluding Oracle Related File: ${file.getCanonicalPath}")
     excludeThisPath(file.getCanonicalPath)
   })
 }
 
 lazy val basicSettings = Seq(
+  excludeFilter in unmanagedSources := {
+    excludeTests match {
+      case true  => excludePaths((unmanagedSourceDirectories in Test).value.map(dir => dir.getCanonicalPath))
+      case false => new SimpleFileFilter(file => false)
+    }
+  },
   organization := "io.getquill",
   scalaVersion := "2.11.12",
   crossScalaVersions := Seq("2.11.12","2.12.7"),
