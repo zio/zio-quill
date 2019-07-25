@@ -2011,6 +2011,57 @@ ctx.run(a)
 
 The `forUpdate` quotation can be reused for multiple queries.
 
+Queries that contain `infix` will generally not be flattened since it is not assumed that the contents
+of the infix are a pure function.
+> Since SQL is typically less performant when there are many nested queries,
+be careful with the use of `infix` in queries that have multiple `map`+`filter` clauses.
+
+```scala
+case class Data(id: Int)
+case class DataAndRandom(id: Int, value: Int)
+
+// This should be alright:
+val q = quote {
+  query[Data].map(e => DataAndRandom(e.id, infix"RAND()".as[Int])).filter(r => r.value <= 10)
+}
+run(q)
+// SELECT e.id, e.value FROM (SELECT RAND() AS value, e.id AS id FROM Data e) AS e WHERE e.value <= 10
+
+// This might not be:
+val q = quote {
+  query[Data]
+    .map(e => DataAndRandom(e.id, infix"SOME_UDF(${e.id})".as[Int]))
+    .filter(r => r.value <= 10)
+    .map(e => DataAndRandom(e.id, infix"SOME_OTHER_UDF(${e.value})".as[Int]))
+    .filter(r => r.value <= 100)
+}
+// Produces too many layers of nesting!
+run(q)
+// SELECT e.id, e.value FROM (
+//   SELECT SOME_OTHER_UDF(e.value) AS value, e.id AS id FROM (
+//     SELECT SOME_UDF(e.id) AS value, e.id AS id FROM Data e
+//   ) AS e WHERE e.value <= 10
+// ) AS e WHERE e.value <= 100
+```
+
+If you are sure that the the content of your infix is a pure function, you canse use the `pure` method
+in order to indicate to Quill that the infix clause can be copied in the query. This gives Quill much
+more leeway to flatten your query, possibly improving performance.
+
+```scala
+val q = quote {
+  query[Data]
+    .map(e => DataAndRandom(e.id, infix"SOME_UDF(${e.id})".pure.as[Int]))
+    .filter(r => r.value <= 10)
+    .map(e => DataAndRandom(e.id, infix"SOME_OTHER_UDF(${e.value})".pure.as[Int]))
+    .filter(r => r.value <= 100)
+}
+// Copying SOME_UDF and SOME_OTHER_UDF allows the query to be completely flattened.
+run(q)
+// SELECT e.id, SOME_OTHER_UDF(SOME_UDF(e.id)) FROM Data e 
+// WHERE SOME_UDF(e.id) <= 10 AND SOME_OTHER_UDF(SOME_UDF(e.id)) <= 100
+```
+
 ### Dynamic infix
 
 Infix supports runtime string values through the `#$` prefix. Example:
