@@ -32,13 +32,13 @@ then
         $SBT_2_12 -Dmodules=db -DskipPush=true 'release with-defaults'
         $SBT_2_12 -Dmodules=async -DskipPush=true 'release with-defaults'
         $SBT_2_12 -Dmodules=codegen -DskipPush=true 'release with-defaults'
-        $SBT_2_12 -Dmodules=bigdata 'release with-defaults default-tag-exists-answer o'
+        $SBT_2_12 -Dmodules=bigdata 'release with-defaults default-tag-exists-answer o' || cat version.sbt
 
         $SBT_2_11 -Dmodules=base -DskipPush=true 'release with-defaults'
         $SBT_2_11 -Dmodules=db -DskipPush=true 'release with-defaults'
         $SBT_2_11 -Dmodules=async -DskipPush=true 'release with-defaults'
         $SBT_2_11 -Dmodules=codegen -DskipPush=true 'release with-defaults'
-        $SBT_2_11 -Dmodules=bigdata 'release with-defaults default-tag-exists-answer o'
+        $SBT_2_11 -Dmodules=bigdata 'release with-defaults default-tag-exists-answer o' || cat version.sbt
 
     elif [[ $TRAVIS_BRANCH == "master" ]]
     then
