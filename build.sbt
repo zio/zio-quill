@@ -613,7 +613,7 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ basicSettings ++
         doOnDefault(checkSnapshotDependencies) ++
         doOnDefault(inquireVersions) ++
         doOnDefault(runClean) ++
-        doOnPush   (setReleaseVersion) ++
+        //doOnPush   (setReleaseVersion) ++
         doOnDefault(updateReadmeVersion(_._1)) ++
         doOnPush   (commitReleaseVersion) ++
         doOnPush   (updateWebsiteTag) ++
