@@ -20,7 +20,7 @@ class FlattenOptionOperation(concatBehavior: ConcatBehavior) extends StatelessTr
   def containsNonFallthroughElement(ast: Ast) =
     CollectAst(ast) {
       case If(_, _, _) => true
-      case Infix(_, _) => true
+      case Infix(_, _, _) => true
       case BinaryOperation(_, StringOperator.`+`, _) if (concatBehavior == NonAnsiConcat) => true
     }.nonEmpty
 

@@ -208,9 +208,15 @@ class StatelessTransformerSpec extends Spec {
     }
 
     "infix" in {
-      val ast: Ast = Infix(List("test"), List(Ident("a"), Ident("b")))
+      val ast: Ast = Infix(List("test"), List(Ident("a"), Ident("b")), false)
       Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"))(ast) mustEqual
-        Infix(List("test"), List(Ident("a'"), Ident("b'")))
+        Infix(List("test"), List(Ident("a'"), Ident("b'")), false)
+    }
+
+    "infix - pure" in {
+      val ast: Ast = Infix(List("test"), List(Ident("a"), Ident("b")), true)
+      Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"))(ast) mustEqual
+        Infix(List("test"), List(Ident("a'"), Ident("b'")), true)
     }
 
     "option operation" - {
