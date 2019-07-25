@@ -1,3 +1,13 @@
+# 3.4.0
+
+- [Nest queries with infix values to allow infix-impurity](https://github.com/getquill/quill/pull/1534)
+
+Migration Notes:
+- Infixes are now not treated as pure functions by default. This means wherever they are used, nested queries may be created.
+You can use `.pure` (e.g. `infix"MY_PURE_UDF".pure.as[T]`) to revert to the previous behavior. See the 
+[Infix](https://github.com/getquill/quill/tree/36842c4801c95a7609ba94c450645f3c022b3e2e#infix) 
+section of the documentation for more detail.
+
 # 3.3.0
 
 - [Returning Record](https://github.com/getquill/quill/pull/1489)
