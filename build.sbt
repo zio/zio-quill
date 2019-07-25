@@ -613,22 +613,22 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ basicSettings ++
         doOnDefault(checkSnapshotDependencies) ++
         doOnDefault(inquireVersions) ++
         doOnDefault(runClean) ++
-        //doOnPush   (setReleaseVersion) ++
+        doOnPush   (setReleaseVersion) ++
         doOnDefault(updateReadmeVersion(_._1)) ++
-        //doOnPush   (commitReleaseVersion) ++
-        //doOnPush   (updateWebsiteTag) ++
-        //doOnPush   (tagRelease) ++
+        doOnPush   (commitReleaseVersion) ++
+        doOnPush   (updateWebsiteTag) ++
+        doOnPush   (tagRelease) ++
         doOnDefault(publishArtifacts) ++
-        //doOnPush   (setNextVersion) ++
+        doOnPush   (setNextVersion) ++
         doOnPush   (updateReadmeVersion(_._2)) ++
-        //doOnPush   (commitNextVersion) ++
+        doOnPush   (commitNextVersion) ++
         //doOnPush(releaseStepCommand("sonatypeReleaseAll")) ++
         doOnPush   (pushChanges)
       case Some((2, 12)) =>
         doOnDefault(checkSnapshotDependencies) ++
         doOnDefault(inquireVersions) ++
         doOnDefault(runClean) ++
-        //doOnPush   (setReleaseVersion) ++
+        doOnPush   (setReleaseVersion) ++
         doOnDefault(publishArtifacts)
         //doOnPush   ("sonatypeReleaseAll") ++
       case _ => Seq[ReleaseStep]()
