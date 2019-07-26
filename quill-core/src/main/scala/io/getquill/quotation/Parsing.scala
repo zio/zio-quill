@@ -275,12 +275,19 @@ trait Parsing extends ValueComputation {
   }
 
   val infixParser: Parser[Ast] = Parser[Ast] {
+    case q"$infix.pure.as[$t]" =>
+      combinedInfixParser(true)(infix)
     case q"$infix.as[$t]" =>
-      infixParser(infix)
+      combinedInfixParser(false)(infix)
+    case `impureInfixParser`(value) =>
+      value
+  }
+
+  val impureInfixParser = combinedInfixParser(false)
+
+  def combinedInfixParser(infixIsPure: Boolean): Parser[Ast] = Parser[Ast] {
     case q"$pack.InfixInterpolator(scala.StringContext.apply(..${ parts: List[String] })).infix(..$params)" =>
-
       if (parts.find(_.endsWith("#")).isDefined) {
-
         val elements =
           parts.zipWithIndex.flatMap {
             case (part, idx) if idx < params.length =>
@@ -313,12 +320,12 @@ trait Parsing extends ValueComputation {
         Dynamic {
           c.typecheck(q"""
             new ${c.prefix}.Quoted[Any] {
-              override def ast = io.getquill.ast.Infix($newParts, $newParams)
+              override def ast = io.getquill.ast.Infix($newParts, $newParams, $infixIsPure)
             }
           """)
         }
       } else
-        Infix(parts, params.map(astParser(_)))
+        Infix(parts, params.map(astParser(_)), infixIsPure)
   }
 
   val functionParser: Parser[Function] = Parser[Function] {
@@ -525,7 +532,7 @@ trait Parsing extends ValueComputation {
 
   /** Do equality checking on the database level with the same truth-table as idiomatic scala */
   private def equalityWithInnerTypechecksIdiomatic(left: Tree, right: Tree)(equalityBehavior: EqualityBehavior) = {
-    val (leftIsOptional, rightIsOptional) = checkInnerTypes(left, right, ForbidInnerCompare)
+    val (leftIsOptional, rightIsOptional) = checkInnerTypes(left, right, AllowInnerCompare)
     val a = astParser(left)
     val b = astParser(right)
     val comparison = BinaryOperation(a, equalityBehavior.operator, b)

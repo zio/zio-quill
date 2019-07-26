@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -e # Any subsequent(*) commands which fail will cause the shell script to exit immediately
 
-SBT_2_12="sbt ++2.12.6"
-SBT_2_11="sbt ++2.11.12"
+SBT_2_12="sbt ++2.12.6 -Dquill.macro.log=false"
+SBT_2_11="sbt ++2.11.12 -Dquill.macro.log=false"
 
 echo $SBT_CMD
 if [[ $TRAVIS_PULL_REQUEST == "false" ]]
@@ -32,13 +32,13 @@ then
         $SBT_2_12 -Dmodules=db -DskipPush=true 'release with-defaults'
         $SBT_2_12 -Dmodules=async -DskipPush=true 'release with-defaults'
         $SBT_2_12 -Dmodules=codegen -DskipPush=true 'release with-defaults'
-        $SBT_2_12 -Dmodules=bigdata 'release with-defaults default-tag-exists-answer o'
+        $SBT_2_12 -Dmodules=bigdata 'release with-defaults default-tag-exists-answer o' || cat version.sbt
 
         $SBT_2_11 -Dmodules=base -DskipPush=true 'release with-defaults'
         $SBT_2_11 -Dmodules=db -DskipPush=true 'release with-defaults'
         $SBT_2_11 -Dmodules=async -DskipPush=true 'release with-defaults'
         $SBT_2_11 -Dmodules=codegen -DskipPush=true 'release with-defaults'
-        $SBT_2_11 -Dmodules=bigdata 'release with-defaults default-tag-exists-answer o'
+        $SBT_2_11 -Dmodules=bigdata 'release with-defaults default-tag-exists-answer o' || cat version.sbt
 
     elif [[ $TRAVIS_BRANCH == "master" ]]
     then
