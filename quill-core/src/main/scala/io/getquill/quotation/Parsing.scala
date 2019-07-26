@@ -532,7 +532,7 @@ trait Parsing extends ValueComputation {
 
   /** Do equality checking on the database level with the same truth-table as idiomatic scala */
   private def equalityWithInnerTypechecksIdiomatic(left: Tree, right: Tree)(equalityBehavior: EqualityBehavior) = {
-    val (leftIsOptional, rightIsOptional) = checkInnerTypes(left, right, AllowInnerCompare)
+    val (leftIsOptional, rightIsOptional) = checkInnerTypes(left, right, ForbidInnerCompare)
     val a = astParser(left)
     val b = astParser(right)
     val comparison = BinaryOperation(a, equalityBehavior.operator, b)
