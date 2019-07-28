@@ -40,7 +40,7 @@ trait SqlIdiom extends Idiom {
           val sql = querifyAst(q)
           trace("sql")(sql)
           VerifySqlQuery(sql).map(fail)
-          val expanded = ExpandNestedQueries(sql, collection.Set.empty)
+          val expanded = ExpandNestedQueries(sql, List())
           val tokenized = expanded.token
           trace("expanded sql")(tokenized)
           tokenized
@@ -170,8 +170,10 @@ trait SqlIdiom extends Idiom {
 
     def tokenizer(implicit astTokenizer: Tokenizer[Ast]) =
       Tokenizer[SelectValue] {
-        case SelectValue(ast, Some(alias), false) => stmt"${ast.token} AS ${tokenizeColumn(strategy, alias).token}"
-        case SelectValue(ast, Some(alias), true)  => stmt"${concatFunction.token}(${ast.token}) AS ${tokenizeColumn(strategy, alias).token}"
+        case SelectValue(ast, Some(alias), false) => {
+          stmt"${ast.token} AS ${tokenizeColumn(strategy, alias).token}"
+        }
+        case SelectValue(ast, Some(alias), true) => stmt"${concatFunction.token}(${ast.token}) AS ${tokenizeColumn(strategy, alias).token}"
         case selectValue =>
           val value =
             selectValue match {

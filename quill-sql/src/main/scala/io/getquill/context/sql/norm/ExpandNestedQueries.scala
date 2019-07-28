@@ -15,10 +15,16 @@ import io.getquill.context.sql.SqlQuery
 import io.getquill.context.sql.TableContext
 import io.getquill.context.sql.UnaryOperationSqlQuery
 import io.getquill.context.sql.FlatJoinContext
+import scala.collection.mutable.LinkedHashSet
 
 object ExpandNestedQueries {
 
-  def apply(q: SqlQuery, references: collection.Set[Property]): SqlQuery =
+  def apply(q: SqlQuery, references: List[Property]): SqlQuery =
+    apply(q, LinkedHashSet.empty ++ references)
+
+  // Using LinkedHashSet despite the fact that it is mutable because it has better characteristics then ListSet.
+  // Also this collection is strictly internal to ExpandNestedQueries and exposed anywhere else.
+  private def apply(q: SqlQuery, references: LinkedHashSet[Property]): SqlQuery =
     q match {
       case q: FlattenSqlQuery =>
         expandNested(q.copy(select = expandSelect(q.select, references)))
@@ -31,7 +37,7 @@ object ExpandNestedQueries {
   private def expandNested(q: FlattenSqlQuery): SqlQuery =
     q match {
       case FlattenSqlQuery(from, where, groupBy, orderBy, limit, offset, select, distinct) =>
-        val asts = Nil ++ where ++ groupBy ++ orderBy.map(_.ast) ++ limit ++ offset ++ select.map(_.ast)
+        val asts = Nil ++ select.map(_.ast) ++ where ++ groupBy ++ orderBy.map(_.ast) ++ limit ++ offset
         val from = q.from.map(expandContext(_, asts))
         q.copy(from = from)
     }
@@ -47,7 +53,7 @@ object ExpandNestedQueries {
       case _: TableContext | _: InfixContext => s
     }
 
-  private def expandSelect(select: List[SelectValue], references: collection.Set[Property]) = {
+  private def expandSelect(select: List[SelectValue], references: LinkedHashSet[Property]) = {
 
     object TupleIndex {
       def unapply(s: String): Option[Int] =
@@ -92,14 +98,14 @@ object ExpandNestedQueries {
       }
     }
 
-    references.toList.sortBy(_.ast.toString).toList match {
+    references.toList match {
       case Nil  => select
       case refs => refs.map(expandReference)
     }
   }
 
   private def references(alias: String, asts: List[Ast]) =
-    References(State(Ident(alias), Nil))(asts)(_.apply)._2.state.references.toSet
+    LinkedHashSet.empty ++ (References(State(Ident(alias), Nil))(asts)(_.apply)._2.state.references)
 }
 
 case class State(ident: Ident, references: List[Property])
