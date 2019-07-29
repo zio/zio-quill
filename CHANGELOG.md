@@ -1,3 +1,12 @@
+# 3.4.1
+
+- [Fix property order expanded sub-queries](https://github.com/getquill/quill/pull/1541)
+
+Migration Notes:
+- Nested sub-queries will now have their terms re-ordered in certain circumstances although the functionality
+of the entire query should not change. If you have deeply nested queries with Infixes, double check that
+they are in the correct position.
+
 # 3.4.0
 
 - [Nest queries with infix values to allow infix-impurity](https://github.com/getquill/quill/pull/1534)
