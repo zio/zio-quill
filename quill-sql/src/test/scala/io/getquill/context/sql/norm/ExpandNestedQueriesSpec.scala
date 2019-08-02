@@ -18,6 +18,21 @@ class ExpandNestedQueriesSpec extends Spec {
       "SELECT x.s, x.i, x.l, x.o FROM (SELECT x.s, x.i, x.l, x.o FROM TestEntity a, TestEntity2 x) AS x"
   }
 
+  "preserves order of selection" in {
+    import testContext._
+    val q = quote {
+      query[TestEntity]
+        .join(query[TestEntity2])
+        .on { case (one, two) => one.i == two.i }
+        .filter(_._1.s == "foo")
+        .map(_._2)
+        .map(e => (infix"DISTINCT ON (${e.s}) ${e.s}".as[String], e.i))
+        .filter(_._2 == 123)
+    }
+    testContext.run(q).string mustEqual
+      "SELECT x1._1, x1._2 FROM (SELECT DISTINCT ON (x11.s) x11.s AS _1, x11.i AS _2 FROM TestEntity x01 INNER JOIN TestEntity2 x11 ON x01.i = x11.i WHERE x01.s = 'foo') AS x1 WHERE x1._2 = 123"
+  }
+
   "partial select" in {
     import testContext._
     val q = quote {
@@ -62,7 +77,7 @@ class ExpandNestedQueriesSpec extends Spec {
       qr1.fullJoin(qr2).on((a, b) => a.i == b.i).distinct
     }
     testContext.run(q.dynamic).string mustEqual
-      "SELECT x._1s, x._1i, x._1l, x._1o, x._2s, x._2i, x._2l, x._2o FROM (SELECT DISTINCT a.l AS _1l, a.o AS _1o, a.s AS _1s, a.i AS _1i, b.o AS _2o, b.s AS _2s, b.i AS _2i, b.l AS _2l FROM TestEntity a FULL JOIN TestEntity2 b ON a.i = b.i) AS x"
+      "SELECT x._1s, x._1i, x._1l, x._1o, x._2s, x._2i, x._2l, x._2o FROM (SELECT DISTINCT a.s AS _1s, a.i AS _1i, a.l AS _1l, a.o AS _1o, b.s AS _2s, b.i AS _2i, b.l AS _2l, b.o AS _2o FROM TestEntity a FULL JOIN TestEntity2 b ON a.i = b.i) AS x"
   }
 
   "handles column alias conflict" in {
@@ -73,6 +88,6 @@ class ExpandNestedQueriesSpec extends Spec {
       }
     }
     testContext.run(q.dynamic).string mustEqual
-      "SELECT x02._1i, x02._2i FROM (SELECT a.i AS _1i, b.i AS _2i FROM TestEntity a INNER JOIN TestEntity2 b ON a.i = b.i) AS x02"
+      "SELECT x03._1i, x03._2i FROM (SELECT a.i AS _1i, b.i AS _2i FROM TestEntity a INNER JOIN TestEntity2 b ON a.i = b.i) AS x03"
   }
 }

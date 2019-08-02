@@ -32,13 +32,25 @@ then
         $SBT_2_12 -Dmodules=db -DskipPush=true 'release with-defaults'
         $SBT_2_12 -Dmodules=async -DskipPush=true 'release with-defaults'
         $SBT_2_12 -Dmodules=codegen -DskipPush=true 'release with-defaults'
-        $SBT_2_12 -Dmodules=bigdata 'release with-defaults default-tag-exists-answer o' || cat version.sbt
+        echo "Release 2.12 Version:"
+        cat version.sbt
+        if ! output=$($SBT_2_12 -Dmodules=bigdata 'release with-defaults default-tag-exists-answer o'); then
+          echo "Release 2.12 Version After:"
+          cat version.sbt
+          exit $?
+        fi
 
         $SBT_2_11 -Dmodules=base -DskipPush=true 'release with-defaults'
         $SBT_2_11 -Dmodules=db -DskipPush=true 'release with-defaults'
         $SBT_2_11 -Dmodules=async -DskipPush=true 'release with-defaults'
         $SBT_2_11 -Dmodules=codegen -DskipPush=true 'release with-defaults'
-        $SBT_2_11 -Dmodules=bigdata 'release with-defaults default-tag-exists-answer o' || cat version.sbt
+        echo "Release 2.11 Version:"
+        cat version.sbt
+        if ! output=$($SBT_2_11 -Dmodules=bigdata 'release with-defaults default-tag-exists-answer o'); then
+          echo "Release 2.11 Version After:"
+          cat version.sbt
+          exit $?
+        fi
 
     elif [[ $TRAVIS_BRANCH == "master" ]]
     then
