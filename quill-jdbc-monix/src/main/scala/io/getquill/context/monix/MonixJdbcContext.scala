@@ -82,8 +82,10 @@ abstract class MonixJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](
         case Some(connection) =>
           withAutocommitBracket(connection, f)
         case None =>
-          Observable.eval(dataSource.getConnection)
-            .bracket(conn => withAutocommitBracket(conn, f))(conn => wrapClose(conn.close()))
+          scheduleObservable {
+            Observable.eval(dataSource.getConnection)
+              .bracket(conn => withAutocommitBracket(conn, f))(conn => wrapClose(conn.close()))
+          }
       }
     } yield result
 
@@ -107,8 +109,8 @@ abstract class MonixJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](
   }
 
   private[getquill] def autocommitOff(conn: Connection): (Connection, Boolean) = {
-    val ac = conn.getAutoCommit;
-    conn.setAutoCommit(false);
+    val ac = conn.getAutoCommit
+    conn.setAutoCommit(false)
     (conn, ac)
   }
 
@@ -146,7 +148,7 @@ abstract class MonixJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](
     } yield result
 
     boundary {
-      schedule(dbEffects)
+      dbEffects
         .executeWithOptions(_.enableLocalContextPropagation)
     }
   }
@@ -168,11 +170,15 @@ abstract class MonixJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](
    */
   class ResultSetIterator[T](rs: ResultSet, extractor: Extractor[T]) extends BufferedIterator[T] {
 
-    private[this] var state = 0 // 0: no data, 1: cached, 2: finished
+    private final val NoData = 0
+    private final val Cached = 1
+    private final val Finished = 2
+
+    private[this] var state = NoData
     private[this] var cached: T = null.asInstanceOf[T]
 
     protected[this] final def finished(): T = {
-      state = 2
+      state = Finished
       null.asInstanceOf[T]
     }
 
@@ -188,23 +194,23 @@ abstract class MonixJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](
     }
 
     private def prefetchIfNeeded(): Unit = {
-      if (state == 0) {
+      if (state == NoData) {
         cached = fetchNext()
-        if (state == 0) state = 1
+        if (state == NoData) state = Cached
       }
     }
 
     def hasNext: Boolean = {
       prefetchIfNeeded()
-      state == 1
+      state == Cached
     }
 
     def next(): T = {
       prefetchIfNeeded()
-      if (state == 1) {
-        state = 0
+      if (state == Cached) {
+        state = NoData
         cached
-      } else throw new NoSuchElementException("next on empty iterator");
+      } else throw new NoSuchElementException("next on empty iterator")
     }
   }
 
