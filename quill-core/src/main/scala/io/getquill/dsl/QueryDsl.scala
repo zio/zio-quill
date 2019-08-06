@@ -13,6 +13,9 @@ private[getquill] trait QueryDsl {
   @compileTimeOnly(NonQuotedException.message)
   def querySchema[T](entity: String, columns: (T => (Any, String))*): EntityQuery[T] = NonQuotedException()
 
+  @compileTimeOnly(NonQuotedException.message)
+  def impliedQuerySchema[T](entity: String, columns: (T => (Any, String))*): EntityQuery[T] = NonQuotedException()
+
   implicit class NullableColumnExtensions[A](o: Option[A]) {
     @compileTimeOnly(NonQuotedException.message)
     def getOrNull: A =
