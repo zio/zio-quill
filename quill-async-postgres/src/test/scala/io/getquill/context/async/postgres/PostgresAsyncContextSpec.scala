@@ -31,6 +31,17 @@ class PostgresAsyncContextSpec extends Spec {
     })
     (1, "foo", Some(123)) mustBe inserted
   }
+  "Update with returning with single column table" in {
+    await(testContext.run(qr5.delete))
+    await(testContext.run {
+      qr5.insert(lift(TestEntity5(0, "test")))
+    })
+
+    val updated = await(testContext.run {
+      qr5.filter(_.s == "test").update(_.i -> 10).returning(_.i)
+    })
+    updated mustBe 10
+  }
 
   "performIO" in {
     await(performIO(runIO(qr4).transactional))

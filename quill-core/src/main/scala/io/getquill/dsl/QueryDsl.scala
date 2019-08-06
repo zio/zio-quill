@@ -165,7 +165,10 @@ private[getquill] trait QueryDsl {
   }
 
   sealed trait ActionReturning[E, Output] extends Action[E]
-  sealed trait Update[E] extends Action[E]
+  sealed trait Update[E] extends Action[E] {
+    @compileTimeOnly(NonQuotedException.message)
+    def returning[R](f: E => R): ActionReturning[E, R] = NonQuotedException()
+  }
   sealed trait Delete[E] extends Action[E]
 
   sealed trait BatchAction[+A <: Action[_]]

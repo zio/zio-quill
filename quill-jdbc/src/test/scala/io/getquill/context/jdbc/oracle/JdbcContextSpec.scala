@@ -62,6 +62,18 @@ class JdbcContextSpec extends Spec {
     testContext.run(qr4.filter(_.i == lift(inserted))).head.i mustBe inserted
   }
 
+  "Update with returning with single column table" in {
+    val inserted = testContext.run {
+      qr5.insert(lift(TestEntity5(0, "test")))
+    }
+
+    val updated = testContext.run {
+      qr5.filter(_.s == "test").update(_.i -> 10).returning(_.i)
+    }
+    testContext.run(inserted)
+    testContext.run(updated) mustBe 10
+  }
+
   "Insert with returning with multiple columns" in {
     testContext.run(qr1.delete)
     val inserted = testContext.run {

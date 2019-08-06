@@ -146,4 +146,16 @@ class JdbcContextSpec extends Spec {
     }
     Return(1, "foo", Some(123)) mustBe inserted
   }
+
+  "Update with returning with single column table" in {
+    testContext.run(qr5.delete)
+    testContext.run {
+      qr5.insert(lift(TestEntity5(0, "test")))
+    }
+
+    val updated = testContext.run {
+      qr5.filter(_.s == "test").update(_.i -> 10).returning(_.i)
+    }
+    testContext.run(updated) mustBe 10
+  }
 }
