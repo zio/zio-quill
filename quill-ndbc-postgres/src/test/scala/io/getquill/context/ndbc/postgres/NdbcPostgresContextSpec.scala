@@ -1,6 +1,7 @@
 package io.getquill.context.ndbc.postgres
 
 import io.getquill.Spec
+import io.trane.future.scala.Future
 
 class NdbcPostgresContextSpec extends Spec {
 
@@ -29,6 +30,43 @@ class NdbcPostgresContextSpec extends Spec {
         qr1.insert(lift(TestEntity("foo", 1, 18L, Some(123)))).returning(r => (r.i, r.s, r.o))
       })
       (1, "foo", Some(123)) mustBe inserted
+    }
+  }
+
+  "transaction support" - {
+    "success" in {
+      get(for {
+        _ <- ctx.run(qr1.delete)
+        _ <- ctx.transaction {
+          ctx.run(qr1.insert(_.i -> 33))
+        }
+        r <- ctx.run(qr1)
+      } yield r).map(_.i) mustEqual List(33)
+    }
+
+    "failure" in {
+      get(for {
+        _ <- ctx.run(qr1.delete)
+        e <- ctx.transaction {
+          Future.sequence(Seq(
+            ctx.run(qr1.insert(_.i -> 19)),
+            Future.apply(throw new IllegalStateException)
+          ))
+        }.failed
+        r <- ctx.run(qr1)
+      } yield (e.getClass.getSimpleName, r.isEmpty)) mustEqual (("IllegalStateException", true))
+    }
+
+    "nested" in {
+      get(for {
+        _ <- ctx.run(qr1.delete)
+        _ <- ctx.transaction {
+          ctx.transaction {
+            ctx.run(qr1.insert(_.i -> 33))
+          }
+        }
+        r <- ctx.run(qr1)
+      } yield r).map(_.i) mustEqual List(33)
     }
   }
 }

@@ -3,11 +3,11 @@ package io.getquill.context.ndbc
 import java.time.{ LocalDate, LocalDateTime, ZoneOffset }
 import java.util.{ Date, UUID }
 
-import io.getquill.dsl.CoreDsl
-import io.trane.ndbc.PostgresPreparedStatement
-
 import scala.language.implicitConversions
 import scala.reflect.ClassTag
+
+import io.getquill.dsl.CoreDsl
+import io.trane.ndbc.PostgresPreparedStatement
 
 trait LowPriorityPostgresImplicits {
   this: CoreDsl =>

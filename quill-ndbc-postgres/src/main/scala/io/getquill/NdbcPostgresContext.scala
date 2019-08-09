@@ -18,4 +18,6 @@ class NdbcPostgresContext[N <: NamingStrategy](naming: N, dataSource: DataSource
   def this(naming: N, configPrefix: String) = this(naming, LoadConfig(configPrefix))
 
   protected def createPreparedStatement(sql: String) = PostgresPreparedStatement.create(sql)
+
+  override protected val effect = NdbcContextEffect
 }

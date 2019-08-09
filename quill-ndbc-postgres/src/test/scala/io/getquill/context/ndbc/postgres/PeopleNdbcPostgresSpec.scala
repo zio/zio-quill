@@ -27,11 +27,11 @@ class PeopleNdbcPostgresSpec extends PeopleSpec {
     get(context.run(`Ex 2 rangeSimple`(lift(`Ex 2 param 1`), lift(`Ex 2 param 2`)))) mustEqual `Ex 2 expected result`
   }
 
-  "Examples 3 - satisfies" in {
+  "Example 3 - satisfies" in {
     get(context.run(`Ex 3 satisfies`)) mustEqual `Ex 3 expected result`
   }
 
-  "Examples 4 - satisfies" in {
+  "Example 4 - satisfies" in {
     get(context.run(`Ex 4 satisfies`)) mustEqual `Ex 4 expected result`
   }
 
@@ -53,5 +53,10 @@ class PeopleNdbcPostgresSpec extends PeopleSpec {
 
   "Example 9 - contains non empty" in {
     get(context.run(`Ex 8 and 9 contains`(liftQuery(`Ex 9 param`)))) mustEqual `Ex 9 expected result`
+  }
+
+  "Example 10 - pagination" in {
+    get(context.run(`Ex 10 page 1 query`)) mustEqual `Ex 10 page 1 expected`
+    get(context.run(`Ex 10 page 2 query`)) mustEqual `Ex 10 page 2 expected`
   }
 }

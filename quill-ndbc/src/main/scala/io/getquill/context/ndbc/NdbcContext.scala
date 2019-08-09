@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory.getLogger
 import com.typesafe.scalalogging.Logger
 
 import io.getquill.{ NamingStrategy, ReturnAction }
+import io.getquill.context.ContextEffect
 import io.getquill.context.sql.SqlContext
 import io.getquill.context.sql.idiom.SqlIdiom
 import io.trane.future.scala.{ Future, toJavaFuture, toScalaFuture }
@@ -35,6 +36,9 @@ abstract class NdbcContext[I <: SqlIdiom, N <: NamingStrategy, P <: PreparedStat
   override type RunBatchActionResult = List[Long]
   override type RunBatchActionReturningResult[T] = List[T]
 
+  protected val effect: ContextEffect[Result]
+  import effect._
+
   protected val zoneOffset: ZoneOffset = ZoneOffset.UTC
 
   protected def createPreparedStatement(sql: String): P
@@ -47,29 +51,37 @@ abstract class NdbcContext[I <: SqlIdiom, N <: NamingStrategy, P <: PreparedStat
 
   def probe(sql: String) = Try(dataSource.query(sql))
 
+  protected def withDataSource[T](f: DataSource[P, R] => T): Result[T] = wrap(f(dataSource))
+
   def transaction[T](f: => Future[T]): Future[T] = {
-    dataSource.transactional(new Supplier[io.trane.future.Future[T]] {
-      override def get = f.toJava
-    }).toScala
+    withDataSource { ds =>
+      ds.transactional(new Supplier[io.trane.future.Future[T]] {
+        override def get = f.toJava
+      })
+    }.flatMap(_.toScala)
   }
 
   def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: R => T = identity[R] _): Future[List[T]] = {
-    val ps = prepare(createPreparedStatement(sql))._2
-    logger.debug(ps.toString())
+    withDataSource { ds =>
+      val ps = prepare(createPreparedStatement(sql))._2
+      logger.debug(ps.toString())
 
-    dataSource.query(ps).toScala.map { rs =>
-      extractResult(rs.iterator, extractor)
-    }
+      ds.query(ps).toScala.map { rs =>
+        extractResult(rs.iterator, extractor)
+      }
+    }.flatMap(result => result)
   }
 
   def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: R => T = identity[R] _): Future[T] =
     executeQuery(sql, prepare, extractor).map(handleSingleResult(_))
 
   def executeAction[T](sql: String, prepare: Prepare = identityPrepare): Future[Long] = {
-    val ps = prepare(createPreparedStatement(sql))._2
-    logger.debug(ps.toString())
+    withDataSource { ds =>
+      val ps = prepare(createPreparedStatement(sql))._2
+      logger.debug(ps.toString())
 
-    dataSource.execute(ps).toScala.map(_.longValue())
+      ds.execute(ps).toScala.map(_.longValue)
+    }.flatMap(result => result)
   }
 
   def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: R => O, returningAction: ReturnAction): Future[O] = {
