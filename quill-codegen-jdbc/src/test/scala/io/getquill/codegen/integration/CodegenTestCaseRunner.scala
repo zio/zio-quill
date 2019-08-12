@@ -7,8 +7,7 @@ import io.getquill.codegen.util.TryOps._
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.duration.Duration
-import scala.concurrent.{ Await, Future }
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Await
 
 object SchemaNames {
   val simpleSnake = `schema_snakecase`
@@ -26,17 +25,10 @@ object CodegenTestCaseRunner {
       if (args.drop(1).contains("all")) ConfigPrefix.all
       else args.drop(1).map(ConfigPrefix.fromValue(_).orThrow).toList
 
-    // Need to generate files for each database test-case by test-case (since auto-commit is used)
-    // but can do cases from multiple databases at the same time
-    val results =
-      prefixes.map(prefix =>
-        Future {
-          val generatedFiles = apply(prefix, path)
-          generatedFiles.foreach(f => logger.info(s"${prefix} | ${f}"))
-        })
-
-    Await.result(Future.sequence(results), Duration.Inf)
-    ()
+    prefixes.foreach(prefix => {
+      val generatedFiles = apply(prefix, path)
+      generatedFiles.foreach(f => logger.info(s"${prefix} | ${f}"))
+    })
   }
 
   def apply(dbPrefix: ConfigPrefix, path: String) = {
