@@ -57,4 +57,8 @@ class PeopleJdbcSpec extends PeopleSpec {
     testContext.run(`Ex 10 page 1 query`) mustEqual `Ex 10 page 1 expected`
     testContext.run(`Ex 10 page 2 query`) mustEqual `Ex 10 page 2 expected`
   }
+
+  "Example 11 - contains + isEmpty" in {
+    testContext.run(`Ex 11 contains`(`Ex 9 param`)) mustEqual `Ex 9 expected result`
+  }
 }
