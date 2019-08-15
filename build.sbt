@@ -8,6 +8,9 @@ import java.io.{File => JFile}
 
 enablePlugins(TutPlugin)
 
+val CodegenTag = Tags.Tag("CodegenTag")
+(concurrentRestrictions in Global) += Tags.exclusive(CodegenTag)
+
 lazy val baseModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-core-jvm`, `quill-core-js`, `quill-sql-jvm`, `quill-sql-js`, `quill-monix`
 )
@@ -135,16 +138,12 @@ lazy val `quill-codegen-jdbc` =
     .dependsOn(`quill-codegen` % "compile->compile;test->test")
     .dependsOn(`quill-jdbc` % "compile->compile;test->test")
 
-
-val codegen = taskKey[Seq[File]]("Run Code Generation Phase for Integration Testing")
-
 lazy val `quill-codegen-tests` =
   (project in file("quill-codegen-tests"))
     .settings(commonSettings: _*)
     .settings(
       libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test,
       fork in Test := true,
-      (sourceGenerators in Test) += (codegen in Test),
       (excludeFilter in unmanagedSources) := excludePathsIfOracle {
         (unmanagedSourceDirectories in Test).value.map { dir =>
           (dir / "io" / "getquill" / "codegen" / "OracleCodegenTestCases.scala").getCanonicalPath
@@ -153,7 +152,7 @@ lazy val `quill-codegen-tests` =
           (dir / "io" / "getquill" / "codegen" / "util" / "WithOracleContext.scala").getCanonicalPath
         }
       },
-      (codegen in Test) := {
+      (sourceGenerators in Test) += Def.task {
         def recrusiveList(file:JFile): List[JFile] = {
           if (file.isDirectory)
             Option(file.listFiles()).map(_.flatMap(child=> recrusiveList(child)).toList).toList.flatten
@@ -180,7 +179,7 @@ lazy val `quill-codegen-tests` =
           s
         )
         recrusiveList(fileDir)
-      }
+      }.tag(CodegenTag)
     )
     .dependsOn(`quill-codegen-jdbc` % "compile->test")
 

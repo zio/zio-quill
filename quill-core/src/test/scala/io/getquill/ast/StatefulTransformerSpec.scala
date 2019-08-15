@@ -1,6 +1,7 @@
 package io.getquill.ast
 
 import io.getquill.Spec
+import io.getquill.ast.Renameable.Fixed
 
 class StatefulTransformerSpec extends Spec {
 
@@ -305,6 +306,15 @@ class StatefulTransformerSpec extends Spec {
       Subject(Nil, Ident("a") -> Ident("a'"))(ast) match {
         case (at, att) =>
           at mustEqual Property(Ident("a'"), "b")
+          att.state mustEqual List(Ident("a"))
+      }
+    }
+
+    "property - fixed" in {
+      val ast: Ast = Property.Opinionated(Ident("a"), "b", Fixed)
+      Subject(Nil, Ident("a") -> Ident("a'"))(ast) match {
+        case (at, att) =>
+          at mustEqual Property.Opinionated(Ident("a'"), "b", Fixed)
           att.state mustEqual List(Ident("a"))
       }
     }
