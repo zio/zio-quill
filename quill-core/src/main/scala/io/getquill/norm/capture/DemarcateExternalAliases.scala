@@ -56,9 +56,9 @@ private[getquill] case class DemarcateExternalAliases(externalIdent: Ident) exte
     case FlatJoin(t, a, iA, o) =>
       FlatJoin(t, a, iA, applyNonOverride(iA)(o))
 
-    case p @ Property(id @ Ident(_), value) =>
+    case p @ Property.Opinionated(id @ Ident(_), value, renameable) =>
       if (id == externalIdent)
-        Property(ExternalIdent(externalIdent.name), value)
+        Property.Opinionated(ExternalIdent(externalIdent.name), value, renameable)
       else
         p
 

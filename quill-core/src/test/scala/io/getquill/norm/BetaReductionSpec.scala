@@ -1,6 +1,7 @@
 package io.getquill.norm
 
 import io.getquill.Spec
+import io.getquill.ast.Renameable.Fixed
 import io.getquill.ast._
 
 class BetaReductionSpec extends Spec {
@@ -10,8 +11,16 @@ class BetaReductionSpec extends Spec {
       val ast: Ast = Property(Tuple(List(Ident("a"))), "_1")
       BetaReduction(ast) mustEqual Ident("a")
     }
+    "tuple field - fixed property" in {
+      val ast: Ast = Property.Opinionated(Tuple(List(Ident("a"))), "_1", Fixed)
+      BetaReduction(ast) mustEqual Ident("a")
+    }
     "caseclass field" in {
       val ast: Ast = Property(CaseClass(List(("foo", Ident("a")))), "foo")
+      BetaReduction(ast) mustEqual Ident("a")
+    }
+    "caseclass field - fixed property" in {
+      val ast: Ast = Property.Opinionated(CaseClass(List(("foo", Ident("a")))), "foo", Fixed)
       BetaReduction(ast) mustEqual Ident("a")
     }
     "function apply" in {

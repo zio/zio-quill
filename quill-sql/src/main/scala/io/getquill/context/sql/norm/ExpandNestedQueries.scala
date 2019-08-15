@@ -76,22 +76,27 @@ object ExpandNestedQueries {
             case SelectValue(ast, alias, c) =>
               SelectValue(ast, concat(alias, idx), c)
           }
-        case Property(ast: Property, name) =>
+        case Property.Opinionated(ast: Property, name, renameable) =>
           expandReference(ast) match {
             case SelectValue(ast, nested, c) =>
-              SelectValue(Property(ast, name), Some(s"${nested.getOrElse("")}$name"), c)
+              // Alias is the plain name of the column, not using the name strategy.
+              // The clauses in `SqlIdiom` that use `Tokenizer[SelectValue]` select the
+              // alias field when it's value is Some(T).
+              // Technically the aliases of a column should not be using naming strategies
+              // but this is an issue to fix at a later date.
+              SelectValue(Property.Opinionated(ast, name, renameable), Some(s"${nested.getOrElse("")}$name"), c)
           }
         case Property(_, TupleIndex(idx)) =>
           select(idx) match {
             case SelectValue(ast, alias, c) =>
               SelectValue(ast, concat(alias, idx), c)
           }
-        case Property(_, name) =>
+        case Property.Opinionated(_, name, renameable) =>
           select match {
             case List(SelectValue(cc: CaseClass, alias, c)) =>
               SelectValue(cc.values.toMap.apply(name), Some(name), c)
             case List(SelectValue(i: Ident, _, c)) =>
-              SelectValue(Property(i, name), None, c)
+              SelectValue(Property.Opinionated(i, name, renameable), None, c)
             case other =>
               SelectValue(Ident(name), Some(name), false)
           }
