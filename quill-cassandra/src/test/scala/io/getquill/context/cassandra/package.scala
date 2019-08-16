@@ -10,6 +10,7 @@ import io.getquill.Literal
 package object cassandra {
 
   lazy val mirrorContext = new CassandraMirrorContext(Literal) with CassandraTestEntities
+  lazy val capsMirrorContext = new CassandraMirrorContext(UpperCaseNonDefault) with CassandraTestEntities
 
   lazy val testSyncDB = new CassandraSyncContext(Literal, "testSyncDB") with CassandraTestEntities
 
