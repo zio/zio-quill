@@ -1,5 +1,7 @@
 package io.getquill.util
 
+import io.getquill.AstPrinter
+
 import scala.reflect.macros.blackbox.{ Context => MacroContext }
 
 object Messages {
@@ -11,6 +13,9 @@ object Messages {
 
   private val traceEnabled = false
   private val traceColors = false
+  private val traceOpinions = false
+
+  val qprint = new AstPrinter(traceOpinions)
 
   def fail(msg: String) =
     throw new IllegalStateException(msg)
@@ -19,7 +24,7 @@ object Messages {
     (v: T) =>
       {
         if (traceEnabled)
-          println(s"$label${{ if (traceColors) pprint.apply(v, height = Integer.MAX_VALUE).render else pprint.apply(v, height = Integer.MAX_VALUE).plainText }.split("\n").map("    " + _).mkString("\n")}")
+          println(s"$label\n${{ if (traceColors) qprint.apply(v).render else qprint.apply(v).plainText }.split("\n").map("    " + _).mkString("\n")}")
         v
       }
 
