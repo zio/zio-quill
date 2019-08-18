@@ -3,11 +3,11 @@ package io.getquill.context.ndbc
 import java.time.{ LocalDate, LocalDateTime, ZoneOffset }
 import java.util.{ Date, UUID }
 
-import scala.language.implicitConversions
-import scala.reflect.ClassTag
-
 import io.getquill.dsl.CoreDsl
 import io.trane.ndbc.PostgresPreparedStatement
+
+import scala.language.implicitConversions
+import scala.reflect.ClassTag
 
 trait LowPriorityPostgresImplicits {
   this: CoreDsl =>
@@ -37,7 +37,8 @@ trait PostgresEncoders extends LowPriorityPostgresImplicits with io.getquill.dsl
 
   implicit def optionEncoder[T](implicit e: Encoder[T]): Encoder[Option[T]] =
     (idx, v, ps) =>
-      v match {
+      if (v == null) ps.setNull(idx)
+      else v match {
         case None    => ps.setNull(idx)
         case Some(v) => e(idx, v, ps)
       }

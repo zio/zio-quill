@@ -4,19 +4,18 @@ import java.time.ZoneOffset
 import java.util.Iterator
 import java.util.function.Supplier
 
-import scala.annotation.tailrec
-import scala.util.Try
-
-import org.slf4j.LoggerFactory.getLogger
-
 import com.typesafe.scalalogging.Logger
-
-import io.getquill.{ NamingStrategy, ReturnAction }
 import io.getquill.context.ContextEffect
 import io.getquill.context.sql.SqlContext
 import io.getquill.context.sql.idiom.SqlIdiom
+import io.getquill.{ NamingStrategy, ReturnAction }
 import io.trane.future.scala.{ Future, toJavaFuture, toScalaFuture }
 import io.trane.ndbc.{ DataSource, PreparedStatement, Row }
+import org.slf4j.LoggerFactory.getLogger
+
+import scala.annotation.tailrec
+import scala.collection.mutable.ArrayBuffer
+import scala.util.Try
 
 abstract class NdbcContext[I <: SqlIdiom, N <: NamingStrategy, P <: PreparedStatement, R <: Row](
   val idiom: I, val naming: N, dataSource: DataSource[P, R]
@@ -37,11 +36,13 @@ abstract class NdbcContext[I <: SqlIdiom, N <: NamingStrategy, P <: PreparedStat
   override type RunBatchActionReturningResult[T] = List[T]
 
   protected val effect: ContextEffect[Result]
+
   import effect._
 
   protected val zoneOffset: ZoneOffset = ZoneOffset.UTC
 
   protected def createPreparedStatement(sql: String): P
+
   protected def expandAction(sql: String, returningAction: ReturnAction) = sql
 
   def close() = {
@@ -93,10 +94,10 @@ abstract class NdbcContext[I <: SqlIdiom, N <: NamingStrategy, P <: PreparedStat
     Future.sequence {
       groups.map {
         case BatchGroup(sql, prepare) =>
-          prepare.foldLeft(Future.successful(Vector.empty[Long])) {
+          prepare.foldLeft(Future.successful(ArrayBuffer.empty[Long])) {
             case (acc, prepare) =>
-              acc.flatMap { vec =>
-                executeAction(sql, prepare).map(vec :+ _)
+              acc.flatMap { array =>
+                executeAction(sql, prepare).map(array :+ _)
               }
           }
       }
@@ -106,10 +107,10 @@ abstract class NdbcContext[I <: SqlIdiom, N <: NamingStrategy, P <: PreparedStat
     Future.sequence {
       groups.map {
         case BatchGroupReturning(sql, column, prepare) =>
-          prepare.foldLeft(Future.successful(Vector.empty[T])) {
+          prepare.foldLeft(Future.successful(ArrayBuffer.empty[T])) {
             case (acc, prepare) =>
-              acc.flatMap { vec =>
-                executeActionReturning(sql, prepare, extractor, column).map(vec :+ _)
+              acc.flatMap { array =>
+                executeActionReturning(sql, prepare, extractor, column).map(array :+ _)
               }
           }
       }
