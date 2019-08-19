@@ -12,15 +12,15 @@ import io.getquill.FinagleMysqlContext
 trait FinagleMysqlEncoders {
   this: FinagleMysqlContext[_] =>
 
-  type Encoder[T] = FinangleMySqlEncoder[T]
+  type Encoder[T] = FinagleMySqlEncoder[T]
 
-  case class FinangleMySqlEncoder[T](encoder: BaseEncoder[T]) extends BaseEncoder[T] {
+  case class FinagleMySqlEncoder[T](encoder: BaseEncoder[T]) extends BaseEncoder[T] {
     override def apply(index: Index, value: T, row: PrepareRow) =
       encoder(index, value, row)
   }
 
   def encoder[T](f: T => Parameter): Encoder[T] =
-    FinangleMySqlEncoder((index, value, row) => row :+ f(value))
+    FinagleMySqlEncoder((index, value, row) => row :+ f(value))
 
   def encoder[T](implicit cbp: CanBeParameter[T]): Encoder[T] =
     encoder[T]((v: T) => v: Parameter)
@@ -28,7 +28,7 @@ trait FinagleMysqlEncoders {
   private[this] val nullEncoder = encoder((_: Null) => Parameter.NullParameter)
 
   implicit def optionEncoder[T](implicit e: Encoder[T]): Encoder[Option[T]] =
-    FinangleMySqlEncoder { (index, value, row) =>
+    FinagleMySqlEncoder { (index, value, row) =>
       value match {
         case None    => nullEncoder.encoder(index, null, row)
         case Some(v) => e.encoder(index, v, row)
@@ -36,7 +36,7 @@ trait FinagleMysqlEncoders {
     }
 
   implicit def mappedEncoder[I, O](implicit mapped: MappedEncoding[I, O], e: Encoder[O]): Encoder[I] =
-    FinangleMySqlEncoder(mappedBaseEncoder(mapped, e.encoder))
+    FinagleMySqlEncoder(mappedBaseEncoder(mapped, e.encoder))
 
   implicit val stringEncoder: Encoder[String] = encoder[String]
   implicit val bigDecimalEncoder: Encoder[BigDecimal] =
