@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e # Any subsequent(*) commands which fail will cause the shell script to exit immediately
 
-SBT_2_11="sbt ++2.11.12 -Dquill.macro.log=false"
+SBT_2_12="sbt ++2.12.6 -Dquill.macro.log=false"
 
 echo $SBT_CMD
 if [[ $TRAVIS_PULL_REQUEST == "false" ]]
@@ -25,33 +25,32 @@ then
         git fetch --unshallow
         git checkout master || git checkout -b master
         git reset --hard origin/master
-        git push --delete origin website || true
 
-        $SBT_2_11 -Dmodules=base -DskipPush=true 'release with-defaults'
-        $SBT_2_11 -Dmodules=db -DskipPush=true 'release with-defaults'
-        $SBT_2_11 -Dmodules=async -DskipPush=true 'release with-defaults'
-        $SBT_2_11 -Dmodules=codegen -DskipPush=true 'release with-defaults'
-        echo "Release 2.11 Version:"
+        $SBT_2_12 -Dmodules=base -DskipPush=true 'release with-defaults'
+        $SBT_2_12 -Dmodules=db -DskipPush=true 'release with-defaults'
+        $SBT_2_12 -Dmodules=async -DskipPush=true 'release with-defaults'
+        $SBT_2_12 -Dmodules=codegen -DskipPush=true 'release with-defaults'
+        echo "Release 2.12 Version:"
         cat version.sbt
-        if ! output=$($SBT_2_11 -Dmodules=bigdata 'release with-defaults default-tag-exists-answer o'); then
-          echo "Release 2.11 Version After:"
+        if ! output=$($SBT_2_12 -Dmodules=bigdata 'release with-defaults default-tag-exists-answer o'); then
+          echo "Release 2.12 Version After:"
           cat version.sbt
           exit $?
         fi
 
     elif [[ $TRAVIS_BRANCH == "master" ]]
     then
-        $SBT_2_11 -Dmodules=base publish
-        $SBT_2_11 -Dmodules=db publish
-        $SBT_2_11 -Dmodules=async publish
-        $SBT_2_11 -Dmodules=codegen publish
-        $SBT_2_11 -Dmodules=bigdata publish
+        $SBT_2_12 -Dmodules=base publish
+        $SBT_2_12 -Dmodules=db publish
+        $SBT_2_12 -Dmodules=async publish
+        $SBT_2_12 -Dmodules=codegen publish
+        $SBT_2_12 -Dmodules=bigdata publish
     else
         echo "version in ThisBuild := \"$TRAVIS_BRANCH-SNAPSHOT\"" > version.sbt
-        $SBT_2_11 -Dmodules=base publish
-        $SBT_2_11 -Dmodules=db publish
-        $SBT_2_11 -Dmodules=async publish
-        $SBT_2_11 -Dmodules=codegen publish
-        $SBT_2_11 -Dmodules=bigdata publish
+        $SBT_2_12 -Dmodules=base publish
+        $SBT_2_12 -Dmodules=db publish
+        $SBT_2_12 -Dmodules=async publish
+        $SBT_2_12 -Dmodules=codegen publish
+        $SBT_2_12 -Dmodules=bigdata publish
     fi
 fi
