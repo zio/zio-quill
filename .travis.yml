@@ -10,7 +10,8 @@ addons:
   postgresql: "9.6"
 branches:
   except:
-    - release
+    - release_2.11
+    - release_2.12
     - website
 cache:
   directories:
