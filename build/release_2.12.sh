@@ -33,6 +33,8 @@ then
         $SBT_2_12 -Dmodules=codegen -DskipPush=true 'release with-defaults'
         echo "Release 2.12 Version:"
         cat version.sbt
+
+        # Note: This captures output of the 'bigdata' modules release so travis might time out on this command
         if ! output=$($SBT_2_12_LOG -Dmodules=bigdata 'release with-defaults default-tag-exists-answer o'); then
           echo "Release 2.12 Version After:"
           cat version.sbt

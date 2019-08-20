@@ -64,10 +64,12 @@ jobs:
     - stage: release
       if: type != pull_request
       scala: 2.12.6
+      name: "Release 2.11"
       script:
-        - travis_retry ./build/release.sh
+        - travis_retry ./build/release_2.11.sh
     - stage: release
       if: type != pull_request
       scala: 2.12.6
+      name: "Release 2.12"
       script:
         - travis_retry ./build/release_2.12.sh
