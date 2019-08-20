@@ -10,23 +10,23 @@ import java.time._
 trait FinaglePostgresEncoders {
   this: FinaglePostgresContext[_] =>
 
-  type Encoder[T] = FinanglePostgresEncoder[T]
+  type Encoder[T] = FinaglePostgresEncoder[T]
 
-  case class FinanglePostgresEncoder[T](encoder: ValueEncoder[T]) extends BaseEncoder[T] {
+  case class FinaglePostgresEncoder[T](encoder: ValueEncoder[T]) extends BaseEncoder[T] {
     override def apply(index: Index, value: T, row: PrepareRow) =
       row :+ Param(value)(encoder)
   }
 
-  def encoder[T](implicit e: ValueEncoder[T]): Encoder[T] = FinanglePostgresEncoder(e)
+  def encoder[T](implicit e: ValueEncoder[T]): Encoder[T] = FinaglePostgresEncoder(e)
 
   def encoder[T, U](f: U => T)(implicit e: ValueEncoder[T]): Encoder[U] =
     encoder[U](e.contraMap(f))
 
   implicit def mappedEncoder[I, O](implicit mapped: MappedEncoding[I, O], e: Encoder[O]): Encoder[I] =
-    FinanglePostgresEncoder(e.encoder.contraMap(mapped.f))
+    FinaglePostgresEncoder(e.encoder.contraMap(mapped.f))
 
   implicit def optionEncoder[T](implicit e: Encoder[T]): Encoder[Option[T]] =
-    FinanglePostgresEncoder[Option[T]](option(e.encoder))
+    FinaglePostgresEncoder[Option[T]](option(e.encoder))
 
   implicit val stringEncoder: Encoder[String] = encoder[String]
   implicit val bigDecimalEncoder: Encoder[BigDecimal] = encoder[BigDecimal]
