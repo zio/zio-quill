@@ -1,3 +1,13 @@
+# 3.4.2
+
+- [Fix NamingStrategy override of querySchema](https://github.com/getquill/quill/pull/1560)
+- [Monix JDBC scheduling fixes ](https://github.com/getquill/quill/pull/1546)
+
+Migration Notes:
+- `NamingStrategy` is no longer applied on column and table names defined in `querySchema`, all 
+column and table names defined in `querySchema` are now final. If you are relying on this behavior to 
+name your columns/tables correctly, you will need to update your `querySchema` objects.
+
 # 3.4.1
 
 - [Fix property order expanded sub-queries](https://github.com/getquill/quill/pull/1541)
