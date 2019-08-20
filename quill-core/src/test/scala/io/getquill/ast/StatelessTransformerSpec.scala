@@ -1,6 +1,7 @@
 package io.getquill.ast
 
 import io.getquill.Spec
+import io.getquill.ast.Renameable.Fixed
 
 class StatelessTransformerSpec extends Spec {
 
@@ -165,6 +166,11 @@ class StatelessTransformerSpec extends Spec {
         Subject(Ident("a") -> Ident("a'"))(target) mustEqual
           OnConflict.Properties(List(Property(Ident("a'"), "b")))
       }
+      "properties - fixed" in {
+        val target: OnConflict.Target = OnConflict.Properties(List(Property.Opinionated(Ident("a"), "b", Fixed)))
+        Subject(Ident("a") -> Ident("a'"))(target) mustEqual
+          OnConflict.Properties(List(Property.Opinionated(Ident("a'"), "b", Fixed)))
+      }
     }
 
     "onConflict.action" - {
@@ -205,6 +211,12 @@ class StatelessTransformerSpec extends Spec {
       val ast: Ast = Property(Ident("a"), "b")
       Subject(Ident("a") -> Ident("a'"))(ast) mustEqual
         Property(Ident("a'"), "b")
+    }
+
+    "property - fixed" in {
+      val ast: Ast = Property.Opinionated(Ident("a"), "b", Fixed)
+      Subject(Ident("a") -> Ident("a'"))(ast) mustEqual
+        Property.Opinionated(Ident("a'"), "b", Fixed)
     }
 
     "infix" in {

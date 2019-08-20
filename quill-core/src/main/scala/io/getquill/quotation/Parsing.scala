@@ -14,6 +14,7 @@ import scala.annotation.tailrec
 import scala.collection.immutable.StringOps
 import scala.reflect.macros.TypecheckException
 import io.getquill.ast.Implicits._
+import io.getquill.ast.Renameable.Fixed
 import io.getquill.util.Interleave
 
 trait Parsing extends ValueComputation {
@@ -176,6 +177,9 @@ trait Parsing extends ValueComputation {
       Entity("unused", Nil)
 
     case q"$pack.querySchema[$t](${ name: String }, ..$properties)" =>
+      Entity.Opinionated(name, properties.map(propertyAliasParser(_)), Fixed)
+
+    case q"$pack.impliedQuerySchema[$t](${ name: String }, ..$properties)" =>
       Entity(name, properties.map(propertyAliasParser(_)))
 
     case q"$source.filter(($alias) => $body)" if (is[CoreDsl#Query[Any]](source)) =>

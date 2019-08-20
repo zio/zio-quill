@@ -139,8 +139,8 @@ trait SparkIdiom extends SqlIdiom with CannotReturn { self =>
     def path(ast: Ast): Token =
       ast match {
         case Ident(name) => name.token
-        case Property(a, b) =>
-          stmt"${path(a)}.${strategy.column(b).token}"
+        case Property.Opinionated(a, b, renameable) =>
+          stmt"${path(a)}.${renameable.fixedOr(b.token)(strategy.column(b).token)}"
         case other =>
           other.token
       }
