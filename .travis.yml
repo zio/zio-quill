@@ -10,8 +10,7 @@ addons:
   postgresql: "9.6"
 branches:
   except:
-    - release_2.11
-    - release_2.12
+    - release
     - website
 cache:
   directories:
@@ -62,12 +61,12 @@ jobs:
 #      scala: 2.12.6
 #      name: "BigData Databases 2.12 - Cassandra, OrientDB, Spark"
 
-    - stage: release_2.11
+    - stage: release
       if: type != pull_request
       scala: 2.12.6
       script:
         - travis_retry ./build/release.sh
-    - stage: release_2.12
+    - stage: release
       if: type != pull_request
       scala: 2.12.6
       script:
