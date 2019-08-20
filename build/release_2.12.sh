@@ -2,6 +2,7 @@
 set -e # Any subsequent(*) commands which fail will cause the shell script to exit immediately
 
 SBT_2_12="sbt ++2.12.6 -Dquill.macro.log=false"
+SBT_2_12_LOG="sbt ++2.12.6 -Dquill.macro.log=true"
 
 echo $SBT_CMD
 if [[ $TRAVIS_PULL_REQUEST == "false" ]]
@@ -32,7 +33,7 @@ then
         $SBT_2_12 -Dmodules=codegen -DskipPush=true 'release with-defaults'
         echo "Release 2.12 Version:"
         cat version.sbt
-        if ! output=$($SBT_2_12 -Dmodules=bigdata 'release with-defaults default-tag-exists-answer o'); then
+        if ! output=$($SBT_2_12_LOG -Dmodules=bigdata 'release with-defaults default-tag-exists-answer o'); then
           echo "Release 2.12 Version After:"
           cat version.sbt
           exit $?
