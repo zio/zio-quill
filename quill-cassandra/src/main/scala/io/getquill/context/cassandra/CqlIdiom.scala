@@ -114,7 +114,7 @@ trait CqlIdiom extends Idiom {
 
   implicit def propertyTokenizer(implicit valueTokenizer: Tokenizer[Value], identTokenizer: Tokenizer[Ident], strategy: NamingStrategy): Tokenizer[Property] =
     Tokenizer[Property] {
-      case Property.Opinionated(_, name, renameable) => strategy.column(name).token
+      case Property.Opinionated(_, name, renameable) => renameable.fixedOr(name.token)(strategy.column(name).token)
     }
 
   implicit def valueTokenizer(implicit strategy: NamingStrategy): Tokenizer[Value] = Tokenizer[Value] {
