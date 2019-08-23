@@ -22,7 +22,7 @@ class AstPrinter(traceOpinions: Boolean) extends pprint.Walker {
       Tree.Apply("Property", List[Tree](treeify(p.ast), treeify(p.name), printRenameable(p.renameable)).iterator)
 
     case e: Entity if (traceOpinions) =>
-      Tree.Apply("Property", List[Tree](treeify(e.name), treeify(e.properties), printRenameable(e.renameable)).iterator)
+      Tree.Apply("Entity", List[Tree](treeify(e.name), treeify(e.properties), printRenameable(e.renameable)).iterator)
   }
 
   def apply(x: Any): fansi.Str = {
