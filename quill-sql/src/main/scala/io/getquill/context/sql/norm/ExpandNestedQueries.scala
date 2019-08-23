@@ -1,5 +1,6 @@
 package io.getquill.context.sql.norm
 
+import io.getquill.NamingStrategy
 import io.getquill.ast.Ast
 import io.getquill.ast.Ident
 import io.getquill.ast._
@@ -15,9 +16,10 @@ import io.getquill.context.sql.SqlQuery
 import io.getquill.context.sql.TableContext
 import io.getquill.context.sql.UnaryOperationSqlQuery
 import io.getquill.context.sql.FlatJoinContext
+
 import scala.collection.mutable.LinkedHashSet
 
-object ExpandNestedQueries {
+class ExpandNestedQueries(strategy: NamingStrategy) {
 
   def apply(q: SqlQuery, references: List[Property]): SqlQuery =
     apply(q, LinkedHashSet.empty ++ references)
@@ -63,6 +65,9 @@ object ExpandNestedQueries {
           None
     }
 
+    def expandColumn(name: String, renameable: Renameable): String =
+      renameable.fixedOr(name)(strategy.column(name))
+
     def expandReference(ref: Property): SelectValue = {
 
       def concat(alias: Option[String], idx: Int) =
@@ -79,12 +84,12 @@ object ExpandNestedQueries {
         case Property.Opinionated(ast: Property, name, renameable) =>
           expandReference(ast) match {
             case SelectValue(ast, nested, c) =>
-              // Alias is the plain name of the column, not using the name strategy.
+              // Alias is the name of the column after the naming strategy
               // The clauses in `SqlIdiom` that use `Tokenizer[SelectValue]` select the
               // alias field when it's value is Some(T).
               // Technically the aliases of a column should not be using naming strategies
               // but this is an issue to fix at a later date.
-              SelectValue(Property.Opinionated(ast, name, renameable), Some(s"${nested.getOrElse("")}$name"), c)
+              SelectValue(Property.Opinionated(ast, name, renameable), Some(s"${nested.getOrElse("")}${expandColumn(name, renameable)}"), c)
           }
         case Property(_, TupleIndex(idx)) =>
           select(idx) match {
@@ -94,11 +99,11 @@ object ExpandNestedQueries {
         case Property.Opinionated(_, name, renameable) =>
           select match {
             case List(SelectValue(cc: CaseClass, alias, c)) =>
-              SelectValue(cc.values.toMap.apply(name), Some(name), c)
+              SelectValue(cc.values.toMap.apply(name), Some(expandColumn(name, renameable)), c)
             case List(SelectValue(i: Ident, _, c)) =>
               SelectValue(Property.Opinionated(i, name, renameable), None, c)
             case other =>
-              SelectValue(Ident(name), Some(name), false)
+              SelectValue(Ident(name), Some(expandColumn(name, renameable)), false)
           }
       }
     }

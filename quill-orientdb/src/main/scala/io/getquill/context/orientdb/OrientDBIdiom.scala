@@ -29,7 +29,7 @@ trait OrientDBIdiom extends Idiom {
         case q: Query =>
           val sql = SqlQuery(q)
           VerifySqlQuery(sql).map(fail)
-          ExpandNestedQueries(sql, List()).token
+          new ExpandNestedQueries(naming)(sql, List()).token
         case other =>
           other.token
       }
