@@ -128,6 +128,7 @@ lazy val `quill-codegen` =
 lazy val `quill-codegen-jdbc` =
   (project in file("quill-codegen-jdbc"))
     .settings(commonSettings: _*)
+    .settings(jdbcTestingLibraries: _*)
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
@@ -136,7 +137,7 @@ lazy val `quill-codegen-jdbc` =
       )
     )
     .dependsOn(`quill-codegen` % "compile->compile;test->test")
-    .dependsOn(`quill-jdbc` % "compile->compile;test->test")
+    .dependsOn(`quill-jdbc` % "compile->compile")
 
 lazy val `quill-codegen-tests` =
   (project in file("quill-codegen-tests"))
@@ -441,8 +442,8 @@ def updateWebsiteTag =
     st
   })
 
-lazy val jdbcTestingSettings = Seq(
-  fork in Test := true,
+
+lazy val jdbcTestingLibraries = Seq(
   resolvers ++= includeIfOracle( // read ojdbc8 jar in case it is deployed
     Resolver.mavenLocal
   ),
@@ -461,7 +462,11 @@ lazy val jdbcTestingSettings = Seq(
     deps ++ includeIfOracle(
       "com.oracle.jdbc" % "ojdbc8" % "18.3.0.0.0" % Test
     )
-  },
+  }
+)
+
+lazy val jdbcTestingSettings = jdbcTestingLibraries ++ Seq(
+  fork in Test := true,
   excludeFilter in unmanagedSources := {
     excludeTests match {
       case true =>

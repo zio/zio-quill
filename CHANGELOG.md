@@ -1,3 +1,7 @@
+# 3.4.3
+
+- [Nested Query does not work correctly with NamingSchemas](https://github.com/getquill/quill/issues/1577)
+
 # 3.4.2
 
 - [Fix NamingStrategy override of querySchema](https://github.com/getquill/quill/pull/1560)

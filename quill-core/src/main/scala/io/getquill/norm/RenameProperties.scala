@@ -67,8 +67,15 @@ object RenameProperties extends StatelessTransformer {
       case (q, _) => q
     }
 
-  private def applySchema(q: Query): (Query, Ast) =
+  private def applySchema(q: Query): (Query, Ast) = {
     q match {
+
+      case Map(q: Query, x, p @ Tuple(values)) if (values.contains(x)) =>
+        val idx = values.indexOf(x)
+        applySchema(q, x, p, Map) match {
+          case (m, oldSchema) => (m, Tuple(List(oldSchema)))
+        }
+
       case e: Entity                 => (e, e)
       case Map(q: Query, x, p)       => applySchema(q, x, p, Map)
       case Filter(q: Query, x, p)    => applySchema(q, x, p, Filter)
@@ -144,6 +151,7 @@ object RenameProperties extends StatelessTransformer {
       case q =>
         (q, Tuple(List.empty))
     }
+  }
 
   private def applySchema(ast: Query, f: Ast => Query): (Query, Ast) =
     applySchema(ast) match {
