@@ -20,7 +20,7 @@ export CASSANDRA_PORT=19042
 export ORIENTDB_HOST=127.0.0.1
 export ORIENTDB_PORT=12424
 
-export SBT_ARGS="-Dquill.macro.log=false -Xms1024m -Xmx3g -Xss5m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC ++$TRAVIS_SCALA_VERSION"
+export JVM_OPTS="-Dquill.macro.log=false -Xms1024m -Xmx3g -Xss5m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC"
 
 modules=$1
 
@@ -57,6 +57,8 @@ function docker_stats() {
     echo "===== Docker Stats End ====="
 }
 export -f docker_stats
+
+export SBT_ARGS="++$TRAVIS_SCALA_VERSION"
 
 if [[ $TRAVIS_SCALA_VERSION == 2.11* ]]; then
     export SBT_ARGS="$SBT_ARGS coverage"
@@ -135,7 +137,6 @@ function wait_for_bigdata() {
 
     sbt clean scalariformFormat test:scalariformFormat
     sbt checkUnformattedFiles
-
     sbt clean $SBT_ARGS quill-coreJVM/test:compile & COMPILE=$!
     ./build/setup_bigdata.sh & SETUP=$!
 
