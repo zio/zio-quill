@@ -17,21 +17,21 @@ import io.getquill.ast.Ast
 case class Replacements(map: collection.Map[Ast, Ast]) {
 
   /** First transformed object to meet criteria **/
-  def apply(key: Ast) =
+  def apply(key: Ast): Ast =
     map.map { case (k, v) => (k.neutralize, v) }.filter(_._1 == key.neutralize).head._2
 
   /** First transformed object to meet criteria or none of none meets **/
-  def get(key: Ast) =
+  def get(key: Ast): Option[Ast] =
     map.map { case (k, v) => (k.neutralize, v) }.filter(_._1 == key.neutralize).headOption.map(_._2)
 
   /** Does the map contain a normalized version of the view you want to see */
-  def contains(key: Ast) =
+  def contains(key: Ast): Boolean =
     map.map { case (k, v) => k.neutralize }.toList.contains(key.neutralize)
 
   def ++(otherMap: collection.Map[Ast, Ast]): Replacements =
     Replacements(map ++ otherMap)
 
-  def -(key: Ast) = {
+  def -(key: Ast): Replacements = {
     val newMap = map.toList.filterNot { case (k, v) => k.neutralize == key.neutralize }.toMap
     Replacements(newMap)
   }
