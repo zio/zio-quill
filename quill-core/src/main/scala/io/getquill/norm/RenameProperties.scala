@@ -1,6 +1,7 @@
 package io.getquill.norm
 
 import io.getquill.ast.Renameable.Fixed
+import io.getquill.ast.Visibility.Visible
 import io.getquill.ast._
 
 object RenameProperties extends StatelessTransformer {
@@ -202,7 +203,7 @@ object RenameProperties extends StatelessTransformer {
                 case Nil          => base
                 case head :: tail => apply(Property(base, head), tail)
               }
-            apply(base, path) -> Property.Opinionated(base, alias, Fixed)
+            apply(base, path) -> Property.Opinionated(base, alias, Fixed, Visible) // Hidden properties cannot be renamed
         }
       case Tuple(values) =>
         values.zipWithIndex.flatMap {

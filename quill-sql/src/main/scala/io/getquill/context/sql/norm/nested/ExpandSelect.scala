@@ -88,7 +88,7 @@ private class ExpandSelect(selectValues: List[SelectValue], references: LinkedHa
                 trace"Appending $idx to $alias " andReturn
                 OrderedSelect(o, SelectValue(ast, concat(alias, idx), c))
             }
-        case pp @ Property.Opinionated(ast: Property, name, renameable) =>
+        case pp @ Property.Opinionated(ast: Property, name, renameable, visible) =>
           trace"Reference is a sub-property. Walking inside." andContinue
             expandReference(ast) match {
               case OrderedSelect(o, SelectValue(ast, nested, c)) =>
@@ -108,8 +108,10 @@ private class ExpandSelect(selectValues: List[SelectValue], references: LinkedHa
                 // into the property path.
 
                 OrderedSelect(o, SelectValue(
-                  Property.Opinionated(ast, name, renameable),
-                  Some(s"${nested.flatMap(expressIfTupleIndex(_)).getOrElse("")}${expandColumn(name, renameable)}"), c
+                  // Note: Pass invisible properties to be tokenized by the idiom, they should be excluded there
+                  Property.Opinionated(ast, name, renameable, visible),
+                  // Skip concatonation of invisible properties into the alias e.g. so it will be
+                  Some(s"${nested.getOrElse("")}${expandColumn(name, renameable)}")
                 ))
             }
         case pp @ Property(_, TupleIndex(idx)) =>
@@ -118,7 +120,7 @@ private class ExpandSelect(selectValues: List[SelectValue], references: LinkedHa
               case OrderedSelect(o, SelectValue(ast, alias, c)) =>
                 OrderedSelect(o, SelectValue(ast, concat(alias, idx), c))
             }
-        case pp @ Property.Opinionated(_, name, renameable) =>
+        case pp @ Property.Opinionated(_, name, renameable, visible) =>
           select match {
             case List(OrderedSelect(o, SelectValue(cc: CaseClass, alias, c))) =>
               // Currently case class element name is not being appended. Need to change that in order to ensure
@@ -131,7 +133,7 @@ private class ExpandSelect(selectValues: List[SelectValue], references: LinkedHa
                 OrderedSelect(o :+ index, SelectValue(ast, Some(expandColumn(name, renameable)), c))
             case List(OrderedSelect(o, SelectValue(i: Ident, _, c))) =>
               trace"Reference is an identifier: " andReturn
-                OrderedSelect(o, SelectValue(Property.Opinionated(i, name, renameable), None, c))
+                OrderedSelect(o, SelectValue(Property.Opinionated(i, name, renameable, visible), None, c))
             case other =>
               trace"Reference is unidentified: " andReturn
                 OrderedSelect(Integer.MAX_VALUE, SelectValue(Ident(name), Some(expandColumn(name, renameable)), false))

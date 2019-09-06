@@ -110,6 +110,11 @@ trait Liftables {
     case Renameable.ByStrategy => q"$pack.Renameable.ByStrategy"
   }
 
+  implicit val visibilityLiftable: Liftable[Visibility] = Liftable[Visibility] {
+    case Visibility.Visible => q"$pack.Visibility.Visible"
+    case Visibility.Hidden  => q"$pack.Visibility.Hidden"
+  }
+
   implicit val queryLiftable: Liftable[Query] = Liftable[Query] {
     case Entity.Opinionated(a, b, renameable) => q"$pack.Entity.Opinionated($a, $b, $renameable)"
     case Filter(a, b, c)                      => q"$pack.Filter($a, $b, $c)"
@@ -134,7 +139,7 @@ trait Liftables {
   }
 
   implicit val propertyLiftable: Liftable[Property] = Liftable[Property] {
-    case Property.Opinionated(a, b, renameable) => q"$pack.Property.Opinionated($a, $b, $renameable)"
+    case Property.Opinionated(a, b, renameable, visibility) => q"$pack.Property.Opinionated($a, $b, $renameable, $visibility)"
   }
 
   implicit val orderingLiftable: Liftable[Ordering] = Liftable[Ordering] {

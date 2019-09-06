@@ -143,9 +143,14 @@ trait Unliftables {
     case q"$pack.Renameable.Fixed"      => Renameable.Fixed
   }
 
+  implicit val visibilityUnliftable: Unliftable[Visibility] = Unliftable[Visibility] {
+    case q"$pack.Visibility.Visible" => Visibility.Visible
+    case q"$pack.Visibility.Hidden"  => Visibility.Hidden
+  }
+
   implicit val propertyUnliftable: Unliftable[Property] = Unliftable[Property] {
     case q"$pack.Property.apply(${ a: Ast }, ${ b: String })" => Property(a, b)
-    case q"$pack.Property.Opinionated.apply(${ a: Ast }, ${ b: String }, ${ renameable: Renameable })" => Property.Opinionated(a, b, renameable)
+    case q"$pack.Property.Opinionated.apply(${ a: Ast }, ${ b: String }, ${ renameable: Renameable }, ${ visibility: Visibility })" => Property.Opinionated(a, b, renameable, visibility)
   }
 
   implicit def optionUnliftable[T](implicit u: Unliftable[T]): Unliftable[Option[T]] = Unliftable[Option[T]] {

@@ -2,7 +2,8 @@ package io.getquill
 
 import fansi.Str
 import io.getquill.ast.Renameable.{ ByStrategy, Fixed }
-import io.getquill.ast.{ Ast, Entity, Property, Renameable }
+import io.getquill.ast.Visibility.{ Hidden, Visible }
+import io.getquill.ast._
 import pprint.{ Renderer, Tree, Truncated }
 
 object AstPrinter {
@@ -28,6 +29,12 @@ class AstPrinter(traceOpinions: Boolean, traceAstSimple: Boolean) extends pprint
       case Fixed      => Tree.Literal("F")
     }
 
+  private def printVisibility(v: Visibility) =
+    v match {
+      case Visible => Tree.Literal("Vis")
+      case Hidden  => Tree.Literal("Hide")
+    }
+
   override def additionalHandlers: PartialFunction[Any, Tree] = {
     case ast: Ast if (traceAstSimple) =>
       Tree.Literal(ast + "") // Do not blow up if it is null
@@ -36,7 +43,7 @@ class AstPrinter(traceOpinions: Boolean, traceAstSimple: Boolean) extends pprint
       Tree.Literal(past + "") // Do not blow up if it is null
 
     case p: Property if (traceOpinions) =>
-      Tree.Apply("Property", List[Tree](treeify(p.ast), treeify(p.name), printRenameable(p.renameable)).iterator)
+      Tree.Apply("Property", List[Tree](treeify(p.ast), treeify(p.name), printRenameable(p.renameable), printVisibility(p.visibility)).iterator)
 
     case e: Entity if (traceOpinions) =>
       Tree.Apply("Entity", List[Tree](treeify(e.name), treeify(e.properties), printRenameable(e.renameable)).iterator)
