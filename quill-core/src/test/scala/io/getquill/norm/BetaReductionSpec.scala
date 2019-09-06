@@ -36,6 +36,16 @@ class BetaReductionSpec extends Spec {
       BetaReduction(ast, Ident("a") -> Ident("a'")) mustEqual
         Ident("a'")
     }
+    "with OnConflict.Excluded" in {
+      val ast: Ast = OnConflict.Excluded(Ident("a"))
+      BetaReduction(ast, Ident("a") -> Ident("a'")) mustEqual
+        Ident("a'")
+    }
+    "with OnConflict.Existing" in {
+      val ast: Ast = OnConflict.Existing(Ident("a"))
+      BetaReduction(ast, Ident("a") -> Ident("a'")) mustEqual
+        Ident("a'")
+    }
     "with inline" - {
       val entity = Entity("a", Nil)
       val (a, b, c, d) = (Ident("a"), Ident("b"), Ident("c"), Ident("d"))

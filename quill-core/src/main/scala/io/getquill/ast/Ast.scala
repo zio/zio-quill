@@ -292,8 +292,14 @@ case class Foreach(query: Ast, alias: Ident, body: Ast) extends Action
 case class OnConflict(insert: Ast, target: OnConflict.Target, action: OnConflict.Action) extends Action
 object OnConflict {
 
-  case class Excluded(alias: Ident) extends Ast
-  case class Existing(alias: Ident) extends Ast
+  case class Excluded(alias: Ident) extends Ast {
+    override def neutral: Ast =
+      alias.neutral
+  }
+  case class Existing(alias: Ident) extends Ast {
+    override def neutral: Ast =
+      alias.neutral
+  }
 
   sealed trait Target
   case object NoTarget extends Target
