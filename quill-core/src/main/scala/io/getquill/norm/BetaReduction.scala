@@ -1,15 +1,14 @@
 package io.getquill.norm
 
-//import io.getquill.ast.Renameable.ByStrategy
 import io.getquill.ast._
 
 case class BetaReduction(replacements: Replacements)
   extends StatelessTransformer {
 
-  override def apply(ast: Ast) =
+  override def apply(ast: Ast): Ast =
     ast match {
 
-      case ast if (replacements.contains(ast)) =>
+      case ast if replacements.contains(ast) =>
         BetaReduction(replacements - ast - replacements(ast))(replacements(ast))
 
       case Property(Tuple(values), name) =>
@@ -30,12 +29,12 @@ case class BetaReduction(replacements: Replacements)
 
       case Function(params, body) =>
         val newParams = params.map { p =>
-          (replacements.get(p) match {
+          replacements.get(p) match {
             case Some(i: Ident) => i
             case _              => p
-          })
+          }
         }
-        Function(newParams, BetaReduction(replacements ++ (params.zip(newParams)).toMap)(body))
+        Function(newParams, BetaReduction(replacements ++ params.zip(newParams).toMap)(body))
 
       case Block(statements) =>
         apply {
@@ -46,7 +45,7 @@ case class BetaReduction(replacements: Replacements)
                   val newMap = map + (name -> body)
                   val newStmt = BetaReduction(stmt, Replacements(newMap))
                   (newMap, newStmt)
-                case other =>
+                case _ =>
                   (map, stmt)
               }
           }._2
@@ -54,7 +53,6 @@ case class BetaReduction(replacements: Replacements)
 
       case Foreach(query, alias, body) =>
         Foreach(query, alias, BetaReduction(replacements - alias)(body))
-
       case Returning(action, alias, prop) =>
         val t = BetaReduction(replacements - alias)
         Returning(apply(action), alias, t(prop))
@@ -67,7 +65,7 @@ case class BetaReduction(replacements: Replacements)
         super.apply(other)
     }
 
-  override def apply(o: OptionOperation) =
+  override def apply(o: OptionOperation): OptionOperation =
     o match {
       case other @ OptionTableFlatMap(a, b, c) =>
         OptionTableFlatMap(apply(a), b, BetaReduction(replacements - b)(c))
@@ -89,14 +87,14 @@ case class BetaReduction(replacements: Replacements)
         super.apply(other)
     }
 
-  override def apply(e: Assignment) =
+  override def apply(e: Assignment): Assignment =
     e match {
       case Assignment(alias, prop, value) =>
         val t = BetaReduction(replacements - alias)
         Assignment(alias, t(prop), t(value))
     }
 
-  override def apply(query: Query) =
+  override def apply(query: Query): Query =
     query match {
       case Filter(a, b, c) =>
         Filter(apply(a), b, BetaReduction(replacements - b)(c))

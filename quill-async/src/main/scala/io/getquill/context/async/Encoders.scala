@@ -1,6 +1,6 @@
 package io.getquill.context.async
 
-import java.time.{ LocalDate, LocalDateTime, ZoneId, ZonedDateTime }
+import java.time.{ LocalDate, LocalDateTime, OffsetDateTime, ZoneId, ZonedDateTime }
 import java.util.Date
 
 import org.joda.time.{ DateTimeZone => JodaDateTimeZone, DateTime => JodaDateTime, LocalDate => JodaLocalDate, LocalDateTime => JodaLocalDateTime }
@@ -62,6 +62,9 @@ trait Encoders {
 
   implicit val encodeZonedDateTime: MappedEncoding[ZonedDateTime, JodaDateTime] =
     MappedEncoding(zdt => new JodaDateTime(zdt.toInstant.toEpochMilli, JodaDateTimeZone.forID(zdt.getZone.getId)))
+
+  implicit val encodeOffsetDateTime: MappedEncoding[OffsetDateTime, JodaDateTime] =
+    MappedEncoding(odt => new JodaDateTime(odt.toInstant.toEpochMilli, JodaDateTimeZone.forID(odt.getOffset.getId)))
 
   implicit val encodeLocalDate: MappedEncoding[LocalDate, JodaLocalDate] =
     MappedEncoding(ld => new JodaLocalDate(ld.getYear, ld.getMonthValue, ld.getDayOfMonth))
