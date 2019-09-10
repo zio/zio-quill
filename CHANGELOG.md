@@ -1,3 +1,8 @@
+# 3.4.4
+
+- [added MappedEncoding for encoding and decoding OffsetDateTime](https://github.com/getquill/quill/pull/1595)
+- [Fix onConflict with custom schemaMeta](https://github.com/getquill/quill/pull/1589)
+
 # 3.4.3
 
 - [Nested Query does not work correctly with NamingSchemas](https://github.com/getquill/quill/issues/1577)
