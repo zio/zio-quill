@@ -44,22 +44,40 @@ object RenameProperties extends StatelessTransformer {
         }
       case OnConflict(a: Action, target, act) =>
         applySchema(a) match {
-          case (action, schema) => (OnConflict(action, target, act), schema)
+          case (action, schema) =>
+            val targetR = target match {
+              case OnConflict.Properties(props) =>
+                val propsR = props.map { prop =>
+                  val replace = replacements(prop.ast, schema)
+                  // A BetaReduction on a Property will always give back a Property
+                  BetaReduction(prop, replace: _*).asInstanceOf[Property]
+                }
+                OnConflict.Properties(propsR)
+              case OnConflict.NoTarget => target
+            }
+            val actR = act match {
+              case OnConflict.Update(assignments) =>
+                OnConflict.Update(replaceAssignments(assignments, schema))
+              case _ => act
+            }
+            (OnConflict(action, targetR, actR), schema)
         }
       case q => (q, Tuple(List.empty))
+    }
+
+  private def replaceAssignments(a: List[Assignment], schema: Ast): List[Assignment] =
+    a.map {
+      case Assignment(alias, prop, value) =>
+        val replace = replacements(alias, schema)
+        val propR = BetaReduction(prop, replace: _*)
+        val valueR = BetaReduction(value, replace: _*)
+        Assignment(alias, propR, valueR)
     }
 
   private def applySchema(q: Query, a: List[Assignment], f: (Query, List[Assignment]) => Action): (Action, Ast) =
     applySchema(q) match {
       case (q, schema) =>
-        val ar = a.map {
-          case Assignment(alias, prop, value) =>
-            val replace = replacements(alias, schema)
-            val propr = BetaReduction(prop, replace: _*)
-            val valuer = BetaReduction(value, replace: _*)
-            Assignment(alias, propr, valuer)
-        }
-        (f(q, ar), schema)
+        (f(q, replaceAssignments(a, schema)), schema)
     }
 
   private def applySchemaOnly(q: Query): Query =
