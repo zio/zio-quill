@@ -1,3 +1,7 @@
+# 3.4.5
+
+- [Express Infix Clauses not in Select List](https://github.com/getquill/quill/pull/1597)
+
 # 3.4.4
 
 - [added MappedEncoding for encoding and decoding OffsetDateTime](https://github.com/getquill/quill/pull/1595)
