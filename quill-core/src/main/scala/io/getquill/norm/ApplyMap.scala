@@ -26,6 +26,15 @@ object ApplyMap {
       }
   }
 
+  object MapWithoutInfixes {
+    def unapply(ast: Ast): Option[(Ast, Ident, Ast)] =
+      ast match {
+        case Map(a, b, InfixedTailOperation(c)) => None
+        case Map(a, b, c)                       => Some((a, b, c))
+        case _                                  => None
+      }
+  }
+
   object DetachableMap {
     def unapply(ast: Ast): Option[(Ast, Ident, Ast)] =
       ast match {
@@ -50,7 +59,7 @@ object ApplyMap {
 
       // a.map(b => c).map(d => e) =>
       //    a.map(b => e[d := c])
-      case Map(Map(a, b, c), d, e) =>
+      case before @ Map(MapWithoutInfixes(a, b, c), d, e) =>
         val er = BetaReduction(e, d -> c)
         Some(Map(a, b, er))
 

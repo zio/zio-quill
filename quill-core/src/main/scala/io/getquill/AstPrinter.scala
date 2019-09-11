@@ -1,10 +1,21 @@
 package io.getquill
 
+import fansi.Str
 import io.getquill.ast.Renameable.{ ByStrategy, Fixed }
-import io.getquill.ast.{ Entity, Property, Renameable }
+import io.getquill.ast.{ Ast, Entity, Property, Renameable }
 import pprint.{ Renderer, Tree, Truncated }
 
-class AstPrinter(traceOpinions: Boolean) extends pprint.Walker {
+object AstPrinter {
+  object Implicits {
+    implicit class FansiStrExt(str: Str) {
+      def string(color: Boolean): String =
+        if (color) str.render
+        else str.plainText
+    }
+  }
+}
+
+class AstPrinter(traceOpinions: Boolean, traceAstSimple: Boolean) extends pprint.Walker {
   val defaultWidth: Int = 150
   val defaultHeight: Int = Integer.MAX_VALUE
   val defaultIndent: Int = 2
@@ -18,6 +29,12 @@ class AstPrinter(traceOpinions: Boolean) extends pprint.Walker {
     }
 
   override def additionalHandlers: PartialFunction[Any, Tree] = {
+    case ast: Ast if (traceAstSimple) =>
+      Tree.Literal(ast + "") // Do not blow up if it is null
+
+    case past: PseudoAst if (traceAstSimple) =>
+      Tree.Literal(past + "") // Do not blow up if it is null
+
     case p: Property if (traceOpinions) =>
       Tree.Apply("Property", List[Tree](treeify(p.ast), treeify(p.name), printRenameable(p.renameable)).iterator)
 
@@ -37,3 +54,10 @@ class AstPrinter(traceOpinions: Boolean) extends pprint.Walker {
     truncated
   }
 }
+
+/**
+ * A trait to be used by elements that are not proper AST elements but should still be treated as though
+ * they were in the case where `traceAstSimple` is enabled (i.e. their toString method should be
+ * used instead of the standard qprint AST printing)
+ */
+trait PseudoAst
