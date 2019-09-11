@@ -1,6 +1,7 @@
 package io.getquill.ast
 
 import io.getquill.Spec
+import io.getquill.ast.Renameable.Fixed
 
 class StatelessTransformerSpec extends Spec {
 
@@ -165,6 +166,11 @@ class StatelessTransformerSpec extends Spec {
         Subject(Ident("a") -> Ident("a'"))(target) mustEqual
           OnConflict.Properties(List(Property(Ident("a'"), "b")))
       }
+      "properties - fixed" in {
+        val target: OnConflict.Target = OnConflict.Properties(List(Property.Opinionated(Ident("a"), "b", Fixed)))
+        Subject(Ident("a") -> Ident("a'"))(target) mustEqual
+          OnConflict.Properties(List(Property.Opinionated(Ident("a'"), "b", Fixed)))
+      }
     }
 
     "onConflict.action" - {
@@ -207,10 +213,22 @@ class StatelessTransformerSpec extends Spec {
         Property(Ident("a'"), "b")
     }
 
+    "property - fixed" in {
+      val ast: Ast = Property.Opinionated(Ident("a"), "b", Fixed)
+      Subject(Ident("a") -> Ident("a'"))(ast) mustEqual
+        Property.Opinionated(Ident("a'"), "b", Fixed)
+    }
+
     "infix" in {
-      val ast: Ast = Infix(List("test"), List(Ident("a"), Ident("b")))
+      val ast: Ast = Infix(List("test"), List(Ident("a"), Ident("b")), false)
       Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"))(ast) mustEqual
-        Infix(List("test"), List(Ident("a'"), Ident("b'")))
+        Infix(List("test"), List(Ident("a'"), Ident("b'")), false)
+    }
+
+    "infix - pure" in {
+      val ast: Ast = Infix(List("test"), List(Ident("a"), Ident("b")), true)
+      Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"))(ast) mustEqual
+        Infix(List("test"), List(Ident("a'"), Ident("b'")), true)
     }
 
     "option operation" - {

@@ -1,13 +1,31 @@
 package io.getquill.ast
 
+import io.getquill.NamingStrategy
+
 //************************************************************
 
 sealed trait Ast {
+
+  /**
+   * Return a copy of this AST element with any opinions that it may have set to their neutral position.
+   * Return the object itself if it has no opinions.
+   */
+  def neutral: Ast = this
+
+  /**
+   * Set all opinions of this element and every element in the subtree to the neutral position.
+   */
+  final def neutralize: Ast = new StatelessTransformer {
+    override def apply(a: Ast) =
+      super.apply(a.neutral)
+  }.apply(this)
+
   override def toString = {
     import io.getquill.MirrorIdiom._
     import io.getquill.idiom.StatementInterpolator._
     implicit def liftTokenizer: Tokenizer[Lift] =
       Tokenizer[Lift](_ => stmt"?")
+    implicit val namingStrategy: NamingStrategy = io.getquill.Literal
     this.token.toString
   }
 }
@@ -16,7 +34,51 @@ sealed trait Ast {
 
 sealed trait Query extends Ast
 
-case class Entity(name: String, properties: List[PropertyAlias]) extends Query
+/**
+ * Entities represent the actual tables/views being selected.
+ * Typically, something like:
+ * <pre>`SELECT p.name FROM People p`</pre> comes from
+ * something like:
+ * <pre>`Map(Entity("People", Nil), Ident("p"), Property(Ident(p), "name"))`.</pre>
+ * When you define a `querySchema`, the fields you mention inside become `PropertyAlias`s.
+ * For example something like:
+ * <pre>`querySchema[Person]("t_person", _.name -> "s_name")`</pre>
+ * Becomes something like:
+ * <pre>`Entity("t_person", List(PropertyAlias(List("name"), "s_name"))) { def renameable = Fixed }`</pre>
+ * Note that Entity has an Opinion called `renameable` which will be the value `Fixed` when a `querySchema` is specified.
+ * That means that even if the `NamingSchema` is `UpperCase`, the resulting query will select `t_person` as opposed
+ * to `T_PERSON` or `Person`.
+ */
+case class Entity(name: String, properties: List[PropertyAlias]) extends Query {
+  // Technically this should be part of the Entity case class but due to the limitations of how
+  // scala creates companion objects, the apply/unapply wouldn't be able to work correctly.
+  def renameable: Renameable = Renameable.neutral
+
+  override def neutral: Entity =
+    new Entity(name, properties)
+
+  override def equals(that: Any) =
+    that match {
+      case e: Entity => (e.name, e.properties, e.renameable) == ((name, properties, renameable))
+      case _         => false
+    }
+
+  override def hashCode = (name, properties, renameable).hashCode()
+}
+
+object Entity {
+  def apply(name: String, properties: List[PropertyAlias]) = new Entity(name, properties)
+  def unapply(e: Entity) = Some((e.name, e.properties))
+
+  object Opinionated {
+    def apply(name: String, properties: List[PropertyAlias], renameableNew: Renameable) =
+      new Entity(name, properties) {
+        override def renameable: Renameable = renameableNew
+      }
+    def unapply(e: Entity) =
+      Some((e.name, e.properties, e.renameable))
+  }
+}
 
 case class PropertyAlias(path: List[String], alias: String)
 
@@ -63,17 +125,87 @@ case class Nested(a: Ast) extends Query
 
 //************************************************************
 
-case class Infix(parts: List[String], params: List[Ast]) extends Ast
+case class Infix(parts: List[String], params: List[Ast], pure: Boolean) extends Ast
 
 case class Function(params: List[Ident], body: Ast) extends Ast
 
 case class Ident(name: String) extends Ast
 
 // Like identity but is but defined in a clause external to the query. Currently this is used
-// for 'returning' clauses to define properties being retruned.
+// for 'returning' clauses to define properties being returned.
 case class ExternalIdent(name: String) extends Ast
 
-case class Property(ast: Ast, name: String) extends Ast
+/**
+ * An Opinion represents a piece of data that needs to be propagated through AST transformations but is not directly
+ * related to how ASTs are transformed in most stages. For instance, `Renameable` controls how columns are named (i.e. whether to use a
+ * `NamingStrategy` or not) after most of the SQL transformations are done. Some transformations (e.g. `RenameProperties`
+ * will use `Opinions` or even modify them so that the correct kind of query comes out at the end of the normalizations.
+ * That said, Opinions should be transparent in most steps of the normalization. In some cases e.g. `BetaReduction`,
+ * AST elements need to be neutralized (i.e. set back to defaults in the entire tree) so that this works correctly.
+ */
+sealed trait Opinion[T]
+sealed trait OpinionValues[T <: Opinion[T]] {
+  def neutral: T
+}
+
+sealed trait Renameable extends Opinion[Renameable] {
+  def fixedOr[T](plain: T)(otherwise: T) =
+    this match {
+      case Renameable.Fixed => plain
+      case _                => otherwise
+    }
+}
+object Renameable extends OpinionValues[Renameable] {
+  case object Fixed extends Renameable with Opinion[Renameable]
+  case object ByStrategy extends Renameable with Opinion[Renameable]
+
+  override def neutral: Renameable = ByStrategy
+}
+
+/**
+ * Properties generally represent column selection from a table or invocation of some kind of method from
+ * some other object. Typically, something like
+ * <pre>`SELECT p.name FROM People p`</pre> comes from
+ * something like
+ * <pre>`Map(Entity("People"), Ident("p"), Property(Ident(p), "name"))`</pre>
+ * Properties also have
+ * an Opinion about how the `NamingStrategy` affects their name. For example something like
+ * `Property.Opinionated(Ident(p), "s_name", Fixed)` will become `p.s_name` even if the `NamingStrategy` is `UpperCase`
+ * (whereas `Property(Ident(p), "s_name")` would become `p.S_NAME`). When Property is constructed without `Opinionated`
+ * being used, the default opinion `ByStrategy` is used.
+ */
+case class Property(ast: Ast, name: String) extends Ast {
+  // Technically this should be part of the Property case class but due to the limitations of how
+  // scala creates companion objects, the apply/unapply wouldn't be able to work correctly.
+  def renameable: Renameable = Renameable.neutral
+
+  override def neutral: Property =
+    new Property(ast, name) {
+      override def renameable = Renameable.neutral
+    }
+
+  override def equals(that: Any) =
+    that match {
+      case p: Property => (p.ast, p.name, p.renameable) == ((ast, name, renameable))
+      case _           => false
+    }
+
+  override def hashCode = (ast, name, renameable).hashCode()
+}
+
+object Property {
+  def apply(ast: Ast, name: String) = new Property(ast, name)
+  def unapply(p: Property) = Some((p.ast, p.name))
+
+  object Opinionated {
+    def apply(ast: Ast, name: String, renameableNew: Renameable) =
+      new Property(ast, name) {
+        override def renameable: Renameable = renameableNew
+      }
+    def unapply(p: Property) =
+      Some((p.ast, p.name, p.renameable))
+  }
+}
 
 sealed trait OptionOperation extends Ast
 case class OptionFlatten(ast: Ast) extends OptionOperation
@@ -160,8 +292,14 @@ case class Foreach(query: Ast, alias: Ident, body: Ast) extends Action
 case class OnConflict(insert: Ast, target: OnConflict.Target, action: OnConflict.Action) extends Action
 object OnConflict {
 
-  case class Excluded(alias: Ident) extends Ast
-  case class Existing(alias: Ident) extends Ast
+  case class Excluded(alias: Ident) extends Ast {
+    override def neutral: Ast =
+      alias.neutral
+  }
+  case class Existing(alias: Ident) extends Ast {
+    override def neutral: Ast =
+      alias.neutral
+  }
 
   sealed trait Target
   case object NoTarget extends Target

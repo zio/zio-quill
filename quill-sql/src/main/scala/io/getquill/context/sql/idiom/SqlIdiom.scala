@@ -8,6 +8,7 @@ import io.getquill.context.sql.norm._
 import io.getquill.idiom._
 import io.getquill.idiom.StatementInterpolator._
 import io.getquill.NamingStrategy
+import io.getquill.ast.Renameable.Fixed
 import io.getquill.context.{ ReturningCapability, ReturningClauseSupported }
 import io.getquill.util.Interleave
 import io.getquill.util.Messages.{ fail, trace }
@@ -40,9 +41,10 @@ trait SqlIdiom extends Idiom {
           val sql = querifyAst(q)
           trace("sql")(sql)
           VerifySqlQuery(sql).map(fail)
-          val expanded = ExpandNestedQueries(sql, collection.Set.empty)
+          val expanded = new ExpandNestedQueries(naming)(sql, List())
+          trace("expanded sql")(expanded)
           val tokenized = expanded.token
-          trace("expanded sql")(tokenized)
+          trace("tokenized sql")(tokenized)
           tokenized
         case other =>
           other.token
@@ -157,11 +159,17 @@ trait SqlIdiom extends Idiom {
       stmt"SELECT ${op.token} (${q.token})"
   }
 
-  protected def tokenizeColumn(strategy: NamingStrategy, column: String) =
-    strategy.column(column)
+  protected def tokenizeColumn(strategy: NamingStrategy, column: String, renameable: Renameable) =
+    renameable match {
+      case Fixed => column
+      case _     => strategy.column(column)
+    }
 
-  protected def tokenizeTable(strategy: NamingStrategy, table: String) =
-    strategy.table(table)
+  protected def tokenizeTable(strategy: NamingStrategy, table: String, renameable: Renameable) =
+    renameable match {
+      case Fixed => table
+      case _     => strategy.table(table)
+    }
 
   protected def tokenizeAlias(strategy: NamingStrategy, table: String) =
     strategy.default(table)
@@ -170,8 +178,10 @@ trait SqlIdiom extends Idiom {
 
     def tokenizer(implicit astTokenizer: Tokenizer[Ast]) =
       Tokenizer[SelectValue] {
-        case SelectValue(ast, Some(alias), false) => stmt"${ast.token} AS ${tokenizeColumn(strategy, alias).token}"
-        case SelectValue(ast, Some(alias), true)  => stmt"${concatFunction.token}(${ast.token}) AS ${tokenizeColumn(strategy, alias).token}"
+        case SelectValue(ast, Some(alias), false) => {
+          stmt"${ast.token} AS ${alias.token}"
+        }
+        case SelectValue(ast, Some(alias), true) => stmt"${concatFunction.token}(${ast.token}) AS ${alias.token}"
         case selectValue =>
           val value =
             selectValue match {
@@ -317,8 +327,14 @@ trait SqlIdiom extends Idiom {
           }
         case a => (a, Nil)
       }
+
+    def tokenizePrefixedProperty(name: String, prefix: List[String], strategy: NamingStrategy, renameable: Renameable) =
+      renameable.fixedOr(
+        (prefix.mkString + name).token
+      )(tokenizeColumn(strategy, prefix.mkString + name, renameable).token)
+
     Tokenizer[Property] {
-      case Property(ast, name) =>
+      case Property.Opinionated(ast, name, renameable) =>
         // When we have things like Embedded tables, properties inside of one another needs to be un-nested.
         // E.g. in `Property(Property(Ident("realTable"), embeddedTableAlias), realPropertyAlias)` the inner
         // property needs to be unwrapped and the result of this should only be `realTable.realPropertyAlias`
@@ -335,11 +351,11 @@ trait SqlIdiom extends Idiom {
           case (ExternalIdent(_), prefix) =>
             stmt"${
               actionAlias.map(alias => stmt"${scopedTokenizer(alias)}.").getOrElse(stmt"")
-            }${tokenizeColumn(strategy, prefix.mkString + name).token}"
+            }${tokenizePrefixedProperty(name, prefix, strategy, renameable)}"
           // The normal case where `Property(Property(Ident("realTable"), embeddedTableAlias), realPropertyAlias)`
           // becomes `realTable.realPropertyAlias`.
           case (ast, prefix) =>
-            stmt"${scopedTokenizer(ast)}.${tokenizeColumn(strategy, prefix.mkString + name).token}"
+            stmt"${scopedTokenizer(ast)}.${tokenizePrefixedProperty(name, prefix, strategy, renameable)}"
         }
     }
   }
@@ -354,7 +370,7 @@ trait SqlIdiom extends Idiom {
   }
 
   implicit def infixTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Infix] = Tokenizer[Infix] {
-    case Infix(parts, params) =>
+    case Infix(parts, params, _) =>
       val pt = parts.map(_.token)
       val pr = params.map(_.token)
       Statement(Interleave(pt, pr))
@@ -373,18 +389,18 @@ trait SqlIdiom extends Idiom {
 
   implicit def defaultAstTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Action] = {
     val insertEntityTokenizer = Tokenizer[Entity] {
-      case Entity(name, _) => stmt"INTO ${tokenizeTable(strategy, name).token}"
+      case Entity.Opinionated(name, _, renameable) => stmt"INTO ${tokenizeTable(strategy, name, renameable).token}"
     }
     actionTokenizer(insertEntityTokenizer)(actionAstTokenizer, strategy)
   }
 
   protected def actionAstTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy) =
     Tokenizer.withFallback[Ast](SqlIdiom.this.astTokenizer(_, strategy)) {
-      case q: Query                                 => astTokenizer.token(q)
-      case Property(Property(_, name), "isEmpty")   => stmt"${tokenizeColumn(strategy, name).token} IS NULL"
-      case Property(Property(_, name), "isDefined") => stmt"${tokenizeColumn(strategy, name).token} IS NOT NULL"
-      case Property(Property(_, name), "nonEmpty")  => stmt"${tokenizeColumn(strategy, name).token} IS NOT NULL"
-      case Property(_, name)                        => tokenizeColumn(strategy, name).token
+      case q: Query => astTokenizer.token(q)
+      case Property(Property.Opinionated(_, name, renameable), "isEmpty") => stmt"${renameable.fixedOr(name)(tokenizeColumn(strategy, name, renameable)).token} IS NULL"
+      case Property(Property.Opinionated(_, name, renameable), "isDefined") => stmt"${renameable.fixedOr(name)(tokenizeColumn(strategy, name, renameable)).token} IS NOT NULL"
+      case Property(Property.Opinionated(_, name, renameable), "nonEmpty") => stmt"${renameable.fixedOr(name)(tokenizeColumn(strategy, name, renameable)).token} IS NOT NULL"
+      case Property.Opinionated(_, name, renameable) => renameable.fixedOr(name.token)(tokenizeColumn(strategy, name, renameable).token)
     }
 
   def returnListTokenizer(implicit tokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[List[Ast]] = {
@@ -450,7 +466,7 @@ trait SqlIdiom extends Idiom {
     }
 
   implicit def entityTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Entity] = Tokenizer[Entity] {
-    case Entity(name, _) => tokenizeTable(strategy, name).token
+    case Entity.Opinionated(name, _, renameable) => tokenizeTable(strategy, name, renameable).token
   }
 
   protected def scopedTokenizer(ast: Ast)(implicit tokenizer: Tokenizer[Ast]) =

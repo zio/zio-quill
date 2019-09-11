@@ -338,6 +338,24 @@ class CqlIdiomSpec extends Spec {
     }
   }
 
+  "naming strategy" - {
+    import capsMirrorContext._
+
+    "naming strategy respected" in {
+      capsMirrorContext.run(query[TestEntity].filter(_.i > 1)).string mustEqual
+        "SELECT S, I, L, O FROM TESTENTITY WHERE I > 1"
+    }
+
+    "query schema overrides naming strategy" in {
+      val qs = quote {
+        querySchema[TestEntity]("CustomTestEntity", _.i -> "field_i")
+      }
+
+      capsMirrorContext.run(qs.filter(r => r.i > 1 && r.l > 2L)).string mustEqual
+        "SELECT S, field_i, L, O FROM CustomTestEntity WHERE field_i > 1 AND L > 2"
+    }
+  }
+
   "collections operations" - {
     "map.contains" in {
       mirrorContext.run(mapFroz.filter(x => x.id.contains(1))).string mustEqual

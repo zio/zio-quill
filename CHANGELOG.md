@@ -1,3 +1,41 @@
+# 3.4.4
+
+- [added MappedEncoding for encoding and decoding OffsetDateTime](https://github.com/getquill/quill/pull/1595)
+- [Fix onConflict with custom schemaMeta](https://github.com/getquill/quill/pull/1589)
+
+# 3.4.3
+
+- [Nested Query does not work correctly with NamingSchemas](https://github.com/getquill/quill/issues/1577)
+
+# 3.4.2
+
+- [Fix NamingStrategy override of querySchema](https://github.com/getquill/quill/pull/1560)
+- [Monix JDBC scheduling fixes ](https://github.com/getquill/quill/pull/1546)
+
+Migration Notes:
+- `NamingStrategy` is no longer applied on column and table names defined in `querySchema`, all 
+column and table names defined in `querySchema` are now final. If you are relying on this behavior to 
+name your columns/tables correctly, you will need to update your `querySchema` objects.
+
+# 3.4.1
+
+- [Fix property order expanded sub-queries](https://github.com/getquill/quill/pull/1541)
+
+Migration Notes:
+- Nested sub-queries will now have their terms re-ordered in certain circumstances although the functionality
+of the entire query should not change. If you have deeply nested queries with Infixes, double check that
+they are in the correct position.
+
+# 3.4.0
+
+- [Nest queries with infix values to allow infix-impurity](https://github.com/getquill/quill/pull/1534)
+
+Migration Notes:
+- Infixes are now not treated as pure functions by default. This means wherever they are used, nested queries may be created.
+You can use `.pure` (e.g. `infix"MY_PURE_UDF".pure.as[T]`) to revert to the previous behavior. See the 
+[Infix](https://github.com/getquill/quill/tree/36842c4801c95a7609ba94c450645f3c022b3e2e#infix) 
+section of the documentation for more detail.
+
 # 3.3.0
 
 - [Returning Record](https://github.com/getquill/quill/pull/1489)

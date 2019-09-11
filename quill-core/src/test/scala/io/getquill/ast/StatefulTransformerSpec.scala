@@ -1,6 +1,7 @@
 package io.getquill.ast
 
 import io.getquill.Spec
+import io.getquill.ast.Renameable.Fixed
 
 class StatefulTransformerSpec extends Spec {
 
@@ -309,6 +310,15 @@ class StatefulTransformerSpec extends Spec {
       }
     }
 
+    "property - fixed" in {
+      val ast: Ast = Property.Opinionated(Ident("a"), "b", Fixed)
+      Subject(Nil, Ident("a") -> Ident("a'"))(ast) match {
+        case (at, att) =>
+          at mustEqual Property.Opinionated(Ident("a'"), "b", Fixed)
+          att.state mustEqual List(Ident("a"))
+      }
+    }
+
     "quotedReference" in {
       val ast: Ast = QuotedReference(null, Ident("a"))
       Subject(Nil, Ident("a") -> Ident("a'"))(ast) match {
@@ -319,10 +329,19 @@ class StatefulTransformerSpec extends Spec {
     }
 
     "infix" in {
-      val ast: Ast = Infix(List("test"), List(Ident("a")))
+      val ast: Ast = Infix(List("test"), List(Ident("a")), false)
       Subject(Nil, Ident("a") -> Ident("a'"))(ast) match {
         case (at, att) =>
-          at mustEqual Infix(List("test"), List(Ident("a'")))
+          at mustEqual Infix(List("test"), List(Ident("a'")), false)
+          att.state mustEqual List(Ident("a"))
+      }
+    }
+
+    "infix - pure" in {
+      val ast: Ast = Infix(List("test"), List(Ident("a")), true)
+      Subject(Nil, Ident("a") -> Ident("a'"))(ast) match {
+        case (at, att) =>
+          at mustEqual Infix(List("test"), List(Ident("a'")), true)
           att.state mustEqual List(Ident("a"))
       }
     }

@@ -8,6 +8,9 @@ import java.io.{File => JFile}
 
 enablePlugins(TutPlugin)
 
+val CodegenTag = Tags.Tag("CodegenTag")
+(concurrentRestrictions in Global) += Tags.exclusive(CodegenTag)
+
 lazy val baseModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-core-jvm`, `quill-core-js`, `quill-sql-jvm`, `quill-sql-js`, `quill-monix`
 )
@@ -94,7 +97,10 @@ lazy val `quill-core` =
       "org.scala-lang"             %  "scala-reflect" % scalaVersion.value
     ))
     .jsSettings(
-      libraryDependencies += "org.scala-js" %%% "scalajs-java-time" % "0.2.5",
+      libraryDependencies ++= Seq(
+        "com.lihaoyi" %%% "pprint" % "0.5.4",
+        "org.scala-js" %%% "scalajs-java-time" % "0.2.5"
+      ),
       coverageExcludedPackages := ".*"
     )
 
@@ -122,6 +128,7 @@ lazy val `quill-codegen` =
 lazy val `quill-codegen-jdbc` =
   (project in file("quill-codegen-jdbc"))
     .settings(commonSettings: _*)
+    .settings(jdbcTestingLibraries: _*)
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
@@ -130,10 +137,7 @@ lazy val `quill-codegen-jdbc` =
       )
     )
     .dependsOn(`quill-codegen` % "compile->compile;test->test")
-    .dependsOn(`quill-jdbc` % "compile->compile;test->test")
-
-
-val codegen = taskKey[Seq[File]]("Run Code Generation Phase for Integration Testing")
+    .dependsOn(`quill-jdbc` % "compile->compile")
 
 lazy val `quill-codegen-tests` =
   (project in file("quill-codegen-tests"))
@@ -141,7 +145,6 @@ lazy val `quill-codegen-tests` =
     .settings(
       libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test,
       fork in Test := true,
-      (sourceGenerators in Test) += (codegen in Test),
       (excludeFilter in unmanagedSources) := excludePathsIfOracle {
         (unmanagedSourceDirectories in Test).value.map { dir =>
           (dir / "io" / "getquill" / "codegen" / "OracleCodegenTestCases.scala").getCanonicalPath
@@ -150,7 +153,7 @@ lazy val `quill-codegen-tests` =
           (dir / "io" / "getquill" / "codegen" / "util" / "WithOracleContext.scala").getCanonicalPath
         }
       },
-      (codegen in Test) := {
+      (sourceGenerators in Test) += Def.task {
         def recrusiveList(file:JFile): List[JFile] = {
           if (file.isDirectory)
             Option(file.listFiles()).map(_.flatMap(child=> recrusiveList(child)).toList).toList.flatten
@@ -177,12 +180,15 @@ lazy val `quill-codegen-tests` =
           s
         )
         recrusiveList(fileDir)
-      }
+      }.tag(CodegenTag)
     )
     .dependsOn(`quill-codegen-jdbc` % "compile->test")
 
 val includeOracle =
   sys.props.getOrElse("oracle", "false").toBoolean
+
+val excludeTests =
+  sys.props.getOrElse("excludeTests", "false").toBoolean
 
 val skipPush =
   sys.props.getOrElse("skipPush", "false").toBoolean
@@ -244,7 +250,7 @@ lazy val `quill-spark` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "org.apache.spark" %% "spark-sql" % "2.4.3"
+        "org.apache.spark" %% "spark-sql" % "2.4.4"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -256,7 +262,7 @@ lazy val `quill-finagle-mysql` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.twitter" %% "finagle-mysql" % "19.6.0"
+        "com.twitter" %% "finagle-mysql" % "19.8.0"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -338,7 +344,7 @@ lazy val `quill-cassandra-lagom` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= {
-        val lagomVersion = "1.5.1"
+        val lagomVersion = "1.5.3"
         Seq(
           "com.lightbend.lagom" %% "lagom-scaladsl-persistence-cassandra" % lagomVersion % Provided,
           "com.lightbend.lagom" %% "lagom-scaladsl-testkit" % lagomVersion % Test
@@ -355,7 +361,7 @@ lazy val `quill-orientdb` =
       .settings(
         fork in Test := true,
         libraryDependencies ++= Seq(
-          "com.orientechnologies" % "orientdb-graphdb" % "3.0.21"
+          "com.orientechnologies" % "orientdb-graphdb" % "3.0.23"
         )
       )
       .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -436,8 +442,8 @@ def updateWebsiteTag =
     st
   })
 
-lazy val jdbcTestingSettings = Seq(
-  fork in Test := true,
+
+lazy val jdbcTestingLibraries = Seq(
   resolvers ++= includeIfOracle( // read ojdbc8 jar in case it is deployed
     Resolver.mavenLocal
   ),
@@ -445,27 +451,51 @@ lazy val jdbcTestingSettings = Seq(
     val deps =
       Seq(
         "com.zaxxer"              %  "HikariCP"                % "3.3.1",
-        "mysql"                   %  "mysql-connector-java"    % "8.0.16"             % Test,
+        "mysql"                   %  "mysql-connector-java"    % "8.0.17"             % Test,
         "com.h2database"          %  "h2"                      % "1.4.199"            % Test,
         "org.postgresql"          %  "postgresql"              % "42.2.6"             % Test,
         "org.xerial"              %  "sqlite-jdbc"             % "3.28.0"           % Test,
         "com.microsoft.sqlserver" %  "mssql-jdbc"              % "7.1.1.jre8-preview" % Test,
-        "org.mockito"             %% "mockito-scala-scalatest" % "1.5.11"              % Test
+        "org.mockito"             %% "mockito-scala-scalatest" % "1.5.15"              % Test
       )
 
     deps ++ includeIfOracle(
       "com.oracle.jdbc" % "ojdbc8" % "18.3.0.0.0" % Test
     )
-  },
-  excludeFilter in unmanagedSources := excludePathsIfOracle {
-    (unmanagedSourceDirectories in Test).value.map { dir =>
-      (dir / "io" / "getquill" / "context" / "jdbc" / "oracle").getCanonicalPath
-    } ++
-    (unmanagedSourceDirectories in Test).value.map { dir =>
-        (dir / "io" / "getquill" / "oracle").getCanonicalPath
+  }
+)
+
+lazy val jdbcTestingSettings = jdbcTestingLibraries ++ Seq(
+  fork in Test := true,
+  excludeFilter in unmanagedSources := {
+    excludeTests match {
+      case true =>
+        excludePaths((unmanagedSourceDirectories in Test).value.map(dir => dir.getCanonicalPath))
+      case false =>
+        excludePathsIfOracle {
+          (unmanagedSourceDirectories in Test).value.map { dir =>
+            (dir / "io" / "getquill" / "context" / "jdbc" / "oracle").getCanonicalPath
+          } ++
+            (unmanagedSourceDirectories in Test).value.map { dir =>
+              (dir / "io" / "getquill" / "oracle").getCanonicalPath
+            }
+        }
     }
   }
 )
+
+def excludePaths(paths:Seq[String]) = {
+  val excludeThisPath =
+    (path: String) =>
+      paths.exists { srcDir =>
+        (path contains srcDir)
+      }
+  new SimpleFileFilter(file => {
+    if (excludeThisPath(file.getCanonicalPath))
+      println(s"Excluding: ${file.getCanonicalPath}")
+    excludeThisPath(file.getCanonicalPath)
+  })
+}
 
 def excludePathsIfOracle(paths:Seq[String]) = {
   val excludeThisPath =
@@ -475,16 +505,23 @@ def excludePathsIfOracle(paths:Seq[String]) = {
       }
   new SimpleFileFilter(file => {
     if (excludeThisPath(file.getCanonicalPath))
-      println(s"Excluding: ${file.getCanonicalPath}")
+      println(s"Excluding Oracle Related File: ${file.getCanonicalPath}")
     excludeThisPath(file.getCanonicalPath)
   })
 }
 
 lazy val basicSettings = Seq(
+  excludeFilter in unmanagedSources := {
+    excludeTests match {
+      case true  => excludePaths((unmanagedSourceDirectories in Test).value.map(dir => dir.getCanonicalPath))
+      case false => new SimpleFileFilter(file => false)
+    }
+  },
   organization := "io.getquill",
   scalaVersion := "2.11.12",
   crossScalaVersions := Seq("2.11.12","2.12.7"),
   libraryDependencies ++= Seq(
+    "com.lihaoyi"     %% "pprint"         % "0.5.4",
     "org.scalamacros" %% "resetallattrs"  % "1.0.0",
     "org.scalatest"   %%% "scalatest"     % "3.0.8"          % Test,
     "ch.qos.logback"  % "logback-classic" % "1.2.3"          % Test,
@@ -580,7 +617,7 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ basicSettings ++
         doOnDefault(checkSnapshotDependencies) ++
         doOnDefault(inquireVersions) ++
         doOnDefault(runClean) ++
-        doOnDefault(setReleaseVersion) ++
+        doOnPush   (setReleaseVersion) ++
         doOnDefault(updateReadmeVersion(_._1)) ++
         doOnPush   (commitReleaseVersion) ++
         doOnPush   (updateWebsiteTag) ++
@@ -595,7 +632,7 @@ lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ basicSettings ++
         doOnDefault(checkSnapshotDependencies) ++
         doOnDefault(inquireVersions) ++
         doOnDefault(runClean) ++
-        doOnDefault(setReleaseVersion) ++
+        doOnPush   (setReleaseVersion) ++
         doOnDefault(publishArtifacts)
         //doOnPush   ("sonatypeReleaseAll") ++
       case _ => Seq[ReleaseStep]()

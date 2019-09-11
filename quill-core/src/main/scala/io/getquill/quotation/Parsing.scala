@@ -14,6 +14,7 @@ import scala.annotation.tailrec
 import scala.collection.immutable.StringOps
 import scala.reflect.macros.TypecheckException
 import io.getquill.ast.Implicits._
+import io.getquill.ast.Renameable.Fixed
 import io.getquill.util.Interleave
 
 trait Parsing extends ValueComputation {
@@ -176,6 +177,9 @@ trait Parsing extends ValueComputation {
       Entity("unused", Nil)
 
     case q"$pack.querySchema[$t](${ name: String }, ..$properties)" =>
+      Entity.Opinionated(name, properties.map(propertyAliasParser(_)), Fixed)
+
+    case q"$pack.impliedQuerySchema[$t](${ name: String }, ..$properties)" =>
       Entity(name, properties.map(propertyAliasParser(_)))
 
     case q"$source.filter(($alias) => $body)" if (is[CoreDsl#Query[Any]](source)) =>
@@ -275,12 +279,19 @@ trait Parsing extends ValueComputation {
   }
 
   val infixParser: Parser[Ast] = Parser[Ast] {
+    case q"$infix.pure.as[$t]" =>
+      combinedInfixParser(true)(infix)
     case q"$infix.as[$t]" =>
-      infixParser(infix)
+      combinedInfixParser(false)(infix)
+    case `impureInfixParser`(value) =>
+      value
+  }
+
+  val impureInfixParser = combinedInfixParser(false)
+
+  def combinedInfixParser(infixIsPure: Boolean): Parser[Ast] = Parser[Ast] {
     case q"$pack.InfixInterpolator(scala.StringContext.apply(..${ parts: List[String] })).infix(..$params)" =>
-
       if (parts.find(_.endsWith("#")).isDefined) {
-
         val elements =
           parts.zipWithIndex.flatMap {
             case (part, idx) if idx < params.length =>
@@ -313,12 +324,12 @@ trait Parsing extends ValueComputation {
         Dynamic {
           c.typecheck(q"""
             new ${c.prefix}.Quoted[Any] {
-              override def ast = io.getquill.ast.Infix($newParts, $newParams)
+              override def ast = io.getquill.ast.Infix($newParts, $newParams, $infixIsPure)
             }
           """)
         }
       } else
-        Infix(parts, params.map(astParser(_)))
+        Infix(parts, params.map(astParser(_)), infixIsPure)
   }
 
   val functionParser: Parser[Function] = Parser[Function] {

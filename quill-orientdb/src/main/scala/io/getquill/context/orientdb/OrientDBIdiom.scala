@@ -29,7 +29,7 @@ trait OrientDBIdiom extends Idiom {
         case q: Query =>
           val sql = SqlQuery(q)
           VerifySqlQuery(sql).map(fail)
-          ExpandNestedQueries(sql, collection.Set.empty).token
+          new ExpandNestedQueries(naming)(sql, List()).token
         case other =>
           other.token
       }
@@ -234,7 +234,8 @@ trait OrientDBIdiom extends Idiom {
       case Property(ast, "isEmpty")   => stmt"${ast.token} IS NULL"
       case Property(ast, "nonEmpty")  => stmt"${ast.token} IS NOT NULL"
       case Property(ast, "isDefined") => stmt"${ast.token} IS NOT NULL"
-      case Property(ast, name)        => stmt"${strategy.column(name).token}"
+      case Property.Opinionated(ast, name, renameable) =>
+        renameable.fixedOr(name.token)(strategy.column(name).token)
     }
   }
 
@@ -248,7 +249,7 @@ trait OrientDBIdiom extends Idiom {
   }
 
   implicit def infixTokenizer(implicit propertyTokenizer: Tokenizer[Property], strategy: NamingStrategy): Tokenizer[Infix] = Tokenizer[Infix] {
-    case Infix(parts, params) =>
+    case Infix(parts, params, _) =>
       val pt = parts.map(_.token)
       val pr = params.map(_.token)
       Statement(Interleave(pt, pr))
@@ -268,10 +269,10 @@ trait OrientDBIdiom extends Idiom {
   implicit def actionTokenizer(implicit strategy: NamingStrategy): Tokenizer[Action] = {
 
     implicit def propertyTokenizer: Tokenizer[Property] = Tokenizer[Property] {
-      case Property(Property(_, name), "isEmpty")   => stmt"${strategy.column(name).token} IS NULL"
-      case Property(Property(_, name), "isDefined") => stmt"${strategy.column(name).token} IS NOT NULL"
-      case Property(Property(_, name), "nonEmpty")  => stmt"${strategy.column(name).token} IS NOT NULL"
-      case Property(_, name)                        => strategy.column(name).token
+      case Property(Property.Opinionated(_, name, renameable), "isEmpty")   => stmt"${renameable.fixedOr(name.token)(strategy.column(name).token)} IS NULL"
+      case Property(Property.Opinionated(_, name, renameable), "isDefined") => stmt"${renameable.fixedOr(name.token)(strategy.column(name).token)} IS NOT NULL"
+      case Property(Property.Opinionated(_, name, renameable), "nonEmpty")  => stmt"${renameable.fixedOr(name.token)(strategy.column(name).token)} IS NOT NULL"
+      case Property.Opinionated(_, name, renameable)                        => renameable.fixedOr(name.token)(strategy.column(name).token)
     }
 
     Tokenizer[Action] {
@@ -298,7 +299,8 @@ trait OrientDBIdiom extends Idiom {
   }
 
   implicit def entityTokenizer(implicit strategy: NamingStrategy): Tokenizer[Entity] = Tokenizer[Entity] {
-    case Entity(name, _) => strategy.table(name).token
+    case Entity.Opinionated(name, _, renameable) =>
+      renameable.fixedOr(name.token)(strategy.table(name).token)
   }
 
   protected def scopedTokenizer[A <: Ast](ast: A)(implicit token: Tokenizer[A]) =

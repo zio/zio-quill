@@ -54,7 +54,7 @@ class CaseClassQuerySpec extends Spec {
   val noteEntries = liftQuery(noteList.toDS())
 
   val reverse = quote {
-    (str: String) => infix"reverse(${str})".as[String]
+    (str: String) => infix"reverse(${str})".pure.as[String]
   }
 
   "Simple Join" in {
@@ -403,6 +403,40 @@ class CaseClassQuerySpec extends Spec {
       } yield ContactSimplifiedRenamed(p.firstName, p.lastNameRenamed, reverse(p.firstName))
     }
     testContext.run(q2).collect() should contain theSameElementsAs expectedData.filter(_.firstName == "Bert")
+  }
+
+  "Two Level Select - Stateful Select from Infix" in {
+
+    val stateCollection = {
+      val buff = new scala.collection.mutable.ArrayBuffer[String]()
+      buff ++= Seq("one", "two", "three", "four", "five", "six")
+      buff
+    }
+
+    val statefulStrings = () => {
+      if (stateCollection.nonEmpty)
+        stateCollection.remove(0)
+      else
+        "end"
+    }
+    sparkSession.udf.register("statefulStringsUdf", statefulStrings)
+
+    val statefulStringsUdf = quote {
+      infix"statefulStringsUdf()".as[String]
+    }
+
+    val q = quote {
+      for {
+        p <- peopleEntries
+      } yield ContactSimplifiedRenamed(p.firstName, p.lastName, statefulStringsUdf)
+    }
+
+    val q2 = quote {
+      for {
+        p <- q if (p.lastNameRenamed == "James")
+      } yield ContactSimplifiedRenamed(p.firstName, p.lastNameRenamed, p.firstReverse + "-" + unquote(statefulStringsUdf))
+    }
+    testContext.run(q2).collect() should contain theSameElementsAs (Seq(ContactSimplifiedRenamed("Bert", "James", "two-four")))
   }
 
   "Two Level Select - Filtered Second Part" in {

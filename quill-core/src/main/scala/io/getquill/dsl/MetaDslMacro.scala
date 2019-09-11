@@ -58,7 +58,7 @@ class MetaDslMacro(val c: MacroContext) extends ValueComputation {
       q"""
           new ${c.prefix}.SchemaMeta[$t] {
             private[this] val _entity =
-              ${c.prefix}.quote(${c.prefix}.querySchema[$t](${t.tpe.typeSymbol.name.decodedName.toString}))
+              ${c.prefix}.quote(${c.prefix}.impliedQuerySchema[$t](${t.tpe.typeSymbol.name.decodedName.toString}))
             def entity = _entity
           }
         """

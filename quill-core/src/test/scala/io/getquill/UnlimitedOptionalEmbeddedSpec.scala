@@ -1,5 +1,6 @@
 package io.getquill
 
+import io.getquill.ast.Renameable.Fixed
 import io.getquill.ast.{ Entity, PropertyAlias }
 import io.getquill.context.mirror.Row
 
@@ -37,7 +38,7 @@ class UnlimitedOptionalEmbeddedSpec extends Spec {
   }
 
   "quotation aliases" in {
-    quote(unquote(qrOptEmd)).ast mustEqual Entity("OptEmd", List(
+    quote(unquote(qrOptEmd)).ast mustEqual Entity.Opinionated("OptEmd", List(
       PropertyAlias(List("e1", "e1", "e1", "value"), "value111"),
       PropertyAlias(List("e1", "e1", "e2", "value"), "value112"),
       PropertyAlias(List("e1", "e2", "e1", "value"), "value121"),
@@ -46,7 +47,7 @@ class UnlimitedOptionalEmbeddedSpec extends Spec {
       PropertyAlias(List("e2", "e1", "e2", "value"), "value212"),
       PropertyAlias(List("e2", "e2", "e1", "value"), "value221"),
       PropertyAlias(List("e2", "e2", "e2", "value"), "value222")
-    ))
+    ), Fixed)
   }
 
   "meta" - {
@@ -86,7 +87,7 @@ class UnlimitedOptionalEmbeddedSpec extends Spec {
   }
 
   "action" - {
-    val resultString = """querySchema("OptEmd", _.e1.e1.e1.value -> "value111", _.e1.e1.e2.value -> "value112", """ +
+    val resultString = """`querySchema`("OptEmd", _.e1.e1.e1.value -> "value111", _.e1.e1.e2.value -> "value112", """ +
       """_.e1.e2.e1.value -> "value121", _.e1.e2.e2.value -> "value122", _.e2.e1.e1.value -> "value211", """ +
       """_.e2.e1.e2.value -> "value212", _.e2.e2.e1.value -> "value221", _.e2.e2.e2.value -> "value222").insert(""" +
       "v => v.e1.e1.e1.value -> ?, " +

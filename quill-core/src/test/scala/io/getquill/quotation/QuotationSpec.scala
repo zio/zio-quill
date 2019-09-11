@@ -1,15 +1,14 @@
 package io.getquill.quotation
 
-import scala.math.BigDecimal.double2bigDecimal
-import scala.math.BigDecimal.int2bigDecimal
-import scala.math.BigDecimal.javaBigDecimal2bigDecimal
-import scala.math.BigDecimal.long2bigDecimal
 import io.getquill.Spec
-import io.getquill.ast.{ Query => _, _ }
-import io.getquill.testContext._
-import io.getquill.context.ValueClass
-import io.getquill.util.Messages
 import io.getquill.ast.Implicits._
+import io.getquill.ast.Renameable.Fixed
+import io.getquill.ast.{ Query => _, _ }
+import io.getquill.context.ValueClass
+import io.getquill.testContext._
+import io.getquill.util.Messages
+
+import scala.math.BigDecimal.{ double2bigDecimal, int2bigDecimal, javaBigDecimal2bigDecimal, long2bigDecimal }
 
 case class CustomAnyValue(i: Int) extends AnyVal
 case class EmbeddedValue(s: String, i: Int) extends Embedded
@@ -30,39 +29,48 @@ class QuotationSpec extends Spec {
           val q = quote {
             querySchema[TestEntity]("SomeAlias")
           }
-          quote(unquote(q)).ast mustEqual Entity("SomeAlias", Nil)
+          quote(unquote(q)).ast mustEqual Entity.Opinionated("SomeAlias", Nil, Fixed)
         }
         "with property alias" in {
           val q = quote {
             querySchema[TestEntity]("SomeAlias", _.s -> "theS", _.i -> "theI")
           }
-          quote(unquote(q)).ast mustEqual Entity("SomeAlias", List(PropertyAlias(List("s"), "theS"), PropertyAlias(List("i"), "theI")))
+          quote(unquote(q)).ast mustEqual Entity.Opinionated("SomeAlias", List(PropertyAlias(List("s"), "theS"), PropertyAlias(List("i"), "theI")), Fixed)
         }
         "with embedded property alias" in {
           case class TestEnt(ev: EmbeddedValue)
           val q = quote {
             querySchema[TestEnt]("SomeAlias", _.ev.s -> "theS", _.ev.i -> "theI")
           }
-          quote(unquote(q)).ast mustEqual Entity("SomeAlias", List(PropertyAlias(List("ev", "s"), "theS"), PropertyAlias(List("ev", "i"), "theI")))
+          quote(unquote(q)).ast mustEqual Entity.Opinionated("SomeAlias", List(PropertyAlias(List("ev", "s"), "theS"), PropertyAlias(List("ev", "i"), "theI")), Fixed)
         }
         "with embedded option property alias" in {
           case class TestEnt(ev: Option[EmbeddedValue])
           val q = quote {
             querySchema[TestEnt]("SomeAlias", _.ev.map(_.s) -> "theS", _.ev.map(_.i) -> "theI")
           }
-          quote(unquote(q)).ast mustEqual Entity("SomeAlias", List(PropertyAlias(List("ev", "s"), "theS"), PropertyAlias(List("ev", "i"), "theI")))
+          quote(unquote(q)).ast mustEqual Entity.Opinionated("SomeAlias", List(PropertyAlias(List("ev", "s"), "theS"), PropertyAlias(List("ev", "i"), "theI")), Fixed)
         }
         "explicit `Predef.ArrowAssoc`" in {
           val q = quote {
             querySchema[TestEntity]("TestEntity", e => Predef.ArrowAssoc(e.s).->[String]("theS"))
           }
-          quote(unquote(q)).ast mustEqual Entity("TestEntity", List(PropertyAlias(List("s"), "theS")))
+          quote(unquote(q)).ast mustEqual Entity.Opinionated("TestEntity", List(PropertyAlias(List("s"), "theS")), Fixed)
         }
         "with property alias and unicode arrow" in {
           val q = quote {
             querySchema[TestEntity]("SomeAlias", _.s → "theS", _.i → "theI")
           }
-          quote(unquote(q)).ast mustEqual Entity("SomeAlias", List(PropertyAlias(List("s"), "theS"), PropertyAlias(List("i"), "theI")))
+          quote(unquote(q)).ast mustEqual Entity.Opinionated("SomeAlias", List(PropertyAlias(List("s"), "theS"), PropertyAlias(List("i"), "theI")), Fixed)
+        }
+        "with only some properties renamed" in {
+          val q = quote {
+            querySchema[TestEntity]("SomeAlias", _.s -> "theS").filter(t => t.s == "s" && t.i == 1)
+          }
+          quote(unquote(q)).ast mustEqual (
+            Filter(Entity.Opinionated("SomeAlias", List(PropertyAlias(List("s"), "theS")), Fixed), Ident("t"),
+              (Property(Ident("t"), "s") +==+ Constant("s")) +&&+ (Property(Ident("t"), "i") +==+ Constant(1)))
+          )
         }
       }
       "filter" in {
@@ -1109,22 +1117,32 @@ class QuotationSpec extends Spec {
         val q = quote {
           infix"true"
         }
-        quote(unquote(q)).ast mustEqual Infix(List("true"), Nil)
+        quote(unquote(q)).ast mustEqual Infix(List("true"), Nil, false)
       }
       "with `as`" in {
         val q = quote {
           infix"true".as[Boolean]
         }
-        quote(unquote(q)).ast mustEqual Infix(List("true"), Nil)
+        quote(unquote(q)).ast mustEqual Infix(List("true"), Nil, false)
       }
       "with params" in {
         val q = quote {
           (a: String, b: String) =>
             infix"$a || $b".as[String]
         }
-        quote(unquote(q)).ast.body mustEqual Infix(List("", " || ", ""), List(Ident("a"), Ident("b")))
+        quote(unquote(q)).ast.body mustEqual Infix(List("", " || ", ""), List(Ident("a"), Ident("b")), false)
       }
       "with dynamic string" - {
+        "at the end - pure" in {
+          val b = "dyn"
+          val q = quote {
+            (a: String) =>
+              infix"$a || #$b".pure.as[String]
+          }
+          quote(unquote(q)).ast must matchPattern {
+            case Function(_, Infix(List("", " || dyn"), List(Ident("a")), true)) =>
+          }
+        }
         "at the end" in {
           val b = "dyn"
           val q = quote {
@@ -1132,7 +1150,17 @@ class QuotationSpec extends Spec {
               infix"$a || #$b".as[String]
           }
           quote(unquote(q)).ast must matchPattern {
-            case Function(_, Infix(List("", " || dyn"), List(Ident("a")))) =>
+            case Function(_, Infix(List("", " || dyn"), List(Ident("a")), false)) =>
+          }
+        }
+        "at the beginning - pure" in {
+          val a = "dyn"
+          val q = quote {
+            (b: String) =>
+              infix"#$a || $b".pure.as[String]
+          }
+          quote(unquote(q)).ast must matchPattern {
+            case Function(_, Infix(List("dyn || ", ""), List(Ident("b")), true)) =>
           }
         }
         "at the beginning" in {
@@ -1142,7 +1170,7 @@ class QuotationSpec extends Spec {
               infix"#$a || $b".as[String]
           }
           quote(unquote(q)).ast must matchPattern {
-            case Function(_, Infix(List("dyn || ", ""), List(Ident("b")))) =>
+            case Function(_, Infix(List("dyn || ", ""), List(Ident("b")), false)) =>
           }
         }
         "only" in {
@@ -1150,7 +1178,15 @@ class QuotationSpec extends Spec {
           val q = quote {
             infix"#$a".as[String]
           }
-          quote(unquote(q)).ast mustEqual Infix(List("dyn1"), List())
+          quote(unquote(q)).ast mustEqual Infix(List("dyn1"), List(), false)
+        }
+        "sequential - pure" in {
+          val a = "dyn1"
+          val b = "dyn2"
+          val q = quote {
+            infix"#$a#$b".pure.as[String]
+          }
+          quote(unquote(q)).ast mustEqual Infix(List("dyn1dyn2"), List(), true)
         }
         "sequential" in {
           val a = "dyn1"
@@ -1158,7 +1194,7 @@ class QuotationSpec extends Spec {
           val q = quote {
             infix"#$a#$b".as[String]
           }
-          quote(unquote(q)).ast mustEqual Infix(List("dyn1dyn2"), List())
+          quote(unquote(q)).ast mustEqual Infix(List("dyn1dyn2"), List(), false)
         }
         "non-string value" in {
           case class Value(a: String)
@@ -1166,7 +1202,7 @@ class QuotationSpec extends Spec {
           val q = quote {
             infix"#$a".as[String]
           }
-          quote(unquote(q)).ast mustEqual Infix(List("Value(dyn)"), List())
+          quote(unquote(q)).ast mustEqual Infix(List("Value(dyn)"), List(), false)
         }
       }
     }

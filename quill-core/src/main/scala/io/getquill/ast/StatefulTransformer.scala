@@ -23,9 +23,9 @@ trait StatefulTransformer[T] {
         val (bt, btt) = apply(b)
         (Function(a, bt), btt)
 
-      case Infix(a, b) =>
+      case Infix(a, b, pure) =>
         val (bt, btt) = apply(b)(_.apply)
-        (Infix(a, bt), btt)
+        (Infix(a, bt, pure), btt)
 
       case If(a, b, c) =>
         val (at, att) = apply(a)
@@ -210,9 +210,9 @@ trait StatefulTransformer[T] {
 
   def apply(e: Property): (Property, StatefulTransformer[T]) =
     e match {
-      case Property(a, b) =>
+      case Property.Opinionated(a, b, renameable) =>
         val (at, att) = apply(a)
-        (Property(at, b), att)
+        (Property.Opinionated(at, b, renameable), att)
     }
 
   def apply(e: Operation): (Operation, StatefulTransformer[T]) =
