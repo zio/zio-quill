@@ -31,5 +31,7 @@ then
 
         # Publish Everything
         $SBT_CMD -Dmodules=none 'release with-defaults default-tag-exists-answer o'
+    else
+        echo "No-Op Release-Publish for Snapshot Versions"
     fi
 fi
