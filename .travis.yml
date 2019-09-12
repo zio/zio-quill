@@ -61,15 +61,52 @@ jobs:
 #      scala: 2.12.6
 #      name: "BigData Databases 2.12 - Cassandra, OrientDB, Spark"
 
-    - stage: release
+    - stage: release-db
       if: type != pull_request
       scala: 2.12.6
-      name: "Release 2.11"
+      name: "Release 2.11 db"
       script:
-        - travis_retry ./build/release_2.11.sh
-    - stage: release
+       - ./build/release.sh 211 db
+    - stage: release-async
       if: type != pull_request
       scala: 2.12.6
-      name: "Release 2.12"
+      name: "Release 2.11 async"
       script:
-        - travis_retry ./build/release_2.12.sh
+       - ./build/release.sh 211 async
+    - stage: release-codegen
+      if: type != pull_request
+      scala: 2.12.6
+      name: "Release 2.11 codegen"
+      script:
+       - ./build/release.sh 211 codegen
+    - stage: release-bigdata
+      if: type != pull_request
+      scala: 2.12.6
+      name: "Release 2.11 bigdata"
+      script:
+       - ./build/release.sh 211 bigdata
+
+    - stage: release-db
+      if: type != pull_request
+      scala: 2.12.6
+      name: "Release 2.12 db"
+      script:
+      - ./build/release.sh 212 db
+    - stage: release-async
+      if: type != pull_request
+      scala: 2.12.6
+      name: "Release 2.12 async"
+      script:
+      - ./build/release.sh 212 async
+    - stage: release-codegen
+      if: type != pull_request
+      scala: 2.12.6
+      name: "Release 2.12 codegen"
+      script:
+      - ./build/release.sh 212 codegen
+    - stage: release-bigdata
+      if: type != pull_request
+      scala: 2.12.6
+      name: "Release 2.12 bigdata"
+      script:
+      - ./build/release.sh 212 bigdata
