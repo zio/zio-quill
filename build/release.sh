@@ -14,10 +14,10 @@ SBT_2_12="sbt ++2.12.6 -Dquill.macro.log=false"
 
 if [[ $VERSION -eq 211 ]]
 then
-    SBT_VER=SBT_2_11
+    SBT_VER=$SBT_2_11
 elif [[ $VERSION -eq 212 ]]
 then
-    SBT_VER=SBT_2_11
+    SBT_VER=$SBT_2_12
 else
     echo "No Valid SBT Version Entered"
     exit 1
