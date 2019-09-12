@@ -35,7 +35,7 @@ then
             $SBT_2_11 -Dmodules=bigdata 'release with-defaults default-tag-exists-answer o'
         }
 
-        trait do_release EXIT
+        trap do_release EXIT
         echo "Release 2.11 Version After:"
         cat version.sbt
         exit $EXIT
