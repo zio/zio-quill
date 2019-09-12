@@ -23,23 +23,22 @@ then
         git config --global user.name "Quill CI"
         git config --global user.email "quillci@getquill.io"
         git remote set-url origin git@github.com:getquill/quill.git
-        git fetch --unshallow
-        git checkout master || git checkout -b master
-        git reset --hard origin/master
 
-        $SBT_2_12 -Dmodules=base -DskipPush=true 'release with-defaults'
-        $SBT_2_12 -Dmodules=db -DskipPush=true 'release with-defaults'
-        $SBT_2_12 -Dmodules=async -DskipPush=true 'release with-defaults'
-        $SBT_2_12 -Dmodules=codegen -DskipPush=true 'release with-defaults'
-        echo "Release 2.12 Version:"
+        function do_release {
+            echo "Release 2.12 Version:"
+            cat version.sbt
+
+            $SBT_2_12 -Dmodules=base -DskipPush=true 'release with-defaults'
+            $SBT_2_12 -Dmodules=db -DskipPush=true 'release with-defaults'
+            $SBT_2_12 -Dmodules=async -DskipPush=true 'release with-defaults'
+            $SBT_2_12 -Dmodules=codegen -DskipPush=true 'release with-defaults'
+            $SBT_2_12 -Dmodules=bigdata 'release with-defaults default-tag-exists-answer o'
+        }
+
+        trait do_release EXIT
+        echo "Release 2.12 Version After:"
         cat version.sbt
-
-        # Note: This captures output of the 'bigdata' modules release so travis might time out on this command
-        if ! output=$($SBT_2_12_LOG -Dmodules=bigdata 'release with-defaults default-tag-exists-answer o'); then
-          echo "Release 2.12 Version After:"
-          cat version.sbt
-          exit $?
-        fi
+        exit $EXIT
 
     elif [[ $TRAVIS_BRANCH == "master" ]]
     then
