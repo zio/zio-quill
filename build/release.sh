@@ -4,7 +4,7 @@ set -e # Any subsequent(*) commands which fail will cause the shell script to ex
 VERSION=$1
 ARTIFACT=$2
 
-if [[ $ARTIFACT -z ]]
+if [[ -z $ARTIFACT ]]
 then
     echo "No Artifact Specified"
 fi
