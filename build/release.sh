@@ -57,21 +57,21 @@ then
 
     elif [[ $TRAVIS_BRANCH == "master" ]]
     then
-        if [[ $ARTIFACT -eq "base" ]];    $SBT_VER -Dmodules=base publish; fi
-        if [[ $ARTIFACT -eq "db" ]];      $SBT_VER -Dmodules=db publish; fi
-        if [[ $ARTIFACT -eq "async" ]];   $SBT_VER -Dmodules=async publish; fi
-        if [[ $ARTIFACT -eq "codegen" ]]; $SBT_VER -Dmodules=codegen publish; fi
-        if [[ $ARTIFACT -eq "bigdata" ]]; $SBT_VER -Dmodules=bigdata publish; fi
+        if [[ $ARTIFACT -eq "base" ]]; then    $SBT_VER -Dmodules=base publish; fi
+        if [[ $ARTIFACT -eq "db" ]]; then      $SBT_VER -Dmodules=db publish; fi
+        if [[ $ARTIFACT -eq "async" ]]; then   $SBT_VER -Dmodules=async publish; fi
+        if [[ $ARTIFACT -eq "codegen" ]]; then $SBT_VER -Dmodules=codegen publish; fi
+        if [[ $ARTIFACT -eq "bigdata" ]]; then $SBT_VER -Dmodules=bigdata publish; fi
 
         # No-Op Publish
         if [[ $ARTIFACT -eq "publish" ]]; then echo "No-Op Publish for Non Release Master Branch"; fi
     else
         echo "version in ThisBuild := \"$TRAVIS_BRANCH-SNAPSHOT\"" > version.sbt
-        if [[ $ARTIFACT -eq "base" ]];    $SBT_VER -Dmodules=base publish; fi
-        if [[ $ARTIFACT -eq "db" ]];      $SBT_VER -Dmodules=db publish; fi
-        if [[ $ARTIFACT -eq "async" ]];   $SBT_VER -Dmodules=async publish; fi
-        if [[ $ARTIFACT -eq "codegen" ]]; $SBT_VER -Dmodules=codegen publish; fi
-        if [[ $ARTIFACT -eq "bigdata" ]]; $SBT_VER -Dmodules=bigdata publish; fi
+        if [[ $ARTIFACT -eq "base" ]]; then    $SBT_VER -Dmodules=base publish; fi
+        if [[ $ARTIFACT -eq "db" ]]; then      $SBT_VER -Dmodules=db publish; fi
+        if [[ $ARTIFACT -eq "async" ]]; then   $SBT_VER -Dmodules=async publish; fi
+        if [[ $ARTIFACT -eq "codegen" ]]; then $SBT_VER -Dmodules=codegen publish; fi
+        if [[ $ARTIFACT -eq "bigdata" ]]; then $SBT_VER -Dmodules=bigdata publish; fi
 
         # No-Op Publish
         if [[ $ARTIFACT -eq "publish" ]]; then echo "No-Op Publish for Non Release Snapshot Branch"; fi
