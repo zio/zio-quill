@@ -42,12 +42,18 @@ then
         git config --global user.name "Quill CI"
         git config --global user.email "quillci@getquill.io"
         git remote set-url origin git@github.com:getquill/quill.git
+        git fetch --unshallow
+        git checkout master || git checkout -b master
+        git reset --hard origin/master
 
         if [[ $ARTIFACT -eq "base" ]]; then    $SBT_VER -Dmodules=base -DskipPush=true 'release with-defaults'; fi
         if [[ $ARTIFACT -eq "db" ]]; then      $SBT_VER -Dmodules=db -DskipPush=true 'release with-defaults'; fi
         if [[ $ARTIFACT -eq "async" ]]; then   $SBT_VER -Dmodules=async -DskipPush=true 'release with-defaults'; fi
         if [[ $ARTIFACT -eq "codegen" ]]; then $SBT_VER -Dmodules=codegen -DskipPush=true 'release with-defaults'; fi
-        if [[ $ARTIFACT -eq "bigdata" ]]; then $SBT_VER -Dmodules=bigdata 'release with-defaults default-tag-exists-answer o'; fi
+        if [[ $ARTIFACT -eq "bigdata" ]]; then $SBT_VER -Dmodules=bigdata -DskipPush=true 'release with-defaults'; fi
+
+        # Publish Everything
+        if [[ $ARTIFACT -eq "publish" ]]; then $SBT_VER -Dmodules=none 'release with-defaults default-tag-exists-answer o'; fi
 
     elif [[ $TRAVIS_BRANCH == "master" ]]
     then
@@ -56,6 +62,9 @@ then
         if [[ $ARTIFACT -eq "async" ]];   $SBT_VER -Dmodules=async publish; fi
         if [[ $ARTIFACT -eq "codegen" ]]; $SBT_VER -Dmodules=codegen publish; fi
         if [[ $ARTIFACT -eq "bigdata" ]]; $SBT_VER -Dmodules=bigdata publish; fi
+
+        # No-Op Publish
+        if [[ $ARTIFACT -eq "publish" ]]; then echo "No-Op Publish for Non Release Master Branch"; fi
     else
         echo "version in ThisBuild := \"$TRAVIS_BRANCH-SNAPSHOT\"" > version.sbt
         if [[ $ARTIFACT -eq "base" ]];    $SBT_VER -Dmodules=base publish; fi
@@ -63,5 +72,8 @@ then
         if [[ $ARTIFACT -eq "async" ]];   $SBT_VER -Dmodules=async publish; fi
         if [[ $ARTIFACT -eq "codegen" ]]; $SBT_VER -Dmodules=codegen publish; fi
         if [[ $ARTIFACT -eq "bigdata" ]]; $SBT_VER -Dmodules=bigdata publish; fi
+
+        # No-Op Publish
+        if [[ $ARTIFACT -eq "publish" ]]; then echo "No-Op Publish for Non Release Snapshot Branch"; fi
     fi
 fi

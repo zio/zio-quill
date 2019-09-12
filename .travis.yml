@@ -61,52 +61,58 @@ jobs:
 #      scala: 2.12.6
 #      name: "BigData Databases 2.12 - Cassandra, OrientDB, Spark"
 
-    - stage: release-db
+    - stage: release
       if: type != pull_request
       scala: 2.12.6
       name: "Release 2.11 db"
       script:
        - ./build/release.sh 211 db
-    - stage: release-async
+    - stage: release
       if: type != pull_request
       scala: 2.12.6
       name: "Release 2.11 async"
       script:
        - ./build/release.sh 211 async
-    - stage: release-codegen
+    - stage: release
       if: type != pull_request
       scala: 2.12.6
       name: "Release 2.11 codegen"
       script:
        - ./build/release.sh 211 codegen
-    - stage: release-bigdata
+    - stage: release
       if: type != pull_request
       scala: 2.12.6
       name: "Release 2.11 bigdata"
       script:
        - ./build/release.sh 211 bigdata
 
-    - stage: release-db
+    - stage: release
       if: type != pull_request
       scala: 2.12.6
       name: "Release 2.12 db"
       script:
       - ./build/release.sh 212 db
-    - stage: release-async
+    - stage: release
       if: type != pull_request
       scala: 2.12.6
       name: "Release 2.12 async"
       script:
       - ./build/release.sh 212 async
-    - stage: release-codegen
+    - stage: release
       if: type != pull_request
       scala: 2.12.6
       name: "Release 2.12 codegen"
       script:
       - ./build/release.sh 212 codegen
-    - stage: release-bigdata
+    - stage: release
       if: type != pull_request
       scala: 2.12.6
       name: "Release 2.12 bigdata"
       script:
       - ./build/release.sh 212 bigdata
+    - stage: release
+        if: type != pull_request
+        scala: 2.12.6
+        name: "Website Tag"
+        script:
+        - ./build/retag.sh
