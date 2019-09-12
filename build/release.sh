@@ -46,34 +46,34 @@ then
         git checkout master || git checkout -b master
         git reset --hard origin/master
 
-        if [[ $ARTIFACT -eq "base" ]]; then    $SBT_VER -Dmodules=base -DskipPush=true 'release with-defaults'; fi
-        if [[ $ARTIFACT -eq "db" ]]; then      $SBT_VER -Dmodules=db -DskipPush=true 'release with-defaults'; fi
-        if [[ $ARTIFACT -eq "async" ]]; then   $SBT_VER -Dmodules=async -DskipPush=true 'release with-defaults'; fi
-        if [[ $ARTIFACT -eq "codegen" ]]; then $SBT_VER -Dmodules=codegen -DskipPush=true 'release with-defaults'; fi
-        if [[ $ARTIFACT -eq "bigdata" ]]; then $SBT_VER -Dmodules=bigdata -DskipPush=true 'release with-defaults'; fi
+        if [[ $ARTIFACT == "base" ]]; then    $SBT_VER -Dmodules=base -DskipPush=true 'release with-defaults'; fi
+        if [[ $ARTIFACT == "db" ]]; then      $SBT_VER -Dmodules=db -DskipPush=true 'release with-defaults'; fi
+        if [[ $ARTIFACT == "async" ]]; then   $SBT_VER -Dmodules=async -DskipPush=true 'release with-defaults'; fi
+        if [[ $ARTIFACT == "codegen" ]]; then $SBT_VER -Dmodules=codegen -DskipPush=true 'release with-defaults'; fi
+        if [[ $ARTIFACT == "bigdata" ]]; then $SBT_VER -Dmodules=bigdata -DskipPush=true 'release with-defaults'; fi
 
         # Publish Everything
-        if [[ $ARTIFACT -eq "publish" ]]; then $SBT_VER -Dmodules=none 'release with-defaults default-tag-exists-answer o'; fi
+        if [[ $ARTIFACT == "publish" ]]; then $SBT_VER -Dmodules=none 'release with-defaults default-tag-exists-answer o'; fi
 
     elif [[ $TRAVIS_BRANCH == "master" ]]
     then
-        if [[ $ARTIFACT -eq "base" ]]; then    $SBT_VER -Dmodules=base publish; fi
-        if [[ $ARTIFACT -eq "db" ]]; then      $SBT_VER -Dmodules=db publish; fi
-        if [[ $ARTIFACT -eq "async" ]]; then   $SBT_VER -Dmodules=async publish; fi
-        if [[ $ARTIFACT -eq "codegen" ]]; then $SBT_VER -Dmodules=codegen publish; fi
-        if [[ $ARTIFACT -eq "bigdata" ]]; then $SBT_VER -Dmodules=bigdata publish; fi
+        if [[ $ARTIFACT == "base" ]]; then    $SBT_VER -Dmodules=base publish; fi
+        if [[ $ARTIFACT == "db" ]]; then      $SBT_VER -Dmodules=db publish; fi
+        if [[ $ARTIFACT == "async" ]]; then   $SBT_VER -Dmodules=async publish; fi
+        if [[ $ARTIFACT == "codegen" ]]; then $SBT_VER -Dmodules=codegen publish; fi
+        if [[ $ARTIFACT == "bigdata" ]]; then $SBT_VER -Dmodules=bigdata publish; fi
 
         # No-Op Publish
-        if [[ $ARTIFACT -eq "publish" ]]; then echo "No-Op Publish for Non Release Master Branch"; fi
+        if [[ $ARTIFACT == "publish" ]]; then echo "No-Op Publish for Non Release Master Branch"; fi
     else
         echo "version in ThisBuild := \"$TRAVIS_BRANCH-SNAPSHOT\"" > version.sbt
-        if [[ $ARTIFACT -eq "base" ]]; then    $SBT_VER -Dmodules=base publish; fi
-        if [[ $ARTIFACT -eq "db" ]]; then      $SBT_VER -Dmodules=db publish; fi
-        if [[ $ARTIFACT -eq "async" ]]; then   $SBT_VER -Dmodules=async publish; fi
-        if [[ $ARTIFACT -eq "codegen" ]]; then $SBT_VER -Dmodules=codegen publish; fi
-        if [[ $ARTIFACT -eq "bigdata" ]]; then $SBT_VER -Dmodules=bigdata publish; fi
+        if [[ $ARTIFACT == "base" ]]; then    $SBT_VER -Dmodules=base publish; fi
+        if [[ $ARTIFACT == "db" ]]; then      $SBT_VER -Dmodules=db publish; fi
+        if [[ $ARTIFACT == "async" ]]; then   $SBT_VER -Dmodules=async publish; fi
+        if [[ $ARTIFACT == "codegen" ]]; then $SBT_VER -Dmodules=codegen publish; fi
+        if [[ $ARTIFACT == "bigdata" ]]; then $SBT_VER -Dmodules=bigdata publish; fi
 
         # No-Op Publish
-        if [[ $ARTIFACT -eq "publish" ]]; then echo "No-Op Publish for Non Release Snapshot Branch"; fi
+        if [[ $ARTIFACT == "publish" ]]; then echo "No-Op Publish for Non Release Snapshot Branch"; fi
     fi
 fi
