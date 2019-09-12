@@ -11,6 +11,7 @@ addons:
 branches:
   except:
     - release
+    - publish
     - website
 cache:
   directories:
@@ -111,7 +112,13 @@ jobs:
       script:
         - ./build/release.sh 212 bigdata
 
-    - stage: release
+    - stage: publish
+      if: type != pull_request
+      scala: 2.12.6
+      name: "Website Tag"
+      script:
+        - ./build/release.sh 211 publish
+    - stage: website
       if: type != pull_request
       scala: 2.12.6
       name: "Website Tag"
