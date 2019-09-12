@@ -115,12 +115,6 @@ jobs:
     - stage: publish
       if: type != pull_request
       scala: 2.12.6
-      name: "Website Tag"
+      name: "Publish"
       script:
-        - ./build/release.sh 211 publish
-    - stage: website
-      if: type != pull_request
-      scala: 2.12.6
-      name: "Website Tag"
-      script:
-        - ./build/retag.sh
+        - ./build/publish.sh

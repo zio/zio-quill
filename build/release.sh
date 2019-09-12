@@ -42,9 +42,6 @@ then
         git config --global user.name "Quill CI"
         git config --global user.email "quillci@getquill.io"
         git remote set-url origin git@github.com:getquill/quill.git
-        git fetch --unshallow
-        git checkout master || git checkout -b master
-        git reset --hard origin/master
 
         if [[ $ARTIFACT == "base" ]]; then    $SBT_VER -Dmodules=base -DskipPush=true 'release with-defaults'; fi
         if [[ $ARTIFACT == "db" ]]; then      $SBT_VER -Dmodules=db -DskipPush=true 'release with-defaults'; fi

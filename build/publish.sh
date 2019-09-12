@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -e # Any subsequent(*) commands which fail will cause the shell script to exit immediately
 
+SBT_CMD="sbt ++2.11.12 -Dquill.macro.log=false"
+
+echo $SBT_CMD
 if [[ $TRAVIS_PULL_REQUEST == "false" ]]
 then
     openssl aes-256-cbc -pass pass:$ENCRYPTION_PASSWORD -in ./build/secring.gpg.enc -out local.secring.gpg -d
@@ -19,9 +22,14 @@ then
         git config --global user.name "Quill CI"
         git config --global user.email "quillci@getquill.io"
         git remote set-url origin git@github.com:getquill/quill.git
+
+        # Only Publish Latest from Master Branch otherwise could move 'forward' to wrong version
         git fetch --unshallow
         git checkout master || git checkout -b master
         git reset --hard origin/master
         git push --delete origin website
+
+        # Publish Everything
+        $SBT_CMD -Dmodules=none 'release with-defaults default-tag-exists-answer o'
     fi
 fi
