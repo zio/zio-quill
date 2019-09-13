@@ -55,6 +55,9 @@ lazy val filteredModules = {
     case Some("bigdata") =>
       println("Compiling Big Data Modules")
       bigdataModules
+    case Some("none") =>
+      println("Invoking Aggregate Project")
+      Seq[sbt.ClasspathDep[sbt.ProjectReference]]()
     case _ =>
       println("Compiling All Modules")
       allModules
@@ -262,7 +265,7 @@ lazy val `quill-finagle-mysql` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.twitter" %% "finagle-mysql" % "19.8.0"
+        "com.twitter" %% "finagle-mysql" % "19.9.0"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")

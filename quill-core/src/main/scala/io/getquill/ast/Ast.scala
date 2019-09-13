@@ -148,6 +148,14 @@ sealed trait OpinionValues[T <: Opinion[T]] {
   def neutral: T
 }
 
+sealed trait Visibility extends Opinion[Visibility]
+object Visibility extends OpinionValues[Visibility] {
+  case object Visible extends Visibility with Opinion[Visibility]
+  case object Hidden extends Visibility with Opinion[Visibility]
+
+  override def neutral: Visibility = Visible
+}
+
 sealed trait Renameable extends Opinion[Renameable] {
   def fixedOr[T](plain: T)(otherwise: T) =
     this match {
@@ -179,18 +187,23 @@ case class Property(ast: Ast, name: String) extends Ast {
   // scala creates companion objects, the apply/unapply wouldn't be able to work correctly.
   def renameable: Renameable = Renameable.neutral
 
+  // Properties that are 'Hidden' are used for embedded objects whose path should not be expressed
+  // during SQL Tokenization.
+  def visibility: Visibility = Visibility.Visible
+
   override def neutral: Property =
     new Property(ast, name) {
       override def renameable = Renameable.neutral
+      override def visibility: Visibility = Visibility.neutral
     }
 
   override def equals(that: Any) =
     that match {
-      case p: Property => (p.ast, p.name, p.renameable) == ((ast, name, renameable))
+      case p: Property => (p.ast, p.name, p.renameable, p.visibility) == ((ast, name, renameable, visibility))
       case _           => false
     }
 
-  override def hashCode = (ast, name, renameable).hashCode()
+  override def hashCode = (ast, name, renameable, visibility).hashCode()
 }
 
 object Property {
@@ -198,12 +211,13 @@ object Property {
   def unapply(p: Property) = Some((p.ast, p.name))
 
   object Opinionated {
-    def apply(ast: Ast, name: String, renameableNew: Renameable) =
+    def apply(ast: Ast, name: String, renameableNew: Renameable, visibilityNew: Visibility) =
       new Property(ast, name) {
         override def renameable: Renameable = renameableNew
+        override def visibility: Visibility = visibilityNew
       }
     def unapply(p: Property) =
-      Some((p.ast, p.name, p.renameable))
+      Some((p.ast, p.name, p.renameable, p.visibility))
   }
 }
 
