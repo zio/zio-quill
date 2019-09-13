@@ -5,21 +5,15 @@ import io.getquill.ast.Ast
 import io.getquill.ast.Ident
 import io.getquill.ast._
 import io.getquill.ast.StatefulTransformer
-import io.getquill.context.sql.FlattenSqlQuery
-import io.getquill.context.sql.FromContext
-import io.getquill.context.sql.InfixContext
-import io.getquill.context.sql.JoinContext
-import io.getquill.context.sql.QueryContext
-import io.getquill.context.sql.SetOperationSqlQuery
-import io.getquill.context.sql.SqlQuery
-import io.getquill.context.sql.TableContext
-import io.getquill.context.sql.UnaryOperationSqlQuery
-import io.getquill.context.sql.FlatJoinContext
+import io.getquill.ast.Visibility.Visible
+import io.getquill.context.sql._
 
 import scala.collection.mutable.LinkedHashSet
 import io.getquill.util.Interpolator
 import io.getquill.util.Messages.TraceType.NestedQueryExpansion
 import io.getquill.context.sql.norm.nested.ExpandSelect
+
+import scala.collection.mutable
 
 class ExpandNestedQueries(strategy: NamingStrategy) {
 
@@ -47,19 +41,41 @@ class ExpandNestedQueries(strategy: NamingStrategy) {
     q match {
       case FlattenSqlQuery(from, where, groupBy, orderBy, limit, offset, select, distinct) =>
         val asts = Nil ++ select.map(_.ast) ++ where ++ groupBy ++ orderBy.map(_.ast) ++ limit ++ offset
-        val from = q.from.map(expandContext(_, asts))
-        q.copy(from = from)
+        val expansions = q.from.map(expandContext(_, asts))
+        val from = expansions.map(_._1)
+        val references = expansions.flatMap(_._2)
+        val modifiedSelects =
+          select
+            .map(s =>
+              if (references.contains(s.ast))
+                trace"Un-hide Select $s:" andReturn unhideProperties(s)
+              else s)
+
+        q.copy(select = modifiedSelects, from = from)
     }
 
-  private def expandContext(s: FromContext, asts: List[Ast]): FromContext =
+  private def unhideProperties(sv: SelectValue) = {
+    def unhideRecurse(ast: Ast): Ast =
+      Transform(ast) {
+        case Property.Opinionated(a, n, r, v) =>
+          Property.Opinionated(unhideRecurse(a), n, r, Visible)
+      }
+    sv.copy(ast = unhideRecurse(sv.ast))
+  }
+
+  private def expandContext(s: FromContext, asts: List[Ast]): (FromContext, LinkedHashSet[Property]) =
     s match {
       case QueryContext(q, alias) =>
-        QueryContext(apply(q, references(alias, asts)), alias)
+        val refs = references(alias, asts)
+        (QueryContext(apply(q, refs), alias), refs)
       case JoinContext(t, a, b, on) =>
-        JoinContext(t, expandContext(a, asts :+ on), expandContext(b, asts :+ on), on)
+        val (left, leftRefs) = expandContext(a, asts :+ on)
+        val (right, rightRefs) = expandContext(b, asts :+ on)
+        (JoinContext(t, left, right, on), leftRefs ++ rightRefs)
       case FlatJoinContext(t, a, on) =>
-        FlatJoinContext(t, expandContext(a, asts :+ on), on)
-      case _: TableContext | _: InfixContext => s
+        val (next, refs) = expandContext(a, asts :+ on)
+        (FlatJoinContext(t, next, on), refs)
+      case _: TableContext | _: InfixContext => (s, new mutable.LinkedHashSet[Property]())
     }
 
   private def references(alias: String, asts: List[Ast]) =
