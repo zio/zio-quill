@@ -1,3 +1,7 @@
+# 3.4.6
+
+- [Fixing Embedded Coproduct Column Duplication Issue](https://github.com/getquill/quill/pull/1604)
+
 # 3.4.5
 
 - [Express Infix Clauses not in Select List](https://github.com/getquill/quill/pull/1597)
