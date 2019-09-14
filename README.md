@@ -2528,7 +2528,7 @@ The body of `transaction` can contain calls to other methods and multiple `run` 
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "mysql" % "mysql-connector-java" % "8.0.15",
+  "mysql" % "mysql-connector-java" % "8.0.17",
   "io.getquill" %% "quill-jdbc" % "3.4.7-SNAPSHOT"
 )
 ```
@@ -2555,7 +2555,7 @@ ctx.connectionTimeout=30000
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "org.postgresql" % "postgresql" % "9.4.1208",
+  "org.postgresql" % "postgresql" % "42.2.8",
   "io.getquill" %% "quill-jdbc" % "3.4.7-SNAPSHOT"
 )
 ```
@@ -2581,7 +2581,7 @@ ctx.connectionTimeout=30000
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "org.xerial" % "sqlite-jdbc" % "3.18.0",
+  "org.xerial" % "sqlite-jdbc" % "3.28.0",
   "io.getquill" %% "quill-jdbc" % "3.4.7-SNAPSHOT"
 )
 ```
@@ -2602,7 +2602,7 @@ ctx.jdbcUrl=jdbc:sqlite:/path/to/db/file.db
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "com.h2database" % "h2" % "1.4.192",
+  "com.h2database" % "h2" % "1.4.199",
   "io.getquill" %% "quill-jdbc" % "3.4.7-SNAPSHOT"
 )
 ```
@@ -2624,7 +2624,7 @@ ctx.dataSource.user=sa
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "com.microsoft.sqlserver" % "mssql-jdbc" % "6.1.7.jre8-preview",
+  "com.microsoft.sqlserver" % "mssql-jdbc" % "7.4.1.jre8",
   "io.getquill" %% "quill-jdbc" % "3.4.7-SNAPSHOT"
 )
 ```
@@ -2746,7 +2746,7 @@ lazy val ctx = new MysqlMonixJdbcContext(SnakeCase, "ctx", Runner.using(Schedule
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "mysql" % "mysql-connector-java" % "8.0.15",
+  "mysql" % "mysql-connector-java" % "8.0.17",
   "io.getquill" %% "quill-jdbc-monix" % "3.4.7-SNAPSHOT"
 )
 ```
@@ -2773,7 +2773,7 @@ ctx.connectionTimeout=30000
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "org.postgresql" % "postgresql" % "9.4.1208",
+  "org.postgresql" % "postgresql" % "42.2.8",
   "io.getquill" %% "quill-jdbc-monix" % "3.4.7-SNAPSHOT"
 )
 ```
@@ -2799,7 +2799,7 @@ ctx.connectionTimeout=30000
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "org.xerial" % "sqlite-jdbc" % "3.18.0",
+  "org.xerial" % "sqlite-jdbc" % "3.28.0",
   "io.getquill" %% "quill-jdbc-monix" % "3.4.7-SNAPSHOT"
 )
 ```
@@ -2820,7 +2820,7 @@ ctx.jdbcUrl=jdbc:sqlite:/path/to/db/file.db
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "com.h2database" % "h2" % "1.4.192",
+  "com.h2database" % "h2" % "1.4.199",
   "io.getquill" %% "quill-jdbc-monix" % "3.4.7-SNAPSHOT"
 )
 ```
@@ -2842,7 +2842,7 @@ ctx.dataSource.user=sa
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "com.microsoft.sqlserver" % "mssql-jdbc" % "6.1.7.jre8-preview",
+  "com.microsoft.sqlserver" % "mssql-jdbc" % "7.4.1.jre8",
   "io.getquill" %% "quill-jdbc-monix" % "3.4.7-SNAPSHOT"
 )
 ```
@@ -2874,7 +2874,7 @@ available for this situation [here](https://stackoverflow.com/questions/1074869/
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "com.oracle.jdbc" % "ojdbc7" % "12.1.0.2",
+  "com.oracle.jdbc" % "ojdbc8" % "18.3.0.0.0",
   "io.getquill" %% "quill-jdbc-monix" % "3.4.7-SNAPSHOT"
 )
 ```
