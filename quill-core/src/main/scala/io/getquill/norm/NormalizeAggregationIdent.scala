@@ -9,8 +9,8 @@ object NormalizeAggregationIdent {
 
       // a => a.b.map(x => x.c).agg =>
       //   a => a.b.map(a => a.c).agg
-      case Aggregation(op, Map(p @ Property(i: Ident, _), mi, Property.Opinionated(_: Ident, n, renameable))) if i != mi =>
-        Some(Aggregation(op, Map(p, i, Property.Opinionated(i, n, renameable)))) // in example aove, if c in x.c is fixed c in a.c should also be
+      case Aggregation(op, Map(p @ Property(i: Ident, _), mi, Property.Opinionated(_: Ident, n, renameable, visibility))) if i != mi =>
+        Some(Aggregation(op, Map(p, i, Property.Opinionated(i, n, renameable, visibility)))) // in example aove, if c in x.c is fixed c in a.c should also be
 
       case _ => None
     }

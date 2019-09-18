@@ -87,7 +87,67 @@ class InfixSpec extends Spec {
         } yield ThreeData(r.id, r.value, infix"bar".as[Int])
       }
 
-      ctx.run(q2).string mustEqual "SELECT d._1, d._2, d._3 FROM (SELECT d.id AS _1, d.value AS _2, bar AS _3 FROM (SELECT d.id AS id, foo AS value FROM Data d) AS d WHERE d.value = 1) AS d"
+      ctx.run(q2).string mustEqual "SELECT d.id, d.value, d.secondValue FROM (SELECT d.id AS id, d.value AS value, bar AS secondValue FROM (SELECT d.id AS id, foo AS value FROM Data d) AS d WHERE d.value = 1) AS d"
+    }
+
+    "excluded infix values" - {
+      case class Person(id: Int, name: String, other: String, other2: String)
+
+      "should not be dropped" in {
+        val q = quote {
+          query[Person].map(p => (p.name, p.id, infix"foo(${p.other})".as[Int])).map(p => (p._1, p._2))
+        }
+
+        ctx.run(q).string mustEqual "SELECT p._1, p._2 FROM (SELECT p.name AS _1, p.id AS _2, foo(p.other) FROM Person p) AS p"
+      }
+
+      "should not be dropped if pure" in {
+        val q = quote {
+          query[Person].map(p => (p.name, p.id, infix"foo(${p.other})".pure.as[Int])).map(p => (p._1, p._2))
+        }
+
+        ctx.run(q).string mustEqual "SELECT p.name, p.id FROM Person p"
+      }
+
+      "should not be dropped in nested tuples" in {
+        val q = quote {
+          query[Person].map(p => (p.name, (p.id, infix"foo(${p.other})".as[Int]))).map(p => (p._1, p._2._1))
+        }
+
+        ctx.run(q).string mustEqual "SELECT p._1, p._2_1 FROM (SELECT p.name AS _1, p.id AS _2_1, foo(p.other) FROM Person p) AS p"
+      }
+
+      "should not be selected twice if in sub-sub tuple" in {
+        val q = quote {
+          query[Person].map(p => (p.name, (p.id, infix"foo(${p.other})".as[Int]))).map(p => (p._1, p._2))
+        }
+
+        ctx.run(q).string mustEqual "SELECT p._1, p._2_1, p._2_2 FROM (SELECT p.name AS _1, p.id AS _2_1, foo(p.other) AS _2_2 FROM Person p) AS p"
+      }
+
+      "should not be selected in sub-sub tuple if pure" in {
+        val q = quote {
+          query[Person].map(p => (p.name, (p.id, infix"foo(${p.other})".pure.as[Int]))).map(p => (p._1, p._2))
+        }
+
+        ctx.run(q).string mustEqual "SELECT p.name, p.id, foo(p.other) FROM Person p"
+      }
+
+      "should not be selected twice in one field matched, one missing" in {
+        val q = quote {
+          query[Person].map(p => (p.name, (p.id, infix"foo(${p.other}, ${p.other2})".as[Int], p.other))).map(p => (p._1, p._2._1, p._2._3))
+        }
+
+        ctx.run(q).string mustEqual "SELECT p._1, p._2_1, p._2_3 FROM (SELECT p.name AS _1, p.id AS _2_1, foo(p.other, p.other2), p.other AS _2_3 FROM Person p) AS p"
+      }
+
+      "distinct-on infix example" in {
+        val q = quote {
+          query[Person].map(p => (infix"DISTINCT ON (${p.other})".as[Int], p.name, p.id)).map(t => (t._2, t._3))
+        }
+
+        ctx.run(q).string mustEqual "SELECT p._2, p._3 FROM (SELECT DISTINCT ON (p.other), p.name AS _2, p.id AS _3 FROM Person p) AS p"
+      }
     }
   }
 }

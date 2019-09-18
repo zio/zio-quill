@@ -2,6 +2,7 @@ package io.getquill.ast
 
 import io.getquill.Spec
 import io.getquill.ast.Renameable.Fixed
+import io.getquill.ast.Visibility.Visible
 
 class StatelessTransformerSpec extends Spec {
 
@@ -167,9 +168,9 @@ class StatelessTransformerSpec extends Spec {
           OnConflict.Properties(List(Property(Ident("a'"), "b")))
       }
       "properties - fixed" in {
-        val target: OnConflict.Target = OnConflict.Properties(List(Property.Opinionated(Ident("a"), "b", Fixed)))
+        val target: OnConflict.Target = OnConflict.Properties(List(Property.Opinionated(Ident("a"), "b", Fixed, Visible)))
         Subject(Ident("a") -> Ident("a'"))(target) mustEqual
-          OnConflict.Properties(List(Property.Opinionated(Ident("a'"), "b", Fixed)))
+          OnConflict.Properties(List(Property.Opinionated(Ident("a'"), "b", Fixed, Visible)))
       }
     }
 
@@ -214,9 +215,9 @@ class StatelessTransformerSpec extends Spec {
     }
 
     "property - fixed" in {
-      val ast: Ast = Property.Opinionated(Ident("a"), "b", Fixed)
+      val ast: Ast = Property.Opinionated(Ident("a"), "b", Fixed, Visible)
       Subject(Ident("a") -> Ident("a'"))(ast) mustEqual
-        Property.Opinionated(Ident("a'"), "b", Fixed)
+        Property.Opinionated(Ident("a'"), "b", Fixed, Visible)
     }
 
     "infix" in {

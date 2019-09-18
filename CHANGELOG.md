@@ -1,3 +1,20 @@
+# 3.4.7
+
+- [Fix RenameProperties with Schema Re-Arrangement](https://github.com/getquill/quill/pull/1613)
+
+# 3.4.6
+
+- [Fixing Embedded Coproduct Column Duplication Issue](https://github.com/getquill/quill/pull/1604)
+
+# 3.4.5
+
+- [Express Infix Clauses not in Select List](https://github.com/getquill/quill/pull/1597)
+
+# 3.4.4
+
+- [added MappedEncoding for encoding and decoding OffsetDateTime](https://github.com/getquill/quill/pull/1595)
+- [Fix onConflict with custom schemaMeta](https://github.com/getquill/quill/pull/1589)
+
 # 3.4.3
 
 - [Nested Query does not work correctly with NamingSchemas](https://github.com/getquill/quill/issues/1577)

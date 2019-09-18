@@ -3,6 +3,7 @@ package io.getquill.norm
 import io.getquill.ReturnAction.{ ReturnColumns, ReturnRecord }
 import io.getquill._
 import io.getquill.ast.Renameable.ByStrategy
+import io.getquill.ast.Visibility.Visible
 import io.getquill.ast._
 import io.getquill.context.Expand
 
@@ -114,14 +115,14 @@ class ExpandReturningSpec extends Spec {
       Map(
         Entity.Opinionated("Person", List(), renameable),
         Ident("p"),
-        Tuple(List(Property.Opinionated(Ident("p"), "name", renameable), Property.Opinionated(Ident("p"), "age", renameable)))
+        Tuple(List(Property.Opinionated(Ident("p"), "name", renameable, Visible), Property.Opinionated(Ident("p"), "age", renameable, Visible)))
       ),
-      List(Assignment(Ident("pp"), Property.Opinionated(Ident("pp"), "name", renameable), Constant("Joe")))
+      List(Assignment(Ident("pp"), Property.Opinionated(Ident("pp"), "name", renameable, Visible), Constant("Joe")))
     )
     def retMulti =
-      Returning(insert, Ident("r"), Tuple(List(Property.Opinionated(Ident("r"), "name", renameable), Property.Opinionated(Ident("r"), "age", renameable))))
+      Returning(insert, Ident("r"), Tuple(List(Property.Opinionated(Ident("r"), "name", renameable, Visible), Property.Opinionated(Ident("r"), "age", renameable, Visible))))
     def retSingle =
-      Returning(insert, Ident("r"), Tuple(List(Property.Opinionated(Ident("r"), "name", renameable))))
+      Returning(insert, Ident("r"), Tuple(List(Property.Opinionated(Ident("r"), "name", renameable, Visible))))
 
     "returning single" - {
       val mi = MirrorIdiomReturningSingle
