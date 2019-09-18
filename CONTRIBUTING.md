@@ -18,7 +18,9 @@ docker-compose run --rm setup
 
 After that you are ready to build and test the project. The following setp describes how to test the project with
 sbt built within docker image. If you would like to use your local sbt,
-please visit [Building locally](#building-locally-using-docker-only-for-databases).
+please visit [Building locally](#building-locally-using-docker-only-for-databases). This is highly recommended
+when running Docker on non-linux OS due to high IO overhead from running 
+[Docker in virtualized environments](https://docs.docker.com/docker-for-mac/osxfs/#performance-issues-solutions-and-roadmap).
 
 To build and test the project:
 
