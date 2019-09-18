@@ -194,7 +194,7 @@ trait MirrorIdiomBase extends Idiom {
     case Constant(v)         => stmt"${v.toString.token}"
     case NullValue           => stmt"null"
     case Tuple(values)       => stmt"(${values.token})"
-    case CaseClass(values)   => stmt"(${values.map(_._2).token})"
+    case CaseClass(values)   => stmt"CaseClass(${values.map { case (k, v) => s"${k.token}: ${v.token}" }.mkString(", ").token})"
   }
 
   implicit val identTokenizer: Tokenizer[Ident] = Tokenizer[Ident] {

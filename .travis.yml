@@ -65,6 +65,12 @@ jobs:
     - stage: release
       if: type != pull_request
       scala: 2.12.6
+      name: "Release 2.11 base"
+      script:
+        - ./build/release.sh 211 base
+    - stage: release
+      if: type != pull_request
+      scala: 2.12.6
       name: "Release 2.11 db"
       script:
         - ./build/release.sh 211 db
@@ -87,6 +93,12 @@ jobs:
       script:
         - ./build/release.sh 211 bigdata
 
+    - stage: release
+      if: type != pull_request
+      scala: 2.12.6
+      name: "Release 2.12 base"
+      script:
+        - ./build/release.sh 212 base
     - stage: release
       if: type != pull_request
       scala: 2.12.6
