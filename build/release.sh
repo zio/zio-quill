@@ -34,7 +34,7 @@ then
     ls -ltr
     sleep 3 # Need to wait until credential files fully written or build fails sometimes
 
-    if [[ ($TRAVIS_BRANCH == "master" || $TRAVIS_BRANCH == "re-release"*) && $(cat version.sbt) != *"SNAPSHOT"* ]]
+    if [[ (($TRAVIS_BRANCH == "master" && $TRAVIS_COMMIT_MESSAGE == "Setting version to"*) || $TRAVIS_BRANCH == "re-release"*) && $(cat version.sbt) != *"SNAPSHOT"* ]]
     then
         echo "Release Build for $TRAVIS_BRANCH"
         eval "$(ssh-agent -s)"
