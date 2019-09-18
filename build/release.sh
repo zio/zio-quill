@@ -34,8 +34,9 @@ then
     ls -ltr
     sleep 3 # Need to wait until credential files fully written or build fails sometimes
 
-    if [[ $TRAVIS_BRANCH == "master" && $(cat version.sbt) != *"SNAPSHOT"* ]]
+    if [[ (($TRAVIS_BRANCH == "master" && $TRAVIS_COMMIT_MESSAGE == "Setting version to"*) || $TRAVIS_BRANCH == "re-release"*) && $(cat version.sbt) != *"SNAPSHOT"* ]]
     then
+        echo "Release Build for $TRAVIS_BRANCH"
         eval "$(ssh-agent -s)"
         chmod 600 local.deploy_key.pem
         ssh-add local.deploy_key.pem
@@ -54,6 +55,7 @@ then
 
     elif [[ $TRAVIS_BRANCH == "master" ]]
     then
+        echo "Master Non-Release Build for $TRAVIS_BRANCH"
         if [[ $ARTIFACT == "base" ]]; then    $SBT_VER -Dmodules=base publish; fi
         if [[ $ARTIFACT == "db" ]]; then      $SBT_VER -Dmodules=db publish; fi
         if [[ $ARTIFACT == "async" ]]; then   $SBT_VER -Dmodules=async publish; fi
@@ -63,6 +65,7 @@ then
         # No-Op Publish
         if [[ $ARTIFACT == "publish" ]]; then echo "No-Op Publish for Non Release Master Branch"; fi
     else
+        echo "Branch build for $TRAVIS_BRANCH"
         echo "version in ThisBuild := \"$TRAVIS_BRANCH-SNAPSHOT\"" > version.sbt
         if [[ $ARTIFACT == "base" ]]; then    $SBT_VER -Dmodules=base publish; fi
         if [[ $ARTIFACT == "db" ]]; then      $SBT_VER -Dmodules=db publish; fi

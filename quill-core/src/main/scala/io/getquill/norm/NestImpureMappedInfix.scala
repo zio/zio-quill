@@ -32,7 +32,7 @@ object NestImpureMappedInfix extends StatelessTransformer {
       case m @ Map(_, x, cc @ CaseClass(values)) if hasInfix(cc) => //Nested(m)
         Map(Nested(applyInside(m)), x,
           CaseClass(values.map {
-            case (str, _) => (str, Property(x, str)) // mappings of nested-query case class properties should not be renamed
+            case (name, _) => (name, Property(x, name)) // mappings of nested-query case class properties should not be renamed
           }))
 
       case m @ Map(_, x, tup @ Tuple(values)) if hasInfix(tup) =>
