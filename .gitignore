@@ -21,6 +21,7 @@ MyTestJdbc.scala
 MyJdbcTest.scala
 MySqlTest.scala
 MyTest.scala
+MyCqlTest.scala
 quill-core/src/main/resources/logback.xml
 quill-jdbc/src/main/resources/logback.xml
 log.txt*

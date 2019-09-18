@@ -2,6 +2,7 @@ package io.getquill.norm
 
 import io.getquill.Spec
 import io.getquill.ast.Renameable.Fixed
+import io.getquill.ast.Visibility.Visible
 import io.getquill.ast._
 
 class BetaReductionSpec extends Spec {
@@ -12,7 +13,7 @@ class BetaReductionSpec extends Spec {
       BetaReduction(ast) mustEqual Ident("a")
     }
     "tuple field - fixed property" in {
-      val ast: Ast = Property.Opinionated(Tuple(List(Ident("a"))), "_1", Fixed)
+      val ast: Ast = Property.Opinionated(Tuple(List(Ident("a"))), "_1", Fixed, Visible)
       BetaReduction(ast) mustEqual Ident("a")
     }
     "caseclass field" in {
@@ -20,7 +21,7 @@ class BetaReductionSpec extends Spec {
       BetaReduction(ast) mustEqual Ident("a")
     }
     "caseclass field - fixed property" in {
-      val ast: Ast = Property.Opinionated(CaseClass(List(("foo", Ident("a")))), "foo", Fixed)
+      val ast: Ast = Property.Opinionated(CaseClass(List(("foo", Ident("a")))), "foo", Fixed, Visible)
       BetaReduction(ast) mustEqual Ident("a")
     }
     "function apply" in {
@@ -33,6 +34,16 @@ class BetaReductionSpec extends Spec {
   "replaces identifiers by actuals" - {
     "ident" in {
       val ast: Ast = Ident("a")
+      BetaReduction(ast, Ident("a") -> Ident("a'")) mustEqual
+        Ident("a'")
+    }
+    "with OnConflict.Excluded" in {
+      val ast: Ast = OnConflict.Excluded(Ident("a"))
+      BetaReduction(ast, Ident("a") -> Ident("a'")) mustEqual
+        Ident("a'")
+    }
+    "with OnConflict.Existing" in {
+      val ast: Ast = OnConflict.Existing(Ident("a"))
       BetaReduction(ast, Ident("a") -> Ident("a'")) mustEqual
         Ident("a'")
     }

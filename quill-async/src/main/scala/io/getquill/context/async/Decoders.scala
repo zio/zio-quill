@@ -144,6 +144,9 @@ trait Decoders {
   implicit val decodeZonedDateTime: MappedEncoding[JodaDateTime, ZonedDateTime] =
     MappedEncoding(jdt => ZonedDateTime.ofInstant(Instant.ofEpochMilli(jdt.getMillis), ZoneId.of(jdt.getZone.getID)))
 
+  implicit val decodeOffsetDateTime: MappedEncoding[JodaDateTime, OffsetDateTime] =
+    MappedEncoding(jdt => OffsetDateTime.ofInstant(Instant.ofEpochMilli(jdt.getMillis), ZoneId.of(jdt.getZone.getID)))
+
   implicit val decodeLocalDate: MappedEncoding[JodaLocalDate, LocalDate] =
     MappedEncoding(jld => LocalDate.of(jld.getYear, jld.getMonthOfYear, jld.getDayOfMonth))
 

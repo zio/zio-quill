@@ -90,4 +90,22 @@ class ExpandNestedQueriesSpec extends Spec {
     testContext.run(q.dynamic).string mustEqual
       "SELECT x03._1i, x03._2i FROM (SELECT a.i AS _1i, b.i AS _2i FROM TestEntity a INNER JOIN TestEntity2 b ON a.i = b.i) AS x03"
   }
+
+  "expands nested mapped entity correctly" in {
+    import testContext._
+
+    case class TestEntity(s: String, i: Int, l: Long, o: Option[Int]) extends Embedded
+    case class Dual(ta: TestEntity, tb: TestEntity)
+
+    val qr1 = quote {
+      query[TestEntity]
+    }
+
+    val q = quote {
+      qr1.join(qr1).on((a, b) => a.i == b.i).nested.map(both => both match { case (a, b) => Dual(a, b) }).nested
+    }
+
+    testContext.run(q).string mustEqual
+      "SELECT both._1s, both._1i, both._1l, both._1o, both._2s, both._2i, both._2l, both._2o FROM (SELECT a.s AS _1s, a.i AS _1i, a.l AS _1l, a.o AS _1o, b.s AS _2s, b.i AS _2i, b.l AS _2l, b.o AS _2o FROM TestEntity a INNER JOIN TestEntity b ON a.i = b.i) AS both"
+  }
 }

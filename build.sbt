@@ -55,6 +55,9 @@ lazy val filteredModules = {
     case Some("bigdata") =>
       println("Compiling Big Data Modules")
       bigdataModules
+    case Some("none") =>
+      println("Invoking Aggregate Project")
+      Seq[sbt.ClasspathDep[sbt.ProjectReference]]()
     case _ =>
       println("Compiling All Modules")
       allModules
@@ -128,6 +131,7 @@ lazy val `quill-codegen` =
 lazy val `quill-codegen-jdbc` =
   (project in file("quill-codegen-jdbc"))
     .settings(commonSettings: _*)
+    .settings(jdbcTestingLibraries: _*)
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
@@ -136,7 +140,7 @@ lazy val `quill-codegen-jdbc` =
       )
     )
     .dependsOn(`quill-codegen` % "compile->compile;test->test")
-    .dependsOn(`quill-jdbc` % "compile->compile;test->test")
+    .dependsOn(`quill-jdbc` % "compile->compile")
 
 lazy val `quill-codegen-tests` =
   (project in file("quill-codegen-tests"))
@@ -249,7 +253,7 @@ lazy val `quill-spark` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "org.apache.spark" %% "spark-sql" % "2.4.3"
+        "org.apache.spark" %% "spark-sql" % "2.4.4"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -261,7 +265,7 @@ lazy val `quill-finagle-mysql` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.twitter" %% "finagle-mysql" % "19.8.0"
+        "com.twitter" %% "finagle-mysql" % "19.9.0"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -343,7 +347,7 @@ lazy val `quill-cassandra-lagom` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= {
-        val lagomVersion = "1.5.1"
+        val lagomVersion = "1.5.3"
         Seq(
           "com.lightbend.lagom" %% "lagom-scaladsl-persistence-cassandra" % lagomVersion % Provided,
           "com.lightbend.lagom" %% "lagom-scaladsl-testkit" % lagomVersion % Test
@@ -441,8 +445,8 @@ def updateWebsiteTag =
     st
   })
 
-lazy val jdbcTestingSettings = Seq(
-  fork in Test := true,
+
+lazy val jdbcTestingLibraries = Seq(
   resolvers ++= includeIfOracle( // read ojdbc8 jar in case it is deployed
     Resolver.mavenLocal
   ),
@@ -455,13 +459,17 @@ lazy val jdbcTestingSettings = Seq(
         "org.postgresql"          %  "postgresql"              % "42.2.6"             % Test,
         "org.xerial"              %  "sqlite-jdbc"             % "3.28.0"           % Test,
         "com.microsoft.sqlserver" %  "mssql-jdbc"              % "7.1.1.jre8-preview" % Test,
-        "org.mockito"             %% "mockito-scala-scalatest" % "1.5.14"              % Test
+        "org.mockito"             %% "mockito-scala-scalatest" % "1.5.15"              % Test
       )
 
     deps ++ includeIfOracle(
       "com.oracle.jdbc" % "ojdbc8" % "18.3.0.0.0" % Test
     )
-  },
+  }
+)
+
+lazy val jdbcTestingSettings = jdbcTestingLibraries ++ Seq(
+  fork in Test := true,
   excludeFilter in unmanagedSources := {
     excludeTests match {
       case true =>
