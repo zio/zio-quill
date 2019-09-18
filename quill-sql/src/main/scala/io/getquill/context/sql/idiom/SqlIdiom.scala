@@ -354,6 +354,11 @@ trait SqlIdiom extends Idiom {
             stmt"${
               actionAlias.map(alias => stmt"${scopedTokenizer(alias)}.").getOrElse(stmt"")
             }${tokenizePrefixedProperty(name, prefix, strategy, renameable)}"
+
+          // In the rare case that the Ident is invisible, do not show it. See the Ident documentation for more info.
+          case (Ident.Opinionated(_, Hidden), prefix) =>
+            stmt"${tokenizePrefixedProperty(name, prefix, strategy, renameable)}"
+
           // The normal case where `Property(Property(Ident("realTable"), embeddedTableAlias), realPropertyAlias)`
           // becomes `realTable.realPropertyAlias`.
           case (ast, prefix) =>

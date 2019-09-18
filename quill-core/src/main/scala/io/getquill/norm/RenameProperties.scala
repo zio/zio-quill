@@ -118,10 +118,21 @@ object RenameProperties extends StatelessTransformer {
   sealed trait Schema {
     def lookup(property: List[String]): Option[Schema] =
       (property, this) match {
-        case (Nil, schema) => Some(schema)
-        case (head :: tail, CaseClassSchema(props)) if (props.contains(head)) => props(head).lookup(tail)
-        case (TupleIndex(idx) :: tail, TupleSchema(values)) if values.contains(idx) => values(idx).lookup(tail)
-        case _ => None
+        case (Nil, schema) =>
+          trace"Nil at $property returning " andReturn
+            Some(schema)
+        case (path, e @ EntitySchema(_)) =>
+          trace"Entity at $path returning " andReturn
+            Some(e.subSchemaOrEmpty(path))
+        case (head :: tail, CaseClassSchema(props)) if (props.contains(head)) =>
+          trace"Case class at $property returning " andReturn
+            props(head).lookup(tail)
+        case (TupleIndex(idx) :: tail, TupleSchema(values)) if values.contains(idx) =>
+          trace"Tuple at at $property returning " andReturn
+            values(idx).lookup(tail)
+        case _ =>
+          trace"Nothing found at $property returning " andReturn
+            None
       }
   }
 
@@ -151,21 +162,12 @@ object RenameProperties extends StatelessTransformer {
 
   def protractSchema(body: Ast, ident: Ident, schema: Schema): Option[Schema] = {
 
-    //    def tryToFindSubSchema(path: List[String], innerBody: Ast) =
-    //      for {
-    //        subSchema <-
-    //          trace"Searching for schema at path: $path resulted in:" andReturn
-    //            schema.lookup(path)
-    //        newSubSchema <- protractSchemaRecurse(innerBody, subSchema)
-    //      } yield newSubSchema
-
     def protractSchemaRecurse(body: Ast, schema: Schema): Option[Schema] =
       body match {
         // if any values yield a sub-schema which is not an entity, recurse into that
         case cc @ CaseClass(values) =>
           trace"Protracting CaseClass $cc into new schema:" andReturn
             CaseClassSchema(
-              // TODO Catch infixes with nested clauses and warn that they cannot be propogated
               values.collect {
                 case (name, innerBody @ HierarchicalAstEntity())          => (name, protractSchemaRecurse(innerBody, schema))
                 // pass the schema into a recursive call an extract from it when we non tuple/caseclass element
@@ -177,7 +179,6 @@ object RenameProperties extends StatelessTransformer {
               }
             ).notEmpty
         case tup @ Tuple(values) =>
-          // TODO Catch infixes with nested clauses and warn that they cannot be propogated
           trace"Protracting Tuple $tup into new schema:" andReturn
             TupleSchema.fromIndexes(
               values.zipWithIndex.collect {
@@ -193,7 +194,10 @@ object RenameProperties extends StatelessTransformer {
 
         case prop @ PropertyMatroshka(`ident`, path) =>
           trace"Protraction completed schema path $prop at the schema $schema pointing to:" andReturn
-            schema.lookup(path)
+            schema match {
+              //case e: EntitySchema => Some(e)
+              case _ => schema.lookup(path)
+            }
         case `ident` =>
           trace"Protraction completed with the mapping identity $ident at the schema:" andReturn
             Some(schema)
@@ -206,7 +210,27 @@ object RenameProperties extends StatelessTransformer {
   }
 
   case object EmptySchema extends Schema
-  case class EntitySchema(e: Entity) extends Schema
+  case class EntitySchema(e: Entity) extends Schema {
+    def noAliases = e.properties.isEmpty
+
+    private def subSchema(path: List[String]) =
+      EntitySchema(Entity(s"sub-${e.name}", e.properties.flatMap {
+        case PropertyAlias(aliasPath, alias) =>
+          if (aliasPath == path)
+            List(PropertyAlias(aliasPath, alias))
+          else if (aliasPath.startsWith(path))
+            List(PropertyAlias(aliasPath.diff(path), alias))
+          else
+            List()
+      }))
+
+    def subSchemaOrEmpty(path: List[String]): Schema =
+      trace"Creating sub-schema for entity $e at path $path will be" andReturn {
+        val sub = subSchema(path)
+        if (sub.noAliases) EmptySchema else sub
+      }
+
+  }
   case class TupleSchema(m: collection.Map[Int, Schema] /* Zero Indexed */ ) extends Schema {
     def list = m.toList.sortBy(_._1)
     def notEmpty =
@@ -250,7 +274,7 @@ object RenameProperties extends StatelessTransformer {
     q match {
 
       // Don't understand why this is needed....
-      case Map(q: Query, x, p @ HierarchicalAstEntity()) =>
+      case Map(q: Query, x, p) =>
         applySchema(q) match {
           case (q, subSchema) =>
             val replace =
@@ -270,7 +294,6 @@ object RenameProperties extends StatelessTransformer {
         }
 
       case e: Entity                 => (e, EntitySchema(e))
-      case Map(q: Query, x, p)       => trace"Map sub-apply" andReturn applySchema(q, x, p, Map)
       case Filter(q: Query, x, p)    => applySchema(q, x, p, Filter)
       case SortBy(q: Query, x, p, o) => applySchema(q, x, p, SortBy(_, _, _, o))
       case GroupBy(q: Query, x, p)   => applySchema(q, x, p, GroupBy)
@@ -397,8 +420,6 @@ object RenameProperties extends StatelessTransformer {
                 case head :: tail => apply(Property(base, head), tail)
               }
             List(
-              // replace CaseClass entity Member names since they can be looked up. The path for them should technically always be one element.
-              //Member(path.mkString(".")) -> Member(alias),
               apply(base, path) -> Property.Opinionated(base, alias, Fixed, Visible) // Hidden properties cannot be renamed
             )
         }
