@@ -20,7 +20,7 @@ object ExpandDistinct {
           case Distinct(Map(q, x, cc @ CaseClass(values))) =>
             Map(Distinct(Map(q, x, cc)), x,
               CaseClass(values.map {
-                case (str, _) => (str, Property(x, str))
+                case (name, _) => (name, Property(x, name))
               }))
           case Distinct(Map(q, x, p)) =>
             Map(Distinct(Map(q, x, p)), x, p)

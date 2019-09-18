@@ -268,6 +268,7 @@ case class Constant(v: Any) extends Value
 object NullValue extends Value
 
 case class Tuple(values: List[Ast]) extends Value
+
 case class CaseClass(values: List[(String, Ast)]) extends Value
 
 //************************************************************
