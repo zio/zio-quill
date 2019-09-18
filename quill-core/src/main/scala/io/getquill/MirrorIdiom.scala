@@ -1,5 +1,6 @@
 package io.getquill
 
+import io.getquill.ast.Renameable.{ ByStrategy, Fixed }
 import io.getquill.ast._
 import io.getquill.context.CanReturnClause
 import io.getquill.idiom.{ Idiom, SetContainsToken, Statement }
@@ -63,11 +64,11 @@ trait MirrorIdiomBase extends Idiom {
 
   implicit def queryTokenizer(implicit liftTokenizer: Tokenizer[Lift]): Tokenizer[Query] = Tokenizer[Query] {
 
-    case Entity(name, Nil) => stmt"querySchema(${s""""$name"""".token})"
+    case Entity.Opinionated(name, Nil, renameable) => stmt"${tokenizeName("querySchema", renameable).token}(${s""""$name"""".token})"
 
-    case Entity(name, prop) =>
+    case Entity.Opinionated(name, prop, renameable) =>
       val properties = prop.map(p => stmt"""_.${p.path.mkStmt(".")} -> "${p.alias.token}"""")
-      stmt"querySchema(${s""""$name"""".token}, ${properties.token})"
+      stmt"${tokenizeName("querySchema", renameable).token}(${s""""$name"""".token}, ${properties.token})"
 
     case Filter(source, alias, body) =>
       stmt"${source.token}.filter(${alias.token} => ${body.token})"
@@ -176,9 +177,15 @@ trait MirrorIdiomBase extends Idiom {
     case o => stmt"${o.toString.token}"
   }
 
+  def tokenizeName(name: String, renameable: Renameable) =
+    renameable match {
+      case ByStrategy => name
+      case Fixed      => s"`${name}`"
+    }
+
   implicit def propertyTokenizer(implicit liftTokenizer: Tokenizer[Lift]): Tokenizer[Property] = Tokenizer[Property] {
-    case Property(ExternalIdent(_), name) => stmt"${name.token}"
-    case Property(ref, name)              => stmt"${scopedTokenizer(ref)}.${name.token}"
+    case Property.Opinionated(ExternalIdent(_), name, renameable, _) => stmt"${tokenizeName(name, renameable).token}"
+    case Property.Opinionated(ref, name, renameable, _)              => stmt"${scopedTokenizer(ref)}.${tokenizeName(name, renameable).token}"
   }
 
   implicit val valueTokenizer: Tokenizer[Value] = Tokenizer[Value] {
@@ -187,7 +194,7 @@ trait MirrorIdiomBase extends Idiom {
     case Constant(v)         => stmt"${v.toString.token}"
     case NullValue           => stmt"null"
     case Tuple(values)       => stmt"(${values.token})"
-    case CaseClass(values)   => stmt"(${values.map(_._2).token})"
+    case CaseClass(values)   => stmt"CaseClass(${values.map { case (k, v) => s"${k.token}: ${v.token}" }.mkString(", ").token})"
   }
 
   implicit val identTokenizer: Tokenizer[Ident] = Tokenizer[Ident] {

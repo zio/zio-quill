@@ -14,6 +14,8 @@ import scala.annotation.tailrec
 import scala.collection.immutable.StringOps
 import scala.reflect.macros.TypecheckException
 import io.getquill.ast.Implicits._
+import io.getquill.ast.Renameable.Fixed
+import io.getquill.ast.Visibility.{ Hidden, Visible }
 import io.getquill.util.Interleave
 
 trait Parsing extends ValueComputation {
@@ -176,6 +178,9 @@ trait Parsing extends ValueComputation {
       Entity("unused", Nil)
 
     case q"$pack.querySchema[$t](${ name: String }, ..$properties)" =>
+      Entity.Opinionated(name, properties.map(propertyAliasParser(_)), Fixed)
+
+    case q"$pack.impliedQuerySchema[$t](${ name: String }, ..$properties)" =>
       Entity(name, properties.map(propertyAliasParser(_)))
 
     case q"$source.filter(($alias) => $body)" if (is[CoreDsl#Query[Any]](source)) =>
@@ -479,7 +484,17 @@ trait Parsing extends ValueComputation {
       if (caseAccessors.nonEmpty && !caseAccessors.contains(property))
         c.fail(s"Can't find case class property: ${property.decodedName.toString}")
 
-      Property(astParser(e), property.decodedName.toString)
+      val visibility = {
+        val tpe = c.typecheck(q"$e.$property")
+        val innerParam = innerOptionParam(q"$tpe".tpe, None)
+        if (is[Embedded](q"$innerParam")) Hidden
+        else Visible
+      }
+
+      Property.Opinionated(astParser(e), property.decodedName.toString,
+        Renameable.neutral, //Renameability of the property is determined later in the RenameProperties normalization phase
+        visibility // Visibility is decided here.
+      )
   }
 
   val operationParser: Parser[Operation] = Parser[Operation] {

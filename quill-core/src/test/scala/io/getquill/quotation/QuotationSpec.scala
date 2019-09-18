@@ -1,15 +1,14 @@
 package io.getquill.quotation
 
-import scala.math.BigDecimal.double2bigDecimal
-import scala.math.BigDecimal.int2bigDecimal
-import scala.math.BigDecimal.javaBigDecimal2bigDecimal
-import scala.math.BigDecimal.long2bigDecimal
 import io.getquill.Spec
-import io.getquill.ast.{ Query => _, _ }
-import io.getquill.testContext._
-import io.getquill.context.ValueClass
-import io.getquill.util.Messages
 import io.getquill.ast.Implicits._
+import io.getquill.ast.Renameable.Fixed
+import io.getquill.ast.{ Query => _, _ }
+import io.getquill.context.ValueClass
+import io.getquill.testContext._
+import io.getquill.util.Messages
+
+import scala.math.BigDecimal.{ double2bigDecimal, int2bigDecimal, javaBigDecimal2bigDecimal, long2bigDecimal }
 
 case class CustomAnyValue(i: Int) extends AnyVal
 case class EmbeddedValue(s: String, i: Int) extends Embedded
@@ -30,39 +29,48 @@ class QuotationSpec extends Spec {
           val q = quote {
             querySchema[TestEntity]("SomeAlias")
           }
-          quote(unquote(q)).ast mustEqual Entity("SomeAlias", Nil)
+          quote(unquote(q)).ast mustEqual Entity.Opinionated("SomeAlias", Nil, Fixed)
         }
         "with property alias" in {
           val q = quote {
             querySchema[TestEntity]("SomeAlias", _.s -> "theS", _.i -> "theI")
           }
-          quote(unquote(q)).ast mustEqual Entity("SomeAlias", List(PropertyAlias(List("s"), "theS"), PropertyAlias(List("i"), "theI")))
+          quote(unquote(q)).ast mustEqual Entity.Opinionated("SomeAlias", List(PropertyAlias(List("s"), "theS"), PropertyAlias(List("i"), "theI")), Fixed)
         }
         "with embedded property alias" in {
           case class TestEnt(ev: EmbeddedValue)
           val q = quote {
             querySchema[TestEnt]("SomeAlias", _.ev.s -> "theS", _.ev.i -> "theI")
           }
-          quote(unquote(q)).ast mustEqual Entity("SomeAlias", List(PropertyAlias(List("ev", "s"), "theS"), PropertyAlias(List("ev", "i"), "theI")))
+          quote(unquote(q)).ast mustEqual Entity.Opinionated("SomeAlias", List(PropertyAlias(List("ev", "s"), "theS"), PropertyAlias(List("ev", "i"), "theI")), Fixed)
         }
         "with embedded option property alias" in {
           case class TestEnt(ev: Option[EmbeddedValue])
           val q = quote {
             querySchema[TestEnt]("SomeAlias", _.ev.map(_.s) -> "theS", _.ev.map(_.i) -> "theI")
           }
-          quote(unquote(q)).ast mustEqual Entity("SomeAlias", List(PropertyAlias(List("ev", "s"), "theS"), PropertyAlias(List("ev", "i"), "theI")))
+          quote(unquote(q)).ast mustEqual Entity.Opinionated("SomeAlias", List(PropertyAlias(List("ev", "s"), "theS"), PropertyAlias(List("ev", "i"), "theI")), Fixed)
         }
         "explicit `Predef.ArrowAssoc`" in {
           val q = quote {
             querySchema[TestEntity]("TestEntity", e => Predef.ArrowAssoc(e.s).->[String]("theS"))
           }
-          quote(unquote(q)).ast mustEqual Entity("TestEntity", List(PropertyAlias(List("s"), "theS")))
+          quote(unquote(q)).ast mustEqual Entity.Opinionated("TestEntity", List(PropertyAlias(List("s"), "theS")), Fixed)
         }
         "with property alias and unicode arrow" in {
           val q = quote {
             querySchema[TestEntity]("SomeAlias", _.s → "theS", _.i → "theI")
           }
-          quote(unquote(q)).ast mustEqual Entity("SomeAlias", List(PropertyAlias(List("s"), "theS"), PropertyAlias(List("i"), "theI")))
+          quote(unquote(q)).ast mustEqual Entity.Opinionated("SomeAlias", List(PropertyAlias(List("s"), "theS"), PropertyAlias(List("i"), "theI")), Fixed)
+        }
+        "with only some properties renamed" in {
+          val q = quote {
+            querySchema[TestEntity]("SomeAlias", _.s -> "theS").filter(t => t.s == "s" && t.i == 1)
+          }
+          quote(unquote(q)).ast mustEqual (
+            Filter(Entity.Opinionated("SomeAlias", List(PropertyAlias(List("s"), "theS")), Fixed), Ident("t"),
+              (Property(Ident("t"), "s") +==+ Constant("s")) +&&+ (Property(Ident("t"), "i") +==+ Constant(1)))
+          )
         }
       }
       "filter" in {

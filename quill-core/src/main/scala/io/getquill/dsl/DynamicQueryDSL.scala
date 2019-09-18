@@ -1,10 +1,14 @@
 package io.getquill.dsl
 
+import io.getquill.ast.Renameable.Fixed
+
 import scala.language.implicitConversions
 import scala.language.experimental.macros
 import io.getquill.ast._
+
 import scala.reflect.macros.whitebox.{ Context => MacroContext }
 import io.getquill.util.Messages._
+
 import scala.annotation.tailrec
 import scala.util.DynamicVariable
 import scala.reflect.ClassTag
@@ -60,7 +64,9 @@ trait DynamicQueryDsl {
   implicit def toQuoted[T <: Action[_]](q: DynamicAction[T]): Quoted[T] = q.q
 
   def dynamicQuery[T](implicit t: ClassTag[T]): DynamicEntityQuery[T] =
-    dynamicQuerySchema(t.runtimeClass.getName.split('.').last.split('$').last)
+    DynamicEntityQuery(splice[EntityQuery[T]](
+      Entity(t.runtimeClass.getName.split('.').last.split('$').last, Nil)
+    ))
 
   case class DynamicAlias[T](property: Quoted[T] => Quoted[Any], name: String)
 
@@ -103,7 +109,7 @@ trait DynamicQueryDsl {
 
         PropertyAlias(path(alias.property(splice[T](Ident("v"))).ast), alias.name)
       }
-    DynamicEntityQuery(splice[EntityQuery[T]](Entity(entity, aliases.toList)))
+    DynamicEntityQuery(splice[EntityQuery[T]](Entity.Opinionated(entity, aliases.toList, Fixed)))
   }
 
   private[this] val nextIdentId = new DynamicVariable(0)

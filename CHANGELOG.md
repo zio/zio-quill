@@ -1,3 +1,34 @@
+# 3.4.7
+
+- [Fix RenameProperties with Schema Re-Arrangement](https://github.com/getquill/quill/pull/1613)
+
+# 3.4.6
+
+- [Fixing Embedded Coproduct Column Duplication Issue](https://github.com/getquill/quill/pull/1604)
+
+# 3.4.5
+
+- [Express Infix Clauses not in Select List](https://github.com/getquill/quill/pull/1597)
+
+# 3.4.4
+
+- [added MappedEncoding for encoding and decoding OffsetDateTime](https://github.com/getquill/quill/pull/1595)
+- [Fix onConflict with custom schemaMeta](https://github.com/getquill/quill/pull/1589)
+
+# 3.4.3
+
+- [Nested Query does not work correctly with NamingSchemas](https://github.com/getquill/quill/issues/1577)
+
+# 3.4.2
+
+- [Fix NamingStrategy override of querySchema](https://github.com/getquill/quill/pull/1560)
+- [Monix JDBC scheduling fixes ](https://github.com/getquill/quill/pull/1546)
+
+Migration Notes:
+- `NamingStrategy` is no longer applied on column and table names defined in `querySchema`, all 
+column and table names defined in `querySchema` are now final. If you are relying on this behavior to 
+name your columns/tables correctly, you will need to update your `querySchema` objects.
+
 # 3.4.1
 
 - [Fix property order expanded sub-queries](https://github.com/getquill/quill/pull/1541)

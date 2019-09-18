@@ -1,23 +1,24 @@
 package io.getquill.context.sql.norm
 
+import io.getquill.NamingStrategy
 import io.getquill.ast.Ast
 import io.getquill.ast.Ident
 import io.getquill.ast._
 import io.getquill.ast.StatefulTransformer
-import io.getquill.context.sql.FlattenSqlQuery
-import io.getquill.context.sql.FromContext
-import io.getquill.context.sql.InfixContext
-import io.getquill.context.sql.JoinContext
-import io.getquill.context.sql.QueryContext
-import io.getquill.context.sql.SelectValue
-import io.getquill.context.sql.SetOperationSqlQuery
-import io.getquill.context.sql.SqlQuery
-import io.getquill.context.sql.TableContext
-import io.getquill.context.sql.UnaryOperationSqlQuery
-import io.getquill.context.sql.FlatJoinContext
-import scala.collection.mutable.LinkedHashSet
+import io.getquill.ast.Visibility.Visible
+import io.getquill.context.sql._
 
-object ExpandNestedQueries {
+import scala.collection.mutable.LinkedHashSet
+import io.getquill.util.Interpolator
+import io.getquill.util.Messages.TraceType.NestedQueryExpansion
+import io.getquill.context.sql.norm.nested.ExpandSelect
+
+import scala.collection.mutable
+
+class ExpandNestedQueries(strategy: NamingStrategy) {
+
+  val interp = new Interpolator(NestedQueryExpansion, 3)
+  import interp._
 
   def apply(q: SqlQuery, references: List[Property]): SqlQuery =
     apply(q, LinkedHashSet.empty ++ references)
@@ -27,7 +28,9 @@ object ExpandNestedQueries {
   private def apply(q: SqlQuery, references: LinkedHashSet[Property]): SqlQuery =
     q match {
       case q: FlattenSqlQuery =>
-        expandNested(q.copy(select = expandSelect(q.select, references)))
+        val expand = expandNested(q.copy(select = ExpandSelect(q.select, references, strategy)))
+        trace"Expanded Nested Query $q into $expand" andLog ()
+        expand
       case SetOperationSqlQuery(a, op, b) =>
         SetOperationSqlQuery(apply(a, references), op, apply(b, references))
       case UnaryOperationSqlQuery(op, q) =>
@@ -38,71 +41,42 @@ object ExpandNestedQueries {
     q match {
       case FlattenSqlQuery(from, where, groupBy, orderBy, limit, offset, select, distinct) =>
         val asts = Nil ++ select.map(_.ast) ++ where ++ groupBy ++ orderBy.map(_.ast) ++ limit ++ offset
-        val from = q.from.map(expandContext(_, asts))
-        q.copy(from = from)
+        val expansions = q.from.map(expandContext(_, asts))
+        val from = expansions.map(_._1)
+        val references = expansions.flatMap(_._2)
+        val modifiedSelects =
+          select
+            .map(s =>
+              if (references.contains(s.ast))
+                trace"Un-hide Select $s:" andReturn unhideProperties(s)
+              else s)
+
+        q.copy(select = modifiedSelects, from = from)
     }
 
-  private def expandContext(s: FromContext, asts: List[Ast]): FromContext =
+  private def unhideProperties(sv: SelectValue) = {
+    def unhideRecurse(ast: Ast): Ast =
+      Transform(ast) {
+        case Property.Opinionated(a, n, r, v) =>
+          Property.Opinionated(unhideRecurse(a), n, r, Visible)
+      }
+    sv.copy(ast = unhideRecurse(sv.ast))
+  }
+
+  private def expandContext(s: FromContext, asts: List[Ast]): (FromContext, LinkedHashSet[Property]) =
     s match {
       case QueryContext(q, alias) =>
-        QueryContext(apply(q, references(alias, asts)), alias)
+        val refs = references(alias, asts)
+        (QueryContext(apply(q, refs), alias), refs)
       case JoinContext(t, a, b, on) =>
-        JoinContext(t, expandContext(a, asts :+ on), expandContext(b, asts :+ on), on)
+        val (left, leftRefs) = expandContext(a, asts :+ on)
+        val (right, rightRefs) = expandContext(b, asts :+ on)
+        (JoinContext(t, left, right, on), leftRefs ++ rightRefs)
       case FlatJoinContext(t, a, on) =>
-        FlatJoinContext(t, expandContext(a, asts :+ on), on)
-      case _: TableContext | _: InfixContext => s
+        val (next, refs) = expandContext(a, asts :+ on)
+        (FlatJoinContext(t, next, on), refs)
+      case _: TableContext | _: InfixContext => (s, new mutable.LinkedHashSet[Property]())
     }
-
-  private def expandSelect(select: List[SelectValue], references: LinkedHashSet[Property]) = {
-
-    object TupleIndex {
-      def unapply(s: String): Option[Int] =
-        if (s.matches("_[0-9]*"))
-          Some(s.drop(1).toInt - 1)
-        else
-          None
-    }
-
-    def expandReference(ref: Property): SelectValue = {
-
-      def concat(alias: Option[String], idx: Int) =
-        Some(s"${alias.getOrElse("")}_${idx + 1}")
-
-      ref match {
-        case Property(ast: Property, TupleIndex(idx)) =>
-          expandReference(ast) match {
-            case SelectValue(Tuple(elems), alias, c) =>
-              SelectValue(elems(idx), concat(alias, idx), c)
-            case SelectValue(ast, alias, c) =>
-              SelectValue(ast, concat(alias, idx), c)
-          }
-        case Property(ast: Property, name) =>
-          expandReference(ast) match {
-            case SelectValue(ast, nested, c) =>
-              SelectValue(Property(ast, name), Some(s"${nested.getOrElse("")}$name"), c)
-          }
-        case Property(_, TupleIndex(idx)) =>
-          select(idx) match {
-            case SelectValue(ast, alias, c) =>
-              SelectValue(ast, concat(alias, idx), c)
-          }
-        case Property(_, name) =>
-          select match {
-            case List(SelectValue(cc: CaseClass, alias, c)) =>
-              SelectValue(cc.values.toMap.apply(name), Some(name), c)
-            case List(SelectValue(i: Ident, _, c)) =>
-              SelectValue(Property(i, name), None, c)
-            case other =>
-              SelectValue(Ident(name), Some(name), false)
-          }
-      }
-    }
-
-    references.toList match {
-      case Nil  => select
-      case refs => refs.map(expandReference)
-    }
-  }
 
   private def references(alias: String, asts: List[Ast]) =
     LinkedHashSet.empty ++ (References(State(Ident(alias), Nil))(asts)(_.apply)._2.state.references)

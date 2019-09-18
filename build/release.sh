@@ -1,8 +1,27 @@
 #!/usr/bin/env bash
 set -e # Any subsequent(*) commands which fail will cause the shell script to exit immediately
 
-SBT_2_12="sbt ++2.12.6 -Dquill.macro.log=false"
+VERSION=$1
+ARTIFACT=$2
+
+if [[ -z $ARTIFACT ]]
+then
+    echo "No Artifact Specified"
+fi
+
 SBT_2_11="sbt ++2.11.12 -Dquill.macro.log=false"
+SBT_2_12="sbt ++2.12.6 -Dquill.macro.log=false"
+
+if [[ $VERSION -eq 211 ]]
+then
+    SBT_VER=$SBT_2_11
+elif [[ $VERSION -eq 212 ]]
+then
+    SBT_VER=$SBT_2_12
+else
+    echo "No Valid SBT Version Entered"
+    exit 1
+fi
 
 echo $SBT_CMD
 if [[ $TRAVIS_PULL_REQUEST == "false" ]]
@@ -15,66 +34,46 @@ then
     ls -ltr
     sleep 3 # Need to wait until credential files fully written or build fails sometimes
 
-    if [[ $TRAVIS_BRANCH == "master" && $(cat version.sbt) != *"SNAPSHOT"* ]]
+    if [[ (($TRAVIS_BRANCH == "master" && $TRAVIS_COMMIT_MESSAGE == "Setting version to"*) || $TRAVIS_BRANCH == "re-release"*) && $(cat version.sbt) != *"SNAPSHOT"* ]]
     then
+        echo "Release Build for $TRAVIS_BRANCH"
         eval "$(ssh-agent -s)"
         chmod 600 local.deploy_key.pem
         ssh-add local.deploy_key.pem
         git config --global user.name "Quill CI"
         git config --global user.email "quillci@getquill.io"
         git remote set-url origin git@github.com:getquill/quill.git
-        git fetch --unshallow
-        git checkout master || git checkout -b master
-        git reset --hard origin/master
-        git push --delete origin website || true
 
-        $SBT_2_12 -Dmodules=base -DskipPush=true 'release with-defaults'
-        $SBT_2_12 -Dmodules=db -DskipPush=true 'release with-defaults'
-        $SBT_2_12 -Dmodules=async -DskipPush=true 'release with-defaults'
-        $SBT_2_12 -Dmodules=codegen -DskipPush=true 'release with-defaults'
-        echo "Release 2.12 Version:"
-        cat version.sbt
-        if ! output=$($SBT_2_12 -Dmodules=bigdata 'release with-defaults default-tag-exists-answer o'); then
-          echo "Release 2.12 Version After:"
-          cat version.sbt
-          exit $?
-        fi
+        if [[ $ARTIFACT == "base" ]]; then    $SBT_VER -Dmodules=base -DskipPush=true 'release with-defaults'; fi
+        if [[ $ARTIFACT == "db" ]]; then      $SBT_VER -Dmodules=db -DskipPush=true 'release with-defaults'; fi
+        if [[ $ARTIFACT == "async" ]]; then   $SBT_VER -Dmodules=async -DskipPush=true 'release with-defaults'; fi
+        if [[ $ARTIFACT == "codegen" ]]; then $SBT_VER -Dmodules=codegen -DskipPush=true 'release with-defaults'; fi
+        if [[ $ARTIFACT == "bigdata" ]]; then $SBT_VER -Dmodules=bigdata -DskipPush=true 'release with-defaults'; fi
 
-        $SBT_2_11 -Dmodules=base -DskipPush=true 'release with-defaults'
-        $SBT_2_11 -Dmodules=db -DskipPush=true 'release with-defaults'
-        $SBT_2_11 -Dmodules=async -DskipPush=true 'release with-defaults'
-        $SBT_2_11 -Dmodules=codegen -DskipPush=true 'release with-defaults'
-        echo "Release 2.11 Version:"
-        cat version.sbt
-        if ! output=$($SBT_2_11 -Dmodules=bigdata 'release with-defaults default-tag-exists-answer o'); then
-          echo "Release 2.11 Version After:"
-          cat version.sbt
-          exit $?
-        fi
+        # Publish Everything
+        if [[ $ARTIFACT == "publish" ]]; then $SBT_VER -Dmodules=none 'release with-defaults default-tag-exists-answer o'; fi
 
     elif [[ $TRAVIS_BRANCH == "master" ]]
     then
-        $SBT_2_12 -Dmodules=base publish
-        $SBT_2_12 -Dmodules=db publish
-        $SBT_2_12 -Dmodules=async publish
-        $SBT_2_12 -Dmodules=codegen publish
-        $SBT_2_12 -Dmodules=bigdata publish
-        $SBT_2_11 -Dmodules=base publish
-        $SBT_2_11 -Dmodules=db publish
-        $SBT_2_11 -Dmodules=async publish
-        $SBT_2_11 -Dmodules=codegen publish
-        $SBT_2_11 -Dmodules=bigdata publish
+        echo "Master Non-Release Build for $TRAVIS_BRANCH"
+        if [[ $ARTIFACT == "base" ]]; then    $SBT_VER -Dmodules=base publish; fi
+        if [[ $ARTIFACT == "db" ]]; then      $SBT_VER -Dmodules=db publish; fi
+        if [[ $ARTIFACT == "async" ]]; then   $SBT_VER -Dmodules=async publish; fi
+        if [[ $ARTIFACT == "codegen" ]]; then $SBT_VER -Dmodules=codegen publish; fi
+        if [[ $ARTIFACT == "bigdata" ]]; then $SBT_VER -Dmodules=bigdata publish; fi
+
+        # No-Op Publish
+        if [[ $ARTIFACT == "publish" ]]; then echo "No-Op Publish for Non Release Master Branch"; fi
     else
+        echo "Branch build for $TRAVIS_BRANCH"
         echo "version in ThisBuild := \"$TRAVIS_BRANCH-SNAPSHOT\"" > version.sbt
-        $SBT_2_12 -Dmodules=base publish
-        $SBT_2_12 -Dmodules=db publish
-        $SBT_2_12 -Dmodules=async publish
-        $SBT_2_12 -Dmodules=codegen publish
-        $SBT_2_12 -Dmodules=bigdata publish
-        $SBT_2_11 -Dmodules=base publish
-        $SBT_2_11 -Dmodules=db publish
-        $SBT_2_11 -Dmodules=async publish
-        $SBT_2_11 -Dmodules=codegen publish
-        $SBT_2_11 -Dmodules=bigdata publish
+        if [[ $ARTIFACT == "base" ]]; then    $SBT_VER -Dmodules=base publish; fi
+        if [[ $ARTIFACT == "db" ]]; then      $SBT_VER -Dmodules=db publish; fi
+        if [[ $ARTIFACT == "async" ]]; then   $SBT_VER -Dmodules=async publish; fi
+        if [[ $ARTIFACT == "codegen" ]]; then $SBT_VER -Dmodules=codegen publish; fi
+        if [[ $ARTIFACT == "bigdata" ]]; then $SBT_VER -Dmodules=bigdata publish; fi
+
+        # No-Op Publish
+        if [[ $ARTIFACT == "publish" ]]; then echo "No-Op Publish for Non Release Snapshot Branch"; fi
     fi
 fi

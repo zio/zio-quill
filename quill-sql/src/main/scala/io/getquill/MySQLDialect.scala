@@ -32,7 +32,7 @@ trait MySQLDialect
 
     lazy val insertIgnoreTokenizer =
       Tokenizer[Entity] {
-        case Entity(name, _) => stmt"IGNORE INTO ${strategy.table(name).token}"
+        case Entity.Opinionated(name, _, renameable) => stmt"IGNORE INTO ${renameable.fixedOr(name.token)(strategy.table(name).token)}"
       }
 
     def tokenizer(implicit astTokenizer: Tokenizer[Ast]) =
@@ -54,10 +54,14 @@ trait MySQLDialect
           fail("This upsert construct is not supported in MySQL. Please refer documentation for details.")
       }
 
+    // TODO Are there situations where you could have invisible properties here?
     val customAstTokenizer =
       Tokenizer.withFallback[Ast](MySQLDialect.this.astTokenizer(_, strategy)) {
-        case Property(Excluded(_), name) => stmt"VALUES(${strategy.column(name).token})"
-        case Property(_, name)           => strategy.column(name).token
+        case Property.Opinionated(Excluded(_), name, renameable, _) =>
+          renameable.fixedOr(name.token)(stmt"VALUES(${strategy.column(name).token})")
+
+        case Property.Opinionated(_, name, renameable, _) =>
+          renameable.fixedOr(name.token)(strategy.column(name).token)
       }
 
     tokenizer(customAstTokenizer)

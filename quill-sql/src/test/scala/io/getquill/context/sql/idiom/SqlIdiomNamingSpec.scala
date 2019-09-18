@@ -1,7 +1,6 @@
 package io.getquill.context.sql.idiom
 
 import io.getquill.Spec
-import io.getquill.SqlMirrorContext
 import io.getquill.Escape
 import io.getquill.SnakeCase
 import io.getquill.UpperCase
@@ -10,17 +9,17 @@ import io.getquill.SqlMirrorContext
 import io.getquill.NamingStrategy
 
 trait CustomTableStrategy extends SnakeCase {
-  override def table(s: String) = s"t_$s".toLowerCase
+  override def table(s: String): String = s"t_$s".toLowerCase
 }
 object CustomTableStrategy extends CustomTableStrategy
 
 trait CustomColumnStrategy extends SnakeCase {
-  override def column(s: String) = s"c_$s".toLowerCase
+  override def column(s: String): String = s"c_$s".toLowerCase
 }
 object CustomColumnStrategy extends CustomColumnStrategy
 
 trait CustomDefaultStrategy extends SnakeCase {
-  override def default(s: String) = s"d_$s".toLowerCase
+  override def default(s: String): String = s"d_$s".toLowerCase
 }
 object CustomDefaultStrategy extends CustomDefaultStrategy
 
@@ -42,7 +41,7 @@ class SqlIdiomNamingSpec extends Spec {
       db.run(query[SomeEntity]).string mustEqual
         """SELECT "X"."SOME_COLUMN" FROM "SOME_ENTITY" "X""""
     }
-    "specific table strategy" in {
+    "specific table strategy - dynamic" in {
       val db = new SqlMirrorContext(MirrorSqlDialect, CustomTableStrategy)
       import db._
 
@@ -53,7 +52,18 @@ class SqlIdiomNamingSpec extends Spec {
       db.run(q.dynamic).string mustEqual
         "SELECT t.some_column FROM t_someentity t"
     }
-    "specific column strategy" in {
+    "specific table strategy" in {
+      val db = new SqlMirrorContext(MirrorSqlDialect, CustomTableStrategy)
+      import db._
+
+      val q = quote {
+        query[SomeEntity].map(t => t.someColumn)
+      }
+
+      db.run(q).string mustEqual
+        "SELECT t.some_column FROM t_someentity t"
+    }
+    "specific column strategy - dynamic" in {
       val db = new SqlMirrorContext(MirrorSqlDialect, CustomColumnStrategy)
       import db._
 
@@ -62,6 +72,17 @@ class SqlIdiomNamingSpec extends Spec {
       }
 
       db.run(q.dynamic).string mustEqual
+        "SELECT t.c_somecolumn FROM some_entity t"
+    }
+    "specific column strategy" in {
+      val db = new SqlMirrorContext(MirrorSqlDialect, CustomColumnStrategy)
+      import db._
+
+      val q = quote {
+        query[SomeEntity].map(t => t.someColumn)
+      }
+
+      db.run(q).string mustEqual
         "SELECT t.c_somecolumn FROM some_entity t"
     }
     "apply strategy to select indent" in {
