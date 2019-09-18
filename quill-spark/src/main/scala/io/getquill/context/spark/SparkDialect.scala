@@ -161,7 +161,8 @@ trait SparkIdiom extends SqlIdiom with CannotReturn { self =>
       val nextTokenizer = new SparkIdiom {
         override def multipleSelect: Boolean = values.length > 1
       }
-      SparkDialectRecursor.runCaseClassWithMultipleSelect(values, nextTokenizer, self.multipleSelect)
+      val keyValues = values.map { case (k, v) => (k, v) }
+      SparkDialectRecursor.runCaseClassWithMultipleSelect(keyValues, nextTokenizer, self.multipleSelect)
     }
     case other => super.valueTokenizer.token(other)
   }
