@@ -4,7 +4,7 @@ import java.time._
 import java.util.Date
 
 import io.getquill.util.Messages.fail
-import org.joda.time.{ DateTime => JodaDateTime, LocalDate => JodaLocalDate, LocalDateTime => JodaLocalDateTime }
+import org.joda.time.{ DateTime => JodaDateTime, LocalDate => JodaLocalDate, LocalTime => JodaLocalTime, LocalDateTime => JodaLocalDateTime }
 
 import scala.reflect.{ ClassTag, classTag }
 
@@ -149,6 +149,9 @@ trait Decoders {
 
   implicit val decodeLocalDate: MappedEncoding[JodaLocalDate, LocalDate] =
     MappedEncoding(jld => LocalDate.of(jld.getYear, jld.getMonthOfYear, jld.getDayOfMonth))
+
+  implicit val decodeLocalTime: MappedEncoding[JodaLocalTime, LocalTime] =
+    MappedEncoding(jlt => LocalTime.of(jlt.getHourOfDay, jlt.getMinuteOfHour, jlt.getSecondOfMinute))
 
   implicit val decodeLocalDateTime: MappedEncoding[JodaLocalDateTime, LocalDateTime] =
     MappedEncoding(jldt => LocalDateTime.ofInstant(jldt.toDate.toInstant, ZoneId.systemDefault()))
