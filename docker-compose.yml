@@ -73,7 +73,7 @@ services:
       - sqlserver:sqlserver
       - oracle:oracle
     volumes:
-      - ./:/app
+      - ./:/app:delegated
     command:
       - ./build/setup_local.sh
 
@@ -93,10 +93,10 @@ services:
       - sqlserver:sqlserver
       - oracle:oracle
     volumes:
-      - ./:/app
-      - ~/.ivy2:/root/.ivy2
-      - ~/.m2:/root/.m2
-      - ~/.sbt:/root/.sbt
+      - ./:/app:delegated
+      - ~/.ivy2:/root/.ivy2:cached
+      - ~/.m2:/root/.m2:cached
+      - ~/.sbt:/root/.sbt:cached
     environment:
       - SBT_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005 -Dfile.encoding=UTF-8 -Xms512m -Xmx1536m -Xss2m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC
       - POSTGRES_HOST=postgres
