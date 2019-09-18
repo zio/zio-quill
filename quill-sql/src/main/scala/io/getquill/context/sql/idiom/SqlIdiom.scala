@@ -9,6 +9,7 @@ import io.getquill.idiom._
 import io.getquill.idiom.StatementInterpolator._
 import io.getquill.NamingStrategy
 import io.getquill.ast.Renameable.Fixed
+import io.getquill.ast.Visibility.Hidden
 import io.getquill.context.{ ReturningCapability, ReturningClauseSupported }
 import io.getquill.util.Interleave
 import io.getquill.util.Messages.{ fail, trace }
@@ -316,14 +317,15 @@ trait SqlIdiom extends Idiom {
 
     def unnest(ast: Ast): (Ast, List[String]) =
       ast match {
-        case Property(a, name) if (name.matches("_[0-9]*")) =>
+        case Property.Opinionated(a, _, _, Hidden) =>
+          unnest(a) match {
+            case (a, nestedName) => (a, nestedName)
+          }
+        // Append the property name. This includes tuple indexes.
+        case Property(a, name) =>
           unnest(a) match {
             case (ast, nestedName) =>
               (ast, nestedName :+ name)
-          }
-        case Property(a, name) =>
-          unnest(a) match {
-            case (a, nestedName) => (a, nestedName)
           }
         case a => (a, Nil)
       }
@@ -334,7 +336,7 @@ trait SqlIdiom extends Idiom {
       )(tokenizeColumn(strategy, prefix.mkString + name, renameable).token)
 
     Tokenizer[Property] {
-      case Property.Opinionated(ast, name, renameable) =>
+      case Property.Opinionated(ast, name, renameable, _ /* Top level property cannot be invisible */ ) =>
         // When we have things like Embedded tables, properties inside of one another needs to be un-nested.
         // E.g. in `Property(Property(Ident("realTable"), embeddedTableAlias), realPropertyAlias)` the inner
         // property needs to be unwrapped and the result of this should only be `realTable.realPropertyAlias`
@@ -397,10 +399,10 @@ trait SqlIdiom extends Idiom {
   protected def actionAstTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy) =
     Tokenizer.withFallback[Ast](SqlIdiom.this.astTokenizer(_, strategy)) {
       case q: Query => astTokenizer.token(q)
-      case Property(Property.Opinionated(_, name, renameable), "isEmpty") => stmt"${renameable.fixedOr(name)(tokenizeColumn(strategy, name, renameable)).token} IS NULL"
-      case Property(Property.Opinionated(_, name, renameable), "isDefined") => stmt"${renameable.fixedOr(name)(tokenizeColumn(strategy, name, renameable)).token} IS NOT NULL"
-      case Property(Property.Opinionated(_, name, renameable), "nonEmpty") => stmt"${renameable.fixedOr(name)(tokenizeColumn(strategy, name, renameable)).token} IS NOT NULL"
-      case Property.Opinionated(_, name, renameable) => renameable.fixedOr(name.token)(tokenizeColumn(strategy, name, renameable).token)
+      case Property(Property.Opinionated(_, name, renameable, _), "isEmpty") => stmt"${renameable.fixedOr(name)(tokenizeColumn(strategy, name, renameable)).token} IS NULL"
+      case Property(Property.Opinionated(_, name, renameable, _), "isDefined") => stmt"${renameable.fixedOr(name)(tokenizeColumn(strategy, name, renameable)).token} IS NOT NULL"
+      case Property(Property.Opinionated(_, name, renameable, _), "nonEmpty") => stmt"${renameable.fixedOr(name)(tokenizeColumn(strategy, name, renameable)).token} IS NOT NULL"
+      case Property.Opinionated(_, name, renameable, _) => renameable.fixedOr(name.token)(tokenizeColumn(strategy, name, renameable).token)
     }
 
   def returnListTokenizer(implicit tokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[List[Ast]] = {

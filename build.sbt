@@ -55,6 +55,9 @@ lazy val filteredModules = {
     case Some("bigdata") =>
       println("Compiling Big Data Modules")
       bigdataModules
+    case Some("none") =>
+      println("Invoking Aggregate Project")
+      Seq[sbt.ClasspathDep[sbt.ProjectReference]]()
     case _ =>
       println("Compiling All Modules")
       allModules

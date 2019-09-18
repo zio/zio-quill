@@ -54,12 +54,13 @@ trait MySQLDialect
           fail("This upsert construct is not supported in MySQL. Please refer documentation for details.")
       }
 
+    // TODO Are there situations where you could have invisible properties here?
     val customAstTokenizer =
       Tokenizer.withFallback[Ast](MySQLDialect.this.astTokenizer(_, strategy)) {
-        case Property.Opinionated(Excluded(_), name, renameable) =>
+        case Property.Opinionated(Excluded(_), name, renameable, _) =>
           renameable.fixedOr(name.token)(stmt"VALUES(${strategy.column(name).token})")
 
-        case Property.Opinionated(_, name, renameable) =>
+        case Property.Opinionated(_, name, renameable, _) =>
           renameable.fixedOr(name.token)(strategy.column(name).token)
       }
 
