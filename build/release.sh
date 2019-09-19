@@ -53,7 +53,7 @@ then
         # Publish Everything
         if [[ $ARTIFACT == "publish" ]]; then $SBT_VER -Dmodules=none 'release with-defaults default-tag-exists-answer o'; fi
 
-    elif [[ $TRAVIS_BRANCH == "master" ]]
+    elif [[ $TRAVIS_BRANCH == "master" && $(cat version.sbt) == *"SNAPSHOT"* ]]
     then
         echo "Master Non-Release Build for $TRAVIS_BRANCH"
         if [[ $ARTIFACT == "base" ]]; then    $SBT_VER -Dmodules=base publish; fi
@@ -64,6 +64,10 @@ then
 
         # No-Op Publish
         if [[ $ARTIFACT == "publish" ]]; then echo "No-Op Publish for Non Release Master Branch"; fi
+
+    elif [[ $TRAVIS_BRANCH == "master" && $(cat version.sbt) != *"SNAPSHOT"* ]]
+    then
+        echo "Publish is No-Op for Master Preliminary Release Build for $ARTIFACT. Actual release will happen in 'Setting version to...' build"
     else
         echo "Branch build for $TRAVIS_BRANCH"
         echo "version in ThisBuild := \"$TRAVIS_BRANCH-SNAPSHOT\"" > version.sbt
