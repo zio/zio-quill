@@ -29,6 +29,8 @@ trait FinaglePostgresEncoders {
     FinaglePostgresEncoder[Option[T]](option(e.encoder))
 
   implicit val stringEncoder: Encoder[String] = encoder[String]
+  implicit val charEncoder: Encoder[Char] =
+    encoder[String, Char]((v: Char) => String.valueOf(v))
   implicit val bigDecimalEncoder: Encoder[BigDecimal] = encoder[BigDecimal]
   implicit val booleanEncoder: Encoder[Boolean] = encoder[Boolean]
   implicit val byteEncoder: Encoder[Byte] = encoder[Short, Byte](_.toShort)

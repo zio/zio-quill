@@ -39,6 +39,10 @@ trait FinagleMysqlEncoders {
     FinagleMySqlEncoder(mappedBaseEncoder(mapped, e.encoder))
 
   implicit val stringEncoder: Encoder[String] = encoder[String]
+  implicit val charEncoder: Encoder[Char] =
+    encoder[Char] { (value: Char) =>
+      StringValue(String.valueOf(value)): Parameter
+    }
   implicit val bigDecimalEncoder: Encoder[BigDecimal] =
     encoder[BigDecimal] { (value: BigDecimal) =>
       BigDecimalValue(value): Parameter

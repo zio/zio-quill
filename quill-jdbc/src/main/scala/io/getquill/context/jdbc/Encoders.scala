@@ -42,6 +42,8 @@ trait Encoders {
     )
 
   implicit val stringEncoder: Encoder[String] = encoder(Types.VARCHAR, _.setString)
+  implicit val charEncoder: Encoder[Char] = encoder(Types.CHAR, (index, value, row) =>
+    row.setString(index, String.valueOf(value)))
   implicit val bigDecimalEncoder: Encoder[BigDecimal] =
     encoder(Types.NUMERIC, (index, value, row) => row.setBigDecimal(index, value.bigDecimal))
   implicit val byteEncoder: Encoder[Byte] = encoder(Types.TINYINT, _.setByte)

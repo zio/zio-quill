@@ -43,6 +43,12 @@ trait Decoders {
     )
 
   implicit val stringDecoder: Decoder[String] = decoder(_.getString)
+  implicit val charDecoder: Decoder[Char] = decoder((index, row) => {
+    val str = row.getString(index)
+    if (str.length != 1)
+      throw new IllegalStateException(s"""The column number ${index} is being decoded as a Char but it's value "${str}" does not have one character as is required (${str.length} characters).""")
+    str.charAt(0)
+  })
   implicit val bigDecimalDecoder: Decoder[BigDecimal] =
     decoder((index, row) => {
       val v = row.getBigDecimal(index)

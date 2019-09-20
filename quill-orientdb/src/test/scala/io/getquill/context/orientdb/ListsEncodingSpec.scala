@@ -14,10 +14,11 @@ class ListsEncodingSpec extends Spec {
     longs:      List[Long],
     floats:     List[Float],
     doubles:    List[Double],
-    timestamps: List[Date]
+    timestamps: List[Date],
+    chars:      List[Char]
   )
   val e = ListsEntity(1, List("c"), List(true), List(1, 2), List(2, 3), List(1.2f, 3.2f),
-    List(5.1d), List(new Date()))
+    List(5.1d), List(new Date()), List('c'))
 
   private def verify(expected: ListsEntity, actual: ListsEntity): Boolean = {
     expected.id mustEqual actual.id
@@ -27,6 +28,7 @@ class ListsEncodingSpec extends Spec {
     expected.longs mustEqual actual.longs
     expected.doubles mustEqual actual.doubles
     actual.timestamps.head.isInstanceOf[Date]
+    expected.chars mustEqual actual.chars
     true
   }
 

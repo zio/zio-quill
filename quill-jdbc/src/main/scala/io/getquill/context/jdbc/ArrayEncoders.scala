@@ -13,6 +13,7 @@ trait ArrayEncoders extends ArrayEncoding {
   self: JdbcContextBase[_, _] =>
 
   implicit def arrayStringEncoder[Col <: Seq[String]]: Encoder[Col] = arrayRawEncoder[String, Col](VARCHAR)
+  implicit def arrayCharEncoder[Col <: Seq[Char]]: Encoder[Col] = arrayRawEncoder[Char, Col](VARCHAR)
   implicit def arrayBigDecimalEncoder[Col <: Seq[BigDecimal]]: Encoder[Col] = arrayEncoder[BigDecimal, Col](parseJdbcType(NUMERIC), _.bigDecimal)
   implicit def arrayBooleanEncoder[Col <: Seq[Boolean]]: Encoder[Col] = arrayRawEncoder[Boolean, Col](BOOLEAN)
   implicit def arrayByteEncoder[Col <: Seq[Byte]]: Encoder[Col] = arrayRawEncoder[Byte, Col](TINYINT)

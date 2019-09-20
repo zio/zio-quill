@@ -38,6 +38,7 @@ trait EncodingSpec extends Spec {
     v12: EncodingTestType,
     v13: LocalDate,
     v14: UUID,
+    v15: Char,
     o1:  Option[String],
     o2:  Option[BigDecimal],
     o3:  Option[Boolean],
@@ -52,7 +53,8 @@ trait EncodingSpec extends Spec {
     o12: Option[EncodingTestType],
     o13: Option[LocalDate],
     o14: Option[UUID],
-    o15: Option[Number]
+    o15: Option[Number],
+    o16: Option[Char]
   )
 
   val delete = quote {
@@ -80,6 +82,7 @@ trait EncodingSpec extends Spec {
         EncodingTestType("s"),
         LocalDate.of(2013, 11, 23),
         UUID.randomUUID(),
+        'c',
         Some("s"),
         Some(BigDecimal(1.1)),
         Some(true),
@@ -94,7 +97,8 @@ trait EncodingSpec extends Spec {
         Some(EncodingTestType("s")),
         Some(LocalDate.of(2013, 11, 23)),
         Some(UUID.randomUUID()),
-        Some(Number("0"))
+        Some(Number("0")),
+        Some('c')
       ),
       EncodingTestEntity(
         "",
@@ -111,6 +115,8 @@ trait EncodingSpec extends Spec {
         EncodingTestType(""),
         LocalDate.ofEpochDay(0),
         UUID.randomUUID(),
+        '\0',
+        None,
         None,
         None,
         None,
@@ -147,6 +153,7 @@ trait EncodingSpec extends Spec {
         e1.v12 mustEqual e2.v12
         e1.v13 mustEqual e2.v13
         e1.v14 mustEqual e2.v14
+        e1.v15 mustEqual e2.v15
 
         e1.o1 mustEqual e2.o1
         e1.o2 mustEqual e2.o2
@@ -163,6 +170,7 @@ trait EncodingSpec extends Spec {
         e1.o13 mustEqual e2.o13
         e1.o14 mustEqual e2.o14
         e1.o15 mustEqual e2.o15
+        e1.o16 mustEqual e2.o16
     }
   }
 

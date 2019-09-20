@@ -46,6 +46,13 @@ trait FinaglePostgresDecoders {
     FinaglePostgresDecoder(mappedBaseDecoder(mapped, d.decoder))
 
   implicit val stringDecoder: Decoder[String] = decoderDirectly[String]
+  implicit val charDecoder: Decoder[Char] =
+    FinanglePostgresDecoder((index, row) => {
+      val str = row.get[String](index)
+      if (str.length != 1)
+        throw new IllegalStateException(s"""The column number ${index} is being decoded as a Char but it's value "${str}" does not have one character as is required (${str.length} characters).""")
+      str.charAt(0)
+    })
   implicit val bigDecimalDecoder: Decoder[BigDecimal] = decoderDirectly[BigDecimal]
   implicit val booleanDecoder: Decoder[Boolean] = decoderDirectly[Boolean]
   implicit val byteDecoder: Decoder[Byte] = decoder[Byte] {

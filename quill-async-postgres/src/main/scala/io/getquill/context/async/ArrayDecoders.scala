@@ -14,6 +14,7 @@ trait ArrayDecoders extends ArrayEncoding {
   self: PostgresAsyncContext[_] =>
 
   implicit def arrayStringDecoder[Col <: Seq[String]](implicit bf: CBF[String, Col]): Decoder[Col] = arrayRawEncoder[String, Col]
+  implicit def arrayCharDecoder[Col <: Seq[Char]](implicit bf: CBF[Char, Col]): Decoder[Col] = arrayRawEncoder[Char, Col]
   implicit def arrayBigDecimalDecoder[Col <: Seq[BigDecimal]](implicit bf: CBF[BigDecimal, Col]): Decoder[Col] = arrayRawEncoder[BigDecimal, Col]
   implicit def arrayBooleanDecoder[Col <: Seq[Boolean]](implicit bf: CBF[Boolean, Col]): Decoder[Col] = arrayRawEncoder[Boolean, Col]
   implicit def arrayByteDecoder[Col <: Seq[Byte]](implicit bf: CBF[Byte, Col]): Decoder[Col] = arrayDecoder[Short, Byte, Col](_.toByte)

@@ -16,6 +16,7 @@ trait ArrayDecoders extends ArrayEncoding {
   self: JdbcContextBase[_, _] =>
 
   implicit def arrayStringDecoder[Col <: Seq[String]](implicit bf: CanBuildFrom[Nothing, String, Col]): Decoder[Col] = arrayRawDecoder[String, Col]
+  implicit def arrayCharDecoder[Col <: Seq[Char]](implicit bf: CanBuildFrom[Nothing, Char, Col]): Decoder[Col] = arrayRawDecoder[Char, Col]
   implicit def arrayBigDecimalDecoder[Col <: Seq[BigDecimal]](implicit bf: CBF[BigDecimal, Col]): Decoder[Col] = arrayDecoder[JBigDecimal, BigDecimal, Col](BigDecimal.apply)
   implicit def arrayBooleanDecoder[Col <: Seq[Boolean]](implicit bf: CBF[Boolean, Col]): Decoder[Col] = arrayRawDecoder[Boolean, Col]
   implicit def arrayByteDecoder[Col <: Seq[Byte]](implicit bf: CBF[Byte, Col]): Decoder[Col] = arrayRawDecoder[Byte, Col]

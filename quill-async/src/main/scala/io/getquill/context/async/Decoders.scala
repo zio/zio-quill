@@ -141,6 +141,16 @@ trait Decoders {
     case localDate: JodaLocalDate         => localDate.toDate
   }, SqlTypes.TIMESTAMP)
 
+  implicit val charDecoder: Decoder[Char] =
+    AsyncDecoder[Char](SqlTypes.VARCHAR)(new BaseDecoder[Char] {
+      override def apply(index: Index, row: ResultRow): Char = {
+        val str = row(index).asInstanceOf[String]
+        if (str.length != 1)
+          throw new IllegalStateException(s"""The column number ${index} is being decoded as a Char but it's value "${str}" does not have one character as is required (${str.length} characters).""")
+        str.charAt(0)
+      }
+    })
+
   implicit val decodeZonedDateTime: MappedEncoding[JodaDateTime, ZonedDateTime] =
     MappedEncoding(jdt => ZonedDateTime.ofInstant(Instant.ofEpochMilli(jdt.getMillis), ZoneId.of(jdt.getZone.getID)))
 
