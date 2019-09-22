@@ -129,7 +129,55 @@ case class Infix(parts: List[String], params: List[Ast], pure: Boolean) extends 
 
 case class Function(params: List[Ident], body: Ast) extends Ast
 
-case class Ident(name: String) extends Ast
+case class Ident(name: String) extends Ast {
+  def visibility: Visibility = Visibility.Visible
+
+  override def neutral: Ident =
+    new Ident(name) {
+      override def visibility: Visibility = Visibility.neutral
+    }
+
+  override def equals(that: Any) =
+    that match {
+      case p: Ident => (p.name, p.visibility) == ((name, visibility))
+      case _        => false
+    }
+
+  override def hashCode = (name, visibility).hashCode()
+}
+
+/**
+ * Ident represents a single variable name, this typically refers to a table but not always.
+ * Invisible identities are a rare case where a user returns an embedded table from a map clause:
+ *
+ * <pre><code>
+ *     case class Emb(id: Int, name: String) extends Embedded
+ *     case class Parent(id: Int, name: String, emb: Emb) extends Embedded
+ *     case class GrandParent(id: Int, par: Parent)
+ *
+ *     query[GrandParent]
+ *         .map(g => g.par).distinct
+ *         .map(p => (p.name, p.emb)).distinct
+ *         .map(tup => (tup._1, tup._2)).distinct
+ *     }
+ * </code></pre>
+ *
+ * In these situations, the identity whose properties need to be expanded in the ExpandNestedQueries phase,
+ * needs to be marked invisible.
+ */
+object Ident {
+  def apply(name: String) = new Ident(name)
+  def unapply(p: Ident) = Some((p.name))
+
+  object Opinionated {
+    def apply(name: String, visibilityNew: Visibility) =
+      new Ident(name) {
+        override def visibility: Visibility = visibilityNew
+      }
+    def unapply(p: Ident) =
+      Some((p.name, p.visibility))
+  }
+}
 
 // Like identity but is but defined in a clause external to the query. Currently this is used
 // for 'returning' clauses to define properties being returned.
