@@ -17,7 +17,7 @@ trait Decoders {
 
   case class AsyncDecoder[T](sqlType: DecoderSqlType)(implicit decoder: BaseDecoder[T])
     extends BaseDecoder[T] {
-    override def apply(index: Index, row: ResultRow) =
+    override def apply(index: Index, row: ResultRow): T =
       decoder(index, row)
   }
 
@@ -26,7 +26,7 @@ trait Decoders {
     sqlType: DecoderSqlType
   ): Decoder[T] =
     AsyncDecoder[T](sqlType)(new BaseDecoder[T] {
-      def apply(index: Index, row: ResultRow) = {
+      def apply(index: Index, row: ResultRow): T = {
         row(index) match {
           case value: T                      => value
           case value if f.isDefinedAt(value) => f(value)
@@ -45,7 +45,7 @@ trait Decoders {
     })
 
   trait NumericDecoder[T] extends BaseDecoder[T] {
-    def apply(index: Index, row: ResultRow) =
+    def apply(index: Index, row: ResultRow): T =
       row(index) match {
         case v: Byte       => decode(v)
         case v: Short      => decode(v)
@@ -63,7 +63,7 @@ trait Decoders {
 
   implicit def optionDecoder[T](implicit d: Decoder[T]): Decoder[Option[T]] =
     AsyncDecoder(d.sqlType)(new BaseDecoder[Option[T]] {
-      def apply(index: Index, row: ResultRow) = {
+      def apply(index: Index, row: ResultRow): Option[T] = {
         row(index) match {
           case null  => None
           case value => Some(d(index, row))
@@ -99,25 +99,25 @@ trait Decoders {
 
   implicit val intDecoder: Decoder[Int] =
     AsyncDecoder(SqlTypes.INTEGER)(new NumericDecoder[Int] {
-      def decode[U](v: U)(implicit n: Numeric[U]) =
+      def decode[U](v: U)(implicit n: Numeric[U]): Int =
         n.toInt(v)
     })
 
   implicit val longDecoder: Decoder[Long] =
     AsyncDecoder(SqlTypes.BIGINT)(new NumericDecoder[Long] {
-      def decode[U](v: U)(implicit n: Numeric[U]) =
+      def decode[U](v: U)(implicit n: Numeric[U]): Long =
         n.toLong(v)
     })
 
   implicit val floatDecoder: Decoder[Float] =
     AsyncDecoder(SqlTypes.FLOAT)(new NumericDecoder[Float] {
-      def decode[U](v: U)(implicit n: Numeric[U]) =
+      def decode[U](v: U)(implicit n: Numeric[U]): Float =
         n.toFloat(v)
     })
 
   implicit val doubleDecoder: Decoder[Double] =
     AsyncDecoder(SqlTypes.DOUBLE)(new NumericDecoder[Double] {
-      def decode[U](v: U)(implicit n: Numeric[U]) =
+      def decode[U](v: U)(implicit n: Numeric[U]): Double =
         n.toDouble(v)
     })
 

@@ -8,7 +8,9 @@ trait PostgresJdbcContextBase[N <: NamingStrategy] extends JdbcContextBase[Postg
   with BooleanObjectEncoding
   with UUIDObjectEncoding
   with ArrayDecoders
-  with ArrayEncoders {
+  with ArrayEncoders
+  with PostgresDateTimeDecoders
+  with PostgresDateTimeEncoders {
 
   val idiom = PostgresDialect
 

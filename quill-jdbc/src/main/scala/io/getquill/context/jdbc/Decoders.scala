@@ -12,7 +12,7 @@ trait Decoders {
   type Decoder[T] = JdbcDecoder[T]
 
   case class JdbcDecoder[T](decoder: BaseDecoder[T]) extends BaseDecoder[T] {
-    def apply(index: Index, row: ResultRow) =
+    def apply(index: Index, row: ResultRow): T =
       decoder(index + 1, row)
   }
 

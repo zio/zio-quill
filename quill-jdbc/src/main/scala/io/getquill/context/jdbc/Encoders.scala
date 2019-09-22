@@ -10,10 +10,10 @@ trait Encoders {
 
   type Encoder[T] = JdbcEncoder[T]
 
-  protected val dateTimeZone = TimeZone.getDefault
+  protected val dateTimeZone: TimeZone = TimeZone.getDefault
 
   case class JdbcEncoder[T](sqlType: Int, encoder: BaseEncoder[T]) extends BaseEncoder[T] {
-    override def apply(index: Index, value: T, row: PrepareRow) =
+    override def apply(index: Index, value: T, row: PrepareRow): PrepareRow =
       encoder(index + 1, value, row)
   }
 
