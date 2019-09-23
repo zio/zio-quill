@@ -12,6 +12,7 @@ import scala.collection.mutable.LinkedHashSet
 import io.getquill.util.Interpolator
 import io.getquill.util.Messages.TraceType.NestedQueryExpansion
 import io.getquill.context.sql.norm.nested.ExpandSelect
+import io.getquill.norm.BetaReduction
 
 import scala.collection.mutable
 
@@ -44,24 +45,35 @@ class ExpandNestedQueries(strategy: NamingStrategy) {
         val expansions = q.from.map(expandContext(_, asts))
         val from = expansions.map(_._1)
         val references = expansions.flatMap(_._2)
-        val modifiedSelects =
-          select
-            .map(s =>
-              if (references.contains(s.ast))
-                trace"Un-hide Select $s:" andReturn unhideProperties(s)
-              else s)
 
-        q.copy(select = modifiedSelects, from = from)
+        val replacedRefs = references.map(ref => (ref, unhideAst(ref)))
+
+        // Need to unhide properties that were used during the query
+        def replaceProps(ast: Ast) =
+          BetaReduction(ast, replacedRefs: _*)
+        def replacePropsOption(ast: Option[Ast]) =
+          ast.map(replaceProps(_))
+
+        q.copy(
+          select = select.map(sv => sv.copy(ast = replaceProps(sv.ast))),
+          from = from,
+          where = replacePropsOption(where),
+          groupBy = replacePropsOption(groupBy),
+          orderBy = orderBy.map(ob => ob.copy(ast = replaceProps(ob.ast))),
+          limit = replacePropsOption(limit),
+          offset = replacePropsOption(offset)
+        )
+
     }
 
-  private def unhideProperties(sv: SelectValue) = {
-    def unhideRecurse(ast: Ast): Ast =
-      Transform(ast) {
-        case Property.Opinionated(a, n, r, v) =>
-          Property.Opinionated(unhideRecurse(a), n, r, Visible)
-      }
-    sv.copy(ast = unhideRecurse(sv.ast))
-  }
+  def unhideAst(ast: Ast): Ast =
+    Transform(ast) {
+      case Property.Opinionated(a, n, r, v) =>
+        Property.Opinionated(unhideAst(a), n, r, Visible)
+    }
+
+  private def unhideProperties(sv: SelectValue) =
+    sv.copy(ast = unhideAst(sv.ast))
 
   private def expandContext(s: FromContext, asts: List[Ast]): (FromContext, LinkedHashSet[Property]) =
     s match {
