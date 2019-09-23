@@ -139,7 +139,7 @@ trait SparkIdiom extends SqlIdiom with CannotReturn { self =>
     def path(ast: Ast): Token =
       ast match {
         case Ident(name) => name.token
-        case Property.Opinionated(a, b, renameable) =>
+        case Property.Opinionated(a, b, renameable, _) =>
           stmt"${path(a)}.${renameable.fixedOr(b.token)(strategy.column(b).token)}"
         case other =>
           other.token
@@ -161,7 +161,8 @@ trait SparkIdiom extends SqlIdiom with CannotReturn { self =>
       val nextTokenizer = new SparkIdiom {
         override def multipleSelect: Boolean = values.length > 1
       }
-      SparkDialectRecursor.runCaseClassWithMultipleSelect(values, nextTokenizer, self.multipleSelect)
+      val keyValues = values.map { case (k, v) => (k, v) }
+      SparkDialectRecursor.runCaseClassWithMultipleSelect(keyValues, nextTokenizer, self.multipleSelect)
     }
     case other => super.valueTokenizer.token(other)
   }

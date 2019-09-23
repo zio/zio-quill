@@ -184,8 +184,8 @@ trait MirrorIdiomBase extends Idiom {
     }
 
   implicit def propertyTokenizer(implicit liftTokenizer: Tokenizer[Lift]): Tokenizer[Property] = Tokenizer[Property] {
-    case Property.Opinionated(ExternalIdent(_), name, renameable) => stmt"${tokenizeName(name, renameable).token}"
-    case Property.Opinionated(ref, name, renameable)              => stmt"${scopedTokenizer(ref)}.${tokenizeName(name, renameable).token}"
+    case Property.Opinionated(ExternalIdent(_), name, renameable, _) => stmt"${tokenizeName(name, renameable).token}"
+    case Property.Opinionated(ref, name, renameable, _)              => stmt"${scopedTokenizer(ref)}.${tokenizeName(name, renameable).token}"
   }
 
   implicit val valueTokenizer: Tokenizer[Value] = Tokenizer[Value] {
@@ -194,7 +194,7 @@ trait MirrorIdiomBase extends Idiom {
     case Constant(v)         => stmt"${v.toString.token}"
     case NullValue           => stmt"null"
     case Tuple(values)       => stmt"(${values.token})"
-    case CaseClass(values)   => stmt"(${values.map(_._2).token})"
+    case CaseClass(values)   => stmt"CaseClass(${values.map { case (k, v) => s"${k.token}: ${v.token}" }.mkString(", ").token})"
   }
 
   implicit val identTokenizer: Tokenizer[Ident] = Tokenizer[Ident] {

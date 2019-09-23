@@ -210,9 +210,9 @@ trait StatefulTransformer[T] {
 
   def apply(e: Property): (Property, StatefulTransformer[T]) =
     e match {
-      case Property.Opinionated(a, b, renameable) =>
+      case Property.Opinionated(a, b, renameable, visibility) =>
         val (at, att) = apply(a)
-        (Property.Opinionated(at, b, renameable), att)
+        (Property.Opinionated(at, b, renameable, visibility), att)
     }
 
   def apply(e: Operation): (Operation, StatefulTransformer[T]) =
