@@ -1,3 +1,18 @@
+# 3.4.8
+
+- [Additional Fixes for Embedded Entities in Nested Queries](https://github.com/getquill/quill/pull/1628)
+- [Fix java.sql.SQLException corner case](https://github.com/getquill/quill/pull/1614)
+- [Feature/local time support](https://github.com/getquill/quill/pull/1596)
+- [Update monix-eval, monix-reactive to 3.0.0](https://github.com/getquill/quill/pull/1607)
+
+Documentation Updates:
+- [Update database drivers versions to latest in docs](https://github.com/getquill/quill/pull/1617)
+- [Document remote debugging in Intellij](https://github.com/getquill/quill/pull/1615)
+
+Migration Notes:
+- Monix 3.0.0 is not binary compatible with 3.0.0-RC3 which was a dependency of Quill 3.4.7.
+If you are using the Quill Monix modules, please update your dependencies accordingly.
+
 # 3.4.7
 
 - [Fix RenameProperties with Schema Re-Arrangement](https://github.com/getquill/quill/pull/1613)
