@@ -21,8 +21,7 @@ lazy val dbModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
 
 lazy val asyncModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-async`, `quill-async-mysql`, `quill-async-postgres`,
-  `quill-finagle-mysql`, `quill-finagle-postgres`,
-  `quill-ndbc`, `quill-ndbc-postgres`
+  `quill-finagle-mysql`, `quill-finagle-postgres`
 )
 
 lazy val codegenModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
@@ -319,32 +318,6 @@ lazy val `quill-async-postgres` =
     )
     .dependsOn(`quill-async` % "compile->compile;test->test")
 
-lazy val `quill-ndbc` =
-  (project in file("quill-ndbc"))
-    .settings(commonSettings: _*)
-    .settings(mimaSettings: _*)
-    .settings(
-      fork in Test := true,
-      libraryDependencies ++= Seq(
-        "io.trane" % "future-scala" % "0.3.2",
-        "io.trane" % "ndbc-core" % "0.1.3"
-      )
-    )
-    .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
-
-lazy val `quill-ndbc-postgres` =
-  (project in file("quill-ndbc-postgres"))
-    .settings(commonSettings: _*)
-    .settings(mimaSettings: _*)
-    .settings(
-      fork in Test := true,
-      libraryDependencies ++= Seq(
-        "io.trane" % "future-scala" % "0.3.2",
-        "io.trane" % "ndbc-postgres-netty4" % "0.1.3"
-      )
-    )
-    .dependsOn(`quill-ndbc` % "compile->compile;test->test")
-
 lazy val `quill-cassandra` =
   (project in file("quill-cassandra"))
     .settings(commonSettings: _*)
@@ -589,7 +562,6 @@ lazy val basicSettings = Seq(
   ),
   EclipseKeys.eclipseOutput := Some("bin"),
   scalacOptions ++= Seq(
-    "-target:jvm-1.8",
     "-Xfatal-warnings",
     "-deprecation",
     "-encoding", "UTF-8",
