@@ -2895,47 +2895,6 @@ ctx.dataSource.portNumber=1521
 ctx.dataSource.serverName=host
 ```
 
-## NDBC Context
-
-Async support via [NDBC driver](https://ndbc.io/) is available with Postgres database.
-
-### quill-ndbc-postgres
-
-#### transactions
-
-Transaction support is provided out of the box by NDBC:
-
-```scala
-ctx.transaction {
-  ctx.run(query[Person].delete)
-  // other transactional code
-}
-```
-
-The body of transaction can contain calls to other methods and multiple run calls since the transaction is automatically handled.
-
-#### sbt dependencies
-```
-libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-ndbc-postgres" % "3.4.2-SNAPSHOT"
-)
-```
-
-#### context definition
-```scala
-lazy val ctx = new NdbcPostgresContext(Literal, "ctx")
-```
-
-#### application.properties
-```
-ctx.ndbc.dataSourceSupplierClass=io.trane.ndbc.postgres.netty4.DataSourceSupplier
-ctx.ndbc.host=host
-ctx.ndbc.port=1234
-ctx.ndbc.user=root
-ctx.ndbc.password=root
-ctx.ndbc.database=database
-```
-
 ## quill-async
 
 The `quill-async` module provides simple async support for MySQL and Postgres databases.
