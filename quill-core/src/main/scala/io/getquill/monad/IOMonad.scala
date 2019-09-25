@@ -1,6 +1,6 @@
 package io.getquill.monad
 
-import scala.collection.generic.CanBuildFrom
+import scala.collection.compat._
 import scala.language.higherKinds
 import scala.util.Failure
 import scala.util.Success
@@ -23,7 +23,7 @@ trait IOMonad {
   val Effect = io.getquill.monad.Effect
 
   protected case class FromTry[T](t: Try[T]) extends IO[T, Effect]
-  protected case class Sequence[A, M[X] <: TraversableOnce[X], E <: Effect](in: M[IO[A, E]], cbfIOToResult: CanBuildFrom[M[IO[A, E]], Result[A], M[Result[A]]], cbfResultToValue: CanBuildFrom[M[Result[A]], A, M[A]]) extends IO[M[A], E]
+  protected case class Sequence[A, M[X] <: IterableOnce[X], E <: Effect](in: M[IO[A, E]], cbfResultToValue: Factory[A, M[A]]) extends IO[M[A], E]
   protected case class TransformWith[T, S, E1 <: Effect, E2 <: Effect](io: IO[T, E1], f: Try[T] => IO[S, E2]) extends IO[S, E1 with E2]
   protected case class Transactional[T, E <: Effect](io: IO[T, E]) extends IO[T, E with Effect.Transaction]
 
@@ -31,8 +31,8 @@ trait IOMonad {
 
     def fromTry[T](result: Try[T]): IO[T, Effect] = FromTry(result)
 
-    def sequence[A, M[X] <: TraversableOnce[X], E <: Effect](in: M[IO[A, E]])(implicit cbfIOToResult: CanBuildFrom[M[IO[A, E]], Result[A], M[Result[A]]], cbfResultToValue: CanBuildFrom[M[Result[A]], A, M[A]]): IO[M[A], E] =
-      Sequence(in, cbfIOToResult, cbfResultToValue)
+    def sequence[A, M[X] <: IterableOnce[X], E <: Effect](in: M[IO[A, E]])(implicit cbfResultToValue: Factory[A, M[A]]): IO[M[A], E] =
+      Sequence(in, cbfResultToValue)
 
     val unit: IO[Unit, Effect] = fromTry(Success(()))
 
@@ -54,8 +54,8 @@ trait IOMonad {
     def reduceLeft[T, R >: T, E <: Effect](ios: collection.immutable.Iterable[IO[T, E]])(op: (R, T) => R): IO[R, E] =
       sequence(ios).map(_.reduceLeft(op))
 
-    def traverse[A, B, M[X] <: TraversableOnce[X], E <: Effect](in: M[A])(fn: A => IO[B, E])(implicit cbf: CanBuildFrom[M[A], B, M[B]]): IO[M[B], E] =
-      sequence(in.map(fn)).map(r => cbf().++=(r).result)
+    def traverse[A, B, M[X] <: IterableOnce[X], E <: Effect](in: M[A])(fn: A => IO[B, E])(implicit cbf: Factory[B, M[B]]): IO[M[B], E] =
+      sequence(in.iterator.map(fn).asInstanceOf[M[IO[B, E]]])
   }
 
   trait IO[+T, -E <: Effect] {
@@ -83,6 +83,8 @@ trait IOMonad {
       }
 
     def map[S](f: T => S): IO[S, E] = transform(_.map(f))
+
+    def *>[S, E2 <: Effect](next: IO[S, E2]) = flatMap(_ => next)
 
     def flatMap[S, E2 <: Effect](f: T => IO[S, E2]): IO[S, E with E2] =
       transformWith {

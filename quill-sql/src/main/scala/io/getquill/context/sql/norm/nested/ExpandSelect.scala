@@ -173,7 +173,7 @@ private class ExpandSelect(selectValues: List[SelectValue], references: LinkedHa
               // We cannot do this because during recursive calls, the aliases of outer clauses are used for inner ones.
               .map(deAliasWhenUneeded(_))
 
-          trace"Mapped Refs: $mappedRefs" andLog ()
+          trace"Mapped Refs: $mappedRefs".andLog()
 
           // are there any selects that have infix values which we have not already selected? We need to include
           // them because they could be doing essential things e.g. RANK ... ORDER BY

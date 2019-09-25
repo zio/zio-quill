@@ -34,6 +34,10 @@ jobs:
       script: ./build/build.sh db
       scala: 2.12.6
       name: "Databases 2.12 - MySQL, Postgres, Sqlite, H2, SQL Server, Oracle"
+    - stage: build
+      script: ./build/build.sh db
+      scala: 2.13.1
+      name: "Databases 2.13 - MySQL, Postgres, Sqlite, H2, SQL Server, Oracle"
 
     - stage: build
       script: ./build/build.sh async
@@ -123,6 +127,19 @@ jobs:
       name: "Release 2.12 bigdata"
       script:
         - ./build/release.sh 212 bigdata
+
+    - stage: release
+      if: type != pull_request
+      scala: 2.13.0
+      name: "Release 2.13 base"
+      script:
+        - ./build/release.sh 213 base
+    - stage: release
+      if: type != pull_request
+      scala: 2.13.1
+      name: "Release 2.13 db"
+      script:
+        - ./build/release.sh 213 db
 
     - stage: publish
       if: type != pull_request AND branch = master

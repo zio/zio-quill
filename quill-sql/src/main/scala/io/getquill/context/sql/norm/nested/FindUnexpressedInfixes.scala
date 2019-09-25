@@ -44,7 +44,7 @@ class FindUnexpressedInfixes(select: List[OrderedSelect]) {
 
     // build paths to every infix and see these paths were not selected already
     def findMissingInfixes(ast: Ast, parentOrder: List[Int]): List[(Ast, List[Int])] = {
-      trace"Searching for infix: $ast in the sub-path $parentOrder" andLog ()
+      trace"Searching for infix: $ast in the sub-path $parentOrder".andLog()
       if (pathExists(parentOrder))
         trace"No infixes found" andContinue
           List()
@@ -65,7 +65,7 @@ class FindUnexpressedInfixes(select: List[OrderedSelect]) {
                   findMissingInfixes(ast, parentOrder :+ index)
               }
           case other if (containsInfix(other)) =>
-            trace"Found unexpressed infix inside $other in $parentOrder" andLog ()
+            trace"Found unexpressed infix inside $other in $parentOrder".andLog()
             List((other, parentOrder))
           case _ =>
             List()

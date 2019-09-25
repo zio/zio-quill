@@ -2,9 +2,10 @@ package io.getquill.norm.capture
 
 import io.getquill.ast.{ Entity, Filter, FlatJoin, FlatMap, GroupBy, Ident, Join, Map, Query, SortBy, StatefulTransformer, _ }
 import io.getquill.norm.{ BetaReduction, Normalize }
+import scala.collection.immutable.Set
 
-private[getquill] case class AvoidAliasConflict(state: collection.Set[Ident])
-  extends StatefulTransformer[collection.Set[Ident]] {
+private[getquill] case class AvoidAliasConflict(state: Set[Ident])
+  extends StatefulTransformer[Set[Ident]] {
 
   object Unaliased {
 
@@ -26,7 +27,7 @@ private[getquill] case class AvoidAliasConflict(state: collection.Set[Ident])
       }
   }
 
-  override def apply(q: Query): (Query, StatefulTransformer[collection.Set[Ident]]) =
+  override def apply(q: Query): (Query, StatefulTransformer[Set[Ident]]) =
     q match {
 
       case FlatMap(Unaliased(q), x, p) =>
@@ -68,14 +69,14 @@ private[getquill] case class AvoidAliasConflict(state: collection.Set[Ident])
         super.apply(q)
     }
 
-  private def apply(x: Ident, p: Ast)(f: (Ident, Ast) => Query): (Query, StatefulTransformer[collection.Set[Ident]]) = {
+  private def apply(x: Ident, p: Ast)(f: (Ident, Ast) => Query): (Query, StatefulTransformer[Set[Ident]]) = {
     val fresh = freshIdent(x)
     val pr = BetaReduction(p, x -> fresh)
     val (prr, t) = AvoidAliasConflict(state + fresh)(pr)
     (f(fresh, prr), t)
   }
 
-  private def freshIdent(x: Ident, state: collection.Set[Ident] = state): Ident = {
+  private def freshIdent(x: Ident, state: Set[Ident] = state): Ident = {
     def loop(x: Ident, n: Int): Ident = {
       val fresh = Ident(s"${x.name}$n")
       if (!state.contains(fresh))
@@ -127,7 +128,7 @@ private[getquill] case class AvoidAliasConflict(state: collection.Set[Ident])
 private[getquill] object AvoidAliasConflict {
 
   def apply(q: Query): Query =
-    AvoidAliasConflict(collection.Set[Ident]())(q) match {
+    AvoidAliasConflict(Set[Ident]())(q) match {
       case (q, _) => q
     }
 

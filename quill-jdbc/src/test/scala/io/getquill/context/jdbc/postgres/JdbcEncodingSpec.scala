@@ -36,14 +36,17 @@ class JdbcEncodingSpec extends EncodingSpec {
     case class EncodingTestEntity(v11: LocalDateTime)
     case class E(v11: Option[LocalDateTime])
     val e = EncodingTestEntity(LocalDateTime.now())
-    val res: List[EncodingTestEntity] = performIO {
-      for {
-        _ <- testContext.runIO(query[EncodingTestEntity].delete)
-        _ <- testContext.runIO(query[EncodingTestEntity].insert(lift(e)))
-        _ <- testContext.runIO(querySchema[E]("EncodingTestEntity").insert(lift(E(None))))
-        r <- testContext.runIO(query[EncodingTestEntity])
-      } yield r
-    }
+
+    val steps = for {
+      _ <- testContext.runIO(query[EncodingTestEntity].delete)
+      _ <- testContext.runIO(query[EncodingTestEntity].insert(lift(e)))
+      _ <- testContext.runIO(querySchema[E]("EncodingTestEntity").insert(lift(E(None))))
+      r <- testContext.runIO(query[EncodingTestEntity])
+    } yield r
+
+    val res: List[EncodingTestEntity] = testContext.performIO(steps)
+
     res must contain theSameElementsAs List(e, EncodingTestEntity(LocalDate.ofEpochDay(0).atStartOfDay()))
+
   }
 }

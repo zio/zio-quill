@@ -9,8 +9,9 @@ then
     echo "No Artifact Specified"
 fi
 
-SBT_2_11="sbt ++2.11.12 -Dquill.macro.log=false"
-SBT_2_12="sbt ++2.12.6 -Dquill.macro.log=false"
+SBT_2_11="sbt ++2.11.12 -Dquill.macro.log=false -Dquil.scala.version=2.11.12"
+SBT_2_12="sbt ++2.12.6 -Dquill.macro.log=false -Dquil.scala.version=2.12.6"
+SBT_2_13="sbt ++2.13.1 -Dquill.macro.log=false -Dquil.scala.version=2.13.1"
 
 if [[ $VERSION -eq 211 ]]
 then
@@ -18,6 +19,9 @@ then
 elif [[ $VERSION -eq 212 ]]
 then
     SBT_VER=$SBT_2_12
+elif [[ $VERSION -eq 213 ]]
+then
+    SBT_VER=$SBT_2_13
 else
     echo "No Valid SBT Version Entered"
     exit 1
