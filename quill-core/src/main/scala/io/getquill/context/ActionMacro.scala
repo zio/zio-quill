@@ -72,8 +72,8 @@ class ActionMacro(val c: MacroContext)
   def runBatchAction(quoted: Tree): Tree =
     batchAction(quoted, "executeBatchAction")
 
-  def bindBatchAction(quoted: Tree): Tree =
-    batchAction(quoted, "bindBatchAction")
+  def prepareBatchAction(quoted: Tree): Tree =
+    batchAction(quoted, "prepareBatchAction")
 
   def batchAction(quoted: Tree, method: String): Tree =
     expandBatchAction(quoted) {
@@ -145,12 +145,12 @@ class ActionMacro(val c: MacroContext)
       })
     """
 
-  def bindAction(quoted: Tree): Tree =
+  def prepareAction(quoted: Tree): Tree =
     c.untypecheck {
       q"""
         ..${EnableReflectiveCalls(c)}
         val expanded = ${expand(extractAst(quoted))}
-        ${c.prefix}.bindAction(
+        ${c.prefix}.prepareAction(
           expanded.string,
           expanded.prepare
         )

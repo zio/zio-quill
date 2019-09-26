@@ -68,16 +68,15 @@ object SqlQuery {
 
   def apply(query: Ast): SqlQuery =
     query match {
-      case Union(a, b)                          => SetOperationSqlQuery(apply(a), UnionOperation, apply(b))
-      case UnionAll(a, b)                       => SetOperationSqlQuery(apply(a), UnionAllOperation, apply(b))
-      case UnaryOperation(op, q: Query)         => UnaryOperationSqlQuery(op, apply(q))
-      case _: Operation | _: Value              => FlattenSqlQuery(select = List(SelectValue(query)))
-      case map @ Map(_: Nested, a, b) if a == b => flatten(map, a.name)
-      case Map(q, a, b) if a == b               => apply(q)
-      case TakeDropFlatten(q, limit, offset)    => flatten(q, "x").copy(limit = limit, offset = offset)
-      case q: Query                             => flatten(q, "x")
-      case infix: Infix                         => flatten(infix, "x")
-      case other                                => fail(s"Query not properly normalized. Please open a bug report. Ast: '$other'")
+      case Union(a, b)                       => SetOperationSqlQuery(apply(a), UnionOperation, apply(b))
+      case UnionAll(a, b)                    => SetOperationSqlQuery(apply(a), UnionAllOperation, apply(b))
+      case UnaryOperation(op, q: Query)      => UnaryOperationSqlQuery(op, apply(q))
+      case _: Operation | _: Value           => FlattenSqlQuery(select = List(SelectValue(query)))
+      case Map(q, a, b) if a == b            => apply(q)
+      case TakeDropFlatten(q, limit, offset) => flatten(q, "x").copy(limit = limit, offset = offset)
+      case q: Query                          => flatten(q, "x")
+      case infix: Infix                      => flatten(infix, "x")
+      case other                             => fail(s"Query not properly normalized. Please open a bug report. Ast: '$other'")
     }
 
   private def flatten(query: Ast, alias: String): FlattenSqlQuery = {

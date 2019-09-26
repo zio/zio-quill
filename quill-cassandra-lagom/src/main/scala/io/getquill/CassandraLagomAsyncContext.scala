@@ -21,7 +21,7 @@ class CassandraLagomAsyncContext[N <: NamingStrategy](
 
   private val logger = ContextLogger(this.getClass)
 
-  def bindAction[T](cql: String, prepare: Prepare = identityPrepare)(implicit executionContext: ExecutionContext): CassandraSession => Future[BoundStatement] = (session: Session) => {
+  def prepareAction[T](cql: String, prepare: Prepare = identityPrepare)(implicit executionContext: ExecutionContext): CassandraSession => Future[BoundStatement] = (session: Session) => {
     val prepareResult = session.prepare(cql).map(bs => prepare(bs.bind()))
     val preparedRow = prepareResult.map {
       case (params, bs) =>
@@ -31,14 +31,14 @@ class CassandraLagomAsyncContext[N <: NamingStrategy](
     preparedRow
   }
 
-  def bindBatchAction[T](groups: List[BatchGroup])(implicit executionContext: ExecutionContext): CassandraSession => Future[List[BoundStatement]] = (session: Session) => {
+  def prepareBatchAction[T](groups: List[BatchGroup])(implicit executionContext: ExecutionContext): CassandraSession => Future[List[BoundStatement]] = (session: Session) => {
     val batches = groups.flatMap {
       case BatchGroup(cql, prepares) =>
         prepares.map(cql -> _)
     }
     Future.traverse(batches) {
       case (cql, prepare) =>
-        val prepareCql = bindAction(cql, prepare)
+        val prepareCql = prepareAction(cql, prepare)
         prepareCql(session)
     }
   }
