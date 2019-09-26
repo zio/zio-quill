@@ -47,7 +47,13 @@ class MirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy](val idiom: Idi
 
   case class BatchActionReturningMirror[T](groups: List[(String, ReturnAction, List[PrepareRow])], extractor: Extractor[T])
 
-  case class QueryMirror[T](string: String, prepareRow: PrepareRow, extractor: Extractor[T])
+  case class QueryMirror[T](string: String, prepareRow: PrepareRow, extractor: Extractor[T]) {
+    def string(pretty: Boolean): String =
+      if (pretty)
+        idiom.format(string)
+      else
+        string
+  }
 
   def executeQuery[T](string: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor) =
     QueryMirror(string, prepare(Row())._2, extractor)
