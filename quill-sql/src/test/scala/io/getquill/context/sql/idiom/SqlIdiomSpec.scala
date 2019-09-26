@@ -131,7 +131,7 @@ class SqlIdiomSpec extends Spec {
             qr1.map(i => new IntLong(i.i, i.l)).distinct
           }
           testContext.run(q).string mustEqual
-            "SELECT i.i, i.l FROM (SELECT DISTINCT i.i AS i, i.l AS l FROM TestEntity i) AS i"
+            "SELECT i.i, i.l FROM (SELECT DISTINCT i.i, i.l FROM TestEntity i) AS i"
         }
         "caseclass companion constructor" in {
           case class IntLong(i: Int, l: Long)
@@ -139,7 +139,7 @@ class SqlIdiomSpec extends Spec {
             qr1.map(i => IntLong(i.i, i.l)).distinct
           }
           testContext.run(q).string mustEqual
-            "SELECT i.i, i.l FROM (SELECT DISTINCT i.i AS i, i.l AS l FROM TestEntity i) AS i"
+            "SELECT i.i, i.l FROM (SELECT DISTINCT i.i, i.l FROM TestEntity i) AS i"
         }
 
         "nesting" in {

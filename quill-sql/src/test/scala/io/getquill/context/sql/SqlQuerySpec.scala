@@ -780,7 +780,7 @@ class SqlQuerySpec extends Spec {
           qr1.map(q => TrivialEntitySameField(q.s)) ++ qr1.map(q => TrivialEntitySameField(q.s))
         }
         testContext.run(q).string mustEqual
-          "SELECT x.s FROM ((SELECT q.s AS s FROM TestEntity q) UNION ALL (SELECT q1.s AS s FROM TestEntity q1)) AS x"
+          "SELECT x.s FROM ((SELECT q.s FROM TestEntity q) UNION ALL (SELECT q1.s FROM TestEntity q1)) AS x"
       }
     }
   }
