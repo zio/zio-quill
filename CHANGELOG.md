@@ -1,3 +1,7 @@
+# 3.4.9
+
+- [Properly unhide properties in nested queries](https://github.com/getquill/quill/pull/1637)
+
 # 3.4.8
 
 - [Additional Fixes for Embedded Entities in Nested Queries](https://github.com/getquill/quill/pull/1628)
