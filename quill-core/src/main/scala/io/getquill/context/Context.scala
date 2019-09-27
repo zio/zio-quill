@@ -35,14 +35,14 @@ trait Context[Idiom <: io.getquill.idiom.Idiom, Naming <: NamingStrategy]
 
   def run[T](quoted: Quoted[T]): Result[RunQuerySingleResult[T]] = macro QueryMacro.runQuerySingle[T]
   def run[T](quoted: Quoted[Query[T]]): Result[RunQueryResult[T]] = macro QueryMacro.runQuery[T]
-  def prepare[T](quoted: Quoted[Query[T]]): Session => Result[PrepareRow] = macro QueryMacro.bindQuery[T]
+  def prepare[T](quoted: Quoted[Query[T]]): Session => Result[PrepareRow] = macro QueryMacro.prepareQuery[T]
 
   def run(quoted: Quoted[Action[_]]): Result[RunActionResult] = macro ActionMacro.runAction
   def run[T](quoted: Quoted[ActionReturning[_, T]]): Result[RunActionReturningResult[T]] = macro ActionMacro.runActionReturning[T]
   def run(quoted: Quoted[BatchAction[Action[_]]]): Result[RunBatchActionResult] = macro ActionMacro.runBatchAction
   def run[T](quoted: Quoted[BatchAction[ActionReturning[_, T]]]): Result[RunBatchActionReturningResult[T]] = macro ActionMacro.runBatchActionReturning[T]
-  def prepare(quoted: Quoted[Action[_]]): Session => Result[PrepareRow] = macro ActionMacro.bindAction
-  def prepare(quoted: Quoted[BatchAction[Action[_]]]): Session => Result[List[PrepareRow]] = macro ActionMacro.bindBatchAction
+  def prepare(quoted: Quoted[Action[_]]): Session => Result[PrepareRow] = macro ActionMacro.prepareAction
+  def prepare(quoted: Quoted[BatchAction[Action[_]]]): Session => Result[List[PrepareRow]] = macro ActionMacro.prepareBatchAction
 
   protected val identityPrepare: Prepare = (Nil, _)
   protected val identityExtractor = identity[ResultRow] _
