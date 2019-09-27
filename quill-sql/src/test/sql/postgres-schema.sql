@@ -51,7 +51,8 @@ CREATE TABLE EncodingTestEntity(
     o11 TIMESTAMP,
     o12 VARCHAR(255),
     o13 DATE,
-    o14 UUID
+    o14 UUID,
+    o15 TEXT
 );
 
 CREATE TABLE EncodingUUIDTestEntity(
@@ -79,6 +80,11 @@ CREATE TABLE TestEntity3(
 
 CREATE TABLE TestEntity4(
     i SERIAL PRIMARY KEY
+);
+
+CREATE TABLE TestEntity5(
+    i SERIAL PRIMARY KEY,
+    s VARCHAR(255)
 );
 
 CREATE TABLE Product(

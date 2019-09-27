@@ -5,13 +5,16 @@ import io.getquill.quotation.NonQuotedException
 
 import scala.annotation.compileTimeOnly
 
-private[dsl] trait QueryDsl {
+private[getquill] trait QueryDsl {
   dsl: CoreDsl =>
 
   def query[T]: EntityQuery[T] = macro QueryDslMacro.expandEntity[T]
 
   @compileTimeOnly(NonQuotedException.message)
   def querySchema[T](entity: String, columns: (T => (Any, String))*): EntityQuery[T] = NonQuotedException()
+
+  @compileTimeOnly(NonQuotedException.message)
+  def impliedQuerySchema[T](entity: String, columns: (T => (Any, String))*): EntityQuery[T] = NonQuotedException()
 
   implicit class NullableColumnExtensions[A](o: Option[A]) {
     @compileTimeOnly(NonQuotedException.message)
@@ -73,6 +76,7 @@ private[dsl] trait QueryDsl {
 
     def groupBy[R](f: T => R): Query[(R, Query[T])]
 
+    def value[U >: T]: Option[T]
     def min[U >: T]: Option[T]
     def max[U >: T]: Option[T]
     def avg[U >: T](implicit n: Numeric[U]): Option[BigDecimal]
@@ -129,6 +133,9 @@ private[dsl] trait QueryDsl {
   sealed trait Insert[E] extends Action[E] {
     @compileTimeOnly(NonQuotedException.message)
     def returning[R](f: E => R): ActionReturning[E, R] = NonQuotedException()
+
+    @compileTimeOnly(NonQuotedException.message)
+    def returningGenerated[R](f: E => R): ActionReturning[E, R] = NonQuotedException()
 
     @compileTimeOnly(NonQuotedException.message)
     def onConflictIgnore: Insert[E] = NonQuotedException()

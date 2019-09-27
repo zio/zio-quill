@@ -48,13 +48,13 @@ class OpsSpec extends Spec {
       val q = quote {
         infix"true".as[Boolean]
       }
-      q.ast mustEqual Infix(List("true"), Nil)
+      q.ast mustEqual Infix(List("true"), Nil, false)
     }
     "without `as`" in {
       val q = quote {
         infix"true"
       }
-      q.ast mustEqual Infix(List("true"), Nil)
+      q.ast mustEqual Infix(List("true"), Nil, false)
     }
   }
 

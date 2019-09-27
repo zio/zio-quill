@@ -95,4 +95,28 @@ class AstOpsSpec extends Spec {
       }
     }
   }
+
+  "returning matcher" - {
+    val insert = Insert(Entity("Ent", List()), List(Assignment(Ident("p"), Property(Ident("p"), "prop"), Constant(123))))
+    val r = Ident("r")
+    val prop = Property(r, "value")
+
+    "must match returning" in {
+      Returning(insert, r, prop) must matchPattern {
+        case ReturningAction(`insert`, `r`, `prop`) =>
+      }
+    }
+
+    "must match returning generated" in {
+      ReturningGenerated(insert, r, prop) must matchPattern {
+        case ReturningAction(`insert`, `r`, `prop`) =>
+      }
+    }
+
+    "must not match anything else" in {
+      insert mustNot matchPattern {
+        case ReturningAction(_, _, _) =>
+      }
+    }
+  }
 }

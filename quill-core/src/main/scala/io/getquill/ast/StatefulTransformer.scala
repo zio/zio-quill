@@ -12,6 +12,7 @@ trait StatefulTransformer[T] {
       case e: Value                => apply(e)
       case e: Assignment           => apply(e)
       case e: Ident                => (e, this)
+      case e: ExternalIdent        => (e, this)
       case e: OptionOperation      => apply(e)
       case e: TraversableOperation => apply(e)
       case e: Property             => apply(e)
@@ -22,9 +23,9 @@ trait StatefulTransformer[T] {
         val (bt, btt) = apply(b)
         (Function(a, bt), btt)
 
-      case Infix(a, b) =>
+      case Infix(a, b, pure) =>
         val (bt, btt) = apply(b)(_.apply)
-        (Infix(a, bt), btt)
+        (Infix(a, bt, pure), btt)
 
       case If(a, b, c) =>
         val (at, att) = apply(a)
@@ -209,9 +210,9 @@ trait StatefulTransformer[T] {
 
   def apply(e: Property): (Property, StatefulTransformer[T]) =
     e match {
-      case Property(a, b) =>
+      case Property.Opinionated(a, b, renameable, visibility) =>
         val (at, att) = apply(a)
-        (Property(at, b), att)
+        (Property.Opinionated(at, b, renameable, visibility), att)
     }
 
   def apply(e: Operation): (Operation, StatefulTransformer[T]) =
@@ -259,6 +260,10 @@ trait StatefulTransformer[T] {
         val (at, att) = apply(a)
         val (ct, ctt) = att.apply(c)
         (Returning(at, b, ct), ctt)
+      case ReturningGenerated(a, b, c) =>
+        val (at, att) = apply(a)
+        val (ct, ctt) = att.apply(c)
+        (ReturningGenerated(at, b, ct), ctt)
       case Foreach(a, b, c) =>
         val (at, att) = apply(a)
         val (ct, ctt) = att.apply(c)

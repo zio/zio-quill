@@ -19,6 +19,7 @@ import io.getquill.idiom.StatementInterpolator._
 import io.getquill.idiom.Token
 import io.getquill.util.Messages.trace
 import io.getquill.ast.Constant
+import io.getquill.context.CannotReturn
 
 class SparkDialect extends SparkIdiom
 
@@ -72,7 +73,7 @@ object SparkDialectRecursor {
   }
 }
 
-trait SparkIdiom extends SqlIdiom { self =>
+trait SparkIdiom extends SqlIdiom with CannotReturn { self =>
 
   def parentTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy) = super.sqlQueryTokenizer
 
@@ -138,8 +139,8 @@ trait SparkIdiom extends SqlIdiom { self =>
     def path(ast: Ast): Token =
       ast match {
         case Ident(name) => name.token
-        case Property(a, b) =>
-          stmt"${path(a)}.${strategy.column(b).token}"
+        case Property.Opinionated(a, b, renameable, _) =>
+          stmt"${path(a)}.${renameable.fixedOr(b.token)(strategy.column(b).token)}"
         case other =>
           other.token
       }
@@ -160,7 +161,8 @@ trait SparkIdiom extends SqlIdiom { self =>
       val nextTokenizer = new SparkIdiom {
         override def multipleSelect: Boolean = values.length > 1
       }
-      SparkDialectRecursor.runCaseClassWithMultipleSelect(values, nextTokenizer, self.multipleSelect)
+      val keyValues = values.map { case (k, v) => (k, v) }
+      SparkDialectRecursor.runCaseClassWithMultipleSelect(keyValues, nextTokenizer, self.multipleSelect)
     }
     case other => super.valueTokenizer.token(other)
   }

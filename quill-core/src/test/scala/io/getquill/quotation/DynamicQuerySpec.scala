@@ -1,10 +1,11 @@
 package io.getquill.quotation
 
 import io.getquill._
+import io.getquill.dsl.DynamicQueryDsl
 
 class DynamicQuerySpec extends Spec {
 
-  //  object testContext extends MirrorContext(MirrorIdiom, Literal) with TestEntities with DynamicQueryDsl
+  object testContext extends MirrorContext(MirrorIdiom, Literal) with TestEntities with DynamicQueryDsl
   import testContext._
 
   "implicit classes" - {
@@ -49,7 +50,9 @@ class DynamicQuerySpec extends Spec {
       d.q mustEqual q
     }
     "action returning" in {
-      val q: Quoted[ActionReturning[TestEntity, Int]] = qr1.insert(_.i -> 1).returning(_.i)
+      val q: Quoted[ActionReturning[TestEntity, Int]] = quote {
+        qr1.insert(_.i -> 1).returningGenerated(_.i)
+      }
       val d = {
         val d = q.dynamic
         (d: DynamicActionReturning[TestEntity, Int])
@@ -557,8 +560,16 @@ class DynamicQuerySpec extends Spec {
       }
       "returning" in {
         test(
-          dynamicQuery[TestEntity].insert(set(_.i, 1)).returning(v0 => v0.l),
-          query[TestEntity].insert(v => v.i -> 1).returning(v0 => v0.l)
+          dynamicQuery[TestEntity].insert(set(_.i, 1)).returningGenerated(v0 => v0.l),
+          quote {
+            query[TestEntity].insert(v => v.i -> 1).returningGenerated(v0 => v0.l)
+          }
+        )
+      }
+      "returning non quoted" in {
+        test(
+          dynamicQuery[TestEntity].insert(set(_.i, 1)).returningGenerated(v0 => v0.l),
+          query[TestEntity].insert(v => v.i -> 1).returningGenerated((v0: TestEntity) => v0.l)
         )
       }
       "onConflictIgnore" - {

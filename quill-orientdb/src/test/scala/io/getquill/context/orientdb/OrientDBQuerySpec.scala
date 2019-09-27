@@ -1,8 +1,9 @@
 package io.getquill.context.orientdb
 
-import io.getquill.ast.{ Query => AstQuery, Action => AstAction, _ }
+import io.getquill.ast.{ Action => AstAction, Query => AstQuery, _ }
 import io.getquill.context.sql._
 import io.getquill.idiom.StatementInterpolator._
+import io.getquill.idiom.StringToken
 import io.getquill.{ Literal, Spec }
 
 class OrientDBQuerySpec extends Spec {
@@ -262,6 +263,11 @@ class OrientDBQuerySpec extends Spec {
       t.token(ins("isDefined")) mustBe stmt"INSERT INTO tb (x IS NOT NULL) VALUES(i)"
       t.token(ins("nonEmpty")) mustBe stmt"INSERT INTO tb (x IS NOT NULL) VALUES(i)"
       t.token(Insert(Entity("tb", Nil), List(Assignment(i, Property(i, "i"), i)))) mustBe stmt"INSERT INTO tb (i) VALUES(i)"
+    }
+    // not actually used anywhere but doing a sanity check here
+    "external ident sanity check" in {
+      val t = implicitly[Tokenizer[ExternalIdent]]
+      t.token(ExternalIdent("TestIdent")) mustBe StringToken("TestIdent")
     }
   }
 }
