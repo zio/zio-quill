@@ -78,11 +78,11 @@ class MirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy](val idiom: Idi
       }, extractor
     )
 
-  def bindAction(string: String, prepare: Prepare = identityPrepare) =
+  def prepareAction(string: String, prepare: Prepare = identityPrepare) =
     (session: Session) =>
       prepare(Row())._2
 
-  def bindBatchAction(groups: List[BatchGroup]) =
+  def prepareBatchAction(groups: List[BatchGroup]) =
     (session: Session) =>
       groups.flatMap {
         case BatchGroup(string, prepare) =>

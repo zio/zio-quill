@@ -33,8 +33,16 @@ then
 
     ls -ltr
     sleep 3 # Need to wait until credential files fully written or build fails sometimes
+    project_version="$(sbt 'show version' | tail -1 | cut -f 2)"
+    echo "Detected Project Version $project_version from SBT Files"
 
-    if [[ ($TRAVIS_BRANCH == "master" || $TRAVIS_BRANCH == "re-release"*) && $(cat version.sbt) != *"SNAPSHOT"* ]]
+    # When an artifact is actually published, a build will go out on the git commit: "Setting version to <YOUR VERSION>".
+    # At that point the $TRAVIS_BRANCH branch varialbe will be set to "v<YOUR VERSION>" which should be the same as
+    # the version in version.sbt (that's what the $project_version variable is. That's the commit on which
+    # we want to do the actual project release!.... as well as any branch name 're-release*' in case a build fails and we need to re-publish.
+    # (Also note, we could technically use $project_version instead of $(cat version.sbt) but I don't want to change that this time around.)
+
+    if [[ ($TRAVIS_BRANCH == "v${project_version}" || $TRAVIS_BRANCH == "re-release"*) && $(cat version.sbt) != *"SNAPSHOT"* ]]
     then
         echo "Release Build for $TRAVIS_BRANCH"
         eval "$(ssh-agent -s)"
@@ -53,7 +61,7 @@ then
         # Publish Everything
         if [[ $ARTIFACT == "publish" ]]; then $SBT_VER -Dmodules=none 'release with-defaults default-tag-exists-answer o'; fi
 
-    elif [[ $TRAVIS_BRANCH == "master" ]]
+    elif [[ $TRAVIS_BRANCH == "master" && $(cat version.sbt) == *"SNAPSHOT"* ]]
     then
         echo "Master Non-Release Build for $TRAVIS_BRANCH"
         if [[ $ARTIFACT == "base" ]]; then    $SBT_VER -Dmodules=base publish; fi
@@ -64,6 +72,10 @@ then
 
         # No-Op Publish
         if [[ $ARTIFACT == "publish" ]]; then echo "No-Op Publish for Non Release Master Branch"; fi
+
+    elif [[ $TRAVIS_BRANCH == "master" && $(cat version.sbt) != *"SNAPSHOT"* ]]
+    then
+        echo "Publish is No-Op for Master Preliminary Release Build for $ARTIFACT. Actual release will happen in 'Setting version to...' build"
     else
         echo "Branch build for $TRAVIS_BRANCH"
         echo "version in ThisBuild := \"$TRAVIS_BRANCH-SNAPSHOT\"" > version.sbt
