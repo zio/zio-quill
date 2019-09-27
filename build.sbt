@@ -288,7 +288,7 @@ lazy val `quill-finagle-postgres` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "io.github.finagle" %% "finagle-postgres" % "0.11.0"
+        "io.github.finagle" %% "finagle-postgres" % "0.12.0"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -466,7 +466,7 @@ lazy val jdbcTestingLibraries = Seq(
         "com.zaxxer"              %  "HikariCP"                % "3.4.1",
         "mysql"                   %  "mysql-connector-java"    % "8.0.17"             % Test,
         "com.h2database"          %  "h2"                      % "1.4.199"            % Test,
-        "org.postgresql"          %  "postgresql"              % "42.2.6"             % Test,
+        "org.postgresql"          %  "postgresql"              % "42.2.8"             % Test,
         "org.xerial"              %  "sqlite-jdbc"             % "3.28.0"           % Test,
         "com.microsoft.sqlserver" %  "mssql-jdbc"              % "7.1.1.jre8-preview" % Test,
         "org.mockito"             %% "mockito-scala-scalatest" % "1.5.15"              % Test
