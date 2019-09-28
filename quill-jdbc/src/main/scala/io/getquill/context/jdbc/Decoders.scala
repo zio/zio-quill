@@ -44,13 +44,8 @@ trait Decoders {
 
   implicit val stringDecoder: Decoder[String] = decoder(_.getString)
   implicit val bigDecimalDecoder: Decoder[BigDecimal] =
-    decoder((index, row) => {
-      val v = row.getBigDecimal(index)
-      if (v == null)
-        BigDecimal(0)
-      else
-        v
-    })
+    decoder((index, row) =>
+      row.getBigDecimal(index))
   implicit val byteDecoder: Decoder[Byte] = decoder(_.getByte)
   implicit val shortDecoder: Decoder[Short] = decoder(_.getShort)
   implicit val intDecoder: Decoder[Int] = decoder(_.getInt)
@@ -59,27 +54,12 @@ trait Decoders {
   implicit val doubleDecoder: Decoder[Double] = decoder(_.getDouble)
   implicit val byteArrayDecoder: Decoder[Array[Byte]] = decoder(_.getBytes)
   implicit val dateDecoder: Decoder[util.Date] =
-    decoder((index, row) => {
-      val v = row.getTimestamp(index, Calendar.getInstance(dateTimeZone))
-      if (v == null)
-        new util.Date(0)
-      else
-        new util.Date(v.getTime)
-    })
+    decoder((index, row) =>
+      new util.Date(row.getTimestamp(index, Calendar.getInstance(dateTimeZone)).getTime))
   implicit val localDateDecoder: Decoder[LocalDate] =
-    decoder((index, row) => {
-      val v = row.getDate(index, Calendar.getInstance(dateTimeZone))
-      if (v == null)
-        LocalDate.ofEpochDay(0)
-      else
-        v.toLocalDate
-    })
+    decoder((index, row) =>
+      row.getDate(index, Calendar.getInstance(dateTimeZone)).toLocalDate)
   implicit val localDateTimeDecoder: Decoder[LocalDateTime] =
-    decoder((index, row) => {
-      val v = row.getTimestamp(index, Calendar.getInstance(dateTimeZone))
-      if (v == null)
-        LocalDate.ofEpochDay(0).atStartOfDay()
-      else
-        v.toLocalDateTime
-    })
+    decoder((index, row) =>
+      row.getTimestamp(index, Calendar.getInstance(dateTimeZone)).toLocalDateTime)
 }
