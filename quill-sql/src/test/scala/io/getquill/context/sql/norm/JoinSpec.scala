@@ -61,7 +61,7 @@ class JoinSpec extends Spec {
       }
     }
     testContext.run(q).string mustEqual
-      "SELECT ab._1s, ab._1i, ab._1l, ab._1o, ab._2s, ab._2i, ab._2l, ab._2o, c.s, c.i, c.l, c.o FROM (SELECT a.s AS _1s, a.o AS _1o, a.l AS _1l, a.i AS _1i, b.l AS _2l, b.i AS _2i, b.o AS _2o, b.s AS _2s FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i WHERE b.l = 3) AS ab LEFT JOIN TestEntity3 c ON ab._2i = ab._1i AND ab._2i = c.i"
+      "SELECT ab._1s, ab._1i, ab._1l, ab._1o, ab._2s, ab._2i, ab._2l, ab._2o, c.s, c.i, c.l, c.o FROM (SELECT a.s AS _1s, a.i AS _1i, a.l AS _1l, a.o AS _1o, b.s AS _2s, b.i AS _2i, b.l AS _2l, b.o AS _2o FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i WHERE b.l = 3) AS ab LEFT JOIN TestEntity3 c ON ab._2i = ab._1i AND ab._2i = c.i"
   }
 
   "join + distinct + leftjoin" in {
@@ -74,7 +74,7 @@ class JoinSpec extends Spec {
       }
     }
     testContext.run(q).string mustEqual
-      "SELECT ab._1s, ab._1i, ab._1l, ab._1o, ab._2s, ab._2i, ab._2l, ab._2o, c.s, c.i, c.l, c.o FROM (SELECT DISTINCT a.s AS _1s, a.o AS _1o, a.l AS _1l, a.i AS _1i, b.l AS _2l, b.i AS _2i, b.o AS _2o, b.s AS _2s FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i) AS ab LEFT JOIN TestEntity3 c ON ab._2i = ab._1i AND ab._2i = c.i"
+      "SELECT ab._1s, ab._1i, ab._1l, ab._1o, ab._2s, ab._2i, ab._2l, ab._2o, c.s, c.i, c.l, c.o FROM (SELECT DISTINCT a.s AS _1s, a.i AS _1i, a.l AS _1l, a.o AS _1o, b.s AS _2s, b.i AS _2i, b.l AS _2l, b.o AS _2o FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i) AS ab LEFT JOIN TestEntity3 c ON ab._2i = ab._1i AND ab._2i = c.i"
   }
 
   "multiple joins + filter + map + distinct" in {

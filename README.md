@@ -1553,6 +1553,59 @@ val a =
 performIO(a.transactional) // note: transactional can be used outside of `performIO`
 ```
 
+### Getting a ResultSet
+
+Quill JDBC Contexts allow you to use `prepare` in order to get a low-level `ResultSet` that is useful
+for interacting with legacy APIs. This function  returns a `f: (Connection) => (PreparedStatement)` 
+closure as opposed to a `PreparedStatement` in order to guarantee that JDBC Exceptions are not
+thrown until you can wrap them into the appropriate Exception-handling mechanism (e.g.
+`try`/`catch`, `Try` etc...).
+
+```scala
+val q = quote {
+  query[Product].filter(_.id == 1)
+}
+val preparer: (Connection) => (PreparedStatement)  = ctx.prepare(q)
+// SELECT x1.id, x1.description, x1.sku FROM Product x1 WHERE x1.id = 1
+
+// Use ugly stateful code, bracketed effects, or try-with-resources here:
+var preparedStatement: PreparedStatement = _
+var resultSet: ResultSet = _
+
+try {
+  preparedStatement = preparer(myCustomDataSource.getConnection)
+  resultSet = preparedStatement.executeQuery()
+} catch {
+  case e: Exception =>
+    // Close the preparedStatement and catch possible exceptions
+    // Close the resultSet and catch possible exceptions
+}
+```
+
+The `prepare` function can also be used with `insert`, and `update` queries.
+
+```scala
+val q = quote {
+  query[Product].insert(lift(Product(1, "Desc", 123))
+}
+val preparer: (Connection) => (PreparedStatement)  = ctx.prepare(q)
+// INSERT INTO Product (id,description,sku) VALUES (?, ?, ?)
+```
+
+As well as with batch queries.
+> Make sure to first quote your batch query and then pass the result into the `prepare` function
+(as is done in the example below) or the Scala compiler may not type the output correctly
+[#1518](https://github.com/getquill/quill/issues/1518).
+
+```scala
+val q = quote {
+  liftQuery(products).foreach(e => query[Product].insert(e))
+}
+val preparers: Connection => List[PreparedStatement] = ctx.prepare(q)
+val preparedStatement: List[PreparedStatement] = preparers(jdbcConf.dataSource.getConnection)
+```
+
+
 ### Effect tracking
 
 The IO monad tracks the effects that a computation performs in its second type parameter:
@@ -1958,6 +2011,57 @@ ctx.run(a)
 
 The `forUpdate` quotation can be reused for multiple queries.
 
+Queries that contain `infix` will generally not be flattened since it is not assumed that the contents
+of the infix are a pure function.
+> Since SQL is typically less performant when there are many nested queries,
+be careful with the use of `infix` in queries that have multiple `map`+`filter` clauses.
+
+```scala
+case class Data(id: Int)
+case class DataAndRandom(id: Int, value: Int)
+
+// This should be alright:
+val q = quote {
+  query[Data].map(e => DataAndRandom(e.id, infix"RAND()".as[Int])).filter(r => r.value <= 10)
+}
+run(q)
+// SELECT e.id, e.value FROM (SELECT RAND() AS value, e.id AS id FROM Data e) AS e WHERE e.value <= 10
+
+// This might not be:
+val q = quote {
+  query[Data]
+    .map(e => DataAndRandom(e.id, infix"SOME_UDF(${e.id})".as[Int]))
+    .filter(r => r.value <= 10)
+    .map(e => DataAndRandom(e.id, infix"SOME_OTHER_UDF(${e.value})".as[Int]))
+    .filter(r => r.value <= 100)
+}
+// Produces too many layers of nesting!
+run(q)
+// SELECT e.id, e.value FROM (
+//   SELECT SOME_OTHER_UDF(e.value) AS value, e.id AS id FROM (
+//     SELECT SOME_UDF(e.id) AS value, e.id AS id FROM Data e
+//   ) AS e WHERE e.value <= 10
+// ) AS e WHERE e.value <= 100
+```
+
+If you are sure that the the content of your infix is a pure function, you canse use the `pure` method
+in order to indicate to Quill that the infix clause can be copied in the query. This gives Quill much
+more leeway to flatten your query, possibly improving performance.
+
+```scala
+val q = quote {
+  query[Data]
+    .map(e => DataAndRandom(e.id, infix"SOME_UDF(${e.id})".pure.as[Int]))
+    .filter(r => r.value <= 10)
+    .map(e => DataAndRandom(e.id, infix"SOME_OTHER_UDF(${e.value})".pure.as[Int]))
+    .filter(r => r.value <= 100)
+}
+// Copying SOME_UDF and SOME_OTHER_UDF allows the query to be completely flattened.
+run(q)
+// SELECT e.id, SOME_OTHER_UDF(SOME_UDF(e.id)) FROM Data e 
+// WHERE SOME_UDF(e.id) <= 10 AND SOME_OTHER_UDF(SOME_UDF(e.id)) <= 100
+```
+
 ### Dynamic infix
 
 Infix supports runtime string values through the `#$` prefix. Example:
@@ -2280,7 +2384,7 @@ Quill provides a fully type-safe way to use Spark's highly-optimized SQL engine.
 ### sbt dependency
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-spark" % "3.2.2-SNAPSHOT"
+  "io.getquill" %% "quill-spark" % "3.4.10-SNAPSHOT"
 )
 ```
 
@@ -2424,8 +2528,8 @@ The body of `transaction` can contain calls to other methods and multiple `run` 
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "mysql" % "mysql-connector-java" % "8.0.15",
-  "io.getquill" %% "quill-jdbc" % "3.2.2-SNAPSHOT"
+  "mysql" % "mysql-connector-java" % "8.0.17",
+  "io.getquill" %% "quill-jdbc" % "3.4.10-SNAPSHOT"
 )
 ```
 
@@ -2451,8 +2555,8 @@ ctx.connectionTimeout=30000
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "org.postgresql" % "postgresql" % "9.4.1208",
-  "io.getquill" %% "quill-jdbc" % "3.2.2-SNAPSHOT"
+  "org.postgresql" % "postgresql" % "42.2.8",
+  "io.getquill" %% "quill-jdbc" % "3.4.10-SNAPSHOT"
 )
 ```
 
@@ -2477,8 +2581,8 @@ ctx.connectionTimeout=30000
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "org.xerial" % "sqlite-jdbc" % "3.18.0",
-  "io.getquill" %% "quill-jdbc" % "3.2.2-SNAPSHOT"
+  "org.xerial" % "sqlite-jdbc" % "3.28.0",
+  "io.getquill" %% "quill-jdbc" % "3.4.10-SNAPSHOT"
 )
 ```
 
@@ -2498,8 +2602,8 @@ ctx.jdbcUrl=jdbc:sqlite:/path/to/db/file.db
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "com.h2database" % "h2" % "1.4.192",
-  "io.getquill" %% "quill-jdbc" % "3.2.2-SNAPSHOT"
+  "com.h2database" % "h2" % "1.4.199",
+  "io.getquill" %% "quill-jdbc" % "3.4.10-SNAPSHOT"
 )
 ```
 
@@ -2520,8 +2624,8 @@ ctx.dataSource.user=sa
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "com.microsoft.sqlserver" % "mssql-jdbc" % "6.1.7.jre8-preview",
-  "io.getquill" %% "quill-jdbc" % "3.2.2-SNAPSHOT"
+  "com.microsoft.sqlserver" % "mssql-jdbc" % "7.4.1.jre8",
+  "io.getquill" %% "quill-jdbc" % "3.4.10-SNAPSHOT"
 )
 ```
 
@@ -2543,7 +2647,7 @@ available for this situation [here](https://stackoverflow.com/questions/1074869/
 ```
 libraryDependencies ++= Seq(
   "com.oracle.jdbc" % "ojdbc8" % "18.3.0.0.0",
-  "io.getquill" %% "quill-jdbc" % "3.2.2-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "3.4.10-SNAPSHOT"
 )
 ```
 
@@ -2642,8 +2746,8 @@ lazy val ctx = new MysqlMonixJdbcContext(SnakeCase, "ctx", Runner.using(Schedule
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "mysql" % "mysql-connector-java" % "8.0.15",
-  "io.getquill" %% "quill-jdbc-monix" % "3.2.2-SNAPSHOT"
+  "mysql" % "mysql-connector-java" % "8.0.17",
+  "io.getquill" %% "quill-jdbc-monix" % "3.4.10-SNAPSHOT"
 )
 ```
 
@@ -2669,8 +2773,8 @@ ctx.connectionTimeout=30000
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "org.postgresql" % "postgresql" % "9.4.1208",
-  "io.getquill" %% "quill-jdbc-monix" % "3.2.2-SNAPSHOT"
+  "org.postgresql" % "postgresql" % "42.2.8",
+  "io.getquill" %% "quill-jdbc-monix" % "3.4.10-SNAPSHOT"
 )
 ```
 
@@ -2695,8 +2799,8 @@ ctx.connectionTimeout=30000
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "org.xerial" % "sqlite-jdbc" % "3.18.0",
-  "io.getquill" %% "quill-jdbc-monix" % "3.2.2-SNAPSHOT"
+  "org.xerial" % "sqlite-jdbc" % "3.28.0",
+  "io.getquill" %% "quill-jdbc-monix" % "3.4.10-SNAPSHOT"
 )
 ```
 
@@ -2716,8 +2820,8 @@ ctx.jdbcUrl=jdbc:sqlite:/path/to/db/file.db
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "com.h2database" % "h2" % "1.4.192",
-  "io.getquill" %% "quill-jdbc-monix" % "3.2.2-SNAPSHOT"
+  "com.h2database" % "h2" % "1.4.199",
+  "io.getquill" %% "quill-jdbc-monix" % "3.4.10-SNAPSHOT"
 )
 ```
 
@@ -2738,8 +2842,8 @@ ctx.dataSource.user=sa
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "com.microsoft.sqlserver" % "mssql-jdbc" % "6.1.7.jre8-preview",
-  "io.getquill" %% "quill-jdbc-monix" % "3.2.2-SNAPSHOT"
+  "com.microsoft.sqlserver" % "mssql-jdbc" % "7.4.1.jre8",
+  "io.getquill" %% "quill-jdbc-monix" % "3.4.10-SNAPSHOT"
 )
 ```
 
@@ -2770,8 +2874,8 @@ available for this situation [here](https://stackoverflow.com/questions/1074869/
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "com.oracle.jdbc" % "ojdbc7" % "12.1.0.2",
-  "io.getquill" %% "quill-jdbc-monix" % "3.2.2-SNAPSHOT"
+  "com.oracle.jdbc" % "ojdbc8" % "18.3.0.0.0",
+  "io.getquill" %% "quill-jdbc-monix" % "3.4.10-SNAPSHOT"
 )
 ```
 
@@ -2879,7 +2983,7 @@ ctx.queryTimeout=10m
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async-mysql" % "3.2.2-SNAPSHOT"
+  "io.getquill" %% "quill-async-mysql" % "3.4.10-SNAPSHOT"
 )
 ```
 
@@ -2903,7 +3007,7 @@ ctx.url=mysql://host:3306/database?user=root&password=root
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async-postgres" % "3.2.2-SNAPSHOT"
+  "io.getquill" %% "quill-async-postgres" % "3.4.10-SNAPSHOT"
 )
 ```
 
@@ -2944,7 +3048,7 @@ The body of `transaction` can contain calls to other methods and multiple `run` 
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-finagle-mysql" % "3.2.2-SNAPSHOT"
+  "io.getquill" %% "quill-finagle-mysql" % "3.4.10-SNAPSHOT"
 )
 ```
 
@@ -2984,7 +3088,7 @@ The body of `transaction` can contain calls to other methods and multiple `run` 
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-finagle-postgres" % "3.2.2-SNAPSHOT"
+  "io.getquill" %% "quill-finagle-postgres" % "3.4.10-SNAPSHOT"
 )
 ```
 
@@ -3011,7 +3115,7 @@ ctx.binaryParams=false
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-cassandra" % "3.2.2-SNAPSHOT"
+  "io.getquill" %% "quill-cassandra" % "3.4.10-SNAPSHOT"
 )
 ```
 
@@ -3047,7 +3151,7 @@ ctx.session.addressTranslator=com.datastax.driver.core.policies.IdentityTranslat
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-cassandra-monix" % "3.2.2-SNAPSHOT"
+  "io.getquill" %% "quill-cassandra-monix" % "3.4.10-SNAPSHOT"
 )
 ```
 
@@ -3066,7 +3170,7 @@ lazy val ctx = new CassandraStreamContext(SnakeCase, "ctx")
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-orientdb" % "3.2.2-SNAPSHOT"
+  "io.getquill" %% "quill-orientdb" % "3.4.10-SNAPSHOT"
 )
 ```
 
@@ -3128,7 +3232,7 @@ Have a look at the [CODEGEN.md](https://github.com/getquill/quill/blob/master/CO
 
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-codegen-jdbc" % "3.2.2-SNAPSHOT"
+  "io.getquill" %% "quill-codegen-jdbc" % "3.4.10-SNAPSHOT"
 )
 ```
 
@@ -3198,6 +3302,7 @@ See the [LICENSE](https://github.com/getquill/quill/blob/master/LICENSE.txt) fil
 - @jilen
 - @juliano
 - @mentegy
+- @mdedetrich
 - @mxl
 
 ## Former maintainers:

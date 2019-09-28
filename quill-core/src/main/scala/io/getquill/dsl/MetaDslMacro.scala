@@ -58,7 +58,7 @@ class MetaDslMacro(val c: MacroContext) extends ValueComputation {
       q"""
           new ${c.prefix}.SchemaMeta[$t] {
             private[this] val _entity =
-              ${c.prefix}.quote(${c.prefix}.querySchema[$t](${t.tpe.typeSymbol.name.decodedName.toString}))
+              ${c.prefix}.quote(${c.prefix}.impliedQuerySchema[$t](${t.tpe.typeSymbol.name.decodedName.toString}))
             def entity = _entity
           }
         """
@@ -68,8 +68,8 @@ class MetaDslMacro(val c: MacroContext) extends ValueComputation {
 
   private def expandQuery[T](value: Value)(implicit t: WeakTypeTag[T]) = {
     val elements = flatten(q"x", value)
-    if (elements.size == 0)
-      c.fail("Case class has no values")
+    if (elements.isEmpty)
+      c.fail(s"Case class type ${t.tpe} has no values")
     q"${c.prefix}.quote((q: ${c.prefix}.Query[$t]) => q.map(x => io.getquill.dsl.UnlimitedTuple(..$elements)))"
   }
 

@@ -3,13 +3,14 @@ package io.getquill.context.monix
 import java.io.Closeable
 import java.sql.{ Array => _, _ }
 
+import cats.effect.ExitCase
 import io.getquill.{ NamingStrategy, ReturnAction }
 import io.getquill.context.StreamingContext
 import io.getquill.context.jdbc.JdbcContextBase
 import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.util.ContextLogger
 import javax.sql.DataSource
-import monix.eval.Task
+import monix.eval.{ Task, TaskLocal }
 import monix.execution.misc.Local
 import monix.reactive.Observable
 
@@ -49,12 +50,12 @@ abstract class MonixJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](
     super.executeBatchAction(groups)
   override def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T]): Task[List[T]] =
     super.executeBatchActionReturning(groups, extractor)
-  override def bindQuery[T](sql: String, prepare: Prepare, extractor: Extractor[T] = identityExtractor): Connection => Task[PreparedStatement] =
-    super.bindQuery(sql, prepare, extractor)
-  override def bindAction(sql: String, prepare: Prepare): Connection => Task[PreparedStatement] =
-    super.bindAction(sql, prepare)
-  override def bindBatchAction(groups: List[BatchGroup]): Connection => Task[List[PreparedStatement]] =
-    super.bindBatchAction(groups)
+  override def prepareQuery[T](sql: String, prepare: Prepare, extractor: Extractor[T] = identityExtractor): Connection => Task[PreparedStatement] =
+    super.prepareQuery(sql, prepare, extractor)
+  override def prepareAction(sql: String, prepare: Prepare): Connection => Task[PreparedStatement] =
+    super.prepareAction(sql, prepare)
+  override def prepareBatchAction(groups: List[BatchGroup]): Connection => Task[List[PreparedStatement]] =
+    super.prepareBatchAction(groups)
 
   override protected val effect: Runner = runner
   import runner._
@@ -82,8 +83,10 @@ abstract class MonixJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](
         case Some(connection) =>
           withAutocommitBracket(connection, f)
         case None =>
-          Observable.eval(dataSource.getConnection)
-            .bracket(conn => withAutocommitBracket(conn, f))(conn => wrapClose(conn.close()))
+          scheduleObservable {
+            Observable.eval(dataSource.getConnection)
+              .bracket(conn => withAutocommitBracket(conn, f))(conn => wrapClose(conn.close()))
+          }
       }
     } yield result
 
@@ -107,8 +110,8 @@ abstract class MonixJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](
   }
 
   private[getquill] def autocommitOff(conn: Connection): (Connection, Boolean) = {
-    val ac = conn.getAutoCommit;
-    conn.setAutoCommit(false);
+    val ac = conn.getAutoCommit
+    conn.setAutoCommit(false)
     (conn, ac)
   }
 
@@ -117,38 +120,37 @@ abstract class MonixJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](
     wrapClose(conn.setAutoCommit(wasAutocommit))
   }
 
-  def transaction[A](f: Task[A]): Task[A] = {
-    val dbEffects = for {
-      result <- currentConnection() match {
-        case Some(_) => f // Already in a transaction
-        case None =>
-          wrap(dataSource.getConnection).bracket { conn =>
-            withCloseBracket(conn, conn => {
-              withAutocommitBracket(conn, conn => {
-                wrap(conn).flatMap { conn =>
-                  currentConnection.update(Some(conn))
-                  f.onCancelRaiseError(new IllegalStateException(
-                    "The task was cancelled in the middle of a transaction."
-                  )).doOnFinish {
-                    case Some(error) =>
-                      conn.rollback()
-                      Task.raiseError(error)
-                    case None =>
-                      wrap(conn.commit())
-                  }
+  def transaction[A](f: Task[A]): Task[A] = effect.boundary {
+    Task.suspend(
+      // Local read is side-effecting, need suspend
+      currentConnection().map(_ => f).getOrElse {
+        effect.wrap {
+          val c = dataSource.getConnection()
+          c.setAutoCommit(false)
+          c
+        }.bracket { conn =>
+          TaskLocal.wrap(Task.pure(currentConnection))
+            .flatMap { tl =>
+              // set local for the tightest scope possible, and commit/rollback/close
+              // only when nobody can touch the connection anymore
+              // also, TaskLocal.bind is more hygienic then manual set/unset
+              tl.bind(Some(conn))(f).guaranteeCase {
+                case ExitCase.Completed => effect.wrap(conn.commit())
+                case ExitCase.Error(e) => effect.wrap {
+                  conn.rollback()
+                  throw e
                 }
-              })
-            })
-          } { conn =>
-            wrap(currentConnection.update(None))
+                case ExitCase.Canceled => effect.wrap(conn.rollback())
+              }
+            }
+        } { conn =>
+          effect.wrapClose {
+            conn.setAutoCommit(true) // Do we need this if we're closing anyway?
+            conn.close()
           }
+        }
       }
-    } yield result
-
-    boundary {
-      schedule(dbEffects)
-        .executeWithOptions(_.enableLocalContextPropagation)
-    }
+    ).executeWithOptions(_.enableLocalContextPropagation)
   }
 
   // Override with sync implementation so will actually be able to do it.
@@ -168,11 +170,15 @@ abstract class MonixJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](
    */
   class ResultSetIterator[T](rs: ResultSet, extractor: Extractor[T]) extends BufferedIterator[T] {
 
-    private[this] var state = 0 // 0: no data, 1: cached, 2: finished
+    private final val NoData = 0
+    private final val Cached = 1
+    private final val Finished = 2
+
+    private[this] var state = NoData
     private[this] var cached: T = null.asInstanceOf[T]
 
     protected[this] final def finished(): T = {
-      state = 2
+      state = Finished
       null.asInstanceOf[T]
     }
 
@@ -188,23 +194,23 @@ abstract class MonixJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](
     }
 
     private def prefetchIfNeeded(): Unit = {
-      if (state == 0) {
+      if (state == NoData) {
         cached = fetchNext()
-        if (state == 0) state = 1
+        if (state == NoData) state = Cached
       }
     }
 
     def hasNext: Boolean = {
       prefetchIfNeeded()
-      state == 1
+      state == Cached
     }
 
     def next(): T = {
       prefetchIfNeeded()
-      if (state == 1) {
-        state = 0
+      if (state == Cached) {
+        state = NoData
         cached
-      } else throw new NoSuchElementException("next on empty iterator");
+      } else throw new NoSuchElementException("next on empty iterator")
     }
   }
 

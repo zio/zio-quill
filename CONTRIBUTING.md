@@ -18,7 +18,9 @@ docker-compose run --rm setup
 
 After that you are ready to build and test the project. The following setp describes how to test the project with
 sbt built within docker image. If you would like to use your local sbt,
-please visit [Building locally](#building-locally-using-docker-only-for-databases).
+please visit [Building locally](#building-locally-using-docker-only-for-databases). This is highly recommended
+when running Docker on non-linux OS due to high IO overhead from running 
+[Docker in virtualized environments](https://docs.docker.com/docker-for-mac/osxfs/#performance-issues-solutions-and-roadmap).
 
 To build and test the project:
 
@@ -150,3 +152,27 @@ Where `127.0.0.1` is address of local docker.
 If you have non-local docker change it depending on your settings.
 
 Finally, you can use `sbt` locally.
+
+## Debugging using Intellij
+
+[Intellij](https://www.jetbrains.com/idea/) has a comprehensive debugger that also works with macros which is very
+helpful when working on Quill.
+
+In order to use the debugger you need to run sbt manually so follow the instructions 
+[here](#building-locally-using-docker-only-for-databases) first. After this you need to edit `build.sbt` to disable
+forking when running tests, this is done by changing `fork := true` to `fork := false` for the tests you want to run.
+
+After this you need to launch sbt with `sbt -jvm-debug 5005`. Note that since the JVM is no longer forked in tests its
+recommended to launch sbt with additional memory, i.e. `sbt -jvm-debug 5005 -mem 4096` otherwise sbt may complain about
+having memory issues.
+
+Then in Intellij you need to
+[add a remote configuration](https://www.jetbrains.com/help/idea/run-debug-configuration-remote-debug.html). The default
+parameters will work fine (note that we started sbt with the debug port `5005` which is also the default debug port
+in Intellij). After you have added the configuration you should be able to start it to start debugging! Feel to free
+to add breakpoints to step through the code.
+
+Note that its possible to debug macros (you can even
+[evaluate expressions](https://www.jetbrains.com/help/idea/evaluating-expressions.html) while paused inside a macro),
+however you need to edit the macro being executed after every debug run to force the macro to recompile since macro
+invocations are cached on a file basis. You can easily do this just be adding new lines.

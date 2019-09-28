@@ -81,7 +81,7 @@ object NormalizeReturning {
    * and the values fo the assignment `p1` property will typically be `v.id` and `v.name` (the `v` variable is a default
    * used for `insert` queries).
    */
-  private def filterReturnedColumn(assignment: Assignment, column: Ast, returningIdent: Ident): Option[Assignment] =
+  private def filterReturnedColumn(assignment: Assignment, body: Ast, returningIdent: Ident): Option[Assignment] =
     assignment match {
       case Assignment(_, p1: Property, _) => {
         // Pull out instance of the column usage. The `column` ast will typically be Property(table, field) but
@@ -91,8 +91,10 @@ object NormalizeReturning {
         // In all of these cases, we need to pull out the Property (e.g. t.id) in order to compare it to the assignment
         // in order to know what to exclude.
         val matchedProps =
-          CollectAst(column) {
-            case prop @ NestedProperty(`returningIdent`) => prop
+          CollectAst(body) {
+            //case prop @ NestedProperty(`returningIdent`) => prop
+            case prop @ NestedProperty(Ident(name)) if (name == returningIdent.name)         => prop
+            case prop @ NestedProperty(ExternalIdent(name)) if (name == returningIdent.name) => prop
           }
 
         if (matchedProps.exists(matchedProp => isSameProperties(p1, matchedProp)))
@@ -103,11 +105,20 @@ object NormalizeReturning {
       case assignment => Some(assignment)
     }
 
+  object SomeIdent {
+    def unapply(ast: Ast): Option[Ast] =
+      ast match {
+        case id: Ident         => Some(id)
+        case id: ExternalIdent => Some(id)
+        case _                 => None
+      }
+  }
+
   /**
    * Is it the same property (but possibly of a different identity). E.g. `p.foo.bar` and `v.foo.bar`
    */
   private def isSameProperties(p1: Property, p2: Property): Boolean = (p1.ast, p2.ast) match {
-    case (_: Ident, _: Ident) =>
+    case (SomeIdent(_), SomeIdent(_)) =>
       p1.name == p2.name
     // If it's Property(Property(Id), name) == Property(Property(Id), name) we need to check that the
     // outer properties are the same before moving on to the inner ones.

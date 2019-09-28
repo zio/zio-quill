@@ -13,7 +13,7 @@ trait StatelessTransformer {
       case e: Ident                => e
       case e: ExternalIdent        => e
       case e: Property             => apply(e)
-      case Infix(a, b)             => Infix(a, b.map(apply))
+      case Infix(a, b, pure)       => Infix(a, b.map(apply), pure)
       case e: OptionOperation      => apply(e)
       case e: TraversableOperation => apply(e)
       case If(a, b, c)             => If(apply(a), apply(b), apply(c))
@@ -86,7 +86,7 @@ trait StatelessTransformer {
 
   def apply(e: Property): Property =
     e match {
-      case Property(a, name) => Property(apply(a), name)
+      case Property.Opinionated(a, name, renameable, visibility) => Property.Opinionated(apply(a), name, renameable, visibility)
     }
 
   def apply(e: Operation): Operation =

@@ -1,9 +1,10 @@
 package io.getquill.context.sql
 
+import io.getquill
 import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.norm.EqualityBehavior
 import io.getquill.norm.EqualityBehavior.NonAnsiEquality
-import io.getquill.{ Literal, MirrorSqlDialect, NamingStrategy, SqlMirrorContext, TestEntities }
+import io.getquill._
 
 class TestContextTemplate[Dialect <: SqlIdiom, Naming <: NamingStrategy](dialect: Dialect, naming: Naming)
   extends SqlMirrorContext(dialect, naming)
@@ -24,7 +25,15 @@ class TestContextTemplate[Dialect <: SqlIdiom, Naming <: NamingStrategy](dialect
   }
 }
 
+trait UpperCaseNonDefault extends NamingStrategy {
+  override def column(s: String): String = s.toUpperCase
+  override def table(s: String): String = s.toUpperCase
+  override def default(s: String) = s
+}
+object UpperCaseNonDefault extends getquill.UpperCaseNonDefault
+
 object testContext extends TestContextTemplate[MirrorSqlDialect, Literal](MirrorSqlDialect, Literal)
+object testContextUpper extends TestContextTemplate[MirrorSqlDialect, getquill.UpperCaseNonDefault](MirrorSqlDialect, UpperCaseNonDefault)
 
 trait NonAnsiMirrorSqlDialect extends MirrorSqlDialect {
   override def equalityBehavior: EqualityBehavior = NonAnsiEquality

@@ -112,9 +112,12 @@ trait CqlIdiom extends Idiom {
     case other                  => fail(s"Cql doesn't support the '$other' operator.")
   }
 
+  // Note: The CqlIdiom does not support joins so there is no need for any complex un-nesting logic like in SqlIdiom
+  // if there are Embedded classes, they will result in Property(Property(embedded, embeddedProp), actualProp)
+  // and we only need to take the top-level property i.e. `actualProp`.
   implicit def propertyTokenizer(implicit valueTokenizer: Tokenizer[Value], identTokenizer: Tokenizer[Ident], strategy: NamingStrategy): Tokenizer[Property] =
     Tokenizer[Property] {
-      case Property(_, name) => strategy.column(name).token
+      case Property.Opinionated(_, name, renameable, _) => renameable.fixedOr(name.token)(strategy.column(name).token)
     }
 
   implicit def valueTokenizer(implicit strategy: NamingStrategy): Tokenizer[Value] = Tokenizer[Value] {
@@ -127,7 +130,7 @@ trait CqlIdiom extends Idiom {
   }
 
   implicit def infixTokenizer(implicit propertyTokenizer: Tokenizer[Property], strategy: NamingStrategy, queryTokenizer: Tokenizer[Query]): Tokenizer[Infix] = Tokenizer[Infix] {
-    case Infix(parts, params) =>
+    case Infix(parts, params, _) =>
       val pt = parts.map(_.token)
       val pr = params.map(_.token)
       Statement(Interleave(pt, pr))
@@ -187,7 +190,8 @@ trait CqlIdiom extends Idiom {
   }
 
   implicit def entityTokenizer(implicit strategy: NamingStrategy): Tokenizer[Entity] = Tokenizer[Entity] {
-    case Entity(name, properties) => strategy.table(name).token
+    case Entity.Opinionated(name, properties, renameable) =>
+      renameable.fixedOr(name.token)(strategy.table(name).token)
   }
 
   implicit def traversableTokenizer(implicit strategy: NamingStrategy): Tokenizer[TraversableOperation] =

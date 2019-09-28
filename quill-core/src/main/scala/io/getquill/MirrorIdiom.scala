@@ -1,5 +1,7 @@
 package io.getquill
 
+import io.getquill.ast.Renameable.{ ByStrategy, Fixed }
+import io.getquill.ast.Visibility.Hidden
 import io.getquill.ast._
 import io.getquill.context.CanReturnClause
 import io.getquill.idiom.{ Idiom, SetContainsToken, Statement }
@@ -10,7 +12,13 @@ import io.getquill.util.Interleave
 object MirrorIdiom extends MirrorIdiom
 class MirrorIdiom extends MirrorIdiomBase with CanReturnClause
 
+object MirrorIdiomPrinting extends MirrorIdiom {
+  override def distinguishHidden: Boolean = true
+}
+
 trait MirrorIdiomBase extends Idiom {
+
+  def distinguishHidden: Boolean = false
 
   override def prepareForProbing(string: String) = string
 
@@ -63,11 +71,11 @@ trait MirrorIdiomBase extends Idiom {
 
   implicit def queryTokenizer(implicit liftTokenizer: Tokenizer[Lift]): Tokenizer[Query] = Tokenizer[Query] {
 
-    case Entity(name, Nil) => stmt"querySchema(${s""""$name"""".token})"
+    case Entity.Opinionated(name, Nil, renameable) => stmt"${tokenizeName("querySchema", renameable).token}(${s""""$name"""".token})"
 
-    case Entity(name, prop) =>
+    case Entity.Opinionated(name, prop, renameable) =>
       val properties = prop.map(p => stmt"""_.${p.path.mkStmt(".")} -> "${p.alias.token}"""")
-      stmt"querySchema(${s""""$name"""".token}, ${properties.token})"
+      stmt"${tokenizeName("querySchema", renameable).token}(${s""""$name"""".token}, ${properties.token})"
 
     case Filter(source, alias, body) =>
       stmt"${source.token}.filter(${alias.token} => ${body.token})"
@@ -176,9 +184,21 @@ trait MirrorIdiomBase extends Idiom {
     case o => stmt"${o.toString.token}"
   }
 
+  def tokenizeName(name: String, renameable: Renameable) =
+    renameable match {
+      case ByStrategy => name
+      case Fixed      => s"`${name}`"
+    }
+
+  def bracketIfHidden(name: String, visibility: Visibility) =
+    (distinguishHidden, visibility) match {
+      case (true, Hidden) => s"[$name]"
+      case _              => name
+    }
+
   implicit def propertyTokenizer(implicit liftTokenizer: Tokenizer[Lift]): Tokenizer[Property] = Tokenizer[Property] {
-    case Property(ExternalIdent(_), name) => stmt"${name.token}"
-    case Property(ref, name)              => stmt"${scopedTokenizer(ref)}.${name.token}"
+    case Property.Opinionated(ExternalIdent(_), name, renameable, visibility) => stmt"${bracketIfHidden(tokenizeName(name, renameable), visibility).token}"
+    case Property.Opinionated(ref, name, renameable, visibility)              => stmt"${scopedTokenizer(ref)}.${bracketIfHidden(tokenizeName(name, renameable), visibility).token}"
   }
 
   implicit val valueTokenizer: Tokenizer[Value] = Tokenizer[Value] {
@@ -187,11 +207,11 @@ trait MirrorIdiomBase extends Idiom {
     case Constant(v)         => stmt"${v.toString.token}"
     case NullValue           => stmt"null"
     case Tuple(values)       => stmt"(${values.token})"
-    case CaseClass(values)   => stmt"(${values.map(_._2).token})"
+    case CaseClass(values)   => stmt"CaseClass(${values.map { case (k, v) => s"${k.token}: ${v.token}" }.mkString(", ").token})"
   }
 
   implicit val identTokenizer: Tokenizer[Ident] = Tokenizer[Ident] {
-    case e => stmt"${e.name.token}"
+    case Ident.Opinionated(name, visibility) => stmt"${bracketIfHidden(name, visibility).token}"
   }
 
   implicit val typeTokenizer: Tokenizer[ExternalIdent] = Tokenizer[ExternalIdent] {
@@ -245,7 +265,7 @@ trait MirrorIdiomBase extends Idiom {
   }
 
   implicit def infixTokenizer(implicit liftTokenizer: Tokenizer[Lift]): Tokenizer[Infix] = Tokenizer[Infix] {
-    case Infix(parts, params) =>
+    case Infix(parts, params, _) =>
       def tokenParam(ast: Ast) =
         ast match {
           case ast: Ident => stmt"$$${ast.token}"

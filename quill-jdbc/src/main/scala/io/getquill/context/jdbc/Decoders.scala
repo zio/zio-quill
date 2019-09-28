@@ -29,11 +29,12 @@ trait Decoders {
     JdbcDecoder(
       (index, row) => {
         try {
-          val res = d.decoder(index, row)
+          // According to the JDBC spec, we first need to read the object before `row.wasNull` works
+          row.getObject(index)
           if (row.wasNull()) {
             None
           } else {
-            Some(res)
+            Some(d.decoder(index, row))
           }
         } catch {
           case _: NullPointerException if row.wasNull() => None

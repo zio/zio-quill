@@ -51,7 +51,8 @@ CREATE TABLE EncodingTestEntity(
   o11 TIMESTAMP,
   o12 VARCHAR(255),
   o13 DATE,
-  o14 VARCHAR(36)
+  o14 VARCHAR(36),
+  o15 VARCHAR(36)
 );
 
 

@@ -4,7 +4,7 @@ import io.getquill.ast._
 import io.getquill.context.sql.norm.FlattenGroupByAggregation
 import io.getquill.norm.BetaReduction
 import io.getquill.util.Messages.fail
-import io.getquill.Literal
+import io.getquill.{ Literal, PseudoAst }
 
 case class OrderByCriteria(ast: Ast, ordering: PropertyOrdering)
 
@@ -40,7 +40,9 @@ case class UnaryOperationSqlQuery(
   q:  SqlQuery
 ) extends SqlQuery
 
-case class SelectValue(ast: Ast, alias: Option[String] = None, concat: Boolean = false)
+case class SelectValue(ast: Ast, alias: Option[String] = None, concat: Boolean = false) extends PseudoAst {
+  override def toString: String = s"${ast.toString}${alias.map("->" + _).getOrElse("")}"
+}
 
 case class FlattenSqlQuery(
   from:     List[FromContext]     = List(),
@@ -66,16 +68,15 @@ object SqlQuery {
 
   def apply(query: Ast): SqlQuery =
     query match {
-      case Union(a, b)                          => SetOperationSqlQuery(apply(a), UnionOperation, apply(b))
-      case UnionAll(a, b)                       => SetOperationSqlQuery(apply(a), UnionAllOperation, apply(b))
-      case UnaryOperation(op, q: Query)         => UnaryOperationSqlQuery(op, apply(q))
-      case _: Operation | _: Value              => FlattenSqlQuery(select = List(SelectValue(query)))
-      case map @ Map(_: Nested, a, b) if a == b => flatten(map, a.name)
-      case Map(q, a, b) if a == b               => apply(q)
-      case TakeDropFlatten(q, limit, offset)    => flatten(q, "x").copy(limit = limit, offset = offset)
-      case q: Query                             => flatten(q, "x")
-      case infix: Infix                         => flatten(infix, "x")
-      case other                                => fail(s"Query not properly normalized. Please open a bug report. Ast: '$other'")
+      case Union(a, b)                       => SetOperationSqlQuery(apply(a), UnionOperation, apply(b))
+      case UnionAll(a, b)                    => SetOperationSqlQuery(apply(a), UnionAllOperation, apply(b))
+      case UnaryOperation(op, q: Query)      => UnaryOperationSqlQuery(op, apply(q))
+      case _: Operation | _: Value           => FlattenSqlQuery(select = List(SelectValue(query)))
+      case Map(q, a, b) if a == b            => apply(q)
+      case TakeDropFlatten(q, limit, offset) => flatten(q, "x").copy(limit = limit, offset = offset)
+      case q: Query                          => flatten(q, "x")
+      case infix: Infix                      => flatten(infix, "x")
+      case other                             => fail(s"Query not properly normalized. Please open a bug report. Ast: '$other'")
     }
 
   private def flatten(query: Ast, alias: String): FlattenSqlQuery = {
@@ -95,6 +96,20 @@ object SqlQuery {
         (List.empty, other)
     }
 
+  object NestedNest {
+    def unapply(q: Ast): Option[Ast] =
+      q match {
+        case _: Nested => recurse(q)
+        case _         => None
+      }
+
+    private def recurse(q: Ast): Option[Ast] =
+      q match {
+        case Nested(qn) => recurse(qn)
+        case other      => Some(other)
+      }
+  }
+
   private def flatten(sources: List[FromContext], finalFlatMapBody: Ast, alias: String): FlattenSqlQuery = {
 
     def select(alias: String) = SelectValue(Ident(alias), None) :: Nil
@@ -103,7 +118,7 @@ object SqlQuery {
       def nest(ctx: FromContext) = FlattenSqlQuery(from = sources :+ ctx, select = select(alias))
       q match {
         case Map(_: GroupBy, _, _) => nest(source(q, alias))
-        case Nested(q)             => nest(QueryContext(apply(q), alias))
+        case NestedNest(q)         => nest(QueryContext(apply(q), alias))
         case q: ConcatMap          => nest(QueryContext(apply(q), alias))
         case Join(tpe, a, b, iA, iB, on) =>
           val ctx = source(q, alias)

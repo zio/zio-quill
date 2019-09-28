@@ -7,12 +7,41 @@ object ApplyMap {
   private def isomorphic(e: Ast, c: Ast, alias: Ident) =
     BetaReduction(e, alias -> c) == c
 
+  object InfixedTailOperation {
+
+    def hasImpureInfix(ast: Ast) =
+      CollectAst(ast) {
+        case i @ Infix(_, _, false) => i
+      }.nonEmpty
+
+    def unapply(ast: Ast): Option[Ast] =
+      ast match {
+        case cc: CaseClass if hasImpureInfix(cc)     => Some(cc)
+        case tup: Tuple if hasImpureInfix(tup)       => Some(tup)
+        case p: Property if hasImpureInfix(p)        => Some(p)
+        case b: BinaryOperation if hasImpureInfix(b) => Some(b)
+        case u: UnaryOperation if hasImpureInfix(u)  => Some(u)
+        case i @ Infix(_, _, false)                  => Some(i)
+        case _                                       => None
+      }
+  }
+
+  object MapWithoutInfixes {
+    def unapply(ast: Ast): Option[(Ast, Ident, Ast)] =
+      ast match {
+        case Map(a, b, InfixedTailOperation(c)) => None
+        case Map(a, b, c)                       => Some((a, b, c))
+        case _                                  => None
+      }
+  }
+
   object DetachableMap {
     def unapply(ast: Ast): Option[(Ast, Ident, Ast)] =
       ast match {
-        case Map(a: GroupBy, b, c) => None
-        case Map(a, b, c)          => Some((a, b, c))
-        case _                     => None
+        case Map(a: GroupBy, b, c)              => None
+        case Map(a, b, InfixedTailOperation(c)) => None
+        case Map(a, b, c)                       => Some((a, b, c))
+        case _                                  => None
       }
   }
 
@@ -30,7 +59,7 @@ object ApplyMap {
 
       // a.map(b => c).map(d => e) =>
       //    a.map(b => e[d := c])
-      case Map(Map(a, b, c), d, e) =>
+      case before @ Map(MapWithoutInfixes(a, b, c), d, e) =>
         val er = BetaReduction(e, d -> c)
         Some(Map(a, b, er))
 
@@ -68,8 +97,8 @@ object ApplyMap {
       case GroupBy(DetachableMap(a, b, c), d, e) =>
         val er = BetaReduction(e, d -> c)
         val x = Ident("x")
-        val x1 = Property(Ident("x"), "_1")
-        val x2 = Property(Ident("x"), "_2")
+        val x1 = Property(Ident("x"), "_1") // These introduced property should not be renamed
+        val x2 = Property(Ident("x"), "_2") // due to any naming convention.
         val body = Tuple(List(x1, Map(x2, b, c)))
         Some(Map(GroupBy(a, b, er), x, body))
 

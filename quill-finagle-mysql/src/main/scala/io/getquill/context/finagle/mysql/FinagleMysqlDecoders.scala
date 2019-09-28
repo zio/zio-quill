@@ -12,21 +12,21 @@ import scala.reflect.{ ClassTag, classTag }
 trait FinagleMysqlDecoders {
   this: FinagleMysqlContext[_] =>
 
-  type Decoder[T] = FinangleMysqlDecoder[T]
+  type Decoder[T] = FinagleMysqlDecoder[T]
 
-  case class FinangleMysqlDecoder[T](decoder: BaseDecoder[T]) extends BaseDecoder[T] {
+  case class FinagleMysqlDecoder[T](decoder: BaseDecoder[T]) extends BaseDecoder[T] {
     override def apply(index: Index, row: ResultRow) =
       decoder(index, row)
   }
 
   def decoder[T: ClassTag](f: PartialFunction[Value, T]): Decoder[T] =
-    FinangleMysqlDecoder((index, row) => {
+    FinagleMysqlDecoder((index, row) => {
       val value = row.values(index)
       f.lift(value).getOrElse(fail(s"Value '$value' can't be decoded to '${classTag[T].runtimeClass}'"))
     })
 
   implicit def optionDecoder[T](implicit d: Decoder[T]): Decoder[Option[T]] =
-    FinangleMysqlDecoder((index, row) => {
+    FinagleMysqlDecoder((index, row) => {
       row.values(index) match {
         case NullValue => None
         case _         => Some(d.decoder(index, row))
@@ -34,7 +34,7 @@ trait FinagleMysqlDecoders {
     })
 
   implicit def mappedDecoder[I, O](implicit mapped: MappedEncoding[I, O], d: Decoder[I]): Decoder[O] =
-    FinangleMysqlDecoder(mappedBaseDecoder(mapped, d.decoder))
+    FinagleMysqlDecoder(mappedBaseDecoder(mapped, d.decoder))
 
   implicit val stringDecoder: Decoder[String] =
     decoder[String] {

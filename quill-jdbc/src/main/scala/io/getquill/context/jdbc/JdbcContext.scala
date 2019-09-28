@@ -46,12 +46,12 @@ abstract class JdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy]
     super.executeBatchAction(groups)
   override def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T]): List[T] =
     super.executeBatchActionReturning(groups, extractor)
-  override def bindQuery[T](sql: String, prepare: Prepare, extractor: Extractor[T] = identityExtractor): Connection => PreparedStatement =
-    super.bindQuery(sql, prepare, extractor)
-  override def bindAction(sql: String, prepare: Prepare): Connection => PreparedStatement =
-    super.bindAction(sql, prepare)
-  override def bindBatchAction(groups: List[BatchGroup]): Connection => List[PreparedStatement] =
-    super.bindBatchAction(groups)
+  override def prepareQuery[T](sql: String, prepare: Prepare, extractor: Extractor[T] = identityExtractor): Connection => PreparedStatement =
+    super.prepareQuery(sql, prepare, extractor)
+  override def prepareAction(sql: String, prepare: Prepare): Connection => PreparedStatement =
+    super.prepareAction(sql, prepare)
+  override def prepareBatchAction(groups: List[BatchGroup]): Connection => List[PreparedStatement] =
+    super.prepareBatchAction(groups)
 
   protected val currentConnection = new DynamicVariable[Option[Connection]](None)
 
