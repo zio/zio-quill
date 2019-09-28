@@ -10,6 +10,106 @@ class NestedDistinctSpec extends Spec {
     val ctx = new SqlMirrorContext(MirrorSqlDialect, Literal)
     import ctx._
 
+    "first operation" - {
+      case class MyEmb(name: String) extends Embedded
+      case class MyParent(myEmb: MyEmb)
+
+      "first operation nesting with filter" in {
+        val q = quote {
+          query[MyParent]
+            .distinct
+            .filter(_.myEmb.name == "test")
+        }
+
+        ctx.run(q).string mustEqual "SELECT x1.myEmbname FROM (SELECT DISTINCT x1.name AS myEmbname FROM MyParent x1 WHERE x1.name = 'test') AS x1"
+      }
+
+      "first operation nesting with filter before and after" in {
+        val q = quote {
+          query[MyParent]
+            .filter(_.myEmb.name == "firstTest")
+            .distinct
+            .filter(_.myEmb.name == "test")
+        }
+
+        ctx.run(q).string mustEqual "SELECT x3.myEmbname FROM (SELECT DISTINCT x2.name AS myEmbname FROM MyParent x2 WHERE x2.name = 'firstTest') AS x3 WHERE x3.myEmbname = 'test'"
+      }
+
+      "first operation nesting with filter before and after - groupBy" in { //hello
+        case class MyEmb(name: Int) extends Embedded
+        case class MyParent(myEmb: MyEmb)
+
+        val q = quote {
+          query[MyParent]
+            .filter(_.myEmb.name == 1)
+            .distinct
+            .filter(_.myEmb.name == 2)
+            .groupBy(p => p.myEmb.name)
+            .map(tup => tup._2.map(_.myEmb.name).sum)
+        }
+
+        //SELECT SUM(x5.name) FROM (SELECT DISTINCT x4.name AS myEmbname FROM MyParent x4 WHERE x4.name = 1) AS x5 WHERE x5.myEmbname = 2 GROUP BY x5.myEmbname
+        ctx.run(q).string mustEqual "SELECT SUM(x5.myEmbname) FROM (SELECT DISTINCT x4.name AS myEmbname FROM MyParent x4 WHERE x4.name = 1) AS x5 WHERE x5.myEmbname = 2 GROUP BY x5.myEmbname"
+      }
+
+      "first operation nesting with filter before and after - orderBy" in {
+        val q = quote {
+          query[MyParent]
+            .filter(_.myEmb.name == "firstTest")
+            .distinct
+            .filter(_.myEmb.name == "test")
+            .sortBy(p => p.myEmb.name)
+        }
+
+        ctx.run(q).string mustEqual "SELECT x8.myEmbname FROM (SELECT DISTINCT x7.name AS myEmbname FROM MyParent x7 WHERE x7.name = 'firstTest') AS x8 WHERE x8.myEmbname = 'test' ORDER BY x8.myEmbname ASC NULLS FIRST"
+      }
+
+      "first operation nesting with filter before and after - limit" in {
+        val q = quote {
+          query[MyParent]
+            .filter(_.myEmb.name == "firstTest")
+            .distinct
+            .filter(_.myEmb.name == "test")
+            .take(7)
+        }
+
+        ctx.run(q).string mustEqual "SELECT x10.myEmbname FROM (SELECT DISTINCT x9.name AS myEmbname FROM MyParent x9 WHERE x9.name = 'firstTest') AS x10 WHERE x10.myEmbname = 'test' LIMIT 7"
+      }
+
+      "first operation nesting with filter before and after - offset" in {
+        val q = quote {
+          query[MyParent]
+            .filter(_.myEmb.name == "firstTest")
+            .distinct
+            .filter(_.myEmb.name == "test")
+            .drop(7)
+        }
+
+        ctx.run(q).string mustEqual "SELECT x12.myEmbname FROM (SELECT DISTINCT x11.name AS myEmbname FROM MyParent x11 WHERE x11.name = 'firstTest') AS x12 WHERE x12.myEmbname = 'test' OFFSET 7"
+      }
+
+      "first operation nesting with filter - nested" in {
+        val q = quote {
+          query[MyParent]
+            .nested
+            .filter(_.myEmb.name == "test")
+        }
+
+        ctx.run(q).string mustEqual "SELECT x13.myEmbname FROM (SELECT x.name AS myEmbname FROM MyParent x) AS x13 WHERE x13.myEmbname = 'test'"
+      }
+
+      "first operation nesting with filter before and after - nested" in {
+        val q = quote {
+          query[MyParent]
+            .filter(_.myEmb.name == "firstTest")
+            .nested
+            .filter(_.myEmb.name == "test")
+        }
+
+        ctx.run(q).string mustEqual "SELECT x15.myEmbname FROM (SELECT x14.name AS myEmbname FROM MyParent x14 WHERE x14.name = 'firstTest') AS x15 WHERE x15.myEmbname = 'test'"
+      }
+    }
+
     "works with querySchema" in {
       case class SimpleEnt(a: Int, b: String)
       case class SimpleEnt2(aa: Int, bb: String)
