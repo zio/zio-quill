@@ -1,6 +1,7 @@
 package io.getquill
 
 import io.getquill.ast.Renameable.{ ByStrategy, Fixed }
+import io.getquill.ast.Visibility.Hidden
 import io.getquill.ast._
 import io.getquill.context.CanReturnClause
 import io.getquill.idiom.{ Idiom, SetContainsToken, Statement }
@@ -11,7 +12,13 @@ import io.getquill.util.Interleave
 object MirrorIdiom extends MirrorIdiom
 class MirrorIdiom extends MirrorIdiomBase with CanReturnClause
 
+object MirrorIdiomPrinting extends MirrorIdiom {
+  override def distinguishHidden: Boolean = true
+}
+
 trait MirrorIdiomBase extends Idiom {
+
+  def distinguishHidden: Boolean = false
 
   override def prepareForProbing(string: String) = string
 
@@ -183,9 +190,15 @@ trait MirrorIdiomBase extends Idiom {
       case Fixed      => s"`${name}`"
     }
 
+  def bracketIfHidden(name: String, visibility: Visibility) =
+    (distinguishHidden, visibility) match {
+      case (true, Hidden) => s"[$name]"
+      case _              => name
+    }
+
   implicit def propertyTokenizer(implicit liftTokenizer: Tokenizer[Lift]): Tokenizer[Property] = Tokenizer[Property] {
-    case Property.Opinionated(ExternalIdent(_), name, renameable) => stmt"${tokenizeName(name, renameable).token}"
-    case Property.Opinionated(ref, name, renameable)              => stmt"${scopedTokenizer(ref)}.${tokenizeName(name, renameable).token}"
+    case Property.Opinionated(ExternalIdent(_), name, renameable, visibility) => stmt"${bracketIfHidden(tokenizeName(name, renameable), visibility).token}"
+    case Property.Opinionated(ref, name, renameable, visibility)              => stmt"${scopedTokenizer(ref)}.${bracketIfHidden(tokenizeName(name, renameable), visibility).token}"
   }
 
   implicit val valueTokenizer: Tokenizer[Value] = Tokenizer[Value] {
@@ -194,11 +207,11 @@ trait MirrorIdiomBase extends Idiom {
     case Constant(v)         => stmt"${v.toString.token}"
     case NullValue           => stmt"null"
     case Tuple(values)       => stmt"(${values.token})"
-    case CaseClass(values)   => stmt"(${values.map(_._2).token})"
+    case CaseClass(values)   => stmt"CaseClass(${values.map { case (k, v) => s"${k.token}: ${v.token}" }.mkString(", ").token})"
   }
 
   implicit val identTokenizer: Tokenizer[Ident] = Tokenizer[Ident] {
-    case e => stmt"${e.name.token}"
+    case Ident.Opinionated(name, visibility) => stmt"${bracketIfHidden(name, visibility).token}"
   }
 
   implicit val typeTokenizer: Tokenizer[ExternalIdent] = Tokenizer[ExternalIdent] {

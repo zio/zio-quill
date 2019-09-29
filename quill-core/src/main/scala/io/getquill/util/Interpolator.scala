@@ -51,15 +51,27 @@ class Interpolator(
 
     private def readFirst(first: String) =
       new Regex("%([0-9]+)(.*)").findFirstMatchIn(first) match {
-        case Some(matches) => (matches.group(2).trim, matches.group(1).toInt)
-        case None          => (first, defaultIndent)
+        case Some(matches) => (matches.group(2).trim, Some(matches.group(1).toInt))
+        case None          => (first, None)
       }
 
     private def readBuffers() = {
+      def orZero(i: Int): Int = if (i < 0) 0 else i
+
       val parts = sc.parts.iterator.toList
       val elements = elementsSeq.toList.map(qprint(_).string(color))
 
-      val (firstStr, indent) = readFirst(parts.head)
+      val (firstStr, explicitIndent) = readFirst(parts.head)
+      val indent =
+        explicitIndent match {
+          case Some(value) => value
+          case None => {
+            // A trick to make nested calls of andReturn indent further out which makes andReturn MUCH more usable.
+            // Just count the number of times it has occurred on the thread stack.
+            val returnInvocationCount = Thread.currentThread().getStackTrace.toList.count(e => e.getMethodName == "andReturn")
+            defaultIndent + orZero(returnInvocationCount - 1) * 2
+          }
+        }
 
       val partsIter = parts.iterator
       partsIter.next() // already took care of the 1st element

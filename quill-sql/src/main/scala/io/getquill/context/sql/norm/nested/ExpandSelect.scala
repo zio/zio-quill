@@ -9,6 +9,7 @@ import io.getquill.util.Messages.TraceType.NestedQueryExpansion
 import scala.collection.mutable.LinkedHashSet
 import io.getquill.context.sql.norm.nested.Elements._
 import io.getquill.ast._
+import io.getquill.norm.BetaReduction
 
 /**
  * Takes the `SelectValue` elements inside of a sub-query (if a super/sub-query constrct exists) and flattens
@@ -62,120 +63,144 @@ private class ExpandSelect(selectValues: List[SelectValue], references: LinkedHa
   def expandColumn(name: String, renameable: Renameable): String =
     renameable.fixedOr(name)(strategy.column(name))
 
-  def apply: List[SelectValue] = {
-    trace"Expanding Select values: $selectValues into references: $references" andLog ()
+  def apply: List[SelectValue] =
+    trace"Expanding Select values: $selectValues into references: $references" andReturn {
 
-    def expandReference(ref: Property): OrderedSelect = {
-      trace"Expanding: $ref from $select" andLog ()
+      def expandReference(ref: Property): OrderedSelect =
+        trace"Expanding: $ref from $select" andReturn {
 
-      def expressIfTupleIndex(str: String) =
-        str match {
-          case MultiTupleIndex() => Some(str)
-          case _                 => None
-        }
-
-      def concat(alias: Option[String], idx: Int) =
-        Some(s"${alias.getOrElse("")}_${idx + 1}")
-
-      val orderedSelect = ref match {
-        case pp @ Property(ast: Property, TupleIndex(idx)) =>
-          trace"Reference is a sub-property of a tuple index: $idx. Walking inside." andContinue
-            expandReference(ast) match {
-              case OrderedSelect(o, SelectValue(Tuple(elems), alias, c)) =>
-                trace"Expressing Element $idx of $elems " andReturn
-                OrderedSelect(o :+ idx, SelectValue(elems(idx), concat(alias, idx), c))
-              case OrderedSelect(o, SelectValue(ast, alias, c)) =>
-                trace"Appending $idx to $alias " andReturn
-                OrderedSelect(o, SelectValue(ast, concat(alias, idx), c))
+          def expressIfTupleIndex(str: String) =
+            str match {
+              case MultiTupleIndex() => Some(str)
+              case _                 => None
             }
-        case pp @ Property.Opinionated(ast: Property, name, renameable) =>
-          trace"Reference is a sub-property. Walking inside." andContinue
-            expandReference(ast) match {
-              case OrderedSelect(o, SelectValue(ast, nested, c)) =>
-                // Alias is the name of the column after the naming strategy
-                // The clauses in `SqlIdiom` that use `Tokenizer[SelectValue]` select the
-                // alias field when it's value is Some(T).
-                // Technically the aliases of a column should not be using naming strategies
-                // but this is an issue to fix at a later date.
 
-                // In the current implementation, aliases we add nested tuple names to queries e.g.
-                // SELECT foo from
-                // SELECT x, y FROM (SELECT foo, bar, red, orange FROM baz JOIN colors)
-                // Typically becomes SELECT foo _1foo, _1bar, _2red, _2orange when
-                // this kind of query is the result of an applicative join that looks like this:
-                // query[baz].join(query[colors]).nested
-                // this may need to change based on how distinct appends table names instead of just tuple indexes
-                // into the property path.
+          def concat(alias: Option[String], idx: Int) =
+            Some(s"${alias.getOrElse("")}_${idx + 1}")
 
-                OrderedSelect(o, SelectValue(
-                  Property.Opinionated(ast, name, renameable),
-                  Some(s"${nested.flatMap(expressIfTupleIndex(_)).getOrElse("")}${expandColumn(name, renameable)}"), c
-                ))
-            }
-        case pp @ Property(_, TupleIndex(idx)) =>
-          trace"Reference is a tuple index: $idx from $select." andContinue
-            select(idx) match {
-              case OrderedSelect(o, SelectValue(ast, alias, c)) =>
-                OrderedSelect(o, SelectValue(ast, concat(alias, idx), c))
-            }
-        case pp @ Property.Opinionated(_, name, renameable) =>
-          select match {
-            case List(OrderedSelect(o, SelectValue(cc: CaseClass, alias, c))) =>
-              // Currently case class element name is not being appended. Need to change that in order to ensure
-              // path name uniqueness in future.
-              val ((_, ast), index) = cc.values.zipWithIndex.find(_._1._1 == name) match {
-                case Some(v) => v
-                case None    => throw new IllegalArgumentException(s"Cannot find element $name in $cc")
+          val orderedSelect = ref match {
+            case pp @ Property(ast: Property, TupleIndex(idx)) =>
+              trace"Reference is a sub-property of a tuple index: $idx. Walking inside." andReturn
+                expandReference(ast) match {
+                  case OrderedSelect(o, SelectValue(Tuple(elems), alias, c)) =>
+                    trace"Expressing Element $idx of $elems " andReturn
+                    OrderedSelect(o :+ idx, SelectValue(elems(idx), concat(alias, idx), c))
+                  case OrderedSelect(o, SelectValue(ast, alias, c)) =>
+                    trace"Appending $idx to $alias " andReturn
+                    OrderedSelect(o, SelectValue(ast, concat(alias, idx), c))
+                }
+            case pp @ Property.Opinionated(ast: Property, name, renameable, visible) =>
+              trace"Reference is a sub-property. Walking inside." andReturn
+                expandReference(ast) match {
+                  case OrderedSelect(o, SelectValue(ast, nested, c)) =>
+                    // Alias is the name of the column after the naming strategy
+                    // The clauses in `SqlIdiom` that use `Tokenizer[SelectValue]` select the
+                    // alias field when it's value is Some(T).
+                    // Technically the aliases of a column should not be using naming strategies
+                    // but this is an issue to fix at a later date.
+
+                    // In the current implementation, aliases we add nested tuple names to queries e.g.
+                    // SELECT foo from
+                    // SELECT x, y FROM (SELECT foo, bar, red, orange FROM baz JOIN colors)
+                    // Typically becomes SELECT foo _1foo, _1bar, _2red, _2orange when
+                    // this kind of query is the result of an applicative join that looks like this:
+                    // query[baz].join(query[colors]).nested
+                    // this may need to change based on how distinct appends table names instead of just tuple indexes
+                    // into the property path.
+
+                    trace"...inside walk completed, continuing to return: " andReturn
+                    OrderedSelect(o, SelectValue(
+                      // Note: Pass invisible properties to be tokenized by the idiom, they should be excluded there
+                      Property.Opinionated(ast, name, renameable, visible),
+                      // Skip concatonation of invisible properties into the alias e.g. so it will be
+                      Some(s"${nested.getOrElse("")}${expandColumn(name, renameable)}")
+                    ))
+                }
+            case pp @ Property(_, TupleIndex(idx)) =>
+              trace"Reference is a tuple index: $idx from $select." andReturn
+                select(idx) match {
+                  case OrderedSelect(o, SelectValue(ast, alias, c)) =>
+                    OrderedSelect(o, SelectValue(ast, concat(alias, idx), c))
+                }
+            case pp @ Property.Opinionated(_, name, renameable, visible) =>
+              select match {
+                case List(OrderedSelect(o, SelectValue(cc: CaseClass, alias, c))) =>
+                  // Currently case class element name is not being appended. Need to change that in order to ensure
+                  // path name uniqueness in future.
+                  val ((_, ast), index) = cc.values.zipWithIndex.find(_._1._1 == name) match {
+                    case Some(v) => v
+                    case None    => throw new IllegalArgumentException(s"Cannot find element $name in $cc")
+                  }
+                  trace"Reference is a case class member: " andReturn
+                    OrderedSelect(o :+ index, SelectValue(ast, Some(expandColumn(name, renameable)), c))
+                case List(OrderedSelect(o, SelectValue(i: Ident, _, c))) =>
+                  trace"Reference is an identifier: " andReturn
+                    OrderedSelect(o, SelectValue(Property.Opinionated(i, name, renameable, visible), Some(name), c))
+                case other =>
+                  trace"Reference is unidentified: $other returning:" andReturn
+                    OrderedSelect(Integer.MAX_VALUE, SelectValue(Ident.Opinionated(name, visible), Some(expandColumn(name, renameable)), false))
               }
-              trace"Reference is a case class member: " andReturn
-                OrderedSelect(o :+ index, SelectValue(ast, Some(expandColumn(name, renameable)), c))
-            case List(OrderedSelect(o, SelectValue(i: Ident, _, c))) =>
-              trace"Reference is an identifier: " andReturn
-                OrderedSelect(o, SelectValue(Property.Opinionated(i, name, renameable), None, c))
-            case other =>
-              trace"Reference is unidentified: " andReturn
-                OrderedSelect(Integer.MAX_VALUE, SelectValue(Ident(name), Some(expandColumn(name, renameable)), false))
           }
-      }
 
-      trace"Expanded $ref into $orderedSelect"
-      orderedSelect
-    }
+          // For certain very large queries where entities are unwrapped and then re-wrapped into CaseClass/Tuple constructs,
+          // the actual row-types can contain Tuple/CaseClass values. For this reason. They need to be beta-reduced again.
+          val normalizedOrderedSelect = orderedSelect.copy(selectValue =
+            orderedSelect.selectValue.copy(ast =
+              BetaReduction(orderedSelect.selectValue.ast)))
 
-    references.toList match {
-      case Nil => select.map(_.selectValue)
-      case refs => {
-        // elements first need to be sorted by their order in the select clause. Since some may map to multiple
-        // properties when expanded, we want to maintain this order of properties as a secondary value.
-        val mappedRefs = refs.map(expandReference)
-        trace"Mapped Refs: $mappedRefs" andLog ()
-
-        // are there any selects that have infix values which we have not already selected? We need to include
-        // them because they could be doing essential things e.g. RANK ... ORDER BY
-        val remainingSelectsWithInfixes =
-          trace"Searching Selects with Infix:" andReturn
-            new FindUnexpressedInfixes(select)(mappedRefs)
-
-        implicit val ordering: scala.math.Ordering[List[Int]] = new scala.math.Ordering[List[Int]] {
-          override def compare(x: List[Int], y: List[Int]): Int =
-            (x, y) match {
-              case (head1 :: tail1, head2 :: tail2) =>
-                val diff = head1 - head2
-                if (diff != 0) diff
-                else compare(tail1, tail2)
-              case (Nil, Nil)   => 0 // List(1,2,3) == List(1,2,3)
-              case (head1, Nil) => -1 // List(1,2,3) < List(1,2)
-              case (Nil, head2) => 1 // List(1,2) > List(1,2,3)
-            }
+          trace"Expanded $ref into $orderedSelect then Normalized to $normalizedOrderedSelect" andReturn
+            normalizedOrderedSelect
         }
 
-        val sortedRefs =
-          (mappedRefs ++ remainingSelectsWithInfixes).sortBy(ref => ref.order) //(ref.order, ref.secondaryOrder)
+      def deAliasWhenUneeded(os: OrderedSelect) =
+        os match {
+          case OrderedSelect(_, sv @ SelectValue(Property(Ident(_), propName), Some(alias), _)) if (propName == alias) =>
+            trace"Detected select value with un-needed alias: $os removing it:" andReturn
+              os.copy(selectValue = sv.copy(alias = None))
+          case _ => os
+        }
 
-        sortedRefs.map(_.selectValue)
+      references.toList match {
+        case Nil => select.map(_.selectValue)
+        case refs => {
+          // elements first need to be sorted by their order in the select clause. Since some may map to multiple
+          // properties when expanded, we want to maintain this order of properties as a secondary value.
+          val mappedRefs =
+            refs
+              // Expand all the references to properties that we have selected in the super query
+              .map(expandReference)
+              // Once all the recursive calls of expandReference are done, remove the alias if it is not needed.
+              // We cannot do this because during recursive calls, the aliases of outer clauses are used for inner ones.
+              .map(deAliasWhenUneeded(_))
+
+          trace"Mapped Refs: $mappedRefs" andLog ()
+
+          // are there any selects that have infix values which we have not already selected? We need to include
+          // them because they could be doing essential things e.g. RANK ... ORDER BY
+          val remainingSelectsWithInfixes =
+            trace"Searching Selects with Infix:" andReturn
+              new FindUnexpressedInfixes(select)(mappedRefs)
+
+          implicit val ordering: scala.math.Ordering[List[Int]] = new scala.math.Ordering[List[Int]] {
+            override def compare(x: List[Int], y: List[Int]): Int =
+              (x, y) match {
+                case (head1 :: tail1, head2 :: tail2) =>
+                  val diff = head1 - head2
+                  if (diff != 0) diff
+                  else compare(tail1, tail2)
+                case (Nil, Nil)   => 0 // List(1,2,3) == List(1,2,3)
+                case (head1, Nil) => -1 // List(1,2,3) < List(1,2)
+                case (Nil, head2) => 1 // List(1,2) > List(1,2,3)
+              }
+          }
+
+          val sortedRefs =
+            (mappedRefs ++ remainingSelectsWithInfixes).sortBy(ref => ref.order) //(ref.order, ref.secondaryOrder)
+
+          sortedRefs.map(_.selectValue)
+        }
       }
     }
-  }
 }
 
 object ExpandSelect {

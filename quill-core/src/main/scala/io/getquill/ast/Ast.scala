@@ -129,7 +129,55 @@ case class Infix(parts: List[String], params: List[Ast], pure: Boolean) extends 
 
 case class Function(params: List[Ident], body: Ast) extends Ast
 
-case class Ident(name: String) extends Ast
+case class Ident(name: String) extends Ast {
+  def visibility: Visibility = Visibility.Visible
+
+  override def neutral: Ident =
+    new Ident(name) {
+      override def visibility: Visibility = Visibility.neutral
+    }
+
+  override def equals(that: Any) =
+    that match {
+      case p: Ident => (p.name, p.visibility) == ((name, visibility))
+      case _        => false
+    }
+
+  override def hashCode = (name, visibility).hashCode()
+}
+
+/**
+ * Ident represents a single variable name, this typically refers to a table but not always.
+ * Invisible identities are a rare case where a user returns an embedded table from a map clause:
+ *
+ * <pre><code>
+ *     case class Emb(id: Int, name: String) extends Embedded
+ *     case class Parent(id: Int, name: String, emb: Emb) extends Embedded
+ *     case class GrandParent(id: Int, par: Parent)
+ *
+ *     query[GrandParent]
+ *         .map(g => g.par).distinct
+ *         .map(p => (p.name, p.emb)).distinct
+ *         .map(tup => (tup._1, tup._2)).distinct
+ *     }
+ * </code></pre>
+ *
+ * In these situations, the identity whose properties need to be expanded in the ExpandNestedQueries phase,
+ * needs to be marked invisible.
+ */
+object Ident {
+  def apply(name: String) = new Ident(name)
+  def unapply(p: Ident) = Some((p.name))
+
+  object Opinionated {
+    def apply(name: String, visibilityNew: Visibility) =
+      new Ident(name) {
+        override def visibility: Visibility = visibilityNew
+      }
+    def unapply(p: Ident) =
+      Some((p.name, p.visibility))
+  }
+}
 
 // Like identity but is but defined in a clause external to the query. Currently this is used
 // for 'returning' clauses to define properties being returned.
@@ -146,6 +194,14 @@ case class ExternalIdent(name: String) extends Ast
 sealed trait Opinion[T]
 sealed trait OpinionValues[T <: Opinion[T]] {
   def neutral: T
+}
+
+sealed trait Visibility extends Opinion[Visibility]
+object Visibility extends OpinionValues[Visibility] {
+  case object Visible extends Visibility with Opinion[Visibility]
+  case object Hidden extends Visibility with Opinion[Visibility]
+
+  override def neutral: Visibility = Visible
 }
 
 sealed trait Renameable extends Opinion[Renameable] {
@@ -179,18 +235,23 @@ case class Property(ast: Ast, name: String) extends Ast {
   // scala creates companion objects, the apply/unapply wouldn't be able to work correctly.
   def renameable: Renameable = Renameable.neutral
 
+  // Properties that are 'Hidden' are used for embedded objects whose path should not be expressed
+  // during SQL Tokenization.
+  def visibility: Visibility = Visibility.Visible
+
   override def neutral: Property =
     new Property(ast, name) {
       override def renameable = Renameable.neutral
+      override def visibility: Visibility = Visibility.neutral
     }
 
   override def equals(that: Any) =
     that match {
-      case p: Property => (p.ast, p.name, p.renameable) == ((ast, name, renameable))
+      case p: Property => (p.ast, p.name, p.renameable, p.visibility) == ((ast, name, renameable, visibility))
       case _           => false
     }
 
-  override def hashCode = (ast, name, renameable).hashCode()
+  override def hashCode = (ast, name, renameable, visibility).hashCode()
 }
 
 object Property {
@@ -198,12 +259,13 @@ object Property {
   def unapply(p: Property) = Some((p.ast, p.name))
 
   object Opinionated {
-    def apply(ast: Ast, name: String, renameableNew: Renameable) =
+    def apply(ast: Ast, name: String, renameableNew: Renameable, visibilityNew: Visibility) =
       new Property(ast, name) {
         override def renameable: Renameable = renameableNew
+        override def visibility: Visibility = visibilityNew
       }
     def unapply(p: Property) =
-      Some((p.ast, p.name, p.renameable))
+      Some((p.ast, p.name, p.renameable, p.visibility))
   }
 }
 
@@ -254,6 +316,7 @@ case class Constant(v: Any) extends Value
 object NullValue extends Value
 
 case class Tuple(values: List[Ast]) extends Value
+
 case class CaseClass(values: List[(String, Ast)]) extends Value
 
 //************************************************************

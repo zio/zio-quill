@@ -91,20 +91,20 @@ trait JdbcContextBase[Dialect <: SqlIdiom, Naming <: NamingStrategy]
       }
     }
 
-  def bindQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): Connection => Result[PreparedStatement] =
-    bindSingle(sql, prepare)
+  def prepareQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): Connection => Result[PreparedStatement] =
+    prepareSingle(sql, prepare)
 
-  def bindAction(sql: String, prepare: Prepare = identityPrepare): Connection => Result[PreparedStatement] =
-    bindSingle(sql, prepare)
+  def prepareAction(sql: String, prepare: Prepare = identityPrepare): Connection => Result[PreparedStatement] =
+    prepareSingle(sql, prepare)
 
-  def bindSingle(sql: String, prepare: Prepare = identityPrepare): Connection => Result[PreparedStatement] =
+  def prepareSingle(sql: String, prepare: Prepare = identityPrepare): Connection => Result[PreparedStatement] =
     (conn: Connection) => wrap {
       val (params, ps) = prepare(conn.prepareStatement(sql))
       logger.logQuery(sql, params)
       ps
     }
 
-  def bindBatchAction(groups: List[BatchGroup]): Connection => Result[List[PreparedStatement]] =
+  def prepareBatchAction(groups: List[BatchGroup]): Connection => Result[List[PreparedStatement]] =
     (session: Connection) =>
       seq {
         val batches = groups.flatMap {
@@ -113,7 +113,7 @@ trait JdbcContextBase[Dialect <: SqlIdiom, Naming <: NamingStrategy]
         }
         batches.map {
           case (sql, prepare) =>
-            val prepareSql = bindAction(sql, prepare)
+            val prepareSql = prepareAction(sql, prepare)
             prepareSql(session)
         }
       }
