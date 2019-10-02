@@ -23,3 +23,5 @@ addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.29")
 addSbtPlugin("org.portable-scala" % "sbt-scalajs-crossproject" % "0.6.1")
 
 addSbtPlugin("com.etsy" % "sbt-compile-quick-plugin" % "1.4.0")
+
+addSbtPlugin("io.get-coursier" % "sbt-coursier" % "2.0.0-RC3-4")
