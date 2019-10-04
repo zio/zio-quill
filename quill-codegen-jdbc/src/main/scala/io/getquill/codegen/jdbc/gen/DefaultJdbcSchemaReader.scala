@@ -2,12 +2,12 @@ package io.getquill.codegen.jdbc.gen
 
 import java.sql.{ Connection, ResultSet }
 
-import com.github.choppythelumberjack.tryclose.JavaImplicits._
-import com.github.choppythelumberjack.tryclose._
 import io.getquill.codegen.jdbc.DatabaseTypes.{ DatabaseType, Oracle }
 import io.getquill.codegen.jdbc.model.JdbcTypes.{ JdbcConnectionMaker, JdbcSchemaReader }
 import io.getquill.codegen.model.{ JdbcColumnMeta, JdbcTableMeta, RawSchema }
 import io.getquill.codegen.util.StringUtil._
+import io.getquill.util.Using
+import scala.util.{ Success, Failure }
 
 import scala.annotation.tailrec
 import scala.collection.immutable.List
@@ -34,20 +34,21 @@ class DefaultJdbcSchemaReader(
     ts.tableType.existsInSetNocase("table", "view", "user table", "user view", "base table")
 
   private[getquill] def extractTables(connectionMaker: () => Connection): List[JdbcTableMeta] = {
-    val output = for {
-      conn <- TryClose(connectionMaker())
-      schema <- TryClose.wrap(conn.getSchema)
-      rs <- TryClose(conn.getMetaData.getTables(
-        null,
-        schemaPattern(schema.get),
-        null,
-        null
-      ))
-      tables <- TryClose.wrap(resultSetExtractor(rs, rs => JdbcTableMeta.fromResultSet(rs)))
-    } yield (tables)
-
+    val output = Using.Manager { use =>
+      val conn = use(connectionMaker())
+      val schema = conn.getSchema
+      val rs = use {
+        conn.getMetaData.getTables(
+          null,
+          schemaPattern(schema),
+          null,
+          null
+        )
+      }
+      resultSetExtractor(rs, rs => JdbcTableMeta.fromResultSet(rs))
+    }
     val unfilteredJdbcEntities =
-      output.resolve.map(_.get) match {
+      output match {
         case Success(value) => value
         case Failure(e)     => throw e
       }
@@ -56,18 +57,20 @@ class DefaultJdbcSchemaReader(
   }
 
   private[getquill] def extractColumns(connectionMaker: () => Connection): List[JdbcColumnMeta] = {
-    val output = for {
-      conn <- TryClose(connectionMaker())
-      schema <- TryClose.wrap(conn.getSchema)
-      rs <- TryClose(conn.getMetaData.getColumns(
-        null,
-        schemaPattern(schema.get),
-        null,
-        null
-      ))
-      tables <- TryClose.wrap(resultSetExtractor(rs, rs => JdbcColumnMeta.fromResultSet(rs)))
-    } yield (tables)
-    output.resolve.map(_.get) match {
+    val output = Using.Manager { use =>
+      val conn = use(connectionMaker())
+      val schema = conn.getSchema
+      val rs = use {
+        conn.getMetaData.getColumns(
+          null,
+          schemaPattern(schema),
+          null,
+          null
+        )
+      }
+      resultSetExtractor(rs, rs => JdbcColumnMeta.fromResultSet(rs))
+    }
+    output match {
       case Success(value) => value
       case Failure(e)     => throw e
     }

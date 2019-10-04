@@ -27,7 +27,7 @@ trait TwitterFutureIOMonad extends IOMonad {
     io match {
       case FromTry(t) => Future.const(Try(t.get))
       case Run(f)     => f()
-      case Sequence(in, _, cbf) =>
+      case Sequence(in, cbf) =>
         Future.collect(in.map(performIO(_)).toSeq)
           .map(r => cbf().++=(r).result)
       case TransformWith(a, fA) =>

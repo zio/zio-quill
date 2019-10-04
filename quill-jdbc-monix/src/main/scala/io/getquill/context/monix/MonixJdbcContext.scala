@@ -168,7 +168,7 @@ abstract class MonixJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](
    * Since Quill provides a extractor for an individual ResultSet row, a single row can easily be cached
    * in memory. This allows for a straightforward implementation of a hasNext method.
    */
-  class ResultSetIterator[T](rs: ResultSet, extractor: Extractor[T]) extends BufferedIterator[T] {
+  class ResultSetIterator[T](rs: ResultSet, extractor: Extractor[T]) extends collection.BufferedIterator[T] {
 
     private final val NoData = 0
     private final val Cached = 1

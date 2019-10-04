@@ -21,7 +21,7 @@ trait Liftables {
     case ast: Lift => liftLiftable(ast)
     case ast: Assignment => assignmentLiftable(ast)
     case ast: OptionOperation => optionOperationLiftable(ast)
-    case ast: TraversableOperation => traversableOperationLiftable(ast)
+    case ast: IterableOperation => traversableOperationLiftable(ast)
     case ast: Property => propertyLiftable(ast)
     case Val(name, body) => q"$pack.Val($name, $body)"
     case Block(statements) => q"$pack.Block($statements)"
@@ -60,7 +60,7 @@ trait Liftables {
     case OptionNone                  => q"$pack.OptionNone"
   }
 
-  implicit val traversableOperationLiftable: Liftable[TraversableOperation] = Liftable[TraversableOperation] {
+  implicit val traversableOperationLiftable: Liftable[IterableOperation] = Liftable[IterableOperation] {
     case MapContains(a, b)  => q"$pack.MapContains($a,$b)"
     case SetContains(a, b)  => q"$pack.SetContains($a,$b)"
     case ListContains(a, b) => q"$pack.ListContains($a,$b)"

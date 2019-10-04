@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e # Any subsequent(*) commands which fail will cause the shell script to exit immediately
 
-SBT_CMD="sbt ++2.11.12 -Dquill.macro.log=false"
+SBT_CMD="sbt ++2.11.12 -Dquill.macro.log=false -Dquill.scala.version=2.11.12"
 
 echo $SBT_CMD
 if [[ $TRAVIS_PULL_REQUEST == "false" ]]

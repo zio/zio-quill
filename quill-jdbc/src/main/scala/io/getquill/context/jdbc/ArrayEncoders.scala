@@ -6,8 +6,7 @@ import java.time.LocalDate
 import java.util.Date
 
 import io.getquill.context.sql.encoding.ArrayEncoding
-
-import scala.collection.generic.CanBuildFrom
+import scala.collection.compat._
 
 trait ArrayEncoders extends ArrayEncoding {
   self: JdbcContextBase[_, _] =>
@@ -38,12 +37,12 @@ trait ArrayEncoders extends ArrayEncoding {
    */
   def arrayEncoder[T, Col <: Seq[T]](jdbcType: String, mapper: T => AnyRef): Encoder[Col] = {
     encoder[Col](ARRAY, (idx: Index, seq: Col, row: PrepareRow) => {
-      val bf = implicitly[CanBuildFrom[Nothing, AnyRef, Array[AnyRef]]]
+      val bf = implicitly[CBF[AnyRef, Array[AnyRef]]]
       row.setArray(
         idx,
         row.getConnection.createArrayOf(
           jdbcType,
-          seq.foldLeft(bf())((b, x) => b += mapper(x)).result()
+          seq.foldLeft(bf.newBuilder)((b, x) => b += mapper(x)).result()
         )
       )
     })

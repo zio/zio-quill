@@ -143,7 +143,7 @@ ctx.run(biggerThan(10)) // SELECT r.radius FROM Circle r WHERE r.radius > ?
 
 ### Lifted queries
 
-A `Traversable` instance can be lifted as a `Query`. There are two main usages for lifted queries:
+A `Iterable` instance can be lifted as a `Query`. There are two main usages for lifted queries:
 
 #### contains
 
