@@ -11,9 +11,9 @@ object RenameProperties extends StatelessTransformer {
   import interp._
   def traceDifferent(one: Any, two: Any) =
     if (one != two)
-      trace"Replaced $one with $two" andLog ()
+      trace"Replaced $one with $two".andLog()
     else
-      trace"Replacements did not match" andLog ()
+      trace"Replacements did not match".andLog()
 
   override def apply(q: Query): Query =
     applySchemaOnly(q)

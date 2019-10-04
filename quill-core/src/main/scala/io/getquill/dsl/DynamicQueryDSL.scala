@@ -175,7 +175,7 @@ trait DynamicQueryDsl {
       if (cond) filter(f)
       else this
 
-    def concatMap[R, U](f: Quoted[T] => Quoted[U])(implicit ev: U => Traversable[R]): DynamicQuery[R] =
+    def concatMap[R, U](f: Quoted[T] => Quoted[U])(implicit ev: U => Iterable[R]): DynamicQuery[R] =
       transform(f, ConcatMap)
 
     def sortBy[R](f: Quoted[T] => Quoted[R])(implicit ord: OrdDsl#Ord[R]): DynamicQuery[T] =

@@ -1,6 +1,6 @@
 resolvers += Classpaths.sbtPluginReleases
 
-resolvers += "Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/"
+resolvers += "Typesafe repository" at "https://repo.typesafe.com/typesafe/releases/"
 
 addSbtPlugin("org.tpolecat" % "tut-plugin" % "0.6.13")
 

@@ -5,6 +5,7 @@ import io.getquill.ast.Implicits._
 import io.getquill.ast.Renameable.Fixed
 import io.getquill.ast.{ Query => _, _ }
 import io.getquill.context.ValueClass
+import io.getquill.norm.NormalizeStringConcat
 import io.getquill.testContext._
 import io.getquill.util.Messages
 
@@ -956,6 +957,9 @@ class QuotationSpec extends Spec {
           quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), StringOperator.`+`, Ident("b"))
         }
         "string interpolation" - {
+
+          def normStrConcat(ast: Ast): Ast = NormalizeStringConcat(ast)
+
           "one param" - {
             "end" in {
               val q = quote {
@@ -967,14 +971,14 @@ class QuotationSpec extends Spec {
               val q = quote {
                 (i: Int) => s"${i}v"
               }
-              quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("i"), StringOperator.`+`, Constant("v"))
+              normStrConcat(quote(unquote(q)).ast.body) mustEqual BinaryOperation(Ident("i"), StringOperator.`+`, Constant("v"))
             }
           }
           "multiple params" in {
             val q = quote {
               (i: Int, j: Int, h: Int) => s"${i}a${j}b${h}"
             }
-            quote(unquote(q)).ast.body mustEqual BinaryOperation(BinaryOperation(BinaryOperation(BinaryOperation(Ident("i"), StringOperator.`+`, Constant("a")), StringOperator.`+`, Ident("j")), StringOperator.`+`, Constant("b")), StringOperator.`+`, Ident("h"))
+            normStrConcat(quote(unquote(q)).ast.body) mustEqual BinaryOperation(BinaryOperation(BinaryOperation(BinaryOperation(Ident("i"), StringOperator.`+`, Constant("a")), StringOperator.`+`, Ident("j")), StringOperator.`+`, Constant("b")), StringOperator.`+`, Ident("h"))
           }
         }
       }
