@@ -25,24 +25,24 @@ import scala.util.control.{ ControlThrowable, NonFatal }
  * ==Usage==
  *
  * There are multiple ways to automatically manage resources with `Using`. If you only need
- * to manage a single resource, the [[Using.apply `apply`]] method is easiest; it wraps the
+ * to manage a single resource, the Using.apply `apply` method is easiest; it wraps the
  * resource opening, operation, and resource releasing in a `Try`.
  *
  * Example:
  * {{{
- * val lines: Try[Seq[String]] =
+ * val lines: Try[Seq[String =
  *   Using(new BufferedReader(new FileReader("file.txt"))) { reader =>
  *     Iterator.unfold(())(_ => Option(reader.readLine()).map(_ -> ())).toList
  *   }
  * }}}
  *
- * If you need to manage multiple resources, [[Using.Manager$.apply `Using.Manager`]] should
+ * If you need to manage multiple resources, Using.Manager$.apply `Using.Manager` should
  * be used. It allows the managing of arbitrarily many resources, whose creation, use, and
  * release are all wrapped in a `Try`.
  *
  * Example:
  * {{{
- * val lines: Try[Seq[String]] = Using.Manager { use =>
+ * val lines: Try[Seq[String = Using.Manager { use =>
  *   val r1 = use(new BufferedReader(new FileReader("file1.txt")))
  *   val r2 = use(new BufferedReader(new FileReader("file2.txt")))
  *   val r3 = use(new BufferedReader(new FileReader("file3.txt")))
@@ -57,7 +57,7 @@ import scala.util.control.{ ControlThrowable, NonFatal }
  * }}}
  *
  * If you wish to avoid wrapping management and operations in a `Try`, you can use
- * [[Using.resource `Using.resource`]], which throws any exceptions that occur.
+ * Using.resource `Using.resource`, which throws any exceptions that occur.
  *
  * Example:
  * {{{
@@ -71,21 +71,21 @@ import scala.util.control.{ ControlThrowable, NonFatal }
  *
  * If two exceptions are thrown (e.g., by an operation and closing a resource),
  * one of them is re-thrown, and the other is
- * [[java.lang.Throwable.addSuppressed(Throwable) added to it as a suppressed exception]].
+ * java.lang.Throwable.addSuppressed(Throwable) added to it as a suppressed exception.
  * If the two exceptions are of different 'severities' (see below), the one of a higher
  * severity is re-thrown, and the one of a lower severity is added to it as a suppressed
  * exception. If the two exceptions are of the same severity, the one thrown first is
  * re-thrown, and the one thrown second is added to it as a suppressed exception.
- * If an exception is a [[scala.util.control.ControlThrowable `ControlThrowable`]], or
+ * If an exception is a scala.util.control.ControlThrowable `ControlThrowable`, or
  * if it does not support suppression (see
- * [[java.lang.Throwable `Throwable`'s constructor with an `enableSuppression` parameter]]),
+ * java.lang.Throwable `Throwable`'s constructor with an `enableSuppression` parameter),
  * an exception that would have been suppressed is instead discarded.
  *
  * Exceptions are ranked from highest to lowest severity as follows:
  *   - `java.lang.VirtualMachineError`
  *   - `java.lang.LinkageError`
  *   - `java.lang.InterruptedException` and `java.lang.ThreadDeath`
- *   - [[scala.util.control.NonFatal fatal exceptions]], excluding `scala.util.control.ControlThrowable`
+ *   - scala.util.control.NonFatal fatal exceptions, excluding `scala.util.control.ControlThrowable`
  *   - `scala.util.control.ControlThrowable`
  *   - all other exceptions
  *
@@ -93,7 +93,7 @@ import scala.util.control.{ ControlThrowable, NonFatal }
  * re-thrown as described above, and each successive exception thrown is combined
  * as it is thrown.
  *
- * @define suppressionBehavior See the main doc for [[Using `Using`]] for full details of
+ * @define suppressionBehavior See the main doc for Using `Using` for full details of
  *                             suppression behavior.
  */
 object Using {
@@ -103,7 +103,7 @@ object Using {
    *
    * $suppressionBehavior
    *
-   * @return a [[Try]] containing an exception if one or more were thrown,
+   * @return a Try containing an exception if one or more were thrown,
    *         or the result of the operation if no exceptions were thrown
    */
   def apply[R: Releasable, A](resource: => R)(f: R => A): Try[A] = Try { Using.resource(resource)(f) }
@@ -111,7 +111,7 @@ object Using {
   /**
    * A resource manager.
    *
-   * Resources can be registered with the manager by calling [[acquire `acquire`]];
+   * Resources can be registered with the manager by calling acquire `acquire`;
    * such resources will be released in reverse order of their acquisition
    * when the manager is closed, regardless of any exceptions thrown
    * during use.
@@ -211,11 +211,11 @@ object Using {
      * }
      * }}}
      *
-     * See the main doc for [[Using `Using`]] for full details of suppression behavior.
+     * See the main doc for Using `Using` for full details of suppression behavior.
      *
      * @param op the operation to perform using the manager
      * @tparam A the return type of the operation
-     * @return a [[Try]] containing an exception if one or more were thrown,
+     * @return a Try containing an exception if one or more were thrown,
      *         or the result of the operation if no exceptions were thrown
      */
     def apply[A](op: Manager => A): Try[A] = Try { (new Manager).manage(op) }
@@ -373,12 +373,12 @@ object Using {
    * A resource is anything which needs to be released, closed, or otherwise cleaned up
    * in some way after it is finished being used, and for which waiting for the object's
    * garbage collection to be cleaned up would be unacceptable. For example, an instance of
-   * [[java.io.OutputStream]] would be considered a resource, because it is important to close
+   * java.io.OutputStream would be considered a resource, because it is important to close
    * the stream after it is finished being used.
    *
    * An instance of `Releasable` is needed in order to automatically manage a resource
-   * with [[Using `Using`]]. An implicit instance is provided for all types extending
-   * [[java.lang.AutoCloseable]].
+   * with Using `Using`. An implicit instance is provided for all types extending
+   * java.lang.AutoCloseable.
    *
    * @tparam R the type of the resource
    */
@@ -388,7 +388,7 @@ object Using {
   }
 
   object Releasable {
-    /** An implicit `Releasable` for [[java.lang.AutoCloseable `AutoCloseable`s]]. */
+    /** An implicit `Releasable` for java.lang.AutoCloseable `AutoCloseable`s. */
     implicit object AutoCloseableIsReleasable extends Releasable[AutoCloseable] {
       def release(resource: AutoCloseable): Unit = resource.close()
     }
