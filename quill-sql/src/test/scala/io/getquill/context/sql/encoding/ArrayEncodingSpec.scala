@@ -52,7 +52,7 @@ class ArrayEncodingSpec extends Spec {
   "Do not compile in case of upper bound types to Seq or not applicable types" - {
     "encoders" in {
       import impl.encodeDecor
-      implicit val e = encoder[Traversable[Raw]]
+      implicit val e = encoder[Iterable[Raw]]
       "implicitly[Encoder[List[Decor]]]" mustNot compile
     }
     "decoders" in {
