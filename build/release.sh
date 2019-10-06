@@ -9,9 +9,9 @@ then
     echo "No Artifact Specified"
 fi
 
-SBT_2_11="sbt ++2.11.12 -Dquill.macro.log=false -Dquil.scala.version=2.11.12"
-SBT_2_12="sbt ++2.12.6 -Dquill.macro.log=false -Dquil.scala.version=2.12.6"
-SBT_2_13="sbt ++2.13.1 -Dquill.macro.log=false -Dquil.scala.version=2.13.1"
+SBT_2_11="sbt ++2.11.12 -Dquill.macro.log=false -Dquill.scala.version=2.11.12"
+SBT_2_12="sbt ++2.12.6 -Dquill.macro.log=false -Dquill.scala.version=2.12.6"
+SBT_2_13="sbt ++2.13.1 -Dquill.macro.log=false -Dquill.scala.version=2.13.1"
 
 if [[ $VERSION -eq 211 ]]
 then
@@ -32,8 +32,12 @@ if [[ $TRAVIS_PULL_REQUEST == "false" ]]
 then
     openssl aes-256-cbc -pass pass:$ENCRYPTION_PASSWORD -in ./build/secring.gpg.enc -out local.secring.gpg -d
     openssl aes-256-cbc -pass pass:$ENCRYPTION_PASSWORD -in ./build/pubring.gpg.enc -out local.pubring.gpg -d
-    openssl aes-256-cbc -pass pass:$ENCRYPTION_PASSWORD -in ./build/credentials.sbt.enc -out local.credentials.sbt -d
+    openssl aes-256-cbc -pass pass:$ENCRYPTION_PASSWORD -in ./build/credentials.sbt.enc -out local.credentials.sbt.temp -d
     openssl aes-256-cbc -pass pass:$ENCRYPTION_PASSWORD -in ./build/deploy_key.pem.enc -out local.deploy_key.pem -d
+
+    # Temp hack to get around SbtPgp being moved. This file needs to be updated with correct import.
+    # See https://github.com/sbt/sbt-pgp/pull/162 for more details
+    cat local.credentials.sbt.temp | sed 's/import com.typesafe.sbt.SbtPgp/import com.jsuereth.sbtpgp.SbtPgp/' > local.credentials.sbt
 
     ls -ltr
     sleep 3 # Need to wait until credential files fully written or build fails sometimes
