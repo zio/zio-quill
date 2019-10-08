@@ -9,7 +9,7 @@ import scala.util.control.NonFatal
 case class JdbcContextConfig(config: Config) {
 
   def configProperties = {
-    import scala.collection.JavaConverters._
+    import scala.jdk.CollectionConverters._
     val p = new Properties
     for (entry <- config.entrySet.asScala)
       p.setProperty(entry.getKey, entry.getValue.unwrapped.toString)

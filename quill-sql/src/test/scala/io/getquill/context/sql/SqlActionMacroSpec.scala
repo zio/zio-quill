@@ -6,6 +6,8 @@ import io.getquill.context.mirror.Row
 
 class SqlActionMacroSpec extends Spec {
 
+  val testContext = io.getquill.context.sql.testContext
+
   "runs actions" - {
     import testContext._
     "without bindings" - {

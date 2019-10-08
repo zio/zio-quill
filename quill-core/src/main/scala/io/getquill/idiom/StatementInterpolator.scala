@@ -109,8 +109,13 @@ object StatementInterpolator {
         .apply(tokens)
     }
 
+    private def checkLengths(args: scala.collection.Seq[Any], parts: Seq[String]): Unit =
+      if (parts.length != args.length + 1)
+        throw new IllegalArgumentException("wrong number of arguments (" + args.length
+          + ") for interpolated string with " + parts.length + " parts")
+
     def stmt(args: Token*): Statement = {
-      sc.checkLengths(args)
+      checkLengths(args, sc.parts)
       val partsIterator = sc.parts.iterator
       val argsIterator = args.iterator
       val bldr = List.newBuilder[Token]

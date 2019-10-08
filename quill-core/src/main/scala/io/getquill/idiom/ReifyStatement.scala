@@ -47,7 +47,7 @@ object ReifyStatement {
     Statement {
       statement.tokens.foldLeft(List.empty[Token]) {
         case (tokens, SetContainsToken(a, op, ScalarLiftToken(lift: ScalarQueryLift))) =>
-          lift.value.asInstanceOf[Traversable[Any]].toList match {
+          lift.value.asInstanceOf[Iterable[Any]].toList match {
             case Nil => tokens :+ emptySetContainsToken(a)
             case values =>
               val liftings = values.map(v => ScalarLiftToken(ScalarValueLift(lift.name, v, lift.encoder)))

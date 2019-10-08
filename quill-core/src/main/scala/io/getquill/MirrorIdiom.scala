@@ -30,27 +30,27 @@ trait MirrorIdiomBase extends Idiom {
   }
 
   implicit def astTokenizer(implicit liftTokenizer: Tokenizer[Lift]): Tokenizer[Ast] = Tokenizer[Ast] {
-    case ast: Query                => ast.token
-    case ast: Function             => ast.token
-    case ast: Value                => ast.token
-    case ast: Operation            => ast.token
-    case ast: Action               => ast.token
-    case ast: Ident                => ast.token
-    case ast: ExternalIdent        => ast.token
-    case ast: Property             => ast.token
-    case ast: Infix                => ast.token
-    case ast: OptionOperation      => ast.token
-    case ast: TraversableOperation => ast.token
-    case ast: Dynamic              => ast.token
-    case ast: If                   => ast.token
-    case ast: Block                => ast.token
-    case ast: Val                  => ast.token
-    case ast: Ordering             => ast.token
-    case ast: QuotedReference      => ast.ast.token
-    case ast: Lift                 => ast.token
-    case ast: Assignment           => ast.token
-    case ast: OnConflict.Excluded  => ast.token
-    case ast: OnConflict.Existing  => ast.token
+    case ast: Query               => ast.token
+    case ast: Function            => ast.token
+    case ast: Value               => ast.token
+    case ast: Operation           => ast.token
+    case ast: Action              => ast.token
+    case ast: Ident               => ast.token
+    case ast: ExternalIdent       => ast.token
+    case ast: Property            => ast.token
+    case ast: Infix               => ast.token
+    case ast: OptionOperation     => ast.token
+    case ast: IterableOperation   => ast.token
+    case ast: Dynamic             => ast.token
+    case ast: If                  => ast.token
+    case ast: Block               => ast.token
+    case ast: Val                 => ast.token
+    case ast: Ordering            => ast.token
+    case ast: QuotedReference     => ast.ast.token
+    case ast: Lift                => ast.token
+    case ast: Assignment          => ast.token
+    case ast: OnConflict.Excluded => ast.token
+    case ast: OnConflict.Existing => ast.token
   }
 
   implicit def ifTokenizer(implicit liftTokenizer: Tokenizer[Lift]): Tokenizer[If] = Tokenizer[If] {
@@ -155,7 +155,7 @@ trait MirrorIdiomBase extends Idiom {
     case OptionNone                           => stmt"None"
   }
 
-  implicit def traversableOperationTokenizer(implicit liftTokenizer: Tokenizer[Lift]): Tokenizer[TraversableOperation] = Tokenizer[TraversableOperation] {
+  implicit def traversableOperationTokenizer(implicit liftTokenizer: Tokenizer[Lift]): Tokenizer[IterableOperation] = Tokenizer[IterableOperation] {
     case MapContains(ast, body)  => stmt"${ast.token}.contains(${body.token})"
     case SetContains(ast, body)  => stmt"${ast.token}.contains(${body.token})"
     case ListContains(ast, body) => stmt"${ast.token}.contains(${body.token})"

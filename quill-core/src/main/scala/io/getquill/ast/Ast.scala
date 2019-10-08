@@ -290,10 +290,10 @@ case class OptionApply(ast: Ast) extends OptionOperation
 case class OptionOrNull(ast: Ast) extends OptionOperation
 case class OptionGetOrNull(ast: Ast) extends OptionOperation
 
-sealed trait TraversableOperation extends Ast
-case class MapContains(ast: Ast, body: Ast) extends TraversableOperation
-case class SetContains(ast: Ast, body: Ast) extends TraversableOperation
-case class ListContains(ast: Ast, body: Ast) extends TraversableOperation
+sealed trait IterableOperation extends Ast
+case class MapContains(ast: Ast, body: Ast) extends IterableOperation
+case class SetContains(ast: Ast, body: Ast) extends IterableOperation
+case class ListContains(ast: Ast, body: Ast) extends IterableOperation
 
 case class If(condition: Ast, `then`: Ast, `else`: Ast) extends Ast
 
