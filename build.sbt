@@ -35,7 +35,7 @@ lazy val bigdataModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
 lazy val allModules =
   baseModules ++ dbModules ++ asyncModules ++ codegenModules ++ bigdataModules
 
-lazy val filteredModules = {
+val filteredModules = {
   val modulesStr = sys.props.get("modules")
   println(s"Modules Argument Value: ${modulesStr}")
 
@@ -59,8 +59,15 @@ lazy val filteredModules = {
       println("Invoking Aggregate Project")
       Seq[sbt.ClasspathDep[sbt.ProjectReference]]()
     case _ =>
-      println("Compiling All Modules")
-      allModules
+      // Workaround for https://github.com/sbt/sbt/issues/3465
+      val scalaVersion = sys.props.get("quill.scala.version")
+      if(scalaVersion.map(_.startsWith("2.13")).getOrElse(false)) {
+        println("Compiling Scala 2.13 Modules")
+        baseModules ++ dbModules
+      } else {
+        println("Compiling All Modules")
+        allModules
+      }
   }
 }
 
@@ -90,6 +97,10 @@ lazy val superPure = new sbtcrossproject.CrossType {
     }
 }
 
+def pprintVersion(v: String) = {
+  if(v.startsWith("2.11")) "0.5.4" else "0.5.5"
+}
+
 lazy val `quill-core` =
   crossProject(JVMPlatform, JSPlatform).crossType(superPure)
     .settings(commonSettings: _*)
@@ -101,7 +112,7 @@ lazy val `quill-core` =
     ))
     .jsSettings(
       libraryDependencies ++= Seq(
-        "com.lihaoyi" %%% "pprint" % "0.5.4",
+        "com.lihaoyi" %%% "pprint" % pprintVersion(scalaVersion.value),
         "org.scala-js" %%% "scalajs-java-time" % "0.2.5"
       ),
       coverageExcludedPackages := ".*"
@@ -135,7 +146,6 @@ lazy val `quill-codegen-jdbc` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.github.choppythelumberjack" %% "tryclose" % "1.0.0",
         "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test
       )
     )
@@ -214,6 +224,7 @@ lazy val `quill-jdbc` =
 
 lazy val `quill-monix` =
   (project in file("quill-monix"))
+
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .settings(
@@ -347,7 +358,7 @@ lazy val `quill-cassandra-lagom` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= {
-        val lagomVersion = "1.5.3"
+        val lagomVersion = "1.5.4"
         Seq(
           "com.lightbend.lagom" %% "lagom-scaladsl-persistence-cassandra" % lagomVersion % Provided,
           "com.lightbend.lagom" %% "lagom-scaladsl-testkit" % lagomVersion % Test
@@ -445,7 +456,6 @@ def updateWebsiteTag =
     st
   })
 
-
 lazy val jdbcTestingLibraries = Seq(
   resolvers ++= includeIfOracle( // read ojdbc8 jar in case it is deployed
     Resolver.mavenLocal
@@ -513,6 +523,15 @@ def excludePathsIfOracle(paths:Seq[String]) = {
   })
 }
 
+val crossVersions = {
+  val scalaVersion = sys.props.get("quill.scala.version")
+  if(scalaVersion.map(_.startsWith("2.13")).getOrElse(false)) {
+    Seq("2.11.12", "2.12.10", "2.13.1")
+  } else {
+    Seq("2.11.12", "2.12.10")
+  }
+}
+
 lazy val basicSettings = Seq(
   excludeFilter in unmanagedSources := {
     excludeTests match {
@@ -522,13 +541,12 @@ lazy val basicSettings = Seq(
   },
   organization := "io.getquill",
   scalaVersion := "2.11.12",
-  crossScalaVersions := Seq("2.11.12","2.12.7"),
+  crossScalaVersions := Seq("2.11.12", "2.12.10", "2.13.1"),
   libraryDependencies ++= Seq(
-    "com.lihaoyi"     %% "pprint"         % "0.5.4",
-    "org.scalamacros" %% "resetallattrs"  % "1.0.0",
+    "org.scala-lang.modules" %%% "scala-collection-compat" % "2.1.2",
+    "com.lihaoyi"     %% "pprint"         % pprintVersion(scalaVersion.value),
     "org.scalatest"   %%% "scalatest"     % "3.0.8"          % Test,
     "ch.qos.logback"  % "logback-classic" % "1.2.3"          % Test,
-    "com.github.choppythelumberjack" %% "tryclose" % "1.0.0" % Test,
     "com.google.code.findbugs" % "jsr305" % "3.0.2"          % Provided // just to avoid warnings during compilation
   ) ++ {
     if (debugMacro) Seq(
@@ -563,24 +581,34 @@ lazy val basicSettings = Seq(
   EclipseKeys.eclipseOutput := Some("bin"),
   scalacOptions ++= Seq(
     "-Xfatal-warnings",
-    "-deprecation",
     "-encoding", "UTF-8",
     "-feature",
+    "-deprecation",
     "-unchecked",
-    "-Yno-adapted-args",
     "-Ywarn-dead-code",
     "-Ywarn-numeric-widen",
     "-Ywarn-value-discard",
-    "-Xfuture"
+
   ),
   scalacOptions ++= {
     CrossVersion.partialVersion(scalaVersion.value) match {
+      case Some((2, 13)) =>
+        Seq("-Ypatmat-exhaust-depth", "40")
       case Some((2, 11)) =>
-        Seq("-Xlint", "-Ywarn-unused-import", "" +
+        Seq("-Xlint",
+          "-Xfatal-warnings",
+          "-Xfuture",
+          "-deprecation",
+          "-Yno-adapted-args",
+          "-Ywarn-unused-import", "" +
           "-Xsource:2.12" // needed so existential types work correctly
         )
       case Some((2, 12)) =>
         Seq("-Xlint:-unused,_",
+
+          "-Xfuture",
+          "-deprecation",
+          "-Yno-adapted-args",
           "-Ywarn-unused:imports",
           "-Ycache-macro-class-loader:last-modified"
         )

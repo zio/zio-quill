@@ -30,7 +30,7 @@ class ExpandNestedQueries(strategy: NamingStrategy) {
     q match {
       case q: FlattenSqlQuery =>
         val expand = expandNested(q.copy(select = ExpandSelect(q.select, references, strategy)))
-        trace"Expanded Nested Query $q into $expand" andLog ()
+        trace"Expanded Nested Query $q into $expand".andLog()
         expand
       case SetOperationSqlQuery(a, op, b) =>
         SetOperationSqlQuery(apply(a, references), op, apply(b, references))

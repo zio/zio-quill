@@ -38,7 +38,7 @@ class JdbcEncodingSpec extends EncodingSpec {
     val e1 = EncodingTestEntity(Some(now))
     val e2 = EncodingTestEntity(None)
     val res: (List[EncodingTestEntity], List[EncodingTestEntity]) = performIO {
-      for {
+      val steps = for {
         _ <- testContext.runIO(query[EncodingTestEntity].delete)
         _ <- testContext.runIO(query[EncodingTestEntity].insert(lift(e1)))
         withoutNull <- testContext.runIO(query[EncodingTestEntity])
@@ -46,6 +46,7 @@ class JdbcEncodingSpec extends EncodingSpec {
         _ <- testContext.runIO(query[EncodingTestEntity].insert(lift(e2)))
         withNull <- testContext.runIO(query[EncodingTestEntity])
       } yield (withoutNull, withNull)
+      steps
     }
     res._1 must contain theSameElementsAs List(EncodingTestEntity(Some(now)))
     res._2 must contain theSameElementsAs List(EncodingTestEntity(None))

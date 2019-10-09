@@ -462,7 +462,7 @@ trait Parsing extends ValueComputation {
       OptionGetOrNull(astParser(o))
   }
 
-  val traversableOperationParser: Parser[TraversableOperation] = Parser[TraversableOperation] {
+  val traversableOperationParser: Parser[IterableOperation] = Parser[IterableOperation] {
     case q"$col.contains($body)" if isBaseType[collection.Map[Any, Any]](col) =>
       MapContains(astParser(col), astParser(body))
     case q"$col.contains($body)" if isBaseType[Set[Any]](col) =>
@@ -514,7 +514,7 @@ trait Parsing extends ValueComputation {
         f.lift(t.decodedName.toString)
     }
     Parser[Operation] {
-      case q"$a.${ operator(op: BinaryOperator) }($b)" if (cond(a) && cond(b)) =>
+      case q"$a.${ operator(op: BinaryOperator) }($b)" if cond(a) => // test on right tree is not necessary and broken in 2.13
         BinaryOperation(astParser(a), op, astParser(b))
       case q"$a.${ operator(op: UnaryOperator) }" if (cond(a)) =>
         UnaryOperation(op, astParser(a))

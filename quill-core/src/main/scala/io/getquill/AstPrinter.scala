@@ -37,10 +37,10 @@ class AstPrinter(traceOpinions: Boolean, traceAstSimple: Boolean) extends pprint
 
   override def additionalHandlers: PartialFunction[Any, Tree] = {
     case ast: Ast if (traceAstSimple) =>
-      Tree.Literal(ast + "") // Do not blow up if it is null
+      Tree.Literal("" + ast) // Do not blow up if it is null
 
     case past: PseudoAst if (traceAstSimple) =>
-      Tree.Literal(past + "") // Do not blow up if it is null
+      Tree.Literal("" + past) // Do not blow up if it is null
 
     case p: Property if (traceOpinions) =>
       Tree.Apply("Property", List[Tree](treeify(p.ast), treeify(p.name), printRenameable(p.renameable), printVisibility(p.visibility)).iterator)

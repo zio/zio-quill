@@ -1,9 +1,12 @@
 package io.getquill.monad
 
+import io.getquill.context.Context
 import language.experimental.macros
+import language.higherKinds
+import scala.collection.compat._
 import scala.util.Failure
 import scala.util.Success
-import io.getquill.context.Context
+
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext
 
@@ -21,14 +24,22 @@ trait ScalaFutureIOMonad extends IOMonad {
 
   case class Run[T, E <: Effect](f: (ExecutionContext) => Result[T]) extends IO[T, E]
 
+  def flatten[Y, M[X] <: IterableOnce[X]](seq: Sequence[Y, M, Effect])(implicit ec: ExecutionContext) = {
+    val builder = seq.cbfResultToValue.newBuilder
+    seq.in.iterator.foldLeft(Future.successful(builder)) { (fr, ioa) =>
+      for {
+        r <- fr
+        a <- performIO(ioa)
+      } yield r += a
+    }.map(_.result)
+  }
+
   def performIO[T](io: IO[T, _], transactional: Boolean = false)(implicit ec: ExecutionContext): Result[T] =
     io match {
       case FromTry(v) => Future.fromTry(v)
       case Run(f)     => f(ec)
-      case Sequence(in, cbfIOToResult, cbfResultToValue) =>
-        val builder = cbfIOToResult()
-        in.foreach(builder += performIO(_))
-        Future.sequence(builder.result)(cbfResultToValue, ec)
+      case seq @ Sequence(_, _) =>
+        flatten(seq)
       case TransformWith(a, fA) =>
         performIO(a)
           .map(Success(_))

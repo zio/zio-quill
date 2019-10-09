@@ -1,10 +1,10 @@
 package io.getquill.context.jdbc
 import java.sql.{ Connection, PreparedStatement, ResultSet }
 
-import com.github.choppythelumberjack.tryclose._
-import com.github.choppythelumberjack.tryclose.JavaImplicits._
 import io.getquill.context.sql.ProductSpec
+import io.getquill.util.Using.Manager
 import org.scalactic.Equality
+import scala.util.{ Success, Failure }
 
 trait PrepareJdbcSpecBase extends ProductSpec {
 
@@ -20,48 +20,51 @@ trait PrepareJdbcSpecBase extends ProductSpec {
   def withOrderedIds(products: List[Product]) =
     products.zipWithIndex.map { case (product, id) => product.copy(id = id.toLong + 1) }
 
-  def singleInsert(conn: => Connection)(prep: Connection => PreparedStatement) =
-    (for {
-      conn <- TryClose(conn)
-      stmt <- TryClose(prep(conn))
-      flag <- TryClose.wrap(stmt.execute())
-    } yield flag).unwrap match {
+  def singleInsert(conn: => Connection)(prep: Connection => PreparedStatement) = {
+    val flag = Manager { use =>
+      val c = use(conn)
+      val s = use(prep(c))
+      s.execute()
+    }
+    flag match {
       case Success(value) => value
       case Failure(e)     => throw e
     }
+  }
 
-  def batchInsert(conn: => Connection)(prep: Connection => List[PreparedStatement]) =
-    (for {
-      conn <- TryClose(conn)
-      list <- appendExecuteSequence(prep(conn))
-    } yield list).unwrap match {
+  def batchInsert(conn: => Connection)(prep: Connection => List[PreparedStatement]) = {
+    val r = Manager { use =>
+      val c = use(conn)
+      val st = prep(c)
+      appendExecuteSequence(st)
+    }
+    r.flatten match {
       case Success(value) => value
       case Failure(e)     => throw e
     }
+  }
 
-  def extractResults[T](conn: => Connection)(prep: Connection => PreparedStatement)(extractor: ResultSet => T) =
-    (for {
-      conn <- TryClose(conn)
-      stmt <- TryClose(prep(conn))
-      rs <- TryClose(stmt.executeQuery())
-    } yield {
-      wrap(ResultSetExtractor(rs, extractor))
-    }).unwrap match {
-      case Success(value) =>
-        value
+  def extractResults[T](conn: => Connection)(prep: Connection => PreparedStatement)(extractor: ResultSet => T) = {
+    val r = Manager { use =>
+      val c = use(conn)
+      val st = use(prep(c))
+      val rs = st.executeQuery()
+      ResultSetExtractor(rs, extractor)
+    }
+    r match {
+      case Success(v) => v
       case Failure(e) => throw e
     }
+  }
 
   def extractProducts(conn: => Connection)(prep: Connection => PreparedStatement): List[Product] =
     extractResults(conn)(prep)(productExtractor)
 
   def appendExecuteSequence(actions: => List[PreparedStatement]) = {
-    actions.foldLeft(TryClose.wrap(List[Boolean]())) {
-      case (currTry, stmt) => currTry.flatMap { wrap =>
-        val list = wrap.get
-        TryClose(stmt).flatMap { stmtInner =>
-          TryClose.wrap(stmtInner.execute() +: list)
-        }
+    Manager { use =>
+      actions.map { stmt =>
+        val s = use(stmt)
+        s.execute()
       }
     }
   }

@@ -1,5 +1,7 @@
 package io.getquill.norm
+
 import io.getquill.ast.Ast
+import scala.collection.immutable.Map
 
 /**
  * When doing beta reductions, the Opinions of AST elements need to be set to their
