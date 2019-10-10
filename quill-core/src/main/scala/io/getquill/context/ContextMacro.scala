@@ -1,7 +1,6 @@
 package io.getquill.context
 
 import scala.reflect.macros.whitebox.{ Context => MacroContext }
-
 import io.getquill.ast.Ast
 import io.getquill.ast.Dynamic
 import io.getquill.quotation.Quotation
@@ -11,6 +10,7 @@ import io.getquill.quotation.IsDynamic
 import io.getquill.ast.Lift
 import io.getquill.NamingStrategy
 import io.getquill.idiom._
+
 import scala.util.Success
 import scala.util.Failure
 
@@ -60,7 +60,7 @@ trait ContextMacro extends Quotation {
 
         ProbeStatement(idiom.prepareForProbing(string), c)
 
-        c.info(string)
+        c.query(string, idiom)
 
         q"($normalizedAst, ${statement: Token})"
       case Failure(ex) =>
