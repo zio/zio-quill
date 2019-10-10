@@ -1,3 +1,9 @@
+# 3.4.10
+
+- [support scala 2.13](https://github.com/getquill/quill/pull/1644)
+- [Remove redundant null checks](https://github.com/getquill/quill/pull/1648)
+- [Improve error message](https://github.com/getquill/quill/pull/1503)
+
 # 3.4.9
 
 - [Properly unhide properties in nested queries](https://github.com/getquill/quill/pull/1637)

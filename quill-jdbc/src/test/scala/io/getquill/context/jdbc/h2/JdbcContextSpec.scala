@@ -1,6 +1,6 @@
 package io.getquill.context.jdbc.h2
 
-import io.getquill._
+import io.getquill.Spec
 
 class JdbcContextSpec extends Spec {
 

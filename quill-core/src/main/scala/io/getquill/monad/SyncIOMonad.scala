@@ -1,6 +1,7 @@
 package io.getquill.monad
 
 import scala.language.higherKinds
+import scala.collection.compat._
 import language.experimental.macros
 import io.getquill.context.Context
 import scala.annotation.tailrec
@@ -24,23 +25,23 @@ trait SyncIOMonad extends IOMonad {
 
     @tailrec def loop[U](io: IO[U, _]): Result[U] = {
 
-      def flatten[Y, M[X] <: TraversableOnce[X]](seq: Sequence[Y, M, Effect]) =
-        seq.in.foldLeft(IO.successful(seq.cbfResultToValue())) {
+      def flatten[Y, M[X] <: IterableOnce[X]](seq: Sequence[Y, M, Effect]) =
+        seq.in.iterator.foldLeft(IO.successful(seq.cbfResultToValue.newBuilder)) {
           (builder, item) =>
             builder.flatMap(b => item.map(b += _))
         }.map(_.result())
 
       io match {
-        case FromTry(v)              => v.get
-        case Run(f)                  => f()
-        case seq @ Sequence(_, _, _) => loop(flatten(seq))
+        case FromTry(v)           => v.get
+        case Run(f)               => f()
+        case seq @ Sequence(_, _) => loop(flatten(seq))
         case TransformWith(a, fA) =>
           a match {
-            case FromTry(v)              => loop(fA(v))
-            case Run(r)                  => loop(fA(Try(r())))
-            case seq @ Sequence(_, _, _) => loop(flatten(seq).transformWith(fA))
-            case TransformWith(b, fB)    => loop(b.transformWith(fB(_).transformWith(fA)))
-            case Transactional(io)       => loop(fA(Try(performIO(io, transactional = true))))
+            case FromTry(v)           => loop(fA(v))
+            case Run(r)               => loop(fA(Try(r())))
+            case seq @ Sequence(_, _) => loop(flatten(seq).transformWith(fA))
+            case TransformWith(b, fB) => loop(b.transformWith(fB(_).transformWith(fA)))
+            case Transactional(io)    => loop(fA(Try(performIO(io, transactional = true))))
           }
         case Transactional(io) => performIO(io, transactional = true)
       }

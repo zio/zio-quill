@@ -1,6 +1,9 @@
 package io.getquill.util
 
 import io.getquill.AstPrinter
+import io.getquill.idiom.Idiom
+import io.getquill.util.IndentUtil._
+
 import scala.reflect.macros.blackbox.{ Context => MacroContext }
 
 object Messages {
@@ -8,6 +11,7 @@ object Messages {
   private def variable(propName: String, envName: String, default: String) =
     Option(System.getProperty(propName)).orElse(sys.env.get(envName)).getOrElse(default)
 
+  private[util] val prettyPrint = variable("quill.macro.log.pretty", "quill_macro_log", "false").toBoolean
   private[util] val debugEnabled = variable("quill.macro.log", "quill_macro_log", "true").toBoolean
   private[util] val traceEnabled = variable("quill.trace.enabled", "quill_trace_enabled", "false").toBoolean
   private[util] val traceColors = variable("quill.trace.color", "quill_trace_color,", "false").toBoolean
@@ -60,6 +64,17 @@ object Messages {
 
     def warn(msg: String): Unit =
       c.warning(c.enclosingPosition, msg)
+
+    def query(queryString: String, idiom: Idiom): Unit = {
+      val formatted = if (prettyPrint) idiom.format(queryString) else queryString
+      val output =
+        if (formatted.fitsOnOneLine)
+          formatted
+        else
+          "\n" + formatted.multiline(1, "| ") + "\n\n"
+
+      if (debugEnabled) c.info(c.enclosingPosition, output, force = true)
+    }
 
     def info(msg: String): Unit =
       if (debugEnabled) c.info(c.enclosingPosition, msg, force = true)

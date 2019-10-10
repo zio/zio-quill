@@ -2,6 +2,7 @@ package io.getquill.context
 
 import io.getquill.NamingStrategy
 import io.getquill.idiom.Idiom
+
 import scala.annotation.tailrec
 import scala.language.experimental.macros
 import scala.language.higherKinds
@@ -31,22 +32,33 @@ trait TranslateContextBase {
   def translate(quoted: Quoted[Action[_]]): TranslateResult[String] = macro ActionMacro.translateQuery
   def translate(quoted: Quoted[BatchAction[Action[_]]]): TranslateResult[List[String]] = macro ActionMacro.translateBatchQuery
 
-  def translateQuery[T](statement: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): TranslateResult[String] =
+  def translate[T](quoted: Quoted[T], prettyPrint: Boolean): TranslateResult[String] = macro QueryMacro.translateQueryPrettyPrint[T]
+  def translate[T](quoted: Quoted[Query[T]], prettyPrint: Boolean): TranslateResult[String] = macro QueryMacro.translateQueryPrettyPrint[T]
+  def translate(quoted: Quoted[Action[_]], prettyPrint: Boolean): TranslateResult[String] = macro ActionMacro.translateQueryPrettyPrint
+  def translate(quoted: Quoted[BatchAction[Action[_]]], prettyPrint: Boolean): TranslateResult[List[String]] = macro ActionMacro.translateBatchQueryPrettyPrint
+
+  def translateQuery[T](statement: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor, prettyPrint: Boolean = false): TranslateResult[String] =
     push(prepareParams(statement, prepare)) { params =>
-      if (params.nonEmpty) {
-        params.foldLeft(statement) {
-          case (expanded, param) => expanded.replaceFirst("\\?", param)
+      val query =
+        if (params.nonEmpty) {
+          params.foldLeft(statement) {
+            case (expanded, param) => expanded.replaceFirst("\\?", param)
+          }
+        } else {
+          statement
         }
-      } else {
-        statement
-      }
+
+      if (prettyPrint)
+        idiom.format(query)
+      else
+        query
     }
 
-  def translateBatchQuery(groups: List[BatchGroup]): TranslateResult[List[String]] =
+  def translateBatchQuery(groups: List[BatchGroup], prettyPrint: Boolean = false): TranslateResult[List[String]] =
     seq {
       groups.flatMap { group =>
         group.prepare.map { prepare =>
-          translateQuery(group.string, prepare)
+          translateQuery(group.string, prepare, prettyPrint = prettyPrint)
         }
       }
     }

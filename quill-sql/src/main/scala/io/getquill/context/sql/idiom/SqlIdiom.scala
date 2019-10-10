@@ -1,5 +1,6 @@
 package io.getquill.context.sql.idiom
 
+import com.github.vertical_blank.sqlformatter.scala.SqlFormatter
 import io.getquill.ast._
 import io.getquill.ast.BooleanOperator._
 import io.getquill.ast.Lift
@@ -28,6 +29,8 @@ trait SqlIdiom extends Idiom {
   protected def equalityBehavior: EqualityBehavior = AnsiEquality
 
   protected def actionAlias: Option[Ident] = None
+
+  override def format(queryString: String): String = SqlFormatter.format(queryString)
 
   def querifyAst(ast: Ast) = SqlQuery(ast)
 
@@ -77,7 +80,7 @@ trait SqlIdiom extends Idiom {
       case a: OptionOperation => a.token
       case a @ (
         _: Function | _: FunctionApply | _: Dynamic | _: OptionOperation | _: Block |
-        _: Val | _: Ordering | _: QuotedReference | _: TraversableOperation | _: OnConflict.Excluded | _: OnConflict.Existing
+        _: Val | _: Ordering | _: QuotedReference | _: IterableOperation | _: OnConflict.Excluded | _: OnConflict.Existing
         ) =>
         fail(s"Malformed or unsupported construct: $a.")
     }

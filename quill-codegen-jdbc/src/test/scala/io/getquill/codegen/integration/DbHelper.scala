@@ -1,9 +1,10 @@
 package io.getquill.codegen.integration
+
+import com.typesafe.scalalogging.Logger
+
 import java.io.Closeable
 import java.sql.Connection
-
-import com.github.choppythelumberjack.tryclose.{ TryClose, wrap }
-import com.typesafe.scalalogging.Logger
+import javax.sql.DataSource
 import io.getquill.codegen.jdbc.DatabaseTypes._
 import io.getquill.codegen.jdbc.gen.DefaultJdbcSchemaReader
 import io.getquill.codegen.model.JdbcTableMeta
@@ -12,23 +13,21 @@ import io.getquill.codegen.util.OptionOps._
 import io.getquill.codegen.util.SchemaConfig
 import io.getquill.codegen.util.StringUtil._
 import io.getquill.codegen.util.TryOps._
-import javax.sql.DataSource
+import io.getquill.util.Using.Manager
 import org.slf4j.LoggerFactory
-
 import scala.util.Try
 
 object DbHelper {
   private val logger = Logger(LoggerFactory.getLogger(classOf[DbHelper]))
 
-  import com.github.choppythelumberjack.tryclose.JavaImplicits._
-
-  private def getDatabaseType(ds: DataSource) = {
-    for {
-      conn <- TryClose(ds.getConnection)
-      meta <- TryClose.wrap(conn.getMetaData)
-      productType <- TryClose.wrap(meta.get.getDatabaseProductName)
-    } yield wrap(DatabaseType.fromProductName(productType.get))
-  }.unwrap.asTry.flatMap(t => t).orThrow
+  private def getDatabaseType(ds: DataSource): DatabaseType = {
+    Manager { use =>
+      val conn = use(ds.getConnection)
+      val meta = conn.getMetaData
+      val productType = meta.getDatabaseProductName
+      DatabaseType.fromProductName(productType)
+    }.flatten.orThrow
+  }
 
   def syncDbRun(rawSql: String, ds: DataSource): Try[Unit] = {
     val databaseType = getDatabaseType(ds)
@@ -63,22 +62,21 @@ object DbHelper {
 
     if (sql.trim.isEmpty) throw new IllegalArgumentException("Cannot execute empty query")
 
-    val result =
-      appendSequence(TryClose(ds.getConnection), sql.split(";").toList.filter(!_.trim.isEmpty))
+    val result = Manager { use =>
+      appendSequence(use(ds.getConnection), sql.split(";").toList.filter(!_.trim.isEmpty))
+    }
 
-    result.unwrap.asTry.map(_ => ())
+    result.map(_ => ())
   }
 
-  private def appendSequence(tc: TryClose[Connection], actions: List[String]) = {
-    // Walk through all the statements that need to be executed and nest them in a try-close. Continue
-    // passing down the connection wrapped since if it is closed it will only be closed upstream in the original
-    // TryClose that had it (i.e. before this function was called)
-    actions.foldLeft(tc.flatMap(TryClose.wrap(_))) {
-      case (currTry, actionStr) => {
-        currTry.flatMap { conn =>
-          TryClose { logger.debug(s"Executing: ${actionStr}"); conn.get.prepareStatement(actionStr).execute(); conn }
-        }
+  private def appendSequence(conn: Connection, actions: List[String]) = {
+    actions.map { actStr =>
+      logger.debug(s"Executing: ${actStr}")
+      Manager { use =>
+        val stmt = use(conn.prepareStatement(actStr))
+        stmt.execute()
       }
+
     }
   }
 
