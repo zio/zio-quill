@@ -1,5 +1,6 @@
 package io.getquill.context.sql.idiom
 
+import com.github.vertical_blank.sqlformatter.scala.SqlFormatter
 import io.getquill.ast._
 import io.getquill.ast.BooleanOperator._
 import io.getquill.ast.Lift
@@ -28,6 +29,8 @@ trait SqlIdiom extends Idiom {
   protected def equalityBehavior: EqualityBehavior = AnsiEquality
 
   protected def actionAlias: Option[Ident] = None
+
+  override def format(queryString: String): String = SqlFormatter.format(queryString)
 
   def querifyAst(ast: Ast) = SqlQuery(ast)
 
