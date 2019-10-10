@@ -15,18 +15,25 @@ class ActionMacro(val c: MacroContext)
   import c.universe.{ Function => _, Ident => _, _ }
 
   def translateQuery(quoted: Tree): Tree =
+    translateQueryPrettyPrint(quoted, q"false")
+
+  def translateQueryPrettyPrint(quoted: Tree, prettyPrint: Tree): Tree =
     c.untypecheck {
       q"""
         ..${EnableReflectiveCalls(c)}
         val expanded = ${expand(extractAst(quoted))}
         ${c.prefix}.translateQuery(
           expanded.string,
-          expanded.prepare
+          expanded.prepare,
+          prettyPrint = ${prettyPrint}
         )
       """
     }
 
   def translateBatchQuery(quoted: Tree): Tree =
+    translateBatchQueryPrettyPrint(quoted, q"false")
+
+  def translateBatchQueryPrettyPrint(quoted: Tree, prettyPrint: Tree): Tree =
     expandBatchAction(quoted) {
       case (batch, param, expanded) =>
         q"""
@@ -38,7 +45,8 @@ class ActionMacro(val c: MacroContext)
             }.groupBy(_._1).map {
               case (string, items) =>
                 ${c.prefix}.BatchGroup(string, items.map(_._2).toList)
-            }.toList
+            }.toList,
+            ${prettyPrint}
           )
         """
     }

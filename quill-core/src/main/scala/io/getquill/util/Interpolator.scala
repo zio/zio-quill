@@ -5,6 +5,7 @@ import java.io.PrintStream
 import io.getquill.AstPrinter
 import io.getquill.AstPrinter.Implicits._
 import io.getquill.util.Messages.TraceType
+import io.getquill.util.IndentUtil._
 
 import scala.collection.mutable
 import scala.util.matching.Regex
@@ -20,16 +21,6 @@ class Interpolator(
   implicit class InterpolatorExt(sc: StringContext) {
     def trace(elements: Any*) = new Traceable(sc, elements)
   }
-  implicit class StringOps(str: String) {
-    def fitsOnOneLine: Boolean = !str.contains("\n")
-    def multiline(indent: Int, prefix: String): String =
-      str.split("\n").map(elem => indent.prefix + prefix + elem).mkString("\n")
-  }
-  implicit class IndentOps(i: Int) {
-    def prefix = indentOf(i)
-  }
-  private def indentOf(num: Int) =
-    (0 to num).map(_ => "").mkString("  ")
 
   class Traceable(sc: StringContext, elementsSeq: Seq[Any]) {
 
