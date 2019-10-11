@@ -1,4 +1,4 @@
-FROM hseeberger/scala-sbt:8u212_1.2.8_2.12.9
+FROM hseeberger/scala-sbt:8u222_1.3.2_2.13.1
 MAINTAINER mdedetrich@gmail.com
 
 RUN apt-get install -y --no-install-recommends nodejs

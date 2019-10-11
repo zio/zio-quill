@@ -113,6 +113,8 @@ lazy val `quill-core` =
     .jsSettings(
       libraryDependencies ++= Seq(
         "com.lihaoyi" %%% "pprint" % pprintVersion(scalaVersion.value),
+        "org.scala-js" %%% "scalajs-java-time" % "0.2.5",
+        "com.lihaoyi" %%% "pprint" % "0.5.4",
         "org.scala-js" %%% "scalajs-java-time" % "0.2.5"
       ),
       coverageExcludedPackages := ".*"
@@ -125,7 +127,14 @@ lazy val `quill-sql` =
   crossProject(JVMPlatform, JSPlatform).crossType(superPure)
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
+    .settings(libraryDependencies ++= Seq(
+      "com.github.vertical-blank"  %% "scala-sql-formatter" % "1.0.0"
+    ))
     .jsSettings(
+      libraryDependencies ++= Seq(
+        "com.github.vertical-blank" %%% "scala-sql-formatter" % "1.0.0"
+      ),
+      scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) },
       coverageExcludedPackages := ".*"
     )
     .dependsOn(`quill-core` % "compile->compile;test->test")
