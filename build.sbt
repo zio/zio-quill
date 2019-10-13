@@ -473,7 +473,7 @@ lazy val jdbcTestingLibraries = Seq(
     val deps =
       Seq(
         "com.zaxxer"              %  "HikariCP"                % "3.4.1",
-        "mysql"                   %  "mysql-connector-java"    % "8.0.17"             % Test,
+        "mysql"                   %  "mysql-connector-java"    % "8.0.18"             % Test,
         "com.h2database"          %  "h2"                      % "1.4.199"            % Test,
         "org.postgresql"          %  "postgresql"              % "42.2.8"             % Test,
         "org.xerial"              %  "sqlite-jdbc"             % "3.28.0"           % Test,
