@@ -106,7 +106,7 @@ lazy val `quill-core` =
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .settings(libraryDependencies ++= Seq(
-      "com.typesafe"               %  "config"        % "1.3.4",
+      "com.typesafe"               %  "config"        % "1.4.0",
       "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
       "org.scala-lang"             %  "scala-reflect" % scalaVersion.value
     ))
@@ -285,7 +285,7 @@ lazy val `quill-finagle-mysql` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.twitter" %% "finagle-mysql" % "19.9.0"
+        "com.twitter" %% "finagle-mysql" % "19.10.0"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -384,7 +384,7 @@ lazy val `quill-orientdb` =
       .settings(
         fork in Test := true,
         libraryDependencies ++= Seq(
-          "com.orientechnologies" % "orientdb-graphdb" % "3.0.23"
+          "com.orientechnologies" % "orientdb-graphdb" % "3.0.24"
         )
       )
       .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -473,12 +473,12 @@ lazy val jdbcTestingLibraries = Seq(
     val deps =
       Seq(
         "com.zaxxer"              %  "HikariCP"                % "3.4.1",
-        "mysql"                   %  "mysql-connector-java"    % "8.0.17"             % Test,
-        "com.h2database"          %  "h2"                      % "1.4.199"            % Test,
+        "mysql"                   %  "mysql-connector-java"    % "8.0.18"             % Test,
+        "com.h2database"          %  "h2"                      % "1.4.200"            % Test,
         "org.postgresql"          %  "postgresql"              % "42.2.8"             % Test,
         "org.xerial"              %  "sqlite-jdbc"             % "3.28.0"           % Test,
         "com.microsoft.sqlserver" %  "mssql-jdbc"              % "7.1.1.jre8-preview" % Test,
-        "org.mockito"             %% "mockito-scala-scalatest" % "1.5.18"              % Test
+        "org.mockito"             %% "mockito-scala-scalatest" % "1.6.2"              % Test
       )
 
     deps ++ includeIfOracle(
