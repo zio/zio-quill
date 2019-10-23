@@ -190,14 +190,11 @@ lazy val `quill-codegen-tests` =
         // We could put the code generated products directly in the `sourcePath` directory but for some reason
         // intellij doesn't like it unless there's a `main` directory inside.
         val fileDir = new File(sourcePath, "main").getAbsoluteFile
-        val dbs =
-          Seq("testH2DB", "testMysqlDB", "testPostgresDB", "testSqliteDB", "testSqlServerDB"
-          ) ++ includeIfOracle("testOracleDB")
+        val dbs = Seq("testH2DB", "testMysqlDB", "testPostgresDB", "testSqliteDB", "testSqlServerDB", "testOracleDB")
         println(s"Running code generation for DBs: ${dbs.mkString(", ")}")
         r.run(
           "io.getquill.codegen.integration.CodegenTestCaseRunner",
           classPath,
-          // If oracle tests are included, enable code generation for it
           fileDir.getAbsolutePath +: dbs,
           s
         )
@@ -217,9 +214,6 @@ val skipPush =
 
 val debugMacro =
   sys.props.getOrElse("debugMacro", "false").toBoolean
-
-def includeIfOracle[T](t:T):Seq[T] =
-  if (includeOracle) Seq(t) else Seq()
 
 val skipTag =
   sys.props.getOrElse("skipTag", "false").toBoolean
@@ -466,25 +460,16 @@ def updateWebsiteTag =
   })
 
 lazy val jdbcTestingLibraries = Seq(
-  resolvers ++= includeIfOracle( // read ojdbc8 jar in case it is deployed
-    Resolver.mavenLocal
-  ),
-  libraryDependencies ++= {
-    val deps =
-      Seq(
-        "com.zaxxer"              %  "HikariCP"                % "3.4.1",
-        "mysql"                   %  "mysql-connector-java"    % "8.0.18"             % Test,
-        "com.h2database"          %  "h2"                      % "1.4.200"            % Test,
-        "org.postgresql"          %  "postgresql"              % "42.2.8"             % Test,
-        "org.xerial"              %  "sqlite-jdbc"             % "3.28.0"           % Test,
-        "com.microsoft.sqlserver" %  "mssql-jdbc"              % "7.1.1.jre8-preview" % Test,
-        "org.mockito"             %% "mockito-scala-scalatest" % "1.6.2"              % Test
-      )
-
-    deps ++ includeIfOracle(
-      "com.oracle.jdbc" % "ojdbc8" % "18.3.0.0.0" % Test
-    )
-  }
+  libraryDependencies ++= Seq(
+    "com.zaxxer"              %  "HikariCP"                % "3.4.1",
+    "mysql"                   %  "mysql-connector-java"    % "8.0.18"             % Test,
+    "com.h2database"          %  "h2"                      % "1.4.200"            % Test,
+    "org.postgresql"          %  "postgresql"              % "42.2.8"             % Test,
+    "org.xerial"              %  "sqlite-jdbc"             % "3.28.0"             % Test,
+    "com.microsoft.sqlserver" %  "mssql-jdbc"              % "7.1.1.jre8-preview" % Test,
+    "com.oracle.ojdbc"        %  "ojdbc8"                  % "19.3.0.0"           % Test,
+    "org.mockito"             %% "mockito-scala-scalatest" % "1.6.2"              % Test
+  )
 )
 
 lazy val jdbcTestingSettings = jdbcTestingLibraries ++ Seq(

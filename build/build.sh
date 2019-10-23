@@ -84,9 +84,6 @@ function wait_for_databases() {
        exit 1
     fi
 
-    echo "Loading Oracle Drivers From Container"
-    ./build/oracle_setup/load_jdbc.sh
-
     echo "Database Setup is finished, waiting for the compilation of core module"
 
     wait $COMPILE
