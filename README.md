@@ -1981,6 +1981,7 @@ dynamicQuery[Person].insert(setOpt(_.name, Some("John")))
 
 // it's also possible to use a runtime string value as the column name
 dynamicQuery[Person].update(set("name", quote("John")))
+dynamicQuery[Person].update(setOpt("name", Some("John")))
 
 // to insert or update a case class instance, use `insertValue`/`updateValue`
 val p = Person(0, "John", 21)
