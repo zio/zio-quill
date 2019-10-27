@@ -416,6 +416,66 @@ class SqlActionMacroSpec extends Spec {
           mirror.returningBehavior mustEqual ReturnRecord
         }
       }
+      "output clause - single" in testContext.withDialect(MirrorSqlDialectWithOutputClause) { ctx =>
+        import ctx._
+        val q = quote {
+          qr1.insert(lift(TestEntity("s", 0, 1L, None))).returningGenerated(_.l)
+        }
+
+        val mirror = ctx.run(q)
+        mirror.string mustEqual "INSERT INTO TestEntity (s,i,o) OUTPUT INSERTED.l VALUES (?, ?, ?)"
+        mirror.returningBehavior mustEqual ReturnRecord
+      }
+      "output clause - multi" in testContext.withDialect(MirrorSqlDialectWithOutputClause) { ctx =>
+        import ctx._
+        val q = quote {
+          qr1.insert(lift(TestEntity("s", 0, 1L, None))).returningGenerated(r => (r.i, r.l))
+        }
+        val mirror = ctx.run(q)
+        mirror.string mustEqual "INSERT INTO TestEntity (s,o) OUTPUT INSERTED.i, INSERTED.l VALUES (?, ?)"
+        mirror.returningBehavior mustEqual ReturnRecord
+      }
+      "output clause - operation" in testContext.withDialect(MirrorSqlDialectWithOutputClause) { ctx =>
+        import ctx._
+        val q = quote { qr1.insert(lift(TestEntity("s", 0, 1L, None))).returningGenerated(r => (r.i, r.l + 1)) }
+        val mirror = ctx.run(q)
+
+        mirror.string mustEqual "INSERT INTO TestEntity (s,o) OUTPUT INSERTED.i, INSERTED.l + 1 VALUES (?, ?)"
+      }
+      "output clause - record" in testContext.withDialect(MirrorSqlDialectWithOutputClause) { ctx =>
+        import ctx._
+        val q = quote {
+          qr1.insert(lift(TestEntity("s", 0, 1L, None))).returningGenerated(r => r)
+        }
+        val mirror = ctx.run(q)
+        mirror.string mustEqual "INSERT INTO TestEntity OUTPUT INSERTED.* DEFAULT VALUES"
+        mirror.returningBehavior mustEqual ReturnRecord
+      }
+      "output clause - embedded" - {
+        case class Dummy(i: Int)
+
+        "embedded property" in testContext.withDialect(MirrorSqlDialectWithOutputClause) { ctx =>
+          import ctx._
+          val q = quote {
+            qr1Emb.insert(lift(TestEntityEmb(Emb("s", 0), 1L, None))).returningGenerated(_.emb.i)
+          }
+          val mirror = ctx.run(q)
+          mirror.string mustEqual "INSERT INTO TestEntity (s,l,o) OUTPUT INSERTED.i VALUES (?, ?, ?)"
+          mirror.returningBehavior mustEqual ReturnRecord
+        }
+        "two embedded properties" in testContext.withDialect(MirrorSqlDialectWithOutputClause) { ctx =>
+          import ctx._
+          val q = quote {
+            qr1Emb.insert(lift(TestEntityEmb(Emb("s", 0), 1L, None))).returningGenerated(r => (r.emb.i, r.emb.s))
+          }
+          val mirror = ctx.run(q)
+          mirror.string mustEqual "INSERT INTO TestEntity (l,o) OUTPUT INSERTED.i, INSERTED.s VALUES (?, ?)"
+          mirror.returningBehavior mustEqual ReturnRecord
+        }
+      }
+      "output clause - should fail on query" in testContext.withDialect(MirrorSqlDialectWithOutputClause) { ctx =>
+        """import ctx._; quote { qr4.insert(lift(TestEntity4(1L))).returningGenerated(r => query[TestEntity4].filter(t => t.i == r.i)) }""" mustNot compile
+      }
     }
 
     "returning" - {
@@ -573,6 +633,64 @@ class SqlActionMacroSpec extends Spec {
           mirror.string mustEqual "INSERT INTO TestEntity AS r (s,i,l,o) VALUES (?, ?, ?, ?) RETURNING (SELECT MAX(d.i) FROM Dummy d WHERE d.i = r.i)"
           mirror.returningBehavior mustEqual ReturnRecord
         }
+      }
+      "output clause - single" in testContext.withDialect(MirrorSqlDialectWithOutputClause) { ctx =>
+        import ctx._
+        val q = quote {
+          qr1.insert(lift(TestEntity("s", 0, 1L, None))).returning(_.l)
+        }
+
+        val mirror = ctx.run(q)
+        mirror.string mustEqual "INSERT INTO TestEntity (s,i,l,o) OUTPUT INSERTED.l VALUES (?, ?, ?, ?)"
+        mirror.returningBehavior mustEqual ReturnRecord
+      }
+      "output clause - multi" in testContext.withDialect(MirrorSqlDialectWithOutputClause) { ctx =>
+        import ctx._
+        val q = quote {
+          qr1.insert(lift(TestEntity("s", 0, 1L, None))).returning(r => (r.i, r.l))
+        }
+        val mirror = ctx.run(q)
+        mirror.string mustEqual "INSERT INTO TestEntity (s,i,l,o) OUTPUT INSERTED.i, INSERTED.l VALUES (?, ?, ?, ?)"
+        mirror.returningBehavior mustEqual ReturnRecord
+      }
+      "output clause - operation" in testContext.withDialect(MirrorSqlDialectWithOutputClause) { ctx =>
+        import ctx._
+        val q = quote { qr1.insert(lift(TestEntity("s", 0, 1L, None))).returning(r => (r.i, r.l + 1)) }
+        val mirror = ctx.run(q)
+
+        mirror.string mustEqual "INSERT INTO TestEntity (s,i,l,o) OUTPUT INSERTED.i, INSERTED.l + 1 VALUES (?, ?, ?, ?)"
+      }
+      "output clause - record" in testContext.withDialect(MirrorSqlDialectWithOutputClause) { ctx =>
+        import ctx._
+        val q = quote {
+          qr1.insert(lift(TestEntity("s", 0, 1L, None))).returning(r => r)
+        }
+        val mirror = ctx.run(q)
+        mirror.string mustEqual "INSERT INTO TestEntity (s,i,l,o) OUTPUT INSERTED.s, INSERTED.i, INSERTED.l, INSERTED.o VALUES (?, ?, ?, ?)"
+        mirror.returningBehavior mustEqual ReturnRecord
+      }
+      "output clause - embedded" - {
+        "embedded property" in testContext.withDialect(MirrorSqlDialectWithOutputClause) { ctx =>
+          import ctx._
+          val q = quote {
+            qr1Emb.insert(lift(TestEntityEmb(Emb("s", 0), 1L, None))).returning(_.emb.i)
+          }
+          val mirror = ctx.run(q)
+          mirror.string mustEqual "INSERT INTO TestEntity (s,i,l,o) OUTPUT INSERTED.i VALUES (?, ?, ?, ?)"
+          mirror.returningBehavior mustEqual ReturnRecord
+        }
+        "two embedded properties" in testContext.withDialect(MirrorSqlDialectWithOutputClause) { ctx =>
+          import ctx._
+          val q = quote {
+            qr1Emb.insert(lift(TestEntityEmb(Emb("s", 0), 1L, None))).returning(r => (r.emb.i, r.emb.s))
+          }
+          val mirror = ctx.run(q)
+          mirror.string mustEqual "INSERT INTO TestEntity (s,i,l,o) OUTPUT INSERTED.i, INSERTED.s VALUES (?, ?, ?, ?)"
+          mirror.returningBehavior mustEqual ReturnRecord
+        }
+      }
+      "output clause - should fail on query" in testContext.withDialect(MirrorSqlDialectWithOutputClause) { ctx =>
+        """import ctx._; quote { qr4.insert(lift(TestEntity4(1L))).returning(r => query[TestEntity4].filter(t => t.i == r.i)) }""" mustNot compile
       }
     }
 

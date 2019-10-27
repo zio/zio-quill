@@ -1,15 +1,10 @@
 package io.getquill.norm
 
 import io.getquill.ReturnAction.ReturnColumns
-import io.getquill.{ NamingStrategy, ReturnAction }
 import io.getquill.ast._
-import io.getquill.context.{
-  ReturningClauseSupported,
-  ReturningMultipleFieldSupported,
-  ReturningNotSupported,
-  ReturningSingleFieldSupported
-}
+import io.getquill.context._
 import io.getquill.idiom.{ Idiom, Statement }
+import io.getquill.{ NamingStrategy, ReturnAction }
 
 /**
  * Take the `.returning` part in a query that contains it and return the array of columns
@@ -21,7 +16,7 @@ object ExpandReturning {
     val initialExpand = ExpandReturning.apply(returning)(idiom, naming)
 
     idiom.idiomReturningCapability match {
-      case ReturningClauseSupported =>
+      case ReturningClauseSupported | OutputClauseSupported =>
         ReturnAction.ReturnRecord
       case ReturningMultipleFieldSupported =>
         ReturnColumns(initialExpand.map { case (ast, statement) => f(ast, statement) })
