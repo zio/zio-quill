@@ -13,14 +13,14 @@ import io.getquill.{ NamingStrategy, ReturnAction }
 object ExpandReturning {
 
   def applyMap(returning: ReturningAction)(f: (Ast, Statement) => String)(idiom: Idiom, naming: NamingStrategy) = {
-    val initialExpand = ExpandReturning.apply(returning)(idiom, naming)
-
     idiom.idiomReturningCapability match {
       case ReturningClauseSupported | OutputClauseSupported =>
         ReturnAction.ReturnRecord
       case ReturningMultipleFieldSupported =>
+        val initialExpand = ExpandReturning(returning)(idiom, naming)
         ReturnColumns(initialExpand.map { case (ast, statement) => f(ast, statement) })
       case ReturningSingleFieldSupported =>
+        val initialExpand = ExpandReturning(returning)(idiom, naming)
         if (initialExpand.length == 1)
           ReturnColumns(initialExpand.map { case (ast, statement) => f(ast, statement) })
         else
@@ -30,17 +30,17 @@ object ExpandReturning {
     }
   }
 
-  def apply(returning: ReturningAction)(idiom: Idiom, naming: NamingStrategy): List[(Ast, Statement)] = {
+  def apply(returning: ReturningAction, renameAlias: Option[String] = None)(idiom: Idiom, naming: NamingStrategy): List[(Ast, Statement)] = {
     val ReturningAction(_, alias, properties) = returning
 
     // Ident("j"), Tuple(List(Property(Ident("j"), "name"), BinaryOperation(Property(Ident("j"), "age"), +, Constant(1))))
     // => Tuple(List(ExternalIdent("name"), BinaryOperation(ExternalIdent("age"), +, Constant(1))))
-    val dePropertized =
-      Transform(properties) {
-        case `alias` => ExternalIdent(alias.name)
-      }
-
-    val aliasName = alias.name
+    val dePropertized = renameAlias match {
+      case Some(newName) =>
+        BetaReduction(properties, alias -> Ident(newName))
+      case None =>
+        BetaReduction(properties, alias -> ExternalIdent(alias.name))
+    }
 
     // Tuple(List(ExternalIdent("name"), BinaryOperation(ExternalIdent("age"), +, Constant(1))))
     // => List(ExternalIdent("name"), BinaryOperation(ExternalIdent("age"), +, Constant(1)))

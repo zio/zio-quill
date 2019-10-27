@@ -448,7 +448,7 @@ class SqlActionMacroSpec extends Spec {
           qr1.insert(lift(TestEntity("s", 0, 1L, None))).returningGenerated(r => r)
         }
         val mirror = ctx.run(q)
-        mirror.string mustEqual "INSERT INTO TestEntity OUTPUT INSERTED.* DEFAULT VALUES"
+        mirror.string mustEqual "INSERT INTO TestEntity OUTPUT INSERTED.s, INSERTED.i, INSERTED.l, INSERTED.o DEFAULT VALUES"
         mirror.returningBehavior mustEqual ReturnRecord
       }
       "output clause - embedded" - {

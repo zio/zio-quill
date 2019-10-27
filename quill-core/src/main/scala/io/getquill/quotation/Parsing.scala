@@ -831,7 +831,7 @@ trait Parsing extends ValueComputation {
   implicit class InsertReturnCapabilityExtension(capability: ReturningCapability) {
     def verifyAst(returnBody: Ast) = capability match {
       case OutputClauseSupported => returnBody match {
-        case Filter(_, _, _) =>
+        case _: Query =>
           c.fail(s"${currentIdiom.map(n => s"The dialect ${n} does").getOrElse("Unspecified dialects do")} not allow queries in 'returning' clauses.")
         case _ =>
       }
