@@ -468,7 +468,7 @@ lazy val jdbcTestingLibraries = Seq(
     "org.xerial"              %  "sqlite-jdbc"             % "3.28.0"             % Test,
     "com.microsoft.sqlserver" %  "mssql-jdbc"              % "7.1.1.jre8-preview" % Test,
     "com.oracle.ojdbc"        %  "ojdbc8"                  % "19.3.0.0"           % Test,
-    "org.mockito"             %% "mockito-scala-scalatest" % "1.6.2"              % Test
+    "org.mockito"             %% "mockito-scala-scalatest" % "1.7.0"              % Test
   )
 )
 
