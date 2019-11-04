@@ -11,6 +11,8 @@ object Messages {
   private def variable(propName: String, envName: String, default: String) =
     Option(System.getProperty(propName)).orElse(sys.env.get(envName)).getOrElse(default)
 
+  val reduceTrivials = variable("quill.transform.reducetrivial", "quill_transform_reducetrivial", "true").toBoolean
+
   private[util] val prettyPrint = variable("quill.macro.log.pretty", "quill_macro_log", "false").toBoolean
   private[util] val debugEnabled = variable("quill.macro.log", "quill_macro_log", "true").toBoolean
   private[util] val traceEnabled = variable("quill.trace.enabled", "quill_trace_enabled", "false").toBoolean

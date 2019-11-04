@@ -1,16 +1,37 @@
 package io.getquill.norm
 
 import io.getquill.ast._
+import io.getquill.util.Messages
+
 import scala.collection.immutable.{ Map => IMap }
 
 case class BetaReduction(replacements: Replacements)
   extends StatelessTransformer {
+
+  object TriviallyTrueCondition {
+    def unapply(ast: Ast): Boolean =
+      ast match {
+        case TriviallyCheckable(Constant(true)) => true
+        case _                                  => false
+      }
+  }
+
+  object TriviallyFalseCondition {
+    def unapply(ast: Ast): Boolean =
+      ast match {
+        case TriviallyCheckable(Constant(false)) => true
+        case _                                   => false
+      }
+  }
 
   override def apply(ast: Ast): Ast =
     ast match {
 
       case ast if replacements.contains(ast) =>
         BetaReduction(replacements - ast - replacements(ast))(replacements(ast))
+
+      case If(TriviallyTrueCondition(), thenClause, _) if (Messages.reduceTrivials)  => apply(thenClause)
+      case If(TriviallyFalseCondition(), _, elseClause) if (Messages.reduceTrivials) => apply(elseClause)
 
       case Property(Tuple(values), name) =>
         apply(values(name.drop(1).toInt - 1))
