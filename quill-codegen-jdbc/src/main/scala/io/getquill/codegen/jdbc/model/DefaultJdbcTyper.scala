@@ -42,7 +42,7 @@ class DefaultJdbcTyper(
       case DECIMAL                                   => Some(classTag[BigDecimal])
       case BIT | BOOLEAN                             => Some(classTag[Boolean])
       case TINYINT                                   => Some(classTag[Byte])
-      case SMALLINT                                  => Some(classTag[Int])
+      case SMALLINT                                  => Some(classTag[Short])
       case INTEGER                                   => Some(classTag[Int])
       case BIGINT                                    => Some(classTag[Long])
       case REAL                                      => Some(classTag[Float])
