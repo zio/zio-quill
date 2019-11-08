@@ -20,7 +20,7 @@ export CASSANDRA_PORT=19042
 export ORIENTDB_HOST=127.0.0.1
 export ORIENTDB_PORT=12424
 
-export JVM_OPTS="-Dquill.macro.log=false -Xms1024m -Xmx3g -Xss5m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC"
+export JVM_OPTS="-Dquill.macro.log=false -Dquill.scala,version=$TRAVIS_SCALA_VERSION -Xms1024m -Xmx3g -Xss5m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC"
 
 modules=$1
 
@@ -83,9 +83,6 @@ function wait_for_databases() {
        kill -9 $COMPILE
        exit 1
     fi
-
-    echo "Loading Oracle Drivers From Container"
-    ./build/oracle_setup/load_jdbc.sh
 
     echo "Database Setup is finished, waiting for the compilation of core module"
 

@@ -15,7 +15,7 @@ class ArrayAsyncEncodingSpec extends ArrayEncodingBaseSpec {
 
   val q = quote(query[ArraysTestEntity])
 
-  "Support all sql base types and `Traversable` implementers" in {
+  "Support all sql base types and `Iterable` implementers" in {
     await(ctx.run(q.insert(lift(e))))
     val actual = await(ctx.run(q)).head
     actual mustEqual e
@@ -51,7 +51,7 @@ class ArrayAsyncEncodingSpec extends ArrayEncodingBaseSpec {
     actual.dates mustBe jE.dates
   }
 
-  "Support Traversable encoding basing on MappedEncoding" in {
+  "Support Iterable encoding basing on MappedEncoding" in {
     val wrapQ = quote(querySchema[WrapEntity]("ArraysTestEntity"))
     await(ctx.run(wrapQ.insert(lift(wrapE))))
     await(ctx.run(wrapQ)).head mustBe wrapE

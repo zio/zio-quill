@@ -53,7 +53,7 @@ trait Unliftables {
     case q"$pack.OptionNone" => OptionNone
   }
 
-  implicit val traversableOperationUnliftable: Unliftable[TraversableOperation] = Unliftable[TraversableOperation] {
+  implicit val traversableOperationUnliftable: Unliftable[IterableOperation] = Unliftable[IterableOperation] {
     case q"$pack.MapContains.apply(${ a: Ast }, ${ b: Ast })"  => MapContains(a, b)
     case q"$pack.SetContains.apply(${ a: Ast }, ${ b: Ast })"  => SetContains(a, b)
     case q"$pack.ListContains.apply(${ a: Ast }, ${ b: Ast })" => ListContains(a, b)

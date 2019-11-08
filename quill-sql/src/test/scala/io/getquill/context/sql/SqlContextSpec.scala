@@ -13,6 +13,7 @@ import io.getquill.context.{ CanReturnField, Context }
 import io.getquill.context.sql.idiom.ConcatSupport
 
 class SqlContextSpec extends Spec {
+  val testContext = io.getquill.context.sql.testContext
 
   "binds inputs according to the sql terms order" - {
     "filter.update" in {
@@ -21,7 +22,7 @@ class SqlContextSpec extends Spec {
       }
       val mirror = testContext.run(q)
       mirror.string mustEqual "UPDATE TestEntity SET l = ? WHERE i = ?"
-      mirror.prepareRow mustEqual Row(2l, 1)
+      mirror.prepareRow mustEqual Row(2L, 1)
     }
     "filter.map" in {
       val q = quote {
@@ -29,7 +30,7 @@ class SqlContextSpec extends Spec {
       }
       val mirror = testContext.run(q)
       mirror.string mustEqual "SELECT ? FROM TestEntity t WHERE t.i = ?"
-      mirror.prepareRow mustEqual Row(2l, 1)
+      mirror.prepareRow mustEqual Row(2L, 1)
     }
   }
 
