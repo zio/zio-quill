@@ -8,6 +8,9 @@ import io.getquill.codegen.dag.CatalogBasedAncestry
 
 import scala.reflect.{ ClassTag, classTag }
 
+// I.e. something the type-ancestry does not know about
+class UnknownClass
+
 class CodeGeneratorRunnerDagTest extends FunSuite with BeforeAndAfter {
 
   case class TestCase[O](one: ClassTag[_], twos: Seq[ClassTag[_]], result: ClassTag[_])
@@ -31,7 +34,14 @@ class CodeGeneratorRunnerDagTest extends FunSuite with BeforeAndAfter {
       ),
       classTag[String]
     ),
-    TestCase(classTag[java.time.LocalDate], Seq(classTag[LocalDateTime]), classTag[LocalDateTime])
+    TestCase(classTag[java.time.LocalDate], Seq(classTag[LocalDateTime]), classTag[LocalDateTime]),
+    TestCase(classTag[Short], Seq(classTag[Boolean], classTag[Byte]), classTag[Short]),
+    TestCase(classTag[Short], Seq(classTag[Int]), classTag[Int]),
+    TestCase(classTag[Int], Seq(classTag[Short]), classTag[Int]),
+    TestCase(classTag[UnknownClass], Seq(classTag[String]), classTag[String]),
+    TestCase(classTag[UnknownClass], Seq(classTag[UnknownClass]), classTag[UnknownClass]),
+    // Don't know ancestry of unknown class to an Int (or any kind) so go directly to root of the ancestry i.e. String.
+    TestCase(classTag[UnknownClass], Seq(classTag[Int]), classTag[String])
   )
 
   val casesIter = for {
