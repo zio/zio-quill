@@ -50,11 +50,13 @@ class NdbcPostgresContextSpec extends Spec {
         e <- ctx.transaction {
           Future.sequence(Seq(
             ctx.run(qr1.insert(_.i -> 19)),
-            Future.apply(throw new IllegalStateException)
+            Future(throw new IllegalStateException)
           ))
-        }.failed
+        }.recoverWith {
+          case e: Exception => Future(e.getClass.getSimpleName)
+        }
         r <- ctx.run(qr1)
-      } yield (e.getClass.getSimpleName, r.isEmpty)) mustEqual (("IllegalStateException", true))
+      } yield (e, r.isEmpty)) mustEqual (("IllegalStateException", true))
     }
 
     "nested" in {

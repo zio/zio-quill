@@ -2,6 +2,7 @@ package io.getquill.context.ndbc
 
 import java.time.ZoneOffset
 import java.util.Iterator
+import java.util.concurrent.Executors
 import java.util.function.Supplier
 
 import com.typesafe.scalalogging.Logger
@@ -9,6 +10,7 @@ import io.getquill.context.ContextEffect
 import io.getquill.context.sql.SqlContext
 import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.{ NamingStrategy, ReturnAction }
+import io.trane.future.FuturePool
 import io.trane.future.scala.{ Future, toJavaFuture, toScalaFuture }
 import io.trane.ndbc.{ DataSource, PreparedStatement, Row }
 import org.slf4j.LoggerFactory.getLogger
@@ -55,12 +57,21 @@ abstract class NdbcContext[I <: SqlIdiom, N <: NamingStrategy, P <: PreparedStat
   protected def withDataSource[T](f: DataSource[P, R] => T): Result[T] = wrap(f(dataSource))
 
   def transaction[T](f: => Future[T]): Future[T] = {
-    withDataSource { ds =>
-      ds.transactional(new Supplier[io.trane.future.Future[T]] {
-        override def get = f.toJava
-      })
-    }.flatMap(_.toScala)
+    val pool = FuturePool.apply(Executors.newCachedThreadPool())
+
+    pool.isolate(
+      supplier(
+        withDataSource { ds =>
+          ds.transactional(supplier(f.toJava))
+        }.flatMap(_.toScala).toJava
+      )
+    ).toScala
   }
+
+  private def supplier[T](future: => io.trane.future.Future[T]) =
+    new Supplier[io.trane.future.Future[T]] {
+      override def get = future
+    }
 
   def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: R => T = identity[R] _): Future[List[T]] = {
     withDataSource { ds =>
