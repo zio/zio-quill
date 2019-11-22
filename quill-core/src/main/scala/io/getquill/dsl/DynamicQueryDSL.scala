@@ -88,6 +88,12 @@ trait DynamicQueryDsl {
       case Some(v) => setValue(property, v)
       case None    => DynamicSetEmpty()
     }
+  
+  def setOpt[T, U](property: String, value: Option[U])(implicit enc: Encoder[U]): DynamicSet[T, U] =
+    value match {
+      case Some(v) => setValue(property, v)
+      case None    => DynamicSetEmpty()
+    }
 
   def set[T, U](property: String, value: Quoted[U]): DynamicSet[T, U] =
     set((f: Quoted[T]) => splice(Property(f.ast, property)), value)
