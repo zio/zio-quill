@@ -3084,6 +3084,15 @@ ctx.transaction {
 }
 ```
 
+#### streaming
+
+The finagle context allows streaming a query response, returning an `AsyncStream` value.
+
+```
+ctx.stream(query[Person]) // returns: Future[AsyncStream[Person]]
+  .flatMap(_.toSeq())
+```
+
 The body of `transaction` can contain calls to other methods and multiple `run` calls since the transaction is automatically propagated through the `Local` value.
 
 #### sbt dependencies
