@@ -2,10 +2,16 @@ package io.getquill.norm.capture
 
 import io.getquill.ast.{ Entity, Filter, FlatJoin, FlatMap, GroupBy, Ident, Join, Map, Query, SortBy, StatefulTransformer, _ }
 import io.getquill.norm.{ BetaReduction, Normalize }
+import io.getquill.util.Interpolator
+import io.getquill.util.Messages.TraceType
+
 import scala.collection.immutable.Set
 
 private[getquill] case class AvoidAliasConflict(state: Set[Ident])
   extends StatefulTransformer[Set[Ident]] {
+
+  val interp = new Interpolator(TraceType.AvoidAliasConflict, 3)
+  import interp._
 
   object Unaliased {
 
@@ -27,54 +33,115 @@ private[getquill] case class AvoidAliasConflict(state: Set[Ident])
       }
   }
 
-  override def apply(q: Query): (Query, StatefulTransformer[Set[Ident]]) =
-    q match {
+  // Cannot realize direct super-cluase of a join because of how ExpandJoin does $a$b.
+  // This is tested in JoinComplexSpec which verifies that ExpandJoin behaves correctly.
+  object CanRealias {
+    def unapply(q: Ast): Boolean =
+      q match {
+        case _: Join => false
+        case _       => true
+      }
+  }
 
-      case FlatMap(Unaliased(q), x, p) =>
-        apply(x, p)(FlatMap(q, _, _))
+  private def recurseAndApply[T <: Query](elem: T)(ext: T => (Ast, Ident, Ast))(f: (Ast, Ident, Ast) => T): (T, StatefulTransformer[Set[Ident]]) =
+    trace"Uncapture RecurseAndApply $elem " andReturn {
+      val (newElem, newTrans) = super.apply(elem)
+      val ((query, alias, body), state) =
+        (ext(newElem.asInstanceOf[T]), newTrans.state)
 
-      case ConcatMap(Unaliased(q), x, p) =>
-        apply(x, p)(ConcatMap(q, _, _))
+      val fresh = freshIdent(alias)
+      val pr =
+        trace"RecurseAndApply Replace: $alias -> $fresh: " andReturn
+          BetaReduction(body, alias -> fresh)
 
-      case Map(Unaliased(q), x, p) =>
-        apply(x, p)(Map(q, _, _))
-
-      case Filter(Unaliased(q), x, p) =>
-        apply(x, p)(Filter(q, _, _))
-
-      case SortBy(Unaliased(q), x, p, o) =>
-        apply(x, p)(SortBy(q, _, _, o))
-
-      case GroupBy(Unaliased(q), x, p) =>
-        apply(x, p)(GroupBy(q, _, _))
-
-      case Join(t, a, b, iA, iB, o) =>
-        val (ar, art) = apply(a)
-        val (br, brt) = art.apply(b)
-        val freshA = freshIdent(iA, brt.state)
-        val freshB = freshIdent(iB, brt.state + freshA)
-        val or = BetaReduction(o, iA -> freshA, iB -> freshB)
-        val (orr, orrt) = AvoidAliasConflict(brt.state + freshA + freshB)(or)
-        (Join(t, ar, br, freshA, freshB, orr), orrt)
-
-      case FlatJoin(t, a, iA, o) =>
-        val (ar, art) = apply(a)
-        val freshA = freshIdent(iA)
-        val or = BetaReduction(o, iA -> freshA)
-        val (orr, orrt) = AvoidAliasConflict(art.state + freshA)(or)
-        (FlatJoin(t, ar, freshA, orr), orrt)
-
-      case _: Entity | _: FlatMap | _: ConcatMap | _: Map | _: Filter | _: SortBy | _: GroupBy |
-        _: Aggregation | _: Take | _: Drop | _: Union | _: UnionAll | _: Distinct | _: Nested =>
-        super.apply(q)
+      (f(query, fresh, pr), AvoidAliasConflict(state + fresh))
     }
 
-  private def apply(x: Ident, p: Ast)(f: (Ident, Ast) => Query): (Query, StatefulTransformer[Set[Ident]]) = {
-    val fresh = freshIdent(x)
-    val pr = BetaReduction(p, x -> fresh)
-    val (prr, t) = AvoidAliasConflict(state + fresh)(pr)
-    (f(fresh, prr), t)
-  }
+  override def apply(qq: Query): (Query, StatefulTransformer[Set[Ident]]) =
+    trace"Uncapture $qq " andReturn
+      qq match {
+
+        case FlatMap(Unaliased(q), x, p) =>
+          apply(x, p)(FlatMap(q, _, _))
+
+        case ConcatMap(Unaliased(q), x, p) =>
+          apply(x, p)(ConcatMap(q, _, _))
+
+        case Map(Unaliased(q), x, p) =>
+          apply(x, p)(Map(q, _, _))
+
+        case Filter(Unaliased(q), x, p) =>
+          apply(x, p)(Filter(q, _, _))
+
+        case GroupBy(Unaliased(q), x, p) =>
+          apply(x, p)(GroupBy(q, _, _))
+
+        case m @ FlatMap(CanRealias(), _, _) =>
+          recurseAndApply(m)(m => (m.query, m.alias, m.body))(FlatMap(_, _, _))
+
+        case m @ ConcatMap(CanRealias(), _, _) =>
+          recurseAndApply(m)(m => (m.query, m.alias, m.body))(ConcatMap(_, _, _))
+
+        case m @ Map(CanRealias(), _, _) =>
+          recurseAndApply(m)(m => (m.query, m.alias, m.body))(Map(_, _, _))
+
+        case m @ Filter(CanRealias(), _, _) =>
+          recurseAndApply(m)(m => (m.query, m.alias, m.body))(Filter(_, _, _))
+
+        case m @ GroupBy(CanRealias(), _, _) =>
+          recurseAndApply(m)(m => (m.query, m.alias, m.body))(GroupBy(_, _, _))
+
+        case SortBy(Unaliased(q), x, p, o) =>
+          trace"Unaliased $qq uncapturing $x" andReturn
+          apply(x, p)(SortBy(q, _, _, o))
+
+        case Join(t, a, b, iA, iB, o) =>
+          trace"Uncapturing Join $qq" andReturn {
+            val (ar, art) = apply(a)
+            val (br, brt) = art.apply(b)
+            val freshA = freshIdent(iA, brt.state)
+            val freshB = freshIdent(iB, brt.state + freshA)
+            val or =
+              trace"Uncapturing Join: Replace $iA -> $freshA, $iB -> $freshB" andReturn
+                BetaReduction(o, iA -> freshA, iB -> freshB)
+            val (orr, orrt) =
+              trace"Uncapturing Join: Recurse with state: ${brt.state} + $freshA + $freshB" andReturn
+                AvoidAliasConflict(brt.state + freshA + freshB)(or)
+
+            (Join(t, ar, br, freshA, freshB, orr), orrt)
+          }
+
+        case FlatJoin(t, a, iA, o) =>
+          trace"Uncapturing FlatJoin $qq" andReturn {
+            val (ar, art) = apply(a)
+            val freshA = freshIdent(iA)
+            val or =
+              trace"Uncapturing FlatJoin: Reducing $iA -> $freshA" andReturn
+                BetaReduction(o, iA -> freshA)
+            val (orr, orrt) =
+              trace"Uncapturing FlatJoin: Recurse with state: ${art.state} + $freshA" andReturn
+                AvoidAliasConflict(art.state + freshA)(or)
+
+            (FlatJoin(t, ar, freshA, orr), orrt)
+          }
+
+        case _: Entity | _: FlatMap | _: ConcatMap | _: Map | _: Filter | _: SortBy | _: GroupBy |
+        _: Aggregation | _: Take | _: Drop | _: Union | _: UnionAll | _: Distinct | _: Nested =>
+          super.apply(qq)
+      }
+
+  private def apply(x: Ident, p: Ast)(f: (Ident, Ast) => Query): (Query, StatefulTransformer[Set[Ident]]) =
+    trace"Uncapture Apply ($x, $p)" andReturn {
+      val fresh = freshIdent(x)
+      val pr =
+        trace"Uncapture Apply: $x -> $fresh" andReturn
+          BetaReduction(p, x -> fresh)
+      val (prr, t) =
+        trace"Uncapture Apply Recurse" andReturn
+          AvoidAliasConflict(state + fresh)(pr)
+
+      (f(fresh, prr), t)
+    }
 
   private def freshIdent(x: Ident, state: Set[Ident] = state): Ident = {
     def loop(x: Ident, n: Int): Ident = {

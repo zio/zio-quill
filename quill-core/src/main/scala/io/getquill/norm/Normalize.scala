@@ -5,12 +5,16 @@ import io.getquill.ast.Query
 import io.getquill.ast.StatelessTransformer
 import io.getquill.norm.capture.AvoidCapture
 import io.getquill.ast.Action
-import io.getquill.util.Messages.trace
+import io.getquill.util.Interpolator
+import io.getquill.util.Messages.{ TraceType, trace }
 import io.getquill.util.Messages.TraceType.Normalizations
 
 import scala.annotation.tailrec
 
 object Normalize extends StatelessTransformer {
+
+  val interp = new Interpolator(TraceType.Normalizations, 1)
+  import interp._
 
   override def apply(q: Ast): Ast =
     super.apply(BetaReduction(q))
@@ -19,7 +23,8 @@ object Normalize extends StatelessTransformer {
     NormalizeReturning(super.apply(q))
 
   override def apply(q: Query): Query =
-    norm(AvoidCapture(q))
+    trace"Avoid Capture and Normalize" andReturn
+      norm(AvoidCapture(q))
 
   private def traceNorm[T](label: String) =
     trace[T](s"${label} (Normalize)", 1, Normalizations)
