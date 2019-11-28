@@ -1989,7 +1989,7 @@ def people(userIds: Seq[Int]) =
 **Actions**
 ```scala
 // actions use `set` 
-dynamicQuery[Person].update(set(_.name, quote("John")))
+dynamicQuery[Person].filter(_.id == 1).update(set(_.name, quote("John")))
 
 // or `setValue` if the value is not quoted
 dynamicQuery[Person].insert(setValue(_.name, "John"))
@@ -1998,12 +1998,12 @@ dynamicQuery[Person].insert(setValue(_.name, "John"))
 dynamicQuery[Person].insert(setOpt(_.name, Some("John")))
 
 // it's also possible to use a runtime string value as the column name
-dynamicQuery[Person].update(set("name", quote("John")))
+dynamicQuery[Person].filter(_.id == 1).update(set("name", quote("John")))
 
 // to insert or update a case class instance, use `insertValue`/`updateValue`
 val p = Person(0, "John", 21)
 dynamicQuery[Person].insertValue(p)
-dynamicQuery[Person].updateValue(p)
+dynamicQuery[Person].filter(_.id == 1).updateValue(p)
 ```
 
 # Extending quill
