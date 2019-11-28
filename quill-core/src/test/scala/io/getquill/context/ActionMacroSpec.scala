@@ -211,7 +211,7 @@ class ActionMacroSpec extends Spec {
       }
       val r = testContext.run(q)
       r.groups mustEqual List(
-        """querySchema("TestEntity").filter(t => t.s == ?).update(v => v.s -> ?, v => v.i -> ?, v => v.l -> ?, v => v.o -> ?)""" ->
+        """querySchema("TestEntity").filter(t1 => t1.s == ?).update(v => v.s -> ?, v => v.i -> ?, v => v.l -> ?, v => v.o -> ?)""" ->
           List(Row("s", "s1", 2, 3L, Some(4)), Row("s", "s5", 6, 7L, Some(8)))
       )
     }
@@ -224,7 +224,7 @@ class ActionMacroSpec extends Spec {
       }
       val r = testContext.run(q)
       r.groups mustEqual List(
-        """querySchema("TestEntity").filter(t => t.i == ?).update(v => v.s -> ?, v => v.i -> ?, v => v.l -> ?, v => v.o -> ?)""" ->
+        """querySchema("TestEntity").filter(t1 => t1.i == ?).update(v => v.s -> ?, v => v.i -> ?, v => v.l -> ?, v => v.o -> ?)""" ->
           List(Row(0, "s1", 2, 3, Some(4)), Row(1, "s5", 6, 7, Some(8)))
       )
     }
@@ -397,8 +397,8 @@ class ActionMacroSpec extends Spec {
         liftQuery(entities).foreach(p => nested(lift("s"), p))
       }
       testContext.translate(q) mustEqual List(
-        """querySchema("TestEntity").filter(t => t.s == 's').update(v => v.s -> 's1', v => v.i -> 2, v => v.l -> 3, v => v.o -> 4)""",
-        """querySchema("TestEntity").filter(t => t.s == 's').update(v => v.s -> 's5', v => v.i -> 6, v => v.l -> 7, v => v.o -> 8)"""
+        """querySchema("TestEntity").filter(t1 => t1.s == 's').update(v => v.s -> 's1', v => v.i -> 2, v => v.l -> 3, v => v.o -> 4)""",
+        """querySchema("TestEntity").filter(t1 => t1.s == 's').update(v => v.s -> 's5', v => v.i -> 6, v => v.l -> 7, v => v.o -> 8)"""
       )
     }
     "zipWithIndex" in {
@@ -409,8 +409,8 @@ class ActionMacroSpec extends Spec {
         liftQuery(entities.zipWithIndex).foreach(p => nested(p._1, p._2))
       }
       testContext.translate(q) mustEqual List(
-        """querySchema("TestEntity").filter(t => t.i == 0).update(v => v.s -> 's1', v => v.i -> 2, v => v.l -> 3, v => v.o -> 4)""",
-        """querySchema("TestEntity").filter(t => t.i == 1).update(v => v.s -> 's5', v => v.i -> 6, v => v.l -> 7, v => v.o -> 8)"""
+        """querySchema("TestEntity").filter(t1 => t1.i == 0).update(v => v.s -> 's1', v => v.i -> 2, v => v.l -> 3, v => v.o -> 4)""",
+        """querySchema("TestEntity").filter(t1 => t1.i == 1).update(v => v.s -> 's5', v => v.i -> 6, v => v.l -> 7, v => v.o -> 8)"""
       )
     }
     "scalar + returning" in {
