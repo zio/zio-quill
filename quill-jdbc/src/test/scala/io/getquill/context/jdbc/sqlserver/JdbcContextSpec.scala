@@ -52,18 +52,53 @@ class JdbcContextSpec extends Spec {
     }
   }
 
-  "Insert with returning with single column table" in {
+  "Insert with returning generated with single column table" in {
     val inserted = testContext.run {
       qr4.insert(lift(TestEntity4(0))).returningGenerated(_.i)
     }
     testContext.run(qr4.filter(_.i == lift(inserted))).head.i mustBe inserted
   }
 
-  "Insert with returning with multiple columns and query embedded" in {
+  "Insert with returning generated with multiple columns and query embedded" in {
     val inserted = testContext.run {
       qr4Emb.insert(lift(TestEntity4Emb(EmbSingle(0)))).returningGenerated(_.emb.i)
     }
     testContext.run(qr4Emb.filter(_.emb.i == lift(inserted))).head.emb.i mustBe inserted
+  }
+
+  "Insert with returning with multiple columns" in {
+    testContext.run(qr1.delete)
+    val inserted = testContext.run {
+      qr1.insert(lift(TestEntity("foo", 1, 18L, Some(123)))).returning(r => (r.i, r.s, r.o))
+    }
+    (1, "foo", Some(123)) mustBe inserted
+  }
+
+  "Insert with returning with multiple columns and operations" in {
+    testContext.run(qr1.delete)
+    val inserted = testContext.run {
+      qr1.insert(lift(TestEntity("foo", 1, 18L, Some(123)))).returning(r => (r.i + 100, r.s, r.o.map(_ + 100)))
+    }
+    (1 + 100, "foo", Some(123 + 100)) mustBe inserted
+  }
+
+  "Insert with returning with multiple columns and query embedded" in {
+    testContext.run(qr1Emb.delete)
+    testContext.run(qr1Emb.insert(lift(TestEntityEmb(Emb("one", 1), 18L, Some(123)))))
+    val inserted = testContext.run {
+      qr1Emb.insert(lift(TestEntityEmb(Emb("two", 2), 18L, Some(123)))).returning(r =>
+        (r.emb.i, r.o))
+    }
+    (2, Some(123)) mustBe inserted
+  }
+
+  "Insert with returning with multiple columns - case class" in {
+    case class Return(id: Int, str: String, opt: Option[Int])
+    testContext.run(qr1.delete)
+    val inserted = testContext.run {
+      qr1.insert(lift(TestEntity("foo", 1, 18L, Some(123)))).returning(r => Return(r.i, r.s, r.o))
+    }
+    Return(1, "foo", Some(123)) mustBe inserted
   }
 }
 

@@ -69,4 +69,60 @@ class SQLServerDialectSpec extends Spec {
       }.getMessage mustEqual "SQLServer does not support OFFSET without ORDER BY"
     }
   }
+
+  "Insert with returning via OUTPUT" - {
+    "returning" - {
+      "with single column table" in {
+        val q = quote {
+          qr4.insert(lift(TestEntity4(0))).returning(_.i)
+        }
+        ctx.run(q).string mustEqual
+          "INSERT INTO TestEntity4 (i) OUTPUT INSERTED.i VALUES (?)"
+      }
+      "with multi column table" in {
+        val q = quote {
+          qr1.insert(lift(TestEntity("s", 0, 0L, Some(3)))).returning(r => (r.i, r.l))
+        }
+        ctx.run(q).string mustEqual
+          "INSERT INTO TestEntity (s,i,l,o) OUTPUT INSERTED.i, INSERTED.l VALUES (?, ?, ?, ?)"
+      }
+      "with multiple fields + operations" in {
+        val q = quote {
+          qr1.insert(lift(TestEntity("s", 1, 2L, Some(3)))).returning(r => (r.i, r.l + 1))
+        }
+        ctx.run(q).string mustEqual
+          "INSERT INTO TestEntity (s,i,l,o) OUTPUT INSERTED.i, INSERTED.l + 1 VALUES (?, ?, ?, ?)"
+      }
+      "with query - should not compile" in {
+        """import ctx._; quote { qr1.insert(lift(TestEntity("s", 1, 2L, Some(3)))).returning(r => query[TestEntity].filter(t => t.i == r.i)) }""" mustNot compile
+      }
+    }
+
+    "returningGenerated" - {
+      "returning generated with single column table" in {
+        val q = quote {
+          qr4.insert(lift(TestEntity4(0))).returningGenerated(_.i)
+        }
+        ctx.run(q).string mustEqual
+          "INSERT INTO TestEntity4 OUTPUT INSERTED.i DEFAULT VALUES"
+      }
+      "with multi column table" in {
+        val q = quote {
+          qr1.insert(lift(TestEntity("s", 0, 0L, Some(3)))).returningGenerated(r => (r.i, r.l))
+        }
+        ctx.run(q).string mustEqual
+          "INSERT INTO TestEntity (s,o) OUTPUT INSERTED.i, INSERTED.l VALUES (?, ?)"
+      }
+      "with multiple fields + operations" in {
+        val q = quote {
+          qr1.insert(lift(TestEntity("s", 0, 0L, Some(3)))).returningGenerated(r => (r.i, r.l + 1))
+        }
+        ctx.run(q).string mustEqual
+          "INSERT INTO TestEntity (s,o) OUTPUT INSERTED.i, INSERTED.l + 1 VALUES (?, ?)"
+      }
+      "with query - should not compile" in {
+        """import ctx._; quote { qr1.insert(lift(TestEntity("s", 0, 0L, Some(3)))).returningGenerated(r => query[TestEntity].filter(t => t.i == r.i)) }""" mustNot compile
+      }
+    }
+  }
 }

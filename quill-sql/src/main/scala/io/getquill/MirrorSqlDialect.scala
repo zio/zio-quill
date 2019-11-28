@@ -1,9 +1,7 @@
 package io.getquill
 
-import io.getquill.context.{ CanReturnClause, CanReturnField, CanReturnMultiField, CannotReturn }
-import io.getquill.context.sql.idiom.SqlIdiom
-import io.getquill.context.sql.idiom.QuestionMarkBindVariables
-import io.getquill.context.sql.idiom.ConcatSupport
+import io.getquill.context.sql.idiom.{ ConcatSupport, QuestionMarkBindVariables, SqlIdiom }
+import io.getquill.context._
 
 trait MirrorSqlDialect
   extends SqlIdiom
@@ -23,6 +21,12 @@ trait MirrorSqlDialectWithReturnClause
   with ConcatSupport
   with CanReturnClause
 
+trait MirrorSqlDialectWithOutputClause
+  extends SqlIdiom
+  with QuestionMarkBindVariables
+  with ConcatSupport
+  with CanOutputClause
+
 trait MirrorSqlDialectWithNoReturn
   extends SqlIdiom
   with QuestionMarkBindVariables
@@ -38,6 +42,10 @@ object MirrorSqlDialectWithReturnMulti extends MirrorSqlDialectWithReturnMulti {
 }
 
 object MirrorSqlDialectWithReturnClause extends MirrorSqlDialectWithReturnClause {
+  override def prepareForProbing(string: String) = string
+}
+
+object MirrorSqlDialectWithOutputClause extends MirrorSqlDialectWithOutputClause {
   override def prepareForProbing(string: String) = string
 }
 
