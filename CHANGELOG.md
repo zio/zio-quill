@@ -1,3 +1,12 @@
+# 3.5.0
+
+- [Ndbc Postgres Support](https://github.com/getquill/quill/pull/1702)
+- [MS SQL Server returning via OUTPUT](https://github.com/getquill/quill/pull/1681)
+- [Pretty Print SQL Queries](https://github.com/getquill/quill/pull/1646)
+- [Fix shadowing via aggressive uncapture](https://github.com/getquill/quill/pull/1713)
+- [Fix Issues with Short](https://github.com/getquill/quill/pull/1698)
+- [Pull Oracle jdbc driver from Maven Central](https://github.com/getquill/quill/pull/1677)
+
 # 3.4.10
 
 - [support scala 2.13](https://github.com/getquill/quill/pull/1644)
