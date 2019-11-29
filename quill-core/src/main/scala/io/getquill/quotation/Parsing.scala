@@ -3,7 +3,7 @@ package io.getquill.quotation
 import scala.reflect.ClassTag
 import io.getquill.ast._
 import io.getquill.Embedded
-import io.getquill.context.{ ReturningMultipleFieldSupported, _ }
+import io.getquill.context._
 import io.getquill.norm.BetaReduction
 import io.getquill.util.Messages.RichContext
 import io.getquill.dsl.{ CoreDsl, QueryDsl, ValueComputation }
@@ -817,10 +817,11 @@ trait Parsing extends ValueComputation {
 
     returnAfterInsertType match {
       case Some(returnType) if (returnType =:= typeOf[ReturningClauseSupported]) => ReturningClauseSupported
+      case Some(returnType) if (returnType =:= typeOf[OutputClauseSupported]) => OutputClauseSupported
       case Some(returnType) if (returnType =:= typeOf[ReturningSingleFieldSupported]) => ReturningSingleFieldSupported
       case Some(returnType) if (returnType =:= typeOf[ReturningMultipleFieldSupported]) => ReturningMultipleFieldSupported
       case Some(returnType) if (returnType =:= typeOf[ReturningNotSupported]) => ReturningNotSupported
-      // Since most SQL Dialects support returing a single field (that is auto-incrementing) allow a return
+      // Since most SQL Dialects support returning a single field (that is auto-incrementing) allow a return
       // of a single field in the case that a dialect is not actually specified. E.g. when SqlContext[_, _]
       // is used to define `returning` clauses.
       case other => ReturningSingleFieldSupported
@@ -829,6 +830,11 @@ trait Parsing extends ValueComputation {
 
   implicit class InsertReturnCapabilityExtension(capability: ReturningCapability) {
     def verifyAst(returnBody: Ast) = capability match {
+      case OutputClauseSupported => returnBody match {
+        case _: Query =>
+          c.fail(s"${currentIdiom.map(n => s"The dialect ${n} does").getOrElse("Unspecified dialects do")} not allow queries in 'returning' clauses.")
+        case _ =>
+      }
       case ReturningClauseSupported =>
       // Only .returning(r => r.prop) or .returning(r => OneElementCaseClass(r.prop1..., propN)) or .returning(r => (r.prop1..., propN)) (well actually it's prop22) is allowed.
       case ReturningMultipleFieldSupported =>
@@ -873,7 +879,7 @@ trait Parsing extends ValueComputation {
       val bodyAst = reprocessReturnClause(ident, astParser(body), action)
       // Verify that the idiom supports this type of returning clause
       idiomReturnCapability match {
-        case ReturningMultipleFieldSupported | ReturningClauseSupported =>
+        case ReturningMultipleFieldSupported | ReturningClauseSupported | OutputClauseSupported =>
         case ReturningSingleFieldSupported =>
           c.fail(s"The 'returning' clause is not supported by the ${currentIdiom.getOrElse("specified")} idiom. Use 'returningGenerated' instead.")
         case ReturningNotSupported =>
