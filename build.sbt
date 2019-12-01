@@ -115,7 +115,6 @@ lazy val `quill-core` =
       libraryDependencies ++= Seq(
         "com.lihaoyi" %%% "pprint" % pprintVersion(scalaVersion.value),
         "org.scala-js" %%% "scalajs-java-time" % "0.2.5",
-        "com.lihaoyi" %%% "pprint" % "0.5.4",
         "org.scala-js" %%% "scalajs-java-time" % "0.2.5"
       ),
       coverageExcludedPackages := ".*"
