@@ -1,0 +1,20 @@
+{
+  "docs": {
+    "Docusaurus": ["doc1"],
+    "First Category": ["doc2"],
+    "Second Category": ["doc3"]
+  },
+  "docs-other": {
+    "Documentation": [
+    	"Introduction", 
+    	"Queries",
+    	"SQL_Dialects", 
+    	"Configuration",
+    	"Extending_Quill", 
+    	"Cassandra",
+    	"Spark",
+    	"Importing_Quill",
+    	"Code_Generation"
+    ]
+  }
+}

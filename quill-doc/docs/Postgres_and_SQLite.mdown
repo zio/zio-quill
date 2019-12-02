@@ -1,0 +1,55 @@
+---
+id: Postgres_and_SQLite
+title: Postgres and SQLite
+---
+
+##### Ignore conflict
+```scala
+val a = quote {
+  query[Product].insert(_.id -> 1, _.sku -> 10).onConflictIgnore
+}
+
+// INSERT INTO Product AS t (id,sku) VALUES (1, 10) ON CONFLICT DO NOTHING
+```
+
+Ignore conflict by explicitly setting conflict target
+```scala
+val a = quote {
+  query[Product].insert(_.id -> 1, _.sku -> 10).onConflictIgnore(_.id)
+}
+
+// INSERT INTO Product AS t (id,sku) VALUES (1, 10) ON CONFLICT (id) DO NOTHING
+```
+
+Multiple properties can be used as well.
+```scala
+val a = quote {
+  query[Product].insert(_.id -> 1, _.sku -> 10).onConflictIgnore(_.id, _.description)
+}
+
+// INSERT INTO Product (id,sku) VALUES (1, 10) ON CONFLICT (id,description) DO NOTHING
+```
+
+##### Update on Conflict
+
+Resolve conflict by updating existing row if needed. In `onConflictUpdate(target)((t, e) => assignment)`: `target` refers to
+conflict target, `t` - to existing row and `e` - to excluded, e.g. row proposed for insert.
+```scala
+val a = quote {
+  query[Product]
+    .insert(_.id -> 1, _.sku -> 10)
+    .onConflictUpdate(_.id)((t, e) => t.sku -> (t.sku + e.sku))
+}
+
+// INSERT INTO Product AS t (id,sku) VALUES (1, 10) ON CONFLICT (id) DO UPDATE SET sku = (t.sku + EXCLUDED.sku)
+```
+Multiple properties can be used with `onConflictUpdate` as well.
+```scala
+val a = quote {
+  query[Product]
+    .insert(_.id -> 1, _.sku -> 10)
+    .onConflictUpdate(_.id, _.description)((t, e) => t.sku -> (t.sku + e.sku))
+}
+
+INSERT INTO Product AS t (id,sku) VALUES (1, 10) ON CONFLICT (id,description) DO UPDATE SET sku = (t.sku + EXCLUDED.sku)
+```
