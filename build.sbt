@@ -566,7 +566,7 @@ lazy val basicSettings = Seq(
   libraryDependencies ++= Seq(
     "org.scala-lang.modules" %%% "scala-collection-compat" % "2.1.2",
     "com.lihaoyi"     %% "pprint"         % pprintVersion(scalaVersion.value),
-    "org.scalatest"   %%% "scalatest"     % "3.0.8"          % Test,
+    "org.scalatest"   %%% "scalatest"     % "3.1.0"          % Test,
     "ch.qos.logback"  % "logback-classic" % "1.2.3"          % Test,
     "com.google.code.findbugs" % "jsr305" % "3.0.2"          % Provided // just to avoid warnings during compilation
   ) ++ {
