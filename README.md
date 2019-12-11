@@ -1175,7 +1175,7 @@ Since you cannot use `Option[Table].isDefined`, if you want to null-check a whol
 val q = quote {
   query[Company].leftJoin(query[Address])
     .on((c, a) => c.zip == a.zip)         // Row type is (Company, Option[Address])
-    .filter({case(c,a) => a.isDefined})   // You cannot null-check a whole table
+    .filter({case(c,a) => a.isDefined})   // You cannot null-check a whole table!
 }
 ```
  
@@ -1298,7 +1298,7 @@ Database actions are defined using quotations as well. These actions don't have 
 ```scala
 val a = quote(query[Contact].insert(lift(Contact(999, "+1510488988"))))
 
-ctx.run(a)
+ctx.run(a) // = 1 if the row was inserted 0 otherwise
 // INSERT INTO Contact (personId,phone) VALUES (?, ?)
 ```
 
@@ -1316,10 +1316,10 @@ ctx.run(a)
 ### batch insert
 ```scala
 val a = quote {
-  liftQuery(List(Person(0, "John", 31))).foreach(e => query[Person].insert(e))
+  liftQuery(List(Person(0, "John", 31),Person(2, "name2", 32))).foreach(e => query[Person].insert(e))
 }
 
-ctx.run(a)
+ctx.run(a) //: List[Long] size = 2. Contains 1 @ positions, where row was inserted E.g List(1,1)
 // INSERT INTO Person (id,name,age) VALUES (?, ?, ?)
 ```
 
@@ -1329,7 +1329,7 @@ val a = quote {
   query[Person].filter(_.id == 999).update(lift(Person(999, "John", 22)))
 }
 
-ctx.run(a)
+ctx.run(a) // = Long number of rows updated
 // UPDATE Person SET id = ?, name = ?, age = ? WHERE id = 999
 ```
 
@@ -1359,12 +1359,12 @@ ctx.run(a)
 
 ```scala
 val a = quote {
-  liftQuery(List(Person(1, "name", 31))).foreach { person =>
+  liftQuery(List(Person(1, "name", 31),Person(2, "name2", 32))).foreach { person =>
      query[Person].filter(_.id == person.id).update(_.name -> person.name, _.age -> person.age)
   }
 }
 
-ctx.run(a)
+ctx.run(a) // : List[Long] size = 2. Contains 1 @ positions, where row was inserted E.g List(1,0)
 // UPDATE Person SET name = ?, age = ? WHERE id = ?
 ```
 
@@ -1374,13 +1374,13 @@ val a = quote {
   query[Person].filter(p => p.name == "").delete
 }
 
-ctx.run(a)
+ctx.run(a) // = Long the number of rows deleted
 // DELETE FROM Person WHERE name = ''
 ```
 
 ### insert or update (upsert, conflict)
 
-Upsert is supported by Postgres, SQLite, and MySQL
+Upsert is supported by Postgres, SQLite, MySQL and H2 `onConflictIgnore` only (since v1.4.200 in PostgreSQL compatibility mode)
 
 #### Postgres and SQLite
 
