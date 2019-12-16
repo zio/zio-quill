@@ -280,7 +280,7 @@ lazy val `quill-finagle-mysql` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.twitter" %% "finagle-mysql" % "19.11.0"
+        "com.twitter" %% "finagle-mysql" % "19.12.0"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -405,7 +405,7 @@ lazy val `quill-orientdb` =
       .settings(
         fork in Test := true,
         libraryDependencies ++= Seq(
-          "com.orientechnologies" % "orientdb-graphdb" % "3.0.25"
+          "com.orientechnologies" % "orientdb-graphdb" % "3.0.26"
         )
       )
       .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -491,7 +491,7 @@ lazy val jdbcTestingLibraries = Seq(
     "com.zaxxer"              %  "HikariCP"                % "3.4.1",
     "mysql"                   %  "mysql-connector-java"    % "8.0.18"             % Test,
     "com.h2database"          %  "h2"                      % "1.4.200"            % Test,
-    "org.postgresql"          %  "postgresql"              % "42.2.8"             % Test,
+    "org.postgresql"          %  "postgresql"              % "42.2.9"             % Test,
     "org.xerial"              %  "sqlite-jdbc"             % "3.28.0"             % Test,
     "com.microsoft.sqlserver" %  "mssql-jdbc"              % "7.1.1.jre8-preview" % Test,
     "com.oracle.ojdbc"        %  "ojdbc8"                  % "19.3.0.0"           % Test,
@@ -564,7 +564,7 @@ lazy val basicSettings = Seq(
   scalaVersion := "2.11.12",
   crossScalaVersions := Seq("2.11.12", "2.12.10", "2.13.1"),
   libraryDependencies ++= Seq(
-    "org.scala-lang.modules" %%% "scala-collection-compat" % "2.1.2",
+    "org.scala-lang.modules" %%% "scala-collection-compat" % "2.1.3",
     "com.lihaoyi"     %% "pprint"         % pprintVersion(scalaVersion.value),
     "org.scalatest"   %%% "scalatest"     % "3.0.8"          % Test,
     "ch.qos.logback"  % "logback-classic" % "1.2.3"          % Test,
