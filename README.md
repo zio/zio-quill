@@ -416,31 +416,25 @@ Any of the following features can be used together with the others and/or within
 
 ### filter
 ```scala
-val q = quote {
-  query[Person].filter(p => p.age > 18)
-}
-
-ctx.run(q)
+ctx.run(
+   query[Person].filter(p => p.age > 18)
+)
 // SELECT p.id, p.name, p.age FROM Person p WHERE p.age > 18
 ```
 
 ### map
 ```scala
-val q = quote {
+ctx.run(
   query[Person].map(p => p.name)
-}
-
-ctx.run(q)
+)
 // SELECT p.name FROM Person p
 ```
 
 ### flatMap
 ```scala
-val q = quote {
+ctx.run(
   query[Person].filter(p => p.age > 18).flatMap(p => query[Contact].filter(c => c.personId == p.id))
-}
-
-ctx.run(q)
+)
 // SELECT c.personId, c.phone FROM Person p, Contact c WHERE (p.age > 18) AND (c.personId = p.id)
 ```
 
@@ -448,88 +442,70 @@ ctx.run(q)
 ```scala
 // similar to `flatMap` but for transformations that return a traversable instead of `Query`
 
-val q = quote {
+ctx.run(
   query[Person].concatMap(p => p.name.split(" "))
-}
-
-ctx.run(q)
+)
 // SELECT UNNEST(SPLIT(p.name, " ")) FROM Person p
 ```
 
 ### sortBy
 ```scala
-val q1 = quote {
+ctx.run(
   query[Person].sortBy(p => p.age)
-}
-
-ctx.run(q1)
+)
 // SELECT p.id, p.name, p.age FROM Person p ORDER BY p.age ASC NULLS FIRST
 
-val q2 = quote {
+ctx.run(
   query[Person].sortBy(p => p.age)(Ord.descNullsLast)
-}
-
-ctx.run(q2)
+)
 // SELECT p.id, p.name, p.age FROM Person p ORDER BY p.age DESC NULLS LAST
 
-val q3 = quote {
+ctx.run(
   query[Person].sortBy(p => (p.name, p.age))(Ord(Ord.asc, Ord.desc))
-}
-
-ctx.run(q3)
+)
 // SELECT p.id, p.name, p.age FROM Person p ORDER BY p.name ASC, p.age DESC
 ```
 
 ### drop/take
 
 ```scala
-val q = quote {
+ctx.run(
   query[Person].drop(2).take(1)
-}
-
-ctx.run(q)
+)
 // SELECT x.id, x.name, x.age FROM Person x LIMIT 1 OFFSET 2
 ```
 
 ### groupBy
 ```scala
-val q = quote {
+ctx.run(
   query[Person].groupBy(p => p.age).map {
     case (age, people) =>
       (age, people.size)
   }
-}
-
-ctx.run(q)
+)
 // SELECT p.age, COUNT(*) FROM Person p GROUP BY p.age
 ```
 
 ### union
 ```scala
-val q = quote {
+ctx.run(
   query[Person].filter(p => p.age > 18).union(query[Person].filter(p => p.age > 60))
-}
-
-ctx.run(q)
+)
 // SELECT x.id, x.name, x.age FROM (SELECT id, name, age FROM Person p WHERE p.age > 18
 // UNION SELECT id, name, age FROM Person p1 WHERE p1.age > 60) x
 ```
 
 ### unionAll/++
 ```scala
-val q = quote {
+ctx.run(
   query[Person].filter(p => p.age > 18).unionAll(query[Person].filter(p => p.age > 60))
-}
-
-ctx.run(q)
+)
 // SELECT x.id, x.name, x.age FROM (SELECT id, name, age FROM Person p WHERE p.age > 18
 // UNION ALL SELECT id, name, age FROM Person p1 WHERE p1.age > 60) x
 
-val q2 = quote {
+ctx.run(
   query[Person].filter(p => p.age > 18) ++ query[Person].filter(p => p.age > 60)
-}
-
-ctx.run(q2)
+)
 // SELECT x.id, x.name, x.age FROM (SELECT id, name, age FROM Person p WHERE p.age > 18
 // UNION ALL SELECT id, name, age FROM Person p1 WHERE p1.age > 60) x
 ```
@@ -549,34 +525,28 @@ ctx.run(r.size) // SELECT COUNT(p.age) FROM Person p
 
 ### isEmpty/nonEmpty
 ```scala
-val q = quote {
+ctx.run(
   query[Person].filter{ p1 =>
     query[Person].filter(p2 => p2.id != p1.id && p2.age == p1.age).isEmpty
   }
-}
-
-ctx.run(q)
+)
 // SELECT p1.id, p1.name, p1.age FROM Person p1 WHERE
 // NOT EXISTS (SELECT * FROM Person p2 WHERE (p2.id <> p1.id) AND (p2.age = p1.age))
 
-val q2 = quote {
+ctx.run(
   query[Person].filter{ p1 =>
     query[Person].filter(p2 => p2.id != p1.id && p2.age == p1.age).nonEmpty
   }
-}
-
-ctx.run(q2)
+)
 // SELECT p1.id, p1.name, p1.age FROM Person p1 WHERE
 // EXISTS (SELECT * FROM Person p2 WHERE (p2.id <> p1.id) AND (p2.age = p1.age))
 ```
 
 ### contains
 ```scala
-val q = quote {
+ctx.run(
   query[Person].filter(p => liftQuery(Set(1, 2)).contains(p.id))
-}
-
-ctx.run(q)
+)
 // SELECT p.id, p.name, p.age FROM Person p WHERE p.id IN (?, ?)
 
 val q1 = quote { (ids: Query[Int]) =>
@@ -589,31 +559,26 @@ ctx.run(q1(liftQuery(List(1, 2))))
 val peopleWithContacts = quote {
   query[Person].filter(p => query[Contact].filter(c => c.personId == p.id).nonEmpty)
 }
-val q2 = quote {
-  query[Person].filter(p => peopleWithContacts.contains(p.id))
-}
 
-ctx.run(q2)
+ctx.run(
+  query[Person].filter(p => peopleWithContacts.contains(p.id))
+)
 // SELECT p.id, p.name, p.age FROM Person p WHERE p.id IN (SELECT p1.* FROM Person p1 WHERE EXISTS (SELECT c.* FROM Contact c WHERE c.personId = p1.id))
 ```
 
 ### distinct
 ```scala
-val q = quote {
+ctx.run(
   query[Person].map(p => p.age).distinct
-}
-
-ctx.run(q)
+)
 // SELECT DISTINCT p.age FROM Person p
 ```
 
 ### nested
 ```scala
-val q = quote {
+ctx.run (
   query[Person].filter(p => p.name == "John").nested.map(p => p.age)
-}
-
-ctx.run(q)
+)
 // SELECT p.age FROM (SELECT p.age FROM Person p WHERE p.name = 'John') p
 ```
 
@@ -910,30 +875,26 @@ Let's go through the typical operations of optionals.
 
 The `isDefined` method is generally a good way to null-check a nullable field:
 ```scala
-val q = quote {
+ctx.run(
   query[Address].filter(a => a.fk.isDefined)
-}
-ctx.run(q)
+)
 // SELECT a.fk, a.street, a.zip FROM Address a WHERE a.fk IS NOT NULL
 ```
 The `isEmpty` method works the same way:
 ```scala
-val q = quote {
+ctx.run(
   query[Address].filter(a => a.fk.isEmpty)
-}
-ctx.run(q)
+)
 // SELECT a.fk, a.street, a.zip FROM Address a WHERE a.fk IS NULL
 ```
 
- 
 #### exists
 
 This method is typically used for inspecting nullable fields inside of boolean conditions, most notably joining!
 ```scala
-val q = quote {
+ctx.run(
   query[Person].join(query[Address]).on((p, a)=> a.fk.exists(_ == p.id))
-}
-ctx.run(q)
+)
 // SELECT p.id, p.name, a.fk, a.street, a.zip FROM Person p INNER JOIN Address a ON a.fk = p.id
 ```
 
@@ -945,33 +906,28 @@ typical database behavior of immediately falsifying a statement that has `null` 
 
 Use this method in boolean conditions that should succeed in the null case.
 ```scala
-val q = quote {
+ctx.run(
   query[Person].join(query[Address]).on((p, a) => a.fk.forall(_ == p.id))
-}
-ctx.run(q)
+)
 // SELECT p.id, p.name, a.fk, a.street, a.zip FROM Person p INNER JOIN Address a ON a.fk IS NULL OR a.fk = p.id
 ```
 Typically this is useful when doing negative conditions, e.g. when a field is **not** some specified value (e.g. `"Joe"`).
 Being `null` in this case is typically a matching result.
 ```scala
-val q = quote {
+ctx.run(
   query[Person].filter(p => p.name.forall(_ != "Joe"))
-}
- 
-ctx.run(q)
+)
 // SELECT p.id, p.name FROM Person p WHERE p.name IS NULL OR p.name <> 'Joe'
 ```
 
 #### map
 As in regular Scala code, performing any operation on an optional value typically requires using the `map` function.
 ```scala
-val q = quote {
+ctx.run(
  for {
     p <- query[Person]
   } yield (p.id, p.name.map("Dear " + _))
-}
- 
-ctx.run(q)
+)
 // SELECT p.id, 'Dear ' || p.name FROM Person p
 // * In Dialects where `||` does not fall-through for nulls (e.g. Oracle):
 // * SELECT p.id, CASE WHEN p.name IS NOT NULL THEN 'Dear ' || p.name ELSE null END FROM Person p
@@ -981,15 +937,13 @@ Additionally, this method is useful when you want to get a non-optional field ou
 (i.e. a table wrapped in an `Option` object).
 
 ```scala
-val q = quote {
+ctx.run(
   query[Company].leftJoin(query[Address])
     .on((c, a) => c.zip == a.zip)
     .map {case(c,a) =>                          // Row type is (Company, Option[Address])
       (c.name, a.map(_.street), a.map(_.zip))   // Use `Option.map` to get `street` and `zip` fields
     }
-}
- 
-run(q)
+)
 // SELECT c.name, a.street, a.zip FROM Company c LEFT JOIN Address a ON c.zip = a.zip
 ```
 
@@ -1014,7 +968,8 @@ val q = quote {
 ctx.run(q) //: List[Option[String]]
 // SELECT (a.name || ' comes after ') || b.name FROM Person a, Person b WHERE a.id > b.id
 // * In Dialects where `||` does not fall-through for nulls (e.g. Oracle):
-// * SELECT CASE WHEN a.name IS NOT NULL AND b.name IS NOT NULL THEN (a.name || ' comes after ') || b.name ELSE null END FROM Person a, Person b WHERE a.id > b.id
+// * SELECT CASE WHEN a.name IS NOT NULL AND b.name IS NOT NULL THEN (a.name || ' comes after ') || b.name ELSE null END 
+// FROM Person a, Person b WHERE a.id > b.id
  
 // Alternatively, you can use `flatten`
 val q = quote {
@@ -1062,7 +1017,8 @@ val q = quote {
 }
  
 ctx.run(q) //: List[(Address, Person)]
-// SELECT p.id, p.name, a.fk, a.street, a.zip FROM Person p INNER JOIN Address a ON a.fk IS NOT NULL AND a.fk = p.id WHERE a.fk <> 123
+// SELECT p.id, p.name, a.fk, a.street, a.zip FROM Person p 
+//   INNER JOIN Address a ON a.fk IS NOT NULL AND a.fk = p.id WHERE a.fk <> 123
 ```
 
 In certain situations, you may wish to pretend that a nullable-field is not actually nullable and perform regular operations
@@ -1070,11 +1026,9 @@ In certain situations, you may wish to pretend that a nullable-field is not actu
 in order to do this.
 
 ```scala
-val q = quote {
+ctx.run(
   query[Person].map(p => Option(p.name.orNull + " suffix"))
-}
- 
-ctx.run(q)
+)
 // SELECT p.name || ' suffix' FROM Person p 
 // i.e. same as the previous behavior
 ```
@@ -1088,14 +1042,19 @@ However, since they may introduce behavior changes in your codebase, the followi
 val q = quote {
   query[Person].map(p => p.name.map(n => if (n == "Joe") "foo" else "bar").getOrElse("baz"))
 }
-// Information:(16, 15) Conditionals inside of Option.map will create a `CASE` statement in order to properly null-check the sub-query: `p.name.map((n) => if(n == "Joe") "foo" else "bar")`. 
-// Expressions like Option(if (v == "foo") else "bar").getOrElse("baz") will now work correctly, but expressions that relied on the broken behavior (where "bar" would be returned instead) need to be modified  (see the "orNull / getOrNull" section of the documentation of more detail).
+// Information:(16, 15) Conditionals inside of Option.map will create a `CASE` statement in order to 
+// properly null-check the sub-query: `p.name.map((n) => if(n == "Joe") "foo" else "bar")`. 
+// Expressions like Option(if (v == "foo") else "bar").getOrElse("baz") will now work correctly,
+// but expressions that relied on the broken behavior (where "bar" would be returned instead) need to be modified
+// (see the "orNull / getOrNull" section of the documentation of more detail).
  
 ctx.run(a)
 // Used to be this:
-// SELECT CASE WHEN CASE WHEN p.name = 'Joe' THEN 'foo' ELSE 'bar' END IS NOT NULL THEN CASE WHEN p.name = 'Joe' THEN 'foo' ELSE 'bar' END ELSE 'baz' END FROM Person p
+// SELECT CASE WHEN CASE WHEN p.name = 'Joe' THEN 'foo' ELSE 'bar' END IS NOT NULL 
+//   THEN CASE WHEN p.name = 'Joe' THEN 'foo' ELSE 'bar' END ELSE 'baz' END FROM Person p
 // Now is this:
-// SELECT CASE WHEN p.name IS NOT NULL AND CASE WHEN p.name = 'Joe' THEN 'foo' ELSE 'bar' END IS NOT NULL THEN CASE WHEN p.name = 'Joe' THEN 'foo' ELSE 'bar' END ELSE 'baz' END FROM Person p
+// SELECT CASE WHEN p.name IS NOT NULL AND CASE WHEN p.name = 'Joe' THEN 'foo' ELSE 'bar' END IS NOT NULL 
+//   THEN CASE WHEN p.name = 'Joe' THEN 'foo' ELSE 'bar' END ELSE 'baz' END FROM Person p
 ```
 
 ### equals
@@ -1121,20 +1080,16 @@ Left         | Right        | Equality   | Result
 ```scala
 case class Node(id:Int, status:Option[String], otherStatus:Option[String])
 
-val q = quote { query[Node].filter(n => n.id == 123) }
-ctx.run(q)
+ctx.run( query[Node].filter(n => n.id == 123) )
 // SELECT n.id, n.status, n.otherStatus FROM Node n WHERE p.id = 123
 
-val q = quote { query[Node].filter(r => r.status == r.otherStatus) }
-ctx.run(q)
+ctx.run( query[Node].filter(r => r.status == r.otherStatus) )
 // SELECT r.id, r.status, r.otherStatus FROM Node r WHERE r.status IS NULL AND r.otherStatus IS NULL OR r.status = r.otherStatus
 
-val q = quote { query[Node].filter(n => n.status == Option("RUNNING")) }
-ctx.run(q)
+ctx.run( query[Node].filter(n => n.status == Option("RUNNING")) )
 // SELECT n.id, n.status, n.otherStatus FROM node n WHERE n.status IS NOT NULL AND n.status = 'RUNNING'
 
-val q = quote { query[Node].filter(n => n.status != Option("RUNNING")) }
-ctx.run(q)
+ctx.run( query[Node].filter(n => n.status != Option("RUNNING")) )
 // SELECT n.id, n.status, n.otherStatus FROM node n WHERE n.status IS NULL OR n.status <> 'RUNNING'
 ```
 
@@ -1175,18 +1130,17 @@ Since you cannot use `Option[Table].isDefined`, if you want to null-check a whol
 val q = quote {
   query[Company].leftJoin(query[Address])
     .on((c, a) => c.zip == a.zip)         // Row type is (Company, Option[Address])
-    .filter({case(c,a) => a.isDefined})   // You cannot null-check a whole table
+    .filter({case(c,a) => a.isDefined})   // You cannot null-check a whole table!
 }
 ```
  
 Instead, map the row-variable to a specific field and then check that field.
 ```scala
-val q = quote {
+ctx.run(
   query[Company].leftJoin(query[Address])
     .on((c, a) => c.zip == a.zip)                     // Row type is (Company, Option[Address])
     .filter({case(c,a) => a.map(_.street).isDefined}) // Null-check a non-nullable field instead
-}
-ctx.run(q)
+)
 // SELECT c.name, c.zip, a.fk, a.street, a.zip 
 // FROM Company c 
 // LEFT JOIN Address a ON c.zip = a.zip 
@@ -1202,16 +1156,17 @@ val aCompanies = quote {
     a <- query[Address].join(_.zip == c.zip)
   } yield (c, Option(a))  // change (Company, Address) to (Company, Option[Address]) 
 }
+
 val bCompanies = quote {
   for {
     c <- query[Company] if (c.name like "A%")
     a <- query[Address].leftJoin(_.zip == c.zip)
   } yield (c, a) // (Company, Option[Address])
 }
-val union = quote {
+
+ctx.run(
   aCompanies union bCompanies
-}
-ctx.run(union)
+)
 // SELECT x.name, x.zip, x.fk, x.street, x.zip FROM (
 // (SELECT c.name name, c.zip zip, x1.zip zip, x1.fk fk, x1.street street 
 // FROM Company c INNER JOIN Address x1 ON x1.zip = c.zip WHERE c.name like 'A%') 
@@ -1230,7 +1185,7 @@ case class Person(id: Int, name: String, age: Int)
 case class Contact(personId: Int, phone: String)
 case class ReachablePerson(name:String, phone: String)
 
-val q = quote {
+ctx.run {
   for {
     p <- query[Person] if(p.id == 999)
     c <- query[Contact] if(c.personId == p.id)
@@ -1238,8 +1193,6 @@ val q = quote {
     ReachablePerson(p.name, c.phone)
   }
 }
-
-ctx.run(q)
 // SELECT p.name, c.phone FROM Person p, Contact c WHERE (p.id = 999) AND (c.personId = p.id)
 ```
 
@@ -1248,7 +1201,7 @@ As well as in general:
 ```scala
 case class IdFilter(id:Int)
 
-val q = quote {
+ctx.run {
   val idFilter = new IdFilter(999)
   for {
     p <- query[Person] if(p.id == idFilter.id)
@@ -1257,8 +1210,6 @@ val q = quote {
     ReachablePerson(p.name, c.phone)
   }
 }
-
-ctx.run(q)
 // SELECT p.name, c.phone FROM Person p, Contact c WHERE (p.id = 999) AND (c.personId = p.id)
 ```
 ***Note*** however that this functionality has the following restrictions:
@@ -1298,28 +1249,26 @@ Database actions are defined using quotations as well. These actions don't have 
 ```scala
 val a = quote(query[Contact].insert(lift(Contact(999, "+1510488988"))))
 
-ctx.run(a)
+ctx.run(a) // = 1 if the row was inserted 0 otherwise
 // INSERT INTO Contact (personId,phone) VALUES (?, ?)
 ```
 
 #### It is also possible to insert specific columns:
 
 ```scala
-val a = quote {
+ctx.run(
   query[Contact].insert(_.personId -> lift(999), _.phone -> lift("+1510488988"))
-}
-
-ctx.run(a)
+)
 // INSERT INTO Contact (personId,phone) VALUES (?, ?)
 ```
 
 ### batch insert
 ```scala
 val a = quote {
-  liftQuery(List(Person(0, "John", 31))).foreach(e => query[Person].insert(e))
+  liftQuery(List(Person(0, "John", 31),Person(2, "name2", 32))).foreach(e => query[Person].insert(e))
 }
 
-ctx.run(a)
+ctx.run(a) //: List[Long] size = 2. Contains 1 @ positions, where row was inserted E.g List(1,1)
 // INSERT INTO Person (id,name,age) VALUES (?, ?, ?)
 ```
 
@@ -1329,7 +1278,7 @@ val a = quote {
   query[Person].filter(_.id == 999).update(lift(Person(999, "John", 22)))
 }
 
-ctx.run(a)
+ctx.run(a) // = Long number of rows updated
 // UPDATE Person SET id = ?, name = ?, age = ? WHERE id = 999
 ```
 
@@ -1359,12 +1308,12 @@ ctx.run(a)
 
 ```scala
 val a = quote {
-  liftQuery(List(Person(1, "name", 31))).foreach { person =>
+  liftQuery(List(Person(1, "name", 31),Person(2, "name2", 32))).foreach { person =>
      query[Person].filter(_.id == person.id).update(_.name -> person.name, _.age -> person.age)
   }
 }
 
-ctx.run(a)
+ctx.run(a) // : List[Long] size = 2. Contains 1 @ positions, where row was inserted E.g List(1,0)
 // UPDATE Person SET name = ?, age = ? WHERE id = ?
 ```
 
@@ -1374,21 +1323,21 @@ val a = quote {
   query[Person].filter(p => p.name == "").delete
 }
 
-ctx.run(a)
+ctx.run(a) // = Long the number of rows deleted
 // DELETE FROM Person WHERE name = ''
 ```
 
 ### insert or update (upsert, conflict)
 
-Upsert is supported by Postgres, SQLite, and MySQL
+Upsert is supported by Postgres, SQLite and MySQL
 
 #### Postgres and SQLite
 
 ##### Ignore conflict
 ```scala
-val a = quote {
+ctx.run(
   query[Product].insert(_.id -> 1, _.sku -> 10).onConflictIgnore
-}
+)
 
 // INSERT INTO Product AS t (id,sku) VALUES (1, 10) ON CONFLICT DO NOTHING
 ```
@@ -1439,18 +1388,18 @@ INSERT INTO Product AS t (id,sku) VALUES (1, 10) ON CONFLICT (id,description) DO
 
 Ignore any conflict, e.g. `insert ignore`
 ```scala
-val a = quote {
+ctx.run(
   query[Product].insert(_.id -> 1, _.sku -> 10).onConflictIgnore
-}
+)
 
 // INSERT IGNORE INTO Product (id,sku) VALUES (1, 10)
 ```
 
 Ignore duplicate key conflict by explicitly setting it
 ```scala
-val a = quote {
+ctx.run(
   query[Product].insert(_.id -> 1, _.sku -> 10).onConflictIgnore(_.id)
-}
+)
 
 // INSERT INTO Product (id,sku) VALUES (1, 10) ON DUPLICATE KEY UPDATE id=id
 ```
@@ -1458,11 +1407,11 @@ val a = quote {
 Resolve duplicate key by updating existing row if needed. In `onConflictUpdate((t, e) => assignment)`: `t` refers to
 existing row and `e` - to values, e.g. values proposed for insert.
 ```scala
-val a = quote {
+ctx.run(
   query[Product]
     .insert(_.id -> 1, _.sku -> 10)
     .onConflictUpdate((t, e) => t.sku -> (t.sku + e.sku))
-}
+)
 
 // INSERT INTO Product (id,sku) VALUES (1, 10) ON DUPLICATE KEY UPDATE sku = (sku + VALUES(sku))
 ```
@@ -1646,16 +1595,14 @@ val ctx = new SqlMirrorContext(MirrorSqlDialect, Literal) with ImplicitQuery
 
 import ctx._
 
-val q = quote {
+ctx.run(
   for {
     p <- Person if(p.id == 999)
     c <- Contact if(c.personId == p.id)
   } yield {
     (p.name, c.phone)
   }
-}
-
-ctx.run(q)
+)
 // SELECT p.name, c.phone FROM Person p, Contact c WHERE (p.id = 999) AND (c.personId = p.id)
 ```
 
@@ -1859,30 +1806,27 @@ ctx.run(q)
 ### list.contains / set.contains
 requires `allowFiltering`
 ```scala
-val q = quote {
+ctx.run(
   query[Book].filter(p => p.pages.contains(25)).allowFiltering
-}
-ctx.run(q)
+)
 // SELECT id, notes, pages, history FROM Book WHERE pages CONTAINS 25 ALLOW FILTERING
 ```
 
 ### map.contains
 requires `allowFiltering`
 ```scala
-val q = quote {
+ctx.run(
   query[Book].filter(p => p.history.contains(12)).allowFiltering
-}
-ctx.run(q)
+)
 // SELECT id, notes, pages, history FROM book WHERE history CONTAINS 12 ALLOW FILTERING
 ```
 
 ### map.containsValue
 requires `allowFiltering`
 ```scala
-val q = quote {
+ctx.run(
   query[Book].filter(p => p.history.containsValue(true)).allowFiltering
-}
-ctx.run(q)
+)
 // SELECT id, notes, pages, history FROM book WHERE history CONTAINS true ALLOW FILTERING
 ```
 
@@ -2019,11 +1963,9 @@ implicit class ForUpdate[T](q: Query[T]) {
   def forUpdate = quote(infix"$q FOR UPDATE".as[Query[T]])
 }
 
-val a = quote {
+ctx.run(
   query[Person].filter(p => p.age < 18).forUpdate
-}
-
-ctx.run(a)
+)
 // SELECT p.name, p.age FROM person p WHERE p.age < 18 FOR UPDATE
 ```
 
@@ -2114,11 +2056,9 @@ val myFunction = quote {
   (i: Int) => infix"MY_FUNCTION($i)".as[Int]
 }
 
-val q = quote {
+ctx.run(
   query[Person].map(p => myFunction(p.age))
-}
-
-ctx.run(q)
+)
 // SELECT MY_FUNCTION(p.age) FROM Person p
 ```
 
@@ -2211,13 +2151,11 @@ Quill automatically encodes `AnyVal`s (value classes):
 case class UserId(value: Int) extends AnyVal
 case class User(id: UserId, name: String)
 
-val q = quote {
+ctx.run(
   for {
     u <- query[User] if u.id == lift(UserId(1))
   } yield u
-}
-
-ctx.run(q)
+)
 // SELECT u.id, u.name FROM User u WHERE (u.id = 1)
 ```
 
@@ -2245,7 +2183,7 @@ def example = {
 ```scala
 implicit val personInsertMeta = insertMeta[Person](_.id)
 
-ctx.run(query[Person].insert(lift(Person(-1, "John", 22))))
+ctx.run( query[Person].insert(lift(Person(-1, "John", 22))) )
 // INSERT INTO Person (name,age) VALUES (?, ?)
 ```
 
