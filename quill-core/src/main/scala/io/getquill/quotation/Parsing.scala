@@ -921,7 +921,7 @@ trait Parsing extends ValueComputation {
 
     (ident == originalBody, actionType.tpe) match {
       // Note, tuples are also case classes so this also matches for tuples
-      case (true, ClassTypeRefMatch(cls, List(arg))) if (cls == asClass[QueryDsl#Insert[_]] && isTypeCaseClass(arg)) =>
+      case (true, ClassTypeRefMatch(cls, List(arg))) if (cls == asClass[QueryDsl#Insert[_]] || cls == asClass[QueryDsl#Update[_]]) && isTypeCaseClass(arg) =>
 
         val elements = flatten(q"${TermName(ident.name)}", value("Decoder", arg))
         if (elements.size == 0) c.fail("Case class in the 'returning' clause has no values")

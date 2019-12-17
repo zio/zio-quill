@@ -1,11 +1,9 @@
 package io.getquill.context
 
-import io.getquill.{ Spec, testContext }
 import io.getquill.ReturnAction.{ ReturnColumns, ReturnRecord }
-import io.getquill.testContext._
 import io.getquill.context.mirror.Row
-import io.getquill.MirrorIdiomReturningSingle
-import io.getquill.MirrorIdiomReturningMulti
+import io.getquill.testContext._
+import io.getquill.{ MirrorIdiomReturningMulti, MirrorIdiomReturningSingle, Spec, testContext }
 
 class ActionMacroSpec extends Spec {
 
@@ -36,14 +34,14 @@ class ActionMacroSpec extends Spec {
     }
     "nexted case class lifting" in {
       val q = quote {
-        (t: TestEntity) => qr1.insert(t)
+        t: TestEntity => qr1.insert(t)
       }
       val r = testContext.run(q(lift(TestEntity("s", 1, 2L, None))))
       r.string mustEqual """querySchema("TestEntity").insert(v => v.s -> ?, v => v.i -> ?, v => v.l -> ?, v => v.o -> ?)"""
       r.prepareRow mustEqual Row("s", 1, 2L, None)
     }
 
-    "returning" - {
+    "insert returning" - {
       "returning value" in {
         val q = quote {
           qr1.insert(t => t.i -> 1).returning(t => t.l)
@@ -54,8 +52,7 @@ class ActionMacroSpec extends Spec {
         r.returningBehavior mustEqual ReturnRecord
       }
       "returning value - with single - should not compile" in testContext.withDialect(MirrorIdiomReturningSingle) { ctx =>
-        import ctx._
-        "ctx.run(qr1.insert(t => t.i -> 1).returning(t => t.l))" mustNot compile
+        "import ctx._; ctx.run(qr1.insert(t => t.i -> 1).returning(t => t.l))" mustNot compile
       }
       "returning value - with multi" in testContext.withDialect(MirrorIdiomReturningMulti) { ctx =>
         import ctx._
@@ -158,10 +155,61 @@ class ActionMacroSpec extends Spec {
         r.returningBehavior mustEqual ReturnRecord
       }
     }
+
+    "update returning" - {
+      "returning value" in {
+        val q = quote {
+          qr1.update(t => t.i -> 1).returning(t => t.l)
+        }
+        val r = testContext.run(q)
+        r.string mustEqual """querySchema("TestEntity").update(t => t.i -> 1).returning((t) => t.l)"""
+        r.prepareRow mustEqual Row()
+        r.returningBehavior mustEqual ReturnRecord
+      }
+      "returning value - with single - should not compile" in testContext.withDialect(MirrorIdiomReturningSingle) { ctx =>
+        "import ctx._; ctx.run(qr1.update(t => t.i -> 1).returning(t => t.l))" mustNot compile
+      }
+      "returning value - with multi" in testContext.withDialect(MirrorIdiomReturningMulti) { ctx =>
+        import ctx._
+        val q = quote {
+          qr1.update(t => t.i -> 1).returning(t => t.l)
+        }
+        val r = ctx.run(q)
+        r.string mustEqual """querySchema("TestEntity").update(t => t.i -> 1).returning((t) => t.l)"""
+        r.prepareRow mustEqual Row()
+        r.returningBehavior mustEqual ReturnColumns(List("l"))
+      }
+      "scalar lifting + returning value" in {
+        val q = quote {
+          qr1.update(t => t.i -> lift(1)).returning(t => t.l)
+        }
+        val r = testContext.run(q)
+        r.string mustEqual """querySchema("TestEntity").update(t => t.i -> ?).returning((t) => t.l)"""
+        r.prepareRow mustEqual Row(1)
+        r.returningBehavior mustEqual ReturnRecord
+      }
+      "case class lifting + returning value" in {
+        val q = quote {
+          qr1.update(lift(TestEntity("s", 1, 2L, None))).returning(t => t.l)
+        }
+        val r = testContext.run(q)
+        r.string mustEqual """querySchema("TestEntity").update(v => v.s -> ?, v => v.i -> ?, v => v.l -> ?, v => v.o -> ?).returning((t) => t.l)"""
+        r.prepareRow mustEqual Row("s", 1, 2, None)
+        r.returningBehavior mustEqual ReturnRecord
+      }
+      "case class lifting + returning multi value" in {
+        val q = quote {
+          qr1.update(lift(TestEntity("s", 1, 2L, None))).returning(t => (t.l, t.i))
+        }
+        val r = testContext.run(q)
+        r.string mustEqual """querySchema("TestEntity").update(v => v.s -> ?, v => v.i -> ?, v => v.l -> ?, v => v.o -> ?).returning((t) => (t.l, t.i))"""
+        r.prepareRow mustEqual Row("s", 1, 2, None)
+        r.returningBehavior mustEqual ReturnRecord
+      }
+    }
   }
 
   "runs batched action" - {
-
     val entities = List(
       TestEntity("s1", 2, 3L, Some(4)),
       TestEntity("s5", 6, 7L, Some(8))
@@ -169,7 +217,7 @@ class ActionMacroSpec extends Spec {
 
     "scalar" in {
       val insert = quote {
-        (p: Int) => qr1.insert(t => t.i -> p)
+        p: Int => qr1.insert(t => t.i -> p)
       }
       val q = quote {
         liftQuery(List(1, 2)).foreach((p: Int) => insert(p))
@@ -191,7 +239,7 @@ class ActionMacroSpec extends Spec {
     }
     "case class + nested action" in {
       val nested = quote {
-        (p: TestEntity) => qr1.insert(p)
+        p: TestEntity => qr1.insert(p)
       }
       val q = quote {
         liftQuery(entities).foreach(p => nested(p))
@@ -230,7 +278,7 @@ class ActionMacroSpec extends Spec {
     }
     "scalar + returning" in {
       val insert = quote {
-        (p: Int) => qr1.insert(t => t.i -> p).returning(t => t.l)
+        p: Int => qr1.insert(t => t.i -> p).returning(t => t.l)
       }
       val q = quote {
         liftQuery(List(1, 2)).foreach((p: Int) => insert(p))
@@ -266,7 +314,7 @@ class ActionMacroSpec extends Spec {
     }
     "case class + returning + nested action" in {
       val insert = quote {
-        (p: TestEntity) => qr1.insert(p).returning(t => t.l)
+        p: TestEntity => qr1.insert(p).returning(t => t.l)
       }
       val r = testContext.run(liftQuery(entities).foreach(p => insert(p)))
       r.groups mustEqual List(
@@ -314,7 +362,7 @@ class ActionMacroSpec extends Spec {
     }
     "nested case class lifting" in {
       val q = quote {
-        (t: TestEntity) => qr1.insert(t)
+        t: TestEntity => qr1.insert(t)
       }
       testContext.translate(q(lift(TestEntity("s", 1, 2L, None)))) mustEqual
         """querySchema("TestEntity").insert(v => v.s -> 's', v => v.i -> 1, v => v.l -> 2, v => v.o -> null)"""
@@ -358,7 +406,7 @@ class ActionMacroSpec extends Spec {
 
     "scalar" in {
       val insert = quote {
-        (p: Int) => qr1.insert(t => t.i -> p)
+        p: Int => qr1.insert(t => t.i -> p)
       }
       val q = quote {
         liftQuery(List(1, 2)).foreach((p: Int) => insert(p))
@@ -379,7 +427,7 @@ class ActionMacroSpec extends Spec {
     }
     "case class + nested action" in {
       val nested = quote {
-        (p: TestEntity) => qr1.insert(p)
+        p: TestEntity => qr1.insert(p)
       }
       val q = quote {
         liftQuery(entities).foreach(p => nested(p))
@@ -415,7 +463,7 @@ class ActionMacroSpec extends Spec {
     }
     "scalar + returning" in {
       val insert = quote {
-        (p: Int) => qr1.insert(t => t.i -> p).returning(t => t.l)
+        p: Int => qr1.insert(t => t.i -> p).returning(t => t.l)
       }
       val q = quote {
         liftQuery(List(1, 2)).foreach((p: Int) => insert(p))
@@ -436,7 +484,7 @@ class ActionMacroSpec extends Spec {
     }
     "case class + returning + nested action" in {
       val insert = quote {
-        (p: TestEntity) => qr1.insert(p).returning(t => t.l)
+        p: TestEntity => qr1.insert(p).returning(t => t.l)
       }
       testContext.translate(liftQuery(entities).foreach(p => insert(p))) mustEqual List(
         """querySchema("TestEntity").insert(v => v.s -> 's1', v => v.i -> 2, v => v.l -> 3, v => v.o -> 4).returning((t) => t.l)""",
@@ -454,7 +502,7 @@ class ActionMacroSpec extends Spec {
     }
     "case class + returning generated + nested action" in {
       val insert = quote {
-        (p: TestEntity) => qr1.insert(p).returningGenerated(t => t.l)
+        p: TestEntity => qr1.insert(p).returningGenerated(t => t.l)
       }
       testContext.translate(liftQuery(entities).foreach(p => insert(p))) mustEqual List(
         """querySchema("TestEntity").insert(v => v.s -> 's1', v => v.i -> 2, v => v.o -> 4).returningGenerated((t) => t.l)""",
