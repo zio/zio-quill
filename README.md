@@ -251,7 +251,7 @@ val returnedIds = ctx.run(q) //: List[(Int, Long)]
 
 In certain situations, we might want to return fields that are not auto generated as well. In this case we do not want 
 the fields to be automatically excluded from the insertion. The `returning` method is used for that.
- 
+
 ```scala
 val q = quote {
   query[Product].insert(lift(Product(0, "My Product", 1011L))).returning(r => (id, description))
@@ -272,7 +272,7 @@ val q = quote {
 val returnedIds = ctx.run(q) //: List[(Int, String)]
 // INSERT INTO Product (description, sku) VALUES (?, ?) RETURNING id, description
 ```
- 
+
  We can also fix this situation by using an insert-meta.
 
 ```scala
@@ -283,6 +283,19 @@ val q = quote {
 
 val returnedIds = ctx.run(q) //: List[(Int, String)]
 // INSERT INTO Product (description, sku) VALUES (?, ?) RETURNING id, description
+```
+
+##### update returning
+
+`returning` can also be used after `update`:
+
+```scala
+val q = quote {
+  query[Product].update(lift(Product(42, "Updated Product", 2022L))).returning(r => (r.id, r.description))
+}
+
+val updated = ctx.run(q) //: List[(Int, String)]
+// UPDATE Product SET id = ?, description = ?, sku = ? RETURNING id, description
 ```
 
 #### Customization
@@ -355,6 +368,16 @@ Add 100 to the value of `id`:
 ```scala
 ctx.run(q.returning(r => id + 100)) //: List[Int]
 // INSERT INTO Product (description, sku) OUTPUT INSERTED.id + 100 VALUES (?, ?)
+```
+
+Update returning:
+```scala
+val q = quote {
+  query[Product].update(_.description -> "Updated Product", _.sku -> 2022L).returning(r => (r.id, r.description))
+}
+
+val updated = ctx.run(q)
+// UPDATE Product SET description = 'Updated Product', sku = 2022 OUTPUT INSERTED.id, INSERTED.description
 ```
 
 ### Embedded case classes
