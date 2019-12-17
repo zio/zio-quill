@@ -55,27 +55,61 @@ class JdbcContextSpec extends Spec {
     }
   }
 
-  "Insert with returning with single column table" in {
-    val inserted = testContext.run {
-      qr4.insert(lift(TestEntity4(0))).returning(_.i)
+  "insert returning" - {
+    "with single column table" in {
+      val inserted = testContext.run {
+        qr4.insert(lift(TestEntity4(0))).returning(_.i)
+      }
+      testContext.run(qr4.filter(_.i == lift(inserted))).head.i mustBe inserted
     }
-    testContext.run(qr4.filter(_.i == lift(inserted))).head.i mustBe inserted
+
+    "with multiple columns" in {
+      testContext.run(qr1.delete)
+      val inserted = testContext.run {
+        qr1.insert(lift(TestEntity("foo", 1, 18L, Some(123)))).returning(r => (r.i, r.s, r.o))
+      }
+      (1, "foo", Some(123)) mustBe inserted
+    }
+
+    "with multiple columns - case class" in {
+      case class Return(id: Int, str: String, opt: Option[Int])
+      testContext.run(qr1.delete)
+      val inserted = testContext.run {
+        qr1.insert(lift(TestEntity("foo", 1, 18L, Some(123)))).returning(r => Return(r.i, r.s, r.o))
+      }
+      Return(1, "foo", Some(123)) mustBe inserted
+    }
   }
 
-  "Insert with returning with multiple columns" in {
-    testContext.run(qr1.delete)
-    val inserted = testContext.run {
-      qr1.insert(lift(TestEntity("foo", 1, 18L, Some(123)))).returning(r => (r.i, r.s, r.o))
-    }
-    (1, "foo", Some(123)) mustBe inserted
-  }
+  "update returning" - {
+    "with single column table" in {
+      testContext.run(qr4.insert(lift(TestEntity4(8))))
 
-  "Insert with returning with multiple columns - case class" in {
-    case class Return(id: Int, str: String, opt: Option[Int])
-    testContext.run(qr1.delete)
-    val inserted = testContext.run {
-      qr1.insert(lift(TestEntity("foo", 1, 18L, Some(123)))).returning(r => Return(r.i, r.s, r.o))
+      val updated = testContext.run {
+        qr4.update(lift(TestEntity4(0))).returning(_.i)
+      }
+      testContext.run(qr4.filter(_.i == lift(updated))).head.i mustBe updated
     }
-    Return(1, "foo", Some(123)) mustBe inserted
+
+    "with multiple columns" in {
+      testContext.run(qr1.delete)
+      testContext.run(qr1.insert(lift(TestEntity("baz", 6, 42L, Some(456)))))
+
+      val updated = testContext.run {
+        qr1.update(lift(TestEntity("foo", 1, 18L, Some(123)))).returning(r => (r.i, r.s, r.o))
+      }
+      (1, "foo", Some(123)) mustBe updated
+    }
+
+    "with multiple columns - case class" in {
+      case class Return(id: Int, str: String, opt: Option[Int])
+      testContext.run(qr1.delete)
+      testContext.run(qr1.insert(lift(TestEntity("baz", 6, 42L, Some(456)))))
+
+      val updated = testContext.run {
+        qr1.update(lift(TestEntity("foo", 1, 18L, Some(123)))).returning(r => Return(r.i, r.s, r.o))
+      }
+      Return(1, "foo", Some(123)) mustBe updated
+    }
   }
 }
