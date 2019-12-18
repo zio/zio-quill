@@ -5,7 +5,7 @@ import io.getquill.ast.Ast
 import io.getquill.norm.ConcatBehavior.AnsiConcat
 import io.getquill.norm.EqualityBehavior.AnsiEquality
 import io.getquill.norm.capture.DemarcateExternalAliases
-import io.getquill.util.Messages.trace
+import io.getquill.util.Messages.title
 
 object SqlNormalize {
   def apply(ast: Ast, concatBehavior: ConcatBehavior = AnsiConcat, equalityBehavior: EqualityBehavior = AnsiEquality) =
@@ -16,31 +16,31 @@ class SqlNormalize(concatBehavior: ConcatBehavior, equalityBehavior: EqualityBeh
 
   private val normalize =
     (identity[Ast] _)
-      .andThen(trace("original"))
+      .andThen(title("original"))
       .andThen(DemarcateExternalAliases.apply _)
-      .andThen(trace("DemarcateReturningAliases"))
+      .andThen(title("DemarcateReturningAliases"))
       .andThen(new FlattenOptionOperation(concatBehavior).apply _)
-      .andThen(trace("FlattenOptionOperation"))
+      .andThen(title("FlattenOptionOperation"))
       .andThen(new SimplifyNullChecks(equalityBehavior).apply _)
-      .andThen(trace("SimplifyNullChecks"))
+      .andThen(title("SimplifyNullChecks"))
       .andThen(Normalize.apply _)
-      .andThen(trace("Normalize"))
+      .andThen(title("Normalize"))
       // Need to do RenameProperties before ExpandJoin which normalizes-out all the tuple indexes
       // on which RenameProperties relies
       .andThen(RenameProperties.apply _)
-      .andThen(trace("RenameProperties"))
+      .andThen(title("RenameProperties"))
       .andThen(ExpandDistinct.apply _)
-      .andThen(trace("ExpandDistinct"))
+      .andThen(title("ExpandDistinct"))
       .andThen(NestImpureMappedInfix.apply _)
-      .andThen(trace("NestMappedInfix"))
+      .andThen(title("NestMappedInfix"))
       .andThen(Normalize.apply _)
-      .andThen(trace("Normalize"))
+      .andThen(title("Normalize"))
       .andThen(ExpandJoin.apply _)
-      .andThen(trace("ExpandJoin"))
+      .andThen(title("ExpandJoin"))
       .andThen(ExpandMappedInfix.apply _)
-      .andThen(trace("ExpandMappedInfix"))
+      .andThen(title("ExpandMappedInfix"))
       .andThen(Normalize.apply _)
-      .andThen(trace("Normalize"))
+      .andThen(title("Normalize"))
 
   def apply(ast: Ast) = normalize(ast)
 }

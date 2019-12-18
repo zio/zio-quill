@@ -32,14 +32,18 @@ object Messages {
     case object Normalizations extends TraceType { val value = "norm" }
     case object Standard extends TraceType { val value = "standard" }
     case object NestedQueryExpansion extends TraceType { val value = "nest" }
+    case object AvoidAliasConflict extends TraceType { val value = "alias" }
 
-    def values: List[TraceType] = List(Standard, Normalizations, NestedQueryExpansion)
+    def values: List[TraceType] = List(Standard, Normalizations, NestedQueryExpansion, AvoidAliasConflict)
   }
 
   val qprint = new AstPrinter(traceOpinions, traceAstSimple)
 
   def fail(msg: String) =
     throw new IllegalStateException(msg)
+
+  def title[T](label: String, traceType: TraceType = TraceType.Standard) =
+    trace[T](("=".repeat(10)) + s" $label " + ("=".repeat(10)), 0, traceType)
 
   def trace[T](label: String, numIndent: Int = 0, traceType: TraceType = TraceType.Standard) =
     (v: T) =>
@@ -53,6 +57,10 @@ object Messages {
           }")
         v
       }
+
+  implicit class StringExt(str: String) {
+    def repeat(n: Int) = (0 until n).map(_ => str).mkString
+  }
 
   implicit class RichContext(c: MacroContext) {
 

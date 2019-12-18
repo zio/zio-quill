@@ -1,13 +1,12 @@
 package io.getquill
 
 import io.getquill.ast._
-import io.getquill.context.CanReturnField
-import io.getquill.context.sql.{ FlattenSqlQuery, SqlQuery }
+import io.getquill.context.CanOutputClause
 import io.getquill.context.sql.idiom._
 import io.getquill.context.sql.norm.AddDropToNestedOrderBy
-import io.getquill.idiom.{ StringToken, Token }
-import io.getquill.idiom.Statement
+import io.getquill.context.sql.{ FlattenSqlQuery, SqlQuery }
 import io.getquill.idiom.StatementInterpolator._
+import io.getquill.idiom.{ Statement, StringToken, Token }
 import io.getquill.norm.EqualityBehavior
 import io.getquill.norm.EqualityBehavior.NonAnsiEquality
 import io.getquill.util.Messages.fail
@@ -16,7 +15,7 @@ trait SQLServerDialect
   extends SqlIdiom
   with QuestionMarkBindVariables
   with ConcatSupport
-  with CanReturnField {
+  with CanOutputClause {
 
   override def querifyAst(ast: Ast) = AddDropToNestedOrderBy(SqlQuery(ast))
 
