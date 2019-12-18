@@ -13,6 +13,10 @@ class RenamePropertiesSpec extends Spec {
     querySchema[TestEntity]("test_entity", _.s -> "field_s", _.i -> "field_i")
   }
 
+  val e2 = quote {
+    querySchema[TestEntity]("test_entity_2", _.s -> "field_s_2", _.i -> "field_i_2")
+  }
+
   val tup = quote {
     querySchema[(String, Int)]("test_tuple", _._1 -> "field_s", _._2 -> "field_i")
   }
@@ -163,6 +167,20 @@ class RenamePropertiesSpec extends Spec {
         testContext.run(q).string mustEqual
           "SELECT t.field_s, t.field_i, t.l, t.o FROM test_entity t WHERE t.field_i = 1"
       }
+    }
+    "union" in {
+      val q = quote {
+        e.filter(t => t.i == 1).union(e.filter(t => t.i != 1))
+      }
+      testContext.run(q).string mustEqual
+        "SELECT x.field_s, x.field_i, x.l, x.o FROM ((SELECT t.field_s, t.field_i, t.l, t.o FROM test_entity t WHERE t.field_i = 1) UNION (SELECT t1.field_s, t1.field_i, t1.l, t1.o FROM test_entity t1 WHERE t1.field_i <> 1)) AS x"
+    }
+    "unionAll" in {
+      val q = quote {
+        e.filter(t => t.i == 1).unionAll(e.filter(t => t.i != 1))
+      }
+      testContext.run(q).string mustEqual
+        "SELECT x.field_s, x.field_i, x.l, x.o FROM ((SELECT t.field_s, t.field_i, t.l, t.o FROM test_entity t WHERE t.field_i = 1) UNION ALL (SELECT t1.field_s, t1.field_i, t1.l, t1.o FROM test_entity t1 WHERE t1.field_i <> 1)) AS x"
     }
     "filter" - {
       "body" in {

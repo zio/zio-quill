@@ -261,6 +261,8 @@ object RenameProperties extends StatelessTransformer {
     def empty: TupleSchema = TupleSchema(List.empty)
   }
 
+  case class CompoundSchema(a: Schema, b: Schema) extends Schema
+
   object HierarchicalAstEntity {
     def unapply(ast: Ast): Boolean =
       ast match {
@@ -293,15 +295,17 @@ object RenameProperties extends StatelessTransformer {
             (Map(q, x, prr), schema)
         }
 
-      case e: Entity                 => (e, EntitySchema(e))
-      case Filter(q: Query, x, p)    => applySchema(q, x, p, Filter)
-      case SortBy(q: Query, x, p, o) => applySchema(q, x, p, SortBy(_, _, _, o))
-      case GroupBy(q: Query, x, p)   => applySchema(q, x, p, GroupBy)
-      case Aggregation(op, q: Query) => applySchema(q, Aggregation(op, _))
-      case Take(q: Query, n)         => applySchema(q, Take(_, n))
-      case Drop(q: Query, n)         => applySchema(q, Drop(_, n))
-      case Nested(q: Query)          => applySchema(q, Nested)
-      case Distinct(q: Query)        => applySchema(q, Distinct)
+      case e: Entity                    => (e, EntitySchema(e))
+      case Filter(q: Query, x, p)       => applySchema(q, x, p, Filter)
+      case SortBy(q: Query, x, p, o)    => applySchema(q, x, p, SortBy(_, _, _, o))
+      case GroupBy(q: Query, x, p)      => applySchema(q, x, p, GroupBy)
+      case Aggregation(op, q: Query)    => applySchema(q, Aggregation(op, _))
+      case Take(q: Query, n)            => applySchema(q, Take(_, n))
+      case Drop(q: Query, n)            => applySchema(q, Drop(_, n))
+      case Nested(q: Query)             => applySchema(q, Nested)
+      case Distinct(q: Query)           => applySchema(q, Distinct)
+      case Union(a: Query, b: Query)    => applySchema(a, b, Union)
+      case UnionAll(a: Query, b: Query) => applySchema(a, b, UnionAll)
 
       case FlatMap(q: Query, x, p) =>
         applySchema(q, x, p, FlatMap) match {
@@ -389,6 +393,12 @@ object RenameProperties extends StatelessTransformer {
         (f(ast), schema)
     }
 
+  private def applySchema(a: Query, b: Query, f: (Ast, Ast) => Query): (Query, Schema) = {
+    val (qa, newSchema1) = applySchema(a)
+    val (qb, newSchema2) = applySchema(b)
+    (f(qa, qb), CompoundSchema(newSchema1, newSchema2))
+  }
+
   private def applySchema[T](q: Query, x: Ident, p: Ast, f: (Ast, Ident, Ast) => T): (T, Schema) =
     applySchema(q) match {
       case (q, schema) =>
@@ -445,6 +455,8 @@ object RenameProperties extends StatelessTransformer {
               value
             )
         }
+      case CompoundSchema(a, b) =>
+        replacements(base, a) ++ replacements(base, b)
       // Do nothing if it is an empty schema
       case EmptySchema => List()
     }
