@@ -251,7 +251,7 @@ val returnedIds = ctx.run(q) //: List[(Int, Long)]
 
 In certain situations, we might want to return fields that are not auto generated as well. In this case we do not want 
 the fields to be automatically excluded from the insertion. The `returning` method is used for that.
- 
+
 ```scala
 val q = quote {
   query[Product].insert(lift(Product(0, "My Product", 1011L))).returning(r => (id, description))
@@ -272,7 +272,7 @@ val q = quote {
 val returnedIds = ctx.run(q) //: List[(Int, String)]
 // INSERT INTO Product (description, sku) VALUES (?, ?) RETURNING id, description
 ```
- 
+
  We can also fix this situation by using an insert-meta.
 
 ```scala
@@ -283,6 +283,19 @@ val q = quote {
 
 val returnedIds = ctx.run(q) //: List[(Int, String)]
 // INSERT INTO Product (description, sku) VALUES (?, ?) RETURNING id, description
+```
+
+##### update returning
+
+`returning` can also be used after `update`:
+
+```scala
+val q = quote {
+  query[Product].update(lift(Product(42, "Updated Product", 2022L))).returning(r => (r.id, r.description))
+}
+
+val updated = ctx.run(q) //: List[(Int, String)]
+// UPDATE Product SET id = ?, description = ?, sku = ? RETURNING id, description
 ```
 
 #### Customization
@@ -355,6 +368,16 @@ Add 100 to the value of `id`:
 ```scala
 ctx.run(q.returning(r => id + 100)) //: List[Int]
 // INSERT INTO Product (description, sku) OUTPUT INSERTED.id + 100 VALUES (?, ?)
+```
+
+Update returning:
+```scala
+val q = quote {
+  query[Product].update(_.description -> "Updated Product", _.sku -> 2022L).returning(r => (r.id, r.description))
+}
+
+val updated = ctx.run(q)
+// UPDATE Product SET description = 'Updated Product', sku = 2022 OUTPUT INSERTED.id, INSERTED.description
 ```
 
 ### Embedded case classes
@@ -1175,7 +1198,7 @@ Since you cannot use `Option[Table].isDefined`, if you want to null-check a whol
 val q = quote {
   query[Company].leftJoin(query[Address])
     .on((c, a) => c.zip == a.zip)         // Row type is (Company, Option[Address])
-    .filter({case(c,a) => a.isDefined})   // You cannot null-check a whole table
+    .filter({case(c,a) => a.isDefined})   // You cannot null-check a whole table!
 }
 ```
  
@@ -1298,7 +1321,7 @@ Database actions are defined using quotations as well. These actions don't have 
 ```scala
 val a = quote(query[Contact].insert(lift(Contact(999, "+1510488988"))))
 
-ctx.run(a)
+ctx.run(a) // = 1 if the row was inserted 0 otherwise
 // INSERT INTO Contact (personId,phone) VALUES (?, ?)
 ```
 
@@ -1316,10 +1339,10 @@ ctx.run(a)
 ### batch insert
 ```scala
 val a = quote {
-  liftQuery(List(Person(0, "John", 31))).foreach(e => query[Person].insert(e))
+  liftQuery(List(Person(0, "John", 31),Person(2, "name2", 32))).foreach(e => query[Person].insert(e))
 }
 
-ctx.run(a)
+ctx.run(a) //: List[Long] size = 2. Contains 1 @ positions, where row was inserted E.g List(1,1)
 // INSERT INTO Person (id,name,age) VALUES (?, ?, ?)
 ```
 
@@ -1329,7 +1352,7 @@ val a = quote {
   query[Person].filter(_.id == 999).update(lift(Person(999, "John", 22)))
 }
 
-ctx.run(a)
+ctx.run(a) // = Long number of rows updated
 // UPDATE Person SET id = ?, name = ?, age = ? WHERE id = 999
 ```
 
@@ -1359,12 +1382,12 @@ ctx.run(a)
 
 ```scala
 val a = quote {
-  liftQuery(List(Person(1, "name", 31))).foreach { person =>
+  liftQuery(List(Person(1, "name", 31),Person(2, "name2", 32))).foreach { person =>
      query[Person].filter(_.id == person.id).update(_.name -> person.name, _.age -> person.age)
   }
 }
 
-ctx.run(a)
+ctx.run(a) // : List[Long] size = 2. Contains 1 @ positions, where row was inserted E.g List(1,0)
 // UPDATE Person SET name = ?, age = ? WHERE id = ?
 ```
 
@@ -1374,13 +1397,13 @@ val a = quote {
   query[Person].filter(p => p.name == "").delete
 }
 
-ctx.run(a)
+ctx.run(a) // = Long the number of rows deleted
 // DELETE FROM Person WHERE name = ''
 ```
 
 ### insert or update (upsert, conflict)
 
-Upsert is supported by Postgres, SQLite, and MySQL
+Upsert is supported by Postgres, SQLite, MySQL and H2 `onConflictIgnore` only (since v1.4.200 in PostgreSQL compatibility mode)
 
 #### Postgres and SQLite
 
@@ -2402,7 +2425,7 @@ Quill provides a fully type-safe way to use Spark's highly-optimized SQL engine.
 ### sbt dependency
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-spark" % "3.4.11-SNAPSHOT"
+  "io.getquill" %% "quill-spark" % "3.5.1-SNAPSHOT"
 )
 ```
 
@@ -2547,7 +2570,7 @@ The body of `transaction` can contain calls to other methods and multiple `run` 
 ```
 libraryDependencies ++= Seq(
   "mysql" % "mysql-connector-java" % "8.0.17",
-  "io.getquill" %% "quill-jdbc" % "3.4.11-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "3.5.1-SNAPSHOT"
 )
 ```
 
@@ -2574,7 +2597,7 @@ ctx.connectionTimeout=30000
 ```
 libraryDependencies ++= Seq(
   "org.postgresql" % "postgresql" % "42.2.8",
-  "io.getquill" %% "quill-jdbc" % "3.4.11-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "3.5.1-SNAPSHOT"
 )
 ```
 
@@ -2600,7 +2623,7 @@ ctx.connectionTimeout=30000
 ```
 libraryDependencies ++= Seq(
   "org.xerial" % "sqlite-jdbc" % "3.28.0",
-  "io.getquill" %% "quill-jdbc" % "3.4.11-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "3.5.1-SNAPSHOT"
 )
 ```
 
@@ -2621,7 +2644,7 @@ ctx.jdbcUrl=jdbc:sqlite:/path/to/db/file.db
 ```
 libraryDependencies ++= Seq(
   "com.h2database" % "h2" % "1.4.199",
-  "io.getquill" %% "quill-jdbc" % "3.4.11-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "3.5.1-SNAPSHOT"
 )
 ```
 
@@ -2643,7 +2666,7 @@ ctx.dataSource.user=sa
 ```
 libraryDependencies ++= Seq(
   "com.microsoft.sqlserver" % "mssql-jdbc" % "7.4.1.jre8",
-  "io.getquill" %% "quill-jdbc" % "3.4.11-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "3.5.1-SNAPSHOT"
 )
 ```
 
@@ -2665,7 +2688,7 @@ available for this situation [here](https://stackoverflow.com/questions/1074869/
 ```
 libraryDependencies ++= Seq(
   "com.oracle.jdbc" % "ojdbc8" % "18.3.0.0.0",
-  "io.getquill" %% "quill-jdbc" % "3.4.11-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "3.5.1-SNAPSHOT"
 )
 ```
 
@@ -2765,7 +2788,7 @@ lazy val ctx = new MysqlMonixJdbcContext(SnakeCase, "ctx", Runner.using(Schedule
 ```
 libraryDependencies ++= Seq(
   "mysql" % "mysql-connector-java" % "8.0.17",
-  "io.getquill" %% "quill-jdbc-monix" % "3.4.11-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-monix" % "3.5.1-SNAPSHOT"
 )
 ```
 
@@ -2792,7 +2815,7 @@ ctx.connectionTimeout=30000
 ```
 libraryDependencies ++= Seq(
   "org.postgresql" % "postgresql" % "42.2.8",
-  "io.getquill" %% "quill-jdbc-monix" % "3.4.11-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-monix" % "3.5.1-SNAPSHOT"
 )
 ```
 
@@ -2818,7 +2841,7 @@ ctx.connectionTimeout=30000
 ```
 libraryDependencies ++= Seq(
   "org.xerial" % "sqlite-jdbc" % "3.28.0",
-  "io.getquill" %% "quill-jdbc-monix" % "3.4.11-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-monix" % "3.5.1-SNAPSHOT"
 )
 ```
 
@@ -2839,7 +2862,7 @@ ctx.jdbcUrl=jdbc:sqlite:/path/to/db/file.db
 ```
 libraryDependencies ++= Seq(
   "com.h2database" % "h2" % "1.4.199",
-  "io.getquill" %% "quill-jdbc-monix" % "3.4.11-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-monix" % "3.5.1-SNAPSHOT"
 )
 ```
 
@@ -2861,7 +2884,7 @@ ctx.dataSource.user=sa
 ```
 libraryDependencies ++= Seq(
   "com.microsoft.sqlserver" % "mssql-jdbc" % "7.4.1.jre8",
-  "io.getquill" %% "quill-jdbc-monix" % "3.4.11-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-monix" % "3.5.1-SNAPSHOT"
 )
 ```
 
@@ -2893,7 +2916,7 @@ available for this situation [here](https://stackoverflow.com/questions/1074869/
 ```
 libraryDependencies ++= Seq(
   "com.oracle.jdbc" % "ojdbc8" % "18.3.0.0.0",
-  "io.getquill" %% "quill-jdbc-monix" % "3.4.11-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-monix" % "3.5.1-SNAPSHOT"
 )
 ```
 
@@ -2935,7 +2958,7 @@ The body of transaction can contain calls to other methods and multiple run call
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-ndbc-postgres" % "3.4.2-SNAPSHOT"
+  "io.getquill" %% "quill-ndbc-postgres" % "3.5.1-SNAPSHOT"
 )
 ```
 
@@ -3042,7 +3065,7 @@ ctx.queryTimeout=10m
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async-mysql" % "3.4.11-SNAPSHOT"
+  "io.getquill" %% "quill-async-mysql" % "3.5.1-SNAPSHOT"
 )
 ```
 
@@ -3066,7 +3089,7 @@ ctx.url=mysql://host:3306/database?user=root&password=root
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async-postgres" % "3.4.11-SNAPSHOT"
+  "io.getquill" %% "quill-async-postgres" % "3.5.1-SNAPSHOT"
 )
 ```
 
@@ -3107,7 +3130,7 @@ The body of `transaction` can contain calls to other methods and multiple `run` 
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-finagle-mysql" % "3.4.11-SNAPSHOT"
+  "io.getquill" %% "quill-finagle-mysql" % "3.5.1-SNAPSHOT"
 )
 ```
 
@@ -3147,7 +3170,7 @@ The body of `transaction` can contain calls to other methods and multiple `run` 
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-finagle-postgres" % "3.4.11-SNAPSHOT"
+  "io.getquill" %% "quill-finagle-postgres" % "3.5.1-SNAPSHOT"
 )
 ```
 
@@ -3174,7 +3197,7 @@ ctx.binaryParams=false
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-cassandra" % "3.4.11-SNAPSHOT"
+  "io.getquill" %% "quill-cassandra" % "3.5.1-SNAPSHOT"
 )
 ```
 
@@ -3210,7 +3233,7 @@ ctx.session.addressTranslator=com.datastax.driver.core.policies.IdentityTranslat
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-cassandra-monix" % "3.4.11-SNAPSHOT"
+  "io.getquill" %% "quill-cassandra-monix" % "3.5.1-SNAPSHOT"
 )
 ```
 
@@ -3229,7 +3252,7 @@ lazy val ctx = new CassandraStreamContext(SnakeCase, "ctx")
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-orientdb" % "3.4.11-SNAPSHOT"
+  "io.getquill" %% "quill-orientdb" % "3.5.1-SNAPSHOT"
 )
 ```
 
@@ -3291,7 +3314,7 @@ Have a look at the [CODEGEN.md](https://github.com/getquill/quill/blob/master/CO
 
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-codegen-jdbc" % "3.4.11-SNAPSHOT"
+  "io.getquill" %% "quill-codegen-jdbc" % "3.5.1-SNAPSHOT"
 )
 ```
 
