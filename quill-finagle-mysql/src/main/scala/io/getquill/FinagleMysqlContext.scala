@@ -1,7 +1,9 @@
 package io.getquill
 
 import java.util.TimeZone
+
 import scala.util.Try
+import com.twitter.concurrent.AsyncStream
 import com.twitter.finagle.mysql.Client
 import com.twitter.finagle.mysql.LongValue
 import com.twitter.finagle.mysql.OK
@@ -22,7 +24,7 @@ import io.getquill.context.sql.SqlContext
 import io.getquill.util.{ ContextLogger, LoadConfig }
 import io.getquill.util.Messages.fail
 import io.getquill.monad.TwitterFutureIOMonad
-import io.getquill.context.{ Context, TranslateContext }
+import io.getquill.context.{ Context, StreamingContext, TranslateContext }
 
 sealed trait OperationType
 object OperationType {
@@ -39,6 +41,7 @@ class FinagleMysqlContext[N <: NamingStrategy](
   extends Context[MySQLDialect, N]
   with TranslateContext
   with SqlContext[MySQLDialect, N]
+  with StreamingContext[MySQLDialect, N]
   with FinagleMysqlDecoders
   with FinagleMysqlEncoders
   with TwitterFutureIOMonad {
@@ -82,6 +85,7 @@ class FinagleMysqlContext[N <: NamingStrategy](
   override type RunActionReturningResult[T] = T
   override type RunBatchActionResult = List[Long]
   override type RunBatchActionReturningResult[T] = List[T]
+  override type StreamResult[T] = Future[AsyncStream[T]]
 
   protected val timestampValue =
     new TimestampValue(
@@ -170,6 +174,16 @@ class FinagleMysqlContext[N <: NamingStrategy](
           }.map(_.result())
       }
     }.map(_.flatten.toList)
+
+  def streamQuery[T](fetchSize: Option[Int], sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): Future[AsyncStream[T]] = {
+    val rowsPerFetch = fetchSize.getOrElse(20)
+    val (params: List[Any], prepared: List[Parameter]) = prepare(Nil)
+    logger.logQuery(sql, params)
+
+    withClient(Read) { client =>
+      client.cursor(sql)(rowsPerFetch, prepared: _*)(extractor).map(_.stream)
+    }
+  }
 
   override private[getquill] def prepareParams(statement: String, prepare: Prepare): Seq[String] = {
     prepare(Nil)._2.map(param => prepareParam(param.value))
