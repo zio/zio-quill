@@ -1,7 +1,7 @@
 package io.getquill.context.spark
 
 import io.getquill.Spec
-import org.scalatest.Matchers._
+import org.scalatest.matchers.should.Matchers._
 
 class QuestionMarkSpec extends Spec {
   val context = io.getquill.context.sql.testContext
