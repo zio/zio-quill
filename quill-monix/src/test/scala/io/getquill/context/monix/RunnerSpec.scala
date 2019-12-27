@@ -4,7 +4,7 @@ import io.getquill.Spec
 import monix.eval.Task
 import monix.execution.Scheduler
 import monix.execution.schedulers.CanBlock
-import org.scalatest.Matchers._
+import org.scalatest.matchers.should.Matchers._
 
 import scala.util.Failure
 

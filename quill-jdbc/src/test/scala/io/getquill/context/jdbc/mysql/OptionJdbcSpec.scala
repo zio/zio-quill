@@ -1,7 +1,7 @@
 package io.getquill.context.jdbc.mysql
 
 import io.getquill.context.sql.OptionQuerySpec
-import org.scalatest.Matchers._
+import org.scalatest.matchers.should.Matchers._
 
 class OptionJdbcSpec extends OptionQuerySpec {
 

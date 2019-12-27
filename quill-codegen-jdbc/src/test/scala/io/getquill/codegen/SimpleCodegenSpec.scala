@@ -1,12 +1,13 @@
 package io.getquill.codegen.codegen
 
 import io.getquill.codegen.util.StringUtil._
-import org.scalatest.{ FreeSpec, Matchers }
+import org.scalatest.freespec.AnyFreeSpec
+import org.scalatest.matchers.should.Matchers
 
 import scala.reflect.runtime.universe._
 import scala.tools.reflect.ToolBox
 
-class SimpleCodegenSpec extends FreeSpec with Matchers {
+class SimpleCodegenSpec extends AnyFreeSpec with Matchers {
 
   case class FieldData(fieldName: String, dataType: String, columnName: String)
   case class FieldDataGroup(data: FieldData*) {

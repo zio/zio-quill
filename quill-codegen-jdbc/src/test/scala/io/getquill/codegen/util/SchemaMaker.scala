@@ -5,11 +5,11 @@ import java.io.Closeable
 import io.getquill._
 import io.getquill.codegen.integration.DbHelper
 import javax.sql.DataSource
-import org.scalatest.FreeSpec
+import org.scalatest.freespec.AnyFreeSpec
 
 import scala.language.implicitConversions
 
-abstract class CodegenSpec extends FreeSpec with SchemaMaker {
+abstract class CodegenSpec extends AnyFreeSpec with SchemaMaker {
   type Prefix <: ConfigPrefix
   val prefix: Prefix
 
