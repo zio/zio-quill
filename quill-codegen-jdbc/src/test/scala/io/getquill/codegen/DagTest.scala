@@ -2,16 +2,17 @@ package io.getquill.codegen
 
 import java.time.LocalDateTime
 
-import org.scalatest._
-import Matchers._
 import io.getquill.codegen.dag.CatalogBasedAncestry
+import org.scalatest.BeforeAndAfter
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.matchers.should.Matchers._
 
 import scala.reflect.{ ClassTag, classTag }
 
 // I.e. something the type-ancestry does not know about
 class UnknownClass
 
-class CodeGeneratorRunnerDagTest extends FunSuite with BeforeAndAfter {
+class CodeGeneratorRunnerDagTest extends AnyFunSuite with BeforeAndAfter {
 
   case class TestCase[O](one: ClassTag[_], twos: Seq[ClassTag[_]], result: ClassTag[_])
 

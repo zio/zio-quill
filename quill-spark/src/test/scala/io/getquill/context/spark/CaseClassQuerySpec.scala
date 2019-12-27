@@ -2,7 +2,7 @@ package io.getquill.context.spark
 
 import io.getquill.Spec
 import org.apache.spark.sql.Dataset
-import org.scalatest.Matchers._
+import org.scalatest.matchers.should.Matchers._
 
 case class Contact(firstName: String, lastName: String, age: Int, addressFk: Int, extraInfo: String)
 case class Address(id: Int, street: String, zip: Int, otherExtraInfo: String)

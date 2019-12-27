@@ -1,7 +1,7 @@
 package io.getquill.context.jdbc.h2
 
 import io.getquill.context.sql.DistinctSpec
-import org.scalatest.Matchers._
+import org.scalatest.matchers.should.Matchers._
 
 class DistinctJdbcSpec extends DistinctSpec {
 

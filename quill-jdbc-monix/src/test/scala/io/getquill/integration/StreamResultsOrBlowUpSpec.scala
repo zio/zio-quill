@@ -2,11 +2,11 @@ package io.getquill.integration
 
 import java.sql.{ Connection, ResultSet }
 
-import org.scalatest.Matchers._
-import io.getquill.context.monix.Runner
 import io.getquill._
+import io.getquill.context.monix.Runner
 import monix.execution.Scheduler
 import monix.execution.schedulers.CanBlock
+import org.scalatest.matchers.should.Matchers._
 
 import scala.concurrent.duration.Duration
 
