@@ -4,12 +4,14 @@ import io.getquill.context.monix.Runner
 import io.getquill.util.LoadConfig
 import monix.eval.Task
 import monix.execution.Scheduler
-import org.scalatest.Matchers._
-import org.scalatest.{ BeforeAndAfterAll, FreeSpec, MustMatchers }
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.freespec.AnyFreeSpec
+import org.scalatest.matchers.must.Matchers
+import org.scalatest.matchers.should.Matchers._
 
 import scala.collection.mutable.ArrayBuffer
 
-class ResultSetIteratorSpec extends FreeSpec with MustMatchers with BeforeAndAfterAll {
+class ResultSetIteratorSpec extends AnyFreeSpec with Matchers with BeforeAndAfterAll {
 
   val ds = JdbcContextConfig(LoadConfig("testPostgresDB")).dataSource
   implicit val scheduler = Scheduler.global

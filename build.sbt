@@ -491,7 +491,7 @@ lazy val jdbcTestingLibraries = Seq(
     "mysql"                   %  "mysql-connector-java"    % "8.0.18"             % Test,
     "com.h2database"          %  "h2"                      % "1.4.200"            % Test,
     "org.postgresql"          %  "postgresql"              % "42.2.9"             % Test,
-    "org.xerial"              %  "sqlite-jdbc"             % "3.28.0"             % Test,
+    "org.xerial"              %  "sqlite-jdbc"             % "3.30.1"             % Test,
     "com.microsoft.sqlserver" %  "mssql-jdbc"              % "7.1.1.jre8-preview" % Test,
     "com.oracle.ojdbc"        %  "ojdbc8"                  % "19.3.0.0"           % Test,
     "org.mockito"             %% "mockito-scala-scalatest" % "1.7.1"              % Test
@@ -565,7 +565,7 @@ lazy val basicSettings = Seq(
   libraryDependencies ++= Seq(
     "org.scala-lang.modules" %%% "scala-collection-compat" % "2.1.3",
     "com.lihaoyi"     %% "pprint"         % pprintVersion(scalaVersion.value),
-    "org.scalatest"   %%% "scalatest"     % "3.0.8"          % Test,
+    "org.scalatest"   %%% "scalatest"     % "3.1.0"          % Test,
     "ch.qos.logback"  % "logback-classic" % "1.2.3"          % Test,
     "com.google.code.findbugs" % "jsr305" % "3.0.2"          % Provided // just to avoid warnings during compilation
   ) ++ {

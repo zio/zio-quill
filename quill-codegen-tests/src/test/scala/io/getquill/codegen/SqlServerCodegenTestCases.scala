@@ -3,7 +3,7 @@ package io.getquill.codegen
 import io.getquill.codegen.integration.CodegenTestCases._
 import io.getquill.codegen.util.ConfigPrefix.TestSqlServerDB
 import io.getquill.codegen.util._
-import org.scalatest.Matchers._
+import org.scalatest.matchers.should.Matchers._
 
 class SqlServerCodegenTestCases extends CodegenSpec {
   import io.getquill.codegen.generated.postgres._

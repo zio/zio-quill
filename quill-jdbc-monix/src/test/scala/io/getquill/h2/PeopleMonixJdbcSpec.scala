@@ -1,7 +1,7 @@
 package io.getquill.h2
 
 import io.getquill.PeopleMonixSpec
-import org.scalatest.Matchers._
+import org.scalatest.matchers.should.Matchers._
 
 class PeopleMonixJdbcSpec extends PeopleMonixSpec {
 
