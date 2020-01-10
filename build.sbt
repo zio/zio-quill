@@ -36,11 +36,26 @@ lazy val bigdataModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
 lazy val allModules =
   baseModules ++ dbModules ++ asyncModules ++ codegenModules ++ bigdataModules
 
+lazy val scala213Modules = baseModules ++ dbModules ++ Seq[sbt.ClasspathDep[sbt.ProjectReference]](
+  `quill-async`,
+  `quill-async-mysql`,
+  `quill-async-postgres`,
+  `quill-finagle-mysql`,
+  `quill-cassandra`,
+  `quill-cassandra-monix`,
+  `quill-orientdb`,
+)
+
+def isScala213 = {
+  val scalaVersion = sys.props.get("quill.scala.version")
+  scalaVersion.map(_.startsWith("2.13")).getOrElse(false)
+}
+
 val filteredModules = {
   val modulesStr = sys.props.get("modules")
   println(s"Modules Argument Value: ${modulesStr}")
 
-  modulesStr match {
+  val modules = modulesStr match {
     case Some("base") =>
       println("Compiling Base Modules")
       baseModules
@@ -61,15 +76,13 @@ val filteredModules = {
       Seq[sbt.ClasspathDep[sbt.ProjectReference]]()
     case _ =>
       // Workaround for https://github.com/sbt/sbt/issues/3465
-      val scalaVersion = sys.props.get("quill.scala.version")
-      if(scalaVersion.map(_.startsWith("2.13")).getOrElse(false)) {
-        println("Compiling Scala 2.13 Modules")
-        baseModules ++ dbModules
-      } else {
-        println("Compiling All Modules")
-        allModules
-      }
+      println("Compiling All Modules")
+      allModules
   }
+  if(isScala213) {
+    println("Compiling 2.13 Modules Only")
+    modules.filter(scala213Modules.contains(_))
+  } else modules
 }
 
 lazy val `quill` =
@@ -303,7 +316,7 @@ lazy val `quill-async` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.github.mauricio" %% "db-async-common"  % "0.2.21"
+        "com.github.postgresql-async" %% "db-async-common"  % "0.3.0"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -315,7 +328,7 @@ lazy val `quill-async-mysql` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.github.mauricio" %% "mysql-async"      % "0.2.21"
+        "com.github.postgresql-async" %% "mysql-async"      % "0.3.0"
       )
     )
     .dependsOn(`quill-async` % "compile->compile;test->test")
@@ -327,7 +340,7 @@ lazy val `quill-async-postgres` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.github.mauricio" %% "postgresql-async" % "0.2.21"
+        "com.github.postgresql-async" %% "postgresql-async" % "0.3.0"
       )
     )
     .dependsOn(`quill-async` % "compile->compile;test->test")
@@ -380,6 +393,7 @@ lazy val `quill-cassandra-monix` =
     .dependsOn(`quill-cassandra` % "compile->compile;test->test")
     .dependsOn(`quill-monix` % "compile->compile;test->test")
 
+
 lazy val `quill-cassandra-lagom` =
    (project in file("quill-cassandra-lagom"))
     .settings(commonSettings: _*)
@@ -387,7 +401,7 @@ lazy val `quill-cassandra-lagom` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= {
-        val lagomVersion = "1.5.4"
+        val lagomVersion = "1.5.5"
         Seq(
           "com.lightbend.lagom" %% "lagom-scaladsl-persistence-cassandra" % lagomVersion % Provided,
           "com.lightbend.lagom" %% "lagom-scaladsl-testkit" % lagomVersion % Test
@@ -563,11 +577,11 @@ lazy val basicSettings = Seq(
   scalaVersion := "2.11.12",
   crossScalaVersions := Seq("2.11.12", "2.12.10", "2.13.1"),
   libraryDependencies ++= Seq(
-    "org.scala-lang.modules" %%% "scala-collection-compat" % "2.1.3",
-    "com.lihaoyi"     %% "pprint"         % pprintVersion(scalaVersion.value),
-    "org.scalatest"   %%% "scalatest"     % "3.1.0"          % Test,
-    "ch.qos.logback"  % "logback-classic" % "1.2.3"          % Test,
-    "com.google.code.findbugs" % "jsr305" % "3.0.2"          % Provided // just to avoid warnings during compilation
+    "org.scala-lang.modules"   %%% "scala-collection-compat" % "2.1.3",
+    "com.lihaoyi"              %%  "pprint"                  % pprintVersion(scalaVersion.value),
+    "org.scalatest"            %%% "scalatest"               % "3.1.0"          % Test,
+    "ch.qos.logback"           %   "logback-classic"         % "1.2.3"          % Test,
+    "com.google.code.findbugs" %   "jsr305"                  % "3.0.2"          % Provided // just to avoid warnings during compilation
   ) ++ {
     if (debugMacro) Seq(
       "org.scala-lang"   %  "scala-library"     % scalaVersion.value,
