@@ -488,7 +488,7 @@ def updateWebsiteTag =
 lazy val jdbcTestingLibraries = Seq(
   libraryDependencies ++= Seq(
     "com.zaxxer"              %  "HikariCP"                % "3.4.1",
-    "mysql"                   %  "mysql-connector-java"    % "8.0.18"             % Test,
+    "mysql"                   %  "mysql-connector-java"    % "8.0.19"             % Test,
     "com.h2database"          %  "h2"                      % "1.4.200"            % Test,
     "org.postgresql"          %  "postgresql"              % "42.2.9"             % Test,
     "org.xerial"              %  "sqlite-jdbc"             % "3.30.1"             % Test,
