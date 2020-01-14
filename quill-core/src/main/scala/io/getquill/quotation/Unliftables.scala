@@ -3,7 +3,7 @@ package io.getquill.quotation
 import scala.reflect.macros.whitebox.Context
 
 import io.getquill.ast._
-import io.getquill.util.Messages.RichContext
+import io.getquill.util.MacroContextExt._
 
 trait Unliftables {
   val c: Context
@@ -207,5 +207,9 @@ trait Unliftables {
     case q"$pack.CaseClassValueLift.apply(${ a: String }, $b)"  => CaseClassValueLift(a, b)
     case q"$pack.ScalarQueryLift.apply(${ a: String }, $b, $c)" => ScalarQueryLift(a, b, c)
     case q"$pack.CaseClassQueryLift.apply(${ a: String }, $b)"  => CaseClassQueryLift(a, b)
+  }
+  implicit val tagUnliftable: Unliftable[Tag] = Unliftable[Tag] {
+    case q"$pack.ScalarTag.apply(${ uid: String })"    => ScalarTag(uid)
+    case q"$pack.QuotationTag.apply(${ uid: String })" => QuotationTag(uid)
   }
 }

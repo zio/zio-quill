@@ -1,7 +1,7 @@
 package io.getquill.dsl
 
 import io.getquill.util.OptionalTypecheck
-import io.getquill.util.Messages._
+import io.getquill.util.MacroContextExt._
 import scala.reflect.macros.blackbox.{ Context => MacroContext }
 
 class EncodingDslMacro(val c: MacroContext) {

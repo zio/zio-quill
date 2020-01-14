@@ -18,7 +18,7 @@ trait StatelessTransformer {
       case e: IterableOperation   => apply(e)
       case If(a, b, c)            => If(apply(a), apply(b), apply(c))
       case e: Dynamic             => e
-      case e: Lift                => e
+      case e: External            => e
       case e: QuotedReference     => e
       case Block(statements)      => Block(statements.map(apply))
       case Val(name, body)        => Val(name, apply(body))

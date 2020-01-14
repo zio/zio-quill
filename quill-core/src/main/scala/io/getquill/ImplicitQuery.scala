@@ -26,7 +26,7 @@ import scala.runtime.AbstractFunction7
 import scala.runtime.AbstractFunction8
 import scala.runtime.AbstractFunction9
 
-import io.getquill.util.Messages.RichContext
+import io.getquill.util.MacroContextExt._
 import io.getquill.context.Context
 
 trait ImplicitQuery {
