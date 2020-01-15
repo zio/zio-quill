@@ -5,15 +5,14 @@ import java.util.Iterator
 import java.util.concurrent.Executors
 import java.util.function.Supplier
 
-import com.typesafe.scalalogging.Logger
 import io.getquill.context.ContextEffect
 import io.getquill.context.sql.SqlContext
 import io.getquill.context.sql.idiom.SqlIdiom
+import io.getquill.util.ContextLogger
 import io.getquill.{ NamingStrategy, ReturnAction }
 import io.trane.future.FuturePool
 import io.trane.future.scala.{ Future, toJavaFuture, toScalaFuture }
 import io.trane.ndbc.{ DataSource, PreparedStatement, Row }
-import org.slf4j.LoggerFactory.getLogger
 
 import scala.annotation.tailrec
 import scala.collection.mutable.ArrayBuffer
@@ -24,7 +23,7 @@ abstract class NdbcContext[I <: SqlIdiom, N <: NamingStrategy, P <: PreparedStat
 )
   extends SqlContext[I, N] {
 
-  private val logger = Logger(getLogger(classOf[NdbcContext[_, _, _, _]]))
+  private val logger = ContextLogger(classOf[NdbcContext[_, _, _, _]])
 
   override type PrepareRow = P
   override type ResultRow = R
@@ -38,7 +37,6 @@ abstract class NdbcContext[I <: SqlIdiom, N <: NamingStrategy, P <: PreparedStat
   override type RunBatchActionReturningResult[T] = List[T]
 
   protected val effect: ContextEffect[Result]
-
   import effect._
 
   protected val zoneOffset: ZoneOffset = ZoneOffset.UTC
@@ -75,8 +73,8 @@ abstract class NdbcContext[I <: SqlIdiom, N <: NamingStrategy, P <: PreparedStat
 
   def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: R => T = identity[R] _): Future[List[T]] = {
     withDataSource { ds =>
-      val ps = prepare(createPreparedStatement(sql))._2
-      logger.debug(ps.toString())
+      val (params, ps) = prepare(createPreparedStatement(sql))
+      logger.logQuery(sql, params)
 
       ds.query(ps).toScala.map { rs =>
         extractResult(rs.iterator, extractor)
@@ -89,8 +87,8 @@ abstract class NdbcContext[I <: SqlIdiom, N <: NamingStrategy, P <: PreparedStat
 
   def executeAction[T](sql: String, prepare: Prepare = identityPrepare): Future[Long] = {
     withDataSource { ds =>
-      val ps = prepare(createPreparedStatement(sql))._2
-      logger.debug(ps.toString())
+      val (params, ps) = prepare(createPreparedStatement(sql))
+      logger.logQuery(sql, params)
 
       ds.execute(ps).toScala.map(_.longValue)
     }.flatMap(result => result)

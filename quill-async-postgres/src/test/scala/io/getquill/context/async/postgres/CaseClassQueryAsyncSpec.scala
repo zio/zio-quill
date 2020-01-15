@@ -2,7 +2,7 @@ package io.getquill.context.async.postgres
 
 import scala.concurrent.ExecutionContext.Implicits.{ global => ec }
 import io.getquill.context.sql.CaseClassQuerySpec
-import org.scalatest.Matchers._
+import org.scalatest.matchers.should.Matchers._
 
 class CaseClassQueryAsyncSpec extends CaseClassQuerySpec {
 
