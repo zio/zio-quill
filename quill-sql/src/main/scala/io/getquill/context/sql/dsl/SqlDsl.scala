@@ -7,5 +7,6 @@ trait SqlDsl {
 
   implicit class Like(s1: String) {
     def like(s2: String) = quote(infix"$s1 like $s2".as[Boolean])
+    def ilike(s2: String) = quote(infix"$s1 ilike $s2".as[Boolean])
   }
 }

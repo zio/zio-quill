@@ -1465,7 +1465,7 @@ val ctx = new SqlMirrorContext(MirrorSqlDialect, Literal)
 import ctx._
 ```
 
-### like
+### like/ilike
 
 ```scala
 val q = quote {
