@@ -21,17 +21,17 @@ class MetaDslSpec extends Spec {
     }
     "custom" in {
       val meta = schemaMeta[TestEntity]("test_entity", _.i -> "ii")
-      meta.entity.toString mustEqual """querySchema("test_entity", _.i -> "ii")"""
+      meta.entity.toString mustEqual """`querySchema`("test_entity", _.i -> "ii")"""
     }
     "custom with embedded" in {
       case class Entity(emb: EmbValue)
       val meta = schemaMeta[Entity]("test_entity", _.emb.i -> "ii")
-      meta.entity.toString mustEqual """querySchema("test_entity", _.emb.i -> "ii")"""
+      meta.entity.toString mustEqual """`querySchema`("test_entity", _.emb.i -> "ii")"""
     }
     "custom with optional embedded" in {
       case class Entity(emb: Option[EmbValue])
       val meta = schemaMeta[Entity]("test_entity", _.emb.map(_.i) -> "ii")
-      meta.entity.toString mustEqual """querySchema("test_entity", _.emb.i -> "ii")"""
+      meta.entity.toString mustEqual """`querySchema`("test_entity", _.emb.i -> "ii")"""
     }
   }
 

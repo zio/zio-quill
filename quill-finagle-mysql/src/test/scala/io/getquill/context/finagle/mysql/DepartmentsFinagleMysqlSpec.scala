@@ -34,4 +34,8 @@ class DepartmentsFinagleMysqlSpec extends DepartmentsSpec {
   "Example 9 - nested db" in {
     await(testContext.run(`Example 9 expertise`(lift(`Example 9 param`)))) mustEqual `Example 9 expected result`
   }
+
+  "Example 9 - streamed result" in {
+    await(testContext.stream(`Example 9 expertise`(lift(`Example 9 param`))).flatMap(_.toSeq())) mustEqual `Example 9 expected result`
+  }
 }

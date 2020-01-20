@@ -27,8 +27,9 @@ object DefaultNodeCatalog extends NodeCatalog {
 
   object LongNode extends DagNode(classTag[Long], BigDecimalNode)
   object IntNode extends DagNode(classTag[Int], LongNode)
-  object ByteNode extends DagNode(classTag[Byte], IntNode)
-  object BooleanNode extends DagNode(classTag[Boolean], IntNode)
+  object ShortNode extends DagNode(classTag[Short], IntNode)
+  object ByteNode extends DagNode(classTag[Byte], ShortNode)
+  object BooleanNode extends DagNode(classTag[Boolean], ByteNode)
 
   object TimestampNode extends DagNode(classTag[java.time.LocalDateTime], StringNode)
   object DateNode extends DagNode(classTag[java.time.LocalDate], TimestampNode)
@@ -41,6 +42,7 @@ object DefaultNodeCatalog extends NodeCatalog {
     LongNode,
     IntNode,
     ByteNode,
+    ShortNode,
     BooleanNode,
     TimestampNode,
     DateNode
@@ -65,16 +67,24 @@ class CatalogBasedAncestry(ancestryCatalog: NodeCatalog = DefaultNodeCatalog) ex
       case None         => node :: Nil
     }
 
-    val oneAncestry = getAncestry(ancestryCatalog.lookup(one))
-    val twoAncestry = getAncestry(ancestryCatalog.lookup(two))
+    def commonAncestry = {
+      val oneAncestry = getAncestry(ancestryCatalog.lookup(one))
+      val twoAncestry = getAncestry(ancestryCatalog.lookup(two))
 
-    val (node, _) =
-      oneAncestry.zipWithIndex.toMap.zipOnKeys(twoAncestry.zipWithIndex.toMap)
-        .collect { case (key, (Some(i), Some(j))) => (key, i + j) }
-        .toList
-        .sortBy { case (node, order) => order }
-        .head
+      val (node, _) =
+        oneAncestry.zipWithIndex.toMap.zipOnKeys(twoAncestry.zipWithIndex.toMap)
+          .collect { case (key, (Some(i), Some(j))) => (key, i + j) }
+          .toList
+          .sortBy { case (node, order) => order }
+          .head
 
-    node.cls
+      node.cls
+    }
+
+    // If the two nodes are exactly the same thing, just return the type. Otherwise look up the DAG.
+    if (one == two)
+      one
+    else
+      commonAncestry
   }
 }

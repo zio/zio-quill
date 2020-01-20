@@ -21,14 +21,14 @@ class MirrorIdiomSpec extends Spec {
         querySchema[TestEntity]("test")
       }
       stmt"${(q.ast: Ast).token}" mustEqual
-        stmt"""querySchema("test")"""
+        stmt"""`querySchema`("test")"""
     }
     "columns" in {
       val q = quote {
         querySchema[TestEntity]("TestEntity", _.i -> "'i", _.o -> "'o")
       }
       stmt"${(q.ast: Ast).token}" mustEqual
-        stmt"""querySchema("TestEntity", _.i -> "'i", _.o -> "'o")"""
+        stmt"""`querySchema`("TestEntity", _.i -> "'i", _.o -> "'o")"""
     }
   }
 

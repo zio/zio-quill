@@ -1,21 +1,8 @@
 package io.getquill.context.sql.idiom
 
-import io.getquill.ast.Ast
-import io.getquill.ast.Ident
-import io.getquill.context.sql.FlatJoinContext
-import io.getquill.context.sql.FlattenSqlQuery
-import io.getquill.context.sql.FromContext
-import io.getquill.context.sql.InfixContext
-import io.getquill.context.sql.JoinContext
-import io.getquill.context.sql.QueryContext
-import io.getquill.context.sql.SetOperationSqlQuery
-import io.getquill.context.sql.SqlQuery
-import io.getquill.context.sql.TableContext
-import io.getquill.context.sql.UnaryOperationSqlQuery
+import io.getquill.ast._
+import io.getquill.context.sql._
 import io.getquill.quotation.FreeVariables
-import io.getquill.ast.CollectAst
-import io.getquill.ast.Property
-import io.getquill.ast.Aggregation
 
 case class Error(free: List[Ident], ast: Ast)
 case class InvalidSqlQuery(errors: List[Error]) {
@@ -80,11 +67,23 @@ object VerifySqlQuery {
       }
     }
 
+    // Recursively expand children until values are fully flattened. Identities in all these should
+    // be skipped during verification.
+    def expandSelect(sv: SelectValue): List[SelectValue] =
+      sv.ast match {
+        case Tuple(values)     => values.map(v => SelectValue(v)).flatMap(expandSelect(_))
+        case CaseClass(values) => values.map(v => SelectValue(v._2)).flatMap(expandSelect(_))
+        case _                 => List(sv)
+      }
+
     val freeVariableErrors: List[Error] =
       query.where.flatMap(verifyAst).toList ++
         query.orderBy.map(_.ast).flatMap(verifyAst) ++
         query.limit.flatMap(verifyAst) ++
-        query.select.map(_.ast).filterNot(_.isInstanceOf[Ident]).flatMap(verifyAst) ++
+        query.select
+        .flatMap(expandSelect(_)) // Expand tuple select clauses so their top-level identities are skipped
+        .map(_.ast)
+        .filterNot(_.isInstanceOf[Ident]).flatMap(verifyAst) ++
         query.from.flatMap {
           case j: JoinContext     => verifyAst(j.on)
           case j: FlatJoinContext => verifyAst(j.on)

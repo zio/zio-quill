@@ -103,4 +103,43 @@ class QueryResultTypeFinagleMysqlSpec extends QueryResultTypeSpec {
       await(testContext.run(isEmpty)) mustEqual false
     }
   }
+
+  "return async stream" - {
+    "select" in {
+      await(testContext.stream(selectAll).flatMap(_.toSeq())) must contain theSameElementsAs (products)
+    }
+    "map" in {
+      await(testContext.stream(map).flatMap(_.toSeq())) must contain theSameElementsAs (products.map(_.id))
+    }
+    "filter" in {
+      await(testContext.stream(filter).flatMap(_.toSeq())) must contain theSameElementsAs (products)
+    }
+    "withFilter" in {
+      await(testContext.stream(withFilter).flatMap(_.toSeq())) must contain theSameElementsAs (products)
+    }
+    "sortBy" in {
+      await(testContext.stream(sortBy).flatMap(_.toSeq())) must contain theSameElementsInOrderAs (products)
+    }
+    "take" in {
+      await(testContext.stream(take).flatMap(_.toSeq())) must contain theSameElementsAs (products)
+    }
+    "drop" in {
+      await(testContext.stream(drop).flatMap(_.toSeq())) must contain theSameElementsAs (products.drop(1))
+    }
+    "++" in {
+      await(testContext.stream(`++`).flatMap(_.toSeq())) must contain theSameElementsAs (products ++ products)
+    }
+    "unionAll" in {
+      await(testContext.stream(unionAll).flatMap(_.toSeq())) must contain theSameElementsAs (products ++ products)
+    }
+    "union" in {
+      await(testContext.stream(union).flatMap(_.toSeq())) must contain theSameElementsAs (products)
+    }
+    "join" in {
+      await(testContext.stream(join).flatMap(_.toSeq())) must contain theSameElementsAs (products zip products)
+    }
+    "distinct" in {
+      await(testContext.stream(distinct).flatMap(_.toSeq())) must contain theSameElementsAs (products.map(_.id).distinct)
+    }
+  }
 }

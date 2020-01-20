@@ -1,10 +1,8 @@
 package io.getquill.context.jdbc.mysql
 
+import io.getquill.context.sql.QueryResultTypeSpec
 import java.util.concurrent.ConcurrentLinkedQueue
-
-import io.getquill.context.sql._
-
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 class QueryResultTypeJdbcSpec extends QueryResultTypeSpec {
 

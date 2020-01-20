@@ -16,11 +16,12 @@ trait Liftables {
     case ast: Action => actionLiftable(ast)
     case ast: Value => valueLiftable(ast)
     case ast: Ident => identLiftable(ast)
+    case ast: ExternalIdent => externalIdentLiftable(ast)
     case ast: Ordering => orderingLiftable(ast)
     case ast: Lift => liftLiftable(ast)
     case ast: Assignment => assignmentLiftable(ast)
     case ast: OptionOperation => optionOperationLiftable(ast)
-    case ast: TraversableOperation => traversableOperationLiftable(ast)
+    case ast: IterableOperation => traversableOperationLiftable(ast)
     case ast: Property => propertyLiftable(ast)
     case Val(name, body) => q"$pack.Val($name, $body)"
     case Block(statements) => q"$pack.Block($statements)"
@@ -28,7 +29,7 @@ trait Liftables {
     case FunctionApply(a, b) => q"$pack.FunctionApply($a, $b)"
     case BinaryOperation(a, b, c) => q"$pack.BinaryOperation($a, $b, $c)"
     case UnaryOperation(a, b) => q"$pack.UnaryOperation($a, $b)"
-    case Infix(a, b) => q"$pack.Infix($a, $b)"
+    case Infix(a, b, pure) => q"$pack.Infix($a, $b, $pure)"
     case If(a, b, c) => q"$pack.If($a, $b, $c)"
     case Dynamic(tree: Tree) if (tree.tpe <:< c.weakTypeOf[CoreDsl#Quoted[Any]]) => q"$tree.ast"
     case Dynamic(tree: Tree) => q"$pack.Constant($tree)"
@@ -59,7 +60,7 @@ trait Liftables {
     case OptionNone                  => q"$pack.OptionNone"
   }
 
-  implicit val traversableOperationLiftable: Liftable[TraversableOperation] = Liftable[TraversableOperation] {
+  implicit val traversableOperationLiftable: Liftable[IterableOperation] = Liftable[IterableOperation] {
     case MapContains(a, b)  => q"$pack.MapContains($a,$b)"
     case SetContains(a, b)  => q"$pack.SetContains($a,$b)"
     case ListContains(a, b) => q"$pack.ListContains($a,$b)"
@@ -104,23 +105,33 @@ trait Liftables {
     case AggregationOperator.`size` => q"$pack.AggregationOperator.`size`"
   }
 
+  implicit val renameableLiftable: Liftable[Renameable] = Liftable[Renameable] {
+    case Renameable.Fixed      => q"$pack.Renameable.Fixed"
+    case Renameable.ByStrategy => q"$pack.Renameable.ByStrategy"
+  }
+
+  implicit val visibilityLiftable: Liftable[Visibility] = Liftable[Visibility] {
+    case Visibility.Visible => q"$pack.Visibility.Visible"
+    case Visibility.Hidden  => q"$pack.Visibility.Hidden"
+  }
+
   implicit val queryLiftable: Liftable[Query] = Liftable[Query] {
-    case Entity(a, b)           => q"$pack.Entity($a, $b)"
-    case Filter(a, b, c)        => q"$pack.Filter($a, $b, $c)"
-    case Map(a, b, c)           => q"$pack.Map($a, $b, $c)"
-    case FlatMap(a, b, c)       => q"$pack.FlatMap($a, $b, $c)"
-    case ConcatMap(a, b, c)     => q"$pack.ConcatMap($a, $b, $c)"
-    case SortBy(a, b, c, d)     => q"$pack.SortBy($a, $b, $c, $d)"
-    case GroupBy(a, b, c)       => q"$pack.GroupBy($a, $b, $c)"
-    case Aggregation(a, b)      => q"$pack.Aggregation($a, $b)"
-    case Take(a, b)             => q"$pack.Take($a, $b)"
-    case Drop(a, b)             => q"$pack.Drop($a, $b)"
-    case Union(a, b)            => q"$pack.Union($a, $b)"
-    case UnionAll(a, b)         => q"$pack.UnionAll($a, $b)"
-    case Join(a, b, c, d, e, f) => q"$pack.Join($a, $b, $c, $d, $e, $f)"
-    case FlatJoin(a, b, c, d)   => q"$pack.FlatJoin($a, $b, $c, $d)"
-    case Distinct(a)            => q"$pack.Distinct($a)"
-    case Nested(a)              => q"$pack.Nested($a)"
+    case Entity.Opinionated(a, b, renameable) => q"$pack.Entity.Opinionated($a, $b, $renameable)"
+    case Filter(a, b, c)                      => q"$pack.Filter($a, $b, $c)"
+    case Map(a, b, c)                         => q"$pack.Map($a, $b, $c)"
+    case FlatMap(a, b, c)                     => q"$pack.FlatMap($a, $b, $c)"
+    case ConcatMap(a, b, c)                   => q"$pack.ConcatMap($a, $b, $c)"
+    case SortBy(a, b, c, d)                   => q"$pack.SortBy($a, $b, $c, $d)"
+    case GroupBy(a, b, c)                     => q"$pack.GroupBy($a, $b, $c)"
+    case Aggregation(a, b)                    => q"$pack.Aggregation($a, $b)"
+    case Take(a, b)                           => q"$pack.Take($a, $b)"
+    case Drop(a, b)                           => q"$pack.Drop($a, $b)"
+    case Union(a, b)                          => q"$pack.Union($a, $b)"
+    case UnionAll(a, b)                       => q"$pack.UnionAll($a, $b)"
+    case Join(a, b, c, d, e, f)               => q"$pack.Join($a, $b, $c, $d, $e, $f)"
+    case FlatJoin(a, b, c, d)                 => q"$pack.FlatJoin($a, $b, $c, $d)"
+    case Distinct(a)                          => q"$pack.Distinct($a)"
+    case Nested(a)                            => q"$pack.Nested($a)"
   }
 
   implicit val propertyAliasLiftable: Liftable[PropertyAlias] = Liftable[PropertyAlias] {
@@ -128,7 +139,7 @@ trait Liftables {
   }
 
   implicit val propertyLiftable: Liftable[Property] = Liftable[Property] {
-    case Property(a, b) => q"$pack.Property($a, $b)"
+    case Property.Opinionated(a, b, renameable, visibility) => q"$pack.Property.Opinionated($a, $b, $renameable, $visibility)"
   }
 
   implicit val orderingLiftable: Liftable[Ordering] = Liftable[Ordering] {
@@ -149,12 +160,13 @@ trait Liftables {
   }
 
   implicit val actionLiftable: Liftable[Action] = Liftable[Action] {
-    case Update(a, b)        => q"$pack.Update($a, $b)"
-    case Insert(a, b)        => q"$pack.Insert($a, $b)"
-    case Delete(a)           => q"$pack.Delete($a)"
-    case Returning(a, b, c)  => q"$pack.Returning($a, $b, $c)"
-    case Foreach(a, b, c)    => q"$pack.Foreach($a, $b, $c)"
-    case OnConflict(a, b, c) => q"$pack.OnConflict($a, $b, $c)"
+    case Update(a, b)                => q"$pack.Update($a, $b)"
+    case Insert(a, b)                => q"$pack.Insert($a, $b)"
+    case Delete(a)                   => q"$pack.Delete($a)"
+    case Returning(a, b, c)          => q"$pack.Returning($a, $b, $c)"
+    case ReturningGenerated(a, b, c) => q"$pack.ReturningGenerated($a, $b, $c)"
+    case Foreach(a, b, c)            => q"$pack.Foreach($a, $b, $c)"
+    case OnConflict(a, b, c)         => q"$pack.OnConflict($a, $b, $c)"
   }
 
   implicit val conflictTargetLiftable: Liftable[OnConflict.Target] = Liftable[OnConflict.Target] {
@@ -179,6 +191,9 @@ trait Liftables {
   }
   implicit val identLiftable: Liftable[Ident] = Liftable[Ident] {
     case Ident(a) => q"$pack.Ident($a)"
+  }
+  implicit val externalIdentLiftable: Liftable[ExternalIdent] = Liftable[ExternalIdent] {
+    case ExternalIdent(a) => q"$pack.ExternalIdent($a)"
   }
 
   implicit val liftLiftable: Liftable[Lift] = Liftable[Lift] {

@@ -20,7 +20,7 @@ export CASSANDRA_PORT=19042
 export ORIENTDB_HOST=127.0.0.1
 export ORIENTDB_PORT=12424
 
-export SBT_ARGS="-Dquill.macro.log=false -Xms1024m -Xmx3g -Xss5m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC ++$TRAVIS_SCALA_VERSION"
+export JVM_OPTS="-Dquill.macro.log=false -Dquill.scala,version=$TRAVIS_SCALA_VERSION -Xms1024m -Xmx3g -Xss5m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC"
 
 modules=$1
 
@@ -58,6 +58,8 @@ function docker_stats() {
 }
 export -f docker_stats
 
+export SBT_ARGS="++$TRAVIS_SCALA_VERSION"
+
 if [[ $TRAVIS_SCALA_VERSION == 2.11* ]]; then
     export SBT_ARGS="$SBT_ARGS coverage"
 fi
@@ -81,9 +83,6 @@ function wait_for_databases() {
        kill -9 $COMPILE
        exit 1
     fi
-
-    echo "Loading Oracle Drivers From Container"
-    ./build/oracle_setup/load_jdbc.sh
 
     echo "Database Setup is finished, waiting for the compilation of core module"
 
@@ -135,7 +134,6 @@ function wait_for_bigdata() {
 
     sbt clean scalariformFormat test:scalariformFormat
     sbt checkUnformattedFiles
-
     sbt clean $SBT_ARGS quill-coreJVM/test:compile & COMPILE=$!
     ./build/setup_bigdata.sh & SETUP=$!
 

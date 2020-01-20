@@ -46,6 +46,13 @@ trait SqlServerJdbcContextBase[N <: NamingStrategy] extends JdbcContextBase[SQLS
   with UUIDStringEncoding {
 
   val idiom = SQLServerDialect
+
+  override def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningBehavior: ReturnAction): Result[O] =
+    withConnectionWrapped { conn =>
+      val (params, ps) = prepare(prepareWithReturning(sql, conn, returningBehavior))
+      logger.logQuery(sql, params)
+      handleSingleResult(extractResult(ps.executeQuery, extractor))
+    }
 }
 
 trait OracleJdbcContextBase[N <: NamingStrategy] extends JdbcContextBase[OracleDialect, N]

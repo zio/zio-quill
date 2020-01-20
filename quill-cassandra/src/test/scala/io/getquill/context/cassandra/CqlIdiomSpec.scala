@@ -3,6 +3,7 @@ package io.getquill.context.cassandra
 import io.getquill._
 import io.getquill.idiom.StatementInterpolator._
 import io.getquill.ast.{ Action => AstAction, _ }
+import io.getquill.idiom.StringToken
 
 class CqlIdiomSpec extends Spec {
 
@@ -38,10 +39,7 @@ class CqlIdiomSpec extends Spec {
         "SELECT s FROM TestEntity WHERE i = 1 ORDER BY s ASC LIMIT 1"
     }
     "returning" in {
-      val q = quote {
-        query[TestEntity].insert(_.l -> 1L).returning(_.i)
-      }
-      "mirrorContext.run(q).string" mustNot compile
+      "mirrorContext.run(query[TestEntity].insert(_.l -> 1L).returning(_.i)).string" mustNot compile
     }
   }
 
@@ -340,6 +338,24 @@ class CqlIdiomSpec extends Spec {
     }
   }
 
+  "naming strategy" - {
+    import capsMirrorContext._
+
+    "naming strategy respected" in {
+      capsMirrorContext.run(query[TestEntity].filter(_.i > 1)).string mustEqual
+        "SELECT S, I, L, O FROM TESTENTITY WHERE I > 1"
+    }
+
+    "query schema overrides naming strategy" in {
+      val qs = quote {
+        querySchema[TestEntity]("CustomTestEntity", _.i -> "field_i")
+      }
+
+      capsMirrorContext.run(qs.filter(r => r.i > 1 && r.l > 2L)).string mustEqual
+        "SELECT S, field_i, L, O FROM CustomTestEntity WHERE field_i > 1 AND L > 2"
+    }
+  }
+
   "collections operations" - {
     "map.contains" in {
       mirrorContext.run(mapFroz.filter(x => x.id.contains(1))).string mustEqual
@@ -391,6 +407,11 @@ class CqlIdiomSpec extends Spec {
       val t = implicitly[Tokenizer[AstAction]]
       intercept[IllegalStateException](t.token(null: AstAction))
       intercept[IllegalStateException](t.token(Insert(Nested(Ident("a")), Nil)))
+    }
+    // not actually used anywhere but doing a sanity check here
+    "external ident sanity check" in {
+      val t = implicitly[Tokenizer[ExternalIdent]]
+      t.token(ExternalIdent("TestIdent")) mustBe StringToken("TestIdent")
     }
   }
 }

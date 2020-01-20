@@ -5,7 +5,7 @@ import java.sql.{ Connection, PreparedStatement }
 
 import javax.sql.DataSource
 import io.getquill.context.sql.idiom.SqlIdiom
-import io.getquill.NamingStrategy
+import io.getquill.{ NamingStrategy, ReturnAction }
 import io.getquill.context.{ ContextEffect, TranslateContext }
 
 import scala.util.{ DynamicVariable, Try }
@@ -40,18 +40,18 @@ abstract class JdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy]
     super.executeQuery(sql, prepare, extractor)
   override def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): T =
     super.executeQuerySingle(sql, prepare, extractor)
-  override def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningColumn: String): O =
-    super.executeActionReturning(sql, prepare, extractor, returningColumn)
+  override def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningBehavior: ReturnAction): O =
+    super.executeActionReturning(sql, prepare, extractor, returningBehavior)
   override def executeBatchAction(groups: List[BatchGroup]): List[Long] =
     super.executeBatchAction(groups)
   override def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T]): List[T] =
     super.executeBatchActionReturning(groups, extractor)
-  override def bindQuery[T](sql: String, prepare: Prepare, extractor: Extractor[T] = identityExtractor): Connection => PreparedStatement =
-    super.bindQuery(sql, prepare, extractor)
-  override def bindAction(sql: String, prepare: Prepare): Connection => PreparedStatement =
-    super.bindAction(sql, prepare)
-  override def bindBatchAction(groups: List[BatchGroup]): Connection => List[PreparedStatement] =
-    super.bindBatchAction(groups)
+  override def prepareQuery[T](sql: String, prepare: Prepare, extractor: Extractor[T] = identityExtractor): Connection => PreparedStatement =
+    super.prepareQuery(sql, prepare, extractor)
+  override def prepareAction(sql: String, prepare: Prepare): Connection => PreparedStatement =
+    super.prepareAction(sql, prepare)
+  override def prepareBatchAction(groups: List[BatchGroup]): Connection => List[PreparedStatement] =
+    super.prepareBatchAction(groups)
 
   protected val currentConnection = new DynamicVariable[Option[Connection]](None)
 

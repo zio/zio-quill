@@ -1,7 +1,8 @@
 package io.getquill.context.cassandra
 
-import io.getquill.ast.{ TraversableOperation, _ }
+import io.getquill.ast.{ IterableOperation, _ }
 import io.getquill.NamingStrategy
+import io.getquill.context.CannotReturn
 import io.getquill.util.Messages.fail
 import io.getquill.idiom.Idiom
 import io.getquill.idiom.StatementInterpolator._
@@ -10,7 +11,7 @@ import io.getquill.idiom.SetContainsToken
 import io.getquill.idiom.Token
 import io.getquill.util.Interleave
 
-object CqlIdiom extends CqlIdiom
+object CqlIdiom extends CqlIdiom with CannotReturn
 
 trait CqlIdiom extends Idiom {
 
@@ -29,17 +30,18 @@ trait CqlIdiom extends Idiom {
     Tokenizer[Ast] {
       case Aggregation(AggregationOperator.`size`, Constant(1)) =>
         "COUNT(1)".token
-      case a: Query                => a.token
-      case a: Operation            => a.token
-      case a: Action               => a.token
-      case a: Ident                => a.token
-      case a: Property             => a.token
-      case a: Value                => a.token
-      case a: Function             => a.body.token
-      case a: Infix                => a.token
-      case a: Lift                 => a.token
-      case a: Assignment           => a.token
-      case a: TraversableOperation => a.token
+      case a: Query             => a.token
+      case a: Operation         => a.token
+      case a: Action            => a.token
+      case a: Ident             => a.token
+      case a: ExternalIdent     => a.token
+      case a: Property          => a.token
+      case a: Value             => a.token
+      case a: Function          => a.body.token
+      case a: Infix             => a.token
+      case a: Lift              => a.token
+      case a: Assignment        => a.token
+      case a: IterableOperation => a.token
       case a @ (
         _: Function | _: FunctionApply | _: Dynamic | _: OptionOperation | _: Block |
         _: Val | _: Ordering | _: QuotedReference | _: If | _: OnConflict.Excluded | _: OnConflict.Existing
@@ -110,9 +112,12 @@ trait CqlIdiom extends Idiom {
     case other                  => fail(s"Cql doesn't support the '$other' operator.")
   }
 
+  // Note: The CqlIdiom does not support joins so there is no need for any complex un-nesting logic like in SqlIdiom
+  // if there are Embedded classes, they will result in Property(Property(embedded, embeddedProp), actualProp)
+  // and we only need to take the top-level property i.e. `actualProp`.
   implicit def propertyTokenizer(implicit valueTokenizer: Tokenizer[Value], identTokenizer: Tokenizer[Ident], strategy: NamingStrategy): Tokenizer[Property] =
     Tokenizer[Property] {
-      case Property(_, name) => strategy.column(name).token
+      case Property.Opinionated(_, name, renameable, _) => renameable.fixedOr(name.token)(strategy.column(name).token)
     }
 
   implicit def valueTokenizer(implicit strategy: NamingStrategy): Tokenizer[Value] = Tokenizer[Value] {
@@ -125,13 +130,17 @@ trait CqlIdiom extends Idiom {
   }
 
   implicit def infixTokenizer(implicit propertyTokenizer: Tokenizer[Property], strategy: NamingStrategy, queryTokenizer: Tokenizer[Query]): Tokenizer[Infix] = Tokenizer[Infix] {
-    case Infix(parts, params) =>
+    case Infix(parts, params, _) =>
       val pt = parts.map(_.token)
       val pr = params.map(_.token)
       Statement(Interleave(pt, pr))
   }
 
   implicit def identTokenizer(implicit strategy: NamingStrategy): Tokenizer[Ident] = Tokenizer[Ident] {
+    case e => strategy.default(e.name).token
+  }
+
+  implicit def externalIdentTokenizer(implicit strategy: NamingStrategy): Tokenizer[ExternalIdent] = Tokenizer[ExternalIdent] {
     case e => strategy.default(e.name).token
   }
 
@@ -172,7 +181,7 @@ trait CqlIdiom extends Idiom {
       case Delete(table) =>
         stmt"TRUNCATE ${table.token}"
 
-      case _: Returning =>
+      case _: Returning | _: ReturningGenerated =>
         fail(s"Cql doesn't support returning generated during insertion")
 
       case other =>
@@ -181,11 +190,12 @@ trait CqlIdiom extends Idiom {
   }
 
   implicit def entityTokenizer(implicit strategy: NamingStrategy): Tokenizer[Entity] = Tokenizer[Entity] {
-    case Entity(name, properties) => strategy.table(name).token
+    case Entity.Opinionated(name, properties, renameable) =>
+      renameable.fixedOr(name.token)(strategy.table(name).token)
   }
 
-  implicit def traversableTokenizer(implicit strategy: NamingStrategy): Tokenizer[TraversableOperation] =
-    Tokenizer[TraversableOperation] {
+  implicit def traversableTokenizer(implicit strategy: NamingStrategy): Tokenizer[IterableOperation] =
+    Tokenizer[IterableOperation] {
       case MapContains(ast, body)  => stmt"${ast.token} CONTAINS KEY ${body.token}"
       case SetContains(ast, body)  => stmt"${ast.token} CONTAINS ${body.token}"
       case ListContains(ast, body) => stmt"${ast.token} CONTAINS ${body.token}"

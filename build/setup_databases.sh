@@ -7,9 +7,6 @@ time docker-compose up -d sqlserver oracle
 # import setup functions
 . build/setup_db_scripts.sh
 
-# load sbt deps to local repo
-. build/oracle_setup/load_jdbc.sh
-
 # run setup scripts for local databases
 time setup_sqlite $SQLITE_SCRIPT 127.0.0.1
 time setup_mysql $MYSQL_SCRIPT 127.0.0.1

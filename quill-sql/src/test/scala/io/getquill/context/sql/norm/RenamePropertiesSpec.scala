@@ -1,6 +1,7 @@
 package io.getquill.context.sql.norm
 
-import io.getquill.Spec
+import io.getquill.{ MirrorSqlDialectWithReturnClause, Spec }
+import io.getquill.ReturnAction.{ ReturnColumns, ReturnRecord }
 import io.getquill.context.sql.testContext._
 import io.getquill.context.sql.testContext
 
@@ -10,6 +11,10 @@ class RenamePropertiesSpec extends Spec {
 
   val e = quote {
     querySchema[TestEntity]("test_entity", _.s -> "field_s", _.i -> "field_i")
+  }
+
+  val e2 = quote {
+    querySchema[TestEntity]("test_entity_2", _.s -> "field_s_2", _.i -> "field_i_2")
   }
 
   val tup = quote {
@@ -69,12 +74,23 @@ class RenamePropertiesSpec extends Spec {
           "DELETE FROM test_entity WHERE field_i = 999"
       }
       "returning" - {
-        "alias" in {
+        "returning - alias" in testContext.withDialect(MirrorSqlDialectWithReturnClause) { ctx =>
+          import ctx._
+          val e1 = quote {
+            querySchema[TestEntity]("test_entity", _.s -> "field_s", _.i -> "field_i")
+          }
           val q = quote {
-            e.insert(lift(TestEntity("s", 1, 1L, None))).returning(_.i)
+            e1.insert(lift(TestEntity("s", 1, 1L, None))).returning(_.i)
+          }
+          val mirror = ctx.run(q.dynamic)
+          mirror.returningBehavior mustEqual ReturnRecord
+        }
+        "returning generated - alias" in {
+          val q = quote {
+            e.insert(lift(TestEntity("s", 1, 1L, None))).returningGenerated(_.i)
           }
           val mirror = testContext.run(q.dynamic)
-          mirror.returningColumn mustEqual "field_i"
+          mirror.returningBehavior mustEqual ReturnColumns(List("field_i"))
         }
       }
     }
@@ -151,6 +167,20 @@ class RenamePropertiesSpec extends Spec {
         testContext.run(q).string mustEqual
           "SELECT t.field_s, t.field_i, t.l, t.o FROM test_entity t WHERE t.field_i = 1"
       }
+    }
+    "union" in {
+      val q = quote {
+        e.filter(t => t.i == 1).union(e.filter(t => t.i != 1))
+      }
+      testContext.run(q).string mustEqual
+        "SELECT x.field_s, x.field_i, x.l, x.o FROM ((SELECT t.field_s, t.field_i, t.l, t.o FROM test_entity t WHERE t.field_i = 1) UNION (SELECT t1.field_s, t1.field_i, t1.l, t1.o FROM test_entity t1 WHERE t1.field_i <> 1)) AS x"
+    }
+    "unionAll" in {
+      val q = quote {
+        e.filter(t => t.i == 1).unionAll(e.filter(t => t.i != 1))
+      }
+      testContext.run(q).string mustEqual
+        "SELECT x.field_s, x.field_i, x.l, x.o FROM ((SELECT t.field_s, t.field_i, t.l, t.o FROM test_entity t WHERE t.field_i = 1) UNION ALL (SELECT t1.field_s, t1.field_i, t1.l, t1.o FROM test_entity t1 WHERE t1.field_i <> 1)) AS x"
     }
     "filter" - {
       "body" in {

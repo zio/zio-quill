@@ -1,8 +1,9 @@
 package io.getquill.quotation
 
 import io.getquill.ast._
+import collection.immutable.Set
 
-case class State(seen: collection.Set[Ident], free: collection.Set[Ident])
+case class State(seen: Set[Ident], free: Set[Ident])
 
 case class FreeVariables(state: State)
   extends StatefulTransformer[State] {
@@ -55,6 +56,8 @@ case class FreeVariables(state: State)
     action match {
       case q @ Returning(a, b, c) =>
         (q, free(a, b, c))
+      case q @ ReturningGenerated(a, b, c) =>
+        (q, free(a, b, c))
       case other =>
         super.apply(other)
     }
@@ -73,7 +76,7 @@ case class FreeVariables(state: State)
       case q @ Join(t, a, b, iA, iB, on) =>
         val (_, freeA) = apply(a)
         val (_, freeB) = apply(b)
-        val (_, freeOn) = FreeVariables(State(state.seen + iA + iB, collection.Set.empty))(on)
+        val (_, freeOn) = FreeVariables(State(state.seen + iA + iB, Set.empty))(on)
         (q, FreeVariables(State(state.seen, state.free ++ freeA.state.free ++ freeB.state.free ++ freeOn.state.free)))
       case _: Entity | _: Take | _: Drop | _: Union | _: UnionAll | _: Aggregation | _: Distinct | _: Nested =>
         super.apply(query)
@@ -87,8 +90,8 @@ case class FreeVariables(state: State)
 }
 
 object FreeVariables {
-  def apply(ast: Ast): collection.Set[Ident] =
-    new FreeVariables(State(collection.Set.empty, collection.Set.empty))(ast) match {
+  def apply(ast: Ast): Set[Ident] =
+    new FreeVariables(State(Set.empty, Set.empty))(ast) match {
       case (_, transformer) =>
         transformer.state.free
     }

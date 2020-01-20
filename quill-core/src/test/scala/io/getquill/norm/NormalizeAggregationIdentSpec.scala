@@ -4,7 +4,6 @@ import io.getquill.Spec
 import io.getquill.testContext._
 
 class NormalizeAggregationIdentSpec extends Spec {
-
   "multiple select" in {
     val q = quote {
       qr1.groupBy(p => p.i).map {
@@ -16,6 +15,6 @@ class NormalizeAggregationIdentSpec extends Spec {
         p => p._1 -> p._2.map(p => p.l).sum
       }
     }
-    Normalize(q.ast) mustEqual n.ast
+    Normalize(q.ast) mustEqual (n.ast)
   }
 }

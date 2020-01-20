@@ -5,13 +5,16 @@ import io.getquill.quotation.NonQuotedException
 
 import scala.annotation.compileTimeOnly
 
-private[dsl] trait QueryDsl {
+private[getquill] trait QueryDsl {
   dsl: CoreDsl =>
 
   def query[T]: EntityQuery[T] = macro QueryDslMacro.expandEntity[T]
 
   @compileTimeOnly(NonQuotedException.message)
   def querySchema[T](entity: String, columns: (T => (Any, String))*): EntityQuery[T] = NonQuotedException()
+
+  @compileTimeOnly(NonQuotedException.message)
+  def impliedQuerySchema[T](entity: String, columns: (T => (Any, String))*): EntityQuery[T] = NonQuotedException()
 
   implicit class NullableColumnExtensions[A](o: Option[A]) {
     @compileTimeOnly(NonQuotedException.message)
@@ -57,7 +60,7 @@ private[dsl] trait QueryDsl {
 
     def flatMap[R](f: T => Query[R]): Query[R]
 
-    def concatMap[R, U](f: T => U)(implicit ev: U => Traversable[R]): Query[R]
+    def concatMap[R, U](f: T => U)(implicit ev: U => Iterable[R]): Query[R]
 
     def withFilter(f: T => Boolean): Query[T]
     def filter(f: T => Boolean): Query[T]
@@ -73,6 +76,7 @@ private[dsl] trait QueryDsl {
 
     def groupBy[R](f: T => R): Query[(R, Query[T])]
 
+    def value[U >: T]: Option[T]
     def min[U >: T]: Option[T]
     def max[U >: T]: Option[T]
     def avg[U >: T](implicit n: Numeric[U]): Option[BigDecimal]
@@ -131,6 +135,9 @@ private[dsl] trait QueryDsl {
     def returning[R](f: E => R): ActionReturning[E, R] = NonQuotedException()
 
     @compileTimeOnly(NonQuotedException.message)
+    def returningGenerated[R](f: E => R): ActionReturning[E, R] = NonQuotedException()
+
+    @compileTimeOnly(NonQuotedException.message)
     def onConflictIgnore: Insert[E] = NonQuotedException()
 
     @compileTimeOnly(NonQuotedException.message)
@@ -160,8 +167,12 @@ private[dsl] trait QueryDsl {
     def onConflictUpdate(target: E => Any, targets: (E => Any)*)(assign: ((E, E) => (Any, Any)), assigns: ((E, E) => (Any, Any))*): Insert[E] = NonQuotedException()
   }
 
+  sealed trait Update[E] extends Action[E] {
+    @compileTimeOnly(NonQuotedException.message)
+    def returning[R](f: E => R): ActionReturning[E, R] = NonQuotedException()
+  }
+
   sealed trait ActionReturning[E, Output] extends Action[E]
-  sealed trait Update[E] extends Action[E]
   sealed trait Delete[E] extends Action[E]
 
   sealed trait BatchAction[+A <: Action[_]]

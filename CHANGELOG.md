@@ -1,3 +1,119 @@
+# 3.5.0
+
+- [Ndbc Postgres Support](https://github.com/getquill/quill/pull/1702)
+- [MS SQL Server returning via OUTPUT](https://github.com/getquill/quill/pull/1681)
+- [Pretty Print SQL Queries](https://github.com/getquill/quill/pull/1646)
+- [Fix shadowing via aggressive uncapture](https://github.com/getquill/quill/pull/1713)
+- [Fix Issues with Short](https://github.com/getquill/quill/pull/1698)
+- [Pull Oracle jdbc driver from Maven Central](https://github.com/getquill/quill/pull/1677)
+
+# 3.4.10
+
+- [support scala 2.13](https://github.com/getquill/quill/pull/1644)
+- [Remove redundant null checks](https://github.com/getquill/quill/pull/1648)
+- [Improve error message](https://github.com/getquill/quill/pull/1503)
+
+# 3.4.9
+
+- [Properly unhide properties in nested queries](https://github.com/getquill/quill/pull/1637)
+
+# 3.4.8
+
+- [Additional Fixes for Embedded Entities in Nested Queries](https://github.com/getquill/quill/pull/1628)
+- [Fix java.sql.SQLException corner case](https://github.com/getquill/quill/pull/1614)
+- [Feature/local time support](https://github.com/getquill/quill/pull/1596)
+- [Update monix-eval, monix-reactive to 3.0.0](https://github.com/getquill/quill/pull/1607)
+
+Documentation Updates:
+- [Update database drivers versions to latest in docs](https://github.com/getquill/quill/pull/1617)
+- [Document remote debugging in Intellij](https://github.com/getquill/quill/pull/1615)
+
+Migration Notes:
+- Monix 3.0.0 is not binary compatible with 3.0.0-RC3 which was a dependency of Quill 3.4.7.
+If you are using the Quill Monix modules, please update your dependencies accordingly.
+
+# 3.4.7
+
+- [Fix RenameProperties with Schema Re-Arrangement](https://github.com/getquill/quill/pull/1613)
+
+# 3.4.6
+
+- [Fixing Embedded Coproduct Column Duplication Issue](https://github.com/getquill/quill/pull/1604)
+
+# 3.4.5
+
+- [Express Infix Clauses not in Select List](https://github.com/getquill/quill/pull/1597)
+
+# 3.4.4
+
+- [added MappedEncoding for encoding and decoding OffsetDateTime](https://github.com/getquill/quill/pull/1595)
+- [Fix onConflict with custom schemaMeta](https://github.com/getquill/quill/pull/1589)
+
+# 3.4.3
+
+- [Nested Query does not work correctly with NamingSchemas](https://github.com/getquill/quill/issues/1577)
+
+# 3.4.2
+
+- [Fix NamingStrategy override of querySchema](https://github.com/getquill/quill/pull/1560)
+- [Monix JDBC scheduling fixes ](https://github.com/getquill/quill/pull/1546)
+
+Migration Notes:
+- `NamingStrategy` is no longer applied on column and table names defined in `querySchema`, all 
+column and table names defined in `querySchema` are now final. If you are relying on this behavior to 
+name your columns/tables correctly, you will need to update your `querySchema` objects.
+
+# 3.4.1
+
+- [Fix property order expanded sub-queries](https://github.com/getquill/quill/pull/1541)
+
+Migration Notes:
+- Nested sub-queries will now have their terms re-ordered in certain circumstances although the functionality
+of the entire query should not change. If you have deeply nested queries with Infixes, double check that
+they are in the correct position.
+
+# 3.4.0
+
+- [Nest queries with infix values to allow infix-impurity](https://github.com/getquill/quill/pull/1534)
+
+Migration Notes:
+- Infixes are now not treated as pure functions by default. This means wherever they are used, nested queries may be created.
+You can use `.pure` (e.g. `infix"MY_PURE_UDF".pure.as[T]`) to revert to the previous behavior. See the 
+[Infix](https://github.com/getquill/quill/tree/36842c4801c95a7609ba94c450645f3c022b3e2e#infix) 
+section of the documentation for more detail.
+
+# 3.3.0
+
+- [Returning Record](https://github.com/getquill/quill/pull/1489)
+- [Change == and != to be Scala-idiomatic ](https://github.com/getquill/quill/pull/1453)
+- [Optimize === comparisons when ANSI behavior assumed](https://github.com/getquill/quill/pull/1454)
+- [API to get PreparedStatement from Query for Low Level Use-cases](https://github.com/getquill/quill/pull/1459)
+- [Add BoundStatement support for all context.](https://github.com/getquill/quill/pull/1425)
+- [Only decode when field is non-null](https://github.com/getquill/quill/pull/1514)
+- [Fix support of nested transactions in Finagle-Postgres](https://github.com/getquill/quill/pull/1501)
+- [Returning shadow fix](https://github.com/getquill/quill/pull/1509)
+- [Fix SQL Server Subqueries with Order By](https://github.com/getquill/quill/pull/1478)
+- [Explicitly pass AsyncContext type params](https://github.com/getquill/quill/pull/1457)
+- [Remove unneeded Tuple reduction clause](https://github.com/getquill/quill/pull/1481)
+- [Fix join subquery+map+distinct and sortBy+distinct](https://github.com/getquill/quill/pull/1462)
+- [Fix Java9 depreciation message](https://github.com/getquill/quill/pull/1504)
+
+Noteworthy Version Bumps:
+- monix - 3.0.0-RC3
+- cassandra-driver-core - 3.7.2
+- orientdb-graphdb - 3.0.21
+- postgresql - 42.2.6
+- sqlite-jdbc - 3.28.0
+
+Migration Notes:
+- The `returning` method no long excludes the specified ID column from the insertion as it used to.
+Use the `returningGenerated` method in order to achieve that.
+See the 'Database-generated values' section of the documentation for more detail.
+- The `==` method now works Scala-idiomatically.
+That means that when two `Option[T]`-wrapped columns are compared, `None == None` will now yield `true`.
+The `===` operator can be used in order to compare `Option[T]`-wrapped columns in a ANSI-SQL
+idiomatic way i.e. `None == None := false`. See the 'equals' section of the documentation for more detail.
+
 # 3.2.0
 
 - [Allow == for Option[T] and/or T columns](https://github.com/getquill/quill/pull/1437)

@@ -9,7 +9,7 @@ import io.getquill.{ Literal, PostgresMonixJdbcContext, Spec }
 import monix.eval.Task
 import monix.execution.Scheduler
 import org.mockito.scalatest.AsyncMockitoSugar
-import org.scalatest.Matchers._
+import org.scalatest.matchers.should.Matchers._
 
 import scala.reflect.ClassTag
 import scala.util.Try

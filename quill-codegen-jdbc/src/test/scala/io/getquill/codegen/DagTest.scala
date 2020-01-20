@@ -2,13 +2,17 @@ package io.getquill.codegen
 
 import java.time.LocalDateTime
 
-import org.scalatest._
-import Matchers._
 import io.getquill.codegen.dag.CatalogBasedAncestry
+import org.scalatest.BeforeAndAfter
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.matchers.should.Matchers._
 
 import scala.reflect.{ ClassTag, classTag }
 
-class CodeGeneratorRunnerDagTest extends FunSuite with BeforeAndAfter {
+// I.e. something the type-ancestry does not know about
+class UnknownClass
+
+class CodeGeneratorRunnerDagTest extends AnyFunSuite with BeforeAndAfter {
 
   case class TestCase[O](one: ClassTag[_], twos: Seq[ClassTag[_]], result: ClassTag[_])
 
@@ -31,7 +35,14 @@ class CodeGeneratorRunnerDagTest extends FunSuite with BeforeAndAfter {
       ),
       classTag[String]
     ),
-    TestCase(classTag[java.time.LocalDate], Seq(classTag[LocalDateTime]), classTag[LocalDateTime])
+    TestCase(classTag[java.time.LocalDate], Seq(classTag[LocalDateTime]), classTag[LocalDateTime]),
+    TestCase(classTag[Short], Seq(classTag[Boolean], classTag[Byte]), classTag[Short]),
+    TestCase(classTag[Short], Seq(classTag[Int]), classTag[Int]),
+    TestCase(classTag[Int], Seq(classTag[Short]), classTag[Int]),
+    TestCase(classTag[UnknownClass], Seq(classTag[String]), classTag[String]),
+    TestCase(classTag[UnknownClass], Seq(classTag[UnknownClass]), classTag[UnknownClass]),
+    // Don't know ancestry of unknown class to an Int (or any kind) so go directly to root of the ancestry i.e. String.
+    TestCase(classTag[UnknownClass], Seq(classTag[Int]), classTag[String])
   )
 
   val casesIter = for {

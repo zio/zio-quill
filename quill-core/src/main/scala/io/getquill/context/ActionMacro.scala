@@ -1,12 +1,12 @@
 package io.getquill.context
 
-import io.getquill.ast._
+import io.getquill.ast._ // Only .returning(r => r.prop) or .returning(r => OneElementCaseClass(r.prop)) is allowed.
 import io.getquill.norm.BetaReduction
 import io.getquill.quotation.ReifyLiftings
-import io.getquill.util.EnableReflectiveCalls
 import io.getquill.util.Messages._
 
 import scala.reflect.macros.whitebox.{ Context => MacroContext }
+import io.getquill.util.{ EnableReflectiveCalls, OptionalTypecheck }
 
 class ActionMacro(val c: MacroContext)
   extends ContextMacro
@@ -15,18 +15,25 @@ class ActionMacro(val c: MacroContext)
   import c.universe.{ Function => _, Ident => _, _ }
 
   def translateQuery(quoted: Tree): Tree =
+    translateQueryPrettyPrint(quoted, q"false")
+
+  def translateQueryPrettyPrint(quoted: Tree, prettyPrint: Tree): Tree =
     c.untypecheck {
       q"""
         ..${EnableReflectiveCalls(c)}
         val expanded = ${expand(extractAst(quoted))}
         ${c.prefix}.translateQuery(
           expanded.string,
-          expanded.prepare
+          expanded.prepare,
+          prettyPrint = ${prettyPrint}
         )
       """
     }
 
   def translateBatchQuery(quoted: Tree): Tree =
+    translateBatchQueryPrettyPrint(quoted, q"false")
+
+  def translateBatchQueryPrettyPrint(quoted: Tree, prettyPrint: Tree): Tree =
     expandBatchAction(quoted) {
       case (batch, param, expanded) =>
         q"""
@@ -38,7 +45,8 @@ class ActionMacro(val c: MacroContext)
             }.groupBy(_._1).map {
               case (string, items) =>
                 ${c.prefix}.BatchGroup(string, items.map(_._2).toList)
-            }.toList
+            }.toList,
+            ${prettyPrint}
           )
         """
     }
@@ -72,8 +80,8 @@ class ActionMacro(val c: MacroContext)
   def runBatchAction(quoted: Tree): Tree =
     batchAction(quoted, "executeBatchAction")
 
-  def bindBatchAction(quoted: Tree): Tree =
-    batchAction(quoted, "bindBatchAction")
+  def prepareBatchAction(quoted: Tree): Tree =
+    batchAction(quoted, "prepareBatchAction")
 
   def batchAction(quoted: Tree, method: String): Tree =
     expandBatchAction(quoted) {
@@ -135,27 +143,36 @@ class ActionMacro(val c: MacroContext)
 
   private def returningColumn =
     q"""
-      expanded.ast match {
-        case io.getquill.ast.Returning(_, _, io.getquill.ast.Property(_, property)) =>
-          expanded.naming.column(property)
+      (expanded.ast match {
+        case ret: io.getquill.ast.ReturningAction =>
+            io.getquill.norm.ExpandReturning.applyMap(ret)(
+              (ast, statement) => io.getquill.context.Expand(${c.prefix}, ast, statement, idiom, naming).string
+            )(idiom, naming)
         case ast =>
           io.getquill.util.Messages.fail(s"Can't find returning column. Ast: '$$ast'")
-      }
+      })
     """
 
-  private def returningExtractor[T](implicit t: WeakTypeTag[T]) =
-    q"(row: ${c.prefix}.ResultRow) => implicitly[Decoder[$t]].apply(0, row)"
-
-  def bindAction(quoted: Tree): Tree =
+  def prepareAction(quoted: Tree): Tree =
     c.untypecheck {
       q"""
         ..${EnableReflectiveCalls(c)}
         val expanded = ${expand(extractAst(quoted))}
-        ${c.prefix}.bindAction(
+        ${c.prefix}.prepareAction(
           expanded.string,
           expanded.prepare
         )
       """
     }
 
+  private def returningExtractor[T](implicit t: WeakTypeTag[T]) = {
+    OptionalTypecheck(c)(q"implicitly[${c.prefix}.Decoder[$t]]") match {
+      case Some(decoder) =>
+        q"(row: ${c.prefix}.ResultRow) => $decoder.apply(0, row)"
+      case None =>
+        val metaTpe = c.typecheck(tq"${c.prefix}.QueryMeta[$t]", c.TYPEmode).tpe
+        val meta = c.inferImplicitValue(metaTpe).orElse(q"${c.prefix}.materializeQueryMeta[$t]")
+        q"$meta.extract"
+    }
+  }
 }

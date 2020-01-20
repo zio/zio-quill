@@ -4,26 +4,27 @@ trait StatelessTransformer {
 
   def apply(e: Ast): Ast =
     e match {
-      case e: Query                => apply(e)
-      case e: Operation            => apply(e)
-      case e: Action               => apply(e)
-      case e: Value                => apply(e)
-      case e: Assignment           => apply(e)
-      case Function(params, body)  => Function(params, apply(body))
-      case e: Ident                => e
-      case e: Property             => apply(e)
-      case Infix(a, b)             => Infix(a, b.map(apply))
-      case e: OptionOperation      => apply(e)
-      case e: TraversableOperation => apply(e)
-      case If(a, b, c)             => If(apply(a), apply(b), apply(c))
-      case e: Dynamic              => e
-      case e: Lift                 => e
-      case e: QuotedReference      => e
-      case Block(statements)       => Block(statements.map(apply))
-      case Val(name, body)         => Val(name, apply(body))
-      case o: Ordering             => o
-      case e: OnConflict.Excluded  => e
-      case e: OnConflict.Existing  => e
+      case e: Query               => apply(e)
+      case e: Operation           => apply(e)
+      case e: Action              => apply(e)
+      case e: Value               => apply(e)
+      case e: Assignment          => apply(e)
+      case Function(params, body) => Function(params, apply(body))
+      case e: Ident               => e
+      case e: ExternalIdent       => e
+      case e: Property            => apply(e)
+      case Infix(a, b, pure)      => Infix(a, b.map(apply), pure)
+      case e: OptionOperation     => apply(e)
+      case e: IterableOperation   => apply(e)
+      case If(a, b, c)            => If(apply(a), apply(b), apply(c))
+      case e: Dynamic             => e
+      case e: Lift                => e
+      case e: QuotedReference     => e
+      case Block(statements)      => Block(statements.map(apply))
+      case Val(name, body)        => Val(name, apply(body))
+      case o: Ordering            => o
+      case e: OnConflict.Excluded => e
+      case e: OnConflict.Existing => e
     }
 
   def apply(o: OptionOperation): OptionOperation =
@@ -49,7 +50,7 @@ trait StatelessTransformer {
       case OptionNone                  => OptionNone
     }
 
-  def apply(o: TraversableOperation): TraversableOperation =
+  def apply(o: IterableOperation): IterableOperation =
     o match {
       case MapContains(a, b)  => MapContains(apply(a), apply(b))
       case SetContains(a, b)  => SetContains(apply(a), apply(b))
@@ -85,7 +86,7 @@ trait StatelessTransformer {
 
   def apply(e: Property): Property =
     e match {
-      case Property(a, name) => Property(apply(a), name)
+      case Property.Opinionated(a, name, renameable, visibility) => Property.Opinionated(apply(a), name, renameable, visibility)
     }
 
   def apply(e: Operation): Operation =
@@ -108,12 +109,13 @@ trait StatelessTransformer {
 
   def apply(e: Action): Action =
     e match {
-      case Update(query, assignments)        => Update(apply(query), assignments.map(apply))
-      case Insert(query, assignments)        => Insert(apply(query), assignments.map(apply))
-      case Delete(query)                     => Delete(apply(query))
-      case Returning(query, alias, property) => Returning(apply(query), alias, apply(property))
-      case Foreach(query, alias, body)       => Foreach(apply(query), alias, apply(body))
-      case OnConflict(query, target, action) => OnConflict(apply(query), apply(target), apply(action))
+      case Update(query, assignments)                 => Update(apply(query), assignments.map(apply))
+      case Insert(query, assignments)                 => Insert(apply(query), assignments.map(apply))
+      case Delete(query)                              => Delete(apply(query))
+      case Returning(query, alias, property)          => Returning(apply(query), alias, apply(property))
+      case ReturningGenerated(query, alias, property) => ReturningGenerated(apply(query), alias, apply(property))
+      case Foreach(query, alias, body)                => Foreach(apply(query), alias, apply(body))
+      case OnConflict(query, target, action)          => OnConflict(apply(query), apply(target), apply(action))
     }
 
   def apply(e: OnConflict.Target): OnConflict.Target =
