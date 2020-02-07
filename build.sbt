@@ -128,11 +128,11 @@ lazy val `quill-sql` =
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .settings(libraryDependencies ++= Seq(
-      "com.github.vertical-blank"  %% "scala-sql-formatter" % "1.0.0"
+      "com.github.vertical-blank"  %% "scala-sql-formatter" % "1.0.1"
     ))
     .jsSettings(
       libraryDependencies ++= Seq(
-        "com.github.vertical-blank" %%% "scala-sql-formatter" % "1.0.0"
+        "com.github.vertical-blank" %%% "scala-sql-formatter" % "1.0.1"
       ),
       scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) },
       coverageExcludedPackages := ".*"
@@ -404,7 +404,7 @@ lazy val `quill-orientdb` =
       .settings(
         fork in Test := true,
         libraryDependencies ++= Seq(
-          "com.orientechnologies" % "orientdb-graphdb" % "3.0.26"
+          "com.orientechnologies" % "orientdb-graphdb" % "3.0.27"
         )
       )
       .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -487,7 +487,7 @@ def updateWebsiteTag =
 
 lazy val jdbcTestingLibraries = Seq(
   libraryDependencies ++= Seq(
-    "com.zaxxer"              %  "HikariCP"                % "3.4.1",
+    "com.zaxxer"              %  "HikariCP"                % "3.4.2",
     "mysql"                   %  "mysql-connector-java"    % "8.0.18"             % Test,
     "com.h2database"          %  "h2"                      % "1.4.200"            % Test,
     "org.postgresql"          %  "postgresql"              % "42.2.9"             % Test,

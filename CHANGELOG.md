@@ -1,3 +1,9 @@
+# 3.5.1
+
+- [Fix Ndbc runtime logging](https://github.com/getquill/quill/pull/1748)
+- [Support for onConflictIgnore to H2 in PostgreSQL mode](https://github.com/getquill/quill/pull/1731)
+- [Update Returning](https://github.com/getquill/quill/pull/1720)
+
 # 3.5.0
 
 - [Ndbc Postgres Support](https://github.com/getquill/quill/pull/1702)
