@@ -404,7 +404,7 @@ lazy val `quill-orientdb` =
       .settings(
         fork in Test := true,
         libraryDependencies ++= Seq(
-          "com.orientechnologies" % "orientdb-graphdb" % "3.0.27"
+          "com.orientechnologies" % "orientdb-graphdb" % "3.0.28"
         )
       )
       .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -488,13 +488,13 @@ def updateWebsiteTag =
 lazy val jdbcTestingLibraries = Seq(
   libraryDependencies ++= Seq(
     "com.zaxxer"              %  "HikariCP"                % "3.4.2",
-    "mysql"                   %  "mysql-connector-java"    % "8.0.18"             % Test,
+    "mysql"                   %  "mysql-connector-java"    % "8.0.19"             % Test,
     "com.h2database"          %  "h2"                      % "1.4.200"            % Test,
-    "org.postgresql"          %  "postgresql"              % "42.2.9"             % Test,
+    "org.postgresql"          %  "postgresql"              % "42.2.10"             % Test,
     "org.xerial"              %  "sqlite-jdbc"             % "3.30.1"             % Test,
     "com.microsoft.sqlserver" %  "mssql-jdbc"              % "7.1.1.jre8-preview" % Test,
     "com.oracle.ojdbc"        %  "ojdbc8"                  % "19.3.0.0"           % Test,
-    "org.mockito"             %% "mockito-scala-scalatest" % "1.7.1"              % Test
+    "org.mockito"             %% "mockito-scala-scalatest" % "1.11.2"              % Test
   )
 )
 
