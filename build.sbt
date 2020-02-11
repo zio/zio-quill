@@ -563,7 +563,7 @@ lazy val basicSettings = Seq(
   scalaVersion := "2.11.12",
   crossScalaVersions := Seq("2.11.12", "2.12.10", "2.13.1"),
   libraryDependencies ++= Seq(
-    "org.scala-lang.modules" %%% "scala-collection-compat" % "2.1.3",
+    "org.scala-lang.modules" %%% "scala-collection-compat" % "2.1.4",
     "com.lihaoyi"     %% "pprint"         % pprintVersion(scalaVersion.value),
     "org.scalatest"   %%% "scalatest"     % "3.1.0"          % Test,
     "ch.qos.logback"  % "logback-classic" % "1.2.3"          % Test,
