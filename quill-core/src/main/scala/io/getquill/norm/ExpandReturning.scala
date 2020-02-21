@@ -1,6 +1,7 @@
 package io.getquill.norm
 
 import io.getquill.ReturnAction.ReturnColumns
+import io.getquill.ast.Renameable.Fixed
 import io.getquill.ast._
 import io.getquill.context._
 import io.getquill.idiom.{ Idiom, Statement }
@@ -37,7 +38,7 @@ object ExpandReturning {
     // => Tuple(List(ExternalIdent("name"), BinaryOperation(ExternalIdent("age"), +, Constant(1))))
     val dePropertized = renameAlias match {
       case Some(newName) =>
-        BetaReduction(properties, alias -> Ident(newName))
+        BetaReduction(properties, alias -> ExternalIdent.Opinionated(newName, Fixed))
       case None =>
         BetaReduction(properties, alias -> ExternalIdent(alias.name))
     }
