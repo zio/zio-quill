@@ -340,7 +340,14 @@ trait SqlIdiom extends Idiom {
         // E.g. in `Property(Property(Ident("realTable"), embeddedTableAlias), realPropertyAlias)` the inner
         // property needs to be unwrapped and the result of this should only be `realTable.realPropertyAlias`
         // as opposed to `realTable.embeddedTableAlias.realPropertyAlias`.
+
         unnest(ast) match {
+          // Given the way to suggest a new alias to ExpandReturning, during translation it can be changed by
+          // naming strategy (https://github.com/getquill/quill/issues/1768). ExternalIdent.Opinionated
+          // Fixed ensures that renaming won't happen
+          case (ExternalIdent.Opinionated(newName, Fixed), _) =>
+            stmt"${tokenizePrefixedProperty(name, List(s"$newName."), strategy, Fixed)}"
+
           // When using ExternalIdent such as .returning(eid => eid.idColumn) clauses drop the 'eid' since SQL
           // returning clauses have no alias for the original table. I.e. INSERT [...] RETURNING idColumn there's no
           // alias you can assign to the INSERT [...] clause that can be used as a prefix to 'idColumn'.

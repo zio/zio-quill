@@ -33,6 +33,7 @@ trait UpperCaseNonDefault extends NamingStrategy {
 object UpperCaseNonDefault extends getquill.UpperCaseNonDefault
 
 object testContext extends TestContextTemplate[MirrorSqlDialect, Literal](MirrorSqlDialect, Literal)
+object testContextSnake extends TestContextTemplate[MirrorSqlDialect, SnakeCase](MirrorSqlDialect, SnakeCase)
 object testContextUpper extends TestContextTemplate[MirrorSqlDialect, getquill.UpperCaseNonDefault](MirrorSqlDialect, UpperCaseNonDefault)
 object testContextEscape extends TestContextTemplate[MirrorSqlDialect, Escape](MirrorSqlDialect, Escape)
 
