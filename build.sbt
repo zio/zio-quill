@@ -19,11 +19,15 @@ lazy val dbModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-jdbc`, `quill-jdbc-monix`
 )
 
+lazy val jasyncModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
+  `quill-jasync`, `quill-jasync-postgres`
+)
+
 lazy val asyncModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-async`, `quill-async-mysql`, `quill-async-postgres`,
   `quill-finagle-mysql`, `quill-finagle-postgres`,
   `quill-ndbc`, `quill-ndbc-postgres`
-)
+) ++ jasyncModules
 
 lazy val codegenModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-codegen`, `quill-codegen-jdbc`, `quill-codegen-tests`
@@ -64,7 +68,7 @@ val filteredModules = {
       val scalaVersion = sys.props.get("quill.scala.version")
       if(scalaVersion.map(_.startsWith("2.13")).getOrElse(false)) {
         println("Compiling Scala 2.13 Modules")
-        baseModules ++ dbModules
+        baseModules ++ dbModules ++ jasyncModules
       } else {
         println("Compiling All Modules")
         allModules
@@ -331,6 +335,31 @@ lazy val `quill-async-postgres` =
       )
     )
     .dependsOn(`quill-async` % "compile->compile;test->test")
+
+lazy val `quill-jasync` =
+  (project in file("quill-jasync"))
+    .settings(commonSettings: _*)
+    .settings(mimaSettings: _*)
+    .settings(
+      fork in Test := true,
+      libraryDependencies ++= Seq(
+        "com.github.jasync-sql" % "jasync-common" % "1.0.14",
+        "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.1"
+      )
+    )
+    .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
+
+lazy val `quill-jasync-postgres` =
+  (project in file("quill-jasync-postgres"))
+    .settings(commonSettings: _*)
+    .settings(mimaSettings: _*)
+    .settings(
+      fork in Test := true,
+      libraryDependencies ++= Seq(
+        "com.github.jasync-sql" % "jasync-postgresql" % "1.0.14"
+      )
+    )
+    .dependsOn(`quill-jasync` % "compile->compile;test->test")
 
 lazy val `quill-ndbc` =
   (project in file("quill-ndbc"))
