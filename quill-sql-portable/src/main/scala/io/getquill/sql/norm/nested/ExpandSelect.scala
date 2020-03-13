@@ -113,7 +113,7 @@ private class ExpandSelect(selectValues: List[SelectValue], references: LinkedHa
                       // Note: Pass invisible properties to be tokenized by the idiom, they should be excluded there
                       Property.Opinionated(ast, name, renameable, visible),
                       // Skip concatonation of invisible properties into the alias e.g. so it will be
-                      Some(s"${nested.getOrElse("")}${expandColumn(name, renameable)}")
+                      Some(expandColumn(s"${nested.getOrElse("")}$name", renameable))
                     ))
                 }
             case pp @ Property(_, TupleIndex(idx)) =>
