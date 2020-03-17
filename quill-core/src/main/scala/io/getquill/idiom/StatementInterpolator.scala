@@ -53,7 +53,21 @@ object StatementInterpolator {
           s"    run(query[Users].update(\n" +
           s"       _.embeddedCaseClass.a -> lift(someInstance.a),\n" +
           s"       _.embeddedCaseClass.b -> lift(someInstance.b)\n" +
-          s"    ))"
+          s"    ))" +
+          s"\n" +
+          s"* You are trying to insert or update an ADT field, but Scala infers the specific type\n" +
+          s"  instead of the ADT type. For example:\n" +
+          s"    case class User(role: UserRole)\n" +
+          s"    sealed trait UserRole extends Product with Serializable\n" +
+          s"    object UserRole {\n" +
+          s"      case object Writer extends UserRole\n" +
+          s"      case object Reader extends UserRole\n" +
+          s"      implicit val encodeStatus: MappedEncoding[UserRole, String] = ...\n" +
+          s"      implicit val decodeStatus: MappedEncoding[String, UserRole] = ...\n" +
+          s"    }\n" +
+          s"    run(query[User].update(_.role -> lift(UserRole.Writer)))\n" +
+          s"  In that case, make sure you are uplifting to ADT type, for example:\n" +
+          s"    run(query[User].update(_.role -> lift(UserRole.Writer: UserRole)))\n"
       )
     }
 
