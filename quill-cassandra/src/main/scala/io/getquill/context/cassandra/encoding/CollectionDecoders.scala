@@ -4,7 +4,7 @@ import io.getquill.context.cassandra.CassandraSessionContext
 import io.getquill.context.cassandra.util.ClassTagConversions.asClassOf
 
 import scala.reflect.ClassTag
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 trait CollectionDecoders {
   this: CassandraSessionContext[_] =>

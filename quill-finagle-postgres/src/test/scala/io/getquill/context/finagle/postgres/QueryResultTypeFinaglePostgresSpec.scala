@@ -3,7 +3,7 @@ package io.getquill.context.finagle.postgres
 import io.getquill.context.sql._
 import com.twitter.util.{ Await, Future }
 import java.util.concurrent.ConcurrentLinkedQueue
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 class QueryResultTypeFinaglePostgresSpec extends QueryResultTypeSpec {
 

@@ -1,7 +1,7 @@
 package io.getquill.context.orientdb.encoding
 
 import io.getquill.context.orientdb.OrientDBSessionContext
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import com.orientechnologies.orient.core.db.record.OTrackedSet
 
 trait CollectionDecoders {
