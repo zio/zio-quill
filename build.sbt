@@ -19,11 +19,15 @@ lazy val dbModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-jdbc`, `quill-jdbc-monix`
 )
 
+lazy val jasyncModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
+  `quill-jasync`, `quill-jasync-postgres`
+)
+
 lazy val asyncModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-async`, `quill-async-mysql`, `quill-async-postgres`,
   `quill-finagle-mysql`, `quill-finagle-postgres`,
   `quill-ndbc`, `quill-ndbc-postgres`
-)
+) ++ jasyncModules
 
 lazy val codegenModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-codegen`, `quill-codegen-jdbc`, `quill-codegen-tests`
@@ -76,8 +80,14 @@ val filteredModules = {
       Seq[sbt.ClasspathDep[sbt.ProjectReference]]()
     case _ =>
       // Workaround for https://github.com/sbt/sbt/issues/3465
-      println("Compiling All Modules")
-      allModules
+      val scalaVersion = sys.props.get("quill.scala.version")
+      if(scalaVersion.map(_.startsWith("2.13")).getOrElse(false)) {
+        println("Compiling Scala 2.13 Modules")
+        baseModules ++ dbModules ++ jasyncModules
+      } else {
+        println("Compiling All Modules")
+        allModules
+      }
   }
   if(isScala213) {
     println("Compiling 2.13 Modules Only")
@@ -292,7 +302,7 @@ lazy val `quill-finagle-mysql` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.twitter" %% "finagle-mysql" % "20.1.0"
+        "com.twitter" %% "finagle-mysql" % "20.3.0"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -344,6 +354,31 @@ lazy val `quill-async-postgres` =
       )
     )
     .dependsOn(`quill-async` % "compile->compile;test->test")
+
+lazy val `quill-jasync` =
+  (project in file("quill-jasync"))
+    .settings(commonSettings: _*)
+    .settings(mimaSettings: _*)
+    .settings(
+      fork in Test := true,
+      libraryDependencies ++= Seq(
+        "com.github.jasync-sql" % "jasync-common" % "1.0.14",
+        "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.1"
+      )
+    )
+    .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
+
+lazy val `quill-jasync-postgres` =
+  (project in file("quill-jasync-postgres"))
+    .settings(commonSettings: _*)
+    .settings(mimaSettings: _*)
+    .settings(
+      fork in Test := true,
+      libraryDependencies ++= Seq(
+        "com.github.jasync-sql" % "jasync-postgresql" % "1.0.14"
+      )
+    )
+    .dependsOn(`quill-jasync` % "compile->compile;test->test")
 
 lazy val `quill-ndbc` =
   (project in file("quill-ndbc"))
@@ -418,7 +453,7 @@ lazy val `quill-orientdb` =
       .settings(
         fork in Test := true,
         libraryDependencies ++= Seq(
-          "com.orientechnologies" % "orientdb-graphdb" % "3.0.28"
+          "com.orientechnologies" % "orientdb-graphdb" % "3.0.29"
         )
       )
       .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -504,11 +539,11 @@ lazy val jdbcTestingLibraries = Seq(
     "com.zaxxer"              %  "HikariCP"                % "3.4.2",
     "mysql"                   %  "mysql-connector-java"    % "8.0.19"             % Test,
     "com.h2database"          %  "h2"                      % "1.4.200"            % Test,
-    "org.postgresql"          %  "postgresql"              % "42.2.10"             % Test,
+    "org.postgresql"          %  "postgresql"              % "42.2.11"             % Test,
     "org.xerial"              %  "sqlite-jdbc"             % "3.30.1"             % Test,
     "com.microsoft.sqlserver" %  "mssql-jdbc"              % "7.1.1.jre8-preview" % Test,
     "com.oracle.ojdbc"        %  "ojdbc8"                  % "19.3.0.0"           % Test,
-    "org.mockito"             %% "mockito-scala-scalatest" % "1.11.4"              % Test
+    "org.mockito"             %% "mockito-scala-scalatest" % "1.13.0"              % Test
   )
 )
 
