@@ -9,7 +9,7 @@ import monix.execution.Scheduler
 import monix.execution.Scheduler.Implicits
 import monix.reactive.Observable
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.util.{ Failure, Success }
 
 class CassandraStreamContext[N <: NamingStrategy](

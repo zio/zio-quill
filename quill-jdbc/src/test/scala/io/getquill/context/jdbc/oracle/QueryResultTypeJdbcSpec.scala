@@ -2,9 +2,9 @@ package io.getquill.context.jdbc.oracle
 
 import java.util.concurrent.ConcurrentLinkedQueue
 
-import io.getquill.context.sql._
+import io.getquill.context.sql.{ testContext => _, _ }
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 class QueryResultTypeJdbcSpec extends QueryResultTypeSpec {
 
