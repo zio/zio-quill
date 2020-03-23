@@ -3229,6 +3229,31 @@ ctx.sslmode=disable # optional, one of [disable|prefer|require|verify-ca|verify-
 ctx.sslrootcert=./path/to/cert/file # optional, required for sslmode=verify-ca or verify-full
 ```
 
+### quill-jasync-mysql
+
+#### sbt dependencies
+```
+libraryDependencies ++= Seq(
+  "io.getquill" %% "quill-jasync-mysql" % "3.5.2-SNAPSHOT"
+)
+```
+
+#### context definition
+```scala
+lazy val ctx = new MysqlJAsyncContext(SnakeCase, "ctx")
+```
+
+#### application.properties
+
+See [above](#applicationproperties-5)
+
+For `url` property use `mysql` scheme:
+
+```
+ctx.url=mysql://host:3306/database?user=root&password=root
+```
+
+
 ### quill-jasync-postgres
 
 #### sbt dependencies
