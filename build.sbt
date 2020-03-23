@@ -23,7 +23,7 @@ lazy val dbModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
 )
 
 lazy val jasyncModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
-  `quill-jasync`, `quill-jasync-postgres`
+  `quill-jasync`, `quill-jasync-postgres`, `quill-jasync-mysql`
 )
 
 lazy val asyncModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
@@ -51,6 +51,9 @@ lazy val scala213Modules = baseModules ++ dbModules ++ Seq[sbt.ClasspathDep[sbt.
   `quill-cassandra`,
   `quill-cassandra-monix`,
   `quill-orientdb`,
+  `quill-jasync`,
+  `quill-jasync-postgres`,
+  `quill-jasync-mysql`
 )
 
 def isScala213 = {
@@ -428,6 +431,18 @@ lazy val `quill-jasync-postgres` =
       fork in Test := true,
       libraryDependencies ++= Seq(
         "com.github.jasync-sql" % "jasync-postgresql" % "1.0.17"
+      )
+    )
+    .dependsOn(`quill-jasync` % "compile->compile;test->test")
+
+lazy val `quill-jasync-mysql` =
+  (project in file("quill-jasync-mysql"))
+    .settings(commonSettings: _*)
+    .settings(mimaSettings: _*)
+    .settings(
+      fork in Test := true,
+      libraryDependencies ++= Seq(
+        "com.github.jasync-sql" % "jasync-mysql" % "1.0.14"
       )
     )
     .dependsOn(`quill-jasync` % "compile->compile;test->test")

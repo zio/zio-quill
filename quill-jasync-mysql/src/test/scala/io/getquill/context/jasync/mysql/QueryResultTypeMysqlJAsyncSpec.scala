@@ -1,4 +1,4 @@
-package io.getquill.context.jasync.postgres
+package io.getquill.context.jasync.mysql
 
 import java.util.concurrent.ConcurrentLinkedQueue
 
@@ -8,7 +8,7 @@ import scala.math.BigDecimal.int2bigDecimal
 
 import io.getquill.context.sql.QueryResultTypeSpec
 
-class QueryResultTypePostgresAsyncSpec extends QueryResultTypeSpec {
+class QueryResultTypeMysqlJAsyncSpec extends QueryResultTypeSpec {
 
   val context = testContext
   import testContext._
