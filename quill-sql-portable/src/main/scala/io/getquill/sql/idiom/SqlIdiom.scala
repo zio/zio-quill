@@ -326,12 +326,13 @@ trait SqlIdiom extends Idiom {
             case (ast, nestedName) =>
               (ast, nestedName :+ name)
           }
-        case a => (a, Nil)
+        case e @ ExternalIdent.Opinionated(a, Fixed) => (e, List(a))
+        case a                                       => (a, Nil)
       }
 
-    def tokenizePrefixedProperty(name: String, prefix: List[String], strategy: NamingStrategy, renameable: Renameable) =
-      renameable.fixedOr(
-        (prefix.mkString + name).token
+    def tokenizePrefixedProperty(name: String, prefix: List[String], strategy: NamingStrategy, renameable: Renameable, prefixRenameable: Renameable = Renameable.neutral) =
+      prefixRenameable.fixedOr(
+        (tokenizeColumn(strategy, prefix.mkString, prefixRenameable) + "." + tokenizeColumn(strategy, name, renameable)).token
       )(tokenizeColumn(strategy, prefix.mkString + name, renameable).token)
 
     Tokenizer[Property] {
@@ -342,11 +343,10 @@ trait SqlIdiom extends Idiom {
         // as opposed to `realTable.embeddedTableAlias.realPropertyAlias`.
 
         unnest(ast) match {
-          // Given the way to suggest a new alias to ExpandReturning, during translation it can be changed by
-          // naming strategy (https://github.com/getquill/quill/issues/1768). ExternalIdent.Opinionated
-          // Fixed ensures that renaming won't happen
-          case (ExternalIdent.Opinionated(newName, Fixed), _) =>
-            stmt"${tokenizePrefixedProperty(name, List(s"$newName."), strategy, Fixed)}"
+          case (ExternalIdent.Opinionated(_: String, prefixRenameable), prefix) =>
+            stmt"${
+              actionAlias.map(alias => stmt"${scopedTokenizer(alias)}.").getOrElse(stmt"")
+            }${tokenizePrefixedProperty(name, prefix, strategy, renameable, prefixRenameable)}"
 
           // When using ExternalIdent such as .returning(eid => eid.idColumn) clauses drop the 'eid' since SQL
           // returning clauses have no alias for the original table. I.e. INSERT [...] RETURNING idColumn there's no
