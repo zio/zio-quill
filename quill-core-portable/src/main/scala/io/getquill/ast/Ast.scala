@@ -15,16 +15,17 @@ sealed trait Ast {
   /**
    * Set all opinions of this element and every element in the subtree to the neutral position.
    */
-  final def neutralize: Ast = new StatelessTransformer {
-    override def apply(a: Ast) =
-      super.apply(a.neutral)
-  }.apply(this)
+  final def neutralize: Ast =
+    new StatelessTransformer {
+      override def apply(a: Ast) =
+        super.apply(a.neutral)
+    }.apply(this)
 
   override def toString = {
     import io.getquill.MirrorIdiom._
     import io.getquill.idiom.StatementInterpolator._
-    implicit def liftTokenizer: Tokenizer[Lift] =
-      Tokenizer[Lift](_ => stmt"?")
+    implicit def externalTokenizer: Tokenizer[External] =
+      Tokenizer[External](_ => stmt"?")
     implicit val namingStrategy: NamingStrategy = io.getquill.Literal
     this.token.toString
   }
@@ -59,19 +60,25 @@ case class Entity(name: String, properties: List[PropertyAlias]) extends Query {
 
   override def equals(that: Any) =
     that match {
-      case e: Entity => (e.name, e.properties, e.renameable) == ((name, properties, renameable))
-      case _         => false
+      case e: Entity =>
+        (e.name, e.properties, e.renameable) == ((name, properties, renameable))
+      case _ => false
     }
 
   override def hashCode = (name, properties, renameable).hashCode()
 }
 
 object Entity {
-  def apply(name: String, properties: List[PropertyAlias]) = new Entity(name, properties)
+  def apply(name: String, properties: List[PropertyAlias]) =
+    new Entity(name, properties)
   def unapply(e: Entity) = Some((e.name, e.properties))
 
   object Opinionated {
-    def apply(name: String, properties: List[PropertyAlias], renameableNew: Renameable) =
+    def apply(
+      name:          String,
+      properties:    List[PropertyAlias],
+      renameableNew: Renameable
+    ) =
       new Entity(name, properties) {
         override def renameable: Renameable = renameableNew
       }
@@ -90,7 +97,8 @@ case class FlatMap(query: Ast, alias: Ident, body: Ast) extends Query
 
 case class ConcatMap(query: Ast, alias: Ident, body: Ast) extends Query
 
-case class SortBy(query: Ast, alias: Ident, criterias: Ast, ordering: Ast) extends Query
+case class SortBy(query: Ast, alias: Ident, criterias: Ast, ordering: Ast)
+  extends Query
 
 sealed trait Ordering extends Ast
 case class TupleOrdering(elems: List[Ordering]) extends Ordering
@@ -115,7 +123,15 @@ case class Union(a: Ast, b: Ast) extends Query
 
 case class UnionAll(a: Ast, b: Ast) extends Query
 
-case class Join(typ: JoinType, a: Ast, b: Ast, aliasA: Ident, aliasB: Ident, on: Ast) extends Query
+case class Join(
+  typ:    JoinType,
+  a:      Ast,
+  b:      Ast,
+  aliasA: Ident,
+  aliasB: Ident,
+  on:     Ast
+)
+  extends Query
 
 case class FlatJoin(typ: JoinType, a: Ast, aliasA: Ident, on: Ast) extends Query
 
@@ -125,7 +141,8 @@ case class Nested(a: Ast) extends Query
 
 //************************************************************
 
-case class Infix(parts: List[String], params: List[Ast], pure: Boolean) extends Ast
+case class Infix(parts: List[String], params: List[Ast], pure: Boolean)
+  extends Ast
 
 case class Function(params: List[Ident], body: Ast) extends Ast
 
@@ -247,8 +264,16 @@ case class Property(ast: Ast, name: String) extends Ast {
 
   override def equals(that: Any) =
     that match {
-      case p: Property => (p.ast, p.name, p.renameable, p.visibility) == ((ast, name, renameable, visibility))
-      case _           => false
+      case p: Property =>
+        (p.ast, p.name, p.renameable, p.visibility) == (
+          (
+            ast,
+            name,
+            renameable,
+            visibility
+          )
+        )
+      case _ => false
     }
 
   override def hashCode = (ast, name, renameable, visibility).hashCode()
@@ -259,7 +284,12 @@ object Property {
   def unapply(p: Property) = Some((p.ast, p.name))
 
   object Opinionated {
-    def apply(ast: Ast, name: String, renameableNew: Renameable, visibilityNew: Visibility) =
+    def apply(
+      ast:           Ast,
+      name:          String,
+      renameableNew: Renameable,
+      visibilityNew: Visibility
+    ) =
       new Property(ast, name) {
         override def renameable: Renameable = renameableNew
         override def visibility: Visibility = visibilityNew
@@ -272,18 +302,25 @@ object Property {
 sealed trait OptionOperation extends Ast
 case class OptionFlatten(ast: Ast) extends OptionOperation
 case class OptionGetOrElse(ast: Ast, body: Ast) extends OptionOperation
-case class OptionFlatMap(ast: Ast, alias: Ident, body: Ast) extends OptionOperation
+case class OptionFlatMap(ast: Ast, alias: Ident, body: Ast)
+  extends OptionOperation
 case class OptionMap(ast: Ast, alias: Ident, body: Ast) extends OptionOperation
-case class OptionForall(ast: Ast, alias: Ident, body: Ast) extends OptionOperation
-case class OptionExists(ast: Ast, alias: Ident, body: Ast) extends OptionOperation
+case class OptionForall(ast: Ast, alias: Ident, body: Ast)
+  extends OptionOperation
+case class OptionExists(ast: Ast, alias: Ident, body: Ast)
+  extends OptionOperation
 case class OptionContains(ast: Ast, body: Ast) extends OptionOperation
 case class OptionIsEmpty(ast: Ast) extends OptionOperation
 case class OptionNonEmpty(ast: Ast) extends OptionOperation
 case class OptionIsDefined(ast: Ast) extends OptionOperation
-case class OptionTableFlatMap(ast: Ast, alias: Ident, body: Ast) extends OptionOperation
-case class OptionTableMap(ast: Ast, alias: Ident, body: Ast) extends OptionOperation
-case class OptionTableExists(ast: Ast, alias: Ident, body: Ast) extends OptionOperation
-case class OptionTableForall(ast: Ast, alias: Ident, body: Ast) extends OptionOperation
+case class OptionTableFlatMap(ast: Ast, alias: Ident, body: Ast)
+  extends OptionOperation
+case class OptionTableMap(ast: Ast, alias: Ident, body: Ast)
+  extends OptionOperation
+case class OptionTableExists(ast: Ast, alias: Ident, body: Ast)
+  extends OptionOperation
+case class OptionTableForall(ast: Ast, alias: Ident, body: Ast)
+  extends OptionOperation
 object OptionNone extends OptionOperation
 case class OptionSome(ast: Ast) extends OptionOperation
 case class OptionApply(ast: Ast) extends OptionOperation
@@ -304,7 +341,8 @@ case class Assignment(alias: Ident, property: Ast, value: Ast) extends Ast
 sealed trait Operation extends Ast
 
 case class UnaryOperation(operator: UnaryOperator, ast: Ast) extends Operation
-case class BinaryOperation(a: Ast, operator: BinaryOperator, b: Ast) extends Operation
+case class BinaryOperation(a: Ast, operator: BinaryOperator, b: Ast)
+  extends Operation
 case class FunctionApply(function: Ast, values: List[Ast]) extends Operation
 
 //************************************************************
@@ -342,17 +380,25 @@ object ReturningAction {
   def unapply(returningClause: ReturningAction): Option[(Ast, Ident, Ast)] =
     returningClause match {
       case Returning(action, alias, property) => Some((action, alias, property))
-      case ReturningGenerated(action, alias, property) => Some((action, alias, property))
+      case ReturningGenerated(action, alias, property) =>
+        Some((action, alias, property))
       case _ => None
     }
 
 }
-case class Returning(action: Ast, alias: Ident, property: Ast) extends ReturningAction
-case class ReturningGenerated(action: Ast, alias: Ident, property: Ast) extends ReturningAction
+case class Returning(action: Ast, alias: Ident, property: Ast)
+  extends ReturningAction
+case class ReturningGenerated(action: Ast, alias: Ident, property: Ast)
+  extends ReturningAction
 
 case class Foreach(query: Ast, alias: Ident, body: Ast) extends Action
 
-case class OnConflict(insert: Ast, target: OnConflict.Target, action: OnConflict.Action) extends Action
+case class OnConflict(
+  insert: Ast,
+  target: OnConflict.Target,
+  action: OnConflict.Action
+)
+  extends Action
 object OnConflict {
 
   case class Excluded(alias: Ident) extends Ast {
@@ -378,7 +424,13 @@ case class Dynamic(tree: Any) extends Ast
 
 case class QuotedReference(tree: Any, ast: Ast) extends Ast
 
-sealed trait Lift extends Ast {
+sealed trait External extends Ast
+
+/***********************************************************************/
+/*                      Only Quill 2                                   */
+/***********************************************************************/
+
+sealed trait Lift extends External {
   val name: String
   val value: Any
 }
@@ -386,9 +438,22 @@ sealed trait Lift extends Ast {
 sealed trait ScalarLift extends Lift {
   val encoder: Any
 }
-case class ScalarValueLift(name: String, value: Any, encoder: Any) extends ScalarLift
-case class ScalarQueryLift(name: String, value: Any, encoder: Any) extends ScalarLift
+case class ScalarValueLift(name: String, value: Any, encoder: Any)
+  extends ScalarLift
+case class ScalarQueryLift(name: String, value: Any, encoder: Any)
+  extends ScalarLift
 
 sealed trait CaseClassLift extends Lift
 case class CaseClassValueLift(name: String, value: Any) extends CaseClassLift
 case class CaseClassQueryLift(name: String, value: Any) extends CaseClassLift
+
+/***********************************************************************/
+/*                      New for ProtoQuill                             */
+/***********************************************************************/
+
+sealed trait Tag extends External {
+  val uid: String
+}
+
+case class ScalarTag(uid: String) extends Tag
+case class QuotationTag(uid: String) extends Tag

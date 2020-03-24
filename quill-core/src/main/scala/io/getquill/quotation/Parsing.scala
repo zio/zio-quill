@@ -5,7 +5,7 @@ import io.getquill.ast._
 import io.getquill.Embedded
 import io.getquill.context._
 import io.getquill.norm.BetaReduction
-import io.getquill.util.Messages.RichContext
+import io.getquill.util.MacroContextExt.RichContext
 import io.getquill.dsl.{ CoreDsl, QueryDsl, ValueComputation }
 import io.getquill.norm.capture.AvoidAliasConflict
 import io.getquill.idiom.Idiom

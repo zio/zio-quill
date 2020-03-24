@@ -1,13 +1,11 @@
 package io.getquill.context
 
 import scala.reflect.macros.whitebox.{ Context => MacroContext }
-import io.getquill.ast.Ast
-import io.getquill.ast.Dynamic
+import io.getquill.ast.{ Ast, Dynamic, Lift, Tag }
 import io.getquill.quotation.Quotation
 import io.getquill.util.LoadObject
-import io.getquill.util.Messages._
+import io.getquill.util.MacroContextExt._
 import io.getquill.quotation.IsDynamic
-import io.getquill.ast.Lift
 import io.getquill.NamingStrategy
 import io.getquill.idiom._
 
@@ -39,6 +37,8 @@ trait ContextMacro extends Quotation {
     }
 
   private implicit val tokenLiftable: Liftable[Token] = Liftable[Token] {
+    case ScalarTagToken(lift)       => q"io.getquill.idiom.ScalarTagToken(${lift: Tag})"
+    case QuotationTagToken(lift)    => q"io.getquill.idiom.QuotationTagToken(${lift: Tag})"
     case StringToken(string)        => q"io.getquill.idiom.StringToken($string)"
     case ScalarLiftToken(lift)      => q"io.getquill.idiom.ScalarLiftToken(${lift: Lift})"
     case Statement(tokens)          => q"io.getquill.idiom.Statement(scala.List(..$tokens))"

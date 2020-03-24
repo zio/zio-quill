@@ -12,7 +12,10 @@ val CodegenTag = Tags.Tag("CodegenTag")
 (concurrentRestrictions in Global) += Tags.exclusive(CodegenTag)
 
 lazy val baseModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
-  `quill-core-jvm`, `quill-core-js`, `quill-sql-jvm`, `quill-sql-js`, `quill-monix`
+  `quill-core-portable-jvm`, `quill-core-portable-js`,
+  `quill-core-jvm`, `quill-core-js`,
+  `quill-sql-portable-jvm`, `quill-sql-portable-js`,
+  `quill-sql-jvm`, `quill-sql-js`, `quill-monix`
 )
 
 lazy val dbModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
@@ -125,6 +128,28 @@ def pprintVersion(v: String) = {
   if(v.startsWith("2.11")) "0.5.4" else "0.5.5"
 }
 
+lazy val `quill-core-portable` =
+  crossProject(JVMPlatform, JSPlatform).crossType(superPure)
+    .settings(commonSettings: _*)
+    .settings(mimaSettings: _*)
+    .settings(libraryDependencies ++= Seq(
+      "com.typesafe"               %  "config"        % "1.4.0",
+      "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
+      "org.scala-lang"             %  "scala-reflect" % scalaVersion.value
+    ))
+    .jsSettings(
+      libraryDependencies ++= Seq(
+        "com.lihaoyi" %%% "pprint" % pprintVersion(scalaVersion.value),
+        "org.scala-js" %%% "scalajs-java-time" % "0.2.5",
+        "com.lihaoyi" %%% "pprint" % "0.5.4",
+        "org.scala-js" %%% "scalajs-java-time" % "0.2.5"
+      ),
+      coverageExcludedPackages := ".*"
+    )
+
+lazy val `quill-core-portable-jvm` = `quill-core-portable`.jvm
+lazy val `quill-core-portable-js` = `quill-core-portable`.js
+
 lazy val `quill-core` =
   crossProject(JVMPlatform, JSPlatform).crossType(superPure)
     .settings(commonSettings: _*)
@@ -142,9 +167,31 @@ lazy val `quill-core` =
       ),
       coverageExcludedPackages := ".*"
     )
+    .dependsOn(`quill-core-portable` % "compile->compile")
 
 lazy val `quill-core-jvm` = `quill-core`.jvm
 lazy val `quill-core-js` = `quill-core`.js
+
+lazy val `quill-sql-portable` =
+  crossProject(JVMPlatform, JSPlatform).crossType(superPure)
+    .settings(commonSettings: _*)
+    .settings(mimaSettings: _*)
+    .settings(libraryDependencies ++= Seq(
+      "com.github.vertical-blank"  %% "scala-sql-formatter" % "1.0.0"
+    ))
+    .jsSettings(
+      libraryDependencies ++= Seq(
+        "com.github.vertical-blank" %%% "scala-sql-formatter" % "1.0.0"
+      ),
+      scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) },
+      coverageExcludedPackages := ".*"
+    )
+    .dependsOn(`quill-core-portable` % "compile->compile")
+
+
+lazy val `quill-sql-portable-jvm` = `quill-sql-portable`.jvm
+lazy val `quill-sql-portable-js` = `quill-sql-portable`.js
+
 
 lazy val `quill-sql` =
   crossProject(JVMPlatform, JSPlatform).crossType(superPure)
@@ -160,7 +207,12 @@ lazy val `quill-sql` =
       scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) },
       coverageExcludedPackages := ".*"
     )
-    .dependsOn(`quill-core` % "compile->compile;test->test")
+    .dependsOn(
+      `quill-sql-portable` % "compile->compile",
+      `quill-core` % "compile->compile;test->test"
+    )
+
+
 
 lazy val `quill-sql-jvm` = `quill-sql`.jvm
 lazy val `quill-sql-js` = `quill-sql`.js

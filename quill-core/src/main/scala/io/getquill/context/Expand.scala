@@ -14,13 +14,17 @@ case class Expand[C <: Context[_, _]](
   naming:      NamingStrategy
 ) {
 
-  val (string, liftings) =
+  val (string, externals) =
     ReifyStatement(
       idiom.liftingPlaceholder,
       idiom.emptySetContainsToken,
       statement,
       forProbing = false
     )
+
+  val liftings = externals.collect {
+    case lift: ScalarLift => lift
+  }
 
   val prepare =
     (row: context.PrepareRow) => {

@@ -1,7 +1,7 @@
 package io.getquill.context.cassandra.encoding
 
 import com.datastax.driver.core.UDTValue
-import io.getquill.util.Messages._
+import io.getquill.util.MacroContextExt._
 import io.getquill.util.OptionalTypecheck
 
 import scala.collection.mutable.ListBuffer

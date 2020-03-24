@@ -71,7 +71,7 @@ trait SqlIdiom extends Idiom {
       case a: Property        => a.token
       case a: Value           => a.token
       case a: If              => a.token
-      case a: Lift            => a.token
+      case a: External        => a.token
       case a: Assignment      => a.token
       case a: OptionOperation => a.token
       case a @ (
