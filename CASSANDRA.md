@@ -61,7 +61,7 @@ import com.datastax.driver.core._
 import com.datastax.driver.core.querybuilder.QueryBuilder
 import com.google.common.cache.{ CacheBuilder, CacheLoader, LoadingCache }
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 object JavaDriver extends App {
 
@@ -198,7 +198,7 @@ import com.datastax.driver.core._
 import com.datastax.driver.core.querybuilder.{ QueryBuilder, Select}
 import com.google.common.cache.{ CacheBuilder, CacheLoader, LoadingCache }
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 object JavaDriver extends App {
 
@@ -380,7 +380,7 @@ import com.datastax.driver.core.querybuilder.QueryBuilder
 import com.datastax.driver.core.utils.Bytes
 import com.google.common.cache.{ CacheBuilder, CacheLoader, LoadingCache }
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 object JavaDriver extends App {
 

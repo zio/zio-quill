@@ -202,4 +202,8 @@ trait Liftables {
     case ScalarQueryLift(a, b: Tree, c: Tree) => q"$pack.ScalarQueryLift($a, $b, $c)"
     case CaseClassQueryLift(a, b: Tree)       => q"$pack.CaseClassQueryLift($a, $b)"
   }
+  implicit val tagLiftable: Liftable[Tag] = Liftable[Tag] {
+    case ScalarTag(uid)    => q"$pack.ScalarTag($uid)"
+    case QuotationTag(uid) => q"$pack.QuotationTag($uid)"
+  }
 }

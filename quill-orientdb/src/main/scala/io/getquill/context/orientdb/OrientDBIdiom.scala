@@ -2,7 +2,7 @@ package io.getquill.context.orientdb
 
 import io.getquill.idiom.StatementInterpolator._
 import io.getquill.context.sql.norm._
-import io.getquill.ast.{ AggregationOperator, Lift, _ }
+import io.getquill.ast.{ AggregationOperator, External, _ }
 import io.getquill.context.sql._
 import io.getquill.NamingStrategy
 import io.getquill.context.CannotReturn
@@ -57,7 +57,7 @@ trait OrientDBIdiom extends Idiom {
         a.token
       case a: If =>
         a.token
-      case a: Lift =>
+      case a: External =>
         a.token
       case a: Assignment =>
         a.token
