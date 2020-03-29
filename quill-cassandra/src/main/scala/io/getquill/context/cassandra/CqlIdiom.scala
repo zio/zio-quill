@@ -39,7 +39,7 @@ trait CqlIdiom extends Idiom {
       case a: Value             => a.token
       case a: Function          => a.body.token
       case a: Infix             => a.token
-      case a: Lift              => a.token
+      case a: External          => a.token
       case a: Assignment        => a.token
       case a: IterableOperation => a.token
       case a @ (

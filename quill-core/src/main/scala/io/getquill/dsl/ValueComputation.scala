@@ -3,7 +3,7 @@ package io.getquill.dsl
 import scala.reflect.macros.whitebox.{ Context => MacroContext }
 import io.getquill.Embedded
 import io.getquill.util.OptionalTypecheck
-import io.getquill.util.Messages._
+import io.getquill.util.MacroContextExt._
 
 trait ValueComputation {
   val c: MacroContext

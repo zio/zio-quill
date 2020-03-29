@@ -5,7 +5,7 @@ import scala.util.Try
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigValueType
 import java.lang.reflect.Method
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import com.datastax.driver.core.Cluster
 
 object ClusterBuilder {

@@ -5,7 +5,7 @@ import scala.reflect.ClassTag
 import scala.reflect.macros.whitebox.Context
 
 import io.getquill.ast._
-import io.getquill.util.Messages.RichContext
+import io.getquill.util.MacroContextExt._
 import io.getquill.norm.BetaReduction
 import io.getquill.util.EnableReflectiveCalls
 
@@ -29,16 +29,16 @@ trait Quotation extends Liftables with Unliftables with Parsing with ReifyLiftin
       c.untypecheck {
         q"""
           new ${c.prefix}.Quoted[$t] {
- 
+
             ..${EnableReflectiveCalls(c)}
-    
+
             @${c.weakTypeOf[QuotedAst]}($reifiedAst)
             def $quoted = ast
-    
+
             override def ast = $reifiedAst
-    
+
             def $id() = ()
-            
+
             $liftings
           }
         """

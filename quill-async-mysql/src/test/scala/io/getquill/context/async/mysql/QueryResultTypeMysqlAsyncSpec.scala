@@ -2,8 +2,7 @@ package io.getquill.context.async.mysql
 
 import java.util.concurrent.ConcurrentLinkedQueue
 
-import scala.collection.JavaConverters.collectionAsScalaIterableConverter
-import scala.collection.JavaConverters.seqAsJavaListConverter
+import scala.jdk.CollectionConverters._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.math.BigDecimal.int2bigDecimal
 

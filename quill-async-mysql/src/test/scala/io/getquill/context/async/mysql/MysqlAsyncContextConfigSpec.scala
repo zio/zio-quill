@@ -5,7 +5,7 @@ import java.nio.charset.Charset
 import com.typesafe.config.ConfigFactory
 import io.getquill.{ MysqlAsyncContextConfig, Spec }
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.concurrent.duration._
 
 class MysqlAsyncContextConfigSpec extends Spec {
