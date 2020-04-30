@@ -308,8 +308,8 @@ lazy val `quill-monix` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "io.monix"                %% "monix-eval"          % "3.0.0",
-        "io.monix"                %% "monix-reactive"      % "3.0.0"
+        "io.monix"                %% "monix-eval"          % "3.2.1",
+        "io.monix"                %% "monix-reactive"      % "3.2.1"
       )
     )
     .dependsOn(`quill-core-jvm` % "compile->compile;test->test")
