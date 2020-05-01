@@ -3,7 +3,7 @@ package io.getquill.context
 import io.getquill.ast._ // Only .returning(r => r.prop) or .returning(r => OneElementCaseClass(r.prop)) is allowed.
 import io.getquill.norm.BetaReduction
 import io.getquill.quotation.ReifyLiftings
-import io.getquill.util.Messages._
+import io.getquill.util.MacroContextExt._
 
 import scala.reflect.macros.whitebox.{ Context => MacroContext }
 import io.getquill.util.{ EnableReflectiveCalls, OptionalTypecheck }

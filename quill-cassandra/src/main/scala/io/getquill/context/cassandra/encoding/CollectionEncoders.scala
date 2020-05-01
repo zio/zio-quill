@@ -2,7 +2,7 @@ package io.getquill.context.cassandra.encoding
 
 import io.getquill.context.cassandra.CassandraSessionContext
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 trait CollectionEncoders {
   this: CassandraSessionContext[_] =>

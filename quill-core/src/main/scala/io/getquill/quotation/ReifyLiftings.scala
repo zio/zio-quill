@@ -7,7 +7,7 @@ import scala.reflect.NameTransformer
 import io.getquill.dsl.EncodingDsl
 import io.getquill.norm.BetaReduction
 import io.getquill.util.OptionalTypecheck
-import io.getquill.util.Messages._
+import io.getquill.util.MacroContextExt._
 
 case class ScalarValueLifting[T, U](value: T, encoder: EncodingDsl#Encoder[U])
 case class CaseClassValueLifting[T](value: T)

@@ -6,7 +6,7 @@ import com.typesafe.config.Config
 import io.getquill.context.orientdb.OrientDBSessionContext
 import io.getquill.util.{ ContextLogger, LoadConfig }
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import io.getquill.monad.SyncIOMonad
 
 class OrientDBSyncContext[N <: NamingStrategy](
@@ -46,7 +46,7 @@ class OrientDBSyncContext[N <: NamingStrategy](
   def executeAction[T](orientQl: String, prepare: Prepare = identityPrepare): Unit = {
     val (params, objects) = prepare(super.prepare())
     logger.logQuery(orientQl, params)
-    oDatabase.command(orientQl, objects.asInstanceOf[Seq[Object]]: _*)
+    oDatabase.command(orientQl, objects.toIndexedSeq.asInstanceOf[Seq[Object]]: _*)
     ()
   }
 

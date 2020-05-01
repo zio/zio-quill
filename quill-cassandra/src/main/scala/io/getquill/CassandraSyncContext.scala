@@ -5,7 +5,7 @@ import com.typesafe.config.Config
 import io.getquill.monad.SyncIOMonad
 import io.getquill.util.{ ContextLogger, LoadConfig }
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 class CassandraSyncContext[N <: NamingStrategy](
   naming:                     N,

@@ -6,7 +6,7 @@ import io.getquill.context.cassandra.util.FutureConversions._
 import io.getquill.monad.ScalaFutureIOMonad
 import io.getquill.util.{ ContextLogger, LoadConfig }
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.concurrent.{ ExecutionContext, Future }
 
 class CassandraAsyncContext[N <: NamingStrategy](
