@@ -5,6 +5,7 @@ import java.util.TimeZone
 import com.twitter.conversions.DurationOps._
 import com.twitter.finagle.Mysql
 import com.twitter.finagle.client.DefaultPool
+import com.twitter.finagle.mysql.QueryRequest
 import com.twitter.util.Try
 import com.typesafe.config.Config
 
@@ -24,6 +25,7 @@ case class FinagleMysqlContextConfig(config: Config) {
   def maxPrepareStatements = Try(config.getInt("maxPrepareStatements")).getOrElse(20)
   def connectTimeout = Try(config.getLong("connectTimeout")).getOrElse(1L)
   def noFailFast = Try(config.getBoolean("noFailFast")).getOrElse(false)
+  def connectionInitSql = Try(Some(config.getString("connectionInitSql"))).getOrElse(None)
 
   def client = {
     var client = Mysql.client
@@ -40,6 +42,9 @@ case class FinagleMysqlContextConfig(config: Config) {
       ))
     if (noFailFast) {
       client = client.withSessionQualifier.noFailFast
+    }
+    connectionInitSql.foreach { sql =>
+      client = client.withConnectionInitRequest(QueryRequest(sql))
     }
     client.newRichClient(dest)
   }
