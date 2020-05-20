@@ -354,7 +354,7 @@ lazy val `quill-finagle-mysql` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.twitter" %% "finagle-mysql" % "20.4.0"
+        "com.twitter" %% "finagle-mysql" % "20.4.1"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -414,7 +414,7 @@ lazy val `quill-jasync` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.github.jasync-sql" % "jasync-common" % "1.0.14",
+        "com.github.jasync-sql" % "jasync-common" % "1.0.17",
         "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.1"
       )
     )
@@ -427,7 +427,7 @@ lazy val `quill-jasync-postgres` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.github.jasync-sql" % "jasync-postgresql" % "1.0.14"
+        "com.github.jasync-sql" % "jasync-postgresql" % "1.0.17"
       )
     )
     .dependsOn(`quill-jasync` % "compile->compile;test->test")
@@ -505,7 +505,7 @@ lazy val `quill-orientdb` =
       .settings(
         fork in Test := true,
         libraryDependencies ++= Seq(
-          "com.orientechnologies" % "orientdb-graphdb" % "3.0.30"
+          "com.orientechnologies" % "orientdb-graphdb" % "3.0.31"
         )
       )
       .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -588,14 +588,14 @@ def updateWebsiteTag =
 
 lazy val jdbcTestingLibraries = Seq(
   libraryDependencies ++= Seq(
-    "com.zaxxer"              %  "HikariCP"                % "3.4.2",
-    "mysql"                   %  "mysql-connector-java"    % "8.0.19"             % Test,
+    "com.zaxxer"              %  "HikariCP"                % "3.4.5",
+    "mysql"                   %  "mysql-connector-java"    % "8.0.20"             % Test,
     "com.h2database"          %  "h2"                      % "1.4.200"            % Test,
     "org.postgresql"          %  "postgresql"              % "42.2.12"             % Test,
-    "org.xerial"              %  "sqlite-jdbc"             % "3.30.1"             % Test,
+    "org.xerial"              %  "sqlite-jdbc"             % "3.31.1"             % Test,
     "com.microsoft.sqlserver" %  "mssql-jdbc"              % "7.1.1.jre8-preview" % Test,
     "com.oracle.ojdbc"        %  "ojdbc8"                  % "19.3.0.0"           % Test,
-    "org.mockito"             %% "mockito-scala-scalatest" % "1.13.9"              % Test
+    "org.mockito"             %% "mockito-scala-scalatest" % "1.14.2"              % Test
   )
 )
 
@@ -664,9 +664,9 @@ lazy val basicSettings = Seq(
   scalaVersion := "2.11.12",
   crossScalaVersions := Seq("2.11.12", "2.12.10", "2.13.1"),
   libraryDependencies ++= Seq(
-    "org.scala-lang.modules" %%% "scala-collection-compat" % "2.1.4",
+    "org.scala-lang.modules" %%% "scala-collection-compat" % "2.1.6",
     "com.lihaoyi"     %% "pprint"         % pprintVersion(scalaVersion.value),
-    "org.scalatest"   %%% "scalatest"     % "3.1.1"          % Test,
+    "org.scalatest"   %%% "scalatest"     % "3.1.2"          % Test,
     "ch.qos.logback"  % "logback-classic" % "1.2.3"          % Test,
     "com.google.code.findbugs" % "jsr305" % "3.0.2"          % Provided // just to avoid warnings during compilation
   ) ++ {
