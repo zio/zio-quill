@@ -207,6 +207,31 @@ class ActionMacroSpec extends Spec {
         r.returningBehavior mustEqual ReturnRecord
       }
     }
+
+    "delete returning" - {
+      "returning value" in {
+        val q = quote {
+          qr1.delete.returning(t => t.l)
+        }
+        val r = testContext.run(q)
+        r.string mustEqual """querySchema("TestEntity").delete.returning((t) => t.l)"""
+        r.prepareRow mustEqual Row()
+        r.returningBehavior mustEqual ReturnRecord
+      }
+      "returning value - with single - should not compile" in testContext.withDialect(MirrorIdiomReturningSingle) { ctx =>
+        "import ctx._; ctx.delete.returning(t => t.l))" mustNot compile
+      }
+      "returning value - with multi" in testContext.withDialect(MirrorIdiomReturningMulti) { ctx =>
+        import ctx._
+        val q = quote {
+          qr1.delete.returning(t => t.l)
+        }
+        val r = ctx.run(q)
+        r.string mustEqual """querySchema("TestEntity").delete.returning((t) => t.l)"""
+        r.prepareRow mustEqual Row()
+        r.returningBehavior mustEqual ReturnColumns(List("l"))
+      }
+    }
   }
 
   "runs batched action" - {

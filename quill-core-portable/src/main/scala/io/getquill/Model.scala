@@ -117,12 +117,16 @@ sealed trait Insert[E] extends Action[E] {
   def onConflictUpdate(target: E => Any, targets: (E => Any)*)(assign: ((E, E) => (Any, Any)), assigns: ((E, E) => (Any, Any))*): Insert[E] = NonQuotedException()
 }
 
+sealed trait ActionReturning[E, Output] extends Action[E]
+
 sealed trait Update[E] extends Action[E] {
   @compileTimeOnly(NonQuotedException.message)
   def returning[R](f: E => R): ActionReturning[E, R] = NonQuotedException()
 }
 
-sealed trait ActionReturning[E, Output] extends Action[E]
-sealed trait Delete[E] extends Action[E]
+sealed trait Delete[E] extends Action[E] {
+  @compileTimeOnly(NonQuotedException.message)
+  def returning[R](f: E => R): ActionReturning[E, R] = NonQuotedException()
+}
 
 sealed trait BatchAction[+A <: Action[_]]
