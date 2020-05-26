@@ -6,6 +6,7 @@ import io.getquill.context.sql.EncodingSpec
 import com.twitter.util.Await
 import java.util.Date
 import java.util.UUID
+import io.getquill.Query
 
 class FinaglePostgresEncodingSpec extends EncodingSpec {
 

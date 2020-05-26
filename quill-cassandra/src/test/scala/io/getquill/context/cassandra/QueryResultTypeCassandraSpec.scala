@@ -3,6 +3,7 @@ package io.getquill.context.cassandra
 import io.getquill.Spec
 import io.getquill.context.cassandra.encoding.Encoders
 import io.getquill.context.cassandra.encoding.Decoders
+import io.getquill.Ord
 
 trait QueryResultTypeCassandraSpec extends Spec {
 
