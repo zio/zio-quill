@@ -467,8 +467,8 @@ trait SqlIdiom extends Idiom {
             case Insert(entity: Entity, assignments) =>
               val (table, columns, values) = insertInfo(insertEntityTokenizer, entity, assignments)
               stmt"INSERT $table${actionAlias.map(alias => stmt" AS ${alias.token}").getOrElse(stmt"")} (${columns.mkStmt(",")}) OUTPUT ${returnListTokenizer.token(ExpandReturning(r, Some("INSERTED"))(this, strategy).map(_._1))} VALUES (${values.map(scopedTokenizer(_)).mkStmt(", ")})"
-            case Update(entity: Entity, assignments) =>
-              stmt"UPDATE ${entity.token}${actionAlias.map(alias => stmt" AS ${alias.token}").getOrElse(stmt"")} SET ${assignments.token} OUTPUT ${returnListTokenizer.token(ExpandReturning(r, Some("INSERTED"))(this, strategy).map(_._1))}"
+            case Update(_, _) =>
+              stmt"${action.token} OUTPUT ${returnListTokenizer.token(ExpandReturning(r, Some("INSERTED"))(this, strategy).map(_._1))}"
             case Delete(_) =>
               stmt"${action.token} OUTPUT ${returnListTokenizer.token(ExpandReturning(r, Some("DELETED"))(this, strategy).map(_._1))}"
             case other =>
