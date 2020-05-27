@@ -1060,6 +1060,64 @@ class SqlActionMacroSpec extends Spec {
           mirror.returningBehavior mustEqual ReturnRecord
         }
       }
+      "output clause - single" in testContext.withDialect(MirrorSqlDialectWithOutputClause) { ctx =>
+        import ctx._
+        val q = quote {
+          qr1.delete.returning(_.l)
+        }
+
+        val mirror = ctx.run(q)
+        mirror.string mustEqual "DELETE FROM TestEntity OUTPUT DELETED.l"
+        mirror.returningBehavior mustEqual ReturnRecord
+      }
+      "output clause - multi" in testContext.withDialect(MirrorSqlDialectWithOutputClause) { ctx =>
+        import ctx._
+        val q = quote {
+          qr1.delete.returning(r => (r.i, r.l))
+        }
+        val mirror = ctx.run(q)
+        mirror.string mustEqual "DELETE FROM TestEntity OUTPUT DELETED.i, DELETED.l"
+        mirror.returningBehavior mustEqual ReturnRecord
+      }
+      "output clause - operation" in testContext.withDialect(MirrorSqlDialectWithOutputClause) { ctx =>
+        import ctx._
+        val q = quote { qr1.delete.returning(r => (r.i, r.l + 1)) }
+        val mirror = ctx.run(q)
+
+        mirror.string mustEqual "DELETE FROM TestEntity OUTPUT DELETED.i, DELETED.l + 1"
+      }
+      "output clause - record" in testContext.withDialect(MirrorSqlDialectWithOutputClause) { ctx =>
+        import ctx._
+        val q = quote {
+          qr1.delete.returning(r => r)
+        }
+        val mirror = ctx.run(q)
+        mirror.string mustEqual "DELETE FROM TestEntity OUTPUT DELETED.s, DELETED.i, DELETED.l, DELETED.o"
+        mirror.returningBehavior mustEqual ReturnRecord
+      }
+      "output clause - embedded" - {
+        "embedded property" in testContext.withDialect(MirrorSqlDialectWithOutputClause) { ctx =>
+          import ctx._
+          val q = quote {
+            qr1Emb.delete.returning(_.emb.i)
+          }
+          val mirror = ctx.run(q)
+          mirror.string mustEqual "DELETE FROM TestEntity OUTPUT DELETED.i"
+          mirror.returningBehavior mustEqual ReturnRecord
+        }
+        "two embedded properties" in testContext.withDialect(MirrorSqlDialectWithOutputClause) { ctx =>
+          import ctx._
+          val q = quote {
+            qr1Emb.delete.returning(r => (r.emb.i, r.emb.s))
+          }
+          val mirror = ctx.run(q)
+          mirror.string mustEqual "DELETE FROM TestEntity OUTPUT DELETED.i, DELETED.s"
+          mirror.returningBehavior mustEqual ReturnRecord
+        }
+      }
+      "output clause - should fail on query" in testContext.withDialect(MirrorSqlDialectWithOutputClause) { ctx =>
+        """import ctx._; quote { qr4.delete.returning(r => query[TestEntity4].filter(t => t.i == r.i)) }""" mustNot compile
+      }
     }
   }
   "apply naming strategy to returning action" in testContext.withNaming(SnakeCase) { ctx =>
