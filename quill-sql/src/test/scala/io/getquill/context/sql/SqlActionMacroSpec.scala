@@ -910,6 +910,157 @@ class SqlActionMacroSpec extends Spec {
         """import ctx._; quote { qr4.update(lift(TestEntity4(1L))).returning(r => query[TestEntity4].filter(t => t.i == r.i)) }""" mustNot compile
       }
     }
+
+    "delete returning" - {
+      "multi" in testContext.withDialect(MirrorSqlDialectWithReturnMulti) { ctx =>
+        import ctx._
+        val q = quote {
+          qr1.delete.returning(_.l)
+        }
+
+        val mirror = ctx.run(q)
+        mirror.string mustEqual "DELETE FROM TestEntity"
+        mirror.returningBehavior mustEqual ReturnColumns(List("l"))
+      }
+      "multi - should fail on operation" in testContext.withDialect(MirrorSqlDialectWithReturnMulti) { ctx =>
+        """import ctx._; quote { qr1.delete.returning(r => (r.i, r.l + 1)) }""" mustNot compile
+      }
+      "no return - should fail on property" in testContext.withDialect(MirrorSqlDialectWithNoReturn) { ctx =>
+        """import ctx._; quote { qr1.delete.returning(r => r.i) }""" mustNot compile
+      }
+
+      "returning clause - single" in testContext.withDialect(MirrorSqlDialectWithReturnClause) { ctx =>
+        import ctx._
+        val q = quote {
+          qr1.delete.returning(_.l)
+        }
+
+        val mirror = ctx.run(q)
+        mirror.string mustEqual "DELETE FROM TestEntity RETURNING l"
+        mirror.returningBehavior mustEqual ReturnRecord
+      }
+      "returning clause - multi" in testContext.withDialect(MirrorSqlDialectWithReturnClause) { ctx =>
+        import ctx._
+        val q = quote {
+          qr1.delete.returning(r => (r.i, r.l))
+        }
+        val mirror = ctx.run(q)
+        mirror.string mustEqual "DELETE FROM TestEntity RETURNING i, l"
+        mirror.returningBehavior mustEqual ReturnRecord
+      }
+      "returning clause - operation" in testContext.withDialect(MirrorSqlDialectWithReturnClause) { ctx =>
+        import ctx._
+        val q = quote {
+          qr1.delete.returning(r => (r.i, r.l + 1))
+        }
+        val mirror = ctx.run(q)
+        mirror.string mustEqual "DELETE FROM TestEntity RETURNING i, l + 1"
+        mirror.returningBehavior mustEqual ReturnRecord
+      }
+      "returning clause - embedded" - {
+        case class Dummy(i: Int)
+
+        "embedded property" in testContext.withDialect(MirrorSqlDialectWithReturnClause) { ctx =>
+          import ctx._
+          val q = quote {
+            qr1Emb.delete.returning(_.emb.i)
+          }
+          val mirror = ctx.run(q)
+          mirror.string mustEqual "DELETE FROM TestEntity RETURNING i"
+          mirror.returningBehavior mustEqual ReturnRecord
+        }
+        "two embedded properties" in testContext.withDialect(MirrorSqlDialectWithReturnClause) { ctx =>
+          import ctx._
+          val q = quote {
+            qr1Emb.delete.returning(r => (r.emb.i, r.emb.s))
+          }
+          val mirror = ctx.run(q)
+          mirror.string mustEqual "DELETE FROM TestEntity RETURNING i, s"
+          mirror.returningBehavior mustEqual ReturnRecord
+        }
+        "query with filter using id - id should be excluded" in testContext.withDialect(MirrorSqlDialectWithReturnClause) { ctx =>
+          import ctx._
+          val q = quote {
+            qr1Emb.delete.returning(r => query[Dummy].filter(d => d.i == r.emb.i).max)
+          }
+          val mirror = ctx.run(q)
+          mirror.string mustEqual "DELETE FROM TestEntity AS r RETURNING (SELECT MAX(*) FROM Dummy d WHERE d.i = r.i)"
+          mirror.returningBehavior mustEqual ReturnRecord
+        }
+      }
+      "with returning clause - query" - {
+        case class Dummy(i: Int)
+
+        "simple not using id - id not excluded" in testContext.withDialect(MirrorSqlDialectWithReturnClause) { ctx =>
+          import ctx._
+          val q = quote {
+            qr1.delete.returning(r => query[Dummy].map(d => d.i).max)
+          }
+          val mirror = ctx.run(q)
+          mirror.string mustEqual "DELETE FROM TestEntity AS r RETURNING (SELECT MAX(d.i) FROM Dummy d)"
+          mirror.returningBehavior mustEqual ReturnRecord
+        }
+        "simple with id - id would be excluded (if was returningGenerated)" in testContext.withDialect(MirrorSqlDialectWithReturnClause) { ctx =>
+          import ctx._
+          val q = quote {
+            qr1.delete.returning(r => (r.i, query[Dummy].map(d => d.i).max))
+          }
+          val mirror = ctx.run(q)
+          mirror.string mustEqual "DELETE FROM TestEntity AS r RETURNING r.i, (SELECT MAX(d.i) FROM Dummy d)"
+          mirror.returningBehavior mustEqual ReturnRecord
+        }
+        "simple with filter using id - id would be excluded (if was returningGenerated)" in testContext.withDialect(MirrorSqlDialectWithReturnClause) { ctx =>
+          import ctx._
+          val q = quote {
+            qr1.delete.returning(r => query[Dummy].filter(d => d.i == r.i).max)
+          }
+          val mirror = ctx.run(q)
+          mirror.string mustEqual "DELETE FROM TestEntity AS r RETURNING (SELECT MAX(*) FROM Dummy d WHERE d.i = r.i)"
+          mirror.returningBehavior mustEqual ReturnRecord
+        }
+        "shadow variable - id not excluded (same as returningGenerated)" in testContext.withDialect(MirrorSqlDialectWithReturnClause) { ctx =>
+          import ctx._
+          val q = quote {
+            qr1.delete.returning(r => query[Dummy].map(r => r.i).max)
+          }
+          val mirror = ctx.run(q)
+          mirror.string mustEqual "DELETE FROM TestEntity AS r RETURNING (SELECT MAX(r1.i) FROM Dummy r1)"
+          mirror.returningBehavior mustEqual ReturnRecord
+        }
+        "shadow variable in multiple clauses - id not excluded (same as returningGenerated)" in testContext.withDialect(MirrorSqlDialectWithReturnClause) { ctx =>
+          import ctx._
+          val q = quote {
+            qr1
+              .delete
+              .returning(
+                r =>
+                  (query[Dummy]
+                    .filter(
+                      r => r.i == r.i /* always true since r overridden! */
+                    )
+                    .map(r => r.i)
+                    .max)
+              )
+          }
+          val mirror = ctx.run(q)
+          mirror.string mustEqual "DELETE FROM TestEntity AS r RETURNING (SELECT MAX(r1.i) FROM Dummy r1 WHERE r1.i = r1.i)"
+          mirror.returningBehavior mustEqual ReturnRecord
+        }
+        "shadow variable in one of multiple clauses - id excluded" in testContext.withDialect(MirrorSqlDialectWithReturnClause) { ctx =>
+          import ctx._
+          val q = quote {
+            qr1
+              .delete
+              .returning(
+                r => query[Dummy].filter(d => d.i == r.i).map(r => r.i).max
+              )
+          }
+          val mirror = ctx.run(q)
+          mirror.string mustEqual "DELETE FROM TestEntity AS r RETURNING (SELECT MAX(d.i) FROM Dummy d WHERE d.i = r.i)"
+          mirror.returningBehavior mustEqual ReturnRecord
+        }
+      }
+    }
   }
   "apply naming strategy to returning action" in testContext.withNaming(SnakeCase) { ctx =>
     import ctx._

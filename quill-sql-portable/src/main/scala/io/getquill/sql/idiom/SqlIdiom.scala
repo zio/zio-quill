@@ -436,10 +436,10 @@ trait SqlIdiom extends Idiom {
         stmt"UPDATE ${table.token}${actionAlias.map(alias => stmt" AS ${alias.token}").getOrElse(stmt"")} SET ${assignments.token} WHERE ${where.token}"
 
       case Delete(Filter(table: Entity, x, where)) =>
-        stmt"DELETE FROM ${table.token} WHERE ${where.token}"
+        stmt"DELETE FROM ${table.token}${actionAlias.map(alias => stmt" AS ${alias.token}").getOrElse(stmt"")} WHERE ${where.token}"
 
       case Delete(table: Entity) =>
-        stmt"DELETE FROM ${table.token}"
+        stmt"DELETE FROM ${table.token}${actionAlias.map(alias => stmt" AS ${alias.token}").getOrElse(stmt"")}"
 
       case r @ ReturningAction(Insert(table: Entity, Nil), alias, prop) =>
         idiomReturningCapability match {
