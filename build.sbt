@@ -278,8 +278,7 @@ lazy val `quill-codegen-tests` =
     )
     .dependsOn(`quill-codegen-jdbc` % "compile->test")
 
-val includeOracle =
-  sys.props.getOrElse("oracle", "false").toBoolean
+val includeOracle = false
 
 val excludeTests =
   sys.props.getOrElse("excludeTests", "false").toBoolean
