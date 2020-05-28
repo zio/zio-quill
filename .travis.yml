@@ -20,9 +20,10 @@ cache:
     - $HOME/.sbt
     - docker_images
     - $HOME/.cache/coursier
+    - docker_images
 before_install:
   - |
-    mkdir -p docker-cache
+    mkdir -p docker_images
     echo "== Load SQL Server =="
     docker load "docker_images/sqlserver.tar" || true
     time docker pull microsoft/mssql-server-linux
