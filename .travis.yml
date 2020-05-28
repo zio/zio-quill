@@ -18,6 +18,11 @@ cache:
     #- $HOME/.ivy2/cache
     - $HOME/.m2
     - $HOME/.sbt
+    - docker_images
+before_install:
+  - docker load -i docker_images/images.tar || true
+before_cache:
+  - docker save -o docker_images/images.tar $(docker images -a -q)
 env:
   global:
     - secure: Glt43/THOQFt4rX7PyBj3eEFgRssB20H8wzw/Isj3pXP0pmG8d0jetVta6cA8geMGLsTh3t/nGdMOKa2fkP7cDD2pGZzgeMBPbpXsyWAForKYC+9fa7AUTmUlY82rKIzMpnvBeYj+XrVtS17+jqTSxB7t1OxJsX9VZB0YOxn9SJADLyGeXLlXcmJfBgdA+l1riUMYEJrWZwLKgSOKDr3qO32UAFRcCWPKBeJZ4qwV/cd5+nmtbMERlV3TsWWgtb03eH9ps+nBcobmsyRYpnrWVlYvqUV7rTmibSMuALoeczK8HDUZjy9XMRSPe2RDlzCtF+Pp8Q2VepBJtKSKu3k4yJ6NMbltgtb+uOtx8lIsVk+JIu4sVQuyYHwJBjfPzSmz/JI3EDYiJqgX9Q4MAn0BCj7QBTqEQdZmsoVWo9E5R7XWXRmr97wPnoKtjPAWM5FCuBITlEmzbHMOCwF3+RBqV+6KMEeq7RrEfrE85OpESntJndVdFikupk/JoektxQWV4aNxrkxlnxntsKxpShOcBHIyCzGrimKn8cHpViF4C/LiqORv1XLK4/bmCQ548db1Gidj9G9x0WTCyhvqiavTAEaj+R4p6XrWxS3+za404ZYQc4BRLn/VacVuaihWkf8F2Bj6V9X1LjnSyBcAWGRm6DaJVyXq7Oh9LzH4/iLyPQ=
