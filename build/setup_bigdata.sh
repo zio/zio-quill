@@ -2,6 +2,7 @@
 
 set -e
 
+echo "========== Docker Starting BigData Modules =========="
 time docker-compose up -d cassandra orientdb
 
 # import setup functions

@@ -2,6 +2,7 @@
 
 set -e
 
+echo "========== Docker Starting Databases =========="
 time docker-compose up -d sqlserver #oracle
 
 # import setup functions

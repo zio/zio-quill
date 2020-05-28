@@ -22,18 +22,27 @@ cache:
     - $HOME/.cache/coursier
 before_install:
   - |
-    if [[ -f "docker_images/images.tar" ]]
-    then
-      docker load -i docker_images/images.tar
-      echo "============ Loaded Images ==========="
-      docker images
-    else
-      mkdir -p docker_images
-      docker-compose build
-      echo "============ Saving Images ==========="
-      docker images
-      docker save -o docker_images/images.tar $(docker images -a -q)
-    fi
+    mkdir -p docker-cache
+    echo "== Load SQL Server =="
+    docker load "sqlserver.tar" || true
+    time docker pull microsoft/mssql-server-linux
+    time docker save -o "sqlserver.tar" microsoft/mssql-server-linux
+    echo "== Load Cassandra =="
+    docker load "cassandra.tar" || true
+    time docker pull cassandra:3.11
+    time docker save -o "cassandra.tar" cassandra:3.11
+    echo "== Load OrientDB =="
+    docker load "orientdb.tar" || true
+    time docker pull orientdb:3.0.11
+    time docker save -o "orientdb.tar" orientdb:3.0.1
+    echo "== Load Debian =="
+    docker load "debian.tar" || true
+    time docker pull debian:jessie
+    time docker save -o "debian.tar" debian:jessie
+    echo "== Load SBT Container =="
+    docker load "hseeberger.tar" || true
+    time docker pull hseeberger/scala-sbt:8u222_1.3.2_2.13.1
+    time docker save -o "hseeberger.tar" hseeberger/scala-sbt:8u222_1.3.2_2.13.1
 env:
   global:
     - secure: Glt43/THOQFt4rX7PyBj3eEFgRssB20H8wzw/Isj3pXP0pmG8d0jetVta6cA8geMGLsTh3t/nGdMOKa2fkP7cDD2pGZzgeMBPbpXsyWAForKYC+9fa7AUTmUlY82rKIzMpnvBeYj+XrVtS17+jqTSxB7t1OxJsX9VZB0YOxn9SJADLyGeXLlXcmJfBgdA+l1riUMYEJrWZwLKgSOKDr3qO32UAFRcCWPKBeJZ4qwV/cd5+nmtbMERlV3TsWWgtb03eH9ps+nBcobmsyRYpnrWVlYvqUV7rTmibSMuALoeczK8HDUZjy9XMRSPe2RDlzCtF+Pp8Q2VepBJtKSKu3k4yJ6NMbltgtb+uOtx8lIsVk+JIu4sVQuyYHwJBjfPzSmz/JI3EDYiJqgX9Q4MAn0BCj7QBTqEQdZmsoVWo9E5R7XWXRmr97wPnoKtjPAWM5FCuBITlEmzbHMOCwF3+RBqV+6KMEeq7RrEfrE85OpESntJndVdFikupk/JoektxQWV4aNxrkxlnxntsKxpShOcBHIyCzGrimKn8cHpViF4C/LiqORv1XLK4/bmCQ548db1Gidj9G9x0WTCyhvqiavTAEaj+R4p6XrWxS3+za404ZYQc4BRLn/VacVuaihWkf8F2Bj6V9X1LjnSyBcAWGRm6DaJVyXq7Oh9LzH4/iLyPQ=
