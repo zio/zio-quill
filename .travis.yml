@@ -32,6 +32,7 @@ env:
 jobs:
   include:
     - stage: build
+      if: type != pull_request
       script: ./build/build.sh db
       scala: 2.11.12
       name: "Databases 2.11 - MySQL, Postgres, Sqlite, H2, SQL Server, Oracle"
@@ -45,6 +46,7 @@ jobs:
       name: "Databases 2.13 - MySQL, Postgres, Sqlite, H2, SQL Server, Oracle"
 
     - stage: build
+      if: type != pull_request
       script: ./build/build.sh async
       scala: 2.11.12
       name: "Async, Finagle, NDBC 2.11 - MySQL, Postgres, Sqlite, H2, SQL Server, Oracle"
@@ -58,20 +60,23 @@ jobs:
       name: "Async, Finagle, NDBC 2.13 - MySQL, Postgres, Sqlite, H2, SQL Server, Oracle"
 
     - stage: build
+      if: type != pull_request
       script: ./build/build.sh codegen
       scala: 2.11.12
       name: "Code Generator 2.11 - MySQL, Postgres, Sqlite, H2, SQL Server, Oracle"
     - stage: build
+      if: type != pull_request
       script: ./build/build.sh codegen
       scala: 2.12.10
       name: "Code Generator 2.12 - MySQL, Postgres, Sqlite, H2, SQL Server, Oracle"
-
     - stage: build
+      if: type != pull_request
       script: ./build/build.sh codegen
       scala: 2.13.1
       name: "Code Generator 2.13 - MySQL, Postgres, Sqlite, H2, SQL Server, Oracle"
 
     - stage: build
+      if: type != pull_request
       script: ./build/build.sh bigdata
       scala: 2.11.12
       name: "BigData Databases 2.11 - Cassandra, OrientDB, Spark"
