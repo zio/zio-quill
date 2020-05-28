@@ -23,6 +23,9 @@ cache:
 before_install:
   - docker load -i docker_images/images.tar || true
 before_cache:
+  - docker-compose build
+  - echo "============Images==========="
+  - docker images
   - docker save -o docker_images/images.tar $(docker images -a -q)
 env:
   global:
