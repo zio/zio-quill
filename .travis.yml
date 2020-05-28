@@ -19,6 +19,7 @@ cache:
     - $HOME/.m2
     - $HOME/.sbt
     - docker_images
+    - $HOME/.cache/coursier
 before_install:
   - docker load -i docker_images/images.tar || true
 before_cache:
