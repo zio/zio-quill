@@ -2,7 +2,7 @@
 
 set -e
 
-time docker-compose up -d sqlserver oracle
+time docker-compose up -d sqlserver #oracle
 
 # import setup functions
 . build/setup_db_scripts.sh
@@ -17,12 +17,12 @@ send_script sqlserver $SQL_SERVER_SCRIPT sqlserver-schema.sql
 send_script sqlserver ./build/setup_db_scripts.sh setup_db_scripts.sh
 time docker-compose exec -T sqlserver bash -c ". setup_db_scripts.sh && setup_sqlserver sqlserver-schema.sql 127.0.0.1"
 
-until docker-compose exec -T oracle "/oracle_setup_local/external_check_script.sh" | grep "match_this_test_to_pass"; do
-  docker-compose exec -T oracle "/oracle_setup_local/external_check_script.sh"
-  echo "Waiting for Oracle"
-  sleep 5;
-done
-sleep 5;
-echo "Oracle Setup Complete"
+#until docker-compose exec -T oracle "/oracle_setup_local/external_check_script.sh" | grep "match_this_test_to_pass"; do
+#  docker-compose exec -T oracle "/oracle_setup_local/external_check_script.sh"
+#  echo "Waiting for Oracle"
+#  sleep 5;
+#done
+#sleep 5;
+#echo "Oracle Setup Complete"
 
 echo "Databases are ready!"
