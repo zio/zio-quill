@@ -17,7 +17,7 @@ import io.getquill.ast.Implicits._
 import io.getquill.ast.Renameable.Fixed
 import io.getquill.ast.Visibility.{ Hidden, Visible }
 import io.getquill.util.Interleave
-import io.getquill.{ Query => DslQuery, Update => DslUpdate, Insert => DslInsert }
+import io.getquill.{ Query => DslQuery, Update => DslUpdate, Insert => DslInsert, Delete => DslDelete }
 
 trait Parsing extends ValueComputation {
   this: Quotation =>
@@ -922,7 +922,7 @@ trait Parsing extends ValueComputation {
 
     (ident == originalBody, actionType.tpe) match {
       // Note, tuples are also case classes so this also matches for tuples
-      case (true, ClassTypeRefMatch(cls, List(arg))) if (cls == asClass[DslInsert[_]] || cls == asClass[DslUpdate[_]]) && isTypeCaseClass(arg) =>
+      case (true, ClassTypeRefMatch(cls, List(arg))) if (cls == asClass[DslInsert[_]] || cls == asClass[DslUpdate[_]] || cls == asClass[DslDelete[_]]) && isTypeCaseClass(arg) =>
 
         val elements = flatten(q"${TermName(ident.name)}", value("Decoder", arg))
         if (elements.size == 0) c.fail("Case class in the 'returning' clause has no values")

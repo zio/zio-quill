@@ -436,10 +436,10 @@ trait SqlIdiom extends Idiom {
         stmt"UPDATE ${table.token}${actionAlias.map(alias => stmt" AS ${alias.token}").getOrElse(stmt"")} SET ${assignments.token} WHERE ${where.token}"
 
       case Delete(Filter(table: Entity, x, where)) =>
-        stmt"DELETE FROM ${table.token} WHERE ${where.token}"
+        stmt"DELETE FROM ${table.token}${actionAlias.map(alias => stmt" AS ${alias.token}").getOrElse(stmt"")} WHERE ${where.token}"
 
       case Delete(table: Entity) =>
-        stmt"DELETE FROM ${table.token}"
+        stmt"DELETE FROM ${table.token}${actionAlias.map(alias => stmt" AS ${alias.token}").getOrElse(stmt"")}"
 
       case r @ ReturningAction(Insert(table: Entity, Nil), alias, prop) =>
         idiomReturningCapability match {
@@ -467,8 +467,10 @@ trait SqlIdiom extends Idiom {
             case Insert(entity: Entity, assignments) =>
               val (table, columns, values) = insertInfo(insertEntityTokenizer, entity, assignments)
               stmt"INSERT $table${actionAlias.map(alias => stmt" AS ${alias.token}").getOrElse(stmt"")} (${columns.mkStmt(",")}) OUTPUT ${returnListTokenizer.token(ExpandReturning(r, Some("INSERTED"))(this, strategy).map(_._1))} VALUES (${values.map(scopedTokenizer(_)).mkStmt(", ")})"
-            case Update(entity: Entity, assignments) =>
-              stmt"UPDATE ${entity.token}${actionAlias.map(alias => stmt" AS ${alias.token}").getOrElse(stmt"")} SET ${assignments.token} OUTPUT ${returnListTokenizer.token(ExpandReturning(r, Some("INSERTED"))(this, strategy).map(_._1))}"
+            case Update(_, _) =>
+              stmt"${action.token} OUTPUT ${returnListTokenizer.token(ExpandReturning(r, Some("INSERTED"))(this, strategy).map(_._1))}"
+            case Delete(_) =>
+              stmt"${action.token} OUTPUT ${returnListTokenizer.token(ExpandReturning(r, Some("DELETED"))(this, strategy).map(_._1))}"
             case other =>
               fail(s"Action ast can't be translated to sql: '$other'")
           }
