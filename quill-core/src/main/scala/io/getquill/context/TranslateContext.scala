@@ -6,6 +6,7 @@ import io.getquill.idiom.Idiom
 import scala.annotation.tailrec
 import scala.language.experimental.macros
 import scala.language.higherKinds
+import io.getquill.{ Query, Action, BatchAction }
 
 trait TranslateContext extends TranslateContextBase {
   this: Context[_ <: Idiom, _ <: NamingStrategy] =>

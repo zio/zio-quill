@@ -1,6 +1,7 @@
 package io.getquill.context.orientdb
 
 import io.getquill.Spec
+import io.getquill.Ord
 
 class QueryResultTypeOrientDBSync extends Spec {
 

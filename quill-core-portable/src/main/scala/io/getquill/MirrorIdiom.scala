@@ -2,7 +2,7 @@ package io.getquill
 
 import io.getquill.ast.Renameable.{ ByStrategy, Fixed }
 import io.getquill.ast.Visibility.Hidden
-import io.getquill.ast._
+import io.getquill.ast.{ Query => AstQuery, Action => AstAction, _ }
 import io.getquill.context.CanReturnClause
 import io.getquill.idiom.{ Idiom, SetContainsToken, Statement }
 import io.getquill.idiom.StatementInterpolator._
@@ -30,11 +30,11 @@ trait MirrorIdiomBase extends Idiom {
   }
 
   implicit def astTokenizer(implicit externalTokenizer: Tokenizer[External]): Tokenizer[Ast] = Tokenizer[Ast] {
-    case ast: Query               => ast.token
+    case ast: AstAction           => ast.token
     case ast: Function            => ast.token
     case ast: Value               => ast.token
     case ast: Operation           => ast.token
-    case ast: Action              => ast.token
+    case ast: AstQuery            => ast.token
     case ast: Ident               => ast.token
     case ast: ExternalIdent       => ast.token
     case ast: Property            => ast.token
@@ -69,7 +69,7 @@ trait MirrorIdiomBase extends Idiom {
     case Val(name, body) => stmt"val ${name.token} = ${body.token}"
   }
 
-  implicit def queryTokenizer(implicit externalTokenizer: Tokenizer[External]): Tokenizer[Query] = Tokenizer[Query] {
+  implicit def queryTokenizer(implicit externalTokenizer: Tokenizer[External]): Tokenizer[AstQuery] = Tokenizer[AstQuery] {
 
     case Entity.Opinionated(name, Nil, renameable) => stmt"${tokenizeName("querySchema", renameable).token}(${s""""$name"""".token})"
 
@@ -226,7 +226,7 @@ trait MirrorIdiomBase extends Idiom {
     case OnConflict.Existing(ident) => stmt"${ident.token}"
   }
 
-  implicit def actionTokenizer(implicit externalTokenizer: Tokenizer[External]): Tokenizer[Action] = Tokenizer[Action] {
+  implicit def actionTokenizer(implicit externalTokenizer: Tokenizer[External]): Tokenizer[AstAction] = Tokenizer[AstAction] {
     case Update(query, assignments)             => stmt"${query.token}.update(${assignments.token})"
     case Insert(query, assignments)             => stmt"${query.token}.insert(${assignments.token})"
     case Delete(query)                          => stmt"${query.token}.delete"
