@@ -2,9 +2,8 @@ package io.getquill.context.cassandra
 
 import io.getquill._
 import io.getquill.idiom.StatementInterpolator._
-import io.getquill.ast.{ Action => AstAction, Query => _, _ }
+import io.getquill.ast.{ Action => AstAction, _ }
 import io.getquill.idiom.StringToken
-import io.getquill.Query
 
 class CqlIdiomSpec extends Spec {
 

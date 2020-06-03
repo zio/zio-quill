@@ -4,7 +4,6 @@ import io.getquill.Literal
 import io.getquill.SqlMirrorContext
 import io.getquill.SqliteDialect
 import io.getquill.TestEntities
-import io.getquill.Ord
 
 class SqliteDialectSpec extends OnConflictSpec {
 

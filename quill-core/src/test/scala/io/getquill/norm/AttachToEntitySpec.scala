@@ -7,7 +7,6 @@ import io.getquill.ast.Ident
 import io.getquill.ast.Map
 import io.getquill.ast.SortBy
 import io.getquill.testContext._
-import io.getquill.Query
 
 class AttachToEntitySpec extends Spec {
 

@@ -13,8 +13,6 @@ import io.getquill.Literal
 import io.getquill.Escape
 import io.getquill.UpperCase
 import io.getquill.SnakeCase
-import io.getquill.Action
-import io.getquill.Query
 
 class ContextMacroSpec extends Spec {
 

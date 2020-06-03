@@ -4,7 +4,6 @@ import io.getquill.ReturnAction.{ ReturnColumns, ReturnRecord }
 import io.getquill.context.sql.testContextUpper
 import io.getquill.context.sql.testContextUpper._
 import io.getquill.{ MirrorSqlDialectWithReturnClause, Spec }
-import io.getquill.Query
 
 class RenamePropertiesOverrideSpec extends Spec {
 

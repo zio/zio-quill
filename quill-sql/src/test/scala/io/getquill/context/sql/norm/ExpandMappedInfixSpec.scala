@@ -2,7 +2,6 @@ package io.getquill.context.sql.norm
 
 import io.getquill.Spec
 import io.getquill.context.sql.testContext._
-import io.getquill.Query
 
 class ExpandMappedInfixSpec extends Spec {
   "expand infix out of map body if first part is empty" in {

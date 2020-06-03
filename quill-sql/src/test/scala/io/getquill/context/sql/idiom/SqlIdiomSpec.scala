@@ -5,9 +5,6 @@ import io.getquill.{ MirrorSqlDialectWithReturnMulti, Spec }
 import io.getquill.context.mirror.Row
 import io.getquill.context.sql.testContext
 import io.getquill.context.sql.testContext._
-import io.getquill.Ord
-import io.getquill.Action
-import io.getquill.Query
 
 class SqlIdiomSpec extends Spec {
 
