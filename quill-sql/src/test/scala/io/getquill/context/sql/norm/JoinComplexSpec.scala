@@ -2,6 +2,7 @@ package io.getquill.context.sql.norm
 
 import io.getquill.Spec
 import io.getquill.context.sql.testContext
+import io.getquill.Query
 
 // Advanced spec for join queries that tests various complex use cases
 class JoinComplexSpec extends Spec {

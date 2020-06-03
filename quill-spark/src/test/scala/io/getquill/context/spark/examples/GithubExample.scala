@@ -5,7 +5,7 @@ import java.net.URL
 import scala.language.postfixOps
 import scala.sys.process._
 import org.apache.spark.sql.SparkSession
-import io.getquill.QuillSparkContext.Ord
+import io.getquill.Ord
 import io.getquill.QuillSparkContext._
 
 case class User(

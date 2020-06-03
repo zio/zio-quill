@@ -2,9 +2,9 @@ package test
 
 import io.getquill.Spec
 import io.getquill.ast._
-import io.getquill.testContext.EntityQuery
+import io.getquill.EntityQuery
 import io.getquill.testContext.InfixInterpolator
-import io.getquill.testContext.Query
+import io.getquill.Query
 import io.getquill.testContext.TestEntity
 import io.getquill.testContext.qr1
 import io.getquill.testContext.query

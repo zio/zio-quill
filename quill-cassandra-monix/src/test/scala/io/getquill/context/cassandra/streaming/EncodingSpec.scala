@@ -2,6 +2,7 @@ package io.getquill.context.cassandra.streaming
 
 import io.getquill.context.cassandra.EncodingSpecHelper
 import monix.reactive.Observable
+import io.getquill.Query
 
 class EncodingSpec extends EncodingSpecHelper {
   "encodes and decodes types" - {

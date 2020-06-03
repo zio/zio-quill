@@ -2,6 +2,7 @@ package io.getquill.context.cassandra
 
 import java.time.{ Instant, ZoneId, ZonedDateTime, LocalDate => Java8LocalDate }
 import java.util.Date
+import io.getquill.Query
 
 import com.datastax.driver.core.LocalDate
 

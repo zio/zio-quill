@@ -1,6 +1,7 @@
 package io.getquill.dsl
 
 import scala.language.experimental.macros
+import io.getquill.{ Query, EntityQuery, Update, Insert }
 
 trait MetaDslLowPriorityImplicits {
   this: MetaDsl =>
