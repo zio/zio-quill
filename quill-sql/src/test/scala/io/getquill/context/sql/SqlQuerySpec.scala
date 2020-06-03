@@ -3,6 +3,8 @@ package io.getquill.context.sql
 import io.getquill.Spec
 import io.getquill.context.sql.testContext._
 import io.getquill.Literal
+import io.getquill.Query
+import io.getquill.Ord
 
 class SqlQuerySpec extends Spec {
 

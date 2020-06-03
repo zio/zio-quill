@@ -8,6 +8,7 @@ import scala.util.Success
 import com.twitter.util.Throw
 import scala.util.Failure
 import com.twitter.util.Try
+import io.getquill.{ Query, Action, ActionReturning, BatchAction }
 
 trait TwitterFutureIOMonad extends IOMonad {
   this: Context[_, _] =>
