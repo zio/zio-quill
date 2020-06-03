@@ -5,6 +5,7 @@ import io.getquill.context.sql._
 import io.getquill.idiom.StatementInterpolator._
 import io.getquill.idiom.StringToken
 import io.getquill.{ Literal, Spec }
+import io.getquill.Ord
 
 class OrientDBQuerySpec extends Spec {
 

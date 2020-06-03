@@ -6,7 +6,7 @@ import io.getquill.Embedded
 import io.getquill.context._
 import io.getquill.norm.BetaReduction
 import io.getquill.util.MacroContextExt.RichContext
-import io.getquill.dsl.{ CoreDsl, QueryDsl, ValueComputation }
+import io.getquill.dsl.{ CoreDsl, ValueComputation }
 import io.getquill.norm.capture.AvoidAliasConflict
 import io.getquill.idiom.Idiom
 
@@ -17,6 +17,7 @@ import io.getquill.ast.Implicits._
 import io.getquill.ast.Renameable.Fixed
 import io.getquill.ast.Visibility.{ Hidden, Visible }
 import io.getquill.util.Interleave
+import io.getquill.{ Query => DslQuery, Update => DslUpdate, Insert => DslInsert }
 
 trait Parsing extends ValueComputation {
   this: Quotation =>
@@ -183,47 +184,47 @@ trait Parsing extends ValueComputation {
     case q"$pack.impliedQuerySchema[$t](${ name: String }, ..$properties)" =>
       Entity(name, properties.map(propertyAliasParser(_)))
 
-    case q"$source.filter(($alias) => $body)" if (is[CoreDsl#Query[Any]](source)) =>
+    case q"$source.filter(($alias) => $body)" if (is[DslQuery[Any]](source)) =>
       Filter(astParser(source), identParser(alias), astParser(body))
 
-    case q"$source.withFilter(($alias) => $body)" if (is[CoreDsl#Query[Any]](source)) =>
+    case q"$source.withFilter(($alias) => $body)" if (is[DslQuery[Any]](source)) =>
       Filter(astParser(source), identParser(alias), astParser(body))
 
-    case q"$source.map[$t](($alias) => $body)" if (is[CoreDsl#Query[Any]](source)) =>
+    case q"$source.map[$t](($alias) => $body)" if (is[DslQuery[Any]](source)) =>
       Map(astParser(source), identParser(alias), astParser(body))
 
-    case q"$source.flatMap[$t](($alias) => $body)" if (is[CoreDsl#Query[Any]](source)) =>
+    case q"$source.flatMap[$t](($alias) => $body)" if (is[DslQuery[Any]](source)) =>
       FlatMap(astParser(source), identParser(alias), astParser(body))
 
-    case q"$source.concatMap[$t, $u](($alias) => $body)($ev)" if (is[CoreDsl#Query[Any]](source)) =>
+    case q"$source.concatMap[$t, $u](($alias) => $body)($ev)" if (is[DslQuery[Any]](source)) =>
       ConcatMap(astParser(source), identParser(alias), astParser(body))
 
-    case q"$source.sortBy[$t](($alias) => $body)($ord)" if (is[CoreDsl#Query[Any]](source)) =>
+    case q"$source.sortBy[$t](($alias) => $body)($ord)" if (is[DslQuery[Any]](source)) =>
       SortBy(astParser(source), identParser(alias), astParser(body), astParser(ord))
 
-    case q"$source.groupBy[$t](($alias) => $body)" if (is[CoreDsl#Query[Any]](source)) =>
+    case q"$source.groupBy[$t](($alias) => $body)" if (is[DslQuery[Any]](source)) =>
       GroupBy(astParser(source), identParser(alias), astParser(body))
 
-    case q"$a.value[$t]" if (is[CoreDsl#Query[Any]](a))   => astParser(a)
-    case q"$a.min[$t]" if (is[CoreDsl#Query[Any]](a))     => Aggregation(AggregationOperator.`min`, astParser(a))
-    case q"$a.max[$t]" if (is[CoreDsl#Query[Any]](a))     => Aggregation(AggregationOperator.`max`, astParser(a))
-    case q"$a.avg[$t]($n)" if (is[CoreDsl#Query[Any]](a)) => Aggregation(AggregationOperator.`avg`, astParser(a))
-    case q"$a.sum[$t]($n)" if (is[CoreDsl#Query[Any]](a)) => Aggregation(AggregationOperator.`sum`, astParser(a))
-    case q"$a.size" if (is[CoreDsl#Query[Any]](a))        => Aggregation(AggregationOperator.`size`, astParser(a))
+    case q"$a.value[$t]" if (is[DslQuery[Any]](a))   => astParser(a)
+    case q"$a.min[$t]" if (is[DslQuery[Any]](a))     => Aggregation(AggregationOperator.`min`, astParser(a))
+    case q"$a.max[$t]" if (is[DslQuery[Any]](a))     => Aggregation(AggregationOperator.`max`, astParser(a))
+    case q"$a.avg[$t]($n)" if (is[DslQuery[Any]](a)) => Aggregation(AggregationOperator.`avg`, astParser(a))
+    case q"$a.sum[$t]($n)" if (is[DslQuery[Any]](a)) => Aggregation(AggregationOperator.`sum`, astParser(a))
+    case q"$a.size" if (is[DslQuery[Any]](a))        => Aggregation(AggregationOperator.`size`, astParser(a))
 
-    case q"$source.take($n)" if (is[CoreDsl#Query[Any]](source)) =>
+    case q"$source.take($n)" if (is[DslQuery[Any]](source)) =>
       Take(astParser(source), astParser(n))
 
-    case q"$source.drop($n)" if (is[CoreDsl#Query[Any]](source)) =>
+    case q"$source.drop($n)" if (is[DslQuery[Any]](source)) =>
       Drop(astParser(source), astParser(n))
 
-    case q"$source.union[$t]($n)" if (is[CoreDsl#Query[Any]](source)) =>
+    case q"$source.union[$t]($n)" if (is[DslQuery[Any]](source)) =>
       Union(astParser(source), astParser(n))
 
-    case q"$source.unionAll[$t]($n)" if (is[CoreDsl#Query[Any]](source)) =>
+    case q"$source.unionAll[$t]($n)" if (is[DslQuery[Any]](source)) =>
       UnionAll(astParser(source), astParser(n))
 
-    case q"$source.++[$t]($n)" if (is[CoreDsl#Query[Any]](source)) =>
+    case q"$source.++[$t]($n)" if (is[DslQuery[Any]](source)) =>
       UnionAll(astParser(source), astParser(n))
 
     case q"${ joinCallParser(typ, a, Some(b)) }.on(($aliasA, $aliasB) => $body)" =>
@@ -235,10 +236,10 @@ trait Parsing extends ValueComputation {
     case q"${ joinCallParser(typ, a, b) }" =>
       c.fail("a join clause must be followed by 'on'.")
 
-    case q"$source.distinct" if (is[CoreDsl#Query[Any]](source)) =>
+    case q"$source.distinct" if (is[DslQuery[Any]](source)) =>
       Distinct(astParser(source))
 
-    case q"$source.nested" if (is[CoreDsl#Query[Any]](source)) =>
+    case q"$source.nested" if (is[DslQuery[Any]](source)) =>
       io.getquill.ast.Nested(astParser(source))
 
   }
@@ -269,14 +270,14 @@ trait Parsing extends ValueComputation {
   }
 
   val joinCallParser: Parser[(JoinType, Ast, Option[Ast])] = Parser[(JoinType, Ast, Option[Ast])] {
-    case q"$a.join[$t, $u]($b)" if (is[CoreDsl#Query[Any]](a))      => (InnerJoin, astParser(a), Some(astParser(b)))
-    case q"$a.leftJoin[$t, $u]($b)" if (is[CoreDsl#Query[Any]](a))  => (LeftJoin, astParser(a), Some(astParser(b)))
-    case q"$a.rightJoin[$t, $u]($b)" if (is[CoreDsl#Query[Any]](a)) => (RightJoin, astParser(a), Some(astParser(b)))
-    case q"$a.fullJoin[$t, $u]($b)" if (is[CoreDsl#Query[Any]](a))  => (FullJoin, astParser(a), Some(astParser(b)))
+    case q"$a.join[$t, $u]($b)" if (is[DslQuery[Any]](a))      => (InnerJoin, astParser(a), Some(astParser(b)))
+    case q"$a.leftJoin[$t, $u]($b)" if (is[DslQuery[Any]](a))  => (LeftJoin, astParser(a), Some(astParser(b)))
+    case q"$a.rightJoin[$t, $u]($b)" if (is[DslQuery[Any]](a)) => (RightJoin, astParser(a), Some(astParser(b)))
+    case q"$a.fullJoin[$t, $u]($b)" if (is[DslQuery[Any]](a))  => (FullJoin, astParser(a), Some(astParser(b)))
 
-    case q"$a.join[$t]" if (is[CoreDsl#Query[Any]](a))              => (InnerJoin, astParser(a), None)
-    case q"$a.leftJoin[$t]" if (is[CoreDsl#Query[Any]](a))          => (LeftJoin, astParser(a), None)
-    case q"$a.rightJoin[$t]" if (is[CoreDsl#Query[Any]](a))         => (RightJoin, astParser(a), None)
+    case q"$a.join[$t]" if (is[DslQuery[Any]](a))              => (InnerJoin, astParser(a), None)
+    case q"$a.leftJoin[$t]" if (is[DslQuery[Any]](a))          => (LeftJoin, astParser(a), None)
+    case q"$a.rightJoin[$t]" if (is[DslQuery[Any]](a))         => (RightJoin, astParser(a), None)
   }
 
   val infixParser: Parser[Ast] = Parser[Ast] {
@@ -639,12 +640,12 @@ trait Parsing extends ValueComputation {
 
   val setOperationParser: Parser[Operation] = {
     val unary =
-      operationParser(is[CoreDsl#Query[Any]](_)) {
+      operationParser(is[DslQuery[Any]](_)) {
         case "isEmpty"  => SetOperator.`isEmpty`
         case "nonEmpty" => SetOperator.`nonEmpty`
       }
     Parser[Operation] {
-      case q"$a.contains[$t]($b)" if (is[CoreDsl#Query[Any]])(a) =>
+      case q"$a.contains[$t]($b)" if (is[DslQuery[Any]])(a) =>
         BinaryOperation(astParser(a), SetOperator.`contains`, astParser(b))
       case unary(op) => op
     }
@@ -902,7 +903,7 @@ trait Parsing extends ValueComputation {
       idiomReturnCapability.verifyAst(bodyAst)
       ReturningGenerated(astParser(action), ident, bodyAst)
 
-    case q"$query.foreach[$t1, $t2](($alias) => $body)($f)" if (is[CoreDsl#Query[Any]](query)) =>
+    case q"$query.foreach[$t1, $t2](($alias) => $body)($f)" if (is[DslQuery[Any]](query)) =>
       // If there are actions inside the subtree, we need to do some additional sanitizations
       // of the variables so that their content will not collide with code that we have generated.
       AvoidAliasConflict.sanitizeVariables(Foreach(astParser(query), identParser(alias), astParser(body)), dangerousVariables)
@@ -921,7 +922,7 @@ trait Parsing extends ValueComputation {
 
     (ident == originalBody, actionType.tpe) match {
       // Note, tuples are also case classes so this also matches for tuples
-      case (true, ClassTypeRefMatch(cls, List(arg))) if (cls == asClass[QueryDsl#Insert[_]] || cls == asClass[QueryDsl#Update[_]]) && isTypeCaseClass(arg) =>
+      case (true, ClassTypeRefMatch(cls, List(arg))) if (cls == asClass[DslInsert[_]] || cls == asClass[DslUpdate[_]]) && isTypeCaseClass(arg) =>
 
         val elements = flatten(q"${TermName(ident.name)}", value("Decoder", arg))
         if (elements.size == 0) c.fail("Case class in the 'returning' clause has no values")

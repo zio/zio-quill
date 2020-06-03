@@ -7,6 +7,7 @@ import com.twitter.util.Await
 import io.getquill.context.sql.EncodingSpec
 import io.getquill.util.LoadConfig
 import io.getquill.{ FinagleMysqlContext, FinagleMysqlContextConfig, Literal }
+import io.getquill.Query
 
 import scala.concurrent.duration._
 
