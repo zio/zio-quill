@@ -3,6 +3,7 @@ package io.getquill.context.cassandra.streaming
 import akka.{ Done, NotUsed }
 import akka.stream.scaladsl.Source
 import io.getquill.context.cassandra.{ EncodingSpecHelper, utils }
+import io.getquill.Query
 
 import scala.concurrent.Future
 

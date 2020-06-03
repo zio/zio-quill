@@ -1,5 +1,7 @@
 package io.getquill.context.cassandra
 
+import io.getquill.{ Query, Action, Delete, Insert, EntityQuery }
+
 trait Ops {
   this: CassandraContext[_] =>
 

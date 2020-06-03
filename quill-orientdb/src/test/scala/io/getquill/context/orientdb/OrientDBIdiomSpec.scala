@@ -1,6 +1,9 @@
 package io.getquill.context.orientdb
 
 import io.getquill.Spec
+import io.getquill.Ord
+import io.getquill.Query
+import io.getquill.Action
 
 class OrientDBIdiomSpec extends Spec {
 
