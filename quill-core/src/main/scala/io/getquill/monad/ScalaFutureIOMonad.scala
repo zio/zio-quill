@@ -9,7 +9,6 @@ import scala.util.Success
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext
-import io.getquill.{ Query, Action, BatchAction, ActionReturning }
 
 trait ScalaFutureIOMonad extends IOMonad {
   this: Context[_, _] =>

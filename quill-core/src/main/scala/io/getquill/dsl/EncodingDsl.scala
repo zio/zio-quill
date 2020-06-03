@@ -5,7 +5,6 @@ import io.getquill.quotation.NonQuotedException
 import scala.annotation.compileTimeOnly
 import scala.language.experimental.macros
 import scala.language.higherKinds
-import io.getquill.Query
 
 trait LowPriorityImplicits {
   this: EncodingDsl =>

@@ -7,7 +7,7 @@ import io.getquill.util.Messages.fail
 import java.io.Closeable
 
 import scala.util.Try
-import io.getquill.{ Query, Action, NamingStrategy, BatchAction, ReturnAction, ActionReturning }
+import io.getquill.{ NamingStrategy, ReturnAction }
 
 trait Context[Idiom <: io.getquill.idiom.Idiom, Naming <: NamingStrategy]
   extends Closeable

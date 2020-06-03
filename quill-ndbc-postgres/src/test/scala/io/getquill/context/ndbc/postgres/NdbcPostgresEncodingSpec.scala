@@ -4,7 +4,6 @@ import java.time.{ LocalDate, LocalDateTime }
 import java.util.{ Date, UUID }
 
 import io.getquill.context.sql.EncodingSpec
-import io.getquill.Query
 
 class NdbcPostgresEncodingSpec extends EncodingSpec {
 
