@@ -3,6 +3,7 @@ package io.getquill.quotation
 import io.getquill.Spec
 import io.getquill.testContext._
 import io.getquill.testContext
+import io.getquill.Action
 
 class RebindSpec extends Spec {
 

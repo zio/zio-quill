@@ -1,5 +1,7 @@
 package io.getquill.context.sql
 
+import io.getquill.Ord
+
 trait QueryResultTypeSpec extends ProductSpec {
 
   import context._
