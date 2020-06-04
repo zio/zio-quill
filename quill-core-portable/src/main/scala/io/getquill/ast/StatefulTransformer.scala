@@ -23,9 +23,9 @@ trait StatefulTransformer[T] {
         val (bt, btt) = apply(b)
         (Function(a, bt), btt)
 
-      case Infix(a, b, pure) =>
+      case Infix(a, b, pure, quat) =>
         val (bt, btt) = apply(b)(_.apply)
-        (Infix(a, bt, pure), btt)
+        (Infix(a, bt, pure, quat), btt)
 
       case If(a, b, c) =>
         val (at, att) = apply(a)
@@ -118,7 +118,7 @@ trait StatefulTransformer[T] {
       case OptionGetOrNull(a) =>
         val (at, att) = apply(a)
         (OptionGetOrNull(at), att)
-      case OptionNone => (o, this)
+      case OptionNone(_) => (o, this)
     }
 
   def apply(e: IterableOperation): (IterableOperation, StatefulTransformer[T]) =

@@ -39,7 +39,7 @@ class NestedQueryNamingStrategySpec extends Spec {
 
     "inner aliases should use naming strategy with override" in {
       val qs = quote {
-        querySchema[Person]("ThePerson", _.id -> "theId", _.name -> "theName") //helloooooo
+        querySchema[Person]("ThePerson", _.id -> "theId", _.name -> "theName")
       }
 
       val q = quote {

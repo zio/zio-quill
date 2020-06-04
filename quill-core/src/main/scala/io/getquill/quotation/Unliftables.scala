@@ -1,8 +1,9 @@
 package io.getquill.quotation
 
 import scala.reflect.macros.whitebox.Context
-
 import io.getquill.ast._
+import io.getquill.quat.Quat
+import io.getquill.quat.Quat.Probity
 import io.getquill.util.MacroContextExt._
 
 trait Unliftables {
@@ -24,7 +25,7 @@ trait Unliftables {
     case q"$pack.BinaryOperation.apply(${ a: Ast }, ${ b: BinaryOperator }, ${ c: Ast })" => BinaryOperation(a, b, c)
     case q"$pack.UnaryOperation.apply(${ a: UnaryOperator }, ${ b: Ast })" => UnaryOperation(a, b)
     case q"$pack.Aggregation.apply(${ a: AggregationOperator }, ${ b: Ast })" => Aggregation(a, b)
-    case q"$pack.Infix.apply(${ a: List[String] }, ${ b: List[Ast] }, ${ pure: Boolean })" => Infix(a, b, pure)
+    case q"$pack.Infix.apply(${ a: List[String] }, ${ b: List[Ast] }, ${ pure: Boolean }, ${ quat: Quat })" => Infix(a, b, pure, quat)
     case q"$pack.If.apply(${ a: Ast }, ${ b: Ast }, ${ c: Ast })" => If(a, b, c)
     case q"$pack.OnConflict.Excluded.apply(${ a: Ident })" => OnConflict.Excluded(a)
     case q"$pack.OnConflict.Existing.apply(${ a: Ident })" => OnConflict.Existing(a)
@@ -33,24 +34,24 @@ trait Unliftables {
 
   implicit val optionOperationUnliftable: Unliftable[OptionOperation] = Unliftable[OptionOperation] {
     case q"$pack.OptionTableFlatMap.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => OptionTableFlatMap(a, b, c)
-    case q"$pack.OptionTableMap.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => OptionTableMap(a, b, c)
-    case q"$pack.OptionTableExists.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => OptionTableExists(a, b, c)
-    case q"$pack.OptionTableForall.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => OptionTableForall(a, b, c)
-    case q"$pack.OptionFlatten.apply(${ a: Ast })" => OptionFlatten(a)
-    case q"$pack.OptionGetOrElse.apply(${ a: Ast }, ${ b: Ast })" => OptionGetOrElse(a, b)
-    case q"$pack.OptionFlatMap.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => OptionFlatMap(a, b, c)
-    case q"$pack.OptionMap.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => OptionMap(a, b, c)
-    case q"$pack.OptionForall.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => OptionForall(a, b, c)
-    case q"$pack.OptionExists.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => OptionExists(a, b, c)
-    case q"$pack.OptionContains.apply(${ a: Ast }, ${ b: Ast })" => OptionContains(a, b)
-    case q"$pack.OptionIsEmpty.apply(${ a: Ast })" => OptionIsEmpty(a)
-    case q"$pack.OptionNonEmpty.apply(${ a: Ast })" => OptionNonEmpty(a)
-    case q"$pack.OptionIsDefined.apply(${ a: Ast })" => OptionIsDefined(a)
-    case q"$pack.OptionSome.apply(${ a: Ast })" => OptionSome(a)
-    case q"$pack.OptionApply.apply(${ a: Ast })" => OptionApply(a)
-    case q"$pack.OptionOrNull.apply(${ a: Ast })" => OptionOrNull(a)
-    case q"$pack.OptionGetOrNull.apply(${ a: Ast })" => OptionGetOrNull(a)
-    case q"$pack.OptionNone" => OptionNone
+    case q"$pack.OptionTableMap.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })"     => OptionTableMap(a, b, c)
+    case q"$pack.OptionTableExists.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })"  => OptionTableExists(a, b, c)
+    case q"$pack.OptionTableForall.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })"  => OptionTableForall(a, b, c)
+    case q"$pack.OptionFlatten.apply(${ a: Ast })"                                  => OptionFlatten(a)
+    case q"$pack.OptionGetOrElse.apply(${ a: Ast }, ${ b: Ast })"                   => OptionGetOrElse(a, b)
+    case q"$pack.OptionFlatMap.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })"      => OptionFlatMap(a, b, c)
+    case q"$pack.OptionMap.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })"          => OptionMap(a, b, c)
+    case q"$pack.OptionForall.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })"       => OptionForall(a, b, c)
+    case q"$pack.OptionExists.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })"       => OptionExists(a, b, c)
+    case q"$pack.OptionContains.apply(${ a: Ast }, ${ b: Ast })"                    => OptionContains(a, b)
+    case q"$pack.OptionIsEmpty.apply(${ a: Ast })"                                  => OptionIsEmpty(a)
+    case q"$pack.OptionNonEmpty.apply(${ a: Ast })"                                 => OptionNonEmpty(a)
+    case q"$pack.OptionIsDefined.apply(${ a: Ast })"                                => OptionIsDefined(a)
+    case q"$pack.OptionSome.apply(${ a: Ast })"                                     => OptionSome(a)
+    case q"$pack.OptionApply.apply(${ a: Ast })"                                    => OptionApply(a)
+    case q"$pack.OptionOrNull.apply(${ a: Ast })"                                   => OptionOrNull(a)
+    case q"$pack.OptionGetOrNull.apply(${ a: Ast })"                                => OptionGetOrNull(a)
+    case q"$pack.OptionNone.apply(${ q: Quat })"                                    => OptionNone(q)
   }
 
   implicit val traversableOperationUnliftable: Unliftable[IterableOperation] = Unliftable[IterableOperation] {
@@ -104,8 +105,8 @@ trait Unliftables {
   }
 
   implicit val queryUnliftable: Unliftable[Query] = Unliftable[Query] {
-    case q"$pack.Entity.apply(${ a: String }, ${ b: List[PropertyAlias] })" => Entity(a, b)
-    case q"$pack.Entity.Opinionated.apply(${ a: String }, ${ b: List[PropertyAlias] }, ${ renameable: Renameable })" => Entity.Opinionated(a, b, renameable)
+    case q"$pack.Entity.apply(${ a: String }, ${ b: List[PropertyAlias] }, ${ quat: Quat.Probity })" => Entity(a, b, quat)
+    case q"$pack.Entity.Opinionated.apply(${ a: String }, ${ b: List[PropertyAlias] }, ${ quat: Quat.Probity }, ${ renameable: Renameable })" => Entity.Opinionated(a, b, quat, renameable)
     case q"$pack.Filter.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => Filter(a, b, c)
     case q"$pack.Map.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => Map(a, b, c)
     case q"$pack.FlatMap.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => FlatMap(a, b, c)
@@ -195,18 +196,34 @@ trait Unliftables {
     case q"$pack.Tuple.apply(${ a: List[Ast] })" => Tuple(a)
     case q"$pack.CaseClass.apply(${ values: List[(String, Ast)] })" => CaseClass(values)
   }
+
+  implicit val quatProbity: Unliftable[Probity] = Unliftable[Probity] {
+    case q"$pack.Quat.Product.WithRenames.apply(${ fields: List[(String, Quat)] }, ${ renames: List[(String, String)] })" => Quat.Product.WithRenames(fields, renames)
+    case q"$pack.Quat.Product.apply(${ fields: List[(String, Quat)] })" => Quat.Product(fields)
+    case q"$pack.Quat.Error.apply(${ msg: String })" => Quat.Error(msg)
+  }
+
+  implicit val quatUnliftable: Unliftable[Quat] = Unliftable[Quat] {
+    case q"$pack.Quat.Product.WithRenames.apply(${ fields: List[(String, Quat)] }, ${ renames: List[(String, String)] })" => Quat.Product.WithRenames(fields, renames)
+    case q"$pack.Quat.Product.apply(${ fields: List[(String, Quat)] })" => Quat.Product(fields)
+    case q"$pack.Quat.Value" => Quat.Value
+    case q"$pack.Quat.Null" => Quat.Null
+    case q"$pack.Quat.Generic" => Quat.Generic
+    case q"$pack.Quat.Error.apply(${ msg: String }, ${ it: Boolean })" => Quat.Error(msg, it)
+  }
+
   implicit val identUnliftable: Unliftable[Ident] = Unliftable[Ident] {
-    case q"$pack.Ident.apply(${ a: String })" => Ident(a)
+    case q"$pack.Ident.apply(${ a: String }, ${ quat: Quat })" => Ident(a, quat)
   }
   implicit val externalIdentUnliftable: Unliftable[ExternalIdent] = Unliftable[ExternalIdent] {
-    case q"$pack.ExternalIdent.apply(${ a: String })" => ExternalIdent(a)
+    case q"$pack.ExternalIdent.apply(${ a: String }, ${ quat: Quat })" => ExternalIdent(a, quat)
   }
 
   implicit val liftUnliftable: Unliftable[Lift] = Unliftable[Lift] {
-    case q"$pack.ScalarValueLift.apply(${ a: String }, $b, $c)" => ScalarValueLift(a, b, c)
-    case q"$pack.CaseClassValueLift.apply(${ a: String }, $b)"  => CaseClassValueLift(a, b)
-    case q"$pack.ScalarQueryLift.apply(${ a: String }, $b, $c)" => ScalarQueryLift(a, b, c)
-    case q"$pack.CaseClassQueryLift.apply(${ a: String }, $b)"  => CaseClassQueryLift(a, b)
+    case q"$pack.ScalarValueLift.apply(${ a: String }, $b, $c, ${ quat: Quat })" => ScalarValueLift(a, b, c, quat)
+    case q"$pack.CaseClassValueLift.apply(${ a: String }, $b, ${ quat: Quat })"  => CaseClassValueLift(a, b, quat)
+    case q"$pack.ScalarQueryLift.apply(${ a: String }, $b, $c, ${ quat: Quat })" => ScalarQueryLift(a, b, c, quat)
+    case q"$pack.CaseClassQueryLift.apply(${ a: String }, $b, ${ quat: Quat })"  => CaseClassQueryLift(a, b, quat)
   }
   implicit val tagUnliftable: Unliftable[Tag] = Unliftable[Tag] {
     case q"$pack.ScalarTag.apply(${ uid: String })"    => ScalarTag(uid)

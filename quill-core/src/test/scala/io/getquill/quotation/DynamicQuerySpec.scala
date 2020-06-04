@@ -61,6 +61,10 @@ class DynamicQuerySpec extends Spec {
     }
   }
 
+  // Need to put here so an summon TypeTag for these
+  case class S(v: String) extends Embedded
+  case class E(s: S)
+
   "query" - {
 
     def test[T: QueryMeta](d: Quoted[Query[T]], s: Quoted[Query[T]]) =
@@ -100,8 +104,6 @@ class DynamicQuerySpec extends Spec {
         )
       }
       "path property" in {
-        case class S(v: String) extends Embedded
-        case class E(s: S)
         test(
           dynamicQuerySchema[E]("e", alias(_.s.v, "sv")),
           querySchema[E]("e", _.s.v -> "sv")

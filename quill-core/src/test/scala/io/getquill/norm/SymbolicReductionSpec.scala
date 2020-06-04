@@ -7,7 +7,9 @@ import io.getquill.testContext.qr3
 import io.getquill.testContext.quote
 import io.getquill.testContext.unquote
 
-class SymbolicReductionSpec extends Spec {
+class SymbolicReductionSpec extends Spec { //hello
+
+  def symbolicReduction = (SymbolicReduction.unapply _).andThen(o => o.map(replaceTempIdent(_)))
 
   "a.filter(b => c).flatMap(d => e.$)" - {
     "e is an entity" in {
@@ -17,7 +19,7 @@ class SymbolicReductionSpec extends Spec {
       val n = quote {
         qr1.flatMap(d => qr2.filter(x => d.s == "s1"))
       }
-      SymbolicReduction.unapply(q.ast) mustEqual Some(n.ast)
+      symbolicReduction(q.ast) mustEqual Some(n.ast)
     }
     "e isn't an entity" in {
       val q = quote {
@@ -26,7 +28,7 @@ class SymbolicReductionSpec extends Spec {
       val n = quote {
         qr1.flatMap(d => qr2.filter(f => d.s == "s1").map(f => f.s))
       }
-      SymbolicReduction.unapply(q.ast) mustEqual Some(n.ast)
+      symbolicReduction(q.ast) mustEqual Some(n.ast)
     }
   }
 
@@ -37,7 +39,7 @@ class SymbolicReductionSpec extends Spec {
     val n = quote {
       qr1.flatMap(b => qr2.flatMap(d => qr3))
     }
-    SymbolicReduction.unapply(q.ast) mustEqual Some(n.ast)
+    symbolicReduction(q.ast) mustEqual Some(n.ast)
   }
 
   "a.union(b).flatMap(c => d)" in {
@@ -47,7 +49,7 @@ class SymbolicReductionSpec extends Spec {
     val n = quote {
       qr1.flatMap(c => qr2).union(qr1.filter(t => t.i == 1).flatMap(c => qr2))
     }
-    SymbolicReduction.unapply(q.ast) mustEqual Some(n.ast)
+    symbolicReduction(q.ast) mustEqual Some(n.ast)
   }
 
   "a.unionAll(b).flatMap(c => d)" in {
@@ -57,6 +59,6 @@ class SymbolicReductionSpec extends Spec {
     val n = quote {
       qr1.flatMap(c => qr2).unionAll(qr1.filter(t => t.i == 1).flatMap(c => qr2))
     }
-    SymbolicReduction.unapply(q.ast) mustEqual Some(n.ast)
+    symbolicReduction(q.ast) mustEqual Some(n.ast)
   }
 }

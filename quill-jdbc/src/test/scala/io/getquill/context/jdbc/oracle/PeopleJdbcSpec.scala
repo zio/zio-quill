@@ -1,6 +1,7 @@
 package io.getquill.context.jdbc.oracle
 
 import io.getquill.context.sql.PeopleSpec
+import io.getquill.Update
 
 class PeopleJdbcSpec extends PeopleSpec {
 

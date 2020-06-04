@@ -25,11 +25,11 @@ class OpinionSpec extends Spec {
 
   "entities should neutralize" - {
     "to renameable default" in {
-      Entity.Opinionated("foo", Nil, Fixed).neutralize mustEqual (Entity("foo", Nil))
+      Entity.Opinionated("foo", Nil, QEP, Fixed).neutralize mustEqual (Entity("foo", Nil, QEP))
     }
     "when inside other AST elements" in {
-      Map(Entity.Opinionated("foo", Nil, Fixed), Ident("v"), Property.Opinionated(Ident("v"), "prop", Fixed, Visible)).neutralize mustEqual (
-        Map(Entity("foo", Nil), Ident("v"), Property(Ident("v"), "prop"))
+      Map(Entity.Opinionated("foo", Nil, QEP, Fixed), Ident("v"), Property.Opinionated(Ident("v"), "prop", Fixed, Visible)).neutralize mustEqual (
+        Map(Entity("foo", Nil, QEP), Ident("v"), Property(Ident("v"), "prop"))
       )
     }
   }

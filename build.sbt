@@ -11,11 +11,16 @@ enablePlugins(TutPlugin)
 val CodegenTag = Tags.Tag("CodegenTag")
 (concurrentRestrictions in Global) += Tags.exclusive(CodegenTag)
 
+lazy val jsModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
+  `quill-core-portable-js`, `quill-core-js`,
+  `quill-sql-portable-js`, `quill-sql-js`
+)
+
 lazy val baseModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
-  `quill-core-portable-jvm`, `quill-core-portable-js`,
-  `quill-core-jvm`, `quill-core-js`,
-  `quill-sql-portable-jvm`, `quill-sql-portable-js`,
-  `quill-sql-jvm`, `quill-sql-js`, `quill-monix`
+  `quill-core-portable-jvm`,
+  `quill-core-jvm`,
+  `quill-sql-portable-jvm`,
+  `quill-sql-jvm`, `quill-monix`
 )
 
 lazy val dbModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
@@ -41,9 +46,9 @@ lazy val bigdataModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
 )
 
 lazy val allModules =
-  baseModules ++ dbModules ++ asyncModules ++ codegenModules ++ bigdataModules
+  baseModules ++ jsModules ++ dbModules ++ asyncModules ++ codegenModules ++ bigdataModules
 
-lazy val scala213Modules = baseModules ++ dbModules ++ Seq[sbt.ClasspathDep[sbt.ProjectReference]](
+lazy val scala213Modules = baseModules ++ jsModules ++ dbModules ++ Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-async`,
   `quill-async-mysql`,
   `quill-async-postgres`,
@@ -69,6 +74,9 @@ val filteredModules = {
     case Some("base") =>
       println("Compiling Base Modules")
       baseModules
+    case Some("js") =>
+      println("Compiling JavaScript Modules")
+      jsModules
     case Some("db") =>
       println("Compiling Database Modules")
       dbModules
@@ -168,6 +176,7 @@ lazy val `quill-core` =
         "org.scala-js" %%% "scalajs-java-time" % "0.2.5",
         "org.scala-js" %%% "scalajs-java-time" % "0.2.5"
       ),
+      excludeFilter in unmanagedSources := new SimpleFileFilter(file => file.getName == "DynamicQuerySpec.scala"),
       coverageExcludedPackages := ".*"
     )
     .dependsOn(`quill-core-portable` % "compile->compile")
@@ -187,7 +196,8 @@ lazy val `quill-sql-portable` =
         "com.github.vertical-blank" %%% "scala-sql-formatter" % "1.0.0"
       ),
       scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) },
-      coverageExcludedPackages := ".*"
+      coverageExcludedPackages := ".*"//,
+      //jsEnv := NodeJSEnv(args = Seq("--max_old_space_size=1024")).value
     )
     .dependsOn(`quill-core-portable` % "compile->compile")
 

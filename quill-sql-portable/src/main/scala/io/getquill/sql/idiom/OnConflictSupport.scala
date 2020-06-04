@@ -12,7 +12,7 @@ trait OnConflictSupport {
   implicit def conflictTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[OnConflict] = {
 
     val customEntityTokenizer = Tokenizer[Entity] {
-      case Entity.Opinionated(name, _, renameable) => stmt"INTO ${renameable.fixedOr(name.token)(strategy.table(name).token)} AS t"
+      case Entity.Opinionated(name, _, _, renameable) => stmt"INTO ${renameable.fixedOr(name.token)(strategy.table(name).token)} AS t"
     }
 
     val customAstTokenizer =

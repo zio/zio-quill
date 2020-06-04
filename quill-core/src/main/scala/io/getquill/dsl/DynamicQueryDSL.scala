@@ -5,14 +5,16 @@ import io.getquill.ast.Renameable.Fixed
 import scala.language.implicitConversions
 import scala.language.experimental.macros
 import io.getquill.ast._
+import io.getquill.quat._
 
 import scala.reflect.macros.whitebox.{ Context => MacroContext }
 import io.getquill.util.Messages._
 
-import scala.annotation.tailrec
 import scala.util.DynamicVariable
 import scala.reflect.ClassTag
-import io.getquill.{ Query, Action => DslAction, ActionReturning, EntityQuery, Ord, Update, Delete, Insert }
+import io.getquill.{ ActionReturning, Delete, EntityQuery, Insert, Ord, Query, Update, Action => DslAction }
+
+import scala.annotation.tailrec
 
 class DynamicQueryDslMacro(val c: MacroContext) {
   import c.universe._
@@ -70,7 +72,7 @@ trait DynamicQueryDsl {
   def dynamicQuery[T](implicit t: ClassTag[T]): DynamicEntityQuery[T] =
     DynamicEntityQuery(
       splice[EntityQuery[T]](
-        Entity(t.runtimeClass.getName.split('.').last.split('$').last, Nil)
+        Entity(t.runtimeClass.getName.split('.').last.split('$').last, Nil, RuntimeEntityQuat[T].probit)
       )
     )
 
@@ -123,7 +125,7 @@ trait DynamicQueryDsl {
   def dynamicQuerySchema[T](
     entity:  String,
     columns: DynamicAlias[T]*
-  ): DynamicEntityQuery[T] = {
+  )(implicit ct: ClassTag[T]): DynamicEntityQuery[T] = {
     val aliases =
       columns.map { alias =>
         @tailrec def path(ast: Ast, acc: List[String] = Nil): List[String] =
@@ -135,21 +137,21 @@ trait DynamicQueryDsl {
           }
 
         PropertyAlias(
-          path(alias.property(splice[T](Ident("v"))).ast),
+          path(alias.property(splice[T](Ident("v", RuntimeEntityQuat[T]))).ast),
           alias.name
         )
       }
     DynamicEntityQuery(
-      splice[EntityQuery[T]](Entity.Opinionated(entity, aliases.toList, Fixed))
+      splice[EntityQuery[T]](Entity.Opinionated(entity, aliases.toList, RuntimeEntityQuat[T].probit, Fixed))
     )
   }
 
   private[this] val nextIdentId = new DynamicVariable(0)
 
-  private[this] def withFreshIdent[R](f: Ident => R): R = {
+  private[this] def withFreshIdent[R](f: Ident => R)(quat: Quat): R = {
     val idx = nextIdentId.value
     nextIdentId.withValue(idx + 1) {
-      f(Ident(s"v$idx"))
+      f(Ident(s"v$idx", quat))
     }
   }
 
@@ -162,7 +164,7 @@ trait DynamicQueryDsl {
     }
 
   protected def spliceLift[O](o: O)(implicit enc: Encoder[O]) =
-    splice[O](ScalarValueLift("o", o, enc))
+    splice[O](ScalarValueLift("o", o, enc, Quat.Value))
 
   object DynamicQuery {
     def apply[T](p: Quoted[Query[T]]) =
@@ -182,7 +184,7 @@ trait DynamicQueryDsl {
     ) =
       withFreshIdent { v =>
         r(t(q.ast, v, f(splice(v)).ast))
-      }
+      }(Quat.Generic)
 
     protected[this] def transformOpt[O, R, D <: DynamicQuery[T]](
       opt:  Option[O],
@@ -308,7 +310,7 @@ trait DynamicQueryDsl {
     ): DynamicQuery[R] =
       withFreshIdent { v =>
         dyn(FlatJoin(tpe, q.ast, v, on(splice(v)).ast))
-      }
+      }(Quat.Generic)
 
     def join[A >: T](on: Quoted[A] => Quoted[Boolean]): DynamicQuery[A] =
       flatJoin(InnerJoin, on)
@@ -353,8 +355,8 @@ trait DynamicQueryDsl {
       withFreshIdent { iA =>
         withFreshIdent { iB =>
           dyn(Join(tpe, q1.ast, q2.ast, iA, iB, f(splice(iA), splice(iB)).ast))
-        }
-      }
+        }(q2.ast.quat) // TODO Verify Quat Later
+      }(q1.ast.quat) // TODO Verify Quat Later
     }
   }
 
@@ -391,7 +393,7 @@ trait DynamicQueryDsl {
     ): List[Assignment] =
       l.collect {
         case s: DynamicSetValue[_, _] =>
-          val v = Ident("v")
+          val v = Ident("v", Quat.Generic)
           Assignment(v, s.property(splice(v)).ast, s.value.ast)
       }
 
@@ -440,17 +442,17 @@ trait DynamicQueryDsl {
 
     def returning[R](f: Quoted[E] => Quoted[R]): DynamicActionReturning[E, R] =
       withFreshIdent { v =>
-        DynamicActionReturning(splice(Returning(q.ast, v, f(splice(v)).ast)))
-      }
+        DynamicActionReturning[E, R](splice(Returning(q.ast, v, f(splice(v)).ast)))
+      } { Quat.Generic }
 
     def returningGenerated[R](
       f: Quoted[E] => Quoted[R]
     ): DynamicActionReturning[E, R] =
       withFreshIdent { v =>
-        DynamicActionReturning(
+        DynamicActionReturning[E, R](
           splice(ReturningGenerated(q.ast, v, f(splice(v)).ast))
         )
-      }
+      } { Quat.Generic }
 
     def onConflictIgnore: DynamicInsert[E] =
       dyn(
@@ -464,7 +466,7 @@ trait DynamicQueryDsl {
     def onConflictIgnore(
       targets: (Quoted[E] => Quoted[Any])*
     ): DynamicInsert[E] = {
-      val v = splice[E](Ident("v"))
+      val v = splice[E](Ident("v", Quat.Generic))
       val properties =
         targets.toList.map { f =>
           f(v).ast match {

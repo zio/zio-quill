@@ -2,8 +2,8 @@ package io.getquill.ast
 
 import scala.reflect.ClassTag
 
-class CollectAst[T](p: PartialFunction[Ast, T], val state: List[T])
-  extends StatefulTransformer[List[T]] {
+class CollectAst[T](p: PartialFunction[Ast, T], val state: Seq[T])
+  extends StatefulTransformer[Seq[T]] {
 
   override def apply(a: Ast) =
     a match {
@@ -20,7 +20,9 @@ object CollectAst {
     }
 
   def apply[T](a: Ast)(p: PartialFunction[Ast, T]) =
-    (new CollectAst(p, List()).apply(a)) match {
+    // The collection is treated as immutable internally but an ArrayBuffer is more effecient then Collection.list at
+    // appending which is mostly what the collection does
+    (new CollectAst(p, collection.mutable.ArrayBuffer()).apply(a)) match {
       case (_, transformer) =>
         transformer.state
     }

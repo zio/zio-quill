@@ -4,6 +4,7 @@ import fansi.Str
 import io.getquill.ast.Renameable.{ ByStrategy, Fixed }
 import io.getquill.ast.Visibility.{ Hidden, Visible }
 import io.getquill.ast._
+import io.getquill.quat.Quat
 import pprint.{ Renderer, Tree, Truncated }
 
 object AstPrinter {
@@ -41,6 +42,16 @@ class AstPrinter(traceOpinions: Boolean, traceAstSimple: Boolean) extends pprint
 
     case past: PseudoAst if (traceAstSimple) =>
       Tree.Literal("" + past) // Do not blow up if it is null
+
+    case i: Ident =>
+      Tree.Apply("Id", List[Tree](treeify(i.name), Tree.Literal(i.quat.shortString)).iterator)
+
+    case e: Entity if (!traceOpinions) =>
+      Tree.Apply("Entity", List[Tree](treeify(e.name), treeify(e.properties), Tree.Literal(e.quat.shortString)).iterator)
+
+    case q: Quat            => Tree.Literal(q.shortString)
+
+    case s: ScalarValueLift => Tree.Apply("ScalarValueLift", List(treeify("..." + s.name.reverse.take(15).reverse), Tree.Literal(s.quat.shortString)).iterator)
 
     case p: Property if (traceOpinions) =>
       Tree.Apply("Property", List[Tree](treeify(p.ast), treeify(p.name), printRenameable(p.renameable), printVisibility(p.visibility)).iterator)

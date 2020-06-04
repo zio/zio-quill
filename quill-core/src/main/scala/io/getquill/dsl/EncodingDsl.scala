@@ -20,7 +20,6 @@ trait EncodingDsl extends LowPriorityImplicits {
 
   type PrepareRow
   type ResultRow
-
   type Index = Int
 
   type BaseEncoder[T] = (Index, T, PrepareRow) => PrepareRow

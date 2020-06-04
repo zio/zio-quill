@@ -2,6 +2,7 @@ package io.getquill.context.jdbc.oracle
 
 import io.getquill.context.sql.CaseClassQuerySpec
 import org.scalatest.matchers.should.Matchers._
+import io.getquill.Update
 
 class CaseClassQueryJdbcSpec extends CaseClassQuerySpec {
 
