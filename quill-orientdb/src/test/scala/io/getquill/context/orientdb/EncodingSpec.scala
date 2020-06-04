@@ -3,6 +3,7 @@ package io.getquill.context.orientdb
 import java.util.Date
 
 import io.getquill.Spec
+import io.getquill.Query
 
 class EncodingSpec extends Spec {
 

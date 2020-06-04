@@ -1,6 +1,7 @@
 package io.getquill.context.jdbc.mysql
 
 import io.getquill.context.sql.EncodingSpec
+import io.getquill.Query
 
 class JdbcEncodingSpec extends EncodingSpec {
 

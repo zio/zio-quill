@@ -6,6 +6,7 @@ import io.getquill.ast.AggregationOperator
 import io.getquill.ast.Ident
 import io.getquill.ast.Property
 import io.getquill.context.sql.testContext._
+import io.getquill.Query
 
 class FlattenGroupByAggregationSpec extends Spec {
 

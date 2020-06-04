@@ -2,6 +2,7 @@ package io.getquill.dsl
 
 import io.getquill.testContext._
 import io.getquill.Spec
+import io.getquill.EntityQuery
 
 class QueryDslSpec extends Spec {
 

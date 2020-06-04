@@ -1,6 +1,7 @@
 package io.getquill.context.spark
 
 import io.getquill.Spec
+import io.getquill.Query
 
 case class American(firstName: String, lastName: String, addressId: Int)
 case class Address1(id: Int, street: String, city: String)
