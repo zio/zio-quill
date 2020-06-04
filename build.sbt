@@ -354,7 +354,7 @@ lazy val `quill-finagle-mysql` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.twitter" %% "finagle-mysql" % "20.4.1"
+        "com.twitter" %% "finagle-mysql" % "20.5.0"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -595,7 +595,7 @@ lazy val jdbcTestingLibraries = Seq(
     "org.xerial"              %  "sqlite-jdbc"             % "3.31.1"             % Test,
     "com.microsoft.sqlserver" %  "mssql-jdbc"              % "7.1.1.jre8-preview" % Test,
     "com.oracle.ojdbc"        %  "ojdbc8"                  % "19.3.0.0"           % Test,
-    "org.mockito"             %% "mockito-scala-scalatest" % "1.14.2"              % Test
+    "org.mockito"             %% "mockito-scala-scalatest" % "1.14.3"              % Test
   )
 )
 
