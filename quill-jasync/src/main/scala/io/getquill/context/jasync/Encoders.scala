@@ -46,7 +46,7 @@ trait Encoders {
   private[this] val nullEncoder: Encoder[Null] = encoder[Null](SqlTypes.NULL)
 
   implicit val stringEncoder: Encoder[String] = encoder[String](SqlTypes.VARCHAR)
-  implicit val bigDecimalEncoder: Encoder[BigDecimal] = encoder[BigDecimal](SqlTypes.REAL)
+  implicit val bigDecimalEncoder: Encoder[BigDecimal] = encoder[BigDecimal]((bd: BigDecimal) => bd.bigDecimal, SqlTypes.REAL)
   implicit val booleanEncoder: Encoder[Boolean] = encoder[Boolean](SqlTypes.BOOLEAN)
   implicit val byteEncoder: Encoder[Byte] = encoder[Byte](SqlTypes.TINYINT)
   implicit val shortEncoder: Encoder[Short] = encoder[Short](SqlTypes.SMALLINT)
