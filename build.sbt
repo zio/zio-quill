@@ -520,7 +520,7 @@ lazy val `quill-orientdb` =
       .settings(
         fork in Test := true,
         libraryDependencies ++= Seq(
-          "com.orientechnologies" % "orientdb-graphdb" % "3.0.31"
+          "com.orientechnologies" % "orientdb-graphdb" % "3.0.32"
         )
       )
       .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
