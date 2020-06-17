@@ -442,7 +442,7 @@ lazy val `quill-jasync-mysql` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.github.jasync-sql" % "jasync-mysql" % "1.0.14"
+        "com.github.jasync-sql" % "jasync-mysql" % "1.0.19"
       )
     )
     .dependsOn(`quill-jasync` % "compile->compile;test->test")
