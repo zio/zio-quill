@@ -1,14 +1,12 @@
 package io.getquill.monad
 
 import language.experimental.macros
-import com.twitter.util.Future
-import io.getquill.context.Context
-import com.twitter.util.Return
-import scala.util.Success
-import com.twitter.util.Throw
-import scala.util.Failure
-import com.twitter.util.Try
+import scala.util.{ Failure, Success }
+
+import com.twitter.util.{ Future, Return, Throw, Try }
+
 import io.getquill.{ Query, Action, ActionReturning, BatchAction }
+import io.getquill.context.Context
 
 trait TwitterFutureIOMonad extends IOMonad {
   this: Context[_, _] =>
@@ -29,8 +27,9 @@ trait TwitterFutureIOMonad extends IOMonad {
       case FromTry(t) => Future.const(Try(t.get))
       case Run(f)     => f()
       case Sequence(in, cbf) =>
-        Future.collect(in.map(performIO(_)).toSeq)
-          .map(r => cbf().++=(r).result)
+        Future
+          .collect(in.iterator.map(performIO(_)).to(Seq))
+          .map(r => cbf.fromSpecific(r))
       case TransformWith(a, fA) =>
         performIO(a)
           .liftToTry.map {
