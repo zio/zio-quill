@@ -285,8 +285,6 @@ val returnedIds = ctx.run(q) //: List[(Int, String)]
 // INSERT INTO Product (description, sku) VALUES (?, ?) RETURNING id, description
 ```
 
-##### update returning
-
 `returning` can also be used after `update`:
 
 ```scala
@@ -296,6 +294,17 @@ val q = quote {
 
 val updated = ctx.run(q) //: List[(Int, String)]
 // UPDATE Product SET id = ?, description = ?, sku = ? RETURNING id, description
+```
+
+or even after `delete`:
+
+```scala
+val q = quote {
+  query[Product].delete.returning(r => (r.id, r.description))
+}
+
+val deleted = ctx.run(q) //: List[(Int, String)]
+// DELETE FROM Product RETURNING id, description
 ```
 
 #### Customization
@@ -355,7 +364,7 @@ In the case that this is impossible (e.g. when using Postgres booleans), you can
 ##### SQL Server
 
 The `returning` and `returningGenerated` methods are more restricted when using SQL Server; they only support 
-arithmetic operations. These are inserted directly into the SQL `OUTPUT INSERTED.*` clause.
+arithmetic operations. These are inserted directly into the SQL `OUTPUT INSERTED.*` or `OUTPUT DELETED.*` clauses.
 
 Assuming the query:
 ```scala
@@ -378,6 +387,16 @@ val q = quote {
 
 val updated = ctx.run(q)
 // UPDATE Product SET description = 'Updated Product', sku = 2022 OUTPUT INSERTED.id, INSERTED.description
+```
+
+Delete returning:
+```scala
+val q = quote {
+  query[Product].delete.returning(r => (r.id, r.description))
+}
+
+val updated = ctx.run(q)
+// DELETE FROM Product OUTPUT DELETED.id, DELETED.description
 ```
 
 ### Embedded case classes
@@ -3228,6 +3247,31 @@ Also see full settings `ConnectionPoolConfiguration` [documentation](https://git
 ctx.sslmode=disable # optional, one of [disable|prefer|require|verify-ca|verify-full]
 ctx.sslrootcert=./path/to/cert/file # optional, required for sslmode=verify-ca or verify-full
 ```
+
+### quill-jasync-mysql
+
+#### sbt dependencies
+```
+libraryDependencies ++= Seq(
+  "io.getquill" %% "quill-jasync-mysql" % "3.5.2-SNAPSHOT"
+)
+```
+
+#### context definition
+```scala
+lazy val ctx = new MysqlJAsyncContext(SnakeCase, "ctx")
+```
+
+#### application.properties
+
+See [above](#applicationproperties-5)
+
+For `url` property use `mysql` scheme:
+
+```
+ctx.url=mysql://host:3306/database?user=root&password=root
+```
+
 
 ### quill-jasync-postgres
 
