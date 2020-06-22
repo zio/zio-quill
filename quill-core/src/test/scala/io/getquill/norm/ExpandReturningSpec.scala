@@ -40,6 +40,33 @@ class ExpandReturningSpec extends Spec {
     }
   }
 
+  "renaming alias" - {
+    val ctx = new MirrorContext(MirrorIdiom, SnakeCase)
+    import ctx._
+
+    "replaces tuple clauses with ExternalIdent(newAlias)" in {
+      val q = quote {
+        query[Person].insert(lift(Person("Joe", 123))).returning(p => (p.name, p.age))
+      }
+      val list =
+        ExpandReturning.apply(q.ast.asInstanceOf[Returning], Some("OTHER"))(MirrorIdiom, SnakeCase)
+      list must matchPattern {
+        case List((Property(ExternalIdent("OTHER"), "name"), _), (Property(ExternalIdent("OTHER"), "age"), _)) =>
+      }
+    }
+
+    "replaces case class clauses with ExternalIdent(newAlias)" in {
+      val q = quote {
+        query[Person].insert(lift(Person("Joe", 123))).returning(p => Foo(p.name, p.age))
+      }
+      val list =
+        ExpandReturning.apply(q.ast.asInstanceOf[Returning], Some("OTHER"))(MirrorIdiom, SnakeCase)
+      list must matchPattern {
+        case List((Property(ExternalIdent("OTHER"), "name"), _), (Property(ExternalIdent("OTHER"), "age"), _)) =>
+      }
+    }
+  }
+
   "returning clause" - {
     val mi = MirrorIdiom
     val ctx = new MirrorContext(mi, Literal)

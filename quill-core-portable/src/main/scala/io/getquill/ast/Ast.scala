@@ -198,7 +198,31 @@ object Ident {
 
 // Like identity but is but defined in a clause external to the query. Currently this is used
 // for 'returning' clauses to define properties being returned.
-case class ExternalIdent(name: String) extends Ast
+case class ExternalIdent(name: String) extends Ast {
+  def renameable: Renameable = Renameable.neutral
+
+  override def equals(that: Any) =
+    that match {
+      case e: ExternalIdent => (e.name, e.renameable) == ((name, renameable))
+      case _                => false
+    }
+
+  override def hashCode = (name, renameable).hashCode()
+}
+
+object ExternalIdent {
+  def apply(name: String) = new ExternalIdent(name)
+  def unapply(e: ExternalIdent) = Some(e.name)
+
+  object Opinionated {
+    def apply(name: String, rename: Renameable) =
+      new ExternalIdent(name) {
+        override def renameable: Renameable = rename
+      }
+
+    def unapply(e: ExternalIdent) = Some((e.name, e.renameable))
+  }
+}
 
 /**
  * An Opinion represents a piece of data that needs to be propagated through AST transformations but is not directly

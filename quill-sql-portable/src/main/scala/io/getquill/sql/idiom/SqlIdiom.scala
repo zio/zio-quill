@@ -326,12 +326,13 @@ trait SqlIdiom extends Idiom {
             case (ast, nestedName) =>
               (ast, nestedName :+ name)
           }
-        case a => (a, Nil)
+        case e @ ExternalIdent.Opinionated(a, Fixed) => (e, List(a))
+        case a                                       => (a, Nil)
       }
 
-    def tokenizePrefixedProperty(name: String, prefix: List[String], strategy: NamingStrategy, renameable: Renameable) =
-      renameable.fixedOr(
-        (prefix.mkString + name).token
+    def tokenizePrefixedProperty(name: String, prefix: List[String], strategy: NamingStrategy, renameable: Renameable, prefixRenameable: Renameable = Renameable.neutral) =
+      prefixRenameable.fixedOr(
+        (tokenizeColumn(strategy, prefix.mkString, prefixRenameable) + "." + tokenizeColumn(strategy, name, renameable)).token
       )(tokenizeColumn(strategy, prefix.mkString + name, renameable).token)
 
     Tokenizer[Property] {
@@ -340,7 +341,13 @@ trait SqlIdiom extends Idiom {
         // E.g. in `Property(Property(Ident("realTable"), embeddedTableAlias), realPropertyAlias)` the inner
         // property needs to be unwrapped and the result of this should only be `realTable.realPropertyAlias`
         // as opposed to `realTable.embeddedTableAlias.realPropertyAlias`.
+
         unnest(ast) match {
+          case (ExternalIdent.Opinionated(_: String, prefixRenameable), prefix) =>
+            stmt"${
+              actionAlias.map(alias => stmt"${scopedTokenizer(alias)}.").getOrElse(stmt"")
+            }${tokenizePrefixedProperty(name, prefix, strategy, renameable, prefixRenameable)}"
+
           // When using ExternalIdent such as .returning(eid => eid.idColumn) clauses drop the 'eid' since SQL
           // returning clauses have no alias for the original table. I.e. INSERT [...] RETURNING idColumn there's no
           // alias you can assign to the INSERT [...] clause that can be used as a prefix to 'idColumn'.

@@ -473,6 +473,17 @@ class SqlActionMacroSpec extends Spec {
           mirror.returningBehavior mustEqual ReturnRecord
         }
       }
+      "output clause - naming strategy renames INSERTED clause with correct column naming" in testContextSnake.withDialect(MirrorSqlDialectWithOutputClause) { ctx =>
+        case class Person(firstName: String, age: Int)
+        import ctx._
+        val q = quote {
+          query[Person].insert(lift(Person("Joe", 123))).returning(p => p.firstName)
+        }
+
+        val mirror = ctx.run(q)
+        mirror.string mustEqual "INSERT INTO person (first_name,age) OUTPUT INSERTED.first_name VALUES (?, ?)"
+        mirror.returningBehavior mustEqual ReturnRecord
+      }
       "output clause - should fail on query" in testContext.withDialect(MirrorSqlDialectWithOutputClause) { ctx =>
         """import ctx._; quote { qr4.insert(lift(TestEntity4(1L))).returningGenerated(r => query[TestEntity4].filter(t => t.i == r.i)) }""" mustNot compile
       }
