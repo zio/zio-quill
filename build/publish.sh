@@ -11,6 +11,11 @@ then
     openssl aes-256-cbc -pass pass:$ENCRYPTION_PASSWORD -in ./build/credentials.sbt.enc -out local.credentials.sbt.temp -d
     openssl aes-256-cbc -pass pass:$ENCRYPTION_PASSWORD -in ./build/deploy_key.pem.enc -out local.deploy_key.pem -d
 
+    gpg --import local.secring.gpg
+    gpg --import local.pubring.gpg
+    gpg --list-keys
+    for fpr in $(gpg --list-keys --with-colons  | awk -F: '/fpr:/ {print $10}' | sort -u); do  echo -e "5\ny\n" |  gpg --command-fd 0 --expert --edit-key $fpr trust; done
+
     # Temp hack to get around SbtPgp being moved. This file needs to be updated with correct import.
     # See https://github.com/sbt/sbt-pgp/pull/162 for more details
     cat local.credentials.sbt.temp | sed 's/import com.typesafe.sbt.SbtPgp/import com.jsuereth.sbtpgp.SbtPgp/' > local.credentials.sbt
