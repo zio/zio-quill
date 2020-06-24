@@ -181,13 +181,13 @@ jobs:
     - stage: release
       if: type != pull_request
       scala: 2.13.1
-      name: "Release 2.12 codegen"
+      name: "Release 2.13 codegen"
       script:
         - ./build/release.sh 213 codegen
     - stage: release
       if: type != pull_request
       scala: 2.13.1
-      name: "Release 2.12 bigdata"
+      name: "Release 2.13 bigdata"
       script:
         - ./build/release.sh 213 bigdata
 

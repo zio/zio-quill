@@ -6,11 +6,6 @@ import scala.sys.process.Process
 import sbtcrossproject.crossProject
 import java.io.{File => JFile}
 
-// one
-// two
-// three
-// four
-
 enablePlugins(TutPlugin)
 
 val CodegenTag = Tags.Tag("CodegenTag")
@@ -53,7 +48,7 @@ lazy val bigdataModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
 lazy val allModules =
   baseModules ++ jsModules ++ dbModules ++ asyncModules ++ codegenModules ++ bigdataModules
 
-lazy val scala213Modules = baseModules ++ jsModules ++ dbModules ++ Seq[sbt.ClasspathDep[sbt.ProjectReference]](
+lazy val scala213Modules = baseModules ++ jsModules ++ dbModules ++ codegenModules ++ Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-async`,
   `quill-async-mysql`,
   `quill-async-postgres`,
