@@ -12,7 +12,7 @@ import scala.concurrent.ExecutionContext
 
 package object utils {
 
-  val server = ServiceTest.startServer(ServiceTest.defaultSetup.withCassandra(false)) { ctx =>
+  val server = ServiceTest.startServer(ServiceTest.defaultSetup.withCassandra(false).withCluster(true)) { ctx =>
     new LagomApplication(ctx) with AhcWSComponents with CassandraPersistenceComponents with ConfigurationServiceLocatorComponents {
 
       override def lagomServer: LagomServer = serverFor[DummyService](new DummyService)
