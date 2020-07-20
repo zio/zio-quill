@@ -27,14 +27,14 @@ object TypeBehavior {
   case object ReplaceWithReduction extends TypeBehavior
 }
 
-case class BetaReduction(replacements: Replacements, typeBehavior: TypeBehavior)
+case class BetaReduction(map: IMap[Ast, Ast], typeBehavior: TypeBehavior)
   extends StatelessTransformer {
 
   override def apply(ast: Ast): Ast =
     ast match {
 
-      case ast if replacements.contains(ast) =>
-        val rep = BetaReduction(replacements - ast - replacements(ast), typeBehavior)(replacements(ast))
+      case ast if map.contains(ast) =>
+        val rep = BetaReduction(map - ast - map(ast), typeBehavior)(map(ast))
         // TODO Quat change null to same functionality as OptionNone
         val output =
           rep match {
@@ -68,23 +68,25 @@ case class BetaReduction(replacements: Replacements, typeBehavior: TypeBehavior)
         apply(tuples.toMap.apply(name))
 
       case FunctionApply(Function(params, body), values) =>
-        val conflicts = values.flatMap(CollectAst.byType[Ident]).map { i =>
+        val conflicts = values.flatMap(CollectAst.byType[Ident]).map { (i: Ident) =>
           i -> Ident(s"tmp_${i.name}", i.quat)
         }.toMap[Ident, Ident]
         val newParams = params.map { p =>
           conflicts.getOrElse(p, p)
         }
-        val bodyr = BetaReduction(Replacements(conflicts ++ params.zip(newParams)), typeBehavior).apply(body)
-        apply(BetaReduction(replacements ++ newParams.zip(values).toMap, typeBehavior).apply(bodyr))
+        // Prepending IMap[Ast, Ast]() is needed otherwise 2.13 fails complaining:
+        // Note: io.getquill.ast.Ident <: io.getquill.ast.Ast, but trait Map is invariant in type K.
+        val bodyr = new BetaReduction(IMap[Ast, Ast]() ++ conflicts ++ params.zip(newParams), typeBehavior).apply(body)
+        apply(BetaReduction(map ++ newParams.zip(values).toMap, typeBehavior).apply(bodyr))
 
       case Function(params, body) =>
         val newParams = params.map { p =>
-          replacements.get(p) match {
+          map.get(p) match {
             case Some(i: Ident) => i
             case _              => p
           }
         }
-        Function(newParams, BetaReduction(replacements ++ params.zip(newParams).toMap, typeBehavior)(body))
+        Function(newParams, BetaReduction(map ++ params.zip(newParams), typeBehavior)(body))
 
       case Block(statements) =>
         apply {
@@ -92,11 +94,11 @@ case class BetaReduction(replacements: Replacements, typeBehavior: TypeBehavior)
           statements.reverse.tail.foldLeft((IMap[Ast, Ast](), statements.last)) {
             case ((map, stmt), line) =>
               // Beta-reduce the statements from the end to the beginning
-              BetaReduction(Replacements(map), typeBehavior)(line) match {
+              BetaReduction(map, typeBehavior)(line) match {
                 // If the beta reduction is a some 'val x=t', add x->t to the beta reductions map
                 case Val(name, body) =>
                   val newMap = map + (name -> body)
-                  val newStmt = BetaReduction(stmt, Replacements(newMap), typeBehavior)
+                  val newStmt = BetaReduction(stmt, newMap, typeBehavior)
                   (newMap, newStmt)
                 case _ =>
                   (map, stmt)
@@ -105,13 +107,13 @@ case class BetaReduction(replacements: Replacements, typeBehavior: TypeBehavior)
         }
 
       case Foreach(query, alias, body) =>
-        Foreach(query, alias, BetaReduction(replacements - alias, typeBehavior)(body))
+        Foreach(query, alias, BetaReduction(map - alias, typeBehavior)(body))
       case Returning(action, alias, prop) =>
-        val t = BetaReduction(replacements - alias, typeBehavior)
+        val t = BetaReduction(map - alias, typeBehavior)
         Returning(apply(action), alias, t(prop))
 
       case ReturningGenerated(action, alias, prop) =>
-        val t = BetaReduction(replacements - alias, typeBehavior)
+        val t = BetaReduction(map - alias, typeBehavior)
         ReturningGenerated(apply(action), alias, t(prop))
 
       case other =>
@@ -121,21 +123,21 @@ case class BetaReduction(replacements: Replacements, typeBehavior: TypeBehavior)
   override def apply(o: OptionOperation): OptionOperation =
     o match {
       case other @ OptionTableFlatMap(a, b, c) =>
-        OptionTableFlatMap(apply(a), b, BetaReduction(replacements - b, typeBehavior)(c))
+        OptionTableFlatMap(apply(a), b, BetaReduction(map - b, typeBehavior)(c))
       case OptionTableMap(a, b, c) =>
-        OptionTableMap(apply(a), b, BetaReduction(replacements - b, typeBehavior)(c))
+        OptionTableMap(apply(a), b, BetaReduction(map - b, typeBehavior)(c))
       case OptionTableExists(a, b, c) =>
-        OptionTableExists(apply(a), b, BetaReduction(replacements - b, typeBehavior)(c))
+        OptionTableExists(apply(a), b, BetaReduction(map - b, typeBehavior)(c))
       case OptionTableForall(a, b, c) =>
-        OptionTableForall(apply(a), b, BetaReduction(replacements - b, typeBehavior)(c))
+        OptionTableForall(apply(a), b, BetaReduction(map - b, typeBehavior)(c))
       case other @ OptionFlatMap(a, b, c) =>
-        OptionFlatMap(apply(a), b, BetaReduction(replacements - b, typeBehavior)(c))
+        OptionFlatMap(apply(a), b, BetaReduction(map - b, typeBehavior)(c))
       case OptionMap(a, b, c) =>
-        OptionMap(apply(a), b, BetaReduction(replacements - b, typeBehavior)(c))
+        OptionMap(apply(a), b, BetaReduction(map - b, typeBehavior)(c))
       case OptionForall(a, b, c) =>
-        OptionForall(apply(a), b, BetaReduction(replacements - b, typeBehavior)(c))
+        OptionForall(apply(a), b, BetaReduction(map - b, typeBehavior)(c))
       case OptionExists(a, b, c) =>
-        OptionExists(apply(a), b, BetaReduction(replacements - b, typeBehavior)(c))
+        OptionExists(apply(a), b, BetaReduction(map - b, typeBehavior)(c))
       case other =>
         super.apply(other)
     }
@@ -143,28 +145,28 @@ case class BetaReduction(replacements: Replacements, typeBehavior: TypeBehavior)
   override def apply(e: Assignment): Assignment =
     e match {
       case Assignment(alias, prop, value) =>
-        val t = BetaReduction(replacements - alias, typeBehavior)
+        val t = BetaReduction(map - alias, typeBehavior)
         Assignment(alias, t(prop), t(value))
     }
 
   override def apply(query: Query): Query =
     query match {
       case Filter(a, b, c) =>
-        Filter(apply(a), b, BetaReduction(replacements - b, typeBehavior)(c))
+        Filter(apply(a), b, BetaReduction(map - b, typeBehavior)(c))
       case Map(a, b, c) =>
-        Map(apply(a), b, BetaReduction(replacements - b, typeBehavior)(c))
+        Map(apply(a), b, BetaReduction(map - b, typeBehavior)(c))
       case FlatMap(a, b, c) =>
-        FlatMap(apply(a), b, BetaReduction(replacements - b, typeBehavior)(c))
+        FlatMap(apply(a), b, BetaReduction(map - b, typeBehavior)(c))
       case ConcatMap(a, b, c) =>
-        ConcatMap(apply(a), b, BetaReduction(replacements - b, typeBehavior)(c))
+        ConcatMap(apply(a), b, BetaReduction(map - b, typeBehavior)(c))
       case SortBy(a, b, c, d) =>
-        SortBy(apply(a), b, BetaReduction(replacements - b, typeBehavior)(c), d)
+        SortBy(apply(a), b, BetaReduction(map - b, typeBehavior)(c), d)
       case GroupBy(a, b, c) =>
-        GroupBy(apply(a), b, BetaReduction(replacements - b, typeBehavior)(c))
+        GroupBy(apply(a), b, BetaReduction(map - b, typeBehavior)(c))
       case Join(t, a, b, iA, iB, on) =>
-        Join(t, apply(a), apply(b), iA, iB, BetaReduction(replacements - iA - iB, typeBehavior)(on))
+        Join(t, apply(a), apply(b), iA, iB, BetaReduction(map - iA - iB, typeBehavior)(on))
       case FlatJoin(t, a, iA, on) =>
-        FlatJoin(t, apply(a), iA, BetaReduction(replacements - iA, typeBehavior)(on))
+        FlatJoin(t, apply(a), iA, BetaReduction(map - iA, typeBehavior)(on))
       case _: Take | _: Entity | _: Drop | _: Union | _: UnionAll | _: Aggregation | _: Distinct | _: Nested =>
         super.apply(query)
     }
@@ -186,17 +188,17 @@ object BetaReduction {
         checkQuats(ast, t)
       case _ =>
     }
-    val output = apply(ast, Replacements(t.toMap), typeBehavior)
+    val output = apply(ast, t.toMap, typeBehavior)
     output
   }
 
   def apply(ast: Ast, t: (Ast, Ast)*): Ast =
     apply(ast, TypeBehavior.SubstituteSubtypes, t: _*)
 
-  def apply(ast: Ast, replacements: Replacements, typeBehavior: TypeBehavior): Ast = {
+  def apply(ast: Ast, replacements: IMap[Ast, Ast], typeBehavior: TypeBehavior): Ast = {
     typeBehavior match {
       case TypeBehavior.SubstituteSubtypes =>
-        checkQuats(ast, replacements.map.toSeq)
+        checkQuats(ast, replacements.toSeq)
       case _ =>
     }
     BetaReduction(replacements, typeBehavior).apply(ast) match {
@@ -204,7 +206,7 @@ object BetaReduction {
       // if a AST property not in the product cases comes up (e.g. Ident's quat.rename etc...) make
       // sure to return the actual AST that was matched as opposed to the one passed in.
       case matchingAst @ `ast` => matchingAst
-      case other               => apply(other, Replacements.empty, typeBehavior)
+      case other               => apply(other, IMap[Ast, Ast](), typeBehavior)
     }
   }
 }

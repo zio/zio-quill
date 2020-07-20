@@ -9,21 +9,6 @@ sealed trait Ast {
 
   def quat: Quat
 
-  /**
-   * Return a copy of this AST element with any opinions that it may have set to their neutral position.
-   * Return the object itself if it has no opinions.
-   */
-  def neutral: Ast = this
-
-  /**
-   * Set all opinions of this element and every element in the subtree to the neutral position.
-   */
-  final def neutralize: Ast =
-    new StatelessTransformer {
-      override def apply(a: Ast) =
-        super.apply(a.neutral)
-    }.apply(this)
-
   override def toString = {
     import io.getquill.MirrorIdiom._
     import io.getquill.idiom.StatementInterpolator._
@@ -60,6 +45,8 @@ object BottomTypedTerminal {
     }
 }
 
+case class EntityId(name: String, properties: List[PropertyAlias])
+
 /**
  * Entities represent the actual tables/views being selected.
  * Typically, something like:
@@ -76,23 +63,18 @@ object BottomTypedTerminal {
  * to `T_PERSON` or `Person`.
  */
 case class Entity(name: String, properties: List[PropertyAlias], quat: Quat.Probity) extends Query { // TODO Quat - quat cannot be part of equals/hashcode
+  def id = EntityId(name, properties)
   // Technically this should be part of the Entity case class but due to the limitations of how
   // scala creates companion objects, the apply/unapply wouldn't be able to work correctly.
   def renameable: Renameable = Renameable.neutral
 
-  override def neutral: Entity =
-    new Entity(name, properties, quat)
-
-  // TODO Quat add quat to equals function here? (note that if you do the tests will test for it)
   override def equals(that: Any) =
     that match {
-      case e: Entity =>
-        (e.name, e.properties, e.renameable) == ((name, properties, renameable))
-      case _ => false
+      case e: Entity => this.id == e.id
+      case _         => false
     }
 
-  // TODO Quat add quat to hash code function here?
-  override def hashCode = (name, properties, renameable).hashCode()
+  override def hashCode = id.hashCode()
 
   // TODO Quat Test independently
   def syncToQuat: Entity = {
@@ -186,24 +168,22 @@ case class Infix(parts: List[String], params: List[Ast], pure: Boolean, quat: Qu
 
 case class Function(params: List[Ident], body: Ast) extends Ast { def quat = body.quat }
 
-case class Ident(name: String, quat: Quat) extends Terminal with Ast {
-  def visibility: Visibility = Visibility.Visible
+case class IdentId(name: String)
 
-  override def neutral: Ident =
-    new Ident(name, quat: Quat) {
-      override def visibility: Visibility = Visibility.neutral
-    }
+case class Ident(name: String, quat: Quat) extends Terminal with Ast {
+  def id = IdentId(name)
+  def visibility: Visibility = Visibility.Visible
 
   override def equals(that: Any) =
     that match {
-      case p: Ident => (p.name, p.visibility) == ((name, visibility))
+      case p: Ident => this.id == p.id
       case _        => false
     }
 
-  override def hashCode = (name, visibility).hashCode()
+  override def hashCode = id.hashCode()
 
   override def withQuat(newQuat: Quat) =
-    Ident.Opinionated(this.name, newQuat, this.visibility) // TODO Quat quat cannot be part of equals/hashcode (maybe add it to secondary args list?)
+    Ident.Opinionated(this.name, newQuat, this.visibility)
 }
 
 /**
@@ -239,18 +219,21 @@ object Ident {
   }
 }
 
+case class ExternalIdentId(name: String)
+
 // Like identity but is but defined in a clause external to the query. Currently this is used
 // for 'returning' clauses to define properties being returned.
 case class ExternalIdent(name: String, quat: Quat) extends Ast {
+  def id = ExternalIdentId(name)
   def renameable: Renameable = Renameable.neutral
 
   override def equals(that: Any) =
     that match {
-      case e: ExternalIdent => (e.name, e.renameable) == ((name, renameable))
+      case e: ExternalIdent => this.id == e.id
       case _                => false
     }
 
-  override def hashCode = (name, renameable).hashCode()
+  override def hashCode = id.hashCode()
 }
 
 object ExternalIdent {
@@ -272,8 +255,7 @@ object ExternalIdent {
  * related to how ASTs are transformed in most stages. For instance, `Renameable` controls how columns are named (i.e. whether to use a
  * `NamingStrategy` or not) after most of the SQL transformations are done. Some transformations (e.g. `RenameProperties`
  * will use `Opinions` or even modify them so that the correct kind of query comes out at the end of the normalizations.
- * That said, Opinions should be transparent in most steps of the normalization. In some cases e.g. `BetaReduction`,
- * AST elements need to be neutralized (i.e. set back to defaults in the entire tree) so that this works correctly.
+ * That said, Opinions should be transparent in most steps of the normalization.
  */
 sealed trait Opinion[T]
 sealed trait OpinionValues[T <: Opinion[T]] {
@@ -324,28 +306,6 @@ case class Property(ast: Ast, name: String) extends Ast {
   // Properties that are 'Hidden' are used for embedded objects whose path should not be expressed
   // during SQL Tokenization.
   def visibility: Visibility = Visibility.Visible
-
-  override def neutral: Property =
-    new Property(ast, name) {
-      override def renameable = Renameable.neutral
-      override def visibility: Visibility = Visibility.neutral
-    }
-
-  override def equals(that: Any) =
-    that match {
-      case p: Property =>
-        (p.ast, p.name, p.renameable, p.visibility) == (
-          (
-            ast,
-            name,
-            renameable,
-            visibility
-          )
-        )
-      case _ => false
-    }
-
-  override def hashCode = (ast, name, renameable, visibility).hashCode()
 }
 
 object Property {
@@ -474,14 +434,24 @@ case class OnConflict(
 object OnConflict {
 
   case class Excluded(alias: Ident) extends Ast {
-    override def neutral: Ast =
-      alias.neutral
     def quat = alias.quat
+    override def equals(obj: Any): Boolean =
+      obj match {
+        case e: Excluded => e.alias == alias
+        case e: Ident    => e == alias
+        case _           => false
+      }
+    override def hashCode(): Int = alias.hashCode
   }
   case class Existing(alias: Ident) extends Ast {
-    override def neutral: Ast =
-      alias.neutral
     def quat = alias.quat
+    override def equals(obj: Any): Boolean =
+      obj match {
+        case e: Existing => e.alias == alias
+        case e: Ident    => e == alias
+        case _           => false
+      }
+    override def hashCode(): Int = alias.hashCode
   }
 
   sealed trait Target
