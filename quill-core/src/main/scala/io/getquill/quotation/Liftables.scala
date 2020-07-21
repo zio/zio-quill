@@ -6,6 +6,8 @@ import io.getquill.dsl.CoreDsl
 import io.getquill.quat.Quat
 import io.getquill.quat.Quat.Probity
 
+import scala.collection.mutable
+
 trait Liftables {
   val c: Context
   import c.universe.{ Ident => _, Constant => _, Function => _, If => _, Block => _, _ }
@@ -59,6 +61,11 @@ trait Liftables {
     case OptionOrNull(a)             => q"$pack.OptionOrNull($a)"
     case OptionGetOrNull(a)          => q"$pack.OptionGetOrNull($a)"
     case OptionNone(quat)            => q"$pack.OptionNone($quat)"
+  }
+
+  implicit def linkedHashMapLiftable[K, V](implicit lk: Liftable[K], lv: Liftable[V]): Liftable[mutable.LinkedHashMap[K, V]] = Liftable[mutable.LinkedHashMap[K, V]] {
+    case l: mutable.LinkedHashMap[K, V] =>
+      q"scala.collection.mutable.LinkedHashMap(${l.map { case (k, v) => q"(${lk(k)}, ${lv(v)})" }.toSeq: _*})"
   }
 
   implicit val traversableOperationLiftable: Liftable[IterableOperation] = Liftable[IterableOperation] {

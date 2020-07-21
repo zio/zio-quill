@@ -2,6 +2,19 @@ package io.getquill.quat
 
 import io.getquill.quotation.QuatException
 
+import scala.collection.mutable
+
+object LinkedHashMapOps {
+  implicit class LinkedHashMapExt[K, V](m1: mutable.LinkedHashMap[K, V]) {
+    def zipWith[R](m2: mutable.LinkedHashMap[K, V])(f: PartialFunction[(K, V, Option[V]), R]) =
+      LinkedHashMapOps.zipWith(m1, m2, f)
+  }
+
+  def zipWith[K, V, R](m1: mutable.LinkedHashMap[K, V], m2: mutable.LinkedHashMap[K, V], f: PartialFunction[(K, V, Option[V]), R]) = {
+    m1.iterator.map(r => (r._1, r._2, m2.get(r._1))).collect(f)
+  }
+}
+
 // This represents a simplified Sql-Type. Since it applies to all dialects, it is called
 // Quill-Application-Type hence Quat.
 sealed trait Quat {
@@ -26,6 +39,18 @@ sealed trait Quat {
       case (other, Quat.Null)                      => Some(other)
       case (Quat.Value, Quat.Value)                => Some(Quat.Value)
       case (me: Quat.Product, other: Quat.Product) => me.leastUpperTypeProduct(other)
+      case (_, _)                                  => None
+    }
+  }
+
+  def leastUpperType2(other: Quat): Option[Quat] = {
+    (this, other) match {
+      case (Quat.Generic, other)                   => Some(other)
+      case (Quat.Null, other)                      => Some(other)
+      case (other, Quat.Generic)                   => Some(other)
+      case (other, Quat.Null)                      => Some(other)
+      case (Quat.Value, Quat.Value)                => Some(Quat.Value)
+      case (me: Quat.Product, other: Quat.Product) => me.leastUpperTypeProduct2(other)
       case (_, _)                                  => None
     }
   }
@@ -82,6 +107,8 @@ sealed trait Quat {
 }
 
 object Quat {
+  import LinkedHashMapOps._
+
   object BottomType {
     def unapply(quat: Quat) =
       quat match {
@@ -116,7 +143,9 @@ object Quat {
       }
   }
 
-  case class Product(fields: List[(String, Quat)]) extends Probity {
+  case class Product(fields: mutable.LinkedHashMap[String, Quat]) extends Probity {
+
+    def this(list: Iterator[(String, Quat)]) = this((mutable.LinkedHashMap[String, Quat]() ++ list): mutable.LinkedHashMap[String, Quat])
 
     def withRenamesFrom(other: Quat): Quat = {
       other match {
@@ -140,6 +169,16 @@ object Quat {
       }
     }
 
+    def leastUpperTypeProduct2(other: Quat.Product): Option[Quat.Product] = {
+      val newFields =
+        fields.zipWith(other.fields) {
+          case (key, thisQuat, Some(otherQuat)) => (key, thisQuat.leastUpperType2(otherQuat))
+        }.collect {
+          case (key, Some(value)) => (key, value)
+        }
+      Some(Quat.Product(newFields))
+    }
+
     def leastUpperTypeProduct(other: Quat.Product): Option[Quat.Product] = {
       // TODO Quat this is a N^2 field check. Explor changing product fields into ListMap and make this more efficient
 
@@ -159,11 +198,12 @@ object Quat {
 
         newFields += ((foundField.head))
       }
-      Some(Quat.Product(newFields.toList))
+      Some(Quat.Product(newFields))
     }
 
     override def withRenames(renames: List[(String, String)]) =
       Product.WithRenames(fields, renames)
+
     /**
      * Rename the properties and reset renames to empty.
      * An interesting idea would be not to clear
@@ -187,11 +227,11 @@ object Quat {
       this.lookup(property) match {
         case e: Quat.Error => e
         case _ => {
-          // TODO Quat, test quat changes with a tuple property rename
           (this, property, newProperty) match {
             case (cc: Quat.Product, property, newProperty) =>
-              cc.fields.find(_._1 == property) match {
+              cc.fields.get(property) match {
                 case Some(_) =>
+                  // Note. Technically this is an N^2 behavior and may not be suitable for mass renaming of large records (e.g. hundreds of fields).
                   val newFields =
                     cc.fields.map {
                       case (field, quat) => if (field == property) (field, newQuat.getOrElse(quat)) else (field, quat)
@@ -234,14 +274,15 @@ object Quat {
       }
     }
   }
-  def LeafProduct(list: String*) = new Quat.Product(list.toList.map(e => (e, Quat.Value)))
-  def LeafTuple(numElems: Int) = Quat.Tuple((1 to numElems).map(_ => Quat.Value).toList)
+  def LeafProduct(list: String*) = Quat.Product(list.map(e => (e, Quat.Value)))
+  def LeafTuple(numElems: Int) = Quat.Tuple((1 to numElems).map(_ => Quat.Value))
 
   object Product {
-    def empty = new Product(List())
-    def apply(fields: (String, Quat)*): Quat.Product = apply(fields.toList)
-    def apply(fields: List[(String, Quat)]): Quat.Product = new Quat.Product(fields)
-    def unapply(p: Quat.Product): Some[(List[(String, Quat)])] = Some(p.fields)
+    def empty = new Quat.Product(mutable.LinkedHashMap[String, Quat]())
+    def apply(fields: (String, Quat)*): Quat.Product = apply(fields.iterator)
+    def apply(fields: Iterable[(String, Quat)]): Quat.Product = new Quat.Product(fields.iterator)
+    def apply(fields: Iterator[(String, Quat)]): Quat.Product = new Quat.Product(fields)
+    def unapply(p: Quat.Product): Some[(List[(String, Quat)])] = Some(p.fields.toList)
 
     /**
      * Add staged renames to the Quat. Note that renames should
@@ -250,7 +291,7 @@ object Quat {
      * (see `PropagateRenames` for more detail)
      */
     object WithRenames {
-      def apply(fields: List[(String, Quat)], theRenames: List[(String, String)]) =
+      def apply(fields: mutable.LinkedHashMap[String, Quat], theRenames: List[(String, String)]) =
         new Product(fields) {
           override def renames: List[(String, String)] = theRenames
         }
@@ -259,8 +300,8 @@ object Quat {
     }
   }
   object Tuple {
-    def apply(fields: Quat*): Quat.Product = apply(fields.toList)
-    def apply(fields: List[Quat]): Quat.Product = new Quat.Product(fields.zipWithIndex.map { case (f, i) => (s"_${i + 1}", f) })
+    def apply(fields: Quat*): Quat.Product = apply(fields)
+    def apply(fields: Iterable[Quat]): Quat.Product = new Quat.Product(fields.zipWithIndex.map { case (f, i) => (s"_${i + 1}", f) }.iterator)
   }
   case object Null extends Quat {
     override def withRenames(renames: List[(String, String)]) = this

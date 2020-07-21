@@ -12,7 +12,7 @@ class QueryGenerator(seed: Int) {
     def randomProperty =
       id.quat match {
         case Quat.Product(fields) =>
-          Property(id, fields(random.nextInt(fields.length))._1)
+          Property(id, fields.toList(random.nextInt(fields.size))._1)
         case _ =>
           id
       }

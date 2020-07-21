@@ -65,6 +65,21 @@ trait Unliftables {
     case q"$pack.List.apply[..$t](..$values)" => values.map(v => u.unapply(v).getOrElse(c.fail(s"Can't unlift $v")))
   }
 
+  import collection.mutable.LinkedHashMap
+
+  implicit def linkedHashMapUnliftable[K, V](implicit uk: Unliftable[K], uv: Unliftable[V]): Unliftable[LinkedHashMap[K, V]] = Unliftable[LinkedHashMap[K, V]] {
+    case q"$pack.LinkedHashMap.apply[..$t](..$values)" =>
+      LinkedHashMap[K, V](
+        values.map {
+          case q"($k, $v)" =>
+            (
+              uk.unapply(k).getOrElse(c.fail(s"Can't unlift $k")),
+              uv.unapply(v).getOrElse(c.fail(s"Can't unlift $v"))
+            )
+        }: _*
+      )
+  }
+
   implicit val binaryOperatorUnliftable: Unliftable[BinaryOperator] = Unliftable[BinaryOperator] {
     case q"$pack.EqualityOperator.`==`"       => EqualityOperator.`==`
     case q"$pack.EqualityOperator.`!=`"       => EqualityOperator.`!=`
@@ -198,13 +213,13 @@ trait Unliftables {
   }
 
   implicit val quatProbity: Unliftable[Probity] = Unliftable[Probity] {
-    case q"$pack.Quat.Product.WithRenames.apply(${ fields: List[(String, Quat)] }, ${ renames: List[(String, String)] })" => Quat.Product.WithRenames(fields, renames)
-    case q"$pack.Quat.Product.apply(${ fields: List[(String, Quat)] })" => Quat.Product(fields)
+    case q"$pack.Quat.Product.WithRenames.apply(${ fields: LinkedHashMap[String, Quat] }, ${ renames: List[(String, String)] })" => Quat.Product.WithRenames(fields, renames)
+    case q"$pack.Quat.Product.apply(${ fields: LinkedHashMap[String, Quat] })" => Quat.Product(fields)
     case q"$pack.Quat.Error.apply(${ msg: String })" => Quat.Error(msg)
   }
 
   implicit val quatUnliftable: Unliftable[Quat] = Unliftable[Quat] {
-    case q"$pack.Quat.Product.WithRenames.apply(${ fields: List[(String, Quat)] }, ${ renames: List[(String, String)] })" => Quat.Product.WithRenames(fields, renames)
+    case q"$pack.Quat.Product.WithRenames.apply(${ fields: LinkedHashMap[String, Quat] }, ${ renames: List[(String, String)] })" => Quat.Product.WithRenames(fields, renames)
     case q"$pack.Quat.Product.apply(${ fields: List[(String, Quat)] })" => Quat.Product(fields)
     case q"$pack.Quat.Value" => Quat.Value
     case q"$pack.Quat.Null" => Quat.Null
