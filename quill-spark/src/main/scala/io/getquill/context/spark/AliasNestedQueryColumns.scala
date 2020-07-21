@@ -8,8 +8,8 @@ import io.getquill.quat.Quat
 object AliasNestedQueryColumns {
 
   object ZipMatch {
-    def unapply[A, B](seqs: (Seq[A], Seq[B])) =
-      if (seqs._1.length == seqs._2.length) Some(seqs._1.zip(seqs._2))
+    def apply[A, B](seqA: Seq[A], seqB: Seq[B]): Option[Seq[(A, B)]] =
+      if (seqA.length == seqB.length) Some(seqA.zip(seqB))
       else None
   }
 
@@ -19,11 +19,10 @@ object AliasNestedQueryColumns {
         val newSelects =
           q.quat match {
             case Quat.Product(fields) =>
-              val duo = (fields.map(_._1), q.select)
-              (duo: @unchecked) match {
-                case ZipMatch(fieldsAndSelects) =>
+              ZipMatch(fields.map(_._1).toSeq, q.select.toSeq) match {
+                case Some(fieldsAndSelects) =>
                   fieldsAndSelects.map { case (field, select) => select.copy(alias = Some(field)) }
-                case _ =>
+                case None =>
                   q.select
               }
             case _ =>

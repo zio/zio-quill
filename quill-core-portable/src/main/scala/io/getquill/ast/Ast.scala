@@ -62,7 +62,7 @@ case class EntityId(name: String, properties: List[PropertyAlias])
  * That means that even if the `NamingSchema` is `UpperCase`, the resulting query will select `t_person` as opposed
  * to `T_PERSON` or `Person`.
  */
-case class Entity(name: String, properties: List[PropertyAlias], quat: Quat.Probity) extends Query { // TODO Quat - quat cannot be part of equals/hashcode
+case class Entity(name: String, properties: List[PropertyAlias], quat: Quat.Product) extends Query {
   def id = EntityId(name, properties)
   // Technically this should be part of the Entity case class but due to the limitations of how
   // scala creates companion objects, the apply/unapply wouldn't be able to work correctly.
@@ -76,22 +76,34 @@ case class Entity(name: String, properties: List[PropertyAlias], quat: Quat.Prob
 
   override def hashCode = id.hashCode()
 
-  // TODO Quat Test independently
   def syncToQuat: Entity = {
-    val newQuat =
-      properties.foldLeft(quat) {
-        case (quat, PropertyAlias(path, alias)) =>
-          quat match {
-            case e: Quat.Error   => e
-            case p: Quat.Product => p.stashRename(path, alias)
-          }
+    import io.getquill.quat.QuatOps.Implicits._
+
+    // Take each path (name.first -> theFirst, name.last -> theLast) to:
+    //   (name -> (first -> theFirst)), (name -> (first -> theLast))
+    val tailPaths =
+      properties.map {
+        case PropertyAlias(path, alias) =>
+          (path.dropRight(1), path.last -> alias)
       }
+
+    // Group each path that we have taken:
+    // (name -> (first -> theFirst)), (name -> (first -> theLast))
+    //   => (name -> (first -> theFirst, last -> theLast))
+    val groupedTailPaths = tailPaths.groupBy(_._1).map(kv => (kv._1, kv._2.map(r => r._2))).toList
+
+    val newQuat: Quat.Product =
+      groupedTailPaths.foldLeft(this.quat) {
+        case (quat, (renamePath, renames)) =>
+          quat.renameAtPath(renamePath, renames)
+      }
+
     Entity.Opinionated(name, properties, newQuat, renameable)
   }
 }
 
 object Entity {
-  def apply(name: String, properties: List[PropertyAlias], quat: Quat.Probity) =
+  def apply(name: String, properties: List[PropertyAlias], quat: Quat.Product) =
     new Entity(name, properties, quat)
   def unapply(e: Entity) = Some((e.name, e.properties, e.quat))
 
@@ -99,7 +111,7 @@ object Entity {
     def apply(
       name:          String,
       properties:    List[PropertyAlias],
-      quat:          Quat.Probity,
+      quat:          Quat.Product,
       renameableNew: Renameable
     ) =
       new Entity(name, properties, quat) {
@@ -118,7 +130,7 @@ case class Map(query: Ast, alias: Ident, body: Ast) extends Query { def quat = b
 
 case class FlatMap(query: Ast, alias: Ident, body: Ast) extends Query { def quat = body.quat }
 
-case class ConcatMap(query: Ast, alias: Ident, body: Ast) extends Query { def quat = body.quat } // TODO Quat check out if quat is supposed to come from the query or the body?
+case class ConcatMap(query: Ast, alias: Ident, body: Ast) extends Query { def quat = body.quat }
 
 case class SortBy(query: Ast, alias: Ident, criterias: Ast, ordering: Ast)
   extends Query { def quat = query.quat }
@@ -350,8 +362,15 @@ case class OptionTableExists(ast: Ast, alias: Ident, body: Ast)
   extends OptionOperation { def quat = body.quat }
 case class OptionTableForall(ast: Ast, alias: Ident, body: Ast)
   extends OptionOperation { def quat = body.quat }
-case class OptionNone(quat: Quat) extends OptionOperation with Terminal { // TODO Quat - Quat cannot be part of equals/hashcode  (maybe add it to secondary args list? but here there's no first one)
+case object OptionNoneId
+case class OptionNone(quat: Quat) extends OptionOperation with Terminal {
   override def withQuat(newQuat: Quat) = this.copy(quat = newQuat)
+  override def equals(obj: Any): Boolean =
+    obj match {
+      case e: OptionNone => true
+      case _             => false
+    }
+  override def hashCode(): Int = OptionNoneId.hashCode()
 }
 case class OptionSome(ast: Ast) extends OptionOperation { def quat = ast.quat }
 case class OptionApply(ast: Ast) extends OptionOperation { def quat = ast.quat }
@@ -365,22 +384,22 @@ case class ListContains(ast: Ast, body: Ast) extends IterableOperation { def qua
 
 case class If(condition: Ast, `then`: Ast, `else`: Ast) extends Ast { def quat = `then`.quat } // then and else clauses should have identical quats
 
-case class Assignment(alias: Ident, property: Ast, value: Ast) extends Ast { def quat = Quat.Value } // TODO Quat. Not sure where this is used, should look into it
+case class Assignment(alias: Ident, property: Ast, value: Ast) extends Ast { def quat = Quat.Value }
 
 //************************************************************
 
 sealed trait Operation extends Ast
 
-case class UnaryOperation(operator: UnaryOperator, ast: Ast) extends Operation { def quat = Quat.Value } // TODO Quat can this be used in a non-scalar context
+case class UnaryOperation(operator: UnaryOperator, ast: Ast) extends Operation { def quat = Quat.Value }
 case class BinaryOperation(a: Ast, operator: BinaryOperator, b: Ast)
-  extends Operation { def quat = Quat.Value } // TODO Quat can this be used in a non-scalar context
+  extends Operation { def quat = Quat.Value }
 case class FunctionApply(function: Ast, values: List[Ast]) extends Operation { def quat = function.quat }
 
 //************************************************************
 
 sealed trait Value extends Ast
 
-case class Constant(v: Any) extends Value { def quat = Quat.Value } // TODO Quat can this be a non scalar?
+case class Constant(v: Any) extends Value { def quat = Quat.Value }
 
 object NullValue extends Value { def quat = Quat.Null }
 
@@ -390,15 +409,16 @@ case class CaseClass(values: List[(String, Ast)]) extends Value { def quat = Qua
 
 //************************************************************
 
-case class Block(statements: List[Ast]) extends Ast { def quat = statements.last.quat } // TODO Quat, should it be the last one. Also, can the list be empty?
+case class Block(statements: List[Ast]) extends Ast { def quat = statements.last.quat } // Note. Assuming Block is not Empty
 
-case class Val(name: Ident, body: Ast) extends Ast { def quat = body.quat } // TODO Quat, can this be non scalar?
+case class Val(name: Ident, body: Ast) extends Ast { def quat = body.quat }
 
 //************************************************************
 
 sealed trait Action extends Ast
 
-case class Update(query: Ast, assignments: List[Assignment]) extends Action { def quat = query.quat } // TODO Quat quat in actions represents numeric values?
+// Note, technically return type of Actions for most Actions is a Int value but Quat here is used for Retruning Quat types
+case class Update(query: Ast, assignments: List[Assignment]) extends Action { def quat = query.quat }
 case class Insert(query: Ast, assignments: List[Assignment]) extends Action { def quat = query.quat }
 case class Delete(query: Ast) extends Action { def quat = query.quat }
 
@@ -422,14 +442,14 @@ case class Returning(action: Ast, alias: Ident, property: Ast)
 case class ReturningGenerated(action: Ast, alias: Ident, property: Ast)
   extends ReturningAction { def quat = property.quat }
 
-case class Foreach(query: Ast, alias: Ident, body: Ast) extends Action { def quat = body.quat } // TODO Quat in what situations is this used?
+case class Foreach(query: Ast, alias: Ident, body: Ast) extends Action { def quat = body.quat }
 
 case class OnConflict(
   insert: Ast,
   target: OnConflict.Target,
   action: OnConflict.Action
 )
-  extends Action { def quat = insert.quat } // TODO Quat is quat needed in this cases? In what circumstances would it be used?
+  extends Action { def quat = insert.quat }
 
 object OnConflict {
 
@@ -464,9 +484,9 @@ object OnConflict {
 }
 //************************************************************
 
-case class Dynamic(tree: Any) extends Ast { def quat = Quat.Value } // TODO Quat how is this used?????
+case class Dynamic(tree: Any) extends Ast { def quat = Quat.Value }
 
-case class QuotedReference(tree: Any, ast: Ast) extends Ast { def quat = ast.quat } // TODO Quat how is this used?????
+case class QuotedReference(tree: Any, ast: Ast) extends Ast { def quat = ast.quat }
 
 sealed trait External extends Ast
 
@@ -482,21 +502,62 @@ sealed trait Lift extends External with Terminal {
 sealed trait ScalarLift extends Lift with Terminal {
   val encoder: Any
 }
+
+case class ScalarValueLiftId(name: String, value: Any, encoder: Any)
 case class ScalarValueLift(name: String, value: Any, encoder: Any, quat: Quat)
   extends ScalarLift {
-  override def withQuat(newQuat: Quat) = this.copy(quat = newQuat) // TODO Quat quat cannot be part of equals/hashcode  (maybe add it to secondary args list?)
+  override def withQuat(newQuat: Quat) = this.copy(quat = newQuat)
+
+  def id = ScalarValueLiftId(name, value, encoder)
+  override def hashCode(): Int = id.hashCode()
+  override def equals(obj: Any): Boolean =
+    obj match {
+      case e: ScalarValueLift => e.id == this.id
+      case _                  => false
+    }
+
 }
+
+case class ScalarQueryLiftId(name: String, value: Any, encoder: Any)
 case class ScalarQueryLift(name: String, value: Any, encoder: Any, quat: Quat)
   extends ScalarLift {
-  override def withQuat(newQuat: Quat) = this.copy(quat = newQuat) // TODO Quat quat cannot be part of equals/hashcode (maybe add it to secondary args list?)
+  override def withQuat(newQuat: Quat) = this.copy(quat = newQuat)
+
+  def id = ScalarQueryLiftId(name, value, encoder)
+  override def hashCode(): Int = id.hashCode()
+  override def equals(obj: Any): Boolean =
+    obj match {
+      case e: ScalarQueryLift => e.id == this.id
+      case _                  => false
+    }
 }
 
 sealed trait CaseClassLift extends Lift
-case class CaseClassValueLift(name: String, value: Any, quat: Quat) extends CaseClassLift { // TODO Quat quat cannot be part of equals/hashcode (maybe add it to secondary args list?)
+
+case class CaseClassValueLiftId(name: String, value: Any)
+case class CaseClassValueLift(name: String, value: Any, quat: Quat) extends CaseClassLift {
   override def withQuat(newQuat: Quat) = this.copy(quat = newQuat)
+
+  def id = CaseClassValueLiftId(name, value)
+  override def hashCode(): Int = id.hashCode()
+  override def equals(obj: Any): Boolean =
+    obj match {
+      case e: CaseClassValueLift => e.id == this.id
+      case _                     => false
+    }
 }
-case class CaseClassQueryLift(name: String, value: Any, quat: Quat) extends CaseClassLift { // TODO Quat quat cannot be part of equals/hashcode (maybe add it to secondary args list?)
+
+case class CaseClassQueryLiftId(name: String, value: Any)
+case class CaseClassQueryLift(name: String, value: Any, quat: Quat) extends CaseClassLift {
   override def withQuat(newQuat: Quat) = this.copy(quat = newQuat)
+
+  def id = CaseClassQueryLiftId(name, value)
+  override def hashCode(): Int = id.hashCode()
+  override def equals(obj: Any): Boolean =
+    obj match {
+      case e: CaseClassQueryLift => e.id == this.id
+      case _                     => false
+    }
 }
 
 /***********************************************************************/
@@ -507,5 +568,28 @@ sealed trait Tag extends External {
   val uid: String
 }
 
-case class ScalarTag(uid: String) extends Tag { def quat = Quat.Value } // TODO Quat actual quat should be passed into here
-case class QuotationTag(uid: String) extends Tag { def quat = Quat.Value } // TODO Quat actual quat should be passed into here
+case class ScalarTagId(uid: String)
+case class ScalarTag(uid: String) extends Tag {
+  def quat = Quat.Value
+
+  def id = ScalarTagId(uid)
+  override def hashCode(): Int = id.hashCode()
+  override def equals(obj: Any): Boolean =
+    obj match {
+      case e: ScalarTag => this.id == e.id
+      case _            => false
+    }
+}
+
+case class QuotationTagId(uid: String)
+case class QuotationTag(uid: String) extends Tag {
+  def quat = Quat.Value
+
+  def id = QuotationTagId(uid)
+  override def hashCode(): Int = id.hashCode()
+  override def equals(obj: Any): Boolean =
+    obj match {
+      case e: QuotationTag => this.id == e.id
+      case _               => false
+    }
+}

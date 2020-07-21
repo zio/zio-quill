@@ -26,7 +26,6 @@ object RepropagateQuats extends StatelessTransformer {
   }
 
   override def apply(e: Query): Query =
-    // TODO Quat Do I need to do something for infixes?
     e match {
       case Filter(a, b, c) => applyBody(a, b, c)(Filter)
       case Map(a, b, c) =>

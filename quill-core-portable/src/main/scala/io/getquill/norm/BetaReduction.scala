@@ -35,7 +35,6 @@ case class BetaReduction(map: IMap[Ast, Ast], typeBehavior: TypeBehavior)
 
       case ast if map.contains(ast) =>
         val rep = BetaReduction(map - ast - map(ast), typeBehavior)(map(ast))
-        // TODO Quat change null to same functionality as OptionNone
         val output =
           rep match {
             // If we are ignoring types, just do the replacement. Need to do this if we are doing renames since a

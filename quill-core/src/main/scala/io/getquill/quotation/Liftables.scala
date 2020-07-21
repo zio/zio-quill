@@ -4,7 +4,6 @@ import scala.reflect.macros.whitebox.Context
 import io.getquill.ast._
 import io.getquill.dsl.CoreDsl
 import io.getquill.quat.Quat
-import io.getquill.quat.Quat.Probity
 
 import scala.collection.mutable
 
@@ -198,9 +197,10 @@ trait Liftables {
     case CaseClass(a) => q"$pack.CaseClass($a)"
   }
 
-  implicit val quatProbityLiftable: Liftable[Probity] = Liftable[Probity] {
+  // Liftables are invariant so want to have a separate liftable for Quat.Product since it is used directly inside Entity
+  // which should be lifted/unlifted without the need for casting.
+  implicit val quatProductLiftable: Liftable[Quat.Product] = Liftable[Quat.Product] {
     case Quat.Product.WithRenames(fields, renames) => q"io.getquill.quat.Quat.Product.WithRenames($fields, $renames)"
-    case Quat.Error(msg, it)                       => q"io.getquill.quat.Quat.Error($msg, $it)"
   }
 
   implicit val quatLiftable: Liftable[Quat] = Liftable[Quat] {
@@ -208,7 +208,6 @@ trait Liftables {
     case Quat.Value                                => q"io.getquill.quat.Quat.Value"
     case Quat.Null                                 => q"io.getquill.quat.Quat.Null"
     case Quat.Generic                              => q"io.getquill.quat.Quat.Generic"
-    case Quat.Error(msg, it)                       => q"io.getquill.quat.Quat.Error($msg, $it)"
   }
 
   implicit val identLiftable: Liftable[Ident] = Liftable[Ident] {

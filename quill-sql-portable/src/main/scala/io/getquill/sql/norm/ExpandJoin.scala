@@ -4,31 +4,18 @@ import io.getquill.ast._
 import io.getquill.norm.BetaReduction
 import io.getquill.norm.Normalize
 
-// TODO Quat comment here about the other branch where this is done
-//      via flatmaps and technically this does not typecheck but left it alone
-//      because inner aliases not expanded correctly from the following query
-//
-//    def nestedWithRenames(): Unit = {
-//      case class Ent(name: String)
-//      case class Foo(fame: String)
-//      case class Bar(bame: String)
-//
-//      implicit val entSchema = schemaMeta[Ent]("TheEnt", _.name -> "theName")
-//
-//      val q = quote {
-//        query[Foo]
-//          .join(query[Ent]).on((f, e) => f.fame == e.name) // (Foo, Ent)
-//          .distinct
-//          .join(query[Bar]).on((fe, b) => (fe._1.fame == b.bame)) // ((Foo, Ent), Bar)
-//          .distinct
-//          .map(feb => (feb._1._2, feb._2)) // feb: ((Foo, Ent), Bar)
-//          .distinct
-//          .map(eb => (eb._1.name, eb._2.bame)) // eb: (Ent, Bar)
-//      }
-//      println(run(q)) //helloo
-//    }
-//    nestedWithRenames()
-
+/**
+ * This phase expands inner joins adding the correct aliases so they will function. Unfortunately,
+ * since it introduces aliases into the clauses that don't actually exist in the inner expressions,
+ * it is not technically type-safe but will not result in a Quat error since Quats cannot check
+ * for Ident scoping. For a better implementation, that uses a well-typed FlatMap/FlatJoin cascade, have
+ * a look here:
+ * [[https://gist.github.com/deusaquilus/dfb42880656df12779a0afd4f20ef1bb Better Typed ExpandJoin which uses FlatMap/FlatJoin]]
+ *
+ * The reason the above implementation is not currently used is because `ExpandNestedQueries` does not
+ * yet use Quat fields for expansion. Once this is changed, using that implementation here
+ * should be reconsidered.
+ */
 object ExpandJoin {
 
   def apply(q: Ast) = expand(q, None)

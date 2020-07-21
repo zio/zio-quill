@@ -105,7 +105,7 @@ class AstOpsSpec extends Spec {
 
     "must match returning" in {
       Returning(insert, r, prop) must matchPattern {
-        case ReturningAction(`insert`, `r`, `prop`) => // TODO Quat check the quat here
+        case ReturningAction(`insert`, `r`, `prop`) =>
       }
     }
 

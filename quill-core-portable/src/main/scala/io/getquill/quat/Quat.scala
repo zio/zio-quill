@@ -27,8 +27,7 @@ sealed trait Quat {
   def probit =
     this match {
       case p: Quat.Product => p
-      case e: Quat.Error   => e
-      case other           => Quat.Error(s"Was expecting SQL-level type must be a Product but found `${other}`")
+      case other           => QuatException(s"Was expecting SQL-level type must be a Product but found `${other}`")
     }
 
   def leastUpperType(other: Quat): Option[Quat] = {
@@ -42,29 +41,6 @@ sealed trait Quat {
       case (_, _)                                  => None
     }
   }
-
-  def leastUpperType2(other: Quat): Option[Quat] = {
-    (this, other) match {
-      case (Quat.Generic, other)                   => Some(other)
-      case (Quat.Null, other)                      => Some(other)
-      case (other, Quat.Generic)                   => Some(other)
-      case (other, Quat.Null)                      => Some(other)
-      case (Quat.Value, Quat.Value)                => Some(Quat.Value)
-      case (me: Quat.Product, other: Quat.Product) => me.leastUpperTypeProduct2(other)
-      case (_, _)                                  => None
-    }
-  }
-
-  //  def reduceTo(other: Quat): Quat = {
-  //    (this, other) match {
-  //      case (Quat.Value, Quat.Value) => Quat.Value
-  //      case (a: Quat.Product, b: Quat.Product) => a
-  //      case (Quat.Null, Quat.Product(_)) => false // Null is most specific subtype so can't replace with a supertype of it
-  //      case (Quat.Product(_), Quat.Null) => true
-  //      case (Quat.Value, Quat.Null) => true
-  //      case (_, _) => false
-  //    }
-  //  }
 
   override def toString: String = shortString
 
@@ -82,22 +58,20 @@ sealed trait Quat {
         case other => s"[${other.map { case (k, v) => k + "->" + v }.mkString(",")}]"
       })
     }"
-    case Quat.Error(msg, _) => s"Quat-Error(${msg.take(20)})"
-    case Quat.Generic       => "<G>"
-    case Quat.Value         => "V"
-    case Quat.Null          => "N"
+    case Quat.Generic => "<G>"
+    case Quat.Value   => "V"
+    case Quat.Null    => "N"
   }
 
   def lookup(path: String): Quat = (this, path) match {
     case (cc @ Quat.Product(fields), fieldName) =>
-      fields.find(_._1 == fieldName).headOption.map(_._2).getOrElse(Quat.Error(s"The field ${fieldName} does not exist in the SQL-level ${cc}")) // TODO Quat does this not match in certain cases? Which ones?
+      fields.find(_._1 == fieldName).headOption.map(_._2).getOrElse(QuatException(s"The field ${fieldName} does not exist in the SQL-level ${cc}"))
     case (Quat.Value, fieldName) =>
-      Quat.Error(s"The field '${fieldName}' does not exist in an SQL-level leaf-node") // TODO Quat is there a case where we're putting a property on a entity which is actually a value?
+      QuatException(s"The field '${fieldName}' does not exist in an SQL-level leaf-node")
     case (Quat.Null, fieldName) =>
-      Quat.Error(s"The field '${fieldName}' cannot be looked up from a SQL-level null node") // TODO Quat is there a case where we're putting a property on a entity which is actually a value?
+      QuatException(s"The field '${fieldName}' cannot be looked up from a SQL-level null node")
     case (Quat.Generic, fieldName) =>
-      Quat.Error(s"The field '${fieldName}' cannot be looked up from a SQL-level generic node") // TODO Quat is there a case where we're putting a property on a entity which is actually a value?
-    case (Quat.Error(msg, _), _) => Quat.Error(s"${msg}. Also tried to lookup ${path} from node.")
+      QuatException(s"The field '${fieldName}' cannot be looked up from a SQL-level generic node")
   }
   def lookup(list: List[String]): Quat =
     list match {
@@ -126,24 +100,7 @@ object Quat {
         None
   }
 
-  /** Represents a coproduct of a Product and Error */
-  sealed trait Probity extends Quat {
-
-    override def applyRenames: Quat.Probity =
-      this match {
-        case p: Product   => p.applyRenames
-        case error: Error => error
-      }
-
-    /** Produce a product or throw an error. I.e. 'prove' the fact that the probity is a Product. */
-    def prove =
-      this match {
-        case p: Quat.Product    => p
-        case Quat.Error(msg, _) => throw new QuatException(s"Could not cast ProductOr SQL-Type to Product SQL Type due to error. ${msg}")
-      }
-  }
-
-  case class Product(fields: mutable.LinkedHashMap[String, Quat]) extends Probity {
+  case class Product(fields: mutable.LinkedHashMap[String, Quat]) extends Quat {
 
     def this(list: Iterator[(String, Quat)]) = this((mutable.LinkedHashMap[String, Quat]() ++ list): mutable.LinkedHashMap[String, Quat])
 
@@ -169,39 +126,17 @@ object Quat {
       }
     }
 
-    def leastUpperTypeProduct2(other: Quat.Product): Option[Quat.Product] = {
+    def leastUpperTypeProduct(other: Quat.Product): Option[Quat.Product] = {
       val newFields =
         fields.zipWith(other.fields) {
-          case (key, thisQuat, Some(otherQuat)) => (key, thisQuat.leastUpperType2(otherQuat))
+          case (key, thisQuat, Some(otherQuat)) => (key, thisQuat.leastUpperType(otherQuat))
         }.collect {
           case (key, Some(value)) => (key, value)
         }
       Some(Quat.Product(newFields))
     }
 
-    def leastUpperTypeProduct(other: Quat.Product): Option[Quat.Product] = {
-      // TODO Quat this is a N^2 field check. Explor changing product fields into ListMap and make this more efficient
-
-      val newFields = collection.mutable.ArrayBuffer[(String, Quat)]()
-      for ((otherField, otherValue) <- other.fields) {
-        val foundField =
-          this.fields
-            .find(tup => tup._1 == otherField)
-            .flatMap {
-              case (thisField, thisValue) =>
-                thisValue.leastUpperType(otherValue).map(v => (thisField, v))
-            }
-
-        // Early exit if any of the fields are None for performance reasons
-        if (foundField.isEmpty)
-          return None
-
-        newFields += ((foundField.head))
-      }
-      Some(Quat.Product(newFields))
-    }
-
-    override def withRenames(renames: List[(String, String)]) =
+    def withRenames(renames: List[(String, String)]) =
       Product.WithRenames(fields, renames)
 
     /**
@@ -220,59 +155,6 @@ object Quat {
       }
       Product(newFields)
     }
-
-    /** Rename a property of a Quat.Tuple or Quat.CaseClass. Optionally can specify a new Quat to change the property to. */
-    def stashRename(property: String, newProperty: String, newQuat: Option[Quat] = None): Quat.Probity = {
-      // sanity check does the property exist in the first place
-      this.lookup(property) match {
-        case e: Quat.Error => e
-        case _ => {
-          (this, property, newProperty) match {
-            case (cc: Quat.Product, property, newProperty) =>
-              cc.fields.get(property) match {
-                case Some(_) =>
-                  // Note. Technically this is an N^2 behavior and may not be suitable for mass renaming of large records (e.g. hundreds of fields).
-                  val newFields =
-                    cc.fields.map {
-                      case (field, quat) => if (field == property) (field, newQuat.getOrElse(quat)) else (field, quat)
-                    }
-                  Quat.Product.WithRenames(newFields, cc.renames :+ ((property, newProperty)))
-
-                case None =>
-                  cc
-              }
-            case _ => Quat.Error(s"Invalid state reached for ${this.shortString}, ${property}, ${newProperty}")
-          }
-        }
-      }
-    }
-
-    def stashRename(path: List[String], newEndProperty: String): Quat.Probity = {
-      path match {
-        case Nil => // do nothing
-          this
-
-        case head :: Nil =>
-          this.stashRename(head, newEndProperty)
-
-        case head :: tail =>
-          val child = this.lookup(head)
-          val newChild: Either[Quat.Error, Probity] =
-            child match {
-              case childProduct: Quat.Product =>
-                Right(childProduct.stashRename(tail, newEndProperty))
-              case e: Quat.Error =>
-                Left(e)
-              case other =>
-                Left(Quat.Error(s"Cannot continue to lookup property '${tail.head}' from ${other.shortString} in ${this.shortString}"))
-            }
-
-          newChild match {
-            case Right(value) => this.stashRename(head, head, Some(value))
-            case Left(error)  => error
-          }
-      }
-    }
   }
   def LeafProduct(list: String*) = Quat.Product(list.map(e => (e, Quat.Value)))
   def LeafTuple(numElems: Int) = Quat.Tuple((1 to numElems).map(_ => Quat.Value))
@@ -282,7 +164,7 @@ object Quat {
     def apply(fields: (String, Quat)*): Quat.Product = apply(fields.iterator)
     def apply(fields: Iterable[(String, Quat)]): Quat.Product = new Quat.Product(fields.iterator)
     def apply(fields: Iterator[(String, Quat)]): Quat.Product = new Quat.Product(fields)
-    def unapply(p: Quat.Product): Some[(List[(String, Quat)])] = Some(p.fields.toList)
+    def unapply(p: Quat.Product): Some[mutable.LinkedHashMap[String, Quat]] = Some(p.fields)
 
     /**
      * Add staged renames to the Quat. Note that renames should
@@ -315,12 +197,7 @@ object Quat {
     override def withRenames(renames: List[(String, String)]) =
       renames match {
         case Nil => this
-        case _   => Quat.Error(s"Renames ${renames} cannot be applied to a value SQL-level type")
+        case _   => QuatException(s"Renames ${renames} cannot be applied to a value SQL-level type")
       }
-  }
-  case class Error(msg: String, immediateThrow: Boolean = true) extends Probity with Quat {
-    if (immediateThrow)
-      throw new QuatException(msg)
-    override def withRenames(renames: List[(String, String)]): Quat = this
   }
 }

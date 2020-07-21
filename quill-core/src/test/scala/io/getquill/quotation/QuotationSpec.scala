@@ -32,6 +32,8 @@ class QuotationSpec extends Spec {
 
     "query" - {
       "schema" - {
+        import io.getquill.quat.QuatOps.Implicits._
+
         "without aliases" in {
           quote(unquote(qr1)).ast mustEqual Entity("TestEntity", Nil, TestEntityQuat)
         }
@@ -42,10 +44,17 @@ class QuotationSpec extends Spec {
           quote(unquote(q)).ast mustEqual Entity.Opinionated("SomeAlias", Nil, TestEntityQuat, Fixed)
         }
         "with property alias" in {
+          import io.getquill.quat.QuatOps.Implicits._
+
           val q = quote {
             querySchema[TestEntity]("SomeAlias", _.s -> "theS", _.i -> "theI")
           }
-          quote(unquote(q)).ast mustEqual Entity.Opinionated("SomeAlias", List(PropertyAlias(List("s"), "theS"), PropertyAlias(List("i"), "theI")), quatOf[TestEntity].rename("s" -> "theS", "i" -> "theI"), Fixed)
+          quote(unquote(q)).ast mustEqual Entity.Opinionated(
+            "SomeAlias",
+            List(PropertyAlias(List("s"), "theS"), PropertyAlias(List("i"), "theI")),
+            quatOf[TestEntity].productOrFail().renameAtPath(Nil, List("s" -> "theS", "i" -> "theI")),
+            Fixed
+          )
         }
         "with embedded property alias" in {
 
@@ -53,9 +62,9 @@ class QuotationSpec extends Spec {
             querySchema[TestEnt]("SomeAlias", _.ev.s -> "theS", _.ev.i -> "theI")
           }
           val renamedQuat =
-            quatOf[TestEnt].prove
-              .stashRename(List("ev", "s"), "theS").prove
-              .stashRename(List("ev", "i"), "theI").prove
+            quatOf[TestEnt]
+              .productOrFail()
+              .renameAtPath(List("ev"), List("s" -> "theS", "i" -> "theI"))
           quote(unquote(q)).ast mustEqual Entity.Opinionated("SomeAlias", List(PropertyAlias(List("ev", "s"), "theS"), PropertyAlias(List("ev", "i"), "theI")), renamedQuat, Fixed)
         }
         "with embedded option property alias" in {
@@ -63,30 +72,30 @@ class QuotationSpec extends Spec {
             querySchema[TestEnt2]("SomeAlias", _.ev.map(_.s) -> "theS", _.ev.map(_.i) -> "theI")
           }
           val renamedQuat =
-            quatOf[TestEnt2].prove
-              .stashRename(List("ev", "s"), "theS").prove
-              .stashRename(List("ev", "i"), "theI").prove
+            quatOf[TestEnt2]
+              .productOrFail()
+              .renameAtPath(List("ev"), List("s" -> "theS", "i" -> "theI"))
           quote(unquote(q)).ast mustEqual Entity.Opinionated("SomeAlias", List(PropertyAlias(List("ev", "s"), "theS"), PropertyAlias(List("ev", "i"), "theI")), renamedQuat, Fixed)
         }
         "explicit `Predef.ArrowAssoc`" in {
           val q = quote {
             querySchema[TestEntity]("TestEntity", e => Predef.ArrowAssoc(e.s).->[String]("theS"))
           }
-          val renamedQuat = TestEntityQuat.rename("s" -> "theS")
+          val renamedQuat = TestEntityQuat.renameAtPath(Nil, List("s" -> "theS"))
           quote(unquote(q)).ast mustEqual Entity.Opinionated("TestEntity", List(PropertyAlias(List("s"), "theS")), renamedQuat, Fixed)
         }
         "with property alias and unicode arrow" in {
           val q = quote {
             querySchema[TestEntity]("SomeAlias", _.s → "theS", _.i → "theI")
           }
-          val renamedQuat = TestEntityQuat.rename("s" -> "theS", "i" -> "theI")
+          val renamedQuat = TestEntityQuat.renameAtPath(Nil, List("s" -> "theS", "i" -> "theI"))
           quote(unquote(q)).ast mustEqual Entity.Opinionated("SomeAlias", List(PropertyAlias(List("s"), "theS"), PropertyAlias(List("i"), "theI")), renamedQuat, Fixed)
         }
         "with only some properties renamed" in {
           val q = quote {
             querySchema[TestEntity]("SomeAlias", _.s -> "theS").filter(t => t.s == "s" && t.i == 1)
           }
-          val renamedQuat = TestEntityQuat.rename("s" -> "theS")
+          val renamedQuat = TestEntityQuat.renameAtPath(Nil, List("s" -> "theS"))
           quote(unquote(q)).ast mustEqual (
             Filter(Entity.Opinionated("SomeAlias", List(PropertyAlias(List("s"), "theS")), renamedQuat, Fixed), Ident("t", renamedQuat),
               (Property(Ident("t", renamedQuat), "s") +==+ Constant("s")) +&&+ (Property(Ident("t", renamedQuat), "i") +==+ Constant(1)))

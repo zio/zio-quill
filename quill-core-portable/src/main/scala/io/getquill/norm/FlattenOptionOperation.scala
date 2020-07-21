@@ -54,7 +54,7 @@ class FlattenOptionOperation(concatBehavior: ConcatBehavior) extends StatelessTr
       case OptionGetOrNull(ast) =>
         apply(ast)
 
-      // TODO Quat Need this to remain a top-level entity because it has a type inside
+      // NOTE. Once Quats were introduced this was moved to the top-level since. If NullValue is modified to carry a Quat, this can be reconsidered.
       //case OptionNone => NullValue
 
       case OptionGetOrElse(OptionMap(ast, alias, body), Constant(b: Boolean)) =>

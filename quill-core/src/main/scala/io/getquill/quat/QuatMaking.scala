@@ -56,7 +56,6 @@ object RuntimeEntityQuat {
       Modifier.isFinal(cls.getModifiers)
   }
 
-  // TODO Quat Test dynamic query schema with embedded Quat generation
   object Embedded {
     def unapply(cls: Class[_]): Option[List[Method]] =
       if (cls.getInterfaces.contains(classOf[Embedded]))
@@ -120,7 +119,6 @@ trait QuatMakingBase {
 
   def inferQuat(tpe: Type): Quat = {
 
-    // TODO Quat do we need other exclusions?
     def nonGenericMethods(tpe: Type) = {
       tpe.members
         .filter(m => m.isPublic
@@ -140,7 +138,7 @@ trait QuatMakingBase {
           case m: MethodSymbol if m.isPrimaryConstructor => m
         }.head
 
-      // TODO Quat Only one constructor param list supported so far? Have an error for that?
+      // Note. One one constructor param list is supported due to Quat Generation Specifics. This is already the case in most situations.
       constructor.paramLists(0).map { param =>
         (
           param.name.toString,
@@ -216,10 +214,6 @@ trait QuatMakingBase {
         // If it is a query type, recurse into it
         case QueryType(tpe) =>
           parseType(tpe)
-
-        // TODO Quat Is this situation needed? What are the cases where top-level type is Query[T]?
-        // case QueryType(Param(tpe)) =>
-        //   parseType(tpe)
 
         // For cases where the type is actually a parameter with type bounds
         // and the upper bound is not final, assume that polymorphism is being used
@@ -299,7 +293,6 @@ trait QuatMakingBase {
       }
   }
 
-  // TODO Quat remove comments
   def paramOf(tpe: Type, of: Type, maxDepth: Int = 10): Option[Type] = {
     //println(s"### Attempting to check paramOf ${tpe} assuming it is a ${of}")
     tpe match {
