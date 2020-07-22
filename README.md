@@ -1762,7 +1762,6 @@ ctx.run(query[Book])
 
 The cassandra context provides encoding of UDT (user-defined types).
 ```scala
-import io.getquill.context.cassandra.Udt
 
 case class Name(firstName: String, lastName: String) extends Udt
 ```

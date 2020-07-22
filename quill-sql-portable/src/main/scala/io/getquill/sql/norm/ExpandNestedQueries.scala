@@ -12,7 +12,8 @@ import scala.collection.mutable.LinkedHashSet
 import io.getquill.util.Interpolator
 import io.getquill.util.Messages.TraceType.NestedQueryExpansion
 import io.getquill.context.sql.norm.nested.ExpandSelect
-import io.getquill.norm.BetaReduction
+import io.getquill.norm.{ BetaReduction, TypeBehavior }
+import io.getquill.quat.Quat
 
 import scala.collection.mutable
 
@@ -22,23 +23,23 @@ class ExpandNestedQueries(strategy: NamingStrategy) {
   import interp._
 
   def apply(q: SqlQuery, references: List[Property]): SqlQuery =
-    apply(q, LinkedHashSet.empty ++ references)
+    apply(q, LinkedHashSet.empty ++ references, true)
 
   // Using LinkedHashSet despite the fact that it is mutable because it has better characteristics then ListSet.
   // Also this collection is strictly internal to ExpandNestedQueries and exposed anywhere else.
-  private def apply(q: SqlQuery, references: LinkedHashSet[Property]): SqlQuery =
+  private def apply(q: SqlQuery, references: LinkedHashSet[Property], isTopLevel: Boolean = false): SqlQuery =
     q match {
       case q: FlattenSqlQuery =>
-        val expand = expandNested(q.copy(select = ExpandSelect(q.select, references, strategy)))
+        val expand = expandNested(q.copy(select = ExpandSelect(q.select, references, strategy))(q.quat), isTopLevel)
         trace"Expanded Nested Query $q into $expand".andLog()
         expand
       case SetOperationSqlQuery(a, op, b) =>
-        SetOperationSqlQuery(apply(a, references), op, apply(b, references))
+        SetOperationSqlQuery(apply(a, references), op, apply(b, references))(q.quat)
       case UnaryOperationSqlQuery(op, q) =>
-        UnaryOperationSqlQuery(op, apply(q, references))
+        UnaryOperationSqlQuery(op, apply(q, references))(q.quat)
     }
 
-  private def expandNested(q: FlattenSqlQuery): SqlQuery =
+  private def expandNested(q: FlattenSqlQuery, isTopLevel: Boolean): SqlQuery =
     q match {
       case FlattenSqlQuery(from, where, groupBy, orderBy, limit, offset, select, distinct) =>
         val asts = Nil ++ select.map(_.ast) ++ where ++ groupBy ++ orderBy.map(_.ast) ++ limit ++ offset
@@ -50,19 +51,49 @@ class ExpandNestedQueries(strategy: NamingStrategy) {
 
         // Need to unhide properties that were used during the query
         def replaceProps(ast: Ast) =
-          BetaReduction(ast, replacedRefs: _*)
+          BetaReduction(ast, TypeBehavior.ReplaceWithReduction, replacedRefs: _*) // Since properties could not actually be inside, don't typecheck the reduction
         def replacePropsOption(ast: Option[Ast]) =
           ast.map(replaceProps(_))
 
+        def distinctIfNotTopLevel(values: List[SelectValue]) =
+          if (isTopLevel)
+            values
+          else
+            values.distinct
+
+        /*
+         * In sub-queries, need to make sure that the same field/alias pair is not selected twice
+         * which is possible when aliases are used. For example, something like this:
+         *
+         * case class Emb(id: Int, name: String) extends Embedded
+         * case class Parent(id: Int, name: String, emb: Emb) extends Embedded
+         * case class GrandParent(id: Int, par: Parent)
+         * val q = quote { query[GrandParent].map(g => g.par).distinct.map(p => (p.name, p.emb, p.id, p.emb.id)).distinct.map(tup => (tup._1, tup._2, tup._3, tup._4)).distinct }
+         * Will cause double-select inside the innermost subselect:
+         * SELECT DISTINCT theParentName AS theParentName, id AS embid, theName AS embtheName, id AS id, id AS embid FROM GrandParent g
+         * Note how embid occurs twice? That's because (p.emb.id, p.emb) are expanded into (p.emb.id, p.emb.id, e.emb.name).
+         *
+         * On the other hand if the query is top level we need to make sure not to do this deduping or else the encoders won't work since they rely on clause positions
+         * For example, something like this:
+         * val q = quote { query[GrandParent].map(g => g.par).distinct.map(p => (p.name, p.emb, p.id, p.emb.id)) }
+         * Would normally expand to this:
+         * SELECT p.theParentName, p.embid, p.embtheName, p.id, p.embid FROM ...
+         * Note now embed occurs twice? We need to maintain this because the second element of the output tuple
+         * (p.name, p.emb, p.id, p.emb.id) needs the fields p.embid, p.embtheName in that precise order in the selection
+         * or they cannot be encoded.
+         */
+        val newSelects =
+          distinctIfNotTopLevel(select.map(sv => sv.copy(ast = replaceProps(sv.ast))))
+
         q.copy(
-          select = select.map(sv => sv.copy(ast = replaceProps(sv.ast))),
+          select = newSelects,
           from = from,
           where = replacePropsOption(where),
           groupBy = replacePropsOption(groupBy),
           orderBy = orderBy.map(ob => ob.copy(ast = replaceProps(ob.ast))),
           limit = replacePropsOption(limit),
           offset = replacePropsOption(offset)
-        )
+        )(q.quat)
 
     }
 
@@ -91,7 +122,7 @@ class ExpandNestedQueries(strategy: NamingStrategy) {
     }
 
   private def references(alias: String, asts: List[Ast]) =
-    LinkedHashSet.empty ++ (References(State(Ident(alias), Nil))(asts)(_.apply)._2.state.references)
+    LinkedHashSet.empty ++ (References(State(Ident(alias, Quat.Value), Nil))(asts)(_.apply)._2.state.references) // TODO scrap this whole thing with quats
 }
 
 case class State(ident: Ident, references: List[Property])

@@ -215,17 +215,17 @@ trait OrientDBIdiom extends Idiom {
   implicit def selectValueTokenizer(implicit strategy: NamingStrategy): Tokenizer[SelectValue] = {
     def tokenValue(ast: Ast) =
       ast match {
-        case Aggregation(op, Ident(_)) => stmt"${op.token}(*)"
-        case Aggregation(op, _: Query) => scopedTokenizer(ast)
-        case Aggregation(op, ast)      => stmt"${op.token}(${ast.token})"
-        case _                         => ast.token
+        case Aggregation(op, Ident(_, _)) => stmt"${op.token}(*)"
+        case Aggregation(op, _: Query)    => scopedTokenizer(ast)
+        case Aggregation(op, ast)         => stmt"${op.token}(${ast.token})"
+        case _                            => ast.token
       }
     Tokenizer[SelectValue] {
-      case SelectValue(ast, Some(alias), false) => stmt"${tokenValue(ast)} ${strategy.column(alias).token}"
-      case SelectValue(Ident("?"), None, false) => "?".token
-      case SelectValue(ast: Ident, None, false) => stmt"*" //stmt"${tokenValue(ast)}.*"
-      case SelectValue(ast, None, false)        => tokenValue(ast)
-      case SelectValue(_, _, true)              => fail("OrientDB doesn't support `concatMap`")
+      case SelectValue(ast, Some(alias), false)    => stmt"${tokenValue(ast)} ${strategy.column(alias).token}"
+      case SelectValue(Ident("?", _), None, false) => "?".token
+      case SelectValue(ast: Ident, None, false)    => stmt"*" //stmt"${tokenValue(ast)}.*"
+      case SelectValue(ast, None, false)           => tokenValue(ast)
+      case SelectValue(_, _, true)                 => fail("OrientDB doesn't support `concatMap`")
     }
   }
 
@@ -249,7 +249,7 @@ trait OrientDBIdiom extends Idiom {
   }
 
   implicit def infixTokenizer(implicit propertyTokenizer: Tokenizer[Property], strategy: NamingStrategy): Tokenizer[Infix] = Tokenizer[Infix] {
-    case Infix(parts, params, _) =>
+    case Infix(parts, params, _, _) =>
       val pt = parts.map(_.token)
       val pr = params.map(_.token)
       Statement(Interleave(pt, pr))
@@ -299,7 +299,7 @@ trait OrientDBIdiom extends Idiom {
   }
 
   implicit def entityTokenizer(implicit strategy: NamingStrategy): Tokenizer[Entity] = Tokenizer[Entity] {
-    case Entity.Opinionated(name, _, renameable) =>
+    case Entity.Opinionated(name, _, _, renameable) =>
       renameable.fixedOr(name.token)(strategy.table(name).token)
   }
 

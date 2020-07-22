@@ -1,19 +1,20 @@
 package io.getquill.quotation
 
 import io.getquill.ast._
+import io.getquill.ast.Implicits._
 import collection.immutable.Set
 
-case class State(seen: Set[Ident], free: Set[Ident])
+case class State(seen: Set[IdentName], free: Set[IdentName])
 
 case class FreeVariables(state: State)
   extends StatefulTransformer[State] {
 
   override def apply(ast: Ast): (Ast, StatefulTransformer[State]) =
     ast match {
-      case ident: Ident if (!state.seen.contains(ident)) =>
-        (ident, FreeVariables(State(state.seen, state.free + ident)))
+      case ident: Ident if (!state.seen.contains(ident.idName)) =>
+        (ident, FreeVariables(State(state.seen, state.free + ident.idName)))
       case f @ Function(params, body) =>
-        val (_, t) = FreeVariables(State(state.seen ++ params, state.free))(body)
+        val (_, t) = FreeVariables(State(state.seen ++ params.map(_.idName), state.free))(body)
         (f, FreeVariables(State(state.seen, state.free ++ t.state.free)))
       case q @ Foreach(a, b, c) =>
         (q, free(a, b, c))
@@ -46,7 +47,7 @@ case class FreeVariables(state: State)
   override def apply(e: Assignment): (Assignment, StatefulTransformer[State]) =
     e match {
       case Assignment(a, b, c) =>
-        val t = FreeVariables(State(state.seen + a, state.free))
+        val t = FreeVariables(State(state.seen + a.idName, state.free))
         val (bt, btt) = t(b)
         val (ct, ctt) = t(c)
         (Assignment(a, bt, ct), FreeVariables(State(state.seen, state.free ++ btt.state.free ++ ctt.state.free)))
@@ -76,13 +77,16 @@ case class FreeVariables(state: State)
       case q @ Join(t, a, b, iA, iB, on) =>
         val (_, freeA) = apply(a)
         val (_, freeB) = apply(b)
-        val (_, freeOn) = FreeVariables(State(state.seen + iA + iB, Set.empty))(on)
+        val (_, freeOn) = FreeVariables(State(state.seen + iA.idName + iB.idName, Set.empty))(on)
         (q, FreeVariables(State(state.seen, state.free ++ freeA.state.free ++ freeB.state.free ++ freeOn.state.free)))
       case _: Entity | _: Take | _: Drop | _: Union | _: UnionAll | _: Aggregation | _: Distinct | _: Nested =>
         super.apply(query)
     }
 
-  private def free(a: Ast, ident: Ident, c: Ast) = {
+  private def free(a: Ast, ident: Ident, c: Ast): FreeVariables =
+    free(a, ident.idName, c)
+
+  private def free(a: Ast, ident: IdentName, c: Ast) = {
     val (_, ta) = apply(a)
     val (_, tc) = FreeVariables(State(state.seen + ident, state.free))(c)
     FreeVariables(State(state.seen, state.free ++ ta.state.free ++ tc.state.free))
@@ -90,7 +94,7 @@ case class FreeVariables(state: State)
 }
 
 object FreeVariables {
-  def apply(ast: Ast): Set[Ident] =
+  def apply(ast: Ast): Set[IdentName] =
     new FreeVariables(State(Set.empty, Set.empty))(ast) match {
       case (_, transformer) =>
         transformer.state.free

@@ -23,7 +23,7 @@ class SparkDialectSpec extends Spec {
       norm mustEqual ast
       stmt.toString mustEqual "SELECT x.* FROM Test x"
     }
-    "non-query" in {
+    "non  -query" in {
       val ast = infix"SELECT 1".ast
       val (norm, stmt) = SparkDialect.translate(ast)(Literal)
       norm mustEqual ast
@@ -35,7 +35,7 @@ class SparkDialectSpec extends Spec {
     val ast = query[Test].map(t => "test'").ast
     val (norm, stmt) = SparkDialect.translate(ast)(Literal)
     norm mustEqual ast
-    stmt.toString mustEqual "SELECT 'test\\'' AS _1 FROM Test t"
+    stmt.toString mustEqual "SELECT 'test\\'' FROM Test t"
   }
 
   "nested property" in {
@@ -58,21 +58,21 @@ class SparkDialectSpec extends Spec {
     val ast = query[Test].concatMap(t => t.s.split(" ")).ast
     val (norm, stmt) = SparkDialect.translate(ast)(Literal)
     norm mustEqual ast
-    stmt.toString mustEqual "SELECT explode(SPLIT(t.s, ' ')) AS _1 FROM Test t"
+    stmt.toString mustEqual "SELECT explode(SPLIT(t.s, ' ')) FROM Test t"
   }
 
   "non-tuple select" in {
     val ast = query[Test].concatMap(t => t.s.split(" ")).filter(s => s == "s").ast
     val (norm, stmt) = SparkDialect.translate(ast)(Literal)
     norm mustEqual ast
-    stmt.toString mustEqual "SELECT s.* FROM (SELECT explode(SPLIT(t.s, ' ')) AS _1 FROM Test t) AS s WHERE s._1 = 's'"
+    stmt.toString mustEqual "SELECT s.* FROM (SELECT explode(SPLIT(t.s, ' ')) FROM Test t) AS s WHERE s._1 = 's'"
   }
 
   "concat string" in {
     val ast = query[Test].map(t => t.s + " ").ast
     val (norm, stmt) = SparkDialect.translate(ast)(Literal)
     norm mustEqual ast
-    stmt.toString mustEqual "SELECT concat(t.s, ' ') AS _1 FROM Test t"
+    stmt.toString mustEqual "SELECT concat(t.s, ' ') FROM Test t"
   }
 
   "groupBy with multiple columns" in {

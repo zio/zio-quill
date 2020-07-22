@@ -189,7 +189,7 @@ class NestedDistinctSpec extends Spec {
         val q = quote {
           query[Parent].map(p => p.emb).nested.map(e => (e.name, e.id))
         }
-        ctx.run(q).string mustEqual "SELECT p.theName, p.embid FROM (SELECT x.theName, x.id AS embid FROM Parent x) AS p"
+        ctx.run(q).string mustEqual "SELECT p.embtheName, p.embid FROM (SELECT x.theName AS embtheName, x.id AS embid FROM Parent x) AS p"
       }
 
       "can be propogated across query with naming intact and then used further" in {
@@ -203,7 +203,7 @@ class NestedDistinctSpec extends Spec {
         val q = quote {
           query[Parent].map(p => p.emb).nested.map(e => (e.name, e.id)).nested.map(tup => (tup._1, tup._2)).nested
         }
-        ctx.run(q).string mustEqual "SELECT p.theName, p.embid FROM (SELECT x.theName, x.id AS embid FROM Parent x) AS p"
+        ctx.run(q).string mustEqual "SELECT p.embtheName, p.embid FROM (SELECT x.theName AS embtheName, x.id AS embid FROM Parent x) AS p"
       }
 
       "can be propogated across query with naming intact - returned as single property" in {
@@ -217,7 +217,7 @@ class NestedDistinctSpec extends Spec {
         val q = quote {
           query[Parent].map(p => p.emb).nested.map(e => e)
         }
-        ctx.run(q).string mustEqual "SELECT p.embid, p.theName FROM (SELECT x.id AS embid, x.theName FROM Parent x) AS p"
+        ctx.run(q).string mustEqual "SELECT p.embid, p.embtheName FROM (SELECT x.id AS embid, x.theName AS embtheName FROM Parent x) AS p"
       }
 
       "can be propogated across distinct with naming intact - and the immediately returned" in {
@@ -238,7 +238,7 @@ class NestedDistinctSpec extends Spec {
         val q = quote {
           query[Parent].map(p => p.emb).nested.map(e => Parent(1, e))
         }
-        ctx.run(q).string mustEqual "SELECT 1, p.embid, p.theName FROM (SELECT x.id AS embid, x.theName FROM Parent x) AS p"
+        ctx.run(q).string mustEqual "SELECT 1, p.embid, p.embtheName FROM (SELECT x.id AS embid, x.theName AS embtheName FROM Parent x) AS p"
       }
     }
 
@@ -254,7 +254,7 @@ class NestedDistinctSpec extends Spec {
             .map(g => g.par).distinct
             .map(p => p.emb).map(p => p.name).distinct
         }
-        ctx.run(q).string mustEqual "SELECT DISTINCT p.theName FROM (SELECT DISTINCT theName AS theName FROM GrandParent g) AS p"
+        ctx.run(q).string mustEqual "SELECT DISTINCT p.embtheName FROM (SELECT DISTINCT theName AS embtheName FROM GrandParent g) AS p"
       }
 
       "fully unwrapped name propagates with side property" in {
@@ -276,7 +276,7 @@ class NestedDistinctSpec extends Spec {
             .map(tup => (tup._1, tup._2)).nested
         }
         ctx.run(q).string mustEqual
-          "SELECT g.theParentName, g.parembid, g.theName FROM (SELECT x.theParentName, x.id AS parembid, x.theName FROM GrandParent x) AS g"
+          "SELECT g.partheParentName, g.parembid, g.parembtheName FROM (SELECT x.theParentName AS partheParentName, x.id AS parembid, x.theName AS parembtheName FROM GrandParent x) AS g"
       }
 
       "fully unwrapped name propagates with un-renamed properties" in {
@@ -286,6 +286,7 @@ class NestedDistinctSpec extends Spec {
             .map(p => (p.name, p.emb, p.id, p.emb.id)).distinct
             .map(tup => (tup._1, tup._2, tup._3, tup._4)).distinct
         }
+        println(ctx.run(q).string(true))
         ctx.run(q).string.collapseSpace mustEqual
           """SELECT x._1, x._2id, x._2theName, x._3, x._4
             |FROM (SELECT DISTINCT p.theParentName AS _1,
@@ -306,6 +307,7 @@ class NestedDistinctSpec extends Spec {
             .map(p => (p.name, p.emb, p.id, p.emb.id)).distinct
             .map(tup => (tup._1, tup._2, tup._3, tup._4)).distinct
         }
+        println(ctx.run(q).string(true))
         ctx.run(q).string.collapseSpace mustEqual
           """SELECT x._1, x._2id, x._2theName, x._3, x._4
             |FROM (SELECT DISTINCT p.theParentName AS _1,
@@ -368,7 +370,7 @@ class NestedDistinctSpec extends Spec {
 
         }
         ctx.run(q).string.collapseSpace mustEqual
-          """SELECT g.id, g.parid, g.theParentName, g.parembid, g.theName FROM (SELECT x.id, x.id AS parid, x.theParentName, x.id AS parembid, x.theName FROM GrandParent x) AS g""".stripMargin.collapseSpace
+          """SELECT g.id, g.parid, g.partheParentName, g.parembid, g.parembtheName FROM (SELECT x.id, x.id AS parid, x.theParentName AS partheParentName, x.id AS parembid, x.theName AS parembtheName FROM GrandParent x) AS g""".stripMargin.collapseSpace
       }
 
       "fully unwrapped and fully re-wrapped - nested and distinct" in {
@@ -388,16 +390,16 @@ class NestedDistinctSpec extends Spec {
           """SELECT tup._1, tup._2id, tup._2name, tup._2embid, tup._2embname
             |FROM (SELECT DISTINCT tup._1, tup._2 AS _2id, tup._3 AS _2name, tup._4 AS _2embid, tup._5 AS _2embname
             |      FROM (SELECT DISTINCT tup._1, tup._2, tup._3, tup._4id AS _4, tup._4theName AS _5
-            |            FROM (SELECT DISTINCT g.id            AS _1,
-            |                                  g.parid         AS _2,
-            |                                  g.theParentName AS _3,
-            |                                  g.parembid      AS _4id,
-            |                                  g.parembtheName AS _4theName
+            |            FROM (SELECT DISTINCT g.id               AS _1,
+            |                                  g.parid            AS _2,
+            |                                  g.partheParentName AS _3,
+            |                                  g.parembid         AS _4id,
+            |                                  g.parembtheName    AS _4theName
             |                  FROM (SELECT x.id,
-            |                               x.id      AS parid,
-            |                               x.theParentName,
-            |                               x.id      AS parembid,
-            |                               x.theName AS parembtheName
+            |                               x.id            AS parid,
+            |                               x.theParentName AS partheParentName,
+            |                               x.id            AS parembid,
+            |                               x.theName       AS parembtheName
             |                        FROM GrandParent x) AS g) AS tup) AS tup) AS tup
           """.stripMargin.collapseSpace
       }

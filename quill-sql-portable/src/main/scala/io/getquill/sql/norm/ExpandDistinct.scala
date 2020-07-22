@@ -13,10 +13,12 @@ object ExpandDistinct {
         Transform(q) {
           case Aggregation(op, Distinct(q)) =>
             Aggregation(op, Distinct(apply(q)))
+
           case Distinct(Map(q, x, cc @ Tuple(values))) =>
-            Map(Distinct(Map(q, x, cc)), x,
+            val newIdent = Ident(x.name, cc.quat)
+            Map(Distinct(Map(q, x, cc)), newIdent,
               Tuple(values.zipWithIndex.map {
-                case (_, i) => Property(x, s"_${i + 1}")
+                case (_, i) => Property(newIdent, s"_${i + 1}")
               }))
 
           // Situations like this:
@@ -26,9 +28,10 @@ object ExpandDistinct {
           //    }
           // ... need some special treatment. Otherwise their values will not be correctly expanded.
           case Distinct(Map(q, x, cc @ CaseClass(values))) =>
-            Map(Distinct(Map(q, x, cc)), x,
+            val newIdent = Ident(x.name, cc.quat)
+            Map(Distinct(Map(q, x, cc)), newIdent,
               CaseClass(values.map {
-                case (name, _) => (name, Property(x, name))
+                case (name, _) => (name, Property(newIdent, name))
               }))
 
           // Need some special handling to address issues with distinct returning a single embedded entity i.e:

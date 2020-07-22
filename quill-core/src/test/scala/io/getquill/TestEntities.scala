@@ -1,6 +1,7 @@
 package io.getquill
 
 import io.getquill.context.Context
+import io.getquill.quat.Quat
 
 trait TestEntities {
   this: Context[_, _] =>
@@ -15,6 +16,16 @@ trait TestEntities {
   case class EmbSingle(i: Long) extends Embedded
   case class TestEntity4Emb(emb: EmbSingle)
   case class TestEntityRegular(s: String, i: Long)
+
+  private val QV = Quat.Value
+
+  val TestEntityQuat = Quat.Product("s" -> QV, "i" -> QV, "l" -> QV, "o" -> QV)
+  val TestEntityEmbQuat = Quat.Product("emb" -> Quat.Product("s" -> QV, "i" -> QV), "l" -> QV, "o" -> QV)
+  val TestEntity2Quat = Quat.Product("s" -> QV, "i" -> QV, "l" -> QV, "o" -> QV)
+  val TestEntity3Quat = Quat.Product("s" -> QV, "i" -> QV, "l" -> QV, "o" -> QV)
+  val TestEntity4Quat = Quat.Product("i" -> QV)
+  val TestEntity5Quat = Quat.Product("i" -> QV, "s" -> QV)
+  val TestEntity4EmbQuat = Quat.Product("emb" -> Quat.Product("i" -> QV))
 
   val qr1 = quote {
     query[TestEntity]
