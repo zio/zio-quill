@@ -1547,7 +1547,7 @@ the latter two, however, do not support Insert and Batch Insert query printing.
 
 Quill provides an IO monad that allows the user to express multiple computations and execute them separately. This mechanism is also known as a free monad, which provides a way of expressing computations as referentially-transparent values and isolates the unsafe IO operations into a single operation. For instance:
 
-```
+```scala
 // this code using Future
 
 case class Person(id: Int, name: String, age: Int)
