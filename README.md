@@ -787,7 +787,7 @@ val q = quote {
   for {
     p <- query[Person]
     a <- query[Address] if (p.id == a.fk)
-    c <- query[Address] if (c.zip == a.zip)
+    c <- query[Company] if (c.zip == a.zip)
   } yield (p, a, c)
 }
  
