@@ -63,15 +63,23 @@ sealed trait Quat {
     case Quat.Null    => "N"
   }
 
+  /** What was the value of a given property before it was renamed (i.e. looks up the value of the Renames hash) */
+  def beforeRenamed(path: String): Option[String] = (this, path) match {
+    case (cc: Quat.Product, fieldName) =>
+      // NOTE This is a linear lookup. To improve efficiency store a map going back from rename to the initial property,
+      // if we did that however, we would need to make sure to warn a user of two things are renamed to the same property however,
+      // that kind of warning should probably exist already
+      renames.find(_._2 == fieldName).headOption.map(_._2)
+    case (other, fieldName) =>
+      QuatException(s"The post-rename field '${fieldName}' does not exist in an SQL-level type ${other}")
+  }
+
   def lookup(path: String): Quat = (this, path) match {
     case (cc @ Quat.Product(fields), fieldName) =>
+      // TODO Change to Get
       fields.find(_._1 == fieldName).headOption.map(_._2).getOrElse(QuatException(s"The field ${fieldName} does not exist in the SQL-level ${cc}"))
-    case (Quat.Value, fieldName) =>
-      QuatException(s"The field '${fieldName}' does not exist in an SQL-level leaf-node")
-    case (Quat.Null, fieldName) =>
-      QuatException(s"The field '${fieldName}' cannot be looked up from a SQL-level null node")
-    case (Quat.Generic, fieldName) =>
-      QuatException(s"The field '${fieldName}' cannot be looked up from a SQL-level generic node")
+    case (other, fieldName) =>
+      QuatException(s"The field '${fieldName}' does not exist in an SQL-level type ${other}")
   }
   def lookup(list: List[String]): Quat =
     list match {
@@ -127,23 +135,26 @@ object Quat {
     }
 
     def leastUpperTypeProduct(other: Quat.Product): Option[Quat.Product] = {
-      val newFields =
+      val newFieldsIter =
         fields.zipWith(other.fields) {
           case (key, thisQuat, Some(otherQuat)) => (key, thisQuat.leastUpperType(otherQuat))
         }.collect {
           case (key, Some(value)) => (key, value)
         }
-      Some(Quat.Product(newFields))
+      val newFields = mutable.LinkedHashMap(newFieldsIter.toList: _*)
+      // Note, some extra renames from properties that don't exist could make it here.
+      // Need to make sure to ignore extra ones when they are actually applied.
+      Some(Quat.Product(newFields).withRenames(renames))
     }
 
     def withRenames(renames: List[(String, String)]) =
       Product.WithRenames(fields, renames)
 
     /**
-     * Rename the properties and reset renames to empty.
-     * An interesting idea would be not to clear
-     * the renames at the end but rather keep them around until the SqlQuery phase wherein we could potentially
-     * create SQL aliases not based on the renamed properties by based on the original property name.
+     * Rename the properties based on the renames list. Keep this list
+     * around since it is used in sql sub-query expansion to determine whether
+     * the property is fixed or not (i.e. whether the column naming strategy should
+     * be applied to it).
      */
     override def applyRenames: Quat.Product = {
       val newFields = fields.map {
@@ -153,7 +164,7 @@ object Quat {
           val newValue = q.applyRenames
           (newKey, newValue)
       }
-      Product(newFields)
+      Product.WithRenames(newFields, renames)
     }
   }
   def LeafProduct(list: String*) = Quat.Product(list.map(e => (e, Quat.Value)))

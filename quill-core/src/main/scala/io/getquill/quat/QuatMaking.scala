@@ -18,18 +18,25 @@ trait QuatMaking extends QuatMakingBase {
   lazy val u: Uni = c.universe
 
   import u.{ Block => _, Constant => _, Function => _, Ident => _, If => _, _ }
+  import collection.mutable.HashMap;
 
-  def existsEncoderFor(tpe: Type) = {
-    OptionalTypecheck(c)(q"implicitly[${c.prefix}.Encoder[$tpe]]") match {
-      case Some(enc) => true
-      case None      => false
+  val cachedEncoderLookups: HashMap[Type, Boolean] = HashMap();
+  def existsEncoderFor(tpe: Type): Boolean = {
+    cachedEncoderLookups.get(tpe) match {
+      case Some(value) =>
+        value
+      case None =>
+        val lookup =
+          OptionalTypecheck(c)(q"implicitly[${c.prefix}.Encoder[$tpe]]") match {
+            case Some(enc) => true
+            case None      => false
+          }
+        cachedEncoderLookups.put(tpe, lookup)
+        lookup
     }
   }
 
-  import collection.mutable.HashMap;
-
   val cachedQuats: HashMap[Type, Quat] = HashMap();
-
   override def inferQuat(tpe: u.Type): Quat = {
     cachedQuats.get(tpe) match {
       case Some(value) =>
@@ -258,8 +265,10 @@ trait QuatMakingBase {
 
         case _ if (isNone(tpe)) =>
           Quat.Null
-        // For other types of case classes
-        case CaseClassBaseType(name, fields) =>
+
+        // For other types of case classes (and if there does not exist an encoder for it)
+        // the exception to that is a cassandra UDT that we treat like an encodeable entity even if it has a parsed type
+        case CaseClassBaseType(name, fields) if !existsEncoderFor(tpe) || tpe <:< typeOf[Udt] =>
           Quat.Product(fields.map { case (fieldName, fieldType) => (fieldName, parseType(fieldType)) })
 
         // If we are already inside a bounded type, treat an arbitrary type as a interface list

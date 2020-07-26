@@ -93,3 +93,14 @@ object IfExist {
     case _                                => None
   }
 }
+
+object PropertyOrCore {
+  def unapply(ast: Ast): Boolean =
+    Core.unapply(ast) || ast.isInstanceOf[Property]
+}
+
+/* Things that can be on the inside of a series of nested properties */
+object Core {
+  def unapply(ast: Ast): Boolean =
+    ast.isInstanceOf[Ident] || ast.isInstanceOf[Infix] || ast.isInstanceOf[Constant]
+}

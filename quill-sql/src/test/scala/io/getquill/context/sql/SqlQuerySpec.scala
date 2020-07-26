@@ -10,7 +10,7 @@ class SqlQuerySpec extends Spec {
 
   implicit val naming = new Literal {}
 
-  "transforms the ast into a flatten sql-like structure" - {
+  "transforms the ast into a flatten sql-like structure" - { //hello
 
     "inner join query" in {
       val q = quote {
@@ -154,7 +154,7 @@ class SqlQuerySpec extends Spec {
           e2 <- qr2.leftJoin(e2 => e2.i == e1.i)
         } yield (e1.i, e2.map(e => e.i))
       }
-      testContext.run(q.dynamic).string mustEqual
+      testContext.run(q).string mustEqual
         "SELECT e1.i, e2.i FROM TestEntity e1 LEFT JOIN TestEntity2 e2 ON e2.i = e1.i"
     }
 
@@ -234,7 +234,7 @@ class SqlQuerySpec extends Spec {
           qr1.sortBy(t => t.s).flatMap(t => qr2.map(t => t.s))
         }
         testContext.run(q).string mustEqual
-          "SELECT t1.s FROM (SELECT t.* FROM TestEntity t ORDER BY t.s ASC NULLS FIRST) AS t, TestEntity2 t1"
+          "SELECT t1.s FROM (SELECT t.s, t.i, t.l, t.o FROM TestEntity t ORDER BY t.s ASC NULLS FIRST) AS t, TestEntity2 t1"
       }
       "tuple criteria" - {
         "single ordering" in {
@@ -257,7 +257,7 @@ class SqlQuerySpec extends Spec {
           qr1.sortBy(t => (t.s, t.i)).sortBy(t => t.l).map(t => t.s)
         }
         testContext.run(q).string mustEqual
-          "SELECT t.s FROM (SELECT t.s, t.l FROM TestEntity t ORDER BY t.s ASC NULLS FIRST, t.i ASC NULLS FIRST) AS t ORDER BY t.l ASC NULLS FIRST"
+          "SELECT t.s FROM (SELECT t.s, t.i, t.l, t.o FROM TestEntity t ORDER BY t.s ASC NULLS FIRST, t.i ASC NULLS FIRST) AS t ORDER BY t.l ASC NULLS FIRST"
       }
       "expression" - {
         "neg" in {
@@ -398,7 +398,7 @@ class SqlQuerySpec extends Spec {
         qr1.map(t => t.i -> t.s).size
       }
       testContext.run(q).string mustEqual
-        "SELECT COUNT(*) FROM (SELECT t.i, t.s FROM TestEntity t) AS x"
+        "SELECT COUNT(*) FROM TestEntity t"
     }
 
     "distinct" - {
@@ -417,6 +417,15 @@ class SqlQuerySpec extends Spec {
           "SELECT 1 FROM (SELECT DISTINCT t.i FROM TestEntity t) AS t"
       }
 
+      "with map uppsercase" in {
+        import testContextUpper._
+        val q = quote {
+          qr1.map(t => t.i).distinct.map(t => 1)
+        }
+        testContextUpper.run(q).string mustEqual
+          "SELECT 1 FROM (SELECT DISTINCT t.I AS i FROM TESTENTITY t) AS t"
+      }
+
       "with map inside join" in {
         val q = quote {
           qr1
@@ -428,7 +437,7 @@ class SqlQuerySpec extends Spec {
             .on((a, b) => a.i == b)
         }
         testContext.run(q).string mustEqual
-          "SELECT a.s, a.i, a.l, a.o, q21.i FROM TestEntity a INNER JOIN (SELECT DISTINCT i AS i FROM TestEntity2 q2) AS q21 ON a.i = q21.i"
+          "SELECT a.s, a.i, a.l, a.o, q21.i FROM TestEntity a INNER JOIN (SELECT DISTINCT q2.i FROM TestEntity2 q2) AS q21 ON a.i = q21.i"
       }
 
       // If you look inside BetaReduction, you will see that tuple values that are the same are collapsed via 'distinct'.
@@ -525,7 +534,7 @@ class SqlQuerySpec extends Spec {
           qr1.take(10).flatMap(a => qr2)
         }
         testContext.run(q).string mustEqual
-          "SELECT x.s, x.i, x.l, x.o FROM (SELECT x.* FROM TestEntity x LIMIT 10) AS a, TestEntity2 x"
+          "SELECT x.s, x.i, x.l, x.o FROM (SELECT x.s, x.i, x.l, x.o FROM TestEntity x LIMIT 10) AS a, TestEntity2 x"
       }
       "with map" in {
         val q = quote {
@@ -555,7 +564,7 @@ class SqlQuerySpec extends Spec {
           qr1.drop(10).flatMap(a => qr2)
         }
         testContext.run(q).string mustEqual
-          "SELECT x.s, x.i, x.l, x.o FROM (SELECT x.* FROM TestEntity x OFFSET 10) AS a, TestEntity2 x"
+          "SELECT x.s, x.i, x.l, x.o FROM (SELECT x.s, x.i, x.l, x.o FROM TestEntity x OFFSET 10) AS a, TestEntity2 x"
       }
       "with map" in {
         val q = quote {
@@ -585,7 +594,7 @@ class SqlQuerySpec extends Spec {
           qr1.drop(10).take(11).flatMap(a => qr2)
         }
         testContext.run(q).string mustEqual
-          "SELECT x.s, x.i, x.l, x.o FROM (SELECT x.* FROM TestEntity x LIMIT 11 OFFSET 10) AS a, TestEntity2 x"
+          "SELECT x.s, x.i, x.l, x.o FROM (SELECT x.s, x.i, x.l, x.o FROM TestEntity x LIMIT 11 OFFSET 10) AS a, TestEntity2 x"
       }
       "multiple" in {
         val q = quote {
@@ -639,14 +648,14 @@ class SqlQuerySpec extends Spec {
           qr1.nonEmpty
         }
         testContext.run(q).string mustEqual
-          "SELECT EXISTS (SELECT x.* FROM TestEntity x)"
+          "SELECT EXISTS (SELECT x.s, x.i, x.l, x.o FROM TestEntity x)"
       }
       "isEmpty" in {
         val q = quote {
           qr1.isEmpty
         }
         testContext.run(q).string mustEqual
-          "SELECT NOT EXISTS (SELECT x.* FROM TestEntity x)"
+          "SELECT NOT EXISTS (SELECT x.s, x.i, x.l, x.o FROM TestEntity x)"
       }
     }
     "aggregated and mapped query" in {

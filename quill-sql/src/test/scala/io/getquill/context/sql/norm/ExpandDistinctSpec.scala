@@ -5,7 +5,7 @@ import io.getquill.context.sql.testContext.qr1
 import io.getquill.context.sql.testContext.quote
 import io.getquill.context.sql.testContext.unquote
 
-class ExpandDistinctSpec extends Spec {
+class ExpandDistinctSpec extends Spec { //hello
 
   "expands distinct map" - {
     "simple" in {
