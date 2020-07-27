@@ -22,32 +22,7 @@ abstract class NdbcContext[I <: SqlIdiom, N <: NamingStrategy, P <: PreparedStat
   override type RunBatchActionResult = List[Long]
   override type RunBatchActionReturningResult[T] = List[T]
 
-  override implicit protected val resultEffect: NdbcContextBase.ContextEffect[Future, Unit] =
-    new NdbcContextBase.ContextEffect[Future, Unit] {
-      override def wrap[T](t: => T): Future[T] = Future(t)
-
-      //noinspection DuplicatedCode
-      override def wrapAsync[T](f: (Complete[T]) => Unit): Future[T] = {
-        val p = Promise[T]()
-        f { complete =>
-          p.complete(complete)
-          ()
-        }
-        p.future
-      }
-
-      override def toFuture[T](eff: Future[T], ec: Unit): Future[T] = eff
-
-      override def fromDeferredFuture[T](f: Unit => Future[T]): Future[T] = f(())
-
-      override def push[A, B](a: Future[A])(f: A => B): Future[B] = a.map(f)
-
-      override def flatMap[A, B](a: Future[A])(f: A => Future[B]): Future[B] = a.flatMap(f)
-
-      override def seq[T](list: List[Future[T]]): Future[List[T]] = Future.sequence(list)
-
-      override def runBlocking[T](eff: Future[T], timeout: Duration): T = Await.result(eff, timeout)
-    }
+  override implicit protected val resultEffect: NdbcContextBase.ContextEffect[Future, Unit] = NdbcContext.ContextEffect
 
   override type TranslateResult[T] = Future[T]
 
@@ -87,4 +62,32 @@ abstract class NdbcContext[I <: SqlIdiom, N <: NamingStrategy, P <: PreparedStat
     withDataSource { _ =>
       resultEffect.wrap(prepare(createPreparedStatement(statement))._1.reverse.map(prepareParam))
     }
+}
+
+object NdbcContext {
+  object ContextEffect extends NdbcContextBase.ContextEffect[Future, Unit] {
+    override def wrap[T](t: => T): Future[T] = Future(t)
+
+    //noinspection DuplicatedCode
+    override def wrapAsync[T](f: (Complete[T]) => Unit): Future[T] = {
+      val p = Promise[T]()
+      f { complete =>
+        p.complete(complete)
+        ()
+      }
+      p.future
+    }
+
+    override def toFuture[T](eff: Future[T], ec: Unit): Future[T] = eff
+
+    override def fromDeferredFuture[T](f: Unit => Future[T]): Future[T] = f(())
+
+    override def push[A, B](a: Future[A])(f: A => B): Future[B] = a.map(f)
+
+    override def flatMap[A, B](a: Future[A])(f: A => Future[B]): Future[B] = a.flatMap(f)
+
+    override def seq[T](list: List[Future[T]]): Future[List[T]] = Future.sequence(list)
+
+    override def runBlocking[T](eff: Future[T], timeout: Duration): T = Await.result(eff, timeout)
+  }
 }

@@ -39,6 +39,36 @@ object MonixNdbcContext {
       override def schedule[T](o: Observable[T]): Observable[T] = o.executeOn(scheduler, forceAsync = true)
     }
   }
+
+  object ContextEffect extends NdbcContextBase.ContextEffect[Task, Scheduler] {
+    override def wrapAsync[T](f: (Complete[T]) => Unit): Task[T] = Task.deferFuture {
+      val p = Promise[T]()
+      f { complete =>
+        p.complete(complete)
+        ()
+      }
+      p.future
+    }
+
+    override def toFuture[T](eff: Task[T], ec: Scheduler): Future[T] = {
+      TraneFutureConverters.scalaToTraneScala(eff.runToFuture(ec))(ec)
+    }
+
+    override def fromDeferredFuture[T](f: Scheduler => Future[T]): Task[T] = Task.deferFutureAction(f(_))
+
+    override def flatMap[A, B](a: Task[A])(f: A => Task[B]): Task[B] = a.flatMap(f)
+
+    override def runBlocking[T](eff: Task[T], timeout: Duration): T = {
+      import monix.execution.Scheduler.Implicits.global
+      eff.runSyncUnsafe(timeout)
+    }
+
+    override def wrap[T](t: => T): Task[T] = Task.apply(t)
+
+    override def push[A, B](fa: Task[A])(f: A => B): Task[B] = fa.map(f)
+
+    override def seq[T](f: List[Task[T]]): Task[List[T]] = Task.sequence(f)
+  }
 }
 
 /**
@@ -62,36 +92,7 @@ abstract class MonixNdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy, P
   override type RunBatchActionResult = List[Long]
   override type RunBatchActionReturningResult[T] = List[T]
 
-  override implicit protected val resultEffect: NdbcContextBase.ContextEffect[Task, Scheduler] =
-    new NdbcContextBase.ContextEffect[Task, Scheduler] {
-      override def wrapAsync[T](f: (Complete[T]) => Unit): Task[T] = Task.deferFuture {
-        val p = Promise[T]()
-        f { complete =>
-          p.complete(complete)
-          ()
-        }
-        p.future
-      }
-
-      override def toFuture[T](eff: Task[T], ec: Scheduler): Future[T] = {
-        TraneFutureConverters.scalaToTraneScala(eff.runToFuture(ec))(ec)
-      }
-
-      override def fromDeferredFuture[T](f: Scheduler => Future[T]): Task[T] = Task.deferFutureAction(f(_))
-
-      override def flatMap[A, B](a: Task[A])(f: A => Task[B]): Task[B] = a.flatMap(f)
-
-      override def runBlocking[T](eff: Task[T], timeout: Duration): T = {
-        import monix.execution.Scheduler.Implicits.global
-        eff.runSyncUnsafe(timeout)
-      }
-
-      override def wrap[T](t: => T): Task[T] = Task.apply(t)
-
-      override def push[A, B](fa: Task[A])(f: A => B): Task[B] = fa.map(f)
-
-      override def seq[T](f: List[Task[T]]): Task[List[T]] = Task.sequence(f)
-    }
+  override implicit protected val resultEffect: NdbcContextBase.ContextEffect[Task, Scheduler] = MonixNdbcContext.ContextEffect
 
   def close(): Unit = {
     dataSource.close()
