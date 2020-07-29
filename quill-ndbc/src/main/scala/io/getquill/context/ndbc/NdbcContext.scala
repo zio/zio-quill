@@ -52,7 +52,7 @@ abstract class NdbcContext[I <: SqlIdiom, N <: NamingStrategy, P <: PreparedStat
   /* TODO: I'm assuming that we don't need to bracket and close the dataSource like with JDBC
       because previously it wasn't done here either */
   override def withDataSource[T](f: DataSource[P, R] => Future[T]): Future[T] = f(dataSource)
-  
+
   def close(): Unit = {
     dataSource.close()
     ()

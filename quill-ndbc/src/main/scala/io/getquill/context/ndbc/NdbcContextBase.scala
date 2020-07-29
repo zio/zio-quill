@@ -50,14 +50,14 @@ trait NdbcContextBase[Idiom <: SqlIdiom, Naming <: NamingStrategy, P <: Prepared
 
   protected implicit val resultEffect: NdbcContextBase.ContextEffect[Result, _]
   import resultEffect._
-  
+
   protected def withDataSource[T](f: DataSource[P, R] => Result[T]): Result[T]
 
   final protected def withDataSourceFromFuture[T](f: DataSource[P, R] => Future[T]): Result[T] =
     withDataSource { ds => resultEffect.wrapFromFuture(f(ds)) }
 
   protected def createPreparedStatement(sql: String): P
-  
+
   protected def expandAction(sql: String, returningAction: ReturnAction) = sql
 
   def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: R => T = identity[R] _): Result[List[T]] = {

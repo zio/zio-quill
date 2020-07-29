@@ -121,7 +121,7 @@ class MonixNdbcContextSpec extends MonixSpec {
         r <- testContext.run(qr1)
       } yield r).runSyncUnsafe(10 seconds).map(_.i) mustEqual List(33)
     }
-    
+
     "prepare" in {
       testContext.prepareParams(
         "select * from Person where name=? and age > ?", ps => (List("Sarah", 127), ps)
