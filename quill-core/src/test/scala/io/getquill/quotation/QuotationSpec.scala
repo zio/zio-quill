@@ -351,7 +351,8 @@ class QuotationSpec extends Spec {
                 v => v.s -> t.s,
                 v => v.i -> t.i,
                 v => v.l -> t.l,
-                v => v.o -> t.o
+                v => v.o -> t.o,
+                v => v.b -> t.b
               )
           }
           quote(unquote(q)).ast mustEqual n.ast
@@ -386,7 +387,8 @@ class QuotationSpec extends Spec {
                 v => v.s -> t.s,
                 v => v.i -> t.i,
                 v => v.l -> t.l,
-                v => v.o -> t.o
+                v => v.o -> t.o,
+                v => v.b -> t.b
               )
           }
           quote(unquote(q)).ast mustEqual n.ast
@@ -1148,13 +1150,13 @@ class QuotationSpec extends Spec {
         val q = quote {
           infix"true"
         }
-        quote(unquote(q)).ast mustEqual Infix(List("true"), Nil, false, QV)
+        quote(unquote(q)).ast mustEqual Infix(List("true"), Nil, false, QBV)
       }
       "with `as`" in {
         val q = quote {
           infix"true".as[Boolean]
         }
-        quote(unquote(q)).ast mustEqual Infix(List("true"), Nil, false, QV)
+        quote(unquote(q)).ast mustEqual Infix(List("true"), Nil, false, QBV)
       }
       "with params" in {
         val q = quote {
@@ -1651,7 +1653,7 @@ class QuotationSpec extends Spec {
         q2.liftings.`q.t.embedded.id`.value mustEqual t.embedded.id
       }
       "merges properties into the case class lifting" - {
-        val t = TestEntity("s", 1, 2L, Some(3))
+        val t = TestEntity("s", 1, 2L, Some(3), true)
         "direct access" in {
           val q = quote {
             lift(t).s

@@ -486,7 +486,7 @@ class CompatibleDynamicQuerySpec extends Spec {
     def test[T](d: Quoted[Action[T]], s: Quoted[Action[T]]) =
       testContext.run(d).string mustEqual testContext.run(s).string
 
-    val t = TestEntity("s", 1, 2L, Some(3))
+    val t = TestEntity("s", 1, 2L, Some(3), true)
     "insertValue" in {
       test(
         quote(query[TestEntity]).dynamic.insertValue(t),

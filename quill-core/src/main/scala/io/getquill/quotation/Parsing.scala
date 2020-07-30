@@ -370,9 +370,14 @@ trait Parsing extends ValueComputation with QuatMaking {
             }
           """)
         }
-      } else
-        Infix(parts, params.map(astParser(_)), infixIsPure, quat)
+      } else {
+        val newQuat = if (isRawBoolean(parts)) Quat.BooleanValue else quat
+        Infix(parts, params.map(astParser(_)), infixIsPure, newQuat)
+      }
   }
+
+  private def isRawBoolean(parts: List[String]): Boolean =
+    parts.size == 1 && (parts.head.trim == "true" || parts.head.trim == "false")
 
   val functionParser: Parser[Function] = Parser[Function] {
     case q"new { def apply[..$t1](...$params) = $body }" =>
@@ -390,7 +395,7 @@ trait Parsing extends ValueComputation with QuatMaking {
   }
 
   val identParser: Parser[Ident] = Parser[Ident] {
-    // TODO Check to see that all these conditions workk
+    // TODO Check to see that all these conditions work
     case t: ValDef =>
       identClean(Ident(t.name.decodedName.toString, inferQuat(t.symbol.typeSignature)))
     case id @ c.universe.Ident(TermName(name)) => identClean(Ident(name, inferQuat(id.symbol.typeSignature)))
@@ -648,7 +653,7 @@ trait Parsing extends ValueComputation with QuatMaking {
     case q"scala.StringContext.apply(..$parts).s(..$params)" =>
       val asts =
         Interleave(parts.map(astParser(_)), params.map(astParser(_)))
-          .filter(_ != Constant(""))
+          .filter(_ != Constant("", Quat.Value))
       asts.tail.foldLeft(asts.head) {
         case (a, b) =>
           BinaryOperation(a, StringOperator.`+`, b)
@@ -744,7 +749,7 @@ trait Parsing extends ValueComputation with QuatMaking {
     case q"scala.Option.apply[$t]($v)"       => OptionApply(astParser(v))
     case q"scala.None"                       => OptionNone(Quat.Null)
     case q"scala.Option.empty[$t]"           => OptionNone(inferQuat(t.tpe))
-    case l @ Literal(c.universe.Constant(v)) => { Constant(v); }
+    case t @ Literal(c.universe.Constant(v)) => Constant(v, inferQuat(t.tpe))
     case q"((..$v))" if (v.size > 1)         => Tuple(v.map(astParser(_)))
     case q"new $ccTerm(..$v)" if (isCaseClass(c.WeakTypeTag(ccTerm.tpe.erasure))) => {
       val values = v.map(astParser(_))
@@ -975,7 +980,7 @@ trait Parsing extends ValueComputation with QuatMaking {
       }
       Assignment(i1, astParser(prop), valueAst)
     // Unused, it's here only to make eclipse's presentation compiler happy
-    case astParser(ast) => Assignment(Ident("unused", Quat.Value), Ident("unused", Quat.Value), Constant("unused"))
+    case astParser(ast) => Assignment(Ident("unused", Quat.Value), Ident("unused", Quat.Value), Constant("unused", Quat.Value))
   }
 
   val conflictParser: Parser[Ast] = Parser[Ast] {

@@ -406,7 +406,7 @@ case class Assignment(alias: Ident, property: Ast, value: Ast) extends Ast { def
 
 sealed trait Operation extends Ast
 
-case class UnaryOperation(operator: UnaryOperator, ast: Ast) extends Operation { def quat = Quat.Value }
+case class UnaryOperation(operator: UnaryOperator, ast: Ast) extends Operation { def quat = Quat.BooleanExpression }
 case class BinaryOperation(a: Ast, operator: BinaryOperator, b: Ast)
   extends Operation { def quat = Quat.Value }
 case class FunctionApply(function: Ast, values: List[Ast]) extends Operation { def quat = function.quat }
@@ -415,7 +415,14 @@ case class FunctionApply(function: Ast, values: List[Ast]) extends Operation { d
 
 sealed trait Value extends Ast
 
-case class Constant(v: Any) extends Value { def quat = Quat.Value }
+case class Constant(v: Any, quat: Quat) extends Value
+
+object Constant {
+  def apply(v: Any) = {
+    val quat = if (v.isInstanceOf[Boolean]) Quat.BooleanValue else Quat.Value
+    new Constant(v, quat)
+  }
+}
 
 object NullValue extends Value { def quat = Quat.Null }
 
@@ -500,7 +507,14 @@ object OnConflict {
 }
 //************************************************************
 
-case class Dynamic(tree: Any) extends Ast { def quat = Quat.Value }
+case class Dynamic(tree: Any, quat: Quat) extends Ast
+
+object Dynamic {
+  def apply(v: Any) = {
+    val quat = if (v.isInstanceOf[Boolean]) Quat.BooleanValue else Quat.Value
+    new Dynamic(v, quat)
+  }
+}
 
 case class QuotedReference(tree: Any, ast: Ast) extends Ast { def quat = ast.quat }
 

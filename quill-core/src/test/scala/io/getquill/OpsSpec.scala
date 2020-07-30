@@ -47,17 +47,33 @@ class OpsSpec extends Spec {
   }
 
   "provides the infix interpolator" - {
-    "with `as`" in {
-      val q = quote {
-        infix"true".as[Boolean]
+    "boolean values" - {
+      "with `as`" in {
+        val q = quote {
+          infix"true".as[Boolean]
+        }
+        q.ast mustEqual Infix(List("true"), Nil, false, Quat.BooleanValue)
       }
-      q.ast mustEqual Infix(List("true"), Nil, false, Quat.Value)
+      "without `as`" in {
+        val q = quote {
+          infix"true"
+        }
+        q.ast mustEqual Infix(List("true"), Nil, false, Quat.BooleanValue)
+      }
     }
-    "without `as`" in {
-      val q = quote {
-        infix"true"
+    "other values" - {
+      "with `as`" in {
+        val q = quote {
+          infix"1".as[Int]
+        }
+        q.ast mustEqual Infix(List("1"), Nil, false, Quat.Value)
       }
-      q.ast mustEqual Infix(List("true"), Nil, false, Quat.Value)
+      "without `as`" in {
+        val q = quote {
+          infix"1"
+        }
+        q.ast mustEqual Infix(List("1"), Nil, false, Quat.Value)
+      }
     }
   }
 
