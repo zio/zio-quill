@@ -24,19 +24,41 @@ trait OrientDBIdiom extends Idiom {
   override def prepareForProbing(string: String): String = string
 
   override def translate(ast: Ast)(implicit naming: NamingStrategy): (Ast, Statement) = {
+
+    def pipeline(q: Query): Token = {
+      val sql = SqlQuery(q)
+      trace("sql")(sql)
+      VerifySqlQuery(sql).map(fail)
+      val expanded = ExpandNestedQueries(sql)
+      trace("expanded sql")(expanded)
+      val refined = if (Messages.pruneColumns) RemoveUnusedSelects(expanded) else expanded
+      trace("filtered sql (only used selects)")(refined)
+      val cleaned = if (!Messages.alwaysAlias) RemoveExtraAlias(naming)(refined) else refined
+      trace("cleaned sql")(cleaned)
+      val tokenized = cleaned.token
+      tokenized
+    }
+
+    def legacyPipeline(q: Query): Token = {
+      import io.getquill.sql.norm.migration._
+      val sql = SqlQueryLegacy(q)
+      trace("sql")(sql)
+      VerifySqlQuery(sql).map(fail)
+      val expanded = new ExpandNestedQueriesLegacy(naming).apply(sql, List())
+      trace("expanded sql")(expanded)
+      val tokenized = expanded.token
+      tokenized
+    }
+
     val normalizedAst = SqlNormalize(ast)
     val token =
       normalizedAst match {
         case q: Query =>
-          val sql = SqlQuery(q)
-          VerifySqlQuery(sql).map(fail)
-          val expanded = ExpandNestedQueries(sql)
-          trace("expanded sql")(expanded)
-          val refined = if (Messages.pruneColumns) RemoveUnusedSelects(expanded) else expanded
-          trace("filtered sql (only used selects)")(refined)
-          val cleaned = if (!Messages.alwaysAlias) RemoveExtraAlias(naming)(refined) else refined
-          trace("cleaned sql")(cleaned)
-          val tokenized = cleaned.token
+          val tokenized =
+            if (Messages.legacyExpand)
+              legacyPipeline(q)
+            else
+              pipeline(q)
           trace("tokenized sql")(tokenized)
           tokenized
         case other =>

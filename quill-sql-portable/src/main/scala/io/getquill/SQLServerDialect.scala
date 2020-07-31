@@ -17,7 +17,7 @@ trait SQLServerDialect
   with ConcatSupport
   with CanOutputClause {
 
-  override def querifyAst(ast: Ast) = AddDropToNestedOrderBy(SqlQuery(ast))
+  override def querifyAst(ast: Ast) = AddDropToNestedOrderBy(super.querifyAst(ast))
 
   override def emptySetContainsToken(field: Token) = StringToken("1 <> 1")
 
