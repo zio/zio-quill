@@ -93,7 +93,11 @@ trait SparkIdiom extends SqlIdiom with CannotReturn { self =>
         case q: Query =>
           val sql = SqlQuery(q)
           trace("sql")(sql)
-          sql.token
+          val expanded = SimpleNestedExpansion(sql)
+          trace("expanded sql")(expanded)
+          val tokenized = expanded.token
+          trace("tokenized sql")(tokenized)
+          tokenized
         case other =>
           other.token
       }

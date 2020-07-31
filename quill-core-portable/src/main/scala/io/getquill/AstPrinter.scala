@@ -26,8 +26,8 @@ class AstPrinter(traceOpinions: Boolean, traceAstSimple: Boolean) extends pprint
 
   private def printRenameable(r: Renameable) =
     r match {
-      case ByStrategy => Tree.Literal("S")
-      case Fixed      => Tree.Literal("F")
+      case ByStrategy => Tree.Literal("Ren")
+      case Fixed      => Tree.Literal("Fix")
     }
 
   private def printVisibility(v: Visibility) =

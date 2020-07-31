@@ -8,6 +8,8 @@ object Messages {
     Option(System.getProperty(propName)).orElse(sys.env.get(envName)).getOrElse(default)
 
   private[util] def prettyPrint = variable("quill.macro.log.pretty", "quill_macro_log", "false").toBoolean
+  private[getquill] def alwaysAlias = variable("quill.query.alwaysAlias", "quill_query_alwaysAlias", "false").toBoolean
+  private[getquill] def pruneColumns = variable("quill.query.pruneColumns", "quill_query_pruneColumns", "true").toBoolean
   private[util] def debugEnabled = variable("quill.macro.log", "quill_macro_log", "true").toBoolean
   private[util] def traceEnabled = variable("quill.trace.enabled", "quill_trace_enabled", "false").toBoolean
   private[util] def traceColors = variable("quill.trace.color", "quill_trace_color,", "false").toBoolean

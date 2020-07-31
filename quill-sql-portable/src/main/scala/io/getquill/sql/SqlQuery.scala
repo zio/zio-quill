@@ -104,20 +104,6 @@ object SqlQuery {
         (List.empty, other)
     }
 
-  object NestedNest {
-    def unapply(q: Ast): Option[Ast] =
-      q match {
-        case _: Nested => recurse(q)
-        case _         => None
-      }
-
-    private def recurse(q: Ast): Option[Ast] =
-      q match {
-        case Nested(qn) => recurse(qn)
-        case other      => Some(other)
-      }
-  }
-
   private def flatten(sources: List[FromContext], finalFlatMapBody: Ast, alias: String): FlattenSqlQuery = {
 
     def select(alias: String, quat: Quat) = SelectValue(Ident(alias, quat), None) :: Nil
@@ -126,7 +112,7 @@ object SqlQuery {
       def nest(ctx: FromContext) = FlattenSqlQuery(from = sources :+ ctx, select = select(alias, q.quat))(q.quat)
       q match {
         case Map(_: GroupBy, _, _) => nest(source(q, alias))
-        case NestedNest(q)         => nest(QueryContext(apply(q), alias))
+        case Nested(q)             => nest(QueryContext(apply(q), alias))
         case q: ConcatMap          => nest(QueryContext(apply(q), alias))
         case Join(tpe, a, b, iA, iB, on) =>
           val ctx = source(q, alias)
@@ -138,9 +124,15 @@ object SqlQuery {
               case JoinContext(_, a, b, _)  => aliases(a) ::: aliases(b)
               case FlatJoinContext(_, a, _) => aliases(a)
             }
+          // TODO Quat what impact does it have on this process if we do the alternative version of ExpandJoins that uses nested flatmaps?
+          //      would that version actually produce more consistent results here?
+          // TODO Quat Test in situations where you have more then two things. Would the subselect work properly?
+          // Maybe prduce nested tuples here based on if it is a join context etc... in the recursive creation of the types
+          val collectedAliases = aliases(ctx).map { case (a, quat) => Ident(a, quat) }
+          val select = Tuple(collectedAliases)
           FlattenSqlQuery(
             from = ctx :: Nil,
-            select = aliases(ctx).map { case (a, quat) => SelectValue(Ident(a, quat), None) }
+            select = List(SelectValue(select, None))
           )(q.quat)
         case q @ (_: Map | _: Filter | _: Entity) => flatten(sources, q, alias)
         case q if (sources == Nil)                => flatten(sources, q, alias)
@@ -247,8 +239,8 @@ object SqlQuery {
 
   private def selectValues(ast: Ast) =
     ast match {
-      case Tuple(values) => values.map(SelectValue(_))
-      case other         => SelectValue(ast) :: Nil
+      //case Tuple(values) => values.map(SelectValue(_))
+      case other => SelectValue(ast) :: Nil
     }
 
   private def source(ast: Ast, alias: String): FromContext =
