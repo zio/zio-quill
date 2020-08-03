@@ -60,7 +60,8 @@ CREATE TABLE TestEntity(
   s VARCHAR(255),
   i INTEGER primary key,
   l NUMBER,
-  o INTEGER
+  o INTEGER,
+  b NUMBER(1)
 );
 
 CREATE TABLE TestEntity2(

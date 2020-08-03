@@ -407,8 +407,24 @@ case class Assignment(alias: Ident, property: Ast, value: Ast) extends Ast { def
 sealed trait Operation extends Ast
 
 case class UnaryOperation(operator: UnaryOperator, ast: Ast) extends Operation { def quat = Quat.BooleanExpression }
-case class BinaryOperation(a: Ast, operator: BinaryOperator, b: Ast)
-  extends Operation { def quat = Quat.Value }
+
+case class BinaryOperation(a: Ast, operator: BinaryOperator, b: Ast) extends Operation {
+  import BooleanOperator._
+  import NumericOperator._
+  import StringOperator.`startsWith`
+  import SetOperator.`contains`
+
+  def quat = operator match {
+    case EqualityOperator.`==` | EqualityOperator.`!=`
+      | `&&` | `||`
+      | `>` | `>=` | `<` | `<=`
+      | `startsWith`
+      | `contains` =>
+      Quat.BooleanExpression
+    case _ =>
+      Quat.Value
+  }
+}
 case class FunctionApply(function: Ast, values: List[Ast]) extends Operation { def quat = function.quat }
 
 //************************************************************

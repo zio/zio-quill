@@ -1,13 +1,8 @@
 package io.getquill.context.sql.norm
 
-import io.getquill.Spec
-import io.getquill.ast.Aggregation
-import io.getquill.ast.AggregationOperator
-import io.getquill.ast.Ident
-import io.getquill.ast.Property
+import io.getquill.ast._
 import io.getquill.context.sql.testContext._
-import io.getquill.Query
-import io.getquill.testContext.TestEntityQuat
+import io.getquill.{ Query, Spec }
 
 class FlattenGroupByAggregationSpec extends Spec {
 

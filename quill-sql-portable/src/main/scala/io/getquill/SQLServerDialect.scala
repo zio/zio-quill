@@ -9,6 +9,7 @@ import io.getquill.idiom.StatementInterpolator._
 import io.getquill.idiom.{ Statement, StringToken, Token }
 import io.getquill.norm.EqualityBehavior
 import io.getquill.norm.EqualityBehavior.NonAnsiEquality
+import io.getquill.quat.Quat
 import io.getquill.util.Messages.fail
 
 trait SQLServerDialect
@@ -50,8 +51,9 @@ trait SQLServerDialect
 
   override implicit def valueTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Value] =
     Tokenizer[Value] {
-      case Constant(b: Boolean) => StringToken(if (b) "1=1" else "1=0")
-      case other                => super.valueTokenizer.token(other)
+      //      case Constant(b: Boolean, Quat.BooleanExpression) => StringToken(if (b) "1 = 1" else "1 = 0")
+      case Constant(b: Boolean, Quat.BooleanValue) => StringToken(if (b) "1" else "0")
+      case other                                   => super.valueTokenizer.token(other)
     }
 }
 

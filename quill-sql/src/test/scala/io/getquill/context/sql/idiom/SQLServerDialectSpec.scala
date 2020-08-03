@@ -29,14 +29,37 @@ class SQLServerDialectSpec extends Spec {
   }
 
   "literal booleans" - {
-    "uses 1=1 instead of true" in {
-      ctx.run(qr4.filter(t => true)).string mustEqual
-        "SELECT t.i FROM TestEntity4 t WHERE 1=1"
+    "boolean expressions" - {
+      "uses 1 = 1 instead of true" in {
+        ctx.run(qr4.filter(t => true)).string mustEqual
+          "SELECT t.i FROM TestEntity4 t WHERE 1 = 1"
+      }
+      "uses 1 = 0 instead of false" in {
+        ctx.run(qr4.filter(t => false)).string mustEqual
+          "SELECT t.i FROM TestEntity4 t WHERE 1 = 0"
+      }
+      "uses 1 = 0 and 1 = 1 altogether" in {
+        ctx.run(qr4.filter(t => false).filter(t => true)).string mustEqual
+          "SELECT t.i FROM TestEntity4 t WHERE 1 = 0 AND 1 = 1"
+      }
     }
-
-    "uses 1=0 instead of false" in {
-      ctx.run(qr4.filter(t => false)).string mustEqual
-        "SELECT t.i FROM TestEntity4 t WHERE 1=0"
+    "boolean values" - {
+      "uses 1 instead of true" in {
+        ctx.run(qr4.map(t => (t.i, true))).string mustEqual
+          "SELECT t.i, 1 FROM TestEntity4 t"
+      }
+      "uses 0 instead of false" in {
+        ctx.run(qr4.map(t => (t.i, false))).string mustEqual
+          "SELECT t.i, 0 FROM TestEntity4 t"
+      }
+      "uses 0 and 1 altogether" in {
+        ctx.run(qr4.map(t => (t.i, true, false))).string mustEqual
+          "SELECT t.i, 1, 0 FROM TestEntity4 t"
+      }
+    }
+    "boolean values and expressions together" in {
+      ctx.run(qr4.filter(t => true).filter(t => false).map(t => (t.i, false, true))).string mustEqual
+        "SELECT t.i, 0, 1 FROM TestEntity4 t WHERE 1 = 1 AND 1 = 0"
     }
   }
 
@@ -81,20 +104,20 @@ class SQLServerDialectSpec extends Spec {
       }
       "with multi column table" in {
         val q = quote {
-          qr1.insert(lift(TestEntity("s", 0, 0L, Some(3)))).returning(r => (r.i, r.l))
+          qr1.insert(lift(TestEntity("s", 0, 0L, Some(3), true))).returning(r => (r.i, r.l))
         }
         ctx.run(q).string mustEqual
-          "INSERT INTO TestEntity (s,i,l,o) OUTPUT INSERTED.i, INSERTED.l VALUES (?, ?, ?, ?)"
+          "INSERT INTO TestEntity (s,i,l,o,b) OUTPUT INSERTED.i, INSERTED.l VALUES (?, ?, ?, ?, ?)"
       }
       "with multiple fields + operations" in {
         val q = quote {
-          qr1.insert(lift(TestEntity("s", 1, 2L, Some(3)))).returning(r => (r.i, r.l + 1))
+          qr1.insert(lift(TestEntity("s", 1, 2L, Some(3), true))).returning(r => (r.i, r.l + 1))
         }
         ctx.run(q).string mustEqual
-          "INSERT INTO TestEntity (s,i,l,o) OUTPUT INSERTED.i, INSERTED.l + 1 VALUES (?, ?, ?, ?)"
+          "INSERT INTO TestEntity (s,i,l,o,b) OUTPUT INSERTED.i, INSERTED.l + 1 VALUES (?, ?, ?, ?, ?)"
       }
       "with query - should not compile" in {
-        """import ctx._; quote { qr1.insert(lift(TestEntity("s", 1, 2L, Some(3)))).returning(r => query[TestEntity].filter(t => t.i == r.i)) }""" mustNot compile
+        """import ctx._; quote { qr1.insert(lift(TestEntity("s", 1, 2L, Some(3), true))).returning(r => query[TestEntity].filter(t => t.i == r.i)) }""" mustNot compile
       }
     }
 
@@ -108,17 +131,17 @@ class SQLServerDialectSpec extends Spec {
       }
       "with multi column table" in {
         val q = quote {
-          qr1.insert(lift(TestEntity("s", 0, 0L, Some(3)))).returningGenerated(r => (r.i, r.l))
+          qr1.insert(lift(TestEntity("s", 0, 0L, Some(3), true))).returningGenerated(r => (r.i, r.l))
         }
         ctx.run(q).string mustEqual
-          "INSERT INTO TestEntity (s,o) OUTPUT INSERTED.i, INSERTED.l VALUES (?, ?)"
+          "INSERT INTO TestEntity (s,o,b) OUTPUT INSERTED.i, INSERTED.l VALUES (?, ?, ?)"
       }
       "with multiple fields + operations" in {
         val q = quote {
-          qr1.insert(lift(TestEntity("s", 0, 0L, Some(3)))).returningGenerated(r => (r.i, r.l + 1))
+          qr1.insert(lift(TestEntity("s", 0, 0L, Some(3), true))).returningGenerated(r => (r.i, r.l + 1))
         }
         ctx.run(q).string mustEqual
-          "INSERT INTO TestEntity (s,o) OUTPUT INSERTED.i, INSERTED.l + 1 VALUES (?, ?)"
+          "INSERT INTO TestEntity (s,o,b) OUTPUT INSERTED.i, INSERTED.l + 1 VALUES (?, ?, ?)"
       }
       "with query - should not compile" in {
         """import ctx._; quote { qr1.insert(lift(TestEntity("s", 0, 0L, Some(3)))).returningGenerated(r => query[TestEntity].filter(t => t.i == r.i)) }""" mustNot compile

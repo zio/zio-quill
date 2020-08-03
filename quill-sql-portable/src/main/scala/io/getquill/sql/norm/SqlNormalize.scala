@@ -51,6 +51,8 @@ class SqlNormalize(concatBehavior: ConcatBehavior, equalityBehavior: EqualityBeh
         Normalize.apply(AvoidAliasConflict.Ast(ast, true))
       })
       .andThen(demarcate("Normalize"))
+      .andThen(VendorizeBooleans.apply _)
+      .andThen(demarcate("VendorizeBooleans"))
 
   def apply(ast: Ast) = normalize(ast)
 }

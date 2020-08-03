@@ -78,10 +78,10 @@ trait SparkIdiom extends SqlIdiom with CannotReturn { self =>
   }
 
   override implicit def valueTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Value] = Tokenizer[Value] {
-    case Constant(v: String) => stmt"'${v.replaceAll("""[\\']""", """\\$0""").token}'"
-    case Tuple(values)       => stmt"struct(${values.zipWithIndex.map { case (value, index) => stmt"${value.token} AS _${(index + 1 + "").token}" }.token})"
-    case CaseClass(values)   => stmt"struct(${values.map { case (name, value) => stmt"${value.token} AS ${name.token}" }.token})"
-    case other               => super.valueTokenizer.token(other)
+    case Constant(v: String, _) => stmt"'${v.replaceAll("""[\\']""", """\\$0""").token}'"
+    case Tuple(values)          => stmt"struct(${values.zipWithIndex.map { case (value, index) => stmt"${value.token} AS _${(index + 1 + "").token}" }.token})"
+    case CaseClass(values)      => stmt"struct(${values.map { case (name, value) => stmt"${value.token} AS ${name.token}" }.token})"
+    case other                  => super.valueTokenizer.token(other)
   }
 
   override protected def tokenizeGroupBy(values: Ast)(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Token =

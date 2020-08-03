@@ -18,28 +18,28 @@ class SqlIdiomOptionCompareSpec extends Spec {
         qr1.filter(t => t.o == Option(1))
       }
       testContext.run(q).string mustEqual
-        "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o IS NOT NULL AND t.o = 1"
+        "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.o IS NOT NULL AND t.o = 1"
     }
     "Option(constant) == Option" in {
       val q = quote {
         qr1.filter(t => Option(1) == t.o)
       }
       testContext.run(q).string mustEqual
-        "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o IS NOT NULL AND 1 = t.o"
+        "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.o IS NOT NULL AND 1 = t.o"
     }
     "Option != Option(constant)" in {
       val q = quote {
         qr1.filter(t => t.o != Option(1))
       }
       testContext.run(q).string mustEqual
-        "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o IS NULL OR t.o <> 1"
+        "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.o IS NULL OR t.o <> 1"
     }
     "Option(constant) != Option" in {
       val q = quote {
         qr1.filter(t => Option(1) != t.o)
       }
       testContext.run(q).string mustEqual
-        "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o IS NULL OR 1 <> t.o"
+        "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.o IS NULL OR 1 <> t.o"
     }
     "Database-level === and =!= operators" - {
       import testContext.extras._
@@ -49,21 +49,21 @@ class SqlIdiomOptionCompareSpec extends Spec {
           qr1.filter(t => t.o === t.o)
         }
         testContext.run(q).string mustEqual
-          "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o IS NOT NULL AND t.o IS NOT NULL AND t.o = t.o"
+          "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.o IS NOT NULL AND t.o IS NOT NULL AND t.o = t.o"
       }
       "Option === Option(constant)" in {
         val q = quote {
           qr1.filter(t => t.o === Option(1))
         }
         testContext.run(q).string mustEqual
-          "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o IS NOT NULL AND t.o = 1"
+          "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.o IS NOT NULL AND t.o = 1"
       }
       "Option(constant) === Option" in {
         val q = quote {
           qr1.filter(t => Option(1) === t.o)
         }
         testContext.run(q).string mustEqual
-          "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o IS NOT NULL AND 1 = t.o"
+          "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.o IS NOT NULL AND 1 = t.o"
       }
 
       "Option =!= Option" in {
@@ -71,21 +71,21 @@ class SqlIdiomOptionCompareSpec extends Spec {
           qr1.filter(t => t.o =!= t.o)
         }
         testContext.run(q).string mustEqual
-          "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o IS NOT NULL AND t.o IS NOT NULL AND t.o <> t.o"
+          "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.o IS NOT NULL AND t.o IS NOT NULL AND t.o <> t.o"
       }
       "Option =!= Option(constant)" in {
         val q = quote {
           qr1.filter(t => t.o =!= Option(1))
         }
         testContext.run(q).string mustEqual
-          "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o IS NOT NULL AND t.o <> 1"
+          "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.o IS NOT NULL AND t.o <> 1"
       }
       "Option(constant) =!= Option" in {
         val q = quote {
           qr1.filter(t => Option(1) =!= t.o)
         }
         testContext.run(q).string mustEqual
-          "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o IS NOT NULL AND 1 <> t.o"
+          "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.o IS NOT NULL AND 1 <> t.o"
       }
     }
     "contains" in {
@@ -93,35 +93,35 @@ class SqlIdiomOptionCompareSpec extends Spec {
         qr1.filter(t => t.o.contains(1))
       }
       testContext.run(q).string mustEqual
-        "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o = 1"
+        "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.o = 1"
     }
     "exists" in {
       val q = quote {
         qr1.filter(t => t.o.exists(op => op != 1))
       }
       testContext.run(q).string mustEqual
-        "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o <> 1"
+        "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.o <> 1"
     }
     "exists with null-check" in {
       val q = quote {
         qr1.filter(t => t.o.exists(op => if (op != 1) false else true))
       }
       testContext.run(q).string mustEqual
-        "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o IS NOT NULL AND CASE WHEN t.o <> 1 THEN false ELSE true END"
+        "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.o IS NOT NULL AND CASE WHEN t.o <> 1 THEN false ELSE true END"
     }
     "forall" in {
       val q = quote {
         qr1.filter(t => t.i != 1 && t.o.forall(op => op == 1))
       }
       testContext.run(q).string mustEqual
-        "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.i <> 1 AND (t.o IS NULL OR t.o = 1)"
+        "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.i <> 1 AND (t.o IS NULL OR t.o = 1)"
     }
     "forall with null-check" in {
       val q = quote {
         qr1.filter(t => t.i != 1 && t.o.forall(op => if (op != 1) false else true))
       }
       testContext.run(q).string mustEqual
-        "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.i <> 1 AND (t.o IS NULL OR t.o IS NOT NULL AND CASE WHEN t.o <> 1 THEN false ELSE true END)"
+        "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.i <> 1 AND (t.o IS NULL OR t.o IS NOT NULL AND CASE WHEN t.o <> 1 THEN false ELSE true END)"
     }
     "embedded" - {
       case class TestEntity(optionalEmbedded: Option[EmbeddedEntity])
@@ -195,28 +195,28 @@ class SqlIdiomOptionCompareSpec extends Spec {
         qr1.filter(t => t.o == Option(1))
       }
       testContext.run(q).string mustEqual
-        "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o = 1"
+        "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.o = 1"
     }
     "Option(constant) == Option" in {
       val q = quote {
         qr1.filter(t => Option(1) == t.o)
       }
       testContext.run(q).string mustEqual
-        "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE 1 = t.o"
+        "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE 1 = t.o"
     }
     "Option != Option(constant)" in {
       val q = quote {
         qr1.filter(t => t.o != Option(1))
       }
       testContext.run(q).string mustEqual
-        "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o IS NULL OR t.o <> 1"
+        "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.o IS NULL OR t.o <> 1"
     }
     "Option(constant) != Option" in {
       val q = quote {
         qr1.filter(t => Option(1) != t.o)
       }
       testContext.run(q).string mustEqual
-        "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o IS NULL OR 1 <> t.o"
+        "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.o IS NULL OR 1 <> t.o"
     }
     "Database-level === and =!= operators" - {
       import testContext.extras._
@@ -226,21 +226,21 @@ class SqlIdiomOptionCompareSpec extends Spec {
           qr1.filter(t => t.o === t.o)
         }
         testContext.run(q).string mustEqual
-          "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o = t.o"
+          "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.o = t.o"
       }
       "Option === Option(constant)" in {
         val q = quote {
           qr1.filter(t => t.o === Option(1))
         }
         testContext.run(q).string mustEqual
-          "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o = 1"
+          "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.o = 1"
       }
       "Option(constant) === Option" in {
         val q = quote {
           qr1.filter(t => Option(1) === t.o)
         }
         testContext.run(q).string mustEqual
-          "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE 1 = t.o"
+          "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE 1 = t.o"
       }
 
       "Option =!= Option" in {
@@ -248,21 +248,21 @@ class SqlIdiomOptionCompareSpec extends Spec {
           qr1.filter(t => t.o =!= t.o)
         }
         testContext.run(q).string mustEqual
-          "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o <> t.o"
+          "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.o <> t.o"
       }
       "Option =!= Option(constant)" in {
         val q = quote {
           qr1.filter(t => t.o =!= Option(1))
         }
         testContext.run(q).string mustEqual
-          "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o <> 1"
+          "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.o <> 1"
       }
       "Option(constant) =!= Option" in {
         val q = quote {
           qr1.filter(t => Option(1) =!= t.o)
         }
         testContext.run(q).string mustEqual
-          "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE 1 <> t.o"
+          "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE 1 <> t.o"
       }
     }
     "contains" in {
@@ -270,35 +270,35 @@ class SqlIdiomOptionCompareSpec extends Spec {
         qr1.filter(t => t.o.contains(1))
       }
       testContext.run(q).string mustEqual
-        "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o = 1"
+        "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.o = 1"
     }
     "exists" in {
       val q = quote {
         qr1.filter(t => t.o.exists(op => op != 1))
       }
       testContext.run(q).string mustEqual
-        "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o <> 1"
+        "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.o <> 1"
     }
     "exists with null-check" in {
       val q = quote {
         qr1.filter(t => t.o.exists(op => if (op != 1) false else true))
       }
       testContext.run(q).string mustEqual
-        "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.o IS NOT NULL AND CASE WHEN t.o <> 1 THEN false ELSE true END"
+        "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.o IS NOT NULL AND CASE WHEN t.o <> 1 THEN false ELSE true END"
     }
     "forall" in {
       val q = quote {
         qr1.filter(t => t.i != 1 && t.o.forall(op => op == 1))
       }
       testContext.run(q).string mustEqual
-        "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.i <> 1 AND (t.o IS NULL OR t.o = 1)"
+        "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.i <> 1 AND (t.o IS NULL OR t.o = 1)"
     }
     "forall with null-check" in {
       val q = quote {
         qr1.filter(t => t.i != 1 && t.o.forall(op => if (op != 1) false else true))
       }
       testContext.run(q).string mustEqual
-        "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.i <> 1 AND (t.o IS NULL OR t.o IS NOT NULL AND CASE WHEN t.o <> 1 THEN false ELSE true END)"
+        "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.i <> 1 AND (t.o IS NULL OR t.o IS NOT NULL AND CASE WHEN t.o <> 1 THEN false ELSE true END)"
     }
     "embedded" - {
       case class TestEntity(optionalEmbedded: Option[EmbeddedEntity])
