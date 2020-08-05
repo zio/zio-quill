@@ -605,6 +605,64 @@ class ExpandNestedQueriesSpec extends Spec {
         |          ) AS tup
         |      ) AS tup
         |  ) AS tup
+        |""".collapseSpace // bad
+  }
+
+  "multiple embedding levels - without nesting the filter" in {
+    val ctx = testContextUpperEscapeColumn
+    import ctx._
+
+    case class Sim(sid: Int) extends Embedded
+    case class Mam(mid: Int, sim: Sim)
+
+    val q = quote {
+      query[Mam]
+        .map(tup => (tup.mid, tup.sim)).distinct.sortBy(_._2.sid)
+        .map(tup => (tup._1, tup._2)).filter(tup => tup._2.sid == 1).distinct
+        .map(tup => (tup._1, tup._2.sid)).distinct
+        .map(tup => (tup._1, Sim(tup._2))).distinct
+        .map(tup => Mam(tup._1, tup._2)).distinct
+    }
+    ctx.run(q).string(true).collapseSpace mustEqual
+      """
+        |SELECT
+        |  tup.mid,
+        |  tup.simsid
+        |FROM
+        |  (
+        |    SELECT
+        |      DISTINCT tup._1 AS mid,
+        |      tup._2sid AS simsid
+        |    FROM
+        |      (
+        |        SELECT DISTINCT tup._1,
+        |          tup._2 AS _2sid
+        |       FROM
+        |         (
+        |           SELECT
+        |             DISTINCT tup._1,
+        |             tup._2sid AS _2
+        |           FROM
+        |             (
+        |               SELECT
+        |                 DISTINCT x11._1,
+        |                 x11._2sid
+        |               FROM
+        |                 (
+        |                  SELECT
+        |                    DISTINCT tup."MID" AS _1,
+        |                    tup."SID" AS _2sid
+        |                  FROM
+        |                    Mam tup
+        |                  ORDER BY
+        |                    tup."SID" ASC NULLS FIRST
+        |                ) AS x11
+        |              WHERE
+        |                x11._2sid = 1
+        |            ) AS tup
+        |        ) AS tup
+        |     ) AS tup
+        | ) AS tup
         |""".collapseSpace
   }
 

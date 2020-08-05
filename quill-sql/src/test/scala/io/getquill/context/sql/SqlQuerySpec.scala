@@ -710,6 +710,16 @@ class SqlQuerySpec extends Spec {
       }
     }
 
+    "embedded sortBy" in {
+      case class Sim(sid: Int, name: String)
+      val q = quote {
+        query[Sim]
+          .map(sim => (sim.sid, sim.name))
+          .sortBy(sim => sim._1)
+      }
+      SqlQuery(q.ast).toString mustEqual "SELECT sim.sid, sim.name FROM Sim sim ORDER BY sim._1 ASC NULLS FIRST"
+    }
+
     "queries using options" - {
       case class Entity(id: Int, s: String, o: Option[String], fk: Int, io: Option[Int])
       case class EntityA(id: Int, s: String, o: Option[String])
