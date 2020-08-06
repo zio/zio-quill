@@ -5,7 +5,7 @@ import java.util.Iterator
 import java.util.concurrent.Executors
 import java.util.function.Supplier
 
-import io.getquill.context.ContextEffect
+import io.getquill.context.{ ContextEffect, TranslateContextBase }
 import io.getquill.context.sql.SqlContext
 import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.util.ContextLogger
@@ -21,7 +21,8 @@ import scala.util.Try
 abstract class NdbcContext[I <: SqlIdiom, N <: NamingStrategy, P <: PreparedStatement, R <: Row](
   val idiom: I, val naming: N, dataSource: DataSource[P, R]
 )
-  extends SqlContext[I, N] {
+  extends SqlContext[I, N]
+  with TranslateContextBase {
 
   private val logger = ContextLogger(classOf[NdbcContext[_, _, _, _]])
 
@@ -38,6 +39,9 @@ abstract class NdbcContext[I <: SqlIdiom, N <: NamingStrategy, P <: PreparedStat
 
   protected val effect: ContextEffect[Result]
   import effect._
+
+  override type TranslateResult[T] = Future[T]
+  override private[getquill] val translateEffect = NdbcContextEffect
 
   protected val zoneOffset: ZoneOffset = ZoneOffset.UTC
 
@@ -131,4 +135,9 @@ abstract class NdbcContext[I <: SqlIdiom, N <: NamingStrategy, P <: PreparedStat
       extractResult(rs, extractor, extractor(rs.next()) :: acc)
     else
       acc.reverse
+
+  override private[getquill] def prepareParams(statement: String, prepare: Prepare): Future[Seq[String]] =
+    withDataSource { _ =>
+      prepare(createPreparedStatement(statement))._1.reverse.map(prepareParam)
+    }
 }

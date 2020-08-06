@@ -93,7 +93,11 @@ trait SparkIdiom extends SqlIdiom with CannotReturn { self =>
         case q: Query =>
           val sql = SqlQuery(q)
           trace("sql")(sql)
-          sql.token
+          val expanded = SimpleNestedExpansion(sql)
+          trace("expanded sql")(expanded)
+          val tokenized = expanded.token
+          trace("tokenized sql")(tokenized)
+          tokenized
         case other =>
           other.token
       }
@@ -104,7 +108,7 @@ trait SparkIdiom extends SqlIdiom with CannotReturn { self =>
   override def concatFunction = "explode"
 
   override implicit def identTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Ident] = Tokenizer[Ident] {
-    case Ident(name) =>
+    case Ident(name, _) =>
       if (multipleSelect)
         stmt"struct(${name.token}.*)"
       else
@@ -126,7 +130,9 @@ trait SparkIdiom extends SqlIdiom with CannotReturn { self =>
     }
 
   override implicit def selectValueTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[SelectValue] = Tokenizer[SelectValue] {
-    case SelectValue(Ident(name), _, _) =>
+    case SelectValue(Ident(name, _), Some(alias), _) if (multipleSelect) =>
+      stmt"struct(${strategy.default(name).token}.*) AS ${alias.token}"
+    case SelectValue(Ident(name, _), _, _) =>
       if (multipleSelect)
         stmt"struct(${strategy.default(name).token}.*)"
       else
@@ -138,7 +144,7 @@ trait SparkIdiom extends SqlIdiom with CannotReturn { self =>
   override implicit def propertyTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Property] = {
     def path(ast: Ast): Token =
       ast match {
-        case Ident(name) => name.token
+        case Ident(name, _) => name.token
         case Property.Opinionated(a, b, renameable, _) =>
           stmt"${path(a)}.${renameable.fixedOr(b.token)(strategy.column(b).token)}"
         case other =>

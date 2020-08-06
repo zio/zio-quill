@@ -11,11 +11,16 @@ enablePlugins(TutPlugin)
 val CodegenTag = Tags.Tag("CodegenTag")
 (concurrentRestrictions in Global) += Tags.exclusive(CodegenTag)
 
+lazy val jsModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
+  `quill-core-portable-js`, `quill-core-js`,
+  `quill-sql-portable-js`, `quill-sql-js`
+)
+
 lazy val baseModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
-  `quill-core-portable-jvm`, `quill-core-portable-js`,
-  `quill-core-jvm`, `quill-core-js`,
-  `quill-sql-portable-jvm`, `quill-sql-portable-js`,
-  `quill-sql-jvm`, `quill-sql-js`, `quill-monix`
+  `quill-core-portable-jvm`,
+  `quill-core-jvm`,
+  `quill-sql-portable-jvm`,
+  `quill-sql-jvm`, `quill-monix`
 )
 
 lazy val dbModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
@@ -23,7 +28,7 @@ lazy val dbModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
 )
 
 lazy val jasyncModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
-  `quill-jasync`, `quill-jasync-postgres`
+  `quill-jasync`, `quill-jasync-postgres`, `quill-jasync-mysql`
 )
 
 lazy val asyncModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
@@ -41,9 +46,9 @@ lazy val bigdataModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
 )
 
 lazy val allModules =
-  baseModules ++ dbModules ++ asyncModules ++ codegenModules ++ bigdataModules
+  baseModules ++ jsModules ++ dbModules ++ asyncModules ++ codegenModules ++ bigdataModules
 
-lazy val scala213Modules = baseModules ++ dbModules ++ Seq[sbt.ClasspathDep[sbt.ProjectReference]](
+lazy val scala213Modules = baseModules ++ jsModules ++ dbModules ++ Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-async`,
   `quill-async-mysql`,
   `quill-async-postgres`,
@@ -52,6 +57,9 @@ lazy val scala213Modules = baseModules ++ dbModules ++ Seq[sbt.ClasspathDep[sbt.
   `quill-cassandra-lagom`,
   `quill-cassandra-monix`,
   `quill-orientdb`,
+  `quill-jasync`,
+  `quill-jasync-postgres`,
+  `quill-jasync-mysql`
 )
 
 def isScala213 = {
@@ -67,6 +75,9 @@ val filteredModules = {
     case Some("base") =>
       println("Compiling Base Modules")
       baseModules
+    case Some("js") =>
+      println("Compiling JavaScript Modules")
+      jsModules
     case Some("db") =>
       println("Compiling Database Modules")
       dbModules
@@ -166,6 +177,7 @@ lazy val `quill-core` =
         "org.scala-js" %%% "scalajs-java-time" % "0.2.5",
         "org.scala-js" %%% "scalajs-java-time" % "0.2.5"
       ),
+      excludeFilter in unmanagedSources := new SimpleFileFilter(file => file.getName == "DynamicQuerySpec.scala"),
       coverageExcludedPackages := ".*"
     )
     .dependsOn(`quill-core-portable` % "compile->compile")
@@ -185,7 +197,8 @@ lazy val `quill-sql-portable` =
         "com.github.vertical-blank" %%% "scala-sql-formatter" % "1.0.0"
       ),
       scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) },
-      coverageExcludedPackages := ".*"
+      coverageExcludedPackages := ".*"//,
+      //jsEnv := NodeJSEnv(args = Seq("--max_old_space_size=1024")).value
     )
     .dependsOn(`quill-core-portable` % "compile->compile")
 
@@ -355,7 +368,7 @@ lazy val `quill-finagle-mysql` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.twitter" %% "finagle-mysql" % "20.4.1"
+        "com.twitter" %% "finagle-mysql" % "20.6.0"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -415,7 +428,7 @@ lazy val `quill-jasync` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.github.jasync-sql" % "jasync-common" % "1.0.17",
+        "com.github.jasync-sql" % "jasync-common" % "1.1.3",
         "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.1"
       )
     )
@@ -428,7 +441,19 @@ lazy val `quill-jasync-postgres` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.github.jasync-sql" % "jasync-postgresql" % "1.0.17"
+        "com.github.jasync-sql" % "jasync-postgresql" % "1.1.3"
+      )
+    )
+    .dependsOn(`quill-jasync` % "compile->compile;test->test")
+
+lazy val `quill-jasync-mysql` =
+  (project in file("quill-jasync-mysql"))
+    .settings(commonSettings: _*)
+    .settings(mimaSettings: _*)
+    .settings(
+      fork in Test := true,
+      libraryDependencies ++= Seq(
+        "com.github.jasync-sql" % "jasync-mysql" % "1.1.3"
       )
     )
     .dependsOn(`quill-jasync` % "compile->compile;test->test")
@@ -509,7 +534,7 @@ lazy val `quill-orientdb` =
       .settings(
         fork in Test := true,
         libraryDependencies ++= Seq(
-          "com.orientechnologies" % "orientdb-graphdb" % "3.0.31"
+          "com.orientechnologies" % "orientdb-graphdb" % "3.0.32"
         )
       )
       .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -595,11 +620,11 @@ lazy val jdbcTestingLibraries = Seq(
     "com.zaxxer"              %  "HikariCP"                % "3.4.5",
     "mysql"                   %  "mysql-connector-java"    % "8.0.20"             % Test,
     "com.h2database"          %  "h2"                      % "1.4.200"            % Test,
-    "org.postgresql"          %  "postgresql"              % "42.2.12"             % Test,
-    "org.xerial"              %  "sqlite-jdbc"             % "3.31.1"             % Test,
+    "org.postgresql"          %  "postgresql"              % "42.2.14"             % Test,
+    "org.xerial"              %  "sqlite-jdbc"             % "3.32.3"             % Test,
     "com.microsoft.sqlserver" %  "mssql-jdbc"              % "7.1.1.jre8-preview" % Test,
     "com.oracle.ojdbc"        %  "ojdbc8"                  % "19.3.0.0"           % Test,
-    "org.mockito"             %% "mockito-scala-scalatest" % "1.14.2"              % Test
+    "org.mockito"             %% "mockito-scala-scalatest" % "1.14.8"              % Test
   )
 )
 
@@ -675,7 +700,7 @@ lazy val basicSettings = Seq(
   libraryDependencies ++= Seq(
     "org.scala-lang.modules" %%% "scala-collection-compat" % "2.1.6",
     "com.lihaoyi"     %% "pprint"         % pprintVersion(scalaVersion.value),
-    "org.scalatest"   %%% "scalatest"     % "3.1.2"          % Test,
+    "org.scalatest"   %%% "scalatest"     % "3.2.0"          % Test,
     "ch.qos.logback"  % "logback-classic" % "1.2.3"          % Test,
     "com.google.code.findbugs" % "jsr305" % "3.0.2"          % Provided // just to avoid warnings during compilation
   ) ++ {

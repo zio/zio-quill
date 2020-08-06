@@ -285,8 +285,6 @@ val returnedIds = ctx.run(q) //: List[(Int, String)]
 // INSERT INTO Product (description, sku) VALUES (?, ?) RETURNING id, description
 ```
 
-##### update returning
-
 `returning` can also be used after `update`:
 
 ```scala
@@ -296,6 +294,17 @@ val q = quote {
 
 val updated = ctx.run(q) //: List[(Int, String)]
 // UPDATE Product SET id = ?, description = ?, sku = ? RETURNING id, description
+```
+
+or even after `delete`:
+
+```scala
+val q = quote {
+  query[Product].delete.returning(r => (r.id, r.description))
+}
+
+val deleted = ctx.run(q) //: List[(Int, String)]
+// DELETE FROM Product RETURNING id, description
 ```
 
 #### Customization
@@ -355,7 +364,7 @@ In the case that this is impossible (e.g. when using Postgres booleans), you can
 ##### SQL Server
 
 The `returning` and `returningGenerated` methods are more restricted when using SQL Server; they only support 
-arithmetic operations. These are inserted directly into the SQL `OUTPUT INSERTED.*` clause.
+arithmetic operations. These are inserted directly into the SQL `OUTPUT INSERTED.*` or `OUTPUT DELETED.*` clauses.
 
 Assuming the query:
 ```scala
@@ -378,6 +387,16 @@ val q = quote {
 
 val updated = ctx.run(q)
 // UPDATE Product SET description = 'Updated Product', sku = 2022 OUTPUT INSERTED.id, INSERTED.description
+```
+
+Delete returning:
+```scala
+val q = quote {
+  query[Product].delete.returning(r => (r.id, r.description))
+}
+
+val updated = ctx.run(q)
+// DELETE FROM Product OUTPUT DELETED.id, DELETED.description
 ```
 
 ### Embedded case classes
@@ -1743,7 +1762,6 @@ ctx.run(query[Book])
 
 The cassandra context provides encoding of UDT (user-defined types).
 ```scala
-import io.getquill.context.cassandra.Udt
 
 case class Name(firstName: String, lastName: String) extends Udt
 ```
@@ -2425,7 +2443,7 @@ Quill provides a fully type-safe way to use Spark's highly-optimized SQL engine.
 ### Importing Quill Spark
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-spark" % "3.5.1"
+  "io.getquill" %% "quill-spark" % "3.5.3-SNAPSHOT"
 )
 ```
 
@@ -2625,7 +2643,7 @@ The body of `transaction` can contain calls to other methods and multiple `run` 
 ```
 libraryDependencies ++= Seq(
   "mysql" % "mysql-connector-java" % "8.0.17",
-  "io.getquill" %% "quill-jdbc" % "3.5.1"
+  "io.getquill" %% "quill-jdbc" % "3.5.3-SNAPSHOT"
 )
 ```
 
@@ -2652,7 +2670,7 @@ ctx.connectionTimeout=30000
 ```
 libraryDependencies ++= Seq(
   "org.postgresql" % "postgresql" % "42.2.8",
-  "io.getquill" %% "quill-jdbc" % "3.5.1"
+  "io.getquill" %% "quill-jdbc" % "3.5.3-SNAPSHOT"
 )
 ```
 
@@ -2678,7 +2696,7 @@ ctx.connectionTimeout=30000
 ```
 libraryDependencies ++= Seq(
   "org.xerial" % "sqlite-jdbc" % "3.28.0",
-  "io.getquill" %% "quill-jdbc" % "3.5.1"
+  "io.getquill" %% "quill-jdbc" % "3.5.3-SNAPSHOT"
 )
 ```
 
@@ -2699,7 +2717,7 @@ ctx.jdbcUrl=jdbc:sqlite:/path/to/db/file.db
 ```
 libraryDependencies ++= Seq(
   "com.h2database" % "h2" % "1.4.199",
-  "io.getquill" %% "quill-jdbc" % "3.5.1"
+  "io.getquill" %% "quill-jdbc" % "3.5.3-SNAPSHOT"
 )
 ```
 
@@ -2721,7 +2739,7 @@ ctx.dataSource.user=sa
 ```
 libraryDependencies ++= Seq(
   "com.microsoft.sqlserver" % "mssql-jdbc" % "7.4.1.jre8",
-  "io.getquill" %% "quill-jdbc" % "3.5.1"
+  "io.getquill" %% "quill-jdbc" % "3.5.3-SNAPSHOT"
 )
 ```
 
@@ -2743,7 +2761,7 @@ available for this situation [here](https://stackoverflow.com/questions/1074869/
 ```
 libraryDependencies ++= Seq(
   "com.oracle.jdbc" % "ojdbc8" % "18.3.0.0.0",
-  "io.getquill" %% "quill-jdbc" % "3.5.1"
+  "io.getquill" %% "quill-jdbc" % "3.5.3-SNAPSHOT"
 )
 ```
 
@@ -2843,7 +2861,7 @@ lazy val ctx = new MysqlMonixJdbcContext(SnakeCase, "ctx", Runner.using(Schedule
 ```
 libraryDependencies ++= Seq(
   "mysql" % "mysql-connector-java" % "8.0.17",
-  "io.getquill" %% "quill-jdbc-monix" % "3.5.1"
+  "io.getquill" %% "quill-jdbc-monix" % "3.5.3-SNAPSHOT"
 )
 ```
 
@@ -2870,7 +2888,7 @@ ctx.connectionTimeout=30000
 ```
 libraryDependencies ++= Seq(
   "org.postgresql" % "postgresql" % "42.2.8",
-  "io.getquill" %% "quill-jdbc-monix" % "3.5.1"
+  "io.getquill" %% "quill-jdbc-monix" % "3.5.3-SNAPSHOT"
 )
 ```
 
@@ -2896,7 +2914,7 @@ ctx.connectionTimeout=30000
 ```
 libraryDependencies ++= Seq(
   "org.xerial" % "sqlite-jdbc" % "3.28.0",
-  "io.getquill" %% "quill-jdbc-monix" % "3.5.1"
+  "io.getquill" %% "quill-jdbc-monix" % "3.5.3-SNAPSHOT"
 )
 ```
 
@@ -2917,7 +2935,7 @@ ctx.jdbcUrl=jdbc:sqlite:/path/to/db/file.db
 ```
 libraryDependencies ++= Seq(
   "com.h2database" % "h2" % "1.4.199",
-  "io.getquill" %% "quill-jdbc-monix" % "3.5.1"
+  "io.getquill" %% "quill-jdbc-monix" % "3.5.3-SNAPSHOT"
 )
 ```
 
@@ -2939,7 +2957,7 @@ ctx.dataSource.user=sa
 ```
 libraryDependencies ++= Seq(
   "com.microsoft.sqlserver" % "mssql-jdbc" % "7.4.1.jre8",
-  "io.getquill" %% "quill-jdbc-monix" % "3.5.1"
+  "io.getquill" %% "quill-jdbc-monix" % "3.5.3-SNAPSHOT"
 )
 ```
 
@@ -2971,7 +2989,7 @@ available for this situation [here](https://stackoverflow.com/questions/1074869/
 ```
 libraryDependencies ++= Seq(
   "com.oracle.jdbc" % "ojdbc8" % "18.3.0.0.0",
-  "io.getquill" %% "quill-jdbc-monix" % "3.5.1"
+  "io.getquill" %% "quill-jdbc-monix" % "3.5.3-SNAPSHOT"
 )
 ```
 
@@ -3013,7 +3031,7 @@ The body of transaction can contain calls to other methods and multiple run call
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-ndbc-postgres" % "3.5.2-SNAPSHOT"
+  "io.getquill" %% "quill-ndbc-postgres" % "3.5.3-SNAPSHOT"
 )
 ```
 
@@ -3120,7 +3138,7 @@ ctx.queryTimeout=10m
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async-mysql" % "3.5.1"
+  "io.getquill" %% "quill-async-mysql" % "3.5.3-SNAPSHOT"
 )
 ```
 
@@ -3144,7 +3162,7 @@ ctx.url=mysql://host:3306/database?user=root&password=root
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async-postgres" % "3.5.1"
+  "io.getquill" %% "quill-async-postgres" % "3.5.3-SNAPSHOT"
 )
 ```
 
@@ -3229,12 +3247,37 @@ ctx.sslmode=disable # optional, one of [disable|prefer|require|verify-ca|verify-
 ctx.sslrootcert=./path/to/cert/file # optional, required for sslmode=verify-ca or verify-full
 ```
 
+### quill-jasync-mysql
+
+#### sbt dependencies
+```
+libraryDependencies ++= Seq(
+  "io.getquill" %% "quill-jasync-mysql" % "3.5.3-SNAPSHOT"
+)
+```
+
+#### context definition
+```scala
+lazy val ctx = new MysqlJAsyncContext(SnakeCase, "ctx")
+```
+
+#### application.properties
+
+See [above](#applicationproperties-5)
+
+For `url` property use `mysql` scheme:
+
+```
+ctx.url=mysql://host:3306/database?user=root&password=root
+```
+
+
 ### quill-jasync-postgres
 
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-jasync-postgres" % "3.5.2-SNAPSHOT"
+  "io.getquill" %% "quill-jasync-postgres" % "3.5.3-SNAPSHOT"
 )
 ```
 
@@ -3284,7 +3327,7 @@ The body of `transaction` can contain calls to other methods and multiple `run` 
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-finagle-mysql" % "3.5.1"
+  "io.getquill" %% "quill-finagle-mysql" % "3.5.3-SNAPSHOT"
 )
 ```
 
@@ -3324,7 +3367,7 @@ The body of `transaction` can contain calls to other methods and multiple `run` 
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-finagle-postgres" % "3.5.1"
+  "io.getquill" %% "quill-finagle-postgres" % "3.5.3-SNAPSHOT"
 )
 ```
 
@@ -3351,7 +3394,7 @@ ctx.binaryParams=false
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-cassandra" % "3.5.1"
+  "io.getquill" %% "quill-cassandra" % "3.5.3-SNAPSHOT"
 )
 ```
 
@@ -3387,7 +3430,7 @@ ctx.session.addressTranslator=com.datastax.driver.core.policies.IdentityTranslat
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-cassandra-monix" % "3.5.1"
+  "io.getquill" %% "quill-cassandra-monix" % "3.5.3-SNAPSHOT"
 )
 ```
 
@@ -3406,7 +3449,7 @@ lazy val ctx = new CassandraStreamContext(SnakeCase, "ctx")
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-orientdb" % "3.5.1"
+  "io.getquill" %% "quill-orientdb" % "3.5.3-SNAPSHOT"
 )
 ```
 
@@ -3468,7 +3511,7 @@ Have a look at the [CODEGEN.md](https://github.com/getquill/quill/blob/master/CO
 
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-codegen-jdbc" % "3.5.1"
+  "io.getquill" %% "quill-codegen-jdbc" % "3.5.3-SNAPSHOT"
 )
 ```
 
