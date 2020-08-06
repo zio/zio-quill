@@ -173,7 +173,8 @@ object SqlQuery {
 
       case Filter(q, Ident(alias, _), p) =>
         val b = base(q, alias)
-        if (b.where.isEmpty)
+        //If the filter body uses the filter alias, make sure it matches one of the aliases in the fromContexts
+        if (b.where.isEmpty && (!CollectAst.byType[Ident](p).map(_.name).contains(alias) || collectAliases(b.from).contains(alias)))
           b.copy(where = Some(p))(quat)
         else
           FlattenSqlQuery(
@@ -185,7 +186,8 @@ object SqlQuery {
       case SortBy(q, Ident(alias, _), p, o) =>
         val b = base(q, alias)
         val criterias = orderByCriterias(p, o)
-        if (b.orderBy.isEmpty)
+        //If the sortBy body uses the filter alias, make sure it matches one of the aliases in the fromContexts
+        if (b.orderBy.isEmpty && (!CollectAst.byType[Ident](p).map(_.name).contains(alias) || collectAliases(b.from).contains(alias)))
           b.copy(orderBy = criterias)(quat)
         else
           FlattenSqlQuery(
@@ -260,4 +262,15 @@ object SqlQuery {
       case (a, o: PropertyOrdering)                   => List(OrderByCriteria(a, o))
       case other                                      => fail(s"Invalid order by criteria $ast")
     }
+
+  private def collectAliases(contexts: List[FromContext]): List[String] = {
+    contexts.flatMap {
+      case c: TableContext             => List(c.alias)
+      case c: QueryContext             => List(c.alias)
+      case c: InfixContext             => List(c.alias)
+      case JoinContext(_, a, b, _)     => collectAliases(List(a)) ++ collectAliases(List(b))
+      case FlatJoinContext(_, from, _) => collectAliases(List(from))
+    }
+
+  }
 }
