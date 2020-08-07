@@ -46,6 +46,21 @@ class PeopleJdbcSpec extends Spec {
       List(("Alex", 5), ("Cora", 2))
   }
 
+  "Example 1 - differences with explicit join" in {
+    val q =
+      quote {
+        for {
+          c <- couples
+          w <- people.join(w => c.her == w.name)
+          m <- people.join(m => c.him == m.name) if (w.age > m.age)
+        } yield {
+          (w.name, w.age - m.age)
+        }
+      }
+    testContext.run(q).collect.toList mustEqual
+      List(("Alex", 5), ("Cora", 2))
+  }
+
   "Example 2 - range simple" in {
     val rangeSimple = quote {
       (a: Int, b: Int) =>
@@ -112,4 +127,15 @@ class PeopleJdbcSpec extends Spec {
     testContext.run(q("Drew", "Bert")).collect.toList mustEqual
       List(Person("Cora", 33), Person("Drew", 31))
   }
+  /*
+  //blows up
+  "simple distinct" in {
+    val q =
+      quote {
+        couples.distinct
+      }
+    testContext.run(q.dynamic).collect.toList mustEqual
+      List(Couple("Alex", "Bert"), Couple("Cora", "Drew"), Couple("Edna", "Fred"))
+  }
+   */
 }
