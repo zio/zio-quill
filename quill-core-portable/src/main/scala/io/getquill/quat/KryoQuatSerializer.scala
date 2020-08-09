@@ -4,6 +4,7 @@ import java.util.Base64
 import com.esotericsoftware.kryo.io.{ Input, Output }
 import com.esotericsoftware.kryo.{ Kryo, Serializer }
 import com.twitter.chill.{ IKryoRegistrar, KryoPool, ScalaKryoInstantiator }
+import io.getquill.util.Messages
 
 import scala.collection.mutable
 
@@ -47,7 +48,7 @@ object KryoQuatSerializer {
   // Needs to be lazy or will be initialize by ScalaJS and it doesn't exist there.
   lazy val kryo =
     KryoPool.withByteArrayOutputStream(
-      10,
+      Messages.quatKryoPoolSize,
       new ScalaKryoInstantiator().withRegistrar(registrar)
     )
 
