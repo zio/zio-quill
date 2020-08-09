@@ -11,15 +11,33 @@ object LinkedHashMapOps {
   }
 
   def zipWith[K, V, R](m1: mutable.LinkedHashMap[K, V], m2: mutable.LinkedHashMap[K, V], f: PartialFunction[(K, V, Option[V]), R]) = {
-    m1.iterator.map(r => (r._1, r._2, m2.get(r._1))).collect(f)
+    m1.toList.map(r => (r._1, r._2, m2.get(r._1))).collect(f)
   }
 }
 
-// This represents a simplified Sql-Type. Since it applies to all dialects, it is called
-// Quill-Application-Type hence Quat.
+/**
+ * This represents a simplified Sql-Type. Since it applies to all dialects, it is called
+ * Quill-Application-Type hence Quat. Quats represent the types of the Quill AST allowing us
+ * to know what fields exist on an Ident and more concretely what can be done with it.
+ * Currently they are:
+ * <ul>
+ *   <li> Quat.Product - Something that contains a list of fields e.g. case class `Person(name:String,age:Int)` would be
+ *   `Product("name"->Quat.Value, "age"->Quat.Value)`
+ *   <li> Quat.Value - A value level Quat e.g. Int, Long, String etc... More specific Quat.Value types are planned int the future.
+ *   <li> Quat.Generic - A Quat representing a type whose value is not known yet.
+ *   <li> Quat.Null - A Quat representing a null value.
+ * </ul>
+ *
+ * Quats are generally treated as through they are immutable although there are dynamic/mutable variables in some places
+ * (e.g. Product uses LinkedHashSet and var) due to various other issues (e.g. performance, serialization). It is assumed that
+ * all operations Quats have referential transparency.
+ */
 sealed trait Quat {
   def applyRenames: Quat = this
   def withRenames(renames: List[(String, String)]): Quat
+
+  def serializeJVM = KryoQuatSerializer.serialize(this)
+  def serializeJS = BooQuatSerializer.serialize(this)
 
   def renames: List[(String, String)] = List()
 
@@ -91,6 +109,9 @@ sealed trait Quat {
 object Quat {
   import LinkedHashMapOps._
 
+  def fromSerializedJVM(serial: String): Quat = KryoQuatSerializer.deserialize(serial)
+  def fromSerializedJS(serial: String): Quat = BooQuatSerializer.deserialize(serial)
+
   object BottomType {
     def unapply(quat: Quat) =
       quat match {
@@ -109,8 +130,18 @@ object Quat {
   }
 
   case class Product(fields: mutable.LinkedHashMap[String, Quat]) extends Quat {
-
     def this(list: Iterator[(String, Quat)]) = this((mutable.LinkedHashMap[String, Quat]() ++ list): mutable.LinkedHashMap[String, Quat])
+
+    // Strictly internal, use WithRenames to construct an instance of a Product with Renames
+    private def this(fields: mutable.LinkedHashMap[String, Quat], newRenames: List[(String, String)]) = {
+      this(fields)
+      _renames = newRenames
+    }
+
+    // Defining as var but should be effectively static! I.e. changes only possible with WithRename. Need
+    // to make this var because doing "new Product { override def renames = newRenames }" breaks BooPickle serialization
+    var _renames: List[(String, String)] = List()
+    override def renames: List[(String, String)] = _renames
 
     def withRenamesFrom(other: Quat): Quat = {
       other match {
@@ -171,6 +202,9 @@ object Quat {
   def LeafTuple(numElems: Int) = Quat.Tuple((1 to numElems).map(_ => Quat.Value))
 
   object Product {
+    def fromSerializedJVM(serial: String): Quat.Product = KryoQuatSerializer.deserialize(serial).probit
+    def fromSerializedJS(serial: String): Quat.Product = BooQuatSerializer.deserialize(serial).probit
+
     def empty = new Quat.Product(mutable.LinkedHashMap[String, Quat]())
     def apply(fields: (String, Quat)*): Quat.Product = apply(fields.iterator)
     def apply(fields: Iterable[(String, Quat)]): Quat.Product = new Quat.Product(fields.iterator)
@@ -185,9 +219,8 @@ object Quat {
      */
     object WithRenames {
       def apply(fields: mutable.LinkedHashMap[String, Quat], theRenames: List[(String, String)]) =
-        new Product(fields) {
-          override def renames: List[(String, String)] = theRenames
-        }
+        new Product(fields, theRenames)
+
       def unapply(p: Quat.Product) =
         Some((p.fields, p.renames))
     }
@@ -202,7 +235,7 @@ object Quat {
   case object Generic extends Quat {
     override def withRenames(renames: List[(String, String)]) = this
   }
-  object Value extends Quat {
+  case object Value extends Quat {
 
     /** Should not be able to rename properties on a value node, turns into a error of the array is not null */
     override def withRenames(renames: List[(String, String)]) =
