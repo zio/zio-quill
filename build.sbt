@@ -368,12 +368,15 @@ lazy val `quill-ndbc-monix` =
 
 lazy val `quill-spark` =
   (project in file("quill-spark"))
-    .settings(commonSettings: _*)
+    .settings(commonNoLogSettings: _*)
     .settings(mimaSettings: _*)
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
         "org.apache.spark" %% "spark-sql" % "2.4.4"
+      ),
+      excludeDependencies ++= Seq(
+        "ch.qos.logback"  % "logback-classic"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -696,6 +699,12 @@ val crossVersions = {
   }
 }
 
+lazy val loggingSettings = Seq(
+  libraryDependencies ++= Seq(
+    "ch.qos.logback"  % "logback-classic" % "1.2.3" % Test
+  )
+)
+
 lazy val basicSettings = Seq(
   excludeFilter in unmanagedSources := {
     excludeTests match {
@@ -710,7 +719,6 @@ lazy val basicSettings = Seq(
     "org.scala-lang.modules" %%% "scala-collection-compat" % "2.1.6",
     "com.lihaoyi"     %% "pprint"         % pprintVersion(scalaVersion.value),
     "org.scalatest"   %%% "scalatest"     % "3.2.0"          % Test,
-    "ch.qos.logback"  % "logback-classic" % "1.2.3"          % Test,
     "com.google.code.findbugs" % "jsr305" % "3.0.2"          % Provided // just to avoid warnings during compilation
   ) ++ {
     if (debugMacro) Seq(
@@ -794,7 +802,10 @@ def doOnPush(steps: ReleaseStep*): Seq[ReleaseStep] =
   else
     Seq[ReleaseStep](steps: _*)
 
-lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ basicSettings ++ Seq(
+lazy val commonNoLogSettings = ReleasePlugin.extraReleaseCommands ++ basicSettings ++ releaseSettings
+lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ basicSettings ++ loggingSettings ++ releaseSettings
+
+lazy val releaseSettings = Seq(
   releasePublishArtifactsAction := PgpKeys.publishSigned.value,
   publishMavenStyle := true,
   publishTo := {
