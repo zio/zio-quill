@@ -22,5 +22,5 @@ trait ContextEffect[F[_]] {
    * Aggregate a list of effects into a single effect element. Most effect types
    * used in Quill context easily support this kind of operation e.g. Futures, monix Tasks, Observables, etc...
    */
-  def seq[A, B](f: List[F[A]]): F[List[A]]
+  def seq[A](f: List[F[A]]): F[List[A]]
 }

@@ -1,6 +1,6 @@
 package io.getquill
 
-import io.getquill.context.monix.Runner
+import io.getquill.context.monix.MonixJdbcContext.Runner
 import io.getquill.util.LoadConfig
 import monix.eval.Task
 import monix.execution.Scheduler
