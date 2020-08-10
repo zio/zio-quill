@@ -2,7 +2,7 @@ package io.getquill.postgres
 
 import java.util.UUID
 
-import io.getquill.context.monix.Runner
+import io.getquill.context.monix.MonixJdbcContext.Runner
 import io.getquill.{ JdbcContextConfig, Literal, PostgresMonixJdbcContext }
 import io.getquill.context.sql.ProductSpec
 import io.getquill.util.LoadConfig

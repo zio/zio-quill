@@ -34,7 +34,7 @@ lazy val jasyncModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
 lazy val asyncModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-async`, `quill-async-mysql`, `quill-async-postgres`,
   `quill-finagle-mysql`, `quill-finagle-postgres`,
-  `quill-ndbc`, `quill-ndbc-postgres`
+  `quill-ndbc`, `quill-ndbc-postgres`, `quill-ndbc-monix`
 ) ++ jasyncModules
 
 lazy val codegenModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
@@ -347,6 +347,20 @@ lazy val `quill-jdbc-monix` =
     .dependsOn(`quill-monix` % "compile->compile;test->test")
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
     .dependsOn(`quill-jdbc` % "compile->compile;test->test")
+
+lazy val `quill-ndbc-monix` =
+  (project in file("quill-ndbc-monix"))
+    .settings(commonSettings: _*)
+    .settings(mimaSettings: _*)
+    .settings(
+      fork in Test := true,
+      libraryDependencies ++= Seq(
+      )
+    )
+    .dependsOn(`quill-monix` % "compile->compile;test->test")
+    .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
+    .dependsOn(`quill-ndbc` % "compile->compile;test->test")
+    .dependsOn(`quill-ndbc-postgres` % "compile->compile;test->test")
 
 lazy val `quill-spark` =
   (project in file("quill-spark"))
