@@ -121,8 +121,8 @@ publishArtifact in `quill` := false
 lazy val superPure = new sbtcrossproject.CrossType {
   def projectDir(crossBase: File, projectType: String): File =
     projectType match {
-      case "jvm" => crossBase
-      case "js"  => crossBase / s".$projectType"
+      case "jvm" => crossBase / s"$projectType"
+      case "js"  => crossBase / s"$projectType"
     }
 
   def sharedSrcDir(projectBase: File, conf: String): Option[File] =
@@ -130,8 +130,8 @@ lazy val superPure = new sbtcrossproject.CrossType {
 
   override def projectDir(crossBase: File, projectType: sbtcrossproject.Platform): File =
     projectType match {
-      case JVMPlatform => crossBase
-      case JSPlatform  => crossBase / ".js"
+      case JVMPlatform => crossBase / "jvm"
+      case JSPlatform  => crossBase / "js"
     }
 }
 
@@ -146,14 +146,17 @@ lazy val `quill-core-portable` =
     .settings(libraryDependencies ++= Seq(
       "com.typesafe"               %  "config"        % "1.4.0",
       "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
-      "org.scala-lang"             %  "scala-reflect" % scalaVersion.value
+      "org.scala-lang"             %  "scala-reflect" % scalaVersion.value,
+      "com.twitter"                %% "chill"         % "0.9.5",
+      "io.suzaku"                  %% "boopickle"     % "1.3.1"
     ))
     .jsSettings(
       libraryDependencies ++= Seq(
         "com.lihaoyi" %%% "pprint" % pprintVersion(scalaVersion.value),
         "org.scala-js" %%% "scalajs-java-time" % "0.2.5",
         "com.lihaoyi" %%% "pprint" % "0.5.4",
-        "org.scala-js" %%% "scalajs-java-time" % "0.2.5"
+        "org.scala-js" %%% "scalajs-java-time" % "0.2.5",
+        "io.suzaku" %%% "boopickle" % "1.3.1"
       ),
       coverageExcludedPackages := ".*"
     )
@@ -181,8 +184,9 @@ lazy val `quill-core` =
     )
     .dependsOn(`quill-core-portable` % "compile->compile")
 
-lazy val `quill-core-jvm` = `quill-core`.jvm
-lazy val `quill-core-js` = `quill-core`.js
+// dependsOn in these clauses technically not needed however, intellij does not work properly without them
+lazy val `quill-core-jvm` = `quill-core`.jvm.dependsOn(`quill-core-portable-jvm` % "compile->compile")
+lazy val `quill-core-js` = `quill-core`.js.dependsOn(`quill-core-portable-js` % "compile->compile")
 
 lazy val `quill-sql-portable` =
   crossProject(JVMPlatform, JSPlatform).crossType(superPure)
@@ -364,12 +368,15 @@ lazy val `quill-ndbc-monix` =
 
 lazy val `quill-spark` =
   (project in file("quill-spark"))
-    .settings(commonSettings: _*)
+    .settings(commonNoLogSettings: _*)
     .settings(mimaSettings: _*)
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
         "org.apache.spark" %% "spark-sql" % "2.4.4"
+      ),
+      excludeDependencies ++= Seq(
+        "ch.qos.logback"  % "logback-classic"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -692,6 +699,12 @@ val crossVersions = {
   }
 }
 
+lazy val loggingSettings = Seq(
+  libraryDependencies ++= Seq(
+    "ch.qos.logback"  % "logback-classic" % "1.2.3" % Test
+  )
+)
+
 lazy val basicSettings = Seq(
   excludeFilter in unmanagedSources := {
     excludeTests match {
@@ -706,7 +719,6 @@ lazy val basicSettings = Seq(
     "org.scala-lang.modules" %%% "scala-collection-compat" % "2.1.6",
     "com.lihaoyi"     %% "pprint"         % pprintVersion(scalaVersion.value),
     "org.scalatest"   %%% "scalatest"     % "3.2.0"          % Test,
-    "ch.qos.logback"  % "logback-classic" % "1.2.3"          % Test,
     "com.google.code.findbugs" % "jsr305" % "3.0.2"          % Provided // just to avoid warnings during compilation
   ) ++ {
     if (debugMacro) Seq(
@@ -790,7 +802,10 @@ def doOnPush(steps: ReleaseStep*): Seq[ReleaseStep] =
   else
     Seq[ReleaseStep](steps: _*)
 
-lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ basicSettings ++ Seq(
+lazy val commonNoLogSettings = ReleasePlugin.extraReleaseCommands ++ basicSettings ++ releaseSettings
+lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ basicSettings ++ loggingSettings ++ releaseSettings
+
+lazy val releaseSettings = Seq(
   releasePublishArtifactsAction := PgpKeys.publishSigned.value,
   publishMavenStyle := true,
   publishTo := {

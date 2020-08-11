@@ -7,6 +7,7 @@ object Messages {
   private def variable(propName: String, envName: String, default: String) =
     Option(System.getProperty(propName)).orElse(sys.env.get(envName)).getOrElse(default)
 
+  private[getquill] def quatKryoPoolSize = variable("quill.quat.kryoPool", "quill_quat_kryoPool", "10").toInt
   private[util] def prettyPrint = variable("quill.macro.log.pretty", "quill_macro_log", "false").toBoolean
   private[getquill] def alwaysAlias = variable("quill.query.alwaysAlias", "quill_query_alwaysAlias", "false").toBoolean
   private[getquill] def pruneColumns = variable("quill.query.pruneColumns", "quill_query_pruneColumns", "true").toBoolean
