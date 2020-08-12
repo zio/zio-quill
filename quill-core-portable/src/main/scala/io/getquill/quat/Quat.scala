@@ -70,8 +70,7 @@ sealed trait Quat {
     case Quat.Product(fields) => s"CC(${
       fields.map {
         case (k, v) => k + (v match {
-          case Quat.QuatValue(_) => ""
-          case other             => ":" + other.shortString
+          case other => ":" + other.shortString
         })
       }.mkString(",")
     })${
@@ -242,27 +241,18 @@ object Quat {
     override def withRenames(renames: List[(String, String)]) = this
   }
 
-  sealed trait QuatValue extends Quat {
+  case object Value extends Quat with NoRenames
+  case object BooleanValue extends Quat with NoRenames
+  case object BooleanExpression extends Quat with NoRenames
+
+  protected trait NoRenames {
+    this: Quat =>
+
     /** Should not be able to rename properties on a value node, turns into a error of the array is not null */
-    override def withRenames(renames: List[(String, String)]) =
+    override def withRenames(renames: List[(String, String)]): Quat =
       renames match {
         case Nil => this
-        case _   => QuatException(s"Renames ${renames} cannot be applied to a value SQL-level type")
+        case _   => QuatException(s"Renames $renames cannot be applied to a value SQL-level type")
       }
   }
-
-  object QuatValue {
-    def unapply(quat: Quat) = quat match {
-      case BooleanValue      => Some(BooleanValue)
-      case BooleanExpression => Some(BooleanExpression)
-      case Value             => Some(Value)
-      case _                 => None
-    }
-  }
-
-  object Value extends QuatValue
-
-  sealed trait Boolean extends QuatValue
-  object BooleanValue extends Boolean
-  object BooleanExpression extends Boolean
 }

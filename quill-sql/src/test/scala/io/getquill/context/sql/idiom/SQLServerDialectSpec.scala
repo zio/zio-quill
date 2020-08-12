@@ -61,6 +61,38 @@ class SQLServerDialectSpec extends Spec {
       ctx.run(qr4.filter(t => true).filter(t => false).map(t => (t.i, false, true))).string mustEqual
         "SELECT t.i, 0, 1 FROM TestEntity4 t WHERE 1 = 1 AND 1 = 0"
     }
+    "if" - {
+      "simple booleans" in {
+        val q = quote {
+          qr1.map(t => if (true) true else false)
+        }
+        ctx.run(q).string mustEqual
+          "SELECT CASE WHEN 1 = 1 THEN 1 ELSE 0 END FROM TestEntity t"
+      }
+      "nested conditions" - {
+        "inside then" in {
+          val q = quote {
+            qr1.map(t => if (true) { if (false) true else false } else true)
+          }
+          ctx.run(q).string mustEqual
+            "SELECT CASE WHEN 1 = 1 THEN CASE WHEN 1 = 0 THEN 1 ELSE 0 END ELSE 1 END FROM TestEntity t"
+        }
+        "inside else" in {
+          val q = quote {
+            qr1.map(t => if (true) true else if (false) true else false)
+          }
+          ctx.run(q).string mustEqual
+            "SELECT CASE WHEN 1 = 1 THEN 1 WHEN 1 = 0 THEN 1 ELSE 0 END FROM TestEntity t"
+        }
+        "inside both" in {
+          val q = quote {
+            qr1.map(t => if (true) { if (false) true else false } else { if (true) false else true })
+          }
+          ctx.run(q).string mustEqual
+            "SELECT CASE WHEN 1 = 1 THEN CASE WHEN 1 = 0 THEN 1 ELSE 0 END WHEN 1 = 1 THEN 0 ELSE 1 END FROM TestEntity t"
+        }
+      }
+    }
   }
 
   "offset/fetch" - {

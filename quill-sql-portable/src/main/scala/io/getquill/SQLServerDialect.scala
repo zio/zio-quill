@@ -9,14 +9,15 @@ import io.getquill.idiom.StatementInterpolator._
 import io.getquill.idiom.{ Statement, StringToken, Token }
 import io.getquill.norm.EqualityBehavior
 import io.getquill.norm.EqualityBehavior.NonAnsiEquality
-import io.getquill.quat.Quat
+import io.getquill.sql.idiom.BooleanLiteralSupport
 import io.getquill.util.Messages.fail
 
 trait SQLServerDialect
   extends SqlIdiom
   with QuestionMarkBindVariables
   with ConcatSupport
-  with CanOutputClause {
+  with CanOutputClause
+  with BooleanLiteralSupport {
 
   override def querifyAst(ast: Ast) = AddDropToNestedOrderBy(SqlQuery(ast))
 
@@ -47,13 +48,6 @@ trait SQLServerDialect
     Tokenizer[Operation] {
       case BinaryOperation(a, StringOperator.`+`, b) => stmt"${scopedTokenizer(a)} + ${scopedTokenizer(b)}"
       case other                                     => super.operationTokenizer.token(other)
-    }
-
-  override implicit def valueTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Value] =
-    Tokenizer[Value] {
-      //      case Constant(b: Boolean, Quat.BooleanExpression) => StringToken(if (b) "1 = 1" else "1 = 0")
-      case Constant(b: Boolean, Quat.BooleanValue) => StringToken(if (b) "1" else "0")
-      case other                                   => super.valueTokenizer.token(other)
     }
 }
 

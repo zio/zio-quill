@@ -1113,12 +1113,26 @@ class SqlIdiomSpec extends Spec {
         testContext.run(q).string mustEqual
           "SELECT CASE WHEN t.i > 0 THEN 'a' ELSE 'b' END FROM TestEntity t"
       }
+      "simple booleans" in {
+        val q = quote {
+          qr1.map(t => if (true) true else false)
+        }
+        testContext.run(q).string mustEqual
+          "SELECT CASE WHEN true THEN true ELSE false END FROM TestEntity t"
+      }
       "nested" in {
         val q = quote {
           qr1.map(t => if (t.i > 0) "a" else if (t.i > 10) "b" else "c")
         }
         testContext.run(q).string mustEqual
           "SELECT CASE WHEN t.i > 0 THEN 'a' WHEN t.i > 10 THEN 'b' ELSE 'c' END FROM TestEntity t"
+      }
+      "nested booleans" in {
+        val q = quote {
+          qr1.map(t => if (true) true else if (true) true else false)
+        }
+        testContext.run(q).string mustEqual
+          "SELECT CASE WHEN true THEN true WHEN true THEN true ELSE false END FROM TestEntity t"
       }
     }
     "inline vals" - {

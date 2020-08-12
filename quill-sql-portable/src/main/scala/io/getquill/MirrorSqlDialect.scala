@@ -2,6 +2,7 @@ package io.getquill
 
 import io.getquill.context.sql.idiom.{ ConcatSupport, QuestionMarkBindVariables, SqlIdiom }
 import io.getquill.context._
+import io.getquill.sql.idiom.BooleanLiteralSupport
 
 trait MirrorSqlDialect
   extends SqlIdiom
@@ -33,6 +34,13 @@ trait MirrorSqlDialectWithNoReturn
   with QuestionMarkBindVariables
   with ConcatSupport
   with CannotReturn
+
+trait MirrorSqlDialectWithBooleanLiterals
+  extends SqlIdiom
+  with QuestionMarkBindVariables
+  with ConcatSupport
+  with CanReturnField
+  with BooleanLiteralSupport
 
 object MirrorSqlDialect extends MirrorSqlDialect {
 
@@ -66,5 +74,9 @@ object MirrorSqlDialectWithOutputClause extends MirrorSqlDialectWithOutputClause
 }
 
 object MirrorSqlDialectWithNoReturn extends MirrorSqlDialectWithNoReturn {
+  override def prepareForProbing(string: String) = string
+}
+
+object MirrorSqlDialectWithBooleanLiterals extends MirrorSqlDialectWithBooleanLiterals {
   override def prepareForProbing(string: String) = string
 }
