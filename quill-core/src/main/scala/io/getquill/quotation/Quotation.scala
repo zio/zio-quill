@@ -3,11 +3,11 @@ package io.getquill.quotation
 import scala.annotation.StaticAnnotation
 import scala.reflect.ClassTag
 import scala.reflect.macros.whitebox.Context
-
 import io.getquill.ast._
 import io.getquill.util.MacroContextExt._
 import io.getquill.norm.BetaReduction
-import io.getquill.util.EnableReflectiveCalls
+import io.getquill.util.Messages.TraceType
+import io.getquill.util.{ EnableReflectiveCalls, Interpolator }
 
 case class QuotedAst(ast: Ast) extends StaticAnnotation
 
@@ -19,7 +19,10 @@ trait Quotation extends Liftables with Unliftables with Parsing with ReifyLiftin
 
   def quote[T](body: Tree)(implicit t: WeakTypeTag[T]) = {
 
-    val ast = BetaReduction(astParser(body))
+    val interp = new Interpolator(TraceType.Quotation, 1)
+    import interp._
+
+    val ast = BetaReduction(trace"Parsing Quotation Body" andReturn (astParser(body)))
 
     val id = TermName(s"id${ast.hashCode.abs}")
 

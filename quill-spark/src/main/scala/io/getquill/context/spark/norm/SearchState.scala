@@ -1,6 +1,7 @@
 package io.getquill.context.spark.norm
 
 import io.getquill.ast.{ Entity, Ident, Property }
+import io.getquill.quat.Quat
 
 sealed trait SearchState {
   def aliases: Seq[EntityId] = Seq()
@@ -27,8 +28,8 @@ object FoundEntityIds {
     new FoundEntityIds(Seq(EntityId(id, e)))
 
   def apply(id: String, propertyList: List[String]) =
-    new FoundEntityIds(Seq(EntityId(id, propertyList.map(p => Property(Ident(id), p)))))
+    new FoundEntityIds(Seq(EntityId(id, propertyList.map(p => Property(Ident(id, Quat.Value), p)))))
 }
 object EntityId {
-  def apply(id: String, e: Entity) = new EntityId(id, e.properties.map(pa => Property(Ident(id), pa.path.mkString("."))))
+  def apply(id: String, e: Entity) = new EntityId(id, e.properties.map(pa => Property(Ident(id, Quat.Value), pa.path.mkString("."))))
 }

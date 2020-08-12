@@ -2,6 +2,7 @@ package io.getquill.context.jdbc.oracle
 
 import io.getquill.context.sql.DepartmentsSpec
 import org.scalatest.matchers.should.Matchers._
+import io.getquill.Update
 
 class DepartmentsJdbcSpec extends DepartmentsSpec {
 

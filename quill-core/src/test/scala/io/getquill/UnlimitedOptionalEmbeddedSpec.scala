@@ -3,6 +3,7 @@ package io.getquill
 import io.getquill.ast.Renameable.Fixed
 import io.getquill.ast.{ Entity, PropertyAlias }
 import io.getquill.context.mirror.Row
+import io.getquill.quat._
 
 class UnlimitedOptionalEmbeddedSpec extends Spec {
   val ctx = testContext
@@ -16,11 +17,15 @@ class UnlimitedOptionalEmbeddedSpec extends Spec {
 
   lazy val optEmdEnt = OptEmd(
     Emb1(
-      Emb2(Emb3("111"), Some(Emb3("112"))), Some(Emb2(Emb3("121"), Some(Emb3("122"))))
+      Emb2(Emb3("111"), Some(Emb3("112"))),
+      Some(Emb2(Emb3("121"), Some(Emb3("122"))))
     ),
-    Some(Emb1(
-      Emb2(Emb3("211"), Some(Emb3("212"))), Some(Emb2(Emb3("221"), Some(Emb3("222"))))
-    ))
+    Some(
+      Emb1(
+        Emb2(Emb3("211"), Some(Emb3("212"))),
+        Some(Emb2(Emb3("221"), Some(Emb3("222"))))
+      )
+    )
   )
 
   val qrOptEmd = quote {
@@ -38,16 +43,21 @@ class UnlimitedOptionalEmbeddedSpec extends Spec {
   }
 
   "quotation aliases" in {
-    quote(unquote(qrOptEmd)).ast mustEqual Entity.Opinionated("OptEmd", List(
-      PropertyAlias(List("e1", "e1", "e1", "value"), "value111"),
-      PropertyAlias(List("e1", "e1", "e2", "value"), "value112"),
-      PropertyAlias(List("e1", "e2", "e1", "value"), "value121"),
-      PropertyAlias(List("e1", "e2", "e2", "value"), "value122"),
-      PropertyAlias(List("e2", "e1", "e1", "value"), "value211"),
-      PropertyAlias(List("e2", "e1", "e2", "value"), "value212"),
-      PropertyAlias(List("e2", "e2", "e1", "value"), "value221"),
-      PropertyAlias(List("e2", "e2", "e2", "value"), "value222")
-    ), Fixed)
+    quote(unquote(qrOptEmd)).ast mustEqual Entity.Opinionated(
+      "OptEmd",
+      List(
+        PropertyAlias(List("e1", "e1", "e1", "value"), "value111"),
+        PropertyAlias(List("e1", "e1", "e2", "value"), "value112"),
+        PropertyAlias(List("e1", "e2", "e1", "value"), "value121"),
+        PropertyAlias(List("e1", "e2", "e2", "value"), "value122"),
+        PropertyAlias(List("e2", "e1", "e1", "value"), "value211"),
+        PropertyAlias(List("e2", "e1", "e2", "value"), "value212"),
+        PropertyAlias(List("e2", "e2", "e1", "value"), "value221"),
+        PropertyAlias(List("e2", "e2", "e2", "value"), "value222")
+      ),
+      quatOf[OptEmd].probit,
+      Fixed
+    )
   }
 
   "meta" - {
@@ -98,7 +108,16 @@ class UnlimitedOptionalEmbeddedSpec extends Spec {
       "v => v.e2.map((v) => v.e1.e2.map((v) => v.value)) -> ?, " +
       "v => v.e2.map((v) => v.e2.map((v) => v.e1.value)) -> ?, " +
       "v => v.e2.map((v) => v.e2.map((v) => v.e2.map((v) => v.value))) -> ?)"
-    val resultRow = Row("111", Some("112"), Some("121"), Some(Some("122")), Some("211"), Some(Some("212")), Some(Some("221")), Some(Some(Some("222"))))
+    val resultRow = Row(
+      "111",
+      Some("112"),
+      Some("121"),
+      Some(Some("122")),
+      Some("211"),
+      Some(Some("212")),
+      Some(Some("221")),
+      Some(Some(Some("222")))
+    )
 
     "non-batched" in {
       val r = testContext.run(qrOptEmd.insert(lift(optEmdEnt)))
@@ -106,7 +125,9 @@ class UnlimitedOptionalEmbeddedSpec extends Spec {
       r.prepareRow mustEqual resultRow
     }
     "batched" in {
-      val r = testContext.run(liftQuery(List(optEmdEnt)).foreach(e => qrOptEmd.insert(e)))
+      val r = testContext.run(
+        liftQuery(List(optEmdEnt)).foreach(e => qrOptEmd.insert(e))
+      )
       r.groups mustEqual List(resultString -> List(resultRow))
     }
   }

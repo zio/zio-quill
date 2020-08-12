@@ -4,7 +4,7 @@ import java.util.Date
 
 import com.datastax.driver.core.LocalDate
 import io.getquill.context.cassandra.encoding.{ CassandraMapper, CassandraType }
-import io.getquill.context.cassandra.{ CassandraContext, CqlIdiom, Udt }
+import io.getquill.context.cassandra.{ CassandraContext, CqlIdiom }
 
 import scala.reflect.ClassTag
 

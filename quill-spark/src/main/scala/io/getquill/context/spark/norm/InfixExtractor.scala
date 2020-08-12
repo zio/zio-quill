@@ -41,7 +41,7 @@ class InfixExtractor(i: Infix, id: String) {
 
   protected def findTypeArgsFromDataset =
     for {
-      scalarValue <- i.params.headOption.collect({ case ScalarValueLift(_, value, _) => value })
+      scalarValue <- i.params.headOption.collect({ case ScalarValueLift(_, value, _, _) => value })
       liftValue <- extractLiftValue(scalarValue)
       firstTypeArg <- firstTypeArgInMethodSymbol(liftValue.symbol)
       datasetClass <- extractDatasetParameter(firstTypeArg)

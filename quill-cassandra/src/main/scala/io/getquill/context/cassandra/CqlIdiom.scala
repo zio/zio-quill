@@ -130,7 +130,7 @@ trait CqlIdiom extends Idiom {
   }
 
   implicit def infixTokenizer(implicit propertyTokenizer: Tokenizer[Property], strategy: NamingStrategy, queryTokenizer: Tokenizer[Query]): Tokenizer[Infix] = Tokenizer[Infix] {
-    case Infix(parts, params, _) =>
+    case Infix(parts, params, _, _) =>
       val pt = parts.map(_.token)
       val pr = params.map(_.token)
       Statement(Interleave(pt, pr))
@@ -190,7 +190,7 @@ trait CqlIdiom extends Idiom {
   }
 
   implicit def entityTokenizer(implicit strategy: NamingStrategy): Tokenizer[Entity] = Tokenizer[Entity] {
-    case Entity.Opinionated(name, properties, renameable) =>
+    case Entity.Opinionated(name, properties, _, renameable) =>
       renameable.fixedOr(name.token)(strategy.table(name).token)
   }
 

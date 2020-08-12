@@ -9,6 +9,7 @@ trait MirrorSqlDialect
   with ConcatSupport
   with CanReturnField
 
+// TOODO Move these others ones into MirrorSqlDialect main class
 trait MirrorSqlDialectWithReturnMulti
   extends SqlIdiom
   with QuestionMarkBindVariables
@@ -34,6 +35,21 @@ trait MirrorSqlDialectWithNoReturn
   with CannotReturn
 
 object MirrorSqlDialect extends MirrorSqlDialect {
+
+  trait StrategizeElements
+    extends SqlIdiom
+    with QuestionMarkBindVariables
+    with ConcatSupport
+    with CanReturnField {
+
+    override def tokenizeIdentName(strategy: NamingStrategy, name: String): String = strategy.default(name)
+    override def tokenizeTableAlias(strategy: NamingStrategy, table: String): String = strategy.default(table)
+    override def tokenizeColumnAlias(strategy: NamingStrategy, column: String): String = strategy.default(column)
+    override def tokenizeFixedColumn(strategy: NamingStrategy, column: String): String = strategy.default(column)
+    override def prepareForProbing(string: String) = string
+  }
+  object StrategizeElements extends StrategizeElements
+
   override def prepareForProbing(string: String) = string
 }
 

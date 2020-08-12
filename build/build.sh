@@ -28,9 +28,9 @@ echo "Modules: $modules"
 
 function show_mem() {
     free -m | awk 'NR==2{printf "Memory Usage: %s/%sMB (%.2f%%)\n", $3,$2,$3*100/$2 }'
-    # mem_details
-    # free_details
-    # docker_stats
+    mem_details
+    free_details
+    docker_stats
 }
 export -f show_mem
 
@@ -44,7 +44,7 @@ export -f mem_details
 
 function free_details() {
     echo "===== Free Memory Stats Start ====="
-    free
+    free -h
     sleep 2
     echo "===== Free Memory Stats End ====="
 }
@@ -53,6 +53,7 @@ export -f free_details
 function docker_stats() {
     echo "===== Docker Stats Start ====="
     docker stats --format "table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}" --no-stream
+    docker ps
     sleep 4
     echo "===== Docker Stats End ====="
 }
@@ -161,6 +162,11 @@ function db_build() {
     sbt -Dmodules=db $SBT_ARGS test doc
 }
 
+function js_build() {
+    export JVM_OPTS="-Dquill.macro.log=false -Dquill.scala.version=$TRAVIS_SCALA_VERSION -Xms1024m -Xmx5g -Xss5m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC"
+    sbt -Dmodules=js $SBT_ARGS test doc
+}
+
 function async_build() {
     wait_for_mysql_postgres
     sbt -Dmodules=async $SBT_ARGS test doc
@@ -185,6 +191,9 @@ function full_build() {
 if [[ $modules == "db" ]]; then
     echo "Build Script: Doing Database Build"
     db_build
+elif [[ $modules == "js" ]]; then
+    echo "Build Script: Doing JavaScript Build"
+    js_build
 elif [[ $modules == "finagle" ]]; then
     echo "Build Script: Doing Finagle Database Build"
     finagle_build

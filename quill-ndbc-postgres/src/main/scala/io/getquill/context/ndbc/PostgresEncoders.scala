@@ -17,7 +17,7 @@ trait LowPriorityPostgresImplicits {
 }
 
 trait PostgresEncoders extends LowPriorityPostgresImplicits with io.getquill.dsl.LowPriorityImplicits {
-  this: NdbcContext[_, _, PostgresPreparedStatement, _] =>
+  this: NdbcContextBase[_, _, PostgresPreparedStatement, _] =>
 
   type Encoder[T] = BaseEncoder[T]
 
