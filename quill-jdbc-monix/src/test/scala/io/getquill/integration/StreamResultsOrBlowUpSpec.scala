@@ -3,7 +3,7 @@ package io.getquill.integration
 import java.sql.{ Connection, ResultSet }
 
 import io.getquill._
-import io.getquill.context.monix.Runner
+import io.getquill.context.monix.MonixJdbcContext.Runner
 import monix.execution.Scheduler
 import monix.execution.schedulers.CanBlock
 import org.scalatest.matchers.should.Matchers._

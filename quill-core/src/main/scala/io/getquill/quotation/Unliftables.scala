@@ -3,9 +3,8 @@ package io.getquill.quotation
 import scala.reflect.macros.whitebox.Context
 import io.getquill.ast._
 import io.getquill.quat.Quat
-import io.getquill.util.MacroContextExt._
 
-trait Unliftables {
+trait Unliftables extends QuatUnliftable {
   val c: Context
   import c.universe.{ Ident => _, Constant => _, Function => _, If => _, _ }
 
@@ -57,26 +56,6 @@ trait Unliftables {
     case q"$pack.MapContains.apply(${ a: Ast }, ${ b: Ast })"  => MapContains(a, b)
     case q"$pack.SetContains.apply(${ a: Ast }, ${ b: Ast })"  => SetContains(a, b)
     case q"$pack.ListContains.apply(${ a: Ast }, ${ b: Ast })" => ListContains(a, b)
-  }
-
-  implicit def listUnliftable[T](implicit u: Unliftable[T]): Unliftable[List[T]] = Unliftable[List[T]] {
-    case q"$pack.Nil"                         => Nil
-    case q"$pack.List.apply[..$t](..$values)" => values.map(v => u.unapply(v).getOrElse(c.fail(s"Can't unlift $v")))
-  }
-
-  import collection.mutable.LinkedHashMap
-
-  implicit def linkedHashMapUnliftable[K, V](implicit uk: Unliftable[K], uv: Unliftable[V]): Unliftable[LinkedHashMap[K, V]] = Unliftable[LinkedHashMap[K, V]] {
-    case q"$pack.LinkedHashMap.apply[..$t](..$values)" =>
-      LinkedHashMap[K, V](
-        values.map {
-          case q"($k, $v)" =>
-            (
-              uk.unapply(k).getOrElse(c.fail(s"Can't unlift $k")),
-              uv.unapply(v).getOrElse(c.fail(s"Can't unlift $v"))
-            )
-        }: _*
-      )
   }
 
   implicit val binaryOperatorUnliftable: Unliftable[BinaryOperator] = Unliftable[BinaryOperator] {
@@ -209,20 +188,6 @@ trait Unliftables {
     case q"$pack.Constant.apply(${ Literal(c.universe.Constant(a)) })" => Constant(a)
     case q"$pack.Tuple.apply(${ a: List[Ast] })" => Tuple(a)
     case q"$pack.CaseClass.apply(${ values: List[(String, Ast)] })" => CaseClass(values)
-  }
-
-  // Unliftables are invariant so want to have a separate liftable for Quat.Product since it is used directly inside Entity
-  // which should be lifted/unlifted without the need for casting.
-  implicit val quatProductUnliftable: Unliftable[Quat.Product] = Unliftable[Quat.Product] {
-    case q"$pack.Quat.Product.WithRenames.apply(${ fields: LinkedHashMap[String, Quat] }, ${ renames: List[(String, String)] })" => Quat.Product.WithRenames(fields, renames)
-  }
-
-  implicit val quatUnliftable: Unliftable[Quat] = Unliftable[Quat] {
-    case q"$pack.Quat.Product.WithRenames.apply(${ fields: LinkedHashMap[String, Quat] }, ${ renames: List[(String, String)] })" => Quat.Product.WithRenames(fields, renames)
-    case q"$pack.Quat.Product.apply(${ fields: List[(String, Quat)] })" => Quat.Product(fields)
-    case q"$pack.Quat.Value" => Quat.Value
-    case q"$pack.Quat.Null" => Quat.Null
-    case q"$pack.Quat.Generic" => Quat.Generic
   }
 
   implicit val identUnliftable: Unliftable[Ident] = Unliftable[Ident] {
