@@ -20,6 +20,7 @@ MySparkTest.scala
 MyTestJdbc.scala
 MyJdbcTest.scala
 MySqlTest*.scala
+MyCassandraTest*.scala
 MyTest.scala
 MyCqlTest.scala
 quill-core/src/main/resources/logback.xml

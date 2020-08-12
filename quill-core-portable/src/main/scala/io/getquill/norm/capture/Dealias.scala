@@ -2,8 +2,13 @@ package io.getquill.norm.capture
 
 import io.getquill.ast._
 import io.getquill.norm.BetaReduction
+import io.getquill.util.Interpolator
+import io.getquill.util.Messages.TraceType
 
 case class Dealias(state: Option[Ident]) extends StatefulTransformer[Option[Ident]] {
+
+  val interp = new Interpolator(TraceType.Standard, 3)
+  import interp._
 
   override def apply(q: Query): (Query, StatefulTransformer[Option[Ident]]) =
     q match {
@@ -55,7 +60,9 @@ case class Dealias(state: Option[Ident]) extends StatefulTransformer[Option[Iden
   private def dealias[T](a: Ast, b: Ident, c: Ast)(f: (Ast, Ident, Ast) => T) =
     apply(a) match {
       case (an, t @ Dealias(Some(alias))) =>
-        (f(an, alias, BetaReduction(c, b -> alias)), t)
+        val retypedAlias = alias.copy(quat = b.quat)
+        trace"Dealias $b into $retypedAlias".andLog()
+        (f(an, retypedAlias, BetaReduction(c, b -> retypedAlias)), t)
       case other =>
         (f(a, b, c), Dealias(Some(b)))
     }

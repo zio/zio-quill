@@ -91,7 +91,7 @@ class JoinSpec extends Spec {
         .distinct
     }
     testContext.run(q).string mustEqual
-      "SELECT DISTINCT a.s, d.l, n.i FROM TestEntity d INNER JOIN TestEntity2 a ON d.i = a.i INNER JOIN (SELECT rp.l, rp.i FROM TestEntity3 rp WHERE rp.s = ?) AS rp ON d.i = rp.i LEFT JOIN TestEntity4 n ON rp.l = n.i"
+      "SELECT DISTINCT a.s, d.l, n.i FROM TestEntity d INNER JOIN TestEntity2 a ON d.i = a.i INNER JOIN (SELECT rp.i, rp.l FROM TestEntity3 rp WHERE rp.s = ?) AS rp ON d.i = rp.i LEFT JOIN TestEntity4 n ON rp.l = n.i"
   }
 
   "multiple joins + map" in {

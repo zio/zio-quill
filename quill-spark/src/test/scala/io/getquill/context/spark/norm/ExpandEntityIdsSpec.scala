@@ -36,9 +36,10 @@ class ExpandEntityIdsSpec extends Spec {
 
   "decomposition" - {
     "tuple decomposition" in {
-      val j1 = testContext.run {
+      val q1 = quote {
         qr1.join(qr2).on(_.i == _.i)
       }
+      val j1 = testContext.run(q1)
 
       val q = quote {
         for {

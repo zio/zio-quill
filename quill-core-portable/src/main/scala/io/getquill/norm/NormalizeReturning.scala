@@ -1,6 +1,7 @@
 package io.getquill.norm
 
 import io.getquill.ast._
+import io.getquill.ast.Implicits._
 import io.getquill.norm.capture.AvoidAliasConflict
 
 /**
@@ -45,7 +46,7 @@ object NormalizeReturning {
    */
   private def dealiasBody(body: Ast, alias: Ident): Ast =
     Transform(body) {
-      case q: Query => AvoidAliasConflict.sanitizeQuery(q, Set(alias))
+      case q: Query => AvoidAliasConflict.sanitizeQuery(q, Set(alias.idName))
     }
 
   private def apply(e: Action, body: Ast, returningIdent: Ident): Action = e match {
@@ -93,8 +94,8 @@ object NormalizeReturning {
         val matchedProps =
           CollectAst(body) {
             //case prop @ NestedProperty(`returningIdent`) => prop
-            case prop @ NestedProperty(Ident(name)) if (name == returningIdent.name)         => prop
-            case prop @ NestedProperty(ExternalIdent(name)) if (name == returningIdent.name) => prop
+            case prop @ NestedProperty(Ident(name, quat)) if (name == returningIdent.name)         => prop
+            case prop @ NestedProperty(ExternalIdent(name, quat)) if (name == returningIdent.name) => prop
           }
 
         if (matchedProps.exists(matchedProp => isSameProperties(p1, matchedProp)))

@@ -5,6 +5,7 @@ import io.getquill.idiom.StatementInterpolator._
 import io.getquill.ast.{ Action => AstAction, Query => _, _ }
 import io.getquill.idiom.StringToken
 import io.getquill.Query
+import io.getquill.quat.Quat
 
 class CqlIdiomSpec extends Spec {
 
@@ -391,7 +392,7 @@ class CqlIdiomSpec extends Spec {
     }
     "cql" in {
       val t = implicitly[Tokenizer[CqlQuery]]
-      val e = CqlQuery(Entity("name", Nil), None, Nil, None, Nil, distinct = true)
+      val e = CqlQuery(Entity("name", Nil, QEP), None, Nil, None, Nil, distinct = true)
       intercept[IllegalStateException](t.token(e))
       t.token(e.copy(distinct = false)) mustBe stmt"SELECT * FROM name"
     }
@@ -412,7 +413,7 @@ class CqlIdiomSpec extends Spec {
     // not actually used anywhere but doing a sanity check here
     "external ident sanity check" in {
       val t = implicitly[Tokenizer[ExternalIdent]]
-      t.token(ExternalIdent("TestIdent")) mustBe StringToken("TestIdent")
+      t.token(ExternalIdent("TestIdent", Quat.Value)) mustBe StringToken("TestIdent")
     }
   }
 }

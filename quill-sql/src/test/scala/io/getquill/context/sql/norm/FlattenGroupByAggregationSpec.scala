@@ -7,6 +7,7 @@ import io.getquill.ast.Ident
 import io.getquill.ast.Property
 import io.getquill.context.sql.testContext._
 import io.getquill.Query
+import io.getquill.testContext.TestEntityQuat
 
 class FlattenGroupByAggregationSpec extends Spec {
 
@@ -16,7 +17,7 @@ class FlattenGroupByAggregationSpec extends Spec {
         (e: Query[TestEntity]) =>
           e.map(_.i).max
       }
-      FlattenGroupByAggregation(Ident("e"))(q.ast.body) mustEqual
+      FlattenGroupByAggregation(Ident("e", TestEntityQuat))(q.ast.body) mustEqual
         Aggregation(AggregationOperator.max, Property(Ident("e"), "i"))
     }
     "nested infix" in {
@@ -28,7 +29,7 @@ class FlattenGroupByAggregationSpec extends Spec {
         (e: TestEntity) =>
           infix"GROUP_CONCAT(${e.i})".as[String]
       }
-      FlattenGroupByAggregation(Ident("e"))(q.ast.body) mustEqual n.ast.body
+      FlattenGroupByAggregation(Ident("e", TestEntityQuat))(q.ast.body) mustEqual n.ast.body
     }
   }
 

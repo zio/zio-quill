@@ -38,9 +38,9 @@ object ExpandReturning {
     // => Tuple(List(ExternalIdent("name"), BinaryOperation(ExternalIdent("age"), +, Constant(1))))
     val dePropertized = renameAlias match {
       case Some(newName) =>
-        BetaReduction(properties, alias -> ExternalIdent.Opinionated(newName, Fixed))
+        BetaReduction(properties, alias -> ExternalIdent.Opinionated(newName, alias.quat, Fixed))
       case None =>
-        BetaReduction(properties, alias -> ExternalIdent(alias.name))
+        BetaReduction(properties, alias -> ExternalIdent(alias.name, alias.quat))
     }
 
     // Tuple(List(ExternalIdent("name"), BinaryOperation(ExternalIdent("age"), +, Constant(1))))
