@@ -1,7 +1,7 @@
 package io.getquill.context.sql
 
 import io.getquill.ast._
-import io.getquill.context.sql.norm.FlattenGroupByAggregation
+import io.getquill.context.sql.norm.{ ExpandSelection, FlattenGroupByAggregation }
 import io.getquill.norm.BetaReduction
 import io.getquill.quat.Quat
 import io.getquill.util.Messages.fail
@@ -151,9 +151,14 @@ object SqlQuery {
 
       case Map(GroupBy(q, x @ Ident(alias, _), g), a, p) =>
         val b = base(q, alias)
+        val flatGroupByAsts = new ExpandSelection(b.from).apply(List(SelectValue(g))).map(_.ast)
+        val groupByClause =
+          if (flatGroupByAsts.length > 1) Tuple(flatGroupByAsts)
+          else flatGroupByAsts.head
+
         val select = BetaReduction(p, a -> Tuple(List(g, x)))
         val flattenSelect = FlattenGroupByAggregation(x)(select)
-        b.copy(groupBy = Some(g), select = this.selectValues(flattenSelect))(quat)
+        b.copy(groupBy = Some(groupByClause), select = this.selectValues(flattenSelect))(quat)
 
       case GroupBy(q, Ident(alias, _), p) =>
         fail("A `groupBy` clause must be followed by `map`.")
@@ -271,6 +276,17 @@ object SqlQuery {
       case JoinContext(_, a, b, _)     => collectAliases(List(a)) ++ collectAliases(List(b))
       case FlatJoinContext(_, from, _) => collectAliases(List(from))
     }
-
   }
+
+  private def collectTableAliases(contexts: List[FromContext]): List[String] = {
+    contexts.flatMap {
+      case c: TableContext             => List(c.alias)
+      case c: QueryContext             => List()
+      case c: InfixContext             => List()
+      case JoinContext(_, a, b, _)     => collectAliases(List(a)) ++ collectAliases(List(b))
+      case FlatJoinContext(_, from, _) => collectAliases(List(from))
+    }
+  }
+
 }
+
