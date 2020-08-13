@@ -230,7 +230,7 @@ object SqlQuery {
             select = select(alias, quat)
           )(quat)
 
-      case Distinct(q: Query) =>
+      case Distinct(q) =>
         val b = base(q, alias)
         b.copy(distinct = true)(quat)
 

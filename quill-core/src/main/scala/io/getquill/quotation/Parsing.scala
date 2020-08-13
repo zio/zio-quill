@@ -250,12 +250,36 @@ trait Parsing extends ValueComputation with QuatMaking {
     case q"${ joinCallParser(typ, a, b) }" =>
       c.fail("a join clause must be followed by 'on'.")
 
-    case q"$source.distinct" if (is[DslQuery[Any]](source)) =>
-      Distinct(astParser(source))
-
-    case q"$source.nested" if (is[DslQuery[Any]](source)) =>
-      io.getquill.ast.Nested(astParser(source))
-
+    // .distinct should not be allowed after a flatjoin
+    case q"$source.distinct" if (is[DslQuery[Any]](source)) => {
+      astParser(source) match {
+        case fj: FlatJoin => throw new IllegalArgumentException(
+          """
+            |The .distinct cannot be placed after a join clause in a for-comprehension. Put it before.
+            |For example. Change:
+            |  for { a <- query[A]; b <- query[B].join(...).distinct } to:
+            |  for { a <- query[A]; b <- query[B].distinct.join(...) }
+            |""".stripMargin
+        )
+        case other =>
+          Distinct(other)
+      }
+    }
+    // .distinct should not be allowed after a flatjoin
+    case q"$source.nested" if (is[DslQuery[Any]](source)) => {
+      astParser(source) match {
+        case fj: FlatJoin => throw new IllegalArgumentException(
+          """
+            |The .nested cannot be placed after a join clause in a for-comprehension. Put it before.
+            |For example. Change:
+            |  for { a <- query[A]; b <- query[B].join(...).nested } to:
+            |  for { a <- query[A]; b <- query[B].nested.join(...) }
+            |""".stripMargin
+        )
+        case other =>
+          io.getquill.ast.Nested(other)
+      }
+    }
   }
 
   implicit val propertyAliasParser: Parser[PropertyAlias] = Parser[PropertyAlias] {
