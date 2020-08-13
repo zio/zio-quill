@@ -225,7 +225,7 @@ class ExpandEntityIdsSpec extends Spec {
           b <- qr2 if (a.i + 1) == b.j
         } yield TestHolder(a, b)
       }
-      testContext.run(q.dynamic).collect.toList mustEqual entities.map(e => TestHolder(e, e))
+      testContext.run(q).collect.toList mustEqual entities.map(e => TestHolder(e, e))
     }
     "regular entities and entities inside ad-hoc case classes" in {
       val q = quote {
