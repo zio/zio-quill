@@ -10,7 +10,7 @@ class SqlQuerySpec extends Spec {
 
   implicit val naming = new Literal {}
 
-  "transforms the ast into a flatten sql-like structure" - { //hello
+  "transforms the ast into a flatten sql-like structure" - {
 
     "inner join query" in {
       val q = quote {
