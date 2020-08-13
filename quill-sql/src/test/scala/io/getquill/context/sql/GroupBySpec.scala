@@ -127,4 +127,19 @@ class GroupBySpec extends Spec {
     }
   }
 
+  "after join" in {
+    case class CountryLanguage(countryCode: String, language: String)
+    case class City(id: Int, name: String, countryCode: String)
+
+    val q = quote(
+      query[City]
+        .join(query[CountryLanguage])
+        .on { case (city, cl) => city.countryCode == cl.countryCode }
+        .groupBy { case (city, language) => language }
+        .map { case (language, cityLanguages) => (language, cityLanguages.size) }
+    )
+    testContext.run(q.dynamic).string mustEqual
+      "SELECT x19.countryCode, x19.language, COUNT(*) FROM City x029 INNER JOIN CountryLanguage x19 ON x029.countryCode = x19.countryCode GROUP BY x19.countryCode, x19.language"
+  }
+
 }
