@@ -54,12 +54,6 @@ class OpsSpec extends Spec {
         }
         q.ast mustEqual Infix(List("true"), Nil, false, Quat.BooleanValue)
       }
-      "without `as`" in {
-        val q = quote {
-          infix"true"
-        }
-        q.ast mustEqual Infix(List("true"), Nil, false, Quat.BooleanValue)
-      }
     }
     "other values" - {
       "with `as`" in {

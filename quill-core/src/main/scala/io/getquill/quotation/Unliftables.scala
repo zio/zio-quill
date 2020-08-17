@@ -189,7 +189,7 @@ trait Unliftables extends QuatUnliftable {
     case q"$pack.Tuple.apply(${ a: List[Ast] })" => Tuple(a)
     case q"$pack.CaseClass.apply(${ values: List[(String, Ast)] })" => CaseClass(values)
   }
-  
+
   implicit val identUnliftable: Unliftable[Ident] = Unliftable[Ident] {
     case q"$pack.Ident.apply(${ a: String }, ${ quat: Quat })" => Ident(a, quat)
   }

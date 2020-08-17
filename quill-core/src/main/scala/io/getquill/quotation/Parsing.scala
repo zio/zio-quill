@@ -370,14 +370,9 @@ trait Parsing extends ValueComputation with QuatMaking {
             }
           """)
         }
-      } else {
-        val newQuat = if (isRawBoolean(parts)) Quat.BooleanValue else quat
-        Infix(parts, params.map(astParser(_)), infixIsPure, newQuat)
-      }
+      } else
+        Infix(parts, params.map(astParser(_)), infixIsPure, quat)
   }
-
-  private def isRawBoolean(parts: List[String]): Boolean =
-    parts.size == 1 && (parts.head.trim == "true" || parts.head.trim == "false")
 
   val functionParser: Parser[Function] = Parser[Function] {
     case q"new { def apply[..$t1](...$params) = $body }" =>

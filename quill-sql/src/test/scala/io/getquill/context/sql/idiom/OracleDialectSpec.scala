@@ -108,4 +108,76 @@ class OracleDialectSpec extends Spec {
     }
   }
 
+  "literal booleans" - {
+    "boolean expressions" - {
+      "uses 1 = 1 instead of true" in {
+        ctx.run(qr4.filter(t => true)).string mustEqual
+          "SELECT t.i FROM TestEntity4 t WHERE 1 = 1"
+      }
+      "uses 1 = 0 instead of false" in {
+        ctx.run(qr4.filter(t => false)).string mustEqual
+          "SELECT t.i FROM TestEntity4 t WHERE 1 = 0"
+      }
+      "uses 1 = 0 and 1 = 1 altogether" in {
+        ctx.run(qr4.filter(t => false).filter(t => true)).string mustEqual
+          "SELECT t.i FROM TestEntity4 t WHERE 1 = 0 AND 1 = 1"
+      }
+    }
+    "boolean values" - {
+      "uses 1 instead of true" in {
+        ctx.run(qr4.map(t => (t.i, true))).string mustEqual
+          "SELECT t.i, 1 FROM TestEntity4 t"
+      }
+      "uses 0 instead of false" in {
+        ctx.run(qr4.map(t => (t.i, false))).string mustEqual
+          "SELECT t.i, 0 FROM TestEntity4 t"
+      }
+      "uses 0 and 1 altogether" in {
+        ctx.run(qr4.map(t => (t.i, true, false))).string mustEqual
+          "SELECT t.i, 1, 0 FROM TestEntity4 t"
+      }
+    }
+    "boolean values and expressions together" in {
+      ctx.run(qr4.filter(t => true).filter(t => false).map(t => (t.i, false, true))).string mustEqual
+        "SELECT t.i, 0, 1 FROM TestEntity4 t WHERE 1 = 1 AND 1 = 0"
+    }
+    "if" - {
+      "simple booleans" in {
+        val q = quote {
+          qr1.map(t => if (true) true else false)
+        }
+        ctx.run(q).string mustEqual
+          "SELECT CASE WHEN 1 = 1 THEN 1 ELSE 0 END FROM TestEntity t"
+      }
+      "nested conditions" - {
+        "inside then" in {
+          val q = quote {
+            qr1.map(t => if (true) {
+              if (false) true else false
+            } else true)
+          }
+          ctx.run(q).string mustEqual
+            "SELECT CASE WHEN 1 = 1 THEN CASE WHEN 1 = 0 THEN 1 ELSE 0 END ELSE 1 END FROM TestEntity t"
+        }
+        "inside else" in {
+          val q = quote {
+            qr1.map(t => if (true) true else if (false) true else false)
+          }
+          ctx.run(q).string mustEqual
+            "SELECT CASE WHEN 1 = 1 THEN 1 WHEN 1 = 0 THEN 1 ELSE 0 END FROM TestEntity t"
+        }
+        "inside both" in {
+          val q = quote {
+            qr1.map(t => if (true) {
+              if (false) true else false
+            } else {
+              if (true) false else true
+            })
+          }
+          ctx.run(q).string mustEqual
+            "SELECT CASE WHEN 1 = 1 THEN CASE WHEN 1 = 0 THEN 1 ELSE 0 END WHEN 1 = 1 THEN 0 ELSE 1 END FROM TestEntity t"
+        }
+      }
+    }
+  }
 }
