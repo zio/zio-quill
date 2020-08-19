@@ -151,6 +151,7 @@ object SqlQuery {
 
       case Map(GroupBy(q, x @ Ident(alias, _), g), a, p) =>
         val b = base(q, alias)
+        //use ExpandSelection logic to break down OrderBy clause
         val flatGroupByAsts = new ExpandSelection(b.from).apply(List(SelectValue(g))).map(_.ast)
         val groupByClause =
           if (flatGroupByAsts.length > 1) Tuple(flatGroupByAsts)
@@ -190,7 +191,7 @@ object SqlQuery {
 
       case SortBy(q, Ident(alias, _), p, o) =>
         val b = base(q, alias)
-        val criterias = orderByCriterias(p, o)
+        val criterias = orderByCriterias(p, o, b.from)
         //If the sortBy body uses the filter alias, make sure it matches one of the aliases in the fromContexts
         if (b.orderBy.isEmpty && (!CollectAst.byType[Ident](p).map(_.name).contains(alias) || collectAliases(b.from).contains(alias)))
           b.copy(orderBy = criterias)(quat)
@@ -260,10 +261,12 @@ object SqlQuery {
       case other                     => QueryContext(apply(other), alias)
     }
 
-  private def orderByCriterias(ast: Ast, ordering: Ast): List[OrderByCriteria] =
+  private def orderByCriterias(ast: Ast, ordering: Ast, from: List[FromContext]): List[OrderByCriteria] =
     (ast, ordering) match {
-      case (Tuple(properties), ord: PropertyOrdering) => properties.flatMap(orderByCriterias(_, ord))
-      case (Tuple(properties), TupleOrdering(ord))    => properties.zip(ord).flatMap { case (a, o) => orderByCriterias(a, o) }
+      case (Tuple(properties), ord: PropertyOrdering) => properties.flatMap(orderByCriterias(_, ord, from))
+      case (Tuple(properties), TupleOrdering(ord))    => properties.zip(ord).flatMap { case (a, o) => orderByCriterias(a, o, from) }
+      //if its a quat product, use ExpandSelection to break it down into its component fields and apply the ordering to all of them
+      case (id @ Ident(_, Quat.Product(fields)), ord) => new ExpandSelection(from).apply(List(SelectValue(ast))).map(_.ast).flatMap(orderByCriterias(_, ord, from))
       case (a, o: PropertyOrdering)                   => List(OrderByCriteria(a, o))
       case other                                      => fail(s"Invalid order by criteria $ast")
     }
