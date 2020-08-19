@@ -6,11 +6,12 @@ import io.getquill.ast.{ AggregationOperator, External, _ }
 import io.getquill.context.sql._
 import io.getquill.NamingStrategy
 import io.getquill.context.CannotReturn
-import io.getquill.util.Messages.fail
+import io.getquill.util.Messages.{ fail, trace }
 import io.getquill.idiom._
 import io.getquill.context.sql.norm.SqlNormalize
-import io.getquill.util.Interleave
+import io.getquill.util.{ Interleave, Messages }
 import io.getquill.context.sql.idiom.VerifySqlQuery
+import io.getquill.sql.norm.{ RemoveExtraAlias, RemoveUnusedSelects }
 
 object OrientDBIdiom extends OrientDBIdiom with CannotReturn
 
@@ -29,7 +30,15 @@ trait OrientDBIdiom extends Idiom {
         case q: Query =>
           val sql = SqlQuery(q)
           VerifySqlQuery(sql).map(fail)
-          new ExpandNestedQueries(naming)(sql, List()).token
+          val expanded = ExpandNestedQueries(sql)
+          trace("expanded sql")(expanded)
+          val refined = if (Messages.pruneColumns) RemoveUnusedSelects(expanded) else expanded
+          trace("filtered sql (only used selects)")(refined)
+          val cleaned = if (!Messages.alwaysAlias) RemoveExtraAlias(naming)(refined) else refined
+          trace("cleaned sql")(cleaned)
+          val tokenized = cleaned.token
+          trace("tokenized sql")(tokenized)
+          tokenized
         case other =>
           other.token
       }

@@ -68,6 +68,9 @@ case class Entity(name: String, properties: List[PropertyAlias], quat: Quat.Prod
   // scala creates companion objects, the apply/unapply wouldn't be able to work correctly.
   def renameable: Renameable = Renameable.neutral
 
+  def copy(name: String = this.name, properties: List[PropertyAlias] = this.properties, quat: Quat.Product = this.quat) =
+    Entity.Opinionated(name, properties, quat, this.renameable)
+
   override def equals(that: Any) =
     that match {
       case e: Entity => this.id == e.id
@@ -194,8 +197,13 @@ case class Ident(name: String, quat: Quat) extends Terminal with Ast {
 
   override def hashCode = id.hashCode()
 
-  override def withQuat(newQuat: Quat) =
+  override def withQuat(newQuat: Quat) = {
     Ident.Opinionated(this.name, newQuat, this.visibility)
+  }
+
+  // need to define a copy which will propogate current value of visibility into the copy
+  def copy(name: String = this.name, quat: Quat = this.quat): Ident =
+    Ident.Opinionated(name, quat, this.visibility)
 }
 
 /**
@@ -246,6 +254,10 @@ case class ExternalIdent(name: String, quat: Quat) extends Ast {
     }
 
   override def hashCode = id.hashCode()
+
+  // need to define a copy which will propogate current value of visibility into the copy
+  def copy(name: String = this.name, quat: Quat = this.quat): ExternalIdent =
+    ExternalIdent.Opinionated(name, quat, this.renameable)
 }
 
 object ExternalIdent {
@@ -314,10 +326,14 @@ case class Property(ast: Ast, name: String) extends Ast {
   def renameable: Renameable = Renameable.neutral
 
   def quat = ast.quat.lookup(name)
+  def prevName = ast.quat.beforeRenamed(name)
 
   // Properties that are 'Hidden' are used for embedded objects whose path should not be expressed
   // during SQL Tokenization.
   def visibility: Visibility = Visibility.Visible
+
+  def copy(ast: Ast = this.ast, name: String = this.name): Property =
+    Property.Opinionated(ast, name, this.renameable, this.visibility)
 }
 
 object Property {

@@ -2,9 +2,9 @@ package io.getquill.mock
 
 import java.io.Closeable
 import java.sql._
-import javax.sql.DataSource
 
-import io.getquill.context.monix.Runner
+import io.getquill.context.monix.MonixJdbcContext.Runner
+import javax.sql.DataSource
 import io.getquill.{ Literal, PostgresMonixJdbcContext, Spec }
 import monix.eval.Task
 import monix.execution.Scheduler

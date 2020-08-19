@@ -5,12 +5,15 @@ import java.sql.{ Array => _, _ }
 
 import cats.effect.ExitCase
 import io.getquill.{ NamingStrategy, ReturnAction }
+import io.getquill.context.ContextEffect
 import io.getquill.context.StreamingContext
 import io.getquill.context.jdbc.JdbcContextBase
+import io.getquill.context.monix.MonixJdbcContext.Runner
 import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.util.ContextLogger
 import javax.sql.DataSource
 import monix.eval.{ Task, TaskLocal }
+import monix.execution.Scheduler
 import monix.execution.misc.Local
 import monix.reactive.Observable
 
@@ -244,5 +247,32 @@ abstract class MonixJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](
     withConnectionWrapped { conn =>
       prepare(conn.prepareStatement(statement))._1.reverse.map(prepareParam)
     }
+  }
+}
+
+object MonixJdbcContext {
+  object Runner {
+    def default = new Runner {}
+    def using(scheduler: Scheduler) = new Runner {
+      override def schedule[T](t: Task[T]): Task[T] = t.executeOn(scheduler, true)
+      override def boundary[T](t: Task[T]): Task[T] = t.executeOn(scheduler, true)
+      override def scheduleObservable[T](o: Observable[T]): Observable[T] = o.executeOn(scheduler, true)
+    }
+  }
+
+  trait Runner extends ContextEffect[Task] {
+    override def wrap[T](t: => T): Task[T] = Task(t)
+    override def push[A, B](result: Task[A])(f: A => B): Task[B] = result.map(f)
+    override def seq[A](list: List[Task[A]]): Task[List[A]] = Task.sequence(list)
+    def schedule[T](t: Task[T]): Task[T] = t
+    def scheduleObservable[T](o: Observable[T]): Observable[T] = o
+    def boundary[T](t: Task[T]): Task[T] = t.asyncBoundary
+
+    /**
+     * Use this method whenever a ResultSet is being wrapped. This has a distinct
+     * method because the client may prefer to fail silently on a ResultSet close
+     * as opposed to failing the surrounding task.
+     */
+    def wrapClose(t: => Unit): Task[Unit] = Task(t)
   }
 }

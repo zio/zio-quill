@@ -4,7 +4,8 @@ import java.io.Closeable
 
 import com.typesafe.config.Config
 import io.getquill.context.jdbc.H2JdbcContextBase
-import io.getquill.context.monix.{ MonixJdbcContext, Runner }
+import io.getquill.context.monix.MonixJdbcContext
+import io.getquill.context.monix.MonixJdbcContext.Runner
 import io.getquill.util.LoadConfig
 import javax.sql.DataSource
 
