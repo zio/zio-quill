@@ -14,7 +14,8 @@ import io.getquill.idiom._
 import io.getquill.norm.ConcatBehavior.AnsiConcat
 import io.getquill.norm.EqualityBehavior.AnsiEquality
 import io.getquill.norm.{ ConcatBehavior, EqualityBehavior, ExpandReturning }
-import io.getquill.util.Interleave
+import io.getquill.sql.norm.{ RemoveExtraAlias, RemoveUnusedSelects }
+import io.getquill.util.{ Interleave, Messages }
 import io.getquill.util.Messages.{ fail, trace }
 
 trait SqlIdiom extends Idiom {
@@ -41,9 +42,13 @@ trait SqlIdiom extends Idiom {
           val sql = querifyAst(q)
           trace("sql")(sql)
           VerifySqlQuery(sql).map(fail)
-          val expanded = new ExpandNestedQueries(naming)(sql, List())
+          val expanded = ExpandNestedQueries(sql)
           trace("expanded sql")(expanded)
-          val tokenized = expanded.token
+          val refined = if (Messages.pruneColumns) RemoveUnusedSelects(expanded) else expanded
+          trace("filtered sql (only used selects)")(refined)
+          val cleaned = if (!Messages.alwaysAlias) RemoveExtraAlias(naming)(refined) else refined
+          trace("cleaned sql")(cleaned)
+          val tokenized = cleaned.token
           trace("tokenized sql")(tokenized)
           tokenized
         case other =>
@@ -161,7 +166,7 @@ trait SqlIdiom extends Idiom {
 
   protected def tokenizeColumn(strategy: NamingStrategy, column: String, renameable: Renameable) =
     renameable match {
-      case Fixed => column
+      case Fixed => tokenizeFixedColumn(strategy, column)
       case _     => strategy.column(column)
     }
 
@@ -171,17 +176,28 @@ trait SqlIdiom extends Idiom {
       case _     => strategy.table(table)
     }
 
-  protected def tokenizeAlias(strategy: NamingStrategy, table: String) =
-    strategy.default(table)
+  // By default do not change alias of an "AS column" based on naming strategy because the corresponding
+  // things using it would also need to change.
+  protected def tokenizeColumnAlias(strategy: NamingStrategy, column: String): String =
+    column
+
+  protected def tokenizeFixedColumn(strategy: NamingStrategy, column: String): String =
+    column
+
+  protected def tokenizeTableAlias(strategy: NamingStrategy, table: String): String =
+    table
+
+  protected def tokenizeIdentName(strategy: NamingStrategy, name: String): String =
+    name
 
   implicit def selectValueTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[SelectValue] = {
 
     def tokenizer(implicit astTokenizer: Tokenizer[Ast]) =
       Tokenizer[SelectValue] {
         case SelectValue(ast, Some(alias), false) => {
-          stmt"${ast.token} AS ${alias.token}"
+          stmt"${ast.token} AS ${tokenizeColumnAlias(strategy, alias).token}"
         }
-        case SelectValue(ast, Some(alias), true) => stmt"${concatFunction.token}(${ast.token}) AS ${alias.token}"
+        case SelectValue(ast, Some(alias), true) => stmt"${concatFunction.token}(${ast.token}) AS ${tokenizeColumnAlias(strategy, alias).token}"
         case selectValue =>
           val value =
             selectValue match {
@@ -251,9 +267,9 @@ trait SqlIdiom extends Idiom {
     stmt"ORDER BY ${criterias.token}"
 
   implicit def sourceTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[FromContext] = Tokenizer[FromContext] {
-    case TableContext(name, alias)  => stmt"${name.token} ${tokenizeAlias(strategy, alias).token}"
-    case QueryContext(query, alias) => stmt"(${query.token}) AS ${tokenizeAlias(strategy, alias).token}"
-    case InfixContext(infix, alias) => stmt"(${(infix: Ast).token}) AS ${strategy.default(alias).token}"
+    case TableContext(name, alias)  => stmt"${name.token} ${tokenizeTableAlias(strategy, alias).token}"
+    case QueryContext(query, alias) => stmt"(${query.token}) AS ${tokenizeTableAlias(strategy, alias).token}"
+    case InfixContext(infix, alias) => stmt"(${(infix: Ast).token}) AS ${tokenizeTableAlias(strategy, alias).token}"
     case JoinContext(t, a, b, on)   => stmt"${a.token} ${t.token} ${b.token} ON ${on.token}"
     case FlatJoinContext(t, a, on)  => stmt"${t.token} ${a.token} ON ${on.token}"
   }
@@ -332,9 +348,12 @@ trait SqlIdiom extends Idiom {
       }
 
     def tokenizePrefixedProperty(name: String, prefix: List[String], strategy: NamingStrategy, renameable: Renameable, prefixRenameable: Renameable = Renameable.neutral) =
-      prefixRenameable.fixedOr(
-        (tokenizeColumn(strategy, prefix.mkString, prefixRenameable) + "." + tokenizeColumn(strategy, name, renameable)).token
-      )(tokenizeColumn(strategy, prefix.mkString + name, renameable).token)
+      prefixRenameable match {
+        case Renameable.Fixed =>
+          (tokenizeColumn(strategy, prefix.mkString, prefixRenameable) + "." + tokenizeColumn(strategy, name, renameable)).token
+        case _ =>
+          tokenizeColumn(strategy, prefix.mkString + name, renameable).token
+      }
 
     Tokenizer[Property] {
       case Property.Opinionated(ast, name, renameable, _ /* Top level property cannot be invisible */ ) =>
@@ -391,10 +410,10 @@ trait SqlIdiom extends Idiom {
   }
 
   implicit def identTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Ident] =
-    Tokenizer[Ident](e => strategy.default(e.name).token)
+    Tokenizer[Ident](e => tokenizeIdentName(strategy, e.name).token)
 
   implicit def externalIdentTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[ExternalIdent] =
-    Tokenizer[ExternalIdent](e => strategy.default(e.name).token)
+    Tokenizer[ExternalIdent](e => tokenizeIdentName(strategy, e.name).token)
 
   implicit def assignmentTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Assignment] = Tokenizer[Assignment] {
     case Assignment(alias, prop, value) =>

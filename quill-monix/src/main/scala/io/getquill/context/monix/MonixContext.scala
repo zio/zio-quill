@@ -16,6 +16,4 @@ trait MonixContext[Idiom <: io.getquill.idiom.Idiom, Naming <: NamingStrategy] e
   // Need explicit return-type annotations due to scala/bug#8356. Otherwise macro system will not understand Result[Long]=Task[Long] etc...
   def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): Task[List[T]]
   def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): Task[T]
-
-  protected val effect: Runner
 }

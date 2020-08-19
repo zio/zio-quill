@@ -55,7 +55,7 @@ class UnlimitedOptionalEmbeddedSpec extends Spec {
         PropertyAlias(List("e2", "e2", "e1", "value"), "value221"),
         PropertyAlias(List("e2", "e2", "e2", "value"), "value222")
       ),
-      quatOf[OptEmd],
+      quatOf[OptEmd].probit,
       Fixed
     )
   }

@@ -81,14 +81,14 @@ class RenamePropertiesOverrideSpec extends Spec {
           val q = quote {
             e1.insert(lift(TestEntity("s", 1, 1L, None))).returning(_.i)
           }
-          val mirror = ctx.run(q.dynamic)
+          val mirror = ctx.run(q)
           mirror.returningBehavior mustEqual ReturnRecord
         }
         "returning generated - alias" in {
           val q = quote {
             e.insert(lift(TestEntity("s", 1, 1L, None))).returningGenerated(_.i)
           }
-          val mirror = testContextUpper.run(q.dynamic)
+          val mirror = testContextUpper.run(q)
           mirror.returningBehavior mustEqual ReturnColumns(List("field_i"))
         }
       }
@@ -105,7 +105,7 @@ class RenamePropertiesOverrideSpec extends Spec {
         val q = quote {
           e.flatMap(t => qr2.map(u => t)).map(t => t.s)
         }
-        testContextUpper.run(q.dynamic).string mustEqual
+        testContextUpper.run(q).string mustEqual
           "SELECT t.field_s FROM test_entity t, TESTENTITY2 u"
       }
       "with filter" in {
@@ -125,7 +125,7 @@ class RenamePropertiesOverrideSpec extends Spec {
       val q = quote {
         e.concatMap(t => t.s.split(" "))
       }
-      testContextUpper.run(q.dynamic).string mustEqual
+      testContextUpper.run(q).string mustEqual
         "SELECT UNNEST(SPLIT(t.field_s, ' ')) FROM test_entity t"
     }
     "map" - {
@@ -232,19 +232,19 @@ class RenamePropertiesOverrideSpec extends Spec {
       }
     }
     "distinct" - {
-      "body" in {
+      "body" in { //hello
         val q = quote {
           e.distinct
         }
         testContextUpper.run(q).string mustEqual
-          "SELECT x.field_s, x.field_i, x.L, x.O FROM (SELECT DISTINCT x.field_s, x.field_i, x.L, x.O FROM test_entity x) AS x"
+          "SELECT x.field_s, x.field_i, x.l, x.o FROM (SELECT DISTINCT x.field_s, x.field_i, x.L AS l, x.O AS o FROM test_entity x) AS x"
       }
       "transitive" in {
         val q = quote {
           e.distinct.map(t => t.s)
         }
         testContextUpper.run(q).string mustEqual
-          "SELECT t.field_s FROM (SELECT DISTINCT x.field_s FROM test_entity x) AS t"
+          "SELECT t.field_s FROM (SELECT DISTINCT x.field_s, x.field_i, x.L AS l, x.O AS o FROM test_entity x) AS t"
       }
     }
 
@@ -261,21 +261,21 @@ class RenamePropertiesOverrideSpec extends Spec {
           e.join(f).on((a, b) => a.s == b.s).map(t => t._1.s)
         }
         testContextUpper.run(q).string mustEqual
-          "SELECT a.field_s FROM test_entity a INNER JOIN (SELECT t.S FROM TESTENTITY t WHERE t.I = 1) AS t ON a.field_s = t.S"
+          "SELECT a.field_s FROM test_entity a INNER JOIN (SELECT t.S AS s FROM TESTENTITY t WHERE t.I = 1) AS t ON a.field_s = t.S"
       }
       "left" in {
         val q = quote {
           e.leftJoin(f).on((a, b) => a.s == b.s).map(t => t._1.s)
         }
         testContextUpper.run(q).string mustEqual
-          "SELECT a.field_s FROM test_entity a LEFT JOIN (SELECT t.S FROM TESTENTITY t WHERE t.I = 1) AS t ON a.field_s = t.S"
+          "SELECT a.field_s FROM test_entity a LEFT JOIN (SELECT t.S AS s FROM TESTENTITY t WHERE t.I = 1) AS t ON a.field_s = t.S"
       }
       "right" in {
         val q = quote {
           f.rightJoin(e).on((a, b) => a.s == b.s).map(t => t._2.s)
         }
         testContextUpper.run(q).string mustEqual
-          "SELECT b.field_s FROM (SELECT t.S FROM TESTENTITY t WHERE t.I = 1) AS t RIGHT JOIN test_entity b ON t.S = b.field_s"
+          "SELECT b.field_s FROM (SELECT t.S AS s FROM TESTENTITY t WHERE t.I = 1) AS t RIGHT JOIN test_entity b ON t.S = b.field_s"
       }
       "flat inner" in {
         val q = quote {
@@ -341,7 +341,7 @@ class RenamePropertiesOverrideSpec extends Spec {
           e.filter(a => a.i > 0).isEmpty
         }
         testContextUpper.run(q).string mustEqual
-          "SELECT NOT EXISTS (SELECT a.* FROM test_entity a WHERE a.field_i > 0)"
+          "SELECT NOT EXISTS (SELECT a.field_s, a.field_i, a.L AS l, a.O AS o FROM test_entity a WHERE a.field_i > 0)"
       }
     }
   }

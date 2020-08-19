@@ -1,65 +1,115 @@
 package io.getquill.context.sql.norm
 
-import io.getquill.NamingStrategy
-import io.getquill.ast.Ast
-import io.getquill.ast.Ident
 import io.getquill.ast._
-import io.getquill.ast.StatefulTransformer
-import io.getquill.ast.Visibility.Visible
 import io.getquill.context.sql._
+import io.getquill.sql.norm.{ SelectPropertyProtractor, StatelessQueryTransformer }
+import io.getquill.ast.PropertyOrCore
+import io.getquill.norm.PropertyMatroshka
 
-import scala.collection.mutable.LinkedHashSet
-import io.getquill.util.Interpolator
-import io.getquill.util.Messages.TraceType.NestedQueryExpansion
-import io.getquill.context.sql.norm.nested.ExpandSelect
-import io.getquill.norm.{ BetaReduction, TypeBehavior }
-import io.getquill.quat.Quat
+class ExpandSelection(from: List[FromContext]) {
 
-import scala.collection.mutable
+  def apply(values: List[SelectValue]): List[SelectValue] =
+    values.flatMap(apply(_))
 
-class ExpandNestedQueries(strategy: NamingStrategy) {
+  implicit class AliasOp(alias: Option[String]) {
+    def concatWith(str: String): Option[String] =
+      alias.orElse(Some("")).map(v => s"${v}${str}")
+  }
 
-  val interp = new Interpolator(NestedQueryExpansion, 3)
-  import interp._
+  private def apply(value: SelectValue): List[SelectValue] = {
+    value match {
+      // Assuming there's no case class or tuple buried inside or a property i.e. if there were,
+      // the beta reduction would have unrolled them already
+      case SelectValue(ast @ PropertyOrCore(), alias, concat) =>
+        val exp = SelectPropertyProtractor(from)(ast)
+        exp.map {
+          case (p: Property, Nil) =>
+            // If the quat-path is nothing and there is some pre-existing alias (e.g. if we came from a case-class or quat)
+            // the use that. Otherwise the selection is of an individual element so use the element name (before the rename)
+            // as the alias.
+            alias match {
+              case None =>
+                SelectValue(p, Some(p.prevName.getOrElse(p.name)), concat)
+              case Some(value) =>
+                SelectValue(p, Some(value), concat)
+            }
+          case (p: Property, path) =>
+            // Append alias headers (i.e. _1,_2 from tuples and field names foo,bar from case classes) to the
+            // value of the Quat path
+            SelectValue(p, alias.concatWith(path.mkString), concat)
+          case (other, _) =>
+            SelectValue(other, alias, concat)
+        }
+      case SelectValue(Tuple(values), alias, concat) =>
+        values.zipWithIndex.flatMap {
+          case (ast, i) =>
+            apply(SelectValue(ast, alias.concatWith(s"_${i + 1}"), concat))
+        }
+      case SelectValue(CaseClass(fields), alias, concat) =>
+        fields.flatMap {
+          case (name, ast) =>
+            apply(SelectValue(ast, alias.concatWith(name), concat))
+        }
+      // Direct infix select, etc...
+      case other => List(other)
+    }
+  }
+}
 
-  def apply(q: SqlQuery, references: List[Property]): SqlQuery =
-    apply(q, LinkedHashSet.empty ++ references, true)
+object ExpandNestedQueries extends StatelessQueryTransformer {
 
-  // Using LinkedHashSet despite the fact that it is mutable because it has better characteristics then ListSet.
-  // Also this collection is strictly internal to ExpandNestedQueries and exposed anywhere else.
-  private def apply(q: SqlQuery, references: LinkedHashSet[Property], isTopLevel: Boolean = false): SqlQuery =
+  protected override def apply(q: SqlQuery, isTopLevel: Boolean = false): SqlQuery =
     q match {
       case q: FlattenSqlQuery =>
-        val expand = expandNested(q.copy(select = ExpandSelect(q.select, references, strategy))(q.quat), isTopLevel)
-        trace"Expanded Nested Query $q into $expand".andLog()
-        expand
-      case SetOperationSqlQuery(a, op, b) =>
-        SetOperationSqlQuery(apply(a, references), op, apply(b, references))(q.quat)
-      case UnaryOperationSqlQuery(op, q) =>
-        UnaryOperationSqlQuery(op, apply(q, references))(q.quat)
+        expandNested(q.copy(select = new ExpandSelection(q.from)(q.select))(q.quat), isTopLevel)
+      case other =>
+        super.apply(q, isTopLevel)
     }
 
-  private def expandNested(q: FlattenSqlQuery, isTopLevel: Boolean): SqlQuery =
+  protected override def expandNested(q: FlattenSqlQuery, isTopLevel: Boolean): FlattenSqlQuery =
     q match {
       case FlattenSqlQuery(from, where, groupBy, orderBy, limit, offset, select, distinct) =>
-        val asts = Nil ++ select.map(_.ast) ++ where ++ groupBy ++ orderBy.map(_.ast) ++ limit ++ offset
-        val expansions = q.from.map(expandContext(_, asts))
-        val from = expansions.map(_._1)
-        val references = expansions.flatMap(_._2)
-
-        val replacedRefs = references.map(ref => (ref, unhideAst(ref)))
-
-        // Need to unhide properties that were used during the query
-        def replaceProps(ast: Ast) =
-          BetaReduction(ast, TypeBehavior.ReplaceWithReduction, replacedRefs: _*) // Since properties could not actually be inside, don't typecheck the reduction
-        def replacePropsOption(ast: Option[Ast]) =
-          ast.map(replaceProps(_))
+        val newFroms = q.from.map(expandContext(_))
 
         def distinctIfNotTopLevel(values: List[SelectValue]) =
           if (isTopLevel)
             values
           else
             values.distinct
+
+        def refersToEntity(ast: Ast) = {
+          val tables = newFroms.collect { case TableContext(entity, alias) => alias }
+          ast match {
+            case Ident(v, _)                       => tables.contains(v)
+            case PropertyMatroshka(Ident(v, _), _) => tables.contains(v)
+            case _                                 => false
+          }
+        }
+
+        def flattenNestedProperty(p: Ast): Ast = {
+          p match {
+            case p @ PropertyMatroshka(inner, path) =>
+              val isSubselect = !refersToEntity(p)
+              val renameable =
+                if (p.prevName.isDefined || isSubselect)
+                  Renameable.Fixed
+                else
+                  Renameable.ByStrategy
+
+              // If it is a sub-select or a renamed property, do not apply the strategy to the property
+              if (isSubselect)
+                Property.Opinionated(inner, path.mkString, renameable, Visibility.Visible)
+              else
+                Property.Opinionated(inner, path.last, renameable, Visibility.Visible)
+
+            case other => other
+          }
+        }
+
+        def flattenPropertiesInside(ast: Ast) =
+          Transform(ast) {
+            case p: Property => flattenNestedProperty(p)
+          }
 
         /*
          * In sub-queries, need to make sure that the same field/alias pair is not selected twice
@@ -82,68 +132,17 @@ class ExpandNestedQueries(strategy: NamingStrategy) {
          * (p.name, p.emb, p.id, p.emb.id) needs the fields p.embid, p.embtheName in that precise order in the selection
          * or they cannot be encoded.
          */
-        val newSelects =
-          distinctIfNotTopLevel(select.map(sv => sv.copy(ast = replaceProps(sv.ast))))
+        val distinctSelects =
+          distinctIfNotTopLevel(select)
 
         q.copy(
-          select = newSelects,
-          from = from,
-          where = replacePropsOption(where),
-          groupBy = replacePropsOption(groupBy),
-          orderBy = orderBy.map(ob => ob.copy(ast = replaceProps(ob.ast))),
-          limit = replacePropsOption(limit),
-          offset = replacePropsOption(offset)
+          select = distinctSelects.map(sv => sv.copy(ast = flattenPropertiesInside(sv.ast))),
+          from = newFroms,
+          where = where.map(flattenPropertiesInside(_)),
+          groupBy = groupBy.map(flattenPropertiesInside(_)),
+          orderBy = orderBy.map(ob => ob.copy(ast = flattenPropertiesInside(ob.ast))),
+          limit = limit.map(flattenPropertiesInside(_)),
+          offset = offset.map(flattenPropertiesInside(_))
         )(q.quat)
-
     }
-
-  def unhideAst(ast: Ast): Ast =
-    Transform(ast) {
-      case Property.Opinionated(a, n, r, v) =>
-        Property.Opinionated(unhideAst(a), n, r, Visible)
-    }
-
-  private def unhideProperties(sv: SelectValue) =
-    sv.copy(ast = unhideAst(sv.ast))
-
-  private def expandContext(s: FromContext, asts: List[Ast]): (FromContext, LinkedHashSet[Property]) =
-    s match {
-      case QueryContext(q, alias) =>
-        val refs = references(alias, asts)
-        (QueryContext(apply(q, refs), alias), refs)
-      case JoinContext(t, a, b, on) =>
-        val (left, leftRefs) = expandContext(a, asts :+ on)
-        val (right, rightRefs) = expandContext(b, asts :+ on)
-        (JoinContext(t, left, right, on), leftRefs ++ rightRefs)
-      case FlatJoinContext(t, a, on) =>
-        val (next, refs) = expandContext(a, asts :+ on)
-        (FlatJoinContext(t, next, on), refs)
-      case _: TableContext | _: InfixContext => (s, new mutable.LinkedHashSet[Property]())
-    }
-
-  private def references(alias: String, asts: List[Ast]) =
-    LinkedHashSet.empty ++ (References(State(Ident(alias, Quat.Value), Nil))(asts)(_.apply)._2.state.references) // TODO scrap this whole thing with quats
-}
-
-case class State(ident: Ident, references: List[Property])
-
-case class References(val state: State)
-  extends StatefulTransformer[State] {
-
-  import state._
-
-  override def apply(a: Ast) =
-    a match {
-      case `reference`(p) => (p, References(State(ident, references :+ p)))
-      case other          => super.apply(a)
-    }
-
-  object reference {
-    def unapply(p: Property): Option[Property] =
-      p match {
-        case Property(`ident`, name)      => Some(p)
-        case Property(reference(_), name) => Some(p)
-        case other                        => None
-      }
-  }
 }

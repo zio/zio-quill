@@ -98,7 +98,7 @@ object RepropagateQuats extends StatelessTransformer {
             case OnConflict.Properties(props) =>
               val propsR = props.map {
                 // Recreate the assignment with new idents but only if we need to repropagate
-                case prop @ PropertyMatroshka(ident, _) =>
+                case prop @ PropertyMatroshka(ident: Ident, _) =>
                   trace"Repropagate OnConflict.Properties Quat ${oca.quat.suppress(msg)} from $oca into:" andReturn
                     BetaReduction(prop, RWR, ident -> ident.withQuat(oca.quat)).asInstanceOf[Property]
                 case other =>

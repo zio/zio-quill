@@ -5,9 +5,7 @@ import io.getquill.ast._
 import io.getquill.dsl.CoreDsl
 import io.getquill.quat.Quat
 
-import scala.collection.mutable
-
-trait Liftables {
+trait Liftables extends QuatLiftable {
   val c: Context
   import c.universe.{ Ident => _, Constant => _, Function => _, If => _, Block => _, _ }
 
@@ -60,11 +58,6 @@ trait Liftables {
     case OptionOrNull(a)             => q"$pack.OptionOrNull($a)"
     case OptionGetOrNull(a)          => q"$pack.OptionGetOrNull($a)"
     case OptionNone(quat)            => q"$pack.OptionNone($quat)"
-  }
-
-  implicit def linkedHashMapLiftable[K, V](implicit lk: Liftable[K], lv: Liftable[V]): Liftable[mutable.LinkedHashMap[K, V]] = Liftable[mutable.LinkedHashMap[K, V]] {
-    case l: mutable.LinkedHashMap[K, V] =>
-      q"scala.collection.mutable.LinkedHashMap(${l.map { case (k, v) => q"(${lk(k)}, ${lv(v)})" }.toSeq: _*})"
   }
 
   implicit val traversableOperationLiftable: Liftable[IterableOperation] = Liftable[IterableOperation] {
@@ -195,19 +188,6 @@ trait Liftables {
     case Constant(a)  => q"$pack.Constant(${Literal(c.universe.Constant(a))})"
     case Tuple(a)     => q"$pack.Tuple($a)"
     case CaseClass(a) => q"$pack.CaseClass($a)"
-  }
-
-  // Liftables are invariant so want to have a separate liftable for Quat.Product since it is used directly inside Entity
-  // which should be lifted/unlifted without the need for casting.
-  implicit val quatProductLiftable: Liftable[Quat.Product] = Liftable[Quat.Product] {
-    case Quat.Product.WithRenames(fields, renames) => q"io.getquill.quat.Quat.Product.WithRenames($fields, $renames)"
-  }
-
-  implicit val quatLiftable: Liftable[Quat] = Liftable[Quat] {
-    case Quat.Product.WithRenames(fields, renames) => q"io.getquill.quat.Quat.Product.WithRenames($fields, $renames)"
-    case Quat.Value                                => q"io.getquill.quat.Quat.Value"
-    case Quat.Null                                 => q"io.getquill.quat.Quat.Null"
-    case Quat.Generic                              => q"io.getquill.quat.Quat.Generic"
   }
 
   implicit val identLiftable: Liftable[Ident] = Liftable[Ident] {

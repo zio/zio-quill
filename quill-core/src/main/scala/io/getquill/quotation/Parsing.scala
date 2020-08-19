@@ -250,12 +250,36 @@ trait Parsing extends ValueComputation with QuatMaking {
     case q"${ joinCallParser(typ, a, b) }" =>
       c.fail("a join clause must be followed by 'on'.")
 
-    case q"$source.distinct" if (is[DslQuery[Any]](source)) =>
-      Distinct(astParser(source))
-
-    case q"$source.nested" if (is[DslQuery[Any]](source)) =>
-      io.getquill.ast.Nested(astParser(source))
-
+    // .distinct should not be allowed after a flatjoin
+    case q"$source.distinct" if (is[DslQuery[Any]](source)) => {
+      astParser(source) match {
+        case fj: FlatJoin => throw new IllegalArgumentException(
+          """
+            |The .distinct cannot be placed after a join clause in a for-comprehension. Put it before.
+            |For example. Change:
+            |  for { a <- query[A]; b <- query[B].join(...).distinct } to:
+            |  for { a <- query[A]; b <- query[B].distinct.join(...) }
+            |""".stripMargin
+        )
+        case other =>
+          Distinct(other)
+      }
+    }
+    // .distinct should not be allowed after a flatjoin
+    case q"$source.nested" if (is[DslQuery[Any]](source)) => {
+      astParser(source) match {
+        case fj: FlatJoin => throw new IllegalArgumentException(
+          """
+            |The .nested cannot be placed after a join clause in a for-comprehension. Put it before.
+            |For example. Change:
+            |  for { a <- query[A]; b <- query[B].join(...).nested } to:
+            |  for { a <- query[A]; b <- query[B].nested.join(...) }
+            |""".stripMargin
+        )
+        case other =>
+          io.getquill.ast.Nested(other)
+      }
+    }
   }
 
   implicit val propertyAliasParser: Parser[PropertyAlias] = Parser[PropertyAlias] {
@@ -715,13 +739,13 @@ trait Parsing extends ValueComputation with QuatMaking {
   }
 
   val valueParser: Parser[Ast] = Parser[Ast] {
-    case q"null"                         => NullValue
-    case q"scala.Some.apply[$t]($v)"     => OptionSome(astParser(v))
-    case q"scala.Option.apply[$t]($v)"   => OptionApply(astParser(v))
-    case q"scala.None"                   => OptionNone(Quat.Null)
-    case q"scala.Option.empty[$t]"       => OptionNone(inferQuat(t.tpe))
-    case Literal(c.universe.Constant(v)) => Constant(v)
-    case q"((..$v))" if (v.size > 1)     => Tuple(v.map(astParser(_)))
+    case q"null"                             => NullValue
+    case q"scala.Some.apply[$t]($v)"         => OptionSome(astParser(v))
+    case q"scala.Option.apply[$t]($v)"       => OptionApply(astParser(v))
+    case q"scala.None"                       => OptionNone(Quat.Null)
+    case q"scala.Option.empty[$t]"           => OptionNone(inferQuat(t.tpe))
+    case l @ Literal(c.universe.Constant(v)) => { Constant(v); }
+    case q"((..$v))" if (v.size > 1)         => Tuple(v.map(astParser(_)))
     case q"new $ccTerm(..$v)" if (isCaseClass(c.WeakTypeTag(ccTerm.tpe.erasure))) => {
       val values = v.map(astParser(_))
       val params = firstConstructorParamList(c.WeakTypeTag(ccTerm.tpe.erasure))

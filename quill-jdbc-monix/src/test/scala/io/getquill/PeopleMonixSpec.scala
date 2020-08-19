@@ -1,4 +1,5 @@
 package io.getquill
+
 import io.getquill.context.monix.MonixJdbcContext
 import io.getquill.context.sql.PeopleSpec
 import monix.execution.Scheduler

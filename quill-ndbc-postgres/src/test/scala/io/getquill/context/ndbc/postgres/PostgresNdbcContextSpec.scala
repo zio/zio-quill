@@ -3,7 +3,7 @@ package io.getquill.context.ndbc.postgres
 import io.getquill.Spec
 import io.trane.future.scala.Future
 
-class NdbcPostgresContextSpec extends Spec {
+class PostgresNdbcContextSpec extends Spec {
 
   val ctx = testContext
   import ctx._

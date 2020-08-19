@@ -1,7 +1,7 @@
 package io.getquill.context.sql
 
 import io.getquill.ast._
-import io.getquill.context.sql.norm.FlattenGroupByAggregation
+import io.getquill.context.sql.norm.{ ExpandSelection, FlattenGroupByAggregation }
 import io.getquill.norm.BetaReduction
 import io.getquill.quat.Quat
 import io.getquill.util.Messages.fail
@@ -104,20 +104,6 @@ object SqlQuery {
         (List.empty, other)
     }
 
-  object NestedNest {
-    def unapply(q: Ast): Option[Ast] =
-      q match {
-        case _: Nested => recurse(q)
-        case _         => None
-      }
-
-    private def recurse(q: Ast): Option[Ast] =
-      q match {
-        case Nested(qn) => recurse(qn)
-        case other      => Some(other)
-      }
-  }
-
   private def flatten(sources: List[FromContext], finalFlatMapBody: Ast, alias: String): FlattenSqlQuery = {
 
     def select(alias: String, quat: Quat) = SelectValue(Ident(alias, quat), None) :: Nil
@@ -126,7 +112,7 @@ object SqlQuery {
       def nest(ctx: FromContext) = FlattenSqlQuery(from = sources :+ ctx, select = select(alias, q.quat))(q.quat)
       q match {
         case Map(_: GroupBy, _, _) => nest(source(q, alias))
-        case NestedNest(q)         => nest(QueryContext(apply(q), alias))
+        case Nested(q)             => nest(QueryContext(apply(q), alias))
         case q: ConcatMap          => nest(QueryContext(apply(q), alias))
         case Join(tpe, a, b, iA, iB, on) =>
           val ctx = source(q, alias)
@@ -138,9 +124,15 @@ object SqlQuery {
               case JoinContext(_, a, b, _)  => aliases(a) ::: aliases(b)
               case FlatJoinContext(_, a, _) => aliases(a)
             }
+          // TODO Quat what impact does it have on this process if we do the alternative version of ExpandJoins that uses nested flatmaps?
+          //      would that version actually produce more consistent results here?
+          // TODO Quat Test in situations where you have more then two things. Would the subselect work properly?
+          // Maybe prduce nested tuples here based on if it is a join context etc... in the recursive creation of the types
+          val collectedAliases = aliases(ctx).map { case (a, quat) => Ident(a, quat) }
+          val select = Tuple(collectedAliases)
           FlattenSqlQuery(
             from = ctx :: Nil,
-            select = aliases(ctx).map { case (a, quat) => SelectValue(Ident(a, quat), None) }
+            select = List(SelectValue(select, None))
           )(q.quat)
         case q @ (_: Map | _: Filter | _: Entity) => flatten(sources, q, alias)
         case q if (sources == Nil)                => flatten(sources, q, alias)
@@ -159,9 +151,14 @@ object SqlQuery {
 
       case Map(GroupBy(q, x @ Ident(alias, _), g), a, p) =>
         val b = base(q, alias)
+        val flatGroupByAsts = new ExpandSelection(b.from).apply(List(SelectValue(g))).map(_.ast)
+        val groupByClause =
+          if (flatGroupByAsts.length > 1) Tuple(flatGroupByAsts)
+          else flatGroupByAsts.head
+
         val select = BetaReduction(p, a -> Tuple(List(g, x)))
         val flattenSelect = FlattenGroupByAggregation(x)(select)
-        b.copy(groupBy = Some(g), select = this.selectValues(flattenSelect))(quat)
+        b.copy(groupBy = Some(groupByClause), select = this.selectValues(flattenSelect))(quat)
 
       case GroupBy(q, Ident(alias, _), p) =>
         fail("A `groupBy` clause must be followed by `map`.")
@@ -181,7 +178,8 @@ object SqlQuery {
 
       case Filter(q, Ident(alias, _), p) =>
         val b = base(q, alias)
-        if (b.where.isEmpty)
+        //If the filter body uses the filter alias, make sure it matches one of the aliases in the fromContexts
+        if (b.where.isEmpty && (!CollectAst.byType[Ident](p).map(_.name).contains(alias) || collectAliases(b.from).contains(alias)))
           b.copy(where = Some(p))(quat)
         else
           FlattenSqlQuery(
@@ -193,7 +191,8 @@ object SqlQuery {
       case SortBy(q, Ident(alias, _), p, o) =>
         val b = base(q, alias)
         val criterias = orderByCriterias(p, o)
-        if (b.orderBy.isEmpty)
+        //If the sortBy body uses the filter alias, make sure it matches one of the aliases in the fromContexts
+        if (b.orderBy.isEmpty && (!CollectAst.byType[Ident](p).map(_.name).contains(alias) || collectAliases(b.from).contains(alias)))
           b.copy(orderBy = criterias)(quat)
         else
           FlattenSqlQuery(
@@ -236,7 +235,7 @@ object SqlQuery {
             select = select(alias, quat)
           )(quat)
 
-      case Distinct(q: Query) =>
+      case Distinct(q) =>
         val b = base(q, alias)
         b.copy(distinct = true)(quat)
 
@@ -247,8 +246,8 @@ object SqlQuery {
 
   private def selectValues(ast: Ast) =
     ast match {
-      case Tuple(values) => values.map(SelectValue(_))
-      case other         => SelectValue(ast) :: Nil
+      //case Tuple(values) => values.map(SelectValue(_))
+      case other => SelectValue(ast) :: Nil
     }
 
   private def source(ast: Ast, alias: String): FromContext =
@@ -268,4 +267,26 @@ object SqlQuery {
       case (a, o: PropertyOrdering)                   => List(OrderByCriteria(a, o))
       case other                                      => fail(s"Invalid order by criteria $ast")
     }
+
+  private def collectAliases(contexts: List[FromContext]): List[String] = {
+    contexts.flatMap {
+      case c: TableContext             => List(c.alias)
+      case c: QueryContext             => List(c.alias)
+      case c: InfixContext             => List(c.alias)
+      case JoinContext(_, a, b, _)     => collectAliases(List(a)) ++ collectAliases(List(b))
+      case FlatJoinContext(_, from, _) => collectAliases(List(from))
+    }
+  }
+
+  private def collectTableAliases(contexts: List[FromContext]): List[String] = {
+    contexts.flatMap {
+      case c: TableContext             => List(c.alias)
+      case c: QueryContext             => List()
+      case c: InfixContext             => List()
+      case JoinContext(_, a, b, _)     => collectAliases(List(a)) ++ collectAliases(List(b))
+      case FlatJoinContext(_, from, _) => collectAliases(List(from))
+    }
+  }
+
 }
+
