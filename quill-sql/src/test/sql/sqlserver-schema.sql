@@ -59,7 +59,8 @@ CREATE TABLE TestEntity(
     s VARCHAR(255),
     i INTEGER,
     l BIGINT,
-    o INTEGER
+    o INTEGER,
+    b BIT
 );
 
 CREATE TABLE TestEntity2(
