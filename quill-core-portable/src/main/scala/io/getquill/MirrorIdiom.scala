@@ -58,7 +58,7 @@ trait MirrorIdiomBase extends Idiom {
   }
 
   implicit val dynamicTokenizer: Tokenizer[Dynamic] = Tokenizer[Dynamic] {
-    case Dynamic(tree) => stmt"${tree.toString.token}"
+    case Dynamic(tree, _) => stmt"${tree.toString.token}"
   }
 
   implicit def blockTokenizer(implicit externalTokenizer: Tokenizer[External]): Tokenizer[Block] = Tokenizer[Block] {
@@ -202,12 +202,12 @@ trait MirrorIdiomBase extends Idiom {
   }
 
   implicit val valueTokenizer: Tokenizer[Value] = Tokenizer[Value] {
-    case Constant(v: String) => stmt""""${v.token}""""
-    case Constant(())        => stmt"{}"
-    case Constant(v)         => stmt"${v.toString.token}"
-    case NullValue           => stmt"null"
-    case Tuple(values)       => stmt"(${values.token})"
-    case CaseClass(values)   => stmt"CaseClass(${values.map { case (k, v) => s"${k.token}: ${v.token}" }.mkString(", ").token})"
+    case Constant(v: String, _) => stmt""""${v.token}""""
+    case Constant((), _)        => stmt"{}"
+    case Constant(v, _)         => stmt"${v.toString.token}"
+    case NullValue              => stmt"null"
+    case Tuple(values)          => stmt"(${values.token})"
+    case CaseClass(values)      => stmt"CaseClass(${values.map { case (k, v) => s"${k.token}: ${v.token}" }.mkString(", ").token})"
   }
 
   implicit val identTokenizer: Tokenizer[Ident] = Tokenizer[Ident] {

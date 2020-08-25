@@ -66,7 +66,7 @@ class JdbcContextSpec extends Spec {
     "with multiple columns" in {
       testContext.run(qr1.delete)
       val inserted = testContext.run {
-        qr1.insert(lift(TestEntity("foo", 1, 18L, Some(123)))).returning(r => (r.i, r.s, r.o))
+        qr1.insert(lift(TestEntity("foo", 1, 18L, Some(123), true))).returning(r => (r.i, r.s, r.o))
       }
       (1, "foo", Some(123)) mustBe inserted
     }
@@ -75,7 +75,7 @@ class JdbcContextSpec extends Spec {
       case class Return(id: Int, str: String, opt: Option[Int])
       testContext.run(qr1.delete)
       val inserted = testContext.run {
-        qr1.insert(lift(TestEntity("foo", 1, 18L, Some(123)))).returning(r => Return(r.i, r.s, r.o))
+        qr1.insert(lift(TestEntity("foo", 1, 18L, Some(123), true))).returning(r => Return(r.i, r.s, r.o))
       }
       Return(1, "foo", Some(123)) mustBe inserted
     }
@@ -96,10 +96,10 @@ class JdbcContextSpec extends Spec {
 
     "with multiple columns" in {
       testContext.run(qr1.delete)
-      testContext.run(qr1.insert(lift(TestEntity("baz", 6, 42L, Some(456)))))
+      testContext.run(qr1.insert(lift(TestEntity("baz", 6, 42L, Some(456), true))))
 
       val updated = testContext.run {
-        qr1.update(lift(TestEntity("foo", 1, 18L, Some(123)))).returning(r => (r.i, r.s, r.o))
+        qr1.update(lift(TestEntity("foo", 1, 18L, Some(123), true))).returning(r => (r.i, r.s, r.o))
       }
       (1, "foo", Some(123)) mustBe updated
     }
@@ -107,10 +107,10 @@ class JdbcContextSpec extends Spec {
     "with multiple columns - case class" in {
       case class Return(id: Int, str: String, opt: Option[Int])
       testContext.run(qr1.delete)
-      testContext.run(qr1.insert(lift(TestEntity("baz", 6, 42L, Some(456)))))
+      testContext.run(qr1.insert(lift(TestEntity("baz", 6, 42L, Some(456), true))))
 
       val updated = testContext.run {
-        qr1.update(lift(TestEntity("foo", 1, 18L, Some(123)))).returning(r => Return(r.i, r.s, r.o))
+        qr1.update(lift(TestEntity("foo", 1, 18L, Some(123), true))).returning(r => Return(r.i, r.s, r.o))
       }
       Return(1, "foo", Some(123)) mustBe updated
     }
