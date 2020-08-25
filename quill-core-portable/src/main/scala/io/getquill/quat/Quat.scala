@@ -50,13 +50,17 @@ sealed trait Quat {
 
   def leastUpperType(other: Quat): Option[Quat] = {
     (this, other) match {
-      case (Quat.Generic, other)                   => Some(other)
-      case (Quat.Null, other)                      => Some(other)
-      case (other, Quat.Generic)                   => Some(other)
-      case (other, Quat.Null)                      => Some(other)
-      case (Quat.Value, Quat.Value)                => Some(Quat.Value)
+      case (Quat.Generic, other) => Some(other)
+      case (Quat.Null, other) => Some(other)
+      case (other, Quat.Generic) => Some(other)
+      case (other, Quat.Null) => Some(other)
+      case (Quat.Value, Quat.Value) => Some(Quat.Value)
+      case (Quat.BooleanValue, Quat.BooleanValue) => Some(Quat.BooleanValue)
+      case (other, Quat.BooleanValue) => Some(other)
+      case (Quat.BooleanExpression, Quat.BooleanExpression) => Some(Quat.BooleanExpression)
+      case (Quat.BooleanExpression, _) => Some(Quat.BooleanExpression)
       case (me: Quat.Product, other: Quat.Product) => me.leastUpperTypeProduct(other)
-      case (_, _)                                  => None
+      case (_, _) => None
     }
   }
 
@@ -66,8 +70,7 @@ sealed trait Quat {
     case Quat.Product(fields) => s"CC(${
       fields.map {
         case (k, v) => k + (v match {
-          case Quat.Value => ""
-          case other      => ":" + other.shortString
+          case other => ":" + other.shortString
         })
       }.mkString(",")
     })${
@@ -76,9 +79,11 @@ sealed trait Quat {
         case other => s"[${other.map { case (k, v) => k + "->" + v }.mkString(",")}]"
       })
     }"
-    case Quat.Generic => "<G>"
-    case Quat.Value   => "V"
-    case Quat.Null    => "N"
+    case Quat.Generic           => "<G>"
+    case Quat.Value             => "V"
+    case Quat.Null              => "N"
+    case Quat.BooleanValue      => "BV"
+    case Quat.BooleanExpression => "BE"
   }
 
   /** What was the value of a given property before it was renamed (i.e. looks up the value of the Renames hash) */
@@ -121,7 +126,7 @@ object Quat {
   }
 
   object TupleIndex {
-    def is(s: String): Boolean = unapply(s).isDefined
+    def is(s: String) = unapply(s).isDefined
     def unapply(s: String): Option[Int] =
       if (s.matches("_[0-9]*"))
         Some(s.drop(1).toInt - 1)
@@ -235,13 +240,19 @@ object Quat {
   case object Generic extends Quat {
     override def withRenames(renames: List[(String, String)]) = this
   }
-  case object Value extends Quat {
+
+  case object Value extends Quat with NoRenames
+  case object BooleanValue extends Quat with NoRenames
+  case object BooleanExpression extends Quat with NoRenames
+
+  protected trait NoRenames {
+    this: Quat =>
 
     /** Should not be able to rename properties on a value node, turns into a error of the array is not null */
-    override def withRenames(renames: List[(String, String)]) =
+    override def withRenames(renames: List[(String, String)]): Quat =
       renames match {
         case Nil => this
-        case _   => QuatException(s"Renames ${renames} cannot be applied to a value SQL-level type")
+        case _   => QuatException(s"Renames $renames cannot be applied to a value SQL-level type")
       }
   }
 }

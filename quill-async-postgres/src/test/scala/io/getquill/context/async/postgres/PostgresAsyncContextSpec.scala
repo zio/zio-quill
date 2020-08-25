@@ -27,7 +27,7 @@ class PostgresAsyncContextSpec extends Spec {
   "Insert with returning with multiple columns" in {
     await(testContext.run(qr1.delete))
     val inserted = await(testContext.run {
-      qr1.insert(lift(TestEntity("foo", 1, 18L, Some(123)))).returning(r => (r.i, r.s, r.o))
+      qr1.insert(lift(TestEntity("foo", 1, 18L, Some(123), true))).returning(r => (r.i, r.s, r.o))
     })
     (1, "foo", Some(123)) mustBe inserted
   }

@@ -8,7 +8,7 @@ trait OnConflictSpec extends Spec {
 
   object `onConflictIgnore` {
     val testQuery1, testQuery2 = quote {
-      qr1.insert(lift(TestEntity("", 1, 0, None))).onConflictIgnore
+      qr1.insert(lift(TestEntity("", 1, 0, None, true))).onConflictIgnore
     }
     val res1 = 1
     val res2 = 0
@@ -16,13 +16,13 @@ trait OnConflictSpec extends Spec {
     val testQuery3 = quote {
       qr1.filter(_.i == 1)
     }
-    val res3 = List(TestEntity("", 1, 0, None))
+    val res3 = List(TestEntity("", 1, 0, None, true))
   }
 
   object `onConflictIgnore(_.i)` {
     val name = "ON CONFLICT (...) DO NOTHING"
     val testQuery1, testQuery2 = quote {
-      qr1.insert(lift(TestEntity("s", 2, 0, None))).onConflictIgnore(_.i)
+      qr1.insert(lift(TestEntity("s", 2, 0, None, true))).onConflictIgnore(_.i)
     }
     val res1 = 1
     val res2 = 0
@@ -30,20 +30,20 @@ trait OnConflictSpec extends Spec {
     val testQuery3 = quote {
       qr1.filter(_.i == 2)
     }
-    val res3 = List(TestEntity("s", 2, 0, None))
+    val res3 = List(TestEntity("s", 2, 0, None, true))
   }
 
   abstract class onConflictUpdate(id: Int) {
-    val e1 = TestEntity("r1", id, 0, None)
-    val e2 = TestEntity("r2", id, 0, None)
-    val e3 = TestEntity("r3", id, 0, None)
+    val e1 = TestEntity("r1", id, 0, None, true)
+    val e2 = TestEntity("r2", id, 0, None, true)
+    val e3 = TestEntity("r3", id, 0, None, true)
 
     val res1, res2, res3 = 1
 
     val testQuery4 = quote {
       qr1.filter(_.i == lift(id))
     }
-    val res4 = List(TestEntity("r1-r2-r3", id, 2, None))
+    val res4 = List(TestEntity("r1-r2-r3", id, 2, None, true))
   }
 
   object `onConflictUpdate((t, e) => ...)` extends onConflictUpdate(3) {

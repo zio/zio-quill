@@ -31,8 +31,8 @@ trait Liftables extends QuatLiftable {
     case UnaryOperation(a, b) => q"$pack.UnaryOperation($a, $b)"
     case Infix(a, b, pure, quat) => q"$pack.Infix($a, $b, $pure, $quat)"
     case If(a, b, c) => q"$pack.If($a, $b, $c)"
-    case Dynamic(tree: Tree) if (tree.tpe <:< c.weakTypeOf[CoreDsl#Quoted[Any]]) => q"$tree.ast"
-    case Dynamic(tree: Tree) => q"$pack.Constant($tree)"
+    case Dynamic(tree: Tree, _) if (tree.tpe <:< c.weakTypeOf[CoreDsl#Quoted[Any]]) => q"$tree.ast"
+    case Dynamic(tree: Tree, quat) => q"$pack.Constant($tree, $quat)"
     case QuotedReference(tree: Tree, ast) => q"$ast"
     case OnConflict.Excluded(a) => q"$pack.OnConflict.Excluded($a)"
     case OnConflict.Existing(a) => q"$pack.OnConflict.Existing($a)"
@@ -184,10 +184,10 @@ trait Liftables extends QuatLiftable {
   }
 
   implicit val valueLiftable: Liftable[Value] = Liftable[Value] {
-    case NullValue    => q"$pack.NullValue"
-    case Constant(a)  => q"$pack.Constant(${Literal(c.universe.Constant(a))})"
-    case Tuple(a)     => q"$pack.Tuple($a)"
-    case CaseClass(a) => q"$pack.CaseClass($a)"
+    case NullValue         => q"$pack.NullValue"
+    case Constant(a, quat) => q"$pack.Constant(${Literal(c.universe.Constant(a))}, $quat)"
+    case Tuple(a)          => q"$pack.Tuple($a)"
+    case CaseClass(a)      => q"$pack.CaseClass($a)"
   }
 
   implicit val identLiftable: Liftable[Ident] = Liftable[Ident] {

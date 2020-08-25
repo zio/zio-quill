@@ -27,12 +27,12 @@ class ComplexQuerySpec extends Spec with BeforeAndAfter {
     "join + nesting + infixes" in {
 
       val testEntities = List(
-        TestEntity("aaa", 11, 1L, None),
-        TestEntity("aaa", 12, 1L, None),
-        TestEntity("aaa", 13, 3L, None),
-        TestEntity("aaa", 14, 3L, None),
-        TestEntity("bbb", 15, 4L, None),
-        TestEntity("bbb", 16, 4L, None)
+        TestEntity("aaa", 11, 1L, None, true),
+        TestEntity("aaa", 12, 1L, None, true),
+        TestEntity("aaa", 13, 3L, None, true),
+        TestEntity("aaa", 14, 3L, None, true),
+        TestEntity("bbb", 15, 4L, None, true),
+        TestEntity("bbb", 16, 4L, None, true)
       )
 
       val testEntities2 = List(

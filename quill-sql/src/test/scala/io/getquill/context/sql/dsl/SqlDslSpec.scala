@@ -11,13 +11,13 @@ class SqlDslSpec extends Spec {
       val q = quote {
         query[TestEntity].filter(t => Like(t.s) like "a")
       }
-      testContext.run(q).string mustEqual "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.s like 'a'"
+      testContext.run(q).string mustEqual "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.s like 'a'"
     }
     "string interpolation" in {
       val q = quote {
         query[TestEntity].filter(t => t.s like s"%${lift("a")}%")
       }
-      testContext.run(q).string mustEqual "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.s like ('%' || ?) || '%'"
+      testContext.run(q).string mustEqual "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.s like ('%' || ?) || '%'"
     }
   }
 }

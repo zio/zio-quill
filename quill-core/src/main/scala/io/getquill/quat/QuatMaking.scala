@@ -36,7 +36,7 @@ trait QuatMaking extends QuatMakingBase {
     }
   }
 
-  val cachedQuats: HashMap[Type, Quat] = HashMap();
+  val cachedQuats: HashMap[Type, Quat] = HashMap()
   override def inferQuat(tpe: u.Type): Quat = {
     cachedQuats.get(tpe) match {
       case Some(value) =>
@@ -201,9 +201,17 @@ trait QuatMakingBase {
         }
     }
 
+    object BooleanType {
+      def unapply(tpe: Type): Option[Type] =
+        if (isType[Boolean](tpe))
+          Some(tpe)
+        else
+          None
+    }
+
     object DefiniteValue {
       def unapply(tpe: Type): Option[Type] = {
-        // UDTs (currently only used by cassandra) are reated as tables even though there is an encoder for them.
+        // UDTs (currently only used by cassandra) are created as tables even though there is an encoder for them.
         if (tpe <:< typeOf[Udt])
           None
         else if (isType[AnyVal](tpe))
@@ -215,6 +223,9 @@ trait QuatMakingBase {
 
     def parseTopLevelType(tpe: Type): Quat =
       tpe match {
+        case BooleanType(tpe) =>
+          Quat.BooleanValue
+
         case DefiniteValue(tpe) =>
           Quat.Value
 
@@ -250,6 +261,9 @@ trait QuatMakingBase {
      */
     def parseType(tpe: Type, boundedInterfaceType: Boolean = false): Quat =
       tpe match {
+        case BooleanType(tpe) =>
+          Quat.BooleanValue
+
         case DefiniteValue(tpe) =>
           Quat.Value
 
