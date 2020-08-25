@@ -42,7 +42,7 @@ class OrientDBQuerySpec extends Spec {
       qr1.take(1)
     }
     mirrorContext.run(q).string mustEqual
-      "SELECT s, i, l, o FROM TestEntity LIMIT 1"
+      "SELECT s, i, l, o, b FROM TestEntity LIMIT 1"
   }
 
   "sortBy" - {
@@ -51,14 +51,14 @@ class OrientDBQuerySpec extends Spec {
         qr1.sortBy(t => t.i)
       }
       mirrorContext.run(q).string mustEqual
-        "SELECT s, i, l, o FROM TestEntity ORDER BY i ASC"
+        "SELECT s, i, l, o, b FROM TestEntity ORDER BY i ASC"
     }
     "tuple" in {
       val q = quote {
         qr1.sortBy(t => (t.i, t.s))
       }
       mirrorContext.run(q).string mustEqual
-        "SELECT s, i, l, o FROM TestEntity ORDER BY i ASC, s ASC"
+        "SELECT s, i, l, o, b FROM TestEntity ORDER BY i ASC, s ASC"
     }
     "custom ordering" - {
       "property" in {
@@ -66,21 +66,21 @@ class OrientDBQuerySpec extends Spec {
           qr1.sortBy(t => t.i)(Ord.desc)
         }
         mirrorContext.run(q).string mustEqual
-          "SELECT s, i, l, o FROM TestEntity ORDER BY i DESC"
+          "SELECT s, i, l, o, b FROM TestEntity ORDER BY i DESC"
       }
       "tuple" in {
         val q = quote {
           qr1.sortBy(t => (t.i, t.s))(Ord(Ord.asc, Ord.desc))
         }
         mirrorContext.run(q).string mustEqual
-          "SELECT s, i, l, o FROM TestEntity ORDER BY i ASC, s DESC"
+          "SELECT s, i, l, o, b FROM TestEntity ORDER BY i ASC, s DESC"
       }
       "tuple single ordering" in {
         val q = quote {
           qr1.sortBy(t => (t.i, t.s))(Ord.desc)
         }
         mirrorContext.run(q).string mustEqual
-          "SELECT s, i, l, o FROM TestEntity ORDER BY i DESC, s DESC"
+          "SELECT s, i, l, o, b FROM TestEntity ORDER BY i DESC, s DESC"
       }
     }
   }
@@ -90,12 +90,12 @@ class OrientDBQuerySpec extends Spec {
       qr1.filter(t => t.i == 1)
     }
     mirrorContext.run(q).string mustEqual
-      "SELECT s, i, l, o FROM TestEntity WHERE i = 1"
+      "SELECT s, i, l, o, b FROM TestEntity WHERE i = 1"
   }
 
   "entity" in {
     mirrorContext.run(qr1).string mustEqual
-      "SELECT s, i, l, o FROM TestEntity"
+      "SELECT s, i, l, o, b FROM TestEntity"
   }
 
   "aggregation" - {
@@ -168,7 +168,7 @@ class OrientDBQuerySpec extends Spec {
       qr1.filter(_.i == 0).union(qr1.filter(_.i == 1))
     }
     mirrorContext.run(q).string mustEqual
-      f"SELECT s, i, l, o FROM (SELECT $$c LET $$a = (SELECT s, i, l, o FROM TestEntity WHERE i = 0), $$b = (SELECT s, i, l, o FROM TestEntity WHERE i = 1), $$c = UNIONALL($$a, $$b))"
+      f"SELECT s, i, l, o, b FROM (SELECT $$c LET $$a = (SELECT s, i, l, o, b FROM TestEntity WHERE i = 0), $$b = (SELECT s, i, l, o, b FROM TestEntity WHERE i = 1), $$c = UNIONALL($$a, $$b))"
   }
 
   "unionall supported" in {
@@ -176,7 +176,7 @@ class OrientDBQuerySpec extends Spec {
       qr1.filter(_.i == 0).unionAll(qr1.filter(_.i == 1))
     }
     mirrorContext.run(q).string mustEqual
-      f"SELECT s, i, l, o FROM (SELECT $$c LET $$a = (SELECT s, i, l, o FROM TestEntity WHERE i = 0), $$b = (SELECT s, i, l, o FROM TestEntity WHERE i = 1), $$c = UNIONALL($$a, $$b))"
+      f"SELECT s, i, l, o, b FROM (SELECT $$c LET $$a = (SELECT s, i, l, o, b FROM TestEntity WHERE i = 0), $$b = (SELECT s, i, l, o, b FROM TestEntity WHERE i = 1), $$c = UNIONALL($$a, $$b))"
   }
 
   import OrientDBIdiom._

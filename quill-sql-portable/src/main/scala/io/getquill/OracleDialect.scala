@@ -8,12 +8,14 @@ import io.getquill.idiom.StatementInterpolator._
 import io.getquill.idiom.{ Statement, StringToken, Token }
 import io.getquill.norm.ConcatBehavior
 import io.getquill.norm.ConcatBehavior.NonAnsiConcat
+import io.getquill.sql.idiom.BooleanLiteralSupport
 
 trait OracleDialect
   extends SqlIdiom
   with QuestionMarkBindVariables
   with ConcatSupport
-  with CanReturnMultiField {
+  with CanReturnMultiField
+  with BooleanLiteralSupport {
 
   class OracleFlattenSqlQueryTokenizerHelper(q: FlattenSqlQuery)(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy)
     extends FlattenSqlQueryTokenizerHelper(q)(astTokenizer, strategy) {

@@ -17,6 +17,8 @@ object KryoQuatSerializer {
       k.register(classOf[Quat])
       k.register(classOf[Quat.Product])
       k.register(Quat.Value.getClass)
+      k.register(Quat.BooleanValue.getClass)
+      k.register(Quat.BooleanExpression.getClass)
       k.register(Quat.Null.getClass)
       k.register(Quat.Generic.getClass)
       // Need to make sure LinkedHashMap is converted to a list of key,value tuples before being convered

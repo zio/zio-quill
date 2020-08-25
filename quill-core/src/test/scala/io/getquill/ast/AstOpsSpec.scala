@@ -10,12 +10,12 @@ class AstOpsSpec extends Spec {
   "+||+" - {
     "unapply" in {
       BinaryOperation(VIdent("a"), BooleanOperator.`||`, Constant(true)) must matchPattern {
-        case VIdent(a) +||+ Constant(t) if (a == "a" && t == true) =>
+        case VIdent(a) +||+ Constant(t, _) if (a == "a" && t == true) =>
       }
     }
     "apply" in {
       (VIdent("a") +||+ Constant(true)) must matchPattern {
-        case BinaryOperation(VIdent(a), BooleanOperator.`||`, Constant(t)) if (a == "a" && t == true) =>
+        case BinaryOperation(VIdent(a), BooleanOperator.`||`, Constant(t, _)) if (a == "a" && t == true) =>
       }
     }
   }
@@ -23,12 +23,12 @@ class AstOpsSpec extends Spec {
   "+&&+" - {
     "unapply" in {
       BinaryOperation(VIdent("a"), BooleanOperator.`&&`, Constant(true)) must matchPattern {
-        case VIdent(a) +&&+ Constant(t) if (a == "a" && t == true) =>
+        case VIdent(a) +&&+ Constant(t, _) if (a == "a" && t == true) =>
       }
     }
     "apply" in {
       (VIdent("a") +&&+ Constant(true)) must matchPattern {
-        case BinaryOperation(VIdent(a), BooleanOperator.`&&`, Constant(t)) if (a == "a" && t == true) =>
+        case BinaryOperation(VIdent(a), BooleanOperator.`&&`, Constant(t, _)) if (a == "a" && t == true) =>
       }
     }
   }
@@ -36,12 +36,12 @@ class AstOpsSpec extends Spec {
   "+==+" - {
     "unapply" in {
       BinaryOperation(VIdent("a"), EqualityOperator.`==`, Constant(true)) must matchPattern {
-        case VIdent(a) +==+ Constant(t) if (a == "a" && t == true) =>
+        case VIdent(a) +==+ Constant(t, _) if (a == "a" && t == true) =>
       }
     }
     "apply" in {
       (VIdent("a") +==+ Constant(true)) must matchPattern {
-        case BinaryOperation(VIdent(a), EqualityOperator.`==`, Constant(t)) if (a == "a" && t == true) =>
+        case BinaryOperation(VIdent(a), EqualityOperator.`==`, Constant(t, _)) if (a == "a" && t == true) =>
       }
     }
   }

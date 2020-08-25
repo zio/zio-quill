@@ -394,12 +394,12 @@ trait SqlIdiom extends Idiom {
   }
 
   implicit def valueTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Value] = Tokenizer[Value] {
-    case Constant(v: String) => stmt"'${v.token}'"
-    case Constant(())        => stmt"1"
-    case Constant(v)         => stmt"${v.toString.token}"
-    case NullValue           => stmt"null"
-    case Tuple(values)       => stmt"${values.token}"
-    case CaseClass(values)   => stmt"${values.map(_._2).token}"
+    case Constant(v: String, _) => stmt"'${v.token}'"
+    case Constant((), _)        => stmt"1"
+    case Constant(v, _)         => stmt"${v.toString.token}"
+    case NullValue              => stmt"null"
+    case Tuple(values)          => stmt"${values.token}"
+    case CaseClass(values)      => stmt"${values.map(_._2).token}"
   }
 
   implicit def infixTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Infix] = Tokenizer[Infix] {

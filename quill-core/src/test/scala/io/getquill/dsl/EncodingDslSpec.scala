@@ -80,7 +80,7 @@ class EncodingDslSpec extends Spec {
       }
     }
     "case class" in {
-      val t = TestEntity("1", 2, 3L, Some(4))
+      val t = TestEntity("1", 2, 3L, Some(4), true)
       val q = quote {
         lift(t)
       }
