@@ -511,7 +511,7 @@ lazy val `quill-cassandra` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.datastax.cassandra" %  "cassandra-driver-core" % "3.7.2"
+        "com.datastax.cassandra" %  "cassandra-driver-core" % "3.10.2"
       )
     )
     .dependsOn(`quill-core-jvm` % "compile->compile;test->test")
