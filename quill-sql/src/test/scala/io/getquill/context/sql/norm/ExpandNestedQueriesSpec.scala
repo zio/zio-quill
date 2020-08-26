@@ -98,7 +98,7 @@ class ExpandNestedQueriesSpec extends Spec {
       qr1.fullJoin(qr2).on((a, b) => a.i == b.i).distinct
     }
     testContext.run(q).string mustEqual
-      "SELECT x._1s, x._1i, x._1l, x._1o, x._2s, x._2i, x._2l, x._2o FROM (SELECT DISTINCT a.s AS _1s, a.i AS _1i, a.l AS _1l, a.o AS _1o, b.s AS _2s, b.i AS _2i, b.l AS _2l, b.o AS _2o FROM TestEntity a FULL JOIN TestEntity2 b ON a.i = b.i) AS x"
+      "SELECT x._1s, x._1i, x._1l, x._1o, x._1b, x._2s, x._2i, x._2l, x._2o FROM (SELECT DISTINCT a.s AS _1s, a.i AS _1i, a.l AS _1l, a.o AS _1o, a.b AS _1b, b.s AS _2s, b.i AS _2i, b.l AS _2l, b.o AS _2o FROM TestEntity a FULL JOIN TestEntity2 b ON a.i = b.i) AS x"
   }
 
   "handles column alias conflict" in {

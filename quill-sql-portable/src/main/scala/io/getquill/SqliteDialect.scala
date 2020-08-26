@@ -45,9 +45,9 @@ trait SqliteDialect
   }
 
   override implicit def valueTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Value] = Tokenizer[Value] {
-    case Constant(v: Boolean) if v  => stmt"1"
-    case Constant(v: Boolean) if !v => stmt"0"
-    case value                      => super.valueTokenizer.token(value)
+    case Constant(v: Boolean, _) if v  => stmt"1" // TODO Quat.BooleanValue change
+    case Constant(v: Boolean, _) if !v => stmt"0"
+    case value                         => super.valueTokenizer.token(value)
   }
 }
 

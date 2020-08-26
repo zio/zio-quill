@@ -27,7 +27,7 @@ class PostgresNdbcContextSpec extends Spec {
     "multiple columns" in {
       get(ctx.run(qr1.delete))
       val inserted = get(ctx.run {
-        qr1.insert(lift(TestEntity("foo", 1, 18L, Some(123)))).returning(r => (r.i, r.s, r.o))
+        qr1.insert(lift(TestEntity("foo", 1, 18L, Some(123), true))).returning(r => (r.i, r.s, r.o))
       })
       (1, "foo", Some(123)) mustBe inserted
     }

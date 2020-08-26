@@ -6,7 +6,7 @@ import io.getquill.quat.Quat
 trait TestEntities {
   this: Context[_, _] =>
 
-  case class TestEntity(s: String, i: Int, l: Long, o: Option[Int])
+  case class TestEntity(s: String, i: Int, l: Long, o: Option[Int], b: Boolean)
   case class Emb(s: String, i: Int) extends Embedded
   case class TestEntityEmb(emb: Emb, l: Long, o: Option[Int])
   case class TestEntity2(s: String, i: Int, l: Long, o: Option[Int])
@@ -18,8 +18,9 @@ trait TestEntities {
   case class TestEntityRegular(s: String, i: Long)
 
   private val QV = Quat.Value
+  private val QBV = Quat.BooleanValue
 
-  val TestEntityQuat = Quat.Product("s" -> QV, "i" -> QV, "l" -> QV, "o" -> QV)
+  val TestEntityQuat = Quat.Product("s" -> QV, "i" -> QV, "l" -> QV, "o" -> QV, "b" -> QBV)
   val TestEntityEmbQuat = Quat.Product("emb" -> Quat.Product("s" -> QV, "i" -> QV), "l" -> QV, "o" -> QV)
   val TestEntity2Quat = Quat.Product("s" -> QV, "i" -> QV, "l" -> QV, "o" -> QV)
   val TestEntity3Quat = Quat.Product("s" -> QV, "i" -> QV, "l" -> QV, "o" -> QV)
