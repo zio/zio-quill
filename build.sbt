@@ -389,7 +389,7 @@ lazy val `quill-finagle-mysql` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.twitter" %% "finagle-mysql" % "20.6.0"
+        "com.twitter" %% "finagle-mysql" % "20.8.1"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -555,7 +555,7 @@ lazy val `quill-orientdb` =
       .settings(
         fork in Test := true,
         libraryDependencies ++= Seq(
-          "com.orientechnologies" % "orientdb-graphdb" % "3.0.32"
+          "com.orientechnologies" % "orientdb-graphdb" % "3.0.33"
         )
       )
       .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -639,13 +639,13 @@ def updateWebsiteTag =
 lazy val jdbcTestingLibraries = Seq(
   libraryDependencies ++= Seq(
     "com.zaxxer"              %  "HikariCP"                % "3.4.5",
-    "mysql"                   %  "mysql-connector-java"    % "8.0.20"             % Test,
+    "mysql"                   %  "mysql-connector-java"    % "8.0.21"             % Test,
     "com.h2database"          %  "h2"                      % "1.4.200"            % Test,
-    "org.postgresql"          %  "postgresql"              % "42.2.14"             % Test,
-    "org.xerial"              %  "sqlite-jdbc"             % "3.32.3"             % Test,
+    "org.postgresql"          %  "postgresql"              % "42.2.16"             % Test,
+    "org.xerial"              %  "sqlite-jdbc"             % "3.32.3.2"             % Test,
     "com.microsoft.sqlserver" %  "mssql-jdbc"              % "7.1.1.jre8-preview" % Test,
     "com.oracle.ojdbc"        %  "ojdbc8"                  % "19.3.0.0"           % Test,
-    "org.mockito"             %% "mockito-scala-scalatest" % "1.14.8"              % Test
+    "org.mockito"             %% "mockito-scala-scalatest" % "1.15.0"              % Test
   )
 )
 
@@ -727,7 +727,7 @@ lazy val basicSettings = Seq(
   libraryDependencies ++= Seq(
     "org.scala-lang.modules" %%% "scala-collection-compat" % "2.1.6",
     "com.lihaoyi"     %% "pprint"         % pprintVersion(scalaVersion.value),
-    "org.scalatest"   %%% "scalatest"     % "3.2.0"          % Test,
+    "org.scalatest"   %%% "scalatest"     % "3.2.2"          % Test,
     "com.google.code.findbugs" % "jsr305" % "3.0.2"          % Provided // just to avoid warnings during compilation
   ) ++ {
     if (debugMacro) Seq(

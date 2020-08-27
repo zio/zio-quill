@@ -250,12 +250,36 @@ trait Parsing extends ValueComputation with QuatMaking {
     case q"${ joinCallParser(typ, a, b) }" =>
       c.fail("a join clause must be followed by 'on'.")
 
-    case q"$source.distinct" if (is[DslQuery[Any]](source)) =>
-      Distinct(astParser(source))
-
-    case q"$source.nested" if (is[DslQuery[Any]](source)) =>
-      io.getquill.ast.Nested(astParser(source))
-
+    // .distinct should not be allowed after a flatjoin
+    case q"$source.distinct" if (is[DslQuery[Any]](source)) => {
+      astParser(source) match {
+        case fj: FlatJoin => throw new IllegalArgumentException(
+          """
+            |The .distinct cannot be placed after a join clause in a for-comprehension. Put it before.
+            |For example. Change:
+            |  for { a <- query[A]; b <- query[B].join(...).distinct } to:
+            |  for { a <- query[A]; b <- query[B].distinct.join(...) }
+            |""".stripMargin
+        )
+        case other =>
+          Distinct(other)
+      }
+    }
+    // .distinct should not be allowed after a flatjoin
+    case q"$source.nested" if (is[DslQuery[Any]](source)) => {
+      astParser(source) match {
+        case fj: FlatJoin => throw new IllegalArgumentException(
+          """
+            |The .nested cannot be placed after a join clause in a for-comprehension. Put it before.
+            |For example. Change:
+            |  for { a <- query[A]; b <- query[B].join(...).nested } to:
+            |  for { a <- query[A]; b <- query[B].nested.join(...) }
+            |""".stripMargin
+        )
+        case other =>
+          io.getquill.ast.Nested(other)
+      }
+    }
   }
 
   implicit val propertyAliasParser: Parser[PropertyAlias] = Parser[PropertyAlias] {
@@ -366,7 +390,7 @@ trait Parsing extends ValueComputation with QuatMaking {
   }
 
   val identParser: Parser[Ident] = Parser[Ident] {
-    // TODO Check to see that all these conditions workk
+    // TODO Check to see that all these conditions work
     case t: ValDef =>
       identClean(Ident(t.name.decodedName.toString, inferQuat(t.symbol.typeSignature)))
     case id @ c.universe.Ident(TermName(name)) => identClean(Ident(name, inferQuat(id.symbol.typeSignature)))
@@ -624,7 +648,7 @@ trait Parsing extends ValueComputation with QuatMaking {
     case q"scala.StringContext.apply(..$parts).s(..$params)" =>
       val asts =
         Interleave(parts.map(astParser(_)), params.map(astParser(_)))
-          .filter(_ != Constant(""))
+          .filter(_ != Constant("", Quat.Value))
       asts.tail.foldLeft(asts.head) {
         case (a, b) =>
           BinaryOperation(a, StringOperator.`+`, b)
@@ -720,7 +744,7 @@ trait Parsing extends ValueComputation with QuatMaking {
     case q"scala.Option.apply[$t]($v)"       => OptionApply(astParser(v))
     case q"scala.None"                       => OptionNone(Quat.Null)
     case q"scala.Option.empty[$t]"           => OptionNone(inferQuat(t.tpe))
-    case l @ Literal(c.universe.Constant(v)) => { Constant(v); }
+    case t @ Literal(c.universe.Constant(v)) => Constant(v, inferQuat(t.tpe))
     case q"((..$v))" if (v.size > 1)         => Tuple(v.map(astParser(_)))
     case q"new $ccTerm(..$v)" if (isCaseClass(c.WeakTypeTag(ccTerm.tpe.erasure))) => {
       val values = v.map(astParser(_))
@@ -951,7 +975,7 @@ trait Parsing extends ValueComputation with QuatMaking {
       }
       Assignment(i1, astParser(prop), valueAst)
     // Unused, it's here only to make eclipse's presentation compiler happy
-    case astParser(ast) => Assignment(Ident("unused", Quat.Value), Ident("unused", Quat.Value), Constant("unused"))
+    case astParser(ast) => Assignment(Ident("unused", Quat.Value), Ident("unused", Quat.Value), Constant("unused", Quat.Value))
   }
 
   val conflictParser: Parser[Ast] = Parser[Ast] {

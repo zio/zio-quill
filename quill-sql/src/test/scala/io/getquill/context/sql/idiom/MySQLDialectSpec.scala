@@ -36,42 +36,42 @@ class MySQLDialectSpec extends OnConflictSpec {
         qr1.sortBy(t => t.s)(Ord.asc)
       }
       ctx.run(q).string mustEqual
-        "SELECT t.s, t.i, t.l, t.o FROM TestEntity t ORDER BY t.s ASC"
+        "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t ORDER BY t.s ASC"
     }
     "desc" in {
       val q = quote {
         qr1.sortBy(t => t.s)(Ord.desc)
       }
       ctx.run(q).string mustEqual
-        "SELECT t.s, t.i, t.l, t.o FROM TestEntity t ORDER BY t.s DESC"
+        "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t ORDER BY t.s DESC"
     }
     "ascNullsFirst" in {
       val q = quote {
         qr1.sortBy(t => t.s)(Ord.ascNullsFirst)
       }
       ctx.run(q).string mustEqual
-        "SELECT t.s, t.i, t.l, t.o FROM TestEntity t ORDER BY t.s ASC"
+        "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t ORDER BY t.s ASC"
     }
     "descNullsFirst" in {
       val q = quote {
         qr1.sortBy(t => t.s)(Ord.descNullsFirst)
       }
       ctx.run(q).string mustEqual
-        "SELECT t.s, t.i, t.l, t.o FROM TestEntity t ORDER BY ISNULL(t.s) DESC, t.s DESC"
+        "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t ORDER BY ISNULL(t.s) DESC, t.s DESC"
     }
     "ascNullsLast" in {
       val q = quote {
         qr1.sortBy(t => t.s)(Ord.ascNullsLast)
       }
       ctx.run(q).string mustEqual
-        "SELECT t.s, t.i, t.l, t.o FROM TestEntity t ORDER BY ISNULL(t.s) ASC, t.s ASC"
+        "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t ORDER BY ISNULL(t.s) ASC, t.s ASC"
     }
     "descNullsLast" in {
       val q = quote {
         qr1.sortBy(t => t.s)(Ord.descNullsLast)
       }
       ctx.run(q).string mustEqual
-        "SELECT t.s, t.i, t.l, t.o FROM TestEntity t ORDER BY t.s DESC"
+        "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t ORDER BY t.s DESC"
     }
   }
 
@@ -84,7 +84,7 @@ class MySQLDialectSpec extends OnConflictSpec {
   }
   "Insert with returning generated - multiple fields - should not compile" in {
     val q = quote {
-      qr1.insert(lift(TestEntity("s", 1, 2L, Some(3))))
+      qr1.insert(lift(TestEntity("s", 1, 2L, Some(3), true)))
     }
     "ctx.run(q.returningGenerated(r => (r.i, r.l))).string" mustNot compile
   }
@@ -98,16 +98,16 @@ class MySQLDialectSpec extends OnConflictSpec {
   "OnConflict" - {
     "no target - ignore" in {
       ctx.run(`no target - ignore`.dynamic).string mustEqual
-        "INSERT IGNORE INTO TestEntity (s,i,l,o) VALUES (?, ?, ?, ?)"
+        "INSERT IGNORE INTO TestEntity (s,i,l,o,b) VALUES (?, ?, ?, ?, ?)"
 
     }
     "cols target - ignore" in {
       ctx.run(`cols target - ignore`.dynamic).string mustEqual
-        "INSERT INTO TestEntity (s,i,l,o) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE i=i"
+        "INSERT INTO TestEntity (s,i,l,o,b) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE i=i"
     }
     "no target - update" in {
       ctx.run(`no target - update`).string mustEqual
-        "INSERT INTO TestEntity (s,i,l,o) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE l = ((l + VALUES(l)) / 2), s = VALUES(s)"
+        "INSERT INTO TestEntity (s,i,l,o,b) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE l = ((l + VALUES(l)) / 2), s = VALUES(s)"
     }
     "cols target - update" in {
       intercept[IllegalStateException] {
