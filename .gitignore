@@ -33,3 +33,5 @@ nohup.out
 project/.bloop/
 /io/
 /.metadata/
+.vscode/
+project/metals.sbt

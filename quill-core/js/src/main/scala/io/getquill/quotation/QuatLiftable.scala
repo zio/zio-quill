@@ -23,6 +23,7 @@ trait QuatLiftable {
 
   implicit def linkedHashMapLiftable[K, V](implicit lk: Liftable[K], lv: Liftable[V]): Liftable[mutable.LinkedHashMap[K, V]] = Liftable[mutable.LinkedHashMap[K, V]] {
     case l: mutable.LinkedHashMap[K, V] =>
-      q"scala.collection.mutable.LinkedHashMap(${l.map { case (k, v) => q"(${lk(k)}, ${lv(v)})" }.toSeq: _*})"
+      val args = l.map { case (k, v) => q"(${lk(k)}, ${lv(v)})" }.toList
+      q"scala.collection.mutable.LinkedHashMap(..$args)"
   }
 }
