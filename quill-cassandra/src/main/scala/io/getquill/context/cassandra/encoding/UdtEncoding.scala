@@ -1,7 +1,8 @@
 package io.getquill.context.cassandra.encoding
 
 import com.datastax.driver.core.UDTValue
-import io.getquill.context.cassandra.{ CassandraSessionContext, Udt }
+import io.getquill.context.cassandra.{ CassandraSessionContext }
+import io.getquill.Udt
 
 import scala.language.experimental.macros
 

@@ -21,7 +21,7 @@ class ImplicitQuerySpec extends Spec {
       TestEntity.filter(t => t.s == "s")
     }
     iqContext.run(q).string mustEqual
-      """querySchema("TestEntity").filter(t => t.s == "s").map(t => (t.s, t.i, t.l, t.o))"""
+      """querySchema("TestEntity").filter(t => t.s == "s").map(t => (t.s, t.i, t.l, t.o, t.b))"""
   }
 
   "fails if querying a non-case-class companion" in {

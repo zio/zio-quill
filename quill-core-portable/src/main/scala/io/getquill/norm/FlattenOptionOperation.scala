@@ -20,7 +20,7 @@ class FlattenOptionOperation(concatBehavior: ConcatBehavior) extends StatelessTr
   def containsNonFallthroughElement(ast: Ast) =
     CollectAst(ast) {
       case If(_, _, _) => true
-      case Infix(_, _, _) => true
+      case Infix(_, _, _, _) => true
       case BinaryOperation(_, StringOperator.`+`, _) if (concatBehavior == NonAnsiConcat) => true
     }.nonEmpty
 
@@ -54,9 +54,10 @@ class FlattenOptionOperation(concatBehavior: ConcatBehavior) extends StatelessTr
       case OptionGetOrNull(ast) =>
         apply(ast)
 
-      case OptionNone => NullValue
+      // NOTE. Once Quats were introduced this was moved to the top-level since. If NullValue is modified to carry a Quat, this can be reconsidered.
+      //case OptionNone => NullValue
 
-      case OptionGetOrElse(OptionMap(ast, alias, body), Constant(b: Boolean)) =>
+      case OptionGetOrElse(OptionMap(ast, alias, body), Constant(b: Boolean, _)) =>
         apply((BetaReduction(body, alias -> ast) +||+ emptyOrNot(b, ast)): Ast)
 
       case OptionGetOrElse(ast, body) =>

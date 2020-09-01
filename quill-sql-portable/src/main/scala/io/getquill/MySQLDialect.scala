@@ -32,7 +32,7 @@ trait MySQLDialect
 
     lazy val insertIgnoreTokenizer =
       Tokenizer[Entity] {
-        case Entity.Opinionated(name, _, renameable) => stmt"IGNORE INTO ${renameable.fixedOr(name.token)(strategy.table(name).token)}"
+        case Entity.Opinionated(name, _, _, renameable) => stmt"IGNORE INTO ${renameable.fixedOr(name.token)(strategy.table(name).token)}"
       }
 
     def tokenizer(implicit astTokenizer: Tokenizer[Ast]) =

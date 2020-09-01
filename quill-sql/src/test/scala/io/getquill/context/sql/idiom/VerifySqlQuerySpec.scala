@@ -32,17 +32,17 @@ class VerifySqlQuerySpec extends Spec {
             case (a, b) => b.isDefined
           }
         }
-        VerifySqlQuery(SqlQuery(SqlNormalize(q.ast))).toString mustEqual
-          "Some(The monad composition can't be expressed using applicative joins. Faulty expression: 'b.isDefined'. Free variables: 'List(b)'.)"
+
+        an[IllegalArgumentException] should be thrownBy VerifySqlQuery(SqlQuery(SqlNormalize(q.ast)))
       }
+
       "with map" in {
         val q = quote {
           qr1.leftJoin(qr2).on((a, b) => a.i == b.i)
             .map(pcTup => if (pcTup._2.isDefined) "bar" else "baz")
         }
 
-        VerifySqlQuery(SqlQuery(SqlNormalize(q.ast))).toString mustEqual
-          "Some(The monad composition can't be expressed using applicative joins. Faulty expression: 'if(b.isDefined) \"bar\" else \"baz\"'. Free variables: 'List(b)'.)"
+        an[IllegalArgumentException] should be thrownBy VerifySqlQuery(SqlQuery(SqlNormalize(q.ast)))
       }
     }
 

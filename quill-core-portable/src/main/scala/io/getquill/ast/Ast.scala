@@ -1,25 +1,13 @@
 package io.getquill.ast
 
 import io.getquill.NamingStrategy
+import io.getquill.quat.Quat
 
 //************************************************************
 
 sealed trait Ast {
 
-  /**
-   * Return a copy of this AST element with any opinions that it may have set to their neutral position.
-   * Return the object itself if it has no opinions.
-   */
-  def neutral: Ast = this
-
-  /**
-   * Set all opinions of this element and every element in the subtree to the neutral position.
-   */
-  final def neutralize: Ast =
-    new StatelessTransformer {
-      override def apply(a: Ast) =
-        super.apply(a.neutral)
-    }.apply(this)
+  def quat: Quat
 
   override def toString = {
     import io.getquill.MirrorIdiom._
@@ -34,6 +22,30 @@ sealed trait Ast {
 //************************************************************
 
 sealed trait Query extends Ast
+
+sealed trait Terminal extends Ast {
+  def withQuat(newQuat: Quat): Terminal
+}
+
+object Terminal {
+  def unapply(ast: Ast): Option[Terminal] =
+    ast match {
+      case t: Terminal => Some(t)
+      case _           => None
+    }
+}
+
+object BottomTypedTerminal {
+  def unapply(ast: Ast): Option[Terminal] =
+    ast match {
+      case t: Terminal if (t.quat == Quat.Null || t.quat == Quat.Generic) =>
+        Some(t)
+      case _ =>
+        None
+    }
+}
+
+case class EntityId(name: String, properties: List[PropertyAlias])
 
 /**
  * Entities represent the actual tables/views being selected.
@@ -50,57 +62,83 @@ sealed trait Query extends Ast
  * That means that even if the `NamingSchema` is `UpperCase`, the resulting query will select `t_person` as opposed
  * to `T_PERSON` or `Person`.
  */
-case class Entity(name: String, properties: List[PropertyAlias]) extends Query {
+case class Entity(name: String, properties: List[PropertyAlias], quat: Quat.Product) extends Query {
+  def id = EntityId(name, properties)
   // Technically this should be part of the Entity case class but due to the limitations of how
   // scala creates companion objects, the apply/unapply wouldn't be able to work correctly.
   def renameable: Renameable = Renameable.neutral
 
-  override def neutral: Entity =
-    new Entity(name, properties)
+  def copy(name: String = this.name, properties: List[PropertyAlias] = this.properties, quat: Quat.Product = this.quat) =
+    Entity.Opinionated(name, properties, quat, this.renameable)
 
   override def equals(that: Any) =
     that match {
-      case e: Entity =>
-        (e.name, e.properties, e.renameable) == ((name, properties, renameable))
-      case _ => false
+      case e: Entity => this.id == e.id
+      case _         => false
     }
 
-  override def hashCode = (name, properties, renameable).hashCode()
+  override def hashCode = id.hashCode()
+
+  def syncToQuat: Entity = {
+    import io.getquill.quat.QuatOps.Implicits._
+
+    // Take each path (name.first -> theFirst, name.last -> theLast) to:
+    //   (name -> (first -> theFirst)), (name -> (first -> theLast))
+    val tailPaths =
+      properties.map {
+        case PropertyAlias(path, alias) =>
+          (path.dropRight(1), path.last -> alias)
+      }
+
+    // Group each path that we have taken:
+    // (name -> (first -> theFirst)), (name -> (first -> theLast))
+    //   => (name -> (first -> theFirst, last -> theLast))
+    val groupedTailPaths = tailPaths.groupBy(_._1).map(kv => (kv._1, kv._2.map(r => r._2))).toList
+
+    val newQuat: Quat.Product =
+      groupedTailPaths.foldLeft(this.quat) {
+        case (quat, (renamePath, renames)) =>
+          quat.renameAtPath(renamePath, renames)
+      }
+
+    Entity.Opinionated(name, properties, newQuat, renameable)
+  }
 }
 
 object Entity {
-  def apply(name: String, properties: List[PropertyAlias]) =
-    new Entity(name, properties)
-  def unapply(e: Entity) = Some((e.name, e.properties))
+  def apply(name: String, properties: List[PropertyAlias], quat: Quat.Product) =
+    new Entity(name, properties, quat)
+  def unapply(e: Entity) = Some((e.name, e.properties, e.quat))
 
   object Opinionated {
     def apply(
       name:          String,
       properties:    List[PropertyAlias],
+      quat:          Quat.Product,
       renameableNew: Renameable
     ) =
-      new Entity(name, properties) {
+      new Entity(name, properties, quat) {
         override def renameable: Renameable = renameableNew
       }
     def unapply(e: Entity) =
-      Some((e.name, e.properties, e.renameable))
+      Some((e.name, e.properties, e.quat, e.renameable))
   }
 }
 
 case class PropertyAlias(path: List[String], alias: String)
 
-case class Filter(query: Ast, alias: Ident, body: Ast) extends Query
+case class Filter(query: Ast, alias: Ident, body: Ast) extends Query { def quat = query.quat }
 
-case class Map(query: Ast, alias: Ident, body: Ast) extends Query
+case class Map(query: Ast, alias: Ident, body: Ast) extends Query { def quat = body.quat }
 
-case class FlatMap(query: Ast, alias: Ident, body: Ast) extends Query
+case class FlatMap(query: Ast, alias: Ident, body: Ast) extends Query { def quat = body.quat }
 
-case class ConcatMap(query: Ast, alias: Ident, body: Ast) extends Query
+case class ConcatMap(query: Ast, alias: Ident, body: Ast) extends Query { def quat = body.quat }
 
 case class SortBy(query: Ast, alias: Ident, criterias: Ast, ordering: Ast)
-  extends Query
+  extends Query { def quat = query.quat }
 
-sealed trait Ordering extends Ast
+sealed trait Ordering extends Ast { def quat = Quat.Value }
 case class TupleOrdering(elems: List[Ordering]) extends Ordering
 
 sealed trait PropertyOrdering extends Ordering
@@ -111,17 +149,17 @@ case object DescNullsFirst extends PropertyOrdering
 case object AscNullsLast extends PropertyOrdering
 case object DescNullsLast extends PropertyOrdering
 
-case class GroupBy(query: Ast, alias: Ident, body: Ast) extends Query
+case class GroupBy(query: Ast, alias: Ident, body: Ast) extends Query { def quat = Quat.Tuple(body.quat, query.quat) }
 
-case class Aggregation(operator: AggregationOperator, ast: Ast) extends Query
+case class Aggregation(operator: AggregationOperator, ast: Ast) extends Query { def quat = Quat.Value }
 
-case class Take(query: Ast, n: Ast) extends Query
+case class Take(query: Ast, n: Ast) extends Query { def quat = query.quat }
 
-case class Drop(query: Ast, n: Ast) extends Query
+case class Drop(query: Ast, n: Ast) extends Query { def quat = query.quat }
 
-case class Union(a: Ast, b: Ast) extends Query
+case class Union(a: Ast, b: Ast) extends Query { def quat = a.quat } // a and b quats should be same
 
-case class UnionAll(a: Ast, b: Ast) extends Query
+case class UnionAll(a: Ast, b: Ast) extends Query { def quat = a.quat } // a and b quats should be same
 
 case class Join(
   typ:    JoinType,
@@ -131,36 +169,41 @@ case class Join(
   aliasB: Ident,
   on:     Ast
 )
-  extends Query
+  extends Query { def quat = Quat.Tuple(a.quat, b.quat) }
 
-case class FlatJoin(typ: JoinType, a: Ast, aliasA: Ident, on: Ast) extends Query
+case class FlatJoin(typ: JoinType, a: Ast, aliasA: Ident, on: Ast) extends Query { def quat = a.quat }
 
-case class Distinct(a: Ast) extends Query
+case class Distinct(a: Ast) extends Query { def quat = a.quat }
 
-case class Nested(a: Ast) extends Query
+case class Nested(a: Ast) extends Query { def quat = a.quat }
 
 //************************************************************
 
-case class Infix(parts: List[String], params: List[Ast], pure: Boolean)
-  extends Ast
+case class Infix(parts: List[String], params: List[Ast], pure: Boolean, quat: Quat) extends Ast
 
-case class Function(params: List[Ident], body: Ast) extends Ast
+case class Function(params: List[Ident], body: Ast) extends Ast { def quat = body.quat }
 
-case class Ident(name: String) extends Ast {
+case class IdentId(name: String)
+
+case class Ident(name: String, quat: Quat) extends Terminal with Ast {
+  def id = IdentId(name)
   def visibility: Visibility = Visibility.Visible
-
-  override def neutral: Ident =
-    new Ident(name) {
-      override def visibility: Visibility = Visibility.neutral
-    }
 
   override def equals(that: Any) =
     that match {
-      case p: Ident => (p.name, p.visibility) == ((name, visibility))
+      case p: Ident => this.id == p.id
       case _        => false
     }
 
-  override def hashCode = (name, visibility).hashCode()
+  override def hashCode = id.hashCode()
+
+  override def withQuat(newQuat: Quat) = {
+    Ident.Opinionated(this.name, newQuat, this.visibility)
+  }
+
+  // need to define a copy which will propogate current value of visibility into the copy
+  def copy(name: String = this.name, quat: Quat = this.quat): Ident =
+    Ident.Opinionated(name, quat, this.visibility)
 }
 
 /**
@@ -183,30 +226,60 @@ case class Ident(name: String) extends Ast {
  * needs to be marked invisible.
  */
 object Ident {
-  def apply(name: String) = new Ident(name)
-  def unapply(p: Ident) = Some((p.name))
+  def apply(name: String, quat: Quat = Quat.Value) = new Ident(name, quat)
+  def unapply(p: Ident) = Some((p.name, p.quat))
 
   object Opinionated {
-    def apply(name: String, visibilityNew: Visibility) =
-      new Ident(name) {
+    def apply(name: String, quat: Quat, visibilityNew: Visibility) =
+      new Ident(name, quat) {
         override def visibility: Visibility = visibilityNew
       }
     def unapply(p: Ident) =
-      Some((p.name, p.visibility))
+      Some((p.name, p.quat, p.visibility))
   }
 }
 
+case class ExternalIdentId(name: String)
+
 // Like identity but is but defined in a clause external to the query. Currently this is used
 // for 'returning' clauses to define properties being returned.
-case class ExternalIdent(name: String) extends Ast
+case class ExternalIdent(name: String, quat: Quat) extends Ast {
+  def id = ExternalIdentId(name)
+  def renameable: Renameable = Renameable.neutral
+
+  override def equals(that: Any) =
+    that match {
+      case e: ExternalIdent => this.id == e.id
+      case _                => false
+    }
+
+  override def hashCode = id.hashCode()
+
+  // need to define a copy which will propogate current value of visibility into the copy
+  def copy(name: String = this.name, quat: Quat = this.quat): ExternalIdent =
+    ExternalIdent.Opinionated(name, quat, this.renameable)
+}
+
+object ExternalIdent {
+  def apply(name: String, quat: Quat) = new ExternalIdent(name, quat)
+  def unapply(e: ExternalIdent) = Some((e.name, e.quat))
+
+  object Opinionated {
+    def apply(name: String, quat: Quat, rename: Renameable) =
+      new ExternalIdent(name, quat) {
+        override def renameable: Renameable = rename
+      }
+
+    def unapply(e: ExternalIdent) = Some((e.name, e.quat, e.renameable))
+  }
+}
 
 /**
  * An Opinion represents a piece of data that needs to be propagated through AST transformations but is not directly
  * related to how ASTs are transformed in most stages. For instance, `Renameable` controls how columns are named (i.e. whether to use a
  * `NamingStrategy` or not) after most of the SQL transformations are done. Some transformations (e.g. `RenameProperties`
  * will use `Opinions` or even modify them so that the correct kind of query comes out at the end of the normalizations.
- * That said, Opinions should be transparent in most steps of the normalization. In some cases e.g. `BetaReduction`,
- * AST elements need to be neutralized (i.e. set back to defaults in the entire tree) so that this works correctly.
+ * That said, Opinions should be transparent in most steps of the normalization.
  */
 sealed trait Opinion[T]
 sealed trait OpinionValues[T <: Opinion[T]] {
@@ -252,31 +325,15 @@ case class Property(ast: Ast, name: String) extends Ast {
   // scala creates companion objects, the apply/unapply wouldn't be able to work correctly.
   def renameable: Renameable = Renameable.neutral
 
+  def quat = ast.quat.lookup(name)
+  def prevName = ast.quat.beforeRenamed(name)
+
   // Properties that are 'Hidden' are used for embedded objects whose path should not be expressed
   // during SQL Tokenization.
   def visibility: Visibility = Visibility.Visible
 
-  override def neutral: Property =
-    new Property(ast, name) {
-      override def renameable = Renameable.neutral
-      override def visibility: Visibility = Visibility.neutral
-    }
-
-  override def equals(that: Any) =
-    that match {
-      case p: Property =>
-        (p.ast, p.name, p.renameable, p.visibility) == (
-          (
-            ast,
-            name,
-            renameable,
-            visibility
-          )
-        )
-      case _ => false
-    }
-
-  override def hashCode = (ast, name, renameable, visibility).hashCode()
+  def copy(ast: Ast = this.ast, name: String = this.name): Property =
+    Property.Opinionated(ast, name, this.renameable, this.visibility)
 }
 
 object Property {
@@ -300,76 +357,109 @@ object Property {
 }
 
 sealed trait OptionOperation extends Ast
-case class OptionFlatten(ast: Ast) extends OptionOperation
-case class OptionGetOrElse(ast: Ast, body: Ast) extends OptionOperation
+case class OptionFlatten(ast: Ast) extends OptionOperation { def quat = ast.quat }
+case class OptionGetOrElse(ast: Ast, body: Ast) extends OptionOperation { def quat = body.quat }
 case class OptionFlatMap(ast: Ast, alias: Ident, body: Ast)
-  extends OptionOperation
-case class OptionMap(ast: Ast, alias: Ident, body: Ast) extends OptionOperation
+  extends OptionOperation { def quat = body.quat }
+case class OptionMap(ast: Ast, alias: Ident, body: Ast) extends OptionOperation { def quat = body.quat }
 case class OptionForall(ast: Ast, alias: Ident, body: Ast)
-  extends OptionOperation
+  extends OptionOperation { def quat = body.quat }
 case class OptionExists(ast: Ast, alias: Ident, body: Ast)
-  extends OptionOperation
-case class OptionContains(ast: Ast, body: Ast) extends OptionOperation
-case class OptionIsEmpty(ast: Ast) extends OptionOperation
-case class OptionNonEmpty(ast: Ast) extends OptionOperation
-case class OptionIsDefined(ast: Ast) extends OptionOperation
+  extends OptionOperation { def quat = body.quat }
+case class OptionContains(ast: Ast, body: Ast) extends OptionOperation { def quat = body.quat }
+case class OptionIsEmpty(ast: Ast) extends OptionOperation { def quat = ast.quat }
+case class OptionNonEmpty(ast: Ast) extends OptionOperation { def quat = ast.quat }
+case class OptionIsDefined(ast: Ast) extends OptionOperation { def quat = ast.quat }
 case class OptionTableFlatMap(ast: Ast, alias: Ident, body: Ast)
-  extends OptionOperation
+  extends OptionOperation { def quat = body.quat }
 case class OptionTableMap(ast: Ast, alias: Ident, body: Ast)
-  extends OptionOperation
+  extends OptionOperation { def quat = body.quat }
 case class OptionTableExists(ast: Ast, alias: Ident, body: Ast)
-  extends OptionOperation
+  extends OptionOperation { def quat = body.quat }
 case class OptionTableForall(ast: Ast, alias: Ident, body: Ast)
-  extends OptionOperation
-object OptionNone extends OptionOperation
-case class OptionSome(ast: Ast) extends OptionOperation
-case class OptionApply(ast: Ast) extends OptionOperation
-case class OptionOrNull(ast: Ast) extends OptionOperation
-case class OptionGetOrNull(ast: Ast) extends OptionOperation
+  extends OptionOperation { def quat = body.quat }
+case object OptionNoneId
+case class OptionNone(quat: Quat) extends OptionOperation with Terminal {
+  override def withQuat(newQuat: Quat) = this.copy(quat = newQuat)
+  override def equals(obj: Any): Boolean =
+    obj match {
+      case e: OptionNone => true
+      case _             => false
+    }
+  override def hashCode(): Int = OptionNoneId.hashCode()
+}
+case class OptionSome(ast: Ast) extends OptionOperation { def quat = ast.quat }
+case class OptionApply(ast: Ast) extends OptionOperation { def quat = ast.quat }
+case class OptionOrNull(ast: Ast) extends OptionOperation { def quat = ast.quat }
+case class OptionGetOrNull(ast: Ast) extends OptionOperation { def quat = ast.quat }
 
 sealed trait IterableOperation extends Ast
-case class MapContains(ast: Ast, body: Ast) extends IterableOperation
-case class SetContains(ast: Ast, body: Ast) extends IterableOperation
-case class ListContains(ast: Ast, body: Ast) extends IterableOperation
+case class MapContains(ast: Ast, body: Ast) extends IterableOperation { def quat = body.quat }
+case class SetContains(ast: Ast, body: Ast) extends IterableOperation { def quat = body.quat }
+case class ListContains(ast: Ast, body: Ast) extends IterableOperation { def quat = body.quat }
 
-case class If(condition: Ast, `then`: Ast, `else`: Ast) extends Ast
+case class If(condition: Ast, `then`: Ast, `else`: Ast) extends Ast { def quat = `then`.quat } // then and else clauses should have identical quats
 
-case class Assignment(alias: Ident, property: Ast, value: Ast) extends Ast
+case class Assignment(alias: Ident, property: Ast, value: Ast) extends Ast { def quat = Quat.Value }
 
 //************************************************************
 
 sealed trait Operation extends Ast
 
-case class UnaryOperation(operator: UnaryOperator, ast: Ast) extends Operation
-case class BinaryOperation(a: Ast, operator: BinaryOperator, b: Ast)
-  extends Operation
-case class FunctionApply(function: Ast, values: List[Ast]) extends Operation
+case class UnaryOperation(operator: UnaryOperator, ast: Ast) extends Operation { def quat = Quat.BooleanExpression }
+
+case class BinaryOperation(a: Ast, operator: BinaryOperator, b: Ast) extends Operation {
+  import BooleanOperator._
+  import NumericOperator._
+  import StringOperator.`startsWith`
+  import SetOperator.`contains`
+
+  def quat = operator match {
+    case EqualityOperator.`==` | EqualityOperator.`!=`
+      | `&&` | `||`
+      | `>` | `>=` | `<` | `<=`
+      | `startsWith`
+      | `contains` =>
+      Quat.BooleanExpression
+    case _ =>
+      Quat.Value
+  }
+}
+case class FunctionApply(function: Ast, values: List[Ast]) extends Operation { def quat = function.quat }
 
 //************************************************************
 
 sealed trait Value extends Ast
 
-case class Constant(v: Any) extends Value
+case class Constant(v: Any, quat: Quat) extends Value
 
-object NullValue extends Value
+object Constant {
+  def apply(v: Any) = {
+    val quat = if (v.isInstanceOf[Boolean]) Quat.BooleanValue else Quat.Value
+    new Constant(v, quat)
+  }
+}
 
-case class Tuple(values: List[Ast]) extends Value
+object NullValue extends Value { def quat = Quat.Null }
 
-case class CaseClass(values: List[(String, Ast)]) extends Value
+case class Tuple(values: List[Ast]) extends Value { def quat = Quat.Tuple(values.map(_.quat)) }
+
+case class CaseClass(values: List[(String, Ast)]) extends Value { def quat = Quat.Product(values.map { case (k, v) => (k, v.quat) }) }
 
 //************************************************************
 
-case class Block(statements: List[Ast]) extends Ast
+case class Block(statements: List[Ast]) extends Ast { def quat = statements.last.quat } // Note. Assuming Block is not Empty
 
-case class Val(name: Ident, body: Ast) extends Ast
+case class Val(name: Ident, body: Ast) extends Ast { def quat = body.quat }
 
 //************************************************************
 
 sealed trait Action extends Ast
 
-case class Update(query: Ast, assignments: List[Assignment]) extends Action
-case class Insert(query: Ast, assignments: List[Assignment]) extends Action
-case class Delete(query: Ast) extends Action
+// Note, technically return type of Actions for most Actions is a Int value but Quat here is used for Retruning Quat types
+case class Update(query: Ast, assignments: List[Assignment]) extends Action { def quat = query.quat }
+case class Insert(query: Ast, assignments: List[Assignment]) extends Action { def quat = query.quat }
+case class Delete(query: Ast) extends Action { def quat = query.quat }
 
 sealed trait ReturningAction extends Action {
   def action: Ast
@@ -387,27 +477,40 @@ object ReturningAction {
 
 }
 case class Returning(action: Ast, alias: Ident, property: Ast)
-  extends ReturningAction
+  extends ReturningAction { def quat = property.quat }
 case class ReturningGenerated(action: Ast, alias: Ident, property: Ast)
-  extends ReturningAction
+  extends ReturningAction { def quat = property.quat }
 
-case class Foreach(query: Ast, alias: Ident, body: Ast) extends Action
+case class Foreach(query: Ast, alias: Ident, body: Ast) extends Action { def quat = body.quat }
 
 case class OnConflict(
   insert: Ast,
   target: OnConflict.Target,
   action: OnConflict.Action
 )
-  extends Action
+  extends Action { def quat = insert.quat }
+
 object OnConflict {
 
   case class Excluded(alias: Ident) extends Ast {
-    override def neutral: Ast =
-      alias.neutral
+    def quat = alias.quat
+    override def equals(obj: Any): Boolean =
+      obj match {
+        case e: Excluded => e.alias == alias
+        case e: Ident    => e == alias
+        case _           => false
+      }
+    override def hashCode(): Int = alias.hashCode
   }
   case class Existing(alias: Ident) extends Ast {
-    override def neutral: Ast =
-      alias.neutral
+    def quat = alias.quat
+    override def equals(obj: Any): Boolean =
+      obj match {
+        case e: Existing => e.alias == alias
+        case e: Ident    => e == alias
+        case _           => false
+      }
+    override def hashCode(): Int = alias.hashCode
   }
 
   sealed trait Target
@@ -420,9 +523,16 @@ object OnConflict {
 }
 //************************************************************
 
-case class Dynamic(tree: Any) extends Ast
+case class Dynamic(tree: Any, quat: Quat) extends Ast
 
-case class QuotedReference(tree: Any, ast: Ast) extends Ast
+object Dynamic {
+  def apply(v: Any) = {
+    val quat = if (v.isInstanceOf[Boolean]) Quat.BooleanValue else Quat.Value
+    new Dynamic(v, quat)
+  }
+}
+
+case class QuotedReference(tree: Any, ast: Ast) extends Ast { def quat = ast.quat }
 
 sealed trait External extends Ast
 
@@ -430,22 +540,71 @@ sealed trait External extends Ast
 /*                      Only Quill 2                                   */
 /***********************************************************************/
 
-sealed trait Lift extends External {
+sealed trait Lift extends External with Terminal {
   val name: String
   val value: Any
 }
 
-sealed trait ScalarLift extends Lift {
+sealed trait ScalarLift extends Lift with Terminal {
   val encoder: Any
 }
-case class ScalarValueLift(name: String, value: Any, encoder: Any)
-  extends ScalarLift
-case class ScalarQueryLift(name: String, value: Any, encoder: Any)
-  extends ScalarLift
+
+case class ScalarValueLiftId(name: String, value: Any, encoder: Any)
+case class ScalarValueLift(name: String, value: Any, encoder: Any, quat: Quat)
+  extends ScalarLift {
+  override def withQuat(newQuat: Quat) = this.copy(quat = newQuat)
+
+  def id = ScalarValueLiftId(name, value, encoder)
+  override def hashCode(): Int = id.hashCode()
+  override def equals(obj: Any): Boolean =
+    obj match {
+      case e: ScalarValueLift => e.id == this.id
+      case _                  => false
+    }
+
+}
+
+case class ScalarQueryLiftId(name: String, value: Any, encoder: Any)
+case class ScalarQueryLift(name: String, value: Any, encoder: Any, quat: Quat)
+  extends ScalarLift {
+  override def withQuat(newQuat: Quat) = this.copy(quat = newQuat)
+
+  def id = ScalarQueryLiftId(name, value, encoder)
+  override def hashCode(): Int = id.hashCode()
+  override def equals(obj: Any): Boolean =
+    obj match {
+      case e: ScalarQueryLift => e.id == this.id
+      case _                  => false
+    }
+}
 
 sealed trait CaseClassLift extends Lift
-case class CaseClassValueLift(name: String, value: Any) extends CaseClassLift
-case class CaseClassQueryLift(name: String, value: Any) extends CaseClassLift
+
+case class CaseClassValueLiftId(name: String, value: Any)
+case class CaseClassValueLift(name: String, value: Any, quat: Quat) extends CaseClassLift {
+  override def withQuat(newQuat: Quat) = this.copy(quat = newQuat)
+
+  def id = CaseClassValueLiftId(name, value)
+  override def hashCode(): Int = id.hashCode()
+  override def equals(obj: Any): Boolean =
+    obj match {
+      case e: CaseClassValueLift => e.id == this.id
+      case _                     => false
+    }
+}
+
+case class CaseClassQueryLiftId(name: String, value: Any)
+case class CaseClassQueryLift(name: String, value: Any, quat: Quat) extends CaseClassLift {
+  override def withQuat(newQuat: Quat) = this.copy(quat = newQuat)
+
+  def id = CaseClassQueryLiftId(name, value)
+  override def hashCode(): Int = id.hashCode()
+  override def equals(obj: Any): Boolean =
+    obj match {
+      case e: CaseClassQueryLift => e.id == this.id
+      case _                     => false
+    }
+}
 
 /***********************************************************************/
 /*                      New for ProtoQuill                             */
@@ -455,5 +614,28 @@ sealed trait Tag extends External {
   val uid: String
 }
 
-case class ScalarTag(uid: String) extends Tag
-case class QuotationTag(uid: String) extends Tag
+case class ScalarTagId(uid: String)
+case class ScalarTag(uid: String) extends Tag {
+  def quat = Quat.Value
+
+  def id = ScalarTagId(uid)
+  override def hashCode(): Int = id.hashCode()
+  override def equals(obj: Any): Boolean =
+    obj match {
+      case e: ScalarTag => this.id == e.id
+      case _            => false
+    }
+}
+
+case class QuotationTagId(uid: String)
+case class QuotationTag(uid: String) extends Tag {
+  def quat = Quat.Value
+
+  def id = QuotationTagId(uid)
+  override def hashCode(): Int = id.hashCode()
+  override def equals(obj: Any): Boolean =
+    obj match {
+      case e: QuotationTag => this.id == e.id
+      case _               => false
+    }
+}

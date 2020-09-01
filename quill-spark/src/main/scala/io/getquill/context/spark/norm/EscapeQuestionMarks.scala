@@ -7,10 +7,10 @@ object EscapeQuestionMarks extends StatelessTransformer {
 
   override def apply(ast: Ast): Ast =
     ast match {
-      case Constant(value) =>
+      case Constant(value, _) =>
         Constant(if (value.isInstanceOf[String]) escape(value.asInstanceOf[String]) else value)
-      case Infix(parts, params, pure) =>
-        Infix(parts.map(escape(_)), params, pure)
+      case Infix(parts, params, pure, quat) =>
+        Infix(parts.map(escape(_)), params, pure, quat)
       case other =>
         super.apply(other)
     }

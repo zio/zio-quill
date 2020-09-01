@@ -1,3 +1,22 @@
+# 3.5.2
+
+- [Add support jasync-sql for postgres](https://github.com/getquill/quill/pull/1793)
+- [Add quill-jasync-mysql](https://github.com/getquill/quill/pull/1813)
+- [Delete returning](https://github.com/getquill/quill/pull/1870)
+- [Fix SqlServer snake case - OUTPUT i_n_s_e_r_t_e_d.id](https://github.com/getquill/quill/pull/1867)
+- [Add translate to NDBC Context](https://github.com/getquill/quill/pull/1865)
+- [Apply NamingStrategy after applying prefix](https://github.com/getquill/quill/pull/1807)
+- [Remove use of `Row#getAnyOption` from `FinaglePostgresDecoders`](https://github.com/getquill/quill/pull/1848)
+- [Better error message about lifting for enum types](https://github.com/getquill/quill/pull/1803)
+- [More 2.13 modules](https://github.com/getquill/quill/pull/1753)
+
+Migration Notes:
+ - Much of the content in `QueryDsl` has been moved to the top-level for better portability with the upcoming Dotty 
+implementation. This means that things like `Query` are no longer part of `Context` but now are directly in the 
+`io.getquill` package. If you are importing `io.getquill._` your code should be unaffected.
+ - Custom decoders written for Finalge Postgres no longer require a `ClassTag`.
+
+
 # 3.5.1
 
 - [Fix Ndbc runtime logging](https://github.com/getquill/quill/pull/1748)

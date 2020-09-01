@@ -14,8 +14,8 @@ class SqlQueryMacroSpec extends Spec {
         }
         val mirror = testContext.run(q)
         mirror.prepareRow mustEqual Row()
-        mirror.extractor(Row("s", 1, 2L, None)) mustEqual TestEntity("s", 1, 2L, None)
-        mirror.string mustEqual "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.s IS NOT NULL"
+        mirror.extractor(Row("s", 1, 2L, None, true)) mustEqual TestEntity("s", 1, 2L, None, true)
+        mirror.string mustEqual "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.s IS NOT NULL"
       }
       "with map" in {
         val q = quote {
@@ -44,7 +44,7 @@ class SqlQueryMacroSpec extends Spec {
         val mirror = testContext.run(q)
         mirror.prepareRow mustEqual Row("s")
         mirror.string mustEqual
-          "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.s <> ?"
+          "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.s <> ?"
       }
       "two" in {
         val q = quote {
@@ -53,7 +53,7 @@ class SqlQueryMacroSpec extends Spec {
         val mirror = testContext.run(q)
         mirror.prepareRow mustEqual Row(2L, 1)
         mirror.string mustEqual
-          "SELECT t.s, t.i, t.l, t.o FROM TestEntity t WHERE t.l <> ? AND t.i <> ?"
+          "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.l <> ? AND t.i <> ?"
       }
     }
   }
