@@ -2,7 +2,7 @@ package io.getquill.context.sql.norm
 
 import io.getquill.ast._
 import io.getquill.context.sql._
-import io.getquill.sql.norm.{ SelectPropertyProtractor, StatelessQueryTransformer }
+import io.getquill.sql.norm.{ InContext, SelectPropertyProtractor, StatelessQueryTransformer }
 import io.getquill.ast.PropertyOrCore
 import io.getquill.norm.PropertyMatroshka
 
@@ -66,50 +66,46 @@ object ExpandNestedQueries extends StatelessQueryTransformer {
         super.apply(q, isTopLevel)
     }
 
+  case class FlattenNestedProperty(from: List[FromContext]) {
+    val inContext = InContext(from)
+
+    def apply(p: Ast): Ast = {
+      p match {
+        case p @ PropertyMatroshka(inner, path) =>
+          val isSubselect = !inContext.refersToEntity(p)
+          val renameable =
+            if (p.prevName.isDefined || isSubselect)
+              Renameable.Fixed
+            else
+              Renameable.ByStrategy
+
+          // If it is a sub-select or a renamed property, do not apply the strategy to the property
+          if (isSubselect)
+            Property.Opinionated(inner, path.mkString, renameable, Visibility.Visible)
+          else
+            Property.Opinionated(inner, path.last, renameable, Visibility.Visible)
+
+        case other => other
+      }
+    }
+
+    def inside(ast: Ast) =
+      Transform(ast) {
+        case p: Property => apply(p)
+      }
+  }
+
   protected override def expandNested(q: FlattenSqlQuery, isTopLevel: Boolean): FlattenSqlQuery =
     q match {
       case FlattenSqlQuery(from, where, groupBy, orderBy, limit, offset, select, distinct) =>
-        val newFroms = q.from.map(expandContext(_))
+        val flattenNestedProperty = FlattenNestedProperty(from)
+        val newFroms = q.from.map(expandContextFlattenOns(_, flattenNestedProperty))
 
         def distinctIfNotTopLevel(values: List[SelectValue]) =
           if (isTopLevel)
             values
           else
             values.distinct
-
-        def refersToEntity(ast: Ast) = {
-          val tables = newFroms.collect { case TableContext(entity, alias) => alias }
-          ast match {
-            case Ident(v, _)                       => tables.contains(v)
-            case PropertyMatroshka(Ident(v, _), _) => tables.contains(v)
-            case _                                 => false
-          }
-        }
-
-        def flattenNestedProperty(p: Ast): Ast = {
-          p match {
-            case p @ PropertyMatroshka(inner, path) =>
-              val isSubselect = !refersToEntity(p)
-              val renameable =
-                if (p.prevName.isDefined || isSubselect)
-                  Renameable.Fixed
-                else
-                  Renameable.ByStrategy
-
-              // If it is a sub-select or a renamed property, do not apply the strategy to the property
-              if (isSubselect)
-                Property.Opinionated(inner, path.mkString, renameable, Visibility.Visible)
-              else
-                Property.Opinionated(inner, path.last, renameable, Visibility.Visible)
-
-            case other => other
-          }
-        }
-
-        def flattenPropertiesInside(ast: Ast) =
-          Transform(ast) {
-            case p: Property => flattenNestedProperty(p)
-          }
 
         /*
          * In sub-queries, need to make sure that the same field/alias pair is not selected twice
@@ -136,13 +132,28 @@ object ExpandNestedQueries extends StatelessQueryTransformer {
           distinctIfNotTopLevel(select)
 
         q.copy(
-          select = distinctSelects.map(sv => sv.copy(ast = flattenPropertiesInside(sv.ast))),
+          select = distinctSelects.map(sv => sv.copy(ast = flattenNestedProperty.inside(sv.ast))),
           from = newFroms,
-          where = where.map(flattenPropertiesInside(_)),
-          groupBy = groupBy.map(flattenPropertiesInside(_)),
-          orderBy = orderBy.map(ob => ob.copy(ast = flattenPropertiesInside(ob.ast))),
-          limit = limit.map(flattenPropertiesInside(_)),
-          offset = offset.map(flattenPropertiesInside(_))
+          where = where.map(flattenNestedProperty.inside(_)),
+          groupBy = groupBy.map(flattenNestedProperty.inside(_)),
+          orderBy = orderBy.map(ob => ob.copy(ast = flattenNestedProperty.inside(ob.ast))),
+          limit = limit.map(flattenNestedProperty.inside(_)),
+          offset = offset.map(flattenNestedProperty.inside(_))
         )(q.quat)
     }
+
+  def expandContextFlattenOns(s: FromContext, flattenNested: FlattenNestedProperty): FromContext = {
+    def expandContextRec(s: FromContext): FromContext =
+      s match {
+        case QueryContext(q, alias) =>
+          QueryContext(apply(q, false), alias)
+        case JoinContext(t, a, b, on) =>
+          JoinContext(t, expandContextRec(a), expandContextRec(b), flattenNested.inside(on))
+        case FlatJoinContext(t, a, on) =>
+          FlatJoinContext(t, expandContextRec(a), flattenNested.inside(on))
+        case _: TableContext | _: InfixContext => s
+      }
+
+    expandContextRec(s)
+  }
 }
