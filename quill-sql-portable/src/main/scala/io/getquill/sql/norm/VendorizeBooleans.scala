@@ -64,21 +64,23 @@ object VendorizeBooleans extends StatelessTransformer {
       // need to be converted to "if (true == e.isSomething) true else false" so they are
       // tokenized as "if (1 == e.isSomething) 1 else 0".
       // Operations transforming strings are an exception to the role and should not be valuefied
-      case BinaryOperation(a, OperatorOnValues(op), b) => (a, b) match {
-        case (StringTransformerOperation(_), StringTransformerOperation(_)) =>
-          BinaryOperation(apply(a), op, apply(b))
-        case (StringTransformerOperation(_), _) =>
-          BinaryOperation(apply(a), op, valuefyExpression(apply(b)))
-        case (_, StringTransformerOperation(_)) =>
-          BinaryOperation(valuefyExpression(apply(a)), op, apply(b))
-        case _ =>
-          BinaryOperation(valuefyExpression(apply(a)), op, valuefyExpression(apply(b)))
+      case BinaryOperation(a, OperatorOnValues(op), b) => {
+        (a, b) match {
+          case (StringTransformerOperation(_), StringTransformerOperation(_)) =>
+            BinaryOperation(apply(a), op, apply(b))
+          case (StringTransformerOperation(_), _) =>
+            BinaryOperation(apply(a), op, valuefyExpression(apply(b)))
+          case (_, StringTransformerOperation(_)) =>
+            BinaryOperation(valuefyExpression(apply(a)), op, apply(b))
+          case _ =>
+            BinaryOperation(valuefyExpression(apply(a)), op, valuefyExpression(apply(b)))
+        }
       }
 
       // Example: "q.filter(e => !e.isSomething)" which needs to be converted to
       // "q.filter(e => !(e.isSomething == 1))" so it can be tokenized to "... WHERE e.isSomething = 1
       case UnaryOperation(`!`, ast) =>
-        UnaryOperation(`!`, expressifyValue(apply(ast)))
+        UnaryOperation(BooleanOperator.`!`, expressifyValue(apply(ast)))
 
       case _ =>
         super.apply(operation)

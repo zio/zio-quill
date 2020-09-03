@@ -53,7 +53,7 @@ class MiscQueriesSpec extends Spec {
     "nested select" in {
       val testsR = liftQuery {
         Seq(
-          Test(1, 2, "r"),
+          Test(1, 2, "r")
         ).toDS
       }
       val q = quote(
