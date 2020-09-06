@@ -6,76 +6,76 @@ import scala.annotation.compileTimeOnly
 
 sealed trait Query[+T] {
 
-  def map[R](f: T => R): Query[R]
+  def map[R](f: T => R): Query[R] = NonQuotedException()
 
-  def flatMap[R](f: T => Query[R]): Query[R]
+  def flatMap[R](f: T => Query[R]): Query[R] = NonQuotedException()
 
-  def concatMap[R, U](f: T => U)(implicit ev: U => Iterable[R]): Query[R]
+  def concatMap[R, U](f: T => U)(implicit ev: U => Iterable[R]): Query[R] = NonQuotedException()
 
-  def withFilter(f: T => Boolean): Query[T]
-  def filter(f: T => Boolean): Query[T]
+  def withFilter(f: T => Boolean): Query[T] = NonQuotedException()
+  def filter(f: T => Boolean): Query[T] = NonQuotedException()
 
-  def sortBy[R](f: T => R)(implicit ord: Ord[R]): Query[T]
+  def sortBy[R](f: T => R)(implicit ord: Ord[R]): Query[T] = NonQuotedException()
 
-  def take(n: Int): Query[T]
-  def drop(n: Int): Query[T]
+  def take(n: Int): Query[T] = NonQuotedException()
+  def drop(n: Int): Query[T] = NonQuotedException()
 
-  def ++[U >: T](q: Query[U]): Query[U]
-  def unionAll[U >: T](q: Query[U]): Query[U]
-  def union[U >: T](q: Query[U]): Query[U]
+  def ++[U >: T](q: Query[U]): Query[U] = NonQuotedException()
+  def unionAll[U >: T](q: Query[U]): Query[U] = NonQuotedException()
+  def union[U >: T](q: Query[U]): Query[U] = NonQuotedException()
 
-  def groupBy[R](f: T => R): Query[(R, Query[T])]
+  def groupBy[R](f: T => R): Query[(R, Query[T])] = NonQuotedException()
 
-  def value[U >: T]: Option[T]
-  def min[U >: T]: Option[T]
-  def max[U >: T]: Option[T]
-  def avg[U >: T](implicit n: Numeric[U]): Option[BigDecimal]
-  def sum[U >: T](implicit n: Numeric[U]): Option[T]
-  def size: Long
+  def value[U >: T]: Option[T] = NonQuotedException()
+  def min[U >: T]: Option[T] = NonQuotedException()
+  def max[U >: T]: Option[T] = NonQuotedException()
+  def avg[U >: T](implicit n: Numeric[U]): Option[BigDecimal] = NonQuotedException()
+  def sum[U >: T](implicit n: Numeric[U]): Option[T] = NonQuotedException()
+  def size: Long = NonQuotedException()
 
-  def join[A >: T, B](q: Query[B]): JoinQuery[A, B, (A, B)]
-  def leftJoin[A >: T, B](q: Query[B]): JoinQuery[A, B, (A, Option[B])]
-  def rightJoin[A >: T, B](q: Query[B]): JoinQuery[A, B, (Option[A], B)]
-  def fullJoin[A >: T, B](q: Query[B]): JoinQuery[A, B, (Option[A], Option[B])]
+  def join[A >: T, B](q: Query[B]): JoinQuery[A, B, (A, B)] = NonQuotedException()
+  def leftJoin[A >: T, B](q: Query[B]): JoinQuery[A, B, (A, Option[B])] = NonQuotedException()
+  def rightJoin[A >: T, B](q: Query[B]): JoinQuery[A, B, (Option[A], B)] = NonQuotedException()
+  def fullJoin[A >: T, B](q: Query[B]): JoinQuery[A, B, (Option[A], Option[B])] = NonQuotedException()
 
-  def join[A >: T](on: A => Boolean): Query[A]
-  def leftJoin[A >: T](on: A => Boolean): Query[Option[A]]
-  def rightJoin[A >: T](on: A => Boolean): Query[Option[A]]
+  def join[A >: T](on: A => Boolean): Query[A] = NonQuotedException()
+  def leftJoin[A >: T](on: A => Boolean): Query[Option[A]] = NonQuotedException()
+  def rightJoin[A >: T](on: A => Boolean): Query[Option[A]] = NonQuotedException()
 
-  def nonEmpty: Boolean
-  def isEmpty: Boolean
-  def contains[B >: T](value: B): Boolean
+  def nonEmpty: Boolean = NonQuotedException()
+  def isEmpty: Boolean = NonQuotedException()
+  def contains[B >: T](value: B): Boolean = NonQuotedException()
 
-  def distinct: Query[T]
+  def distinct: Query[T] = NonQuotedException()
 
-  def nested: Query[T]
+  def nested: Query[T] = NonQuotedException()
 
   /**
    *
    * @param unquote is used for conversion of `Quoted[A]` to A` with `unquote`
    * @return
    */
-  def foreach[A <: Action[_], B](f: T => B)(implicit unquote: B => A): BatchAction[A]
+  def foreach[A <: Action[_], B](f: T => B)(implicit unquote: B => A): BatchAction[A] = NonQuotedException()
 }
 
 sealed trait JoinQuery[A, B, R] extends Query[R] {
-  def on(f: (A, B) => Boolean): Query[R]
+  def on(f: (A, B) => Boolean): Query[R] = NonQuotedException()
 }
 
 trait EntityQueryModel[T]
   extends Query[T] {
 
-  override def withFilter(f: T => Boolean): EntityQueryModel[T]
-  override def filter(f: T => Boolean): EntityQueryModel[T]
-  override def map[R](f: T => R): EntityQueryModel[R]
+  override def withFilter(f: T => Boolean): EntityQueryModel[T] = NonQuotedException()
+  override def filter(f: T => Boolean): EntityQueryModel[T] = NonQuotedException()
+  override def map[R](f: T => R): EntityQueryModel[R] = NonQuotedException()
 
   def insert(value: T): Insert[T] = NonQuotedException()
-  def insert(f: (T => (Any, Any)), f2: (T => (Any, Any))*): Insert[T]
+  def insert(f: (T => (Any, Any)), f2: (T => (Any, Any))*): Insert[T] = NonQuotedException()
 
   def update(value: T): Update[T] = NonQuotedException()
-  def update(f: (T => (Any, Any)), f2: (T => (Any, Any))*): Update[T]
+  def update(f: (T => (Any, Any)), f2: (T => (Any, Any))*): Update[T] = NonQuotedException()
 
-  def delete: Delete[T]
+  def delete: Delete[T] = NonQuotedException()
 }
 
 sealed trait Action[E]

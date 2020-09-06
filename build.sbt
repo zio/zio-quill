@@ -135,12 +135,29 @@ lazy val superPure = new sbtcrossproject.CrossType {
     }
 }
 
+lazy val ultraPure = new sbtcrossproject.CrossType {
+  def projectDir(crossBase: File, projectType: String): File =
+    projectType match {
+      case "jvm" => crossBase
+      case "js"  => crossBase / s".$projectType"
+    }
+
+  def sharedSrcDir(projectBase: File, conf: String): Option[File] =
+    Some(projectBase.getParentFile / "src" / conf / "scala")
+
+  override def projectDir(crossBase: File, projectType: sbtcrossproject.Platform): File =
+    projectType match {
+      case JVMPlatform => crossBase
+      case JSPlatform  => crossBase / ".js"
+    }
+}
+
 def pprintVersion(v: String) = {
   if(v.startsWith("2.11")) "0.5.4" else "0.5.5"
 }
 
 lazy val `quill-core-portable` =
-  crossProject(JVMPlatform, JSPlatform).crossType(superPure)
+  crossProject(JVMPlatform, JSPlatform).crossType(ultraPure)
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .settings(libraryDependencies ++= Seq(
@@ -189,7 +206,7 @@ lazy val `quill-core-jvm` = `quill-core`.jvm.dependsOn(`quill-core-portable-jvm`
 lazy val `quill-core-js` = `quill-core`.js.dependsOn(`quill-core-portable-js` % "compile->compile")
 
 lazy val `quill-sql-portable` =
-  crossProject(JVMPlatform, JSPlatform).crossType(superPure)
+  crossProject(JVMPlatform, JSPlatform).crossType(ultraPure)
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .settings(libraryDependencies ++= Seq(
@@ -211,7 +228,7 @@ lazy val `quill-sql-portable-js` = `quill-sql-portable`.js
 
 
 lazy val `quill-sql` =
-  crossProject(JVMPlatform, JSPlatform).crossType(superPure)
+  crossProject(JVMPlatform, JSPlatform).crossType(ultraPure)
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .settings(libraryDependencies ++= Seq(
