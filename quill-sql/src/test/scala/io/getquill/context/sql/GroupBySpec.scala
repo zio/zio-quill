@@ -3,6 +3,7 @@ package io.getquill.context.sql
 import io.getquill.Spec
 import io.getquill.context.sql.testContext._
 import io.getquill.Literal
+import io.getquill.context.sql.util.StringOps._
 
 class GroupBySpec extends Spec {
   implicit val naming = new Literal {}
@@ -80,8 +81,21 @@ class GroupBySpec extends Spec {
           .map { case (country, citysInCountry) => ((country.countryCode, country.language), citysInCountry.map(cICn => cICn._1)) }
           .map { case (country, cityCountries) => (country, cityCountries.size) }
       )
-      testContext.run(q.dynamic).string mustEqual
-        "SELECT x15.countryCode, x15.languagename, x15.languagedialect, COUNT(*) FROM City x015 INNER JOIN Country x15 ON x015.countryCode = x15.countryCode GROUP BY x15.countryCode, x15.languagename, x15.languagedialect"
+      testContext.run(q).string.collapseSpace mustEqual
+        """
+          |SELECT
+          |  x15.countryCode,
+          |  x15.name,
+          |  x15.dialect,
+          |  COUNT(*)
+          |FROM
+          |  City x015
+          |  INNER JOIN Country x15 ON x015.countryCode = x15.countryCode
+          |GROUP BY
+          |  x15.countryCode,
+          |  x15.name,
+          |  x15.dialect
+          |""".collapseSpace
     }
     "nested" in {
       val q = quote(
@@ -92,8 +106,28 @@ class GroupBySpec extends Spec {
           .groupBy { case (city, country) => country }
           .map { case (country, cityCountries) => (country, cityCountries.size) }
       )
-      testContext.run(q.dynamic).string mustEqual
-        "SELECT x020._2countryCode, x020._2languagename, x020._2languagedialect, COUNT(*) FROM (SELECT x16.countryCode AS _2countryCode, x16.languagename AS _2languagename, x16.languagedialect AS _2languagedialect FROM City x019 INNER JOIN Country x16 ON x019.countryCode = x16.countryCode) AS x020 GROUP BY x020._2countryCode, x020._2languagename, x020._2languagedialect"
+      testContext.run(q).string(true).collapseSpace mustEqual
+        """
+          |SELECT
+          |  x020._2countryCode,
+          |  x020._2languagename,
+          |  x020._2languagedialect,
+          |  COUNT(*)
+          |FROM
+          |  (
+          |    SELECT
+          |      x16.countryCode AS _2countryCode,
+          |      x16.name AS _2languagename,
+          |      x16.dialect AS _2languagedialect
+          |    FROM
+          |      City x019
+          |      INNER JOIN Country x16 ON x019.countryCode = x16.countryCode
+          |  ) AS x020
+          |GROUP BY
+          |  x020._2countryCode,
+          |  x020._2languagename,
+          |  x020._2languagedialect
+          |""".collapseSpace
     }
     "with schema" in {
       implicit val countrySchema =
@@ -107,8 +141,20 @@ class GroupBySpec extends Spec {
           .map { case (country, citysInCountry) => ((country.countryCode, country.language), citysInCountry.map(cICn => cICn._1)) }
           .map { case (country, cityCountries) => (country, cityCountries.size) }
       )
-      testContext.run(q.dynamic).string mustEqual
-        "SELECT x17.theCountryCode, x17.languageTheLanguageName, x17.languagedialect, COUNT(*) FROM City x022 INNER JOIN theCountry x17 ON x022.countryCode = x17.theCountryCode GROUP BY x17.theCountryCode, x17.languageTheLanguageName, x17.languagedialect"
+      testContext.run(q).string(true).collapseSpace mustEqual
+        """|SELECT
+            |  x17.theCountryCode,
+            |  x17.TheLanguageName,
+            |  x17.dialect,
+            |  COUNT(*)
+            |FROM
+            |  City x022
+            |  INNER JOIN theCountry x17 ON x022.countryCode = x17.theCountryCode
+            |GROUP BY
+            |  x17.theCountryCode,
+            |  x17.TheLanguageName,
+            |  x17.dialect
+            |""".collapseSpace
     }
     "with schema nested" in {
       implicit val languageSchema =
@@ -122,8 +168,28 @@ class GroupBySpec extends Spec {
           .groupBy { case (city, country) => country }
           .map { case (country, cityCountries) => (country, cityCountries.size) }
       )
-      testContext.run(q.dynamic).string mustEqual
-        "SELECT x027._2theCountryCode, x027._2languageTheLanguageName, x027._2languagedialect, COUNT(*) FROM (SELECT x18.theCountryCode AS _2theCountryCode, x18.languageTheLanguageName AS _2languageTheLanguageName, x18.languagedialect AS _2languagedialect FROM City x026 INNER JOIN theCountry x18 ON x026.countryCode = x18.theCountryCode) AS x027 GROUP BY x027._2theCountryCode, x027._2languageTheLanguageName, x027._2languagedialect"
+      testContext.run(q).string(true).collapseSpace mustEqual
+        """
+          |SELECT
+          |  x027._2theCountryCode,
+          |  x027._2languageTheLanguageName,
+          |  x027._2languagedialect,
+          |  COUNT(*)
+          |FROM
+          |  (
+          |    SELECT
+          |      x18.theCountryCode AS _2theCountryCode,
+          |      x18.TheLanguageName AS _2languageTheLanguageName,
+          |      x18.dialect AS _2languagedialect
+          |    FROM
+          |      City x026
+          |      INNER JOIN theCountry x18 ON x026.countryCode = x18.theCountryCode
+          |  ) AS x027
+          |GROUP BY
+          |  x027._2theCountryCode,
+          |  x027._2languageTheLanguageName,
+          |  x027._2languagedialect
+          |""".collapseSpace
     }
   }
 
