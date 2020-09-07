@@ -16,6 +16,18 @@ object Messages {
   private[util] def traceColors = variable("quill.trace.color", "quill_trace_color,", "false").toBoolean
   private[util] def traceOpinions = variable("quill.trace.opinion", "quill_trace_opinion", "false").toBoolean
   private[util] def traceAstSimple = variable("quill.trace.ast.simple", "quill_trace_ast_simple", "false").toBoolean
+  private[getquill] def traceQuats = QuatTrace(variable("quill.trace.quat", "quill_trace_quat", QuatTrace.None.value))
+
+  sealed trait QuatTrace { def value: String }
+  object QuatTrace {
+    case object Short extends QuatTrace { val value = "short" }
+    case object Full extends QuatTrace { val value = "short" }
+    case object None extends QuatTrace { val value = "none" }
+    val values = List(Short, Full, None)
+    def apply(str: String): QuatTrace =
+      values.find(_.value == str).getOrElse(throw new IllegalArgumentException(s"The value ${str} is an invalid quat trace setting. Value values are: ${values.map(_.value).mkString(",")}"))
+  }
+
   private[util] def traces: List[TraceType] =
     variable("quill.trace.types", "quill_trace_types", "standard")
       .split(",")

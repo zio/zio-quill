@@ -323,14 +323,14 @@ val q = quote {
 
 Add 100 to the value of `id`:
 ```scala
-ctx.run(q.returning(r => id + 100)) //: List[Int]
+ctx.run(q.returning(r => r.id + 100)) //: List[Int]
 // INSERT INTO Product (description, sku) VALUES (?, ?) RETURNING id + 100
 ```
 
 Pass the value of `id` into a UDF:
 ```scala
 val udf = quote { (i: Long) => infix"myUdf($i)".as[Int] }
-ctx.run(q.returning(r => udf(id))) //: List[Int]
+ctx.run(q.returning(r => udf(r.id))) //: List[Int]
 // INSERT INTO Product (description, sku) VALUES (?, ?) RETURNING myUdf(id)
 ```
 
