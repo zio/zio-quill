@@ -165,13 +165,16 @@ lazy val `quill-core-portable` =
   crossProject(JVMPlatform, JSPlatform).crossType(ultraPure)
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
-    .settings(libraryDependencies ++= Seq(
-      "com.typesafe"               %  "config"        % "1.4.0",
-      "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
-      "org.scala-lang"             %  "scala-reflect" % scalaVersion.value,
-      "com.twitter"                %% "chill"         % "0.9.5",
-      "io.suzaku"                  %% "boopickle"     % "1.3.1"
-    ))
+    .settings(
+      libraryDependencies ++= Seq(
+        "com.typesafe"               %  "config"        % "1.4.0",
+        "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
+        "org.scala-lang"             %  "scala-reflect" % scalaVersion.value,
+        "com.twitter"                %% "chill"         % "0.9.5",
+        "io.suzaku"                  %% "boopickle"     % "1.3.1"
+      ),
+      coverageExcludedPackages := "<empty>;.*AstPrinter;.*Using;"
+    )
     .jsSettings(
       libraryDependencies ++= Seq(
         "com.lihaoyi" %%% "pprint" % pprintVersion(scalaVersion.value),

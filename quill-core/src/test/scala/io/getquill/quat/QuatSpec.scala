@@ -1,6 +1,7 @@
 package io.getquill.quat
 
 import io.getquill._
+import io.getquill.quotation.QuatException
 
 class QuatSpec extends Spec {
 
@@ -50,6 +51,40 @@ class QuatSpec extends Spec {
 
       quote(isSpot[Cat](query[Cat])).ast.quat mustEqual CatQuat
     }
+  }
 
+  "lookup" - {
+    val bar = Quat.Product("baz" -> Quat.Value)
+    val foo = Quat.Product("v" -> Quat.Value, "bar" -> bar)
+    val example = Quat.Product("v" -> Quat.Value, "foo" -> foo)
+    "path" - {
+      example.lookup("foo") mustEqual foo
+      example.lookup(List("foo", "bar")) mustEqual bar
+      example.lookup(List("foo", "bar", "baz")) mustEqual Quat.Value
+      val e = intercept[QuatException] {
+        example.lookup("blah")
+      }
+    }
+  }
+
+  "probit" - {
+    val p: Quat = Quat.Product("foo" -> Quat.Value)
+    val v: Quat = Quat.Value
+    p.probit mustEqual p
+    val e = intercept[QuatException] {
+      v.probit
+    }
+  }
+
+  "rename" - {
+    val prod = Quat.Product("bv" -> Quat.BooleanValue, "be" -> Quat.BooleanExpression, "v" -> Quat.Value, "p" -> Quat.Product("vv" -> Quat.Value, "pp" -> Quat.Product("ppp" -> Quat.Value)))
+    val expect = Quat.Product("bva" -> Quat.BooleanValue, "be" -> Quat.BooleanExpression, "v" -> Quat.Value, "pa" -> Quat.Product("vv" -> Quat.Value, "pp" -> Quat.Product("ppp" -> Quat.Value)))
+    val value = Quat.Value
+    "rename field" in {
+      prod.withRenames(List("bv" -> "bva", "p" -> "pa")).applyRenames mustEqual expect
+    }
+    val e = intercept[QuatException] {
+      value.withRenames(List("foo" -> "bar"))
+    }
   }
 }
