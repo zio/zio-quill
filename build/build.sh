@@ -61,7 +61,7 @@ export -f docker_stats
 
 export SBT_ARGS="++$TRAVIS_SCALA_VERSION"
 
-if [[ $TRAVIS_SCALA_VERSION == 2.11* ]]; then
+if [[ $TRAVIS_SCALA_VERSION == 2.12* ]]; then
     export SBT_ARGS="$SBT_ARGS coverage"
 fi
 
@@ -214,8 +214,8 @@ fi
 show_mem
 echo "Tests completed. Shutting down"
 time docker-compose down
-# for 2.11 publish coverage
-if [[ $TRAVIS_SCALA_VERSION == 2.11* ]]; then
+# for 2.12 publish coverage
+if [[ $TRAVIS_SCALA_VERSION == 2.12* ]]; then
     echo "Coverage"
     time sbt $SBT_ARGS coverageReport coverageAggregate
     pip install --user codecov && codecov
