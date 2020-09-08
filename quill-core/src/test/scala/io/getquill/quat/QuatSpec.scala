@@ -87,4 +87,14 @@ class QuatSpec extends Spec {
       value.withRenames(List("foo" -> "bar"))
     }
   }
+
+  "should serialize" - {
+    // Need to import implicits from BooQuatSerializer otherwise c_jl_UnsupportedOperationException happens in JS
+    import BooQuatSerializer._
+    val example = Quat.Product("bv" -> Quat.BooleanValue, "be" -> Quat.BooleanExpression, "v" -> Quat.Value, "p" -> Quat.Product("vv" -> Quat.Value))
+    "with boo" in {
+      Quat.fromSerializedJS(serialize(example)) mustEqual example
+    }
+    // kryo tests are covered by standard JVM quill specs
+  }
 }
