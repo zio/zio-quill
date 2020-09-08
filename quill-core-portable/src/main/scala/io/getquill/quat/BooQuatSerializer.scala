@@ -34,7 +34,10 @@ object BooQuatSerializer {
       .addConcreteType[Quat.Null.type]
 
   def serialize(quat: Quat): String = {
-    Base64.getEncoder.encodeToString(Pickle.intoBytes(quat).array())
+    val bytes = Pickle.intoBytes(quat)
+    val arr: Array[Byte] = new Array[Byte](bytes.remaining())
+    bytes.get(arr)
+    Base64.getEncoder.encodeToString(arr)
   }
 
   def deserialize(str: String): Quat = {
