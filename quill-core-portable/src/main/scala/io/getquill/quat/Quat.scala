@@ -99,8 +99,7 @@ sealed trait Quat {
 
   def lookup(path: String): Quat = (this, path) match {
     case (cc @ Quat.Product(fields), fieldName) =>
-      // TODO Change to Get
-      fields.find(_._1 == fieldName).headOption.map(_._2).getOrElse(QuatException(s"The field ${fieldName} does not exist in the SQL-level ${cc}"))
+      fields.get(fieldName).getOrElse(QuatException(s"The field ${fieldName} does not exist in the SQL-level ${cc}"))
     case (other, fieldName) =>
       QuatException(s"The field '${fieldName}' does not exist in an SQL-level type ${other}")
   }
@@ -116,23 +115,6 @@ object Quat {
 
   def fromSerializedJVM(serial: String): Quat = KryoQuatSerializer.deserialize(serial)
   def fromSerializedJS(serial: String): Quat = BooQuatSerializer.deserialize(serial)
-
-  object BottomType {
-    def unapply(quat: Quat) =
-      quat match {
-        case Quat.Null | Quat.Generic => true
-        case _                        => false
-      }
-  }
-
-  object TupleIndex {
-    def is(s: String) = unapply(s).isDefined
-    def unapply(s: String): Option[Int] =
-      if (s.matches("_[0-9]*"))
-        Some(s.drop(1).toInt - 1)
-      else
-        None
-  }
 
   case class Product(fields: mutable.LinkedHashMap[String, Quat]) extends Quat {
     def this(list: Iterator[(String, Quat)]) = this((mutable.LinkedHashMap[String, Quat]() ++ list): mutable.LinkedHashMap[String, Quat])
@@ -214,7 +196,6 @@ object Quat {
     def apply(fields: (String, Quat)*): Quat.Product = apply(fields.iterator)
     def apply(fields: Iterable[(String, Quat)]): Quat.Product = new Quat.Product(fields.iterator)
     def apply(fields: Iterator[(String, Quat)]): Quat.Product = new Quat.Product(fields)
-    def unapply(p: Quat.Product): Some[mutable.LinkedHashMap[String, Quat]] = Some(p.fields)
 
     /**
      * Add staged renames to the Quat. Note that renames should

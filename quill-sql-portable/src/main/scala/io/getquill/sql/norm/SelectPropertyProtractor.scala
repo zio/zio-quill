@@ -7,9 +7,11 @@ import io.getquill.norm.PropertyMatroshka
 import io.getquill.quat.Quat
 import io.getquill.ast.Core
 
-case class SelectPropertyProtractor(from: List[FromContext]) {
-
-  private def refersToEntity(ast: Ast) = {
+/**
+ * Simple utility that checks if if an AST entity refers to a entity
+ */
+case class InContext(from: List[FromContext]) {
+  def refersToEntity(ast: Ast) = {
     val tables = collectTableAliases(from)
     ast match {
       case Ident(v, _)                       => tables.contains(v)
@@ -27,6 +29,10 @@ case class SelectPropertyProtractor(from: List[FromContext]) {
       case FlatJoinContext(_, from, _) => collectTableAliases(List(from))
     }
   }
+}
+
+case class SelectPropertyProtractor(from: List[FromContext]) {
+  val inContext = InContext(from)
 
   /*
   * Properties that do not belong to an entity i.e. where the 'from' is not
@@ -47,7 +53,7 @@ case class SelectPropertyProtractor(from: List[FromContext]) {
   def apply(ast: Ast): List[(Ast, List[String])] = {
     ast match {
       case id @ Core() =>
-        val isEntity = refersToEntity(id)
+        val isEntity = inContext.refersToEntity(id)
         id.quat match {
           case p: Quat.Product =>
             ProtractQuat(isEntity)(p, id).map { case (prop, path) => (freezeNonEntityProps(prop, isEntity), path) }
@@ -57,7 +63,7 @@ case class SelectPropertyProtractor(from: List[FromContext]) {
       // Assuming a property contains only an Ident, Infix or Constant at this point
       // and all situations where there is a case-class, tuple, etc... inside have already been beta-reduced
       case prop @ PropertyMatroshka(id @ Core(), _) =>
-        val isEntity = refersToEntity(id)
+        val isEntity = inContext.refersToEntity(id)
         prop.quat match {
           case p: Quat.Product =>
             ProtractQuat(isEntity)(p, prop).map { case (prop, path) => (freezeNonEntityProps(prop, isEntity), path) }

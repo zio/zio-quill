@@ -79,7 +79,7 @@ class NestedQueryNamingStrategySpec extends Spec { //hello
         }.filter(_._1.id == 1)
       }
       testContextUpper.run(q).string mustEqual
-        "SELECT ab._1theId, ab._1theName, ab._2id, ab._2name, ab._3 FROM (SELECT a.theId AS _1theId, a.theName AS _1theName, b.id AS _2id, b.name AS _2name, foobar AS _3 FROM ThePerson a INNER JOIN PERSON b ON a.theName = b.NAME) AS ab WHERE ab._1theId = 1"
+        "SELECT ab._1theId, ab._1theName, ab._2id, ab._2name, ab._3 FROM (SELECT a.theId AS _1theId, a.theName AS _1theName, b.ID AS _2id, b.NAME AS _2name, foobar AS _3 FROM ThePerson a INNER JOIN PERSON b ON a.theName = b.NAME) AS ab WHERE ab._1theId = 1"
     }
 
     "inner alias should nest properly in multiple levels" in {
