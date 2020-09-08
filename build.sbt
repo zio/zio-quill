@@ -173,7 +173,7 @@ lazy val `quill-core-portable` =
         "com.twitter"                %% "chill"         % "0.9.5",
         "io.suzaku"                  %% "boopickle"     % "1.3.1"
       ),
-      coverageExcludedPackages := "<empty>;.*AstPrinter;.*Using;"
+      coverageExcludedPackages := "<empty>;.*AstPrinter;.*Using;.*/Model;.*/MacroModel"
     )
     .jsSettings(
       libraryDependencies ++= Seq(
