@@ -741,7 +741,7 @@ lazy val basicSettings = Seq(
   scalaVersion := "2.12.10",
   crossScalaVersions := Seq("2.11.12", "2.12.10", "2.13.1"),
   libraryDependencies ++= Seq(
-    "org.scala-lang.modules" %%% "scala-collection-compat" % "2.1.6",
+    "org.scala-lang.modules" %%% "scala-collection-compat" % "2.2.0",
     "com.lihaoyi"     %% "pprint"         % pprintVersion(scalaVersion.value),
     "org.scalatest"   %%% "scalatest"     % "3.2.2"          % Test,
     "com.google.code.findbugs" % "jsr305" % "3.0.2"          % Provided // just to avoid warnings during compilation
