@@ -11,6 +11,8 @@
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.getquill/quill-core_2.13/badge.svg)](https://maven-badges.herokuapp.com/maven-central/io.getquill/quill-core_2.13)
 [![Javadocs](https://www.javadoc.io/badge/io.getquill/quill-core_2.13.svg)](https://www.javadoc.io/doc/io.getquill/quill-core_2.13)
 
+# What is Quill?
+
 Quill provides a Quoted Domain Specific Language ([QDSL](http://homepages.inf.ed.ac.uk/wadler/papers/qdsl/qdsl.pdf)) to express queries in Scala and execute them in a target language. The library's core is designed to support multiple target languages, currently featuring specializations for Structured Query Language ([SQL](https://en.wikipedia.org/wiki/SQL)) and Cassandra Query Language ([CQL](https://cassandra.apache.org/doc/latest/cql/)).
 
 ![example](https://raw.githubusercontent.com/getquill/quill/master/example.gif)
