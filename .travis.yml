@@ -177,19 +177,19 @@ jobs:
       scala: 2.13.1
       name: "Release 2.13 async"
       script:
-        - ./build/release.sh 212 async
+        - ./build/release.sh 213 async
     - stage: release
       if: type != pull_request
       scala: 2.13.1
-      name: "Release 2.12 codegen"
+      name: "Release 2.13 codegen"
       script:
-        - ./build/release.sh 212 codegen
+        - ./build/release.sh 213 codegen
     - stage: release
       if: type != pull_request
       scala: 2.13.1
-      name: "Release 2.12 bigdata"
+      name: "Release 2.13 bigdata"
       script:
-        - ./build/release.sh 212 bigdata
+        - ./build/release.sh 213 bigdata
 
     - stage: publish
       if: type != pull_request AND branch = master
