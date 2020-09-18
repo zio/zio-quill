@@ -7,7 +7,7 @@ import io.getquill.Query
 
 class AttachToEntitySpec extends Spec {
 
-  val attachToEntity = (AttachToEntity(SortBy(_, _, Constant(1), AscNullsFirst)) _).andThen(replaceTempIdent.apply _)
+  val attachToEntity = (AttachToEntity(SortBy(_, _, Constant.auto(1), AscNullsFirst)) _).andThen(replaceTempIdent.apply _)
 
   "attaches clause to the root of the query (entity)" - {
     "query is the entity" in {

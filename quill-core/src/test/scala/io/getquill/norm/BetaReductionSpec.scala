@@ -54,7 +54,7 @@ class BetaReductionSpec extends Spec {
       val (aE, bE, cE, dE) = (Ident("a", QEP), Ident("b", QEP), Ident("c", QEP), Ident("d", QEP))
       // Value Idents
       val (a, b, c, d) = (Ident("a", QV), Ident("b", QV), Ident("c", QV), Ident("d", QV))
-      val (c1, c2, c3) = (Constant(1), Constant(2), Constant(3))
+      val (c1, c2, c3) = (Constant.auto(1), Constant.auto(2), Constant.auto(3))
 
       "top level block" in {
         val block = Block(List(
