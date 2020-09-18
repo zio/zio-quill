@@ -146,7 +146,7 @@ class ExpandReturningSpec extends Spec {
         Ident("p"),
         Tuple(List(Property.Opinionated(Ident("p"), "name", renameable, Visible), Property.Opinionated(Ident("p"), "age", renameable, Visible)))
       ),
-      List(Assignment(Ident("pp"), Property.Opinionated(Ident("pp"), "name", renameable, Visible), Constant("Joe")))
+      List(Assignment(Ident("pp"), Property.Opinionated(Ident("pp"), "name", renameable, Visible), Constant.auto("Joe")))
     )
     def retMulti =
       Returning(insert, Ident("r"), Tuple(List(Property.Opinionated(Ident("r"), "name", renameable, Visible), Property.Opinionated(Ident("r"), "age", renameable, Visible))))

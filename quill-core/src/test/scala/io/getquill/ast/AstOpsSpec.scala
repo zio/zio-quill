@@ -9,12 +9,12 @@ class AstOpsSpec extends Spec {
 
   "+||+" - {
     "unapply" in {
-      BinaryOperation(VIdent("a"), BooleanOperator.`||`, Constant(true)) must matchPattern {
+      BinaryOperation(VIdent("a"), BooleanOperator.`||`, Constant.auto(true)) must matchPattern {
         case VIdent(a) +||+ Constant(t, _) if (a == "a" && t == true) =>
       }
     }
     "apply" in {
-      (VIdent("a") +||+ Constant(true)) must matchPattern {
+      (VIdent("a") +||+ Constant.auto(true)) must matchPattern {
         case BinaryOperation(VIdent(a), BooleanOperator.`||`, Constant(t, _)) if (a == "a" && t == true) =>
       }
     }
@@ -22,12 +22,12 @@ class AstOpsSpec extends Spec {
 
   "+&&+" - {
     "unapply" in {
-      BinaryOperation(VIdent("a"), BooleanOperator.`&&`, Constant(true)) must matchPattern {
+      BinaryOperation(VIdent("a"), BooleanOperator.`&&`, Constant.auto(true)) must matchPattern {
         case VIdent(a) +&&+ Constant(t, _) if (a == "a" && t == true) =>
       }
     }
     "apply" in {
-      (VIdent("a") +&&+ Constant(true)) must matchPattern {
+      (VIdent("a") +&&+ Constant.auto(true)) must matchPattern {
         case BinaryOperation(VIdent(a), BooleanOperator.`&&`, Constant(t, _)) if (a == "a" && t == true) =>
       }
     }
@@ -35,12 +35,12 @@ class AstOpsSpec extends Spec {
 
   "+==+" - {
     "unapply" in {
-      BinaryOperation(VIdent("a"), EqualityOperator.`==`, Constant(true)) must matchPattern {
+      BinaryOperation(VIdent("a"), EqualityOperator.`==`, Constant.auto(true)) must matchPattern {
         case VIdent(a) +==+ Constant(t, _) if (a == "a" && t == true) =>
       }
     }
     "apply" in {
-      (VIdent("a") +==+ Constant(true)) must matchPattern {
+      (VIdent("a") +==+ Constant.auto(true)) must matchPattern {
         case BinaryOperation(VIdent(a), EqualityOperator.`==`, Constant(t, _)) if (a == "a" && t == true) =>
       }
     }
@@ -99,7 +99,7 @@ class AstOpsSpec extends Spec {
   }
 
   "returning matcher" - {
-    val insert = Insert(Entity("Ent", List(), Quat.LeafProduct("prop")), List(Assignment(VIdent("p"), Property(VIdent("p"), "prop"), Constant(123))))
+    val insert = Insert(Entity("Ent", List(), Quat.LeafProduct("prop")), List(Assignment(VIdent("p"), Property(VIdent("p"), "prop"), Constant.auto(123))))
     val r = VIdent("r")
     val prop = Property(r, "value")
 
