@@ -7,6 +7,7 @@ services:
       - "15432:5432"
     environment:
       - POSTGRES_USER=postgres
+      - POSTGRES_HOST_AUTH_METHOD=trust
 
   mysql:
     image: mysql:5.7
