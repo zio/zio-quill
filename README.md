@@ -3590,13 +3590,18 @@ Please refer to [CASSANDRA.md](https://github.com/getquill/quill/blob/master/CAS
 
 ### Talks
 
+ - **[Intro]** ScalaDays Berlin 2016 - [Scylla, Charybdis, and the mystery of Quill](https://www.youtube.com/watch?v=nqSYccoSeio)
+ - **[Intro]** Postgres Philly 2019 - [Introduction to Quill](https://www.youtube.com/watch?v=RVs-T5iFdQI)
+ - ScalaUA 2020 - [Manipulating Abstract Syntax Trees (ASTs) to generate safe SQL Queries with Quill](https://www.youtube.com/watch?v=aY8DrjE9lIY)
  - BeeScala 2019 - [Quill + Spark = Better Together](https://www.youtube.com/watch?v=EXISmUXBXu8)
  - Scale By the Bay 2019 - [Quill + Doobie = Better Together](https://www.youtube.com/watch?v=1WVjkP_G2cA)
- - ScalaDays Berlin 2016 - [Scylla, Charybdis, and the mystery of Quill](https://www.youtube.com/watch?v=nqSYccoSeio)
-
+ - ScQuilL, Porting Quill to Dotty (Ongoing) - [Quill, Dotty, and Macros](https://www.youtube.com/playlist?list=PLqky8QybCVQYNZY_MNJpkjFKT-dAdHQDX)
+ 
 ### Blog posts
 
- - Haoyi's Programming Blog - [Working with Databases using Scala and Quill](http://www.lihaoyi.com/post/WorkingwithDatabasesusingScalaandQuill.html)
+ - **[Intro]** Haoyi's Programming Blog - [Working with Databases using Scala and Quill](http://www.lihaoyi.com/post/WorkingwithDatabasesusingScalaandQuill.html)
+ - Juliano Alves's Blog - [Streaming all the way with ZIO, Doobie, Quill, http4s and fs2](https://juliano-alves.com/2020/06/15/streaming-all-the-way-zio-doobie-quill-http4s-fs2/)
+ - Juliano Alves's Blog - [Quill: Translating Boolean Literals](https://juliano-alves.com/2020/09/14/quill-translating-boolean-literals/)
  - Juliano Alves's Blog - [Quill NDBC Postgres: A New Async Module](https://juliano-alves.com/2019/11/29/quill-ndbc-postgres-a-new-async-module/)
  - Juliano Alves's Blog - [Contributing to Quill, a Pairing Session](https://juliano-alves.com/2019/11/18/contributing-to-quill-a-pairing-session/)
  - Medium @ Fwbrasil - [quill-spark: A type-safe Scala API for Spark SQL](https://medium.com/@fwbrasil/quill-spark-a-type-safe-scala-api-for-spark-sql-2672e8582b0d)
