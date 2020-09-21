@@ -319,6 +319,10 @@ trait Parsing extends ValueComputation with QuatMaking {
   }
 
   val infixParser: Parser[Ast] = Parser[Ast] {
+    case q"$infix.pure.asCondition" =>
+      combinedInfixParser(true, Quat.BooleanExpression)(infix)
+    case q"$infix.asCondition" =>
+      combinedInfixParser(false, Quat.BooleanExpression)(infix)
     case q"$infix.generic.pure.as[$t]" =>
       combinedInfixParser(true, Quat.Generic)(infix)
     case q"$infix.pure.as[$t]" =>
