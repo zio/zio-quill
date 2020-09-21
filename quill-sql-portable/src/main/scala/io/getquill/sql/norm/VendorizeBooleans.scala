@@ -8,6 +8,15 @@ object VendorizeBooleans extends StatelessTransformer {
 
   override def apply(ast: Ast): Ast =
     ast match {
+      // Map clauses need values e.g. map(n=>n.status==true) => map(n=>if(n.status==true) 1 else 0)
+      case Map(q, alias, body) =>
+        Map(apply(q), alias, valuefyExpression(apply(body)))
+      case CaseClass(values) =>
+        CaseClass(values.map { case (name, value) => (name, valuefyExpression(apply(value))) })
+      case Tuple(values) =>
+        Tuple(values.map(value => valuefyExpression(apply(value))))
+
+      // Filter clauses need expressions e.g. filter(n=>n.isTrue) becomes filter(n=>n.isTrue==1)
       case Filter(q, alias, body) =>
         Filter(apply(q), alias, expressifyValue(apply(body)))
       case If(cond, t, e) =>

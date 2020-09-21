@@ -8,6 +8,7 @@ private[dsl] trait InfixDsl {
 
   private[dsl] trait InfixValue {
     def as[T]: T
+    def asCondition: Boolean
     def pure: InfixValue
     private[getquill] def generic: InfixValue
   }

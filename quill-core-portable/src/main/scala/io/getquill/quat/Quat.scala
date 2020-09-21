@@ -8,10 +8,17 @@ object LinkedHashMapOps {
   implicit class LinkedHashMapExt[K, V](m1: mutable.LinkedHashMap[K, V]) {
     def zipWith[R](m2: mutable.LinkedHashMap[K, V])(f: PartialFunction[(K, V, Option[V]), R]) =
       LinkedHashMapOps.zipWith(m1, m2, f)
+
+    def outerZipWith[R](m2: mutable.LinkedHashMap[K, V])(f: PartialFunction[(K, Option[V], Option[V]), R]) =
+      LinkedHashMapOps.outerZipWith(m1, m2, f)
   }
 
   def zipWith[K, V, R](m1: mutable.LinkedHashMap[K, V], m2: mutable.LinkedHashMap[K, V], f: PartialFunction[(K, V, Option[V]), R]) = {
     m1.toList.map(r => (r._1, r._2, m2.get(r._1))).collect(f)
+  }
+
+  def outerZipWith[K, V, R](m1: mutable.LinkedHashMap[K, V], m2: mutable.LinkedHashMap[K, V], f: PartialFunction[(K, Option[V], Option[V]), R]) = {
+    mutable.LinkedHashSet((m1.keySet.toList ++ m2.keySet.toList): _*).map(k => (k, m1.get(k), m2.get(k))).collect(f)
   }
 }
 
@@ -55,10 +62,14 @@ sealed trait Quat {
       case (other, Quat.Generic) => Some(other)
       case (other, Quat.Null) => Some(other)
       case (Quat.Value, Quat.Value) => Some(Quat.Value)
-      case (Quat.BooleanValue, Quat.BooleanValue) => Some(Quat.BooleanValue)
-      case (other, Quat.BooleanValue) => Some(other)
       case (Quat.BooleanExpression, Quat.BooleanExpression) => Some(Quat.BooleanExpression)
-      case (Quat.BooleanExpression, _) => Some(Quat.BooleanExpression)
+      case (Quat.BooleanValue, Quat.BooleanValue) => Some(Quat.BooleanValue)
+      case (Quat.BooleanValue, Quat.BooleanExpression) => Some(Quat.BooleanValue)
+      case (Quat.BooleanExpression, Quat.BooleanValue) => Some(Quat.BooleanValue)
+      case (Quat.Value, Quat.BooleanValue) => Some(Quat.Value)
+      case (Quat.Value, Quat.BooleanExpression) => Some(Quat.Value)
+      case (Quat.BooleanValue, Quat.Value) => Some(Quat.Value)
+      case (Quat.BooleanExpression, Quat.Value) => Some(Quat.Value)
       case (me: Quat.Product, other: Quat.Product) => me.leastUpperTypeProduct(other)
       case (_, _) => None
     }

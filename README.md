@@ -2121,6 +2121,56 @@ run(q)
 // WHERE SOME_UDF(e.id) <= 10 AND SOME_OTHER_UDF(SOME_UDF(e.id)) <= 100
 ```
 
+### Infixes With Conditions
+
+#### Summary
+Use `infix"...".asCondition` to express an infix that represents a conditional expression.
+
+#### Explination
+
+When synthesizing queries for databases which do not have proper boolean-type support (e.g. SQL Server,
+Oracle etc...) boolean infix clauses inside projections must become values. 
+Typically this requires a `CASE WHERE ... END`.
+
+Take the following example:
+```scala
+case class Node(name: String, isUp: Boolean, uptime:Long)
+case class Status(name: String, allowed: Boolean)
+val allowedStatus:Boolean = getState
+
+quote {
+  query[Node].map(n => Status(n.name, n.isUp == lift(allowedStatus)))
+}
+run(q)
+// This is invalid in most databases:
+//   SELECT n.name, n.isUp = ?, uptime FROM Node n
+// It will be converted to this:
+//   SELECT n.name, CASE WHEN (n.isUp = ?) THEN 1 ELSE 0, uptime FROM Node n
+```
+However, in certain cases, infix clauses that express conditionals should actually represent
+boolean expressions for example:
+```scala
+case class Node(name: String, isUp: Boolean)
+val maxUptime:Boolean = getState
+
+quote {
+  query[Node].filter(n => infix"${n.uptime} > ${lift(maxUptime)}".as[Boolean])
+}
+run(q)
+// Should be this:
+//  SELECT n.name, n.isUp, n.uptime WHERE n.uptime > ?
+// However since infix"...".as[Boolean] is treated as a Boolean Value (as opposed to an expression) it will be converted to this:
+//  SELECT n.name, n.isUp, n.uptime WHERE 1 == n.uptime > ?
+```
+
+In order to avoid this problem, use infix"...".asCondition so that Quill understands that the boolean is an expression:
+```scala
+quote {
+  query[Node].filter(n => infix"${n.uptime} > ${lift(maxUptime)}".asCondition)
+}
+run(q) // SELECT n.name, n.isUp, n.uptime WHERE n.uptime > ?
+```
+
 ### Dynamic infix
 
 Infix supports runtime string values through the `#$` prefix. Example:

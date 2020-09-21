@@ -21,7 +21,7 @@ object Messages {
   sealed trait QuatTrace { def value: String }
   object QuatTrace {
     case object Short extends QuatTrace { val value = "short" }
-    case object Full extends QuatTrace { val value = "short" }
+    case object Full extends QuatTrace { val value = "full" }
     case object None extends QuatTrace { val value = "none" }
     val values = List(Short, Full, None)
     def apply(str: String): QuatTrace =
