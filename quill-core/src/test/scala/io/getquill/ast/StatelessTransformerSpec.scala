@@ -109,7 +109,7 @@ class StatelessTransformerSpec extends Spec {
 
     "value" - {
       "constant" in {
-        val ast: Ast = Constant("a")
+        val ast: Ast = Constant.auto("a")
         Subject()(ast) mustEqual ast
       }
       "null" in {

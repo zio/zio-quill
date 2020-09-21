@@ -160,7 +160,7 @@ class StatefulTransformerSpec extends Spec {
 
     "value" - {
       "constant" in {
-        val ast: Ast = Constant("a")
+        val ast: Ast = Constant.auto("a")
         Subject(Nil)(ast) match {
           case (at, att) =>
             at mustEqual ast

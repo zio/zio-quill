@@ -49,10 +49,10 @@ class QueryGenerator(seed: Int) {
   }
 
   private def take(i: Int) =
-    Take(apply(i - 1), Constant(i))
+    Take(apply(i - 1), Constant.auto(i))
 
   private def drop(i: Int) =
-    Drop(apply(i - 1), Constant(i))
+    Drop(apply(i - 1), Constant.auto(i))
 
   private def map(i: Int) = {
     val q = apply(i)
@@ -69,7 +69,7 @@ class QueryGenerator(seed: Int) {
   private def filter(i: Int) = {
     val q = apply(i)
     val id = Ident(char, q.quat)
-    Filter(q, id, BinaryOperation(id.randomProperty, EqualityOperator.`!=`, Constant(1)))
+    Filter(q, id, BinaryOperation(id.randomProperty, EqualityOperator.`!=`, Constant.auto(1)))
   }
 
   private def sortBy(i: Int) = {

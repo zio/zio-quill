@@ -434,7 +434,7 @@ sealed trait Value extends Ast
 case class Constant(v: Any, quat: Quat) extends Value
 
 object Constant {
-  def apply(v: Any) = {
+  def auto(v: Any) = {
     val quat = if (v.isInstanceOf[Boolean]) Quat.BooleanValue else Quat.Value
     new Constant(v, quat)
   }
