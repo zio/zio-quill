@@ -3,7 +3,6 @@ package io.getquill.norm
 import io.getquill.Spec
 import io.getquill.ast._
 import io.getquill.testContext._
-import io.getquill.ast.NumericOperator
 import io.getquill.ast.Implicits._
 import io.getquill.norm.ConcatBehavior.{ AnsiConcat, NonAnsiConcat }
 import io.getquill.MoreAstOps._
@@ -129,23 +128,13 @@ class FlattenOptionOperationSpec extends Spec {
       val q = quote {
         (o: Option[Int]) => o.map(_ < 1).getOrElse(true)
       }
-      new FlattenOptionOperation(AnsiConcat)(q.ast.body: Ast) mustEqual
-        BinaryOperation(
-          BinaryOperation(Ident("o"), NumericOperator.`<`, Constant.auto(1)),
-          BooleanOperator.`||`,
-          OptionIsEmpty(Ident("o"))
-        )
+      new FlattenOptionOperation(AnsiConcat)(q.ast.body: Ast).toString mustEqual "(((o < 1) != null) && (o < 1)) || true"
     }
     "map + getOrElse(false)" in {
       val q = quote {
         (o: Option[Int]) => o.map(_ < 1).getOrElse(false)
       }
-      new FlattenOptionOperation(AnsiConcat)(q.ast.body: Ast) mustEqual
-        BinaryOperation(
-          BinaryOperation(Ident("o"), NumericOperator.`<`, Constant.auto(1)),
-          BooleanOperator.`||`,
-          OptionNonEmpty(Ident("o"))
-        )
+      new FlattenOptionOperation(AnsiConcat)(q.ast.body: Ast).toString mustEqual "(((o < 1) != null) && (o < 1)) || false"
     }
     "forall" - {
       "regular operation" in {

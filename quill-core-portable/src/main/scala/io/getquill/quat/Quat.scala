@@ -234,8 +234,9 @@ object Quat {
   }
 
   case object Value extends Quat with NoRenames
-  case object BooleanValue extends Quat with NoRenames
-  case object BooleanExpression extends Quat with NoRenames
+  sealed trait Boolean extends Quat
+  case object BooleanValue extends Boolean with NoRenames
+  case object BooleanExpression extends Boolean with NoRenames
 
   protected trait NoRenames {
     this: Quat =>
