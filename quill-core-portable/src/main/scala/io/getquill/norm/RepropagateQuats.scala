@@ -6,6 +6,8 @@ import io.getquill.util.Interpolator
 import io.getquill.util.Messages.TraceType
 import io.getquill.quotation.QuatExceptionOps._
 
+import scala.collection.mutable
+
 object RepropagateQuats extends StatelessTransformer {
   import TypeBehavior.{ ReplaceWithReduction => RWR }
   val msg = "This is acceptable from dynamic queries."
@@ -13,47 +15,87 @@ object RepropagateQuats extends StatelessTransformer {
   val interp = new Interpolator(TraceType.RepropagateQuats, 1)
   import interp._
 
+  implicit class QuatExt(q: Quat) {
+    def retypeFrom(other: Quat): Quat = {
+      (q, other) match {
+        case (Quat.BooleanValue, Quat.BooleanExpression) => Quat.BooleanValue
+        case (Quat.BooleanExpression, Quat.BooleanValue) => Quat.BooleanValue
+        case (Quat.Value, Quat.BooleanValue)             => Quat.BooleanValue
+        case (Quat.Value, Quat.BooleanExpression)        => Quat.Value
+        case (Quat.BooleanValue, Quat.Value)             => Quat.BooleanValue
+        case (Quat.BooleanExpression, Quat.Value)        => Quat.Value
+        case (me: Quat.Product, other: Quat.Product)     => me.retypeProduct(other)
+        case (_, other)                                  => other
+      }
+    }
+  }
+  implicit class ProductQuatExt(q: Quat.Product) {
+    import io.getquill.quat.LinkedHashMapOps._
+
+    def retypeProduct(other: Quat.Product): Quat.Product = {
+      val newFieldsIter =
+        q.fields.outerZipWith(other.fields) {
+          case (key, Some(thisQuat), Some(otherQuat)) => (key, thisQuat.retypeFrom(otherQuat))
+          case (key, Some(value), None)               => (key, value)
+          case (key, None, Some(value))               => (key, value)
+        }
+      val newFields = mutable.LinkedHashMap(newFieldsIter.toList: _*)
+      // Note, some extra renames from properties that don't exist could make it here.
+      // Need to make sure to ignore extra ones when they are actually applied.
+      Quat.Product(newFields).withRenames(other.renames)
+    }
+  }
+
   implicit class IdentExt(id: Ident) {
-    def withQuat(from: Quat) =
-      id.copy(quat = from)
+    def retypeQuatFrom(from: Quat) =
+      id.copy(quat = id.quat.retypeFrom(from))
   }
 
   def applyBody(a: Ast, b: Ident, c: Ast)(f: (Ast, Ident, Ast) => Query) = {
     val ar = apply(a)
-    val br = b.withQuat(ar.quat)
+    val br = b.retypeQuatFrom(ar.quat)
     val cr = BetaReduction(c, RWR, b -> br)
     trace"Repropagate ${a.quat.suppress(msg)} from ${a} into:" andReturn f(ar, br, apply(cr))
   }
 
-  override def apply(e: Query): Query =
-    e match {
-      case Filter(a, b, c) => applyBody(a, b, c)(Filter)
-      case Map(a, b, c) =>
-        applyBody(a, b, c)(Map)
-      case FlatMap(a, b, c)   => applyBody(a, b, c)(FlatMap)
-      case ConcatMap(a, b, c) => applyBody(a, b, c)(ConcatMap)
-      case GroupBy(a, b, c)   => applyBody(a, b, c)(GroupBy)
-      case SortBy(a, b, c, d) => applyBody(a, b, c)(SortBy(_, _, _, d))
-      case Join(t, a, b, iA, iB, on) =>
-        val ar = apply(a)
-        val br = apply(b)
-        val iAr = iA.withQuat(ar.quat)
-        val iBr = iB.withQuat(br.quat)
-        val onr = BetaReduction(on, RWR, iA -> iAr, iB -> iBr)
-        trace"Repropagate ${a.quat.suppress(msg)} from $a and ${b.quat.suppress(msg)} from $b into:" andReturn Join(t, ar, br, iAr, iBr, apply(onr))
-      case FlatJoin(t, a, iA, on) =>
-        val ar = apply(a)
-        val iAr = iA.withQuat(ar.quat)
-        val onr = BetaReduction(on, RWR, iA -> iAr)
-        trace"Repropagate ${a.quat.suppress(msg)} from $a into:" andReturn FlatJoin(t, a, iAr, apply(onr))
-      case other =>
-        super.apply(other)
-    }
+  override def apply(e: Query): Query = {
+    //println("==================== Before ==================")
+    //println(io.getquill.util.Messages.qprint(e))
+
+    val o =
+      e match {
+        case Filter(a, b, c) => applyBody(a, b, c)(Filter)
+        case Map(a, b, c) =>
+          applyBody(a, b, c)(Map)
+        case FlatMap(a, b, c)   => applyBody(a, b, c)(FlatMap)
+        case ConcatMap(a, b, c) => applyBody(a, b, c)(ConcatMap)
+        case GroupBy(a, b, c)   => applyBody(a, b, c)(GroupBy)
+        case SortBy(a, b, c, d) => applyBody(a, b, c)(SortBy(_, _, _, d))
+        case Join(t, a, b, iA, iB, on) =>
+          val ar = apply(a)
+          val br = apply(b)
+          val iAr = iA.retypeQuatFrom(ar.quat)
+          val iBr = iB.retypeQuatFrom(br.quat)
+          val onr = BetaReduction(on, RWR, iA -> iAr, iB -> iBr)
+          trace"Repropagate ${a.quat.suppress(msg)} from $a and ${b.quat.suppress(msg)} from $b into:" andReturn Join(t, ar, br, iAr, iBr, apply(onr))
+        case FlatJoin(t, a, iA, on) =>
+          val ar = apply(a)
+          val iAr = iA.retypeQuatFrom(ar.quat)
+          val onr = BetaReduction(on, RWR, iA -> iAr)
+          trace"Repropagate ${a.quat.suppress(msg)} from $a into:" andReturn FlatJoin(t, a, iAr, apply(onr))
+        case other =>
+          super.apply(other)
+      }
+
+    //println("==================== After ==================")
+    //println(io.getquill.util.Messages.qprint(o))
+    o
+  }
 
   def reassign(assignments: List[Assignment], quat: Quat) =
     assignments.map {
       case Assignment(alias, property, value) =>
-        val aliasR = alias.withQuat(quat)
+        val aliasR = alias.retypeQuatFrom(quat)
         val propertyR = BetaReduction(property, RWR, alias -> aliasR)
         val valueR = BetaReduction(value, RWR, alias -> aliasR)
         Assignment(aliasR, propertyR, valueR)
@@ -79,14 +121,14 @@ object RepropagateQuats extends StatelessTransformer {
 
       case Returning(action: Action, alias, body) =>
         val actionR = apply(action)
-        val aliasR = alias.withQuat(actionR.quat)
+        val aliasR = alias.retypeQuatFrom(actionR.quat)
         val bodyR = BetaReduction(body, RWR, alias -> aliasR)
         trace"Repropagate ${alias.quat.suppress(msg)} from $alias into:" andReturn
           Returning(actionR, aliasR, bodyR)
 
       case ReturningGenerated(action: Action, alias, body) =>
         val actionR = apply(action)
-        val aliasR = alias.withQuat(actionR.quat)
+        val aliasR = alias.retypeQuatFrom(actionR.quat)
         val bodyR = BetaReduction(body, RWR, alias -> aliasR)
         trace"Repropagate ${alias.quat.suppress(msg)} from $alias into:" andReturn
           ReturningGenerated(actionR, aliasR, bodyR)
@@ -100,7 +142,7 @@ object RepropagateQuats extends StatelessTransformer {
                 // Recreate the assignment with new idents but only if we need to repropagate
                 case prop @ PropertyMatroshka(ident: Ident, _) =>
                   trace"Repropagate OnConflict.Properties Quat ${oca.quat.suppress(msg)} from $oca into:" andReturn
-                    BetaReduction(prop, RWR, ident -> ident.withQuat(oca.quat)).asInstanceOf[Property]
+                    BetaReduction(prop, RWR, ident -> ident.retypeQuatFrom(oca.quat)).asInstanceOf[Property]
                 case other =>
                   throw new IllegalArgumentException(s"Malformed onConflict element ${oc}. Could not parse property ${other}")
               }

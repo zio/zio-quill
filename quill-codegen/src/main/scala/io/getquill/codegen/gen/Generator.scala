@@ -101,7 +101,7 @@ trait Generator {
               strategy.asInstanceOf[BySomeTableData[CodeEmitter]].namer(gen)
           }
 
-        val fileWithExtension = fileName.resolveSibling(fileName.getFileName + ".scala")
+        val fileWithExtension = fileName.resolveSibling(fileName.getFileName.toString + ".scala")
         val loc = Paths.get(location)
 
         (gen, Paths.get(location, fileWithExtension.toString))

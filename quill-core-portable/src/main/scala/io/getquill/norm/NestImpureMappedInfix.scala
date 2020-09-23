@@ -1,6 +1,7 @@
 package io.getquill.norm
 
 import io.getquill.ast._
+import io.getquill.quat.QuatNestingHelper._
 
 /**
  * A problem occurred in the original way infixes were done in that it was assumed that infix
@@ -30,14 +31,14 @@ object NestImpureMappedInfix extends StatelessTransformer {
         Nested(Map(apply(inner), a, b))
 
       case m @ Map(_, x, cc @ CaseClass(values)) if hasInfix(cc) => //Nested(m)
-        val newIdent = Ident(x.name, cc.quat)
+        val newIdent = Ident(x.name, valueQuat(cc.quat))
         Map(Nested(applyInside(m)), newIdent,
           CaseClass(values.map {
             case (name, _) => (name, Property(newIdent, name)) // mappings of nested-query case class properties should not be renamed
           }))
 
       case m @ Map(_, x, tup @ Tuple(values)) if hasInfix(tup) =>
-        val newIdent = Ident(x.name, tup.quat)
+        val newIdent = Ident(x.name, valueQuat(tup.quat))
         Map(Nested(applyInside(m)), newIdent,
           Tuple(values.zipWithIndex.map {
             case (_, i) => Property(newIdent, s"_${i + 1}") // mappings of nested-query tuple properties should not be renamed
@@ -45,22 +46,22 @@ object NestImpureMappedInfix extends StatelessTransformer {
 
       case m @ Map(q, x, i @ Infix(_, _, false, _)) =>
         val newMap = Map(apply(q), x, Tuple(List(i)))
-        val newIdent = Ident(x.name, newMap.quat)
+        val newIdent = Ident(x.name, valueQuat(newMap.quat))
         Map(Nested(newMap), newIdent, Property(newIdent, "_1"))
 
       case m @ Map(q, x, i @ Property(prop, _)) if hasInfix(prop) =>
         val newMap = Map(apply(q), x, Tuple(List(i)))
-        val newIdent = Ident(x.name, newMap.quat)
+        val newIdent = Ident(x.name, valueQuat(newMap.quat))
         Map(Nested(newMap), newIdent, Property(newIdent, "_1"))
 
       case m @ Map(q, x, i @ BinaryOperation(a, _, b)) if hasInfix(a, b) =>
         val newMap = Map(apply(q), x, Tuple(List(i)))
-        val newIdent = Ident(x.name, newMap.quat)
+        val newIdent = Ident(x.name, valueQuat(newMap.quat))
         Map(Nested(newMap), newIdent, Property(newIdent, "_1"))
 
       case m @ Map(q, x, i @ UnaryOperation(_, a)) if hasInfix(a) =>
         val newMap = Map(apply(q), x, Tuple(List(i)))
-        val newIdent = Ident(x.name, newMap.quat)
+        val newIdent = Ident(x.name, valueQuat(newMap.quat))
         Map(Nested(newMap), newIdent, Property(newIdent, "_1"))
 
       case other => super.apply(other)

@@ -14,7 +14,7 @@ object AddDropToNestedOrderBy {
     q match {
       case q: FlattenSqlQuery =>
         q.copy(
-          offset = if (q.orderBy.nonEmpty) q.offset.orElse(Some(Constant(0))) else q.offset,
+          offset = if (q.orderBy.nonEmpty) q.offset.orElse(Some(Constant.auto(0))) else q.offset,
           from = q.from.map(applyInner(_))
         )(q.quat)
 

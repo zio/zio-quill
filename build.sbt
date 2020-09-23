@@ -6,11 +6,6 @@ import scala.sys.process.Process
 import sbtcrossproject.crossProject
 import java.io.{File => JFile}
 
-// one
-// two
-// three
-// four
-
 enablePlugins(TutPlugin)
 
 val CodegenTag = Tags.Tag("CodegenTag")
@@ -53,7 +48,7 @@ lazy val bigdataModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
 lazy val allModules =
   baseModules ++ jsModules ++ dbModules ++ asyncModules ++ codegenModules ++ bigdataModules
 
-lazy val scala213Modules = baseModules ++ jsModules ++ dbModules ++ Seq[sbt.ClasspathDep[sbt.ProjectReference]](
+lazy val scala213Modules = baseModules ++ jsModules ++ dbModules ++ codegenModules ++ Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-async`,
   `quill-async-mysql`,
   `quill-async-postgres`,
@@ -174,7 +169,7 @@ lazy val `quill-core-portable` =
         "com.twitter"                %% "chill"         % "0.9.5",
         "io.suzaku"                  %% "boopickle"     % "1.3.1"
       ),
-      coverageExcludedPackages := "<empty>;.*AstPrinter;.*Using;"
+      coverageExcludedPackages := "<empty>;.*AstPrinter;.*Using;io.getquill.Model;io.getquill.ScalarTag;io.getquill.QuotationTag"
     )
     .jsSettings(
       libraryDependencies ++= Seq(
@@ -750,7 +745,7 @@ lazy val basicSettings = Seq(
   scalaVersion := scala_v_11,
   crossScalaVersions := Seq(scala_v_11, scala_v_12, scala_v_13),
   libraryDependencies ++= Seq(
-    "org.scala-lang.modules" %%% "scala-collection-compat" % "2.1.6",
+    "org.scala-lang.modules" %%% "scala-collection-compat" % "2.2.0",
     "com.lihaoyi"     %% "pprint"         % pprintVersion(scalaVersion.value),
     "org.scalatest"   %%% "scalatest"     % "3.2.2"          % Test,
     "com.google.code.findbugs" % "jsr305" % "3.0.2"          % Provided // just to avoid warnings during compilation
@@ -869,6 +864,13 @@ lazy val releaseSettings = Seq(
         //doOnPush(releaseStepCommand("sonatypeReleaseAll")) ++
         doOnPush   (pushChanges)
       case Some((2, 12)) =>
+        doOnDefault(checkSnapshotDependencies) ++
+        doOnDefault(inquireVersions) ++
+        doOnDefault(runClean) ++
+        doOnPush   (setReleaseVersion) ++
+        doOnDefault(publishArtifacts)
+        //doOnPush   ("sonatypeReleaseAll") ++
+      case Some((2, 13)) =>
         doOnDefault(checkSnapshotDependencies) ++
         doOnDefault(inquireVersions) ++
         doOnDefault(runClean) ++

@@ -32,7 +32,7 @@ object CqlQuery {
       case Map(q: Query, x, p) =>
         apply(q, select(p), distinct)
       case Aggregation(AggregationOperator.`size`, q: Query) =>
-        apply(q, List(Aggregation(AggregationOperator.`size`, Constant(1))), distinct)
+        apply(q, List(Aggregation(AggregationOperator.`size`, Constant.auto(1))), distinct)
       case other =>
         apply(q, List(), distinct)
     }

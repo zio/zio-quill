@@ -11,6 +11,8 @@
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.getquill/quill-core_2.13/badge.svg)](https://maven-badges.herokuapp.com/maven-central/io.getquill/quill-core_2.13)
 [![Javadocs](https://www.javadoc.io/badge/io.getquill/quill-core_2.13.svg)](https://www.javadoc.io/doc/io.getquill/quill-core_2.13)
 
+# What is Quill?
+
 Quill provides a Quoted Domain Specific Language ([QDSL](http://homepages.inf.ed.ac.uk/wadler/papers/qdsl/qdsl.pdf)) to express queries in Scala and execute them in a target language. The library's core is designed to support multiple target languages, currently featuring specializations for Structured Query Language ([SQL](https://en.wikipedia.org/wiki/SQL)) and Cassandra Query Language ([CQL](https://cassandra.apache.org/doc/latest/cql/)).
 
 ![example](https://raw.githubusercontent.com/getquill/quill/master/example.gif)
@@ -2121,6 +2123,56 @@ run(q)
 // WHERE SOME_UDF(e.id) <= 10 AND SOME_OTHER_UDF(SOME_UDF(e.id)) <= 100
 ```
 
+### Infixes With Conditions
+
+#### Summary
+Use `infix"...".asCondition` to express an infix that represents a conditional expression.
+
+#### Explination
+
+When synthesizing queries for databases which do not have proper boolean-type support (e.g. SQL Server,
+Oracle etc...) boolean infix clauses inside projections must become values. 
+Typically this requires a `CASE WHERE ... END`.
+
+Take the following example:
+```scala
+case class Node(name: String, isUp: Boolean, uptime:Long)
+case class Status(name: String, allowed: Boolean)
+val allowedStatus:Boolean = getState
+
+quote {
+  query[Node].map(n => Status(n.name, n.isUp == lift(allowedStatus)))
+}
+run(q)
+// This is invalid in most databases:
+//   SELECT n.name, n.isUp = ?, uptime FROM Node n
+// It will be converted to this:
+//   SELECT n.name, CASE WHEN (n.isUp = ?) THEN 1 ELSE 0, uptime FROM Node n
+```
+However, in certain cases, infix clauses that express conditionals should actually represent
+boolean expressions for example:
+```scala
+case class Node(name: String, isUp: Boolean)
+val maxUptime:Boolean = getState
+
+quote {
+  query[Node].filter(n => infix"${n.uptime} > ${lift(maxUptime)}".as[Boolean])
+}
+run(q)
+// Should be this:
+//  SELECT n.name, n.isUp, n.uptime WHERE n.uptime > ?
+// However since infix"...".as[Boolean] is treated as a Boolean Value (as opposed to an expression) it will be converted to this:
+//  SELECT n.name, n.isUp, n.uptime WHERE 1 == n.uptime > ?
+```
+
+In order to avoid this problem, use infix"...".asCondition so that Quill understands that the boolean is an expression:
+```scala
+quote {
+  query[Node].filter(n => infix"${n.uptime} > ${lift(maxUptime)}".asCondition)
+}
+run(q) // SELECT n.name, n.isUp, n.uptime WHERE n.uptime > ?
+```
+
 ### Dynamic infix
 
 Infix supports runtime string values through the `#$` prefix. Example:
@@ -2443,7 +2495,7 @@ Quill provides a fully type-safe way to use Spark's highly-optimized SQL engine.
 ### Importing Quill Spark
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-spark" % "3.5.3-SNAPSHOT"
+  "io.getquill" %% "quill-spark" % "3.5.4-SNAPSHOT"
 )
 ```
 
@@ -2643,7 +2695,7 @@ The body of `transaction` can contain calls to other methods and multiple `run` 
 ```
 libraryDependencies ++= Seq(
   "mysql" % "mysql-connector-java" % "8.0.17",
-  "io.getquill" %% "quill-jdbc" % "3.5.3-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "3.5.4-SNAPSHOT"
 )
 ```
 
@@ -2670,7 +2722,7 @@ ctx.connectionTimeout=30000
 ```
 libraryDependencies ++= Seq(
   "org.postgresql" % "postgresql" % "42.2.8",
-  "io.getquill" %% "quill-jdbc" % "3.5.3-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "3.5.4-SNAPSHOT"
 )
 ```
 
@@ -2696,7 +2748,7 @@ ctx.connectionTimeout=30000
 ```
 libraryDependencies ++= Seq(
   "org.xerial" % "sqlite-jdbc" % "3.28.0",
-  "io.getquill" %% "quill-jdbc" % "3.5.3-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "3.5.4-SNAPSHOT"
 )
 ```
 
@@ -2717,7 +2769,7 @@ ctx.jdbcUrl=jdbc:sqlite:/path/to/db/file.db
 ```
 libraryDependencies ++= Seq(
   "com.h2database" % "h2" % "1.4.199",
-  "io.getquill" %% "quill-jdbc" % "3.5.3-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "3.5.4-SNAPSHOT"
 )
 ```
 
@@ -2739,7 +2791,7 @@ ctx.dataSource.user=sa
 ```
 libraryDependencies ++= Seq(
   "com.microsoft.sqlserver" % "mssql-jdbc" % "7.4.1.jre8",
-  "io.getquill" %% "quill-jdbc" % "3.5.3-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "3.5.4-SNAPSHOT"
 )
 ```
 
@@ -2761,7 +2813,7 @@ available for this situation [here](https://stackoverflow.com/questions/1074869/
 ```
 libraryDependencies ++= Seq(
   "com.oracle.jdbc" % "ojdbc8" % "18.3.0.0.0",
-  "io.getquill" %% "quill-jdbc" % "3.5.3-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "3.5.4-SNAPSHOT"
 )
 ```
 
@@ -2861,7 +2913,7 @@ lazy val ctx = new MysqlMonixJdbcContext(SnakeCase, "ctx", Runner.using(Schedule
 ```
 libraryDependencies ++= Seq(
   "mysql" % "mysql-connector-java" % "8.0.17",
-  "io.getquill" %% "quill-jdbc-monix" % "3.5.3-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-monix" % "3.5.4-SNAPSHOT"
 )
 ```
 
@@ -2888,7 +2940,7 @@ ctx.connectionTimeout=30000
 ```
 libraryDependencies ++= Seq(
   "org.postgresql" % "postgresql" % "42.2.8",
-  "io.getquill" %% "quill-jdbc-monix" % "3.5.3-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-monix" % "3.5.4-SNAPSHOT"
 )
 ```
 
@@ -2914,7 +2966,7 @@ ctx.connectionTimeout=30000
 ```
 libraryDependencies ++= Seq(
   "org.xerial" % "sqlite-jdbc" % "3.28.0",
-  "io.getquill" %% "quill-jdbc-monix" % "3.5.3-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-monix" % "3.5.4-SNAPSHOT"
 )
 ```
 
@@ -2935,7 +2987,7 @@ ctx.jdbcUrl=jdbc:sqlite:/path/to/db/file.db
 ```
 libraryDependencies ++= Seq(
   "com.h2database" % "h2" % "1.4.199",
-  "io.getquill" %% "quill-jdbc-monix" % "3.5.3-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-monix" % "3.5.4-SNAPSHOT"
 )
 ```
 
@@ -2957,7 +3009,7 @@ ctx.dataSource.user=sa
 ```
 libraryDependencies ++= Seq(
   "com.microsoft.sqlserver" % "mssql-jdbc" % "7.4.1.jre8",
-  "io.getquill" %% "quill-jdbc-monix" % "3.5.3-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-monix" % "3.5.4-SNAPSHOT"
 )
 ```
 
@@ -2989,7 +3041,7 @@ available for this situation [here](https://stackoverflow.com/questions/1074869/
 ```
 libraryDependencies ++= Seq(
   "com.oracle.jdbc" % "ojdbc8" % "18.3.0.0.0",
-  "io.getquill" %% "quill-jdbc-monix" % "3.5.3-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-monix" % "3.5.4-SNAPSHOT"
 )
 ```
 
@@ -3031,7 +3083,7 @@ The body of transaction can contain calls to other methods and multiple run call
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-ndbc-postgres" % "3.5.3-SNAPSHOT"
+  "io.getquill" %% "quill-ndbc-postgres" % "3.5.4-SNAPSHOT"
 )
 ```
 
@@ -3138,7 +3190,7 @@ ctx.queryTimeout=10m
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async-mysql" % "3.5.3-SNAPSHOT"
+  "io.getquill" %% "quill-async-mysql" % "3.5.4-SNAPSHOT"
 )
 ```
 
@@ -3162,7 +3214,7 @@ ctx.url=mysql://host:3306/database?user=root&password=root
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async-postgres" % "3.5.3-SNAPSHOT"
+  "io.getquill" %% "quill-async-postgres" % "3.5.4-SNAPSHOT"
 )
 ```
 
@@ -3252,7 +3304,7 @@ ctx.sslrootcert=./path/to/cert/file # optional, required for sslmode=verify-ca o
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-jasync-mysql" % "3.5.3-SNAPSHOT"
+  "io.getquill" %% "quill-jasync-mysql" % "3.5.4-SNAPSHOT"
 )
 ```
 
@@ -3277,7 +3329,7 @@ ctx.url=mysql://host:3306/database?user=root&password=root
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-jasync-postgres" % "3.5.3-SNAPSHOT"
+  "io.getquill" %% "quill-jasync-postgres" % "3.5.4-SNAPSHOT"
 )
 ```
 
@@ -3327,7 +3379,7 @@ The body of `transaction` can contain calls to other methods and multiple `run` 
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-finagle-mysql" % "3.5.3-SNAPSHOT"
+  "io.getquill" %% "quill-finagle-mysql" % "3.5.4-SNAPSHOT"
 )
 ```
 
@@ -3367,7 +3419,7 @@ The body of `transaction` can contain calls to other methods and multiple `run` 
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-finagle-postgres" % "3.5.3-SNAPSHOT"
+  "io.getquill" %% "quill-finagle-postgres" % "3.5.4-SNAPSHOT"
 )
 ```
 
@@ -3394,7 +3446,7 @@ ctx.binaryParams=false
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-cassandra" % "3.5.3-SNAPSHOT"
+  "io.getquill" %% "quill-cassandra" % "3.5.4-SNAPSHOT"
 )
 ```
 
@@ -3430,7 +3482,7 @@ ctx.session.addressTranslator=com.datastax.driver.core.policies.IdentityTranslat
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-cassandra-monix" % "3.5.3-SNAPSHOT"
+  "io.getquill" %% "quill-cassandra-monix" % "3.5.4-SNAPSHOT"
 )
 ```
 
@@ -3449,7 +3501,7 @@ lazy val ctx = new CassandraStreamContext(SnakeCase, "ctx")
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-orientdb" % "3.5.3-SNAPSHOT"
+  "io.getquill" %% "quill-orientdb" % "3.5.4-SNAPSHOT"
 )
 ```
 
@@ -3511,7 +3563,7 @@ Have a look at the [CODEGEN.md](https://github.com/getquill/quill/blob/master/CO
 
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-codegen-jdbc" % "3.5.3-SNAPSHOT"
+  "io.getquill" %% "quill-codegen-jdbc" % "3.5.4-SNAPSHOT"
 )
 ```
 
@@ -3590,13 +3642,18 @@ Please refer to [CASSANDRA.md](https://github.com/getquill/quill/blob/master/CAS
 
 ### Talks
 
+ - **[Intro]** ScalaDays Berlin 2016 - [Scylla, Charybdis, and the mystery of Quill](https://www.youtube.com/watch?v=nqSYccoSeio)
+ - **[Intro]** Postgres Philly 2019 - [Introduction to Quill](https://www.youtube.com/watch?v=RVs-T5iFdQI)
+ - ScalaUA 2020 - [Manipulating Abstract Syntax Trees (ASTs) to generate safe SQL Queries with Quill](https://www.youtube.com/watch?v=aY8DrjE9lIY)
  - BeeScala 2019 - [Quill + Spark = Better Together](https://www.youtube.com/watch?v=EXISmUXBXu8)
  - Scale By the Bay 2019 - [Quill + Doobie = Better Together](https://www.youtube.com/watch?v=1WVjkP_G2cA)
- - ScalaDays Berlin 2016 - [Scylla, Charybdis, and the mystery of Quill](https://www.youtube.com/watch?v=nqSYccoSeio)
-
+ - ScQuilL, Porting Quill to Dotty (Ongoing) - [Quill, Dotty, and Macros](https://www.youtube.com/playlist?list=PLqky8QybCVQYNZY_MNJpkjFKT-dAdHQDX)
+ 
 ### Blog posts
 
- - Haoyi's Programming Blog - [Working with Databases using Scala and Quill](http://www.lihaoyi.com/post/WorkingwithDatabasesusingScalaandQuill.html)
+ - **[Intro]** Haoyi's Programming Blog - [Working with Databases using Scala and Quill](http://www.lihaoyi.com/post/WorkingwithDatabasesusingScalaandQuill.html)
+ - Juliano Alves's Blog - [Streaming all the way with ZIO, Doobie, Quill, http4s and fs2](https://juliano-alves.com/2020/06/15/streaming-all-the-way-zio-doobie-quill-http4s-fs2/)
+ - Juliano Alves's Blog - [Quill: Translating Boolean Literals](https://juliano-alves.com/2020/09/14/quill-translating-boolean-literals/)
  - Juliano Alves's Blog - [Quill NDBC Postgres: A New Async Module](https://juliano-alves.com/2019/11/29/quill-ndbc-postgres-a-new-async-module/)
  - Juliano Alves's Blog - [Contributing to Quill, a Pairing Session](https://juliano-alves.com/2019/11/18/contributing-to-quill-a-pairing-session/)
  - Medium @ Fwbrasil - [quill-spark: A type-safe Scala API for Spark SQL](https://medium.com/@fwbrasil/quill-spark-a-type-safe-scala-api-for-spark-sql-2672e8582b0d)
