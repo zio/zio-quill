@@ -1,7 +1,8 @@
 package io.getquill.sql.norm
 
 import io.getquill.ast.Implicits.AstOpsExt
-import io.getquill.ast._
+import io.getquill.ast.{ BooleanOperator, _ }
+import io.getquill.quat.QuatOps.{ HasBooleanQuat, HasBooleanValueQuat }
 import io.getquill.quat.Quat.{ BooleanExpression, BooleanValue }
 
 object VendorizeBooleans extends StatelessTransformer {
@@ -96,9 +97,25 @@ object VendorizeBooleans extends StatelessTransformer {
     }
   }
 
-  def expressifyValue(ast: Ast): Ast = ast.quat match {
-    case BooleanValue => Constant(true, BooleanValue) +==+ ast
-    case _            => ast
+  /*
+   * Generally speaking you need to add true==X to some X which is a boolean-value to make it a boolean-expression
+   * For example:
+   * SELECT ... WHERE person.isSober
+   *   => SELECT ... WHERE true==person.isSober
+   * However if you know the expression is conditional you can do better:
+   * SELECT ... WHERE CASE WHEN person.isSober THEN shouldDrinkMore ELSE shouldNotDrinkMore
+   *   => SELECT ... WHERE (person.isSober && shouldDrinkMore) || (person.isSober && shouldNotDrinkMore)
+   */
+  def expressifyValue(ast: Ast): Ast = ast match {
+    case If(condition, HasBooleanQuat(thenClause), HasBooleanQuat(elseClause)) =>
+      val condExpr = expressifyValue(condition)
+      val thenExpr = expressifyValue(thenClause)
+      val elseExpr = expressifyValue(elseClause)
+      (condExpr +&&+ thenExpr) +||+ (UnaryOperation(BooleanOperator.`!`, condExpr) +&&+ elseExpr)
+    case HasBooleanValueQuat(ast) =>
+      Constant(true, BooleanValue) +==+ ast
+    case _ =>
+      ast
   }
 
   def valuefyExpression(ast: Ast): Ast = ast.quat match {

@@ -1,5 +1,6 @@
 package io.getquill.quat
 
+import io.getquill.ast.Ast
 import io.getquill.quotation.QuatException
 
 private[getquill] object QuatOps {
@@ -39,5 +40,15 @@ private[getquill] object QuatOps {
       }
 
     renameQuatAtPathRecurse(path, List(), rootQuat)
+  }
+
+  object HasBooleanQuat {
+    def unapply(ast: Ast): Option[Ast] =
+      if (ast.quat.isInstanceOf[Quat.Boolean]) Some(ast) else None
+  }
+
+  object HasBooleanValueQuat {
+    def unapply(ast: Ast): Option[Ast] =
+      if (ast.quat == Quat.BooleanValue) Some(ast) else None
   }
 }

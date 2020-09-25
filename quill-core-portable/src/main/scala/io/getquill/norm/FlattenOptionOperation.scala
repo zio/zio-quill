@@ -3,7 +3,7 @@ package io.getquill.norm
 import io.getquill.ast._
 import io.getquill.ast.Implicits._
 import io.getquill.norm.ConcatBehavior.NonAnsiConcat
-import io.getquill.quat.Quat
+import io.getquill.quat.QuatOps.HasBooleanQuat
 
 class FlattenOptionOperation(concatBehavior: ConcatBehavior) extends StatelessTransformer {
 
@@ -55,13 +55,9 @@ class FlattenOptionOperation(concatBehavior: ConcatBehavior) extends StatelessTr
       case OptionGetOrNull(ast) =>
         apply(ast)
 
-      case OptionGetOrElse(OptionMap(ast, alias, body), c @ Constant(b: Boolean, _)) =>
+      case OptionGetOrElse(HasBooleanQuat(OptionMap(ast, alias, body)), HasBooleanQuat(alternative)) =>
         val expr = BetaReduction(body, alias -> ast)
-        val output: Ast = (IsNotNullCheck(expr) +&&+ expr) +||+ c
-        apply(output)
-
-      case OptionGetOrElse(ast, body) if (ast.quat.isInstanceOf[Quat.Boolean] && body.quat.isInstanceOf[Quat.Boolean]) =>
-        val output: Ast = (IsNotNullCheck(ast) +&&+ ast) +||+ body
+        val output: Ast = (IsNotNullCheck(ast) +&&+ expr) +||+ (IsNullCheck(ast) +&&+ alternative)
         apply(output)
 
       case OptionGetOrElse(ast, body) =>
