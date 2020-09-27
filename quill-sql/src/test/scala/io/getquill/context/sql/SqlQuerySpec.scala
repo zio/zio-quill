@@ -414,7 +414,7 @@ class SqlQuerySpec extends Spec {
           qr1.map(t => t.i).distinct.map(t => 1)
         }
         testContext.run(q).string mustEqual
-          "SELECT 1 FROM (SELECT DISTINCT t.i FROM TestEntity t) AS t"
+          "SELECT 1 FROM (SELECT DISTINCT t.i FROM TestEntity t) AS t" //hel
       }
 
       "with map uppsercase" in {
@@ -500,7 +500,7 @@ class SqlQuerySpec extends Spec {
           "SELECT a.s, a.i, a.l, a.o, a.b, q21.one, q21.two FROM TestEntity a INNER JOIN (SELECT DISTINCT q2.i AS one, q2.l AS two FROM TestEntity2 q2) AS q21 ON a.i = q21.one"
       }
 
-      "sort with distinct immediately afterward" in {
+      "sort with distinct immediately afterward" in { //hello
         val q = quote {
           qr1
             .join(qr2)

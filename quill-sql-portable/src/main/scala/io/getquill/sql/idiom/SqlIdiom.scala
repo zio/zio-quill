@@ -29,10 +29,13 @@ trait SqlIdiom extends Idiom {
 
   override def format(queryString: String): String = SqlFormatter.format(queryString)
 
+  def normalizeAst(ast: Ast, concatBehavior: ConcatBehavior, equalityBehavior: EqualityBehavior) =
+    SqlNormalize(ast, concatBehavior, equalityBehavior)
+
   def querifyAst(ast: Ast) = SqlQuery(ast)
 
-  override def translate(ast: Ast)(implicit naming: NamingStrategy) = {
-    val normalizedAst = SqlNormalize(ast, concatBehavior, equalityBehavior)
+  override def translate(ast: Ast)(implicit naming: NamingStrategy): (Ast, Statement) = {
+    val normalizedAst = normalizeAst(ast, concatBehavior, equalityBehavior)
 
     implicit val tokernizer = defaultTokenizer
 

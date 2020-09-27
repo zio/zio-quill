@@ -11,6 +11,7 @@ object Messages {
   private[util] def prettyPrint = variable("quill.macro.log.pretty", "quill_macro_log", "false").toBoolean
   private[getquill] def alwaysAlias = variable("quill.query.alwaysAlias", "quill_query_alwaysAlias", "false").toBoolean
   private[getquill] def pruneColumns = variable("quill.query.pruneColumns", "quill_query_pruneColumns", "true").toBoolean
+  private[getquill] def smartBooleans = variable("quill.query.smartBooleans", "quill_query_smartBooleans", "true").toBoolean
   private[util] def debugEnabled = variable("quill.macro.log", "quill_macro_log", "true").toBoolean
   private[util] def traceEnabled = variable("quill.trace.enabled", "quill_trace_enabled", "false").toBoolean
   private[util] def traceColors = variable("quill.trace.color", "quill_trace_color,", "false").toBoolean
@@ -21,7 +22,7 @@ object Messages {
   sealed trait QuatTrace { def value: String }
   object QuatTrace {
     case object Short extends QuatTrace { val value = "short" }
-    case object Full extends QuatTrace { val value = "short" }
+    case object Full extends QuatTrace { val value = "full" }
     case object None extends QuatTrace { val value = "none" }
     val values = List(Short, Full, None)
     def apply(str: String): QuatTrace =

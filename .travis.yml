@@ -192,7 +192,7 @@ jobs:
         - ./build/release.sh 213 bigdata
 
     - stage: publish
-      if: type != pull_request AND branch = master
+      if: type != pull_request AND (branch = master OR branch =~ /re-release.*/)
       scala: 2.12.6
       name: "Publish"
       script:
