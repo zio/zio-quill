@@ -1,6 +1,6 @@
 package io.getquill.context.sql.norm
 
-import io.getquill.{ MirrorSqlDialect, SnakeCase, Spec, SqlMirrorContext }
+import io.getquill.{ MirrorSqlDialect, Query, SnakeCase, Spec, SqlMirrorContext }
 import io.getquill.context.sql.{ testContext, testContextUpperEscapeColumn }
 import io.getquill.context.sql.util.StringOps._
 
@@ -666,4 +666,32 @@ class ExpandNestedQueriesSpec extends Spec {
         |""".collapseSpace
   }
 
+  "infixes" - {
+    object testContext extends SqlMirrorContext(MirrorSqlDialect, SnakeCase)
+    import testContext._
+
+    "should be handled correctly in a regular schema" in {
+      case class Person(firstName: String, lastName: String)
+      testContext.run(infix"fromSomewhere()".as[Query[Person]]).string mustEqual
+        "SELECT x.first_name, x.last_name FROM (fromSomewhere()) AS x"
+    }
+  }
+
+  "expression subquery" - {
+    case class ThePerson(name: String, age: Int, bossId: Int)
+    case class TheBoss(bossId: Int, name: String, age: Int)
+
+    object testContext extends SqlMirrorContext(MirrorSqlDialect, SnakeCase)
+    import testContext._
+
+    "should be handled correctly in a regular schema" in {
+      testContext.run(query[ThePerson].filter(p => query[TheBoss].filter(_.bossId == p.bossId).map(_ => 1).nonEmpty)).string mustEqual
+        "SELECT p.name, p.age, p.boss_id FROM the_person p WHERE EXISTS (SELECT 1 FROM the_boss x12 WHERE x12.boss_id = p.boss_id)"
+    }
+    "should be handled correctly when using a schemameta" in {
+      implicit val personSchema = schemaMeta[TheBoss]("theBossMan", _.bossId -> "bossman_id")
+      testContext.run(query[ThePerson].filter(p => query[TheBoss].filter(_.bossId == p.bossId).map(_ => 1).nonEmpty)).string mustEqual
+        "SELECT p.name, p.age, p.boss_id FROM the_person p WHERE EXISTS (SELECT 1 FROM theBossMan x15 WHERE x15.bossman_id = p.boss_id)"
+    }
+  }
 }
