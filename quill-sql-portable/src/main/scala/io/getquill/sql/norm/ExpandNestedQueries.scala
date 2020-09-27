@@ -72,7 +72,7 @@ object ExpandNestedQueries extends StatelessQueryTransformer {
     def apply(p: Ast): Ast = {
       p match {
         case p @ PropertyMatroshka(inner, path) =>
-          val isSubselect = !inContext.refersToEntity(p)
+          val isSubselect = inContext.isSubselect(p)
           val renameable =
             if (p.prevName.isDefined || isSubselect)
               Renameable.Fixed
