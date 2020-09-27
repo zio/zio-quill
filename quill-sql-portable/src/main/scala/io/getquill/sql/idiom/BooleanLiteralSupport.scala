@@ -9,11 +9,17 @@ import io.getquill.idiom.StringToken
 import io.getquill.norm.{ ConcatBehavior, EqualityBehavior }
 import io.getquill.quat.Quat
 import io.getquill.sql.norm.VendorizeBooleans
+import io.getquill.util.Messages
 
 trait BooleanLiteralSupport extends SqlIdiom {
 
-  override def normalizeAst(ast: Ast, concatBehavior: ConcatBehavior, equalityBehavior: EqualityBehavior) =
-    VendorizeBooleans(SqlNormalize(ast, concatBehavior, equalityBehavior))
+  override def normalizeAst(ast: Ast, concatBehavior: ConcatBehavior, equalityBehavior: EqualityBehavior) = {
+    val norm = SqlNormalize(ast, concatBehavior, equalityBehavior)
+    if (Messages.smartBooleans)
+      VendorizeBooleans(norm)
+    else
+      norm
+  }
 
   override implicit def valueTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Value] =
     Tokenizer[Value] {
