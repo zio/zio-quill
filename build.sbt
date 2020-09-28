@@ -804,7 +804,8 @@ lazy val basicSettings = Seq(
     "-unchecked",
     "-Ywarn-dead-code",
     "-Ywarn-numeric-widen",
-    "-Ywarn-value-discard"
+    "-Ywarn-value-discard",
+    "-Ypatmat-exhaust-depth", "40"
 
   ),
   scalacOptions ++= {

@@ -498,6 +498,8 @@ trait Parsing extends ValueComputation with QuatMaking {
       OptionFlatten(astParser(o))
     case q"$o.getOrElse[$t]($body)" if is[Option[Any]](o) =>
       OptionGetOrElse(astParser(o), astParser(body))
+    case q"$o.orElse[$t]($body)" if is[Option[Any]](o) =>
+      OptionOrElse(astParser(o), astParser(body))
     case q"$o.contains[$t]($body)" if is[Option[Any]](o) =>
       OptionContains(astParser(o), astParser(body))
     case q"$o.isEmpty" if is[Option[Any]](o) =>

@@ -25,6 +25,13 @@ class FlattenOptionOperationSpec extends Spec { //hello
       new FlattenOptionOperation(AnsiConcat)(q.ast.body: Ast) mustEqual
         If(BinaryOperation(Ident("o"), EqualityOperator.`!=`, NullValue), Ident("o"), Constant.auto(1))
     }
+    "orElse" in {
+      val q = quote {
+        (o: Option[Int]) => o.orElse(Option(1))
+      }
+      new FlattenOptionOperation(AnsiConcat)(q.ast.body: Ast) mustEqual
+        If(BinaryOperation(Ident("o"), EqualityOperator.`!=`, NullValue), Ident("o"), Constant.auto(1))
+    }
     "flatten" - {
       "regular operation" in {
         val q = quote {
