@@ -3675,13 +3675,13 @@ See the [LICENSE](https://github.com/getquill/quill/blob/master/LICENSE.txt) fil
 - @juliano
 - @mentegy
 - @mdedetrich
-- @mxl
 
 ## Former maintainers:
 
 - @gustavoamigo
 - @godenji
 - @lvicentesanchez
+- @mxl
 
 You can notify all current maintainers using the handle `@getquill/maintainers`.
 
