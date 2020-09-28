@@ -137,4 +137,37 @@ trait OptionQuerySpec extends Spec {
     ("Cora", "111 Default Address")
   )
 
+  val `Simple OrElse` = quote {
+    query[Address].map(a => (a.street, a.otherExtraInfo.orElse(Some("yet something else"))))
+  }
+  val `Simple OrElse Result` = List(
+    ("123 Fake Street", Some("something")),
+    ("456 Old Street", Some("something else")),
+    ("789 New Street", Some("yet something else")),
+    ("111 Default Address", Some("yet something else"))
+  )
+
+  val `Simple Map with OrElse` = quote {
+    query[Address].map(
+      a => (a.street, a.otherExtraInfo.map(info => info + " suffix").orElse(Some("baz")))
+    )
+  }
+  val `Simple Map with OrElse Result` = List(
+    ("123 Fake Street", Some("something suffix")),
+    ("456 Old Street", Some("something else suffix")),
+    ("789 New Street", Some("baz")),
+    ("111 Default Address", Some("baz"))
+  )
+
+  val `Simple Map with Condition and OrElse` = quote {
+    query[Address].map(
+      a => (a.street, a.otherExtraInfo.map(info => if (info == "something") "foo" else "bar").orElse(Some("baz")))
+    )
+  }
+  val `Simple Map with Condition and OrElse Result` = List(
+    ("123 Fake Street", Some("foo")),
+    ("456 Old Street", Some("bar")),
+    ("789 New Street", Some("baz")),
+    ("111 Default Address", Some("baz"))
+  )
 }
