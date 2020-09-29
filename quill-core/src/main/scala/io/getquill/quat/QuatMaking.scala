@@ -1,6 +1,6 @@
 package io.getquill.quat
 
-import java.lang.reflect.{ Method, Modifier }
+import java.lang.reflect.Method
 
 import io.getquill.dsl.QuotationDsl
 import io.getquill.util.{ Messages, OptionalTypecheck }
@@ -58,9 +58,12 @@ object RuntimeEntityQuat {
   def apply[T](implicit ct: ClassTag[T]): Quat =
     forClassTopLevel(ct.runtimeClass)
 
-  object Final {
+  object AnyVal {
     def unapply(cls: Class[_]): Boolean =
-      Modifier.isFinal(cls.getModifiers)
+      if (cls.getClasses.contains(classOf[AnyVal]))
+        true
+      else
+        false
   }
 
   object Embedded {
@@ -94,7 +97,7 @@ object RuntimeEntityQuat {
 
   def forClass(cls: Class[_]): Quat =
     cls match {
-      case Final() => Quat.Value
+      case AnyVal() => Quat.Value
       case Embedded(methods) =>
         Quat.Product(methods.map(m => (m.getName, forClass(m.getReturnType))))
       // If we are here we are already inside of a product which means if we are not a embedded, we have to be value-level
@@ -103,7 +106,7 @@ object RuntimeEntityQuat {
 
   def forClassTopLevel(cls: Class[_]): Quat =
     cls match {
-      case Final() => Quat.Value
+      case AnyVal() => Quat.Value
       // Embedded object can be a top-level entity
       case Embedded(methods) =>
         Quat.Product(methods.map(m => (m.getName, forClass(m.getReturnType))))
@@ -271,6 +274,9 @@ trait QuatMakingBase {
         // In this situations, the CaseClassBaseType should activate first and recurse which will then hit this case clause.
         case QueryType(tpe) =>
           parseType(tpe)
+
+        case Param(tpe) =>
+          Quat.Generic
 
         // If the type is optional, recurse
         case _ if (isOptionType(tpe)) =>

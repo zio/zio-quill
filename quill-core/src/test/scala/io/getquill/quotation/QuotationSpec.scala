@@ -101,6 +101,29 @@ class QuotationSpec extends Spec {
               (Property(Ident("t", renamedQuat), "s") +==+ Constant.auto("s")) +&&+ (Property(Ident("t", renamedQuat), "i") +==+ Constant.auto(1)))
           )
         }
+
+        case class TableData(id: Int)
+
+        "with implicit property and generic" in {
+          implicit class LimitQuery[T](q: Query[T]) {
+            def limitQuery = quote(infix"$q LIMIT 1".as[Query[T]])
+          }
+          val q = quote { query[TableData].limitQuery }
+          q.ast mustEqual Infix(List("", " LIMIT 1"), List(Entity("TableData", List(), Quat.LeafProduct("id"))), false, Quat.Generic)
+          quote(unquote(q)).ast mustEqual Infix(List("", " LIMIT 1"), List(Entity("TableData", List(), Quat.LeafProduct("id"))), false, Quat.LeafProduct("id"))
+        }
+        "with method and generic" in {
+          def limitQuery[T] = quote { (q: Query[T]) => infix"$q LIMIT 1".as[Query[T]] }
+          val q = quote { limitQuery(query[TableData]) }
+          q.ast mustEqual Infix(List("", " LIMIT 1"), List(Entity("TableData", List(), Quat.LeafProduct("id"))), false, Quat.Generic)
+          quote(unquote(q)).ast mustEqual Infix(List("", " LIMIT 1"), List(Entity("TableData", List(), Quat.LeafProduct("id"))), false, Quat.LeafProduct("id"))
+        }
+        "with method and generic - typed" in {
+          def limitQuery[T] = quote { (q: Query[T]) => infix"$q LIMIT 1".as[Query[T]] }
+          val q = quote { limitQuery[TableData](query[TableData]) }
+          q.ast mustEqual Infix(List("", " LIMIT 1"), List(Entity("TableData", List(), Quat.LeafProduct("id"))), false, Quat.Generic)
+          quote(unquote(q)).ast mustEqual Infix(List("", " LIMIT 1"), List(Entity("TableData", List(), Quat.LeafProduct("id"))), false, Quat.LeafProduct("id"))
+        }
       }
       "filter" in {
         val q = quote {
