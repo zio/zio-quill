@@ -1,3 +1,7 @@
+# 3.6-RC2
+
+- [Fix incorrect Quat.Value parsing issues](https://github.com/getquill/quill/pull/1987)
+
 # 3.6.0-RC1
 
 - [Fix Query in Nested Operation and Infix](https://github.com/getquill/quill/pull/1980)
