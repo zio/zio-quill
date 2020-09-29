@@ -1,7 +1,9 @@
 package io.getquill.quotation
 
 import io.getquill._
+import io.getquill.ast.Entity
 import io.getquill.dsl.DynamicQueryDsl
+import io.getquill.quat.Quat
 
 class DynamicQuerySpec extends Spec {
 
@@ -69,6 +71,13 @@ class DynamicQuerySpec extends Spec {
 
     def test[T: QueryMeta](d: Quoted[Query[T]], s: Quoted[Query[T]]) =
       testContext.run(d).string mustEqual testContext.run(s).string
+
+    "simple dynamic query succeeds" in {
+      final case class Person(firstName: String, lastName: String)
+      val person = "Person"
+      val s = dynamicQuerySchema[Person](person)
+      s.ast mustEqual Entity("Person", List(), Quat.LeafProduct("firstName", "lastName"))
+    }
 
     "dynamicQuery" in {
       test(
