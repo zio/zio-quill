@@ -102,7 +102,31 @@ In order to contribute to the project, just do as follows:
 ## File Formatting 
 
 [Scalariform](http://mdr.github.io/scalariform/) is used as file formatting tool in this project.
-Every time you compile the project in sbt, file formatting will be triggered.
+Every time you compile the project in sbt, file formatting will be triggered. To manually format
+the Quill codebase, run the following command:
+```
+sbt scalariformFormat test:scalariformFormat
+```
+
+## Notes About Git
+
+As you are working on a branch fixing a Quill problem, there will likely be additional changes merged
+to the main Quill repo (i.e. getquill/quill) before you finish. The solution to this is to squash your commits, 
+and then to replay them on top of the latest changes that have been made to the main Quill repo.
+
+The steps to do that are the following:
+1) Squash your commits via an interactive git rebase (see [here](https://medium.com/@slamflipstrom/a-beginners-guide-to-squashing-commits-with-git-rebase-8185cf6e62ec)).
+2) If you have not already, add an 'upstream' remote to your repository:
+   ```
+   git remote add upstream 'git@github.com:getquill/quill.git'
+   ``` 
+3) Do a git Pull + Rebase from the upstream:
+   ```
+   git pull --rebase upstream master
+   ```
+
+Once you have resolved any conflicts that may have arisen from the rebase, your
+branch will be capable of becoming a pull-request.
 
 ## Oracle Support
 
@@ -248,8 +272,31 @@ Some additional arguments you can add to your compiler's VM args provide insight
 -Dquill.trace.color=true          // Print Quill ASTs in color (default=false) 
 -Dquill.trace.opinion=false       // Print the parts of Quill ASTs not directly used in the main transformation phases (called Opinions).  (default=false) 
 -Dquill.trace.ast.simple=true     // Print the raw Quill ASTs elements or a more compact view of the AST code (think `show` vs `showRaw` in Scala macros). (default=true) 
--Dquill.trace.types=norm,standard,alias    // What parts of the Quill transformations to print during compilation?
+-Dquill.trace.types=sql,standard,alias,norm    // What parts of the Quill transformations to print during compilation?
 ```
 
 In Intellij, add them in the SBT settings if your are compiling using SBT:
 ![Intellj-SBT-Settings-Additional.png](quill-doc/etc/Intellj-SBT-Settings-Additional.png)
+
+## 'Trick' Debugging via the Dynamic Query API
+
+Since typically the Quill Query Normalizations and Tokenizations run during compile-time,
+break-point debugging them requires one of the above two steps. However, you can 'trick'
+Quill into running these during compile time by using the `.dynamically` keyword.
+
+For example say you have a query that looks like this, and you would like to see
+what happens to the AST in the `ExpandDistinct` phase.
+```scala
+val q = quote { query[Person].distinct.map(p => p.name) }
+val output = run(q)
+```
+Change the quotation to be dynamic:
+```scala
+val output = run(q.dynamically)
+```
+Since the query is now dynamic, you can set a breakpoint in the ExpandDistinct
+class and it will be hit during the runtime of your application.
+
+> NOTE: In situations where the .dynamically keyword is not available, e.g. when the 
+> quoted construct is not a query, add a type annotation to the variable holding the
+> quotation and this will effectively cause the same behavior.
