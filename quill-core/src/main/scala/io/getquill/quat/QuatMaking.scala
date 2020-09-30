@@ -120,6 +120,16 @@ object RuntimeEntityQuat {
 
 }
 
+abstract class TypeTaggedQuatMaking extends QuatMakingBase {
+  import scala.reflect.runtime.universe
+  override type Uni = scala.reflect.runtime.universe.type
+  // need to cast this to u.type otherwise 'existsEncoderFor' consumers will not be able to use scala.reflect.runtime.universe
+  override val u: scala.reflect.runtime.universe.type = universe
+
+  def existsEncoderFor(tpe: universe.Type): Boolean = quatValueTypes.contains(tpe)
+  def quatValueTypes: List[universe.Type]
+}
+
 trait QuatMakingBase {
   type Uni <: Universe
   val u: Uni

@@ -193,6 +193,9 @@ lazy val `quill-core` =
       "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
       "org.scala-lang"             %  "scala-reflect" % scalaVersion.value
     ))
+    .jvmSettings(
+      fork in Test := true
+    )
     .jsSettings(
       libraryDependencies ++= Seq(
         "com.lihaoyi" %%% "pprint" % pprintVersion(scalaVersion.value),
