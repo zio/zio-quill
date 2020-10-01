@@ -27,11 +27,6 @@ env:
 jobs:
   include:
     - stage: build
-      if: type != pull_request
-      script: ./build/build.sh db
-      scala: 2.11.12
-      name: "Databases 2.11 - MySQL, Postgres, Sqlite, H2, SQL Server, Oracle"
-    - stage: build
       script: ./build/build.sh db
       scala: 2.12.10
       name: "Databases 2.12 - MySQL, Postgres, Sqlite, H2, SQL Server, Oracle"
@@ -41,11 +36,6 @@ jobs:
       name: "Databases 2.13 - MySQL, Postgres, Sqlite, H2, SQL Server, Oracle"
 
     - stage: build
-      if: type != pull_request
-      script: ./build/build.sh js
-      scala: 2.11.12
-      name: "Databases 2.11 - JavaScript"
-    - stage: build
       script: ./build/build.sh js
       scala: 2.12.10
       name: "Databases 2.12 - JavaScript"
@@ -54,11 +44,6 @@ jobs:
       scala: 2.13.1
       name: "Databases 2.13 - JavaScript"
 
-    - stage: build
-      if: type != pull_request
-      script: ./build/build.sh async
-      scala: 2.11.12
-      name: "Async, Finagle, NDBC 2.11 - MySQL, Postgres, Sqlite, H2, SQL Server, Oracle"
     - stage: build
       script: ./build/build.sh async
       scala: 2.12.10
@@ -71,11 +56,6 @@ jobs:
     - stage: build
       if: type != pull_request
       script: ./build/build.sh codegen
-      scala: 2.11.12
-      name: "Code Generator 2.11 - MySQL, Postgres, Sqlite, H2, SQL Server, Oracle"
-    - stage: build
-      if: type != pull_request
-      script: ./build/build.sh codegen
       scala: 2.12.10
       name: "Code Generator 2.12 - MySQL, Postgres, Sqlite, H2, SQL Server, Oracle"
     - stage: build
@@ -85,11 +65,6 @@ jobs:
       name: "Code Generator 2.13 - MySQL, Postgres, Sqlite, H2, SQL Server, Oracle"
 
     - stage: build
-      if: type != pull_request
-      script: ./build/build.sh bigdata
-      scala: 2.11.12
-      name: "BigData Databases 2.11 - Cassandra, OrientDB, Spark"
-    - stage: build
       script: ./build/build.sh bigdata
       scala: 2.12.10
       name: "BigData Databases 2.12 - Cassandra, OrientDB, Spark"
@@ -97,43 +72,6 @@ jobs:
       script: ./build/build.sh bigdata
       scala: 2.13.1
       name: "BigData Databases 2.13 - Cassandra, OrientDB, Spark"
-
-    - stage: release
-      if: type != pull_request
-      scala: 2.12.6
-      name: "Release 2.11 base"
-      script:
-        - ./build/release.sh 211 base
-    - stage: release
-      if: type != pull_request
-      scala: 2.12.6
-      name: "Release 2.11 db"
-      script:
-        - ./build/release.sh 211 db
-    - stage: release
-      if: type != pull_request
-      scala: 2.12.6
-      name: "Release 2.11 js"
-      script:
-        - ./build/release.sh 211 js
-    - stage: release
-      if: type != pull_request
-      scala: 2.12.6
-      name: "Release 2.11 async"
-      script:
-        - ./build/release.sh 211 async
-    - stage: release
-      if: type != pull_request
-      scala: 2.12.6
-      name: "Release 2.11 codegen"
-      script:
-        - ./build/release.sh 211 codegen
-    - stage: release
-      if: type != pull_request
-      scala: 2.12.6
-      name: "Release 2.11 bigdata"
-      script:
-        - ./build/release.sh 211 bigdata
 
     - stage: release
       if: type != pull_request
