@@ -147,12 +147,12 @@ trait ReifyLiftings extends QuatMaking {
               for ((name, Reified(value, encoder)) <- transformer.state) yield {
                 encoder match {
                   case Some(encoder) =>
-                    q"def $name = io.getquill.quotation.ScalarValueLifting($value, $encoder)"
+                    q"lazy val $name = io.getquill.quotation.ScalarValueLifting($value, $encoder)"
                   case None =>
-                    q"def $name = io.getquill.quotation.CaseClassValueLifting($value)"
+                    q"lazy val $name = io.getquill.quotation.CaseClassValueLifting($value)"
                 }
               }
-            (ast, q"def $liftings = new { ..$trees }")
+            (ast, q"lazy val $liftings = new { ..$trees }")
         }
     }
 }
