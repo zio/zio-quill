@@ -367,6 +367,10 @@ trait Parsing extends ValueComputation with QuatMaking {
           fused.collect {
             case Right(a) => astParser(a)
           }
+
+        val liftUnlift = new { override val mctx: c.type = c } with LiftUnlift(newParams.foldLeft(0)((num, ast) => num + ast.countQuatFields))
+        import liftUnlift._
+
         Dynamic {
           c.typecheck(q"""
             new ${c.prefix}.Quoted[Any] {

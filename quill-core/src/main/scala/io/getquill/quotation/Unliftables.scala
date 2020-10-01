@@ -5,8 +5,8 @@ import io.getquill.ast._
 import io.getquill.quat.Quat
 
 trait Unliftables extends QuatUnliftable {
-  val c: Context
-  import c.universe.{ Ident => _, Constant => _, Function => _, If => _, _ }
+  val mctx: Context
+  import mctx.universe.{ Ident => _, Constant => _, Function => _, If => _, _ }
 
   implicit val astUnliftable: Unliftable[Ast] = Unliftable[Ast] {
     case liftUnliftable(ast) => ast
@@ -185,7 +185,7 @@ trait Unliftables extends QuatUnliftable {
 
   implicit val valueUnliftable: Unliftable[Value] = Unliftable[Value] {
     case q"$pack.NullValue" => NullValue
-    case q"$pack.Constant.apply(${ Literal(c.universe.Constant(a)) }, ${ quat: Quat })" => Constant(a, quat)
+    case q"$pack.Constant.apply(${ Literal(mctx.universe.Constant(a)) }, ${ quat: Quat })" => Constant(a, quat)
     case q"$pack.Tuple.apply(${ a: List[Ast] })" => Tuple(a)
     case q"$pack.CaseClass.apply(${ values: List[(String, Ast)] })" => CaseClass(values)
   }

@@ -798,14 +798,13 @@ lazy val basicSettings = Seq(
   EclipseKeys.eclipseOutput := Some("bin"),
   scalacOptions ++= Seq(
     "-target:jvm-1.8",
-    "-Xfatal-warnings",
     "-encoding", "UTF-8",
     "-feature",
     "-deprecation",
     "-unchecked",
     "-Ywarn-dead-code",
     "-Ywarn-numeric-widen",
-    "-Ywarn-value-discard",
+    "-Ywarn-value-discard"
 
   ),
   scalacOptions ++= {
@@ -822,7 +821,9 @@ lazy val basicSettings = Seq(
           "-Xsource:2.12" // needed so existential types work correctly
         )
       case Some((2, 12)) =>
-        Seq("-Xlint:-unused,_",
+        Seq(
+          "-Xfatal-warnings",
+          "-Xlint:-unused,_",
           "-Xfuture",
           "-deprecation",
           "-Yno-adapted-args",
