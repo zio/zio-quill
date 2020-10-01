@@ -1,4 +1,3 @@
 package io.getquill
 
-trait Udt {
-}
+trait Udt
