@@ -82,6 +82,14 @@ class FlattenOptionOperation(concatBehavior: ConcatBehavior) extends StatelessTr
           uncheckedReduction(ast, alias, body)
         }
 
+      case OptionForall(OptionOrElse(a, b), alias, body) =>
+        val reducedA = BetaReduction(body, alias -> a)
+        val reducedB = BetaReduction(body, alias -> b)
+        val isNullA = IsNullCheck(a)
+        val isNullB = IsNullCheck(b)
+
+        apply(reducedA) +||+ apply((isNullA +&&+ reducedB): Ast) +||+ apply((isNullA +&&+ isNullB): Ast)
+
       case OptionForall(ast, alias, body) =>
         if (containsNonFallthroughElement(body)) {
           val reduction = BetaReduction(body, alias -> ast)

@@ -12,8 +12,10 @@ class OptionJdbcSpec extends OptionQuerySpec {
     testContext.transaction {
       testContext.run(query[Contact].delete)
       testContext.run(query[Address].delete)
+      testContext.run(query[Task].delete)
       testContext.run(liftQuery(peopleEntries).foreach(p => peopleInsert(p)))
       testContext.run(liftQuery(addressEntries).foreach(p => addressInsert(p)))
+      testContext.run(liftQuery(taskEntries).foreach(p => taskInsert(p)))
     }
     ()
   }
@@ -60,5 +62,9 @@ class OptionJdbcSpec extends OptionQuerySpec {
 
   "Example 6 - Map+Option+Flatten+getOrElse Join" in {
     testContext.run(`Option+Some+None Normalize`) should contain theSameElementsAs `Option+Some+None Normalize Result`
+  }
+
+  "Example 7 - Filter with OrElse and Forall" in {
+    testContext.run(`Filter with OrElse and Forall`) should contain theSameElementsAs `Filter with OrElse and Forall Result`
   }
 }

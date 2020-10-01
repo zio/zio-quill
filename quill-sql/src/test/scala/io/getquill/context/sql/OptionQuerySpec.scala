@@ -12,6 +12,7 @@ trait OptionQuerySpec extends Spec {
   case class HasAddressContact(firstName: String, lastName: String, age: Int, addressFk: Int)
   case class Contact(firstName: String, lastName: String, age: Int, addressFk: Option[Int], extraInfo: String)
   case class Address(id: Int, street: String, zip: Int, otherExtraInfo: Option[String])
+  case class Task(emp: Option[String], tsk: Option[String])
 
   val peopleInsert =
     quote((p: Contact) => query[Contact].insert(p))
@@ -30,6 +31,15 @@ trait OptionQuerySpec extends Spec {
     Address(2, "456 Old Street", 45678, Some("something else")),
     Address(3, "789 New Street", 89010, None),
     Address(111, "111 Default Address", 12345, None)
+  )
+
+  val taskInsert = quote((t: Task) => query[Task].insert(t))
+
+  val taskEntries = List(
+    Task(Some("Feed the dogs"), Some("Feed the cats")),
+    Task(Some("Feed the dogs"), None),
+    Task(None, Some("Feed the cats")),
+    Task(None, None)
   )
 
   val `Simple Map with Condition` = quote {
@@ -169,5 +179,15 @@ trait OptionQuerySpec extends Spec {
     ("456 Old Street", Some("bar")),
     ("789 New Street", Some("baz")),
     ("111 Default Address", Some("baz"))
+  )
+
+  val `Filter with OrElse and Forall` = quote {
+    query[Task].filter(t => t.emp.orElse(t.tsk).forall(_ == "Feed the dogs"))
+  }
+
+  val `Filter with OrElse and Forall Result` = List(
+    Task(Some("Feed the dogs"), Some("Feed the cats")),
+    Task(Some("Feed the dogs"), None),
+    Task(None, None)
   )
 }
