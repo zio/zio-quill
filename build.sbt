@@ -110,12 +110,25 @@ val filteredModules = {
   } else modules
 }
 
-lazy val `quill` =
-  (project in file("."))
-    .settings(commonSettings: _*)
-    .settings(`tut-settings`:_*)
-    .aggregate(filteredModules.map(_.project): _*)
-    .dependsOn(filteredModules: _*)
+lazy val `quill` = {
+  val quill =
+    (project in file("."))
+      .settings(commonSettings: _*)
+      .settings(`tut-settings`:_*)
+
+  // Do not do aggregate project builds when debugging since during that time
+  // typically only individual modules are being build/compiled. This is mostly for convenience with IntelliJ.
+  // Normally it to just exclude `quill` from the build in Intellij instead but then local file change tracking
+  // and search of files from the root level (e.g. in the 'build' directory) is lost.
+  debugMacro match {
+    case true =>
+      quill
+    case false =>
+      quill
+        .aggregate(filteredModules.map(_.project): _*)
+        .dependsOn(filteredModules: _*)
+  }
+}
 
 publishArtifact in `quill` := false
 
@@ -194,6 +207,9 @@ lazy val `quill-core` =
       "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
       "org.scala-lang"             %  "scala-reflect" % scalaVersion.value
     ))
+    .jvmSettings(
+      fork in Test := true
+    )
     .jsSettings(
       libraryDependencies ++= Seq(
         "com.lihaoyi" %%% "pprint" % pprintVersion(scalaVersion.value),
@@ -409,7 +425,7 @@ lazy val `quill-finagle-mysql` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.twitter" %% "finagle-mysql" % "20.8.1"
+        "com.twitter" %% "finagle-mysql" % "20.9.0"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -469,7 +485,7 @@ lazy val `quill-jasync` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.github.jasync-sql" % "jasync-common" % "1.1.3",
+        "com.github.jasync-sql" % "jasync-common" % "1.1.4",
         "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.1"
       )
     )
@@ -482,7 +498,7 @@ lazy val `quill-jasync-postgres` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.github.jasync-sql" % "jasync-postgresql" % "1.1.3"
+        "com.github.jasync-sql" % "jasync-postgresql" % "1.1.4"
       )
     )
     .dependsOn(`quill-jasync` % "compile->compile;test->test")
@@ -494,7 +510,7 @@ lazy val `quill-jasync-mysql` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.github.jasync-sql" % "jasync-mysql" % "1.1.3"
+        "com.github.jasync-sql" % "jasync-mysql" % "1.1.4"
       )
     )
     .dependsOn(`quill-jasync` % "compile->compile;test->test")
@@ -665,7 +681,7 @@ lazy val jdbcTestingLibraries = Seq(
     "org.xerial"              %  "sqlite-jdbc"             % "3.32.3.2"             % Test,
     "com.microsoft.sqlserver" %  "mssql-jdbc"              % "7.1.1.jre8-preview" % Test,
     "com.oracle.ojdbc"        %  "ojdbc8"                  % "19.3.0.0"           % Test,
-    "org.mockito"             %% "mockito-scala-scalatest" % "1.15.0"              % Test
+    "org.mockito"             %% "mockito-scala-scalatest" % "1.16.0"              % Test
   )
 )
 

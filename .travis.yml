@@ -113,6 +113,12 @@ jobs:
     - stage: release
       if: type != pull_request
       scala: 2.12.6
+      name: "Release 2.11 js"
+      script:
+        - ./build/release.sh 211 js
+    - stage: release
+      if: type != pull_request
+      scala: 2.12.6
       name: "Release 2.11 async"
       script:
         - ./build/release.sh 211 async
@@ -144,6 +150,12 @@ jobs:
     - stage: release
       if: type != pull_request
       scala: 2.12.6
+      name: "Release 2.12 js"
+      script:
+        - ./build/release.sh 212 js
+    - stage: release
+      if: type != pull_request
+      scala: 2.12.6
       name: "Release 2.12 async"
       script:
         - ./build/release.sh 212 async
@@ -172,6 +184,12 @@ jobs:
       name: "Release 2.13 db"
       script:
         - ./build/release.sh 213 db
+    - stage: release
+      if: type != pull_request
+      scala: 2.13.2
+      name: "Release 2.13 js"
+      script:
+        - ./build/release.sh 213 js
     - stage: release
       if: type != pull_request
       scala: 2.13.2
