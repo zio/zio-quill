@@ -35,15 +35,17 @@ class Interpolator(
       val objectString = qprint(value).string(color)
       val oneLine = objectString.fitsOnOneLine
       oneLine match {
-        case true  => s"${indent.prefix}> ${objectString}"
-        case false => s"${indent.prefix}>\n${objectString.multiline(indent, elementPrefix)}"
+        case true => s"${indent.prefix}> ${objectString}"
+        case false =>
+          s"${indent.prefix}>\n${objectString.multiline(indent, elementPrefix)}"
       }
     }
 
     private def readFirst(first: String) =
       new Regex("%([0-9]+)(.*)").findFirstMatchIn(first) match {
-        case Some(matches) => (matches.group(2).trim, Some(matches.group(1).toInt))
-        case None          => (first, None)
+        case Some(matches) =>
+          (matches.group(2).trim, Some(matches.group(1).toInt))
+        case None => (first, None)
       }
 
     private def readBuffers() = {
@@ -59,7 +61,11 @@ class Interpolator(
           case None => {
             // A trick to make nested calls of andReturn indent further out which makes andReturn MUCH more usable.
             // Just count the number of times it has occurred on the thread stack.
-            val returnInvocationCount = Thread.currentThread().getStackTrace.toList.count(e => e.getMethodName == "andReturn")
+            val returnInvocationCount = Thread
+              .currentThread()
+              .getStackTrace
+              .toList
+              .count(e => e.getMethodName == "andReturn")
             defaultIndent + orZero(returnInvocationCount - 1) * 2
           }
         }
@@ -118,10 +124,10 @@ class Interpolator(
         None
 
     def andLog(): Unit =
-      logIfEnabled.foreach(value => out.println(value._1))
+      logIfEnabled().foreach(value => out.println(value._1))
 
     def andContinue[T](command: => T) = {
-      logIfEnabled.foreach(value => out.println(value._1))
+      logIfEnabled().foreach(value => out.println(value._1))
       command
     }
 

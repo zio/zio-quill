@@ -54,6 +54,7 @@ lazy val scala213Modules = baseModules ++ jsModules ++ dbModules ++ codegenModul
   `quill-async-postgres`,
   `quill-finagle-mysql`,
   `quill-cassandra`,
+  `quill-cassandra-lagom`,
   `quill-cassandra-monix`,
   `quill-orientdb`,
   `quill-jasync`,
@@ -563,6 +564,7 @@ lazy val `quill-cassandra-monix` =
     .dependsOn(`quill-monix` % "compile->compile;test->test")
 
 
+
 lazy val `quill-cassandra-lagom` =
    (project in file("quill-cassandra-lagom"))
     .settings(commonSettings: _*)
@@ -570,11 +572,13 @@ lazy val `quill-cassandra-lagom` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= {
-        val lagomVersion = "1.5.5"
+        val lagomVersion = if (scalaVersion.value.startsWith("2.13")) "1.6.1" else "1.5.5"
+        val versionSpecificDependencies =  if (scalaVersion.value.startsWith("2.13")) Seq("com.typesafe.play" %% "play-akka-http-server" % "2.8.0") else Seq.empty
         Seq(
+          "org.scala-lang.modules" %% "scala-collection-compat" % "2.1.6",
           "com.lightbend.lagom" %% "lagom-scaladsl-persistence-cassandra" % lagomVersion % Provided,
           "com.lightbend.lagom" %% "lagom-scaladsl-testkit" % lagomVersion % Test
-        )
+        ) ++ versionSpecificDependencies
       }
     )
     .dependsOn(`quill-cassandra` % "compile->compile;test->test")
@@ -726,12 +730,17 @@ def excludePathsIfOracle(paths:Seq[String]) = {
   })
 }
 
+val scala_v_11 = "2.11.12"
+val scala_v_12 = "2.12.10"
+val scala_v_13 = "2.13.2"
+
+
 val crossVersions = {
   val scalaVersion = sys.props.get("quill.scala.version")
-  if(scalaVersion.map(_.startsWith("2.13")).getOrElse(false)) {
-    Seq("2.11.12", "2.12.10", "2.13.1")
+  if(scalaVersion.exists(_.startsWith("2.13"))) {
+    Seq(scala_v_11, scala_v_12, scala_v_13)
   } else {
-    Seq("2.11.12", "2.12.10")
+    Seq(scala_v_11, scala_v_12)
   }
 }
 
@@ -749,8 +758,8 @@ lazy val basicSettings = Seq(
     }
   },
   organization := "io.getquill",
-  scalaVersion := "2.12.10",
-  crossScalaVersions := Seq("2.11.12", "2.12.10", "2.13.1"),
+  scalaVersion := scala_v_11,
+  crossScalaVersions := Seq(scala_v_11, scala_v_12, scala_v_13),
   libraryDependencies ++= Seq(
     "org.scala-lang.modules" %%% "scala-collection-compat" % "2.2.0",
     "com.lihaoyi"     %% "pprint"         % pprintVersion(scalaVersion.value),
@@ -814,7 +823,6 @@ lazy val basicSettings = Seq(
         )
       case Some((2, 12)) =>
         Seq("-Xlint:-unused,_",
-
           "-Xfuture",
           "-deprecation",
           "-Yno-adapted-args",
