@@ -46,6 +46,13 @@ sealed trait Quat {
   def serializeJVM = KryoQuatSerializer.serialize(this)
   def serializeJS = BooQuatSerializer.serialize(this)
 
+  /** Recursively count the fields of the Quat */
+  def countFields: Int =
+    this match {
+      case p: Quat.Product => p.fields.map(kv => kv._2.countFields).sum + 1
+      case _               => 1
+    }
+
   def renames: List[(String, String)] = List()
 
   /** Either convert to a Product or make the Quat into an error if it is anything else. */
