@@ -9,6 +9,17 @@ sealed trait Ast {
 
   def quat: Quat
 
+  def countQuatFields: Int =
+    CollectAst(this) {
+      case c: Constant           => c.quat.countFields
+      case a: Ident              => a.quat.countFields
+      case o: OptionNone         => o.quat.countFields
+      case l: ScalarValueLift    => l.quat.countFields
+      case l: ScalarQueryLift    => l.quat.countFields
+      case l: CaseClassValueLift => l.quat.countFields
+      case l: CaseClassQueryLift => l.quat.countFields
+    }.sum
+
   override def toString = {
     import io.getquill.MirrorIdiom._
     import io.getquill.idiom.StatementInterpolator._

@@ -6,8 +6,8 @@ import io.getquill.dsl.CoreDsl
 import io.getquill.quat.Quat
 
 trait Liftables extends QuatLiftable {
-  val c: Context
-  import c.universe.{ Ident => _, Constant => _, Function => _, If => _, Block => _, _ }
+  val mctx: Context
+  import mctx.universe.{ Ident => _, Constant => _, Function => _, If => _, Block => _, _ }
 
   private val pack = q"io.getquill.ast"
 
@@ -31,7 +31,7 @@ trait Liftables extends QuatLiftable {
     case UnaryOperation(a, b) => q"$pack.UnaryOperation($a, $b)"
     case Infix(a, b, pure, quat) => q"$pack.Infix($a, $b, $pure, $quat)"
     case If(a, b, c) => q"$pack.If($a, $b, $c)"
-    case Dynamic(tree: Tree, _) if (tree.tpe <:< c.weakTypeOf[CoreDsl#Quoted[Any]]) => q"$tree.ast"
+    case Dynamic(tree: Tree, _) if (tree.tpe <:< mctx.weakTypeOf[CoreDsl#Quoted[Any]]) => q"$tree.ast"
     case Dynamic(tree: Tree, quat) => q"$pack.Constant($tree, $quat)"
     case QuotedReference(tree: Tree, ast) => q"$ast"
     case OnConflict.Excluded(a) => q"$pack.OnConflict.Excluded($a)"
@@ -185,7 +185,7 @@ trait Liftables extends QuatLiftable {
 
   implicit val valueLiftable: Liftable[Value] = Liftable[Value] {
     case NullValue         => q"$pack.NullValue"
-    case Constant(a, quat) => q"$pack.Constant(${Literal(c.universe.Constant(a))}, $quat)"
+    case Constant(a, quat) => q"$pack.Constant(${Literal(mctx.universe.Constant(a))}, $quat)"
     case Tuple(a)          => q"$pack.Tuple($a)"
     case CaseClass(a)      => q"$pack.CaseClass($a)"
   }

@@ -54,6 +54,7 @@ lazy val scala213Modules = baseModules ++ jsModules ++ dbModules ++ codegenModul
   `quill-async-postgres`,
   `quill-finagle-mysql`,
   `quill-cassandra`,
+  `quill-cassandra-lagom`,
   `quill-cassandra-monix`,
   `quill-orientdb`,
   `quill-jasync`,
@@ -109,12 +110,25 @@ val filteredModules = {
   } else modules
 }
 
-lazy val `quill` =
-  (project in file("."))
-    .settings(commonSettings: _*)
-    .settings(`tut-settings`:_*)
-    .aggregate(filteredModules.map(_.project): _*)
-    .dependsOn(filteredModules: _*)
+lazy val `quill` = {
+  val quill =
+    (project in file("."))
+      .settings(commonSettings: _*)
+      .settings(`tut-settings`:_*)
+
+  // Do not do aggregate project builds when debugging since during that time
+  // typically only individual modules are being build/compiled. This is mostly for convenience with IntelliJ.
+  // Normally it to just exclude `quill` from the build in Intellij instead but then local file change tracking
+  // and search of files from the root level (e.g. in the 'build' directory) is lost.
+  debugMacro match {
+    case true =>
+      quill
+    case false =>
+      quill
+        .aggregate(filteredModules.map(_.project): _*)
+        .dependsOn(filteredModules: _*)
+  }
+}
 
 publishArtifact in `quill` := false
 
@@ -193,6 +207,9 @@ lazy val `quill-core` =
       "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
       "org.scala-lang"             %  "scala-reflect" % scalaVersion.value
     ))
+    .jvmSettings(
+      fork in Test := true
+    )
     .jsSettings(
       libraryDependencies ++= Seq(
         "com.lihaoyi" %%% "pprint" % pprintVersion(scalaVersion.value),
@@ -547,6 +564,7 @@ lazy val `quill-cassandra-monix` =
     .dependsOn(`quill-monix` % "compile->compile;test->test")
 
 
+
 lazy val `quill-cassandra-lagom` =
    (project in file("quill-cassandra-lagom"))
     .settings(commonSettings: _*)
@@ -554,11 +572,13 @@ lazy val `quill-cassandra-lagom` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= {
-        val lagomVersion = "1.5.5"
+        val lagomVersion = if (scalaVersion.value.startsWith("2.13")) "1.6.4" else "1.5.5"
+        val versionSpecificDependencies =  if (scalaVersion.value.startsWith("2.13")) Seq("com.typesafe.play" %% "play-akka-http-server" % "2.8.0") else Seq.empty
         Seq(
+          "org.scala-lang.modules" %% "scala-collection-compat" % "2.1.6",
           "com.lightbend.lagom" %% "lagom-scaladsl-persistence-cassandra" % lagomVersion % Provided,
           "com.lightbend.lagom" %% "lagom-scaladsl-testkit" % lagomVersion % Test
-        )
+        ) ++ versionSpecificDependencies
       }
     )
     .dependsOn(`quill-cassandra` % "compile->compile;test->test")
@@ -710,12 +730,17 @@ def excludePathsIfOracle(paths:Seq[String]) = {
   })
 }
 
+val scala_v_11 = "2.11.12"
+val scala_v_12 = "2.12.10"
+val scala_v_13 = "2.13.2"
+
+
 val crossVersions = {
   val scalaVersion = sys.props.get("quill.scala.version")
-  if(scalaVersion.map(_.startsWith("2.13")).getOrElse(false)) {
-    Seq("2.11.12", "2.12.10", "2.13.1")
+  if(scalaVersion.exists(_.startsWith("2.13"))) {
+    Seq(scala_v_11, scala_v_12, scala_v_13)
   } else {
-    Seq("2.11.12", "2.12.10")
+    Seq(scala_v_11, scala_v_12)
   }
 }
 
@@ -733,8 +758,8 @@ lazy val basicSettings = Seq(
     }
   },
   organization := "io.getquill",
-  scalaVersion := "2.12.10",
-  crossScalaVersions := Seq("2.11.12", "2.12.10", "2.13.1"),
+  scalaVersion := scala_v_11,
+  crossScalaVersions := Seq(scala_v_11, scala_v_12, scala_v_13),
   libraryDependencies ++= Seq(
     "org.scala-lang.modules" %%% "scala-collection-compat" % "2.2.0",
     "com.lihaoyi"     %% "pprint"         % pprintVersion(scalaVersion.value),
@@ -773,14 +798,13 @@ lazy val basicSettings = Seq(
   EclipseKeys.eclipseOutput := Some("bin"),
   scalacOptions ++= Seq(
     "-target:jvm-1.8",
-    "-Xfatal-warnings",
     "-encoding", "UTF-8",
     "-feature",
     "-deprecation",
     "-unchecked",
     "-Ywarn-dead-code",
     "-Ywarn-numeric-widen",
-    "-Ywarn-value-discard",
+    "-Ywarn-value-discard"
 
   ),
   scalacOptions ++= {
@@ -797,8 +821,9 @@ lazy val basicSettings = Seq(
           "-Xsource:2.12" // needed so existential types work correctly
         )
       case Some((2, 12)) =>
-        Seq("-Xlint:-unused,_",
-
+        Seq(
+          "-Xfatal-warnings",
+          "-Xlint:-unused,_",
           "-Xfuture",
           "-deprecation",
           "-Yno-adapted-args",
