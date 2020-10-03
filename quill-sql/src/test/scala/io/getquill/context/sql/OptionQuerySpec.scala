@@ -190,4 +190,13 @@ trait OptionQuerySpec extends Spec {
     Task(Some("Feed the dogs"), None),
     Task(None, None)
   )
+
+  val `Filter with OrElse and Exists` = quote {
+    query[Task].filter(t => t.emp.orElse(t.tsk).exists(_ == "Feed the dogs"))
+  }
+
+  val `Filter with OrElse and Exists Result` = List(
+    Task(Some("Feed the dogs"), Some("Feed the cats")),
+    Task(Some("Feed the dogs"), None)
+  )
 }

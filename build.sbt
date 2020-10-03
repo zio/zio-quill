@@ -806,7 +806,6 @@ lazy val basicSettings = Seq(
     "-Ywarn-numeric-widen",
     "-Ywarn-value-discard",
     "-Ypatmat-exhaust-depth", "40"
-
   ),
   scalacOptions ++= {
     CrossVersion.partialVersion(scalaVersion.value) match {

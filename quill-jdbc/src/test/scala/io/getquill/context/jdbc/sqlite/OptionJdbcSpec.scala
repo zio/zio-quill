@@ -63,4 +63,8 @@ class OptionJdbcSpec extends OptionQuerySpec {
   "Example 7 - Filter with OrElse and Forall" in {
     testContext.run(`Filter with OrElse and Forall`) should contain theSameElementsAs `Filter with OrElse and Forall Result`
   }
+
+  "Example 7.1 - Filter with OrElse and Exists" in {
+    testContext.run(`Filter with OrElse and Exists`) should contain theSameElementsAs `Filter with OrElse and Exists Result`
+  }
 }

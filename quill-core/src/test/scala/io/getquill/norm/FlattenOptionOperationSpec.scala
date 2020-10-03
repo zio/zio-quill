@@ -42,6 +42,13 @@ class FlattenOptionOperationSpec extends Spec {
           ((o +==+ c2) +||+ (IsNullCheck(o) +&&+ (c1 +==+ c2))
             +||+ (IsNullCheck(o) +&&+ IsNullCheck(c1)))
       }
+      "with exists" in {
+        val q = quote {
+          (o: Option[Int]) => o.orElse(Option(1)).exists(_ == 2)
+        }
+        new FlattenOptionOperation(AnsiConcat)(q.ast.body: Ast) mustEqual
+          ((o +==+ c2 +&&+ IsNotNullCheck(o)) +||+ (c1 +==+ c2 +&&+ IsNotNullCheck(c1)))
+      }
     }
     "flatten" - {
       "regular operation" in {
