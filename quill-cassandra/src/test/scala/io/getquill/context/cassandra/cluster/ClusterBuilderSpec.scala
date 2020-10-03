@@ -16,19 +16,19 @@ class ClusterBuilderSpec extends Spec {
     "with a single host" in {
       val cfgString = s"contactPoint = ${hosts.head}"
       val clusterBuilder: Builder = ClusterBuilder(ConfigFactory.parseString(cfgString))
-      clusterBuilder.getContactPoints must contain theSameElementsAs (contactPoints.take(1))
+      clusterBuilder.getContactPoints === contactPoints.take(1)
     }
 
     "with a single host in an array" in {
       val cfgString = s"contactPoints = [${hosts.head}]"
       val clusterBuilder: Builder = ClusterBuilder(ConfigFactory.parseString(cfgString))
-      clusterBuilder.getContactPoints must contain theSameElementsAs (contactPoints.take(1))
+      clusterBuilder.getContactPoints === contactPoints.take(1)
     }
 
     "with multiple hosts" in {
       val cfgString = s"""contactPoints = [${hosts.mkString(",")}] """
       val clusterBuilder: Builder = ClusterBuilder(ConfigFactory.parseString(cfgString))
-      clusterBuilder.getContactPoints must contain theSameElementsAs (contactPoints)
+      clusterBuilder.getContactPoints === contactPoints
     }
   }
 }
