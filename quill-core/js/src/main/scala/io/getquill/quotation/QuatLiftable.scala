@@ -3,8 +3,6 @@ package io.getquill.quotation
 import scala.reflect.macros.whitebox.Context
 import io.getquill.quat.Quat
 
-import scala.collection.mutable
-
 trait QuatLiftable {
   val mctx: Context
   def serializeQuats: Boolean
@@ -16,22 +14,17 @@ trait QuatLiftable {
   implicit val quatProductLiftable: Liftable[Quat.Product] = Liftable[Quat.Product] {
     // If we are in the JS, use Kryo to serialize our Quat due to JS 64KB method limit that we will run into of the Quat Constructor
     // if plainly lifted into the method created by our macro (i.e. the 'ast' method).
-    case quat: Quat.Product if (serializeQuats)    => q"io.getquill.quat.Quat.Product.fromSerializedJS(${quat.serializeJS})"
-    case Quat.Product.WithRenames(fields, renames) => q"io.getquill.quat.Quat.Product.WithRenames($fields, $renames)"
+    case quat: Quat.Product if (serializeQuats)                                  => q"io.getquill.quat.Quat.Product.fromSerializedJS(${quat.serializeJS})"
+    case Quat.Product.WithRenamesCompact(fields, values, renamesFrom, renamesTo) => q"io.getquill.quat.Quat.Product.WithRenamesCompact.apply(..$fields)(..$values)(..$renamesFrom)(..$renamesTo)"
   }
 
   implicit val quatLiftable: Liftable[Quat] = Liftable[Quat] {
-    case quat: Quat.Product if (serializeQuats)    => q"io.getquill.quat.Quat.fromSerializedJS(${quat.serializeJS})"
-    case Quat.Product.WithRenames(fields, renames) => q"io.getquill.quat.Quat.Product.WithRenames($fields, $renames)"
-    case Quat.Value                                => q"io.getquill.quat.Quat.Value"
-    case Quat.Null                                 => q"io.getquill.quat.Quat.Null"
-    case Quat.Generic                              => q"io.getquill.quat.Quat.Generic"
-    case Quat.BooleanValue                         => q"io.getquill.quat.Quat.BooleanValue"
-    case Quat.BooleanExpression                    => q"io.getquill.quat.Quat.BooleanExpression"
-  }
-
-  implicit def linkedHashMapLiftable[K, V](implicit lk: Liftable[K], lv: Liftable[V]): Liftable[mutable.LinkedHashMap[K, V]] = Liftable[mutable.LinkedHashMap[K, V]] {
-    case l: mutable.LinkedHashMap[K, V] =>
-      q"scala.collection.mutable.LinkedHashMap(${l.map { case (k, v) => q"(${lk(k)}, ${lv(v)})" }.toSeq: _*})"
+    case quat: Quat.Product if (serializeQuats) => q"io.getquill.quat.Quat.fromSerializedJS(${quat.serializeJS})"
+    case Quat.Product.WithRenamesCompact(fields, values, renamesFrom, renamesTo) => q"io.getquill.quat.Quat.Product.WithRenamesCompact.apply(..$fields)(..$values)(..$renamesFrom)(..$renamesTo)"
+    case Quat.Value => q"io.getquill.quat.Quat.Value"
+    case Quat.Null => q"io.getquill.quat.Quat.Null"
+    case Quat.Generic => q"io.getquill.quat.Quat.Generic"
+    case Quat.BooleanValue => q"io.getquill.quat.Quat.BooleanValue"
+    case Quat.BooleanExpression => q"io.getquill.quat.Quat.BooleanExpression"
   }
 }
