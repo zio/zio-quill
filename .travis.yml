@@ -6,6 +6,11 @@ services:
   - docker
   - postgresql
   - mysql
+before_install:
+  - |
+    wget -qO- "https://github.com/crazy-max/travis-wait-enhanced/releases/download/v1.2.0/travis-wait-enhanced_1.2.0_linux_x86_64.tar.gz" | tar -zxvf - travis-wait-enhanced
+    mv travis-wait-enhanced /home/travis/bin/
+    travis-wait-enhanced --version
 addons:
   postgresql: "9.6"
 branches:
