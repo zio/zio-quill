@@ -41,7 +41,9 @@ object LinkedHashMapOps {
  */
 sealed trait Quat {
   def applyRenames: Quat = this
-  def withRenames(renames: List[(String, String)]): Quat
+  def withRenames(renames: mutable.LinkedHashMap[String, String]): Quat
+  def withRenames(renames: List[(String, String)]): Quat =
+    withRenames(mutable.LinkedHashMap(renames: _*))
 
   def serializeJVM = KryoQuatSerializer.serialize(this)
   def serializeJS = BooQuatSerializer.serialize(this)
@@ -53,7 +55,7 @@ sealed trait Quat {
       case _               => 1
     }
 
-  def renames: List[(String, String)] = List()
+  def renames: mutable.LinkedHashMap[String, String] = mutable.LinkedHashMap()
 
   /** Either convert to a Product or make the Quat into an error if it is anything else. */
   def probit =
@@ -92,10 +94,10 @@ sealed trait Quat {
         })
       }.mkString(",")
     })${
-      (this.renames match {
-        case Nil   => ""
-        case other => s"[${other.map { case (k, v) => k + "->" + v }.mkString(",")}]"
-      })
+      (if (this.renames.isEmpty)
+        ""
+      else
+        s"[${this.renames.map { case (k, v) => k + "->" + v }.mkString(",")}]")
     }"
     case Quat.Generic           => "<G>"
     case Quat.Value             => "V"
@@ -138,15 +140,15 @@ object Quat {
     def this(list: Iterator[(String, Quat)]) = this((mutable.LinkedHashMap[String, Quat]() ++ list): mutable.LinkedHashMap[String, Quat])
 
     // Strictly internal, use WithRenames to construct an instance of a Product with Renames
-    private def this(fields: mutable.LinkedHashMap[String, Quat], newRenames: List[(String, String)]) = {
+    private def this(fields: mutable.LinkedHashMap[String, Quat], newRenames: mutable.LinkedHashMap[String, String]) = {
       this(fields)
       _renames = newRenames
     }
 
     // Defining as var but should be effectively static! I.e. changes only possible with WithRename. Need
     // to make this var because doing "new Product { override def renames = newRenames }" breaks BooPickle serialization
-    var _renames: List[(String, String)] = List()
-    override def renames: List[(String, String)] = _renames
+    var _renames: mutable.LinkedHashMap[String, String] = mutable.LinkedHashMap()
+    override def renames: mutable.LinkedHashMap[String, String] = _renames
 
     def withRenamesFrom(other: Quat): Quat = {
       other match {
@@ -183,8 +185,11 @@ object Quat {
       Some(Quat.Product(newFields).withRenames(renames))
     }
 
-    def withRenames(renames: List[(String, String)]) =
+    override def withRenames(renames: mutable.LinkedHashMap[String, String]): Quat.Product =
       Product.WithRenames(fields, renames)
+
+    override def withRenames(renames: List[(String, String)]): Quat.Product =
+      Product.WithRenames(fields, (mutable.LinkedHashMap[String, String]() ++ renames): mutable.LinkedHashMap[String, String])
 
     /**
      * Rename the properties based on the renames list. Keep this list
@@ -196,7 +201,7 @@ object Quat {
       val newFields = fields.map {
         case (f, q) =>
           // Rename properties of this quat and rename it's children recursively
-          val newKey = renames.find(_._1 == f).map(_._2).getOrElse(f)
+          val newKey = renames.get(f).getOrElse(f)
           val newValue = q.applyRenames
           (newKey, newValue)
       }
@@ -222,11 +227,39 @@ object Quat {
      * (see `PropagateRenames` for more detail)
      */
     object WithRenames {
-      def apply(fields: mutable.LinkedHashMap[String, Quat], theRenames: List[(String, String)]) =
+      def apply(fields: mutable.LinkedHashMap[String, Quat], theRenames: mutable.LinkedHashMap[String, String]) =
         new Product(fields, theRenames)
+
+      def iterated(list: Iterator[(String, Quat)], renames: Iterator[(String, String)]) =
+        WithRenames.apply(
+          (mutable.LinkedHashMap[String, Quat]() ++ list): mutable.LinkedHashMap[String, Quat],
+          (mutable.LinkedHashMap[String, String]() ++ renames): mutable.LinkedHashMap[String, String]
+        )
 
       def unapply(p: Quat.Product) =
         Some((p.fields, p.renames))
+    }
+
+    object WithRenamesCompact {
+      def apply(fields: String*)(values: Quat*)(renamesFrom: String*)(renamesTo: String*) = {
+        if (fields.length != values.length)
+          throw new IllegalArgumentException(
+            s"Property Re-creation failed because fields length ${fields.length} was not same as values length ${values.length}." +
+              s"\nFields: [${fields.mkString(", ")}]" + s"\nValues: [${values.mkString(", ")}]"
+          )
+        if (renamesFrom.length != renamesTo.length)
+          throw new IllegalArgumentException(
+            s"Property Re-creation failed because rename keys length ${renamesFrom.length} was not same as rename values length ${renamesTo.length}." +
+              s"\nKeys: [${renamesFrom.mkString(", ")}]" + s"\nValues: [${renamesTo.mkString(", ")}]"
+          )
+        Product.WithRenames.iterated(fields.zip(values).iterator, renamesFrom.zip(renamesTo).iterator)
+      }
+
+      def unapply(p: Quat.Product) = {
+        val (fields, values) = p.fields.unzip
+        val (renamesFrom, renamesTo) = p.renames.unzip
+        Some((fields, values, renamesFrom, renamesTo))
+      }
     }
   }
   object Tuple {
@@ -234,10 +267,10 @@ object Quat {
     def apply(fields: Iterable[Quat]): Quat.Product = new Quat.Product(fields.zipWithIndex.map { case (f, i) => (s"_${i + 1}", f) }.iterator)
   }
   case object Null extends Quat {
-    override def withRenames(renames: List[(String, String)]) = this
+    override def withRenames(renames: mutable.LinkedHashMap[String, String]) = this
   }
   case object Generic extends Quat {
-    override def withRenames(renames: List[(String, String)]) = this
+    override def withRenames(renames: mutable.LinkedHashMap[String, String]) = this
   }
 
   case object Value extends Quat with NoRenames
@@ -249,10 +282,11 @@ object Quat {
     this: Quat =>
 
     /** Should not be able to rename properties on a value node, turns into a error of the array is not null */
-    override def withRenames(renames: List[(String, String)]): Quat =
-      renames match {
-        case Nil => this
-        case _   => QuatException(s"Renames $renames cannot be applied to a value SQL-level type")
-      }
+    override def withRenames(renames: mutable.LinkedHashMap[String, String]): Quat = {
+      if (renames.isEmpty)
+        this
+      else
+        QuatException(s"Renames $renames cannot be applied to a value SQL-level type")
+    }
   }
 }
