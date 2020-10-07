@@ -19,7 +19,7 @@ object BooQuatSerializer {
     override def unpickle(implicit state: UnpickleState): Quat.Product = {
       Quat.Product.WithRenames(
         state.unpickle[LinkedHashMap[String, Quat]],
-        state.unpickle[List[(String, String)]]
+        state.unpickle[LinkedHashMap[String, String]]
       )
     }
   }
