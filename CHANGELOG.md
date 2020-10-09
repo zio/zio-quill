@@ -1,4 +1,9 @@
-# 3.6-RC2
+# 3.6.0-RC3
+
+ - [Change all Quat fields to Lazy](https://github.com/getquill/quill/pull/2004)
+ - [Smart serialization based on number of Quat fields](https://github.com/getquill/quill/pull/1997)
+
+# 3.6.0-RC2
 
 - [Fix incorrect Quat.Value parsing issues](https://github.com/getquill/quill/pull/1987)
 
