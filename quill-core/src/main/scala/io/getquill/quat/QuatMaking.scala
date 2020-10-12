@@ -198,7 +198,7 @@ trait QuatMakingBase {
 
     object Param {
       def unapply(tpe: Type) =
-        if (tpe.typeSymbol.isParameter)
+        if (tpe.typeSymbol.isParameter || tpe.typeSymbol.isAbstract)
           Some(tpe)
         else
           None
@@ -260,8 +260,8 @@ trait QuatMakingBase {
         case Param(RealTypeBounds(lower, Deoption(upper))) if (!upper.typeSymbol.isFinal && !existsEncoderFor(tpe)) =>
           parseType(upper, true)
 
-        case Param(tpe) =>
-          Quat.Generic
+        //case Param(tpe) =>
+        //  Quat.Generic
 
         case other =>
           parseType(other)
@@ -285,9 +285,6 @@ trait QuatMakingBase {
         case QueryType(tpe) =>
           parseType(tpe)
 
-        case Param(tpe) =>
-          Quat.Generic
-
         // If the type is optional, recurse
         case _ if (isOptionType(tpe)) =>
           val innerParam = innerOptionParam(tpe, None)
@@ -304,6 +301,10 @@ trait QuatMakingBase {
         // If we are already inside a bounded type, treat an arbitrary type as a interface list
         case ArbitraryBaseType(name, fields) if (boundedInterfaceType) =>
           Quat.Product(fields.map { case (fieldName, fieldType) => (fieldName, parseType(fieldType)) })
+
+        // Is it a generic or does it have any generic parameters that have not been filled (e.g. is T not filled in Option[T] ?)
+        case Param(tpe) =>
+          Quat.Generic
 
         // Otherwise it's a terminal value
         case _ =>
