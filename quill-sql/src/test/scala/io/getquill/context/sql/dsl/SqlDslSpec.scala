@@ -20,4 +20,11 @@ class SqlDslSpec extends Spec {
       testContext.run(q).string mustEqual "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.s like ('%' || ?) || '%'"
     }
   }
+
+  "forUpdate" in {
+    val q = quote {
+      query[TestEntity].filter(t => t.s == "a").forUpdate
+    }
+    testContext.run(q).string mustEqual "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.s = 'a' FOR UPDATE"
+  }
 }
