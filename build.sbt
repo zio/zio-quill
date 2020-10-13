@@ -871,6 +871,7 @@ lazy val releaseSettings = Seq(
   },
   pgpSecretRing := file("local.secring.gpg"),
   pgpPublicRing := file("local.pubring.gpg"),
+  releaseVersionBump := sbtrelease.Version.Bump.Nano,
   releasePublishArtifactsAction := PgpKeys.publishSigned.value,
   releaseProcess := {
     CrossVersion.partialVersion(scalaVersion.value) match {
