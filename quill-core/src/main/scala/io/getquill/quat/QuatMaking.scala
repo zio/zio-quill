@@ -268,13 +268,16 @@ trait QuatMakingBase {
         // run(is80Proof(query[Gin]))
         // When processing is80Prof, we assume that Spirit is actually a base class to be extended
         case Param(Signature(RealTypeBounds(lower, Deoption(upper)))) if (!upper.typeSymbol.isFinal && !existsEncoderFor(tpe)) =>
-          parseType(upper, true)
+          parseType(upper, true) match {
+            case p: Quat.Product => p.copy(tpe = Quat.Product.Type.Abstract)
+            case other           => other
+          }
 
         case Param(RealTypeBounds(lower, Deoption(upper))) if (!upper.typeSymbol.isFinal && !existsEncoderFor(tpe)) =>
-          parseType(upper, true)
-
-        //case Param(tpe) =>
-        //  Quat.Generic
+          parseType(upper, true) match {
+            case p: Quat.Product => p.copy(tpe = Quat.Product.Type.Abstract)
+            case other           => other
+          }
 
         case other =>
           parseType(other)

@@ -27,11 +27,18 @@ object TopLevelExpansion {
           case (name, ast) =>
             SelectValue(ast, Some(name), concat)
         }
-      case SelectValue(Ident(singleFieldName, Quat.Product(fields)), alias, concat) if (length == 1) =>
+
+      // If an ident is the only thing in the select list (and it is not abstract, meaning we know what all of it's fields are),
+      // then expand it directly in the selection clauses. If the ident is abstract however, we do not know all of it's fields
+      // and therefore cannot directly expand it into select-values since there could be fields that we have missed.
+      // The only good option that I have thought of so far, is to expand the Ident in the SparkDialect directly
+      // in the FlattenSqlTokenizer with special handling for length=1 selects
+      case SelectValue(Ident(singleFieldName, q @ Quat.Product(fields)), alias, concat) if (length == 1 && q.tpe == Quat.Product.Type.Concrete) =>
         fields.map {
           case (name, quat) =>
             SelectValue(Property(Ident(singleFieldName, quat), name), Some(name), concat)
         }.toList
+
       // Direct infix select, etc...
       case other if (length == 1) =>
         List(other.copy(alias = Some("single")))

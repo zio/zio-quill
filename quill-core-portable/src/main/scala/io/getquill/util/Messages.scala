@@ -40,6 +40,14 @@ object Messages {
   def tracesEnabled(tt: TraceType) =
     traceEnabled && traces.contains(tt)
 
+  def enableTrace(color: Boolean = true, quatTrace: QuatTrace = QuatTrace.Full, traceTypes: List[TraceType] = List(TraceType.SqlNormalizations, TraceType.Standard)): Unit = {
+    System.setProperty("quill.trace.enabled", "true")
+    System.setProperty("quill.trace.color", color.toString)
+    System.setProperty("quill.trace.quat", quatTrace.value)
+    System.setProperty("quill.trace.types", traceTypes.map(_.value).mkString(","))
+    ()
+  }
+
   sealed trait TraceType { def value: String }
   object TraceType {
     case object SqlNormalizations extends TraceType { val value = "sql" }

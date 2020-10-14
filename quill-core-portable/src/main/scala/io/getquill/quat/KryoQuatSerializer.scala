@@ -16,12 +16,17 @@ object KryoQuatSerializer {
     override def apply(k: Kryo): Unit = {
       k.register(classOf[Quat])
       k.register(classOf[Quat.Product])
+      k.register(classOf[Quat.Product.Id])
       k.register(Quat.Value.getClass)
       k.register(Quat.BooleanValue.getClass)
       k.register(Quat.BooleanExpression.getClass)
       k.register(Quat.Null.getClass)
       k.register(Quat.Generic.getClass)
       k.register(Quat.Unknown.getClass)
+      k.register(classOf[Quat.Product.Type])
+      k.register(Quat.Product.Type.Concrete.getClass)
+      k.register(Quat.Product.Type.Abstract.getClass)
+
       // Need to make sure LinkedHashMap is converted to a list of key,value tuples before being convered
       // otherwise very strange things happen after kryo deserialization with the operation of LinkedHashMap.
       // for example, Quat.zip on LinkedHashMap would cause:
