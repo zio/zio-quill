@@ -2,6 +2,7 @@ package io.getquill.norm
 
 import io.getquill.ast.{ Action, Assignment, Ast, ConcatMap, Filter, FlatJoin, FlatMap, GroupBy, Ident, Insert, Join, Map, OnConflict, Property, Query, Returning, ReturningGenerated, SortBy, StatelessTransformer, Update }
 import io.getquill.quat.Quat
+import io.getquill.quat.Quat.Product
 import io.getquill.util.Interpolator
 import io.getquill.util.Messages.TraceType
 import io.getquill.quotation.QuatExceptionOps._
@@ -40,9 +41,14 @@ object RepropagateQuats extends StatelessTransformer {
           case (key, None, Some(value))               => (key, value)
         }
       val newFields = mutable.LinkedHashMap(newFieldsIter.toList: _*)
+      val newTpe =
+        if (q.tpe == Product.Type.Abstract || other.tpe == Product.Type.Abstract)
+          Product.Type.Abstract
+        else
+          Product.Type.Concrete
       // Note, some extra renames from properties that don't exist could make it here.
       // Need to make sure to ignore extra ones when they are actually applied.
-      Quat.Product(newFields).withRenames(other.renames)
+      Quat.Product(newFields).withRenames(other.renames).withType(newTpe)
     }
   }
 
