@@ -28,6 +28,7 @@ object BooQuatSerializer {
     compositePickler[Quat]
       .addConcreteType[Quat.Product](productPickler, scala.reflect.classTag[Quat.Product])
       .addConcreteType[Quat.Generic.type]
+      .addConcreteType[Quat.Unknown.type]
       .addConcreteType[Quat.Value.type]
       .addConcreteType[Quat.BooleanValue.type]
       .addConcreteType[Quat.BooleanExpression.type]

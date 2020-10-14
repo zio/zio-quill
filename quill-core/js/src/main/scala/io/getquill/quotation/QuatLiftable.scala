@@ -24,6 +24,7 @@ trait QuatLiftable {
     case Quat.Value => q"io.getquill.quat.Quat.Value"
     case Quat.Null => q"io.getquill.quat.Quat.Null"
     case Quat.Generic => q"io.getquill.quat.Quat.Generic"
+    case Quat.Unknown => q"io.getquill.quat.Quat.Unknown"
     case Quat.BooleanValue => q"io.getquill.quat.Quat.BooleanValue"
     case Quat.BooleanExpression => q"io.getquill.quat.Quat.BooleanExpression"
   }

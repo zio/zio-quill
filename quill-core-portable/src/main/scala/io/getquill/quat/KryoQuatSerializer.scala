@@ -21,6 +21,7 @@ object KryoQuatSerializer {
       k.register(Quat.BooleanExpression.getClass)
       k.register(Quat.Null.getClass)
       k.register(Quat.Generic.getClass)
+      k.register(Quat.Unknown.getClass)
       // Need to make sure LinkedHashMap is converted to a list of key,value tuples before being convered
       // otherwise very strange things happen after kryo deserialization with the operation of LinkedHashMap.
       // for example, Quat.zip on LinkedHashMap would cause:

@@ -67,8 +67,10 @@ sealed trait Quat {
   def leastUpperType(other: Quat): Option[Quat] = {
     (this, other) match {
       case (Quat.Generic, other) => Some(other)
+      case (Quat.Unknown, other) => Some(other)
       case (Quat.Null, other) => Some(other)
       case (other, Quat.Generic) => Some(other)
+      case (other, Quat.Unknown) => Some(other)
       case (other, Quat.Null) => Some(other)
       case (Quat.Value, Quat.Value) => Some(Quat.Value)
       case (Quat.BooleanExpression, Quat.BooleanExpression) => Some(Quat.BooleanExpression)
@@ -100,6 +102,7 @@ sealed trait Quat {
         s"[${this.renames.map { case (k, v) => k + "->" + v }.mkString(",")}]")
     }"
     case Quat.Generic           => "<G>"
+    case Quat.Unknown           => "<U>"
     case Quat.Value             => "V"
     case Quat.Null              => "N"
     case Quat.BooleanValue      => "BV"
@@ -119,9 +122,13 @@ sealed trait Quat {
 
   def lookup(path: String): Quat = (this, path) match {
     case (cc @ Quat.Product(fields), fieldName) =>
-      fields.get(fieldName).getOrElse(QuatException(s"The field ${fieldName} does not exist in the SQL-level ${cc}"))
+      fields.get(fieldName).getOrElse {
+        io.getquill.util.Messages.trace(s"The field '${fieldName}' does not exist in an SQL-level type ${cc}. Assuming it's type is Quat.Unknown.")
+        Quat.Unknown
+      }
     case (other, fieldName) =>
-      QuatException(s"The field '${fieldName}' does not exist in an SQL-level type ${other}")
+      io.getquill.util.Messages.trace(s"The field '${fieldName}' does not exist in an SQL-level type ${other}. Assuming it's type is Quat.Unknown.")
+      Quat.Unknown
   }
   def lookup(list: List[String]): Quat =
     list match {
@@ -271,6 +278,18 @@ object Quat {
   }
   case object Generic extends Quat {
     override def withRenames(renames: mutable.LinkedHashMap[String, String]) = this
+  }
+  case object Unknown extends Quat {
+    override def withRenames(renames: mutable.LinkedHashMap[String, String]) = this
+  }
+
+  object Placeholder {
+    def unapply(q: Quat): Option[Quat] =
+      q match {
+        case Quat.Generic => Some(q)
+        case Quat.Unknown => Some(q)
+        case _            => None
+      }
   }
 
   case object Value extends Quat with NoRenames

@@ -28,6 +28,7 @@ trait QuatUnliftable {
     case q"$pack.Quat.Value" => Quat.Value
     case q"$pack.Quat.Null" => Quat.Null
     case q"$pack.Quat.Generic" => Quat.Generic
+    case q"$pack.Quat.Unknown" => Quat.Unknown
     case q"$pack.Quat.BooleanValue" => Quat.BooleanValue
     case q"$pack.Quat.BooleanExpression" => Quat.BooleanExpression
   }
