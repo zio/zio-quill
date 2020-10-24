@@ -177,7 +177,7 @@ lazy val `quill-core-portable` =
     .settings(mimaSettings: _*)
     .settings(
       libraryDependencies ++= Seq(
-        "com.typesafe"               %  "config"        % "1.4.0",
+        "com.typesafe"               %  "config"        % "1.4.1",
         "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
         "org.scala-lang"             %  "scala-reflect" % scalaVersion.value,
         "com.twitter"                %% "chill"         % "0.9.5",
@@ -206,7 +206,7 @@ lazy val `quill-core` =
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .settings(libraryDependencies ++= Seq(
-      "com.typesafe"               %  "config"        % "1.4.0",
+      "com.typesafe"               %  "config"        % "1.4.1",
       "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
       "org.scala-lang"             %  "scala-reflect" % scalaVersion.value
     ))

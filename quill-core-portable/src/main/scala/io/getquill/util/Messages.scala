@@ -38,7 +38,15 @@ object Messages {
       .flatMap(trace => TraceType.values.filter(traceType => trace == traceType.value))
 
   def tracesEnabled(tt: TraceType) =
-    traceEnabled && traces.contains(tt)
+    (traceEnabled && traces.contains(tt)) || tt == TraceType.Warning
+
+  def enableTrace(color: Boolean = true, quatTrace: QuatTrace = QuatTrace.Full, traceTypes: List[TraceType] = List(TraceType.SqlNormalizations, TraceType.Standard)): Unit = {
+    System.setProperty("quill.trace.enabled", "true")
+    System.setProperty("quill.trace.color", color.toString)
+    System.setProperty("quill.trace.quat", quatTrace.value)
+    System.setProperty("quill.trace.types", traceTypes.map(_.value).mkString(","))
+    ()
+  }
 
   sealed trait TraceType { def value: String }
   object TraceType {
@@ -52,11 +60,16 @@ object Messages {
     case object Quotation extends TraceType { val value = "quote" }
     case object RepropagateQuats extends TraceType { val value = "reprop" }
     case object RenameProperties extends TraceType { val value = "rename" }
+    // Specifically for situations where what needs to be printed is a type of warning to the user as opposed to an expansion
+    // This kind of trace is always on by default and does not need to be enabled by the user.
+    case object Warning extends TraceType { val value = "warning" }
 
-    def values: List[TraceType] = List(Standard, SqlNormalizations, Normalizations, NestedQueryExpansion, AvoidAliasConflict, ReifyLiftings, PatMatch, Quotation, RepropagateQuats, RenameProperties)
+    def values: List[TraceType] = List(Standard, SqlNormalizations, Normalizations, NestedQueryExpansion, AvoidAliasConflict, ReifyLiftings, PatMatch, Quotation, RepropagateQuats, RenameProperties, Warning)
   }
 
-  val qprint = new AstPrinter(traceOpinions, traceAstSimple)
+  val qprint = new AstPrinter(traceOpinions, traceAstSimple, Messages.traceQuats)
+  def qprintCustom(traceOpinions: Boolean = false, traceAstSimple: Boolean = false, traceQuats: QuatTrace = QuatTrace.None) =
+    new AstPrinter(traceOpinions, traceAstSimple, Messages.traceQuats)
 
   def fail(msg: String) =
     throw new IllegalStateException(msg)
