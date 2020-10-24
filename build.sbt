@@ -10,6 +10,7 @@ enablePlugins(TutPlugin)
 
 val CodegenTag = Tags.Tag("CodegenTag")
 (concurrentRestrictions in Global) += Tags.exclusive(CodegenTag)
+(concurrentRestrictions in Global) += Tags.limit(ScalaJSTags.Link, 1)
 
 lazy val jsModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-core-portable-js`, `quill-core-js`,
@@ -176,7 +177,7 @@ lazy val `quill-core-portable` =
     .settings(mimaSettings: _*)
     .settings(
       libraryDependencies ++= Seq(
-        "com.typesafe"               %  "config"        % "1.4.0",
+        "com.typesafe"               %  "config"        % "1.4.1",
         "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
         "org.scala-lang"             %  "scala-reflect" % scalaVersion.value,
         "com.twitter"                %% "chill"         % "0.9.5",
@@ -192,7 +193,9 @@ lazy val `quill-core-portable` =
         "org.scala-js" %%% "scalajs-java-time" % "0.2.5",
         "io.suzaku" %%% "boopickle" % "1.3.1"
       ),
-      coverageExcludedPackages := ".*"
+      coverageExcludedPackages := ".*",
+      // 2.12 Build seems to take forever without this option
+      scalaJSOptimizerOptions in fastOptJS in Test ~= { _.withDisableOptimizer(true) }
     )
 
 lazy val `quill-core-portable-jvm` = `quill-core-portable`.jvm
@@ -203,7 +206,7 @@ lazy val `quill-core` =
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .settings(libraryDependencies ++= Seq(
-      "com.typesafe"               %  "config"        % "1.4.0",
+      "com.typesafe"               %  "config"        % "1.4.1",
       "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
       "org.scala-lang"             %  "scala-reflect" % scalaVersion.value
     ))
@@ -217,7 +220,9 @@ lazy val `quill-core` =
         "org.scala-js" %%% "scalajs-java-time" % "0.2.5"
       ),
       excludeFilter in unmanagedSources := new SimpleFileFilter(file => file.getName == "DynamicQuerySpec.scala"),
-      coverageExcludedPackages := ".*"
+      coverageExcludedPackages := ".*",
+      // 2.12 Build seems to take forever without this option
+      scalaJSOptimizerOptions in fastOptJS in Test ~= { _.withDisableOptimizer(true) }
     )
     .dependsOn(`quill-core-portable` % "compile->compile")
 
@@ -237,7 +242,9 @@ lazy val `quill-sql-portable` =
         "com.github.vertical-blank" %%% "scala-sql-formatter" % "1.0.0"
       ),
       scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) },
-      coverageExcludedPackages := ".*"//,
+      coverageExcludedPackages := ".*",
+      // 2.12 Build seems to take forever without this option
+      scalaJSOptimizerOptions in fastOptJS in Test ~= { _.withDisableOptimizer(true) }
       //jsEnv := NodeJSEnv(args = Seq("--max_old_space_size=1024")).value
     )
     .dependsOn(`quill-core-portable` % "compile->compile")
@@ -259,7 +266,9 @@ lazy val `quill-sql` =
         "com.github.vertical-blank" %%% "scala-sql-formatter" % "1.0.1"
       ),
       scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) },
-      coverageExcludedPackages := ".*"
+      coverageExcludedPackages := ".*",
+      // 2.12 Build seems to take forever without this option
+      scalaJSOptimizerOptions in fastOptJS in Test ~= { _.withDisableOptimizer(true) }
     )
     .dependsOn(
       `quill-sql-portable` % "compile->compile",
@@ -675,9 +684,9 @@ def updateWebsiteTag =
 lazy val jdbcTestingLibraries = Seq(
   libraryDependencies ++= Seq(
     "com.zaxxer"              %  "HikariCP"                % "3.4.5",
-    "mysql"                   %  "mysql-connector-java"    % "8.0.21"             % Test,
+    "mysql"                   %  "mysql-connector-java"    % "8.0.22"             % Test,
     "com.h2database"          %  "h2"                      % "1.4.200"            % Test,
-    "org.postgresql"          %  "postgresql"              % "42.2.16"             % Test,
+    "org.postgresql"          %  "postgresql"              % "42.2.18"             % Test,
     "org.xerial"              %  "sqlite-jdbc"             % "3.32.3.2"             % Test,
     "com.microsoft.sqlserver" %  "mssql-jdbc"              % "7.1.1.jre8-preview" % Test,
     "com.oracle.ojdbc"        %  "ojdbc8"                  % "19.3.0.0"           % Test,
@@ -798,14 +807,13 @@ lazy val basicSettings = Seq(
   EclipseKeys.eclipseOutput := Some("bin"),
   scalacOptions ++= Seq(
     "-target:jvm-1.8",
-    "-Xfatal-warnings",
     "-encoding", "UTF-8",
     "-feature",
     "-deprecation",
     "-unchecked",
     "-Ywarn-dead-code",
     "-Ywarn-numeric-widen",
-    "-Ywarn-value-discard",
+    "-Ywarn-value-discard"
 
   ),
   scalacOptions ++= {
@@ -822,7 +830,9 @@ lazy val basicSettings = Seq(
           "-Xsource:2.12" // needed so existential types work correctly
         )
       case Some((2, 12)) =>
-        Seq("-Xlint:-unused,_",
+        Seq(
+          "-Xfatal-warnings",
+          "-Xlint:-unused,_",
           "-Xfuture",
           "-deprecation",
           "-Yno-adapted-args",
@@ -861,6 +871,7 @@ lazy val releaseSettings = Seq(
   },
   pgpSecretRing := file("local.secring.gpg"),
   pgpPublicRing := file("local.pubring.gpg"),
+  releaseVersionBump := sbtrelease.Version.Bump.Nano,
   releasePublishArtifactsAction := PgpKeys.publishSigned.value,
   releaseProcess := {
     CrossVersion.partialVersion(scalaVersion.value) match {

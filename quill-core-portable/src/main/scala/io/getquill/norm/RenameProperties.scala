@@ -79,8 +79,8 @@ object ApplyRenamesToProps extends StatelessTransformer {
         trace"Checking Property: ${p} for possible rename".andLog()
         val newAst = apply(ast)
         // Check the quat if it is renaming this property if so rename it. Otherwise property is the same
-        newAst.quat.renames.find(_._1 == name) match {
-          case Some((_, newName)) =>
+        newAst.quat.renames.get(name) match {
+          case Some(newName) =>
             trace"Applying Rename on Property:" andReturn
               Property.Opinionated(newAst, newName, Renameable.Fixed, visibility)
           case None => p
@@ -117,11 +117,11 @@ object SeedRenames extends StatelessTransformer {
                 // Use the Quat from the Infix to do the renames
                 case p: Quat.Product =>
                   p.withRenamesFrom(elem.quat)
-                // If the infix is marked as generic, use the Infix from the single-element to do the renames
+                // If the infix is marked as generic or unknown, use the Infix from the single-element to do the renames
                 // This typically happens with situations where the generic type of an infix needs to be cast
                 // into is not known by the macros yet. See allowFiltering for the cassandra quill-context or
                 // liftQuery(ds: Dataset) in the quill-spark context.
-                case Quat.Generic =>
+                case Quat.Placeholder(_) =>
                   elem.quat
                 case _ =>
                   qu

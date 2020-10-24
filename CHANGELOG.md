@@ -1,4 +1,11 @@
-# 3.6-RC2
+# 3.6.0-RC3
+
+ - [Add support for scala 2.13 to quill-cassandra-lagom](https://github.com/getquill/quill/pull/1909)
+ - [Change all Quat fields to Lazy](https://github.com/getquill/quill/pull/2004)
+ - [Smart serialization based on number of Quat fields](https://github.com/getquill/quill/pull/1997)
+ - [Better Dynamic Query DSL For Quats on JVM](https://github.com/getquill/quill/pull/1993)
+
+# 3.6.0-RC2
 
 - [Fix incorrect Quat.Value parsing issues](https://github.com/getquill/quill/pull/1987)
 
