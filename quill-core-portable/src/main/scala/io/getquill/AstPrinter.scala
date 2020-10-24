@@ -5,7 +5,6 @@ import io.getquill.ast.Renameable.{ ByStrategy, Fixed }
 import io.getquill.ast.Visibility.{ Hidden, Visible }
 import io.getquill.ast._
 import io.getquill.quat.Quat
-import io.getquill.util.Messages
 import io.getquill.util.Messages.QuatTrace
 import pprint.{ Renderer, Tree, Truncated }
 
@@ -19,7 +18,7 @@ object AstPrinter {
   }
 }
 
-class AstPrinter(traceOpinions: Boolean, traceAstSimple: Boolean) extends pprint.Walker {
+class AstPrinter(traceOpinions: Boolean, traceAstSimple: Boolean, traceQuats: QuatTrace) extends pprint.Walker {
   val defaultWidth: Int = 150
   val defaultHeight: Int = Integer.MAX_VALUE
   val defaultIndent: Int = 2
@@ -51,7 +50,7 @@ class AstPrinter(traceOpinions: Boolean, traceAstSimple: Boolean) extends pprint
     private def treeifyList: List[Tree] =
       toContent.list.flatMap {
         case e: treemake.Quat =>
-          Messages.traceQuats match {
+          traceQuats match {
             case QuatTrace.Full  => List(Tree.Literal(e.q.shortString))
             case QuatTrace.Short => List(Tree.Literal(e.q.shortString.take(10)))
             case QuatTrace.None  => List()

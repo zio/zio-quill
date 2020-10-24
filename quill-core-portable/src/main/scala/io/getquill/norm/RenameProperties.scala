@@ -117,11 +117,11 @@ object SeedRenames extends StatelessTransformer {
                 // Use the Quat from the Infix to do the renames
                 case p: Quat.Product =>
                   p.withRenamesFrom(elem.quat)
-                // If the infix is marked as generic, use the Infix from the single-element to do the renames
+                // If the infix is marked as generic or unknown, use the Infix from the single-element to do the renames
                 // This typically happens with situations where the generic type of an infix needs to be cast
                 // into is not known by the macros yet. See allowFiltering for the cassandra quill-context or
                 // liftQuery(ds: Dataset) in the quill-spark context.
-                case Quat.Generic =>
+                case Quat.Placeholder(_) =>
                   elem.quat
                 case _ =>
                   qu

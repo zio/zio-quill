@@ -116,13 +116,15 @@ trait SqlIdiom extends Idiom {
   protected class FlattenSqlQueryTokenizerHelper(q: FlattenSqlQuery)(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy) {
     import q._
 
+    def selectTokenizer =
+      select match {
+        case Nil => stmt"*"
+        case _   => select.token
+      }
+
     def distinctTokenizer = (if (distinct) "DISTINCT " else "").token
 
-    def withDistinct =
-      select match {
-        case Nil => stmt"$distinctTokenizer*"
-        case _   => stmt"$distinctTokenizer${select.token}"
-      }
+    def withDistinct = stmt"$distinctTokenizer${selectTokenizer}"
 
     def withFrom =
       from match {

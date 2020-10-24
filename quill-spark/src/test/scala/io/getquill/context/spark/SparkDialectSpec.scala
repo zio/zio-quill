@@ -68,7 +68,7 @@ class SparkDialectSpec extends Spec {
     val ast = query[Test].concatMap(t => t.s.split(" ")).filter(s => s == "s").ast
     val (norm, stmt) = SparkDialect.translate(ast)(Literal)
     norm mustEqual ast
-    stmt.toString mustEqual "SELECT s.single AS single FROM (SELECT explode(SPLIT(t.s, ' ')) AS single FROM Test t) AS s WHERE s.single = 's'"
+    stmt.toString mustEqual "SELECT s.* FROM (SELECT explode(SPLIT(t.s, ' ')) AS single FROM Test t) AS s WHERE s.single = 's'"
   }
 
   "concat string" in {

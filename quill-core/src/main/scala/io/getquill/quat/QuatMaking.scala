@@ -188,6 +188,14 @@ trait QuatMakingBase {
         Some(tpe.typeSymbol.typeSignature)
     }
 
+    object OptionType {
+      def unapply(tpe: Type) =
+        if (isOptionType(tpe))
+          Some(innerOptionParam(tpe, None))
+        else
+          None
+    }
+
     object Deoption {
       def unapply(tpe: Type) =
         if (isOptionType(tpe))
@@ -198,7 +206,7 @@ trait QuatMakingBase {
 
     object Param {
       def unapply(tpe: Type) =
-        if (tpe.typeSymbol.isParameter)
+        if (tpe.typeSymbol.isParameter || tpe.typeSymbol.isAbstract)
           Some(tpe)
         else
           None
@@ -229,6 +237,8 @@ trait QuatMakingBase {
           None
         else if (isType[AnyVal](tpe))
           Some(tpe)
+        else if (existsEncoderFor(tpe))
+          Some(tpe)
         else
           None
       }
@@ -237,6 +247,9 @@ trait QuatMakingBase {
     def parseTopLevelType(tpe: Type): Quat =
       tpe match {
         case BooleanType(tpe) =>
+          Quat.BooleanValue
+
+        case OptionType(BooleanType(innerParam)) =>
           Quat.BooleanValue
 
         case DefiniteValue(tpe) =>
@@ -255,13 +268,16 @@ trait QuatMakingBase {
         // run(is80Proof(query[Gin]))
         // When processing is80Prof, we assume that Spirit is actually a base class to be extended
         case Param(Signature(RealTypeBounds(lower, Deoption(upper)))) if (!upper.typeSymbol.isFinal && !existsEncoderFor(tpe)) =>
-          parseType(upper, true)
+          parseType(upper, true) match {
+            case p: Quat.Product => p.copy(tpe = Quat.Product.Type.Abstract)
+            case other           => other
+          }
 
         case Param(RealTypeBounds(lower, Deoption(upper))) if (!upper.typeSymbol.isFinal && !existsEncoderFor(tpe)) =>
-          parseType(upper, true)
-
-        case Param(tpe) =>
-          Quat.Generic
+          parseType(upper, true) match {
+            case p: Quat.Product => p.copy(tpe = Quat.Product.Type.Abstract)
+            case other           => other
+          }
 
         case other =>
           parseType(other)
@@ -277,6 +293,9 @@ trait QuatMakingBase {
         case BooleanType(tpe) =>
           Quat.BooleanValue
 
+        case OptionType(BooleanType(_)) =>
+          Quat.BooleanValue
+
         case DefiniteValue(tpe) =>
           Quat.Value
 
@@ -285,12 +304,8 @@ trait QuatMakingBase {
         case QueryType(tpe) =>
           parseType(tpe)
 
-        case Param(tpe) =>
-          Quat.Generic
-
         // If the type is optional, recurse
-        case _ if (isOptionType(tpe)) =>
-          val innerParam = innerOptionParam(tpe, None)
+        case OptionType(innerParam) =>
           parseType(innerParam)
 
         case _ if (isNone(tpe)) =>
@@ -305,10 +320,14 @@ trait QuatMakingBase {
         case ArbitraryBaseType(name, fields) if (boundedInterfaceType) =>
           Quat.Product(fields.map { case (fieldName, fieldType) => (fieldName, parseType(fieldType)) })
 
+        // Is it a generic or does it have any generic parameters that have not been filled (e.g. is T not filled in Option[T] ?)
+        case Param(tpe) =>
+          Quat.Generic
+
         // Otherwise it's a terminal value
         case _ =>
-          Messages.trace(s"Could not infer SQL-type of ${tpe}, assuming it is a value.")
-          Quat.Value
+          Messages.trace(s"Could not infer SQL-type of ${tpe}, assuming it is a Unknown Quat.")
+          Quat.Unknown
       }
 
     parseTopLevelType(tpe)

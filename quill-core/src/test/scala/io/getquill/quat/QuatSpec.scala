@@ -8,6 +8,12 @@ class QuatSpec extends Spec {
   object testContext extends TestMirrorContextTemplate(MirrorIdiom, Literal) with TestEntities
   import testContext._
 
+  "boolean and optional boolean" in {
+    case class MyPerson(name: String, isHuman: Boolean, isRussian: Option[Boolean])
+    val MyPersonQuat = Quat.Product("name" -> Quat.Value, "isHuman" -> Quat.BooleanValue, "isRussian" -> Quat.BooleanValue)
+    quote(query[MyPerson]).ast.quat mustEqual MyPersonQuat
+  }
+
   "should support standard case class" in {
     case class MyPerson(firstName: String, lastName: String, age: Int)
     val MyPersonQuat = Quat.LeafProduct("firstName", "lastName", "age")
@@ -57,17 +63,15 @@ class QuatSpec extends Spec {
     val bar = Quat.Product("baz" -> Quat.Value)
     val foo = Quat.Product("v" -> Quat.Value, "bar" -> bar)
     val example = Quat.Product("v" -> Quat.Value, "foo" -> foo)
-    "path" - {
+    "path" in {
       example.lookup("foo") mustEqual foo
       example.lookup(List("foo", "bar")) mustEqual bar
       example.lookup(List("foo", "bar", "baz")) mustEqual Quat.Value
-      val e = intercept[QuatException] {
-        example.lookup("blah")
-      }
+      example.lookup("blah") mustEqual Quat.Unknown
     }
   }
 
-  "probit" - {
+  "probit" in {
     val p: Quat = Quat.Product("foo" -> Quat.Value)
     val v: Quat = Quat.Value
     p.probit mustEqual p
