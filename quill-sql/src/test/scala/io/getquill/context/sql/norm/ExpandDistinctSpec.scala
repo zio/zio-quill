@@ -5,7 +5,7 @@ import io.getquill.context.sql.testContext.qr1
 import io.getquill.context.sql.testContext.quote
 import io.getquill.context.sql.testContext.unquote
 
-class ExpandDistinctSpec extends Spec {
+class ExpandDistinctSpec extends Spec { //hello
 
   "expands distinct map" - {
     "simple" in {
@@ -20,7 +20,7 @@ class ExpandDistinctSpec extends Spec {
         qr1.map(e => (e.i, e.l)).groupBy(g => g._1).map(_._2.max).distinct.nested
       }
       ExpandDistinct(q.ast).toString mustEqual
-        """querySchema("TestEntity").map(e => (e.i, e.l)).groupBy(g => g._1).map(x1 => x1._2.max).distinct.map(x1 => x1._2.max).nested"""
+        """querySchema("TestEntity").map(e => (e.i, e.l)).groupBy(g => g._1).map(x1 => (x1._2.max)).distinct.map(x1 => x1._1).nested"""
     }
     "with case class" in {
       case class Rec(one: Int, two: Long)

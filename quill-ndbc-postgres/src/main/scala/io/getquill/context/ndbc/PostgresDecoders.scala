@@ -3,6 +3,7 @@ package io.getquill.context.ndbc
 import java.time._
 import java.util.{ Date, UUID }
 
+import scala.collection.compat._
 import scala.language.implicitConversions
 import scala.math.BigDecimal.javaBigDecimal2bigDecimal
 
@@ -21,7 +22,7 @@ object Default {
 }
 
 trait PostgresDecoders {
-  this: NdbcContext[_, _, _, PostgresRow] with ArrayEncoding =>
+  this: NdbcContextBase[_, _, _, PostgresRow] with ArrayEncoding =>
 
   type Decoder[T] = BaseDecoder[T]
 
@@ -36,7 +37,7 @@ trait PostgresDecoders {
 
   def arrayDecoder[T, U, Col <: Seq[U]](f: PostgresRow => Int => Array[T])(implicit map: T => U, bf: CBF[U, Col]): Decoder[Col] =
     (index, row) => {
-      f(row)(index).foldLeft(bf()) {
+      f(row)(index).foldLeft(bf.newBuilder) {
         case (b, v) => b += map(v)
       }.result()
     }

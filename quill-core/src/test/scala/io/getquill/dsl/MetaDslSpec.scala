@@ -3,6 +3,7 @@ package io.getquill.dsl
 import io.getquill.Spec
 import io.getquill.testContext._
 import io.getquill.context.mirror.Row
+import io.getquill.Query
 
 class MetaDslSpec extends Spec {
 

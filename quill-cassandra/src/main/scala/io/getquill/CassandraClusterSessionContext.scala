@@ -5,7 +5,7 @@ import io.getquill.context.cassandra.util.FutureConversions._
 import io.getquill.context.cassandra.{ CassandraSessionContext, PrepareStatementCache }
 import io.getquill.util.Messages.fail
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.Failure
 

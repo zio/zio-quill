@@ -102,7 +102,31 @@ In order to contribute to the project, just do as follows:
 ## File Formatting 
 
 [Scalariform](http://mdr.github.io/scalariform/) is used as file formatting tool in this project.
-Every time you compile the project in sbt, file formatting will be triggered.
+Every time you compile the project in sbt, file formatting will be triggered. To manually format
+the Quill codebase, run the following command:
+```
+sbt scalariformFormat test:scalariformFormat
+```
+
+## Notes About Git
+
+As you are working on a branch fixing a Quill problem, there will likely be additional changes merged
+to the main Quill repo (i.e. getquill/quill) before you finish. The solution to this is to squash your commits, 
+and then to replay them on top of the latest changes that have been made to the main Quill repo.
+
+The steps to do that are the following:
+1) Squash your commits via an interactive git rebase (see [here](https://medium.com/@slamflipstrom/a-beginners-guide-to-squashing-commits-with-git-rebase-8185cf6e62ec)).
+2) If you have not already, add an 'upstream' remote to your repository:
+   ```
+   git remote add upstream 'git@github.com:getquill/quill.git'
+   ``` 
+3) Do a git Pull + Rebase from the upstream:
+   ```
+   git pull --rebase upstream master
+   ```
+
+Once you have resolved any conflicts that may have arisen from the rebase, your
+branch will be capable of becoming a pull-request.
 
 ## Oracle Support
 
@@ -156,7 +180,11 @@ Finally, you can use `sbt` locally.
 ## Debugging using Intellij
 
 [Intellij](https://www.jetbrains.com/idea/) has a comprehensive debugger that also works with macros which is very
-helpful when working on Quill.
+helpful when working on Quill. There are two ways to debug Quill macros using Intellij. The first way is to launch SBT in 
+debug mode and use Intellij to remote debug it. The second way is to launch a debug session 
+from Intellij from the "Run/Debug Configurations" menu.
+
+### Debug Macros by Remote Debugging SBT
 
 In order to use the debugger you need to run sbt manually so follow the instructions 
 [here](#building-locally-using-docker-only-for-databases) first. After this you need to edit `build.sbt` to disable
@@ -175,4 +203,100 @@ to add breakpoints to step through the code.
 Note that its possible to debug macros (you can even
 [evaluate expressions](https://www.jetbrains.com/help/idea/evaluating-expressions.html) while paused inside a macro),
 however you need to edit the macro being executed after every debug run to force the macro to recompile since macro
-invocations are cached on a file basis. You can easily do this just be adding new lines.
+invocations are cached on a file basis. You can easily do this just by adding new lines.
+
+### Debug Macros by Launching a Session
+
+Firstly, you will need to build Quill with some additional dependencies that include the file `scala.tools.nsc.Main`.
+You can do this adding the argument `-DdebugMacro=true` to the sbt launcher. You can do this in the Intellij SBT
+menu:
+
+![Intellij-SBT-Settings.png](quill-doc/etc/Intellij-SBT-Settings.png)
+
+In Intellij, go to `Run -> Edit Configurations...` click on the Plus (i.e. `+`) button (or `Add New Configuration`) 
+and select `Application`. Then enter the following settings:
+
+```
+Main Class: scala.tools.nsc.Main
+VM Options: -Dscala.usejavacp=true
+Program Arguments: -cp io.getquill.MySqlTest.scala /home/me/projects/quill/quill-sql/src/main/scala/io/getquill/MySqlTest.scala
+Use classpath of module: quill-sql
+Before launch:
+Build, no error check (make sure to set this since you will frequently want to debug the macros even if the build fails)
+```
+
+It should look like this:
+![Intellij-Run-Debug-Config.png](quill-doc/etc/Intellij-Run-Debug-Config.png)
+
+> NOTE In this example, our entry-point into Quill-macro-debugging is `MySqlTest.scala`.
+> In our Intellij application configuration this file name is being explicitly specified.<br> 
+> If you wish to easily be able to macro-debug multiple entry-point files, an alternative method would be to
+> use some Intellij variables to automatically pass whatever file is currently selected. You can do this by using
+> the configuration:
+> ```
+> -cp $FileFQPackage$$FileName$ $FilePath$
+> ```
+> Also, instead of specifying the path segment `/home/me/projects/quill/` you can use `$ProjectFileDir$`
+
+Then create a file `quill-sql/src/main/scala/io/getquill/MySqlTest.scala` that has the code you wish to debug.
+For example:
+```scala
+object MySqlTest {
+
+  val ctx = new SqlMirrorContext(PostgresDialect, Literal)
+  import ctx._
+
+  case class Person(name: String, age:Int)
+
+  def main(args:Array[String]):Unit = {    
+    val q = quote {
+      query[Person].filter(p => p.name == "Joe")
+    }
+    println( run(q).string )
+  }
+}
+```
+
+Set a breakpoint anywhere in the Quill codebase and run this configuration from the top-right menu shortcut:
+![Intellij-Debug-App-Launcher](quill-doc/etc/Intellij-Debug-App-Launcher.png)
+
+## Additional Debug Arguments
+
+Some additional arguments you can add to your compiler's VM args provide insight into Quill's compilation:
+
+```
+-DdebugMacro=true                 // Enables libraries needed to debug via an Intellij Application session (default=false)
+-Dquill.macro.log.pretty=true     // Pretty print the SQL Queries that Quill produces (default=false)
+-Dquill.macro.log=true            // Enable/Disable priting of the SQL Queries Quill generates during compile-time (default=true)
+-Dquill.trace.enabled=true        // Global switch that Enables/Disables printing of Quill ASTs during compilation (default=false)
+-Dquill.trace.color=true          // Print Quill ASTs in color (default=false) 
+-Dquill.trace.opinion=false       // Print the parts of Quill ASTs not directly used in the main transformation phases (called Opinions).  (default=false) 
+-Dquill.trace.ast.simple=true     // Print the raw Quill ASTs elements or a more compact view of the AST code (think `show` vs `showRaw` in Scala macros). (default=true) 
+-Dquill.trace.types=sql,standard,alias,norm    // What parts of the Quill transformations to print during compilation?
+```
+
+In Intellij, add them in the SBT settings if your are compiling using SBT:
+![Intellj-SBT-Settings-Additional.png](quill-doc/etc/Intellj-SBT-Settings-Additional.png)
+
+## 'Trick' Debugging via the Dynamic Query API
+
+Since typically the Quill Query Normalizations and Tokenizations run during compile-time,
+break-point debugging them requires one of the above two steps. However, you can 'trick'
+Quill into running these during compile time by using the `.dynamically` keyword.
+
+For example say you have a query that looks like this, and you would like to see
+what happens to the AST in the `ExpandDistinct` phase.
+```scala
+val q = quote { query[Person].distinct.map(p => p.name) }
+val output = run(q)
+```
+Change the quotation to be dynamic:
+```scala
+val output = run(q.dynamically)
+```
+Since the query is now dynamic, you can set a breakpoint in the ExpandDistinct
+class and it will be hit during the runtime of your application.
+
+> NOTE: In situations where the .dynamically keyword is not available, e.g. when the 
+> quoted construct is not a query, add a type annotation to the variable holding the
+> quotation and this will effectively cause the same behavior.

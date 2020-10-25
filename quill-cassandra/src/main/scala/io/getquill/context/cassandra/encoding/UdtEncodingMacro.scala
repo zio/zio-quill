@@ -1,7 +1,7 @@
 package io.getquill.context.cassandra.encoding
 
 import com.datastax.driver.core.UDTValue
-import io.getquill.util.Messages._
+import io.getquill.util.MacroContextExt._
 import io.getquill.util.OptionalTypecheck
 
 import scala.collection.mutable.ListBuffer
@@ -14,7 +14,7 @@ class UdtEncodingMacro(val c: MacroContext) {
   private val encoding = q"io.getquill.context.cassandra.encoding"
   private val udtRaw = typeOf[UDTValue]
   private def prefix = c.prefix
-  private def convert = q"scala.collection.JavaConverters"
+  private def UdtValueOps = q"_root_.io.getquill.context.cassandra.encoding.UdtValueOps"
 
   def udtDecoder[T](implicit t: WeakTypeTag[T]): Tree = {
     val (typeDefs, params, getters) = decodeUdt(t.tpe)
@@ -89,18 +89,18 @@ class UdtEncodingMacro(val c: MacroContext) {
 
         val tree =
           if (tpe <:< typeOf[Option[Any]]) {
-            params.append(single(tpe.typeArgs.head), tagTree)
+            params.appendAll(Seq(single(tpe.typeArgs.head), tagTree))
             q"Option($rawTree)"
 
           } else if (tpe <:< typeOf[List[Any]]) {
-            params.append(single(tpe.typeArgs.head), tagTree)
-            val list = q"udt.getList[$absType]($name, $classTree)"
-            q"$convert.asScalaBufferConverter($list).asScala.map($mapper.f).toList"
+            params.appendAll(Seq(single(tpe.typeArgs.head), tagTree))
+            val list = q"$UdtValueOps(udt).getScalaList[$absType]($name, $classTree)"
+            q"$list.map($mapper.f).toList"
 
           } else if (isBaseType[Set[Any]](tpe)) {
-            params.append(single(tpe.typeArgs.head), tagTree)
-            val set = q"udt.getSet[$absType]($name, $classTree)"
-            q"$convert.asScalaSetConverter($set).asScala.map($mapper.f).toSet"
+            params.appendAll(Seq(single(tpe.typeArgs.head), tagTree))
+            val set = q"$UdtValueOps(udt).getScalaSet[$absType]($name, $classTree)"
+            q"$set.map($mapper.f).toSet"
 
           } else if (isBaseType[collection.Map[Any, Any]](tpe)) {
             val vAbsName = s"${absTypeDef.name.encodedName}V"
@@ -109,17 +109,19 @@ class UdtEncodingMacro(val c: MacroContext) {
             val vTag = TermName(s"${tag.encodedName}V")
             val kTpe :: vTpe :: Nil = tpe.typeArgs
             val vMapper = TermName(s"${mapper.encodedName}V")
-            params.append(
-              q"$mapper: $encoding.CassandraMapper[$absType, $kTpe]",
-              q"$vMapper: $encoding.CassandraMapper[$vAbsType, $vTpe]",
-              tagTree,
-              q"$vTag: scala.reflect.ClassTag[$vAbsType]"
+            params.appendAll(
+              Seq(
+                q"$mapper: $encoding.CassandraMapper[$absType, $kTpe]",
+                q"$vMapper: $encoding.CassandraMapper[$vAbsType, $vTpe]",
+                tagTree,
+                q"$vTag: scala.reflect.ClassTag[$vAbsType]"
+              )
             )
-            val map = q"udt.getMap[$absType, $vAbsType]($name, $classTree, $vTag.runtimeClass.asInstanceOf[Class[$vAbsType]])"
-            q"$convert.mapAsScalaMapConverter($map).asScala.map(kv => $mapper.f(kv._1) -> $vMapper.f(kv._2)).toMap"
+            val map = q"$UdtValueOps(udt).getScalaMap[$absType, $vAbsType]($name, $classTree, $vTag.runtimeClass.asInstanceOf[Class[$vAbsType]])"
+            q"$map.map(kv => $mapper.f(kv._1) -> $vMapper.f(kv._2)).toMap"
 
           } else {
-            params.append(single(tpe), tagTree)
+            params.appendAll(Seq(single(tpe), tagTree))
             rawTree
           }
         (typeDefs.toList, params.toList, tree)
@@ -143,21 +145,21 @@ class UdtEncodingMacro(val c: MacroContext) {
         def single(tpe: Type) = q"$mapper: $encoding.CassandraMapper[$tpe, $absType]"
 
         if (tpe <:< typeOf[Option[Any]]) {
-          params.append(single(tpe.typeArgs.head), tagTree)
+          params.appendAll(Seq(single(tpe.typeArgs.head), tagTree))
           trees.append {
             q"x.$field.map(v => udt.set[$absType]($name, $mapper.f(v), $classTree)).getOrElse(udt.setToNull($name))"
           }
         } else if (tpe <:< typeOf[List[Any]]) {
-          params.append(single(tpe.typeArgs.head), tagTree)
+          params.appendAll(Seq(single(tpe.typeArgs.head), tagTree))
           val list = q"x.$field.map($mapper.f)"
           trees.append {
-            q"udt.setList[$absType]($name, $convert.seqAsJavaListConverter($list).asJava, $classTree)"
+            q"$UdtValueOps(udt).setScalaList[$absType]($name, $list, $classTree)"
           }
         } else if (isBaseType[Set[Any]](tpe)) {
-          params.append(single(tpe.typeArgs.head), tagTree)
-          val set = q"$convert.setAsJavaSetConverter(x.$field.map($mapper.f)).asJava"
+          params.appendAll(Seq(single(tpe.typeArgs.head), tagTree))
+          val set = q"x.$field.map($mapper.f)"
           trees.append {
-            q"udt.setSet[$absType]($name, $set, $classTree)"
+            q"$UdtValueOps(udt).setScalaSet[$absType]($name, $set, $classTree)"
           }
         } else if (isBaseType[collection.Map[Any, Any]](tpe)) {
           val vAbsName = s"${absTypeDef.name.encodedName}V"
@@ -166,19 +168,21 @@ class UdtEncodingMacro(val c: MacroContext) {
           val vTag = TermName(s"${tag.encodedName}V")
           val kTpe :: vTpe :: Nil = tpe.typeArgs
           val vMapper = TermName(s"${mapper.encodedName}V")
-          params.append(
-            q"$mapper: $encoding.CassandraMapper[$kTpe, $absType]",
-            q"$vMapper: $encoding.CassandraMapper[$vTpe, $vAbsType]",
-            tagTree,
-            q"$vTag: scala.reflect.ClassTag[$vAbsType]"
+          params.appendAll(
+            Seq(
+              q"$mapper: $encoding.CassandraMapper[$kTpe, $absType]",
+              q"$vMapper: $encoding.CassandraMapper[$vTpe, $vAbsType]",
+              tagTree,
+              q"$vTag: scala.reflect.ClassTag[$vAbsType]"
+            )
           )
           val vClassTree = q"$vTag.runtimeClass.asInstanceOf[Class[$vAbsType]]"
-          val map = q"$convert.mapAsJavaMapConverter(x.$field.map(kv => $mapper.f(kv._1) -> $vMapper.f(kv._2))).asJava"
+          val map = q"x.$field.map(kv => $mapper.f(kv._1) -> $vMapper.f(kv._2))"
           trees.append {
-            q"udt.setMap[$absType, $vAbsType]($name, $map, $classTree, $vClassTree)"
+            q"$UdtValueOps(udt).setScalaMap[$absType, $vAbsType]($name, $map, $classTree, $vClassTree)"
           }
         } else {
-          params.append(single(tpe), tagTree)
+          params.appendAll(Seq(single(tpe), tagTree))
           trees.append {
             q"udt.set[$absType]($name, $mapper.f(x.$field), $classTree)"
           }

@@ -1,5 +1,7 @@
 package io.getquill.context.cassandra
 
+import io.getquill.{ Query, Action, Delete, Insert, EntityQuery }
+
 trait Ops {
   this: CassandraContext[_] =>
 
@@ -10,7 +12,7 @@ trait Ops {
   }
 
   implicit class QueryOps[Q <: Query[_]](q: Q) {
-    def allowFiltering = quote(infix"$q ALLOW FILTERING".as[Q])
+    def allowFiltering = quote(infix"$q ALLOW FILTERING".generic.pure.as[Q])
   }
 
   implicit class EntityOps[A <: EntityQuery[_]](q: A)

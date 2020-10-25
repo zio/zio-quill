@@ -4,6 +4,8 @@ import language.experimental.macros
 import com.twitter.util.Future
 import io.getquill.context.Context
 import com.twitter.util.Try
+import scala.collection.compat._
+import io.getquill.{ Query, Action, BatchAction, ActionReturning }
 
 trait TwitterFutureIOMonad extends IOMonad {
   this: Context[_, _] =>
@@ -24,8 +26,8 @@ trait TwitterFutureIOMonad extends IOMonad {
       case FromTry(t) => Future.const(Try.fromScala(t))
       case Run(f)     => f()
       case Sequence(in, cbf) =>
-        Future.collect(in.map(performIO(_)).toSeq)
-          .map(r => cbf().++=(r).result)
+        Future.collect(in.iterator.map(performIO(_)).iterator.to(Seq))
+          .map(r => cbf.newBuilder.++=(r).result)
       case TransformWith(a, fA) =>
         performIO(a)
           .liftToTry.map(_.asScala)

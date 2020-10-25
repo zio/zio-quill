@@ -2,6 +2,7 @@ package io.getquill.context.orientdb
 
 import io.getquill.Spec
 import io.getquill.context.mirror.Row
+import io.getquill.Query
 
 class OrientDBContextMacroSpec extends Spec {
 
@@ -13,7 +14,7 @@ class OrientDBContextMacroSpec extends Spec {
         qr1.filter(t => t.i == lift(1))
       }
       val mirror = mirrorContext.run(q)
-      mirror.string mustEqual "SELECT s, i, l, o FROM TestEntity WHERE i = ?"
+      mirror.string mustEqual "SELECT s, i, l, o, b FROM TestEntity WHERE i = ?"
       mirror.prepareRow mustEqual Row(1)
     }
     "dynamic" in {
@@ -23,7 +24,7 @@ class OrientDBContextMacroSpec extends Spec {
         qr1.filter(t => t.i == lift(1))
       }
       val mirror = mirrorContext.run(q)
-      mirror.string mustEqual "SELECT s, i, l, o FROM TestEntity WHERE i = ?"
+      mirror.string mustEqual "SELECT s, i, l, o, b FROM TestEntity WHERE i = ?"
       mirror.prepareRow mustEqual Row(1)
     }
   }

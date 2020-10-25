@@ -6,11 +6,13 @@ import io.getquill.ast.Renameable.ByStrategy
 import io.getquill.ast.Visibility.Visible
 import io.getquill.ast._
 import io.getquill.context.Expand
+import io.getquill.quat._
 
 class ExpandReturningSpec extends Spec {
 
   case class Person(name: String, age: Int)
   case class Foo(bar: String, baz: Int)
+  val quat = Quat.Product("name" -> QV, "age" -> QV)
 
   "inner apply" - {
     val mi = MirrorIdiom
@@ -24,7 +26,7 @@ class ExpandReturningSpec extends Spec {
       val list =
         ExpandReturning.apply(q.ast.asInstanceOf[Returning])(MirrorIdiom, Literal)
       list must matchPattern {
-        case List((Property(ExternalIdent("p"), "name"), _), (Property(ExternalIdent("p"), "age"), _)) =>
+        case List((Property(ExternalIdent("p", `quat`), "name"), _), (Property(ExternalIdent("p", `quat`), "age"), _)) =>
       }
     }
 
@@ -35,7 +37,34 @@ class ExpandReturningSpec extends Spec {
       val list =
         ExpandReturning.apply(q.ast.asInstanceOf[Returning])(MirrorIdiom, Literal)
       list must matchPattern {
-        case List((Property(ExternalIdent("p"), "name"), _), (Property(ExternalIdent("p"), "age"), _)) =>
+        case List((Property(ExternalIdent("p", `quat`), "name"), _), (Property(ExternalIdent("p", `quat`), "age"), _)) =>
+      }
+    }
+  }
+
+  "renaming alias" - {
+    val ctx = new MirrorContext(MirrorIdiom, SnakeCase)
+    import ctx._
+
+    "replaces tuple clauses with ExternalIdent(newAlias)" in {
+      val q = quote {
+        query[Person].insert(lift(Person("Joe", 123))).returning(p => (p.name, p.age))
+      }
+      val list =
+        ExpandReturning.apply(q.ast.asInstanceOf[Returning], Some("OTHER"))(MirrorIdiom, SnakeCase)
+      list must matchPattern {
+        case List((Property(ExternalIdent("OTHER", `quat`), "name"), _), (Property(ExternalIdent("OTHER", `quat`), "age"), _)) =>
+      }
+    }
+
+    "replaces case class clauses with ExternalIdent(newAlias)" in {
+      val q = quote {
+        query[Person].insert(lift(Person("Joe", 123))).returning(p => Foo(p.name, p.age))
+      }
+      val list =
+        ExpandReturning.apply(q.ast.asInstanceOf[Returning], Some("OTHER"))(MirrorIdiom, SnakeCase)
+      list must matchPattern {
+        case List((Property(ExternalIdent("OTHER", `quat`), "name"), _), (Property(ExternalIdent("OTHER", `quat`), "age"), _)) =>
       }
     }
   }
@@ -113,11 +142,11 @@ class ExpandReturningSpec extends Spec {
 
     def insert = Insert(
       Map(
-        Entity.Opinionated("Person", List(), renameable),
+        Entity.Opinionated("Person", List(), QEP, renameable),
         Ident("p"),
         Tuple(List(Property.Opinionated(Ident("p"), "name", renameable, Visible), Property.Opinionated(Ident("p"), "age", renameable, Visible)))
       ),
-      List(Assignment(Ident("pp"), Property.Opinionated(Ident("pp"), "name", renameable, Visible), Constant("Joe")))
+      List(Assignment(Ident("pp"), Property.Opinionated(Ident("pp"), "name", renameable, Visible), Constant.auto("Joe")))
     )
     def retMulti =
       Returning(insert, Ident("r"), Tuple(List(Property.Opinionated(Ident("r"), "name", renameable, Visible), Property.Opinionated(Ident("r"), "age", renameable, Visible))))

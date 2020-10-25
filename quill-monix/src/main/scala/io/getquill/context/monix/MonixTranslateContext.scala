@@ -13,6 +13,6 @@ trait MonixTranslateContext extends TranslateContextBase {
   override private[getquill] val translateEffect: ContextEffect[Task] = new ContextEffect[Task] {
     override def wrap[T](t: => T): Task[T] = Task.eval(t)
     override def push[A, B](result: Task[A])(f: A => B): Task[B] = result.map(f)
-    override def seq[A, B](list: List[Task[A]]): Task[List[A]] = Task.sequence(list)
+    override def seq[A](list: List[Task[A]]): Task[List[A]] = Task.sequence(list)
   }
 }

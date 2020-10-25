@@ -16,7 +16,7 @@ class MapsEncodingSpec extends CollectionsSpec {
     boolDate:      Map[Boolean, LocalDate],
     uuidTimestamp: Map[UUID, Date]
   )
-  val e = MapsEntity(1, Map("1" -> BigDecimal(1)), Map(1 -> 1d, 2 -> 2d, 3 -> 3d), Map(1l -> 3f),
+  val e = MapsEntity(1, Map("1" -> BigDecimal(1)), Map(1 -> 1d, 2 -> 2d, 3 -> 3d), Map(1L -> 3f),
     Map(true -> LocalDate.fromMillisSinceEpoch(System.currentTimeMillis())),
     Map(UUID.randomUUID() -> new Date))
   val q = quote(query[MapsEntity])

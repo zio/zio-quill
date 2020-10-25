@@ -70,7 +70,7 @@ class JdbcContextSpec extends Spec {
     "with multiple columns" in {
       ctx.run(qr1.delete)
       val inserted = ctx.run {
-        qr1.insert(lift(TestEntity("foo", 1, 18L, Some(123)))).returning(r => (r.i, r.s, r.o))
+        qr1.insert(lift(TestEntity("foo", 1, 18L, Some(123), true))).returning(r => (r.i, r.s, r.o))
       }
       (1, "foo", Some(123)) mustBe inserted
     }
@@ -78,7 +78,7 @@ class JdbcContextSpec extends Spec {
     "with multiple columns and operations" in {
       ctx.run(qr1.delete)
       val inserted = ctx.run {
-        qr1.insert(lift(TestEntity("foo", 1, 18L, Some(123)))).returning(r => (r.i + 100, r.s, r.o.map(_ + 100)))
+        qr1.insert(lift(TestEntity("foo", 1, 18L, Some(123), true))).returning(r => (r.i + 100, r.s, r.o.map(_ + 100)))
       }
       (1 + 100, "foo", Some(123 + 100)) mustBe inserted
     }
@@ -97,7 +97,7 @@ class JdbcContextSpec extends Spec {
       case class Return(id: Int, str: String, opt: Option[Int])
       ctx.run(qr1.delete)
       val inserted = ctx.run {
-        qr1.insert(lift(TestEntity("foo", 1, 18L, Some(123)))).returning(r => Return(r.i, r.s, r.o))
+        qr1.insert(lift(TestEntity("foo", 1, 18L, Some(123), true))).returning(r => Return(r.i, r.s, r.o))
       }
       Return(1, "foo", Some(123)) mustBe inserted
     }
@@ -106,20 +106,20 @@ class JdbcContextSpec extends Spec {
   "update returning" - {
     "with multiple columns" in {
       ctx.run(qr1.delete)
-      ctx.run(qr1.insert(lift(TestEntity("baz", 6, 42L, Some(456)))))
+      ctx.run(qr1.insert(lift(TestEntity("baz", 6, 42L, Some(456), true))))
 
       val updated = ctx.run {
-        qr1.update(lift(TestEntity("foo", 1, 18L, Some(123)))).returning(r => (r.i, r.s, r.o))
+        qr1.update(lift(TestEntity("foo", 1, 18L, Some(123), true))).returning(r => (r.i, r.s, r.o))
       }
       (1, "foo", Some(123)) mustBe updated
     }
 
     "with multiple columns and operations" in {
       ctx.run(qr1.delete)
-      ctx.run(qr1.insert(lift(TestEntity("baz", 6, 42L, Some(456)))))
+      ctx.run(qr1.insert(lift(TestEntity("baz", 6, 42L, Some(456), true))))
 
       val updated = ctx.run {
-        qr1.update(lift(TestEntity("foo", 1, 18L, Some(123)))).returning(r => (r.i + 100, r.s, r.o.map(_ + 100)))
+        qr1.update(lift(TestEntity("foo", 1, 18L, Some(123), true))).returning(r => (r.i + 100, r.s, r.o.map(_ + 100)))
       }
       (1 + 100, "foo", Some(123 + 100)) mustBe updated
     }
@@ -137,12 +137,55 @@ class JdbcContextSpec extends Spec {
     "with multiple columns - case class" in {
       case class Return(id: Int, str: String, opt: Option[Int])
       ctx.run(qr1.delete)
-      ctx.run(qr1.insert(lift(TestEntity("baz", 6, 42L, Some(456)))))
+      ctx.run(qr1.insert(lift(TestEntity("baz", 6, 42L, Some(456), true))))
 
       val updated = ctx.run {
-        qr1.update(lift(TestEntity("foo", 1, 18L, Some(123)))).returning(r => Return(r.i, r.s, r.o))
+        qr1.update(lift(TestEntity("foo", 1, 18L, Some(123), true))).returning(r => Return(r.i, r.s, r.o))
       }
       Return(1, "foo", Some(123)) mustBe updated
+    }
+  }
+
+  "delete returning" - {
+    "with multiple columns" in {
+      ctx.run(qr1.delete)
+      ctx.run(qr1.insert(lift(TestEntity("foo", 1, 42L, Some(123), true))))
+
+      val deleted = ctx.run {
+        qr1.delete.returning(r => (r.i, r.s, r.o))
+      }
+      (1, "foo", Some(123)) mustBe deleted
+    }
+
+    "with multiple columns and operations" in {
+      ctx.run(qr1.delete)
+      ctx.run(qr1.insert(lift(TestEntity("foo", 1, 42L, Some(123), true))))
+
+      val deleted = ctx.run {
+        qr1.delete.returning(r => (r.i + 100, r.s, r.o.map(_ + 100)))
+      }
+      (1 + 100, "foo", Some(123 + 100)) mustBe deleted
+    }
+
+    "with multiple columns and query embedded" in {
+      ctx.run(qr1Emb.delete)
+      ctx.run(qr1Emb.insert(lift(TestEntityEmb(Emb("one", 1), 42L, Some(333)))))
+
+      val deleted = ctx.run {
+        qr1Emb.delete.returning(r => (r.emb.i, r.o))
+      }
+      (1, Some(333)) mustBe deleted
+    }
+
+    "with multiple columns - case class" in {
+      case class Return(id: Int, str: String, opt: Option[Int])
+      ctx.run(qr1.delete)
+      ctx.run(qr1.insert(lift(TestEntity("foo", 2, 42L, Some(222), true))))
+
+      val deleted = ctx.run {
+        qr1.delete.returning(r => Return(r.i, r.s, r.o))
+      }
+      Return(2, "foo", Some(222)) mustBe deleted
     }
   }
 }

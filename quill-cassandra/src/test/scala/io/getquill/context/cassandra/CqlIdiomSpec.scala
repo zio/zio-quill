@@ -2,8 +2,10 @@ package io.getquill.context.cassandra
 
 import io.getquill._
 import io.getquill.idiom.StatementInterpolator._
-import io.getquill.ast.{ Action => AstAction, _ }
+import io.getquill.ast.{ Action => AstAction, Query => _, _ }
 import io.getquill.idiom.StringToken
+import io.getquill.Query
+import io.getquill.quat.Quat
 
 class CqlIdiomSpec extends Spec {
 
@@ -22,14 +24,14 @@ class CqlIdiomSpec extends Spec {
         qr1.take(1)
       }
       mirrorContext.run(q).string mustEqual
-        "SELECT s, i, l, o FROM TestEntity LIMIT 1"
+        "SELECT s, i, l, o, b FROM TestEntity LIMIT 1"
     }
     "sortBy" in {
       val q = quote {
         qr1.sortBy(t => t.i)
       }
       mirrorContext.run(q).string mustEqual
-        "SELECT s, i, l, o FROM TestEntity ORDER BY i ASC"
+        "SELECT s, i, l, o, b FROM TestEntity ORDER BY i ASC"
     }
     "all terms" in {
       val q = quote {
@@ -74,42 +76,42 @@ class CqlIdiomSpec extends Spec {
         qr1.sortBy(t => t.i)(Ord.asc)
       }
       mirrorContext.run(q).string mustEqual
-        "SELECT s, i, l, o FROM TestEntity ORDER BY i ASC"
+        "SELECT s, i, l, o, b FROM TestEntity ORDER BY i ASC"
     }
     "desc" in {
       val q = quote {
         qr1.sortBy(t => t.i)(Ord.desc)
       }
       mirrorContext.run(q).string mustEqual
-        "SELECT s, i, l, o FROM TestEntity ORDER BY i DESC"
+        "SELECT s, i, l, o, b FROM TestEntity ORDER BY i DESC"
     }
     "ascNullsFirst" in {
       val q = quote {
         qr1.sortBy(t => t.i)(Ord.ascNullsFirst)
       }
       mirrorContext.run(q).string mustEqual
-        "SELECT s, i, l, o FROM TestEntity ORDER BY i ASC"
+        "SELECT s, i, l, o, b FROM TestEntity ORDER BY i ASC"
     }
     "descNullsFirst" in {
       val q = quote {
         qr1.sortBy(t => t.i)(Ord.descNullsFirst)
       }
       mirrorContext.run(q).string mustEqual
-        "SELECT s, i, l, o FROM TestEntity ORDER BY i DESC"
+        "SELECT s, i, l, o, b FROM TestEntity ORDER BY i DESC"
     }
     "ascNullsLast" in {
       val q = quote {
         qr1.sortBy(t => t.i)(Ord.ascNullsLast)
       }
       mirrorContext.run(q).string mustEqual
-        "SELECT s, i, l, o FROM TestEntity ORDER BY i ASC"
+        "SELECT s, i, l, o, b FROM TestEntity ORDER BY i ASC"
     }
     "descNullsLast" in {
       val q = quote {
         qr1.sortBy(t => t.i)(Ord.descNullsLast)
       }
       mirrorContext.run(q).string mustEqual
-        "SELECT s, i, l, o FROM TestEntity ORDER BY i DESC"
+        "SELECT s, i, l, o, b FROM TestEntity ORDER BY i DESC"
     }
   }
 
@@ -119,7 +121,7 @@ class CqlIdiomSpec extends Spec {
         qr1.filter(t => t.i == 1)
       }
       mirrorContext.run(q).string mustEqual
-        "SELECT s, i, l, o FROM TestEntity WHERE i = 1"
+        "SELECT s, i, l, o, b FROM TestEntity WHERE i = 1"
     }
     "unary (not supported)" in {
       val q = quote {
@@ -157,42 +159,42 @@ class CqlIdiomSpec extends Spec {
         qr1.filter(t => t.i == 1)
       }
       mirrorContext.run(q).string mustEqual
-        "SELECT s, i, l, o FROM TestEntity WHERE i = 1"
+        "SELECT s, i, l, o, b FROM TestEntity WHERE i = 1"
     }
     "&&" in {
       val q = quote {
         qr1.filter(t => t.i == 1 && t.s == "s")
       }
       mirrorContext.run(q).string mustEqual
-        "SELECT s, i, l, o FROM TestEntity WHERE i = 1 AND s = 's'"
+        "SELECT s, i, l, o, b FROM TestEntity WHERE i = 1 AND s = 's'"
     }
     ">" in {
       val q = quote {
         qr1.filter(t => t.i > 1)
       }
       mirrorContext.run(q).string mustEqual
-        "SELECT s, i, l, o FROM TestEntity WHERE i > 1"
+        "SELECT s, i, l, o, b FROM TestEntity WHERE i > 1"
     }
     ">=" in {
       val q = quote {
         qr1.filter(t => t.i >= 1)
       }
       mirrorContext.run(q).string mustEqual
-        "SELECT s, i, l, o FROM TestEntity WHERE i >= 1"
+        "SELECT s, i, l, o, b FROM TestEntity WHERE i >= 1"
     }
     "<" in {
       val q = quote {
         qr1.filter(t => t.i < 1)
       }
       mirrorContext.run(q).string mustEqual
-        "SELECT s, i, l, o FROM TestEntity WHERE i < 1"
+        "SELECT s, i, l, o, b FROM TestEntity WHERE i < 1"
     }
     "<=" in {
       val q = quote {
         qr1.filter(t => t.i <= 1)
       }
       mirrorContext.run(q).string mustEqual
-        "SELECT s, i, l, o FROM TestEntity WHERE i <= 1"
+        "SELECT s, i, l, o, b FROM TestEntity WHERE i <= 1"
     }
     "+" in {
       val q = quote {
@@ -215,7 +217,7 @@ class CqlIdiomSpec extends Spec {
         qr1.filter(t => t.s == "s")
       }
       mirrorContext.run(q).string mustEqual
-        "SELECT s, i, l, o FROM TestEntity WHERE s = 's'"
+        "SELECT s, i, l, o, b FROM TestEntity WHERE s = 's'"
     }
     "unit" in {
       case class Test(u: Unit)
@@ -230,7 +232,7 @@ class CqlIdiomSpec extends Spec {
         qr1.filter(t => t.i == 1)
       }
       mirrorContext.run(q).string mustEqual
-        "SELECT s, i, l, o FROM TestEntity WHERE i = 1"
+        "SELECT s, i, l, o, b FROM TestEntity WHERE i = 1"
     }
     "tuple" in {
       val q = quote {
@@ -244,7 +246,7 @@ class CqlIdiomSpec extends Spec {
         qr1.filter(t => liftQuery(List(1, 2)).contains(t.i))
       }
       mirrorContext.run(q).string mustEqual
-        "SELECT s, i, l, o FROM TestEntity WHERE i IN (?, ?)"
+        "SELECT s, i, l, o, b FROM TestEntity WHERE i IN (?, ?)"
     }
     "null (not supported)" in {
       val q = quote {
@@ -257,25 +259,25 @@ class CqlIdiomSpec extends Spec {
   "action" - {
     "insert" in {
       val q = quote {
-        qr1.insert(lift(TestEntity("s", 1, 2L, None)))
+        qr1.insert(lift(TestEntity("s", 1, 2L, None, true)))
       }
       mirrorContext.run(q).string mustEqual
-        "INSERT INTO TestEntity (s,i,l,o) VALUES (?, ?, ?, ?)"
+        "INSERT INTO TestEntity (s,i,l,o,b) VALUES (?, ?, ?, ?, ?)"
     }
     "update" - {
       "all" in {
         val q = quote {
-          qr1.update(lift(TestEntity("s", 1, 2L, None)))
+          qr1.update(lift(TestEntity("s", 1, 2L, None, true)))
         }
         mirrorContext.run(q).string mustEqual
-          "UPDATE TestEntity SET s = ?, i = ?, l = ?, o = ?"
+          "UPDATE TestEntity SET s = ?, i = ?, l = ?, o = ?, b = ?"
       }
       "filtered" in {
         val q = quote {
-          qr1.filter(t => t.i == 1).update(lift(TestEntity("s", 1, 2L, None)))
+          qr1.filter(t => t.i == 1).update(lift(TestEntity("s", 1, 2L, None, true)))
         }
         mirrorContext.run(q).string mustEqual
-          "UPDATE TestEntity SET s = ?, i = ?, l = ?, o = ? WHERE i = 1"
+          "UPDATE TestEntity SET s = ?, i = ?, l = ?, o = ?, b = ? WHERE i = 1"
       }
     }
     "delete" - {
@@ -310,7 +312,7 @@ class CqlIdiomSpec extends Spec {
           qr1.filter(t => infix"${t.i} = 1".as[Boolean])
         }
         mirrorContext.run(q).string mustEqual
-          "SELECT s, i, l, o FROM TestEntity WHERE i = 1"
+          "SELECT s, i, l, o, b FROM TestEntity WHERE i = 1"
       }
       "full" in {
         val q = quote {
@@ -323,10 +325,10 @@ class CqlIdiomSpec extends Spec {
     "action" - {
       "partial" in {
         val q = quote {
-          qr1.filter(t => infix"${t.i} = 1".as[Boolean]).update(lift(TestEntity("s", 1, 2L, None)))
+          qr1.filter(t => infix"${t.i} = 1".as[Boolean]).update(lift(TestEntity("s", 1, 2L, None, true)))
         }
         mirrorContext.run(q).string mustEqual
-          "UPDATE TestEntity SET s = ?, i = ?, l = ?, o = ? WHERE i = 1"
+          "UPDATE TestEntity SET s = ?, i = ?, l = ?, o = ?, b = ? WHERE i = 1"
       }
       "full" in {
         val q = quote {
@@ -343,7 +345,7 @@ class CqlIdiomSpec extends Spec {
 
     "naming strategy respected" in {
       capsMirrorContext.run(query[TestEntity].filter(_.i > 1)).string mustEqual
-        "SELECT S, I, L, O FROM TESTENTITY WHERE I > 1"
+        "SELECT S, I, L, O, B FROM TESTENTITY WHERE I > 1"
     }
 
     "query schema overrides naming strategy" in {
@@ -352,7 +354,7 @@ class CqlIdiomSpec extends Spec {
       }
 
       capsMirrorContext.run(qs.filter(r => r.i > 1 && r.l > 2L)).string mustEqual
-        "SELECT S, field_i, L, O FROM CustomTestEntity WHERE field_i > 1 AND L > 2"
+        "SELECT S, field_i, L, O, B FROM CustomTestEntity WHERE field_i > 1 AND L > 2"
     }
   }
 
@@ -390,7 +392,7 @@ class CqlIdiomSpec extends Spec {
     }
     "cql" in {
       val t = implicitly[Tokenizer[CqlQuery]]
-      val e = CqlQuery(Entity("name", Nil), None, Nil, None, Nil, distinct = true)
+      val e = CqlQuery(Entity("name", Nil, QEP), None, Nil, None, Nil, distinct = true)
       intercept[IllegalStateException](t.token(e))
       t.token(e.copy(distinct = false)) mustBe stmt"SELECT * FROM name"
     }
@@ -411,7 +413,7 @@ class CqlIdiomSpec extends Spec {
     // not actually used anywhere but doing a sanity check here
     "external ident sanity check" in {
       val t = implicitly[Tokenizer[ExternalIdent]]
-      t.token(ExternalIdent("TestIdent")) mustBe StringToken("TestIdent")
+      t.token(ExternalIdent("TestIdent", Quat.Value)) mustBe StringToken("TestIdent")
     }
   }
 }

@@ -8,8 +8,10 @@
 [![Codacy Badge](https://api.codacy.com/project/badge/grade/36ab84c7ff43480489df9b7312a4bdc1)](https://www.codacy.com/app/fwbrasil/quill)
 [![codecov.io](https://codecov.io/github/getquill/quill/coverage.svg?branch=master)](https://codecov.io/github/getquill/quill?branch=master)
 [![Join the chat at https://gitter.im/getquill/quill](https://img.shields.io/badge/gitter-join%20chat-green.svg)](https://gitter.im/getquill/quill?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.getquill/quill_2.11/badge.svg)](https://maven-badges.herokuapp.com/maven-central/io.getquill/quill_2.11)
-[![Javadocs](https://www.javadoc.io/badge/io.getquill/quill_2.11.svg)](https://www.javadoc.io/doc/io.getquill/quill-core_2.11)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.getquill/quill-core_2.13/badge.svg)](https://maven-badges.herokuapp.com/maven-central/io.getquill/quill-core_2.13)
+[![Javadocs](https://www.javadoc.io/badge/io.getquill/quill-core_2.13.svg)](https://www.javadoc.io/doc/io.getquill/quill-core_2.13)
+
+# What is Quill?
 
 Quill provides a Quoted Domain Specific Language ([QDSL](http://homepages.inf.ed.ac.uk/wadler/papers/qdsl/qdsl.pdf)) to express queries in Scala and execute them in a target language. The library's core is designed to support multiple target languages, currently featuring specializations for Structured Query Language ([SQL](https://en.wikipedia.org/wiki/SQL)) and Cassandra Query Language ([CQL](https://cassandra.apache.org/doc/latest/cql/)).
 
@@ -273,7 +275,7 @@ val returnedIds = ctx.run(q) //: List[(Int, String)]
 // INSERT INTO Product (description, sku) VALUES (?, ?) RETURNING id, description
 ```
 
- We can also fix this situation by using an insert-meta.
+We can also fix this situation by using an insert-meta.
 
 ```scala
 implicit val productInsertMeta = insertMeta[Product](_.id)
@@ -285,8 +287,6 @@ val returnedIds = ctx.run(q) //: List[(Int, String)]
 // INSERT INTO Product (description, sku) VALUES (?, ?) RETURNING id, description
 ```
 
-##### update returning
-
 `returning` can also be used after `update`:
 
 ```scala
@@ -296,6 +296,17 @@ val q = quote {
 
 val updated = ctx.run(q) //: List[(Int, String)]
 // UPDATE Product SET id = ?, description = ?, sku = ? RETURNING id, description
+```
+
+or even after `delete`:
+
+```scala
+val q = quote {
+  query[Product].delete.returning(r => (r.id, r.description))
+}
+
+val deleted = ctx.run(q) //: List[(Int, String)]
+// DELETE FROM Product RETURNING id, description
 ```
 
 #### Customization
@@ -314,14 +325,14 @@ val q = quote {
 
 Add 100 to the value of `id`:
 ```scala
-ctx.run(q.returning(r => id + 100)) //: List[Int]
+ctx.run(q.returning(r => r.id + 100)) //: List[Int]
 // INSERT INTO Product (description, sku) VALUES (?, ?) RETURNING id + 100
 ```
 
 Pass the value of `id` into a UDF:
 ```scala
 val udf = quote { (i: Long) => infix"myUdf($i)".as[Int] }
-ctx.run(q.returning(r => udf(id))) //: List[Int]
+ctx.run(q.returning(r => udf(r.id))) //: List[Int]
 // INSERT INTO Product (description, sku) VALUES (?, ?) RETURNING myUdf(id)
 ```
 
@@ -355,7 +366,7 @@ In the case that this is impossible (e.g. when using Postgres booleans), you can
 ##### SQL Server
 
 The `returning` and `returningGenerated` methods are more restricted when using SQL Server; they only support 
-arithmetic operations. These are inserted directly into the SQL `OUTPUT INSERTED.*` clause.
+arithmetic operations. These are inserted directly into the SQL `OUTPUT INSERTED.*` or `OUTPUT DELETED.*` clauses.
 
 Assuming the query:
 ```scala
@@ -378,6 +389,16 @@ val q = quote {
 
 val updated = ctx.run(q)
 // UPDATE Product SET description = 'Updated Product', sku = 2022 OUTPUT INSERTED.id, INSERTED.description
+```
+
+Delete returning:
+```scala
+val q = quote {
+  query[Product].delete.returning(r => (r.id, r.description))
+}
+
+val updated = ctx.run(q)
+// DELETE FROM Product OUTPUT DELETED.id, DELETED.description
 ```
 
 ### Embedded case classes
@@ -768,7 +789,7 @@ val q = quote {
   for {
     p <- query[Person]
     a <- query[Address] if (p.id == a.fk)
-    c <- query[Address] if (c.zip == a.zip)
+    c <- query[Company] if (c.zip == a.zip)
   } yield (p, a, c)
 }
  
@@ -1528,7 +1549,7 @@ the latter two, however, do not support Insert and Batch Insert query printing.
 
 Quill provides an IO monad that allows the user to express multiple computations and execute them separately. This mechanism is also known as a free monad, which provides a way of expressing computations as referentially-transparent values and isolates the unsafe IO operations into a single operation. For instance:
 
-```
+```scala
 // this code using Future
 
 case class Person(id: Int, name: String, age: Int)
@@ -1743,7 +1764,6 @@ ctx.run(query[Book])
 
 The cassandra context provides encoding of UDT (user-defined types).
 ```scala
-import io.getquill.context.cassandra.Udt
 
 case class Name(firstName: String, lastName: String) extends Udt
 ```
@@ -2103,6 +2123,56 @@ run(q)
 // WHERE SOME_UDF(e.id) <= 10 AND SOME_OTHER_UDF(SOME_UDF(e.id)) <= 100
 ```
 
+### Infixes With Conditions
+
+#### Summary
+Use `infix"...".asCondition` to express an infix that represents a conditional expression.
+
+#### Explination
+
+When synthesizing queries for databases which do not have proper boolean-type support (e.g. SQL Server,
+Oracle etc...) boolean infix clauses inside projections must become values. 
+Typically this requires a `CASE WHERE ... END`.
+
+Take the following example:
+```scala
+case class Node(name: String, isUp: Boolean, uptime:Long)
+case class Status(name: String, allowed: Boolean)
+val allowedStatus:Boolean = getState
+
+quote {
+  query[Node].map(n => Status(n.name, n.isUp == lift(allowedStatus)))
+}
+run(q)
+// This is invalid in most databases:
+//   SELECT n.name, n.isUp = ?, uptime FROM Node n
+// It will be converted to this:
+//   SELECT n.name, CASE WHEN (n.isUp = ?) THEN 1 ELSE 0, uptime FROM Node n
+```
+However, in certain cases, infix clauses that express conditionals should actually represent
+boolean expressions for example:
+```scala
+case class Node(name: String, isUp: Boolean)
+val maxUptime:Boolean = getState
+
+quote {
+  query[Node].filter(n => infix"${n.uptime} > ${lift(maxUptime)}".as[Boolean])
+}
+run(q)
+// Should be this:
+//  SELECT n.name, n.isUp, n.uptime WHERE n.uptime > ?
+// However since infix"...".as[Boolean] is treated as a Boolean Value (as opposed to an expression) it will be converted to this:
+//  SELECT n.name, n.isUp, n.uptime WHERE 1 == n.uptime > ?
+```
+
+In order to avoid this problem, use infix"...".asCondition so that Quill understands that the boolean is an expression:
+```scala
+quote {
+  query[Node].filter(n => infix"${n.uptime} > ${lift(maxUptime)}".asCondition)
+}
+run(q) // SELECT n.name, n.isUp, n.uptime WHERE n.uptime > ?
+```
+
 ### Dynamic infix
 
 Infix supports runtime string values through the `#$` prefix. Example:
@@ -2418,14 +2488,14 @@ val results = run(peopleOlderThan(22, liftQuery(dataset)))
 ```
 
 
-## Spark Context
+## Spark Integration
 
 Quill provides a fully type-safe way to use Spark's highly-optimized SQL engine. It's an alternative to `Dataset`'s weakly-typed API.
 
-### sbt dependency
+### Importing Quill Spark
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-spark" % "3.5.2-SNAPSHOT"
+  "io.getquill" %% "quill-spark" % "3.6.0-SNAPSHOT"
 )
 ```
 
@@ -2434,26 +2504,62 @@ libraryDependencies ++= Seq(
 Unlike the other modules, the Spark context is a companion object. Also, it does not depend on a spark session. To use it, add the following import:
 
 ```scala
+import org.apache.spark.sql.SparkSession
+
+// Create your Spark Context
+val session =
+  SparkSession.builder()
+    .master("local")
+    .appName("spark test")
+    .getOrCreate()
+
+// The Spark SQL Context must be provided by the user through an implicit value:
+implicit val sqlContext = session
+import sqlContext.implicits._      // Also needed...
+
+// Import the Quill Spark Context
 import io.getquill.QuillSparkContext._
 ```
 
-The spark session must be provided by the user through an **implicit** value:
+> Note Unlike the other modules, the Spark context is a companion object. Also, it does not depend on a spark session.
 
+> Also Note: Quill decoders and meta instances are not used by the quill-spark module, Spark's `Encoder`s are used instead.
+
+### Using Quill-Spark
+
+The `run` method returns a `Dataset` transformed by the Quill query using the SQL engine.
 ```scala
-import org.apache.spark.sql.SparkSession
+// Typically you start with some type dataset.
+val peopleDS: Dataset[Person] = spark.read.parquet("path/to/people")
+val addressesDS: Dataset[Address] = spark.read.parquet("path/to/addresses")
 
-// Replace by your spark SQL context creation
-implicit lazy val sqlContext =
-  SparkSession.builder().master("local").appName("spark test").getOrCreate().sqlContext
+// The liftQuery method converts Datasets to Quill queries:
+val people: Query[Person] = quote { liftQuery(peopleDS) }
+val addresses: Query[Address] = quote { liftQuery(addressesDS) }
+
+val people: Query[(Person] = quote {
+  people.join(addresses).on((p, a) => p.id == a.ownerFk)
+}
+
+val peopleAndAddressesDS: Dataset[(Person, Address)] = run(people)
 ```
 
-Quill decoders and meta instances are not used by the quill-spark module, Spark's `Encoder`s are used instead. Add this import to have them in scope:
+#### Simplify it
+Since the `run` method allows for Quill queries to be specified directly, and `liftQuery` can be used inside
+of any Quoted block, you can shorten various steps of the above workflow:
 
 ```scala
-import sqlContext.implicits._
+val peopleDS: Dataset[Person] = spark.read.parquet("path/to/people")
+val addressesDS: Dataset[Address] = spark.read.parquet("path/to/addresses")
+
+val peopleAndAddressesDS: Dataset[(Person, Address)] = run {
+  liftQuery(peopleDS)
+    .join(liftQuery(addressesDS))
+    .on((p, a) => p.id == a.ownerFk)
+}
 ```
 
-The `liftQuery` method converts `Dataset`s to Quill queries:
+Here is an example of a Dataset being converted into Quill, filtered, and then written back out.
 
 ```scala
 import org.apache.spark.sql.Dataset
@@ -2465,9 +2571,30 @@ def filter(myDataset: Dataset[Person], name: String): Dataset[Int] =
 // SELECT x1.age _1 FROM (?) x1 WHERE x1.name = ?
 ```
 
-Note that the `run` method returns a `Dataset` transformed by the Quill query using the SQL engine.
+#### Workflow
 
-Additionally, note that the queries printed from `run(myQuery)` during compile time escape question marks via a backslash them in order to
+Due to the design of Quill-Spark, it can be used interchangeably throughout your Spark workflow:
+ - Lift a Dataset to Query to do some filtering and sub-selecting
+(with [Predicate and Filter Pushdown!](https://jaceklaskowski.gitbooks.io/mastering-spark-sql/spark-sql-Optimizer-PushDownPredicate.html)).
+ - Then covert it back to a Dataset to do Spark-Specific operations.
+ - Then convert it back to a Query to use Quills great Join DSL...
+ - Then convert it back to a Dataset to write it to a file or do something else with it...
+
+### Custom Functions
+
+TODO UDFs and UDAFs
+
+### Restrictions
+
+#### Top Level Classes
+Spark only supports using top-level classes as record types. That means that
+when using `quill-spark` you can only use a top-level case class for `T` in `Query[T]`.
+
+TODO Get the specific error
+
+#### Lifted Variable Interpolation
+
+The queries printed from `run(myQuery)` during compile time escape question marks via a backslash them in order to
 be able to substitute liftings properly. They are then returned back to their original form before running.
 ```scala
 import org.apache.spark.sql.Dataset
@@ -2482,8 +2609,6 @@ def filter(myDataset: Dataset[Person]): Dataset[Int] =
 // SELECT x1.age _1 FROM (ds1) x1 WHERE x1.name = '?'
 ```
 
-
-**Important**: Spark doesn't support transformations of inner classes. Use top-level classes.
 
 ## SQL Contexts
 
@@ -2570,7 +2695,7 @@ The body of `transaction` can contain calls to other methods and multiple `run` 
 ```
 libraryDependencies ++= Seq(
   "mysql" % "mysql-connector-java" % "8.0.17",
-  "io.getquill" %% "quill-jdbc" % "3.5.2-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "3.6.0-SNAPSHOT"
 )
 ```
 
@@ -2597,7 +2722,7 @@ ctx.connectionTimeout=30000
 ```
 libraryDependencies ++= Seq(
   "org.postgresql" % "postgresql" % "42.2.8",
-  "io.getquill" %% "quill-jdbc" % "3.5.2-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "3.6.0-SNAPSHOT"
 )
 ```
 
@@ -2623,7 +2748,7 @@ ctx.connectionTimeout=30000
 ```
 libraryDependencies ++= Seq(
   "org.xerial" % "sqlite-jdbc" % "3.28.0",
-  "io.getquill" %% "quill-jdbc" % "3.5.2-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "3.6.0-SNAPSHOT"
 )
 ```
 
@@ -2644,7 +2769,7 @@ ctx.jdbcUrl=jdbc:sqlite:/path/to/db/file.db
 ```
 libraryDependencies ++= Seq(
   "com.h2database" % "h2" % "1.4.199",
-  "io.getquill" %% "quill-jdbc" % "3.5.2-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "3.6.0-SNAPSHOT"
 )
 ```
 
@@ -2666,7 +2791,7 @@ ctx.dataSource.user=sa
 ```
 libraryDependencies ++= Seq(
   "com.microsoft.sqlserver" % "mssql-jdbc" % "7.4.1.jre8",
-  "io.getquill" %% "quill-jdbc" % "3.5.2-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "3.6.0-SNAPSHOT"
 )
 ```
 
@@ -2688,7 +2813,7 @@ available for this situation [here](https://stackoverflow.com/questions/1074869/
 ```
 libraryDependencies ++= Seq(
   "com.oracle.jdbc" % "ojdbc8" % "18.3.0.0.0",
-  "io.getquill" %% "quill-jdbc" % "3.5.2-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "3.6.0-SNAPSHOT"
 )
 ```
 
@@ -2788,7 +2913,7 @@ lazy val ctx = new MysqlMonixJdbcContext(SnakeCase, "ctx", Runner.using(Schedule
 ```
 libraryDependencies ++= Seq(
   "mysql" % "mysql-connector-java" % "8.0.17",
-  "io.getquill" %% "quill-jdbc-monix" % "3.5.2-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-monix" % "3.6.0-SNAPSHOT"
 )
 ```
 
@@ -2815,7 +2940,7 @@ ctx.connectionTimeout=30000
 ```
 libraryDependencies ++= Seq(
   "org.postgresql" % "postgresql" % "42.2.8",
-  "io.getquill" %% "quill-jdbc-monix" % "3.5.2-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-monix" % "3.6.0-SNAPSHOT"
 )
 ```
 
@@ -2841,7 +2966,7 @@ ctx.connectionTimeout=30000
 ```
 libraryDependencies ++= Seq(
   "org.xerial" % "sqlite-jdbc" % "3.28.0",
-  "io.getquill" %% "quill-jdbc-monix" % "3.5.2-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-monix" % "3.6.0-SNAPSHOT"
 )
 ```
 
@@ -2862,7 +2987,7 @@ ctx.jdbcUrl=jdbc:sqlite:/path/to/db/file.db
 ```
 libraryDependencies ++= Seq(
   "com.h2database" % "h2" % "1.4.199",
-  "io.getquill" %% "quill-jdbc-monix" % "3.5.2-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-monix" % "3.6.0-SNAPSHOT"
 )
 ```
 
@@ -2884,7 +3009,7 @@ ctx.dataSource.user=sa
 ```
 libraryDependencies ++= Seq(
   "com.microsoft.sqlserver" % "mssql-jdbc" % "7.4.1.jre8",
-  "io.getquill" %% "quill-jdbc-monix" % "3.5.2-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-monix" % "3.6.0-SNAPSHOT"
 )
 ```
 
@@ -2916,7 +3041,7 @@ available for this situation [here](https://stackoverflow.com/questions/1074869/
 ```
 libraryDependencies ++= Seq(
   "com.oracle.jdbc" % "ojdbc8" % "18.3.0.0.0",
-  "io.getquill" %% "quill-jdbc-monix" % "3.5.2-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-monix" % "3.6.0-SNAPSHOT"
 )
 ```
 
@@ -2958,7 +3083,7 @@ The body of transaction can contain calls to other methods and multiple run call
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-ndbc-postgres" % "3.5.2-SNAPSHOT"
+  "io.getquill" %% "quill-ndbc-postgres" % "3.6.0-SNAPSHOT"
 )
 ```
 
@@ -3065,7 +3190,7 @@ ctx.queryTimeout=10m
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async-mysql" % "3.5.2-SNAPSHOT"
+  "io.getquill" %% "quill-async-mysql" % "3.6.0-SNAPSHOT"
 )
 ```
 
@@ -3089,13 +3214,128 @@ ctx.url=mysql://host:3306/database?user=root&password=root
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async-postgres" % "3.5.2-SNAPSHOT"
+  "io.getquill" %% "quill-async-postgres" % "3.6.0-SNAPSHOT"
 )
 ```
 
 #### context definition
 ```scala
 lazy val ctx = new PostgresAsyncContext(SnakeCase, "ctx")
+```
+
+#### application.properties
+
+See [common properties](#applicationproperties-5)
+
+For `url` property use `postgresql` scheme:
+
+```
+ctx.url=postgresql://host:5432/database?user=root&password=root
+```
+
+## quill-jasync
+
+The `quill-jasync` module provides simple async support for Postgres databases.
+
+#### transactions
+
+The async module provides transaction support based on a custom implicit execution context:
+
+```
+ctx.transaction { implicit ec =>
+  ctx.run(query[Person].delete)
+  // other transactional code
+}
+```
+
+The body of `transaction` can contain calls to other methods and multiple `run` calls, but the transactional code must be done using the provided implicit execution context. For instance:
+
+```
+def deletePerson(name: String)(implicit ec: ExecutionContext) = 
+  ctx.run(query[Person].filter(_.name == lift(name)).delete)
+
+ctx.transaction { implicit ec =>
+  deletePerson("John")
+}
+```
+
+Depending on how the main execution context is imported, it is possible to produce an ambiguous implicit resolution. A way to solve this problem is shadowing the multiple implicits by using the same name:
+
+```
+import scala.concurrent.ExecutionContext.Implicits.{ global => ec }
+
+def deletePerson(name: String)(implicit ec: ExecutionContext) = 
+  ctx.run(query[Person].filter(_.name == lift(name)).delete)
+
+ctx.transaction { implicit ec =>
+  deletePerson("John")
+}
+```
+
+Note that the global execution context is renamed to ec.
+
+#### application.properties
+
+##### connection configuration
+```
+ctx.host=host
+ctx.port=1234
+ctx.username=root
+ctx.password=root
+ctx.database=database
+```
+
+or use connection URL with database-specific scheme (see below):
+
+```
+ctx.url=scheme://host:5432/database?user=root&password=root
+```
+
+Also see full settings `ConnectionPoolConfiguration` [documentation](https://github.com/jasync-sql/jasync-sql/blob/master/db-async-common/src/main/java/com/github/jasync/sql/db/ConnectionPoolConfiguration.kt).
+
+##### SSL configuration
+```
+ctx.sslmode=disable # optional, one of [disable|prefer|require|verify-ca|verify-full]
+ctx.sslrootcert=./path/to/cert/file # optional, required for sslmode=verify-ca or verify-full
+```
+
+### quill-jasync-mysql
+
+#### sbt dependencies
+```
+libraryDependencies ++= Seq(
+  "io.getquill" %% "quill-jasync-mysql" % "3.6.0-SNAPSHOT"
+)
+```
+
+#### context definition
+```scala
+lazy val ctx = new MysqlJAsyncContext(SnakeCase, "ctx")
+```
+
+#### application.properties
+
+See [above](#applicationproperties-5)
+
+For `url` property use `mysql` scheme:
+
+```
+ctx.url=mysql://host:3306/database?user=root&password=root
+```
+
+
+### quill-jasync-postgres
+
+#### sbt dependencies
+```
+libraryDependencies ++= Seq(
+  "io.getquill" %% "quill-jasync-postgres" % "3.6.0-SNAPSHOT"
+)
+```
+
+#### context definition
+```scala
+lazy val ctx = new PostgresJAsyncContext(SnakeCase, "ctx")
 ```
 
 #### application.properties
@@ -3139,7 +3379,7 @@ The body of `transaction` can contain calls to other methods and multiple `run` 
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-finagle-mysql" % "3.5.2-SNAPSHOT"
+  "io.getquill" %% "quill-finagle-mysql" % "3.6.0-SNAPSHOT"
 )
 ```
 
@@ -3179,7 +3419,7 @@ The body of `transaction` can contain calls to other methods and multiple `run` 
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-finagle-postgres" % "3.5.2-SNAPSHOT"
+  "io.getquill" %% "quill-finagle-postgres" % "3.6.0-SNAPSHOT"
 )
 ```
 
@@ -3206,7 +3446,7 @@ ctx.binaryParams=false
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-cassandra" % "3.5.2-SNAPSHOT"
+  "io.getquill" %% "quill-cassandra" % "3.6.0-SNAPSHOT"
 )
 ```
 
@@ -3242,7 +3482,7 @@ ctx.session.addressTranslator=com.datastax.driver.core.policies.IdentityTranslat
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-cassandra-monix" % "3.5.2-SNAPSHOT"
+  "io.getquill" %% "quill-cassandra-monix" % "3.6.0-SNAPSHOT"
 )
 ```
 
@@ -3261,7 +3501,7 @@ lazy val ctx = new CassandraStreamContext(SnakeCase, "ctx")
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-orientdb" % "3.5.2-SNAPSHOT"
+  "io.getquill" %% "quill-orientdb" % "3.6.0-SNAPSHOT"
 )
 ```
 
@@ -3323,7 +3563,7 @@ Have a look at the [CODEGEN.md](https://github.com/getquill/quill/blob/master/CO
 
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-codegen-jdbc" % "3.5.2-SNAPSHOT"
+  "io.getquill" %% "quill-codegen-jdbc" % "3.6.0-SNAPSHOT"
 )
 ```
 
@@ -3393,6 +3633,7 @@ Please refer to [SLICK.md](https://github.com/getquill/quill/blob/master/SLICK.m
 Please refer to [CASSANDRA.md](https://github.com/getquill/quill/blob/master/CASSANDRA.md) for a detailed comparison between Quill and other main alternatives for interaction with Cassandra in Scala.
 
 ## Related Projects
+ * [quill-generic](https://github.com/ajozwik/quill-generic) - Generic DAO Support for Quill.
  * [scala-db-codegen](https://github.com/olafurpg/scala-db-codegen) - Code/boilerplate generator from db schema
  * [quill-cache](https://github.com/mslinn/quill-cache/) - Caching layer for Quill
  * [quill-gen](https://github.com/mslinn/quill-gen/) - a DAO generator for `quill-cache`
@@ -3401,12 +3642,22 @@ Please refer to [CASSANDRA.md](https://github.com/getquill/quill/blob/master/CAS
 
 ### Talks
 
-ScalaDays Berlin 2016 - [Scylla, Charybdis, and the mystery of Quill](https://www.youtube.com/watch?v=nqSYccoSeio)
-
+ - **[Intro]** ScalaDays Berlin 2016 - [Scylla, Charybdis, and the mystery of Quill](https://www.youtube.com/watch?v=nqSYccoSeio)
+ - **[Intro]** Postgres Philly 2019 - [Introduction to Quill](https://www.youtube.com/watch?v=RVs-T5iFdQI)
+ - ScalaUA 2020 - [Manipulating Abstract Syntax Trees (ASTs) to generate safe SQL Queries with Quill](https://www.youtube.com/watch?v=aY8DrjE9lIY)
+ - BeeScala 2019 - [Quill + Spark = Better Together](https://www.youtube.com/watch?v=EXISmUXBXu8)
+ - Scale By the Bay 2019 - [Quill + Doobie = Better Together](https://www.youtube.com/watch?v=1WVjkP_G2cA)
+ - ScQuilL, Porting Quill to Dotty (Ongoing) - [Quill, Dotty, and Macros](https://www.youtube.com/playlist?list=PLqky8QybCVQYNZY_MNJpkjFKT-dAdHQDX)
+ 
 ### Blog posts
 
-[quill-spark: A type-safe Scala API for Spark SQL](https://medium.com/@fwbrasil/quill-spark-a-type-safe-scala-api-for-spark-sql-2672e8582b0d)
-Scalac.io blog - [Compile-time Queries with Quill](http://blog.scalac.io/2016/07/21/compile-time-queries-with-quill.html)
+ - **[Intro]** Haoyi's Programming Blog - [Working with Databases using Scala and Quill](http://www.lihaoyi.com/post/WorkingwithDatabasesusingScalaandQuill.html)
+ - Juliano Alves's Blog - [Streaming all the way with ZIO, Doobie, Quill, http4s and fs2](https://juliano-alves.com/2020/06/15/streaming-all-the-way-zio-doobie-quill-http4s-fs2/)
+ - Juliano Alves's Blog - [Quill: Translating Boolean Literals](https://juliano-alves.com/2020/09/14/quill-translating-boolean-literals/)
+ - Juliano Alves's Blog - [Quill NDBC Postgres: A New Async Module](https://juliano-alves.com/2019/11/29/quill-ndbc-postgres-a-new-async-module/)
+ - Juliano Alves's Blog - [Contributing to Quill, a Pairing Session](https://juliano-alves.com/2019/11/18/contributing-to-quill-a-pairing-session/)
+ - Medium @ Fwbrasil - [quill-spark: A type-safe Scala API for Spark SQL](https://medium.com/@fwbrasil/quill-spark-a-type-safe-scala-api-for-spark-sql-2672e8582b0d)
+ - Scalac.io blog - [Compile-time Queries with Quill](http://blog.scalac.io/2016/07/21/compile-time-queries-with-quill.html)
 
 ## Code of Conduct
 
@@ -3424,13 +3675,13 @@ See the [LICENSE](https://github.com/getquill/quill/blob/master/LICENSE.txt) fil
 - @juliano
 - @mentegy
 - @mdedetrich
-- @mxl
 
 ## Former maintainers:
 
 - @gustavoamigo
 - @godenji
 - @lvicentesanchez
+- @mxl
 
 You can notify all current maintainers using the handle `@getquill/maintainers`.
 

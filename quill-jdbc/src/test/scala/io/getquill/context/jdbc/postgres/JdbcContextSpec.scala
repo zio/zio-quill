@@ -81,7 +81,7 @@ class JdbcContextSpec extends Spec {
     "with multiple columns" in {
       ctx.run(qr1.delete)
       val inserted = ctx.run {
-        qr1.insert(lift(TestEntity("foo", 1, 18L, Some(123)))).returning(r => (r.i, r.s, r.o))
+        qr1.insert(lift(TestEntity("foo", 1, 18L, Some(123), true))).returning(r => (r.i, r.s, r.o))
       }
       (1, "foo", Some(123)) mustBe inserted
     }
@@ -89,7 +89,7 @@ class JdbcContextSpec extends Spec {
     "with multiple columns and operations" in {
       ctx.run(qr1.delete)
       val inserted = ctx.run {
-        qr1.insert(lift(TestEntity("foo", 1, 18L, Some(123)))).returning(r => (r.i + 100, r.s, r.o.map(_ + 100)))
+        qr1.insert(lift(TestEntity("foo", 1, 18L, Some(123), true))).returning(r => (r.i + 100, r.s, r.o.map(_ + 100)))
       }
       (1 + 100, "foo", Some(123 + 100)) mustBe inserted
     }
@@ -100,7 +100,7 @@ class JdbcContextSpec extends Spec {
 
       ctx.run(qr1.delete)
       val inserted = ctx.run {
-        qr1.insert(lift(TestEntity("two", 36, 18L, Some(123)))).returning(r =>
+        qr1.insert(lift(TestEntity("two", 36, 18L, Some(123), true))).returning(r =>
           (r.i, r.s + "_s", qr2.filter(rr => rr.i == r.i).map(_.s).max))
       }
       (36, "two_s", Some("foobar")) mustBe inserted
@@ -113,7 +113,7 @@ class JdbcContextSpec extends Spec {
       val value = "foobar"
       ctx.run(qr1.delete)
       val inserted = ctx.run {
-        qr1.insert(lift(TestEntity("two", 36, 18L, Some(123)))).returning(r =>
+        qr1.insert(lift(TestEntity("two", 36, 18L, Some(123), true))).returning(r =>
           (r.i, r.s + "_s", qr2.filter(rr => rr.i == r.i && rr.s == lift(value)).map(_.s).max))
       }
       (36, "two_s", Some("foobar")) mustBe inserted
@@ -121,9 +121,9 @@ class JdbcContextSpec extends Spec {
 
     "with multiple columns and query - same table" in {
       ctx.run(qr1.delete)
-      ctx.run(qr1.insert(lift(TestEntity("one", 1, 18L, Some(1)))))
+      ctx.run(qr1.insert(lift(TestEntity("one", 1, 18L, Some(1), true))))
       val inserted = ctx.run {
-        qr1.insert(lift(TestEntity("two", 2, 18L, Some(123)))).returning(r =>
+        qr1.insert(lift(TestEntity("two", 2, 18L, Some(123), true))).returning(r =>
           (r.i, r.s + "_s", qr1.filter(rr => rr.o.exists(_ == r.i - 1)).map(_.s).max))
       }
       (2, "two_s", Some("one")) mustBe inserted
@@ -143,7 +143,7 @@ class JdbcContextSpec extends Spec {
       case class Return(id: Int, str: String, opt: Option[Int])
       ctx.run(qr1.delete)
       val inserted = ctx.run {
-        qr1.insert(lift(TestEntity("foo", 1, 18L, Some(123)))).returning(r => Return(r.i, r.s, r.o))
+        qr1.insert(lift(TestEntity("foo", 1, 18L, Some(123), true))).returning(r => Return(r.i, r.s, r.o))
       }
       Return(1, "foo", Some(123)) mustBe inserted
     }
@@ -152,20 +152,20 @@ class JdbcContextSpec extends Spec {
   "update returning" - {
     "with multiple columns" in {
       ctx.run(qr1.delete)
-      ctx.run(qr1.insert(lift(TestEntity("foo", 1, 18L, Some(123)))))
+      ctx.run(qr1.insert(lift(TestEntity("foo", 1, 18L, Some(123), true))))
 
       val updated = ctx.run {
-        qr1.update(lift(TestEntity("bar", 2, 42L, Some(321)))).returning(r => (r.i, r.s, r.o))
+        qr1.update(lift(TestEntity("bar", 2, 42L, Some(321), true))).returning(r => (r.i, r.s, r.o))
       }
       (2, "bar", Some(321)) mustBe updated
     }
 
     "with multiple columns and operations" in {
       ctx.run(qr1.delete)
-      ctx.run(qr1.insert(lift(TestEntity("foo", 1, 18L, Some(123)))))
+      ctx.run(qr1.insert(lift(TestEntity("foo", 1, 18L, Some(123), true))))
 
       val updated = ctx.run {
-        qr1.update(lift(TestEntity("bar", 2, 42L, Some(321)))).returning(r => (r.i + 100, r.s, r.o.map(_ + 100)))
+        qr1.update(lift(TestEntity("bar", 2, 42L, Some(321), true))).returning(r => (r.i + 100, r.s, r.o.map(_ + 100)))
       }
       (2 + 100, "bar", Some(321 + 100)) mustBe updated
     }
@@ -175,10 +175,10 @@ class JdbcContextSpec extends Spec {
       ctx.run(qr2.insert(_.i -> 36, _.l -> 0L, _.s -> "foobar"))
 
       ctx.run(qr1.delete)
-      ctx.run(qr1.insert(lift(TestEntity("foo", 1, 18L, Some(123)))))
+      ctx.run(qr1.insert(lift(TestEntity("foo", 1, 18L, Some(123), true))))
 
       val updated = ctx.run {
-        qr1.update(lift(TestEntity("bar", 36, 42L, Some(321)))).returning(r =>
+        qr1.update(lift(TestEntity("bar", 36, 42L, Some(321), true))).returning(r =>
           (r.i, r.s + "_s", qr2.filter(rr => rr.i == r.i).map(_.s).max))
       }
       (36, "bar_s", Some("foobar")) mustBe updated
@@ -190,10 +190,10 @@ class JdbcContextSpec extends Spec {
 
       val value = "foobar"
       ctx.run(qr1.delete)
-      ctx.run(qr1.insert(lift(TestEntity("foo", 1, 18L, Some(123)))))
+      ctx.run(qr1.insert(lift(TestEntity("foo", 1, 18L, Some(123), true))))
 
       val updated = ctx.run {
-        qr1.update(lift(TestEntity("bar", 36, 42L, Some(321)))).returning(r =>
+        qr1.update(lift(TestEntity("bar", 36, 42L, Some(321), true))).returning(r =>
           (r.i, r.s + "_s", qr2.filter(rr => rr.i == r.i && rr.s == lift(value)).map(_.s).max))
       }
       (36, "bar_s", Some("foobar")) mustBe updated
@@ -201,10 +201,10 @@ class JdbcContextSpec extends Spec {
 
     "with multiple columns and query - same table" in {
       ctx.run(qr1.delete)
-      ctx.run(qr1.insert(lift(TestEntity("one", 1, 18L, Some(1)))))
+      ctx.run(qr1.insert(lift(TestEntity("one", 1, 18L, Some(1), true))))
 
       val updated = ctx.run {
-        qr1.update(lift(TestEntity("two", 2, 18L, Some(123)))).returning(r =>
+        qr1.update(lift(TestEntity("two", 2, 18L, Some(123), true))).returning(r =>
           (r.i, r.s + "_s", qr1.filter(rr => rr.o.exists(_ == r.i - 1)).map(_.s).max))
       }
       (2, "two_s", Some("one")) mustBe updated
@@ -223,12 +223,95 @@ class JdbcContextSpec extends Spec {
     "with multiple columns - case class" in {
       case class Return(id: Int, str: String, opt: Option[Int])
       ctx.run(qr1.delete)
-      ctx.run(qr1.insert(lift(TestEntity("one", 1, 18L, Some(1)))))
+      ctx.run(qr1.insert(lift(TestEntity("one", 1, 18L, Some(1), true))))
 
       val updated = ctx.run {
-        qr1.update(lift(TestEntity("foo", 1, 18L, Some(123)))).returning(r => Return(r.i, r.s, r.o))
+        qr1.update(lift(TestEntity("foo", 1, 18L, Some(123), true))).returning(r => Return(r.i, r.s, r.o))
       }
       Return(1, "foo", Some(123)) mustBe updated
+    }
+  }
+
+  "delete returning" - {
+    "with multiple columns" in {
+      ctx.run(qr1.delete)
+      ctx.run(qr1.insert(lift(TestEntity("foo", 1, 18L, Some(123), true))))
+
+      val deleted = ctx.run {
+        qr1.delete.returning(r => (r.i, r.s, r.o))
+      }
+      (1, "foo", Some(123)) mustBe deleted
+    }
+
+    "with multiple columns and operations" in {
+      ctx.run(qr1.delete)
+      ctx.run(qr1.insert(lift(TestEntity("foo", 1, 18L, Some(123), true))))
+
+      val deleted = ctx.run {
+        qr1.delete.returning(r => (r.i + 100, r.s, r.o.map(_ + 100)))
+      }
+      (1 + 100, "foo", Some(123 + 100)) mustBe deleted
+    }
+
+    "with multiple columns and query" in {
+      ctx.run(qr2.delete)
+      ctx.run(qr2.insert(_.i -> 1, _.l -> 0L, _.s -> "foobar"))
+
+      ctx.run(qr1.delete)
+      ctx.run(qr1.insert(lift(TestEntity("foo", 1, 18L, Some(123), true))))
+
+      val deleted = ctx.run {
+        qr1.delete.returning(r =>
+          (r.i, r.s + "_s", qr2.filter(rr => rr.i == r.i).map(_.s).max))
+      }
+      (1, "foo_s", Some("foobar")) mustBe deleted
+    }
+
+    "with multiple columns and query - with lifting" in {
+      ctx.run(qr2.delete)
+      ctx.run(qr2.insert(_.i -> 1, _.l -> 0L, _.s -> "foobar"))
+
+      val value = "foobar"
+      ctx.run(qr1.delete)
+      ctx.run(qr1.insert(lift(TestEntity("foo", 1, 18L, Some(123), true))))
+
+      val deleted = ctx.run {
+        qr1.delete.returning(r =>
+          (r.i, r.s + "_s", qr2.filter(rr => rr.i == r.i && rr.s == lift(value)).map(_.s).max))
+      }
+      (1, "foo_s", Some("foobar")) mustBe deleted
+    }
+
+    "with multiple columns and query - same table" in {
+      ctx.run(qr1.delete)
+      ctx.run(qr1.insert(lift(TestEntity("one", 2, 18L, Some(1), true))))
+
+      val deleted = ctx.run {
+        qr1.delete.returning(r =>
+          (r.i, r.s + "_s", qr1.filter(rr => rr.o.exists(_ == r.i - 1)).map(_.s).max))
+      }
+      (2, "one_s", Some("one")) mustBe deleted
+    }
+
+    "with multiple columns and query embedded" in {
+      ctx.run(qr1Emb.delete)
+      ctx.run(qr1Emb.insert(lift(TestEntityEmb(Emb("one", 1), 18L, Some(123)))))
+
+      val deleted = ctx.run {
+        qr1Emb.delete.returning(r => (r.emb.i, r.o))
+      }
+      (1, Some(123)) mustBe deleted
+    }
+
+    "with multiple columns - case class" in {
+      case class Return(id: Int, str: String, opt: Option[Int])
+      ctx.run(qr1.delete)
+      ctx.run(qr1.insert(lift(TestEntity("one", 1, 18L, Some(123), true))))
+
+      val deleted = ctx.run {
+        qr1.delete.returning(r => Return(r.i, r.s, r.o))
+      }
+      Return(1, "one", Some(123)) mustBe deleted
     }
   }
 }
