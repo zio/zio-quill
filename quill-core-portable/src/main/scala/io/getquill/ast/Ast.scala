@@ -49,7 +49,7 @@ object Terminal {
 object BottomTypedTerminal {
   def unapply(ast: Ast): Option[Terminal] =
     ast match {
-      case t: Terminal if (t.quat == Quat.Null || t.quat == Quat.Generic) =>
+      case t: Terminal if (t.quat == Quat.Null || t.quat == Quat.Generic || t.quat == Quat.Unknown) =>
         Some(t)
       case _ =>
         None
