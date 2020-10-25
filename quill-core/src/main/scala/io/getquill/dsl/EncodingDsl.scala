@@ -5,6 +5,7 @@ import io.getquill.quotation.NonQuotedException
 import scala.annotation.compileTimeOnly
 import scala.language.experimental.macros
 import scala.language.higherKinds
+import io.getquill.Query
 
 trait LowPriorityImplicits {
   this: EncodingDsl =>
@@ -19,7 +20,6 @@ trait EncodingDsl extends LowPriorityImplicits {
 
   type PrepareRow
   type ResultRow
-
   type Index = Int
 
   type BaseEncoder[T] = (Index, T, PrepareRow) => PrepareRow

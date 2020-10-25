@@ -22,31 +22,31 @@ class RenamePropertiesSpec extends Spec {
         e.filter(_.i == 1).allowFiltering
       }
       mirrorContext.run(q).string mustEqual
-        "SELECT field_s, field_i, l, o FROM test_entity WHERE field_i = 1 ALLOW FILTERING"
+        "SELECT field_s, field_i, l, o, b FROM test_entity WHERE field_i = 1 ALLOW FILTERING"
     }
 
     "action" - {
       "insert" in {
         val q = quote {
-          e.insert(lift(TestEntity("a", 1, 1L, None)))
+          e.insert(lift(TestEntity("a", 1, 1L, None, true)))
         }
         mirrorContext.run(q).string mustEqual
-          "INSERT INTO test_entity (field_s,field_i,l,o) VALUES (?, ?, ?, ?)"
+          "INSERT INTO test_entity (field_s,field_i,l,o,b) VALUES (?, ?, ?, ?, ?)"
       }
 
       "insert assigned" in {
         val q = quote {
-          e.insert(_.i -> lift(1), _.l -> lift(1L), _.o -> lift(Option(1)), _.s -> lift("test"))
+          e.insert(_.i -> lift(1), _.l -> lift(1L), _.o -> lift(Option(1)), _.s -> lift("test"), _.b -> lift(true))
         }
         mirrorContext.run(q).string mustEqual
-          "INSERT INTO test_entity (field_i,l,o,field_s) VALUES (?, ?, ?, ?)"
+          "INSERT INTO test_entity (field_i,l,o,field_s,b) VALUES (?, ?, ?, ?, ?)"
       }
       "update" in {
         val q = quote {
-          e.filter(_.i == 999).update(lift(TestEntity("a", 1, 1L, None)))
+          e.filter(_.i == 999).update(lift(TestEntity("a", 1, 1L, None, true)))
         }
         mirrorContext.run(q).string mustEqual
-          "UPDATE test_entity SET field_s = ?, field_i = ?, l = ?, o = ? WHERE field_i = 999"
+          "UPDATE test_entity SET field_s = ?, field_i = ?, l = ?, o = ?, b = ? WHERE field_i = 999"
       }
       "delete" in {
         val q: Quoted[Delete[TestEntity]] = quote {
@@ -70,7 +70,7 @@ class RenamePropertiesSpec extends Spec {
           e.map(t => t).filter(t => t.i == 1)
         }
         mirrorContext.run(q).string mustEqual
-          "SELECT field_s, field_i, l, o FROM test_entity WHERE field_i = 1"
+          "SELECT field_s, field_i, l, o, b FROM test_entity WHERE field_i = 1"
       }
     }
     "filter" - {
@@ -79,7 +79,7 @@ class RenamePropertiesSpec extends Spec {
           e.filter(t => t.i == 1)
         }
         mirrorContext.run(q).string mustEqual
-          "SELECT field_s, field_i, l, o FROM test_entity WHERE field_i = 1"
+          "SELECT field_s, field_i, l, o, b FROM test_entity WHERE field_i = 1"
       }
       "transitive" in {
         val q = quote {
@@ -95,7 +95,7 @@ class RenamePropertiesSpec extends Spec {
           e.sortBy(t => t.i)
         }
         mirrorContext.run(q).string mustEqual
-          "SELECT field_s, field_i, l, o FROM test_entity ORDER BY field_i ASC"
+          "SELECT field_s, field_i, l, o, b FROM test_entity ORDER BY field_i ASC"
       }
       "transitive" in {
         val q = quote {

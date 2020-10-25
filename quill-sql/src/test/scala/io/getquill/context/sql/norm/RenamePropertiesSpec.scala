@@ -4,6 +4,7 @@ import io.getquill.{ MirrorSqlDialectWithReturnClause, Spec }
 import io.getquill.ReturnAction.{ ReturnColumns, ReturnRecord }
 import io.getquill.context.sql.testContext._
 import io.getquill.context.sql.testContext
+import io.getquill.Query
 
 class RenamePropertiesSpec extends Spec {
 
@@ -47,24 +48,24 @@ class RenamePropertiesSpec extends Spec {
     "action" - {
       "insert" in {
         val q = quote {
-          e.insert(lift(TestEntity("a", 1, 1L, None)))
+          e.insert(lift(TestEntity("a", 1, 1L, None, true)))
         }
         testContext.run(q).string mustEqual
-          "INSERT INTO test_entity (field_s,field_i,l,o) VALUES (?, ?, ?, ?)"
+          "INSERT INTO test_entity (field_s,field_i,l,o,b) VALUES (?, ?, ?, ?, ?)"
       }
       "insert assigned" in {
         val q = quote {
-          e.insert(_.i -> lift(1), _.l -> lift(1L), _.o -> lift(Option(1)), _.s -> lift("test"))
+          e.insert(_.i -> lift(1), _.l -> lift(1L), _.o -> lift(Option(1)), _.s -> lift("test"), _.b -> lift(true))
         }
         testContext.run(q).string mustEqual
-          "INSERT INTO test_entity (field_i,l,o,field_s) VALUES (?, ?, ?, ?)"
+          "INSERT INTO test_entity (field_i,l,o,field_s,b) VALUES (?, ?, ?, ?, ?)"
       }
       "update" in {
         val q = quote {
-          e.filter(_.i == 999).update(lift(TestEntity("a", 1, 1L, None)))
+          e.filter(_.i == 999).update(lift(TestEntity("a", 1, 1L, None, true)))
         }
         testContext.run(q).string mustEqual
-          "UPDATE test_entity SET field_s = ?, field_i = ?, l = ?, o = ? WHERE field_i = 999"
+          "UPDATE test_entity SET field_s = ?, field_i = ?, l = ?, o = ?, b = ? WHERE field_i = 999"
       }
       "delete" in {
         val q = quote {
@@ -80,16 +81,16 @@ class RenamePropertiesSpec extends Spec {
             querySchema[TestEntity]("test_entity", _.s -> "field_s", _.i -> "field_i")
           }
           val q = quote {
-            e1.insert(lift(TestEntity("s", 1, 1L, None))).returning(_.i)
+            e1.insert(lift(TestEntity("s", 1, 1L, None, true))).returning(_.i)
           }
-          val mirror = ctx.run(q.dynamic)
+          val mirror = ctx.run(q)
           mirror.returningBehavior mustEqual ReturnRecord
         }
         "returning generated - alias" in {
           val q = quote {
-            e.insert(lift(TestEntity("s", 1, 1L, None))).returningGenerated(_.i)
+            e.insert(lift(TestEntity("s", 1, 1L, None, true))).returningGenerated(_.i)
           }
-          val mirror = testContext.run(q.dynamic)
+          val mirror = testContext.run(q)
           mirror.returningBehavior mustEqual ReturnColumns(List("field_i"))
         }
       }
@@ -106,7 +107,7 @@ class RenamePropertiesSpec extends Spec {
         val q = quote {
           e.flatMap(t => qr2.map(u => t)).map(t => t.s)
         }
-        testContext.run(q.dynamic).string mustEqual
+        testContext.run(q).string mustEqual
           "SELECT t.field_s FROM test_entity t, TestEntity2 u"
       }
       "with filter" in {
@@ -119,14 +120,14 @@ class RenamePropertiesSpec extends Spec {
           }
         }
         testContext.run(q).string mustEqual
-          "SELECT a.field_s, a.field_i, a.l, a.o, b.s, b.i, b.l, b.o FROM test_entity a, TestEntity2 b WHERE a.field_s = b.s"
+          "SELECT a.field_s, a.field_i, a.l, a.o, a.b, b.s, b.i, b.l, b.o FROM test_entity a, TestEntity2 b WHERE a.field_s = b.s"
       }
     }
     "concatMap" in {
       val q = quote {
         e.concatMap(t => t.s.split(" "))
       }
-      testContext.run(q.dynamic).string mustEqual
+      testContext.run(q).string mustEqual
         "SELECT UNNEST(SPLIT(t.field_s, ' ')) FROM test_entity t"
     }
     "map" - {
@@ -165,7 +166,7 @@ class RenamePropertiesSpec extends Spec {
           e.map(t => t).filter(t => t.i == 1)
         }
         testContext.run(q).string mustEqual
-          "SELECT t.field_s, t.field_i, t.l, t.o FROM test_entity t WHERE t.field_i = 1"
+          "SELECT t.field_s, t.field_i, t.l, t.o, t.b FROM test_entity t WHERE t.field_i = 1"
       }
     }
     "union" in {
@@ -173,14 +174,14 @@ class RenamePropertiesSpec extends Spec {
         e.filter(t => t.i == 1).union(e.filter(t => t.i != 1))
       }
       testContext.run(q).string mustEqual
-        "SELECT x.field_s, x.field_i, x.l, x.o FROM ((SELECT t.field_s, t.field_i, t.l, t.o FROM test_entity t WHERE t.field_i = 1) UNION (SELECT t1.field_s, t1.field_i, t1.l, t1.o FROM test_entity t1 WHERE t1.field_i <> 1)) AS x"
+        "SELECT x.field_s, x.field_i, x.l, x.o, x.b FROM ((SELECT t.field_s, t.field_i, t.l, t.o, t.b FROM test_entity t WHERE t.field_i = 1) UNION (SELECT t1.field_s, t1.field_i, t1.l, t1.o, t1.b FROM test_entity t1 WHERE t1.field_i <> 1)) AS x"
     }
     "unionAll" in {
       val q = quote {
         e.filter(t => t.i == 1).unionAll(e.filter(t => t.i != 1))
       }
       testContext.run(q).string mustEqual
-        "SELECT x.field_s, x.field_i, x.l, x.o FROM ((SELECT t.field_s, t.field_i, t.l, t.o FROM test_entity t WHERE t.field_i = 1) UNION ALL (SELECT t1.field_s, t1.field_i, t1.l, t1.o FROM test_entity t1 WHERE t1.field_i <> 1)) AS x"
+        "SELECT x.field_s, x.field_i, x.l, x.o, x.b FROM ((SELECT t.field_s, t.field_i, t.l, t.o, t.b FROM test_entity t WHERE t.field_i = 1) UNION ALL (SELECT t1.field_s, t1.field_i, t1.l, t1.o, t1.b FROM test_entity t1 WHERE t1.field_i <> 1)) AS x"
     }
     "filter" - {
       "body" in {
@@ -188,7 +189,7 @@ class RenamePropertiesSpec extends Spec {
           e.filter(t => t.i == 1)
         }
         testContext.run(q).string mustEqual
-          "SELECT t.field_s, t.field_i, t.l, t.o FROM test_entity t WHERE t.field_i = 1"
+          "SELECT t.field_s, t.field_i, t.l, t.o, t.b FROM test_entity t WHERE t.field_i = 1"
       }
       "transitive" in {
         val q = quote {
@@ -204,7 +205,7 @@ class RenamePropertiesSpec extends Spec {
           e.sortBy(t => t.i)
         }
         testContext.run(q).string mustEqual
-          "SELECT t.field_s, t.field_i, t.l, t.o FROM test_entity t ORDER BY t.field_i ASC NULLS FIRST"
+          "SELECT t.field_s, t.field_i, t.l, t.o, t.b FROM test_entity t ORDER BY t.field_i ASC NULLS FIRST"
       }
       "transitive" in {
         val q = quote {
@@ -220,7 +221,7 @@ class RenamePropertiesSpec extends Spec {
           e.take(1)
         }
         testContext.run(q).string mustEqual
-          "SELECT x.field_s, x.field_i, x.l, x.o FROM test_entity x LIMIT 1"
+          "SELECT x.field_s, x.field_i, x.l, x.o, x.b FROM test_entity x LIMIT 1"
       }
       "transitive" in {
         val q = quote {
@@ -236,7 +237,7 @@ class RenamePropertiesSpec extends Spec {
           e.drop(1)
         }
         testContext.run(q).string mustEqual
-          "SELECT x.field_s, x.field_i, x.l, x.o FROM test_entity x OFFSET 1"
+          "SELECT x.field_s, x.field_i, x.l, x.o, x.b FROM test_entity x OFFSET 1"
       }
       "transitive" in {
         val q = quote {
@@ -252,14 +253,14 @@ class RenamePropertiesSpec extends Spec {
           e.distinct
         }
         testContext.run(q).string mustEqual
-          "SELECT x.field_s, x.field_i, x.l, x.o FROM (SELECT DISTINCT x.field_s, x.field_i, x.l, x.o FROM test_entity x) AS x"
+          "SELECT x.field_s, x.field_i, x.l, x.o, x.b FROM (SELECT DISTINCT x.field_s, x.field_i, x.l, x.o, x.b FROM test_entity x) AS x"
       }
       "transitive" in {
         val q = quote {
           e.distinct.map(t => t.s)
         }
         testContext.run(q).string mustEqual
-          "SELECT t.field_s FROM (SELECT DISTINCT x.field_s FROM test_entity x) AS t"
+          "SELECT t.field_s FROM (SELECT DISTINCT x.field_s, x.field_i, x.l, x.o, x.b FROM test_entity x) AS t"
       }
     }
 
@@ -356,7 +357,7 @@ class RenamePropertiesSpec extends Spec {
           e.filter(a => a.i > 0).isEmpty
         }
         testContext.run(q).string mustEqual
-          "SELECT NOT EXISTS (SELECT a.* FROM test_entity a WHERE a.field_i > 0)"
+          "SELECT NOT EXISTS (SELECT a.field_s, a.field_i, a.l, a.o, a.b FROM test_entity a WHERE a.field_i > 0)"
       }
     }
   }

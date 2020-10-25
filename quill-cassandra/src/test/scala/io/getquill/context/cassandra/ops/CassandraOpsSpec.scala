@@ -13,7 +13,7 @@ class CassandraOpsSpec extends Spec {
         query[TestEntity].filter(t => t.i > 10).allowFiltering
       }
       mirrorContext.run(q).string mustEqual
-        "SELECT s, i, l, o FROM TestEntity WHERE i > 10 ALLOW FILTERING"
+        "SELECT s, i, l, o, b FROM TestEntity WHERE i > 10 ALLOW FILTERING"
     }
   }
 
@@ -54,24 +54,24 @@ class CassandraOpsSpec extends Spec {
     "options" - {
       "timestamp" in {
         val q = quote {
-          query[TestEntity].usingTimestamp(99).update(lift(TestEntity("s", 1, 2L, None)))
+          query[TestEntity].usingTimestamp(99).update(lift(TestEntity("s", 1, 2L, None, true)))
         }
         mirrorContext.run(q).string mustEqual
-          "UPDATE TestEntity USING TIMESTAMP 99 SET s = ?, i = ?, l = ?, o = ?"
+          "UPDATE TestEntity USING TIMESTAMP 99 SET s = ?, i = ?, l = ?, o = ?, b = ?"
       }
       "ttl" in {
         val q = quote {
-          query[TestEntity].usingTtl(1).update(lift(TestEntity("s", 1, 2L, None)))
+          query[TestEntity].usingTtl(1).update(lift(TestEntity("s", 1, 2L, None, true)))
         }
         mirrorContext.run(q).string mustEqual
-          "UPDATE TestEntity USING TTL 1 SET s = ?, i = ?, l = ?, o = ?"
+          "UPDATE TestEntity USING TTL 1 SET s = ?, i = ?, l = ?, o = ?, b = ?"
       }
       "both" in {
         val q = quote {
-          query[TestEntity].using(1, 2).update(lift(TestEntity("s", 1, 2L, None)))
+          query[TestEntity].using(1, 2).update(lift(TestEntity("s", 1, 2L, None, true)))
         }
         mirrorContext.run(q).string mustEqual
-          "UPDATE TestEntity USING TIMESTAMP 1 AND TTL 2 SET s = ?, i = ?, l = ?, o = ?"
+          "UPDATE TestEntity USING TIMESTAMP 1 AND TTL 2 SET s = ?, i = ?, l = ?, o = ?, b = ?"
       }
     }
     "if" in {

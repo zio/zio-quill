@@ -3,14 +3,14 @@ package io.getquill
 import com.datastax.driver.core.{ Cluster, ResultSet, Row }
 import com.typesafe.config.Config
 import io.getquill.context.cassandra.CqlIdiom
-import io.getquill.context.monix.{ MonixContext, Runner }
+import io.getquill.context.monix.MonixContext
 import io.getquill.util.{ ContextLogger, LoadConfig }
 import io.getquill.context.cassandra.util.FutureConversions._
 import monix.eval.Task
 import monix.execution.Scheduler
 import monix.reactive.Observable
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.util.{ Failure, Success }
 
 class CassandraMonixContext[N <: NamingStrategy](
@@ -21,9 +21,6 @@ class CassandraMonixContext[N <: NamingStrategy](
 )
   extends CassandraClusterSessionContext[N](naming, cluster, keyspace, preparedStatementCacheSize)
   with MonixContext[CqlIdiom, N] {
-
-  // not using this here
-  override val effect = Runner.default
 
   def this(naming: N, config: CassandraContextConfig) = this(naming, config.cluster, config.keyspace, config.preparedStatementCacheSize)
   def this(naming: N, config: Config) = this(naming, CassandraContextConfig(config))

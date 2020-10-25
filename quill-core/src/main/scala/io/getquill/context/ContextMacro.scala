@@ -1,13 +1,10 @@
 package io.getquill.context
 
 import scala.reflect.macros.whitebox.{ Context => MacroContext }
-import io.getquill.ast.Ast
-import io.getquill.ast.Dynamic
-import io.getquill.quotation.Quotation
+import io.getquill.ast.{ Ast, Dynamic, Lift, Tag }
+import io.getquill.quotation.{ IsDynamic, LiftUnlift, Quotation }
 import io.getquill.util.LoadObject
-import io.getquill.util.Messages._
-import io.getquill.quotation.IsDynamic
-import io.getquill.ast.Lift
+import io.getquill.util.MacroContextExt._
 import io.getquill.NamingStrategy
 import io.getquill.idiom._
 
@@ -38,14 +35,23 @@ trait ContextMacro extends Quotation {
       case true  => translateDynamic(ast)
     }
 
-  private implicit val tokenLiftable: Liftable[Token] = Liftable[Token] {
-    case StringToken(string)        => q"io.getquill.idiom.StringToken($string)"
-    case ScalarLiftToken(lift)      => q"io.getquill.idiom.ScalarLiftToken(${lift: Lift})"
-    case Statement(tokens)          => q"io.getquill.idiom.Statement(scala.List(..$tokens))"
-    case SetContainsToken(a, op, b) => q"io.getquill.idiom.SetContainsToken($a, $op, $b)"
+  abstract class TokenLift(numQuatFields: Int) extends LiftUnlift(numQuatFields) {
+    import mctx.universe.{ Ident => _, Constant => _, Function => _, If => _, _ }
+
+    implicit val tokenLiftable: Liftable[Token] = Liftable[Token] {
+      case ScalarTagToken(lift)       => q"io.getquill.idiom.ScalarTagToken(${lift: Tag})"
+      case QuotationTagToken(lift)    => q"io.getquill.idiom.QuotationTagToken(${lift: Tag})"
+      case StringToken(string)        => q"io.getquill.idiom.StringToken($string)"
+      case ScalarLiftToken(lift)      => q"io.getquill.idiom.ScalarLiftToken(${lift: Lift})"
+      case Statement(tokens)          => q"io.getquill.idiom.Statement(scala.List(..$tokens))"
+      case SetContainsToken(a, op, b) => q"io.getquill.idiom.SetContainsToken($a, $op, $b)"
+    }
   }
 
   private def translateStatic(ast: Ast): Tree = {
+    val liftUnlift = new { override val mctx: c.type = c } with TokenLift(ast.countQuatFields)
+    import liftUnlift._
+
     idiomAndNamingStatic match {
       case Success((idiom, naming)) =>
         val (normalizedAst, statement) = idiom.translate(ast)(naming)
@@ -70,10 +76,12 @@ trait ContextMacro extends Quotation {
   }
 
   private def translateDynamic(ast: Ast): Tree = {
+    val liftUnlift = new { override val mctx: c.type = c } with TokenLift(ast.countQuatFields)
+    import liftUnlift._
     c.info("Dynamic query")
     q"""
       val (idiom, naming) = ${idiomAndNamingDynamic}
-      idiom.translate($ast)(naming)
+      idiom.translate(io.getquill.norm.RepropagateQuats($ast))(naming)
     """
   }
 

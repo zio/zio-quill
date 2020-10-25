@@ -8,7 +8,7 @@ import scala.util.Success
 
 import io.getquill._
 import io.getquill.util.Cache
-import io.getquill.util.Messages.RichContext
+import io.getquill.util.MacroContextExt._
 import io.getquill.util.LoadObject
 import io.getquill.idiom.Idiom
 

@@ -3,6 +3,7 @@ package io.getquill.context.jdbc.postgres
 import java.time.LocalDateTime
 
 import io.getquill.context.sql.EncodingSpec
+import io.getquill.Query
 
 class JdbcEncodingSpec extends EncodingSpec {
 

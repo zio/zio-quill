@@ -63,7 +63,8 @@ CREATE TABLE TestEntity(
     s VARCHAR(255),
     i INTEGER primary key,
     l BIGINT,
-    o INTEGER
+    o INTEGER,
+    b BOOLEAN
 );
 
 CREATE TABLE TestEntity2(

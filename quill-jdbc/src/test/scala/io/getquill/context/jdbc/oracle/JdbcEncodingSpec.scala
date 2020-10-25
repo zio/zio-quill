@@ -1,6 +1,7 @@
 package io.getquill.context.jdbc.oracle
 
 import io.getquill.context.sql.{ EncodingSpec, EncodingTestType }
+import io.getquill.Query
 
 class JdbcEncodingSpec extends EncodingSpec {
 

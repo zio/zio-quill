@@ -2,15 +2,38 @@ package io.getquill.norm
 
 import scala.util.Random
 import io.getquill.ast._
+import io.getquill.quat.Quat
 
 class QueryGenerator(seed: Int) {
 
   private val random = new Random(seed)
 
-  def apply(i: Int): Query =
+  implicit class IdentExt(id: Ident) {
+    def randomProperty =
+      id.quat match {
+        case Quat.Product(fields) =>
+          Property(id, fields.toList(random.nextInt(fields.size))._1)
+        case _ =>
+          id
+      }
+  }
+
+  def string(size: Int): String =
+    size match {
+      case 0    => ""
+      case size => char + string(size - 1)
+    }
+
+  def char: String = {
+    val letters = "abcdefghijklmnopqrstuvwxyz"
+    letters.charAt(random.nextInt(letters.size)).toString
+  }
+
+  def apply(i: Int): Query = {
     if (i <= 2) {
+      val quat = Quat.Product()
       val s = string(3)
-      Entity(s, Nil)
+      Entity(s, Nil, Quat.Product((1 to 20).map(i => (string(3), Quat.Value)).toList.distinct: _*))
     } else {
       random.nextInt(8) match {
         case 0 => map(i)
@@ -23,36 +46,42 @@ class QueryGenerator(seed: Int) {
         case 7 => aggregation(i)
       }
     }
+  }
 
   private def take(i: Int) =
-    Take(apply(i - 1), Constant(i))
+    Take(apply(i - 1), Constant.auto(i))
 
   private def drop(i: Int) =
-    Drop(apply(i - 1), Constant(i))
+    Drop(apply(i - 1), Constant.auto(i))
 
   private def map(i: Int) = {
-    val id = ident
-    Map(apply(i), id, id)
+    val q = apply(i)
+    val id = Ident(char, q.quat)
+    Map(q, id, id)
   }
 
   private def flatMap(i: Int) = {
     val (a, b) = distribute(i)
-    FlatMap(apply(a), ident, apply(b))
+    val q = apply(a)
+    FlatMap(q, Ident(char, q.quat), apply(b))
   }
 
   private def filter(i: Int) = {
-    val id = ident
-    Filter(apply(i), id, BinaryOperation(Property(id, string), EqualityOperator.`!=`, Constant(1)))
+    val q = apply(i)
+    val id = Ident(char, q.quat)
+    Filter(q, id, BinaryOperation(id.randomProperty, EqualityOperator.`!=`, Constant.auto(1)))
   }
 
   private def sortBy(i: Int) = {
-    val id = ident
-    SortBy(apply(i), id, Property(id, string), AscNullsFirst)
+    val q = apply(i)
+    val id = Ident(char, q.quat)
+    SortBy(apply(i), id, id.randomProperty, AscNullsFirst)
   }
 
   private def groupBy(i: Int) = {
-    val id = ident
-    val group = GroupBy(apply(i), id, Property(id, string))
+    val q = apply(i)
+    val id = Ident(char, q.quat)
+    val group = GroupBy(q, id, id.randomProperty)
     Map(group, id, id)
   }
 
@@ -68,20 +97,6 @@ class QueryGenerator(seed: Int) {
     val j = random.nextInt(i - 2) + 1
     val k = i - j
     (j, k)
-  }
-
-  private def ident =
-    Ident(string)
-
-  private def string(size: Int): String =
-    size match {
-      case 0    => ""
-      case size => string + string(size - 1)
-    }
-
-  private def string: String = {
-    val letters = "abcdefghijklmnopqrstuvwxyz"
-    letters.charAt(random.nextInt(letters.size)).toString
   }
 }
 

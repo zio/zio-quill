@@ -14,7 +14,7 @@ class StatelessTransformerSpec extends Spec {
   "transforms asts" - {
     "query" - {
       "entity" in {
-        val ast: Ast = Entity("a", Nil)
+        val ast: Ast = Entity("a", Nil, QEP)
         Subject()(ast) mustEqual ast
       }
       "filter" in {
@@ -109,7 +109,7 @@ class StatelessTransformerSpec extends Spec {
 
     "value" - {
       "constant" in {
-        val ast: Ast = Constant("a")
+        val ast: Ast = Constant.auto("a")
         Subject()(ast) mustEqual ast
       }
       "null" in {
@@ -221,15 +221,15 @@ class StatelessTransformerSpec extends Spec {
     }
 
     "infix" in {
-      val ast: Ast = Infix(List("test"), List(Ident("a"), Ident("b")), false)
+      val ast: Ast = Infix(List("test"), List(Ident("a"), Ident("b")), false, QV)
       Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"))(ast) mustEqual
-        Infix(List("test"), List(Ident("a'"), Ident("b'")), false)
+        Infix(List("test"), List(Ident("a'"), Ident("b'")), false, QV)
     }
 
     "infix - pure" in {
-      val ast: Ast = Infix(List("test"), List(Ident("a"), Ident("b")), true)
+      val ast: Ast = Infix(List("test"), List(Ident("a"), Ident("b")), true, QV)
       Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"))(ast) mustEqual
-        Infix(List("test"), List(Ident("a'"), Ident("b'")), true)
+        Infix(List("test"), List(Ident("a'"), Ident("b'")), true, QV)
     }
 
     "option operation" - {
@@ -259,7 +259,7 @@ class StatelessTransformerSpec extends Spec {
           OptionGetOrNull(Ident("a'"))
       }
       "None" in {
-        val ast: Ast = OptionNone
+        val ast: Ast = OptionNone(QV)
         Subject()(ast) mustEqual ast
       }
       "getOrElse" in {
@@ -360,20 +360,20 @@ class StatelessTransformerSpec extends Spec {
 
     "block" in {
       val ast: Ast = Block(List(
-        Val(Ident("a"), Entity("a", Nil)),
-        Val(Ident("b"), Entity("b", Nil))
+        Val(Ident("a"), Entity("a", Nil, QEP)),
+        Val(Ident("b"), Entity("b", Nil, QEP))
       ))
-      Subject(Entity("a", Nil) -> Entity("b", Nil), Entity("b", Nil) -> Entity("c", Nil))(ast) mustEqual
+      Subject(Entity("a", Nil, QEP) -> Entity("b", Nil, QEP), Entity("b", Nil, QEP) -> Entity("c", Nil, QEP))(ast) mustEqual
         Block(List(
-          Val(Ident("a"), Entity("b", Nil)),
-          Val(Ident("b"), Entity("c", Nil))
+          Val(Ident("a"), Entity("b", Nil, QEP)),
+          Val(Ident("b"), Entity("c", Nil, QEP))
         ))
     }
 
     "val" in {
-      val ast: Ast = Val(Ident("a"), Entity("a", Nil))
-      Subject(Entity("a", Nil) -> Entity("b", Nil))(ast) mustEqual
-        Val(Ident("a"), Entity("b", Nil))
+      val ast: Ast = Val(Ident("a"), Entity("a", Nil, QEP))
+      Subject(Entity("a", Nil, QEP) -> Entity("b", Nil, QEP))(ast) mustEqual
+        Val(Ident("a"), Entity("b", Nil, QEP))
     }
   }
 }

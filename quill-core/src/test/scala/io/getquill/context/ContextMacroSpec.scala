@@ -13,6 +13,8 @@ import io.getquill.Literal
 import io.getquill.Escape
 import io.getquill.UpperCase
 import io.getquill.SnakeCase
+import io.getquill.Action
+import io.getquill.Query
 
 class ContextMacroSpec extends Spec {
 
@@ -168,7 +170,7 @@ class ContextMacroSpec extends Spec {
       "dynamic type param" in {
         def test[T: SchemaMeta] = quote(query[T])
         val r = testContext.run(test[TestEntity])
-        r.string mustEqual """querySchema("TestEntity").map(x => (x.s, x.i, x.l, x.o))"""
+        r.string mustEqual """querySchema("TestEntity").map(x => (x.s, x.i, x.l, x.o, x.b))"""
       }
     }
     "parametrized" - {
@@ -177,7 +179,7 @@ class ContextMacroSpec extends Spec {
           qr1.filter(t => t.s == lift("a"))
         }
         val r = testContext.run(q)
-        r.string mustEqual """querySchema("TestEntity").filter(t => t.s == ?).map(t => (t.s, t.i, t.l, t.o))"""
+        r.string mustEqual """querySchema("TestEntity").filter(t => t.s == ?).map(t => (t.s, t.i, t.l, t.o, t.b))"""
         r.prepareRow mustEqual Row("a")
       }
 
@@ -212,7 +214,7 @@ class ContextMacroSpec extends Spec {
           qr1.filter(t => t.s == lift("a"))
         }
         val r = testContext.run(q.dynamic)
-        r.string mustEqual """querySchema("TestEntity").filter(t => t.s == ?).map(t => (t.s, t.i, t.l, t.o))"""
+        r.string mustEqual """querySchema("TestEntity").filter(t => t.s == ?).map(t => (t.s, t.i, t.l, t.o, t.b))"""
         r.prepareRow mustEqual Row("a")
       }
       "dynamic type param" in {
@@ -259,7 +261,7 @@ class ContextMacroSpec extends Spec {
       "dynamic type param" in {
         def test[T: SchemaMeta] = quote(query[T])
         testContext.translate(test[TestEntity]) mustEqual
-          """querySchema("TestEntity").map(x => (x.s, x.i, x.l, x.o))"""
+          """querySchema("TestEntity").map(x => (x.s, x.i, x.l, x.o, x.b))"""
       }
     }
     "parametrized" - {
@@ -268,7 +270,7 @@ class ContextMacroSpec extends Spec {
           qr1.filter(t => t.s == lift("a"))
         }
         testContext.translate(q) mustEqual
-          """querySchema("TestEntity").filter(t => t.s == 'a').map(t => (t.s, t.i, t.l, t.o))"""
+          """querySchema("TestEntity").filter(t => t.s == 'a').map(t => (t.s, t.i, t.l, t.o, t.b))"""
       }
 
       "value class" in {
@@ -298,7 +300,7 @@ class ContextMacroSpec extends Spec {
           qr1.filter(t => t.s == lift("a"))
         }
         testContext.translate(q.dynamic) mustEqual
-          """querySchema("TestEntity").filter(t => t.s == 'a').map(t => (t.s, t.i, t.l, t.o))"""
+          """querySchema("TestEntity").filter(t => t.s == 'a').map(t => (t.s, t.i, t.l, t.o, t.b))"""
       }
       "dynamic type param" in {
         def test[T: SchemaMeta: QueryMeta] = quote {
@@ -340,28 +342,28 @@ class ContextMacroSpec extends Spec {
       ctx.translate(query[TestEntity])
     }
 
-    test(testContext).string mustEqual """querySchema("TestEntity").map(x => (x.s, x.i, x.l, x.o))"""
-    translateTest(testContext) mustEqual """querySchema("TestEntity").map(x => (x.s, x.i, x.l, x.o))"""
+    test(testContext).string mustEqual """querySchema("TestEntity").map(x => (x.s, x.i, x.l, x.o, x.b))"""
+    translateTest(testContext) mustEqual """querySchema("TestEntity").map(x => (x.s, x.i, x.l, x.o, x.b))"""
   }
 
   "supports composite naming strategies" - {
     "two" in {
       object ctx extends MirrorContext(MirrorIdiom, NamingStrategy(Literal, Escape)) with TestEntities
       import ctx._
-      ctx.run(query[TestEntity]).string mustEqual """querySchema("TestEntity").map(x => (x.s, x.i, x.l, x.o))"""
-      ctx.translate(query[TestEntity]) mustEqual """querySchema("TestEntity").map(x => (x.s, x.i, x.l, x.o))"""
+      ctx.run(query[TestEntity]).string mustEqual """querySchema("TestEntity").map(x => (x.s, x.i, x.l, x.o, x.b))"""
+      ctx.translate(query[TestEntity]) mustEqual """querySchema("TestEntity").map(x => (x.s, x.i, x.l, x.o, x.b))"""
     }
     "three" in {
       object ctx extends MirrorContext(MirrorIdiom, NamingStrategy(Literal, Escape, UpperCase)) with TestEntities
       import ctx._
-      ctx.run(query[TestEntity]).string mustEqual """querySchema("TestEntity").map(x => (x.s, x.i, x.l, x.o))"""
-      ctx.translate(query[TestEntity]) mustEqual """querySchema("TestEntity").map(x => (x.s, x.i, x.l, x.o))"""
+      ctx.run(query[TestEntity]).string mustEqual """querySchema("TestEntity").map(x => (x.s, x.i, x.l, x.o, x.b))"""
+      ctx.translate(query[TestEntity]) mustEqual """querySchema("TestEntity").map(x => (x.s, x.i, x.l, x.o, x.b))"""
     }
     "four" in {
       object ctx extends MirrorContext(MirrorIdiom, NamingStrategy(Literal, Escape, UpperCase, SnakeCase)) with TestEntities
       import ctx._
-      ctx.run(query[TestEntity]).string mustEqual """querySchema("TestEntity").map(x => (x.s, x.i, x.l, x.o))"""
-      ctx.translate(query[TestEntity]) mustEqual """querySchema("TestEntity").map(x => (x.s, x.i, x.l, x.o))"""
+      ctx.run(query[TestEntity]).string mustEqual """querySchema("TestEntity").map(x => (x.s, x.i, x.l, x.o, x.b))"""
+      ctx.translate(query[TestEntity]) mustEqual """querySchema("TestEntity").map(x => (x.s, x.i, x.l, x.o, x.b))"""
     }
   }
 }

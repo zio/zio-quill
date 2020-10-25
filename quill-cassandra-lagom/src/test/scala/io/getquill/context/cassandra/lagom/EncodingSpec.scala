@@ -1,6 +1,7 @@
 package io.getquill.context.cassandra.lagom
 
 import io.getquill.context.cassandra.EncodingSpecHelper
+import io.getquill.Query
 
 class EncodingSpec extends EncodingSpecHelper {
   "encodes and decodes types" - {

@@ -1,8 +1,9 @@
 package io.getquill.context.cassandra.udt
 
 import io.getquill.{ CassandraContextConfig, CassandraSyncContext, SnakeCase }
-import io.getquill.context.cassandra.{ Udt, testSyncDB }
+import io.getquill.context.cassandra.testSyncDB
 import io.getquill.util.LoadConfig
+import io.getquill.Udt
 
 class UdtEncodingSessionContextSpec extends UdtSpec {
 

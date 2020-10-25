@@ -6,6 +6,7 @@ import language.experimental.macros
 import io.getquill.context.Context
 import scala.annotation.tailrec
 import scala.util.Try
+import io.getquill.{ Query, Action, BatchAction, ActionReturning }
 
 trait SyncIOMonad extends IOMonad {
   this: Context[_, _] =>

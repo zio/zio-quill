@@ -12,7 +12,7 @@ class NormalizeAggregationIdentSpec extends Spec {
     }
     val n = quote {
       qr1.groupBy(p => p.i).map {
-        p => p._1 -> p._2.map(p => p.l).sum
+        p => p._1 -> p._2.map(x1 => x1.l).sum
       }
     }
     Normalize(q.ast) mustEqual (n.ast)

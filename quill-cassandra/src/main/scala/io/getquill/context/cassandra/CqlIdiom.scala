@@ -28,7 +28,7 @@ trait CqlIdiom extends Idiom {
 
   implicit def astTokenizer(implicit strategy: NamingStrategy, queryTokenizer: Tokenizer[Query]): Tokenizer[Ast] =
     Tokenizer[Ast] {
-      case Aggregation(AggregationOperator.`size`, Constant(1)) =>
+      case Aggregation(AggregationOperator.`size`, Constant(1, _)) =>
         "COUNT(1)".token
       case a: Query             => a.token
       case a: Operation         => a.token
@@ -39,7 +39,7 @@ trait CqlIdiom extends Idiom {
       case a: Value             => a.token
       case a: Function          => a.body.token
       case a: Infix             => a.token
-      case a: Lift              => a.token
+      case a: External          => a.token
       case a: Assignment        => a.token
       case a: IterableOperation => a.token
       case a @ (
@@ -121,16 +121,16 @@ trait CqlIdiom extends Idiom {
     }
 
   implicit def valueTokenizer(implicit strategy: NamingStrategy): Tokenizer[Value] = Tokenizer[Value] {
-    case Constant(v: String) => stmt"'${v.token}'"
-    case Constant(())        => stmt"1"
-    case Constant(v)         => stmt"${v.toString.token}"
-    case Tuple(values)       => stmt"${values.token}"
-    case CaseClass(values)   => stmt"${values.map(_._2).token}"
-    case NullValue           => fail("Cql doesn't support null values.")
+    case Constant(v: String, _) => stmt"'${v.token}'"
+    case Constant((), _)        => stmt"1"
+    case Constant(v, _)         => stmt"${v.toString.token}"
+    case Tuple(values)          => stmt"${values.token}"
+    case CaseClass(values)      => stmt"${values.map(_._2).token}"
+    case NullValue              => fail("Cql doesn't support null values.")
   }
 
   implicit def infixTokenizer(implicit propertyTokenizer: Tokenizer[Property], strategy: NamingStrategy, queryTokenizer: Tokenizer[Query]): Tokenizer[Infix] = Tokenizer[Infix] {
-    case Infix(parts, params, _) =>
+    case Infix(parts, params, _, _) =>
       val pt = parts.map(_.token)
       val pr = params.map(_.token)
       Statement(Interleave(pt, pr))
@@ -190,7 +190,7 @@ trait CqlIdiom extends Idiom {
   }
 
   implicit def entityTokenizer(implicit strategy: NamingStrategy): Tokenizer[Entity] = Tokenizer[Entity] {
-    case Entity.Opinionated(name, properties, renameable) =>
+    case Entity.Opinionated(name, properties, _, renameable) =>
       renameable.fixedOr(name.token)(strategy.table(name).token)
   }
 

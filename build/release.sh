@@ -11,7 +11,7 @@ fi
 
 SBT_2_11="sbt ++2.11.12 -Dquill.macro.log=false -Dquill.scala.version=2.11.12"
 SBT_2_12="sbt ++2.12.6 -Dquill.macro.log=false -Dquill.scala.version=2.12.6"
-SBT_2_13="sbt ++2.13.1 -Dquill.macro.log=false -Dquill.scala.version=2.13.1"
+SBT_2_13="sbt ++2.13.2 -Dquill.macro.log=false -Dquill.scala.version=2.13.2"
 
 if [[ $VERSION -eq 211 ]]
 then
@@ -34,6 +34,11 @@ then
     openssl aes-256-cbc -pass pass:$ENCRYPTION_PASSWORD -in ./build/pubring.gpg.enc -out local.pubring.gpg -d
     openssl aes-256-cbc -pass pass:$ENCRYPTION_PASSWORD -in ./build/credentials.sbt.enc -out local.credentials.sbt.temp -d
     openssl aes-256-cbc -pass pass:$ENCRYPTION_PASSWORD -in ./build/deploy_key.pem.enc -out local.deploy_key.pem -d
+
+    gpg --import local.secring.gpg
+    gpg --import local.pubring.gpg
+    gpg --list-keys
+    for fpr in $(gpg --list-keys --with-colons  | awk -F: '/fpr:/ {print $10}' | sort -u); do  echo -e "5\ny\n" |  gpg --command-fd 0 --expert --edit-key $fpr trust; done
 
     # Temp hack to get around SbtPgp being moved. This file needs to be updated with correct import.
     # See https://github.com/sbt/sbt-pgp/pull/162 for more details
@@ -62,6 +67,7 @@ then
 
         if [[ $ARTIFACT == "base" ]]; then    $SBT_VER -Dmodules=base -DskipPush=true 'release with-defaults'; fi
         if [[ $ARTIFACT == "db" ]]; then      $SBT_VER -Dmodules=db -DskipPush=true 'release with-defaults'; fi
+        if [[ $ARTIFACT == "js" ]]; then      $SBT_VER -Dmodules=js -DskipPush=true 'release with-defaults'; fi
         if [[ $ARTIFACT == "async" ]]; then   $SBT_VER -Dmodules=async -DskipPush=true 'release with-defaults'; fi
         if [[ $ARTIFACT == "codegen" ]]; then $SBT_VER -Dmodules=codegen -DskipPush=true 'release with-defaults'; fi
         if [[ $ARTIFACT == "bigdata" ]]; then $SBT_VER -Dmodules=bigdata -DskipPush=true 'release with-defaults'; fi
@@ -74,6 +80,7 @@ then
         echo "Master Non-Release Build for $TRAVIS_BRANCH"
         if [[ $ARTIFACT == "base" ]]; then    $SBT_VER -Dmodules=base publish; fi
         if [[ $ARTIFACT == "db" ]]; then      $SBT_VER -Dmodules=db publish; fi
+        if [[ $ARTIFACT == "js" ]]; then      $SBT_VER -Dmodules=js publish; fi
         if [[ $ARTIFACT == "async" ]]; then   $SBT_VER -Dmodules=async publish; fi
         if [[ $ARTIFACT == "codegen" ]]; then $SBT_VER -Dmodules=codegen publish; fi
         if [[ $ARTIFACT == "bigdata" ]]; then $SBT_VER -Dmodules=bigdata publish; fi
@@ -89,6 +96,7 @@ then
         echo "version in ThisBuild := \"$TRAVIS_BRANCH-SNAPSHOT\"" > version.sbt
         if [[ $ARTIFACT == "base" ]]; then    $SBT_VER -Dmodules=base publish; fi
         if [[ $ARTIFACT == "db" ]]; then      $SBT_VER -Dmodules=db publish; fi
+        if [[ $ARTIFACT == "js" ]]; then      $SBT_VER -Dmodules=js publish; fi
         if [[ $ARTIFACT == "async" ]]; then   $SBT_VER -Dmodules=async publish; fi
         if [[ $ARTIFACT == "codegen" ]]; then $SBT_VER -Dmodules=codegen publish; fi
         if [[ $ARTIFACT == "bigdata" ]]; then $SBT_VER -Dmodules=bigdata publish; fi

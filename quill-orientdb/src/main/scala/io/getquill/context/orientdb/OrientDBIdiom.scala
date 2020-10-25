@@ -2,15 +2,16 @@ package io.getquill.context.orientdb
 
 import io.getquill.idiom.StatementInterpolator._
 import io.getquill.context.sql.norm._
-import io.getquill.ast.{ AggregationOperator, Lift, _ }
+import io.getquill.ast.{ AggregationOperator, External, _ }
 import io.getquill.context.sql._
 import io.getquill.NamingStrategy
 import io.getquill.context.CannotReturn
-import io.getquill.util.Messages.fail
+import io.getquill.util.Messages.{ fail, trace }
 import io.getquill.idiom._
 import io.getquill.context.sql.norm.SqlNormalize
-import io.getquill.util.Interleave
+import io.getquill.util.{ Interleave, Messages }
 import io.getquill.context.sql.idiom.VerifySqlQuery
+import io.getquill.sql.norm.{ RemoveExtraAlias, RemoveUnusedSelects }
 
 object OrientDBIdiom extends OrientDBIdiom with CannotReturn
 
@@ -29,7 +30,15 @@ trait OrientDBIdiom extends Idiom {
         case q: Query =>
           val sql = SqlQuery(q)
           VerifySqlQuery(sql).map(fail)
-          new ExpandNestedQueries(naming)(sql, List()).token
+          val expanded = ExpandNestedQueries(sql)
+          trace("expanded sql")(expanded)
+          val refined = if (Messages.pruneColumns) RemoveUnusedSelects(expanded) else expanded
+          trace("filtered sql (only used selects)")(refined)
+          val cleaned = if (!Messages.alwaysAlias) RemoveExtraAlias(naming)(refined) else refined
+          trace("cleaned sql")(cleaned)
+          val tokenized = cleaned.token
+          trace("tokenized sql")(tokenized)
+          tokenized
         case other =>
           other.token
       }
@@ -57,7 +66,7 @@ trait OrientDBIdiom extends Idiom {
         a.token
       case a: If =>
         a.token
-      case a: Lift =>
+      case a: External =>
         a.token
       case a: Assignment =>
         a.token
@@ -215,17 +224,17 @@ trait OrientDBIdiom extends Idiom {
   implicit def selectValueTokenizer(implicit strategy: NamingStrategy): Tokenizer[SelectValue] = {
     def tokenValue(ast: Ast) =
       ast match {
-        case Aggregation(op, Ident(_)) => stmt"${op.token}(*)"
-        case Aggregation(op, _: Query) => scopedTokenizer(ast)
-        case Aggregation(op, ast)      => stmt"${op.token}(${ast.token})"
-        case _                         => ast.token
+        case Aggregation(op, Ident(_, _)) => stmt"${op.token}(*)"
+        case Aggregation(op, _: Query)    => scopedTokenizer(ast)
+        case Aggregation(op, ast)         => stmt"${op.token}(${ast.token})"
+        case _                            => ast.token
       }
     Tokenizer[SelectValue] {
-      case SelectValue(ast, Some(alias), false) => stmt"${tokenValue(ast)} ${strategy.column(alias).token}"
-      case SelectValue(Ident("?"), None, false) => "?".token
-      case SelectValue(ast: Ident, None, false) => stmt"*" //stmt"${tokenValue(ast)}.*"
-      case SelectValue(ast, None, false)        => tokenValue(ast)
-      case SelectValue(_, _, true)              => fail("OrientDB doesn't support `concatMap`")
+      case SelectValue(ast, Some(alias), false)    => stmt"${tokenValue(ast)} ${strategy.column(alias).token}"
+      case SelectValue(Ident("?", _), None, false) => "?".token
+      case SelectValue(ast: Ident, None, false)    => stmt"*" //stmt"${tokenValue(ast)}.*"
+      case SelectValue(ast, None, false)           => tokenValue(ast)
+      case SelectValue(_, _, true)                 => fail("OrientDB doesn't support `concatMap`")
     }
   }
 
@@ -240,16 +249,16 @@ trait OrientDBIdiom extends Idiom {
   }
 
   implicit def valueTokenizer(implicit strategy: NamingStrategy): Tokenizer[Value] = Tokenizer[Value] {
-    case Constant(v: String) => stmt"'${v.token}'"
-    case Constant(())        => stmt"1"
-    case Constant(v)         => stmt"${v.toString.token}"
-    case NullValue           => stmt"null"
-    case Tuple(values)       => stmt"${values.token}"
-    case CaseClass(values)   => stmt"${values.map(_._2).token}"
+    case Constant(v: String, _) => stmt"'${v.token}'"
+    case Constant((), _)        => stmt"1"
+    case Constant(v, _)         => stmt"${v.toString.token}"
+    case NullValue              => stmt"null"
+    case Tuple(values)          => stmt"${values.token}"
+    case CaseClass(values)      => stmt"${values.map(_._2).token}"
   }
 
   implicit def infixTokenizer(implicit propertyTokenizer: Tokenizer[Property], strategy: NamingStrategy): Tokenizer[Infix] = Tokenizer[Infix] {
-    case Infix(parts, params, _) =>
+    case Infix(parts, params, _, _) =>
       val pt = parts.map(_.token)
       val pr = params.map(_.token)
       Statement(Interleave(pt, pr))
@@ -299,7 +308,7 @@ trait OrientDBIdiom extends Idiom {
   }
 
   implicit def entityTokenizer(implicit strategy: NamingStrategy): Tokenizer[Entity] = Tokenizer[Entity] {
-    case Entity.Opinionated(name, _, renameable) =>
+    case Entity.Opinionated(name, _, _, renameable) =>
       renameable.fixedOr(name.token)(strategy.table(name).token)
   }
 

@@ -1,7 +1,7 @@
 package io.getquill.context.cassandra.udt
 
 import io.getquill.Spec
-import io.getquill.context.cassandra.Udt
+import io.getquill.Udt
 
 trait UdtSpec extends Spec {
   case class Name(firstName: String, lastName: Option[String]) extends Udt
