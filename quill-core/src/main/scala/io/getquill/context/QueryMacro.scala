@@ -52,7 +52,8 @@ class QueryMacro(val c: MacroContext) extends ContextMacro {
     }
 
   private def expandQueryWithDecoder(quoted: Tree, method: ContextMethod, decoder: Tree) = {
-    val ast = Map(extractAst(quoted), Ident("x"), Ident("x"))
+    val extractedAst = extractAst(quoted)
+    val ast = Map(extractedAst, Ident("x", extractedAst.quat), Ident("x", extractedAst.quat))
     val invocation =
       method match {
         case StreamQuery(UsesExplicitFetch(size)) =>

@@ -35,14 +35,29 @@ class PeopleJdbcSpec extends Spec {
     val q =
       quote {
         for {
-          c <- couples
-          w <- people
-          m <- people if (c.her == w.name && c.him == m.name && w.age > m.age)
+          c <- couples.distinct
+          w <- people.distinct
+          m <- people.distinct if (c.her == w.name && c.him == m.name && w.age > m.age)
         } yield {
           (w.name, w.age - m.age)
         }
       }
-    testContext.run(q).collect.toList mustEqual
+    testContext.run(q).collect.toList.sorted mustEqual
+      List(("Alex", 5), ("Cora", 2))
+  }
+
+  "Example 1 - differences with explicit join" in {
+    val q =
+      quote {
+        for {
+          c <- couples
+          w <- people.join(w => c.her == w.name)
+          m <- people.join(m => c.him == m.name) if (w.age > m.age)
+        } yield {
+          (w.name, w.age - m.age)
+        }
+      }
+    testContext.run(q).collect.toList.sorted mustEqual
       List(("Alex", 5), ("Cora", 2))
   }
 
@@ -111,5 +126,79 @@ class PeopleJdbcSpec extends Spec {
     }
     testContext.run(q("Drew", "Bert")).collect.toList mustEqual
       List(Person("Cora", 33), Person("Drew", 31))
+  }
+
+  "Distinct" - {
+    "simple distinct" in {
+      val q =
+        quote {
+          couples.distinct
+        }
+      testContext.run(q).collect.toList mustEqual
+        List(Couple("Alex", "Bert"), Couple("Cora", "Drew"), Couple("Edna", "Fred"))
+    }
+    "complex distinct" in {
+      val q =
+        quote {
+          for {
+            c <- couples.distinct
+            w <- people.distinct.join(w => c.her == w.name)
+            m <- people.distinct.join(m => c.him == m.name) if (w.age > m.age)
+          } yield {
+            (w.name, w.age - m.age)
+          }
+        }
+      testContext.run(q).collect.toList.sorted mustEqual
+        List(("Alex", 5), ("Cora", 2))
+    }
+    "should throw Exception" in {
+      val q =
+        """ quote {
+          for {
+            c <- couples
+            w <- people.join(w => c.her == w.name).distinct
+            m <- people.join(m => c.him == m.name) if (w.age > m.age)
+          } yield {
+            (w.name, w.age - m.age)
+          }
+        }""" mustNot compile
+    }
+  }
+
+  "Nested" - {
+    "simple nested" in {
+      val q =
+        quote {
+          couples.nested
+        }
+      testContext.run(q.dynamic).collect.toList mustEqual
+        List(Couple("Alex", "Bert"), Couple("Cora", "Drew"), Couple("Edna", "Fred"))
+    }
+    "complex distinct" in {
+      val q =
+        quote {
+          for {
+            c <- couples.nested
+            w <- people.nested.join(w => c.her == w.name)
+            m <- people.nested.join(m => c.him == m.name) if (w.age > m.age)
+          } yield {
+            (w.name, w.age - m.age)
+          }
+        }
+      testContext.run(q).collect.toList.sorted mustEqual
+        List(("Alex", 5), ("Cora", 2))
+    }
+    "should throw Exception" in {
+      val q =
+        """ quote {
+          for {
+            c <- couples
+            w <- people.join(w => c.her == w.name).nested
+            m <- people.join(m => c.him == m.name) if (w.age > m.age)
+          } yield {
+            (w.name, w.age - m.age)
+          }
+        }""" mustNot compile
+    }
   }
 }

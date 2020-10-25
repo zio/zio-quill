@@ -33,7 +33,12 @@ trait UpperCaseNonDefault extends NamingStrategy {
 object UpperCaseNonDefault extends getquill.UpperCaseNonDefault
 
 object testContext extends TestContextTemplate[MirrorSqlDialect, Literal](MirrorSqlDialect, Literal)
+object testContextSnake extends TestContextTemplate[MirrorSqlDialect, SnakeCase](MirrorSqlDialect, SnakeCase)
 object testContextUpper extends TestContextTemplate[MirrorSqlDialect, getquill.UpperCaseNonDefault](MirrorSqlDialect, UpperCaseNonDefault)
+object testContextEscape extends TestContextTemplate[MirrorSqlDialect, Escape](MirrorSqlDialect, Escape)
+object testContextEscapeAndAlias extends TestContextTemplate[MirrorSqlDialect, Escape](MirrorSqlDialect, Escape)
+object testContextUpperEscapeColumn extends TestContextTemplate[MirrorSqlDialect, getquill.UpperCaseEscapeColumn](MirrorSqlDialect, UpperCaseEscapeColumn)
+object testContextEscapeElements extends TestContextTemplate[MirrorSqlDialect.StrategizeElements, Escape](MirrorSqlDialect.StrategizeElements, Escape)
 
 trait NonAnsiMirrorSqlDialect extends MirrorSqlDialect {
   override def equalityBehavior: EqualityBehavior = NonAnsiEquality

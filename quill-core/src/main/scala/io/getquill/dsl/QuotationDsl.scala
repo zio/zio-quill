@@ -9,7 +9,7 @@ import io.getquill.quotation.NonQuotedException
 import io.getquill.quotation.Quotation
 import scala.annotation.compileTimeOnly
 
-private[dsl] trait QuotationDsl {
+private[getquill] trait QuotationDsl {
   this: CoreDsl =>
 
   trait Quoted[+T] {

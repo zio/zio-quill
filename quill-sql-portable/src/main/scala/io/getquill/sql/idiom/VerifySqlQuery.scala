@@ -3,6 +3,7 @@ package io.getquill.context.sql.idiom
 import io.getquill.ast._
 import io.getquill.context.sql._
 import io.getquill.quotation.FreeVariables
+import io.getquill.quat.Quat
 
 case class Error(free: List[Ident], ast: Ast)
 case class InvalidSqlQuery(errors: List[Error]) {
@@ -50,20 +51,15 @@ object VerifySqlQuery {
 
     verifyFlatJoins(query)
 
-    val aliases = query.from.flatMap(this.aliases).map(Ident(_)) :+ Ident("*") :+ Ident("?")
+    val aliases = query.from.flatMap(this.aliases).map(IdentName(_)) :+ IdentName("*") :+ IdentName("?")
 
     def verifyAst(ast: Ast) = {
       val freeVariables =
         (FreeVariables(ast) -- aliases).toList
-      val freeIdents =
-        (CollectAst(ast) {
-          case ast: Property            => None
-          case Aggregation(_, _: Ident) => None
-          case ast: Ident               => Some(ast)
-        }).flatten
-      (freeVariables ++ freeIdents) match {
+      checkIllegalIdents(ast)
+      freeVariables match {
         case Nil  => None
-        case free => Some(Error(free, ast))
+        case free => Some(Error(free.map(f => Ident(f.name, Quat.Value)), ast)) // Quat is not actually needed here here just for the sake of the Error Ident
       }
     }
 
@@ -109,4 +105,24 @@ object VerifySqlQuery {
       case s: JoinContext     => aliases(s.a) ++ aliases(s.b)
       case s: FlatJoinContext => aliases(s.a)
     }
+
+  private def checkIllegalIdents(ast: Ast): Unit = {
+    val freeIdents =
+      (CollectAst(ast) {
+        case op: OptionExists if op.quat.isInstanceOf[Quat.Product] => throw new IllegalArgumentException("Cannot use Option.exists on a table or embedded case class")
+        case op: OptionForall if op.quat.isInstanceOf[Quat.Product] => throw new IllegalArgumentException("Cannot use Option.forAll on a table or embedded case class")
+        case op: OptionGetOrElse if op.quat.isInstanceOf[Quat.Product] => throw new IllegalArgumentException("Cannot use Option.getOrElse on a table or embedded case class")
+        case op: OptionIsEmpty if op.quat.isInstanceOf[Quat.Product] => throw new IllegalArgumentException("Cannot use Option.isEmpty on a table or embedded case class")
+        case op: OptionNonEmpty if op.quat.isInstanceOf[Quat.Product] => throw new IllegalArgumentException("Cannot use Option.nonEmpty on a table or embedded case class")
+        case op: OptionIsDefined if op.quat.isInstanceOf[Quat.Product] => throw new IllegalArgumentException("Cannot use Option.isDefined on a table or embedded case class")
+        case op: OptionTableForall if op.quat.isInstanceOf[Quat.Product] => throw new IllegalArgumentException("Cannot use Option.tableForAll on a table or embedded case class")
+        case op: OptionTableExists if op.quat.isInstanceOf[Quat.Product] => throw new IllegalArgumentException("Cannot use Option.tableExists on a table or embedded case class")
+
+        case cond: If if cond.`then`.isInstanceOf[Quat.Product] => throw throw new IllegalArgumentException("Cannot use table or embedded case class as a result of a condition")
+        case cond: If if cond.`else`.isInstanceOf[Quat.Product] => throw throw new IllegalArgumentException("Cannot use table or embedded case class as a result of a condition")
+
+        case cond: If => checkIllegalIdents(cond.condition)
+        case other => None
+      })
+  }
 }

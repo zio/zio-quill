@@ -1,6 +1,9 @@
 package io.getquill.context.orientdb
 
 import io.getquill.Spec
+import io.getquill.Ord
+import io.getquill.Query
+import io.getquill.Action
 
 class OrientDBIdiomSpec extends Spec {
 
@@ -20,14 +23,14 @@ class OrientDBIdiomSpec extends Spec {
         qr1.take(1)
       }
       ctx.run(q).string mustEqual
-        "SELECT s, i, l, o FROM TestEntity LIMIT 1"
+        "SELECT s, i, l, o, b FROM TestEntity LIMIT 1"
     }
     "sortBy" in {
       val q = quote {
         qr1.sortBy(t => t.i)
       }
       ctx.run(q).string mustEqual
-        "SELECT s, i, l, o FROM TestEntity ORDER BY i ASC"
+        "SELECT s, i, l, o, b FROM TestEntity ORDER BY i ASC"
     }
     "allTerms" in {
       val q = quote {
@@ -67,42 +70,42 @@ class OrientDBIdiomSpec extends Spec {
         qr1.sortBy(t => t.i)(Ord.asc)
       }
       ctx.run(q).string mustEqual
-        "SELECT s, i, l, o FROM TestEntity ORDER BY i ASC"
+        "SELECT s, i, l, o, b FROM TestEntity ORDER BY i ASC"
     }
     "desc" in {
       val q = quote {
         qr1.sortBy(t => t.i)(Ord.desc)
       }
       ctx.run(q).string mustEqual
-        "SELECT s, i, l, o FROM TestEntity ORDER BY i DESC"
+        "SELECT s, i, l, o, b FROM TestEntity ORDER BY i DESC"
     }
     "ascNullsFirst" in {
       val q = quote {
         qr1.sortBy(t => t.i)(Ord.ascNullsFirst)
       }
       ctx.run(q).string mustEqual
-        "SELECT s, i, l, o FROM TestEntity ORDER BY i ASC"
+        "SELECT s, i, l, o, b FROM TestEntity ORDER BY i ASC"
     }
     "descNullsFirst" in {
       val q = quote {
         qr1.sortBy(t => t.i)(Ord.descNullsFirst)
       }
       ctx.run(q).string mustEqual
-        "SELECT s, i, l, o FROM TestEntity ORDER BY i DESC"
+        "SELECT s, i, l, o, b FROM TestEntity ORDER BY i DESC"
     }
     "ascNullsLast" in {
       val q = quote {
         qr1.sortBy(t => t.i)(Ord.ascNullsLast)
       }
       ctx.run(q).string mustEqual
-        "SELECT s, i, l, o FROM TestEntity ORDER BY i ASC"
+        "SELECT s, i, l, o, b FROM TestEntity ORDER BY i ASC"
     }
     "descNullsLast" in {
       val q = quote {
         qr1.sortBy(t => t.i)(Ord.descNullsLast)
       }
       ctx.run(q).string mustEqual
-        "SELECT s, i, l, o FROM TestEntity ORDER BY i DESC"
+        "SELECT s, i, l, o, b FROM TestEntity ORDER BY i DESC"
     }
   }
 
@@ -112,7 +115,7 @@ class OrientDBIdiomSpec extends Spec {
         qr1.filter(t => t.i == 1)
       }
       ctx.run(q).string mustEqual
-        "SELECT s, i, l, o FROM TestEntity WHERE i = 1"
+        "SELECT s, i, l, o, b FROM TestEntity WHERE i = 1"
     }
     "unary (not supported)" in {
       val q = quote {
@@ -151,42 +154,42 @@ class OrientDBIdiomSpec extends Spec {
         qr1.filter(t => t.i == 1)
       }
       ctx.run(q).string mustEqual
-        "SELECT s, i, l, o FROM TestEntity WHERE i = 1"
+        "SELECT s, i, l, o, b FROM TestEntity WHERE i = 1"
     }
     "&&" in {
       val q = quote {
         qr1.filter(t => t.i == 1 && t.s == "s")
       }
       ctx.run(q).string mustEqual
-        "SELECT s, i, l, o FROM TestEntity WHERE (i = 1) AND (s = 's')"
+        "SELECT s, i, l, o, b FROM TestEntity WHERE (i = 1) AND (s = 's')"
     }
     ">" in {
       val q = quote {
         qr1.filter(t => t.i > 1)
       }
       ctx.run(q).string mustEqual
-        "SELECT s, i, l, o FROM TestEntity WHERE i > 1"
+        "SELECT s, i, l, o, b FROM TestEntity WHERE i > 1"
     }
     ">=" in {
       val q = quote {
         qr1.filter(t => t.i >= 1)
       }
       ctx.run(q).string mustEqual
-        "SELECT s, i, l, o FROM TestEntity WHERE i >= 1"
+        "SELECT s, i, l, o, b FROM TestEntity WHERE i >= 1"
     }
     "<" in {
       val q = quote {
         qr1.filter(t => t.i < 1)
       }
       ctx.run(q).string mustEqual
-        "SELECT s, i, l, o FROM TestEntity WHERE i < 1"
+        "SELECT s, i, l, o, b FROM TestEntity WHERE i < 1"
     }
     "<=" in {
       val q = quote {
         qr1.filter(t => t.i <= 1)
       }
       ctx.run(q).string mustEqual
-        "SELECT s, i, l, o FROM TestEntity WHERE i <= 1"
+        "SELECT s, i, l, o, b FROM TestEntity WHERE i <= 1"
     }
     "+" in {
       val q = quote {
@@ -200,28 +203,28 @@ class OrientDBIdiomSpec extends Spec {
         qr1.filter(t => t.i * 2 == 4)
       }
       ctx.run(q).string mustEqual
-        "SELECT s, i, l, o FROM TestEntity WHERE (i * 2) = 4"
+        "SELECT s, i, l, o, b FROM TestEntity WHERE (i * 2) = 4"
     }
     "-" in {
       val q = quote {
         qr1.filter(t => t.i - 1 == 1)
       }
       ctx.run(q).string mustEqual
-        "SELECT s, i, l, o FROM TestEntity WHERE (i - 1) = 1"
+        "SELECT s, i, l, o, b FROM TestEntity WHERE (i - 1) = 1"
     }
     "/" in {
       val q = quote {
         qr1.filter(t => t.i / 1 == 1)
       }
       ctx.run(q).string mustEqual
-        "SELECT s, i, l, o FROM TestEntity WHERE (i / 1) = 1"
+        "SELECT s, i, l, o, b FROM TestEntity WHERE (i / 1) = 1"
     }
     "%" in {
       val q = quote {
         qr1.filter(t => t.i % 1 == 0)
       }
       ctx.run(q).string mustEqual
-        "SELECT s, i, l, o FROM TestEntity WHERE (i % 1) = 0"
+        "SELECT s, i, l, o, b FROM TestEntity WHERE (i % 1) = 0"
     }
   }
   "value" - {
@@ -230,7 +233,7 @@ class OrientDBIdiomSpec extends Spec {
         qr1.filter(t => t.s == "a")
       }
       ctx.run(q).string mustEqual
-        "SELECT s, i, l, o FROM TestEntity WHERE s = 'a'"
+        "SELECT s, i, l, o, b FROM TestEntity WHERE s = 'a'"
     }
     "unit" in {
       case class Test(u: Unit)
@@ -245,7 +248,7 @@ class OrientDBIdiomSpec extends Spec {
         qr1.filter(t => t.i == 1)
       }
       ctx.run(q).string mustEqual
-        "SELECT s, i, l, o FROM TestEntity WHERE i = 1"
+        "SELECT s, i, l, o, b FROM TestEntity WHERE i = 1"
     }
     "tuple" in {
       val q = quote {
@@ -267,32 +270,32 @@ class OrientDBIdiomSpec extends Spec {
         qr1.filter(t => t.s == null)
       }
       ctx.run(q).string mustEqual
-        "SELECT s, i, l, o FROM TestEntity WHERE s IS NULL"
+        "SELECT s, i, l, o, b FROM TestEntity WHERE s IS NULL"
     }
   }
 
   "action" - {
     "insert" in {
       val q = quote {
-        qr1.insert(lift(TestEntity("a", 1, 1L, None)))
+        qr1.insert(lift(TestEntity("a", 1, 1L, None, true)))
       }
       ctx.run(q).string mustEqual
-        "INSERT INTO TestEntity (s, i, l, o) VALUES(?, ?, ?, ?)"
+        "INSERT INTO TestEntity (s, i, l, o, b) VALUES(?, ?, ?, ?, ?)"
     }
     "update" - {
       "all" in {
         val q = quote {
-          qr1.update(lift(TestEntity("a", 1, 1L, None)))
+          qr1.update(lift(TestEntity("a", 1, 1L, None, true)))
         }
         ctx.run(q).string mustEqual
-          "UPDATE TestEntity SET s = ?, i = ?, l = ?, o = ?"
+          "UPDATE TestEntity SET s = ?, i = ?, l = ?, o = ?, b = ?"
       }
       "filtered" in {
         val q = quote {
-          qr1.filter(t => t.i == 1).update(lift(TestEntity("a", 1, 1L, None)))
+          qr1.filter(t => t.i == 1).update(lift(TestEntity("a", 1, 1L, None, true)))
         }
         ctx.run(q).string mustEqual
-          "UPDATE TestEntity SET s = ?, i = ?, l = ?, o = ? WHERE i = 1"
+          "UPDATE TestEntity SET s = ?, i = ?, l = ?, o = ?, b = ? WHERE i = 1"
       }
     }
     "delete" - {
@@ -320,7 +323,7 @@ class OrientDBIdiomSpec extends Spec {
           qr1.filter(t => infix"${t.i} = 1".as[Boolean])
         }
         ctx.run(q).string mustEqual
-          "SELECT s, i, l, o FROM TestEntity WHERE i = 1"
+          "SELECT s, i, l, o, b FROM TestEntity WHERE i = 1"
       }
       "full" in {
         val q = quote {
@@ -333,10 +336,10 @@ class OrientDBIdiomSpec extends Spec {
     "action" - {
       "partial" in {
         val q = quote {
-          qr1.filter(t => infix"${t.i} = 1".as[Boolean]).update(lift(TestEntity("a", 1, 1L, None)))
+          qr1.filter(t => infix"${t.i} = 1".as[Boolean]).update(lift(TestEntity("a", 1, 1L, None, true)))
         }
         ctx.run(q).string mustEqual
-          "UPDATE TestEntity SET s = ?, i = ?, l = ?, o = ? WHERE i = 1"
+          "UPDATE TestEntity SET s = ?, i = ?, l = ?, o = ?, b = ? WHERE i = 1"
       }
       "full" in {
         val q = quote {

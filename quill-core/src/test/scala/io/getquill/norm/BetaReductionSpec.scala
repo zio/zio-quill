@@ -4,6 +4,7 @@ import io.getquill.Spec
 import io.getquill.ast.Renameable.Fixed
 import io.getquill.ast.Visibility.Visible
 import io.getquill.ast._
+import io.getquill.quat.Quat
 
 class BetaReductionSpec extends Spec {
 
@@ -48,45 +49,48 @@ class BetaReductionSpec extends Spec {
         Ident("a'")
     }
     "with inline" - {
-      val entity = Entity("a", Nil)
-      val (a, b, c, d) = (Ident("a"), Ident("b"), Ident("c"), Ident("d"))
-      val (c1, c2, c3) = (Constant(1), Constant(2), Constant(3))
+      val entity = Entity("a", Nil, QEP)
+      // Entity Idents
+      val (aE, bE, cE, dE) = (Ident("a", QEP), Ident("b", QEP), Ident("c", QEP), Ident("d", QEP))
+      // Value Idents
+      val (a, b, c, d) = (Ident("a", QV), Ident("b", QV), Ident("c", QV), Ident("d", QV))
+      val (c1, c2, c3) = (Constant.auto(1), Constant.auto(2), Constant.auto(3))
 
       "top level block" in {
         val block = Block(List(
-          Val(a, entity),
-          Val(b, a),
-          Map(b, d, c1)
+          Val(aE, entity),
+          Val(bE, aE),
+          Map(bE, dE, c1)
         ))
-        BetaReduction(block) mustEqual Map(entity, d, c1)
+        BetaReduction(block) mustEqual Map(entity, dE, c1)
       }
       "nested blocks" in {
         val inner = Block(List(
-          Val(a, entity),
+          Val(aE, entity),
           Val(b, c2),
           Val(c, c3),
-          Tuple(List(a, b, c))
+          Tuple(List(aE, bE, cE))
         ))
         val outer = Block(List(
-          Val(a, inner),
-          Val(b, a),
-          Val(c, b),
-          c
+          Val(aE, inner),
+          Val(bE, aE),
+          Val(cE, bE),
+          cE
         ))
         BetaReduction(outer) mustEqual Tuple(List(entity, c2, c3))
       }
       "nested blocks caseclass" in {
         val inner = Block(List(
-          Val(a, entity),
+          Val(aE, entity),
           Val(b, c2),
           Val(c, c3),
-          CaseClass(List(("foo", a), ("bar", b), ("baz", c)))
+          CaseClass(List(("foo", aE), ("bar", bE), ("baz", cE)))
         ))
         val outer = Block(List(
-          Val(a, inner),
-          Val(b, a),
-          Val(c, b),
-          c
+          Val(aE, inner),
+          Val(bE, aE),
+          Val(cE, bE),
+          cE
         ))
         BetaReduction(outer) mustEqual CaseClass(List(("foo", entity), ("bar", c2), ("baz", c3)))
       }
@@ -177,14 +181,16 @@ class BetaReductionSpec extends Spec {
   }
 
   "reapplies the beta reduction if the structure changes" in {
-    val ast: Ast = Property(Ident("a"), "_1")
-    BetaReduction(ast, Ident("a") -> Tuple(List(Ident("a'")))) mustEqual
+    val quat = Quat.LeafTuple(1)
+    val ast: Ast = Property(Ident("a", quat), "_1")
+    BetaReduction(ast, Ident("a", quat) -> Tuple(List(Ident("a'")))) mustEqual
       Ident("a'")
   }
 
   "reapplies the beta reduction if the structure changes caseclass" in {
-    val ast: Ast = Property(Ident("a"), "foo")
-    BetaReduction(ast, Ident("a") -> CaseClass(List(("foo", Ident("a'"))))) mustEqual
+    val quat = Quat.LeafProduct("foo")
+    val ast: Ast = Property(Ident("a", quat), "foo")
+    BetaReduction(ast, Ident("a", quat) -> CaseClass(List(("foo", Ident("a'"))))) mustEqual
       Ident("a'")
   }
 

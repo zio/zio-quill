@@ -36,9 +36,10 @@ class ExpandEntityIdsSpec extends Spec {
 
   "decomposition" - {
     "tuple decomposition" in {
-      val j1 = testContext.run {
+      val q1 = quote {
         qr1.join(qr2).on(_.i == _.i)
       }
+      val j1 = testContext.run(q1)
 
       val q = quote {
         for {
@@ -224,7 +225,7 @@ class ExpandEntityIdsSpec extends Spec {
           b <- qr2 if (a.i + 1) == b.j
         } yield TestHolder(a, b)
       }
-      testContext.run(q.dynamic).collect.toList mustEqual entities.map(e => TestHolder(e, e))
+      testContext.run(q).collect.toList mustEqual entities.map(e => TestHolder(e, e))
     }
     "regular entities and entities inside ad-hoc case classes" in {
       val q = quote {

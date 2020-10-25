@@ -3,6 +3,7 @@ package io.getquill.norm
 import io.getquill.ast._
 import io.getquill.ast.Implicits._
 import io.getquill.norm.ConcatBehavior.NonAnsiConcat
+import io.getquill.quat.QuatOps.HasBooleanQuat
 
 class FlattenOptionOperation(concatBehavior: ConcatBehavior) extends StatelessTransformer {
 
@@ -20,7 +21,7 @@ class FlattenOptionOperation(concatBehavior: ConcatBehavior) extends StatelessTr
   def containsNonFallthroughElement(ast: Ast) =
     CollectAst(ast) {
       case If(_, _, _) => true
-      case Infix(_, _, _) => true
+      case Infix(_, _, _, _) => true
       case BinaryOperation(_, StringOperator.`+`, _) if (concatBehavior == NonAnsiConcat) => true
     }.nonEmpty
 
@@ -54,10 +55,10 @@ class FlattenOptionOperation(concatBehavior: ConcatBehavior) extends StatelessTr
       case OptionGetOrNull(ast) =>
         apply(ast)
 
-      case OptionNone => NullValue
-
-      case OptionGetOrElse(OptionMap(ast, alias, body), Constant(b: Boolean)) =>
-        apply((BetaReduction(body, alias -> ast) +||+ emptyOrNot(b, ast)): Ast)
+      case OptionGetOrElse(HasBooleanQuat(OptionMap(ast, alias, body)), HasBooleanQuat(alternative)) =>
+        val expr = BetaReduction(body, alias -> ast)
+        val output: Ast = (IsNotNullCheck(ast) +&&+ expr) +||+ (IsNullCheck(ast) +&&+ alternative)
+        apply(output)
 
       case OptionGetOrElse(ast, body) =>
         apply(If(IsNotNullCheck(ast), ast, body))

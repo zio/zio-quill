@@ -1,6 +1,13 @@
 package io.getquill.ast
 
+// Represents an Ident without a Quat
+case class IdentName(name: String)
+
 object Implicits {
+  implicit class IdentOps(id: Ident) {
+    def idName = IdentName(id.name)
+  }
+
   implicit class AstOpsExt(body: Ast) {
     def +||+(other: Ast) = BinaryOperation(body, BooleanOperator.`||`, other)
     def +&&+(other: Ast) = BinaryOperation(body, BooleanOperator.`&&`, other)
@@ -85,4 +92,15 @@ object IfExist {
     case If(IsNotNullCheck(exists), t, e) => Some((exists, t, e))
     case _                                => None
   }
+}
+
+object PropertyOrCore {
+  def unapply(ast: Ast): Boolean =
+    Core.unapply(ast) || ast.isInstanceOf[Property]
+}
+
+/* Things that can be on the inside of a series of nested properties */
+object Core {
+  def unapply(ast: Ast): Boolean =
+    ast.isInstanceOf[Ident] || ast.isInstanceOf[Infix] || ast.isInstanceOf[Constant]
 }

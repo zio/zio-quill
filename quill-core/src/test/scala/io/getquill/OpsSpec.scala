@@ -2,10 +2,11 @@ package test
 
 import io.getquill.Spec
 import io.getquill.ast._
-import io.getquill.testContext.EntityQuery
+import io.getquill.EntityQuery
 import io.getquill.testContext.InfixInterpolator
-import io.getquill.testContext.Query
-import io.getquill.testContext.TestEntity
+import io.getquill.Query
+import io.getquill.quat._
+import io.getquill.testContext._
 import io.getquill.testContext.qr1
 import io.getquill.testContext.query
 import io.getquill.testContext.quote
@@ -19,12 +20,12 @@ class OpsSpec extends Spec {
       val q = quote {
         query[TestEntity]
       }
-      q.ast mustEqual Entity("TestEntity", Nil)
+      q.ast mustEqual Entity("TestEntity", Nil, TestEntityQuat)
     }
     "implicitly" in {
       val q: Quoted[Query[TestEntity]] =
         query[TestEntity]
-      q.ast mustEqual Entity("TestEntity", Nil)
+      q.ast mustEqual Entity("TestEntity", Nil, TestEntityQuat)
     }
   }
 
@@ -33,28 +34,40 @@ class OpsSpec extends Spec {
       val q = quote {
         unquote(qr1).map(t => t)
       }
-      q.ast mustEqual Map(Entity("TestEntity", Nil), Ident("t"), Ident("t"))
+      val quat = TestEntityQuat
+      q.ast mustEqual Map(Entity("TestEntity", Nil, quat), Ident("t", quat), Ident("t", quat))
     }
     "implicitly" in {
       val q = quote {
         qr1.map(t => t)
       }
-      q.ast mustEqual Map(Entity("TestEntity", Nil), Ident("t"), Ident("t"))
+      val quat = TestEntityQuat
+      q.ast mustEqual Map(Entity("TestEntity", Nil, quat), Ident("t", quat), Ident("t", quat))
     }
   }
 
   "provides the infix interpolator" - {
-    "with `as`" in {
-      val q = quote {
-        infix"true".as[Boolean]
+    "boolean values" - {
+      "with `as`" in {
+        val q = quote {
+          infix"true".as[Boolean]
+        }
+        q.ast mustEqual Infix(List("true"), Nil, false, Quat.BooleanValue)
       }
-      q.ast mustEqual Infix(List("true"), Nil, false)
     }
-    "without `as`" in {
-      val q = quote {
-        infix"true"
+    "other values" - {
+      "with `as`" in {
+        val q = quote {
+          infix"1".as[Int]
+        }
+        q.ast mustEqual Infix(List("1"), Nil, false, Quat.Value)
       }
-      q.ast mustEqual Infix(List("true"), Nil, false)
+      "without `as`" in {
+        val q = quote {
+          infix"1"
+        }
+        q.ast mustEqual Infix(List("1"), Nil, false, Quat.Value)
+      }
     }
   }
 

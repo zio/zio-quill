@@ -8,12 +8,14 @@ import io.getquill.idiom.StatementInterpolator._
 import io.getquill.idiom.{ Statement, StringToken, Token }
 import io.getquill.norm.ConcatBehavior
 import io.getquill.norm.ConcatBehavior.NonAnsiConcat
+import io.getquill.sql.idiom.BooleanLiteralSupport
 
 trait OracleDialect
   extends SqlIdiom
   with QuestionMarkBindVariables
   with ConcatSupport
-  with CanReturnMultiField {
+  with CanReturnMultiField
+  with BooleanLiteralSupport {
 
   class OracleFlattenSqlQueryTokenizerHelper(q: FlattenSqlQuery)(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy)
     extends FlattenSqlQueryTokenizerHelper(q)(astTokenizer, strategy) {
@@ -63,8 +65,11 @@ trait OracleDialect
   override protected def tokenizeTable(strategy: NamingStrategy, table: String, renameable: Renameable): String =
     tokenizeEscapeUnderscores(strategy, table, Some(renameable))
 
-  override protected def tokenizeAlias(strategy: NamingStrategy, table: String): String =
-    tokenizeEscapeUnderscores(strategy, table, None)
+  override protected def tokenizeColumnAlias(strategy: NamingStrategy, column: String): String =
+    tokenizeEscapeUnderscores(strategy, column, None)
+
+  override protected def tokenizeTableAlias(strategy: NamingStrategy, column: String): String =
+    tokenizeEscapeUnderscores(strategy, column, None)
 
   private def tokenizeEscapeUnderscores(strategy: NamingStrategy, columnOrTable: String, renameable: Option[Renameable]): String =
     if (columnOrTable.startsWith("_"))
