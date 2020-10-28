@@ -434,7 +434,7 @@ lazy val `quill-finagle-mysql` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "com.twitter" %% "finagle-mysql" % "20.9.0"
+        "com.twitter" %% "finagle-mysql" % "20.10.0"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -582,7 +582,7 @@ lazy val `quill-cassandra-lagom` =
       fork in Test := true,
       libraryDependencies ++= {
         val lagomVersion = if (scalaVersion.value.startsWith("2.13")) "1.6.4" else "1.5.5"
-        val versionSpecificDependencies =  if (scalaVersion.value.startsWith("2.13")) Seq("com.typesafe.play" %% "play-akka-http-server" % "2.8.2") else Seq.empty
+        val versionSpecificDependencies =  if (scalaVersion.value.startsWith("2.13")) Seq("com.typesafe.play" %% "play-akka-http-server" % "2.8.3") else Seq.empty
         Seq(
           "org.scala-lang.modules" %% "scala-collection-compat" % "2.1.6",
           "com.lightbend.lagom" %% "lagom-scaladsl-persistence-cassandra" % lagomVersion % Provided,
