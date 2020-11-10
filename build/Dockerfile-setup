@@ -25,7 +25,7 @@ RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
     dpkg-reconfigure --frontend=noninteractive locales && \
     update-locale LANG=en_US.UTF-8
 
-ENV CASSANDRA_VERSION 3.11.7
+ENV CASSANDRA_VERSION 3.11.8
 
 RUN  cd /opt ; \
      curl http://apache.volia.net/cassandra/$CASSANDRA_VERSION/apache-cassandra-$CASSANDRA_VERSION-bin.tar.gz | tar zx
