@@ -889,15 +889,28 @@ trait Parsing extends ValueComputation with QuatMaking {
     }
   }
 
+  // (Query[Person]) example - query[Person] or query[Person].filter(p => p.name == "Jack")
+  // (Action[Person] example - (Query[Perosn]).insert(_.name -> "Joe", _.age -> 123)
   val actionParser: Parser[Ast] = Parser[Ast] {
+    // (Query[Person]).update(_.name -> "Joe", _.age > 123)
     case q"$query.$method(..$assignments)" if (method.decodedName.toString == "update") =>
       Update(astParser(query), assignments.map(assignmentParser(_)))
+
+    // Action: (https://getquill.io/#quotation-actions-insert)
+    // (Query[Person]).insert(_.name -> "Joe", _.age > 123)
     case q"$query.insert(..$assignments)" =>
       Insert(astParser(query), assignments.map(assignmentParser(_)))
+
+    // (Query[Person]).delete
     case q"$query.delete" =>
       Delete(astParser(query))
+
+    // Theory:  ( (Query[Perosn]).update(....) ).returning[T]
+    // Example: ( query[Person].filter(p => p.name == "Joe").update(....) ).returning[Something]
     case q"$action.returning[$r]" =>
       c.fail(s"A 'returning' clause must have arguments.")
+
+    // ( (Query[Perosn]).insert(_.name -> "Joe", _.age -> 123) ).returning(p => (p.id, p.age))
     case q"$action.returning[$r](($alias) => $body)" =>
       val ident = identParser(alias)
       val bodyAst = reprocessReturnClause(ident, astParser(body), action)
@@ -913,6 +926,7 @@ trait Parsing extends ValueComputation with QuatMaking {
       idiomReturnCapability.verifyAst(bodyAst)
       Returning(astParser(action), ident, bodyAst)
 
+    // ( (Query[Perosn]).insert(_.name -> "Joe", _.age -> 123) ).returningGenerated(p => (p.id, p.otherGeneratedProp))
     case q"$action.returningGenerated[$r](($alias) => $body)" =>
       val ident = identParser(alias)
       val bodyAst = reprocessReturnClause(ident, astParser(body), action)
@@ -926,6 +940,9 @@ trait Parsing extends ValueComputation with QuatMaking {
       idiomReturnCapability.verifyAst(bodyAst)
       ReturningGenerated(astParser(action), ident, bodyAst)
 
+    // Batch Action (https://getquill.io/#quotation-actions-batch-insert)
+    // Example: { liftQuery(List(Person("Joe", 123), Person("Jack", 456))) }.foreach(p => (query[Person].insert(p.name, p.age))<Compiler Inferred: (implicit unquote: B => A)>
+    // Theory:  { Query[Person] }.foreach(p => (Action[Person])<Compiler Inferred: (implicit unquote: B => A)>
     case q"$query.foreach[$t1, $t2](($alias) => $body)($f)" if (is[DslQuery[Any]](query)) =>
       // If there are actions inside the subtree, we need to do some additional sanitizations
       // of the variables so that their content will not collide with code that we have generated.
