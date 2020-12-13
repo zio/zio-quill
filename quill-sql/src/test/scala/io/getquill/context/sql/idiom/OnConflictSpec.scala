@@ -8,9 +8,11 @@ trait OnConflictSpec extends Spec {
   import ctx._
 
   lazy val e = TestEntity("s1", 1, 1, None, true)
+  lazy val e2 = TestEntityEmb(Emb("s1", 1), 1, None)
 
   def ins = quote(query[TestEntity].insert(lift(e)))
   def del = quote(query[TestEntity].delete)
+  def insEmb = quote(query[TestEntityEmb].insert(lift(e2)))
 
   def `no target - ignore` = quote {
     ins.onConflictIgnore
@@ -20,6 +22,9 @@ trait OnConflictSpec extends Spec {
   }
   def `no target - update` = quote {
     ins.onConflictUpdate((t, e) => t.l -> (t.l + e.l) / 2, _.s -> _.s)
+  }
+  def `no target - update embedded` = quote {
+    insEmb.onConflictUpdate(_.emb.i -> _.emb.i, _.l -> _.l)
   }
   def `cols target - update` = quote {
     ins.onConflictUpdate(_.i, _.s)((t, e) => t.l -> (t.l + e.l) / 2, _.s -> _.s)

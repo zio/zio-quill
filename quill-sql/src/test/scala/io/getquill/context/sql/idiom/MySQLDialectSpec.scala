@@ -109,6 +109,10 @@ class MySQLDialectSpec extends OnConflictSpec {
       ctx.run(`no target - update`).string mustEqual
         "INSERT INTO TestEntity (s,i,l,o,b) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE l = ((l + VALUES(l)) / 2), s = VALUES(s)"
     }
+    "no target - update embedded" in {
+      ctx.run(`no target - update embedded`).string mustEqual
+        "INSERT INTO TestEntityEmb (s,i,l,o) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE i = VALUES(i), l = VALUES(l)"
+    }
     "cols target - update" in {
       intercept[IllegalStateException] {
         ctx.run(`cols target - update`.dynamic)

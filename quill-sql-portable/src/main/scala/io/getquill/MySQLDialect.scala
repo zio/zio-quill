@@ -60,6 +60,10 @@ trait MySQLDialect
         case Property.Opinionated(Excluded(_), name, renameable, _) =>
           renameable.fixedOr(name.token)(stmt"VALUES(${strategy.column(name).token})")
 
+        // Nesting in case of embedded property
+        case Property.Opinionated(Property.Opinionated(Excluded(_), _, _, _), name, renameable, _) =>
+          renameable.fixedOr(name.token)(stmt"VALUES(${strategy.column(name).token})")
+
         case Property.Opinionated(_, name, renameable, _) =>
           renameable.fixedOr(name.token)(strategy.column(name).token)
       }
