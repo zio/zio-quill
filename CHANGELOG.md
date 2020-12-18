@@ -78,6 +78,8 @@ Migration Notes:
 
 # 3.5.3
 
+Please skip this release and proceed directly to the 3.6.0-RC line. This release was originally a test-bed for the new Quats-based functionality which was supposed to be a strictly internal mechanism. Unfortunately multiple issues were found. They will be addressed in the 3.6.X line.
+
 - [Adding Quill-Application-Types (Quats) to AST](https://github.com/getquill/quill/pull/1911)
 - [Translate boolean literals](https://github.com/getquill/quill/pull/1923)
 - [breakdown caseclasses in groupBy clause](https://github.com/getquill/quill/pull/1939)
