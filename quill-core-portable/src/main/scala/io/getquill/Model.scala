@@ -69,10 +69,8 @@ trait EntityQueryModel[T]
   override def filter(f: T => Boolean): EntityQueryModel[T]
   override def map[R](f: T => R): EntityQueryModel[R]
 
-  def insert(value: T): Insert[T] = NonQuotedException()
   def insert(f: (T => (Any, Any)), f2: (T => (Any, Any))*): Insert[T]
 
-  def update(value: T): Update[T] = NonQuotedException()
   def update(f: (T => (Any, Any)), f2: (T => (Any, Any))*): Update[T]
 
   def delete: Delete[T]
