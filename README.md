@@ -3642,6 +3642,7 @@ Please refer to [CASSANDRA.md](https://github.com/getquill/quill/blob/master/CAS
 
 ### Talks
 
+ - **[Dotty/Scala 3]** Functional Scala 2020 - [Quill, Dotty, And The Awesome Power of 'Inline'](https://www.youtube.com/watch?v=SmBpGkIsJIU)
  - **[Intro]** ScalaDays Berlin 2016 - [Scylla, Charybdis, and the mystery of Quill](https://www.youtube.com/watch?v=nqSYccoSeio)
  - **[Intro]** Postgres Philly 2019 - [Introduction to Quill](https://www.youtube.com/watch?v=RVs-T5iFdQI)
  - ScalaUA 2020 - [Manipulating Abstract Syntax Trees (ASTs) to generate safe SQL Queries with Quill](https://www.youtube.com/watch?v=aY8DrjE9lIY)
