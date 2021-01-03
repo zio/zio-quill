@@ -189,6 +189,13 @@ function full_build() {
     sbt $SBT_ARGS test tut doc
 }
 
+if [[ $TRAVIS_EVENT_TYPE != "pull_request")  ]]; then
+  echo "Logging into Docker via $DOCKER_USERNAME for $TRAVIS_EVENT_TYPE"
+  echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+elif
+  echo "Not Logging into Docker for $TRAVIS_EVENT_TYPE build"
+fi
+
 if [[ $modules == "db" ]]; then
     echo "Build Script: Doing Database Build"
     db_build
