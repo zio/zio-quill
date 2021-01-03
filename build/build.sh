@@ -192,7 +192,7 @@ function full_build() {
 if [[ $TRAVIS_EVENT_TYPE != "pull_request" ]]; then
   echo "Logging into Docker via $DOCKER_USERNAME for $TRAVIS_EVENT_TYPE"
   echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-elif
+else
   echo "Not Logging into Docker for $TRAVIS_EVENT_TYPE build"
 fi
 
