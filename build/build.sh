@@ -189,7 +189,7 @@ function full_build() {
     sbt $SBT_ARGS test tut doc
 }
 
-if [[ $TRAVIS_EVENT_TYPE != "pull_request")  ]]; then
+if [[ $TRAVIS_EVENT_TYPE != "pull_request" ]]; then
   echo "Logging into Docker via $DOCKER_USERNAME for $TRAVIS_EVENT_TYPE"
   echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 elif
