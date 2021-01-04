@@ -1,6 +1,7 @@
 FROM hseeberger/scala-sbt:8u222_1.3.2_2.13.1
 MAINTAINER mdedetrich@gmail.com
 
+RUN apt-get update
 RUN apt-get install -y --no-install-recommends nodejs
 ENV JAVA_OPTS "-Dquill.macro.log=false -Xmx3G"
 
