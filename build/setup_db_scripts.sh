@@ -105,15 +105,14 @@ function setup_sqlserver() {
 # by the container and docker-compose steps.
 
 function setup_oracle() {
-
     while ! nc -z $2 1521; do
         echo "Waiting for Oracle"
-        sleep 5;
+        sleep 2;
     done;
-    sleep 5;
+    sleep 2;
 
     echo "Connected to Oracle"
-    sleep 5
+    sleep 2
 }
 
 function send_script() {
