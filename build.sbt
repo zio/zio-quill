@@ -18,9 +18,9 @@ lazy val baseModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-sql-portable-jvm`,
   `quill-sql-jvm`,
   `quill-monix`,
-  `quill-sql-spec-context`,
-  `quill-sql-spec-norm`,
-  `quill-sql-spec-quote`
+  `quill-spec-context`,
+  `quill-spec-norm`,
+  `quill-spec-quote`
 )
 
 lazy val dbModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
@@ -235,20 +235,26 @@ lazy val `quill-sql` =
 
 lazy val `quill-sql-jvm` = `quill-sql`
 
-lazy val `quill-sql-spec-context` =
-  (project in file ("quill-sql-spec-context"))
+lazy val `quill-spec-core` =
+  (project in file ("quill-spec-core"))
+    .settings(commonSettings: _*)
+    .settings(mimaSettings: _*)
+    .dependsOn(`quill-core` % "test->test")
+
+lazy val `quill-spec-context` =
+  (project in file ("quill-spec-context"))
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .dependsOn(`quill-sql` % "test->test")
 
-lazy val `quill-sql-spec-norm` =
-  (project in file ("quill-sql-spec-norm"))
+lazy val `quill-spec-norm` =
+  (project in file ("quill-spec-norm"))
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .dependsOn(`quill-sql` % "test->test")
 
-lazy val `quill-sql-spec-quote` =
-  (project in file ("quill-sql-spec-quote"))
+lazy val `quill-spec-quote` =
+  (project in file ("quill-spec-quote"))
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .dependsOn(`quill-sql` % "test->test")
