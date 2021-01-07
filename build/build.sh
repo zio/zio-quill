@@ -98,38 +98,6 @@ function wait_for_databases() {
     show_mem
 }
 
-function wait_for_mysql_postgres() {
-    show_mem
-
-    sbt clean scalariformFormat test:scalariformFormat
-    sbt checkUnformattedFiles
-
-    # Start sbt compilation and database setup in parallel
-    sbt -Dmodules=base $SBT_ARGS compile & COMPILE=$!
-    ./build/setup_mysql_postgres_databases.sh & SETUP=$!
-
-    # Wait on database setup. If it has failed then kill compilation process and exit with error
-    wait $SETUP
-
-    if [[ "$?" != "0" ]]; then
-       echo "Database setup failed"
-       sleep 10
-       kill -9 $COMPILE
-       exit 1
-    fi
-    echo "Database Setup is finished, waiting for the compilation of core module"
-
-    wait $COMPILE
-    if [[ "$?" != "0" ]]; then
-       echo "Compilation of core module has failed"
-       sleep 10
-       exit 1
-    fi
-
-    echo "Database Setup is finished"
-    show_mem
-}
-
 function wait_for_bigdata() {
     show_mem
 
@@ -160,18 +128,13 @@ function wait_for_bigdata() {
 function db_build() {
     wait_for_databases
     # Also will run any base tests in quill-core and quill-sql since db contains spec modules which depend on them
-    sbt -Dmodules=db $SBT_ARGS test doc
+    sbt -Dmodules=alldb $SBT_ARGS test doc
 }
 
 function js_build() {
     show_mem
     export JVM_OPTS="-Dquill.macro.log=false -Dquill.scala.version=$TRAVIS_SCALA_VERSION -Xms1024m -Xmx4g -Xss5m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC"
     travis-wait-enhanced --interval=1m --timeout=50m -- sbt -Dmodules=js $SBT_ARGS test doc
-}
-
-function async_build() {
-    wait_for_mysql_postgres
-    sbt -Dmodules=async $SBT_ARGS test doc
 }
 
 function codegen_build() {

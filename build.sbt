@@ -83,6 +83,9 @@ val filteredModules = {
     case Some("db") =>
       println("Compiling Database Modules")
       dbModules
+    case Some("alldb") =>
+      println("Compiling Database Modules")
+      dbModules ++ asyncModules
     case Some("async") =>
       println("Compiling Async Database Modules")
       asyncModules
