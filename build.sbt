@@ -17,14 +17,16 @@ lazy val baseModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-core-jvm`,
   `quill-sql-portable-jvm`,
   `quill-sql-jvm`,
-  `quill-monix`,
-  `quill-spec-context`,
-  `quill-spec-norm`,
-  `quill-spec-quote`
+  `quill-monix`
 )
 
 lazy val dbModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
-  `quill-jdbc`, `quill-jdbc-monix`
+  `quill-jdbc`, `quill-jdbc-monix`,
+  // base modules in build.sh happen with every db-wait so do them here with the db modules
+  // specifically in the DB test series
+  `quill-spec-context`,
+  `quill-spec-norm`,
+  `quill-spec-quote`
 )
 
 lazy val jasyncModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
