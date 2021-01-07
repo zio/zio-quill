@@ -105,7 +105,7 @@ function wait_for_mysql_postgres() {
     sbt checkUnformattedFiles
 
     # Start sbt compilation and database setup in parallel
-    sbt -Dmodules=base $SBT_ARGS test & COMPILE=$!
+    sbt -Dmodules=base $SBT_ARGS compile & COMPILE=$!
     ./build/setup_mysql_postgres_databases.sh & SETUP=$!
 
     # Wait on database setup. If it has failed then kill compilation process and exit with error
@@ -135,7 +135,7 @@ function wait_for_bigdata() {
 
     sbt clean scalariformFormat test:scalariformFormat
     sbt checkUnformattedFiles
-    sbt clean $SBT_ARGS quill-coreJVM/test:compile & COMPILE=$!
+    sbt -Dmodules=base $SBT_ARGS compile & COMPILE=$!
     ./build/setup_bigdata.sh & SETUP=$!
 
     wait $SETUP
@@ -159,6 +159,7 @@ function wait_for_bigdata() {
 
 function db_build() {
     wait_for_databases
+    # Also will run any base tests in quill-core and quill-sql since db contains spec modules which depend on them
     sbt -Dmodules=db $SBT_ARGS test doc
 }
 
