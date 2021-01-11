@@ -236,8 +236,9 @@ class Ident(val name: String)(theQuat: => Quat) extends Terminal with Ast {
   }
 
   // need to define a copy which will propogate current value of visibility into the copy
-  def copy(name: String = this.name, quat: => Quat = this.quat): Ident =
+  def copy(name: String = this.name, quat: => Quat = this.quat): Ident = {
     Ident.Opinionated(name, quat, this.visibility)
+  }
 }
 
 /**
