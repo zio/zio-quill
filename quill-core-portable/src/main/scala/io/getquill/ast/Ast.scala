@@ -219,7 +219,12 @@ object Infix {
 case class Function(params: List[Ident], body: Ast) extends Ast { def quat = body.quat }
 
 class Ident(val name: String)(theQuat: => Quat) extends Terminal with Ast {
-  def quat: Quat = theQuat
+  private var cachedQuat: Quat = null
+  def quat: Quat = {
+    if (cachedQuat == null) cachedQuat = theQuat
+    cachedQuat
+  }
+
   private val id = Ident.Id(name)
   def visibility: Visibility = Visibility.Visible
 
