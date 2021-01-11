@@ -48,14 +48,16 @@ object ExpandDistinct {
           // This would normally become:
           // SELECT p._1, p._1 FROM (SELECT DISTINCT p.name AS _1 from Person p) AS p
           case Distinct(Map(q, x, p @ Property(id: Ident, name))) =>
-            Map(Distinct(Map(q, x, p)), x, Property(id.copy(quat = valueQuat(id.quat)), name))
+            val newQuat = valueQuat(id.quat) // force quat recomputation for perf purposes
+            Map(Distinct(Map(q, x, p)), x, Property(id.copy(quat = newQuat), name))
 
           // Problems with distinct were first discovered in #1032. Basically, unless
           // the distinct is "expanded" adding an outer map, Ident's representing a Table will end up in invalid places
           // such as "ORDER BY tableIdent" etc...
           case Distinct(Map(q, x, p)) =>
             val newMap = Map(q, x, Tuple(List(p)))
-            val newIdent = Ident(x.name, Quat.Tuple(valueQuat(p.quat)))
+            val newQuat = Quat.Tuple(valueQuat(p.quat)) // force quat recomputation for perf purposes
+            val newIdent = Ident(x.name, newQuat)
             Map(Distinct(newMap), newIdent, Property(newIdent, "_1"))
         }
     }
