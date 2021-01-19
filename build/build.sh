@@ -189,6 +189,21 @@ function full_build() {
     sbt $SBT_ARGS test tut doc
 }
 
+if [[ (! -z "$DOCKER_USERNAME") && (! -z "$DOCKER_USERNAME") ]]; then
+  echo "Logging into Docker via $DOCKER_USERNAME for $TRAVIS_EVENT_TYPE"
+  echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+
+  echo "Getting Per-Account Statistics for Docker Pull Limits"
+  TOKEN=$(curl --user "$DOCKER_USERNAME:$DOCKER_PASSWORD" "https://auth.docker.io/token?service=registry.docker.io&scope=repository:ratelimitpreview/test:pull" | jq -r .token)
+  curl --head -H "Authorization: Bearer $TOKEN" https://registry-1.docker.io/v2/ratelimitpreview/test/manifests/latest
+else
+  echo "Getting Anonymous-Account Statistics for Docker Pull Limits"
+  TOKEN=$(curl "https://auth.docker.io/token?service=registry.docker.io&scope=repository:ratelimitpreview/test:pull" | jq -r .token)
+  curl --head -H "Authorization: Bearer $TOKEN" https://registry-1.docker.io/v2/ratelimitpreview/test/manifests/latest
+
+  echo "Not Logging into Docker for $TRAVIS_EVENT_TYPE build, restarting Docker using GCR mirror"
+fi
+
 if [[ $modules == "db" ]]; then
     echo "Build Script: Doing Database Build"
     db_build

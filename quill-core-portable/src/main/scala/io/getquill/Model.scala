@@ -69,10 +69,14 @@ trait EntityQueryModel[T]
   override def filter(f: T => Boolean): EntityQueryModel[T] = NonQuotedException()
   override def map[R](f: T => R): EntityQueryModel[R] = NonQuotedException()
 
-  def insert(value: T): Insert[T] = NonQuotedException()
+  // Note: This class is to be shared with Dotty and the parameter `value` needs to be inline.
+  //       however, regular values cannot be overridden with inline ones so we cannot define
+  //       insert[T] and update[T] on this level.
+  //def insert(value: T): Insert[T] = NonQuotedException()
+  //def update(value: T): Update[T] = NonQuotedException()
+
   def insert(f: (T => (Any, Any)), f2: (T => (Any, Any))*): Insert[T] = NonQuotedException()
 
-  def update(value: T): Update[T] = NonQuotedException()
   def update(f: (T => (Any, Any)), f2: (T => (Any, Any))*): Update[T] = NonQuotedException()
 
   def delete: Delete[T] = NonQuotedException()

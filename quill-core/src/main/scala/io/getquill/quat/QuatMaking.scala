@@ -140,7 +140,7 @@ trait QuatMakingBase {
   def inferQuat(tpe: Type): Quat = {
 
     def nonGenericMethods(tpe: Type) = {
-      tpe.members
+      tpe.members.sorted
         .filter(m => m.isPublic
           && m.owner.name.toString != "Any"
           && m.owner.name.toString != "Object").map { param =>
@@ -223,11 +223,13 @@ trait QuatMakingBase {
     }
 
     object BooleanType {
-      def unapply(tpe: Type): Option[Type] =
-        if (isType[Boolean](tpe))
+      def unapply(tpe: Type): Option[Type] = {
+        if (isType[Boolean](tpe.finalResultType)) {
           Some(tpe)
-        else
+        } else {
           None
+        }
+      }
     }
 
     object DefiniteValue {
