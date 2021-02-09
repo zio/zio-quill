@@ -15,7 +15,7 @@ object Messages {
 
   private[getquill] def quatKryoPoolSize = cache("quill.quat.kryoPool", variable("quill.quat.kryoPool", "quill_quat_kryoPool", "10").toInt)
   private[getquill] def maxQuatFields = cache("quill.quat.tooManyFields", variable("quill.quat.tooManyFields", "quill_quat_tooManyFields", "500").toInt)
-  private[getquill] def prettyPrint = cache("quill.macro.log.pretty", variable("quill.macro.log.pretty", "quill_macro_log", "false").toBoolean)
+  private[getquill] def prettyPrint = cache("quill.macro.log.pretty", variable("quill.macro.log.pretty", "quill_macro_log_pretty", "false").toBoolean)
   private[getquill] def alwaysAlias = cache("quill.query.alwaysAlias", variable("quill.query.alwaysAlias", "quill_query_alwaysAlias", "false").toBoolean)
   private[getquill] def pruneColumns = cache("quill.query.pruneColumns", variable("quill.query.pruneColumns", "quill_query_pruneColumns", "true").toBoolean)
   private[getquill] def smartBooleans = cache("quill.query.smartBooleans", variable("quill.query.smartBooleans", "quill_query_smartBooleans", "true").toBoolean)
