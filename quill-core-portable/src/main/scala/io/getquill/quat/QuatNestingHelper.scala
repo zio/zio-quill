@@ -12,8 +12,12 @@ object QuatNestingHelper {
 
   def valuefyQuatInProperty(ast: Ast): Ast =
     ast match {
-      case Property(id: Ident, name)      => Property(id.copy(quat = valueQuat(id.quat)), name)
-      case Property(prop: Property, name) => Property(valuefyQuatInProperty(prop), name)
-      case other                          => other
+      case Property(id: Ident, name) =>
+        val newQuat = valueQuat(id.quat) // Force quat value recomputation for better performance
+        Property(id.copy(quat = newQuat), name)
+      case Property(prop: Property, name) =>
+        Property(valuefyQuatInProperty(prop), name)
+      case other =>
+        other
     }
 }
