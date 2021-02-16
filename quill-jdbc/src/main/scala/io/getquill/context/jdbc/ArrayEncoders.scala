@@ -1,8 +1,8 @@
 package io.getquill.context.jdbc
 
-import java.sql.{ Timestamp, Date => SqlDate }
+import java.sql.Timestamp
 import java.sql.Types._
-import java.time.LocalDate
+import java.time.{ LocalDate, LocalDateTime, LocalTime, OffsetDateTime }
 import java.util.Date
 
 import io.getquill.context.sql.encoding.ArrayEncoding
@@ -22,7 +22,11 @@ trait ArrayEncoders extends ArrayEncoding {
   implicit def arrayDoubleEncoder[Col <: Seq[Double]]: Encoder[Col] = arrayRawEncoder[Double, Col](DOUBLE)
   implicit def arrayDateEncoder[Col <: Seq[Date]]: Encoder[Col] = arrayRawEncoder[Date, Col](TIMESTAMP)
   implicit def arrayTimestampEncoder[Col <: Seq[Timestamp]]: Encoder[Col] = arrayRawEncoder[Timestamp, Col](TIMESTAMP)
-  implicit def arrayLocalDateEncoder[Col <: Seq[LocalDate]]: Encoder[Col] = arrayEncoder[LocalDate, Col](parseJdbcType(DATE), SqlDate.valueOf)
+  // Taken from https://jdbc.postgresql.org/documentation/head/8-date-time.html
+  implicit def arrayLocalDateEncoder[Col <: Seq[LocalDate]]: Encoder[Col] = arrayRawEncoder[LocalDate, Col](parseJdbcType(DATE))
+  implicit def arrayLocalTimeEncoder[Col <: Seq[LocalTime]]: Encoder[Col] = arrayRawEncoder[LocalTime, Col](parseJdbcType(TIME))
+  implicit def arrayLocalDateTimeEncoder[Col <: Seq[LocalDateTime]]: Encoder[Col] = arrayRawEncoder[LocalDateTime, Col](parseJdbcType(TIMESTAMP))
+  implicit def arrayOffsetDateTimeEncoder[Col <: Seq[OffsetDateTime]]: Encoder[Col] = arrayRawEncoder[OffsetDateTime, Col](parseJdbcType(TIMESTAMP_WITH_TIMEZONE))
 
   /**
    * Generic encoder for JDBC arrays.

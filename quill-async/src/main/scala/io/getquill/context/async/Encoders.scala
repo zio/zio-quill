@@ -14,7 +14,7 @@ trait Encoders {
 
   case class AsyncEncoder[T](sqlType: DecoderSqlType)(implicit encoder: BaseEncoder[T])
     extends BaseEncoder[T] {
-    override def apply(index: Index, value: T, row: PrepareRow) =
+    override def apply(index: Index, value: T, row: PrepareRow): PrepareRow =
       encoder.apply(index, value, row)
   }
 
@@ -23,19 +23,19 @@ trait Encoders {
 
   def encoder[T](f: T => Any, sqlType: DecoderSqlType): Encoder[T] =
     AsyncEncoder[T](sqlType)(new BaseEncoder[T] {
-      def apply(index: Index, value: T, row: PrepareRow) =
+      def apply(index: Index, value: T, row: PrepareRow): PrepareRow =
         row :+ f(value)
     })
 
   implicit def mappedEncoder[I, O](implicit mapped: MappedEncoding[I, O], e: Encoder[O]): Encoder[I] =
     AsyncEncoder(e.sqlType)(new BaseEncoder[I] {
-      def apply(index: Index, value: I, row: PrepareRow) =
+      def apply(index: Index, value: I, row: PrepareRow): PrepareRow =
         e(index, mapped.f(value), row)
     })
 
   implicit def optionEncoder[T](implicit d: Encoder[T]): Encoder[Option[T]] =
     AsyncEncoder(d.sqlType)(new BaseEncoder[Option[T]] {
-      def apply(index: Index, value: Option[T], row: PrepareRow) = {
+      def apply(index: Index, value: Option[T], row: PrepareRow): PrepareRow = {
         value match {
           case None    => nullEncoder(index, null, row)
           case Some(v) => d(index, v, row)
