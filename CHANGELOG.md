@@ -1,3 +1,13 @@
+# 3.6.1
+
+- [Memoize Passed-By-Name Quats of Asts Ident, Entity, and Others](https://github.com/getquill/quill/pull/2084)
+- [Minior Quat Fixes and More Tests](https://github.com/getquill/quill/pull/2057)
+
+Migration Notes:
+
+ - Memoization of Quats should improve performance of dynamic queries based on some profiling analysis. This
+   change should not have any user-facing changes.
+
 # 3.6.0
 This description is an aggregation of the 3.6.0-RC1, RC2 and RC3 as well as several new items.
 

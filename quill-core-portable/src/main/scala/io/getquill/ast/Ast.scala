@@ -72,7 +72,9 @@ object BottomTypedTerminal {
  * to `T_PERSON` or `Person`.
  */
 class Entity(val name: String, val properties: List[PropertyAlias])(theQuat: => Quat.Product) extends Query {
-  def quat: Quat.Product = theQuat
+  private lazy val computedQuat = theQuat
+  def quat = computedQuat
+
   private def id = Entity.Id(name, properties)
   // Technically this should be part of the Entity case class but due to the limitations of how
   // scala creates companion objects, the apply/unapply wouldn't be able to work correctly.
@@ -105,13 +107,12 @@ class Entity(val name: String, val properties: List[PropertyAlias])(theQuat: => 
     //   => (name -> (first -> theFirst, last -> theLast))
     val groupedTailPaths = tailPaths.groupBy(_._1).map(kv => (kv._1, kv._2.map(r => r._2))).toList
 
-    lazy val quat: Quat.Product =
+    val newQuat =
       groupedTailPaths.foldLeft(this.quat) {
         case (quat, (renamePath, renames)) =>
           quat.renameAtPath(renamePath, renames)
       }
-
-    Entity.Opinionated(name, properties, quat, renameable)
+    Entity.Opinionated(name, properties, newQuat, renameable)
   }
 }
 
@@ -219,7 +220,9 @@ object Infix {
 case class Function(params: List[Ident], body: Ast) extends Ast { def quat = body.quat }
 
 class Ident(val name: String)(theQuat: => Quat) extends Terminal with Ast {
-  def quat: Quat = theQuat
+  private lazy val computedQuat = theQuat
+  def quat = computedQuat
+
   private val id = Ident.Id(name)
   def visibility: Visibility = Visibility.Visible
 
@@ -236,8 +239,9 @@ class Ident(val name: String)(theQuat: => Quat) extends Terminal with Ast {
   }
 
   // need to define a copy which will propogate current value of visibility into the copy
-  def copy(name: String = this.name, quat: => Quat = this.quat): Ident =
+  def copy(name: String = this.name, quat: => Quat = this.quat): Ident = {
     Ident.Opinionated(name, quat, this.visibility)
+  }
 }
 
 /**
@@ -416,7 +420,9 @@ case class OptionTableForall(ast: Ast, alias: Ident, body: Ast)
   extends OptionOperation { def quat = body.quat }
 case object OptionNoneId
 class OptionNone(theQuat: => Quat) extends OptionOperation with Terminal {
-  def quat: Quat = theQuat
+  private lazy val computedQuat = theQuat
+  def quat = computedQuat
+
   override def withQuat(quat: => Quat) = this.copy(quat = quat)
   override def equals(obj: Any): Boolean =
     obj match {
@@ -475,7 +481,9 @@ case class FunctionApply(function: Ast, values: List[Ast]) extends Operation { d
 sealed trait Value extends Ast
 
 class Constant(val v: Any)(theQuat: => Quat) extends Value {
-  def quat: Quat = theQuat
+  private lazy val computedQuat = theQuat
+  def quat = computedQuat
+
   private val id = Constant.Id(v)
   override def hashCode(): Int = id.hashCode()
   override def equals(obj: Any): Boolean =
@@ -499,13 +507,22 @@ object Constant {
 
 object NullValue extends Value { def quat = Quat.Null }
 
-case class Tuple(values: List[Ast]) extends Value { def quat = Quat.Tuple(values.map(_.quat)) }
+case class Tuple(values: List[Ast]) extends Value {
+  private lazy val computedQuat = Quat.Tuple(values.map(_.quat))
+  def quat = computedQuat
+}
 
-case class CaseClass(values: List[(String, Ast)]) extends Value { def quat = Quat.Product(values.map { case (k, v) => (k, v.quat) }) }
+case class CaseClass(values: List[(String, Ast)]) extends Value {
+  private lazy val computedQuat = Quat.Product(values.map { case (k, v) => (k, v.quat) })
+  def quat = computedQuat
+}
 
 //************************************************************
 
-case class Block(statements: List[Ast]) extends Ast { def quat = statements.last.quat } // Note. Assuming Block is not Empty
+case class Block(statements: List[Ast]) extends Ast {
+  private lazy val computedQuat = statements.last.quat
+  def quat = computedQuat
+} // Note. Assuming Block is not Empty
 
 case class Val(name: Ident, body: Ast) extends Ast { def quat = body.quat }
 
@@ -581,7 +598,8 @@ object OnConflict {
 //************************************************************
 
 class Dynamic(val tree: Any)(theQuat: => Quat) extends Ast {
-  def quat = theQuat
+  private lazy val computedQuat = theQuat
+  def quat = computedQuat
 }
 
 object Dynamic {
