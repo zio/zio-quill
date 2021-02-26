@@ -33,7 +33,7 @@ jobs:
     - stage: build
       if: type != pull_request
       script: ./build/build.sh db
-      scala: 2.11.12
+      scala: 2.13.5
       name: "Databases 2.11 - MySQL, Postgres, Sqlite, H2, SQL Server, Oracle"
     - stage: build
       script: ./build/build.sh db
@@ -47,7 +47,7 @@ jobs:
     - stage: build
       if: type != pull_request
       script: ./build/build.sh js
-      scala: 2.11.12
+      scala: 2.13.5
       name: "Databases 2.11 - JavaScript"
     - stage: build
       script: ./build/build.sh js
@@ -61,7 +61,7 @@ jobs:
     - stage: build
       if: type != pull_request
       script: ./build/build.sh async
-      scala: 2.11.12
+      scala: 2.13.5
       name: "Async, Finagle, NDBC 2.11 - MySQL, Postgres, Sqlite, H2, SQL Server, Oracle"
     - stage: build
       script: ./build/build.sh async
@@ -75,7 +75,7 @@ jobs:
     - stage: build
       if: type != pull_request
       script: ./build/build.sh codegen
-      scala: 2.11.12
+      scala: 2.13.5
       name: "Code Generator 2.11 - MySQL, Postgres, Sqlite, H2, SQL Server, Oracle"
     - stage: build
       if: type != pull_request
@@ -91,7 +91,7 @@ jobs:
     - stage: build
       if: type != pull_request
       script: ./build/build.sh bigdata
-      scala: 2.11.12
+      scala: 2.13.5
       name: "BigData Databases 2.11 - Cassandra, OrientDB, Spark"
     - stage: build
       script: ./build/build.sh bigdata
