@@ -13,6 +13,7 @@ import zio.{ Cause, Chunk, ChunkBuilder, RIO, Task, UIO, ZIO, ZManaged }
 import java.sql.{ Array => _, _ }
 import javax.sql.DataSource
 import scala.util.Try
+import zio.blocking.blocking
 
 /**
  * Quill context that executes JDBC queries inside of ZIO. Unlike most other contexts
@@ -25,16 +26,28 @@ import scala.util.Try
  * `BlockingConnection` hence methods in this context return `ZIO[BlockingConnection, Throwable, T]`.
  *
  * If you have a zio-app, using this context is fairly straightforward but requires some setup:
- * TODO Example
+ * {{
+ *   val zioConn =
+ *     ZLayer.fromManaged(for {
+ *       ds <- ZManaged.fromAutoCloseable(Task(JdbcContextConfig(LoadConfig("testPostgresDB")).dataSource))
+ *       conn <- ZManaged.fromAutoCloseable(Task(ds.getConnection))
+ *     } yield conn)
+ *
+ *   MyZioContext.run(query[Person]).provideCustomLayer(zioConn)
+ * }}
  *
  * Various methods in the `io.getquill.context.ZioJdbc` can assist in doing this, for example, you can
  * provide a `DataSource`` instead of a `Connection` like this (note that the Connection has a closing bracket).
- * TODO Example
+ * {{
+ *   import ZioJdbc._
+ *   val zioConn = Layers.dataSourceFromPrefix("testPostgresDB") >>> Layers.dataSourceToConnection
+ *   MyZioContext.run(query[Person]).provideCustomLayer(zioConn)
+ * }}
  *
- * If you are using a Plain Scala app however, you will have to setup a Datasource, grab a connection
- * from it and then execute a query using this context. Be sure to properly bracket these resources
- * with a `.close()` wherever necessary.
- * TODO Example
+ * If you are using a Plain Scala app however, you will need to manually run it e.g. using zio.Runtime
+ * {{
+ *   Runtime.default.unsafeRun(MyZioContext.run(query[Person]).provideCustomLayer(zioConn))
+ * }}
  *
  * Note that using this context, resources are aggressively bracketed. For example,
  * when using `prepareQuery/prepareAction`, a `ZIO[BlockingConnection, Throwable, PreparedStatement]`
@@ -82,13 +95,10 @@ abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] ext
   override def close(): Unit = ()
 
   protected def withConnection[T](f: Connection => Result[T]): Result[T] = throw new IllegalArgumentException("Not Used")
-  override protected def withConnectionWrapped[T](f: Connection => T): RIO[BlockingConnection, T] =
-    RIO.fromFunction((conn: BlockingConnection) => f(conn.get))
 
-  trait SameThreadExecutionContext extends scala.concurrent.ExecutionContext {
-    def submit(runnable: Runnable): Unit =
-      runnable.run()
-  }
+  // Primary method used to actually run Quill context commands query, insert, update, delete and others
+  override protected def withConnectionWrapped[T](f: Connection => T): RIO[BlockingConnection, T] =
+    blocking(RIO.fromFunction((conn: BlockingConnection) => f(conn.get)))
 
   private[getquill] def withoutAutoCommit[A](f: ZIO[BlockingConnection, Throwable, A]): ZIO[BlockingConnection, Throwable, A] = {
     for {
@@ -111,7 +121,7 @@ abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] ext
   }
 
   def transaction[A](f: RIO[BlockingConnection, A]): RIO[BlockingConnection, A] = {
-    withoutAutoCommit(ZIO.environment[BlockingConnection].flatMap(conn =>
+    blocking(withoutAutoCommit(ZIO.environment[BlockingConnection].flatMap(conn =>
       f.onExit {
         case Success(_) =>
           UIO(conn.get.commit())
@@ -121,7 +131,7 @@ abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] ext
             rollbackFailCause => ZIO.halt(cause.flatMap(Cause.die) ++ rollbackFailCause),
             _ => ZIO.halt(cause.flatMap(Cause.die)) // or ZIO.halt(cause).orDie
           )
-      }))
+      })))
   }
 
   def probingDataSource: Option[DataSource] = None
@@ -290,11 +300,11 @@ abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] ext
   }
 
   def constructPrepareQuery(f: Connection => Result[PreparedStatement]): RIO[BlockingConnection, PreparedStatement] =
-    ZIO.environment[BlockingConnection].flatMap(c => f(c.get))
+    blocking(ZIO.environment[BlockingConnection].flatMap(c => f(c.get)))
 
   def constructPrepareAction(f: Connection => Result[PreparedStatement]): RIO[BlockingConnection, PreparedStatement] =
-    ZIO.environment[BlockingConnection].flatMap(c => f(c.get))
+    blocking(ZIO.environment[BlockingConnection].flatMap(c => f(c.get)))
 
   def constructPrepareBatchAction(f: Connection => Result[List[PreparedStatement]]): RIO[BlockingConnection, List[PreparedStatement]] =
-    ZIO.environment[BlockingConnection].flatMap(c => f(c.get))
+    blocking(ZIO.environment[BlockingConnection].flatMap(c => f(c.get)))
 }
