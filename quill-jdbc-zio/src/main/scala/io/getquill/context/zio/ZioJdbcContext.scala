@@ -93,7 +93,12 @@ abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] ext
 
   // Primary method used to actually run Quill context commands query, insert, update, delete and others
   override protected def withConnectionWrapped[T](f: Connection => T): RIO[BlockingConnection, T] =
-    blocking(RIO.fromFunction((conn: BlockingConnection) => f(conn.get)))
+    blocking {
+      for {
+        conn <- ZIO.environment[BlockingConnection]
+        result <- ZIO.effect(f(conn.get))
+      } yield result
+    }
 
   private[getquill] def withoutAutoCommit[A](f: ZIO[BlockingConnection, Throwable, A]): ZIO[BlockingConnection, Throwable, A] = {
     for {
