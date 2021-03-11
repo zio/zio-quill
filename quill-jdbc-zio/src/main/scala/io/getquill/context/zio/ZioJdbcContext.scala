@@ -48,11 +48,6 @@ import zio.blocking.blocking
  * {{
  *   Runtime.default.unsafeRun(MyZioContext.run(query[Person]).provideCustomLayer(zioConn))
  * }}
- *
- * Note that using this context, resources are aggressively bracketed. For example,
- * when using `prepareQuery/prepareAction`, a `ZIO[BlockingConnection, Throwable, PreparedStatement]`
- * is returned, however, the user does not need to manually close the PreparedStatement since
- * it is already bracketed with a `.close()` internally.
  */
 abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] extends ZioContext[Dialect, Naming]
   with JdbcRunContext[Dialect, Naming]
@@ -298,13 +293,4 @@ abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] ext
       prepare(conn.prepareStatement(statement))._1.reverse.map(prepareParam)
     }
   }
-
-  def constructPrepareQuery(f: Connection => Result[PreparedStatement]): RIO[BlockingConnection, PreparedStatement] =
-    blocking(ZIO.environment[BlockingConnection].flatMap(c => f(c.get)))
-
-  def constructPrepareAction(f: Connection => Result[PreparedStatement]): RIO[BlockingConnection, PreparedStatement] =
-    blocking(ZIO.environment[BlockingConnection].flatMap(c => f(c.get)))
-
-  def constructPrepareBatchAction(f: Connection => Result[List[PreparedStatement]]): RIO[BlockingConnection, List[PreparedStatement]] =
-    blocking(ZIO.environment[BlockingConnection].flatMap(c => f(c.get)))
 }
