@@ -96,7 +96,7 @@ abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] ext
     blocking {
       for {
         conn <- ZIO.environment[BlockingConnection]
-        result <- ZIO.effect(f(conn.get))
+        result <- ZIO.effect(f(conn.get[Connection]))
       } yield result
     }
 
@@ -124,9 +124,9 @@ abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] ext
     blocking(withoutAutoCommit(ZIO.environment[BlockingConnection].flatMap(conn =>
       f.onExit {
         case Success(_) =>
-          UIO(conn.get.commit())
+          UIO(conn.get[Connection].commit())
         case Failure(cause) =>
-          UIO(conn.get.rollback()).foldCauseM(
+          UIO(conn.get[Connection].rollback()).foldCauseM(
             // NOTE: cause.flatMap(Cause.die) means wrap up the throwable failures into die failures, can only do if E param is Throwable (can also do .orDie at the end)
             rollbackFailCause => ZIO.halt(cause.flatMap(Cause.die) ++ rollbackFailCause),
             _ => ZIO.halt(cause.flatMap(Cause.die)) // or ZIO.halt(cause).orDie
