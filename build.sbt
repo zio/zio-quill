@@ -21,11 +21,11 @@ lazy val baseModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-core-portable-jvm`,
   `quill-core-jvm`,
   `quill-sql-portable-jvm`,
-  `quill-sql-jvm`, `quill-monix`
+  `quill-sql-jvm`, `quill-monix`, `quill-zio`
 )
 
 lazy val dbModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
-  `quill-jdbc`, `quill-jdbc-monix`
+  `quill-jdbc`, `quill-jdbc-monix`, `quill-jdbc-zio`
 )
 
 lazy val jasyncModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
@@ -35,8 +35,7 @@ lazy val jasyncModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
 lazy val asyncModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-async`, `quill-async-mysql`, `quill-async-postgres`,
   `quill-finagle-mysql`, `quill-finagle-postgres`,
-  `quill-ndbc`, `quill-ndbc-postgres`, `quill-ndbc-monix`,
-  `quill-zio`, `quill-jdbc-zio`
+  `quill-ndbc`, `quill-ndbc-postgres`, `quill-ndbc-monix`
 ) ++ jasyncModules
 
 lazy val codegenModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
