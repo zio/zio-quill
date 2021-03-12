@@ -43,7 +43,7 @@ class StreamResultsOrBlowUpSpec extends ZioSpec {
     (numRows: Long) =>
       infix"""insert into person (name, age) select md5(random()::text), random()*10+1 from generate_series(1, ${numRows}) s(i)""".as[Insert[Int]]
   }
-  val deletes = runQuill { query[Person].delete }
+  val deletes = runQuill { infix"TRUNCATE TABLE Person".as[Delete[Person]] }
 
   val numRows = 1000000L
 
@@ -65,6 +65,7 @@ class StreamResultsOrBlowUpSpec extends ZioSpec {
       })
       .runSyncUnsafe()
     result should be > numRows
+    deletes.runSyncUnsafe()
   }
 
   "stream a large result set without blowing up - no chunking" in {
@@ -85,5 +86,6 @@ class StreamResultsOrBlowUpSpec extends ZioSpec {
       })
       .runSyncUnsafe()
     result should be > numRows
+    deletes.runSyncUnsafe()
   }
 }

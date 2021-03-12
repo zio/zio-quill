@@ -48,7 +48,7 @@ class StreamResultsOrBlowUpSpec extends Spec {
   val numRows = 1000000L
 
   "stream a large result set without blowing up" in {
-    val deletes = runQuill { query[Person].delete }
+    val deletes = runQuill { infix"TRUNCATE TABLE Person".as[Delete[Person]] }
     deletes.runSyncUnsafe(Duration.Inf)(scheduler, CanBlock.permit)
 
     val inserts = quote {
@@ -71,5 +71,7 @@ class StreamResultsOrBlowUpSpec extends Spec {
       })
       .runSyncUnsafe(Duration.Inf)(scheduler, CanBlock.permit)
     result should be > numRows
+
+    deletes.runSyncUnsafe(Duration.Inf)(scheduler, CanBlock.permit)
   }
 }
