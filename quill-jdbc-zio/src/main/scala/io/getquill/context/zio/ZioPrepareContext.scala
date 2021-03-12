@@ -6,9 +6,9 @@ import io.getquill.context.ZioJdbc._
 import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.util.ContextLogger
 import zio.blocking.Blocking
-import zio.{ Has, RIO, ZIO }
+import zio.{ Has, ZIO }
 
-import java.sql.{ Connection, PreparedStatement, ResultSet }
+import java.sql.{ Connection, PreparedStatement, ResultSet, SQLException }
 
 trait ZioPrepareContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] extends ZioContext[Dialect, Naming]
   with PrepareContext {
@@ -17,9 +17,9 @@ trait ZioPrepareContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] extends Z
 
   override type PrepareRow = PreparedStatement
   override type ResultRow = ResultSet
-  override type PrepareQueryResult = RIO[BlockingConnection, PrepareRow]
-  override type PrepareActionResult = RIO[BlockingConnection, PrepareRow]
-  override type PrepareBatchActionResult = RIO[BlockingConnection, List[PrepareRow]]
+  override type PrepareQueryResult = QIO[PrepareRow]
+  override type PrepareActionResult = QIO[PrepareRow]
+  override type PrepareBatchActionResult = QIO[List[PrepareRow]]
 
   def prepareQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): PrepareQueryResult =
     prepareSingle(sql, prepare)
@@ -28,14 +28,14 @@ trait ZioPrepareContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] extends Z
     prepareSingle(sql, prepare)
 
   /** Execute SQL on connection and return prepared statement. Closes the statement in a bracket. */
-  def prepareSingle(sql: String, prepare: Prepare = identityPrepare): RIO[BlockingConnection, PreparedStatement] = {
+  def prepareSingle(sql: String, prepare: Prepare = identityPrepare): QIO[PreparedStatement] = {
     ZIO.environment[BlockingConnection]
       .mapEffect(bconn => bconn.get[Connection].prepareStatement(sql))
       .mapEffect { stmt =>
         val (params, ps) = prepare(stmt)
         logger.logQuery(sql, params)
         ps
-      }
+      }.refineToOrDie[SQLException]
   }
 
   def prepareBatchAction(groups: List[BatchGroup]): PrepareBatchActionResult =
@@ -48,5 +48,5 @@ trait ZioPrepareContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] extends Z
         case (sql, prepare) =>
           prepareSingle(sql, prepare)
       }
-    }
+    }.refineToOrDie[SQLException]
 }

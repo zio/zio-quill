@@ -1,6 +1,6 @@
 package io.getquill.context.zio
 
-import io.getquill.context.StreamingContext
+import io.getquill.context.{ ContextEffect, StreamingContext }
 import io.getquill.context.ZioJdbc._
 import io.getquill.context.jdbc.JdbcRunContext
 import io.getquill.context.sql.idiom.SqlIdiom
@@ -8,12 +8,14 @@ import io.getquill.util.ContextLogger
 import io.getquill.{ NamingStrategy, ReturnAction }
 import zio.Exit.{ Failure, Success }
 import zio.stream.{ Stream, ZStream }
-import zio.{ Cause, Chunk, ChunkBuilder, RIO, Task, UIO, ZIO, ZManaged }
+import zio.{ Cause, Chunk, ChunkBuilder, Has, Task, UIO, ZIO, ZManaged }
 
 import java.sql.{ Array => _, _ }
 import javax.sql.DataSource
 import scala.util.Try
-import zio.blocking.blocking
+import zio.blocking.{ Blocking, blocking }
+
+import scala.reflect.ClassTag
 
 /**
  * Quill context that executes JDBC queries inside of ZIO. Unlike most other contexts
@@ -57,6 +59,7 @@ abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] ext
 
   override private[getquill] val logger = ContextLogger(classOf[ZioJdbcContext[_, _]])
 
+  override type Error = SQLException
   override type PrepareRow = PreparedStatement
   override type ResultRow = ResultSet
   override type RunActionResult = Long
@@ -65,26 +68,24 @@ abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] ext
   override type RunBatchActionReturningResult[T] = List[T]
 
   // Need explicit return-type annotations due to scala/bug#8356. Otherwise macro system will not understand Result[Long]=Task[Long] etc...
-  override def executeAction[T](sql: String, prepare: Prepare = identityPrepare): RIO[BlockingConnection, Long] =
+  override def executeAction[T](sql: String, prepare: Prepare = identityPrepare): QIO[Long] =
     super.executeAction(sql, prepare)
-  override def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): RIO[BlockingConnection, List[T]] =
+  override def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): QIO[List[T]] =
     super.executeQuery(sql, prepare, extractor)
-  override def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): RIO[BlockingConnection, T] =
+  override def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): QIO[T] =
     super.executeQuerySingle(sql, prepare, extractor)
-  override def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningBehavior: ReturnAction): RIO[BlockingConnection, O] =
+  override def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningBehavior: ReturnAction): QIO[O] =
     super.executeActionReturning(sql, prepare, extractor, returningBehavior)
-  override def executeBatchAction(groups: List[BatchGroup]): RIO[BlockingConnection, List[Long]] =
+  override def executeBatchAction(groups: List[BatchGroup]): QIO[List[Long]] =
     super.executeBatchAction(groups)
-  override def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T]): RIO[BlockingConnection, List[T]] =
+  override def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T]): QIO[List[T]] =
     super.executeBatchActionReturning(groups, extractor)
-  override def prepareQuery[T](sql: String, prepare: Prepare, extractor: Extractor[T] = identityExtractor): RIO[BlockingConnection, PreparedStatement] =
+  override def prepareQuery[T](sql: String, prepare: Prepare, extractor: Extractor[T] = identityExtractor): QIO[PreparedStatement] =
     super.prepareQuery(sql, prepare, extractor)
-  override def prepareAction(sql: String, prepare: Prepare): RIO[BlockingConnection, PreparedStatement] =
+  override def prepareAction(sql: String, prepare: Prepare): QIO[PreparedStatement] =
     super.prepareAction(sql, prepare)
-  override def prepareBatchAction(groups: List[BatchGroup]): RIO[BlockingConnection, List[PreparedStatement]] =
+  override def prepareBatchAction(groups: List[BatchGroup]): QIO[List[PreparedStatement]] =
     super.prepareBatchAction(groups)
-
-  override protected val effect: Runner = Runner.default
 
   /** ZIO Contexts do not managed DB connections so this is a no-op */
   override def close(): Unit = ()
@@ -92,22 +93,24 @@ abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] ext
   protected def withConnection[T](f: Connection => Result[T]): Result[T] = throw new IllegalArgumentException("Not Used")
 
   // Primary method used to actually run Quill context commands query, insert, update, delete and others
-  override protected def withConnectionWrapped[T](f: Connection => T): RIO[BlockingConnection, T] =
+  override protected def withConnectionWrapped[T](f: Connection => T): QIO[T] =
     blocking {
       for {
         conn <- ZIO.environment[BlockingConnection]
-        result <- ZIO.effect(f(conn.get[Connection]))
+        result <- sqlEffect(f(conn.get[Connection]))
       } yield result
     }
 
-  private[getquill] def withoutAutoCommit[A](f: ZIO[BlockingConnection, Throwable, A]): ZIO[BlockingConnection, Throwable, A] = {
+  private def sqlEffect[T](t: => T): QIO[T] = ZIO.effect(t).refineToOrDie[SQLException]
+
+  private[getquill] def withoutAutoCommit[A, E <: Throwable: ClassTag](f: ZIO[BlockingConnection, E, A]): ZIO[BlockingConnection, E, A] = {
     for {
       blockingConn <- ZIO.environment[BlockingConnection]
       conn = blockingConn.get[Connection]
       autoCommitPrev = conn.getAutoCommit
-      r <- Task(conn).bracket(conn => UIO(conn.setAutoCommit(autoCommitPrev)))(
-        conn => Task { conn.setAutoCommit(false) }.flatMap(_ => f)
-      )
+      r <- sqlEffect(conn).bracket(conn => UIO(conn.setAutoCommit(autoCommitPrev))) { conn =>
+        sqlEffect(conn.setAutoCommit(false)).flatMap(_ => f)
+      }.refineToOrDie[E]
     } yield r
   }
 
@@ -120,7 +123,7 @@ abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] ext
     } yield r
   }
 
-  def transaction[A](f: RIO[BlockingConnection, A]): RIO[BlockingConnection, A] = {
+  def transaction[A](f: ZIO[BlockingConnection, Throwable, A]): ZIO[BlockingConnection, Throwable, A] = {
     blocking(withoutAutoCommit(ZIO.environment[BlockingConnection].flatMap(conn =>
       f.onExit {
         case Success(_) =>
@@ -209,7 +212,7 @@ abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] ext
     stmt
   }
 
-  def streamQuery[T](fetchSize: Option[Int], sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): ZStream[BlockingConnection, Throwable, T] = {
+  def streamQuery[T](fetchSize: Option[Int], sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): QStream[T] = {
     def prepareStatement(conn: Connection) = {
       val stmt = prepareStatementForStreaming(sql, conn, fetchSize)
       val (params, ps) = prepare(stmt)
@@ -243,7 +246,7 @@ abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] ext
       }
 
     val typedStream = outStream.provideSome((bc: BlockingConnection) => bc.get[Connection])
-    streamWithoutAutoCommit(typedStream)
+    streamWithoutAutoCommit(typedStream).refineToOrDie[SQLException]
   }
 
   def guardedChunkFill[A](n: Int)(hasNext: => Boolean, elem: => A): Chunk[A] =
@@ -293,9 +296,19 @@ abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] ext
     }
   }
 
-  override private[getquill] def prepareParams(statement: String, prepare: Prepare): RIO[BlockingConnection, Seq[String]] = {
+  override private[getquill] def prepareParams(statement: String, prepare: Prepare): QIO[Seq[String]] = {
     withConnectionWrapped { conn =>
       prepare(conn.prepareStatement(statement))._1.reverse.map(prepareParam)
     }
+  }
+
+  // Put this last since we want to be able to use zio 'effect' keyword in some places
+  override protected val effect = new ContextEffect[Result] {
+    override def wrap[T](t: => T): ZIO[Has[Connection] with Blocking, SQLException, T] =
+      throw new IllegalArgumentException("Runner not used for zio context.")
+    override def push[A, B](result: ZIO[Has[Connection] with Blocking, SQLException, A])(f: A => B): ZIO[Has[Connection] with Blocking, SQLException, B] =
+      throw new IllegalArgumentException("Runner not used for zio context.")
+    override def seq[A](f: List[ZIO[Has[Connection] with Blocking, SQLException, A]]): ZIO[Has[Connection] with Blocking, SQLException, List[A]] =
+      throw new IllegalArgumentException("Runner not used for zio context.")
   }
 }
