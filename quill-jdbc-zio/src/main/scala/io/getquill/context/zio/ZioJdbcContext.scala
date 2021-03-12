@@ -242,7 +242,7 @@ abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] ext
           }
       }
 
-    val typedStream = outStream.provideSome((bc: BlockingConnection) => bc.get)
+    val typedStream = outStream.provideSome((bc: BlockingConnection) => bc.get[Connection])
     streamWithoutAutoCommit(typedStream)
   }
 
