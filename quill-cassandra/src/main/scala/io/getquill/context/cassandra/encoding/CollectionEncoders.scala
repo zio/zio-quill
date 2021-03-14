@@ -1,11 +1,11 @@
 package io.getquill.context.cassandra.encoding
 
-import io.getquill.context.cassandra.CassandraSessionContext
+import io.getquill.context.cassandra.CassandraBaseContext
 
 import scala.jdk.CollectionConverters._
 
 trait CollectionEncoders {
-  this: CassandraSessionContext[_] =>
+  this: CassandraBaseContext[_] =>
 
   implicit def listEncoder[T, Cas](implicit mapper: CassandraMapper[T, Cas]): Encoder[List[T]] =
     encoder((index, list, row) => row.setList[Cas](index, list.map(mapper.f).asJava))

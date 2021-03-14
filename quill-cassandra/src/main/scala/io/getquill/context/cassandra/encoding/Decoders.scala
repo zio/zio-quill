@@ -1,13 +1,13 @@
 package io.getquill.context.cassandra.encoding
 
-import java.util.{ Date, UUID }
-
 import com.datastax.driver.core.LocalDate
-import io.getquill.context.cassandra.CassandraSessionContext
+import io.getquill.context.cassandra.CassandraBaseContext
 import io.getquill.util.Messages.fail
 
+import java.util.{ Date, UUID }
+
 trait Decoders extends CollectionDecoders {
-  this: CassandraSessionContext[_] =>
+  this: CassandraBaseContext[_] =>
 
   type Decoder[T] = CassandraDecoder[T]
 
