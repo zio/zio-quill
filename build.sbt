@@ -21,11 +21,11 @@ lazy val baseModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-core-portable-jvm`,
   `quill-core-jvm`,
   `quill-sql-portable-jvm`,
-  `quill-sql-jvm`, `quill-monix`
+  `quill-sql-jvm`, `quill-monix`, `quill-zio`
 )
 
 lazy val dbModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
-  `quill-jdbc`, `quill-jdbc-monix`
+  `quill-jdbc`, `quill-jdbc-monix`, `quill-jdbc-zio`
 )
 
 lazy val jasyncModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
@@ -88,6 +88,9 @@ val filteredModules = {
     case Some("codegen") =>
       println("Compiling Code Generator Modules")
       codegenModules
+    case Some("nocodegen") =>
+      println("Compiling Code Generator Modules")
+      baseModules ++ jsModules ++ dbModules ++ asyncModules ++ bigdataModules
     case Some("bigdata") =>
       println("Compiling Big Data Modules")
       bigdataModules
@@ -114,8 +117,8 @@ val filteredModules = {
 lazy val `quill` = {
   val quill =
     (project in file("."))
-      .settings(commonSettings: _*)
-      .settings(`tut-settings`:_*)
+    .settings(commonSettings: _*)
+    .settings(`tut-settings`:_*)
 
   // Do not do aggregate project builds when debugging since during that time
   // typically only individual modules are being build/compiled. This is mostly for convenience with IntelliJ.
@@ -365,7 +368,6 @@ lazy val `quill-jdbc` =
 
 lazy val `quill-monix` =
   (project in file("quill-monix"))
-
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .settings(
@@ -397,6 +399,42 @@ lazy val `quill-jdbc-monix` =
     .dependsOn(`quill-monix` % "compile->compile;test->test")
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
     .dependsOn(`quill-jdbc` % "compile->compile;test->test")
+
+lazy val `quill-zio` =
+  (project in file("quill-zio"))
+    .settings(commonSettings: _*)
+    .settings(mimaSettings: _*)
+    .settings(
+      fork in Test := true,
+      libraryDependencies ++= Seq(
+        "dev.zio" %% "zio" % "1.0.5",
+        "dev.zio" %% "zio-streams" % "1.0.5"
+      )
+    )
+    .dependsOn(`quill-core-jvm` % "compile->compile;test->test")
+
+lazy val `quill-jdbc-zio` =
+  (project in file("quill-jdbc-zio"))
+    .settings(commonSettings: _*)
+    .settings(mimaSettings: _*)
+    .settings(jdbcTestingSettings: _*)
+    .settings(
+      testGrouping in Test := {
+        (definedTests in Test).value map { test =>
+          if (test.name endsWith "IntegrationSpec")
+            Tests.Group(name = test.name, tests = Seq(test), runPolicy = Tests.SubProcess(
+              ForkOptions().withRunJVMOptions(Vector("-Xmx200m"))
+            ))
+          else
+            Tests.Group(name = test.name, tests = Seq(test), runPolicy = Tests.SubProcess(ForkOptions()))
+        }
+      }
+    )
+    .dependsOn(`quill-zio` % "compile->compile;test->test")
+    .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
+    .dependsOn(`quill-jdbc` % "compile->compile;test->test")
+
+
 
 lazy val `quill-ndbc-monix` =
   (project in file("quill-ndbc-monix"))
@@ -822,7 +860,7 @@ lazy val basicSettings = Seq(
         Seq("-Ypatmat-exhaust-depth", "40")
       case Some((2, 11)) =>
         Seq("-Xlint",
-          "-Xfatal-warnings",
+          //"-Xfatal-warnings",
           "-Xfuture",
           "-deprecation",
           "-Yno-adapted-args",
@@ -831,7 +869,7 @@ lazy val basicSettings = Seq(
         )
       case Some((2, 12)) =>
         Seq(
-          "-Xfatal-warnings",
+          //"-Xfatal-warnings",
           "-Xlint:-unused,_",
           "-Xfuture",
           "-deprecation",
