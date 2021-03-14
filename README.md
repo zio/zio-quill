@@ -2833,6 +2833,238 @@ ctx.dataSource.portNumber=1433
 ctx.dataSource.serverName=host
 ```
 
+## ZIO (quill-jdbc-zio)
+
+Quill context that executes JDBC queries using ZIO. Unlike most other contexts
+that require passing in a Data Source, this context takes in a java.sql.Connection
+as a resource dependency which can be provided later (see `ZioJdbc` for helper methods
+that assist in doing this).
+The resource dependency itself is not just a Connection since JDBC requires blocking.
+Instead it is a `Has[Connection] with Blocking` which is type-alised as
+`BlockingConnection` hence methods in this context return `ZIO[BlockingConnection, Throwable, T]`.
+
+Another type alias `BlockingDataSource` for `Has[DataSource] with Blocking` is also provided
+for convenience. Various utilities inside of `ZioJdbc.scala` can do the above conversion
+and/or provide layers that map between the two. Some simple examples of this are:
+
+If you have a zio-app, using this context is fairly straightforward but requires some setup:
+```scala
+val zioConn =
+  ZLayer.fromManaged(for {
+    ds <- ZManaged.fromAutoCloseable(Task(JdbcContextConfig(LoadConfig("testPostgresDB")).dataSource))
+    conn <- ZManaged.fromAutoCloseable(Task(ds.getConnection))
+  } yield conn)
+
+MyZioContext.run(query[Person]).provideCustomLayer(zioConn)
+```
+
+Various methods in the `io.getquill.context.ZioJdbc` can assist in doing this, for example, you can
+provide a `DataSource` instead of a `Connection` like this (note that the Connection has a closing bracket).
+
+```scala
+import ZioJdbc._
+val zioConn = Layers.dataSourceFromPrefix("testPostgresDB") >>> Layers.dataSourceToConnection
+MyZioContext.run(query[Person]).provideCustomLayer(zioConn)
+```
+
+If you are using a Plain Scala app however, you will need to manually run it e.g. using zio.Runtime
+```scala
+Runtime.default.unsafeRun(MyZioContext.run(query[Person]).provideCustomLayer(zioConn))
+```
+
+#### streaming
+
+The `ZioJdbcContext` can stream using zio.ZStream:
+
+```
+ctx.stream(query[Person])             // returns: ZStream[BlockingConnection, Throwable, Person]
+  .run(Sink.collectAll).map(_.toList) // returns: ZIO[BlockingConnection, Throwable, List[T]]
+```
+
+#### transactions
+
+The `ZioJdbcContext`s provide support for transactions without needing thread-local storage or similar
+because they propagate the resource dependency in the ZIO effect itself (i.e. the BlockingConnection in `Zio[BlockingConnection, _, _]`).
+As with the other contexts, if an exception is thrown anywhere inside a task or sub-task within a `transaction` block, the entire block
+will be rolled back by the database.
+
+Basic syntax:
+```
+val trans =
+  ctx.transaction {
+    for {
+      _ <- ctx.run(query[Person].delete)
+      _ <- ctx.run(query[Person].insert(Person("Joe", 123)))
+      p <- ctx.run(query[Person])
+    } yield p
+  } //returns: ZIO[BlockingConnection, Throwable, List[Person]]
+
+val result = Runtime.default.unsafeRun(trans) //returns: List[Person]
+```
+
+
+
+### MySQL (quill-jdbc-zio)
+
+#### sbt dependencies
+```
+libraryDependencies ++= Seq(
+  "mysql" % "mysql-connector-java" % "8.0.17",
+  "io.getquill" %% "quill-jdbc-zio" % "3.6.1-SNAPSHOT"
+)
+```
+
+#### context definition
+```scala
+val ctx = new MysqlZioJdbcContext(SnakeCase)
+// Also can be static:
+object MyContext extends MysqlZioJdbcContext(SnakeCase)
+```
+
+#### application.properties
+```
+ctx.dataSourceClassName=com.mysql.cj.jdbc.MysqlDataSource
+ctx.dataSource.url=jdbc:mysql://host/database
+ctx.dataSource.user=root
+ctx.dataSource.password=root
+ctx.dataSource.cachePrepStmts=true
+ctx.dataSource.prepStmtCacheSize=250
+ctx.dataSource.prepStmtCacheSqlLimit=2048
+ctx.connectionTimeout=30000
+```
+
+### Postgres (quill-jdbc-zio)
+
+#### sbt dependencies
+```
+libraryDependencies ++= Seq(
+  "org.postgresql" % "postgresql" % "42.2.8",
+  "io.getquill" %% "quill-jdbc-zio" % "3.6.1-SNAPSHOT"
+)
+```
+
+#### context definition
+```scala
+val ctx = new PostgresZioJdbcContext(SnakeCase)
+// Also can be static:
+object MyContext extends PostgresZioJdbcContext(SnakeCase)
+```
+
+#### application.properties
+```
+ctx.dataSourceClassName=org.postgresql.ds.PGSimpleDataSource
+ctx.dataSource.user=root
+ctx.dataSource.password=root
+ctx.dataSource.databaseName=database
+ctx.dataSource.portNumber=5432
+ctx.dataSource.serverName=host
+ctx.connectionTimeout=30000
+```
+
+### Sqlite (quill-jdbc-zio)
+
+#### sbt dependencies
+```
+libraryDependencies ++= Seq(
+  "org.xerial" % "sqlite-jdbc" % "3.28.0",
+  "io.getquill" %% "quill-jdbc-zio" % "3.6.1-SNAPSHOT"
+)
+```
+
+#### context definition
+```scala
+val ctx = new SqlitezioJdbcContext(SnakeCase)
+// Also can be static:
+object MyContext extends SqlitezioJdbcContext(SnakeCase)
+```
+
+#### application.properties
+```
+ctx.driverClassName=org.sqlite.JDBC
+ctx.jdbcUrl=jdbc:sqlite:/path/to/db/file.db
+```
+
+### H2 (quill-jdbc-zio)
+
+#### sbt dependencies
+```
+libraryDependencies ++= Seq(
+  "com.h2database" % "h2" % "1.4.199",
+  "io.getquill" %% "quill-jdbc-zio" % "3.6.1-SNAPSHOT"
+)
+```
+
+#### context definition
+```scala
+val ctx = new H2ZioJdbcContext(SnakeCase)
+// Also can be static:
+object MyContext extends H2ZioJdbcContext(SnakeCase)
+```
+
+#### application.properties
+```
+ctx.dataSourceClassName=org.h2.jdbcx.JdbcDataSource
+ctx.dataSource.url=jdbc:h2:mem:yourdbname
+ctx.dataSource.user=sa
+```
+
+### SQL Server (quill-jdbc-zio)
+
+#### sbt dependencies
+```
+libraryDependencies ++= Seq(
+  "com.microsoft.sqlserver" % "mssql-jdbc" % "7.4.1.jre8",
+  "io.getquill" %% "quill-jdbc-zio" % "3.6.1-SNAPSHOT"
+)
+```
+
+#### context definition
+```scala
+val ctx = new SqlServerZioJdbcContext(SnakeCase)
+// Also can be static:
+object MyContext extends SqlServerZioJdbcContext(SnakeCase)
+```
+
+#### application.properties
+```
+ctx.dataSourceClassName=com.microsoft.sqlserver.jdbc.SQLServerDataSource
+ctx.dataSource.user=user
+ctx.dataSource.password=YourStrongPassword
+ctx.dataSource.databaseName=database
+ctx.dataSource.portNumber=1433
+ctx.dataSource.serverName=host
+```
+
+### Oracle (quill-jdbc-zio)
+
+Quill supports Oracle version 12c and up although due to licensing restrictions, version 18c XE is used for testing.
+
+#### sbt dependencies
+```
+libraryDependencies ++= Seq(
+  "com.oracle.jdbc" % "ojdbc8" % "18.3.0.0.0",
+  "io.getquill" %% "quill-jdbc-zio" % "3.6.1-SNAPSHOT"
+)
+```
+
+#### context definition
+```scala
+val ctx = new OracleZioJdbcContext(SnakeCase)
+// Also can be static:
+object MyContext extends OracleZioJdbcContext(SnakeCase)
+```
+
+#### application.properties
+```
+ctx.dataSourceClassName=oracle.jdbc.xa.client.OracleXADataSource
+ctx.dataSource.databaseName=xe
+ctx.dataSource.user=database
+ctx.dataSource.password=YourStrongPassword
+ctx.dataSource.driverType=thin
+ctx.dataSource.portNumber=1521
+ctx.dataSource.serverName=host
+```
+
 ## quill-jdbc-monix
 
 The `quill-jdbc-monix` module integrates the Monix asynchronous programming framework with Quill,

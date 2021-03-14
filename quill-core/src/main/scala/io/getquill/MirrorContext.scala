@@ -1,7 +1,7 @@
 package io.getquill
 
 import io.getquill.context.mirror.{ MirrorDecoders, MirrorEncoders, MirrorSession, Row }
-import io.getquill.context.{ Context, TranslateContext }
+import io.getquill.context.{ StandardContext, TranslateContext }
 import io.getquill.idiom.{ Idiom => BaseIdiom }
 import io.getquill.monad.SyncIOMonad
 
@@ -11,7 +11,7 @@ object mirrorContextWithQueryProbing
   extends MirrorContext(MirrorIdiom, Literal) with QueryProbing
 
 class MirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy](val idiom: Idiom, val naming: Naming)
-  extends Context[Idiom, Naming]
+  extends StandardContext[Idiom, Naming]
   with TranslateContext
   with MirrorEncoders
   with MirrorDecoders

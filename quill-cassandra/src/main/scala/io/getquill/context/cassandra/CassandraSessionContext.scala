@@ -2,7 +2,7 @@ package io.getquill.context.cassandra
 
 import com.datastax.driver.core._
 import io.getquill.NamingStrategy
-import io.getquill.context.Context
+import io.getquill.context.StandardContext
 import io.getquill.context.cassandra.encoding.{ CassandraTypes, Decoders, Encoders, UdtEncoding }
 import io.getquill.util.ContextLogger
 import io.getquill.util.Messages.fail
@@ -12,7 +12,7 @@ import scala.concurrent.duration._
 import scala.util.Try
 
 abstract class CassandraSessionContext[N <: NamingStrategy]
-  extends Context[CqlIdiom, N]
+  extends StandardContext[CqlIdiom, N]
   with CassandraContext[N]
   with Encoders
   with Decoders
