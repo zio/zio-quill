@@ -37,3 +37,5 @@ project/.bloop/
 /.metadata/
 .bsp/
 .jvmopts
+.DS_Store
+.vscode

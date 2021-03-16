@@ -1,13 +1,10 @@
 package io.getquill.context.cassandra.zio
 
-import io.getquill.CassandraZioContext.Layers
-import io.getquill.{ CassandraContextConfig, Spec, ZioCassandraSession }
-import zio.blocking.Blocking
-import zio.stream.{ Sink, ZStream }
 import io.getquill.CassandraZioContext._
 import io.getquill.util.LoadConfig
-import zio.ZIO
-import zio.Runtime
+import io.getquill.{ CassandraContextConfig, Spec, ZioCassandraSession }
+import zio.{ Runtime, ZIO }
+import zio.stream.{ Sink, ZStream }
 
 trait ZioCassandraSpec extends Spec {
 

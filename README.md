@@ -2872,6 +2872,8 @@ If you are using a Plain Scala app however, you will need to manually run it e.g
 Runtime.default.unsafeRun(MyZioContext.run(query[Person]).provideCustomLayer(zioConn))
 ```
 
+More examples of a Quill-JDBC-ZIO app [quill-jdbc-zio/src/test/scala/io/getquill/examples](https://github.com/getquill/quill/tree/master/quill-jdbc-zio/src/test/scala/io/getquill/examples).
+
 #### streaming
 
 The `ZioJdbcContext` can stream using zio.ZStream:
@@ -3707,6 +3709,41 @@ ctx.session.credentials.0=root
 ctx.session.credentials.1=pass
 ctx.session.maxSchemaAgreementWaitSeconds=1
 ctx.session.addressTranslator=com.datastax.driver.core.policies.IdentityTranslator
+```
+
+## quill-cassandra-zio
+
+Quill context that executes Cassandra queries inside of ZIO. Unlike most other contexts
+that require passing in a Data Source, this context takes in a `ZioCassandraSession`
+as a resource dependency which can be provided later (see the `ZioCassandraSession` object for helper methods
+that assist in doing this).
+
+The resource dependency itself is not just a ZioCassandraSession since the Cassandra API requires blocking in
+some places (this is the case despite fact that is is asynchronous).
+Instead it is a `Has[ZioCassandraSession] with Has[Blocking.Service]` which is type-alised as
+`BlockingSession` hence methods in this context return `ZIO[BlockingConnection, Throwable, T]`.
+The type `CIO[T]` i.e. Cassandra-IO is an alias for this.
+
+Various methods in the `io.getquill.ZioCassandraSession` can assist in simplifying it's creation, for example, you can
+provide a `Config` object instead of a `ZioCassandraSession` like this
+(note that the resulting ZioCassandraSession has a closing bracket).
+```scala
+ val zioSession =
+   ZioCassandraSession.fromPrefix("testStreamDB")
+```
+
+If you are using a Plain Scala app however, you will need to manually run it e.g. using zio.Runtime
+```scala
+ Runtime.default.unsafeRun(MyZioContext.run(query[Person]).provideCustomLayer(zioSession))
+```
+More examples of a Quill-JDBC-ZIO app [quill-cassandra-zio/src/test/scala/io/getquill/context/cassandra/zio/examples](https://github.com/getquill/quill/tree/master/quill-cassandra-zio/src/test/scala/io/getquill/context/cassandra/zio/examples).
+
+#### sbt dependencies
+
+```
+libraryDependencies ++= Seq(
+  "io.getquill" %% "quill-cassandra-zio" % "3.6.1-SNAPSHOT"
+)
 ```
 
 ## quill-cassandra-monix

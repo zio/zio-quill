@@ -26,6 +26,7 @@ import scala.reflect.ClassTag
  * The resource dependency itself is not just a Connection since JDBC requires blocking.
  * Instead it is a `Has[Connection] with Has[Blocking.Service]` which is type-alised as
  * `BlockingConnection` hence methods in this context return `ZIO[BlockingConnection, Throwable, T]`.
+ * The type `QIO[T]` i.e. Quill-IO is an alias for this.
  *
  * If you have a zio-app, using this context is fairly straightforward but requires some setup:
  * {{
@@ -38,8 +39,9 @@ import scala.reflect.ClassTag
  *   MyZioContext.run(query[Person]).provideCustomLayer(zioConn)
  * }}
  *
- * Various methods in the `io.getquill.context.ZioJdbc` can assist in doing this, for example, you can
- * provide a `DataSource`` instead of a `Connection` like this (note that the Connection has a closing bracket).
+ * Various methods in the `io.getquill.context.ZioJdbc` can assist in simplifying it's creation, for example, you can
+ * provide a `DataSource` instead of a `Connection` like this
+ * (note that the resulting Connection has a closing bracket).
  * {{
  *   import ZioJdbc._
  *   val zioConn = Layers.dataSourceFromPrefix("testPostgresDB") >>> Layers.dataSourceToConnection
