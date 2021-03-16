@@ -1,13 +1,13 @@
 package io.getquill.context.cassandra.encoding
 
+import com.datastax.driver.core.LocalDate
+import io.getquill.context.cassandra.CassandraBaseContext
+
 import java.nio.ByteBuffer
 import java.util.{ Date, UUID }
 
-import com.datastax.driver.core.LocalDate
-import io.getquill.context.cassandra.CassandraSessionContext
-
 trait Encoders extends CollectionEncoders {
-  this: CassandraSessionContext[_] =>
+  this: CassandraBaseContext[_] =>
 
   type Encoder[T] = CassandraEncoder[T]
 

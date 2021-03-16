@@ -43,7 +43,7 @@ lazy val codegenModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
 )
 
 lazy val bigdataModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
-  `quill-cassandra`, `quill-cassandra-lagom`, `quill-cassandra-monix`, `quill-orientdb`, `quill-spark`
+  `quill-cassandra`, `quill-cassandra-lagom`, `quill-cassandra-monix`, `quill-cassandra-zio`, `quill-orientdb`, `quill-spark`
 )
 
 lazy val allModules =
@@ -610,6 +610,20 @@ lazy val `quill-cassandra-monix` =
     .dependsOn(`quill-cassandra` % "compile->compile;test->test")
     .dependsOn(`quill-monix` % "compile->compile;test->test")
 
+lazy val `quill-cassandra-zio` =
+  (project in file("quill-cassandra-zio"))
+    .settings(commonSettings: _*)
+    .settings(mimaSettings: _*)
+    .settings(
+      fork in Test := true,
+      libraryDependencies ++= Seq(
+        "dev.zio" %% "zio" % "1.0.5",
+        "dev.zio" %% "zio-streams" % "1.0.5",
+        "dev.zio" %% "zio-interop-guava" % "30.1.0.3"
+      )
+    )
+    .dependsOn(`quill-cassandra` % "compile->compile;test->test")
+    .dependsOn(`quill-zio` % "compile->compile;test->test")
 
 
 lazy val `quill-cassandra-lagom` =

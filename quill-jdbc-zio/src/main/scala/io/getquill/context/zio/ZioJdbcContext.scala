@@ -60,6 +60,7 @@ abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] ext
   override private[getquill] val logger = ContextLogger(classOf[ZioJdbcContext[_, _]])
 
   override type Error = SQLException
+  override type Environment = Has[Session] with Blocking
   override type PrepareRow = PreparedStatement
   override type ResultRow = ResultSet
   override type RunActionResult = Long
@@ -246,8 +247,14 @@ abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] ext
       }
 
     val typedStream = outStream.provideSome((bc: BlockingConnection) => bc.get[Connection])
-    streamWithoutAutoCommit(typedStream).refineToOrDie[SQLException]
+    // Run the chunked fetch on the blocking pool
+    streamBlocker *> streamWithoutAutoCommit(typedStream).refineToOrDie[SQLException]
   }
+
+  val streamBlocker: ZStream[Blocking, Nothing, Any] =
+    ZStream.managed(zio.blocking.blockingExecutor.toManaged_.flatMap { executor =>
+      ZManaged.lock(executor)
+    })
 
   def guardedChunkFill[A](n: Int)(hasNext: => Boolean, elem: => A): Chunk[A] =
     if (n <= 0) Chunk.empty
