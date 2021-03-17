@@ -12,7 +12,7 @@ object PlainApp {
   case class Person(name: String, age: Int)
 
   val zioSession =
-    ZioCassandraSession.fromPrefix("testStreamDB")
+    CassandraZioSession.fromPrefix("testStreamDB")
 
   def main(args: Array[String]): Unit = {
     val people = quote {

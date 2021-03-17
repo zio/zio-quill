@@ -1,4 +1,4 @@
-package io.getquill.context.zio
+package io.getquill.context.qzio
 
 import io.getquill.NamingStrategy
 import io.getquill.context.PrepareContext
@@ -29,7 +29,7 @@ trait ZioPrepareContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] extends Z
 
   /** Execute SQL on connection and return prepared statement. Closes the statement in a bracket. */
   def prepareSingle(sql: String, prepare: Prepare = identityPrepare): QIO[PreparedStatement] = {
-    ZIO.environment[BlockingConnection]
+    ZIO.environment[QConnection]
       .mapEffect(bconn => bconn.get[Connection].prepareStatement(sql))
       .mapEffect { stmt =>
         val (params, ps) = prepare(stmt)

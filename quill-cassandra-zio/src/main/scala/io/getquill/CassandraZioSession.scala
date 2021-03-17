@@ -10,7 +10,7 @@ import zio.{ Has, ZIO, ZLayer, ZManaged }
 import io.getquill.util.ZioConversions._
 import zio.blocking.Blocking
 
-trait ZioAsyncCache { self: CassandraSession =>
+trait AsyncZioCache { self: CassandraSession =>
   lazy val asyncCache = new PrepareStatementCache[CIO[PreparedStatement]](preparedStatementCacheSize)
   def prepareAsync(cql: String): CIO[BoundStatement] =
     asyncCache(cql)(stmt => session.prepareAsync(stmt).asCio.tapError {
@@ -18,13 +18,13 @@ trait ZioAsyncCache { self: CassandraSession =>
     }).map(_.bind())
 }
 
-case class ZioCassandraSession(
+case class CassandraZioSession(
   override val cluster:                    Cluster,
   override val keyspace:                   String,
   override val preparedStatementCacheSize: Long
-) extends CassandraSession with SyncCache with ZioAsyncCache with AutoCloseable
+) extends CassandraSession with SyncCache with AsyncZioCache with AutoCloseable
 
-object ZioCassandraSession {
+object CassandraZioSession {
   def fromContextConfig(config: CassandraContextConfig) = {
     val managed =
       for {
@@ -32,7 +32,7 @@ object ZioCassandraSession {
         block = env.get[Blocking.Service]
         // Evaluate the configuration inside of 'effect' and then create the session from it
         session <- ZManaged.fromAutoCloseable(
-          ZIO.effect(ZioCassandraSession(config.cluster, config.keyspace, config.preparedStatementCacheSize))
+          ZIO.effect(CassandraZioSession(config.cluster, config.keyspace, config.preparedStatementCacheSize))
         )
       } yield Has(session) ++ Has(block)
     ZLayer.fromManagedMany(managed)

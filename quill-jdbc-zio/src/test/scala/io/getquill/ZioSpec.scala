@@ -23,20 +23,20 @@ trait ZioSpec extends Spec with BeforeAndAfterAll {
     pool.close()
   }
 
-  def accumulate[T](stream: ZStream[BlockingConnection, Throwable, T]): ZIO[BlockingConnection, Throwable, List[T]] =
+  def accumulate[T](stream: ZStream[QConnection, Throwable, T]): ZIO[QConnection, Throwable, List[T]] =
     stream.run(Sink.collectAll).map(_.toList)
 
-  def collect[T](stream: ZStream[BlockingConnection, Throwable, T]): List[T] =
+  def collect[T](stream: ZStream[QConnection, Throwable, T]): List[T] =
     Runtime.default.unsafeRun(stream.run(Sink.collectAll).map(_.toList).provideConnectionFrom(pool))
 
-  def collect[T](qzio: ZIO[BlockingConnection, Throwable, T]): T =
+  def collect[T](qzio: ZIO[QConnection, Throwable, T]): T =
     Runtime.default.unsafeRun(qzio.provideConnectionFrom(pool))
 
-  implicit class ZStreamTestExt[T](stream: ZStream[BlockingConnection, Throwable, T]) {
+  implicit class ZStreamTestExt[T](stream: ZStream[QConnection, Throwable, T]) {
     def runSyncUnsafe() = collect[T](stream)
   }
 
-  implicit class ZioTestExt[T](qzio: ZIO[BlockingConnection, Throwable, T]) {
+  implicit class ZioTestExt[T](qzio: ZIO[QConnection, Throwable, T]) {
     def runSyncUnsafe() = collect[T](qzio)
   }
 }

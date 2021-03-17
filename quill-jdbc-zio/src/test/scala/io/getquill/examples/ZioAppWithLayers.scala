@@ -1,7 +1,7 @@
 package io.getquill.examples
 
 import io.getquill._
-import io.getquill.context.ZioJdbc.Layers
+import io.getquill.context.ZioJdbc._
 import zio.console.putStrLn
 import zio.{ App, ExitCode, URIO }
 
@@ -13,8 +13,8 @@ object ZioAppWithLayers extends App {
   case class Person(name: String, age: Int)
 
   val zioConn =
-    Layers.dataSourceFromPrefix("testPostgresDB") >>>
-      Layers.dataSourceToConnection
+    QDataSource.fromPrefix("testPostgresDB") >>>
+      QDataSource.toConnection
 
   override def run(args: List[String]): URIO[zio.ZEnv, ExitCode] = {
     val people = quote {

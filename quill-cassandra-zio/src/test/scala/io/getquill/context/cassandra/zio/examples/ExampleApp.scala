@@ -12,7 +12,7 @@ object ExampleApp extends App {
   case class Person(name: String, age: Int)
 
   val zioSession =
-    ZioCassandraSession.fromPrefix("testStreamDB")
+    CassandraZioSession.fromPrefix("testStreamDB")
 
   override def run(args: List[String]) = {
     val people = quote {

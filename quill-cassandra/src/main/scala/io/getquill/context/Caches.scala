@@ -13,7 +13,7 @@ trait SyncCache { this: CassandraSession =>
     syncCache(cql)(stmt => session.prepare(stmt)).bind()
 }
 
-trait FutureAsyncCache { this: CassandraSession =>
+trait AsyncFutureCache { this: CassandraSession =>
   lazy val asyncCache = new PrepareStatementCache[Future[PreparedStatement]](preparedStatementCacheSize)
   def prepareAsync(cql: String)(implicit executionContext: ExecutionContext): Future[BoundStatement] =
     asyncCache(cql)(stmt => session.prepareAsync(stmt).asScala andThen {
