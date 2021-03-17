@@ -1,4 +1,4 @@
-package io.getquill.context.zio
+package io.getquill.context.qzio
 
 import io.getquill.NamingStrategy
 import io.getquill.context.{ Context, ContextEffect, TranslateContextBase }

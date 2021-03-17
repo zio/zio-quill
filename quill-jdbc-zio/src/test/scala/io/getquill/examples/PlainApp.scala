@@ -1,7 +1,7 @@
 package io.getquill.examples
 
 import io.getquill.{ Literal, PostgresZioJdbcContext }
-import io.getquill.context.ZioJdbc.Layers
+import io.getquill.context.ZioJdbc.QDataSource
 import zio.console.putStrLn
 import zio.Runtime
 
@@ -13,7 +13,7 @@ object PlainApp {
   case class Person(name: String, age: Int)
 
   val zioConn =
-    Layers.dataSourceFromPrefix("testPostgresDB") >>> Layers.dataSourceToConnection
+    QDataSource.fromPrefix("testPostgresDB") >>> QDataSource.toConnection
 
   def main(args: Array[String]): Unit = {
     val people = quote {

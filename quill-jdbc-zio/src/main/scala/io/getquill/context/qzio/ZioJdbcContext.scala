@@ -1,4 +1,4 @@
-package io.getquill.context.zio
+package io.getquill.context.qzio
 
 import io.getquill.context.{ ContextEffect, StreamingContext }
 import io.getquill.context.ZioJdbc._
@@ -25,7 +25,8 @@ import scala.reflect.ClassTag
  *
  * The resource dependency itself is not just a Connection since JDBC requires blocking.
  * Instead it is a `Has[Connection] with Has[Blocking.Service]` which is type-alised as
- * `BlockingConnection` hence methods in this context return `ZIO[BlockingConnection, Throwable, T]`.
+ * `QConnection` hence methods in this context return `ZIO[QConnection, Throwable, T]`.
+ * The type `QIO[T]` i.e. Quill-IO is an alias for this.
  *
  * If you have a zio-app, using this context is fairly straightforward but requires some setup:
  * {{
@@ -38,11 +39,12 @@ import scala.reflect.ClassTag
  *   MyZioContext.run(query[Person]).provideCustomLayer(zioConn)
  * }}
  *
- * Various methods in the `io.getquill.context.ZioJdbc` can assist in doing this, for example, you can
- * provide a `DataSource`` instead of a `Connection` like this (note that the Connection has a closing bracket).
+ * Various methods in the `io.getquill.context.ZioJdbc` can assist in simplifying it's creation, for example, you can
+ * provide a `DataSource` instead of a `Connection` like this
+ * (note that the resulting Connection has a closing bracket).
  * {{
  *   import ZioJdbc._
- *   val zioConn = Layers.dataSourceFromPrefix("testPostgresDB") >>> Layers.dataSourceToConnection
+ *   val zioConn = QDataSource.fromPrefix("testPostgresDB") >>> QDataSource.toConnection
  *   MyZioContext.run(query[Person]).provideCustomLayer(zioConn)
  * }}
  *
@@ -97,16 +99,16 @@ abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] ext
   override protected def withConnectionWrapped[T](f: Connection => T): QIO[T] =
     blocking {
       for {
-        conn <- ZIO.environment[BlockingConnection]
+        conn <- ZIO.environment[QConnection]
         result <- sqlEffect(f(conn.get[Connection]))
       } yield result
     }
 
   private def sqlEffect[T](t: => T): QIO[T] = ZIO.effect(t).refineToOrDie[SQLException]
 
-  private[getquill] def withoutAutoCommit[A, E <: Throwable: ClassTag](f: ZIO[BlockingConnection, E, A]): ZIO[BlockingConnection, E, A] = {
+  private[getquill] def withoutAutoCommit[A, E <: Throwable: ClassTag](f: ZIO[QConnection, E, A]): ZIO[QConnection, E, A] = {
     for {
-      blockingConn <- ZIO.environment[BlockingConnection]
+      blockingConn <- ZIO.environment[QConnection]
       conn = blockingConn.get[Connection]
       autoCommitPrev = conn.getAutoCommit
       r <- sqlEffect(conn).bracket(conn => UIO(conn.setAutoCommit(autoCommitPrev))) { conn =>
@@ -115,17 +117,17 @@ abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] ext
     } yield r
   }
 
-  private[getquill] def streamWithoutAutoCommit[A](f: ZStream[BlockingConnection, Throwable, A]): ZStream[BlockingConnection, Throwable, A] = {
+  private[getquill] def streamWithoutAutoCommit[A](f: ZStream[QConnection, Throwable, A]): ZStream[QConnection, Throwable, A] = {
     for {
-      blockingConn <- ZStream.environment[BlockingConnection]
+      blockingConn <- ZStream.environment[QConnection]
       conn = blockingConn.get[Connection]
       autoCommitPrev = conn.getAutoCommit
       r <- ZStream.bracket(Task(conn.setAutoCommit(false)))(_ => UIO(conn.setAutoCommit(autoCommitPrev))).flatMap(_ => f)
     } yield r
   }
 
-  def transaction[A](f: ZIO[BlockingConnection, Throwable, A]): ZIO[BlockingConnection, Throwable, A] = {
-    blocking(withoutAutoCommit(ZIO.environment[BlockingConnection].flatMap(conn =>
+  def transaction[A](f: ZIO[QConnection, Throwable, A]): ZIO[QConnection, Throwable, A] = {
+    blocking(withoutAutoCommit(ZIO.environment[QConnection].flatMap(conn =>
       f.onExit {
         case Success(_) =>
           UIO(conn.get[Connection].commit())
@@ -246,7 +248,7 @@ abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] ext
           }
       }
 
-    val typedStream = outStream.provideSome((bc: BlockingConnection) => bc.get[Connection])
+    val typedStream = outStream.provideSome((bc: QConnection) => bc.get[Connection])
     // Run the chunked fetch on the blocking pool
     streamBlocker *> streamWithoutAutoCommit(typedStream).refineToOrDie[SQLException]
   }

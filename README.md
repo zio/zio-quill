@@ -2841,9 +2841,9 @@ as a resource dependency which can be provided later (see `ZioJdbc` for helper m
 that assist in doing this).
 The resource dependency itself is not just a Connection since JDBC requires blocking.
 Instead it is a `Has[Connection] with Blocking` which is type-alised as
-`BlockingConnection` hence methods in this context return `ZIO[BlockingConnection, Throwable, T]`.
+`QConnection` hence methods in this context return `ZIO[QConnection, Throwable, T]`.
 
-Another type alias `BlockingDataSource` for `Has[DataSource] with Blocking` is also provided
+Another type alias `QDataSource` for `Has[DataSource] with Blocking` is also provided
 for convenience. Various utilities inside of `ZioJdbc.scala` can do the above conversion
 and/or provide layers that map between the two. Some simple examples of this are:
 
@@ -2872,19 +2872,21 @@ If you are using a Plain Scala app however, you will need to manually run it e.g
 Runtime.default.unsafeRun(MyZioContext.run(query[Person]).provideCustomLayer(zioConn))
 ```
 
+More examples of a Quill-JDBC-ZIO app [quill-jdbc-zio/src/test/scala/io/getquill/examples](https://github.com/getquill/quill/tree/master/quill-jdbc-zio/src/test/scala/io/getquill/examples).
+
 #### streaming
 
 The `ZioJdbcContext` can stream using zio.ZStream:
 
 ```
-ctx.stream(query[Person])             // returns: ZStream[BlockingConnection, Throwable, Person]
-  .run(Sink.collectAll).map(_.toList) // returns: ZIO[BlockingConnection, Throwable, List[T]]
+ctx.stream(query[Person])             // returns: ZStream[QConnection, Throwable, Person]
+  .run(Sink.collectAll).map(_.toList) // returns: ZIO[QConnection, Throwable, List[T]]
 ```
 
 #### transactions
 
 The `ZioJdbcContext`s provide support for transactions without needing thread-local storage or similar
-because they propagate the resource dependency in the ZIO effect itself (i.e. the BlockingConnection in `Zio[BlockingConnection, _, _]`).
+because they propagate the resource dependency in the ZIO effect itself (i.e. the QConnection in `Zio[QConnection, _, _]`).
 As with the other contexts, if an exception is thrown anywhere inside a task or sub-task within a `transaction` block, the entire block
 will be rolled back by the database.
 
@@ -2897,7 +2899,7 @@ val trans =
       _ <- ctx.run(query[Person].insert(Person("Joe", 123)))
       p <- ctx.run(query[Person])
     } yield p
-  } //returns: ZIO[BlockingConnection, Throwable, List[Person]]
+  } //returns: ZIO[QConnection, Throwable, List[Person]]
 
 val result = Runtime.default.unsafeRun(trans) //returns: List[Person]
 ```
@@ -3707,6 +3709,41 @@ ctx.session.credentials.0=root
 ctx.session.credentials.1=pass
 ctx.session.maxSchemaAgreementWaitSeconds=1
 ctx.session.addressTranslator=com.datastax.driver.core.policies.IdentityTranslator
+```
+
+## quill-cassandra-zio
+
+Quill context that executes Cassandra queries inside of ZIO. Unlike most other contexts
+that require passing in a Data Source, this context takes in a `CassandraZioSession`
+as a resource dependency which can be provided later (see the `CassandraZioSession` object for helper methods
+that assist in doing this).
+
+The resource dependency itself is not just a ZioCassandraSession since the Cassandra API requires blocking in
+some places (this is the case despite fact that is is asynchronous).
+Instead it is a `Has[CassandraZioSession] with Has[Blocking.Service]` which is type-alised as
+`BlockingSession` hence methods in this context return `ZIO[QConnection, Throwable, T]`.
+The type `CIO[T]` i.e. Cassandra-IO is an alias for this.
+
+Various methods in the `io.getquill.ZioCassandraSession` can assist in simplifying it's creation, for example, you can
+provide a `Config` object instead of a `ZioCassandraSession` like this
+(note that the resulting ZioCassandraSession has a closing bracket).
+```scala
+ val zioSession =
+   ZioCassandraSession.fromPrefix("testStreamDB")
+```
+
+If you are using a Plain Scala app however, you will need to manually run it e.g. using zio.Runtime
+```scala
+ Runtime.default.unsafeRun(MyZioContext.run(query[Person]).provideCustomLayer(zioSession))
+```
+More examples of a Quill-JDBC-ZIO app [quill-cassandra-zio/src/test/scala/io/getquill/context/cassandra/zio/examples](https://github.com/getquill/quill/tree/master/quill-cassandra-zio/src/test/scala/io/getquill/context/cassandra/zio/examples).
+
+#### sbt dependencies
+
+```
+libraryDependencies ++= Seq(
+  "io.getquill" %% "quill-cassandra-zio" % "3.6.1-SNAPSHOT"
+)
 ```
 
 ## quill-cassandra-monix

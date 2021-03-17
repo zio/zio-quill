@@ -8,7 +8,7 @@ import io.getquill.context.jdbc.MysqlJdbcRunContext
 import io.getquill.context.jdbc.SqliteJdbcRunContext
 import io.getquill.context.jdbc.OracleJdbcRunContext
 import io.getquill.context.sql.idiom.SqlIdiom
-import io.getquill.context.zio.ZioJdbcContext
+import io.getquill.context.qzio.ZioJdbcContext
 import io.getquill.util.LoadConfig
 
 import javax.sql.DataSource

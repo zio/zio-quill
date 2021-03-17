@@ -1,10 +1,9 @@
-package io.getquill.context.zio
+package io.getquill.context.qzio
 
 import io.getquill.NamingStrategy
 import io.getquill.context.{ Context, StreamingContext }
-import zio.blocking.Blocking
+import zio.ZIO
 import zio.stream.ZStream
-import zio.{ Has, ZIO }
 
 trait ZioContext[Idiom <: io.getquill.idiom.Idiom, Naming <: NamingStrategy] extends Context[Idiom, Naming]
   with StreamingContext[Idiom, Naming] {

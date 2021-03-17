@@ -1,10 +1,10 @@
 package io.getquill.context.cassandra.zio.examples
 
 import io.getquill.{ CassandraZioContext, _ }
-import zio.App
+import zio.Runtime
 import zio.console.putStrLn
 
-object ExampleApp extends App {
+object PlainApp {
 
   object MyZioPostgresContext extends CassandraZioContext(Literal)
   import MyZioPostgresContext._
@@ -14,12 +14,16 @@ object ExampleApp extends App {
   val zioSession =
     CassandraZioSession.fromPrefix("testStreamDB")
 
-  override def run(args: List[String]) = {
+  def main(args: Array[String]): Unit = {
     val people = quote {
       query[Person]
     }
-    MyZioPostgresContext.run(people)
-      .tap(result => putStrLn(result.toString))
-      .provideCustomLayer(zioSession).exitCode
+    val czio =
+      MyZioPostgresContext.run(people)
+        .tap(result => putStrLn(result.toString))
+        .provideCustomLayer(zioSession)
+
+    Runtime.default.unsafeRun(czio)
+    ()
   }
 }
