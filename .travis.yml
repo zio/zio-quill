@@ -30,77 +30,77 @@ env:
     - secure: GVYDRNMwVypUDJXUQe9SCobwVCezyPODG4T2sMFZdZ3IjBV3vpPQxG0vKj5LL3HjRULb6D8X60Rsso/EQKSVs6cbRhU3h1Am4tgO/KjUswTcf97RJMk9a+pz+KmEFemJXYatpqK5uusYaJcMoKj5D4FeR2Z1FQjgLVV5y6dqAZc+lBzGq2l3QJbBgdwgIb7PLPBszdajpO5LZ3rcxKm+VvvittFqCCNA6V8NINnByByYpxy+BRm2JGrbOiDWzNC41RVbOY/xsRkOAHFKKJofh3sSHf/YAVyavCGi0nwmBevsoGS9Lmt9wGPydvuW7mQ58QODxjlpKoidohQRg81TY/rutl+Ul0a3xVFmTNVwK5dqfBekfwZBI7esBat864LdoWXViH93eQHbkYANUMMb14z5TBWprmAwRdUAUhVXxI201bYFpHTRl8ejBvtT/x0B38CRYd3cM2qjKNkhuOq3G2bCcU1iSW5Kn8U8M+sKI8rXkNtzqSKlQzPXznFhmVybNUh8K6FysIaPDwdtkfnzq9Obw8p1fLcHBts1BeaPxzF28GnTV/nsvTV44VF1sLJJ9kep7YlGzNfNM/eTianlQ1TZozVp+z4sAuytRkYoNgC+NpMnnwdqUk74AvKw2ExRHZbMLtMlKvcliV9etzdiaC0ZbKIFCjS1QFOFB2mpDaI=
 jobs:
   include:
-    - stage: build
-      if: type != pull_request
-      script: ./build/build.sh db
-      scala: 2.11.12
-      name: "Databases 2.11 - MySQL, Postgres, Sqlite, H2, SQL Server, Oracle"
-    - stage: build
-      script: ./build/build.sh db
-      scala: 2.12.10
-      name: "Databases 2.12 - MySQL, Postgres, Sqlite, H2, SQL Server, Oracle"
-    - stage: build
-      script: ./build/build.sh db
-      scala: 2.13.2
-      name: "Databases 2.13 - MySQL, Postgres, Sqlite, H2, SQL Server, Oracle"
-
-    - stage: build
-      if: type != pull_request
-      script: ./build/build.sh js
-      scala: 2.11.12
-      name: "Databases 2.11 - JavaScript"
-    - stage: build
-      script: ./build/build.sh js
-      scala: 2.12.10
-      name: "Databases 2.12 - JavaScript"
-    - stage: build
-      script: ./build/build.sh js
-      scala: 2.13.1
-      name: "Databases 2.13 - JavaScript"
-
-    - stage: build
-      if: type != pull_request
-      script: ./build/build.sh async
-      scala: 2.11.12
-      name: "Async, Finagle, NDBC 2.11 - MySQL, Postgres, Sqlite, H2, SQL Server, Oracle"
-    - stage: build
-      script: ./build/build.sh async
-      scala: 2.12.10
-      name: "Async, Finagle, NDBC 2.12 - MySQL, Postgres, Sqlite, H2, SQL Server, Oracle"
-    - stage: build
-      script: ./build/build.sh async
-      scala: 2.13.2
-      name: "Async, Finagle, NDBC 2.13 - MySQL, Postgres, Sqlite, H2, SQL Server, Oracle"
-
-    - stage: build
-      if: type != pull_request
-      script: ./build/build.sh codegen
-      scala: 2.11.12
-      name: "Code Generator 2.11 - MySQL, Postgres, Sqlite, H2, SQL Server, Oracle"
-    - stage: build
-      if: type != pull_request
-      script: ./build/build.sh codegen
-      scala: 2.12.10
-      name: "Code Generator 2.12 - MySQL, Postgres, Sqlite, H2, SQL Server, Oracle"
-    - stage: build
-      if: type != pull_request
-      script: ./build/build.sh codegen
-      scala: 2.13.2
-      name: "Code Generator 2.13 - MySQL, Postgres, Sqlite, H2, SQL Server, Oracle"
-
-    - stage: build
-      if: type != pull_request
-      script: ./build/build.sh bigdata
-      scala: 2.11.12
-      name: "BigData Databases 2.11 - Cassandra, OrientDB, Spark"
-    - stage: build
-      script: ./build/build.sh bigdata
-      scala: 2.12.10
-      name: "BigData Databases 2.12 - Cassandra, OrientDB, Spark"
-    - stage: build
-      script: ./build/build.sh bigdata
-      scala: 2.13.2
-      name: "BigData Databases 2.13 - Cassandra, OrientDB, Spark"
+#    - stage: build
+#      if: type != pull_request
+#      script: ./build/build.sh db
+#      scala: 2.11.12
+#      name: "Databases 2.11 - MySQL, Postgres, Sqlite, H2, SQL Server, Oracle"
+#    - stage: build
+#      script: ./build/build.sh db
+#      scala: 2.12.10
+#      name: "Databases 2.12 - MySQL, Postgres, Sqlite, H2, SQL Server, Oracle"
+#    - stage: build
+#      script: ./build/build.sh db
+#      scala: 2.13.2
+#      name: "Databases 2.13 - MySQL, Postgres, Sqlite, H2, SQL Server, Oracle"
+#
+#    - stage: build
+#      if: type != pull_request
+#      script: ./build/build.sh js
+#      scala: 2.11.12
+#      name: "Databases 2.11 - JavaScript"
+#    - stage: build
+#      script: ./build/build.sh js
+#      scala: 2.12.10
+#      name: "Databases 2.12 - JavaScript"
+#    - stage: build
+#      script: ./build/build.sh js
+#      scala: 2.13.1
+#      name: "Databases 2.13 - JavaScript"
+#
+#    - stage: build
+#      if: type != pull_request
+#      script: ./build/build.sh async
+#      scala: 2.11.12
+#      name: "Async, Finagle, NDBC 2.11 - MySQL, Postgres, Sqlite, H2, SQL Server, Oracle"
+#    - stage: build
+#      script: ./build/build.sh async
+#      scala: 2.12.10
+#      name: "Async, Finagle, NDBC 2.12 - MySQL, Postgres, Sqlite, H2, SQL Server, Oracle"
+#    - stage: build
+#      script: ./build/build.sh async
+#      scala: 2.13.2
+#      name: "Async, Finagle, NDBC 2.13 - MySQL, Postgres, Sqlite, H2, SQL Server, Oracle"
+#
+#    - stage: build
+#      if: type != pull_request
+#      script: ./build/build.sh codegen
+#      scala: 2.11.12
+#      name: "Code Generator 2.11 - MySQL, Postgres, Sqlite, H2, SQL Server, Oracle"
+#    - stage: build
+#      if: type != pull_request
+#      script: ./build/build.sh codegen
+#      scala: 2.12.10
+#      name: "Code Generator 2.12 - MySQL, Postgres, Sqlite, H2, SQL Server, Oracle"
+#    - stage: build
+#      if: type != pull_request
+#      script: ./build/build.sh codegen
+#      scala: 2.13.2
+#      name: "Code Generator 2.13 - MySQL, Postgres, Sqlite, H2, SQL Server, Oracle"
+#
+#    - stage: build
+#      if: type != pull_request
+#      script: ./build/build.sh bigdata
+#      scala: 2.11.12
+#      name: "BigData Databases 2.11 - Cassandra, OrientDB, Spark"
+#    - stage: build
+#      script: ./build/build.sh bigdata
+#      scala: 2.12.10
+#      name: "BigData Databases 2.12 - Cassandra, OrientDB, Spark"
+#    - stage: build
+#      script: ./build/build.sh bigdata
+#      scala: 2.13.2
+#      name: "BigData Databases 2.13 - Cassandra, OrientDB, Spark"
 
     - stage: release
       if: type != pull_request
