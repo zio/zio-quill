@@ -101,111 +101,111 @@ jobs:
 #      script: ./build/build.sh bigdata
 #      scala: 2.13.2
 #      name: "BigData Databases 2.13 - Cassandra, OrientDB, Spark"
-
-    - stage: release
-      if: type != pull_request
-      scala: 2.12.6
-      name: "Release 2.11 base"
-      script:
-        - ./build/release.sh 211 base
-    - stage: release
-      if: type != pull_request
-      scala: 2.12.6
-      name: "Release 2.11 db"
-      script:
-        - ./build/release.sh 211 db
-    - stage: release
-      if: type != pull_request
-      scala: 2.12.6
-      name: "Release 2.11 js"
-      script:
-        - ./build/release.sh 211 js
-    - stage: release
-      if: type != pull_request
-      scala: 2.12.6
-      name: "Release 2.11 async"
-      script:
-        - ./build/release.sh 211 async
-    - stage: release
-      if: type != pull_request
-      scala: 2.12.6
-      name: "Release 2.11 codegen"
-      script:
-        - ./build/release.sh 211 codegen
-    - stage: release
-      if: type != pull_request
-      scala: 2.12.6
-      name: "Release 2.11 bigdata"
-      script:
-        - ./build/release.sh 211 bigdata
-
-    - stage: release
-      if: type != pull_request
-      scala: 2.12.6
-      name: "Release 2.12 base"
-      script:
-        - ./build/release.sh 212 base
-    - stage: release
-      if: type != pull_request
-      scala: 2.12.6
-      name: "Release 2.12 db"
-      script:
-        - ./build/release.sh 212 db
-    - stage: release
-      if: type != pull_request
-      scala: 2.12.6
-      name: "Release 2.12 js"
-      script:
-        - ./build/release.sh 212 js
-    - stage: release
-      if: type != pull_request
-      scala: 2.12.6
-      name: "Release 2.12 async"
-      script:
-        - ./build/release.sh 212 async
-    - stage: release
-      if: type != pull_request
-      scala: 2.12.6
-      name: "Release 2.12 codegen"
-      script:
-        - ./build/release.sh 212 codegen
-    - stage: release
-      if: type != pull_request
-      scala: 2.12.6
-      name: "Release 2.12 bigdata"
-      script:
-        - ./build/release.sh 212 bigdata
-
-    - stage: release
-      if: type != pull_request
-      scala: 2.13.2
-      name: "Release 2.13 base"
-      script:
-        - ./build/release.sh 213 base
-    - stage: release
-      if: type != pull_request
-      scala: 2.13.2
-      name: "Release 2.13 db"
-      script:
-        - ./build/release.sh 213 db
-    - stage: release
-      if: type != pull_request
-      scala: 2.13.2
-      name: "Release 2.13 js"
-      script:
-        - ./build/release.sh 213 js
-    - stage: release
-      if: type != pull_request
-      scala: 2.13.2
-      name: "Release 2.13 async"
-      script:
-        - ./build/release.sh 213 async
-    - stage: release
-      if: type != pull_request
-      scala: 2.13.2
-      name: "Release 2.12 codegen"
-      script:
-        - ./build/release.sh 213 codegen
+#
+#    - stage: release
+#      if: type != pull_request
+#      scala: 2.12.6
+#      name: "Release 2.11 base"
+#      script:
+#        - ./build/release.sh 211 base
+#    - stage: release
+#      if: type != pull_request
+#      scala: 2.12.6
+#      name: "Release 2.11 db"
+#      script:
+#        - ./build/release.sh 211 db
+#    - stage: release
+#      if: type != pull_request
+#      scala: 2.12.6
+#      name: "Release 2.11 js"
+#      script:
+#        - ./build/release.sh 211 js
+#    - stage: release
+#      if: type != pull_request
+#      scala: 2.12.6
+#      name: "Release 2.11 async"
+#      script:
+#        - ./build/release.sh 211 async
+#    - stage: release
+#      if: type != pull_request
+#      scala: 2.12.6
+#      name: "Release 2.11 codegen"
+#      script:
+#        - ./build/release.sh 211 codegen
+#    - stage: release
+#      if: type != pull_request
+#      scala: 2.12.6
+#      name: "Release 2.11 bigdata"
+#      script:
+#        - ./build/release.sh 211 bigdata
+#
+#    - stage: release
+#      if: type != pull_request
+#      scala: 2.12.6
+#      name: "Release 2.12 base"
+#      script:
+#        - ./build/release.sh 212 base
+#    - stage: release
+#      if: type != pull_request
+#      scala: 2.12.6
+#      name: "Release 2.12 db"
+#      script:
+#        - ./build/release.sh 212 db
+#    - stage: release
+#      if: type != pull_request
+#      scala: 2.12.6
+#      name: "Release 2.12 js"
+#      script:
+#        - ./build/release.sh 212 js
+#    - stage: release
+#      if: type != pull_request
+#      scala: 2.12.6
+#      name: "Release 2.12 async"
+#      script:
+#        - ./build/release.sh 212 async
+#    - stage: release
+#      if: type != pull_request
+#      scala: 2.12.6
+#      name: "Release 2.12 codegen"
+#      script:
+#        - ./build/release.sh 212 codegen
+#    - stage: release
+#      if: type != pull_request
+#      scala: 2.12.6
+#      name: "Release 2.12 bigdata"
+#      script:
+#        - ./build/release.sh 212 bigdata
+#
+#    - stage: release
+#      if: type != pull_request
+#      scala: 2.13.2
+#      name: "Release 2.13 base"
+#      script:
+#        - ./build/release.sh 213 base
+#    - stage: release
+#      if: type != pull_request
+#      scala: 2.13.2
+#      name: "Release 2.13 db"
+#      script:
+#        - ./build/release.sh 213 db
+#    - stage: release
+#      if: type != pull_request
+#      scala: 2.13.2
+#      name: "Release 2.13 js"
+#      script:
+#        - ./build/release.sh 213 js
+#    - stage: release
+#      if: type != pull_request
+#      scala: 2.13.2
+#      name: "Release 2.13 async"
+#      script:
+#        - ./build/release.sh 213 async
+#    - stage: release
+#      if: type != pull_request
+#      scala: 2.13.2
+#      name: "Release 2.12 codegen"
+#      script:
+#        - ./build/release.sh 213 codegen
     - stage: release
       if: type != pull_request
       scala: 2.13.2
@@ -213,9 +213,9 @@ jobs:
       script:
         - ./build/release.sh 213 bigdata
 
-    - stage: publish
-      if: type != pull_request AND (branch = master OR branch =~ /re-release.*/)
-      scala: 2.12.6
-      name: "Publish"
-      script:
-        - ./build/publish.sh
+#    - stage: publish
+#      if: type != pull_request AND (branch = master OR branch =~ /re-release.*/)
+#      scala: 2.12.6
+#      name: "Publish"
+#      script:
+#        - ./build/publish.sh
