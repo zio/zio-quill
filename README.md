@@ -2495,7 +2495,7 @@ Quill provides a fully type-safe way to use Spark's highly-optimized SQL engine.
 ### Importing Quill Spark
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-spark" % "3.7.0"
+  "io.getquill" %% "quill-spark" % "3.7.0-SNAPSHOT"
 )
 ```
 
@@ -2695,7 +2695,7 @@ The body of `transaction` can contain calls to other methods and multiple `run` 
 ```
 libraryDependencies ++= Seq(
   "mysql" % "mysql-connector-java" % "8.0.17",
-  "io.getquill" %% "quill-jdbc" % "3.7.0"
+  "io.getquill" %% "quill-jdbc" % "3.7.0-SNAPSHOT"
 )
 ```
 
@@ -2722,7 +2722,7 @@ ctx.connectionTimeout=30000
 ```
 libraryDependencies ++= Seq(
   "org.postgresql" % "postgresql" % "42.2.8",
-  "io.getquill" %% "quill-jdbc" % "3.7.0"
+  "io.getquill" %% "quill-jdbc" % "3.7.0-SNAPSHOT"
 )
 ```
 
@@ -2748,7 +2748,7 @@ ctx.connectionTimeout=30000
 ```
 libraryDependencies ++= Seq(
   "org.xerial" % "sqlite-jdbc" % "3.28.0",
-  "io.getquill" %% "quill-jdbc" % "3.7.0"
+  "io.getquill" %% "quill-jdbc" % "3.7.0-SNAPSHOT"
 )
 ```
 
@@ -2769,7 +2769,7 @@ ctx.jdbcUrl=jdbc:sqlite:/path/to/db/file.db
 ```
 libraryDependencies ++= Seq(
   "com.h2database" % "h2" % "1.4.199",
-  "io.getquill" %% "quill-jdbc" % "3.7.0"
+  "io.getquill" %% "quill-jdbc" % "3.7.0-SNAPSHOT"
 )
 ```
 
@@ -2791,7 +2791,7 @@ ctx.dataSource.user=sa
 ```
 libraryDependencies ++= Seq(
   "com.microsoft.sqlserver" % "mssql-jdbc" % "7.4.1.jre8",
-  "io.getquill" %% "quill-jdbc" % "3.7.0"
+  "io.getquill" %% "quill-jdbc" % "3.7.0-SNAPSHOT"
 )
 ```
 
@@ -2813,7 +2813,7 @@ available for this situation [here](https://stackoverflow.com/questions/1074869/
 ```
 libraryDependencies ++= Seq(
   "com.oracle.jdbc" % "ojdbc8" % "18.3.0.0.0",
-  "io.getquill" %% "quill-jdbc" % "3.7.0"
+  "io.getquill" %% "quill-jdbc" % "3.7.0-SNAPSHOT"
 )
 ```
 
@@ -2912,7 +2912,7 @@ val result = Runtime.default.unsafeRun(trans) //returns: List[Person]
 ```
 libraryDependencies ++= Seq(
   "mysql" % "mysql-connector-java" % "8.0.17",
-  "io.getquill" %% "quill-jdbc-zio" % "3.7.0"
+  "io.getquill" %% "quill-jdbc-zio" % "3.7.0-SNAPSHOT"
 )
 ```
 
@@ -2941,7 +2941,7 @@ ctx.connectionTimeout=30000
 ```
 libraryDependencies ++= Seq(
   "org.postgresql" % "postgresql" % "42.2.8",
-  "io.getquill" %% "quill-jdbc-zio" % "3.7.0"
+  "io.getquill" %% "quill-jdbc-zio" % "3.7.0-SNAPSHOT"
 )
 ```
 
@@ -2969,7 +2969,7 @@ ctx.connectionTimeout=30000
 ```
 libraryDependencies ++= Seq(
   "org.xerial" % "sqlite-jdbc" % "3.28.0",
-  "io.getquill" %% "quill-jdbc-zio" % "3.7.0"
+  "io.getquill" %% "quill-jdbc-zio" % "3.7.0-SNAPSHOT"
 )
 ```
 
@@ -2992,7 +2992,7 @@ ctx.jdbcUrl=jdbc:sqlite:/path/to/db/file.db
 ```
 libraryDependencies ++= Seq(
   "com.h2database" % "h2" % "1.4.199",
-  "io.getquill" %% "quill-jdbc-zio" % "3.7.0"
+  "io.getquill" %% "quill-jdbc-zio" % "3.7.0-SNAPSHOT"
 )
 ```
 
@@ -3016,7 +3016,7 @@ ctx.dataSource.user=sa
 ```
 libraryDependencies ++= Seq(
   "com.microsoft.sqlserver" % "mssql-jdbc" % "7.4.1.jre8",
-  "io.getquill" %% "quill-jdbc-zio" % "3.7.0"
+  "io.getquill" %% "quill-jdbc-zio" % "3.7.0-SNAPSHOT"
 )
 ```
 
@@ -3045,7 +3045,7 @@ Quill supports Oracle version 12c and up although due to licensing restrictions,
 ```
 libraryDependencies ++= Seq(
   "com.oracle.jdbc" % "ojdbc8" % "18.3.0.0.0",
-  "io.getquill" %% "quill-jdbc-zio" % "3.7.0"
+  "io.getquill" %% "quill-jdbc-zio" % "3.7.0-SNAPSHOT"
 )
 ```
 
@@ -3147,7 +3147,7 @@ lazy val ctx = new MysqlMonixJdbcContext(SnakeCase, "ctx", Runner.using(Schedule
 ```
 libraryDependencies ++= Seq(
   "mysql" % "mysql-connector-java" % "8.0.17",
-  "io.getquill" %% "quill-jdbc-monix" % "3.7.0"
+  "io.getquill" %% "quill-jdbc-monix" % "3.7.0-SNAPSHOT"
 )
 ```
 
@@ -3174,7 +3174,7 @@ ctx.connectionTimeout=30000
 ```
 libraryDependencies ++= Seq(
   "org.postgresql" % "postgresql" % "42.2.8",
-  "io.getquill" %% "quill-jdbc-monix" % "3.7.0"
+  "io.getquill" %% "quill-jdbc-monix" % "3.7.0-SNAPSHOT"
 )
 ```
 
@@ -3200,7 +3200,7 @@ ctx.connectionTimeout=30000
 ```
 libraryDependencies ++= Seq(
   "org.xerial" % "sqlite-jdbc" % "3.28.0",
-  "io.getquill" %% "quill-jdbc-monix" % "3.7.0"
+  "io.getquill" %% "quill-jdbc-monix" % "3.7.0-SNAPSHOT"
 )
 ```
 
@@ -3221,7 +3221,7 @@ ctx.jdbcUrl=jdbc:sqlite:/path/to/db/file.db
 ```
 libraryDependencies ++= Seq(
   "com.h2database" % "h2" % "1.4.199",
-  "io.getquill" %% "quill-jdbc-monix" % "3.7.0"
+  "io.getquill" %% "quill-jdbc-monix" % "3.7.0-SNAPSHOT"
 )
 ```
 
@@ -3243,7 +3243,7 @@ ctx.dataSource.user=sa
 ```
 libraryDependencies ++= Seq(
   "com.microsoft.sqlserver" % "mssql-jdbc" % "7.4.1.jre8",
-  "io.getquill" %% "quill-jdbc-monix" % "3.7.0"
+  "io.getquill" %% "quill-jdbc-monix" % "3.7.0-SNAPSHOT"
 )
 ```
 
@@ -3275,7 +3275,7 @@ available for this situation [here](https://stackoverflow.com/questions/1074869/
 ```
 libraryDependencies ++= Seq(
   "com.oracle.jdbc" % "ojdbc8" % "18.3.0.0.0",
-  "io.getquill" %% "quill-jdbc-monix" % "3.7.0"
+  "io.getquill" %% "quill-jdbc-monix" % "3.7.0-SNAPSHOT"
 )
 ```
 
@@ -3317,7 +3317,7 @@ The body of transaction can contain calls to other methods and multiple run call
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-ndbc-postgres" % "3.7.0"
+  "io.getquill" %% "quill-ndbc-postgres" % "3.7.0-SNAPSHOT"
 )
 ```
 
@@ -3424,7 +3424,7 @@ ctx.queryTimeout=10m
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async-mysql" % "3.7.0"
+  "io.getquill" %% "quill-async-mysql" % "3.7.0-SNAPSHOT"
 )
 ```
 
@@ -3448,7 +3448,7 @@ ctx.url=mysql://host:3306/database?user=root&password=root
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async-postgres" % "3.7.0"
+  "io.getquill" %% "quill-async-postgres" % "3.7.0-SNAPSHOT"
 )
 ```
 
@@ -3538,7 +3538,7 @@ ctx.sslrootcert=./path/to/cert/file # optional, required for sslmode=verify-ca o
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-jasync-mysql" % "3.7.0"
+  "io.getquill" %% "quill-jasync-mysql" % "3.7.0-SNAPSHOT"
 )
 ```
 
@@ -3563,7 +3563,7 @@ ctx.url=mysql://host:3306/database?user=root&password=root
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-jasync-postgres" % "3.7.0"
+  "io.getquill" %% "quill-jasync-postgres" % "3.7.0-SNAPSHOT"
 )
 ```
 
@@ -3613,7 +3613,7 @@ The body of `transaction` can contain calls to other methods and multiple `run` 
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-finagle-mysql" % "3.7.0"
+  "io.getquill" %% "quill-finagle-mysql" % "3.7.0-SNAPSHOT"
 )
 ```
 
@@ -3653,7 +3653,7 @@ The body of `transaction` can contain calls to other methods and multiple `run` 
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-finagle-postgres" % "3.7.0"
+  "io.getquill" %% "quill-finagle-postgres" % "3.7.0-SNAPSHOT"
 )
 ```
 
@@ -3680,7 +3680,7 @@ ctx.binaryParams=false
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-cassandra" % "3.7.0"
+  "io.getquill" %% "quill-cassandra" % "3.7.0-SNAPSHOT"
 )
 ```
 
@@ -3742,7 +3742,7 @@ More examples of a Quill-JDBC-ZIO app [quill-cassandra-zio/src/test/scala/io/get
 
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-cassandra-zio" % "3.7.0"
+  "io.getquill" %% "quill-cassandra-zio" % "3.7.0-SNAPSHOT"
 )
 ```
 
@@ -3751,7 +3751,7 @@ libraryDependencies ++= Seq(
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-cassandra-monix" % "3.7.0"
+  "io.getquill" %% "quill-cassandra-monix" % "3.7.0-SNAPSHOT"
 )
 ```
 
@@ -3770,7 +3770,7 @@ lazy val ctx = new CassandraStreamContext(SnakeCase, "ctx")
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-orientdb" % "3.7.0"
+  "io.getquill" %% "quill-orientdb" % "3.7.0-SNAPSHOT"
 )
 ```
 
@@ -3832,7 +3832,7 @@ Have a look at the [CODEGEN.md](https://github.com/getquill/quill/blob/master/CO
 
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-codegen-jdbc" % "3.7.0"
+  "io.getquill" %% "quill-codegen-jdbc" % "3.7.0-SNAPSHOT"
 )
 ```
 
