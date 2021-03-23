@@ -3,7 +3,7 @@ package io.getquill.context.jasync
 import java.util.UUID
 
 trait UUIDObjectEncoding {
-  this: JAsyncContext[_, _, _] =>
+  this: JAsyncContextBase[_, _] =>
 
   implicit val uuidEncoder: Encoder[UUID] = encoder[UUID](SqlTypes.UUID)
 

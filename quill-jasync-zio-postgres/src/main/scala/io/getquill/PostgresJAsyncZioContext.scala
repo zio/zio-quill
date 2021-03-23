@@ -5,25 +5,41 @@ import com.github.jasync.sql.db.postgresql.PostgreSQLConnection
 import com.github.jasync.sql.db.{QueryResult => DBQueryResult}
 import com.typesafe.config.Config
 import io.getquill.ReturnAction.{ReturnColumns, ReturnNothing, ReturnRecord}
-import io.getquill.context.jasync.{ArrayDecoders, ArrayEncoders, JAsyncContext, JAsyncContextBase, UUIDObjectEncoding}
+import io.getquill.context.jasync.{ArrayDecoders, ArrayEncoders, JAsyncContext, JAsyncZioContext, UUIDObjectEncoding}
 import io.getquill.util.LoadConfig
 import io.getquill.util.Messages.fail
+import zio.{Has, Task, ZIO, ZLayer, ZManaged}
 
 import scala.jdk.CollectionConverters._
 
-trait PostgresJAsyncContextBase[N <: NamingStrategy]
-  extends JAsyncContextBase[PostgresDialect, N]
-  with ArrayEncoders
-  with ArrayDecoders
-  with UUIDObjectEncoding
+object PostgresJAsyncZioContext {
+  import JAsyncZioContext._
 
-class PostgresJAsyncContext[N <: NamingStrategy](naming: N, pool: ConnectionPool[PostgreSQLConnection])
-  extends JAsyncContext[PostgresDialect, N, PostgreSQLConnection](PostgresDialect, naming, pool)
+  object BuildPool {
+    def fromContextConfig(config: =>PostgresJAsyncContextConfig) =
+      ZManaged.make(ZIO.effect(config.pool))(pool => ZIO.effect(pool.disconnect().toZio).flatten.orDie)
+    def fromConfig(config: Config) =
+      fromContextConfig(PostgresJAsyncContextConfig(config))
+    def fromPrefix(prefix: String) =
+      fromContextConfig(PostgresJAsyncContextConfig(LoadConfig(prefix)))
+  }
+
+  object BuildConnection {
+    def fromPool = {
+      ZLayer.fromManaged {
+        for {
+          env <- ZManaged.environment[Has[ConnectionPool[PostgreSQLConnection]]]
+          pool = env.get[ConnectionPool[PostgreSQLConnection]]
+          conn <- ZManaged.make(ZIO.effect(pool.take().toZio).flatten)(conn => pool.giveBack(conn).toZio.orDie)
+        } yield conn
+      }
+    }
+  }
+}
+
+class PostgresJAsyncZioContext[N <: NamingStrategy](naming: N)
+  extends JAsyncZioContext[PostgresDialect, N](PostgresDialect, naming)
   with PostgresJAsyncContextBase[N] {
-
-  def this(naming: N, config: PostgresJAsyncContextConfig) = this(naming, config.pool)
-  def this(naming: N, config: Config) = this(naming, PostgresJAsyncContextConfig(config))
-  def this(naming: N, configPrefix: String) = this(naming, LoadConfig(configPrefix))
 
   override protected def extractActionResult[O](returningAction: ReturnAction, returningExtractor: Extractor[O])(result: DBQueryResult): O =
     result.getRows.asScala

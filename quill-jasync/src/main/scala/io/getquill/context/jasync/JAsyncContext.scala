@@ -22,17 +22,10 @@ import scala.compat.java8.FutureConverters
 import scala.jdk.CollectionConverters._
 
 abstract class JAsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: ConcreteConnection](val idiom: D, val naming: N, pool: ConnectionPool[C])
-  extends Context[D, N]
-  with TranslateContext
-  with SqlContext[D, N]
-  with Decoders
-  with Encoders
+  extends JAsyncContextBase[D, N]
   with ScalaFutureIOMonad {
 
   private val logger = ContextLogger(classOf[JAsyncContext[_, _, _]])
-
-  override type PrepareRow = Seq[Any]
-  override type ResultRow = RowData
 
   override type Result[T] = Future[T]
   override type RunQueryResult[T] = Seq[T]

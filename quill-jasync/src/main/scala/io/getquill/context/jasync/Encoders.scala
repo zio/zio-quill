@@ -6,7 +6,7 @@ import java.util.Date
 import org.joda.time.{ DateTime => JodaDateTime, DateTimeZone => JodaDateTimeZone, LocalTime => JodaLocalTime, LocalDate => JodaLocalDate, LocalDateTime => JodaLocalDateTime }
 
 trait Encoders {
-  this: JAsyncContext[_, _, _] =>
+  this: JAsyncContextBase[_, _] =>
 
   type Encoder[T] = AsyncEncoder[T]
 

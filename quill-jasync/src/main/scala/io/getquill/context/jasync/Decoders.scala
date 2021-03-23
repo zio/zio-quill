@@ -10,7 +10,7 @@ import org.joda.time.{ DateTime => JodaDateTime, LocalDate => JodaLocalDate, Loc
 import scala.reflect.{ ClassTag, classTag }
 
 trait Decoders {
-  this: JAsyncContext[_, _, _] =>
+  this: JAsyncContextBase[_, _] =>
 
   type Decoder[T] = AsyncDecoder[T]
 

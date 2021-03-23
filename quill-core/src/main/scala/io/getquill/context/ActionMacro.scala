@@ -120,17 +120,17 @@ class ActionMacro(val c: MacroContext)
 
   def expandBatchAction(quoted: Tree)(call: (Tree, Tree, Tree) => Tree): Tree =
     BetaReduction(extractAst(quoted)) match {
-      case ast @ Foreach(lift: Lift, alias, body) =>
-        val batch = lift.value.asInstanceOf[Tree]
-        val batchItemType = batch.tpe.typeArgs.head
-        c.typecheck(q"(value: $batchItemType) => value") match {
+      case ast @ Foreach(lift: Lift, alias, body) =>  // Foreach(CaseClassLift(list:List[Person]), x, query[Person].insert(x))
+        val batch = lift.value.asInstanceOf[Tree]     // lift batch e.g. List[Person]
+        val batchItemType = batch.tpe.typeArgs.head   // so: Person
+        c.typecheck(q"(value: $batchItemType) => value") match { // (value: Person) => value
           case q"($param) => $value" =>
             val nestedLift =
               lift match {
                 case ScalarQueryLift(name, batch: Tree, encoder: Tree, quat) =>
                   ScalarValueLift("value", value, encoder, quat)
                 case CaseClassQueryLift(name, batch: Tree, quat) =>
-                  CaseClassValueLift("value", value, quat)
+                  CaseClassValueLift("value", value, quat) // CaseClassValueLift(value,
               }
             val (ast, _) = reifyLiftings(BetaReduction(body, alias -> nestedLift))
             c.untypecheck {

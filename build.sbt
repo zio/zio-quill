@@ -539,6 +539,20 @@ lazy val `quill-jasync` =
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
 
+
+lazy val `quill-jasync-zio` =
+  (project in file("quill-jasync-zio"))
+    .settings(commonSettings: _*)
+    .settings(mimaSettings: _*)
+    .settings(
+      fork in Test := true,
+      libraryDependencies ++= Seq(
+        "dev.zio" %% "zio" % "1.0.5",
+        "dev.zio" %% "zio-streams" % "1.0.5"
+      )
+    )
+    .dependsOn(`quill-jasync` % "compile->compile;test->test")
+
 lazy val `quill-jasync-postgres` =
   (project in file("quill-jasync-postgres"))
     .settings(commonSettings: _*)
@@ -549,7 +563,22 @@ lazy val `quill-jasync-postgres` =
         "com.github.jasync-sql" % "jasync-postgresql" % "1.1.4"
       )
     )
-    .dependsOn(`quill-jasync` % "compile->compile;test->test")
+    .dependsOn(`quill-jasync-zio` % "compile->compile;test->test")
+
+lazy val `quill-jasync-zio-postgres` =
+  (project in file("quill-jasync-zio-postgres"))
+    .settings(commonSettings: _*)
+    .settings(mimaSettings: _*)
+    .settings(
+      fork in Test := true,
+      libraryDependencies ++= Seq(
+        "dev.zio" %% "zio" % "1.0.5",
+        "dev.zio" %% "zio-streams" % "1.0.5",
+        "com.github.jasync-sql" % "jasync-postgresql" % "1.1.4"
+      )
+    )
+    .dependsOn(`quill-jasync-zio` % "compile->compile;test->test")
+    .dependsOn(`quill-jasync-postgres` % "compile->compile;test->test")
 
 lazy val `quill-jasync-mysql` =
   (project in file("quill-jasync-mysql"))
