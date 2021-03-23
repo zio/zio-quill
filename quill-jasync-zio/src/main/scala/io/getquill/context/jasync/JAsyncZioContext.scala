@@ -1,16 +1,15 @@
 package io.getquill.context.jasync
 
 import com.github.jasync.sql.db.pool.ConnectionPool
-import com.github.jasync.sql.db.{Connection, QueryResult, RowData}
+import com.github.jasync.sql.db.{ Connection, QueryResult, RowData }
 import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.util.ContextLogger
-import io.getquill.{NamingStrategy, ReturnAction}
+import io.getquill.{ NamingStrategy, ReturnAction }
 import kotlin.jvm.functions.Function1
-import zio.{Has, Task, ZIO, ZManaged}
+import zio.{ Has, Task, ZIO }
 
 import java.util.concurrent.CompletableFuture
 import scala.jdk.CollectionConverters._
-import scala.language.implicitConversions
 import scala.util.Try
 
 object JAsyncZioContext {
@@ -39,7 +38,7 @@ abstract class JAsyncZioContext[D <: SqlIdiom, N <: NamingStrategy](val idiom: D
   override type RunBatchActionResult = Seq[Long]
   override type RunBatchActionReturningResult[T] = Seq[T]
 
-//  implicit def toCompletableFuture[T](f: Future[T]): CompletableFuture[T] = FutureConverters.toJava(f).asInstanceOf[CompletableFuture[T]]
+  //  implicit def toCompletableFuture[T](f: Future[T]): CompletableFuture[T] = FutureConverters.toJava(f).asInstanceOf[CompletableFuture[T]]
 
   def toKotlin[T, R](f: T => R): Function1[T, R] = new Function1[T, R] {
     override def invoke(t: T): R = f(t)
@@ -60,7 +59,6 @@ abstract class JAsyncZioContext[D <: SqlIdiom, N <: NamingStrategy](val idiom: D
           zio.Runtime.default.unsafeRun(pool.sendQuery(sql).toZio)
         }
     }
-
 
   def transaction[T](ops: JIO[T]) = {
     for {

@@ -3,10 +3,10 @@ package io.getquill.context.jasync
 import java.time.LocalDate
 import java.util
 import java.util.Date
-import io.getquill.{PostgresJAsyncContext, PostgresJAsyncContextBase}
+import io.getquill.{ PostgresJAsyncContext, PostgresJAsyncContextBase }
 import io.getquill.context.sql.encoding.ArrayEncoding
 import io.getquill.util.Messages.fail
-import org.joda.time.{DateTime => JodaDateTime, LocalDate => JodaLocalDate, LocalDateTime => JodaLocalDateTime}
+import org.joda.time.{ DateTime => JodaDateTime, LocalDate => JodaLocalDate, LocalDateTime => JodaLocalDateTime }
 
 import scala.reflect.ClassTag
 import scala.collection.compat._

@@ -2,13 +2,13 @@ package io.getquill
 
 import com.github.jasync.sql.db.pool.ConnectionPool
 import com.github.jasync.sql.db.postgresql.PostgreSQLConnection
-import com.github.jasync.sql.db.{QueryResult => DBQueryResult}
+import com.github.jasync.sql.db.{ QueryResult => DBQueryResult }
 import com.typesafe.config.Config
-import io.getquill.ReturnAction.{ReturnColumns, ReturnNothing, ReturnRecord}
-import io.getquill.context.jasync.{ArrayDecoders, ArrayEncoders, JAsyncContext, JAsyncZioContext, UUIDObjectEncoding}
+import io.getquill.ReturnAction.{ ReturnColumns, ReturnNothing, ReturnRecord }
+import io.getquill.context.jasync.JAsyncZioContext
 import io.getquill.util.LoadConfig
 import io.getquill.util.Messages.fail
-import zio.{Has, Task, ZIO, ZLayer, ZManaged}
+import zio.{ Has, ZIO, ZLayer, ZManaged }
 
 import scala.jdk.CollectionConverters._
 
@@ -16,7 +16,7 @@ object PostgresJAsyncZioContext {
   import JAsyncZioContext._
 
   object BuildPool {
-    def fromContextConfig(config: =>PostgresJAsyncContextConfig) =
+    def fromContextConfig(config: => PostgresJAsyncContextConfig) =
       ZManaged.make(ZIO.effect(config.pool))(pool => ZIO.effect(pool.disconnect().toZio).flatten.orDie)
     def fromConfig(config: Config) =
       fromContextConfig(PostgresJAsyncContextConfig(config))

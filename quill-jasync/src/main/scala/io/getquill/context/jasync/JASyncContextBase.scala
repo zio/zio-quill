@@ -2,7 +2,7 @@ package io.getquill.context.jasync
 
 import com.github.jasync.sql.db.RowData
 import io.getquill.NamingStrategy
-import io.getquill.context.{Context, TranslateContext}
+import io.getquill.context.{ Context, TranslateContext }
 import io.getquill.context.sql.SqlContext
 import io.getquill.context.sql.idiom.SqlIdiom
 

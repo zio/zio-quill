@@ -2,10 +2,10 @@ package io.getquill
 
 import com.github.jasync.sql.db.pool.ConnectionPool
 import com.github.jasync.sql.db.postgresql.PostgreSQLConnection
-import com.github.jasync.sql.db.{QueryResult => DBQueryResult}
+import com.github.jasync.sql.db.{ QueryResult => DBQueryResult }
 import com.typesafe.config.Config
-import io.getquill.ReturnAction.{ReturnColumns, ReturnNothing, ReturnRecord}
-import io.getquill.context.jasync.{ArrayDecoders, ArrayEncoders, JAsyncContext, JAsyncContextBase, UUIDObjectEncoding}
+import io.getquill.ReturnAction.{ ReturnColumns, ReturnNothing, ReturnRecord }
+import io.getquill.context.jasync.{ ArrayDecoders, ArrayEncoders, JAsyncContext, JAsyncContextBase, UUIDObjectEncoding }
 import io.getquill.util.LoadConfig
 import io.getquill.util.Messages.fail
 
