@@ -1,6 +1,5 @@
 package io.getquill.context.jasync.qzio.postgres
 
-import scala.concurrent.ExecutionContext.Implicits.{ global => ec }
 import io.getquill.context.sql.CaseClassQuerySpec
 import org.scalatest.matchers.should.Matchers._
 
@@ -11,7 +10,7 @@ class CaseClassQueryAsyncSpec extends CaseClassQuerySpec with ZioSpec {
 
   override def beforeAll =
     await {
-      testContext.transaction { implicit ec =>
+      testContext.transaction {
         for {
           _ <- testContext.run(query[Contact].delete)
           _ <- testContext.run(query[Address].delete)

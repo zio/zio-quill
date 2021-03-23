@@ -2,6 +2,7 @@ package io.getquill.context.jasync.qzio.postgres
 
 import io.getquill.context.sql.ProductSpec
 import io.getquill.context.sql.Id
+import zio.ZIO
 
 class ProductPostgresAsyncSpec extends ProductSpec with ZioSpec {
 
@@ -15,7 +16,7 @@ class ProductPostgresAsyncSpec extends ProductSpec with ZioSpec {
 
   "Product" - {
     "Insert multiple products" in {
-      val inserted = await(Future.sequence(productEntries.map(product => testContext.run(productInsert(lift(product))))))
+      val inserted = await(ZIO.collectAll(productEntries.map(product => testContext.run(productInsert(lift(product))))))
       val product = await(testContext.run(productById(lift(inserted(2))))).head
       product.description mustEqual productEntries(2).description
       product.id mustEqual inserted(2)

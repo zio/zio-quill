@@ -5,9 +5,6 @@ import java.time.{ LocalDate, LocalDateTime, ZonedDateTime }
 import io.getquill.context.sql.EncodingSpec
 import org.joda.time.{ DateTime => JodaDateTime, LocalDate => JodaLocalDate, LocalDateTime => JodaLocalDateTime }
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Await
-import scala.concurrent.duration.Duration
 import java.util.Date
 import java.util.UUID
 import io.getquill.Query
@@ -25,7 +22,7 @@ class PostgresAsyncEncodingSpec extends EncodingSpec with ZioSpec {
         result <- testContext.run(query[EncodingTestEntity])
       } yield result
 
-    verify(Await.result(r, Duration.Inf))
+    verify(await(r))
   }
 
   "encodes and decodes uuids" in {
@@ -34,31 +31,31 @@ class PostgresAsyncEncodingSpec extends EncodingSpec with ZioSpec {
 
     //delete old values
     val q0 = quote(query[EncodingUUIDTestEntity].delete)
-    val rez0 = Await.result(testContext.run(q0), Duration.Inf)
+    val rez0 = await(testContext.run(q0))
 
     //insert new uuid
-    val rez1 = Await.result(testContext.run(query[EncodingUUIDTestEntity].insert(lift(EncodingUUIDTestEntity(testUUID)))), Duration.Inf)
+    val rez1 = await(testContext.run(query[EncodingUUIDTestEntity].insert(lift(EncodingUUIDTestEntity(testUUID)))))
 
     //verify you can get the uuid back from the db
     val q2 = quote(query[EncodingUUIDTestEntity].map(p => p.v1))
-    val rez2 = Await.result(testContext.run(q2), Duration.Inf)
+    val rez2 = await(testContext.run(q2))
 
     rez2 mustEqual List(testUUID)
   }
 
   "fails if the column has the wrong type" - {
     "numeric" in {
-      Await.result(testContext.run(liftQuery(insertValues).foreach(e => insert(e))), Duration.Inf)
+      await(testContext.run(liftQuery(insertValues).foreach(e => insert(e))))
       case class EncodingTestEntity(v1: Int)
       val e = intercept[IllegalStateException] {
-        Await.result(testContext.run(query[EncodingTestEntity]), Duration.Inf)
+        await(testContext.run(query[EncodingTestEntity]))
       }
     }
     "non-numeric" in {
-      Await.result(testContext.run(liftQuery(insertValues).foreach(e => insert(e))), Duration.Inf)
+      await(testContext.run(liftQuery(insertValues).foreach(e => insert(e))))
       case class EncodingTestEntity(v1: Date)
       val e = intercept[IllegalStateException] {
-        Await.result(testContext.run(query[EncodingTestEntity]), Duration.Inf)
+        await(testContext.run(query[EncodingTestEntity]))
       }
     }
   }
@@ -76,13 +73,13 @@ class PostgresAsyncEncodingSpec extends EncodingSpec with ZioSpec {
       } yield {
         r
       }
-    verify(Await.result(fut, Duration.Inf))
+    verify(await(fut))
   }
 
   "returning UUID" in {
     val success = for {
-      uuid <- Await.result(testContext.run(insertBarCode(lift(barCodeEntry))), Duration.Inf)
-      barCode <- Await.result(testContext.run(findBarCodeByUuid(uuid)), Duration.Inf).headOption
+      uuid <- await(testContext.run(insertBarCode(lift(barCodeEntry))))
+      barCode <- await(testContext.run(findBarCodeByUuid(uuid))).headOption
     } yield {
       verifyBarcode(barCode)
     }
@@ -97,7 +94,7 @@ class PostgresAsyncEncodingSpec extends EncodingSpec with ZioSpec {
       _ <- testContext.run(query[DateEncodingTestEntity].insert(lift(entity)))
       result <- testContext.run(query[DateEncodingTestEntity])
     } yield result
-    Await.result(r, Duration.Inf) mustBe Seq(entity)
+    await(r) mustBe Seq(entity)
   }
 
   "decodes ZonedDateTime, LocalDate and LocalDateTime types" in {
@@ -108,7 +105,7 @@ class PostgresAsyncEncodingSpec extends EncodingSpec with ZioSpec {
       _ <- testContext.run(query[DateEncodingTestEntity].insert(lift(entity)))
       result <- testContext.run(query[DateEncodingTestEntity])
     } yield result
-    Await.result(r, Duration.Inf) mustBe Seq(entity)
+    await(r) mustBe Seq(entity)
   }
 
   "encodes custom type inside singleton object" in {
@@ -123,6 +120,6 @@ class PostgresAsyncEncodingSpec extends EncodingSpec with ZioSpec {
     }
 
     implicit val c = testContext
-    Await.result(Singleton(), Duration.Inf)
+    await(Singleton())
   }
 }

@@ -2,10 +2,10 @@ package io.getquill.context.jasync.qzio.postgres
 
 import io.getquill.context.sql.EncodingTestType
 import io.getquill.context.sql.encoding.ArrayEncodingBaseSpec
-import org.joda.time.{DateTime => JodaDateTime, LocalDate => JodaLocalDate, LocalDateTime => JodaLocalDateTime}
+import org.joda.time.{ DateTime => JodaDateTime, LocalDate => JodaLocalDate, LocalDateTime => JodaLocalDateTime }
 
-import java.time.{LocalDate, LocalDateTime}
-import java.util.{Date, UUID}
+import java.time.{ LocalDate, LocalDateTime }
+import java.util.{ Date, UUID }
 
 class ArrayAsyncEncodingSpec extends ArrayEncodingBaseSpec with ZioSpec {
   val ctx = testContext

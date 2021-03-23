@@ -31,10 +31,6 @@ class PostgresJAsyncContextSpec extends Spec with ZioSpec {
     (1, "foo", Some(123)) mustBe inserted
   }
 
-  "performIO" in {
-    await(performIO(runIO(qr4).transactional))
-  }
-
   "probe" in {
     probe("select 1").toOption mustBe defined
   }

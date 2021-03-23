@@ -4,7 +4,7 @@ import com.github.jasync.sql.db.pool.ConnectionPool
 import com.github.jasync.sql.db.postgresql.PostgreSQLConnection
 import io.getquill.PostgresJAsyncZioContext.BuildConnection
 import io.getquill.util.LoadConfig
-import io.getquill.{PostgresJAsyncContextConfig, Spec}
+import io.getquill.{ PostgresJAsyncContextConfig, Spec }
 import zio.ZLayer
 
 trait ZioSpec extends Spec {

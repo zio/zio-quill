@@ -1,7 +1,5 @@
 package io.getquill.context.jasync.qzio.postgres
 
-import scala.concurrent.ExecutionContext.Implicits.{ global => ec }
-
 import io.getquill.context.sql.PeopleSpec
 
 class PeoplePostgresAsyncSpec extends PeopleSpec with ZioSpec {
@@ -11,7 +9,7 @@ class PeoplePostgresAsyncSpec extends PeopleSpec with ZioSpec {
 
   override def beforeAll =
     await {
-      testContext.transaction { implicit ec =>
+      testContext.transaction {
         for {
           _ <- testContext.run(query[Couple].delete)
           _ <- testContext.run(query[Person].filter(_.age > 0).delete)

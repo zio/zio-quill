@@ -2,8 +2,6 @@ package io.getquill.context.jasync.qzio.postgres
 
 import io.getquill.context.sql.ArrayOpsSpec
 
-import scala.concurrent.ExecutionContext.Implicits.global
-
 class ArrayOpsAsyncSpec extends ArrayOpsSpec with ZioSpec {
   val ctx = testContext
 
