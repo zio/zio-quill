@@ -5,6 +5,7 @@ import com.github.jasync.sql.db.{ Connection, QueryResult, RowData }
 import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.util.ContextLogger
 import io.getquill.{ NamingStrategy, ReturnAction }
+import izumi.reflect.Tag
 import kotlin.jvm.functions.Function1
 import zio.{ Has, Task, ZIO }
 
@@ -13,24 +14,22 @@ import scala.jdk.CollectionConverters._
 import scala.util.Try
 
 object JAsyncZioContext {
-  type JIO[T] = ZIO[Has[Connection], Throwable, T]
-
   implicit class CompleteableFutureOps[T](cf: CompletableFuture[T]) {
     def toZio: Task[T] = ZIO.fromCompletionStage(cf)
   }
 }
 
-abstract class JAsyncZioContext[D <: SqlIdiom, N <: NamingStrategy](val idiom: D, val naming: N)
+abstract class JAsyncZioContext[D <: SqlIdiom, N <: NamingStrategy, C <: Connection: Tag](val idiom: D, val naming: N)
   extends JAsyncContextBase[D, N] {
 
   import JAsyncZioContext._
 
-  private val logger = ContextLogger(classOf[JAsyncZioContext[_, _]])
+  private val logger = ContextLogger(classOf[JAsyncZioContext[_, _, _]])
 
   override type PrepareRow = Seq[Any]
   override type ResultRow = RowData
 
-  override type Result[T] = JIO[T]
+  override type Result[T] = ZIO[Has[C], Throwable, T]
   override type RunQueryResult[T] = Seq[T]
   override type RunQuerySingleResult[T] = T
   override type RunActionResult = Long
@@ -60,55 +59,55 @@ abstract class JAsyncZioContext[D <: SqlIdiom, N <: NamingStrategy](val idiom: D
         }
     }
 
-  def transaction[T](ops: JIO[T]) = {
+  def transaction[T](ops: ZIO[Has[C], Throwable, T]) = {
     for {
-      env <- ZIO.environment[Has[Connection]]
-      conn = env.get[Connection]
+      env <- ZIO.environment[Has[C]]
+      conn = env.get[C]
       rt <- ZIO.runtime[Any]
       result <- conn.inTransaction(toKotlin(
-        (conn: Connection) => rt.unsafeRun(ops.provide(env).toCompletableFuture)
+        (conn: Connection) => rt.unsafeRun(ops.provide(Has(conn.asInstanceOf[C])).toCompletableFuture)
       )).toZio
     } yield result
   }
 
-  def prepareAndSend(sql: String, conn: Connection, prepare: Prepare) = {
+  def prepareAndSend(sql: String, conn: C, prepare: Prepare) = {
     val (params, values) = prepare(Nil)
     logger.logQuery(sql, params)
     conn.sendPreparedStatement(sql, values.asJava)
   }
 
-  def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): JIO[List[T]] = {
+  def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): ZIO[Has[C], Throwable, List[T]] = {
     for {
-      env <- ZIO.environment[Has[Connection]]
-      conn = env.get[Connection]
+      env <- ZIO.environment[Has[C]]
+      conn = env.get[C]
       rows <- ZIO.succeed(prepareAndSend(sql, conn, prepare).toZio).flatten
       results <- ZIO.effect(rows.getRows.asScala.iterator.map(extractor).toList)
     } yield results
   }
 
-  def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): JIO[T] =
+  def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): ZIO[Has[C], Throwable, T] =
     executeQuery(sql, prepare, extractor).map(handleSingleResult)
 
-  def executeAction[T](sql: String, prepare: Prepare = identityPrepare): JIO[Long] = {
+  def executeAction[T](sql: String, prepare: Prepare = identityPrepare): ZIO[Has[C], Throwable, Long] = {
     for {
-      env <- ZIO.environment[Has[Connection]]
-      conn = env.get[Connection]
+      env <- ZIO.environment[Has[C]]
+      conn = env.get[C]
       rows <- ZIO.succeed(prepareAndSend(sql, conn, prepare).toZio).flatten
       result <- ZIO.effect(rows.getRowsAffected)
     } yield result
   }
 
-  def executeActionReturning[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T], returningAction: ReturnAction): JIO[T] = {
+  def executeActionReturning[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T], returningAction: ReturnAction): ZIO[Has[C], Throwable, T] = {
     for {
-      env <- ZIO.environment[Has[Connection]]
-      conn = env.get[Connection]
+      env <- ZIO.environment[Has[C]]
+      conn = env.get[C]
       rows <- ZIO.succeed(prepareAndSend(sql, conn, prepare).toZio).flatten
       result <- ZIO.effect(extractActionResult(returningAction, extractor)(rows))
     } yield result
   }
 
-  def executeBatchAction(groups: List[BatchGroup]): JIO[List[Long]] = {
-    def prep(conn: Connection) =
+  def executeBatchAction(groups: List[BatchGroup]): ZIO[Has[C], Throwable, List[Long]] = {
+    def prep(conn: C) =
       for {
         BatchGroup(sql, prepares) <- groups
         prepare <- prepares
@@ -116,15 +115,15 @@ abstract class JAsyncZioContext[D <: SqlIdiom, N <: NamingStrategy](val idiom: D
 
     // TODO not sure why the JAsync version uses foldLeft and list builder. I think it's the same perf as a full list
     for {
-      env <- ZIO.environment[Has[Connection]]
-      conn = env.get[Connection]
+      env <- ZIO.environment[Has[C]]
+      conn = env.get[C]
       jobs <- ZIO.effect(prep(conn))
       results <- ZIO.collectAll(jobs)
     } yield results
   }
 
-  def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T]): JIO[List[T]] = {
-    def prep(conn: Connection) =
+  def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T]): ZIO[Has[C], Throwable, List[T]] = {
+    def prep(conn: C) =
       for {
         BatchGroupReturning(sql, column, prepares) <- groups
         prepare <- prepares
@@ -132,8 +131,8 @@ abstract class JAsyncZioContext[D <: SqlIdiom, N <: NamingStrategy](val idiom: D
 
     // TODO not sure why the JAsync version uses foldLeft and list builder. I think it's the same perf as a full list
     for {
-      env <- ZIO.environment[Has[Connection]]
-      conn = env.get[Connection]
+      env <- ZIO.environment[Has[C]]
+      conn = env.get[C]
       jobs <- ZIO.effect(prep(conn))
       results <- ZIO.collectAll(jobs)
     } yield results

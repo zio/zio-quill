@@ -2,13 +2,12 @@ package io.getquill.context.jasync.qzio.postgres
 
 import io.getquill.context.sql.OnConflictSpec
 
-import scala.concurrent.ExecutionContext.Implicits.global
-
 class OnConflictAsyncSpec extends OnConflictSpec with ZioSpec {
   val ctx = testContext
   import ctx._
 
   override protected def beforeAll(): Unit = {
+    super.beforeAll()
     await(ctx.run(qr1.delete))
     ()
   }

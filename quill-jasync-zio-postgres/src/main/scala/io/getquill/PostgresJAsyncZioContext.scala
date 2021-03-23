@@ -38,7 +38,7 @@ object PostgresJAsyncZioContext {
 }
 
 class PostgresJAsyncZioContext[N <: NamingStrategy](naming: N)
-  extends JAsyncZioContext[PostgresDialect, N](PostgresDialect, naming)
+  extends JAsyncZioContext[PostgresDialect, N, PostgreSQLConnection](PostgresDialect, naming)
   with PostgresJAsyncContextBase[N] {
 
   override protected def extractActionResult[O](returningAction: ReturnAction, returningExtractor: Extractor[O])(result: DBQueryResult): O =

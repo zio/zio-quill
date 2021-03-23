@@ -7,7 +7,8 @@ class PeoplePostgresAsyncSpec extends PeopleSpec with ZioSpec {
   val context = testContext
   import testContext._
 
-  override def beforeAll =
+  override def beforeAll = {
+    super.beforeAll()
     await {
       testContext.transaction {
         for {
@@ -18,6 +19,7 @@ class PeoplePostgresAsyncSpec extends PeopleSpec with ZioSpec {
         } yield {}
       }
     }
+  }
 
   "Example 1 - differences" in {
     await(testContext.run(`Ex 1 differences`)) mustEqual `Ex 1 expected result`

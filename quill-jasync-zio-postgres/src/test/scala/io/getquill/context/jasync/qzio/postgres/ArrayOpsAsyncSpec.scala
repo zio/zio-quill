@@ -15,6 +15,7 @@ class ArrayOpsAsyncSpec extends ArrayOpsSpec with ZioSpec {
   }
 
   override protected def beforeAll(): Unit = {
+    super.beforeAll()
     await(ctx.run(entity.delete))
     await(ctx.run(insertEntries))
     ()

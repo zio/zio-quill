@@ -8,7 +8,8 @@ class CaseClassQueryAsyncSpec extends CaseClassQuerySpec with ZioSpec {
   val context = testContext
   import testContext._
 
-  override def beforeAll =
+  override def beforeAll = {
+    super.beforeAll()
     await {
       testContext.transaction {
         for {
@@ -19,6 +20,7 @@ class CaseClassQueryAsyncSpec extends CaseClassQuerySpec with ZioSpec {
         } yield {}
       }
     }
+  }
 
   "Example 1 - Single Case Class Mapping" in {
     await(testContext.run(`Ex 1 CaseClass Record Output`)) should contain theSameElementsAs `Ex 1 CaseClass Record Output expected result`

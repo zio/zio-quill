@@ -10,6 +10,7 @@ class ProductPostgresAsyncSpec extends ProductSpec with ZioSpec {
   import testContext._
 
   override def beforeAll = {
+    super.beforeAll()
     await(testContext.run(quote(query[Product].delete)))
     ()
   }

@@ -7,7 +7,8 @@ class DepartmentsPostgresAsyncSpec extends DepartmentsSpec with ZioSpec {
   val context = testContext
   import testContext._
 
-  override def beforeAll =
+  override def beforeAll = {
+    super.beforeAll()
     await {
       testContext.transaction {
         for {
@@ -21,6 +22,7 @@ class DepartmentsPostgresAsyncSpec extends DepartmentsSpec with ZioSpec {
         } yield {}
       }
     }
+  }
 
   "Example 8 - nested naive" in {
     await(testContext.run(`Example 8 expertise naive`(lift(`Example 8 param`)))) mustEqual `Example 8 expected result`

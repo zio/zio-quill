@@ -56,6 +56,7 @@ class PostgresJAsyncContextSpec extends Spec with ZioSpec {
   }
 
   override protected def beforeAll(): Unit = {
+    super.beforeAll()
     await(testContext.run(qr1.delete))
     ()
   }
