@@ -960,7 +960,7 @@ trait Parsing extends ValueComputation with QuatMaking {
   private def reprocessReturnClause(ident: Ident, originalBody: Ast, action: Tree) = {
     val actionType = typecheckUnquoted(action)
 
-    (ident == originalBody, actionType.tpe) match {
+    (ident == originalBody, actionType.tpe.dealias) match {
       // Note, tuples are also case classes so this also matches for tuples
       case (true, ClassTypeRefMatch(cls, List(arg))) if (cls == asClass[DslInsert[_]] || cls == asClass[DslUpdate[_]] || cls == asClass[DslDelete[_]]) && isTypeCaseClass(arg) =>
 
