@@ -4,10 +4,16 @@ import io.getquill.quotation.NonQuotedException
 
 import scala.annotation.compileTimeOnly
 
-sealed trait QOP[InputEntity, +OutputEntity]
-
 object Model {
-  sealed trait Query[+T] extends QOP[Nothing, T] {
+
+  /**
+   * A Quill-Action-Concept centrally defines Quill Query, Insert, Update, Delete, etc... actions.
+   * This ZIO-inspired construct makes it easier to reason about Quoted actions
+   * (particularly in Dotty) in a type-full way.
+   */
+  sealed trait QAC[ModificationEntity, +OutputEntity]
+
+  sealed trait Query[+T] extends QAC[Nothing, T] {
 
     def map[R](f: T => R): Query[R] = NonQuotedException()
 
@@ -58,7 +64,7 @@ object Model {
      * @param unquote is used for conversion of `Quoted[A]` to A` with `unquote`
      * @return
      */
-    def foreach[A <: QOP[_, _] with Action[_], B](f: T => B)(implicit unquote: B => A): BatchAction[A] = NonQuotedException()
+    def foreach[A <: QAC[_, _] with Action[_], B](f: T => B)(implicit unquote: B => A): BatchAction[A] = NonQuotedException()
   }
 
   sealed trait JoinQuery[A, B, R] extends Query[R] {
@@ -87,7 +93,7 @@ object Model {
 
   sealed trait Action[E]
 
-  sealed trait Insert[E] extends QOP[E, Nothing] with Action[E] {
+  sealed trait Insert[E] extends QAC[E, Nothing] with Action[E] {
     @compileTimeOnly(NonQuotedException.message)
     def returning[R](f: E => R): ActionReturning[E, R] = NonQuotedException()
 
@@ -124,17 +130,17 @@ object Model {
     def onConflictUpdate(target: E => Any, targets: (E => Any)*)(assign: ((E, E) => (Any, Any)), assigns: ((E, E) => (Any, Any))*): Insert[E] = NonQuotedException()
   }
 
-  sealed trait ActionReturning[E, +Output] extends QOP[E, Output] with Action[E]
+  sealed trait ActionReturning[E, +Output] extends QAC[E, Output] with Action[E]
 
-  sealed trait Update[E] extends QOP[E, Nothing] with Action[E] {
+  sealed trait Update[E] extends QAC[E, Nothing] with Action[E] {
     @compileTimeOnly(NonQuotedException.message)
     def returning[R](f: E => R): ActionReturning[E, R] = NonQuotedException()
   }
 
-  sealed trait Delete[E] extends QOP[E, Nothing] with Action[E] {
+  sealed trait Delete[E] extends QAC[E, Nothing] with Action[E] {
     @compileTimeOnly(NonQuotedException.message)
     def returning[R](f: E => R): ActionReturning[E, R] = NonQuotedException()
   }
 
-  sealed trait BatchAction[+A <: QOP[_, _] with Action[_]]
+  sealed trait BatchAction[+A <: QAC[_, _] with Action[_]]
 }
