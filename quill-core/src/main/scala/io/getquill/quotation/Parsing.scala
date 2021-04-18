@@ -337,6 +337,7 @@ trait Parsing extends ValueComputation with QuatMaking {
 
   def combinedInfixParser(infixIsPure: Boolean, quat: Quat): Parser[Ast] = Parser[Ast] {
     case q"$pack.InfixInterpolator(scala.StringContext.apply(..${ parts: List[String] })).infix(..$params)" =>
+      // Parts that end with # indicate this is a dynamic infix.
       if (parts.find(_.endsWith("#")).isDefined) {
         val elements =
           parts.zipWithIndex.flatMap {
