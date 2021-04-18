@@ -597,6 +597,7 @@ object OnConflict {
 }
 //************************************************************
 
+/** For Dynamic Infix Splices */
 class Dynamic(val tree: Any)(theQuat: => Quat) extends Ast {
   private lazy val computedQuat = theQuat
   def quat = computedQuat
