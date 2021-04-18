@@ -13,7 +13,7 @@ package object getquill {
   type Update[E] = Model.Update[E]
   type ActionReturning[E, +Output] = Model.ActionReturning[E, Output]
   type Delete[E] = Model.Delete[E]
-  type BatchAction[+A <: QOP[_, _] with Action[_]] = Model.BatchAction[A]
+  type BatchAction[+A <: Model.QAC[_, _] with Action[_]] = Model.BatchAction[A]
 
   object testContext extends TestMirrorContextTemplate(MirrorIdiom, Literal) with TestEntities
   object testAsyncContext extends AsyncMirrorContext(MirrorIdiom, Literal) with TestEntities {
