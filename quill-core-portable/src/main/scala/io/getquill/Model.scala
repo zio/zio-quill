@@ -89,7 +89,7 @@ trait EntityQueryModel[T]
   def delete: Delete[T] = NonQuotedException()
 }
 
-sealed trait Action[E]
+sealed trait Action[E] extends QAC[E, Any]
 
 sealed trait Insert[E] extends QAC[E, Nothing] with Action[E] {
   @compileTimeOnly(NonQuotedException.message)
