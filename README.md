@@ -2863,7 +2863,7 @@ provide a `DataSource` instead of a `Connection` like this (note that the Connec
 
 ```scala
 import ZioJdbc._
-val zioConn = Layers.dataSourceFromPrefix("testPostgresDB") >>> Layers.dataSourceToConnection
+val zioConn = QDataSource.fromPrefix("testPostgresDB") >>> QDataSource.toConnection
 MyZioContext.run(query[Person]).provideCustomLayer(zioConn)
 ```
 
