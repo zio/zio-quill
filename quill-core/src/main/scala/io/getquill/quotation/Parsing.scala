@@ -337,6 +337,7 @@ trait Parsing extends ValueComputation with QuatMaking {
 
   def combinedInfixParser(infixIsPure: Boolean, quat: Quat): Parser[Ast] = Parser[Ast] {
     case q"$pack.InfixInterpolator(scala.StringContext.apply(..${ parts: List[String] })).infix(..$params)" =>
+      // Parts that end with # indicate this is a dynamic infix.
       if (parts.find(_.endsWith("#")).isDefined) {
         val elements =
           parts.zipWithIndex.flatMap {
@@ -960,7 +961,7 @@ trait Parsing extends ValueComputation with QuatMaking {
   private def reprocessReturnClause(ident: Ident, originalBody: Ast, action: Tree) = {
     val actionType = typecheckUnquoted(action)
 
-    (ident == originalBody, actionType.tpe) match {
+    (ident == originalBody, actionType.tpe.dealias) match {
       // Note, tuples are also case classes so this also matches for tuples
       case (true, ClassTypeRefMatch(cls, List(arg))) if (cls == asClass[DslInsert[_]] || cls == asClass[DslUpdate[_]] || cls == asClass[DslDelete[_]]) && isTypeCaseClass(arg) =>
 
