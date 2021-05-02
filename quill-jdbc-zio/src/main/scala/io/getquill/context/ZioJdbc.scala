@@ -27,6 +27,14 @@ object ZioJdbc {
   }
 
   object QDataSource {
+    object Managed {
+      def fromDataSource(ds: => DataSource with Closeable) =
+        for {
+          block <- ZManaged.environment[Blocking]
+          managedDs <- ZManaged.fromAutoCloseable(Task(ds))
+        } yield (Has(managedDs) ++ block)
+    }
+
     val toConnection: ZLayer[QDataSource, SQLException, QConnection] = {
       val managed =
         for {
@@ -37,6 +45,14 @@ object ZioJdbc {
         } yield Has(r) ++ Has(blocking)
       ZLayer.fromManagedMany(managed)
     }
+
+    def fromDataSource(ds: => DataSource with Closeable): ZLayer[Blocking, Throwable, QDataSource] =
+      ZLayer.fromEffectMany {
+        for {
+          block <- ZIO.environment[Blocking]
+          dst <- Task(ds)
+        } yield (Has(dst) ++ block)
+      }
 
     def fromConfig(config: => Config): ZLayer[Blocking, Throwable, QDataSource] =
       fromJdbcConfig(JdbcContextConfig(config))
