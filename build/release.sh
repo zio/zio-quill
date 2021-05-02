@@ -46,7 +46,7 @@ then
 
     ls -ltr
     sleep 3 # Need to wait until credential files fully written or build fails sometimes
-    project_version="$(sbt 'show version' | tail -1 | cut -f 2)"
+    project_version="v$(cat version.sbt | awk -F'"' '{print $2}')"
     echo "Detected project_version '$project_version' from SBT Files (on TRAVIS_BRANCH '$TRAVIS_BRANCH')"
 
     # When an artifact is actually published, a build will go out on the git commit: "Setting version to <YOUR VERSION>".

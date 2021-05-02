@@ -1,3 +1,8 @@
+# 3.7.1
+
+- [Add a single ZIO-inspired root type QAC for all actions](https://github.com/getquill/quill/pull/2130)
+- [Adding fromDataSource ZIO API and example](https://github.com/getquill/quill/pull/2131)
+
 # 3.7.0
 
 - [ZIO Cassandra](https://github.com/getquill/quill/pull/2106)
