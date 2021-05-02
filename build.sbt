@@ -6,8 +6,6 @@ import scala.sys.process.Process
 import sbtcrossproject.crossProject
 import java.io.{File => JFile}
 
-enablePlugins(TutPlugin)
-
 val CodegenTag = Tags.Tag("CodegenTag")
 (concurrentRestrictions in Global) += Tags.exclusive(CodegenTag)
 (concurrentRestrictions in Global) += Tags.limit(ScalaJSTags.Link, 1)
@@ -118,7 +116,6 @@ lazy val `quill` = {
   val quill =
     (project in file("."))
     .settings(commonSettings: _*)
-    .settings(`tut-settings`:_*)
 
   // Do not do aggregate project builds when debugging since during that time
   // typically only individual modules are being build/compiled. This is mostly for convenience with IntelliJ.
@@ -656,29 +653,6 @@ lazy val `quill-orientdb` =
         )
       )
       .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
-
-lazy val `tut-sources` = Seq(
-  "CASSANDRA.md",
-  "README.md"
-)
-
-lazy val `tut-settings` = Seq(
-  scalacOptions in Tut := Seq(),
-  tutSourceDirectory := baseDirectory.value / "target" / "tut",
-  tutNameFilter := `tut-sources`.map(_.replaceAll("""\.""", """\.""")).mkString("(", "|", ")").r,
-  sourceGenerators in Compile +=
-    Def.task {
-      `tut-sources`.foreach { name =>
-        val source = baseDirectory.value / name
-        val file = baseDirectory.value / "target" / "tut" / name
-        val str = IO.read(source).replace("```scala", "```tut")
-        // workaround tut bug due to https://github.com/tpolecat/tut/pull/220
-        val fixed = str.replaceAll("\\n//.*", "\n1").replaceAll("//.*", "")
-        IO.write(file, fixed)
-      }
-      Seq()
-    }.taskValue
-)
 
 lazy val mimaSettings = MimaPlugin.mimaDefaultSettings ++ Seq(
   mimaPreviousArtifacts := {
