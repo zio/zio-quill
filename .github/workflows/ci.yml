@@ -23,8 +23,10 @@ jobs:
       with:
         java-version: 1.8.0
 
-    - run: export TRAVIS_SCALA_VERSION=${{ matrix.scala }}
-    - run: ./build/build.sh ${{ matrix.module }}
+    - run: |
+        export TRAVIS_SCALA_VERSION=${{ matrix.scala }}
+        echo "TRAVIS_SCALA_VERSION='$TRAVIS_SCALA_VERSION'"
+        ./build/build.sh ${{ matrix.module }}
     
   release:
     runs-on: ubuntu-latest
@@ -51,10 +53,11 @@ jobs:
       with:
         java-version: 1.8.0
 
-    - run: export TRAVIS_PULL_REQUEST="false"
-      if: ${{ !github.event.issue.pull_request }}
-    - run: export TRAVIS_PULL_REQUEST="true"
-      if: ${{ github.event.issue.pull_request }}
-    - run: export TRAVIS_SCALA_VERSION=${{ matrix.scala }}
-    - run: export TRAVIS_BRANCH=$(git for-each-ref ${{ github.ref }} --format='%(refname:short)')
-    - run: ./build/release.sh ${{ matrix.scala_short }} ${{ matrix.module }}
+    - run: |
+        export TRAVIS_PULL_REQUEST=${{ github.event.pull_request!! }}
+        echo "TRAVIS_PULL_REQUEST='$TRAVIS_PULL_REQUEST'"
+        export TRAVIS_SCALA_VERSION=${{ matrix.scala }}
+        echo "TRAVIS_SCALA_VERSION='$TRAVIS_SCALA_VERSION'"
+        export TRAVIS_BRANCH=$(git for-each-ref ${{ github.ref }} --format='%(refname:short)')
+        echo "TRAVIS_BRANCH='$TRAVIS_BRANCH'"
+        ./build/release.sh ${{ matrix.scala_short }} ${{ matrix.module }}
