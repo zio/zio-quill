@@ -54,7 +54,7 @@ jobs:
         java-version: 1.8.0
 
     - run: |
-        export TRAVIS_PULL_REQUEST=${{ (github.event.pull_request!)! }}
+        export TRAVIS_PULL_REQUEST=${{ !!github.event.pull_request }}
         echo "TRAVIS_PULL_REQUEST='$TRAVIS_PULL_REQUEST'"
         export TRAVIS_SCALA_VERSION=${{ matrix.scala }}
         echo "TRAVIS_SCALA_VERSION='$TRAVIS_SCALA_VERSION'"
