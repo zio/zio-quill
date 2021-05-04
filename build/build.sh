@@ -163,6 +163,12 @@ function sqltest_build() {
     sbt -Dmodules=sqltest -Doracle=true $SBT_ARGS test
 }
 
+function alldb_build() {
+    wait_for_databases
+    export JVM_OPTS="-Dquill.macro.log=false -Dquill.scala.version=$TRAVIS_SCALA_VERSION -Xms1024m -Xmx4g -Xss5m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC"
+    sbt -Dmodules=alldb $SBT_ARGS test doc
+}
+
 function db_build() {
     wait_for_databases
     sbt -Dmodules=db $SBT_ARGS test doc

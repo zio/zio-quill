@@ -48,6 +48,9 @@ lazy val bigdataModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-cassandra`, `quill-cassandra-lagom`, `quill-cassandra-monix`, `quill-cassandra-zio`, `quill-orientdb`, `quill-spark`
 )
 
+lazy val allDatabaseModules =
+  jsModules ++ dbModules ++ asyncModules ++ codegenModules
+
 lazy val allModules =
   baseModules ++ jsModules ++ dbModules ++ sqlTestModules ++ asyncModules ++ codegenModules ++ bigdataModules
 
@@ -81,6 +84,9 @@ val filteredModules = {
     case Some("sqltest") =>
       println("Compiling SQL test Modules")
       sqlTestModules
+    case Some("alldb") =>
+      println("Compiling SQL test Modules")
+      allDatabaseModules
     case Some("js") =>
       println("Compiling JavaScript Modules")
       jsModules
