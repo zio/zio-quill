@@ -26,17 +26,6 @@ jobs:
       with:
         java-version: 1.8.0
 
-    - name: Cache SBT
-      uses: actions/cache@v2
-      with:
-        path: |
-          ~/.ivy2/cache
-          ~/.cache/coursier
-          ~/.sbt
-        key: ${{ runner.os }}-sbt-${{ matrix.scala.binary-version }}-${{ hashFiles('**/*.sbt') }}-${{ hashFiles('**/build.properties') }}
-        restore-keys: |
-          ${{ runner.os }}-sbt-${{ matrix.scala.binary-version }}-
-
     - run: |
         export TRAVIS_SCALA_VERSION=${{ matrix.scala }}
         echo "TRAVIS_SCALA_VERSION='$TRAVIS_SCALA_VERSION'"
