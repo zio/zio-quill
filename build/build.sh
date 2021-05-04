@@ -157,12 +157,15 @@ function wait_for_bigdata() {
     show_mem
 }
 
+function base_build() {
+    sbt -Dmodules=base $SBT_ARGS test
+}
+
 function sqltest_build() {
     # Can use more memory here since not loading any images
     export JVM_OPTS="-Dquill.macro.log=false -Dquill.scala.version=$TRAVIS_SCALA_VERSION -Xms2g -Xmx5g -Xss5m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC"
     sbt -Dmodules=sqltest -Doracle=true $SBT_ARGS test
 }
-
 
 function alldb_build() {
     wait_for_databases
@@ -216,7 +219,10 @@ else
   echo "Not Logging into Docker for $TRAVIS_EVENT_TYPE build, restarting Docker using GCR mirror"
 fi
 
-if [[ $modules == "db" ]]; then
+if [[ $modules == "base" ]]; then
+    echo "Build Script: Doing Base Build"
+    base_build
+elif [[ $modules == "db" ]]; then
     echo "Build Script: Doing Database Build"
     db_build
 elif [[ $modules == "sqltest" ]]; then
