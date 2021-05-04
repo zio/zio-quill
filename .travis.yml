@@ -32,6 +32,20 @@ jobs:
   include:
     - stage: build
       if: type != pull_request
+      script: ./build/build.sh sqltest
+      scala: 2.11.12
+      name: "SQL Tests 2.11 - JVM and JS"
+    - stage: build
+      script: ./build/build.sh sqltest
+      scala: 2.12.10
+      name: "SQL Tests 2.12 - JVM and JS"
+    - stage: build
+      script: ./build/build.sh sqltest
+      scala: 2.13.1
+      name: "SQL Tests 2.13 - JVM and JS"
+
+    - stage: build
+      if: type != pull_request
       script: ./build/build.sh db
       scala: 2.11.12
       name: "Databases 2.11 - MySQL, Postgres, Sqlite, H2, SQL Server, Oracle"

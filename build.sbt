@@ -22,6 +22,10 @@ lazy val baseModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-sql-jvm`, `quill-monix`, `quill-zio`
 )
 
+lazy val sqlTestModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
+  `quill-sql-tests-jvm`, `quill-sql-tests-js`
+)
+
 lazy val dbModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-jdbc`, `quill-jdbc-monix`, `quill-jdbc-zio`
 )
@@ -45,9 +49,9 @@ lazy val bigdataModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
 )
 
 lazy val allModules =
-  baseModules ++ jsModules ++ dbModules ++ asyncModules ++ codegenModules ++ bigdataModules
+  baseModules ++ jsModules ++ dbModules ++ sqlTestModules ++ asyncModules ++ codegenModules ++ bigdataModules
 
-lazy val scala213Modules = baseModules ++ jsModules ++ dbModules ++ codegenModules ++ Seq[sbt.ClasspathDep[sbt.ProjectReference]](
+lazy val scala213Modules = baseModules ++ jsModules ++ dbModules ++ sqlTestModules ++ codegenModules ++ Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-async`,
   `quill-async-mysql`,
   `quill-async-postgres`,
@@ -74,6 +78,9 @@ val filteredModules = {
     case Some("base") =>
       println("Compiling Base Modules")
       baseModules
+    case Some("sqltest") =>
+      println("Compiling SQL test Modules")
+      sqlTestModules
     case Some("js") =>
       println("Compiling JavaScript Modules")
       jsModules
@@ -100,7 +107,7 @@ val filteredModules = {
       val scalaVersion = sys.props.get("quill.scala.version")
       if(scalaVersion.map(_.startsWith("2.13")).getOrElse(false)) {
         println("Compiling Scala 2.13 Modules")
-        baseModules ++ dbModules ++ jasyncModules
+        baseModules ++ dbModules ++ sqlTestModules ++ jasyncModules
       } else {
         println("Compiling All Modules")
         allModules
@@ -275,11 +282,17 @@ lazy val `quill-sql` =
       `quill-core` % "compile->compile;test->test"
     )
 
-
-
 lazy val `quill-sql-jvm` = `quill-sql`.jvm
 lazy val `quill-sql-js` = `quill-sql`.js
 
+lazy val `quill-sql-tests` =
+  crossProject(JVMPlatform, JSPlatform).crossType(ultraPure)
+    .settings(commonSettings: _*)
+    .settings(mimaSettings: _*)
+    .dependsOn(`quill-sql` % "compile->compile;test->test")
+
+lazy val `quill-sql-tests-jvm` = `quill-sql-tests`.jvm
+lazy val `quill-sql-tests-js` = `quill-sql-tests`.js
 
 lazy val `quill-codegen` =
   (project in file("quill-codegen"))

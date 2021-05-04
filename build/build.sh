@@ -157,6 +157,10 @@ function wait_for_bigdata() {
     show_mem
 }
 
+function sqltest_build() {
+    sbt -Dmodules=sqltest -Doracle=true $SBT_ARGS test
+}
+
 function db_build() {
     wait_for_databases
     sbt -Dmodules=db $SBT_ARGS test doc
@@ -207,6 +211,9 @@ fi
 if [[ $modules == "db" ]]; then
     echo "Build Script: Doing Database Build"
     db_build
+elif [[ $modules == "sqltest" ]]; then
+    echo "Build Script: Doing SQL Test Build"
+    sqltest_build
 elif [[ $modules == "js" ]]; then
     echo "Build Script: Doing JavaScript Build"
     js_build
