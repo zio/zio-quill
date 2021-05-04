@@ -167,9 +167,9 @@ function sqltest_build() {
     sbt -Dmodules=sqltest -Doracle=true $SBT_ARGS test
 }
 
-function alldb_build() {
+function dbgen_build() {
     wait_for_databases
-    sbt -Dmodules=alldb $SBT_ARGS test doc
+    sbt -Dmodules=dbgen $SBT_ARGS test doc
 }
 
 function db_build() {
@@ -225,9 +225,9 @@ if [[ $modules == "base" ]]; then
 elif [[ $modules == "db" ]]; then
     echo "Build Script: Doing Database Build"
     db_build
-elif [[ $modules == "alldb" ]]; then
-    echo "Build Script: Doing Database Build with Async and Codegen"
-    alldb_build
+elif [[ $modules == "dbgen" ]]; then
+    echo "Build Script: Doing Database Build with Codegen"
+    dbgen_build
 elif [[ $modules == "sqltest" ]]; then
     echo "Build Script: Doing SQL Test Build"
     sqltest_build

@@ -34,29 +34,43 @@ jobs:
       if: type != pull_request
       script: ./build/build.sh sqltest
       scala: 2.11.12
-      name: "SQL Tests 2.11 - JVM and JS"
+      name: "SQL Tests 2.11 - JVM"
     - stage: build
       script: ./build/build.sh sqltest
       scala: 2.12.10
-      name: "SQL Tests 2.12 - JVM and JS"
+      name: "SQL Tests 2.12 - JVM"
     - stage: build
       script: ./build/build.sh sqltest
       scala: 2.13.1
-      name: "SQL Tests 2.13 - JVM and JS"
+      name: "SQL Tests 2.13 - JVM"
 
     - stage: build
       if: type != pull_request
-      script: ./build/build.sh alldb
+      script: ./build/build.sh dbgen
       scala: 2.11.12
-      name: "Databases 2.11 - Sync/Async MySQL, Postgres, Sqlite, H2, SQL Server, Oracle and Codegen"
+      name: "Databases 2.11 - JDBC MySQL, Postgres, Sqlite, H2, SQL Server, Oracle and Codegen"
     - stage: build
-      script: ./build/build.sh alldb
+      script: ./build/build.sh dbgen
       scala: 2.12.10
-      name: "Databases 2.12 - Sync/Async MySQL, Postgres, Sqlite, H2, SQL Server, Oracle and Codegen"
+      name: "Databases 2.12 - JDBC MySQL, Postgres, Sqlite, H2, SQL Server, Oracle and Codegen"
     - stage: build
-      script: ./build/build.sh alldb
+      script: ./build/build.sh dbgen
       scala: 2.13.2
-      name: "Databases 2.13 - Sync/Async MySQL, Postgres, Sqlite, H2, SQL Server, Oracle and Codegen"
+      name: "Databases 2.13 - JDBC MySQL, Postgres, Sqlite, H2, SQL Server, Oracle and Codegen"
+
+    - stage: build
+      if: type != pull_request
+      script: ./build/build.sh async
+      scala: 2.11.12
+      name: "Databases 2.11 - Async MySQL, Postgres, Sqlite, H2, SQL Server, Oracle"
+    - stage: build
+      script: ./build/build.sh async
+      scala: 2.12.10
+      name: "Databases 2.12 - Async MySQL, Postgres, Sqlite, H2, SQL Server, Oracle"
+    - stage: build
+      script: ./build/build.sh async
+      scala: 2.13.2
+      name: "Databases 2.13 - Async MySQL, Postgres, Sqlite, H2, SQL Server, Oracle"
 
     - stage: build
       if: type != pull_request
