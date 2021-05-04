@@ -16,7 +16,7 @@ jobs:
     strategy:
       matrix:
         scala: [2.11.12, 2.12.10, 2.13.2]
-        module: [sqltest, dbgen, async, js, bigdata]
+        module: [sqltest, db, codegen, async, js, bigdata]
 
     steps:
     - uses: actions/checkout@v2
@@ -26,10 +26,16 @@ jobs:
       with:
         java-version: 1.8.0
 
-    - run: |
-        export TRAVIS_SCALA_VERSION=${{ matrix.scala }}
-        echo "TRAVIS_SCALA_VERSION='$TRAVIS_SCALA_VERSION'"
-        ./build/build.sh ${{ matrix.module }}
+    
+    - name: Scala ${{ matrix.scala }} Building ${{ matrix.module }}
+      uses: nick-invision/retry@v2
+      with:
+        timeout_minutes: 40
+        max_attempts: 3
+        command: |
+          export TRAVIS_SCALA_VERSION=${{ matrix.scala }}
+          echo "TRAVIS_SCALA_VERSION='$TRAVIS_SCALA_VERSION'"
+          ./build/build.sh ${{ matrix.module }}
     
   release:
     runs-on: ubuntu-latest
