@@ -289,6 +289,15 @@ lazy val `quill-sql-tests` =
   crossProject(JVMPlatform, JSPlatform).crossType(ultraPure)
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
+    .jsSettings(
+      libraryDependencies ++= Seq(
+        "com.github.vertical-blank" %%% "scala-sql-formatter" % "1.0.1"
+      ),
+      scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) },
+      coverageExcludedPackages := ".*",
+      // 2.12 Build seems to take forever without this option
+      scalaJSOptimizerOptions in fastOptJS in Test ~= { _.withDisableOptimizer(true) }
+    )
     .dependsOn(`quill-sql` % "compile->compile;test->test")
 
 lazy val `quill-sql-tests-jvm` = `quill-sql-tests`.jvm
