@@ -225,6 +225,9 @@ if [[ $modules == "base" ]]; then
 elif [[ $modules == "db" ]]; then
     echo "Build Script: Doing Database Build"
     db_build
+elif [[ $modules == "alldb" ]]; then
+    echo "Build Script: Doing Database Build with Async and Codegen"
+    alldb_build
 elif [[ $modules == "sqltest" ]]; then
     echo "Build Script: Doing SQL Test Build"
     sqltest_build
