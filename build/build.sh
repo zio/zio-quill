@@ -169,39 +169,39 @@ function sqltest_build() {
 
 function dbgen_build() {
     wait_for_databases
-    sbt -Dmodules=dbgen $SBT_ARGS test doc
+    sbt -Dmodules=dbgen $SBT_ARGS test
 }
 
 function db_build() {
     wait_for_databases
-    sbt -Dmodules=db $SBT_ARGS test doc
+    sbt -Dmodules=db $SBT_ARGS test
 }
 
 function js_build() {
     show_mem
     export JVM_OPTS="-Dquill.macro.log=false -Dquill.scala.version=$TRAVIS_SCALA_VERSION -Xms1024m -Xmx4g -Xss5m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC"
-    sbt -Dmodules=js $SBT_ARGS test doc
+    sbt -Dmodules=js $SBT_ARGS test
 }
 
 function async_build() {
     wait_for_mysql_postgres
-    sbt -Dmodules=async $SBT_ARGS test doc
+    sbt -Dmodules=async $SBT_ARGS test
 }
 
 function codegen_build() {
     wait_for_databases
-    sbt -Dmodules=codegen $SBT_ARGS test doc
+    sbt -Dmodules=codegen $SBT_ARGS test
 }
 
 function bigdata_build() {
     wait_for_bigdata
-    sbt -Dmodules=bigdata $SBT_ARGS test doc
+    sbt -Dmodules=bigdata $SBT_ARGS test
 }
 
 function full_build() {
     wait_for_databases
     wait_for_bigdata
-    sbt $SBT_ARGS test tut doc
+    sbt $SBT_ARGS test tut
 }
 
 if [[ (! -z "$DOCKER_USERNAME") && (! -z "$DOCKER_USERNAME") ]]; then
