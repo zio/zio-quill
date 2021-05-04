@@ -48,15 +48,29 @@ jobs:
       if: type != pull_request
       script: ./build/build.sh alldb
       scala: 2.11.12
-      name: "Databases 2.11 - Sync/Async/JS MySQL, Postgres, Sqlite, H2, SQL Server, Oracle and Codegen"
+      name: "Databases 2.11 - Sync/Async MySQL, Postgres, Sqlite, H2, SQL Server, Oracle and Codegen"
     - stage: build
       script: ./build/build.sh alldb
       scala: 2.12.10
-      name: "Databases 2.12 - Sync/Async/JS MySQL, Postgres, Sqlite, H2, SQL Server, Oracle and Codegen"
+      name: "Databases 2.12 - Sync/Async MySQL, Postgres, Sqlite, H2, SQL Server, Oracle and Codegen"
     - stage: build
       script: ./build/build.sh alldb
       scala: 2.13.2
-      name: "Databases 2.13 - Sync/Async/JS MySQL, Postgres, Sqlite, H2, SQL Server, Oracle and Codegen"
+      name: "Databases 2.13 - Sync/Async MySQL, Postgres, Sqlite, H2, SQL Server, Oracle and Codegen"
+
+    - stage: build
+      if: type != pull_request
+      script: ./build/build.sh js
+      scala: 2.11.12
+      name: "Databases 2.11 - JavaScript"
+    - stage: build
+      script: ./build/build.sh js
+      scala: 2.12.10
+      name: "Databases 2.12 - JavaScript"
+    - stage: build
+      script: ./build/build.sh js
+      scala: 2.13.1
+      name: "Databases 2.13 - JavaScript"
 
     - stage: build
       if: type != pull_request

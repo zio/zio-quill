@@ -12,7 +12,8 @@ val CodegenTag = Tags.Tag("CodegenTag")
 
 lazy val jsModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-core-portable-js`, `quill-core-js`,
-  `quill-sql-portable-js`, `quill-sql-js`
+  `quill-sql-portable-js`, `quill-sql-js`,
+  `quill-sql-tests-js`
 )
 
 lazy val baseModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
@@ -23,7 +24,7 @@ lazy val baseModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
 )
 
 lazy val sqlTestModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
-  `quill-sql-tests-jvm`, `quill-sql-tests-js`
+  `quill-sql-tests-jvm`
 )
 
 lazy val dbModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
@@ -49,7 +50,7 @@ lazy val bigdataModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
 )
 
 lazy val allDatabaseModules =
-  jsModules ++ dbModules ++ asyncModules ++ codegenModules
+  dbModules ++ asyncModules ++ codegenModules
 
 lazy val allModules =
   baseModules ++ jsModules ++ dbModules ++ sqlTestModules ++ asyncModules ++ codegenModules ++ bigdataModules

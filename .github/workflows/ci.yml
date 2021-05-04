@@ -13,7 +13,7 @@ jobs:
     strategy:
       matrix:
         scala: [2.11.12, 2.12.10, 2.13.2]
-        module: [sqltest, alldb, bigdata]
+        module: [sqltest, alldb, js, bigdata]
 
     steps:
     - uses: actions/checkout@v2
