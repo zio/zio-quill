@@ -30,7 +30,7 @@ jobs:
     - name: Scala ${{ matrix.scala }} Building ${{ matrix.module }}
       uses: nick-invision/retry@v2
       with:
-        timeout_minutes: 40
+        timeout_minutes: 180
         max_attempts: 3
         command: |
           export TRAVIS_SCALA_VERSION=${{ matrix.scala }}
