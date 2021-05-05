@@ -173,8 +173,7 @@ function dbgen_build() {
 }
 
 function db_build() {
-    wait_for_databases
-    sbt -Dmodules=db $SBT_ARGS test
+    sbt -Dmodules=db $SBT_ARGS test:compile
 }
 
 function js_build() {
@@ -184,13 +183,11 @@ function js_build() {
 }
 
 function async_build() {
-    wait_for_mysql_postgres
-    sbt -Dmodules=async $SBT_ARGS test
+    sbt -Dmodules=async $SBT_ARGS test:compile
 }
 
 function codegen_build() {
-    wait_for_databases
-    sbt -Dmodules=codegen $SBT_ARGS test
+    sbt -Dmodules=codegen $SBT_ARGS test:compile
 }
 
 function bigdata_build() {
