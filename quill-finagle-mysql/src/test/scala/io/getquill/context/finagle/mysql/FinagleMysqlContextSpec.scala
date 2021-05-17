@@ -6,7 +6,10 @@ import com.twitter.finagle.mysql
 import com.twitter.finagle.mysql.{ EmptyValue, Error, IsolationLevel }
 import com.twitter.util._
 import io.getquill.context.sql.{ TestDecoders, TestEncoders }
-import io.getquill.{ testContext => _, _ }
+import io.getquill.Spec
+import io.getquill.FinagleMysqlContext
+import io.getquill.Literal
+import io.getquill.TestEntities
 
 class FinagleMysqlContextSpec extends Spec {
 

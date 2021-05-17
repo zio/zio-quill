@@ -58,7 +58,7 @@ class SqlQuerySpec extends Spec {
       }
     }
 
-    "nested join - named variables - query schema" in {
+    "nested join - named variables - query schema " in {
       val qs1 = quote {
         querySchema[TestEntity]("CustomEntity", _.i -> "field_i")
       }

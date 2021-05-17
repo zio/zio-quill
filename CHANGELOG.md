@@ -1,3 +1,36 @@
+# 3.7.1
+
+- [Add a single ZIO-inspired root type QAC for all actions](https://github.com/getquill/quill/pull/2130)
+- [Adding fromDataSource ZIO API and example](https://github.com/getquill/quill/pull/2131)
+
+# 3.7.0
+
+- [ZIO Cassandra](https://github.com/getquill/quill/pull/2106)
+- [Zio](https://github.com/getquill/quill/pull/1989)
+
+Migration Notes:
+In order to properly accommodate a good ZIO experience, several refactorings had to be done to various
+internal context classes, none of these changes modify class structure in a breaking way.
+
+The following was done for quill-jdbc-zio
+- Query Preparation base type definitions have been moved out of `JdbcContextSimplified` into `JdbcContextBase`
+  which inherits a class named `StagedPrepare` which defines prepare-types (e.g. `type PrepareQueryResult = Session => Result[PrepareRow]`).
+- This has been done so that the ZIO JDBC Context can define prepare-types via the ZIO `R` parameter instead of 
+  a lambda parameter (e.g. `ZIO[QConnection, SQLException, PrepareRow]` a.k.a. `QIO[PrepareRow]`).
+- In order prevent user-facing breaking changes. The contexts in `BaseContexts.scala` now extend from both `JdbcContextSimplified` (indirectly) 
+  and `JdbcContextBase` thus preserving the `Session => Result[PrepareRow]` prepare-types.
+- The context `JdbcContextSimplified` now contains the `prepareQuery/Action/BatchAction` methods used by all contexts other than the ZIO
+  contexts which define these methods independently (since they use the ZIO `R` parameter).
+- All remaining context functionality (i.e. the `run(...)` series of functions) has been extracted out into `JdbcRunContext` which the 
+  ZIO JDBC Contexts in `ZioJdbcContexts.scala` as well as all the other JDBC Contexts now extend.
+
+Similarly for quill-cassandra-zio
+- The CassandraSessionContext on which the CassandraMonixContext and all the other Cassandra contexts are based on keeps internal state (i.e. session, keyspace, caches).
+- This state was pulled out as separate classes e.g. `SyncCache`, `AsyncFutureCache` (the ZIO equivalent of which is `AsyncZioCache`). 
+- Then a `CassandraZioSession` is created which extends these state-containers however, it is not directly a base-class of the `CassandraZioContext`.
+- Instead it is returned as a dependency from the CassandraZioContext run/prepare commands as part of the type 
+  `ZIO[Has[ZioCassandraSession] with Blocking, Throwable, T]` (a.k.a `CIO[T]`). This allows the primary context CassandraZioContext to be stateless.
+
 # 3.6.1
 
 - [Memoize Passed-By-Name Quats of Asts Ident, Entity, and Others](https://github.com/getquill/quill/pull/2084)

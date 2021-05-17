@@ -13,7 +13,7 @@ import scala.collection.compat._
 import scala.reflect.ClassTag
 
 trait ArrayDecoders extends ArrayEncoding {
-  self: JdbcContextBase[_, _] =>
+  self: JdbcRunContext[_, _] =>
 
   implicit def arrayStringDecoder[Col <: Seq[String]](implicit bf: CBF[String, Col]): Decoder[Col] = arrayRawDecoder[String, Col]
   implicit def arrayBigDecimalDecoder[Col <: Seq[BigDecimal]](implicit bf: CBF[BigDecimal, Col]): Decoder[Col] = arrayDecoder[JBigDecimal, BigDecimal, Col](BigDecimal.apply)

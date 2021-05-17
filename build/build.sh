@@ -165,7 +165,7 @@ function db_build() {
 function js_build() {
     show_mem
     export JVM_OPTS="-Dquill.macro.log=false -Dquill.scala.version=$TRAVIS_SCALA_VERSION -Xms1024m -Xmx4g -Xss5m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC"
-    travis-wait-enhanced --interval=1m --timeout=50m -- sbt -Dmodules=js $SBT_ARGS test doc
+    sbt -Dmodules=js $SBT_ARGS test doc
 }
 
 function async_build() {
