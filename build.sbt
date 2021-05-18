@@ -404,8 +404,8 @@ lazy val `quill-zio` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "dev.zio" %% "zio" % "1.0.5",
-        "dev.zio" %% "zio-streams" % "1.0.5"
+        "dev.zio" %% "zio" % "1.0.8",
+        "dev.zio" %% "zio-streams" % "1.0.8"
       )
     )
     .dependsOn(`quill-core-jvm` % "compile->compile;test->test")
@@ -614,8 +614,8 @@ lazy val `quill-cassandra-zio` =
     .settings(
       fork in Test := true,
       libraryDependencies ++= Seq(
-        "dev.zio" %% "zio" % "1.0.5",
-        "dev.zio" %% "zio-streams" % "1.0.5",
+        "dev.zio" %% "zio" % "1.0.8",
+        "dev.zio" %% "zio-streams" % "1.0.8",
         "dev.zio" %% "zio-interop-guava" % "30.1.0.3"
       )
     )
