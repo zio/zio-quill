@@ -363,7 +363,7 @@ You could extend Phantom by extending the DSL to add new features, although it m
 
 **Quill**
 
-Quill provides an easy mechanism to add non-supported features through [infix](https://github.com/getquill/quill#infix). In fact, most of the [CQL specific features](https://github.com/getquill/quill/blob/master/quill-cassandra/src/main/scala/io/getquill/sources/cassandra/ops/package.scala) are added using infix.
+Quill provides an easy mechanism to add non-supported features through [infix](https://github.com/getquill/quill#infix). In fact, most of the [CQL specific features](https://github.com/getquill/quill/blob/master/quill-cassandra/src/main/scala/io/getquill/context/cassandra/Ops.scala) are added using infix.
 
 ## Custom data types ##
 

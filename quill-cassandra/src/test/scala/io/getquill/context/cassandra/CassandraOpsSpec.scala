@@ -1,7 +1,6 @@
-package io.getquill.context.cassandra.ops
+package io.getquill.context.cassandra
 
 import io.getquill._
-import io.getquill.context.cassandra.mirrorContext
 
 class CassandraOpsSpec extends Spec {
 
@@ -81,6 +80,13 @@ class CassandraOpsSpec extends Spec {
       }
       mirrorContext.run(q).string mustEqual
         "UPDATE TestEntity SET s = 'b' IF s = 'a'"
+    }
+    "if exists" in {
+      val q = quote {
+        query[TestEntity].update(t => t.s -> "b").ifExists
+      }
+      mirrorContext.run(q).string mustEqual
+        "UPDATE TestEntity SET s = 'b' IF EXISTS"
     }
   }
 
