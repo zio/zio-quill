@@ -68,46 +68,48 @@ def isScala213 = {
 
 val filteredModules = {
   val modulesStr = sys.props.get("modules")
-  println(s"Modules Argument Value: ${modulesStr}")
+  println(s"SBT =:> Modules Argument Value: ${modulesStr}")
 
   val modules = modulesStr match {
     case Some("base") =>
-      println("Compiling Base Modules")
+      println("SBT =:> Compiling Base Modules")
       baseModules
     case Some("js") =>
-      println("Compiling JavaScript Modules")
+      println("SBT =:> Compiling JavaScript Modules")
       jsModules
     case Some("db") =>
-      println("Compiling Database Modules")
+      println("SBT =:> Compiling Database Modules")
       dbModules
     case Some("async") =>
-      println("Compiling Async Database Modules")
+      println("SBT =:> Compiling Async Database Modules")
       asyncModules
     case Some("codegen") =>
-      println("Compiling Code Generator Modules")
+      println("SBT =:> Compiling Code Generator Modules")
       codegenModules
     case Some("nocodegen") =>
-      println("Compiling Code Generator Modules")
+      println("Compiling Not-Code Generator Modules")
       baseModules ++ jsModules ++ dbModules ++ asyncModules ++ bigdataModules
     case Some("bigdata") =>
-      println("Compiling Big Data Modules")
+      println("SBT =:> Compiling Big Data Modules")
       bigdataModules
     case Some("none") =>
-      println("Invoking Aggregate Project")
+      println("SBT =:> Invoking Aggregate Project")
       Seq[sbt.ClasspathDep[sbt.ProjectReference]]()
     case _ =>
       // Workaround for https://github.com/sbt/sbt/issues/3465
       val scalaVersion = sys.props.get("quill.scala.version")
       if(scalaVersion.map(_.startsWith("2.13")).getOrElse(false)) {
-        println("Compiling Scala 2.13 Modules")
+        println("SBT =:> Compiling Scala 2.13 Modules")
         baseModules ++ dbModules ++ jasyncModules
       } else {
-        println("Compiling All Modules")
+        println("SBT =:> Compiling All Modules")
         allModules
+        // Note, can't do this because things like inform (i.e. formatting) actually do run for all modules
+        //throw new IllegalStateException("Tried to build all modules. Not allowed.")
       }
   }
   if(isScala213) {
-    println("Compiling 2.13 Modules Only")
+    println("SBT =:> Compiling 2.13 Modules Only")
     modules.filter(scala213Modules.contains(_))
   } else modules
 }
