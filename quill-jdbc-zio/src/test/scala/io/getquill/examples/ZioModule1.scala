@@ -19,7 +19,7 @@ object ziomodule1 {
     val live: URLayer[QConnection, ZioModule1] =
       ZLayer.fromServices[Blocking.Service, Connection, ZioModule1.Service] { (blocking, connection) =>
         new Service {
-          private val env = Has(blocking) ++ Has(connection)
+          private val env = Has.allOf(blocking, connection)
           private object MyPostgresContext extends PostgresZioJdbcContext(Literal)
           import MyPostgresContext._
 
