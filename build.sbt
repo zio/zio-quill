@@ -180,7 +180,7 @@ lazy val `quill-core-portable` =
         "com.typesafe"               %  "config"        % "1.4.1",
         "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
         "org.scala-lang"             %  "scala-reflect" % scalaVersion.value,
-        "com.twitter"                %% "chill"         % "0.9.5",
+        "com.twitter"                %% "chill"         % "0.10.0",
         "io.suzaku"                  %% "boopickle"     % "1.3.1"
       ),
       coverageExcludedPackages := "<empty>;.*AstPrinter;.*Using;io.getquill.Model;io.getquill.ScalarTag;io.getquill.QuotationTag"
