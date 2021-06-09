@@ -15,7 +15,7 @@ import zio.{ Chunk, ChunkBuilder, Has, ZIO, ZManaged }
 import scala.jdk.CollectionConverters._
 import scala.util.Try
 
-object CassandraZioContext {
+object CassandraZioContext { //test
   type BlockingSession = Has[CassandraZioSession] with Blocking
   type CIO[T] = ZIO[BlockingSession, Throwable, T]
   type CStream[T] = ZStream[BlockingSession, Throwable, T]
