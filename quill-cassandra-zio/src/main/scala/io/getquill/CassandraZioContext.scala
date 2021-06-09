@@ -96,7 +96,7 @@ class CassandraZioContext[N <: NamingStrategy](val naming: N)
           p
         }
         .flatMap(p => {
-          csession.session.executeAsync(p).asCio
+          csession.session.executeAsync(p).asZio
         })
     }
 
@@ -116,7 +116,7 @@ class CassandraZioContext[N <: NamingStrategy](val naming: N)
           val nextPage = page(rs)
           nextPage.flatMap { chunk =>
             if (chunk.length > 0) {
-              rs.fetchMoreResults().asCio.map(rs => Some((chunk, rs)))
+              rs.fetchMoreResults().asZio.map(rs => Some((chunk, rs)))
             } else
               ZIO.succeed(None)
           }
@@ -152,7 +152,7 @@ class CassandraZioContext[N <: NamingStrategy](val naming: N)
       env <- ZIO.environment[BlockingSession]
       r <- prepareRowAndLog(cql, prepare).provide(env)
       csession = env.get[CassandraZioSession]
-      result <- csession.session.executeAsync(r).asCio
+      result <- csession.session.executeAsync(r).asZio
     } yield ()
   }
 
@@ -176,7 +176,7 @@ class CassandraZioContext[N <: NamingStrategy](val naming: N)
       env <- ZIO.environment[Has[CassandraZioSession] with Blocking]
       csession = env.get[CassandraZioSession]
       boundStatement <- {
-        csession.prepareAsync(cql)
+        ZIO.fromFuture { implicit ec => csession.prepareAsync(cql) }
           .mapEffect(prepare)
           .map(p => p._2)
       }

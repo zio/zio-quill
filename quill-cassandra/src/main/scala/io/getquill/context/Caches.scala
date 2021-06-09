@@ -5,7 +5,6 @@ import io.getquill.context.cassandra.PrepareStatementCache
 import io.getquill.context.cassandra.util.FutureConversions._
 
 import scala.concurrent.{ ExecutionContext, Future }
-import scala.util.Failure
 
 trait SyncCache { this: CassandraSession =>
   lazy val syncCache = new PrepareStatementCache[PreparedStatement](preparedStatementCacheSize)
@@ -15,8 +14,12 @@ trait SyncCache { this: CassandraSession =>
 
 trait AsyncFutureCache { this: CassandraSession =>
   lazy val asyncCache = new PrepareStatementCache[Future[PreparedStatement]](preparedStatementCacheSize)
-  def prepareAsync(cql: String)(implicit executionContext: ExecutionContext): Future[BoundStatement] =
-    asyncCache(cql)(stmt => session.prepareAsync(stmt).asScala andThen {
-      case Failure(_) => asyncCache.invalidate(stmt)
-    }).map(_.bind())
+
+  def prepareAsync(cql: String)(implicit executionContext: ExecutionContext): Future[BoundStatement] = {
+    val output = asyncCache(cql) { stmt =>
+      session.prepareAsync(stmt).asScala
+    }
+    output.onFailure { case _ => asyncCache.invalidate(cql) }
+    output.map(_.bind())
+  }
 }
