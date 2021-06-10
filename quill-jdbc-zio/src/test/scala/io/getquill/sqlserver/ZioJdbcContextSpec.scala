@@ -1,7 +1,7 @@
 package io.getquill.sqlserver
 
 import io.getquill.ZioSpec
-import io.getquill.context.ZioJdbc.Prefix
+import io.getquill.Prefix
 import zio.{ Task, ZIO }
 
 class ZioJdbcContextSpec extends ZioSpec {

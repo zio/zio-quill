@@ -2,7 +2,7 @@ package io.getquill.mysql
 
 import java.sql.ResultSet
 import io.getquill.PrepareZioJdbcSpecBase
-import io.getquill.context.ZioJdbc.Prefix
+import io.getquill.Prefix
 import org.scalatest.BeforeAndAfter
 
 class PrepareJdbcSpec extends PrepareZioJdbcSpecBase with BeforeAndAfter {
