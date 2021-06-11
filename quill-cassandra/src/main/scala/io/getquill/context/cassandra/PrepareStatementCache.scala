@@ -16,14 +16,13 @@ class PrepareStatementCache[V <: AnyRef](size: Long) {
 
   private val hasher = Hashing.goodFastHash(128)
 
-  def apply(stmt: String)(prepare: String => V): V = {
+  def apply(stmt: String)(prepare: String => V): V =
     cache.get(
       hash(stmt),
       new Callable[V] {
         override def call: V = prepare(stmt)
       }
     )
-  }
 
   def invalidate(stmt: String): Unit = cache.invalidate(hash(stmt))
 

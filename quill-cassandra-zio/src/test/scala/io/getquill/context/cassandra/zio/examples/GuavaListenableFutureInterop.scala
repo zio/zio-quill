@@ -17,7 +17,7 @@ import scala.util.Try
 object GuavaListenableFutureInterop {
   implicit class ZioTaskConverter[A](val lf: ListenableFuture[A]) extends AnyVal {
     def asCio: CIO[A] = {
-      def makePromise(ec: Executor): CIO[A] = {
+      def makePromise(executor: Executor): CIO[A] = {
         val promise = Promise[A]()
         lf.addListener(new Runnable {
           def run(): Unit = {
@@ -27,7 +27,7 @@ object GuavaListenableFutureInterop {
             })
             ()
           }
-        }, ec.asInstanceOf[Executor])
+        }, executor)
         ZIO.fromPromiseScala(promise)
       }
 
