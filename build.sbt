@@ -190,9 +190,7 @@ lazy val ultraPure = new sbtcrossproject.CrossType {
     }
 }
 
-def pprintVersion(v: String) = {
-  if(v.startsWith("2.11")) "0.5.4" else "0.5.5"
-}
+val pprintVersion = "0.6.6"
 
 lazy val `quill-core-portable` =
   crossProject(JVMPlatform, JSPlatform).crossType(ultraPure)
@@ -204,21 +202,19 @@ lazy val `quill-core-portable` =
         "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
         "org.scala-lang"             %  "scala-reflect" % scalaVersion.value,
         "com.twitter"                %% "chill"         % "0.9.5",
-        "io.suzaku"                  %% "boopickle"     % "1.3.1"
+        "io.suzaku"                  %% "boopickle"     % "1.3.3"
       ),
       coverageExcludedPackages := "<empty>;.*AstPrinter;.*Using;io.getquill.Model;io.getquill.ScalarTag;io.getquill.QuotationTag"
     )
     .jsSettings(
       libraryDependencies ++= Seq(
-        "com.lihaoyi" %%% "pprint" % pprintVersion(scalaVersion.value),
-        "org.scala-js" %%% "scalajs-java-time" % "0.2.5",
-        "com.lihaoyi" %%% "pprint" % "0.5.4",
-        "org.scala-js" %%% "scalajs-java-time" % "0.2.5",
-        "io.suzaku" %%% "boopickle" % "1.3.1"
+        "com.lihaoyi" %%% "pprint" % pprintVersion,
+        "io.github.cquiroz" %%% "scala-java-time" % "2.3.0",
+        "com.lihaoyi" %%% "pprint" % "0.6.6",
+        "io.github.cquiroz" %%% "scala-java-time" % "2.3.0",
+        "io.suzaku" %%% "boopickle" % "1.3.3"
       ),
       coverageExcludedPackages := ".*",
-      // 2.12 Build seems to take forever without this option
-      Test / fastOptJS / scalaJSOptimizerOptions ~= { _.withDisableOptimizer(true) }
     ).enablePlugins(MimaPlugin)
 
 lazy val `quill-core-portable-jvm` = `quill-core-portable`.jvm
@@ -238,14 +234,12 @@ lazy val `quill-core` =
     )
     .jsSettings(
       libraryDependencies ++= Seq(
-        "com.lihaoyi" %%% "pprint" % pprintVersion(scalaVersion.value),
-        "org.scala-js" %%% "scalajs-java-time" % "0.2.5",
-        "org.scala-js" %%% "scalajs-java-time" % "0.2.5"
+        "com.lihaoyi" %%% "pprint" % pprintVersion,
+        "io.github.cquiroz" %%% "scala-java-time" % "2.3.0",
+        "io.github.cquiroz" %%% "scala-java-time" % "2.3.0"
       ),
       unmanagedSources / excludeFilter := new SimpleFileFilter(file => file.getName == "DynamicQuerySpec.scala"),
       coverageExcludedPackages := ".*",
-      // 2.12 Build seems to take forever without this option
-      Test / fastOptJS / scalaJSOptimizerOptions ~= { _.withDisableOptimizer(true) }
     )
     .dependsOn(`quill-core-portable` % "compile->compile")
     .enablePlugins(MimaPlugin)
@@ -259,16 +253,14 @@ lazy val `quill-sql-portable` =
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .settings(libraryDependencies ++= Seq(
-      "com.github.vertical-blank"  %% "scala-sql-formatter" % "1.0.0"
+      "com.github.takayahilton"  %% "sql-formatter" % "1.2.1"
     ))
     .jsSettings(
       libraryDependencies ++= Seq(
-        "com.github.vertical-blank" %%% "scala-sql-formatter" % "1.0.0"
+        "com.github.takayahilton" %%% "sql-formatter" % "1.2.1"
       ),
       scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) },
       coverageExcludedPackages := ".*",
-      // 2.12 Build seems to take forever without this option
-      Test / fastOptJS / scalaJSOptimizerOptions ~= { _.withDisableOptimizer(true) }
       //jsEnv := NodeJSEnv(args = Seq("--max_old_space_size=1024")).value
     )
     .dependsOn(`quill-core-portable` % "compile->compile")
@@ -283,16 +275,14 @@ lazy val `quill-sql` =
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .settings(libraryDependencies ++= Seq(
-      "com.github.vertical-blank"  %% "scala-sql-formatter" % "1.0.1"
+      "com.github.takayahilton"  %% "sql-formatter" % "1.2.1"
     ))
     .jsSettings(
       libraryDependencies ++= Seq(
-        "com.github.vertical-blank" %%% "scala-sql-formatter" % "1.0.1"
+        "com.github.takayahilton" %%% "sql-formatter" % "1.2.1"
       ),
       scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) },
       coverageExcludedPackages := ".*",
-      // 2.12 Build seems to take forever without this option
-      Test / fastOptJS / scalaJSOptimizerOptions ~= { _.withDisableOptimizer(true) }
     )
     .dependsOn(
       `quill-sql-portable` % "compile->compile",
@@ -811,7 +801,6 @@ def excludePathsIfOracle(paths:Seq[String]) = {
   })
 }
 
-val scala_v_11 = "2.11.12"
 val scala_v_12 = "2.12.14"
 val scala_v_13 = "2.13.3"
 
@@ -819,9 +808,9 @@ val scala_v_13 = "2.13.3"
 val crossVersions = {
   val scalaVersion = sys.props.get("quill.scala.version")
   if(scalaVersion.exists(_.startsWith("2.13"))) {
-    Seq(scala_v_11, scala_v_12, scala_v_13)
+    Seq(scala_v_12, scala_v_13)
   } else {
-    Seq(scala_v_11, scala_v_12)
+    Seq(scala_v_12)
   }
 }
 
@@ -839,11 +828,11 @@ lazy val basicSettings = Seq(
     }
   },
   organization := "io.getquill",
-  scalaVersion := scala_v_11,
-  crossScalaVersions := Seq(scala_v_11, scala_v_12, scala_v_13),
+  scalaVersion := scala_v_12,
+  crossScalaVersions := Seq(scala_v_12, scala_v_13),
   libraryDependencies ++= Seq(
     "org.scala-lang.modules" %%% "scala-collection-compat" % "2.2.0",
-    "com.lihaoyi"     %% "pprint"         % pprintVersion(scalaVersion.value),
+    "com.lihaoyi"     %% "pprint"         % pprintVersion,
     "org.scalatest"   %%% "scalatest"     % "3.2.3"          % Test,
     "com.google.code.findbugs" % "jsr305" % "3.0.2"          % Provided // just to avoid warnings during compilation
   ) ++ {

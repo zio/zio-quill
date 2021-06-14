@@ -1,6 +1,6 @@
 package io.getquill.context.sql.idiom
 
-import com.github.vertical_blank.sqlformatter.scala.SqlFormatter
+import com.github.takayahilton.sqlformatter._
 import io.getquill.NamingStrategy
 import io.getquill.ast.BooleanOperator._
 import io.getquill.ast.Renameable.Fixed
