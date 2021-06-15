@@ -175,11 +175,7 @@ class CassandraZioContext[N <: NamingStrategy](val naming: N)
     for {
       env <- ZIO.environment[Has[CassandraZioSession] with Blocking]
       csession = env.get[CassandraZioSession]
-      boundStatement <- {
-        ZIO.fromFuture { implicit ec => csession.prepareAsync(cql) }
-          .mapEffect(prepare)
-          .map(p => p._2)
-      }
+      boundStatement <- csession.prepareAsync(cql).mapEffect(prepare).map(_._2)
     } yield boundStatement
 
   def probingSession: Option[CassandraZioSession] = None
