@@ -1,3 +1,9 @@
+# 3.7.2
+
+- [Fix FutureAsyncCache](https://github.com/getquill/quill/pull/2162)
+- [Catch close() exceptions](https://github.com/getquill/quill/pull/2166)
+- [Make all AST classes final](https://github.com/getquill/quill/pull/2165)
+
 # 3.7.1
 
 - [Add a single ZIO-inspired root type QAC for all actions](https://github.com/getquill/quill/pull/2130)
