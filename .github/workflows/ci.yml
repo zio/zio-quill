@@ -13,45 +13,45 @@ on:
       - master
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    env:
-      TRAVIS_SCALA_VERSION: ${{ matrix.scala }}
-      POSTGRES_PASSWORD: postgres
-      MYSQL_PASSWORD: root
-
-    strategy:
-      matrix:
-        scala: [2.11.12, 2.12.10, 2.13.2]
-        module: [db, js, async, codegen, bigdata]
-
-    steps:
-    - uses: actions/checkout@v2
-    - name: Cache sbt
-      uses: actions/cache@v2
-      with:
-        path: |
-          ~/.cache/coursier
-          ~/.sbt
-        key: ${{ runner.os }}-${{matrix.scala}}-${{matrix.module}}-${{ hashFiles('**/build.sbt') }}
-
-    - name: Setup Java and Scala
-      uses: olafurpg/setup-scala@v10
-      with:
-        java-version: 1.8.0
-
-    - name: Build modules
-      run: |
-        export TRAVIS_SCALA_VERSION=${{ matrix.scala }}
-        echo "TRAVIS_SCALA_VERSION='$TRAVIS_SCALA_VERSION'"
-        ./build/build.sh ${{ matrix.module }}
+#  build:
+#    runs-on: ubuntu-latest
+#
+#    env:
+#      TRAVIS_SCALA_VERSION: ${{ matrix.scala }}
+#      POSTGRES_PASSWORD: postgres
+#      MYSQL_PASSWORD: root
+#
+#    strategy:
+#      matrix:
+#        scala: [2.11.12, 2.12.10, 2.13.2]
+#        module: [db, js, async, codegen, bigdata]
+#
+#    steps:
+#    - uses: actions/checkout@v2
+#    - name: Cache sbt
+#      uses: actions/cache@v2
+#      with:
+#        path: |
+#          ~/.cache/coursier
+#          ~/.sbt
+#        key: ${{ runner.os }}-${{matrix.scala}}-${{matrix.module}}-${{ hashFiles('**/build.sbt') }}
+#
+#    - name: Setup Java and Scala
+#      uses: olafurpg/setup-scala@v10
+#      with:
+#        java-version: 1.8.0
+#
+#    - name: Build modules
+#      run: |
+#        export TRAVIS_SCALA_VERSION=${{ matrix.scala }}
+#        echo "TRAVIS_SCALA_VERSION='$TRAVIS_SCALA_VERSION'"
+#        ./build/build.sh ${{ matrix.module }}
 
   release:
     if: ${{github.event_name != 'pull_request'}}
     runs-on: ubuntu-latest
 
-    needs: build
+#    needs: build
 
     strategy:
       matrix:
