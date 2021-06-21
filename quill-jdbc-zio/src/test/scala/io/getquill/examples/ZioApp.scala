@@ -1,6 +1,7 @@
 package io.getquill.examples
 
 import io.getquill._
+import io.getquill.context.ZioJdbc
 import io.getquill.util.LoadConfig
 import zio.{ App, ExitCode, Task, URIO, ZLayer, ZManaged }
 import zio.console.putStrLn
@@ -14,8 +15,8 @@ object ZioApp extends App {
 
   val zioConn =
     ZLayer.fromManaged(for {
-      ds <- ZManaged.fromAutoCloseable(Task(JdbcContextConfig(LoadConfig("testPostgresDB")).dataSource))
-      conn <- ZManaged.fromAutoCloseable(Task(ds.getConnection))
+      ds <- ZioJdbc.managedBestEffort(Task(JdbcContextConfig(LoadConfig("testPostgresDB")).dataSource))
+      conn <- ZioJdbc.managedBestEffort(Task(ds.getConnection))
     } yield conn)
 
   override def run(args: List[String]): URIO[zio.ZEnv, ExitCode] = {
