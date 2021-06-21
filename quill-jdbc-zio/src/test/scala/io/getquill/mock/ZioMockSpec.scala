@@ -87,6 +87,35 @@ class ZioMockSpec extends AnyFreeSpec with MockitoSugar { //with AsyncMockitoSug
     order.verifyNoMoreInteractions()
   }
 
+  "managed connection throwing exception on close is caught internally" in {
+    val people = List(Person("Joe", 11), Person("Jack", 22))
+
+    val ds = mock[MyDataSource]
+    val conn = mock[Connection]
+    val stmt = mock[PreparedStatement]
+    val rs = MockResultSet(people)
+
+    when(ds.getConnection) thenReturn conn
+    when(conn.prepareStatement(any[String])) thenReturn stmt
+    when(stmt.executeQuery()) thenReturn rs
+    when(conn.close()) thenThrow (new SQLException("Could not close the connection"))
+
+    val ctx = new PostgresZioJdbcContext(Literal)
+    import ctx._
+
+    val results =
+      ctx.run(query[Person])
+        .provideConnectionFrom(ds).defaultRun
+
+    results must equal(people)
+
+    // In test suite verifications come after
+    val order = inOrder(Seq[AnyRef](conn, stmt, rs): _*)
+    // connection close bracket
+    order.verify(conn).close()
+    order.verifyNoMoreInteractions()
+  }
+
   "stream is correctly closed when ending conn.setAutoCommit returns error but is caught" in {
     val people = List(Person("Joe", 11), Person("Jack", 22))
 

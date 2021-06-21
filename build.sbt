@@ -6,6 +6,11 @@ import scala.sys.process.Process
 import sbtcrossproject.crossProject
 import java.io.{File => JFile}
 
+// During release cycles, GPG will expect passphrase user-input EVEN when --passphrase is specified
+// this should add --pinentry-loopback in order to disable that. See here for more info:
+// https://github.com/sbt/sbt-pgp/issues/178
+Global / useGpgPinentry := true
+
 val CodegenTag = Tags.Tag("CodegenTag")
 (concurrentRestrictions in Global) += Tags.exclusive(CodegenTag)
 (concurrentRestrictions in Global) += Tags.limit(ScalaJSTags.Link, 1)
