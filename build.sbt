@@ -3,7 +3,7 @@ import com.typesafe.sbt.SbtScalariform.ScalariformKeys
 import scalariform.formatter.preferences._
 import sbtrelease.ReleasePlugin
 import scala.sys.process.Process
-import sbtcrossproject.crossProject
+import sbtcrossproject.CrossPlugin.autoImport.crossProject
 import java.io.{File => JFile}
 
 // During release cycles, GPG will expect passphrase user-input EVEN when --passphrase is specified
