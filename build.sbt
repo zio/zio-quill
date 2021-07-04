@@ -123,7 +123,7 @@ val filteredModules = {
 lazy val `quill` = {
   val quill =
     (project in file("."))
-    .settings(commonSettings: _*)
+      .settings(commonSettings: _*)
 
   // Do not do aggregate project builds when debugging since during that time
   // typically only individual modules are being build/compiled. This is mostly for convenience with IntelliJ.
@@ -317,9 +317,9 @@ lazy val `quill-codegen-tests` =
         (unmanagedSourceDirectories in Test).value.map { dir =>
           (dir / "io" / "getquill" / "codegen" / "OracleCodegenTestCases.scala").getCanonicalPath
         } ++
-        (unmanagedSourceDirectories in Test).value.map { dir =>
-          (dir / "io" / "getquill" / "codegen" / "util" / "WithOracleContext.scala").getCanonicalPath
-        }
+          (unmanagedSourceDirectories in Test).value.map { dir =>
+            (dir / "io" / "getquill" / "codegen" / "util" / "WithOracleContext.scala").getCanonicalPath
+          }
       },
       (sourceGenerators in Test) += Def.task {
         def recrusiveList(file:JFile): List[JFile] = {
@@ -632,7 +632,7 @@ lazy val `quill-cassandra-zio` =
 
 
 lazy val `quill-cassandra-lagom` =
-   (project in file("quill-cassandra-lagom"))
+  (project in file("quill-cassandra-lagom"))
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .settings(
@@ -652,15 +652,15 @@ lazy val `quill-cassandra-lagom` =
 
 lazy val `quill-orientdb` =
   (project in file("quill-orientdb"))
-      .settings(commonSettings: _*)
-      .settings(mimaSettings: _*)
-      .settings(
-        fork in Test := true,
-        libraryDependencies ++= Seq(
-          "com.orientechnologies" % "orientdb-graphdb" % "3.0.34"
-        )
+    .settings(commonSettings: _*)
+    .settings(mimaSettings: _*)
+    .settings(
+      fork in Test := true,
+      libraryDependencies ++= Seq(
+        "com.orientechnologies" % "orientdb-graphdb" % "3.0.34"
       )
-      .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
+    )
+    .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
 
 lazy val mimaSettings = MimaPlugin.mimaDefaultSettings ++ Seq(
   mimaPreviousArtifacts := {
@@ -861,7 +861,7 @@ lazy val basicSettings = Seq(
           "-deprecation",
           "-Yno-adapted-args",
           "-Ywarn-unused-import", "" +
-          "-Xsource:2.12" // needed so existential types work correctly
+            "-Xsource:2.12" // needed so existential types work correctly
         )
       case Some((2, 12)) =>
         Seq(
@@ -911,54 +911,54 @@ lazy val releaseSettings = Seq(
     CrossVersion.partialVersion(scalaVersion.value) match {
       case Some((2, 11)) =>
         doOnDefault(checkSnapshotDependencies) ++
-        doOnDefault(inquireVersions) ++
-        doOnDefault(runClean) ++
-        doOnPush   (setReleaseVersion) ++
-        doOnDefault(updateReadmeVersion(_._1)) ++
-        doOnPush   (commitReleaseVersion) ++
-        doOnPush   (updateWebsiteTag) ++
-        doOnPush   (tagRelease) ++
-        doOnDefault(publishArtifacts) ++
-        doOnPush   (setNextVersion) ++
-        doOnPush   (updateReadmeVersion(_._2)) ++
-        doOnPush   (commitNextVersion) ++
-        //doOnPush(releaseStepCommand("sonatypeReleaseAll")) ++
-        doOnPush   (pushChanges)
+          doOnDefault(inquireVersions) ++
+          doOnDefault(runClean) ++
+          doOnPush   (setReleaseVersion) ++
+          doOnDefault(updateReadmeVersion(_._1)) ++
+          doOnPush   (commitReleaseVersion) ++
+          doOnPush   (updateWebsiteTag) ++
+          doOnPush   (tagRelease) ++
+          doOnDefault(publishArtifacts) ++
+          doOnPush   (setNextVersion) ++
+          doOnPush   (updateReadmeVersion(_._2)) ++
+          doOnPush   (commitNextVersion) ++
+          //doOnPush(releaseStepCommand("sonatypeReleaseAll")) ++
+          doOnPush   (pushChanges)
       case Some((2, 12)) =>
         doOnDefault(checkSnapshotDependencies) ++
-        doOnDefault(inquireVersions) ++
-        doOnDefault(runClean) ++
-        doOnPush   (setReleaseVersion) ++
-        doOnDefault(publishArtifacts)
-        //doOnPush   ("sonatypeReleaseAll") ++
+          doOnDefault(inquireVersions) ++
+          doOnDefault(runClean) ++
+          doOnPush   (setReleaseVersion) ++
+          doOnDefault(publishArtifacts)
+      //doOnPush   ("sonatypeReleaseAll") ++
       case Some((2, 13)) =>
         doOnDefault(checkSnapshotDependencies) ++
-        doOnDefault(inquireVersions) ++
-        doOnDefault(runClean) ++
-        doOnPush   (setReleaseVersion) ++
-        doOnDefault(publishArtifacts)
-        //doOnPush   ("sonatypeReleaseAll") ++
+          doOnDefault(inquireVersions) ++
+          doOnDefault(runClean) ++
+          doOnPush   (setReleaseVersion) ++
+          doOnDefault(publishArtifacts)
+      //doOnPush   ("sonatypeReleaseAll") ++
       case _ => Seq[ReleaseStep]()
     }
   },
   pomExtra := (
     <url>http://github.com/getquill/quill</url>
-    <licenses>
-      <license>
-        <name>Apache License 2.0</name>
-        <url>https://raw.githubusercontent.com/getquill/quill/master/LICENSE.txt</url>
-        <distribution>repo</distribution>
-      </license>
-    </licenses>
-    <scm>
-      <url>git@github.com:getquill/quill.git</url>
-      <connection>scm:git:git@github.com:getquill/quill.git</connection>
-    </scm>
-    <developers>
-      <developer>
-        <id>fwbrasil</id>
-        <name>Flavio W. Brasil</name>
-        <url>http://github.com/fwbrasil/</url>
-      </developer>
-    </developers>)
+      <licenses>
+        <license>
+          <name>Apache License 2.0</name>
+          <url>https://raw.githubusercontent.com/getquill/quill/master/LICENSE.txt</url>
+          <distribution>repo</distribution>
+        </license>
+      </licenses>
+      <scm>
+        <url>git@github.com:getquill/quill.git</url>
+        <connection>scm:git:git@github.com:getquill/quill.git</connection>
+      </scm>
+      <developers>
+        <developer>
+          <id>fwbrasil</id>
+          <name>Flavio W. Brasil</name>
+          <url>http://github.com/fwbrasil/</url>
+        </developer>
+      </developers>)
 )
