@@ -4,11 +4,27 @@ import scalariform.formatter.preferences._
 import sbtrelease.ReleasePlugin
 import sbtcrossproject.CrossPlugin.autoImport.crossProject
 import java.io.{File => JFile}
+import ReleaseTransformations._
+import sbtrelease.Version
+import sbtrelease.versionFormatError
 
 // During release cycles, GPG will expect passphrase user-input EVEN when --passphrase is specified
 // this should add --pinentry-loopback in order to disable that. See here for more info:
 // https://github.com/sbt/sbt-pgp/issues/178
 Global / useGpgPinentry := true
+
+// Do not strip the qualifier, want to keep that. If I set version.sbt to 1.2.3.foo.1 that's exactly what I want the version to be
+releaseVersion     := { ver => ver }
+releaseNextVersion := { ver =>
+  val withoutLast = ver.reverse.dropWhile(_.isDigit).reverse
+  val last = ver.reverse.takeWhile(_.isDigit).reverse
+  println(s"Detected original version: ${ver}. Which is ${withoutLast} + ${last}")
+  // see if the last group of chars are numeric, if they are, just increment
+  val actualLast = scala.util.Try(last.toInt).map(i => (i + 1).toString).getOrElse(last)
+  val newVer = withoutLast + actualLast + "-SNAPSHOT"
+  println(s"Final computed version is: ${newVer}")
+  newVer
+}
 
 val CodegenTag = Tags.Tag("CodegenTag")
 (Global / concurrentRestrictions) += Tags.exclusive(CodegenTag)
