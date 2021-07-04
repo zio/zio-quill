@@ -4,7 +4,7 @@ import com.typesafe.config.Config
 import io.getquill.JdbcContextConfig
 import zio.{ Has, Task, ZIO, ZLayer, ZManaged }
 import zio.stream.ZStream
-import io.getquill.util.LoadConfig
+import io.getquill.util.{ ContextLogger, LoadConfig }
 import izumi.reflect.Tag
 
 import java.io.Closeable
@@ -31,7 +31,7 @@ object ZioJdbc {
       def fromDataSource(ds: => DataSource with Closeable) =
         for {
           block <- ZManaged.environment[Blocking]
-          managedDs <- ZManaged.fromAutoCloseable(Task(ds))
+          managedDs <- managedBestEffort(Task(ds))
         } yield (Has(managedDs) ++ block)
     }
 
@@ -41,7 +41,7 @@ object ZioJdbc {
           fromBlocking <- ZManaged.environment[Has[DataSource with Closeable] with Blocking]
           from = fromBlocking.get[DataSource with Closeable]
           blocking = fromBlocking.get[Blocking.Service]
-          r <- ZManaged.fromAutoCloseable(ZIO.effect(from.getConnection).refineToOrDie[SQLException]: ZIO[Any, SQLException, Connection])
+          r <- managedBestEffort(ZIO.effect(from.getConnection)).refineToOrDie[SQLException]: ZManaged[Any, SQLException, Connection]
         } yield Has(r) ++ Has(blocking)
       ZLayer.fromManagedMany(managed)
     }
@@ -68,7 +68,7 @@ object ZioJdbc {
         for {
           block <- ZManaged.environment[Blocking]
           conf <- ZManaged.fromEffect(Task(jdbcContextConfig))
-          ds <- ZManaged.fromAutoCloseable(Task(conf.dataSource: DataSource with Closeable))
+          ds <- managedBestEffort(Task(conf.dataSource: DataSource with Closeable))
         } yield (Has(ds) ++ block)
       )
   }
@@ -126,4 +126,18 @@ object ZioJdbc {
       env = Has(provision) ++ rest
       result <- qzio.provide(env)
     } yield result
+
+  /**
+   * This is the same as `ZManaged.fromAutoCloseable` but if the `.close()` fails it will log `"close() of resource failed"`
+   * and continue instead of immediately throwing an error in the ZIO die-channel. That is because for JDBC purposes,
+   * a failure on the connection close is usually a recoverable failure. In the cases where it happens it occurs
+   * as the byproduct of a bad state (e.g. failing to close a transaction before closing the connection or failing to
+   * release a stale connection) which will eventually cause other operations (i.e. future reads/writes) to fail
+   * that have not occurred yet.
+   */
+  def managedBestEffort[T <: AutoCloseable](effect: Task[T]) =
+    ZManaged.make(effect)(resource =>
+      ZIO.effect(resource.close()).tapError(e => ZIO.effect(logger.underlying.error(s"close() of resource failed", e)).ignore).ignore)
+
+  private[getquill] val logger = ContextLogger(ZioJdbc.getClass)
 }

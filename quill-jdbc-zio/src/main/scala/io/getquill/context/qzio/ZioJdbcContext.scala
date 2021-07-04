@@ -32,8 +32,8 @@ import scala.reflect.ClassTag
  * {{
  *   val zioConn =
  *     ZLayer.fromManaged(for {
- *       ds <- ZManaged.fromAutoCloseable(Task(JdbcContextConfig(LoadConfig("testPostgresDB")).dataSource))
- *       conn <- ZManaged.fromAutoCloseable(Task(ds.getConnection))
+ *       ds <- ZioJdbc.managedBestEffort(Task(JdbcContextConfig(LoadConfig("testPostgresDB")).dataSource))
+ *       conn <- ZioJdbc.managedBestEffort(Task(ds.getConnection))
  *     } yield conn)
  *
  *   MyZioContext.run(query[Person]).provideCustomLayer(zioConn)
@@ -228,8 +228,8 @@ abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] ext
         ZStream.managed {
           for {
             conn <- ZManaged.make(Task(conn))(c => Task.unit)
-            ps <- ZManaged.fromAutoCloseable(Task(prepareStatement(conn)))
-            rs <- ZManaged.fromAutoCloseable(Task(ps.executeQuery()))
+            ps <- managedBestEffort(Task(prepareStatement(conn)))
+            rs <- managedBestEffort(Task(ps.executeQuery()))
           } yield (conn, ps, rs)
         }
       }
