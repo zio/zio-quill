@@ -204,7 +204,7 @@ lazy val `quill-core-portable` =
       coverageExcludedPackages := ".*",
       // 2.12 Build seems to take forever without this option
       Test / fastOptJS / scalaJSOptimizerOptions ~= { _.withDisableOptimizer(true) }
-    )
+    ).enablePlugins(MimaPlugin)
 
 lazy val `quill-core-portable-jvm` = `quill-core-portable`.jvm
 lazy val `quill-core-portable-js` = `quill-core-portable`.js
@@ -233,6 +233,7 @@ lazy val `quill-core` =
       Test / fastOptJS / scalaJSOptimizerOptions ~= { _.withDisableOptimizer(true) }
     )
     .dependsOn(`quill-core-portable` % "compile->compile")
+    .enablePlugins(MimaPlugin)
 
 // dependsOn in these clauses technically not needed however, intellij does not work properly without them
 lazy val `quill-core-jvm` = `quill-core`.jvm.dependsOn(`quill-core-portable-jvm` % "compile->compile")
@@ -256,7 +257,7 @@ lazy val `quill-sql-portable` =
       //jsEnv := NodeJSEnv(args = Seq("--max_old_space_size=1024")).value
     )
     .dependsOn(`quill-core-portable` % "compile->compile")
-
+    .enablePlugins(MimaPlugin)
 
 lazy val `quill-sql-portable-jvm` = `quill-sql-portable`.jvm
 lazy val `quill-sql-portable-js` = `quill-sql-portable`.js
@@ -282,7 +283,7 @@ lazy val `quill-sql` =
       `quill-sql-portable` % "compile->compile",
       `quill-core` % "compile->compile;test->test"
     )
-
+    .enablePlugins(MimaPlugin)
 
 
 lazy val `quill-sql-jvm` = `quill-sql`.jvm
@@ -370,6 +371,7 @@ lazy val `quill-jdbc` =
     .settings(mimaSettings: _*)
     .settings(jdbcTestingSettings: _*)
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
+    .enablePlugins(MimaPlugin)
 
 lazy val `quill-monix` =
   (project in file("quill-monix"))
@@ -383,6 +385,7 @@ lazy val `quill-monix` =
       )
     )
     .dependsOn(`quill-core-jvm` % "compile->compile;test->test")
+    .enablePlugins(MimaPlugin)
 
 lazy val `quill-jdbc-monix` =
   (project in file("quill-jdbc-monix"))
@@ -404,6 +407,7 @@ lazy val `quill-jdbc-monix` =
     .dependsOn(`quill-monix` % "compile->compile;test->test")
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
     .dependsOn(`quill-jdbc` % "compile->compile;test->test")
+    .enablePlugins(MimaPlugin)
 
 lazy val `quill-zio` =
   (project in file("quill-zio"))
@@ -417,6 +421,7 @@ lazy val `quill-zio` =
       )
     )
     .dependsOn(`quill-core-jvm` % "compile->compile;test->test")
+    .enablePlugins(MimaPlugin)
 
 lazy val `quill-jdbc-zio` =
   (project in file("quill-jdbc-zio"))
@@ -438,6 +443,7 @@ lazy val `quill-jdbc-zio` =
     .dependsOn(`quill-zio` % "compile->compile;test->test")
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
     .dependsOn(`quill-jdbc` % "compile->compile;test->test")
+    .enablePlugins(MimaPlugin)
 
 
 
@@ -454,6 +460,7 @@ lazy val `quill-ndbc-monix` =
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
     .dependsOn(`quill-ndbc` % "compile->compile;test->test")
     .dependsOn(`quill-ndbc-postgres` % "compile->compile;test->test")
+    .enablePlugins(MimaPlugin)
 
 lazy val `quill-spark` =
   (project in file("quill-spark"))
@@ -469,6 +476,7 @@ lazy val `quill-spark` =
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
+    .enablePlugins(MimaPlugin)
 
 lazy val `quill-finagle-mysql` =
   (project in file("quill-finagle-mysql"))
@@ -481,6 +489,7 @@ lazy val `quill-finagle-mysql` =
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
+    .enablePlugins(MimaPlugin)
 
 lazy val `quill-finagle-postgres` =
   (project in file("quill-finagle-postgres"))
@@ -493,6 +502,7 @@ lazy val `quill-finagle-postgres` =
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
+    .enablePlugins(MimaPlugin)
 
 lazy val `quill-async` =
   (project in file("quill-async"))
@@ -505,6 +515,7 @@ lazy val `quill-async` =
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
+    .enablePlugins(MimaPlugin)
 
 lazy val `quill-async-mysql` =
   (project in file("quill-async-mysql"))
@@ -517,6 +528,7 @@ lazy val `quill-async-mysql` =
       )
     )
     .dependsOn(`quill-async` % "compile->compile;test->test")
+    .enablePlugins(MimaPlugin)
 
 lazy val `quill-async-postgres` =
   (project in file("quill-async-postgres"))
@@ -529,6 +541,7 @@ lazy val `quill-async-postgres` =
       )
     )
     .dependsOn(`quill-async` % "compile->compile;test->test")
+    .enablePlugins(MimaPlugin)
 
 lazy val `quill-jasync` =
   (project in file("quill-jasync"))
@@ -542,6 +555,7 @@ lazy val `quill-jasync` =
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
+    .enablePlugins(MimaPlugin)
 
 lazy val `quill-jasync-postgres` =
   (project in file("quill-jasync-postgres"))
@@ -554,6 +568,7 @@ lazy val `quill-jasync-postgres` =
       )
     )
     .dependsOn(`quill-jasync` % "compile->compile;test->test")
+    .enablePlugins(MimaPlugin)
 
 lazy val `quill-jasync-mysql` =
   (project in file("quill-jasync-mysql"))
@@ -566,6 +581,7 @@ lazy val `quill-jasync-mysql` =
       )
     )
     .dependsOn(`quill-jasync` % "compile->compile;test->test")
+    .enablePlugins(MimaPlugin)
 
 lazy val `quill-ndbc` =
   (project in file("quill-ndbc"))
@@ -579,6 +595,7 @@ lazy val `quill-ndbc` =
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
+    .enablePlugins(MimaPlugin)
 
 lazy val `quill-ndbc-postgres` =
   (project in file("quill-ndbc-postgres"))
@@ -592,6 +609,7 @@ lazy val `quill-ndbc-postgres` =
       )
     )
     .dependsOn(`quill-ndbc` % "compile->compile;test->test")
+    .enablePlugins(MimaPlugin)
 
 lazy val `quill-cassandra` =
   (project in file("quill-cassandra"))
@@ -604,6 +622,7 @@ lazy val `quill-cassandra` =
       )
     )
     .dependsOn(`quill-core-jvm` % "compile->compile;test->test")
+    .enablePlugins(MimaPlugin)
 
 lazy val `quill-cassandra-monix` =
   (project in file("quill-cassandra-monix"))
@@ -614,6 +633,7 @@ lazy val `quill-cassandra-monix` =
     )
     .dependsOn(`quill-cassandra` % "compile->compile;test->test")
     .dependsOn(`quill-monix` % "compile->compile;test->test")
+    .enablePlugins(MimaPlugin)
 
 lazy val `quill-cassandra-zio` =
   (project in file("quill-cassandra-zio"))
@@ -629,6 +649,7 @@ lazy val `quill-cassandra-zio` =
     )
     .dependsOn(`quill-cassandra` % "compile->compile;test->test")
     .dependsOn(`quill-zio` % "compile->compile;test->test")
+    .enablePlugins(MimaPlugin)
 
 
 lazy val `quill-cassandra-lagom` =
@@ -648,6 +669,7 @@ lazy val `quill-cassandra-lagom` =
       }
     )
     .dependsOn(`quill-cassandra` % "compile->compile;test->test")
+    .enablePlugins(MimaPlugin)
 
 
 lazy val `quill-orientdb` =
@@ -661,8 +683,9 @@ lazy val `quill-orientdb` =
         )
       )
       .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
+      .enablePlugins(MimaPlugin)
 
-lazy val mimaSettings = MimaPlugin.mimaDefaultSettings ++ Seq(
+lazy val mimaSettings = Seq(
   mimaPreviousArtifacts := {
     CrossVersion.partialVersion(scalaVersion.value) match {
       case Some((2, scalaMajor)) if scalaMajor <= 11 =>
