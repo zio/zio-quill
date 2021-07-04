@@ -12,8 +12,8 @@ import java.io.{File => JFile}
 Global / useGpgPinentry := true
 
 val CodegenTag = Tags.Tag("CodegenTag")
-(concurrentRestrictions in Global) += Tags.exclusive(CodegenTag)
-(concurrentRestrictions in Global) += Tags.limit(ScalaJSTags.Link, 1)
+(Global / concurrentRestrictions) += Tags.exclusive(CodegenTag)
+(Global / concurrentRestrictions) += Tags.limit(ScalaJSTags.Link, 1)
 
 lazy val jsModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-core-portable-js`, `quill-core-js`,
@@ -139,7 +139,7 @@ lazy val `quill` = {
   }
 }
 
-publishArtifact in `quill` := false
+`quill` / publishArtifact := false
 
 lazy val superPure = new sbtcrossproject.CrossType {
   def projectDir(crossBase: File, projectType: String): File =
@@ -203,7 +203,7 @@ lazy val `quill-core-portable` =
       ),
       coverageExcludedPackages := ".*",
       // 2.12 Build seems to take forever without this option
-      scalaJSOptimizerOptions in fastOptJS in Test ~= { _.withDisableOptimizer(true) }
+      Test / fastOptJS / scalaJSOptimizerOptions ~= { _.withDisableOptimizer(true) }
     )
 
 lazy val `quill-core-portable-jvm` = `quill-core-portable`.jvm
@@ -219,7 +219,7 @@ lazy val `quill-core` =
       "org.scala-lang"             %  "scala-reflect" % scalaVersion.value
     ))
     .jvmSettings(
-      fork in Test := true
+      Test / fork := true
     )
     .jsSettings(
       libraryDependencies ++= Seq(
@@ -227,10 +227,10 @@ lazy val `quill-core` =
         "org.scala-js" %%% "scalajs-java-time" % "0.2.5",
         "org.scala-js" %%% "scalajs-java-time" % "0.2.5"
       ),
-      excludeFilter in unmanagedSources := new SimpleFileFilter(file => file.getName == "DynamicQuerySpec.scala"),
+      unmanagedSources / excludeFilter := new SimpleFileFilter(file => file.getName == "DynamicQuerySpec.scala"),
       coverageExcludedPackages := ".*",
       // 2.12 Build seems to take forever without this option
-      scalaJSOptimizerOptions in fastOptJS in Test ~= { _.withDisableOptimizer(true) }
+      Test / fastOptJS / scalaJSOptimizerOptions ~= { _.withDisableOptimizer(true) }
     )
     .dependsOn(`quill-core-portable` % "compile->compile")
 
@@ -252,7 +252,7 @@ lazy val `quill-sql-portable` =
       scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) },
       coverageExcludedPackages := ".*",
       // 2.12 Build seems to take forever without this option
-      scalaJSOptimizerOptions in fastOptJS in Test ~= { _.withDisableOptimizer(true) }
+      Test / fastOptJS / scalaJSOptimizerOptions ~= { _.withDisableOptimizer(true) }
       //jsEnv := NodeJSEnv(args = Seq("--max_old_space_size=1024")).value
     )
     .dependsOn(`quill-core-portable` % "compile->compile")
@@ -276,7 +276,7 @@ lazy val `quill-sql` =
       scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) },
       coverageExcludedPackages := ".*",
       // 2.12 Build seems to take forever without this option
-      scalaJSOptimizerOptions in fastOptJS in Test ~= { _.withDisableOptimizer(true) }
+      Test / fastOptJS / scalaJSOptimizerOptions ~= { _.withDisableOptimizer(true) }
     )
     .dependsOn(
       `quill-sql-portable` % "compile->compile",
@@ -299,7 +299,7 @@ lazy val `quill-codegen-jdbc` =
     .settings(commonSettings: _*)
     .settings(jdbcTestingLibraries: _*)
     .settings(
-      fork in Test := true,
+      Test / fork := true,
       libraryDependencies ++= Seq(
         "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test
       )
@@ -312,26 +312,26 @@ lazy val `quill-codegen-tests` =
     .settings(commonSettings: _*)
     .settings(
       libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test,
-      fork in Test := true,
-      (excludeFilter in unmanagedSources) := excludePathsIfOracle {
-        (unmanagedSourceDirectories in Test).value.map { dir =>
+      Test / fork := true,
+      (unmanagedSources / excludeFilter) := excludePathsIfOracle {
+        (Test / unmanagedSourceDirectories).value.map { dir =>
           (dir / "io" / "getquill" / "codegen" / "OracleCodegenTestCases.scala").getCanonicalPath
         } ++
-        (unmanagedSourceDirectories in Test).value.map { dir =>
+        (Test/ unmanagedSourceDirectories).value.map { dir =>
           (dir / "io" / "getquill" / "codegen" / "util" / "WithOracleContext.scala").getCanonicalPath
         }
       },
-      (sourceGenerators in Test) += Def.task {
+      (Test / sourceGenerators) += Def.task {
         def recrusiveList(file:JFile): List[JFile] = {
           if (file.isDirectory)
             Option(file.listFiles()).map(_.flatMap(child=> recrusiveList(child)).toList).toList.flatten
           else
             List(file)
         }
-        val r = (runner in Compile).value
+        val r = (Compile / runner).value
         val s = streams.value.log
         val sourcePath = sourceManaged.value
-        val classPath = (fullClasspath in Test in `quill-codegen-jdbc`).value.map(_.data)
+        val classPath = (`quill-codegen-jdbc` / Test / fullClasspath).value.map(_.data)
 
         // We could put the code generated products directly in the `sourcePath` directory but for some reason
         // intellij doesn't like it unless there's a `main` directory inside.
@@ -376,7 +376,7 @@ lazy val `quill-monix` =
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .settings(
-      fork in Test := true,
+      Test / fork := true,
       libraryDependencies ++= Seq(
         "io.monix"                %% "monix-eval"          % "3.0.0",
         "io.monix"                %% "monix-reactive"      % "3.0.0"
@@ -390,8 +390,8 @@ lazy val `quill-jdbc-monix` =
     .settings(mimaSettings: _*)
     .settings(jdbcTestingSettings: _*)
     .settings(
-      testGrouping in Test := {
-        (definedTests in Test).value map { test =>
+      Test / testGrouping := {
+        (Test / definedTests).value map { test =>
           if (test.name endsWith "IntegrationSpec")
             Tests.Group(name = test.name, tests = Seq(test), runPolicy = Tests.SubProcess(
               ForkOptions().withRunJVMOptions(Vector("-Xmx200m"))
@@ -410,7 +410,7 @@ lazy val `quill-zio` =
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .settings(
-      fork in Test := true,
+      Test / fork := true,
       libraryDependencies ++= Seq(
         "dev.zio" %% "zio" % "1.0.5",
         "dev.zio" %% "zio-streams" % "1.0.5"
@@ -424,8 +424,8 @@ lazy val `quill-jdbc-zio` =
     .settings(mimaSettings: _*)
     .settings(jdbcTestingSettings: _*)
     .settings(
-      testGrouping in Test := {
-        (definedTests in Test).value map { test =>
+      Test / testGrouping := {
+        (Test / definedTests).value map { test =>
           if (test.name endsWith "IntegrationSpec")
             Tests.Group(name = test.name, tests = Seq(test), runPolicy = Tests.SubProcess(
               ForkOptions().withRunJVMOptions(Vector("-Xmx200m"))
@@ -446,7 +446,7 @@ lazy val `quill-ndbc-monix` =
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .settings(
-      fork in Test := true,
+      Test / fork := true,
       libraryDependencies ++= Seq(
       )
     )
@@ -460,7 +460,7 @@ lazy val `quill-spark` =
     .settings(commonNoLogSettings: _*)
     .settings(mimaSettings: _*)
     .settings(
-      fork in Test := true,
+      Test / fork := true,
       libraryDependencies ++= Seq(
         "org.apache.spark" %% "spark-sql" % "2.4.4"
       ),
@@ -475,7 +475,7 @@ lazy val `quill-finagle-mysql` =
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .settings(
-      fork in Test := true,
+      Test / fork := true,
       libraryDependencies ++= Seq(
         "com.twitter" %% "finagle-mysql" % "20.10.0"
       )
@@ -487,7 +487,7 @@ lazy val `quill-finagle-postgres` =
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .settings(
-      fork in Test := true,
+      Test / fork := true,
       libraryDependencies ++= Seq(
         "io.github.finagle" %% "finagle-postgres" % "0.12.0"
       )
@@ -499,7 +499,7 @@ lazy val `quill-async` =
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .settings(
-      fork in Test := true,
+      Test / fork := true,
       libraryDependencies ++= Seq(
         "com.github.postgresql-async" %% "db-async-common"  % "0.3.0"
       )
@@ -511,7 +511,7 @@ lazy val `quill-async-mysql` =
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .settings(
-      fork in Test := true,
+      Test / fork := true,
       libraryDependencies ++= Seq(
         "com.github.postgresql-async" %% "mysql-async"      % "0.3.0"
       )
@@ -523,7 +523,7 @@ lazy val `quill-async-postgres` =
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .settings(
-      fork in Test := true,
+      Test / fork := true,
       libraryDependencies ++= Seq(
         "com.github.postgresql-async" %% "postgresql-async" % "0.3.0"
       )
@@ -535,7 +535,7 @@ lazy val `quill-jasync` =
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .settings(
-      fork in Test := true,
+      Test / fork := true,
       libraryDependencies ++= Seq(
         "com.github.jasync-sql" % "jasync-common" % "1.1.4",
         "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.1"
@@ -548,7 +548,7 @@ lazy val `quill-jasync-postgres` =
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .settings(
-      fork in Test := true,
+      Test / fork := true,
       libraryDependencies ++= Seq(
         "com.github.jasync-sql" % "jasync-postgresql" % "1.1.4"
       )
@@ -560,7 +560,7 @@ lazy val `quill-jasync-mysql` =
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .settings(
-      fork in Test := true,
+      Test / fork := true,
       libraryDependencies ++= Seq(
         "com.github.jasync-sql" % "jasync-mysql" % "1.1.4"
       )
@@ -572,7 +572,7 @@ lazy val `quill-ndbc` =
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .settings(
-      fork in Test := true,
+      Test / fork := true,
       libraryDependencies ++= Seq(
         "io.trane" % "future-scala" % "0.3.2",
         "io.trane" % "ndbc-core" % "0.1.3"
@@ -585,7 +585,7 @@ lazy val `quill-ndbc-postgres` =
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .settings(
-      fork in Test := true,
+      Test / fork := true,
       libraryDependencies ++= Seq(
         "io.trane" % "future-scala" % "0.3.2",
         "io.trane" % "ndbc-postgres-netty4" % "0.1.3"
@@ -598,7 +598,7 @@ lazy val `quill-cassandra` =
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .settings(
-      fork in Test := true,
+      Test / fork := true,
       libraryDependencies ++= Seq(
         "com.datastax.cassandra" %  "cassandra-driver-core" % "3.7.2"
       )
@@ -610,7 +610,7 @@ lazy val `quill-cassandra-monix` =
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .settings(
-      fork in Test := true
+      Test / fork := true
     )
     .dependsOn(`quill-cassandra` % "compile->compile;test->test")
     .dependsOn(`quill-monix` % "compile->compile;test->test")
@@ -620,7 +620,7 @@ lazy val `quill-cassandra-zio` =
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .settings(
-      fork in Test := true,
+      Test / fork := true,
       libraryDependencies ++= Seq(
         "dev.zio" %% "zio" % "1.0.5",
         "dev.zio" %% "zio-streams" % "1.0.5",
@@ -636,7 +636,7 @@ lazy val `quill-cassandra-lagom` =
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .settings(
-      fork in Test := true,
+      Test / fork := true,
       libraryDependencies ++= {
         val lagomVersion = if (scalaVersion.value.startsWith("2.13")) "1.6.4" else "1.5.5"
         val versionSpecificDependencies =  if (scalaVersion.value.startsWith("2.13")) Seq("com.typesafe.play" %% "play-akka-http-server" % "2.8.5") else Seq.empty
@@ -655,7 +655,7 @@ lazy val `quill-orientdb` =
       .settings(commonSettings: _*)
       .settings(mimaSettings: _*)
       .settings(
-        fork in Test := true,
+        Test / fork := true,
         libraryDependencies ++= Seq(
           "com.orientechnologies" % "orientdb-graphdb" % "3.0.34"
         )
@@ -729,17 +729,17 @@ lazy val jdbcTestingLibraries = Seq(
 )
 
 lazy val jdbcTestingSettings = jdbcTestingLibraries ++ Seq(
-  fork in Test := true,
-  excludeFilter in unmanagedSources := {
+  Test / fork := true,
+  unmanagedSources / excludeFilter := {
     excludeTests match {
       case true =>
-        excludePaths((unmanagedSourceDirectories in Test).value.map(dir => dir.getCanonicalPath))
+        excludePaths((Test / unmanagedSourceDirectories).value.map(dir => dir.getCanonicalPath))
       case false =>
         excludePathsIfOracle {
-          (unmanagedSourceDirectories in Test).value.map { dir =>
+          (Test / unmanagedSourceDirectories).value.map { dir =>
             (dir / "io" / "getquill" / "context" / "jdbc" / "oracle").getCanonicalPath
           } ++
-            (unmanagedSourceDirectories in Test).value.map { dir =>
+            (Test / unmanagedSourceDirectories).value.map { dir =>
               (dir / "io" / "getquill" / "oracle").getCanonicalPath
             }
         }
@@ -794,9 +794,9 @@ lazy val loggingSettings = Seq(
 )
 
 lazy val basicSettings = Seq(
-  excludeFilter in unmanagedSources := {
+  unmanagedSources / excludeFilter := {
     excludeTests match {
-      case true  => excludePaths((unmanagedSourceDirectories in Test).value.map(dir => dir.getCanonicalPath))
+      case true  => excludePaths((Test / unmanagedSourceDirectories).value.map(dir => dir.getCanonicalPath))
       case false => new SimpleFileFilter(file => false)
     }
   },
@@ -835,7 +835,7 @@ lazy val basicSettings = Seq(
     .setPreference(SpacesWithinPatternBinders, true)
     .setPreference(SpacesAroundMultiImports, true),
   EclipseKeys.createSrc := EclipseCreateSrc.Default,
-  unmanagedClasspath in Test ++= Seq(
+  Test / unmanagedClasspath ++= Seq(
     baseDirectory.value / "src" / "test" / "resources"
   ),
   EclipseKeys.eclipseOutput := Some("bin"),
@@ -876,7 +876,7 @@ lazy val basicSettings = Seq(
       case _ => Seq()
     }
   },
-  concurrentRestrictions in Global += Tags.limit(Tags.Test, 1),
+  Global / concurrentRestrictions += Tags.limit(Tags.Test, 1),
   scoverage.ScoverageKeys.coverageMinimum := 96,
   scoverage.ScoverageKeys.coverageFailOnMinimum := false
 )
