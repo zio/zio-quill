@@ -76,6 +76,7 @@ lazy val scala213Modules = baseModules ++ jsModules ++ dbModules ++ codegenModul
   `quill-cassandra`,
   `quill-cassandra-lagom`,
   `quill-cassandra-monix`,
+  `quill-cassandra-zio`,
   `quill-orientdb`,
   `quill-jasync`,
   `quill-jasync-postgres`,
