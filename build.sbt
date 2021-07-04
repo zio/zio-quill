@@ -2,7 +2,6 @@ import ReleaseTransformations._
 import com.typesafe.sbt.SbtScalariform.ScalariformKeys
 import scalariform.formatter.preferences._
 import sbtrelease.ReleasePlugin
-import scala.sys.process.Process
 import sbtcrossproject.CrossPlugin.autoImport.crossProject
 import java.io.{File => JFile}
 
