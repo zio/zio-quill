@@ -957,24 +957,15 @@ lazy val releaseSettings = Seq(
       case _ => Seq[ReleaseStep]()
     }
   },
-  pomExtra := (
-    <url>http://github.com/getquill/quill</url>
-    <licenses>
-      <license>
-        <name>Apache License 2.0</name>
-        <url>https://raw.githubusercontent.com/getquill/quill/master/LICENSE.txt</url>
-        <distribution>repo</distribution>
-      </license>
-    </licenses>
-    <scm>
-      <url>git@github.com:getquill/quill.git</url>
-      <connection>scm:git:git@github.com:getquill/quill.git</connection>
-    </scm>
-    <developers>
-      <developer>
-        <id>fwbrasil</id>
-        <name>Flavio W. Brasil</name>
-        <url>http://github.com/fwbrasil/</url>
-      </developer>
-    </developers>)
+
+  homepage := Some(url("http://github.com/getquill/quill")),
+  licenses := List(("Apache License 2.0", url("https://raw.githubusercontent.com/getquill/quill/master/LICENSE.txt"))),
+  developers := List(
+    Developer("fwbrasil", "Flavio W. Brasil", "", url("http://github.com/fwbrasil")),
+    Developer("deusaquilus", "Alexander Ioffe", "", url("https://github.com/deusaquilus"))
+  ),
+  scmInfo := Some(
+    ScmInfo(url("https://github.com/getquill/quill"), "git:git@github.com:getquill/quill.git")
+  ),
+
 )
