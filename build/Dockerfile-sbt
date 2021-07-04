@@ -1,4 +1,4 @@
-FROM hseeberger/scala-sbt:8u222_1.3.2_2.13.1
+FROM hseeberger/scala-sbt:8u282_1.5.4_2.12.13
 MAINTAINER mdedetrich@gmail.com
 
 RUN apt-get update
