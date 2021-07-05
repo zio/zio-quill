@@ -1,6 +1,4 @@
 import ReleaseTransformations._
-import com.typesafe.sbt.SbtScalariform.ScalariformKeys
-import scalariform.formatter.preferences._
 import sbtrelease.ReleasePlugin
 import sbtcrossproject.CrossPlugin.autoImport.crossProject
 import java.io.{File => JFile}
@@ -711,14 +709,6 @@ lazy val mimaSettings = Seq(
   }
 )
 
-commands += Command.command("checkUnformattedFiles") { st =>
-  val vcs = Project.extract(st).get(releaseVcs).get
-  val modified = vcs.cmd("ls-files", "--modified", "--exclude-standard").!!.trim.split('\n').filter(_.contains(".scala"))
-  if(modified.nonEmpty)
-    throw new IllegalStateException(s"Please run `sbt scalariformFormat test:scalariformFormat` and resubmit your pull request. Found unformatted files: ${modified.toList}")
-  st
-}
-
 def updateReadmeVersion(selectVersion: sbtrelease.Versions => String) =
   ReleaseStep(action = st => {
 
@@ -854,24 +844,6 @@ lazy val basicSettings = Seq(
     )
     else Seq()
   },
-  ScalariformKeys.preferences := ScalariformKeys.preferences.value
-    .setPreference(AlignParameters, true)
-    .setPreference(CompactStringConcatenation, false)
-    .setPreference(IndentPackageBlocks, true)
-    .setPreference(FormatXml, true)
-    .setPreference(PreserveSpaceBeforeArguments, false)
-    .setPreference(DoubleIndentConstructorArguments, false)
-    .setPreference(RewriteArrowSymbols, false)
-    .setPreference(AlignSingleLineCaseStatements, true)
-    .setPreference(AlignSingleLineCaseStatements.MaxArrowIndent, 40)
-    .setPreference(SpaceBeforeColon, false)
-    .setPreference(SpaceInsideBrackets, false)
-    .setPreference(SpaceInsideParentheses, false)
-    .setPreference(DanglingCloseParenthesis, Force)
-    .setPreference(IndentSpaces, 2)
-    .setPreference(IndentLocalDefs, false)
-    .setPreference(SpacesWithinPatternBinders, true)
-    .setPreference(SpacesAroundMultiImports, true),
   EclipseKeys.createSrc := EclipseCreateSrc.Default,
   Test / unmanagedClasspath ++= Seq(
     baseDirectory.value / "src" / "test" / "resources"

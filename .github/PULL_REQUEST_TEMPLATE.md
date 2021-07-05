@@ -19,6 +19,6 @@ Additional notes.
 - [ ] Update `README.md` if applicable
 - [ ] Add `[WIP]` to the pull request title if it's work in progress
 - [ ] [Squash commits](https://ariejan.net/2011/07/05/git-squash-your-latests-commits-into-one) that aren't meaningful changes
-- [ ] Run `sbt scalariformFormat test:scalariformFormat` to make sure that the source files are formatted
+- [ ] Run `sbt scalafmt test:scalafmt scalafmtSbt` to make sure that the source files are formatted
 
 @getquill/maintainers

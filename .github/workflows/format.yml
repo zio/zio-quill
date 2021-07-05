@@ -1,0 +1,26 @@
+name: Scalafmt
+
+on:
+  pull_request:
+    branches: ['**']
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  build:
+    name: Code is formatted
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout current branch (full)
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Check project is formatted
+        uses: jrouly/scalafmt-native-action@v1
+        with:
+          version: '2.7.5'

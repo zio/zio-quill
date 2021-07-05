@@ -101,12 +101,15 @@ In order to contribute to the project, just do as follows:
 
 ## File Formatting 
 
-[Scalariform](http://mdr.github.io/scalariform/) is used as file formatting tool in this project.
-Every time you compile the project in sbt, file formatting will be triggered. To manually format
-the Quill codebase, run the following command:
+[Scalafmt](https://scalameta.org/scalafmt/) is used as file formatting tool in this project.
+Whenever you open a PR in on https://www.github.com/getquill/quill it will check if your
+codebase is formatted. To manually format the Quill codebase, run the following command:
 ```
-sbt scalariformFormat test:scalariformFormat
+sbt scalafmt test:scalafmt scalafmtSbt
 ```
+
+There are other ways of running scalafmt (such as via Intellij), see the 
+[installation](https://scalameta.org/scalafmt/docs/installation.html) page for more details
 
 ## Notes About Git
 
