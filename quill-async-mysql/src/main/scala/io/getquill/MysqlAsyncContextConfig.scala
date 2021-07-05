@@ -7,4 +7,4 @@ import com.typesafe.config.Config
 import io.getquill.context.async.AsyncContextConfig
 
 case class MysqlAsyncContextConfig(config: Config)
-  extends AsyncContextConfig[MySQLConnection](config, new MySQLConnectionFactory(_), URLParser)
+    extends AsyncContextConfig[MySQLConnection](config, new MySQLConnectionFactory(_), URLParser)

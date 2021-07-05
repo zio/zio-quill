@@ -18,8 +18,7 @@ case class JdbcContextConfig(config: Config) {
   }
 
   def dataSource =
-    try
-      new HikariDataSource(new HikariConfig(configProperties))
+    try new HikariDataSource(new HikariConfig(configProperties))
     catch {
       case NonFatal(ex) =>
         throw new IllegalStateException(s"Failed to load data source for config: '$config'", ex)

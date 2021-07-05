@@ -16,21 +16,21 @@ class ProductJdbcSpec extends ProductSpec {
     "Insert multiple products" in {
       val inserted = productEntries.map(product => testContext.run(productInsert(lift(product))))
       val id: Long = inserted(2)
-      val product = testContext.run(productById(lift(id))).head
+      val product  = testContext.run(productById(lift(id))).head
       product.description mustEqual productEntries(2).description
       product.id mustEqual inserted(2)
     }
 
     "Single insert product" in {
       val inserted = testContext.run(productSingleInsert)
-      val product = testContext.run(productById(lift(inserted))).head
+      val product  = testContext.run(productById(lift(inserted))).head
       product.description mustEqual "Window"
       product.id mustEqual inserted
     }
 
     "Single insert with inlined free variable" in {
-      val prd = Product(0L, "test1", 1L)
-      val inserted = testContext.run {
+      val prd             = Product(0L, "test1", 1L)
+      val inserted        = testContext.run {
         product.insert(_.sku -> lift(prd.sku), _.description -> lift(prd.description)).returningGenerated(_.id)
       }
       val returnedProduct = testContext.run(productById(lift(inserted))).head
@@ -40,11 +40,11 @@ class ProductJdbcSpec extends ProductSpec {
     }
 
     "Single insert with free variable and explicit quotation" in {
-      val prd = Product(0L, "test2", 2L)
-      val q1 = quote {
+      val prd             = Product(0L, "test2", 2L)
+      val q1              = quote {
         product.insert(_.sku -> lift(prd.sku), _.description -> lift(prd.description)).returningGenerated(_.id)
       }
-      val inserted = testContext.run(q1)
+      val inserted        = testContext.run(q1)
       val returnedProduct = testContext.run(productById(lift(inserted))).head
       returnedProduct.description mustEqual "test2"
       returnedProduct.sku mustEqual 2L
@@ -52,8 +52,8 @@ class ProductJdbcSpec extends ProductSpec {
     }
 
     "Single product insert with a method quotation" in {
-      val prd = Product(0L, "test3", 3L)
-      val inserted = testContext.run(productInsert(lift(prd)))
+      val prd             = Product(0L, "test3", 3L)
+      val inserted        = testContext.run(productInsert(lift(prd)))
       val returnedProduct = testContext.run(productById(lift(inserted))).head
       returnedProduct.description mustEqual "test3"
       returnedProduct.sku mustEqual 3L

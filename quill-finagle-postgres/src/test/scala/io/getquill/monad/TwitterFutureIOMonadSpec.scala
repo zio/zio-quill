@@ -1,7 +1,7 @@
 package io.getquill.monad
 
 import io.getquill.context.finagle.postgres.testContext
-import com.twitter.util.{ Await, Future }
+import com.twitter.util.{Await, Future}
 
 class TwitterFutureIOMonadSpec extends IOMonadSpec {
 

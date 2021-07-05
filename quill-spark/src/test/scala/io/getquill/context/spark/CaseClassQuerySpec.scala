@@ -31,21 +31,21 @@ class CaseClassQuerySpec extends Spec {
   import testContext._
   import sqlContext.implicits._
 
-  val peopleList = Seq(
+  val peopleList    = Seq(
     Contact("Alex", "Jones", 60, 2, "foo"),
     Contact("Bert", "James", 55, 3, "bar"),
     Contact("Cora", "Jasper", 33, 3, "baz")
   )
   val peopleEntries = liftQuery(peopleList.toDS())
 
-  val addressList = Seq(
+  val addressList    = Seq(
     Address(1, "123 Fake Street", 11234, "something"),
     Address(2, "456 Old Street", 45678, "something else"),
     Address(3, "789 New Street", 89010, "another thing")
   )
   val addressEntries = liftQuery(addressList.toDS())
 
-  val noteList = Seq(
+  val noteList    = Seq(
     Note("Alex", "Foo"),
     Note("Alex", "Bar"),
     Note("Bert", "Baz"),
@@ -53,8 +53,8 @@ class CaseClassQuerySpec extends Spec {
   )
   val noteEntries = liftQuery(noteList.toDS())
 
-  val reverse = quote {
-    (str: String) => infix"reverse(${str})".pure.as[String]
+  val reverse = quote { (str: String) =>
+    infix"reverse(${str})".pure.as[String]
   }
 
   "Simple Join" in {
@@ -62,9 +62,7 @@ class CaseClassQuerySpec extends Spec {
       for {
         p <- peopleEntries
         a <- addressEntries if p.addressFk == a.id
-      } yield {
-        new AddressableContact(p.firstName, p.lastName, p.age, a.street, a.zip)
-      }
+      } yield new AddressableContact(p.firstName, p.lastName, p.age, a.street, a.zip)
     }
 
     testContext.run(q).collect() should contain theSameElementsAs Seq(
@@ -79,9 +77,7 @@ class CaseClassQuerySpec extends Spec {
       for {
         p <- (peopleEntries.filter(_.age >= 60)) ++ (peopleEntries.filter(_.age < 60))
         a <- addressEntries if p.addressFk == a.id
-      } yield {
-        new AddressableContact(p.firstName, p.lastName, p.age, a.street, a.zip)
-      }
+      } yield new AddressableContact(p.firstName, p.lastName, p.age, a.street, a.zip)
     }
 
     testContext.run(q).collect() should contain theSameElementsAs Seq(
@@ -97,9 +93,7 @@ class CaseClassQuerySpec extends Spec {
         // returns a duplicate record that should be deduped
         p <- (peopleEntries.filter(_.age >= 60)) ++ (peopleEntries.filter(_.age <= 60))
         a <- addressEntries if p.addressFk == a.id
-      } yield {
-        new AddressableContact(p.firstName, p.lastName, p.age, a.street, a.zip)
-      }).distinct
+      } yield new AddressableContact(p.firstName, p.lastName, p.age, a.street, a.zip)).distinct
     }
 
     testContext.run(q).collect() should contain theSameElementsAs Seq(
@@ -117,9 +111,18 @@ class CaseClassQuerySpec extends Spec {
       } yield (p, a, AddressableContact(p.firstName, p.lastName, p.age, a.street, a.zip))
     }
     testContext.run(q).collect() should contain theSameElementsAs Seq(
-      (Contact("Alex", "Jones", 60, 2, "foo"), Address(2, "456 Old Street", 45678, "something else"), AddressableContact("Alex", "Jones", 60, "456 Old Street", 45678)),
-      (Contact("Bert", "James", 55, 3, "bar"), Address(3, "789 New Street", 89010, "another thing"), AddressableContact("Bert", "James", 55, "789 New Street", 89010)),
-      (Contact("Cora", "Jasper", 33, 3, "baz"), Address(3, "789 New Street", 89010, "another thing"), AddressableContact("Cora", "Jasper", 33, "789 New Street", 89010))
+      (Contact("Alex", "Jones", 60, 2, "foo"),
+       Address(2, "456 Old Street", 45678, "something else"),
+       AddressableContact("Alex", "Jones", 60, "456 Old Street", 45678)
+      ),
+      (Contact("Bert", "James", 55, 3, "bar"),
+       Address(3, "789 New Street", 89010, "another thing"),
+       AddressableContact("Bert", "James", 55, "789 New Street", 89010)
+      ),
+      (Contact("Cora", "Jasper", 33, 3, "baz"),
+       Address(3, "789 New Street", 89010, "another thing"),
+       AddressableContact("Cora", "Jasper", 33, "789 New Street", 89010)
+      )
     )
   }
 
@@ -172,9 +175,15 @@ class CaseClassQuerySpec extends Spec {
     }
     testContext.run(q).collect() should contain theSameElementsAs Seq(
       AddressAndOptionalContext(Address(1, "123 Fake Street", 11234, "something"), None),
-      AddressAndOptionalContext(Address(2, "456 Old Street", 45678, "something else"), Some(Contact("Alex", "Jones", 60, 2, "foo"))),
-      AddressAndOptionalContext(Address(3, "789 New Street", 89010, "another thing"), Some(Contact("Bert", "James", 55, 3, "bar"))),
-      AddressAndOptionalContext(Address(3, "789 New Street", 89010, "another thing"), Some(Contact("Cora", "Jasper", 33, 3, "baz")))
+      AddressAndOptionalContext(Address(2, "456 Old Street", 45678, "something else"),
+                                Some(Contact("Alex", "Jones", 60, 2, "foo"))
+      ),
+      AddressAndOptionalContext(Address(3, "789 New Street", 89010, "another thing"),
+                                Some(Contact("Bert", "James", 55, 3, "bar"))
+      ),
+      AddressAndOptionalContext(Address(3, "789 New Street", 89010, "another thing"),
+                                Some(Contact("Cora", "Jasper", 33, 3, "baz"))
+      )
     )
   }
 
@@ -186,10 +195,31 @@ class CaseClassQuerySpec extends Spec {
       } yield AddressAndOptionalContextHolder(1, Option(AddressAndOptionalContext(a, p)))
     }
     testContext.run(q).collect() should contain theSameElementsAs Seq(
-      AddressAndOptionalContextHolder(1, Some(AddressAndOptionalContext(Address(1, "123 Fake Street", 11234, "something"), None))),
-      AddressAndOptionalContextHolder(1, Some(AddressAndOptionalContext(Address(2, "456 Old Street", 45678, "something else"), Some(Contact("Alex", "Jones", 60, 2, "foo"))))),
-      AddressAndOptionalContextHolder(1, Some(AddressAndOptionalContext(Address(3, "789 New Street", 89010, "another thing"), Some(Contact("Bert", "James", 55, 3, "bar"))))),
-      AddressAndOptionalContextHolder(1, Some(AddressAndOptionalContext(Address(3, "789 New Street", 89010, "another thing"), Some(Contact("Cora", "Jasper", 33, 3, "baz")))))
+      AddressAndOptionalContextHolder(
+        1,
+        Some(AddressAndOptionalContext(Address(1, "123 Fake Street", 11234, "something"), None))
+      ),
+      AddressAndOptionalContextHolder(1,
+                                      Some(
+                                        AddressAndOptionalContext(Address(2, "456 Old Street", 45678, "something else"),
+                                                                  Some(Contact("Alex", "Jones", 60, 2, "foo"))
+                                        )
+                                      )
+      ),
+      AddressAndOptionalContextHolder(1,
+                                      Some(
+                                        AddressAndOptionalContext(Address(3, "789 New Street", 89010, "another thing"),
+                                                                  Some(Contact("Bert", "James", 55, 3, "bar"))
+                                        )
+                                      )
+      ),
+      AddressAndOptionalContextHolder(1,
+                                      Some(
+                                        AddressAndOptionalContext(Address(3, "789 New Street", 89010, "another thing"),
+                                                                  Some(Contact("Cora", "Jasper", 33, 3, "baz"))
+                                        )
+                                      )
+      )
     )
   }
 
@@ -198,7 +228,7 @@ class CaseClassQuerySpec extends Spec {
     val a2 = Address(2, "456 Old Street", 45678, "something else")
     val a3 = Address(3, "789 New Street", 89010, "another thing")
 
-    val c2 = Contact("Alex", "Jones", 60, 2, "foo")
+    val c2  = Contact("Alex", "Jones", 60, 2, "foo")
     val c3a = Contact("Bert", "James", 55, 3, "bar")
     val c3b = Contact("Cora", "Jasper", 33, 3, "baz")
 
@@ -294,7 +324,8 @@ class CaseClassQuerySpec extends Spec {
   "Simple Join Nested Objects Explicit Union Distinct with Filters" in {
     val q = quote {
       (for {
-        p <- (peopleEntries.filter(_.age == 55) ++ peopleEntries.filter(_.age == 33) ++ peopleEntries.filter(_.age <= 33))
+        p <-
+          (peopleEntries.filter(_.age == 55) ++ peopleEntries.filter(_.age == 33) ++ peopleEntries.filter(_.age <= 33))
         a <- addressEntries if p.addressFk == a.id
       } yield (p, a)).distinct
     }
@@ -307,9 +338,9 @@ class CaseClassQuerySpec extends Spec {
   "Three Level Join with Two Nested Distincts and Nested Objects" in {
     val peopleAndIds = quote {
       for {
-        id <- noteEntries
+        id     <- noteEntries
         person <- peopleEntries if person.firstName == id.owner
-      } yield (person)
+      } yield person
     }
 
     val q = quote {
@@ -355,13 +386,11 @@ class CaseClassQuerySpec extends Spec {
       for {
         p <- peopleEntries
         a <- addressEntries if p.addressFk == a.id
-      } yield {
-        AddressableContact(p.firstName, p.lastName, p.age, a.street, a.zip)
-      }
+      } yield AddressableContact(p.firstName, p.lastName, p.age, a.street, a.zip)
     }
 
     val dataset: Dataset[AddressableContact] = testContext.run(q)
-    val mapped = dataset.map(ac => ContactSimplifiedRenamed(ac.firstName, ac.lastName, ac.firstName.reverse))
+    val mapped                               = dataset.map(ac => ContactSimplifiedRenamed(ac.firstName, ac.lastName, ac.firstName.reverse))
 
     mapped.collect() should contain theSameElementsAs expectedData
   }
@@ -393,7 +422,7 @@ class CaseClassQuerySpec extends Spec {
   "Two Level Select - Filtered First Part" in {
     val q = quote {
       for {
-        p <- peopleEntries if (p.firstName == "Bert")
+        p <- peopleEntries if p.firstName == "Bert"
       } yield ContactSimplifiedRenamed(p.firstName, p.lastName, reverse(p.firstName))
     }
 
@@ -433,10 +462,15 @@ class CaseClassQuerySpec extends Spec {
 
     val q2 = quote {
       for {
-        p <- q if (p.lastNameRenamed == "James")
-      } yield ContactSimplifiedRenamed(p.firstName, p.lastNameRenamed, p.firstReverse + "-" + unquote(statefulStringsUdf))
+        p <- q if p.lastNameRenamed == "James"
+      } yield ContactSimplifiedRenamed(p.firstName,
+                                       p.lastNameRenamed,
+                                       p.firstReverse + "-" + unquote(statefulStringsUdf)
+      )
     }
-    testContext.run(q2).collect() should contain theSameElementsAs (Seq(ContactSimplifiedRenamed("Bert", "James", "two-four")))
+    testContext.run(q2).collect() should contain theSameElementsAs (Seq(
+      ContactSimplifiedRenamed("Bert", "James", "two-four")
+    ))
   }
 
   "Two Level Select - Filtered Second Part" in {
@@ -448,7 +482,7 @@ class CaseClassQuerySpec extends Spec {
 
     val q2 = quote {
       for {
-        p <- q if (p.lastNameRenamed == "James")
+        p <- q if p.lastNameRenamed == "James"
       } yield ContactSimplifiedRenamed(p.firstName, p.lastNameRenamed, reverse(p.firstName))
     }
     testContext.run(q2).collect() should contain theSameElementsAs expectedData.filter(_.firstName == "Bert")
@@ -457,13 +491,13 @@ class CaseClassQuerySpec extends Spec {
   "Two Level Select - Filtered First and Second Part" in {
     val q = quote {
       for {
-        p <- peopleEntries if (p.firstName == "Bert" || p.firstName == "Alex")
+        p <- peopleEntries if p.firstName == "Bert" || p.firstName == "Alex"
       } yield ContactSimplifiedRenamed(p.firstName, p.lastName, reverse(p.firstName))
     }
 
     val q2 = quote {
       for {
-        p <- q if (p.lastNameRenamed == "James")
+        p <- q if p.lastNameRenamed == "James"
       } yield ContactSimplifiedRenamed(p.firstName, p.lastNameRenamed, reverse(p.firstName))
     }
     testContext.run(q2).collect() should contain theSameElementsAs expectedData.filter(_.firstName == "Bert")
@@ -482,8 +516,8 @@ class CaseClassQuerySpec extends Spec {
       } yield ContactSimplifiedMapped(p._1, p._2, reverse(p._1))
     }
 
-    testContext.run(q2).collect() should contain theSameElementsAs expectedData.map(
-      c => ContactSimplifiedMapped(c.firstName, c.lastNameRenamed, c.firstReverse)
+    testContext.run(q2).collect() should contain theSameElementsAs expectedData.map(c =>
+      ContactSimplifiedMapped(c.firstName, c.lastNameRenamed, c.firstReverse)
     )
   }
 
@@ -504,8 +538,8 @@ class CaseClassQuerySpec extends Spec {
       for {
         a <- addressEntries if a.id > 1
         p <- (
-          peopleEntries.filter(_.age > 33) unionAll peopleEntries.filter(_.firstName != "Bert")
-        ) if (a.id == p.addressFk)
+               peopleEntries.filter(_.age > 33) unionAll peopleEntries.filter(_.firstName != "Bert")
+             ) if a.id == p.addressFk
       } yield (p, a)
     }
 
@@ -522,9 +556,13 @@ class CaseClassQuerySpec extends Spec {
       for {
         a <- addressEntries if a.id > 1
         p <- (
-          peopleEntries.filter(_.age > 33).map(p => ContactSimplifiedWithAddress(p.firstName, p.lastName, p.addressFk)) unionAll
-          peopleEntries.filter(_.firstName != "Bert").map(p => ContactSimplifiedWithAddress(p.firstName, p.lastName, p.addressFk))
-        ) if (a.id == p.addressFk)
+               peopleEntries
+                 .filter(_.age > 33)
+                 .map(p => ContactSimplifiedWithAddress(p.firstName, p.lastName, p.addressFk)) unionAll
+                 peopleEntries
+                   .filter(_.firstName != "Bert")
+                   .map(p => ContactSimplifiedWithAddress(p.firstName, p.lastName, p.addressFk))
+             ) if a.id == p.addressFk
       } yield (p, a)
     }
 
@@ -547,13 +585,12 @@ class CaseClassQuerySpec extends Spec {
     val q = quote {
       liftQuery(people)
         .groupBy(p => (p.id, p.name))
-        .map {
-          case ((id, name), items) =>
-            PersonTotalNumerics(
-              id,
-              name,
-              items.map(_.numeric).sum.getOrElse(0L)
-            )
+        .map { case ((id, name), items) =>
+          PersonTotalNumerics(
+            id,
+            name,
+            items.map(_.numeric).sum.getOrElse(0L)
+          )
         }
     }
 
@@ -576,13 +613,12 @@ class CaseClassQuerySpec extends Spec {
     val q = quote {
       liftQuery(people)
         .groupBy(p => (p.id, p.name))
-        .map {
-          case ((id, name), items) =>
-            (
-              id,
-              name,
-              items.map(_.numeric).sum.getOrElse(0L)
-            )
+        .map { case ((id, name), items) =>
+          (
+            id,
+            name,
+            items.map(_.numeric).sum.getOrElse(0L)
+          )
         }
     }
 

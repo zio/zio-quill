@@ -1,6 +1,6 @@
 package io.getquill.util
 
-import java.io.{ ByteArrayOutputStream, PrintStream }
+import java.io.{ByteArrayOutputStream, PrintStream}
 
 import io.getquill.Spec
 import io.getquill.util.Messages.TraceType.Standard
@@ -36,13 +36,24 @@ and bar $small""".generateString() mustEqual (
     )
   }
 
-  case class Large(id: Int, one: String, two: String, three: String, four: String, five: String, six: String, seven: String, eight: String, nine: String, ten: String)
-  val vars = (0 until 10).map(i => (0 until i).map(_ => "Test").mkString("")).toList
+  case class Large(id: Int,
+                   one: String,
+                   two: String,
+                   three: String,
+                   four: String,
+                   five: String,
+                   six: String,
+                   seven: String,
+                   eight: String,
+                   nine: String,
+                   ten: String
+  )
+  val vars  = (0 until 10).map(i => (0 until i).map(_ => "Test").mkString("")).toList
   val large = Large(123, vars(0), vars(1), vars(2), vars(3), vars(4), vars(5), vars(6), vars(7), vars(8), vars(9))
 
   "traces large objects on multiple line - single" in {
     trace"large object: $large".generateString() mustEqual ((
-      """large object:
+                                                              """large object:
         ||  Large(
         ||    123,
         ||    "",
@@ -56,13 +67,15 @@ and bar $small""".generateString() mustEqual (
         ||    "TestTestTestTestTestTestTestTest",
         ||    "TestTestTestTestTestTestTestTestTest"
         ||  )
-        |""".stripMargin, 0
-    ))
+        |""".stripMargin,
+                                                              0
+                                                            )
+    )
   }
 
   "traces large objects on multiple line - single - custom indent" in {
     trace"%2 large object: $large".generateString() mustEqual ((
-      """    large object:
+                                                                 """    large object:
         |    |  Large(
         |    |    123,
         |    |    "",
@@ -76,13 +89,15 @@ and bar $small""".generateString() mustEqual (
         |    |    "TestTestTestTestTestTestTestTest",
         |    |    "TestTestTestTestTestTestTestTestTest"
         |    |  )
-        |""".stripMargin, 2
-    ))
+        |""".stripMargin,
+                                                                 2
+                                                               )
+    )
   }
 
   "traces large objects on multiple line - multi" in {
     trace"large object: $large and $large".generateString() mustEqual ((
-      """large object:
+                                                                         """large object:
         ||  Large(
         ||    123,
         ||    "",
@@ -110,14 +125,16 @@ and bar $small""".generateString() mustEqual (
         ||    "TestTestTestTestTestTestTestTest",
         ||    "TestTestTestTestTestTestTestTestTest"
         ||  )
-        |""".stripMargin, 0
-    ))
+        |""".stripMargin,
+                                                                         0
+                                                                       )
+    )
   }
 
   "should log to print stream" - {
     "do not log if traces disabled" in {
-      val buff = new ByteArrayOutputStream()
-      val ps = new PrintStream(buff)
+      val buff   = new ByteArrayOutputStream()
+      val ps     = new PrintStream(buff)
       val interp = new Interpolator(Standard, defaultIndent = 0, color = false, tracesEnabled = _ => false, out = ps)
       import interp._
 
@@ -127,8 +144,8 @@ and bar $small""".generateString() mustEqual (
     }
 
     "log if traces disabled" in {
-      val buff = new ByteArrayOutputStream()
-      val ps = new PrintStream(buff)
+      val buff   = new ByteArrayOutputStream()
+      val ps     = new PrintStream(buff)
       val interp = new Interpolator(Standard, defaultIndent = 0, color = false, tracesEnabled = _ => true, out = ps)
       import interp._
 
@@ -138,8 +155,8 @@ and bar $small""".generateString() mustEqual (
     }
 
     "traces large objects on multiple line - multi - with return" in {
-      val buff = new ByteArrayOutputStream()
-      val ps = new PrintStream(buff)
+      val buff   = new ByteArrayOutputStream()
+      val ps     = new PrintStream(buff)
       val interp = new Interpolator(Standard, defaultIndent = 0, color = false, tracesEnabled = _ => true, out = ps)
       import interp._
 

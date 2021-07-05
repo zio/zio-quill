@@ -17,14 +17,14 @@ class QueryResultTypeOrientDBSync extends Spec {
     val ctx = orientdb.testSyncDB
     import ctx._
     ctx.run(quote(query[OrderTestEntity].delete))
-    entries.foreach(e => ctx.run(quote { query[OrderTestEntity].insert(lift(e)) }))
+    entries.foreach(e => ctx.run(quote(query[OrderTestEntity].insert(lift(e)))))
   }
 
   "return list" - {
     "select" in {
       val ctx = orientdb.testSyncDB
       import ctx._
-      ctx.run(quote(query[OrderTestEntity])) must contain theSameElementsAs (entries)
+      ctx.run(quote(query[OrderTestEntity])) must contain theSameElementsAs entries
       ctx.close()
     }
     "map" in {
@@ -54,7 +54,7 @@ class QueryResultTypeOrientDBSync extends Spec {
     "take" in {
       val ctx = orientdb.testSyncDB
       import ctx._
-      ctx.run(quote(query[OrderTestEntity].take(10))) must contain theSameElementsAs (entries)
+      ctx.run(quote(query[OrderTestEntity].take(10))) must contain theSameElementsAs entries
       ctx.close()
     }
   }
@@ -68,7 +68,7 @@ class QueryResultTypeOrientDBSync extends Spec {
     "paramlize size" in {
       val ctx = orientdb.testSyncDB
       import ctx._
-      ctx.run(quote { query[OrderTestEntity].filter(_.id == lift(0)).size }) mustEqual 0
+      ctx.run(quote(query[OrderTestEntity].filter(_.id == lift(0)).size)) mustEqual 0
     }
   }
 }

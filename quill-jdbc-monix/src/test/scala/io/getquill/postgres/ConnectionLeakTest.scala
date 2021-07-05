@@ -3,7 +3,7 @@ package io.getquill.postgres
 import java.util.UUID
 
 import io.getquill.context.monix.MonixJdbcContext.Runner
-import io.getquill.{ JdbcContextConfig, Literal, PostgresMonixJdbcContext }
+import io.getquill.{JdbcContextConfig, Literal, PostgresMonixJdbcContext}
 import io.getquill.context.sql.ProductSpec
 import io.getquill.util.LoadConfig
 import monix.execution.Scheduler
@@ -26,20 +26,21 @@ class ConnectionLeakTest extends ProductSpec {
 
   "insert and select without leaking" in {
     val result =
-      context.transaction {
-        for {
-          _ <- context.run {
-            quote {
-              query[Product].insert(
-                lift(Product(1, UUID.randomUUID().toString, Random.nextLong()))
-              )
-            }
-          }
-          result <- context.run {
-            query[Product].filter(p => query[Product].map(_.id).max.exists(_ == p.id))
-          }
-        } yield (result)
-      }
+      context
+        .transaction {
+          for {
+            _      <- context.run {
+                        quote {
+                          query[Product].insert(
+                            lift(Product(1, UUID.randomUUID().toString, Random.nextLong()))
+                          )
+                        }
+                      }
+            result <- context.run {
+                        query[Product].filter(p => query[Product].map(_.id).max.exists(_ == p.id))
+                      }
+          } yield result
+        }
         .map(_.headOption.map(_.id))
         .runSyncUnsafe()
 

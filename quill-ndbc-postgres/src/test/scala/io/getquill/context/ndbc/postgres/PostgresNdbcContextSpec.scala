@@ -38,8 +38,8 @@ class PostgresNdbcContextSpec extends Spec {
       get(for {
         _ <- ctx.run(qr1.delete)
         _ <- ctx.transaction {
-          ctx.run(qr1.insert(_.i -> 33))
-        }
+               ctx.run(qr1.insert(_.i -> 33))
+             }
         r <- ctx.run(qr1)
       } yield r).map(_.i) mustEqual List(33)
     }
@@ -47,14 +47,18 @@ class PostgresNdbcContextSpec extends Spec {
     "failure" in {
       get(for {
         _ <- ctx.run(qr1.delete)
-        e <- ctx.transaction {
-          Future.sequence(Seq(
-            ctx.run(qr1.insert(_.i -> 19)),
-            Future(throw new IllegalStateException)
-          ))
-        }.recoverWith {
-          case e: Exception => Future(e.getClass.getSimpleName)
-        }
+        e <- ctx
+               .transaction {
+                 Future.sequence(
+                   Seq(
+                     ctx.run(qr1.insert(_.i -> 19)),
+                     Future(throw new IllegalStateException)
+                   )
+                 )
+               }
+               .recoverWith { case e: Exception =>
+                 Future(e.getClass.getSimpleName)
+               }
         r <- ctx.run(qr1)
       } yield (e, r.isEmpty)) mustEqual (("IllegalStateException", true))
     }
@@ -63,18 +67,21 @@ class PostgresNdbcContextSpec extends Spec {
       get(for {
         _ <- ctx.run(qr1.delete)
         _ <- ctx.transaction {
-          ctx.transaction {
-            ctx.run(qr1.insert(_.i -> 33))
-          }
-        }
+               ctx.transaction {
+                 ctx.run(qr1.insert(_.i -> 33))
+               }
+             }
         r <- ctx.run(qr1)
       } yield r).map(_.i) mustEqual List(33)
     }
 
     "prepare" in {
-      get(ctx.prepareParams(
-        "select * from Person where name=? and age > ?", pr => (List("David Bowie", 69), pr)
-      )) mustEqual List("69", "'David Bowie'")
+      get(
+        ctx.prepareParams(
+          "select * from Person where name=? and age > ?",
+          pr => (List("David Bowie", 69), pr)
+        )
+      ) mustEqual List("69", "'David Bowie'")
     }
   }
 }

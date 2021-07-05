@@ -1,7 +1,7 @@
 package io.getquill.dsl
 
 import io.getquill.util.MacroContextExt._
-import scala.reflect.macros.whitebox.{ Context => MacroContext }
+import scala.reflect.macros.whitebox.{Context => MacroContext}
 
 class MetaDslMacro(val c: MacroContext) extends ValueComputation {
   import c.universe._
@@ -63,7 +63,9 @@ class MetaDslMacro(val c: MacroContext) extends ValueComputation {
           }
         """
     } else {
-      c.fail(s"Can't materialize a `SchemaMeta` for non-case-class type '${t.tpe}', please provide an implicit `SchemaMeta`.")
+      c.fail(
+        s"Can't materialize a `SchemaMeta` for non-case-class type '${t.tpe}', please provide an implicit `SchemaMeta`."
+      )
     }
 
   private def expandQuery[T](value: Value)(implicit t: WeakTypeTag[T]) = {
@@ -93,23 +95,19 @@ class MetaDslMacro(val c: MacroContext) extends ValueComputation {
         case Nested(_, tpe, params, optional) =>
           if (parentOptional || optional) {
             val groups = params.map(_.map(v => expand(v, parentOptional = true) -> v.nestedAndOptional))
-            val terms =
-              groups.zipWithIndex.map {
-                case (options, idx1) =>
-                  options.zipWithIndex.map {
-                    case ((_, opt), idx2) =>
-                      val term = TermName(s"o_${idx1}_$idx2")
-                      if (opt) q"Some($term)"
-                      else q"$term"
-                  }
-              }
-            groups.zipWithIndex.foldLeft(q"Some(new $tpe(...$terms))") {
-              case (body, (options, idx1)) =>
-                options.zipWithIndex.foldLeft(body) {
-                  case (body, ((option, _), idx2)) =>
-                    val o = q"val ${TermName(s"o_${idx1}_$idx2")} = $EmptyTree"
-                    q"$option.flatMap($o => $body)"
+            val terms  =
+              groups.zipWithIndex.map { case (options, idx1) =>
+                options.zipWithIndex.map { case ((_, opt), idx2) =>
+                  val term = TermName(s"o_${idx1}_$idx2")
+                  if (opt) q"Some($term)"
+                  else q"$term"
                 }
+              }
+            groups.zipWithIndex.foldLeft(q"Some(new $tpe(...$terms))") { case (body, (options, idx1)) =>
+              options.zipWithIndex.foldLeft(body) { case (body, ((option, _), idx2)) =>
+                val o = q"val ${TermName(s"o_${idx1}_$idx2")} = $EmptyTree"
+                q"$option.flatMap($o => $body)"
+              }
             }
           } else
             q"new $tpe(...${params.map(_.map(expand(_)))})"
@@ -121,9 +119,8 @@ class MetaDslMacro(val c: MacroContext) extends ValueComputation {
     val assignments =
       flatten(q"v", value)
         .zip(flatten(q"value", value))
-        .map {
-          case (vTree, valueTree) =>
-            q"(v: $t) => $vTree -> $valueTree"
+        .map { case (vTree, valueTree) =>
+          q"(v: $t) => $vTree -> $valueTree"
         }
     c.untypecheck {
       q"""

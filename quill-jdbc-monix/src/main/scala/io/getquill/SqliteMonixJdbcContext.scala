@@ -10,11 +10,11 @@ import io.getquill.util.LoadConfig
 import javax.sql.DataSource
 
 class SqliteMonixJdbcContext[N <: NamingStrategy](
-  val naming:     N,
-  val dataSource: DataSource with Closeable,
-  runner:         Runner
+    val naming: N,
+    val dataSource: DataSource with Closeable,
+    runner: Runner
 ) extends MonixJdbcContext[SqliteDialect, N](dataSource, runner)
-  with SqliteJdbcContextBase[N] {
+    with SqliteJdbcContextBase[N] {
 
   def this(naming: N, config: JdbcContextConfig, runner: Runner) = this(naming, config.dataSource, runner)
   def this(naming: N, config: Config, runner: Runner) = this(naming, JdbcContextConfig(config), runner)

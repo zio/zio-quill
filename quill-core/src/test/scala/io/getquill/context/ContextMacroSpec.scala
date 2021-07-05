@@ -43,7 +43,7 @@ class ContextMacroSpec extends Spec {
       }
       "dynamic type param" in {
         def test[T: SchemaMeta] = quote(query[T].delete)
-        val r = testContext.run(test[TestEntity])
+        val r                   = testContext.run(test[TestEntity])
         r.string mustEqual """querySchema("TestEntity").delete"""
       }
     }
@@ -77,7 +77,7 @@ class ContextMacroSpec extends Spec {
         def test[T <: { def i: Int }: SchemaMeta] = quote {
           query[T].filter(t => t.i == lift(1)).delete
         }
-        val r = testContext.run(test[TestEntity])
+        val r                                     = testContext.run(test[TestEntity])
         r.string mustEqual """querySchema("TestEntity").filter(t => t.i == ?).delete"""
         r.prepareRow mustEqual Row(1)
       }
@@ -169,7 +169,7 @@ class ContextMacroSpec extends Spec {
       }
       "dynamic type param" in {
         def test[T: SchemaMeta] = quote(query[T])
-        val r = testContext.run(test[TestEntity])
+        val r                   = testContext.run(test[TestEntity])
         r.string mustEqual """querySchema("TestEntity").map(x => (x.s, x.i, x.l, x.o, x.b))"""
       }
     }
@@ -221,7 +221,7 @@ class ContextMacroSpec extends Spec {
         def test[T: SchemaMeta: QueryMeta] = quote {
           query[T].map(t => lift(1))
         }
-        val r = testContext.run(test[TestEntity])
+        val r                              = testContext.run(test[TestEntity])
         r.string mustEqual """querySchema("TestEntity").map(t => ?)"""
         r.prepareRow mustEqual Row(1)
       }
@@ -360,7 +360,9 @@ class ContextMacroSpec extends Spec {
       ctx.translate(query[TestEntity]) mustEqual """querySchema("TestEntity").map(x => (x.s, x.i, x.l, x.o, x.b))"""
     }
     "four" in {
-      object ctx extends MirrorContext(MirrorIdiom, NamingStrategy(Literal, Escape, UpperCase, SnakeCase)) with TestEntities
+      object ctx
+          extends MirrorContext(MirrorIdiom, NamingStrategy(Literal, Escape, UpperCase, SnakeCase))
+          with TestEntities
       import ctx._
       ctx.run(query[TestEntity]).string mustEqual """querySchema("TestEntity").map(x => (x.s, x.i, x.l, x.o, x.b))"""
       ctx.translate(query[TestEntity]) mustEqual """querySchema("TestEntity").map(x => (x.s, x.i, x.l, x.o, x.b))"""

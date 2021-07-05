@@ -11,7 +11,7 @@ object OrderTerms {
 
       // a.sortBy(b => c).filter(d => e) =>
       //     a.filter(d => e).sortBy(b => c)
-      case Filter(SortBy(a, b, c, d), e, f) =>
+      case Filter(SortBy(a, b, c, d), e, f)  =>
         Some(SortBy(Filter(a, e, f), b, c, d))
 
       // a.flatMap(b => c).take(n).map(d => e) =>

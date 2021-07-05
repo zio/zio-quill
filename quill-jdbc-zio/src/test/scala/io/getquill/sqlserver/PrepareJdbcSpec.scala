@@ -8,7 +8,7 @@ import org.scalatest.BeforeAndAfter
 class PrepareJdbcSpec extends PrepareZioJdbcSpecBase with BeforeAndAfter {
 
   override def prefix: Prefix = Prefix("testSqlServerDB")
-  val context = testContext
+  val context                 = testContext
   import testContext._
 
   before {
@@ -16,8 +16,8 @@ class PrepareJdbcSpec extends PrepareZioJdbcSpecBase with BeforeAndAfter {
   }
 
   def productExtractor = (rs: ResultSet) => materializeQueryMeta[Product].extract(rs)
-  val prepareQuery = prepare(query[Product])
-  implicit val im = insertMeta[Product](_.id)
+  val prepareQuery     = prepare(query[Product])
+  implicit val im      = insertMeta[Product](_.id)
 
   "single" in {
     val prepareInsert = prepare(query[Product].insert(lift(productEntries.head)))

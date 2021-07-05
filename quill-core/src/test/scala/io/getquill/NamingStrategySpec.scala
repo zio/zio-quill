@@ -119,7 +119,7 @@ class NamingStrategySpec extends Spec {
     }
 
     "preserve default naming strategy" in {
-      s.default("test") mustEqual ("test")
+      s.default("test") mustEqual "test"
     }
   }
 

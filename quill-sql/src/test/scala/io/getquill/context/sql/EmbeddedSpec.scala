@@ -38,7 +38,7 @@ class EmbeddedSpec extends Spec {
     "function property inside of nested distinct queries - twice" in {
       case class Grandparent(idG: Int, par: Parent)
       case class Parent(idP: Int, emb1: Emb) extends Embedded
-      case class Emb(a: Int, b: Int) extends Embedded
+      case class Emb(a: Int, b: Int)         extends Embedded
       val q = quote {
         query[Emb].map(e => Parent(1, e)).distinct.map(p => Grandparent(2, p)).distinct
       }
@@ -48,7 +48,7 @@ class EmbeddedSpec extends Spec {
     "function property inside of nested distinct queries - twice - into tuple" in {
       case class Grandparent(idG: Int, par: Parent)
       case class Parent(idP: Int, emb1: Emb) extends Embedded
-      case class Emb(a: Int, b: Int) extends Embedded
+      case class Emb(a: Int, b: Int)         extends Embedded
       val q = quote {
         query[Emb].map(e => Parent(1, e)).distinct.map(p => Grandparent(2, p)).distinct.map(g => (3, g)).distinct
       }

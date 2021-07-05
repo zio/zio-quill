@@ -13,12 +13,10 @@ class DecodeNullSpec extends Spec {
 
       val result =
         for {
-          _ <- testStreamDB.run(writeEntities.delete)
-          _ <- Observable.fromTask(testStreamDB.run(writeEntities.insert(lift(insertValue))).countL)
+          _      <- testStreamDB.run(writeEntities.delete)
+          _      <- Observable.fromTask(testStreamDB.run(writeEntities.insert(lift(insertValue))).countL)
           result <- testStreamDB.run(query[DecodeNullTestEntity])
-        } yield {
-          result
-        }
+        } yield result
       intercept[IllegalStateException] {
         await {
           result.headL.runToFuture

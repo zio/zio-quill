@@ -1,10 +1,10 @@
 package io.getquill.examples
 
-import com.zaxxer.hikari.{ HikariConfig, HikariDataSource }
+import com.zaxxer.hikari.{HikariConfig, HikariDataSource}
 import io.getquill.context.ZioJdbc.DataSourceLayer
 import io.getquill.util.LoadConfig
-import io.getquill.{ JdbcContextConfig, Literal, PostgresZioJdbcContext }
-import zio.{ Has, Runtime, Task, ZLayer }
+import io.getquill.{JdbcContextConfig, Literal, PostgresZioJdbcContext}
+import zio.{Has, Runtime, Task, ZLayer}
 import zio.console.putStrLn
 
 import java.io.Closeable
@@ -18,7 +18,7 @@ object PlainAppDataSource2 {
 
   case class Person(name: String, age: Int)
 
-  def hikariConfig = new HikariConfig(JdbcContextConfig(LoadConfig("testPostgresDB")).configProperties)
+  def hikariConfig                                = new HikariConfig(JdbcContextConfig(LoadConfig("testPostgresDB")).configProperties)
   def hikariDataSource: DataSource with Closeable = new HikariDataSource(hikariConfig)
 
   val zioConn: ZLayer[Any, Throwable, Has[Connection]] =
@@ -28,8 +28,9 @@ object PlainAppDataSource2 {
     val people = quote {
       query[Person].filter(p => p.name == "Alex")
     }
-    val qzio =
-      MyPostgresContext.run(people)
+    val qzio   =
+      MyPostgresContext
+        .run(people)
         .tap(result => putStrLn(result.toString))
         .provideCustomLayer(zioConn)
 

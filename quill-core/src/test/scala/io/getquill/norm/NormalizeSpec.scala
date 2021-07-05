@@ -11,7 +11,7 @@ class NormalizeSpec extends Spec {
 
   "normalizes random-generated queries" - {
     val gen = new QueryGenerator(1)
-    for (i <- (3 to 15)) {
+    for (i <- (3 to 15))
       for (j <- (0 until 30)) {
         val query = gen(i)
         s"$i levels ($j) - $query" in {
@@ -20,7 +20,6 @@ class NormalizeSpec extends Spec {
           ()
         }
       }
-    }
   }
 
   "doesn't apply the avoid capture normalization to branches in isolation" in {

@@ -15,8 +15,8 @@ class PrepareJdbcSpec extends PrepareJdbcSpecBase with BeforeAndAfter {
   }
 
   def productExtractor = (rs: ResultSet) => materializeQueryMeta[Product].extract(rs)
-  val prepareQuery = prepare(query[Product])
-  implicit val im = insertMeta[Product](_.id)
+  val prepareQuery     = prepare(query[Product])
+  implicit val im      = insertMeta[Product](_.id)
 
   "single" in {
     val prepareInsert = prepare(query[Product].insert(lift(productEntries.head)))

@@ -7,7 +7,7 @@ class DecodeNullSpec extends Spec {
   "no default values when reading null" - {
 
     "sync" in {
-      val ctx = orientdb.testSyncDB
+      val ctx           = orientdb.testSyncDB
       import ctx._
       val writeEntities = quote(querySchema[DecodeNullTestWriteEntity]("DecodeNullTestEntity"))
 

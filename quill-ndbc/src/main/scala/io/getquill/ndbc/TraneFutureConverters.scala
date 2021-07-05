@@ -1,9 +1,9 @@
 package io.getquill.ndbc
 
-import io.trane.future.scala.{ toJavaFuture, toScalaFuture, Future => TFutureS, Promise => TPromiseS }
-import io.trane.future.{ Future => TFutureJ }
+import io.trane.future.scala.{toJavaFuture, toScalaFuture, Future => TFutureS, Promise => TPromiseS}
+import io.trane.future.{Future => TFutureJ}
 
-import scala.concurrent.{ ExecutionContext, Future, Promise }
+import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.language.implicitConversions
 
 object TraneFutureConverters {

@@ -1,7 +1,7 @@
 package io.getquill.context.sql.norm
 
-import io.getquill.{ MirrorSqlDialect, Query, SnakeCase, Spec, SqlMirrorContext }
-import io.getquill.context.sql.{ testContext, testContextUpperEscapeColumn }
+import io.getquill.{MirrorSqlDialect, Query, SnakeCase, Spec, SqlMirrorContext}
+import io.getquill.context.sql.{testContext, testContextUpperEscapeColumn}
 import io.getquill.context.sql.util.StringOps._
 
 class ExpandNestedQueriesSpec extends Spec {
@@ -72,20 +72,21 @@ class ExpandNestedQueriesSpec extends Spec {
 
     case class Entity(camelCase: String)
 
-    testContext.run(
-      query[Entity]
-        .map(e => (e, 1))
-        .nested
-    ).string mustEqual
+    testContext
+      .run(
+        query[Entity]
+          .map(e => (e, 1))
+          .nested
+      )
+      .string mustEqual
       "SELECT e.camelCase, 1 FROM (SELECT x.camel_case AS camelCase FROM entity x) AS e"
   }
 
   "expands nested tuple select" in {
     import testContext._
     val q = quote {
-      qr1.groupBy(s => (s.i, s.s)).map {
-        case (group, items) =>
-          (group, items.size)
+      qr1.groupBy(s => (s.i, s.s)).map { case (group, items) =>
+        (group, items.size)
       }
     }
     testContext.run(q).string mustEqual
@@ -104,8 +105,8 @@ class ExpandNestedQueriesSpec extends Spec {
   "handles column alias conflict" in {
     import testContext._
     val q = quote {
-      qr1.join(qr2).on((a, b) => a.i == b.i).nested.map {
-        case (a, b) => (a.i, b.i)
+      qr1.join(qr2).on((a, b) => a.i == b.i).nested.map { case (a, b) =>
+        (a.i, b.i)
       }
     }
     println(testContext.run(q).string(true))
@@ -200,7 +201,9 @@ class ExpandNestedQueriesSpec extends Spec {
       val q = quote {
         query[Parent].map(p => p.emb).nested.map(e => (e.name, e.id))
       }
-      ctx.run(q).string mustEqual "SELECT p.embname, p.embid FROM (SELECT x.name AS embname, x.id AS embid FROM Parent x) AS p"
+      ctx
+        .run(q)
+        .string mustEqual "SELECT p.embname, p.embid FROM (SELECT x.name AS embname, x.id AS embid FROM Parent x) AS p"
     }
 
     "can be propagated across distinct query with naming intact" in {
@@ -228,7 +231,13 @@ class ExpandNestedQueriesSpec extends Spec {
       case class Emb(name: String, id: Int) extends Embedded
 
       val q = quote {
-        query[Parent].map(p => p.emb).distinct.map(e => (e.name, e.id)).distinct.map(tup => Emb(tup._1, tup._2)).distinct
+        query[Parent]
+          .map(p => p.emb)
+          .distinct
+          .map(e => (e.name, e.id))
+          .distinct
+          .map(tup => Emb(tup._1, tup._2))
+          .distinct
       }
       ctx.run(q).string.collapseSpace mustEqual
         """SELECT tup.name, tup.id
@@ -241,19 +250,26 @@ class ExpandNestedQueriesSpec extends Spec {
 
   "multiple embedding levels" in {
     import testContext._
-    case class Emb(id: Int, name: String) extends Embedded
+    case class Emb(id: Int, name: String)              extends Embedded
     case class Parent(id: Int, name: String, emb: Emb) extends Embedded
     case class GrandParent(id: Int, par: Parent)
 
     val q = quote {
       query[GrandParent]
-        .map(g => (g.id, g.par)).distinct
-        .map(p => (p._1, p._2.id, p._2.name, p._2.emb)).distinct
-        .map(tup => (tup._1, tup._2, tup._3, tup._4.id, tup._4.name)).distinct
-        .map(tup => (tup._1, tup._2, tup._3, tup._4, tup._5)).distinct
-        .map(tup => (tup._1, tup._2, tup._3, Emb(tup._4, tup._5))).distinct
-        .map(tup => (tup._1, Parent(tup._2, tup._3, tup._4))).distinct
-        .map(tup => GrandParent(tup._1, tup._2)).distinct
+        .map(g => (g.id, g.par))
+        .distinct
+        .map(p => (p._1, p._2.id, p._2.name, p._2.emb))
+        .distinct
+        .map(tup => (tup._1, tup._2, tup._3, tup._4.id, tup._4.name))
+        .distinct
+        .map(tup => (tup._1, tup._2, tup._3, tup._4, tup._5))
+        .distinct
+        .map(tup => (tup._1, tup._2, tup._3, Emb(tup._4, tup._5)))
+        .distinct
+        .map(tup => (tup._1, Parent(tup._2, tup._3, tup._4)))
+        .distinct
+        .map(tup => GrandParent(tup._1, tup._2))
+        .distinct
     }
 
     val str = testContext.run(q).string(true)
@@ -296,19 +312,26 @@ class ExpandNestedQueriesSpec extends Spec {
 
   "multiple embedding levels - another example" in {
     import testContext._
-    case class Sim(sid: Int) extends Embedded
+    case class Sim(sid: Int)           extends Embedded
     case class Mam(mid: Int, sim: Sim) extends Embedded
     case class Bim(bid: Int, mam: Mam)
 
     val q = quote {
       query[Bim]
-        .map(g => (g.bid, g.mam)).distinct
-        .map(p => (p._1, p._2.mid, p._2.sim)).distinct
-        .map(tup => (tup._1, tup._2, tup._3)).distinct
-        .map(tup => (tup._1, tup._2, tup._3.sid)).distinct
-        .map(tup => (tup._1, tup._2, Sim(tup._3))).distinct
-        .map(tup => (tup._1, Mam(tup._2, tup._3))).distinct
-        .map(tup => Bim(tup._1, tup._2)).distinct
+        .map(g => (g.bid, g.mam))
+        .distinct
+        .map(p => (p._1, p._2.mid, p._2.sim))
+        .distinct
+        .map(tup => (tup._1, tup._2, tup._3))
+        .distinct
+        .map(tup => (tup._1, tup._2, tup._3.sid))
+        .distinct
+        .map(tup => (tup._1, tup._2, Sim(tup._3)))
+        .distinct
+        .map(tup => (tup._1, Mam(tup._2, tup._3)))
+        .distinct
+        .map(tup => Bim(tup._1, tup._2))
+        .distinct
     }
     testContext.run(q).string(true).collapseSpace mustEqual
       """
@@ -365,7 +388,7 @@ class ExpandNestedQueriesSpec extends Spec {
 
   "multiple embedding levels - another example - with rename" in {
     import testContext._
-    case class Sim(sid: Int) extends Embedded
+    case class Sim(sid: Int)           extends Embedded
     case class Mam(mid: Int, sim: Sim) extends Embedded
     case class Bim(bid: Int, mam: Mam)
 
@@ -373,13 +396,20 @@ class ExpandNestedQueriesSpec extends Spec {
 
     val q = quote {
       query[Bim]
-        .map(g => (g.bid, g.mam)).distinct
-        .map(p => (p._1, p._2.mid, p._2.sim)).distinct
-        .map(tup => (tup._1, tup._2, tup._3)).distinct
-        .map(tup => (tup._1, tup._2, tup._3.sid)).distinct
-        .map(tup => (tup._1, tup._2, Sim(tup._3))).distinct
-        .map(tup => (tup._1, Mam(tup._2, tup._3))).distinct
-        .map(tup => Bim(tup._1, tup._2)).distinct
+        .map(g => (g.bid, g.mam))
+        .distinct
+        .map(p => (p._1, p._2.mid, p._2.sim))
+        .distinct
+        .map(tup => (tup._1, tup._2, tup._3))
+        .distinct
+        .map(tup => (tup._1, tup._2, tup._3.sid))
+        .distinct
+        .map(tup => (tup._1, tup._2, Sim(tup._3)))
+        .distinct
+        .map(tup => (tup._1, Mam(tup._2, tup._3)))
+        .distinct
+        .map(tup => Bim(tup._1, tup._2))
+        .distinct
     }
     println(testContext.run(q).string(true))
     testContext.run(q).string(true).collapseSpace mustEqual
@@ -438,7 +468,7 @@ class ExpandNestedQueriesSpec extends Spec {
   "multiple embedding levels - another example - with rename - with escape column" in {
     val ctx = testContextUpperEscapeColumn
     import ctx._
-    case class Sim(sid: Int) extends Embedded
+    case class Sim(sid: Int)           extends Embedded
     case class Mam(mid: Int, sim: Sim) extends Embedded
     case class Bim(bid: Int, mam: Mam)
 
@@ -446,13 +476,20 @@ class ExpandNestedQueriesSpec extends Spec {
 
     val q = quote {
       query[Bim]
-        .map(g => (g.bid, g.mam)).distinct
-        .map(p => (p._1, p._2.mid, p._2.sim)).distinct
-        .map(tup => (tup._1, tup._2, tup._3)).distinct
-        .map(tup => (tup._1, tup._2, tup._3.sid)).distinct
-        .map(tup => (tup._1, tup._2, Sim(tup._3))).distinct
-        .map(tup => (tup._1, Mam(tup._2, tup._3))).distinct
-        .map(tup => Bim(tup._1, tup._2)).distinct
+        .map(g => (g.bid, g.mam))
+        .distinct
+        .map(p => (p._1, p._2.mid, p._2.sim))
+        .distinct
+        .map(tup => (tup._1, tup._2, tup._3))
+        .distinct
+        .map(tup => (tup._1, tup._2, tup._3.sid))
+        .distinct
+        .map(tup => (tup._1, tup._2, Sim(tup._3)))
+        .distinct
+        .map(tup => (tup._1, Mam(tup._2, tup._3)))
+        .distinct
+        .map(tup => Bim(tup._1, tup._2))
+        .distinct
     }
     ctx.run(q).string(true).collapseSpace mustEqual
       """
@@ -510,7 +547,7 @@ class ExpandNestedQueriesSpec extends Spec {
   "multiple embedding levels - another example - with rename - with escape column - with groupby" in {
     val ctx = testContextUpperEscapeColumn
     import ctx._
-    case class Sim(sid: Int) extends Embedded
+    case class Sim(sid: Int)           extends Embedded
     case class Mam(mid: Int, sim: Sim) extends Embedded
     case class Bim(bid: Int, mam: Mam)
 
@@ -536,13 +573,23 @@ class ExpandNestedQueriesSpec extends Spec {
 
     val q = quote {
       query[Bim]
-        .map(g => (g.bid, g.mam)).distinct.sortBy(_._2.sim.sid)
-        .map(p => (p._1, p._2.mid, p._2.sim)).distinct
-        .map(tup => (tup._1, tup._2, tup._3)).nested.filter(n => n._3.sid == 1).distinct
-        .map(tup => (tup._1, tup._2, tup._3.sid)).distinct
-        .map(tup => (tup._1, tup._2, Sim(tup._3))).distinct
-        .map(tup => (tup._1, Mam(tup._2, tup._3))).distinct
-        .map(tup => Bim(tup._1, tup._2)).distinct
+        .map(g => (g.bid, g.mam))
+        .distinct
+        .sortBy(_._2.sim.sid)
+        .map(p => (p._1, p._2.mid, p._2.sim))
+        .distinct
+        .map(tup => (tup._1, tup._2, tup._3))
+        .nested
+        .filter(n => n._3.sid == 1)
+        .distinct
+        .map(tup => (tup._1, tup._2, tup._3.sid))
+        .distinct
+        .map(tup => (tup._1, tup._2, Sim(tup._3)))
+        .distinct
+        .map(tup => (tup._1, Mam(tup._2, tup._3)))
+        .distinct
+        .map(tup => Bim(tup._1, tup._2))
+        .distinct
     }
     ctx.run(q).string(true).collapseSpace mustEqual
       """
@@ -617,11 +664,18 @@ class ExpandNestedQueriesSpec extends Spec {
 
     val q = quote {
       query[Mam]
-        .map(tup => (tup.mid, tup.sim)).distinct.sortBy(_._2.sid)
-        .map(tup => (tup._1, tup._2)).filter(tup => tup._2.sid == 1).distinct
-        .map(tup => (tup._1, tup._2.sid)).distinct
-        .map(tup => (tup._1, Sim(tup._2))).distinct
-        .map(tup => Mam(tup._1, tup._2)).distinct
+        .map(tup => (tup.mid, tup.sim))
+        .distinct
+        .sortBy(_._2.sid)
+        .map(tup => (tup._1, tup._2))
+        .filter(tup => tup._2.sid == 1)
+        .distinct
+        .map(tup => (tup._1, tup._2.sid))
+        .distinct
+        .map(tup => (tup._1, Sim(tup._2)))
+        .distinct
+        .map(tup => Mam(tup._1, tup._2))
+        .distinct
     }
     ctx.run(q).string(true).collapseSpace mustEqual
       """
@@ -685,12 +739,16 @@ class ExpandNestedQueriesSpec extends Spec {
     import testContext._
 
     "should be handled correctly in a regular schema" in {
-      testContext.run(query[ThePerson].filter(p => query[TheBoss].filter(_.bossId == p.bossId).map(_ => 1).nonEmpty)).string mustEqual
+      testContext
+        .run(query[ThePerson].filter(p => query[TheBoss].filter(_.bossId == p.bossId).map(_ => 1).nonEmpty))
+        .string mustEqual
         "SELECT p.name, p.age, p.boss_id FROM the_person p WHERE EXISTS (SELECT 1 FROM the_boss x12 WHERE x12.boss_id = p.boss_id)"
     }
     "should be handled correctly when using a schemameta" in {
       implicit val personSchema = schemaMeta[TheBoss]("theBossMan", _.bossId -> "bossman_id")
-      testContext.run(query[ThePerson].filter(p => query[TheBoss].filter(_.bossId == p.bossId).map(_ => 1).nonEmpty)).string mustEqual
+      testContext
+        .run(query[ThePerson].filter(p => query[TheBoss].filter(_.bossId == p.bossId).map(_ => 1).nonEmpty))
+        .string mustEqual
         "SELECT p.name, p.age, p.boss_id FROM the_person p WHERE EXISTS (SELECT 1 FROM theBossMan x15 WHERE x15.bossman_id = p.boss_id)"
     }
   }

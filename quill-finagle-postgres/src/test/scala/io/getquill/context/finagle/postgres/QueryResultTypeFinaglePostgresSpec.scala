@@ -1,7 +1,7 @@
 package io.getquill.context.finagle.postgres
 
 import io.getquill.context.sql._
-import com.twitter.util.{ Await, Future }
+import com.twitter.util.{Await, Future}
 import java.util.concurrent.ConcurrentLinkedQueue
 import scala.jdk.CollectionConverters._
 
@@ -16,9 +16,9 @@ class QueryResultTypeFinaglePostgresSpec extends QueryResultTypeSpec {
 
   override def beforeAll = {
     await(testContext.run(deleteAll))
-    val rs = await(testContext.run(liftQuery(productEntries).foreach(e => productInsert(e))))
-    val inserted = (rs zip productEntries).map {
-      case (r, prod) => prod.copy(id = r)
+    val rs       = await(testContext.run(liftQuery(productEntries).foreach(e => productInsert(e))))
+    val inserted = (rs zip productEntries).map { case (r, prod) =>
+      prod.copy(id = r)
     }
     insertedProducts.addAll(inserted.asJava)
     ()
@@ -28,22 +28,22 @@ class QueryResultTypeFinaglePostgresSpec extends QueryResultTypeSpec {
 
   "return list" - {
     "select" in {
-      await(testContext.run(selectAll)) must contain theSameElementsAs (products)
+      await(testContext.run(selectAll)) must contain theSameElementsAs products
     }
     "map" in {
       await(testContext.run(map)) must contain theSameElementsAs (products.map(_.id))
     }
     "filter" in {
-      await(testContext.run(filter)) must contain theSameElementsAs (products)
+      await(testContext.run(filter)) must contain theSameElementsAs products
     }
     "withFilter" in {
-      await(testContext.run(withFilter)) must contain theSameElementsAs (products)
+      await(testContext.run(withFilter)) must contain theSameElementsAs products
     }
     "sortBy" in {
-      await(testContext.run(sortBy)) must contain theSameElementsInOrderAs (products)
+      await(testContext.run(sortBy)) must contain theSameElementsInOrderAs products
     }
     "take" in {
-      await(testContext.run(take)) must contain theSameElementsAs (products)
+      await(testContext.run(take)) must contain theSameElementsAs products
     }
     "drop" in {
       await(testContext.run(drop)) must contain theSameElementsAs (products.drop(1))
@@ -55,7 +55,7 @@ class QueryResultTypeFinaglePostgresSpec extends QueryResultTypeSpec {
       await(testContext.run(unionAll)) must contain theSameElementsAs (products ++ products)
     }
     "union" in {
-      await(testContext.run(union)) must contain theSameElementsAs (products)
+      await(testContext.run(union)) must contain theSameElementsAs products
     }
     "join" in {
       await(testContext.run(join)) must contain theSameElementsAs (products zip products)

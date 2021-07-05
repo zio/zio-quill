@@ -1,7 +1,7 @@
 package io.getquill.dsl
 
 import io.getquill.util.MacroContextExt._
-import scala.reflect.macros.blackbox.{ Context => MacroContext }
+import scala.reflect.macros.blackbox.{Context => MacroContext}
 
 class QueryDslMacro(val c: MacroContext) {
 

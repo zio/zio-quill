@@ -1,9 +1,9 @@
 package io.getquill.context.async.mysql
 
-import java.time.{ LocalDate, LocalDateTime }
+import java.time.{LocalDate, LocalDateTime}
 
 import io.getquill.context.sql.EncodingSpec
-import org.joda.time.{ DateTime => JodaDateTime, LocalDate => JodaLocalDate, LocalDateTime => JodaLocalDateTime }
+import org.joda.time.{DateTime => JodaDateTime, LocalDate => JodaLocalDate, LocalDateTime => JodaLocalDateTime}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Await
@@ -19,8 +19,8 @@ class MysqlAsyncEncodingSpec extends EncodingSpec {
   "encodes and decodes types" in {
     val r =
       for {
-        _ <- testContext.run(delete)
-        _ <- testContext.run(liftQuery(insertValues).foreach(e => insert(e)))
+        _      <- testContext.run(delete)
+        _      <- testContext.run(liftQuery(insertValues).foreach(e => insert(e)))
         result <- testContext.run(query[EncodingTestEntity])
       } yield result
 
@@ -78,9 +78,9 @@ class MysqlAsyncEncodingSpec extends EncodingSpec {
   "decode date types" in {
     case class DateEncodingTestEntity(v1: Date, v2: Date, v3: Date)
     val entity = DateEncodingTestEntity(new Date, new Date, new Date)
-    val r = for {
-      _ <- testContext.run(query[DateEncodingTestEntity].delete)
-      _ <- testContext.run(query[DateEncodingTestEntity].insert(lift(entity)))
+    val r      = for {
+      _      <- testContext.run(query[DateEncodingTestEntity].delete)
+      _      <- testContext.run(query[DateEncodingTestEntity].insert(lift(entity)))
       result <- testContext.run(query[DateEncodingTestEntity])
     } yield result
     Await.result(r, Duration.Inf)
@@ -90,9 +90,9 @@ class MysqlAsyncEncodingSpec extends EncodingSpec {
   "decode joda DateTime and Date types" in {
     case class DateEncodingTestEntity(v1: LocalDate, v2: JodaDateTime, v3: JodaDateTime)
     val entity = DateEncodingTestEntity(LocalDate.now, JodaDateTime.now, JodaDateTime.now)
-    val r = for {
-      _ <- testContext.run(query[DateEncodingTestEntity].delete)
-      _ <- testContext.run(query[DateEncodingTestEntity].insert(lift(entity)))
+    val r      = for {
+      _      <- testContext.run(query[DateEncodingTestEntity].delete)
+      _      <- testContext.run(query[DateEncodingTestEntity].insert(lift(entity)))
       result <- testContext.run(query[DateEncodingTestEntity])
     } yield result
     Await.result(r, Duration.Inf) must contain(entity)
@@ -101,9 +101,9 @@ class MysqlAsyncEncodingSpec extends EncodingSpec {
   "decode joda LocalDate and LocalDateTime types" in {
     case class DateEncodingTestEntity(v1: JodaLocalDate, v2: JodaLocalDateTime)
     val entity = DateEncodingTestEntity(JodaLocalDate.now, JodaLocalDateTime.now)
-    val r = for {
-      _ <- testContext.run(query[DateEncodingTestEntity].delete)
-      _ <- testContext.run(query[DateEncodingTestEntity].insert(lift(entity)))
+    val r      = for {
+      _      <- testContext.run(query[DateEncodingTestEntity].delete)
+      _      <- testContext.run(query[DateEncodingTestEntity].insert(lift(entity)))
       result <- testContext.run(query[DateEncodingTestEntity])
     } yield result
     Await.result(r, Duration.Inf)
@@ -113,9 +113,9 @@ class MysqlAsyncEncodingSpec extends EncodingSpec {
     case class DateEncodingTestEntity(v1: LocalDate, v2: LocalDateTime, v3: LocalDateTime)
     //since localdatetime is converted to joda which doesn't store nanos need to zero the nano part
     val entity = DateEncodingTestEntity(LocalDate.now(), LocalDateTime.now.withNano(0), LocalDateTime.now.withNano(0))
-    val r = for {
-      _ <- testContext.run(query[DateEncodingTestEntity].delete)
-      _ <- testContext.run(query[DateEncodingTestEntity].insert(lift(entity)))
+    val r      = for {
+      _      <- testContext.run(query[DateEncodingTestEntity].delete)
+      _      <- testContext.run(query[DateEncodingTestEntity].insert(lift(entity)))
       result <- testContext.run(query[DateEncodingTestEntity])
     } yield result
     Await.result(r, Duration.Inf) must contain(entity)
@@ -139,18 +139,15 @@ class MysqlAsyncEncodingSpec extends EncodingSpec {
   }
 
   "encodes sets" in {
-    val q = quote {
-      (set: Query[Int]) =>
-        query[EncodingTestEntity].filter(t => set.contains(t.v6))
+    val q   = quote { (set: Query[Int]) =>
+      query[EncodingTestEntity].filter(t => set.contains(t.v6))
     }
     val fut =
       for {
         _ <- testContext.run(query[EncodingTestEntity].delete)
         _ <- testContext.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insert(e)))
         r <- testContext.run(q(liftQuery(insertValues.map(_.v6))))
-      } yield {
-        r
-      }
+      } yield r
     verify(Await.result(fut, Duration.Inf))
   }
 
@@ -159,7 +156,7 @@ class MysqlAsyncEncodingSpec extends EncodingSpec {
       def apply()(implicit c: TestContext) = {
         import c._
         for {
-          _ <- c.run(query[EncodingTestEntity].delete)
+          _      <- c.run(query[EncodingTestEntity].delete)
           result <- c.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insert(e)))
         } yield result
       }

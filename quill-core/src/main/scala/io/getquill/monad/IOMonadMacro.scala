@@ -1,6 +1,6 @@
 package io.getquill.monad
 
-import scala.reflect.macros.blackbox.{ Context => MacroContext }
+import scala.reflect.macros.blackbox.{Context => MacroContext}
 import scala.concurrent.ExecutionContext
 
 class IOMonadMacro(val c: MacroContext) {
@@ -15,7 +15,7 @@ class IOMonadMacro(val c: MacroContext) {
       c.inferImplicitValue(c.weakTypeOf[ExecutionContext]) match {
         case Select(_, name) =>
           name.decodedName.toString
-        case tree =>
+        case tree            =>
           tree.symbol.name.decodedName.toString
       }
 

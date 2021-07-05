@@ -1,6 +1,6 @@
 package io.getquill.context.jdbc.sqlserver
 
-import io.getquill.{ Literal, Spec, SqlServerJdbcContext }
+import io.getquill.{Literal, Spec, SqlServerJdbcContext}
 
 class JdbcContextSpec extends Spec {
 
@@ -47,7 +47,8 @@ class JdbcContextSpec extends Spec {
     }
     "prepare" in {
       ctx.prepareParams(
-        "select * from Person where name=? and age > ?", ps => (List("Sarah", 127), ps)
+        "select * from Person where name=? and age > ?",
+        ps => (List("Sarah", 127), ps)
       ) mustEqual List("127", "'Sarah'")
     }
   }
@@ -87,8 +88,7 @@ class JdbcContextSpec extends Spec {
       ctx.run(qr1Emb.delete)
       ctx.run(qr1Emb.insert(lift(TestEntityEmb(Emb("one", 1), 18L, Some(123)))))
       val inserted = ctx.run {
-        qr1Emb.insert(lift(TestEntityEmb(Emb("two", 2), 18L, Some(123)))).returning(r =>
-          (r.emb.i, r.o))
+        qr1Emb.insert(lift(TestEntityEmb(Emb("two", 2), 18L, Some(123)))).returning(r => (r.emb.i, r.o))
       }
       (2, Some(123)) mustBe inserted
     }

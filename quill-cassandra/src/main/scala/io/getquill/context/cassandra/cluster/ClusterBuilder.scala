@@ -18,25 +18,26 @@ object ClusterBuilder {
 
       def tryMethod(m: Method) =
         m.getParameterTypes.toList match {
-          case Nil =>
+          case Nil         =>
             Try(cfg.getBoolean(key)).map {
               case true  => m.invoke(instance)
               case false =>
             }
-          case tpe :: Nil =>
+          case tpe :: Nil  =>
             param(key, tpe, cfg)
               .map(p => m.invoke(instance, p.asInstanceOf[AnyRef]))
           case tpe :: tail =>
             val c = cfg.getConfig(key)
-            tail.foldLeft(param("0", tpe, c).map(List(_))) {
-              case (list, tpe) =>
+            tail
+              .foldLeft(param("0", tpe, c).map(List(_))) { case (list, tpe) =>
                 list.flatMap { l =>
                   val key = s"${l.size}"
                   param(key, tpe, c).map(l :+ _)
                 }
-            }.map { params =>
-              m.invoke(instance, params.asInstanceOf[List[Object]]: _*)
-            }
+              }
+              .map { params =>
+                m.invoke(instance, params.asInstanceOf[List[Object]]: _*)
+              }
         }
 
       def tryMethods(m: List[Method]): Any =
@@ -48,9 +49,9 @@ object ClusterBuilder {
       tryMethods {
         instance.getClass.getMethods.toList.filter { m =>
           m.getName == key ||
-            m.getName == s"with${key.capitalize}" ||
-            m.getName == s"add${key.capitalize}" ||
-            m.getName == s"set${key.capitalize}"
+          m.getName == s"with${key.capitalize}" ||
+          m.getName == s"add${key.capitalize}" ||
+          m.getName == s"set${key.capitalize}"
         }
       }
     }

@@ -8,7 +8,7 @@ class BindVariablesSpec extends Spec {
 
   "binds values according to the sql terms order" - {
     "drop.take" in {
-      val q =
+      val q      =
         quote {
           query[TestEntity].drop(lift(1)).take(lift(2))
         }
@@ -17,7 +17,7 @@ class BindVariablesSpec extends Spec {
       mirror.prepareRow mustEqual Row(2, 1)
     }
     "drop.take with extra param" in {
-      val q =
+      val q      =
         quote {
           query[TestEntity].filter(_.i == lift(3)).drop(lift(1)).take(lift(2))
         }

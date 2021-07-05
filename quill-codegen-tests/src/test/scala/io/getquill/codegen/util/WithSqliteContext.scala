@@ -3,8 +3,8 @@ package io.getquill.codegen.util
 import java.io.Closeable
 
 import io.getquill.codegen.integration.CodegenTestCases._
-import io.getquill.codegen.util.ConfigPrefix.{ TestSqliteDB => TheDB }
-import io.getquill.{ SnakeCase, SqliteDialect => TheDialect, SqliteJdbcContext => TheContext }
+import io.getquill.codegen.util.ConfigPrefix.{TestSqliteDB => TheDB}
+import io.getquill.{SnakeCase, SqliteDialect => TheDialect, SqliteJdbcContext => TheContext}
 import javax.sql.DataSource
 
 trait WithSqliteContext extends WithContextAux {
@@ -28,9 +28,13 @@ trait WithSqliteContext extends WithContextAux {
       override protected def makeContext(ds: DataSource with Closeable) = new QuillContext(SnakeCase, ds)
     }
 
-  implicit def sqliteContextForTest2: Aux[TheDB, `2-comp-stereo-single`, TheContext[SnakeCase] with `2-comp-stereo-single-lib`.public.PublicExtensions[TheDialect, SnakeCase]] =
+  implicit def sqliteContextForTest2: Aux[TheDB, `2-comp-stereo-single`, TheContext[
+    SnakeCase
+  ] with `2-comp-stereo-single-lib`.public.PublicExtensions[TheDialect, SnakeCase]] =
     new WithContextBase[TheDB, `2-comp-stereo-single`](TheDB, `2-comp-stereo-single`) {
-      override type QuillContext = TheContext[SnakeCase] with `2-comp-stereo-single-lib`.public.PublicExtensions[TheDialect, SnakeCase]
-      override protected def makeContext(ds: DataSource with Closeable) = new TheContext[SnakeCase](SnakeCase, ds) with `2-comp-stereo-single-lib`.public.PublicExtensions[TheDialect, SnakeCase]
+      override type QuillContext = TheContext[SnakeCase]
+        with `2-comp-stereo-single-lib`.public.PublicExtensions[TheDialect, SnakeCase]
+      override protected def makeContext(ds: DataSource with Closeable) = new TheContext[SnakeCase](SnakeCase, ds)
+        with `2-comp-stereo-single-lib`.public.PublicExtensions[TheDialect, SnakeCase]
     }
 }

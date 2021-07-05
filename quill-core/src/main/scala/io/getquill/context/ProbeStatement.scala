@@ -2,7 +2,7 @@ package io.getquill.context
 
 import scala.concurrent.duration.DurationInt
 import scala.reflect.api.Types
-import scala.reflect.macros.whitebox.{ Context => MacroContext }
+import scala.reflect.macros.whitebox.{Context => MacroContext}
 import scala.util.Failure
 import scala.util.Success
 
@@ -17,7 +17,7 @@ object ProbeStatement {
   private val cache = new Cache[Types#Type, Context[Idiom, NamingStrategy]]
 
   def apply(statement: String, c: MacroContext) = {
-    import c.universe.{ Try => _, _ }
+    import c.universe.{Try => _, _}
 
     def resolveContext(tpe: Type) =
       tpe match {
@@ -25,7 +25,7 @@ object ProbeStatement {
           LoadObject[Context[Idiom, NamingStrategy]](c)(tpe) match {
             case Success(context) =>
               Some(context)
-            case Failure(ex) =>
+            case Failure(ex)      =>
               c.error(
                 s"Can't load the context of type '$tpe' for a compile-time query probing. " +
                   s"Make sure that context creation happens in a separate compilation unit. " +
@@ -34,7 +34,7 @@ object ProbeStatement {
               )
               None
           }
-        case _ =>
+        case _                                         =>
           None
       }
 
@@ -44,7 +44,7 @@ object ProbeStatement {
       .getOrElseUpdate(tpe, resolveContext(tpe), 30.seconds)
       .map(_.probe(statement))
       .foreach {
-        case Success(_) =>
+        case Success(_)  =>
         case Failure(ex) =>
           c.error(s"Query probing failed. Reason: '$ex'")
       }

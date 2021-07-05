@@ -8,7 +8,7 @@ class TransactionalExecutionContextSpec extends Spec {
 
   "uses the wrapped context to execute runnables" in {
     val executed = ListBuffer[Runnable]()
-    val ec = new ExecutionContext {
+    val ec       = new ExecutionContext {
       def execute(r: Runnable) = {
         executed += r
         r.run
@@ -23,8 +23,8 @@ class TransactionalExecutionContextSpec extends Spec {
   }
 
   "uses the wrapped context to report errors" in {
-    val reported = ListBuffer[Throwable]()
-    val ec = new ExecutionContext {
+    val reported  = ListBuffer[Throwable]()
+    val ec        = new ExecutionContext {
       def execute(r: Runnable) = ???
       def reportFailure(t: Throwable) = {
         val r = reported += t

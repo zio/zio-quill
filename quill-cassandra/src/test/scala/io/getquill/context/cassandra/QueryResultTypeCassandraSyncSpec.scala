@@ -14,7 +14,7 @@ class QueryResultTypeCassandraSyncSpec extends QueryResultTypeCassandraSpec {
 
   "return list" - {
     "select" in {
-      context.run(selectAll) must contain theSameElementsAs (entries)
+      context.run(selectAll) must contain theSameElementsAs entries
     }
     "map" in {
       context.run(map) must contain theSameElementsAs (entries.map(_.id))
@@ -29,7 +29,7 @@ class QueryResultTypeCassandraSyncSpec extends QueryResultTypeCassandraSpec {
       context.run(sortBy) mustEqual entries.take(1)
     }
     "take" in {
-      context.run(take) must contain theSameElementsAs (entries)
+      context.run(take) must contain theSameElementsAs entries
     }
   }
 

@@ -5,15 +5,15 @@ import io.getquill.util.MacroContextExt._
 import io.getquill.util.OptionalTypecheck
 
 import scala.collection.mutable.ListBuffer
-import scala.reflect.macros.blackbox.{ Context => MacroContext }
+import scala.reflect.macros.blackbox.{Context => MacroContext}
 
 class UdtEncodingMacro(val c: MacroContext) {
 
   import c.universe._
 
-  private val encoding = q"io.getquill.context.cassandra.encoding"
-  private val udtRaw = typeOf[UDTValue]
-  private def prefix = c.prefix
+  private val encoding    = q"io.getquill.context.cassandra.encoding"
+  private val udtRaw      = typeOf[UDTValue]
+  private def prefix      = c.prefix
   private def UdtValueOps = q"_root_.io.getquill.context.cassandra.encoding.UdtValueOps"
 
   def udtDecoder[T](implicit t: WeakTypeTag[T]): Tree = {
@@ -72,143 +72,141 @@ class UdtEncodingMacro(val c: MacroContext) {
   }
 
   private def decodeUdt[T](udtType: Type) = {
-    val t = udtFields(udtType).map {
-      case (name, _, tpe, mapper, absType, absTypeDef, tag) =>
+    val t = udtFields(udtType).map { case (name, _, tpe, mapper, absType, absTypeDef, tag) =>
+      def classTree = q"$tag.runtimeClass.asInstanceOf[Class[$absType]]"
 
-        def classTree = q"$tag.runtimeClass.asInstanceOf[Class[$absType]]"
+      def tagTree = q"$tag: scala.reflect.ClassTag[$absType]"
 
-        def tagTree = q"$tag: scala.reflect.ClassTag[$absType]"
+      def rawTree = q"$mapper.f(udt.get[$absType]($name, $classTree))"
 
-        def rawTree = q"$mapper.f(udt.get[$absType]($name, $classTree))"
+      val params   = ListBuffer.empty[Tree]
+      val typeDefs = ListBuffer.empty[TypeDef]
+      typeDefs.append(absTypeDef)
 
-        val params = ListBuffer.empty[Tree]
-        val typeDefs = ListBuffer.empty[TypeDef]
-        typeDefs.append(absTypeDef)
+      def single(tpe: Type) = q"$mapper: $encoding.CassandraMapper[$absType, $tpe]"
 
-        def single(tpe: Type) = q"$mapper: $encoding.CassandraMapper[$absType, $tpe]"
+      val tree =
+        if (tpe <:< typeOf[Option[Any]]) {
+          params.appendAll(Seq(single(tpe.typeArgs.head), tagTree))
+          q"Option($rawTree)"
 
-        val tree =
-          if (tpe <:< typeOf[Option[Any]]) {
-            params.appendAll(Seq(single(tpe.typeArgs.head), tagTree))
-            q"Option($rawTree)"
+        } else if (tpe <:< typeOf[List[Any]]) {
+          params.appendAll(Seq(single(tpe.typeArgs.head), tagTree))
+          val list = q"$UdtValueOps(udt).getScalaList[$absType]($name, $classTree)"
+          q"$list.map($mapper.f).toList"
 
-          } else if (tpe <:< typeOf[List[Any]]) {
-            params.appendAll(Seq(single(tpe.typeArgs.head), tagTree))
-            val list = q"$UdtValueOps(udt).getScalaList[$absType]($name, $classTree)"
-            q"$list.map($mapper.f).toList"
+        } else if (isBaseType[Set[Any]](tpe)) {
+          params.appendAll(Seq(single(tpe.typeArgs.head), tagTree))
+          val set = q"$UdtValueOps(udt).getScalaSet[$absType]($name, $classTree)"
+          q"$set.map($mapper.f).toSet"
 
-          } else if (isBaseType[Set[Any]](tpe)) {
-            params.appendAll(Seq(single(tpe.typeArgs.head), tagTree))
-            val set = q"$UdtValueOps(udt).getScalaSet[$absType]($name, $classTree)"
-            q"$set.map($mapper.f).toSet"
-
-          } else if (isBaseType[collection.Map[Any, Any]](tpe)) {
-            val vAbsName = s"${absTypeDef.name.encodedName}V"
-            val vAbsType = TypeName(vAbsName)
-            typeDefs.append(makeTypeDef(vAbsName))
-            val vTag = TermName(s"${tag.encodedName}V")
-            val kTpe :: vTpe :: Nil = tpe.typeArgs
-            val vMapper = TermName(s"${mapper.encodedName}V")
-            params.appendAll(
-              Seq(
-                q"$mapper: $encoding.CassandraMapper[$absType, $kTpe]",
-                q"$vMapper: $encoding.CassandraMapper[$vAbsType, $vTpe]",
-                tagTree,
-                q"$vTag: scala.reflect.ClassTag[$vAbsType]"
-              )
+        } else if (isBaseType[collection.Map[Any, Any]](tpe)) {
+          val vAbsName            = s"${absTypeDef.name.encodedName}V"
+          val vAbsType            = TypeName(vAbsName)
+          typeDefs.append(makeTypeDef(vAbsName))
+          val vTag                = TermName(s"${tag.encodedName}V")
+          val kTpe :: vTpe :: Nil = tpe.typeArgs
+          val vMapper             = TermName(s"${mapper.encodedName}V")
+          params.appendAll(
+            Seq(
+              q"$mapper: $encoding.CassandraMapper[$absType, $kTpe]",
+              q"$vMapper: $encoding.CassandraMapper[$vAbsType, $vTpe]",
+              tagTree,
+              q"$vTag: scala.reflect.ClassTag[$vAbsType]"
             )
-            val map = q"$UdtValueOps(udt).getScalaMap[$absType, $vAbsType]($name, $classTree, $vTag.runtimeClass.asInstanceOf[Class[$vAbsType]])"
-            q"$map.map(kv => $mapper.f(kv._1) -> $vMapper.f(kv._2)).toMap"
+          )
+          val map                 =
+            q"$UdtValueOps(udt).getScalaMap[$absType, $vAbsType]($name, $classTree, $vTag.runtimeClass.asInstanceOf[Class[$vAbsType]])"
+          q"$map.map(kv => $mapper.f(kv._1) -> $vMapper.f(kv._2)).toMap"
 
-          } else {
-            params.appendAll(Seq(single(tpe), tagTree))
-            rawTree
-          }
-        (typeDefs.toList, params.toList, tree)
+        } else {
+          params.appendAll(Seq(single(tpe), tagTree))
+          rawTree
+        }
+      (typeDefs.toList, params.toList, tree)
     }.unzip3
     t.copy(_1 = t._1.flatten, _2 = t._2.flatten)
   }
 
   private def encodeUdt[T](udtType: Type) = {
-    val trees = ListBuffer[Tree](q"val udt = $prefix.udtValueOf(meta.name, meta.keyspace)")
-    val (typeDefs, params) = udtFields(udtType).map {
-      case (name, field, tpe, mapper, absType, absTypeDef, tag) =>
+    val trees              = ListBuffer[Tree](q"val udt = $prefix.udtValueOf(meta.name, meta.keyspace)")
+    val (typeDefs, params) = udtFields(udtType).map { case (name, field, tpe, mapper, absType, absTypeDef, tag) =>
+      val params   = ListBuffer.empty[Tree]
+      val typeDefs = ListBuffer.empty[TypeDef]
+      typeDefs.append(absTypeDef)
 
-        val params = ListBuffer.empty[Tree]
-        val typeDefs = ListBuffer.empty[TypeDef]
-        typeDefs.append(absTypeDef)
+      def classTree = q"$tag.runtimeClass.asInstanceOf[Class[$absType]]"
 
-        def classTree = q"$tag.runtimeClass.asInstanceOf[Class[$absType]]"
+      def tagTree = q"$tag: scala.reflect.ClassTag[$absType]"
 
-        def tagTree = q"$tag: scala.reflect.ClassTag[$absType]"
+      def single(tpe: Type) = q"$mapper: $encoding.CassandraMapper[$tpe, $absType]"
 
-        def single(tpe: Type) = q"$mapper: $encoding.CassandraMapper[$tpe, $absType]"
-
-        if (tpe <:< typeOf[Option[Any]]) {
-          params.appendAll(Seq(single(tpe.typeArgs.head), tagTree))
-          trees.append {
-            q"x.$field.map(v => udt.set[$absType]($name, $mapper.f(v), $classTree)).getOrElse(udt.setToNull($name))"
-          }
-        } else if (tpe <:< typeOf[List[Any]]) {
-          params.appendAll(Seq(single(tpe.typeArgs.head), tagTree))
-          val list = q"x.$field.map($mapper.f)"
-          trees.append {
-            q"$UdtValueOps(udt).setScalaList[$absType]($name, $list, $classTree)"
-          }
-        } else if (isBaseType[Set[Any]](tpe)) {
-          params.appendAll(Seq(single(tpe.typeArgs.head), tagTree))
-          val set = q"x.$field.map($mapper.f)"
-          trees.append {
-            q"$UdtValueOps(udt).setScalaSet[$absType]($name, $set, $classTree)"
-          }
-        } else if (isBaseType[collection.Map[Any, Any]](tpe)) {
-          val vAbsName = s"${absTypeDef.name.encodedName}V"
-          val vAbsType = TypeName(vAbsName)
-          typeDefs.append(makeTypeDef(vAbsName))
-          val vTag = TermName(s"${tag.encodedName}V")
-          val kTpe :: vTpe :: Nil = tpe.typeArgs
-          val vMapper = TermName(s"${mapper.encodedName}V")
-          params.appendAll(
-            Seq(
-              q"$mapper: $encoding.CassandraMapper[$kTpe, $absType]",
-              q"$vMapper: $encoding.CassandraMapper[$vTpe, $vAbsType]",
-              tagTree,
-              q"$vTag: scala.reflect.ClassTag[$vAbsType]"
-            )
-          )
-          val vClassTree = q"$vTag.runtimeClass.asInstanceOf[Class[$vAbsType]]"
-          val map = q"x.$field.map(kv => $mapper.f(kv._1) -> $vMapper.f(kv._2))"
-          trees.append {
-            q"$UdtValueOps(udt).setScalaMap[$absType, $vAbsType]($name, $map, $classTree, $vClassTree)"
-          }
-        } else {
-          params.appendAll(Seq(single(tpe), tagTree))
-          trees.append {
-            q"udt.set[$absType]($name, $mapper.f(x.$field), $classTree)"
-          }
+      if (tpe <:< typeOf[Option[Any]]) {
+        params.appendAll(Seq(single(tpe.typeArgs.head), tagTree))
+        trees.append {
+          q"x.$field.map(v => udt.set[$absType]($name, $mapper.f(v), $classTree)).getOrElse(udt.setToNull($name))"
         }
-        typeDefs.toList -> params.toList
+      } else if (tpe <:< typeOf[List[Any]]) {
+        params.appendAll(Seq(single(tpe.typeArgs.head), tagTree))
+        val list = q"x.$field.map($mapper.f)"
+        trees.append {
+          q"$UdtValueOps(udt).setScalaList[$absType]($name, $list, $classTree)"
+        }
+      } else if (isBaseType[Set[Any]](tpe)) {
+        params.appendAll(Seq(single(tpe.typeArgs.head), tagTree))
+        val set = q"x.$field.map($mapper.f)"
+        trees.append {
+          q"$UdtValueOps(udt).setScalaSet[$absType]($name, $set, $classTree)"
+        }
+      } else if (isBaseType[collection.Map[Any, Any]](tpe)) {
+        val vAbsName            = s"${absTypeDef.name.encodedName}V"
+        val vAbsType            = TypeName(vAbsName)
+        typeDefs.append(makeTypeDef(vAbsName))
+        val vTag                = TermName(s"${tag.encodedName}V")
+        val kTpe :: vTpe :: Nil = tpe.typeArgs
+        val vMapper             = TermName(s"${mapper.encodedName}V")
+        params.appendAll(
+          Seq(
+            q"$mapper: $encoding.CassandraMapper[$kTpe, $absType]",
+            q"$vMapper: $encoding.CassandraMapper[$vTpe, $vAbsType]",
+            tagTree,
+            q"$vTag: scala.reflect.ClassTag[$vAbsType]"
+          )
+        )
+        val vClassTree          = q"$vTag.runtimeClass.asInstanceOf[Class[$vAbsType]]"
+        val map                 = q"x.$field.map(kv => $mapper.f(kv._1) -> $vMapper.f(kv._2))"
+        trees.append {
+          q"$UdtValueOps(udt).setScalaMap[$absType, $vAbsType]($name, $map, $classTree, $vClassTree)"
+        }
+      } else {
+        params.appendAll(Seq(single(tpe), tagTree))
+        trees.append {
+          q"udt.set[$absType]($name, $mapper.f(x.$field), $classTree)"
+        }
+      }
+      typeDefs.toList -> params.toList
     }.unzip
     (typeDefs.flatten, params.flatten, trees.toList)
   }
 
   private def udtFields(udt: Type) = {
-    val fields = udt.decls.collectFirst {
-      case m: MethodSymbol if m.isPrimaryConstructor => m.paramLists.flatten
-    }.getOrElse(c.fail(s"Could not find primary constructor of $udt"))
+    val fields = udt.decls
+      .collectFirst {
+        case m: MethodSymbol if m.isPrimaryConstructor => m.paramLists.flatten
+      }
+      .getOrElse(c.fail(s"Could not find primary constructor of $udt"))
 
-    fields.zipWithIndex.map {
-      case (f, i) =>
-        val name = f.name.decodedName.toString
-        (
-          q"meta.alias($name).getOrElse($prefix.naming.default($name))",
-          f.name.toTermName,
-          f.typeSignature.asSeenFrom(udt, udt.typeSymbol),
-          TermName(s"m$i"),
-          TypeName(s"T$i"),
-          makeTypeDef(s"T$i"),
-          TermName(s"t$i")
-        )
+    fields.zipWithIndex.map { case (f, i) =>
+      val name = f.name.decodedName.toString
+      (
+        q"meta.alias($name).getOrElse($prefix.naming.default($name))",
+        f.name.toTermName,
+        f.typeSignature.asSeenFrom(udt, udt.typeSymbol),
+        TermName(s"m$i"),
+        TypeName(s"T$i"),
+        makeTypeDef(s"T$i"),
+        TermName(s"t$i")
+      )
     }
   }
 

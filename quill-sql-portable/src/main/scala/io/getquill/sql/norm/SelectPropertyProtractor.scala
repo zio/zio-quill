@@ -1,37 +1,36 @@
 package io.getquill.sql.norm
 
-import io.getquill.ast.{ Ast, Ident, Property, Renameable }
-import io.getquill.ast.Visibility.{ Hidden, Visible }
-import io.getquill.context.sql.{ FlatJoinContext, FromContext, InfixContext, JoinContext, QueryContext, TableContext }
+import io.getquill.ast.{Ast, Ident, Property, Renameable}
+import io.getquill.ast.Visibility.{Hidden, Visible}
+import io.getquill.context.sql.{FlatJoinContext, FromContext, InfixContext, JoinContext, QueryContext, TableContext}
 import io.getquill.norm.PropertyMatroshka
 import io.getquill.quat.Quat
 import io.getquill.ast.Core
-import io.getquill.sql.norm.InContext.{ InContextType, InInfixContext, InQueryContext, InTableContext }
+import io.getquill.sql.norm.InContext.{InContextType, InInfixContext, InQueryContext, InTableContext}
 
-/**
- * Simple utility that checks if if an AST entity refers to a entity. It traverses
- * through the context types to find out what kind of context a variable refers to.
- * For example, in a query like:
- * {{{ query[Pair].map(p => Pair(p.a, p.b)).distinct.map(p => (p.b, p.a)) }}}
- *
- * Yielding SQL like this:
- * {{{ SELECT p.b, p.a FROM (SELECT DISTINCT p.a, p.b FROM pair p) AS p }}}
- *
- * the inner p.a and p.b will have a TableContext while the outer p.b and p.a will have a QueryContext.
- *
- * Note that there are some cases where the id of a field is not in a FromContext at all. For example,
- * in a query like this:
- * {{{ query[Human].filter(h => query[Robot].filter(r => r.friend == h.id).nonEmpty) }}}
- *
- * Where the sql produced is something like this:
- * {{{ SELECT h.id FROM human h WHERE EXISTS (SELECT r.* FROM robot r WHERE r.friend = h.id) }}}
- *
- * the field `r.friend`` is selected from a sub-query of an SQL operation (i.e. `EXISTS (...)`)
- * so a from-context of it will not exist at all.
- * When deciding which properties to treat as sub-select properties (e.g. if we want to make sure NOT
- * to apply a naming-schema on them) we need to take care to understand that we may not know the
- * FromContext that a property comes from since it may not exist.
- */
+/** Simple utility that checks if if an AST entity refers to a entity. It traverses
+  * through the context types to find out what kind of context a variable refers to.
+  * For example, in a query like:
+  * {{{ query[Pair].map(p => Pair(p.a, p.b)).distinct.map(p => (p.b, p.a)) }}}
+  *
+  * Yielding SQL like this:
+  * {{{ SELECT p.b, p.a FROM (SELECT DISTINCT p.a, p.b FROM pair p) AS p }}}
+  *
+  * the inner p.a and p.b will have a TableContext while the outer p.b and p.a will have a QueryContext.
+  *
+  * Note that there are some cases where the id of a field is not in a FromContext at all. For example,
+  * in a query like this:
+  * {{{ query[Human].filter(h => query[Robot].filter(r => r.friend == h.id).nonEmpty) }}}
+  *
+  * Where the sql produced is something like this:
+  * {{{ SELECT h.id FROM human h WHERE EXISTS (SELECT r.* FROM robot r WHERE r.friend = h.id) }}}
+  *
+  * the field `r.friend`` is selected from a sub-query of an SQL operation (i.e. `EXISTS (...)`)
+  * so a from-context of it will not exist at all.
+  * When deciding which properties to treat as sub-select properties (e.g. if we want to make sure NOT
+  * to apply a naming-schema on them) we need to take care to understand that we may not know the
+  * FromContext that a property comes from since it may not exist.
+  */
 case class InContext(from: List[FromContext]) {
   // Are we sure it is a subselect
   def isSubselect(ast: Ast) =
@@ -56,17 +55,18 @@ case class InContext(from: List[FromContext]) {
     }
   }
 
-  private def collectTableAliases(contexts: List[FromContext]): Map[String, InContextType] = {
-    contexts.map {
-      case c: TableContext             => Map(c.alias -> InTableContext)
-      case c: QueryContext             => Map(c.alias -> InQueryContext)
-      case c: InfixContext             => Map(c.alias -> InInfixContext)
-      case JoinContext(_, a, b, _)     => collectTableAliases(List(a)) ++ collectTableAliases(List(b))
-      case FlatJoinContext(_, from, _) => collectTableAliases(List(from))
-    }.foldLeft(Map[String, InContextType]())(_ ++ _)
-  }
+  private def collectTableAliases(contexts: List[FromContext]): Map[String, InContextType] =
+    contexts
+      .map {
+        case c: TableContext             => Map(c.alias -> InTableContext)
+        case c: QueryContext             => Map(c.alias -> InQueryContext)
+        case c: InfixContext             => Map(c.alias -> InInfixContext)
+        case JoinContext(_, a, b, _)     => collectTableAliases(List(a)) ++ collectTableAliases(List(b))
+        case FlatJoinContext(_, from, _) => collectTableAliases(List(from))
+      }
+      .foldLeft(Map[String, InContextType]())(_ ++ _)
 }
-object InContext {
+object InContext                              {
   sealed trait InContextType
   case object InTableContext extends InContextType
   case object InQueryContext extends InContextType
@@ -77,29 +77,29 @@ case class SelectPropertyProtractor(from: List[FromContext]) {
   val inContext = InContext(from)
 
   /*
-  * Properties that do not belong to an entity i.e. where the 'from' is not
-  * a TableContext but rather a QueryContext (so idents being selected from are not
-  * direct tables) need to be visible and fixed since they should not be affected by naming strategies.
-  */
+   * Properties that do not belong to an entity i.e. where the 'from' is not
+   * a TableContext but rather a QueryContext (so idents being selected from are not
+   * direct tables) need to be visible and fixed since they should not be affected by naming strategies.
+   */
   def freezeNonEntityProps(p: Ast, isEntity: Boolean): Ast = {
     def freezeEntityPropsRecurse(p: Ast): Ast =
       p match {
         case Property.Opinionated(ast, name, r, v) =>
           Property.Opinionated(freezeEntityPropsRecurse(ast), name, Renameable.Fixed, Visible)
-        case other =>
+        case other                                 =>
           other
       }
     if (!isEntity) freezeEntityPropsRecurse(p) else p
   }
 
-  def apply(ast: Ast): List[(Ast, List[String])] = {
+  def apply(ast: Ast): List[(Ast, List[String])] =
     ast match {
-      case id @ Core() =>
+      case id @ Core()                              =>
         val isEntity = inContext.isEntityReference(id)
         id.quat match {
           case p: Quat.Product =>
             ProtractQuat(isEntity)(p, id).map { case (prop, path) => (freezeNonEntityProps(prop, isEntity), path) }
-          case _ =>
+          case _               =>
             List(id).map(p => (freezeNonEntityProps(p, isEntity), List.empty))
         }
       // Assuming a property contains only an Ident, Infix or Constant at this point
@@ -109,18 +109,17 @@ case class SelectPropertyProtractor(from: List[FromContext]) {
         prop.quat match {
           case p: Quat.Product =>
             ProtractQuat(isEntity)(p, prop).map { case (prop, path) => (freezeNonEntityProps(prop, isEntity), path) }
-          case _ =>
+          case _               =>
             List(prop).map(p => (freezeNonEntityProps(p, isEntity), List.empty))
         }
-      case other => List(other).map(p => (p, List.empty))
+      case other                                    => List(other).map(p => (p, List.empty))
     }
-  }
 }
 
 /* Take a quat and project it out as nested properties with some core ast inside.
-* quat: CC(foo,bar:Quat(a,b)) with core id:Ident(x) =>
-*   List( Prop(id,foo) [foo], Prop(Prop(id,bar),a) [bar.a], Prop(Prop(id,bar),b) [bar.b] )
-*/
+ * quat: CC(foo,bar:Quat(a,b)) with core id:Ident(x) =>
+ *   List( Prop(id,foo) [foo], Prop(Prop(id,bar),a) [bar.a], Prop(Prop(id,bar),b) [bar.b] )
+ */
 case class ProtractQuat(refersToEntity: Boolean) {
   def apply(quat: Quat.Product, core: Ast): List[(Property, List[String])] =
     applyInner(quat, core)
@@ -168,11 +167,10 @@ case class ProtractQuat(refersToEntity: Boolean) {
              */
             if (wholePathVisible) Visible else Hidden
           )
-        ).map {
-            case (prop, path) =>
-              (prop, name +: path)
-          }
-      case (name, _) =>
+        ).map { case (prop, path) =>
+          (prop, name +: path)
+        }
+      case (name, _)                   =>
         // If the quat is renamed, create a property representing the renamed field, otherwise use the quat field for the property
         //val fieldName = quat.renames.find(_._1 == name).map(_._2).getOrElse(name)
         // The innermost entity of the quat. This is always visible since it is the actual column of the table

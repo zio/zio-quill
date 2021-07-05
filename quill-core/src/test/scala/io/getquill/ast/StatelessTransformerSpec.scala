@@ -137,12 +137,20 @@ class StatelessTransformerSpec extends Spec {
     "action" - {
       "update" in {
         val ast: Ast = Update(Ident("a"), List(Assignment(Ident("b"), Ident("c"), Ident("d"))))
-        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"), Ident("d") -> Ident("d'"))(ast) mustEqual
+        Subject(Ident("a") -> Ident("a'"),
+                Ident("b") -> Ident("b'"),
+                Ident("c") -> Ident("c'"),
+                Ident("d") -> Ident("d'")
+        )(ast) mustEqual
           Update(Ident("a'"), List(Assignment(Ident("b"), Ident("c'"), Ident("d'"))))
       }
       "insert" in {
         val ast: Ast = Insert(Ident("a"), List(Assignment(Ident("b"), Ident("c"), Ident("d"))))
-        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"), Ident("d") -> Ident("d'"))(ast) mustEqual
+        Subject(Ident("a") -> Ident("a'"),
+                Ident("b") -> Ident("b'"),
+                Ident("c") -> Ident("c'"),
+                Ident("d") -> Ident("d'")
+        )(ast) mustEqual
           Insert(Ident("a'"), List(Assignment(Ident("b"), Ident("c'"), Ident("d'"))))
       }
       "delete" in {
@@ -168,7 +176,8 @@ class StatelessTransformerSpec extends Spec {
           OnConflict.Properties(List(Property(Ident("a'"), "b")))
       }
       "properties - fixed" in {
-        val target: OnConflict.Target = OnConflict.Properties(List(Property.Opinionated(Ident("a"), "b", Fixed, Visible)))
+        val target: OnConflict.Target =
+          OnConflict.Properties(List(Property.Opinionated(Ident("a"), "b", Fixed, Visible)))
         Subject(Ident("a") -> Ident("a'"))(target) mustEqual
           OnConflict.Properties(List(Property.Opinionated(Ident("a'"), "b", Fixed, Visible)))
       }
@@ -359,15 +368,21 @@ class StatelessTransformerSpec extends Spec {
     }
 
     "block" in {
-      val ast: Ast = Block(List(
-        Val(Ident("a"), Entity("a", Nil, QEP)),
-        Val(Ident("b"), Entity("b", Nil, QEP))
-      ))
-      Subject(Entity("a", Nil, QEP) -> Entity("b", Nil, QEP), Entity("b", Nil, QEP) -> Entity("c", Nil, QEP))(ast) mustEqual
-        Block(List(
-          Val(Ident("a"), Entity("b", Nil, QEP)),
-          Val(Ident("b"), Entity("c", Nil, QEP))
-        ))
+      val ast: Ast = Block(
+        List(
+          Val(Ident("a"), Entity("a", Nil, QEP)),
+          Val(Ident("b"), Entity("b", Nil, QEP))
+        )
+      )
+      Subject(Entity("a", Nil, QEP) -> Entity("b", Nil, QEP), Entity("b", Nil, QEP) -> Entity("c", Nil, QEP))(
+        ast
+      ) mustEqual
+        Block(
+          List(
+            Val(Ident("a"), Entity("b", Nil, QEP)),
+            Val(Ident("b"), Entity("c", Nil, QEP))
+          )
+        )
     }
 
     "val" in {

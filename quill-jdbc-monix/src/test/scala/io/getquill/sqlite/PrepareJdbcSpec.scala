@@ -8,7 +8,7 @@ import org.scalatest.BeforeAndAfter
 
 class PrepareJdbcSpec extends PrepareMonixJdbcSpecBase with BeforeAndAfter {
 
-  val context = testContext
+  val context            = testContext
   import testContext._
   implicit val scheduler = Scheduler.global
 
@@ -17,7 +17,7 @@ class PrepareJdbcSpec extends PrepareMonixJdbcSpecBase with BeforeAndAfter {
   }
 
   def productExtractor = (rs: ResultSet) => materializeQueryMeta[Product].extract(rs)
-  val prepareQuery = prepare(query[Product])
+  val prepareQuery     = prepare(query[Product])
 
   "single" in {
     val prepareInsert = prepare(query[Product].insert(lift(productEntries.head)))

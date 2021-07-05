@@ -16,14 +16,15 @@ private[getquill] object QuatOps {
   def renameQuatAtPath(path: List[String], renames: List[(String, String)], rootQuat: Quat.Product) = {
     def renameQuatAtPathRecurse(path: List[String], curr: List[String], quat: Quat.Product): Quat.Product =
       path match {
-        case Nil =>
+        case Nil          =>
           quat.withRenames(renames.filter(r => quat.fields.contains(r._1)))
         case head :: tail =>
-          val goInto =
+          val goInto     =
             quat.lookup(head) match {
               case p: Quat.Product => p
-              case _ =>
-                QuatException(s"Quat at ${curr.mkString("/", ".", "")} is not a product but we need to go into ${tail.mkString("./", ".", "")} and write renames: [${renames.mkString(",")}]")
+              case _               =>
+                QuatException(s"Quat at ${curr.mkString("/", ".", "")} is not a product but we need to go into ${tail
+                  .mkString("./", ".", "")} and write renames: [${renames.mkString(",")}]")
             }
           val newSubQuat = renameQuatAtPathRecurse(tail, curr :+ head, goInto)
           // Make a copy of the current quat with the one at the recursed field replaced.
@@ -33,7 +34,7 @@ private[getquill] object QuatOps {
           // Technically we could just do "newFields = quat.fields.put(head, newSubQuat) but that would
           // introduce mutability into the Ast that I wish to avoid for now although it should technically
           // be a safe operation because there is no multi-threading in the Quill transformations.
-          val newFields = quat.fields.map(kv => if (kv._1 == head) (kv._1, newSubQuat) else kv)
+          val newFields  = quat.fields.map(kv => if (kv._1 == head) (kv._1, newSubQuat) else kv)
           // Re-create the quat with the new fields. Can't use copy since it would not copy the renames
           // along with the object.
           Quat.Product.WithRenames(quat.tpe, newFields, quat.renames)

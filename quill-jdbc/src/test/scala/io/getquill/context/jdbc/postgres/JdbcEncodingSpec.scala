@@ -19,15 +19,14 @@ class JdbcEncodingSpec extends EncodingSpec {
   "encodes sets" in {
     testContext.run(query[EncodingTestEntity].delete)
     testContext.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insert(e)))
-    val q = quote {
-      (set: Query[Int]) =>
-        query[EncodingTestEntity].filter(t => set.contains(t.v6))
+    val q = quote { (set: Query[Int]) =>
+      query[EncodingTestEntity].filter(t => set.contains(t.v6))
     }
     verify(testContext.run(q(liftQuery(insertValues.map(_.v6)))))
   }
 
   "returning custom type" in {
-    val uuid = testContext.run(insertBarCode(lift(barCodeEntry))).get
+    val uuid             = testContext.run(insertBarCode(lift(barCodeEntry))).get
     val (barCode :: Nil) = testContext.run(findBarCodeByUuid(uuid))
 
     verifyBarcode(barCode)
@@ -35,17 +34,17 @@ class JdbcEncodingSpec extends EncodingSpec {
 
   "LocalDateTime" in {
     case class EncodingTestEntity(v11: Option[LocalDateTime])
-    val now = LocalDateTime.now()
-    val e1 = EncodingTestEntity(Some(now))
-    val e2 = EncodingTestEntity(None)
+    val now                                                       = LocalDateTime.now()
+    val e1                                                        = EncodingTestEntity(Some(now))
+    val e2                                                        = EncodingTestEntity(None)
     val res: (List[EncodingTestEntity], List[EncodingTestEntity]) = performIO {
       val steps = for {
-        _ <- testContext.runIO(query[EncodingTestEntity].delete)
-        _ <- testContext.runIO(query[EncodingTestEntity].insert(lift(e1)))
+        _           <- testContext.runIO(query[EncodingTestEntity].delete)
+        _           <- testContext.runIO(query[EncodingTestEntity].insert(lift(e1)))
         withoutNull <- testContext.runIO(query[EncodingTestEntity])
-        _ <- testContext.runIO(query[EncodingTestEntity].delete)
-        _ <- testContext.runIO(query[EncodingTestEntity].insert(lift(e2)))
-        withNull <- testContext.runIO(query[EncodingTestEntity])
+        _           <- testContext.runIO(query[EncodingTestEntity].delete)
+        _           <- testContext.runIO(query[EncodingTestEntity].insert(lift(e2)))
+        withNull    <- testContext.runIO(query[EncodingTestEntity])
       } yield (withoutNull, withNull)
       steps
     }

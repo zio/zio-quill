@@ -8,7 +8,7 @@ class PeopleOrientDBSpec extends Spec {
   case class Person(id: Int, name: String, age: Int)
 
   override protected def beforeAll(): Unit = {
-    val ctx = orientdb.testSyncDB
+    val ctx     = orientdb.testSyncDB
     import ctx._
     val entries = List(
       Person(1, "Bob", 30),
@@ -26,8 +26,8 @@ class PeopleOrientDBSpec extends Spec {
     "empty" in {
       val ctx = orientdb.testSyncDB
       import ctx._
-      val q = quote {
-        (ids: Query[Int]) => query[Person].filter(p => ids.contains(p.id))
+      val q   = quote { (ids: Query[Int]) =>
+        query[Person].filter(p => ids.contains(p.id))
       }
       ctx.run(q(liftQuery(Set.empty[Int]))) mustEqual List.empty[Person]
     }

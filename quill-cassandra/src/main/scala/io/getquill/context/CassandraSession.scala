@@ -1,6 +1,6 @@
 package io.getquill.context
 
-import com.datastax.driver.core.{ Cluster, UDTValue, UserType }
+import com.datastax.driver.core.{Cluster, UDTValue, UserType}
 import io.getquill.util.Messages.fail
 import scala.jdk.CollectionConverters._
 
@@ -18,13 +18,18 @@ trait CassandraSession {
   def udtValueOf(udtName: String, keyspace: Option[String] = None): UDTValue =
     udtMetadata.getOrElse(udtName.toLowerCase, Nil) match {
       case udt :: Nil => udt.newValue()
-      case Nil =>
+      case Nil        =>
         fail(s"Could not find UDT `$udtName` in any keyspace")
-      case udts => udts
-        .find(udt => keyspace.contains(udt.getKeyspace) || udt.getKeyspace == session.getLoggedKeyspace)
-        .map(_.newValue())
-        .getOrElse(fail(s"Could not determine to which keyspace `$udtName` UDT belongs. " +
-          s"Please specify desired keyspace using UdtMeta"))
+      case udts       =>
+        udts
+          .find(udt => keyspace.contains(udt.getKeyspace) || udt.getKeyspace == session.getLoggedKeyspace)
+          .map(_.newValue())
+          .getOrElse(
+            fail(
+              s"Could not determine to which keyspace `$udtName` UDT belongs. " +
+                s"Please specify desired keyspace using UdtMeta"
+            )
+          )
     }
 
   def close(): Unit = {

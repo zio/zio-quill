@@ -5,7 +5,7 @@ import scala.reflect.ClassTag
 import io.getquill.util.Messages.fail
 
 case class Row(data: Any*) {
-  def add(value: Any) = Row((data :+ value): _*)
+  def add(value: Any)                               = Row((data :+ value): _*)
   def apply[T](index: Int)(implicit t: ClassTag[T]) =
     data(index) match {
       case v: T  => v

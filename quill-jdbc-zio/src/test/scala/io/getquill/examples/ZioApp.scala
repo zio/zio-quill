@@ -3,7 +3,7 @@ package io.getquill.examples
 import io.getquill._
 import io.getquill.context.ZioJdbc._
 import zio.console.putStrLn
-import zio.{ App, ExitCode, URIO }
+import zio.{App, ExitCode, URIO}
 
 object ZioApp extends App {
 
@@ -18,7 +18,9 @@ object ZioApp extends App {
     val people = quote {
       query[Person].filter(p => p.name == "Alex")
     }
-    MyPostgresContext.run(people).onDataSource
+    MyPostgresContext
+      .run(people)
+      .onDataSource
       .tap(result => putStrLn(result.toString))
       .provideCustomLayer(zioDS)
       .exitCode

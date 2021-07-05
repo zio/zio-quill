@@ -1,7 +1,7 @@
 package io.getquill.context.sql.norm
 
-import io.getquill.{ MirrorSqlDialectWithReturnClause, Spec }
-import io.getquill.ReturnAction.{ ReturnColumns, ReturnRecord }
+import io.getquill.{MirrorSqlDialectWithReturnClause, Spec}
+import io.getquill.ReturnAction.{ReturnColumns, ReturnRecord}
 import io.getquill.context.sql.testContext._
 import io.getquill.context.sql.testContext
 import io.getquill.Query
@@ -77,17 +77,17 @@ class RenamePropertiesSpec extends Spec {
       "returning" - {
         "returning - alias" in testContext.withDialect(MirrorSqlDialectWithReturnClause) { ctx =>
           import ctx._
-          val e1 = quote {
+          val e1     = quote {
             querySchema[TestEntity]("test_entity", _.s -> "field_s", _.i -> "field_i")
           }
-          val q = quote {
+          val q      = quote {
             e1.insert(lift(TestEntity("s", 1, 1L, None, true))).returning(_.i)
           }
           val mirror = ctx.run(q)
           mirror.returningBehavior mustEqual ReturnRecord
         }
         "returning generated - alias" in {
-          val q = quote {
+          val q      = quote {
             e.insert(lift(TestEntity("s", 1, 1L, None, true))).returningGenerated(_.i)
           }
           val mirror = testContext.run(q)
@@ -114,10 +114,8 @@ class RenamePropertiesSpec extends Spec {
         val q = quote {
           for {
             a <- e
-            b <- qr2 if (a.s == b.s)
-          } yield {
-            (a, b)
-          }
+            b <- qr2 if a.s == b.s
+          } yield (a, b)
         }
         testContext.run(q).string mustEqual
           "SELECT a.field_s, a.field_i, a.l, a.o, a.b, b.s, b.i, b.l, b.o FROM test_entity a, TestEntity2 b WHERE a.field_s = b.s"
@@ -328,8 +326,8 @@ class RenamePropertiesSpec extends Spec {
     "aggregation" - {
       "groupBy" in {
         val q = quote {
-          e.groupBy(a => a.s).map {
-            case (s, eq) => s -> eq.map(_.i).sum
+          e.groupBy(a => a.s).map { case (s, eq) =>
+            s -> eq.map(_.i).sum
           }
         }
         testContext.run(q).string mustEqual

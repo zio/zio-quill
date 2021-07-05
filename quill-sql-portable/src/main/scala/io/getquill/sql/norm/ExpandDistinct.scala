@@ -11,17 +11,19 @@ object ExpandDistinct {
     q match {
       case Distinct(q) =>
         Distinct(apply(q))
-      case q =>
+      case q           =>
         Transform(q) {
           case Aggregation(op, Distinct(q)) =>
             Aggregation(op, Distinct(apply(q)))
 
-          case Distinct(Map(q, x, cc @ Tuple(values))) =>
+          case Distinct(Map(q, x, cc @ Tuple(values)))                            =>
             val newIdent = Ident(x.name, valueQuat(cc.quat))
-            Map(Distinct(Map(q, x, cc)), newIdent,
-              Tuple(values.zipWithIndex.map {
-                case (_, i) => Property(newIdent, s"_${i + 1}")
-              }))
+            Map(Distinct(Map(q, x, cc)),
+                newIdent,
+                Tuple(values.zipWithIndex.map { case (_, i) =>
+                  Property(newIdent, s"_${i + 1}")
+                })
+            )
 
           // Situations like this:
           //    case class AdHocCaseClass(id: Int, name: String)
@@ -29,12 +31,14 @@ object ExpandDistinct {
           //      query[SomeTable].map(st => AdHocCaseClass(st.id, st.name)).distinct
           //    }
           // ... need some special treatment. Otherwise their values will not be correctly expanded.
-          case Distinct(Map(q, x, cc @ CaseClass(values))) =>
+          case Distinct(Map(q, x, cc @ CaseClass(values)))                        =>
             val newIdent = Ident(x.name, valueQuat(cc.quat))
-            Map(Distinct(Map(q, x, cc)), newIdent,
-              CaseClass(values.map {
-                case (name, _) => (name, Property(newIdent, name))
-              }))
+            Map(Distinct(Map(q, x, cc)),
+                newIdent,
+                CaseClass(values.map { case (name, _) =>
+                  (name, Property(newIdent, name))
+                })
+            )
 
           // Need some special handling to address issues with distinct returning a single embedded entity i.e:
           // query[Parent].map(p => p.emb).distinct.map(e => (e.name, e.id))
@@ -54,9 +58,9 @@ object ExpandDistinct {
           // Problems with distinct were first discovered in #1032. Basically, unless
           // the distinct is "expanded" adding an outer map, Ident's representing a Table will end up in invalid places
           // such as "ORDER BY tableIdent" etc...
-          case Distinct(Map(q, x, p)) =>
-            val newMap = Map(q, x, Tuple(List(p)))
-            val newQuat = Quat.Tuple(valueQuat(p.quat)) // force quat recomputation for perf purposes
+          case Distinct(Map(q, x, p))                             =>
+            val newMap   = Map(q, x, Tuple(List(p)))
+            val newQuat  = Quat.Tuple(valueQuat(p.quat)) // force quat recomputation for perf purposes
             val newIdent = Ident(x.name, newQuat)
             Map(Distinct(newMap), newIdent, Property(newIdent, "_1"))
         }

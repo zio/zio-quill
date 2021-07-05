@@ -1,6 +1,6 @@
 package io.getquill.dsl
 
-import scala.reflect.macros.whitebox.{ Context => MacroContext }
+import scala.reflect.macros.whitebox.{Context => MacroContext}
 import io.getquill.Embedded
 import io.getquill.util.OptionalTypecheck
 import io.getquill.util.MacroContextExt._
@@ -16,7 +16,7 @@ trait ValueComputation {
   case class Nested(term: Option[TermName], tpe: Type, params: List[List[Value]], optional: Boolean) extends Value {
     def nestedAndOptional: Boolean = optional
   }
-  case class Scalar(term: Option[TermName], tpe: Type, decoder: Tree, optional: Boolean) extends Value {
+  case class Scalar(term: Option[TermName], tpe: Type, decoder: Tree, optional: Boolean)             extends Value {
     def nestedAndOptional: Boolean = false
   }
 
@@ -27,7 +27,7 @@ trait ValueComputation {
 
     def nest(tpe: Type, term: Option[TermName]): Nested =
       caseClassConstructor(tpe) match {
-        case None =>
+        case None              =>
           c.fail(s"Found the embedded '$tpe', but it is not a case class")
         case Some(constructor) =>
           val params =
@@ -43,12 +43,11 @@ trait ValueComputation {
           Nested(term, tpe, params, optional = false)
       }
 
-    def apply(tpe: Type, term: Option[TermName], nested: Boolean): Value = {
+    def apply(tpe: Type, term: Option[TermName], nested: Boolean): Value =
       OptionalTypecheck(c)(q"implicitly[${c.prefix}.${TypeName(encoding)}[$tpe]]") match {
         case Some(encoding) =>
           Scalar(term, tpe, encoding, optional = is[Option[Any]](tpe))
-        case None =>
-
+        case None           =>
           def value(tpe: Type) =
             tpe match {
               case tpe if !is[Embedded](tpe) && nested =>
@@ -71,28 +70,26 @@ trait ValueComputation {
             value(tpe)
           }
       }
-    }
 
     def filterExcludes(value: Value) = {
       val paths =
-        exclude.map {
-          case f: Function =>
-            def path(tree: Tree): List[TermName] =
-              tree match {
-                case q"$a.$b"                => path(a) :+ b
-                case q"$a.map[$t]($b => $c)" => path(a) ++ path(c)
-                case _                       => Nil
-              }
-            path(f.body)
+        exclude.map { case f: Function =>
+          def path(tree: Tree): List[TermName] =
+            tree match {
+              case q"$a.$b"                => path(a) :+ b
+              case q"$a.map[$t]($b => $c)" => path(a) ++ path(c)
+              case _                       => Nil
+            }
+          path(f.body)
         }
 
       def filter(value: Value, path: List[TermName] = Nil): Option[Value] =
         value match {
           case value if paths.contains(path ++ value.term) =>
             None
-          case Nested(term, tpe, params, optional) =>
+          case Nested(term, tpe, params, optional)         =>
             Some(Nested(term, tpe, params.map(_.flatMap(filter(_, path ++ term))), optional))
-          case value =>
+          case value                                       =>
             Some(value)
         }
 
@@ -126,7 +123,7 @@ trait ValueComputation {
       params.flatten.flatMap(flatten(base, _))
 
     value match {
-      case Scalar(term, _, _, _) =>
+      case Scalar(term, _, _, _)             =>
         List(nest(base, term))
       case Nested(term, _, params, optional) =>
         if (optional)

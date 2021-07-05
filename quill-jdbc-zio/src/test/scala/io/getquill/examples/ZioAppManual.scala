@@ -2,7 +2,7 @@ package io.getquill.examples
 
 import io.getquill._
 import io.getquill.util.LoadConfig
-import zio.{ App, ExitCode, Task, URIO, ZLayer, ZManaged }
+import zio.{App, ExitCode, Task, URIO, ZLayer, ZManaged}
 import zio.console.putStrLn
 
 object ZioAppManual extends App {
@@ -14,7 +14,7 @@ object ZioAppManual extends App {
 
   val zioConn =
     ZLayer.fromManaged(for {
-      ds <- ZManaged.fromAutoCloseable(Task(JdbcContextConfig(LoadConfig("testPostgresDB")).dataSource))
+      ds   <- ZManaged.fromAutoCloseable(Task(JdbcContextConfig(LoadConfig("testPostgresDB")).dataSource))
       conn <- ZManaged.fromAutoCloseable(Task(ds.getConnection))
     } yield conn)
 
@@ -22,7 +22,8 @@ object ZioAppManual extends App {
     val people = quote {
       query[Person].filter(p => p.name == "Alex")
     }
-    MyPostgresContext.run(people)
+    MyPostgresContext
+      .run(people)
       .tap(result => putStrLn(result.toString))
       .provideCustomLayer(zioConn)
       .exitCode

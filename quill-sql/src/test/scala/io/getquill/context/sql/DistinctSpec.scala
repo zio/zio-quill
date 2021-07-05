@@ -35,13 +35,13 @@ trait DistinctSpec extends Spec {
     Couple("A", "Y")
   )
 
-  val `Ex 1 Distinct One Field` = quote {
+  val `Ex 1 Distinct One Field`        = quote {
     query[Couple].map(_.him).distinct
   }
   val `Ex 1 Distinct One Field Result` =
     List("B", "A")
 
-  val `Ex 2 Distinct Two Field Tuple` = quote {
+  val `Ex 2 Distinct Two Field Tuple`        = quote {
     query[Couple].map(c => (c.him, c.her)).distinct
   }
   val `Ex 2 Distinct Two Field Tuple Result` =
@@ -53,7 +53,7 @@ trait DistinctSpec extends Spec {
       ("A", "Y")
     )
 
-  val `Ex 2a Distinct Two Field Tuple Same Element` = quote {
+  val `Ex 2a Distinct Two Field Tuple Same Element`        = quote {
     query[Couple].map(c => (c.him, c.him)).distinct
   }
   val `Ex 2a Distinct Two Field Tuple Same Element Result` =
@@ -62,7 +62,7 @@ trait DistinctSpec extends Spec {
       ("A", "A")
     )
 
-  val `Ex 3 Distinct Two Field Case Class` = quote {
+  val `Ex 3 Distinct Two Field Case Class`        = quote {
     query[Couple].distinct
   }
   val `Ex 3 Distinct Two Field Case Class Result` =
@@ -74,7 +74,7 @@ trait DistinctSpec extends Spec {
       Couple("A", "Y")
     )
 
-  val `Ex 4-base non-Distinct Subquery` = quote {
+  val `Ex 4-base non-Distinct Subquery`        = quote {
     query[Person].join(query[Couple]).on(_.name == _.him)
   }
   val `Ex 4-base non-Distinct Subquery Result` =
@@ -87,7 +87,7 @@ trait DistinctSpec extends Spec {
       (Person("B", 2), Couple("B", "Z"))
     )
 
-  val `Ex 4 Distinct Subquery` = quote {
+  val `Ex 4 Distinct Subquery`        = quote {
     query[Person].join(query[Couple].distinct).on(_.name == _.him)
   }
   val `Ex 4 Distinct Subquery Result` =
@@ -99,11 +99,12 @@ trait DistinctSpec extends Spec {
       (Person("B", 2), Couple("B", "Z"))
     )
 
-  val `Ex 5 Distinct Subquery with Map Single Field` = quote {
+  val `Ex 5 Distinct Subquery with Map Single Field`        = quote {
     query[Person]
       .join(
         query[Couple].map(_.him).distinct
-      ).on((p, cm) => p.name == cm)
+      )
+      .on((p, cm) => p.name == cm)
   }
   val `Ex 5 Distinct Subquery with Map Single Field Result` =
     List(
@@ -111,11 +112,12 @@ trait DistinctSpec extends Spec {
       (Person("B", 2), "B")
     )
 
-  val `Ex 6 Distinct Subquery with Map Multi Field` = quote {
+  val `Ex 6 Distinct Subquery with Map Multi Field`        = quote {
     query[Person]
       .join(
         query[Couple].map(c => (c.him, c.her)).distinct
-      ).on(_.name == _._1)
+      )
+      .on(_.name == _._1)
   }
   val `Ex 6 Distinct Subquery with Map Multi Field Result` =
     List(
@@ -127,11 +129,12 @@ trait DistinctSpec extends Spec {
     )
 
   case class TwoField(one: String, two: String)
-  val `Ex 7 Distinct Subquery with Map Multi Field Tuple` = quote {
+  val `Ex 7 Distinct Subquery with Map Multi Field Tuple`        = quote {
     query[Person]
       .join(
         query[Couple].map(c => TwoField(c.him, c.her)).distinct
-      ).on(_.name == _.one)
+      )
+      .on(_.name == _.one)
   }
   val `Ex 7 Distinct Subquery with Map Multi Field Tuple Result` =
     List(
@@ -142,9 +145,10 @@ trait DistinctSpec extends Spec {
       (Person("B", 2), TwoField("B", "Z"))
     )
 
-  val `Ex 8 Distinct With Sort` = quote {
+  val `Ex 8 Distinct With Sort`        = quote {
     query[Person]
-      .join(query[Couple]).on(_.name == _.him)
+      .join(query[Couple])
+      .on(_.name == _.him)
       .distinct
       .sortBy(_._1.name)(Ord.asc)
   }

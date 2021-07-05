@@ -25,9 +25,9 @@ class GroupBySpec extends Spec {
         "SELECT x11.name, COUNT(*) FROM City x01 INNER JOIN Country x11 ON x01.countryId = x11.id GROUP BY x11.id, x11.name"
     }
     "with QuerySchema" in {
-      implicit val citySchema = schemaMeta[City]("theCity", _.name -> "theCityName")
+      implicit val citySchema    = schemaMeta[City]("theCity", _.name -> "theCityName")
       implicit val countrySchema = schemaMeta[Country]("theCountry", _.name -> "theCountryName")
-      val q = quote(
+      val q                      = quote(
         query[City]
           .join(query[Country])
           .on { case (city, country) => city.countryId == country.id }
@@ -51,9 +51,9 @@ class GroupBySpec extends Spec {
         "SELECT x010._2id, x010._2name, COUNT(*) FROM (SELECT x13.id AS _2id, x13.name AS _2name FROM City x09 INNER JOIN Country x13 ON x09.countryId = x13.id) AS x010 GROUP BY x010._2id, x010._2name"
     }
     "with QuerySchema nested" in {
-      implicit val citySchema = schemaMeta[City]("theCity", _.name -> "theCityName")
+      implicit val citySchema    = schemaMeta[City]("theCity", _.name -> "theCityName")
       implicit val countrySchema = schemaMeta[Country]("theCountry", _.name -> "theCountryName")
-      val q = quote(
+      val q                      = quote(
         query[City]
           .join(query[Country])
           .on { case (city, country) => city.countryId == country.id }
@@ -78,7 +78,9 @@ class GroupBySpec extends Spec {
           .join(query[Country])
           .on { case (city, country) => city.countryCode == country.countryCode }
           .groupBy { case (city, country) => country }
-          .map { case (country, citysInCountry) => ((country.countryCode, country.language), citysInCountry.map(cICn => cICn._1)) }
+          .map { case (country, citysInCountry) =>
+            ((country.countryCode, country.language), citysInCountry.map(cICn => cICn._1))
+          }
           .map { case (country, cityCountries) => (country, cityCountries.size) }
       )
       testContext.run(q).string.collapseSpace mustEqual
@@ -133,12 +135,14 @@ class GroupBySpec extends Spec {
       implicit val countrySchema =
         schemaMeta[Country]("theCountry", _.countryCode -> "theCountryCode", _.language.name -> "TheLanguageName")
 
-      val q = quote(
+      val q                      = quote(
         query[City]
           .join(query[Country])
           .on { case (city, country) => city.countryCode == country.countryCode }
           .groupBy { case (city, country) => country }
-          .map { case (country, citysInCountry) => ((country.countryCode, country.language), citysInCountry.map(cICn => cICn._1)) }
+          .map { case (country, citysInCountry) =>
+            ((country.countryCode, country.language), citysInCountry.map(cICn => cICn._1))
+          }
           .map { case (country, cityCountries) => (country, cityCountries.size) }
       )
       testContext.run(q).string(true).collapseSpace mustEqual
@@ -160,7 +164,7 @@ class GroupBySpec extends Spec {
       implicit val languageSchema =
         schemaMeta[Country]("theCountry", _.countryCode -> "theCountryCode", _.language.name -> "TheLanguageName")
 
-      val q = quote(
+      val q                       = quote(
         query[City]
           .join(query[Country])
           .on { case (city, country) => city.countryCode == country.countryCode }

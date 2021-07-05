@@ -1,7 +1,7 @@
 package io.getquill
 
 trait NamingStrategy {
-  def table(s: String): String = default(s)
+  def table(s: String): String  = default(s)
   def column(s: String): String = default(s)
   def default(s: String): String
 }
@@ -20,23 +20,30 @@ trait CompositeNamingStrategy extends NamingStrategy {
 }
 
 case class CompositeNamingStrategy2[N1 <: NamingStrategy, N2 <: NamingStrategy](
-  n1: N1, n2: N2
-)
-  extends CompositeNamingStrategy {
+    n1: N1,
+    n2: N2
+) extends CompositeNamingStrategy {
   override protected val elements = List(n1, n2)
 }
 
 case class CompositeNamingStrategy3[N1 <: NamingStrategy, N2 <: NamingStrategy, N3 <: NamingStrategy](
-  n1: N1, n2: N2, n3: N3
-)
-  extends CompositeNamingStrategy {
+    n1: N1,
+    n2: N2,
+    n3: N3
+) extends CompositeNamingStrategy {
   override protected val elements = List(n1, n2, n3)
 }
 
-case class CompositeNamingStrategy4[N1 <: NamingStrategy, N2 <: NamingStrategy, N3 <: NamingStrategy, N4 <: NamingStrategy](
-  n1: N1, n2: N2, n3: N3, n4: N4
-)
-  extends CompositeNamingStrategy {
+case class CompositeNamingStrategy4[N1 <: NamingStrategy,
+                                    N2 <: NamingStrategy,
+                                    N3 <: NamingStrategy,
+                                    N4 <: NamingStrategy
+](
+    n1: N1,
+    n2: N2,
+    n3: N3,
+    n4: N4
+) extends CompositeNamingStrategy {
   override protected val elements = List(n1, n2, n3, n4)
 }
 
@@ -46,45 +53,50 @@ object NamingStrategy {
     n1
 
   def apply[N1 <: NamingStrategy, N2 <: NamingStrategy](
-    n1: N1, n2: N2
+      n1: N1,
+      n2: N2
   ): CompositeNamingStrategy2[N1, N2] =
     new CompositeNamingStrategy2(n1, n2)
 
   def apply[N1 <: NamingStrategy, N2 <: NamingStrategy, N3 <: NamingStrategy](
-    n1: N1, n2: N2, n3: N3
+      n1: N1,
+      n2: N2,
+      n3: N3
   ): CompositeNamingStrategy3[N1, N2, N3] =
     new CompositeNamingStrategy3(n1, n2, n3)
 
   def apply[N1 <: NamingStrategy, N2 <: NamingStrategy, N3 <: NamingStrategy, N4 <: NamingStrategy](
-    n1: N1, n2: N2, n3: N3, n4: N4
+      n1: N1,
+      n2: N2,
+      n3: N3,
+      n4: N4
   ): CompositeNamingStrategy4[N1, N2, N3, N4] =
     new CompositeNamingStrategy4(n1, n2, n3, n4)
 
-  private[getquill] def apply(strategies: List[NamingStrategy]) = {
+  private[getquill] def apply(strategies: List[NamingStrategy]) =
     new CompositeNamingStrategy {
       override protected val elements = strategies
     }
-  }
 }
 
-trait Literal extends NamingStrategy {
+trait Literal  extends NamingStrategy {
   override def default(s: String) = s
 }
 object Literal extends Literal
 
-trait Escape extends NamingStrategy {
+trait Escape  extends NamingStrategy {
   override def default(s: String) =
     s""""$s""""
 }
 object Escape extends Escape
 
-trait UpperCase extends NamingStrategy {
+trait UpperCase  extends NamingStrategy {
   override def default(s: String) =
     s.toUpperCase
 }
 object UpperCase extends UpperCase
 
-trait LowerCase extends NamingStrategy {
+trait LowerCase  extends NamingStrategy {
   override def default(s: String) =
     s.toLowerCase
 }
@@ -123,23 +135,23 @@ trait CamelCase extends NamingStrategy {
 }
 object CamelCase extends CamelCase
 
-trait PluralizedTableNames extends NamingStrategy {
+trait PluralizedTableNames  extends NamingStrategy {
   override def default(s: String) = s
-  override def table(s: String) =
+  override def table(s: String)   =
     if (s.endsWith("s")) s
     else s + "s"
 }
 object PluralizedTableNames extends PluralizedTableNames
 
-trait PostgresEscape extends Escape {
+trait PostgresEscape  extends Escape {
   override def column(s: String) = if (s.startsWith("$")) s else super.column(s)
 }
 object PostgresEscape extends PostgresEscape
 
-trait MysqlEscape extends NamingStrategy {
-  override def table(s: String) = quote(s)
-  override def column(s: String) = quote(s)
+trait MysqlEscape  extends NamingStrategy {
+  override def table(s: String)   = quote(s)
+  override def column(s: String)  = quote(s)
   override def default(s: String) = s
-  private def quote(s: String) = s"`$s`"
+  private def quote(s: String)    = s"`$s`"
 }
 object MysqlEscape extends MysqlEscape

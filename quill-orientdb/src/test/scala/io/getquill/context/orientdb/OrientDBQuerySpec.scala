@@ -1,10 +1,10 @@
 package io.getquill.context.orientdb
 
-import io.getquill.ast.{ Action => AstAction, Query => AstQuery, _ }
+import io.getquill.ast.{Action => AstAction, Query => AstQuery, _}
 import io.getquill.context.sql._
 import io.getquill.idiom.StatementInterpolator._
 import io.getquill.idiom.StringToken
-import io.getquill.{ Literal, Spec }
+import io.getquill.{Literal, Spec}
 import io.getquill.Ord
 import io.getquill.quat.Quat
 
@@ -181,7 +181,7 @@ class OrientDBQuerySpec extends Spec {
 
   import OrientDBIdiom._
   implicit val n = Literal
-  val i = Ident("i")
+  val i          = Ident("i")
 
   "tokenizers" - {
     "if" in {
@@ -202,12 +202,14 @@ class OrientDBQuerySpec extends Spec {
 
       t.token(e) mustBe stmt"SELECT *"
 
-      intercept[IllegalStateException](t.token(e.copy(distinct = true)(Quat.Value)))
-        .getMessage mustBe "OrientDB DISTINCT with multiple columns is not supported"
+      intercept[IllegalStateException](
+        t.token(e.copy(distinct = true)(Quat.Value))
+      ).getMessage mustBe "OrientDB DISTINCT with multiple columns is not supported"
 
       val x = SelectValue(Ident("x"))
-      intercept[IllegalStateException](t.token(e.copy(select = List(x, x), distinct = true)(Quat.Value)))
-        .getMessage mustBe "OrientDB DISTINCT with multiple columns is not supported"
+      intercept[IllegalStateException](
+        t.token(e.copy(select = List(x, x), distinct = true)(Quat.Value))
+      ).getMessage mustBe "OrientDB DISTINCT with multiple columns is not supported"
 
       val tb = TableContext(Entity("tb", Nil, QEP), "x1")
       t.token(e.copy(from = List(tb, tb))(Quat.Value)) mustBe stmt"SELECT * FROM tb"
@@ -215,12 +217,15 @@ class OrientDBQuerySpec extends Spec {
       val jn = FlatJoinContext(InnerJoin, tb.copy(alias = "x2"), Ident("x"))
       intercept[IllegalStateException](t.token(e.copy(from = List(tb, jn))(Quat.Value)))
 
-      t.token(e.copy(limit = Some(Ident("1", Quat.Value)), offset = Some(Ident("2")))(Quat.Value)) mustBe stmt"SELECT * SKIP 2 LIMIT 1"
+      t.token(
+        e.copy(limit = Some(Ident("1", Quat.Value)), offset = Some(Ident("2")))(Quat.Value)
+      ) mustBe stmt"SELECT * SKIP 2 LIMIT 1"
       t.token(e.copy(limit = Some(Ident("1", Quat.Value)))(Quat.Value)) mustBe stmt"SELECT * LIMIT 1"
       t.token(e.copy(offset = Some(Ident("2", Quat.Value)))(Quat.Value)) mustBe stmt"SELECT * SKIP 2"
 
-      intercept[IllegalStateException](t.token(UnaryOperationSqlQuery(BooleanOperator.`!`, e)(Quat.Value)))
-        .getMessage mustBe "Other operators are not supported yet. Please raise a ticket to support more operations"
+      intercept[IllegalStateException](
+        t.token(UnaryOperationSqlQuery(BooleanOperator.`!`, e)(Quat.Value))
+      ).getMessage mustBe "Other operators are not supported yet. Please raise a ticket to support more operations"
     }
     "operation" in {
       val t = implicitly[Tokenizer[Operation]]
@@ -243,7 +248,9 @@ class OrientDBQuerySpec extends Spec {
     "select value" in {
       val t = implicitly[Tokenizer[SelectValue]]
       t.token(SelectValue(Ident("?"))) mustBe "?".token
-      t.token(SelectValue(Aggregation(AggregationOperator.`max`, Entity("t", Nil, QEP)), Some("x"))) mustBe stmt"(SELECT MAX(*) FROM t) x"
+      t.token(
+        SelectValue(Aggregation(AggregationOperator.`max`, Entity("t", Nil, QEP)), Some("x"))
+      ) mustBe stmt"(SELECT MAX(*) FROM t) x"
     }
     "prop" in {
       val t = implicitly[Tokenizer[Property]]
@@ -257,14 +264,16 @@ class OrientDBQuerySpec extends Spec {
       t.token(Tuple(List(NullValue))) mustBe stmt"null"
     }
     "action" in {
-      val t = implicitly[Tokenizer[AstAction]]
+      val t              = implicitly[Tokenizer[AstAction]]
       intercept[IllegalStateException](t.token(null: AstAction))
       def ins(a: String) =
         Insert(Entity("tb", Nil, QEP), List(Assignment(i, Property(Property(i, "x"), a), i)))
       t.token(ins("isEmpty")) mustBe stmt"INSERT INTO tb (x IS NULL) VALUES(i)"
       t.token(ins("isDefined")) mustBe stmt"INSERT INTO tb (x IS NOT NULL) VALUES(i)"
       t.token(ins("nonEmpty")) mustBe stmt"INSERT INTO tb (x IS NOT NULL) VALUES(i)"
-      t.token(Insert(Entity("tb", Nil, QEP), List(Assignment(i, Property(i, "i"), i)))) mustBe stmt"INSERT INTO tb (i) VALUES(i)"
+      t.token(
+        Insert(Entity("tb", Nil, QEP), List(Assignment(i, Property(i, "i"), i)))
+      ) mustBe stmt"INSERT INTO tb (i) VALUES(i)"
     }
     // not actually used anywhere but doing a sanity check here
     "external ident sanity check" in {

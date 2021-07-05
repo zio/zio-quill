@@ -2,7 +2,7 @@ package io.getquill.context.jdbc.oracle
 
 import java.util.concurrent.ConcurrentLinkedQueue
 
-import io.getquill.context.sql.{ testContext => _, _ }
+import io.getquill.context.sql.{testContext => _, _}
 
 import scala.jdk.CollectionConverters._
 
@@ -17,9 +17,9 @@ class QueryResultTypeJdbcSpec extends QueryResultTypeSpec {
 
   override def beforeAll = {
     context.run(deleteAll)
-    val ids = context.run(liftQuery(productEntries).foreach(p => productInsert(p)))
-    val inserted = (ids zip productEntries).map {
-      case (id, prod) => prod.copy(id = id)
+    val ids      = context.run(liftQuery(productEntries).foreach(p => productInsert(p)))
+    val inserted = (ids zip productEntries).map { case (id, prod) =>
+      prod.copy(id = id)
     }
     insertedProducts.addAll(inserted.asJava)
     ()
@@ -29,16 +29,16 @@ class QueryResultTypeJdbcSpec extends QueryResultTypeSpec {
 
   "return list" - {
     "select" in {
-      await(context.run(selectAll)) must contain theSameElementsAs (products)
+      await(context.run(selectAll)) must contain theSameElementsAs products
     }
     "map" in {
       await(context.run(map)) must contain theSameElementsAs (products.map(_.id))
     }
     "sortBy" in {
-      await(context.run(sortBy)) must contain theSameElementsInOrderAs (products)
+      await(context.run(sortBy)) must contain theSameElementsInOrderAs products
     }
     "take" in {
-      await(context.run(take)) must contain theSameElementsAs (products)
+      await(context.run(take)) must contain theSameElementsAs products
     }
     "drop" in {
       await(context.run(drop)) must contain theSameElementsAs (products.drop(1))
@@ -50,7 +50,7 @@ class QueryResultTypeJdbcSpec extends QueryResultTypeSpec {
       await(context.run(unionAll)) must contain theSameElementsAs (products ++ products)
     }
     "union" in {
-      await(context.run(union)) must contain theSameElementsAs (products)
+      await(context.run(union)) must contain theSameElementsAs products
     }
     "join" in {
       await(context.run(join)) must contain theSameElementsAs (products zip products)

@@ -2,7 +2,7 @@ package io.getquill.context.sql.norm
 
 import io.getquill.ast._
 import io.getquill.context.sql._
-import io.getquill.sql.norm.{ InContext, SelectPropertyProtractor, StatelessQueryTransformer }
+import io.getquill.sql.norm.{InContext, SelectPropertyProtractor, StatelessQueryTransformer}
 import io.getquill.ast.PropertyOrCore
 import io.getquill.norm.PropertyMatroshka
 
@@ -16,19 +16,19 @@ class ExpandSelection(from: List[FromContext]) {
       alias.orElse(Some("")).map(v => s"${v}${str}")
   }
 
-  private def apply(value: SelectValue): List[SelectValue] = {
+  private def apply(value: SelectValue): List[SelectValue] =
     value match {
       // Assuming there's no case class or tuple buried inside or a property i.e. if there were,
       // the beta reduction would have unrolled them already
       case SelectValue(ast @ PropertyOrCore(), alias, concat) =>
         val exp = SelectPropertyProtractor(from)(ast)
         exp.map {
-          case (p: Property, Nil) =>
+          case (p: Property, Nil)  =>
             // If the quat-path is nothing and there is some pre-existing alias (e.g. if we came from a case-class or quat)
             // the use that. Otherwise the selection is of an individual element so use the element name (before the rename)
             // as the alias.
             alias match {
-              case None =>
+              case None        =>
                 SelectValue(p, Some(p.prevName.getOrElse(p.name)), concat)
               case Some(value) =>
                 SelectValue(p, Some(value), concat)
@@ -37,23 +37,20 @@ class ExpandSelection(from: List[FromContext]) {
             // Append alias headers (i.e. _1,_2 from tuples and field names foo,bar from case classes) to the
             // value of the Quat path
             SelectValue(p, alias.concatWith(path.mkString), concat)
-          case (other, _) =>
+          case (other, _)          =>
             SelectValue(other, alias, concat)
         }
-      case SelectValue(Tuple(values), alias, concat) =>
-        values.zipWithIndex.flatMap {
-          case (ast, i) =>
-            apply(SelectValue(ast, alias.concatWith(s"_${i + 1}"), concat))
+      case SelectValue(Tuple(values), alias, concat)          =>
+        values.zipWithIndex.flatMap { case (ast, i) =>
+          apply(SelectValue(ast, alias.concatWith(s"_${i + 1}"), concat))
         }
-      case SelectValue(CaseClass(fields), alias, concat) =>
-        fields.flatMap {
-          case (name, ast) =>
-            apply(SelectValue(ast, alias.concatWith(name), concat))
+      case SelectValue(CaseClass(fields), alias, concat)      =>
+        fields.flatMap { case (name, ast) =>
+          apply(SelectValue(ast, alias.concatWith(name), concat))
         }
       // Direct infix select, etc...
-      case other => List(other)
+      case other                                              => List(other)
     }
-  }
 }
 
 object ExpandNestedQueries extends StatelessQueryTransformer {
@@ -62,18 +59,18 @@ object ExpandNestedQueries extends StatelessQueryTransformer {
     q match {
       case q: FlattenSqlQuery =>
         expandNested(q.copy(select = new ExpandSelection(q.from)(q.select))(q.quat), isTopLevel)
-      case other =>
+      case other              =>
         super.apply(q, isTopLevel)
     }
 
   case class FlattenNestedProperty(from: List[FromContext]) {
     val inContext = InContext(from)
 
-    def apply(p: Ast): Ast = {
+    def apply(p: Ast): Ast =
       p match {
         case p @ PropertyMatroshka(inner, path) =>
           val isSubselect = inContext.isSubselect(p)
-          val renameable =
+          val renameable  =
             if (p.prevName.isDefined || isSubselect)
               Renameable.Fixed
             else
@@ -87,11 +84,10 @@ object ExpandNestedQueries extends StatelessQueryTransformer {
 
         case other => other
       }
-    }
 
     def inside(ast: Ast) =
-      Transform(ast) {
-        case p: Property => apply(p)
+      Transform(ast) { case p: Property =>
+        apply(p)
       }
   }
 
@@ -99,7 +95,7 @@ object ExpandNestedQueries extends StatelessQueryTransformer {
     q match {
       case FlattenSqlQuery(from, where, groupBy, orderBy, limit, offset, select, distinct) =>
         val flattenNestedProperty = FlattenNestedProperty(from)
-        val newFroms = q.from.map(expandContextFlattenOns(_, flattenNestedProperty))
+        val newFroms              = q.from.map(expandContextFlattenOns(_, flattenNestedProperty))
 
         def distinctIfNotTopLevel(values: List[SelectValue]) =
           if (isTopLevel)
@@ -145,11 +141,11 @@ object ExpandNestedQueries extends StatelessQueryTransformer {
   def expandContextFlattenOns(s: FromContext, flattenNested: FlattenNestedProperty): FromContext = {
     def expandContextRec(s: FromContext): FromContext =
       s match {
-        case QueryContext(q, alias) =>
+        case QueryContext(q, alias)            =>
           QueryContext(apply(q, false), alias)
-        case JoinContext(t, a, b, on) =>
+        case JoinContext(t, a, b, on)          =>
           JoinContext(t, expandContextRec(a), expandContextRec(b), flattenNested.inside(on))
-        case FlatJoinContext(t, a, on) =>
+        case FlatJoinContext(t, a, on)         =>
           FlatJoinContext(t, expandContextRec(a), flattenNested.inside(on))
         case _: TableContext | _: InfixContext => s
       }

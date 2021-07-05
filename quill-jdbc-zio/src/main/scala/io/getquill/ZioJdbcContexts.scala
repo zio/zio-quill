@@ -14,28 +14,26 @@ import io.getquill.util.LoadConfig
 import javax.sql.DataSource
 
 class PostgresZioJdbcContext[N <: NamingStrategy](val naming: N)
-  extends ZioJdbcContext[PostgresDialect, N]
-  with PostgresJdbcRunContext[N]
+    extends ZioJdbcContext[PostgresDialect, N]
+    with PostgresJdbcRunContext[N]
 
 class SqlServerZioJdbcContext[N <: NamingStrategy](val naming: N)
-  extends ZioJdbcContext[SQLServerDialect, N]
-  with SqlServerJdbcRunContext[N]
+    extends ZioJdbcContext[SQLServerDialect, N]
+    with SqlServerJdbcRunContext[N]
 
-class H2ZioJdbcContext[N <: NamingStrategy](val naming: N)
-  extends ZioJdbcContext[H2Dialect, N]
-  with H2JdbcRunContext[N]
+class H2ZioJdbcContext[N <: NamingStrategy](val naming: N) extends ZioJdbcContext[H2Dialect, N] with H2JdbcRunContext[N]
 
 class MysqlZioJdbcContext[N <: NamingStrategy](val naming: N)
-  extends ZioJdbcContext[MySQLDialect, N]
-  with MysqlJdbcRunContext[N]
+    extends ZioJdbcContext[MySQLDialect, N]
+    with MysqlJdbcRunContext[N]
 
 class SqliteZioJdbcContext[N <: NamingStrategy](val naming: N)
-  extends ZioJdbcContext[SqliteDialect, N]
-  with SqliteJdbcRunContext[N]
+    extends ZioJdbcContext[SqliteDialect, N]
+    with SqliteJdbcRunContext[N]
 
 class OracleZioJdbcContext[N <: NamingStrategy](val naming: N)
-  extends ZioJdbcContext[OracleDialect, N]
-  with OracleJdbcRunContext[N]
+    extends ZioJdbcContext[OracleDialect, N]
+    with OracleJdbcRunContext[N]
 
 trait WithProbing[D <: SqlIdiom, N <: NamingStrategy] extends ZioJdbcContext[D, N] {
   def probingConfig: Config;

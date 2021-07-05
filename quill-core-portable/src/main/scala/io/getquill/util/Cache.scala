@@ -1,7 +1,7 @@
 package io.getquill.util
 
 import java.io.Closeable
-import java.lang.System.{ currentTimeMillis => now }
+import java.lang.System.{currentTimeMillis => now}
 
 import scala.concurrent.duration.Duration
 
@@ -19,7 +19,7 @@ class Cache[K, V <: Closeable] {
         case Some(entry) =>
           cache += key -> entry.copy(expiration = expiration)
           entry.value
-        case None =>
+        case None        =>
           val v = value
           cache += key -> Entry(v, expiration)
           v

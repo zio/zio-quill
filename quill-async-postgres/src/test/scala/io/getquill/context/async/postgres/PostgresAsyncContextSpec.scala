@@ -4,7 +4,7 @@ import com.github.mauricio.async.db.QueryResult
 import io.getquill.ReturnAction.ReturnColumns
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import io.getquill.{ Literal, PostgresAsyncContext, ReturnAction, Spec }
+import io.getquill.{Literal, PostgresAsyncContext, ReturnAction, Spec}
 
 class PostgresAsyncContextSpec extends Spec {
 
@@ -21,8 +21,7 @@ class PostgresAsyncContextSpec extends Spec {
     val inserted: Long = await(testContext.run {
       qr4.insert(lift(TestEntity4(0))).returningGenerated(_.i)
     })
-    await(testContext.run(qr4.filter(_.i == lift(inserted))))
-      .head.i mustBe inserted
+    await(testContext.run(qr4.filter(_.i == lift(inserted)))).head.i mustBe inserted
   }
   "Insert with returning with multiple columns" in {
     await(testContext.run(qr1.delete))
@@ -43,8 +42,8 @@ class PostgresAsyncContextSpec extends Spec {
   "cannot extract" in {
     object ctx extends PostgresAsyncContext(Literal, "testPostgresDB") {
       override def extractActionResult[O](
-        returningAction:    ReturnAction,
-        returningExtractor: ctx.Extractor[O]
+          returningAction: ReturnAction,
+          returningExtractor: ctx.Extractor[O]
       )(result: QueryResult) =
         super.extractActionResult(returningAction, returningExtractor)(result)
     }

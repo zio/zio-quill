@@ -19,20 +19,30 @@ class CaseClassQueryJdbcSpec extends CaseClassQuerySpec {
   }
 
   "Example 1 - Single Case Class Mapping" in {
-    testContext.run(`Ex 1 CaseClass Record Output`) should contain theSameElementsAs `Ex 1 CaseClass Record Output expected result`
+    testContext.run(
+      `Ex 1 CaseClass Record Output`
+    ) should contain theSameElementsAs `Ex 1 CaseClass Record Output expected result`
   }
   "Example 1A - Single Case Class Mapping" in {
-    testContext.run(`Ex 1A CaseClass Record Output`) should contain theSameElementsAs `Ex 1 CaseClass Record Output expected result`
+    testContext.run(
+      `Ex 1A CaseClass Record Output`
+    ) should contain theSameElementsAs `Ex 1 CaseClass Record Output expected result`
   }
   "Example 1B - Single Case Class Mapping" in {
-    testContext.run(`Ex 1B CaseClass Record Output`) should contain theSameElementsAs `Ex 1 CaseClass Record Output expected result`
+    testContext.run(
+      `Ex 1B CaseClass Record Output`
+    ) should contain theSameElementsAs `Ex 1 CaseClass Record Output expected result`
   }
 
   "Example 2 - Single Record Mapped Join" in {
-    testContext.run(`Ex 2 Single-Record Join`) should contain theSameElementsAs `Ex 2 Single-Record Join expected result`
+    testContext.run(
+      `Ex 2 Single-Record Join`
+    ) should contain theSameElementsAs `Ex 2 Single-Record Join expected result`
   }
 
   "Example 3 - Inline Record as Filter" in {
-    testContext.run(`Ex 3 Inline Record Usage`) should contain theSameElementsAs `Ex 3 Inline Record Usage exepected result`
+    testContext.run(
+      `Ex 3 Inline Record Usage`
+    ) should contain theSameElementsAs `Ex 3 Inline Record Usage exepected result`
   }
 }

@@ -15,7 +15,7 @@ import io.getquill.util.LoadConfig
 
 object orientdb {
   private val databaseName = "GratefulDeadConcerts"
-  private var setupDone = false
+  private var setupDone    = false
 
   private val conf = OrientDBContextConfig(LoadConfig("ctx"))
 
@@ -23,7 +23,7 @@ object orientdb {
     val orientDB = new OrientDB(conf.dbUrl, "root", "root", OrientDBConfig.defaultConfig())
     orientDB.createIfNotExists(databaseName, ODatabaseType.MEMORY)
 
-    val pool = new ODatabasePool(conf.dbUrl, "root", "root")
+    val pool   = new ODatabasePool(conf.dbUrl, "root", "root")
     val schema = pool.acquire().getMetadata.getSchema
     getOrCreateClass(schema, "DecodeNullTestEntity")
     getOrCreateClass(schema, "EncodingTestEntity")
@@ -43,12 +43,11 @@ object orientdb {
     getOrCreateClass(schema, "Address")
   }
 
-  private def getOrCreateClass(iSchema: OSchema, iClassName: String): Unit = {
+  private def getOrCreateClass(iSchema: OSchema, iClassName: String): Unit =
     if (!iSchema.existsClass(iClassName)) {
       iSchema.createClass(iClassName)
       ()
     }
-  }
 
   def mirrorContext = {
     if (!setupDone) { setup(); setupDone = true }

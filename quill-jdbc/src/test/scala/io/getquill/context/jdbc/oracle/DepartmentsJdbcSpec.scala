@@ -24,10 +24,14 @@ class DepartmentsJdbcSpec extends DepartmentsSpec {
   }
 
   "Example 8 - nested naive" in {
-    testContext.run(`Example 8 expertise naive`(lift(`Example 8 param`))) should contain theSameElementsAs `Example 8 expected result`
+    testContext.run(
+      `Example 8 expertise naive`(lift(`Example 8 param`))
+    ) should contain theSameElementsAs `Example 8 expected result`
   }
 
   "Example 9 - nested db" in {
-    testContext.run(`Example 9 expertise`(lift(`Example 9 param`))) should contain theSameElementsAs `Example 9 expected result`
+    testContext.run(
+      `Example 9 expertise`(lift(`Example 9 param`))
+    ) should contain theSameElementsAs `Example 9 expected result`
   }
 }

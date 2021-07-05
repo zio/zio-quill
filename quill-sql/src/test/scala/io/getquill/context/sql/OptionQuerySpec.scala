@@ -32,7 +32,7 @@ trait OptionQuerySpec extends Spec {
     Address(111, "111 Default Address", 12345, None)
   )
 
-  val `Simple Map with Condition` = quote {
+  val `Simple Map with Condition`        = quote {
     query[Address].map(a => (a.street, a.otherExtraInfo.map(info => if (info == "something") "one" else "two")))
   }
   val `Simple Map with Condition Result` = List(
@@ -42,10 +42,8 @@ trait OptionQuerySpec extends Spec {
     ("111 Default Address", None)
   )
 
-  val `Simple Map with GetOrElse` = quote {
-    query[Address].map(
-      a => (a.street, a.otherExtraInfo.map(info => info + " suffix").getOrElse("baz"))
-    )
+  val `Simple Map with GetOrElse`        = quote {
+    query[Address].map(a => (a.street, a.otherExtraInfo.map(info => info + " suffix").getOrElse("baz")))
   }
   val `Simple Map with GetOrElse Result` = List(
     ("123 Fake Street", "something suffix"),
@@ -54,9 +52,9 @@ trait OptionQuerySpec extends Spec {
     ("111 Default Address", "baz")
   )
 
-  val `Simple Map with Condition and GetOrElse` = quote {
-    query[Address].map(
-      a => (a.street, a.otherExtraInfo.map(info => if (info == "something") "foo" else "bar").getOrElse("baz"))
+  val `Simple Map with Condition and GetOrElse`        = quote {
+    query[Address].map(a =>
+      (a.street, a.otherExtraInfo.map(info => if (info == "something") "foo" else "bar").getOrElse("baz"))
     )
   }
   val `Simple Map with Condition and GetOrElse Result` = List(
@@ -66,7 +64,7 @@ trait OptionQuerySpec extends Spec {
     ("111 Default Address", "baz")
   )
 
-  val `Simple GetOrElse` = quote {
+  val `Simple GetOrElse`        = quote {
     query[Address].map(a => (a.street, a.otherExtraInfo.getOrElse("yet something else")))
   }
   val `Simple GetOrElse Result` = List(
@@ -76,8 +74,10 @@ trait OptionQuerySpec extends Spec {
     ("111 Default Address", "yet something else")
   )
 
-  val `LeftJoin with FlatMap` = quote {
-    query[Contact].leftJoin(query[Address]).on((c, a) => c.addressFk.exists(_ == a.id))
+  val `LeftJoin with FlatMap`        = quote {
+    query[Contact]
+      .leftJoin(query[Address])
+      .on((c, a) => c.addressFk.exists(_ == a.id))
       .map({ case (c, a) => (a.map(_.id), a.flatMap(_.otherExtraInfo)) })
   }
   val `LeftJoin with FlatMap Result` = List(
@@ -86,8 +86,10 @@ trait OptionQuerySpec extends Spec {
     (None, None)
   )
 
-  val `LeftJoin with Flatten` = quote {
-    query[Contact].leftJoin(query[Address]).on((c, a) => c.addressFk.exists(_ == a.id))
+  val `LeftJoin with Flatten`        = quote {
+    query[Contact]
+      .leftJoin(query[Address])
+      .on((c, a) => c.addressFk.exists(_ == a.id))
       .map({ case (c, a) => (a.map(_.id), a.map(_.otherExtraInfo).flatten) })
   }
   val `LeftJoin with Flatten Result` = List(
@@ -96,8 +98,10 @@ trait OptionQuerySpec extends Spec {
     (None, None)
   )
 
-  val `Map+getOrElse LeftJoin` = quote {
-    query[Contact].leftJoin(query[Address]).on((c, a) => c.addressFk.getOrElse(-1) == a.id)
+  val `Map+getOrElse LeftJoin`        = quote {
+    query[Contact]
+      .leftJoin(query[Address])
+      .on((c, a) => c.addressFk.getOrElse(-1) == a.id)
       .map({ case (c, a) => (a.map(_.id), a.flatMap(_.otherExtraInfo)) })
   }
   val `Map+getOrElse LeftJoin Result` = List(
@@ -108,8 +112,8 @@ trait OptionQuerySpec extends Spec {
 
   case class NormalizedContact(name: String, addressFk: Option[Int])
 
-  def normalizeAddress = quote {
-    (addressFk: Option[Int]) => addressFk.getOrElse(111)
+  def normalizeAddress = quote { (addressFk: Option[Int]) =>
+    addressFk.getOrElse(111)
   }
 
   val `Option+Some+None Normalize` = quote {
@@ -121,7 +125,7 @@ trait OptionQuerySpec extends Spec {
 
     for {
       (name, addressFk) <- normalized
-      address <- query[Address] if address.id == addressFk
+      address           <- query[Address] if address.id == addressFk
     } yield (name, address.street)
   }
 

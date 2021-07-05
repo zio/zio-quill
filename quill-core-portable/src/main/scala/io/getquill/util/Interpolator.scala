@@ -11,12 +11,12 @@ import scala.collection.mutable
 import scala.util.matching.Regex
 
 class Interpolator(
-  traceType:     TraceType,
-  defaultIndent: Int                    = 0,
-  color:         Boolean                = Messages.traceColors,
-  qprint:        AstPrinter             = Messages.qprint,
-  out:           PrintStream            = System.out,
-  tracesEnabled: (TraceType) => Boolean = Messages.tracesEnabled(_)
+    traceType: TraceType,
+    defaultIndent: Int = 0,
+    color: Boolean = Messages.traceColors,
+    qprint: AstPrinter = Messages.qprint,
+    out: PrintStream = System.out,
+    tracesEnabled: (TraceType) => Boolean = Messages.tracesEnabled(_)
 ) {
   implicit class InterpolatorExt(sc: StringContext) {
     def trace(elements: Any*) = new Traceable(sc, elements)
@@ -28,14 +28,14 @@ class Interpolator(
 
     private sealed trait PrintElement
     private case class Str(str: String, first: Boolean) extends PrintElement
-    private case class Elem(value: String) extends PrintElement
-    private case object Separator extends PrintElement
+    private case class Elem(value: String)              extends PrintElement
+    private case object Separator                       extends PrintElement
 
     private def generateStringForCommand(value: Any, indent: Int) = {
       val objectString = qprint(value).string(color)
-      val oneLine = objectString.fitsOnOneLine
+      val oneLine      = objectString.fitsOnOneLine
       oneLine match {
-        case true => s"${indent.prefix}> ${objectString}"
+        case true  => s"${indent.prefix}> ${objectString}"
         case false =>
           s"${indent.prefix}>\n${objectString.multiline(indent, elementPrefix)}"
       }
@@ -45,20 +45,20 @@ class Interpolator(
       new Regex("%([0-9]+)(.*)").findFirstMatchIn(first) match {
         case Some(matches) =>
           (matches.group(2).trim, Some(matches.group(1).toInt))
-        case None => (first, None)
+        case None          => (first, None)
       }
 
     private def readBuffers() = {
       def orZero(i: Int): Int = if (i < 0) 0 else i
 
-      val parts = sc.parts.iterator.toList
+      val parts    = sc.parts.iterator.toList
       val elements = elementsSeq.toList.map(qprint(_).string(color))
 
       val (firstStr, explicitIndent) = readFirst(parts.head)
-      val indent =
+      val indent                     =
         explicitIndent match {
           case Some(value) => value
-          case None => {
+          case None        =>
             // A trick to make nested calls of andReturn indent further out which makes andReturn MUCH more usable.
             // Just count the number of times it has occurred on the thread stack.
             val returnInvocationCount = Thread
@@ -67,7 +67,6 @@ class Interpolator(
               .toList
               .count(e => e.getMethodName == "andReturn")
             defaultIndent + orZero(returnInvocationCount - 1) * 2
-          }
         }
 
       val partsIter = parts.iterator
@@ -102,16 +101,16 @@ class Interpolator(
         case Str(value, _) => value.fitsOnOneLine
         case _             => true
       }
-      val output =
+      val output  =
         elements.map {
-          case Str(value, true) if (oneLine)  => indent.prefix + value
-          case Str(value, false) if (oneLine) => value
-          case Elem(value) if (oneLine)       => value
-          case Separator if (oneLine)         => " "
-          case Str(value, true)               => value.multiline(indent, "")
-          case Str(value, false)              => value.multiline(indent, "|")
-          case Elem(value)                    => value.multiline(indent, "|  ")
-          case Separator                      => "\n"
+          case Str(value, true) if oneLine  => indent.prefix + value
+          case Str(value, false) if oneLine => value
+          case Elem(value) if oneLine       => value
+          case Separator if oneLine         => " "
+          case Str(value, true)             => value.multiline(indent, "")
+          case Str(value, false)            => value.multiline(indent, "|")
+          case Elem(value)                  => value.multiline(indent, "|  ")
+          case Separator                    => "\n"
         }
 
       (output.mkString, indent)
@@ -131,7 +130,7 @@ class Interpolator(
       command
     }
 
-    def andReturn[T](command: => T) = {
+    def andReturn[T](command: => T) =
       logIfEnabled() match {
         case Some((output, indent)) =>
           // do the initial log
@@ -141,9 +140,8 @@ class Interpolator(
           out.println(generateStringForCommand(result, indent))
 
           result
-        case None =>
+        case None                   =>
           command
       }
-    }
   }
 }

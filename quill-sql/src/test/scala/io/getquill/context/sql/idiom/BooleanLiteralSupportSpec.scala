@@ -1,6 +1,6 @@
 package io.getquill.context.sql.idiom
 
-import io.getquill.{ MirrorSqlDialectWithBooleanLiterals, Spec }
+import io.getquill.{MirrorSqlDialectWithBooleanLiterals, Spec}
 import io.getquill.context.sql.testContext
 
 class BooleanLiteralSupportSpec extends Spec {
@@ -249,13 +249,17 @@ class BooleanLiteralSupportSpec extends Spec {
         "SELECT a.i, CASE WHEN b IS NULL OR b.i > 20 THEN 0 ELSE 1 END FROM TestEntity a LEFT JOIN TestEntity2 b ON 1 = 1"
     }
 
-    "join + map (with conditional comparison lifted)" in testContext.withDialect(MirrorSqlDialectWithBooleanLiterals) { ctx =>
-      import ctx._
-      val q = quote {
-        qr1.leftJoin(qr2).on((a, b) => true).map(t => (t._1.i, if (t._2.forall(_.i > 20)) lift(false) else lift(true)))
-      }
-      ctx.run(q).string mustEqual
-        "SELECT a.i, CASE WHEN b IS NULL OR b.i > 20 THEN ? ELSE ? END FROM TestEntity a LEFT JOIN TestEntity2 b ON 1 = 1"
+    "join + map (with conditional comparison lifted)" in testContext.withDialect(MirrorSqlDialectWithBooleanLiterals) {
+      ctx =>
+        import ctx._
+        val q = quote {
+          qr1
+            .leftJoin(qr2)
+            .on((a, b) => true)
+            .map(t => (t._1.i, if (t._2.forall(_.i > 20)) lift(false) else lift(true)))
+        }
+        ctx.run(q).string mustEqual
+          "SELECT a.i, CASE WHEN b IS NULL OR b.i > 20 THEN ? ELSE ? END FROM TestEntity a LEFT JOIN TestEntity2 b ON 1 = 1"
     }
 
     "join + map + filter" in testContext.withDialect(MirrorSqlDialectWithBooleanLiterals) { ctx =>

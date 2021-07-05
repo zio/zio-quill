@@ -17,9 +17,9 @@ class QueryResultTypeNdbcPostgresSpec extends QueryResultTypeSpec {
 
   override def beforeAll = {
     get(context.run(deleteAll))
-    val ids = get(context.run(liftQuery(productEntries).foreach(e => productInsert(e))))
-    val inserted = (ids zip productEntries).map {
-      case (id, prod) => prod.copy(id = id)
+    val ids      = get(context.run(liftQuery(productEntries).foreach(e => productInsert(e))))
+    val inserted = (ids zip productEntries).map { case (id, prod) =>
+      prod.copy(id = id)
     }
     insertedProducts.addAll(inserted.asJava)
     ()
@@ -29,22 +29,22 @@ class QueryResultTypeNdbcPostgresSpec extends QueryResultTypeSpec {
 
   "return list" - {
     "select" in {
-      get(context.run(selectAll)) must contain theSameElementsAs (products)
+      get(context.run(selectAll)) must contain theSameElementsAs products
     }
     "map" in {
       get(context.run(map)) must contain theSameElementsAs (products.map(_.id))
     }
     "filter" in {
-      get(context.run(filter)) must contain theSameElementsAs (products)
+      get(context.run(filter)) must contain theSameElementsAs products
     }
     "withFilter" in {
-      get(context.run(withFilter)) must contain theSameElementsAs (products)
+      get(context.run(withFilter)) must contain theSameElementsAs products
     }
     "sortBy" in {
-      get(context.run(sortBy)) must contain theSameElementsInOrderAs (products)
+      get(context.run(sortBy)) must contain theSameElementsInOrderAs products
     }
     "take" in {
-      get(context.run(take)) must contain theSameElementsAs (products)
+      get(context.run(take)) must contain theSameElementsAs products
     }
     "drop" in {
       get(context.run(drop)) must contain theSameElementsAs (products.drop(1))
@@ -56,7 +56,7 @@ class QueryResultTypeNdbcPostgresSpec extends QueryResultTypeSpec {
       get(context.run(unionAll)) must contain theSameElementsAs (products ++ products)
     }
     "union" in {
-      get(context.run(union)) must contain theSameElementsAs (products)
+      get(context.run(union)) must contain theSameElementsAs products
     }
     "join" in {
       get(context.run(join)) must contain theSameElementsAs (products zip products)

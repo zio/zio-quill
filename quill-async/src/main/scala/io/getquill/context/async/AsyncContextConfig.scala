@@ -15,25 +15,25 @@ import scala.concurrent.duration.Duration
 import scala.util.Try
 
 abstract class AsyncContextConfig[C <: Connection](
-  config:            Config,
-  connectionFactory: Configuration => ObjectFactory[C],
-  uriParser:         AbstractURIParser
+    config: Config,
+    connectionFactory: Configuration => ObjectFactory[C],
+    uriParser: AbstractURIParser
 ) {
-  def url = Try(config.getString("url")).toOption
-  def user = Try(config.getString("user")).toOption
-  def password = Try(config.getString("password")).toOption
-  def database = Try(config.getString("database")).toOption
-  def port = Try(config.getInt("port")).toOption
-  def host = Try(config.getString("host")).toOption
-  def sslProps = Map(
-    "sslmode" -> Try(config.getString("sslmode")).toOption,
+  def url                = Try(config.getString("url")).toOption
+  def user               = Try(config.getString("user")).toOption
+  def password           = Try(config.getString("password")).toOption
+  def database           = Try(config.getString("database")).toOption
+  def port               = Try(config.getInt("port")).toOption
+  def host               = Try(config.getString("host")).toOption
+  def sslProps           = Map(
+    "sslmode"     -> Try(config.getString("sslmode")).toOption,
     "sslrootcert" -> Try(config.getString("sslrootcert")).toOption
   ).collect { case (key, Some(value)) => key -> value }
-  def charset = Try(Charset.forName(config.getString("charset"))).toOption
+  def charset            = Try(Charset.forName(config.getString("charset"))).toOption
   def maximumMessageSize = Try(config.getInt("maximumMessageSize")).toOption
-  def connectTimeout = Try(Duration(config.getString("connectTimeout"))).toOption
-  def testTimeout = Try(Duration(config.getString("testTimeout"))).toOption
-  def queryTimeout = Try(Duration(config.getString("queryTimeout"))).toOption
+  def connectTimeout     = Try(Duration(config.getString("connectTimeout"))).toOption
+  def testTimeout        = Try(Duration(config.getString("testTimeout"))).toOption
+  def queryTimeout       = Try(Duration(config.getString("queryTimeout"))).toOption
 
   def configuration = {
     var c =
@@ -61,10 +61,11 @@ abstract class AsyncContextConfig[C <: Connection](
 
   private val defaultPoolConfig = PoolConfiguration.Default
 
-  def poolMaxObjects = Try(config.getInt("poolMaxObjects")).getOrElse(defaultPoolConfig.maxObjects)
-  def poolMaxIdle = Try(config.getLong("poolMaxIdle")).getOrElse(defaultPoolConfig.maxIdle)
-  def poolMaxQueueSize = Try(config.getInt("poolMaxQueueSize")).getOrElse(defaultPoolConfig.maxQueueSize)
-  def poolValidationInterval = Try(config.getLong("poolValidationInterval")).getOrElse(defaultPoolConfig.validationInterval)
+  def poolMaxObjects         = Try(config.getInt("poolMaxObjects")).getOrElse(defaultPoolConfig.maxObjects)
+  def poolMaxIdle            = Try(config.getLong("poolMaxIdle")).getOrElse(defaultPoolConfig.maxIdle)
+  def poolMaxQueueSize       = Try(config.getInt("poolMaxQueueSize")).getOrElse(defaultPoolConfig.maxQueueSize)
+  def poolValidationInterval =
+    Try(config.getLong("poolValidationInterval")).getOrElse(defaultPoolConfig.validationInterval)
 
   def poolConfiguration =
     PoolConfiguration(

@@ -4,8 +4,8 @@ import io.getquill.norm._
 import io.getquill.ast.Ast
 import io.getquill.norm.ConcatBehavior.AnsiConcat
 import io.getquill.norm.EqualityBehavior.AnsiEquality
-import io.getquill.norm.capture.{ AvoidAliasConflict, DemarcateExternalAliases }
-import io.getquill.util.Messages.{ TraceType, title }
+import io.getquill.norm.capture.{AvoidAliasConflict, DemarcateExternalAliases}
+import io.getquill.util.Messages.{TraceType, title}
 
 object SqlNormalize {
   def apply(ast: Ast, concatBehavior: ConcatBehavior = AnsiConcat, equalityBehavior: EqualityBehavior = AnsiEquality) =
@@ -15,7 +15,7 @@ object SqlNormalize {
 class SqlNormalize(concatBehavior: ConcatBehavior, equalityBehavior: EqualityBehavior) {
 
   private def demarcate(heading: String) =
-    ((ast: Ast) => title(heading, TraceType.SqlNormalizations)(ast))
+    (ast: Ast) => title(heading, TraceType.SqlNormalizations)(ast)
 
   private val normalize =
     (identity[Ast] _)
@@ -45,11 +45,11 @@ class SqlNormalize(concatBehavior: ConcatBehavior, equalityBehavior: EqualityBeh
       .andThen(demarcate("ExpandJoin"))
       .andThen(ExpandMappedInfix.apply _)
       .andThen(demarcate("ExpandMappedInfix"))
-      .andThen(ast => {
+      .andThen { ast =>
         // In the final stage of normalization, change all temporary aliases into
         // shorter ones of the form x[0-9]+.
         Normalize.apply(AvoidAliasConflict.Ast(ast, true))
-      })
+      }
       .andThen(demarcate("Normalize"))
 
   def apply(ast: Ast) = normalize(ast)

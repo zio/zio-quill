@@ -1,14 +1,14 @@
 package io.getquill.context
 
-import com.datastax.driver.core.{ BoundStatement, PreparedStatement }
+import com.datastax.driver.core.{BoundStatement, PreparedStatement}
 import io.getquill.context.cassandra.PrepareStatementCache
 import io.getquill.context.cassandra.util.FutureConversions._
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Failure
 
 trait SyncCache { this: CassandraSession =>
-  lazy val syncCache = new PrepareStatementCache[PreparedStatement](preparedStatementCacheSize)
+  lazy val syncCache                       = new PrepareStatementCache[PreparedStatement](preparedStatementCacheSize)
   def prepare(cql: String): BoundStatement =
     syncCache(cql)(stmt => session.prepare(stmt)).bind()
 }

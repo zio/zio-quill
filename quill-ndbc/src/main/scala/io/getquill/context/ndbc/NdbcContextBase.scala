@@ -10,13 +10,13 @@ import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.ndbc.TraneFutureConverters._
 import io.getquill.util.ContextLogger
 import io.trane.future.FuturePool
-import io.trane.future.scala.{ Future, toScalaFuture }
-import io.trane.ndbc.{ DataSource, PreparedStatement, Row }
+import io.trane.future.scala.{Future, toScalaFuture}
+import io.trane.ndbc.{DataSource, PreparedStatement, Row}
 
 import scala.annotation.tailrec
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.duration.Duration
-import scala.language.{ higherKinds, implicitConversions }
+import scala.language.{higherKinds, implicitConversions}
 import scala.util.Try
 
 object NdbcContextBase {
@@ -41,12 +41,12 @@ object NdbcContextBase {
 }
 
 trait NdbcContextBase[Idiom <: SqlIdiom, Naming <: NamingStrategy, P <: PreparedStatement, R <: Row]
-  extends SqlContext[Idiom, Naming] {
+    extends SqlContext[Idiom, Naming] {
 
   private[getquill] val logger = ContextLogger(classOf[NdbcContext[_, _, _, _]])
 
   final override type PrepareRow = P
-  final override type ResultRow = R
+  final override type ResultRow  = R
 
   protected implicit val resultEffect: NdbcContextBase.ContextEffect[Result, _]
   import resultEffect._
@@ -54,13 +54,16 @@ trait NdbcContextBase[Idiom <: SqlIdiom, Naming <: NamingStrategy, P <: Prepared
   protected def withDataSource[T](f: DataSource[P, R] => Result[T]): Result[T]
 
   final protected def withDataSourceFromFuture[T](f: DataSource[P, R] => Future[T]): Result[T] =
-    withDataSource { ds => resultEffect.wrapFromFuture(f(ds)) }
+    withDataSource(ds => resultEffect.wrapFromFuture(f(ds)))
 
   protected def createPreparedStatement(sql: String): P
 
   protected def expandAction(sql: String, returningAction: ReturnAction) = sql
 
-  def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: R => T = identity[R] _): Result[List[T]] = {
+  def executeQuery[T](sql: String,
+                      prepare: Prepare = identityPrepare,
+                      extractor: R => T = identity[R] _
+  ): Result[List[T]] =
     withDataSourceFromFuture { ds =>
       val (params, ps) = prepare(createPreparedStatement(sql))
       logger.logQuery(sql, params)
@@ -69,33 +72,37 @@ trait NdbcContextBase[Idiom <: SqlIdiom, Naming <: NamingStrategy, P <: Prepared
         extractResult(rs.iterator, extractor)
       }
     }
-  }
 
-  def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: R => T = identity[R] _): Result[T] =
+  def executeQuerySingle[T](sql: String,
+                            prepare: Prepare = identityPrepare,
+                            extractor: R => T = identity[R] _
+  ): Result[T] =
     push(executeQuery(sql, prepare, extractor))(handleSingleResult)
 
-  def executeAction[T](sql: String, prepare: Prepare = identityPrepare): Result[Long] = {
+  def executeAction[T](sql: String, prepare: Prepare = identityPrepare): Result[Long] =
     withDataSourceFromFuture { ds =>
       val (params, ps) = prepare(createPreparedStatement(sql))
       logger.logQuery(sql, params)
       ds.execute(ps).toScala.map(_.longValue)
     }
-  }
 
-  def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: R => O, returningAction: ReturnAction): Result[O] = {
+  def executeActionReturning[O](sql: String,
+                                prepare: Prepare = identityPrepare,
+                                extractor: R => O,
+                                returningAction: ReturnAction
+  ): Result[O] = {
     val expanded = expandAction(sql, returningAction)
     executeQuerySingle(expanded, prepare, extractor)
   }
 
   def executeBatchAction(groups: List[BatchGroup]): Result[List[Long]] =
     push(
-      traverse(groups) {
-        case BatchGroup(sql, prepares) =>
-          prepares.foldLeft(wrap(ArrayBuffer.empty[Long])) { (acc, prepare) =>
-            flatMap(acc) { array =>
-              push(executeAction(sql, prepare))(array :+ _)
-            }
+      traverse(groups) { case BatchGroup(sql, prepares) =>
+        prepares.foldLeft(wrap(ArrayBuffer.empty[Long])) { (acc, prepare) =>
+          flatMap(acc) { array =>
+            push(executeAction(sql, prepare))(array :+ _)
           }
+        }
       }
     )(_.flatten)
 
@@ -105,13 +112,12 @@ trait NdbcContextBase[Idiom <: SqlIdiom, Naming <: NamingStrategy, P <: Prepared
 
   def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: R => T): Result[List[T]] =
     push(
-      traverse(groups) {
-        case BatchGroupReturning(sql, column, prepare) =>
-          prepare.foldLeft(wrap(ArrayBuffer.empty[T])) { (acc, prepare) =>
-            flatMap(acc) { array =>
-              push(executeActionReturning(sql, prepare, extractor, column))(array :+ _)
-            }
+      traverse(groups) { case BatchGroupReturning(sql, column, prepare) =>
+        prepare.foldLeft(wrap(ArrayBuffer.empty[T])) { (acc, prepare) =>
+          flatMap(acc) { array =>
+            push(executeActionReturning(sql, prepare, extractor, column))(array :+ _)
           }
+        }
       }
     )(_.flatten)
 
@@ -137,6 +143,7 @@ trait NdbcContextBase[Idiom <: SqlIdiom, Naming <: NamingStrategy, P <: Prepared
         ds.transactional {
           resultEffect.toFuture(f, scheduler).toJava
         }
-      ))
+      )
+    )
   }
 }

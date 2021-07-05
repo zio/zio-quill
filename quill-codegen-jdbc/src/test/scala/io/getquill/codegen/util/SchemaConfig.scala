@@ -10,8 +10,8 @@ sealed trait SchemaConfig {
   private val logger = Logger(LoggerFactory.getLogger(this.getClass))
 
   def fileName: String = {
-    import scala.reflect.runtime.{ universe => u }
-    val m = u.runtimeMirror(this.getClass.getClassLoader)
+    import scala.reflect.runtime.{universe => u}
+    val m   = u.runtimeMirror(this.getClass.getClassLoader)
     val sym = m.reflect(this).symbol
     sym.name.decodedName.toString + ".sql"
   }
@@ -23,12 +23,12 @@ sealed trait SchemaConfig {
 }
 
 object SchemaConfig {
-  case object `schema_casesensitive` extends SchemaConfig
-  case object `schema_simple` extends SchemaConfig
-  case object `schema_snakecase` extends SchemaConfig
+  case object `schema_casesensitive`                                       extends SchemaConfig
+  case object `schema_simple`                                              extends SchemaConfig
+  case object `schema_snakecase`                                           extends SchemaConfig
   case object `schema_snakecase_twoschema_differentcolumns_differenttypes` extends SchemaConfig
-  case object `schema_snakecase_twotable` extends SchemaConfig
-  case object `schema_snakecase_twotable_differentcolumns` extends SchemaConfig
-  case object `schema_snakecase_twotable_differentcolumns_differenttypes` extends SchemaConfig
-  case object `schema_twotable` extends SchemaConfig
+  case object `schema_snakecase_twotable`                                  extends SchemaConfig
+  case object `schema_snakecase_twotable_differentcolumns`                 extends SchemaConfig
+  case object `schema_snakecase_twotable_differentcolumns_differenttypes`  extends SchemaConfig
+  case object `schema_twotable`                                            extends SchemaConfig
 }

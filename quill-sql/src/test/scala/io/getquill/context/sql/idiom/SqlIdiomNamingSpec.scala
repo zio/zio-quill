@@ -8,17 +8,17 @@ import io.getquill.MirrorSqlDialect
 import io.getquill.SqlMirrorContext
 import io.getquill.NamingStrategy
 
-trait CustomTableStrategy extends SnakeCase {
+trait CustomTableStrategy  extends SnakeCase {
   override def table(s: String): String = s"t_$s".toLowerCase
 }
 object CustomTableStrategy extends CustomTableStrategy
 
-trait CustomColumnStrategy extends SnakeCase {
+trait CustomColumnStrategy  extends SnakeCase {
   override def column(s: String): String = s"c_$s".toLowerCase
 }
 object CustomColumnStrategy extends CustomColumnStrategy
 
-trait CustomDefaultStrategy extends SnakeCase {
+trait CustomDefaultStrategy  extends SnakeCase {
   override def default(s: String): String = s"d_$s".toLowerCase
 }
 object CustomDefaultStrategy extends CustomDefaultStrategy
@@ -88,7 +88,7 @@ class SqlIdiomNamingSpec extends Spec {
     "do not apply strategy to select ident" in {
       val db = new SqlMirrorContext(MirrorSqlDialect, CustomDefaultStrategy)
       import db._
-      val q = quote {
+      val q  = quote {
         query[SomeEntity].distinct
       }
       db.run(q.dynamic).string mustEqual

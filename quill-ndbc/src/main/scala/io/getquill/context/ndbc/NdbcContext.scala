@@ -2,24 +2,25 @@ package io.getquill.context.ndbc
 
 import io.getquill.context.TranslateContextBase
 import io.getquill.context.sql.idiom.SqlIdiom
-import io.getquill.{ NamingStrategy, ReturnAction }
-import io.trane.future.scala.{ Await, Future, Promise }
-import io.trane.ndbc.{ DataSource, PreparedStatement, Row }
+import io.getquill.{NamingStrategy, ReturnAction}
+import io.trane.future.scala.{Await, Future, Promise}
+import io.trane.ndbc.{DataSource, PreparedStatement, Row}
 
 import scala.concurrent.duration.Duration
 
 abstract class NdbcContext[I <: SqlIdiom, N <: NamingStrategy, P <: PreparedStatement, R <: Row](
-  override val idiom: I, override val naming: N, val dataSource: DataSource[P, R]
-)
-  extends NdbcContextBase[I, N, P, R]
-  with TranslateContextBase {
+    override val idiom: I,
+    override val naming: N,
+    val dataSource: DataSource[P, R]
+) extends NdbcContextBase[I, N, P, R]
+    with TranslateContextBase {
 
-  override type Result[T] = Future[T]
-  override type RunQueryResult[T] = List[T]
-  override type RunQuerySingleResult[T] = T
-  override type RunActionResult = Long
-  override type RunActionReturningResult[T] = T
-  override type RunBatchActionResult = List[Long]
+  override type Result[T]                        = Future[T]
+  override type RunQueryResult[T]                = List[T]
+  override type RunQuerySingleResult[T]          = T
+  override type RunActionResult                  = Long
+  override type RunActionReturningResult[T]      = T
+  override type RunBatchActionResult             = List[Long]
   override type RunBatchActionReturningResult[T] = List[T]
 
   override implicit protected val resultEffect: NdbcContextBase.ContextEffect[Future, Unit] = NdbcContext.ContextEffect
@@ -32,19 +33,31 @@ abstract class NdbcContext[I <: SqlIdiom, N <: NamingStrategy, P <: PreparedStat
   override def executeAction[T](sql: String, prepare: Prepare = identityPrepare): Future[Long] =
     super.executeAction(sql, prepare)
 
-  override def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): Future[List[T]] =
+  override def executeQuery[T](sql: String,
+                               prepare: Prepare = identityPrepare,
+                               extractor: Extractor[T] = identityExtractor
+  ): Future[List[T]] =
     super.executeQuery(sql, prepare, extractor)
 
-  override def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): Future[T] =
+  override def executeQuerySingle[T](sql: String,
+                                     prepare: Prepare = identityPrepare,
+                                     extractor: Extractor[T] = identityExtractor
+  ): Future[T] =
     super.executeQuerySingle(sql, prepare, extractor)
 
-  override def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningBehavior: ReturnAction): Future[O] =
+  override def executeActionReturning[O](sql: String,
+                                         prepare: Prepare = identityPrepare,
+                                         extractor: Extractor[O],
+                                         returningBehavior: ReturnAction
+  ): Future[O] =
     super.executeActionReturning(sql, prepare, extractor, returningBehavior)
 
   override def executeBatchAction(groups: List[BatchGroup]): Future[List[Long]] =
     super.executeBatchAction(groups)
 
-  override def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T]): Future[List[T]] =
+  override def executeBatchActionReturning[T](groups: List[BatchGroupReturning],
+                                              extractor: Extractor[T]
+  ): Future[List[T]] =
     super.executeBatchActionReturning(groups, extractor)
 
   override def transaction[T](f: => Future[T]): Future[T] = super.transaction(f)

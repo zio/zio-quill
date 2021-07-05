@@ -1,6 +1,6 @@
 package io.getquill.context.sql
 
-import io.getquill.{ Literal, MirrorSqlDialect, Spec, SqlMirrorContext }
+import io.getquill.{Literal, MirrorSqlDialect, Spec, SqlMirrorContext}
 import io.getquill.context.sql.util.StringOps._
 
 class NestedDistinctSpec extends Spec {
@@ -17,8 +17,7 @@ class NestedDistinctSpec extends Spec {
 
       "first operation nesting with filter" in {
         val q = quote {
-          query[MyParent]
-            .distinct
+          query[MyParent].distinct
             .filter(_.myEmb.name == "test")
         }
 
@@ -90,8 +89,7 @@ class NestedDistinctSpec extends Spec {
 
       "first operation nesting with filter - nested" in {
         val q = quote {
-          query[MyParent]
-            .nested
+          query[MyParent].nested
             .filter(_.myEmb.name == "test")
         }
 
@@ -119,7 +117,8 @@ class NestedDistinctSpec extends Spec {
       }
 
       val q = quote {
-        qschem.map(e => SimpleEnt(e.a + 1, e.b))
+        qschem
+          .map(e => SimpleEnt(e.a + 1, e.b))
           .distinct
           .map(e => SimpleEnt2(e.a + 2, e.b))
           .distinct
@@ -136,7 +135,8 @@ class NestedDistinctSpec extends Spec {
       }
 
       val q = quote {
-        qschem.map(e => (e.a + 1, infix"foo(${e.b})".as[String]))
+        qschem
+          .map(e => (e.a + 1, infix"foo(${e.b})".as[String]))
           .nested
           .map(e => (e._1 + 2, infix"bar(${e._2})".as[String]))
           .nested
@@ -231,7 +231,9 @@ class NestedDistinctSpec extends Spec {
         val q = quote {
           query[Parent].map(p => p.emb).distinct.map(e => Parent(1, e))
         }
-        ctx.run(q).string mustEqual "SELECT 1, e.id, e.theName FROM (SELECT DISTINCT p.id, p.theName FROM Parent p) AS e"
+        ctx
+          .run(q)
+          .string mustEqual "SELECT 1, e.id, e.theName FROM (SELECT DISTINCT p.id, p.theName FROM Parent p) AS e"
       }
 
       "can be propogated across query with naming intact and then re-wrapped in tuple" in {
@@ -243,16 +245,20 @@ class NestedDistinctSpec extends Spec {
     }
 
     "double embedded entity from parent" - {
-      case class Emb(id: Int, name: String) extends Embedded
+      case class Emb(id: Int, name: String)              extends Embedded
       case class Parent(id: Int, name: String, emb: Emb) extends Embedded
       case class GrandParent(id: Int, par: Parent)
-      implicit val parentMeta = schemaMeta[GrandParent]("GrandParent", _.par.emb.name -> "theName", _.par.name -> "theParentName")
+      implicit val parentMeta =
+        schemaMeta[GrandParent]("GrandParent", _.par.emb.name -> "theName", _.par.name -> "theParentName")
 
       "fully unwrapped name propagates" in {
         val q = quote {
           query[GrandParent]
-            .map(g => g.par).distinct
-            .map(p => p.emb).map(p => p.name).distinct
+            .map(g => g.par)
+            .distinct
+            .map(p => p.emb)
+            .map(p => p.name)
+            .distinct
         }
         ctx.run(q).string mustEqual "SELECT DISTINCT p.embtheName FROM (SELECT DISTINCT g.id, g.theParentName, g.id AS embid, g.theName AS embtheName FROM GrandParent g) AS p"
       }
@@ -260,9 +266,12 @@ class NestedDistinctSpec extends Spec {
       "fully unwrapped name propagates with side property" in {
         val q = quote {
           query[GrandParent]
-            .map(g => g.par).distinct
-            .map(p => (p.name, p.emb)).distinct
-            .map(tup => (tup._1, tup._2)).distinct
+            .map(g => g.par)
+            .distinct
+            .map(p => (p.name, p.emb))
+            .distinct
+            .map(tup => (tup._1, tup._2))
+            .distinct
         }
         ctx.run(q).string mustEqual
           "SELECT x._1, x._2id, x._2theName FROM (SELECT DISTINCT p.theParentName AS _1, p.embid AS _2id, p.embtheName AS _2theName FROM (SELECT DISTINCT g.id, g.theParentName, g.id AS embid, g.theName AS embtheName FROM GrandParent g) AS p) AS x"
@@ -271,9 +280,12 @@ class NestedDistinctSpec extends Spec {
       "fully unwrapped name propagates with side property - nested" in {
         val q = quote {
           query[GrandParent]
-            .map(g => g.par).nested
-            .map(p => (p.name, p.emb)).nested
-            .map(tup => (tup._1, tup._2)).nested
+            .map(g => g.par)
+            .nested
+            .map(p => (p.name, p.emb))
+            .nested
+            .map(tup => (tup._1, tup._2))
+            .nested
         }
         ctx.run(q).string(true).collapseSpace mustEqual
           """
@@ -310,9 +322,12 @@ class NestedDistinctSpec extends Spec {
       "fully unwrapped name propagates with un-renamed properties" in {
         val q = quote {
           query[GrandParent]
-            .map(g => g.par).distinct
-            .map(p => (p.name, p.emb, p.id, p.emb.id)).distinct
-            .map(tup => (tup._1, tup._2, tup._3, tup._4)).distinct
+            .map(g => g.par)
+            .distinct
+            .map(p => (p.name, p.emb, p.id, p.emb.id))
+            .distinct
+            .map(tup => (tup._1, tup._2, tup._3, tup._4))
+            .distinct
         }
         ctx.run(q).string(true).collapseSpace mustEqual
           """
@@ -345,12 +360,19 @@ class NestedDistinctSpec extends Spec {
       }
 
       "fully unwrapped name propagates with un-renamed properties - with one property renamed" in {
-        implicit val parentMeta = schemaMeta[GrandParent]("GrandParent", _.id -> "gId", _.par.emb.name -> "theName", _.par.name -> "theParentName")
-        val q = quote {
+        implicit val parentMeta = schemaMeta[GrandParent]("GrandParent",
+                                                          _.id           -> "gId",
+                                                          _.par.emb.name -> "theName",
+                                                          _.par.name     -> "theParentName"
+        )
+        val q                   = quote {
           query[GrandParent]
-            .map(g => g.par).distinct
-            .map(p => (p.name, p.emb, p.id, p.emb.id)).distinct
-            .map(tup => (tup._1, tup._2, tup._3, tup._4)).distinct
+            .map(g => g.par)
+            .distinct
+            .map(p => (p.name, p.emb, p.id, p.emb.id))
+            .distinct
+            .map(tup => (tup._1, tup._2, tup._3, tup._4))
+            .distinct
         }
         ctx.run(q).string(true).collapseSpace mustEqual
           """
@@ -383,15 +405,22 @@ class NestedDistinctSpec extends Spec {
       }
 
       "fully unwrapped and fully re-wrapped" in {
-        implicit val parentMeta = schemaMeta[GrandParent]("GrandParent", _.par.emb.name -> "theName", _.par.name -> "theParentName")
-        val q = quote {
+        implicit val parentMeta =
+          schemaMeta[GrandParent]("GrandParent", _.par.emb.name -> "theName", _.par.name -> "theParentName")
+        val q                   = quote {
           query[GrandParent]
-            .map(g => (g.id, g.par)).distinct
-            .map(p => (p._1, p._2.id, p._2.name, p._2.emb)).distinct
-            .map(tup => (tup._1, tup._2, tup._3, tup._4.id, tup._4.name)).distinct
-            .map(tup => (tup._1, tup._2, tup._3, tup._4, tup._5)).distinct
-            .map(tup => (tup._1, tup._2, tup._3, Emb(tup._4, tup._5))).distinct
-            .map(tup => (tup._1, Parent(tup._2, tup._3, tup._4))).distinct
+            .map(g => (g.id, g.par))
+            .distinct
+            .map(p => (p._1, p._2.id, p._2.name, p._2.emb))
+            .distinct
+            .map(tup => (tup._1, tup._2, tup._3, tup._4.id, tup._4.name))
+            .distinct
+            .map(tup => (tup._1, tup._2, tup._3, tup._4, tup._5))
+            .distinct
+            .map(tup => (tup._1, tup._2, tup._3, Emb(tup._4, tup._5)))
+            .distinct
+            .map(tup => (tup._1, Parent(tup._2, tup._3, tup._4)))
+            .distinct
             .map(tup => GrandParent(tup._1, tup._2))
 
         }
@@ -454,15 +483,22 @@ class NestedDistinctSpec extends Spec {
       }
 
       "fully unwrapped and fully re-wrapped - nested" in {
-        implicit val parentMeta = schemaMeta[GrandParent]("GrandParent", _.par.emb.name -> "theName", _.par.name -> "theParentName")
-        val q = quote {
+        implicit val parentMeta =
+          schemaMeta[GrandParent]("GrandParent", _.par.emb.name -> "theName", _.par.name -> "theParentName")
+        val q                   = quote {
           query[GrandParent]
-            .map(g => (g.id, g.par)).nested
-            .map(p => (p._1, p._2.id, p._2.name, p._2.emb)).nested
-            .map(tup => (tup._1, tup._2, tup._3, tup._4.id, tup._4.name)).nested
-            .map(tup => (tup._1, tup._2, tup._3, tup._4, tup._5)).nested
-            .map(tup => (tup._1, tup._2, tup._3, Emb(tup._4, tup._5))).nested
-            .map(tup => (tup._1, Parent(tup._2, tup._3, tup._4))).nested
+            .map(g => (g.id, g.par))
+            .nested
+            .map(p => (p._1, p._2.id, p._2.name, p._2.emb))
+            .nested
+            .map(tup => (tup._1, tup._2, tup._3, tup._4.id, tup._4.name))
+            .nested
+            .map(tup => (tup._1, tup._2, tup._3, tup._4, tup._5))
+            .nested
+            .map(tup => (tup._1, tup._2, tup._3, Emb(tup._4, tup._5)))
+            .nested
+            .map(tup => (tup._1, Parent(tup._2, tup._3, tup._4)))
+            .nested
             .map(tup => GrandParent(tup._1, tup._2))
 
         }
@@ -473,15 +509,22 @@ class NestedDistinctSpec extends Spec {
       }
 
       "fully unwrapped and fully re-wrapped - nested and distinct" in {
-        implicit val parentMeta = schemaMeta[GrandParent]("GrandParent", _.par.emb.name -> "theName", _.par.name -> "theParentName")
-        val q = quote {
+        implicit val parentMeta =
+          schemaMeta[GrandParent]("GrandParent", _.par.emb.name -> "theName", _.par.name -> "theParentName")
+        val q                   = quote {
           query[GrandParent]
-            .map(g => (g.id, g.par)).nested
-            .map(p => (p._1, p._2.id, p._2.name, p._2.emb)).distinct
-            .map(tup => (tup._1, tup._2, tup._3, tup._4.id, tup._4.name)).nested
-            .map(tup => (tup._1, tup._2, tup._3, tup._4, tup._5)).distinct
-            .map(tup => (tup._1, tup._2, tup._3, Emb(tup._4, tup._5))).nested
-            .map(tup => (tup._1, Parent(tup._2, tup._3, tup._4))).distinct
+            .map(g => (g.id, g.par))
+            .nested
+            .map(p => (p._1, p._2.id, p._2.name, p._2.emb))
+            .distinct
+            .map(tup => (tup._1, tup._2, tup._3, tup._4.id, tup._4.name))
+            .nested
+            .map(tup => (tup._1, tup._2, tup._3, tup._4, tup._5))
+            .distinct
+            .map(tup => (tup._1, tup._2, tup._3, Emb(tup._4, tup._5)))
+            .nested
+            .map(tup => (tup._1, Parent(tup._2, tup._3, tup._4)))
+            .distinct
             .map(tup => GrandParent(tup._1, tup._2))
 
         }
@@ -511,9 +554,11 @@ class NestedDistinctSpec extends Spec {
         case class GrandParent(name: String, par: Parent)
 
         val norm = quote(query[Emb])
-        val mod = quote(querySchema[Emb]("CustomEmb", _.name -> "theName"))
-        val q = quote {
-          norm.join(mod).on((norm, mod) => norm.name == mod.name)
+        val mod  = quote(querySchema[Emb]("CustomEmb", _.name -> "theName"))
+        val q    = quote {
+          norm
+            .join(mod)
+            .on((norm, mod) => norm.name == mod.name)
             .map(joined => Parent("Joe", joined._1, joined._2))
             .distinct
         }
@@ -530,13 +575,15 @@ class NestedDistinctSpec extends Spec {
 
         val q = quote {
           query[Foo]
-            .join(query[Ent]).on((f, e) => f.fame == e.name) // (Foo, Ent)
+            .join(query[Ent])
+            .on((f, e) => f.fame == e.name)        // (Foo, Ent)
             .distinct
-            .join(query[Bar]).on((fe, b) => (fe._1.fame == b.bame)) // ((Foo, Ent), Bar)
+            .join(query[Bar])
+            .on((fe, b) => (fe._1.fame == b.bame)) // ((Foo, Ent), Bar)
             .distinct
-            .map(feb => (feb._1._2, feb._2)) // feb: ((Foo, Ent), Bar)
+            .map(feb => (feb._1._2, feb._2))       // feb: ((Foo, Ent), Bar)
             .distinct
-            .map(eb => (eb._1.name, eb._2.bame)) // eb: (Ent, Bar)
+            .map(eb => (eb._1.name, eb._2.bame))   // eb: (Ent, Bar)
         }
         ctx.run(q).string(true).collapseSpace mustEqual
           """
@@ -578,11 +625,13 @@ class NestedDistinctSpec extends Spec {
 
         val q = quote {
           query[WrongEnt]
-            .join(query[Ent]).on((f, e) => f.name == e.name) // (WrongEnt, Ent)
+            .join(query[Ent])
+            .on((f, e) => f.name == e.name)                            // (WrongEnt, Ent)
             .distinct
-            .join(query[Bar]).on((we, b) => (we._1.name == b.bame)) // ((WrongEnt, Ent), Bar)
+            .join(query[Bar])
+            .on((we, b) => (we._1.name == b.bame))                     // ((WrongEnt, Ent), Bar)
             .distinct
-            .map(web => ((web._1._2, web._1._1), web._2)) // web: ((WrongEnt, Ent), Bar) -> ((Ent, WrongEnt), Bar)
+            .map(web => ((web._1._2, web._1._1), web._2))              // web: ((WrongEnt, Ent), Bar) -> ((Ent, WrongEnt), Bar)
             .distinct
             .map(ewb => (ewb._1._2.name, ewb._1._1.name, ewb._2.bame)) // ewb: ((WrongEnt, Ent), Bar)
         }
@@ -631,7 +680,9 @@ class NestedDistinctSpec extends Spec {
         val q = quote {
           query[Emb].map(e => Parent(1, e)).distinct.map(p => p.emb1.a)
         }
-        ctx.run(q).string mustEqual "SELECT e.emb1a FROM (SELECT DISTINCT 1 AS id, e.a AS emb1a, e.b AS emb1b FROM Emb e) AS e"
+        ctx
+          .run(q)
+          .string mustEqual "SELECT e.emb1a FROM (SELECT DISTINCT 1 AS id, e.a AS emb1a, e.b AS emb1b FROM Emb e) AS e"
       }
 
       "should not use override from parent schema level - nested" in {
@@ -688,7 +739,7 @@ class NestedDistinctSpec extends Spec {
       // Try parent and embedded children with same name, schema on parent
       "schema on parent should not override children" in {
         implicit val parentSchema = schemaMeta[Parent]("ParentEnt", _.name -> "theName")
-        val q = quote {
+        val q                     = quote {
           query[Emb].map(e => Parent("Joe", e, e)).distinct.map(p => p.emb1)
         }
         ctx.run(q).string mustEqual "SELECT e.emb1name, e.emb1id FROM (SELECT DISTINCT 'Joe' AS name, e.name AS emb1name, e.id AS emb1id, e.name AS emb2name, e.id AS emb2id FROM Emb e) AS e"
@@ -696,7 +747,7 @@ class NestedDistinctSpec extends Spec {
 
       "schema on parent should not override children - from grandparent ad-hoc cc" in {
         implicit val parentSchema = schemaMeta[Parent]("ParentEnt", _.name -> "theName")
-        val q = quote {
+        val q                     = quote {
           query[Parent].map(p => GrandParent("GJoe", p)).distinct.map(p => (p.par.emb1, p.par.name))
         }
         ctx.run(q).string mustEqual "SELECT p.paremb1name, p.paremb1id, p.partheName FROM (SELECT DISTINCT 'GJoe' AS name, p.theName AS partheName, p.name AS paremb1name, p.id AS paremb1id, p.name AS paremb2name, p.id AS paremb2id FROM ParentEnt p) AS p"
@@ -705,7 +756,7 @@ class NestedDistinctSpec extends Spec {
       // Schema on child should propagate to children
       "schema on children should behave correctly when inside parent" in {
         implicit val childSchema = schemaMeta[Emb]("ChildEnt", _.name -> "theName")
-        val q = quote {
+        val q                    = quote {
           query[Emb].map(e => Parent("Joe", e, e)).distinct.map(p => p.emb1)
         }
         ctx.run(q).string mustEqual "SELECT e.emb1theName, e.emb1id FROM (SELECT DISTINCT 'Joe' AS name, e.theName AS emb1theName, e.id AS emb1id, e.theName AS emb2theName, e.id AS emb2id FROM ChildEnt e) AS e"
@@ -714,9 +765,11 @@ class NestedDistinctSpec extends Spec {
       //Try parent and embedded children with same name, schema on one of children
       "schema on one of children should not override the other child or the parent" in {
         val norms = quote(query[Emb])
-        val mods = quote(querySchema[Emb]("CustomEmb", _.name -> "theName"))
-        val q = quote {
-          norms.join(mods).on((norm, mod) => norm.name == mod.name)
+        val mods  = quote(querySchema[Emb]("CustomEmb", _.name -> "theName"))
+        val q     = quote {
+          norms
+            .join(mods)
+            .on((norm, mod) => norm.name == mod.name)
             .map(joined => Parent("Joe", joined._1, joined._2))
             .distinct
         }
@@ -726,9 +779,11 @@ class NestedDistinctSpec extends Spec {
       // Try parent and embedded children with same name, schema on the other child
       "schema on the other one children should not override the other child or the parent" in {
         val norms = quote(query[Emb])
-        val mods = quote(querySchema[Emb]("CustomEmb", _.name -> "theName"))
-        val q = quote {
-          mods.join(norms).on((mod, norm) => norm.name == mod.name)
+        val mods  = quote(querySchema[Emb]("CustomEmb", _.name -> "theName"))
+        val q     = quote {
+          mods
+            .join(norms)
+            .on((mod, norm) => norm.name == mod.name)
             .map(joined => Parent("Joe", joined._1, joined._2))
             .distinct
         }
@@ -738,9 +793,11 @@ class NestedDistinctSpec extends Spec {
       // Try parent and embedded children with same name, schema on both of children - same schema
       "schema on both of the children can be the same" in {
         val norms = quote(querySchema[Emb]("CustomEmb", _.name -> "theName"))
-        val mods = quote(querySchema[Emb]("CustomEmb", _.name -> "theName"))
-        val q = quote {
-          mods.join(norms).on((mod, norm) => norm.name == mod.name)
+        val mods  = quote(querySchema[Emb]("CustomEmb", _.name -> "theName"))
+        val q     = quote {
+          mods
+            .join(norms)
+            .on((mod, norm) => norm.name == mod.name)
             .map(joined => Parent("Joe", joined._1, joined._2))
             .distinct
         }
@@ -750,9 +807,11 @@ class NestedDistinctSpec extends Spec {
       // Try parent and embedded children with same name, schema on both of children - different schemas
       "schema on both of the children can be different" in {
         val norms = quote(querySchema[Emb]("CustomEmb", _.name -> "theFirstName"))
-        val mods = quote(querySchema[Emb]("CustomEmb", _.name -> "theSecondName"))
-        val q = quote {
-          mods.join(norms).on((mod, norm) => norm.name == mod.name)
+        val mods  = quote(querySchema[Emb]("CustomEmb", _.name -> "theSecondName"))
+        val q     = quote {
+          mods
+            .join(norms)
+            .on((mod, norm) => norm.name == mod.name)
             .map(joined => Parent("Joe", joined._1, joined._2))
             .distinct
         }

@@ -10,7 +10,7 @@ case class CassandraContextConfig(config: Config) {
       config.getLong("preparedStatementCacheSize")
     else
       1000
-  def builder = ClusterBuilder(config.getConfig("session"))
-  def cluster: Cluster = builder.build
-  def keyspace: String = config.getString("keyspace")
+  def builder                          = ClusterBuilder(config.getConfig("session"))
+  def cluster: Cluster                 = builder.build
+  def keyspace: String                 = config.getString("keyspace")
 }

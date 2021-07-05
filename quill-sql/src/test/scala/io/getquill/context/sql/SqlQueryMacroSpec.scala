@@ -9,7 +9,7 @@ class SqlQueryMacroSpec extends Spec {
   "runs queries" - {
     "without bindings" - {
       "with filter" in {
-        val q = quote {
+        val q      = quote {
           qr1.filter(t => t.s != null)
         }
         val mirror = testContext.run(q)
@@ -18,7 +18,7 @@ class SqlQueryMacroSpec extends Spec {
         mirror.string mustEqual "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.s IS NOT NULL"
       }
       "with map" in {
-        val q = quote {
+        val q      = quote {
           qr1.map(t => (t.s, t.i, t.l))
         }
         val mirror = testContext.run(q)
@@ -27,7 +27,7 @@ class SqlQueryMacroSpec extends Spec {
         mirror.string mustEqual "SELECT t.s, t.i, t.l FROM TestEntity t"
       }
       "with flatMap" in {
-        val q = quote {
+        val q      = quote {
           qr1.flatMap(t => qr2)
         }
         val mirror = testContext.run(q)
@@ -38,7 +38,7 @@ class SqlQueryMacroSpec extends Spec {
     }
     "with bindigns" - {
       "one" in {
-        val q = quote {
+        val q      = quote {
           qr1.filter(t => t.s != lift("s"))
         }
         val mirror = testContext.run(q)
@@ -47,7 +47,7 @@ class SqlQueryMacroSpec extends Spec {
           "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.s <> ?"
       }
       "two" in {
-        val q = quote {
+        val q      = quote {
           qr1.filter(t => t.l != lift(2L) && t.i != lift(1))
         }
         val mirror = testContext.run(q)

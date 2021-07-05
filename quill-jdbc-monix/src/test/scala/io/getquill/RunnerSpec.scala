@@ -13,8 +13,8 @@ class RunnerSpec extends Spec {
 
   class SideEffect {
     private var state = 0
-    def apply() = state = 1
-    def applied = state == 1
+    def apply()       = state = 1
+    def applied       = state == 1
   }
 
   implicit val scheduler = Scheduler.global
@@ -25,7 +25,7 @@ class RunnerSpec extends Spec {
 
     "should lazily evaluate" in {
       val sideEffect = new SideEffect
-      val task = wrap(sideEffect())
+      val task       = wrap(sideEffect())
       sideEffect.applied should equal(false)
       task.runSyncUnsafe()
       sideEffect.applied should equal(true)
@@ -33,7 +33,7 @@ class RunnerSpec extends Spec {
 
     "should encapsulate exception throw" in {
       wrap(throw new RuntimeException("Surprise!")).materialize.runSyncUnsafe() should matchPattern {
-        case Failure(e) if (e.getMessage == "Surprise!") =>
+        case Failure(e) if e.getMessage == "Surprise!" =>
       }
     }
 
@@ -47,7 +47,7 @@ class RunnerSpec extends Spec {
 
     "plain schedule should be a no-op" in {
       val t = Task(1)
-      (schedule(t) eq (t)) must equal(true)
+      (schedule(t) eq t) must equal(true)
     }
 
     "boundary operator must force async boundary" in {
@@ -55,14 +55,14 @@ class RunnerSpec extends Spec {
         boundary(Task(Thread.currentThread().getName))
           .flatMap(prevName => Task((prevName, Thread.currentThread().getName)))
           .runSyncUnsafe()
-      first must not equal (second)
+      first must not equal second
     }
   }
 
   "using scheduler runner" - {
-    val prefix = "quill-test-pool"
+    val prefix          = "quill-test-pool"
     val customScheduler = Scheduler.io(prefix)
-    val runner = Runner.using(customScheduler)
+    val runner          = Runner.using(customScheduler)
     import runner._
 
     "should run in specified scheduler" in {
@@ -82,7 +82,7 @@ class RunnerSpec extends Spec {
     }
 
     "should async-boundary correctly" in {
-      val prefix2 = "quill-test-pool2"
+      val prefix2         = "quill-test-pool2"
       // the global scheduler is imported but want to explicitly tell this to run on it, just for clarity
       val (first, second) =
         Task(Thread.currentThread().getName)

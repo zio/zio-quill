@@ -13,13 +13,11 @@ class QueryResultTypeCassandraAsyncSpec extends QueryResultTypeCassandraSpec {
 
   import context._
 
-  def result[T](function: CassandraSession => Future[T]): T = {
+  def result[T](function: CassandraSession => Future[T]): T =
     await(function(context.session))
-  }
 
-  def result[T](future: Future[T]): T = {
+  def result[T](future: Future[T]): T =
     await(future)
-  }
 
   override def beforeAll = {
     result(context.run(deleteAll))

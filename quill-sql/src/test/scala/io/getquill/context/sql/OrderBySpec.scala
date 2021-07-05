@@ -22,7 +22,7 @@ class OrderBySpec extends Spec {
   }
 
   "order by case class with rename" in {
-    implicit val citySchema = schemaMeta[City]("theCity", _.countryId -> "theCityCode")
+    implicit val citySchema    = schemaMeta[City]("theCity", _.countryId -> "theCityCode")
     implicit val countrySchema = schemaMeta[Country]("theCountry", _.id -> "theCountryCode")
 
     val q = quote(

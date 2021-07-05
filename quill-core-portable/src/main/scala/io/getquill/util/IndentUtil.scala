@@ -2,7 +2,7 @@ package io.getquill.util
 
 object IndentUtil {
   implicit class StringOpsExt(str: String) {
-    def fitsOnOneLine: Boolean = !str.contains("\n")
+    def fitsOnOneLine: Boolean                         = !str.contains("\n")
     def multiline(indent: Int, prefix: String): String =
       str.split("\n").map(elem => indent.prefix + prefix + elem).mkString("\n")
   }

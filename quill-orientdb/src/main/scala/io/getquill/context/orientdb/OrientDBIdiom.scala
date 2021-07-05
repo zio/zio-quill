@@ -2,16 +2,16 @@ package io.getquill.context.orientdb
 
 import io.getquill.idiom.StatementInterpolator._
 import io.getquill.context.sql.norm._
-import io.getquill.ast.{ AggregationOperator, External, _ }
+import io.getquill.ast.{AggregationOperator, External, _}
 import io.getquill.context.sql._
 import io.getquill.NamingStrategy
 import io.getquill.context.CannotReturn
-import io.getquill.util.Messages.{ fail, trace }
+import io.getquill.util.Messages.{fail, trace}
 import io.getquill.idiom._
 import io.getquill.context.sql.norm.SqlNormalize
-import io.getquill.util.{ Interleave, Messages }
+import io.getquill.util.{Interleave, Messages}
 import io.getquill.context.sql.idiom.VerifySqlQuery
-import io.getquill.sql.norm.{ RemoveExtraAlias, RemoveUnusedSelects }
+import io.getquill.sql.norm.{RemoveExtraAlias, RemoveUnusedSelects}
 
 object OrientDBIdiom extends OrientDBIdiom with CannotReturn
 
@@ -25,91 +25,87 @@ trait OrientDBIdiom extends Idiom {
 
   override def translate(ast: Ast)(implicit naming: NamingStrategy): (Ast, Statement) = {
     val normalizedAst = SqlNormalize(ast)
-    val token =
+    val token         =
       normalizedAst match {
         case q: Query =>
-          val sql = SqlQuery(q)
+          val sql       = SqlQuery(q)
           VerifySqlQuery(sql).map(fail)
-          val expanded = ExpandNestedQueries(sql)
+          val expanded  = ExpandNestedQueries(sql)
           trace("expanded sql")(expanded)
-          val refined = if (Messages.pruneColumns) RemoveUnusedSelects(expanded) else expanded
+          val refined   = if (Messages.pruneColumns) RemoveUnusedSelects(expanded) else expanded
           trace("filtered sql (only used selects)")(refined)
-          val cleaned = if (!Messages.alwaysAlias) RemoveExtraAlias(naming)(refined) else refined
+          val cleaned   = if (!Messages.alwaysAlias) RemoveExtraAlias(naming)(refined) else refined
           trace("cleaned sql")(cleaned)
           val tokenized = cleaned.token
           trace("tokenized sql")(tokenized)
           tokenized
-        case other =>
+        case other    =>
           other.token
       }
 
     (normalizedAst, stmt"$token")
   }
 
-  implicit def astTokenizer(implicit strategy: NamingStrategy, queryTokenizer: Tokenizer[Query]): Tokenizer[Ast] = {
+  implicit def astTokenizer(implicit strategy: NamingStrategy, queryTokenizer: Tokenizer[Query]): Tokenizer[Ast] =
     Tokenizer[Ast] {
-      case a: Query =>
+      case a: Query         =>
         SqlQuery(a).token
-      case a: Operation =>
+      case a: Operation     =>
         a.token
-      case a: Infix =>
+      case a: Infix         =>
         a.token
-      case a: Action =>
+      case a: Action        =>
         a.token
-      case a: Ident =>
+      case a: Ident         =>
         a.token
       case a: ExternalIdent =>
         a.token
-      case a: Property =>
+      case a: Property      =>
         a.token
-      case a: Value =>
+      case a: Value         =>
         a.token
-      case a: If =>
+      case a: If            =>
         a.token
-      case a: External =>
+      case a: External      =>
         a.token
-      case a: Assignment =>
+      case a: Assignment    =>
         a.token
       case a @ (
-        _: Function | _: FunctionApply | _: Dynamic | _: OptionOperation | _: Block |
-        _: Val | _: Ordering | _: QuotedReference | _: IterableOperation | _: OnConflict.Excluded | _: OnConflict.Existing
-        ) =>
+            _: Function | _: FunctionApply | _: Dynamic | _: OptionOperation | _: Block | _: Val | _: Ordering |
+            _: QuotedReference | _: IterableOperation | _: OnConflict.Excluded | _: OnConflict.Existing
+          ) =>
         fail(s"Malformed or unsupported construct: $a.")
     }
+
+  implicit def ifTokenizer(implicit strategy: NamingStrategy): Tokenizer[If] = Tokenizer[If] { case ast: If =>
+    def flatten(ast: Ast): (List[(Ast, Ast)], Ast) =
+      ast match {
+        case If(cond, a, b) =>
+          val (l, e) = flatten(b)
+          ((cond, a) +: l, e)
+        case other          =>
+          (List(), other)
+      }
+
+    val (l, e)     = flatten(ast)
+    val conditions =
+      for ((cond, body) <- l) yield stmt"if(${cond.token}, ${body.token}, ${e.token})"
+    conditions.head
   }
 
-  implicit def ifTokenizer(implicit strategy: NamingStrategy): Tokenizer[If] = Tokenizer[If] {
-    case ast: If =>
-      def flatten(ast: Ast): (List[(Ast, Ast)], Ast) =
-        ast match {
-          case If(cond, a, b) =>
-            val (l, e) = flatten(b)
-            ((cond, a) +: l, e)
-          case other =>
-            (List(), other)
-        }
-
-      val (l, e) = flatten(ast)
-      val conditions =
-        for ((cond, body) <- l) yield {
-          stmt"if(${cond.token}, ${body.token}, ${e.token})"
-        }
-      conditions.head
-  }
-
-  implicit def queryTokenizer(implicit strategy: NamingStrategy): Tokenizer[Query] = Tokenizer[Query] {
-    case q => SqlQuery(q).token
+  implicit def queryTokenizer(implicit strategy: NamingStrategy): Tokenizer[Query] = Tokenizer[Query] { case q =>
+    SqlQuery(q).token
   }
 
   implicit def orientDBQueryTokenizer(implicit strategy: NamingStrategy): Tokenizer[SqlQuery] = Tokenizer[SqlQuery] {
     case FlattenSqlQuery(from, where, groupBy, orderBy, limit, offset, select, distinct) =>
-
       val distinctTokenizer = (if (distinct) "DISTINCT" else "").token
 
       val selectClause =
         select match {
-          case Nil => if (!distinct) stmt"SELECT *" else fail("OrientDB DISTINCT with multiple columns is not supported")
-          case _ =>
+          case Nil =>
+            if (!distinct) stmt"SELECT *" else fail("OrientDB DISTINCT with multiple columns is not supported")
+          case _   =>
             if (!distinct) stmt"SELECT ${select.token}"
             else if (select.size == 1) stmt"SELECT $distinctTokenizer(${select.token})"
             else fail("OrientDB DISTINCT with multiple columns is not supported")
@@ -117,12 +113,12 @@ trait OrientDBIdiom extends Idiom {
 
       val withFrom =
         from match {
-          case Nil => selectClause
+          case Nil          => selectClause
           case head :: tail =>
             val t = tail.foldLeft(stmt"${head.token}") {
               case (a, b: FlatJoinContext) =>
                 stmt"$a ${(b: FromContext).token}"
-              case (a, b) =>
+              case (a, b)                  =>
                 stmt"$a"
             }
             stmt"$selectClause FROM $t"
@@ -130,7 +126,7 @@ trait OrientDBIdiom extends Idiom {
 
       val withWhere =
         where match {
-          case None => withFrom
+          case None        => withFrom
           case Some(where) =>
             stmt"$withFrom WHERE ${where.token}"
         }
@@ -152,23 +148,26 @@ trait OrientDBIdiom extends Idiom {
         case (Some(limit), Some(offset)) => stmt"$withOrderBy SKIP ${offset.token} LIMIT ${limit.token}"
         case (None, Some(offset))        => stmt"$withOrderBy SKIP ${offset.token}"
       }
-    case SetOperationSqlQuery(a, op, b) =>
+    case SetOperationSqlQuery(a, op, b)                                                  =>
       val str = f"SELECT $$c LET $$a = (${a.token}), $$b = (${b.token}), $$c = UNIONALL($$a, $$b)"
       str.token
-    case _ =>
+    case _                                                                               =>
       fail("Other operators are not supported yet. Please raise a ticket to support more operations")
   }
 
-  implicit def operationTokenizer(implicit propertyTokenizer: Tokenizer[Property], strategy: NamingStrategy): Tokenizer[Operation] = Tokenizer[Operation] {
+  implicit def operationTokenizer(implicit
+      propertyTokenizer: Tokenizer[Property],
+      strategy: NamingStrategy
+  ): Tokenizer[Operation] = Tokenizer[Operation] {
     case UnaryOperation(op, ast)                              => stmt"${op.token} (${ast.token})"
     case BinaryOperation(a, EqualityOperator.`==`, NullValue) => stmt"${scopedTokenizer(a)} IS NULL"
     case BinaryOperation(NullValue, EqualityOperator.`==`, b) => stmt"${scopedTokenizer(b)} IS NULL"
     case BinaryOperation(a, EqualityOperator.`!=`, NullValue) => stmt"${scopedTokenizer(a)} IS NOT NULL"
     case BinaryOperation(NullValue, EqualityOperator.`!=`, b) => stmt"${scopedTokenizer(b)} IS NOT NULL"
     case BinaryOperation(a, op @ SetOperator.`contains`, b)   => SetContainsToken(scopedTokenizer(b), op.token, a.token)
-    case BinaryOperation(a, op, b) =>
+    case BinaryOperation(a, op, b)                            =>
       stmt"${scopedTokenizer(a)} ${op.token} ${scopedTokenizer(b)}"
-    case e: FunctionApply => fail(s"Can't translate the ast to sql: '$e'")
+    case e: FunctionApply                                     => fail(s"Can't translate the ast to sql: '$e'")
   }
 
   implicit val setOperationTokenizer: Tokenizer[SetOperation] = Tokenizer[SetOperation] {
@@ -186,10 +185,11 @@ trait OrientDBIdiom extends Idiom {
     case _                          => fail("OrientDB sql doesn't support joins")
   }
 
-  implicit def orderByCriteriaTokenizer(implicit strategy: NamingStrategy): Tokenizer[OrderByCriteria] = Tokenizer[OrderByCriteria] {
-    case OrderByCriteria(ast, Asc | AscNullsFirst | AscNullsLast)    => stmt"${scopedTokenizer(ast)} ASC"
-    case OrderByCriteria(ast, Desc | DescNullsFirst | DescNullsLast) => stmt"${scopedTokenizer(ast)} DESC"
-  }
+  implicit def orderByCriteriaTokenizer(implicit strategy: NamingStrategy): Tokenizer[OrderByCriteria] =
+    Tokenizer[OrderByCriteria] {
+      case OrderByCriteria(ast, Asc | AscNullsFirst | AscNullsLast)    => stmt"${scopedTokenizer(ast)} ASC"
+      case OrderByCriteria(ast, Desc | DescNullsFirst | DescNullsLast) => stmt"${scopedTokenizer(ast)} DESC"
+    }
 
   implicit val unaryOperatorTokenizer: Tokenizer[UnaryOperator] = Tokenizer[UnaryOperator] {
     case StringOperator.`toUpperCase` => stmt"toUpperCase()"
@@ -238,15 +238,18 @@ trait OrientDBIdiom extends Idiom {
     }
   }
 
-  implicit def propertyTokenizer(implicit valueTokenizer: Tokenizer[Value], identTokenizer: Tokenizer[Ident], strategy: NamingStrategy): Tokenizer[Property] = {
+  implicit def propertyTokenizer(implicit
+      valueTokenizer: Tokenizer[Value],
+      identTokenizer: Tokenizer[Ident],
+      strategy: NamingStrategy
+  ): Tokenizer[Property] =
     Tokenizer[Property] {
-      case Property(ast, "isEmpty")   => stmt"${ast.token} IS NULL"
-      case Property(ast, "nonEmpty")  => stmt"${ast.token} IS NOT NULL"
-      case Property(ast, "isDefined") => stmt"${ast.token} IS NOT NULL"
+      case Property(ast, "isEmpty")                       => stmt"${ast.token} IS NULL"
+      case Property(ast, "nonEmpty")                      => stmt"${ast.token} IS NOT NULL"
+      case Property(ast, "isDefined")                     => stmt"${ast.token} IS NOT NULL"
       case Property.Opinionated(ast, name, renameable, _) =>
         renameable.fixedOr(name.token)(strategy.column(name).token)
     }
-  }
 
   implicit def valueTokenizer(implicit strategy: NamingStrategy): Tokenizer[Value] = Tokenizer[Value] {
     case Constant(v: String, _) => stmt"'${v.token}'"
@@ -257,11 +260,13 @@ trait OrientDBIdiom extends Idiom {
     case CaseClass(values)      => stmt"${values.map(_._2).token}"
   }
 
-  implicit def infixTokenizer(implicit propertyTokenizer: Tokenizer[Property], strategy: NamingStrategy): Tokenizer[Infix] = Tokenizer[Infix] {
-    case Infix(parts, params, _, _) =>
-      val pt = parts.map(_.token)
-      val pr = params.map(_.token)
-      Statement(Interleave(pt, pr))
+  implicit def infixTokenizer(implicit
+      propertyTokenizer: Tokenizer[Property],
+      strategy: NamingStrategy
+  ): Tokenizer[Infix] = Tokenizer[Infix] { case Infix(parts, params, _, _) =>
+    val pt = parts.map(_.token)
+    val pr = params.map(_.token)
+    Statement(Interleave(pt, pr))
   }
 
   implicit def identTokenizer(implicit strategy: NamingStrategy): Tokenizer[Ident] =
@@ -270,24 +275,29 @@ trait OrientDBIdiom extends Idiom {
   implicit def externalIdentTokenizer(implicit strategy: NamingStrategy): Tokenizer[ExternalIdent] =
     Tokenizer[ExternalIdent](e => strategy.default(e.name).token)
 
-  implicit def assignmentTokenizer(implicit propertyTokenizer: Tokenizer[Property], strategy: NamingStrategy): Tokenizer[Assignment] = Tokenizer[Assignment] {
-    case Assignment(alias, prop, value) =>
-      stmt"${prop.token} = ${scopedTokenizer(value)}"
+  implicit def assignmentTokenizer(implicit
+      propertyTokenizer: Tokenizer[Property],
+      strategy: NamingStrategy
+  ): Tokenizer[Assignment] = Tokenizer[Assignment] { case Assignment(alias, prop, value) =>
+    stmt"${prop.token} = ${scopedTokenizer(value)}"
   }
 
   implicit def actionTokenizer(implicit strategy: NamingStrategy): Tokenizer[Action] = {
 
     implicit def propertyTokenizer: Tokenizer[Property] = Tokenizer[Property] {
-      case Property(Property.Opinionated(_, name, renameable, _), "isEmpty")   => stmt"${renameable.fixedOr(name.token)(strategy.column(name).token)} IS NULL"
-      case Property(Property.Opinionated(_, name, renameable, _), "isDefined") => stmt"${renameable.fixedOr(name.token)(strategy.column(name).token)} IS NOT NULL"
-      case Property(Property.Opinionated(_, name, renameable, _), "nonEmpty")  => stmt"${renameable.fixedOr(name.token)(strategy.column(name).token)} IS NOT NULL"
+      case Property(Property.Opinionated(_, name, renameable, _), "isEmpty")   =>
+        stmt"${renameable.fixedOr(name.token)(strategy.column(name).token)} IS NULL"
+      case Property(Property.Opinionated(_, name, renameable, _), "isDefined") =>
+        stmt"${renameable.fixedOr(name.token)(strategy.column(name).token)} IS NOT NULL"
+      case Property(Property.Opinionated(_, name, renameable, _), "nonEmpty")  =>
+        stmt"${renameable.fixedOr(name.token)(strategy.column(name).token)} IS NOT NULL"
       case Property.Opinionated(_, name, renameable, _)                        => renameable.fixedOr(name.token)(strategy.column(name).token)
     }
 
     Tokenizer[Action] {
       case Insert(table: Entity, assignments) =>
         val columns = assignments.map(_.property.token)
-        val values = assignments.map(_.value)
+        val values  = assignments.map(_.value)
         stmt"INSERT INTO ${table.token} (${columns.mkStmt(", ")}) VALUES(${values.map(scopedTokenizer(_)).mkStmt(", ")})"
 
       case Update(table: Entity, assignments) =>

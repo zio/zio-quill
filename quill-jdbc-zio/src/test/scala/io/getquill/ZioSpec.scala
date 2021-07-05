@@ -2,8 +2,8 @@ package io.getquill
 
 import io.getquill.util.LoadConfig
 import org.scalatest.BeforeAndAfterAll
-import zio.{ Has, Runtime, ZIO }
-import zio.stream.{ Sink, ZStream }
+import zio.{Has, Runtime, ZIO}
+import zio.stream.{Sink, ZStream}
 import io.getquill.context.ZioJdbc._
 
 import java.io.Closeable
@@ -22,9 +22,8 @@ trait ZioSpec extends Spec with BeforeAndAfterAll {
     pool = JdbcContextConfig(LoadConfig(prefix.name)).dataSource
   }
 
-  override def afterAll(): Unit = {
+  override def afterAll(): Unit =
     pool.close()
-  }
 
   def accumulate[T](stream: ZStream[Has[Connection], Throwable, T]): ZIO[Has[Connection], Throwable, List[T]] =
     stream.run(Sink.collectAll).map(_.toList)

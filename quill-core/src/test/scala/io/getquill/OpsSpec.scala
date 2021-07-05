@@ -31,14 +31,14 @@ class OpsSpec extends Spec {
 
   "unquotes asts" - {
     "explicitly" in {
-      val q = quote {
+      val q    = quote {
         unquote(qr1).map(t => t)
       }
       val quat = TestEntityQuat
       q.ast mustEqual Map(Entity("TestEntity", Nil, quat), Ident("t", quat), Ident("t", quat))
     }
     "implicitly" in {
-      val q = quote {
+      val q    = quote {
         qr1.map(t => t)
       }
       val quat = TestEntityQuat
@@ -75,7 +75,7 @@ class OpsSpec extends Spec {
     val q: Quoted[EntityQuery[TestEntity]] = quote {
       quote(query[TestEntity])
     }
-    val n = quote {
+    val n                                  = quote {
       query[TestEntity]
     }
     q.ast mustEqual n.ast
@@ -87,24 +87,20 @@ class OpsSpec extends Spec {
 
   "unquotes quoted function bodies automatically" - {
     "one param" in {
-      val q: Quoted[Int => EntityQuery[TestEntity]] = quote {
-        (i: Int) =>
-          query[TestEntity].allowFiltering
+      val q: Quoted[Int => EntityQuery[TestEntity]] = quote { (i: Int) =>
+        query[TestEntity].allowFiltering
       }
-      val n = quote {
-        (i: Int) =>
-          unquote(query[TestEntity].allowFiltering)
+      val n                                         = quote { (i: Int) =>
+        unquote(query[TestEntity].allowFiltering)
       }
       q.ast mustEqual n.ast
     }
     "multiple params" in {
-      val q: Quoted[(Int, Int, Int) => EntityQuery[TestEntity]] = quote {
-        (i: Int, j: Int, k: Int) =>
-          query[TestEntity].allowFiltering
+      val q: Quoted[(Int, Int, Int) => EntityQuery[TestEntity]] = quote { (i: Int, j: Int, k: Int) =>
+        query[TestEntity].allowFiltering
       }
-      val n = quote {
-        (i: Int, j: Int, k: Int) =>
-          unquote(query[TestEntity].allowFiltering)
+      val n                                                     = quote { (i: Int, j: Int, k: Int) =>
+        unquote(query[TestEntity].allowFiltering)
       }
       q.ast mustEqual n.ast
     }

@@ -10,9 +10,7 @@ class PrepareSpec extends Spec {
       for {
         a <- qr1.leftJoin(qr2.map(t => (t.i, t.l))).on((a, b) => a.i > b._1)
         b <- qr1.leftJoin(qr2.map(t => (t.i, t.l))).on((a, b) => a.l < b._2)
-      } yield {
-        (a._2.map(_._1), b._2.map(_._2))
-      }
+      } yield (a._2.map(_._1), b._2.map(_._2))
     }
     testContext.run(q).string mustEqual
       "SELECT t.i, t1.l FROM TestEntity a LEFT JOIN TestEntity2 t ON a.i > t.i, TestEntity a1 LEFT JOIN  TestEntity2 t1 ON a1.l < t1.l"
@@ -25,7 +23,7 @@ class PrepareSpec extends Spec {
       val q = quote {
         for {
           (a, b) <- qr1 join qr2 on ((a, b) => a.i == b.i)
-          c <- qr1 join (c => c.i == a.i)
+          c      <- qr1 join (c => c.i == a.i)
         } yield (a, b, c)
       }
       testContext.run(q).string mustEqual
@@ -36,9 +34,9 @@ class PrepareSpec extends Spec {
       val q = quote {
         for {
           (a, b) <- qr1 join qr2 on ((a, b) => a.i == b.i)
-          c <- qr1 join (c => c.i == a.i)
-          d <- qr2 join (d => d.i == b.i)
-          e <- qr3 join (e => e.i == c.i)
+          c      <- qr1 join (c => c.i == a.i)
+          d      <- qr2 join (d => d.i == b.i)
+          e      <- qr3 join (e => e.i == c.i)
         } yield (a, b, c, d, e)
       }
       testContext.run(q).string mustEqual
@@ -49,7 +47,7 @@ class PrepareSpec extends Spec {
       val q = quote {
         for {
           (a, b) <- qr1 join qr2 on ((a, b) => a.i == a.i)
-          c <- qr1 rightJoin (c => c.i == a.i)
+          c      <- qr1 rightJoin (c => c.i == a.i)
         } yield (a, b, c.map(c => c.i))
       }
       testContext.run(q).string mustEqual

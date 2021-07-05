@@ -1,14 +1,13 @@
 package io.getquill.context.jdbc
 
-import java.sql.{ Connection, PreparedStatement }
+import java.sql.{Connection, PreparedStatement}
 
 import io.getquill.NamingStrategy
 import io.getquill.context.sql.idiom.SqlIdiom
-import io.getquill.context.{ Context, ContextEffect }
+import io.getquill.context.{Context, ContextEffect}
 import io.getquill.util.ContextLogger
 
-trait JdbcPrepareBase[Dialect <: SqlIdiom, Naming <: NamingStrategy]
-  extends Context[Dialect, Naming] {
+trait JdbcPrepareBase[Dialect <: SqlIdiom, Naming <: NamingStrategy] extends Context[Dialect, Naming] {
 
   private[getquill] val logger = ContextLogger(classOf[JdbcPrepareBase[_, _]])
 
@@ -16,7 +15,10 @@ trait JdbcPrepareBase[Dialect <: SqlIdiom, Naming <: NamingStrategy]
   type PrepareBatchResult
   override type PrepareRow = PreparedStatement
 
-  def prepareQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): PrepareResult
+  def prepareQuery[T](sql: String,
+                      prepare: Prepare = identityPrepare,
+                      extractor: Extractor[T] = identityExtractor
+  ): PrepareResult
   def prepareAction(sql: String, prepare: Prepare = identityPrepare): PrepareResult
   def prepareSingle(sql: String, prepare: Prepare = identityPrepare): PrepareResult
   def prepareBatchAction(groups: List[BatchGroup]): PrepareBatchResult
@@ -31,16 +33,17 @@ trait JdbcPrepareBase[Dialect <: SqlIdiom, Naming <: NamingStrategy]
       ps
     }
 
-  protected def prepareBatchInternal(conn: Connection, groups: List[BatchGroup], prepareSingle: (String, Prepare, Connection) => Result[PreparedStatement]) =
+  protected def prepareBatchInternal(conn: Connection,
+                                     groups: List[BatchGroup],
+                                     prepareSingle: (String, Prepare, Connection) => Result[PreparedStatement]
+  ) =
     seq {
-      val batches = groups.flatMap {
-        case BatchGroup(sql, prepares) =>
-          prepares.map(sql -> _)
+      val batches = groups.flatMap { case BatchGroup(sql, prepares) =>
+        prepares.map(sql -> _)
       }
-      batches.map {
-        case (sql, prepare) =>
-          val singleResult = prepareSingle(sql, prepare, conn)
-          singleResult
+      batches.map { case (sql, prepare) =>
+        val singleResult = prepareSingle(sql, prepare, conn)
+        singleResult
       }
     }
 }

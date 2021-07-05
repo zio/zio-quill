@@ -12,12 +12,10 @@ class DecodeNullSpec extends Spec {
 
       val result =
         for {
-          _ <- testMonixDB.run(writeEntities.delete)
-          _ <- testMonixDB.run(writeEntities.insert(lift(insertValue)))
+          _      <- testMonixDB.run(writeEntities.delete)
+          _      <- testMonixDB.run(writeEntities.insert(lift(insertValue)))
           result <- testMonixDB.run(query[DecodeNullTestEntity])
-        } yield {
-          result
-        }
+        } yield result
       intercept[IllegalStateException] {
         await {
           result.runToFuture

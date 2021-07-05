@@ -7,4 +7,4 @@ import com.typesafe.config.Config
 import io.getquill.context.async.AsyncContextConfig
 
 case class PostgresAsyncContextConfig(config: Config)
-  extends AsyncContextConfig[PostgreSQLConnection](config, new PostgreSQLConnectionFactory(_), URLParser)
+    extends AsyncContextConfig[PostgreSQLConnection](config, new PostgreSQLConnectionFactory(_), URLParser)

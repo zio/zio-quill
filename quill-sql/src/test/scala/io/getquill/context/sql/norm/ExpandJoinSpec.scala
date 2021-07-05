@@ -41,7 +41,11 @@ class ExpandJoinSpec extends Spec {
       }
       "both" in {
         val q = quote {
-          qr1.leftJoin(qr2).on((a, b) => a.s == b.s).leftJoin(qr3.leftJoin(qr2).on((c, d) => c.s == d.s)).on((e, f) => e._1.s == f._1.s)
+          qr1
+            .leftJoin(qr2)
+            .on((a, b) => a.s == b.s)
+            .leftJoin(qr3.leftJoin(qr2).on((c, d) => c.s == d.s))
+            .on((e, f) => e._1.s == f._1.s)
         }
         ExpandJoin(q.ast).toString mustEqual
           """querySchema("TestEntity").leftJoin(querySchema("TestEntity2")).on((a, b) => a.s == b.s).leftJoin(querySchema("TestEntity3").leftJoin(querySchema("TestEntity2")).on((c, d) => c.s == d.s)).on((e, f) => a.s == c.s).map(ef => ((a, b), (c, d)))"""

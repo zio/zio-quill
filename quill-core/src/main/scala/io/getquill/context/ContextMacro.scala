@@ -1,8 +1,8 @@
 package io.getquill.context
 
-import scala.reflect.macros.whitebox.{ Context => MacroContext }
-import io.getquill.ast.{ Ast, Dynamic, Lift, Tag }
-import io.getquill.quotation.{ IsDynamic, LiftUnlift, Quotation }
+import scala.reflect.macros.whitebox.{Context => MacroContext}
+import io.getquill.ast.{Ast, Dynamic, Lift, Tag}
+import io.getquill.quotation.{IsDynamic, LiftUnlift, Quotation}
 import io.getquill.util.LoadObject
 import io.getquill.util.MacroContextExt._
 import io.getquill.NamingStrategy
@@ -13,7 +13,7 @@ import scala.util.Failure
 
 trait ContextMacro extends Quotation {
   val c: MacroContext
-  import c.universe.{ Function => _, Ident => _, _ }
+  import c.universe.{Function => _, Ident => _, _}
 
   protected def expand(ast: Ast): Tree =
     q"""
@@ -36,7 +36,7 @@ trait ContextMacro extends Quotation {
     }
 
   abstract class TokenLift(numQuatFields: Int) extends LiftUnlift(numQuatFields) {
-    import mctx.universe.{ Ident => _, Constant => _, Function => _, If => _, _ }
+    import mctx.universe.{Ident => _, Constant => _, Function => _, If => _, _}
 
     implicit val tokenLiftable: Liftable[Token] = Liftable[Token] {
       case ScalarTagToken(lift)       => q"io.getquill.idiom.ScalarTagToken(${lift: Tag})"
@@ -69,8 +69,10 @@ trait ContextMacro extends Quotation {
         c.query(string, idiom)
 
         q"($normalizedAst, ${statement: Token})"
-      case Failure(ex) =>
-        c.info(s"Can't translate query at compile time because the idiom and/or the naming strategy aren't known at this point.")
+      case Failure(ex)              =>
+        c.info(
+          s"Can't translate query at compile time because the idiom and/or the naming strategy aren't known at this point."
+        )
         translateDynamic(ast)
     }
   }
@@ -99,10 +101,8 @@ trait ContextMacro extends Quotation {
   private def idiomAndNamingStatic = {
     val (idiom, naming) = idiomAndNaming
     for {
-      idiom <- LoadObject[Idiom](c)(idiom)
+      idiom  <- LoadObject[Idiom](c)(idiom)
       naming <- LoadNaming.static(c)(naming)
-    } yield {
-      (idiom, naming)
-    }
+    } yield (idiom, naming)
   }
 }

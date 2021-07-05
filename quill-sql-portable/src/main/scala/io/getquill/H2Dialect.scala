@@ -3,18 +3,14 @@ package io.getquill
 import io.getquill.idiom.StatementInterpolator._
 import java.util.concurrent.atomic.AtomicInteger
 
-import io.getquill.ast.{ Ast, OnConflict }
+import io.getquill.ast.{Ast, OnConflict}
 import io.getquill.context.CanReturnField
 import io.getquill.context.sql.idiom.PositionalBindVariables
 import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.context.sql.idiom.ConcatSupport
 import io.getquill.util.Messages.fail
 
-trait H2Dialect
-  extends SqlIdiom
-  with PositionalBindVariables
-  with ConcatSupport
-  with CanReturnField {
+trait H2Dialect extends SqlIdiom with PositionalBindVariables with ConcatSupport with CanReturnField {
 
   private[getquill] val preparedStatementId = new AtomicInteger
 
@@ -27,7 +23,10 @@ trait H2Dialect
       case ast           => super.astTokenizer.token(ast)
     }
 
-  implicit def conflictTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[OnConflict] = {
+  implicit def conflictTokenizer(implicit
+      astTokenizer: Tokenizer[Ast],
+      strategy: NamingStrategy
+  ): Tokenizer[OnConflict] = {
     import OnConflict._
     def tokenizer(implicit astTokenizer: Tokenizer[Ast]) =
       Tokenizer[OnConflict] {

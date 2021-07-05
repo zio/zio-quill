@@ -2,8 +2,8 @@ package io.getquill.context.cassandra
 
 import io.getquill._
 
-import scala.concurrent.ExecutionContext.Implicits.{ global => ec }
-import scala.util.{ Success, Try }
+import scala.concurrent.ExecutionContext.Implicits.{global => ec}
+import scala.util.{Success, Try}
 
 class CassandraContextSpec extends Spec {
 
@@ -29,8 +29,8 @@ class CassandraContextSpec extends Spec {
 
   "fail on returning" in {
     import testSyncDB._
-    val p: Prepare = (x) => (Nil, x)
-    val e: Extractor[Int] = (_) => 1
+    val p: Prepare        = x => (Nil, x)
+    val e: Extractor[Int] = _ => 1
 
     intercept[IllegalStateException](executeActionReturning("", p, e, "")).getMessage mustBe
       intercept[IllegalStateException](executeBatchActionReturning(Nil, e)).getMessage

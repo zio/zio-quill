@@ -7,10 +7,10 @@ import io.getquill.Spec
 class MapsEncodingSpec extends Spec {
 
   case class MapsEntity(
-    id:         Int,
-    longDouble: Map[Long, Double],
-    intDouble:  Map[Int, Double],
-    boolDate:   Map[Boolean, Date]
+      id: Int,
+      longDouble: Map[Long, Double],
+      intDouble: Map[Int, Double],
+      boolDate: Map[Boolean, Date]
   )
   val e = MapsEntity(1, Map(1L -> 1.1), Map(1 -> 1.1d), Map(true -> new Date()))
 
@@ -25,7 +25,7 @@ class MapsEncodingSpec extends Spec {
   "mirror" in {
     val ctx = orientdb.mirrorContext
     import ctx._
-    val q = quote(query[MapsEntity])
+    val q   = quote(query[MapsEntity])
     ctx.run(q.insert(lift(e)))
     ctx.run(q)
   }
@@ -33,7 +33,7 @@ class MapsEncodingSpec extends Spec {
   "Map encoders/decoders" in {
     val ctx = orientdb.testSyncDB
     import ctx._
-    val q = quote(query[MapsEntity])
+    val q   = quote(query[MapsEntity])
     ctx.run(q.delete)
     ctx.run(q.insert(lift(e)))
     verify(e, ctx.run(q.filter(_.id == 1)).head)
@@ -43,12 +43,12 @@ class MapsEncodingSpec extends Spec {
     val ctx = orientdb.testSyncDB
     import ctx._
     case class Entity(
-      id:         Int,
-      intDouble:  Option[Map[Int, Double]],
-      longDouble: Option[Map[Long, Double]]
+        id: Int,
+        intDouble: Option[Map[Int, Double]],
+        longDouble: Option[Map[Long, Double]]
     )
-    val e = Entity(1, None, None)
-    val q = quote(querySchema[Entity]("MapEntity"))
+    val e   = Entity(1, None, None)
+    val q   = quote(querySchema[Entity]("MapEntity"))
 
     ctx.run(q.delete)
     ctx.run(q.insert(lift(e)))
@@ -59,11 +59,20 @@ class MapsEncodingSpec extends Spec {
     val ctx = orientdb.testSyncDB
     import ctx._
     case class MapFrozen(id: Map[Int, Boolean])
-    val e = MapFrozen(Map(1 -> true))
-    val q = quote(query[MapFrozen])
+    val e   = MapFrozen(Map(1 -> true))
+    val q   = quote(query[MapFrozen])
     ctx.run(q.delete)
     ctx.run(q.insert(lift(e)))
-    ctx.run(q.filter(p => liftQuery(Set(1))
-      .contains(p.id))).head.id.head._2 mustBe e.id.head._2
+    ctx
+      .run(
+        q.filter(p =>
+          liftQuery(Set(1))
+            .contains(p.id)
+        )
+      )
+      .head
+      .id
+      .head
+      ._2 mustBe e.id.head._2
   }
 }

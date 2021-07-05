@@ -1,9 +1,9 @@
 package io.getquill.context.cassandra.zio
 
 import io.getquill.util.LoadConfig
-import io.getquill.{ CassandraContextConfig, CassandraZioSession, Spec }
-import zio.{ Has, Runtime, ZIO }
-import zio.stream.{ Sink, ZStream }
+import io.getquill.{CassandraContextConfig, CassandraZioSession, Spec}
+import zio.{Has, Runtime, ZIO}
+import zio.stream.{Sink, ZStream}
 
 trait ZioCassandraSpec extends Spec {
 
@@ -16,11 +16,12 @@ trait ZioCassandraSpec extends Spec {
 
   }
 
-  override def afterAll(): Unit = {
+  override def afterAll(): Unit =
     pool.close()
-  }
 
-  def accumulate[T](stream: ZStream[Has[CassandraZioSession], Throwable, T]): ZIO[Has[CassandraZioSession], Throwable, List[T]] =
+  def accumulate[T](
+      stream: ZStream[Has[CassandraZioSession], Throwable, T]
+  ): ZIO[Has[CassandraZioSession], Throwable, List[T]] =
     stream.run(Sink.collectAll).map(_.toList)
 
   def result[T](stream: ZStream[Has[CassandraZioSession], Throwable, T]): List[T] =

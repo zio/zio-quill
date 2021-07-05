@@ -16,7 +16,7 @@ class QueryResultTypeCassandraAsyncSpec extends QueryResultTypeCassandraSpec {
 
   "return list" - {
     "select" in {
-      await(context.run(selectAll)) must contain theSameElementsAs (entries)
+      await(context.run(selectAll)) must contain theSameElementsAs entries
     }
     "map" in {
       await(context.run(map)) must contain theSameElementsAs (entries.map(_.id))
@@ -31,7 +31,7 @@ class QueryResultTypeCassandraAsyncSpec extends QueryResultTypeCassandraSpec {
       await(context.run(sortBy)) mustEqual entries.take(1)
     }
     "take" in {
-      await(context.run(take)) must contain theSameElementsAs (entries)
+      await(context.run(take)) must contain theSameElementsAs entries
     }
   }
 

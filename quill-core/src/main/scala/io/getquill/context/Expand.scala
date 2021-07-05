@@ -7,11 +7,11 @@ import io.getquill.NamingStrategy
 import io.getquill.idiom.Idiom
 
 case class Expand[C <: Context[_, _]](
-  val context: C,
-  val ast:     Ast,
-  statement:   Statement,
-  idiom:       Idiom,
-  naming:      NamingStrategy
+    val context: C,
+    val ast: Ast,
+    statement: Statement,
+    idiom: Idiom,
+    naming: NamingStrategy
 ) {
 
   val (string, externals) =
@@ -22,17 +22,16 @@ case class Expand[C <: Context[_, _]](
       forProbing = false
     )
 
-  val liftings = externals.collect {
-    case lift: ScalarLift => lift
+  val liftings = externals.collect { case lift: ScalarLift =>
+    lift
   }
 
   val prepare =
     (row: context.PrepareRow) => {
-      val (_, values, prepare) = liftings.foldLeft((0, List.empty[Any], row)) {
-        case ((idx, values, row), lift) =>
-          val encoder = lift.encoder.asInstanceOf[context.Encoder[Any]]
-          val newRow = encoder(idx, lift.value, row)
-          (idx + 1, lift.value :: values, newRow)
+      val (_, values, prepare) = liftings.foldLeft((0, List.empty[Any], row)) { case ((idx, values, row), lift) =>
+        val encoder = lift.encoder.asInstanceOf[context.Encoder[Any]]
+        val newRow  = encoder(idx, lift.value, row)
+        (idx + 1, lift.value :: values, newRow)
       }
       (values, prepare)
     }

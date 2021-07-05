@@ -5,14 +5,12 @@ import io.getquill.norm.BetaReduction
 import io.getquill.quotation.ReifyLiftings
 import io.getquill.util.MacroContextExt._
 
-import scala.reflect.macros.whitebox.{ Context => MacroContext }
-import io.getquill.util.{ EnableReflectiveCalls, OptionalTypecheck }
+import scala.reflect.macros.whitebox.{Context => MacroContext}
+import io.getquill.util.{EnableReflectiveCalls, OptionalTypecheck}
 
-class ActionMacro(val c: MacroContext)
-  extends ContextMacro
-  with ReifyLiftings {
+class ActionMacro(val c: MacroContext) extends ContextMacro with ReifyLiftings {
 
-  import c.universe.{ Function => _, Ident => _, _ }
+  import c.universe.{Function => _, Ident => _, _}
 
   def translateQuery(quoted: Tree): Tree =
     translateQueryPrettyPrint(quoted, q"false")
@@ -34,9 +32,8 @@ class ActionMacro(val c: MacroContext)
     translateBatchQueryPrettyPrint(quoted, q"false")
 
   def translateBatchQueryPrettyPrint(quoted: Tree, prettyPrint: Tree): Tree =
-    expandBatchAction(quoted) {
-      case (batch, param, expanded) =>
-        q"""
+    expandBatchAction(quoted) { case (batch, param, expanded) =>
+      q"""
           ..${EnableReflectiveCalls(c)}
           ${c.prefix}.translateBatchQuery(
             $batch.map { $param =>
@@ -84,9 +81,8 @@ class ActionMacro(val c: MacroContext)
     batchAction(quoted, "prepareBatchAction")
 
   def batchAction(quoted: Tree, method: String): Tree =
-    expandBatchAction(quoted) {
-      case (batch, param, expanded) =>
-        q"""
+    expandBatchAction(quoted) { case (batch, param, expanded) =>
+      q"""
           ..${EnableReflectiveCalls(c)}
           ${c.prefix}.${TermName(method)}(
             $batch.map { $param =>
@@ -101,9 +97,8 @@ class ActionMacro(val c: MacroContext)
     }
 
   def runBatchActionReturning[T](quoted: Tree)(implicit t: WeakTypeTag[T]): Tree =
-    expandBatchAction(quoted) {
-      case (batch, param, expanded) =>
-        q"""
+    expandBatchAction(quoted) { case (batch, param, expanded) =>
+      q"""
           ..${EnableReflectiveCalls(c)}
           ${c.prefix}.executeBatchActionReturning(
             $batch.map { $param =>
@@ -121,7 +116,7 @@ class ActionMacro(val c: MacroContext)
   def expandBatchAction(quoted: Tree)(call: (Tree, Tree, Tree) => Tree): Tree =
     BetaReduction(extractAst(quoted)) match {
       case ast @ Foreach(lift: Lift, alias, body) =>
-        val batch = lift.value.asInstanceOf[Tree]
+        val batch         = lift.value.asInstanceOf[Tree]
         val batchItemType = batch.tpe.typeArgs.head
         c.typecheck(q"(value: $batchItemType) => value") match {
           case q"($param) => $value" =>
@@ -129,15 +124,15 @@ class ActionMacro(val c: MacroContext)
               lift match {
                 case ScalarQueryLift(name, batch: Tree, encoder: Tree, quat) =>
                   ScalarValueLift("value", value, encoder, quat)
-                case CaseClassQueryLift(name, batch: Tree, quat) =>
+                case CaseClassQueryLift(name, batch: Tree, quat)             =>
                   CaseClassValueLift("value", value, quat)
               }
-            val (ast, _) = reifyLiftings(BetaReduction(body, alias -> nestedLift))
+            val (ast, _)   = reifyLiftings(BetaReduction(body, alias -> nestedLift))
             c.untypecheck {
               call(batch, param, expand(ast))
             }
         }
-      case other =>
+      case other                                  =>
         c.fail(s"Batch actions must be static quotations. Found: '$other'")
     }
 
@@ -165,14 +160,13 @@ class ActionMacro(val c: MacroContext)
       """
     }
 
-  private def returningExtractor[T](implicit t: WeakTypeTag[T]) = {
+  private def returningExtractor[T](implicit t: WeakTypeTag[T]) =
     OptionalTypecheck(c)(q"implicitly[${c.prefix}.Decoder[$t]]") match {
       case Some(decoder) =>
         q"(row: ${c.prefix}.ResultRow) => $decoder.apply(0, row)"
-      case None =>
+      case None          =>
         val metaTpe = c.typecheck(tq"${c.prefix}.QueryMeta[$t]", c.TYPEmode).tpe
-        val meta = c.inferImplicitValue(metaTpe).orElse(q"${c.prefix}.materializeQueryMeta[$t]")
+        val meta    = c.inferImplicitValue(metaTpe).orElse(q"${c.prefix}.materializeQueryMeta[$t]")
         q"$meta.extract"
     }
-  }
 }

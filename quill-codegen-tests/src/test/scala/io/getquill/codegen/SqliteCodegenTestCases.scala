@@ -18,7 +18,7 @@ class SqliteCodegenTestCases extends CodegenSpec {
 
       val results = ctx.run(query[Person].filter(_.age > 11)).toSeq
       results should contain theSameElementsAs
-        (List(Person(1, "Joe", "Bloggs", 22), Person(2, "Jack", "Ripper", 33)))
+        List(Person(1, "Joe", "Bloggs", 22), Person(2, "Jack", "Ripper", 33))
     }
     "use trivial literal schema" in WithContext[Prefix, `2-simple-literal`].run { ctx =>
       import `2-simple-literal-lib`.public._
@@ -26,7 +26,7 @@ class SqliteCodegenTestCases extends CodegenSpec {
 
       val results = ctx.run(query[Person].filter(_.age > 11)).toSeq
       results should contain theSameElementsAs
-        (List(Person(1, "Joe", "Bloggs", 22), Person(2, "Jack", "Ripper", 33)))
+        List(Person(1, "Joe", "Bloggs", 22), Person(2, "Jack", "Ripper", 33))
     }
   }
 
@@ -44,11 +44,11 @@ class SqliteCodegenTestCases extends CodegenSpec {
     "2-comp-stereo-single" in WithContext[Prefix, `2-comp-stereo-single`].run { ctx =>
       import `2-comp-stereo-single-lib`.public._
       import ctx._
-      (ctx.run(PersonDao.query.filter(_.age > 11))) should contain theSameElementsAs
-        (List(
+      ctx.run(PersonDao.query.filter(_.age > 11)) should contain theSameElementsAs
+        List(
           Person(1, "Joe", "Bloggs", 22),
           Person(2, "Jack", "Ripper", 33)
-        ))
+        )
     }
   }
 }

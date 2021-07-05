@@ -28,8 +28,8 @@ class VerifySqlQuerySpec extends Spec {
     "doesn't accept table reference" - {
       "with filter" in {
         val q = quote {
-          qr1.leftJoin(qr2).on((a, b) => a.i == b.i).filter {
-            case (a, b) => b.isDefined
+          qr1.leftJoin(qr2).on((a, b) => a.i == b.i).filter { case (a, b) =>
+            b.isDefined
           }
         }
 
@@ -38,7 +38,9 @@ class VerifySqlQuerySpec extends Spec {
 
       "with map" in {
         val q = quote {
-          qr1.leftJoin(qr2).on((a, b) => a.i == b.i)
+          qr1
+            .leftJoin(qr2)
+            .on((a, b) => a.i == b.i)
             .map(pcTup => if (pcTup._2.isDefined) "bar" else "baz")
         }
 

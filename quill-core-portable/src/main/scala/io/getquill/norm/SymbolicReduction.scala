@@ -1,16 +1,15 @@
 package io.getquill.norm
 
-import io.getquill.ast.{ Filter, FlatMap, Query, Union, UnionAll }
+import io.getquill.ast.{Filter, FlatMap, Query, Union, UnionAll}
 
-/**
- * This stage represents Normalization Stage1: Symbolic Reduction in Philip Wadler's Paper
- * "A Practical Theory of Language Integrated Query", given in Figure 11.
- * http://homepages.inf.ed.ac.uk/slindley/papers/practical-theory-of-linq.pdf
- *
- * It represents foundational normalizations done to sequences that represents queries.
- * In Wadler's paper, he characterizes them as `for x in P ...`` whereas in Quill they are
- * characterized as list comprehensions i.e. `P.flatMap(x => ...)`.
- */
+/** This stage represents Normalization Stage1: Symbolic Reduction in Philip Wadler's Paper
+  * "A Practical Theory of Language Integrated Query", given in Figure 11.
+  * http://homepages.inf.ed.ac.uk/slindley/papers/practical-theory-of-linq.pdf
+  *
+  * It represents foundational normalizations done to sequences that represents queries.
+  * In Wadler's paper, he characterizes them as `for x in P ...`` whereas in Quill they are
+  * characterized as list comprehensions i.e. `P.flatMap(x => ...)`.
+  */
 object SymbolicReduction {
 
   def unapply(q: Query) =
@@ -46,21 +45,21 @@ object SymbolicReduction {
       //
       // a.flatMap(b => c).flatMap(d => e) =>
       //     a.flatMap(b => c.flatMap(d => e))
-      case FlatMap(FlatMap(a, b, c), d, e) =>
+      case FlatMap(FlatMap(a, b, c), d, e)       =>
         Some(FlatMap(a, b, FlatMap(c, d, e)))
 
       // Represents for@ in Figure 11
       //
       // a.union(b).flatMap(c => d)
       //      a.flatMap(c => d).union(b.flatMap(c => d))
-      case FlatMap(Union(a, b), c, d) =>
+      case FlatMap(Union(a, b), c, d)            =>
         Some(Union(FlatMap(a, c, d), FlatMap(b, c, d)))
 
       // Represents for@ in Figure 11 (Wadler does not distinguish between Union and UnionAll)
       //
       // a.unionAll(b).flatMap(c => d)
       //      a.flatMap(c => d).unionAll(b.flatMap(c => d))
-      case FlatMap(UnionAll(a, b), c, d) =>
+      case FlatMap(UnionAll(a, b), c, d)         =>
         Some(UnionAll(FlatMap(a, c, d), FlatMap(b, c, d)))
 
       case other => None

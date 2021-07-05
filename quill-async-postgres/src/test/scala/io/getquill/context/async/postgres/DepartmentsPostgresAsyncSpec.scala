@@ -1,6 +1,6 @@
 package io.getquill.context.async.postgres
 
-import scala.concurrent.ExecutionContext.Implicits.{ global => ec }
+import scala.concurrent.ExecutionContext.Implicits.{global => ec}
 
 import io.getquill.context.sql.DepartmentsSpec
 

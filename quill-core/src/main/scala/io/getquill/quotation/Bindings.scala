@@ -7,8 +7,10 @@ object Bindings {
     import c.universe._
     tpe
       .member(TermName("bindings"))
-      .typeSignature.decls.collect {
-        case m: MethodSymbol if (m.isGetter) =>
+      .typeSignature
+      .decls
+      .collect {
+        case m: MethodSymbol if m.isGetter =>
           m ->
             q"""
               {
@@ -16,6 +18,7 @@ object Bindings {
                 $quoted.bindings.$m
               }
             """
-      }.toMap
+      }
+      .toMap
   }
 }

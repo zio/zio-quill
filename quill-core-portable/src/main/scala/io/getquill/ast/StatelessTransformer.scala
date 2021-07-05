@@ -61,24 +61,24 @@ trait StatelessTransformer {
 
   def apply(e: Query): Query =
     e match {
-      case e: Entity          => e
-      case Filter(a, b, c)    => Filter(apply(a), applyIdent(b), apply(c))
-      case Map(a, b, c)       => Map(apply(a), applyIdent(b), apply(c))
-      case FlatMap(a, b, c)   => FlatMap(apply(a), applyIdent(b), apply(c))
-      case ConcatMap(a, b, c) => ConcatMap(apply(a), applyIdent(b), apply(c))
-      case SortBy(a, b, c, d) => SortBy(apply(a), applyIdent(b), apply(c), d)
-      case GroupBy(a, b, c)   => GroupBy(apply(a), applyIdent(b), apply(c))
-      case Aggregation(o, a)  => Aggregation(o, apply(a))
-      case Take(a, b)         => Take(apply(a), apply(b))
-      case Drop(a, b)         => Drop(apply(a), apply(b))
-      case Union(a, b)        => Union(apply(a), apply(b))
-      case UnionAll(a, b)     => UnionAll(apply(a), apply(b))
+      case e: Entity                 => e
+      case Filter(a, b, c)           => Filter(apply(a), applyIdent(b), apply(c))
+      case Map(a, b, c)              => Map(apply(a), applyIdent(b), apply(c))
+      case FlatMap(a, b, c)          => FlatMap(apply(a), applyIdent(b), apply(c))
+      case ConcatMap(a, b, c)        => ConcatMap(apply(a), applyIdent(b), apply(c))
+      case SortBy(a, b, c, d)        => SortBy(apply(a), applyIdent(b), apply(c), d)
+      case GroupBy(a, b, c)          => GroupBy(apply(a), applyIdent(b), apply(c))
+      case Aggregation(o, a)         => Aggregation(o, apply(a))
+      case Take(a, b)                => Take(apply(a), apply(b))
+      case Drop(a, b)                => Drop(apply(a), apply(b))
+      case Union(a, b)               => Union(apply(a), apply(b))
+      case UnionAll(a, b)            => UnionAll(apply(a), apply(b))
       case Join(t, a, b, iA, iB, on) =>
         Join(t, apply(a), apply(b), applyIdent(iA), applyIdent(iB), apply(on))
-      case FlatJoin(t, a, iA, on) =>
+      case FlatJoin(t, a, iA, on)    =>
         FlatJoin(t, apply(a), applyIdent(iA), apply(on))
-      case Distinct(a) => Distinct(apply(a))
-      case Nested(a)   => Nested(apply(a))
+      case Distinct(a)               => Distinct(apply(a))
+      case Nested(a)                 => Nested(apply(a))
     }
 
   def apply(e: Assignment): Assignment =
@@ -88,7 +88,8 @@ trait StatelessTransformer {
 
   def apply(e: Property): Property =
     e match {
-      case Property.Opinionated(a, name, renameable, visibility) => Property.Opinionated(apply(a), name, renameable, visibility)
+      case Property.Opinionated(a, name, renameable, visibility) =>
+        Property.Opinionated(apply(a), name, renameable, visibility)
     }
 
   def apply(e: Operation): Operation =
@@ -100,13 +101,12 @@ trait StatelessTransformer {
 
   def apply(e: Value): Value =
     e match {
-      case e: Constant   => e
-      case NullValue     => NullValue
-      case Tuple(values) => Tuple(values.map(apply))
-      case CaseClass(tuples) => {
+      case e: Constant       => e
+      case NullValue         => NullValue
+      case Tuple(values)     => Tuple(values.map(apply))
+      case CaseClass(tuples) =>
         val (keys, values) = tuples.unzip
         CaseClass(keys.zip(values.map(apply)))
-      }
     }
 
   def apply(e: Action): Action =
@@ -115,7 +115,8 @@ trait StatelessTransformer {
       case Insert(query, assignments)                 => Insert(apply(query), assignments.map(apply))
       case Delete(query)                              => Delete(apply(query))
       case Returning(query, alias, property)          => Returning(apply(query), applyIdent(alias), apply(property))
-      case ReturningGenerated(query, alias, property) => ReturningGenerated(apply(query), applyIdent(alias), apply(property))
+      case ReturningGenerated(query, alias, property) =>
+        ReturningGenerated(apply(query), applyIdent(alias), apply(property))
       case Foreach(query, alias, body)                => Foreach(apply(query), applyIdent(alias), apply(body))
       case OnConflict(query, target, action)          => OnConflict(apply(query), apply(target), apply(action))
     }

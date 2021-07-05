@@ -1,6 +1,6 @@
 package io.getquill.context.cassandra
 
-import io.getquill.{ CassandraLagomAsyncContext, Literal }
+import io.getquill.{CassandraLagomAsyncContext, Literal}
 import utils._
 
 package object lagom {

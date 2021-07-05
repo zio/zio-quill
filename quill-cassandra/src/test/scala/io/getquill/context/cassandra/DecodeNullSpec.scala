@@ -24,12 +24,10 @@ class DecodeNullSpec extends Spec {
 
       val result =
         for {
-          _ <- testAsyncDB.run(writeEntities.delete)
-          _ <- testAsyncDB.run(writeEntities.insert(lift(insertValue)))
+          _      <- testAsyncDB.run(writeEntities.delete)
+          _      <- testAsyncDB.run(writeEntities.insert(lift(insertValue)))
           result <- testAsyncDB.run(query[DecodeNullTestEntity])
-        } yield {
-          result
-        }
+        } yield result
       intercept[IllegalStateException] {
         await {
           result

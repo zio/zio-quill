@@ -17,7 +17,7 @@ object LoadNaming {
 
   private def strategies(c: Context)(tpe: c.Type) =
     tpe <:< c.typeOf[CompositeNamingStrategy] match {
-      case true =>
+      case true  =>
         tpe.typeArgs
           .filterNot(_ =:= c.weakTypeOf[NamingStrategy])
           .filterNot(_ =:= c.weakTypeOf[scala.Nothing])

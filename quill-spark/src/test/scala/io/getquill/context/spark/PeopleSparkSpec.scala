@@ -37,10 +37,8 @@ class PeopleJdbcSpec extends Spec {
         for {
           c <- couples.distinct
           w <- people.distinct
-          m <- people.distinct if (c.her == w.name && c.him == m.name && w.age > m.age)
-        } yield {
-          (w.name, w.age - m.age)
-        }
+          m <- people.distinct if c.her == w.name && c.him == m.name && w.age > m.age
+        } yield (w.name, w.age - m.age)
       }
     testContext.run(q).collect.toList.sorted mustEqual
       List(("Alex", 5), ("Cora", 2))
@@ -52,23 +50,18 @@ class PeopleJdbcSpec extends Spec {
         for {
           c <- couples
           w <- people.join(w => c.her == w.name)
-          m <- people.join(m => c.him == m.name) if (w.age > m.age)
-        } yield {
-          (w.name, w.age - m.age)
-        }
+          m <- people.join(m => c.him == m.name) if w.age > m.age
+        } yield (w.name, w.age - m.age)
       }
     testContext.run(q).collect.toList.sorted mustEqual
       List(("Alex", 5), ("Cora", 2))
   }
 
   "Example 2 - range simple" in {
-    val rangeSimple = quote {
-      (a: Int, b: Int) =>
-        for {
-          u <- people if (a <= u.age && u.age < b)
-        } yield {
-          u
-        }
+    val rangeSimple = quote { (a: Int, b: Int) =>
+      for {
+        u <- people if a <= u.age && u.age < b
+      } yield u
     }
 
     testContext.run(rangeSimple(30, 40)).collect.toList mustEqual
@@ -76,13 +69,10 @@ class PeopleJdbcSpec extends Spec {
   }
 
   val satisfies =
-    quote {
-      (p: Int => Boolean) =>
-        for {
-          u <- people if (p(u.age))
-        } yield {
-          u
-        }
+    quote { (p: Int => Boolean) =>
+      for {
+        u <- people if p(u.age)
+      } yield u
     }
 
   "Example 3 - satisfies" in {
@@ -97,31 +87,22 @@ class PeopleJdbcSpec extends Spec {
 
   "Example 5 - compose" in {
     val q = {
-      val range = quote {
-        (a: Int, b: Int) =>
-          for {
-            u <- people if (a <= u.age && u.age < b)
-          } yield {
-            u
-          }
+      val range       = quote { (a: Int, b: Int) =>
+        for {
+          u <- people if a <= u.age && u.age < b
+        } yield u
       }
-      val ageFromName = quote {
-        (s: String) =>
-          for {
-            u <- people if (s == u.name)
-          } yield {
-            u.age
-          }
+      val ageFromName = quote { (s: String) =>
+        for {
+          u <- people if s == u.name
+        } yield u.age
       }
-      quote {
-        (s: String, t: String) =>
-          for {
-            a <- ageFromName(s)
-            b <- ageFromName(t)
-            r <- range(a, b)
-          } yield {
-            r
-          }
+      quote { (s: String, t: String) =>
+        for {
+          a <- ageFromName(s)
+          b <- ageFromName(t)
+          r <- range(a, b)
+        } yield r
       }
     }
     testContext.run(q("Drew", "Bert")).collect.toList mustEqual
@@ -143,10 +124,8 @@ class PeopleJdbcSpec extends Spec {
           for {
             c <- couples.distinct
             w <- people.distinct.join(w => c.her == w.name)
-            m <- people.distinct.join(m => c.him == m.name) if (w.age > m.age)
-          } yield {
-            (w.name, w.age - m.age)
-          }
+            m <- people.distinct.join(m => c.him == m.name) if w.age > m.age
+          } yield (w.name, w.age - m.age)
         }
       testContext.run(q).collect.toList.sorted mustEqual
         List(("Alex", 5), ("Cora", 2))
@@ -180,10 +159,8 @@ class PeopleJdbcSpec extends Spec {
           for {
             c <- couples.nested
             w <- people.nested.join(w => c.her == w.name)
-            m <- people.nested.join(m => c.him == m.name) if (w.age > m.age)
-          } yield {
-            (w.name, w.age - m.age)
-          }
+            m <- people.nested.join(m => c.him == m.name) if w.age > m.age
+          } yield (w.name, w.age - m.age)
         }
       testContext.run(q).collect.toList.sorted mustEqual
         List(("Alex", 5), ("Cora", 2))

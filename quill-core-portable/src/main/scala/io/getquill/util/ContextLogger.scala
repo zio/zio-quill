@@ -9,23 +9,20 @@ class ContextLogger(name: String) {
   val underlying = Logger(LoggerFactory.getLogger(name))
 
   private val bindsEnabled = sys.props.get("quill.binds.log").contains("true")
-  private val nullToken = "null"
+  private val nullToken    = "null"
 
-  def logQuery(query: String, params: Seq[Any]): Unit = {
+  def logQuery(query: String, params: Seq[Any]): Unit =
     if (!bindsEnabled || params.isEmpty) underlying.debug(query)
     else {
       underlying.debug("{} - binds: {}", query, prepareParams(params))
     }
-  }
 
-  def logBatchItem(query: String, params: Seq[Any]): Unit = {
+  def logBatchItem(query: String, params: Seq[Any]): Unit =
     if (bindsEnabled) {
       underlying.debug("{} - batch item: {}", query, prepareParams(params))
     }
-  }
 
-  private def prepareParams(params: Seq[Any]): String = params
-    .reverse
+  private def prepareParams(params: Seq[Any]): String = params.reverse
     .map(prepareParam)
     .mkString("[", ", ", "]")
 
@@ -41,4 +38,3 @@ class ContextLogger(name: String) {
 object ContextLogger {
   def apply(ctxClass: Class[_]): ContextLogger = new ContextLogger(ctxClass.getName)
 }
-

@@ -6,7 +6,7 @@ class OrientDBContextSpec extends Spec {
 
   "run non-batched select" - {
     "sync" in {
-      val ctx = orientdb.testSyncDB
+      val ctx    = orientdb.testSyncDB
       import ctx._
       case class TestEntity(id: Int, s: String, i: Int, l: Long, o: Int)
       val select = quote {
@@ -17,7 +17,7 @@ class OrientDBContextSpec extends Spec {
   }
 
   "run non-batched action" in {
-    val ctx = orientdb.testSyncDB
+    val ctx    = orientdb.testSyncDB
     import ctx._
     case class TestEntity(id: Int, s: String, i: Int, l: Long, o: Int)
     val update = quote {
@@ -34,10 +34,10 @@ class OrientDBContextSpec extends Spec {
   }
 
   "fail on returning" in {
-    val ctx = orientdb.testSyncDB
+    val ctx               = orientdb.testSyncDB
     import ctx._
-    val e: Extractor[Int] = (_) => 1
-    intercept[IllegalStateException](executeActionReturning("", (x) => (Nil, x), e, "")).getMessage mustBe
+    val e: Extractor[Int] = _ => 1
+    intercept[IllegalStateException](executeActionReturning("", x => (Nil, x), e, "")).getMessage mustBe
       intercept[IllegalStateException](executeBatchActionReturning(Nil, e)).getMessage
   }
 

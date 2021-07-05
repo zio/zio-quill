@@ -46,8 +46,8 @@ class AliasNestedQueryColumnsSpec extends Spec {
       }
       "join" in {
         val q = quote {
-          qr1.join(qr2).on((a, b) => a.i == b.i).map {
-            case (a, b) => (a.i, b.i)
+          qr1.join(qr2).on((a, b) => a.i == b.i).map { case (a, b) =>
+            (a.i, b.i)
           }
         }
         testContext.run(q).collect.toList mustEqual

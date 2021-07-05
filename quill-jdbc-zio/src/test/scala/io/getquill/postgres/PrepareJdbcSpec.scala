@@ -1,7 +1,7 @@
 package io.getquill.postgres
 
 import io.getquill.Prefix
-import io.getquill.{ PrepareZioJdbcSpecBase, ZioSpec }
+import io.getquill.{PrepareZioJdbcSpecBase, ZioSpec}
 import org.scalatest.BeforeAndAfter
 
 import java.sql.ResultSet
@@ -9,7 +9,7 @@ import java.sql.ResultSet
 class PrepareJdbcSpec extends PrepareZioJdbcSpecBase with ZioSpec with BeforeAndAfter {
 
   override def prefix: Prefix = Prefix("testPostgresDB")
-  val context = testContext
+  val context                 = testContext
   import testContext._
 
   before {
@@ -17,7 +17,7 @@ class PrepareJdbcSpec extends PrepareZioJdbcSpecBase with ZioSpec with BeforeAnd
   }
 
   def productExtractor = (rs: ResultSet) => materializeQueryMeta[Product].extract(rs)
-  val prepareQuery = prepare(query[Product])
+  val prepareQuery     = prepare(query[Product])
 
   "single" in {
     val prepareInsert = prepare(query[Product].insert(lift(productEntries.head)))

@@ -8,11 +8,11 @@ import io.getquill.context.sql.idiom._
 import io.getquill.idiom.StatementInterpolator._
 
 trait PostgresDialect
-  extends SqlIdiom
-  with QuestionMarkBindVariables
-  with ConcatSupport
-  with OnConflictSupport
-  with CanReturnClause {
+    extends SqlIdiom
+    with QuestionMarkBindVariables
+    with ConcatSupport
+    with OnConflictSupport
+    with CanReturnClause {
 
   override def astTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Ast] =
     Tokenizer[Ast] {
@@ -21,7 +21,10 @@ trait PostgresDialect
       case ast                     => super.astTokenizer.token(ast)
     }
 
-  override implicit def operationTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Operation] =
+  override implicit def operationTokenizer(implicit
+      astTokenizer: Tokenizer[Ast],
+      strategy: NamingStrategy
+  ): Tokenizer[Operation] =
     Tokenizer[Operation] {
       case UnaryOperation(StringOperator.`toLong`, ast) => stmt"${scopedTokenizer(ast)}::bigint"
       case UnaryOperation(StringOperator.`toInt`, ast)  => stmt"${scopedTokenizer(ast)}::integer"
@@ -31,11 +34,14 @@ trait PostgresDialect
   private[getquill] val preparedStatementId = new AtomicInteger
 
   override def prepareForProbing(string: String) = {
-    var i = 0
-    val query = string.flatMap(x => if (x != '?') s"$x" else {
-      i += 1
-      s"$$$i"
-    })
+    var i     = 0
+    val query = string.flatMap(x =>
+      if (x != '?') s"$x"
+      else {
+        i += 1
+        s"$$$i"
+      }
+    )
     s"PREPARE p${preparedStatementId.incrementAndGet.toString.token} AS $query"
   }
 }

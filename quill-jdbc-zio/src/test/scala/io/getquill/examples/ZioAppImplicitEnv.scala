@@ -4,7 +4,7 @@ import io.getquill._
 import io.getquill.context.ZioJdbc._
 import io.getquill.util.LoadConfig
 import zio.console.putStrLn
-import zio.{ App, ExitCode, Has, URIO }
+import zio.{App, ExitCode, Has, URIO}
 
 import java.io.Closeable
 import javax.sql.DataSource
@@ -22,15 +22,13 @@ object ZioAppImplicitEnv extends App {
     import Ctx._
     implicit val env = Implicit(Has(ds))
 
-    val joes = Ctx.run(query[Person].filter(p => p.name == "Joe")).implicitDS
-    val jills = Ctx.run(query[Person].filter(p => p.name == "Jill")).implicitDS
+    val joes   = Ctx.run(query[Person].filter(p => p.name == "Joe")).implicitDS
+    val jills  = Ctx.run(query[Person].filter(p => p.name == "Jill")).implicitDS
     val alexes = Ctx.run(query[Person].filter(p => p.name == "Alex")).implicitDS
   }
 
-  override def run(args: List[String]): URIO[zio.ZEnv, ExitCode] = {
-    MyQueryService(dataSource)
-      .joes
+  override def run(args: List[String]): URIO[zio.ZEnv, ExitCode] =
+    MyQueryService(dataSource).joes
       .tap(result => putStrLn(result.toString))
       .exitCode
-  }
 }

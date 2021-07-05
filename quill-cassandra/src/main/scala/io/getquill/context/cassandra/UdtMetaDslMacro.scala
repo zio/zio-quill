@@ -1,15 +1,14 @@
 package io.getquill.context.cassandra
 
-import scala.reflect.macros.blackbox.{ Context => MacroContext }
+import scala.reflect.macros.blackbox.{Context => MacroContext}
 
 class UdtMetaDslMacro(val c: MacroContext) {
 
   import c.universe._
 
   def udtMeta[T](path: Tree, columns: Tree*)(implicit t: WeakTypeTag[T]): Tree = {
-    val pairs = columns.map {
-      case q"(($x1) => $pack.Predef.ArrowAssoc[$t]($prop).$arrow[$v](${ alias: String }))" =>
-        q"(${prop.symbol.name.decodedName.toString}, $alias)"
+    val pairs = columns.map { case q"(($x1) => $pack.Predef.ArrowAssoc[$t]($prop).$arrow[$v](${alias: String}))" =>
+      q"(${prop.symbol.name.decodedName.toString}, $alias)"
     }
     c.untypecheck {
       q"""

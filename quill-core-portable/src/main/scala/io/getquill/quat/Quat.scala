@@ -14,41 +14,44 @@ object LinkedHashMapOps {
       LinkedHashMapOps.outerZipWith(m1, m2, f)
   }
 
-  def zipWith[K, V, R](m1: mutable.LinkedHashMap[K, V], m2: mutable.LinkedHashMap[K, V], f: PartialFunction[(K, V, Option[V]), R]) = {
+  def zipWith[K, V, R](m1: mutable.LinkedHashMap[K, V],
+                       m2: mutable.LinkedHashMap[K, V],
+                       f: PartialFunction[(K, V, Option[V]), R]
+  ) =
     m1.toList.map(r => (r._1, r._2, m2.get(r._1))).collect(f)
-  }
 
-  def outerZipWith[K, V, R](m1: mutable.LinkedHashMap[K, V], m2: mutable.LinkedHashMap[K, V], f: PartialFunction[(K, Option[V], Option[V]), R]) = {
+  def outerZipWith[K, V, R](m1: mutable.LinkedHashMap[K, V],
+                            m2: mutable.LinkedHashMap[K, V],
+                            f: PartialFunction[(K, Option[V], Option[V]), R]
+  ) =
     mutable.LinkedHashSet((m1.keySet.toList ++ m2.keySet.toList): _*).map(k => (k, m1.get(k), m2.get(k))).collect(f)
-  }
 }
 
-/**
- * This represents a simplified Sql-Type. Since it applies to all dialects, it is called
- * Quill-Application-Type hence Quat. Quats represent the types of the Quill AST allowing us
- * to know what fields exist on an Ident and more concretely what can be done with it.
- * Currently they are:
- * <ul>
- *   <li> Quat.Product - Something that contains a list of fields e.g. case class `Person(name:String,age:Int)` would be
- *   `Product("name"->Quat.Value, "age"->Quat.Value)`
- *   <li> Quat.Value - A value level Quat e.g. Int, Long, String etc... More specific Quat.Value types are planned int the future.
- *   <li> Quat.Generic - A Quat representing a type whose value is not known yet.
- *   <li> Quat.Null - A Quat representing a null value.
- * </ul>
- *
- * Quats are generally treated as through they are immutable although there are dynamic/mutable variables in some places
- * (e.g. Product uses LinkedHashSet and var) due to various other issues (e.g. performance, serialization). It is assumed that
- * all operations Quats have referential transparency.
- */
+/** This represents a simplified Sql-Type. Since it applies to all dialects, it is called
+  * Quill-Application-Type hence Quat. Quats represent the types of the Quill AST allowing us
+  * to know what fields exist on an Ident and more concretely what can be done with it.
+  * Currently they are:
+  * <ul>
+  *   <li> Quat.Product - Something that contains a list of fields e.g. case class `Person(name:String,age:Int)` would be
+  *   `Product("name"->Quat.Value, "age"->Quat.Value)`
+  *   <li> Quat.Value - A value level Quat e.g. Int, Long, String etc... More specific Quat.Value types are planned int the future.
+  *   <li> Quat.Generic - A Quat representing a type whose value is not known yet.
+  *   <li> Quat.Null - A Quat representing a null value.
+  * </ul>
+  *
+  * Quats are generally treated as through they are immutable although there are dynamic/mutable variables in some places
+  * (e.g. Product uses LinkedHashSet and var) due to various other issues (e.g. performance, serialization). It is assumed that
+  * all operations Quats have referential transparency.
+  */
 sealed trait Quat {
-  def isPrimitive = false
-  def applyRenames: Quat = this
+  def isPrimitive                                        = false
+  def applyRenames: Quat                                 = this
   def withRenames(renames: mutable.LinkedHashMap[String, String]): Quat
   def withRenames(renames: List[(String, String)]): Quat =
     withRenames(mutable.LinkedHashMap(renames: _*))
 
   def serializeJVM = KryoQuatSerializer.serialize(this)
-  def serializeJS = BooQuatSerializer.serialize(this)
+  def serializeJS  = BooQuatSerializer.serialize(this)
 
   /** Recursively count the fields of the Quat */
   def countFields: Int =
@@ -66,49 +69,47 @@ sealed trait Quat {
       case other           => QuatException(s"Was expecting SQL-level type must be a Product but found `${other}`")
     }
 
-  def leastUpperType(other: Quat): Option[Quat] = {
+  def leastUpperType(other: Quat): Option[Quat] =
     (this, other) match {
-      case (Quat.Generic, other) => Some(other)
-      case (Quat.Unknown, other) => Some(other)
-      case (Quat.Null, other) => Some(other)
-      case (other, Quat.Generic) => Some(other)
-      case (other, Quat.Unknown) => Some(other)
-      case (other, Quat.Null) => Some(other)
-      case (Quat.Value, Quat.Value) => Some(Quat.Value)
+      case (Quat.Generic, other)                            => Some(other)
+      case (Quat.Unknown, other)                            => Some(other)
+      case (Quat.Null, other)                               => Some(other)
+      case (other, Quat.Generic)                            => Some(other)
+      case (other, Quat.Unknown)                            => Some(other)
+      case (other, Quat.Null)                               => Some(other)
+      case (Quat.Value, Quat.Value)                         => Some(Quat.Value)
       case (Quat.BooleanExpression, Quat.BooleanExpression) => Some(Quat.BooleanExpression)
-      case (Quat.BooleanValue, Quat.BooleanValue) => Some(Quat.BooleanValue)
-      case (Quat.BooleanValue, Quat.BooleanExpression) => Some(Quat.BooleanValue)
-      case (Quat.BooleanExpression, Quat.BooleanValue) => Some(Quat.BooleanValue)
-      case (Quat.Value, Quat.BooleanValue) => Some(Quat.Value)
-      case (Quat.Value, Quat.BooleanExpression) => Some(Quat.Value)
-      case (Quat.BooleanValue, Quat.Value) => Some(Quat.Value)
-      case (Quat.BooleanExpression, Quat.Value) => Some(Quat.Value)
-      case (me: Quat.Product, other: Quat.Product) => me.leastUpperTypeProduct(other)
-      case (_, _) => None
+      case (Quat.BooleanValue, Quat.BooleanValue)           => Some(Quat.BooleanValue)
+      case (Quat.BooleanValue, Quat.BooleanExpression)      => Some(Quat.BooleanValue)
+      case (Quat.BooleanExpression, Quat.BooleanValue)      => Some(Quat.BooleanValue)
+      case (Quat.Value, Quat.BooleanValue)                  => Some(Quat.Value)
+      case (Quat.Value, Quat.BooleanExpression)             => Some(Quat.Value)
+      case (Quat.BooleanValue, Quat.Value)                  => Some(Quat.Value)
+      case (Quat.BooleanExpression, Quat.Value)             => Some(Quat.Value)
+      case (me: Quat.Product, other: Quat.Product)          => me.leastUpperTypeProduct(other)
+      case (_, _)                                           => None
     }
-  }
 
   override def toString: String = shortString
 
   def shortString: String = this match {
-    case p @ Quat.Product(fields) => s"CC${if (p.tpe == Quat.Product.Type.Abstract) "A" else ""}(${
-      fields.map {
-        case (k, v) => k + (v match {
-          case other => ":" + other.shortString
-        })
-      }.mkString(",")
-    })${
-      (if (this.renames.isEmpty)
-        ""
-      else
-        s"[${this.renames.map { case (k, v) => k + "->" + v }.mkString(",")}]")
-    }"
-    case Quat.Generic           => "<G>"
-    case Quat.Unknown           => "<U>"
-    case Quat.Value             => "V"
-    case Quat.Null              => "N"
-    case Quat.BooleanValue      => "BV"
-    case Quat.BooleanExpression => "BE"
+    case p @ Quat.Product(fields) =>
+      s"CC${if (p.tpe == Quat.Product.Type.Abstract) "A" else ""}(${fields
+        .map { case (k, v) =>
+          k + (v match {
+            case other => ":" + other.shortString
+          })
+        }
+        .mkString(",")})${(if (this.renames.isEmpty)
+                             ""
+                           else
+                             s"[${this.renames.map { case (k, v) => k + "->" + v }.mkString(",")}]")}"
+    case Quat.Generic             => "<G>"
+    case Quat.Unknown             => "<U>"
+    case Quat.Value               => "V"
+    case Quat.Null                => "N"
+    case Quat.BooleanValue        => "BV"
+    case Quat.BooleanExpression   => "BE"
   }
 
   /** What was the value of a given property before it was renamed (i.e. looks up the value of the Renames hash) */
@@ -118,18 +119,24 @@ sealed trait Quat {
       // if we did that however, we would need to make sure to warn a user of two things are renamed to the same property however,
       // that kind of warning should probably exist already
       renames.find(_._2 == fieldName).headOption.map(_._2)
-    case (other, fieldName) =>
+    case (other, fieldName)            =>
       QuatException(s"The post-rename field '${fieldName}' does not exist in an SQL-level type ${other}")
   }
 
-  def lookup(path: String): Quat = (this, path) match {
+  def lookup(path: String): Quat       = (this, path) match {
     case (cc @ Quat.Product(fields), fieldName) =>
       fields.get(fieldName).getOrElse {
-        io.getquill.util.Messages.trace(s"The field '${fieldName}' does not exist in an SQL-level type ${cc}. Assuming it's type is Quat.Unknown.", traceType = TraceType.Warning)
+        io.getquill.util.Messages.trace(
+          s"The field '${fieldName}' does not exist in an SQL-level type ${cc}. Assuming it's type is Quat.Unknown.",
+          traceType = TraceType.Warning
+        )
         Quat.Unknown
       }
-    case (other, fieldName) =>
-      io.getquill.util.Messages.trace(s"The field '${fieldName}' does not exist in an SQL-level type ${other}. Assuming it's type is Quat.Unknown.", traceType = TraceType.Warning)
+    case (other, fieldName)                     =>
+      io.getquill.util.Messages.trace(
+        s"The field '${fieldName}' does not exist in an SQL-level type ${other}. Assuming it's type is Quat.Unknown.",
+        traceType = TraceType.Warning
+      )
       Quat.Unknown
   }
   def lookup(list: List[String]): Quat =
@@ -143,9 +150,12 @@ object Quat {
   import LinkedHashMapOps._
 
   def fromSerializedJVM(serial: String): Quat = KryoQuatSerializer.deserialize(serial)
-  def fromSerializedJS(serial: String): Quat = BooQuatSerializer.deserialize(serial)
+  def fromSerializedJS(serial: String): Quat  = BooQuatSerializer.deserialize(serial)
 
-  class Product(val fields: mutable.LinkedHashMap[String, Quat], override val renames: mutable.LinkedHashMap[String, String], val tpe: Quat.Product.Type) extends Quat {
+  class Product(val fields: mutable.LinkedHashMap[String, Quat],
+                override val renames: mutable.LinkedHashMap[String, String],
+                val tpe: Quat.Product.Type
+  ) extends Quat {
     private val id = Product.Id(fields)
 
     override def equals(that: Any) =
@@ -156,26 +166,30 @@ object Quat {
 
     override def hashCode = id.hashCode()
 
-    def copy(fields: mutable.LinkedHashMap[String, Quat] = this.fields, renames: mutable.LinkedHashMap[String, String] = this.renames, tpe: Quat.Product.Type = this.tpe) =
+    def copy(fields: mutable.LinkedHashMap[String, Quat] = this.fields,
+             renames: mutable.LinkedHashMap[String, String] = this.renames,
+             tpe: Quat.Product.Type = this.tpe
+    ) =
       new Product(fields, renames, tpe)
 
-    def withRenamesFrom(other: Quat): Quat = {
+    def withRenamesFrom(other: Quat): Quat =
       other match {
         case otherProduct: Quat.Product =>
           val newFields =
-            fields.map {
-              case (key, value) =>
+            fields
+              .map { case (key, value) =>
                 otherProduct.fields.find(_._1 == key).map { case (ok, ov) => (key, ov, value) }.toRight((key, value))
-            }.map {
-              // If the other Quat.Product does not have this field, don't rename it, just return it as is
-              case Left((key, value))                       => (key, value)
-              // If the other Quat.Product has this field and the value of that field is also a product, recurse into it
-              case Right((key, from: Product, to: Product)) => (key, to.withRenamesFrom(from))
-              // If the value of the other field is not a product, just return the original field/value
-              case Right((key, _, to))                      => (key, to)
-            }
+              }
+              .map {
+                // If the other Quat.Product does not have this field, don't rename it, just return it as is
+                case Left((key, value))                       => (key, value)
+                // If the other Quat.Product has this field and the value of that field is also a product, recurse into it
+                case Right((key, from: Product, to: Product)) => (key, to.withRenamesFrom(from))
+                // If the value of the other field is not a product, just return the original field/value
+                case Right((key, _, to))                      => (key, to)
+              }
           // Pass in the local renames from the other quat product)
-          val newTpe =
+          val newTpe    =
             if (this.tpe == Product.Type.Abstract || otherProduct.tpe == Product.Type.Abstract)
               Product.Type.Abstract
             else
@@ -184,17 +198,18 @@ object Quat {
 
         case _ => this
       }
-    }
 
     def leastUpperTypeProduct(other: Quat.Product): Option[Quat.Product] = {
       val newFieldsIter =
-        fields.zipWith(other.fields) {
-          case (key, thisQuat, Some(otherQuat)) => (key, thisQuat.leastUpperType(otherQuat))
-        }.collect {
-          case (key, Some(value)) => (key, value)
-        }
-      val newFields = mutable.LinkedHashMap(newFieldsIter.toList: _*)
-      val newTpe =
+        fields
+          .zipWith(other.fields) { case (key, thisQuat, Some(otherQuat)) =>
+            (key, thisQuat.leastUpperType(otherQuat))
+          }
+          .collect { case (key, Some(value)) =>
+            (key, value)
+          }
+      val newFields     = mutable.LinkedHashMap(newFieldsIter.toList: _*)
+      val newTpe        =
         if (this.tpe == Product.Type.Abstract || other.tpe == Product.Type.Abstract)
           Product.Type.Abstract
         else
@@ -211,21 +226,22 @@ object Quat {
       this.copy(tpe = tpe)
 
     override def withRenames(renames: List[(String, String)]): Quat.Product =
-      Product.WithRenames(tpe, fields, (mutable.LinkedHashMap[String, String]() ++ renames): mutable.LinkedHashMap[String, String])
+      Product.WithRenames(tpe,
+                          fields,
+                          (mutable.LinkedHashMap[String, String]() ++ renames): mutable.LinkedHashMap[String, String]
+      )
 
-    /**
-     * Rename the properties based on the renames list. Keep this list
-     * around since it is used in sql sub-query expansion to determine whether
-     * the property is fixed or not (i.e. whether the column naming strategy should
-     * be applied to it).
-     */
+    /** Rename the properties based on the renames list. Keep this list
+      * around since it is used in sql sub-query expansion to determine whether
+      * the property is fixed or not (i.e. whether the column naming strategy should
+      * be applied to it).
+      */
     override def applyRenames: Quat.Product = {
-      val newFields = fields.map {
-        case (f, q) =>
-          // Rename properties of this quat and rename it's children recursively
-          val newKey = renames.get(f).getOrElse(f)
-          val newValue = q.applyRenames
-          (newKey, newValue)
+      val newFields = fields.map { case (f, q) =>
+        // Rename properties of this quat and rename it's children recursively
+        val newKey   = renames.get(f).getOrElse(f)
+        val newValue = q.applyRenames
+        (newKey, newValue)
       }
       Product.WithRenames(tpe, newFields, renames)
     }
@@ -237,47 +253,56 @@ object Quat {
     case class Id(fields: mutable.LinkedHashMap[String, Quat])
 
     def fromSerializedJVM(serial: String): Quat.Product = KryoQuatSerializer.deserialize(serial).probit
-    def fromSerializedJS(serial: String): Quat.Product = BooQuatSerializer.deserialize(serial).probit
+    def fromSerializedJS(serial: String): Quat.Product  = BooQuatSerializer.deserialize(serial).probit
 
     def empty = new Quat.Product(mutable.LinkedHashMap(), mutable.LinkedHashMap(), Type.Concrete)
 
-    def apply(fields: (String, Quat)*): Quat.Product = new Quat.Product(mutable.LinkedHashMap[String, Quat]() ++ fields.iterator, mutable.LinkedHashMap(), Type.Concrete)
-    def apply(tpe: Type, fields: (String, Quat)*): Quat.Product = new Quat.Product(mutable.LinkedHashMap[String, Quat]() ++ fields.iterator, mutable.LinkedHashMap(), tpe)
+    def apply(fields: (String, Quat)*): Quat.Product            =
+      new Quat.Product(mutable.LinkedHashMap[String, Quat]() ++ fields.iterator, mutable.LinkedHashMap(), Type.Concrete)
+    def apply(tpe: Type, fields: (String, Quat)*): Quat.Product =
+      new Quat.Product(mutable.LinkedHashMap[String, Quat]() ++ fields.iterator, mutable.LinkedHashMap(), tpe)
 
-    def apply(fields: Iterable[(String, Quat)]): Quat.Product = new Quat.Product(mutable.LinkedHashMap[String, Quat]() ++ fields.iterator, mutable.LinkedHashMap(), Type.Concrete)
-    def apply(tpe: Type, fields: Iterable[(String, Quat)]): Quat.Product = new Quat.Product(mutable.LinkedHashMap[String, Quat]() ++ fields.iterator, mutable.LinkedHashMap(), tpe)
+    def apply(fields: Iterable[(String, Quat)]): Quat.Product            =
+      new Quat.Product(mutable.LinkedHashMap[String, Quat]() ++ fields.iterator, mutable.LinkedHashMap(), Type.Concrete)
+    def apply(tpe: Type, fields: Iterable[(String, Quat)]): Quat.Product =
+      new Quat.Product(mutable.LinkedHashMap[String, Quat]() ++ fields.iterator, mutable.LinkedHashMap(), tpe)
 
-    def apply(fields: Iterator[(String, Quat)]): Quat.Product = new Quat.Product(mutable.LinkedHashMap[String, Quat]() ++ fields, mutable.LinkedHashMap(), Type.Concrete)
-    def apply(tpe: Type, fields: Iterator[(String, Quat)]): Quat.Product = new Quat.Product(mutable.LinkedHashMap[String, Quat]() ++ fields, mutable.LinkedHashMap(), tpe)
+    def apply(fields: Iterator[(String, Quat)]): Quat.Product            =
+      new Quat.Product(mutable.LinkedHashMap[String, Quat]() ++ fields, mutable.LinkedHashMap(), Type.Concrete)
+    def apply(tpe: Type, fields: Iterator[(String, Quat)]): Quat.Product =
+      new Quat.Product(mutable.LinkedHashMap[String, Quat]() ++ fields, mutable.LinkedHashMap(), tpe)
 
-    def apply(fields: mutable.LinkedHashMap[String, Quat]): Quat.Product = new Quat.Product(fields, mutable.LinkedHashMap(), Type.Concrete)
-    def apply(tpe: Type, fields: mutable.LinkedHashMap[String, Quat]): Quat.Product = new Quat.Product(fields, mutable.LinkedHashMap(), tpe)
+    def apply(fields: mutable.LinkedHashMap[String, Quat]): Quat.Product            =
+      new Quat.Product(fields, mutable.LinkedHashMap(), Type.Concrete)
+    def apply(tpe: Type, fields: mutable.LinkedHashMap[String, Quat]): Quat.Product =
+      new Quat.Product(fields, mutable.LinkedHashMap(), tpe)
 
     def unapply(p: Quat.Product): Option[mutable.LinkedHashMap[String, Quat]] = Some(p.fields)
 
-    /**
-     * Since Product-Quats can be a representation of abstract product types (e.g. abstract classes, traits, etc...)
-     * in some cases we need to keep track of this information in order to know that the present product type does not have all of the needed fields.
-     * Currently, this is only really possible in quill-spark where resolution of T (of Query[T]) can be a different class during compile-time
-     * and run-type while still having a static-query (since dataframes are lifted via the liftQuery construct that has this unique property, I do not
-     * believe that this is currently possible with the standard query[T] method).
-     * As outlined in the TypeMemberJoinSpec, there are certain situations where the contents of an `Ident(a)` are not entirely known and the ident
-     * needs to be expanded as either `struct(a.*)` or just `a.*` depending on the situation.
-     */
+    /** Since Product-Quats can be a representation of abstract product types (e.g. abstract classes, traits, etc...)
+      * in some cases we need to keep track of this information in order to know that the present product type does not have all of the needed fields.
+      * Currently, this is only really possible in quill-spark where resolution of T (of Query[T]) can be a different class during compile-time
+      * and run-type while still having a static-query (since dataframes are lifted via the liftQuery construct that has this unique property, I do not
+      * believe that this is currently possible with the standard query[T] method).
+      * As outlined in the TypeMemberJoinSpec, there are certain situations where the contents of an `Ident(a)` are not entirely known and the ident
+      * needs to be expanded as either `struct(a.*)` or just `a.*` depending on the situation.
+      */
     sealed trait Type
     object Type {
       case object Abstract extends Type
       case object Concrete extends Type
     }
 
-    /**
-     * Add staged renames to the Quat. Note that renames should
-     * explicit NOT be counted as part of the Type indicated by the Quat
-     * since it is typical to beta reduce a Quat without renames to a Quat with them
-     * (see `PropagateRenames` for more detail)
-     */
+    /** Add staged renames to the Quat. Note that renames should
+      * explicit NOT be counted as part of the Type indicated by the Quat
+      * since it is typical to beta reduce a Quat without renames to a Quat with them
+      * (see `PropagateRenames` for more detail)
+      */
     object WithRenames {
-      def apply(tpe: Quat.Product.Type, fields: mutable.LinkedHashMap[String, Quat], theRenames: mutable.LinkedHashMap[String, String]) =
+      def apply(tpe: Quat.Product.Type,
+                fields: mutable.LinkedHashMap[String, Quat],
+                theRenames: mutable.LinkedHashMap[String, String]
+      ) =
         new Product(fields, theRenames, tpe)
 
       def iterated(tpe: Quat.Product.Type, list: Iterator[(String, Quat)], renames: Iterator[(String, String)]) =
@@ -307,15 +332,17 @@ object Quat {
       }
 
       def unapply(p: Quat.Product) = {
-        val (fields, values) = p.fields.unzip
+        val (fields, values)         = p.fields.unzip
         val (renamesFrom, renamesTo) = p.renames.unzip
         Some((p.tpe, fields, values, renamesFrom, renamesTo))
       }
     }
   }
-  object Tuple {
-    def apply(fields: Quat*): Quat.Product = apply(fields)
-    def apply(fields: Iterable[Quat]): Quat.Product = Quat.Product(fields.zipWithIndex.map { case (f, i) => (s"_${i + 1}", f) }.iterator)
+  object Tuple   {
+    def apply(fields: Quat*): Quat.Product          = apply(fields)
+    def apply(fields: Iterable[Quat]): Quat.Product = Quat.Product(fields.zipWithIndex.map { case (f, i) =>
+      (s"_${i + 1}", f)
+    }.iterator)
   }
   case object Null extends Quat {
     override def withRenames(renames: mutable.LinkedHashMap[String, String]) = this
@@ -341,21 +368,20 @@ object Quat {
     override def isPrimitive = true
   }
 
-  case object Value extends Primitive with NoRenames
+  case object Value    extends Primitive with NoRenames
   sealed trait Boolean extends Primitive
 
-  case object BooleanValue extends Boolean with NoRenames
+  case object BooleanValue      extends Boolean with NoRenames
   case object BooleanExpression extends Boolean with NoRenames
 
   protected trait NoRenames {
     this: Quat =>
 
     /** Should not be able to rename properties on a value node, turns into a error of the array is not null */
-    override def withRenames(renames: mutable.LinkedHashMap[String, String]): Quat = {
+    override def withRenames(renames: mutable.LinkedHashMap[String, String]): Quat =
       if (renames.isEmpty)
         this
       else
         QuatException(s"Renames $renames cannot be applied to a value SQL-level type")
-    }
   }
 }

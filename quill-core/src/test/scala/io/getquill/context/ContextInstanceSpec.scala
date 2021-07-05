@@ -19,7 +19,7 @@ class ContextInstanceSpec extends Spec {
     "context-based" - {
       "encoding" in {
         implicit val testToString = MappedEncoding[StringValue, String](_.s)
-        val q = quote {
+        val q                     = quote {
           query[Entity].insert(_.s -> lift(StringValue("s")))
         }
         testContext.run(q).prepareRow mustEqual Row("s")
@@ -27,7 +27,7 @@ class ContextInstanceSpec extends Spec {
 
       "decoding" in {
         implicit val stringToTest = MappedEncoding[String, StringValue](StringValue)
-        val q = quote {
+        val q                     = quote {
           query[Entity]
         }
         testContext.run(q).extractor(Row("s")) mustEqual Entity(StringValue("s"))
@@ -37,7 +37,7 @@ class ContextInstanceSpec extends Spec {
       import io.getquill.MappedEncoding
       "encoding" in {
         implicit val testToString = MappedEncoding[StringValue, String](_.s)
-        val q = quote {
+        val q                     = quote {
           query[Entity].insert(_.s -> lift(StringValue("s")))
         }
         testContext.run(q).prepareRow mustEqual Row("s")
@@ -45,7 +45,7 @@ class ContextInstanceSpec extends Spec {
 
       "decoding" in {
         implicit val stringToTest = MappedEncoding[String, StringValue](StringValue)
-        val q = quote {
+        val q                     = quote {
           query[Entity]
         }
         testContext.run(q).extractor(Row("s")) mustEqual Entity(StringValue("s"))

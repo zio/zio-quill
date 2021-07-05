@@ -52,14 +52,12 @@ trait CaseClassQuerySpec extends Spec {
     ContactSimplified("Cora", "Jasper", 33)
   )
 
-  val `Ex 2 Single-Record Join` =
+  val `Ex 2 Single-Record Join`                 =
     quote {
       for {
         p <- query[Contact]
         a <- query[Address] if p.addressFk == a.id
-      } yield {
-        new AddressableContact(p.firstName, p.lastName, p.age, a.street, a.zip)
-      }
+      } yield new AddressableContact(p.firstName, p.lastName, p.age, a.street, a.zip)
     }
   val `Ex 2 Single-Record Join expected result` = List(
     AddressableContact("Alex", "Jones", 60, "456 Old Street", 45678),

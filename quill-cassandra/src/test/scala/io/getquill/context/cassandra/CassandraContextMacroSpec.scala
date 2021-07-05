@@ -10,7 +10,7 @@ class CassandraContextMacroSpec extends Spec {
 
   "runs queries" - {
     "static" in {
-      val q = quote {
+      val q      = quote {
         qr1.filter(t => t.i == lift(1))
       }
       val mirror = mirrorContext.run(q)
@@ -21,7 +21,7 @@ class CassandraContextMacroSpec extends Spec {
       val q: Quoted[Query[TestEntity]] = quote {
         qr1.filter(t => t.i == lift(1))
       }
-      val mirror = mirrorContext.run(q)
+      val mirror                       = mirrorContext.run(q)
       mirror.string mustEqual "SELECT s, i, l, o, b FROM TestEntity WHERE i = ?"
       mirror.prepareRow mustEqual Row(1)
     }
@@ -30,7 +30,7 @@ class CassandraContextMacroSpec extends Spec {
   "probes queries" in {
     val ctx = new CassandraMirrorContextWithQueryProbing
     import ctx._
-    val q = quote {
+    val q   = quote {
       query[TestEntity].filter(_.s == "fail")
     }
     "ctx.run(q)" mustNot compile
@@ -38,7 +38,7 @@ class CassandraContextMacroSpec extends Spec {
 
   "binds inputs according to the cql terms order" - {
     "filter.update" in {
-      val q = quote {
+      val q      = quote {
         qr1.filter(t => t.i == lift(1)).update(t => t.l -> lift(2L))
       }
       val mirror = mirrorContext.run(q)
@@ -46,7 +46,7 @@ class CassandraContextMacroSpec extends Spec {
       mirror.prepareRow mustEqual Row(2L, 1)
     }
     "filter.map" in {
-      val q = quote {
+      val q      = quote {
         qr1.filter(t => t.i == lift(1)).map(t => lift(2L))
       }
       val mirror = mirrorContext.run(q)

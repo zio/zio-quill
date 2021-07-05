@@ -1,10 +1,10 @@
 package io.getquill.util
 
-import io.getquill.util.Messages.{ debugEnabled, prettyPrint }
+import io.getquill.util.Messages.{debugEnabled, prettyPrint}
 import io.getquill.idiom.Idiom
 import io.getquill.util.IndentUtil._
 
-import scala.reflect.macros.blackbox.{ Context => MacroContext }
+import scala.reflect.macros.blackbox.{Context => MacroContext}
 
 object MacroContextExt {
 
@@ -22,7 +22,7 @@ object MacroContextExt {
     def query(queryString: String, idiom: Idiom): Unit = {
       val formatted =
         if (prettyPrint) idiom.format(queryString) else queryString
-      val output =
+      val output    =
         if (formatted.fitsOnOneLine)
           formatted
         else

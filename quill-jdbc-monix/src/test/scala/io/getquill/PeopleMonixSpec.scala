@@ -18,6 +18,6 @@ trait PeopleMonixSpec extends PeopleSpec {
       .firstL
       .runSyncUnsafe()
 
-  val `Ex 11 query` = quote(query[Person])
+  val `Ex 11 query`    = quote(query[Person])
   val `Ex 11 expected` = peopleEntries
 }

@@ -3,7 +3,7 @@ package io.getquill
 import io.getquill.ZioTestUtil._
 import io.getquill.context.ZioJdbc._
 import io.getquill.util.LoadConfig
-import zio.{ Has, Task }
+import zio.{Has, Task}
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -29,20 +29,24 @@ class ResultSetIteratorSpec extends ZioSpec {
 
   override def beforeAll = {
     super.beforeAll()
-    ctx.transaction {
-      for {
-        _ <- ctx.run(query[Person].delete)
-        _ <- ctx.run(liftQuery(peopleEntries).foreach(p => peopleInsert(p)))
-      } yield ()
-    }.onDataSource.provide(Has(pool)).defaultRun
+    ctx
+      .transaction {
+        for {
+          _ <- ctx.run(query[Person].delete)
+          _ <- ctx.run(liftQuery(peopleEntries).foreach(p => peopleInsert(p)))
+        } yield ()
+      }
+      .onDataSource
+      .provide(Has(pool))
+      .defaultRun
   }
 
   "traverses correctly" in {
     val results =
       Task(ds.getConnection).bracketAuto { conn =>
         Task {
-          val stmt = conn.prepareStatement("select * from person")
-          val rs = new ResultSetIterator[String](stmt.executeQuery(), extractor = (rs) => { rs.getString(1) })
+          val stmt  = conn.prepareStatement("select * from person")
+          val rs    = new ResultSetIterator[String](stmt.executeQuery(), extractor = rs => { rs.getString(1) })
           val accum = ArrayBuffer[String]()
           while (rs.hasNext) accum += rs.next()
           accum
@@ -57,7 +61,7 @@ class ResultSetIteratorSpec extends ZioSpec {
       Task(ds.getConnection).bracketAuto { conn =>
         Task {
           val stmt = conn.prepareStatement("select * from person where name = 'Alex'")
-          val rs = new ResultSetIterator(stmt.executeQuery(), extractor = (rs) => { rs.getString(1) })
+          val rs   = new ResultSetIterator(stmt.executeQuery(), extractor = rs => { rs.getString(1) })
           rs.head
         }
       }.defaultRun

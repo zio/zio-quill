@@ -11,7 +11,7 @@ class SqlIdiomOptionCompareSpec extends Spec {
 
   "strictly checks non-ansi option operation" - {
     import io.getquill.context.sql.nonAnsiTestContext._
-    import io.getquill.context.sql.{ nonAnsiTestContext => testContext }
+    import io.getquill.context.sql.{nonAnsiTestContext => testContext}
 
     "Option == Option(constant)" in {
       val q = quote {
@@ -161,7 +161,9 @@ class SqlIdiomOptionCompareSpec extends Spec {
       }
       "exists with null-check" in {
         val q = quote {
-          query[TestEntity].filter(t => t.optionalEmbedded.exists(_.optionalValue.exists(v => if (v == 1) true else false)))
+          query[TestEntity].filter(t =>
+            t.optionalEmbedded.exists(_.optionalValue.exists(v => if (v == 1) true else false))
+          )
         }
 
         testContext.run(q).string mustEqual
@@ -177,7 +179,9 @@ class SqlIdiomOptionCompareSpec extends Spec {
       }
       "forall with null-check" in {
         val q = quote {
-          query[TestEntity].filter(t => t.optionalEmbedded.exists(_.optionalValue.forall(v => if (v == 1) true else false)))
+          query[TestEntity].filter(t =>
+            t.optionalEmbedded.exists(_.optionalValue.forall(v => if (v == 1) true else false))
+          )
         }
 
         testContext.run(q).string mustEqual
@@ -338,7 +342,9 @@ class SqlIdiomOptionCompareSpec extends Spec {
       }
       "exists with null-check" in {
         val q = quote {
-          query[TestEntity].filter(t => t.optionalEmbedded.exists(_.optionalValue.exists(v => if (v == 1) true else false)))
+          query[TestEntity].filter(t =>
+            t.optionalEmbedded.exists(_.optionalValue.exists(v => if (v == 1) true else false))
+          )
         }
 
         testContext.run(q).string mustEqual
@@ -354,7 +360,9 @@ class SqlIdiomOptionCompareSpec extends Spec {
       }
       "forall with null-check" in {
         val q = quote {
-          query[TestEntity].filter(t => t.optionalEmbedded.exists(_.optionalValue.forall(v => if (v == 1) true else false)))
+          query[TestEntity].filter(t =>
+            t.optionalEmbedded.exists(_.optionalValue.forall(v => if (v == 1) true else false))
+          )
         }
 
         testContext.run(q).string mustEqual

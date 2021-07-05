@@ -22,18 +22,18 @@ case class FlattenGroupByAggregation(agg: Ident) extends StatelessTransformer {
 
   override def apply(ast: Ast) =
     ast match {
-      case q: Query if (isGroupByAggregation(q)) =>
+      case q: Query if isGroupByAggregation(q) =>
         q match {
           case Aggregation(op, Map(`agg`, ident, body)) =>
             Aggregation(op, BetaReduction(body, ident -> agg))
-          case Map(`agg`, ident, body) =>
+          case Map(`agg`, ident, body)                  =>
             BetaReduction(body, ident -> agg)
-          case q @ Aggregation(op, `agg`) =>
+          case q @ Aggregation(op, `agg`)               =>
             q
-          case other =>
+          case other                                    =>
             fail(s"Invalid group by aggregation: '$other'")
         }
-      case other =>
+      case other                               =>
         super.apply(other)
     }
 

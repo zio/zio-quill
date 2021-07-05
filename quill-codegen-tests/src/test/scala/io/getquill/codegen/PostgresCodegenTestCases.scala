@@ -18,7 +18,7 @@ class PostgresCodegenTestCases extends CodegenSpec {
 
       val results = ctx.run(query[Person].filter(_.age > 11)).toSeq
       results should contain theSameElementsAs
-        (List(Person(1, "Joe", "Bloggs", 22), Person(2, "Jack", "Ripper", 33)))
+        List(Person(1, "Joe", "Bloggs", 22), Person(2, "Jack", "Ripper", 33))
     }
     "use trivial literal schema" in WithContext[Prefix, `2-simple-literal`].run { ctx =>
       import `2-simple-literal-lib`.public._
@@ -26,7 +26,7 @@ class PostgresCodegenTestCases extends CodegenSpec {
 
       val results = ctx.run(query[Person].filter(_.age > 11)).toSeq
       results should contain theSameElementsAs
-        (List(Person(1, "Joe", "Bloggs", 22), Person(2, "Jack", "Ripper", 33)))
+        List(Person(1, "Joe", "Bloggs", 22), Person(2, "Jack", "Ripper", 33))
     }
   }
 
@@ -44,28 +44,24 @@ class PostgresCodegenTestCases extends CodegenSpec {
     "2-comp-stereo-single" in WithContext[Prefix, `2-comp-stereo-single`].run { ctx =>
       import `2-comp-stereo-single-lib`.public._
       import ctx._
-      (ctx.run(PersonDao.query.filter(_.age > 11))) should contain theSameElementsAs
-        (List(
+      ctx.run(PersonDao.query.filter(_.age > 11)) should contain theSameElementsAs
+        List(
           Person(1, "Joe", "Bloggs", 22),
           Person(2, "Jack", "Ripper", 33)
-        ))
+        )
     }
 
     "3-comp-stereo-oneschema" in WithContext[Prefix, `3-comp-stereo-oneschema`].run { ctx =>
       import `3-comp-stereo-oneschema-lib`.public._
       import ctx._
 
-      (ctx.run(PublicSchema.PersonDao.alphaPerson.filter(_.age > 11))) should contain theSameElementsAs (
-        List(
-          Person(1, "Joe", "Bloggs", 22, 55L, "Wonkles"),
-          Person(2, "Jack", "Ripper", 33, 66L, "Ginkles")
-        )
+      ctx.run(PublicSchema.PersonDao.alphaPerson.filter(_.age > 11)) should contain theSameElementsAs List(
+        Person(1, "Joe", "Bloggs", 22, 55L, "Wonkles"),
+        Person(2, "Jack", "Ripper", 33, 66L, "Ginkles")
       )
-      (ctx.run(PublicSchema.AddressDao.publicAddress.filter(_.personFk == 1))) should contain theSameElementsAs (
-        List(
-          Address(1, "123 Someplace", 1001),
-          Address(1, "678 Blah", 2002)
-        )
+      ctx.run(PublicSchema.AddressDao.publicAddress.filter(_.personFk == 1)) should contain theSameElementsAs List(
+        Address(1, "123 Someplace", 1001),
+        Address(1, "678 Blah", 2002)
       )
     }
 
@@ -74,17 +70,13 @@ class PostgresCodegenTestCases extends CodegenSpec {
       import `4-comp-stereo-twoschema-lib`.public._
       import ctx._
 
-      (ctx.run(PersonDao.alphaPerson.filter(_.age > 11))) should contain theSameElementsAs (
-        List(
-          Person(1, "Joe", "Bloggs", 22, 55L, "Wonkles"),
-          Person(2, "Jack", "Ripper", 33, 66L, "Ginkles")
-        )
+      ctx.run(PersonDao.alphaPerson.filter(_.age > 11)) should contain theSameElementsAs List(
+        Person(1, "Joe", "Bloggs", 22, 55L, "Wonkles"),
+        Person(2, "Jack", "Ripper", 33, 66L, "Ginkles")
       )
-      (ctx.run(AddressDao.publicAddress.filter(_.personFk == 1))) should contain theSameElementsAs (
-        List(
-          Address(1, "123 Someplace", 1001),
-          Address(1, "678 Blah", 2002)
-        )
+      ctx.run(AddressDao.publicAddress.filter(_.personFk == 1)) should contain theSameElementsAs List(
+        Address(1, "123 Someplace", 1001),
+        Address(1, "678 Blah", 2002)
       )
     }
 
@@ -93,17 +85,13 @@ class PostgresCodegenTestCases extends CodegenSpec {
       import `5-comp-non-stereo-allschema-lib`.public._
       import ctx._
 
-      (ctx.run(ctx.AlphaSchema.PersonDao.query.filter(_.age > 11))) should contain theSameElementsAs (
-        List(
-          Person(1, "Joe", "Bloggs", 22, "blah", 55, "Wonkles"),
-          Person(2, "Jack", "Ripper", 33, "blah", 66, "Ginkles")
-        )
+      ctx.run(ctx.AlphaSchema.PersonDao.query.filter(_.age > 11)) should contain theSameElementsAs List(
+        Person(1, "Joe", "Bloggs", 22, "blah", 55, "Wonkles"),
+        Person(2, "Jack", "Ripper", 33, "blah", 66, "Ginkles")
       )
-      (ctx.run(ctx.PublicSchema.AddressDao.query.filter(_.personFk == 1))) should contain theSameElementsAs (
-        List(
-          Address(1, "123 Someplace", 1001),
-          Address(1, "678 Blah", 2002)
-        )
+      ctx.run(ctx.PublicSchema.AddressDao.query.filter(_.personFk == 1)) should contain theSameElementsAs List(
+        Address(1, "123 Someplace", 1001),
+        Address(1, "678 Blah", 2002)
       )
     }
   }

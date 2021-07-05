@@ -1,6 +1,6 @@
 package io.getquill.quat
 
-import io.getquill.ast.{ Ast, Ident, Property }
+import io.getquill.ast.{Ast, Ident, Property}
 
 object QuatNestingHelper {
   def valueQuat(quat: Quat): Quat =
@@ -12,12 +12,12 @@ object QuatNestingHelper {
 
   def valuefyQuatInProperty(ast: Ast): Ast =
     ast match {
-      case Property(id: Ident, name) =>
+      case Property(id: Ident, name)      =>
         val newQuat = valueQuat(id.quat) // Force quat value recomputation for better performance
         Property(id.copy(quat = newQuat), name)
       case Property(prop: Property, name) =>
         Property(valuefyQuatInProperty(prop), name)
-      case other =>
+      case other                          =>
         other
     }
 }

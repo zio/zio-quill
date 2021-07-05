@@ -4,7 +4,7 @@ import com.datastax.driver.core.LocalDate
 import io.getquill.context.cassandra.CassandraBaseContext
 
 import java.nio.ByteBuffer
-import java.util.{ Date, UUID }
+import java.util.{Date, UUID}
 
 trait Encoders extends CollectionEncoders {
   this: CassandraBaseContext[_] =>
@@ -35,19 +35,19 @@ trait Encoders extends CollectionEncoders {
   implicit def mappedEncoder[I, O](implicit mapped: MappedEncoding[I, O], encoder: Encoder[O]): Encoder[I] =
     CassandraEncoder(mappedBaseEncoder(mapped, encoder.encoder))
 
-  implicit val stringEncoder: Encoder[String] = encoder(_.setString)
-  implicit val bigDecimalEncoder: Encoder[BigDecimal] =
+  implicit val stringEncoder: Encoder[String]                = encoder(_.setString)
+  implicit val bigDecimalEncoder: Encoder[BigDecimal]        =
     encoder((index, value, row) => row.setDecimal(index, value.bigDecimal))
-  implicit val booleanEncoder: Encoder[Boolean] = encoder(_.setBool)
-  implicit val byteEncoder: Encoder[Byte] = encoder(_.setByte)
-  implicit val shortEncoder: Encoder[Short] = encoder(_.setShort)
-  implicit val intEncoder: Encoder[Int] = encoder(_.setInt)
-  implicit val longEncoder: Encoder[Long] = encoder(_.setLong)
-  implicit val floatEncoder: Encoder[Float] = encoder(_.setFloat)
-  implicit val doubleEncoder: Encoder[Double] = encoder(_.setDouble)
-  implicit val byteArrayEncoder: Encoder[Array[Byte]] =
+  implicit val booleanEncoder: Encoder[Boolean]              = encoder(_.setBool)
+  implicit val byteEncoder: Encoder[Byte]                    = encoder(_.setByte)
+  implicit val shortEncoder: Encoder[Short]                  = encoder(_.setShort)
+  implicit val intEncoder: Encoder[Int]                      = encoder(_.setInt)
+  implicit val longEncoder: Encoder[Long]                    = encoder(_.setLong)
+  implicit val floatEncoder: Encoder[Float]                  = encoder(_.setFloat)
+  implicit val doubleEncoder: Encoder[Double]                = encoder(_.setDouble)
+  implicit val byteArrayEncoder: Encoder[Array[Byte]]        =
     encoder((index, value, row) => row.setBytes(index, ByteBuffer.wrap(value)))
-  implicit val uuidEncoder: Encoder[UUID] = encoder(_.setUUID)
-  implicit val timestampEncoder: Encoder[Date] = encoder(_.setTimestamp)
+  implicit val uuidEncoder: Encoder[UUID]                    = encoder(_.setUUID)
+  implicit val timestampEncoder: Encoder[Date]               = encoder(_.setTimestamp)
   implicit val cassandraLocalDateEncoder: Encoder[LocalDate] = encoder(_.setDate)
 }
