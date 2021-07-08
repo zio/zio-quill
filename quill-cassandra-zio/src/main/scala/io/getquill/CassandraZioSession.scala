@@ -1,11 +1,9 @@
 package io.getquill
 
-import com.datastax.driver.core.{ BoundStatement, Cluster, PreparedStatement }
+import com.datastax.driver.core.Cluster
 import com.typesafe.config.Config
-import io.getquill.context.cassandra.PrepareStatementCache
-import io.getquill.context.{ AsyncFutureCache, CassandraSession, SyncCache }
+import io.getquill.context.{ CassandraSession, SyncCache }
 import io.getquill.util.LoadConfig
-import io.getquill.util.ZioConversions._
 import zio._
 import zio.blocking.Blocking
 
@@ -13,7 +11,7 @@ case class CassandraZioSession(
   override val cluster:                    Cluster,
   override val keyspace:                   String,
   override val preparedStatementCacheSize: Long
-) extends CassandraSession with SyncCache with AsyncFutureCache with AutoCloseable
+) extends CassandraSession with SyncCache with AsyncZioCache with AutoCloseable
 
 object CassandraZioSession {
   def fromContextConfig(config: CassandraContextConfig) = {
