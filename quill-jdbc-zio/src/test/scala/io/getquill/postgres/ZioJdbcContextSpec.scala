@@ -1,8 +1,8 @@
 package io.getquill.postgres
 
 import io.getquill.ZioSpec
-import io.getquill.context.ZioJdbc._
 import zio.{ Task, ZIO }
+import io.getquill.Prefix
 
 class ZioJdbcContextSpec extends ZioSpec {
 
