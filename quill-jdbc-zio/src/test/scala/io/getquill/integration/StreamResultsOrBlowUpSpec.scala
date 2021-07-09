@@ -68,6 +68,7 @@ class StreamResultsOrBlowUpSpec extends ZioSpec {
     deletes.runSyncUnsafe()
   }
 
+  // Note, to actually have no chunking, remove the 100 in stream(query[Person], 100) and run with a small memory size e.g. -Xmx50m
   "stream a large result set without blowing up - no chunking" in {
     deletes.runSyncUnsafe()
 
