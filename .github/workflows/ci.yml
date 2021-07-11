@@ -13,110 +13,110 @@ on:
       - master
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+#   build:
+#     runs-on: ubuntu-latest
 
-    env:
-      SCALA_VERSION: ${{ matrix.scala }}
-      POSTGRES_PASSWORD: postgres
-      MYSQL_PASSWORD: root
+#     env:
+#       SCALA_VERSION: ${{ matrix.scala }}
+#       POSTGRES_PASSWORD: postgres
+#       MYSQL_PASSWORD: root
 
-    strategy:
-      matrix:
-        scala: [2.11.12, 2.12.10, 2.13.2]
-        module: [db, js, async, codegen, bigdata]
-        include:
-          - scala: 2.11.12
-            scala_short: 211
-            scala_short_dot: 2.11
-          - scala: 2.12.10
-            scala_short: 212
-            scala_short_dot: 2.12
-          - scala: 2.13.2
-            scala_short: 213
-            scala_short_dot: 2.13
+#     strategy:
+#       matrix:
+#         scala: [2.11.12, 2.12.10, 2.13.2]
+#         module: [db, js, async, codegen, bigdata]
+#         include:
+#           - scala: 2.11.12
+#             scala_short: 211
+#             scala_short_dot: 2.11
+#           - scala: 2.12.10
+#             scala_short: 212
+#             scala_short_dot: 2.12
+#           - scala: 2.13.2
+#             scala_short: 213
+#             scala_short_dot: 2.13
 
-    name: Build ${{matrix.scala_short_dot}} - ${{matrix.module}}
+#     name: Build ${{matrix.scala_short_dot}} - ${{matrix.module}}
 
-    steps:
-    - uses: actions/checkout@v2
-    - name: Cache sbt
-      uses: actions/cache@v2
-      with:
-        path: |
-          ~/.cache/coursier
-          ~/.sbt
-        key: ${{ runner.os }}-${{matrix.scala}}-${{matrix.module}}-${{ hashFiles('**/build.sbt') }}
+#     steps:
+#     - uses: actions/checkout@v2
+#     - name: Cache sbt
+#       uses: actions/cache@v2
+#       with:
+#         path: |
+#           ~/.cache/coursier
+#           ~/.sbt
+#         key: ${{ runner.os }}-${{matrix.scala}}-${{matrix.module}}-${{ hashFiles('**/build.sbt') }}
 
-    - name: Setup Java and Scala
-      uses: olafurpg/setup-scala@v10
-      with:
-        java-version: 1.8.0
+#     - name: Setup Java and Scala
+#       uses: olafurpg/setup-scala@v10
+#       with:
+#         java-version: 1.8.0
 
-    - name: Build modules
-      run: |
-        export SCALA_VERSION=${{ matrix.scala }}
-        echo "SCALA_VERSION='$SCALA_VERSION'"
-        ./build/build.sh ${{ matrix.module }}
+#     - name: Build modules
+#       run: |
+#         export SCALA_VERSION=${{ matrix.scala }}
+#         echo "SCALA_VERSION='$SCALA_VERSION'"
+#         ./build/build.sh ${{ matrix.module }}
 
-  release:
-    if: ${{github.event_name != 'pull_request'}}
-    runs-on: ubuntu-latest
+#   release:
+#     if: ${{github.event_name != 'pull_request'}}
+#     runs-on: ubuntu-latest
 
-    needs: build
+#     needs: build
 
-    strategy:
-      matrix:
-        scala: [2.11.12, 2.12.10, 2.13.2]
-        module: [base, db, js, async, codegen, bigdata]
-        include:
-          - scala: 2.11.12
-            scala_short: 211
-            scala_short_dot: 2.11
-          - scala: 2.12.10
-            scala_short: 212
-            scala_short_dot: 2.12
-          - scala: 2.13.2
-            scala_short: 213
-            scala_short_dot: 2.13
+#     strategy:
+#       matrix:
+#         scala: [2.11.12, 2.12.10, 2.13.2]
+#         module: [base, db, js, async, codegen, bigdata]
+#         include:
+#           - scala: 2.11.12
+#             scala_short: 211
+#             scala_short_dot: 2.11
+#           - scala: 2.12.10
+#             scala_short: 212
+#             scala_short_dot: 2.12
+#           - scala: 2.13.2
+#             scala_short: 213
+#             scala_short_dot: 2.13
 
-    name: Release ${{matrix.scala_short_dot}} - ${{matrix.module}}
+#     name: Release ${{matrix.scala_short_dot}} - ${{matrix.module}}
 
-    steps:
-    - uses: actions/checkout@v2
-    - name: Cache sbt
-      uses: actions/cache@v2
-      with:
-        path: |
-          ~/.cache/coursier
-          ~/.sbt
-        key: ${{ runner.os }}-${{matrix.scala}}-${{matrix.module}}-${{ hashFiles('**/build.sbt') }}
+#     steps:
+#     - uses: actions/checkout@v2
+#     - name: Cache sbt
+#       uses: actions/cache@v2
+#       with:
+#         path: |
+#           ~/.cache/coursier
+#           ~/.sbt
+#         key: ${{ runner.os }}-${{matrix.scala}}-${{matrix.module}}-${{ hashFiles('**/build.sbt') }}
 
-    - name: Setup Java and Scala
-      uses: olafurpg/setup-scala@v10
-      with:
-        java-version: 1.8.0
+#     - name: Setup Java and Scala
+#       uses: olafurpg/setup-scala@v10
+#       with:
+#         java-version: 1.8.0
 
-    - name: Release
-      run: |
-        export SCALA_VERSION=${{ matrix.scala }}
-        echo "SCALA_VERSION='$SCALA_VERSION'"
-        export PGP_PASSPHRASE=${{ secrets.PGP_PASSPHRASE }}
-        export PULL_REQUEST=${{ !!github.event.pull_request }}
-        echo "PULL_REQUEST='$PULL_REQUEST'"
-        export GITHUB_REF=${{ github.ref }}
-        echo "GITHUB_REF='$GITHUB_REF'"
-        export BRANCH=$(git for-each-ref ${{ github.ref }} --format='%(refname:short)')
-        echo "BRANCH='$BRANCH'"
-        ./build/release.sh ${{ matrix.scala_short }} ${{ matrix.module }}
-      env:
-        ENCRYPTION_PASSWORD: ${{ secrets.ENCRYPTION_PASSWORD }}
+#     - name: Release
+#       run: |
+#         export SCALA_VERSION=${{ matrix.scala }}
+#         echo "SCALA_VERSION='$SCALA_VERSION'"
+#         export PGP_PASSPHRASE=${{ secrets.PGP_PASSPHRASE }}
+#         export PULL_REQUEST=${{ !!github.event.pull_request }}
+#         echo "PULL_REQUEST='$PULL_REQUEST'"
+#         export GITHUB_REF=${{ github.ref }}
+#         echo "GITHUB_REF='$GITHUB_REF'"
+#         export BRANCH=$(git for-each-ref ${{ github.ref }} --format='%(refname:short)')
+#         echo "BRANCH='$BRANCH'"
+#         ./build/release.sh ${{ matrix.scala_short }} ${{ matrix.module }}
+#       env:
+#         ENCRYPTION_PASSWORD: ${{ secrets.ENCRYPTION_PASSWORD }}
 
   publish:
     if: ${{github.event_name != 'pull_request'}}
     runs-on: ubuntu-latest
 
-    needs: release
+    #needs: release
 
     strategy:
       matrix:
