@@ -23,34 +23,22 @@ import scala.reflect.ClassTag
  * as a resource dependency which can be provided later (see `ZioJdbc` for helper methods
  * that assist in doing this).
  *
- * The resource dependency itself is not just a Connection since JDBC requires blocking.
- * Instead it is a `Has[Connection] with Has[Blocking.Service]` which is type-alised as
- * `QConnection` hence methods in this context return `ZIO[QConnection, Throwable, T]`.
- * The type `QIO[T]` i.e. Quill-IO is an alias for this.
+ * The resource dependency itself is just a `Has[Connection]`. Since this is frequently used
+ * The type `QIO[T]` i.e. Quill-IO has been defined as an alias for `ZIO[Has[Connection], SQLException, T]`.
  *
- * If you have a zio-app, using this context is fairly straightforward but requires some setup:
- * {{
- *   val zioConn =
- *     ZLayer.fromManaged(for {
- *       ds <- ZioJdbc.managedBestEffort(Task(JdbcContextConfig(LoadConfig("testPostgresDB")).dataSource))
- *       conn <- ZioJdbc.managedBestEffort(Task(ds.getConnection))
- *     } yield conn)
- *
- *   MyZioContext.run(query[Person]).provideCustomLayer(zioConn)
- * }}
- *
- * Various methods in the `io.getquill.context.ZioJdbc` can assist in simplifying it's creation, for example, you can
- * provide a `DataSource` instead of a `Connection` like this
- * (note that the resulting Connection has a closing bracket).
+ * Since in most JDBC use-cases, a connection-pool datasource i.e. Hikari is used it would actually
+ * be much more useful to interact with `ZIO[Has[DataSource with Closeable], SQLException, T]`.
+ * The extension method `.onDataSource` in `io.getquill.context.ZioJdbc.QuillZioExt` will perform this conversion
+ * (for even more brevity use `onDS` which is an alias for this method).
  * {{
  *   import ZioJdbc._
- *   val zioConn = QDataSource.fromPrefix("testPostgresDB") >>> QDataSource.toConnection
- *   MyZioContext.run(query[Person]).provideCustomLayer(zioConn)
+ *   val zioDs = DataSourceLayer.fromPrefix("testPostgresDB")
+ *   MyZioContext.run(query[Person]).onDataSource.provideCustomLayer(zioDS)
  * }}
  *
  * If you are using a Plain Scala app however, you will need to manually run it e.g. using zio.Runtime
  * {{
- *   Runtime.default.unsafeRun(MyZioContext.run(query[Person]).provideCustomLayer(zioConn))
+ *   Runtime.default.unsafeRun(MyZioContext.run(query[Person]).provideLayer(zioDS))
  * }}
  */
 abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] extends ZioContext[Dialect, Naming]

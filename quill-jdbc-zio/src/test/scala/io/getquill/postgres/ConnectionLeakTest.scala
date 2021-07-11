@@ -40,7 +40,7 @@ class ConnectionLeakTest extends ProductSpec with ZioSpec {
         } yield (result)
       }
         .map(_.headOption.map(_.id))
-        .asDao
+        .onDataSource
         .provide(Has(dataSource)))
 
     Thread.sleep(2000)

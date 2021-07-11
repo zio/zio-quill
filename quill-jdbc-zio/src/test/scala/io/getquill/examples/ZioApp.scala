@@ -12,15 +12,15 @@ object ZioApp extends App {
 
   case class Person(name: String, age: Int)
 
-  val zioConn = DaoLayer.fromPrefix("testPostgresDB")
+  val zioDS = DataSourceLayer.fromPrefix("testPostgresDB")
 
   override def run(args: List[String]): URIO[zio.ZEnv, ExitCode] = {
     val people = quote {
       query[Person].filter(p => p.name == "Alex")
     }
-    MyPostgresContext.run(people)
+    MyPostgresContext.run(people).onDataSource
       .tap(result => putStrLn(result.toString))
-      .provideCustomLayer(zioConn)
+      .provideCustomLayer(zioDS)
       .exitCode
   }
 }

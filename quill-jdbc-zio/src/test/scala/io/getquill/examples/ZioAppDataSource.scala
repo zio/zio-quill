@@ -20,7 +20,7 @@ object ZioAppDataSource extends App {
       query[Person].filter(p => p.name == "Alex")
     }
     MyPostgresContext.run(people)
-      .asDao
+      .onDataSource
       .provide(Has(dataSource))
       .tap(result => putStrLn(result.toString))
       .exitCode

@@ -25,7 +25,7 @@ trait PrepareZioJdbcSpecBase extends ProductSpec with ZioSpec {
 
   def singleInsert(prep: QIO[PreparedStatement]) = {
     prep.flatMap(stmt =>
-      Task(stmt).bracketAuto { stmt => Task(stmt.execute()) }).asDao.provide(Has(pool)).defaultRun
+      Task(stmt).bracketAuto { stmt => Task(stmt.execute()) }).onDataSource.provide(Has(pool)).defaultRun
   }
 
   def batchInsert(prep: QIO[List[PreparedStatement]]) = {
@@ -33,7 +33,7 @@ trait PrepareZioJdbcSpecBase extends ProductSpec with ZioSpec {
       ZIO.collectAll(
         stmts.map(stmt =>
           Task(stmt).bracketAuto { stmt => Task(stmt.execute()) })
-      )).asDao.provide(Has(pool)).defaultRun
+      )).onDataSource.provide(Has(pool)).defaultRun
   }
 
   def extractResults[T](prep: QIO[PreparedStatement])(extractor: ResultSet => T) = {
@@ -41,7 +41,7 @@ trait PrepareZioJdbcSpecBase extends ProductSpec with ZioSpec {
       Task(stmt.executeQuery()).bracketAuto { rs =>
         Task(ResultSetExtractor(rs, extractor))
       }
-    }.asDao.provide(Has(pool)).defaultRun
+    }.onDataSource.provide(Has(pool)).defaultRun
   }
 
   def extractProducts(prep: QIO[PreparedStatement]) =

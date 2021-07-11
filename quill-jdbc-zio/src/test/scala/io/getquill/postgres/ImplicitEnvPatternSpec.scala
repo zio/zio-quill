@@ -31,9 +31,9 @@ class ImplicitEnvPatternSpec extends PeopleZioSpec {
   case class MyService(ds: DataSource with Closeable) {
     implicit val env = Implicit(Has(ds))
 
-    def alexes = testContext.run(query[Person].filter(p => p.name == "Alex")).asDao.implicitly
-    def berts = testContext.run(query[Person].filter(p => p.name == "Bert")).asDao.implicitly
-    def coras = testContext.run(query[Person].filter(p => p.name == "Cora")).asDao.implicitly
+    def alexes = testContext.run(query[Person].filter(p => p.name == "Alex")).onDataSource.implicitly
+    def berts = testContext.run(query[Person].filter(p => p.name == "Bert")).onDataSource.implicitly
+    def coras = testContext.run(query[Person].filter(p => p.name == "Cora")).onDataSource.implicitly
   }
 
   def makeDataSource() = JdbcContextConfig(LoadConfig("testPostgresDB")).dataSource
