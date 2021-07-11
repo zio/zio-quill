@@ -2878,6 +2878,8 @@ MyZioContext.run(query[Person]).onDataSource.provideCustomLayer(zioDS)
 > Runtime.default.unsafeRun(MyZioContext.run(query[Person]).provideLayer(zioDS))
 > ```
 
+#### DAO helper
+
 One additional useful pattern is to use `import io.getquill.context.qzio.ImplicitSyntax.Implicit` to provide
 an implicit DataSource to one or multiple `run(qry)` calls in a context. This is very useful when creating
 DAO patterns that will reuse a DataSource many times:
@@ -3741,23 +3743,34 @@ that require passing in a Data Source, this context takes in a `CassandraZioSess
 as a resource dependency which can be provided later (see the `CassandraZioSession` object for helper methods
 that assist in doing this).
 
-The resource dependency itself is just a `Has[CassandraZioSession]` hence methods in this context return 
+The resource dependency itself is just a `Has[CassandraZioSession]` hence `run(qry)` and other methods in this context will return 
 `ZIO[Has[CassandraZioSession], Throwable, T]`.  The type `CIO[T]` i.e. Cassandra-IO is an alias for this.
+Providing a `CassandraZioSession` dependency is now very simple:
+
+```scala
+val session: CassandraZioSession = _
+run(people)
+  .provide(Has(session))
+```
 
 Various methods in the `io.getquill.CassandraZioSession` can assist in simplifying it's creation, for example, you can
-provide a `Config` object instead of a `CassandraZioSession` like this
-(note that the resulting ZioCassandraSession has a closing bracket).
+provide a `Config` object instead of a `CassandraZioSession` like this:
+
 ```scala
  val zioSessionLayer: ZLayer[Any, Throwable, Has[CassandraZioSession]] =
    ZioCassandraSession.fromPrefix("testStreamDB")
 run(query[Person])
   .provideCustomLayer(zioSessionLayer)
 ```
+> (Note that the resulting ZioCassandraSession has a closing bracket)
 
-> If you are using a Plain Scala app, you will need to manually run it e.g. using zio.Runtime
-> ```scala
->  Runtime.default.unsafeRun(MyZioContext.run(query[Person]).provideCustomLayer(zioSessionLayer))
-> ```
+
+If you are using a Plain Scala app, you will need to manually run it e.g. using zio.Runtime
+```scala
+ Runtime.default.unsafeRun(MyZioContext.run(query[Person]).provideCustomLayer(zioSessionLayer))
+```
+
+#### DAO helper
 
 One additional useful pattern is to use `import io.getquill.context.qzio.ImplicitSyntax.Implicit` to provide
 an implicit CassandraZioSession to one or multiple `run(qry)` calls in a context. This is very useful when creating
