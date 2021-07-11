@@ -10,16 +10,16 @@ import zio.{ IO, ZIO }
  *     import Ctx._
  *     implicit val env = Implicit(Has(ds))
  *
- *     val joes = Ctx.run(query[Person].filter(p => p.name == "Joe")).asDao.implicitly
- *     val jills = Ctx.run(query[Person].filter(p => p.name == "Jill")).asDao.implicitly
- *     val alexes = Ctx.run(query[Person].filter(p => p.name == "Alex")).asDao.implicitly
+ *     val joes = Ctx.run(query[Person].filter(p => p.name == "Joe")).onDataSource.implicitly
+ *     val jills = Ctx.run(query[Person].filter(p => p.name == "Jill")).onDataSource.implicitly
+ *     val alexes = Ctx.run(query[Person].filter(p => p.name == "Alex")).onDataSource.implicitly
  *   }
  * }}}
  * Normally you would have to do a separate `provide` for each clause:
  * {{{
- *   val joes = Ctx.run(query[Person].filter(p => p.name == "Joe")).asDao.provide(Has(ds))
- *   val jills = Ctx.run(query[Person].filter(p => p.name == "Jill")).asDao.provide(Has(ds))
- *   val alexes = Ctx.run(query[Person].filter(p => p.name == "Alex")).asDao.provide(Has(ds))
+ *   val joes = Ctx.run(query[Person].filter(p => p.name == "Joe")).onDataSource.provide(Has(ds))
+ *   val jills = Ctx.run(query[Person].filter(p => p.name == "Jill")).onDataSource.provide(Has(ds))
+ *   val alexes = Ctx.run(query[Person].filter(p => p.name == "Alex")).onDataSource.provide(Has(ds))
  * }}}
  *
  * For other contexts where the environment returned from `run(myQuery)` just the session itself,

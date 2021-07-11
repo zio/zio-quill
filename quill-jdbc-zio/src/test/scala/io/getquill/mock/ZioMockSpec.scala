@@ -68,7 +68,7 @@ class ZioMockSpec extends AnyFreeSpec with MockitoSugar { //with AsyncMockitoSug
       stream(query[Person])
         .fold(Seq[Person]())({ case (l, p) => p +: l })
         .map(_.reverse)
-        .asDao
+        .onDataSource
         .provide(Has(ds)).defaultRun
 
     results must equal(people)
@@ -107,7 +107,7 @@ class ZioMockSpec extends AnyFreeSpec with MockitoSugar { //with AsyncMockitoSug
 
     val results =
       ctx.run(query[Person])
-        .asDao.provide(Has(ds)).defaultRun
+        .onDataSource.provide(Has(ds)).defaultRun
 
     results must equal(people)
 
@@ -135,7 +135,7 @@ class ZioMockSpec extends AnyFreeSpec with MockitoSugar { //with AsyncMockitoSug
       stream(query[Person])
         .fold(Seq[Person]())({ case (l, p) => p +: l })
         .map(_.reverse)
-        .asDao
+        .onDataSource
         .provide(Has(ds)).foldCause(cause => cause.prettyPrint, _ => "").defaultRun
 
     resultMsg.contains("Fiber failed.") mustBe true
@@ -171,7 +171,7 @@ class ZioMockSpec extends AnyFreeSpec with MockitoSugar { //with AsyncMockitoSug
       stream(query[Person])
         .fold(Seq[Person]())({ case (l, p) => p +: l })
         .map(_.reverse)
-        .asDao
+        .onDataSource
         .provide(Has(ds)).foldCause(cause => cause.prettyPrint, _ => "").defaultRun
 
     resultMsg.contains("Fiber failed.") mustBe true

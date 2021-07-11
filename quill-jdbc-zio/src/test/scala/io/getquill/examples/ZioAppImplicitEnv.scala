@@ -22,9 +22,9 @@ object ZioAppImplicitEnv extends App {
     import Ctx._
     implicit val env = Implicit(Has(ds))
 
-    val joes = Ctx.run(query[Person].filter(p => p.name == "Joe")).implicitDao
-    val jills = Ctx.run(query[Person].filter(p => p.name == "Jill")).implicitDao
-    val alexes = Ctx.run(query[Person].filter(p => p.name == "Alex")).implicitDao
+    val joes = Ctx.run(query[Person].filter(p => p.name == "Joe")).implicitDS
+    val jills = Ctx.run(query[Person].filter(p => p.name == "Jill")).implicitDS
+    val alexes = Ctx.run(query[Person].filter(p => p.name == "Alex")).implicitDS
   }
 
   override def run(args: List[String]): URIO[zio.ZEnv, ExitCode] = {
