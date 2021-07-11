@@ -1,10 +1,10 @@
 package io.getquill.examples
 
-import com.zaxxer.hikari.{HikariConfig, HikariDataSource}
+import com.zaxxer.hikari.{ HikariConfig, HikariDataSource }
 import io.getquill.context.ZioJdbc.DataSourceLayer
 import io.getquill.util.LoadConfig
-import io.getquill.{JdbcContextConfig, Literal, PostgresZioJdbcContext}
-import zio.{Has, Runtime, Task, ZLayer}
+import io.getquill.{ JdbcContextConfig, Literal, PostgresZioJdbcContext }
+import zio.{ Has, Runtime, Task, ZLayer }
 import zio.console.putStrLn
 
 import java.io.Closeable
