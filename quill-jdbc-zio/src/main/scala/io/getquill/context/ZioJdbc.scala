@@ -116,7 +116,7 @@ object ZioJdbc {
     def onDataSource: ZIO[Has[DataSource with Closeable], SQLException, T] =
       qzio.provideLayer(DataSourceLayer.live).refineToOrDie[SQLException]
 
-    /** Shortcut `onDataSource` for  */
+    /** Shortcut for `onDataSource` */
     def onDS: ZIO[Has[DataSource with Closeable], SQLException, T] =
       qzio.onDataSource
 
