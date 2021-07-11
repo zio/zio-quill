@@ -2835,41 +2835,27 @@ ctx.dataSource.serverName=host
 
 ## ZIO (quill-jdbc-zio)
 
-Quill context that executes JDBC queries using ZIO. Unlike most other contexts
+Quill context that executes JDBC queries inside of ZIO. Unlike most other contexts
 that require passing in a Data Source, this context takes in a java.sql.Connection
 as a resource dependency which can be provided later (see `ZioJdbc` for helper methods
 that assist in doing this).
-The resource dependency itself is not just a Connection since JDBC requires blocking.
-Instead it is a `Has[Connection] with Blocking` which is type-alised as
-`QConnection` hence methods in this context return `ZIO[QConnection, Throwable, T]`.
 
-Another type alias `QDataSource` for `Has[DataSource] with Blocking` is also provided
-for convenience. Various utilities inside of `ZioJdbc.scala` can do the above conversion
-and/or provide layers that map between the two. Some simple examples of this are:
+The resource dependency itself is just a `Has[Connection]`. Since this is frequently used
+The type `QIO[T]` i.e. Quill-IO has been defined as an alias for `ZIO[Has[Connection], SQLException, T]`.
 
-If you have a zio-app, using this context is fairly straightforward but requires some setup:
-```scala
-val zioConn =
-  ZLayer.fromManaged(for {
-    ds <- ZManaged.fromAutoCloseable(Task(JdbcContextConfig(LoadConfig("testPostgresDB")).dataSource))
-    conn <- ZManaged.fromAutoCloseable(Task(ds.getConnection))
-  } yield conn)
-
-MyZioContext.run(query[Person]).provideCustomLayer(zioConn)
-```
-
-Various methods in the `io.getquill.context.ZioJdbc` can assist in doing this, for example, you can
-provide a `DataSource` instead of a `Connection` like this (note that the Connection has a closing bracket).
-
+Since in most JDBC use-cases, a connection-pool datasource i.e. Hikari is used it would actually
+be much more useful to interact with `ZIO[Has[DataSource with Closeable], SQLException, T]`.
+The extension method `.onDataSource` in `io.getquill.context.ZioJdbc.QuillZioExt` will perform this conversion
+(you can use `.onDS` for even more brevity).
 ```scala
 import ZioJdbc._
-val zioConn = Layers.dataSourceFromPrefix("testPostgresDB") >>> Layers.dataSourceToConnection
-MyZioContext.run(query[Person]).provideCustomLayer(zioConn)
+val zioDs = DataSourceLayer.fromPrefix("testPostgresDB")
+MyZioContext.run(query[Person]).onDataSource.provideCustomLayer(zioDS)
 ```
 
 If you are using a Plain Scala app however, you will need to manually run it e.g. using zio.Runtime
 ```scala
-Runtime.default.unsafeRun(MyZioContext.run(query[Person]).provideCustomLayer(zioConn))
+Runtime.default.unsafeRun(MyZioContext.run(query[Person]).provideLayer(zioDS))
 ```
 
 More examples of a Quill-JDBC-ZIO app [quill-jdbc-zio/src/test/scala/io/getquill/examples](https://github.com/getquill/quill/tree/master/quill-jdbc-zio/src/test/scala/io/getquill/examples).
@@ -2899,9 +2885,9 @@ val trans =
       _ <- ctx.run(query[Person].insert(Person("Joe", 123)))
       p <- ctx.run(query[Person])
     } yield p
-  } //returns: ZIO[QConnection, Throwable, List[Person]]
+  } //returns: ZIO[Has[Connection], Throwable, List[Person]]
 
-val result = Runtime.default.unsafeRun(trans) //returns: List[Person]
+val result = Runtime.default.unsafeRun(trans.onDataSource) //returns: List[Person]
 ```
 
 
