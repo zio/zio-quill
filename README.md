@@ -2840,9 +2840,9 @@ that require passing in a Data Source, this context takes in a java.sql.Connecti
 as a resource dependency which can be provided later (see `ZioJdbc` for helper methods
 that assist in doing this).
 
-The resource dependency itself is just a `Has[Connection]`. Since this is frequently used
-The type `QIO[T]` i.e. Quill-IO has been defined as an alias for `ZIO[Has[Connection], SQLException, T]`
-so if you have a JDBC connection object, just provide it!
+Since the resource dependency itself is just a `Has[Connection]` the result of a `run` call is `ZIO[Has[Connection], SQLException, T]`. 
+Since this is frequently used, the type `QIO[T]` i.e. Quill-IO has been defined as an alias it.
+This means that if you have a `Connection` object, you just provide it!
 
 ```scala
 def conn: Connection = _
@@ -2850,12 +2850,13 @@ run(people)
   .provide(Has(conn))
 ```
 
-Since in most JDBC use-cases, a connection-pool datasource (e.g. Hikari) is used it would actually
-be much more useful to interact with `ZIO[Has[DataSource with Closeable], SQLException, T]`.
+Since in most JDBC use-cases, a connection-pool datasource (e.g. Hikari) is used, it is simplier to work with
+`ZIO[Has[DataSource with Closeable], SQLException, T]` than `ZIO[Has[Connection], SQLException, T]`.
 The extension method `.onDataSource` in `io.getquill.context.ZioJdbc.QuillZioExt` will perform this conversion
 (you can use `.onDS` for even more brevity).
 
 ```scala
+import io.getquill.context.ZioJdbc._
 def ds: DataSource with Closeable = _
 run(people)
   .onDataSource  // or: onDS
@@ -2901,14 +2902,14 @@ More examples of a Quill-JDBC-ZIO app [quill-jdbc-zio/src/test/scala/io/getquill
 The `ZioJdbcContext` can stream using zio.ZStream:
 
 ```
-ctx.stream(query[Person])             // returns: ZStream[QConnection, Throwable, Person]
-  .run(Sink.collectAll).map(_.toList) // returns: ZIO[QConnection, Throwable, List[T]]
+ctx.stream(query[Person])             // returns: ZStream[Has[Connection], Throwable, Person]
+  .run(Sink.collectAll).map(_.toList) // returns: ZIO[Has[Connection], Throwable, List[T]]
 ```
 
 #### transactions
 
 The `ZioJdbcContext`s provide support for transactions without needing thread-local storage or similar
-because they propagate the resource dependency in the ZIO effect itself (i.e. the QConnection in `Zio[QConnection, _, _]`).
+because they propagate the resource dependency in the ZIO effect itself (i.e. the `Has[Connection]` in `Zio[Has[Connection], _, _]`).
 As with the other contexts, if an exception is thrown anywhere inside a task or sub-task within a `transaction` block, the entire block
 will be rolled back by the database.
 
@@ -2923,7 +2924,7 @@ val trans =
     } yield p
   } //returns: ZIO[Has[Connection], Throwable, List[Person]]
 
-val result = Runtime.default.unsafeRun(trans.onDataSource) //returns: List[Person]
+val result = Runtime.default.unsafeRun(trans.onDataSource.provide(ds)) //returns: List[Person]
 ```
 
 
