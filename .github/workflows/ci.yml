@@ -147,14 +147,14 @@ jobs:
       - name: Release
         run: |
           export SCALA_VERSION=${{ matrix.scala }}
-          echo "SCALA_VERSION='$TRAVIS_SCALA_VERSION'"
+          echo "SCALA_VERSION='$SCALA_VERSION'"
           export PGP_PASSPHRASE=${{ secrets.PGP_PASSPHRASE }}
           export PULL_REQUEST=${{ !!github.event.pull_request }}
-          echo "PULL_REQUEST='$TRAVIS_PULL_REQUEST'"
+          echo "PULL_REQUEST='$PULL_REQUEST'"
           export GITHUB_REF=${{ github.ref }}
           echo "GITHUB_REF='$GITHUB_REF'"
           export BRANCH=$(git for-each-ref ${{ github.ref }} --format='%(refname:short)')
-          echo "BRANCH='$TRAVIS_BRANCH'"
+          echo "BRANCH='$BRANCH'"
           ./build/release.sh ${{ matrix.scala_short }} ${{ matrix.module }}
         env:
           ENCRYPTION_PASSWORD: ${{ secrets.ENCRYPTION_PASSWORD }}
