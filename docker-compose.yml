@@ -101,6 +101,7 @@ services:
       - POSTGRES_PORT=5432
       - MYSQL_HOST=mysql
       - MYSQL_PORT=3306
+      - MYSQL_PASSWORD=root
       - SQL_SERVER_HOST=sqlserver
       - SQL_SERVER_PORT=1433
       - ORACLE_HOST=oracle

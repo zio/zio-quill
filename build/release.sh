@@ -4,6 +4,8 @@ set -e # Any subsequent(*) commands which fail will cause the shell script to ex
 VERSION=$1
 ARTIFACT=$2
 
+echo "Begin Release Script for VERSION=$VERSION ARTIFACT=$ARTIFACT"
+
 if [[ -z $ARTIFACT ]]
 then
     echo "No Artifact Specified"
@@ -121,4 +123,6 @@ then
         VERSION_FILE=$(cat version.sbt)
         echo "Github actions branch was: ${$BRANCH} and version file is $VERSION_FILE. Not Sure what to do."
     fi
+else
+  echo "PULL_REQUEST is not 'false' ($PULL_REQUEST). Not doing a release."
 fi

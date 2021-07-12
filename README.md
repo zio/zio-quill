@@ -2835,58 +2835,83 @@ ctx.dataSource.serverName=host
 
 ## ZIO (quill-jdbc-zio)
 
-Quill context that executes JDBC queries using ZIO. Unlike most other contexts
+Quill context that executes JDBC queries inside of ZIO. Unlike most other contexts
 that require passing in a Data Source, this context takes in a java.sql.Connection
 as a resource dependency which can be provided later (see `ZioJdbc` for helper methods
 that assist in doing this).
-The resource dependency itself is not just a Connection since JDBC requires blocking.
-Instead it is a `Has[Connection] with Blocking` which is type-alised as
-`QConnection` hence methods in this context return `ZIO[QConnection, Throwable, T]`.
 
-Another type alias `QDataSource` for `Has[DataSource] with Blocking` is also provided
-for convenience. Various utilities inside of `ZioJdbc.scala` can do the above conversion
-and/or provide layers that map between the two. Some simple examples of this are:
+Since the resource dependency itself is just a `Has[Connection]` the result of a `run` call is `ZIO[Has[Connection], SQLException, T]`. 
+Since this is frequently used, the type `QIO[T]` i.e. Quill-IO has been defined as an alias it.
+This means that if you have a `Connection` object, you just provide it!
 
-If you have a zio-app, using this context is fairly straightforward but requires some setup:
 ```scala
-val zioConn =
-  ZLayer.fromManaged(for {
-    ds <- ZManaged.fromAutoCloseable(Task(JdbcContextConfig(LoadConfig("testPostgresDB")).dataSource))
-    conn <- ZManaged.fromAutoCloseable(Task(ds.getConnection))
-  } yield conn)
-
-MyZioContext.run(query[Person]).provideCustomLayer(zioConn)
+def conn: Connection = _
+run(people)
+  .provide(Has(conn))
 ```
 
-Various methods in the `io.getquill.context.ZioJdbc` can assist in doing this, for example, you can
-provide a `DataSource` instead of a `Connection` like this (note that the Connection has a closing bracket).
+Since in most JDBC use-cases, a connection-pool datasource (e.g. Hikari) is used, it is simplier to work with
+`ZIO[Has[DataSource with Closeable], SQLException, T]` than `ZIO[Has[Connection], SQLException, T]`.
+The extension method `.onDataSource` in `io.getquill.context.ZioJdbc.QuillZioExt` will perform this conversion
+(you can use `.onDS` for even more brevity).
+
+```scala
+import io.getquill.context.ZioJdbc._
+def ds: DataSource with Closeable = _
+run(people)
+  .onDataSource  // or: onDS
+  .provide(Has(ds))
+```
+
+Additionally, constructor-methods `fromPrefix`, `fromConfig`, `fromJdbcConfig` and `fromDataSource` are available on
+`DataSourceLayer` to construct instances of `ZLayer[Has[DataSource with Closeable], SQLException, Has[Connection]]`.
+You can use them like this:
 
 ```scala
 import ZioJdbc._
-val zioConn = Layers.dataSourceFromPrefix("testPostgresDB") >>> Layers.dataSourceToConnection
-MyZioContext.run(query[Person]).provideCustomLayer(zioConn)
+val zioDs = DataSourceLayer.fromPrefix("testPostgresDB")
+MyZioContext.run(query[Person]).onDataSource.provideCustomLayer(zioDS)
 ```
 
-If you are using a Plain Scala app however, you will need to manually run it e.g. using zio.Runtime
+> Also note that if you are using a Plain Scala app however, you will need to manually run it i.e. using zio.Runtime
+> ```scala
+> Runtime.default.unsafeRun(MyZioContext.run(query[Person]).provideLayer(zioDS))
+> ```
+
+#### DAO helper
+
+One additional useful pattern is to use `import io.getquill.context.qzio.ImplicitSyntax.Implicit` to provide
+an implicit DataSource to one or multiple `run(qry)` calls in a context. This is very useful when creating
+DAO patterns that will reuse a DataSource many times:
+
 ```scala
-Runtime.default.unsafeRun(MyZioContext.run(query[Person]).provideCustomLayer(zioConn))
+case class MyQueryService(ds: DataSource with Closeable) { // I.e. our DAO
+ import Ctx._
+ implicit val env = Implicit(Has(ds)) // This will be looked up in each `.implicitDS` call
+
+ val joes = Ctx.run(query[Person].filter(p => p.name == "Joe")).implicitDS
+ val jills = Ctx.run(query[Person].filter(p => p.name == "Jill")).implicitDS
+ val alexes = Ctx.run(query[Person].filter(p => p.name == "Alex")).implicitDS
+}
 ```
+
 
 More examples of a Quill-JDBC-ZIO app [quill-jdbc-zio/src/test/scala/io/getquill/examples](https://github.com/getquill/quill/tree/master/quill-jdbc-zio/src/test/scala/io/getquill/examples).
+
 
 #### streaming
 
 The `ZioJdbcContext` can stream using zio.ZStream:
 
 ```
-ctx.stream(query[Person])             // returns: ZStream[QConnection, Throwable, Person]
-  .run(Sink.collectAll).map(_.toList) // returns: ZIO[QConnection, Throwable, List[T]]
+ctx.stream(query[Person])             // returns: ZStream[Has[Connection], Throwable, Person]
+  .run(Sink.collectAll).map(_.toList) // returns: ZIO[Has[Connection], Throwable, List[T]]
 ```
 
 #### transactions
 
 The `ZioJdbcContext`s provide support for transactions without needing thread-local storage or similar
-because they propagate the resource dependency in the ZIO effect itself (i.e. the QConnection in `Zio[QConnection, _, _]`).
+because they propagate the resource dependency in the ZIO effect itself (i.e. the `Has[Connection]` in `Zio[Has[Connection], _, _]`).
 As with the other contexts, if an exception is thrown anywhere inside a task or sub-task within a `transaction` block, the entire block
 will be rolled back by the database.
 
@@ -2899,9 +2924,9 @@ val trans =
       _ <- ctx.run(query[Person].insert(Person("Joe", 123)))
       p <- ctx.run(query[Person])
     } yield p
-  } //returns: ZIO[QConnection, Throwable, List[Person]]
+  } //returns: ZIO[Has[Connection], Throwable, List[Person]]
 
-val result = Runtime.default.unsafeRun(trans) //returns: List[Person]
+val result = Runtime.default.unsafeRun(trans.onDataSource.provide(ds)) //returns: List[Person]
 ```
 
 
@@ -3718,25 +3743,52 @@ that require passing in a Data Source, this context takes in a `CassandraZioSess
 as a resource dependency which can be provided later (see the `CassandraZioSession` object for helper methods
 that assist in doing this).
 
-The resource dependency itself is not just a ZioCassandraSession since the Cassandra API requires blocking in
-some places (this is the case despite fact that is is asynchronous).
-Instead it is a `Has[CassandraZioSession] with Has[Blocking.Service]` which is type-alised as
-`BlockingSession` hence methods in this context return `ZIO[QConnection, Throwable, T]`.
-The type `CIO[T]` i.e. Cassandra-IO is an alias for this.
+The resource dependency itself is just a `Has[CassandraZioSession]` hence `run(qry)` and other methods in this context will return 
+`ZIO[Has[CassandraZioSession], Throwable, T]`.  The type `CIO[T]` i.e. Cassandra-IO is an alias for this.
+Providing a `CassandraZioSession` dependency is now very simple:
 
-Various methods in the `io.getquill.ZioCassandraSession` can assist in simplifying it's creation, for example, you can
-provide a `Config` object instead of a `ZioCassandraSession` like this
-(note that the resulting ZioCassandraSession has a closing bracket).
 ```scala
- val zioSession =
+val session: CassandraZioSession = _
+run(people)
+  .provide(Has(session))
+```
+
+Various methods in the `io.getquill.CassandraZioSession` can assist in simplifying it's creation, for example, you can
+provide a `Config` object instead of a `CassandraZioSession` like this:
+
+```scala
+ val zioSessionLayer: ZLayer[Any, Throwable, Has[CassandraZioSession]] =
    ZioCassandraSession.fromPrefix("testStreamDB")
+run(query[Person])
+  .provideCustomLayer(zioSessionLayer)
+```
+> (Note that the resulting ZioCassandraSession has a closing bracket)
+
+
+If you are using a Plain Scala app, you will need to manually run it e.g. using zio.Runtime
+```scala
+ Runtime.default.unsafeRun(MyZioContext.run(query[Person]).provideCustomLayer(zioSessionLayer))
 ```
 
-If you are using a Plain Scala app however, you will need to manually run it e.g. using zio.Runtime
+#### DAO helper
+
+One additional useful pattern is to use `import io.getquill.context.qzio.ImplicitSyntax.Implicit` to provide
+an implicit CassandraZioSession to one or multiple `run(qry)` calls in a context. This is very useful when creating
+DAO patterns that will reuse a CassandraZioSession many times:
+
 ```scala
- Runtime.default.unsafeRun(MyZioContext.run(query[Person]).provideCustomLayer(zioSession))
+case class MyQueryService(cs: CassandraZioSession) {
+  import Ctx._
+  implicit val env = Implicit(Has(cs))
+
+  def joes = Ctx.run { query[Person].filter(p => p.name == "Joe") }.implicitly
+  def jills = Ctx.run { query[Person].filter(p => p.name == "Jill") }.implicitly
+  def alexes = Ctx.run { query[Person].filter(p => p.name == "Alex") }.implicitly
+}
 ```
-More examples of a Quill-JDBC-ZIO app [quill-cassandra-zio/src/test/scala/io/getquill/context/cassandra/zio/examples](https://github.com/getquill/quill/tree/master/quill-cassandra-zio/src/test/scala/io/getquill/context/cassandra/zio/examples).
+
+
+More examples of a Quill-Cassandra-ZIO app [quill-cassandra-zio/src/test/scala/io/getquill/context/cassandra/zio/examples](https://github.com/getquill/quill/tree/master/quill-cassandra-zio/src/test/scala/io/getquill/context/cassandra/zio/examples).
 
 #### sbt dependencies
 

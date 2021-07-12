@@ -3,7 +3,7 @@ package io.getquill
 import io.getquill.ZioTestUtil._
 import io.getquill.context.ZioJdbc._
 import io.getquill.util.LoadConfig
-import zio.Task
+import zio.{ Has, Task }
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -34,7 +34,7 @@ class ResultSetIteratorSpec extends ZioSpec {
         _ <- ctx.run(query[Person].delete)
         _ <- ctx.run(liftQuery(peopleEntries).foreach(p => peopleInsert(p)))
       } yield ()
-    }.provideConnectionFrom(pool).defaultRun
+    }.onDataSource.provide(Has(pool)).defaultRun
   }
 
   "traverses correctly" in {
