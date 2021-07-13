@@ -500,7 +500,7 @@ lazy val `quill-finagle-mysql` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.twitter" %% "finagle-mysql" % "20.10.0"
+        "com.twitter" %% "finagle-mysql" % "21.6.0"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
