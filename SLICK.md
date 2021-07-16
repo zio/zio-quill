@@ -90,7 +90,7 @@ Slick requires explicit type definition to map the database model to lifted valu
 
 Quill's quoted DSL opens a new path to query generation. For the quotations that are known statically, the query normalization and translation to SQL happen at compile-time. The user receives feedback during compilation, knows the SQL string that will be used and if it will succeed when executed against the database.
 
-The feedback cycle using Slick is typically longer. Some factors like normalization bugs and unsupported operations can make the query fail, but only at runtime it is possible to know whether they will affect the query or not.
+The feedback cycle using Slick is typically longer. Some factors like normalization bugs and unsupported operations can make the query fail, but only at runtime is it possible to know whether they will affect the query or not.
 
 ## Non-blocking IO ##
 
@@ -108,9 +108,9 @@ Unfortunately, the paper doesn't cover all SQL features supported by Quill. Some
 
 Slick's normalization is based on an multi-phase compilation engine. The code complexity is very high, probably due to the lack of principled normalization rules.
 
-The last stable version (3.1) features a major rewrite of the query compiler. Before it, even simple compositions used to produce highly nested queries with bad performance characteristics when executed against MySQL.
+Before Slick 3.1, even simple compositions used to produce highly nested queries with bad performance characteristics when executed against MySQL.
 
 The reader is invited to compare the libraries' normalization code:
 
-https://github.com/getquill/quill/tree/master/quill-core/src/main/scala/io/getquill/norm
+https://github.com/getquill/quill/tree/master/quill-core-portable/src/main/scala/io/getquill/norm
 https://github.com/slick/slick/tree/master/slick/src/main/scala/slick/compiler
