@@ -4,6 +4,8 @@ set -e # Any subsequent(*) commands which fail will cause the shell script to ex
 VERSION=$1
 ARTIFACT=$2
 
+echo "Begin Release Script for VERSION=$VERSION ARTIFACT=$ARTIFACT"
+
 if [[ -z $ARTIFACT ]]
 then
     echo "No Artifact Specified"
@@ -76,7 +78,7 @@ then
         ssh-add local.deploy_key.pem
         git config --global user.name "Quill CI"
         git config --global user.email "quillci@getquill.io"
-        git remote set-url origin git@github.com:getquill/protoquill.git
+        git remote set-url origin git@github.com:getquill/quill.git
 
         if [[ $ARTIFACT == "base" ]]; then    $SBT_VER -Dmodules=base -DskipPush=true 'release with-defaults'; fi
         if [[ $ARTIFACT == "db" ]]; then      $SBT_VER -Dmodules=db -DskipPush=true 'release with-defaults'; fi
@@ -120,4 +122,6 @@ then
         VERSION_FILE=$(cat version.sbt)
         echo "Github actions branch was: ${$BRANCH} and version file is $VERSION_FILE. Not Sure what to do."
     fi
+else
+  echo "PULL_REQUEST is not 'false' ($PULL_REQUEST). Not doing a release."
 fi

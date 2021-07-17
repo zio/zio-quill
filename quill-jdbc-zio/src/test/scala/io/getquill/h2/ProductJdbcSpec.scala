@@ -1,7 +1,7 @@
 package io.getquill.h2
 
 import io.getquill.ZioSpec
-import io.getquill.context.ZioJdbc.Prefix
+import io.getquill.Prefix
 import io.getquill.context.sql.ProductSpec
 
 class ProductJdbcSpec extends ProductSpec with ZioSpec {

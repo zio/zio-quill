@@ -2,130 +2,139 @@ package io.getquill.context
 
 import com.typesafe.config.Config
 import io.getquill.JdbcContextConfig
-import zio.{ Has, Task, ZIO, ZLayer, ZManaged }
+import io.getquill.context.qzio.ImplicitSyntax.Implicit
+import zio.{ Has, IO, Task, ZIO, ZLayer, ZManaged }
 import zio.stream.ZStream
 import io.getquill.util.{ ContextLogger, LoadConfig }
-import izumi.reflect.Tag
 
 import java.io.Closeable
 import java.sql.{ Connection, SQLException }
 import javax.sql.DataSource
 
 object ZioJdbc {
-  import zio.blocking._
-
-  /** Describes a single HOCON Jdbc Config block */
-  case class Prefix(name: String)
-
-  type QIO[T] = ZIO[QConnection, SQLException, T]
-  type QStream[T] = ZStream[Has[Connection] with Blocking, SQLException, T]
-  type QConnection = Has[Connection] with Blocking
-  type QDataSource = Has[DataSource with Closeable] with Blocking
+  type QIO[T] = ZIO[Has[Connection], SQLException, T]
+  type QStream[T] = ZStream[Has[Connection], SQLException, T]
 
   object QIO {
     def apply[T](t: => T): QIO[T] = ZIO.effect(t).refineToOrDie[SQLException]
   }
 
-  object QDataSource {
-    object Managed {
-      def fromDataSource(ds: => DataSource with Closeable) =
-        for {
-          block <- ZManaged.environment[Blocking]
-          managedDs <- managedBestEffort(Task(ds))
-        } yield (Has(managedDs) ++ block)
-    }
+  object DataSourceLayer {
+    def live: ZLayer[Has[DataSource with Closeable], SQLException, Has[Connection]] = layer
 
-    val toConnection: ZLayer[QDataSource, SQLException, QConnection] = {
+    private[getquill] val layer = {
       val managed =
         for {
-          fromBlocking <- ZManaged.environment[Has[DataSource with Closeable] with Blocking]
-          from = fromBlocking.get[DataSource with Closeable]
-          blocking = fromBlocking.get[Blocking.Service]
-          r <- managedBestEffort(ZIO.effect(from.getConnection)).refineToOrDie[SQLException]: ZManaged[Any, SQLException, Connection]
-        } yield Has(r) ++ Has(blocking)
+          from <- ZManaged.environment[Has[DataSource with Closeable]]
+          r <- managedBestEffort(ZIO.effect(from.get.getConnection).refineToOrDie[SQLException]: ZIO[Any, SQLException, Connection])
+        } yield Has(r)
       ZLayer.fromManagedMany(managed)
     }
 
-    def fromDataSource(ds: => DataSource with Closeable): ZLayer[Blocking, Throwable, QDataSource] =
-      ZLayer.fromEffectMany {
-        for {
-          block <- ZIO.environment[Blocking]
-          dst <- Task(ds)
-        } yield (Has(dst) ++ block)
-      }
+    def fromDataSource(ds: => DataSource with Closeable): ZLayer[Any, Throwable, Has[DataSource with Closeable]] =
+      ZLayer.fromEffect(Task(ds))
 
-    def fromConfig(config: => Config): ZLayer[Blocking, Throwable, QDataSource] =
+    def fromConfig(config: => Config): ZLayer[Any, Throwable, Has[DataSource with Closeable]] =
       fromJdbcConfig(JdbcContextConfig(config))
 
-    def fromPrefix(prefix: Prefix): ZLayer[Blocking, Throwable, QDataSource] =
-      fromJdbcConfig(JdbcContextConfig(LoadConfig(prefix.name)))
-
-    def fromPrefix(prefix: String): ZLayer[Blocking, Throwable, QDataSource] =
+    def fromPrefix(prefix: String): ZLayer[Any, Throwable, Has[DataSource with Closeable]] =
       fromJdbcConfig(JdbcContextConfig(LoadConfig(prefix)))
 
-    def fromJdbcConfig(jdbcContextConfig: => JdbcContextConfig): ZLayer[Blocking, Throwable, QDataSource] =
+    def fromJdbcConfig(jdbcContextConfig: => JdbcContextConfig): ZLayer[Any, Throwable, Has[DataSource with Closeable]] =
       ZLayer.fromManagedMany(
         for {
-          block <- ZManaged.environment[Blocking]
           conf <- ZManaged.fromEffect(Task(jdbcContextConfig))
           ds <- managedBestEffort(Task(conf.dataSource: DataSource with Closeable))
-        } yield (Has(ds) ++ block)
+        } yield Has(ds)
       )
   }
 
-  implicit class ZioQuillThrowableExt[T](qzio: ZIO[QConnection, Throwable, T]) {
+  object QDataSource {
+    object Managed {
+      @deprecated(message = "Not needed anymore. Use: ZioJdbc.managedBestEffort(Task(ds)).map(Has(_))", "3.8.0")
+      def fromDataSource(ds: => DataSource with Closeable) =
+        managedBestEffort(Task(ds)).map(Has(_))
+    }
+
+    @deprecated("Use DataSourceLayer.live instead", "3.8.0")
+    val toConnection: ZLayer[Has[DataSource with Closeable], SQLException, Has[Connection]] =
+      DataSourceLayer.live
+
+    @deprecated("Use ZLayer.fromEffect(Task(ds)) instead", "3.8.0")
+    def fromDataSource(ds: => DataSource with Closeable): ZLayer[Any, Throwable, Has[DataSource with Closeable]] =
+      ZLayer.fromEffect(Task(ds))
+
+    def fromConfig(config: => Config): ZLayer[Any, Throwable, Has[DataSource with Closeable]] =
+      fromJdbcConfig(JdbcContextConfig(config))
+
+    def fromPrefix(prefix: String): ZLayer[Any, Throwable, Has[DataSource with Closeable]] =
+      fromJdbcConfig(JdbcContextConfig(LoadConfig(prefix)))
+
+    def fromJdbcConfig(jdbcContextConfig: => JdbcContextConfig): ZLayer[Any, Throwable, Has[DataSource with Closeable]] =
+      ZLayer.fromManagedMany(
+        for {
+          conf <- ZManaged.fromEffect(Task(jdbcContextConfig))
+          ds <- managedBestEffort(Task(conf.dataSource: DataSource with Closeable))
+        } yield Has(ds)
+      )
+  }
+
+  implicit class ZioQuillThrowableExt[T](qzio: ZIO[Has[Connection], Throwable, T]) {
+    @deprecated("Use .refineToOrDie[SQLException]", "3.8.0")
     def justSqlEx = qzio.refineToOrDie[SQLException]
   }
 
   object QConnection {
-    def fromDataSource: ZLayer[QDataSource, SQLException, QConnection] = QDataSource.toConnection
-    def dependOnDataSource[T](qzio: ZIO[QConnection, Throwable, T]) =
-      qzio.justSqlEx.provideLayer(QDataSource.toConnection)
-    def provideConnection[T](qzio: ZIO[QConnection, Throwable, T])(conn: Connection): ZIO[Blocking, SQLException, T] =
-      provideOne(conn)(qzio.justSqlEx)
-    def provideConnectionFrom[T](qzio: ZIO[QConnection, Throwable, T])(ds: DataSource with Closeable): ZIO[Blocking, SQLException, T] =
-      provideOne(ds)(QConnection.dependOnDataSource(qzio.justSqlEx))
+    @deprecated("Use DataSourceLayer.live. If you need just SQLException add .refineToOrDie[SQLException]", "3.8.0")
+    def fromDataSource: ZLayer[Has[DataSource with Closeable], SQLException, Has[Connection]] = DataSourceLayer.live
+
+    @deprecated("Use qzio.onDataSource.", "3.8.0")
+    def dependOnDataSource[T](qzio: ZIO[Has[Connection], Throwable, T]) =
+      qzio.onDataSource
+
+    @deprecated("Use qzio.provide(Has(conn)). If you need just SQLException add .refineToOrDie[SQLException]", "3.8.0")
+    def provideConnection[T](qzio: ZIO[Has[Connection], Throwable, T])(conn: Connection): ZIO[Any, SQLException, T] =
+      qzio.provide(Has(conn)).refineToOrDie[SQLException]
+
+    @deprecated("Use qzio.onDataSource.provide(Has(ds)). If you need just SQLException add .refineToOrDie[SQLException]", "3.8.0")
+    def provideConnectionFrom[T](qzio: ZIO[Has[Connection], Throwable, T])(ds: DataSource with Closeable): ZIO[Any, SQLException, T] =
+      qzio.onDataSource.provide(Has(ds)).refineToOrDie[SQLException]
   }
 
-  implicit class DataSourceCloseableExt(ds: DataSource with Closeable) {
-    def withDefaultBlocking: QDataSource = Has(ds) ++ Has(Blocking.Service.live)
+  implicit class QuillZioExt[T](qzio: ZIO[Has[Connection], Throwable, T]) {
+    import io.getquill.context.qzio.ImplicitSyntax._
+
+    /**
+     * Change `Has[Connection]` of a QIO to `Has[DataSource with Closeable]` by providing a `DataSourceLayer.live` instance
+     * which will grab a connection from the data-source, perform the QIO operation, and the immediately release the connection.
+     * This is used for data-sources that have pooled connections e.g. Hikari.
+     * {{{
+     *   def ds: DataSource with Closeable = ...
+     *   run(query[Person]).onDataSource.provide(Has(ds))
+     * }}}
+     */
+    def onDataSource: ZIO[Has[DataSource with Closeable], SQLException, T] =
+      qzio.provideLayer(DataSourceLayer.live).refineToOrDie[SQLException]
+
+    /** Shortcut for `onDataSource` */
+    def onDS: ZIO[Has[DataSource with Closeable], SQLException, T] =
+      qzio.onDataSource
+
+    def implicitDS(implicit implicitEnv: Implicit[Has[DataSource with Closeable]]): IO[SQLException, T] =
+      qzio.onDataSource.implicitly
+
+    @deprecated("Use qzio.onDataSource.", "3.8.0")
+    def dependOnDataSource(): ZIO[Has[DataSource with Closeable], SQLException, T] =
+      qzio.onDataSource.refineToOrDie[SQLException]
+
+    @deprecated("Use qzio.onDataSource.provide(Has(ds)). If you need just SQLException add .refineToOrDie[SQLException]", "3.8.0")
+    def provideConnectionFrom(ds: DataSource with Closeable): ZIO[Nothing, SQLException, T] =
+      qzio.onDataSource.provide(Has(ds)).refineToOrDie[SQLException]
+
+    @deprecated("Use qzio.provide(Has(conn)). If you need just SQLException add .refineToOrDie[SQLException]", "3.8.0")
+    def provideConnection(conn: Connection): ZIO[Any, SQLException, T] =
+      qzio.provide(Has(conn)).refineToOrDie[SQLException]
   }
-
-  implicit class QuillZioExt[T](qzio: ZIO[QConnection, Throwable, T]) {
-    /**
-     * Allows the user to specify `Has[DataSource]` instead of `Has[Connection]` for a Quill ZIO value i.e.
-     * Converts:<br>
-     *   `ZIO[QConnection, Throwable, T]` to `ZIO[QDataSource, Throwable, T]` a.k.a.<br>
-     *   `ZIO[Has[Connection] with Blocking, Throwable, T]` to `ZIO[Has[DataSource] with Blocking, Throwable, T]` a.k.a.<br>
-     */
-    def dependOnDataSource(): ZIO[QDataSource, SQLException, T] = QConnection.dependOnDataSource(qzio)
-
-    /**
-     * Allows the user to specify JDBC `DataSource` instead of `QConnection` for a Quill ZIO value i.e.
-     * Provides a DataSource object which internally brackets `dataSource.getConnection` and `connection.close()`.
-     * This effectively converts:<br>
-     *   `ZIO[QConnection, Throwable, T]` to `ZIO[Blocking, Throwable, T]` a.k.a.<br>
-     *   `ZIO[Has[Connection] with Blocking, Throwable, T]` to `ZIO[Blocking, Throwable, T]` a.k.a.<br>
-     */
-    def provideConnectionFrom(ds: DataSource with Closeable): ZIO[Blocking, SQLException, T] =
-      QConnection.provideConnectionFrom(qzio)(ds)
-
-    /**
-     * Allows the user to specify JDBC `Connection` instead of `QConnection` for a Quill ZIO value i.e.
-     * Provides a Connection object which converts:<br>
-     *   `ZIO[QConnection, Throwable, T]` to `ZIO[Blocking, Throwable, T]` a.k.a.<br>
-     *   `ZIO[Has[Connection] with Blocking, Throwable, T]` to `ZIO[Blocking, Throwable, T]` a.k.a.<br>
-     */
-    def provideConnection(conn: Connection): ZIO[Blocking, SQLException, T] =
-      QConnection.provideConnection(qzio)(conn)
-  }
-
-  private[getquill] def provideOne[P: Tag, T, E: Tag, Rest <: Has[_]: Tag](provision: P)(qzio: ZIO[Has[P] with Rest, E, T]): ZIO[Rest, E, T] =
-    for {
-      rest <- ZIO.environment[Rest]
-      env = Has(provision) ++ rest
-      result <- qzio.provide(env)
-    } yield result
 
   /**
    * This is the same as `ZManaged.fromAutoCloseable` but if the `.close()` fails it will log `"close() of resource failed"`
@@ -135,9 +144,10 @@ object ZioJdbc {
    * release a stale connection) which will eventually cause other operations (i.e. future reads/writes) to fail
    * that have not occurred yet.
    */
-  def managedBestEffort[T <: AutoCloseable](effect: Task[T]) =
+  def managedBestEffort[R, E, A <: AutoCloseable](effect: ZIO[R, E, A]) =
     ZManaged.make(effect)(resource =>
       ZIO.effect(resource.close()).tapError(e => ZIO.effect(logger.underlying.error(s"close() of resource failed", e)).ignore).ignore)
 
   private[getquill] val logger = ContextLogger(ZioJdbc.getClass)
 }
+

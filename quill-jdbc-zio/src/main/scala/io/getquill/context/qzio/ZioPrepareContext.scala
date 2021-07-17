@@ -29,7 +29,7 @@ trait ZioPrepareContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] extends Z
 
   /** Execute SQL on connection and return prepared statement. Closes the statement in a bracket. */
   def prepareSingle(sql: String, prepare: Prepare = identityPrepare): QIO[PreparedStatement] = {
-    ZIO.environment[QConnection]
+    ZIO.environment[Has[Connection]]
       .mapEffect(bconn => bconn.get[Connection].prepareStatement(sql))
       .mapEffect { stmt =>
         val (params, ps) = prepare(stmt)
@@ -39,7 +39,7 @@ trait ZioPrepareContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] extends Z
   }
 
   def prepareBatchAction(groups: List[BatchGroup]): PrepareBatchActionResult =
-    ZIO.collectAll[Has[Connection] with Blocking, Throwable, PrepareRow, List] {
+    ZIO.collectAll[Has[Connection], Throwable, PrepareRow, List] {
       val batches = groups.flatMap {
         case BatchGroup(sql, prepares) =>
           prepares.map(sql -> _)
