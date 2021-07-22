@@ -8,7 +8,7 @@ import io.getquill.util.ContextLogger
 import io.getquill.{ NamingStrategy, ReturnAction }
 import zio.Exit.{ Failure, Success }
 import zio.stream.{ Stream, ZStream }
-import zio.{ Cause, Chunk, ChunkBuilder, Has, Task, UIO, ZIO, ZManaged }
+import zio.{ Cause, Has, Task, UIO, ZIO, ZManaged }
 
 import java.sql.{ Array => _, _ }
 import javax.sql.DataSource
@@ -117,16 +117,15 @@ abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] ext
     } yield r
   }
 
-  def transaction[A](f: ZIO[Has[Connection], Throwable, A]): ZIO[Has[Connection], Throwable, A] = {
+  def transaction[E <: Throwable: ClassTag, A](f: ZIO[Has[Connection], E, A]): ZIO[Has[Connection], E, A] = {
     simpleBlocking(withoutAutoCommit(ZIO.environment[Has[Connection]].flatMap(conn =>
       f.onExit {
         case Success(_) =>
           UIO(conn.get[Connection].commit())
         case Failure(cause) =>
           UIO(conn.get[Connection].rollback()).foldCauseM(
-            // NOTE: cause.flatMap(Cause.die) means wrap up the throwable failures into die failures, can only do if E param is Throwable (can also do .orDie at the end)
-            rollbackFailCause => ZIO.halt(cause.flatMap(Cause.die) ++ rollbackFailCause),
-            _ => ZIO.halt(cause.flatMap(Cause.die)) // or ZIO.halt(cause).orDie
+            rollbackFailCause => ZIO.halt(cause.flatMap(Cause.die(_)) ++ rollbackFailCause),
+            _ => ZIO.halt(cause.flatMap(Cause.die(_)))
           )
       })))
   }
