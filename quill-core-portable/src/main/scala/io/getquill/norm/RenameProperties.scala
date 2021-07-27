@@ -79,8 +79,8 @@ object ApplyRenamesToProps extends StatelessTransformer {
   def applyProperty(p: Property) =
     p match {
       case p @ Property.Opinionated(ast, name, renameable, visibility) =>
-        trace"Checking Property: ${p} for possible rename".andLog()
         val newAst = apply(ast)
+        trace"Checking Property: ${p} for possible rename. Renames on Quat: ${newAst.quat.renames}".andLog()
         // Check the quat if it is renaming this property if so rename it. Otherwise property is the same
         newAst.quat.renames.get(name) match {
           case Some(newName) =>

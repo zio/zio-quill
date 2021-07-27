@@ -11,6 +11,7 @@ trait StatefulTransformer[T] {
       case e: Action              => apply(e)
       case e: Value               => apply(e)
       case e: Assignment          => apply(e)
+      case e: AssignmentDual      => apply(e)
       case e: Ident               => (e, this)
       case e: ExternalIdent       => (e, this)
       case e: OptionOperation     => apply(e)
@@ -206,6 +207,14 @@ trait StatefulTransformer[T] {
         val (bt, btt) = apply(b)
         val (ct, ctt) = btt.apply(c)
         (Assignment(a, bt, ct), ctt)
+    }
+
+  def apply(e: AssignmentDual): (AssignmentDual, StatefulTransformer[T]) =
+    e match {
+      case AssignmentDual(a1, a2, b, c) =>
+        val (bt, btt) = apply(b)
+        val (ct, ctt) = btt.apply(c)
+        (AssignmentDual(a1, a2, bt, ct), ctt)
     }
 
   def apply(e: Property): (Property, StatefulTransformer[T]) =
