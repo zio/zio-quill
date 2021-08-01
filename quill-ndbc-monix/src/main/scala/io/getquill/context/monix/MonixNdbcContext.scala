@@ -132,18 +132,18 @@ abstract class MonixNdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy, P
       .eval {
         // TODO: Do we need to set ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY?
         val stmt = createPreparedStatement(sql)
-        val (params, ps) = prepare(stmt)
+        val (params, ps) = prepare(stmt, ())
         logger.logQuery(sql, params)
         ps
       }
       .flatMap(ps => withDataSourceObservable { ds =>
         Observable.fromReactivePublisher(ds.stream(ps))
       })
-      .map(extractor)
+      .map(row => extractor(row, ()))
 
   override private[getquill] def prepareParams(statement: String, prepare: Prepare): Task[Seq[String]] = {
     withDataSource { _ =>
-      resultEffect.wrap(prepare(createPreparedStatement(statement))._1.reverse.map(prepareParam))
+      resultEffect.wrap(prepare(createPreparedStatement(statement), ())._1.reverse.map(prepareParam))
     }
   }
 }

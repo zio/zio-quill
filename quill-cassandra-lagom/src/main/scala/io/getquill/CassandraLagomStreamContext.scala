@@ -27,8 +27,8 @@ class CassandraLagomStreamContext[N <: NamingStrategy](
     prepare:   Prepare      = identityPrepare,
     extractor: Extractor[T] = identityExtractor
   )(implicit executionContext: ExecutionContext): Result[RunQueryResult[T]] = {
-    val statement = prepareAsyncAndGetStatement(cql, prepare, logger)
-    val resultSource = statement.map(st => session.select(st).map(extractor))
+    val statement = prepareAsyncAndGetStatement(cql, prepare, wrappedSession, logger)
+    val resultSource = statement.map(st => session.select(st).map(row => extractor(row, wrappedSession)))
     Source
       .fromFutureSource(resultSource)
       .mapMaterializedValue(_ => NotUsed)
@@ -50,7 +50,7 @@ class CassandraLagomStreamContext[N <: NamingStrategy](
     implicit
     executionContext: ExecutionContext
   ): Result[RunActionResult] = {
-    val statement = prepareAsyncAndGetStatement(cql, prepare, logger)
+    val statement = prepareAsyncAndGetStatement(cql, prepare, CassandraLagomSession(session), logger)
     Source.fromFuture(statement).mapAsync(1) { st =>
       session.executeWrite(st)
     }

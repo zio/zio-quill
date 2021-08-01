@@ -45,8 +45,8 @@ trait Context[Idiom <: io.getquill.idiom.Idiom, Naming <: NamingStrategy]
   type RunBatchActionReturningResult[T]
   type Session
 
-  type Prepare = PrepareRow => (List[Any], PrepareRow)
-  type Extractor[T] = ResultRow => T
+  type Prepare = (PrepareRow, Session) => (List[Any], PrepareRow)
+  type Extractor[T] = (ResultRow, Session) => T
 
   case class BatchGroup(string: String, prepare: List[Prepare])
   case class BatchGroupReturning(string: String, returningBehavior: ReturnAction, prepare: List[Prepare])
@@ -64,8 +64,8 @@ trait Context[Idiom <: io.getquill.idiom.Idiom, Naming <: NamingStrategy]
   def run(quoted: Quoted[BatchAction[Action[_]]]): Result[RunBatchActionResult] = macro ActionMacro.runBatchAction
   def run[T](quoted: Quoted[BatchAction[ActionReturning[_, T]]]): Result[RunBatchActionReturningResult[T]] = macro ActionMacro.runBatchActionReturning[T]
 
-  protected val identityPrepare: Prepare = (Nil, _)
-  protected val identityExtractor = identity[ResultRow] _
+  protected val identityPrepare: Prepare = (p: PrepareRow, s: Session) => (Nil, p)
+  protected val identityExtractor = (rr: ResultRow, s: Session) => rr
 
   protected def handleSingleResult[T](list: List[T]) =
     list match {

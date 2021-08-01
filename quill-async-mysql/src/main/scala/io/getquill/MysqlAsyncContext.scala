@@ -20,7 +20,7 @@ class MysqlAsyncContext[N <: NamingStrategy](naming: N, pool: PartitionedConnect
   override protected def extractActionResult[O](returningAction: ReturnAction, returningExtractor: Extractor[O])(result: DBQueryResult): O = {
     result match {
       case r: MySQLQueryResult =>
-        returningExtractor(new ArrayRowData(0, Map.empty, Array(r.lastInsertId)))
+        returningExtractor(new ArrayRowData(0, Map.empty, Array(r.lastInsertId)), ())
       case _ =>
         fail("This is a bug. Cannot extract returning value.")
     }

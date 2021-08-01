@@ -9,7 +9,7 @@ trait UUIDObjectEncoding {
 
   implicit val uuidDecoder: Decoder[UUID] =
     AsyncDecoder(SqlTypes.UUID)(
-      (index: Index, row: ResultRow) => row(index) match {
+      (index: Index, row: ResultRow, session: Session) => row(index) match {
         case value: UUID => value
       }
     )

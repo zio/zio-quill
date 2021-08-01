@@ -99,7 +99,7 @@ abstract class JdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy]
 
   override private[getquill] def prepareParams(statement: String, prepare: Prepare): Seq[String] = {
     withConnectionWrapped { conn =>
-      prepare(conn.prepareStatement(statement))._1.reverse.map(prepareParam)
+      prepare(conn.prepareStatement(statement), conn)._1.reverse.map(prepareParam)
     }
   }
 }

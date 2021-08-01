@@ -37,6 +37,7 @@ abstract class AsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: Connection]
   override type RunActionReturningResult[T] = T
   override type RunBatchActionResult = List[Long]
   override type RunBatchActionReturningResult[T] = List[T]
+  override type Session = Unit
 
   override def close = {
     Await.result(pool.close, Duration.Inf)
@@ -70,11 +71,11 @@ abstract class AsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: Connection]
     }
 
   def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(implicit ec: ExecutionContext): Future[List[T]] = {
-    val (params, values) = prepare(Nil)
+    val (params, values) = prepare(Nil, ())
     logger.logQuery(sql, params)
     withConnection(_.sendPreparedStatement(sql, values)).map {
       _.rows match {
-        case Some(rows) => rows.map(extractor).toList
+        case Some(rows) => rows.map(row => extractor(row, ())).toList
         case None       => Nil
       }
     }
@@ -84,14 +85,14 @@ abstract class AsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: Connection]
     executeQuery(sql, prepare, extractor).map(handleSingleResult)
 
   def executeAction[T](sql: String, prepare: Prepare = identityPrepare)(implicit ec: ExecutionContext): Future[Long] = {
-    val (params, values) = prepare(Nil)
+    val (params, values) = prepare(Nil, ())
     logger.logQuery(sql, params)
     withConnection(_.sendPreparedStatement(sql, values)).map(_.rowsAffected)
   }
 
   def executeActionReturning[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T], returningAction: ReturnAction)(implicit ec: ExecutionContext): Future[T] = {
     val expanded = expandAction(sql, returningAction)
-    val (params, values) = prepare(Nil)
+    val (params, values) = prepare(Nil, ())
     logger.logQuery(sql, params)
     withConnection(_.sendPreparedStatement(expanded, values))
       .map(extractActionResult(returningAction, extractor))
@@ -124,6 +125,6 @@ abstract class AsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: Connection]
     }.map(_.flatten.toList)
 
   override private[getquill] def prepareParams(statement: String, prepare: Prepare): Seq[String] = {
-    prepare(Nil)._2.map(param => prepareParam(param))
+    prepare(Nil, ())._2.map(param => prepareParam(param))
   }
 }

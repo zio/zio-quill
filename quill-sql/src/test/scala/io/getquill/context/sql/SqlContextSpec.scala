@@ -58,9 +58,9 @@ class SqlContextSpec extends Spec {
 
       def probe(sql: String): Try[Any] = null
 
-      def encoder[T]: Encoder[T] = (index: Index, value: T, row: PrepareRow) => row
+      def encoder[T]: Encoder[T] = (index: Index, value: T, row: PrepareRow, session: Session) => row
 
-      def decoder[T]: Decoder[T] = (index: Index, row: ResultRow) => row(index).asInstanceOf[T]
+      def decoder[T]: Decoder[T] = (index: Index, row: ResultRow, session: Session) => row(index).asInstanceOf[T]
 
       implicit def optionEncoder[T](implicit d: Encoder[T]): Encoder[Option[T]] = encoder[Option[T]]
 

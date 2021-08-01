@@ -2,7 +2,7 @@ package io.getquill.context.cassandra
 
 import com.datastax.driver.core._
 import io.getquill.NamingStrategy
-import io.getquill.context.StandardContext
+import io.getquill.context.{ CassandraSession, StandardContext, UdtValueLookup }
 import io.getquill.context.cassandra.encoding.{ CassandraTypes, Decoders, Encoders, UdtEncoding }
 import io.getquill.util.ContextLogger
 import io.getquill.util.Messages.fail
@@ -12,9 +12,17 @@ import scala.concurrent.duration._
 import scala.util.Try
 
 abstract class CassandraSessionContext[N <: NamingStrategy]
-  extends CassandraBaseContext[N]
-  with CassandraContext[N] {
+  extends CassandraPrepareContext[N]
+  with CassandraBaseContext[N]
 
+/**
+ * When using this context, we cannot encode UDTs since does not have a proper CassandraSession trait mixed in with udtValueOf.
+ * Certain contexts e.g. the CassandraLagomContext does not currently have this ability.
+ */
+abstract class CassandraSessionlessContext[N <: NamingStrategy]
+  extends CassandraPrepareContext[N]
+
+trait CassandraPrepareContext[N <: NamingStrategy] extends CassandraRowContext[N] with CassandraContext[N] {
   protected def prepareAsync(cql: String)(implicit executionContext: ExecutionContext): Future[BoundStatement]
 
   def probe(cql: String): Try[_] = {
@@ -24,8 +32,8 @@ abstract class CassandraSessionContext[N <: NamingStrategy]
     }
   }
 
-  protected def prepareAsyncAndGetStatement(cql: String, prepare: Prepare, logger: ContextLogger)(implicit executionContext: ExecutionContext): Future[BoundStatement] = {
-    val prepareResult = this.prepareAsync(cql).map(prepare)
+  protected def prepareAsyncAndGetStatement(cql: String, prepare: Prepare, session: Session, logger: ContextLogger)(implicit executionContext: ExecutionContext): Future[BoundStatement] = {
+    val prepareResult = this.prepareAsync(cql).map(row => prepare(row, session))
     val preparedRow = prepareResult.map {
       case (params, bs) =>
         logger.logQuery(cql, params)
@@ -41,7 +49,11 @@ abstract class CassandraSessionContext[N <: NamingStrategy]
     fail("Cassandra doesn't support `returning`.")
 }
 
-abstract class CassandraBaseContext[N <: NamingStrategy]
+trait CassandraBaseContext[N <: NamingStrategy] extends CassandraRowContext[N] {
+  override type Session = CassandraSession
+}
+
+trait CassandraRowContext[N <: NamingStrategy]
   extends CassandraContext[N]
   with StandardContext[CqlIdiom, N]
   with Encoders
@@ -53,6 +65,9 @@ abstract class CassandraBaseContext[N <: NamingStrategy]
 
   override type PrepareRow = BoundStatement
   override type ResultRow = Row
+
+  // Usually this is io.getquill.context.CassandraSession so you can use udtValueOf but not always e.g. for Lagom it is different
+  type Session <: UdtValueLookup
 
   override type RunActionReturningResult[T] = Unit
   override type RunBatchActionReturningResult[T] = Unit

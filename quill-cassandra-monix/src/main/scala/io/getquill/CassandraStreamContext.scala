@@ -50,7 +50,7 @@ class CassandraStreamContext[N <: NamingStrategy](
       .flatMap(Observable.fromAsyncStateAction((rs: ResultSet) => page(rs).map((_, rs)))(_))
       .takeWhile(_.nonEmpty)
       .flatMap(Observable.fromIterable)
-      .map(extractor)
+      .map(row => extractor(row, this))
   }
 
   def executeQuerySingle[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): Observable[T] =
@@ -76,7 +76,7 @@ class CassandraStreamContext[N <: NamingStrategy](
       implicit val executor: Scheduler = scheduler
 
       super.prepareAsync(cql)
-        .map(prepare)
+        .map(row => prepare(row, this))
         .onComplete {
           case Success((params, bs)) =>
             logger.logQuery(cql, params)

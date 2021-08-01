@@ -171,7 +171,7 @@ abstract class MonixJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](
    * Since Quill provides a extractor for an individual ResultSet row, a single row can easily be cached
    * in memory. This allows for a straightforward implementation of a hasNext method.
    */
-  class ResultSetIterator[T](rs: ResultSet, extractor: Extractor[T]) extends collection.BufferedIterator[T] {
+  class ResultSetIterator[T](rs: ResultSet, conn: Connection, extractor: Extractor[T]) extends collection.BufferedIterator[T] {
 
     private final val NoData = 0
     private final val Cached = 1
@@ -187,7 +187,7 @@ abstract class MonixJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](
 
     /** Return a new value or call finished() */
     protected def fetchNext(): T =
-      if (rs.next()) extractor(rs)
+      if (rs.next()) extractor(rs, conn)
       else finished()
 
     def head: T = {
@@ -232,12 +232,12 @@ abstract class MonixJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](
     withConnectionObservable { conn =>
       Observable.eval {
         val stmt = prepareStatementForStreaming(sql, conn, fetchSize)
-        val (params, ps) = prepare(stmt)
+        val (params, ps) = prepare(stmt, conn)
         logger.logQuery(sql, params)
         ps.executeQuery()
       }.bracket { rs =>
         Observable
-          .fromIteratorUnsafe(new ResultSetIterator(rs, extractor))
+          .fromIteratorUnsafe(new ResultSetIterator(rs, conn, extractor))
       } { rs =>
         wrapClose(rs.close())
       }
@@ -245,7 +245,7 @@ abstract class MonixJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](
 
   override private[getquill] def prepareParams(statement: String, prepare: Prepare): Task[Seq[String]] = {
     withConnectionWrapped { conn =>
-      prepare(conn.prepareStatement(statement))._1.reverse.map(prepareParam)
+      prepare(conn.prepareStatement(statement), conn)._1.reverse.map(prepareParam)
     }
   }
 }

@@ -64,9 +64,9 @@ trait SqlServerJdbcRunContext[N <: NamingStrategy] extends JdbcRunContext[SQLSer
 
   override def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningBehavior: ReturnAction): Result[O] =
     withConnectionWrapped { conn =>
-      val (params, ps) = prepare(prepareWithReturning(sql, conn, returningBehavior))
+      val (params, ps) = prepare(prepareWithReturning(sql, conn, returningBehavior), conn)
       logger.logQuery(sql, params)
-      handleSingleResult(extractResult(ps.executeQuery, extractor))
+      handleSingleResult(extractResult(ps.executeQuery, conn, extractor))
     }
 }
 
