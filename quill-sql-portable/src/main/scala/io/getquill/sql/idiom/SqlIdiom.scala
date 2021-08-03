@@ -81,6 +81,7 @@ trait SqlIdiom extends Idiom {
       case a: If              => a.token
       case a: External        => a.token
       case a: Assignment      => a.token
+      case a: AssignmentDual  => a.token
       case a: OptionOperation => a.token
       case a @ (
         _: Function | _: FunctionApply | _: Dynamic | _: OptionOperation | _: Block |
@@ -422,6 +423,11 @@ trait SqlIdiom extends Idiom {
 
   implicit def assignmentTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Assignment] = Tokenizer[Assignment] {
     case Assignment(alias, prop, value) =>
+      stmt"${prop.token} = ${scopedTokenizer(value)}"
+  }
+
+  implicit def assignmentDualTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[AssignmentDual] = Tokenizer[AssignmentDual] {
+    case AssignmentDual(alias1, alias2, prop, value) =>
       stmt"${prop.token} = ${scopedTokenizer(value)}"
   }
 

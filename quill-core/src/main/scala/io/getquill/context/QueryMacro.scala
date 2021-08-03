@@ -62,7 +62,7 @@ class QueryMacro(val c: MacroContext) extends ContextMacro {
               Some(${size}),
               expanded.string,
               expanded.prepare,
-              row => $decoder(0, row)
+              (row, session) => $decoder(0, row, session)
             )
            """
         case StreamQuery(UsesDefaultFetch) =>
@@ -71,7 +71,7 @@ class QueryMacro(val c: MacroContext) extends ContextMacro {
               None,
               expanded.string,
               expanded.prepare,
-              row => $decoder(0, row)
+              (row, session) => $decoder(0, row, session)
             )
            """
         case StreamQuery(DoesNotUseFetch) =>
@@ -79,7 +79,7 @@ class QueryMacro(val c: MacroContext) extends ContextMacro {
             ${c.prefix}.${TermName(method.name)}(
               expanded.string,
               expanded.prepare,
-              row => $decoder(0, row)
+              (row, session) => $decoder(0, row, session)
             )
            """
         case TranslateQuery(ExplicitPrettyPrint(argValue)) =>
@@ -87,7 +87,7 @@ class QueryMacro(val c: MacroContext) extends ContextMacro {
             ${c.prefix}.${TermName(method.name)}(
               expanded.string,
               expanded.prepare,
-              row => $decoder(0, row),
+              (row, session) => $decoder(0, row, session),
               prettyPrint = ${argValue}
             )
            """
@@ -96,7 +96,7 @@ class QueryMacro(val c: MacroContext) extends ContextMacro {
             ${c.prefix}.${TermName(method.name)}(
               expanded.string,
               expanded.prepare,
-              row => $decoder(0, row),
+              (row, session) => $decoder(0, row, session),
               prettyPrint = false
             )
            """
@@ -105,7 +105,7 @@ class QueryMacro(val c: MacroContext) extends ContextMacro {
             ${c.prefix}.${TermName(method.name)}(
               expanded.string,
               expanded.prepare,
-              row => $decoder(0, row)
+              (row, session) => $decoder(0, row, session)
             )
            """
       }

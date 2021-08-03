@@ -1,18 +1,19 @@
 package io.getquill
 
 import io.getquill.context.{ StandardContext, TranslateContext }
-import io.getquill.context.mirror.Row
+import io.getquill.context.mirror.{ MirrorDecoders, MirrorEncoders, MirrorSession, Row }
+
 import scala.concurrent.Future
-import io.getquill.context.mirror.MirrorEncoders
-import io.getquill.context.mirror.MirrorDecoders
 import io.getquill.monad.ScalaFutureIOMonad
+
 import scala.concurrent.ExecutionContext
 import io.getquill.idiom.{ Idiom => BaseIdiom }
+
 import scala.util.Try
 import scala.util.Failure
 import scala.util.Success
 
-class AsyncMirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy](val idiom: Idiom, val naming: Naming)
+class AsyncMirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy](val idiom: Idiom, val naming: Naming, session: MirrorSession = MirrorSession("DefaultMirrorContextSession"))
   extends StandardContext[Idiom, Naming]
   with TranslateContext
   with MirrorEncoders
@@ -21,6 +22,7 @@ class AsyncMirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy](val idiom
 
   override type PrepareRow = Row
   override type ResultRow = Row
+  override type Session = MirrorSession
 
   override type Result[T] = Future[T]
   override type RunQueryResult[T] = QueryMirror[T]
@@ -65,24 +67,24 @@ class AsyncMirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy](val idiom
   case class QueryMirror[T](string: String, prepareRow: PrepareRow, extractor: Extractor[T])(implicit val ec: ExecutionContext)
 
   def executeQuery[T](string: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(implicit ec: ExecutionContext) =
-    Future(QueryMirror(string, prepare(Row())._2, extractor))
+    Future(QueryMirror(string, prepare(Row(), session)._2, extractor))
 
   def executeQuerySingle[T](string: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(implicit ec: ExecutionContext) =
-    Future(QueryMirror(string, prepare(Row())._2, extractor))
+    Future(QueryMirror(string, prepare(Row(), session)._2, extractor))
 
   def executeAction(string: String, prepare: Prepare = identityPrepare)(implicit ec: ExecutionContext) =
-    Future(ActionMirror(string, prepare(Row())._2))
+    Future(ActionMirror(string, prepare(Row(), session)._2))
 
   def executeActionReturning[O](string: String, prepare: Prepare = identityPrepare, extractor: Extractor[O],
                                 returningBehavior: ReturnAction)(implicit ec: ExecutionContext) =
-    Future(ActionReturningMirror[O](string, prepare(Row())._2, extractor, returningBehavior))
+    Future(ActionReturningMirror[O](string, prepare(Row(), session)._2, extractor, returningBehavior))
 
   def executeBatchAction(groups: List[BatchGroup])(implicit ec: ExecutionContext) =
     Future {
       BatchActionMirror {
         groups.map {
           case BatchGroup(string, prepare) =>
-            (string, prepare.map(_(Row())._2))
+            (string, prepare.map(_(Row(), session)._2))
         }
       }
     }
@@ -92,11 +94,11 @@ class AsyncMirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy](val idiom
       BatchActionReturningMirror[T](
         groups.map {
           case BatchGroupReturning(string, returningBehavior, prepare) =>
-            (string, returningBehavior, prepare.map(_(Row())._2))
+            (string, returningBehavior, prepare.map(_(Row(), session)._2))
         }, extractor
       )
     }
 
   override private[getquill] def prepareParams(statement: String, prepare: Prepare): Seq[String] =
-    prepare(Row())._2.data.map(prepareParam)
+    prepare(Row(), session)._2.data.map(prepareParam)
 }

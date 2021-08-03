@@ -33,6 +33,7 @@ abstract class JAsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: ConcreteCo
 
   override type PrepareRow = Seq[Any]
   override type ResultRow = RowData
+  override type Session = Unit
 
   override type Result[T] = Future[T]
   override type RunQueryResult[T] = Seq[T]
@@ -80,24 +81,24 @@ abstract class JAsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: ConcreteCo
     }
 
   def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(implicit ec: ExecutionContext): Future[List[T]] = {
-    val (params, values) = prepare(Nil)
+    val (params, values) = prepare(Nil, ())
     logger.logQuery(sql, params)
     withConnection(_.sendPreparedStatement(sql, values.asJava))
-      .map(_.getRows.asScala.iterator.map(extractor).toList)
+      .map(_.getRows.asScala.iterator.map(row => extractor(row, ())).toList)
   }
 
   def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(implicit ec: ExecutionContext): Future[T] =
     executeQuery(sql, prepare, extractor).map(handleSingleResult)
 
   def executeAction[T](sql: String, prepare: Prepare = identityPrepare)(implicit ec: ExecutionContext): Future[Long] = {
-    val (params, values) = prepare(Nil)
+    val (params, values) = prepare(Nil, ())
     logger.logQuery(sql, params)
     withConnection(_.sendPreparedStatement(sql, values.asJava)).map(_.getRowsAffected)
   }
 
   def executeActionReturning[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T], returningAction: ReturnAction)(implicit ec: ExecutionContext): Future[T] = {
     val expanded = expandAction(sql, returningAction)
-    val (params, values) = prepare(Nil)
+    val (params, values) = prepare(Nil, ())
     logger.logQuery(sql, params)
     withConnection(_.sendPreparedStatement(expanded, values.asJava))
       .map(extractActionResult(returningAction, extractor))
@@ -130,6 +131,6 @@ abstract class JAsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: ConcreteCo
     }.map(_.flatten.toList)
 
   override private[getquill] def prepareParams(statement: String, prepare: Prepare): Seq[String] =
-    prepare(Nil)._2.map(prepareParam)
+    prepare(Nil, ())._2.map(prepareParam)
 
 }

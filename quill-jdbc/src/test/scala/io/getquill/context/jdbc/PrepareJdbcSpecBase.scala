@@ -15,7 +15,7 @@ trait PrepareJdbcSpecBase extends ProductSpec {
     }
   }
 
-  def productExtractor: ResultSet => Product
+  def productExtractor: (ResultSet, Connection) => Product
 
   def withOrderedIds(products: List[Product]) =
     products.zipWithIndex.map { case (product, id) => product.copy(id = id.toLong + 1) }
@@ -44,12 +44,12 @@ trait PrepareJdbcSpecBase extends ProductSpec {
     }
   }
 
-  def extractResults[T](conn: => Connection)(prep: Connection => PreparedStatement)(extractor: ResultSet => T) = {
+  def extractResults[T](conn: => Connection)(prep: Connection => PreparedStatement)(extractor: (ResultSet, Connection) => T) = {
     val r = Manager { use =>
       val c = use(conn)
       val st = use(prep(c))
       val rs = st.executeQuery()
-      ResultSetExtractor(rs, extractor)
+      ResultSetExtractor(rs, c, extractor)
     }
     r match {
       case Success(v) => v

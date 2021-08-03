@@ -42,7 +42,7 @@ class ResultSetIteratorSpec extends ZioSpec {
       Task(ds.getConnection).bracketAuto { conn =>
         Task {
           val stmt = conn.prepareStatement("select * from person")
-          val rs = new ResultSetIterator[String](stmt.executeQuery(), extractor = (rs) => { rs.getString(1) })
+          val rs = new ResultSetIterator[String](stmt.executeQuery(), conn, extractor = (rs, conn) => { rs.getString(1) })
           val accum = ArrayBuffer[String]()
           while (rs.hasNext) accum += rs.next()
           accum
@@ -57,7 +57,7 @@ class ResultSetIteratorSpec extends ZioSpec {
       Task(ds.getConnection).bracketAuto { conn =>
         Task {
           val stmt = conn.prepareStatement("select * from person where name = 'Alex'")
-          val rs = new ResultSetIterator(stmt.executeQuery(), extractor = (rs) => { rs.getString(1) })
+          val rs = new ResultSetIterator(stmt.executeQuery(), conn, extractor = (rs, conn) => { rs.getString(1) })
           rs.head
         }
       }.defaultRun

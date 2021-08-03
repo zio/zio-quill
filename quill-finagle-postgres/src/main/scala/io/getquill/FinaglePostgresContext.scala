@@ -32,6 +32,7 @@ class FinaglePostgresContext[N <: NamingStrategy](val naming: N, client: Postgre
 
   override type PrepareRow = List[Param[_]]
   override type ResultRow = Row
+  override type Session = Unit
 
   override type Result[T] = Future[T]
   override type RunQueryResult[T] = List[T]
@@ -74,16 +75,16 @@ class FinaglePostgresContext[N <: NamingStrategy](val naming: N, client: Postgre
     }
 
   def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): Future[List[T]] = {
-    val (params, prepared) = prepare(Nil)
+    val (params, prepared) = prepare(Nil, ())
     logger.logQuery(sql, params)
-    withClient(_.prepareAndQuery(sql, prepared: _*)(extractor).map(_.toList))
+    withClient(_.prepareAndQuery(sql, prepared: _*)(row => extractor(row, ())).map(_.toList))
   }
 
   def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): Future[T] =
     executeQuery(sql, prepare, extractor).map(handleSingleResult)
 
   def executeAction[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): Future[Long] = {
-    val (params, prepared) = prepare(Nil)
+    val (params, prepared) = prepare(Nil, ())
     logger.logQuery(sql, params)
     withClient(_.prepareAndExecute(sql, prepared: _*)).map(_.toLong)
   }
@@ -101,9 +102,9 @@ class FinaglePostgresContext[N <: NamingStrategy](val naming: N, client: Postgre
   }.map(_.flatten.toList)
 
   def executeActionReturning[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T], returningAction: ReturnAction): Future[T] = {
-    val (params, prepared) = prepare(Nil)
+    val (params, prepared) = prepare(Nil, ())
     logger.logQuery(sql, params)
-    withClient(_.prepareAndQuery(expandAction(sql, returningAction), prepared: _*)(extractor)).map(v => handleSingleResult(v.toList))
+    withClient(_.prepareAndQuery(expandAction(sql, returningAction), prepared: _*)(row => extractor(row, ()))).map(v => handleSingleResult(v.toList))
   }
 
   def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T]): Future[List[T]] =
@@ -120,7 +121,7 @@ class FinaglePostgresContext[N <: NamingStrategy](val naming: N, client: Postgre
     }.map(_.flatten.toList)
 
   override private[getquill] def prepareParams(statement: String, prepare: Prepare): Seq[String] = {
-    prepare(Nil)._2.map(param => prepareParam(param.encode()))
+    prepare(Nil, ())._2.map(param => prepareParam(param.encode()))
   }
 
   private def withClient[T](f: PostgresClient => T) =

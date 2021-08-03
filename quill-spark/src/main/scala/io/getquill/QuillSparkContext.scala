@@ -29,6 +29,7 @@ trait QuillSparkContext
   type Result[T] = Dataset[T]
   type RunQuerySingleResult[T] = T
   type RunQueryResult[T] = T
+  type Session = Unit
 
   private[getquill] val queryCounter = new AtomicInteger(0)
 
@@ -40,7 +41,7 @@ trait QuillSparkContext
   val naming = Literal
 
   private implicit def datasetEncoder[T] =
-    (idx: Int, ds: Dataset[T], row: List[Binding]) =>
+    (idx: Int, ds: Dataset[T], row: List[Binding], session: Session) =>
       row :+ DatasetBinding(ds)
 
   def liftQuery[T](ds: Dataset[T]) =
@@ -144,7 +145,7 @@ trait QuillSparkContext
   private[getquill] def prepareString(string: String, prepare: Prepare)(implicit spark: SQLContext) = {
     var dsId = 0
     val withSubstitutions =
-      prepare(Nil)._2.foldLeft(string) {
+      prepare(Nil, ())._2.foldLeft(string) {
         case (string, DatasetBinding(ds)) =>
           dsId += 1
           val name = s"ds${queryCounter.incrementAndGet()}"

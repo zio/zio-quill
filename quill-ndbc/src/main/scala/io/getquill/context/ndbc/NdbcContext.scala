@@ -60,7 +60,7 @@ abstract class NdbcContext[I <: SqlIdiom, N <: NamingStrategy, P <: PreparedStat
 
   override private[getquill] def prepareParams(statement: String, prepare: Prepare): Future[Seq[String]] =
     withDataSource { _ =>
-      resultEffect.wrap(prepare(createPreparedStatement(statement))._1.reverse.map(prepareParam))
+      resultEffect.wrap(prepare(createPreparedStatement(statement), ())._1.reverse.map(prepareParam))
     }
 }
 

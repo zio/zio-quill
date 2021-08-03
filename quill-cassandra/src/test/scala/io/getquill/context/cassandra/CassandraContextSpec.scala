@@ -29,8 +29,8 @@ class CassandraContextSpec extends Spec {
 
   "fail on returning" in {
     import testSyncDB._
-    val p: Prepare = (x) => (Nil, x)
-    val e: Extractor[Int] = (_) => 1
+    val p: Prepare = (x, session) => (Nil, x)
+    val e: Extractor[Int] = (_, _) => 1
 
     intercept[IllegalStateException](executeActionReturning("", p, e, "")).getMessage mustBe
       intercept[IllegalStateException](executeBatchActionReturning(Nil, e)).getMessage

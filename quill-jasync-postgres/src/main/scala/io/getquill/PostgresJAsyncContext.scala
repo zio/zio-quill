@@ -23,7 +23,7 @@ class PostgresJAsyncContext[N <: NamingStrategy](naming: N, pool: ConnectionPool
   override protected def extractActionResult[O](returningAction: ReturnAction, returningExtractor: Extractor[O])(result: DBQueryResult): O =
     result.getRows.asScala
       .headOption
-      .map(returningExtractor)
+      .map(row => returningExtractor(row, ()))
       .getOrElse(fail("This is a bug. Cannot extract returning value."))
 
   override protected def expandAction(sql: String, returningAction: ReturnAction): String =

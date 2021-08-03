@@ -18,8 +18,8 @@ trait Decoders {
 
   case class AsyncDecoder[T](sqlType: DecoderSqlType)(implicit decoder: BaseDecoder[T])
     extends BaseDecoder[T] {
-    override def apply(index: Index, row: ResultRow) =
-      decoder(index, row)
+    override def apply(index: Index, row: ResultRow, session: Session) =
+      decoder(index, row, session)
   }
 
   def decoder[T: ClassTag](
@@ -27,7 +27,7 @@ trait Decoders {
     sqlType: DecoderSqlType
   ): Decoder[T] =
     AsyncDecoder[T](sqlType)(new BaseDecoder[T] {
-      def apply(index: Index, row: ResultRow) = {
+      def apply(index: Index, row: ResultRow, session: Session) = {
         row.get(index) match {
           case value: T                      => value
           case value if f.isDefinedAt(value) => f(value)
@@ -41,13 +41,13 @@ trait Decoders {
 
   implicit def mappedDecoder[I, O](implicit mapped: MappedEncoding[I, O], decoder: Decoder[I]): Decoder[O] =
     AsyncDecoder(decoder.sqlType)(new BaseDecoder[O] {
-      def apply(index: Index, row: ResultRow): O =
-        mapped.f(decoder.apply(index, row))
+      def apply(index: Index, row: ResultRow, session: Session): O =
+        mapped.f(decoder.apply(index, row, session))
     })
 
   trait NumericDecoder[T] extends BaseDecoder[T] {
 
-    def apply(index: Index, row: ResultRow) = {
+    def apply(index: Index, row: ResultRow, session: Session) = {
       (row.get(index): Any) match {
         case v: Byte           => decode(v)
         case v: Short          => decode(v)
@@ -66,10 +66,10 @@ trait Decoders {
 
   implicit def optionDecoder[T](implicit d: Decoder[T]): Decoder[Option[T]] =
     AsyncDecoder(d.sqlType)(new BaseDecoder[Option[T]] {
-      def apply(index: Index, row: ResultRow) = {
+      def apply(index: Index, row: ResultRow, session: Session) = {
         row.get(index) match {
           case null  => None
-          case value => Some(d(index, row))
+          case value => Some(d(index, row, session))
         }
       }
     })

@@ -1,7 +1,6 @@
 package io.getquill.sqlite
 
-import java.sql.ResultSet
-
+import java.sql.{ Connection, ResultSet }
 import io.getquill.PrepareMonixJdbcSpecBase
 import monix.execution.Scheduler
 import org.scalatest.BeforeAndAfter
@@ -16,7 +15,7 @@ class PrepareJdbcSpec extends PrepareMonixJdbcSpecBase with BeforeAndAfter {
     testContext.run(query[Product].delete).runSyncUnsafe()
   }
 
-  def productExtractor = (rs: ResultSet) => materializeQueryMeta[Product].extract(rs)
+  def productExtractor = (rs: ResultSet, conn: Connection) => materializeQueryMeta[Product].extract(rs, conn)
   val prepareQuery = prepare(query[Product])
 
   "single" in {

@@ -10,7 +10,7 @@ import scala.util.{ Failure, Success, Try }
 object mirrorContextWithQueryProbing
   extends MirrorContext(MirrorIdiom, Literal) with QueryProbing
 
-class MirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy](val idiom: Idiom, val naming: Naming)
+class MirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy](val idiom: Idiom, val naming: Naming, session: MirrorSession = MirrorSession("DefaultMirrorContextSession"))
   extends StandardContext[Idiom, Naming]
   with TranslateContext
   with MirrorEncoders
@@ -56,23 +56,23 @@ class MirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy](val idiom: Idi
   }
 
   def executeQuery[T](string: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor) =
-    QueryMirror(string, prepare(Row())._2, extractor)
+    QueryMirror(string, prepare(Row(), session)._2, extractor)
 
   def executeQuerySingle[T](string: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor) =
-    QueryMirror(string, prepare(Row())._2, extractor)
+    QueryMirror(string, prepare(Row(), session)._2, extractor)
 
   def executeAction(string: String, prepare: Prepare = identityPrepare) =
-    ActionMirror(string, prepare(Row())._2)
+    ActionMirror(string, prepare(Row(), session)._2)
 
   def executeActionReturning[O](string: String, prepare: Prepare = identityPrepare, extractor: Extractor[O],
                                 returningBehavior: ReturnAction) =
-    ActionReturningMirror[O](string, prepare(Row())._2, extractor, returningBehavior)
+    ActionReturningMirror[O](string, prepare(Row(), session)._2, extractor, returningBehavior)
 
   def executeBatchAction(groups: List[BatchGroup]) =
     BatchActionMirror {
       groups.map {
         case BatchGroup(string, prepare) =>
-          (string, prepare.map(_(Row())._2))
+          (string, prepare.map(_(Row(), session)._2))
       }
     }
 
@@ -80,21 +80,21 @@ class MirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy](val idiom: Idi
     BatchActionReturningMirror[T](
       groups.map {
         case BatchGroupReturning(string, returningBehavior, prepare) =>
-          (string, returningBehavior, prepare.map(_(Row())._2))
+          (string, returningBehavior, prepare.map(_(Row(), session)._2))
       }, extractor
     )
 
   def prepareAction(string: String, prepare: Prepare = identityPrepare) =
     (session: Session) =>
-      prepare(Row())._2
+      prepare(Row(), session)._2
 
   def prepareBatchAction(groups: List[BatchGroup]) =
     (session: Session) =>
       groups.flatMap {
         case BatchGroup(string, prepare) =>
-          prepare.map(_(Row())._2)
+          prepare.map(_(Row(), session)._2)
       }
 
   override private[getquill] def prepareParams(statement: String, prepare: Prepare): Seq[String] =
-    prepare(Row())._2.data.map(prepareParam)
+    prepare(Row(), session)._2.data.map(prepareParam)
 }
