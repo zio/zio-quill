@@ -47,6 +47,7 @@ trait NdbcContextBase[Idiom <: SqlIdiom, Naming <: NamingStrategy, P <: Prepared
 
   final override type PrepareRow = P
   final override type ResultRow = R
+  override type Session = Unit
 
   protected implicit val resultEffect: NdbcContextBase.ContextEffect[Result, _]
   import resultEffect._
@@ -60,29 +61,29 @@ trait NdbcContextBase[Idiom <: SqlIdiom, Naming <: NamingStrategy, P <: Prepared
 
   protected def expandAction(sql: String, returningAction: ReturnAction) = sql
 
-  def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: R => T = identity[R] _): Result[List[T]] = {
+  def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: (R, Session) => T = (r: R, s: Session) => r): Result[List[T]] = {
     withDataSourceFromFuture { ds =>
-      val (params, ps) = prepare(createPreparedStatement(sql))
+      val (params, ps) = prepare(createPreparedStatement(sql), ())
       logger.logQuery(sql, params)
 
       ds.query(ps).toScala.map { rs =>
-        extractResult(rs.iterator, extractor)
+        extractResult(rs.iterator, (r: R) => extractor(r, ()))
       }
     }
   }
 
-  def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: R => T = identity[R] _): Result[T] =
+  def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: (R, Session) => T = (r: R, s: Session) => r): Result[T] =
     push(executeQuery(sql, prepare, extractor))(handleSingleResult)
 
   def executeAction[T](sql: String, prepare: Prepare = identityPrepare): Result[Long] = {
     withDataSourceFromFuture { ds =>
-      val (params, ps) = prepare(createPreparedStatement(sql))
+      val (params, ps) = prepare(createPreparedStatement(sql), ())
       logger.logQuery(sql, params)
       ds.execute(ps).toScala.map(_.longValue)
     }
   }
 
-  def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: R => O, returningAction: ReturnAction): Result[O] = {
+  def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: (R, Session) => O, returningAction: ReturnAction): Result[O] = {
     val expanded = expandAction(sql, returningAction)
     executeQuerySingle(expanded, prepare, extractor)
   }
@@ -103,7 +104,7 @@ trait NdbcContextBase[Idiom <: SqlIdiom, Naming <: NamingStrategy, P <: Prepared
   def probe(sql: String): Try[_] =
     Try(runBlocking(withDataSourceFromFuture(_.query(sql).toScala), Duration.Inf))
 
-  def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: R => T): Result[List[T]] =
+  def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: (R, Session) => T): Result[List[T]] =
     push(
       traverse(groups) {
         case BatchGroupReturning(sql, column, prepare) =>

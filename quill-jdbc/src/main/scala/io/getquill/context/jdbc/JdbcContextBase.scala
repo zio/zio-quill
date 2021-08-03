@@ -32,7 +32,7 @@ trait JdbcContextSimplified[Dialect <: SqlIdiom, Naming <: NamingStrategy]
 
   def prepareSingle(sql: String, prepare: Prepare = identityPrepare): Connection => Result[PreparedStatement] =
     (conn: Connection) => wrap {
-      val (params, ps) = prepare(conn.prepareStatement(sql))
+      val (params, ps) = prepare(conn.prepareStatement(sql), conn)
       logger.logQuery(sql, params)
       ps
     }
@@ -75,17 +75,17 @@ trait JdbcRunContext[Dialect <: SqlIdiom, Naming <: NamingStrategy]
 
   def executeAction[T](sql: String, prepare: Prepare = identityPrepare): Result[Long] =
     withConnectionWrapped { conn =>
-      val (params, ps) = prepare(conn.prepareStatement(sql))
+      val (params, ps) = prepare(conn.prepareStatement(sql), conn)
       logger.logQuery(sql, params)
       ps.executeUpdate().toLong
     }
 
   def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): Result[List[T]] =
     withConnectionWrapped { conn =>
-      val (params, ps) = prepare(conn.prepareStatement(sql))
+      val (params, ps) = prepare(conn.prepareStatement(sql), conn)
       logger.logQuery(sql, params)
       val rs = ps.executeQuery()
-      extractResult(rs, extractor)
+      extractResult(rs, conn, extractor)
     }
 
   def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): Result[T] =
@@ -93,10 +93,10 @@ trait JdbcRunContext[Dialect <: SqlIdiom, Naming <: NamingStrategy]
 
   def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningBehavior: ReturnAction): Result[O] =
     withConnectionWrapped { conn =>
-      val (params, ps) = prepare(prepareWithReturning(sql, conn, returningBehavior))
+      val (params, ps) = prepare(prepareWithReturning(sql, conn, returningBehavior), conn)
       logger.logQuery(sql, params)
       ps.executeUpdate()
-      handleSingleResult(extractResult(ps.getGeneratedKeys, extractor))
+      handleSingleResult(extractResult(ps.getGeneratedKeys, conn, extractor))
     }
 
   protected def prepareWithReturning(sql: String, conn: Connection, returningBehavior: ReturnAction) =
@@ -113,7 +113,7 @@ trait JdbcRunContext[Dialect <: SqlIdiom, Naming <: NamingStrategy]
           val ps = conn.prepareStatement(sql)
           logger.underlying.debug("Batch: {}", sql)
           prepare.foreach { f =>
-            val (params, _) = f(ps)
+            val (params, _) = f(ps, conn)
             logger.logBatchItem(sql, params)
             ps.addBatch()
           }
@@ -128,12 +128,12 @@ trait JdbcRunContext[Dialect <: SqlIdiom, Naming <: NamingStrategy]
           val ps = prepareWithReturning(sql, conn, returningBehavior)
           logger.underlying.debug("Batch: {}", sql)
           prepare.foreach { f =>
-            val (params, _) = f(ps)
+            val (params, _) = f(ps, conn)
             logger.logBatchItem(sql, params)
             ps.addBatch()
           }
           ps.executeBatch()
-          extractResult(ps.getGeneratedKeys, extractor)
+          extractResult(ps.getGeneratedKeys, conn, extractor)
       }
     }
 
@@ -150,6 +150,6 @@ trait JdbcRunContext[Dialect <: SqlIdiom, Naming <: NamingStrategy]
    */
   def parseJdbcType(intType: Int): String = JDBCType.valueOf(intType).getName
 
-  private[getquill] final def extractResult[T](rs: ResultSet, extractor: Extractor[T]): List[T] =
-    ResultSetExtractor(rs, extractor)
+  private[getquill] final def extractResult[T](rs: ResultSet, conn: Connection, extractor: Extractor[T]): List[T] =
+    ResultSetExtractor(rs, conn, extractor)
 }

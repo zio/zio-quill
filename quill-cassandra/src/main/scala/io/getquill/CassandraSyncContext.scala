@@ -34,17 +34,17 @@ class CassandraSyncContext[N <: NamingStrategy](
   }
 
   def executeQuery[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): List[T] = {
-    val (params, bs) = prepare(this.prepare(cql))
+    val (params, bs) = prepare(this.prepare(cql), this)
     logger.logQuery(cql, params)
     session.execute(bs)
-      .all.asScala.toList.map(extractor)
+      .all.asScala.toList.map(row => extractor(row, this))
   }
 
   def executeQuerySingle[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): T =
     handleSingleResult(executeQuery(cql, prepare, extractor))
 
   def executeAction[T](cql: String, prepare: Prepare = identityPrepare): Unit = {
-    val (params, bs) = prepare(this.prepare(cql))
+    val (params, bs) = prepare(this.prepare(cql), this)
     logger.logQuery(cql, params)
     session.execute(bs)
     ()

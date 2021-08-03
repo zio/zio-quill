@@ -38,9 +38,9 @@ class CassandraAsyncContext[N <: NamingStrategy](
   }
 
   def executeQuery[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(implicit executionContext: ExecutionContext): Result[RunQueryResult[T]] = {
-    val statement = prepareAsyncAndGetStatement(cql, prepare, logger)
+    val statement = prepareAsyncAndGetStatement(cql, prepare, this, logger)
     statement.flatMap(st => session.executeAsync(st).asScala)
-      .map(_.all.asScala.toList.map(extractor))
+      .map(_.all.asScala.toList.map(row => extractor(row, this)))
   }
 
   def executeQuerySingle[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(implicit executionContext: ExecutionContext): Result[RunQuerySingleResult[T]] = {
@@ -48,7 +48,7 @@ class CassandraAsyncContext[N <: NamingStrategy](
   }
 
   def executeAction[T](cql: String, prepare: Prepare = identityPrepare)(implicit executionContext: ExecutionContext): Result[RunActionResult] = {
-    val statement = prepareAsyncAndGetStatement(cql, prepare, logger)
+    val statement = prepareAsyncAndGetStatement(cql, prepare, this, logger)
     statement.flatMap(st => session.executeAsync(st).asScala).map(_ => ())
   }
 

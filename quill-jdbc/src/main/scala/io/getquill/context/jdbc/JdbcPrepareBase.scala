@@ -15,6 +15,7 @@ trait JdbcPrepareBase[Dialect <: SqlIdiom, Naming <: NamingStrategy]
   type PrepareResult
   type PrepareBatchResult
   override type PrepareRow = PreparedStatement
+  override type Session = Connection
 
   def prepareQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): PrepareResult
   def prepareAction(sql: String, prepare: Prepare = identityPrepare): PrepareResult
@@ -26,7 +27,7 @@ trait JdbcPrepareBase[Dialect <: SqlIdiom, Naming <: NamingStrategy]
 
   protected def prepareInternal(conn: Connection, sql: String, prepare: Prepare) =
     wrap {
-      val (params, ps) = prepare(conn.prepareStatement(sql))
+      val (params, ps) = prepare(conn.prepareStatement(sql), conn)
       logger.logQuery(sql, params)
       ps
     }

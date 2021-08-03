@@ -3,7 +3,7 @@ package io.getquill
 import com.datastax.driver.core._
 import io.getquill.CassandraZioContext._
 import io.getquill.context.StandardContext
-import io.getquill.context.cassandra.{ CassandraBaseContext, CqlIdiom }
+import io.getquill.context.cassandra.{ CassandraRowContext, CqlIdiom }
 import io.getquill.context.qzio.ZioContext
 import io.getquill.util.Messages.fail
 import io.getquill.util.ZioConversions._
@@ -50,7 +50,7 @@ trait CioOps {
  * }}
  */
 class CassandraZioContext[N <: NamingStrategy](val naming: N)
-  extends CassandraBaseContext[N]
+  extends CassandraRowContext[N]
   with ZioContext[CqlIdiom, N]
   with StandardContext[CqlIdiom, N]
   with CioOps {
@@ -70,6 +70,7 @@ class CassandraZioContext[N <: NamingStrategy](val naming: N)
 
   override type PrepareRow = BoundStatement
   override type ResultRow = Row
+  override type Session = CassandraZioSession
 
   protected def page(rs: ResultSet): CIO[Chunk[Row]] = ZIO.succeed {
     val available = rs.getAvailableWithoutFetching
@@ -117,7 +118,7 @@ class CassandraZioContext[N <: NamingStrategy](val naming: N)
               ZIO.succeed(None)
           }
         }
-      } yield extractor(row)
+      } yield extractor(row, csession)
 
     // Run the entire chunking flow on the blocking executor
     streamBlocker *> stream
@@ -131,7 +132,7 @@ class CassandraZioContext[N <: NamingStrategy](val naming: N)
       csession <- ZIO.service[CassandraZioSession]
       rs <- execute(cql, prepare, csession, None)
       rows <- ZIO.effect(rs.all())
-    } yield (rows.asScala.map(extractor).toList)
+    } yield (rows.asScala.map(row => extractor(row, csession)).toList)
   }
 
   def executeQuerySingle[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): CIO[T] = simpleBlocking {
@@ -140,7 +141,7 @@ class CassandraZioContext[N <: NamingStrategy](val naming: N)
       csession <- ZIO.service[CassandraZioSession]
       rs <- execute(cql, prepare, csession, None)
       rows <- ZIO.effect(rs.all())
-      singleRow <- ZIO.effect(handleSingleResult(rows.asScala.map(extractor).toList))
+      singleRow <- ZIO.effect(handleSingleResult(rows.asScala.map(row => extractor(row, csession)).toList))
     } yield singleRow
   }
 
@@ -173,7 +174,7 @@ class CassandraZioContext[N <: NamingStrategy](val naming: N)
       csession = env.get[CassandraZioSession]
       boundStatement <- {
         csession.prepareAsync(cql)
-          .mapEffect(prepare)
+          .mapEffect(row => prepare(row, csession))
           .map(p => p._2)
       }
     } yield boundStatement

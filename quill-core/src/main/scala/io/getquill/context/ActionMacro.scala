@@ -168,7 +168,7 @@ class ActionMacro(val c: MacroContext)
   private def returningExtractor[T](implicit t: WeakTypeTag[T]) = {
     OptionalTypecheck(c)(q"implicitly[${c.prefix}.Decoder[$t]]") match {
       case Some(decoder) =>
-        q"(row: ${c.prefix}.ResultRow) => $decoder.apply(0, row)"
+        q"(row: ${c.prefix}.ResultRow, session: ${c.prefix}.Session) => $decoder.apply(0, row, session)"
       case None =>
         val metaTpe = c.typecheck(tq"${c.prefix}.QueryMeta[$t]", c.TYPEmode).tpe
         val meta = c.inferImplicitValue(metaTpe).orElse(q"${c.prefix}.materializeQueryMeta[$t]")

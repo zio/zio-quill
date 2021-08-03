@@ -13,12 +13,12 @@ trait Encoders {
   protected val dateTimeZone = TimeZone.getDefault
 
   case class JdbcEncoder[T](sqlType: Int, encoder: BaseEncoder[T]) extends BaseEncoder[T] {
-    override def apply(index: Index, value: T, row: PrepareRow) =
-      encoder(index + 1, value, row)
+    override def apply(index: Index, value: T, row: PrepareRow, session: Session) =
+      encoder(index + 1, value, row, session)
   }
 
   def encoder[T](sqlType: Int, f: (Index, T, PrepareRow) => Unit): Encoder[T] =
-    JdbcEncoder(sqlType, (index: Index, value: T, row: PrepareRow) => {
+    JdbcEncoder(sqlType, (index: Index, value: T, row: PrepareRow, session: Session) => {
       f(index, value, row)
       row
     })
@@ -34,10 +34,10 @@ trait Encoders {
   implicit def optionEncoder[T](implicit d: Encoder[T]): Encoder[Option[T]] =
     JdbcEncoder(
       d.sqlType,
-      (index, value, row) =>
+      (index, value, row, session) =>
         value match {
-          case Some(v) => d.encoder(index, v, row)
-          case None    => nullEncoder.encoder(index, d.sqlType, row)
+          case Some(v) => d.encoder(index, v, row, session)
+          case None    => nullEncoder.encoder(index, d.sqlType, row, session)
         }
     )
 

@@ -86,6 +86,7 @@ class FinagleMysqlContext[N <: NamingStrategy](
   override type RunBatchActionResult = List[Long]
   override type RunBatchActionReturningResult[T] = List[T]
   override type StreamResult[T] = Future[AsyncStream[T]]
+  override type Session = Unit
 
   protected val timestampValue =
     new TimestampValue(
@@ -127,23 +128,23 @@ class FinagleMysqlContext[N <: NamingStrategy](
     }
 
   def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): Future[List[T]] = {
-    val (params, prepared) = prepare(Nil)
+    val (params, prepared) = prepare(Nil, ())
     logger.logQuery(sql, params)
-    withClient(Read)(_.prepare(sql).select(prepared: _*)(extractor)).map(_.toList)
+    withClient(Read)(_.prepare(sql).select(prepared: _*)(row => extractor(row, ()))).map(_.toList)
   }
 
   def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): Future[T] =
     executeQuery(sql, prepare, extractor).map(handleSingleResult)
 
   def executeAction[T](sql: String, prepare: Prepare = identityPrepare): Future[Long] = {
-    val (params, prepared) = prepare(Nil)
+    val (params, prepared) = prepare(Nil, ())
     logger.logQuery(sql, params)
     withClient(Write)(_.prepare(sql)(prepared: _*))
       .map(r => toOk(r).affectedRows)
   }
 
   def executeActionReturning[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T], returningAction: ReturnAction): Future[T] = {
-    val (params, prepared) = prepare(Nil)
+    val (params, prepared) = prepare(Nil, ())
     logger.logQuery(sql, params)
     withClient(Write)(_.prepare(sql)(prepared: _*))
       .map(extractReturningValue(_, extractor))
@@ -177,20 +178,20 @@ class FinagleMysqlContext[N <: NamingStrategy](
 
   def streamQuery[T](fetchSize: Option[Int], sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): Future[AsyncStream[T]] = {
     val rowsPerFetch = fetchSize.getOrElse(20)
-    val (params: List[Any], prepared: List[Parameter]) = prepare(Nil)
+    val (params: List[Any], prepared: List[Parameter]) = prepare(Nil, ())
     logger.logQuery(sql, params)
 
     withClient(Read) { client =>
-      client.cursor(sql)(rowsPerFetch, prepared: _*)(extractor).map(_.stream)
+      client.cursor(sql)(rowsPerFetch, prepared: _*)(row => extractor(row, ())).map(_.stream)
     }
   }
 
   override private[getquill] def prepareParams(statement: String, prepare: Prepare): Seq[String] = {
-    prepare(Nil)._2.map(param => prepareParam(param.value))
+    prepare(Nil, ())._2.map(param => prepareParam(param.value))
   }
 
   private def extractReturningValue[T](result: MysqlResult, extractor: Extractor[T]) =
-    extractor(SingleValueRow(LongValue(toOk(result).insertId)))
+    extractor(SingleValueRow(LongValue(toOk(result).insertId)), ())
 
   protected def toOk(result: MysqlResult) =
     result match {
