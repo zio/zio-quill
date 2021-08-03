@@ -1,9 +1,8 @@
 package io.getquill.context.jdbc
 
-import java.time.{ LocalDate, LocalDateTime }
+import java.time.{ LocalDate, LocalDateTime, OffsetDateTime }
 import java.util
 import java.util.Calendar
-
 import scala.math.BigDecimal.javaBigDecimal2bigDecimal
 
 trait Decoders {
@@ -62,4 +61,7 @@ trait Decoders {
   implicit val localDateTimeDecoder: Decoder[LocalDateTime] =
     decoder((index, row, session) =>
       row.getTimestamp(index, Calendar.getInstance(dateTimeZone)).toLocalDateTime)
+  implicit val offsetDateTimeDecoder: Decoder[OffsetDateTime] =
+    decoder((index, row, session) =>
+      row.getObject(index, classOf[OffsetDateTime]))
 }

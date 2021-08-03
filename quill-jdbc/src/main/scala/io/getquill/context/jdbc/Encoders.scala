@@ -1,7 +1,7 @@
 package io.getquill.context.jdbc
 
 import java.sql.{ Date, Timestamp, Types }
-import java.time.{ LocalDate, LocalDateTime }
+import java.time.{ LocalDate, LocalDateTime, OffsetDateTime, ZoneId }
 import java.util.{ Calendar, TimeZone }
 import java.{ sql, util }
 
@@ -60,4 +60,9 @@ trait Encoders {
   implicit val localDateTimeEncoder: Encoder[LocalDateTime] =
     encoder(Types.TIMESTAMP, (index, value, row) =>
       row.setTimestamp(index, Timestamp.valueOf(value), Calendar.getInstance(dateTimeZone)))
+  implicit val offsetDateTimeEncoder: Encoder[OffsetDateTime] =
+    encoder(Types.TIMESTAMP_WITH_TIMEZONE, (index, value, row) => {
+      row.setObject(index, value)
+    })
+
 }

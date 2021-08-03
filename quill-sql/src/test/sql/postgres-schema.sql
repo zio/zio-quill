@@ -38,6 +38,7 @@ CREATE TABLE EncodingTestEntity(
     v12 VARCHAR(255),
     v13 DATE,
     v14 UUID,
+    v15 TIMESTAMPTZ,
     o1 VARCHAR(255),
     o2 DECIMAL(5,2),
     o3 BOOLEAN,
