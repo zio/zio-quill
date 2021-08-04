@@ -4,7 +4,7 @@ set -e # Any subsequent(*) commands which fail will cause the shell script to ex
 VERSION=$1
 ARTIFACT=$2
 
-echo "Begin Release Script for VERSION=$VERSION ARTIFACT=$ARTIFACT"
+echo "Begin Release Script for BRANCH=$BRANCH VERSION=$VERSION ARTIFACT=$ARTIFACT"
 
 if [[ -z $ARTIFACT ]]
 then
@@ -90,6 +90,7 @@ then
 
         # Commit next version and tag if we are on the master branch (i.e. not if we are on a re-release)
         if [[ $BRANCH == "master" && $ARTIFACT == "publish" ]]; then
+          echo "Doing Master Publish for BRANCH=$BRANCH VERSION=$VERSION ARTIFACT=$ARTIFACT"
           # Delete the website tag. If it does not currently exist then ignore it.
           git push --delete origin website || true
           $SBT_VER -Dmodules=none 'release with-defaults default-tag-exists-answer o';
