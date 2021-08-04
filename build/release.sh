@@ -90,7 +90,8 @@ then
 
         # Commit next version and tag if we are on the master branch (i.e. not if we are on a re-release)
         if [[ $BRANCH == "master" && $ARTIFACT == "publish" ]]; then
-          git push --delete origin website
+          # Delete the website tag. If it does not currently exist then ignore it.
+          git push --delete origin website || true
           $SBT_VER -Dmodules=none 'release with-defaults default-tag-exists-answer o';
         fi
 
