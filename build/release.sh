@@ -89,7 +89,10 @@ then
         if [[ $ARTIFACT == "bigdata" ]]; then $SBT_VER -Dmodules=bigdata -DskipPush=true 'release with-defaults'; fi
 
         # Commit next version and tag if we are on the master branch (i.e. not if we are on a re-release)
-        if [[ $BRANCH == "master" && $ARTIFACT == "publish" ]]; then $SBT_VER -Dmodules=none 'release with-defaults default-tag-exists-answer o'; fi
+        if [[ $BRANCH == "master" && $ARTIFACT == "publish" ]]; then
+          git push --delete origin website
+          $SBT_VER -Dmodules=none 'release with-defaults default-tag-exists-answer o';
+        fi
 
     elif [[ $BRANCH == "master" && $(cat version.sbt) == *"SNAPSHOT"* ]]
     then
