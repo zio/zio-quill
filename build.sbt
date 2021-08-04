@@ -961,7 +961,7 @@ lazy val releaseSettings = Seq(
         doOnPush   (updateReadmeVersion(_._2)) ++
         doOnPush   (commitNextVersion) //++
         //doOnPush(releaseStepCommand("sonatypeReleaseAll")) ++
-        //doOnPush   (pushChanges)
+        doOnPush   (pushChanges)
       case Some((2, 12)) =>
         doOnDefault(checkSnapshotDependencies) ++
         doOnDefault(inquireVersions) ++
