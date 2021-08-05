@@ -1016,9 +1016,7 @@ trait Parsing extends ValueComputation with QuatMaking {
     case q"$query.onConflictUpdate(..$assigns)" =>
       OnConflict(astParser(query), OnConflict.NoTarget, parseConflictAssigns(assigns))
     case q"$query.onConflictUpdate(..$targets)(..$assigns)" =>
-      val output = OnConflict(astParser(query), parseConflictProps(targets), parseConflictAssigns(assigns))
-      println(io.getquill.util.Messages.qprint(output))
-      output
+      OnConflict(astParser(query), parseConflictProps(targets), parseConflictAssigns(assigns))
   }
 
   private def parseConflictProps(targets: List[Tree]) = OnConflict.Properties {
