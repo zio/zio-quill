@@ -1714,14 +1714,14 @@ val ctx = new SqlMirrorContext(MirrorSqlDialect, Literal)
 import ctx._
 ```
 
-### like
+### like/ilike
 
 ```scala
 val q = quote {
-  query[Person].filter(p => p.name like "%John%")
+  query[Person].filter(p => p.name ilike "%John%")
 }
 ctx.run(q)
-// SELECT p.id, p.name, p.age FROM Person p WHERE p.name like '%John%'
+// SELECT p.id, p.name, p.age FROM Person p WHERE p.name ilike '%John%'
 ```
 
 ## SQL-specific encoding
