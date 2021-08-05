@@ -1,3 +1,7 @@
+# 3.9.1
+
+- [Remove unneeded printouts](https://github.com/getquill/quill/pull/2225)
+
 # 3.9.0
 
 - [Pass Session to all Encoders/Decoders allowing UDT Encoding without local session varaible in contexts e.g. ZIO and others](https://github.com/getquill/quill/pull/2219)
