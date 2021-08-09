@@ -8,6 +8,7 @@ import io.getquill.context.sql.encoding.ArrayEncoding
 import io.getquill.util.Messages.fail
 import org.joda.time.{ DateTime => JodaDateTime, LocalDate => JodaLocalDate, LocalDateTime => JodaLocalDateTime }
 
+import scala.collection.compat._
 import scala.reflect.ClassTag
 
 trait ArrayDecoders extends ArrayEncoding {
@@ -30,9 +31,9 @@ trait ArrayDecoders extends ArrayEncoding {
 
   def arrayDecoder[I, O, Col <: Seq[O]](mapper: I => O)(implicit bf: CBF[O, Col], iTag: ClassTag[I], oTag: ClassTag[O]): Decoder[Col] =
     AsyncDecoder[Col](SqlTypes.ARRAY)(new BaseDecoder[Col] {
-      def apply(index: Index, row: ResultRow): Col = {
+      def apply(index: Index, row: ResultRow, session: Session): Col = {
         row(index) match {
-          case seq: IndexedSeq[Any] => seq.foldLeft(bf()) {
+          case seq: IndexedSeq[Any] => seq.foldLeft(bf.newBuilder) {
             case (b, x: I) => b += mapper(x)
             case (_, x)    => fail(s"Array at index $index contains element of ${x.getClass.getCanonicalName}, but expected $iTag")
           }.result()

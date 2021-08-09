@@ -2,103 +2,105 @@ package io.getquill.ast
 
 import io.getquill.Spec
 import io.getquill.ast.Implicits._
+import io.getquill.VIdent
+import io.getquill.quat.Quat
 
 class AstOpsSpec extends Spec {
 
   "+||+" - {
     "unapply" in {
-      BinaryOperation(Ident("a"), BooleanOperator.`||`, Constant(true)) must matchPattern {
-        case Ident(a) +||+ Constant(t) if (a == "a" && t == true) =>
+      BinaryOperation(VIdent("a"), BooleanOperator.`||`, Constant.auto(true)) must matchPattern {
+        case VIdent(a) +||+ Constant(t, _) if (a == "a" && t == true) =>
       }
     }
     "apply" in {
-      (Ident("a") +||+ Constant(true)) must matchPattern {
-        case BinaryOperation(Ident(a), BooleanOperator.`||`, Constant(t)) if (a == "a" && t == true) =>
+      (VIdent("a") +||+ Constant.auto(true)) must matchPattern {
+        case BinaryOperation(VIdent(a), BooleanOperator.`||`, Constant(t, _)) if (a == "a" && t == true) =>
       }
     }
   }
 
   "+&&+" - {
     "unapply" in {
-      BinaryOperation(Ident("a"), BooleanOperator.`&&`, Constant(true)) must matchPattern {
-        case Ident(a) +&&+ Constant(t) if (a == "a" && t == true) =>
+      BinaryOperation(VIdent("a"), BooleanOperator.`&&`, Constant.auto(true)) must matchPattern {
+        case VIdent(a) +&&+ Constant(t, _) if (a == "a" && t == true) =>
       }
     }
     "apply" in {
-      (Ident("a") +&&+ Constant(true)) must matchPattern {
-        case BinaryOperation(Ident(a), BooleanOperator.`&&`, Constant(t)) if (a == "a" && t == true) =>
+      (VIdent("a") +&&+ Constant.auto(true)) must matchPattern {
+        case BinaryOperation(VIdent(a), BooleanOperator.`&&`, Constant(t, _)) if (a == "a" && t == true) =>
       }
     }
   }
 
   "+==+" - {
     "unapply" in {
-      BinaryOperation(Ident("a"), EqualityOperator.`==`, Constant(true)) must matchPattern {
-        case Ident(a) +==+ Constant(t) if (a == "a" && t == true) =>
+      BinaryOperation(VIdent("a"), EqualityOperator.`==`, Constant.auto(true)) must matchPattern {
+        case VIdent(a) +==+ Constant(t, _) if (a == "a" && t == true) =>
       }
     }
     "apply" in {
-      (Ident("a") +==+ Constant(true)) must matchPattern {
-        case BinaryOperation(Ident(a), EqualityOperator.`==`, Constant(t)) if (a == "a" && t == true) =>
+      (VIdent("a") +==+ Constant.auto(true)) must matchPattern {
+        case BinaryOperation(VIdent(a), EqualityOperator.`==`, Constant(t, _)) if (a == "a" && t == true) =>
       }
     }
   }
 
   "exist" - {
     "apply" in {
-      IsNotNullCheck(Ident("a")) must matchPattern {
-        case BinaryOperation(Ident(a), EqualityOperator.!=, NullValue) if (a == "a") =>
+      IsNotNullCheck(VIdent("a")) must matchPattern {
+        case BinaryOperation(VIdent(a), EqualityOperator.!=, NullValue) if (a == "a") =>
       }
     }
     "unapply" in {
-      BinaryOperation(Ident("a"), EqualityOperator.!=, NullValue) must matchPattern {
-        case IsNotNullCheck(Ident(a)) if (a == "a") =>
+      BinaryOperation(VIdent("a"), EqualityOperator.!=, NullValue) must matchPattern {
+        case IsNotNullCheck(VIdent(a)) if (a == "a") =>
       }
     }
   }
 
   "empty" - {
     "apply" in {
-      IsNullCheck(Ident("a")) must matchPattern {
-        case BinaryOperation(Ident(a), EqualityOperator.==, NullValue) if (a == "a") =>
+      IsNullCheck(VIdent("a")) must matchPattern {
+        case BinaryOperation(VIdent(a), EqualityOperator.==, NullValue) if (a == "a") =>
       }
     }
     "unapply" in {
-      BinaryOperation(Ident("a"), EqualityOperator.==, NullValue) must matchPattern {
-        case IsNullCheck(Ident(a)) if (a == "a") =>
+      BinaryOperation(VIdent("a"), EqualityOperator.==, NullValue) must matchPattern {
+        case IsNullCheck(VIdent(a)) if (a == "a") =>
       }
     }
   }
 
   "if exist" - {
     "apply" in {
-      IfExist(Ident("a"), Ident("b"), Ident("c")) must matchPattern {
-        case If(BinaryOperation(Ident(a), EqualityOperator.!=, NullValue), Ident(b), Ident(c)) if (a == "a" && b == "b" && c == "c") =>
+      IfExist(VIdent("a"), VIdent("b"), VIdent("c")) must matchPattern {
+        case If(BinaryOperation(VIdent(a), EqualityOperator.!=, NullValue), VIdent(b), VIdent(c)) if (a == "a" && b == "b" && c == "c") =>
       }
     }
     "unapply" in {
-      If(BinaryOperation(Ident("a"), EqualityOperator.!=, NullValue), Ident("b"), Ident("c")) must matchPattern {
-        case IfExist(Ident(a), Ident(b), Ident(c)) if (a == "a" && b == "b" && c == "c") =>
+      If(BinaryOperation(VIdent("a"), EqualityOperator.!=, NullValue), VIdent("b"), VIdent("c")) must matchPattern {
+        case IfExist(VIdent(a), VIdent(b), VIdent(c)) if (a == "a" && b == "b" && c == "c") =>
       }
     }
   }
 
   "if exist or null" - {
     "apply" in {
-      IfExistElseNull(Ident("a"), Ident("b")) must matchPattern {
-        case If(BinaryOperation(Ident(a), EqualityOperator.!=, NullValue), Ident(b), NullValue) if (a == "a" && b == "b") =>
+      IfExistElseNull(VIdent("a"), VIdent("b")) must matchPattern {
+        case If(BinaryOperation(VIdent(a), EqualityOperator.!=, NullValue), VIdent(b), NullValue) if (a == "a" && b == "b") =>
       }
     }
     "unapply" in {
-      If(BinaryOperation(Ident("a"), EqualityOperator.!=, NullValue), Ident("b"), NullValue) must matchPattern {
-        case IfExistElseNull(Ident(a), Ident(b)) if (a == "a" && b == "b") =>
+      If(BinaryOperation(VIdent("a"), EqualityOperator.!=, NullValue), VIdent("b"), NullValue) must matchPattern {
+        case IfExistElseNull(VIdent(a), VIdent(b)) if (a == "a" && b == "b") =>
       }
     }
   }
 
   "returning matcher" - {
-    val insert = Insert(Entity("Ent", List()), List(Assignment(Ident("p"), Property(Ident("p"), "prop"), Constant(123))))
-    val r = Ident("r")
+    val insert = Insert(Entity("Ent", List(), Quat.LeafProduct("prop")), List(Assignment(VIdent("p"), Property(VIdent("p"), "prop"), Constant.auto(123))))
+    val r = VIdent("r")
     val prop = Property(r, "value")
 
     "must match returning" in {

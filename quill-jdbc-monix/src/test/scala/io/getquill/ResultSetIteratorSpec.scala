@@ -1,6 +1,6 @@
 package io.getquill
 
-import io.getquill.context.monix.Runner
+import io.getquill.context.monix.MonixJdbcContext.Runner
 import io.getquill.util.LoadConfig
 import monix.eval.Task
 import monix.execution.Scheduler
@@ -44,7 +44,7 @@ class ResultSetIteratorSpec extends AnyFreeSpec with Matchers with BeforeAndAfte
       Task(ds.getConnection).bracket { conn =>
         Task {
           val stmt = conn.prepareStatement("select * from person")
-          val rs = new ResultSetIterator[String](stmt.executeQuery(), extractor = (rs) => { rs.getString(1) })
+          val rs = new ResultSetIterator[String](stmt.executeQuery(), conn, extractor = (rs, conn) => { rs.getString(1) })
           val accum = ArrayBuffer[String]()
           while (rs.hasNext) accum += rs.next()
           accum
@@ -59,7 +59,7 @@ class ResultSetIteratorSpec extends AnyFreeSpec with Matchers with BeforeAndAfte
       Task(ds.getConnection).bracket { conn =>
         Task {
           val stmt = conn.prepareStatement("select * from person where name = 'Alex'")
-          val rs = new ResultSetIterator(stmt.executeQuery(), extractor = (rs) => { rs.getString(1) })
+          val rs = new ResultSetIterator(stmt.executeQuery(), conn, extractor = (rs, conn) => { rs.getString(1) })
           rs.head
         }
       } { conn => Task(conn.close()) }.runSyncUnsafe()

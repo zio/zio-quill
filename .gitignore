@@ -3,6 +3,7 @@ target
 .classpath
 .project
 .settings
+.bsp
 .cache*
 **/bin
 **/.tmpBin
@@ -20,8 +21,10 @@ MySparkTest.scala
 MyTestJdbc.scala
 MyJdbcTest.scala
 MySqlTest*.scala
+MyCassandraTest*.scala
 MyTest.scala
 MyCqlTest.scala
+MySparkExample.scala
 quill-core/src/main/resources/logback.xml
 quill-jdbc/src/main/resources/logback.xml
 log.txt*
@@ -32,3 +35,7 @@ nohup.out
 project/.bloop/
 /io/
 /.metadata/
+.bsp/
+.jvmopts
+.DS_Store
+.vscode

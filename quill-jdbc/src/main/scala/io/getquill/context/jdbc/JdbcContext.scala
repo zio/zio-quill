@@ -30,7 +30,7 @@ abstract class JdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy]
   override protected val effect: ContextEffect[Result] = new ContextEffect[Result] {
     override def wrap[T](t: => T): T = t
     override def push[A, B](result: A)(f: A => B): B = f(result)
-    override def seq[A, B](list: List[A]): List[A] = list
+    override def seq[A](list: List[A]): List[A] = list
   }
 
   // Need explicit return-type annotations due to scala/bug#8356. Otherwise macro system will not understand Result[Long]=Long etc...
@@ -99,7 +99,7 @@ abstract class JdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy]
 
   override private[getquill] def prepareParams(statement: String, prepare: Prepare): Seq[String] = {
     withConnectionWrapped { conn =>
-      prepare(conn.prepareStatement(statement))._1.reverse.map(prepareParam)
+      prepare(conn.prepareStatement(statement), conn)._1.reverse.map(prepareParam)
     }
   }
 }

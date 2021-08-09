@@ -3,7 +3,7 @@ package io.getquill.context
 import io.getquill.ast._ // Only .returning(r => r.prop) or .returning(r => OneElementCaseClass(r.prop)) is allowed.
 import io.getquill.norm.BetaReduction
 import io.getquill.quotation.ReifyLiftings
-import io.getquill.util.Messages._
+import io.getquill.util.MacroContextExt._
 
 import scala.reflect.macros.whitebox.{ Context => MacroContext }
 import io.getquill.util.{ EnableReflectiveCalls, OptionalTypecheck }
@@ -127,10 +127,10 @@ class ActionMacro(val c: MacroContext)
           case q"($param) => $value" =>
             val nestedLift =
               lift match {
-                case ScalarQueryLift(name, batch: Tree, encoder: Tree) =>
-                  ScalarValueLift("value", value, encoder)
-                case CaseClassQueryLift(name, batch: Tree) =>
-                  CaseClassValueLift("value", value)
+                case ScalarQueryLift(name, batch: Tree, encoder: Tree, quat) =>
+                  ScalarValueLift("value", value, encoder, quat)
+                case CaseClassQueryLift(name, batch: Tree, quat) =>
+                  CaseClassValueLift("value", value, quat)
               }
             val (ast, _) = reifyLiftings(BetaReduction(body, alias -> nestedLift))
             c.untypecheck {
@@ -168,7 +168,7 @@ class ActionMacro(val c: MacroContext)
   private def returningExtractor[T](implicit t: WeakTypeTag[T]) = {
     OptionalTypecheck(c)(q"implicitly[${c.prefix}.Decoder[$t]]") match {
       case Some(decoder) =>
-        q"(row: ${c.prefix}.ResultRow) => $decoder.apply(0, row)"
+        q"(row: ${c.prefix}.ResultRow, session: ${c.prefix}.Session) => $decoder.apply(0, row, session)"
       case None =>
         val metaTpe = c.typecheck(tq"${c.prefix}.QueryMeta[$t]", c.TYPEmode).tpe
         val meta = c.inferImplicitValue(metaTpe).orElse(q"${c.prefix}.materializeQueryMeta[$t]")

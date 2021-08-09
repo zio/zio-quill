@@ -9,7 +9,7 @@ import monix.execution.Scheduler
 import monix.execution.Scheduler.Implicits
 import monix.reactive.Observable
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.util.{ Failure, Success }
 
 class CassandraStreamContext[N <: NamingStrategy](
@@ -50,7 +50,7 @@ class CassandraStreamContext[N <: NamingStrategy](
       .flatMap(Observable.fromAsyncStateAction((rs: ResultSet) => page(rs).map((_, rs)))(_))
       .takeWhile(_.nonEmpty)
       .flatMap(Observable.fromIterable)
-      .map(extractor)
+      .map(row => extractor(row, this))
   }
 
   def executeQuerySingle[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): Observable[T] =
@@ -76,7 +76,7 @@ class CassandraStreamContext[N <: NamingStrategy](
       implicit val executor: Scheduler = scheduler
 
       super.prepareAsync(cql)
-        .map(prepare)
+        .map(row => prepare(row, this))
         .onComplete {
           case Success((params, bs)) =>
             logger.logQuery(cql, params)

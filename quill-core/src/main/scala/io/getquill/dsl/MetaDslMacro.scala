@@ -1,6 +1,6 @@
 package io.getquill.dsl
 
-import io.getquill.util.Messages._
+import io.getquill.util.MacroContextExt._
 import scala.reflect.macros.whitebox.{ Context => MacroContext }
 
 class MetaDslMacro(val c: MacroContext) extends ValueComputation {
@@ -25,7 +25,7 @@ class MetaDslMacro(val c: MacroContext) extends ValueComputation {
           private[this] val _expand = $expand
           def expand = _expand
           val extract =
-            (r: ${c.prefix}.ResultRow) => $extract(implicitly[${c.prefix}.QueryMeta[$r]].extract(r))
+            (r: ${c.prefix}.ResultRow, s: ${c.prefix}.Session) => $extract(implicitly[${c.prefix}.QueryMeta[$r]].extract(r, s))
         }
       """
     }
@@ -70,7 +70,7 @@ class MetaDslMacro(val c: MacroContext) extends ValueComputation {
     val elements = flatten(q"x", value)
     if (elements.isEmpty)
       c.fail(s"Case class type ${t.tpe} has no values")
-    q"${c.prefix}.quote((q: ${c.prefix}.Query[$t]) => q.map(x => io.getquill.dsl.UnlimitedTuple(..$elements)))"
+    q"${c.prefix}.quote((q: io.getquill.Query[$t]) => q.map(x => io.getquill.dsl.UnlimitedTuple(..$elements)))"
   }
 
   private def extract[T](value: Value)(implicit t: WeakTypeTag[T]): Tree = {
@@ -83,11 +83,11 @@ class MetaDslMacro(val c: MacroContext) extends ValueComputation {
           index += 1
           if (parentOptional) {
             if (optional)
-              q"Some($decoder($index, row))"
+              q"Some($decoder($index, row, session))"
             else
-              q"implicitly[${c.prefix}.Decoder[Option[$tpe]]].apply($index, row)"
+              q"implicitly[${c.prefix}.Decoder[Option[$tpe]]].apply($index, row, session)"
           } else {
-            q"$decoder($index, row)"
+            q"$decoder($index, row, session)"
           }
 
         case Nested(_, tpe, params, optional) =>
@@ -114,7 +114,7 @@ class MetaDslMacro(val c: MacroContext) extends ValueComputation {
           } else
             q"new $tpe(...${params.map(_.map(expand(_)))})"
       }
-    q"(row: ${c.prefix}.ResultRow) => ${expand(value)}"
+    q"(row: ${c.prefix}.ResultRow, session: ${c.prefix}.Session) => ${expand(value)}"
   }
 
   private def actionMeta[T](value: Value, method: String)(implicit t: WeakTypeTag[T]) = {
@@ -129,7 +129,7 @@ class MetaDslMacro(val c: MacroContext) extends ValueComputation {
       q"""
         new ${c.prefix}.${TypeName(method.capitalize + "Meta")}[$t] {
           private[this] val _expand =
-            ${c.prefix}.quote((q: ${c.prefix}.EntityQuery[$t], value: $t) => q.${TermName(method)}(..$assignments))
+            ${c.prefix}.quote((q: io.getquill.EntityQuery[$t], value: $t) => q.${TermName(method)}(..$assignments))
           def expand = _expand
         }
       """

@@ -1,11 +1,12 @@
 package io.getquill
 
 import io.getquill.context.Context
+import io.getquill.quat.Quat
 
 trait TestEntities {
   this: Context[_, _] =>
 
-  case class TestEntity(s: String, i: Int, l: Long, o: Option[Int])
+  case class TestEntity(s: String, i: Int, l: Long, o: Option[Int], b: Boolean)
   case class Emb(s: String, i: Int) extends Embedded
   case class TestEntityEmb(emb: Emb, l: Long, o: Option[Int])
   case class TestEntity2(s: String, i: Int, l: Long, o: Option[Int])
@@ -15,6 +16,17 @@ trait TestEntities {
   case class EmbSingle(i: Long) extends Embedded
   case class TestEntity4Emb(emb: EmbSingle)
   case class TestEntityRegular(s: String, i: Long)
+
+  private val QV = Quat.Value
+  private val QBV = Quat.BooleanValue
+
+  val TestEntityQuat = Quat.Product("s" -> QV, "i" -> QV, "l" -> QV, "o" -> QV, "b" -> QBV)
+  val TestEntityEmbQuat = Quat.Product("emb" -> Quat.Product("s" -> QV, "i" -> QV), "l" -> QV, "o" -> QV)
+  val TestEntity2Quat = Quat.Product("s" -> QV, "i" -> QV, "l" -> QV, "o" -> QV)
+  val TestEntity3Quat = Quat.Product("s" -> QV, "i" -> QV, "l" -> QV, "o" -> QV)
+  val TestEntity4Quat = Quat.Product("i" -> QV)
+  val TestEntity5Quat = Quat.Product("i" -> QV, "s" -> QV)
+  val TestEntity4EmbQuat = Quat.Product("emb" -> Quat.Product("i" -> QV))
 
   val qr1 = quote {
     query[TestEntity]

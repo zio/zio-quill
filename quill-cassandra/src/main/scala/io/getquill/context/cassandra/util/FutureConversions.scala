@@ -9,15 +9,18 @@ import scala.util.Try
 
 object FutureConversions {
 
-  implicit class ListenableFutureConverter[A](val lf: ListenableFuture[A]) extends AnyVal {
+  implicit class ListenableFutureConverter[A](val lf: ListenableFuture[A])
+    extends AnyVal {
     def asScala(implicit ec: ExecutionContext): Future[A] = {
-      val promise = Promise[A]
+      val promise = Promise[A]()
       lf.addListener(new Runnable {
         def run(): Unit = {
           promise.complete(Try(lf.get()))
           ()
         }
-      }, ec.asInstanceOf[Executor])
+      }, new Executor {
+        override def execute(command: Runnable): Unit = ec.execute(command)
+      })
       promise.future
     }
 

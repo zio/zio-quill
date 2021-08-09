@@ -29,7 +29,7 @@ class PrepareSpec extends Spec {
         } yield (a, b, c)
       }
       testContext.run(q).string mustEqual
-        "SELECT a.s, a.i, a.l, a.o, b.s, b.i, b.l, b.o, c.s, c.i, c.l, c.o FROM TestEntity a INNER JOIN TestEntity2 b ON a.i = b.i INNER JOIN TestEntity c ON c.i = a.i"
+        "SELECT a.s, a.i, a.l, a.o, a.b, b.s, b.i, b.l, b.o, c.s, c.i, c.l, c.o, c.b FROM TestEntity a INNER JOIN TestEntity2 b ON a.i = b.i INNER JOIN TestEntity c ON c.i = a.i"
     }
 
     "with many secondary tables" in {
@@ -42,7 +42,7 @@ class PrepareSpec extends Spec {
         } yield (a, b, c, d, e)
       }
       testContext.run(q).string mustEqual
-        "SELECT a.s, a.i, a.l, a.o, b.s, b.i, b.l, b.o, c.s, c.i, c.l, c.o, d.s, d.i, d.l, d.o, e.s, e.i, e.l, e.o FROM TestEntity a INNER JOIN TestEntity2 b ON a.i = b.i INNER JOIN TestEntity c ON c.i = a.i INNER JOIN TestEntity2 d ON d.i = b.i INNER JOIN TestEntity3 e ON e.i = c.i"
+        "SELECT a.s, a.i, a.l, a.o, a.b, b.s, b.i, b.l, b.o, c.s, c.i, c.l, c.o, c.b, d.s, d.i, d.l, d.o, e.s, e.i, e.l, e.o FROM TestEntity a INNER JOIN TestEntity2 b ON a.i = b.i INNER JOIN TestEntity c ON c.i = a.i INNER JOIN TestEntity2 d ON d.i = b.i INNER JOIN TestEntity3 e ON e.i = c.i"
     }
 
     "with outer join" in {
@@ -53,7 +53,7 @@ class PrepareSpec extends Spec {
         } yield (a, b, c.map(c => c.i))
       }
       testContext.run(q).string mustEqual
-        "SELECT a.s, a.i, a.l, a.o, b.s, b.i, b.l, b.o, c.i FROM TestEntity a INNER JOIN TestEntity2 b ON a.i = a.i RIGHT JOIN TestEntity c ON c.i = a.i"
+        "SELECT a.s, a.i, a.l, a.o, a.b, b.s, b.i, b.l, b.o, c.i FROM TestEntity a INNER JOIN TestEntity2 b ON a.i = a.i RIGHT JOIN TestEntity c ON c.i = a.i"
     }
   }
 }

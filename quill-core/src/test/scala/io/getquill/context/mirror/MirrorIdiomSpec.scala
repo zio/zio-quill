@@ -2,12 +2,13 @@ package io.getquill.context.mirror
 
 import io.getquill.MirrorIdiom
 import io.getquill.Spec
-import io.getquill.testContext
 import io.getquill.testContext._
 import io.getquill.idiom.StatementInterpolator._
 import io.getquill.Literal
 import io.getquill.ast.Ast
 import io.getquill.ast._
+import io.getquill.Ord
+import io.getquill.Query
 
 class MirrorIdiomSpec extends Spec {
 
@@ -168,14 +169,14 @@ class MirrorIdiomSpec extends Spec {
   "shows operations" - {
     "unary" in {
       val q = quote {
-        (xs: testContext.Query[_]) => !xs.nonEmpty
+        (xs: Query[_]) => !xs.nonEmpty
       }
       stmt"${(q.ast: Ast).token}" mustEqual
         stmt"""(xs) => !xs.nonEmpty"""
     }
     "binary" in {
       val q = quote {
-        (xs: testContext.Query[_]) => xs.nonEmpty && xs != null
+        (xs: Query[_]) => xs.nonEmpty && xs != null
       }
       stmt"${(q.ast: Ast).token}" mustEqual
         stmt"""(xs) => xs.nonEmpty && (xs != null)"""
@@ -249,14 +250,14 @@ class MirrorIdiomSpec extends Spec {
     "prostfix" - {
       "isEmpty" in {
         val q = quote {
-          (xs: testContext.Query[_]) => xs.isEmpty
+          (xs: Query[_]) => xs.isEmpty
         }
         stmt"${(q.ast: Ast).token}" mustEqual
           stmt"""(xs) => xs.isEmpty"""
       }
       "nonEmpty" in {
         val q = quote {
-          (xs: testContext.Query[_]) => xs.nonEmpty
+          (xs: Query[_]) => xs.nonEmpty
         }
         stmt"${(q.ast: Ast).token}" mustEqual
           stmt"""(xs) => xs.nonEmpty"""
@@ -488,8 +489,8 @@ class MirrorIdiomSpec extends Spec {
         stmt"""querySchema("TestEntity").filter(t => infix"$${t.s} == 's'")"""
     }
     "as quoted" in {
-      implicit class RichQuoted[T](q: Quoted[testContext.Query[T]]) {
-        def func = quote(infix"$q.func".as[testContext.Query[T]])
+      implicit class RichQuoted[T](q: Quoted[Query[T]]) {
+        def func = quote(infix"$q.func".as[Query[T]])
       }
       val q = quote {
         qr1.func

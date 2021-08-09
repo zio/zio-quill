@@ -1,7 +1,9 @@
 package io.getquill.quotation
 
 import io.getquill._
+import io.getquill.ast.Entity
 import io.getquill.dsl.DynamicQueryDsl
+import io.getquill.quat.Quat
 
 class DynamicQuerySpec extends Spec {
 
@@ -61,10 +63,20 @@ class DynamicQuerySpec extends Spec {
     }
   }
 
+  // Need to put here so an summon TypeTag for these
+  case class S(v: String) extends Embedded
+  case class E(s: S)
+  case class Person2(firstName: String, lastName: String)
+
   "query" - {
 
     def test[T: QueryMeta](d: Quoted[Query[T]], s: Quoted[Query[T]]) =
       testContext.run(d).string mustEqual testContext.run(s).string
+
+    "simple dynamic query succeeds" in {
+      val s = dynamicQuerySchema[Person2]("Person2")
+      s.ast mustEqual Entity("Person2", List(), Quat.LeafProduct("firstName", "lastName"))
+    }
 
     "dynamicQuery" in {
       test(
@@ -100,8 +112,6 @@ class DynamicQuerySpec extends Spec {
         )
       }
       "path property" in {
-        case class S(v: String) extends Embedded
-        case class E(s: S)
         test(
           dynamicQuerySchema[E]("e", alias(_.s.v, "sv")),
           querySchema[E]("e", _.s.v -> "sv")
@@ -518,7 +528,7 @@ class DynamicQuerySpec extends Spec {
     def test[T](d: Quoted[Action[T]], s: Quoted[Action[T]]) =
       testContext.run(d).string mustEqual testContext.run(s).string
 
-    val t = TestEntity("s", 1, 2L, Some(3))
+    val t = TestEntity("s", 1, 2L, Some(3), true)
     "insertValue" in {
       test(
         dynamicQuery[TestEntity].insertValue(t),

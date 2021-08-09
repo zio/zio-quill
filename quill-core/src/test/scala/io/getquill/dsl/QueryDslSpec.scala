@@ -2,6 +2,7 @@ package io.getquill.dsl
 
 import io.getquill.testContext._
 import io.getquill.Spec
+import io.getquill.EntityQuery
 
 class QueryDslSpec extends Spec {
 
@@ -11,7 +12,14 @@ class QueryDslSpec extends Spec {
         (t: TestEntity) => qr1.insert(t)
       }
       val u = quote {
-        (t: TestEntity) => qr1.insert(v => v.s -> t.s, v => v.i -> t.i, v => v.l -> t.l, v => v.o -> t.o)
+        (t: TestEntity) =>
+          qr1.insert(
+            v => v.s -> t.s,
+            v => v.i -> t.i,
+            v => v.l -> t.l,
+            v => v.o -> t.o,
+            v => v.b -> t.b
+          )
       }
       q.ast mustEqual u.ast
     }
@@ -35,7 +43,14 @@ class QueryDslSpec extends Spec {
         (t: TestEntity) => qr1.update(t)
       }
       val u = quote {
-        (t: TestEntity) => qr1.update(v => v.s -> t.s, v => v.i -> t.i, v => v.l -> t.l, v => v.o -> t.o)
+        (t: TestEntity) =>
+          qr1.update(
+            v => v.s -> t.s,
+            v => v.i -> t.i,
+            v => v.l -> t.l,
+            v => v.o -> t.o,
+            v => v.b -> t.b
+          )
       }
       q.ast mustEqual u.ast
     }

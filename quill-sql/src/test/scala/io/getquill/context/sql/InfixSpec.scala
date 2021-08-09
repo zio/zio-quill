@@ -6,7 +6,7 @@ import io.getquill.TestEntities
 import io.getquill.Literal
 import io.getquill.Spec
 
-class InfixSpec extends Spec {
+class InfixSpec extends Spec { //hello
 
   "queries with infix should" - {
 
@@ -98,7 +98,7 @@ class InfixSpec extends Spec {
           query[Person].map(p => (p.name, p.id, infix"foo(${p.other})".as[Int])).map(p => (p._1, p._2))
         }
 
-        ctx.run(q).string mustEqual "SELECT p._1, p._2 FROM (SELECT p.name AS _1, p.id AS _2, foo(p.other) FROM Person p) AS p"
+        ctx.run(q).string mustEqual "SELECT p._1, p._2 FROM (SELECT p.name AS _1, p.id AS _2, foo(p.other) AS _3 FROM Person p) AS p"
       }
 
       "should not be dropped if pure" in {
@@ -114,7 +114,7 @@ class InfixSpec extends Spec {
           query[Person].map(p => (p.name, (p.id, infix"foo(${p.other})".as[Int]))).map(p => (p._1, p._2._1))
         }
 
-        ctx.run(q).string mustEqual "SELECT p._1, p._2_1 FROM (SELECT p.name AS _1, p.id AS _2_1, foo(p.other) FROM Person p) AS p"
+        ctx.run(q).string mustEqual "SELECT p._1, p._2_1 FROM (SELECT p.name AS _1, p.id AS _2_1, foo(p.other) AS _2_2 FROM Person p) AS p"
       }
 
       "should not be selected twice if in sub-sub tuple" in {
@@ -138,7 +138,7 @@ class InfixSpec extends Spec {
           query[Person].map(p => (p.name, (p.id, infix"foo(${p.other}, ${p.other2})".as[Int], p.other))).map(p => (p._1, p._2._1, p._2._3))
         }
 
-        ctx.run(q).string mustEqual "SELECT p._1, p._2_1, p._2_3 FROM (SELECT p.name AS _1, p.id AS _2_1, foo(p.other, p.other2), p.other AS _2_3 FROM Person p) AS p"
+        ctx.run(q).string mustEqual "SELECT p._1, p._2_1, p._2_3 FROM (SELECT p.name AS _1, p.id AS _2_1, foo(p.other, p.other2) AS _2_2, p.other AS _2_3 FROM Person p) AS p"
       }
 
       "distinct-on infix example" in {
@@ -146,7 +146,7 @@ class InfixSpec extends Spec {
           query[Person].map(p => (infix"DISTINCT ON (${p.other})".as[Int], p.name, p.id)).map(t => (t._2, t._3))
         }
 
-        ctx.run(q).string mustEqual "SELECT p._2, p._3 FROM (SELECT DISTINCT ON (p.other), p.name AS _2, p.id AS _3 FROM Person p) AS p"
+        ctx.run(q).string mustEqual "SELECT p._2, p._3 FROM (SELECT DISTINCT ON (p.other) AS _1, p.name AS _2, p.id AS _3 FROM Person p) AS p"
       }
     }
   }

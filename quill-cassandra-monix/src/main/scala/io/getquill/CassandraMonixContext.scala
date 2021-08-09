@@ -3,14 +3,14 @@ package io.getquill
 import com.datastax.driver.core.{ Cluster, ResultSet, Row }
 import com.typesafe.config.Config
 import io.getquill.context.cassandra.CqlIdiom
-import io.getquill.context.monix.{ MonixContext, Runner }
+import io.getquill.context.monix.MonixContext
 import io.getquill.util.{ ContextLogger, LoadConfig }
 import io.getquill.context.cassandra.util.FutureConversions._
 import monix.eval.Task
 import monix.execution.Scheduler
 import monix.reactive.Observable
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.util.{ Failure, Success }
 
 class CassandraMonixContext[N <: NamingStrategy](
@@ -21,9 +21,6 @@ class CassandraMonixContext[N <: NamingStrategy](
 )
   extends CassandraClusterSessionContext[N](naming, cluster, keyspace, preparedStatementCacheSize)
   with MonixContext[CqlIdiom, N] {
-
-  // not using this here
-  override val effect = Runner.default
 
   def this(naming: N, config: CassandraContextConfig) = this(naming, config.cluster, config.keyspace, config.preparedStatementCacheSize)
   def this(naming: N, config: Config) = this(naming, CassandraContextConfig(config))
@@ -57,7 +54,7 @@ class CassandraMonixContext[N <: NamingStrategy](
       .flatMap(Observable.fromAsyncStateAction((rs: ResultSet) => page(rs).map((_, rs)))(_))
       .takeWhile(_.nonEmpty)
       .flatMap(Observable.fromIterable)
-      .map(extractor)
+      .map(row => extractor(row, this))
   }
 
   def executeQuery[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): Task[List[T]] = {
@@ -87,7 +84,7 @@ class CassandraMonixContext[N <: NamingStrategy](
       implicit val executor: Scheduler = scheduler
 
       super.prepareAsync(cql)
-        .map(prepare)
+        .map(row => prepare(row, this))
         .onComplete {
           case Success((params, bs)) =>
             logger.logQuery(cql, params)

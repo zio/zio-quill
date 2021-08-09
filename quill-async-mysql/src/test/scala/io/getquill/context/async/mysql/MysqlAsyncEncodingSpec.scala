@@ -9,6 +9,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 import java.util.Date
+import io.getquill.Query
 
 class MysqlAsyncEncodingSpec extends EncodingSpec {
 

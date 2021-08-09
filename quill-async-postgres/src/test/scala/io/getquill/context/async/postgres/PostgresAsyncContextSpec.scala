@@ -27,7 +27,7 @@ class PostgresAsyncContextSpec extends Spec {
   "Insert with returning with multiple columns" in {
     await(testContext.run(qr1.delete))
     val inserted = await(testContext.run {
-      qr1.insert(lift(TestEntity("foo", 1, 18L, Some(123)))).returning(r => (r.i, r.s, r.o))
+      qr1.insert(lift(TestEntity("foo", 1, 18L, Some(123), true))).returning(r => (r.i, r.s, r.o))
     })
     (1, "foo", Some(123)) mustBe inserted
   }
@@ -49,13 +49,13 @@ class PostgresAsyncContextSpec extends Spec {
         super.extractActionResult(returningAction, returningExtractor)(result)
     }
     intercept[IllegalStateException] {
-      ctx.extractActionResult(ReturnColumns(List("w/e")), row => 1)(new QueryResult(0, "w/e"))
+      ctx.extractActionResult(ReturnColumns(List("w/e")), (row, session) => 1)(new QueryResult(0, "w/e"))
     }
     ctx.close
   }
 
   "prepare" in {
-    testContext.prepareParams("", ps => (Nil, ps ++ List("Sarah", 127))) mustEqual List("'Sarah'", "127")
+    testContext.prepareParams("", (ps, session) => (Nil, ps ++ List("Sarah", 127))) mustEqual List("'Sarah'", "127")
   }
 
   override protected def beforeAll(): Unit = {
