@@ -49,6 +49,7 @@ class ExecutionInfo(val executionType: ExecutionType, queryAst: => Ast) {
 }
 object ExecutionInfo {
   def apply(executionType: ExecutionType, ast: => Ast) = new ExecutionInfo(executionType, ast)
+  val unknown = ExecutionInfo(ExecutionType.Unknown, io.getquill.ast.NullValue)
 }
 
 trait AstSplicing
@@ -57,6 +58,7 @@ sealed trait ExecutionType
 object ExecutionType {
   case object Dynamic extends ExecutionType
   case object Static extends ExecutionType
+  case object Unknown extends ExecutionType
 }
 
 trait ProtoStreamContext[Dialect <: io.getquill.idiom.Idiom, Naming <: NamingStrategy] extends RowContext {

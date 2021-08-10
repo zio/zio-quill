@@ -28,6 +28,7 @@ trait JdbcRunContext[Dialect <: SqlIdiom, Naming <: NamingStrategy]
   override type PrepareRow = PreparedStatement
   override type ResultRow = ResultSet
   override type Session = Connection
+  override type DatasourceContext = Unit
 
   protected val effect: ContextEffect[Result]
   import effect._
