@@ -1,14 +1,13 @@
 package io.getquill
 
 import java.util.TimeZone
-
 import scala.util.Try
 import com.twitter.concurrent.AsyncStream
 import com.twitter.finagle.mysql.Client
 import com.twitter.finagle.mysql.LongValue
 import com.twitter.finagle.mysql.OK
 import com.twitter.finagle.mysql.Parameter
-import com.twitter.finagle.mysql.{ Result => MysqlResult }
+import com.twitter.finagle.mysql.{Result => MysqlResult}
 import com.twitter.finagle.mysql.Row
 import com.twitter.finagle.mysql.Transactions
 import com.twitter.finagle.mysql.TimestampValue
@@ -21,10 +20,10 @@ import io.getquill.context.finagle.mysql.FinagleMysqlDecoders
 import io.getquill.context.finagle.mysql.FinagleMysqlEncoders
 import io.getquill.context.finagle.mysql.SingleValueRow
 import io.getquill.context.sql.SqlContext
-import io.getquill.util.{ ContextLogger, LoadConfig }
+import io.getquill.util.{ContextLogger, LoadConfig}
 import io.getquill.util.Messages.fail
 import io.getquill.monad.TwitterFutureIOMonad
-import io.getquill.context.{ Context, StreamingContext, TranslateContext }
+import io.getquill.context.{Context, ExecutionInfo, StreamingContext, TranslateContext}
 
 sealed trait OperationType
 object OperationType {
@@ -127,30 +126,30 @@ class FinagleMysqlContext[N <: NamingStrategy](
       case true  => transaction(super.performIO(io))
     }
 
-  def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): Future[List[T]] = {
+  def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(executionInfo: ExecutionInfo, dc: DatasourceContext): Future[List[T]] = {
     val (params, prepared) = prepare(Nil, ())
     logger.logQuery(sql, params)
     withClient(Read)(_.prepare(sql).select(prepared: _*)(row => extractor(row, ()))).map(_.toList)
   }
 
-  def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): Future[T] =
+  def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(executionInfo: ExecutionInfo, dc: DatasourceContext): Future[T] =
     executeQuery(sql, prepare, extractor).map(handleSingleResult)
 
-  def executeAction[T](sql: String, prepare: Prepare = identityPrepare): Future[Long] = {
+  def executeAction[T](sql: String, prepare: Prepare = identityPrepare)(executionInfo: ExecutionInfo, dc: DatasourceContext): Future[Long] = {
     val (params, prepared) = prepare(Nil, ())
     logger.logQuery(sql, params)
     withClient(Write)(_.prepare(sql)(prepared: _*))
       .map(r => toOk(r).affectedRows)
   }
 
-  def executeActionReturning[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T], returningAction: ReturnAction): Future[T] = {
+  def executeActionReturning[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T], returningAction: ReturnAction)(executionInfo: ExecutionInfo, dc: DatasourceContext): Future[T] = {
     val (params, prepared) = prepare(Nil, ())
     logger.logQuery(sql, params)
     withClient(Write)(_.prepare(sql)(prepared: _*))
       .map(extractReturningValue(_, extractor))
   }
 
-  def executeBatchAction[B](groups: List[BatchGroup]): Future[List[Long]] =
+  def executeBatchAction[B](groups: List[BatchGroup])(executionInfo: ExecutionInfo, dc: DatasourceContext): Future[List[Long]] =
     Future.collect {
       groups.map {
         case BatchGroup(sql, prepare) =>
@@ -163,7 +162,7 @@ class FinagleMysqlContext[N <: NamingStrategy](
       }
     }.map(_.flatten.toList)
 
-  def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T]): Future[List[T]] =
+  def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T])(executionInfo: ExecutionInfo, dc: DatasourceContext): Future[List[T]] =
     Future.collect {
       groups.map {
         case BatchGroupReturning(sql, column, prepare) =>
@@ -176,7 +175,7 @@ class FinagleMysqlContext[N <: NamingStrategy](
       }
     }.map(_.flatten.toList)
 
-  def streamQuery[T](fetchSize: Option[Int], sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): Future[AsyncStream[T]] = {
+  def streamQuery[T](fetchSize: Option[Int], sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(executionInfo: ExecutionInfo, dc: DatasourceContext): Future[AsyncStream[T]] = {
     val rowsPerFetch = fetchSize.getOrElse(20)
     val (params: List[Any], prepared: List[Parameter]) = prepare(Nil, ())
     logger.logQuery(sql, params)
