@@ -1,17 +1,16 @@
 package io.getquill.context.monix
 
-import java.sql.{ Array => _ }
-
-import io.getquill.context.StreamingContext
+import java.sql.{Array => _}
+import io.getquill.context.{ExecutionInfo, StreamingContext}
 import io.getquill.context.monix.MonixNdbcContext.Runner
 import io.getquill.context.ndbc.NdbcContextBase
 import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.ndbc.TraneFutureConverters
 import io.getquill.ndbc.TraneFutureConverters._
 import io.getquill.util.ContextLogger
-import io.getquill.{ NamingStrategy, ReturnAction }
+import io.getquill.{NamingStrategy, ReturnAction}
 import io.trane.future.scala.Future
-import io.trane.ndbc.{ DataSource, PreparedStatement, Row }
+import io.trane.ndbc.{DataSource, PreparedStatement, Row}
 import monix.eval.Task
 import monix.execution.Scheduler
 import monix.reactive.Observable
@@ -100,23 +99,23 @@ abstract class MonixNdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy, P
   }
 
   // Need explicit return-type annotations due to scala/bug#8356. Otherwise macro system will not understand Result[Long]=Task[Long] etc...
-  override def executeAction[T](sql: String, prepare: Prepare = identityPrepare): Task[Long] =
-    super.executeAction(sql, prepare)
+  override def executeAction[T](sql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: DatasourceContext): Task[Long] =
+    super.executeAction(sql, prepare)(info, dc)
 
-  override def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): Task[List[T]] =
-    super.executeQuery(sql, prepare, extractor)
+  override def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext): Task[List[T]] =
+    super.executeQuery(sql, prepare, extractor)(info, dc)
 
-  override def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): Task[T] =
-    super.executeQuerySingle(sql, prepare, extractor)
+  override def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext): Task[T] =
+    super.executeQuerySingle(sql, prepare, extractor)(info, dc)
 
-  override def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningBehavior: ReturnAction): Task[O] =
-    super.executeActionReturning(sql, prepare, extractor, returningBehavior)
+  override def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningBehavior: ReturnAction)(info: ExecutionInfo, dc: DatasourceContext): Task[O] =
+    super.executeActionReturning(sql, prepare, extractor, returningBehavior)(info, dc)
 
-  override def executeBatchAction(groups: List[BatchGroup]): Task[List[Long]] =
-    super.executeBatchAction(groups)
+  override def executeBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: DatasourceContext): Task[List[Long]] =
+    super.executeBatchAction(groups)(info, dc)
 
-  override def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T]): Task[List[T]] =
-    super.executeBatchActionReturning(groups, extractor)
+  override def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T])(info: ExecutionInfo, dc: DatasourceContext): Task[List[T]] =
+    super.executeBatchActionReturning(groups, extractor)(info, dc)
 
   override def transaction[T](f: => Task[T]): Task[T] = super.transaction(f)
 
@@ -127,7 +126,7 @@ abstract class MonixNdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy, P
     schedule(f(dataSource))
 
   // TODO: What about fetchSize? Not really applicable here
-  def streamQuery[T](fetchSize: Option[Index], sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): Observable[T] =
+  def streamQuery[T](fetchSize: Option[Index], sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext): Observable[T] =
     Observable
       .eval {
         // TODO: Do we need to set ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY?

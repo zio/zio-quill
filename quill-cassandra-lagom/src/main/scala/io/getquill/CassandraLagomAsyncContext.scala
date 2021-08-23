@@ -3,9 +3,10 @@ package io.getquill
 import akka.Done
 import com.datastax.driver.core.BoundStatement
 import com.lightbend.lagom.scaladsl.persistence.cassandra.CassandraSession
+import io.getquill.context.ExecutionInfo
 import io.getquill.util.ContextLogger
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 
 class CassandraLagomAsyncContext[N <: NamingStrategy](
   naming:  N,
@@ -44,25 +45,25 @@ class CassandraLagomAsyncContext[N <: NamingStrategy](
     }
   }
 
-  def executeQuery[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(implicit executionContext: ExecutionContext): Result[RunQueryResult[T]] = {
+  def executeQuery[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext)(implicit executionContext: ExecutionContext): Result[RunQueryResult[T]] = {
     val statement = prepareAsyncAndGetStatement(cql, prepare, wrappedSession, logger)
     statement.flatMap(st => session.selectAll(st)).map(_.map(row => extractor(row, wrappedSession)))
   }
 
-  def executeQuerySingle[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(implicit executionContext: ExecutionContext): Result[RunQuerySingleResult[T]] = {
-    executeQuery(cql, prepare, extractor).map(_.headOption)
+  def executeQuerySingle[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext)(implicit executionContext: ExecutionContext): Result[RunQuerySingleResult[T]] = {
+    executeQuery(cql, prepare, extractor)(info, dc).map(_.headOption)
   }
 
-  def executeAction[T](cql: String, prepare: Prepare = identityPrepare)(implicit executionContext: ExecutionContext): Result[RunActionResult] = {
+  def executeAction[T](cql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: DatasourceContext)(implicit executionContext: ExecutionContext): Result[RunActionResult] = {
     val statement = prepareAsyncAndGetStatement(cql, prepare, wrappedSession, logger)
     statement.flatMap(st => session.executeWrite(st))
   }
 
-  def executeBatchAction(groups: List[BatchGroup])(implicit executionContext: ExecutionContext): Result[RunBatchActionResult] = {
+  def executeBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: DatasourceContext)(implicit executionContext: ExecutionContext): Result[RunBatchActionResult] = {
     Future.sequence {
       groups.flatMap {
         case BatchGroup(cql, prepares) =>
-          prepares.map(executeAction(cql, _))
+          prepares.map(executeAction(cql, _)(info, dc))
       }
     }.map(_ => Done)
   }

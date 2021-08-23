@@ -100,6 +100,13 @@ class QueryMacro(val c: MacroContext) extends ContextMacro {
               prettyPrint = false
             )(io.getquill.context.ExecutionInfo.unknown, ())
            """
+        case PrepareQuery =>
+          q"""
+            ${c.prefix}.${TermName(method.name)}(
+              expanded.string,
+              expanded.prepare
+            )(io.getquill.context.ExecutionInfo.unknown, ())
+           """
         case _ =>
           q"""
             ${c.prefix}.${TermName(method.name)}(
@@ -167,6 +174,13 @@ class QueryMacro(val c: MacroContext) extends ContextMacro {
               expanded.prepare,
               $meta.extract,
               prettyPrint = false
+            )(io.getquill.context.ExecutionInfo.unknown, ())
+           """
+        case PrepareQuery =>
+          q"""
+            ${c.prefix}.${TermName(method.name)}(
+              expanded.string,
+              expanded.prepare
             )(io.getquill.context.ExecutionInfo.unknown, ())
            """
         case _ =>

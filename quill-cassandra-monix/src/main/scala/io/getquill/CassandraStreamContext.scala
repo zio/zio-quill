@@ -1,16 +1,17 @@
 package io.getquill
 
-import com.datastax.driver.core.{ Cluster, ResultSet, Row }
+import com.datastax.driver.core.{Cluster, ResultSet, Row}
 import com.typesafe.config.Config
+import io.getquill.context.ExecutionInfo
 import io.getquill.context.cassandra.util.FutureConversions._
-import io.getquill.util.{ ContextLogger, LoadConfig }
+import io.getquill.util.{ContextLogger, LoadConfig}
 import monix.eval.Task
 import monix.execution.Scheduler
 import monix.execution.Scheduler.Implicits
 import monix.reactive.Observable
 
 import scala.jdk.CollectionConverters._
-import scala.util.{ Failure, Success }
+import scala.util.{Failure, Success}
 
 class CassandraStreamContext[N <: NamingStrategy](
   naming:                     N,
@@ -42,7 +43,7 @@ class CassandraStreamContext[N <: NamingStrategy](
       Task.fromFuture(rs.fetchMoreResults().asScala(Implicits.global)).map(_ => page)
   }
 
-  def executeQuery[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): Observable[T] = {
+  def executeQuery[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext): Observable[T] = {
 
     Observable
       .fromTask(prepareRowAndLog(cql, prepare))
@@ -53,21 +54,21 @@ class CassandraStreamContext[N <: NamingStrategy](
       .map(row => extractor(row, this))
   }
 
-  def executeQuerySingle[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): Observable[T] =
+  def executeQuerySingle[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext): Observable[T] =
     executeQuery(cql, prepare, extractor)
 
-  def executeAction[T](cql: String, prepare: Prepare = identityPrepare): Observable[Unit] = {
+  def executeAction[T](cql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: DatasourceContext): Observable[Unit] = {
     Observable
       .fromTask(prepareRowAndLog(cql, prepare))
       .mapEvalF(p => session.executeAsync(p).asScala(Implicits.global))
       .map(_ => ())
   }
 
-  def executeBatchAction(groups: List[BatchGroup]): Observable[Unit] =
+  def executeBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: DatasourceContext): Observable[Unit] =
     Observable.fromIterable(groups).flatMap {
       case BatchGroup(cql, prepare) =>
         Observable.fromIterable(prepare)
-          .flatMap(executeAction(cql, _))
+          .flatMap(executeAction(cql, _)(info, dc))
           .map(_ => ())
     }
 

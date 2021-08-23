@@ -2,7 +2,7 @@ package io.getquill.context.jdbc
 
 import io.getquill.{ NamingStrategy, ReturnAction }
 import io.getquill.ReturnAction.{ ReturnColumns, ReturnNothing, ReturnRecord }
-import io.getquill.context.{ Context, ContextEffect, ExecutionInfo, ProtoContext }
+import io.getquill.context.{ Context, ContextEffect, ExecutionInfo }
 import io.getquill.context.sql.SqlContext
 import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.util.ContextLogger
@@ -12,18 +12,9 @@ import java.sql.{ Connection, JDBCType, PreparedStatement, ResultSet, Statement 
 trait JdbcRunContext[Dialect <: SqlIdiom, Naming <: NamingStrategy]
   extends Context[Dialect, Naming]
   with SqlContext[Dialect, Naming]
-  with ProtoContext[Dialect, Naming]
   with Encoders
   with Decoders {
   private[getquill] val logger = ContextLogger(classOf[JdbcContext[_, _]])
-
-  override type Result[T] = T
-  override type RunQueryResult[T] = List[T]
-  override type RunQuerySingleResult[T] = T
-  override type RunActionResult = Long
-  override type RunActionReturningResult[T] = T
-  override type RunBatchActionResult = List[Long]
-  override type RunBatchActionReturningResult[T] = List[T]
 
   override type PrepareRow = PreparedStatement
   override type ResultRow = ResultSet
@@ -37,14 +28,14 @@ trait JdbcRunContext[Dialect <: SqlIdiom, Naming <: NamingStrategy]
   protected def withConnectionWrapped[T](f: Connection => T): Result[T] =
     withConnection(conn => wrap(f(conn)))
 
-  override def executeAction[T](sql: String, prepare: Prepare = identityPrepare)(executionInfo: ExecutionInfo, dc: DatasourceContext): Result[Long] =
+  def executeAction[T](sql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: DatasourceContext): Result[Long] =
     withConnectionWrapped { conn =>
       val (params, ps) = prepare(conn.prepareStatement(sql), conn)
       logger.logQuery(sql, params)
       ps.executeUpdate().toLong
     }
 
-  override def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(executionInfo: ExecutionInfo, dc: DatasourceContext): Result[List[T]] =
+  def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext): Result[List[T]] =
     withConnectionWrapped { conn =>
       val (params, ps) = prepare(conn.prepareStatement(sql), conn)
       logger.logQuery(sql, params)
@@ -52,10 +43,10 @@ trait JdbcRunContext[Dialect <: SqlIdiom, Naming <: NamingStrategy]
       extractResult(rs, conn, extractor)
     }
 
-  def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(executionInfo: ExecutionInfo, dc: DatasourceContext): Result[T] =
-    handleSingleWrappedResult(executeQuery(sql, prepare, extractor)(executionInfo, dc))
+  def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext): Result[T] =
+    handleSingleWrappedResult(executeQuery(sql, prepare, extractor)(info, dc))
 
-  override def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningBehavior: ReturnAction)(executionInfo: ExecutionInfo, dc: DatasourceContext): Result[O] =
+  def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningBehavior: ReturnAction)(info: ExecutionInfo, dc: DatasourceContext): Result[O] =
     withConnectionWrapped { conn =>
       val (params, ps) = prepare(prepareWithReturning(sql, conn, returningBehavior), conn)
       logger.logQuery(sql, params)
@@ -70,7 +61,7 @@ trait JdbcRunContext[Dialect <: SqlIdiom, Naming <: NamingStrategy]
       case ReturnNothing          => conn.prepareStatement(sql)
     }
 
-  override def executeBatchAction(groups: List[BatchGroup])(executionInfo: ExecutionInfo, dc: DatasourceContext): Result[List[Long]] =
+  def executeBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: DatasourceContext): Result[List[Long]] =
     withConnectionWrapped { conn =>
       groups.flatMap {
         case BatchGroup(sql, prepare) =>
@@ -85,7 +76,7 @@ trait JdbcRunContext[Dialect <: SqlIdiom, Naming <: NamingStrategy]
       }
     }
 
-  def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T])(executionInfo: ExecutionInfo, dc: DatasourceContext): Result[List[T]] =
+  def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T])(info: ExecutionInfo, dc: DatasourceContext): Result[List[T]] =
     withConnectionWrapped { conn =>
       groups.flatMap {
         case BatchGroupReturning(sql, returningBehavior, prepare) =>

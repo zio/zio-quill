@@ -44,6 +44,7 @@ trait Context[Idiom <: io.getquill.idiom.Idiom, Naming <: NamingStrategy] extend
   type RunBatchActionResult
   type RunBatchActionReturningResult[T]
   type Session
+  type DatasourceContext
 
   def probe(statement: String): Try[_]
 

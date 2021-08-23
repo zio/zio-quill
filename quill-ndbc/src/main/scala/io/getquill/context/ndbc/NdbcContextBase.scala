@@ -49,6 +49,7 @@ trait NdbcContextBase[Idiom <: SqlIdiom, Naming <: NamingStrategy, P <: Prepared
   final override type PrepareRow = P
   final override type ResultRow = R
   override type Session = Unit
+  type DatasourceContext = Unit
 
   protected implicit val resultEffect: NdbcContextBase.ContextEffect[Result, _]
   import resultEffect._
@@ -62,7 +63,7 @@ trait NdbcContextBase[Idiom <: SqlIdiom, Naming <: NamingStrategy, P <: Prepared
 
   protected def expandAction(sql: String, returningAction: ReturnAction) = sql
 
-  def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: (R, Session) => T = (r: R, s: Session) => r)(executionInfo: ExecutionInfo, dc: DatasourceContext): Result[List[T]] = {
+  def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: (R, Session) => T = (r: R, s: Session) => r)(info: ExecutionInfo, dc: DatasourceContext): Result[List[T]] = {
     withDataSourceFromFuture { ds =>
       val (params, ps) = prepare(createPreparedStatement(sql), ())
       logger.logQuery(sql, params)
@@ -73,10 +74,10 @@ trait NdbcContextBase[Idiom <: SqlIdiom, Naming <: NamingStrategy, P <: Prepared
     }
   }
 
-  def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: (R, Session) => T = (r: R, s: Session) => r)(executionInfo: ExecutionInfo, dc: DatasourceContext): Result[T] =
-    push(executeQuery(sql, prepare, extractor)(executionInfo, dc))(handleSingleResult)
+  def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: (R, Session) => T = (r: R, s: Session) => r)(info: ExecutionInfo, dc: DatasourceContext): Result[T] =
+    push(executeQuery(sql, prepare, extractor)(info, dc))(handleSingleResult)
 
-  def executeAction[T](sql: String, prepare: Prepare = identityPrepare)(executionInfo: ExecutionInfo, dc: DatasourceContext): Result[Long] = {
+  def executeAction[T](sql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: DatasourceContext): Result[Long] = {
     withDataSourceFromFuture { ds =>
       val (params, ps) = prepare(createPreparedStatement(sql), ())
       logger.logQuery(sql, params)
@@ -84,18 +85,18 @@ trait NdbcContextBase[Idiom <: SqlIdiom, Naming <: NamingStrategy, P <: Prepared
     }
   }
 
-  def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: (R, Session) => O, returningAction: ReturnAction)(executionInfo: ExecutionInfo, dc: DatasourceContext): Result[O] = {
+  def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: (R, Session) => O, returningAction: ReturnAction)(info: ExecutionInfo, dc: DatasourceContext): Result[O] = {
     val expanded = expandAction(sql, returningAction)
-    executeQuerySingle(expanded, prepare, extractor)
+    executeQuerySingle(expanded, prepare, extractor)(info, dc)
   }
 
-  def executeBatchAction(groups: List[BatchGroup])(executionInfo: ExecutionInfo, dc: DatasourceContext): Result[List[Long]] =
+  def executeBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: DatasourceContext): Result[List[Long]] =
     push(
       traverse(groups) {
         case BatchGroup(sql, prepares) =>
           prepares.foldLeft(wrap(ArrayBuffer.empty[Long])) { (acc, prepare) =>
             flatMap(acc) { array =>
-              push(executeAction(sql, prepare)(executionInfo, dc))(array :+ _)
+              push(executeAction(sql, prepare)(info, dc))(array :+ _)
             }
           }
       }
@@ -105,13 +106,13 @@ trait NdbcContextBase[Idiom <: SqlIdiom, Naming <: NamingStrategy, P <: Prepared
   def probe(sql: String): Try[_] =
     Try(runBlocking(withDataSourceFromFuture(_.query(sql).toScala), Duration.Inf))
 
-  def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: (R, Session) => T)(executionInfo: ExecutionInfo, dc: DatasourceContext): Result[List[T]] =
+  def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: (R, Session) => T)(info: ExecutionInfo, dc: DatasourceContext): Result[List[T]] =
     push(
       traverse(groups) {
         case BatchGroupReturning(sql, column, prepare) =>
           prepare.foldLeft(wrap(ArrayBuffer.empty[T])) { (acc, prepare) =>
             flatMap(acc) { array =>
-              push(executeActionReturning(sql, prepare, extractor, column)(executionInfo, dc))(array :+ _)
+              push(executeActionReturning(sql, prepare, extractor, column)(info, dc))(array :+ _)
             }
           }
       }

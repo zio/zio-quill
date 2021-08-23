@@ -69,5 +69,5 @@ trait ProtoStreamContext[Dialect <: io.getquill.idiom.Idiom, Naming <: NamingStr
   type StreamResult[T]
   type Session
 
-  def streamQuery[T](fetchSize: Option[Int], sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(executionInfo: ExecutionInfo, dc: DatasourceContext): StreamResult[T]
+  def streamQuery[T](fetchSize: Option[Int], sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext): StreamResult[T]
 }

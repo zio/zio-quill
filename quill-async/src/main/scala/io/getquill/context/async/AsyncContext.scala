@@ -1,7 +1,7 @@
 package io.getquill.context.async
 
 import com.github.mauricio.async.db.Connection
-import com.github.mauricio.async.db.{ QueryResult => DBQueryResult }
+import com.github.mauricio.async.db.{QueryResult => DBQueryResult}
 import com.github.mauricio.async.db.RowData
 import com.github.mauricio.async.db.pool.PartitionedConnectionPool
 
@@ -12,10 +12,10 @@ import scala.concurrent.duration.Duration
 import scala.util.Try
 import io.getquill.context.sql.SqlContext
 import io.getquill.context.sql.idiom.SqlIdiom
-import io.getquill.{ NamingStrategy, ReturnAction }
+import io.getquill.{NamingStrategy, ReturnAction}
 import io.getquill.util.ContextLogger
 import io.getquill.monad.ScalaFutureIOMonad
-import io.getquill.context.{ Context, TranslateContext }
+import io.getquill.context.{Context, ExecutionInfo, TranslateContext}
 
 abstract class AsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: Connection](val idiom: D, val naming: N, pool: PartitionedConnectionPool[C])
   extends Context[D, N]
@@ -38,6 +38,7 @@ abstract class AsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: Connection]
   override type RunBatchActionResult = List[Long]
   override type RunBatchActionReturningResult[T] = List[T]
   override type Session = Unit
+  override type DatasourceContext = Unit
 
   override def close = {
     Await.result(pool.close, Duration.Inf)
@@ -70,7 +71,7 @@ abstract class AsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: Connection]
       case true  => transaction(super.performIO(io)(_))
     }
 
-  def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(implicit ec: ExecutionContext): Future[List[T]] = {
+  def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext)(implicit ec: ExecutionContext): Future[List[T]] = {
     val (params, values) = prepare(Nil, ())
     logger.logQuery(sql, params)
     withConnection(_.sendPreparedStatement(sql, values)).map {
@@ -81,16 +82,16 @@ abstract class AsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: Connection]
     }
   }
 
-  def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(implicit ec: ExecutionContext): Future[T] =
-    executeQuery(sql, prepare, extractor).map(handleSingleResult)
+  def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext)(implicit ec: ExecutionContext): Future[T] =
+    executeQuery(sql, prepare, extractor)(info, dc).map(handleSingleResult)
 
-  def executeAction[T](sql: String, prepare: Prepare = identityPrepare)(implicit ec: ExecutionContext): Future[Long] = {
+  def executeAction[T](sql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: DatasourceContext)(implicit ec: ExecutionContext): Future[Long] = {
     val (params, values) = prepare(Nil, ())
     logger.logQuery(sql, params)
     withConnection(_.sendPreparedStatement(sql, values)).map(_.rowsAffected)
   }
 
-  def executeActionReturning[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T], returningAction: ReturnAction)(implicit ec: ExecutionContext): Future[T] = {
+  def executeActionReturning[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T], returningAction: ReturnAction)(info: ExecutionInfo, dc: DatasourceContext)(implicit ec: ExecutionContext): Future[T] = {
     val expanded = expandAction(sql, returningAction)
     val (params, values) = prepare(Nil, ())
     logger.logQuery(sql, params)
@@ -98,7 +99,7 @@ abstract class AsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: Connection]
       .map(extractActionResult(returningAction, extractor))
   }
 
-  def executeBatchAction(groups: List[BatchGroup])(implicit ec: ExecutionContext): Future[List[Long]] =
+  def executeBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: DatasourceContext)(implicit ec: ExecutionContext): Future[List[Long]] =
     Future.sequence {
       groups.map {
         case BatchGroup(sql, prepare) =>
@@ -111,7 +112,7 @@ abstract class AsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: Connection]
       }
     }.map(_.flatten.toList)
 
-  def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T])(implicit ec: ExecutionContext): Future[List[T]] =
+  def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T])(info: ExecutionInfo, dc: DatasourceContext)(implicit ec: ExecutionContext): Future[List[T]] =
     Future.sequence {
       groups.map {
         case BatchGroupReturning(sql, column, prepare) =>
