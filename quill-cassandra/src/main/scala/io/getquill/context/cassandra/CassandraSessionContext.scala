@@ -2,12 +2,12 @@ package io.getquill.context.cassandra
 
 import com.datastax.driver.core._
 import io.getquill.NamingStrategy
-import io.getquill.context.{CassandraSession, ExecutionInfo, StandardContext, UdtValueLookup}
-import io.getquill.context.cassandra.encoding.{CassandraTypes, Decoders, Encoders, UdtEncoding}
+import io.getquill.context.{ CassandraSession, ExecutionInfo, StandardContext, UdtValueLookup }
+import io.getquill.context.cassandra.encoding.{ CassandraTypes, Decoders, Encoders, UdtEncoding }
 import io.getquill.util.ContextLogger
 import io.getquill.util.Messages.fail
 
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.{ Await, ExecutionContext, Future }
 import scala.concurrent.duration._
 import scala.util.Try
 

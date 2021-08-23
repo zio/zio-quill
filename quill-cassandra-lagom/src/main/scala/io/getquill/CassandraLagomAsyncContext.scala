@@ -6,7 +6,7 @@ import com.lightbend.lagom.scaladsl.persistence.cassandra.CassandraSession
 import io.getquill.context.ExecutionInfo
 import io.getquill.util.ContextLogger
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
 class CassandraLagomAsyncContext[N <: NamingStrategy](
   naming:  N,

@@ -1,7 +1,7 @@
 package io.getquill.context.jasync
 
 import java.util.concurrent.CompletableFuture
-import com.github.jasync.sql.db.{ConcreteConnection, Connection, QueryResult, RowData}
+import com.github.jasync.sql.db.{ ConcreteConnection, Connection, QueryResult, RowData }
 import com.github.jasync.sql.db.pool.ConnectionPool
 
 import scala.language.implicitConversions
@@ -12,10 +12,10 @@ import scala.concurrent.duration.Duration
 import scala.util.Try
 import io.getquill.context.sql.SqlContext
 import io.getquill.context.sql.idiom.SqlIdiom
-import io.getquill.{NamingStrategy, ReturnAction}
+import io.getquill.{ NamingStrategy, ReturnAction }
 import io.getquill.util.ContextLogger
 import io.getquill.monad.ScalaFutureIOMonad
-import io.getquill.context.{Context, ExecutionInfo, TranslateContext}
+import io.getquill.context.{ Context, ExecutionInfo, TranslateContext }
 import kotlin.jvm.functions.Function1
 
 import scala.compat.java8.FutureConverters

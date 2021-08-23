@@ -2,14 +2,14 @@ package io.getquill
 
 import com.datastax.driver.core._
 import io.getquill.CassandraZioContext._
-import io.getquill.context.{ExecutionInfo, StandardContext}
-import io.getquill.context.cassandra.{CassandraRowContext, CqlIdiom}
+import io.getquill.context.{ ExecutionInfo, StandardContext }
+import io.getquill.context.cassandra.{ CassandraRowContext, CqlIdiom }
 import io.getquill.context.qzio.ZioContext
 import io.getquill.util.Messages.fail
 import io.getquill.util.ZioConversions._
 import io.getquill.util.ContextLogger
 import zio.stream.ZStream
-import zio.{Chunk, ChunkBuilder, Has, ZIO, ZManaged}
+import zio.{ Chunk, ChunkBuilder, Has, ZIO, ZManaged }
 import zio.blocking.Blocking
 
 import scala.jdk.CollectionConverters._

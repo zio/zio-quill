@@ -1,18 +1,18 @@
 package io.getquill
 
-import com.datastax.driver.core.{Cluster, ResultSet, Row}
+import com.datastax.driver.core.{ Cluster, ResultSet, Row }
 import com.typesafe.config.Config
 import io.getquill.context.ExecutionInfo
 import io.getquill.context.cassandra.CqlIdiom
 import io.getquill.context.monix.MonixContext
-import io.getquill.util.{ContextLogger, LoadConfig}
+import io.getquill.util.{ ContextLogger, LoadConfig }
 import io.getquill.context.cassandra.util.FutureConversions._
 import monix.eval.Task
 import monix.execution.Scheduler
 import monix.reactive.Observable
 
 import scala.jdk.CollectionConverters._
-import scala.util.{Failure, Success}
+import scala.util.{ Failure, Success }
 
 class CassandraMonixContext[N <: NamingStrategy](
   naming:                     N,

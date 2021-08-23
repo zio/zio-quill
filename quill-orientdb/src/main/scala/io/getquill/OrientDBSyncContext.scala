@@ -5,7 +5,7 @@ import com.orientechnologies.orient.core.sql.query.OSQLSynchQuery
 import com.typesafe.config.Config
 import io.getquill.context.ExecutionInfo
 import io.getquill.context.orientdb.OrientDBSessionContext
-import io.getquill.util.{ContextLogger, LoadConfig}
+import io.getquill.util.{ ContextLogger, LoadConfig }
 
 import scala.jdk.CollectionConverters._
 import io.getquill.monad.SyncIOMonad

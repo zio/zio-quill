@@ -1,7 +1,7 @@
 package io.getquill
 
 import akka.stream.scaladsl.Source
-import akka.{Done, NotUsed}
+import akka.{ Done, NotUsed }
 import com.lightbend.lagom.scaladsl.persistence.cassandra.CassandraSession
 import io.getquill.context.ExecutionInfo
 import io.getquill.util.ContextLogger

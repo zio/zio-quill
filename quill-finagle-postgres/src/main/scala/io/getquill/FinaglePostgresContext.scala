@@ -1,15 +1,15 @@
 package io.getquill
 
-import com.twitter.util.{Await, Future, Local}
+import com.twitter.util.{ Await, Future, Local }
 import com.twitter.finagle.postgres._
 import com.typesafe.config.Config
-import io.getquill.ReturnAction.{ReturnColumns, ReturnNothing, ReturnRecord}
+import io.getquill.ReturnAction.{ ReturnColumns, ReturnNothing, ReturnRecord }
 import io.getquill.context.finagle.postgres._
 import io.getquill.context.sql.SqlContext
-import io.getquill.util.{ContextLogger, LoadConfig}
+import io.getquill.util.{ ContextLogger, LoadConfig }
 
 import scala.util.Try
-import io.getquill.context.{Context, ExecutionInfo, TranslateContext}
+import io.getquill.context.{ Context, ExecutionInfo, TranslateContext }
 import io.getquill.monad.TwitterFutureIOMonad
 
 class FinaglePostgresContext[N <: NamingStrategy](val naming: N, client: PostgresClient)

@@ -4,7 +4,7 @@ import com.datastax.driver.core.Cluster
 import com.typesafe.config.Config
 import io.getquill.context.ExecutionInfo
 import io.getquill.monad.SyncIOMonad
-import io.getquill.util.{ContextLogger, LoadConfig}
+import io.getquill.util.{ ContextLogger, LoadConfig }
 
 import scala.jdk.CollectionConverters._
 

@@ -1,16 +1,16 @@
 package io.getquill.context.monix
 
-import java.sql.{Array => _}
-import io.getquill.context.{ExecutionInfo, StreamingContext}
+import java.sql.{ Array => _ }
+import io.getquill.context.{ ExecutionInfo, StreamingContext }
 import io.getquill.context.monix.MonixNdbcContext.Runner
 import io.getquill.context.ndbc.NdbcContextBase
 import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.ndbc.TraneFutureConverters
 import io.getquill.ndbc.TraneFutureConverters._
 import io.getquill.util.ContextLogger
-import io.getquill.{NamingStrategy, ReturnAction}
+import io.getquill.{ NamingStrategy, ReturnAction }
 import io.trane.future.scala.Future
-import io.trane.ndbc.{DataSource, PreparedStatement, Row}
+import io.trane.ndbc.{ DataSource, PreparedStatement, Row }
 import monix.eval.Task
 import monix.execution.Scheduler
 import monix.reactive.Observable

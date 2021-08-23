@@ -1,7 +1,7 @@
 package io.getquill.context.async
 
 import com.github.mauricio.async.db.Connection
-import com.github.mauricio.async.db.{QueryResult => DBQueryResult}
+import com.github.mauricio.async.db.{ QueryResult => DBQueryResult }
 import com.github.mauricio.async.db.RowData
 import com.github.mauricio.async.db.pool.PartitionedConnectionPool
 
@@ -12,10 +12,10 @@ import scala.concurrent.duration.Duration
 import scala.util.Try
 import io.getquill.context.sql.SqlContext
 import io.getquill.context.sql.idiom.SqlIdiom
-import io.getquill.{NamingStrategy, ReturnAction}
+import io.getquill.{ NamingStrategy, ReturnAction }
 import io.getquill.util.ContextLogger
 import io.getquill.monad.ScalaFutureIOMonad
-import io.getquill.context.{Context, ExecutionInfo, TranslateContext}
+import io.getquill.context.{ Context, ExecutionInfo, TranslateContext }
 
 abstract class AsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: Connection](val idiom: D, val naming: N, pool: PartitionedConnectionPool[C])
   extends Context[D, N]
