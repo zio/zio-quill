@@ -7,7 +7,7 @@ import io.getquill.util.Messages.fail
 import java.io.Closeable
 
 import scala.util.Try
-import io.getquill.{ Query, Action, NamingStrategy, BatchAction, ReturnAction, ActionReturning }
+import io.getquill.{ Query, Action, NamingStrategy, BatchAction, ActionReturning }
 
 trait StagedPrepare extends PrepareContext {
   type PrepareQueryResult = Session => Result[PrepareRow]
@@ -32,8 +32,8 @@ trait StandardContext[Idiom <: io.getquill.idiom.Idiom, Naming <: NamingStrategy
   extends Context[Idiom, Naming]
   with StagedPrepare
 
-trait Context[Idiom <: io.getquill.idiom.Idiom, Naming <: NamingStrategy]
-  extends Closeable
+trait Context[Idiom <: io.getquill.idiom.Idiom, Naming <: NamingStrategy] extends RowContext
+  with Closeable
   with CoreDsl {
 
   type Result[T]
@@ -44,12 +44,7 @@ trait Context[Idiom <: io.getquill.idiom.Idiom, Naming <: NamingStrategy]
   type RunBatchActionResult
   type RunBatchActionReturningResult[T]
   type Session
-
-  type Prepare = (PrepareRow, Session) => (List[Any], PrepareRow)
-  type Extractor[T] = (ResultRow, Session) => T
-
-  case class BatchGroup(string: String, prepare: List[Prepare])
-  case class BatchGroupReturning(string: String, returningBehavior: ReturnAction, prepare: List[Prepare])
+  type DatasourceContext
 
   def probe(statement: String): Try[_]
 
@@ -63,9 +58,6 @@ trait Context[Idiom <: io.getquill.idiom.Idiom, Naming <: NamingStrategy]
   def run[T](quoted: Quoted[ActionReturning[_, T]]): Result[RunActionReturningResult[T]] = macro ActionMacro.runActionReturning[T]
   def run(quoted: Quoted[BatchAction[Action[_]]]): Result[RunBatchActionResult] = macro ActionMacro.runBatchAction
   def run[T](quoted: Quoted[BatchAction[ActionReturning[_, T]]]): Result[RunBatchActionReturningResult[T]] = macro ActionMacro.runBatchActionReturning[T]
-
-  protected val identityPrepare: Prepare = (p: PrepareRow, s: Session) => (Nil, p)
-  protected val identityExtractor = (rr: ResultRow, s: Session) => rr
 
   protected def handleSingleResult[T](list: List[T]) =
     list match {
