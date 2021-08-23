@@ -40,15 +40,15 @@ class MirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy](val idiom: Idi
 
   def transaction[T](f: => T) = f
 
-  case class ActionMirror(string: String, prepareRow: PrepareRow)
+  case class ActionMirror(string: String, prepareRow: PrepareRow, info: ExecutionInfo)
 
-  case class ActionReturningMirror[T](string: String, prepareRow: PrepareRow, extractor: Extractor[T], returningBehavior: ReturnAction)
+  case class ActionReturningMirror[T](string: String, prepareRow: PrepareRow, extractor: Extractor[T], returningBehavior: ReturnAction, info: ExecutionInfo)
 
-  case class BatchActionMirror(groups: List[(String, List[Row])])
+  case class BatchActionMirror(groups: List[(String, List[Row])], info: ExecutionInfo)
 
-  case class BatchActionReturningMirror[T](groups: List[(String, ReturnAction, List[PrepareRow])], extractor: Extractor[T])
+  case class BatchActionReturningMirror[T](groups: List[(String, ReturnAction, List[PrepareRow])], extractor: Extractor[T], info: ExecutionInfo)
 
-  case class QueryMirror[T](string: String, prepareRow: PrepareRow, extractor: Extractor[T]) {
+  case class QueryMirror[T](string: String, prepareRow: PrepareRow, extractor: Extractor[T], info: ExecutionInfo) {
     def string(pretty: Boolean): String =
       if (pretty)
         idiom.format(string)
@@ -56,39 +56,40 @@ class MirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy](val idiom: Idi
         string
   }
 
-  def executeQuery[T](string: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(executionInfo: ExecutionInfo, dc: DatasourceContext) =
-    QueryMirror(string, prepare(Row(), session)._2, extractor)
+  def executeQuery[T](string: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext) =
+    QueryMirror(string, prepare(Row(), session)._2, extractor, info)
 
-  def executeQuerySingle[T](string: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(executionInfo: ExecutionInfo, dc: DatasourceContext) =
-    QueryMirror(string, prepare(Row(), session)._2, extractor)
+  def executeQuerySingle[T](string: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext) =
+    QueryMirror(string, prepare(Row(), session)._2, extractor, info)
 
-  def executeAction(string: String, prepare: Prepare = identityPrepare)(executionInfo: ExecutionInfo, dc: DatasourceContext) =
-    ActionMirror(string, prepare(Row(), session)._2)
+  def executeAction(string: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: DatasourceContext) =
+    ActionMirror(string, prepare(Row(), session)._2, info)
 
-  def executeActionReturning[O](string: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningBehavior: ReturnAction)(executionInfo: ExecutionInfo, dc: DatasourceContext) =
-    ActionReturningMirror[O](string, prepare(Row(), session)._2, extractor, returningBehavior)
+  def executeActionReturning[O](string: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningBehavior: ReturnAction)(info: ExecutionInfo, dc: DatasourceContext) =
+    ActionReturningMirror[O](string, prepare(Row(), session)._2, extractor, returningBehavior, info)
 
-  def executeBatchAction(groups: List[BatchGroup]) =
-    BatchActionMirror {
+  def executeBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: DatasourceContext) =
+    BatchActionMirror(
       groups.map {
         case BatchGroup(string, prepare) =>
           (string, prepare.map(_(Row(), session)._2))
-      }
-    }
+      },
+      info
+    )
 
-  def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T])(executionInfo: ExecutionInfo, dc: DatasourceContext) =
+  def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T])(info: ExecutionInfo, dc: DatasourceContext) =
     BatchActionReturningMirror[T](
       groups.map {
         case BatchGroupReturning(string, returningBehavior, prepare) =>
           (string, returningBehavior, prepare.map(_(Row(), session)._2))
-      }, extractor
+      }, extractor, info
     )
 
-  def prepareAction(string: String, prepare: Prepare = identityPrepare)(executionInfo: ExecutionInfo, dc: DatasourceContext) =
+  def prepareAction(string: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: DatasourceContext) =
     (session: Session) =>
       prepare(Row(), session)._2
 
-  def prepareBatchAction(groups: List[BatchGroup])(executionInfo: ExecutionInfo, dc: DatasourceContext) =
+  def prepareBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: DatasourceContext) =
     (session: Session) =>
       groups.flatMap {
         case BatchGroup(string, prepare) =>
