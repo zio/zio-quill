@@ -24,6 +24,7 @@ trait TranslateContextBase {
   this: Context[_ <: Idiom, _ <: NamingStrategy] =>
 
   type TranslateResult[T]
+  type DatasourceContext
 
   private[getquill] val translateEffect: ContextEffect[TranslateResult]
   import translateEffect._
@@ -38,7 +39,7 @@ trait TranslateContextBase {
   def translate(quoted: Quoted[Action[_]], prettyPrint: Boolean): TranslateResult[String] = macro ActionMacro.translateQueryPrettyPrint
   def translate(quoted: Quoted[BatchAction[Action[_]]], prettyPrint: Boolean): TranslateResult[List[String]] = macro ActionMacro.translateBatchQueryPrettyPrint
 
-  def translateQuery[T](statement: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor, prettyPrint: Boolean = false): TranslateResult[String] =
+  def translateQuery[T](statement: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor, prettyPrint: Boolean = false)(executionInfo: ExecutionInfo, dc: DatasourceContext): TranslateResult[String] =
     push(prepareParams(statement, prepare)) { params =>
       val query =
         if (params.nonEmpty) {
@@ -55,11 +56,11 @@ trait TranslateContextBase {
         query
     }
 
-  def translateBatchQuery(groups: List[BatchGroup], prettyPrint: Boolean = false): TranslateResult[List[String]] =
+  def translateBatchQuery(groups: List[BatchGroup], prettyPrint: Boolean = false)(executionInfo: ExecutionInfo, dc: DatasourceContext): TranslateResult[List[String]] =
     seq {
       groups.flatMap { group =>
         group.prepare.map { prepare =>
-          translateQuery(group.string, prepare, prettyPrint = prettyPrint)
+          translateQuery(group.string, prepare, prettyPrint = prettyPrint)(executionInfo, dc)
         }
       }
     }

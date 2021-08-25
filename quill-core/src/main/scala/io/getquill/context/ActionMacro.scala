@@ -26,7 +26,7 @@ class ActionMacro(val c: MacroContext)
           expanded.string,
           expanded.prepare,
           prettyPrint = ${prettyPrint}
-        )
+        )(io.getquill.context.ExecutionInfo.unknown, ())
       """
     }
 
@@ -47,7 +47,7 @@ class ActionMacro(val c: MacroContext)
                 ${c.prefix}.BatchGroup(string, items.map(_._2).toList)
             }.toList,
             ${prettyPrint}
-          )
+          )(io.getquill.context.ExecutionInfo.unknown, ())
         """
     }
 
@@ -59,7 +59,7 @@ class ActionMacro(val c: MacroContext)
         ${c.prefix}.executeAction(
           expanded.string,
           expanded.prepare
-        )
+        )(io.getquill.context.ExecutionInfo.unknown, ())
       """
     }
 
@@ -73,7 +73,7 @@ class ActionMacro(val c: MacroContext)
           expanded.prepare,
           ${returningExtractor[T]},
           $returningColumn
-        )
+        )(io.getquill.context.ExecutionInfo.unknown, ())
       """
     }
 
@@ -96,7 +96,7 @@ class ActionMacro(val c: MacroContext)
               case (string, items) =>
                 ${c.prefix}.BatchGroup(string, items.map(_._2).toList)
             }.toList
-          )
+          )(io.getquill.context.ExecutionInfo.unknown, ())
         """
     }
 
@@ -114,7 +114,7 @@ class ActionMacro(val c: MacroContext)
                 ${c.prefix}.BatchGroupReturning(string, column, items.map(_._2).toList)
             }.toList,
             ${returningExtractor[T]}
-          )
+          )(io.getquill.context.ExecutionInfo.unknown, ())
         """
     }
 
@@ -161,7 +161,7 @@ class ActionMacro(val c: MacroContext)
         ${c.prefix}.prepareAction(
           expanded.string,
           expanded.prepare
-        )
+        )(io.getquill.context.ExecutionInfo.unknown, ())
       """
     }
 

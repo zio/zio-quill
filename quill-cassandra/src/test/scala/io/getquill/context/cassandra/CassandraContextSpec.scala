@@ -1,6 +1,7 @@
 package io.getquill.context.cassandra
 
 import io.getquill._
+import io.getquill.context.ExecutionInfo
 
 import scala.concurrent.ExecutionContext.Implicits.{ global => ec }
 import scala.util.{ Success, Try }
@@ -32,8 +33,8 @@ class CassandraContextSpec extends Spec {
     val p: Prepare = (x, session) => (Nil, x)
     val e: Extractor[Int] = (_, _) => 1
 
-    intercept[IllegalStateException](executeActionReturning("", p, e, "")).getMessage mustBe
-      intercept[IllegalStateException](executeBatchActionReturning(Nil, e)).getMessage
+    intercept[IllegalStateException](executeActionReturning("", p, e, "")(ExecutionInfo.unknown, ())).getMessage mustBe
+      intercept[IllegalStateException](executeBatchActionReturning(Nil, e)(ExecutionInfo.unknown, ())).getMessage
   }
 
   "probe" in {
@@ -42,12 +43,12 @@ class CassandraContextSpec extends Spec {
 
   "return failed future on `prepare` error in async context" - {
     "query" - {
-      val f = testAsyncDB.executeQuery("bad cql")
+      val f = testAsyncDB.executeQuery("bad cql")(ExecutionInfo.unknown, ())
       Try(await(f)).isFailure mustEqual true
       ()
     }
     "action" - {
-      val f = testAsyncDB.executeAction("bad cql")
+      val f = testAsyncDB.executeAction("bad cql")(ExecutionInfo.unknown, ())
       Try(await(f)).isFailure mustEqual true
       ()
     }
