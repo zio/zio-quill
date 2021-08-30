@@ -1,10 +1,10 @@
 package io.getquill.postgres
 
-import io.getquill.context.ZioJdbc.Prefix
+import io.getquill.Prefix
 import io.getquill.{ PrepareZioJdbcSpecBase, ZioSpec }
 import org.scalatest.BeforeAndAfter
 
-import java.sql.ResultSet
+import java.sql.{ Connection, ResultSet }
 
 class PrepareJdbcSpec extends PrepareZioJdbcSpecBase with ZioSpec with BeforeAndAfter {
 
@@ -16,7 +16,7 @@ class PrepareJdbcSpec extends PrepareZioJdbcSpecBase with ZioSpec with BeforeAnd
     testContext.run(query[Product].delete).runSyncUnsafe()
   }
 
-  def productExtractor = (rs: ResultSet) => materializeQueryMeta[Product].extract(rs)
+  def productExtractor = (rs: ResultSet, conn: Connection) => materializeQueryMeta[Product].extract(rs, conn)
   val prepareQuery = prepare(query[Product])
 
   "single" in {

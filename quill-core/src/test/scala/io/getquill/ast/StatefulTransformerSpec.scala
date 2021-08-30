@@ -257,10 +257,12 @@ class StatefulTransformerSpec extends Spec {
         }
       }
       "update" in {
-        val action: OnConflict.Action = OnConflict.Update(List(Assignment(Ident("a"), Ident("b"), Ident("c"))))
-        Subject(Nil, Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(action) match {
+        val action: OnConflict.Action = OnConflict.Update(List(AssignmentDual(Ident("a1"), Ident("a2"), Ident("b"), Ident("c"))))
+        Subject(Nil, Ident("a1") -> Ident("a1'"), Ident("a2") -> Ident("a2'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(action) match {
           case (at, att) =>
-            at mustEqual OnConflict.Update(List(Assignment(Ident("a"), Ident("b'"), Ident("c'"))))
+            // I.e. values should be changed in this case but not identifiers. Identifiers are not modified in the stateful transformer.
+            // The stateless transformer has a specific clause for them that will activate in some instances.
+            at mustEqual OnConflict.Update(List(AssignmentDual(Ident("a1"), Ident("a2"), Ident("b'"), Ident("c'"))))
             att.state mustEqual List(Ident("b"), Ident("c"))
         }
       }

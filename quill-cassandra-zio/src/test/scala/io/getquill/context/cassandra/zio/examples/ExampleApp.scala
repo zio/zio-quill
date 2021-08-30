@@ -11,7 +11,7 @@ object ExampleApp extends App {
 
   case class Person(name: String, age: Int)
 
-  val zioSession =
+  val zioSessionLayer =
     CassandraZioSession.fromPrefix("testStreamDB")
 
   override def run(args: List[String]) = {
@@ -20,6 +20,6 @@ object ExampleApp extends App {
     }
     MyZioPostgresContext.run(people)
       .tap(result => putStrLn(result.toString))
-      .provideCustomLayer(zioSession).exitCode
+      .provideCustomLayer(zioSessionLayer).exitCode
   }
 }

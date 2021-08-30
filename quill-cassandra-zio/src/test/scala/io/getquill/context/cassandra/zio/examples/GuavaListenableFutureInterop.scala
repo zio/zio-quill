@@ -17,7 +17,7 @@ import scala.util.Try
 object GuavaListenableFutureInterop {
   implicit class ZioTaskConverter[A](val lf: ListenableFuture[A]) extends AnyVal {
     def asCio: CIO[A] = {
-      def makePromise(ec: Executor): CIO[A] = {
+      def makePromise(executor: Executor): CIO[A] = {
         val promise = Promise[A]()
         lf.addListener(new Runnable {
           def run(): Unit = {
@@ -27,14 +27,13 @@ object GuavaListenableFutureInterop {
             })
             ()
           }
-        }, ec.asInstanceOf[Executor])
+        }, executor)
         ZIO.fromPromiseScala(promise)
       }
 
       for {
-        env <- ZIO.environment[Has[CassandraZioSession] with Blocking]
-        block = env.get[Blocking.Service]
-        promise <- makePromise(block.blockingExecutor.asJava)
+        env <- ZIO.environment[Has[CassandraZioSession]]
+        promise <- makePromise(Blocking.Service.live.blockingExecutor.asJava)
       } yield promise
     }
   }
