@@ -39,7 +39,7 @@ lazy val baseModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-core-portable-jvm`,
   `quill-core-jvm`,
   `quill-sql-portable-jvm`,
-  `quill-sql-jvm`, `quill-monix`, `quill-zio`
+  `quill-sql-jvm`, `quill-monix`, `quill-zio`, `quill-ce`
 )
 
 lazy val dbModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
@@ -62,6 +62,7 @@ lazy val codegenModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
 
 lazy val bigdataModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-cassandra`, `quill-cassandra-lagom`, `quill-cassandra-monix`, `quill-cassandra-zio`, `quill-orientdb`, `quill-spark`
+  , `quill-cassandra-ce`
 )
 
 lazy val allModules =
@@ -73,6 +74,7 @@ lazy val scala213Modules = baseModules ++ jsModules ++ dbModules ++ codegenModul
   `quill-async-postgres`,
   `quill-finagle-mysql`,
   `quill-cassandra`,
+  `quill-cassandra-ce`,
   `quill-cassandra-lagom`,
   `quill-cassandra-monix`,
   `quill-cassandra-zio`,
@@ -138,7 +140,7 @@ val filteredModules = {
 lazy val `quill` = {
   val quill =
     (project in file("."))
-    .settings(commonSettings: _*)
+      .settings(commonSettings: _*)
 
   // Do not do aggregate project builds when debugging since during that time
   // typically only individual modules are being build/compiled. This is mostly for convenience with IntelliJ.
@@ -438,6 +440,31 @@ lazy val `quill-zio` =
     .dependsOn(`quill-core-jvm` % "compile->compile;test->test")
     .enablePlugins(MimaPlugin)
 
+lazy val `quill-ce` =
+  (project in file("quill-ce"))
+    .settings(commonSettings: _*)
+    .settings(mimaSettings: _*)
+    .settings(
+      scalacOptions ++= {
+        CrossVersion.partialVersion(scalaVersion.value) match {
+          case Some((2, major)) if major <= 12 => Seq("-Ypartial-unification")
+          case _ => Seq.empty
+        }
+      },
+      libraryDependencies ++= {
+        CrossVersion.partialVersion(scalaVersion.value) match {
+          case Some((2, x)) if x >= 12 => Seq(
+            "org.typelevel" %% "cats-core" % "2.3.0",
+            "org.typelevel" %% "cats-effect" % "3.1.1",
+            "co.fs2" %% "fs2-core" % "3.0.4"
+          )
+          case _ => Seq.empty
+        }
+      }
+    )
+    .dependsOn(`quill-core-jvm` % "compile->compile;test->test")
+    .enablePlugins(MimaPlugin)
+
 lazy val `quill-jdbc-zio` =
   (project in file("quill-jdbc-zio"))
     .settings(commonSettings: _*)
@@ -666,6 +693,16 @@ lazy val `quill-cassandra-zio` =
     .dependsOn(`quill-zio` % "compile->compile;test->test")
     .enablePlugins(MimaPlugin)
 
+lazy val `quill-cassandra-ce` =
+  (project in file("quill-cassandra-ce"))
+    .settings(commonSettings: _*)
+    .settings(mimaSettings: _*)
+    .settings(
+      Test / fork := true
+    )
+    .dependsOn(`quill-cassandra` % "compile->compile;test->test")
+    .dependsOn(`quill-ce` % "compile->compile;test->test")
+    .enablePlugins(MimaPlugin)
 
 lazy val `quill-cassandra-lagom` =
    (project in file("quill-cassandra-lagom"))
