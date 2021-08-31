@@ -64,7 +64,7 @@ lazy val codegenModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
 )
 
 lazy val bigdataModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
-  `quill-cassandra`, `quill-cassandra-lagom`, `quill-cassandra-monix`, `quill-cassandra-zio`, `quill-orientdb`, `quill-spark`
+  `quill-cassandra`, `quill-cassandra-lagom`, `quill-cassandra-monix`, `quill-cassandra-zio`, `quill-orientdb`, `quill-spark`, `quill-cassandra-ce`
 )
 
 lazy val allModules =
@@ -76,6 +76,7 @@ lazy val scala213Modules = baseModules ++ jsModules ++ dbModules ++ codegenModul
   `quill-async-postgres`,
   `quill-finagle-mysql`,
   `quill-cassandra`,
+  `quill-cassandra-ce`,
   `quill-cassandra-lagom`,
   `quill-cassandra-monix`,
   `quill-cassandra-zio`,
@@ -391,8 +392,8 @@ lazy val `quill-monix` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "io.monix"                %% "monix-eval"          % "3.0.0",
-        "io.monix"                %% "monix-reactive"      % "3.0.0"
+        "io.monix"                %% "monix-eval"          % "3.0.0" excludeAll(ExclusionRule(organization = "org.typelevel")),
+        "io.monix"                %% "monix-reactive"      % "3.0.0" excludeAll(ExclusionRule(organization = "org.typelevel")),
       )
     )
     .dependsOn(`quill-core-jvm` % "compile->compile;test->test")
@@ -430,6 +431,31 @@ lazy val `quill-zio` =
         "dev.zio" %% "zio" % "1.0.12",
         "dev.zio" %% "zio-streams" % "1.0.12"
       )
+    )
+    .dependsOn(`quill-core-jvm` % "compile->compile;test->test")
+    .enablePlugins(MimaPlugin)
+
+lazy val `quill-ce` =
+  (project in file("quill-ce"))
+    .settings(commonSettings: _*)
+    .settings(mimaSettings: _*)
+    .settings(
+      scalacOptions ++= {
+        CrossVersion.partialVersion(scalaVersion.value) match {
+          case Some((2, major)) if major <= 12 => Seq("-Ypartial-unification")
+          case _ => Seq.empty
+        }
+      },
+      libraryDependencies ++= {
+        CrossVersion.partialVersion(scalaVersion.value) match {
+          case Some((2, x)) if x >= 12 => Seq(
+            "org.typelevel" %% "cats-core" % "2.3.0",
+            "org.typelevel" %% "cats-effect" % "3.1.1",
+            "co.fs2" %% "fs2-core" % "3.0.4",
+          )
+          case _ => Seq.empty
+        }
+      }
     )
     .dependsOn(`quill-core-jvm` % "compile->compile;test->test")
     .enablePlugins(MimaPlugin)
@@ -666,6 +692,16 @@ lazy val `quill-cassandra-zio` =
     .dependsOn(`quill-zio` % "compile->compile;test->test")
     .enablePlugins(MimaPlugin)
 
+lazy val `quill-cassandra-ce` =
+  (project in file("quill-cassandra-ce"))
+    .settings(commonSettings: _*)
+    .settings(mimaSettings: _*)
+    .settings(
+      Test / fork := true
+    )
+    .dependsOn(`quill-cassandra` % "compile->compile;test->test")
+    .dependsOn(`quill-ce` % "compile->compile;test->test")
+    .enablePlugins(MimaPlugin)
 
 lazy val `quill-cassandra-lagom` =
    (project in file("quill-cassandra-lagom"))
@@ -686,6 +722,7 @@ lazy val `quill-cassandra-lagom` =
         ) ++ versionSpecificDependencies
       }
     )
+    .dependsOn(`quill-cassandra` % "compile->compile;test->test")
     .enablePlugins(MimaPlugin)
 
 
