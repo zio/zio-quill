@@ -2,7 +2,6 @@ package io.getquill.postgres
 
 import io.getquill.{ JdbcContextConfig, PeopleZioSpec, Prefix }
 
-import java.io.Closeable
 import javax.sql.DataSource
 import io.getquill.context.ZioJdbc._
 import io.getquill.context.qzio.ImplicitSyntax._
@@ -28,7 +27,7 @@ class ImplicitEnvPatternSpec extends PeopleZioSpec {
     }.runSyncUnsafe()
   }
 
-  case class MyService(ds: DataSource with Closeable) {
+  case class MyService(ds: DataSource) {
     implicit val env = Implicit(Has(ds))
 
     def alexes = testContext.run(query[Person].filter(p => p.name == "Alex")).onDataSource.implicitly

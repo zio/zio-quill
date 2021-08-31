@@ -6,7 +6,6 @@ import io.getquill.util.LoadConfig
 import zio.console.putStrLn
 import zio.{ App, ExitCode, Has, URIO }
 
-import java.io.Closeable
 import javax.sql.DataSource
 import io.getquill.context.qzio.ImplicitSyntax._
 
@@ -18,7 +17,7 @@ object ZioAppImplicitEnv extends App {
 
   def dataSource = JdbcContextConfig(LoadConfig("testPostgresDB")).dataSource
 
-  case class MyQueryService(ds: DataSource with Closeable) {
+  case class MyQueryService(ds: DataSource) {
     import Ctx._
     implicit val env = Implicit(Has(ds))
 

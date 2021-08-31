@@ -20,27 +20,27 @@ object ZioJdbc {
   }
 
   object DataSourceLayer {
-    def live: ZLayer[Has[DataSource with Closeable], SQLException, Has[Connection]] = layer
+    def live: ZLayer[Has[DataSource], SQLException, Has[Connection]] = layer
 
     private[getquill] val layer = {
       val managed =
         for {
-          from <- ZManaged.environment[Has[DataSource with Closeable]]
+          from <- ZManaged.environment[Has[DataSource]]
           r <- managedBestEffort(ZIO.effect(from.get.getConnection).refineToOrDie[SQLException]: ZIO[Any, SQLException, Connection])
         } yield Has(r)
       ZLayer.fromManagedMany(managed)
     }
 
-    def fromDataSource(ds: => DataSource with Closeable): ZLayer[Any, Throwable, Has[DataSource with Closeable]] =
+    def fromDataSource(ds: => DataSource): ZLayer[Any, Throwable, Has[DataSource]] =
       ZLayer.fromEffect(Task(ds))
 
-    def fromConfig(config: => Config): ZLayer[Any, Throwable, Has[DataSource with Closeable]] =
+    def fromConfig(config: => Config): ZLayer[Any, Throwable, Has[DataSource]] =
       fromJdbcConfig(JdbcContextConfig(config))
 
-    def fromPrefix(prefix: String): ZLayer[Any, Throwable, Has[DataSource with Closeable]] =
+    def fromPrefix(prefix: String): ZLayer[Any, Throwable, Has[DataSource]] =
       fromJdbcConfig(JdbcContextConfig(LoadConfig(prefix)))
 
-    def fromJdbcConfig(jdbcContextConfig: => JdbcContextConfig): ZLayer[Any, Throwable, Has[DataSource with Closeable]] =
+    def fromJdbcConfig(jdbcContextConfig: => JdbcContextConfig): ZLayer[Any, Throwable, Has[DataSource]] =
       ZLayer.fromManagedMany(
         for {
           conf <- ZManaged.fromEffect(Task(jdbcContextConfig))
@@ -57,7 +57,7 @@ object ZioJdbc {
     }
 
     @deprecated("Use DataSourceLayer.live instead", "3.8.0")
-    val toConnection: ZLayer[Has[DataSource with Closeable], SQLException, Has[Connection]] =
+    val toConnection: ZLayer[Has[DataSource], SQLException, Has[Connection]] =
       DataSourceLayer.live
 
     @deprecated("Use ZLayer.fromEffect(Task(ds)) instead", "3.8.0")
@@ -86,7 +86,7 @@ object ZioJdbc {
 
   object QConnection {
     @deprecated("Use DataSourceLayer.live. If you need just SQLException add .refineToOrDie[SQLException]", "3.8.0")
-    def fromDataSource: ZLayer[Has[DataSource with Closeable], SQLException, Has[Connection]] = DataSourceLayer.live
+    def fromDataSource: ZLayer[Has[DataSource], SQLException, Has[Connection]] = DataSourceLayer.live
 
     @deprecated("Use qzio.onDataSource.", "3.8.0")
     def dependOnDataSource[T](qzio: ZIO[Has[Connection], Throwable, T]) =
@@ -113,22 +113,22 @@ object ZioJdbc {
      *   run(query[Person]).onDataSource.provide(Has(ds))
      * }}}
      */
-    def onDataSource: ZIO[Has[DataSource with Closeable], SQLException, T] =
+    def onDataSource: ZIO[Has[DataSource], SQLException, T] =
       qzio.provideLayer(DataSourceLayer.live).refineToOrDie[SQLException]
 
     /** Shortcut for `onDataSource` */
-    def onDS: ZIO[Has[DataSource with Closeable], SQLException, T] =
+    def onDS: ZIO[Has[DataSource], SQLException, T] =
       qzio.onDataSource
 
-    def implicitDS(implicit implicitEnv: Implicit[Has[DataSource with Closeable]]): IO[SQLException, T] =
+    def implicitDS(implicit implicitEnv: Implicit[Has[DataSource]]): IO[SQLException, T] =
       qzio.onDataSource.implicitly
 
     @deprecated("Use qzio.onDataSource.", "3.8.0")
-    def dependOnDataSource(): ZIO[Has[DataSource with Closeable], SQLException, T] =
+    def dependOnDataSource(): ZIO[Has[DataSource], SQLException, T] =
       qzio.onDataSource.refineToOrDie[SQLException]
 
     @deprecated("Use qzio.onDataSource.provide(Has(ds)). If you need just SQLException add .refineToOrDie[SQLException]", "3.8.0")
-    def provideConnectionFrom(ds: DataSource with Closeable): ZIO[Nothing, SQLException, T] =
+    def provideConnectionFrom(ds: DataSource): ZIO[Nothing, SQLException, T] =
       qzio.onDataSource.provide(Has(ds)).refineToOrDie[SQLException]
 
     @deprecated("Use qzio.provide(Has(conn)). If you need just SQLException add .refineToOrDie[SQLException]", "3.8.0")
