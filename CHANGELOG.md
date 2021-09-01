@@ -1,3 +1,8 @@
+# 3.10.0
+
+- [Open connection on ZIO blocking pool](https://github.com/getquill/quill/pull/2244)
+- [Line-up core API with ProtoQuill so child contexts can have same code](https://github.com/getquill/quill/pull/2231)
+
 # 3.9.0
 
 - [Pass Session to all Encoders/Decoders allowing UDT Encoding without local session varaible in contexts e.g. ZIO and others](https://github.com/getquill/quill/pull/2219)
