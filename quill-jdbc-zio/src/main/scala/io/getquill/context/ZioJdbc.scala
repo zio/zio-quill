@@ -25,8 +25,9 @@ object ZioJdbc {
     private[getquill] val layer = {
       val managed =
         for {
+          blockingExecutor <- ZIO.succeed(zio.blocking.Blocking.Service.live.blockingExecutor).toManaged_
           from <- ZManaged.environment[Has[DataSource with Closeable]]
-          r <- managedBestEffort(ZIO.effect(from.get.getConnection).refineToOrDie[SQLException]: ZIO[Any, SQLException, Connection])
+          r <- ZioJdbc.managedBestEffort(ZIO.effect(from.get.getConnection)).refineToOrDie[SQLException].lock(blockingExecutor)
         } yield Has(r)
       ZLayer.fromManagedMany(managed)
     }
