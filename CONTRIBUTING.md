@@ -10,16 +10,16 @@ Instructions on how to install Docker can be found [here](https://docs.docker.co
 If you are running Linux, you should also install Docker Compose separately, as described
 [here](https://docs.docker.com/compose/install/).
 
-After installing Docker and Docker Compose you have to setup databases:
+After installing Docker and Docker Compose you have to set up the databases:
 
 ```bash
 docker-compose run --rm setup
 ```
 
-After that you are ready to build and test the project. The following setp describes how to test the project with
-sbt built within docker image. If you would like to use your local sbt,
+After that you are ready to build and test the project. The following setup describes how to test the project with
+sbt built within a Docker image. If you would like to use your local sbt,
 please visit [Building locally](#building-locally-using-docker-only-for-databases). This is highly recommended
-when running Docker on non-linux OS due to high IO overhead from running 
+when running Docker on a non-Linux OS due to high IO overhead from running 
 [Docker in virtualized environments](https://docs.docker.com/docker-for-mac/osxfs/#performance-issues-solutions-and-roadmap).
 
 To build and test the project:
@@ -30,12 +30,12 @@ docker-compose run --rm sbt sbt test
 
 ## Building Scala.js targets
 
-The Scala.js targets are disabled by default, use `sbt "project quill-with-js"` to enable them.
+The Scala.js targets are disabled by default: use `sbt "project quill-with-js"` to enable them.
 The CI build also sets this `project quill-with-js` to force the Scala.js compilation.
 
 ## Changing database schema
 
-If any file that creates a database schema was changed then you have to setup the databases again:
+If any file that creates a database schema was changed then you have to set up the databases again:
 
 ```bash
 docker-compose down && docker-compose run --rm setup
@@ -43,7 +43,7 @@ docker-compose down && docker-compose run --rm setup
 
 ## Changing docker configuration
 
-If `build/Dockerfile-sbt`, `build/Dockerfile-setup`, `docker-compose.yml` or any file used by them was changed then you have to rebuild docker images and to setup the databases again:
+If `build/Dockerfile-sbt`, `build/Dockerfile-setup`, `docker-compose.yml` or any file used by them was changed then you have to rebuild docker images and to set up the databases again:
 
 ```bash
 docker-compose down && docker-compose build && docker-compose run --rm setup
@@ -58,37 +58,37 @@ Run all tests:
 docker-compose run --rm sbt sbt test
 ```
 
-Run specific test:
+Run a specified test:
 ```bash
 docker-compose run --rm sbt sbt "test-only io.getquill.context.sql.SqlQuerySpec"
 ```
 
-Run all tests in specific sub-project:
+Run all tests in a specified sub-project:
 ```bash
 docker-compose run --rm sbt sbt "project quill-async" test
 ```
 
-Run specific test in specific sub-project:
+Run a specified test in a specified sub-project:
 ```bash
 docker-compose run --rm sbt sbt "project quill-sqlJVM" "test-only io.getquill.context.sql.SqlQuerySpec"
 ```
 
 ### Debugging tests
-1. Run sbt in interactive mode with docker container ports mapped to the host: 
+1. Run sbt in interactive mode with Docker container ports mapped to the host: 
 ```bash
 docker-compose run --service-ports --rm sbt
 ```
 
-2. Attach debugger to port 15005 of your docker host. In IntelliJ IDEA you should create Remote Run/Debug Configuration, 
-change it port to 15005.
-3. In sbt command line run tests with `test` or test specific spec by passing full name to `test-only`:
+2. Attach debugger to port 15005 of your Docker host. In IntelliJ IDEA you should create a Remote Run/Debug Configuration, 
+and change it port to 15005.
+3. In sbt command line run tests with `test` or test a specified spec by passing its full name to `test-only`:
 ```bash
 > test-only io.getquill.context.sql.SqlQuerySpec
 ```
 
 ## Pull Request
 
-In order to contribute to the project, just do as follows:
+In order to contribute to the project, just do the following:
 
 1. Fork the project
 2. Build it locally
@@ -188,11 +188,11 @@ Note: Make sure you have exposed all the ports as mentioned above.
 ## Debugging using Intellij
 
 [Intellij](https://www.jetbrains.com/idea/) has a comprehensive debugger that also works with macros which is very
-helpful when working on Quill. There are two ways to debug Quill macros using Intellij. The first way is to launch SBT in 
+helpful when working on Quill. There are two ways to debug Quill macros using Intellij. The first way is to launch sbt in 
 debug mode and use Intellij to remote debug it. The second way is to launch a debug session 
 from Intellij from the "Run/Debug Configurations" menu.
 
-### Debug Macros by Remote Debugging SBT
+### Debug Macros by Remote Debugging sbt
 
 In order to use the debugger you need to run sbt manually so follow the instructions 
 [here](#building-locally-using-docker-only-for-databases) first. After this you need to edit `build.sbt` to disable
@@ -216,7 +216,7 @@ invocations are cached on a file basis. You can easily do this just by adding ne
 ### Debug Macros by Launching a Session
 
 Firstly, you will need to build Quill with some additional dependencies that include the file `scala.tools.nsc.Main`.
-You can do this adding the argument `-DdebugMacro=true` to the sbt launcher. You can do this in the Intellij SBT
+You can do this adding the argument `-DdebugMacro=true` to the sbt launcher. You can do this in the Intellij sbt
 menu:
 
 ![Intellij-SBT-Settings.png](quill-doc/etc/Intellij-SBT-Settings.png)
@@ -284,7 +284,7 @@ Some additional arguments you can add to your compiler's VM args provide insight
 -Dquill.trace.types=sql,standard,alias,norm    // What parts of the Quill transformations to print during compilation?
 ```
 
-In Intellij, add them in the SBT settings if your are compiling using SBT:
+In Intellij, add them in the sbt settings if your are compiling using sbt:
 ![Intellj-SBT-Settings-Additional.png](quill-doc/etc/Intellj-SBT-Settings-Additional.png)
 
 ## 'Trick' Debugging via the Dynamic Query API
