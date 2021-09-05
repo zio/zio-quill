@@ -135,24 +135,11 @@ val filteredModules = {
   } else modules
 }
 
-lazy val `quill` = {
-  val quill =
-    (project in file("."))
+lazy val `quill` =
+  (project in file("."))
     .settings(commonSettings: _*)
-
-  // Do not do aggregate project builds when debugging since during that time
-  // typically only individual modules are being build/compiled. This is mostly for convenience with IntelliJ.
-  // Normally it to just exclude `quill` from the build in Intellij instead but then local file change tracking
-  // and search of files from the root level (e.g. in the 'build' directory) is lost.
-  debugMacro match {
-    case true =>
-      quill
-    case false =>
-      quill
-        .aggregate(filteredModules.map(_.project): _*)
-        .dependsOn(filteredModules: _*)
-  }
-}
+    .aggregate(filteredModules.map(_.project): _*)
+    .dependsOn(filteredModules: _*)
 
 `quill` / publishArtifact := false
 
