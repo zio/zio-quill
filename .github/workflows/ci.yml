@@ -23,7 +23,7 @@ jobs:
 
    strategy:
      matrix:
-       scala: [2.11.12, 2.12.10, 2.13.2]
+       scala: [2.11.12]
        module: [db, js, async, codegen, bigdata]
        include:
          - scala: 2.11.12
@@ -67,7 +67,7 @@ jobs:
 
    strategy:
      matrix:
-       scala: [2.11.12, 2.12.10, 2.13.2]
+       scala: [2.11.12]
        module: [base, db, js, async, codegen, bigdata]
        include:
          - scala: 2.11.12
