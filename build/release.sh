@@ -86,20 +86,7 @@ then
         git config --global user.email "quillci@getquill.io"
         git remote set-url origin git@github.com:getquill/quill.git
 
-        if [[ $ARTIFACT == "base" ]]; then    echo_and_run $SBT_VER -Dmodules=base -DskipPush=true 'release with-defaults'; fi
-        if [[ $ARTIFACT == "db" ]]; then      echo_and_run $SBT_VER -Dmodules=db -DskipPush=true 'release with-defaults'; fi
-        if [[ $ARTIFACT == "js" ]]; then      echo_and_run $SBT_VER -Dmodules=js -DskipPush=true 'release with-defaults'; fi
-        if [[ $ARTIFACT == "async" ]]; then   echo_and_run $SBT_VER -Dmodules=async -DskipPush=true 'release with-defaults'; fi
-        if [[ $ARTIFACT == "codegen" ]]; then echo_and_run $SBT_VER -Dmodules=codegen -DskipPush=true 'release with-defaults'; fi
-        if [[ $ARTIFACT == "bigdata" ]]; then echo_and_run $SBT_VER -Dmodules=bigdata -DskipPush=true 'release with-defaults'; fi
-
-        # Commit next version and tag if we are on the master branch (i.e. not if we are on a re-release)
-        if [[ $BRANCH == "master" && $ARTIFACT == "publish" ]]; then
-          echo "Doing Master Publish for BRANCH=$BRANCH VERSION=$VERSION ARTIFACT=$ARTIFACT"
-          # Delete the website tag. If it does not currently exist then ignore it.
-          echo_and_run git push --delete origin website || true
-          echo_and_run $SBT_VER -Dmodules=none 'release with-defaults default-tag-exists-answer o';
-        fi
+        $SBT_VER -Dmodules=db -DskipPush=true 'release with-defaults'; fi
 
     elif [[ $BRANCH == "master" && $(cat version.sbt) == *"SNAPSHOT"* ]]
     then
