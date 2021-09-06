@@ -11,6 +11,11 @@ then
     echo "No Artifact Specified"
 fi
 
+function echo_and_run {
+  echo "$" "$@"
+  eval $(printf '%q ' "$@") < /dev/tty
+}
+
 SBT_2_11="sbt ++2.11.12 -Dquill.macro.log=false -Dquill.scala.version=2.11.12"
 SBT_2_12="sbt ++2.12.6 -Dquill.macro.log=false -Dquill.scala.version=2.12.6"
 SBT_2_13="sbt ++2.13.2 -Dquill.macro.log=false -Dquill.scala.version=2.13.2"
@@ -81,19 +86,19 @@ then
         git config --global user.email "quillci@getquill.io"
         git remote set-url origin git@github.com:getquill/quill.git
 
-        if [[ $ARTIFACT == "base" ]]; then    $SBT_VER -Dmodules=base -DskipPush=true 'release with-defaults'; fi
-        if [[ $ARTIFACT == "db" ]]; then      $SBT_VER -Dmodules=db -DskipPush=true 'release with-defaults'; fi
-        if [[ $ARTIFACT == "js" ]]; then      $SBT_VER -Dmodules=js -DskipPush=true 'release with-defaults'; fi
-        if [[ $ARTIFACT == "async" ]]; then   $SBT_VER -Dmodules=async -DskipPush=true 'release with-defaults'; fi
-        if [[ $ARTIFACT == "codegen" ]]; then $SBT_VER -Dmodules=codegen -DskipPush=true 'release with-defaults'; fi
-        if [[ $ARTIFACT == "bigdata" ]]; then $SBT_VER -Dmodules=bigdata -DskipPush=true 'release with-defaults'; fi
+        if [[ $ARTIFACT == "base" ]]; then    echo_and_run $SBT_VER -Dmodules=base -DskipPush=true 'release with-defaults'; fi
+        if [[ $ARTIFACT == "db" ]]; then      echo_and_run $SBT_VER -Dmodules=db -DskipPush=true 'release with-defaults'; fi
+        if [[ $ARTIFACT == "js" ]]; then      echo_and_run $SBT_VER -Dmodules=js -DskipPush=true 'release with-defaults'; fi
+        if [[ $ARTIFACT == "async" ]]; then   echo_and_run $SBT_VER -Dmodules=async -DskipPush=true 'release with-defaults'; fi
+        if [[ $ARTIFACT == "codegen" ]]; then echo_and_run $SBT_VER -Dmodules=codegen -DskipPush=true 'release with-defaults'; fi
+        if [[ $ARTIFACT == "bigdata" ]]; then echo_and_run $SBT_VER -Dmodules=bigdata -DskipPush=true 'release with-defaults'; fi
 
         # Commit next version and tag if we are on the master branch (i.e. not if we are on a re-release)
         if [[ $BRANCH == "master" && $ARTIFACT == "publish" ]]; then
           echo "Doing Master Publish for BRANCH=$BRANCH VERSION=$VERSION ARTIFACT=$ARTIFACT"
           # Delete the website tag. If it does not currently exist then ignore it.
-          git push --delete origin website || true
-          $SBT_VER -Dmodules=none 'release with-defaults default-tag-exists-answer o';
+          echo_and_run git push --delete origin website || true
+          echo_and_run $SBT_VER -Dmodules=none 'release with-defaults default-tag-exists-answer o';
         fi
 
     elif [[ $BRANCH == "master" && $(cat version.sbt) == *"SNAPSHOT"* ]]
