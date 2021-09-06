@@ -86,7 +86,7 @@ then
         git config --global user.email "quillci@getquill.io"
         git remote set-url origin git@github.com:getquill/quill.git
 
-        $SBT_VER -Dmodules=db -DskipPush=true 'release with-defaults'; fi
+        $SBT_VER -Dmodules=db -DskipPush=true 'release with-defaults'
 
     elif [[ $BRANCH == "master" && $(cat version.sbt) == *"SNAPSHOT"* ]]
     then
