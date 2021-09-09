@@ -123,7 +123,7 @@ jobs:
         scala: [2.11.12]
         module: [publish]
         include:
-          - scala: 2.11.12
+          - scala: 2.11.11
             scala_short: 211
             scala_short_dot: 2.11
 
