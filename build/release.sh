@@ -16,7 +16,7 @@ function echo_and_run {
   eval $(printf '%q ' "$@") < /dev/tty
 }
 
-SBT_2_11="sbt ++2.11.12 -Dquill.macro.log=false -Dquill.scala.version=2.11.12"
+SBT_2_11="sbt ++2.11.11 -Dquill.macro.log=false -Dquill.scala.version=2.11.11"
 SBT_2_12="sbt ++2.12.6 -Dquill.macro.log=false -Dquill.scala.version=2.12.6"
 SBT_2_13="sbt ++2.13.2 -Dquill.macro.log=false -Dquill.scala.version=2.13.2"
 
