@@ -67,7 +67,7 @@ jobs:
 
    strategy:
      matrix:
-       scala: [2.12.10]
+       scala: [2.11.12]
        module: [base, db, js, async, codegen, bigdata]
        include:
          - scala: 2.11.12
