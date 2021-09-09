@@ -839,7 +839,7 @@ lazy val basicSettings = Seq(
     }
   },
   organization := "io.getquill",
-  scalaVersion := scala_v_12,
+  scalaVersion := scala_v_11,
   crossScalaVersions := Seq(scala_v_11, scala_v_12, scala_v_13),
   libraryDependencies ++= Seq(
     "org.scala-lang.modules" %%% "scala-collection-compat" % "2.2.0",
@@ -952,16 +952,7 @@ lazy val releaseSettings = Seq(
         doOnDefault(inquireVersions) ++
         doOnDefault(runClean) ++
         doOnPush   (setReleaseVersion) ++
-        doOnDefault(updateReadmeVersion(_._1)) ++
-        doOnPush   (commitReleaseVersion) ++
-        doOnPush   (updateWebsiteTag) ++
-        doOnPush   (tagRelease) ++
-        doOnDefault(publishArtifacts) ++
-        doOnPush   (setNextVersion) ++
-        doOnPush   (updateReadmeVersion(_._2)) ++
-        doOnPush   (commitNextVersion) //++
-        //doOnPush(releaseStepCommand("sonatypeReleaseAll")) ++
-        doOnPush   (pushChanges)
+        doOnDefault(publishArtifacts)
       case Some((2, 12)) =>
         doOnDefault(checkSnapshotDependencies) ++
         doOnDefault(inquireVersions) ++
