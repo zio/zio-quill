@@ -996,7 +996,7 @@ lazy val releaseSettings = Seq(
         doOnDefault(publishArtifacts) ++
         doOnPush   (setNextVersion) ++
         doOnPush   (updateReadmeVersion(_._2)) ++
-        doOnPush   (commitNextVersion) //++
+        doOnPush   (commitNextVersion) ++
         //doOnPush(releaseStepCommand("sonatypeReleaseAll")) ++
         doOnPush   (pushChanges)
       case Some((2, 12)) =>
