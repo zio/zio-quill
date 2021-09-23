@@ -48,7 +48,7 @@ lazy val dbModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
 )
 
 lazy val jasyncModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
-  `quill-jasync`, `quill-jasync-postgres`, `quill-jasync-mysql`
+  `quill-jasync`, `quill-jasync-postgres`, `quill-jasync-mysql`, `quill-jasync-zio`, `quill-jasync-zio-postgres`
 )
 
 lazy val asyncModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
@@ -76,7 +76,9 @@ lazy val scala213Modules = baseModules ++ jsModules ++ dbModules ++ codegenModul
   `quill-orientdb`,
   `quill-jasync`,
   `quill-jasync-postgres`,
-  `quill-jasync-mysql`
+  `quill-jasync-mysql`,
+  `quill-jasync-zio`,
+  `quill-jasync-zio-postgres`
 )
 
 lazy val scala3Modules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](`quill-engine-jvm`)
@@ -437,6 +439,9 @@ lazy val `quill-jdbc-zio` =
 
 
 
+
+
+
 lazy val `quill-ndbc-monix` =
   (project in file("quill-ndbc-monix"))
     .settings(commonSettings: _*)
@@ -535,6 +540,34 @@ lazy val `quill-jasync-mysql` =
       )
     )
     .dependsOn(`quill-jasync` % "compile->compile;test->test")
+    .enablePlugins(MimaPlugin)
+
+lazy val `quill-jasync-zio` =
+  (project in file("quill-jasync-zio"))
+    .settings(commonSettings: _*)
+    .settings(mimaSettings: _*)
+    .settings(
+      Test / fork := true,
+      libraryDependencies ++= Seq(
+        "com.github.jasync-sql" % "jasync-common" % "1.1.4",
+        "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.1"
+      )
+    )
+    .dependsOn(`quill-zio` % "compile->compile;test->test")
+    .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
+    .enablePlugins(MimaPlugin)
+
+lazy val `quill-jasync-zio-postgres` =
+  (project in file("quill-jasync-zio-postgres"))
+    .settings(commonSettings: _*)
+    .settings(mimaSettings: _*)
+    .settings(
+      Test / fork := true,
+      libraryDependencies ++= Seq(
+        "com.github.jasync-sql" % "jasync-postgresql" % "1.1.4"
+      )
+    )
+    .dependsOn(`quill-jasync-zio` % "compile->compile;test->test")
     .enablePlugins(MimaPlugin)
 
 lazy val `quill-ndbc` =
