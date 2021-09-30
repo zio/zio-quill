@@ -35,3 +35,7 @@ nohup.out
 project/.bloop/
 /io/
 /.metadata/
+.bsp/
+.jvmopts
+.DS_Store
+.vscode

@@ -41,7 +41,7 @@ services:
     init: true
 
   sqlserver:
-    image: microsoft/mssql-server-linux
+    image: mcr.microsoft.com/mssql/server:2017-CU24-ubuntu-16.04
     ports:
       - "11433:1433"
     environment:
@@ -94,12 +94,14 @@ services:
       - ~/.ivy2:/root/.ivy2:cached
       - ~/.m2:/root/.m2:cached
       - ~/.sbt:/root/.sbt:cached
+      - ~/.cache/coursier:/root/.cache/coursier:cached
     environment:
       - SBT_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005 -Dfile.encoding=UTF-8 -Xms512m -Xmx1536m -Xss2m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC
       - POSTGRES_HOST=postgres
       - POSTGRES_PORT=5432
       - MYSQL_HOST=mysql
       - MYSQL_PORT=3306
+      - MYSQL_PASSWORD=root
       - SQL_SERVER_HOST=sqlserver
       - SQL_SERVER_PORT=1433
       - ORACLE_HOST=oracle

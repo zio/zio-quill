@@ -73,7 +73,7 @@ class PostgresNdbcContextSpec extends Spec {
 
     "prepare" in {
       get(ctx.prepareParams(
-        "select * from Person where name=? and age > ?", pr => (List("David Bowie", 69), pr)
+        "select * from Person where name=? and age > ?", (pr, session) => (List("David Bowie", 69), pr)
       )) mustEqual List("69", "'David Bowie'")
     }
   }
