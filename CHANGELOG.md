@@ -1,3 +1,20 @@
+# 3.10.0
+
+- [Defunct AsyncZioCache accidentally returned in #2174. Remove it.](https://github.com/getquill/quill/pull/2246)
+- [Open connection on ZIO blocking pool](https://github.com/getquill/quill/pull/2244)
+- [Line-up core API with ProtoQuill so child contexts can have same code](https://github.com/getquill/quill/pull/2231)
+
+#### Migration Notes:
+
+No externally facing API changes have been made.
+This release aligns Quill's internal Context methods with the API defined in ProtoQuill and introduces
+a root-level context (in the `quill-sql-portable` module) that will be shared together with ProtoQuill.
+Two arguments `info: ExecutionInfo` and `dc: DatasourceContext` have been introduced to all `execute___`
+and `prepare___` methods. For Scala2-Quill, these arguments should be ignored as they contain no
+relevant information. ProtoQuill uses them in order to pass Ast information as well as whether
+the query is Static or Dynamic into execute and prepare methods. In the future, Scala2-Quill may be enhanced
+to use them as well.
+
 # 3.9.0
 
 - [Pass Session to all Encoders/Decoders allowing UDT Encoding without local session varaible in contexts e.g. ZIO and others](https://github.com/getquill/quill/pull/2219)
