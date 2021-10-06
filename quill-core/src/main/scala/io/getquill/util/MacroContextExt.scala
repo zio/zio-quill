@@ -11,10 +11,10 @@ object MacroContextExt {
   implicit class RichContext(c: MacroContext) {
 
     def error(msg: String): Unit =
-      c.error(c.enclosingPosition, msg)
+      c.error(c.enclosingPosition, s"[quill] $msg")
 
     def fail(msg: String): Nothing =
-      c.abort(c.enclosingPosition, msg)
+      c.abort(c.enclosingPosition, s"[quill] $msg")
 
     def warn(msg: String): Unit =
       c.warning(c.enclosingPosition, msg)
