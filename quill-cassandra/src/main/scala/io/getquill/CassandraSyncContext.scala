@@ -2,6 +2,7 @@ package io.getquill
 
 import com.datastax.driver.core.Cluster
 import com.typesafe.config.Config
+import io.getquill.context.ExecutionInfo
 import io.getquill.monad.SyncIOMonad
 import io.getquill.util.{ ContextLogger, LoadConfig }
 
@@ -33,26 +34,26 @@ class CassandraSyncContext[N <: NamingStrategy](
     super.performIO(io)
   }
 
-  def executeQuery[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): List[T] = {
-    val (params, bs) = prepare(this.prepare(cql))
+  def executeQuery[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext): List[T] = {
+    val (params, bs) = prepare(this.prepare(cql), this)
     logger.logQuery(cql, params)
     session.execute(bs)
-      .all.asScala.toList.map(extractor)
+      .all.asScala.toList.map(row => extractor(row, this))
   }
 
-  def executeQuerySingle[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): T =
-    handleSingleResult(executeQuery(cql, prepare, extractor))
+  def executeQuerySingle[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext): T =
+    handleSingleResult(executeQuery(cql, prepare, extractor)(info, dc))
 
-  def executeAction[T](cql: String, prepare: Prepare = identityPrepare): Unit = {
-    val (params, bs) = prepare(this.prepare(cql))
+  def executeAction[T](cql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: DatasourceContext): Unit = {
+    val (params, bs) = prepare(this.prepare(cql), this)
     logger.logQuery(cql, params)
     session.execute(bs)
     ()
   }
 
-  def executeBatchAction(groups: List[BatchGroup]): Unit =
+  def executeBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: DatasourceContext): Unit =
     groups.foreach {
       case BatchGroup(cql, prepare) =>
-        prepare.foreach(executeAction(cql, _))
+        prepare.foreach(executeAction(cql, _)(info, dc))
     }
 }

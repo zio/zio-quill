@@ -6,7 +6,10 @@ import com.twitter.finagle.mysql
 import com.twitter.finagle.mysql.{ EmptyValue, Error, IsolationLevel }
 import com.twitter.util._
 import io.getquill.context.sql.{ TestDecoders, TestEncoders }
-import io.getquill.{ testContext => _, _ }
+import io.getquill.Spec
+import io.getquill.FinagleMysqlContext
+import io.getquill.Literal
+import io.getquill.TestEntities
 
 class FinagleMysqlContextSpec extends Spec {
 
@@ -96,7 +99,7 @@ class FinagleMysqlContextSpec extends Spec {
     import com.twitter.finagle.mysql.Parameter
 
     testContext.prepareParams(
-      "", ps => (Nil, ps ++: List(Parameter.of("Sarah"), Parameter.of(127)))
+      "", (ps, session) => (Nil, ps ++: List(Parameter.of("Sarah"), Parameter.of(127)))
     ) mustEqual List("'Sarah'", "127")
   }
 
