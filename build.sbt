@@ -191,7 +191,7 @@ lazy val ultraPure = new sbtcrossproject.CrossType {
 }
 
 def pprintVersion(v: String) = {
-  if(v.startsWith("2.11")) "0.5.4" else "0.5.5"
+  if(v.startsWith("2.11")) "0.5.4" else "0.5.9"
 }
 
 lazy val `quill-core-portable` =
