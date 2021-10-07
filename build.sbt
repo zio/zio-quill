@@ -431,8 +431,8 @@ lazy val `quill-zio` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "dev.zio" %% "zio" % "1.0.9",
-        "dev.zio" %% "zio-streams" % "1.0.9"
+        "dev.zio" %% "zio" % "1.0.12",
+        "dev.zio" %% "zio-streams" % "1.0.12"
       )
     )
     .dependsOn(`quill-core-jvm` % "compile->compile;test->test")
@@ -566,7 +566,7 @@ lazy val `quill-jasync` =
       Test / fork := true,
       libraryDependencies ++= Seq(
         "com.github.jasync-sql" % "jasync-common" % "1.1.4",
-        "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.1"
+        "org.scala-lang.modules" %% "scala-java8-compat" % "1.0.1"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -657,9 +657,9 @@ lazy val `quill-cassandra-zio` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "dev.zio" %% "zio" % "1.0.9",
-        "dev.zio" %% "zio-streams" % "1.0.9",
-        "dev.zio" %% "zio-interop-guava" % "30.1.0.3"
+        "dev.zio" %% "zio" % "1.0.12",
+        "dev.zio" %% "zio-streams" % "1.0.12",
+        "dev.zio" %% "zio-interop-guava" % "31.0.0.0"
       )
     )
     .dependsOn(`quill-cassandra` % "compile->compile;test->test")
@@ -827,7 +827,7 @@ val crossVersions = {
 
 lazy val loggingSettings = Seq(
   libraryDependencies ++= Seq(
-    "ch.qos.logback"  % "logback-classic" % "1.2.3" % Test
+    "ch.qos.logback"  % "logback-classic" % "1.2.6" % Test
   )
 )
 
