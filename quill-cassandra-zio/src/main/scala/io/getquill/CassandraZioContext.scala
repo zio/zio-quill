@@ -173,7 +173,7 @@ class CassandraZioContext[N <: NamingStrategy](val naming: N)
       env <- ZIO.environment[Has[CassandraZioSession]]
       csession = env.get[CassandraZioSession]
       boundStatement <- {
-        csession.prepareAsync(cql)
+        ZIO.fromFuture { implicit ec => csession.prepareAsync(cql) }
           .mapEffect(row => prepare(row, csession))
           .map(p => p._2)
       }
