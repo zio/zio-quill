@@ -1,3 +1,61 @@
+# 3.10.0
+
+- [Defunct AsyncZioCache accidentally returned in #2174. Remove it.](https://github.com/getquill/quill/pull/2246)
+- [Open connection on ZIO blocking pool](https://github.com/getquill/quill/pull/2244)
+- [Line-up core API with ProtoQuill so child contexts can have same code](https://github.com/getquill/quill/pull/2231)
+
+#### Migration Notes:
+
+No externally facing API changes have been made.
+This release aligns Quill's internal Context methods with the API defined in ProtoQuill and introduces
+a root-level context (in the `quill-sql-portable` module) that will be shared together with ProtoQuill.
+Two arguments `info: ExecutionInfo` and `dc: DatasourceContext` have been introduced to all `execute___`
+and `prepare___` methods. For Scala2-Quill, these arguments should be ignored as they contain no
+relevant information. ProtoQuill uses them in order to pass Ast information as well as whether
+the query is Static or Dynamic into execute and prepare methods. In the future, Scala2-Quill may be enhanced
+to use them as well.
+
+# 3.9.0
+
+- [Pass Session to all Encoders/Decoders allowing UDT Encoding without local session varaible in contexts e.g. ZIO and others](https://github.com/getquill/quill/pull/2219)
+- [Fixing on-conflict case with querySchema/schemaMeta renamed columns](https://github.com/getquill/quill/pull/2218)
+
+#### Migration Notes:
+
+This release modifies Quill's core encoding DSL however this is very much an internal API.
+If you are using MappedEncoder, which should be the case for most users, you will be completely unaffected.
+The MappedEncoder signatures remain the same.
+
+Quill's core encoding API has changed:
+```scala
+// From:
+type BaseEncoder[T] = (Index, T, PrepareRow) => PrepareRow
+type BaseDecoder[T] = (Index, ResultRow) => T
+// To:
+type BaseEncoder[T] = (Index, T, PrepareRow, Session) => PrepareRow
+type BaseDecoder[T] = (Index, ResultRow, Session) => T
+```
+That means that internal signature of all encoders has also changed. For example, the JdbcEncoder has changed:
+```scala
+// From:
+case class JdbcEncoder[T](sqlType: Int, encoder: BaseEncoder[T]) extends BaseEncoder[T] {
+  override def apply(index: Index, value: T, row: PrepareRow) =
+    encoder(index + 1, value, row)
+}
+// To:
+case class JdbcEncoder[T](sqlType: Int, encoder: BaseEncoder[T]) extends BaseEncoder[T] {
+  override def apply(index: Index, value: T, row: PrepareRow, session: Session) =
+    encoder(index + 1, value, row, session)
+}
+```
+If you are writing encoders that directly implement `BaseEncoder`, they will have to be modified with an
+additional `session: Session` parameter.
+> The actual type that `Session` is will vary. For JDBC this will be `Connection`, for `Cassandra` this will be some 
+implementation of `CassandraSession`, for other systems that use a entirely different session paradigm
+this will just be `Unit`.
+
+Again, if you are using MappedEncoders for all of your custom encoding needs, you will not be affected by this change.
+
 # 3.8.0
 
 - [Use ZIO-Native Iterator chunking for JDBC result sets](https://github.com/getquill/quill/pull/2196)

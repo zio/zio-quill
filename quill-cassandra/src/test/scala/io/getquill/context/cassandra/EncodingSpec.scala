@@ -67,8 +67,8 @@ class EncodingSpec extends EncodingSpecHelper {
     import testSyncDB._
     case class A()
     case class B()
-    val a1: Encoder[A] = encoder((b, c, d) => d)
-    val a2: Decoder[A] = decoder((b, c) => A())
+    val a1: Encoder[A] = encoder((b, c, d, s) => d)
+    val a2: Decoder[A] = decoder((b, c, s) => A())
     mappedDecoder(MappedEncoding[A, B](_ => B()), a2).isInstanceOf[CassandraDecoder[B]] mustBe true
     mappedEncoder(MappedEncoding[B, A](_ => A()), a1).isInstanceOf[CassandraEncoder[B]] mustBe true
   }

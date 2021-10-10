@@ -1,7 +1,6 @@
 package io.getquill.context.cassandra
 
 import java.util.{ Date, UUID }
-
 import com.datastax.driver.core.LocalDate
 import io.getquill.NamingStrategy
 import io.getquill.context.Context

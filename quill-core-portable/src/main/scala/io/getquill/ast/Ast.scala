@@ -439,6 +439,7 @@ case class ListContains(ast: Ast, body: Ast) extends IterableOperation { def qua
 case class If(condition: Ast, `then`: Ast, `else`: Ast) extends Ast { def quat = `then`.quat } // then and else clauses should have identical quats
 
 case class Assignment(alias: Ident, property: Ast, value: Ast) extends Ast { def quat = Quat.Value }
+case class AssignmentDual(alias1: Ident, alias2: Ident, property: Ast, value: Ast) extends Ast { def quat = Quat.Value }
 
 //************************************************************
 
@@ -557,23 +558,9 @@ object OnConflict {
 
   case class Excluded(alias: Ident) extends Ast {
     def quat = alias.quat
-    override def equals(obj: Any): Boolean =
-      obj match {
-        case e: Excluded => e.alias == alias
-        case e: Ident    => e == alias
-        case _           => false
-      }
-    override def hashCode(): Int = alias.hashCode
   }
   case class Existing(alias: Ident) extends Ast {
     def quat = alias.quat
-    override def equals(obj: Any): Boolean =
-      obj match {
-        case e: Existing => e.alias == alias
-        case e: Ident    => e == alias
-        case _           => false
-      }
-    override def hashCode(): Int = alias.hashCode
   }
 
   sealed trait Target
@@ -582,7 +569,7 @@ object OnConflict {
 
   sealed trait Action
   case object Ignore extends Action
-  case class Update(assignments: List[Assignment]) extends Action
+  case class Update(assignments: List[AssignmentDual]) extends Action
 }
 //************************************************************
 

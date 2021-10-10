@@ -1,6 +1,6 @@
 package io.getquill.context.sql.mirror
 
-import io.getquill.context.mirror.Row
+import io.getquill.context.mirror.{ MirrorSession, Row }
 import io.getquill.context.sql.{ EncodingSpec, testContext }
 
 class MirrorContextEncodingSpec extends EncodingSpec {
@@ -17,6 +17,6 @@ class MirrorContextEncodingSpec extends EncodingSpec {
     context.run(liftQuery(insertValues).foreach(p => insert(p))).groups.flatMap(_._2) mustEqual rows
 
     val mirror = context.run(query[EncodingTestEntity])
-    verify(rows.map(mirror.extractor))
+    verify(rows.map(row => mirror.extractor(row, MirrorSession.default)))
   }
 }
