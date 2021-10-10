@@ -99,7 +99,7 @@ class FinagleMysqlContextSpec extends Spec {
     import com.twitter.finagle.mysql.Parameter
 
     testContext.prepareParams(
-      "", ps => (Nil, ps ++: List(Parameter.of("Sarah"), Parameter.of(127)))
+      "", (ps, session) => (Nil, ps ++: List(Parameter.of("Sarah"), Parameter.of(127)))
     ) mustEqual List("'Sarah'", "127")
   }
 

@@ -1,10 +1,9 @@
 package io.getquill.examples
 
 import io.getquill._
-import io.getquill.context.ZioJdbc
-import io.getquill.util.LoadConfig
-import zio.{ App, ExitCode, Task, URIO, ZLayer, ZManaged }
+import io.getquill.context.ZioJdbc._
 import zio.console.putStrLn
+import zio.{ App, ExitCode, URIO }
 
 object ZioApp extends App {
 
@@ -13,20 +12,15 @@ object ZioApp extends App {
 
   case class Person(name: String, age: Int)
 
-  val zioConn =
-    ZLayer.fromManaged(for {
-      ds <- ZioJdbc.managedBestEffort(Task(JdbcContextConfig(LoadConfig("testPostgresDB")).dataSource))
-      conn <- ZioJdbc.managedBestEffort(Task(ds.getConnection))
-    } yield conn)
+  val zioDS = DataSourceLayer.fromPrefix("testPostgresDB")
 
   override def run(args: List[String]): URIO[zio.ZEnv, ExitCode] = {
     val people = quote {
       query[Person].filter(p => p.name == "Alex")
     }
-    MyPostgresContext.run(people)
+    MyPostgresContext.run(people).onDataSource
       .tap(result => putStrLn(result.toString))
-      .provideCustomLayer(zioConn).exitCode
+      .provideCustomLayer(zioDS)
+      .exitCode
   }
-
-  // NOTE: provideCustomLayer argument whatever zio does not
 }

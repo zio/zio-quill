@@ -22,7 +22,7 @@ class PostgresAsyncContext[N <: NamingStrategy](naming: N, pool: PartitionedConn
   override protected def extractActionResult[O](returningAction: ReturnAction, returningExtractor: Extractor[O])(result: DBQueryResult): O = {
     result.rows match {
       case Some(r) if r.nonEmpty =>
-        returningExtractor(r.head)
+        returningExtractor(r.head, ())
       case _ =>
         fail("This is a bug. Cannot extract returning value.")
     }

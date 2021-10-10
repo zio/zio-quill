@@ -20,7 +20,7 @@ export CASSANDRA_PORT=19042
 export ORIENTDB_HOST=127.0.0.1
 export ORIENTDB_PORT=12424
 
-export JVM_OPTS="-Dquill.macro.log=false -Dquill.scala.version=$TRAVIS_SCALA_VERSION -Xms1024m -Xmx3g -Xss5m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC"
+export JVM_OPTS="-Dquill.macro.log=false -Dquill.scala.version=$SCALA_VERSION -Xms1024m -Xmx3g -Xss5m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC"
 
 modules=$1
 echo "Start build modules: $modules"
@@ -59,9 +59,9 @@ function docker_stats() {
 }
 export -f docker_stats
 
-export SBT_ARGS="++$TRAVIS_SCALA_VERSION"
+export SBT_ARGS="++$SCALA_VERSION"
 
-if [[ $TRAVIS_SCALA_VERSION == 2.12* ]]; then
+if [[ $SCALA_VERSION == 2.12* ]]; then
     export SBT_ARGS="$SBT_ARGS coverage"
 fi
 
@@ -162,7 +162,7 @@ function wait_for_bigdata() {
 function db_build() {
     echo "build.sh =:> DB Build Specified"
     wait_for_databases
-    export JVM_OPTS="-Dquill.macro.log=false -Dquill.scala.version=$TRAVIS_SCALA_VERSION -Xms4g -Xmx4g -Xss10m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC"
+    export JVM_OPTS="-Dquill.macro.log=false -Dquill.scala.version=$SCALA_VERSION -Xms4g -Xmx4g -Xss10m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC"
     echo "build.sh =:> Starting DB Build Primary"
     ./build/aware_run.sh "sbt -Dmodules=db $SBT_ARGS test"
 }
@@ -170,7 +170,7 @@ function db_build() {
 function js_build() {
     echo "build.sh =:> JS Build Specified"
     show_mem
-    export JVM_OPTS="-Dquill.macro.log=false -Dquill.scala.version=$TRAVIS_SCALA_VERSION -Xms4g -Xmx4g -Xss10m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC"
+    export JVM_OPTS="-Dquill.macro.log=false -Dquill.scala.version=$SCALA_VERSION -Xms4g -Xmx4g -Xss10m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC"
     echo "build.sh =:> Starting JS Build Primary"
     sbt -Dmodules=js $SBT_ARGS test
 }
@@ -205,7 +205,7 @@ function full_build() {
 }
 
 if [[ (! -z "$DOCKER_USERNAME") && (! -z "$DOCKER_USERNAME") ]]; then
-  echo "Logging into Docker via $DOCKER_USERNAME for $TRAVIS_EVENT_TYPE"
+  echo "Logging into Docker via $DOCKER_USERNAME for $EVENT_TYPE"
   echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 
   echo "Getting Per-Account Statistics for Docker Pull Limits"
@@ -216,7 +216,7 @@ else
   TOKEN=$(curl "https://auth.docker.io/token?service=registry.docker.io&scope=repository:ratelimitpreview/test:pull" | jq -r .token)
   curl --head -H "Authorization: Bearer $TOKEN" https://registry-1.docker.io/v2/ratelimitpreview/test/manifests/latest
 
-  echo "Not Logging into Docker for $TRAVIS_EVENT_TYPE build, restarting Docker using GCR mirror"
+  echo "Not Logging into Docker for $EVENT_TYPE build, restarting Docker using GCR mirror"
 fi
 
 echo "Building cache:"
@@ -249,7 +249,7 @@ show_mem
 echo "Tests completed. Shutting down"
 time docker-compose down
 # for 2.12 publish coverage
-if [[ $TRAVIS_SCALA_VERSION == 2.12* ]]; then
+if [[ $SCALA_VERSION == 2.12* ]]; then
     echo "Coverage"
     time sbt $SBT_ARGS coverageReport coverageAggregate
     pip install --user codecov && codecov

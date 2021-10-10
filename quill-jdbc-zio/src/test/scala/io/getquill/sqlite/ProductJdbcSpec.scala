@@ -1,7 +1,7 @@
 package io.getquill.sqlite
 
 import io.getquill.ZioSpec
-import io.getquill.context.ZioJdbc.Prefix
+import io.getquill.Prefix
 import io.getquill.context.sql.ProductSpec
 import zio.ZIO
 

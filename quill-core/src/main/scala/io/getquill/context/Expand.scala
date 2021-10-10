@@ -27,11 +27,11 @@ case class Expand[C <: Context[_, _]](
   }
 
   val prepare =
-    (row: context.PrepareRow) => {
+    (row: context.PrepareRow, session: context.Session) => {
       val (_, values, prepare) = liftings.foldLeft((0, List.empty[Any], row)) {
         case ((idx, values, row), lift) =>
           val encoder = lift.encoder.asInstanceOf[context.Encoder[Any]]
-          val newRow = encoder(idx, lift.value, row)
+          val newRow = encoder(idx, lift.value, row, session)
           (idx + 1, lift.value :: values, newRow)
       }
       (values, prepare)
