@@ -53,6 +53,15 @@ case class FreeVariables(state: State)
         (Assignment(a, bt, ct), FreeVariables(State(state.seen, state.free ++ btt.state.free ++ ctt.state.free)))
     }
 
+  override def apply(e: AssignmentDual): (AssignmentDual, StatefulTransformer[State]) =
+    e match {
+      case AssignmentDual(a1, a2, b, c) =>
+        val t = FreeVariables(State(state.seen + a1.idName + a2.idName, state.free))
+        val (bt, btt) = t(b)
+        val (ct, ctt) = t(c)
+        (AssignmentDual(a1, a2, bt, ct), FreeVariables(State(state.seen, state.free ++ btt.state.free ++ ctt.state.free)))
+    }
+
   override def apply(action: Action): (Action, StatefulTransformer[State]) =
     action match {
       case q @ Returning(a, b, c) =>

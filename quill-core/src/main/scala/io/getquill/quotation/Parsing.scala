@@ -988,18 +988,21 @@ trait Parsing extends ValueComputation with QuatMaking {
     }
   }
 
-  private val assignmentParser: Parser[Assignment] = Parser[Assignment] {
-    case q"((${ identParser(i1) }) => $pack.Predef.ArrowAssoc[$t]($prop).$arrow[$v]($value))" =>
-      checkTypes(prop, value)
-      Assignment(i1, astParser(prop), astParser(value))
-
+  private val assignmentDualParser: Parser[AssignmentDual] = Parser[AssignmentDual] {
     case q"((${ identParser(i1) }, ${ identParser(i2) }) => $pack.Predef.ArrowAssoc[$t]($prop).$arrow[$v]($value))" =>
       checkTypes(prop, value)
       val valueAst = Transform(astParser(value)) {
         case `i1` => OnConflict.Existing(i1)
         case `i2` => OnConflict.Excluded(i2)
       }
-      Assignment(i1, astParser(prop), valueAst)
+      AssignmentDual(i1, i2, astParser(prop), valueAst)
+  }
+
+  private val assignmentParser: Parser[Assignment] = Parser[Assignment] {
+    case q"((${ identParser(i1) }) => $pack.Predef.ArrowAssoc[$t]($prop).$arrow[$v]($value))" =>
+      checkTypes(prop, value)
+      Assignment(i1, astParser(prop), astParser(value))
+
     // Unused, it's here only to make eclipse's presentation compiler happy
     case astParser(ast) => Assignment(Ident("unused", Quat.Value), Ident("unused", Quat.Value), Constant("unused", Quat.Value))
   }
@@ -1024,7 +1027,7 @@ trait Parsing extends ValueComputation with QuatMaking {
   }
 
   private def parseConflictAssigns(targets: List[Tree]) =
-    OnConflict.Update(targets.map(assignmentParser(_)))
+    OnConflict.Update(targets.map(assignmentDualParser(_)))
 
   trait OptionCheckBehavior
   /** Allow T == Option[T] comparison **/

@@ -148,6 +148,13 @@ case class BetaReduction(map: IMap[Ast, Ast], typeBehavior: TypeBehavior)
         Assignment(alias, t(prop), t(value))
     }
 
+  override def apply(e: AssignmentDual): AssignmentDual =
+    e match {
+      case AssignmentDual(alias1, alias2, prop, value) =>
+        val t = BetaReduction(map - alias1 - alias2, typeBehavior)
+        AssignmentDual(alias1, alias2, t(prop), t(value))
+    }
+
   override def apply(query: Query): Query =
     query match {
       case Filter(a, b, c) =>
