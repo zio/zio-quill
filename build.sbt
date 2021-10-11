@@ -203,7 +203,7 @@ lazy val `quill-core-portable` =
         "com.typesafe"               %  "config"        % "1.4.1",
         "com.typesafe.scala-logging" %% "scala-logging" % "3.9.4",
         "org.scala-lang"             %  "scala-reflect" % scalaVersion.value,
-        "com.twitter"                %% "chill"         % "0.9.5",
+        "com.twitter"                %% "chill"         % "0.10.0",
         "io.suzaku"                  %% "boopickle"     % "1.3.1"
       ),
       coverageExcludedPackages := "<empty>;.*AstPrinter;.*Using;io.getquill.Model;io.getquill.ScalarTag;io.getquill.QuotationTag"
@@ -674,7 +674,7 @@ lazy val `quill-cassandra-lagom` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= {
-        val lagomVersion = if (scalaVersion.value.startsWith("2.13")) "1.6.4" else "1.5.5"
+        val lagomVersion = if (scalaVersion.value.startsWith("2.13")) "1.6.5" else "1.5.5"
         val versionSpecificDependencies =  if (scalaVersion.value.startsWith("2.13")) Seq("com.typesafe.play" %% "play-akka-http-server" % "2.8.5") else Seq.empty
         Seq(
           "org.scala-lang.modules" %% "scala-collection-compat" % "2.1.6",
@@ -813,7 +813,7 @@ def excludePathsIfOracle(paths:Seq[String]) = {
 
 val scala_v_11 = "2.11.12"
 val scala_v_12 = "2.12.15"
-val scala_v_13 = "2.13.3"
+val scala_v_13 = "2.13.6"
 
 
 val crossVersions = {
