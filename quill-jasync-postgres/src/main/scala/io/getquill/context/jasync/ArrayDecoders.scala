@@ -32,7 +32,7 @@ trait ArrayDecoders extends ArrayEncoding {
 
   def arrayDecoder[I, O, Col <: Seq[O]](mapper: I => O)(implicit bf: CBF[O, Col], iTag: ClassTag[I], oTag: ClassTag[O]): Decoder[Col] =
     AsyncDecoder[Col](SqlTypes.ARRAY)(new BaseDecoder[Col] {
-      def apply(index: Index, row: ResultRow): Col = row.get(index) match {
+      def apply(index: Index, row: ResultRow, session: Session): Col = row.get(index) match {
         case seq: util.ArrayList[_] =>
           seq.asScala.foldLeft(bf.newBuilder) {
             case (b, x: I) => b += mapper(x)
