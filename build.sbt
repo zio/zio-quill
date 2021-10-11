@@ -813,7 +813,7 @@ def excludePathsIfOracle(paths:Seq[String]) = {
 
 val scala_v_11 = "2.11.12"
 val scala_v_12 = "2.12.15"
-val scala_v_13 = "2.13.3"
+val scala_v_13 = "2.13.6"
 
 
 val crossVersions = {
