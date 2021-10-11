@@ -10,6 +10,7 @@ import org.mockito.scalatest.MockitoSugar
 import org.scalatest.matchers.must.Matchers._
 import io.getquill.context.ZioJdbc._
 import org.scalatest.freespec.AnyFreeSpec
+import zio.Has
 
 import scala.reflect.ClassTag
 
@@ -67,7 +68,8 @@ class ZioMockSpec extends AnyFreeSpec with MockitoSugar { //with AsyncMockitoSug
       stream(query[Person])
         .fold(Seq[Person]())({ case (l, p) => p +: l })
         .map(_.reverse)
-        .provideConnectionFrom(ds).defaultRun
+        .onDataSource
+        .provide(Has(ds)).defaultRun
 
     results must equal(people)
 
@@ -82,6 +84,35 @@ class ZioMockSpec extends AnyFreeSpec with MockitoSugar { //with AsyncMockitoSug
     order.verify(stmt).close()
     // closing autocommit bracket
     order.verify(conn).setAutoCommit(true)
+    // connection close bracket
+    order.verify(conn).close()
+    order.verifyNoMoreInteractions()
+  }
+
+  "managed connection throwing exception on close is caught internally" in {
+    val people = List(Person("Joe", 11), Person("Jack", 22))
+
+    val ds = mock[MyDataSource]
+    val conn = mock[Connection]
+    val stmt = mock[PreparedStatement]
+    val rs = MockResultSet(people)
+
+    when(ds.getConnection) thenReturn conn
+    when(conn.prepareStatement(any[String])) thenReturn stmt
+    when(stmt.executeQuery()) thenReturn rs
+    when(conn.close()) thenThrow (new SQLException("Could not close the connection"))
+
+    val ctx = new PostgresZioJdbcContext(Literal)
+    import ctx._
+
+    val results =
+      ctx.run(query[Person])
+        .onDataSource.provide(Has(ds)).defaultRun
+
+    results must equal(people)
+
+    // In test suite verifications come after
+    val order = inOrder(Seq[AnyRef](conn, stmt, rs): _*)
     // connection close bracket
     order.verify(conn).close()
     order.verifyNoMoreInteractions()
@@ -104,7 +135,8 @@ class ZioMockSpec extends AnyFreeSpec with MockitoSugar { //with AsyncMockitoSug
       stream(query[Person])
         .fold(Seq[Person]())({ case (l, p) => p +: l })
         .map(_.reverse)
-        .provideConnectionFrom(ds).foldCause(cause => cause.prettyPrint, _ => "").defaultRun
+        .onDataSource
+        .provide(Has(ds)).foldCause(cause => cause.prettyPrint, _ => "").defaultRun
 
     resultMsg.contains("Fiber failed.") mustBe true
     resultMsg.contains(msg) mustBe true
@@ -139,7 +171,8 @@ class ZioMockSpec extends AnyFreeSpec with MockitoSugar { //with AsyncMockitoSug
       stream(query[Person])
         .fold(Seq[Person]())({ case (l, p) => p +: l })
         .map(_.reverse)
-        .provideConnectionFrom(ds).foldCause(cause => cause.prettyPrint, _ => "").defaultRun
+        .onDataSource
+        .provide(Has(ds)).foldCause(cause => cause.prettyPrint, _ => "").defaultRun
 
     resultMsg.contains("Fiber failed.") mustBe true
     resultMsg.contains(msg) mustBe true

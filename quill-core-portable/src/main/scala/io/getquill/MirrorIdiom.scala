@@ -49,6 +49,7 @@ trait MirrorIdiomBase extends Idiom {
     case ast: QuotedReference     => ast.ast.token
     case ast: External            => ast.token
     case ast: Assignment          => ast.token
+    case ast: AssignmentDual      => ast.token
     case ast: OnConflict.Excluded => ast.token
     case ast: OnConflict.Existing => ast.token
   }
@@ -247,9 +248,9 @@ trait MirrorIdiomBase extends Idiom {
       case OnConflict.Properties(props) => stmt"(${targetProps(props).token})"
     }
 
-    val updateAssignsTokenizer = Tokenizer[Assignment] {
-      case Assignment(i, p, v) =>
-        stmt"(${i.token}, e) => ${p.token} -> ${scopedTokenizer(v)}"
+    implicit val updateAssignsTokenizer = Tokenizer[AssignmentDual] {
+      case AssignmentDual(i, j, p, v) =>
+        stmt"(${i.token}, ${j.token}) => ${p.token} -> ${scopedTokenizer(v)}"
     }
 
     Tokenizer[OnConflict] {
@@ -258,6 +259,15 @@ trait MirrorIdiomBase extends Idiom {
       case OnConflict(i, t, OnConflict.Ignore) =>
         stmt"${i.token}.onConflictIgnore${t.token}"
     }
+  }
+
+  /**
+   * Technically, AssignmentDual is only used in OnConflict so we only need the updateAssignsTokenizer in conflictTokenizer but since
+   * there is a `case AssignmentDual` in `apply(ast: Ast)` we need to define a way to tokenize that case (otherwise compiler exhaustivity warnings will happen)
+   */
+  implicit val assignmentTokenizer = Tokenizer[AssignmentDual] {
+    case AssignmentDual(i, j, p, v) =>
+      stmt"(${i.token}, ${j.token}) => ${p.token} -> ${v.token}"
   }
 
   implicit def assignmentTokenizer(implicit externalTokenizer: Tokenizer[External]): Tokenizer[Assignment] = Tokenizer[Assignment] {

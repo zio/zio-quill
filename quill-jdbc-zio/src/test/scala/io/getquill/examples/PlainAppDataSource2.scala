@@ -1,12 +1,15 @@
 package io.getquill.examples
 
-import com.zaxxer.hikari.HikariDataSource
-import io.getquill.context.ZioJdbc.{ QConnection, QDataSource }
+import com.zaxxer.hikari.{ HikariConfig, HikariDataSource }
+import io.getquill.context.ZioJdbc.DataSourceLayer
 import io.getquill.util.LoadConfig
 import io.getquill.{ JdbcContextConfig, Literal, PostgresZioJdbcContext }
-import zio.{ Runtime, Task, ZLayer }
-import zio.blocking.Blocking
+import zio.{ Has, Runtime, Task, ZLayer }
 import zio.console.putStrLn
+
+import java.io.Closeable
+import java.sql.Connection
+import javax.sql.DataSource
 
 object PlainAppDataSource2 {
 
@@ -15,14 +18,11 @@ object PlainAppDataSource2 {
 
   case class Person(name: String, age: Int)
 
-  def config = JdbcContextConfig(LoadConfig("testPostgresDB")).dataSource
+  def hikariConfig = new HikariConfig(JdbcContextConfig(LoadConfig("testPostgresDB")).configProperties)
+  def hikariDataSource: DataSource with Closeable = new HikariDataSource(hikariConfig)
 
-  val zioConn: ZLayer[Blocking, Throwable, QConnection] = {
-    (for {
-      hikariConfig <- Task(config).toManaged_
-      ds <- QDataSource.Managed.fromDataSource(new HikariDataSource(hikariConfig))
-    } yield ds).toLayerMany >>> QDataSource.toConnection
-  }
+  val zioConn: ZLayer[Any, Throwable, Has[Connection]] =
+    Task(hikariDataSource).toLayer >>> DataSourceLayer.live
 
   def main(args: Array[String]): Unit = {
     val people = quote {

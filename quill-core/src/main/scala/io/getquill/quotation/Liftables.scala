@@ -20,6 +20,7 @@ trait Liftables extends QuatLiftable {
     case ast: Ordering => orderingLiftable(ast)
     case ast: Lift => liftLiftable(ast)
     case ast: Assignment => assignmentLiftable(ast)
+    case ast: AssignmentDual => assignmentDualLiftable(ast)
     case ast: OptionOperation => optionOperationLiftable(ast)
     case ast: IterableOperation => traversableOperationLiftable(ast)
     case ast: Property => propertyLiftable(ast)
@@ -181,6 +182,10 @@ trait Liftables extends QuatLiftable {
 
   implicit val assignmentLiftable: Liftable[Assignment] = Liftable[Assignment] {
     case Assignment(a, b, c) => q"$pack.Assignment($a, $b, $c)"
+  }
+
+  implicit val assignmentDualLiftable: Liftable[AssignmentDual] = Liftable[AssignmentDual] {
+    case AssignmentDual(a1, a2, b, c) => q"$pack.AssignmentDual($a1, $a2, $b, $c)"
   }
 
   implicit val valueLiftable: Liftable[Value] = Liftable[Value] {

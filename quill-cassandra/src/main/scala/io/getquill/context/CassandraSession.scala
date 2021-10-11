@@ -4,7 +4,7 @@ import com.datastax.driver.core.{ Cluster, UDTValue, UserType }
 import io.getquill.util.Messages.fail
 import scala.jdk.CollectionConverters._
 
-trait CassandraSession {
+trait CassandraSession extends UdtValueLookup {
   def cluster: Cluster
   def keyspace: String
   def preparedStatementCacheSize: Long
@@ -15,7 +15,7 @@ trait CassandraSession {
     .flatMap(_.getUserTypes.asScala)
     .groupBy(_.getTypeName)
 
-  def udtValueOf(udtName: String, keyspace: Option[String] = None): UDTValue =
+  override def udtValueOf(udtName: String, keyspace: Option[String] = None): UDTValue =
     udtMetadata.getOrElse(udtName.toLowerCase, Nil) match {
       case udt :: Nil => udt.newValue()
       case Nil =>
@@ -31,4 +31,8 @@ trait CassandraSession {
     session.close()
     cluster.close()
   }
+}
+
+trait UdtValueLookup {
+  def udtValueOf(udtName: String, keyspace: Option[String] = None): UDTValue = throw new IllegalStateException("UDTs are not supported by this context")
 }
