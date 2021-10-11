@@ -2,15 +2,14 @@ package io.getquill.context.monix
 
 import java.io.Closeable
 import java.sql.{ Array => _, _ }
-
 import cats.effect.ExitCase
 import io.getquill.{ NamingStrategy, ReturnAction }
-import io.getquill.context.ContextEffect
-import io.getquill.context.StreamingContext
+import io.getquill.context.{ ContextEffect, ExecutionInfo, StreamingContext }
 import io.getquill.context.jdbc.JdbcContextBase
 import io.getquill.context.monix.MonixJdbcContext.Runner
 import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.util.ContextLogger
+
 import javax.sql.DataSource
 import monix.eval.{ Task, TaskLocal }
 import monix.execution.Scheduler
@@ -41,24 +40,24 @@ abstract class MonixJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](
   override type RunBatchActionReturningResult[T] = List[T]
 
   // Need explicit return-type annotations due to scala/bug#8356. Otherwise macro system will not understand Result[Long]=Task[Long] etc...
-  override def executeAction[T](sql: String, prepare: Prepare = identityPrepare): Task[Long] =
-    super.executeAction(sql, prepare)
-  override def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): Task[List[T]] =
-    super.executeQuery(sql, prepare, extractor)
-  override def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): Task[T] =
-    super.executeQuerySingle(sql, prepare, extractor)
-  override def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningBehavior: ReturnAction): Task[O] =
-    super.executeActionReturning(sql, prepare, extractor, returningBehavior)
-  override def executeBatchAction(groups: List[BatchGroup]): Task[List[Long]] =
-    super.executeBatchAction(groups)
-  override def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T]): Task[List[T]] =
-    super.executeBatchActionReturning(groups, extractor)
-  override def prepareQuery[T](sql: String, prepare: Prepare, extractor: Extractor[T] = identityExtractor): Connection => Task[PreparedStatement] =
-    super.prepareQuery(sql, prepare, extractor)
-  override def prepareAction(sql: String, prepare: Prepare): Connection => Task[PreparedStatement] =
-    super.prepareAction(sql, prepare)
-  override def prepareBatchAction(groups: List[BatchGroup]): Connection => Task[List[PreparedStatement]] =
-    super.prepareBatchAction(groups)
+  override def executeAction[T](sql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: DatasourceContext): Task[Long] =
+    super.executeAction(sql, prepare)(info, dc)
+  override def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext): Task[List[T]] =
+    super.executeQuery(sql, prepare, extractor)(info, dc)
+  override def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext): Task[T] =
+    super.executeQuerySingle(sql, prepare, extractor)(info, dc)
+  override def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningBehavior: ReturnAction)(info: ExecutionInfo, dc: DatasourceContext): Task[O] =
+    super.executeActionReturning(sql, prepare, extractor, returningBehavior)(info, dc)
+  override def executeBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: DatasourceContext): Task[List[Long]] =
+    super.executeBatchAction(groups)(info, dc)
+  override def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T])(info: ExecutionInfo, dc: DatasourceContext): Task[List[T]] =
+    super.executeBatchActionReturning(groups, extractor)(info, dc)
+  override def prepareQuery(sql: String, prepare: Prepare)(info: ExecutionInfo, dc: DatasourceContext): Connection => Task[PreparedStatement] =
+    super.prepareQuery(sql, prepare)(info, dc)
+  override def prepareAction(sql: String, prepare: Prepare)(info: ExecutionInfo, dc: DatasourceContext): Connection => Task[PreparedStatement] =
+    super.prepareAction(sql, prepare)(info, dc)
+  override def prepareBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: DatasourceContext): Connection => Task[List[PreparedStatement]] =
+    super.prepareBatchAction(groups)(info, dc)
 
   override protected val effect: Runner = runner
   import runner._
@@ -171,7 +170,7 @@ abstract class MonixJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](
    * Since Quill provides a extractor for an individual ResultSet row, a single row can easily be cached
    * in memory. This allows for a straightforward implementation of a hasNext method.
    */
-  class ResultSetIterator[T](rs: ResultSet, extractor: Extractor[T]) extends collection.BufferedIterator[T] {
+  class ResultSetIterator[T](rs: ResultSet, conn: Connection, extractor: Extractor[T]) extends collection.BufferedIterator[T] {
 
     private final val NoData = 0
     private final val Cached = 1
@@ -187,7 +186,7 @@ abstract class MonixJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](
 
     /** Return a new value or call finished() */
     protected def fetchNext(): T =
-      if (rs.next()) extractor(rs)
+      if (rs.next()) extractor(rs, conn)
       else finished()
 
     def head: T = {
@@ -228,16 +227,16 @@ abstract class MonixJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](
     stmt
   }
 
-  def streamQuery[T](fetchSize: Option[Int], sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): Observable[T] =
+  def streamQuery[T](fetchSize: Option[Int], sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext): Observable[T] =
     withConnectionObservable { conn =>
       Observable.eval {
         val stmt = prepareStatementForStreaming(sql, conn, fetchSize)
-        val (params, ps) = prepare(stmt)
+        val (params, ps) = prepare(stmt, conn)
         logger.logQuery(sql, params)
         ps.executeQuery()
       }.bracket { rs =>
         Observable
-          .fromIteratorUnsafe(new ResultSetIterator(rs, extractor))
+          .fromIteratorUnsafe(new ResultSetIterator(rs, conn, extractor))
       } { rs =>
         wrapClose(rs.close())
       }
@@ -245,7 +244,7 @@ abstract class MonixJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](
 
   override private[getquill] def prepareParams(statement: String, prepare: Prepare): Task[Seq[String]] = {
     withConnectionWrapped { conn =>
-      prepare(conn.prepareStatement(statement))._1.reverse.map(prepareParam)
+      prepare(conn.prepareStatement(statement), conn)._1.reverse.map(prepareParam)
     }
   }
 }

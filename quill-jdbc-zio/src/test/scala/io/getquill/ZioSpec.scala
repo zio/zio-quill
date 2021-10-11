@@ -1,13 +1,16 @@
 package io.getquill
 
-import io.getquill.context.ZioJdbc._
 import io.getquill.util.LoadConfig
 import org.scalatest.BeforeAndAfterAll
-import zio.{ Runtime, ZIO }
+import zio.{ Has, Runtime, ZIO }
 import zio.stream.{ Sink, ZStream }
+import io.getquill.context.ZioJdbc._
 
 import java.io.Closeable
+import java.sql.Connection
 import javax.sql.DataSource
+
+case class Prefix(name: String)
 
 trait ZioSpec extends Spec with BeforeAndAfterAll {
   def prefix: Prefix;
@@ -23,20 +26,24 @@ trait ZioSpec extends Spec with BeforeAndAfterAll {
     pool.close()
   }
 
-  def accumulate[T](stream: ZStream[QConnection, Throwable, T]): ZIO[QConnection, Throwable, List[T]] =
+  def accumulate[T](stream: ZStream[Has[Connection], Throwable, T]): ZIO[Has[Connection], Throwable, List[T]] =
     stream.run(Sink.collectAll).map(_.toList)
 
-  def collect[T](stream: ZStream[QConnection, Throwable, T]): List[T] =
-    Runtime.default.unsafeRun(stream.run(Sink.collectAll).map(_.toList).provideConnectionFrom(pool))
+  def collect[T](stream: ZStream[Has[Connection], Throwable, T]): List[T] =
+    Runtime.default.unsafeRun(stream.run(Sink.collectAll).map(_.toList).onDataSource.provide(Has(pool)))
 
-  def collect[T](qzio: ZIO[QConnection, Throwable, T]): T =
-    Runtime.default.unsafeRun(qzio.provideConnectionFrom(pool))
+  def collect[T](qzio: ZIO[Has[Connection], Throwable, T]): T =
+    Runtime.default.unsafeRun(qzio.onDataSource.provide(Has(pool)))
 
-  implicit class ZStreamTestExt[T](stream: ZStream[QConnection, Throwable, T]) {
+  implicit class ZioAnyOps[T](qzio: ZIO[Any, Throwable, T]) {
+    def runSyncUnsafe() = Runtime.default.unsafeRun(qzio)
+  }
+
+  implicit class ZStreamTestExt[T](stream: ZStream[Has[Connection], Throwable, T]) {
     def runSyncUnsafe() = collect[T](stream)
   }
 
-  implicit class ZioTestExt[T](qzio: ZIO[QConnection, Throwable, T]) {
+  implicit class ZioTestExt[T](qzio: ZIO[Has[Connection], Throwable, T]) {
     def runSyncUnsafe() = collect[T](qzio)
   }
 }

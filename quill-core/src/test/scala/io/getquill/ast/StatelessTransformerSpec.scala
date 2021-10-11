@@ -180,9 +180,9 @@ class StatelessTransformerSpec extends Spec {
         Subject()(action) mustEqual action
       }
       "update" in {
-        val action: OnConflict.Action = OnConflict.Update(List(Assignment(Ident("a"), Ident("b"), Ident("c"))))
-        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(action) mustEqual
-          OnConflict.Update(List(Assignment(Ident("a"), Ident("b'"), Ident("c'"))))
+        val action: OnConflict.Action = OnConflict.Update(List(AssignmentDual(Ident("a1"), Ident("a2"), Ident("b"), Ident("c"))))
+        Subject(Ident("a1") -> Ident("a1'"), Ident("a2") -> Ident("a2'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(action) mustEqual
+          OnConflict.Update(List(AssignmentDual(Ident("a1"), Ident("a2"), Ident("b'"), Ident("c'"))))
       }
     }
 

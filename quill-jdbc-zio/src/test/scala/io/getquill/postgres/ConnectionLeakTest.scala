@@ -3,10 +3,10 @@ package io.getquill.postgres
 import java.util.UUID
 import io.getquill.{ JdbcContextConfig, Literal, PostgresZioJdbcContext, ZioSpec }
 import io.getquill.context.sql.ProductSpec
-import io.getquill.context.ZioJdbc.Prefix
+import io.getquill.Prefix
 import io.getquill.util.LoadConfig
 import io.getquill.context.ZioJdbc._
-import zio.Runtime
+import zio.{ Has, Runtime }
 
 import scala.util.Random
 
@@ -40,7 +40,8 @@ class ConnectionLeakTest extends ProductSpec with ZioSpec {
         } yield (result)
       }
         .map(_.headOption.map(_.id))
-        .provideConnectionFrom(dataSource))
+        .onDataSource
+        .provide(Has(dataSource)))
 
     Thread.sleep(2000)
 

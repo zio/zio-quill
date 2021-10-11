@@ -18,7 +18,9 @@ object FutureConversions {
           promise.complete(Try(lf.get()))
           ()
         }
-      }, ec.asInstanceOf[Executor])
+      }, new Executor {
+        override def execute(command: Runnable): Unit = ec.execute(command)
+      })
       promise.future
     }
 

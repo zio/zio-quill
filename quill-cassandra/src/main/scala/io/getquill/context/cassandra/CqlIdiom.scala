@@ -41,6 +41,7 @@ trait CqlIdiom extends Idiom {
       case a: Infix             => a.token
       case a: External          => a.token
       case a: Assignment        => a.token
+      case a: AssignmentDual    => a.token
       case a: IterableOperation => a.token
       case a @ (
         _: Function | _: FunctionApply | _: Dynamic | _: OptionOperation | _: Block |
@@ -146,6 +147,11 @@ trait CqlIdiom extends Idiom {
 
   implicit def assignmentTokenizer(implicit propertyTokenizer: Tokenizer[Property], strategy: NamingStrategy): Tokenizer[Assignment] = Tokenizer[Assignment] {
     case Assignment(alias, prop, value) =>
+      stmt"${prop.token} = ${value.token}"
+  }
+
+  implicit def assignmentDualTokenizer(implicit propertyTokenizer: Tokenizer[Property], strategy: NamingStrategy): Tokenizer[AssignmentDual] = Tokenizer[AssignmentDual] {
+    case AssignmentDual(alias1, alias2, prop, value) =>
       stmt"${prop.token} = ${value.token}"
   }
 
