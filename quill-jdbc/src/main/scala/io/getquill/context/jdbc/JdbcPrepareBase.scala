@@ -1,10 +1,9 @@
 package io.getquill.context.jdbc
 
 import java.sql.{ Connection, PreparedStatement }
-
 import io.getquill.NamingStrategy
 import io.getquill.context.sql.idiom.SqlIdiom
-import io.getquill.context.{ Context, ContextEffect }
+import io.getquill.context.{ Context, ContextEffect, ExecutionInfo }
 import io.getquill.util.ContextLogger
 
 trait JdbcPrepareBase[Dialect <: SqlIdiom, Naming <: NamingStrategy]
@@ -14,13 +13,14 @@ trait JdbcPrepareBase[Dialect <: SqlIdiom, Naming <: NamingStrategy]
 
   type PrepareResult
   type PrepareBatchResult
+  type DatasourceContext = Unit
   override type PrepareRow = PreparedStatement
   override type Session = Connection
 
-  def prepareQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): PrepareResult
-  def prepareAction(sql: String, prepare: Prepare = identityPrepare): PrepareResult
-  def prepareSingle(sql: String, prepare: Prepare = identityPrepare): PrepareResult
-  def prepareBatchAction(groups: List[BatchGroup]): PrepareBatchResult
+  def prepareQuery(sql: String, prepare: Prepare = identityPrepare)(executionInfo: ExecutionInfo, dc: DatasourceContext): PrepareResult
+  def prepareAction(sql: String, prepare: Prepare = identityPrepare)(executionInfo: ExecutionInfo, dc: DatasourceContext): PrepareResult
+  def prepareSingle(sql: String, prepare: Prepare = identityPrepare)(executionInfo: ExecutionInfo, dc: DatasourceContext): PrepareResult
+  def prepareBatchAction(groups: List[BatchGroup])(executionInfo: ExecutionInfo, dc: DatasourceContext): PrepareBatchResult
 
   protected val effect: ContextEffect[Result]
   import effect._

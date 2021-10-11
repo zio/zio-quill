@@ -150,7 +150,6 @@ object RepropagateQuats extends StatelessTransformer {
           }
         val actR = act match {
           case OnConflict.Update(assignments) =>
-            def p(any: Any) = io.getquill.util.Messages.qprint(any)
             val assignmentsR =
               assignments.map { assignment =>
                 val alias1R = assignment.alias1.copy(quat = oca.quat)
