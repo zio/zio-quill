@@ -47,7 +47,7 @@ class FinaglePostgresContextSpec extends Spec with BeforeAndAfter {
     import com.twitter.finagle.postgres.values.ValueEncoder._
 
     testContext.prepareParams(
-      "", ps => (Nil, ps ++: List(Param("Sarah"), Param(127)))
+      "", (ps, session) => (Nil, ps ++: List(Param("Sarah"), Param(127)))
     ) mustEqual List("'Sarah'", "'127'")
   }
 }

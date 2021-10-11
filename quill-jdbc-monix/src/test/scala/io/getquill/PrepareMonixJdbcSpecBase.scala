@@ -16,7 +16,7 @@ trait PrepareMonixJdbcSpecBase extends ProductSpec {
     }
   }
 
-  def productExtractor: ResultSet => Product
+  def productExtractor: (ResultSet, Connection) => Product
 
   def withOrderedIds(products: List[Product]) =
     products.zipWithIndex.map { case (product, id) => product.copy(id = id.toLong + 1) }
@@ -41,11 +41,11 @@ trait PrepareMonixJdbcSpecBase extends ProductSpec {
     }(conn => Task(conn.close()))
   }
 
-  def extractResults[T](conn: => Connection)(prep: Connection => Task[PreparedStatement])(extractor: ResultSet => T) = {
+  def extractResults[T](conn: => Connection)(prep: Connection => Task[PreparedStatement])(extractor: (ResultSet, Connection) => T) = {
     Task(conn).bracket { conn =>
       prep(conn).bracket { stmt =>
         Task(stmt.executeQuery()).bracket { rs =>
-          Task(ResultSetExtractor(rs, extractor))
+          Task(ResultSetExtractor(rs, conn, extractor))
         }(rs => Task(rs.close()))
       }(stmt => Task(stmt.close()))
     }(conn => Task(conn.close()))

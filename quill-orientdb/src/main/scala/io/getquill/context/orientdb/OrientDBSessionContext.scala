@@ -22,6 +22,7 @@ abstract class OrientDBSessionContext[N <: NamingStrategy](
 
   override type PrepareRow = ArrayBuffer[Any]
   override type ResultRow = ODocument
+  override type Session = OPartitionedDatabasePool
 
   override type RunActionReturningResult[T] = Unit
   override type RunBatchActionReturningResult[T] = Unit

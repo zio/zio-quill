@@ -3,7 +3,7 @@ package io.getquill.integration
 import java.sql.{ Connection, ResultSet }
 import org.scalatest.matchers.should.Matchers._
 import io.getquill._
-import io.getquill.context.ZioJdbc.Prefix
+import io.getquill.Prefix
 
 /**
  * This is a long-running test that will cause a OutOfMemory exception if
@@ -57,7 +57,7 @@ class StreamResultsOrBlowUpSpec extends ZioSpec {
       .zipWithIndex
       .fold(0L)({
         case (totalYears, (person, index)) => {
-          // Need to print something out as we stream or travis will thing the build is stalled and kill it with the following message:
+          // Need to print something out as we stream or github actions will think the build is stalled and kill it with the following message:
           // "No output has been received in the last 10m0s..."
           if (index % 10000 == 0) println(s"Streaming Test Row: ${index}")
           totalYears + person.age
@@ -68,6 +68,7 @@ class StreamResultsOrBlowUpSpec extends ZioSpec {
     deletes.runSyncUnsafe()
   }
 
+  // Note, to actually have no chunking, remove the 100 in stream(query[Person], 100) and run with a small memory size e.g. -Xmx50m
   "stream a large result set without blowing up - no chunking" in {
     deletes.runSyncUnsafe()
 
@@ -78,7 +79,7 @@ class StreamResultsOrBlowUpSpec extends ZioSpec {
       .zipWithIndex
       .fold(0L)({
         case (totalYears, (person, index)) => {
-          // Need to print something out as we stream or travis will thing the build is stalled and kill it with the following message:
+          // Need to print something out as we stream or github actions will think the build is stalled and kill it with the following message:
           // "No output has been received in the last 10m0s..."
           if (index % 10000 == 0) println(s"Streaming Test Row: ${index}")
           totalYears + person.age

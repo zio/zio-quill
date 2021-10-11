@@ -1,7 +1,7 @@
 package io.getquill.sqlserver
 
 import io.getquill.ZioSpec
-import io.getquill.context.ZioJdbc.Prefix
+import io.getquill.Prefix
 import zio.{ Task, ZIO }
 
 class ZioJdbcContextSpec extends ZioSpec {
@@ -61,7 +61,7 @@ class ZioJdbcContextSpec extends ZioSpec {
     }
     "prepare" in {
       testContext.prepareParams(
-        "select * from Person where name=? and age > ?", ps => (List("Sarah", 127), ps)
+        "select * from Person where name=? and age > ?", (ps, session) => (List("Sarah", 127), ps)
       ).runSyncUnsafe() mustEqual List("127", "'Sarah'")
     }
   }
