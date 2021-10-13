@@ -677,7 +677,7 @@ lazy val `quill-cassandra-lagom` =
         val lagomVersion = if (scalaVersion.value.startsWith("2.13")) "1.6.5" else "1.5.5"
         val versionSpecificDependencies =  if (scalaVersion.value.startsWith("2.13")) Seq("com.typesafe.play" %% "play-akka-http-server" % "2.8.8") else Seq.empty
         Seq(
-          "org.scala-lang.modules" %% "scala-collection-compat" % "2.1.6",
+          "org.scala-lang.modules" %% "scala-collection-compat" % "2.4.2",
           "com.lightbend.lagom" %% "lagom-scaladsl-persistence-cassandra" % lagomVersion % Provided,
           "com.lightbend.lagom" %% "lagom-scaladsl-testkit" % lagomVersion % Test
         ) ++ versionSpecificDependencies
