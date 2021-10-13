@@ -385,6 +385,10 @@ class CqlIdiomSpec extends Spec {
       val a: Ast = Assignment(Ident("a"), Ident("b"), Ident("c"))
       translate(a: Ast) mustBe (a -> stmt"b = c")
     }
+    "assignmentDual" in {
+      val a: Ast = AssignmentDual(Ident("a1"), Ident("a2"), Ident("b"), Ident("c"))
+      translate(a: Ast) mustBe (a -> stmt"b = c")
+    }
     "aggregation" in {
       val t = implicitly[Tokenizer[AggregationOperator]]
       t.token(AggregationOperator.`size`) mustBe stmt"COUNT"

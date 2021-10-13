@@ -177,6 +177,14 @@ If you have non-local docker change it depending on your settings.
 
 Finally, you can use `sbt` locally.
 
+### All In One ###
+
+To restart the database services, rebuild them, and start with locally explosed ports run:
+
+docker-compose down && docker-compose build && docker-compose run --rm --service-ports setup
+
+Note: Make sure you have exposed all the ports as mentioned above.
+
 ## Debugging using Intellij
 
 [Intellij](https://www.jetbrains.com/idea/) has a comprehensive debugger that also works with macros which is very
@@ -265,13 +273,14 @@ Set a breakpoint anywhere in the Quill codebase and run this configuration from 
 Some additional arguments you can add to your compiler's VM args provide insight into Quill's compilation:
 
 ```
--DdebugMacro=true                 // Enables libraries needed to debug via an Intellij Application session (default=false)
--Dquill.macro.log.pretty=true     // Pretty print the SQL Queries that Quill produces (default=false)
--Dquill.macro.log=true            // Enable/Disable priting of the SQL Queries Quill generates during compile-time (default=true)
--Dquill.trace.enabled=true        // Global switch that Enables/Disables printing of Quill ASTs during compilation (default=false)
--Dquill.trace.color=true          // Print Quill ASTs in color (default=false) 
--Dquill.trace.opinion=false       // Print the parts of Quill ASTs not directly used in the main transformation phases (called Opinions).  (default=false) 
--Dquill.trace.ast.simple=true     // Print the raw Quill ASTs elements or a more compact view of the AST code (think `show` vs `showRaw` in Scala macros). (default=true) 
+-DdebugMacro=true                              // Enables libraries needed to debug via an Intellij Application session (default=false)
+-DexcludeTests=false                           // Excludes testing code from being build. Useful during development times that require rapid iteration
+-Dquill.macro.log.pretty=true                  // Pretty print the SQL Queries that Quill produces (default=false)
+-Dquill.macro.log=true                         // Enable/Disable priting of the SQL Queries Quill generates during compile-time (default=true)
+-Dquill.trace.enabled=true                     // Global switch that Enables/Disables printing of Quill ASTs during compilation (default=false)
+-Dquill.trace.color=true                       // Print Quill ASTs in color (default=false) 
+-Dquill.trace.opinion=false                    // Print the parts of Quill ASTs not directly used in the main transformation phases (called Opinions).  (default=false) 
+-Dquill.trace.ast.simple=true                  // Print the raw Quill ASTs elements or a more compact view of the AST code (think `show` vs `showRaw` in Scala macros). (default=true) 
 -Dquill.trace.types=sql,standard,alias,norm    // What parts of the Quill transformations to print during compilation?
 ```
 

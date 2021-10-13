@@ -15,12 +15,12 @@ trait FinagleMysqlEncoders {
   type Encoder[T] = FinagleMySqlEncoder[T]
 
   case class FinagleMySqlEncoder[T](encoder: BaseEncoder[T]) extends BaseEncoder[T] {
-    override def apply(index: Index, value: T, row: PrepareRow) =
-      encoder(index, value, row)
+    override def apply(index: Index, value: T, row: PrepareRow, session: Session) =
+      encoder(index, value, row, session)
   }
 
   def encoder[T](f: T => Parameter): Encoder[T] =
-    FinagleMySqlEncoder((index, value, row) => row :+ f(value))
+    FinagleMySqlEncoder((index, value, row, session) => row :+ f(value))
 
   def encoder[T](implicit cbp: CanBeParameter[T]): Encoder[T] =
     encoder[T]((v: T) => v: Parameter)
@@ -28,10 +28,10 @@ trait FinagleMysqlEncoders {
   private[this] val nullEncoder = encoder((_: Null) => Parameter.NullParameter)
 
   implicit def optionEncoder[T](implicit e: Encoder[T]): Encoder[Option[T]] =
-    FinagleMySqlEncoder { (index, value, row) =>
+    FinagleMySqlEncoder { (index, value, row, session) =>
       value match {
-        case None    => nullEncoder.encoder(index, null, row)
-        case Some(v) => e.encoder(index, v, row)
+        case None    => nullEncoder.encoder(index, null, row, session)
+        case Some(v) => e.encoder(index, v, row, session)
       }
     }
 
