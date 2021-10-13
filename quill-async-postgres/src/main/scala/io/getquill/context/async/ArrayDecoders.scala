@@ -31,7 +31,7 @@ trait ArrayDecoders extends ArrayEncoding {
 
   def arrayDecoder[I, O, Col <: Seq[O]](mapper: I => O)(implicit bf: CBF[O, Col], iTag: ClassTag[I], oTag: ClassTag[O]): Decoder[Col] =
     AsyncDecoder[Col](SqlTypes.ARRAY)(new BaseDecoder[Col] {
-      def apply(index: Index, row: ResultRow): Col = {
+      def apply(index: Index, row: ResultRow, session: Session): Col = {
         row(index) match {
           case seq: IndexedSeq[Any] => seq.foldLeft(bf.newBuilder) {
             case (b, x: I) => b += mapper(x)

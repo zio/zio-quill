@@ -28,7 +28,7 @@ trait MetaDsl extends MetaDslLowPriorityImplicits {
 
   trait QueryMeta[T] {
     def expand: Quoted[Query[T] => Query[_]]
-    def extract: ResultRow => T
+    def extract: (ResultRow, Session) => T
   }
 
   trait UpdateMeta[T] {

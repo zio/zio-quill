@@ -175,12 +175,16 @@ trait Unliftables extends QuatUnliftable {
   }
 
   implicit val conflictActionUnliftable: Unliftable[OnConflict.Action] = Unliftable[OnConflict.Action] {
-    case q"$pack.OnConflict.Ignore"                                 => OnConflict.Ignore
-    case q"$pack.OnConflict.Update.apply(${ a: List[Assignment] })" => OnConflict.Update(a)
+    case q"$pack.OnConflict.Ignore"                                     => OnConflict.Ignore
+    case q"$pack.OnConflict.Update.apply(${ a: List[AssignmentDual] })" => OnConflict.Update(a)
   }
 
   implicit val assignmentUnliftable: Unliftable[Assignment] = Unliftable[Assignment] {
     case q"$pack.Assignment.apply(${ a: Ident }, ${ b: Ast }, ${ c: Ast })" => Assignment(a, b, c)
+  }
+
+  implicit val assignmentDualUnliftable: Unliftable[AssignmentDual] = Unliftable[AssignmentDual] {
+    case q"$pack.AssignmentDual.apply(${ a1: Ident }, ${ a2: Ident }, ${ b: Ast }, ${ c: Ast })" => AssignmentDual(a1, a2, b, c)
   }
 
   implicit val valueUnliftable: Unliftable[Value] = Unliftable[Value] {

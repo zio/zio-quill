@@ -13,7 +13,7 @@ trait FinaglePostgresEncoders {
   type Encoder[T] = FinaglePostgresEncoder[T]
 
   case class FinaglePostgresEncoder[T](encoder: ValueEncoder[T]) extends BaseEncoder[T] {
-    override def apply(index: Index, value: T, row: PrepareRow) =
+    override def apply(index: Index, value: T, row: PrepareRow, session: Session) =
       row :+ Param(value)(encoder)
   }
 

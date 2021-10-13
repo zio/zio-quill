@@ -4,9 +4,9 @@ import io.getquill.quotation.NonQuotedException
 
 import scala.annotation.compileTimeOnly
 
-private[dsl] trait InfixDsl {
+private[getquill] trait InfixDsl {
 
-  private[dsl] trait InfixValue {
+  private[getquill] trait InfixValue {
     def as[T]: T
     def asCondition: Boolean
     def pure: InfixValue
