@@ -23,7 +23,7 @@ trait FinaglePostgresDecoders {
     vd:      ValueDecoder[T],
     default: Throwable => T  = (e: Throwable) => fail(e.getMessage)
   ) extends BaseDecoder[T] {
-    override def apply(index: Index, row: ResultRow): T =
+    override def apply(index: Index, row: ResultRow, session: Session): T =
       row.getTry[T](index)(vd) match {
         case Return(r) => r
         case Throw(e)  => default(e)

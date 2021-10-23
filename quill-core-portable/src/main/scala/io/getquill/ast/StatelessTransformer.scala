@@ -11,6 +11,7 @@ trait StatelessTransformer {
       case e: Action              => apply(e)
       case e: Value               => apply(e)
       case e: Assignment          => apply(e)
+      case e: AssignmentDual      => apply(e)
       case Function(params, body) => Function(params, apply(body))
       case e: Ident               => applyIdent(e)
       case e: ExternalIdent       => e
@@ -25,8 +26,18 @@ trait StatelessTransformer {
       case Block(statements)      => Block(statements.map(apply))
       case Val(name, body)        => Val(name, apply(body))
       case o: Ordering            => o
-      case e: OnConflict.Excluded => e
-      case e: OnConflict.Existing => e
+      case e: OnConflict.Excluded => apply(e)
+      case e: OnConflict.Existing => apply(e)
+    }
+
+  def apply(e: OnConflict.Excluded): OnConflict.Excluded =
+    e match {
+      case OnConflict.Excluded(alias) => OnConflict.Excluded(apply(alias).asInstanceOf[Ident])
+    }
+
+  def apply(e: OnConflict.Existing): OnConflict.Existing =
+    e match {
+      case OnConflict.Existing(alias) => OnConflict.Existing(apply(alias).asInstanceOf[Ident])
     }
 
   def apply(o: OptionOperation): OptionOperation =
@@ -84,6 +95,11 @@ trait StatelessTransformer {
   def apply(e: Assignment): Assignment =
     e match {
       case Assignment(a, b, c) => Assignment(applyIdent(a), apply(b), apply(c))
+    }
+
+  def apply(e: AssignmentDual): AssignmentDual =
+    e match {
+      case AssignmentDual(a1, a2, b, c) => AssignmentDual(applyIdent(a1), applyIdent(a2), apply(b), apply(c))
     }
 
   def apply(e: Property): Property =
