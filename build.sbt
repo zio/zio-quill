@@ -500,7 +500,10 @@ lazy val `quill-finagle-mysql` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.twitter" %% "finagle-mysql" % "20.10.0"
+        if (scalaVersion.value.startsWith("2.11"))
+          "com.twitter" % "finagle-mysql_2.11" % "21.2.0"
+        else
+          "com.twitter" %% "finagle-mysql" % "21.9.0"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -756,10 +759,10 @@ def updateWebsiteTag =
 lazy val jdbcTestingLibraries = Seq(
   libraryDependencies ++= Seq(
     "com.zaxxer"              %  "HikariCP"                % "3.4.5",
-    "mysql"                   %  "mysql-connector-java"    % "8.0.26"             % Test,
+    "mysql"                   %  "mysql-connector-java"    % "8.0.27"             % Test,
     "com.h2database"          %  "h2"                      % "1.4.200"            % Test,
-    "org.postgresql"          %  "postgresql"              % "42.2.24"             % Test,
-    "org.xerial"              %  "sqlite-jdbc"             % "3.32.3.3"             % Test,
+    "org.postgresql"          %  "postgresql"              % "42.3.0"             % Test,
+    "org.xerial"              %  "sqlite-jdbc"             % "3.36.0.3"             % Test,
     "com.microsoft.sqlserver" %  "mssql-jdbc"              % "7.1.1.jre8-preview" % Test,
     "com.oracle.ojdbc"        %  "ojdbc8"                  % "19.3.0.0"           % Test,
     "org.mockito"             %% "mockito-scala-scalatest" % "1.16.46"              % Test
