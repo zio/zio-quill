@@ -1,24 +1,30 @@
 package io.getquill.util
 
 import io.getquill.AstPrinter
+import scala.collection.mutable.{ Map => MutableMap }
 
 object Messages {
 
   private def variable(propName: String, envName: String, default: String) =
     Option(System.getProperty(propName)).orElse(sys.env.get(envName)).getOrElse(default)
 
-  private[getquill] def quatKryoPoolSize = variable("quill.quat.kryoPool", "quill_quat_kryoPool", "10").toInt
-  private[getquill] def maxQuatFields = variable("quill.quat.tooManyFields", "quill_quat_tooManyFields", "500").toInt
-  private[util] def prettyPrint = variable("quill.macro.log.pretty", "quill_macro_log", "false").toBoolean
-  private[getquill] def alwaysAlias = variable("quill.query.alwaysAlias", "quill_query_alwaysAlias", "false").toBoolean
-  private[getquill] def pruneColumns = variable("quill.query.pruneColumns", "quill_query_pruneColumns", "true").toBoolean
-  private[getquill] def smartBooleans = variable("quill.query.smartBooleans", "quill_query_smartBooleans", "true").toBoolean
-  private[util] def debugEnabled = variable("quill.macro.log", "quill_macro_log", "true").toBoolean
-  private[util] def traceEnabled = variable("quill.trace.enabled", "quill_trace_enabled", "false").toBoolean
-  private[util] def traceColors = variable("quill.trace.color", "quill_trace_color,", "false").toBoolean
-  private[util] def traceOpinions = variable("quill.trace.opinion", "quill_trace_opinion", "false").toBoolean
-  private[util] def traceAstSimple = variable("quill.trace.ast.simple", "quill_trace_ast_simple", "false").toBoolean
-  private[getquill] def traceQuats = QuatTrace(variable("quill.trace.quat", "quill_trace_quat", QuatTrace.None.value))
+  private[getquill] def resetCache(): Unit = cacheMap.clear()
+  private val cacheMap: MutableMap[String, Any] = MutableMap()
+  private def cache[T](name: String, value: => T): T =
+    cacheMap.getOrElseUpdate(name, value).asInstanceOf[T]
+
+  private[getquill] def quatKryoPoolSize = cache("quill.quat.kryoPool", variable("quill.quat.kryoPool", "quill_quat_kryoPool", "10").toInt)
+  private[getquill] def maxQuatFields = cache("quill.quat.tooManyFields", variable("quill.quat.tooManyFields", "quill_quat_tooManyFields", "500").toInt)
+  private[getquill] def prettyPrint = cache("quill.macro.log.pretty", variable("quill.macro.log.pretty", "quill_macro_log", "false").toBoolean)
+  private[getquill] def alwaysAlias = cache("quill.query.alwaysAlias", variable("quill.query.alwaysAlias", "quill_query_alwaysAlias", "false").toBoolean)
+  private[getquill] def pruneColumns = cache("quill.query.pruneColumns", variable("quill.query.pruneColumns", "quill_query_pruneColumns", "true").toBoolean)
+  private[getquill] def smartBooleans = cache("quill.query.smartBooleans", variable("quill.query.smartBooleans", "quill_query_smartBooleans", "true").toBoolean)
+  private[getquill] def debugEnabled = cache("quill.macro.log", variable("quill.macro.log", "quill_macro_log", "true").toBoolean)
+  private[getquill] def traceEnabled = cache("quill.trace.enabled", variable("quill.trace.enabled", "quill_trace_enabled", "false").toBoolean)
+  private[getquill] def traceColors = cache("quill.trace.color", variable("quill.trace.color", "quill_trace_color,", "false").toBoolean)
+  private[getquill] def traceOpinions = cache("quill.trace.opinion", variable("quill.trace.opinion", "quill_trace_opinion", "false").toBoolean)
+  private[getquill] def traceAstSimple = cache("quill.trace.ast.simple", variable("quill.trace.ast.simple", "quill_trace_ast_simple", "false").toBoolean)
+  private[getquill] def traceQuats = cache("quill.trace.quat", QuatTrace(variable("quill.trace.quat", "quill_trace_quat", QuatTrace.None.value)))
 
   sealed trait QuatTrace { def value: String }
   object QuatTrace {
@@ -31,11 +37,11 @@ object Messages {
   }
 
   private[util] def traces: List[TraceType] =
-    variable("quill.trace.types", "quill_trace_types", "standard")
+    cache("quill.trace.types", variable("quill.trace.types", "quill_trace_types", "standard")
       .split(",")
       .toList
       .map(_.trim)
-      .flatMap(trace => TraceType.values.filter(traceType => trace == traceType.value))
+      .flatMap(trace => TraceType.values.filter(traceType => trace == traceType.value)))
 
   def tracesEnabled(tt: TraceType) =
     (traceEnabled && traces.contains(tt)) || tt == TraceType.Warning
@@ -45,6 +51,7 @@ object Messages {
     System.setProperty("quill.trace.color", color.toString)
     System.setProperty("quill.trace.quat", quatTrace.value)
     System.setProperty("quill.trace.types", traceTypes.map(_.value).mkString(","))
+    resetCache()
     ()
   }
 

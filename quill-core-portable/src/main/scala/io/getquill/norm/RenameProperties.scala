@@ -46,8 +46,10 @@ object RenameProperties {
 
 object CompleteRenames extends StatelessTransformer {
   // NOTE Leaving renames on Entities so knowledges of what renames have been done remains in the AST. May want to change this in the future.
-  override def applyIdent(e: Ident): Ident =
-    e.copy(quat = e.quat.applyRenames)
+  override def applyIdent(e: Ident): Ident = {
+    val newQuat = e.quat.applyRenames // Force actual quat computation for performance reasons
+    e.copy(quat = newQuat)
+  }
 
   override def apply(e: Query): Query =
     e match {
@@ -57,7 +59,8 @@ object CompleteRenames extends StatelessTransformer {
 
   override def apply(e: Ast): Ast = e match {
     case e: Ident =>
-      e.copy(quat = e.quat.applyRenames)
+      val newQuat = e.quat.applyRenames // Force actual quat computation for performance reasons
+      e.copy(quat = newQuat)
 
     case other =>
       super.apply(other)
@@ -76,8 +79,8 @@ object ApplyRenamesToProps extends StatelessTransformer {
   def applyProperty(p: Property) =
     p match {
       case p @ Property.Opinionated(ast, name, renameable, visibility) =>
-        trace"Checking Property: ${p} for possible rename".andLog()
         val newAst = apply(ast)
+        trace"Checking Property: ${p} for possible rename. Renames on Quat: ${newAst.quat.renames}".andLog()
         // Check the quat if it is renaming this property if so rename it. Otherwise property is the same
         newAst.quat.renames.get(name) match {
           case Some(newName) =>

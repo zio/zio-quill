@@ -47,7 +47,7 @@ class JdbcContextSpec extends Spec {
     }
     "prepare" in {
       ctx.prepareParams(
-        "select * from Person where name=? and age > ?", ps => (List("Sarah", 127), ps)
+        "select * from Person where name=? and age > ?", (ps, session) => (List("Sarah", 127), ps)
       ) mustEqual List("127", "'Sarah'")
     }
   }

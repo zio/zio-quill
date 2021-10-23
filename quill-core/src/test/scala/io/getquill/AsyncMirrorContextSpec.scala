@@ -33,7 +33,7 @@ class AsyncMirrorContextSpec extends Spec {
   }
 
   "prepare" in {
-    ctx.prepareParams("", ps => (Nil, ps.add("Sarah").add(127))) mustEqual List("'Sarah'", "127")
+    ctx.prepareParams("", (ps, session) => (Nil, ps.add("Sarah").add(127))) mustEqual List("'Sarah'", "127")
   }
 
   "probe" in {

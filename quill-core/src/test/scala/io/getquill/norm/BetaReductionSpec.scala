@@ -7,7 +7,7 @@ import io.getquill.ast._
 import io.getquill.quat.Quat
 
 class BetaReductionSpec extends Spec {
-
+  //hello
   "simplifies the ast by applying functons" - {
     "tuple field" in {
       val ast: Ast = Property(Tuple(List(Ident("a"))), "_1")
@@ -41,12 +41,12 @@ class BetaReductionSpec extends Spec {
     "with OnConflict.Excluded" in {
       val ast: Ast = OnConflict.Excluded(Ident("a"))
       BetaReduction(ast, Ident("a") -> Ident("a'")) mustEqual
-        Ident("a'")
+        OnConflict.Excluded(Ident("a'"))
     }
     "with OnConflict.Existing" in {
       val ast: Ast = OnConflict.Existing(Ident("a"))
       BetaReduction(ast, Ident("a") -> Ident("a'")) mustEqual
-        Ident("a'")
+        OnConflict.Existing(Ident("a'"))
     }
     "with inline" - {
       val entity = Entity("a", Nil, QEP)

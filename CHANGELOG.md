@@ -1,3 +1,231 @@
+# 3.10.0
+
+- [Defunct AsyncZioCache accidentally returned in #2174. Remove it.](https://github.com/getquill/quill/pull/2246)
+- [Open connection on ZIO blocking pool](https://github.com/getquill/quill/pull/2244)
+- [Line-up core API with ProtoQuill so child contexts can have same code](https://github.com/getquill/quill/pull/2231)
+
+#### Migration Notes:
+
+No externally facing API changes have been made.
+This release aligns Quill's internal Context methods with the API defined in ProtoQuill and introduces
+a root-level context (in the `quill-sql-portable` module) that will be shared together with ProtoQuill.
+Two arguments `info: ExecutionInfo` and `dc: DatasourceContext` have been introduced to all `execute___`
+and `prepare___` methods. For Scala2-Quill, these arguments should be ignored as they contain no
+relevant information. ProtoQuill uses them in order to pass Ast information as well as whether
+the query is Static or Dynamic into execute and prepare methods. In the future, Scala2-Quill may be enhanced
+to use them as well.
+
+# 3.9.0
+
+- [Pass Session to all Encoders/Decoders allowing UDT Encoding without local session varaible in contexts e.g. ZIO and others](https://github.com/getquill/quill/pull/2219)
+- [Fixing on-conflict case with querySchema/schemaMeta renamed columns](https://github.com/getquill/quill/pull/2218)
+
+#### Migration Notes:
+
+This release modifies Quill's core encoding DSL however this is very much an internal API.
+If you are using MappedEncoder, which should be the case for most users, you will be completely unaffected.
+The MappedEncoder signatures remain the same.
+
+Quill's core encoding API has changed:
+```scala
+// From:
+type BaseEncoder[T] = (Index, T, PrepareRow) => PrepareRow
+type BaseDecoder[T] = (Index, ResultRow) => T
+// To:
+type BaseEncoder[T] = (Index, T, PrepareRow, Session) => PrepareRow
+type BaseDecoder[T] = (Index, ResultRow, Session) => T
+```
+That means that internal signature of all encoders has also changed. For example, the JdbcEncoder has changed:
+```scala
+// From:
+case class JdbcEncoder[T](sqlType: Int, encoder: BaseEncoder[T]) extends BaseEncoder[T] {
+  override def apply(index: Index, value: T, row: PrepareRow) =
+    encoder(index + 1, value, row)
+}
+// To:
+case class JdbcEncoder[T](sqlType: Int, encoder: BaseEncoder[T]) extends BaseEncoder[T] {
+  override def apply(index: Index, value: T, row: PrepareRow, session: Session) =
+    encoder(index + 1, value, row, session)
+}
+```
+If you are writing encoders that directly implement `BaseEncoder`, they will have to be modified with an
+additional `session: Session` parameter.
+> The actual type that `Session` is will vary. For JDBC this will be `Connection`, for `Cassandra` this will be some 
+implementation of `CassandraSession`, for other systems that use a entirely different session paradigm
+this will just be `Unit`.
+
+Again, if you are using MappedEncoders for all of your custom encoding needs, you will not be affected by this change.
+
+# 3.8.0
+
+- [Use ZIO-Native Iterator chunking for JDBC result sets](https://github.com/getquill/quill/pull/2196)
+- [Remove 'with Blocking' from all signatures](https://github.com/getquill/quill/pull/2174)
+- [Update Microsoft SQL Server Docker image](https://github.com/getquill/quill/pull/2183)
+
+#### Migration Notes:
+The `quill-jdbc-zio` contexts' `.run` method was designed to work with ZIO in an idiomatic way. As such, the environment variable
+of their return type including the `zio.blocking.Blocking` dependency. This added a significant amount of complexity. 
+Instead of `ZIO[Has[Connection], SQLException, T]`, the return type became `ZIO[Has[Connection] with Blocking, SQLException, T]`. 
+Instead of `ZIO[Has[DataSource with Closeable], SQLException, T]`, the return type became `ZIO[Has[DataSource with Closeable] with Blocking, SQLException, T]`.
+Various types such as `QConnection` and `QDataSource` were created in order to encapsulate these concepts but this only led to additional confusion.
+Furthermore, actually supplying a `Connection` or `DataSource with Closeable` required first peeling off the `with Blocking` clause, calling a `.provide`,
+and then appending it back on. The fact that a Connection needs to be opened from a Data Source (which will typically be a Hikari connection pool)
+further complicates the problem because this aforementioned process needs to be done twice. All of leads to the clear conclusion that the `with Blocking`
+construct has bad ergonomics. For this reason, the ZIO team has decided to drop the concept of `with Blocking` in ZIO 2 altogether.
+
+As a result of this, I have decided to drop the `with Blocking` construct in advance. Quill queries resulting from the `run(qry)` command and
+still run on the blocking pool but `with Blocking` is not included in the signature. This also means that and the need for `QConnection` and `QDataSource` disappears since they are now just `Has[Connection]` and `Has[Datasource with Closeable]`
+respectively. This also means that all the constructors on the corresponding objects e.g. `QDataSource.fromPrefix("myDB")` are not consistent with
+any actual construct in QIO, therefore they are not needed either.
+
+Instead, I have introduced a simple layer-constructor called `DataSourceLayer` which has a `.live` implementation which converts
+`ZIO[Has[Connection], SQLException, T]` to `ZIO[Has[DataSource with Closeable], SQLException, T]` by taking a connection from the
+data-source and returning it immediately afterward, this is the analogue of what `QDataSource.toConnection` use to do.
+You can use it like this:
+```scala
+def hikariDataSource: DataSource with Closeable = ...
+val zioConn: ZLayer[Any, Throwable, Has[Connection]] = 
+  Task(hikariDataSource).toLayer >>> DataSourceLayer.live
+run(people)
+  .provideCustomLayer(zioConn)
+```
+
+You can also use the extension method `.onDataSource` (or `.onDS` for short) to do the same thing:
+```scala
+def hikariDataSource: DataSource with Closeable = ...
+run(people)
+  .onDataSource
+  .provide(Has(hikariDataSource))
+```
+
+Also, constructor-methods `fromPrefix`, `fromConfig`, `fromJdbcConfig` and `fromDataSource` are available on
+`DataSourceLayer` to construct instances of `ZLayer[Has[DataSource with Closeable], SQLException, Has[Connection]]`.
+Combined with the `toDataSource` construct, these provide a simple way to construct various Hikari pools from
+a corresponding typesafe-config file `application.conf`.
+```scala
+run(people)
+  .onDataSource
+  .provideLayer(DataSourceLayer.fromPrefix("testPostgresDB"))
+```
+
+Also note that the objects `QDataSource` and `QConnection` have not yet been removed. Instead, all of their methods
+have been marked as deprecated and a comment on what calls using `DataSourceLayer`/`onDataSource` to use instead
+have been added.
+
+#### Cassandra:
+
+Similar changes have been made in quill-cassandra-zio. `Has[CassandraZioSession] with Blocking` has been replaced
+with just `Has[CassandraZioSession]` so now this is much easier to provide:
+
+```scala
+val session: CassandraZioSession = _
+run(people)
+  .provide(Has(session))
+```
+
+The ZioCassandraSession constructors however are all still fine to use:
+
+```scala
+ val zioSessionLayer: ZLayer[Any, Throwable, Has[CassandraZioSession]] =
+   ZioCassandraSession.fromPrefix("testStreamDB")
+run(query[Person])
+  .provideCustomLayer(zioSessionLayer)
+```
+
+
+# 3.7.2
+
+- [Fix FutureAsyncCache](https://github.com/getquill/quill/pull/2162)
+- [Catch close() exceptions](https://github.com/getquill/quill/pull/2166)
+- [Make all AST classes final](https://github.com/getquill/quill/pull/2165)
+
+# 3.7.1
+
+- [Add a single ZIO-inspired root type QAC for all actions](https://github.com/getquill/quill/pull/2130)
+- [Adding fromDataSource ZIO API and example](https://github.com/getquill/quill/pull/2131)
+
+# 3.7.0
+
+- [ZIO Cassandra](https://github.com/getquill/quill/pull/2106)
+- [Zio](https://github.com/getquill/quill/pull/1989)
+
+Migration Notes:
+In order to properly accommodate a good ZIO experience, several refactorings had to be done to various
+internal context classes, none of these changes modify class structure in a breaking way.
+
+The following was done for quill-jdbc-zio
+- Query Preparation base type definitions have been moved out of `JdbcContextSimplified` into `JdbcContextBase`
+  which inherits a class named `StagedPrepare` which defines prepare-types (e.g. `type PrepareQueryResult = Session => Result[PrepareRow]`).
+- This has been done so that the ZIO JDBC Context can define prepare-types via the ZIO `R` parameter instead of 
+  a lambda parameter (e.g. `ZIO[QConnection, SQLException, PrepareRow]` a.k.a. `QIO[PrepareRow]`).
+- In order prevent user-facing breaking changes. The contexts in `BaseContexts.scala` now extend from both `JdbcContextSimplified` (indirectly) 
+  and `JdbcContextBase` thus preserving the `Session => Result[PrepareRow]` prepare-types.
+- The context `JdbcContextSimplified` now contains the `prepareQuery/Action/BatchAction` methods used by all contexts other than the ZIO
+  contexts which define these methods independently (since they use the ZIO `R` parameter).
+- All remaining context functionality (i.e. the `run(...)` series of functions) has been extracted out into `JdbcRunContext` which the 
+  ZIO JDBC Contexts in `ZioJdbcContexts.scala` as well as all the other JDBC Contexts now extend.
+
+Similarly for quill-cassandra-zio
+- The CassandraSessionContext on which the CassandraMonixContext and all the other Cassandra contexts are based on keeps internal state (i.e. session, keyspace, caches).
+- This state was pulled out as separate classes e.g. `SyncCache`, `AsyncFutureCache` (the ZIO equivalent of which is `AsyncZioCache`). 
+- Then a `CassandraZioSession` is created which extends these state-containers however, it is not directly a base-class of the `CassandraZioContext`.
+- Instead it is returned as a dependency from the CassandraZioContext run/prepare commands as part of the type 
+  `ZIO[Has[ZioCassandraSession] with Blocking, Throwable, T]` (a.k.a `CIO[T]`). This allows the primary context CassandraZioContext to be stateless.
+
+# 3.6.1
+
+- [Memoize Passed-By-Name Quats of Asts Ident, Entity, and Others](https://github.com/getquill/quill/pull/2084)
+- [Minior Quat Fixes and More Tests](https://github.com/getquill/quill/pull/2057)
+
+Migration Notes:
+
+ - Memoization of Quats should improve performance of dynamic queries based on some profiling analysis. This
+   change should not have any user-facing changes.
+
+# 3.6.0
+This description is an aggregation of the 3.6.0-RC1, RC2 and RC3 as well as several new items.
+
+ - [Quat Enhancements to Support Needed Spark Use Cases](https://github.com/getquill/quill/pull/2010)
+ - [Add support for scala 2.13 to quill-cassandra-lagom](https://github.com/getquill/quill/pull/1909)
+ - [Change all Quat fields to Lazy](https://github.com/getquill/quill/pull/2004)
+ - [Smart serialization based on number of Quat fields](https://github.com/getquill/quill/pull/1997)
+ - [Better Dynamic Query DSL For Quats on JVM](https://github.com/getquill/quill/pull/1993)
+ - [Fix incorrect Quat.Value parsing issues](https://github.com/getquill/quill/pull/1987)
+ - [Fix Query in Nested Operation and Infix](https://github.com/getquill/quill/pull/1980)
+ - [Fix Logic table, replicate Option.getOrElse optimization to Boolean Quats](https://github.com/getquill/quill/pull/1975)
+ - [Fixes + Enhancements to Boolean Optional APIs](https://github.com/getquill/quill/pull/1970)
+ - [Fix for Boolean Quat Issues](https://github.com/getquill/quill/pull/1967)
+
+Migration Notes:
+
+ - The Cassandra base UDT class `io.getquill.context.cassandra.Udt` has been moved to `io.getquill.Udt`.
+ - When working with databases which do not support boolean literals (SQL Server, Oracle, etc...) infixes representing booleans
+   will be converted to equality-expressions.
+   
+   For example:
+   ```
+   query[Person].filter(p => infix"isJoe(p.name)".as[Boolean])
+   // SELECT ... FROM Person p WHERE isJoe(p.name)
+   // Becomes> SELECT ... FROM Person p WHERE 1 = isJoe(p.name)
+   ```
+   This is because the aforementioned databases not not directly support boolean literals (i.e. true/false) or expressions
+   that yield them.
+   
+   In some cases however, it is desirable for the above behavior not to happen and for the whole infix statement to be treated
+   as an expression. For example
+   ```
+   query[Person].filter(p => infix"${p.age} > 21".as[Boolean])
+   // We Need This> SELECT ... FROM Person p WHERE p.age > 21
+   // Not This> SELECT ... FROM Person p WHERE 1 = p.age > 21
+   ```
+   In order to have this behavior, instead of `infix"...".as[Boolean]`, use `infix"...".asCondition`.
+   ```
+   query[Person].filter(p => infix"${p.age} > 21".asCondition)
+   // We Need This> SELECT ... FROM Person p WHERE p.age > 21
+   ```
+   If the condition represents a pure function, be sure to use `infix"...".pure.asCondition`.
+
+
 # 3.6.0-RC3
 
  - [Add support for scala 2.13 to quill-cassandra-lagom](https://github.com/getquill/quill/pull/1909)
@@ -36,6 +264,36 @@ Migration Notes:
    // We Need This> SELECT ... FROM Person p WHERE p.age > 21
    ```
    If the condition represents a pure function, be sure to use `infix"...".pure.asCondition`.
+ - This realease is not binary compatible with any Quill version before 3.5.3.
+ - Any code generated by the Quill Code Generator with `quote { ... }` blocks will have to be regenerated with this
+   Quill version if generated before 3.5.3.
+ - In most SQL dialects (i.e. everything except Postgres) boolean literals and expressions yielding them are 
+    not supported so statements such as `SELECT foo=bar FROM ...` are not supported. In order to get equivalent logic, 
+    it is necessary to user case-statements e.g.
+    ```sql
+    SELECT CASE WHERE foo=bar THEN 1 ELSE 0`.
+    ```
+    On the other hand, in a WHERE-clause, it is the opposite:
+    ```sql
+    SELECT ... WHERE CASE WHEN (...) foo ELSE bar`
+    ```
+    is invalid and needs to be rewritten.
+    Naively, a `1=` could be inserted:
+    ```sql
+    SELECT ... WHERE 1 = (CASE WHEN (...) foo ELSE bar)
+    ```
+    Note that this behavior can disabled via the `-Dquill.query.smartBooleans` switch 
+    when issued during compile-time for compile-time queries and during runtime for runtime
+    queries.
+
+    Additionally, in certain situations, it is far more preferable to express this without the `CASE WHEN` construct:
+    ```sql
+    SELECT ... WHERE ((...) && foo) || !(...) && foo
+    ```
+   This is because CASE statements in SQL are not sargable and generally [cannot be well optimized](https://dba.stackexchange.com/questions/209025/sargability-of-queries-against-a-view-with-a-case-expression).
+
+ - A large portion of the Quill DSL has been moved outside of QueryDsl into the top level under the `io.getquill` package. Due to this change, it may be necessary to import `io.getquill.Query` if you are not already importing `io.getquill._`.
+
 
 # 3.6.0-RC1
 

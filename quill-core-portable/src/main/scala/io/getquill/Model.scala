@@ -4,7 +4,14 @@ import io.getquill.quotation.NonQuotedException
 
 import scala.annotation.compileTimeOnly
 
-sealed trait Query[+T] {
+/**
+ * A Quill-Action-Concept centrally defines Quill Query, Insert, Update, Delete, etc... actions.
+ * This ZIO-inspired construct makes it easier to reason about Quoted actions
+ * (particularly in Dotty) in a type-full way.
+ */
+sealed trait QAC[ModificationEntity, +OutputEntity]
+
+sealed trait Query[+T] extends QAC[Nothing, T] {
 
   def map[R](f: T => R): Query[R] = NonQuotedException()
 
@@ -55,7 +62,7 @@ sealed trait Query[+T] {
    * @param unquote is used for conversion of `Quoted[A]` to A` with `unquote`
    * @return
    */
-  def foreach[A <: Action[_], B](f: T => B)(implicit unquote: B => A): BatchAction[A] = NonQuotedException()
+  def foreach[A <: QAC[_, _] with Action[_], B](f: T => B)(implicit unquote: B => A): BatchAction[A] = NonQuotedException()
 }
 
 sealed trait JoinQuery[A, B, R] extends Query[R] {
@@ -69,18 +76,22 @@ trait EntityQueryModel[T]
   override def filter(f: T => Boolean): EntityQueryModel[T] = NonQuotedException()
   override def map[R](f: T => R): EntityQueryModel[R] = NonQuotedException()
 
-  def insert(value: T): Insert[T] = NonQuotedException()
+  // Note: This class is to be shared with Dotty and the parameter `value` needs to be inline.
+  //       however, regular values cannot be overridden with inline ones so we cannot define
+  //       insert[T] and update[T] on this level.
+  //def insert(value: T): Insert[T] = NonQuotedException()
+  //def update(value: T): Update[T] = NonQuotedException()
+
   def insert(f: (T => (Any, Any)), f2: (T => (Any, Any))*): Insert[T] = NonQuotedException()
 
-  def update(value: T): Update[T] = NonQuotedException()
   def update(f: (T => (Any, Any)), f2: (T => (Any, Any))*): Update[T] = NonQuotedException()
 
   def delete: Delete[T] = NonQuotedException()
 }
 
-sealed trait Action[E]
+sealed trait Action[E] extends QAC[E, Any]
 
-sealed trait Insert[E] extends Action[E] {
+sealed trait Insert[E] extends QAC[E, Nothing] with Action[E] {
   @compileTimeOnly(NonQuotedException.message)
   def returning[R](f: E => R): ActionReturning[E, R] = NonQuotedException()
 
@@ -117,16 +128,16 @@ sealed trait Insert[E] extends Action[E] {
   def onConflictUpdate(target: E => Any, targets: (E => Any)*)(assign: ((E, E) => (Any, Any)), assigns: ((E, E) => (Any, Any))*): Insert[E] = NonQuotedException()
 }
 
-sealed trait ActionReturning[E, Output] extends Action[E]
+sealed trait ActionReturning[E, +Output] extends QAC[E, Output] with Action[E]
 
-sealed trait Update[E] extends Action[E] {
+sealed trait Update[E] extends QAC[E, Nothing] with Action[E] {
   @compileTimeOnly(NonQuotedException.message)
   def returning[R](f: E => R): ActionReturning[E, R] = NonQuotedException()
 }
 
-sealed trait Delete[E] extends Action[E] {
+sealed trait Delete[E] extends QAC[E, Nothing] with Action[E] {
   @compileTimeOnly(NonQuotedException.message)
   def returning[R](f: E => R): ActionReturning[E, R] = NonQuotedException()
 }
 
-sealed trait BatchAction[+A <: Action[_]]
+sealed trait BatchAction[+A <: QAC[_, _] with Action[_]]

@@ -19,71 +19,98 @@ function get_host() {
 
 function setup_sqlite() {
     # DB File in quill-jdbc
+    echo "Creating sqlite DB File"
     DB_FILE=quill-jdbc/quill_test.db
+    echo "Removing Previous sqlite DB File (if any)"
     rm -f $DB_FILE
+    echo "Creating sqlite DB File"
+    echo "(with the $1 script)"
     sqlite3 $DB_FILE < $1
+    echo "Setting permissions on sqlite DB File"
     chmod a+rw $DB_FILE
 
-    # DB File in quill-jdbc-monix
-    DB_FILE=quill-jdbc-monix/quill_test.db
-    rm -f $DB_FILE
-    sqlite3 $DB_FILE < $1
-    chmod a+rw $DB_FILE
-
-    # Create an empty DB for the codegen
-    DB_FILE=quill-codegen-tests/codegen_test.db
-    rm -f $DB_FILE
-    sqlite3 $DB_FILE "VACUUM;"
-    chmod a+rw $DB_FILE
+   # DB File in quill-jdbc-monix
+   DB_FILE=quill-jdbc-monix/quill_test.db
+   rm -f $DB_FILE
+   sqlite3 $DB_FILE < $1
+   chmod a+rw $DB_FILE
 
     echo "Sqlite ready!"
 }
 
 function setup_mysql() {
-    connection=$2
-    if [[ "$2" == "mysql" ]]; then
-       connection="mysql -proot"
-       hacks="mysql -h mysql -u root -proot -e \"ALTER USER 'root'@'%' IDENTIFIED BY ''\""
+    port=$3
+    password=''
+    if [ -z "$port" ]; then
+        echo "MySQL Port not defined. Setting to default: 3306  "
+        port="3306"
+    else
+        echo "MySQL Port specified as $port"
     fi
 
+    connection=$2
+    MYSQL_ROOT_PASSWORD=root
+
     echo "Waiting for MySql"
-    until mysql -h $connection -u root -e "select 1" &> /dev/null; do
+    # If --protocol not set, --port is silently ignored so need to have it
+    until mysql --protocol=tcp --host=$connection --password="$MYSQL_ROOT_PASSWORD" --port=$port -u root -e "select 1" &> /dev/null; do
+        echo "**Tapping MySQL Connection> mysql --protocol=tcp --host=$connection --password='$MYSQL_ROOT_PASSWORD' --port=$port -u root -e 'select 1'"
+        mysql --protocol=tcp --host=$connection --password="$MYSQL_ROOT_PASSWORD" --port=$port -u root -e "select 1" || true
         sleep 5;
     done
     echo "Connected to MySql"
 
-    eval $hacks
-    mysql -h $2 -u root -e "CREATE DATABASE codegen_test;"
-    mysql -h $2 -u root -e "CREATE DATABASE quill_test;"
-    mysql -h $2 -u root quill_test < $1
-    mysql -h $2 -u root -e "CREATE USER 'finagle'@'%' IDENTIFIED BY 'finagle';"
-    mysql -h $2 -u root -e "GRANT ALL PRIVILEGES ON * . * TO 'finagle'@'%';"
-    mysql -h $2 -u root -e "FLUSH PRIVILEGES;"
+    echo "**Verifying MySQL Connection> mysql --protocol=tcp --host=$connection --password='...' --port=$port -u root -e 'select 1'"
+    mysql --protocol=tcp --host=$connection --password="$MYSQL_ROOT_PASSWORD" --port=$port -u root -e "select 1"
+
+    echo "MySql: Create codegen_test"
+    mysql --protocol=tcp --host=$connection --password="$MYSQL_ROOT_PASSWORD" --port=$port -u root -e "CREATE DATABASE codegen_test;"
+    echo "MySql: Create quill_test"
+    mysql --protocol=tcp --host=$connection --password="$MYSQL_ROOT_PASSWORD" --port=$port -u root -e "CREATE DATABASE quill_test;"
+    echo "MySql: Write Schema to quill_test"
+    mysql --protocol=tcp --host=$connection --password="$MYSQL_ROOT_PASSWORD" --port=$port -u root quill_test < $1
+    echo "MySql: Create finagle user"
+    mysql --protocol=tcp --host=$connection --password="$MYSQL_ROOT_PASSWORD" --port=$port -u root -e "CREATE USER 'finagle'@'%' IDENTIFIED BY 'finagle';"
+    echo "MySql: Grant finagle user"
+    mysql --protocol=tcp --host=$connection --password="$MYSQL_ROOT_PASSWORD" --port=$port -u root -e "GRANT ALL PRIVILEGES ON * . * TO 'finagle'@'%';"
+    echo "MySql: Flush the grant"
+    mysql --protocol=tcp --host=$connection --password="$MYSQL_ROOT_PASSWORD" --port=$port -u root -e "FLUSH PRIVILEGES;"
 }
 
 function setup_postgres() {
-    host=$(get_host $2)
+    port=$3
+    if [ -z "$port" ]; then
+        echo "Postgres Port not defined. Setting to default: 5432"
+        port="5432"
+    else
+        echo "Postgres Port specified as $port"
+    fi
     echo "Waiting for Postgres"
-    until psql -h $2 -U postgres -c "select 1" &> /dev/null; do
+    until psql --host $2 --port $port --username postgres -c "select 1" &> /dev/null; do
+        echo "## Tapping Postgres Connection> psql --host $2 --port $port --username postgres -c 'select 1'"
+        psql --host $2 --port $port --username postgres -c "select 1" || true
         sleep 5;
     done
     echo "Connected to Postgres"
 
-    psql -h $2 -U postgres -c "CREATE DATABASE codegen_test"
-    psql -h $2 -U postgres -c "CREATE DATABASE quill_test"
-    psql -h $2 -U postgres -d quill_test -a -q -f $1
+    echo "Postgres: Create codegen_test"
+    psql --host $2 --port $port -U postgres -c "CREATE DATABASE codegen_test"
+    echo "Postgres: Create quill_test"
+    psql --host $2 --port $port -U postgres -c "CREATE DATABASE quill_test"
+    echo "Postgres: Write Schema to quill_test"
+    psql --host $2 --port $port -U postgres -d quill_test -a -q -f $1
 }
 
-function setup_cassandra() {
-    host=$(get_host $2)
-    echo "Waiting for Cassandra"
-    until cqlsh $2 -e "describe cluster" &> /dev/null; do
-        sleep 5;
-    done
-    echo "Connected to Cassandra"
+ function setup_cassandra() {
+     host=$(get_host $2)
+     echo "Waiting for Cassandra"
+     until cqlsh $2 -e "describe cluster" &> /dev/null; do
+         sleep 5;
+     done
+     echo "Connected to Cassandra"
 
-    cqlsh $2 -f $1
-}
+     cqlsh $2 -f $1
+ }
 
 function setup_sqlserver() {
     host=$(get_host $2)
@@ -105,15 +132,14 @@ function setup_sqlserver() {
 # by the container and docker-compose steps.
 
 function setup_oracle() {
-
     while ! nc -z $2 1521; do
         echo "Waiting for Oracle"
-        sleep 5;
+        sleep 2;
     done;
-    sleep 5;
+    sleep 2;
 
     echo "Connected to Oracle"
-    sleep 5
+    sleep 2
 }
 
 function send_script() {

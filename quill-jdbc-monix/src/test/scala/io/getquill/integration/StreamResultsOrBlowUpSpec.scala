@@ -48,7 +48,7 @@ class StreamResultsOrBlowUpSpec extends Spec {
   val numRows = 1000000L
 
   "stream a large result set without blowing up" in {
-    val deletes = runQuill { query[Person].delete }
+    val deletes = runQuill { infix"TRUNCATE TABLE Person".as[Delete[Person]] }
     deletes.runSyncUnsafe(Duration.Inf)(scheduler, CanBlock.permit)
 
     val inserts = quote {
@@ -63,7 +63,7 @@ class StreamResultsOrBlowUpSpec extends Spec {
       .zipWithIndex
       .foldLeftL(0L)({
         case (totalYears, (person, index)) => {
-          // Need to print something out as we stream or travis will thing the build is stalled and kill it with the following message:
+          // Need to print something out as we stream or github actions will think the build is stalled and kill it with the following message:
           // "No output has been received in the last 10m0s..."
           if (index % 10000 == 0) println(s"Streaming Test Row: ${index}")
           totalYears + person.age
@@ -71,5 +71,7 @@ class StreamResultsOrBlowUpSpec extends Spec {
       })
       .runSyncUnsafe(Duration.Inf)(scheduler, CanBlock.permit)
     result should be > numRows
+
+    deletes.runSyncUnsafe(Duration.Inf)(scheduler, CanBlock.permit)
   }
 }
