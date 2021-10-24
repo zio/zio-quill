@@ -500,7 +500,10 @@ lazy val `quill-finagle-mysql` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.twitter" %% "finagle-mysql" % "20.10.0"
+        if (scalaVersion.value.startsWith("2.11"))
+          "com.twitter" % "finagle-mysql_2.11" % "21.2.0"
+        else
+          "com.twitter" %% "finagle-mysql" % "21.9.0"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -675,9 +678,9 @@ lazy val `quill-cassandra-lagom` =
       Test / fork := true,
       libraryDependencies ++= {
         val lagomVersion = if (scalaVersion.value.startsWith("2.13")) "1.6.5" else "1.5.5"
-        val versionSpecificDependencies =  if (scalaVersion.value.startsWith("2.13")) Seq("com.typesafe.play" %% "play-akka-http-server" % "2.8.5") else Seq.empty
+        val versionSpecificDependencies =  if (scalaVersion.value.startsWith("2.13")) Seq("com.typesafe.play" %% "play-akka-http-server" % "2.8.8") else Seq.empty
         Seq(
-          "org.scala-lang.modules" %% "scala-collection-compat" % "2.1.6",
+          "org.scala-lang.modules" %% "scala-collection-compat" % "2.4.4",
           "com.lightbend.lagom" %% "lagom-scaladsl-persistence-cassandra" % lagomVersion % Provided,
           "com.lightbend.lagom" %% "lagom-scaladsl-testkit" % lagomVersion % Test
         ) ++ versionSpecificDependencies
@@ -756,13 +759,13 @@ def updateWebsiteTag =
 lazy val jdbcTestingLibraries = Seq(
   libraryDependencies ++= Seq(
     "com.zaxxer"              %  "HikariCP"                % "3.4.5",
-    "mysql"                   %  "mysql-connector-java"    % "8.0.26"             % Test,
+    "mysql"                   %  "mysql-connector-java"    % "8.0.27"             % Test,
     "com.h2database"          %  "h2"                      % "1.4.200"            % Test,
-    "org.postgresql"          %  "postgresql"              % "42.2.24"             % Test,
-    "org.xerial"              %  "sqlite-jdbc"             % "3.32.3.2"             % Test,
+    "org.postgresql"          %  "postgresql"              % "42.3.0"             % Test,
+    "org.xerial"              %  "sqlite-jdbc"             % "3.36.0.3"             % Test,
     "com.microsoft.sqlserver" %  "mssql-jdbc"              % "7.1.1.jre8-preview" % Test,
     "com.oracle.ojdbc"        %  "ojdbc8"                  % "19.3.0.0"           % Test,
-    "org.mockito"             %% "mockito-scala-scalatest" % "1.16.42"              % Test
+    "org.mockito"             %% "mockito-scala-scalatest" % "1.16.46"              % Test
   )
 )
 
