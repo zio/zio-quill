@@ -1,6 +1,6 @@
 package io.getquill
 
-import com.datastax.driver.core.Cluster
+import com.datastax.oss.driver.api.core.{ CqlSession, CqlSessionBuilder }
 import com.typesafe.config.Config
 import io.getquill.context.ExecutionInfo
 import io.getquill.context.cassandra.util.FutureConversions._
@@ -8,18 +8,20 @@ import io.getquill.monad.ScalaFutureIOMonad
 import io.getquill.util.{ ContextLogger, LoadConfig }
 
 import scala.jdk.CollectionConverters._
+import scala.compat.java8.FutureConverters._
+
 import scala.concurrent.{ ExecutionContext, Future }
 
 class CassandraAsyncContext[N <: NamingStrategy](
   naming:                     N,
-  cluster:                    Cluster,
+  session:                    CqlSession,
   keyspace:                   String,
   preparedStatementCacheSize: Long
 )
-  extends CassandraClusterSessionContext[N](naming, cluster, keyspace, preparedStatementCacheSize)
+  extends CassandraCqlSessionContext[N](naming, session, keyspace, preparedStatementCacheSize)
   with ScalaFutureIOMonad {
 
-  def this(naming: N, config: CassandraContextConfig) = this(naming, config.cluster, config.keyspace, config.preparedStatementCacheSize)
+  def this(naming: N, config: CassandraContextConfig) = this(naming, config.session, config.keyspace, config.preparedStatementCacheSize)
 
   def this(naming: N, config: Config) = this(naming, CassandraContextConfig(config))
 
@@ -41,8 +43,13 @@ class CassandraAsyncContext[N <: NamingStrategy](
 
   def executeQuery[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext)(implicit executionContext: ExecutionContext): Result[RunQueryResult[T]] = {
     val statement = prepareAsyncAndGetStatement(cql, prepare, this, logger)
-    statement.flatMap(st => session.executeAsync(st).asScala)
-      .map(_.all.asScala.toList.map(row => extractor(row, this)))
+
+    //statement.flatMap(st => session.executeAsync(st).asScala)
+    //.map(result=>_.all.asScala.toList.map(row => extractor(row, this)))
+    //TODO: 3.x implementation collected all data to memory - technically no difference between sync and async execution
+    //      4x returns data (rows) asynchronously row by row. Details:
+    //      https://docs.datastax.com/en/developer/java-driver/2.1/manual/async/#async-paging
+    statement.map(st => session.execute(st).asScala.toList.map(row => extractor(row, this)))
   }
 
   def executeQuerySingle[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext)(implicit executionContext: ExecutionContext): Result[RunQuerySingleResult[T]] = {
@@ -51,7 +58,7 @@ class CassandraAsyncContext[N <: NamingStrategy](
 
   def executeAction[T](cql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: DatasourceContext)(implicit executionContext: ExecutionContext): Result[RunActionResult] = {
     val statement = prepareAsyncAndGetStatement(cql, prepare, this, logger)
-    statement.flatMap(st => session.executeAsync(st).asScala).map(_ => ())
+    statement.flatMap(st => session.executeAsync(st).toCompletableFuture.toScala).map(_ => ())
   }
 
   def executeBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: DatasourceContext)(implicit executionContext: ExecutionContext): Result[RunBatchActionResult] = {

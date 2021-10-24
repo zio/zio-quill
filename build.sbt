@@ -613,7 +613,10 @@ lazy val `quill-cassandra` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.datastax.cassandra" %  "cassandra-driver-core" % "3.7.2"
+        //"com.datastax.cassandra" %  "cassandra-driver-core" % "3.7.2"
+        // https://mvnrepository.com/artifact/com.datastax.oss/java-driver-core
+        "com.datastax.oss" % "java-driver-core" % "4.13.0",
+        "org.scala-lang.modules" %% "scala-java8-compat" % "1.0.1"
       )
     )
     .dependsOn(`quill-core-jvm` % "compile->compile;test->test")

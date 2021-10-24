@@ -1,6 +1,6 @@
 package io.getquill
 
-import com.datastax.driver.core._
+import com.datastax.oss.driver.api.core.cql.{ AsyncResultSet, BoundStatement, ResultSet, Row }
 import io.getquill.CassandraZioContext._
 import io.getquill.context.{ ExecutionInfo, StandardContext }
 import io.getquill.context.cassandra.{ CassandraRowContext, CqlIdiom }
@@ -12,6 +12,7 @@ import zio.stream.ZStream
 import zio.{ Chunk, ChunkBuilder, Has, ZIO, ZManaged }
 import zio.blocking.Blocking
 
+import scala.compat.java8.FutureConverters._
 import scala.jdk.CollectionConverters._
 import scala.util.Try
 
@@ -72,11 +73,11 @@ class CassandraZioContext[N <: NamingStrategy](val naming: N)
   override type ResultRow = Row
   override type Session = CassandraZioSession
 
-  protected def page(rs: ResultSet): CIO[Chunk[Row]] = ZIO.succeed {
-    val available = rs.getAvailableWithoutFetching
+  protected def page(rs: AsyncResultSet): CIO[Chunk[Row]] = ZIO.succeed {
+    val available = rs.remaining()
     val builder = ChunkBuilder.make[Row]()
     builder.sizeHint(available)
-    while (rs.getAvailableWithoutFetching() > 0) {
+    while (rs.remaining() > 0) {
       builder += rs.one()
     }
     builder.result()
@@ -88,13 +89,13 @@ class CassandraZioContext[N <: NamingStrategy](val naming: N)
         .mapEffect { p =>
           // Set the fetch size of the result set if it exists
           fetchSize match {
-            case Some(value) => p.setFetchSize(value)
+            case Some(value) => p.setPageSize(value)
             case None        =>
           }
           p
         }
         .flatMap(p => {
-          csession.session.executeAsync(p).asZio
+          ZIO.fromCompletionStage(csession.session.executeAsync(p))
         })
     }
 
@@ -113,7 +114,7 @@ class CassandraZioContext[N <: NamingStrategy](val naming: N)
           val nextPage = page(rs)
           nextPage.flatMap { chunk =>
             if (chunk.length > 0) {
-              rs.fetchMoreResults().asZio.map(rs => Some((chunk, rs)))
+              ZIO.fromCompletableFuture(rs.fetchNextPage().toCompletableFuture).map(rs => Some((chunk, rs)))
             } else
               ZIO.succeed(None)
           }
@@ -131,7 +132,7 @@ class CassandraZioContext[N <: NamingStrategy](val naming: N)
     for {
       csession <- ZIO.service[CassandraZioSession]
       rs <- execute(cql, prepare, csession, None)
-      rows <- ZIO.effect(rs.all())
+      rows <- ZIO.effect(rs.currentPage())
     } yield (rows.asScala.map(row => extractor(row, csession)).toList)
   }
 
@@ -140,7 +141,7 @@ class CassandraZioContext[N <: NamingStrategy](val naming: N)
     for {
       csession <- ZIO.service[CassandraZioSession]
       rs <- execute(cql, prepare, csession, None)
-      rows <- ZIO.effect(rs.all())
+      rows <- ZIO.effect(rs.currentPage())
       singleRow <- ZIO.effect(handleSingleResult(rows.asScala.map(row => extractor(row, csession)).toList))
     } yield singleRow
   }
@@ -149,7 +150,7 @@ class CassandraZioContext[N <: NamingStrategy](val naming: N)
     for {
       csession <- ZIO.service[CassandraZioSession]
       r <- prepareRowAndLog(cql, prepare).provide(Has(csession))
-      result <- csession.session.executeAsync(r).asZio
+      result <- ZIO.fromCompletionStage(csession.session.executeAsync(r))
     } yield ()
   }
 

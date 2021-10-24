@@ -19,9 +19,9 @@ class CassandraStreamContext[N <: NamingStrategy](
   keyspace:                   String,
   preparedStatementCacheSize: Long
 )
-  extends CassandraClusterSessionContext[N](naming, cluster, keyspace, preparedStatementCacheSize) {
+  extends CassandraCqlSessionContext[N](naming, cluster, keyspace, preparedStatementCacheSize) {
 
-  def this(naming: N, config: CassandraContextConfig) = this(naming, config.cluster, config.keyspace, config.preparedStatementCacheSize)
+  def this(naming: N, config: CassandraContextConfig) = this(naming, config.session, config.keyspace, config.preparedStatementCacheSize)
   def this(naming: N, config: Config) = this(naming, CassandraContextConfig(config))
   def this(naming: N, configPrefix: String) = this(naming, LoadConfig(configPrefix))
 
