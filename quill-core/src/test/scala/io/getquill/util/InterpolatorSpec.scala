@@ -14,11 +14,11 @@ class InterpolatorSpec extends Spec {
   val small = Small(123)
 
   "traces small objects on single line - single" in {
-    trace"small object: $small".generateString() mustEqual (("small object: Small(123) ", 0))
+    trace"small object: $small".generateString() mustEqual (("small object: Small(id = 123) ", 0))
   }
 
   "traces multiple small objects on single line" in {
-    trace"small object: $small and $small".generateString() mustEqual (("small object: Small(123) and Small(123) ", 0))
+    trace"small object: $small and $small".generateString() mustEqual (("small object: Small(id = 123) and Small(id = 123) ", 0))
   }
 
   "traces multiple small objects multline text" in {
@@ -26,10 +26,10 @@ class InterpolatorSpec extends Spec {
 and bar $small""".generateString() mustEqual (
       (
         """small object:
-        ||  Small(123)
+        ||  Small(id = 123)
         ||and foo
         ||and bar
-        ||  Small(123)
+        ||  Small(id = 123)
         |""".stripMargin,
         0
       )
@@ -44,17 +44,17 @@ and bar $small""".generateString() mustEqual (
     trace"large object: $large".generateString() mustEqual ((
       """large object:
         ||  Large(
-        ||    123,
-        ||    "",
-        ||    "Test",
-        ||    "TestTest",
-        ||    "TestTestTest",
-        ||    "TestTestTestTest",
-        ||    "TestTestTestTestTest",
-        ||    "TestTestTestTestTestTest",
-        ||    "TestTestTestTestTestTestTest",
-        ||    "TestTestTestTestTestTestTestTest",
-        ||    "TestTestTestTestTestTestTestTestTest"
+        ||    id = 123,
+        ||    one = "",
+        ||    two = "Test",
+        ||    three = "TestTest",
+        ||    four = "TestTestTest",
+        ||    five = "TestTestTestTest",
+        ||    six = "TestTestTestTestTest",
+        ||    seven = "TestTestTestTestTestTest",
+        ||    eight = "TestTestTestTestTestTestTest",
+        ||    nine = "TestTestTestTestTestTestTestTest",
+        ||    ten = "TestTestTestTestTestTestTestTestTest"
         ||  )
         |""".stripMargin, 0
     ))
@@ -64,17 +64,17 @@ and bar $small""".generateString() mustEqual (
     trace"%2 large object: $large".generateString() mustEqual ((
       """    large object:
         |    |  Large(
-        |    |    123,
-        |    |    "",
-        |    |    "Test",
-        |    |    "TestTest",
-        |    |    "TestTestTest",
-        |    |    "TestTestTestTest",
-        |    |    "TestTestTestTestTest",
-        |    |    "TestTestTestTestTestTest",
-        |    |    "TestTestTestTestTestTestTest",
-        |    |    "TestTestTestTestTestTestTestTest",
-        |    |    "TestTestTestTestTestTestTestTestTest"
+        |    |    id = 123,
+        |    |    one = "",
+        |    |    two = "Test",
+        |    |    three = "TestTest",
+        |    |    four = "TestTestTest",
+        |    |    five = "TestTestTestTest",
+        |    |    six = "TestTestTestTestTest",
+        |    |    seven = "TestTestTestTestTestTest",
+        |    |    eight = "TestTestTestTestTestTestTest",
+        |    |    nine = "TestTestTestTestTestTestTestTest",
+        |    |    ten = "TestTestTestTestTestTestTestTestTest"
         |    |  )
         |""".stripMargin, 2
     ))
@@ -84,31 +84,31 @@ and bar $small""".generateString() mustEqual (
     trace"large object: $large and $large".generateString() mustEqual ((
       """large object:
         ||  Large(
-        ||    123,
-        ||    "",
-        ||    "Test",
-        ||    "TestTest",
-        ||    "TestTestTest",
-        ||    "TestTestTestTest",
-        ||    "TestTestTestTestTest",
-        ||    "TestTestTestTestTestTest",
-        ||    "TestTestTestTestTestTestTest",
-        ||    "TestTestTestTestTestTestTestTest",
-        ||    "TestTestTestTestTestTestTestTestTest"
+        ||    id = 123,
+        ||    one = "",
+        ||    two = "Test",
+        ||    three = "TestTest",
+        ||    four = "TestTestTest",
+        ||    five = "TestTestTestTest",
+        ||    six = "TestTestTestTestTest",
+        ||    seven = "TestTestTestTestTestTest",
+        ||    eight = "TestTestTestTestTestTestTest",
+        ||    nine = "TestTestTestTestTestTestTestTest",
+        ||    ten = "TestTestTestTestTestTestTestTestTest"
         ||  )
         ||and
         ||  Large(
-        ||    123,
-        ||    "",
-        ||    "Test",
-        ||    "TestTest",
-        ||    "TestTestTest",
-        ||    "TestTestTestTest",
-        ||    "TestTestTestTestTest",
-        ||    "TestTestTestTestTestTest",
-        ||    "TestTestTestTestTestTestTest",
-        ||    "TestTestTestTestTestTestTestTest",
-        ||    "TestTestTestTestTestTestTestTestTest"
+        ||    id = 123,
+        ||    one = "",
+        ||    two = "Test",
+        ||    three = "TestTest",
+        ||    four = "TestTestTest",
+        ||    five = "TestTestTestTest",
+        ||    six = "TestTestTestTestTest",
+        ||    seven = "TestTestTestTestTestTest",
+        ||    eight = "TestTestTestTestTestTestTest",
+        ||    nine = "TestTestTestTestTestTestTestTest",
+        ||    ten = "TestTestTestTestTestTestTestTestTest"
         ||  )
         |""".stripMargin, 0
     ))
@@ -134,7 +134,7 @@ and bar $small""".generateString() mustEqual (
 
       trace"small object: $small".andLog()
       ps.flush()
-      buff.toString mustEqual "small object: Small(123) \n"
+      buff.toString mustEqual "small object: Small(id = 123) \n"
     }
 
     "traces large objects on multiple line - multi - with return" in {
@@ -148,46 +148,46 @@ and bar $small""".generateString() mustEqual (
       buff.toString mustEqual (
         """large object:
           ||  Large(
-          ||    123,
-          ||    "",
-          ||    "Test",
-          ||    "TestTest",
-          ||    "TestTestTest",
-          ||    "TestTestTestTest",
-          ||    "TestTestTestTestTest",
-          ||    "TestTestTestTestTestTest",
-          ||    "TestTestTestTestTestTestTest",
-          ||    "TestTestTestTestTestTestTestTest",
-          ||    "TestTestTestTestTestTestTestTestTest"
+          ||    id = 123,
+          ||    one = "",
+          ||    two = "Test",
+          ||    three = "TestTest",
+          ||    four = "TestTestTest",
+          ||    five = "TestTestTestTest",
+          ||    six = "TestTestTestTestTest",
+          ||    seven = "TestTestTestTestTestTest",
+          ||    eight = "TestTestTestTestTestTestTest",
+          ||    nine = "TestTestTestTestTestTestTestTest",
+          ||    ten = "TestTestTestTestTestTestTestTestTest"
           ||  )
           ||and
           ||  Large(
-          ||    123,
-          ||    "",
-          ||    "Test",
-          ||    "TestTest",
-          ||    "TestTestTest",
-          ||    "TestTestTestTest",
-          ||    "TestTestTestTestTest",
-          ||    "TestTestTestTestTestTest",
-          ||    "TestTestTestTestTestTestTest",
-          ||    "TestTestTestTestTestTestTestTest",
-          ||    "TestTestTestTestTestTestTestTestTest"
+          ||    id = 123,
+          ||    one = "",
+          ||    two = "Test",
+          ||    three = "TestTest",
+          ||    four = "TestTestTest",
+          ||    five = "TestTestTestTest",
+          ||    six = "TestTestTestTestTest",
+          ||    seven = "TestTestTestTestTestTest",
+          ||    eight = "TestTestTestTestTestTestTest",
+          ||    nine = "TestTestTestTestTestTestTestTest",
+          ||    ten = "TestTestTestTestTestTestTestTestTest"
           ||  )
           |
           |>
           ||  Large(
-          ||    123,
-          ||    "",
-          ||    "Test",
-          ||    "TestTest",
-          ||    "TestTestTest",
-          ||    "TestTestTestTest",
-          ||    "TestTestTestTestTest",
-          ||    "TestTestTestTestTestTest",
-          ||    "TestTestTestTestTestTestTest",
-          ||    "TestTestTestTestTestTestTestTest",
-          ||    "TestTestTestTestTestTestTestTestTest"
+          ||    id = 123,
+          ||    one = "",
+          ||    two = "Test",
+          ||    three = "TestTest",
+          ||    four = "TestTestTest",
+          ||    five = "TestTestTestTest",
+          ||    six = "TestTestTestTestTest",
+          ||    seven = "TestTestTestTestTestTest",
+          ||    eight = "TestTestTestTestTestTestTest",
+          ||    nine = "TestTestTestTestTestTestTestTest",
+          ||    ten = "TestTestTestTestTestTestTestTestTest"
           ||  )
           |""".stripMargin
       )

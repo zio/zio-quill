@@ -190,10 +190,6 @@ lazy val ultraPure = new sbtcrossproject.CrossType {
     }
 }
 
-def pprintVersion(v: String) = {
-  if(v.startsWith("2.11")) "0.5.4" else "0.5.9"
-}
-
 lazy val `quill-core-portable` =
   crossProject(JVMPlatform, JSPlatform).crossType(ultraPure)
     .settings(commonSettings: _*)
@@ -210,9 +206,8 @@ lazy val `quill-core-portable` =
     )
     .jsSettings(
       libraryDependencies ++= Seq(
-        "com.lihaoyi" %%% "pprint" % pprintVersion(scalaVersion.value),
+        "com.lihaoyi" %%% "pprint" % "0.6.6",
         "org.scala-js" %%% "scalajs-java-time" % "0.2.5",
-        "com.lihaoyi" %%% "pprint" % "0.5.4",
         "org.scala-js" %%% "scalajs-java-time" % "0.2.5",
         "io.suzaku" %%% "boopickle" % "1.3.1"
       ),
@@ -238,7 +233,7 @@ lazy val `quill-core` =
     )
     .jsSettings(
       libraryDependencies ++= Seq(
-        "com.lihaoyi" %%% "pprint" % pprintVersion(scalaVersion.value),
+        "com.lihaoyi" %%% "pprint" % "0.6.6",
         "org.scala-js" %%% "scalajs-java-time" % "0.2.5",
         "org.scala-js" %%% "scalajs-java-time" % "0.2.5"
       ),
@@ -846,7 +841,7 @@ lazy val basicSettings = Seq(
   crossScalaVersions := Seq(scala_v_11, scala_v_12, scala_v_13),
   libraryDependencies ++= Seq(
     "org.scala-lang.modules" %%% "scala-collection-compat" % "2.2.0",
-    "com.lihaoyi"     %% "pprint"         % pprintVersion(scalaVersion.value),
+    "com.lihaoyi"     %% "pprint"         % "0.6.6",
     "org.scalatest"   %%% "scalatest"     % "3.2.10"          % Test,
     "com.google.code.findbugs" % "jsr305" % "3.0.2"          % Provided // just to avoid warnings during compilation
   ) ++ {
