@@ -17,30 +17,6 @@ import zio.blocking.Blocking
 
 import scala.reflect.ClassTag
 
-/**
- * Quill context that executes JDBC queries inside of ZIO. Unlike most other contexts
- * that require passing in a Data Source, this context takes in a java.sql.Connection
- * as a resource dependency which can be provided later (see `ZioJdbc` for helper methods
- * that assist in doing this).
- *
- * The resource dependency itself is just a `Has[Connection]`. Since this is frequently used
- * The type `QIO[T]` i.e. Quill-IO has been defined as an alias for `ZIO[Has[Connection], SQLException, T]`.
- *
- * Since in most JDBC use-cases, a connection-pool datasource i.e. Hikari is used it would actually
- * be much more useful to interact with `ZIO[Has[DataSource with Closeable], SQLException, T]`.
- * The extension method `.onDataSource` in `io.getquill.context.ZioJdbc.QuillZioExt` will perform this conversion
- * (for even more brevity use `onDS` which is an alias for this method).
- * {{
- *   import ZioJdbc._
- *   val zioDs = DataSourceLayer.fromPrefix("testPostgresDB")
- *   MyZioContext.run(query[Person]).onDataSource.provideCustomLayer(zioDS)
- * }}
- *
- * If you are using a Plain Scala app however, you will need to manually run it e.g. using zio.Runtime
- * {{
- *   Runtime.default.unsafeRun(MyZioContext.run(query[Person]).provideLayer(zioDS))
- * }}
- */
 abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] extends ZioContext[Dialect, Naming]
   with JdbcRunContext[Dialect, Naming]
   with StreamingContext[Dialect, Naming]
@@ -59,23 +35,23 @@ abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] ext
   override type RunBatchActionReturningResult[T] = List[T]
 
   // Need explicit return-type annotations due to scala/bug#8356. Otherwise macro system will not understand Result[Long]=Task[Long] etc...
-  override def executeAction[T](sql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: DatasourceContext): QIO[Long] =
+  override def executeAction[T](sql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: DatasourceContext): QLIO[Long] =
     super.executeAction(sql, prepare)(info, dc)
-  override def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext): QIO[List[T]] =
+  override def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext): QLIO[List[T]] =
     super.executeQuery(sql, prepare, extractor)(info, dc)
-  override def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext): QIO[T] =
+  override def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext): QLIO[T] =
     super.executeQuerySingle(sql, prepare, extractor)(info, dc)
-  override def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningBehavior: ReturnAction)(info: ExecutionInfo, dc: DatasourceContext): QIO[O] =
+  override def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningBehavior: ReturnAction)(info: ExecutionInfo, dc: DatasourceContext): QLIO[O] =
     super.executeActionReturning(sql, prepare, extractor, returningBehavior)(info, dc)
-  override def executeBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: DatasourceContext): QIO[List[Long]] =
+  override def executeBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: DatasourceContext): QLIO[List[Long]] =
     super.executeBatchAction(groups)(info, dc)
-  override def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T])(info: ExecutionInfo, dc: DatasourceContext): QIO[List[T]] =
+  override def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T])(info: ExecutionInfo, dc: DatasourceContext): QLIO[List[T]] =
     super.executeBatchActionReturning(groups, extractor)(info, dc)
-  override def prepareQuery(sql: String, prepare: Prepare)(info: ExecutionInfo, dc: DatasourceContext): QIO[PreparedStatement] =
+  override def prepareQuery(sql: String, prepare: Prepare)(info: ExecutionInfo, dc: DatasourceContext): QLIO[PreparedStatement] =
     super.prepareQuery(sql, prepare)(info, dc)
-  override def prepareAction(sql: String, prepare: Prepare)(info: ExecutionInfo, dc: DatasourceContext): QIO[PreparedStatement] =
+  override def prepareAction(sql: String, prepare: Prepare)(info: ExecutionInfo, dc: DatasourceContext): QLIO[PreparedStatement] =
     super.prepareAction(sql, prepare)(info, dc)
-  override def prepareBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: DatasourceContext): QIO[List[PreparedStatement]] =
+  override def prepareBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: DatasourceContext): QLIO[List[PreparedStatement]] =
     super.prepareBatchAction(groups)(info, dc)
 
   /** ZIO Contexts do not managed DB connections so this is a no-op */
@@ -87,7 +63,7 @@ abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] ext
     Blocking.Service.live.blocking(zio)
 
   // Primary method used to actually run Quill context commands query, insert, update, delete and others
-  override protected def withConnectionWrapped[T](f: Connection => T): QIO[T] =
+  override protected def withConnectionWrapped[T](f: Connection => T): QLIO[T] =
     simpleBlocking {
       for {
         conn <- ZIO.environment[Has[Connection]]
@@ -95,7 +71,7 @@ abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] ext
       } yield result
     }
 
-  private def sqlEffect[T](t: => T): QIO[T] = ZIO.effect(t).refineToOrDie[SQLException]
+  private def sqlEffect[T](t: => T): QLIO[T] = ZIO.effect(t).refineToOrDie[SQLException]
 
   private[getquill] def withoutAutoCommit[A, E <: Throwable: ClassTag](f: ZIO[Has[Connection], E, A]): ZIO[Has[Connection], E, A] = {
     for {
@@ -206,7 +182,7 @@ abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] ext
     stmt
   }
 
-  def streamQuery[T](fetchSize: Option[Int], sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext): QStream[T] = {
+  def streamQuery[T](fetchSize: Option[Int], sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext): QLStream[T] = {
     def prepareStatement(conn: Connection) = {
       val stmt = prepareStatementForStreaming(sql, conn, fetchSize)
       val (params, ps) = prepare(stmt, conn)
@@ -249,7 +225,7 @@ abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] ext
       ZManaged.lock(executor)
     }).provideLayer(Blocking.live)
 
-  override private[getquill] def prepareParams(statement: String, prepare: Prepare): QIO[Seq[String]] = {
+  override private[getquill] def prepareParams(statement: String, prepare: Prepare): QLIO[Seq[String]] = {
     withConnectionWrapped { conn =>
       prepare(conn.prepareStatement(statement), conn)._1.reverse.map(prepareParam)
     }
