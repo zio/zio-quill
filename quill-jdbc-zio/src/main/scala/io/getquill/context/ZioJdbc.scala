@@ -12,11 +12,14 @@ import java.sql.{ Connection, SQLException }
 import javax.sql.DataSource
 
 object ZioJdbc {
-  type QIO[T] = ZIO[Has[Connection], SQLException, T]
-  type QStream[T] = ZStream[Has[Connection], SQLException, T]
+  type QIO[T] = ZIO[Has[DataSource with Closeable], SQLException, T]
+  type QStream[T] = ZStream[Has[DataSource with Closeable], SQLException, T]
+
+  type QLIO[T] = ZIO[Has[Connection], SQLException, T]
+  type QLStream[T] = ZStream[Has[Connection], SQLException, T]
 
   object QIO {
-    def apply[T](t: => T): QIO[T] = ZIO.effect(t).refineToOrDie[SQLException]
+    def apply[T](t: => T): QLIO[T] = ZIO.effect(t).refineToOrDie[SQLException]
   }
 
   object DataSourceLayer {
