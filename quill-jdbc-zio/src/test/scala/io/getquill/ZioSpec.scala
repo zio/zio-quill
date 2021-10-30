@@ -28,12 +28,12 @@ trait ZioSpec extends Spec with BeforeAndAfterAll {
 
   def accumulate[T](stream: ZStream[Has[Connection], Throwable, T]): ZIO[Has[Connection], Throwable, List[T]] =
     stream.run(Sink.collectAll).map(_.toList)
+  
+  def collect[T](stream: ZStream[Has[DataSource with Closeable], Throwable, T]): List[T] =
+    Runtime.default.unsafeRun(stream.run(Sink.collectAll).map(_.toList).provide(Has(pool)))
 
-  def collect[T](stream: ZStream[Has[Connection], Throwable, T]): List[T] =
-    Runtime.default.unsafeRun(stream.run(Sink.collectAll).map(_.toList).onDataSource.provide(Has(pool)))
-
-  def collect[T](qzio: ZIO[Has[Connection], Throwable, T]): T =
-    Runtime.default.unsafeRun(qzio.onDataSource.provide(Has(pool)))
+  def collect[T](qzio: ZIO[Has[DataSource with Closeable], Throwable, T]): T =
+    Runtime.default.unsafeRun(qzio.provide(Has(pool)))
 
   implicit class ZioAnyOps[T](qzio: ZIO[Any, Throwable, T]) {
     def runSyncUnsafe() = Runtime.default.unsafeRun(qzio)

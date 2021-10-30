@@ -1,14 +1,14 @@
 package io.getquill.postgres
 
 import io.getquill.util.LoadConfig
-import io.getquill.{ JdbcContextConfig, Literal, OuterPostgresZioJdbcContext, Spec }
+import io.getquill.{ JdbcContextConfig, Literal, PostgresZioJdbcContext, Spec }
 import zio.Has
 
 import java.io.Closeable
 import javax.sql.DataSource
 
 class PeopleZioOuterJdbcSpec extends Spec {
-  val testContext = new OuterPostgresZioJdbcContext(Literal)
+  val testContext = new PostgresZioJdbcContext(Literal)
   import testContext._
   case class Person(name: String, age: Int)
 
@@ -26,7 +26,8 @@ class PeopleZioOuterJdbcSpec extends Spec {
     val q = quote {
       query[Person].filter(p => p.name == "Bert")
     }
-    val exec = testContext.translate(q).provide(Has(ds))
+    val a = testContext.translate(q)
+    val exec = a.provide(Has(ds))
     println(zio.Runtime.default.unsafeRunSync(exec))
   }
 }
