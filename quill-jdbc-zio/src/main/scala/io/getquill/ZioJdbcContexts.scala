@@ -20,26 +20,61 @@ class PostgresZioJdbcContext[N <: NamingStrategy](val naming: N)
   with PostgresJdbcComposition[N]
   with JdbcRunContext[PostgresDialect, N]
 
+class OuterSqlServerZioJdbcContext[N <: NamingStrategy](val naming: N)
+  extends OuterZioJdbcContext[SQLServerDialect, N]
+  with SqlServerJdbcComposition[N] {
+
+  val underlying: ZioJdbcContext[SQLServerDialect, N] = new SqlServerZioJdbcContext[N](naming)
+}
+
 class SqlServerZioJdbcContext[N <: NamingStrategy](val naming: N)
   extends ZioJdbcContext[SQLServerDialect, N]
   with SqlServerJdbcComposition[N]
   with JdbcRunContext[SQLServerDialect, N]
   with SqlServerExecuteOverride[N]
 
+class OuterH2ZioJdbcContext[N <: NamingStrategy](val naming: N)
+  extends OuterZioJdbcContext[H2Dialect, N]
+  with H2JdbcComposition[N] {
+
+  val underlying: ZioJdbcContext[H2Dialect, N] = new H2ZioJdbcContext[N](naming)
+}
+
 class H2ZioJdbcContext[N <: NamingStrategy](val naming: N)
   extends ZioJdbcContext[H2Dialect, N]
   with H2JdbcComposition[N]
   with JdbcRunContext[H2Dialect, N]
+
+class OuterMysqlZioJdbcContext[N <: NamingStrategy](val naming: N)
+  extends OuterZioJdbcContext[MySQLDialect, N]
+  with MysqlJdbcComposition[N] {
+
+  val underlying: ZioJdbcContext[MySQLDialect, N] = new MysqlZioJdbcContext[N](naming)
+}
 
 class MysqlZioJdbcContext[N <: NamingStrategy](val naming: N)
   extends ZioJdbcContext[MySQLDialect, N]
   with MysqlJdbcComposition[N]
   with JdbcRunContext[MySQLDialect, N]
 
+class OuterSqliteZioJdbcContext[N <: NamingStrategy](val naming: N)
+  extends OuterZioJdbcContext[SqliteDialect, N]
+  with SqliteJdbcComposition[N] {
+
+  val underlying: ZioJdbcContext[SqliteDialect, N] = new SqliteZioJdbcContext[N](naming)
+}
+
 class SqliteZioJdbcContext[N <: NamingStrategy](val naming: N)
   extends ZioJdbcContext[SqliteDialect, N]
   with SqliteJdbcComposition[N]
   with JdbcRunContext[SqliteDialect, N]
+
+class OuterOracleZioJdbcContext[N <: NamingStrategy](val naming: N)
+  extends OuterZioJdbcContext[OracleDialect, N]
+  with OracleJdbcComposition[N] {
+
+  val underlying: ZioJdbcContext[OracleDialect, N] = new OracleZioJdbcContext[N](naming)
+}
 
 class OracleZioJdbcContext[N <: NamingStrategy](val naming: N)
   extends ZioJdbcContext[OracleDialect, N]
