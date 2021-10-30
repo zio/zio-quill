@@ -1,6 +1,6 @@
 package io.getquill.oracle
 
-import java.sql.{Connection, ResultSet}
+import java.sql.{ Connection, ResultSet }
 import io.getquill.PrepareZioJdbcSpecBase
 import io.getquill.Prefix
 import org.scalatest.BeforeAndAfter

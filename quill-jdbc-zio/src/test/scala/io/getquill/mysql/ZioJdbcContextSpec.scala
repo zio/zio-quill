@@ -1,7 +1,7 @@
 package io.getquill.mysql
 
-import io.getquill.{EntityQuery, Prefix, ZioSpec}
-import zio.{Task, ZIO}
+import io.getquill.{ EntityQuery, Prefix, ZioSpec }
+import zio.{ Task, ZIO }
 import io.getquill.context.ZioJdbc._
 
 class ZioJdbcContextSpec extends ZioSpec {
@@ -22,13 +22,12 @@ class ZioJdbcContextSpec extends ZioSpec {
       } yield r).runSyncUnsafe().map(_.i) mustEqual List(33)
     }
     "success - stream" in {
-
       (for {
         _ <- testContext.run(qr1.delete)
         seq <- testContext.underlying.transaction {
           import testContext.underlying._
           for {
-            _ <-  testContext.underlying.run(qr1.insert(_.i -> 33))
+            _ <- testContext.underlying.run(qr1.insert(_.i -> 33))
             s <- accumulate(testContext.underlying.stream(qr1.asInstanceOf[testContext.underlying.Quoted[EntityQuery[TestEntity]]]))
           } yield s
         }.onDataSource

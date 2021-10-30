@@ -5,9 +5,9 @@ import io.getquill.context.ZioJdbc._
 import io.getquill.context.jdbc.ResultSetExtractor
 import io.getquill.context.sql.ProductSpec
 import org.scalactic.Equality
-import zio.{Has, Task, ZIO}
+import zio.{ Has, Task, ZIO }
 
-import java.sql.{Connection, PreparedStatement, ResultSet}
+import java.sql.{ Connection, PreparedStatement, ResultSet }
 
 trait PrepareZioJdbcSpecBase extends ProductSpec with ZioSpec {
 

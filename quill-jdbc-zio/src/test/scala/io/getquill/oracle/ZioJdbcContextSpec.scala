@@ -1,7 +1,7 @@
 package io.getquill.oracle
 
-import io.getquill.{EntityQuery, Prefix, ZioSpec}
-import zio.{Task, ZIO}
+import io.getquill.{ EntityQuery, Prefix, ZioSpec }
+import zio.{ Task, ZIO }
 import io.getquill.context.ZioJdbc._
 
 class ZioJdbcContextSpec extends ZioSpec {

@@ -3,14 +3,14 @@ package io.getquill.context.qzio
 import io.getquill.context.ZioJdbc._
 import io.getquill.context.jdbc.JdbcComposition
 import io.getquill.context.sql.idiom.SqlIdiom
-import io.getquill.context.{ExecutionInfo, PrepareContext, StreamingContext, TranslateContextMacro}
-import io.getquill.{NamingStrategy, ReturnAction}
+import io.getquill.context.{ ExecutionInfo, PrepareContext, StreamingContext, TranslateContextMacro }
+import io.getquill.{ NamingStrategy, ReturnAction }
 import zio.ZIO.ZIOAutoCloseableOps
 import zio.stream.ZStream
-import zio.{Has, ZIO}
+import zio.{ Has, ZIO }
 
 import java.io.Closeable
-import java.sql.{Array => _, _}
+import java.sql.{ Array => _, _ }
 import javax.sql.DataSource
 import scala.util.Try
 
