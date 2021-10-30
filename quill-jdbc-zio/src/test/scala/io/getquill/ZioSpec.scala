@@ -2,8 +2,8 @@ package io.getquill
 
 import io.getquill.util.LoadConfig
 import org.scalatest.BeforeAndAfterAll
-import zio.{ Has, Runtime, ZIO }
-import zio.stream.{ Sink, ZStream }
+import zio.{Has, Runtime, ZIO}
+import zio.stream.{Sink, ZStream}
 import io.getquill.context.ZioJdbc._
 
 import java.io.Closeable
@@ -39,11 +39,11 @@ trait ZioSpec extends Spec with BeforeAndAfterAll {
     def runSyncUnsafe() = Runtime.default.unsafeRun(qzio)
   }
 
-  implicit class ZStreamTestExt[T](stream: ZStream[Has[Connection], Throwable, T]) {
+  implicit class ZStreamTestExt[T](stream: ZStream[Has[DataSource with Closeable], Throwable, T]) {
     def runSyncUnsafe() = collect[T](stream)
   }
 
-  implicit class ZioTestExt[T](qzio: ZIO[Has[Connection], Throwable, T]) {
+  implicit class ZioTestExt[T](qzio: ZIO[Has[DataSource with Closeable], Throwable, T]) {
     def runSyncUnsafe() = collect[T](qzio)
   }
 }
