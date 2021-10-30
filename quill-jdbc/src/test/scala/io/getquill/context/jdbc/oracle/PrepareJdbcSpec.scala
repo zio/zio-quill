@@ -1,7 +1,6 @@
 package io.getquill.context.jdbc.oracle
 
-import java.sql.ResultSet
-
+import java.sql.{Connection, ResultSet}
 import io.getquill.context.jdbc.PrepareJdbcSpecBase
 import org.scalatest.BeforeAndAfter
 
@@ -14,7 +13,7 @@ class PrepareJdbcSpec extends PrepareJdbcSpecBase with BeforeAndAfter {
     testContext.run(query[Product].delete)
   }
 
-  def productExtractor = (rs: ResultSet) => materializeQueryMeta[Product].extract(rs)
+  def productExtractor = (rs: ResultSet, conn: Connection) => materializeQueryMeta[Product].extract(rs, conn)
   val prepareQuery = prepare(query[Product])
 
   "single" in {
