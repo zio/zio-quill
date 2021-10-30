@@ -3,13 +3,14 @@ package io.getquill.context.qzio
 import io.getquill.context.ZioJdbc._
 import io.getquill.context.jdbc.JdbcComposition
 import io.getquill.context.sql.idiom.SqlIdiom
-import io.getquill.context.{ ExecutionInfo, PrepareContext, StreamingContext, TranslateContextMacro }
-import io.getquill.{ NamingStrategy, ReturnAction }
+import io.getquill.context.{ExecutionInfo, PrepareContext, StreamingContext, TranslateContextMacro}
+import io.getquill.{NamingStrategy, ReturnAction}
+import zio.ZIO.ZIOAutoCloseableOps
 import zio.stream.ZStream
-import zio.{ Has, ZIO }
+import zio.{Has, ZIO}
 
 import java.io.Closeable
-import java.sql.{ Array => _, _ }
+import java.sql.{Array => _, _}
 import javax.sql.DataSource
 import scala.util.Try
 
@@ -38,7 +39,7 @@ import scala.util.Try
  * }}
  */
 
-abstract class OuterZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] extends ZioContext[Dialect, Naming]
+abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] extends ZioContext[Dialect, Naming]
   with JdbcComposition[Dialect, Naming]
   with StreamingContext[Dialect, Naming]
   with PrepareContext
@@ -67,6 +68,7 @@ abstract class OuterZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy
   val underlying: ZioJdbcUnderlyingContext[Dialect, Naming]
 
   override def close() = ()
+
   override def probe(sql: String): Try[_] = underlying.probe(sql)
 
   def executeAction[T](sql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: DatasourceContext): QIO[Long] =
@@ -82,26 +84,26 @@ abstract class OuterZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy
     underlying.translateQuery[T](statement, prepare, extractor, prettyPrint)(executionInfo, dc).onDataSource
 
   override def translateBatchQuery(groups: List[BatchGroup], prettyPrint: Boolean = false)(executionInfo: ExecutionInfo, dc: DatasourceContext): TranslateResult[List[String]] =
-    underlying.translateBatchQuery(groups.asInstanceOf[List[OuterZioJdbcContext.this.underlying.BatchGroup]], prettyPrint)(executionInfo, dc).onDataSource
+    underlying.translateBatchQuery(groups.asInstanceOf[List[ZioJdbcContext.this.underlying.BatchGroup]], prettyPrint)(executionInfo, dc).onDataSource
 
-  def streamQuery[T](fetchSize: Option[Int], sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext): QLStream[T] =
-    underlying.streamQuery[T](fetchSize, sql, prepare, extractor)(info, dc)
+  def streamQuery[T](fetchSize: Option[Int], sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext): QStream[T] =
+    underlying.streamQuery[T](fetchSize, sql, prepare, extractor)(info, dc).provideLayer(DataSourceLayer.live).refineToOrDie[SQLException]
 
-  def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningBehavior: ReturnAction)(info: ExecutionInfo, dc: DatasourceContext): QLIO[O] =
-    underlying.executeActionReturning[O](sql, prepare, extractor, returningBehavior)(info, dc)
+  def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningBehavior: ReturnAction)(info: ExecutionInfo, dc: DatasourceContext): QIO[O] =
+    underlying.executeActionReturning[O](sql, prepare, extractor, returningBehavior)(info, dc).onDataSource
 
-  def executeBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: DatasourceContext): QLIO[List[Long]] =
-    underlying.executeBatchAction(groups.asInstanceOf[List[OuterZioJdbcContext.this.underlying.BatchGroup]])(info, dc)
+  def executeBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: DatasourceContext): QIO[List[Long]] =
+    underlying.executeBatchAction(groups.asInstanceOf[List[ZioJdbcContext.this.underlying.BatchGroup]])(info, dc).onDataSource
 
-  def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T])(info: ExecutionInfo, dc: DatasourceContext): QLIO[List[T]] =
-    underlying.executeBatchActionReturning[T](groups.asInstanceOf[List[OuterZioJdbcContext.this.underlying.BatchGroupReturning]], extractor)(info, dc)
+  def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T])(info: ExecutionInfo, dc: DatasourceContext): QIO[List[T]] =
+    underlying.executeBatchActionReturning[T](groups.asInstanceOf[List[ZioJdbcContext.this.underlying.BatchGroupReturning]], extractor)(info, dc).onDataSource
 
-  def prepareQuery(sql: String, prepare: Prepare)(info: ExecutionInfo, dc: DatasourceContext): QLIO[PreparedStatement] =
-    underlying.prepareQuery(sql, prepare)(info, dc)
+  def prepareQuery(sql: String, prepare: Prepare)(info: ExecutionInfo, dc: DatasourceContext): QIO[PreparedStatement] =
+    underlying.prepareQuery(sql, prepare)(info, dc).onDataSource
 
-  def prepareAction(sql: String, prepare: Prepare)(info: ExecutionInfo, dc: DatasourceContext): QLIO[PreparedStatement] =
-    underlying.prepareAction(sql, prepare)(info, dc)
+  def prepareAction(sql: String, prepare: Prepare)(info: ExecutionInfo, dc: DatasourceContext): QIO[PreparedStatement] =
+    underlying.prepareAction(sql, prepare)(info, dc).onDataSource
 
-  def prepareBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: DatasourceContext): QLIO[List[PreparedStatement]] =
-    underlying.prepareBatchAction(groups.asInstanceOf[List[OuterZioJdbcContext.this.underlying.BatchGroup]])(info, dc)
+  def prepareBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: DatasourceContext): QIO[List[PreparedStatement]] =
+    underlying.prepareBatchAction(groups.asInstanceOf[List[ZioJdbcContext.this.underlying.BatchGroup]])(info, dc).onDataSource
 }
