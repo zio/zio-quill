@@ -5,6 +5,8 @@ target
 .settings
 .bsp
 .cache*
+.jvmopts
+queries.sql
 **/bin
 **/.tmpBin
 local.*
