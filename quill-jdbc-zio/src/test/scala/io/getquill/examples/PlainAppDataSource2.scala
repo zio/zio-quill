@@ -21,8 +21,8 @@ object PlainAppDataSource2 {
   def hikariConfig = new HikariConfig(JdbcContextConfig(LoadConfig("testPostgresDB")).configProperties)
   def hikariDataSource: DataSource with Closeable = new HikariDataSource(hikariConfig)
 
-  val zioConn: ZLayer[Any, Throwable, Has[Connection]] =
-    Task(hikariDataSource).toLayer >>> DataSourceLayer.live
+  val zioConn: ZLayer[Any, Throwable, Has[DataSource with Closeable]] =
+    Task(hikariDataSource).toLayer
 
   def main(args: Array[String]): Unit = {
     val people = quote {
