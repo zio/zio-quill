@@ -1,6 +1,7 @@
 package io.getquill.util
 
 import io.getquill.testContext._
+import io.getquill.util.Messages.LogToFile
 import io.getquill.{ Spec, testContext }
 
 import scala.io.Source
@@ -8,17 +9,21 @@ import scala.io.Source
 class LogToFileSpec extends Spec {
 
   "logs a query to file when enabled" in {
-    val q = quote {
-      qr1.leftJoin(qr2).on((a, b) => a.i == b.i)
-    }
-    testContext.run(q)
+    val queryLogName = "./LogToFileSpecQuery.sql"
+    val mockLogger = new QueryLogger(LogToFile(queryLogName))
 
-    val queryFile = Source.fromFile("queries.sql")
+    val mockQuery = "SELECT * from foo_bar where id = ?"
+
+    mockLogger.doLog(mockQuery, "io.getquill.util.LogToFileSpec", 15, 5)
+
+    Thread.sleep(1000) // Give the async log a chance to finish up
+
+    val queryFile = Source.fromFile(queryLogName)
     val contents = queryFile.mkString.trim
     queryFile.close()
 
     contents must not be empty
-    contents must endWith("""querySchema("TestEntity").leftJoin(querySchema("TestEntity2")).on((a, b) => a.i == b.i).map(x => (x._1.s, x._1.i, x._1.l, x._1.o, x._1.b, x._2.map((v) => v.s), x._2.map((v) => v.i), x._2.map((v) => v.l), x._2.map((v) => v.o)));""")
+    contents must endWith(s"""${mockQuery};""")
 
   }
 }
