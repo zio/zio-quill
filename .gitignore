@@ -8,8 +8,6 @@ target
 .jvmopts
 queries.sql
 LogToFileSpecQuery.sql
-.jvmopts
-queries.sql
 **/bin
 **/.tmpBin
 local.*
