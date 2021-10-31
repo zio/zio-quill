@@ -38,7 +38,7 @@ trait Quotation extends Parsing with ReifyLiftings {
     val quotation =
       c.untypecheck {
         q"""
-          new ${c.prefix}.Quoted[$t] {
+          new io.getquill.Quoted[$t] {
 
             ..${EnableReflectiveCalls(c)}
 
@@ -55,7 +55,7 @@ trait Quotation extends Parsing with ReifyLiftings {
       }
 
     if (IsDynamic(ast)) {
-      q"$quotation: ${c.prefix}.Quoted[$t]"
+      q"$quotation: io.getquill.Quoted[$t]"
     } else {
       quotation
     }

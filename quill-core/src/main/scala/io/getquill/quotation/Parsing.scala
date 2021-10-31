@@ -6,7 +6,7 @@ import io.getquill.Embedded
 import io.getquill.context._
 import io.getquill.norm.{ BetaReduction, TypeBehavior }
 import io.getquill.util.MacroContextExt.RichContext
-import io.getquill.dsl.{ CoreDsl, ValueComputation }
+import io.getquill.dsl.ValueComputation
 import io.getquill.norm.capture.AvoidAliasConflict
 import io.getquill.idiom.Idiom
 
@@ -18,7 +18,7 @@ import io.getquill.ast.Visibility.{ Hidden, Visible }
 import io.getquill.quat._
 import io.getquill.util.Messages.TraceType
 import io.getquill.util.{ Interleave, Interpolator }
-import io.getquill.{ Delete => DslDelete, Insert => DslInsert, Query => DslQuery, Update => DslUpdate }
+import io.getquill.{ Delete => DslDelete, Insert => DslInsert, Query => DslQuery, Update => DslUpdate, Quoted }
 
 trait Parsing extends ValueComputation with QuatMaking {
   this: Quotation =>
@@ -140,7 +140,7 @@ trait Parsing extends ValueComputation with QuatMaking {
 
   val quotedAstParser: Parser[Ast] = Parser[Ast] {
     case q"$pack.unquote[$t]($quoted)" => astParser(quoted)
-    case t if (t.tpe <:< c.weakTypeOf[CoreDsl#Quoted[Any]]) =>
+    case t if (t.tpe <:< c.weakTypeOf[Quoted[Any]]) =>
       unquote[Ast](t) match {
         case Some(ast) if (!IsDynamic(ast)) =>
           t match {
@@ -374,7 +374,7 @@ trait Parsing extends ValueComputation with QuatMaking {
 
         Dynamic {
           c.typecheck(q"""
-            new ${c.prefix}.Quoted[Any] {
+            new io.getquill.Quoted[Any] {
               override def ast = io.getquill.ast.Infix($newParts, $newParams, $infixIsPure, $quat)
             }
           """)
@@ -1073,7 +1073,7 @@ trait Parsing extends ValueComputation with QuatMaking {
 
   private def typecheckUnquoted(tree: Tree): Tree = {
     def unquoted(maybeQuoted: Tree) =
-      is[CoreDsl#Quoted[Any]](maybeQuoted) match {
+      is[Quoted[Any]](maybeQuoted) match {
         case false => maybeQuoted
         case true  => q"unquote($maybeQuoted)"
       }
@@ -1087,7 +1087,7 @@ trait Parsing extends ValueComputation with QuatMaking {
 
   private def checkTypes(lhs: Tree, rhs: Tree): Unit = {
     def unquoted(tree: Tree) =
-      is[CoreDsl#Quoted[Any]](tree) match {
+      is[Quoted[Any]](tree) match {
         case false => tree
         case true  => q"unquote($tree)"
       }

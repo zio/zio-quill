@@ -1,8 +1,14 @@
 package io.getquill
 
+import io.getquill.ast.Ast
 import io.getquill.quotation.NonQuotedException
 
 import scala.annotation.compileTimeOnly
+
+trait Quoted[+T] {
+  def ast: Ast
+  override def toString: String = ast.toString
+}
 
 /**
  * A Quill-Action-Concept centrally defines Quill Query, Insert, Update, Delete, etc... actions.
