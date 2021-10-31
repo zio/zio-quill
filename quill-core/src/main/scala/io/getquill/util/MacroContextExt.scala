@@ -1,32 +1,12 @@
 package io.getquill.util
 
+import io.getquill.util.Messages.{ debugEnabled, prettyPrint }
 import io.getquill.idiom.Idiom
 import io.getquill.util.IndentUtil._
-import io.getquill.util.Messages.{ LogToFile, debugEnabled, prettyPrint, quillLogFile }
-import zio._
-import zio.logging._
 
-import java.nio.file.Paths
-import java.time.ZonedDateTime
 import scala.reflect.macros.blackbox.{ Context => MacroContext }
 
 object MacroContextExt {
-
-  val env = {
-    quillLogFile match {
-      case LogToFile.Enabled(file) =>
-        ZEnv.live >>>
-          Logging.file(
-            logLevel = LogLevel.Info,
-            format = LogFormat.fromFunction((ctx, str) => {
-              str
-            }),
-            destination = Paths.get(file)
-          ) >>> Logging.withRootLoggerName("query-logger")
-    }
-  }
-
-  val runtime = Runtime.unsafeFromLayer(env)
 
   implicit class RichContext(c: MacroContext) {
 
@@ -47,19 +27,6 @@ object MacroContextExt {
           formatted
         else
           "\n" + formatted.multiline(1, "| ") + "\n\n"
-
-      quillLogFile match {
-        case LogToFile.Enabled(_) =>
-          runtime.unsafeRunAsync_(log.info(
-            s"""
-                 |-- file: ${c.enclosingPosition.source.path}
-                 |-- line: ${c.enclosingPosition.line}
-                 |-- col: ${c.enclosingPosition.column}
-                 |-- time: ${ZonedDateTime.now().format(LogDatetimeFormatter.isoLocalDateTimeFormatter)}
-                 |${idiom.format(queryString)};
-                 |""".stripMargin
-          ))
-      }
 
       if (debugEnabled) c.info(c.enclosingPosition, output, force = true)
     }

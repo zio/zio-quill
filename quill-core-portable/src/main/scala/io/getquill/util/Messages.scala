@@ -25,18 +25,6 @@ object Messages {
   private[getquill] def traceOpinions = cache("quill.trace.opinion", variable("quill.trace.opinion", "quill_trace_opinion", "false").toBoolean)
   private[getquill] def traceAstSimple = cache("quill.trace.ast.simple", variable("quill.trace.ast.simple", "quill_trace_ast_simple", "false").toBoolean)
   private[getquill] def traceQuats = cache("quill.trace.quat", QuatTrace(variable("quill.trace.quat", "quill_trace_quat", QuatTrace.None.value)))
-  private[getquill] def quillLogFile = cache("quill.log.file", LogToFile(variable("quill.log.file", "quill_log_file", "./queries.sql")))
-
-  sealed trait LogToFile
-  object LogToFile {
-    case class Enabled(file: String) extends LogToFile
-    case object Disabled extends LogToFile
-    def apply(switch: String): LogToFile =
-      switch.trim match {
-        case "false" => Disabled
-        case other   => Enabled(other)
-      }
-  }
 
   sealed trait QuatTrace { def value: String }
   object QuatTrace {
