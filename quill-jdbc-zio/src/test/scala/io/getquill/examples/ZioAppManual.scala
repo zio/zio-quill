@@ -8,7 +8,7 @@ import zio.console.putStrLn
 object ZioAppManual extends App {
 
   object MyPostgresContext extends PostgresZioJdbcContext(Literal)
-  import MyPostgresContext._
+  import MyPostgresContext.underlying._
 
   case class Person(name: String, age: Int)
 
@@ -22,7 +22,7 @@ object ZioAppManual extends App {
     val people = quote {
       query[Person].filter(p => p.name == "Alex")
     }
-    MyPostgresContext.run(people)
+    MyPostgresContext.underlying.run(people)
       .tap(result => putStrLn(result.toString))
       .provideCustomLayer(zioConn)
       .exitCode

@@ -8,8 +8,8 @@ import org.scalatest.BeforeAndAfter
 class PrepareJdbcSpec extends PrepareZioJdbcSpecBase with BeforeAndAfter {
 
   def prefix = Prefix("testMysqlDB")
-  val context = testContext
-  import testContext._
+  val context = testContext.underlying
+  import context._
 
   before {
     testContext.run(query[Product].delete).runSyncUnsafe()

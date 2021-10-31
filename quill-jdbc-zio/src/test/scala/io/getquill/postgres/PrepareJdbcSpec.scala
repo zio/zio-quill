@@ -9,8 +9,8 @@ import java.sql.{ Connection, ResultSet }
 class PrepareJdbcSpec extends PrepareZioJdbcSpecBase with ZioSpec with BeforeAndAfter {
 
   override def prefix: Prefix = Prefix("testPostgresDB")
-  val context = testContext
-  import testContext._
+  val context = testContext.underlying
+  import context._
 
   before {
     testContext.run(query[Product].delete).runSyncUnsafe()

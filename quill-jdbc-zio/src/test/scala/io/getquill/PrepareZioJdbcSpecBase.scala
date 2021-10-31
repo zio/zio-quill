@@ -23,12 +23,12 @@ trait PrepareZioJdbcSpecBase extends ProductSpec with ZioSpec {
   def withOrderedIds(products: List[Product]) =
     products.zipWithIndex.map { case (product, id) => product.copy(id = id.toLong + 1) }
 
-  def singleInsert(prep: QIO[PreparedStatement]) = {
+  def singleInsert(prep: QLIO[PreparedStatement]) = {
     prep.flatMap(stmt =>
       Task(stmt).bracketAuto { stmt => Task(stmt.execute()) }).onDataSource.provide(Has(pool)).defaultRun
   }
 
-  def batchInsert(prep: QIO[List[PreparedStatement]]) = {
+  def batchInsert(prep: QLIO[List[PreparedStatement]]) = {
     prep.flatMap(stmts =>
       ZIO.collectAll(
         stmts.map(stmt =>
@@ -36,7 +36,7 @@ trait PrepareZioJdbcSpecBase extends ProductSpec with ZioSpec {
       )).onDataSource.provide(Has(pool)).defaultRun
   }
 
-  def extractResults[T](prepareStatement: QIO[PreparedStatement])(extractor: (ResultSet, Connection) => T) = {
+  def extractResults[T](prepareStatement: QLIO[PreparedStatement])(extractor: (ResultSet, Connection) => T) = {
     (for {
       conn <- ZIO.service[Connection]
       result <- prepareStatement.provide(Has(conn)).bracketAuto { stmt =>
@@ -47,6 +47,6 @@ trait PrepareZioJdbcSpecBase extends ProductSpec with ZioSpec {
     } yield result).onDataSource.provide(Has(pool)).defaultRun
   }
 
-  def extractProducts(prep: QIO[PreparedStatement]) =
+  def extractProducts(prep: QLIO[PreparedStatement]) =
     extractResults(prep)(productExtractor)
 }
