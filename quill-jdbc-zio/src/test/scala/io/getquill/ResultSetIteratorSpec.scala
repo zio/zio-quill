@@ -13,7 +13,7 @@ class ResultSetIteratorSpec extends ZioSpec {
 
   val ds = JdbcContextConfig(LoadConfig("testPostgresDB")).dataSource
 
-  val ctx = new PostgresZioJdbcContext(Literal)
+  val ctx = new PostgresZioJdbcUnderlyingContext(Literal)
   import ctx._
 
   case class Person(name: String, age: Int)

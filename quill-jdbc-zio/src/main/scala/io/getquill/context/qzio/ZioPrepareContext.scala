@@ -16,9 +16,9 @@ trait ZioPrepareContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] extends Z
 
   override type PrepareRow = PreparedStatement
   override type ResultRow = ResultSet
-  override type PrepareQueryResult = QIO[PrepareRow]
-  override type PrepareActionResult = QIO[PrepareRow]
-  override type PrepareBatchActionResult = QIO[List[PrepareRow]]
+  override type PrepareQueryResult = QLIO[PrepareRow]
+  override type PrepareActionResult = QLIO[PrepareRow]
+  override type PrepareBatchActionResult = QLIO[List[PrepareRow]]
   override type Session = Connection
 
   def prepareQuery(sql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: DatasourceContext): PrepareQueryResult =
@@ -28,7 +28,7 @@ trait ZioPrepareContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] extends Z
     prepareSingle(sql, prepare)(info, dc)
 
   /** Execute SQL on connection and return prepared statement. Closes the statement in a bracket. */
-  def prepareSingle(sql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: DatasourceContext): QIO[PreparedStatement] = {
+  def prepareSingle(sql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: DatasourceContext): QLIO[PreparedStatement] = {
     (for {
       bconn <- ZIO.environment[Has[Connection]]
       conn = bconn.get[Connection]

@@ -23,7 +23,7 @@ object PlainAppDataSource {
       query[Person].filter(p => p.name == "Alex")
     }
     val qzio =
-      MyPostgresContext.run(people).onDataSource
+      MyPostgresContext.run(people)
         .tap(result => putStrLn(result.toString))
         .provideCustomLayer(zioDs)
 

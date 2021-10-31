@@ -18,7 +18,7 @@ object ZioApp extends App {
     val people = quote {
       query[Person].filter(p => p.name == "Alex")
     }
-    MyPostgresContext.run(people).onDataSource
+    MyPostgresContext.run(people)
       .tap(result => putStrLn(result.toString))
       .provideCustomLayer(zioDS)
       .exitCode
