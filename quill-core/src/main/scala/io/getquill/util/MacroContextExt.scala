@@ -23,6 +23,7 @@ object MacroContextExt {
             }),
             destination = Paths.get(file)
           ) >>> Logging.withRootLoggerName("query-logger")
+      case LogToFile.Disabled => Logging.ignore
     }
   }
 
@@ -59,6 +60,7 @@ object MacroContextExt {
                  |${idiom.format(queryString)};
                  |""".stripMargin
           ))
+        case LogToFile.Disabled => // do nothing
       }
 
       if (debugEnabled) c.info(c.enclosingPosition, output, force = true)
