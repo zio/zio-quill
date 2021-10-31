@@ -2,13 +2,13 @@ package io.getquill.util
 
 import io.getquill.idiom.Idiom
 import io.getquill.util.IndentUtil._
-import io.getquill.util.Messages.{LogToFile, debugEnabled, prettyPrint, quillLogFile}
+import io.getquill.util.Messages.{ LogToFile, debugEnabled, prettyPrint, quillLogFile }
 import zio._
 import zio.logging._
 
 import java.nio.file.Paths
 import java.time.ZonedDateTime
-import scala.reflect.macros.blackbox.{Context => MacroContext}
+import scala.reflect.macros.blackbox.{ Context => MacroContext }
 
 object MacroContextExt {
 
