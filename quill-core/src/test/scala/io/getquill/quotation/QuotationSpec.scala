@@ -11,6 +11,7 @@ import io.getquill.util.Messages
 import io.getquill.Ord
 import io.getquill.Query
 import io.getquill.quat._
+import io.getquill.Quoted
 
 import scala.math.BigDecimal.{ double2bigDecimal, int2bigDecimal, javaBigDecimal2bigDecimal, long2bigDecimal }
 

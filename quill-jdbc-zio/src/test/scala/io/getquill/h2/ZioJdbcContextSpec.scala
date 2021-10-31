@@ -28,7 +28,7 @@ class ZioJdbcContextSpec extends ZioSpec {
           import testContext.underlying._
           for {
             _ <- testContext.underlying.run(qr1.insert(_.i -> 33))
-            s <- accumulate(testContext.underlying.stream(qr1.asInstanceOf[testContext.underlying.Quoted[EntityQuery[TestEntity]]]))
+            s <- accumulate(testContext.underlying.stream(qr1))
           } yield s
         }.onDataSource
         r <- testContext.run(qr1)
