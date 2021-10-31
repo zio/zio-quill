@@ -805,16 +805,6 @@ val scala_v_11 = "2.11.12"
 val scala_v_12 = "2.12.15"
 val scala_v_13 = "2.13.6"
 
-
-val crossVersions = {
-  val scalaVersion = sys.props.get("quill.scala.version")
-  if(scalaVersion.exists(_.startsWith("2.13"))) {
-    Seq(scala_v_11, scala_v_12, scala_v_13)
-  } else {
-    Seq(scala_v_11, scala_v_12)
-  }
-}
-
 lazy val loggingSettings = Seq(
   libraryDependencies ++= Seq(
     "ch.qos.logback"  % "logback-classic" % "1.2.6" % Test
@@ -939,6 +929,13 @@ lazy val releaseSettings = Seq(
     CrossVersion.partialVersion(scalaVersion.value) match {
       case Some((2, 11)) =>
         doOnDefault(checkSnapshotDependencies) ++
+          doOnDefault(inquireVersions) ++
+          doOnDefault(runClean) ++
+          doOnPush   (setReleaseVersion) ++
+          doOnDefault(publishArtifacts)
+      //doOnPush   ("sonatypeReleaseAll") ++
+      case Some((2, 12)) =>
+        doOnDefault(checkSnapshotDependencies) ++
         doOnDefault(inquireVersions) ++
         doOnDefault(runClean) ++
         doOnPush   (setReleaseVersion) ++
@@ -952,13 +949,6 @@ lazy val releaseSettings = Seq(
         doOnPush   (commitNextVersion) ++
         //doOnPush(releaseStepCommand("sonatypeReleaseAll")) ++
         doOnPush   (pushChanges)
-      case Some((2, 12)) =>
-        doOnDefault(checkSnapshotDependencies) ++
-        doOnDefault(inquireVersions) ++
-        doOnDefault(runClean) ++
-        doOnPush   (setReleaseVersion) ++
-        doOnDefault(publishArtifacts)
-        //doOnPush   ("sonatypeReleaseAll") ++
       case Some((2, 13)) =>
         doOnDefault(checkSnapshotDependencies) ++
         doOnDefault(inquireVersions) ++
