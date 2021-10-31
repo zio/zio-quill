@@ -1,6 +1,6 @@
 package io.getquill.context.jdbc.oracle
 
-import java.sql.{Connection, ResultSet}
+import java.sql.{ Connection, ResultSet }
 import io.getquill.context.jdbc.PrepareJdbcSpecBase
 import org.scalatest.BeforeAndAfter
 
