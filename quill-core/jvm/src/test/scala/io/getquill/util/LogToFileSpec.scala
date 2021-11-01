@@ -12,7 +12,7 @@ class LogToFileSpec extends Spec {
 
     val mockQuery = "SELECT * from foo_bar where id = ?"
 
-    mockLogger.log(mockQuery, "io.getquill.util.LogToFileSpec", 15, 5)
+    mockLogger(mockQuery, "io.getquill.util.LogToFileSpec", 15, 5)
 
     Thread.sleep(1000) // Give the async log a chance to finish up
 

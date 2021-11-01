@@ -26,7 +26,7 @@ class QueryLogger(logToFile: LogToFile) {
 
   private[getquill] val runtime = Runtime.unsafeFromLayer(env)
 
-  def log(queryString: String, sourcePath: String, line: Int, column: Int): Unit = {
+  def apply(queryString: String, sourcePath: String, line: Int, column: Int): Unit = {
     quillLogFile match {
       case LogToFile.Enabled(_) =>
         runtime.unsafeRunAsync_(log.info(
