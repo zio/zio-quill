@@ -1724,6 +1724,8 @@ ctx.run(q)
 // SELECT p.id, p.name, p.age FROM Person p WHERE p.name like '%John%'
 ```
 
+`like` extension works on `Option[String]` fields as well.
+
 ### forUpdate
 
 ```scala
