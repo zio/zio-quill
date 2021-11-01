@@ -3,6 +3,7 @@ version: '3'
 services:
   postgres:
     image: postgres:9.6
+    platform: linux/amd64
     ports:
       - "15432:5432"
     environment:
@@ -30,17 +31,16 @@ services:
       - MAX_HEAP_SIZE=256m
       - HEAP_NEWSIZE=64m
       - JVM_OPTS=-XX:NativeMemoryTracking=summary -XX:CompressedClassSpaceSize=200m
-    init: true
 
   orientdb:
     image: orientdb:3.0.11
+    platform: linux/amd64
     ports:
       - "12424:2424"
     # enable NativeMemoryTracking so that jcmd in possible in build.sh. For CompressedClassSpaceSize 1gig is default which is too high.
     environment:
       - ORIENTDB_ROOT_PASSWORD=root
       - ORIENTDB_OPTS_MEMORY=-XX:NativeMemoryTracking=summary -XX:CompressedClassSpaceSize=200m -Xms256m -Xmx512m -XX:MetaspaceSize=32m -XX:MaxMetaspaceSize=64m -Xss256k
-    init: true
 
   sqlserver:
     image: mcr.microsoft.com/azure-sql-edge:latest # use this because it supports ARM64 architecture for M1 Mac
@@ -52,6 +52,7 @@ services:
 
   oracle:
     image: quillbuilduser/oracle-18-xe-micro-sq
+    platform: linux/amd64
     ports:
       - "11521:1521"
     # Opatch is an internal java-based daemon in the Oracle container that updates components, don't really need it here. Reduce it's memory settings.
@@ -61,7 +62,7 @@ services:
   setup:
     build:
       context: .
-      dockerfile: ./build/Dockerfile-setup
+      dockerfile: ./build/m1/Dockerfile-setup
     depends_on:
       - oracle
     links:
@@ -80,7 +81,8 @@ services:
   sbt:
     build:
       context: .
-      dockerfile: ./build/Dockerfile-sbt
+      dockerfile: ./build/m1/Dockerfile-sbt
+    platform: linux/amd64
     ports:
       - "15005:5005"
     command: sbt

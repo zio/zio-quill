@@ -1,4 +1,4 @@
-FROM hseeberger/scala-sbt:8u312_1.5.5_2.13.6
+FROM --platform=linux/arm64 hseeberger/scala-sbt:8u312_1.5.5_2.13.6
 MAINTAINER mdedetrich@gmail.com
 
 RUN apt-get update
