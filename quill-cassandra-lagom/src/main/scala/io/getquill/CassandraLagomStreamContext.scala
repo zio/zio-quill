@@ -44,7 +44,6 @@ class CassandraLagomStreamContext[N <: NamingStrategy](
     executeQuery(cql, prepare, extractor)(info, dc).take(1)
   }
 
-  @nowarn // Just for scala 2.13, there is deprecation warn on method missing in other scala versions
   def executeAction[T](cql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: DatasourceContext)(
     implicit
     executionContext: ExecutionContext
