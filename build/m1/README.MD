@@ -17,7 +17,7 @@ Any time you want to re-setup your databases (i.e. you run `docker-compose down`
 ## Compile and Test
 To start the build and run tests, its often best to skip the codegen tests as they can sometimes cause phantom errors.  To do this, execute the following:
 
-`docker-compose -f docker-compose-m1.yml sbt sbt -Dmodules=db test`
+`docker-compose -f docker-compose-m1.yml run sbt sbt -Dmodules=db test`
 
 Drop the `-Dmodules=db` if you want to run ALL the tests (and grab an adult beverage while it runs - it'll be a while).  Check out the `build.sbt` for a list of the 
 various modules you can build together or independently.
@@ -31,6 +31,6 @@ If you plan to have some rapid build/test cycles - run: `docker-compose -f docke
 By default the build executes with Scala 2.11.  Not horrible - but if you want to take advantage of the improved compiler of a more recent 2.x verison of Scala you can specify that!
 You can simply set the `quill.scala.version` when you start your build:
 
-`docker-compose -f docker-compose-m1.yml sbt sbt -Dquill.scala.version=2.13.6 -Dmodules=db test`
+`docker-compose -f docker-compose-m1.yml run sbt sbt -Dquill.scala.version=2.13.6 -Dmodules=db test`
 
 Check out the [CONTRIBUTING](../../CONTRIBUTING.md) guide for more details.  Good luck!
