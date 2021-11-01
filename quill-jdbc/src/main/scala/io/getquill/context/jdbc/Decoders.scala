@@ -3,9 +3,10 @@ package io.getquill.context.jdbc
 import java.time.{ Instant, LocalDate, LocalDateTime }
 import java.util
 import java.util.Calendar
+import scala.math.BigDecimal.javaBigDecimal2bigDecimal
 
 trait Decoders {
-  this: JdbcRunContext[_, _] =>
+  this: JdbcComposition[_, _] =>
 
   type Decoder[T] = JdbcDecoder[T]
 

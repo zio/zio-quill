@@ -8,6 +8,7 @@ import io.getquill.context.ZioJdbc._
 import io.getquill.context.qzio.ImplicitSyntax._
 import io.getquill.util.LoadConfig
 import zio.{ Has, Task, ZManaged }
+import io.getquill.context.ZioJdbc._
 
 class ImplicitEnvPatternSpec extends PeopleZioSpec {
 
@@ -18,22 +19,23 @@ class ImplicitEnvPatternSpec extends PeopleZioSpec {
 
   override def beforeAll = {
     super.beforeAll()
-    testContext.transaction {
+    testContext.underlying.transaction {
+      import testContext.underlying._
       for {
-        _ <- testContext.run(query[Couple].delete)
-        _ <- testContext.run(query[Person].filter(_.age > 0).delete)
-        _ <- testContext.run(liftQuery(peopleEntries).foreach(p => peopleInsert(p)))
-        _ <- testContext.run(liftQuery(couplesEntries).foreach(p => couplesInsert(p)))
+        _ <- testContext.underlying.run(query[Couple].delete)
+        _ <- testContext.underlying.run(query[Person].filter(_.age > 0).delete)
+        _ <- testContext.underlying.run(liftQuery(peopleEntries).foreach(p => peopleInsert(p)))
+        _ <- testContext.underlying.run(liftQuery(couplesEntries).foreach(p => couplesInsert(p)))
       } yield ()
-    }.runSyncUnsafe()
+    }.onDataSource.runSyncUnsafe()
   }
 
   case class MyService(ds: DataSource with Closeable) {
     implicit val env = Implicit(Has(ds))
 
-    def alexes = testContext.run(query[Person].filter(p => p.name == "Alex")).onDataSource.implicitly
-    def berts = testContext.run(query[Person].filter(p => p.name == "Bert")).onDataSource.implicitly
-    def coras = testContext.run(query[Person].filter(p => p.name == "Cora")).onDataSource.implicitly
+    def alexes = testContext.run(query[Person].filter(p => p.name == "Alex"))
+    def berts = testContext.run(query[Person].filter(p => p.name == "Bert"))
+    def coras = testContext.run(query[Person].filter(p => p.name == "Cora"))
   }
 
   def makeDataSource() = JdbcContextConfig(LoadConfig("testPostgresDB")).dataSource

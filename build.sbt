@@ -135,24 +135,11 @@ val filteredModules = {
   } else modules
 }
 
-lazy val `quill` = {
-  val quill =
-    (project in file("."))
+lazy val `quill` =
+  (project in file("."))
     .settings(commonSettings: _*)
-
-  // Do not do aggregate project builds when debugging since during that time
-  // typically only individual modules are being build/compiled. This is mostly for convenience with IntelliJ.
-  // Normally it to just exclude `quill` from the build in Intellij instead but then local file change tracking
-  // and search of files from the root level (e.g. in the 'build' directory) is lost.
-  debugMacro match {
-    case true =>
-      quill
-    case false =>
-      quill
-        .aggregate(filteredModules.map(_.project): _*)
-        .dependsOn(filteredModules: _*)
-  }
-}
+    .aggregate(filteredModules.map(_.project): _*)
+    .dependsOn(filteredModules: _*)
 
 `quill` / publishArtifact := false
 
@@ -230,6 +217,7 @@ lazy val `quill-core` =
     .settings(mimaSettings: _*)
     .settings(libraryDependencies ++= Seq(
       "com.typesafe"               %  "config"        % "1.4.1",
+      "dev.zio"                    %% "zio-logging"   % "0.5.13",
       "com.typesafe.scala-logging" %% "scala-logging" % "3.9.4",
       "org.scala-lang"             %  "scala-reflect" % scalaVersion.value
     ))
@@ -818,16 +806,6 @@ val scala_v_11 = "2.11.12"
 val scala_v_12 = "2.12.15"
 val scala_v_13 = "2.13.6"
 
-
-val crossVersions = {
-  val scalaVersion = sys.props.get("quill.scala.version")
-  if(scalaVersion.exists(_.startsWith("2.13"))) {
-    Seq(scala_v_11, scala_v_12, scala_v_13)
-  } else {
-    Seq(scala_v_11, scala_v_12)
-  }
-}
-
 lazy val loggingSettings = Seq(
   libraryDependencies ++= Seq(
     "ch.qos.logback"  % "logback-classic" % "1.2.6" % Test
@@ -842,7 +820,7 @@ lazy val basicSettings = Seq(
     }
   },
   organization := "io.getquill",
-  scalaVersion := scala_v_11,
+  scalaVersion := scala_v_12,
   crossScalaVersions := Seq(scala_v_11, scala_v_12, scala_v_13),
   libraryDependencies ++= Seq(
     "org.scala-lang.modules" %%% "scala-collection-compat" % "2.2.0",
@@ -952,6 +930,13 @@ lazy val releaseSettings = Seq(
     CrossVersion.partialVersion(scalaVersion.value) match {
       case Some((2, 11)) =>
         doOnDefault(checkSnapshotDependencies) ++
+          doOnDefault(inquireVersions) ++
+          doOnDefault(runClean) ++
+          doOnPush   (setReleaseVersion) ++
+          doOnDefault(publishArtifacts)
+      //doOnPush   ("sonatypeReleaseAll") ++
+      case Some((2, 12)) =>
+        doOnDefault(checkSnapshotDependencies) ++
         doOnDefault(inquireVersions) ++
         doOnDefault(runClean) ++
         doOnPush   (setReleaseVersion) ++
@@ -965,13 +950,6 @@ lazy val releaseSettings = Seq(
         doOnPush   (commitNextVersion) ++
         //doOnPush(releaseStepCommand("sonatypeReleaseAll")) ++
         doOnPush   (pushChanges)
-      case Some((2, 12)) =>
-        doOnDefault(checkSnapshotDependencies) ++
-        doOnDefault(inquireVersions) ++
-        doOnDefault(runClean) ++
-        doOnPush   (setReleaseVersion) ++
-        doOnDefault(publishArtifacts)
-        //doOnPush   ("sonatypeReleaseAll") ++
       case Some((2, 13)) =>
         doOnDefault(checkSnapshotDependencies) ++
         doOnDefault(inquireVersions) ++

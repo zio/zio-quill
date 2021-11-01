@@ -18,13 +18,12 @@ class StreamingWithFetchSpec extends ZioSpec with BeforeAndAfter {
   val insert = quote { (p: Person) => query[Person].insert(p) }
 
   def result[T](qzio: QIO[T]): T =
-    Runtime.default.unsafeRun(qzio.onDataSource.provide(Has(pool)))
+    Runtime.default.unsafeRun(qzio.provide(Has(pool)))
 
   before {
     testContext.run(quote(query[Person].delete)).runSyncUnsafe()
     ()
   }
-
   "streaming with fetch should work" - {
     def produceEntities(num: Int) =
       (1 to num).map(i => Person("Joe" + i, i)).toList

@@ -25,16 +25,17 @@ class ConnectionLeakTest extends ProductSpec with ZioSpec {
 
   "insert and select without leaking" in {
     val result =
-      Runtime.default.unsafeRun(context.transaction {
+      Runtime.default.unsafeRun(context.underlying.transaction {
+        import context.underlying._
         for {
-          _ <- context.run {
+          _ <- context.underlying.run {
             quote {
               query[Product].insert(
                 lift(Product(1, UUID.randomUUID().toString, Random.nextLong()))
               )
             }
           }
-          result <- context.run {
+          result <- context.underlying.run {
             query[Product].filter(p => query[Product].map(_.id).max.exists(_ == p.id))
           }
         } yield (result)
