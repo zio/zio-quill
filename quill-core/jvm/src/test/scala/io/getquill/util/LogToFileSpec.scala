@@ -1,9 +1,7 @@
 package io.getquill.util
 
-import io.getquill.testContext._
 import io.getquill.util.Messages.LogToFile
-import io.getquill.{ Spec, testContext }
-
+import io.getquill.Spec
 import scala.io.Source
 
 class LogToFileSpec extends Spec {
@@ -14,7 +12,7 @@ class LogToFileSpec extends Spec {
 
     val mockQuery = "SELECT * from foo_bar where id = ?"
 
-    mockLogger.doLog(mockQuery, "io.getquill.util.LogToFileSpec", 15, 5)
+    mockLogger.log(mockQuery, "io.getquill.util.LogToFileSpec", 15, 5)
 
     Thread.sleep(1000) // Give the async log a chance to finish up
 

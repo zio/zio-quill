@@ -30,7 +30,7 @@ object MacroContextExt {
         else
           "\n" + formatted.multiline(1, "| ") + "\n\n"
 
-      queryLogger.doLog(output, c.enclosingPosition.source.path, c.enclosingPosition.line, c.enclosingPosition.column)
+      queryLogger.log(output, c.enclosingPosition.source.path, c.enclosingPosition.line, c.enclosingPosition.column)
 
       if (debugEnabled) c.info(c.enclosingPosition, output, force = true)
 
