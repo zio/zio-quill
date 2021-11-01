@@ -6,7 +6,6 @@ import com.lightbend.lagom.scaladsl.persistence.cassandra.CassandraSession
 import io.getquill.context.ExecutionInfo
 import io.getquill.util.ContextLogger
 
-import scala.annotation.nowarn
 import scala.concurrent.ExecutionContext
 
 class CassandraLagomStreamContext[N <: NamingStrategy](
@@ -22,7 +21,6 @@ class CassandraLagomStreamContext[N <: NamingStrategy](
 
   private val logger = ContextLogger(this.getClass)
 
-  @nowarn // Just for scala 2.13, there is deprecation warn on fromFutureSource missing in other scala versions
   def executeQuery[T](
     cql:       String,
     prepare:   Prepare      = identityPrepare,
@@ -46,7 +44,6 @@ class CassandraLagomStreamContext[N <: NamingStrategy](
     executeQuery(cql, prepare, extractor)(info, dc).take(1)
   }
 
-  @nowarn // Just for scala 2.13, there is deprecation warn on method missing in other scala versions
   def executeAction[T](cql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: DatasourceContext)(
     implicit
     executionContext: ExecutionContext
