@@ -139,7 +139,7 @@ abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] ext
             currentConnection.set(None) *> ZIO.effect(connection.setAutoCommit(prevAutoCommit)).orDie)
           // TODO Ask Adam about this, this always has to happen when the currentConnection variable is unset
           //      (usually right before the connection is returned to the pool). Why wouldn't it work if below?
-          //_ <- ZIO.effect(connection.setAutoCommit(prevAutoCommit)).toManaged_
+
           _ <- op.onExit {
             case Success(_) =>
               UIO(connection.commit())
@@ -150,6 +150,8 @@ abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] ext
                 _ => ZIO.halt(cause.flatMap(Cause.die)) // or ZIO.halt(cause).orDie
               )
           }.toManaged_
+          // works if this is after op.onExit or in the release of the ZManaged that controls currentConnection
+          // _ <- ZIO.effect(connection.setAutoCommit(prevAutoCommit)).toManaged_
         } yield ()
         connection.use_(op)
     }
