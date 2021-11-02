@@ -5,9 +5,8 @@ import io.getquill.context.jdbc.JdbcComposition
 import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.context.{ ExecutionInfo, PrepareContext, StreamingContext, TranslateContextMacro }
 import io.getquill.{ NamingStrategy, ReturnAction }
-import zio.ZIO.ZIOAutoCloseableOps
 import zio.stream.ZStream
-import zio.{ Has, ZIO }
+import zio.{ FiberRef, Has, Runtime, ZIO, ZManaged }
 
 import java.io.Closeable
 import java.sql.{ Array => _, _ }
@@ -65,6 +64,9 @@ abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] ext
   override type PrepareBatchActionResult = QIO[List[PrepareRow]]
   override type Session = Connection
 
+  val currentConnection: FiberRef[Option[Connection]] =
+    Runtime.default.unsafeRun(FiberRef.make(None))
+
   val underlying: ZioJdbcUnderlyingContext[Dialect, Naming]
 
   override def close() = ()
@@ -75,35 +77,75 @@ abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] ext
     underlying.executeAction[T](sql, prepare)(info, dc).onDataSource
 
   def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext): QIO[List[T]] =
-    underlying.executeQuery[T](sql, prepare, extractor)(info, dc).onDataSource
+    onConnection(underlying.executeQuery[T](sql, prepare, extractor)(info, dc))
 
   override def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext): QIO[T] =
-    underlying.executeQuerySingle[T](sql, prepare, extractor)(info, dc).onDataSource
+    onConnection(underlying.executeQuerySingle[T](sql, prepare, extractor)(info, dc))
 
   override def translateQuery[T](statement: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor, prettyPrint: Boolean = false)(executionInfo: ExecutionInfo, dc: DatasourceContext): TranslateResult[String] =
-    underlying.translateQuery[T](statement, prepare, extractor, prettyPrint)(executionInfo, dc).onDataSource
+    onConnection(underlying.translateQuery[T](statement, prepare, extractor, prettyPrint)(executionInfo, dc))
 
   override def translateBatchQuery(groups: List[BatchGroup], prettyPrint: Boolean = false)(executionInfo: ExecutionInfo, dc: DatasourceContext): TranslateResult[List[String]] =
-    underlying.translateBatchQuery(groups.asInstanceOf[List[ZioJdbcContext.this.underlying.BatchGroup]], prettyPrint)(executionInfo, dc).onDataSource
+    onConnection(underlying.translateBatchQuery(groups.asInstanceOf[List[ZioJdbcContext.this.underlying.BatchGroup]], prettyPrint)(executionInfo, dc))
 
   def streamQuery[T](fetchSize: Option[Int], sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext): QStream[T] =
-    underlying.streamQuery[T](fetchSize, sql, prepare, extractor)(info, dc).provideLayer(DataSourceLayer.live).refineToOrDie[SQLException]
+    onConnectionStream(underlying.streamQuery[T](fetchSize, sql, prepare, extractor)(info, dc))
 
   def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningBehavior: ReturnAction)(info: ExecutionInfo, dc: DatasourceContext): QIO[O] =
-    underlying.executeActionReturning[O](sql, prepare, extractor, returningBehavior)(info, dc).onDataSource
+    onConnection(underlying.executeActionReturning[O](sql, prepare, extractor, returningBehavior)(info, dc))
 
   def executeBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: DatasourceContext): QIO[List[Long]] =
-    underlying.executeBatchAction(groups.asInstanceOf[List[ZioJdbcContext.this.underlying.BatchGroup]])(info, dc).onDataSource
+    onConnection(underlying.executeBatchAction(groups.asInstanceOf[List[ZioJdbcContext.this.underlying.BatchGroup]])(info, dc))
 
   def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T])(info: ExecutionInfo, dc: DatasourceContext): QIO[List[T]] =
-    underlying.executeBatchActionReturning[T](groups.asInstanceOf[List[ZioJdbcContext.this.underlying.BatchGroupReturning]], extractor)(info, dc).onDataSource
+    onConnection(underlying.executeBatchActionReturning[T](groups.asInstanceOf[List[ZioJdbcContext.this.underlying.BatchGroupReturning]], extractor)(info, dc))
 
   def prepareQuery(sql: String, prepare: Prepare)(info: ExecutionInfo, dc: DatasourceContext): QIO[PreparedStatement] =
-    underlying.prepareQuery(sql, prepare)(info, dc).onDataSource
+    onConnection(underlying.prepareQuery(sql, prepare)(info, dc))
 
   def prepareAction(sql: String, prepare: Prepare)(info: ExecutionInfo, dc: DatasourceContext): QIO[PreparedStatement] =
-    underlying.prepareAction(sql, prepare)(info, dc).onDataSource
+    onConnection(underlying.prepareAction(sql, prepare)(info, dc))
 
   def prepareBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: DatasourceContext): QIO[List[PreparedStatement]] =
-    underlying.prepareBatchAction(groups.asInstanceOf[List[ZioJdbcContext.this.underlying.BatchGroup]])(info, dc).onDataSource
+    onConnection(underlying.prepareBatchAction(groups.asInstanceOf[List[ZioJdbcContext.this.underlying.BatchGroup]])(info, dc))
+
+  /**
+   * Execute instructions in a transaction. For example, to add a Person row to the database and return
+   * the contents of the Person table immediately after that:
+   * {{
+   *   val a = run(query[Person].insert(Person(...)): ZIO[Has[DataSource with Closable], SQLException, Long]
+   *   val b = run(query[Person]): ZIO[Has[DataSource with Closable], SQLException, Person]
+   *   transaction(a *> b): ZIO[Has[DataSource with Closable], SQLException, Person]
+   * }}
+   */
+  def transaction[R <: Has[DataSource with Closeable], A](op: ZIO[R, Throwable, A]): ZIO[R, Throwable, A] =
+    currentConnection.get.flatMap {
+      // We can just return the op in the case that there is already a connection set on the fiber ref
+      // because the op is execute___ which will lookup the connection from the fiber ref via onConnection/onConnectionStream
+      // This will typically happen for nested transactions e.g. transaction(transaction(a *> b) *> c)
+      case Some(connection) => op
+      case None =>
+        val connection = for {
+          env        <- ZIO.service[DataSource with Closeable].toManaged_
+          connection <- managedBestEffort(ZIO.effect(env.getConnection))
+          _          <- ZManaged.make(currentConnection.set(Some(connection)))(_ => currentConnection.set(None))
+        } yield ()
+        connection.use_(op).refineToOrDie[SQLException]
+    }
+
+  private def onConnection[T](qlio: ZIO[Has[Connection], SQLException, T]): ZIO[Has[DataSource with Closeable], SQLException, T] =
+    currentConnection.get.flatMap {
+      case Some(connection) =>
+        qlio.provide(Has(connection))
+      case None =>
+        qlio.onDataSource
+    }
+
+  private def onConnectionStream[T](qstream: ZStream[Has[Connection], SQLException, T]): ZStream[Has[DataSource with Closeable], SQLException, T] =
+    ZStream.fromEffect(currentConnection.get).flatMap {
+      case Some(connection) =>
+        qstream.provide(Has(connection))
+      case None =>
+        qstream.provideLayer(DataSourceLayer.live).refineToOrDie[SQLException]
+    }
 }
