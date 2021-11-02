@@ -7,7 +7,7 @@ import io.getquill.context.{ ExecutionInfo, PrepareContext, StreamingContext, Tr
 import io.getquill.{ NamingStrategy, ReturnAction }
 import zio.Exit.{ Failure, Success }
 import zio.stream.ZStream
-import zio.{ Cause, FiberRef, Has, Runtime, UIO, ZIO, ZManaged }
+import zio.{ Cause, FiberRef, Has, Runtime, Task, UIO, ZIO, ZManaged }
 
 import java.io.Closeable
 import java.sql.{ Array => _, _ }
@@ -130,38 +130,29 @@ abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] ext
       case None =>
         val connection = for {
           env <- ZIO.service[DataSource with Closeable].toManaged_
-          connection <- managedBestEffort(ZIO.effect(env.getConnection))
+          connection <- managedBestEffort(Task(env.getConnection))
           // Get the current value of auto-commit
-          prevAutoCommit <- ZIO.effect(connection.getAutoCommit).toManaged_
+          prevAutoCommit <- Task(connection.getAutoCommit).toManaged_
           // Disable auto-commit since we need to be able to roll back. Once everything is done, set it
           // to whatever the previous value was.
-          _ <- ZManaged.make(ZIO.effect(connection.setAutoCommit(false))) { _ =>
-            ZIO.effect(connection.setAutoCommit(prevAutoCommit)).orDie
-          }
-          _ <- ZManaged.make(currentConnection.set(Some(connection))) { _ =>
-            // Note. Do we really need to fail the fiber if the auto-commit reset does not happen?
-            // Would hikari do this for us anyway
-            currentConnection.set(None)
-            // also works here
-            // *> ZIO.effect(connection.setAutoCommit(prevAutoCommit)).orDie
-          }
-          // TODO Ask Adam about this, this always has to happen when the currentConnection variable is unset
-          //      (usually right before the connection is returned to the pool). Why wouldn't it work if below?
-
-          _ <- op.onExit {
-            case Success(_) =>
-              UIO(connection.commit())
-            case Failure(cause) =>
-              UIO(connection.rollback()).foldCauseM(
-                // NOTE: cause.flatMap(Cause.die) means wrap up the throwable failures into die failures, can only do if E param is Throwable (can also do .orDie at the end)
-                rollbackFailCause => ZIO.halt(cause.flatMap(Cause.die) ++ rollbackFailCause),
-                _ => ZIO.halt(cause.flatMap(Cause.die)) // or ZIO.halt(cause).orDie
-              )
-          }.toManaged_
-          // works if this is after op.onExit or in the release of the ZManaged that controls currentConnection
-          // _ <- ZIO.effect(connection.setAutoCommit(prevAutoCommit)).toManaged_
+          _ <- ZManaged.make(Task(connection.setAutoCommit(false)))(_ => Task(connection.setAutoCommit(prevAutoCommit)).orDie)
+          _ <- ZManaged.make(currentConnection.set(Some(connection)))(_ => currentConnection.set(None))
+          // Commit the action once done or rollback if failed
+          _ <- rollbackOnFail(op)(connection).toManaged_
         } yield ()
         connection.use_(op)
+    }
+
+  def rollbackOnFail[R, A](op: ZIO[R, Throwable, A])(connection: Connection): ZIO[R, Throwable, A] =
+    op.onExit {
+      case Success(_) =>
+        UIO(connection.commit())
+      case Failure(cause) =>
+        UIO(connection.rollback()).foldCauseM(
+          // NOTE: cause.flatMap(Cause.die) means wrap up the throwable failures into die failures, can only do if E param is Throwable (can also do .orDie at the end)
+          rollbackFailCause => ZIO.halt(cause.flatMap(Cause.die) ++ rollbackFailCause),
+          _ => ZIO.halt(cause.flatMap(Cause.die)) // or ZIO.halt(cause).orDie
+        )
     }
 
   private def onConnection[T](qlio: ZIO[Has[Connection], SQLException, T]): ZIO[Has[DataSource with Closeable], SQLException, T] =
