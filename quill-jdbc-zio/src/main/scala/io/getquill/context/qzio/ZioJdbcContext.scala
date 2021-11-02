@@ -5,12 +5,14 @@ import io.getquill.context.jdbc.JdbcComposition
 import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.context.{ ExecutionInfo, PrepareContext, StreamingContext, TranslateContextMacro }
 import io.getquill.{ NamingStrategy, ReturnAction }
+import zio.Exit.{ Failure, Success }
 import zio.stream.ZStream
-import zio.{ FiberRef, Has, Runtime, ZIO, ZManaged }
+import zio.{ Cause, FiberRef, Has, Runtime, UIO, ZIO, ZManaged }
 
 import java.io.Closeable
 import java.sql.{ Array => _, _ }
 import javax.sql.DataSource
+import scala.reflect.ClassTag
 import scala.util.Try
 
 /**
@@ -74,7 +76,7 @@ abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] ext
   override def probe(sql: String): Try[_] = underlying.probe(sql)
 
   def executeAction[T](sql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: DatasourceContext): QIO[Long] =
-    underlying.executeAction[T](sql, prepare)(info, dc).onDataSource
+    onConnection(underlying.executeAction[T](sql, prepare)(info, dc))
 
   def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext): QIO[List[T]] =
     onConnection(underlying.executeQuery[T](sql, prepare, extractor)(info, dc))
@@ -123,17 +125,37 @@ abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] ext
       // We can just return the op in the case that there is already a connection set on the fiber ref
       // because the op is execute___ which will lookup the connection from the fiber ref via onConnection/onConnectionStream
       // This will typically happen for nested transactions e.g. transaction(transaction(a *> b) *> c)
+      // TODO this needs to be simpleBlocking
       case Some(connection) => op
       case None =>
         val connection = for {
-          env        <- ZIO.service[DataSource with Closeable].toManaged_
+          env <- ZIO.service[DataSource with Closeable].toManaged_
           connection <- managedBestEffort(ZIO.effect(env.getConnection))
-          _          <- ZManaged.make(currentConnection.set(Some(connection)))(_ => currentConnection.set(None))
+          prevAutoCommit <- ZIO.effect(connection.getAutoCommit).toManaged_
+          _ <- ZIO.effect(connection.setAutoCommit(false)).toManaged_
+          _ <- ZManaged.make(currentConnection.set(Some(connection)))(_ =>
+            // Note. Do we really need to fail the fiber if the auto-commit reset does not happen?
+            // Would hikari do this for us anyway
+            currentConnection.set(None) *> ZIO.effect(connection.setAutoCommit(prevAutoCommit)).orDie)
+          // TODO Ask Adam about this, this always has to happen when the currentConnection variable is unset
+          //      (usually right before the connection is returned to the pool). Why wouldn't it work if below?
+          //_ <- ZIO.effect(connection.setAutoCommit(prevAutoCommit)).toManaged_
+          _ <- op.onExit {
+            case Success(_) =>
+              UIO(connection.commit())
+            case Failure(cause) =>
+              UIO(connection.rollback()).foldCauseM(
+                // NOTE: cause.flatMap(Cause.die) means wrap up the throwable failures into die failures, can only do if E param is Throwable (can also do .orDie at the end)
+                rollbackFailCause => ZIO.halt(cause.flatMap(Cause.die) ++ rollbackFailCause),
+                _ => ZIO.halt(cause.flatMap(Cause.die)) // or ZIO.halt(cause).orDie
+              )
+          }.toManaged_
         } yield ()
-        connection.use_(op).refineToOrDie[SQLException]
+        connection.use_(op)
     }
 
   private def onConnection[T](qlio: ZIO[Has[Connection], SQLException, T]): ZIO[Has[DataSource with Closeable], SQLException, T] =
+    // TODO this needs to be simpleBlocking
     currentConnection.get.flatMap {
       case Some(connection) =>
         qlio.provide(Has(connection))
@@ -142,6 +164,7 @@ abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] ext
     }
 
   private def onConnectionStream[T](qstream: ZStream[Has[Connection], SQLException, T]): ZStream[Has[DataSource with Closeable], SQLException, T] =
+    // TODO this needs to use the blocking stream runner
     ZStream.fromEffect(currentConnection.get).flatMap {
       case Some(connection) =>
         qstream.provide(Has(connection))
