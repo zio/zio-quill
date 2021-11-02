@@ -131,12 +131,20 @@ abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] ext
         val connection = for {
           env <- ZIO.service[DataSource with Closeable].toManaged_
           connection <- managedBestEffort(ZIO.effect(env.getConnection))
+          // Get the current value of auto-commit
           prevAutoCommit <- ZIO.effect(connection.getAutoCommit).toManaged_
-          _ <- ZIO.effect(connection.setAutoCommit(false)).toManaged_
-          _ <- ZManaged.make(currentConnection.set(Some(connection)))(_ =>
+          // Disable auto-commit since we need to be able to roll back. Once everything is done, set it
+          // to whatever the previous value was.
+          _ <- ZManaged.make(ZIO.effect(connection.setAutoCommit(false))) { _ =>
+            ZIO.effect(connection.setAutoCommit(prevAutoCommit)).orDie
+          }
+          _ <- ZManaged.make(currentConnection.set(Some(connection))) { _ =>
             // Note. Do we really need to fail the fiber if the auto-commit reset does not happen?
             // Would hikari do this for us anyway
-            currentConnection.set(None) *> ZIO.effect(connection.setAutoCommit(prevAutoCommit)).orDie)
+            currentConnection.set(None)
+            // also works here
+            // *> ZIO.effect(connection.setAutoCommit(prevAutoCommit)).orDie
+          }
           // TODO Ask Adam about this, this always has to happen when the currentConnection variable is unset
           //      (usually right before the connection is returned to the pool). Why wouldn't it work if below?
 
