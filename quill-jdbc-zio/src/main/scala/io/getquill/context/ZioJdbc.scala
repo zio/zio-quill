@@ -6,6 +6,7 @@ import io.getquill.context.qzio.ImplicitSyntax.Implicit
 import zio.{ Has, IO, Task, ZIO, ZLayer, ZManaged }
 import zio.stream.ZStream
 import io.getquill.util.{ ContextLogger, LoadConfig }
+import zio.blocking.Blocking
 
 import java.io.Closeable
 import java.sql.{ Connection, SQLException }
@@ -148,9 +149,20 @@ object ZioJdbc {
    * release a stale connection) which will eventually cause other operations (i.e. future reads/writes) to fail
    * that have not occurred yet.
    */
-  def managedBestEffort[R, E, A <: AutoCloseable](effect: ZIO[R, E, A]) =
+  private[getquill] def managedBestEffort[R, E, A <: AutoCloseable](effect: ZIO[R, E, A]) =
     ZManaged.make(effect)(resource =>
-      ZIO.effect(resource.close()).tapError(e => ZIO.effect(logger.underlying.error(s"close() of resource failed", e)).ignore).ignore)
+      blockingEffect(resource.close()).tapError(e => ZIO.effect(logger.underlying.error(s"close() of resource failed", e)).ignore).ignore)
+
+  private[getquill] val streamBlocker: ZStream[Any, Nothing, Any] =
+    ZStream.managed(zio.blocking.blockingExecutor.toManaged_.flatMap { executor =>
+      ZManaged.lock(executor)
+    }).provideLayer(Blocking.live)
+
+  private[getquill] def withBlocking[R, E, A](zio: ZIO[R, E, A]): ZIO[R, E, A] =
+    Blocking.Service.live.blocking(zio)
+
+  private[getquill] def blockingEffect[A](value: => A): Task[A] =
+    Blocking.Service.live.blocking(Task(value))
 
   private[getquill] val logger = ContextLogger(ZioJdbc.getClass)
 }

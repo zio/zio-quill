@@ -7,12 +7,11 @@ import io.getquill.context.{ ExecutionInfo, PrepareContext, StreamingContext, Tr
 import io.getquill.{ NamingStrategy, ReturnAction }
 import zio.Exit.{ Failure, Success }
 import zio.stream.ZStream
-import zio.{ Cause, FiberRef, Has, Runtime, UIO, ZIO, ZManaged }
+import zio.{ FiberRef, Has, Runtime, UIO, ZIO, ZManaged }
 
 import java.io.Closeable
 import java.sql.{ Array => _, _ }
 import javax.sql.DataSource
-import scala.reflect.ClassTag
 import scala.util.Try
 
 /**
@@ -142,13 +141,13 @@ abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] ext
       case None =>
         val connection = for {
           env <- ZIO.service[DataSource with Closeable].toManaged_
-          connection <- managedBestEffort(ZIO.effect(env.getConnection))
+          connection <- managedBestEffort(blockingEffect(env.getConnection))
           // Get the current value of auto-commit
-          prevAutoCommit <- ZIO.effect(connection.getAutoCommit).toManaged_
+          prevAutoCommit <- blockingEffect(connection.getAutoCommit).toManaged_
           // Disable auto-commit since we need to be able to roll back. Once everything is done, set it
           // to whatever the previous value was.
-          _ <- ZManaged.make(ZIO.effect(connection.setAutoCommit(false))) { _ =>
-            ZIO.effect(connection.setAutoCommit(prevAutoCommit)).orDie
+          _ <- ZManaged.make(blockingEffect(connection.setAutoCommit(false))) { _ =>
+            blockingEffect(connection.setAutoCommit(prevAutoCommit)).orDie
           }
           _ <- ZManaged.make(currentConnection.set(Some(connection))) { _ =>
             // Note. We are failing the fiber if auto-commit reset fails. For some circumstances this may be too aggresive.
@@ -158,8 +157,8 @@ abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] ext
           }
           // Once the `use` of this outer-ZManaged is done, rollback the connection if needed
           _ <- ZManaged.finalizerExit {
-            case Success(_)     => UIO(connection.commit())
-            case Failure(cause) => UIO(connection.rollback())
+            case Success(_)     => withBlocking(UIO(connection.commit()))
+            case Failure(cause) => withBlocking(UIO(connection.rollback()))
           }
         } yield ()
 
@@ -167,17 +166,15 @@ abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] ext
     }
 
   private def onConnection[T](qlio: ZIO[Has[Connection], SQLException, T]): ZIO[Has[DataSource with Closeable], SQLException, T] =
-    // TODO this needs to be simpleBlocking
     currentConnection.get.flatMap {
       case Some(connection) =>
-        qlio.provide(Has(connection))
+        withBlocking(qlio.provide(Has(connection)))
       case None =>
-        qlio.onDataSource
+        withBlocking(qlio.onDataSource)
     }
 
   private def onConnectionStream[T](qstream: ZStream[Has[Connection], SQLException, T]): ZStream[Has[DataSource with Closeable], SQLException, T] =
-    // TODO this needs to use the blocking stream runner
-    ZStream.fromEffect(currentConnection.get).flatMap {
+    streamBlocker *> ZStream.fromEffect(currentConnection.get).flatMap {
       case Some(connection) =>
         qstream.provide(Has(connection))
       case None =>
