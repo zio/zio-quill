@@ -114,11 +114,23 @@ abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] ext
   /**
    * Execute instructions in a transaction. For example, to add a Person row to the database and return
    * the contents of the Person table immediately after that:
-   * {{
+   * {{{
    *   val a = run(query[Person].insert(Person(...)): ZIO[Has[DataSource with Closable], SQLException, Long]
    *   val b = run(query[Person]): ZIO[Has[DataSource with Closable], SQLException, Person]
    *   transaction(a *> b): ZIO[Has[DataSource with Closable], SQLException, Person]
-   * }}
+   * }}}
+   *
+   * The order of operations run in the case that a new connection needs to be aquired are as follows:
+   * <pre>
+   *   getDS from env,
+   *   acquire-connection,
+   *     set-no-autocommit(connection),
+   *       put-into-fiberref(connection),
+   *         op - the corresponding execute_ method which will execute and pull connection from the fiberref,
+   *       remove-from-fiberref(connection),
+   *     set-prev-autocommit(connection),
+   *   release-conn
+   * </pre>
    */
   def transaction[R <: Has[DataSource with Closeable], A](op: ZIO[R, Throwable, A]): ZIO[R, Throwable, A] =
     currentConnection.get.flatMap {
@@ -139,28 +151,18 @@ abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] ext
             ZIO.effect(connection.setAutoCommit(prevAutoCommit)).orDie
           }
           _ <- ZManaged.make(currentConnection.set(Some(connection))) { _ =>
-            // Note. Do we really need to fail the fiber if the auto-commit reset does not happen?
-            // Would hikari do this for us anyway
+            // Note. We are failing the fiber if auto-commit reset fails. For some circumstances this may be too aggresive.
+            // If the connection pool e.g. Hikari resets this property for a recycled connection anyway doing it here
+            // might not be necessary
             currentConnection.set(None)
-            // also works here
-            // *> ZIO.effect(connection.setAutoCommit(prevAutoCommit)).orDie
           }
-          // TODO Ask Adam about this, this always has to happen when the currentConnection variable is unset
-          //      (usually right before the connection is returned to the pool). Why wouldn't it work if below?
-
-          _ <- op.onExit {
-            case Success(_) =>
-              UIO(connection.commit())
-            case Failure(cause) =>
-              UIO(connection.rollback()).foldCauseM(
-                // NOTE: cause.flatMap(Cause.die) means wrap up the throwable failures into die failures, can only do if E param is Throwable (can also do .orDie at the end)
-                rollbackFailCause => ZIO.halt(cause.flatMap(Cause.die) ++ rollbackFailCause),
-                _ => ZIO.halt(cause.flatMap(Cause.die)) // or ZIO.halt(cause).orDie
-              )
-          }.toManaged_
-          // works if this is after op.onExit or in the release of the ZManaged that controls currentConnection
-          // _ <- ZIO.effect(connection.setAutoCommit(prevAutoCommit)).toManaged_
+          // Once the `use` of this outer-ZManaged is done, rollback the connection if needed
+          _ <- ZManaged.finalizerExit {
+            case Success(_)     => UIO(connection.commit())
+            case Failure(cause) => UIO(connection.rollback())
+          }
         } yield ()
+
         connection.use_(op)
     }
 

@@ -1,10 +1,8 @@
 package io.getquill.postgres
 
-import io.getquill.{ EntityQuery, Prefix, ZioSpec }
-import zio.{ Task, ZIO }
 import io.getquill.context.ZioJdbc._
-
-import java.sql.SQLException
+import io.getquill.{ Prefix, ZioSpec }
+import zio.{ Task, ZIO }
 
 class ZioJdbcContextSpec extends ZioSpec {
 
@@ -35,16 +33,19 @@ class ZioJdbcContextSpec extends ZioSpec {
         r <- testContext.run(qr1)
       } yield (seq.map(_.i), r.map(_.i))).runSyncUnsafe() mustEqual ((List(33), List(33)))
     }
-    "failure" in {
+    "failure - nested" in {
       (for {
         _ <- testContext.run(qr1.delete)
         e <- testContext.transaction {
-          ZIO.collectAll(Seq(
-            testContext.run(qr1.insert(_.i -> 18)),
-            Task {
-              throw new IllegalStateException
+          testContext.run(qr1.insert(_.i -> 36)) *>
+            testContext.transaction {
+              ZIO.collectAll(Seq(
+                testContext.run(qr1.insert(_.i -> 18)),
+                Task {
+                  throw new IllegalStateException
+                }
+              ))
             }
-          ))
         }.catchSome {
           case e: Exception => Task(e.getClass.getSimpleName)
         }
