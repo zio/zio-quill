@@ -123,11 +123,11 @@ run(people)
   .provide(Has(session))
 ```
 
-The ZioCassandraSession constructors however are all still fine to use:
+The CassandraZioSession constructors however are all still fine to use:
 
 ```scala
  val zioSessionLayer: ZLayer[Any, Throwable, Has[CassandraZioSession]] =
-   ZioCassandraSession.fromPrefix("testStreamDB")
+   CassandraZioSession.fromPrefix("testStreamDB")
 run(query[Person])
   .provideCustomLayer(zioSessionLayer)
 ```
@@ -170,7 +170,7 @@ Similarly for quill-cassandra-zio
 - This state was pulled out as separate classes e.g. `SyncCache`, `AsyncFutureCache` (the ZIO equivalent of which is `AsyncZioCache`). 
 - Then a `CassandraZioSession` is created which extends these state-containers however, it is not directly a base-class of the `CassandraZioContext`.
 - Instead it is returned as a dependency from the CassandraZioContext run/prepare commands as part of the type 
-  `ZIO[Has[ZioCassandraSession] with Blocking, Throwable, T]` (a.k.a `CIO[T]`). This allows the primary context CassandraZioContext to be stateless.
+  `ZIO[Has[CassandraZioSession] with Blocking, Throwable, T]` (a.k.a `CIO[T]`). This allows the primary context CassandraZioContext to be stateless.
 
 # 3.6.1
 
