@@ -8,7 +8,6 @@ import zio.{ Has, ZIO, ZLayer, ZManaged }
 
 case class CassandraZioSession(
   override val session:                    CqlSession,
-  override val keyspace:                   String,
   override val preparedStatementCacheSize: Long
 ) extends CassandraSession with SyncCache with AsyncFutureCache with AutoCloseable
 
@@ -18,7 +17,7 @@ object CassandraZioSession {
       config <- ZManaged.service[CassandraContextConfig]
       // Evaluate the configuration inside of 'effect' and then create the session from it
       session <- ZManaged.fromAutoCloseable(
-        ZIO.effect(CassandraZioSession(config.session, config.keyspace, config.preparedStatementCacheSize))
+        ZIO.effect(CassandraZioSession(config.session, config.preparedStatementCacheSize))
       )
     } yield session).toLayer
 

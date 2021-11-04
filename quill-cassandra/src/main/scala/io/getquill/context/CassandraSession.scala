@@ -2,17 +2,16 @@ package io.getquill.context
 
 import com.datastax.oss.driver.api.core.`type`.UserDefinedType
 import com.datastax.oss.driver.api.core.data.UdtValue
-import com.datastax.oss.driver.api.core.{ CqlIdentifier, CqlSession, CqlSessionBuilder }
+import com.datastax.oss.driver.api.core.CqlSession
 import io.getquill.util.Messages.fail
 
 import scala.jdk.CollectionConverters._
+import scala.compat.java8.OptionConverters._
 
 trait CassandraSession extends UdtValueLookup {
   def session: CqlSession
-  def keyspace: String
   def preparedStatementCacheSize: Long
-
-  //lazy val session = session
+  def keyspace: Option[String] = session.getKeyspace.asScala.map(_.toString)
 
   val udtMetadata: Map[String, List[UserDefinedType]] = session.getMetadata.getKeyspaces.asScala.toList
     .map(_._2)
@@ -38,4 +37,5 @@ trait CassandraSession extends UdtValueLookup {
 
 trait UdtValueLookup {
   def udtValueOf(udtName: String, keyspace: Option[String] = None): UdtValue = throw new IllegalStateException("UDTs are not supported by this context")
+  def session: CqlSession
 }

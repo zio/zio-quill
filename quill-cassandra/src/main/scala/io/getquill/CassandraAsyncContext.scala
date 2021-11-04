@@ -15,13 +15,12 @@ import scala.concurrent.{ ExecutionContext, Future }
 class CassandraAsyncContext[N <: NamingStrategy](
   naming:                     N,
   session:                    CqlSession,
-  keyspace:                   String,
   preparedStatementCacheSize: Long
 )
-  extends CassandraCqlSessionContext[N](naming, session, keyspace, preparedStatementCacheSize)
+  extends CassandraCqlSessionContext[N](naming, session, preparedStatementCacheSize)
   with ScalaFutureIOMonad {
 
-  def this(naming: N, config: CassandraContextConfig) = this(naming, config.session, config.keyspace, config.preparedStatementCacheSize)
+  def this(naming: N, config: CassandraContextConfig) = this(naming, config.session, config.preparedStatementCacheSize)
 
   def this(naming: N, config: Config) = this(naming, CassandraContextConfig(config))
 
@@ -43,12 +42,6 @@ class CassandraAsyncContext[N <: NamingStrategy](
 
   def executeQuery[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext)(implicit executionContext: ExecutionContext): Result[RunQueryResult[T]] = {
     val statement = prepareAsyncAndGetStatement(cql, prepare, this, logger)
-
-    //statement.flatMap(st => session.executeAsync(st).asScala)
-    //.map(result=>_.all.asScala.toList.map(row => extractor(row, this)))
-    //TODO: 3.x implementation collected all data to memory - technically no difference between sync and async execution
-    //      4x returns data (rows) asynchronously row by row. Details:
-    //      https://docs.datastax.com/en/developer/java-driver/2.1/manual/async/#async-paging
     statement.map(st => session.execute(st).asScala.toList.map(row => extractor(row, this)))
   }
 
@@ -69,4 +62,5 @@ class CassandraAsyncContext[N <: NamingStrategy](
       }
     }.map(_ => ())
   }
+
 }

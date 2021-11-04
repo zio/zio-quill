@@ -12,7 +12,7 @@ trait ZioCassandraSpec extends Spec {
   override def beforeAll = {
     super.beforeAll()
     val config = CassandraContextConfig(LoadConfig("testStreamDB"))
-    pool = CassandraZioSession(config.session, config.keyspace, config.preparedStatementCacheSize)
+    pool = CassandraZioSession(config.session, config.preparedStatementCacheSize)
 
   }
 

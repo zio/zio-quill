@@ -1,6 +1,7 @@
 package io.getquill
 
-import com.datastax.driver.core.{ Cluster, ResultSet, Row }
+import com.datastax.oss.driver.api.core.CqlSession
+import com.datastax.oss.driver.api.core.cql.{ AsyncResultSet, Row }
 import com.typesafe.config.Config
 import io.getquill.context.ExecutionInfo
 import io.getquill.context.cassandra.CqlIdiom
@@ -10,20 +11,19 @@ import io.getquill.context.cassandra.util.FutureConversions._
 import monix.eval.Task
 import monix.execution.Scheduler
 import monix.reactive.Observable
-
+import scala.compat.java8.FutureConverters._
 import scala.jdk.CollectionConverters._
 import scala.util.{ Failure, Success }
 
 class CassandraMonixContext[N <: NamingStrategy](
   naming:                     N,
-  cluster:                    Cluster,
-  keyspace:                   String,
+  session:                    CqlSession,
   preparedStatementCacheSize: Long
 )
-  extends CassandraCqlSessionContext[N](naming, cluster, keyspace, preparedStatementCacheSize)
+  extends CassandraCqlSessionContext[N](naming, session, preparedStatementCacheSize)
   with MonixContext[CqlIdiom, N] {
 
-  def this(naming: N, config: CassandraContextConfig) = this(naming, config.session, config.keyspace, config.preparedStatementCacheSize)
+  def this(naming: N, config: CassandraContextConfig) = this(naming, config.session, config.preparedStatementCacheSize)
   def this(naming: N, config: Config) = this(naming, CassandraContextConfig(config))
   def this(naming: N, configPrefix: String) = this(naming, LoadConfig(configPrefix))
 
@@ -37,22 +37,20 @@ class CassandraMonixContext[N <: NamingStrategy](
   override type RunQuerySingleResult[T] = T
   override type RunBatchActionResult = Unit
 
-  protected def page(rs: ResultSet): Task[Iterable[Row]] = Task.defer {
-    val available = rs.getAvailableWithoutFetching
-    val page = rs.asScala.take(available)
-
-    if (rs.isFullyFetched)
-      Task.now(page)
-    else
-      Task.fromFuture(rs.fetchMoreResults().asScalaWithDefaultGlobal).map(_ => page)
-  }
+  protected def page(rs: AsyncResultSet): Task[Iterable[Row]] =
+    Task.defer {
+      val page = rs.currentPage().asScala
+      if (rs.hasMorePages)
+        Task.from(rs.fetchNextPage().toCompletableFuture.toScala).map(_ => page)
+      else
+        Task.now(page)
+    }
 
   def streamQuery[T](fetchSize: Option[Int], cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext): Observable[T] = {
-
     Observable
       .fromTask(prepareRowAndLog(cql, prepare))
-      .mapEvalF(p => session.executeAsync(p).asScalaWithDefaultGlobal)
-      .flatMap(Observable.fromAsyncStateAction((rs: ResultSet) => page(rs).map((_, rs)))(_))
+      .mapEvalF(p => session.executeAsync(p).toScala)
+      .flatMap(Observable.fromAsyncStateAction((rs: AsyncResultSet) => page(rs).map((_, rs)))(_))
       .takeWhile(_.nonEmpty)
       .flatMap(Observable.fromIterable)
       .map(row => extractor(row, this))
@@ -68,7 +66,7 @@ class CassandraMonixContext[N <: NamingStrategy](
 
   def executeAction[T](cql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: DatasourceContext): Task[Unit] = {
     prepareRowAndLog(cql, prepare)
-      .flatMap(r => Task.fromFuture(session.executeAsync(r).asScalaWithDefaultGlobal))
+      .flatMap(r => Task.fromFuture(session.executeAsync(r).toScala))
       .map(_ => ())
   }
 

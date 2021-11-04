@@ -61,7 +61,7 @@ lazy val codegenModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
 )
 
 lazy val bigdataModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
-  `quill-cassandra`, `quill-cassandra-lagom`, `quill-cassandra-monix`, `quill-cassandra-zio`, `quill-orientdb`, `quill-spark`
+  `quill-cassandra`, `quill-cassandra-monix`, `quill-cassandra-zio`, `quill-orientdb`, `quill-spark`
 )
 
 lazy val allModules =
@@ -613,8 +613,6 @@ lazy val `quill-cassandra` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        //"com.datastax.cassandra" %  "cassandra-driver-core" % "3.7.2"
-        // https://mvnrepository.com/artifact/com.datastax.oss/java-driver-core
         "com.datastax.oss" % "java-driver-core" % "4.13.0",
         "org.scala-lang.modules" %% "scala-java8-compat" % "1.0.1"
       )
@@ -662,11 +660,15 @@ lazy val `quill-cassandra-lagom` =
         Seq(
           "org.scala-lang.modules" %% "scala-collection-compat" % "2.4.4",
           "com.lightbend.lagom" %% "lagom-scaladsl-persistence-cassandra" % lagomVersion % Provided,
-          "com.lightbend.lagom" %% "lagom-scaladsl-testkit" % lagomVersion % Test
+          "com.lightbend.lagom" %% "lagom-scaladsl-testkit" % lagomVersion % Test,
+          "com.datastax.cassandra" %  "cassandra-driver-core" % "3.7.2",
+          // lagom uses datastax 3.x driver - not compatible with 4.x in API level
+          "io.getquill" %% "quill-cassandra" % "3.10.0" % "compile->compile"
         ) ++ versionSpecificDependencies
       }
     )
-    .dependsOn(`quill-cassandra` % "compile->compile;test->test")
+    //.dependsOn(`quill-cassandra` % "compile->compile;test->test")
+     .dependsOn(`quill-core`.jvm % "compile->compile;test->test")
     .enablePlugins(MimaPlugin)
 
 

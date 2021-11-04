@@ -1,6 +1,6 @@
 package io.getquill
 
-import com.datastax.oss.driver.api.core.{ CqlSession, CqlSessionBuilder }
+import com.datastax.oss.driver.api.core.CqlSession
 import com.typesafe.config.Config
 import io.getquill.context.ExecutionInfo
 import io.getquill.monad.SyncIOMonad
@@ -11,13 +11,12 @@ import scala.jdk.CollectionConverters._
 class CassandraSyncContext[N <: NamingStrategy](
   naming:                     N,
   session:                    CqlSession,
-  keyspace:                   String,
   preparedStatementCacheSize: Long
 )
-  extends CassandraCqlSessionContext[N](naming, session, keyspace, preparedStatementCacheSize)
+  extends CassandraCqlSessionContext[N](naming, session, preparedStatementCacheSize)
   with SyncIOMonad {
 
-  def this(naming: N, config: CassandraContextConfig) = this(naming, config.session, config.keyspace, config.preparedStatementCacheSize)
+  def this(naming: N, config: CassandraContextConfig) = this(naming, config.session, config.preparedStatementCacheSize)
   def this(naming: N, config: Config) = this(naming, CassandraContextConfig(config))
   def this(naming: N, configPrefix: String) = this(naming, LoadConfig(configPrefix))
 
