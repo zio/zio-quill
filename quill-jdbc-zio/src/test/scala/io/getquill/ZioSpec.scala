@@ -26,6 +26,9 @@ trait ZioSpec extends Spec with BeforeAndAfterAll {
     pool.close()
   }
 
+  def accumulateDS[T](stream: ZStream[Has[DataSource with Closeable], Throwable, T]): ZIO[Has[DataSource with Closeable], Throwable, List[T]] =
+    stream.run(Sink.collectAll).map(_.toList)
+
   def accumulate[T](stream: ZStream[Has[Connection], Throwable, T]): ZIO[Has[Connection], Throwable, List[T]] =
     stream.run(Sink.collectAll).map(_.toList)
 
