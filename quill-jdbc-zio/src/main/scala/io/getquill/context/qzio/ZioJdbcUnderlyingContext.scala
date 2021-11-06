@@ -88,18 +88,20 @@ abstract class ZioJdbcUnderlyingContext[Dialect <: SqlIdiom, Naming <: NamingStr
     } yield r
   }
 
-  def transaction[A](f: ZIO[Has[Connection], Throwable, A]): ZIO[Has[Connection], Throwable, A] = {
-    withBlocking(withoutAutoCommit(ZIO.environment[Has[Connection]].flatMap(conn =>
-      f.onExit {
-        case Success(_) =>
-          UIO(conn.get[Connection].commit())
-        case Failure(cause) =>
-          UIO(conn.get[Connection].rollback()).foldCauseM(
-            // NOTE: cause.flatMap(Cause.die) means wrap up the throwable failures into die failures, can only do if E param is Throwable (can also do .orDie at the end)
-            rollbackFailCause => ZIO.halt(cause.flatMap(Cause.die) ++ rollbackFailCause),
-            _ => ZIO.halt(cause.flatMap(Cause.die)) // or ZIO.halt(cause).orDie
-          )
-      })))
+  def transaction[R <: Has[Connection], A](f: ZIO[R, Throwable, A]): ZIO[R, Throwable, A] = {
+    ZIO.environment[R].flatMap(env =>
+      withBlocking(withoutAutoCommit(
+        f.onExit {
+          case Success(_) =>
+            UIO(env.get[Connection].commit())
+          case Failure(cause) =>
+            UIO(env.get[Connection].rollback()).foldCauseM(
+              // NOTE: cause.flatMap(Cause.die) means wrap up the throwable failures into die failures, can only do if E param is Throwable (can also do .orDie at the end)
+              rollbackFailCause => ZIO.halt(cause.flatMap(Cause.die) ++ rollbackFailCause),
+              _ => ZIO.halt(cause.flatMap(Cause.die)) // or ZIO.halt(cause).orDie
+            )
+        }.provide(env)
+      )))
   }
 
   def probingDataSource: Option[DataSource] = None

@@ -13,7 +13,7 @@ import javax.sql.DataSource
 case class Prefix(name: String)
 
 trait ZioSpec extends Spec with BeforeAndAfterAll {
-  def prefix: Prefix;
+  def prefix: Prefix
 
   var pool: DataSource with Closeable = _
 
