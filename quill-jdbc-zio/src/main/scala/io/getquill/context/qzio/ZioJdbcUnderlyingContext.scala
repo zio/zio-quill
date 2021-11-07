@@ -1,9 +1,9 @@
 package io.getquill.context.qzio
 
-import io.getquill.context.{ ContextEffect, ExecutionInfo, StreamingContext }
 import io.getquill.context.ZioJdbc._
 import io.getquill.context.jdbc.JdbcRunContext
 import io.getquill.context.sql.idiom.SqlIdiom
+import io.getquill.context.{ ContextEffect, ExecutionInfo, StreamingContext }
 import io.getquill.util.ContextLogger
 import io.getquill.{ NamingStrategy, ReturnAction }
 import zio.Exit.{ Failure, Success }
@@ -12,10 +12,8 @@ import zio.{ Cause, Has, Task, UIO, ZIO, ZManaged }
 
 import java.sql.{ Array => _, _ }
 import javax.sql.DataSource
-import scala.util.Try
-import zio.blocking.Blocking
-
 import scala.reflect.ClassTag
+import scala.util.Try
 
 abstract class ZioJdbcUnderlyingContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] extends ZioContext[Dialect, Naming]
   with JdbcRunContext[Dialect, Naming]
@@ -59,12 +57,9 @@ abstract class ZioJdbcUnderlyingContext[Dialect <: SqlIdiom, Naming <: NamingStr
 
   protected def withConnection[T](f: Connection => Result[T]): Result[T] = throw new IllegalArgumentException("Not Used")
 
-  private[getquill] def simpleBlocking[R, E, A](zio: ZIO[Has[R], E, A]): ZIO[Has[R], E, A] =
-    Blocking.Service.live.blocking(zio)
-
   // Primary method used to actually run Quill context commands query, insert, update, delete and others
   override protected def withConnectionWrapped[T](f: Connection => T): QLIO[T] =
-    simpleBlocking {
+    withBlocking {
       for {
         conn <- ZIO.environment[Has[Connection]]
         result <- sqlEffect(f(conn.get[Connection]))
@@ -94,7 +89,7 @@ abstract class ZioJdbcUnderlyingContext[Dialect <: SqlIdiom, Naming <: NamingStr
   }
 
   def transaction[A](f: ZIO[Has[Connection], Throwable, A]): ZIO[Has[Connection], Throwable, A] = {
-    simpleBlocking(withoutAutoCommit(ZIO.environment[Has[Connection]].flatMap(conn =>
+    withBlocking(withoutAutoCommit(ZIO.environment[Has[Connection]].flatMap(conn =>
       f.onExit {
         case Success(_) =>
           UIO(conn.get[Connection].commit())
@@ -219,11 +214,6 @@ abstract class ZioJdbcUnderlyingContext[Dialect <: SqlIdiom, Naming <: NamingStr
     // Run the chunked fetch on the blocking pool
     streamBlocker *> streamWithoutAutoCommit(typedStream).refineToOrDie[SQLException]
   }
-
-  val streamBlocker: ZStream[Any, Nothing, Any] =
-    ZStream.managed(zio.blocking.blockingExecutor.toManaged_.flatMap { executor =>
-      ZManaged.lock(executor)
-    }).provideLayer(Blocking.live)
 
   override private[getquill] def prepareParams(statement: String, prepare: Prepare): QLIO[Seq[String]] = {
     withConnectionWrapped { conn =>
