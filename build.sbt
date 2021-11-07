@@ -804,7 +804,7 @@ def excludePathsIfOracle(paths:Seq[String]) = {
 
 val scala_v_11 = "2.11.12"
 val scala_v_12 = "2.12.10"
-val scala_v_13 = "2.13.2"
+val scala_v_13 = "2.13.7"
 
 lazy val loggingSettings = Seq(
   libraryDependencies ++= Seq(
