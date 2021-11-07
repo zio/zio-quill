@@ -1,17 +1,15 @@
 package io.getquill.postgres
 
-import io.getquill.context.ZioJdbc._
 import io.getquill.{ Prefix, ZioSpec }
-import zio.{ Task, ZIO }
+import zio.{ Task, ZIO, ZLayer }
+
+import javax.sql.DataSource
 
 class ZioJdbcContextSpec extends ZioSpec {
 
   override def prefix: Prefix = Prefix("testPostgresDB")
   val context = testContext
   import testContext._
-
-  // TODO Transaction in transaction Spec
-  // TODO Streaming in transaction spec
 
   "provides transaction support" - {
     "success" in {
@@ -20,6 +18,18 @@ class ZioJdbcContextSpec extends ZioSpec {
         _ <- testContext.transaction { testContext.run(qr1.insert(_.i -> 33)) }
         r <- testContext.run(qr1)
       } yield r).runSyncUnsafe().map(_.i) mustEqual List(33)
+    }
+    "success - with dependency" in {
+      (for {
+        _ <- testContext.run(qr1.delete)
+        _ <- testContext.transaction {
+          for {
+            env <- ZIO.service[Int]
+            qry <- testContext.run(qr1.insert(_.i -> lift(env)))
+          } yield qry
+        }
+        r <- testContext.run(qr1)
+      } yield r).provideSomeLayer(ZLayer.service[DataSource] >>> ZLayer.succeed(33)).runSyncUnsafe().map(_.i) mustEqual List(33)
     }
     "success - stream" in {
       (for {
@@ -60,9 +70,9 @@ class ZioJdbcContextSpec extends ZioSpec {
       } yield r).runSyncUnsafe().map(_.i) mustEqual List(33)
     }
     "prepare" in {
-      testContext.underlying.prepareParams(
+      testContext.prepareParams(
         "select * from Person where name=? and age > ?", (ps, session) => (List("Sarah", 127), ps)
-      ).onDataSource.runSyncUnsafe() mustEqual List("127", "'Sarah'")
+      ).runSyncUnsafe() mustEqual List("127", "'Sarah'")
     }
   }
 }

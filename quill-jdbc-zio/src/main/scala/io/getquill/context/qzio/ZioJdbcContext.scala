@@ -9,7 +9,6 @@ import zio.Exit.{ Failure, Success }
 import zio.stream.ZStream
 import zio.{ FiberRef, Has, Runtime, UIO, ZIO, ZManaged }
 
-import java.io.Closeable
 import java.sql.{ Array => _, _ }
 import javax.sql.DataSource
 import scala.util.Try
@@ -24,7 +23,7 @@ import scala.util.Try
  * The type `QIO[T]` i.e. Quill-IO has been defined as an alias for `ZIO[Has[Connection], SQLException, T]`.
  *
  * Since in most JDBC use-cases, a connection-pool datasource i.e. Hikari is used it would actually
- * be much more useful to interact with `ZIO[Has[DataSource with Closeable], SQLException, T]`.
+ * be much more useful to interact with `ZIO[Has[DataSource], SQLException, T]`.
  * The extension method `.onDataSource` in `io.getquill.context.ZioJdbc.QuillZioExt` will perform this conversion
  * (for even more brevity use `onDS` which is an alias for this method).
  * {{
@@ -38,7 +37,6 @@ import scala.util.Try
  *   Runtime.default.unsafeRun(MyZioContext.run(query[Person]).provideLayer(zioDS))
  * }}
  */
-
 abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] extends ZioContext[Dialect, Naming]
   with JdbcComposition[Dialect, Naming]
   with StreamingContext[Dialect, Naming]
@@ -55,7 +53,7 @@ abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] ext
   override type RunBatchActionReturningResult[T] = List[T]
 
   override type Error = SQLException
-  override type Environment = Has[DataSource with Closeable]
+  override type Environment = Has[DataSource]
   override type PrepareRow = PreparedStatement
   override type ResultRow = ResultSet
 
@@ -110,13 +108,16 @@ abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] ext
   def prepareBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: DatasourceContext): QIO[List[PreparedStatement]] =
     onConnection(underlying.prepareBatchAction(groups.asInstanceOf[List[ZioJdbcContext.this.underlying.BatchGroup]])(info, dc))
 
+  private[getquill] def prepareParams(statement: String, prepare: Prepare): QIO[Seq[String]] =
+    onConnection(underlying.prepareParams(statement, prepare))
+
   /**
    * Execute instructions in a transaction. For example, to add a Person row to the database and return
    * the contents of the Person table immediately after that:
    * {{{
-   *   val a = run(query[Person].insert(Person(...)): ZIO[Has[DataSource with Closable], SQLException, Long]
-   *   val b = run(query[Person]): ZIO[Has[DataSource with Closable], SQLException, Person]
-   *   transaction(a *> b): ZIO[Has[DataSource with Closable], SQLException, Person]
+   *   val a = run(query[Person].insert(Person(...)): ZIO[Has[DataSource], SQLException, Long]
+   *   val b = run(query[Person]): ZIO[Has[DataSource], SQLException, Person]
+   *   transaction(a *> b): ZIO[Has[DataSource], SQLException, Person]
    * }}}
    *
    * The order of operations run in the case that a new connection needs to be aquired are as follows:
@@ -131,16 +132,15 @@ abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] ext
    *   release-conn
    * </pre>
    */
-  def transaction[R <: Has[DataSource with Closeable], A](op: ZIO[R, Throwable, A]): ZIO[R, Throwable, A] =
-    currentConnection.get.flatMap {
+  def transaction[R <: Has[DataSource], A](op: ZIO[R, Throwable, A]): ZIO[R, Throwable, A] = {
+    withBlocking(currentConnection.get.flatMap {
       // We can just return the op in the case that there is already a connection set on the fiber ref
       // because the op is execute___ which will lookup the connection from the fiber ref via onConnection/onConnectionStream
       // This will typically happen for nested transactions e.g. transaction(transaction(a *> b) *> c)
-      // TODO this needs to be simpleBlocking
       case Some(connection) => op
       case None =>
         val connection = for {
-          env <- ZIO.service[DataSource with Closeable].toManaged_
+          env <- ZIO.service[DataSource].toManaged_
           connection <- managedBestEffort(blockingEffect(env.getConnection))
           // Get the current value of auto-commit
           prevAutoCommit <- blockingEffect(connection.getAutoCommit).toManaged_
@@ -163,17 +163,18 @@ abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] ext
         } yield ()
 
         connection.use_(op)
-    }
+    })
+  }
 
-  private def onConnection[T](qlio: ZIO[Has[Connection], SQLException, T]): ZIO[Has[DataSource with Closeable], SQLException, T] =
+  private def onConnection[T](qlio: ZIO[Has[Connection], SQLException, T]): ZIO[Has[DataSource], SQLException, T] =
     currentConnection.get.flatMap {
       case Some(connection) =>
         withBlocking(qlio.provide(Has(connection)))
       case None =>
-        withBlocking(qlio.onDataSource)
+        withBlocking(qlio.provideLayer(DataSourceLayer.live))
     }
 
-  private def onConnectionStream[T](qstream: ZStream[Has[Connection], SQLException, T]): ZStream[Has[DataSource with Closeable], SQLException, T] =
+  private def onConnectionStream[T](qstream: ZStream[Has[Connection], SQLException, T]): ZStream[Has[DataSource], SQLException, T] =
     streamBlocker *> ZStream.fromEffect(currentConnection.get).flatMap {
       case Some(connection) =>
         qstream.provide(Has(connection))

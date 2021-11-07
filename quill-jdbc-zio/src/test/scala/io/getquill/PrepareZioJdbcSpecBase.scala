@@ -23,30 +23,30 @@ trait PrepareZioJdbcSpecBase extends ProductSpec with ZioSpec {
   def withOrderedIds(products: List[Product]) =
     products.zipWithIndex.map { case (product, id) => product.copy(id = id.toLong + 1) }
 
-  def singleInsert(prep: QLIO[PreparedStatement]) = {
+  def singleInsert(prep: QIO[PreparedStatement]) = {
     prep.flatMap(stmt =>
-      Task(stmt).bracketAuto { stmt => Task(stmt.execute()) }).onDataSource.provide(Has(pool)).defaultRun
+      Task(stmt).bracketAuto { stmt => Task(stmt.execute()) }).provide(Has(pool)).defaultRun
   }
 
-  def batchInsert(prep: QLIO[List[PreparedStatement]]) = {
+  def batchInsert(prep: QIO[List[PreparedStatement]]) = {
     prep.flatMap(stmts =>
       ZIO.collectAll(
         stmts.map(stmt =>
           Task(stmt).bracketAuto { stmt => Task(stmt.execute()) })
-      )).onDataSource.provide(Has(pool)).defaultRun
+      )).provide(Has(pool)).defaultRun
   }
 
-  def extractResults[T](prepareStatement: QLIO[PreparedStatement])(extractor: (ResultSet, Connection) => T) = {
+  def extractResults[T](prepareStatement: QIO[PreparedStatement])(extractor: (ResultSet, Connection) => T) = {
     (for {
-      conn <- ZIO.service[Connection]
+      conn <- ZIO.service[javax.sql.DataSource]
       result <- prepareStatement.provide(Has(conn)).bracketAuto { stmt =>
         Task(stmt.executeQuery()).bracketAuto { rs =>
-          Task(ResultSetExtractor(rs, conn, extractor))
+          Task(ResultSetExtractor(rs, stmt.getConnection, extractor))
         }
       }
     } yield result).onDataSource.provide(Has(pool)).defaultRun
   }
 
-  def extractProducts(prep: QLIO[PreparedStatement]) =
+  def extractProducts(prep: QIO[PreparedStatement]) =
     extractResults(prep)(productExtractor)
 }

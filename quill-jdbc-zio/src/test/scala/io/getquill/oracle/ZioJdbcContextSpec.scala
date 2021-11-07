@@ -14,23 +14,21 @@ class ZioJdbcContextSpec extends ZioSpec {
     "success" in {
       (for {
         _ <- testContext.run(qr1.delete)
-        _ <- testContext.underlying.transaction {
-          import testContext.underlying._
-          testContext.underlying.run(qr1.insert(_.i -> 33))
-        }.onDataSource
+        _ <- testContext.transaction {
+          testContext.run(qr1.insert(_.i -> 33))
+        }
         r <- testContext.run(qr1)
       } yield r).runSyncUnsafe().map(_.i) mustEqual List(33)
     }
     "success - stream" in {
       (for {
         _ <- testContext.run(qr1.delete)
-        seq <- testContext.underlying.transaction {
-          import testContext.underlying._
+        seq <- testContext.transaction {
           for {
-            _ <- testContext.underlying.run(qr1.insert(_.i -> 33))
-            s <- accumulate(testContext.underlying.stream(qr1.asInstanceOf[testContext.underlying.Quoted[EntityQuery[TestEntity]]]))
+            _ <- testContext.run(qr1.insert(_.i -> 33))
+            s <- accumulate(testContext.stream(qr1))
           } yield s
-        }.onDataSource
+        }
         r <- testContext.run(qr1)
       } yield (seq.map(_.i), r.map(_.i))).runSyncUnsafe() mustEqual ((List(33), List(33)))
     }

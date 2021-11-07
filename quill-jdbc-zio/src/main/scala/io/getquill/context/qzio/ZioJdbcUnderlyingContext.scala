@@ -68,7 +68,7 @@ abstract class ZioJdbcUnderlyingContext[Dialect <: SqlIdiom, Naming <: NamingStr
 
   private def sqlEffect[T](t: => T): QLIO[T] = ZIO.effect(t).refineToOrDie[SQLException]
 
-  private[getquill] def withoutAutoCommit[A, E <: Throwable: ClassTag](f: ZIO[Has[Connection], E, A]): ZIO[Has[Connection], E, A] = {
+  private[getquill] def withoutAutoCommit[R <: Has[Connection], A, E <: Throwable: ClassTag](f: ZIO[R, E, A]): ZIO[R, E, A] = {
     for {
       blockingConn <- ZIO.environment[Has[Connection]]
       conn = blockingConn.get[Connection]
@@ -120,53 +120,6 @@ abstract class ZioJdbcUnderlyingContext[Dialect <: SqlIdiom, Naming <: NamingStr
         }
       case None => Try[Unit](())
     }
-
-  /**
-   * In order to allow a ResultSet to be consumed by an Observable, a ResultSet iterator must be created.
-   * Since Quill provides a extractor for an individual ResultSet row, a single row can easily be cached
-   * in memory. This allows for a straightforward implementation of a hasNext method.
-   */
-  class ResultSetIterator[T](rs: ResultSet, conn: Connection, extractor: Extractor[T]) extends BufferedIterator[T] {
-
-    private[this] var state = 0 // 0: no data, 1: cached, 2: finished
-    private[this] var cached: T = null.asInstanceOf[T]
-
-    protected[this] final def finished(): T = {
-      state = 2
-      null.asInstanceOf[T]
-    }
-
-    /** Return a new value or call finished() */
-    protected def fetchNext(): T =
-      if (rs.next()) extractor(rs, conn)
-      else finished()
-
-    def head: T = {
-      prefetchIfNeeded()
-      if (state == 1) cached
-      else throw new NoSuchElementException("head on empty iterator")
-    }
-
-    private def prefetchIfNeeded(): Unit = {
-      if (state == 0) {
-        cached = fetchNext()
-        if (state == 0) state = 1
-      }
-    }
-
-    def hasNext: Boolean = {
-      prefetchIfNeeded()
-      state == 1
-    }
-
-    def next(): T = {
-      prefetchIfNeeded()
-      if (state == 1) {
-        state = 0
-        cached
-      } else throw new NoSuchElementException("next on empty iterator");
-    }
-  }
 
   /**
    * Override to enable specific vendor options needed for streaming

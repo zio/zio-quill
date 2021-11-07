@@ -16,7 +16,7 @@ object PlainAppDataSource {
 
   def config = JdbcContextConfig(LoadConfig("testPostgresDB")).dataSource
 
-  val zioDs = DataSourceLayer.fromDataSource(new HikariDataSource(config))
+  val zioDS = DataSourceLayer.fromDataSource(new HikariDataSource(config))
 
   def main(args: Array[String]): Unit = {
     val people = quote {
@@ -25,7 +25,7 @@ object PlainAppDataSource {
     val qzio =
       MyPostgresContext.run(people)
         .tap(result => putStrLn(result.toString))
-        .provideCustomLayer(zioDs)
+        .provideCustomLayer(zioDS)
 
     Runtime.default.unsafeRun(qzio)
     ()

@@ -1,7 +1,7 @@
 package io.getquill
 
 import io.getquill.ZioTestUtil._
-import io.getquill.context.ZioJdbc._
+import io.getquill.context.qzio.ResultSetIterator
 import io.getquill.util.LoadConfig
 import zio.{ Has, Task }
 
@@ -13,7 +13,7 @@ class ResultSetIteratorSpec extends ZioSpec {
 
   val ds = JdbcContextConfig(LoadConfig("testPostgresDB")).dataSource
 
-  val ctx = new PostgresZioJdbcUnderlyingContext(Literal)
+  val ctx = new PostgresZioJdbcContext(Literal)
   import ctx._
 
   case class Person(name: String, age: Int)
@@ -34,7 +34,7 @@ class ResultSetIteratorSpec extends ZioSpec {
         _ <- ctx.run(query[Person].delete)
         _ <- ctx.run(liftQuery(peopleEntries).foreach(p => peopleInsert(p)))
       } yield ()
-    }.onDataSource.provide(Has(pool)).defaultRun
+    }.provide(Has(pool)).defaultRun
   }
 
   "traverses correctly" in {
