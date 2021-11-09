@@ -16,11 +16,11 @@ object ZioJdbc {
   type QIO[T] = ZIO[Has[DataSource], SQLException, T]
   type QStream[T] = ZStream[Has[DataSource], SQLException, T]
 
-  type QLIO[T] = ZIO[Has[Connection], SQLException, T]
-  type QLStream[T] = ZStream[Has[Connection], SQLException, T]
+  type QCIO[T] = ZIO[Has[Connection], SQLException, T]
+  type QCStream[T] = ZStream[Has[Connection], SQLException, T]
 
   object QIO {
-    def apply[T](t: => T): QLIO[T] = ZIO.effect(t).refineToOrDie[SQLException]
+    def apply[T](t: => T): QCIO[T] = ZIO.effect(t).refineToOrDie[SQLException]
   }
 
   implicit class DataSourceLayerExt(layer: ZLayer[Any, Throwable, Has[DataSource with Closeable]]) {
