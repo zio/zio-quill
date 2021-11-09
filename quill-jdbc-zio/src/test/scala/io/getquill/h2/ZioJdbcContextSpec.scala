@@ -1,6 +1,5 @@
 package io.getquill.h2
 
-import io.getquill.context.ZioJdbc._
 import io.getquill.{ Prefix, ZioSpec }
 import zio.{ Task, ZIO }
 

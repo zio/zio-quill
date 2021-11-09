@@ -1,7 +1,6 @@
 package io.getquill.examples
 
 import io.getquill._
-import io.getquill.context.ZioJdbc._
 import io.getquill.util.LoadConfig
 import zio.console.putStrLn
 import zio.{ App, ExitCode, Has, URIO }
