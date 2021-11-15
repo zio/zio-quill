@@ -73,7 +73,7 @@ function wait_for_databases() {
 
     # Start sbt compilation and database setup in parallel
     echo "build.sh =:> Base Compile in wait_for_databases"
-    sbt -Dmodules=base -Doracle=true $SBT_ARGS  test & COMPILE=$!
+    sbt -Dmodules=base $SBT_ARGS  test & COMPILE=$!
     ./build/setup_databases.sh & SETUP=$!
 
     # Wait on database setup. If it has failed then kill compilation process and exit with error

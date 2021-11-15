@@ -317,14 +317,6 @@ lazy val `quill-codegen-tests` =
     .settings(
       libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test,
       Test / fork := true,
-      (unmanagedSources / excludeFilter) := excludePathsIfOracle {
-        (Test / unmanagedSourceDirectories).value.map { dir =>
-          (dir / "io" / "getquill" / "codegen" / "OracleCodegenTestCases.scala").getCanonicalPath
-        } ++
-        (Test/ unmanagedSourceDirectories).value.map { dir =>
-          (dir / "io" / "getquill" / "codegen" / "util" / "WithOracleContext.scala").getCanonicalPath
-        }
-      },
       (Test / sourceGenerators) += Def.task {
         def recrusiveList(file:JFile): List[JFile] = {
           if (file.isDirectory)
@@ -352,9 +344,6 @@ lazy val `quill-codegen-tests` =
       }.tag(CodegenTag)
     )
     .dependsOn(`quill-codegen-jdbc` % "compile->test")
-
-val includeOracle =
-  sys.props.getOrElse("oracle", "false").toBoolean
 
 val excludeTests =
   sys.props.getOrElse("excludeTests", "false").toBoolean
@@ -764,14 +753,7 @@ lazy val jdbcTestingSettings = jdbcTestingLibraries ++ Seq(
       case true =>
         excludePaths((Test / unmanagedSourceDirectories).value.map(dir => dir.getCanonicalPath))
       case false =>
-        excludePathsIfOracle {
-          (Test / unmanagedSourceDirectories).value.map { dir =>
-            (dir / "io" / "getquill" / "context" / "jdbc" / "oracle").getCanonicalPath
-          } ++
-            (Test / unmanagedSourceDirectories).value.map { dir =>
-              (dir / "io" / "getquill" / "oracle").getCanonicalPath
-            }
-        }
+        excludePaths(List())
     }
   }
 )
@@ -785,19 +767,6 @@ def excludePaths(paths:Seq[String]) = {
   new SimpleFileFilter(file => {
     if (excludeThisPath(file.getCanonicalPath))
       println(s"Excluding: ${file.getCanonicalPath}")
-    excludeThisPath(file.getCanonicalPath)
-  })
-}
-
-def excludePathsIfOracle(paths:Seq[String]) = {
-  val excludeThisPath =
-    (path: String) =>
-      paths.exists { srcDir =>
-        !includeOracle && (path contains srcDir)
-      }
-  new SimpleFileFilter(file => {
-    if (excludeThisPath(file.getCanonicalPath))
-      println(s"Excluding Oracle Related File: ${file.getCanonicalPath}")
     excludeThisPath(file.getCanonicalPath)
   })
 }

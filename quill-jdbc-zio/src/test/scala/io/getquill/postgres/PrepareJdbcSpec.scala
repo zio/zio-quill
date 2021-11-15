@@ -9,7 +9,7 @@ import java.sql.{ Connection, ResultSet }
 class PrepareJdbcSpec extends PrepareZioJdbcSpecBase with ZioSpec with BeforeAndAfter {
 
   override def prefix: Prefix = Prefix("testPostgresDB")
-  val context = testContext.underlying
+  val context = testContext
   import context._
 
   before {
