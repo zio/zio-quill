@@ -1,4 +1,9 @@
+# 3.11.0
 
+- [Implement `transaction` on outer zio-jdbc-context using fiber refs](https://github.com/getquill/quill/pull/2302)
+- [Feature Request: write compile-time queries to a file](https://github.com/getquill/quill/issues/1715)
+- [`transaction` supports ZIO effects with mixed environments](https://github.com/getquill/quill/pull/2304)
+- [Apple M1 Build Updates & Instructions](https://github.com/getquill/quill/pull/2296)
 
 #### Migration Notes:
 
