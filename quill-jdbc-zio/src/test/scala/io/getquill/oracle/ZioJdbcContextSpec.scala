@@ -1,6 +1,6 @@
 package io.getquill.oracle
 
-import io.getquill.{ EntityQuery, Prefix, ZioSpec }
+import io.getquill.{ Prefix, ZioSpec }
 import zio.{ Task, ZIO }
 import io.getquill.context.ZioJdbc._
 
@@ -26,7 +26,7 @@ class ZioJdbcContextSpec extends ZioSpec {
         seq <- testContext.transaction {
           for {
             _ <- testContext.run(qr1.insert(_.i -> 33))
-            s <- accumulate(testContext.stream(qr1))
+            s <- accumulateDS(testContext.stream(qr1))
           } yield s
         }
         r <- testContext.run(qr1)

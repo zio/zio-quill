@@ -2,6 +2,7 @@ package io.getquill.sqlserver
 
 import io.getquill.{ Prefix, ZioSpec }
 import zio.{ Task, ZIO, ZLayer }
+import io.getquill.context.ZioJdbc._
 
 import javax.sql.DataSource
 
@@ -72,7 +73,7 @@ class ZioJdbcContextSpec extends ZioSpec {
     "prepare" in {
       testContext.prepareParams(
         "select * from Person where name=? and age > ?", (ps, session) => (List("Sarah", 127), ps)
-      ).runSyncUnsafe() mustEqual List("127", "'Sarah'")
+      ).onDataSource.runSyncUnsafe() mustEqual List("127", "'Sarah'")
     }
   }
 }

@@ -128,25 +128,6 @@ The steps to do that are the following:
 Once you have resolved any conflicts that may have arisen from the rebase, your
 branch will be capable of becoming a pull-request.
 
-## Oracle Support
-
-By default, the sbt build will not run or even compile the Oracle test suites, this is because
-Oracle JDBC drivers are not available in any public repository. If you wish to test with the built-in
-Oracle 18c XE Docker container using the Oracle 18c XE JDBC drivers, you can extract them from
-the container and load them into your local maven repo using the `load_jdbc.sh` script.
-Note that this is only allowed for development and testing purposes!
-
-Use the `-Doracle` argument to activate compilation and testing of the Oracle test suites.
-
-```bash
-# Load oracle jdbc drivers
-> ./build/oracle_test/load_jdbc.sh
-...
-
-# Specify the -Doracle argument *before* the build phases that will run Oracle tests
-> sbt -Doracle clean test
-```
-
 ## Building locally using Docker only for databases
 
 To restart your database service with database ports exposed to your host machine run:
@@ -162,8 +143,10 @@ export CASSANDRA_HOST=127.0.0.1
 export CASSANDRA_PORT=19042
 export MYSQL_HOST=127.0.0.1
 export MYSQL_PORT=13306
+export MYSQL_PASSWORD=root
 export POSTGRES_HOST=127.0.0.1
 export POSTGRES_PORT=15432
+export POSTGRES_PASSWORD=postgres
 export SQL_SERVER_HOST=127.0.0.1
 export SQL_SERVER_PORT=11433
 export ORIENTDB_HOST=127.0.0.1

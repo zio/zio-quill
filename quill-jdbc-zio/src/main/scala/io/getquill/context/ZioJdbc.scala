@@ -103,9 +103,35 @@ object ZioJdbc {
       } yield q).refineToOrDie[SQLException]
   }
 
-  implicit class QuillZioExt[T, R <: Has[_]](qzio: ZIO[Has[Connection] with R, Throwable, T])(implicit tag: Tag[R]) {
+  implicit class QuillZioExtPlain[T](qzio: ZIO[Has[Connection], Throwable, T]) {
+
     import io.getquill.context.qzio.ImplicitSyntax._
 
+    def onDataSource: ZIO[Has[DataSource], SQLException, T] =
+      (for {
+        q <- qzio.provideSomeLayer(DataSourceLayer.live)
+      } yield q).refineToOrDie[SQLException]
+
+    /** Shortcut for `onDataSource` */
+    @deprecated("Use onDataSource", "3.10.0")
+    def onDS: ZIO[Has[DataSource], SQLException, T] =
+      this.onDataSource
+
+    @deprecated(
+      "Preferably use a ZioJdbcContext instead of a ZioJdbcUnderlyingContext when starting with a DataSource " +
+        "(i.e. instead of a Connection). ZIO[Has[DataSource], SQLException, T] now has a .implicitDS method for similar functionality." +
+        "If you need to convert from ZIO[Has[Connection], SQLException, T], to ZIO[Has[DataSource], SQLException, T] " +
+        "use .provideLayer(DataSourceLayer.live)", "3.10.0"
+    )
+    def implicitDS(implicit implicitEnv: Implicit[Has[DataSource]]): ZIO[Any, SQLException, T] =
+      (for {
+        q <- qzio
+          .provideSomeLayer(DataSourceLayer.live)
+          .provide(implicitEnv.env)
+      } yield q).refineToOrDie[SQLException]
+  }
+
+  implicit class QuillZioExt[T, R <: Has[_]](qzio: ZIO[Has[Connection] with R, Throwable, T])(implicit tag: Tag[R]) {
     /**
      * Change `Has[Connection]` of a QIO to `Has[DataSource with Closeable]` by providing a `DataSourceLayer.live` instance
      * which will grab a connection from the data-source, perform the QIO operation, and the immediately release the connection.
@@ -115,32 +141,12 @@ object ZioJdbc {
      *   run(query[Person]).onDataSource.provide(Has(ds))
      * }}}
      */
-    def onDataSource: ZIO[Has[DataSource] with R, SQLException, T] =
+    def onSomeDataSource: ZIO[Has[DataSource] with R, SQLException, T] =
       (for {
         r <- ZIO.environment[R]
         q <- qzio
           .provideSomeLayer[Has[Connection]](ZLayer.succeedMany(r))
           .provideSomeLayer(DataSourceLayer.live)
-      } yield q).refineToOrDie[SQLException]
-
-    /** Shortcut for `onDataSource` */
-    @deprecated("Use onDataSource", "3.10.0")
-    def onDS: ZIO[Has[DataSource] with R, SQLException, T] =
-      this.onDataSource
-
-    @deprecated(
-      "Preferably use a ZioJdbcContext instead of a ZioJdbcUnderlyingContext when starting with a DataSource " +
-        "(i.e. instead of a Connection). ZIO[Has[DataSource], SQLException, T] now has a .implicitDS method for similar functionality." +
-        "If you need to convert from ZIO[Has[Connection], SQLException, T], to ZIO[Has[DataSource], SQLException, T] " +
-        "use .provideLayer(DataSourceLayer.live)", "3.10.0"
-    )
-    def implicitDS(implicit implicitEnv: Implicit[Has[DataSource]]): ZIO[R, SQLException, T] =
-      (for {
-        r <- ZIO.environment[R]
-        q <- qzio
-          .provideSomeLayer[Has[Connection]](ZLayer.succeedMany(r))
-          .provideSomeLayer(DataSourceLayer.live)
-          .provide(implicitEnv.env)
       } yield q).refineToOrDie[SQLException]
   }
 

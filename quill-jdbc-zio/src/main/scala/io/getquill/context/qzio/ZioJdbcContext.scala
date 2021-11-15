@@ -36,6 +36,10 @@ import scala.util.Try
  * {{
  *   Runtime.default.unsafeRun(MyZioContext.run(query[Person]).provideLayer(zioDS))
  * }}
+ *
+ * Note however that the one exception to these cases are the `prepare` methods where a `ZIO[Has[Connection], SQLException, PreparedStatement]`
+ * is being returned. In those situations the acquire-action-release pattern does not make any sense because the `PrepareStatement`
+ * is only held open while it's host-connection exists.
  */
 abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] extends ZioContext[Dialect, Naming]
   with JdbcComposition[Dialect, Naming]
@@ -58,9 +62,9 @@ abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] ext
   override type ResultRow = ResultSet
 
   override type TranslateResult[T] = ZIO[Environment, Error, T]
-  override type PrepareQueryResult = QIO[PrepareRow]
-  override type PrepareActionResult = QIO[PrepareRow]
-  override type PrepareBatchActionResult = QIO[List[PrepareRow]]
+  override type PrepareQueryResult = QCIO[PrepareRow]
+  override type PrepareActionResult = QCIO[PrepareRow]
+  override type PrepareBatchActionResult = QCIO[List[PrepareRow]]
   override type Session = Connection
 
   val currentConnection: FiberRef[Option[Connection]] =
@@ -99,17 +103,17 @@ abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] ext
   def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T])(info: ExecutionInfo, dc: DatasourceContext): QIO[List[T]] =
     onConnection(underlying.executeBatchActionReturning[T](groups.asInstanceOf[List[ZioJdbcContext.this.underlying.BatchGroupReturning]], extractor)(info, dc))
 
-  def prepareQuery(sql: String, prepare: Prepare)(info: ExecutionInfo, dc: DatasourceContext): QIO[PreparedStatement] =
-    onConnection(underlying.prepareQuery(sql, prepare)(info, dc))
+  def prepareQuery(sql: String, prepare: Prepare)(info: ExecutionInfo, dc: DatasourceContext): QCIO[PreparedStatement] =
+    underlying.prepareQuery(sql, prepare)(info, dc)
 
-  def prepareAction(sql: String, prepare: Prepare)(info: ExecutionInfo, dc: DatasourceContext): QIO[PreparedStatement] =
-    onConnection(underlying.prepareAction(sql, prepare)(info, dc))
+  def prepareAction(sql: String, prepare: Prepare)(info: ExecutionInfo, dc: DatasourceContext): QCIO[PreparedStatement] =
+    underlying.prepareAction(sql, prepare)(info, dc)
 
-  def prepareBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: DatasourceContext): QIO[List[PreparedStatement]] =
-    onConnection(underlying.prepareBatchAction(groups.asInstanceOf[List[ZioJdbcContext.this.underlying.BatchGroup]])(info, dc))
+  def prepareBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: DatasourceContext): QCIO[List[PreparedStatement]] =
+    underlying.prepareBatchAction(groups.asInstanceOf[List[ZioJdbcContext.this.underlying.BatchGroup]])(info, dc)
 
-  private[getquill] def prepareParams(statement: String, prepare: Prepare): QIO[Seq[String]] =
-    onConnection(underlying.prepareParams(statement, prepare))
+  private[getquill] def prepareParams(statement: String, prepare: Prepare): QCIO[Seq[String]] =
+    underlying.prepareParams(statement, prepare)
 
   /**
    * Execute instructions in a transaction. For example, to add a Person row to the database and return
