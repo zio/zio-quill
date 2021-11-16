@@ -61,7 +61,7 @@ lazy val codegenModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
 )
 
 lazy val bigdataModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
-  `quill-cassandra`, `quill-cassandra-monix`, `quill-cassandra-zio`, `quill-orientdb`, `quill-spark`
+  `quill-cassandra`, `quill-cassandra-lagom`, `quill-cassandra-monix`, `quill-cassandra-zio`, `quill-orientdb`, `quill-spark`
 )
 
 lazy val allModules =
@@ -318,9 +318,9 @@ lazy val `quill-codegen-tests` =
       libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test,
       Test / fork := true,
       (Test / sourceGenerators) += Def.task {
-        def recrusiveList(file:JFile): List[JFile] = {
+        def recursiveList(file:JFile): List[JFile] = {
           if (file.isDirectory)
-            Option(file.listFiles()).map(_.flatMap(child=> recrusiveList(child)).toList).toList.flatten
+            Option(file.listFiles()).map(_.flatMap(child=> recursiveList(child)).toList).toList.flatten
           else
             List(file)
         }
@@ -340,7 +340,7 @@ lazy val `quill-codegen-tests` =
           fileDir.getAbsolutePath +: dbs,
           s
         )
-        recrusiveList(fileDir)
+        recursiveList(fileDir)
       }.tag(CodegenTag)
     )
     .dependsOn(`quill-codegen-jdbc` % "compile->test")
@@ -668,7 +668,7 @@ lazy val `quill-cassandra-lagom` =
       }
     )
     //.dependsOn(`quill-cassandra` % "compile->compile;test->test")
-     .dependsOn(`quill-core`.jvm % "compile->compile;test->test")
+    .dependsOn(`quill-core`.jvm % "compile->compile;test->test")
     .enablePlugins(MimaPlugin)
 
 

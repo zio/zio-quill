@@ -149,7 +149,7 @@ run(query[Person])
 Additional parameters can be added programmatically:
 ```scala
  val zioSessionLayer: ZLayer[Any, Throwable, Has[CassandraZioSession]] =
-  CassandraZioSession.fromContextConfigCassandraContextConfig(LoadConfig("MyCassandraDb").withValue("keyspace", ConfigValueFactory.fromAnyRef("data")))
+  CassandraZioSession.fromContextConfig(LoadConfig("MyCassandraDb").withValue("keyspace", ConfigValueFactory.fromAnyRef("data")))
 run(query[Person])
   .provideCustomLayer(zioSessionLayer)
 ```
