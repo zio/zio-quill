@@ -1,6 +1,6 @@
 package io.getquill
 
-import com.datastax.oss.driver.api.core.cql.{ AsyncResultSet, BoundStatement, ResultSet, Row }
+import com.datastax.oss.driver.api.core.cql.{ AsyncResultSet, BoundStatement, Row }
 import io.getquill.CassandraZioContext._
 import io.getquill.context.{ ExecutionInfo, StandardContext }
 import io.getquill.context.cassandra.{ CassandraRowContext, CqlIdiom }
@@ -123,12 +123,7 @@ class CassandraZioContext[N <: NamingStrategy](val naming: N)
     Blocking.Service.live.blocking(zio)
 
   def executeQuery[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext): CIO[List[T]] = simpleBlocking {
-
-    for {
-      csession <- ZIO.service[CassandraZioSession]
-      rs <- execute(cql, prepare, csession, None)
-      rows <- ZIO.effect(rs.currentPage())
-    } yield (rows.asScala.map(row => extractor(row, csession)).toList)
+    streamQuery[T](None, cql, prepare, extractor)(info, dc).runCollect.map(_.toList)
   }
 
   def executeQuerySingle[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext): CIO[T] = simpleBlocking {
