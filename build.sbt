@@ -546,7 +546,7 @@ lazy val `quill-jasync` =
       Test / fork := true,
       libraryDependencies ++= Seq(
         "com.github.jasync-sql" % "jasync-common" % "1.1.4",
-        "org.scala-lang.modules" %% "scala-java8-compat" % "1.0.1"
+        "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.1"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
