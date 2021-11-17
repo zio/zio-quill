@@ -56,7 +56,28 @@ create table public.Address (
 You can invoke the SimpleJdbcCodegen like so:
 
 ````scala
+// provide DB credentials with a com.typesafe.config.Config object
+// (under the hood the credentials are used to create a HikariPool DataSource)
+import io.getquill.codegen.jdbc.SimpleJdbcCodegen
+import io.getquill.util.LoadConfig
+
+val snakecaseConfig = LoadConfig(configPrefix: String)
 val gen = new SimpleJdbcCodegen(snakecaseConfig, "com.my.project") {
+    override def nameParser = SnakeCaseNames
+}
+gen.writeFiles("src/main/scala/com/my/project")
+
+// or, provide an initialized DataSource
+import io.getquill.codegen.jdbc.SimpleJdbcCodegen
+import org.postgresql.ds.PGSimpleDataSource
+
+val pgDataSource = new PGSimpleDataSource()
+pgDataSource.setURL(
+  "jdbc:postgresql://127.0.0.1:5432/quill_codegen_example?ssl=false",
+)
+pgDataSource.setUser("my_user")
+pgDataSource.setPassword("my_password")
+val gen = new SimpleJdbcCodegen(pgDataSource, "com.my.project") {
     override def nameParser = SnakeCaseNames
 }
 gen.writeFiles("src/main/scala/com/my/project")
@@ -114,7 +135,7 @@ Here is a example of how you could use the `ComposeableTraitsJdbcCodegen` in ord
 
 ````scala
 val gen = new ComposeableTraitsJdbcCodegen(
-  snakecaseConfig,
+  configOrDataSource,
   packagePrefix = "com.my.project",
   nestedTrait = true) {
 
@@ -181,6 +202,9 @@ object MyCustomContext extends SqlMirrorContext[H2Dialect, Literal](H2Dialect, L
 `ComposeableTraitsJdbcCodegen` is designed to be customizable via composition. This is a longer list of customizable strategies:
 
 ```scala
+import io.getquill.codegen.jdbc.ComposeableTraitsJdbcCodegen
+import io.getquill.codegen.model._
+
 new ComposeableTraitsJdbcCodegen(...) {
 
   // whether to generate Scala code for a table
