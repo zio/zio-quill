@@ -141,6 +141,8 @@ After that we need to set some environment variables in order to run `sbt` local
 ```bash
 export CASSANDRA_HOST=127.0.0.1
 export CASSANDRA_PORT=19042
+export CASSANDRA_CONTACT_POINT_0=127.0.0.1:19042
+export CASSANDRA_DC=datacenter1
 export MYSQL_HOST=127.0.0.1
 export MYSQL_PORT=13306
 export MYSQL_PASSWORD=root

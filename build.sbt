@@ -318,9 +318,9 @@ lazy val `quill-codegen-tests` =
       libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test,
       Test / fork := true,
       (Test / sourceGenerators) += Def.task {
-        def recrusiveList(file:JFile): List[JFile] = {
+        def recursiveList(file:JFile): List[JFile] = {
           if (file.isDirectory)
-            Option(file.listFiles()).map(_.flatMap(child=> recrusiveList(child)).toList).toList.flatten
+            Option(file.listFiles()).map(_.flatMap(child=> recursiveList(child)).toList).toList.flatten
           else
             List(file)
         }
@@ -340,7 +340,7 @@ lazy val `quill-codegen-tests` =
           fileDir.getAbsolutePath +: dbs,
           s
         )
-        recrusiveList(fileDir)
+        recursiveList(fileDir)
       }.tag(CodegenTag)
     )
     .dependsOn(`quill-codegen-jdbc` % "compile->test")
@@ -546,7 +546,7 @@ lazy val `quill-jasync` =
       Test / fork := true,
       libraryDependencies ++= Seq(
         "com.github.jasync-sql" % "jasync-common" % "1.1.4",
-        "org.scala-lang.modules" %% "scala-java8-compat" % "1.0.1"
+        "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.1"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -613,7 +613,8 @@ lazy val `quill-cassandra` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.datastax.cassandra" %  "cassandra-driver-core" % "3.7.2"
+        "com.datastax.oss" % "java-driver-core" % "4.13.0",
+        "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.1"
       )
     )
     .dependsOn(`quill-core-jvm` % "compile->compile;test->test")
@@ -659,11 +660,15 @@ lazy val `quill-cassandra-lagom` =
         Seq(
           "org.scala-lang.modules" %% "scala-collection-compat" % "2.4.4",
           "com.lightbend.lagom" %% "lagom-scaladsl-persistence-cassandra" % lagomVersion % Provided,
-          "com.lightbend.lagom" %% "lagom-scaladsl-testkit" % lagomVersion % Test
+          "com.lightbend.lagom" %% "lagom-scaladsl-testkit" % lagomVersion % Test,
+          "com.datastax.cassandra" %  "cassandra-driver-core" % "3.7.2",
+          // lagom uses datastax 3.x driver - not compatible with 4.x in API level
+          "io.getquill" %% "quill-cassandra" % "3.10.0" % "compile->compile"
         ) ++ versionSpecificDependencies
       }
     )
-    .dependsOn(`quill-cassandra` % "compile->compile;test->test")
+    //.dependsOn(`quill-cassandra` % "compile->compile;test->test")
+    .dependsOn(`quill-core`.jvm % "compile->compile;test->test")
     .enablePlugins(MimaPlugin)
 
 

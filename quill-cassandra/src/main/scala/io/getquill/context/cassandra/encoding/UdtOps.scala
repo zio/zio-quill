@@ -1,9 +1,10 @@
 package io.getquill.context.cassandra.encoding
 
-import com.datastax.driver.core.UDTValue
+import com.datastax.oss.driver.api.core.data.UdtValue
+
 import scala.jdk.CollectionConverters._
 
-class UdtValueOps(val udt: UDTValue) extends AnyVal {
+class UdtValueOps(val udt: UdtValue) extends AnyVal {
   def getScalaList[A](name: String, cls: Class[A]) = {
     udt.getList(name, cls).asScala
   }
@@ -30,5 +31,5 @@ class UdtValueOps(val udt: UDTValue) extends AnyVal {
 }
 
 object UdtValueOps {
-  def apply(udt: UDTValue) = new UdtValueOps(udt)
+  def apply(udt: UdtValue) = new UdtValueOps(udt)
 }
