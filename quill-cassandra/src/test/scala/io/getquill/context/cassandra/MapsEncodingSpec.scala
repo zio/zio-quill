@@ -1,8 +1,7 @@
 package io.getquill.context.cassandra
 
+import java.time.{ Instant, LocalDate }
 import java.util.{ Date, UUID }
-
-import com.datastax.driver.core.LocalDate
 
 class MapsEncodingSpec extends CollectionsSpec {
   val ctx = testSyncDB
@@ -14,11 +13,11 @@ class MapsEncodingSpec extends CollectionsSpec {
     intDouble:     Map[Int, Double],
     longFloat:     Map[Long, Float],
     boolDate:      Map[Boolean, LocalDate],
-    uuidTimestamp: Map[UUID, Date]
+    uuidTimestamp: Map[UUID, Instant]
   )
   val e = MapsEntity(1, Map("1" -> BigDecimal(1)), Map(1 -> 1d, 2 -> 2d, 3 -> 3d), Map(1L -> 3f),
-    Map(true -> LocalDate.fromMillisSinceEpoch(System.currentTimeMillis())),
-    Map(UUID.randomUUID() -> new Date))
+    Map(true -> LocalDate.now()),
+    Map(UUID.randomUUID() -> Instant.now()))
   val q = quote(query[MapsEntity])
 
   "Map encoders/decoders" in {

@@ -4,6 +4,7 @@ import java.sql.{ Connection, ResultSet }
 import org.scalatest.matchers.should.Matchers._
 import io.getquill._
 import io.getquill.Prefix
+import io.getquill.context.ZioJdbc._
 
 /**
  * This is a long-running test that will cause a OutOfMemory exception if
@@ -25,7 +26,7 @@ class StreamResultsOrBlowUpSpec extends ZioSpec {
   // that will force jdbc to load the entire ResultSet into memory and crash this test.
   val doBlowUp = false
 
-  val ctx = new PostgresZioJdbcContext(Literal) {
+  val ctx = new PostgresZioJdbcContext.Underlying(Literal) {
     override protected def prepareStatementForStreaming(sql: String, conn: Connection, fetchSize: Option[Int]) = {
       val stmt =
         conn.prepareStatement(
@@ -48,9 +49,9 @@ class StreamResultsOrBlowUpSpec extends ZioSpec {
   val numRows = 1000000L
 
   "stream a large result set without blowing up - 100 per chunk" in {
-    deletes.runSyncUnsafe()
+    deletes.onDataSource.runSyncUnsafe()
 
-    runQuill(inserts(lift(numRows))).runSyncUnsafe()
+    runQuill(inserts(lift(numRows))).onDataSource.runSyncUnsafe()
 
     // not sure why but foreachL causes a OutOfMemory exception anyhow, and firstL causes a ResultSet Closed exception
     val result = stream(query[Person], 100)
@@ -63,16 +64,17 @@ class StreamResultsOrBlowUpSpec extends ZioSpec {
           totalYears + person.age
         }
       })
+      .onDataSource
       .runSyncUnsafe()
     result should be > numRows
-    deletes.runSyncUnsafe()
+    deletes.onDataSource.runSyncUnsafe()
   }
 
   // Note, to actually have no chunking, remove the 100 in stream(query[Person], 100) and run with a small memory size e.g. -Xmx50m
   "stream a large result set without blowing up - no chunking" in {
-    deletes.runSyncUnsafe()
+    deletes.onDataSource.runSyncUnsafe()
 
-    runQuill(inserts(lift(numRows))).runSyncUnsafe()
+    runQuill(inserts(lift(numRows))).onDataSource.runSyncUnsafe()
 
     // not sure why but foreachL causes a OutOfMemory exception anyhow, and firstL causes a ResultSet Closed exception
     val result = stream(query[Person], 100)
@@ -85,8 +87,9 @@ class StreamResultsOrBlowUpSpec extends ZioSpec {
           totalYears + person.age
         }
       })
+      .onDataSource
       .runSyncUnsafe()
     result should be > numRows
-    deletes.runSyncUnsafe()
+    deletes.onDataSource.runSyncUnsafe()
   }
 }

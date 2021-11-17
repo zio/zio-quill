@@ -1,4 +1,4 @@
-package test
+package io.getquill
 
 import io.getquill.Spec
 import io.getquill.ast._
@@ -11,7 +11,7 @@ import io.getquill.testContext.qr1
 import io.getquill.testContext.query
 import io.getquill.testContext.quote
 import io.getquill.testContext.unquote
-import io.getquill.testContext.Quoted
+import io.getquill.Quoted
 
 class OpsSpec extends Spec {
 

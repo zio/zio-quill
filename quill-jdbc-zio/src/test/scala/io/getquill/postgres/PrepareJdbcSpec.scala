@@ -10,7 +10,7 @@ class PrepareJdbcSpec extends PrepareZioJdbcSpecBase with ZioSpec with BeforeAnd
 
   override def prefix: Prefix = Prefix("testPostgresDB")
   val context = testContext
-  import testContext._
+  import context._
 
   before {
     testContext.run(query[Product].delete).runSyncUnsafe()

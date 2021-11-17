@@ -4,7 +4,6 @@ import io.getquill.{ JdbcContextConfig, PeopleZioSpec, Prefix }
 
 import java.io.Closeable
 import javax.sql.DataSource
-import io.getquill.context.ZioJdbc._
 import io.getquill.context.qzio.ImplicitSyntax._
 import io.getquill.util.LoadConfig
 import zio.{ Has, Task, ZManaged }
@@ -31,9 +30,9 @@ class ImplicitEnvPatternSpec extends PeopleZioSpec {
   case class MyService(ds: DataSource with Closeable) {
     implicit val env = Implicit(Has(ds))
 
-    def alexes = testContext.run(query[Person].filter(p => p.name == "Alex")).onDataSource.implicitly
-    def berts = testContext.run(query[Person].filter(p => p.name == "Bert")).onDataSource.implicitly
-    def coras = testContext.run(query[Person].filter(p => p.name == "Cora")).onDataSource.implicitly
+    def alexes = testContext.run(query[Person].filter(p => p.name == "Alex"))
+    def berts = testContext.run(query[Person].filter(p => p.name == "Bert"))
+    def coras = testContext.run(query[Person].filter(p => p.name == "Cora"))
   }
 
   def makeDataSource() = JdbcContextConfig(LoadConfig("testPostgresDB")).dataSource

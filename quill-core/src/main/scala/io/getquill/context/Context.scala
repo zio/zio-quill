@@ -4,10 +4,10 @@ import scala.language.higherKinds
 import scala.language.experimental.macros
 import io.getquill.dsl.CoreDsl
 import io.getquill.util.Messages.fail
-import java.io.Closeable
 
+import java.io.Closeable
 import scala.util.Try
-import io.getquill.{ Query, Action, NamingStrategy, BatchAction, ActionReturning }
+import io.getquill.{ Action, ActionReturning, BatchAction, NamingStrategy, Query, Quoted }
 
 trait StagedPrepare extends PrepareContext {
   type PrepareQueryResult = Session => Result[PrepareRow]

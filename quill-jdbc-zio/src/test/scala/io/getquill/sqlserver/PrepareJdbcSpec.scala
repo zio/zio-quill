@@ -9,7 +9,7 @@ class PrepareJdbcSpec extends PrepareZioJdbcSpecBase with BeforeAndAfter {
 
   override def prefix: Prefix = Prefix("testSqlServerDB")
   val context = testContext
-  import testContext._
+  import context._
 
   before {
     testContext.run(query[Product].delete).runSyncUnsafe()
