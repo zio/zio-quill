@@ -135,24 +135,11 @@ val filteredModules = {
   } else modules
 }
 
-lazy val `quill` = {
-  val quill =
-    (project in file("."))
+lazy val `quill` =
+  (project in file("."))
     .settings(commonSettings: _*)
-
-  // Do not do aggregate project builds when debugging since during that time
-  // typically only individual modules are being build/compiled. This is mostly for convenience with IntelliJ.
-  // Normally it to just exclude `quill` from the build in Intellij instead but then local file change tracking
-  // and search of files from the root level (e.g. in the 'build' directory) is lost.
-  debugMacro match {
-    case true =>
-      quill
-    case false =>
-      quill
-        .aggregate(filteredModules.map(_.project): _*)
-        .dependsOn(filteredModules: _*)
-  }
-}
+    .aggregate(filteredModules.map(_.project): _*)
+    .dependsOn(filteredModules: _*)
 
 `quill` / publishArtifact := false
 
@@ -191,7 +178,7 @@ lazy val ultraPure = new sbtcrossproject.CrossType {
 }
 
 def pprintVersion(v: String) = {
-  if(v.startsWith("2.11")) "0.5.4" else "0.5.5"
+  if(v.startsWith("2.11")) "0.5.4" else "0.5.9"
 }
 
 lazy val `quill-core-portable` =
@@ -201,9 +188,9 @@ lazy val `quill-core-portable` =
     .settings(
       libraryDependencies ++= Seq(
         "com.typesafe"               %  "config"        % "1.4.1",
-        "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
+        "com.typesafe.scala-logging" %% "scala-logging" % "3.9.4",
         "org.scala-lang"             %  "scala-reflect" % scalaVersion.value,
-        "com.twitter"                %% "chill"         % "0.9.5",
+        "com.twitter"                %% "chill"         % "0.10.0",
         "io.suzaku"                  %% "boopickle"     % "1.3.1"
       ),
       coverageExcludedPackages := "<empty>;.*AstPrinter;.*Using;io.getquill.Model;io.getquill.ScalarTag;io.getquill.QuotationTag"
@@ -230,7 +217,8 @@ lazy val `quill-core` =
     .settings(mimaSettings: _*)
     .settings(libraryDependencies ++= Seq(
       "com.typesafe"               %  "config"        % "1.4.1",
-      "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
+      "dev.zio"                    %% "zio-logging"   % "0.5.13",
+      "com.typesafe.scala-logging" %% "scala-logging" % "3.9.4",
       "org.scala-lang"             %  "scala-reflect" % scalaVersion.value
     ))
     .jvmSettings(
@@ -329,18 +317,10 @@ lazy val `quill-codegen-tests` =
     .settings(
       libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test,
       Test / fork := true,
-      (unmanagedSources / excludeFilter) := excludePathsIfOracle {
-        (Test / unmanagedSourceDirectories).value.map { dir =>
-          (dir / "io" / "getquill" / "codegen" / "OracleCodegenTestCases.scala").getCanonicalPath
-        } ++
-        (Test/ unmanagedSourceDirectories).value.map { dir =>
-          (dir / "io" / "getquill" / "codegen" / "util" / "WithOracleContext.scala").getCanonicalPath
-        }
-      },
       (Test / sourceGenerators) += Def.task {
-        def recrusiveList(file:JFile): List[JFile] = {
+        def recursiveList(file:JFile): List[JFile] = {
           if (file.isDirectory)
-            Option(file.listFiles()).map(_.flatMap(child=> recrusiveList(child)).toList).toList.flatten
+            Option(file.listFiles()).map(_.flatMap(child=> recursiveList(child)).toList).toList.flatten
           else
             List(file)
         }
@@ -360,13 +340,10 @@ lazy val `quill-codegen-tests` =
           fileDir.getAbsolutePath +: dbs,
           s
         )
-        recrusiveList(fileDir)
+        recursiveList(fileDir)
       }.tag(CodegenTag)
     )
     .dependsOn(`quill-codegen-jdbc` % "compile->test")
-
-val includeOracle =
-  sys.props.getOrElse("oracle", "false").toBoolean
 
 val excludeTests =
   sys.props.getOrElse("excludeTests", "false").toBoolean
@@ -500,7 +477,10 @@ lazy val `quill-finagle-mysql` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.twitter" %% "finagle-mysql" % "20.10.0"
+        if (scalaVersion.value.startsWith("2.11"))
+          "com.twitter" % "finagle-mysql_2.11" % "21.2.0"
+        else
+          "com.twitter" %% "finagle-mysql" % "21.9.0"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -565,8 +545,8 @@ lazy val `quill-jasync` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.github.jasync-sql" % "jasync-common" % "1.1.7",
-        "org.scala-lang.modules" %% "scala-java8-compat" % "1.0.1"
+        "com.github.jasync-sql" % "jasync-common" % "1.1.4",
+        "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.1"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -633,7 +613,8 @@ lazy val `quill-cassandra` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.datastax.cassandra" %  "cassandra-driver-core" % "3.7.2"
+        "com.datastax.oss" % "java-driver-core" % "4.13.0",
+        "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.1"
       )
     )
     .dependsOn(`quill-core-jvm` % "compile->compile;test->test")
@@ -659,7 +640,7 @@ lazy val `quill-cassandra-zio` =
       libraryDependencies ++= Seq(
         "dev.zio" %% "zio" % "1.0.12",
         "dev.zio" %% "zio-streams" % "1.0.12",
-        "dev.zio" %% "zio-interop-guava" % "30.1.0.3"
+        "dev.zio" %% "zio-interop-guava" % "31.0.0.0"
       )
     )
     .dependsOn(`quill-cassandra` % "compile->compile;test->test")
@@ -674,16 +655,20 @@ lazy val `quill-cassandra-lagom` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= {
-        val lagomVersion = if (scalaVersion.value.startsWith("2.13")) "1.6.4" else "1.5.5"
-        val versionSpecificDependencies =  if (scalaVersion.value.startsWith("2.13")) Seq("com.typesafe.play" %% "play-akka-http-server" % "2.8.5") else Seq.empty
+        val lagomVersion = if (scalaVersion.value.startsWith("2.13")) "1.6.5" else "1.5.5"
+        val versionSpecificDependencies =  if (scalaVersion.value.startsWith("2.13")) Seq("com.typesafe.play" %% "play-akka-http-server" % "2.8.8") else Seq.empty
         Seq(
-          "org.scala-lang.modules" %% "scala-collection-compat" % "2.1.6",
+          "org.scala-lang.modules" %% "scala-collection-compat" % "2.4.4",
           "com.lightbend.lagom" %% "lagom-scaladsl-persistence-cassandra" % lagomVersion % Provided,
-          "com.lightbend.lagom" %% "lagom-scaladsl-testkit" % lagomVersion % Test
+          "com.lightbend.lagom" %% "lagom-scaladsl-testkit" % lagomVersion % Test,
+          "com.datastax.cassandra" %  "cassandra-driver-core" % "3.7.2",
+          // lagom uses datastax 3.x driver - not compatible with 4.x in API level
+          "io.getquill" %% "quill-cassandra" % "3.10.0" % "compile->compile"
         ) ++ versionSpecificDependencies
       }
     )
-    .dependsOn(`quill-cassandra` % "compile->compile;test->test")
+    //.dependsOn(`quill-cassandra` % "compile->compile;test->test")
+    .dependsOn(`quill-core`.jvm % "compile->compile;test->test")
     .enablePlugins(MimaPlugin)
 
 
@@ -694,7 +679,7 @@ lazy val `quill-orientdb` =
       .settings(
         Test / fork := true,
         libraryDependencies ++= Seq(
-          "com.orientechnologies" % "orientdb-graphdb" % "3.0.34"
+          "com.orientechnologies" % "orientdb-graphdb" % "3.0.39"
         )
       )
       .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -756,13 +741,13 @@ def updateWebsiteTag =
 lazy val jdbcTestingLibraries = Seq(
   libraryDependencies ++= Seq(
     "com.zaxxer"              %  "HikariCP"                % "3.4.5",
-    "mysql"                   %  "mysql-connector-java"    % "8.0.22"             % Test,
+    "mysql"                   %  "mysql-connector-java"    % "8.0.27"             % Test,
     "com.h2database"          %  "h2"                      % "1.4.200"            % Test,
-    "org.postgresql"          %  "postgresql"              % "42.2.18"             % Test,
-    "org.xerial"              %  "sqlite-jdbc"             % "3.32.3.2"             % Test,
+    "org.postgresql"          %  "postgresql"              % "42.3.0"             % Test,
+    "org.xerial"              %  "sqlite-jdbc"             % "3.36.0.3"             % Test,
     "com.microsoft.sqlserver" %  "mssql-jdbc"              % "7.1.1.jre8-preview" % Test,
     "com.oracle.ojdbc"        %  "ojdbc8"                  % "19.3.0.0"           % Test,
-    "org.mockito"             %% "mockito-scala-scalatest" % "1.16.2"              % Test
+    "org.mockito"             %% "mockito-scala-scalatest" % "1.16.46"              % Test
   )
 )
 
@@ -773,14 +758,7 @@ lazy val jdbcTestingSettings = jdbcTestingLibraries ++ Seq(
       case true =>
         excludePaths((Test / unmanagedSourceDirectories).value.map(dir => dir.getCanonicalPath))
       case false =>
-        excludePathsIfOracle {
-          (Test / unmanagedSourceDirectories).value.map { dir =>
-            (dir / "io" / "getquill" / "context" / "jdbc" / "oracle").getCanonicalPath
-          } ++
-            (Test / unmanagedSourceDirectories).value.map { dir =>
-              (dir / "io" / "getquill" / "oracle").getCanonicalPath
-            }
-        }
+        excludePaths(List())
     }
   }
 )
@@ -798,36 +776,13 @@ def excludePaths(paths:Seq[String]) = {
   })
 }
 
-def excludePathsIfOracle(paths:Seq[String]) = {
-  val excludeThisPath =
-    (path: String) =>
-      paths.exists { srcDir =>
-        !includeOracle && (path contains srcDir)
-      }
-  new SimpleFileFilter(file => {
-    if (excludeThisPath(file.getCanonicalPath))
-      println(s"Excluding Oracle Related File: ${file.getCanonicalPath}")
-    excludeThisPath(file.getCanonicalPath)
-  })
-}
-
 val scala_v_11 = "2.11.12"
-val scala_v_12 = "2.12.14"
-val scala_v_13 = "2.13.3"
-
-
-val crossVersions = {
-  val scalaVersion = sys.props.get("quill.scala.version")
-  if(scalaVersion.exists(_.startsWith("2.13"))) {
-    Seq(scala_v_11, scala_v_12, scala_v_13)
-  } else {
-    Seq(scala_v_11, scala_v_12)
-  }
-}
+val scala_v_12 = "2.12.10"
+val scala_v_13 = "2.13.2"
 
 lazy val loggingSettings = Seq(
   libraryDependencies ++= Seq(
-    "ch.qos.logback"  % "logback-classic" % "1.2.3" % Test
+    "ch.qos.logback"  % "logback-classic" % "1.2.6" % Test
   )
 )
 
@@ -839,12 +794,12 @@ lazy val basicSettings = Seq(
     }
   },
   organization := "io.getquill",
-  scalaVersion := scala_v_11,
+  scalaVersion := scala_v_12,
   crossScalaVersions := Seq(scala_v_11, scala_v_12, scala_v_13),
   libraryDependencies ++= Seq(
     "org.scala-lang.modules" %%% "scala-collection-compat" % "2.2.0",
     "com.lihaoyi"     %% "pprint"         % pprintVersion(scalaVersion.value),
-    "org.scalatest"   %%% "scalatest"     % "3.2.3"          % Test,
+    "org.scalatest"   %%% "scalatest"     % "3.2.10"          % Test,
     "com.google.code.findbugs" % "jsr305" % "3.0.2"          % Provided // just to avoid warnings during compilation
   ) ++ {
     if (debugMacro) Seq(
@@ -949,6 +904,13 @@ lazy val releaseSettings = Seq(
     CrossVersion.partialVersion(scalaVersion.value) match {
       case Some((2, 11)) =>
         doOnDefault(checkSnapshotDependencies) ++
+          doOnDefault(inquireVersions) ++
+          doOnDefault(runClean) ++
+          doOnPush   (setReleaseVersion) ++
+          doOnDefault(publishArtifacts)
+      //doOnPush   ("sonatypeReleaseAll") ++
+      case Some((2, 12)) =>
+        doOnDefault(checkSnapshotDependencies) ++
         doOnDefault(inquireVersions) ++
         doOnDefault(runClean) ++
         doOnPush   (setReleaseVersion) ++
@@ -962,13 +924,6 @@ lazy val releaseSettings = Seq(
         doOnPush   (commitNextVersion) ++
         //doOnPush(releaseStepCommand("sonatypeReleaseAll")) ++
         doOnPush   (pushChanges)
-      case Some((2, 12)) =>
-        doOnDefault(checkSnapshotDependencies) ++
-        doOnDefault(inquireVersions) ++
-        doOnDefault(runClean) ++
-        doOnPush   (setReleaseVersion) ++
-        doOnDefault(publishArtifacts)
-        //doOnPush   ("sonatypeReleaseAll") ++
       case Some((2, 13)) =>
         doOnDefault(checkSnapshotDependencies) ++
         doOnDefault(inquireVersions) ++

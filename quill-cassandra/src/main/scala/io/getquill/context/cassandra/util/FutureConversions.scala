@@ -1,8 +1,8 @@
 package io.getquill.context.cassandra.util
 
-import java.util.concurrent.Executor
+import com.datastax.oss.driver.shaded.guava.common.util.concurrent.ListenableFuture
 
-import com.google.common.util.concurrent.ListenableFuture
+import java.util.concurrent.Executor
 
 import scala.concurrent.{ ExecutionContext, Future, Promise }
 import scala.util.Try
