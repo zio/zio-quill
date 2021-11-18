@@ -28,7 +28,7 @@ Note: The GIF example uses Eclipse, which shows compilation messages to the user
 
 ## Introduction
 
-The QDSL allows the user to write plain Scala code, leveraging Scala's syntax and type system. Quotations are created using the `quote` method and can contain any excerpt of code that uses supported operations. To create quotations, first create a context instance. Please see the [context](#contexts) section for more details on the different context available.
+The QDSL allows the user to write plain Scala code, leveraging Scala's syntax and type system. Quotations are created using the `quote` method and can contain any excerpt of code that uses supported operations. To create quotations, first create a context instance. Please see the [context](#contexts) section for more details on the different contexts available.
 
 For this documentation, a special type of context that acts as a [mirror](#mirror-context) is used:
 
@@ -168,7 +168,7 @@ ctx.run(insert(List(Circle(1.1F), Circle(1.2F))))
 
 ## Schema
 
-The database schema is represented by case classes. By default, quill uses the class and field names as the database identifiers:
+The database schema is represented by case classes. By default, Quill uses the class and field names as the database identifiers:
 
 ```scala
 case class Circle(radius: Float)
@@ -268,7 +268,7 @@ from the insertion! We can fix this situation by manually specifying the columns
 
 ```scala
 val q = quote {
-  query[Product].insert(_.description -> "My Product", _.sku -> 1011L))).returning(r => (id, description))
+  query[Product].insert(_.description -> "My Product", _.sku -> 1011L).returning(r => (id, description))
 }
 
 val returnedIds = ctx.run(q) //: List[(Int, String)]
@@ -356,10 +356,10 @@ ctx.run {
 // RETURNING id + 100, myUdf(id), (SELECT MAX(s.id) FROM Supplier s WHERE s.sku = sku)
 ```
 
-> NOTE: Queries used inside of return clauses can only return a single row per insert.
+> NOTE: Queries used inside return clauses can only return a single row per insert.
 Otherwise, Postgres will throw:
 `ERROR: more than one row returned by a subquery used as an expression`. This is why is it strongly
-recommended that you use aggregators such as `max` or `min`inside of quill returning-clause queries.
+recommended that you use aggregators such as `max` or `min` inside Quill returning-clause queries.
 In the case that this is impossible (e.g. when using Postgres booleans), you can use the `.value` method: 
 `q.returning(r => query[Supplier].filter(s => s.sku == r.sku).map(_.id).value)`.
 
@@ -435,7 +435,7 @@ ctx.run(q)
 
 ## Queries
 
-The overall abstraction of quill queries uses database tables as if they were in-memory collections. Scala for-comprehensions provide syntactic sugar to deal with these kinds of monadic operations:
+The overall abstraction of Quill queries uses database tables as if they were in-memory collections. Scala for-comprehensions provide syntactic sugar to deal with these kinds of monadic operations:
 
 ```scala
 case class Person(id: Int, name: String, age: Int)
@@ -443,11 +443,9 @@ case class Contact(personId: Int, phone: String)
 
 val q = quote {
   for {
-    p <- query[Person] if(p.id == 999)
-    c <- query[Contact] if(c.personId == p.id)
-  } yield {
-    (p.name, c.phone)
-  }
+    p <- query[Person] if p.id == 999
+    c <- query[Contact] if c.personId == p.id
+  } yield (p.name, c.phone)
 }
 
 ctx.run(q)
@@ -678,7 +676,7 @@ quote {
 quote {
   for {
     a <- query[A]
-    b <- query[B] if (a.id == b.fk) 
+    b <- query[B] if a.id == b.fk 
   } yield (a, b)
 }
  
@@ -696,11 +694,11 @@ Let's see them one by one assuming the following schema:
 case class Person(id: Int, name: String)
 case class Address(street: String, zip: Int, fk: Int)
 ```
-(Note: If your use case involves lots and lots of joins, both inner and outer. Skip right to the flat-joins section!)
+(Note: If your use case involves lots and lots of joins, both inner and outer, then skip right to the flat joins section!)
 
 #### applicative joins
 
-Applicative joins are useful for joining two tables together,
+Applicative joins are useful for joining two tables together;
 they are straightforward to understand, and typically look good on one line.
 Quill supports inner, left-outer, right-outer, and full-outer (i.e. cross) applicative joins.
 
@@ -720,7 +718,7 @@ val q = quote {
 }
  
 ctx.run(q) //: List[(Person, Option[Address])]
-// Note that when you use named-variables in your comprehension, Quill does its best to honor them in the query.
+// Note that when you use named variables in your comprehension, Quill does its best to honor them in the query.
 // SELECT p.id, p.name, a.street, a.zip, a.fk 
 // FROM Person p LEFT JOIN Address a ON p.id = a.fk
  
@@ -751,8 +749,8 @@ case class Company(zip: Int)
 // All is well for two tables but for three or more, the nesting mess begins:
 val q = quote {
   query[Person]
-    .join(query[Address]).on({case (p, a) => p.id == a.fk}) // Let's use `case` here to stay consistent
-    .join(query[Company]).on({case ((p, a), c) => a.zip == c.zip})
+    .join(query[Address]).on { case (p, a) => p.id == a.fk } // Let's use `case` here to stay consistent
+    .join(query[Company]).on { case ((p, a), c) => a.zip == c.zip }
 }
  
 ctx.run(q) //: List[((Person, Address), Company)]
@@ -760,20 +758,20 @@ ctx.run(q) //: List[((Person, Address), Company)]
 // SELECT x01.id, x01.name, x11.street, x11.zip, x11.fk, x12.name, x12.zip 
 // FROM Person x01 INNER JOIN Address x11 ON x01.id = x11.fk INNER JOIN Company x12 ON x11.zip = x12.zip
 ```
-No worries though, implicit joins and flat joins have your other use-cases covered!
+No worries though: implicit joins and flat joins have your other use-cases covered!
 
 #### implicit joins
 
-Quill's implicit joins use a monadic syntax making them pleasant to use for joining many tables together.
-They look a lot like Scala collections when used in for-comprehensions
+Quill's implicit joins use a monadic syntax, making them pleasant to use for joining many tables together.
+They look a lot like Scala collections when used in for-comprehensions,
 making them familiar to a typical Scala developer. 
-What's the catch? They can only do inner-joins.
+What's the catch? They can only do inner joins.
 
 ```scala
 val q = quote {
   for {
     p <- query[Person]
-    a <- query[Address] if (p.id == a.fk)
+    a <- query[Address] if p.id == a.fk
   } yield (p, a)
 }
  
@@ -788,8 +786,8 @@ without having to do any pesky nesting.
 val q = quote {
   for {
     p <- query[Person]
-    a <- query[Address] if (p.id == a.fk)
-    c <- query[Company] if (c.zip == a.zip)
+    a <- query[Address] if p.id == a.fk
+    c <- query[Company] if c.zip == a.zip
   } yield (p, a, c)
 }
  
@@ -797,12 +795,12 @@ run(q) //: List[(Person, Address, Company)]
 // SELECT p.id, p.name, a.street, a.zip, a.fk, c.name, c.zip 
 // FROM Person p, Address a, Company c WHERE p.id = a.fk AND c.zip = a.zip
 ```
-Well that looks nice but wait! What If I need to inner, **and** outer join lots of tables nicely?
-No worries, flat-joins are here to help!
+Well that looks nice, but wait! What If I need to inner _and_ outer join lots of tables nicely?
+No worries, flat joins are here to help!
 
 ### flat joins
 
-Flat Joins give you the best of both worlds! In the monadic syntax, you can use both inner joins,
+Flat joins give you the best of both worlds! In the monadic syntax, you can use both inner joins,
 and left-outer joins together without any of that pesky nesting.
 
 ```scala
@@ -811,7 +809,7 @@ val q = quote {
   for { 
     p <- query[Person]
     a <- query[Address].join(a => a.fk == p.id)
-  } yield (p,a)
+  } yield (p, a)
 }
  
 ctx.run(q) //: List[(Person, Address)]
@@ -823,7 +821,7 @@ val q = quote {
   for { 
     p <- query[Person]
     a <- query[Address].leftJoin(a => a.fk == p.id)
-  } yield (p,a)
+  } yield (p, a)
 }
  
 ctx.run(q) //: List[(Person, Option[Address])]
@@ -838,7 +836,7 @@ val q = quote {
     p <- query[Person]
     a <- query[Address].join(a => a.fk == p.id)
     c <- query[Company].leftJoin(c => c.zip == a.zip)
-  } yield (p,a,c)
+  } yield (p, a, c)
 }
  
 ctx.run(q) //: List[(Person, Address, Option[Company])]
@@ -857,20 +855,20 @@ With Quill the following multi-join queries are equivalent, use them according t
 case class Employer(id: Int, personId: Int, name: String)
 
 val qFlat = quote {
-  for{
-    (p,e) <- query[Person].join(query[Employer]).on(_.id == _.personId)
-       c  <- query[Contact].leftJoin(_.personId == p.id)
-  } yield(p, e, c)
+  for {
+    (p, e) <- query[Person].join(query[Employer]).on(_.id == _.personId)
+        c  <- query[Contact].leftJoin(_.personId == p.id)
+  } yield (p, e, c)
 }
 
 val qNested = quote {
-  for{
-    ((p,e),c) <-
+  for {
+    ((p, e), c) <-
       query[Person].join(query[Employer]).on(_.id == _.personId)
       .leftJoin(query[Contact]).on(
         _._1.id == _.personId
       )
-  } yield(p, e, c)
+  } yield (p, e, c)
 }
 
 ctx.run(qFlat)
@@ -879,14 +877,14 @@ ctx.run(qNested)
 // FROM Person p INNER JOIN Employer e ON p.id = e.personId LEFT JOIN Contact c ON c.personId = p.id
 ```
 
-Note that in some cases implicit and flat joins cannot be used together, for example, the following
+Note that in some cases implicit and flat joins cannot be used together; for example, the following
 query will fail.
 ```scala
 val q = quote {
   for {
-    p <- query[Person]
-    p1 <- query[Person] if (p1.name == p.name)
-    c <- query[Contact].leftJoin(_.personId == p.id)
+    p  <- query[Person]
+    p1 <- query[Person] if p1.name == p.name
+    c  <- query[Contact].leftJoin(_.personId == p.id)
   } yield (p, c)
 }
  
@@ -897,12 +895,13 @@ val q = quote {
 This happens because an explicit join typically cannot be done after an implicit join in the same query.
  
 A good guideline is in any query or subquery, choose one of the following:
- * Use flat-joins + applicative joins or
+
+ * Use flat joins + applicative joins, or
  * Use implicit joins
  
-Also, note that not all Option operations are available on outer-joined tables (i.e. tables wrapped in an `Option` object),
+Also, note that not all `Option` operations are available on outer-joined tables (i.e. tables wrapped in an `Option`),
 only a specific subset. This is mostly due to the inherent limitations of SQL itself. For more information, see the
-'Optional Tables' section.
+[Optional Tables] section.
 
 ### Optionals / Nullable Fields
 
@@ -928,9 +927,9 @@ CREATE TABLE Company(
 ```
 This would encode to the following:
 ```scala
-case class Person(id:Int, name:Option[String])
-case class Address(fk:Option[Int], street:String, zip:Int)
-case class Company(name:String, zip:Int)
+case class Person(id: Int, name: Option[String])
+case class Address(fk: Option[Int], street: String, zip: Int)
+case class Company(name: String, zip: Int)
 ```
 
 Some important notes regarding Optionals and nullable fields.
@@ -945,7 +944,7 @@ Some important notes regarding Optionals and nullable fields.
 > "falls-through" and returns `null` when the input is null. This is not true of all databases (e.g. [Oracle](https://community.oracle.com/ideas/19866)),
 > forcing Quill to return the longer expression with explicit null-checking. Also, if there are conditionals inside
 > of an Option operation (e.g. `o.map(v => if (v == "x") "y" else "z")`) this creates SQL with case statements,
-> which will never fall-through when the input value is null. This forces Quill to explicitly null-check such statements in every
+> which will never fall through when the input value is null. This forces Quill to explicitly null-check such statements in every
 > SQL dialect.
 
 Let's go through the typical operations of optionals.
@@ -972,10 +971,10 @@ ctx.run(q)
  
 #### exists
 
-This method is typically used for inspecting nullable fields inside of boolean conditions, most notably joining!
+This method is typically used for inspecting nullable fields inside boolean conditions; this is particularly useful for joining!
 ```scala
 val q = quote {
-  query[Person].join(query[Address]).on((p, a)=> a.fk.exists(_ == p.id))
+  query[Person].join(query[Address]).on((p, a) => a.fk.exists(_ == p.id))
 }
 ctx.run(q)
 // SELECT p.id, p.name, a.fk, a.street, a.zip FROM Person p INNER JOIN Address a ON a.fk = p.id
@@ -1017,18 +1016,18 @@ val q = quote {
  
 ctx.run(q)
 // SELECT p.id, 'Dear ' || p.name FROM Person p
-// * In Dialects where `||` does not fall-through for nulls (e.g. Oracle):
+// * In dialects where `||` does not fall through for nulls (e.g. Oracle):
 // * SELECT p.id, CASE WHEN p.name IS NOT NULL THEN 'Dear ' || p.name ELSE null END FROM Person p
 ```
 
 Additionally, this method is useful when you want to get a non-optional field out of an outer-joined table
-(i.e. a table wrapped in an `Option` object).
+(i.e. a table wrapped in an `Option`).
 
 ```scala
 val q = quote {
   query[Company].leftJoin(query[Address])
     .on((c, a) => c.zip == a.zip)
-    .map {case(c,a) =>                          // Row type is (Company, Option[Address])
+    .map { case (c, a) =>                          // Row type is (Company, Option[Address])
       (c.name, a.map(_.street), a.map(_.zip))   // Use `Option.map` to get `street` and `zip` fields
     }
 }
@@ -1037,7 +1036,7 @@ run(q)
 // SELECT c.name, a.street, a.zip FROM Company c LEFT JOIN Address a ON c.zip = a.zip
 ```
 
-For more details about this operation (and some caveats), see the 'Optional Tables' section.
+For more details about this operation (and some caveats), see the [Optional Tables] section.
 
 #### flatMap and flatten
 
@@ -1047,41 +1046,45 @@ multiple nullable fields in a way which would otherwise result in `Option[Option
 val q = quote {
   for {
     a <- query[Person]
-    b <- query[Person] if (a.id > b.id)
-  } yield (
+    b <- query[Person] if a.id > b.id
+  } yield
     // If this was `a.name.map`, resulting record type would be Option[Option[String]]
-    a.name.flatMap(an =>
-      b.name.map(bn => 
-        an+" comes after "+bn)))
+    a.name.flatMap { an =>
+      b.name.map { bn =>
+        an + " comes after " + bn
+      }
+    }
 }
  
 ctx.run(q) //: List[Option[String]]
 // SELECT (a.name || ' comes after ') || b.name FROM Person a, Person b WHERE a.id > b.id
-// * In Dialects where `||` does not fall-through for nulls (e.g. Oracle):
+// * In Dialects where `||` does not fall through for nulls (e.g. Oracle):
 // * SELECT CASE WHEN a.name IS NOT NULL AND b.name IS NOT NULL THEN (a.name || ' comes after ') || b.name ELSE null END FROM Person a, Person b WHERE a.id > b.id
  
 // Alternatively, you can use `flatten`
 val q = quote {
   for {
     a <- query[Person]
-    b <- query[Person] if (a.id > b.id)
-  } yield (
-    a.name.map(an => 
-      b.name.map(bn => 
-        an + " comes after " + bn)).flatten)
+    b <- query[Person] if a.id > b.id
+  } yield
+    a.name.map { an => 
+      b.name.map { bn => 
+        an + " comes after " + bn
+     }
+   }.flatten
 }
  
 ctx.run(q) //: List[Option[String]]
 // SELECT (a.name || ' comes after ') || b.name FROM Person a, Person b WHERE a.id > b.id
 ``` 
 This is also very useful when selecting from outer-joined tables i.e. where the entire table
-is inside of an `Option` object. Note how below we get the `fk` field from `Option[Address]`.
+is inside an `Option`. Note how below we get the `fk` field from `Option[Address]`.
 
 ```scala
 val q = quote {
   query[Person].leftJoin(query[Address])
     .on((p, a) => a.fk.exists(_ == p.id))
-    .map {case (p /*Person*/, a /*Option[Address]*/) => (p.name, a.flatMap(_.fk))}
+    .map { case (p /*Person*/, a /*Option[Address]*/) => (p.name, a.flatMap(_.fk)) }
 }
  
 ctx.run(q) //: List[(Option[String], Option[Int])]
@@ -1090,26 +1093,26 @@ ctx.run(q) //: List[(Option[String], Option[Int])]
 
 #### orNull / getOrNull
 
-The `orNull` method can be used to convert an Option-enclosed row back into a regular row.
+The `orNull` method can be used to convert an `Option`-enclosed row back into a regular row.
 Since `Option[T].orNull` does not work for primitive types (e.g. `Int`, `Double`, etc...),
-you can use the `getOrNull` method inside of quoted blocks to do the same thing.
+you can use the `getOrNull` method inside quoted blocks to do the same thing.
 
-> Note that since the presence of null columns can cause queries to break in some data sources (e.g. Spark), so use this operation very carefully.
+> Note that since the presence of null columns can cause queries to break in some data sources (e.g. Spark), use this operation very carefully.
 
 ```scala
 val q = quote {
   query[Person].join(query[Address])
     .on((p, a) => a.fk.exists(_ == p.id))
-    .filter {case (p /*Person*/, a /*Option[Address]*/) => 
-      a.fk.getOrNull != 123 } // Exclude a particular value from the query.
-                              // Since we already did an inner-join on this value, we know it is not null.
+    .filter { case (p /*Person*/, a /*Option[Address]*/) => 
+      a.fk.getOrNull != 123 // Exclude a particular value from the query.
+    }                       // Since we already did an inner join on this value, we know it is not null.
 }
  
 ctx.run(q) //: List[(Address, Person)]
 // SELECT p.id, p.name, a.fk, a.street, a.zip FROM Person p INNER JOIN Address a ON a.fk IS NOT NULL AND a.fk = p.id WHERE a.fk <> 123
 ```
 
-In certain situations, you may wish to pretend that a nullable-field is not actually nullable and perform regular operations
+In certain situations, you may wish to pretend that a nullable field is not actually nullable and perform regular operations
 (e.g. arithmetic, concatenation, etc...) on the field. You can use a combination of `Option.apply` and `orNull` (or `getOrNull` where needed)
 in order to do this.
 
@@ -1123,7 +1126,7 @@ ctx.run(q)
 // i.e. same as the previous behavior
 ```
 
-In all other situations, since Quill strictly checks nullable values, and `case.. if` conditionals will work correctly in all Optional constructs.
+In all other situations, since Quill strictly checks nullable values, and `case ... if` conditionals will work correctly in all Optional constructs.
 However, since they may introduce behavior changes in your codebase, the following warning has been introduced:
 
 > Conditionals inside of Option.[map | flatMap | exists | forall] will create a `CASE` statement in order to properly null-check the sub-query (...)
@@ -1132,7 +1135,7 @@ However, since they may introduce behavior changes in your codebase, the followi
 val q = quote {
   query[Person].map(p => p.name.map(n => if (n == "Joe") "foo" else "bar").getOrElse("baz"))
 }
-// Information:(16, 15) Conditionals inside of Option.map will create a `CASE` statement in order to properly null-check the sub-query: `p.name.map((n) => if(n == "Joe") "foo" else "bar")`. 
+// Information:(16, 15) Conditionals inside of Option.map will create a `CASE` statement in order to properly null-check the sub-query: `p.name.map((n) => if (n == "Joe") "foo" else "bar")`. 
 // Expressions like Option(if (v == "foo") else "bar").getOrElse("baz") will now work correctly, but expressions that relied on the broken behavior (where "bar" would be returned instead) need to be modified  (see the "orNull / getOrNull" section of the documentation of more detail).
  
 ctx.run(a)
@@ -1144,8 +1147,8 @@ ctx.run(a)
 
 ### equals
 
-The `==`, `!=`, and `.equals` methods can be used to compare regular types as well Option types in a scala-idiomatic way.
-That is to say, either `T == T` or `Option[T] == Option[T]` is supported and the following "truth-table" is observed:
+The `==`, `!=`, and `.equals` methods can be used to compare regular types as well as `Option`-wrapped types in a Scala-idiomatic way.
+That is to say, both `T == T` and `Option[T] == Option[T]` are supported and the following "truth table" is observed:
 
 Left         | Right        | Equality   | Result
 -------------|--------------|------------|----------
@@ -1163,7 +1166,7 @@ Left         | Right        | Equality   | Result
 `None      ` | `None`       | `!=`       | `false`
 
 ```scala
-case class Node(id:Int, status:Option[String], otherStatus:Option[String])
+case class Node(id: Int, status: Option[String], otherStatus: Option[String])
 
 val q = quote { query[Node].filter(n => n.id == 123) }
 ctx.run(q)
@@ -1182,44 +1185,44 @@ ctx.run(q)
 // SELECT n.id, n.status, n.otherStatus FROM node n WHERE n.status IS NULL OR n.status <> 'RUNNING'
 ```
 
-If you would like to use an equality operator that follows that ansi-idiomatic approach, failing
-the comparison if either side is null as well as the principle that `null = null := false`, you can import `===` (and `=!=`) 
-from `Context.extras`. These operators work across `T` and `Option[T]` allowing comparisons like `T === Option[T]`,
-`Option[T] == T` etc... to be made. You can use also `===`
-directly in Scala code and it will have the same behavior, returning `false` when other the left-hand
+If you would like to use an equality operator that follows the ANSI-idiomatic approach, i.e. failing
+the comparison if either side is null, as well as the principle that `null = null := false`, you can import `===` (and `=!=`) 
+from `Context.extras`. These operators work across `T` and `Option[T]`, allowing comparisons like `T === Option[T]`,
+`Option[T] == T` etc. to be made. You can use also `===`
+directly in Scala code and it will have the same behavior, returning `false` when either the left-hand
 or right-hand side is `None`. This is particularity useful in paradigms like Spark where
 you will typically transition inside and outside of Quill code.
 
 > When using `a === b` or `a =!= b` sometimes you will see the extra `a IS NOT NULL AND b IS NOT NULL` comparisons
 > and sometimes you will not. This depends on `equalityBehavior` in `SqlIdiom` which determines whether the given SQL
-> dialect already does ansi-idiomatic comparison to `a`, and `b` when an `=` operator is used,
+> dialect already does ANSI-idiomatic comparison to `a`, and `b` when an `=` operator is used;
 > this allows us to omit the extra `a IS NOT NULL AND b IS NOT NULL`.
 
 
 ```scala
 import ctx.extras._
 
-// === works the same way inside of a quotation
+// === works the same way inside a quotation
 val q = run( query[Node].filter(n => n.status === "RUNNING") )
 // SELECT n.id, n.status FROM node n WHERE n.status IS NOT NULL AND n.status = 'RUNNING'
 
 // as well as outside
-(nodes:List[Node]).filter(n => n.status === "RUNNING")
+(nodes: List[Node]).filter(n => n.status === "RUNNING")
 ```
 
 #### Optional Tables
 
 As we have seen in the examples above, only the `map` and `flatMap` methods are available on outer-joined tables
-(i.e. tables wrapped in an `Option` object).
+(i.e. tables wrapped in an `Option`).
  
 Since you cannot use `Option[Table].isDefined`, if you want to null-check a whole table
-(e.g. if a left-join was not matched), you have to `map` to a specific field on which you can do the null-check.
+(e.g. if a left join was not matched), you have to `map` to a specific field on which you can do the null-check.
 
 ```scala
 val q = quote {
   query[Company].leftJoin(query[Address])
-    .on((c, a) => c.zip == a.zip)         // Row type is (Company, Option[Address])
-    .filter({case(c,a) => a.isDefined})   // You cannot null-check a whole table!
+    .on((c, a) => c.zip == a.zip)          // Row type is (Company, Option[Address])
+    .filter { case (c, a) => a.isDefined } // You cannot null-check a whole table!
 }
 ```
  
@@ -1227,8 +1230,8 @@ Instead, map the row-variable to a specific field and then check that field.
 ```scala
 val q = quote {
   query[Company].leftJoin(query[Address])
-    .on((c, a) => c.zip == a.zip)                     // Row type is (Company, Option[Address])
-    .filter({case(c,a) => a.map(_.street).isDefined}) // Null-check a non-nullable field instead
+    .on((c, a) => c.zip == a.zip)                       // Row type is (Company, Option[Address])
+    .filter { case (c, a) => a.map(_.street).isDefined } // Null-check a non-nullable field instead
 }
 ctx.run(q)
 // SELECT c.name, c.zip, a.fk, a.street, a.zip 
@@ -1237,18 +1240,18 @@ ctx.run(q)
 // WHERE a.street IS NOT NULL
 ```
  
-Finally, it is worth noting that a whole table can be wrapped into an `Option` object. This is particularly
+Finally, it is worth noting that a whole table can be wrapped in an `Option`. This is particularly
 useful when doing a union on table-sets that are both right-joined and left-joined together.
 ```scala
 val aCompanies = quote {
   for {
-    c <- query[Company] if (c.name like "A%")
+    c <- query[Company] if c.name like "A%"
     a <- query[Address].join(_.zip == c.zip)
   } yield (c, Option(a))  // change (Company, Address) to (Company, Option[Address]) 
 }
 val bCompanies = quote {
   for {
-    c <- query[Company] if (c.name like "A%")
+    c <- query[Company] if c.name like "A%"
     a <- query[Address].leftJoin(_.zip == c.zip)
   } yield (c, a) // (Company, Option[Address])
 }
@@ -1267,20 +1270,18 @@ ctx.run(union)
 
 ### Ad-Hoc Case Classes
 
-Case Classes can also be used inside quotations as output values:
+Case classes can also be used inside quotations as output values:
 
 ```scala
 case class Person(id: Int, name: String, age: Int)
 case class Contact(personId: Int, phone: String)
-case class ReachablePerson(name:String, phone: String)
+case class ReachablePerson(name: String, phone: String)
 
 val q = quote {
   for {
-    p <- query[Person] if(p.id == 999)
-    c <- query[Contact] if(c.personId == p.id)
-  } yield {
-    ReachablePerson(p.name, c.phone)
-  }
+    p <- query[Person] if p.id == 999
+    c <- query[Contact] if c.personId == p.id
+  } yield ReachablePerson(p.name, c.phone)
 }
 
 ctx.run(q)
@@ -1290,28 +1291,28 @@ ctx.run(q)
 As well as in general:
 
 ```scala
-case class IdFilter(id:Int)
+case class IdFilter(id: Int)
 
 val q = quote {
   val idFilter = new IdFilter(999)
   for {
-    p <- query[Person] if(p.id == idFilter.id)
-    c <- query[Contact] if(c.personId == p.id)
-  } yield {
-    ReachablePerson(p.name, c.phone)
-  }
+    p <- query[Person] if p.id == idFilter.id
+    c <- query[Contact] if c.personId == p.id
+  } yield ReachablePerson(p.name, c.phone)
 }
 
 ctx.run(q)
 // SELECT p.name, c.phone FROM Person p, Contact c WHERE (p.id = 999) AND (c.personId = p.id)
 ```
+
 ***Note*** however that this functionality has the following restrictions:
-1. The Ad-Hoc Case Class can only have one constructor with one set of parameters.
-2. The Ad-Hoc Case Class must be constructed inside the quotation using one of the following methods:
+
+1. The ad-hoc case class can only have one constructor with one set of parameters.
+2. The ad-hoc case class must be constructed inside the quotation using one of the following methods:
     1. Using the `new` keyword: `new Person("Joe", "Bloggs")`
     2. Using a companion object's apply method:  `Person("Joe", "Bloggs")`
     3. Using a companion object's apply method explicitly: `Person.apply("Joe", "Bloggs")`
-4. Any custom logic in a constructor/apply-method of an Ad-Hoc case class will not be invoked when it is 'constructed' inside a quotation. To construct an Ad-Hoc case class with custom logic inside a quotation, you can use a quoted method.
+4. Any custom logic in a constructor/apply-method of an ad-hoc case class will not be invoked when it is 'constructed' inside a quotation. To construct an ad-hoc case class with custom logic inside a quotation, you can use a quoted method.
 
 ## Query probing
 
@@ -1323,15 +1324,15 @@ This feature is disabled by default. To enable it, mix the `QueryProbing` trait 
 object myContext extends YourContextType with QueryProbing
 ```
 
-The context must be created in a separate compilation unit in order to be loaded at compile time. Please use [this guide](http://www.scala-sbt.org/0.13/docs/Macro-Projects.html) that explains how to create a separate compilation unit for macros, that also serves to the purpose of defining a query-probing-capable context. `context` could be used instead of `macros` as the name of the separate compilation unit.
+The context must be created in a separate compilation unit in order to be loaded at compile time. Please use [this guide](http://www.scala-sbt.org/0.13/docs/Macro-Projects.html) that explains how to create a separate compilation unit for macros, that also serves the purpose of defining a query-probing-capable context. `context` can be used instead of `macros` as the name of the separate compilation unit.
 
-The configurations correspondent to the config key must be available at compile time. You can achieve it by adding this line to your project settings:
+The configuration corresponding to the config key must be available at compile time. You can achieve this by adding the following line to your project settings:
 
 ```
 unmanagedClasspath in Compile += baseDirectory.value / "src" / "main" / "resources"
 ```
 
-If your project doesn't have a standard layout, e.g. a play project, you should configure the path to point to the folder that contains your config file.
+If your project doesn't have a standard layout, e.g. a Play project, you should configure the path to point to the folder that contains your config file.
 
 ## Actions
 
@@ -1360,7 +1361,7 @@ ctx.run(a)
 ### batch insert
 ```scala
 val a = quote {
-  liftQuery(List(Person(0, "John", 31),Person(2, "name2", 32))).foreach(e => query[Person].insert(e))
+  liftQuery(List(Person(0, "John", 31), Person(2, "name2", 32))).foreach(e => query[Person].insert(e))
 }
 
 ctx.run(a) //: List[Long] size = 2. Contains 1 @ positions, where row was inserted E.g List(1,1)
@@ -1403,7 +1404,7 @@ ctx.run(a)
 
 ```scala
 val a = quote {
-  liftQuery(List(Person(1, "name", 31),Person(2, "name2", 32))).foreach { person =>
+  liftQuery(List(Person(1, "name", 31), Person(2, "name2", 32))).foreach { person =>
      query[Person].filter(_.id == person.id).update(_.name -> person.name, _.age -> person.age)
   }
 }
@@ -1457,8 +1458,8 @@ val a = quote {
 
 ##### Update on Conflict
 
-Resolve conflict by updating existing row if needed. In `onConflictUpdate(target)((t, e) => assignment)`: `target` refers to
-conflict target, `t` - to existing row and `e` - to excluded, e.g. row proposed for insert.
+Resolve a conflict by updating an existing row if needed. In `onConflictUpdate(target)((t, e) => assignment)`: `target` refers to the
+conflict target, `t` - to the existing row and `e` - to the excluded, e.g. row proposed for insert.
 ```scala
 val a = quote {
   query[Product]
@@ -1538,16 +1539,16 @@ val q = quote {
 }
 val strs: List[String] = ctx.translate(q)
 strs.map(println)
-// INSERT INTO Person (id, name,age) VALUES (0, 'Joe', 44)
-// INSERT INTO Person (id, name,age) VALUES (1, 'Jack', 45)
+// INSERT INTO Person (id,name,age) VALUES (0, 'Joe', 44)
+// INSERT INTO Person (id,name,age) VALUES (1, 'Jack', 45)
 ```
 
-The `translate` method is available in every Quill context as well as the Cassandra and OrientDB contexts,
-the latter two, however, do not support Insert and Batch Insert query printing.
+The `translate` method is available in every Quill context as well as the Cassandra and OrientDB contexts;
+the latter two, however, do not support insert and batch insert query printing.
 
 ## IO Monad
 
-Quill provides an IO monad that allows the user to express multiple computations and execute them separately. This mechanism is also known as a free monad, which provides a way of expressing computations as referentially-transparent values and isolates the unsafe IO operations into a single operation. For instance:
+Quill provides an IO monad that allows the user to express multiple computations and execute them separately. This mechanism is also known as a free monad, which provides a way of expressing computations as referentially transparent values and isolates the unsafe IO operations into a single operation. For instance:
 
 ```scala
 // this code using Future
@@ -1618,16 +1619,16 @@ performIO(a.transactional) // note: transactional can be used outside of `perfor
 ### Getting a ResultSet
 
 Quill JDBC Contexts allow you to use `prepare` in order to get a low-level `ResultSet` that is useful
-for interacting with legacy APIs. This function  returns a `f: (Connection) => (PreparedStatement)` 
-closure as opposed to a `PreparedStatement` in order to guarantee that JDBC Exceptions are not
-thrown until you can wrap them into the appropriate Exception-handling mechanism (e.g.
+for interacting with legacy APIs. This function  returns an `f: Connection => PreparedStatement` 
+closure as opposed to a `PreparedStatement` in order to guarantee that JDBC exceptions are not
+thrown until you can wrap them into the appropriate exception-handling mechanism (e.g.
 `try`/`catch`, `Try` etc...).
 
 ```scala
 val q = quote {
   query[Product].filter(_.id == 1)
 }
-val preparer: (Connection) => (PreparedStatement)  = ctx.prepare(q)
+val preparer: Connection => PreparedStatement  = ctx.prepare(q)
 // SELECT x1.id, x1.description, x1.sku FROM Product x1 WHERE x1.id = 1
 
 // Use ugly stateful code, bracketed effects, or try-with-resources here:
@@ -1650,7 +1651,7 @@ The `prepare` function can also be used with `insert`, and `update` queries.
 val q = quote {
   query[Product].insert(lift(Product(1, "Desc", 123))
 }
-val preparer: (Connection) => (PreparedStatement)  = ctx.prepare(q)
+val preparer: Connection => PreparedStatement = ctx.prepare(q)
 // INSERT INTO Product (id,description,sku) VALUES (?, ?, ?)
 ```
 
@@ -1692,11 +1693,9 @@ import ctx._
 
 val q = quote {
   for {
-    p <- Person if(p.id == 999)
-    c <- Contact if(c.personId == p.id)
-  } yield {
-    (p.name, c.phone)
-  }
+    p <- Person if p.id == 999
+    c <- Contact if c.personId == p.id
+  } yield (p.name, c.phone)
 }
 
 ctx.run(q)
@@ -1762,7 +1761,7 @@ ctx.run(query[Book])
 
 ### User-Defined Types
 
-The cassandra context provides encoding of UDT (user-defined types).
+The Cassandra context provides encoding of UDT (user-defined types).
 ```scala
 
 case class Name(firstName: String, lastName: String) extends Udt
@@ -1789,7 +1788,7 @@ implicit val nameMeta = udtMeta[Name]("name", _.firstName -> "first", _.lastName
 
 ## Cassandra-specific operations
 
-The cassandra context also provides a few additional operations:
+The Cassandra context also provides a few additional operations:
 
 ### allowFiltering
 ```scala
@@ -1978,11 +1977,11 @@ def filter(f: Quoted[T] => Quoted[Boolean]): DynamicQuery[T] =
   transform(f, Filter)
 ```
 
-It takes a `Quoted[T]` as input and produces a `Quoted[Boolean]`. The user is free to use regular scala code within the transformation:
+It takes a `Quoted[T]` as input and produces a `Quoted[Boolean]`. The user is free to use regular Scala code within the transformation:
 
 ```scala
 def people(onlyMinors: Boolean) =
-  dynamicQuery[Person].filter(p => if(onlyMinors) quote(p.age < 18) else quote(true))
+  dynamicQuery[Person].filter(p => if (onlyMinors) quote(p.age < 18) else quote(true))
 ```
 
 In order to create a dynamic query, use one of the following methods:
@@ -2010,7 +2009,7 @@ dynamicQuerySchema[Person]("people", alias(_.name, "pname"))
 
 // this allows users to use a dynamic list of aliases
 val aliases = List(alias[Person](_.name, "pname"), alias[Person](_.age, "page"))
-dynamicQuerySchema[Person]("people", aliases:_*)
+dynamicQuerySchema[Person]("people", aliases: _*)
 
 // a few methods have an overload with the `Opt` suffix,
 // which apply the transformation only if the option is defined:
@@ -2049,13 +2048,13 @@ dynamicQuery[Person].insertValue(p)
 dynamicQuery[Person].filter(_.id == 1).updateValue(p)
 ```
 
-# Extending quill
+# Extending Quill
 
 ## Infix
 
 Infix is a very flexible mechanism to use non-supported features without having to use plain queries in the target language. It allows the insertion of arbitrary strings within quotations.
 
-For instance, quill doesn't support the `FOR UPDATE` SQL feature. It can still be used through infix and implicit classes:
+For instance, Quill doesn't support the `FOR UPDATE` SQL feature. It can still be used through infix and implicit classes:
 
 ```scala
 implicit class ForUpdate[T](q: Query[T]) {
@@ -2081,7 +2080,7 @@ be careful with the use of `infix` in queries that have multiple `map`+`filter` 
 case class Data(id: Int)
 case class DataAndRandom(id: Int, value: Int)
 
-// This should be alright:
+// This should be all right:
 val q = quote {
   query[Data].map(e => DataAndRandom(e.id, infix"RAND()".as[Int])).filter(r => r.value <= 10)
 }
@@ -2105,7 +2104,7 @@ run(q)
 // ) AS e WHERE e.value <= 100
 ```
 
-If you are sure that the the content of your infix is a pure function, you canse use the `pure` method
+If you are sure that the content of your infix is a pure function, you can use the `pure` method
 in order to indicate to Quill that the infix clause can be copied in the query. This gives Quill much
 more leeway to flatten your query, possibly improving performance.
 
@@ -2128,7 +2127,7 @@ run(q)
 #### Summary
 Use `infix"...".asCondition` to express an infix that represents a conditional expression.
 
-#### Explination
+#### Explanation
 
 When synthesizing queries for databases which do not have proper boolean-type support (e.g. SQL Server,
 Oracle etc...) boolean infix clauses inside projections must become values. 
@@ -2136,9 +2135,9 @@ Typically this requires a `CASE WHERE ... END`.
 
 Take the following example:
 ```scala
-case class Node(name: String, isUp: Boolean, uptime:Long)
+case class Node(name: String, isUp: Boolean, uptime: Long)
 case class Status(name: String, allowed: Boolean)
-val allowedStatus:Boolean = getState
+val allowedStatus: Boolean = getState
 
 quote {
   query[Node].map(n => Status(n.name, n.isUp == lift(allowedStatus)))
@@ -2150,10 +2149,10 @@ run(q)
 //   SELECT n.name, CASE WHEN (n.isUp = ?) THEN 1 ELSE 0, uptime FROM Node n
 ```
 However, in certain cases, infix clauses that express conditionals should actually represent
-boolean expressions for example:
+boolean expressions, for example:
 ```scala
 case class Node(name: String, isUp: Boolean)
-val maxUptime:Boolean = getState
+val maxUptime: Boolean = getState
 
 quote {
   query[Node].filter(n => infix"${n.uptime} > ${lift(maxUptime)}".as[Boolean])
@@ -2161,7 +2160,7 @@ quote {
 run(q)
 // Should be this:
 //  SELECT n.name, n.isUp, n.uptime WHERE n.uptime > ?
-// However since infix"...".as[Boolean] is treated as a Boolean Value (as opposed to an expression) it will be converted to this:
+// However since infix"...".as[Boolean] is treated as a boolean value (as opposed to an expression) it will be converted to this:
 //  SELECT n.name, n.isUp, n.uptime WHERE 1 == n.uptime > ?
 ```
 
@@ -2320,7 +2319,7 @@ The meta DSL allows the user to customize how Quill handles the expansion and ex
 
 ### Schema meta
 
-By default, quill expands `query[Person]` to `querySchema[Person]("Person")`. It's possible to customize this behavior using an implicit instance of `SchemaMeta`:
+By default, Quill expands `query[Person]` to `querySchema[Person]("Person")`. It's possible to customize this behavior using an implicit instance of `SchemaMeta`:
 
 ```scala
 def example = {
@@ -2448,7 +2447,7 @@ For example, create the following abstract context:
 ```scala
 trait ModularContext[I <: Idiom, N <: NamingStrategy] { this: Context[I, N] =>
   def peopleOlderThan = quote {
-    (age:Int, q:Query[Person]) => q.filter(p => p.age > age)
+    (age: Int, q: Query[Person]) => q.filter(p => p.age > age)
   }
 }
 ```
@@ -2559,7 +2558,7 @@ val peopleAndAddressesDS: Dataset[(Person, Address)] = run {
 }
 ```
 
-Here is an example of a Dataset being converted into Quill, filtered, and then written back out.
+Here is an example of a dataset being converted into Quill, filtered, and then written back out.
 
 ```scala
 import org.apache.spark.sql.Dataset
@@ -2835,7 +2834,7 @@ ctx.dataSource.serverName=host
 
 ## ZIO (quill-jdbc-zio)
 
-Quill context that executes JDBC queries inside of ZIO. Unlike most other contexts
+Quill context that executes JDBC queries inside ZIO. Unlike most other contexts
 that require passing in a Data Source, this context takes in a java.sql.Connection
 as a resource dependency which can be provided later (see `ZioJdbc` for helper methods
 that assist in doing this).
@@ -2873,7 +2872,7 @@ val zioDs = DataSourceLayer.fromPrefix("testPostgresDB")
 MyZioContext.run(query[Person]).onDataSource.provideCustomLayer(zioDS)
 ```
 
-> Also note that if you are using a Plain Scala app however, you will need to manually run it i.e. using zio.Runtime
+> Also note that if you are using a plain Scala app however, you will need to manually run it i.e. using zio.Runtime
 > ```scala
 > Runtime.default.unsafeRun(MyZioContext.run(query[Person]).provideLayer(zioDS))
 > ```
@@ -3130,7 +3129,7 @@ val trans =
 val result = trans.runSyncUnsafe() //returns: List[Person]
 ```
 
-Streaming can also be done inside of `transaction` block so long as the result is converted to a task beforehand.
+Streaming can also be done inside `transaction` block so long as the result is converted to a task beforehand.
 ```
 val trans =
   ctx.transaction {
@@ -3138,7 +3137,7 @@ val trans =
       _   <- ctx.run(query[Person].insert(Person("Joe", 123)))
       ppl <- ctx
               .stream(query[Person])                               // Observable[Person]
-              .foldLeftL(List[Person]())({case (l, p) => p +: l})  // ... becomes Task[List[Person]]
+              .foldLeftL(List[Person]()) { case (l, p) => p +: l } // ... becomes Task[List[Person]]
     } yield ppl
   } //returns: Task[List[Person]]
 
@@ -3400,7 +3399,7 @@ ctx.transaction { implicit ec =>
 }
 ```
 
-Note that the global execution context is renamed to ec.
+Note that the global execution context is renamed to `ec`.
 
 #### application.properties
 
@@ -3531,7 +3530,7 @@ ctx.transaction { implicit ec =>
 }
 ```
 
-Note that the global execution context is renamed to ec.
+Note that the global execution context is renamed to `ec`.
 
 #### application.properties
 
@@ -3615,7 +3614,7 @@ Support for the Twitter Finagle library is available with MySQL and Postgres dat
 
 #### transactions
 
-The finagle context provides transaction support through a `Local` value. See twitter util's [scaladoc](https://github.com/twitter/util/blob/ee8d3140ba0ecc16b54591bd9d8961c11b999c0d/util-core/src/main/scala/com/twitter/util/Local.scala#L96) for more details.
+The Finagle context provides transaction support through a `Local` value. See twitter util's [scaladoc](https://github.com/twitter/util/blob/ee8d3140ba0ecc16b54591bd9d8961c11b999c0d/util-core/src/main/scala/com/twitter/util/Local.scala#L96) for more details.
 
 ```
 ctx.transaction {
@@ -3664,7 +3663,7 @@ ctx.pool.maxWaiters=2147483647
 
 #### transactions
 
-The finagle context provides transaction support through a `Local` value. See twitter util's [scaladoc](https://github.com/twitter/util/blob/ee8d3140ba0ecc16b54591bd9d8961c11b999c0d/util-core/src/main/scala/com/twitter/util/Local.scala#L96) for more details.
+The Finagle context provides transaction support through a `Local` value. See twitter util's [scaladoc](https://github.com/twitter/util/blob/ee8d3140ba0ecc16b54591bd9d8961c11b999c0d/util-core/src/main/scala/com/twitter/util/Local.scala#L96) for more details.
 
 ```
 ctx.transaction {
@@ -3738,7 +3737,7 @@ ctx.session.addressTranslator=com.datastax.driver.core.policies.IdentityTranslat
 
 ## quill-cassandra-zio
 
-Quill context that executes Cassandra queries inside of ZIO. Unlike most other contexts
+Quill context that executes Cassandra queries inside ZIO. Unlike most other contexts
 that require passing in a Data Source, this context takes in a `CassandraZioSession`
 as a resource dependency which can be provided later (see the `CassandraZioSession` object for helper methods
 that assist in doing this).
@@ -3753,7 +3752,7 @@ run(people)
   .provide(Has(session))
 ```
 
-Various methods in the `io.getquill.CassandraZioSession` can assist in simplifying it's creation, for example, you can
+Various methods in the `io.getquill.CassandraZioSession` can assist in simplifying its creation, for example, you can
 provide a `Config` object instead of a `CassandraZioSession` like this:
 
 ```scala
@@ -3762,10 +3761,10 @@ provide a `Config` object instead of a `CassandraZioSession` like this:
 run(query[Person])
   .provideCustomLayer(zioSessionLayer)
 ```
-> (Note that the resulting ZioCassandraSession has a closing bracket)
+> (Note that the resulting `ZioCassandraSession` has a closing bracket)
 
 
-If you are using a Plain Scala app, you will need to manually run it e.g. using zio.Runtime
+If you are using a plain Scala app, you will need to manually run it e.g. using `zio.Runtime`
 ```scala
  Runtime.default.unsafeRun(MyZioContext.run(query[Person]).provideCustomLayer(zioSessionLayer))
 ```
@@ -3773,8 +3772,8 @@ If you are using a Plain Scala app, you will need to manually run it e.g. using 
 #### DAO helper
 
 One additional useful pattern is to use `import io.getquill.context.qzio.ImplicitSyntax.Implicit` to provide
-an implicit CassandraZioSession to one or multiple `run(qry)` calls in a context. This is very useful when creating
-DAO patterns that will reuse a CassandraZioSession many times:
+an implicit `CassandraZioSession` to one or multiple `run(qry)` calls in a context. This is very useful when creating
+DAO patterns that will reuse a `CassandraZioSession` many times:
 
 ```scala
 case class MyQueryService(cs: CassandraZioSession) {
@@ -3955,7 +3954,7 @@ Please refer to [CASSANDRA.md](https://github.com/getquill/quill/blob/master/CAS
 
 ## Related Projects
  * [quill-generic](https://github.com/ajozwik/quill-generic) - Generic DAO Support for Quill.
- * [scala-db-codegen](https://github.com/olafurpg/scala-db-codegen) - Code/boilerplate generator from db schema
+ * [scala-db-codegen](https://github.com/olafurpg/scala-db-codegen) - Code/boilerplate generator from DB schema
  * [quill-cache](https://github.com/mslinn/quill-cache/) - Caching layer for Quill
  * [quill-gen](https://github.com/mslinn/quill-gen/) - a DAO generator for `quill-cache`
  
