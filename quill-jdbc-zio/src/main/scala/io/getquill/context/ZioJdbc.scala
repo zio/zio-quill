@@ -20,6 +20,10 @@ object ZioJdbc {
   type QCStream[T] = ZStream[Has[Connection], SQLException, T]
 
   object QIO {
+    def apply[T](t: => T): QIO[T] = ZIO.effect(t).refineToOrDie[SQLException]
+  }
+
+  object QCIO {
     def apply[T](t: => T): QCIO[T] = ZIO.effect(t).refineToOrDie[SQLException]
   }
 
