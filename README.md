@@ -2836,41 +2836,64 @@ ctx.dataSource.serverName=host
 ## ZIO (quill-jdbc-zio)
 
 Quill context that executes JDBC queries inside of ZIO. Unlike most other contexts
-that require passing in a Data Source, this context takes in a java.sql.Connection
-as a resource dependency which can be provided later (see `ZioJdbc` for helper methods
-that assist in doing this).
+that require passing in a `java.sql.DataSource` when the context is created, this context's 
+run methods return a ZIO that has a DataSource resource dependency.
+Naturally, this should be provided later on in your application 
+(see `ZioJdbc` for helper methods that assist in doing this).
 
-Since the resource dependency itself is just a `Has[Connection]` the result of a `run` call is `ZIO[Has[Connection], SQLException, T]`. 
-Since this is frequently used, the type `QIO[T]` i.e. Quill-IO has been defined as an alias it.
-This means that if you have a `Connection` object, you just provide it!
-
-```scala
-def conn: Connection = _
-run(people)
-  .provide(Has(conn))
-```
-
-Since in most JDBC use-cases, a connection-pool datasource (e.g. Hikari) is used, it is simplier to work with
-`ZIO[Has[DataSource with Closeable], SQLException, T]` than `ZIO[Has[Connection], SQLException, T]`.
-The extension method `.onDataSource` in `io.getquill.context.ZioJdbc.QuillZioExt` will perform this conversion
-(you can use `.onDS` for even more brevity).
+Since resource dependency is `Has[DataSource]` the result of a `run` call is `ZIO[Has[DataSource], SQLException, T]`.
+This means that if you have a `DataSource` object, you can just provide it!
 
 ```scala
-import io.getquill.context.ZioJdbc._
-def ds: DataSource with Closeable = _
-run(people)
-  .onDataSource  // or: onDS
-  .provide(Has(ds))
+def ds: DataSource = _
+run(people).provide(Has(ds))
 ```
 
-Additionally, constructor-methods `fromPrefix`, `fromConfig`, `fromJdbcConfig` and `fromDataSource` are available on
-`DataSourceLayer` to construct instances of `ZLayer[Has[DataSource with Closeable], SQLException, Has[Connection]]`.
+> Since most quill-zio methods return `ZIO[Has[DataSource], SQLException, T]` 
+> the type `QIO[T]` i.e. Quill-IO has been defined as an alias.
+> 
+> For underlying-contexts (see below) that depend on `Has[Connection]`, 
+> the alias `QCIO[T]` (i.e. Quill-Connection-IO) has been defined
+> for `ZIO[Has[Connection], SQLException, T]`.
+
+Since in most JDBC use-cases, a connection-pool datasource (e.g. Hikari) is used,
+constructor-methods `fromPrefix`, `fromConfig`, `fromJdbcConfig` are available on
+`DataSourceLayer` to construct instances of a `ZLayer[Any, SQLException, Has[DataSource]]`
+which can be easily used to provide a DataSource dependency.
 You can use them like this:
-
 ```scala
 import ZioJdbc._
 val zioDs = DataSourceLayer.fromPrefix("testPostgresDB")
-MyZioContext.run(query[Person]).onDataSource.provideCustomLayer(zioDS)
+MyZioContext.run(query[Person]).provideCustomLayer(zioDS)
+```
+
+If in some rare cases, you wish to provide a `java.sql.Connection` to a `run` method directly, you can delegate
+to the underlying-context. This is a more low-level context whose `run` methods have a `Has[Connection]` resource.
+Here is an example of how this can be done.
+
+```scala
+def conn: Connection = _ // If you are starting with a connection object
+
+import io.getquill.context.ZioJdbc._
+// Import encoders/decoders of the underlying context. Do not import quote/run/prepare methods to avoid conflicts.
+import MyZioContext.underlying.{ quote => _, run => _, prepare => _,  _ }
+
+MyZioContext.underlying.run(people).provide(Has(conn))
+```
+
+If you are working with an underlying-context and want to provide a DataSource instead of a connection,
+you can use the `onDataSource` method. Note however that this is *only* needed when working with an underlying-context.
+When working with a normal context, `onDataSource` is not available or necessary 
+(since for a  normal contexts `R` will be `Has[DataSource]`).
+
+```scala
+val ds: DataSource = _
+
+import io.getquill.context.ZioJdbc._
+// Import encoders/decoders of the underlying context. Do not import quote/run/prepare methods to avoid conflicts.
+import MyZioContext.underlying.{ quote => _, run => _, prepare => _,  _ }
+
+MyZioContext.underlying.run(people).onDataSource.provide(Has(ds))
 ```
 
 > Also note that if you are using a Plain Scala app however, you will need to manually run it i.e. using zio.Runtime

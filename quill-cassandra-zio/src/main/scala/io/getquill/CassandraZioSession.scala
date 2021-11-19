@@ -1,14 +1,13 @@
 package io.getquill
 
-import com.datastax.driver.core.Cluster
+import com.datastax.oss.driver.api.core.CqlSession
 import com.typesafe.config.Config
 import io.getquill.context.{ AsyncFutureCache, CassandraSession, SyncCache }
 import io.getquill.util.LoadConfig
 import zio.{ Has, ZIO, ZLayer, ZManaged }
 
 case class CassandraZioSession(
-  override val cluster:                    Cluster,
-  override val keyspace:                   String,
+  override val session:                    CqlSession,
   override val preparedStatementCacheSize: Long
 ) extends CassandraSession with SyncCache with AsyncFutureCache with AutoCloseable
 
@@ -18,7 +17,7 @@ object CassandraZioSession {
       config <- ZManaged.service[CassandraContextConfig]
       // Evaluate the configuration inside of 'effect' and then create the session from it
       session <- ZManaged.fromAutoCloseable(
-        ZIO.effect(CassandraZioSession(config.cluster, config.keyspace, config.preparedStatementCacheSize))
+        ZIO.effect(CassandraZioSession(config.session, config.preparedStatementCacheSize))
       )
     } yield session).toLayer
 
