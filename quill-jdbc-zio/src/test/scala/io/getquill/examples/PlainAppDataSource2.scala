@@ -1,14 +1,12 @@
 package io.getquill.examples
 
 import com.zaxxer.hikari.{ HikariConfig, HikariDataSource }
-import io.getquill.context.ZioJdbc.DataSourceLayer
 import io.getquill.util.LoadConfig
 import io.getquill.{ JdbcContextConfig, Literal, PostgresZioJdbcContext }
-import zio.{ Has, Runtime, Task, ZLayer }
 import zio.console.putStrLn
+import zio.{ Has, Runtime, Task, ZLayer }
 
 import java.io.Closeable
-import java.sql.Connection
 import javax.sql.DataSource
 
 object PlainAppDataSource2 {
@@ -21,8 +19,8 @@ object PlainAppDataSource2 {
   def hikariConfig = new HikariConfig(JdbcContextConfig(LoadConfig("testPostgresDB")).configProperties)
   def hikariDataSource: DataSource with Closeable = new HikariDataSource(hikariConfig)
 
-  val zioConn: ZLayer[Any, Throwable, Has[Connection]] =
-    Task(hikariDataSource).toLayer >>> DataSourceLayer.live
+  val zioDS: ZLayer[Any, Throwable, Has[DataSource]] =
+    Task(hikariDataSource).toLayer
 
   def main(args: Array[String]): Unit = {
     val people = quote {
@@ -31,7 +29,7 @@ object PlainAppDataSource2 {
     val qzio =
       MyPostgresContext.run(people)
         .tap(result => putStrLn(result.toString))
-        .provideCustomLayer(zioConn)
+        .provideCustomLayer(zioDS)
 
     Runtime.default.unsafeRun(qzio)
     ()

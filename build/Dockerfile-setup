@@ -1,7 +1,7 @@
-FROM debian:jessie
+FROM debian:stretch
 MAINTAINER gustavo.amigo@gmail.com
 
-RUN apt-get update; DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     ca-certificates \
     curl \
     mysql-client \
@@ -11,27 +11,40 @@ RUN apt-get update; DEBIAN_FRONTEND=noninteractive apt-get install -y --no-insta
     sqlite3 \
     tar \
     apt-transport-https \
-    locales
+    locales \
+    default-jre \
+    apt-utils
 
-RUN curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - && \
-    curl https://packages.microsoft.com/config/debian/8/prod.list > /etc/apt/sources.list.d/mssql-release.list && \
-    apt-get update && \
-    ACCEPT_EULA=Y apt-get install -y msodbcsql mssql-tools
+ADD https://repo1.maven.org/maven2/sqlline/sqlline/1.12.0/sqlline-1.12.0-jar-with-dependencies.jar /sqlline/sqlline.jar
+ADD https://repo1.maven.org/maven2/com/oracle/ojdbc/ojdbc8/19.3.0.0/ojdbc8-19.3.0.0.jar /sqlline/ojdbc.jar
 
-ENV PATH $PATH:/opt/mssql-tools/bin
+# RUN curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - && \
+# RUN curl https://packages.microsoft.com/config/debian/9/prod.list > /etc/apt/sources.list.d/mssql-release.list && \
+# RUN apt-get update && \
+# ACCEPT_EULA=Y apt-get install -y msodbcsql mssql-tools
+
+
+# Needed to get the apt-key add - to work
+RUN apt-get update && apt-get install -my wget gnupg
+RUN curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add -
+
+RUN curl https://packages.microsoft.com/config/debian/9/prod.list > /etc/apt/sources.list.d/mssql-release.list
+RUN apt update
+RUN ACCEPT_EULA=Y apt-get install -y mssql-tools
 
 RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
     echo 'LANG="en_US.UTF-8"'>/etc/default/locale && \
     dpkg-reconfigure --frontend=noninteractive locales && \
     update-locale LANG=en_US.UTF-8
 
-ENV CASSANDRA_VERSION 3.11.10
+ENV CASSANDRA_VERSION 3.11.11
+ENV CASSANDRA_URL https://downloads.apache.org/cassandra/$CASSANDRA_VERSION/apache-cassandra-$CASSANDRA_VERSION-bin.tar.gz
 
 RUN echo "Cassandra Version: $CASSANDRA_VERSION"
-RUN echo "Getting http://apache.volia.net/cassandra/$CASSANDRA_VERSION/apache-cassandra-$CASSANDRA_VERSION-bin.tar.gz"
+RUN echo "Getting $CASSANDRA_URL"
 
 RUN  cd /opt ; \
-     curl "http://apache.volia.net/cassandra/$CASSANDRA_VERSION/apache-cassandra-$CASSANDRA_VERSION-bin.tar.gz" | tar zx
+     curl "$CASSANDRA_URL" | tar zx
 
 ENV PATH /opt/apache-cassandra-$CASSANDRA_VERSION/bin:$PATH
 

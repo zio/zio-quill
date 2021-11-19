@@ -1,8 +1,7 @@
 package io.getquill.quat
 
 import java.lang.reflect.Method
-
-import io.getquill.dsl.QuotationDsl
+import io.getquill.Quoted
 import io.getquill.util.{ Messages, OptionalTypecheck }
 import io.getquill.{ Embedded, Udt }
 
@@ -337,7 +336,7 @@ trait QuatMakingBase {
 
   object QuotedType {
     def unapply(tpe: Type) =
-      paramOf(tpe, typeOf[QuotationDsl#Quoted[Any]])
+      paramOf(tpe, typeOf[Quoted[Any]])
   }
 
   object QueryType {

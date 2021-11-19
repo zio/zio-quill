@@ -1,8 +1,8 @@
 package io.getquill.oracle
 
-import io.getquill.ZioSpec
-import io.getquill.Prefix
+import io.getquill.{ Prefix, ZioSpec }
 import zio.{ Task, ZIO }
+import io.getquill.context.ZioJdbc._
 
 class ZioJdbcContextSpec extends ZioSpec {
 
@@ -26,7 +26,7 @@ class ZioJdbcContextSpec extends ZioSpec {
         seq <- testContext.transaction {
           for {
             _ <- testContext.run(qr1.insert(_.i -> 33))
-            s <- accumulate(testContext.stream(qr1))
+            s <- accumulateDS(testContext.stream(qr1))
           } yield s
         }
         r <- testContext.run(qr1)
@@ -35,34 +35,36 @@ class ZioJdbcContextSpec extends ZioSpec {
     "failure" in {
       (for {
         _ <- testContext.run(qr1.delete)
-        e <- testContext.transaction {
+        e <- testContext.underlying.transaction {
+          import testContext.underlying._
           ZIO.collectAll(Seq(
-            testContext.run(qr1.insert(_.i -> 18)),
+            testContext.underlying.run(qr1.insert(_.i -> 18)),
             Task {
               throw new IllegalStateException
             }
           ))
         }.catchSome {
           case e: Exception => Task(e.getClass.getSimpleName)
-        }
+        }.onDataSource
         r <- testContext.run(qr1)
       } yield (e, r.isEmpty)).runSyncUnsafe() mustEqual (("IllegalStateException", true))
     }
     "nested" in {
       (for {
         _ <- testContext.run(qr1.delete)
-        _ <- testContext.transaction {
-          testContext.transaction {
-            testContext.run(qr1.insert(_.i -> 33))
+        _ <- testContext.underlying.transaction {
+          import testContext.underlying._
+          testContext.underlying.transaction {
+            testContext.underlying.run(qr1.insert(_.i -> 33))
           }
-        }
+        }.onDataSource
         r <- testContext.run(qr1)
       } yield r).runSyncUnsafe().map(_.i) mustEqual List(33)
     }
     "prepare" in {
-      testContext.prepareParams(
-        "select * from Person where name=? and age > ?", ps => (List("Sarah", 127), ps)
-      ).runSyncUnsafe() mustEqual List("127", "'Sarah'")
+      testContext.underlying.prepareParams(
+        "select * from Person where name=? and age > ?", (ps, _) => (List("Sarah", 127), ps)
+      ).onDataSource.runSyncUnsafe() mustEqual List("127", "'Sarah'")
     }
   }
 }
