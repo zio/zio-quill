@@ -91,10 +91,17 @@ object ZioJdbc {
       )
   }
 
-  implicit class QuillZioDataSourceExt[T, R <: Has[_]](qzio: ZIO[Has[DataSource] with R, Throwable, T])(implicit tag: Tag[R]) {
+  implicit class QuillZioDataSourceExt[T](qzio: ZIO[Has[DataSource], Throwable, T]) {
     import io.getquill.context.qzio.ImplicitSyntax._
+    def implicitDS(implicit implicitEnv: Implicit[Has[DataSource]]): ZIO[Any, SQLException, T] =
+      (for {
+        q <- qzio.provide(implicitEnv.env)
+      } yield q).refineToOrDie[SQLException]
+  }
 
-    def implicitDS(implicit implicitEnv: Implicit[Has[DataSource]]): ZIO[R, SQLException, T] =
+  implicit class QuillZioSomeDataSourceExt[T, R <: Has[_]](qzio: ZIO[Has[DataSource] with R, Throwable, T])(implicit tag: Tag[R]) {
+    import io.getquill.context.qzio.ImplicitSyntax._
+    def implicitSomeDS(implicit implicitEnv: Implicit[Has[DataSource]]): ZIO[R, SQLException, T] =
       (for {
         r <- ZIO.environment[R]
         q <- qzio
