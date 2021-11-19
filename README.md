@@ -1724,6 +1724,16 @@ ctx.run(q)
 // SELECT p.id, p.name, p.age FROM Person p WHERE p.name like '%John%'
 ```
 
+### forUpdate
+
+```scala
+val q = quote {
+  query[Person].filter(p => p.name == "Mary").forUpdate()
+}
+ctx.run(q)
+// SELECT p.id, p.name, p.age FROM Person p WHERE p.name = 'Mary' FOR UPDATE
+```
+
 ## SQL-specific encoding
 
 ### Arrays
