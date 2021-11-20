@@ -59,7 +59,9 @@ object AttachToEntity {
       }
   }
 
-  def apply(f: (Ast, Ident) => Query, alias: Option[Ident] = None)(q: Ast): Ast =
+  def apply(f: (Ast, Ident) => Query, alias: Option[Ident] = None)(q: Ast): Ast = applyWithId(f, alias, 0)(q)
+
+  private def applyWithId(f: (Ast, Ident) => Query, alias: Option[Ident], nextId: Long)(q: Ast): Ast =
     q match {
 
       case Map(IsEntity(a), b, c) => Map(f(a, b), b, c)
@@ -70,17 +72,17 @@ object AttachToEntity {
 
       case Map(_: GroupBy, _, _) | _: Union | _: UnionAll | _: Join | _: FlatJoin => f(q, alias.getOrElse(Ident("x", q.quat)))
 
-      case Map(a: Query, b, c) => Map(apply(f, Some(b))(a), b, c)
-      case FlatMap(a: Query, b, c) => FlatMap(apply(f, Some(b))(a), b, c)
-      case ConcatMap(a: Query, b, c) => ConcatMap(apply(f, Some(b))(a), b, c)
-      case Filter(a: Query, b, c) => Filter(apply(f, Some(b))(a), b, c)
-      case SortBy(a: Query, b, c, d) => SortBy(apply(f, Some(b))(a), b, c, d)
-      case Take(a: Query, b) => Take(apply(f, alias)(a), b)
-      case Drop(a: Query, b) => Drop(apply(f, alias)(a), b)
-      case Aggregation(op, a: Query) => Aggregation(op, apply(f, alias)(a))
-      case Distinct(a: Query) => Distinct(apply(f, alias)(a))
+      case Map(a: Query, b, c) => Map(applyWithId(f, Some(b), nextId + 1)(a), b, c)
+      case FlatMap(a: Query, b, c) => FlatMap(applyWithId(f, Some(b), nextId + 1)(a), b, c)
+      case ConcatMap(a: Query, b, c) => ConcatMap(applyWithId(f, Some(b), nextId + 1)(a), b, c)
+      case Filter(a: Query, b, c) => Filter(applyWithId(f, Some(b), nextId + 1)(a), b, c)
+      case SortBy(a: Query, b, c, d) => SortBy(applyWithId(f, Some(b), nextId + 1)(a), b, c, d)
+      case Take(a: Query, b) => Take(applyWithId(f, alias, nextId + 1)(a), b)
+      case Drop(a: Query, b) => Drop(applyWithId(f, alias, nextId + 1)(a), b)
+      case Aggregation(op, a: Query) => Aggregation(op, applyWithId(f, alias, nextId + 1)(a))
+      case Distinct(a: Query) => Distinct(applyWithId(f, alias, nextId + 1)(a))
 
-      case IsEntity(q) => f(q, alias.getOrElse(Ident(s"[tmp_${java.util.UUID.randomUUID().toString.replace("-", "")}]", q.quat)))
+      case IsEntity(q) => f(q, alias.getOrElse(Ident(s"[tmp_attachtoentity${nextId}]", q.quat)))
       case other => fail(s"Can't find an 'Entity' in '$q'")
     }
 }
