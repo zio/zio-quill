@@ -25,6 +25,7 @@ object Messages {
   private[getquill] def traceOpinions = cache("quill.trace.opinion", variable("quill.trace.opinion", "quill_trace_opinion", "false").toBoolean)
   private[getquill] def traceAstSimple = cache("quill.trace.ast.simple", variable("quill.trace.ast.simple", "quill_trace_ast_simple", "false").toBoolean)
   private[getquill] def traceQuats = cache("quill.trace.quat", QuatTrace(variable("quill.trace.quat", "quill_trace_quat", QuatTrace.None.value)))
+  private[getquill] def cacheDynamicQueries = cache("quill.query.cacheDaynamic", variable("quill.query.cacheDaynamic", "query_query_cacheDaynamic", "true").toBoolean)
   private[getquill] def quillLogFile = cache("quill.log.file", LogToFile(variable("quill.log.file", "quill_log_file", "./target/queries.sql")))
 
   sealed trait LogToFile

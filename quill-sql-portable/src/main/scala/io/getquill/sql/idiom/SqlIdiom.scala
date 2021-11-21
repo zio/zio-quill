@@ -13,7 +13,7 @@ import io.getquill.idiom.StatementInterpolator._
 import io.getquill.idiom._
 import io.getquill.norm.ConcatBehavior.AnsiConcat
 import io.getquill.norm.EqualityBehavior.AnsiEquality
-import io.getquill.norm.{ ConcatBehavior, EqualityBehavior, ExpandReturning }
+import io.getquill.norm.{ ConcatBehavior, EqualityBehavior, ExpandReturning, NormalizeCaching }
 import io.getquill.sql.norm.{ RemoveExtraAlias, RemoveUnusedSelects }
 import io.getquill.util.{ Interleave, Messages }
 import io.getquill.util.Messages.{ fail, trace }
@@ -34,8 +34,13 @@ trait SqlIdiom extends Idiom {
 
   def querifyAst(ast: Ast) = SqlQuery(ast)
 
-  override def translate(ast: Ast)(implicit naming: NamingStrategy): (Ast, Statement) = {
-    val normalizedAst = normalizeAst(ast, concatBehavior, equalityBehavior)
+  private def doTranslate(ast: Ast, cached: Boolean)(implicit naming: NamingStrategy): (Ast, Statement) = {
+
+    val normalizedAst = {
+      if (cached) {
+        NormalizeCaching { a: Ast => normalizeAst(a, concatBehavior, equalityBehavior) }(ast)
+      } else normalizeAst(ast, concatBehavior, equalityBehavior)
+    }
 
     implicit val tokernizer = defaultTokenizer
 
@@ -59,6 +64,13 @@ trait SqlIdiom extends Idiom {
       }
 
     (normalizedAst, stmt"$token")
+  }
+
+  override def translate(ast: Ast)(implicit naming: NamingStrategy): (Ast, Statement) = {
+    doTranslate(ast, false)
+  }
+  override def translateCached(ast: Ast)(implicit naming: NamingStrategy): (Ast, Statement) = {
+    doTranslate(ast, true)
   }
 
   def defaultTokenizer(implicit naming: NamingStrategy): Tokenizer[Ast] =

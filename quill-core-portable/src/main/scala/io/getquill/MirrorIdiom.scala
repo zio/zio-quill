@@ -6,7 +6,7 @@ import io.getquill.ast.{ Query => AstQuery, Action => AstAction, _ }
 import io.getquill.context.CanReturnClause
 import io.getquill.idiom.{ Idiom, SetContainsToken, Statement }
 import io.getquill.idiom.StatementInterpolator._
-import io.getquill.norm.Normalize
+import io.getquill.norm.{ Normalize, NormalizeCaching }
 import io.getquill.util.Interleave
 
 object MirrorIdiom extends MirrorIdiom
@@ -23,6 +23,11 @@ trait MirrorIdiomBase extends Idiom {
   override def prepareForProbing(string: String) = string
 
   override def liftingPlaceholder(index: Int): String = "?"
+
+  override def translateCached(ast: Ast)(implicit naming: NamingStrategy): (Ast, Statement) = {
+    val normalizedAst = NormalizeCaching(Normalize.apply)(ast)
+    (normalizedAst, stmt"${normalizedAst.token}")
+  }
 
   override def translate(ast: Ast)(implicit naming: NamingStrategy): (Ast, Statement) = {
     val normalizedAst = Normalize(ast)

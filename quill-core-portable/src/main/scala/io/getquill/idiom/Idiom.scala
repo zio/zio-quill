@@ -14,6 +14,8 @@ trait Idiom extends Capabilities {
 
   def translate(ast: Ast)(implicit naming: NamingStrategy): (Ast, Statement)
 
+  def translateCached(ast: Ast)(implicit naming: NamingStrategy): (Ast, Statement)
+
   def format(queryString: String): String = queryString
 
   def prepareForProbing(string: String): String
