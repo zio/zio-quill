@@ -42,7 +42,7 @@ class CassandraStreamContext[N <: NamingStrategy](
       Task.now(page)
   }
 
-  def executeQuery[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext): Observable[T] = {
+  def executeQuery[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner): Observable[T] = {
     Observable
       .fromTask(prepareRowAndLog(cql, prepare))
       .mapEvalF(p => session.executeAsync(p).toScala)
@@ -52,17 +52,17 @@ class CassandraStreamContext[N <: NamingStrategy](
       .map(row => extractor(row, this))
   }
 
-  def executeQuerySingle[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext): Observable[T] =
+  def executeQuerySingle[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner): Observable[T] =
     executeQuery(cql, prepare, extractor)(info, dc)
 
-  def executeAction[T](cql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: DatasourceContext): Observable[Unit] = {
+  def executeAction(cql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: Runner): Observable[Unit] = {
     Observable
       .fromTask(prepareRowAndLog(cql, prepare))
       .mapEvalF(p => session.executeAsync(p).toScala)
       .map(_ => ())
   }
 
-  def executeBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: DatasourceContext): Observable[Unit] =
+  def executeBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: Runner): Observable[Unit] =
     Observable.fromIterable(groups).flatMap {
       case BatchGroup(cql, prepare) =>
         Observable.fromIterable(prepare)

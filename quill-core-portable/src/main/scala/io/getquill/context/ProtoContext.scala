@@ -9,6 +9,11 @@ import scala.language.higherKinds
  * methods cannot be contained here since they use macros. Right now not all Scala2-Quill context extend
  * this context but hopefully they will all in the future. This will establish a common general-api that
  * Quill contexts can use.
+ * In ProtoQuill, this context is used for the base of all other context and allows the Scala 3 macros
+ * to call the `execute___` methods. In Scala2-Quill wherein macros are less strict about signatures,
+ * this cannot be used for `Context` (in `Context.scala`) but various higher-level context extend it
+ * as a guard-rail against API drift i.e. so that the Scala2-Quill and ProtoQuill internal-context
+ * APIs remain largely the same.
  */
 trait ProtoContext[Dialect <: io.getquill.idiom.Idiom, Naming <: NamingStrategy] extends RowContext {
   type PrepareRow
@@ -23,17 +28,17 @@ trait ProtoContext[Dialect <: io.getquill.idiom.Idiom, Naming <: NamingStrategy]
   type RunBatchActionReturningResult[T]
   type Session
   /** Future class to hold things like ExecutionContext for Cassandra etc... */
-  type DatasourceContext
+  type Runner
 
   def idiom: Dialect
   def naming: Naming
 
-  def executeQuery[T](sql: String, prepare: Prepare, extractor: Extractor[T])(executionInfo: ExecutionInfo, dc: DatasourceContext): Result[RunQueryResult[T]]
-  def executeQuerySingle[T](string: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(executionInfo: ExecutionInfo, dc: DatasourceContext): Result[RunQuerySingleResult[T]]
-  def executeAction[T](sql: String, prepare: Prepare = identityPrepare)(executionInfo: ExecutionInfo, dc: DatasourceContext): Result[RunActionResult]
-  def executeActionReturning[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T], returningBehavior: ReturnAction)(executionInfo: ExecutionInfo, dc: DatasourceContext): Result[RunActionReturningResult[T]]
-  def executeBatchAction(groups: List[BatchGroup])(executionInfo: ExecutionInfo, dc: DatasourceContext): Result[RunBatchActionResult]
-  def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T])(executionInfo: ExecutionInfo, dc: DatasourceContext): Result[RunBatchActionReturningResult[T]]
+  def executeQuery[T](sql: String, prepare: Prepare, extractor: Extractor[T])(executionInfo: ExecutionInfo, rn: Runner): Result[RunQueryResult[T]]
+  def executeQuerySingle[T](string: String, prepare: Prepare, extractor: Extractor[T])(executionInfo: ExecutionInfo, rn: Runner): Result[RunQuerySingleResult[T]]
+  def executeAction(sql: String, prepare: Prepare)(executionInfo: ExecutionInfo, rn: Runner): Result[RunActionResult]
+  def executeActionReturning[T](sql: String, prepare: Prepare, extractor: Extractor[T], returningBehavior: ReturnAction)(executionInfo: ExecutionInfo, rn: Runner): Result[RunActionReturningResult[T]]
+  def executeBatchAction(groups: List[BatchGroup])(executionInfo: ExecutionInfo, rn: Runner): Result[RunBatchActionResult]
+  def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T])(executionInfo: ExecutionInfo, rn: Runner): Result[RunBatchActionReturningResult[T]]
 }
 
 /**
@@ -65,9 +70,9 @@ trait ProtoStreamContext[Dialect <: io.getquill.idiom.Idiom, Naming <: NamingStr
   type PrepareRow
   type ResultRow
 
-  type DatasourceContext
+  type Runner
   type StreamResult[T]
   type Session
 
-  def streamQuery[T](fetchSize: Option[Int], sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext): StreamResult[T]
+  def streamQuery[T](fetchSize: Option[Int], sql: String, prepare: Prepare, extractor: Extractor[T])(info: ExecutionInfo, rn: Runner): StreamResult[T]
 }

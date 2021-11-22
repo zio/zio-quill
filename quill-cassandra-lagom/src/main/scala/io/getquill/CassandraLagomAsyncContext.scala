@@ -54,7 +54,7 @@ class CassandraLagomAsyncContext[N <: NamingStrategy](
     executeQuery(cql, prepare, extractor)(info, dc).map(_.headOption)
   }
 
-  def executeAction[T](cql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: DatasourceContext)(implicit executionContext: ExecutionContext): Result[RunActionResult] = {
+  def executeAction(cql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: DatasourceContext)(implicit executionContext: ExecutionContext): Result[RunActionResult] = {
     val statement = prepareAsyncAndGetStatement(cql, prepare, wrappedSession, logger)
     statement.flatMap(st => session.executeWrite(st))
   }

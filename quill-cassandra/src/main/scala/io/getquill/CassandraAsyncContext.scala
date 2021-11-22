@@ -33,28 +33,28 @@ class CassandraAsyncContext[N <: NamingStrategy](
   override type RunQuerySingleResult[T] = T
   override type RunActionResult = Unit
   override type RunBatchActionResult = Unit
-  override type DatasourceContext = Unit
+  override type Runner = Unit
 
   override def performIO[T](io: IO[T, _], transactional: Boolean = false)(implicit ec: ExecutionContext): Result[T] = {
     if (transactional) logger.underlying.warn("Cassandra doesn't support transactions, ignoring `io.transactional`")
     super.performIO(io)
   }
 
-  def executeQuery[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext)(implicit executionContext: ExecutionContext): Result[RunQueryResult[T]] = {
+  def executeQuery[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner)(implicit executionContext: ExecutionContext): Result[RunQueryResult[T]] = {
     val statement = prepareAsyncAndGetStatement(cql, prepare, this, logger)
     statement.map(st => session.execute(st).asScala.toList.map(row => extractor(row, this)))
   }
 
-  def executeQuerySingle[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext)(implicit executionContext: ExecutionContext): Result[RunQuerySingleResult[T]] = {
+  def executeQuerySingle[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner)(implicit executionContext: ExecutionContext): Result[RunQuerySingleResult[T]] = {
     executeQuery(cql, prepare, extractor)(info, dc).map(handleSingleResult)
   }
 
-  def executeAction[T](cql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: DatasourceContext)(implicit executionContext: ExecutionContext): Result[RunActionResult] = {
+  def executeAction(cql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: Runner)(implicit executionContext: ExecutionContext): Result[RunActionResult] = {
     val statement = prepareAsyncAndGetStatement(cql, prepare, this, logger)
     statement.flatMap(st => session.executeAsync(st).toCompletableFuture.toScala).map(_ => ())
   }
 
-  def executeBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: DatasourceContext)(implicit executionContext: ExecutionContext): Result[RunBatchActionResult] = {
+  def executeBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: Runner)(implicit executionContext: ExecutionContext): Result[RunBatchActionResult] = {
     Future.sequence {
       groups.flatMap {
         case BatchGroup(cql, prepare) =>

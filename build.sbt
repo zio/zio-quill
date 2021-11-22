@@ -3,10 +3,13 @@ import com.typesafe.sbt.SbtScalariform.ScalariformKeys
 import scalariform.formatter.preferences._
 import sbtrelease.ReleasePlugin
 import sbtcrossproject.CrossPlugin.autoImport.crossProject
-import java.io.{File => JFile}
+
+import java.io.{ File => JFile }
 import ReleaseTransformations._
 import sbtrelease.Version
 import sbtrelease.versionFormatError
+
+import scala.collection.immutable.ListSet
 
 // During release cycles, GPG will expect passphrase user-input EVEN when --passphrase is specified
 // this should add --pinentry-loopback in order to disable that. See here for more info:
@@ -89,46 +92,62 @@ def isScala213 = {
 
 val filteredModules = {
   val modulesStr = sys.props.get("modules")
-  println(s"SBT =:> Modules Argument Value: ${modulesStr}")
+  val moduleStrings =
+    ListSet(
+      modulesStr
+        .getOrElse("all")
+        .split(",")
+        .map(_.trim): _*
+    )
 
-  val modules = modulesStr match {
-    case Some("base") =>
-      println("SBT =:> Compiling Base Modules")
-      baseModules
-    case Some("js") =>
-      println("SBT =:> Compiling JavaScript Modules")
-      jsModules
-    case Some("db") =>
-      println("SBT =:> Compiling Database Modules")
-      dbModules
-    case Some("async") =>
-      println("SBT =:> Compiling Async Database Modules")
-      asyncModules
-    case Some("codegen") =>
-      println("SBT =:> Compiling Code Generator Modules")
-      codegenModules
-    case Some("nocodegen") =>
-      println("Compiling Not-Code Generator Modules")
-      baseModules ++ jsModules ++ dbModules ++ asyncModules ++ bigdataModules
-    case Some("bigdata") =>
-      println("SBT =:> Compiling Big Data Modules")
-      bigdataModules
-    case Some("none") =>
-      println("SBT =:> Invoking Aggregate Project")
-      Seq[sbt.ClasspathDep[sbt.ProjectReference]]()
-    case _ =>
-      // Workaround for https://github.com/sbt/sbt/issues/3465
-      val scalaVersion = sys.props.get("quill.scala.version")
-      if(scalaVersion.map(_.startsWith("2.13")).getOrElse(false)) {
-        println("SBT =:> Compiling Scala 2.13 Modules")
-        baseModules ++ dbModules ++ jasyncModules
-      } else {
-        println("SBT =:> Compiling All Modules")
-        allModules
-        // Note, can't do this because things like inform (i.e. formatting) actually do run for all modules
-        //throw new IllegalStateException("Tried to build all modules. Not allowed.")
-      }
-  }
+  println(s"SBT =:> Matching Modules ${moduleStrings} from argument value: '${modulesStr}''")
+
+  def matchModules(modulesStr: String) =
+    modulesStr match {
+      case "base" =>
+        println("SBT =:> Compiling Base Modules")
+        baseModules
+      case "js" =>
+        println("SBT =:> Compiling JavaScript Modules")
+        jsModules
+      case "db" =>
+        println("SBT =:> Compiling Database Modules")
+        dbModules
+      case "async" =>
+        println("SBT =:> Compiling Async Database Modules")
+        asyncModules
+      case "codegen" =>
+        println("SBT =:> Compiling Code Generator Modules")
+        codegenModules
+      case "nocodegen" =>
+        println("Compiling Not-Code Generator Modules")
+        baseModules ++ jsModules ++ dbModules ++ asyncModules ++ bigdataModules
+      case "bigdata" =>
+        println("SBT =:> Compiling Big Data Modules")
+        bigdataModules
+      case "none" =>
+        println("SBT =:> Invoking Aggregate Project")
+        Seq[sbt.ClasspathDep[sbt.ProjectReference]]()
+      case _ | "all" =>
+        // Workaround for https://github.com/sbt/sbt/issues/3465
+        val scalaVersion = sys.props.get("quill.scala.version")
+        if(scalaVersion.map(_.startsWith("2.13")).getOrElse(false)) {
+          println("SBT =:> Compiling Scala 2.13 Modules")
+          baseModules ++ dbModules ++ jasyncModules
+        } else {
+          println("SBT =:> Compiling All Modules")
+          allModules
+          // Note, can't do this because things like inform (i.e. formatting) actually do run for all modules
+          //throw new IllegalStateException("Tried to build all modules. Not allowed.")
+        }
+    }
+
+  val modules =
+    moduleStrings
+      .map(matchModules(_))
+      .map(seq => ListSet(seq: _*))
+      .flatMap(elem => elem)
+
   if(isScala213) {
     println("SBT =:> Compiling 2.13 Modules Only")
     modules.filter(scala213Modules.contains(_))
@@ -138,8 +157,8 @@ val filteredModules = {
 lazy val `quill` =
   (project in file("."))
     .settings(commonSettings: _*)
-    .aggregate(filteredModules.map(_.project): _*)
-    .dependsOn(filteredModules: _*)
+    .aggregate(filteredModules.map(_.project).toSeq: _*)
+    .dependsOn(filteredModules.toSeq: _*)
 
 `quill` / publishArtifact := false
 
@@ -667,8 +686,6 @@ lazy val `quill-cassandra-lagom` =
         ) ++ versionSpecificDependencies
       }
     )
-    //.dependsOn(`quill-cassandra` % "compile->compile;test->test")
-    .dependsOn(`quill-core`.jvm % "compile->compile;test->test")
     .enablePlugins(MimaPlugin)
 
 
