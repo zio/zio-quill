@@ -480,7 +480,7 @@ lazy val `quill-finagle-mysql` =
         if (scalaVersion.value.startsWith("2.11"))
           "com.twitter" % "finagle-mysql_2.11" % "21.2.0"
         else
-          "com.twitter" %% "finagle-mysql" % "21.9.0"
+          "com.twitter" %% "finagle-mysql" % "21.11.0"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
