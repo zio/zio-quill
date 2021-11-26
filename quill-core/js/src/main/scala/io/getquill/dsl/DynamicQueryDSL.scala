@@ -12,7 +12,7 @@ import io.getquill.util.Messages._
 
 import scala.util.DynamicVariable
 import scala.reflect.ClassTag
-import io.getquill.{ ActionReturning, Delete, EntityQuery, Insert, Ord, Query, Update, Action => DslAction }
+import io.getquill.{ ActionReturning, Delete, EntityQuery, Insert, Ord, Query, Update, Action => DslAction, Quoted }
 
 import scala.annotation.tailrec
 

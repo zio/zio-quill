@@ -9,6 +9,7 @@ import io.getquill.ast.Ast
 import io.getquill.ast._
 import io.getquill.Ord
 import io.getquill.Query
+import io.getquill.Quoted
 
 class MirrorIdiomSpec extends Spec {
 

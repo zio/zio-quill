@@ -1,9 +1,10 @@
 package io.getquill.context.cassandra.encoding
 
-import com.datastax.driver.core.LocalDate
+import com.datastax.oss.driver.internal.core.`type`.{ DefaultListType, PrimitiveType }
 import io.getquill.context.cassandra.CassandraRowContext
 import io.getquill.util.Messages.fail
 
+import java.time.{ Instant, LocalDate, LocalTime }
 import java.util.{ Date, UUID }
 
 trait Decoders extends CollectionDecoders {
@@ -18,8 +19,8 @@ trait Decoders extends CollectionDecoders {
 
   def decoder[T](d: BaseDecoder[T]): Decoder[T] = CassandraDecoder(
     (index, row, session) =>
-      if (row.isNull(index) && !row.getColumnDefinitions.getType(index).isCollection)
-        fail(s"Expected column at index $index to be defined but is was empty")
+      if (row.isNull(index) && row.getColumnDefinitions.get(index).getType.isInstanceOf[PrimitiveType])
+        fail(s"Expected column at index $index to be defined but is was empty or type is unknown ${row.getColumnDefinitions.get(index).getType.getClass}")
       else d(index, row, session)
 
   )
@@ -40,8 +41,8 @@ trait Decoders extends CollectionDecoders {
 
   implicit val stringDecoder: Decoder[String] = decoder(_.getString)
   implicit val bigDecimalDecoder: Decoder[BigDecimal] =
-    decoder((index, row, session) => row.getDecimal(index))
-  implicit val booleanDecoder: Decoder[Boolean] = decoder(_.getBool)
+    decoder((index, row, session) => row.getBigDecimal(index))
+  implicit val booleanDecoder: Decoder[Boolean] = decoder(_.getBoolean)
   implicit val byteDecoder: Decoder[Byte] = decoder(_.getByte)
   implicit val shortDecoder: Decoder[Short] = decoder(_.getShort)
   implicit val intDecoder: Decoder[Int] = decoder(_.getInt)
@@ -50,12 +51,13 @@ trait Decoders extends CollectionDecoders {
   implicit val doubleDecoder: Decoder[Double] = decoder(_.getDouble)
   implicit val byteArrayDecoder: Decoder[Array[Byte]] =
     decoder((index, row, session) => {
-      val bb = row.getBytes(index)
+      val bb = row.getByteBuffer(index)
       val b = new Array[Byte](bb.remaining())
       bb.get(b)
       b
     })
-  implicit val uuidDecoder: Decoder[UUID] = decoder(_.getUUID)
-  implicit val timestampDecoder: Decoder[Date] = decoder(_.getTimestamp)
-  implicit val cassandraLocalDateDecoder: Decoder[LocalDate] = decoder(_.getDate)
+  implicit val uuidDecoder: Decoder[UUID] = decoder(_.getUuid)
+  implicit val timestampDecoder: Decoder[Instant] = decoder(_.getInstant)
+  implicit val cassandraLocalTimeDecoder: Decoder[LocalTime] = decoder(_.getLocalTime)
+  implicit val cassandraLocalDateDecoder: Decoder[LocalDate] = decoder(_.getLocalDate)
 }

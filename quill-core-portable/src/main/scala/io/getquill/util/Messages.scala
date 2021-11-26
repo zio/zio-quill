@@ -8,23 +8,36 @@ object Messages {
   private def variable(propName: String, envName: String, default: String) =
     Option(System.getProperty(propName)).orElse(sys.env.get(envName)).getOrElse(default)
 
-  private[getquill] def resetCache(): Unit = cacheMap.clear()
+  def resetCache(): Unit = cacheMap.clear()
   private val cacheMap: MutableMap[String, Any] = MutableMap()
   private def cache[T](name: String, value: => T): T =
     cacheMap.getOrElseUpdate(name, value).asInstanceOf[T]
 
-  private[getquill] def quatKryoPoolSize = cache("quill.quat.kryoPool", variable("quill.quat.kryoPool", "quill_quat_kryoPool", "10").toInt)
-  private[getquill] def maxQuatFields = cache("quill.quat.tooManyFields", variable("quill.quat.tooManyFields", "quill_quat_tooManyFields", "500").toInt)
-  private[getquill] def prettyPrint = cache("quill.macro.log.pretty", variable("quill.macro.log.pretty", "quill_macro_log", "false").toBoolean)
-  private[getquill] def alwaysAlias = cache("quill.query.alwaysAlias", variable("quill.query.alwaysAlias", "quill_query_alwaysAlias", "false").toBoolean)
-  private[getquill] def pruneColumns = cache("quill.query.pruneColumns", variable("quill.query.pruneColumns", "quill_query_pruneColumns", "true").toBoolean)
-  private[getquill] def smartBooleans = cache("quill.query.smartBooleans", variable("quill.query.smartBooleans", "quill_query_smartBooleans", "true").toBoolean)
-  private[getquill] def debugEnabled = cache("quill.macro.log", variable("quill.macro.log", "quill_macro_log", "true").toBoolean)
-  private[getquill] def traceEnabled = cache("quill.trace.enabled", variable("quill.trace.enabled", "quill_trace_enabled", "false").toBoolean)
-  private[getquill] def traceColors = cache("quill.trace.color", variable("quill.trace.color", "quill_trace_color,", "false").toBoolean)
-  private[getquill] def traceOpinions = cache("quill.trace.opinion", variable("quill.trace.opinion", "quill_trace_opinion", "false").toBoolean)
-  private[getquill] def traceAstSimple = cache("quill.trace.ast.simple", variable("quill.trace.ast.simple", "quill_trace_ast_simple", "false").toBoolean)
-  private[getquill] def traceQuats = cache("quill.trace.quat", QuatTrace(variable("quill.trace.quat", "quill_trace_quat", QuatTrace.None.value)))
+  def quatKryoPoolSize = cache("quill.quat.kryoPool", variable("quill.quat.kryoPool", "quill_quat_kryoPool", "10").toInt)
+  def maxQuatFields = cache("quill.quat.tooManyFields", variable("quill.quat.tooManyFields", "quill_quat_tooManyFields", "500").toInt)
+  def prettyPrint = cache("quill.macro.log.pretty", variable("quill.macro.log.pretty", "quill_macro_log", "false").toBoolean)
+  def alwaysAlias = cache("quill.query.alwaysAlias", variable("quill.query.alwaysAlias", "quill_query_alwaysAlias", "false").toBoolean)
+  def pruneColumns = cache("quill.query.pruneColumns", variable("quill.query.pruneColumns", "quill_query_pruneColumns", "true").toBoolean)
+  def smartBooleans = cache("quill.query.smartBooleans", variable("quill.query.smartBooleans", "quill_query_smartBooleans", "true").toBoolean)
+  def debugEnabled = cache("quill.macro.log", variable("quill.macro.log", "quill_macro_log", "true").toBoolean)
+  def traceEnabled = cache("quill.trace.enabled", variable("quill.trace.enabled", "quill_trace_enabled", "false").toBoolean)
+  def traceColors = cache("quill.trace.color", variable("quill.trace.color", "quill_trace_color,", "false").toBoolean)
+  def traceOpinions = cache("quill.trace.opinion", variable("quill.trace.opinion", "quill_trace_opinion", "false").toBoolean)
+  def traceAstSimple = cache("quill.trace.ast.simple", variable("quill.trace.ast.simple", "quill_trace_ast_simple", "false").toBoolean)
+  def traceQuats = cache("quill.trace.quat", QuatTrace(variable("quill.trace.quat", "quill_trace_quat", QuatTrace.None.value)))
+  def cacheDynamicQueries = cache("quill.query.cacheDaynamic", variable("quill.query.cacheDaynamic", "query_query_cacheDaynamic", "true").toBoolean)
+  def quillLogFile = cache("quill.log.file", LogToFile(variable("quill.log.file", "quill_log_file", "./target/queries.sql")))
+
+  sealed trait LogToFile
+  object LogToFile {
+    case class Enabled(file: String) extends LogToFile
+    case object Disabled extends LogToFile
+    def apply(switch: String): LogToFile =
+      switch.trim match {
+        case "false" => Disabled
+        case other   => Enabled(other)
+      }
+  }
 
   sealed trait QuatTrace { def value: String }
   object QuatTrace {

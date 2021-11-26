@@ -1,16 +1,14 @@
 package io.getquill.context.jdbc
 
 import java.sql.{ Date, Timestamp, Types }
-import java.time.{ LocalDate, LocalDateTime }
-import java.util.{ Calendar, TimeZone }
+import java.time.{ Instant, LocalDate, LocalDateTime }
+import java.util.Calendar
 import java.{ sql, util }
 
 trait Encoders {
-  this: JdbcRunContext[_, _] =>
+  this: JdbcComposition[_, _] =>
 
   type Encoder[T] = JdbcEncoder[T]
-
-  protected val dateTimeZone = TimeZone.getDefault
 
   case class JdbcEncoder[T](sqlType: Int, encoder: BaseEncoder[T]) extends BaseEncoder[T] {
     override def apply(index: Index, value: T, row: PrepareRow, session: Session) =
@@ -60,4 +58,8 @@ trait Encoders {
   implicit val localDateTimeEncoder: Encoder[LocalDateTime] =
     encoder(Types.TIMESTAMP, (index, value, row) =>
       row.setTimestamp(index, Timestamp.valueOf(value), Calendar.getInstance(dateTimeZone)))
+  implicit val instantEncoder: Encoder[Instant] =
+    encoder(Types.TIMESTAMP, (index, value, row) =>
+      row.setTimestamp(index, Timestamp.from(value)))
+
 }

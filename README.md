@@ -1724,6 +1724,16 @@ ctx.run(q)
 // SELECT p.id, p.name, p.age FROM Person p WHERE p.name like '%John%'
 ```
 
+### forUpdate
+
+```scala
+val q = quote {
+  query[Person].filter(p => p.name == "Mary").forUpdate()
+}
+ctx.run(q)
+// SELECT p.id, p.name, p.age FROM Person p WHERE p.name = 'Mary' FOR UPDATE
+```
+
 ## SQL-specific encoding
 
 ### Arrays
@@ -2048,6 +2058,21 @@ val p = Person(0, "John", 21)
 dynamicQuery[Person].insertValue(p)
 dynamicQuery[Person].filter(_.id == 1).updateValue(p)
 ```
+
+### Dynamic query normalization cache
+
+Quill is super fast for static queries (almost zero runtime overhead compared to directly sql executing).
+
+But there is significant impact for dynamic queries.
+
+Normalization caching was introduced to improve the situation, which will speedup dynamic queries significantly. It is enabled by default.
+
+To disable dynamic normalization caching, pass following property to sbt during compile time
+
+```
+sbt -Dquill.query.cacheDaynamic=false
+```
+
 
 # Extending quill
 
@@ -2495,7 +2520,7 @@ Quill provides a fully type-safe way to use Spark's highly-optimized SQL engine.
 ### Importing Quill Spark
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-spark" % "3.9.1-SNAPSHOT"
+  "io.getquill" %% "quill-spark" % "3.11.1-SNAPSHOT"
 )
 ```
 
@@ -2695,7 +2720,7 @@ The body of `transaction` can contain calls to other methods and multiple `run` 
 ```
 libraryDependencies ++= Seq(
   "mysql" % "mysql-connector-java" % "8.0.17",
-  "io.getquill" %% "quill-jdbc" % "3.9.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "3.11.1-SNAPSHOT"
 )
 ```
 
@@ -2722,7 +2747,7 @@ ctx.connectionTimeout=30000
 ```
 libraryDependencies ++= Seq(
   "org.postgresql" % "postgresql" % "42.2.8",
-  "io.getquill" %% "quill-jdbc" % "3.9.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "3.11.1-SNAPSHOT"
 )
 ```
 
@@ -2748,7 +2773,7 @@ ctx.connectionTimeout=30000
 ```
 libraryDependencies ++= Seq(
   "org.xerial" % "sqlite-jdbc" % "3.28.0",
-  "io.getquill" %% "quill-jdbc" % "3.9.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "3.11.1-SNAPSHOT"
 )
 ```
 
@@ -2769,7 +2794,7 @@ ctx.jdbcUrl=jdbc:sqlite:/path/to/db/file.db
 ```
 libraryDependencies ++= Seq(
   "com.h2database" % "h2" % "1.4.199",
-  "io.getquill" %% "quill-jdbc" % "3.9.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "3.11.1-SNAPSHOT"
 )
 ```
 
@@ -2791,7 +2816,7 @@ ctx.dataSource.user=sa
 ```
 libraryDependencies ++= Seq(
   "com.microsoft.sqlserver" % "mssql-jdbc" % "7.4.1.jre8",
-  "io.getquill" %% "quill-jdbc" % "3.9.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "3.11.1-SNAPSHOT"
 )
 ```
 
@@ -2813,7 +2838,7 @@ available for this situation [here](https://stackoverflow.com/questions/1074869/
 ```
 libraryDependencies ++= Seq(
   "com.oracle.jdbc" % "ojdbc8" % "18.3.0.0.0",
-  "io.getquill" %% "quill-jdbc" % "3.9.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "3.11.1-SNAPSHOT"
 )
 ```
 
@@ -2836,41 +2861,64 @@ ctx.dataSource.serverName=host
 ## ZIO (quill-jdbc-zio)
 
 Quill context that executes JDBC queries inside of ZIO. Unlike most other contexts
-that require passing in a Data Source, this context takes in a java.sql.Connection
-as a resource dependency which can be provided later (see `ZioJdbc` for helper methods
-that assist in doing this).
+that require passing in a `java.sql.DataSource` when the context is created, this context's 
+run methods return a ZIO that has a DataSource resource dependency.
+Naturally, this should be provided later on in your application 
+(see `ZioJdbc` for helper methods that assist in doing this).
 
-Since the resource dependency itself is just a `Has[Connection]` the result of a `run` call is `ZIO[Has[Connection], SQLException, T]`. 
-Since this is frequently used, the type `QIO[T]` i.e. Quill-IO has been defined as an alias it.
-This means that if you have a `Connection` object, you just provide it!
-
-```scala
-def conn: Connection = _
-run(people)
-  .provide(Has(conn))
-```
-
-Since in most JDBC use-cases, a connection-pool datasource (e.g. Hikari) is used, it is simplier to work with
-`ZIO[Has[DataSource with Closeable], SQLException, T]` than `ZIO[Has[Connection], SQLException, T]`.
-The extension method `.onDataSource` in `io.getquill.context.ZioJdbc.QuillZioExt` will perform this conversion
-(you can use `.onDS` for even more brevity).
+Since resource dependency is `Has[DataSource]` the result of a `run` call is `ZIO[Has[DataSource], SQLException, T]`.
+This means that if you have a `DataSource` object, you can just provide it!
 
 ```scala
-import io.getquill.context.ZioJdbc._
-def ds: DataSource with Closeable = _
-run(people)
-  .onDataSource  // or: onDS
-  .provide(Has(ds))
+def ds: DataSource = _
+run(people).provide(Has(ds))
 ```
 
-Additionally, constructor-methods `fromPrefix`, `fromConfig`, `fromJdbcConfig` and `fromDataSource` are available on
-`DataSourceLayer` to construct instances of `ZLayer[Has[DataSource with Closeable], SQLException, Has[Connection]]`.
+> Since most quill-zio methods return `ZIO[Has[DataSource], SQLException, T]` 
+> the type `QIO[T]` i.e. Quill-IO has been defined as an alias.
+> 
+> For underlying-contexts (see below) that depend on `Has[Connection]`, 
+> the alias `QCIO[T]` (i.e. Quill-Connection-IO) has been defined
+> for `ZIO[Has[Connection], SQLException, T]`.
+
+Since in most JDBC use-cases, a connection-pool datasource (e.g. Hikari) is used,
+constructor-methods `fromPrefix`, `fromConfig`, `fromJdbcConfig` are available on
+`DataSourceLayer` to construct instances of a `ZLayer[Any, SQLException, Has[DataSource]]`
+which can be easily used to provide a DataSource dependency.
 You can use them like this:
-
 ```scala
 import ZioJdbc._
 val zioDs = DataSourceLayer.fromPrefix("testPostgresDB")
-MyZioContext.run(query[Person]).onDataSource.provideCustomLayer(zioDS)
+MyZioContext.run(query[Person]).provideCustomLayer(zioDS)
+```
+
+If in some rare cases, you wish to provide a `java.sql.Connection` to a `run` method directly, you can delegate
+to the underlying-context. This is a more low-level context whose `run` methods have a `Has[Connection]` resource.
+Here is an example of how this can be done.
+
+```scala
+def conn: Connection = _ // If you are starting with a connection object
+
+import io.getquill.context.ZioJdbc._
+// Import encoders/decoders of the underlying context. Do not import quote/run/prepare methods to avoid conflicts.
+import MyZioContext.underlying.{ quote => _, run => _, prepare => _,  _ }
+
+MyZioContext.underlying.run(people).provide(Has(conn))
+```
+
+If you are working with an underlying-context and want to provide a DataSource instead of a connection,
+you can use the `onDataSource` method. Note however that this is *only* needed when working with an underlying-context.
+When working with a normal context, `onDataSource` is not available or necessary 
+(since for a  normal contexts `R` will be `Has[DataSource]`).
+
+```scala
+val ds: DataSource = _
+
+import io.getquill.context.ZioJdbc._
+// Import encoders/decoders of the underlying context. Do not import quote/run/prepare methods to avoid conflicts.
+import MyZioContext.underlying.{ quote => _, run => _, prepare => _,  _ }
+
+MyZioContext.underlying.run(people).onDataSource.provide(Has(ds))
 ```
 
 > Also note that if you are using a Plain Scala app however, you will need to manually run it i.e. using zio.Runtime
@@ -2937,7 +2985,7 @@ val result = Runtime.default.unsafeRun(trans.onDataSource.provide(ds)) //returns
 ```
 libraryDependencies ++= Seq(
   "mysql" % "mysql-connector-java" % "8.0.17",
-  "io.getquill" %% "quill-jdbc-zio" % "3.9.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-zio" % "3.11.1-SNAPSHOT"
 )
 ```
 
@@ -2966,7 +3014,7 @@ ctx.connectionTimeout=30000
 ```
 libraryDependencies ++= Seq(
   "org.postgresql" % "postgresql" % "42.2.8",
-  "io.getquill" %% "quill-jdbc-zio" % "3.9.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-zio" % "3.11.1-SNAPSHOT"
 )
 ```
 
@@ -2994,7 +3042,7 @@ ctx.connectionTimeout=30000
 ```
 libraryDependencies ++= Seq(
   "org.xerial" % "sqlite-jdbc" % "3.28.0",
-  "io.getquill" %% "quill-jdbc-zio" % "3.9.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-zio" % "3.11.1-SNAPSHOT"
 )
 ```
 
@@ -3017,7 +3065,7 @@ ctx.jdbcUrl=jdbc:sqlite:/path/to/db/file.db
 ```
 libraryDependencies ++= Seq(
   "com.h2database" % "h2" % "1.4.199",
-  "io.getquill" %% "quill-jdbc-zio" % "3.9.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-zio" % "3.11.1-SNAPSHOT"
 )
 ```
 
@@ -3041,7 +3089,7 @@ ctx.dataSource.user=sa
 ```
 libraryDependencies ++= Seq(
   "com.microsoft.sqlserver" % "mssql-jdbc" % "7.4.1.jre8",
-  "io.getquill" %% "quill-jdbc-zio" % "3.9.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-zio" % "3.11.1-SNAPSHOT"
 )
 ```
 
@@ -3070,7 +3118,7 @@ Quill supports Oracle version 12c and up although due to licensing restrictions,
 ```
 libraryDependencies ++= Seq(
   "com.oracle.jdbc" % "ojdbc8" % "18.3.0.0.0",
-  "io.getquill" %% "quill-jdbc-zio" % "3.9.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-zio" % "3.11.1-SNAPSHOT"
 )
 ```
 
@@ -3172,7 +3220,7 @@ lazy val ctx = new MysqlMonixJdbcContext(SnakeCase, "ctx", Runner.using(Schedule
 ```
 libraryDependencies ++= Seq(
   "mysql" % "mysql-connector-java" % "8.0.17",
-  "io.getquill" %% "quill-jdbc-monix" % "3.9.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-monix" % "3.11.1-SNAPSHOT"
 )
 ```
 
@@ -3199,7 +3247,7 @@ ctx.connectionTimeout=30000
 ```
 libraryDependencies ++= Seq(
   "org.postgresql" % "postgresql" % "42.2.8",
-  "io.getquill" %% "quill-jdbc-monix" % "3.9.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-monix" % "3.11.1-SNAPSHOT"
 )
 ```
 
@@ -3225,7 +3273,7 @@ ctx.connectionTimeout=30000
 ```
 libraryDependencies ++= Seq(
   "org.xerial" % "sqlite-jdbc" % "3.28.0",
-  "io.getquill" %% "quill-jdbc-monix" % "3.9.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-monix" % "3.11.1-SNAPSHOT"
 )
 ```
 
@@ -3246,7 +3294,7 @@ ctx.jdbcUrl=jdbc:sqlite:/path/to/db/file.db
 ```
 libraryDependencies ++= Seq(
   "com.h2database" % "h2" % "1.4.199",
-  "io.getquill" %% "quill-jdbc-monix" % "3.9.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-monix" % "3.11.1-SNAPSHOT"
 )
 ```
 
@@ -3268,7 +3316,7 @@ ctx.dataSource.user=sa
 ```
 libraryDependencies ++= Seq(
   "com.microsoft.sqlserver" % "mssql-jdbc" % "7.4.1.jre8",
-  "io.getquill" %% "quill-jdbc-monix" % "3.9.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-monix" % "3.11.1-SNAPSHOT"
 )
 ```
 
@@ -3300,7 +3348,7 @@ available for this situation [here](https://stackoverflow.com/questions/1074869/
 ```
 libraryDependencies ++= Seq(
   "com.oracle.jdbc" % "ojdbc8" % "18.3.0.0.0",
-  "io.getquill" %% "quill-jdbc-monix" % "3.9.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-monix" % "3.11.1-SNAPSHOT"
 )
 ```
 
@@ -3342,7 +3390,7 @@ The body of transaction can contain calls to other methods and multiple run call
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-ndbc-postgres" % "3.9.1-SNAPSHOT"
+  "io.getquill" %% "quill-ndbc-postgres" % "3.11.1-SNAPSHOT"
 )
 ```
 
@@ -3449,7 +3497,7 @@ ctx.queryTimeout=10m
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async-mysql" % "3.9.1-SNAPSHOT"
+  "io.getquill" %% "quill-async-mysql" % "3.11.1-SNAPSHOT"
 )
 ```
 
@@ -3473,7 +3521,7 @@ ctx.url=mysql://host:3306/database?user=root&password=root
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async-postgres" % "3.9.1-SNAPSHOT"
+  "io.getquill" %% "quill-async-postgres" % "3.11.1-SNAPSHOT"
 )
 ```
 
@@ -3563,7 +3611,7 @@ ctx.sslrootcert=./path/to/cert/file # optional, required for sslmode=verify-ca o
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-jasync-mysql" % "3.9.1-SNAPSHOT"
+  "io.getquill" %% "quill-jasync-mysql" % "3.11.1-SNAPSHOT"
 )
 ```
 
@@ -3588,7 +3636,7 @@ ctx.url=mysql://host:3306/database?user=root&password=root
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-jasync-postgres" % "3.9.1-SNAPSHOT"
+  "io.getquill" %% "quill-jasync-postgres" % "3.11.1-SNAPSHOT"
 )
 ```
 
@@ -3638,7 +3686,7 @@ The body of `transaction` can contain calls to other methods and multiple `run` 
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-finagle-mysql" % "3.9.1-SNAPSHOT"
+  "io.getquill" %% "quill-finagle-mysql" % "3.11.1-SNAPSHOT"
 )
 ```
 
@@ -3678,7 +3726,7 @@ The body of `transaction` can contain calls to other methods and multiple `run` 
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-finagle-postgres" % "3.9.1-SNAPSHOT"
+  "io.getquill" %% "quill-finagle-postgres" % "3.11.1-SNAPSHOT"
 )
 ```
 
@@ -3705,7 +3753,7 @@ ctx.binaryParams=false
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-cassandra" % "3.9.1-SNAPSHOT"
+  "io.getquill" %% "quill-cassandra" % "3.11.1-SNAPSHOT"
 )
 ```
 
@@ -3794,7 +3842,7 @@ More examples of a Quill-Cassandra-ZIO app [quill-cassandra-zio/src/test/scala/i
 
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-cassandra-zio" % "3.9.1-SNAPSHOT"
+  "io.getquill" %% "quill-cassandra-zio" % "3.11.1-SNAPSHOT"
 )
 ```
 
@@ -3803,7 +3851,7 @@ libraryDependencies ++= Seq(
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-cassandra-monix" % "3.9.1-SNAPSHOT"
+  "io.getquill" %% "quill-cassandra-monix" % "3.11.1-SNAPSHOT"
 )
 ```
 
@@ -3822,7 +3870,7 @@ lazy val ctx = new CassandraStreamContext(SnakeCase, "ctx")
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-orientdb" % "3.9.1-SNAPSHOT"
+  "io.getquill" %% "quill-orientdb" % "3.11.1-SNAPSHOT"
 )
 ```
 
@@ -3884,7 +3932,7 @@ Have a look at the [CODEGEN.md](https://github.com/getquill/quill/blob/master/CO
 
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-codegen-jdbc" % "3.9.1-SNAPSHOT"
+  "io.getquill" %% "quill-codegen-jdbc" % "3.11.1-SNAPSHOT"
 )
 ```
 

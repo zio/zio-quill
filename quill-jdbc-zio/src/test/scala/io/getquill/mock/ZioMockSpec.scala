@@ -1,17 +1,15 @@
 package io.getquill.mock
 
 import io.getquill.ZioTestUtil._
+import io.getquill.{ Literal, PostgresZioJdbcContext }
+import org.mockito.scalatest.MockitoSugar
+import org.scalatest.freespec.AnyFreeSpec
+import org.scalatest.matchers.must.Matchers._
+import zio.Has
 
 import java.io.Closeable
 import java.sql._
 import javax.sql.DataSource
-import io.getquill.{ Literal, PostgresZioJdbcContext }
-import org.mockito.scalatest.MockitoSugar
-import org.scalatest.matchers.must.Matchers._
-import io.getquill.context.ZioJdbc._
-import org.scalatest.freespec.AnyFreeSpec
-import zio.Has
-
 import scala.reflect.ClassTag
 
 class ZioMockSpec extends AnyFreeSpec with MockitoSugar { //with AsyncMockitoSugar
@@ -68,7 +66,6 @@ class ZioMockSpec extends AnyFreeSpec with MockitoSugar { //with AsyncMockitoSug
       stream(query[Person])
         .fold(Seq[Person]())({ case (l, p) => p +: l })
         .map(_.reverse)
-        .onDataSource
         .provide(Has(ds)).defaultRun
 
     results must equal(people)
@@ -107,7 +104,7 @@ class ZioMockSpec extends AnyFreeSpec with MockitoSugar { //with AsyncMockitoSug
 
     val results =
       ctx.run(query[Person])
-        .onDataSource.provide(Has(ds)).defaultRun
+        .provide(Has(ds)).defaultRun
 
     results must equal(people)
 
@@ -135,7 +132,6 @@ class ZioMockSpec extends AnyFreeSpec with MockitoSugar { //with AsyncMockitoSug
       stream(query[Person])
         .fold(Seq[Person]())({ case (l, p) => p +: l })
         .map(_.reverse)
-        .onDataSource
         .provide(Has(ds)).foldCause(cause => cause.prettyPrint, _ => "").defaultRun
 
     resultMsg.contains("Fiber failed.") mustBe true
@@ -171,7 +167,6 @@ class ZioMockSpec extends AnyFreeSpec with MockitoSugar { //with AsyncMockitoSug
       stream(query[Person])
         .fold(Seq[Person]())({ case (l, p) => p +: l })
         .map(_.reverse)
-        .onDataSource
         .provide(Has(ds)).foldCause(cause => cause.prettyPrint, _ => "").defaultRun
 
     resultMsg.contains("Fiber failed.") mustBe true

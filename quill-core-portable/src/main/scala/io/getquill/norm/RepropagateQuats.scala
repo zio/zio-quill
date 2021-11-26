@@ -84,7 +84,7 @@ object RepropagateQuats extends StatelessTransformer {
         val ar = apply(a)
         val iAr = iA.retypeQuatFrom(ar.quat)
         val onr = BetaReduction(on, RWR, iA -> iAr)
-        trace"Repropagate ${a.quat.suppress(msg)} from $a into:" andReturn FlatJoin(t, a, iAr, apply(onr))
+        trace"Repropagate ${a.quat.suppress(msg)} from $a into:" andReturn FlatJoin(t, ar, iAr, apply(onr))
       case other =>
         super.apply(other)
     }

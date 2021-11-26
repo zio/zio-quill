@@ -1,3 +1,174 @@
+# 3.12.0 (Upcoming)
+
+#### Migration Notes:
+
+Datastax standard configuration file format and properties (HOCON) are used to provide cassandra driver configuration
+
+Sample HOCON:
+```hocon
+MyCassandraDb {
+       preparedStatementCacheSize=1000
+       keyspace=quill_test
+
+        session {
+            basic.contact-points = [ ${?CASSANDRA_CONTACT_POINT_0}, ${?CASSANDRA_CONTACT_POINT_1} ]
+            basic.load-balancing-policy.local-datacenter = ${?CASSANDRA_DC}
+            basic.request.consistency = LOCAL_QUORUM
+            basic.request.page-size = 3
+        }
+
+}
+```
+
+The `session` entry values and keys are described in the datastax documentation:
+[Reference configuration](https://docs.datastax.com/en/developer/java-driver/4.13/manual/core/configuration/reference/) 
+
+
+The ZioCassandraSession constructors:
+
+```scala
+ val zioSessionLayer: ZLayer[Any, Throwable, Has[CassandraZioSession]] =
+  CassandraZioSession.fromPrefix("MyCassandraDb")
+run(query[Person])
+  .provideCustomLayer(zioSessionLayer)
+```
+
+Additional parameters can be added programmatically:
+```scala
+ val zioSessionLayer: ZLayer[Any, Throwable, Has[CassandraZioSession]] =
+  CassandraZioSession.fromContextConfig(LoadConfig("MyCassandraDb").withValue("keyspace", ConfigValueFactory.fromAnyRef("data")))
+run(query[Person])
+  .provideCustomLayer(zioSessionLayer)
+```
+
+
+`session.queryOptions.fetchSize=N` config entry  should be replaced by
+`basic.request.page-size=N`
+
+```hocon
+testStreamDB {
+       preparedStatementCacheSize=1000
+       keyspace=quill_test
+       
+        session {
+            ...
+            basic.request.page-size = 3
+       }
+```
+
+# 3.11.0
+
+- [Implement `transaction` on outer zio-jdbc-context using fiber refs](https://github.com/getquill/quill/pull/2302)
+- [Feature Request: write compile-time queries to a file](https://github.com/getquill/quill/issues/1715)
+- [`transaction` supports ZIO effects with mixed environments](https://github.com/getquill/quill/pull/2304)
+- [Apple M1 Build Updates & Instructions](https://github.com/getquill/quill/pull/2296)
+
+#### Migration Notes:
+
+All ZIO JDBC context `run` methods have now switched from have switched their dependency (i.e. `R`) from `Has[Connection]` to
+`Has[DataSource]`. This should clear up many innocent errors that have happened because how this `Has[Connecction]` is supposed
+to be provided was unclear. As I have come to understand, nearly all DAO service patterns involve grabbing a connection from a 
+pooled DataSource, doing one single crud operation, and then returning the connection back to the pool. The new JDBC ZIO context
+memorialize this pattern.
+
+* The signature of `QIO[T]` has been changed from `ZIO[Has[Connection], SQLException, T]` to `ZIO[Has[DataSource], SQLException, T]`.
+  a new type-alias `QCIO[T]` (lit. Quill Connection IO) has been introduced that represents `ZIO[Has[Connection], SQLException, T]`.
+
+* If you are using the `.onDataSource` command, migration should be fairly easy. Whereas previously, a usage of quill-jdbc-zio 3.10.0
+  might have looked like this:
+  ```scala
+  object MyPostgresContext extends PostgresZioJdbcContext(Literal); import MyPostgresContext._
+  val zioDS = DataSourceLayer.fromPrefix("testPostgresDB")
+  
+  val people = quote {
+    query[Person].filter(p => p.name == "Alex")
+  }
+  
+  MyPostgresContext.run(people).onDataSource
+    .tap(result => putStrLn(result.toString))
+    .provideCustomLayer(zioDs)
+  ```
+  In 3.11.0 simply remove the `.onDataSource` in order to use the new context.
+  ```scala
+  object MyPostgresContext extends PostgresZioJdbcContext(Literal); import MyPostgresContext._
+  val zioDS = DataSourceLayer.fromPrefix("testPostgresDB")
+  
+  val people = quote {
+    query[Person].filter(p => p.name == "Alex")
+  }
+  
+  MyPostgresContext.run(people)  // Don't need `.onDataSource` anymore
+    .tap(result => putStrLn(result.toString))
+    .provideCustomLayer(zioDs)
+  ```
+
+* If you are creating a Hikari DataSource directly, passing of the dependency is now also simpler. Instead having to pass
+  the Hikari-pool-layer into `DataSourceLayer`, just provide the Hikari-pool-layer directly.
+  
+  From this:
+  ```scala
+  def hikariConfig = new HikariConfig(JdbcContextConfig(LoadConfig("testPostgresDB")).configProperties)
+  def hikariDataSource: DataSource with Closeable = new HikariDataSource(hikariConfig)
+  
+  val zioConn: ZLayer[Any, Throwable, Has[Connection]] =
+    Task(hikariDataSource).toLayer >>> DataSourceLayer.live
+  
+  
+  MyPostgresContext.run(people)
+    .tap(result => putStrLn(result.toString))
+    .provideCustomLayer(zioConn)
+  ```
+  To this:
+  ```scala
+  def hikariConfig = new HikariConfig(JdbcContextConfig(LoadConfig("testPostgresDB")).configProperties)
+  def hikariDataSource: DataSource with Closeable = new HikariDataSource(hikariConfig)
+  
+  val zioDS: ZLayer[Any, Throwable, Has[DataSource]] =
+    Task(hikariDataSource).toLayer // Don't need `>>> DataSourceLayer.live` anymore!
+  
+  MyPostgresContext.run(people)
+    .tap(result => putStrLn(result.toString))
+    .provideCustomLayer(zioConn)
+  ```
+  
+* If you want to provide a `java.sql.Connection` to a ZIO context directly, you can still do it using the `underlying` variable.
+  ```
+  object Ctx extends PostgresZioJdbcContext(Literal); import MyPostgresContext._
+  Ctx.underlying.run(qr1)
+    .provide(zio.Has(conn: java.sql.Connection))
+  ```
+  
+* Also, when using an underlying context, you can still use `onDataSource` to go from a `Has[Connection]` dependency 
+  back to a `Has[DataSource]` dependency (note that it no longer has to be `with Closable`).
+  ```
+    object Ctx extends PostgresZioJdbcContext(Literal); import MyPostgresContext._
+    Ctx.underlying.run(qr1)
+      .onDataSource
+      .provide(zio.Has(ds: java.sql.DataSource))
+    ```
+
+* Finally, that the `prepare` methods have been unaffected by this change. They still require a `Has[Connection]`
+  and have the signature `ZIO[Has[Connection], SQLException, PreparedStatement]`. This is because in order to work
+  with the result of this value (i.e. to work with `PreparedStatement`), the connection that created it must
+  still be open.
+
+# 3.10.0
+
+- [Defunct AsyncZioCache accidentally returned in #2174. Remove it.](https://github.com/getquill/quill/pull/2246)
+- [Open connection on ZIO blocking pool](https://github.com/getquill/quill/pull/2244)
+- [Line-up core API with ProtoQuill so child contexts can have same code](https://github.com/getquill/quill/pull/2231)
+
+#### Migration Notes:
+
+No externally facing API changes have been made.
+This release aligns Quill's internal Context methods with the API defined in ProtoQuill and introduces
+a root-level context (in the `quill-sql-portable` module) that will be shared together with ProtoQuill.
+Two arguments `info: ExecutionInfo` and `dc: DatasourceContext` have been introduced to all `execute___`
+and `prepare___` methods. For Scala2-Quill, these arguments should be ignored as they contain no
+relevant information. ProtoQuill uses them in order to pass Ast information as well as whether
+the query is Static or Dynamic into execute and prepare methods. In the future, Scala2-Quill may be enhanced
+to use them as well.
+
 # 3.9.0
 
 - [Pass Session to all Encoders/Decoders allowing UDT Encoding without local session varaible in contexts e.g. ZIO and others](https://github.com/getquill/quill/pull/2219)

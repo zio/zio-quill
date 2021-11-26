@@ -1,9 +1,9 @@
 package io.getquill.context
 
-import io.getquill.NamingStrategy
+import io.getquill.{ NamingStrategy, Query, Quoted }
+
 import scala.language.higherKinds
 import scala.language.experimental.macros
-import io.getquill.Query
 
 trait StreamingContext[Idiom <: io.getquill.idiom.Idiom, Naming <: NamingStrategy] {
   this: Context[Idiom, Naming] =>

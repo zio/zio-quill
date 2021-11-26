@@ -1,8 +1,8 @@
 package io.getquill.context.sql.dsl
 
 import io.getquill.Spec
-import io.getquill.context.sql.testContext._
 import io.getquill.context.sql.testContext
+import io.getquill.context.sql.testContext._
 
 class SqlDslSpec extends Spec {
 
@@ -19,5 +19,12 @@ class SqlDslSpec extends Spec {
       }
       testContext.run(q).string mustEqual "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.s like ('%' || ?) || '%'"
     }
+  }
+
+  "forUpdate" in {
+    val q = quote {
+      query[TestEntity].filter(t => t.s == "a").forUpdate
+    }
+    testContext.run(q).string mustEqual "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.s = 'a' FOR UPDATE"
   }
 }

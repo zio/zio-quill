@@ -8,18 +8,33 @@ import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.util.ContextLogger
 
 import java.sql.{ Connection, JDBCType, PreparedStatement, ResultSet, Statement }
+import java.util.TimeZone
 
-trait JdbcRunContext[Dialect <: SqlIdiom, Naming <: NamingStrategy]
-  extends Context[Dialect, Naming]
+trait JdbcComposition[Dialect <: SqlIdiom, Naming <: NamingStrategy] extends Context[Dialect, Naming]
   with SqlContext[Dialect, Naming]
   with Encoders
   with Decoders {
-  private[getquill] val logger = ContextLogger(classOf[JdbcContext[_, _]])
 
-  override type PrepareRow = PreparedStatement
-  override type ResultRow = ResultSet
-  override type Session = Connection
-  override type DatasourceContext = Unit
+  type PrepareRow = PreparedStatement
+  type ResultRow = ResultSet
+  type Session = Connection
+  type DatasourceContext = Unit
+
+  protected val dateTimeZone = TimeZone.getDefault
+
+  /**
+   * Parses instances of java.sql.Types to string form so it can be used in creation of sql arrays.
+   * Some databases does not support each of generic types, hence it's welcome to override this method
+   * and provide alternatives to non-existent types.
+   *
+   * @param intType one of java.sql.Types
+   * @return JDBC type in string form
+   */
+  def parseJdbcType(intType: Int): String = JDBCType.valueOf(intType).getName
+}
+
+trait JdbcRunContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] extends JdbcComposition[Dialect, Naming] {
+  private[getquill] val logger = ContextLogger(classOf[JdbcContext[_, _]])
 
   protected val effect: ContextEffect[Result]
   import effect._
@@ -94,16 +109,6 @@ trait JdbcRunContext[Dialect <: SqlIdiom, Naming <: NamingStrategy]
 
   protected def handleSingleWrappedResult[T](list: Result[List[T]]): Result[T] =
     push(list)(handleSingleResult(_))
-
-  /**
-   * Parses instances of java.sql.Types to string form so it can be used in creation of sql arrays.
-   * Some databases does not support each of generic types, hence it's welcome to override this method
-   * and provide alternatives to non-existent types.
-   *
-   * @param intType one of java.sql.Types
-   * @return JDBC type in string form
-   */
-  def parseJdbcType(intType: Int): String = JDBCType.valueOf(intType).getName
 
   private[getquill] final def extractResult[T](rs: ResultSet, conn: Connection, extractor: Extractor[T]): List[T] =
     ResultSetExtractor(rs, conn, extractor)

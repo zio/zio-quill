@@ -18,7 +18,7 @@ object PlainApp {
       query[Person].filter(p => p.name == "Alex")
     }
     val qzio =
-      MyPostgresContext.run(people).onDataSource
+      MyPostgresContext.run(people)
         .tap(result => zio.Task(println(result.toString)))
         .provideLayer(zioDS)
 
