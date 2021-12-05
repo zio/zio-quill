@@ -88,34 +88,37 @@ class QueryLogger(logToFile: LogToFile) {
       .map(appender => Has(appender.get.filter((ctx, _) => ctx.get(LogAnnotation.Level) >= logLevel)))
       >+> Logging.make >>> modifyLoggerM(addTimestamp[String]))
 
-  private[getquill] val env = {
+  def produceLoggerEnv(file: String) =
+    ZEnv.live >>>
+      logFile(
+        logLevel = LogLevel.Info,
+        format = LogFormat.fromFunction((ctx, str) => {
+          str
+        }),
+        destination = Paths.get(file)
+      ) >>> Logging.withRootLoggerName("query-logger")
+
+  lazy val env = {
     logToFile match {
-      case LogToFile.Enabled(file) =>
-        ZEnv.live >>>
-          logFile(
-            logLevel = LogLevel.Info,
-            format = LogFormat.fromFunction((ctx, str) => {
-              str
-            }),
-            destination = Paths.get(file)
-          ) >>> Logging.withRootLoggerName("query-logger")
-      case LogToFile.Disabled => Logging.ignore
+      case LogToFile.Enabled(file) => Some(produceLoggerEnv(file))
+      case LogToFile.Disabled      => None
     }
   }
 
-  private[getquill] val runtime = Runtime.unsafeFromLayer(env)
+  private[getquill] val runtime =
+    env.map(Runtime.unsafeFromLayer(_))
 
   def apply(queryString: String, sourcePath: String, line: Int, column: Int): Unit = {
-    quillLogFile match {
-      case LogToFile.Enabled(_) =>
-        runtime.unsafeRunAsync_(log.info(
+    runtime match {
+      case Some(runtimeValue) =>
+        runtimeValue.unsafeRunAsync_(log.info(
           s"""
              |-- file: $sourcePath:$line:$column
              |-- time: ${ZonedDateTime.now().format(LogDatetimeFormatter.isoLocalDateTimeFormatter)}
              |$queryString;
              |""".stripMargin
         ))
-      case LogToFile.Disabled => // do nothing
+      case None => // do nothing
     }
   }
 }
