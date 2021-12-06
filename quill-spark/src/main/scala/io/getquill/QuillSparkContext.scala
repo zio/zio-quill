@@ -29,7 +29,7 @@ trait QuillSparkContext
   type RunQuerySingleResult[T] = T
   type RunQueryResult[T] = T
   type Session = Unit
-  type DatasourceContext = Unit
+  type Runner = Unit
 
   private[getquill] val queryCounter = new AtomicInteger(0)
 
@@ -132,12 +132,12 @@ trait QuillSparkContext
     }
   }
 
-  def executeQuery[T: TypeTag](string: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext)(implicit enc: SparkEncoder[T], spark: SQLContext) = {
+  def executeQuery[T: TypeTag](string: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner)(implicit enc: SparkEncoder[T], spark: SQLContext) = {
     val ds = spark.sql(prepareString(string, prepare))
     percolateNullArrays(ds.toDF(CaseAccessors[T](ds.schema): _*).as[T])
   }
 
-  def executeQuerySingle[T: TypeTag](string: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext)(implicit enc: SparkEncoder[T], spark: SQLContext) = {
+  def executeQuerySingle[T: TypeTag](string: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner)(implicit enc: SparkEncoder[T], spark: SQLContext) = {
     val ds = spark.sql(prepareString(string, prepare))
     percolateNullArrays(ds.toDF(CaseAccessors[T](ds.schema): _*).as[T])
   }

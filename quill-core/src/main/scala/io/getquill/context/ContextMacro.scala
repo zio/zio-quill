@@ -79,9 +79,12 @@ trait ContextMacro extends Quotation {
     val liftUnlift = new { override val mctx: c.type = c } with TokenLift(ast.countQuatFields)
     import liftUnlift._
     c.info("Dynamic query")
+    val translateMethod = if (io.getquill.util.Messages.cacheDynamicQueries) {
+      q"idiom.translateCached"
+    } else q"idiom.translate"
     q"""
       val (idiom, naming) = ${idiomAndNamingDynamic}
-      idiom.translate(io.getquill.norm.RepropagateQuats($ast))(naming)
+      $translateMethod(_root_.io.getquill.norm.RepropagateQuats($ast))(naming)
     """
   }
 

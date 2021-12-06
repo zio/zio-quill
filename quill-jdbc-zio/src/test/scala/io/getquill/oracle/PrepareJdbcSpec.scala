@@ -8,7 +8,7 @@ import org.scalatest.BeforeAndAfter
 class PrepareJdbcSpec extends PrepareZioJdbcSpecBase with BeforeAndAfter {
 
   def prefix = Prefix("testOracleDB")
-  val context = testContext.underlying
+  val context = testContext
   import context._
 
   before {

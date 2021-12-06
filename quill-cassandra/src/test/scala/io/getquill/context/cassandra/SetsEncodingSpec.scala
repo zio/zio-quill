@@ -1,8 +1,7 @@
 package io.getquill.context.cassandra
 
+import java.time.{ Instant, LocalDate }
 import java.util.{ Date, UUID }
-
-import com.datastax.driver.core.LocalDate
 
 class SetsEncodingSpec extends CollectionsSpec {
   val ctx = testSyncDB
@@ -18,12 +17,12 @@ class SetsEncodingSpec extends CollectionsSpec {
     floats:     Set[Float],
     doubles:    Set[Double],
     dates:      Set[LocalDate],
-    timestamps: Set[Date],
+    timestamps: Set[Instant],
     uuids:      Set[UUID]
   )
   val e = SetsEntity(1, Set("c"), Set(BigDecimal(1.33)), Set(true), Set(1, 2), Set(2, 3), Set(1f, 3f),
-    Set(5d), Set(LocalDate.fromMillisSinceEpoch(System.currentTimeMillis())),
-    Set(new Date), Set(UUID.randomUUID()))
+    Set(5d), Set(LocalDate.now()),
+    Set(Instant.now()), Set(UUID.randomUUID()))
   val q = quote(query[SetsEntity])
 
   "Set encoders/decoders" in {

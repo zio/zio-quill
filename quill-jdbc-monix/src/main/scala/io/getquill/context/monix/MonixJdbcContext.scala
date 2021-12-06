@@ -4,9 +4,9 @@ import java.io.Closeable
 import java.sql.{ Array => _, _ }
 import cats.effect.ExitCase
 import io.getquill.{ NamingStrategy, ReturnAction }
-import io.getquill.context.{ ContextEffect, ExecutionInfo, StreamingContext }
+import io.getquill.context.{ ExecutionInfo, ProtoContext, StreamingContext }
 import io.getquill.context.jdbc.JdbcContextBase
-import io.getquill.context.monix.MonixJdbcContext.Runner
+import io.getquill.context.monix.MonixJdbcContext.EffectWrapper
 import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.util.ContextLogger
 
@@ -24,8 +24,9 @@ import scala.util.Try
  */
 abstract class MonixJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](
   dataSource: DataSource with Closeable,
-  runner:     Runner
+  wrapper:    EffectWrapper
 ) extends MonixContext[Dialect, Naming]
+  with ProtoContext[Dialect, Naming]
   with JdbcContextBase[Dialect, Naming]
   with StreamingContext[Dialect, Naming]
   with MonixTranslateContext {
@@ -40,27 +41,24 @@ abstract class MonixJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](
   override type RunBatchActionReturningResult[T] = List[T]
 
   // Need explicit return-type annotations due to scala/bug#8356. Otherwise macro system will not understand Result[Long]=Task[Long] etc...
-  override def executeAction[T](sql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: DatasourceContext): Task[Long] =
+  override def executeAction(sql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: Runner): Task[Long] =
     super.executeAction(sql, prepare)(info, dc)
-  override def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext): Task[List[T]] =
+  override def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner): Task[List[T]] =
     super.executeQuery(sql, prepare, extractor)(info, dc)
-  override def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext): Task[T] =
+  override def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner): Task[T] =
     super.executeQuerySingle(sql, prepare, extractor)(info, dc)
-  override def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningBehavior: ReturnAction)(info: ExecutionInfo, dc: DatasourceContext): Task[O] =
+  override def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningBehavior: ReturnAction)(info: ExecutionInfo, dc: Runner): Task[O] =
     super.executeActionReturning(sql, prepare, extractor, returningBehavior)(info, dc)
-  override def executeBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: DatasourceContext): Task[List[Long]] =
+  override def executeBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: Runner): Task[List[Long]] =
     super.executeBatchAction(groups)(info, dc)
-  override def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T])(info: ExecutionInfo, dc: DatasourceContext): Task[List[T]] =
+  override def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T])(info: ExecutionInfo, dc: Runner): Task[List[T]] =
     super.executeBatchActionReturning(groups, extractor)(info, dc)
-  override def prepareQuery(sql: String, prepare: Prepare)(info: ExecutionInfo, dc: DatasourceContext): Connection => Task[PreparedStatement] =
+  override def prepareQuery(sql: String, prepare: Prepare)(info: ExecutionInfo, dc: Runner): Connection => Task[PreparedStatement] =
     super.prepareQuery(sql, prepare)(info, dc)
-  override def prepareAction(sql: String, prepare: Prepare)(info: ExecutionInfo, dc: DatasourceContext): Connection => Task[PreparedStatement] =
+  override def prepareAction(sql: String, prepare: Prepare)(info: ExecutionInfo, dc: Runner): Connection => Task[PreparedStatement] =
     super.prepareAction(sql, prepare)(info, dc)
-  override def prepareBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: DatasourceContext): Connection => Task[List[PreparedStatement]] =
+  override def prepareBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: Runner): Connection => Task[List[PreparedStatement]] =
     super.prepareBatchAction(groups)(info, dc)
-
-  override protected val effect: Runner = runner
-  import runner._
 
   private val currentConnection: Local[Option[Connection]] = Local(None)
 
@@ -72,8 +70,8 @@ abstract class MonixJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](
       result <- maybeConnection match {
         case Some(connection) => f(connection)
         case None =>
-          schedule {
-            wrap(dataSource.getConnection).bracket(f)(conn => wrapClose(conn.close()))
+          wrapper.schedule {
+            wrap(dataSource.getConnection).bracket(f)(conn => wrapper.wrapClose(conn.close()))
           }
       }
     } yield result
@@ -85,9 +83,9 @@ abstract class MonixJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](
         case Some(connection) =>
           withAutocommitBracket(connection, f)
         case None =>
-          scheduleObservable {
+          wrapper.scheduleObservable {
             Observable.eval(dataSource.getConnection)
-              .bracket(conn => withAutocommitBracket(conn, f))(conn => wrapClose(conn.close()))
+              .bracket(conn => withAutocommitBracket(conn, f))(conn => wrapper.wrapClose(conn.close()))
           }
       }
     } yield result
@@ -108,7 +106,7 @@ abstract class MonixJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](
 
   private[getquill] def withCloseBracket[T](conn: Connection, f: Connection => Task[T]): Task[T] = {
     Task(conn)
-      .bracket(conn => f(conn))(conn => wrapClose(conn.close()))
+      .bracket(conn => f(conn))(conn => wrapper.wrapClose(conn.close()))
   }
 
   private[getquill] def autocommitOff(conn: Connection): (Connection, Boolean) = {
@@ -119,14 +117,14 @@ abstract class MonixJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](
 
   private[getquill] def autoCommitBackOn(state: (Connection, Boolean)) = {
     val (conn, wasAutocommit) = state
-    wrapClose(conn.setAutoCommit(wasAutocommit))
+    wrapper.wrapClose(conn.setAutoCommit(wasAutocommit))
   }
 
-  def transaction[A](f: Task[A]): Task[A] = effect.boundary {
+  def transaction[A](f: Task[A]): Task[A] = wrapper.boundary {
     Task.suspend(
       // Local read is side-effecting, need suspend
       currentConnection().map(_ => f).getOrElse {
-        effect.wrap {
+        wrapper.wrap {
           val c = dataSource.getConnection()
           c.setAutoCommit(false)
           c
@@ -137,16 +135,16 @@ abstract class MonixJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](
               // only when nobody can touch the connection anymore
               // also, TaskLocal.bind is more hygienic then manual set/unset
               tl.bind(Some(conn))(f).guaranteeCase {
-                case ExitCase.Completed => effect.wrap(conn.commit())
-                case ExitCase.Error(e) => effect.wrap {
+                case ExitCase.Completed => wrapper.wrap(conn.commit())
+                case ExitCase.Error(e) => wrapper.wrap {
                   conn.rollback()
                   throw e
                 }
-                case ExitCase.Canceled => effect.wrap(conn.rollback())
+                case ExitCase.Canceled => wrapper.wrap(conn.rollback())
               }
             }
         } { conn =>
-          effect.wrapClose {
+          wrapper.wrapClose {
             conn.setAutoCommit(true) // Do we need this if we're closing anyway?
             conn.close()
           }
@@ -227,7 +225,7 @@ abstract class MonixJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](
     stmt
   }
 
-  def streamQuery[T](fetchSize: Option[Int], sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext): Observable[T] =
+  def streamQuery[T](fetchSize: Option[Int], sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner): Observable[T] =
     withConnectionObservable { conn =>
       Observable.eval {
         val stmt = prepareStatementForStreaming(sql, conn, fetchSize)
@@ -238,7 +236,7 @@ abstract class MonixJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](
         Observable
           .fromIteratorUnsafe(new ResultSetIterator(rs, conn, extractor))
       } { rs =>
-        wrapClose(rs.close())
+        wrapper.wrapClose(rs.close())
       }
     }
 
@@ -250,19 +248,19 @@ abstract class MonixJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](
 }
 
 object MonixJdbcContext {
-  object Runner {
-    def default = new Runner {}
-    def using(scheduler: Scheduler) = new Runner {
+  object EffectWrapper {
+    def default = new EffectWrapper {}
+    def using(scheduler: Scheduler) = new EffectWrapper {
       override def schedule[T](t: Task[T]): Task[T] = t.executeOn(scheduler, true)
       override def boundary[T](t: Task[T]): Task[T] = t.executeOn(scheduler, true)
       override def scheduleObservable[T](o: Observable[T]): Observable[T] = o.executeOn(scheduler, true)
     }
   }
 
-  trait Runner extends ContextEffect[Task] {
-    override def wrap[T](t: => T): Task[T] = Task(t)
-    override def push[A, B](result: Task[A])(f: A => B): Task[B] = result.map(f)
-    override def seq[A](list: List[Task[A]]): Task[List[A]] = Task.sequence(list)
+  trait EffectWrapper {
+    def wrap[T](t: => T): Task[T] = Task(t)
+    def push[A, B](result: Task[A])(f: A => B): Task[B] = result.map(f)
+    def seq[A](list: List[Task[A]]): Task[List[A]] = Task.sequence(list)
     def schedule[T](t: Task[T]): Task[T] = t
     def scheduleObservable[T](o: Observable[T]): Observable[T] = o
     def boundary[T](t: Task[T]): Task[T] = t.asyncBoundary

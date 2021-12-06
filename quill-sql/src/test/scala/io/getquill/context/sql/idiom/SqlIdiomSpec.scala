@@ -575,14 +575,14 @@ class SqlIdiomSpec extends Spec {
             qr1.filter(t => qr2.filter(u => u.s == t.s).isEmpty)
           }
           testContext.run(q).string mustEqual
-            "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE NOT EXISTS (SELECT u.* FROM TestEntity2 u WHERE u.s = t.s)"
+            "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE NOT EXISTS (SELECT u.s, u.i, u.l, u.o FROM TestEntity2 u WHERE u.s = t.s)"
         }
         "nonEmpty" in {
           val q = quote {
             qr1.filter(t => qr2.filter(u => u.s == t.s).nonEmpty)
           }
           testContext.run(q).string mustEqual
-            "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE EXISTS (SELECT u.* FROM TestEntity2 u WHERE u.s = t.s)"
+            "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE EXISTS (SELECT u.s, u.i, u.l, u.o FROM TestEntity2 u WHERE u.s = t.s)"
         }
         "toUpperCase" in {
           val q = quote {

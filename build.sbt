@@ -3,10 +3,13 @@ import com.typesafe.sbt.SbtScalariform.ScalariformKeys
 import scalariform.formatter.preferences._
 import sbtrelease.ReleasePlugin
 import sbtcrossproject.CrossPlugin.autoImport.crossProject
-import java.io.{File => JFile}
+
+import java.io.{ File => JFile }
 import ReleaseTransformations._
 import sbtrelease.Version
 import sbtrelease.versionFormatError
+
+import scala.collection.immutable.ListSet
 
 // During release cycles, GPG will expect passphrase user-input EVEN when --passphrase is specified
 // this should add --pinentry-loopback in order to disable that. See here for more info:
@@ -89,46 +92,62 @@ def isScala213 = {
 
 val filteredModules = {
   val modulesStr = sys.props.get("modules")
-  println(s"SBT =:> Modules Argument Value: ${modulesStr}")
+  val moduleStrings =
+    ListSet(
+      modulesStr
+        .getOrElse("all")
+        .split(",")
+        .map(_.trim): _*
+    )
 
-  val modules = modulesStr match {
-    case Some("base") =>
-      println("SBT =:> Compiling Base Modules")
-      baseModules
-    case Some("js") =>
-      println("SBT =:> Compiling JavaScript Modules")
-      jsModules
-    case Some("db") =>
-      println("SBT =:> Compiling Database Modules")
-      dbModules
-    case Some("async") =>
-      println("SBT =:> Compiling Async Database Modules")
-      asyncModules
-    case Some("codegen") =>
-      println("SBT =:> Compiling Code Generator Modules")
-      codegenModules
-    case Some("nocodegen") =>
-      println("Compiling Not-Code Generator Modules")
-      baseModules ++ jsModules ++ dbModules ++ asyncModules ++ bigdataModules
-    case Some("bigdata") =>
-      println("SBT =:> Compiling Big Data Modules")
-      bigdataModules
-    case Some("none") =>
-      println("SBT =:> Invoking Aggregate Project")
-      Seq[sbt.ClasspathDep[sbt.ProjectReference]]()
-    case _ =>
-      // Workaround for https://github.com/sbt/sbt/issues/3465
-      val scalaVersion = sys.props.get("quill.scala.version")
-      if(scalaVersion.map(_.startsWith("2.13")).getOrElse(false)) {
-        println("SBT =:> Compiling Scala 2.13 Modules")
-        baseModules ++ dbModules ++ jasyncModules
-      } else {
-        println("SBT =:> Compiling All Modules")
-        allModules
-        // Note, can't do this because things like inform (i.e. formatting) actually do run for all modules
-        //throw new IllegalStateException("Tried to build all modules. Not allowed.")
-      }
-  }
+  println(s"SBT =:> Matching Modules ${moduleStrings} from argument value: '${modulesStr}''")
+
+  def matchModules(modulesStr: String) =
+    modulesStr match {
+      case "base" =>
+        println("SBT =:> Compiling Base Modules")
+        baseModules
+      case "js" =>
+        println("SBT =:> Compiling JavaScript Modules")
+        jsModules
+      case "db" =>
+        println("SBT =:> Compiling Database Modules")
+        dbModules
+      case "async" =>
+        println("SBT =:> Compiling Async Database Modules")
+        asyncModules
+      case "codegen" =>
+        println("SBT =:> Compiling Code Generator Modules")
+        codegenModules
+      case "nocodegen" =>
+        println("Compiling Not-Code Generator Modules")
+        baseModules ++ jsModules ++ dbModules ++ asyncModules ++ bigdataModules
+      case "bigdata" =>
+        println("SBT =:> Compiling Big Data Modules")
+        bigdataModules
+      case "none" =>
+        println("SBT =:> Invoking Aggregate Project")
+        Seq[sbt.ClasspathDep[sbt.ProjectReference]]()
+      case _ | "all" =>
+        // Workaround for https://github.com/sbt/sbt/issues/3465
+        val scalaVersion = sys.props.get("quill.scala.version")
+        if(scalaVersion.map(_.startsWith("2.13")).getOrElse(false)) {
+          println("SBT =:> Compiling Scala 2.13 Modules")
+          baseModules ++ dbModules ++ jasyncModules
+        } else {
+          println("SBT =:> Compiling All Modules")
+          allModules
+          // Note, can't do this because things like inform (i.e. formatting) actually do run for all modules
+          //throw new IllegalStateException("Tried to build all modules. Not allowed.")
+        }
+    }
+
+  val modules =
+    moduleStrings
+      .map(matchModules(_))
+      .map(seq => ListSet(seq: _*))
+      .flatMap(elem => elem)
+
   if(isScala213) {
     println("SBT =:> Compiling 2.13 Modules Only")
     modules.filter(scala213Modules.contains(_))
@@ -138,8 +157,8 @@ val filteredModules = {
 lazy val `quill` =
   (project in file("."))
     .settings(commonSettings: _*)
-    .aggregate(filteredModules.map(_.project): _*)
-    .dependsOn(filteredModules: _*)
+    .aggregate(filteredModules.map(_.project).toSeq: _*)
+    .dependsOn(filteredModules.toSeq: _*)
 
 `quill` / publishArtifact := false
 
@@ -317,18 +336,10 @@ lazy val `quill-codegen-tests` =
     .settings(
       libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test,
       Test / fork := true,
-      (unmanagedSources / excludeFilter) := excludePathsIfOracle {
-        (Test / unmanagedSourceDirectories).value.map { dir =>
-          (dir / "io" / "getquill" / "codegen" / "OracleCodegenTestCases.scala").getCanonicalPath
-        } ++
-        (Test/ unmanagedSourceDirectories).value.map { dir =>
-          (dir / "io" / "getquill" / "codegen" / "util" / "WithOracleContext.scala").getCanonicalPath
-        }
-      },
       (Test / sourceGenerators) += Def.task {
-        def recrusiveList(file:JFile): List[JFile] = {
+        def recursiveList(file:JFile): List[JFile] = {
           if (file.isDirectory)
-            Option(file.listFiles()).map(_.flatMap(child=> recrusiveList(child)).toList).toList.flatten
+            Option(file.listFiles()).map(_.flatMap(child=> recursiveList(child)).toList).toList.flatten
           else
             List(file)
         }
@@ -348,13 +359,10 @@ lazy val `quill-codegen-tests` =
           fileDir.getAbsolutePath +: dbs,
           s
         )
-        recrusiveList(fileDir)
+        recursiveList(fileDir)
       }.tag(CodegenTag)
     )
     .dependsOn(`quill-codegen-jdbc` % "compile->test")
-
-val includeOracle =
-  sys.props.getOrElse("oracle", "false").toBoolean
 
 val excludeTests =
   sys.props.getOrElse("excludeTests", "false").toBoolean
@@ -557,7 +565,7 @@ lazy val `quill-jasync` =
       Test / fork := true,
       libraryDependencies ++= Seq(
         "com.github.jasync-sql" % "jasync-common" % "1.1.4",
-        "org.scala-lang.modules" %% "scala-java8-compat" % "1.0.1"
+        "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.1"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -624,7 +632,8 @@ lazy val `quill-cassandra` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.datastax.cassandra" %  "cassandra-driver-core" % "3.7.2"
+        "com.datastax.oss" % "java-driver-core" % "4.13.0",
+        "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.1"
       )
     )
     .dependsOn(`quill-core-jvm` % "compile->compile;test->test")
@@ -670,11 +679,13 @@ lazy val `quill-cassandra-lagom` =
         Seq(
           "org.scala-lang.modules" %% "scala-collection-compat" % "2.4.4",
           "com.lightbend.lagom" %% "lagom-scaladsl-persistence-cassandra" % lagomVersion % Provided,
-          "com.lightbend.lagom" %% "lagom-scaladsl-testkit" % lagomVersion % Test
+          "com.lightbend.lagom" %% "lagom-scaladsl-testkit" % lagomVersion % Test,
+          "com.datastax.cassandra" %  "cassandra-driver-core" % "3.7.2",
+          // lagom uses datastax 3.x driver - not compatible with 4.x in API level
+          "io.getquill" %% "quill-cassandra" % "3.10.0" % "compile->compile"
         ) ++ versionSpecificDependencies
       }
     )
-    .dependsOn(`quill-cassandra` % "compile->compile;test->test")
     .enablePlugins(MimaPlugin)
 
 
@@ -764,14 +775,7 @@ lazy val jdbcTestingSettings = jdbcTestingLibraries ++ Seq(
       case true =>
         excludePaths((Test / unmanagedSourceDirectories).value.map(dir => dir.getCanonicalPath))
       case false =>
-        excludePathsIfOracle {
-          (Test / unmanagedSourceDirectories).value.map { dir =>
-            (dir / "io" / "getquill" / "context" / "jdbc" / "oracle").getCanonicalPath
-          } ++
-            (Test / unmanagedSourceDirectories).value.map { dir =>
-              (dir / "io" / "getquill" / "oracle").getCanonicalPath
-            }
-        }
+        excludePaths(List())
     }
   }
 )
@@ -789,22 +793,9 @@ def excludePaths(paths:Seq[String]) = {
   })
 }
 
-def excludePathsIfOracle(paths:Seq[String]) = {
-  val excludeThisPath =
-    (path: String) =>
-      paths.exists { srcDir =>
-        !includeOracle && (path contains srcDir)
-      }
-  new SimpleFileFilter(file => {
-    if (excludeThisPath(file.getCanonicalPath))
-      println(s"Excluding Oracle Related File: ${file.getCanonicalPath}")
-    excludeThisPath(file.getCanonicalPath)
-  })
-}
-
 val scala_v_11 = "2.11.12"
-val scala_v_12 = "2.12.15"
-val scala_v_13 = "2.13.6"
+val scala_v_12 = "2.12.10"
+val scala_v_13 = "2.13.2"
 
 lazy val loggingSettings = Seq(
   libraryDependencies ++= Seq(

@@ -8,7 +8,7 @@ import org.scalatest.BeforeAndAfter
 class PrepareJdbcSpec extends PrepareZioJdbcSpecBase with BeforeAndAfter {
 
   override def prefix: Prefix = Prefix("testSqlServerDB")
-  val context = testContext.underlying
+  val context = testContext
   import context._
 
   before {

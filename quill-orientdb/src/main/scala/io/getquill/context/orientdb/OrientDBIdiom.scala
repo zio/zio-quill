@@ -1,5 +1,6 @@
 package io.getquill.context.orientdb
 
+import io.getquill.norm.NormalizeCaching
 import io.getquill.idiom.StatementInterpolator._
 import io.getquill.context.sql.norm._
 import io.getquill.ast.{ AggregationOperator, External, _ }
@@ -24,7 +25,19 @@ trait OrientDBIdiom extends Idiom {
   override def prepareForProbing(string: String): String = string
 
   override def translate(ast: Ast)(implicit naming: NamingStrategy): (Ast, Statement) = {
-    val normalizedAst = SqlNormalize(ast)
+    doTranslate(ast, false)
+  }
+
+  override def translateCached(ast: Ast)(implicit naming: NamingStrategy): (Ast, Statement) = {
+    doTranslate(ast, true)
+  }
+
+  private def doTranslate(ast: Ast, cached: Boolean)(implicit naming: NamingStrategy): (Ast, Statement) = {
+    val normalizedAst = {
+      if (cached)
+        NormalizeCaching { ast: Ast => SqlNormalize(ast) }(ast)
+      else SqlNormalize(ast)
+    }
     val token =
       normalizedAst match {
         case q: Query =>

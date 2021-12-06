@@ -110,7 +110,11 @@ services:
       - SQL_SERVER_PORT=1433
       - ORACLE_HOST=oracle
       - ORACLE_PORT=1521
+      # for lagom project compatibility
       - CASSANDRA_HOST=cassandra
       - CASSANDRA_PORT=9042
+      # the values should be used for all new cassandra projects
+      - CASSANDRA_CONTACT_POINT_0=cassandra:9042
+      - CASSANDRA_DC=datacenter1
       - ORIENTDB_HOST=orientdb
       - ORIENTDB_PORT=2424

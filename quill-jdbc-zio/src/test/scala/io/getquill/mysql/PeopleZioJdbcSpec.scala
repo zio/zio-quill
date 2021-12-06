@@ -3,7 +3,6 @@ package io.getquill.mysql
 import io.getquill.PeopleZioSpec
 import io.getquill.Prefix
 import org.scalatest.matchers.should.Matchers._
-import io.getquill.context.ZioJdbc._
 
 class PeopleZioJdbcSpec extends PeopleZioSpec {
 
@@ -13,15 +12,14 @@ class PeopleZioJdbcSpec extends PeopleZioSpec {
 
   override def beforeAll = {
     super.beforeAll()
-    testContext.underlying.transaction {
-      import testContext.underlying._
+    testContext.transaction {
       for {
-        _ <- testContext.underlying.run(query[Couple].delete)
-        _ <- testContext.underlying.run(query[Person].filter(_.age > 0).delete)
-        _ <- testContext.underlying.run(liftQuery(peopleEntries).foreach(p => peopleInsert(p)))
-        _ <- testContext.underlying.run(liftQuery(couplesEntries).foreach(p => couplesInsert(p)))
+        _ <- testContext.run(query[Couple].delete)
+        _ <- testContext.run(query[Person].filter(_.age > 0).delete)
+        _ <- testContext.run(liftQuery(peopleEntries).foreach(p => peopleInsert(p)))
+        _ <- testContext.run(liftQuery(couplesEntries).foreach(p => couplesInsert(p)))
       } yield ()
-    }.onDataSource.runSyncUnsafe()
+    }.runSyncUnsafe()
   }
 
   "Example 1 - differences" in {
