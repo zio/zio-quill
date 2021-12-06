@@ -82,7 +82,13 @@ trait SqlIdiom extends Idiom {
 
   def astTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Ast] =
     Tokenizer[Ast] {
-      case a: Query           => SqlQuery(a).token
+      case a: Query =>
+        // This case almost exclusively happens when you have a select inside of an insert.
+        // have a look at the SqlDslSpec `forUpdate` and `insert with subselects` tests
+        // for more details.
+        // Right now we are not removing extra select clauses here (via RemoveUnusedSelects) since I am not sure what
+        // kind of impact that could have on selects. Can try to do that in the future.
+        RemoveExtraAlias(strategy)(ExpandNestedQueries(SqlQuery(a))).token
       case a: Operation       => a.token
       case a: Infix           => a.token
       case a: Action          => a.token
