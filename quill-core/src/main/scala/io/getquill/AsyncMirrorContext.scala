@@ -1,6 +1,6 @@
 package io.getquill
 
-import io.getquill.context.{ ExecutionInfo, StandardContext, TranslateContext }
+import io.getquill.context.{ ExecutionInfo, RowContext, StandardContext, TranslateContext }
 import io.getquill.context.mirror.{ MirrorDecoders, MirrorEncoders, MirrorSession, Row }
 
 import scala.concurrent.Future
@@ -15,6 +15,7 @@ import scala.util.Success
 
 class AsyncMirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy](val idiom: Idiom, val naming: Naming, session: MirrorSession = MirrorSession("DefaultMirrorContextSession"))
   extends StandardContext[Idiom, Naming]
+  with RowContext
   with TranslateContext
   with MirrorEncoders
   with MirrorDecoders
@@ -31,7 +32,7 @@ class AsyncMirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy](val idiom
   override type RunActionReturningResult[T] = ActionReturningMirror[T]
   override type RunBatchActionResult = BatchActionMirror
   override type RunBatchActionReturningResult[T] = BatchActionReturningMirror[T]
-  override type DatasourceContext = Unit
+  override type Runner = Unit
 
   override def close = ()
 
@@ -67,19 +68,19 @@ class AsyncMirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy](val idiom
 
   case class QueryMirror[T](string: String, prepareRow: PrepareRow, extractor: Extractor[T], info: ExecutionInfo)(implicit val ec: ExecutionContext)
 
-  def executeQuery[T](string: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(executionInfo: ExecutionInfo, dc: DatasourceContext)(implicit ec: ExecutionContext) =
+  def executeQuery[T](string: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(executionInfo: ExecutionInfo, dc: Runner)(implicit ec: ExecutionContext) =
     Future(QueryMirror(string, prepare(Row(), session)._2, extractor, executionInfo))
 
-  def executeQuerySingle[T](string: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(executionInfo: ExecutionInfo, dc: DatasourceContext)(implicit ec: ExecutionContext) =
+  def executeQuerySingle[T](string: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(executionInfo: ExecutionInfo, dc: Runner)(implicit ec: ExecutionContext) =
     Future(QueryMirror(string, prepare(Row(), session)._2, extractor, executionInfo))
 
-  def executeAction(string: String, prepare: Prepare = identityPrepare)(executionInfo: ExecutionInfo, dc: DatasourceContext)(implicit ec: ExecutionContext) =
+  def executeAction(string: String, prepare: Prepare = identityPrepare)(executionInfo: ExecutionInfo, dc: Runner)(implicit ec: ExecutionContext) =
     Future(ActionMirror(string, prepare(Row(), session)._2, executionInfo))
 
-  def executeActionReturning[O](string: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningBehavior: ReturnAction)(executionInfo: ExecutionInfo, dc: DatasourceContext)(implicit ec: ExecutionContext) =
+  def executeActionReturning[O](string: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningBehavior: ReturnAction)(executionInfo: ExecutionInfo, dc: Runner)(implicit ec: ExecutionContext) =
     Future(ActionReturningMirror[O](string, prepare(Row(), session)._2, extractor, returningBehavior, executionInfo))
 
-  def executeBatchAction(groups: List[BatchGroup])(executionInfo: ExecutionInfo, dc: DatasourceContext)(implicit ec: ExecutionContext) =
+  def executeBatchAction(groups: List[BatchGroup])(executionInfo: ExecutionInfo, dc: Runner)(implicit ec: ExecutionContext) =
     Future {
       BatchActionMirror(
         groups.map {
@@ -90,7 +91,7 @@ class AsyncMirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy](val idiom
       )
     }
 
-  def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T])(executionInfo: ExecutionInfo, dc: DatasourceContext)(implicit ec: ExecutionContext) =
+  def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T])(executionInfo: ExecutionInfo, dc: Runner)(implicit ec: ExecutionContext) =
     Future {
       BatchActionReturningMirror[T](
         groups.map {

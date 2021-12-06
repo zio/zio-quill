@@ -98,7 +98,7 @@ class CassandraZioContext[N <: NamingStrategy](val naming: N)
       ZManaged.lock(Blocking.Service.live.blockingExecutor)
     )
 
-  def streamQuery[T](fetchSize: Option[Int], cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext) = {
+  def streamQuery[T](fetchSize: Option[Int], cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner) = {
     val stream =
       for {
         csession <- ZStream.service[CassandraZioSession]
@@ -122,11 +122,11 @@ class CassandraZioContext[N <: NamingStrategy](val naming: N)
   private[getquill] def simpleBlocking[R, E, A](zio: ZIO[R, E, A]): ZIO[R, E, A] =
     Blocking.Service.live.blocking(zio)
 
-  def executeQuery[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext): CIO[List[T]] = simpleBlocking {
+  def executeQuery[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner): CIO[List[T]] = simpleBlocking {
     streamQuery[T](None, cql, prepare, extractor)(info, dc).runCollect.map(_.toList)
   }
 
-  def executeQuerySingle[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext): CIO[T] = simpleBlocking {
+  def executeQuerySingle[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner): CIO[T] = simpleBlocking {
     for {
       csession <- ZIO.service[CassandraZioSession]
       rs <- execute(cql, prepare, csession, Some(1)) //pull only one record from the DB explicitly.
@@ -135,7 +135,7 @@ class CassandraZioContext[N <: NamingStrategy](val naming: N)
     } yield singleRow
   }
 
-  def executeAction[T](cql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: DatasourceContext): CIO[Unit] = simpleBlocking {
+  def executeAction(cql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: Runner): CIO[Unit] = simpleBlocking {
     for {
       csession <- ZIO.service[CassandraZioSession]
       r <- prepareRowAndLog(cql, prepare).provide(Has(csession))
@@ -145,7 +145,7 @@ class CassandraZioContext[N <: NamingStrategy](val naming: N)
 
   //TODO: Cassandra batch actions applicable to insert/update/delete and  described here:
   //      https://docs.datastax.com/en/dse/6.0/cql/cql/cql_reference/cql_commands/cqlBatch.html
-  def executeBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: DatasourceContext): CIO[Unit] = simpleBlocking {
+  def executeBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: Runner): CIO[Unit] = simpleBlocking {
     for {
       env <- ZIO.service[CassandraZioSession]
       _ <- {

@@ -3206,7 +3206,7 @@ import io.getquill.context.monix.Runner
 // You can use the default Runner when constructing a Monix jdbc contexts. 
 // The resulting tasks will be wrapped with whatever Scheduler is 
 // defined when you do task.syncRunUnsafe(), typically a global implicit.
-lazy val ctx = new MysqlMonixJdbcContext(SnakeCase, "ctx", Runner.default)
+lazy val ctx = new MysqlMonixJdbcContext(SnakeCase, "ctx", EffectWrapper.default)
 
 // However...
 // Monix strongly suggests that you use a separate thread pool for database IO 
@@ -3226,7 +3226,7 @@ libraryDependencies ++= Seq(
 
 #### context definition
 ```scala
-lazy val ctx = new MysqlMonixJdbcContext(SnakeCase, "ctx", Runner.default)
+lazy val ctx = new MysqlMonixJdbcContext(SnakeCase, "ctx", EffectWrapper.default)
 ```
 
 #### application.properties
@@ -3253,7 +3253,7 @@ libraryDependencies ++= Seq(
 
 #### context definition
 ```scala
-lazy val ctx = new PostgresMonixJdbcContext(SnakeCase, "ctx", Runner.default)
+lazy val ctx = new PostgresMonixJdbcContext(SnakeCase, "ctx", EffectWrapper.default)
 ```
 
 #### application.properties
@@ -3279,7 +3279,7 @@ libraryDependencies ++= Seq(
 
 #### context definition
 ```scala
-lazy val ctx = new SqliteMonixJdbcContext(SnakeCase, "ctx", Runner.default)
+lazy val ctx = new SqliteMonixJdbcContext(SnakeCase, "ctx", EffectWrapper.default)
 ```
 
 #### application.properties
@@ -3300,7 +3300,7 @@ libraryDependencies ++= Seq(
 
 #### context definition
 ```scala
-lazy val ctx = new H2MonixJdbcContext(SnakeCase, "ctx", Runner.default)
+lazy val ctx = new H2MonixJdbcContext(SnakeCase, "ctx", EffectWrapper.default)
 ```
 
 #### application.properties
@@ -3322,7 +3322,7 @@ libraryDependencies ++= Seq(
 
 #### context definition
 ```scala
-lazy val ctx = new SqlServerMonixJdbcContext(SnakeCase, "ctx", Runner.default)
+lazy val ctx = new SqlServerMonixJdbcContext(SnakeCase, "ctx", EffectWrapper.default)
 ```
 
 #### application.properties

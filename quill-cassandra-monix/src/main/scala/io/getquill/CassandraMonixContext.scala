@@ -46,7 +46,7 @@ class CassandraMonixContext[N <: NamingStrategy](
         Task.now(page)
     }
 
-  def streamQuery[T](fetchSize: Option[Int], cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext): Observable[T] = {
+  def streamQuery[T](fetchSize: Option[Int], cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner): Observable[T] = {
     Observable
       .fromTask(prepareRowAndLog(cql, prepare))
       .mapEvalF(p => session.executeAsync(p).toScala)
@@ -56,21 +56,21 @@ class CassandraMonixContext[N <: NamingStrategy](
       .map(row => extractor(row, this))
   }
 
-  def executeQuery[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext): Task[List[T]] = {
+  def executeQuery[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner): Task[List[T]] = {
     streamQuery[T](None, cql, prepare, extractor)(info, dc)
       .foldLeftL(List[T]())({ case (l, r) => r +: l }).map(_.reverse)
   }
 
-  def executeQuerySingle[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext): Task[T] =
+  def executeQuerySingle[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner): Task[T] =
     executeQuery(cql, prepare, extractor)(info, dc).map(handleSingleResult(_))
 
-  def executeAction[T](cql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: DatasourceContext): Task[Unit] = {
+  def executeAction(cql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: Runner): Task[Unit] = {
     prepareRowAndLog(cql, prepare)
       .flatMap(r => Task.fromFuture(session.executeAsync(r).toScala))
       .map(_ => ())
   }
 
-  def executeBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: DatasourceContext): Task[Unit] =
+  def executeBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: Runner): Task[Unit] =
     Observable.fromIterable(groups).flatMap {
       case BatchGroup(cql, prepare) =>
         Observable.fromIterable(prepare)
