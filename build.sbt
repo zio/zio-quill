@@ -682,7 +682,7 @@ lazy val `quill-cassandra-lagom` =
           "com.lightbend.lagom" %% "lagom-scaladsl-testkit" % lagomVersion % Test,
           "com.datastax.cassandra" %  "cassandra-driver-core" % "3.7.2",
           // lagom uses datastax 3.x driver - not compatible with 4.x in API level
-          "io.getquill" %% "quill-cassandra" % "3.10.0" % "compile->compile"
+          "io.getquill" %% "quill-cassandra" % "3.12.0" % "compile->compile"
         ) ++ versionSpecificDependencies
       }
     )
