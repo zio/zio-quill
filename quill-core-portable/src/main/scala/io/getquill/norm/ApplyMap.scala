@@ -2,6 +2,8 @@ package io.getquill.norm
 
 import io.getquill.ast._
 import io.getquill.quat.Quat
+import io.getquill.util.Interpolator
+import io.getquill.util.Messages.TraceType
 
 /**
  * Notes for the conceptual examples below. Gin and Tonic were used as prototypical
@@ -17,6 +19,9 @@ import io.getquill.quat.Quat
  * is used in most examples with DetachableMap
  */
 object ApplyMap {
+
+  val interp = new Interpolator(TraceType.ApplyMap, 3)
+  import interp._
 
   // Note, since the purpose of this beta reduction is to check isomophism types should not actually be
   // checked here since they may be wrong (i.e. if there is no actual isomorphism).
@@ -73,42 +78,42 @@ object ApplyMap {
       //  map(i => (i.i, i.l)).distinct.map(x => (x._1, x._2)) =>
       //    map(i => (i.i, i.l)).distinct
       case Map(Distinct(DetachableMap(a, b, c)), d, e) if isomorphic(e, c, d) =>
-        Some(Distinct(Map(a, b, c)))
+        trace"ApplyMap on Distinct for $q" andReturn Some(Distinct(Map(a, b, c)))
 
       // a.map(b => c).map(d => e) =>
       //    a.map(b => e[d := c])
       case before @ Map(MapWithoutInfixes(a, b, c), d, e) =>
         val er = BetaReduction(e, d -> c)
-        Some(Map(a, b, er))
+        trace"ApplyMap on double-map for $q" andReturn Some(Map(a, b, er))
 
       // a.map(b => b) =>
       //    a
       case Map(a: Query, b, c) if (b == c) =>
-        Some(a)
+        trace"ApplyMap on identity-map for $q" andReturn Some(a)
 
       // a.map(b => c).flatMap(d => e) =>
       //    a.flatMap(b => e[d := c])
       case FlatMap(DetachableMap(a, b, c), d, e) =>
         val er = BetaReduction(e, d -> c)
-        Some(FlatMap(a, b, er))
+        trace"ApplyMap inside flatMap for $q" andReturn Some(FlatMap(a, b, er))
 
       // a.map(b => c).filter(d => e) =>
       //    a.filter(b => e[d := c]).map(b => c)
       case Filter(DetachableMap(a, b, c), d, e) =>
         val er = BetaReduction(e, d -> c)
-        Some(Map(Filter(a, b, er), b, c))
+        trace"ApplyMap inside filter for $q" andReturn Some(Map(Filter(a, b, er), b, c))
 
       // a.map(b => c).sortBy(d => e) =>
       //    a.sortBy(b => e[d := c]).map(b => c)
       case SortBy(DetachableMap(a, b, c), d, e, f) =>
         val er = BetaReduction(e, d -> c)
-        Some(Map(SortBy(a, b, er, f), b, c))
+        trace"ApplyMap inside sortBy for $q" andReturn Some(Map(SortBy(a, b, er, f), b, c))
 
       // a.map(b => c).sortBy(d => e).distinct =>
       //    a.sortBy(b => e[d := c]).map(b => c).distinct
       case SortBy(Distinct(DetachableMap(a, b, c)), d, e, f) =>
         val er = BetaReduction(e, d -> c)
-        Some(Distinct(Map(SortBy(a, b, er, f), b, c)))
+        trace"ApplyMap inside sortBy+distinct for $q" andReturn Some(Distinct(Map(SortBy(a, b, er, f), b, c)))
 
       // === Conceptual Example ===
       // Instead of transforming spirit into gin and the bottling the join, bottle the
@@ -122,26 +127,31 @@ object ApplyMap {
       // x._2.map(b => c).type == d.type
       case GroupBy(DetachableMap(a, b, c), d, e) =>
         val er = BetaReduction(e, d -> c)
-        val x = Ident("x", Quat.Tuple(e.quat, c.quat))
+        val grp = GroupBy(a, b, er)
+        // Use grp.quat directly instead of trying to compute it manually. Before it was Quat.Tuple(e.quat, c.quat)
+        // which could produce subtle bugs in some cases e.g. CC(_1:V,_2:V) instead of CC(_1:V,_2:CC(_1:V))
+        // if you're reducing Grp(M(quat:CC(_1:V),_,_), quat:CC(_1:V,_2:CC(_1:V))) it would become M(Grp(...):,id:Id(quat:CC(_1:V,_2:V)),_)
+        // and the quat of the `id` is CC(_1:V,_2:V) instead of CC(_1:V,_2:CC(_1:V))). It would break beta reductions in later phases.
+        val x = Ident("x", grp.quat)
         val x1 = Property(x, "_1")
         val x2 = Property(x, "_2")
         val body = Tuple(List(x1, Map(x2, b, c)))
-        Some(Map(GroupBy(a, b, er), x, body))
+        trace"ApplyMap inside groupBy for $q" andReturn Some(Map(grp, x, body))
 
       // a.map(b => c).drop(d) =>
       //    a.drop(d).map(b => c)
       case Drop(DetachableMap(a, b, c), d) =>
-        Some(Map(Drop(a, d), b, c))
+        trace"ApplyMap inside drop for $q" andReturn Some(Map(Drop(a, d), b, c))
 
       // a.map(b => c).take(d) =>
       //    a.drop(d).map(b => c)
       case Take(DetachableMap(a, b, c), d) =>
-        Some(Map(Take(a, d), b, c))
+        trace"ApplyMap inside take for $q" andReturn Some(Map(Take(a, d), b, c))
 
       // a.map(b => c).nested =>
       //    a.nested.map(b => c)
       case Nested(DetachableMap(a, b, c)) =>
-        Some(Map(Nested(a), b, c))
+        trace"ApplyMap inside nested for $q" andReturn Some(Map(Nested(a), b, c))
 
       // === Conceptual Example ===
       // Instead of combining gin and tonic, pour spirit and water into a cup and transform both
@@ -157,7 +167,8 @@ object ApplyMap {
         val t = Ident("t", Quat.Tuple(b.quat, e.quat))
         val t1 = BetaReduction(c, b -> Property(t, "_1"))
         val t2 = BetaReduction(f, e -> Property(t, "_2"))
-        Some(Map(Join(tpe, a, d, b, e, onr), t, Tuple(List(t1, t2))))
+        trace"ApplyMap inside join-reduceDouble for $q" andReturn
+          Some(Map(Join(tpe, a, d, b, e, onr), t, Tuple(List(t1, t2))))
 
       // === Conceptual Example ===
       // Instead of combining gin and tonic, pour gin and water into a cup and transform the water
@@ -173,7 +184,8 @@ object ApplyMap {
         val t = Ident("t", Quat.Tuple(a.quat, c.quat))
         val t1 = Property(t, "_1")
         val t2 = BetaReduction(d, c -> Property(t, "_2"))
-        Some(Map(Join(tpe, a, b, iA, c, onr), t, Tuple(List(t1, t2))))
+        trace"ApplyMap inside join-reduceRight for $q" andReturn
+          Some(Map(Join(tpe, a, b, iA, c, onr), t, Tuple(List(t1, t2))))
 
       // === Conceptual Example ===
       // Instead of combining gin and tonic, pour raw spirit with tonic in a cup and transform the spirit
@@ -190,7 +202,8 @@ object ApplyMap {
         val t = Ident("t", Quat.Tuple(b.quat, d.quat))
         val t1 = BetaReduction(c, b -> Property(t, "_1"))
         val t2 = Property(t, "_2")
-        Some(Map(Join(tpe, a, d, b, iB, onr), t, Tuple(List(t1, t2))))
+        trace"ApplyMap inside join-reduceLeft for $q" andReturn
+          Some(Map(Join(tpe, a, d, b, iB, onr), t, Tuple(List(t1, t2))))
 
       case other => None
     }

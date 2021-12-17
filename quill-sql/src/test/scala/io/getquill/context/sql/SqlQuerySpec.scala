@@ -337,7 +337,7 @@ class SqlQuerySpec extends Spec {
             }
           }
           testContext.run(q).string mustEqual
-            "SELECT t.i, COUNT(*) FROM TestEntity t GROUP BY t.i"
+            "SELECT t.i, COUNT(t.*) FROM TestEntity t GROUP BY t.i"
         }
         "mapped" in {
           val q = quote {
@@ -414,7 +414,7 @@ class SqlQuerySpec extends Spec {
           qr1.map(t => t.i).distinct.map(t => 1)
         }
         testContext.run(q).string mustEqual
-          "SELECT 1 FROM (SELECT DISTINCT t.i FROM TestEntity t) AS t" //hel
+          "SELECT 1 FROM (SELECT DISTINCT t.i AS _1 FROM TestEntity t) AS t" //hel
       }
 
       "with map uppsercase" in {
@@ -423,7 +423,7 @@ class SqlQuerySpec extends Spec {
           qr1.map(t => t.i).distinct.map(t => 1)
         }
         testContextUpper.run(q).string mustEqual
-          "SELECT 1 FROM (SELECT DISTINCT t.I AS i FROM TESTENTITY t) AS t"
+          "SELECT 1 FROM (SELECT DISTINCT t.I AS _1 FROM TESTENTITY t) AS t"
       }
 
       "with map inside join" in {
@@ -437,7 +437,7 @@ class SqlQuerySpec extends Spec {
             .on((a, b) => a.i == b)
         }
         testContext.run(q).string mustEqual
-          "SELECT a.s, a.i, a.l, a.o, a.b, q21.i FROM TestEntity a INNER JOIN (SELECT DISTINCT q2.i FROM TestEntity2 q2) AS q21 ON a.i = q21.i"
+          "SELECT a.s, a.i, a.l, a.o, a.b, q21._1 FROM TestEntity a INNER JOIN (SELECT DISTINCT q2.i AS _1 FROM TestEntity2 q2) AS q21 ON a.i = q21._1"
       }
 
       // If you look inside BetaReduction, you will see that tuple values that are the same are collapsed via 'distinct'.
@@ -692,7 +692,7 @@ class SqlQuerySpec extends Spec {
             b <- qr2
           } yield a.i).nested
         }
-        testContext.run(q).string mustEqual "SELECT x.* FROM (SELECT a.i FROM TestEntity a, TestEntity2 b) AS x"
+        testContext.run(q).string mustEqual "SELECT x.i FROM (SELECT a.i FROM TestEntity a, TestEntity2 b) AS x"
       }
       "mapped" in {
         val q = quote {

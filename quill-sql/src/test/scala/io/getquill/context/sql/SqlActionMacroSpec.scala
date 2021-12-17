@@ -187,7 +187,7 @@ class SqlActionMacroSpec extends Spec {
             qr1Emb.insert(lift(TestEntityEmb(Emb("s", 0), 1L, None))).returningGenerated(r => (query[Dummy].filter(d => d.i == r.emb.i).max))
           }
           val mirror = ctx.run(q)
-          mirror.string mustEqual "INSERT INTO TestEntity AS r (s,l,o) VALUES (?, ?, ?) RETURNING (SELECT MAX(*) FROM Dummy d WHERE d.i = r.i)"
+          mirror.string mustEqual "INSERT INTO TestEntity AS r (s,l,o) VALUES (?, ?, ?) RETURNING (SELECT MAX(d.*) FROM Dummy d WHERE d.i = r.i)"
           mirror.returningBehavior mustEqual ReturnRecord
         }
       }
@@ -226,7 +226,7 @@ class SqlActionMacroSpec extends Spec {
               .returningGenerated(r => (query[Dummy].filter(d => d.i == r.i).max))
           }
           val mirror = ctx.run(q)
-          mirror.string mustEqual "INSERT INTO TestEntity AS r (s,l,o,b) VALUES (?, ?, ?, ?) RETURNING (SELECT MAX(*) FROM Dummy d WHERE d.i = r.i)"
+          mirror.string mustEqual "INSERT INTO TestEntity AS r (s,l,o,b) VALUES (?, ?, ?, ?) RETURNING (SELECT MAX(d.*) FROM Dummy d WHERE d.i = r.i)"
           mirror.returningBehavior mustEqual ReturnRecord
         }
         "shadow variable - id excluded - filter + max" in testContext.withDialect(MirrorSqlDialectWithReturnClause) { ctx =>
@@ -237,7 +237,7 @@ class SqlActionMacroSpec extends Spec {
               .returningGenerated(r => (query[Dummy].filter(d => d.i == r.i).max))
           }
           val mirror = ctx.run(q)
-          mirror.string mustEqual "INSERT INTO TestEntity AS r (s,l,o,b) VALUES (?, ?, ?, ?) RETURNING (SELECT MAX(*) FROM Dummy d WHERE d.i = r.i)"
+          mirror.string mustEqual "INSERT INTO TestEntity AS r (s,l,o,b) VALUES (?, ?, ?, ?) RETURNING (SELECT MAX(d.*) FROM Dummy d WHERE d.i = r.i)"
           mirror.returningBehavior mustEqual ReturnRecord
         }
         "shadow variable, default values - id not excluded - map" in testContext.withDialect(MirrorSqlDialectWithReturnClause) { ctx =>
@@ -260,7 +260,7 @@ class SqlActionMacroSpec extends Spec {
               .returningGenerated(r => (query[Dummy].filter(r => r.i == lift(value)).max))
           }
           val mirror = ctx.run(q)
-          mirror.string mustEqual "INSERT INTO TestEntity AS r (s,i,l,o,b) VALUES (?, ?, ?, ?, ?) RETURNING (SELECT MAX(*) FROM Dummy r1 WHERE r1.i = ?)"
+          mirror.string mustEqual "INSERT INTO TestEntity AS r (s,i,l,o,b) VALUES (?, ?, ?, ?, ?) RETURNING (SELECT MAX(r1.*) FROM Dummy r1 WHERE r1.i = ?)"
           mirror.returningBehavior mustEqual ReturnRecord
         }
         // The `id` column should not be excluded from the insert when it is not actually in a query inside the returning clause.
@@ -352,7 +352,7 @@ class SqlActionMacroSpec extends Spec {
                 query[Dummy].sortBy(r => r.i).max)
           }
           val mirror = ctx.run(q)
-          mirror.string mustEqual "INSERT INTO TestEntity AS r (s,i,l,o,b) VALUES (?, ?, ?, ?, ?) RETURNING (SELECT MAX(*) FROM Dummy r1 ORDER BY r1.i ASC NULLS FIRST)"
+          mirror.string mustEqual "INSERT INTO TestEntity AS r (s,i,l,o,b) VALUES (?, ?, ?, ?, ?) RETURNING (SELECT MAX(r1.*) FROM Dummy r1 ORDER BY r1.i ASC NULLS FIRST)"
           mirror.returningBehavior mustEqual ReturnRecord
         }
         "shadow variable in multiple clauses - id not excluded" in testContext.withDialect(MirrorSqlDialectWithReturnClause) { ctx =>
@@ -399,7 +399,7 @@ class SqlActionMacroSpec extends Spec {
               )
           }
           val mirror = ctx.run(q)
-          mirror.string mustEqual "INSERT INTO TestEntity AS r (s,l,o,b) VALUES (?, ?, ?, ?) RETURNING (SELECT MAX(*) FROM Dummy r1 WHERE r1.i = r1.i AND r1.i = r.i)"
+          mirror.string mustEqual "INSERT INTO TestEntity AS r (s,l,o,b) VALUES (?, ?, ?, ?) RETURNING (SELECT MAX(r1.*) FROM Dummy r1 WHERE r1.i = r1.i AND r1.i = r.i)"
           mirror.returningBehavior mustEqual ReturnRecord
         }
         "shadow variable in one of multiple clauses - id excluded - two filter plus tuple" in testContext.withDialect(MirrorSqlDialectWithReturnClause) { ctx =>
@@ -412,7 +412,7 @@ class SqlActionMacroSpec extends Spec {
               )
           }
           val mirror = ctx.run(q)
-          mirror.string mustEqual "INSERT INTO TestEntity AS r (s,l,o,b) VALUES (?, ?, ?, ?) RETURNING r.i, (SELECT MAX(*) FROM Dummy r1 WHERE r1.i = r1.i AND r1.i = r.i)"
+          mirror.string mustEqual "INSERT INTO TestEntity AS r (s,l,o,b) VALUES (?, ?, ?, ?) RETURNING r.i, (SELECT MAX(r1.*) FROM Dummy r1 WHERE r1.i = r1.i AND r1.i = r.i)"
           mirror.returningBehavior mustEqual ReturnRecord
         }
       }
@@ -561,7 +561,7 @@ class SqlActionMacroSpec extends Spec {
             qr1Emb.insert(lift(TestEntityEmb(Emb("s", 0), 1L, None))).returning(r => (query[Dummy].filter(d => d.i == r.emb.i).max))
           }
           val mirror = ctx.run(q)
-          mirror.string mustEqual "INSERT INTO TestEntity AS r (s,i,l,o) VALUES (?, ?, ?, ?) RETURNING (SELECT MAX(*) FROM Dummy d WHERE d.i = r.i)"
+          mirror.string mustEqual "INSERT INTO TestEntity AS r (s,i,l,o) VALUES (?, ?, ?, ?) RETURNING (SELECT MAX(d.*) FROM Dummy d WHERE d.i = r.i)"
           mirror.returningBehavior mustEqual ReturnRecord
         }
       }
@@ -598,7 +598,7 @@ class SqlActionMacroSpec extends Spec {
               .returning(r => (query[Dummy].filter(d => d.i == r.i).max))
           }
           val mirror = ctx.run(q)
-          mirror.string mustEqual "INSERT INTO TestEntity AS r (s,i,l,o,b) VALUES (?, ?, ?, ?, ?) RETURNING (SELECT MAX(*) FROM Dummy d WHERE d.i = r.i)"
+          mirror.string mustEqual "INSERT INTO TestEntity AS r (s,i,l,o,b) VALUES (?, ?, ?, ?, ?) RETURNING (SELECT MAX(d.*) FROM Dummy d WHERE d.i = r.i)"
           mirror.returningBehavior mustEqual ReturnRecord
         }
         "shadow variable - id not excluded (same as returningGenerated)" in testContext.withDialect(MirrorSqlDialectWithReturnClause) { ctx =>
@@ -778,7 +778,7 @@ class SqlActionMacroSpec extends Spec {
             qr1Emb.update(lift(TestEntityEmb(Emb("s", 0), 1L, None))).returning(r => query[Dummy].filter(d => d.i == r.emb.i).max)
           }
           val mirror = ctx.run(q)
-          mirror.string mustEqual "UPDATE TestEntity AS r SET s = ?, i = ?, l = ?, o = ? RETURNING (SELECT MAX(*) FROM Dummy d WHERE d.i = r.i)"
+          mirror.string mustEqual "UPDATE TestEntity AS r SET s = ?, i = ?, l = ?, o = ? RETURNING (SELECT MAX(d.*) FROM Dummy d WHERE d.i = r.i)"
           mirror.returningBehavior mustEqual ReturnRecord
         }
       }
@@ -815,7 +815,7 @@ class SqlActionMacroSpec extends Spec {
               .returning(r => query[Dummy].filter(d => d.i == r.i).max)
           }
           val mirror = ctx.run(q)
-          mirror.string mustEqual "UPDATE TestEntity AS r SET s = ?, i = ?, l = ?, o = ?, b = ? RETURNING (SELECT MAX(*) FROM Dummy d WHERE d.i = r.i)"
+          mirror.string mustEqual "UPDATE TestEntity AS r SET s = ?, i = ?, l = ?, o = ?, b = ? RETURNING (SELECT MAX(d.*) FROM Dummy d WHERE d.i = r.i)"
           mirror.returningBehavior mustEqual ReturnRecord
         }
         "shadow variable - id not excluded (same as returningGenerated)" in testContext.withDialect(MirrorSqlDialectWithReturnClause) { ctx =>
@@ -995,7 +995,7 @@ class SqlActionMacroSpec extends Spec {
             qr1Emb.delete.returning(r => query[Dummy].filter(d => d.i == r.emb.i).max)
           }
           val mirror = ctx.run(q)
-          mirror.string mustEqual "DELETE FROM TestEntity AS r RETURNING (SELECT MAX(*) FROM Dummy d WHERE d.i = r.i)"
+          mirror.string mustEqual "DELETE FROM TestEntity AS r RETURNING (SELECT MAX(d.*) FROM Dummy d WHERE d.i = r.i)"
           mirror.returningBehavior mustEqual ReturnRecord
         }
       }
@@ -1026,7 +1026,7 @@ class SqlActionMacroSpec extends Spec {
             qr1.delete.returning(r => query[Dummy].filter(d => d.i == r.i).max)
           }
           val mirror = ctx.run(q)
-          mirror.string mustEqual "DELETE FROM TestEntity AS r RETURNING (SELECT MAX(*) FROM Dummy d WHERE d.i = r.i)"
+          mirror.string mustEqual "DELETE FROM TestEntity AS r RETURNING (SELECT MAX(d.*) FROM Dummy d WHERE d.i = r.i)"
           mirror.returningBehavior mustEqual ReturnRecord
         }
         "shadow variable - id not excluded (same as returningGenerated)" in testContext.withDialect(MirrorSqlDialectWithReturnClause) { ctx =>

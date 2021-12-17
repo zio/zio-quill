@@ -40,8 +40,8 @@ object TopLevelExpansion {
         }.toList
 
       // Direct infix select, etc...
-      case other @ SelectValue(SingleValuePrimitive(), _, _) if (length == 1) =>
-        List(other.copy(alias = Some("single")))
+      case other @ SelectValue(SingleValuePrimitive(), currentAlias, _) if (length == 1) =>
+        List(other.copy(alias = currentAlias.orElse(Some("x"))))
       // Technically this case should not exist, adding it so that the pattern match will have full coverage
       case other =>
         List(other)
