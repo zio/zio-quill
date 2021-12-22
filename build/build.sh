@@ -141,15 +141,6 @@ function wait_for_bigdata() {
     sbt scalariformFormat test:scalariformFormat
     sbt checkUnformattedFiles
     sbt $SBT_ARGS quill-coreJVM/test:compile & COMPILE=$!
-    ./build/setup_bigdata.sh & SETUP=$!
-
-    wait $SETUP
-    if [[ "$?" != "0" ]]; then
-       echo "build.sh =:> BigData Database setup failed"
-       sleep 10
-       kill -9 $COMPILE
-       exit 1
-    fi
 
     wait $COMPILE
     if [[ "$?" != "0" ]]; then
