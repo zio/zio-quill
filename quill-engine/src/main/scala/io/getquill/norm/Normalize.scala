@@ -24,7 +24,8 @@ object Normalize extends StatelessTransformer {
 
   override def apply(q: Query): Query =
     trace"Avoid Capture and Normalize $q into:" andReturn
-      norm(Dealias(AvoidAliasConflict(q)))
+      norm(q)
+  //norm(Dealias(AvoidAliasConflict(q)))
 
   private def traceNorm[T](label: String) =
     trace[T](s"${label} (Normalize)", 1, Normalizations)

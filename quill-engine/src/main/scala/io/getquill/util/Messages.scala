@@ -83,6 +83,7 @@ object Messages {
   sealed trait TraceType { def value: String }
   object TraceType {
     case object SqlNormalizations extends TraceType { val value = "sql" }
+    case object SqlQuery extends TraceType { val value = "query" }
     case object ExpandDistinct extends TraceType { val value = "distinct" }
     case object Normalizations extends TraceType { val value = "norm" }
     case object Standard extends TraceType { val value = "standard" }

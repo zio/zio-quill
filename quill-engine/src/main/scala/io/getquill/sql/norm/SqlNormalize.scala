@@ -5,6 +5,7 @@ import io.getquill.ast.Ast
 import io.getquill.norm.ConcatBehavior.AnsiConcat
 import io.getquill.norm.EqualityBehavior.AnsiEquality
 import io.getquill.norm.capture.{ AvoidAliasConflict, DemarcateExternalAliases }
+import io.getquill.sql.norm.ExpandJoin
 import io.getquill.util.Messages.{ TraceType, title }
 
 object SqlNormalize {
