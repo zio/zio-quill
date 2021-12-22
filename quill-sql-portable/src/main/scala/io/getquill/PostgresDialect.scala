@@ -1,11 +1,11 @@
 package io.getquill
 
 import java.util.concurrent.atomic.AtomicInteger
-
 import io.getquill.ast._
 import io.getquill.context.CanReturnClause
 import io.getquill.context.sql.idiom._
 import io.getquill.idiom.StatementInterpolator._
+import io.getquill.norm.ProductAggregationToken
 
 trait PostgresDialect
   extends SqlIdiom
@@ -13,6 +13,8 @@ trait PostgresDialect
   with ConcatSupport
   with OnConflictSupport
   with CanReturnClause {
+
+  override protected def productAggregationToken: ProductAggregationToken = ProductAggregationToken.VariableDotStar
 
   override def astTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Ast] =
     Tokenizer[Ast] {

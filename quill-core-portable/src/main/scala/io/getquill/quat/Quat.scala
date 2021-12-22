@@ -122,19 +122,30 @@ sealed trait Quat {
       QuatException(s"The post-rename field '${fieldName}' does not exist in an SQL-level type ${other}")
   }
 
-  def lookup(path: String): Quat = (this, path) match {
+  def lookup(path: String, failNonExist: Boolean): Quat = (this, path) match {
     case (cc @ Quat.Product(fields), fieldName) =>
       fields.get(fieldName).getOrElse {
-        io.getquill.util.Messages.trace(s"The field '${fieldName}' does not exist in an SQL-level type ${cc}. Assuming it's type is Quat.Unknown.", traceType = TraceType.Warning)
+        if (failNonExist)
+          throw new IllegalArgumentException(s"The field '${fieldName}' does not exist in an SQL-level type ${cc}")
+        else {
+          io.getquill.util.Messages.trace(s"The field '${fieldName}' does not exist in an SQL-level type ${cc}. Assuming it's type is Quat.Unknown", traceType = TraceType.Warning)
+          Quat.Unknown
+        }
+      }
+    case (Quat.Generic, fieldName) =>
+      io.getquill.util.Messages.trace(s"The field '${fieldName}' was looked up from from a Generic Quat. Assuming it will also be Quat.Generic", traceType = TraceType.Warning)
+      Quat.Unknown
+    case (other, fieldName) =>
+      if (failNonExist)
+        throw new IllegalArgumentException(s"The field '${fieldName}' does not exist in an SQL-level type ${other}")
+      else {
+        io.getquill.util.Messages.trace(s"The field '${fieldName}' does not exist in an SQL-level type ${other}. Assuming it's type is Quat.Unknown", traceType = TraceType.Warning)
         Quat.Unknown
       }
-    case (other, fieldName) =>
-      io.getquill.util.Messages.trace(s"The field '${fieldName}' does not exist in an SQL-level type ${other}. Assuming it's type is Quat.Unknown.", traceType = TraceType.Warning)
-      Quat.Unknown
   }
-  def lookup(list: List[String]): Quat =
+  def lookup(list: List[String], failNonExist: Boolean): Quat =
     list match {
-      case head :: tail => this.lookup(head).lookup(tail)
+      case head :: tail => this.lookup(head, failNonExist).lookup(tail, failNonExist)
       case Nil          => this
     }
 }

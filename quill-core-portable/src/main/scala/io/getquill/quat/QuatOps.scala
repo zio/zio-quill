@@ -20,7 +20,7 @@ private[getquill] object QuatOps {
           quat.withRenames(renames.filter(r => quat.fields.contains(r._1)))
         case head :: tail =>
           val goInto =
-            quat.lookup(head) match {
+            quat.lookup(head, true) match {
               case p: Quat.Product => p
               case _ =>
                 QuatException(s"Quat at ${curr.mkString("/", ".", "")} is not a product but we need to go into ${tail.mkString("./", ".", "")} and write renames: [${renames.mkString(",")}]")
