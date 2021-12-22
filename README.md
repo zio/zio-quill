@@ -15,6 +15,8 @@
 
 Quill provides a Quoted Domain Specific Language ([QDSL](http://homepages.inf.ed.ac.uk/wadler/papers/qdsl/qdsl.pdf)) to express queries in Scala and execute them in a target language. The library's core is designed to support multiple target languages, currently featuring specializations for Structured Query Language ([SQL](https://en.wikipedia.org/wiki/SQL)) and Cassandra Query Language ([CQL](https://cassandra.apache.org/doc/latest/cql/)).
 
+> ### [Scastie](https://scastie.scala-lang.org/) is a great tool to try out Quill without having to prepare a local environment. It works with [mirror contexts](#mirror-context), see [this](https://scastie.scala-lang.org/QwOewNEiR3mFlKIM7v900A) snippet as an example.
+
 ![example](https://raw.githubusercontent.com/getquill/quill/master/example.gif)
 
 1. **Boilerplate-free mapping**: The database schema is mapped using simple case classes.
@@ -24,7 +26,56 @@ Quill provides a Quoted Domain Specific Language ([QDSL](http://homepages.inf.ed
 
 Note: The GIF example uses Eclipse, which shows compilation messages to the user.
 
-# Quotation
+# Getting Started
+
+Quill has integrations with many libraries. If you are using a regular RDBMS e.g. PostgreSQL
+and want to use Quill to query it with an asychronous, no-blocking, reactive application, the easiest way to get 
+started is by using an awesome library called ZIO.
+
+A simple ZIO + Quill application looks like this: 
+```scala
+case class Person(name: String, age: Int)
+
+object QuillContext extends PostgresZioJdbcContext(SnakeCase)
+
+object DataService {
+  import QuillContext._
+  def getPeople = run(query[Person])
+}
+
+object Main extends App {
+  override def run(args: List[String]) =
+    DataService.getPeople
+      .inject(DataSourceLayer.fromPrefix("myDatabaseConfig").orDie)
+      .debug("Results")
+      .exitCode
+}
+```
+
+Add the following to build.sbt:
+```scala
+libraryDependencies ++= Seq(
+  "io.getquill"          %% "quill-jdbc-zio" % "3.12.0",
+  "io.github.kitlangton" %% "zio-magic"      % "0.3.11",
+  "org.postgresql"       %  "postgresql"     % "42.3.1"
+)
+```
+
+You can find this code (with some more examples) complete with a docker-provided Postgres database [here](https://github.com/deusaquilus/zio-quill-gettingstarted/blob/master/README.md).
+
+## Choosing a Module
+
+Choose the quill module that works for you!
+
+* If you are starting from scratch with a regular RDBMS try using the `quill-jdbc-zio` module as shown above.
+* If you are developing a legacy Java project and don't want/need reactive, use `quill-jdbc`.
+* If you are developing a project with Cats and/or Monix, try `quill-jdbc-monix`.
+* If you like to "live dangerously" and want to try a socket-level async library, try `quill-jasync-postgres` 
+  or `quill-jasync-mysql`. 
+* If you are using Cassandra, Spark, or OrientDB, try the corresponding modules for each of them.
+
+
+# Writing Queries
 
 ## Introduction
 
@@ -37,8 +88,6 @@ import io.getquill._
 
 val ctx = new SqlMirrorContext(MirrorSqlDialect, Literal)
 ```
-
-> ### **Note:** [Scastie](https://scastie.scala-lang.org/) is a great tool to try out Quill without having to prepare a local environment. It works with [mirror contexts](#mirror-context), see [this](https://scastie.scala-lang.org/QwOewNEiR3mFlKIM7v900A) snippet as an example.
 
 The context instance provides all the types, methods, and encoders/decoders needed for quotations:
 
@@ -101,6 +150,19 @@ val q = quote {
   }
 }
 ```
+
+You can also use implicit classes to extend things in quotations.
+
+```scala
+implicit class Ext(q: Query[Person]) {
+  def olderThan(age: Int) = quote {
+    query[Person].filter(p => p.age > lift(age))
+  }
+}
+
+run(query[Person].olderThan(44))
+```
+(see [implicit-extensions](#implicit-extensions) for additional information.)
 
 ## Compile-time quotations
 
@@ -309,7 +371,9 @@ val deleted = ctx.run(q) //: List[(Int, String)]
 // DELETE FROM Product RETURNING id, description
 ```
 
-#### Customization
+#### customized returning
+
+Values returned can be further customized in some databases.
 
 ##### Postgres
 
@@ -2205,6 +2269,51 @@ Infix supports runtime string values through the `#$` prefix. Example:
 ```scala
 def test(functionName: String) =
   ctx.run(query[Person].map(p => infix"#$functionName(${p.name})".as[Int]))
+```
+
+### Implicit Extensions
+
+You can use implicit extensions in quill in several ways.
+
+##### Standard quoted extension:
+```scala
+implicit class Ext(q: Query[Person]) {
+  def olderThan(age: Int) = quote {
+    query[Person].filter(p => p.age > lift(age))
+  }
+}
+run(query[Person].olderThan(44))
+// SELECT p.name, p.age FROM Person p WHERE p.age > ?
+```
+
+##### Higher-order quoted extension:
+```scala
+implicit class Ext(q: Query[Person]) {
+  def olderThan = quote { 
+    (age: Int) => 
+      query[Person].filter(p => p.age > lift(age))
+  }
+}
+run(query[Person].olderThan(44))
+// SELECT p.name, p.age FROM Person p WHERE p.age > 44
+
+run(query[Person].olderThan(lift(44)))
+// SELECT p.name, p.age FROM Person p WHERE p.age > ?
+```
+The advantage of this approach is that you can choose to either lift or use a constant.
+
+##### Scalar quoted extension:
+
+Just as `Query` can be extended, scalar values can be similarly extended.
+```scala
+implicit class Ext(i: Int) {
+  def between = quote { 
+    (a: Int, b:Int) =>
+      i > a && i < b
+  }
+}
+run(query[Person].filter(p => p.age.between(33, 44)))
+// SELECT p.name, p.age FROM Person p WHERE p.age > 33 AND p.age < 44
 ```
 
 ### Raw SQL queries
