@@ -29,6 +29,7 @@ class Interpolator(
     private sealed trait PrintElement
     private case class Str(str: String, first: Boolean) extends PrintElement
     private case class Elem(value: String) extends PrintElement
+    private case class Simple(value: String) extends PrintElement
     private case object Separator extends PrintElement
 
     private def generateStringForCommand(value: Any, indent: Int) = {
@@ -48,11 +49,20 @@ class Interpolator(
         case None => (first, None)
       }
 
+    sealed trait Splice { def value: String }
+    object Splice {
+      case class Simple(value: String) extends Splice // Simple splice into the string, don't indent etc...
+      case class Show(value: String) extends Splice // Indent, colorize the element etc...
+    }
+
     private def readBuffers() = {
       def orZero(i: Int): Int = if (i < 0) 0 else i
 
       val parts = sc.parts.iterator.toList
-      val elements = elementsSeq.toList.map(qprint(_).string(color))
+      val elements = elementsSeq.toList.map(elem => {
+        if (elem.isInstanceOf[String]) Splice.Simple(elem.asInstanceOf[String])
+        else Splice.Show(qprint(elem).string(color))
+      })
 
       val (firstStr, explicitIndent) = readFirst(parts.head)
       val indent =
@@ -78,11 +88,19 @@ class Interpolator(
       sb.append(Str(firstStr.trim, true))
 
       while (elementsIter.hasNext) {
-        sb.append(Separator)
-        sb.append(Elem(elementsIter.next()))
-        val nextPart = partsIter.next().trim
-        sb.append(Separator)
-        sb.append(Str(nextPart, false))
+        val nextElem = elementsIter.next()
+        nextElem match {
+          case Splice.Simple(v) =>
+            sb.append(Simple(v))
+            val nextPart = partsIter.next().trim
+            sb.append(Simple(nextPart))
+          case Splice.Show(v) =>
+            sb.append(Separator)
+            sb.append(Elem(v))
+            val nextPart = partsIter.next().trim
+            sb.append(Separator)
+            sb.append(Str(nextPart, false))
+        }
       }
 
       (sb.toList, indent)
@@ -104,6 +122,7 @@ class Interpolator(
       }
       val output =
         elements.map {
+          case Simple(value)                  => value
           case Str(value, true) if (oneLine)  => indent.prefix + value
           case Str(value, false) if (oneLine) => value
           case Elem(value) if (oneLine)       => value

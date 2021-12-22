@@ -13,7 +13,8 @@ import io.getquill.idiom.StatementInterpolator._
 import io.getquill.idiom._
 import io.getquill.norm.ConcatBehavior.AnsiConcat
 import io.getquill.norm.EqualityBehavior.AnsiEquality
-import io.getquill.norm.{ ConcatBehavior, EqualityBehavior, ExpandReturning, NormalizeCaching }
+import io.getquill.norm.{ ConcatBehavior, EqualityBehavior, ExpandReturning, NormalizeCaching, ProductAggregationToken }
+import io.getquill.quat.Quat
 import io.getquill.sql.norm.{ RemoveExtraAlias, RemoveUnusedSelects }
 import io.getquill.util.{ Interleave, Messages }
 import io.getquill.util.Messages.{ fail, trace }
@@ -24,6 +25,7 @@ trait SqlIdiom extends Idiom {
 
   protected def concatBehavior: ConcatBehavior = AnsiConcat
   protected def equalityBehavior: EqualityBehavior = AnsiEquality
+  protected def productAggregationToken: ProductAggregationToken = ProductAggregationToken.Star
 
   protected def actionAlias: Option[Ident] = None
 
@@ -237,14 +239,26 @@ trait SqlIdiom extends Idiom {
 
     val customAstTokenizer =
       Tokenizer.withFallback[Ast](SqlIdiom.this.astTokenizer(_, strategy)) {
-        case Aggregation(op, Ident(_, _) | Tuple(_)) => stmt"${op.token}(*)"
-        case Aggregation(op, Distinct(ast))          => stmt"${op.token}(DISTINCT ${ast.token})"
-        case ast @ Aggregation(op, _: Query)         => scopedTokenizer(ast)
-        case Aggregation(op, ast)                    => stmt"${op.token}(${ast.token})"
+
+        case Aggregation(op, Ident(id, _: Quat.Product)) => stmt"${op.token}(${makeProductAggregationToken(id)})"
+        // Not too many cases of this. Can happen if doing a leaf-level infix inside of a select clause. For example in postgres:
+        // `infix"unnest(array['foo','bar'])".as[Query[Int]].groupBy(p => p).map(ap => ap._2.max)` which should yield:
+        // SELECT MAX(inf) FROM (unnest(array['foo','bar'])) AS inf GROUP BY inf
+        case Aggregation(op, Ident(id, _))               => stmt"${op.token}(${id.token})"
+        case Aggregation(op, Tuple(_))                   => stmt"${op.token}(*)"
+        case Aggregation(op, Distinct(ast))              => stmt"${op.token}(DISTINCT ${ast.token})"
+        case ast @ Aggregation(op, _: Query)             => scopedTokenizer(ast)
+        case Aggregation(op, ast)                        => stmt"${op.token}(${ast.token})"
       }
 
     tokenizer(customAstTokenizer)
   }
+
+  private[getquill] def makeProductAggregationToken(id: String) =
+    productAggregationToken match {
+      case ProductAggregationToken.Star            => stmt"*"
+      case ProductAggregationToken.VariableDotStar => stmt"${id.token}.*"
+    }
 
   implicit def operationTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Operation] = Tokenizer[Operation] {
     case UnaryOperation(op, ast)                              => stmt"${op.token} (${ast.token})"
@@ -566,6 +580,7 @@ object SqlIdiom {
       override def concatFunction: String = parent.concatFunction
       override def liftingPlaceholder(index: Int): String = parent.liftingPlaceholder(index)
       override def idiomReturningCapability: ReturningCapability = parent.idiomReturningCapability
+      override def productAggregationToken: ProductAggregationToken = parent.productAggregationToken
     }
 
   /**

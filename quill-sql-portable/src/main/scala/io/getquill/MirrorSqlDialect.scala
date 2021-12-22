@@ -2,45 +2,58 @@ package io.getquill
 
 import io.getquill.context.sql.idiom.{ ConcatSupport, QuestionMarkBindVariables, SqlIdiom }
 import io.getquill.context._
+import io.getquill.norm.ProductAggregationToken
 import io.getquill.sql.idiom.BooleanLiteralSupport
 
 trait MirrorSqlDialect
   extends SqlIdiom
   with QuestionMarkBindVariables
   with ConcatSupport
-  with CanReturnField
+  with CanReturnField {
+  override protected def productAggregationToken: ProductAggregationToken = ProductAggregationToken.VariableDotStar
+}
 
 // TOODO Move these others ones into MirrorSqlDialect main class
 trait MirrorSqlDialectWithReturnMulti
   extends SqlIdiom
   with QuestionMarkBindVariables
   with ConcatSupport
-  with CanReturnMultiField
+  with CanReturnMultiField {
+  override protected def productAggregationToken: ProductAggregationToken = ProductAggregationToken.VariableDotStar
+}
 
 trait MirrorSqlDialectWithReturnClause
   extends SqlIdiom
   with QuestionMarkBindVariables
   with ConcatSupport
-  with CanReturnClause
+  with CanReturnClause {
+  override protected def productAggregationToken: ProductAggregationToken = ProductAggregationToken.VariableDotStar
+}
 
 trait MirrorSqlDialectWithOutputClause
   extends SqlIdiom
   with QuestionMarkBindVariables
   with ConcatSupport
-  with CanOutputClause
+  with CanOutputClause {
+  override protected def productAggregationToken: ProductAggregationToken = ProductAggregationToken.VariableDotStar
+}
 
 trait MirrorSqlDialectWithNoReturn
   extends SqlIdiom
   with QuestionMarkBindVariables
   with ConcatSupport
-  with CannotReturn
+  with CannotReturn {
+  override protected def productAggregationToken: ProductAggregationToken = ProductAggregationToken.VariableDotStar
+}
 
 trait MirrorSqlDialectWithBooleanLiterals
   extends SqlIdiom
   with QuestionMarkBindVariables
   with ConcatSupport
   with CanReturnField
-  with BooleanLiteralSupport
+  with BooleanLiteralSupport {
+  override protected def productAggregationToken: ProductAggregationToken = ProductAggregationToken.VariableDotStar
+}
 
 object MirrorSqlDialect extends MirrorSqlDialect {
 
