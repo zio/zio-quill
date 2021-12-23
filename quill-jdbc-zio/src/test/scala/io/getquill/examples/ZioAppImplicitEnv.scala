@@ -32,5 +32,6 @@ object ZioAppImplicitEnv extends App {
       .joes
       .tap(result => putStrLn(result.toString))
       .exitCode
-  }
+  }20: Unused import
+  [warn] import zio.console.putStrLn
 }

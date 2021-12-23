@@ -1,11 +1,10 @@
 package io.getquill.examples
 
 import io.getquill._
+import io.getquill.context.ZioJdbc.DataSource
 import io.getquill.util.LoadConfig
-import zio.{ App, ExitCode, URIO, ZLayer }
+import zio.{App, ExitCode, URIO, ZLayer}
 import zio.console.putStrLn
-
-import javax.sql.DataSource
 
 object ZioAppManual extends App {
 

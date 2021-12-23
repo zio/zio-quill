@@ -1,14 +1,14 @@
 package io.getquill
 
 import com.typesafe.config.Config
-import com.zaxxer.hikari.HikariConfig
-import com.zaxxer.hikari.HikariDataSource
+import com.zaxxer.hikari.{HikariConfig, HikariDataSource}
 
 import java.io.Closeable
 import java.util.Properties
 import scala.util.control.NonFatal
 
 final case class JdbcContextConfig(config: Config) {
+  type DataSource = javax.sql.DataSource with Closeable
 
   def configProperties: Properties = {
     import scala.jdk.CollectionConverters._
@@ -18,7 +18,7 @@ final case class JdbcContextConfig(config: Config) {
     p
   }
 
-  def dataSource: javax.sql.DataSource with Closeable =
+  def dataSource: DataSource =
     try
       new HikariDataSource(new HikariConfig(configProperties))
     catch {
