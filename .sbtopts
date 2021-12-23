@@ -1,4 +1,2 @@
 -J-Xmx16g
 -J-XX:MaxMetaspaceSize=2g
--J--add-opens=java.base/java.util=ALL-UNNAMED
--J--add-opens=java.base/java.lang=ALL-UNNAMED
