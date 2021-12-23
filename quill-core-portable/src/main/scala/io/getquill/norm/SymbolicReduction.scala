@@ -13,7 +13,7 @@ import io.getquill.ast.{ Filter, FlatMap, Query, Union, UnionAll }
  */
 object SymbolicReduction {
 
-  def unapply(q: Query) =
+  def unapply(q: Query): Option[Query] =
     q match {
 
       /*
@@ -63,6 +63,6 @@ object SymbolicReduction {
       case FlatMap(UnionAll(a, b), c, d) =>
         Some(UnionAll(FlatMap(a, c, d), FlatMap(b, c, d)))
 
-      case other => None
+      case _ => None
     }
 }

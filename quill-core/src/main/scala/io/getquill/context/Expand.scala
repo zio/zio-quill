@@ -6,7 +6,7 @@ import io.getquill.idiom.ReifyStatement
 import io.getquill.NamingStrategy
 import io.getquill.idiom.Idiom
 
-case class Expand[C <: Context[_, _]](
+final case class Expand[C <: Context[_, _]](
   val context: C,
   val ast:     Ast,
   statement:   Statement,
@@ -22,11 +22,11 @@ case class Expand[C <: Context[_, _]](
       forProbing = false
     )
 
-  val liftings = externals.collect {
+  val liftings: List[ScalarLift] = externals.collect {
     case lift: ScalarLift => lift
   }
 
-  val prepare =
+  val prepare: (context.PrepareRow, context.Session) => (List[Any], context.PrepareRow) =
     (row: context.PrepareRow, session: context.Session) => {
       val (_, values, prepare) = liftings.foldLeft((0, List.empty[Any], row)) {
         case ((idx, values, row), lift) =>

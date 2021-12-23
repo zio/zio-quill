@@ -31,10 +31,10 @@ trait SqlIdiom extends Idiom {
 
   override def format(queryString: String): String = SqlFormatter.format(queryString)
 
-  def normalizeAst(ast: Ast, concatBehavior: ConcatBehavior, equalityBehavior: EqualityBehavior) =
+  def normalizeAst(ast: Ast, concatBehavior: ConcatBehavior, equalityBehavior: EqualityBehavior): Ast =
     SqlNormalize(ast, concatBehavior, equalityBehavior)
 
-  def querifyAst(ast: Ast) = SqlQuery(ast)
+  def querifyAst(ast: Ast): SqlQuery = SqlQuery(ast)
 
   private def doTranslate(ast: Ast, cached: Boolean)(implicit naming: NamingStrategy): (Ast, Statement) = {
 
@@ -137,17 +137,17 @@ trait SqlIdiom extends Idiom {
   protected class FlattenSqlQueryTokenizerHelper(q: FlattenSqlQuery)(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy) {
     import q._
 
-    def selectTokenizer =
+    def selectTokenizer: Token =
       select match {
         case Nil => stmt"*"
         case _   => select.token
       }
 
-    def distinctTokenizer = (if (distinct) "DISTINCT " else "").token
+    def distinctTokenizer: Token = (if (distinct) "DISTINCT " else "").token
 
-    def withDistinct = stmt"$distinctTokenizer${selectTokenizer}"
+    def withDistinct: Statement = stmt"$distinctTokenizer${selectTokenizer}"
 
-    def withFrom =
+    def withFrom: Statement =
       from match {
         case Nil => withDistinct
         case head :: tail =>
@@ -161,24 +161,24 @@ trait SqlIdiom extends Idiom {
           stmt"$withDistinct FROM $t"
       }
 
-    def withWhere =
+    def withWhere: Statement =
       where match {
         case None        => withFrom
         case Some(where) => stmt"$withFrom WHERE ${where.token}"
       }
-    def withGroupBy =
+    def withGroupBy: Statement =
       groupBy match {
         case None          => withWhere
         case Some(groupBy) => stmt"$withWhere GROUP BY ${tokenizeGroupBy(groupBy)}"
       }
-    def withOrderBy =
+    def withOrderBy: Statement =
       orderBy match {
         case Nil     => withGroupBy
         case orderBy => stmt"$withGroupBy ${tokenOrderBy(orderBy)}"
       }
-    def withLimitOffset = limitOffsetToken(withOrderBy).token((limit, offset))
+    def withLimitOffset: Token = limitOffsetToken(withOrderBy).token((limit, offset))
 
-    def apply = stmt"SELECT $withLimitOffset"
+    def apply: Statement = stmt"SELECT $withLimitOffset"
   }
 
   implicit def sqlQueryTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[SqlQuery] = Tokenizer[SqlQuery] {
@@ -190,13 +190,13 @@ trait SqlIdiom extends Idiom {
       stmt"SELECT ${op.token} (${q.token})"
   }
 
-  protected def tokenizeColumn(strategy: NamingStrategy, column: String, renameable: Renameable) =
+  protected def tokenizeColumn(strategy: NamingStrategy, column: String, renameable: Renameable): String =
     renameable match {
       case Fixed => tokenizeFixedColumn(strategy, column)
       case _     => strategy.column(column)
     }
 
-  protected def tokenizeTable(strategy: NamingStrategy, table: String, renameable: Renameable) =
+  protected def tokenizeTable(strategy: NamingStrategy, table: String, renameable: Renameable): String =
     renameable match {
       case Fixed => table
       case _     => strategy.table(table)
@@ -247,7 +247,7 @@ trait SqlIdiom extends Idiom {
         case Aggregation(op, Ident(id, _))               => stmt"${op.token}(${id.token})"
         case Aggregation(op, Tuple(_))                   => stmt"${op.token}(*)"
         case Aggregation(op, Distinct(ast))              => stmt"${op.token}(DISTINCT ${ast.token})"
-        case ast @ Aggregation(op, _: Query)             => scopedTokenizer(ast)
+        case ast @ Aggregation(_, _: Query)             => scopedTokenizer(ast)
         case Aggregation(op, ast)                        => stmt"${op.token}(${ast.token})"
       }
 
@@ -293,7 +293,7 @@ trait SqlIdiom extends Idiom {
     case UnionAllOperation => stmt"UNION ALL"
   }
 
-  protected def limitOffsetToken(query: Statement)(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy) =
+  protected def limitOffsetToken(query: Statement)(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[(Option[Ast], Option[Ast])] =
     Tokenizer[(Option[Ast], Option[Ast])] {
       case (None, None)                => query
       case (Some(limit), None)         => stmt"$query LIMIT ${limit.token}"
@@ -301,7 +301,7 @@ trait SqlIdiom extends Idiom {
       case (None, Some(offset))        => stmt"$query OFFSET ${offset.token}"
     }
 
-  protected def tokenOrderBy(criterias: List[OrderByCriteria])(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy) =
+  protected def tokenOrderBy(criterias: List[OrderByCriteria])(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Statement =
     stmt"ORDER BY ${criterias.token}"
 
   implicit def sourceTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[FromContext] = Tokenizer[FromContext] {
@@ -454,12 +454,12 @@ trait SqlIdiom extends Idiom {
     Tokenizer[ExternalIdent](e => tokenizeIdentName(strategy, e.name).token)
 
   implicit def assignmentTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Assignment] = Tokenizer[Assignment] {
-    case Assignment(alias, prop, value) =>
+    case Assignment(_, prop, value) =>
       stmt"${prop.token} = ${scopedTokenizer(value)}"
   }
 
   implicit def assignmentDualTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[AssignmentDual] = Tokenizer[AssignmentDual] {
-    case AssignmentDual(alias1, alias2, prop, value) =>
+    case AssignmentDual(_, _, prop, value) =>
       stmt"${prop.token} = ${scopedTokenizer(value)}"
   }
 
@@ -470,7 +470,7 @@ trait SqlIdiom extends Idiom {
     actionTokenizer(insertEntityTokenizer)(actionAstTokenizer, strategy)
   }
 
-  protected def actionAstTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy) =
+  protected def actionAstTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Ast] =
     Tokenizer.withFallback[Ast](SqlIdiom.this.astTokenizer(_, strategy)) {
       case q: Query => astTokenizer.token(q)
       case Property(Property.Opinionated(_, name, renameable, _), "isEmpty") => stmt"${renameable.fixedOr(name)(tokenizeColumn(strategy, name, renameable)).token} IS NULL"
@@ -502,16 +502,16 @@ trait SqlIdiom extends Idiom {
       case Update(table: Entity, assignments) =>
         stmt"UPDATE ${table.token}${actionAlias.map(alias => stmt" AS ${alias.token}").getOrElse(stmt"")} SET ${assignments.token}"
 
-      case Update(Filter(table: Entity, x, where), assignments) =>
+      case Update(Filter(table: Entity, _, where), assignments) =>
         stmt"UPDATE ${table.token}${actionAlias.map(alias => stmt" AS ${alias.token}").getOrElse(stmt"")} SET ${assignments.token} WHERE ${where.token}"
 
-      case Delete(Filter(table: Entity, x, where)) =>
+      case Delete(Filter(table: Entity, _, where)) =>
         stmt"DELETE FROM ${table.token}${actionAlias.map(alias => stmt" AS ${alias.token}").getOrElse(stmt"")} WHERE ${where.token}"
 
       case Delete(table: Entity) =>
         stmt"DELETE FROM ${table.token}${actionAlias.map(alias => stmt" AS ${alias.token}").getOrElse(stmt"")}"
 
-      case r @ ReturningAction(Insert(table: Entity, Nil), alias, prop) =>
+      case r @ ReturningAction(Insert(table: Entity, Nil), _, prop) =>
         idiomReturningCapability match {
           // If there are queries inside of the returning clause we are forced to alias the inserted table (see #1509). Only do this as
           // a last resort since it is not even supported in all Postgres versions (i.e. only after 9.5)
@@ -521,11 +521,11 @@ trait SqlIdiom extends Idiom {
             stmt"INSERT INTO ${table.token} ${defaultAutoGeneratedToken(prop.token)} RETURNING ${returnListTokenizer.token(ExpandReturning(r)(this, strategy).map(_._1))}"
           case OutputClauseSupported =>
             stmt"INSERT INTO ${table.token} OUTPUT ${returnListTokenizer.token(ExpandReturning(r, Some("INSERTED"))(this, strategy).map(_._1))} ${defaultAutoGeneratedToken(prop.token)}"
-          case other =>
+          case _ =>
             stmt"INSERT INTO ${table.token} ${defaultAutoGeneratedToken(prop.token)}"
         }
 
-      case r @ ReturningAction(action, alias, prop) =>
+      case r @ ReturningAction(action, _, prop) =>
         idiomReturningCapability match {
           // If there are queries inside of the returning clause we are forced to alias the inserted table (see #1509). Only do this as
           // a last resort since it is not even supported in all Postgres versions (i.e. only after 9.5)
@@ -563,7 +563,7 @@ trait SqlIdiom extends Idiom {
     case Entity.Opinionated(name, _, _, renameable) => tokenizeTable(strategy, name, renameable).token
   }
 
-  protected def scopedTokenizer(ast: Ast)(implicit tokenizer: Tokenizer[Ast]) =
+  protected def scopedTokenizer(ast: Ast)(implicit tokenizer: Tokenizer[Ast]): Token =
     ast match {
       case _: Query           => stmt"(${ast.token})"
       case _: BinaryOperation => stmt"(${ast.token})"
@@ -599,7 +599,7 @@ object SqlIdiom {
     query match {
       case r @ ReturningAction(Insert(table: Entity, Nil), alias, prop) =>
         stmt"INSERT INTO ${table.token} AS ${alias.name.token} ${defaultAutoGeneratedToken(prop.token)} RETURNING ${returnListTokenizer.token(ExpandReturning(r)(idiom, strategy).map(_._1))}"
-      case r @ ReturningAction(action, alias, prop) =>
+      case r @ ReturningAction(action, _, _) =>
         stmt"${action.token} RETURNING ${returnListTokenizer.token(ExpandReturning(r)(idiom, strategy).map(_._1))}"
     }
   }

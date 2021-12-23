@@ -137,7 +137,7 @@ trait OrientDBIdiom extends Idiom {
             val t = tail.foldLeft(stmt"${head.token}") {
               case (a, b: FlatJoinContext) =>
                 stmt"$a ${(b: FromContext).token}"
-              case (a, b) =>
+              case (a, _) =>
                 stmt"$a"
             }
             stmt"$selectClause FROM $t"
@@ -167,7 +167,7 @@ trait OrientDBIdiom extends Idiom {
         case (Some(limit), Some(offset)) => stmt"$withOrderBy SKIP ${offset.token} LIMIT ${limit.token}"
         case (None, Some(offset))        => stmt"$withOrderBy SKIP ${offset.token}"
       }
-    case SetOperationSqlQuery(a, op, b) =>
+    case SetOperationSqlQuery(a, _, b) =>
       val str = f"SELECT $$c LET $$a = (${a.token}), $$b = (${b.token}), $$c = UNIONALL($$a, $$b)"
       str.token
     case _ =>
@@ -191,13 +191,13 @@ trait OrientDBIdiom extends Idiom {
     case UnionAllOperation => stmt"UNION ALL"
   }
 
-  protected def tokenOrderBy(criterias: List[OrderByCriteria])(implicit strategy: NamingStrategy) =
+  protected def tokenOrderBy(criterias: List[OrderByCriteria])(implicit strategy: NamingStrategy): Statement =
     stmt"ORDER BY ${criterias.token}"
 
   implicit def sourceTokenizer(implicit strategy: NamingStrategy): Tokenizer[FromContext] = Tokenizer[FromContext] {
-    case TableContext(name, alias)  => stmt"${name.token}"
-    case QueryContext(query, alias) => stmt"(${query.token})"
-    case InfixContext(infix, alias) => stmt"(${(infix: Ast).token})"
+    case TableContext(name, _)  => stmt"${name.token}"
+    case QueryContext(query, _) => stmt"(${query.token})"
+    case InfixContext(infix, _) => stmt"(${(infix: Ast).token})"
     case _                          => fail("OrientDB sql doesn't support joins")
   }
 
@@ -240,14 +240,14 @@ trait OrientDBIdiom extends Idiom {
     def tokenValue(ast: Ast) =
       ast match {
         case Aggregation(op, Ident(_, _)) => stmt"${op.token}(*)"
-        case Aggregation(op, _: Query)    => scopedTokenizer(ast)
+        case Aggregation(_, _: Query)    => scopedTokenizer(ast)
         case Aggregation(op, ast)         => stmt"${op.token}(${ast.token})"
         case _                            => ast.token
       }
     Tokenizer[SelectValue] {
       case SelectValue(ast, Some(alias), false)    => stmt"${tokenValue(ast)} ${strategy.column(alias).token}"
       case SelectValue(Ident("?", _), None, false) => "?".token
-      case SelectValue(ast: Ident, None, false)    => stmt"*" //stmt"${tokenValue(ast)}.*"
+      case SelectValue(_: Ident, None, false)    => stmt"*" //stmt"${tokenValue(ast)}.*"
       case SelectValue(ast, None, false)           => tokenValue(ast)
       case SelectValue(_, _, true)                 => fail("OrientDB doesn't support `concatMap`")
     }
@@ -258,7 +258,7 @@ trait OrientDBIdiom extends Idiom {
       case Property(ast, "isEmpty")   => stmt"${ast.token} IS NULL"
       case Property(ast, "nonEmpty")  => stmt"${ast.token} IS NOT NULL"
       case Property(ast, "isDefined") => stmt"${ast.token} IS NOT NULL"
-      case Property.Opinionated(ast, name, renameable, _) =>
+      case Property.Opinionated(_, name, renameable, _) =>
         renameable.fixedOr(name.token)(strategy.column(name).token)
     }
   }
@@ -286,12 +286,12 @@ trait OrientDBIdiom extends Idiom {
     Tokenizer[ExternalIdent](e => strategy.default(e.name).token)
 
   implicit def assignmentTokenizer(implicit propertyTokenizer: Tokenizer[Property], strategy: NamingStrategy): Tokenizer[Assignment] = Tokenizer[Assignment] {
-    case Assignment(alias, prop, value) =>
+    case Assignment(_, prop, value) =>
       stmt"${prop.token} = ${scopedTokenizer(value)}"
   }
 
   implicit def assignmentDualTokenizer(implicit propertyTokenizer: Tokenizer[Property], strategy: NamingStrategy): Tokenizer[AssignmentDual] = Tokenizer[AssignmentDual] {
-    case AssignmentDual(alias1, alias2, prop, value) =>
+    case AssignmentDual(_, _, prop, value) =>
       stmt"${prop.token} = ${scopedTokenizer(value)}"
   }
 
@@ -313,10 +313,10 @@ trait OrientDBIdiom extends Idiom {
       case Update(table: Entity, assignments) =>
         stmt"UPDATE ${table.token} SET ${assignments.token}"
 
-      case Update(Filter(table: Entity, x, where), assignments) =>
+      case Update(Filter(table: Entity, _, where), assignments) =>
         stmt"UPDATE ${table.token} SET ${assignments.token} WHERE ${where.token}"
 
-      case Delete(Filter(table: Entity, x, where)) =>
+      case Delete(Filter(table: Entity, _, where)) =>
         stmt"DELETE FROM ${table.token} WHERE ${where.token}"
 
       case Delete(table: Entity) =>
@@ -332,7 +332,7 @@ trait OrientDBIdiom extends Idiom {
       renameable.fixedOr(name.token)(strategy.table(name).token)
   }
 
-  protected def scopedTokenizer[A <: Ast](ast: A)(implicit token: Tokenizer[A]) =
+  protected def scopedTokenizer[A <: Ast](ast: A)(implicit token: Tokenizer[A]): Token =
     ast match {
       case _: Query           => stmt"(${ast.token})"
       case _: BinaryOperation => stmt"(${ast.token})"

@@ -5,6 +5,6 @@ import io.getquill.ast.CollectAst
 import io.getquill.ast.Dynamic
 
 object IsDynamic {
-  def apply(a: Ast) =
+  def apply(a: Ast): Boolean =
     CollectAst(a) { case d: Dynamic => d }.nonEmpty
 }

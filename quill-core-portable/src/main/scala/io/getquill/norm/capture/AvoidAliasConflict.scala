@@ -40,7 +40,7 @@ import scala.collection.immutable.Set
  * i.e. because aliases of outer clauses may not be present. For this reason, this transformation is specifically
  * called once from the top-level inside `SqlNormalize` at the very end of the transformation pipeline.
  */
-private[getquill] case class AvoidAliasConflict(state: Set[IdentName], detemp: Boolean)
+final private[getquill] case class AvoidAliasConflict(state: Set[IdentName], detemp: Boolean)
   extends StatefulTransformer[Set[IdentName]] {
 
   val interp = new Interpolator(TraceType.AvoidAliasConflict, 3)

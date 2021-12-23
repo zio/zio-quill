@@ -1,6 +1,5 @@
 package io.getquill.context
 
-import scala.language.higherKinds
 import scala.language.experimental.macros
 import io.getquill.dsl.CoreDsl
 import io.getquill.util.Messages.fail
@@ -59,7 +58,7 @@ trait Context[Idiom <: io.getquill.idiom.Idiom, Naming <: NamingStrategy] extend
   def run(quoted: Quoted[BatchAction[Action[_]]]): Result[RunBatchActionResult] = macro ActionMacro.runBatchAction
   def run[T](quoted: Quoted[BatchAction[ActionReturning[_, T]]]): Result[RunBatchActionReturningResult[T]] = macro ActionMacro.runBatchActionReturning[T]
 
-  protected def handleSingleResult[T](list: List[T]) =
+  protected def handleSingleResult[T](list: List[T]): T =
     list match {
       case value :: Nil => value
       case other        => fail(s"Expected a single result but got $other")

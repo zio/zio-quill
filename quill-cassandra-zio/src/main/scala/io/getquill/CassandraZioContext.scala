@@ -54,7 +54,7 @@ class CassandraZioContext[N <: NamingStrategy](val naming: N)
   with StandardContext[CqlIdiom, N]
   with CioOps {
 
-  private val logger = ContextLogger(classOf[CassandraZioContext[_]])
+  ContextLogger(classOf[CassandraZioContext[_]])
 
   override type Error = Throwable
   override type Environment = Has[CassandraZioSession]
@@ -98,7 +98,7 @@ class CassandraZioContext[N <: NamingStrategy](val naming: N)
       ZManaged.lock(Blocking.Service.live.blockingExecutor)
     )
 
-  def streamQuery[T](fetchSize: Option[Int], cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner) = {
+  def streamQuery[T](fetchSize: Option[Int], cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner): ZStream[Has[CassandraZioSession],Throwable,T] = {
     val stream =
       for {
         csession <- ZStream.service[CassandraZioSession]

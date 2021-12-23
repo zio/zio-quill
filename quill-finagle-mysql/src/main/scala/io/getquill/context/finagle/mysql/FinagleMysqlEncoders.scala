@@ -5,7 +5,6 @@ import java.time.{ LocalDate, LocalDateTime }
 import java.util.{ Date, UUID }
 
 import com.twitter.finagle.mysql.CanBeParameter._
-import com.twitter.finagle.mysql.Parameter.wrap
 import com.twitter.finagle.mysql._
 import io.getquill.FinagleMysqlContext
 
@@ -15,12 +14,12 @@ trait FinagleMysqlEncoders {
   type Encoder[T] = FinagleMySqlEncoder[T]
 
   case class FinagleMySqlEncoder[T](encoder: BaseEncoder[T]) extends BaseEncoder[T] {
-    override def apply(index: Index, value: T, row: PrepareRow, session: Session) =
+    override def apply(index: Index, value: T, row: PrepareRow, session: Session): PrepareRow =
       encoder(index, value, row, session)
   }
 
   def encoder[T](f: T => Parameter): Encoder[T] =
-    FinagleMySqlEncoder((index, value, row, session) => row :+ f(value))
+    FinagleMySqlEncoder((_, value, row, _) => row :+ f(value))
 
   def encoder[T](implicit cbp: CanBeParameter[T]): Encoder[T] =
     encoder[T]((v: T) => v: Parameter)

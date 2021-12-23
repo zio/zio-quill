@@ -31,7 +31,7 @@ object RenameProperties {
   private def demarcate(heading: String) =
     ((ast: Ast) => title(heading)(ast))
 
-  def apply(ast: Ast) = {
+  def apply(ast: Ast): Ast = {
     (identity[Ast] _)
       .andThen(SeedRenames.apply(_: Ast)) // Stage field renames into the Quats of entities
       .andThen(demarcate("SeedRenames"))
@@ -76,9 +76,9 @@ object ApplyRenamesToProps extends StatelessTransformer {
   override def apply(p: Property): Property =
     applyProperty(p)
 
-  def applyProperty(p: Property) =
+  def applyProperty(p: Property): Property =
     p match {
-      case p @ Property.Opinionated(ast, name, renameable, visibility) =>
+      case p @ Property.Opinionated(ast, name, _, visibility) =>
         val newAst = apply(ast)
         trace"Checking Property: ${p} for possible rename. Renames on Quat: ${newAst.quat.renames}".andLog()
         // Check the quat if it is renaming this property if so rename it. Otherwise property is the same

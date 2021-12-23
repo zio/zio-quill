@@ -50,27 +50,27 @@ abstract class JAsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: ConcreteCo
     override def invoke(t: T): R = f(t)
   }
 
-  override def close = {
+  override def close: Unit = {
     Await.result(pool.disconnect(), Duration.Inf)
     ()
   }
 
-  protected def withConnection[T](f: Connection => Future[T])(implicit ec: ExecutionContext) =
+  protected def withConnection[T](f: Connection => Future[T])(implicit ec: ExecutionContext): Future[T] =
     ec match {
-      case TransactionalExecutionContext(ec, conn) => f(conn)
-      case other                                   => f(pool)
+      case TransactionalExecutionContext(_, conn) => f(conn)
+      case _                                   => f(pool)
     }
 
   protected def extractActionResult[O](returningAction: ReturnAction, extractor: Extractor[O])(result: QueryResult): O
 
   protected def expandAction(sql: String, returningAction: ReturnAction) = sql
 
-  def probe(sql: String) =
+  def probe(sql: String): Try[QueryResult] =
     Try {
       Await.result(pool.sendQuery(sql), Duration.Inf)
     }
 
-  def transaction[T](f: TransactionalExecutionContext => Future[T])(implicit ec: ExecutionContext) =
+  def transaction[T](f: TransactionalExecutionContext => Future[T])(implicit ec: ExecutionContext): CompletableFuture[T] =
     pool.inTransaction({ c: Connection =>
       toCompletableFuture(f(TransactionalExecutionContext(ec, c)))
     })

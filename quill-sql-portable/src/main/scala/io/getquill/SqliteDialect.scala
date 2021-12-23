@@ -15,9 +15,9 @@ trait SqliteDialect
   with OnConflictSupport
   with CanReturnField {
 
-  override def emptySetContainsToken(field: Token) = StringToken("0")
+  override def emptySetContainsToken(field: Token): StringToken = StringToken("0")
 
-  override def prepareForProbing(string: String) = s"sqlite3_prepare_v2($string)"
+  override def prepareForProbing(string: String): String = s"sqlite3_prepare_v2($string)"
 
   override def astTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Ast] =
     Tokenizer[Ast] {

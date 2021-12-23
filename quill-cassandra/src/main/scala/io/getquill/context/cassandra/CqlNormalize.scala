@@ -8,7 +8,7 @@ import io.getquill.norm.{ FlattenOptionOperation, Normalize, RenameProperties, S
 
 object CqlNormalize {
 
-  def apply(ast: Ast) =
+  def apply(ast: Ast): Ast =
     normalize(ast)
 
   private[this] val normalize =

@@ -1,7 +1,5 @@
 package io.getquill.context.cassandra.cluster
 
-import com.datastax.oss.driver.api.core.config.DriverConfigLoader
-import io.getquill.util.Messages._
 import com.typesafe.config.Config
 import com.datastax.oss.driver.api.core.{ CqlSession, CqlSessionBuilder }
 import com.datastax.oss.driver.internal.core.config.typesafe.DefaultDriverConfigLoader

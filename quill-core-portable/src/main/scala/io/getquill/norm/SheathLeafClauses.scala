@@ -1,6 +1,6 @@
 package io.getquill.norm
 
-import io.getquill.ast.{ Aggregation, Ast, CaseClass, ConcatMap, Distinct, Filter, FlatMap, GroupBy, Ident, Join, Map, Property, Query, StatefulTransformerWithStack, Tuple, Union, UnionAll }
+import io.getquill.ast.{ Aggregation, Ast, CaseClass, ConcatMap, Distinct, Filter, FlatMap, GroupBy, Ident, Join, Map, Property, Query, StatefulTransformerWithStack, Union, UnionAll }
 import io.getquill.ast.Ast.LeafQuat
 import io.getquill.ast.StatefulTransformerWithStack.History
 import io.getquill.util.Interpolator
@@ -14,19 +14,19 @@ import io.getquill.util.Messages.TraceType
  * ent - means a Ast Query. Typically just a Ast Entity
  * e.v - this dot-shorthand means Property(e, v) where e is an Ast Ident
  */
-case class SheathLeafClauses(state: Option[String]) extends StatefulTransformerWithStack[Option[String]] {
+final case class SheathLeafClauses(state: Option[String]) extends StatefulTransformerWithStack[Option[String]] {
 
   val interp = new Interpolator(TraceType.ShealthLeaf, 3)
   import interp._
 
-  def sheathLeaf(ast: Ast) =
+  def sheathLeaf(ast: Ast): (Ast, Option[String]) =
     ast match {
       case LeafQuat(p: Property) => (CaseClass(p.name -> p), Some(p.name))
       case LeafQuat(body)        => (CaseClass("x" -> body), Some("x"))
       case other                 => (other, None)
     }
 
-  def elaborateSheath(ast: Ast)(state: Option[String], e: Ident, newIdent: Ident) =
+  def elaborateSheath(ast: Ast)(state: Option[String], e: Ident, newIdent: Ident): Ast =
     state match {
       case Some(v) =>
         val e1 = newIdent
@@ -40,7 +40,7 @@ case class SheathLeafClauses(state: Option[String]) extends StatefulTransformerW
         ast
     }
 
-  def elaborateGroupSheath(ast: Ast)(state: Option[String], replace: Ident, newIdent: Ident) = {
+  def elaborateGroupSheath(ast: Ast)(state: Option[String], replace: Ident, newIdent: Ident): Ast = {
     val e = replace
     val e1 = newIdent
     state match {
@@ -57,9 +57,9 @@ case class SheathLeafClauses(state: Option[String]) extends StatefulTransformerW
   }
 
   object NotGroupBy {
-    def unapply(ast: Ast) =
+    def unapply(ast: Ast): Option[Ast] =
       ast match {
-        case p: GroupBy => None
+        case _: GroupBy => None
         case _          => Some(ast)
       }
   }
@@ -77,7 +77,7 @@ case class SheathLeafClauses(state: Option[String]) extends StatefulTransformerW
           case MapClauseType.ConcatMap => ConcatMap(a, b, c)
         }
     }
-    def unapply(ast: Ast) =
+    def unapply(ast: Ast): Option[(Ast, Ident, Ast, Remaker)] =
       ast match {
         case Map(a, b, c)       => Some((a, b, c, new Remaker(MapClauseType.Map)))
         case ConcatMap(a, b, c) => Some((a, b, c, new Remaker(MapClauseType.ConcatMap)))
@@ -98,7 +98,7 @@ case class SheathLeafClauses(state: Option[String]) extends StatefulTransformerW
           case UnionClauseType.UnionAll => UnionAll(a, b)
         }
     }
-    def unapply(ast: Ast) =
+    def unapply(ast: Ast): Option[(Ast, Ast, Remaker)] =
       ast match {
         case Union(a, b)    => Some((a, b, new Remaker(UnionClauseType.Union)))
         case UnionAll(a, b) => Some((a, b, new Remaker(UnionClauseType.UnionAll)))
@@ -136,7 +136,7 @@ case class SheathLeafClauses(state: Option[String]) extends StatefulTransformerW
 
       // This is the entry-point for all groupBy nodes which all must be followed by a .map clause
       // Typically the body of a groupBy.map is an aggregation.
-      case Map(grpBy @ GroupBy(LeafQuat(query), eg, LeafQuat(by)), e, LeafQuat(body)) =>
+      case Map( GroupBy(LeafQuat(query), eg, LeafQuat(by)), e, LeafQuat(body)) =>
         val innerState = query match {
           // If it's an infix inside e.g. Map(Grp(i:Infix),e,by) the higher-level apply should have changed it approporately
           // by adding an extra Map step inside which has a CaseClass that holds a new attribute that we will pass around
@@ -274,5 +274,5 @@ case class SheathLeafClauses(state: Option[String]) extends StatefulTransformerW
 }
 
 private[getquill] object SheathLeafClauses {
-  def from(q: Ast) = new SheathLeafClauses(None).apply(q)(History.Root)._1
+  def from(q: Ast): Ast = new SheathLeafClauses(None).apply(q)(History.Root)._1
 }

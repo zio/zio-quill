@@ -9,6 +9,7 @@ import io.getquill.util.Messages.fail
 import scala.collection.mutable.ArrayBuffer
 import scala.util.Try
 import io.getquill.context.Context
+import com.orientechnologies.orient.core.db.document.ODatabaseDocumentTx
 
 abstract class OrientDBSessionContext[N <: NamingStrategy](
   val naming: N,
@@ -28,7 +29,7 @@ abstract class OrientDBSessionContext[N <: NamingStrategy](
   override type RunBatchActionReturningResult[T] = Unit
 
   protected val session = new OPartitionedDatabasePool(dbUrl, username, password)
-  protected val oDatabase = session.acquire()
+  protected val oDatabase: ODatabaseDocumentTx = session.acquire()
 
   val idiom = OrientDBIdiom
 
@@ -39,7 +40,7 @@ abstract class OrientDBSessionContext[N <: NamingStrategy](
     session.close()
   }
 
-  override def probe(orientDBQl: String) =
+  override def probe(orientDBQl: String): Try[Unit] =
     Try {
       prepare()
       ()

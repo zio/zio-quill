@@ -300,7 +300,7 @@ trait StatefulTransformer[T] {
         (OnConflict.Update(at), att)
     }
 
-  def apply[U, R](list: List[U])(f: StatefulTransformer[T] => U => (R, StatefulTransformer[T])) =
+  def apply[U, R](list: List[U])(f: StatefulTransformer[T] => U => (R, StatefulTransformer[T])): (List[R], StatefulTransformer[T]) =
     list.foldLeft((List[R](), this)) {
       case ((values, t), v) =>
         val (vt, vtt) = f(t)(v)

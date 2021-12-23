@@ -124,7 +124,7 @@ abstract class ZioJdbcUnderlyingContext[Dialect <: SqlIdiom, Naming <: NamingStr
   /**
    * Override to enable specific vendor options needed for streaming
    */
-  protected def prepareStatementForStreaming(sql: String, conn: Connection, fetchSize: Option[Int]) = {
+  protected def prepareStatementForStreaming(sql: String, conn: Connection, fetchSize: Option[Int]): PreparedStatement = {
     val stmt = conn.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY)
     fetchSize.foreach { size =>
       stmt.setFetchSize(size)
@@ -144,7 +144,7 @@ abstract class ZioJdbcUnderlyingContext[Dialect <: SqlIdiom, Naming <: NamingStr
       ZStream.environment[Connection].flatMap { conn =>
         ZStream.managed {
           for {
-            conn <- ZManaged.make(Task(conn))(c => Task.unit)
+            conn <- ZManaged.make(Task(conn))(_ => Task.unit)
             ps <- managedBestEffort(Task(prepareStatement(conn)))
             rs <- managedBestEffort(Task(ps.executeQuery()))
           } yield (conn, ps, rs)
@@ -153,7 +153,7 @@ abstract class ZioJdbcUnderlyingContext[Dialect <: SqlIdiom, Naming <: NamingStr
 
     val outStream: ZStream[Connection, Throwable, T] =
       managedEnv.flatMap {
-        case (conn, ps, rs) =>
+        case (conn, _, rs) =>
           val iter = new ResultSetIterator(rs, conn, extractor)
           fetchSize match {
             // TODO Assuming chunk size is fetch size. Not sure if this is optimal.

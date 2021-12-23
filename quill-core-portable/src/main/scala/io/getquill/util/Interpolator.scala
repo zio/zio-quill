@@ -106,7 +106,7 @@ class Interpolator(
       (sb.toList, indent)
     }
 
-    def generateString() = {
+    def generateString(): (String, Int) = {
       val (elementsRaw, indent) = readBuffers()
 
       val elements = elementsRaw.filter {
@@ -145,12 +145,12 @@ class Interpolator(
     def andLog(): Unit =
       logIfEnabled().foreach(value => out.println(value._1))
 
-    def andContinue[T](command: => T) = {
+    def andContinue[T](command: => T): T = {
       logIfEnabled().foreach(value => out.println(value._1))
       command
     }
 
-    def andReturn[T](command: => T) = {
+    def andReturn[T](command: => T): T = {
       logIfEnabled() match {
         case Some((output, indent)) =>
           // do the initial log

@@ -1,6 +1,5 @@
 package io.getquill.context.monix
 
-import java.sql.{ Array => _ }
 import io.getquill.context.{ ExecutionInfo, StreamingContext }
 import io.getquill.context.monix.MonixNdbcContext.Runner
 import io.getquill.context.ndbc.NdbcContextBase
@@ -27,12 +26,12 @@ object MonixNdbcContext {
   }
 
   object Runner {
-    def default = new Runner {
+    def default: Runner = new Runner {
       override def schedule[T](t: Task[T]): Task[T] = t
       override def schedule[T](o: Observable[T]): Observable[T] = o
     }
 
-    def using(scheduler: Scheduler) = new Runner {
+    def using(scheduler: Scheduler): Runner = new Runner {
       override def schedule[T](t: Task[T]): Task[T] = t.executeOn(scheduler, forceAsync = true)
 
       override def schedule[T](o: Observable[T]): Observable[T] = o.executeOn(scheduler, forceAsync = true)

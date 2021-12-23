@@ -70,7 +70,7 @@ trait JdbcRunContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] extends Jdbc
       handleSingleResult(extractResult(ps.getGeneratedKeys, conn, extractor))
     }
 
-  protected def prepareWithReturning(sql: String, conn: Connection, returningBehavior: ReturnAction) =
+  protected def prepareWithReturning(sql: String, conn: Connection, returningBehavior: ReturnAction): PreparedStatement =
     returningBehavior match {
       case ReturnRecord           => conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)
       case ReturnColumns(columns) => conn.prepareStatement(sql, columns.toArray)

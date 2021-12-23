@@ -9,7 +9,6 @@ import io.getquill.context.sql.encoding.ArrayEncoding
 import io.getquill.util.Messages.fail
 import org.joda.time.{ DateTime => JodaDateTime, LocalDate => JodaLocalDate, LocalDateTime => JodaLocalDateTime }
 import scala.reflect.ClassTag
-import scala.collection.compat._
 import scala.jdk.CollectionConverters._
 
 trait ArrayDecoders extends ArrayEncoding {

@@ -24,6 +24,7 @@ import io.getquill.util.{ ContextLogger, LoadConfig }
 import io.getquill.util.Messages.fail
 import io.getquill.monad.TwitterFutureIOMonad
 import io.getquill.context.{ Context, ExecutionInfo, StreamingContext, TranslateContext }
+import com.twitter.finagle.mysql
 
 sealed trait OperationType
 object OperationType {
@@ -94,7 +95,7 @@ class FinagleMysqlContext[N <: NamingStrategy](
       extractionTimeZone
     )
 
-  override def close =
+  override def close: Unit =
     Await.result(
       Future.join(
         client(Write).close(),
@@ -104,17 +105,17 @@ class FinagleMysqlContext[N <: NamingStrategy](
 
   private val currentClient = new Local[Client]
 
-  def probe(sql: String) =
+  def probe(sql: String): Try[mysql.Result] =
     Try(Await.result(client(Write).query(sql)))
 
-  def transaction[T](f: => Future[T]) =
+  def transaction[T](f: => Future[T]): Future[T] =
     client(Write).transaction {
       transactional =>
         currentClient.update(transactional)
         f.ensure(currentClient.clear)
     }
 
-  def transactionWithIsolation[T](isolationLevel: IsolationLevel)(f: => Future[T]) =
+  def transactionWithIsolation[T](isolationLevel: IsolationLevel)(f: => Future[T]): Future[T] =
     client(Write).transactionWithIsolation(isolationLevel) {
       transactional =>
         currentClient.update(transactional)
@@ -193,13 +194,13 @@ class FinagleMysqlContext[N <: NamingStrategy](
   private def extractReturningValue[T](result: MysqlResult, extractor: Extractor[T]) =
     extractor(SingleValueRow(LongValue(toOk(result).insertId)), ())
 
-  protected def toOk(result: MysqlResult) =
+  protected def toOk(result: MysqlResult): OK =
     result match {
       case ok: OK => ok
       case error  => fail(error.toString)
     }
 
-  def withClient[T](op: OperationType)(f: Client => T) =
+  def withClient[T](op: OperationType)(f: Client => T): T =
     currentClient().map {
       client => f(client)
     }.getOrElse {

@@ -19,23 +19,23 @@ abstract class AsyncContextConfig[C <: Connection](
   connectionFactory: Configuration => ObjectFactory[C],
   uriParser:         AbstractURIParser
 ) {
-  def url = Try(config.getString("url")).toOption
-  def user = Try(config.getString("user")).toOption
-  def password = Try(config.getString("password")).toOption
-  def database = Try(config.getString("database")).toOption
-  def port = Try(config.getInt("port")).toOption
-  def host = Try(config.getString("host")).toOption
-  def sslProps = Map(
+  def url: Option[String] = Try(config.getString("url")).toOption
+  def user: Option[String] = Try(config.getString("user")).toOption
+  def password: Option[String] = Try(config.getString("password")).toOption
+  def database: Option[String] = Try(config.getString("database")).toOption
+  def port: Option[Int] = Try(config.getInt("port")).toOption
+  def host: Option[String] = Try(config.getString("host")).toOption
+  def sslProps: Map[String,String] = Map(
     "sslmode" -> Try(config.getString("sslmode")).toOption,
     "sslrootcert" -> Try(config.getString("sslrootcert")).toOption
   ).collect { case (key, Some(value)) => key -> value }
-  def charset = Try(Charset.forName(config.getString("charset"))).toOption
-  def maximumMessageSize = Try(config.getInt("maximumMessageSize")).toOption
-  def connectTimeout = Try(Duration(config.getString("connectTimeout"))).toOption
-  def testTimeout = Try(Duration(config.getString("testTimeout"))).toOption
-  def queryTimeout = Try(Duration(config.getString("queryTimeout"))).toOption
+  def charset: Option[Charset] = Try(Charset.forName(config.getString("charset"))).toOption
+  def maximumMessageSize: Option[Int] = Try(config.getInt("maximumMessageSize")).toOption
+  def connectTimeout: Option[Duration] = Try(Duration(config.getString("connectTimeout"))).toOption
+  def testTimeout: Option[Duration] = Try(Duration(config.getString("testTimeout"))).toOption
+  def queryTimeout: Option[Duration] = Try(Duration(config.getString("queryTimeout"))).toOption
 
-  def configuration = {
+  def configuration: Configuration = {
     var c =
       url match {
         case Some(url) => uriParser.parseOrDie(url)
@@ -61,12 +61,12 @@ abstract class AsyncContextConfig[C <: Connection](
 
   private val defaultPoolConfig = PoolConfiguration.Default
 
-  def poolMaxObjects = Try(config.getInt("poolMaxObjects")).getOrElse(defaultPoolConfig.maxObjects)
-  def poolMaxIdle = Try(config.getLong("poolMaxIdle")).getOrElse(defaultPoolConfig.maxIdle)
-  def poolMaxQueueSize = Try(config.getInt("poolMaxQueueSize")).getOrElse(defaultPoolConfig.maxQueueSize)
-  def poolValidationInterval = Try(config.getLong("poolValidationInterval")).getOrElse(defaultPoolConfig.validationInterval)
+  def poolMaxObjects: Int = Try(config.getInt("poolMaxObjects")).getOrElse(defaultPoolConfig.maxObjects)
+  def poolMaxIdle: Long = Try(config.getLong("poolMaxIdle")).getOrElse(defaultPoolConfig.maxIdle)
+  def poolMaxQueueSize: Int = Try(config.getInt("poolMaxQueueSize")).getOrElse(defaultPoolConfig.maxQueueSize)
+  def poolValidationInterval: Long = Try(config.getLong("poolValidationInterval")).getOrElse(defaultPoolConfig.validationInterval)
 
-  def poolConfiguration =
+  def poolConfiguration: PoolConfiguration =
     PoolConfiguration(
       maxObjects = poolMaxObjects,
       maxIdle = poolMaxIdle,
@@ -74,7 +74,7 @@ abstract class AsyncContextConfig[C <: Connection](
       validationInterval = poolValidationInterval
     )
 
-  def numberOfPartitions = Try(config.getInt("poolNumberOfPartitions")).getOrElse(4)
+  def numberOfPartitions: Int = Try(config.getInt("poolNumberOfPartitions")).getOrElse(4)
 
   def pool =
     new PartitionedConnectionPool[C](

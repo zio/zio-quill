@@ -6,7 +6,7 @@ import org.slf4j.LoggerFactory
 import scala.annotation.tailrec
 
 class ContextLogger(name: String) {
-  val underlying = Logger(LoggerFactory.getLogger(name))
+  val underlying: Logger = Logger(LoggerFactory.getLogger(name))
 
   private val bindsEnabled = sys.props.get("quill.binds.log").contains("true")
   private val nullToken = "null"

@@ -14,13 +14,13 @@ trait MirrorDecoders {
   override type Decoder[T] = MirrorDecoder[T]
 
   case class MirrorDecoder[T](decoder: BaseDecoder[T]) extends BaseDecoder[T] {
-    override def apply(index: Index, row: ResultRow, session: Session) =
+    override def apply(index: Index, row: ResultRow, session: Session): T =
       decoder(index, row, session)
   }
 
-  def decoder[T: ClassTag]: Decoder[T] = MirrorDecoder((index: Index, row: ResultRow, session: Session) => row[T](index))
+  def decoder[T: ClassTag]: Decoder[T] = MirrorDecoder((index: Index, row: ResultRow, _: Session) => row[T](index))
 
-  def decoderUnsafe[T]: Decoder[T] = MirrorDecoder((index: Index, row: ResultRow, session: Session) => row.data(index).asInstanceOf[T])
+  def decoderUnsafe[T]: Decoder[T] = MirrorDecoder((index: Index, row: ResultRow, _: Session) => row.data(index).asInstanceOf[T])
 
   implicit def mappedDecoder[I, O](implicit mapped: MappedEncoding[I, O], d: Decoder[I]): Decoder[O] =
     MirrorDecoder((index: Index, row: ResultRow, session: Session) => mapped.f(d.apply(index, row, session)))

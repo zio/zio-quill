@@ -18,7 +18,7 @@ trait H2Dialect
 
   private[getquill] val preparedStatementId = new AtomicInteger
 
-  override def prepareForProbing(string: String) =
+  override def prepareForProbing(string: String): String =
     s"PREPARE p${preparedStatementId.incrementAndGet.toString.token} AS $string}"
 
   override def astTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Ast] =

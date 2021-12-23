@@ -15,12 +15,12 @@ trait FinagleMysqlDecoders {
   type Decoder[T] = FinagleMysqlDecoder[T]
 
   case class FinagleMysqlDecoder[T](decoder: BaseDecoder[T]) extends BaseDecoder[T] {
-    override def apply(index: Index, row: ResultRow, session: Session) =
+    override def apply(index: Index, row: ResultRow, session: Session): T =
       decoder(index, row, session)
   }
 
   def decoder[T: ClassTag](f: PartialFunction[Value, T]): Decoder[T] =
-    FinagleMysqlDecoder((index, row, session) => {
+    FinagleMysqlDecoder((index, row, _) => {
       val value = row.values(index)
       f.lift(value).getOrElse(fail(s"Value '$value' can't be decoded to '${classTag[T].runtimeClass}'"))
     })

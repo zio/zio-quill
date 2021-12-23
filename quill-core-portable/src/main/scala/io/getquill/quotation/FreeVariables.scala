@@ -4,9 +4,9 @@ import io.getquill.ast._
 import io.getquill.ast.Implicits._
 import collection.immutable.Set
 
-case class State(seen: Set[IdentName], free: Set[IdentName])
+final case class State(seen: Set[IdentName], free: Set[IdentName])
 
-case class FreeVariables(state: State)
+final case class FreeVariables(state: State)
   extends StatefulTransformer[State] {
 
   override def apply(ast: Ast): (Ast, StatefulTransformer[State]) =
@@ -80,10 +80,10 @@ case class FreeVariables(state: State)
       case q @ Map(a, b, c)         => (q, free(a, b, c))
       case q @ FlatMap(a, b, c)     => (q, free(a, b, c))
       case q @ ConcatMap(a, b, c)   => (q, free(a, b, c))
-      case q @ SortBy(a, b, c, d)   => (q, free(a, b, c))
+      case q @ SortBy(a, b, c, _)   => (q, free(a, b, c))
       case q @ GroupBy(a, b, c)     => (q, free(a, b, c))
-      case q @ FlatJoin(t, a, b, c) => (q, free(a, b, c))
-      case q @ Join(t, a, b, iA, iB, on) =>
+      case q @ FlatJoin(_, a, b, c) => (q, free(a, b, c))
+      case q @ Join(_, a, b, iA, iB, on) =>
         val (_, freeA) = apply(a)
         val (_, freeB) = apply(b)
         val (_, freeOn) = FreeVariables(State(state.seen + iA.idName + iB.idName, Set.empty))(on)

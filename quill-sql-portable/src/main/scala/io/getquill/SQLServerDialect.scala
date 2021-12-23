@@ -19,9 +19,9 @@ trait SQLServerDialect
   with CanOutputClause
   with BooleanLiteralSupport {
 
-  override def querifyAst(ast: Ast) = AddDropToNestedOrderBy(SqlQuery(ast))
+  override def querifyAst(ast: Ast): SqlQuery = AddDropToNestedOrderBy(SqlQuery(ast))
 
-  override def emptySetContainsToken(field: Token) = StringToken("1 <> 1")
+  override def emptySetContainsToken(field: Token): StringToken = StringToken("1 <> 1")
 
   override def prepareForProbing(string: String) = string
 
@@ -29,7 +29,7 @@ trait SQLServerDialect
   // for the sake of consistency with the other contexts.
   override def equalityBehavior: EqualityBehavior = NonAnsiEquality
 
-  override protected def limitOffsetToken(query: Statement)(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy) =
+  override protected def limitOffsetToken(query: Statement)(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[(Option[Ast], Option[Ast])] =
     Tokenizer[(Option[Ast], Option[Ast])] {
       case (Some(limit), None)         => stmt"TOP ${limit.token} $query"
       case (Some(limit), Some(offset)) => stmt"$query OFFSET ${offset.token} ROWS FETCH FIRST ${limit.token} ROWS ONLY"

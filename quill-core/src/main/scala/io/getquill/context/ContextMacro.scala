@@ -69,7 +69,7 @@ trait ContextMacro extends Quotation {
         c.query(string, idiom)
 
         q"($normalizedAst, ${statement: Token})"
-      case Failure(ex) =>
+      case Failure(_) =>
         c.info(s"Can't translate query at compile time because the idiom and/or the naming strategy aren't known at this point.")
         translateDynamic(ast)
     }

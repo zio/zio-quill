@@ -13,7 +13,7 @@ import io.getquill.{ NamingStrategy, ReturnAction }
  */
 object ExpandReturning {
 
-  def applyMap(returning: ReturningAction)(f: (Ast, Statement) => String)(idiom: Idiom, naming: NamingStrategy) = {
+  def applyMap(returning: ReturningAction)(f: (Ast, Statement) => String)(idiom: Idiom, naming: NamingStrategy): ReturnAction = {
     idiom.idiomReturningCapability match {
       case ReturningClauseSupported | OutputClauseSupported =>
         ReturnAction.ReturnRecord

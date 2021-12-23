@@ -3,7 +3,6 @@ package io.getquill.context.ndbc
 import java.time._
 import java.util.{ Date, UUID }
 
-import scala.collection.compat._
 import scala.language.implicitConversions
 import scala.math.BigDecimal.javaBigDecimal2bigDecimal
 
@@ -15,7 +14,7 @@ class Default[+T](val default: T)
 
 object Default {
   implicit def defaultNull[T <: AnyRef]: Default[T] = new Default[T](null.asInstanceOf[T])
-  implicit def defaultNumeric[T <: Numeric[_]](n: T) = new Default[T](0.asInstanceOf[T])
+  implicit def defaultNumeric[T <: Numeric[_]](n: T): Default[T] = new Default[T](0.asInstanceOf[T])
   implicit object DefaultBoolean extends Default[Boolean](false)
 
   def value[A](implicit value: Default[A]): A = value.default
@@ -29,14 +28,14 @@ trait PostgresDecoders {
   protected val zoneOffset: ZoneOffset
 
   def decoder[T, U](f: PostgresRow => Int => T)(implicit map: T => U): Decoder[U] =
-    (index, row, session) =>
+    (index, row, _) =>
       row.column(index) match {
         case Value.NULL => Default.value[U]
         case _          => map(f(row)(index))
       }
 
   def arrayDecoder[T, U, Col <: Seq[U]](f: PostgresRow => Int => Array[T])(implicit map: T => U, bf: CBF[U, Col]): Decoder[Col] =
-    (index, row, session) => {
+    (index, row, _) => {
       f(row)(index).foldLeft(bf.newBuilder) {
         case (b, v) => b += map(v)
       }.result()
@@ -49,7 +48,7 @@ trait PostgresDecoders {
     (idx, row, session) =>
       row.column(idx) match {
         case Value.NULL => None
-        case value      => Option(d(idx, row, session))
+        case _      => Option(d(idx, row, session))
       }
 
   private implicit def toDate(v: LocalDateTime): Date = Date.from(v.toInstant(zoneOffset))

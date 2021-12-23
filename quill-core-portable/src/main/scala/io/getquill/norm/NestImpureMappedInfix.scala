@@ -44,22 +44,22 @@ object NestImpureMappedInfix extends StatelessTransformer {
             case (_, i) => Property(newIdent, s"_${i + 1}") // mappings of nested-query tuple properties should not be renamed
           }))
 
-      case m @ Map(q, x, i @ Infix(_, _, false, _)) =>
+      case  Infix(_, _, false, _)) =>
         val newMap = Map(apply(q), x, Tuple(List(i)))
         val newIdent = Ident(x.name, valueQuat(newMap.quat))
         Map(Nested(newMap), newIdent, Property(newIdent, "_1"))
 
-      case m @ Map(q, x, i @ Property(prop, _)) if hasInfix(prop) =>
+      case  Property(prop, _)) if hasInfix(prop) =>
         val newMap = Map(apply(q), x, Tuple(List(i)))
         val newIdent = Ident(x.name, valueQuat(newMap.quat))
         Map(Nested(newMap), newIdent, Property(newIdent, "_1"))
 
-      case m @ Map(q, x, i @ BinaryOperation(a, _, b)) if hasInfix(a, b) =>
+      case  BinaryOperation(a, _, b)) if hasInfix(a, b) =>
         val newMap = Map(apply(q), x, Tuple(List(i)))
         val newIdent = Ident(x.name, valueQuat(newMap.quat))
         Map(Nested(newMap), newIdent, Property(newIdent, "_1"))
 
-      case m @ Map(q, x, i @ UnaryOperation(_, a)) if hasInfix(a) =>
+      case  UnaryOperation(_, a)) if hasInfix(a) =>
         val newMap = Map(apply(q), x, Tuple(List(i)))
         val newIdent = Ident(x.name, valueQuat(newMap.quat))
         Map(Nested(newMap), newIdent, Property(newIdent, "_1"))

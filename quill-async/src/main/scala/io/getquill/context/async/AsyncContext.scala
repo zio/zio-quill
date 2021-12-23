@@ -40,27 +40,27 @@ abstract class AsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: Connection]
   override type Session = Unit
   override type Runner = Unit
 
-  override def close = {
+  override def close: Unit = {
     Await.result(pool.close, Duration.Inf)
     ()
   }
 
-  protected def withConnection[T](f: Connection => Future[T])(implicit ec: ExecutionContext) =
+  protected def withConnection[T](f: Connection => Future[T])(implicit ec: ExecutionContext): Future[T] =
     ec match {
-      case TransactionalExecutionContext(ec, conn) => f(conn)
-      case other                                   => f(pool)
+      case TransactionalExecutionContext(_, conn) => f(conn)
+      case _                                   => f(pool)
     }
 
   protected def extractActionResult[O](returningAction: ReturnAction, extractor: Extractor[O])(result: DBQueryResult): O
 
   protected def expandAction(sql: String, returningAction: ReturnAction) = sql
 
-  def probe(sql: String) =
+  def probe(sql: String): Try[DBQueryResult] =
     Try {
       Await.result(pool.sendQuery(sql), Duration.Inf)
     }
 
-  def transaction[T](f: TransactionalExecutionContext => Future[T])(implicit ec: ExecutionContext) =
+  def transaction[T](f: TransactionalExecutionContext => Future[T])(implicit ec: ExecutionContext): Future[T] =
     pool.inTransaction { c =>
       f(TransactionalExecutionContext(ec, c))
     }

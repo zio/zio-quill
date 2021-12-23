@@ -24,7 +24,7 @@ object RemoveExtraAlias {
  * as well as entities whose aliases are the same as their selection e.g. "select x.foo as foo"
  * since this just adds syntactic noise.
  */
-case class RemoveExtraAlias(strategy: NamingStrategy, topLevel: TopLevelRemove = TopLevelRemove.All) extends StatelessQueryTransformer {
+final case class RemoveExtraAlias(strategy: NamingStrategy, topLevel: TopLevelRemove = TopLevelRemove.All) extends StatelessQueryTransformer {
   // Remove aliases that are the same as as the select values. Since a strategy may change the name,
   // use a heuristic where if the column naming strategy make the property name be different from the
   // alias, keep the column property name.

@@ -11,7 +11,7 @@ import io.getquill.ast.UnionAll
 
 object AdHocReduction {
 
-  def unapply(q: Query) =
+  def unapply(q: Query): Option[Query] =
     q match {
 
       // ---------------------------
@@ -46,7 +46,7 @@ object AdHocReduction {
       case FlatMap(a, b, UnionAll(c, d)) =>
         Some(UnionAll(FlatMap(a, b, c), FlatMap(a, b, d)))
 
-      case other => None
+      case _ => None
     }
 
 }

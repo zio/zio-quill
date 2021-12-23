@@ -53,11 +53,11 @@ object RepropagateQuats extends StatelessTransformer {
   }
 
   implicit class IdentExt(id: Ident) {
-    def retypeQuatFrom(from: Quat) =
+    def retypeQuatFrom(from: Quat): Ident =
       id.copy(quat = id.quat.retypeFrom(from))
   }
 
-  def applyBody(a: Ast, b: Ident, c: Ast)(f: (Ast, Ident, Ast) => Query) = {
+  def applyBody(a: Ast, b: Ident, c: Ast)(f: (Ast, Ident, Ast) => Query): Query = {
     val ar = apply(a)
     val br = b.retypeQuatFrom(ar.quat)
     val cr = BetaReduction(c, RWR, b -> br)
@@ -90,7 +90,7 @@ object RepropagateQuats extends StatelessTransformer {
     }
   }
 
-  def reassign(assignments: List[Assignment], quat: Quat) =
+  def reassign(assignments: List[Assignment], quat: Quat): List[Assignment] =
     assignments.map {
       case Assignment(alias, property, value) =>
         val aliasR = alias.retypeQuatFrom(quat)

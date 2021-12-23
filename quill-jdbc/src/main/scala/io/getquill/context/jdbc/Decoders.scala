@@ -11,7 +11,7 @@ trait Decoders {
   type Decoder[T] = JdbcDecoder[T]
 
   case class JdbcDecoder[T](decoder: BaseDecoder[T]) extends BaseDecoder[T] {
-    def apply(index: Index, row: ResultRow, session: Session) =
+    def apply(index: Index, row: ResultRow, session: Session): T =
       decoder(index + 1, row, session)
   }
 
@@ -19,7 +19,7 @@ trait Decoders {
     JdbcDecoder(d)
 
   def decoder[T](f: ResultRow => Index => T): Decoder[T] =
-    decoder((index, row, session) => f(row)(index))
+    decoder((index, row, _) => f(row)(index))
 
   implicit def mappedDecoder[I, O](implicit mapped: MappedEncoding[I, O], d: Decoder[I]): Decoder[O] =
     JdbcDecoder(mappedBaseDecoder(mapped, d.decoder))
@@ -43,7 +43,7 @@ trait Decoders {
 
   implicit val stringDecoder: Decoder[String] = decoder(_.getString)
   implicit val bigDecimalDecoder: Decoder[BigDecimal] =
-    decoder((index, row, session) =>
+    decoder((index, row, _) =>
       row.getBigDecimal(index))
   implicit val byteDecoder: Decoder[Byte] = decoder(_.getByte)
   implicit val shortDecoder: Decoder[Short] = decoder(_.getShort)
@@ -53,13 +53,13 @@ trait Decoders {
   implicit val doubleDecoder: Decoder[Double] = decoder(_.getDouble)
   implicit val byteArrayDecoder: Decoder[Array[Byte]] = decoder(_.getBytes)
   implicit val dateDecoder: Decoder[util.Date] =
-    decoder((index, row, session) =>
+    decoder((index, row, _) =>
       new util.Date(row.getTimestamp(index, Calendar.getInstance(dateTimeZone)).getTime))
   implicit val localDateDecoder: Decoder[LocalDate] =
-    decoder((index, row, session) =>
+    decoder((index, row, _) =>
       row.getDate(index, Calendar.getInstance(dateTimeZone)).toLocalDate)
   implicit val localDateTimeDecoder: Decoder[LocalDateTime] =
-    decoder((index, row, session) =>
+    decoder((index, row, _) =>
       row.getTimestamp(index, Calendar.getInstance(dateTimeZone)).toLocalDateTime)
   implicit val instantDecoder: Decoder[Instant] =
     decoder((index, row, _) =>

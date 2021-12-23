@@ -34,7 +34,7 @@ object EmptyProductQuatBehavior {
   case object Ignore extends EmptyProductQuatBehavior
 }
 
-case class BetaReduction(map: IMap[Ast, Ast], typeBehavior: TypeBehavior, emptyBehavior: EmptyProductQuatBehavior)
+final case class BetaReduction(map: IMap[Ast, Ast], typeBehavior: TypeBehavior, emptyBehavior: EmptyProductQuatBehavior)
   extends StatelessTransformer {
 
   override def apply(ast: Ast): Ast =
@@ -128,7 +128,7 @@ case class BetaReduction(map: IMap[Ast, Ast], typeBehavior: TypeBehavior, emptyB
 
   override def apply(o: OptionOperation): OptionOperation =
     o match {
-      case other @ OptionTableFlatMap(a, b, c) =>
+      case  OptionTableFlatMap(a, b, c) =>
         OptionTableFlatMap(apply(a), b, BetaReduction(map - b, typeBehavior, emptyBehavior)(c))
       case OptionTableMap(a, b, c) =>
         OptionTableMap(apply(a), b, BetaReduction(map - b, typeBehavior, emptyBehavior)(c))
@@ -136,7 +136,7 @@ case class BetaReduction(map: IMap[Ast, Ast], typeBehavior: TypeBehavior, emptyB
         OptionTableExists(apply(a), b, BetaReduction(map - b, typeBehavior, emptyBehavior)(c))
       case OptionTableForall(a, b, c) =>
         OptionTableForall(apply(a), b, BetaReduction(map - b, typeBehavior, emptyBehavior)(c))
-      case other @ OptionFlatMap(a, b, c) =>
+      case  OptionFlatMap(a, b, c) =>
         OptionFlatMap(apply(a), b, BetaReduction(map - b, typeBehavior, emptyBehavior)(c))
       case OptionMap(a, b, c) =>
         OptionMap(apply(a), b, BetaReduction(map - b, typeBehavior, emptyBehavior)(c))

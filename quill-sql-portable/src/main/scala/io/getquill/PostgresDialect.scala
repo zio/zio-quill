@@ -32,7 +32,7 @@ trait PostgresDialect
 
   private[getquill] val preparedStatementId = new AtomicInteger
 
-  override def prepareForProbing(string: String) = {
+  override def prepareForProbing(string: String): String = {
     var i = 0
     val query = string.flatMap(x => if (x != '?') s"$x" else {
       i += 1

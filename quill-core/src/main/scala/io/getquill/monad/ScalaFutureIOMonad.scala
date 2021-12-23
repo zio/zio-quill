@@ -3,7 +3,6 @@ package io.getquill.monad
 import io.getquill.context.Context
 
 import language.experimental.macros
-import language.higherKinds
 import scala.collection.compat._
 import scala.util.Failure
 import scala.util.Success
@@ -34,7 +33,7 @@ trait ScalaFutureIOMonad extends IOMonad {
 
   def flatten[Y, M[X] <: IterableOnce[X]](
     seq: Sequence[Y, M, Effect]
-  )(implicit ec: ExecutionContext) = {
+  )(implicit ec: ExecutionContext): Future[M[Y]] = {
     val builder = seq.cbfResultToValue.newBuilder
     seq.in.iterator
       .foldLeft(Future.successful(builder)) { (fr, ioa) =>

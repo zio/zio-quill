@@ -7,18 +7,17 @@ import io.getquill.quat.QuatOps.HasBooleanQuat
 
 class FlattenOptionOperation(concatBehavior: ConcatBehavior) extends StatelessTransformer {
 
-  private def emptyOrNot(b: Boolean, ast: Ast) =
-    if (b) OptionIsEmpty(ast) else OptionNonEmpty(ast)
+  
 
-  def uncheckedReduction(ast: Ast, alias: Ident, body: Ast) =
+  def uncheckedReduction(ast: Ast, alias: Ident, body: Ast): Ast =
     apply(BetaReduction(body, alias -> ast))
 
-  def uncheckedForall(ast: Ast, alias: Ident, body: Ast) = {
+  def uncheckedForall(ast: Ast, alias: Ident, body: Ast): Ast = {
     val reduced = BetaReduction(body, alias -> ast)
     apply((IsNullCheck(ast) +||+ reduced): Ast)
   }
 
-  def containsNonFallthroughElement(ast: Ast) =
+  def containsNonFallthroughElement(ast: Ast): Boolean =
     CollectAst(ast) {
       case If(_, _, _) => true
       case Infix(_, _, _, _) => true

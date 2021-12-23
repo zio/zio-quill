@@ -1,6 +1,6 @@
 package io.getquill.util
 
-import io.getquill.util.Messages.{ LogToFile, quillLogFile }
+import io.getquill.util.Messages.LogToFile
 import zio._
 import zio.clock.Clock
 import zio.console.Console
@@ -88,17 +88,17 @@ class QueryLogger(logToFile: LogToFile) {
       .map(appender => Has(appender.get.filter((ctx, _) => ctx.get(LogAnnotation.Level) >= logLevel)))
       >+> Logging.make >>> modifyLoggerM(addTimestamp[String]))
 
-  def produceLoggerEnv(file: String) =
+  def produceLoggerEnv(file: String): ZLayer[Any,Throwable,Logging] =
     ZEnv.live >>>
       logFile(
         logLevel = LogLevel.Info,
-        format = LogFormat.fromFunction((ctx, str) => {
+        format = LogFormat.fromFunction((_, str) => {
           str
         }),
         destination = Paths.get(file)
       ) >>> Logging.withRootLoggerName("query-logger")
 
-  lazy val env = {
+  lazy val env: Option[ZLayer[Any,Throwable,Logging]] = {
     logToFile match {
       case LogToFile.Enabled(file) => Some(produceLoggerEnv(file))
       case LogToFile.Disabled      => None

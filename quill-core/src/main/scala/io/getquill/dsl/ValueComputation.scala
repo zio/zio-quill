@@ -80,7 +80,7 @@ trait ValueComputation {
             def path(tree: Tree): List[TermName] =
               tree match {
                 case q"$a.$b"                => path(a) :+ b
-                case q"$a.map[$t]($b => $c)" => path(a) ++ path(c)
+                case q"$a.map[$_]($_ => $c)" => path(a) ++ path(c)
                 case _                       => Nil
               }
             path(f.body)

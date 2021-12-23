@@ -30,7 +30,7 @@ class DefaultJdbcSchemaReader(
       case _      => null
     }
 
-  def jdbcEntityFilter(ts: JdbcTableMeta) =
+  def jdbcEntityFilter(ts: JdbcTableMeta): Boolean =
     ts.tableType.existsInSetNocase("table", "view", "user table", "user view", "base table")
 
   private[getquill] def extractTables(connectionMaker: () => Connection): List[JdbcTableMeta] = {

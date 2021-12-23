@@ -18,7 +18,7 @@ trait Decoders {
 
   case class AsyncDecoder[T](sqlType: DecoderSqlType)(implicit decoder: BaseDecoder[T])
     extends BaseDecoder[T] {
-    override def apply(index: Index, row: ResultRow, session: Session) =
+    override def apply(index: Index, row: ResultRow, session: Session): T =
       decoder(index, row, session)
   }
 
@@ -47,7 +47,7 @@ trait Decoders {
 
   trait NumericDecoder[T] extends BaseDecoder[T] {
 
-    def apply(index: Index, row: ResultRow, session: Session) = {
+    def apply(index: Index, row: ResultRow, session: Session): T = {
       (row.get(index): Any) match {
         case v: Byte           => decode(v)
         case v: Short          => decode(v)
@@ -69,7 +69,7 @@ trait Decoders {
       def apply(index: Index, row: ResultRow, session: Session) = {
         row.get(index) match {
           case null  => None
-          case value => Some(d(index, row, session))
+          case _ => Some(d(index, row, session))
         }
       }
     })

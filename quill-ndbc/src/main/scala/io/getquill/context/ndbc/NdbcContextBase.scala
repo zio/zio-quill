@@ -16,7 +16,7 @@ import io.trane.ndbc.{ DataSource, PreparedStatement, Row }
 import scala.annotation.tailrec
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.duration.Duration
-import scala.language.{ higherKinds, implicitConversions }
+import scala.language.implicitConversions
 import scala.util.Try
 
 object NdbcContextBase {
@@ -39,7 +39,7 @@ object NdbcContextBase {
     def fromDeferredFuture[T](f: (this.FutureExecutionContext) => Future[T]): F[T]
 
     def flatMap[A, B](a: F[A])(f: A => F[B]): F[B]
-    def traverse[A, B](list: List[A])(f: A => F[B]) = seq(list.map(f))
+    def traverse[A, B](list: List[A])(f: A => F[B]): F[List[B]] = seq(list.map(f))
 
     def runBlocking[T](eff: F[T], timeout: Duration): T
   }
@@ -67,7 +67,7 @@ trait NdbcContextBase[Idiom <: SqlIdiom, Naming <: NamingStrategy, P <: Prepared
 
   protected def expandAction(sql: String, returningAction: ReturnAction) = sql
 
-  def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: (R, Session) => T = (r: R, s: Session) => r)(info: ExecutionInfo, dc: Runner): Result[List[T]] = {
+  def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: (R, Session) => T = (r: R, _: Session) => r)(info: ExecutionInfo, dc: Runner): Result[List[T]] = {
     withDataSourceFromFuture { ds =>
       val (params, ps) = prepare(createPreparedStatement(sql), ())
       logger.logQuery(sql, params)
@@ -78,7 +78,7 @@ trait NdbcContextBase[Idiom <: SqlIdiom, Naming <: NamingStrategy, P <: Prepared
     }
   }
 
-  def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: (R, Session) => T = (r: R, s: Session) => r)(info: ExecutionInfo, dc: Runner): Result[T] =
+  def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: (R, Session) => T = (r: R, _: Session) => r)(info: ExecutionInfo, dc: Runner): Result[T] =
     push(executeQuery(sql, prepare, extractor)(info, dc))(handleSingleResult)
 
   def executeAction(sql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: Runner): Result[Long] = {

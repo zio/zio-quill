@@ -13,7 +13,7 @@ import io.getquill.util.Messages
 
 trait BooleanLiteralSupport extends SqlIdiom {
 
-  override def normalizeAst(ast: Ast, concatBehavior: ConcatBehavior, equalityBehavior: EqualityBehavior) = {
+  override def normalizeAst(ast: Ast, concatBehavior: ConcatBehavior, equalityBehavior: EqualityBehavior): Ast = {
     val norm = SqlNormalize(ast, concatBehavior, equalityBehavior)
     if (Messages.smartBooleans)
       VendorizeBooleans(norm)

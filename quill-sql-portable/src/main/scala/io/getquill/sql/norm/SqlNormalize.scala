@@ -54,5 +54,5 @@ class SqlNormalize(concatBehavior: ConcatBehavior, equalityBehavior: EqualityBeh
       })
       .andThen(demarcate("Normalize"))
 
-  def apply(ast: Ast) = normalize(ast)
+  def apply(ast: Ast): Ast = normalize(ast)
 }

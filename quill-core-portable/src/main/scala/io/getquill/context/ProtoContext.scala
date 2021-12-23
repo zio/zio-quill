@@ -2,7 +2,6 @@ package io.getquill.context
 
 import io.getquill.{ NamingStrategy, ReturnAction }
 import io.getquill.ast.Ast
-import scala.language.higherKinds
 
 /**
  * A common context used between Quill and ProtoQuill. This is more like a pre-context because the actual `run`
@@ -54,7 +53,7 @@ class ExecutionInfo(val executionType: ExecutionType, queryAst: => Ast) {
 }
 object ExecutionInfo {
   def apply(executionType: ExecutionType, ast: => Ast) = new ExecutionInfo(executionType, ast)
-  val unknown = ExecutionInfo(ExecutionType.Unknown, io.getquill.ast.NullValue)
+  val unknown: ExecutionInfo = ExecutionInfo(ExecutionType.Unknown, io.getquill.ast.NullValue)
 }
 
 trait AstSplicing

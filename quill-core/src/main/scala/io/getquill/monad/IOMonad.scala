@@ -1,7 +1,6 @@
 package io.getquill.monad
 
 import scala.collection.compat._
-import scala.language.higherKinds
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
@@ -70,7 +69,7 @@ trait IOMonad {
         IO.fromTry(f(r))
       }
 
-    def lowerFromTry[U](implicit ev: T => Try[U]) =
+    def lowerFromTry[U](implicit ev: T => Try[U]): IO[U,E] =
       transform(_.flatMap(ev))
 
     def liftToTry: IO[Try[T], E] =

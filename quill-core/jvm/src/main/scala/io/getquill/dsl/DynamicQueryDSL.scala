@@ -36,7 +36,7 @@ class DynamicQueryDslMacro(val c: MacroContext) {
 trait DynamicQueryDsl {
   dsl: CoreDsl =>
 
-  val quatMaking = new TypeTaggedQuatMaking() {
+  val quatMaking: TypeTaggedQuatMaking = new TypeTaggedQuatMaking() {
     import u.typeOf
     override def quatValueTypes: List[u.Type] =
       List(
@@ -183,11 +183,11 @@ trait DynamicQueryDsl {
       override def ast = a
     }
 
-  protected def spliceLift[O](o: O)(implicit enc: Encoder[O]) =
+  protected def spliceLift[O](o: O)(implicit enc: Encoder[O]): Quoted[O] =
     splice[O](ScalarValueLift("o", o, enc, Quat.Value))
 
   object DynamicQuery {
-    def apply[T](p: Quoted[Query[T]]) =
+    def apply[T](p: Quoted[Query[T]]): DynamicQuery[T] =
       new DynamicQuery[T] {
         override def q = p
       }
@@ -201,7 +201,7 @@ trait DynamicQueryDsl {
       f: Quoted[U] => Quoted[V],
       t: (Ast, Ident, Ast) => Ast,
       r: Ast => R                 = dyn _
-    ) =
+    ): R =
       withFreshIdent { v =>
         r(t(q.ast, v, f(splice(v)).ast))
       }(Quat.Generic)
@@ -211,7 +211,7 @@ trait DynamicQueryDsl {
       f:    (Quoted[T], Quoted[O]) => Quoted[R],
       t:    (Quoted[T] => Quoted[R]) => D,
       thiz: D
-    )(implicit enc: Encoder[O]) =
+    )(implicit enc: Encoder[O]): D =
       opt match {
         case Some(o) =>
           t(v => f(v, spliceLift(o)))
@@ -436,7 +436,7 @@ trait DynamicQueryDsl {
   }
 
   object DynamicAction {
-    def apply[A <: DslAction[_]](p: Quoted[A]) =
+    def apply[A <: DslAction[_]](p: Quoted[A]): DynamicAction[A] =
       new DynamicAction[A] {
         override val q = p
       }
@@ -449,7 +449,7 @@ trait DynamicQueryDsl {
   }
 
   object DynamicInsert {
-    def apply[E](p: Quoted[Insert[E]]) =
+    def apply[E](p: Quoted[Insert[E]]): DynamicInsert[E] =
       new DynamicInsert[E] {
         override val q = p
       }

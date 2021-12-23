@@ -1,9 +1,8 @@
 package io.getquill
 
-import com.datastax.oss.driver.api.core.{ CqlSession, CqlSessionBuilder }
+import com.datastax.oss.driver.api.core.CqlSession
 import com.typesafe.config.Config
 import io.getquill.context.ExecutionInfo
-import io.getquill.context.cassandra.util.FutureConversions._
 import io.getquill.monad.ScalaFutureIOMonad
 import io.getquill.util.{ ContextLogger, LoadConfig }
 

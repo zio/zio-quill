@@ -62,12 +62,12 @@ object ExpandNestedQueries extends StatelessQueryTransformer {
     q match {
       case q: FlattenSqlQuery =>
         expandNested(q.copy(select = new ExpandSelection(q.from)(q.select))(q.quat), isTopLevel)
-      case other =>
+      case _ =>
         super.apply(q, isTopLevel)
     }
 
-  case class FlattenNestedProperty(from: List[FromContext]) {
-    val inContext = InContext(from)
+  final case class FlattenNestedProperty(from: List[FromContext]) {
+    val inContext: InContext = InContext(from)
 
     def apply(p: Ast): Ast = {
       p match {
@@ -89,7 +89,7 @@ object ExpandNestedQueries extends StatelessQueryTransformer {
       }
     }
 
-    def inside(ast: Ast) =
+    def inside(ast: Ast): Ast =
       Transform(ast) {
         case p: Property => apply(p)
       }
@@ -97,7 +97,7 @@ object ExpandNestedQueries extends StatelessQueryTransformer {
 
   protected override def expandNested(q: FlattenSqlQuery, isTopLevel: Boolean): FlattenSqlQuery =
     q match {
-      case FlattenSqlQuery(from, where, groupBy, orderBy, limit, offset, select, distinct) =>
+      case FlattenSqlQuery(from, where, groupBy, orderBy, limit, offset, select, _) =>
         val flattenNestedProperty = FlattenNestedProperty(from)
         val newFroms = q.from.map(expandContextFlattenOns(_, flattenNestedProperty))
 

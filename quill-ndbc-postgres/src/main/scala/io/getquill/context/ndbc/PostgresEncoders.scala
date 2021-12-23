@@ -24,12 +24,12 @@ trait PostgresEncoders extends LowPriorityPostgresImplicits with io.getquill.dsl
   protected val zoneOffset: ZoneOffset
 
   def encoder[T, U](f: PostgresPreparedStatement => (Int, U) => PostgresPreparedStatement)(implicit ev: T => U): Encoder[T] =
-    (idx, v, ps, session) =>
+    (idx, v, ps, _) =>
       if (v == null) ps.setNull(idx)
       else f(ps)(idx, v)
 
   def arrayEncoder[T, U: ClassTag, Col <: Seq[T]](f: PostgresPreparedStatement => (Int, Array[U]) => PostgresPreparedStatement)(ev: T => U): Encoder[Col] =
-    (idx, v, ps, session) =>
+    (idx, v, ps, _) =>
       if (v == null) ps.setNull(idx)
       else f(ps)(idx, v.map(ev).toArray[U])
 
@@ -43,7 +43,7 @@ trait PostgresEncoders extends LowPriorityPostgresImplicits with io.getquill.dsl
         case Some(v) => e(idx, v, ps, session)
       }
 
-  implicit def toLocalDateTime(d: Date) = LocalDateTime.ofInstant(d.toInstant(), zoneOffset)
+  implicit def toLocalDateTime(d: Date): LocalDateTime = LocalDateTime.ofInstant(d.toInstant(), zoneOffset)
 
   implicit val uuidEncoder: Encoder[UUID] = encoder(_.setUUID)
   implicit val stringEncoder: Encoder[String] = encoder(_.setString)

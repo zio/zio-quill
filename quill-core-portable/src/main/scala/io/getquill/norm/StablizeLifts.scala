@@ -14,7 +14,7 @@ private[getquill] object StablizeLifts {
     RevertLiftValues(state).apply(ast)
   }
 
-  case class State(
+  final case class State(
     replaceTable: IMap[Token, Any],
     nextToken:    Token
   ) {
@@ -26,15 +26,15 @@ private[getquill] object StablizeLifts {
     }
   }
 
-  case class Token(id: Long)
+  final case class Token(id: Long)
 
-  case class RevertLiftValues(state: State) extends StatelessTransformer {
+  final case class RevertLiftValues(state: State) extends StatelessTransformer {
     override def apply(ast: Ast): Ast = ast match {
       case l: Lift => applyLift(l)
       case others  => super.apply(others)
     }
 
-    def applyLift(ast: Lift) = ast match {
+    def applyLift(ast: Lift): Lift = ast match {
       case l: ScalarValueLift =>
         val value = state.replaceTable(l.value.asInstanceOf[Token])
         l.copy(value = value)
@@ -51,7 +51,7 @@ private[getquill] object StablizeLifts {
     }
   }
 
-  case class StubLiftValus(state: State) extends StatefulTransformer[State] {
+  final case class StubLiftValus(state: State) extends StatefulTransformer[State] {
     override def apply(e: Ast): (Ast, StatefulTransformer[State]) = e match {
       case l: Lift =>
         val (ast, ss) = applyLift(l)

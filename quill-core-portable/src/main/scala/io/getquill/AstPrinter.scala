@@ -25,7 +25,7 @@ class AstPrinter(traceOpinions: Boolean, traceAstSimple: Boolean, traceQuats: Qu
   val colorLiteral: fansi.Attrs = fansi.Color.Green
   val colorApplyPrefix: fansi.Attrs = fansi.Color.Yellow
 
-  val traceAllQuats = traceQuats == QuatTrace.All
+  val traceAllQuats: Boolean = traceQuats == QuatTrace.All
 
   private def printRenameable(r: Renameable) =
     r match {
@@ -70,7 +70,7 @@ class AstPrinter(traceOpinions: Boolean, traceAstSimple: Boolean, traceQuats: Qu
     private case class Elem(any: Any) extends treemake
     private case class Tree(any: pprint.Tree) extends treemake
     private case class Content(list: List[treemake]) extends treemake {
-      def andWith(elem: treemake) =
+      def andWith(elem: treemake): Content =
         elem match {
           case c: Content => Content(list ++ c.list)
           case other      => Content(list :+ other)

@@ -12,7 +12,7 @@ object KryoQuatSerializer {
   import scala.collection.mutable.LinkedHashMap
 
   // Needs to be lazy or will be initialize by ScalaJS and it doesn't exist there.
-  lazy val registrar = new IKryoRegistrar {
+  lazy val registrar: IKryoRegistrar = new IKryoRegistrar {
     override def apply(k: Kryo): Unit = {
       k.register(classOf[Quat])
       k.register(classOf[Quat.Product])
@@ -54,7 +54,7 @@ object KryoQuatSerializer {
     }
   }
   // Needs to be lazy or will be initialize by ScalaJS and it doesn't exist there.
-  lazy val kryo =
+  lazy val kryo: KryoPool =
     KryoPool.withByteArrayOutputStream(
       Messages.quatKryoPoolSize,
       new ScalaKryoInstantiator().withRegistrar(registrar)

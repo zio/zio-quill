@@ -17,7 +17,7 @@ object DefaultNodeCatalog extends NodeCatalog {
 
   private val logger = Logger(LoggerFactory.getLogger(this.getClass))
 
-  implicit def nodeToOpt(dagNode: DagNode) = Some(dagNode)
+  implicit def nodeToOpt(dagNode: DagNode): Some[DagNode] = Some(dagNode)
 
   object StringNode extends DagNode(classTag[String], None)
 
@@ -75,7 +75,7 @@ class CatalogBasedAncestry(ancestryCatalog: NodeCatalog = DefaultNodeCatalog) ex
         oneAncestry.zipWithIndex.toMap.zipOnKeys(twoAncestry.zipWithIndex.toMap)
           .collect { case (key, (Some(i), Some(j))) => (key, i + j) }
           .toList
-          .sortBy { case (node, order) => order }
+          .sortBy { case (_, order) => order }
           .head
 
       node.cls

@@ -12,8 +12,8 @@ import io.getquill.util.{ Interpolator, OptionalTypecheck }
 import io.getquill.util.MacroContextExt._
 import io.getquill.util.Messages.TraceType
 
-case class ScalarValueLifting[T, U](value: T, encoder: EncodingDsl#Encoder[U])
-case class CaseClassValueLifting[T](value: T)
+final case class ScalarValueLifting[T, U](value: T, encoder: EncodingDsl#Encoder[U])
+final case class CaseClassValueLifting[T](value: T)
 
 trait ReifyLiftings extends QuatMaking {
   val c: MacroContext
@@ -34,10 +34,10 @@ trait ReifyLiftings extends QuatMaking {
 
     private def reify(lift: Lift) =
       lift match {
-        case ScalarValueLift(name, value: Tree, encoder: Tree, _) => Reified(value, Some(encoder))
-        case CaseClassValueLift(name, value: Tree, _)             => Reified(value, None)
-        case ScalarQueryLift(name, value: Tree, encoder: Tree, _) => Reified(value, Some(encoder))
-        case CaseClassQueryLift(name, value: Tree, _)             => Reified(value, None)
+        case ScalarValueLift(_, value: Tree, encoder: Tree, _) => Reified(value, Some(encoder))
+        case CaseClassValueLift(_, value: Tree, _)             => Reified(value, None)
+        case ScalarQueryLift(_, value: Tree, encoder: Tree, _) => Reified(value, Some(encoder))
+        case CaseClassQueryLift(_, value: Tree, _)             => Reified(value, None)
       }
 
     private def unparse(ast: Ast): Tree =
@@ -64,7 +64,7 @@ trait ReifyLiftings extends QuatMaking {
       }
     }
 
-    override def apply(ast: Ast) =
+    override def apply(ast: Ast): (Ast, StatefulTransformer[Map[TermName,Reified]]) =
       ast match {
 
         case ast: Lift =>
@@ -118,13 +118,13 @@ trait ReifyLiftings extends QuatMaking {
                 val nested =
                   q"$ref.$liftings.${encode(lift.name)}"
                 lift match {
-                  case ScalarValueLift(name, value, encoder, quat) =>
+                  case ScalarValueLift(name, _, _, quat) =>
                     ScalarValueLift(s"$ref.$name", q"$nested.value", q"$nested.encoder", quat)
-                  case CaseClassValueLift(name, value, quat) =>
+                  case CaseClassValueLift(name, _, quat) =>
                     CaseClassValueLift(s"$ref.$name", q"$nested.value", quat)
-                  case ScalarQueryLift(name, value, encoder, quat) =>
+                  case ScalarQueryLift(name, _, _, quat) =>
                     ScalarQueryLift(s"$ref.$name", q"$nested.value", q"$nested.encoder", quat)
-                  case CaseClassQueryLift(name, value, quat) =>
+                  case CaseClassQueryLift(name, _, quat) =>
                     CaseClassQueryLift(s"$ref.$name", q"$nested.value", quat)
                 }
             }

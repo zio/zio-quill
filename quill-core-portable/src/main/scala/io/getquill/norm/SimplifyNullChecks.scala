@@ -64,10 +64,10 @@ class SimplifyNullChecks(equalityBehavior: EqualityBehavior) extends StatelessTr
       case OptionIsDefined(Optional(a)) +&&+ (exp @ (Optional(a1) `== or !=` Optional(_))) if (a == a1 && equalityBehavior == AnsiEquality) => apply(exp)
       case OptionIsDefined(Optional(b)) +&&+ (exp @ (Optional(_) `== or !=` Optional(b1))) if (b == b1 && equalityBehavior == AnsiEquality) => apply(exp)
 
-      case (left +&&+ OptionIsEmpty(Optional(Constant(_, _)))) +||+ other => apply(other)
-      case (OptionIsEmpty(Optional(Constant(_, _))) +&&+ right) +||+ other => apply(other)
-      case other +||+ (left +&&+ OptionIsEmpty(Optional(Constant(_, _)))) => apply(other)
-      case other +||+ (OptionIsEmpty(Optional(Constant(_, _))) +&&+ right) => apply(other)
+      case (_ +&&+ OptionIsEmpty(Optional(Constant(_, _)))) +||+ other => apply(other)
+      case (OptionIsEmpty(Optional(Constant(_, _))) +&&+ _) +||+ other => apply(other)
+      case other +||+ (_ +&&+ OptionIsEmpty(Optional(Constant(_, _)))) => apply(other)
+      case other +||+ (OptionIsEmpty(Optional(Constant(_, _))) +&&+ _) => apply(other)
 
       case (left +&&+ OptionIsDefined(Optional(Constant(_, _)))) => apply(left)
       case (OptionIsDefined(Optional(Constant(_, _))) +&&+ right) => apply(right)

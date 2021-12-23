@@ -77,7 +77,7 @@ object RemoveUnusedSelects {
 
   private def gatherAsts(q: FlattenSqlQuery, newSelect: List[SelectValue]): List[Ast] =
     q match {
-      case FlattenSqlQuery(from, where, groupBy, orderBy, limit, offset, select, distinct) =>
+      case FlattenSqlQuery(_, where, groupBy, orderBy, limit, offset, _, _) =>
         Nil ++ newSelect.map(_.ast) ++ where ++ groupBy ++ orderBy.map(_.ast) ++ limit ++ offset
     }
 
@@ -101,25 +101,25 @@ object RemoveUnusedSelects {
     LinkedHashSet.empty ++ (References(State(Ident(alias, Quat.Value), Nil))(asts)(_.apply)._2.state.references)
 }
 
-case class State(ident: Ident, references: List[Property])
+final case class State(ident: Ident, references: List[Property])
 
-case class References(val state: State)
+final case class References(val state: State)
   extends StatefulTransformer[State] {
 
   import state._
 
-  override def apply(a: Ast) =
+  override def apply(a: Ast): (Ast, StatefulTransformer[State]) =
     a match {
       case `reference`(p) => (p, References(State(ident, references :+ p)))
-      case other          => super.apply(a)
+      case _          => super.apply(a)
     }
 
   object reference {
     def unapply(p: Property): Option[Property] =
       p match {
-        case Property(`ident`, name)      => Some(p)
-        case Property(reference(_), name) => Some(p)
-        case other                        => None
+        case Property(`ident`, _)      => Some(p)
+        case Property(reference(_), _) => Some(p)
+        case _                        => None
       }
   }
 }

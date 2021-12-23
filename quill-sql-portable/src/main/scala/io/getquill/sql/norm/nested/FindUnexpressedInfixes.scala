@@ -34,7 +34,7 @@ class FindUnexpressedInfixes(select: List[OrderedSelect]) {
   val interp = new Interpolator(NestedQueryExpansion, 3)
   import interp._
 
-  def apply(refs: List[OrderedSelect]) = {
+  def apply(refs: List[OrderedSelect]): List[OrderedSelect] = {
 
     def pathExists(path: List[Int]) =
       refs.map(_.order).contains(path)

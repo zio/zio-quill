@@ -7,19 +7,19 @@ import io.getquill.quat.Quat
 import io.getquill.util.Messages.fail
 import io.getquill.{ Literal, PseudoAst }
 
-case class OrderByCriteria(ast: Ast, ordering: PropertyOrdering)
+final case class OrderByCriteria(ast: Ast, ordering: PropertyOrdering)
 
 sealed trait FromContext { def quat: Quat }
-case class TableContext(entity: Entity, alias: String) extends FromContext { def quat = entity.quat }
-case class QueryContext(query: SqlQuery, alias: String) extends FromContext { def quat = query.quat }
-case class InfixContext(infix: Infix, alias: String) extends FromContext { def quat = infix.quat }
-case class JoinContext(t: JoinType, a: FromContext, b: FromContext, on: Ast) extends FromContext { def quat = Quat.Tuple(a.quat, b.quat) }
-case class FlatJoinContext(t: JoinType, a: FromContext, on: Ast) extends FromContext { def quat = a.quat }
+final case class TableContext(entity: Entity, alias: String) extends FromContext { def quat = entity.quat }
+final case class QueryContext(query: SqlQuery, alias: String) extends FromContext { def quat = query.quat }
+final case class InfixContext(infix: Infix, alias: String) extends FromContext { def quat = infix.quat }
+final case class JoinContext(t: JoinType, a: FromContext, b: FromContext, on: Ast) extends FromContext { def quat: Quat.Product = Quat.Tuple(a.quat, b.quat) }
+final case class FlatJoinContext(t: JoinType, a: FromContext, on: Ast) extends FromContext { def quat = a.quat }
 
 sealed trait SqlQuery {
   def quat: Quat
 
-  override def toString = {
+  override def toString: String = {
     import io.getquill.MirrorSqlDialect._
     import io.getquill.idiom.StatementInterpolator._
     implicit val naming = Literal
@@ -32,7 +32,7 @@ sealed trait SetOperation
 case object UnionOperation extends SetOperation
 case object UnionAllOperation extends SetOperation
 
-case class SetOperationSqlQuery(
+final case class SetOperationSqlQuery(
   a:  SqlQuery,
   op: SetOperation,
   b:  SqlQuery
@@ -40,18 +40,18 @@ case class SetOperationSqlQuery(
   def quat = quatType
 }
 
-case class UnaryOperationSqlQuery(
+final case class UnaryOperationSqlQuery(
   op: UnaryOperator,
   q:  SqlQuery
 )(quatType: Quat) extends SqlQuery {
   def quat = quatType
 }
 
-case class SelectValue(ast: Ast, alias: Option[String] = None, concat: Boolean = false) extends PseudoAst {
+final case class SelectValue(ast: Ast, alias: Option[String] = None, concat: Boolean = false) extends PseudoAst {
   override def toString: String = s"${ast.toString}${alias.map("->" + _).getOrElse("")}"
 }
 
-case class FlattenSqlQuery(
+final case class FlattenSqlQuery(
   from:     List[FromContext]     = List(),
   where:    Option[Ast]           = None,
   groupBy:  Option[Ast]           = None,
@@ -98,7 +98,7 @@ object SqlQuery {
         val source = this.source(q, alias)
         val (nestedContexts, finalFlatMapBody) = flattenContexts(p)
         (source +: nestedContexts, finalFlatMapBody)
-      case FlatMap(q @ (_: Query | _: Infix), Ident(alias, _), p: Infix) =>
+      case FlatMap( (_: Query | _: Infix), Ident(_, _), _: Infix) =>
         fail(s"Infix can't be use as a `flatMap` body. $query")
       case other =>
         (List.empty, other)
@@ -114,7 +114,7 @@ object SqlQuery {
         case Map(_: GroupBy, _, _) => nest(source(q, alias))
         case Nested(q)             => nest(QueryContext(apply(q), alias))
         case q: ConcatMap          => nest(QueryContext(apply(q), alias))
-        case Join(tpe, a, b, iA, iB, on) =>
+        case Join(_, _, _, _, _, _) =>
           val ctx = source(q, alias)
           def aliases(ctx: FromContext): List[(String, Quat)] =
             ctx match {
@@ -136,7 +136,7 @@ object SqlQuery {
           )(q.quat)
         case q @ (_: Map | _: Filter | _: Entity) => flatten(sources, q, alias)
         case q if (sources == Nil)                => flatten(sources, q, alias)
-        case other                                => nest(source(q, alias))
+        case _                                => nest(source(q, alias))
       }
     }
 
@@ -161,7 +161,7 @@ object SqlQuery {
         val flattenSelect = FlattenGroupByAggregation(x)(select)
         b.copy(groupBy = Some(groupByClause), select = this.selectValues(flattenSelect))(quat)
 
-      case GroupBy(q, Ident(alias, _), p) =>
+      case GroupBy(_, Ident(_, _), _) =>
         fail("A `groupBy` clause must be followed by `map`.")
 
       case Map(q, Ident(alias, _), p) =>
@@ -207,7 +207,7 @@ object SqlQuery {
         b.select match {
           case head :: Nil if !b.distinct =>
             b.copy(select = List(head.copy(ast = Aggregation(op, head.ast))))(quat)
-          case other =>
+          case _ =>
             FlattenSqlQuery(
               from = QueryContext(apply(q), alias) :: Nil,
               select = List(SelectValue(Aggregation(op, Ident("*", quat)))) // Quat of a * aggregation is same as for the entire query
@@ -248,7 +248,7 @@ object SqlQuery {
   private def selectValues(ast: Ast) =
     ast match {
       //case Tuple(values) => values.map(SelectValue(_))
-      case other => SelectValue(ast) :: Nil
+      case _ => SelectValue(ast) :: Nil
     }
 
   private def source(ast: Ast, alias: String): FromContext =
@@ -266,9 +266,9 @@ object SqlQuery {
       case (Tuple(properties), ord: PropertyOrdering) => properties.flatMap(orderByCriterias(_, ord, from))
       case (Tuple(properties), TupleOrdering(ord))    => properties.zip(ord).flatMap { case (a, o) => orderByCriterias(a, o, from) }
       //if its a quat product, use ExpandSelection to break it down into its component fields and apply the ordering to all of them
-      case (id @ Ident(_, _: Quat.Product), ord)      => new ExpandSelection(from).apply(List(SelectValue(ast))).map(_.ast).flatMap(orderByCriterias(_, ord, from))
+      case ( Ident(_, _: Quat.Product), ord)      => new ExpandSelection(from).apply(List(SelectValue(ast))).map(_.ast).flatMap(orderByCriterias(_, ord, from))
       case (a, o: PropertyOrdering)                   => List(OrderByCriteria(a, o))
-      case other                                      => fail(s"Invalid order by criteria $ast")
+      case _                                      => fail(s"Invalid order by criteria $ast")
     }
 
   private def collectAliases(contexts: List[FromContext]): List[String] = {
@@ -281,15 +281,7 @@ object SqlQuery {
     }
   }
 
-  private def collectTableAliases(contexts: List[FromContext]): List[String] = {
-    contexts.flatMap {
-      case c: TableContext             => List(c.alias)
-      case c: QueryContext             => List()
-      case c: InfixContext             => List()
-      case JoinContext(_, a, b, _)     => collectAliases(List(a)) ++ collectAliases(List(b))
-      case FlatJoinContext(_, from, _) => collectAliases(List(from))
-    }
-  }
+  __
 
 }
 

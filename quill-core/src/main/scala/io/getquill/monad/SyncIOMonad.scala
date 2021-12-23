@@ -1,6 +1,5 @@
 package io.getquill.monad
 
-import scala.language.higherKinds
 import scala.collection.compat._
 import language.experimental.macros
 import io.getquill.context.Context

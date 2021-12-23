@@ -3,7 +3,7 @@ package io.getquill.context.cassandra
 import io.getquill.ast._
 import io.getquill.util.Messages.fail
 
-case class CqlQuery(
+final case class CqlQuery(
   entity:   Entity,
   filter:   Option[Ast],
   orderBy:  List[OrderByCriteria],
@@ -12,7 +12,7 @@ case class CqlQuery(
   distinct: Boolean
 )
 
-case class OrderByCriteria(
+final case class OrderByCriteria(
   property: Property,
   ordering: PropertyOrdering
 )
@@ -23,17 +23,17 @@ object CqlQuery {
     q match {
       case Distinct(q: Query) =>
         apply(q, true)
-      case other =>
+      case _ =>
         apply(q, false)
     }
 
   private def apply(q: Query, distinct: Boolean): CqlQuery =
     q match {
-      case Map(q: Query, x, p) =>
+      case Map(q: Query, _, p) =>
         apply(q, select(p), distinct)
       case Aggregation(AggregationOperator.`size`, q: Query) =>
         apply(q, List(Aggregation(AggregationOperator.`size`, Constant.auto(1))), distinct)
-      case other =>
+      case _ =>
         apply(q, List(), distinct)
     }
 
@@ -41,23 +41,23 @@ object CqlQuery {
     q match {
       case Take(q: Query, limit) =>
         apply(q, Some(limit), select, distinct)
-      case other =>
+      case _ =>
         apply(q, None, select, distinct)
     }
 
   private def apply(q: Query, limit: Option[Ast], select: List[Ast], distinct: Boolean): CqlQuery =
     q match {
-      case SortBy(q: Query, x, p, o) =>
+      case SortBy(q: Query, _, p, o) =>
         apply(q, orderByCriterias(p, o), limit, select, distinct)
-      case other =>
+      case _ =>
         apply(q, List(), limit, select, distinct)
     }
 
   private def apply(q: Query, orderBy: List[OrderByCriteria], limit: Option[Ast], select: List[Ast], distinct: Boolean): CqlQuery =
     q match {
-      case Filter(q: Query, x, p) =>
+      case Filter(q: Query, _, p) =>
         apply(q, Some(p), orderBy, limit, select, distinct)
-      case other =>
+      case _ =>
         apply(q, None, orderBy, limit, select, distinct)
     }
 
@@ -81,7 +81,7 @@ object CqlQuery {
     ast match {
       case Tuple(values) => values.flatMap(select)
       case p: Property   => List(p)
-      case i: Ident      => List()
+      case _: Ident      => List()
       case l: Lift       => List(l)
       case other         => fail(s"Cql supports only properties as select elements. Found: $other")
     }
@@ -91,6 +91,6 @@ object CqlQuery {
       case (Tuple(properties), ord: PropertyOrdering) => properties.flatMap(orderByCriterias(_, ord))
       case (Tuple(properties), TupleOrdering(ord))    => properties.zip(ord).flatMap { case (a, o) => orderByCriterias(a, o) }
       case (a: Property, o: PropertyOrdering)         => List(OrderByCriteria(a, o))
-      case other                                      => fail(s"Invalid order by criteria $ast")
+      case _                                      => fail(s"Invalid order by criteria $ast")
     }
 }

@@ -6,7 +6,7 @@ import io.getquill.context.{ AsyncFutureCache, CassandraSession, SyncCache }
 import io.getquill.util.LoadConfig
 import zio.{ Has, ZIO, ZLayer, ZManaged }
 
-case class CassandraZioSession(
+final case class CassandraZioSession(
   override val session:                    CqlSession,
   override val preparedStatementCacheSize: Long
 ) extends CassandraSession with SyncCache with AsyncFutureCache with AutoCloseable
@@ -24,7 +24,7 @@ object CassandraZioSession {
   def fromContextConfig(config: CassandraContextConfig): ZLayer[Any, Throwable, Has[CassandraZioSession]] =
     ZLayer.succeed(config) >>> live
 
-  def fromConfig(config: Config) = fromContextConfig(CassandraContextConfig(config))
+  def fromConfig(config: Config): ZLayer[Any,Throwable,Has[CassandraZioSession]] = fromContextConfig(CassandraContextConfig(config))
   // Call the by-name constructor for the construction to fail inside of the effect if it fails
-  def fromPrefix(configPrefix: String) = fromContextConfig(CassandraContextConfig(LoadConfig(configPrefix)))
+  def fromPrefix(configPrefix: String): ZLayer[Any,Throwable,Has[CassandraZioSession]] = fromContextConfig(CassandraContextConfig(LoadConfig(configPrefix)))
 }

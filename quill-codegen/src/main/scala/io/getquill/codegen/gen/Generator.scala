@@ -31,7 +31,7 @@ trait Generator {
   /**
    * Instantiate the generator for a particular schema
    */
-  def generatorMaker = new SingleGeneratorFactory[CodeEmitter] {
+  def generatorMaker: SingleGeneratorFactory[CodeEmitter] = new SingleGeneratorFactory[CodeEmitter] {
     override def apply(emitterSettings: EmitterSettings[TableMeta, ColumnMeta]): CodeEmitter =
       new CodeEmitter(emitterSettings)
   }
@@ -51,7 +51,7 @@ trait Generator {
       emitters
     }
   }
-  def makeGenerators = new MultiGeneratorFactory(generatorMaker).apply
+  def makeGenerators: Seq[CodeEmitter] = new MultiGeneratorFactory(generatorMaker).apply
 
   def writeAllFiles(localtion: String): Future[Seq[Path]] =
     Future.sequence(writeFiles(localtion))
@@ -102,7 +102,7 @@ trait Generator {
           }
 
         val fileWithExtension = fileName.resolveSibling(fileName.getFileName.toString + ".scala")
-        val loc = Paths.get(location)
+        Paths.get(location)
 
         (gen, Paths.get(location, fileWithExtension.toString))
       })
@@ -122,7 +122,7 @@ trait Generator {
     })
   }
 
-  val renderMembers = nameParser match {
+  val renderMembers: Boolean = nameParser match {
     case CustomNames(_, _) => true
     case _                 => false
   }
@@ -132,7 +132,7 @@ trait Generator {
    *
    * @return
    */
-  def writeStrings = makeGenerators.map(_.apply)
+  def writeStrings: Seq[String] = makeGenerators.map(_.apply)
 
   class CodeEmitter(emitterSettings: EmitterSettings[TableMeta, ColumnMeta])
     extends AbstractCodeEmitter with PackageGen {
@@ -150,17 +150,17 @@ trait Generator {
 
     override def packagePrefix: String = Generator.this.packagePrefix
 
-    override def code = surroundByPackage(body)
+    override def code: String = surroundByPackage(body)
     def body: String = caseClassesCode + "\n\n" + tableSchemasCode
 
     def caseClassesCode: String = caseClassTables.map(CaseClass(_).code).mkString("\n\n")
     def tableSchemasCode: String = querySchemaTables.map(CombinedTableSchemas(_, querySchemaNaming).code).mkString("\n")
 
-    protected def ifMembers(str: String) = if (renderMembers) str else ""
+    protected def ifMembers(str: String): String = if (renderMembers) str else ""
 
     def CaseClass = new CaseClassGen(_)
     class CaseClassGen(val tableColumns: TableStereotype[TableMeta, ColumnMeta]) extends super.AbstractCaseClassGen with CaseClassNaming[TableMeta, ColumnMeta] {
-      def code = {
+      def code: String = {
         s"case class ${actualCaseClassName}(" + tableColumns.columns.map(Member(_).code).mkString(", ") + ")"
       }
 
@@ -199,7 +199,7 @@ trait Generator {
       def QuerySchema = new QuerySchemaGen(_, _)
       class QuerySchemaGen(val tableColumns: TableStereotype[TableMeta, ColumnMeta], schema: TableMeta) extends AbstractQuerySchemaGen with CaseClassNaming[TableMeta, ColumnMeta] {
 
-        def members =
+        def members: String =
           ifMembers(
             (tableColumns.columns.map(QuerySchemaMapping(_).code).mkString(",\n"))
           )

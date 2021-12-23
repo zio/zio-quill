@@ -8,7 +8,7 @@ object IndentUtil {
   }
 
   implicit class IndentOps(i: Int) {
-    def prefix = indentOf(i)
+    def prefix: String = indentOf(i)
   }
 
   private def indentOf(num: Int) =

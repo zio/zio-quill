@@ -4,8 +4,9 @@ import java.util.Properties
 import scala.util.control.NonFatal
 import com.typesafe.config.Config
 import io.trane.ndbc.DataSource
+import io.trane.ndbc.{ PreparedStatement, Row }
 
-case class NdbcContextConfig(config: Config) {
+final case class NdbcContextConfig(config: Config) {
 
   private def configProperties = {
     import scala.jdk.CollectionConverters._
@@ -15,7 +16,7 @@ case class NdbcContextConfig(config: Config) {
     p
   }
 
-  def dataSource =
+  def dataSource: DataSource[PreparedStatement,Row] =
     try
       DataSource.fromProperties("ndbc", configProperties)
     catch {

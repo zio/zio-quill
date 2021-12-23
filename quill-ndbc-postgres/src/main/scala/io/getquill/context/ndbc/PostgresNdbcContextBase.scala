@@ -13,7 +13,7 @@ trait PostgresNdbcContextBase[N <: NamingStrategy] extends NdbcContextBase[Postg
 
   override val idiom = PostgresDialect
 
-  override protected def createPreparedStatement(sql: String) = PostgresPreparedStatement.create(sql)
+  override protected def createPreparedStatement(sql: String): PostgresPreparedStatement = PostgresPreparedStatement.create(sql)
 
   override protected val zoneOffset: ZoneOffset = ZoneOffset.UTC
 }

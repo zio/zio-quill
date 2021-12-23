@@ -190,13 +190,13 @@ trait MirrorIdiomBase extends Idiom {
     case o => stmt"${o.toString.token}"
   }
 
-  def tokenizeName(name: String, renameable: Renameable) =
+  def tokenizeName(name: String, renameable: Renameable): String =
     renameable match {
       case ByStrategy => name
       case Fixed      => s"`${name}`"
     }
 
-  def bracketIfHidden(name: String, visibility: Visibility) =
+  def bracketIfHidden(name: String, visibility: Visibility): String =
     (distinguishHidden, visibility) match {
       case (true, Hidden) => s"[$name]"
       case _              => name
@@ -217,7 +217,7 @@ trait MirrorIdiomBase extends Idiom {
   }
 
   implicit val identTokenizer: Tokenizer[Ident] = Tokenizer[Ident] {
-    case Ident.Opinionated(name, quat, visibility) => stmt"${bracketIfHidden(name, visibility).token}"
+    case Ident.Opinionated(name, _, visibility) => stmt"${bracketIfHidden(name, visibility).token}"
   }
 
   implicit val typeTokenizer: Tokenizer[ExternalIdent] = Tokenizer[ExternalIdent] {
@@ -284,7 +284,7 @@ trait MirrorIdiomBase extends Idiom {
       def tokenParam(ast: Ast) =
         ast match {
           case ast: Ident => stmt"$$${ast.token}"
-          case other      => stmt"$${${ast.token}}"
+          case _      => stmt"$${${ast.token}}"
         }
 
       val pt = parts.map(_.token)
@@ -297,6 +297,6 @@ trait MirrorIdiomBase extends Idiom {
     ast match {
       case _: Function        => stmt"(${ast.token})"
       case _: BinaryOperation => stmt"(${ast.token})"
-      case other              => ast.token
+      case _              => ast.token
     }
 }
