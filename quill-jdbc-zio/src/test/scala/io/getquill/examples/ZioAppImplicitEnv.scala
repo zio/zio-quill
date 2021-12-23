@@ -5,7 +5,7 @@ import io.getquill.context.ZioJdbc.DataSource
 import io.getquill.context.qzio.ImplicitSyntax._
 import io.getquill.util.LoadConfig
 import zio.console.putStrLn
-import zio.{App, ExitCode, Has, IO, URIO}
+import zio.{ App, ExitCode, Has, IO, URIO }
 
 import java.sql.SQLException
 
