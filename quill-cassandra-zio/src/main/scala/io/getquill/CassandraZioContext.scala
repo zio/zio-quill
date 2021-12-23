@@ -1,15 +1,14 @@
 package io.getquill
 
-import com.datastax.oss.driver.api.core.cql.{ AsyncResultSet, BoundStatement, Row }
+import com.datastax.oss.driver.api.core.cql.{AsyncResultSet, BoundStatement, Row}
 import io.getquill.CassandraZioContext._
-import io.getquill.context.{ ExecutionInfo, StandardContext }
-import io.getquill.context.cassandra.{ CassandraRowContext, CqlIdiom }
+import io.getquill.context.cassandra.{CassandraRowContext, CqlIdiom}
 import io.getquill.context.qzio.ZioContext
+import io.getquill.context.{ExecutionInfo, StandardContext}
 import io.getquill.util.Messages.fail
-import io.getquill.util.ContextLogger
-import zio.stream.ZStream
-import zio.{ Chunk, ChunkBuilder, Has, ZIO, ZManaged }
 import zio.blocking.Blocking
+import zio.stream.ZStream
+import zio.{Chunk, ChunkBuilder, Has, ZIO, ZManaged}
 
 import scala.jdk.CollectionConverters._
 import scala.util.Try
@@ -53,8 +52,6 @@ class CassandraZioContext[N <: NamingStrategy](val naming: N)
   with ZioContext[CqlIdiom, N]
   with StandardContext[CqlIdiom, N]
   with CioOps {
-
-  ContextLogger(classOf[CassandraZioContext[_]])
 
   override type Error = Throwable
   override type Environment = Has[CassandraZioSession]
