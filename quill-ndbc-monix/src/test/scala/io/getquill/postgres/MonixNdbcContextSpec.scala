@@ -24,7 +24,7 @@ class MonixNdbcContextSpec extends MonixSpec {
       (for {
         _ <- testContext.run(qr1.delete)
         s <- accumulate(testContext.stream(qr1))
-      } yield s).runSyncUnsafe(10 seconds).map(_.i) mustEqual List()
+      } yield s).runSyncUnsafe(10 seconds).map(_.i) mustEqual List.empty
     }
 
     "streams single result" in {
@@ -63,7 +63,7 @@ class MonixNdbcContextSpec extends MonixSpec {
       (for {
         _ <- testContext.run(qr1.delete)
         s <- testContext.transaction(accumulate(testContext.stream(qr1)))
-      } yield s).runSyncUnsafe(10 seconds).map(_.i) mustEqual List()
+      } yield s).runSyncUnsafe(10 seconds).map(_.i) mustEqual List.empty
     }
 
     /* Ignore because apparently NDBC streaming doesn't work with transactions, as these tests

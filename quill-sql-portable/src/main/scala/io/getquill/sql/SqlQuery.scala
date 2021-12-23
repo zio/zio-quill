@@ -52,7 +52,7 @@ final case class SelectValue(ast: Ast, alias: Option[String] = None, concat: Boo
 }
 
 final case class FlattenSqlQuery(
-  from:     List[FromContext]     = List(),
+  from:     List[FromContext]     = List.empty,
   where:    Option[Ast]           = None,
   groupBy:  Option[Ast]           = None,
   orderBy:  List[OrderByCriteria] = Nil,

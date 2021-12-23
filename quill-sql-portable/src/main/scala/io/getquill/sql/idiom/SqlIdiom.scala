@@ -118,7 +118,7 @@ trait SqlIdiom extends Idiom {
             val (l, e) = flatten(b)
             ((cond, a) +: l, e)
           case other =>
-            (List(), other)
+            (List.empty, other)
         }
 
       val (l, e) = flatten(ast)

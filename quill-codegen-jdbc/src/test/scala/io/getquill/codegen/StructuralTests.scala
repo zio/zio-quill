@@ -33,7 +33,7 @@ class StructuralTests extends SimpleCodegenSpec with WithStandardCodegen {
         assertCaseClass(gens(0).caseClassesCode, "Person", personData.ccList)
         assertStandardObject(
           gens(0).tableSchemasCode,
-          "Person", "Person", Seq(QuerySchema("person", "PUBLIC.PERSON", List()))
+          "Person", "Person", Seq(QuerySchema("person", "PUBLIC.PERSON", List.empty))
         )
       }
 
@@ -46,13 +46,13 @@ class StructuralTests extends SimpleCodegenSpec with WithStandardCodegen {
         assertCaseClass(gens(0).caseClassesCode, "Address", addressData.ccList)
         assertStandardObject(
           gens(0).tableSchemasCode,
-          "Address", "Address", Seq(QuerySchema("address", "PUBLIC.ADDRESS", List()))
+          "Address", "Address", Seq(QuerySchema("address", "PUBLIC.ADDRESS", List.empty))
         )
 
         assertCaseClass(gens(1).caseClassesCode, "Person", personData.ccList)
         assertStandardObject(
           gens(1).tableSchemasCode,
-          "Person", "Person", Seq(QuerySchema("person", "PUBLIC.PERSON", List()))
+          "Person", "Person", Seq(QuerySchema("person", "PUBLIC.PERSON", List.empty))
         )
       }
     }
@@ -152,15 +152,15 @@ class StructuralTests extends SimpleCodegenSpec with WithStandardCodegen {
           assertCaseClass(gens(0).caseClassesCode, "address", addressData.ccList)
           assertStandardObject(
             gens(0).tableSchemasCode,
-            "address", "address", Seq(QuerySchema("address", "PUBLIC.ADDRESS", List()))
+            "address", "address", Seq(QuerySchema("address", "PUBLIC.ADDRESS", List.empty))
           )
 
           assertCaseClass(gens(1).caseClassesCode, "person", personData.ccList)
           assertStandardObject(
             gens(1).tableSchemasCode,
             "person", "person", Seq(
-              QuerySchema("alphaPerson", "PUBLIC.ALPHA_PERSON", List()),
-              QuerySchema("bravoPerson", "PUBLIC.BRAVO_PERSON", List())
+              QuerySchema("alphaPerson", "PUBLIC.ALPHA_PERSON", List.empty),
+              QuerySchema("bravoPerson", "PUBLIC.BRAVO_PERSON", List.empty)
             )
           )
         }
@@ -176,15 +176,15 @@ class StructuralTests extends SimpleCodegenSpec with WithStandardCodegen {
           assertCaseClass(gens(0).caseClassesCode, "address", addressData.ccList)
           assertStandardObject(
             gens(0).tableSchemasCode,
-            "address", "address", Seq(QuerySchema("address", "PUBLIC.ADDRESS", List()))
+            "address", "address", Seq(QuerySchema("address", "PUBLIC.ADDRESS", List.empty))
           )
 
           assertCaseClass(gens(1).caseClassesCode, "person", personData.ccList)
           assertStandardObject(
             gens(1).tableSchemasCode,
             "person", "person", Seq(
-              QuerySchema("alphaPerson", "PUBLIC.ALPHA_PERSON", List()),
-              QuerySchema("bravoPerson", "PUBLIC.BRAVO_PERSON", List())
+              QuerySchema("alphaPerson", "PUBLIC.ALPHA_PERSON", List.empty),
+              QuerySchema("bravoPerson", "PUBLIC.BRAVO_PERSON", List.empty)
             )
           )
         }
@@ -208,15 +208,15 @@ class StructuralTests extends SimpleCodegenSpec with WithStandardCodegen {
           assertCaseClass(gens(0).caseClassesCode, "Address", addressData.ccList)
           assertStandardObject(
             gens(0).tableSchemasCode,
-            "Address", "Address", Seq(QuerySchema("address", "PUBLIC.ADDRESS", List()))
+            "Address", "Address", Seq(QuerySchema("address", "PUBLIC.ADDRESS", List.empty))
           )
 
           assertCaseClass(gens(1).caseClassesCode, "Person", personData.ccList)
           assertStandardObject(
             gens(1).tableSchemasCode,
             "Person", "Person", Seq(
-              QuerySchema("alphaPerson", "PUBLIC.ALPHA_PERSON", List()),
-              QuerySchema("bravoPerson", "PUBLIC.BRAVO_PERSON", List())
+              QuerySchema("alphaPerson", "PUBLIC.ALPHA_PERSON", List.empty),
+              QuerySchema("bravoPerson", "PUBLIC.BRAVO_PERSON", List.empty)
             )
           )
         }
@@ -242,15 +242,15 @@ class StructuralTests extends SimpleCodegenSpec with WithStandardCodegen {
           assertCaseClass(gens(0).caseClassesCode, "Address", addressData.ccList)
           assertStandardObject(
             gens(0).tableSchemasCode,
-            "Address", "Address", Seq(QuerySchema("publicAddress", "PUBLIC.ADDRESS", List()))
+            "Address", "Address", Seq(QuerySchema("publicAddress", "PUBLIC.ADDRESS", List.empty))
           )
 
           assertCaseClass(gens(1).caseClassesCode, "Person", personData.ccList)
           assertStandardObject(
             gens(1).tableSchemasCode,
             "Person", "Person", Seq(
-              QuerySchema("bravoPerson", "BRAVO.PERSON", List()),
-              QuerySchema("alphaPerson", "ALPHA.PERSON", List())
+              QuerySchema("bravoPerson", "BRAVO.PERSON", List.empty),
+              QuerySchema("alphaPerson", "ALPHA.PERSON", List.empty)
             )
           )
         }
