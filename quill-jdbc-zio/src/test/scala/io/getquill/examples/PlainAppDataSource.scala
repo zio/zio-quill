@@ -13,7 +13,7 @@ object PlainAppDataSource {
   object MyPostgresContext extends PostgresZioJdbcContext(Literal)
   import MyPostgresContext._
 
-  case class Person(name: String, age: Int)
+  final case class Person(name: String, age: Int)
 
   def dataSource: javax.sql.DataSource with Closeable = JdbcContextConfig(LoadConfig("testPostgresDB")).dataSource
 
