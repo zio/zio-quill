@@ -29,13 +29,11 @@ object ZioJdbc {
   }
 
   object DataSourceLayer {
-    def live: ZLayer[Has[DataSource], SQLException, Has[Connection]] = layer
-
-    private[getquill] val layer =
+    val live: ZLayer[Has[DataSource], SQLException, Has[Connection]] =
       (
         for {
           from <- ZManaged.environment[Has[DataSource]]
-          r <- ZioJdbc.managedBestEffort(blockingEffect(from.get.getConnection)).refineToOrDie[SQLException]
+          r <- ZioJdbc.managedBestEffort(blockingEffect(from.get.getConnection)).refineToOrDie[SQLException].asInstanceOf[ZManaged[Any, SQLException, Connection]]
         } yield r
       ).toLayer
 
@@ -55,39 +53,25 @@ object ZioJdbc {
           ds <- managedBestEffort(blockingEffect(conf.dataSource))
         } yield ds
       ).toLayer
-
-    def fromConfigClosable(config: => Config): ZLayer[Any, Throwable, Has[DataSource with Closeable]] =
-      fromJdbcConfigClosable(JdbcContextConfig(config))
-
-    def fromPrefixClosable(prefix: String): ZLayer[Any, Throwable, Has[DataSource with Closeable]] =
-      fromJdbcConfigClosable(JdbcContextConfig(LoadConfig(prefix)))
-
-    def fromJdbcConfigClosable(jdbcContextConfig: => JdbcContextConfig): ZLayer[Any, Throwable, Has[DataSource with Closeable]] =
-      ZLayer.fromManagedMany(
-        for {
-          conf <- ZManaged.fromEffect(Task(jdbcContextConfig))
-          ds <- managedBestEffort(Task(conf.dataSource: DataSource with Closeable))
-        } yield Has(ds)
-      )
   }
 
   object QDataSource {
     @deprecated("Use DataSourceLayer.fromConfig instead", "3.11.0")
-    def fromConfig(config: => Config): ZLayer[Any, Throwable, Has[DataSource with Closeable]] =
+    def fromConfig(config: => Config): ZLayer[Any, Throwable, Has[DataSource]] =
       fromJdbcConfig(JdbcContextConfig(config))
 
     @deprecated("Use DataSourceLayer.fromPrefix instead", "3.11.0")
-    def fromPrefix(prefix: String): ZLayer[Any, Throwable, Has[DataSource with Closeable]] =
+    def fromPrefix(prefix: String): ZLayer[Any, Throwable, Has[DataSource]] =
       fromJdbcConfig(JdbcContextConfig(LoadConfig(prefix)))
 
     @deprecated("Use DataSourceLayer.fromJdbcConfig instead", "3.11.0")
-    def fromJdbcConfig(jdbcContextConfig: => JdbcContextConfig): ZLayer[Any, Throwable, Has[DataSource with Closeable]] =
-      ZLayer.fromManagedMany(
+    def fromJdbcConfig(jdbcContextConfig: => JdbcContextConfig): ZLayer[Any, Throwable, Has[DataSource]] =
+      (
         for {
           conf <- ZManaged.fromEffect(Task(jdbcContextConfig))
-          ds <- managedBestEffort(Task(conf.dataSource: DataSource with Closeable))
-        } yield Has(ds)
-      )
+          ds <- managedBestEffort(blockingEffect(conf.dataSource))
+        } yield ds
+      ).toLayer
   }
 
   implicit class QuillZioDataSourceExt[T](qzio: ZIO[Has[DataSource], Throwable, T]) {
@@ -139,11 +123,11 @@ object ZioJdbc {
 
   implicit class QuillZioExt[T, R <: Has[_]](qzio: ZIO[Has[Connection] with R, Throwable, T])(implicit tag: Tag[R]) {
     /**
-     * Change `Has[Connection]` of a QIO to `Has[DataSource with Closeable]` by providing a `DataSourceLayer.live` instance
+     * Change `Has[Connection]` of a QIO to `Has[DataSource]` by providing a `DataSourceLayer.live` instance
      * which will grab a connection from the data-source, perform the QIO operation, and the immediately release the connection.
      * This is used for data-sources that have pooled connections e.g. Hikari.
      * {{{
-     *   def ds: DataSource with Closeable = ...
+     *   def ds: DataSource = ...
      *   run(query[Person]).onDataSource.provide(Has(ds))
      * }}}
      */
@@ -172,7 +156,7 @@ object ZioJdbc {
     Blocking.Service.live.blocking(zio)
 
   private[getquill] def blockingEffect[A](value: => A): Task[A] =
-    Blocking.Service.live.blocking(Task(value))
+    Blocking.Service.live.effectBlocking(value)
 
   private[getquill] def blockingStream[R, E, A](stream: ZStream[R, E, A]): ZStream[R, E, A] =
     stream.lock(Blocking.Service.live.blockingExecutor)
