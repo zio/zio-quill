@@ -99,7 +99,7 @@ class AstOpsSpec extends Spec {
   }
 
   "returning matcher" - {
-    val insert = Insert(Entity("Ent", List(), Quat.LeafProduct("prop")), List(Assignment(VIdent("p"), Property(VIdent("p"), "prop"), Constant.auto(123))))
+    val insert = Insert(Entity("Ent", List.empty, Quat.LeafProduct("prop")), List(Assignment(VIdent("p"), Property(VIdent("p"), "prop"), Constant.auto(123))))
     val r = VIdent("r")
     val prop = Property(r, "value")
 

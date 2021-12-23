@@ -545,7 +545,7 @@ class StatefulTransformerSpec extends Spec {
       Subject(Nil, Ident("a") -> Ident("a'"))(ast) match {
         case (at, att) =>
           at mustEqual ast
-          att.state mustEqual List()
+          att.state mustEqual List.empty
       }
     }
 

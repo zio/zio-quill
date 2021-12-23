@@ -76,7 +76,7 @@ class ArrayAsyncEncodingSpec extends ArrayEncodingBaseSpec {
     val actual1 = await(ctx.run(q.filter(_.texts == lift(List("test")))))
     val actual2 = await(ctx.run(q.filter(_.texts == lift(List("test2")))))
     actual1 mustEqual List(e)
-    actual2 mustEqual List()
+    actual2 mustEqual List.empty
   }
 
   // Need to have an actual value in the table in order for the decoder to go off. Previously,
