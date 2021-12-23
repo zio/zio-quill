@@ -57,7 +57,7 @@ sealed trait Quat {
       case _               => 1
     }
 
-  def renames: mutable.LinkedHashMap[String, String] = mutable.LinkedHashMap()
+  def renames: mutable.LinkedHashMap[String, String] = mutable.LinkedHashMap.empty
 
   /** Either convert to a Product or make the Quat into an error if it is anything else. */
   def probit: Quat.Product =
@@ -250,19 +250,19 @@ object Quat {
     def fromSerializedJVM(serial: String): Quat.Product = KryoQuatSerializer.deserialize(serial).probit
     def fromSerializedJS(serial: String): Quat.Product = BooQuatSerializer.deserialize(serial).probit
 
-    def empty = new Quat.Product(mutable.LinkedHashMap(), mutable.LinkedHashMap(), Type.Concrete)
+    def empty = new Quat.Product(mutable.LinkedHashMap.empty, mutable.LinkedHashMap.empty, Type.Concrete)
 
-    def apply(fields: (String, Quat)*): Quat.Product = new Quat.Product(mutable.LinkedHashMap[String, Quat]() ++ fields.iterator, mutable.LinkedHashMap(), Type.Concrete)
-    def apply(tpe: Type, fields: (String, Quat)*): Quat.Product = new Quat.Product(mutable.LinkedHashMap[String, Quat]() ++ fields.iterator, mutable.LinkedHashMap(), tpe)
+    def apply(fields: (String, Quat)*): Quat.Product = new Quat.Product(mutable.LinkedHashMap[String, Quat]() ++ fields.iterator, mutable.LinkedHashMap.empty, Type.Concrete)
+    def apply(tpe: Type, fields: (String, Quat)*): Quat.Product = new Quat.Product(mutable.LinkedHashMap[String, Quat]() ++ fields.iterator, mutable.LinkedHashMap.empty, tpe)
 
-    def apply(fields: Iterable[(String, Quat)]): Quat.Product = new Quat.Product(mutable.LinkedHashMap[String, Quat]() ++ fields.iterator, mutable.LinkedHashMap(), Type.Concrete)
-    def apply(tpe: Type, fields: Iterable[(String, Quat)]): Quat.Product = new Quat.Product(mutable.LinkedHashMap[String, Quat]() ++ fields.iterator, mutable.LinkedHashMap(), tpe)
+    def apply(fields: Iterable[(String, Quat)]): Quat.Product = new Quat.Product(mutable.LinkedHashMap[String, Quat]() ++ fields.iterator, mutable.LinkedHashMap.empty, Type.Concrete)
+    def apply(tpe: Type, fields: Iterable[(String, Quat)]): Quat.Product = new Quat.Product(mutable.LinkedHashMap[String, Quat]() ++ fields.iterator, mutable.LinkedHashMap.empty, tpe)
 
-    def apply(fields: Iterator[(String, Quat)]): Quat.Product = new Quat.Product(mutable.LinkedHashMap[String, Quat]() ++ fields, mutable.LinkedHashMap(), Type.Concrete)
-    def apply(tpe: Type, fields: Iterator[(String, Quat)]): Quat.Product = new Quat.Product(mutable.LinkedHashMap[String, Quat]() ++ fields, mutable.LinkedHashMap(), tpe)
+    def apply(fields: Iterator[(String, Quat)]): Quat.Product = new Quat.Product(mutable.LinkedHashMap[String, Quat]() ++ fields, mutable.LinkedHashMap.empty, Type.Concrete)
+    def apply(tpe: Type, fields: Iterator[(String, Quat)]): Quat.Product = new Quat.Product(mutable.LinkedHashMap[String, Quat]() ++ fields, mutable.LinkedHashMap.empty, tpe)
 
-    def apply(fields: mutable.LinkedHashMap[String, Quat]): Quat.Product = new Quat.Product(fields, mutable.LinkedHashMap(), Type.Concrete)
-    def apply(tpe: Type, fields: mutable.LinkedHashMap[String, Quat]): Quat.Product = new Quat.Product(fields, mutable.LinkedHashMap(), tpe)
+    def apply(fields: mutable.LinkedHashMap[String, Quat]): Quat.Product = new Quat.Product(fields, mutable.LinkedHashMap.empty, Type.Concrete)
+    def apply(tpe: Type, fields: mutable.LinkedHashMap[String, Quat]): Quat.Product = new Quat.Product(fields, mutable.LinkedHashMap.empty, tpe)
 
     def unapply(p: Quat.Product): Option[mutable.LinkedHashMap[String, Quat]] = Some(p.fields)
 

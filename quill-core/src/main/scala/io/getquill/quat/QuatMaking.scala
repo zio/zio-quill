@@ -19,7 +19,7 @@ trait QuatMaking extends QuatMakingBase {
   import u.{ Block => _, Constant => _, Function => _, Ident => _, If => _, _ }
   import collection.mutable.HashMap;
 
-  val cachedEncoderLookups: HashMap[Type, Boolean] = HashMap();
+  val cachedEncoderLookups: HashMap[Type, Boolean] = HashMap.empty;
   def existsEncoderFor(tpe: Type): Boolean = {
     cachedEncoderLookups.get(tpe) match {
       case Some(value) =>
@@ -35,7 +35,7 @@ trait QuatMaking extends QuatMakingBase {
     }
   }
 
-  val cachedQuats: HashMap[Type, Quat] = HashMap()
+  val cachedQuats: HashMap[Type, Quat] = HashMap.empty
   override def inferQuat(tpe: u.Type): Quat = {
     cachedQuats.get(tpe) match {
       case Some(value) =>

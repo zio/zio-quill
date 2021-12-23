@@ -39,7 +39,7 @@ private[getquill] object QuatOps {
           Quat.Product.WithRenames(quat.tpe, newFields, quat.renames)
       }
 
-    renameQuatAtPathRecurse(path, List.empty, rootQuat)
+    renameQuatAtPathRecurse(path, List(), rootQuat)
   }
 
   object HasBooleanQuat {

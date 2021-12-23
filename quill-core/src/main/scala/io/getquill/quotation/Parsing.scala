@@ -99,7 +99,7 @@ trait Parsing extends ValueComputation with QuatMaking {
       path.foldLeft(tuple) {
         case (t, i) => Property(t, s"_${i + 1}")
       }
-    def reductions(ast: Ast, path: List[Int] = List.empty): List[(Ident, Ast)] = {
+    def reductions(ast: Ast, path: List[Int] = List()): List[(Ident, Ast)] = {
       ast match {
         case ident: Ident => List(ident -> property(path))
         case Tuple(elems) =>

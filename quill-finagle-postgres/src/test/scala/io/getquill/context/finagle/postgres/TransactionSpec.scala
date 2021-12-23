@@ -30,7 +30,7 @@ class TransactionSpec extends ProductSpec {
     // Since a query inside a transaction failed, the outermost transaction had
     // to rollback.
     val res: List[Product] = await { context.run(productById(lift(id))) }
-    res mustEqual List.empty
+    res mustEqual List()
   }
 
   "Transaction inside transaction should not open a new client" in {

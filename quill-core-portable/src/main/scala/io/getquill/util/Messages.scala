@@ -9,7 +9,7 @@ object Messages {
     Option(System.getProperty(propName)).orElse(sys.env.get(envName)).getOrElse(default)
 
   def resetCache(): Unit = cacheMap.clear()
-  private val cacheMap: MutableMap[String, Any] = MutableMap()
+  private val cacheMap: MutableMap[String, Any] = MutableMap.empty
   private def cache[T](name: String, value: => T): T =
     cacheMap.getOrElseUpdate(name, value).asInstanceOf[T]
 

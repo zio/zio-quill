@@ -32,7 +32,7 @@ class MapsEncodingSpec extends CollectionsSpec {
       intDouble:   Option[Map[Int, Double]],
       longFloat:   Map[Long, Float]
     )
-    val e = Entity(1, Some(Map("1" -> BigDecimal(1))), None, Map())
+    val e = Entity(1, Some(Map("1" -> BigDecimal(1))), None, Map.empty)
     val q = quote(querySchema[Entity]("MapsEntity"))
 
     ctx.run(q.insert(lift(e)))

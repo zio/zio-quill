@@ -71,7 +71,7 @@ class SetsEncodingSpec extends CollectionsSpec {
     val e = SetFrozen(Set(1, 2))
     ctx.run(setFroz.insert(lift(e)))
     ctx.run(setFroz.filter(_.id == lift(Set(1, 2)))) mustBe List(e)
-    ctx.run(setFroz.filter(_.id == lift(Set(1)))) mustBe List.empty
+    ctx.run(setFroz.filter(_.id == lift(Set(1)))) mustBe List()
   }
 
   override protected def beforeEach(): Unit = {

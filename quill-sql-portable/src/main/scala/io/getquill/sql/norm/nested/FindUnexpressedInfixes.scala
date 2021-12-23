@@ -47,7 +47,7 @@ class FindUnexpressedInfixes(select: List[OrderedSelect]) {
       trace"Searching for infix: $ast in the sub-path $parentOrder".andLog()
       if (pathExists(parentOrder))
         trace"No infixes found" andContinue
-          List.empty
+          List()
       else
         ast match {
           case Tuple(values) =>
@@ -68,7 +68,7 @@ class FindUnexpressedInfixes(select: List[OrderedSelect]) {
             trace"Found unexpressed infix inside $other in $parentOrder".andLog()
             List((other, parentOrder))
           case _ =>
-            List.empty
+            List()
         }
     }
 

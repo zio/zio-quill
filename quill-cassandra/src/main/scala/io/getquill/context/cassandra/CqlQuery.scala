@@ -34,7 +34,7 @@ object CqlQuery {
       case Aggregation(AggregationOperator.`size`, q: Query) =>
         apply(q, List(Aggregation(AggregationOperator.`size`, Constant.auto(1))), distinct)
       case _ =>
-        apply(q, List.empty, distinct)
+        apply(q, List(), distinct)
     }
 
   private def apply(q: Query, select: List[Ast], distinct: Boolean): CqlQuery =
@@ -50,7 +50,7 @@ object CqlQuery {
       case SortBy(q: Query, _, p, o) =>
         apply(q, orderByCriterias(p, o), limit, select, distinct)
       case _ =>
-        apply(q, List.empty, limit, select, distinct)
+        apply(q, List(), limit, select, distinct)
     }
 
   private def apply(q: Query, orderBy: List[OrderByCriteria], limit: Option[Ast], select: List[Ast], distinct: Boolean): CqlQuery =
@@ -81,7 +81,7 @@ object CqlQuery {
     ast match {
       case Tuple(values) => values.flatMap(select)
       case p: Property   => List(p)
-      case _: Ident      => List.empty
+      case _: Ident      => List()
       case l: Lift       => List(l)
       case other         => fail(s"Cql supports only properties as select elements. Found: $other")
     }

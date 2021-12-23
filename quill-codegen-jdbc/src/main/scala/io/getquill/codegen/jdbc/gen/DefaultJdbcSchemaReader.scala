@@ -17,7 +17,7 @@ class DefaultJdbcSchemaReader(
 ) extends JdbcSchemaReader {
 
   @tailrec
-  private def resultSetExtractor[T](rs: ResultSet, extractor: (ResultSet) => T, acc: List[T] = List.empty): List[T] = {
+  private def resultSetExtractor[T](rs: ResultSet, extractor: (ResultSet) => T, acc: List[T] = List()): List[T] = {
     if (!rs.next())
       acc.reverse
     else

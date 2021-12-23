@@ -142,7 +142,7 @@ class ExpandReturningSpec extends Spec {
 
     def insert = Insert(
       Map(
-        Entity.Opinionated("Person", List.empty, QEP, renameable),
+        Entity.Opinionated("Person", List(), QEP, renameable),
         Ident("p"),
         Tuple(List(Property.Opinionated(Ident("p"), "name", renameable, Visible), Property.Opinionated(Ident("p"), "age", renameable, Visible)))
       ),

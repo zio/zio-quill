@@ -57,7 +57,7 @@ class AstPrinter(traceOpinions: Boolean, traceAstSimple: Boolean, traceQuats: Qu
           traceQuats match {
             case QuatTrace.Full | QuatTrace.All => List(Tree.Literal(e.q.shortString))
             case QuatTrace.Short                => List(Tree.Literal(e.q.shortString.take(10)))
-            case QuatTrace.None                 => List.empty
+            case QuatTrace.None                 => List()
           }
         case treemake.Elem(value)   => List(pprint.treeify(value))
         case treemake.Tree(value)   => List(value)

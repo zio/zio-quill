@@ -101,7 +101,7 @@ trait OrientDBIdiom extends Idiom {
             val (l, e) = flatten(b)
             ((cond, a) +: l, e)
           case other =>
-            (List.empty, other)
+            (List(), other)
         }
 
       val (l, e) = flatten(ast)
