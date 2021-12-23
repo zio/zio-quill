@@ -1,16 +1,16 @@
 package io.getquill.context.qzio
 
-import io.getquill.context.ZioJdbc._
+import io.getquill.context.ZioJdbc.{QCIO, _}
 import io.getquill.context.jdbc.JdbcRunContext
 import io.getquill.context.sql.idiom.SqlIdiom
-import io.getquill.context.{ ExecutionInfo, StreamingContext }
+import io.getquill.context.{ExecutionInfo, StreamingContext}
 import io.getquill.util.ContextLogger
-import io.getquill.{ NamingStrategy, ReturnAction }
-import zio.Exit.{ Failure, Success }
-import zio.stream.{ Stream, ZStream }
-import zio.{ Cause, Has, Task, UIO, ZIO, ZManaged }
+import io.getquill.{NamingStrategy, ReturnAction}
+import zio.Exit.{Failure, Success}
+import zio.stream.{Stream, ZStream}
+import zio.{Cause, Has, Task, UIO, ZIO}
 
-import java.sql.{ Array => _, _ }
+import java.sql.{Array => _, _}
 import javax.sql.DataSource
 import scala.reflect.ClassTag
 import scala.util.Try
@@ -61,30 +61,28 @@ abstract class ZioJdbcUnderlyingContext[Dialect <: SqlIdiom, Naming <: NamingStr
   override protected def withConnectionWrapped[T](f: Connection => T): QCIO[T] =
     withBlocking {
       for {
-        conn <- ZIO.environment[Has[Connection]]
-        result <- sqlEffect(f(conn.get[Connection]))
+        connection <- ZIO.service[Connection]
+        result <- QCIO(f(connection))
       } yield result
     }
 
-  private def sqlEffect[T](t: => T): QCIO[T] = ZIO.effect(t).refineToOrDie[SQLException]
-
   private[getquill] def withoutAutoCommit[R <: Has[Connection], A, E <: Throwable: ClassTag](f: ZIO[R, E, A]): ZIO[R, E, A] = {
     for {
-      blockingConn <- ZIO.environment[Has[Connection]]
-      conn = blockingConn.get[Connection]
-      autoCommitPrev = conn.getAutoCommit
-      r <- sqlEffect(conn).bracket(conn => UIO(conn.setAutoCommit(autoCommitPrev))) { conn =>
-        sqlEffect(conn.setAutoCommit(false)) *> f
-      }.refineToOrDie[E]
+      connection <- ZIO.service[Connection]
+      autoCommitPrev = connection.getAutoCommit
+      r <- ZIO.bracket(
+        acquire = Task(connection.setAutoCommit(false)),
+        release = (_: Unit) => Task(connection.setAutoCommit(autoCommitPrev)).orDie,
+        use = (_: Unit) => f
+      ).refineToOrDie[E]
     } yield r
   }
 
   private[getquill] def streamWithoutAutoCommit[A](f: ZStream[Has[Connection], Throwable, A]): ZStream[Has[Connection], Throwable, A] = {
     for {
-      blockingConn <- ZStream.environment[Has[Connection]]
-      conn = blockingConn.get[Connection]
-      autoCommitPrev = conn.getAutoCommit
-      r <- ZStream.bracket(Task(conn.setAutoCommit(false)))(_ => UIO(conn.setAutoCommit(autoCommitPrev))) *> f
+      connection <- ZStream.service[Connection]
+      autoCommitPrev = connection.getAutoCommit
+      r <- ZStream.bracket(Task(connection.setAutoCommit(false)))(_ => UIO(connection.setAutoCommit(autoCommitPrev))) *> f
     } yield r
   }
 
@@ -133,7 +131,7 @@ abstract class ZioJdbcUnderlyingContext[Dialect <: SqlIdiom, Naming <: NamingStr
   }
 
   def streamQuery[T](fetchSize: Option[Int], sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner): QCStream[T] = {
-    def prepareStatement(conn: Connection) = {
+    def prepareStatement(conn: Connection): PreparedStatement = {
       val stmt = prepareStatementForStreaming(sql, conn, fetchSize)
       val (params, ps) = prepare(stmt, conn)
       logger.logQuery(sql, params)
@@ -144,7 +142,6 @@ abstract class ZioJdbcUnderlyingContext[Dialect <: SqlIdiom, Naming <: NamingStr
       ZStream.environment[Connection].flatMap { conn =>
         ZStream.managed {
           for {
-            conn <- ZManaged.make(Task(conn))(c => Task.unit)
             ps <- managedBestEffort(Task(prepareStatement(conn)))
             rs <- managedBestEffort(Task(ps.executeQuery()))
           } yield (conn, ps, rs)

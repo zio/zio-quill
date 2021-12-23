@@ -33,57 +33,24 @@ val CodegenTag = Tags.Tag("CodegenTag")
 (Global / concurrentRestrictions) += Tags.exclusive(CodegenTag)
 (Global / concurrentRestrictions) += Tags.limit(ScalaJSTags.Link, 1)
 
-lazy val jsModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
-  `quill-core-portable-js`, `quill-core-js`,
-  `quill-sql-portable-js`, `quill-sql-js`
-)
 
 lazy val baseModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-core-portable-jvm`,
   `quill-core-jvm`,
   `quill-sql-portable-jvm`,
-  `quill-sql-jvm`, `quill-monix`, `quill-zio`
+  `quill-sql-jvm`,
+  `quill-zio`
 )
 
 lazy val dbModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
-  `quill-jdbc`, `quill-jdbc-monix`, `quill-jdbc-zio`
+  `quill-jdbc`, `quill-jdbc-zio`
 )
 
-lazy val jasyncModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
-  `quill-jasync`, `quill-jasync-postgres`, `quill-jasync-mysql`
-)
-
-lazy val asyncModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
-  `quill-async`, `quill-async-mysql`, `quill-async-postgres`,
-  `quill-finagle-mysql`, `quill-finagle-postgres`,
-  `quill-ndbc`, `quill-ndbc-postgres`, `quill-ndbc-monix`
-) ++ jasyncModules
-
-lazy val codegenModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
-  `quill-codegen`, `quill-codegen-jdbc`, `quill-codegen-tests`
-)
-
-lazy val bigdataModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
-  `quill-cassandra`, `quill-cassandra-lagom`, `quill-cassandra-monix`, `quill-cassandra-zio`, `quill-orientdb`, `quill-spark`
-)
 
 lazy val allModules =
-  baseModules ++ jsModules ++ dbModules ++ asyncModules ++ codegenModules ++ bigdataModules
+  baseModules ++ dbModules
 
-lazy val scala213Modules = baseModules ++ jsModules ++ dbModules ++ codegenModules ++ Seq[sbt.ClasspathDep[sbt.ProjectReference]](
-  `quill-async`,
-  `quill-async-mysql`,
-  `quill-async-postgres`,
-  `quill-finagle-mysql`,
-  `quill-cassandra`,
-  `quill-cassandra-lagom`,
-  `quill-cassandra-monix`,
-  `quill-cassandra-zio`,
-  `quill-orientdb`,
-  `quill-jasync`,
-  `quill-jasync-postgres`,
-  `quill-jasync-mysql`
-)
+lazy val scala213Modules = baseModules ++ dbModules
 
 def isScala213 = {
   val scalaVersion = sys.props.get("quill.scala.version")
@@ -107,24 +74,9 @@ val filteredModules = {
       case "base" =>
         println("SBT =:> Compiling Base Modules")
         baseModules
-      case "js" =>
-        println("SBT =:> Compiling JavaScript Modules")
-        jsModules
       case "db" =>
         println("SBT =:> Compiling Database Modules")
         dbModules
-      case "async" =>
-        println("SBT =:> Compiling Async Database Modules")
-        asyncModules
-      case "codegen" =>
-        println("SBT =:> Compiling Code Generator Modules")
-        codegenModules
-      case "nocodegen" =>
-        println("Compiling Not-Code Generator Modules")
-        baseModules ++ jsModules ++ dbModules ++ asyncModules ++ bigdataModules
-      case "bigdata" =>
-        println("SBT =:> Compiling Big Data Modules")
-        bigdataModules
       case "none" =>
         println("SBT =:> Invoking Aggregate Project")
         Seq[sbt.ClasspathDep[sbt.ProjectReference]]()
@@ -133,7 +85,7 @@ val filteredModules = {
         val scalaVersion = sys.props.get("quill.scala.version")
         if(scalaVersion.map(_.startsWith("2.13")).getOrElse(false)) {
           println("SBT =:> Compiling Scala 2.13 Modules")
-          baseModules ++ dbModules ++ jasyncModules
+          baseModules ++ dbModules
         } else {
           println("SBT =:> Compiling All Modules")
           allModules
@@ -228,7 +180,6 @@ lazy val `quill-core-portable` =
     ).enablePlugins(MimaPlugin)
 
 lazy val `quill-core-portable-jvm` = `quill-core-portable`.jvm
-lazy val `quill-core-portable-js` = `quill-core-portable`.js
 
 lazy val `quill-core` =
   crossProject(JVMPlatform, JSPlatform).crossType(superPure)
@@ -259,7 +210,6 @@ lazy val `quill-core` =
 
 // dependsOn in these clauses technically not needed however, intellij does not work properly without them
 lazy val `quill-core-jvm` = `quill-core`.jvm.dependsOn(`quill-core-portable-jvm` % "compile->compile")
-lazy val `quill-core-js` = `quill-core`.js.dependsOn(`quill-core-portable-js` % "compile->compile")
 
 lazy val `quill-sql-portable` =
   crossProject(JVMPlatform, JSPlatform).crossType(ultraPure)
@@ -282,7 +232,6 @@ lazy val `quill-sql-portable` =
     .enablePlugins(MimaPlugin)
 
 lazy val `quill-sql-portable-jvm` = `quill-sql-portable`.jvm
-lazy val `quill-sql-portable-js` = `quill-sql-portable`.js
 
 
 lazy val `quill-sql` =
@@ -309,60 +258,6 @@ lazy val `quill-sql` =
 
 
 lazy val `quill-sql-jvm` = `quill-sql`.jvm
-lazy val `quill-sql-js` = `quill-sql`.js
-
-
-lazy val `quill-codegen` =
-  (project in file("quill-codegen"))
-    .settings(commonSettings: _*)
-    .dependsOn(`quill-core-jvm` % "compile->compile;test->test")
-
-lazy val `quill-codegen-jdbc` =
-  (project in file("quill-codegen-jdbc"))
-    .settings(commonSettings: _*)
-    .settings(jdbcTestingLibraries: _*)
-    .settings(
-      Test / fork := true,
-      libraryDependencies ++= Seq(
-        "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test
-      )
-    )
-    .dependsOn(`quill-codegen` % "compile->compile;test->test")
-    .dependsOn(`quill-jdbc` % "compile->compile")
-
-lazy val `quill-codegen-tests` =
-  (project in file("quill-codegen-tests"))
-    .settings(commonSettings: _*)
-    .settings(
-      libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test,
-      Test / fork := true,
-      (Test / sourceGenerators) += Def.task {
-        def recursiveList(file:JFile): List[JFile] = {
-          if (file.isDirectory)
-            Option(file.listFiles()).map(_.flatMap(child=> recursiveList(child)).toList).toList.flatten
-          else
-            List(file)
-        }
-        val r = (Compile / runner).value
-        val s = streams.value.log
-        val sourcePath = sourceManaged.value
-        val classPath = (`quill-codegen-jdbc` / Test / fullClasspath).value.map(_.data)
-
-        // We could put the code generated products directly in the `sourcePath` directory but for some reason
-        // intellij doesn't like it unless there's a `main` directory inside.
-        val fileDir = new File(sourcePath, "main").getAbsoluteFile
-        val dbs = Seq("testH2DB", "testMysqlDB", "testPostgresDB", "testSqliteDB", "testSqlServerDB", "testOracleDB")
-        println(s"Running code generation for DBs: ${dbs.mkString(", ")}")
-        r.run(
-          "io.getquill.codegen.integration.CodegenTestCaseRunner",
-          classPath,
-          fileDir.getAbsolutePath +: dbs,
-          s
-        )
-        recursiveList(fileDir)
-      }.tag(CodegenTag)
-    )
-    .dependsOn(`quill-codegen-jdbc` % "compile->test")
 
 val excludeTests =
   sys.props.getOrElse("excludeTests", "false").toBoolean
@@ -382,42 +277,6 @@ lazy val `quill-jdbc` =
     .settings(mimaSettings: _*)
     .settings(jdbcTestingSettings: _*)
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
-    .enablePlugins(MimaPlugin)
-
-lazy val `quill-monix` =
-  (project in file("quill-monix"))
-    .settings(commonSettings: _*)
-    .settings(mimaSettings: _*)
-    .settings(
-      Test / fork := true,
-      libraryDependencies ++= Seq(
-        "io.monix"                %% "monix-eval"          % "3.0.0",
-        "io.monix"                %% "monix-reactive"      % "3.0.0"
-      )
-    )
-    .dependsOn(`quill-core-jvm` % "compile->compile;test->test")
-    .enablePlugins(MimaPlugin)
-
-lazy val `quill-jdbc-monix` =
-  (project in file("quill-jdbc-monix"))
-    .settings(commonSettings: _*)
-    .settings(mimaSettings: _*)
-    .settings(jdbcTestingSettings: _*)
-    .settings(
-      Test / testGrouping := {
-        (Test / definedTests).value map { test =>
-          if (test.name endsWith "IntegrationSpec")
-            Tests.Group(name = test.name, tests = Seq(test), runPolicy = Tests.SubProcess(
-              ForkOptions().withRunJVMOptions(Vector("-Xmx200m"))
-            ))
-          else
-            Tests.Group(name = test.name, tests = Seq(test), runPolicy = Tests.SubProcess(ForkOptions()))
-        }
-      }
-    )
-    .dependsOn(`quill-monix` % "compile->compile;test->test")
-    .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
-    .dependsOn(`quill-jdbc` % "compile->compile;test->test")
     .enablePlugins(MimaPlugin)
 
 lazy val `quill-zio` =
@@ -455,252 +314,6 @@ lazy val `quill-jdbc-zio` =
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
     .dependsOn(`quill-jdbc` % "compile->compile;test->test")
     .enablePlugins(MimaPlugin)
-
-
-
-lazy val `quill-ndbc-monix` =
-  (project in file("quill-ndbc-monix"))
-    .settings(commonSettings: _*)
-    .settings(mimaSettings: _*)
-    .settings(
-      Test / fork := true,
-      libraryDependencies ++= Seq(
-      )
-    )
-    .dependsOn(`quill-monix` % "compile->compile;test->test")
-    .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
-    .dependsOn(`quill-ndbc` % "compile->compile;test->test")
-    .dependsOn(`quill-ndbc-postgres` % "compile->compile;test->test")
-    .enablePlugins(MimaPlugin)
-
-lazy val `quill-spark` =
-  (project in file("quill-spark"))
-    .settings(commonNoLogSettings: _*)
-    .settings(mimaSettings: _*)
-    .settings(
-      Test / fork := true,
-      libraryDependencies ++= Seq(
-        "org.apache.spark" %% "spark-sql" % "2.4.4"
-      ),
-      excludeDependencies ++= Seq(
-        "ch.qos.logback"  % "logback-classic"
-      )
-    )
-    .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
-    .enablePlugins(MimaPlugin)
-
-lazy val `quill-finagle-mysql` =
-  (project in file("quill-finagle-mysql"))
-    .settings(commonSettings: _*)
-    .settings(mimaSettings: _*)
-    .settings(
-      Test / fork := true,
-      libraryDependencies ++= Seq(
-        if (scalaVersion.value.startsWith("2.11"))
-          "com.twitter" % "finagle-mysql_2.11" % "21.2.0"
-        else
-          "com.twitter" %% "finagle-mysql" % "21.9.0"
-      )
-    )
-    .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
-    .enablePlugins(MimaPlugin)
-
-lazy val `quill-finagle-postgres` =
-  (project in file("quill-finagle-postgres"))
-    .settings(commonSettings: _*)
-    .settings(mimaSettings: _*)
-    .settings(
-      Test / fork := true,
-      libraryDependencies ++= Seq(
-        "io.github.finagle" %% "finagle-postgres" % "0.12.0"
-      )
-    )
-    .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
-    .enablePlugins(MimaPlugin)
-
-lazy val `quill-async` =
-  (project in file("quill-async"))
-    .settings(commonSettings: _*)
-    .settings(mimaSettings: _*)
-    .settings(
-      Test / fork := true,
-      libraryDependencies ++= Seq(
-        "com.github.postgresql-async" %% "db-async-common"  % "0.3.0"
-      )
-    )
-    .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
-    .enablePlugins(MimaPlugin)
-
-lazy val `quill-async-mysql` =
-  (project in file("quill-async-mysql"))
-    .settings(commonSettings: _*)
-    .settings(mimaSettings: _*)
-    .settings(
-      Test / fork := true,
-      libraryDependencies ++= Seq(
-        "com.github.postgresql-async" %% "mysql-async"      % "0.3.0"
-      )
-    )
-    .dependsOn(`quill-async` % "compile->compile;test->test")
-    .enablePlugins(MimaPlugin)
-
-lazy val `quill-async-postgres` =
-  (project in file("quill-async-postgres"))
-    .settings(commonSettings: _*)
-    .settings(mimaSettings: _*)
-    .settings(
-      Test / fork := true,
-      libraryDependencies ++= Seq(
-        "com.github.postgresql-async" %% "postgresql-async" % "0.3.0"
-      )
-    )
-    .dependsOn(`quill-async` % "compile->compile;test->test")
-    .enablePlugins(MimaPlugin)
-
-lazy val `quill-jasync` =
-  (project in file("quill-jasync"))
-    .settings(commonSettings: _*)
-    .settings(mimaSettings: _*)
-    .settings(
-      Test / fork := true,
-      libraryDependencies ++= Seq(
-        "com.github.jasync-sql" % "jasync-common" % "1.1.4",
-        "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.1"
-      )
-    )
-    .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
-    .enablePlugins(MimaPlugin)
-
-lazy val `quill-jasync-postgres` =
-  (project in file("quill-jasync-postgres"))
-    .settings(commonSettings: _*)
-    .settings(mimaSettings: _*)
-    .settings(
-      Test / fork := true,
-      libraryDependencies ++= Seq(
-        "com.github.jasync-sql" % "jasync-postgresql" % "1.1.4"
-      )
-    )
-    .dependsOn(`quill-jasync` % "compile->compile;test->test")
-    .enablePlugins(MimaPlugin)
-
-lazy val `quill-jasync-mysql` =
-  (project in file("quill-jasync-mysql"))
-    .settings(commonSettings: _*)
-    .settings(mimaSettings: _*)
-    .settings(
-      Test / fork := true,
-      libraryDependencies ++= Seq(
-        "com.github.jasync-sql" % "jasync-mysql" % "1.1.4"
-      )
-    )
-    .dependsOn(`quill-jasync` % "compile->compile;test->test")
-    .enablePlugins(MimaPlugin)
-
-lazy val `quill-ndbc` =
-  (project in file("quill-ndbc"))
-    .settings(commonSettings: _*)
-    .settings(mimaSettings: _*)
-    .settings(
-      Test / fork := true,
-      libraryDependencies ++= Seq(
-        "io.trane" % "future-scala" % "0.3.2",
-        "io.trane" % "ndbc-core" % "0.1.3"
-      )
-    )
-    .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
-    .enablePlugins(MimaPlugin)
-
-lazy val `quill-ndbc-postgres` =
-  (project in file("quill-ndbc-postgres"))
-    .settings(commonSettings: _*)
-    .settings(mimaSettings: _*)
-    .settings(
-      Test / fork := true,
-      libraryDependencies ++= Seq(
-        "io.trane" % "future-scala" % "0.3.2",
-        "io.trane" % "ndbc-postgres-netty4" % "0.1.3"
-      )
-    )
-    .dependsOn(`quill-ndbc` % "compile->compile;test->test")
-    .enablePlugins(MimaPlugin)
-
-lazy val `quill-cassandra` =
-  (project in file("quill-cassandra"))
-    .settings(commonSettings: _*)
-    .settings(mimaSettings: _*)
-    .settings(
-      Test / fork := true,
-      libraryDependencies ++= Seq(
-        "com.datastax.oss" % "java-driver-core" % "4.13.0",
-        "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.1"
-      )
-    )
-    .dependsOn(`quill-core-jvm` % "compile->compile;test->test")
-    .enablePlugins(MimaPlugin)
-
-lazy val `quill-cassandra-monix` =
-  (project in file("quill-cassandra-monix"))
-    .settings(commonSettings: _*)
-    .settings(mimaSettings: _*)
-    .settings(
-      Test / fork := true
-    )
-    .dependsOn(`quill-cassandra` % "compile->compile;test->test")
-    .dependsOn(`quill-monix` % "compile->compile;test->test")
-    .enablePlugins(MimaPlugin)
-
-lazy val `quill-cassandra-zio` =
-  (project in file("quill-cassandra-zio"))
-    .settings(commonSettings: _*)
-    .settings(mimaSettings: _*)
-    .settings(
-      Test / fork := true,
-      libraryDependencies ++= Seq(
-        "dev.zio" %% "zio" % "1.0.13",
-        "dev.zio" %% "zio-streams" % "1.0.13",
-        "dev.zio" %% "zio-interop-guava" % "31.0.0.0"
-      )
-    )
-    .dependsOn(`quill-cassandra` % "compile->compile;test->test")
-    .dependsOn(`quill-zio` % "compile->compile;test->test")
-    .enablePlugins(MimaPlugin)
-
-
-lazy val `quill-cassandra-lagom` =
-   (project in file("quill-cassandra-lagom"))
-    .settings(commonSettings: _*)
-    .settings(mimaSettings: _*)
-    .settings(
-      Test / fork := true,
-      libraryDependencies ++= {
-        val lagomVersion = if (scalaVersion.value.startsWith("2.13")) "1.6.5" else "1.5.5"
-        val versionSpecificDependencies =  if (scalaVersion.value.startsWith("2.13")) Seq("com.typesafe.play" %% "play-akka-http-server" % "2.8.8") else Seq.empty
-        Seq(
-          "org.scala-lang.modules" %% "scala-collection-compat" % "2.4.4",
-          "com.lightbend.lagom" %% "lagom-scaladsl-persistence-cassandra" % lagomVersion % Provided,
-          "com.lightbend.lagom" %% "lagom-scaladsl-testkit" % lagomVersion % Test,
-          "com.datastax.cassandra" %  "cassandra-driver-core" % "3.7.2",
-          // lagom uses datastax 3.x driver - not compatible with 4.x in API level
-          "io.getquill" %% "quill-cassandra" % "3.10.0" % "compile->compile"
-        ) ++ versionSpecificDependencies
-      }
-    )
-    .enablePlugins(MimaPlugin)
-
-
-lazy val `quill-orientdb` =
-  (project in file("quill-orientdb"))
-      .settings(commonSettings: _*)
-      .settings(mimaSettings: _*)
-      .settings(
-        Test / fork := true,
-        libraryDependencies ++= Seq(
-          "com.orientechnologies" % "orientdb-graphdb" % "3.0.39"
-        )
-      )
-      .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
-      .enablePlugins(MimaPlugin)
 
 lazy val mimaSettings = Seq(
   mimaPreviousArtifacts := {
