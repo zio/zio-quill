@@ -1,11 +1,12 @@
 package io.getquill.examples
 
-import com.zaxxer.hikari.HikariDataSource
 import io.getquill.context.ZioJdbc._
 import io.getquill.util.LoadConfig
-import io.getquill.{ JdbcContextConfig, Literal, PostgresZioJdbcContext }
+import io.getquill.{JdbcContextConfig, Literal, PostgresZioJdbcContext}
 import zio.console.putStrLn
-import zio.Runtime
+import zio.{Has, Runtime, TaskLayer}
+
+import java.io.Closeable
 
 object PlainAppDataSource {
 
@@ -14,9 +15,9 @@ object PlainAppDataSource {
 
   case class Person(name: String, age: Int)
 
-  def config = JdbcContextConfig(LoadConfig("testPostgresDB")).dataSource
+  def dataSource: javax.sql.DataSource with Closeable = JdbcContextConfig(LoadConfig("testPostgresDB")).dataSource
 
-  val zioDS = DataSourceLayer.fromDataSource(new HikariDataSource(config))
+  val zioDS: TaskLayer[Has[DataSource]] = DataSourceLayer.fromDataSource(dataSource)
 
   def main(args: Array[String]): Unit = {
     val people = quote {
