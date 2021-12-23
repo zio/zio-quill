@@ -4,12 +4,13 @@ import com.typesafe.config.Config
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 
+import java.io.Closeable
 import java.util.Properties
 import scala.util.control.NonFatal
 
-case class JdbcContextConfig(config: Config) {
+final case class JdbcContextConfig(config: Config) {
 
-  def configProperties = {
+  def configProperties: Properties = {
     import scala.jdk.CollectionConverters._
     val p = new Properties
     for (entry <- config.entrySet.asScala)
@@ -17,7 +18,7 @@ case class JdbcContextConfig(config: Config) {
     p
   }
 
-  def dataSource =
+  def dataSource: javax.sql.DataSource with Closeable =
     try
       new HikariDataSource(new HikariConfig(configProperties))
     catch {

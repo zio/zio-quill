@@ -93,10 +93,8 @@ class CassandraZioContext[N <: NamingStrategy](val naming: N)
         })
     }
 
-  val streamBlocker: ZStream[Any, Nothing, Any] =
-    ZStream.managed(
-      ZManaged.lock(Blocking.Service.live.blockingExecutor)
-    )
+  private[getquill] def blockingStream[R, E, A](stream: ZStream[R, E, A]): ZStream[R, E, A] =
+    stream.lock(Blocking.Service.live.blockingExecutor)
 
   def streamQuery[T](fetchSize: Option[Int], cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner) = {
     val stream =
@@ -116,7 +114,7 @@ class CassandraZioContext[N <: NamingStrategy](val naming: N)
       } yield extractor(row, csession)
 
     // Run the entire chunking flow on the blocking executor
-    streamBlocker *> stream
+    blockingStream(stream)
   }
 
   private[getquill] def simpleBlocking[R, E, A](zio: ZIO[R, E, A]): ZIO[R, E, A] =

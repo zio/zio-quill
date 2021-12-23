@@ -74,7 +74,7 @@ abstract class ZioJdbcUnderlyingContext[Dialect <: SqlIdiom, Naming <: NamingStr
       conn = blockingConn.get[Connection]
       autoCommitPrev = conn.getAutoCommit
       r <- sqlEffect(conn).bracket(conn => UIO(conn.setAutoCommit(autoCommitPrev))) { conn =>
-        sqlEffect(conn.setAutoCommit(false)).flatMap(_ => f)
+        sqlEffect(conn.setAutoCommit(false)) *> f
       }.refineToOrDie[E]
     } yield r
   }
@@ -84,7 +84,7 @@ abstract class ZioJdbcUnderlyingContext[Dialect <: SqlIdiom, Naming <: NamingStr
       blockingConn <- ZStream.environment[Has[Connection]]
       conn = blockingConn.get[Connection]
       autoCommitPrev = conn.getAutoCommit
-      r <- ZStream.bracket(Task(conn.setAutoCommit(false)))(_ => UIO(conn.setAutoCommit(autoCommitPrev))).flatMap(_ => f)
+      r <- ZStream.bracket(Task(conn.setAutoCommit(false)))(_ => UIO(conn.setAutoCommit(autoCommitPrev))) *> f
     } yield r
   }
 
@@ -167,7 +167,7 @@ abstract class ZioJdbcUnderlyingContext[Dialect <: SqlIdiom, Naming <: NamingStr
 
     val typedStream = outStream.provideSome((bc: Has[Connection]) => bc.get[Connection])
     // Run the chunked fetch on the blocking pool
-    streamBlocker *> streamWithoutAutoCommit(typedStream).refineToOrDie[SQLException]
+    blockingStream(streamWithoutAutoCommit(typedStream).refineToOrDie[SQLException])
   }
 
   override private[getquill] def prepareParams(statement: String, prepare: Prepare): QCIO[Seq[String]] = {

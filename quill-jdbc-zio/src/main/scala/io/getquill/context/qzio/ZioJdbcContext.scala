@@ -7,10 +7,9 @@ import io.getquill.context.{ ExecutionInfo, PrepareContext, ProtoContext, Stream
 import io.getquill.{ NamingStrategy, ReturnAction }
 import zio.Exit.{ Failure, Success }
 import zio.stream.ZStream
-import zio.{ FiberRef, Has, Runtime, UIO, ZIO, ZManaged }
+import zio.{ FiberRef, Has, Runtime, Task, ZIO, ZManaged }
 
 import java.sql.{ Array => _, _ }
-import javax.sql.DataSource
 import scala.util.Try
 
 /**
@@ -142,30 +141,29 @@ abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] ext
       // We can just return the op in the case that there is already a connection set on the fiber ref
       // because the op is execute___ which will lookup the connection from the fiber ref via onConnection/onConnectionStream
       // This will typically happen for nested transactions e.g. transaction(transaction(a *> b) *> c)
-      case Some(connection) => op
+      case Some(_) => op
       case None =>
-        val connection = for {
-          env <- ZIO.service[DataSource].toManaged_
-          connection <- managedBestEffort(blockingEffect(env.getConnection))
-          // Get the current value of auto-commit
-          prevAutoCommit <- blockingEffect(connection.getAutoCommit).toManaged_
-          // Disable auto-commit since we need to be able to roll back. Once everything is done, set it
-          // to whatever the previous value was.
-          _ <- ZManaged.make(blockingEffect(connection.setAutoCommit(false))) { _ =>
-            blockingEffect(connection.setAutoCommit(prevAutoCommit)).orDie
-          }
-          _ <- ZManaged.make(currentConnection.set(Some(connection))) { _ =>
-            // Note. We are failing the fiber if auto-commit reset fails. For some circumstances this may be too aggresive.
-            // If the connection pool e.g. Hikari resets this property for a recycled connection anyway doing it here
-            // might not be necessary
-            currentConnection.set(None)
-          }
-          // Once the `use` of this outer-ZManaged is done, rollback the connection if needed
-          _ <- ZManaged.finalizerExit {
-            case Success(_)     => withBlocking(UIO(connection.commit()))
-            case Failure(cause) => withBlocking(UIO(connection.rollback()))
-          }
-        } yield ()
+        val connection =
+          for {
+            env <- ZManaged.service[DataSource]
+            connection <- managedBestEffort(Task(env.getConnection))
+            // Get the current value of auto-commit
+            prevAutoCommit <- Task(connection.getAutoCommit).toManaged_
+            // Disable auto-commit since we need to be able to roll back. Once everything is done, set it
+            // to whatever the previous value was.
+            _ <- ZManaged.make(Task(connection.setAutoCommit(false))) { _ => Task(connection.setAutoCommit(prevAutoCommit)).orDie }
+            _ <- ZManaged.make(currentConnection.set(Some(connection))) { _ =>
+              // Note. We are failing the fiber if auto-commit reset fails. For some circumstances this may be too aggressive.
+              // If the connection pool e.g. Hikari resets this property for a recycled connection anyway doing it here
+              // might not be necessary
+              currentConnection.set(None)
+            }
+            // Once the `use` of this outer-ZManaged is done, rollback the connection if needed
+            _ <- ZManaged.finalizerExit {
+              case Success(_) => Task(connection.commit()).orDie
+              case Failure(_) => Task(connection.rollback()).orDie
+            }
+          } yield ()
 
         connection.use_(op)
     })
@@ -180,10 +178,10 @@ abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] ext
     }
 
   private def onConnectionStream[T](qstream: ZStream[Has[Connection], SQLException, T]): ZStream[Has[DataSource], SQLException, T] =
-    streamBlocker *> ZStream.fromEffect(currentConnection.get).flatMap {
+    ZStream.fromEffect(currentConnection.get).flatMap {
       case Some(connection) =>
-        qstream.provide(Has(connection))
+        blockingStream(qstream.provide(Has(connection)))
       case None =>
-        qstream.provideLayer(DataSourceLayer.live).refineToOrDie[SQLException]
+        blockingStream(qstream.provideLayer(DataSourceLayer.live).refineToOrDie[SQLException])
     }
 }

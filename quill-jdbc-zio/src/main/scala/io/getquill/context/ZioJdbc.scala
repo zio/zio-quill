@@ -2,17 +2,18 @@ package io.getquill.context
 
 import com.typesafe.config.Config
 import io.getquill.JdbcContextConfig
-import zio.{ Has, Task, ZIO, ZLayer, ZManaged }
-import zio.stream.ZStream
 import io.getquill.util.{ ContextLogger, LoadConfig }
 import izumi.reflect.Tag
 import zio.blocking.Blocking
+import zio.stream.ZStream
+import zio.{ Has, Task, ZIO, ZLayer, ZManaged }
 
 import java.io.Closeable
 import java.sql.{ Connection, SQLException }
-import javax.sql.DataSource
 
 object ZioJdbc {
+  type DataSource = javax.sql.DataSource with Closeable
+
   type QIO[T] = ZIO[Has[DataSource], SQLException, T]
   type QStream[T] = ZStream[Has[DataSource], SQLException, T]
 
@@ -27,25 +28,19 @@ object ZioJdbc {
     def apply[T](t: => T): QCIO[T] = ZIO.effect(t).refineToOrDie[SQLException]
   }
 
-  implicit class DataSourceLayerExt(layer: ZLayer[Any, Throwable, Has[DataSource with Closeable]]) {
-    def widen: ZLayer[Any, Throwable, Has[DataSource]] = layer.map(ds => Has(ds.get[DataSource with Closeable]: DataSource))
-  }
-
   object DataSourceLayer {
     def live: ZLayer[Has[DataSource], SQLException, Has[Connection]] = layer
 
-    private[getquill] val layer = {
-      val managed =
+    private[getquill] val layer =
+      (
         for {
-          blockingExecutor <- ZIO.succeed(zio.blocking.Blocking.Service.live.blockingExecutor).toManaged_
           from <- ZManaged.environment[Has[DataSource]]
-          r <- ZioJdbc.managedBestEffort(ZIO.effect(from.get.getConnection)).refineToOrDie[SQLException].lock(blockingExecutor)
-        } yield Has(r)
-      ZLayer.fromManagedMany(managed)
-    }
+          r <- ZioJdbc.managedBestEffort(blockingEffect(from.get.getConnection)).refineToOrDie[SQLException]
+        } yield r
+      ).toLayer
 
     def fromDataSource(ds: => DataSource): ZLayer[Any, Throwable, Has[DataSource]] =
-      ZLayer.fromEffect(Task(ds))
+      Task(ds).toLayer
 
     def fromConfig(config: => Config): ZLayer[Any, Throwable, Has[DataSource]] =
       fromJdbcConfig(JdbcContextConfig(config))
@@ -54,12 +49,12 @@ object ZioJdbc {
       fromJdbcConfig(JdbcContextConfig(LoadConfig(prefix)))
 
     def fromJdbcConfig(jdbcContextConfig: => JdbcContextConfig): ZLayer[Any, Throwable, Has[DataSource]] =
-      ZLayer.fromManagedMany(
+      (
         for {
           conf <- ZManaged.fromEffect(Task(jdbcContextConfig))
-          ds <- managedBestEffort(Task(conf.dataSource: DataSource with Closeable))
-        } yield Has(ds)
-      )
+          ds <- managedBestEffort(blockingEffect(conf.dataSource))
+        } yield ds
+      ).toLayer
 
     def fromConfigClosable(config: => Config): ZLayer[Any, Throwable, Has[DataSource with Closeable]] =
       fromJdbcConfigClosable(JdbcContextConfig(config))
@@ -169,20 +164,18 @@ object ZioJdbc {
    * release a stale connection) which will eventually cause other operations (i.e. future reads/writes) to fail
    * that have not occurred yet.
    */
-  private[getquill] def managedBestEffort[R, E, A <: AutoCloseable](effect: ZIO[R, E, A]) =
+  private[getquill] def managedBestEffort[R, E, A <: AutoCloseable](effect: ZIO[R, E, A]): ZManaged[R, E, A] =
     ZManaged.make(effect)(resource =>
       blockingEffect(resource.close()).tapError(e => ZIO.effect(logger.underlying.error(s"close() of resource failed", e)).ignore).ignore)
-
-  private[getquill] val streamBlocker: ZStream[Any, Nothing, Any] =
-    ZStream.managed(zio.blocking.blockingExecutor.toManaged_.flatMap { executor =>
-      ZManaged.lock(executor)
-    }).provideLayer(Blocking.live)
 
   private[getquill] def withBlocking[R, E, A](zio: ZIO[R, E, A]): ZIO[R, E, A] =
     Blocking.Service.live.blocking(zio)
 
   private[getquill] def blockingEffect[A](value: => A): Task[A] =
     Blocking.Service.live.blocking(Task(value))
+
+  private[getquill] def blockingStream[R, E, A](stream: ZStream[R, E, A]): ZStream[R, E, A] =
+    stream.lock(Blocking.Service.live.blockingExecutor)
 
   private[getquill] val logger = ContextLogger(ZioJdbc.getClass)
 }

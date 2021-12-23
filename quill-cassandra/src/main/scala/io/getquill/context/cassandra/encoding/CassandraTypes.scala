@@ -3,8 +3,8 @@ package io.getquill.context.cassandra.encoding
 import java.lang.{ Boolean => JBoolean, Byte => JByte, Double => JDouble, Float => JFloat, Integer => JInt, Long => JLong, Short => JShort }
 import java.math.{ BigDecimal => JBigDecimal }
 import java.nio.ByteBuffer
-import java.util.{ Date, UUID }
 import java.time.{ Instant, LocalDate }
+import java.util.UUID
 
 /**
  * `CassandraTypes` contains implicit markers for already supported types by Cassandra.

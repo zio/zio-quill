@@ -1,11 +1,11 @@
 package io.getquill.context.cassandra
 
-import java.util.{ Date, UUID }
 import io.getquill.NamingStrategy
 import io.getquill.context.Context
 import io.getquill.context.cassandra.encoding.{ CassandraMapper, Encodings }
 
 import java.time.{ Instant, LocalDate }
+import java.util.UUID
 import scala.reflect.ClassTag
 
 trait CassandraContext[N <: NamingStrategy]
