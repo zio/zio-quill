@@ -11,7 +11,7 @@ object ZioAppManual extends App {
   object MyPostgresContext extends PostgresZioJdbcContext(Literal)
   import MyPostgresContext._
 
-  case class Person(name: String, age: Int)
+  final case class Person(name: String, age: Int)
   lazy val ds: DataSource = JdbcContextConfig(LoadConfig("testPostgresDB")).dataSource
 
   override def run(args: List[String]): URIO[zio.ZEnv, ExitCode] = {
