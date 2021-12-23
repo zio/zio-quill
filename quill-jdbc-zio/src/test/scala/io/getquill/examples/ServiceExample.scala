@@ -1,12 +1,11 @@
 package io.getquill.examples
 
-import io.getquill.context.ZioJdbc.DataSourceLayer
-import io.getquill.{ Literal, PostgresZioJdbcContext }
-import zio.{ App, ExitCode, Has, URIO, ZIO, ZLayer }
+import io.getquill.context.ZioJdbc.{DataSource, DataSourceLayer}
+import io.getquill.{Literal, PostgresZioJdbcContext}
+import zio.{App, ExitCode, Has, URIO, ZIO, ZLayer}
 import zio.console._
 
 import java.sql.SQLException
-import javax.sql.DataSource
 
 object ServiceExample extends App {
   import DBModel._
