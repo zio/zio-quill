@@ -10,7 +10,7 @@ object StringUtil {
     }
   }
 
-  implicit class StringExtensions(str: String) {
+  implicit final class StringExtensions(private val str: String) extends AnyVal {
     def snakeToUpperCamel: String = str.split("_").map(_.toLowerCase).map(_.capitalize).mkString
     def snakeToLowerCamel = str.split("_").map(_.toLowerCase).map(_.capitalize).mkString.uncapitalize
     def lowerCamelToSnake: String = str.split("(?=[A-Z])").mkString("_").toLowerCase
@@ -28,7 +28,7 @@ object StringUtil {
       seq.map(_.toLowerCase).toSeq.contains(str.toLowerCase)
   }
 
-  implicit class OptionStringExtensions(str: Option[String]) {
+  implicit final class OptionStringExtensions(private val str: Option[String]) extends AnyVal {
     def existsInSetNocase(seq: String*): Boolean =
       str.map(_.toLowerCase).exists(value => seq.map(_.toLowerCase).toSeq.contains(value))
   }
