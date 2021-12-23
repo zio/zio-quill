@@ -1,22 +1,21 @@
 package io.getquill
 
+import io.getquill.context.ZioJdbc.DataSource
 import io.getquill.util.LoadConfig
 import org.scalatest.BeforeAndAfterAll
-import zio.{ Has, Runtime, ZIO }
-import zio.stream.{ Sink, ZStream }
+import zio.stream.{Sink, ZStream}
+import zio.{Has, Runtime, ZIO}
 
-import java.io.Closeable
 import java.sql.Connection
-import javax.sql.DataSource
 
 case class Prefix(name: String)
 
 trait ZioSpec extends Spec with BeforeAndAfterAll {
   def prefix: Prefix
 
-  var pool: DataSource with Closeable = _
+  var pool: DataSource = _
 
-  override def beforeAll = {
+  override def beforeAll: Unit = {
     super.beforeAll()
     pool = JdbcContextConfig(LoadConfig(prefix.name)).dataSource
   }
@@ -38,14 +37,14 @@ trait ZioSpec extends Spec with BeforeAndAfterAll {
     Runtime.default.unsafeRun(qzio.provide(Has(pool)))
 
   implicit class ZioAnyOps[T](qzio: ZIO[Any, Throwable, T]) {
-    def runSyncUnsafe() = Runtime.default.unsafeRun(qzio)
+    def runSyncUnsafe(): T = Runtime.default.unsafeRun(qzio)
   }
 
   implicit class ZStreamTestExt[T](stream: ZStream[Has[DataSource], Throwable, T]) {
-    def runSyncUnsafe() = collect[T](stream)
+    def runSyncUnsafe(): List[Any] = collect[T](stream)
   }
 
   implicit class ZioTestExt[T](qzio: ZIO[Has[DataSource], Throwable, T]) {
-    def runSyncUnsafe() = collect[T](qzio)
+    def runSyncUnsafe(): T = collect[T](qzio)
   }
 }
