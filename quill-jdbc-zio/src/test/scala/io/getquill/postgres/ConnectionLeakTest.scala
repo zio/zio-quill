@@ -1,12 +1,14 @@
 package io.getquill.postgres
 
+import com.zaxxer.hikari.HikariDataSource
+
 import java.util.UUID
-import io.getquill.{ JdbcContextConfig, Literal, PostgresZioJdbcContext, ZioSpec }
+import io.getquill.{JdbcContextConfig, Literal, PostgresZioJdbcContext, ZioSpec}
 import io.getquill.context.sql.ProductSpec
 import io.getquill.Prefix
 import io.getquill.util.LoadConfig
 import io.getquill.context.ZioJdbc._
-import zio.{ Has, Runtime }
+import zio.{Has, Runtime}
 
 import scala.util.Random
 
@@ -47,7 +49,7 @@ class ConnectionLeakTest extends ProductSpec with ZioSpec {
     Thread.sleep(2000)
 
     result mustEqual Option(1)
-    dataSource.getHikariPoolMXBean.getActiveConnections mustEqual 0
+    dataSource.asInstanceOf[HikariDataSource].getHikariPoolMXBean.getActiveConnections mustEqual 0
 
     context.close()
   }

@@ -1,9 +1,10 @@
 package io.getquill.postgres
 
-import java.util.UUID
+import com.zaxxer.hikari.HikariDataSource
 
+import java.util.UUID
 import io.getquill.context.monix.MonixJdbcContext.EffectWrapper
-import io.getquill.{ JdbcContextConfig, Literal, PostgresMonixJdbcContext }
+import io.getquill.{JdbcContextConfig, Literal, PostgresMonixJdbcContext}
 import io.getquill.context.sql.ProductSpec
 import io.getquill.util.LoadConfig
 import monix.execution.Scheduler
@@ -46,7 +47,7 @@ class ConnectionLeakTest extends ProductSpec {
     Thread.sleep(2000)
 
     result mustEqual Option(1)
-    dataSource.getHikariPoolMXBean.getActiveConnections mustEqual 0
+    dataSource.asInstanceOf[HikariDataSource].getHikariPoolMXBean.getActiveConnections mustEqual 0
 
     context.close()
   }

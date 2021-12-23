@@ -2,11 +2,8 @@ package io.getquill.postgres
 
 import io.getquill.PeopleZioSpec
 import io.getquill.Prefix
-import org.scalatest.matchers.should.Matchers._
 import zio.{ Has, ZIO, ZLayer }
 import io.getquill.context.ZioJdbc._
-
-import javax.sql.DataSource
 
 class OnDataSourceSpec extends PeopleZioSpec {
 
@@ -16,7 +13,7 @@ class OnDataSourceSpec extends PeopleZioSpec {
 
   import testContext._
 
-  override def beforeAll = {
+  override def beforeAll: Unit = {
     super.beforeAll()
     testContext.transaction {
       for {
