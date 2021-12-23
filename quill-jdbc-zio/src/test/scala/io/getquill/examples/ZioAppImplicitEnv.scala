@@ -7,7 +7,6 @@ import io.getquill.util.LoadConfig
 import zio.console.putStrLn
 import zio.{App, ExitCode, Has, IO, URIO}
 
-import java.io.Closeable
 import java.sql.SQLException
 
 object ZioAppImplicitEnv extends App {
@@ -16,7 +15,7 @@ object ZioAppImplicitEnv extends App {
 
   final case class Person(name: String, age: Int)
 
-  def dataSource: DataSource with Closeable = JdbcContextConfig(LoadConfig("testPostgresDB")).dataSource
+  def dataSource: DataSource = JdbcContextConfig(LoadConfig("testPostgresDB")).dataSource
 
   final case class MyQueryService(ds: DataSource) {
     import Ctx._
@@ -32,6 +31,5 @@ object ZioAppImplicitEnv extends App {
       .joes
       .tap(result => putStrLn(result.toString))
       .exitCode
-  }20: Unused import
-  [warn] import zio.console.putStrLn
+  }
 }

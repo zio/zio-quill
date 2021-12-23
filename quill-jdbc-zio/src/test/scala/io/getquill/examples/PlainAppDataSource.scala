@@ -2,9 +2,9 @@ package io.getquill.examples
 
 import io.getquill.context.ZioJdbc._
 import io.getquill.util.LoadConfig
-import io.getquill.{JdbcContextConfig, Literal, PostgresZioJdbcContext}
+import io.getquill.{ JdbcContextConfig, Literal, PostgresZioJdbcContext }
 import zio.console.putStrLn
-import zio.{Has, Runtime, TaskLayer}
+import zio.{ Has, Runtime, TaskLayer }
 
 import java.io.Closeable
 

@@ -1,7 +1,7 @@
 package io.getquill
 
 import com.typesafe.config.Config
-import com.zaxxer.hikari.{HikariConfig, HikariDataSource}
+import com.zaxxer.hikari.{ HikariConfig, HikariDataSource }
 
 import java.io.Closeable
 import java.util.Properties
