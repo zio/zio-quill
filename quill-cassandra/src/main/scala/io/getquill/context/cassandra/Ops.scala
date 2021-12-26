@@ -1,6 +1,6 @@
 package io.getquill.context.cassandra
 
-import io.getquill.{ Query, Action, Delete, Insert, EntityQuery }
+import io.getquill.{ Action, Delete, EntityQuery, Insert, Query, Update }
 
 trait Ops {
   this: CassandraContext[_] =>
@@ -21,6 +21,11 @@ trait Ops {
   implicit class InsertOps[A <: Insert[_]](q: A)
     extends Options(q) {
     def ifNotExists = quote(infix"$q IF NOT EXISTS".as[A])
+  }
+
+  implicit class UpdateOps[A <: Update[_]](q: A)
+    extends Options(q) {
+    def ifExists = quote(infix"$q IF EXISTS".as[A])
   }
 
   implicit class DeleteOps[A <: Delete[_]](q: A)
