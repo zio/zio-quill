@@ -34,14 +34,12 @@ val CodegenTag = Tags.Tag("CodegenTag")
 (Global / concurrentRestrictions) += Tags.limit(ScalaJSTags.Link, 1)
 
 lazy val jsModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
-  `quill-core-portable-js`, `quill-core-js`,
-  `quill-sql-portable-js`, `quill-sql-js`
+  `quill-engine-js`, `quill-core-js`, `quill-sql-js`
 )
 
 lazy val baseModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
-  `quill-core-portable-jvm`,
+  `quill-engine-jvm`,
   `quill-core-jvm`,
-  `quill-sql-portable-jvm`,
   `quill-sql-jvm`, `quill-monix`, `quill-zio`
 )
 
@@ -200,7 +198,7 @@ def pprintVersion(v: String) = {
   if(v.startsWith("2.11")) "0.5.4" else "0.5.9"
 }
 
-lazy val `quill-core-portable` =
+lazy val `quill-engine` =
   crossProject(JVMPlatform, JSPlatform).crossType(ultraPure)
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
@@ -210,7 +208,8 @@ lazy val `quill-core-portable` =
         "com.typesafe.scala-logging" %% "scala-logging" % "3.9.4",
         "org.scala-lang"             %  "scala-reflect" % scalaVersion.value,
         "com.twitter"                %% "chill"         % "0.10.0",
-        "io.suzaku"                  %% "boopickle"     % "1.3.1"
+        "io.suzaku"                  %% "boopickle"     % "1.3.1",
+        "com.github.vertical-blank"  %% "scala-sql-formatter" % "1.0.0"
       ),
       coverageExcludedPackages := "<empty>;.*AstPrinter;.*Using;io.getquill.Model;io.getquill.ScalarTag;io.getquill.QuotationTag"
     )
@@ -220,15 +219,16 @@ lazy val `quill-core-portable` =
         "org.scala-js" %%% "scalajs-java-time" % "0.2.5",
         "com.lihaoyi" %%% "pprint" % "0.5.4",
         "org.scala-js" %%% "scalajs-java-time" % "0.2.5",
-        "io.suzaku" %%% "boopickle" % "1.3.1"
+        "io.suzaku" %%% "boopickle" % "1.3.1",
+        "com.github.vertical-blank" %%% "scala-sql-formatter" % "1.0.0"
       ),
       coverageExcludedPackages := ".*",
       // 2.12 Build seems to take forever without this option
       Test / fastOptJS / scalaJSOptimizerOptions ~= { _.withDisableOptimizer(true) }
     ).enablePlugins(MimaPlugin)
 
-lazy val `quill-core-portable-jvm` = `quill-core-portable`.jvm
-lazy val `quill-core-portable-js` = `quill-core-portable`.js
+lazy val `quill-engine-jvm` = `quill-engine`.jvm
+lazy val `quill-engine-js` = `quill-engine`.js
 
 lazy val `quill-core` =
   crossProject(JVMPlatform, JSPlatform).crossType(superPure)
@@ -254,36 +254,12 @@ lazy val `quill-core` =
       // 2.12 Build seems to take forever without this option
       Test / fastOptJS / scalaJSOptimizerOptions ~= { _.withDisableOptimizer(true) }
     )
-    .dependsOn(`quill-core-portable` % "compile->compile")
+    .dependsOn(`quill-engine` % "compile->compile")
     .enablePlugins(MimaPlugin)
 
 // dependsOn in these clauses technically not needed however, intellij does not work properly without them
-lazy val `quill-core-jvm` = `quill-core`.jvm.dependsOn(`quill-core-portable-jvm` % "compile->compile")
-lazy val `quill-core-js` = `quill-core`.js.dependsOn(`quill-core-portable-js` % "compile->compile")
-
-lazy val `quill-sql-portable` =
-  crossProject(JVMPlatform, JSPlatform).crossType(ultraPure)
-    .settings(commonSettings: _*)
-    .settings(mimaSettings: _*)
-    .settings(libraryDependencies ++= Seq(
-      "com.github.vertical-blank"  %% "scala-sql-formatter" % "1.0.0"
-    ))
-    .jsSettings(
-      libraryDependencies ++= Seq(
-        "com.github.vertical-blank" %%% "scala-sql-formatter" % "1.0.0"
-      ),
-      scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) },
-      coverageExcludedPackages := ".*",
-      // 2.12 Build seems to take forever without this option
-      Test / fastOptJS / scalaJSOptimizerOptions ~= { _.withDisableOptimizer(true) }
-      //jsEnv := NodeJSEnv(args = Seq("--max_old_space_size=1024")).value
-    )
-    .dependsOn(`quill-core-portable` % "compile->compile")
-    .enablePlugins(MimaPlugin)
-
-lazy val `quill-sql-portable-jvm` = `quill-sql-portable`.jvm
-lazy val `quill-sql-portable-js` = `quill-sql-portable`.js
-
+lazy val `quill-core-jvm` = `quill-core`.jvm.dependsOn(`quill-engine-jvm` % "compile->compile")
+lazy val `quill-core-js` = `quill-core`.js.dependsOn(`quill-engine-js` % "compile->compile")
 
 lazy val `quill-sql` =
   crossProject(JVMPlatform, JSPlatform).crossType(ultraPure)
@@ -302,7 +278,7 @@ lazy val `quill-sql` =
       Test / fastOptJS / scalaJSOptimizerOptions ~= { _.withDisableOptimizer(true) }
     )
     .dependsOn(
-      `quill-sql-portable` % "compile->compile",
+      `quill-engine` % "compile->compile",
       `quill-core` % "compile->compile;test->test"
     )
     .enablePlugins(MimaPlugin)
