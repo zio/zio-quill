@@ -11,8 +11,8 @@ object Implicits {
   implicit class AstOpsExt(body: Ast) {
     def +||+(other: Ast) = BinaryOperation(body, BooleanOperator.`||`, other)
     def +&&+(other: Ast) = BinaryOperation(body, BooleanOperator.`&&`, other)
-    def +==+(other: Ast) = BinaryOperation(body, EqualityOperator.`==`, other)
-    def +!=+(other: Ast) = BinaryOperation(body, EqualityOperator.`!=`, other)
+    def +==+(other: Ast) = BinaryOperation(body, EqualityOperator.`_==`, other)
+    def +!=+(other: Ast) = BinaryOperation(body, EqualityOperator.`_!=`, other)
   }
 }
 
@@ -37,7 +37,7 @@ object +&&+ {
 object +==+ {
   def unapply(a: Ast): Option[(Ast, Ast)] = {
     a match {
-      case BinaryOperation(one, EqualityOperator.`==`, two) => Some((one, two))
+      case BinaryOperation(one, EqualityOperator.`_==`, two) => Some((one, two))
       case _ => None
     }
   }
@@ -46,29 +46,29 @@ object +==+ {
 object +!=+ {
   def unapply(a: Ast): Option[(Ast, Ast)] = {
     a match {
-      case BinaryOperation(one, EqualityOperator.`!=`, two) => Some((one, two))
+      case BinaryOperation(one, EqualityOperator.`_!=`, two) => Some((one, two))
       case _ => None
     }
   }
 }
 
 object IsNotNullCheck {
-  def apply(ast: Ast) = BinaryOperation(ast, EqualityOperator.`!=`, NullValue)
+  def apply(ast: Ast) = BinaryOperation(ast, EqualityOperator.`_!=`, NullValue)
 
   def unapply(ast: Ast): Option[Ast] = {
     ast match {
-      case BinaryOperation(cond, EqualityOperator.`!=`, NullValue) => Some(cond)
+      case BinaryOperation(cond, EqualityOperator.`_!=`, NullValue) => Some(cond)
       case _ => None
     }
   }
 }
 
 object IsNullCheck {
-  def apply(ast: Ast) = BinaryOperation(ast, EqualityOperator.`==`, NullValue)
+  def apply(ast: Ast) = BinaryOperation(ast, EqualityOperator.`_==`, NullValue)
 
   def unapply(ast: Ast): Option[Ast] = {
     ast match {
-      case BinaryOperation(cond, EqualityOperator.`==`, NullValue) => Some(cond)
+      case BinaryOperation(cond, EqualityOperator.`_==`, NullValue) => Some(cond)
       case _ => None
     }
   }

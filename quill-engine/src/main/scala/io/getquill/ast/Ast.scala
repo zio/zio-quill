@@ -84,8 +84,8 @@ object BottomTypedTerminal {
  * to `T_PERSON` or `Person`.
  */
 final class Entity(val name: String, val properties: List[PropertyAlias])(theQuat: => Quat.Product)(val renameable: Renameable) extends Query {
-  private lazy val computedQuat = theQuat
-  def quat = computedQuat
+  private lazy val computedQuat: Quat.Product = theQuat
+  def quat: Quat.Product = computedQuat
   def bestQuat: Quat = quat
 
   private def id = Entity.Id(name, properties)
@@ -535,7 +535,7 @@ case class BinaryOperation(a: Ast, operator: BinaryOperator, b: Ast) extends Ope
   import SetOperator.`contains`
 
   def quat = operator match {
-    case EqualityOperator.`==` | EqualityOperator.`!=`
+    case EqualityOperator.`_==` | EqualityOperator.`_!=`
       | `&&` | `||`
       | `>` | `>=` | `<` | `<=`
       | `startsWith`
@@ -567,7 +567,7 @@ final class Constant(val v: Any)(theQuat: => Quat) extends Value {
     }
 }
 
-final object Constant {
+object Constant {
   private case class Id(v: Any)
 
   def apply(v: Any, quat: => Quat): Constant = new Constant(v)(quat)

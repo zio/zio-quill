@@ -45,7 +45,7 @@ object VendorizeBooleans extends StatelessTransformer {
 
     def unapply(op: BinaryOperator) =
       op match {
-        case `<` | `>` | `<=` | `>=` | EqualityOperator.`==` | EqualityOperator.`!=` => Some(op)
+        case `<` | `>` | `<=` | `>=` | EqualityOperator.`_==` | EqualityOperator.`_!=` => Some(op)
         case _ => None
       }
   }
