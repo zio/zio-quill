@@ -13,7 +13,7 @@ class ExpandDistinctSpec extends Spec { //hello
         qr1.map(e => e.i).distinct.nested
       }
       ExpandDistinct(q.ast).toString mustEqual
-        """querySchema("TestEntity").map(e => e.i).distinct.map(e => e.i).nested"""
+        """querySchema("TestEntity").map(e => (e.i)).distinct.map(e => e._1).nested"""
     }
     "aggregation" in {
       val q = quote {

@@ -20,11 +20,15 @@ import scala.language.{ higherKinds, implicitConversions }
 import scala.util.Try
 
 object NdbcContextBase {
-  trait ContextEffect[F[_], FutureExecutionContext_] extends context.ContextEffect[F] {
+  trait ContextEffect[F[_], FutureExecutionContext_] {
     final type Complete[T] = (Try[T] => Unit)
 
+    def wrap[T](t: => T): F[T]
+    def seq[A](f: List[F[A]]): F[List[A]]
+    def push[A, B](result: F[A])(f: A => B): F[B]
+
     final type FutureExecutionContext = FutureExecutionContext_
-    type DatasourceContext = Unit
+    type Runner = Unit
 
     def wrapAsync[T](f: Complete[T] => Unit): F[T]
 
@@ -49,7 +53,7 @@ trait NdbcContextBase[Idiom <: SqlIdiom, Naming <: NamingStrategy, P <: Prepared
   final override type PrepareRow = P
   final override type ResultRow = R
   override type Session = Unit
-  type DatasourceContext = Unit
+  type Runner = Unit
 
   protected implicit val resultEffect: NdbcContextBase.ContextEffect[Result, _]
   import resultEffect._
@@ -63,7 +67,7 @@ trait NdbcContextBase[Idiom <: SqlIdiom, Naming <: NamingStrategy, P <: Prepared
 
   protected def expandAction(sql: String, returningAction: ReturnAction) = sql
 
-  def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: (R, Session) => T = (r: R, s: Session) => r)(info: ExecutionInfo, dc: DatasourceContext): Result[List[T]] = {
+  def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: (R, Session) => T = (r: R, s: Session) => r)(info: ExecutionInfo, dc: Runner): Result[List[T]] = {
     withDataSourceFromFuture { ds =>
       val (params, ps) = prepare(createPreparedStatement(sql), ())
       logger.logQuery(sql, params)
@@ -74,10 +78,10 @@ trait NdbcContextBase[Idiom <: SqlIdiom, Naming <: NamingStrategy, P <: Prepared
     }
   }
 
-  def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: (R, Session) => T = (r: R, s: Session) => r)(info: ExecutionInfo, dc: DatasourceContext): Result[T] =
+  def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: (R, Session) => T = (r: R, s: Session) => r)(info: ExecutionInfo, dc: Runner): Result[T] =
     push(executeQuery(sql, prepare, extractor)(info, dc))(handleSingleResult)
 
-  def executeAction[T](sql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: DatasourceContext): Result[Long] = {
+  def executeAction(sql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: Runner): Result[Long] = {
     withDataSourceFromFuture { ds =>
       val (params, ps) = prepare(createPreparedStatement(sql), ())
       logger.logQuery(sql, params)
@@ -85,12 +89,12 @@ trait NdbcContextBase[Idiom <: SqlIdiom, Naming <: NamingStrategy, P <: Prepared
     }
   }
 
-  def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: (R, Session) => O, returningAction: ReturnAction)(info: ExecutionInfo, dc: DatasourceContext): Result[O] = {
+  def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: (R, Session) => O, returningAction: ReturnAction)(info: ExecutionInfo, dc: Runner): Result[O] = {
     val expanded = expandAction(sql, returningAction)
     executeQuerySingle(expanded, prepare, extractor)(info, dc)
   }
 
-  def executeBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: DatasourceContext): Result[List[Long]] =
+  def executeBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: Runner): Result[List[Long]] =
     push(
       traverse(groups) {
         case BatchGroup(sql, prepares) =>
@@ -106,7 +110,7 @@ trait NdbcContextBase[Idiom <: SqlIdiom, Naming <: NamingStrategy, P <: Prepared
   def probe(sql: String): Try[_] =
     Try(runBlocking(withDataSourceFromFuture(_.query(sql).toScala), Duration.Inf))
 
-  def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: (R, Session) => T)(info: ExecutionInfo, dc: DatasourceContext): Result[List[T]] =
+  def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: (R, Session) => T)(info: ExecutionInfo, dc: Runner): Result[List[T]] =
     push(
       traverse(groups) {
         case BatchGroupReturning(sql, column, prepare) =>

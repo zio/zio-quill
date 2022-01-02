@@ -130,13 +130,13 @@ class QuotationSpec extends Spec {
         val q = quote {
           qr1.filter(t => t.s == "s")
         }
-        quote(unquote(q)).ast mustEqual Filter(Entity("TestEntity", Nil, TestEntityQuat), Ident("t", TestEntityQuat), BinaryOperation(Property(Ident("t", TestEntityQuat), "s"), EqualityOperator.`==`, Constant.auto("s")))
+        quote(unquote(q)).ast mustEqual Filter(Entity("TestEntity", Nil, TestEntityQuat), Ident("t", TestEntityQuat), BinaryOperation(Property(Ident("t", TestEntityQuat), "s"), EqualityOperator.`_==`, Constant.auto("s")))
       }
       "withFilter" in {
         val q = quote {
           qr1.withFilter(t => t.s == "s")
         }
-        quote(unquote(q)).ast mustEqual Filter(Entity("TestEntity", Nil, TestEntityQuat), Ident("t"), BinaryOperation(Property(Ident("t"), "s"), EqualityOperator.`==`, Constant.auto("s")))
+        quote(unquote(q)).ast mustEqual Filter(Entity("TestEntity", Nil, TestEntityQuat), Ident("t"), BinaryOperation(Property(Ident("t"), "s"), EqualityOperator.`_==`, Constant.auto("s")))
       }
       "map" in {
         val q = quote {
@@ -315,7 +315,7 @@ class QuotationSpec extends Spec {
       "join" - {
 
         def tree(t: JoinType) =
-          Join(t, Entity("TestEntity", Nil, TestEntityQuat), Entity("TestEntity2", Nil, TestEntity2Quat), Ident("a"), Ident("b"), BinaryOperation(Property(Ident("a"), "s"), EqualityOperator.`==`, Property(Ident("b"), "s")))
+          Join(t, Entity("TestEntity", Nil, TestEntityQuat), Entity("TestEntity2", Nil, TestEntity2Quat), Ident("a"), Ident("b"), BinaryOperation(Property(Ident("a"), "s"), EqualityOperator.`_==`, Property(Ident("b"), "s")))
 
         "inner join" in {
           val q = quote {
@@ -574,19 +574,19 @@ class QuotationSpec extends Spec {
           val q = quote {
             (a: Int, b: Int) => a == b
           }
-          quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), EqualityOperator.`==`, Ident("b"))
+          quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), EqualityOperator.`_==`, Ident("b"))
         }
         "succeeds when different numerics are used Int/Long" in {
           val q = quote {
             (a: Int, b: Long) => a == b
           }
-          quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), EqualityOperator.`==`, Ident("b"))
+          quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), EqualityOperator.`_==`, Ident("b"))
         }
         "succeeds when different numerics are used Long/Int" in {
           val q = quote {
             (a: Long, b: Int) => a == b
           }
-          quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), EqualityOperator.`==`, Ident("b"))
+          quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), EqualityOperator.`_==`, Ident("b"))
         }
         "fails if the types don't match" in {
           """
@@ -697,19 +697,19 @@ class QuotationSpec extends Spec {
             val q = quote {
               (a: Int, b: Int) => a === b
             }
-            quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), EqualityOperator.`==`, Ident("b"))
+            quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), EqualityOperator.`_==`, Ident("b"))
           }
           "normal - string" in {
             val q = quote {
               (a: String, b: String) => a === b
             }
-            quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), EqualityOperator.`==`, Ident("b"))
+            quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), EqualityOperator.`_==`, Ident("b"))
           }
           "succeeds when different numerics are used Int/Long" in {
             val q = quote {
               (a: Int, b: Long) => a === b
             }
-            quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), EqualityOperator.`==`, Ident("b"))
+            quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), EqualityOperator.`_==`, Ident("b"))
           }
           "succeeds when Option/Option" in {
             val q = quote {
@@ -772,13 +772,13 @@ class QuotationSpec extends Spec {
           val q = quote {
             (a: Int, b: Int) => a.equals(b)
           }
-          quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), EqualityOperator.`==`, Ident("b"))
+          quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), EqualityOperator.`_==`, Ident("b"))
         }
         "==" in {
           val q = quote {
             (a: Int, b: Int) => a == b
           }
-          quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), EqualityOperator.`==`, Ident("b"))
+          quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), EqualityOperator.`_==`, Ident("b"))
         }
 
         case class Foo(id: Int)
@@ -790,19 +790,19 @@ class QuotationSpec extends Spec {
           val q = quote {
             (a: Foo, b: Foo with Foot) => a.equals(b)
           }
-          quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), EqualityOperator.`==`, Ident("b"))
+          quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), EqualityOperator.`_==`, Ident("b"))
         }
         "should succeed if left is subclass" in {
           val q = quote {
             (a: Foo with Foot, b: Foo) => a.equals(b)
           }
-          quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), EqualityOperator.`==`, Ident("b"))
+          quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), EqualityOperator.`_==`, Ident("b"))
         }
         "should succeed with refinements" in {
           val q = quote {
             (a: Foo with Foot, b: Foo with Foot) => a.equals(b)
           }
-          quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), EqualityOperator.`==`, Ident("b"))
+          quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), EqualityOperator.`_==`, Ident("b"))
         }
         "should fail if both are subclasses" in {
           "quote{ (a: Foo with Foot, b: Foo with Bart) => a.equals(b) }.ast.body" mustNot compile
@@ -816,19 +816,19 @@ class QuotationSpec extends Spec {
           val q = quote {
             (a: Int, b: Int) => a != b
           }
-          quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), EqualityOperator.`!=`, Ident("b"))
+          quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), EqualityOperator.`_!=`, Ident("b"))
         }
         "succeeds when different numerics are used Int/Long" in {
           val q = quote {
             (a: Int, b: Long) => a != b
           }
-          quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), EqualityOperator.`!=`, Ident("b"))
+          quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), EqualityOperator.`_!=`, Ident("b"))
         }
         "succeeds when different numerics are used Long/Int" in {
           val q = quote {
             (a: Long, b: Int) => a != b
           }
-          quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), EqualityOperator.`!=`, Ident("b"))
+          quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), EqualityOperator.`_!=`, Ident("b"))
         }
         "fails if the types don't match" in {
           """
@@ -932,13 +932,13 @@ class QuotationSpec extends Spec {
             val q = quote {
               (a: Int, b: Int) => a =!= b
             }
-            quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), EqualityOperator.`!=`, Ident("b"))
+            quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), EqualityOperator.`_!=`, Ident("b"))
           }
           "succeeds when different numerics are used Int/Long" in {
             val q = quote {
               (a: Int, b: Long) => a =!= b
             }
-            quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), EqualityOperator.`!=`, Ident("b"))
+            quote(unquote(q)).ast.body mustEqual BinaryOperation(Ident("a"), EqualityOperator.`_!=`, Ident("b"))
           }
           "succeeds when Option/Option" in {
             val q = quote {

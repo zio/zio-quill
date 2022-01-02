@@ -2,7 +2,7 @@ package io.getquill.postgres
 
 import java.util.UUID
 
-import io.getquill.context.monix.MonixJdbcContext.Runner
+import io.getquill.context.monix.MonixJdbcContext.EffectWrapper
 import io.getquill.{ JdbcContextConfig, Literal, PostgresMonixJdbcContext }
 import io.getquill.context.sql.ProductSpec
 import io.getquill.util.LoadConfig
@@ -16,7 +16,7 @@ class ConnectionLeakTest extends ProductSpec {
 
   val dataSource = JdbcContextConfig(LoadConfig("testPostgresLeakDB")).dataSource
 
-  val context = new PostgresMonixJdbcContext(Literal, dataSource, Runner.default)
+  val context = new PostgresMonixJdbcContext(Literal, dataSource, EffectWrapper.default)
   import context._
 
   override def beforeAll = {

@@ -1,6 +1,6 @@
 package io.getquill.context.cassandra
 
-import com.datastax.driver.core._
+import com.datastax.oss.driver.api.core.cql.{ BoundStatement, Row }
 import io.getquill.NamingStrategy
 import io.getquill.context.{ CassandraSession, ExecutionInfo, StandardContext, UdtValueLookup }
 import io.getquill.context.cassandra.encoding.{ CassandraTypes, Decoders, Encoders, UdtEncoding }
@@ -42,10 +42,10 @@ trait CassandraPrepareContext[N <: NamingStrategy] extends CassandraRowContext[N
     preparedRow
   }
 
-  def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningColumn: String)(info: ExecutionInfo, dc: DatasourceContext): Unit =
+  def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningColumn: String)(info: ExecutionInfo, dc: Runner): Unit =
     fail("Cassandra doesn't support `returning`.")
 
-  def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T])(info: ExecutionInfo, dc: DatasourceContext): Unit =
+  def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T])(info: ExecutionInfo, dc: Runner): Unit =
     fail("Cassandra doesn't support `returning`.")
 }
 
@@ -65,7 +65,7 @@ trait CassandraRowContext[N <: NamingStrategy]
 
   override type PrepareRow = BoundStatement
   override type ResultRow = Row
-  type DatasourceContext = Unit
+  type Runner = Unit
 
   // Usually this is io.getquill.context.CassandraSession so you can use udtValueOf but not always e.g. for Lagom it is different
   type Session <: UdtValueLookup

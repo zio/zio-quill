@@ -150,7 +150,7 @@ class SqlIdiomSpec extends Spec {
             qr1.map(i => i.i).distinct.map(x => x + 1)
           }
           testContext.run(q).string mustEqual
-            "SELECT i.i + 1 FROM (SELECT DISTINCT i.i FROM TestEntity i) AS i"
+            "SELECT i._1 + 1 FROM (SELECT DISTINCT i.i AS _1 FROM TestEntity i) AS i"
         }
 
         "with join + filter" in {
@@ -161,7 +161,7 @@ class SqlIdiomSpec extends Spec {
             } yield (v1, v2)
           }
           testContext.run(q).string mustEqual
-            "SELECT i.i, x1.s, x1.i, x1.l, x1.o FROM (SELECT DISTINCT i.i FROM TestEntity i) AS i, TestEntity2 x1 WHERE x1.i = i.i"
+            "SELECT i._1, x1.s, x1.i, x1.l, x1.o FROM (SELECT DISTINCT i.i AS _1 FROM TestEntity i) AS i, TestEntity2 x1 WHERE x1.i = i._1"
         }
 
         "with two joins" in {
@@ -172,7 +172,7 @@ class SqlIdiomSpec extends Spec {
             } yield (v1, v2)
           }
           testContext.run(q).string mustEqual
-            "SELECT i.i, x2.s, x2.i, x2.l, x2.o FROM (SELECT DISTINCT i.i FROM TestEntity i) AS i INNER JOIN (SELECT x2.s, x2.i, x2.l, x2.o FROM TestEntity2 x2 ORDER BY x2.l ASC NULLS FIRST) AS x2 ON x2.i = i.i"
+            "SELECT i._1, x2.s, x2.i, x2.l, x2.o FROM (SELECT DISTINCT i.i AS _1 FROM TestEntity i) AS i INNER JOIN (SELECT x2.s, x2.i, x2.l, x2.o FROM TestEntity2 x2 ORDER BY x2.l ASC NULLS FIRST) AS x2 ON x2.i = i._1"
         }
 
         "followed by aggregation" in {
@@ -268,7 +268,7 @@ class SqlIdiomSpec extends Spec {
             }
           }
           testContext.run(q).string mustEqual
-            "SELECT t.i, COUNT(*) FROM TestEntity t GROUP BY t.i"
+            "SELECT t.i, COUNT(t.*) FROM TestEntity t GROUP BY t.i"
         }
         "nested" in {
           val q = quote {
@@ -282,7 +282,7 @@ class SqlIdiomSpec extends Spec {
             }
           }
           testContext.run(q).string mustEqual
-            "SELECT t._1, t._2, c.s, c.i, c.l, c.o FROM (SELECT t.i AS _1, COUNT(*) AS _2 FROM TestEntity t GROUP BY t.i) AS t, TestEntity2 c WHERE c.i = t._1"
+            "SELECT t._1, t._2, c.s, c.i, c.l, c.o FROM (SELECT t.i AS _1, COUNT(t.*) AS _2 FROM TestEntity t GROUP BY t.i) AS t, TestEntity2 c WHERE c.i = t._1"
         }
         "limited" in {
           val q = quote {
@@ -341,7 +341,7 @@ class SqlIdiomSpec extends Spec {
               qr1.size
             }
             testContext.run(q).string mustEqual
-              "SELECT COUNT(*) FROM TestEntity x"
+              "SELECT COUNT(x.*) FROM TestEntity x"
           }
           "with groupBy" in {
             val q = quote {
@@ -381,7 +381,7 @@ class SqlIdiomSpec extends Spec {
             }
           }
           testContext.run(q).string mustEqual
-            "SELECT t.i, (COUNT(*)) + 1 FROM TestEntity t GROUP BY t.i"
+            "SELECT t.i, (COUNT(t.*)) + 1 FROM TestEntity t GROUP BY t.i"
         }
       }
       "unary operation" - {
@@ -575,14 +575,14 @@ class SqlIdiomSpec extends Spec {
             qr1.filter(t => qr2.filter(u => u.s == t.s).isEmpty)
           }
           testContext.run(q).string mustEqual
-            "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE NOT EXISTS (SELECT u.* FROM TestEntity2 u WHERE u.s = t.s)"
+            "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE NOT EXISTS (SELECT u.s, u.i, u.l, u.o FROM TestEntity2 u WHERE u.s = t.s)"
         }
         "nonEmpty" in {
           val q = quote {
             qr1.filter(t => qr2.filter(u => u.s == t.s).nonEmpty)
           }
           testContext.run(q).string mustEqual
-            "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE EXISTS (SELECT u.* FROM TestEntity2 u WHERE u.s = t.s)"
+            "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE EXISTS (SELECT u.s, u.i, u.l, u.o FROM TestEntity2 u WHERE u.s = t.s)"
         }
         "toUpperCase" in {
           val q = quote {

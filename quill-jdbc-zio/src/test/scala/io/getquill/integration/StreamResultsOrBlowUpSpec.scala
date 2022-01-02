@@ -26,7 +26,7 @@ class StreamResultsOrBlowUpSpec extends ZioSpec {
   // that will force jdbc to load the entire ResultSet into memory and crash this test.
   val doBlowUp = false
 
-  val ctx = new PostgresZioJdbcUnderlyingContext(Literal) {
+  val ctx = new PostgresZioJdbcContext.Underlying(Literal) {
     override protected def prepareStatementForStreaming(sql: String, conn: Connection, fetchSize: Option[Int]) = {
       val stmt =
         conn.prepareStatement(

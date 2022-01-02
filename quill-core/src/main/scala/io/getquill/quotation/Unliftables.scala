@@ -59,8 +59,8 @@ trait Unliftables extends QuatUnliftable {
   }
 
   implicit val binaryOperatorUnliftable: Unliftable[BinaryOperator] = Unliftable[BinaryOperator] {
-    case q"$pack.EqualityOperator.`==`"       => EqualityOperator.`==`
-    case q"$pack.EqualityOperator.`!=`"       => EqualityOperator.`!=`
+    case q"$pack.EqualityOperator.`_==`"      => EqualityOperator.`_==`
+    case q"$pack.EqualityOperator.`_!=`"      => EqualityOperator.`_!=`
     case q"$pack.BooleanOperator.`&&`"        => BooleanOperator.`&&`
     case q"$pack.BooleanOperator.`||`"        => BooleanOperator.`||`
     case q"$pack.StringOperator.`+`"          => StringOperator.`+`
