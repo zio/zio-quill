@@ -255,7 +255,7 @@ lazy val `quill-core` =
     .settings(mimaSettings: _*)
     .settings(libraryDependencies ++= Seq(
       "com.typesafe"               %  "config"        % "1.4.1",
-      "dev.zio"                    %% "zio-logging"   % "0.5.13",
+      "dev.zio"                    %% "zio-logging"   % "0.5.14",
       "com.typesafe.scala-logging" %% "scala-logging" % "3.9.4"
     ))
     .jvmSettings(
