@@ -223,9 +223,9 @@ lazy val `quill-engine` =
         ("com.github.takayahilton"   %%% "sql-formatter" % "1.2.1").cross(CrossVersion.for3Use2_13)
       ) ++ {
         if (isScala211)
-          Seq("io.suzaku" %%% "boopickle" % "1.3.1")
+          Seq("io.suzaku" %% "boopickle" % "1.3.1")
         else
-          Seq("io.suzaku" %%% "boopickle" % "1.4.0")
+          Seq("io.suzaku" %% "boopickle" % "1.4.0")
       },
       coverageExcludedPackages := "<empty>;.*AstPrinter;.*Using;io.getquill.Model;io.getquill.ScalarTag;io.getquill.QuotationTag"
     )
@@ -234,7 +234,12 @@ lazy val `quill-engine` =
         "com.lihaoyi" %%% "pprint" % "0.7.1",
         "org.scala-js" %%% "scalajs-java-time" % "1.0.0",
         "org.scala-lang.modules" %%% "scala-collection-compat" % "2.2.0"
-      ),
+      ) ++ {
+        if (isScala211)
+          Seq("io.suzaku" %%% "boopickle" % "1.3.1")
+        else
+          Seq("io.suzaku" %%% "boopickle" % "1.4.0")
+      },
       coverageExcludedPackages := ".*"
     ).enablePlugins(MimaPlugin)
 
