@@ -52,7 +52,6 @@ lazy val jasyncModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
 )
 
 lazy val asyncModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
-  `quill-async`, `quill-async-mysql`, `quill-async-postgres`,
   `quill-finagle-mysql`, `quill-finagle-postgres`,
   `quill-ndbc`, `quill-ndbc-postgres`, `quill-ndbc-monix`
 ) ++ jasyncModules
@@ -69,9 +68,6 @@ lazy val allModules =
   baseModules ++ jsModules ++ dbModules ++ asyncModules ++ codegenModules ++ bigdataModules
 
 lazy val scala213Modules = baseModules ++ jsModules ++ dbModules ++ codegenModules ++ Seq[sbt.ClasspathDep[sbt.ProjectReference]](
-  `quill-async`,
-  `quill-async-mysql`,
-  `quill-async-postgres`,
   `quill-finagle-mysql`,
   `quill-cassandra`,
   `quill-cassandra-lagom`,
@@ -510,45 +506,6 @@ lazy val `quill-finagle-postgres` =
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
-    .enablePlugins(MimaPlugin)
-
-lazy val `quill-async` =
-  (project in file("quill-async"))
-    .settings(commonSettings: _*)
-    .settings(mimaSettings: _*)
-    .settings(
-      Test / fork := true,
-      libraryDependencies ++= Seq(
-        "com.github.postgresql-async" %% "db-async-common"  % "0.3.0"
-      )
-    )
-    .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
-    .enablePlugins(MimaPlugin)
-
-lazy val `quill-async-mysql` =
-  (project in file("quill-async-mysql"))
-    .settings(commonSettings: _*)
-    .settings(mimaSettings: _*)
-    .settings(
-      Test / fork := true,
-      libraryDependencies ++= Seq(
-        "com.github.postgresql-async" %% "mysql-async"      % "0.3.0"
-      )
-    )
-    .dependsOn(`quill-async` % "compile->compile;test->test")
-    .enablePlugins(MimaPlugin)
-
-lazy val `quill-async-postgres` =
-  (project in file("quill-async-postgres"))
-    .settings(commonSettings: _*)
-    .settings(mimaSettings: _*)
-    .settings(
-      Test / fork := true,
-      libraryDependencies ++= Seq(
-        "com.github.postgresql-async" %% "postgresql-async" % "0.3.0"
-      )
-    )
-    .dependsOn(`quill-async` % "compile->compile;test->test")
     .enablePlugins(MimaPlugin)
 
 lazy val `quill-jasync` =
