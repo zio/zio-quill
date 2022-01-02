@@ -1,6 +1,6 @@
 package io.getquill
 
-import io.getquill.context.monix.MonixJdbcContext.Runner
+import io.getquill.context.monix.MonixJdbcContext.EffectWrapper
 import io.getquill.util.LoadConfig
 import monix.eval.Task
 import monix.execution.Scheduler
@@ -16,7 +16,7 @@ class ResultSetIteratorSpec extends AnyFreeSpec with Matchers with BeforeAndAfte
   val ds = JdbcContextConfig(LoadConfig("testPostgresDB")).dataSource
   implicit val scheduler = Scheduler.global
 
-  val ctx = new PostgresMonixJdbcContext(Literal, ds, Runner.default)
+  val ctx = new PostgresMonixJdbcContext(Literal, ds, EffectWrapper.default)
   import ctx._
 
   case class Person(name: String, age: Int)

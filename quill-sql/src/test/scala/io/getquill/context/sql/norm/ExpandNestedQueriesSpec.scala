@@ -89,7 +89,7 @@ class ExpandNestedQueriesSpec extends Spec {
       }
     }
     testContext.run(q).string mustEqual
-      "SELECT s.i, s.s, COUNT(*) FROM TestEntity s GROUP BY s.i, s.s"
+      "SELECT s.i, s.s, COUNT(s.*) FROM TestEntity s GROUP BY s.i, s.s"
   }
 
   "expands nested distinct query" in {

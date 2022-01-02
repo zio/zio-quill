@@ -7,7 +7,7 @@ import io.getquill.ast._
 import io.getquill.quat.Quat
 
 class BetaReductionSpec extends Spec {
-  //hello
+
   "simplifies the ast by applying functons" - {
     "tuple field" in {
       val ast: Ast = Property(Tuple(List(Ident("a"))), "_1")
@@ -62,7 +62,7 @@ class BetaReductionSpec extends Spec {
           Val(bE, aE),
           Map(bE, dE, c1)
         ))
-        BetaReduction(block) mustEqual Map(entity, dE, c1)
+        BetaReduction.AllowEmpty(block) mustEqual Map(entity, dE, c1)
       }
       "nested blocks" in {
         val inner = Block(List(
@@ -77,7 +77,7 @@ class BetaReductionSpec extends Spec {
           Val(cE, bE),
           cE
         ))
-        BetaReduction(outer) mustEqual Tuple(List(entity, c2, c3))
+        BetaReduction.AllowEmpty(outer) mustEqual Tuple(List(entity, c2, c3))
       }
       "nested blocks caseclass" in {
         val inner = Block(List(
@@ -92,7 +92,7 @@ class BetaReductionSpec extends Spec {
           Val(cE, bE),
           cE
         ))
-        BetaReduction(outer) mustEqual CaseClass(List(("foo", entity), ("bar", c2), ("baz", c3)))
+        BetaReduction.AllowEmpty(outer) mustEqual CaseClass(List(("foo", entity), ("bar", c2), ("baz", c3)))
       }
     }
     "avoids replacing idents of an outer scope" - {

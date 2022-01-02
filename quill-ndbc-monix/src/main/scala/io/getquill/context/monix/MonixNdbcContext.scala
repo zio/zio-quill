@@ -99,22 +99,22 @@ abstract class MonixNdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy, P
   }
 
   // Need explicit return-type annotations due to scala/bug#8356. Otherwise macro system will not understand Result[Long]=Task[Long] etc...
-  override def executeAction[T](sql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: DatasourceContext): Task[Long] =
+  override def executeAction(sql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: Runner): Task[Long] =
     super.executeAction(sql, prepare)(info, dc)
 
-  override def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext): Task[List[T]] =
+  override def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner): Task[List[T]] =
     super.executeQuery(sql, prepare, extractor)(info, dc)
 
-  override def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext): Task[T] =
+  override def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner): Task[T] =
     super.executeQuerySingle(sql, prepare, extractor)(info, dc)
 
-  override def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningBehavior: ReturnAction)(info: ExecutionInfo, dc: DatasourceContext): Task[O] =
+  override def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningBehavior: ReturnAction)(info: ExecutionInfo, dc: Runner): Task[O] =
     super.executeActionReturning(sql, prepare, extractor, returningBehavior)(info, dc)
 
-  override def executeBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: DatasourceContext): Task[List[Long]] =
+  override def executeBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: Runner): Task[List[Long]] =
     super.executeBatchAction(groups)(info, dc)
 
-  override def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T])(info: ExecutionInfo, dc: DatasourceContext): Task[List[T]] =
+  override def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T])(info: ExecutionInfo, dc: Runner): Task[List[T]] =
     super.executeBatchActionReturning(groups, extractor)(info, dc)
 
   override def transaction[T](f: => Task[T]): Task[T] = super.transaction(f)
@@ -126,7 +126,7 @@ abstract class MonixNdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy, P
     schedule(f(dataSource))
 
   // TODO: What about fetchSize? Not really applicable here
-  def streamQuery[T](fetchSize: Option[Index], sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext): Observable[T] =
+  def streamQuery[T](fetchSize: Option[Index], sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner): Observable[T] =
     Observable
       .eval {
         // TODO: Do we need to set ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY?

@@ -1,3 +1,84 @@
+# 3.12.0
+
+- [cassandra - Datastax4x upgrade](https://github.com/getquill/quill/pull/2315)
+- [Implement dynamic query caching](https://github.com/getquill/quill/pull/2088)
+- [Fix Quat-based query schema rename issue](https://github.com/getquill/quill/pull/2322)
+- [forUpdate via infix](https://github.com/getquill/quill/pull/2268)
+- [Disable file infra log by default](https://github.com/getquill/quill/pull/2332)
+- [Fix `QIO.apply` function type](https://github.com/getquill/quill/pull/2318)
+- [doc: update CODEGEN.md](https://github.com/getquill/quill/pull/2316)
+
+#### Migration Notes - Datastax Drivers:
+
+The Datastax drivers have been moved to Version 4, this adds support for many new features with the caveat that the configuration
+file format must be changed. In Version 4, the Datastax standard configuration file format and properties 
+are in the HOCON format. They are used to configure the driver.
+
+Sample HOCON:
+```hocon
+MyCassandraDb {
+  preparedStatementCacheSize=1000
+  keyspace=quill_test
+  
+  session {
+    basic.contact-points = [ ${?CASSANDRA_CONTACT_POINT_0}, ${?CASSANDRA_CONTACT_POINT_1} ]
+    basic.load-balancing-policy.local-datacenter = ${?CASSANDRA_DC}
+    basic.request.consistency = LOCAL_QUORUM
+    basic.request.page-size = 3
+  }
+
+}
+```
+
+The `session` entry values and keys are described in the datastax documentation:
+[Reference configuration](https://docs.datastax.com/en/developer/java-driver/4.13/manual/core/configuration/reference/) 
+
+
+The ZioCassandraSession constructors:
+
+```scala
+ val zioSessionLayer: ZLayer[Any, Throwable, Has[CassandraZioSession]] =
+  CassandraZioSession.fromPrefix("MyCassandraDb")
+run(query[Person])
+  .provideCustomLayer(zioSessionLayer)
+```
+
+Additional parameters can be added programmatically:
+```scala
+ val zioSessionLayer: ZLayer[Any, Throwable, Has[CassandraZioSession]] =
+  CassandraZioSession.fromContextConfig(LoadConfig("MyCassandraDb").withValue("keyspace", ConfigValueFactory.fromAnyRef("data")))
+run(query[Person])
+  .provideCustomLayer(zioSessionLayer)
+```
+
+
+`session.queryOptions.fetchSize=N` config entry should be replaced by
+`basic.request.page-size=N`
+
+```hocon
+testStreamDB {
+  preparedStatementCacheSize=1000
+  keyspace=quill_test
+  
+  session {
+    ...
+    basic.request.page-size = 3
+  }
+  ...
+}
+```
+
+#### Migration Notes - Query Log File:
+
+Production of the query-log file `queries.txt` has been disabled by default due to issues with SBT
+and metals. In order to use it, launch the compiler JVM (e.g. SBT) with the argument `-Dquill.log.file=my_queries.sql`
+or set the `quill_log_file` environment variable (e.g. `export quill_log_file=my_queries.sql`).
+
+#### Migration Notes - Monix:
+
+The monix context wrapper `MonixJdbcContext.Runner` has been renamed to `MonixJdbcContext.EffectWrapper`.
+The type `Runner` needs to be used by ProtoQuill to define quill-context-specific execution contexts.
+
 # 3.11.0
 
 - [Implement `transaction` on outer zio-jdbc-context using fiber refs](https://github.com/getquill/quill/pull/2302)
@@ -110,64 +191,6 @@ and `prepare___` methods. For Scala2-Quill, these arguments should be ignored as
 relevant information. ProtoQuill uses them in order to pass Ast information as well as whether
 the query is Static or Dynamic into execute and prepare methods. In the future, Scala2-Quill may be enhanced
 to use them as well.
-
-# 3.10.1 
-
-#### Migration Notes:
-
-Datastax standard configuration file format and properties (HOCON) are used to provide cassandra driver configuration
-
-Sample HOCON:
-```hocon
-MyCassandraDb {
-       preparedStatementCacheSize=1000
-       keyspace=quill_test
-
-        session {
-            basic.contact-points = [ ${?CASSANDRA_CONTACT_POINT_0}, ${?CASSANDRA_CONTACT_POINT_1} ]
-            basic.load-balancing-policy.local-datacenter = ${?CASSANDRA_DC}
-            basic.request.consistency = LOCAL_QUORUM
-            basic.request.page-size = 3
-        }
-
-}
-```
-
-The `session` entry values and keys are described in the datastax documentation:
-[Reference configuration](https://docs.datastax.com/en/developer/java-driver/4.13/manual/core/configuration/reference/) 
-
-
-The ZioCassandraSession constructors:
-
-```scala
- val zioSessionLayer: ZLayer[Any, Throwable, Has[CassandraZioSession]] =
-  CassandraZioSession.fromPrefix("MyCassandraDb")
-run(query[Person])
-  .provideCustomLayer(zioSessionLayer)
-```
-
-Additional parameters can be added programmatically:
-```scala
- val zioSessionLayer: ZLayer[Any, Throwable, Has[CassandraZioSession]] =
-  CassandraZioSession.fromContextConfig(LoadConfig("MyCassandraDb").withValue("keyspace", ConfigValueFactory.fromAnyRef("data")))
-run(query[Person])
-  .provideCustomLayer(zioSessionLayer)
-```
-
-
-`session.queryOptions.fetchSize=N` config entry  should be replaced by
-`basic.request.page-size=N`
-
-```hocon
-testStreamDB {
-       preparedStatementCacheSize=1000
-       keyspace=quill_test
-       
-        session {
-            ...
-            basic.request.page-size = 3
-       }
-```
 
 # 3.9.0
 

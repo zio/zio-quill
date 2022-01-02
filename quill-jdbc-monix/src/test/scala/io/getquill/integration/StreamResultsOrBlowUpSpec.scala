@@ -3,7 +3,7 @@ package io.getquill.integration
 import java.sql.{ Connection, ResultSet }
 
 import io.getquill._
-import io.getquill.context.monix.MonixJdbcContext.Runner
+import io.getquill.context.monix.MonixJdbcContext.EffectWrapper
 import monix.execution.Scheduler
 import monix.execution.schedulers.CanBlock
 import org.scalatest.matchers.should.Matchers._
@@ -30,7 +30,7 @@ class StreamResultsOrBlowUpSpec extends Spec {
   // that will force jdbc to load the entire ResultSet into memory and crash this test.
   val doBlowUp = false
 
-  val ctx = new PostgresMonixJdbcContext(Literal, "testPostgresDB", Runner.default) {
+  val ctx = new PostgresMonixJdbcContext(Literal, "testPostgresDB", EffectWrapper.default) {
     override protected def prepareStatementForStreaming(sql: String, conn: Connection, fetchSize: Option[Int]) = {
       val stmt =
         conn.prepareStatement(

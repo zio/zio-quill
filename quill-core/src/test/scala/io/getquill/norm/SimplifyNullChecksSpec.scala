@@ -78,7 +78,7 @@ class SimplifyNullChecksSpec extends Spec {
         val q = quote {
           (a: Int, b: Int) => a === b
         }
-        SimplifyNullChecksAnsi(quote(unquote(q)).ast.body) mustEqual BinaryOperation(Ident("a"), EqualityOperator.`==`, Ident("b"))
+        SimplifyNullChecksAnsi(quote(unquote(q)).ast.body) mustEqual BinaryOperation(Ident("a"), EqualityOperator.`_==`, Ident("b"))
       }
       "reduces when Option/Option" in {
         val q = quote {
@@ -105,7 +105,7 @@ class SimplifyNullChecksSpec extends Spec {
         val q = quote {
           (a: Int, b: Int) => a === b
         }
-        SimplifyNullChecksNonAnsi(quote(unquote(q)).ast.body) mustEqual BinaryOperation(Ident("a"), EqualityOperator.`==`, Ident("b"))
+        SimplifyNullChecksNonAnsi(quote(unquote(q)).ast.body) mustEqual BinaryOperation(Ident("a"), EqualityOperator.`_==`, Ident("b"))
       }
       "reduces when Option/Option" in {
         val q = quote {
