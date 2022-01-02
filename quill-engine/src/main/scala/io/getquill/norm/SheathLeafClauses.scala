@@ -70,7 +70,7 @@ case class SheathLeafClauses(state: Option[String]) extends StatefulTransformerW
       case object Map extends MapClauseType
       case object ConcatMap extends MapClauseType
     }
-    class Remaker(tpe: MapClauseType) {
+    class Remaker private[MapClause] (tpe: MapClauseType) {
       def apply(a: Ast, b: Ident, c: Ast): Query =
         tpe match {
           case MapClauseType.Map       => Map(a, b, c)
@@ -91,7 +91,7 @@ case class SheathLeafClauses(state: Option[String]) extends StatefulTransformerW
       case object Union extends UnionClauseType
       case object UnionAll extends UnionClauseType
     }
-    class Remaker(tpe: UnionClauseType) {
+    class Remaker private[UnionClause] (tpe: UnionClauseType) {
       def apply(a: Ast, b: Ast): Query =
         tpe match {
           case UnionClauseType.Union    => Union(a, b)

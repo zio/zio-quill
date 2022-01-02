@@ -40,11 +40,11 @@ trait SqlIdiom extends Idiom {
 
     val normalizedAst = {
       if (cached) {
-        NormalizeCaching { a: Ast => normalizeAst(a, concatBehavior, equalityBehavior) }(ast)
+        NormalizeCaching { (a: Ast) => normalizeAst(a, concatBehavior, equalityBehavior) }(ast)
       } else normalizeAst(ast, concatBehavior, equalityBehavior)
     }
 
-    implicit val tokernizer = defaultTokenizer
+    implicit val tokernizer: Tokenizer[Ast] = defaultTokenizer
 
     val token =
       normalizedAst match {
@@ -261,14 +261,14 @@ trait SqlIdiom extends Idiom {
     }
 
   implicit def operationTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Operation] = Tokenizer[Operation] {
-    case UnaryOperation(op, ast)                              => stmt"${op.token} (${ast.token})"
-    case BinaryOperation(a, EqualityOperator.`==`, NullValue) => stmt"${scopedTokenizer(a)} IS NULL"
-    case BinaryOperation(NullValue, EqualityOperator.`==`, b) => stmt"${scopedTokenizer(b)} IS NULL"
-    case BinaryOperation(a, EqualityOperator.`!=`, NullValue) => stmt"${scopedTokenizer(a)} IS NOT NULL"
-    case BinaryOperation(NullValue, EqualityOperator.`!=`, b) => stmt"${scopedTokenizer(b)} IS NOT NULL"
-    case BinaryOperation(a, StringOperator.`startsWith`, b)   => stmt"${scopedTokenizer(a)} LIKE (${(BinaryOperation(b, StringOperator.`+`, Constant.auto("%")): Ast).token})"
-    case BinaryOperation(a, op @ StringOperator.`split`, b)   => stmt"${op.token}(${scopedTokenizer(a)}, ${scopedTokenizer(b)})"
-    case BinaryOperation(a, op @ SetOperator.`contains`, b)   => SetContainsToken(scopedTokenizer(b), op.token, a.token)
+    case UnaryOperation(op, ast)                               => stmt"${op.token} (${ast.token})"
+    case BinaryOperation(a, EqualityOperator.`_==`, NullValue) => stmt"${scopedTokenizer(a)} IS NULL"
+    case BinaryOperation(NullValue, EqualityOperator.`_==`, b) => stmt"${scopedTokenizer(b)} IS NULL"
+    case BinaryOperation(a, EqualityOperator.`_!=`, NullValue) => stmt"${scopedTokenizer(a)} IS NOT NULL"
+    case BinaryOperation(NullValue, EqualityOperator.`_!=`, b) => stmt"${scopedTokenizer(b)} IS NOT NULL"
+    case BinaryOperation(a, StringOperator.`startsWith`, b)    => stmt"${scopedTokenizer(a)} LIKE (${(BinaryOperation(b, StringOperator.`+`, Constant.auto("%")): Ast).token})"
+    case BinaryOperation(a, op @ StringOperator.`split`, b)    => stmt"${op.token}(${scopedTokenizer(a)}, ${scopedTokenizer(b)})"
+    case BinaryOperation(a, op @ SetOperator.`contains`, b)    => SetContainsToken(scopedTokenizer(b), op.token, a.token)
     case BinaryOperation(a, op @ `&&`, b) => (a, b) match {
       case (BinaryOperation(_, `||`, _), BinaryOperation(_, `||`, _)) => stmt"${scopedTokenizer(a)} ${op.token} ${scopedTokenizer(b)}"
       case (BinaryOperation(_, `||`, _), _) => stmt"${scopedTokenizer(a)} ${op.token} ${b.token}"
@@ -348,8 +348,8 @@ trait SqlIdiom extends Idiom {
   }
 
   implicit val binaryOperatorTokenizer: Tokenizer[BinaryOperator] = Tokenizer[BinaryOperator] {
-    case EqualityOperator.`==`       => stmt"="
-    case EqualityOperator.`!=`       => stmt"<>"
+    case EqualityOperator.`_==`      => stmt"="
+    case EqualityOperator.`_!=`      => stmt"<>"
     case BooleanOperator.`&&`        => stmt"AND"
     case BooleanOperator.`||`        => stmt"OR"
     case StringOperator.`+`          => stmt"||"

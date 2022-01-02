@@ -187,7 +187,9 @@ trait MirrorIdiomBase extends Idiom {
   }
 
   implicit def operatorTokenizer[T <: Operator]: Tokenizer[T] = Tokenizer[T] {
-    case o => stmt"${o.toString.token}"
+    case EqualityOperator.`_!=` => stmt"!="
+    case EqualityOperator.`_==` => stmt"=="
+    case o                      => stmt"${o.toString.token}"
   }
 
   def tokenizeName(name: String, renameable: Renameable) =
@@ -248,12 +250,12 @@ trait MirrorIdiomBase extends Idiom {
       case Ident(_, quat) => Ident("_", quat)
     })
 
-    implicit val conflictTargetTokenizer = Tokenizer[OnConflict.Target] {
+    implicit val conflictTargetTokenizer: Tokenizer[OnConflict.Target] = Tokenizer[OnConflict.Target] {
       case OnConflict.NoTarget          => stmt""
       case OnConflict.Properties(props) => stmt"(${targetProps(props).token})"
     }
 
-    implicit val updateAssignsTokenizer = Tokenizer[AssignmentDual] {
+    implicit val updateAssignsTokenizer: Tokenizer[AssignmentDual] = Tokenizer[AssignmentDual] {
       case AssignmentDual(i, j, p, v) =>
         stmt"(${i.token}, ${j.token}) => ${p.token} -> ${scopedTokenizer(v)}"
     }
@@ -270,7 +272,7 @@ trait MirrorIdiomBase extends Idiom {
    * Technically, AssignmentDual is only used in OnConflict so we only need the updateAssignsTokenizer in conflictTokenizer but since
    * there is a `case AssignmentDual` in `apply(ast: Ast)` we need to define a way to tokenize that case (otherwise compiler exhaustivity warnings will happen)
    */
-  implicit val assignmentTokenizer = Tokenizer[AssignmentDual] {
+  implicit val assignmentTokenizer: Tokenizer[AssignmentDual] = Tokenizer[AssignmentDual] {
     case AssignmentDual(i, j, p, v) =>
       stmt"(${i.token}, ${j.token}) => ${p.token} -> ${v.token}"
   }

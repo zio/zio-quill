@@ -14,12 +14,12 @@ object NormalizeNestedStructures {
       case SortBy(a, b, c, d) => apply(a, c)(SortBy(_, b, _, d))
       case GroupBy(a, b, c)   => apply(a, c)(GroupBy(_, b, _))
       case Aggregation(a, b)  => apply(b)(Aggregation(a, _))
-      case Take(a, b)         => apply(a, b)(Take)
-      case Drop(a, b)         => apply(a, b)(Drop)
-      case Union(a, b)        => apply(a, b)(Union)
-      case UnionAll(a, b)     => apply(a, b)(UnionAll)
-      case Distinct(a)        => apply(a)(Distinct)
-      case Nested(a)          => apply(a)(Nested)
+      case Take(a, b)         => apply(a, b)(Take.apply)
+      case Drop(a, b)         => apply(a, b)(Drop.apply)
+      case Union(a, b)        => apply(a, b)(Union.apply)
+      case UnionAll(a, b)     => apply(a, b)(UnionAll.apply)
+      case Distinct(a)        => apply(a)(Distinct.apply)
+      case Nested(a)          => apply(a)(Nested.apply)
       case FlatJoin(t, a, iA, on) =>
         (Normalize(a), Normalize(on)) match {
           case (`a`, `on`) => None

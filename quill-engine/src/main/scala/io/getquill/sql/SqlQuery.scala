@@ -22,8 +22,8 @@ sealed trait SqlQuery {
   override def toString = {
     import io.getquill.MirrorSqlDialect._
     import io.getquill.idiom.StatementInterpolator._
-    implicit val naming = Literal
-    implicit val tokenizer = defaultTokenizer
+    implicit val naming: Literal = Literal
+    implicit val tokenizer: Tokenizer[Ast] = defaultTokenizer
     this.token.toString
   }
 }

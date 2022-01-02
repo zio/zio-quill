@@ -7,9 +7,11 @@ sealed trait PrefixUnaryOperator extends UnaryOperator
 sealed trait PostfixUnaryOperator extends UnaryOperator
 sealed trait BinaryOperator extends Operator
 
+// In Scala 3 == and != are not stable identifiers so need to prepend them with something otherwise
+// compile errors will happen
 object EqualityOperator {
-  case object `==` extends BinaryOperator
-  case object `!=` extends BinaryOperator
+  case object `_==` extends BinaryOperator
+  case object `_!=` extends BinaryOperator
 }
 
 object BooleanOperator {

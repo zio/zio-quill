@@ -108,7 +108,7 @@ trait CqlIdiom extends Idiom {
   }
 
   implicit val binaryOperatorTokenizer: Tokenizer[BinaryOperator] = Tokenizer[BinaryOperator] {
-    case EqualityOperator.`==`  => stmt"="
+    case EqualityOperator.`_==` => stmt"="
     case BooleanOperator.`&&`   => stmt"AND"
     case NumericOperator.`>`    => stmt">"
     case NumericOperator.`>=`   => stmt">="

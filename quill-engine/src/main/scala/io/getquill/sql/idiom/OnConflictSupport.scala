@@ -27,19 +27,19 @@ trait OnConflictSupport {
     def doUpdateStmt(i: Token, t: Token, u: Update) = {
       val assignments = u.assignments
         .map(a => stmt"${actionAstTokenizer.token(a.property)} = ${scopedTokenizer(a.value)(customAstTokenizer)}")
-        .mkStmt()
+        .mkStmt()(statementTokenizer)
 
       stmt"$i ON CONFLICT $t DO UPDATE SET $assignments"
     }
 
     def doNothingStmt(i: Ast, t: Token) = stmt"${i.token} ON CONFLICT $t DO NOTHING"
 
-    implicit val conflictTargetPropsTokenizer =
+    implicit val conflictTargetPropsTokenizer: Tokenizer[Properties] =
       Tokenizer[Properties] {
         case OnConflict.Properties(props) => stmt"(${props.map(n => n.renameable.fixedOr(n.name)(strategy.column(n.name))).mkStmt(",")})"
       }
 
-    def tokenizer(implicit astTokenizer: Tokenizer[Ast]) =
+    def tokenizer(implicit astTokenizer: Tokenizer[Ast]): Tokenizer[OnConflict] =
       Tokenizer[OnConflict] {
         case OnConflict(_, NoTarget, _: Update)      => fail("'DO UPDATE' statement requires explicit conflict target")
         case OnConflict(i, p: Properties, u: Update) => doUpdateStmt(i.token, p.token, u)
