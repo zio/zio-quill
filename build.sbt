@@ -233,7 +233,7 @@ lazy val `quill-engine` =
       libraryDependencies ++= Seq(
         "com.lihaoyi" %%% "pprint" % "0.7.1",
         "org.scala-js" %%% "scalajs-java-time" % "1.0.0",
-        "org.scala-lang.modules" %%% "scala-collection-compat" % "2.2.0"
+        "org.scala-lang.modules" %%% "scala-collection-compat" % "2.6.0"
       ) ++ {
         if (isScala211)
           Seq("io.suzaku" %%% "boopickle" % "1.3.1")
