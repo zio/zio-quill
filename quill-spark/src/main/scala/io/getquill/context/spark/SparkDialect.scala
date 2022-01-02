@@ -56,7 +56,7 @@ trait SparkIdiom extends SqlIdiom with CannotReturn { self =>
     // Situations where a single ident arise with is a Quat.Value typically only happen when an operation yields a single SelectValue
     // e.g. a concatMap (or aggregation?)
     case Ident(name, Quat.Value) =>
-      stmt"${name.token}.single"
+      stmt"${name.token}.x"
     case Ident(name, _) =>
       stmt"${name.token}"
   }

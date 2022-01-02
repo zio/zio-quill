@@ -54,7 +54,7 @@ function setup_mysql() {
     echo "Waiting for MySql"
     # If --protocol not set, --port is silently ignored so need to have it
     until mysql --protocol=tcp --host=$connection --password="$MYSQL_ROOT_PASSWORD" --port=$port -u root -e "select 1" &> /dev/null; do
-        echo "**Tapping MySQL Connection> mysql --protocol=tcp --host=$connection --password='$MYSQL_ROOT_PASSWORD' --port=$port -u root -e 'select 1'"
+        echo "Tapping MySQL Connection, this may show an error> mysql --protocol=tcp --host=$connection --password='$MYSQL_ROOT_PASSWORD' --port=$port -u root -e 'select 1'"
         mysql --protocol=tcp --host=$connection --password="$MYSQL_ROOT_PASSWORD" --port=$port -u root -e "select 1" || true
         sleep 5;
     done
@@ -137,6 +137,13 @@ function setup_oracle() {
         sleep 2;
     done;
     sleep 2;
+
+    echo "Running Oracle Setup Script"
+    java -cp '/sqlline/sqlline.jar:/sqlline/ojdbc.jar' 'sqlline.SqlLine' \
+      -u 'jdbc:oracle:thin:@oracle:1521:xe' \
+      -n quill_test -p 'QuillRocks!' \
+      -f "$ORACLE_SCRIPT" \
+      --showWarnings=false
 
     echo "Connected to Oracle"
     sleep 2

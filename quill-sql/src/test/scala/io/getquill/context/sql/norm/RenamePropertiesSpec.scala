@@ -26,6 +26,11 @@ class RenamePropertiesSpec extends Spec {
     qr1.filter(t => t.i == 1)
   }
 
+  // Tables for "nested flatMap in flatJoin" case
+  case class Table1(id: String, category: Int, active: Boolean)
+  case class Table2(id: String, name: String)
+  case class Table3(id: String, configurationId: String, name: String)
+
   "renames properties of a tuple" - {
     "body" in {
       val q = quote {
@@ -323,6 +328,28 @@ class RenamePropertiesSpec extends Spec {
         testContext.run(q).string mustEqual
           "SELECT b.field_i, b.field_s FROM TestEntity2 a RIGHT JOIN test_entity b ON a.s = b.field_s"
       }
+      "nested flatMap in flatJoin" in {
+
+        val table1Schema = quote {
+          querySchema[Table1]("settings", _.id -> "settings_id")
+        }
+
+        val table2Schema = quote {
+          for {
+            c <- querySchema[Table2]("configuration")
+            s <- table1Schema.join(st => st.id == c.id) if s.active
+          } yield c
+        }
+
+        val q = quote {
+          for {
+            t3 <- query[Table3]
+            c <- table2Schema.join(ct => ct.id == t3.configurationId)
+          } yield (t3, c)
+        }
+
+        testContext.run(q).string mustEqual "SELECT t3.id, t3.configurationId, t3.name, st.id, st.name FROM Table3 t3 INNER JOIN (SELECT c.id, c.name FROM configuration c INNER JOIN settings st ON st.settings_id = c.id WHERE st.active) AS st ON st.id = t3.configurationId"
+      }
     }
 
     "aggregation" - {
@@ -343,14 +370,14 @@ class RenamePropertiesSpec extends Spec {
           e.filter(a => e.filter(b => b.i > 0).isEmpty).map(_.i)
         }
         testContext.run(q).string mustEqual
-          "SELECT a.field_i FROM test_entity a WHERE NOT EXISTS (SELECT b.* FROM test_entity b WHERE b.field_i > 0)"
+          "SELECT a.field_i FROM test_entity a WHERE NOT EXISTS (SELECT b.field_s, b.field_i, b.l, b.o, b.b FROM test_entity b WHERE b.field_i > 0)"
       }
       "binary" in {
         val q = quote {
           e.filter(a => e.filter(b => b.i > 0).isEmpty && a.s == "test").map(_.i)
         }
         testContext.run(q).string mustEqual
-          "SELECT a.field_i FROM test_entity a WHERE NOT EXISTS (SELECT b.* FROM test_entity b WHERE b.field_i > 0) AND a.field_s = 'test'"
+          "SELECT a.field_i FROM test_entity a WHERE NOT EXISTS (SELECT b.field_s, b.field_i, b.l, b.o, b.b FROM test_entity b WHERE b.field_i > 0) AND a.field_s = 'test'"
       }
       "query body" in {
         val q = quote {

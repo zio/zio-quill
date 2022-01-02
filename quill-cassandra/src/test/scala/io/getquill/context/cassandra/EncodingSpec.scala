@@ -1,10 +1,7 @@
 package io.getquill.context.cassandra
 
-import java.time.{ Instant, ZoneId, ZonedDateTime, LocalDate => Java8LocalDate }
-import java.util.Date
+import java.time.{ Instant, LocalDate, ZoneId, ZonedDateTime }
 import io.getquill.Query
-
-import com.datastax.driver.core.LocalDate
 
 class EncodingSpec extends EncodingSpecHelper {
 
@@ -74,13 +71,13 @@ class EncodingSpec extends EncodingSpecHelper {
   }
 
   "date and timestamps" - {
-    case class Java8Types(v9: Java8LocalDate, v11: Instant, o9: Option[ZonedDateTime], id: Int = 1, v1: String = "")
-    case class CasTypes(v9: LocalDate, v11: Date, o9: Option[Date], id: Int = 1, v1: String = "")
+    case class Java8Types(v9: LocalDate, v11: Instant, o9: Option[ZonedDateTime], id: Int = 1, v1: String = "")
+    case class CasTypes(v9: LocalDate, v11: Instant, o9: Option[ZonedDateTime], id: Int = 1, v1: String = "")
 
     "mirror" in {
       import mirrorContext._
-      implicitly[Encoder[Java8LocalDate]]
-      implicitly[Decoder[Java8LocalDate]]
+      implicitly[Encoder[LocalDate]]
+      implicitly[Decoder[LocalDate]]
       implicitly[Encoder[Instant]]
       implicitly[Decoder[Instant]]
       implicitly[Encoder[ZonedDateTime]]
@@ -97,9 +94,9 @@ class EncodingSpec extends EncodingSpecHelper {
       val zonedDateTime = ZonedDateTime.ofInstant(instant, ZoneId.systemDefault)
 
       val jq = quote(querySchema[Java8Types]("EncodingTestEntity"))
-      val j = Java8Types(Java8LocalDate.ofEpochDay(epohDay), instant, Some(zonedDateTime))
+      val j = Java8Types(LocalDate.ofEpochDay(epohDay), instant, Some(zonedDateTime))
       val cq = quote(querySchema[CasTypes]("EncodingTestEntity"))
-      val c = CasTypes(LocalDate.fromMillisSinceEpoch(epoh), new Date(epoh), Some(new Date(epoh)))
+      val c = CasTypes(LocalDate.ofEpochDay(epohDay), Instant.ofEpochMilli(epoh), Some(zonedDateTime))
 
       ctx.run(jq.delete)
       ctx.run(jq.insert(lift(j)))

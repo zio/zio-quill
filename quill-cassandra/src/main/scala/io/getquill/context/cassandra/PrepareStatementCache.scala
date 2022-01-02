@@ -1,10 +1,10 @@
 package io.getquill.context.cassandra
 
-import java.util.concurrent.Callable
+import com.datastax.oss.driver.shaded.guava.common.base.Charsets
+import com.datastax.oss.driver.shaded.guava.common.cache.CacheBuilder
+import com.datastax.oss.driver.shaded.guava.common.hash.Hashing
 
-import com.google.common.base.Charsets
-import com.google.common.cache.CacheBuilder
-import com.google.common.hash.Hashing
+import java.util.concurrent.Callable
 
 class PrepareStatementCache[V <: AnyRef](size: Long) {
 

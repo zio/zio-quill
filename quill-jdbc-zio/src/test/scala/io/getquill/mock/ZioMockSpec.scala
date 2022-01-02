@@ -1,17 +1,15 @@
 package io.getquill.mock
 
 import io.getquill.ZioTestUtil._
+import io.getquill.{ Literal, PostgresZioJdbcContext }
+import org.mockito.scalatest.MockitoSugar
+import org.scalatest.freespec.AnyFreeSpec
+import org.scalatest.matchers.must.Matchers._
+import zio.Has
 
 import java.io.Closeable
 import java.sql._
 import javax.sql.DataSource
-import io.getquill.{ Literal, PostgresZioJdbcContext }
-import org.mockito.scalatest.MockitoSugar
-import org.scalatest.matchers.must.Matchers._
-import io.getquill.context.ZioJdbc._
-import org.scalatest.freespec.AnyFreeSpec
-import zio.Has
-
 import scala.reflect.ClassTag
 
 class ZioMockSpec extends AnyFreeSpec with MockitoSugar { //with AsyncMockitoSugar

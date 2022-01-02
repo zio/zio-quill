@@ -26,25 +26,24 @@ trait JdbcContextSimplified[Dialect <: SqlIdiom, Naming <: NamingStrategy]
   override type PrepareActionResult = Connection => Result[PreparedStatement]
   override type PrepareBatchActionResult = Connection => Result[List[PreparedStatement]]
 
-  import effect._
   def constructPrepareQuery(f: Connection => Result[PreparedStatement]): PrepareQueryResult
   def constructPrepareAction(f: Connection => Result[PreparedStatement]): PrepareActionResult
   def constructPrepareBatchAction(f: Connection => Result[List[PreparedStatement]]): PrepareBatchActionResult
 
-  def prepareQuery(sql: String, prepare: Prepare = identityPrepare)(executionInfo: ExecutionInfo, dc: DatasourceContext): PrepareQueryResult =
+  def prepareQuery(sql: String, prepare: Prepare = identityPrepare)(executionInfo: ExecutionInfo, dc: Runner): PrepareQueryResult =
     constructPrepareQuery(prepareSingle(sql, prepare)(executionInfo, dc))
 
-  def prepareAction(sql: String, prepare: Prepare = identityPrepare)(executionInfo: ExecutionInfo, dc: DatasourceContext): PrepareActionResult =
+  def prepareAction(sql: String, prepare: Prepare = identityPrepare)(executionInfo: ExecutionInfo, dc: Runner): PrepareActionResult =
     constructPrepareAction(prepareSingle(sql, prepare)(executionInfo, dc))
 
-  def prepareSingle(sql: String, prepare: Prepare = identityPrepare)(executionInfo: ExecutionInfo, dc: DatasourceContext): Connection => Result[PreparedStatement] =
+  def prepareSingle(sql: String, prepare: Prepare = identityPrepare)(executionInfo: ExecutionInfo, dc: Runner): Connection => Result[PreparedStatement] =
     (conn: Connection) => wrap {
       val (params, ps) = prepare(conn.prepareStatement(sql), conn)
       logger.logQuery(sql, params)
       ps
     }
 
-  def prepareBatchAction(groups: List[BatchGroup])(executionInfo: ExecutionInfo, dc: DatasourceContext): PrepareBatchActionResult =
+  def prepareBatchAction(groups: List[BatchGroup])(executionInfo: ExecutionInfo, dc: Runner): PrepareBatchActionResult =
     constructPrepareBatchAction {
       (session: Connection) =>
         seq {
