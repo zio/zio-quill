@@ -220,7 +220,7 @@ lazy val `quill-engine` =
         "com.typesafe"               %  "config"        % "1.4.1",
         "com.typesafe.scala-logging" %% "scala-logging" % "3.9.4",
         ("com.twitter"               %% "chill"         % "0.10.0").cross(CrossVersion.for3Use2_13),
-        ("com.github.vertical-blank" %% "scala-sql-formatter" % "1.0.0").cross(CrossVersion.for3Use2_13)
+        ("com.github.takayahilton"   %%% "sql-formatter" % "1.2.1").cross(CrossVersion.for3Use2_13)
       ) ++ {
         if (isScala211)
           Seq("io.suzaku" %% "boopickle" % "1.3.1")
@@ -232,14 +232,15 @@ lazy val `quill-engine` =
     .jsSettings(
       libraryDependencies ++= Seq(
         "com.lihaoyi" %%% "pprint" % "0.7.1",
-        "org.scala-js" %%% "scalajs-java-time" % "0.2.5",
-        "io.suzaku" %%% "boopickle" % "1.3.1",
-        "com.github.vertical-blank" %%% "scala-sql-formatter" % "1.0.0",
+        "org.scala-js" %%% "scalajs-java-time" % "1.0.0",
         "org.scala-lang.modules" %%% "scala-collection-compat" % "2.2.0"
-      ),
-      coverageExcludedPackages := ".*",
-      // 2.12 Build seems to take forever without this option
-      Test / fastOptJS / scalaJSOptimizerOptions ~= { _.withDisableOptimizer(true) }
+      ) ++ {
+        if (isScala211)
+          Seq("io.suzaku" %%% "boopickle" % "1.3.1")
+        else
+          Seq("io.suzaku" %%% "boopickle" % "1.4.0")
+      },
+      coverageExcludedPackages := ".*"
     ).enablePlugins(MimaPlugin)
 
 lazy val `quill-engine-jvm` = `quill-engine`.jvm
@@ -259,14 +260,10 @@ lazy val `quill-core` =
     )
     .jsSettings(
       libraryDependencies ++= Seq(
-        "com.lihaoyi" %%% "pprint" % "0.7.1",
-        "org.scala-js" %%% "scalajs-java-time" % "0.2.5",
-        "org.scala-js" %%% "scalajs-java-time" % "0.2.5"
+        "com.lihaoyi" %%% "pprint" % "0.7.1"
       ),
       unmanagedSources / excludeFilter := new SimpleFileFilter(file => file.getName == "DynamicQuerySpec.scala"),
-      coverageExcludedPackages := ".*",
-      // 2.12 Build seems to take forever without this option
-      Test / fastOptJS / scalaJSOptimizerOptions ~= { _.withDisableOptimizer(true) }
+      coverageExcludedPackages := ".*"
     )
     .dependsOn(`quill-engine` % "compile->compile")
     .enablePlugins(MimaPlugin)
@@ -279,17 +276,9 @@ lazy val `quill-sql` =
   crossProject(JVMPlatform, JSPlatform).crossType(ultraPure)
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
-    .settings(libraryDependencies ++= Seq(
-      "com.github.vertical-blank"  %% "scala-sql-formatter" % "1.0.1"
-    ))
     .jsSettings(
-      libraryDependencies ++= Seq(
-        "com.github.vertical-blank" %%% "scala-sql-formatter" % "1.0.1"
-      ),
       scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) },
-      coverageExcludedPackages := ".*",
-      // 2.12 Build seems to take forever without this option
-      Test / fastOptJS / scalaJSOptimizerOptions ~= { _.withDisableOptimizer(true) }
+      coverageExcludedPackages := ".*"
     )
     .dependsOn(
       `quill-engine` % "compile->compile",
