@@ -27,7 +27,7 @@ abstract class JAsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: ConcreteCo
   override type ResultRow = RowData
   override type Session = Unit
 
-  override type Result[T] = RIO[Has[ZConnection.Service], T]
+  override type Result[T] = RIO[Has[ZConnection], T]
   override type RunQueryResult[T] = Seq[T]
   override type RunQuerySingleResult[T] = T
   override type RunActionResult = Long
@@ -52,25 +52,25 @@ abstract class JAsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: ConcreteCo
   def probe(sql: String): Try[_] =
     Try(()) //need to address that
 
-  def transaction[T](action: Result[T]): RIO[Has[ZConnection.Service], T] = {
-    ZIO.accessM[Has[ZConnection.Service]](_.get.transaction(action))
+  def transaction[T](action: Result[T]): RIO[Has[ZConnection], T] = {
+    ZIO.accessM[Has[ZConnection]](_.get.transaction(action))
   }
 
-  override def performIO[T](io: IO[T, _], transactional: Boolean = false): RIO[Has[ZConnection.Service], T] =
+  override def performIO[T](io: IO[T, _], transactional: Boolean = false): RIO[Has[ZConnection], T] =
     if (transactional) {
       transaction(super.performIO(io))
     } else {
       super.performIO(io)
     }
 
-  def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext): RIO[Has[ZConnection.Service], List[T]] = {
+  def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext): RIO[Has[ZConnection], List[T]] = {
     val (params, values) = prepare(Nil, ())
     logger.logQuery(sql, params)
     ZConnection.sendPreparedStatement(sql, values)
       .map(_.getRows.asScala.iterator.map(row => extractor(row, ())).toList)
   }
 
-  def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext): RIO[Has[ZConnection.Service], T] =
+  def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext): RIO[Has[ZConnection], T] =
     executeQuery(sql, prepare, extractor)(info, dc).map(handleSingleResult)
 
   def executeAction[T](sql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: DatasourceContext): Result[Long] = {
@@ -79,7 +79,7 @@ abstract class JAsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: ConcreteCo
     ZConnection.sendPreparedStatement(sql, values).map(_.getRowsAffected)
   }
 
-  def executeActionReturning[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T], returningAction: ReturnAction)(info: ExecutionInfo, dc: DatasourceContext): RIO[Has[ZConnection.Service], T] = {
+  def executeActionReturning[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T], returningAction: ReturnAction)(info: ExecutionInfo, dc: DatasourceContext): RIO[Has[ZConnection], T] = {
     val expanded = expandAction(sql, returningAction)
     val (params, values) = prepare(Nil, ())
     logger.logQuery(sql, params)
@@ -87,7 +87,7 @@ abstract class JAsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: ConcreteCo
       .map(extractActionResult(returningAction, extractor))
   }
 
-  def executeBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: DatasourceContext): RIO[Has[ZConnection.Service], List[Long]] =
+  def executeBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: DatasourceContext): RIO[Has[ZConnection], List[Long]] =
     ZIO.foreach(groups) { group =>
       ZIO.foldLeft(group.prepare)(List.newBuilder[Long]) {
         case (acc, prepare) =>
@@ -95,7 +95,7 @@ abstract class JAsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: ConcreteCo
       }.map(_.result())
     }.map(_.flatten.toList)
 
-  def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T])(info: ExecutionInfo, dc: DatasourceContext): RIO[Has[ZConnection.Service], List[T]] =
+  def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T])(info: ExecutionInfo, dc: DatasourceContext): RIO[Has[ZConnection], List[T]] =
     ZIO.foreach(groups) {
       case BatchGroupReturning(sql, column, prepare) =>
         ZIO.foldLeft(prepare)(List.newBuilder[T]) {
