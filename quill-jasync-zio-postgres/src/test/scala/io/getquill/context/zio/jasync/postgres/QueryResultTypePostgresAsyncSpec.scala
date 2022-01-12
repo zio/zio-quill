@@ -3,7 +3,6 @@ package io.getquill.context.zio.jasync.postgres
 import java.util.concurrent.ConcurrentLinkedQueue
 
 import scala.jdk.CollectionConverters._
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.math.BigDecimal.int2bigDecimal
 
 import io.getquill.context.sql.QueryResultTypeSpec

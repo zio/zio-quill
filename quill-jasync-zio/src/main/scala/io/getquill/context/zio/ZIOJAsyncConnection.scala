@@ -5,17 +5,17 @@ import com.github.jasync.sql.db.pool.{ ConnectionPool => KConnectionPool }
 import zio.{ Has, RIO, Task, TaskManaged, ZIO, ZLayer, ZManaged, Tag }
 import scala.jdk.CollectionConverters._
 
-trait ZConnection {
+trait ZIOJAsyncConnection {
   protected def takeConnection: TaskManaged[ConcreteConnection]
 
-  private[zio] final def transaction[A](action: RIO[Has[ZConnection], A]): ZIO[Has[ZConnection], Throwable, A] = {
+  private[zio] final def transaction[A](action: RIO[Has[ZIOJAsyncConnection], A]): ZIO[Has[ZIOJAsyncConnection], Throwable, A] = {
     //Taken from ConcreteConnectionBase.kt to avoid usage of pool.inTransaction
     takeConnection.use(conn =>
-      (ZConnection.sendQuery(conn, "BEGIN") *>
-        action.updateService[ZConnection](_ => ZConnection.make(conn))).tapBoth(
-        _ => ZConnection.sendQuery(conn, "ROLLBACK"),
-        _ => ZConnection.sendQuery(conn, "COMMIT")
-      ))
+      (ZIOJAsyncConnection.sendQuery(conn, "BEGIN") *>
+        action.updateService[ZIOJAsyncConnection](_ => ZIOJAsyncConnection.make(conn))).tapBoth(
+          _ => ZIOJAsyncConnection.sendQuery(conn, "ROLLBACK"),
+          _ => ZIOJAsyncConnection.sendQuery(conn, "COMMIT")
+        ))
 
   }
 
@@ -27,36 +27,34 @@ trait ZConnection {
       conn.sendPreparedStatement(sql, params.asJava)
     ))
 
-  final def execute[R <: Has[ZConnection], A](action: RIO[R, A]): RIO[R, A] =
-    action.provideSomeLayer[R](ZLayer.succeed(this))
 }
 
-object ZConnection {
+object ZIOJAsyncConnection {
 
-  def sendQuery(query: String): ZIO[Has[ZConnection], Throwable, QueryResult] =
-    ZIO.accessM[Has[ZConnection]](_.get.sendQuery(query))
+  def sendQuery(query: String): ZIO[Has[ZIOJAsyncConnection], Throwable, QueryResult] =
+    ZIO.accessM[Has[ZIOJAsyncConnection]](_.get.sendQuery(query))
 
-  def sendPreparedStatement(sql: String, params: Seq[Any]): ZIO[Has[ZConnection], Throwable, QueryResult] =
-    ZIO.accessM[Has[ZConnection]](_.get.sendPreparedStatement(sql, params))
+  def sendPreparedStatement(sql: String, params: Seq[Any]): ZIO[Has[ZIOJAsyncConnection], Throwable, QueryResult] =
+    ZIO.accessM[Has[ZIOJAsyncConnection]](_.get.sendPreparedStatement(sql, params))
 
   private def sendQuery[C <: ConcreteConnection](connection: C, query: String): Task[QueryResult] =
     ZIO.fromCompletableFuture(connection.sendQuery(query))
 
-  def make[C <: ConcreteConnection](pool: KConnectionPool[C]): ZConnection = new ZConnection {
+  def make[C <: ConcreteConnection](pool: KConnectionPool[C]): ZIOJAsyncConnection = new ZIOJAsyncConnection {
 
     override protected def takeConnection: TaskManaged[ConcreteConnection] =
       ZManaged.make(ZIO.fromCompletableFuture(pool.take()))(conn => ZIO.fromCompletableFuture(pool.giveBack(conn)).orDie.unit)
 
   }
 
-  def make[C <: ConcreteConnection](connection: C): ZConnection = new ZConnection {
+  def make[C <: ConcreteConnection](connection: C): ZIOJAsyncConnection = new ZIOJAsyncConnection {
 
     override protected def takeConnection: TaskManaged[ConcreteConnection] =
       ZManaged.succeed(connection)
 
   }
 
-  def live[C <: ConcreteConnection: Tag]: ZLayer[Has[JAsyncContextConfig[C]], Throwable, Has[ZConnection]] =
+  def live[C <: ConcreteConnection: Tag]: ZLayer[Has[JAsyncContextConfig[C]], Throwable, Has[ZIOJAsyncConnection]] =
     ZManaged.accessManaged[Has[JAsyncContextConfig[C]]](env =>
       ZManaged.make(
         ZIO.effect(
@@ -65,6 +63,6 @@ object ZConnection {
             env.get.connectionPoolConfiguration
           )
         )
-      )(pool => ZIO.fromCompletableFuture(pool.disconnect()).orDie)).map(Service.live[C]).toLayer
+      )(pool => ZIO.fromCompletableFuture(pool.disconnect()).orDie)).map(ZIOJAsyncConnection.make[C]).toLayer
 
 }

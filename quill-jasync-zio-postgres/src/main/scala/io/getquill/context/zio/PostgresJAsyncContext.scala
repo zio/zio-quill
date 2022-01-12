@@ -10,7 +10,7 @@ import io.getquill.{ NamingStrategy, PostgresDialect, ReturnAction }
 import scala.jdk.CollectionConverters._
 
 class PostgresJAsyncContext[N <: NamingStrategy](naming: N)
-  extends JAsyncContext[PostgresDialect, N, PostgreSQLConnection](PostgresDialect, naming)
+  extends ZIOJAsyncContext[PostgresDialect, N, PostgreSQLConnection](PostgresDialect, naming)
   with ArrayEncoders
   with ArrayDecoders
   with UUIDObjectEncoding {

@@ -1,7 +1,5 @@
 package io.getquill.context.zio.jasync.postgres
 
-import scala.concurrent.ExecutionContext.Implicits.{ global => ec }
-
 import io.getquill.context.sql.DepartmentsSpec
 
 class DepartmentsPostgresAsyncSpec extends DepartmentsSpec with ZioSpec {

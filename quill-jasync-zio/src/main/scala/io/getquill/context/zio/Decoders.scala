@@ -1,5 +1,7 @@
 package io.getquill.context.zio
 
+import com.github.jasync.sql.db.RowData
+import io.getquill.context.Context
 import io.getquill.util.Messages.fail
 import org.joda.time.{ DateTime => JodaDateTime, LocalDate => JodaLocalDate, LocalDateTime => JodaLocalDateTime, LocalTime => JodaLocalTime }
 
@@ -9,9 +11,12 @@ import java.util.Date
 import scala.reflect.{ ClassTag, classTag }
 
 trait Decoders {
-  this: JAsyncContext[_, _, _] =>
+  this: Context[_, _] =>
 
   type Decoder[T] = AsyncDecoder[T]
+
+  type ResultRow = RowData
+  type Session = Unit
 
   type DecoderSqlType = SqlTypes.SqlTypes
 

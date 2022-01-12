@@ -1,16 +1,23 @@
 package io.getquill.context.zio
 
+import com.github.jasync.sql.db.RowData
+import io.getquill.context.Context
 import org.joda.time.{ DateTime => JodaDateTime, DateTimeZone => JodaDateTimeZone, LocalDate => JodaLocalDate, LocalDateTime => JodaLocalDateTime, LocalTime => JodaLocalTime }
 
 import java.time._
 import java.util.Date
 
 trait Encoders {
-  this: JAsyncContext[_, _, _] =>
+  this: Context[_, _] =>
 
   type Encoder[T] = AsyncEncoder[T]
 
+  type ResultRow = RowData
+  type Session = Unit
+  type PrepareRow = Seq[Any]
+
   type EncoderSqlType = SqlTypes.SqlTypes
+  type DecoderSqlType = SqlTypes.SqlTypes
 
   case class AsyncEncoder[T](sqlType: DecoderSqlType)(implicit encoder: BaseEncoder[T])
     extends BaseEncoder[T] {

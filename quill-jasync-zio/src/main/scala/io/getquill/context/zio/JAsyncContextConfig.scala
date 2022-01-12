@@ -1,8 +1,8 @@
 package io.getquill.context.zio
 
-import com.github.jasync.sql.db.pool.{ ConnectionPool, ObjectFactory }
-import com.github.jasync.sql.db.util.AbstractURIParser
 import com.github.jasync.sql.db._
+import com.github.jasync.sql.db.pool.ObjectFactory
+import com.github.jasync.sql.db.util.AbstractURIParser
 import com.typesafe.config.Config
 
 import java.lang.{ Long => JavaLong }

@@ -2,7 +2,7 @@ package io.getquill.context.zio
 
 import io.getquill.context.Context
 import io.getquill.monad.{ IOMonad, IOMonadMacro }
-import io.getquill.{ Action, ActionReturning, BatchAction, Query }
+import io.getquill.{ Action, ActionReturning, BatchAction, Query, Quoted }
 import zio.{ Has, RIO, ZIO }
 
 import scala.collection.compat._
@@ -13,7 +13,7 @@ import scala.util.{ Failure, Success }
 trait ZIOMonad extends IOMonad {
   this: Context[_, _] =>
 
-  type Result[T] = RIO[Has[ZConnection.Service], T]
+  type Result[T] = RIO[Has[ZIOJAsyncConnection], T]
 
   def runIO[T](quoted: Quoted[T]): IO[RunQuerySingleResult[T], Effect.Read] = macro IOMonadMacro.runIO
   def runIO[T](quoted: Quoted[Query[T]]): IO[RunQueryResult[T], Effect.Read] = macro IOMonadMacro.runIO

@@ -1,7 +1,5 @@
 package io.getquill.context.zio.jasync.postgres
 
-import scala.concurrent.Future
-import scala.concurrent.ExecutionContext.Implicits.global
 import io.getquill.context.sql.ProductSpec
 import io.getquill.context.sql.Id
 import zio.ZIO

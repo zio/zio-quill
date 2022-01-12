@@ -4,7 +4,6 @@ import com.github.jasync.sql.db.{ QueryResult, ResultSetKt }
 import io.getquill.ReturnAction.ReturnColumns
 import io.getquill.context.zio.PostgresJAsyncContext
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import io.getquill.{ Literal, ReturnAction, Spec }
 
 class PostgresJAsyncContextSpec extends Spec with ZioSpec {
