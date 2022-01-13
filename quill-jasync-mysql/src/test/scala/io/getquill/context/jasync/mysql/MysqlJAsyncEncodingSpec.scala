@@ -3,7 +3,6 @@ package io.getquill.context.jasync.mysql
 import java.time.{ LocalDate, LocalDateTime }
 
 import io.getquill.context.sql.EncodingSpec
-import org.joda.time.{ DateTime => JodaDateTime, LocalDate => JodaLocalDate, LocalDateTime => JodaLocalDateTime }
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Await
@@ -86,29 +85,6 @@ class MysqlJAsyncEncodingSpec extends EncodingSpec {
     Await.result(r, Duration.Inf)
     ()
   }
-
-  "decode joda DateTime and Date types" in {
-    case class DateEncodingTestEntity(v1: LocalDate, v2: JodaDateTime, v3: JodaDateTime)
-    val entity = DateEncodingTestEntity(LocalDate.now, JodaDateTime.now, JodaDateTime.now)
-    val r = for {
-      _ <- testContext.run(query[DateEncodingTestEntity].delete)
-      _ <- testContext.run(query[DateEncodingTestEntity].insert(lift(entity)))
-      result <- testContext.run(query[DateEncodingTestEntity])
-    } yield result
-    Await.result(r, Duration.Inf) must contain(entity)
-  }
-
-  "decode joda LocalDate and LocalDateTime types" in {
-    case class DateEncodingTestEntity(v1: JodaLocalDate, v2: JodaLocalDateTime)
-    val entity = DateEncodingTestEntity(JodaLocalDate.now, JodaLocalDateTime.now)
-    val r = for {
-      _ <- testContext.run(query[DateEncodingTestEntity].delete)
-      _ <- testContext.run(query[DateEncodingTestEntity].insert(lift(entity)))
-      result <- testContext.run(query[DateEncodingTestEntity])
-    } yield result
-    Await.result(r, Duration.Inf)
-  }
-
   "decode LocalDate and LocalDateTime types" in {
     case class DateEncodingTestEntity(v1: LocalDate, v2: LocalDateTime, v3: LocalDateTime)
     //since localdatetime is converted to joda which doesn't store nanos need to zero the nano part
