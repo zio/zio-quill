@@ -29,7 +29,7 @@ Note: The GIF example uses Eclipse, which shows compilation messages to the user
 # Getting Started
 
 Quill has integrations with many libraries. If you are using a regular RDBMS e.g. PostgreSQL
-and want to use Quill to query it with an asychronous, no-blocking, reactive application, the easiest way to get 
+and want to use Quill to query it with an asychronous, non-blocking, reactive application, the easiest way to get 
 started is by using an awesome library called ZIO.
 
 A simple ZIO + Quill application looks like this: 
