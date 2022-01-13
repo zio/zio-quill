@@ -7,12 +7,18 @@ import io.getquill.util.Interpolator
 import io.getquill.util.Messages.TraceType
 
 /**
+ * The state produced in some child clause by the `sheathLeaf` function is essentially "consumed" by the
+ * `elaborateSheath` function in the parent.
+ *
  * Note that in the documentation is use a couple of shorthands:
  *
  * M - means Map
  * Fm - means FlatMap
  * ent - means a Ast Query. Typically just a Ast Entity
- * e.v - this dot-shorthand means Property(e, v) where e is an Ast Ident
+ * e.v - this dot-shorthand means Property(e, v) where e is an Ast Ident. This is essentially a scalar-projection
+ *       from the entity e.
+ * leaf - Typically this is a query-ast clause that results in a scalar type. It could be M(ent,e,e.v) or
+ *        an `infix"stuff".as[Query[Int/String/Boolean/etc...] ]`
  */
 case class SheathLeafClauses(state: Option[String]) extends StatefulTransformerWithStack[Option[String]] {
 
@@ -181,8 +187,10 @@ case class SheathLeafClauses(state: Option[String]) extends StatefulTransformerW
       // This happens in two phases:
       // 1) Elaborate Sheaths - This means that if in the map.query we produced some kind of state "property" then
       //    we transform the alias `e` in the body to `e.property`.
-      // 2)
-
+      // 2) SheathLeaves - This means that if there are more nested stages that use a leaf projection (e.g. `e.v`)
+      //    when we have to wrap that projection into another CaseClass which will provide the column information for us (e.g. `CC(v->e.v)`).
+      //    Note that in certain phases that automatically expect a leaf-project e.g. aggregations we do not want to do this phase.
+      //    that means that we need to track what the parent-ast (that contains this one) is.
       case MapClause(NotGroupBy(ent), e, LeafQuat(body), remake) =>
         val (ent1, s) = apply(ent)
         val e1 = Ident(e.name, ent1.quat)
@@ -201,12 +209,24 @@ case class SheathLeafClauses(state: Option[String]) extends StatefulTransformerW
       case FlatMap(ent, e, body) =>
         val (ent1, s) = apply(ent)
         val e1 = Ident(e.name, ent1.quat)
-        val bodyA = elaborateSheath(body)(s.state, e, e1) // TODO Should it be ent1.quat?
+        val bodyA = elaborateSheath(body)(s.state, e, e1)
         val (bodyB, s1) = s.apply(bodyA)
         trace"Sheath FlatMap(qry) with $stateInfo in $qq becomes" andReturn {
           (FlatMap(ent1, e1, bodyB), s1)
         }
 
+      // When Sheathing leaves inside of a the two join clauses you get resulting state for them.
+      // The issue is that it is very difficult to continue propagating the state onward so instead
+      // we immediately map back to the leaf node before the join happens.
+      // For example, say we have J(M(ent,e,e.v+123),M(ent,e,e.v+456)) that the sheathing changes to J(M(ent,e,CC(x->e.v+123)),M(ent,e,CC(x->e.v+456))).
+      // We would then like to add an extra layer of mapping J(M(M(ent,e,CC(v->e.v+123)),e,e.x)),M(M(ent,e,CC(v->e.v+456)),e,e.x).
+      // This might seem to do undo the original intent however, this if the parts e.g. v+123 are not actually reducible e.g. infix"AVG($v) OVER (PARTITION BY...)"
+      // this additional information will not be removed via the applyMap normalization and actually help SqlQuery understand that the variable `x` should
+      // be used to identify this column.
+      // Also note that the alternative could be to produce an outer join e.g.
+      // J(M(ent,e,CC(x->e.v+123)),M(ent,e,CC(x->e.v+456))) -> M(J(M(ent,e,CC(x->e.v+123)),M(ent,e,CC(x->e.v+456))),id,Tup(id._1.x,id._2.x))
+      // Unfortunately however due to the ExpandJoin phase being non-well typed this would cause various kinds of queries to fail. Some
+      // examples are in SqlQuerySpec. If ExpandJoin can be rewritten to be well-typed this approach can be re-examined.
       case Join(t, a, b, iA, iB, on) =>
         val (a1, sa) = apply(a)
         val (b1, sb) = apply(b)
