@@ -175,12 +175,12 @@ trait OrientDBIdiom extends Idiom {
   }
 
   implicit def operationTokenizer(implicit propertyTokenizer: Tokenizer[Property], strategy: NamingStrategy): Tokenizer[Operation] = Tokenizer[Operation] {
-    case UnaryOperation(op, ast)                              => stmt"${op.token} (${ast.token})"
-    case BinaryOperation(a, EqualityOperator.`==`, NullValue) => stmt"${scopedTokenizer(a)} IS NULL"
-    case BinaryOperation(NullValue, EqualityOperator.`==`, b) => stmt"${scopedTokenizer(b)} IS NULL"
-    case BinaryOperation(a, EqualityOperator.`!=`, NullValue) => stmt"${scopedTokenizer(a)} IS NOT NULL"
-    case BinaryOperation(NullValue, EqualityOperator.`!=`, b) => stmt"${scopedTokenizer(b)} IS NOT NULL"
-    case BinaryOperation(a, op @ SetOperator.`contains`, b)   => SetContainsToken(scopedTokenizer(b), op.token, a.token)
+    case UnaryOperation(op, ast)                               => stmt"${op.token} (${ast.token})"
+    case BinaryOperation(a, EqualityOperator.`_==`, NullValue) => stmt"${scopedTokenizer(a)} IS NULL"
+    case BinaryOperation(NullValue, EqualityOperator.`_==`, b) => stmt"${scopedTokenizer(b)} IS NULL"
+    case BinaryOperation(a, EqualityOperator.`_!=`, NullValue) => stmt"${scopedTokenizer(a)} IS NOT NULL"
+    case BinaryOperation(NullValue, EqualityOperator.`_!=`, b) => stmt"${scopedTokenizer(b)} IS NOT NULL"
+    case BinaryOperation(a, op @ SetOperator.`contains`, b)    => SetContainsToken(scopedTokenizer(b), op.token, a.token)
     case BinaryOperation(a, op, b) =>
       stmt"${scopedTokenizer(a)} ${op.token} ${scopedTokenizer(b)}"
     case e: FunctionApply => fail(s"Can't translate the ast to sql: '$e'")
@@ -221,7 +221,7 @@ trait OrientDBIdiom extends Idiom {
   }
 
   implicit val binaryOperatorTokenizer: Tokenizer[BinaryOperator] = Tokenizer[BinaryOperator] {
-    case EqualityOperator.`==`  => stmt"="
+    case EqualityOperator.`_==` => stmt"="
     case BooleanOperator.`&&`   => stmt"AND"
     case NumericOperator.`>`    => stmt">"
     case NumericOperator.`>=`   => stmt">="

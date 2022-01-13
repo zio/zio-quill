@@ -580,8 +580,8 @@ trait Parsing extends ValueComputation with QuatMaking {
   }
 
   sealed trait EqualityBehavior { def operator: BinaryOperator }
-  case object Equal extends EqualityBehavior { def operator: BinaryOperator = EqualityOperator.`==` }
-  case object NotEqual extends EqualityBehavior { def operator: BinaryOperator = EqualityOperator.`!=` }
+  case object Equal extends EqualityBehavior { def operator: BinaryOperator = EqualityOperator.`_==` }
+  case object NotEqual extends EqualityBehavior { def operator: BinaryOperator = EqualityOperator.`_!=` }
 
   /** Do equality checking on the database level with the ansi-style truth table (i.e. always false if one side is null) */
   private def equalityWithInnerTypechecksAnsi(left: Tree, right: Tree)(equalityBehavior: EqualityBehavior) = {
