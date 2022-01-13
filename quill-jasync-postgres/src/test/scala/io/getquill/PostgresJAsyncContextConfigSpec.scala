@@ -15,7 +15,7 @@ class PostgresJAsyncContextConfigSpec extends Spec {
       .withValue("host", ConfigValueFactory.fromAnyRef("host"))
       .withValue("sslmode", ConfigValueFactory.fromAnyRef("require"))
       .withValue("sslrootcert", ConfigValueFactory.fromAnyRef("./file.crt"))
-    val context = new PostgresJAsyncContextConfig(config)
-    context.connectionPoolConfiguration.getSsl mustEqual new SSLConfiguration(Mode.Require, new File("./file.crt"))
+    val context = PostgresJAsyncContextConfig(config)
+    context.connectionPoolConfiguration.getSsl mustEqual new SSLConfiguration(Mode.Require, new File("./file.crt"), null, null)
   }
 }

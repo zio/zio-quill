@@ -6,7 +6,6 @@ import java.util.Date
 
 import io.getquill.PostgresJAsyncContext
 import io.getquill.context.sql.encoding.ArrayEncoding
-import org.joda.time.{ DateTime => JodaDateTime, LocalDate => JodaLocalDate, LocalDateTime => JodaLocalDateTime }
 
 trait ArrayEncoders extends ArrayEncoding {
   self: PostgresJAsyncContext[_] =>
@@ -21,10 +20,7 @@ trait ArrayEncoders extends ArrayEncoding {
   implicit def arrayFloatEncoder[Col <: Seq[Float]]: Encoder[Col] = arrayRawEncoder[Float, Col]
   implicit def arrayDoubleEncoder[Col <: Seq[Double]]: Encoder[Col] = arrayRawEncoder[Double, Col]
   implicit def arrayDateEncoder[Col <: Seq[Date]]: Encoder[Col] = arrayEncoder[Date, Col](d => Timestamp.from(d.toInstant))
-  implicit def arrayJodaDateTimeEncoder[Col <: Seq[JodaDateTime]]: Encoder[Col] = arrayEncoder[JodaDateTime, Col](_.toLocalDateTime)
-  implicit def arrayJodaLocalDateTimeEncoder[Col <: Seq[JodaLocalDateTime]]: Encoder[Col] = arrayRawEncoder[JodaLocalDateTime, Col]
-  implicit def arrayJodaLocalDateEncoder[Col <: Seq[JodaLocalDate]]: Encoder[Col] = arrayRawEncoder[JodaLocalDate, Col]
-  implicit def arrayLocalDateEncoder[Col <: Seq[LocalDate]]: Encoder[Col] = arrayEncoder[LocalDate, Col](encodeLocalDate.f)
+  implicit def arrayLocalDateEncoder[Col <: Seq[LocalDate]]: Encoder[Col] = arrayRawEncoder[LocalDate, Col]
 
   def arrayEncoder[T, Col <: Seq[T]](mapper: T => Any): Encoder[Col] =
     encoder[Col]((col: Col) => col.toIndexedSeq.map(mapper).mkString("{", ",", "}"), SqlTypes.ARRAY)

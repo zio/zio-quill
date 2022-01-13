@@ -5,7 +5,6 @@ import java.util.{ Date, UUID }
 
 import io.getquill.context.sql.EncodingTestType
 import io.getquill.context.sql.encoding.ArrayEncodingBaseSpec
-import org.joda.time.{ DateTime => JodaDateTime, LocalDate => JodaLocalDate, LocalDateTime => JodaLocalDateTime }
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -20,25 +19,6 @@ class ArrayAsyncEncodingSpec extends ArrayEncodingBaseSpec {
     val actual = await(ctx.run(q)).head
     actual mustEqual e
     baseEntityDeepCheck(actual, e)
-  }
-
-  "Joda times" in {
-    case class JodaTimes(timestamps: Seq[JodaLocalDateTime], dates: Seq[JodaLocalDate])
-    val jE = JodaTimes(Seq(JodaLocalDateTime.now()), Seq(JodaLocalDate.now()))
-    val jQ = quote(querySchema[JodaTimes]("ArraysTestEntity"))
-    await(ctx.run(jQ.insert(lift(jE))))
-    val actual = await(ctx.run(jQ)).head
-    actual.timestamps mustBe jE.timestamps
-    actual.dates mustBe jE.dates
-  }
-
-  "Joda times 2" in {
-    case class JodaTimes(timestamps: Seq[JodaDateTime])
-    val jE = JodaTimes(Seq(JodaDateTime.now()))
-    val jQ = quote(querySchema[JodaTimes]("ArraysTestEntity"))
-    await(ctx.run(jQ.insert(lift(jE))))
-    val actual = await(ctx.run(jQ)).head
-    actual.timestamps mustBe jE.timestamps
   }
 
   "Java8 times" in {
@@ -57,19 +37,19 @@ class ArrayAsyncEncodingSpec extends ArrayEncodingBaseSpec {
     await(ctx.run(wrapQ)).head mustBe wrapE
   }
 
-  "Catch invalid decoders" in {
-    val newCtx = new TestContext {
-      // avoid transforming from org.joda.time.LocalDate to java.time.LocalDate
-      override implicit def arrayLocalDateDecoder[Col <: Seq[LocalDate]](implicit bf: CBF[LocalDate, Col]): Decoder[Col] =
-        arrayDecoder[LocalDate, LocalDate, Col](identity)
-    }
-    import newCtx._
-    await(newCtx.run(query[ArraysTestEntity].insert(lift(e))))
-    intercept[IllegalStateException] {
-      await(newCtx.run(query[ArraysTestEntity])).head mustBe e
-    }
-    newCtx.close()
-  }
+//  "Catch invalid decoders" in {
+//    val newCtx = new TestContext {
+//      // avoid transforming from org.joda.time.LocalDate to java.time.LocalDate
+//      override implicit def arrayLocalDateDecoder[Col <: Seq[LocalDate]](implicit bf: CBF[LocalDate, Col]): Decoder[Col] =
+//        arrayDecoder[LocalDate, LocalDate, Col](identity)
+//    }
+//    import newCtx._
+//    await(newCtx.run(query[ArraysTestEntity].insert(lift(e))))
+//    intercept[IllegalStateException] {
+//      await(newCtx.run(query[ArraysTestEntity])).head mustBe e
+//    }
+//    newCtx.close()
+//  }
 
   "Arrays in where clause" in {
     await(ctx.run(q.insert(lift(e))))
