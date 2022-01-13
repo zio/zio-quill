@@ -61,7 +61,7 @@ libraryDependencies ++= Seq(
 )
 ```
 
-You can find this code (with some more examples) complete with a docker-provided Postgres database [here](https://github.com/deusaquilus/zio-quill-gettingstarted/blob/master/README.md).
+You can find this code (with some more examples) complete with a docker-provided Postgres database [here](https://github.com/deusaquilus/zio-quill-gettingstarted/blob/master).
 
 ## Choosing a Module
 
