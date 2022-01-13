@@ -12,7 +12,7 @@ class DecodeNullSpec extends Spec {
       val writeEntities = quote(querySchema[DecodeNullTestWriteEntity]("DecodeNullTestEntity"))
 
       ctx.run(writeEntities.delete)
-      ctx.run(writeEntities.insert(lift(insertValue)))
+      ctx.run(writeEntities.insertValue(lift(insertValue)))
 
       intercept[IllegalStateException] {
         ctx.run(query[DecodeNullTestEntity])

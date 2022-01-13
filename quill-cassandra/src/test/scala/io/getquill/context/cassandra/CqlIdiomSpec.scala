@@ -259,7 +259,7 @@ class CqlIdiomSpec extends Spec {
   "action" - {
     "insert" in {
       val q = quote {
-        qr1.insert(lift(TestEntity("s", 1, 2L, None, true)))
+        qr1.insertValue(lift(TestEntity("s", 1, 2L, None, true)))
       }
       mirrorContext.run(q).string mustEqual
         "INSERT INTO TestEntity (s,i,l,o,b) VALUES (?, ?, ?, ?, ?)"

@@ -21,7 +21,7 @@ class MapsEncodingSpec extends CollectionsSpec {
   val q = quote(query[MapsEntity])
 
   "Map encoders/decoders" in {
-    ctx.run(q.insert(lift(e)))
+    ctx.run(q.insertValue(lift(e)))
     ctx.run(q.filter(_.id == 1)).head mustBe e
   }
 
@@ -35,7 +35,7 @@ class MapsEncodingSpec extends CollectionsSpec {
     val e = Entity(1, Some(Map("1" -> BigDecimal(1))), None, Map())
     val q = quote(querySchema[Entity]("MapsEntity"))
 
-    ctx.run(q.insert(lift(e)))
+    ctx.run(q.insertValue(lift(e)))
     ctx.run(q.filter(_.id == 1)).head mustBe e
   }
 
@@ -44,7 +44,7 @@ class MapsEncodingSpec extends CollectionsSpec {
     val e = StrEntity(1, Map(StrWrap("1") -> BigDecimal(1)))
     val q = quote(querySchema[StrEntity]("MapsEntity"))
 
-    ctx.run(q.insert(lift(e)))
+    ctx.run(q.insertValue(lift(e)))
     ctx.run(q.filter(_.id == 1)).head mustBe e
   }
 
@@ -53,13 +53,13 @@ class MapsEncodingSpec extends CollectionsSpec {
     val e = IntEntity(1, Map(IntWrap(1) -> 1d))
     val q = quote(querySchema[IntEntity]("MapsEntity"))
 
-    ctx.run(q.insert(lift(e)))
+    ctx.run(q.insertValue(lift(e)))
     ctx.run(q.filter(_.id == 1)).head mustBe e
   }
 
   "Map in where clause / contains" in {
     val e = MapFrozen(Map(1 -> true))
-    ctx.run(mapFroz.insert(lift(e)))
+    ctx.run(mapFroz.insertValue(lift(e)))
     ctx.run(mapFroz.filter(_.id == lift(Map(1 -> true)))) mustBe List(e)
     ctx.run(mapFroz.filter(_.id == lift(Map(1 -> false)))) mustBe Nil
 
@@ -69,7 +69,7 @@ class MapsEncodingSpec extends CollectionsSpec {
 
   "Map.containsValue" in {
     val e = MapFrozen(Map(1 -> true))
-    ctx.run(mapFroz.insert(lift(e)))
+    ctx.run(mapFroz.insertValue(lift(e)))
 
     ctx.run(mapFroz.filter(_.id.containsValue(true)).allowFiltering) mustBe List(e)
     ctx.run(mapFroz.filter(_.id.containsValue(false)).allowFiltering) mustBe Nil

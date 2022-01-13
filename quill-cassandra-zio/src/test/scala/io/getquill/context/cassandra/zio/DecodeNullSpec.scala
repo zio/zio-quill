@@ -10,7 +10,7 @@ class DecodeNullSpec extends ZioCassandraSpec {
       val ret =
         for {
           _ <- testZioDB.run(writeEntities.delete)
-          _ <- testZioDB.run(writeEntities.insert(lift(insertValue)))
+          _ <- testZioDB.run(writeEntities.insertValue(lift(insertValue)))
           result <- testZioDB.run(query[DecodeNullTestEntity])
         } yield {
           result

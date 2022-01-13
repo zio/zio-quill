@@ -21,7 +21,7 @@ class TransactionSpec extends ProductSpec {
           }
           Throw(_) <- context.transaction {
             context.run(quote {
-              query[Product].insert(lift(p.copy(id = id)))
+              query[Product].insertValue(lift(p.copy(id = id)))
             }).liftToTry
           }
         } yield id
