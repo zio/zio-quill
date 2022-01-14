@@ -15,7 +15,7 @@ class ArrayAsyncEncodingSpec extends ArrayEncodingBaseSpec {
   val q = quote(query[ArraysTestEntity])
 
   "Support all sql base types and `Iterable` implementers" in {
-    await(ctx.run(q.insert(lift(e))))
+    await(ctx.run(q.insertValue(lift(e))))
     val actual = await(ctx.run(q)).head
     actual mustEqual e
     baseEntityDeepCheck(actual, e)
@@ -25,7 +25,7 @@ class ArrayAsyncEncodingSpec extends ArrayEncodingBaseSpec {
     case class Java8Times(timestamps: Seq[LocalDateTime], dates: Seq[LocalDate])
     val jE = Java8Times(Seq(LocalDateTime.now()), Seq(LocalDate.now()))
     val jQ = quote(querySchema[Java8Times]("ArraysTestEntity"))
-    await(ctx.run(jQ.insert(lift(jE))))
+    await(ctx.run(jQ.insertValue(lift(jE))))
     val actual = await(ctx.run(jQ)).head
     actual.timestamps mustBe jE.timestamps
     actual.dates mustBe jE.dates
@@ -33,26 +33,12 @@ class ArrayAsyncEncodingSpec extends ArrayEncodingBaseSpec {
 
   "Support Iterable encoding basing on MappedEncoding" in {
     val wrapQ = quote(querySchema[WrapEntity]("ArraysTestEntity"))
-    await(ctx.run(wrapQ.insert(lift(wrapE))))
+    await(ctx.run(wrapQ.insertValue(lift(wrapE))))
     await(ctx.run(wrapQ)).head mustBe wrapE
   }
 
-//  "Catch invalid decoders" in {
-//    val newCtx = new TestContext {
-//      // avoid transforming from org.joda.time.LocalDate to java.time.LocalDate
-//      override implicit def arrayLocalDateDecoder[Col <: Seq[LocalDate]](implicit bf: CBF[LocalDate, Col]): Decoder[Col] =
-//        arrayDecoder[LocalDate, LocalDate, Col](identity)
-//    }
-//    import newCtx._
-//    await(newCtx.run(query[ArraysTestEntity].insert(lift(e))))
-//    intercept[IllegalStateException] {
-//      await(newCtx.run(query[ArraysTestEntity])).head mustBe e
-//    }
-//    newCtx.close()
-//  }
-
   "Arrays in where clause" in {
-    await(ctx.run(q.insert(lift(e))))
+    await(ctx.run(q.insertValue(lift(e))))
     val actual1 = await(ctx.run(q.filter(_.texts == lift(List("test")))))
     val actual2 = await(ctx.run(q.filter(_.texts == lift(List("test2")))))
     baseEntityDeepCheck(actual1.head, e)
@@ -131,7 +117,7 @@ class ArrayAsyncEncodingSpec extends ArrayEncodingBaseSpec {
     val realEntity = quote {
       querySchema[RealEncodingTestEntity]("EncodingTestEntity")
     }
-    await(ctx.run(realEntity.insert(lift(insertValue))))
+    await(ctx.run(realEntity.insertValue(lift(insertValue))))
 
     case class EncodingTestEntity(v1: List[String])
     intercept[IllegalStateException](await(ctx.run(query[EncodingTestEntity])))

@@ -29,6 +29,6 @@ class UdtEncodingMirrorContextSpec extends UdtSpec {
     case class User(id: Int, name: Name, names: List[Name])
     mirrorContext.run(query[User]).string mustBe "SELECT id, name, names FROM User"
     mirrorContext.run(query[User]
-      .insert(lift(User(1, Name("1", None), Nil)))).string mustBe "INSERT INTO User (id,name,names) VALUES (?, ?, ?)"
+      .insertValue(lift(User(1, Name("1", None), Nil)))).string mustBe "INSERT INTO User (id,name,names) VALUES (?, ?, ?)"
   }
 }

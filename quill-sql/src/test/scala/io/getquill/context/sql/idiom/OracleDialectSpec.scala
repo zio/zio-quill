@@ -20,7 +20,7 @@ class OracleDialectSpec extends Spec {
         """SELECT _t."_1", _t."_2" FROM "_UnderscoreEntity" "_t""""
     }
     "table and column insert" in {
-      ctx.run(query[_UnderscoreEntity].insert(lift(_UnderscoreEntity("foo", 1, 1)))).string mustEqual
+      ctx.run(query[_UnderscoreEntity].insertValue(lift(_UnderscoreEntity("foo", 1, 1)))).string mustEqual
         """INSERT INTO "_UnderscoreEntity" ("_1","_2","_3") VALUES (?, ?, ?)"""
     }
   }
@@ -28,7 +28,7 @@ class OracleDialectSpec extends Spec {
   "Insert with returning" - {
     "with single column table" in {
       val q = quote {
-        qr4.insert(lift(TestEntity4(0))).returning(_.i)
+        qr4.insertValue(lift(TestEntity4(0))).returning(_.i)
       }
       ctx.run(q).string mustEqual
         "INSERT INTO TestEntity4 (i) VALUES (?)"
@@ -36,34 +36,34 @@ class OracleDialectSpec extends Spec {
 
     "returning generated with single column table" in {
       val q = quote {
-        qr4.insert(lift(TestEntity4(0))).returningGenerated(_.i)
+        qr4.insertValue(lift(TestEntity4(0))).returningGenerated(_.i)
       }
       ctx.run(q).string mustEqual
         "INSERT INTO TestEntity4 (i) VALUES (DEFAULT)"
     }
     "returning with multi column table" in {
       val q = quote {
-        qr1.insert(lift(TestEntity("s", 0, 0L, Some(3), true))).returning(r => (r.i, r.l))
+        qr1.insertValue(lift(TestEntity("s", 0, 0L, Some(3), true))).returning(r => (r.i, r.l))
       }
       ctx.run(q).string mustEqual
         "INSERT INTO TestEntity (s,i,l,o,b) VALUES (?, ?, ?, ?, ?)"
     }
     "returning generated with multi column table" in {
       val q = quote {
-        qr1.insert(lift(TestEntity("s", 0, 0L, Some(3), true))).returningGenerated(r => (r.i, r.l))
+        qr1.insertValue(lift(TestEntity("s", 0, 0L, Some(3), true))).returningGenerated(r => (r.i, r.l))
       }
       ctx.run(q).string mustEqual
         "INSERT INTO TestEntity (s,o,b) VALUES (?, ?, ?)"
     }
     "returning - multiple fields + operations - should not compile" in {
       val q = quote {
-        qr1.insert(lift(TestEntity("s", 1, 2L, Some(3), true)))
+        qr1.insertValue(lift(TestEntity("s", 1, 2L, Some(3), true)))
       }
       "ctx.run(q.returning(r => (r.i, r.l + 1))).string" mustNot compile
     }
     "returning generated - multiple fields + operations - should not compile" in {
       val q = quote {
-        qr1.insert(lift(TestEntity("s", 1, 2L, Some(3), true)))
+        qr1.insertValue(lift(TestEntity("s", 1, 2L, Some(3), true)))
       }
       "ctx.run(q.returningGenerated(r => (r.i, r.l + 1))).string" mustNot compile
     }

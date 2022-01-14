@@ -18,7 +18,7 @@ class PrepareJdbcSpec extends PrepareJdbcSpecBase with BeforeAndAfter {
   implicit val im = insertMeta[Product](_.id)
 
   "single" in {
-    val prepareInsert = prepare(query[Product].insert(lift(productEntries.head)))
+    val prepareInsert = prepare(query[Product].insertValue(lift(productEntries.head)))
 
     singleInsert(dataSource.getConnection)(prepareInsert) mustEqual false
     extractProducts(dataSource.getConnection)(prepareQuery) === List(productEntries.head)
@@ -26,7 +26,7 @@ class PrepareJdbcSpec extends PrepareJdbcSpecBase with BeforeAndAfter {
 
   "batch" in {
     val prepareBatchInsert = prepare(
-      liftQuery(withOrderedIds(productEntries)).foreach(p => query[Product].insert(p))
+      liftQuery(withOrderedIds(productEntries)).foreach(p => query[Product].insertValue(p))
     )
 
     batchInsert(dataSource.getConnection)(prepareBatchInsert).distinct mustEqual List(false)

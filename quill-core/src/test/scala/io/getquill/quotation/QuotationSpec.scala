@@ -403,7 +403,7 @@ class QuotationSpec extends Spec {
         }
         "case class" in {
           val q = quote {
-            (t: TestEntity) => qr1.insert(t)
+            (t: TestEntity) => qr1.insertValue(t)
           }
           val n = quote {
             (t: TestEntity) =>
@@ -431,7 +431,7 @@ class QuotationSpec extends Spec {
             ActionTestEntity(1),
             ActionTestEntity(2)
           )
-          val insert = quote((row: ActionTestEntity) => query[ActionTestEntity].insert(row))
+          val insert = quote((row: ActionTestEntity) => query[ActionTestEntity].insertValue(row))
           val q = quote(liftQuery(list).foreach(row => quote(insert(row))))
           quote(unquote(q)).ast mustEqual
             Foreach(CaseClassQueryLift("q.list", list, quatOf[ActionTestEntity]), Ident("row"), insert.ast.body)
@@ -1664,7 +1664,7 @@ class QuotationSpec extends Spec {
         case class TestEntity(embedded: EmbeddedTestEntity)
         val t = TestEntity(EmbeddedTestEntity("test"))
         val q = quote {
-          query[TestEntity].insert(lift(t))
+          query[TestEntity].insertValue(lift(t))
         }
         q.liftings.`t.embedded.id`.value mustEqual t.embedded.id
         val q2 = quote(q)
@@ -1694,7 +1694,7 @@ class QuotationSpec extends Spec {
         }
         "action" in {
           val q = quote {
-            query[TestEntity].insert(lift(t))
+            query[TestEntity].insertValue(lift(t))
           }
           val l1 = q.liftings.`t.s`
           l1.value mustEqual t.s

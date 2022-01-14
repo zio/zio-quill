@@ -60,7 +60,7 @@ class UdtEncodingSessionContextSpec extends UdtSpec {
         Set(1, 2),
         Map(1 -> "1", 2 -> "2")),
         List(Name("first", None)))
-      ctx1.run(query[WithEverything].insert(lift(e)))
+      ctx1.run(query[WithEverything].insertValue(lift(e)))
       ctx1.run(query[WithEverything].filter(_.id == 1)).headOption must contain(e)
     }
     "with meta" in {
@@ -69,7 +69,7 @@ class UdtEncodingSessionContextSpec extends UdtSpec {
       implicit val myNameMeta = udtMeta[MyName]("Name", _.first -> "firstName")
 
       val e = WithEverything(2, MyName("first"), List(MyName("first")))
-      ctx1.run(query[WithEverything].insert(lift(e)))
+      ctx1.run(query[WithEverything].insertValue(lift(e)))
       ctx1.run(query[WithEverything].filter(_.id == 2)).headOption must contain(e)
     }
   }
@@ -100,7 +100,7 @@ class UdtEncodingSessionContextSpec extends UdtSpec {
     case class WithUdt(id: Int, name: Name)
     val e = WithUdt(1, Name("first", Some("second")))
     // quill_test_2 uses snake case
-    ctx2.run(query[WithUdt].insert(lift(e)))
+    ctx2.run(query[WithUdt].insertValue(lift(e)))
     ctx2.run(query[WithUdt].filter(_.id == 1)).headOption must contain(e)
   }
 

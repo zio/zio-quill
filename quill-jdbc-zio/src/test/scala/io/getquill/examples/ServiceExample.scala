@@ -44,7 +44,7 @@ object DBManager {
 
   val live: ZLayer[Any, Nothing, DBManagerEnv] = ZLayer.succeed(new Service {
     def persist(person: Person): ZIO[Has[DataSource], SQLException, Long] =
-      ctx.run(quote(query[Person].insert(lift(person))))
+      ctx.run(quote(query[Person].insertValue(lift(person))))
 
     def retrieveJoes: ZIO[Has[DataSource], SQLException, List[Person]] =
       ctx.run(quote(query[Person].filter(p => p.name == "Joe")))
