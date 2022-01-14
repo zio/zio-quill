@@ -205,6 +205,12 @@ def biggerThan(i: Float) = quote {
 ctx.run(biggerThan(10)) // SELECT r.radius FROM Circle r WHERE r.radius > ?
 ```
 
+Note that literal-constants do not need to be lifted, they can be used in queries directly. Literal constants are supported starting Scala 2.12.
+```scala
+final val minAge = 21  // This is the same as: final val minAge: 21 = 21
+ctx.run(query[Person].filter(p => p.age > minAge)) // SELECT p.name, p.age FROM Person p WHERE p.name > 21
+```
+
 ### Lifted queries
 
 A `Iterable` instance can be lifted as a `Query`. There are two main usages for lifted queries:
