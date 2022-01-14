@@ -70,6 +70,7 @@ lazy val allModules =
 lazy val scala213Modules = baseModules ++ jsModules ++ dbModules ++ codegenModules ++ Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-finagle-mysql`,
   `quill-cassandra`,
+  `quill-cassandra-alpakka`,
   `quill-cassandra-lagom`,
   `quill-cassandra-monix`,
   `quill-cassandra-zio`,
@@ -607,6 +608,19 @@ lazy val `quill-cassandra-zio` =
     .dependsOn(`quill-zio` % "compile->compile;test->test")
     .enablePlugins(MimaPlugin)
 
+lazy val `quill-cassandra-alpakka` =
+  (project in file("quill-cassandra-alpakka"))
+    .settings(commonSettings: _*)
+    .settings(mimaSettings: _*)
+    .settings(
+      Test / fork := true,
+      libraryDependencies ++= Seq(
+        "com.lightbend.akka" %% "akka-stream-alpakka-cassandra" % "3.0.4",
+        "com.typesafe.akka" %% "akka-testkit" % "2.6.14" % Test
+      )
+    )
+    .dependsOn(`quill-cassandra` % "compile->compile;test->test")
+    .enablePlugins(MimaPlugin)
 
 lazy val `quill-cassandra-lagom` =
    (project in file("quill-cassandra-lagom"))
@@ -627,7 +641,6 @@ lazy val `quill-cassandra-lagom` =
       }
     )
     .enablePlugins(MimaPlugin)
-
 
 lazy val `quill-orientdb` =
   (project in file("quill-orientdb"))
