@@ -29,7 +29,7 @@ class ListsEncodingSpec extends CollectionsSpec {
   val q = quote(query[ListsEntity])
 
   "List encoders/decoders for CassandraTypes and CassandraMappers" in {
-    ctx.run(q.insert(lift(e)))
+    ctx.run(q.insertValue(lift(e)))
     ctx.run(q.filter(_.id == 1)).head mustBe e
   }
 
@@ -38,7 +38,7 @@ class ListsEncodingSpec extends CollectionsSpec {
     val e = Entity(1, Some(List("1", "2")), None, Nil)
     val q = quote(querySchema[Entity]("ListsEntity"))
 
-    ctx.run(q.insert(lift(e)))
+    ctx.run(q.insertValue(lift(e)))
     val r = ctx.run(q.filter(_.id == 1)).head
     ctx.run(q.filter(_.id == 1)).head mustBe e
   }
@@ -48,7 +48,7 @@ class ListsEncodingSpec extends CollectionsSpec {
     val e = StrEntity(1, List("1", "2").map(StrWrap.apply))
     val q = quote(querySchema[StrEntity]("ListsEntity"))
 
-    ctx.run(q.insert(lift(e)))
+    ctx.run(q.insertValue(lift(e)))
     ctx.run(q.filter(_.id == 1)).head mustBe e
   }
 
@@ -57,7 +57,7 @@ class ListsEncodingSpec extends CollectionsSpec {
     val e = IntEntity(1, List(1, 2).map(IntWrap.apply))
     val q = quote(querySchema[IntEntity]("ListsEntity"))
 
-    ctx.run(q.insert(lift(e)))
+    ctx.run(q.insertValue(lift(e)))
     ctx.run(q.filter(_.id == 1)).head mustBe e
   }
 
@@ -66,14 +66,14 @@ class ListsEncodingSpec extends CollectionsSpec {
     val e = BlobsEntity(1, List(Array(1.toByte, 2.toByte), Array(2.toByte)))
     val q = quote(querySchema[BlobsEntity]("ListsEntity"))
 
-    ctx.run(q.insert(lift(e)))
+    ctx.run(q.insertValue(lift(e)))
     ctx.run(q.filter(_.id == 1))
       .head.blobs.map(_.toList) mustBe e.blobs.map(_.toList)
   }
 
   "List in where clause / contains" in {
     val e = ListFrozen(List(1, 2))
-    ctx.run(listFroz.insert(lift(e)))
+    ctx.run(listFroz.insertValue(lift(e)))
     ctx.run(listFroz.filter(_.id == lift(List(1, 2)))) mustBe List(e)
     ctx.run(listFroz.filter(_.id == lift(List(1)))) mustBe Nil
 

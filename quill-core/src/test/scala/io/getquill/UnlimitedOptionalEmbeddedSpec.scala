@@ -120,13 +120,13 @@ class UnlimitedOptionalEmbeddedSpec extends Spec {
     )
 
     "non-batched" in {
-      val r = testContext.run(qrOptEmd.insert(lift(optEmdEnt)))
+      val r = testContext.run(qrOptEmd.insertValue(lift(optEmdEnt)))
       r.string mustEqual resultString
       r.prepareRow mustEqual resultRow
     }
     "batched" in {
       val r = testContext.run(
-        liftQuery(List(optEmdEnt)).foreach(e => qrOptEmd.insert(e))
+        liftQuery(List(optEmdEnt)).foreach(e => qrOptEmd.insertValue(e))
       )
       r.groups mustEqual List(resultString -> List(resultRow))
     }
