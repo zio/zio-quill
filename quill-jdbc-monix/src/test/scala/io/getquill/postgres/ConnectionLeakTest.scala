@@ -30,7 +30,7 @@ class ConnectionLeakTest extends ProductSpec {
         for {
           _ <- context.run {
             quote {
-              query[Product].insert(
+              query[Product].insertValue(
                 lift(Product(1, UUID.randomUUID().toString, Random.nextLong()))
               )
             }

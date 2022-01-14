@@ -15,7 +15,7 @@ trait DepartmentsSpec extends Spec {
 
   val departmentInsert =
     quote {
-      (dpt: Department) => query[Department].insert(dpt)
+      (dpt: Department) => query[Department].insertValue(dpt)
     }
 
   val departmentEntries =
@@ -28,7 +28,7 @@ trait DepartmentsSpec extends Spec {
 
   val employeeInsert =
     quote {
-      (emp: Employee) => query[Employee].insert(emp)
+      (emp: Employee) => query[Employee].insertValue(emp)
     }
 
   val employeeEntries =
@@ -43,7 +43,7 @@ trait DepartmentsSpec extends Spec {
 
   val taskInsert =
     quote {
-      (tsk: Task) => query[Task].insert(tsk)
+      (tsk: Task) => query[Task].insertValue(tsk)
     }
 
   val taskEntries =

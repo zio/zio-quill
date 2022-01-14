@@ -43,7 +43,7 @@ class FinagleMysqlEncodingSpec extends EncodingSpec {
     Await.result {
       for {
         _ <- testContext.run(query[EncodingTestEntity].delete)
-        _ <- testContext.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insert(e)))
+        _ <- testContext.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insertValue(e)))
         r <- testContext.run(q(liftQuery(insertValues.map(_.v6))))
       } yield {
         verify(r)
@@ -77,7 +77,7 @@ class FinagleMysqlEncodingSpec extends EncodingSpec {
     val decodeBoolean = (entity: BooleanEncodingTestEntity) => {
       val r = for {
         _ <- testContext.run(query[BooleanEncodingTestEntity].delete)
-        _ <- testContext.run(query[BooleanEncodingTestEntity].insert(lift(entity)))
+        _ <- testContext.run(query[BooleanEncodingTestEntity].insertValue(lift(entity)))
         result <- testContext.run(query[BooleanEncodingTestEntity])
       } yield result
       Await.result(r).head
@@ -128,7 +128,7 @@ class FinagleMysqlEncodingSpec extends EncodingSpec {
     "default timezone" in {
       val r = for {
         _ <- testContext.run(query[DateEncodingTestEntity].delete)
-        _ <- testContext.run(query[DateEncodingTestEntity].insert(lift(entity)))
+        _ <- testContext.run(query[DateEncodingTestEntity].insertValue(lift(entity)))
         result <- testContext.run(query[DateEncodingTestEntity])
       } yield result
 
@@ -142,7 +142,7 @@ class FinagleMysqlEncodingSpec extends EncodingSpec {
 
       val r = for {
         _ <- testTimezoneContext.run(query[DateEncodingTestEntity].delete)
-        _ <- testTimezoneContext.run(query[DateEncodingTestEntity].insert(lift(entity)))
+        _ <- testTimezoneContext.run(query[DateEncodingTestEntity].insertValue(lift(entity)))
         result <- testTimezoneContext.run(query[DateEncodingTestEntity])
       } yield result
 
@@ -174,7 +174,7 @@ class FinagleMysqlEncodingSpec extends EncodingSpec {
 
       val r = for {
         _ <- testTimezoneContext.run(query[LocalDateTimeEncodingTestEntity].delete)
-        _ <- testTimezoneContext.run(query[LocalDateTimeEncodingTestEntity].insert(lift(entity)))
+        _ <- testTimezoneContext.run(query[LocalDateTimeEncodingTestEntity].insertValue(lift(entity)))
         result <- testTimezoneContext.run(query[LocalDateTimeEncodingTestEntity])
       } yield result
 
@@ -190,7 +190,7 @@ class FinagleMysqlEncodingSpec extends EncodingSpec {
 
     val r = for {
       _ <- testContext.run(query[LocalDateTimeEncodingTestEntity].delete)
-      _ <- testContext.run(query[LocalDateTimeEncodingTestEntity].insert(lift(e)))
+      _ <- testContext.run(query[LocalDateTimeEncodingTestEntity].insertValue(lift(e)))
       result <- testContext.run(query[LocalDateTimeEncodingTestEntity])
     } yield result
 
