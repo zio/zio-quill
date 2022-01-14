@@ -28,22 +28,22 @@ class ScalaFutureIOMonadSpec extends IOMonadSpec {
     }
     "RunActionReturningResult" in {
       val t = TestEntity("1", 2, 3L, Some(4), true)
-      val q = quote(qr1.insert(lift(t)).returning(_.i))
+      val q = quote(qr1.insertValue(lift(t)).returning(_.i))
       eval(ctx.runIO(q)).string mustEqual ctx.eval(ctx.run(q)).string
     }
     "RunBatchActionResult" in {
       val l = List(TestEntity("1", 2, 3L, Some(4), true))
-      val q = quote(liftQuery(l).foreach(t => qr1.insert(t)))
+      val q = quote(liftQuery(l).foreach(t => qr1.insertValue(t)))
       eval(ctx.runIO(q)).groups mustEqual ctx.eval(ctx.run(q)).groups
     }
     "RunBatchActionReturningResult" in {
       val l = List(TestEntity("1", 2, 3L, Some(4), true))
-      val q = quote(liftQuery(l).foreach(t => qr1.insert(t).returning(_.i)))
+      val q = quote(liftQuery(l).foreach(t => qr1.insertValue(t).returning(_.i)))
       eval(ctx.runIO(q)).groups mustEqual ctx.eval(ctx.run(q)).groups
     }
     "transactional" in {
       val l = List(TestEntity("1", 2, 3L, Some(4), true))
-      val q = quote(liftQuery(l).foreach(t => qr1.insert(t).returning(_.i)))
+      val q = quote(liftQuery(l).foreach(t => qr1.insertValue(t).returning(_.i)))
       eval(ctx.runIO(q).transactional).ec mustEqual TransactionalExecutionContext(implicitly[ExecutionContext])
     }
   }

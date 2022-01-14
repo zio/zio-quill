@@ -46,7 +46,7 @@ class RenamePropertiesOverrideSpec extends Spec {
     "action" - {
       "insert" in {
         val q = quote {
-          e.insert(lift(TestEntity("a", 1, 1L, None, true)))
+          e.insertValue(lift(TestEntity("a", 1, 1L, None, true)))
         }
         testContextUpper.run(q).string mustEqual
           "INSERT INTO test_entity (field_s,field_i,L,O,B) VALUES (?, ?, ?, ?, ?)"
@@ -79,14 +79,14 @@ class RenamePropertiesOverrideSpec extends Spec {
             querySchema[TestEntity]("test_entity", _.s -> "field_s", _.i -> "field_i")
           }
           val q = quote {
-            e1.insert(lift(TestEntity("s", 1, 1L, None, true))).returning(_.i)
+            e1.insertValue(lift(TestEntity("s", 1, 1L, None, true))).returning(_.i)
           }
           val mirror = ctx.run(q)
           mirror.returningBehavior mustEqual ReturnRecord
         }
         "returning generated - alias" in {
           val q = quote {
-            e.insert(lift(TestEntity("s", 1, 1L, None, true))).returningGenerated(_.i)
+            e.insertValue(lift(TestEntity("s", 1, 1L, None, true))).returningGenerated(_.i)
           }
           val mirror = testContextUpper.run(q)
           mirror.returningBehavior mustEqual ReturnColumns(List("field_i"))

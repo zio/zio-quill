@@ -20,7 +20,7 @@ trait ArrayOpsSpec extends Spec {
   val entity = quote(query[ArrayOps])
 
   val insertEntries = quote {
-    liftQuery(entriesList).foreach(e => entity.insert(e))
+    liftQuery(entriesList).foreach(e => entity.insertValue(e))
   }
 
   object `contains` {

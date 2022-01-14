@@ -408,6 +408,7 @@ lazy val `quill-zio` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
+        "io.github.kitlangton" %% "zio-magic" % "0.3.11" % Test,
         "dev.zio" %% "zio" % "1.0.12",
         "dev.zio" %% "zio-streams" % "1.0.12"
       )

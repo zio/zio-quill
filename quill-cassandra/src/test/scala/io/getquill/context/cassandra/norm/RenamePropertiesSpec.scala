@@ -28,7 +28,7 @@ class RenamePropertiesSpec extends Spec {
     "action" - {
       "insert" in {
         val q = quote {
-          e.insert(lift(TestEntity("a", 1, 1L, None, true)))
+          e.insertValue(lift(TestEntity("a", 1, 1L, None, true)))
         }
         mirrorContext.run(q).string mustEqual
           "INSERT INTO test_entity (field_s,field_i,l,o,b) VALUES (?, ?, ?, ?, ?)"

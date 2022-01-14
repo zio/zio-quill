@@ -9,7 +9,7 @@ trait OnConflictSpec extends Spec {
 
   lazy val e = TestEntity("s1", 1, 1, None, true)
 
-  def ins = quote(query[TestEntity].insert(lift(e)))
+  def ins = quote(query[TestEntity].insertValue(lift(e)))
   def del = quote(query[TestEntity].delete)
 
   def `no target - ignore` = quote {
@@ -27,6 +27,6 @@ trait OnConflictSpec extends Spec {
   def insBatch = quote(liftQuery(Seq(e, TestEntity("s2", 1, 2L, Some(1), true))))
 
   def `no target - ignore batch` = quote {
-    insBatch.foreach(query[TestEntity].insert(_).onConflictIgnore)
+    insBatch.foreach(query[TestEntity].insertValue(_).onConflictIgnore)
   }
 }
