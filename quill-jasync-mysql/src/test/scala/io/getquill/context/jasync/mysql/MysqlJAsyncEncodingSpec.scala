@@ -88,8 +88,7 @@ class MysqlJAsyncEncodingSpec extends EncodingSpec {
 
   "decode LocalDate and LocalDateTime types" in {
     case class DateEncodingTestEntity(v1: LocalDate, v2: LocalDateTime, v3: LocalDateTime)
-    //since localdatetime is converted to joda which doesn't store nanos need to zero the nano part
-    val entity = DateEncodingTestEntity(LocalDate.now(), LocalDateTime.now.withNano(0), LocalDateTime.now.withNano(0))
+    val entity = DateEncodingTestEntity(LocalDate.now, LocalDateTime.now, LocalDateTime.now)
     val r = for {
       _ <- testContext.run(query[DateEncodingTestEntity].delete)
       _ <- testContext.run(query[DateEncodingTestEntity].insertValue(lift(entity)))

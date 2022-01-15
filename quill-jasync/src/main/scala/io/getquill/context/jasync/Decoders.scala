@@ -128,4 +128,6 @@ trait Decoders {
   implicit val dateDecoder: Decoder[Date] = decoder[Date](PartialFunction.empty, SqlTypes.TIMESTAMP)
 
   implicit val localDateDecoder: Decoder[LocalDate] = decoder[LocalDate](PartialFunction.empty, SqlTypes.TIMESTAMP)
+
+  implicit val localDateTimeDecoder: Decoder[LocalDateTime] = decoder[LocalDateTime](PartialFunction.empty, SqlTypes.TIMESTAMP)
 }

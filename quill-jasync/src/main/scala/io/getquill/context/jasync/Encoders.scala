@@ -55,4 +55,5 @@ trait Encoders {
   implicit val byteArrayEncoder: Encoder[Array[Byte]] = encoder[Array[Byte]](SqlTypes.VARBINARY)
   implicit val dateEncoder: Encoder[Date] = encoder[Date](SqlTypes.TIMESTAMP)
   implicit val localDateEncoder: Encoder[LocalDate] = encoder[LocalDate](SqlTypes.TIMESTAMP)
+  implicit val localDateTimeEncoder: Encoder[LocalDateTime] = encoder[LocalDateTime](SqlTypes.TIMESTAMP)
 }
