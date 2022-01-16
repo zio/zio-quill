@@ -520,7 +520,7 @@ lazy val `quill-jasync-postgres` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.github.jasync-sql" % "jasync-postgresql" % "2.0.5"
+        "com.github.jasync-sql" % "jasync-postgresql" % "2.0.6"
       )
     )
     .dependsOn(`quill-jasync` % "compile->compile;test->test")
@@ -533,7 +533,7 @@ lazy val `quill-jasync-mysql` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.github.jasync-sql" % "jasync-mysql" % "2.0.5"
+        "com.github.jasync-sql" % "jasync-mysql" % "2.0.6"
       )
     )
     .dependsOn(`quill-jasync` % "compile->compile;test->test")

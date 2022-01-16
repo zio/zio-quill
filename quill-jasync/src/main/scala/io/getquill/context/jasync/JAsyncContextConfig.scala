@@ -63,7 +63,7 @@ abstract class JAsyncContextConfig[C <: ConcreteConnection](
     getString("applicationName").orElse(Option(urlConfiguration.getApplicationName)).orNull,
     urlConfiguration.getInterceptors,
     getLong("maxConnectionTtl").map(JavaLong.valueOf).orElse(Option(default.getMaxConnectionTtl)).orNull,
-//    getString("currentSchema").orElse(Option(urlConfiguration.getCurrentSchema.getCurrentSchema)).orNull
+    getString("currentSchema").orElse(Option(urlConfiguration.getCurrentSchema)).orNull
   )
 
   def pool =
