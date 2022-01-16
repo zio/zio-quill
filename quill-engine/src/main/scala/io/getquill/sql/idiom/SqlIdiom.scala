@@ -90,7 +90,11 @@ trait SqlIdiom extends Idiom {
         // for more details.
         // Right now we are not removing extra select clauses here (via RemoveUnusedSelects) since I am not sure what
         // kind of impact that could have on selects. Can try to do that in the future.
-        RemoveExtraAlias(strategy)(ExpandNestedQueries(SqlQuery(a))).token
+        if (Messages.querySubexpand)
+          RemoveExtraAlias(strategy)(ExpandNestedQueries(SqlQuery(a))).token
+        else
+          SqlQuery(a).token
+
       case a: Operation       => a.token
       case a: Infix           => a.token
       case a: Action          => a.token
