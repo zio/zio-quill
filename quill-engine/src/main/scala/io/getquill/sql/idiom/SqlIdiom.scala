@@ -84,6 +84,28 @@ trait SqlIdiom extends Idiom {
       def token(v: Ast) = stableTokenizer.token(v)
     }
 
+  private[getquill] def subexpandNestedQuery(q: Query, strategy: NamingStrategy) = {
+    val mappedSubquery =
+      q match {
+        case Quat.Is(Quat.Product(values)) =>
+          val id = Ident("x", q.quat)
+          val keyValues =
+            values.map {
+              case (k, quat) => (strategy.column(k), Property(id, k))
+            }.toList
+          Map(q, id, CaseClass(keyValues))
+
+        case Map(query, id, prop @ Property(_, propName)) =>
+          Map(query, id, CaseClass(List((strategy.column(propName), prop))))
+
+        case other => q
+      }
+
+    val transformed = normalizeAst(mappedSubquery, concatBehavior, equalityBehavior)
+    RemoveExtraAlias(strategy)(ExpandNestedQueries(SqlQuery(transformed)))
+  }
+
+
   def astTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Ast] =
     Tokenizer[Ast] {
       case a: Query =>
@@ -92,7 +114,7 @@ trait SqlIdiom extends Idiom {
         // for more details.
         // Right now we are not removing extra select clauses here (via RemoveUnusedSelects) since I am not sure what
         // kind of impact that could have on selects. Can try to do that in the future.
-        RemoveExtraAlias(strategy)(ExpandNestedQueries(SqlQuery(a))).token
+        subexpandNestedQuery(a, strategy).token
 
       case a: Operation       => a.token
       case a: Infix           => a.token
