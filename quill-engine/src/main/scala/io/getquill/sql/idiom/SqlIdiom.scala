@@ -105,7 +105,6 @@ trait SqlIdiom extends Idiom {
     RemoveExtraAlias(strategy)(ExpandNestedQueries(SqlQuery(transformed)))
   }
 
-
   def astTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Ast] =
     Tokenizer[Ast] {
       case a: Query =>
