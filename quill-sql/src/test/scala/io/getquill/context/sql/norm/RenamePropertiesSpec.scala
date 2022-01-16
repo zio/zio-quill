@@ -179,14 +179,14 @@ class RenamePropertiesSpec extends Spec {
         e.filter(t => t.i == 1).union(e.filter(t => t.i != 1))
       }
       testContext.run(q).string mustEqual
-        "SELECT x.field_s, x.field_i, x.l, x.o, x.b FROM ((SELECT t.field_s, t.field_i, t.l, t.o, t.b FROM test_entity t WHERE t.field_i = 1) UNION (SELECT t1.field_s, t1.field_i, t1.l, t1.o, t1.b FROM test_entity t1 WHERE t1.field_i <> 1)) AS x"
+        "(SELECT t.field_s, t.field_i, t.l, t.o, t.b FROM test_entity t WHERE t.field_i = 1) UNION (SELECT t1.field_s, t1.field_i, t1.l, t1.o, t1.b FROM test_entity t1 WHERE t1.field_i <> 1)"
     }
     "unionAll" in {
       val q = quote {
         e.filter(t => t.i == 1).unionAll(e.filter(t => t.i != 1))
       }
       testContext.run(q).string mustEqual
-        "SELECT x.field_s, x.field_i, x.l, x.o, x.b FROM ((SELECT t.field_s, t.field_i, t.l, t.o, t.b FROM test_entity t WHERE t.field_i = 1) UNION ALL (SELECT t1.field_s, t1.field_i, t1.l, t1.o, t1.b FROM test_entity t1 WHERE t1.field_i <> 1)) AS x"
+        "(SELECT t.field_s, t.field_i, t.l, t.o, t.b FROM test_entity t WHERE t.field_i = 1) UNION ALL (SELECT t1.field_s, t1.field_i, t1.l, t1.o, t1.b FROM test_entity t1 WHERE t1.field_i <> 1)"
     }
     "filter" - {
       "body" in {
@@ -258,7 +258,7 @@ class RenamePropertiesSpec extends Spec {
           e.distinct
         }
         testContext.run(q).string mustEqual
-          "SELECT x.field_s, x.field_i, x.l, x.o, x.b FROM (SELECT DISTINCT x.field_s, x.field_i, x.l, x.o, x.b FROM test_entity x) AS x"
+          "SELECT DISTINCT x.field_s, x.field_i, x.l, x.o, x.b FROM test_entity x"
       }
       "transitive" in {
         val q = quote {

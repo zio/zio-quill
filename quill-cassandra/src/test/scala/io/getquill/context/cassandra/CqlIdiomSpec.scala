@@ -62,7 +62,7 @@ class CqlIdiomSpec extends Spec {
     }
 
     "distinct tuple" in {
-      val q = quote {
+      val q: Quoted[Query[(Index, Long)]] = quote {
         qr1.map(i => (i.i, i.l)).distinct
       }
       mirrorContext.run(q).string mustEqual
