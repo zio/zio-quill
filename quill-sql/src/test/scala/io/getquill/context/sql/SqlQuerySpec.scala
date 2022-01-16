@@ -147,15 +147,48 @@ class SqlQuerySpec extends Spec {
         "SELECT x02._1s, x02._1i, x02._1l, x02._1o, x02._1b, x02._2s, x02._2i, x02._2l, x02._2o, x12.s, x12.i, x12.l, x12.o FROM (SELECT x01.s AS _1s, x01.i AS _1i, x01.l AS _1l, x01.o AS _1o, x01.b AS _1b, x11.s AS _2s, x11.i AS _2i, x11.l AS _2l, x11.o AS _2o FROM TestEntity x01 LEFT JOIN TestEntity2 x11 ON x01.i = x11.i WHERE x11.l = 3) AS x02 LEFT JOIN TestEntity3 x12 ON x02._2i = x02._1i AND x02._2i = x12.i"
     }
 
-    "flat outer join" in {
-      val q = quote {
-        for {
-          e1 <- qr1
-          e2 <- qr2.leftJoin(e2 => e2.i == e1.i)
-        } yield (e1.i, e2.map(e => e.i))
+    "flat-join" - {
+      "flat outer join" in {
+        val q = quote {
+          for {
+            e1 <- qr1
+            e2 <- qr2.leftJoin(e2 => e2.i == e1.i)
+          } yield (e1.i, e2.map(e => e.i))
+        }
+        testContext.run(q).string mustEqual
+          "SELECT e1.i, e2.i FROM TestEntity e1 LEFT JOIN TestEntity2 e2 ON e2.i = e1.i"
       }
-      testContext.run(q).string mustEqual
-        "SELECT e1.i, e2.i FROM TestEntity e1 LEFT JOIN TestEntity2 e2 ON e2.i = e1.i"
+
+      "flat join without map" in {
+        val q: io.getquill.Quoted[Query[TestEntity]] = quote {
+          qr1.flatMap(e1 =>
+            qr1.join(e2 => e1.i == e2.i))
+        }
+        testContext.run(q).string mustEqual
+          "SELECT e2.s, e2.i, e2.l, e2.o, e2.b FROM TestEntity e1 INNER JOIN TestEntity e2 ON e1.i = e2.i"
+      }
+
+      // Future exploration should have a look at transforming scalar values into Ast CaseClass values by wrapping them
+      // using a stateful transformation.
+      //      "flat join without non-product" in {
+      //        val q: io.getquill.Quoted[Query[Int]] = quote {
+      //          qr1.flatMap(e1 =>
+      //            qr1.map(te => te.i).join(e2i => e1.i == e2i))
+      //        }
+      //        testContext.run(q).string mustEqual
+      //          ""
+      //      }
+      //
+      //      "flat join without non-product - continued" in {
+      //        val q: io.getquill.Quoted[Query[Int]] = quote {
+      //          for {
+      //            v <- qr1.flatMap(e1 => qr1.map(te => te.i).join(e2i => e1.i == e2i))
+      //            a <- qr2.join(aa => aa.i == v)
+      //          } yield (v)
+      //        }
+      //        testContext.run(q).string mustEqual
+      //          ""
+      //      }
     }
 
     "value query" - {
@@ -509,7 +542,7 @@ class SqlQuerySpec extends Spec {
             .sortBy(t => t._1.i)(Ord.desc)
         }
         testContext.run(q).string mustEqual
-          "SELECT t._1s, t._1i, t._1l, t._1o, t._1b, t._2s, t._2i, t._2l, t._2o FROM (SELECT DISTINCT a.s AS _1s, a.i AS _1i, a.l AS _1l, a.o AS _1o, a.b AS _1b, b.s AS _2s, b.i AS _2i, b.l AS _2l, b.o AS _2o FROM TestEntity a INNER JOIN TestEntity2 b ON a.i = b.i ORDER BY a.i DESC) AS t"
+          "SELECT DISTINCT a.s, a.i, a.l, a.o, a.b, b.s, b.i, b.l, b.o FROM TestEntity a INNER JOIN TestEntity2 b ON a.i = b.i ORDER BY a.i DESC"
       }
     }
 
@@ -632,14 +665,14 @@ class SqlQuerySpec extends Spec {
           qr1.union(qr1)
         }
         testContext.run(q).string mustEqual
-          "SELECT x.s, x.i, x.l, x.o, x.b FROM ((SELECT x.s, x.i, x.l, x.o, x.b FROM TestEntity x) UNION (SELECT x.s, x.i, x.l, x.o, x.b FROM TestEntity x)) AS x"
+          "(SELECT x.s, x.i, x.l, x.o, x.b FROM TestEntity x) UNION (SELECT x.s, x.i, x.l, x.o, x.b FROM TestEntity x)"
       }
       "unionAll" in {
         val q = quote {
           qr1.unionAll(qr1)
         }
         testContext.run(q).string mustEqual
-          "SELECT x.s, x.i, x.l, x.o, x.b FROM ((SELECT x.s, x.i, x.l, x.o, x.b FROM TestEntity x) UNION ALL (SELECT x.s, x.i, x.l, x.o, x.b FROM TestEntity x)) AS x"
+          "(SELECT x.s, x.i, x.l, x.o, x.b FROM TestEntity x) UNION ALL (SELECT x.s, x.i, x.l, x.o, x.b FROM TestEntity x)"
       }
     }
     "unary operation query" - {
@@ -791,7 +824,7 @@ class SqlQuerySpec extends Spec {
           qr1.map(q => TrivialEntity(q.s)) ++ qr1.map(q => TrivialEntity(q.s))
         }
         testContext.run(q).string mustEqual
-          "SELECT x.str FROM ((SELECT q.s AS str FROM TestEntity q) UNION ALL (SELECT q1.s AS str FROM TestEntity q1)) AS x"
+          "(SELECT q.s AS str FROM TestEntity q) UNION ALL (SELECT q1.s AS str FROM TestEntity q1)"
       }
 
       "in union same field name" in {
@@ -801,7 +834,7 @@ class SqlQuerySpec extends Spec {
           qr1.map(q => TrivialEntitySameField(q.s)) ++ qr1.map(q => TrivialEntitySameField(q.s))
         }
         testContext.run(q).string mustEqual
-          "SELECT x.s FROM ((SELECT q.s FROM TestEntity q) UNION ALL (SELECT q1.s FROM TestEntity q1)) AS x"
+          "(SELECT q.s FROM TestEntity q) UNION ALL (SELECT q1.s FROM TestEntity q1)"
       }
     }
   }

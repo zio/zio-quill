@@ -145,7 +145,7 @@ class SheathLeafClausesSpec extends Spec {
         val q = quote {
           query[Person].groupBy(p => p.age).map(ap => ap._2.max) ++ query[Person].groupBy(p => p.age).map(ap => ap._2.max)
         }
-        ctx.run(q).string mustEqual "SELECT x.firstName, x.lastName, x.age FROM ((SELECT MAX(p.*) FROM person p GROUP BY p.age) UNION ALL (SELECT MAX(p1.*) FROM person p1 GROUP BY p1.age)) AS x"
+        ctx.run(q).string mustEqual "(SELECT MAX(p.*) FROM person p GROUP BY p.age) UNION ALL (SELECT MAX(p1.*) FROM person p1 GROUP BY p1.age)"
       }
 
       "(map(=>node).groupBy.map(Wrap)) unionAll (map(=>node).groupBy.map(Wrap))" in {

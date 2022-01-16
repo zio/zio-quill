@@ -22,7 +22,18 @@ class NestedDistinctSpec extends Spec {
             .filter(_.myEmb.name == "test")
         }
 
-        ctx.run(q).string mustEqual "SELECT x1.myEmbname FROM (SELECT DISTINCT x1.name AS myEmbname FROM MyParent x1 WHERE x1.name = 'test') AS x1"
+        ctx.run(q).string mustEqual "SELECT DISTINCT x1.name FROM MyParent x1 WHERE x1.name = 'test'"
+      }
+
+      "first operation nesting with filter and outer nesting" in {
+        val q = quote {
+          query[MyParent]
+            .distinct
+            .filter(f => f.myEmb.name == "test")
+            .nested
+        }
+
+        ctx.run(q).string mustEqual "SELECT x.myEmbname FROM (SELECT DISTINCT f.name AS myEmbname FROM MyParent f WHERE f.name = 'test') AS x"
       }
 
       "first operation nesting with filter before and after" in {
@@ -124,7 +135,7 @@ class NestedDistinctSpec extends Spec {
           .map(e => SimpleEnt2(e.a + 2, e.b))
           .distinct
       }
-      ctx.run(q).string mustEqual "SELECT e.aa, e.bb FROM (SELECT DISTINCT e.a + 2 AS aa, e.b AS bb FROM (SELECT DISTINCT e.field_a + 1 AS a, e.b FROM CustomEnt e) AS e) AS e"
+      ctx.run(q).string mustEqual "SELECT DISTINCT e.a + 2, e.b FROM (SELECT DISTINCT e.field_a + 1 AS a, e.b FROM CustomEnt e) AS e"
     }
 
     "works with explicitly nested infixes" in {
@@ -196,7 +207,7 @@ class NestedDistinctSpec extends Spec {
         val q = quote {
           query[Parent].map(p => p.emb).distinct.map(e => (e.name, e.id)).distinct.map(tup => (tup._1, tup._2)).distinct
         }
-        ctx.run(q).string mustEqual "SELECT x._1, x._2 FROM (SELECT DISTINCT e.theName AS _1, e.id AS _2 FROM (SELECT DISTINCT p.id, p.theName FROM Parent p) AS e) AS x"
+        ctx.run(q).string mustEqual "SELECT DISTINCT e.theName, e.id FROM (SELECT DISTINCT p.id, p.theName FROM Parent p) AS e"
       }
 
       "can be propogated across query with naming intact and then used further - nested" in {
@@ -224,7 +235,7 @@ class NestedDistinctSpec extends Spec {
         val q = quote {
           query[Parent].map(p => p.emb).distinct.map(e => e)
         }
-        ctx.run(q).string mustEqual "SELECT e.id, e.theName FROM (SELECT DISTINCT p.id, p.theName FROM Parent p) AS e"
+        ctx.run(q).string mustEqual "SELECT DISTINCT p.id, p.theName FROM Parent p"
       }
 
       "can be propogated across query with naming intact and then re-wrapped in case class" in {
@@ -265,7 +276,7 @@ class NestedDistinctSpec extends Spec {
             .map(tup => (tup._1, tup._2)).distinct
         }
         ctx.run(q).string mustEqual
-          "SELECT x._1, x._2id, x._2theName FROM (SELECT DISTINCT p.theParentName AS _1, p.embid AS _2id, p.embtheName AS _2theName FROM (SELECT DISTINCT g.id, g.theParentName, g.id AS embid, g.theName AS embtheName FROM GrandParent g) AS p) AS x"
+          "SELECT DISTINCT p.theParentName, p.embid, p.embtheName FROM (SELECT DISTINCT g.id, g.theParentName, g.id AS embid, g.theName AS embtheName FROM GrandParent g) AS p"
       }
 
       "fully unwrapped name propagates with side property - nested" in {
@@ -317,30 +328,21 @@ class NestedDistinctSpec extends Spec {
         ctx.run(q).string(true).collapseSpace mustEqual
           """
             |SELECT
-            |  x._1,
-            |  x._2id,
-            |  x._2theName,
-            |  x._3,
-            |  x._4
+            |  DISTINCT p.theParentName,
+            |  p.embid,
+            |  p.embtheName,
+            |  p.id,
+            |  p.embid
             |FROM
             |  (
             |    SELECT
-            |      DISTINCT p.theParentName AS _1,
-            |      p.embid AS _2id,
-            |      p.embtheName AS _2theName,
-            |      p.id AS _3,
-            |      p.embid AS _4
+            |      DISTINCT g.id,
+            |      g.theParentName,
+            |      g.id AS embid,
+            |      g.theName AS embtheName
             |    FROM
-            |      (
-            |        SELECT
-            |          DISTINCT g.id,
-            |          g.theParentName,
-            |          g.id AS embid,
-            |          g.theName AS embtheName
-            |        FROM
-            |          GrandParent g
-            |      ) AS p
-            |  ) AS x
+            |      GrandParent g
+            |  ) AS p
             |""".collapseSpace
       }
 
@@ -355,30 +357,21 @@ class NestedDistinctSpec extends Spec {
         ctx.run(q).string(true).collapseSpace mustEqual
           """
             |SELECT
-            |  x._1,
-            |  x._2id,
-            |  x._2theName,
-            |  x._3,
-            |  x._4
+            |  DISTINCT p.theParentName,
+            |  p.embid,
+            |  p.embtheName,
+            |  p.id,
+            |  p.embid
             |FROM
             |  (
             |    SELECT
-            |      DISTINCT p.theParentName AS _1,
-            |      p.embid AS _2id,
-            |      p.embtheName AS _2theName,
-            |      p.id AS _3,
-            |      p.embid AS _4
+            |      DISTINCT g.id,
+            |      g.theParentName,
+            |      g.id AS embid,
+            |      g.theName AS embtheName
             |    FROM
-            |      (
-            |        SELECT
-            |          DISTINCT g.id,
-            |          g.theParentName,
-            |          g.id AS embid,
-            |          g.theName AS embtheName
-            |        FROM
-            |          GrandParent g
-            |      ) AS p
-            |  ) AS x
+            |      GrandParent g
+            |  ) AS p
             |""".collapseSpace
       }
 
@@ -466,8 +459,6 @@ class NestedDistinctSpec extends Spec {
             .map(tup => GrandParent(tup._1, tup._2))
 
         }
-        println(ctx.run(q).string(true).collapseSpace)
-
         ctx.run(q).string.collapseSpace mustEqual
           """SELECT g.id, g.parid, g.partheParentName, g.parembid, g.parembtheName FROM (SELECT x.id, x.parid, x.partheParentName, x.parembid, x.parembtheName FROM (SELECT x.id, x.parid, x.partheParentName, x.parembid, x.parembtheName FROM (SELECT x.id, x.parid, x.partheParentName, x.parembid, x.parembtheName FROM (SELECT x.id, x.parid, x.partheParentName, x.parembid, x.parembtheName FROM (SELECT x.id, x.parid, x.partheParentName, x.parembid, x.parembtheName FROM (SELECT x.id, x.id AS parid, x.theParentName AS partheParentName, x.id AS parembid, x.theName AS parembtheName FROM GrandParent x) AS x) AS x) AS x) AS x) AS x) AS g""".collapseSpace
       }
@@ -518,7 +509,18 @@ class NestedDistinctSpec extends Spec {
             .distinct
         }
 
-        ctx.run(q).string mustEqual "SELECT joined.name, joined.emb1name, joined.emb1id, joined.emb2theName, joined.emb2id FROM (SELECT DISTINCT 'Joe' AS name, norm.name AS emb1name, norm.id AS emb1id, mod.theName AS emb2theName, mod.id AS emb2id FROM Emb norm INNER JOIN CustomEmb mod ON norm.name = mod.theName) AS joined"
+        ctx.run(q).string(true).collapseSpace mustEqual
+          """
+            |SELECT
+            |  DISTINCT 'Joe',
+            |  norm.name,
+            |  norm.id,
+            |  mod.theName,
+            |  mod.id
+            |FROM
+            |  Emb norm
+            |  INNER JOIN CustomEmb mod ON norm.name = mod.theName
+            |""".collapseSpace
       }
 
       "entities re-ordered in a subschema should have correct naming" in {
@@ -720,7 +722,18 @@ class NestedDistinctSpec extends Spec {
             .map(joined => Parent("Joe", joined._1, joined._2))
             .distinct
         }
-        ctx.run(q).string mustEqual "SELECT joined.name, joined.emb1name, joined.emb1id, joined.emb2theName, joined.emb2id FROM (SELECT DISTINCT 'Joe' AS name, norm.name AS emb1name, norm.id AS emb1id, mod.theName AS emb2theName, mod.id AS emb2id FROM Emb norm INNER JOIN CustomEmb mod ON norm.name = mod.theName) AS joined"
+        ctx.run(q).string(true).collapseSpace mustEqual
+          """
+            |SELECT
+            |  DISTINCT 'Joe',
+            |  norm.name,
+            |  norm.id,
+            |  mod.theName,
+            |  mod.id
+            |FROM
+            |  Emb norm
+            |  INNER JOIN CustomEmb mod ON norm.name = mod.theName
+            |""".collapseSpace
       }
 
       // Try parent and embedded children with same name, schema on the other child
@@ -732,7 +745,18 @@ class NestedDistinctSpec extends Spec {
             .map(joined => Parent("Joe", joined._1, joined._2))
             .distinct
         }
-        ctx.run(q).string mustEqual "SELECT joined.name, joined.emb1theName, joined.emb1id, joined.emb2name, joined.emb2id FROM (SELECT DISTINCT 'Joe' AS name, mod.theName AS emb1theName, mod.id AS emb1id, norm.name AS emb2name, norm.id AS emb2id FROM CustomEmb mod INNER JOIN Emb norm ON norm.name = mod.theName) AS joined"
+        ctx.run(q).string(true).collapseSpace mustEqual
+          """
+            |SELECT
+            |  DISTINCT 'Joe',
+            |  mod.theName,
+            |  mod.id,
+            |  norm.name,
+            |  norm.id
+            |FROM
+            |  CustomEmb mod
+            |  INNER JOIN Emb norm ON norm.name = mod.theName
+            |""".collapseSpace
       }
 
       // Try parent and embedded children with same name, schema on both of children - same schema
@@ -744,7 +768,18 @@ class NestedDistinctSpec extends Spec {
             .map(joined => Parent("Joe", joined._1, joined._2))
             .distinct
         }
-        ctx.run(q).string mustEqual "SELECT joined.name, joined.emb1theName, joined.emb1id, joined.emb2theName, joined.emb2id FROM (SELECT DISTINCT 'Joe' AS name, mod.theName AS emb1theName, mod.id AS emb1id, norm.theName AS emb2theName, norm.id AS emb2id FROM CustomEmb mod INNER JOIN CustomEmb norm ON norm.theName = mod.theName) AS joined"
+        ctx.run(q).string(true).collapseSpace mustEqual
+          """
+            |SELECT
+            |  DISTINCT 'Joe',
+            |  mod.theName,
+            |  mod.id,
+            |  norm.theName,
+            |  norm.id
+            |FROM
+            |  CustomEmb mod
+            |  INNER JOIN CustomEmb norm ON norm.theName = mod.theName
+            |""".collapseSpace
       }
 
       // Try parent and embedded children with same name, schema on both of children - different schemas
@@ -756,7 +791,18 @@ class NestedDistinctSpec extends Spec {
             .map(joined => Parent("Joe", joined._1, joined._2))
             .distinct
         }
-        ctx.run(q).string mustEqual "SELECT joined.name, joined.emb1theSecondName, joined.emb1id, joined.emb2theFirstName, joined.emb2id FROM (SELECT DISTINCT 'Joe' AS name, mod.theSecondName AS emb1theSecondName, mod.id AS emb1id, norm.theFirstName AS emb2theFirstName, norm.id AS emb2id FROM CustomEmb mod INNER JOIN CustomEmb norm ON norm.theFirstName = mod.theSecondName) AS joined"
+        ctx.run(q).string(true).collapseSpace mustEqual
+          """
+            |SELECT
+            |  DISTINCT 'Joe',
+            |  mod.theSecondName,
+            |  mod.id,
+            |  norm.theFirstName,
+            |  norm.id
+            |FROM
+            |  CustomEmb mod
+            |  INNER JOIN CustomEmb norm ON norm.theFirstName = mod.theSecondName
+            |""".collapseSpace
       }
     }
   }
