@@ -506,7 +506,7 @@ lazy val `quill-jasync` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.github.jasync-sql" % "jasync-common" % "2.0.5",
+        "com.github.jasync-sql" % "jasync-common" % "2.0.6",
         "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.1"
       )
     )
