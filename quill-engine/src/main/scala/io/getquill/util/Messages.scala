@@ -32,11 +32,13 @@ object Messages {
   sealed trait LogToFile
   object LogToFile {
     case class Enabled(file: String) extends LogToFile
+    case object ProjectDir extends LogToFile
     case object Disabled extends LogToFile
     def apply(switch: String): LogToFile =
       switch.trim match {
-        case "false" => Disabled
-        case other   => Enabled(other)
+        case "false"       => Disabled
+        case "PROJECT_DIR" => ProjectDir
+        case other         => Enabled(other)
       }
   }
 

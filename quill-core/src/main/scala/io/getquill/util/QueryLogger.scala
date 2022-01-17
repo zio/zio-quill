@@ -1,6 +1,6 @@
 package io.getquill.util
 
-import io.getquill.util.Messages.{ LogToFile, quillLogFile }
+import io.getquill.util.Messages.LogToFile
 import zio._
 import zio.clock.Clock
 import zio.console.Console
@@ -11,7 +11,7 @@ import zio.logging._
 import java.io.{ BufferedWriter, FileOutputStream, OutputStreamWriter, Writer }
 import java.nio.charset.{ Charset, StandardCharsets }
 import java.nio.file.{ Path, Paths }
-import java.time.ZonedDateTime
+import scala.util.Try
 
 class AppendingLogWriter(
   destination:        Path,
@@ -101,20 +101,28 @@ class QueryLogger(logToFile: LogToFile) {
   lazy val env = {
     logToFile match {
       case LogToFile.Enabled(file) => Some(produceLoggerEnv(file))
+      case LogToFile.ProjectDir    => Some(produceLoggerEnv(System.getProperty("user.dir")))
       case LogToFile.Disabled      => None
     }
   }
 
-  private[getquill] val runtime =
-    env.map(Runtime.unsafeFromLayer(_))
+  private[getquill] val runtime: Option[Runtime.Managed[Logging]] = env.map(Runtime.unsafeFromLayer(_))
+
+  private lazy val maybeProjectDir: Try[Path] =
+    Try(System.getProperty("user.dir")).map(s => Paths.get(s))
 
   def apply(queryString: String, sourcePath: String, line: Int, column: Int): Unit = {
     runtime match {
       case Some(runtimeValue) =>
         runtimeValue.unsafeRunAsync_(log.info(
           s"""
-             |-- file: $sourcePath:$line:$column
-             |-- time: ${ZonedDateTime.now().format(LogDatetimeFormatter.isoLocalDateTimeFormatter)}
+             |-- file: ${
+            (for {
+              projectDir <- maybeProjectDir
+              source <- Try(Paths.get(sourcePath))
+              relative <- Try(projectDir.relativize(source))
+            } yield relative.toString).getOrElse(sourcePath)
+          }:$line:$column
              |$queryString;
              |""".stripMargin
         ))
