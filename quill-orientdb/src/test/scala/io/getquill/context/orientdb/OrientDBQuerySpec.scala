@@ -168,7 +168,7 @@ class OrientDBQuerySpec extends Spec {
       qr1.filter(_.i == 0).union(qr1.filter(_.i == 1))
     }
     mirrorContext.run(q).string mustEqual
-      f"SELECT s, i, l, o, b FROM (SELECT $$c LET $$a = (SELECT s, i, l, o, b FROM TestEntity WHERE i = 0), $$b = (SELECT s, i, l, o, b FROM TestEntity WHERE i = 1), $$c = UNIONALL($$a, $$b))"
+      f"SELECT $$c LET $$a = (SELECT s, i, l, o, b FROM TestEntity WHERE i = 0), $$b = (SELECT s, i, l, o, b FROM TestEntity WHERE i = 1), $$c = UNIONALL($$a, $$b)"
   }
 
   "unionall supported" in {
@@ -176,7 +176,7 @@ class OrientDBQuerySpec extends Spec {
       qr1.filter(_.i == 0).unionAll(qr1.filter(_.i == 1))
     }
     mirrorContext.run(q).string mustEqual
-      f"SELECT s, i, l, o, b FROM (SELECT $$c LET $$a = (SELECT s, i, l, o, b FROM TestEntity WHERE i = 0), $$b = (SELECT s, i, l, o, b FROM TestEntity WHERE i = 1), $$c = UNIONALL($$a, $$b))"
+      f"SELECT $$c LET $$a = (SELECT s, i, l, o, b FROM TestEntity WHERE i = 0), $$b = (SELECT s, i, l, o, b FROM TestEntity WHERE i = 1), $$c = UNIONALL($$a, $$b)"
   }
 
   import OrientDBIdiom._

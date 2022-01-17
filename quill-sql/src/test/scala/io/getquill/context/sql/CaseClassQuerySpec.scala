@@ -14,7 +14,7 @@ trait CaseClassQuerySpec extends Spec {
   case class NicknameSameField(firstName: String)
 
   val peopleInsert =
-    quote((p: Contact) => query[Contact].insert(p))
+    quote((p: Contact) => query[Contact].insertValue(p))
 
   val peopleEntries = List(
     Contact("Alex", "Jones", 60, 2, "foo"),
@@ -23,7 +23,7 @@ trait CaseClassQuerySpec extends Spec {
   )
 
   val addressInsert =
-    quote((c: Address) => query[Address].insert(c))
+    quote((c: Address) => query[Address].insertValue(c))
 
   val addressEntries = List(
     Address(1, "123 Fake Street", 11234, "something"),

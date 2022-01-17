@@ -17,7 +17,7 @@ class QueryResultTypeOrientDBSync extends Spec {
     val ctx = orientdb.testSyncDB
     import ctx._
     ctx.run(quote(query[OrderTestEntity].delete))
-    entries.foreach(e => ctx.run(quote { query[OrderTestEntity].insert(lift(e)) }))
+    entries.foreach(e => ctx.run(quote { query[OrderTestEntity].insertValue(lift(e)) }))
   }
 
   "return list" - {

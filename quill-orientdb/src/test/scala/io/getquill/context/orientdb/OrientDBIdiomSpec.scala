@@ -277,7 +277,7 @@ class OrientDBIdiomSpec extends Spec {
   "action" - {
     "insert" in {
       val q = quote {
-        qr1.insert(lift(TestEntity("a", 1, 1L, None, true)))
+        qr1.insertValue(lift(TestEntity("a", 1, 1L, None, true)))
       }
       ctx.run(q).string mustEqual
         "INSERT INTO TestEntity (s, i, l, o, b) VALUES(?, ?, ?, ?, ?)"

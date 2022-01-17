@@ -109,7 +109,7 @@ class SqlIdiomSpec extends Spec {
             qr1.distinct
           }
           testContext.run(q).string mustEqual
-            "SELECT x.s, x.i, x.l, x.o, x.b FROM (SELECT DISTINCT x.s, x.i, x.l, x.o, x.b FROM TestEntity x) AS x"
+            "SELECT DISTINCT x.s, x.i, x.l, x.o, x.b FROM TestEntity x"
         }
 
         "single" in {
@@ -134,7 +134,7 @@ class SqlIdiomSpec extends Spec {
             qr1.map(i => new IntLong(i.i, i.l)).distinct
           }
           testContext.run(q).string mustEqual
-            "SELECT i.i, i.l FROM (SELECT DISTINCT i.i, i.l FROM TestEntity i) AS i"
+            "SELECT DISTINCT i.i, i.l FROM TestEntity i"
         }
         "caseclass companion constructor" in {
           case class IntLong(i: Int, l: Long)
@@ -142,7 +142,7 @@ class SqlIdiomSpec extends Spec {
             qr1.map(i => IntLong(i.i, i.l)).distinct
           }
           testContext.run(q).string mustEqual
-            "SELECT i.i, i.l FROM (SELECT DISTINCT i.i, i.l FROM TestEntity i) AS i"
+            "SELECT DISTINCT i.i, i.l FROM TestEntity i"
         }
 
         "nesting" in {
@@ -293,7 +293,7 @@ class SqlIdiomSpec extends Spec {
           }
 
           testContext.run(q).string mustEqual
-            "SELECT t._1, t._2 FROM (SELECT t.i AS _1, MIN(t.l) AS _2 FROM TestEntity t GROUP BY t.i) AS t LIMIT 10"
+            "SELECT x._1, x._2 FROM (SELECT t.i AS _1, MIN(t.l) AS _2 FROM TestEntity t GROUP BY t.i) AS x LIMIT 10"
         }
         "filter.flatMap(groupBy)" in {
           val q = quote {
@@ -421,7 +421,7 @@ class SqlIdiomSpec extends Spec {
             qr1.filter(t => t.i > 10).union(qr1.filter(t => t.s == "s"))
           }
           testContext.run(q).string mustEqual
-            "SELECT x.s, x.i, x.l, x.o, x.b FROM ((SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.i > 10) UNION (SELECT t1.s, t1.i, t1.l, t1.o, t1.b FROM TestEntity t1 WHERE t1.s = 's')) AS x"
+            "(SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.i > 10) UNION (SELECT t1.s, t1.i, t1.l, t1.o, t1.b FROM TestEntity t1 WHERE t1.s = 's')"
         }
         "mapped" in {
           val q = quote {
@@ -452,7 +452,7 @@ class SqlIdiomSpec extends Spec {
             qr1.filter(t => t.i > 10).unionAll(qr1.filter(t => t.s == "s"))
           }
           testContext.run(q).string mustEqual
-            "SELECT x.s, x.i, x.l, x.o, x.b FROM ((SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.i > 10) UNION ALL (SELECT t1.s, t1.i, t1.l, t1.o, t1.b FROM TestEntity t1 WHERE t1.s = 's')) AS x"
+            "(SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.i > 10) UNION ALL (SELECT t1.s, t1.i, t1.l, t1.o, t1.b FROM TestEntity t1 WHERE t1.s = 's')"
         }
       }
       "join" - {
@@ -757,7 +757,7 @@ class SqlIdiomSpec extends Spec {
         "not affected by variable name" - {
           "simple" in {
             val q = quote { (v: TestEntity) =>
-              query[TestEntity].insert(v)
+              query[TestEntity].insertValue(v)
             }
             val v = TestEntity("s", 1, 2L, Some(1), true)
             testContext.run(q(lift(v))).string mustEqual "INSERT INTO TestEntity (s,i,l,o,b) VALUES (?, ?, ?, ?, ?)"
@@ -765,14 +765,14 @@ class SqlIdiomSpec extends Spec {
           "returning" in testContext.withDialect(MirrorSqlDialectWithReturnMulti) { ctx =>
             import ctx._
             val q = quote { (v: TestEntity) =>
-              query[TestEntity].insert(v)
+              query[TestEntity].insertValue(v)
             }
             val v = TestEntity("s", 1, 2L, Some(1), true)
             ctx.run(q(lift(v)).returning(v => v.i)).string mustEqual "INSERT INTO TestEntity (s,i,l,o,b) VALUES (?, ?, ?, ?, ?)"
           }
           "returning generated" in {
             val q = quote { (v: TestEntity) =>
-              query[TestEntity].insert(v)
+              query[TestEntity].insertValue(v)
             }
             val v = TestEntity("s", 1, 2L, Some(1), true)
             testContext.run(q(lift(v)).returningGenerated(v => v.i)).string mustEqual "INSERT INTO TestEntity (s,l,o,b) VALUES (?, ?, ?, ?)"
@@ -780,13 +780,13 @@ class SqlIdiomSpec extends Spec {
           "foreach" in {
             val v = TestEntity("s", 1, 2L, Some(1), true)
             testContext.run(
-              liftQuery(List(v)).foreach(v => query[TestEntity].insert(v))
+              liftQuery(List(v)).foreach(v => query[TestEntity].insertValue(v))
             ).groups mustEqual List(("INSERT INTO TestEntity (s,i,l,o,b) VALUES (?, ?, ?, ?, ?)", List(Row(v.productIterator.toList: _*))))
           }
           "foreach returning" in testContext.withDialect(MirrorSqlDialectWithReturnMulti) { ctx =>
             import ctx._
             val v = TestEntity("s", 1, 2L, Some(1), true)
-            ctx.run(liftQuery(List(v)).foreach(v => query[TestEntity].insert(v).returning(v => v.i))).groups mustEqual
+            ctx.run(liftQuery(List(v)).foreach(v => query[TestEntity].insertValue(v).returning(v => v.i))).groups mustEqual
               List(("INSERT INTO TestEntity (s,i,l,o,b) VALUES (?, ?, ?, ?, ?)",
                 ReturnColumns(List("i")),
                 List(Row(v.productIterator.toList: _*))
@@ -795,7 +795,7 @@ class SqlIdiomSpec extends Spec {
           "foreach returning generated" in {
             val v = TestEntity("s", 1, 2L, Some(1), true)
             testContext.run(
-              liftQuery(List(v)).foreach(v => query[TestEntity].insert(v).returningGenerated(v => v.i))
+              liftQuery(List(v)).foreach(v => query[TestEntity].insertValue(v).returningGenerated(v => v.i))
             ).groups mustEqual
               List(("INSERT INTO TestEntity (s,l,o,b) VALUES (?, ?, ?, ?)",
                 ReturnColumns(List("i")),
@@ -820,14 +820,14 @@ class SqlIdiomSpec extends Spec {
         "returning" in testContext.withDialect(MirrorSqlDialectWithReturnMulti) { ctx =>
           import ctx._
           val q = quote {
-            query[TestEntity].insert(lift(TestEntity("s", 1, 2L, Some(1), true))).returning(_.l)
+            query[TestEntity].insertValue(lift(TestEntity("s", 1, 2L, Some(1), true))).returning(_.l)
           }
           val run = ctx.run(q).string mustEqual
             "INSERT INTO TestEntity (s,i,l,o,b) VALUES (?, ?, ?, ?, ?)"
         }
         "returning generated" in {
           val q = quote {
-            query[TestEntity].insert(lift(TestEntity("s", 1, 2L, Some(1), true))).returningGenerated(_.l)
+            query[TestEntity].insertValue(lift(TestEntity("s", 1, 2L, Some(1), true))).returningGenerated(_.l)
           }
           val run = testContext.run(q).string mustEqual
             "INSERT INTO TestEntity (s,i,o,b) VALUES (?, ?, ?, ?)"
@@ -835,14 +835,14 @@ class SqlIdiomSpec extends Spec {
         "returning with single column table" in testContext.withDialect(MirrorSqlDialectWithReturnMulti) { ctx =>
           import ctx._
           val q = quote {
-            qr4.insert(lift(TestEntity4(0))).returning(_.i)
+            qr4.insertValue(lift(TestEntity4(0))).returning(_.i)
           }
           ctx.run(q).string mustEqual
             "INSERT INTO TestEntity4 (i) VALUES (?)"
         }
         "returning generated with single column table" in {
           val q = quote {
-            qr4.insert(lift(TestEntity4(0))).returningGenerated(_.i)
+            qr4.insertValue(lift(TestEntity4(0))).returningGenerated(_.i)
           }
           testContext.run(q).string mustEqual
             "INSERT INTO TestEntity4 DEFAULT VALUES"
