@@ -3,8 +3,7 @@ package io.getquill.context.sql.norm
 import io.getquill.ReturnAction.{ ReturnColumns, ReturnRecord }
 import io.getquill.context.sql.testContextUpper
 import io.getquill.context.sql.testContextUpper._
-import io.getquill.{ MirrorSqlDialectWithReturnClause, Spec }
-import io.getquill.Query
+import io.getquill.{ EntityQuery, MirrorSqlDialectWithReturnClause, Query, Quoted, Spec }
 
 class RenamePropertiesOverrideSpec extends Spec {
 
@@ -323,7 +322,7 @@ class RenamePropertiesOverrideSpec extends Spec {
 
     "operation" - {
       "unary" in {
-        val q = quote {
+        val q: Quoted[EntityQuery[Index]] = quote {
           e.filter(a => e.filter(b => b.i > 0).isEmpty).map(_.i)
         }
         testContextUpper.run(q).string mustEqual

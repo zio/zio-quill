@@ -8,8 +8,10 @@ import io.getquill.norm.PropertyMatroshka
 
 class ExpandSelection(from: List[FromContext]) {
 
-  def apply(values: List[SelectValue]): List[SelectValue] =
-    values.flatMap(apply(_))
+  def apply(values: List[SelectValue]): List[SelectValue] = {
+    val vls = values.flatMap(apply(_))
+    vls
+  }
 
   implicit class AliasOp(alias: Option[String]) {
     def concatWith(str: String): Option[String] =
@@ -22,24 +24,26 @@ class ExpandSelection(from: List[FromContext]) {
       // the beta reduction would have unrolled them already
       case SelectValue(ast @ PropertyOrCore(), alias, concat) =>
         val exp = SelectPropertyProtractor(from)(ast)
-        exp.map {
-          case (p: Property, Nil) =>
-            // If the quat-path is nothing and there is some pre-existing alias (e.g. if we came from a case-class or quat)
-            // the use that. Otherwise the selection is of an individual element so use the element name (before the rename)
-            // as the alias.
-            alias match {
-              case None =>
-                SelectValue(p, Some(p.prevName.getOrElse(p.name)), concat)
-              case Some(value) =>
-                SelectValue(p, Some(value), concat)
-            }
-          case (p: Property, path) =>
-            // Append alias headers (i.e. _1,_2 from tuples and field names foo,bar from case classes) to the
-            // value of the Quat path
-            SelectValue(p, alias.concatWith(path.mkString), concat)
-          case (other, _) =>
-            SelectValue(other, alias, concat)
-        }
+        val mapped =
+          exp.map {
+            case (p: Property, Nil) =>
+              // If the quat-path is nothing and there is some pre-existing alias (e.g. if we came from a case-class or quat)
+              // the use that. Otherwise the selection is of an individual element so use the element name (before the rename)
+              // as the alias.
+              alias match {
+                case None =>
+                  SelectValue(p, Some(p.prevName.getOrElse(p.name)), concat)
+                case Some(value) =>
+                  SelectValue(p, Some(value), concat)
+              }
+            case (p: Property, path) =>
+              // Append alias headers (i.e. _1,_2 from tuples and field names foo,bar from case classes) to the
+              // value of the Quat path
+              SelectValue(p, alias.concatWith(path.mkString), concat)
+            case (other, _) =>
+              SelectValue(other, alias, concat)
+          }
+        mapped
       case SelectValue(Tuple(values), alias, concat) =>
         values.zipWithIndex.flatMap {
           case (ast, i) =>
@@ -48,6 +52,7 @@ class ExpandSelection(from: List[FromContext]) {
       case SelectValue(CaseClass(fields), alias, concat) =>
         fields.flatMap {
           case (name, ast) =>
+            val concated = SelectValue(ast, alias.concatWith(name), concat)
             apply(SelectValue(ast, alias.concatWith(name), concat))
         }
       // Direct infix select, etc...
@@ -61,7 +66,9 @@ object ExpandNestedQueries extends StatelessQueryTransformer {
   protected override def apply(q: SqlQuery, isTopLevel: Boolean = false): SqlQuery =
     q match {
       case q: FlattenSqlQuery =>
-        expandNested(q.copy(select = new ExpandSelection(q.from)(q.select))(q.quat), isTopLevel)
+        val selection = new ExpandSelection(q.from)(q.select)
+        val out = expandNested(q.copy(select = selection)(q.quat), isTopLevel)
+        out
       case other =>
         super.apply(q, isTopLevel)
     }
@@ -71,10 +78,11 @@ object ExpandNestedQueries extends StatelessQueryTransformer {
 
     def apply(p: Ast): Ast = {
       p match {
-        case p @ PropertyMatroshka(inner, path) =>
+        case p @ PropertyMatroshka(inner, path, renameables) =>
           val isSubselect = inContext.isSubselect(p)
+          val propsAlreadyFixed = renameables.forall(_ == Renameable.Fixed)
           val renameable =
-            if (p.prevName.isDefined || isSubselect)
+            if (p.prevName.isDefined || isSubselect || propsAlreadyFixed)
               Renameable.Fixed
             else
               Renameable.ByStrategy

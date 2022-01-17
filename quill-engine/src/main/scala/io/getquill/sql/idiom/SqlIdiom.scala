@@ -15,6 +15,7 @@ import io.getquill.norm.ConcatBehavior.AnsiConcat
 import io.getquill.norm.EqualityBehavior.AnsiEquality
 import io.getquill.norm.{ ConcatBehavior, EqualityBehavior, ExpandReturning, NormalizeCaching, ProductAggregationToken }
 import io.getquill.quat.Quat
+import io.getquill.sql.norm.RemoveExtraAlias.TopLevelRemove
 import io.getquill.sql.norm.{ RemoveExtraAlias, RemoveUnusedSelects }
 import io.getquill.util.{ Interleave, Messages }
 import io.getquill.util.Messages.{ fail, trace }
@@ -91,18 +92,19 @@ trait SqlIdiom extends Idiom {
           val id = Ident("x", q.quat)
           val keyValues =
             values.map {
-              case (k, quat) => (strategy.column(k), Property(id, k))
+              case (k, quat) => (strategy.column(k), Property.Opinionated(id, k, Renameable.Fixed, Visibility.Visible))
             }.toList
           Map(q, id, CaseClass(keyValues))
 
-        case Map(query, id, prop @ Property(_, propName)) =>
+        case Map(query, id, prop @ Property.Opinionated(_, propName, renameable, _)) =>
           Map(query, id, CaseClass(List((strategy.column(propName), prop))))
 
         case other => q
       }
 
     val transformed = normalizeAst(mappedSubquery, concatBehavior, equalityBehavior)
-    RemoveExtraAlias(strategy)(ExpandNestedQueries(SqlQuery(transformed)))
+    val nestedExpanded = ExpandNestedQueries(SqlQuery(transformed))
+    RemoveExtraAlias(strategy, topLevel = TopLevelRemove.OnlyMatching)(nestedExpanded)
   }
 
   def astTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Ast] =
@@ -113,9 +115,9 @@ trait SqlIdiom extends Idiom {
         // for more details.
         // Right now we are not removing extra select clauses here (via RemoveUnusedSelects) since I am not sure what
         // kind of impact that could have on selects. Can try to do that in the future.
-        if (Messages.querySubexpand)
+        if (Messages.querySubexpand) {
           subexpandNestedQuery(a, strategy).token
-        else
+        } else
           SqlQuery(a).token
 
       case a: Operation       => a.token
