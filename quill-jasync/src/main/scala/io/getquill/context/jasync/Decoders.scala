@@ -126,8 +126,7 @@ trait Decoders {
   implicit val byteArrayDecoder: Decoder[Array[Byte]] = decoder[Array[Byte]](PartialFunction.empty, SqlTypes.TINYINT)
 
   implicit val dateDecoder: Decoder[Date] = decoder[Date](PartialFunction.empty, SqlTypes.TIMESTAMP)
-
   implicit val localDateDecoder: Decoder[LocalDate] = decoder[LocalDate](PartialFunction.empty, SqlTypes.TIMESTAMP)
-
   implicit val localDateTimeDecoder: Decoder[LocalDateTime] = decoder[LocalDateTime](PartialFunction.empty, SqlTypes.TIMESTAMP)
+  implicit val zonedDateTimeDecoder: Decoder[ZonedDateTime] = decoder[ZonedDateTime](PartialFunction.empty, SqlTypes.TIMESTAMP)
 }
