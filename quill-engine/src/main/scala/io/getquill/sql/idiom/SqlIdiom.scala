@@ -85,24 +85,24 @@ trait SqlIdiom extends Idiom {
       def token(v: Ast) = stableTokenizer.token(v)
     }
 
-  private[getquill] def subexpandNestedQuery(q: Query, strategy: NamingStrategy) = {
-    val mappedSubquery =
-      q match {
-        case Quat.Is(Quat.Product(values)) =>
-          val id = Ident("x", q.quat)
-          val keyValues =
-            values.map {
-              case (k, quat) => (strategy.column(k), Property.Opinionated(id, k, Renameable.Fixed, Visibility.Visible))
-            }.toList
-          Map(q, id, CaseClass(keyValues))
+  private[getquill] def sheathQuery(q: Query, strategy: NamingStrategy) =
+    q match {
+      case Quat.Is(Quat.Product(values)) =>
+        val id = Ident("x", q.quat)
+        val keyValues =
+          values.map {
+            case (k, quat) => (strategy.column(k), Property.Opinionated(id, k, Renameable.Fixed, Visibility.Visible))
+          }.toList
+        Map(q, id, CaseClass(keyValues))
 
-        case Map(query, id, prop @ Property.Opinionated(_, propName, renameable, _)) =>
-          Map(query, id, CaseClass(List((strategy.column(propName), prop))))
+      case Map(query, id, prop @ Property(_, propName)) =>
+        Map(query, id, CaseClass(List((strategy.column(propName), prop))))
 
-        case other => q
-      }
+      case _ => q
+    }
 
-    val transformed = normalizeAst(mappedSubquery, concatBehavior, equalityBehavior)
+  private[getquill] def expandNestedSubQuery(q: Query, strategy: NamingStrategy) = {
+    val transformed = normalizeAst(q, concatBehavior, equalityBehavior)
     val nestedExpanded = ExpandNestedQueries(SqlQuery(transformed))
     RemoveExtraAlias(strategy, topLevel = TopLevelRemove.OnlyMatching)(nestedExpanded)
   }
@@ -110,13 +110,15 @@ trait SqlIdiom extends Idiom {
   def astTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Ast] =
     Tokenizer[Ast] {
       case a: Query =>
-        // This case almost exclusively happens when you have a select inside of an insert.
+        // This case typically happens when you have a select inside of an insert
+        // infix or a set operation (e.g. query[Person].exists).
         // have a look at the SqlDslSpec `forUpdate` and `insert with subselects` tests
         // for more details.
         // Right now we are not removing extra select clauses here (via RemoveUnusedSelects) since I am not sure what
         // kind of impact that could have on selects. Can try to do that in the future.
         if (Messages.querySubexpand) {
-          subexpandNestedQuery(a, strategy).token
+          val nestedExpanded = ExpandNestedQueries(SqlQuery(a))
+          RemoveExtraAlias(strategy)(nestedExpanded).token
         } else
           SqlQuery(a).token
 
@@ -476,7 +478,13 @@ trait SqlIdiom extends Idiom {
   implicit def infixTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Infix] = Tokenizer[Infix] {
     case Infix(parts, params, _, _) =>
       val pt = parts.map(_.token)
-      val pr = params.map(_.token)
+      val pr = params.map {
+        case q: Query if (Messages.querySubexpand) =>
+          val sheathed = sheathQuery(q, strategy)
+          expandNestedSubQuery(sheathed, strategy).token
+        case other =>
+          other.token
+      }
       Statement(Interleave(pt, pr))
   }
 

@@ -320,7 +320,7 @@ class RenamePropertiesOverrideSpec extends Spec {
       }
     }
 
-    "operation" - {
+    "operation" - { //
       "unary" in {
         val q: Quoted[EntityQuery[Index]] = quote {
           e.filter(a => e.filter(b => b.i > 0).isEmpty).map(_.i)
