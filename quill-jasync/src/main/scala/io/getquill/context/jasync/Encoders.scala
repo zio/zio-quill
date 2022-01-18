@@ -1,6 +1,6 @@
 package io.getquill.context.jasync
 
-import java.time.{LocalDate, LocalDateTime}
+import java.time.{ LocalDate, LocalDateTime }
 import java.util.Date
 
 trait Encoders {
