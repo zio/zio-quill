@@ -85,18 +85,18 @@ trait SqlIdiom extends Idiom {
       def token(v: Ast) = stableTokenizer.token(v)
     }
 
-  private[getquill] def sheathQuery(q: Query, strategy: NamingStrategy) =
+  private[getquill] def sheathQuery(q: Query) =
     q match {
       case Quat.Is(Quat.Product(values)) =>
         val id = Ident("x", q.quat)
         val keyValues =
           values.map {
-            case (k, quat) => (strategy.column(k), Property.Opinionated(id, k, Renameable.Fixed, Visibility.Visible))
+            case (k, quat) => (k, Property(id, k))
           }.toList
         Map(q, id, CaseClass(keyValues))
 
       case Map(query, id, prop @ Property(_, propName)) =>
-        Map(query, id, CaseClass(List((strategy.column(propName), prop))))
+        Map(query, id, CaseClass(List((propName, prop))))
 
       case _ => q
     }
@@ -117,8 +117,9 @@ trait SqlIdiom extends Idiom {
         // Right now we are not removing extra select clauses here (via RemoveUnusedSelects) since I am not sure what
         // kind of impact that could have on selects. Can try to do that in the future.
         if (Messages.querySubexpand) {
-          val nestedExpanded = ExpandNestedQueries(SqlQuery(a))
-          RemoveExtraAlias(strategy)(nestedExpanded).token
+          val sheathed = sheathQuery(a)
+          val expanded = expandNestedSubQuery(sheathed, strategy)
+          expanded.token
         } else
           SqlQuery(a).token
 
@@ -478,13 +479,7 @@ trait SqlIdiom extends Idiom {
   implicit def infixTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Infix] = Tokenizer[Infix] {
     case Infix(parts, params, _, _) =>
       val pt = parts.map(_.token)
-      val pr = params.map {
-        case q: Query if (Messages.querySubexpand) =>
-          val sheathed = sheathQuery(q, strategy)
-          expandNestedSubQuery(sheathed, strategy).token
-        case other =>
-          other.token
-      }
+      val pr = params.map(_.token)
       Statement(Interleave(pt, pr))
   }
 
