@@ -109,7 +109,7 @@ class SqlIdiomSpec extends Spec {
             qr1.distinct
           }
           testContext.run(q).string mustEqual
-            "SELECT x.s, x.i, x.l, x.o, x.b FROM (SELECT DISTINCT x.s, x.i, x.l, x.o, x.b FROM TestEntity x) AS x"
+            "SELECT DISTINCT x.s, x.i, x.l, x.o, x.b FROM TestEntity x"
         }
 
         "single" in {
@@ -134,7 +134,7 @@ class SqlIdiomSpec extends Spec {
             qr1.map(i => new IntLong(i.i, i.l)).distinct
           }
           testContext.run(q).string mustEqual
-            "SELECT i.i, i.l FROM (SELECT DISTINCT i.i, i.l FROM TestEntity i) AS i"
+            "SELECT DISTINCT i.i, i.l FROM TestEntity i"
         }
         "caseclass companion constructor" in {
           case class IntLong(i: Int, l: Long)
@@ -142,7 +142,7 @@ class SqlIdiomSpec extends Spec {
             qr1.map(i => IntLong(i.i, i.l)).distinct
           }
           testContext.run(q).string mustEqual
-            "SELECT i.i, i.l FROM (SELECT DISTINCT i.i, i.l FROM TestEntity i) AS i"
+            "SELECT DISTINCT i.i, i.l FROM TestEntity i"
         }
 
         "nesting" in {
@@ -293,7 +293,7 @@ class SqlIdiomSpec extends Spec {
           }
 
           testContext.run(q).string mustEqual
-            "SELECT t._1, t._2 FROM (SELECT t.i AS _1, MIN(t.l) AS _2 FROM TestEntity t GROUP BY t.i) AS t LIMIT 10"
+            "SELECT x._1, x._2 FROM (SELECT t.i AS _1, MIN(t.l) AS _2 FROM TestEntity t GROUP BY t.i) AS x LIMIT 10"
         }
         "filter.flatMap(groupBy)" in {
           val q = quote {
@@ -421,7 +421,7 @@ class SqlIdiomSpec extends Spec {
             qr1.filter(t => t.i > 10).union(qr1.filter(t => t.s == "s"))
           }
           testContext.run(q).string mustEqual
-            "SELECT x.s, x.i, x.l, x.o, x.b FROM ((SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.i > 10) UNION (SELECT t1.s, t1.i, t1.l, t1.o, t1.b FROM TestEntity t1 WHERE t1.s = 's')) AS x"
+            "(SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.i > 10) UNION (SELECT t1.s, t1.i, t1.l, t1.o, t1.b FROM TestEntity t1 WHERE t1.s = 's')"
         }
         "mapped" in {
           val q = quote {
@@ -452,7 +452,7 @@ class SqlIdiomSpec extends Spec {
             qr1.filter(t => t.i > 10).unionAll(qr1.filter(t => t.s == "s"))
           }
           testContext.run(q).string mustEqual
-            "SELECT x.s, x.i, x.l, x.o, x.b FROM ((SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.i > 10) UNION ALL (SELECT t1.s, t1.i, t1.l, t1.o, t1.b FROM TestEntity t1 WHERE t1.s = 's')) AS x"
+            "(SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.i > 10) UNION ALL (SELECT t1.s, t1.i, t1.l, t1.o, t1.b FROM TestEntity t1 WHERE t1.s = 's')"
         }
       }
       "join" - {

@@ -237,7 +237,7 @@ class RenamePropertiesOverrideSpec extends Spec {
           e.distinct
         }
         testContextUpper.run(q).string mustEqual
-          "SELECT x.field_s, x.field_i, x.l, x.o, x.b FROM (SELECT DISTINCT x.field_s, x.field_i, x.L AS l, x.O AS o, x.B AS b FROM test_entity x) AS x"
+          "SELECT DISTINCT x.field_s, x.field_i, x.L, x.O, x.B FROM test_entity x"
       }
       "transitive" in {
         val q = quote {
