@@ -1,6 +1,6 @@
 package io.getquill.context.jasync
 
-import java.time.{ LocalDate, LocalDateTime, LocalTime, OffsetDateTime, ZoneId, ZonedDateTime }
+import java.time.{LocalDate, LocalDateTime}
 import java.util.Date
 
 trait Encoders {
@@ -56,5 +56,4 @@ trait Encoders {
   implicit val dateEncoder: Encoder[Date] = encoder[Date](SqlTypes.TIMESTAMP)
   implicit val localDateEncoder: Encoder[LocalDate] = encoder[LocalDate](SqlTypes.TIMESTAMP)
   implicit val localDateTimeEncoder: Encoder[LocalDateTime] = encoder[LocalDateTime](SqlTypes.TIMESTAMP)
-  implicit val zonedDateTimeEncoder: Encoder[ZonedDateTime] = encoder[ZonedDateTime](SqlTypes.TIMESTAMP)
 }

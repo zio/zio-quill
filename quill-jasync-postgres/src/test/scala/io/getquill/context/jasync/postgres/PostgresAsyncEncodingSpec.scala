@@ -1,6 +1,6 @@
 package io.getquill.context.jasync.postgres
 
-import java.time.{ LocalDate, LocalDateTime, ZonedDateTime }
+import java.time.{ LocalDate, LocalDateTime }
 
 import io.getquill.context.sql.EncodingSpec
 
@@ -88,9 +88,9 @@ class PostgresAsyncEncodingSpec extends EncodingSpec {
     success must not be empty
   }
 
-  "decodes ZonedDateTime, LocalDate and LocalDateTime types" in {
-    case class DateEncodingTestEntity(v1: LocalDate, v2: LocalDateTime, v3: ZonedDateTime)
-    val entity = DateEncodingTestEntity(LocalDate.now, LocalDateTime.now, ZonedDateTime.now)
+  "decodes LocalDate and LocalDateTime types" in {
+    case class DateEncodingTestEntity(v1: LocalDate, v2: LocalDateTime)
+    val entity = DateEncodingTestEntity(LocalDate.now, LocalDateTime.now)
     val r = for {
       _ <- testContext.run(query[DateEncodingTestEntity].delete)
       _ <- testContext.run(query[DateEncodingTestEntity].insertValue(lift(entity)))
