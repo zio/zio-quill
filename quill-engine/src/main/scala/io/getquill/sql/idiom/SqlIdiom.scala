@@ -15,6 +15,7 @@ import io.getquill.norm.ConcatBehavior.AnsiConcat
 import io.getquill.norm.EqualityBehavior.AnsiEquality
 import io.getquill.norm.{ ConcatBehavior, EqualityBehavior, ExpandReturning, NormalizeCaching, ProductAggregationToken }
 import io.getquill.quat.Quat
+import io.getquill.sql.norm.RemoveExtraAlias.TopLevelRemove
 import io.getquill.sql.norm.{ RemoveExtraAlias, RemoveUnusedSelects }
 import io.getquill.util.{ Interleave, Messages }
 import io.getquill.util.Messages.{ fail, trace }
@@ -24,6 +25,7 @@ trait SqlIdiom extends Idiom {
   override def prepareForProbing(string: String): String
 
   protected def concatBehavior: ConcatBehavior = AnsiConcat
+
   protected def equalityBehavior: EqualityBehavior = AnsiEquality
   protected def productAggregationToken: ProductAggregationToken = ProductAggregationToken.Star
 
@@ -71,6 +73,7 @@ trait SqlIdiom extends Idiom {
   override def translate(ast: Ast)(implicit naming: NamingStrategy): (Ast, Statement) = {
     doTranslate(ast, false)
   }
+
   override def translateCached(ast: Ast)(implicit naming: NamingStrategy): (Ast, Statement) = {
     doTranslate(ast, true)
   }
@@ -85,12 +88,18 @@ trait SqlIdiom extends Idiom {
   def astTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Ast] =
     Tokenizer[Ast] {
       case a: Query =>
-        // This case almost exclusively happens when you have a select inside of an insert.
+        // This case typically happens when you have a select inside of an insert
+        // infix or a set operation (e.g. query[Person].exists).
         // have a look at the SqlDslSpec `forUpdate` and `insert with subselects` tests
         // for more details.
         // Right now we are not removing extra select clauses here (via RemoveUnusedSelects) since I am not sure what
         // kind of impact that could have on selects. Can try to do that in the future.
-        RemoveExtraAlias(strategy)(ExpandNestedQueries(SqlQuery(a))).token
+        if (Messages.querySubexpand) {
+          val nestedExpanded = ExpandNestedQueries(SqlQuery(a))
+          RemoveExtraAlias(strategy)(nestedExpanded).token
+        } else
+          SqlQuery(a).token
+
       case a: Operation       => a.token
       case a: Infix           => a.token
       case a: Action          => a.token
@@ -135,6 +144,7 @@ trait SqlIdiom extends Idiom {
     values.token
 
   protected class FlattenSqlQueryTokenizerHelper(q: FlattenSqlQuery)(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy) {
+
     import q._
 
     def selectTokenizer =
@@ -166,16 +176,19 @@ trait SqlIdiom extends Idiom {
         case None        => withFrom
         case Some(where) => stmt"$withFrom WHERE ${where.token}"
       }
+
     def withGroupBy =
       groupBy match {
         case None          => withWhere
         case Some(groupBy) => stmt"$withWhere GROUP BY ${tokenizeGroupBy(groupBy)}"
       }
+
     def withOrderBy =
       orderBy match {
         case Nil     => withGroupBy
         case orderBy => stmt"$withGroupBy ${tokenOrderBy(orderBy)}"
       }
+
     def withLimitOffset = limitOffsetToken(withOrderBy).token((limit, offset))
 
     def apply = stmt"SELECT $withLimitOffset"
@@ -576,9 +589,13 @@ object SqlIdiom {
   private[getquill] def copyIdiom(parent: SqlIdiom, newActionAlias: Option[Ident]) =
     new SqlIdiom {
       override protected def actionAlias: Option[Ident] = newActionAlias
+
       override def prepareForProbing(string: String): String = parent.prepareForProbing(string)
+
       override def concatFunction: String = parent.concatFunction
+
       override def liftingPlaceholder(index: Int): String = parent.liftingPlaceholder(index)
+
       override def idiomReturningCapability: ReturningCapability = parent.idiomReturningCapability
       override def productAggregationToken: ProductAggregationToken = parent.productAggregationToken
     }

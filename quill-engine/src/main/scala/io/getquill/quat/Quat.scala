@@ -1,5 +1,6 @@
 package io.getquill.quat
 
+import io.getquill.ast.Ast
 import io.getquill.quotation.QuatException
 import io.getquill.util.Messages.TraceType
 
@@ -151,6 +152,10 @@ sealed trait Quat {
 }
 
 object Quat {
+  object Is {
+    def unapply(ast: Ast) = Some(ast.quat)
+  }
+
   import LinkedHashMapOps._
 
   def fromSerializedJVM(serial: String): Quat = KryoQuatSerializer.deserialize(serial)

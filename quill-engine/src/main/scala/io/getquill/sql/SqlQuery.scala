@@ -72,6 +72,17 @@ object TakeDropFlatten {
   }
 }
 
+object CaseClassMake {
+  def fromQuat(quat: Quat)(idName: String) =
+    quat match {
+      case Quat.Product(fields) =>
+        CaseClass(fields.toList.map { case (name, _) => (name, Property(Ident(idName, quat), name)) })
+      // Figure out a way to test this case?
+      case _ =>
+        CaseClass(List((idName, Ident(idName, quat))))
+    }
+}
+
 object SqlQuery {
 
   def apply(query: Ast): SqlQuery =
@@ -94,6 +105,10 @@ object SqlQuery {
 
   private def flattenContexts(query: Ast): (List[FromContext], Ast) =
     query match {
+      // A flat-join query with no maps e.g: `qr1.flatMap(e1 => qr1.join(e2 => e1.i == e2.i))`
+      case FlatMap(q @ (_: Query | _: Infix), id: Ident, flatJoin @ FlatJoin(_, _, alias @ Ident(name, _), _)) =>
+        val cc = CaseClassMake.fromQuat(flatJoin.quat)(name)
+        flattenContexts(FlatMap(q, id, Map(flatJoin, alias, cc)))
       case FlatMap(q @ (_: Query | _: Infix), Ident(alias, _), p: Query) =>
         val source = this.source(q, alias)
         val (nestedContexts, finalFlatMapBody) = flattenContexts(p)

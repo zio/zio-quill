@@ -61,17 +61,6 @@ class UnlimitedOptionalEmbeddedSpec extends Spec {
   }
 
   "meta" - {
-    "query" in {
-      materializeQueryMeta[OptEmd].expand.toString mustEqual "(q) => q.map(x => (" +
-        "x.e1.e1.e1.value, " +
-        "x.e1.e1.e2.map((v) => v.value), " +
-        "x.e1.e2.map((v) => v.e1.value), " +
-        "x.e1.e2.map((v) => v.e2.map((v) => v.value)), " +
-        "x.e2.map((v) => v.e1.e1.value), " +
-        "x.e2.map((v) => v.e1.e2.map((v) => v.value)), " +
-        "x.e2.map((v) => v.e2.map((v) => v.e1.value)), " +
-        "x.e2.map((v) => v.e2.map((v) => v.e2.map((v) => v.value)))))"
-    }
     "update" in {
       materializeUpdateMeta[OptEmd].expand.toString mustEqual "(q, value) => q.update(" +
         "v => v.e1.e1.e1.value -> value.e1.e1.e1.value, " +

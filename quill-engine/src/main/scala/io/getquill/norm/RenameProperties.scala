@@ -153,20 +153,20 @@ object SeedRenames extends StatelessTransformer {
 // Represents a nested property path to an identity i.e. Property(Property(... Ident(), ...))
 object PropertyMatroshka {
 
-  def traverse(initial: Property): Option[(Ast, List[String])] =
+  def traverse(initial: Property): Option[(Ast, List[String], List[Renameable])] =
     initial match {
       // If it's a nested-property walk inside and append the name to the result (if something is returned)
-      case Property(inner: Property, name) =>
-        traverse(inner).map { case (id, list) => (id, list :+ name) }
+      case Property.Opinionated(inner: Property, name, ren, _) =>
+        traverse(inner).map { case (id, list, renameable) => (id, list :+ name, renameable :+ ren) }
       // If it's a property with ident in the core, return that
-      case Property(inner, name) if !inner.isInstanceOf[Property] =>
-        Some((inner, List(name)))
+      case Property.Opinionated(inner, name, ren, _) if !inner.isInstanceOf[Property] =>
+        Some((inner, List(name), List(ren)))
       // Otherwise an ident property is not inside so don't return anything
       case _ =>
         None
     }
 
-  def unapply(ast: Property): Option[(Ast, List[String])] =
+  def unapply(ast: Property): Option[(Ast, List[String], List[Renameable])] =
     ast match {
       case p: Property => traverse(p)
       case _           => None
