@@ -48,6 +48,7 @@ class ExpandSelection(from: List[FromContext]) {
       case SelectValue(CaseClass(fields), alias, concat) =>
         fields.flatMap {
           case (name, ast) =>
+            val concated = SelectValue(ast, alias.concatWith(name), concat)
             apply(SelectValue(ast, alias.concatWith(name), concat))
         }
       // Direct infix select, etc...
@@ -61,7 +62,9 @@ object ExpandNestedQueries extends StatelessQueryTransformer {
   protected override def apply(q: SqlQuery, isTopLevel: Boolean = false): SqlQuery =
     q match {
       case q: FlattenSqlQuery =>
-        expandNested(q.copy(select = new ExpandSelection(q.from)(q.select))(q.quat), isTopLevel)
+        val selection = new ExpandSelection(q.from)(q.select)
+        val out = expandNested(q.copy(select = selection)(q.quat), isTopLevel)
+        out
       case other =>
         super.apply(q, isTopLevel)
     }
@@ -71,10 +74,12 @@ object ExpandNestedQueries extends StatelessQueryTransformer {
 
     def apply(p: Ast): Ast = {
       p match {
-        case p @ PropertyMatroshka(inner, path) =>
+        case p @ PropertyMatroshka(inner, path, renameables) =>
           val isSubselect = inContext.isSubselect(p)
+          val propsAlreadyFixed = renameables.forall(_ == Renameable.Fixed)
+          val isPropertyRenamed = p.prevName.isDefined
           val renameable =
-            if (p.prevName.isDefined || isSubselect)
+            if (isPropertyRenamed || isSubselect || propsAlreadyFixed)
               Renameable.Fixed
             else
               Renameable.ByStrategy

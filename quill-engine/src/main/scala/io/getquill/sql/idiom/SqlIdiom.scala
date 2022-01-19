@@ -15,6 +15,7 @@ import io.getquill.norm.ConcatBehavior.AnsiConcat
 import io.getquill.norm.EqualityBehavior.AnsiEquality
 import io.getquill.norm.{ ConcatBehavior, EqualityBehavior, ExpandReturning, NormalizeCaching, ProductAggregationToken }
 import io.getquill.quat.Quat
+import io.getquill.sql.norm.RemoveExtraAlias.TopLevelRemove
 import io.getquill.sql.norm.{ RemoveExtraAlias, RemoveUnusedSelects }
 import io.getquill.util.{ Interleave, Messages }
 import io.getquill.util.Messages.{ fail, trace }
@@ -87,12 +88,17 @@ trait SqlIdiom extends Idiom {
   def astTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Ast] =
     Tokenizer[Ast] {
       case a: Query =>
-        // This case almost exclusively happens when you have a select inside of an insert.
+        // This case typically happens when you have a select inside of an insert
+        // infix or a set operation (e.g. query[Person].exists).
         // have a look at the SqlDslSpec `forUpdate` and `insert with subselects` tests
         // for more details.
         // Right now we are not removing extra select clauses here (via RemoveUnusedSelects) since I am not sure what
         // kind of impact that could have on selects. Can try to do that in the future.
-        RemoveExtraAlias(strategy)(ExpandNestedQueries(SqlQuery(a))).token
+        if (Messages.querySubexpand) {
+          val nestedExpanded = ExpandNestedQueries(SqlQuery(a))
+          RemoveExtraAlias(strategy)(nestedExpanded).token
+        } else
+          SqlQuery(a).token
 
       case a: Operation       => a.token
       case a: Infix           => a.token

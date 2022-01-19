@@ -1,11 +1,10 @@
 package io.getquill.sql.norm
 
-import io.getquill.ast.{ Ast, Ident, Property, Renameable }
+import io.getquill.ast.{ Ast, Core, Ident, Infix, Property, Renameable }
 import io.getquill.ast.Visibility.{ Hidden, Visible }
 import io.getquill.context.sql.{ FlatJoinContext, FromContext, InfixContext, JoinContext, QueryContext, TableContext }
 import io.getquill.norm.PropertyMatroshka
 import io.getquill.quat.Quat
-import io.getquill.ast.Core
 import io.getquill.sql.norm.InContext.{ InContextType, InInfixContext, InQueryContext, InTableContext }
 
 /**
@@ -44,15 +43,16 @@ case class InContext(from: List[FromContext]) {
   def isEntityReference(ast: Ast) =
     contextReferenceType(ast) match {
       case Some(InTableContext) => true
+      case Some(InInfixContext) => true
       case _                    => false
     }
 
   def contextReferenceType(ast: Ast) = {
     val references = collectTableAliases(from)
     ast match {
-      case Ident(v, _)                       => references.get(v)
-      case PropertyMatroshka(Ident(v, _), _) => references.get(v)
-      case _                                 => None
+      case Ident(v, _)                          => references.get(v)
+      case PropertyMatroshka(Ident(v, _), _, _) => references.get(v)
+      case _                                    => None
     }
   }
 
@@ -95,6 +95,9 @@ case class SelectPropertyProtractor(from: List[FromContext]) {
   def apply(ast: Ast): List[(Ast, List[String])] = {
     ast match {
       case id @ Core() =>
+        // The quat is considered to be an entity (i.e. thing whose fields need to be renamed) if it is either:
+        // a) Found in the table references (i.e. it's an actual table in the subselect) or...
+        // b) We are selecting fields from an infix e.g. `infix"selectPerson()".as[Query[Person]]`
         val isEntity = inContext.isEntityReference(id)
         id.quat match {
           case p: Quat.Product =>
@@ -104,7 +107,7 @@ case class SelectPropertyProtractor(from: List[FromContext]) {
         }
       // Assuming a property contains only an Ident, Infix or Constant at this point
       // and all situations where there is a case-class, tuple, etc... inside have already been beta-reduced
-      case prop @ PropertyMatroshka(id @ Core(), _) =>
+      case prop @ PropertyMatroshka(id @ Core(), _, _) =>
         val isEntity = inContext.isEntityReference(id)
         prop.quat match {
           case p: Quat.Product =>
@@ -122,8 +125,10 @@ case class SelectPropertyProtractor(from: List[FromContext]) {
 *   List( Prop(id,foo) [foo], Prop(Prop(id,bar),a) [bar.a], Prop(Prop(id,bar),b) [bar.b] )
 */
 case class ProtractQuat(refersToEntity: Boolean) {
-  def apply(quat: Quat.Product, core: Ast): List[(Property, List[String])] =
-    applyInner(quat, core)
+  def apply(quat: Quat.Product, core: Ast): List[(Property, List[String])] = {
+    val prot = applyInner(quat, core)
+    prot
+  }
 
   def applyInner(quat: Quat.Product, core: Ast): List[(Property, List[String])] = {
     // Property (and alias path) should be visible unless we are referring directly to a TableContext
