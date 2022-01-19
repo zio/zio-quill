@@ -1,3 +1,27 @@
+# 3.13.0
+
+- [JAsync ZIO implementation](https://github.com/zio/zio-quill/pull/2267)
+- [cassandra-alpakka](https://github.com/zio/zio-quill/pull/2365)
+- [Need to change EntityQuery.insert(CaseClass) to EntityQuery.insertValue(CaseClass) for upstream Scala 3 issues.](https://github.com/zio/zio-quill/pull/2379)
+- [Update ScalaJS to latest](https://github.com/zio/zio-quill/pull/2364)
+- [Work on removing tuple elaboration](https://github.com/zio/zio-quill/pull/2381)
+- [Option to Disable Nested Subexpansion](https://github.com/zio/zio-quill/pull/2383)
+- [Remove deprecated async modules](https://github.com/zio/zio-quill/pull/2362)
+- [Add Scala 3 cross-build for quill-engine](https://github.com/zio/zio-quill/pull/2361)
+- [Move quill-core-portable & quill-sql-portable to common quill-engine module](https://github.com/zio/zio-quill/pull/2360)
+- [Sheath leaf map clauses that cannot be reduced so still have their column in queries](https://github.com/zio/zio-quill/pull/2352)
+
+#### Migration Notes
+* The method `EntityQuery.insert(CaseClass)` e.g. `query[Person].insert(Person("Joe", 123))` has been replaced with `insertValue`.
+  The original `insert` method has been deprecated and will be removed in the next Quill release.
+* The `quill-async` modules using Mauricio's deprecated library ([here](https://github.com/mauricio/postgresql-async))
+  have been removed. Please move to the `quill-jasync` libraries as soon as possible.
+* Quill for ScalaJS has been updated to ScalaJS 1.8.
+* `quill-core-portable` and `quill-sql-portable` are now merged into a cross-built `quill-engine` module.
+* In 3.12.0 addition of field-aliases has been introduced in sub-queries but [#2340](https://github.com/zio/zio-quill/issues/2340)
+  then occurred. A compile-time switch `-Dquill.query.subexpand=false` has been introduced to disable the feature
+  until it can be fixed.
+
 # 3.12.0
 
 - [cassandra - Datastax4x upgrade](https://github.com/getquill/quill/pull/2315)
