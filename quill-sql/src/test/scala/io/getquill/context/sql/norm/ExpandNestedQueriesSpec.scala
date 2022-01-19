@@ -1,6 +1,6 @@
 package io.getquill.context.sql.norm
 
-import io.getquill.{ MirrorSqlDialect, Query, SnakeCase, Spec, SqlMirrorContext }
+import io.getquill.{ MirrorSqlDialect, Query, Quoted, SnakeCase, Spec, SqlMirrorContext }
 import io.getquill.context.sql.{ testContext, testContextUpperEscapeColumn }
 import io.getquill.context.sql.util.StringOps._
 
@@ -638,8 +638,21 @@ class ExpandNestedQueriesSpec extends Spec {
 
     "should be handled correctly in a regular schema" in {
       case class Person(firstName: String, lastName: String)
-      testContext.run(infix"fromSomewhere()".as[Query[Person]]).string mustEqual
+      val q = quote {
+        infix"fromSomewhere()".as[Query[Person]]
+      }
+      testContext.run(q).string mustEqual
         "SELECT x.first_name, x.last_name FROM (fromSomewhere()) AS x"
+    }
+
+    "should be handled correctly in a regular schema - nested" in {
+      case class Name(firstName: String, lastName: String) extends Embedded
+      case class Person(name: Name, theAge: Int)
+      val q = quote {
+        infix"fromSomewhere()".as[Query[Person]]
+      }
+      testContext.run(q).string mustEqual
+        "SELECT x.first_name, x.last_name, x.the_age FROM (fromSomewhere()) AS x"
     }
   }
 

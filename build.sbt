@@ -48,7 +48,7 @@ lazy val dbModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
 )
 
 lazy val jasyncModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
-  `quill-jasync`, `quill-jasync-postgres`, `quill-jasync-mysql`
+  `quill-jasync`, `quill-jasync-postgres`, `quill-jasync-mysql`, `quill-jasync-zio`, `quill-jasync-zio-postgres`
 )
 
 lazy val asyncModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
@@ -61,7 +61,8 @@ lazy val codegenModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
 )
 
 lazy val bigdataModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
-  `quill-cassandra`, `quill-cassandra-lagom`, `quill-cassandra-monix`, `quill-cassandra-zio`, `quill-orientdb`, `quill-spark`
+  `quill-cassandra`, `quill-cassandra-lagom`, `quill-cassandra-monix`, `quill-cassandra-zio`, `quill-cassandra-alpakka`,
+  `quill-orientdb`, `quill-spark`
 )
 
 lazy val allModules =
@@ -77,7 +78,13 @@ lazy val scala213Modules = baseModules ++ jsModules ++ dbModules ++ codegenModul
   `quill-orientdb`,
   `quill-jasync`,
   `quill-jasync-postgres`,
-  `quill-jasync-mysql`
+  `quill-jasync-mysql`,
+  `quill-jasync-zio`,
+  `quill-jasync-zio-postgres`
+)
+
+lazy val notScala211Modules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
+  `quill-cassandra-alpakka`
 )
 
 lazy val scala3Modules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](`quill-engine-jvm`)
@@ -163,8 +170,13 @@ val filteredModules = {
   if(isScala213) {
     println("SBT =:> Compiling 2.13 Modules Only")
     modules.filter(scala213Modules.contains(_))
-  } else if(isScala3) {
-    println("SBT =:> Compiling 2.13 Modules Only")
+  }
+  else if(isScala211) {
+    println("SBT =:> Compiling 2.11 Modules Only")
+    modules.filter(m => !notScala211Modules.contains(m))
+  }
+  else if(isScala3) {
+    println("SBT =:> Compiling 3 Modules Only")
     modules.filter(scala3Modules.contains(_))
   }
   else modules
@@ -439,6 +451,9 @@ lazy val `quill-jdbc-zio` =
 
 
 
+
+
+
 lazy val `quill-ndbc-monix` =
   (project in file("quill-ndbc-monix"))
     .settings(commonSettings: _*)
@@ -537,6 +552,34 @@ lazy val `quill-jasync-mysql` =
       )
     )
     .dependsOn(`quill-jasync` % "compile->compile;test->test")
+    .enablePlugins(MimaPlugin)
+
+lazy val `quill-jasync-zio` =
+  (project in file("quill-jasync-zio"))
+    .settings(commonSettings: _*)
+    .settings(mimaSettings: _*)
+    .settings(
+      Test / fork := true,
+      libraryDependencies ++= Seq(
+        "com.github.jasync-sql" % "jasync-common" % "1.1.4",
+        "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.1"
+      )
+    )
+    .dependsOn(`quill-zio` % "compile->compile;test->test")
+    .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
+    .enablePlugins(MimaPlugin)
+
+lazy val `quill-jasync-zio-postgres` =
+  (project in file("quill-jasync-zio-postgres"))
+    .settings(commonSettings: _*)
+    .settings(mimaSettings: _*)
+    .settings(
+      Test / fork := true,
+      libraryDependencies ++= Seq(
+        "com.github.jasync-sql" % "jasync-postgresql" % "1.1.4"
+      )
+    )
+    .dependsOn(`quill-jasync-zio` % "compile->compile;test->test")
     .enablePlugins(MimaPlugin)
 
 lazy val `quill-ndbc` =
