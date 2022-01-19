@@ -61,7 +61,8 @@ lazy val codegenModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
 )
 
 lazy val bigdataModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
-  `quill-cassandra`, `quill-cassandra-lagom`, `quill-cassandra-monix`, `quill-cassandra-zio`, `quill-orientdb`, `quill-spark`
+  `quill-cassandra`, `quill-cassandra-lagom`, `quill-cassandra-monix`, `quill-cassandra-zio`, `quill-cassandra-alpakka`,
+  `quill-orientdb`, `quill-spark`
 )
 
 lazy val allModules =
@@ -80,6 +81,10 @@ lazy val scala213Modules = baseModules ++ jsModules ++ dbModules ++ codegenModul
   `quill-jasync-mysql`,
   `quill-jasync-zio`,
   `quill-jasync-zio-postgres`
+)
+
+lazy val notScala211Modules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
+  `quill-cassandra-alpakka`
 )
 
 lazy val scala3Modules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](`quill-engine-jvm`)
@@ -165,8 +170,13 @@ val filteredModules = {
   if(isScala213) {
     println("SBT =:> Compiling 2.13 Modules Only")
     modules.filter(scala213Modules.contains(_))
-  } else if(isScala3) {
-    println("SBT =:> Compiling 2.13 Modules Only")
+  }
+  else if(isScala211) {
+    println("SBT =:> Compiling 2.11 Modules Only")
+    modules.filter(m => !notScala211Modules.contains(m))
+  }
+  else if(isScala3) {
+    println("SBT =:> Compiling 3 Modules Only")
     modules.filter(scala3Modules.contains(_))
   }
   else modules
