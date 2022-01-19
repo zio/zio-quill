@@ -3770,6 +3770,78 @@ For `url` property use `postgresql` scheme:
 ctx.url=postgresql://host:5432/database?user=root&password=root
 ```
 
+## quill-jasync-zio
+
+The `quill-jasync-zio` module provides ZIO async support for Postgres databases. 
+
+
+##### connection configuration
+```
+ctx.host=host
+ctx.port=1234
+ctx.username=root
+ctx.password=root
+ctx.database=database
+```
+
+or use connection URL with database-specific scheme (see below):
+
+```
+ctx.url=scheme://host:5432/database?user=root&password=root
+```
+
+Also see full settings `ConnectionPoolConfiguration` [documentation](https://github.com/jasync-sql/jasync-sql/blob/master/db-async-common/src/main/java/com/github/jasync/sql/db/ConnectionPoolConfiguration.kt).
+
+##### SSL configuration
+```
+ctx.sslmode=disable # optional, one of [disable|prefer|require|verify-ca|verify-full]
+ctx.sslrootcert=./path/to/cert/file # optional, required for sslmode=verify-ca or verify-full
+```
+
+### quill-jasync-zio-postgres
+
+
+#### sbt dependencies
+```
+libraryDependencies ++= Seq(
+  "io.getquill" %% "quill-jasync-zio-postgres" % "3.12.1-SNAPSHOT"
+)
+```
+
+#### context definition
+```scala
+lazy val ctx = new PostgresZioJAsyncContext(SnakeCase)
+// Also can be static:
+object MyContext extends PostgresZioJAsyncContext(Literal)
+```
+In order to run operation in this context we need to provide `ZioJAsyncConnection` instance.
+
+```scala
+object MyApp extends zio.App {
+  object DBContext extends PostgresZioJAsyncContext(Literal)
+  import DBContext._
+
+  val dependencies = 
+    PostgresJAsyncContextConfig.loadConfig("testPostgresDB") >>> 
+    ZIOJAsyncConnection.live[PostgreSQLConnection] 
+
+  val program = run(query[Person])
+    
+  def run(args: List[String]) = program.provideLayer(dependencies).exitCode
+}
+```
+
+#### application.properties
+
+See [common properties](#applicationproperties-5)
+
+For `url` property use `postgresql` scheme:
+
+```
+ctx.url=postgresql://host:5432/database?user=root&password=root
+```
+
+
 ## Finagle Contexts
 
 Support for the Twitter Finagle library is available with MySQL and Postgres databases.
