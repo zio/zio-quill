@@ -4052,6 +4052,48 @@ lazy val ctx = new CassandraMonixContext(SnakeCase, "ctx")
 lazy val ctx = new CassandraStreamContext(SnakeCase, "ctx")
 ```
 
+## quill-cassandra-alpakka
+
+#### sbt dependencies
+```
+libraryDependencies ++= Seq(
+  "io.getquill" %% "quill-cassandra-alpakka" % "3.13.1-SNAPSHOT"
+)
+```
+
+See [Alpakka Cassandra](https://doc.akka.io/docs/alpakka/current/cassandra.html) documentation page for more information.
+
+#### context
+
+```scala
+import akka.actor.ActorSystem
+import akka.stream.alpakka.cassandra.CassandraSessionSettings
+import akka.stream.alpakka.cassandra.scaladsl.{CassandraSession, CassandraSessionRegistry}
+import io.getquill.CassandraAlpakkaContext
+
+val system: ActorSystem = ???
+val alpakkaSessionSettings = CassandraSessionSettings("quill-test.alpakka.cassandra")
+val alpakkaSession: CassandraSession = CassandraSessionRegistry.get(system).sessionFor(alpakkaSessionSettings)
+  
+lazy val ctx = new CassandraAlpakkaContext(SnakeCase, alpakkaSession, preparedStatementCacheSize = 100)
+```
+
+#### application.properties
+```
+// alpakka cassandra session with keyspace
+quill-test.alpakka.cassandra: ${alpakka.cassandra} { // inheritance of alpakka.cassandra session configuration
+  // custom datastax driver setup
+  datastax-java-driver-config = quill-test-datastax-java-driver
+}
+
+quill-test-datastax-java-driver {
+  basic {
+    // keyspace at datastax driver setup, as there is not different option now
+    session-keyspace = "quill_test"
+  }
+}
+```
+
 ## OrientDB Contexts
 
 #### sbt dependencies
