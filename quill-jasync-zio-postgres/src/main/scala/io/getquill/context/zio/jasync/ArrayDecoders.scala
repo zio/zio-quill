@@ -4,7 +4,7 @@ import java.time.LocalDate
 import java.util
 import java.util.Date
 import io.getquill.context.sql.encoding.ArrayEncoding
-import io.getquill.context.zio.{ PostgresJAsyncContext, SqlTypes }
+import io.getquill.context.zio.{ PostgresZioJAsyncContext, SqlTypes }
 import io.getquill.util.Messages.fail
 import org.joda.time.{ DateTime => JodaDateTime, LocalDate => JodaLocalDate, LocalDateTime => JodaLocalDateTime }
 
@@ -13,7 +13,7 @@ import scala.collection.compat._
 import scala.jdk.CollectionConverters._
 
 trait ArrayDecoders extends ArrayEncoding {
-  self: PostgresJAsyncContext[_] =>
+  self: PostgresZioJAsyncContext[_] =>
 
   implicit def arrayStringDecoder[Col <: Seq[String]](implicit bf: CBF[String, Col]): Decoder[Col] = arrayRawEncoder[String, Col]
   implicit def arrayBigDecimalDecoder[Col <: Seq[BigDecimal]](implicit bf: CBF[BigDecimal, Col]): Decoder[Col] = arrayDecoder[java.math.BigDecimal, BigDecimal, Col](BigDecimal.javaBigDecimal2bigDecimal)

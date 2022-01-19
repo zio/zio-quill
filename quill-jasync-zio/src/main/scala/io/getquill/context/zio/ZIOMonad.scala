@@ -13,7 +13,7 @@ import scala.util.{ Failure, Success }
 trait ZIOMonad extends IOMonad {
   this: Context[_, _] =>
 
-  type Result[T] = RIO[Has[ZIOJAsyncConnection], T]
+  type Result[T] = RIO[Has[ZioJAsyncConnection], T]
 
   def runIO[T](quoted: Quoted[T]): IO[RunQuerySingleResult[T], Effect.Read] = macro IOMonadMacro.runIO
   def runIO[T](quoted: Quoted[Query[T]]): IO[RunQueryResult[T], Effect.Read] = macro IOMonadMacro.runIO

@@ -1,7 +1,7 @@
 package io.getquill
 
 import io.getquill.context.Context
-import io.getquill.context.zio.PostgresJAsyncContext
+import io.getquill.context.zio.PostgresZioJAsyncContext
 
 // Testing we are passing type params explicitly into AsyncContext, otherwise
 // this file will fail to compile
@@ -11,5 +11,5 @@ trait BaseExtensions {
 }
 
 trait AsyncExtensions extends BaseExtensions {
-  override val context: PostgresJAsyncContext[_]
+  override val context: PostgresZioJAsyncContext[_]
 }

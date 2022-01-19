@@ -13,7 +13,7 @@ import scala.jdk.CollectionConverters._
 import scala.language.implicitConversions
 import scala.util.Try
 
-abstract class ZIOJAsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: ConcreteConnection](val idiom: D, val naming: N)
+abstract class ZioJAsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: ConcreteConnection](val idiom: D, val naming: N)
   extends Context[D, N]
   with TranslateContext
   with SqlContext[D, N]
@@ -21,13 +21,13 @@ abstract class ZIOJAsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: Concret
   with Encoders
   with ZIOMonad {
 
-  private val logger = ContextLogger(classOf[ZIOJAsyncContext[_, _, _]])
+  private val logger = ContextLogger(classOf[ZioJAsyncContext[_, _, _]])
 
   override type PrepareRow = Seq[Any]
   override type ResultRow = RowData
   override type Session = Unit
 
-  override type Result[T] = RIO[Has[ZIOJAsyncConnection], T]
+  override type Result[T] = RIO[Has[ZioJAsyncConnection], T]
   override type RunQueryResult[T] = Seq[T]
   override type RunQuerySingleResult[T] = T
   override type RunActionResult = Long
@@ -53,42 +53,42 @@ abstract class ZIOJAsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: Concret
   def probe(sql: String): Try[_] =
     Try(()) //need to address that
 
-  def transaction[T](action: Result[T]): RIO[Has[ZIOJAsyncConnection], T] = {
-    ZIO.accessM[Has[ZIOJAsyncConnection]](_.get.transaction(action))
+  def transaction[T](action: Result[T]): RIO[Has[ZioJAsyncConnection], T] = {
+    ZIO.accessM[Has[ZioJAsyncConnection]](_.get.transaction(action))
   }
 
-  override def performIO[T](io: IO[T, _], transactional: Boolean = false): RIO[Has[ZIOJAsyncConnection], T] =
+  override def performIO[T](io: IO[T, _], transactional: Boolean = false): RIO[Has[ZioJAsyncConnection], T] =
     if (transactional) {
       transaction(super.performIO(io))
     } else {
       super.performIO(io)
     }
 
-  def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext): RIO[Has[ZIOJAsyncConnection], List[T]] = {
+  def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext): RIO[Has[ZioJAsyncConnection], List[T]] = {
     val (params, values) = prepare(Nil, ())
     logger.logQuery(sql, params)
-    ZIOJAsyncConnection.sendPreparedStatement(sql, values)
+    ZioJAsyncConnection.sendPreparedStatement(sql, values)
       .map(_.getRows.asScala.iterator.map(row => extractor(row, ())).toList)
   }
 
-  def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext): RIO[Has[ZIOJAsyncConnection], T] =
+  def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext): RIO[Has[ZioJAsyncConnection], T] =
     executeQuery(sql, prepare, extractor)(info, dc).map(handleSingleResult)
 
   def executeAction[T](sql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: DatasourceContext): Result[Long] = {
     val (params, values) = prepare(Nil, ())
     logger.logQuery(sql, params)
-    ZIOJAsyncConnection.sendPreparedStatement(sql, values).map(_.getRowsAffected)
+    ZioJAsyncConnection.sendPreparedStatement(sql, values).map(_.getRowsAffected)
   }
 
-  def executeActionReturning[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T], returningAction: ReturnAction)(info: ExecutionInfo, dc: DatasourceContext): RIO[Has[ZIOJAsyncConnection], T] = {
+  def executeActionReturning[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T], returningAction: ReturnAction)(info: ExecutionInfo, dc: DatasourceContext): RIO[Has[ZioJAsyncConnection], T] = {
     val expanded = expandAction(sql, returningAction)
     val (params, values) = prepare(Nil, ())
     logger.logQuery(sql, params)
-    ZIOJAsyncConnection.sendPreparedStatement(expanded, values)
+    ZioJAsyncConnection.sendPreparedStatement(expanded, values)
       .map(extractActionResult(returningAction, extractor))
   }
 
-  def executeBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: DatasourceContext): RIO[Has[ZIOJAsyncConnection], List[Long]] =
+  def executeBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: DatasourceContext): RIO[Has[ZioJAsyncConnection], List[Long]] =
     ZIO.foreach(groups) { group =>
       ZIO.foldLeft(group.prepare)(List.newBuilder[Long]) {
         case (acc, prepare) =>
@@ -96,7 +96,7 @@ abstract class ZIOJAsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: Concret
       }.map(_.result())
     }.map(_.flatten.toList)
 
-  def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T])(info: ExecutionInfo, dc: DatasourceContext): RIO[Has[ZIOJAsyncConnection], List[T]] =
+  def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T])(info: ExecutionInfo, dc: DatasourceContext): RIO[Has[ZioJAsyncConnection], List[T]] =
     ZIO.foreach(groups) {
       case BatchGroupReturning(sql, column, prepare) =>
         ZIO.foldLeft(prepare)(List.newBuilder[T]) {

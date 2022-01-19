@@ -2,7 +2,7 @@ package io.getquill.context.zio.jasync.postgres
 
 import com.github.jasync.sql.db.{ QueryResult, ResultSetKt }
 import io.getquill.ReturnAction.ReturnColumns
-import io.getquill.context.zio.PostgresJAsyncContext
+import io.getquill.context.zio.PostgresZioJAsyncContext
 
 import io.getquill.{ Literal, ReturnAction, Spec }
 
@@ -41,7 +41,7 @@ class PostgresJAsyncContextSpec extends Spec with ZioSpec {
   }
 
   "cannot extract" in {
-    object ctx extends PostgresJAsyncContext(Literal) {
+    object ctx extends PostgresZioJAsyncContext(Literal) {
       override def extractActionResult[O](
         returningAction:    ReturnAction,
         returningExtractor: ctx.Extractor[O]

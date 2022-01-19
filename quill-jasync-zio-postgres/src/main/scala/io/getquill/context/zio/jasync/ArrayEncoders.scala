@@ -4,11 +4,11 @@ import java.sql.Timestamp
 import java.time.LocalDate
 import java.util.Date
 import io.getquill.context.sql.encoding.ArrayEncoding
-import io.getquill.context.zio.{ PostgresJAsyncContext, SqlTypes }
+import io.getquill.context.zio.{ PostgresZioJAsyncContext, SqlTypes }
 import org.joda.time.{ DateTime => JodaDateTime, LocalDate => JodaLocalDate, LocalDateTime => JodaLocalDateTime }
 
 trait ArrayEncoders extends ArrayEncoding {
-  self: PostgresJAsyncContext[_] =>
+  self: PostgresZioJAsyncContext[_] =>
 
   implicit def arrayStringEncoder[Col <: Seq[String]]: Encoder[Col] = arrayRawEncoder[String, Col]
   implicit def arrayBigDecimalEncoder[Col <: Seq[BigDecimal]]: Encoder[Col] = arrayRawEncoder[BigDecimal, Col]

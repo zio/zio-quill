@@ -3,7 +3,7 @@ package io.getquill.context.zio
 import java.util.UUID
 
 trait UUIDStringEncoding {
-  this: ZIOJAsyncContext[_, _, _] =>
+  this: ZioJAsyncContext[_, _, _] =>
 
   implicit val uuidEncoder: Encoder[UUID] = encoder[UUID]((v: UUID) => v.toString, SqlTypes.UUID)
 
