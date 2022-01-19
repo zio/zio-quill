@@ -3823,7 +3823,7 @@ object MyApp extends zio.App {
 
   val dependencies = 
     PostgresJAsyncContextConfig.loadConfig("testPostgresDB") >>> 
-    ZIOJAsyncConnection.live[PostgreSQLConnection] 
+    ZioJAsyncConnection.live[PostgreSQLConnection] 
 
   val program = run(query[Person])
     
