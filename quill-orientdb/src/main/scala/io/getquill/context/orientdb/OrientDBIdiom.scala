@@ -1,5 +1,6 @@
 package io.getquill.context.orientdb
 
+import io.getquill.norm.NormalizeCaching
 import io.getquill.idiom.StatementInterpolator._
 import io.getquill.context.sql.norm._
 import io.getquill.ast.{ AggregationOperator, External, _ }
@@ -24,7 +25,19 @@ trait OrientDBIdiom extends Idiom {
   override def prepareForProbing(string: String): String = string
 
   override def translate(ast: Ast)(implicit naming: NamingStrategy): (Ast, Statement) = {
-    val normalizedAst = SqlNormalize(ast)
+    doTranslate(ast, false)
+  }
+
+  override def translateCached(ast: Ast)(implicit naming: NamingStrategy): (Ast, Statement) = {
+    doTranslate(ast, true)
+  }
+
+  private def doTranslate(ast: Ast, cached: Boolean)(implicit naming: NamingStrategy): (Ast, Statement) = {
+    val normalizedAst = {
+      if (cached)
+        NormalizeCaching { ast: Ast => SqlNormalize(ast) }(ast)
+      else SqlNormalize(ast)
+    }
     val token =
       normalizedAst match {
         case q: Query =>
@@ -162,12 +175,12 @@ trait OrientDBIdiom extends Idiom {
   }
 
   implicit def operationTokenizer(implicit propertyTokenizer: Tokenizer[Property], strategy: NamingStrategy): Tokenizer[Operation] = Tokenizer[Operation] {
-    case UnaryOperation(op, ast)                              => stmt"${op.token} (${ast.token})"
-    case BinaryOperation(a, EqualityOperator.`==`, NullValue) => stmt"${scopedTokenizer(a)} IS NULL"
-    case BinaryOperation(NullValue, EqualityOperator.`==`, b) => stmt"${scopedTokenizer(b)} IS NULL"
-    case BinaryOperation(a, EqualityOperator.`!=`, NullValue) => stmt"${scopedTokenizer(a)} IS NOT NULL"
-    case BinaryOperation(NullValue, EqualityOperator.`!=`, b) => stmt"${scopedTokenizer(b)} IS NOT NULL"
-    case BinaryOperation(a, op @ SetOperator.`contains`, b)   => SetContainsToken(scopedTokenizer(b), op.token, a.token)
+    case UnaryOperation(op, ast)                               => stmt"${op.token} (${ast.token})"
+    case BinaryOperation(a, EqualityOperator.`_==`, NullValue) => stmt"${scopedTokenizer(a)} IS NULL"
+    case BinaryOperation(NullValue, EqualityOperator.`_==`, b) => stmt"${scopedTokenizer(b)} IS NULL"
+    case BinaryOperation(a, EqualityOperator.`_!=`, NullValue) => stmt"${scopedTokenizer(a)} IS NOT NULL"
+    case BinaryOperation(NullValue, EqualityOperator.`_!=`, b) => stmt"${scopedTokenizer(b)} IS NOT NULL"
+    case BinaryOperation(a, op @ SetOperator.`contains`, b)    => SetContainsToken(scopedTokenizer(b), op.token, a.token)
     case BinaryOperation(a, op, b) =>
       stmt"${scopedTokenizer(a)} ${op.token} ${scopedTokenizer(b)}"
     case e: FunctionApply => fail(s"Can't translate the ast to sql: '$e'")
@@ -208,7 +221,7 @@ trait OrientDBIdiom extends Idiom {
   }
 
   implicit val binaryOperatorTokenizer: Tokenizer[BinaryOperator] = Tokenizer[BinaryOperator] {
-    case EqualityOperator.`==`  => stmt"="
+    case EqualityOperator.`_==` => stmt"="
     case BooleanOperator.`&&`   => stmt"AND"
     case NumericOperator.`>`    => stmt">"
     case NumericOperator.`>=`   => stmt">="

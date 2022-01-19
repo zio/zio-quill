@@ -3,7 +3,7 @@ package io.getquill.context.qzio
 import io.getquill.context.ZioJdbc._
 import io.getquill.context.jdbc.JdbcRunContext
 import io.getquill.context.sql.idiom.SqlIdiom
-import io.getquill.context.{ ContextEffect, ExecutionInfo, StreamingContext }
+import io.getquill.context.{ ExecutionInfo, StreamingContext }
 import io.getquill.util.ContextLogger
 import io.getquill.{ NamingStrategy, ReturnAction }
 import zio.Exit.{ Failure, Success }
@@ -33,23 +33,23 @@ abstract class ZioJdbcUnderlyingContext[Dialect <: SqlIdiom, Naming <: NamingStr
   override type RunBatchActionReturningResult[T] = List[T]
 
   // Need explicit return-type annotations due to scala/bug#8356. Otherwise macro system will not understand Result[Long]=Task[Long] etc...
-  override def executeAction[T](sql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: DatasourceContext): QCIO[Long] =
+  override def executeAction(sql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: Runner): QCIO[Long] =
     super.executeAction(sql, prepare)(info, dc)
-  override def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext): QCIO[List[T]] =
+  override def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner): QCIO[List[T]] =
     super.executeQuery(sql, prepare, extractor)(info, dc)
-  override def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext): QCIO[T] =
+  override def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner): QCIO[T] =
     super.executeQuerySingle(sql, prepare, extractor)(info, dc)
-  override def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningBehavior: ReturnAction)(info: ExecutionInfo, dc: DatasourceContext): QCIO[O] =
+  override def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningBehavior: ReturnAction)(info: ExecutionInfo, dc: Runner): QCIO[O] =
     super.executeActionReturning(sql, prepare, extractor, returningBehavior)(info, dc)
-  override def executeBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: DatasourceContext): QCIO[List[Long]] =
+  override def executeBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: Runner): QCIO[List[Long]] =
     super.executeBatchAction(groups)(info, dc)
-  override def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T])(info: ExecutionInfo, dc: DatasourceContext): QCIO[List[T]] =
+  override def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T])(info: ExecutionInfo, dc: Runner): QCIO[List[T]] =
     super.executeBatchActionReturning(groups, extractor)(info, dc)
-  override def prepareQuery(sql: String, prepare: Prepare)(info: ExecutionInfo, dc: DatasourceContext): QCIO[PreparedStatement] =
+  override def prepareQuery(sql: String, prepare: Prepare)(info: ExecutionInfo, dc: Runner): QCIO[PreparedStatement] =
     super.prepareQuery(sql, prepare)(info, dc)
-  override def prepareAction(sql: String, prepare: Prepare)(info: ExecutionInfo, dc: DatasourceContext): QCIO[PreparedStatement] =
+  override def prepareAction(sql: String, prepare: Prepare)(info: ExecutionInfo, dc: Runner): QCIO[PreparedStatement] =
     super.prepareAction(sql, prepare)(info, dc)
-  override def prepareBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: DatasourceContext): QCIO[List[PreparedStatement]] =
+  override def prepareBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: Runner): QCIO[List[PreparedStatement]] =
     super.prepareBatchAction(groups)(info, dc)
 
   /** ZIO Contexts do not managed DB connections so this is a no-op */
@@ -132,7 +132,7 @@ abstract class ZioJdbcUnderlyingContext[Dialect <: SqlIdiom, Naming <: NamingStr
     stmt
   }
 
-  def streamQuery[T](fetchSize: Option[Int], sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext): QCStream[T] = {
+  def streamQuery[T](fetchSize: Option[Int], sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner): QCStream[T] = {
     def prepareStatement(conn: Connection) = {
       val stmt = prepareStatementForStreaming(sql, conn, fetchSize)
       val (params, ps) = prepare(stmt, conn)
@@ -176,13 +176,8 @@ abstract class ZioJdbcUnderlyingContext[Dialect <: SqlIdiom, Naming <: NamingStr
     }
   }
 
-  // Put this last since we want to be able to use zio 'effect' keyword in some places
-  override protected val effect = new ContextEffect[Result] {
-    override def wrap[T](t: => T): ZIO[Has[Connection], SQLException, T] =
-      throw new IllegalArgumentException("Runner not used for zio context.")
-    override def push[A, B](result: ZIO[Has[Connection], SQLException, A])(f: A => B): ZIO[Has[Connection], SQLException, B] =
-      throw new IllegalArgumentException("Runner not used for zio context.")
-    override def seq[A](f: List[ZIO[Has[Connection], SQLException, A]]): ZIO[Has[Connection], SQLException, List[A]] =
-      throw new IllegalArgumentException("Runner not used for zio context.")
-  }
+  // Generally these are not used in the ZIO context but have implementations in case they are needed
+  override def wrap[T](t: => T): ZIO[Has[Connection], SQLException, T] = QCIO(t)
+  override def push[A, B](result: ZIO[Has[Connection], SQLException, A])(f: A => B): ZIO[Has[Connection], SQLException, B] = result.map(f)
+  override def seq[A](f: List[ZIO[Has[Connection], SQLException, A]]): ZIO[Has[Connection], SQLException, List[A]] = ZIO.collectAll(f)
 }

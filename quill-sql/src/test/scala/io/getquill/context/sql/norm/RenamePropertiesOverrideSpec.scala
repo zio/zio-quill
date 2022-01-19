@@ -3,8 +3,7 @@ package io.getquill.context.sql.norm
 import io.getquill.ReturnAction.{ ReturnColumns, ReturnRecord }
 import io.getquill.context.sql.testContextUpper
 import io.getquill.context.sql.testContextUpper._
-import io.getquill.{ MirrorSqlDialectWithReturnClause, Spec }
-import io.getquill.Query
+import io.getquill.{ EntityQuery, MirrorSqlDialectWithReturnClause, Query, Quoted, Spec }
 
 class RenamePropertiesOverrideSpec extends Spec {
 
@@ -46,7 +45,7 @@ class RenamePropertiesOverrideSpec extends Spec {
     "action" - {
       "insert" in {
         val q = quote {
-          e.insert(lift(TestEntity("a", 1, 1L, None, true)))
+          e.insertValue(lift(TestEntity("a", 1, 1L, None, true)))
         }
         testContextUpper.run(q).string mustEqual
           "INSERT INTO test_entity (field_s,field_i,L,O,B) VALUES (?, ?, ?, ?, ?)"
@@ -79,14 +78,14 @@ class RenamePropertiesOverrideSpec extends Spec {
             querySchema[TestEntity]("test_entity", _.s -> "field_s", _.i -> "field_i")
           }
           val q = quote {
-            e1.insert(lift(TestEntity("s", 1, 1L, None, true))).returning(_.i)
+            e1.insertValue(lift(TestEntity("s", 1, 1L, None, true))).returning(_.i)
           }
           val mirror = ctx.run(q)
           mirror.returningBehavior mustEqual ReturnRecord
         }
         "returning generated - alias" in {
           val q = quote {
-            e.insert(lift(TestEntity("s", 1, 1L, None, true))).returningGenerated(_.i)
+            e.insertValue(lift(TestEntity("s", 1, 1L, None, true))).returningGenerated(_.i)
           }
           val mirror = testContextUpper.run(q)
           mirror.returningBehavior mustEqual ReturnColumns(List("field_i"))
@@ -237,7 +236,7 @@ class RenamePropertiesOverrideSpec extends Spec {
           e.distinct
         }
         testContextUpper.run(q).string mustEqual
-          "SELECT x.field_s, x.field_i, x.l, x.o, x.b FROM (SELECT DISTINCT x.field_s, x.field_i, x.L AS l, x.O AS o, x.B AS b FROM test_entity x) AS x"
+          "SELECT DISTINCT x.field_s, x.field_i, x.L, x.O, x.B FROM test_entity x"
       }
       "transitive" in {
         val q = quote {
@@ -321,20 +320,20 @@ class RenamePropertiesOverrideSpec extends Spec {
       }
     }
 
-    "operation" - {
+    "operation" - { //
       "unary" in {
-        val q = quote {
+        val q: Quoted[EntityQuery[Index]] = quote {
           e.filter(a => e.filter(b => b.i > 0).isEmpty).map(_.i)
         }
         testContextUpper.run(q).string mustEqual
-          "SELECT a.field_i FROM test_entity a WHERE NOT EXISTS (SELECT b.* FROM test_entity b WHERE b.field_i > 0)"
+          "SELECT a.field_i FROM test_entity a WHERE NOT EXISTS (SELECT b.field_s, b.field_i, b.L, b.O, b.B FROM test_entity b WHERE b.field_i > 0)"
       }
       "binary" in {
         val q = quote {
           e.filter(a => e.filter(b => b.i > 0).isEmpty && a.s == "test").map(_.i)
         }
         testContextUpper.run(q).string mustEqual
-          "SELECT a.field_i FROM test_entity a WHERE NOT EXISTS (SELECT b.* FROM test_entity b WHERE b.field_i > 0) AND a.field_s = 'test'"
+          "SELECT a.field_i FROM test_entity a WHERE NOT EXISTS (SELECT b.field_s, b.field_i, b.L, b.O, b.B FROM test_entity b WHERE b.field_i > 0) AND a.field_s = 'test'"
       }
       "query body" in {
         val q = quote {

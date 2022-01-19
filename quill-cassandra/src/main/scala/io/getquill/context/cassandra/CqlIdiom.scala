@@ -9,6 +9,7 @@ import io.getquill.idiom.StatementInterpolator._
 import io.getquill.idiom.Statement
 import io.getquill.idiom.SetContainsToken
 import io.getquill.idiom.Token
+import io.getquill.norm.NormalizeCaching
 import io.getquill.util.Interleave
 
 object CqlIdiom extends CqlIdiom with CannotReturn
@@ -23,6 +24,11 @@ trait CqlIdiom extends Idiom {
 
   override def translate(ast: Ast)(implicit naming: NamingStrategy) = {
     val normalizedAst = CqlNormalize(ast)
+    (normalizedAst, stmt"${normalizedAst.token}")
+  }
+
+  override def translateCached(ast: Ast)(implicit naming: NamingStrategy) = {
+    val normalizedAst = NormalizeCaching(CqlNormalize.apply)(ast)
     (normalizedAst, stmt"${normalizedAst.token}")
   }
 
@@ -102,7 +108,7 @@ trait CqlIdiom extends Idiom {
   }
 
   implicit val binaryOperatorTokenizer: Tokenizer[BinaryOperator] = Tokenizer[BinaryOperator] {
-    case EqualityOperator.`==`  => stmt"="
+    case EqualityOperator.`_==` => stmt"="
     case BooleanOperator.`&&`   => stmt"AND"
     case NumericOperator.`>`    => stmt">"
     case NumericOperator.`>=`   => stmt">="

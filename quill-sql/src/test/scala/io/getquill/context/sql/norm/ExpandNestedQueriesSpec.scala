@@ -1,6 +1,6 @@
 package io.getquill.context.sql.norm
 
-import io.getquill.{ MirrorSqlDialect, Query, SnakeCase, Spec, SqlMirrorContext }
+import io.getquill.{ MirrorSqlDialect, Query, Quoted, SnakeCase, Spec, SqlMirrorContext }
 import io.getquill.context.sql.{ testContext, testContextUpperEscapeColumn }
 import io.getquill.context.sql.util.StringOps._
 
@@ -89,7 +89,7 @@ class ExpandNestedQueriesSpec extends Spec {
       }
     }
     testContext.run(q).string mustEqual
-      "SELECT s.i, s.s, COUNT(*) FROM TestEntity s GROUP BY s.i, s.s"
+      "SELECT s.i, s.s, COUNT(s.*) FROM TestEntity s GROUP BY s.i, s.s"
   }
 
   "expands nested distinct query" in {
@@ -98,7 +98,7 @@ class ExpandNestedQueriesSpec extends Spec {
       qr1.fullJoin(qr2).on((a, b) => a.i == b.i).distinct
     }
     testContext.run(q).string mustEqual
-      "SELECT x._1s, x._1i, x._1l, x._1o, x._1b, x._2s, x._2i, x._2l, x._2o FROM (SELECT DISTINCT a.s AS _1s, a.i AS _1i, a.l AS _1l, a.o AS _1o, a.b AS _1b, b.s AS _2s, b.i AS _2i, b.l AS _2l, b.o AS _2o FROM TestEntity a FULL JOIN TestEntity2 b ON a.i = b.i) AS x"
+      "SELECT DISTINCT a.s, a.i, a.l, a.o, a.b, b.s, b.i, b.l, b.o FROM TestEntity a FULL JOIN TestEntity2 b ON a.i = b.i"
   }
 
   "handles column alias conflict" in {
@@ -231,10 +231,10 @@ class ExpandNestedQueriesSpec extends Spec {
         query[Parent].map(p => p.emb).distinct.map(e => (e.name, e.id)).distinct.map(tup => Emb(tup._1, tup._2)).distinct
       }
       ctx.run(q).string.collapseSpace mustEqual
-        """SELECT tup.name, tup.id
-          |FROM (SELECT DISTINCT tup._1 AS name, tup._2 AS id
+        """
+          | SELECT DISTINCT e._1, e._2
           |      FROM (SELECT DISTINCT e.name AS _1, e.id AS _2
-          |            FROM (SELECT DISTINCT p.name, p.id FROM Parent p) AS e) AS tup) AS tup
+          |            FROM (SELECT DISTINCT p.name, p.id FROM Parent p) AS e) AS e
         """.stripMargin.collapseSpace
     }
   }
@@ -259,38 +259,38 @@ class ExpandNestedQueriesSpec extends Spec {
     val str = testContext.run(q).string(true)
     println(str)
     testContext.run(q).string.collapseSpace mustEqual
-      """SELECT tup.id, tup.parid, tup.parname, tup.parembid, tup.parembname
-        |FROM (SELECT DISTINCT tup._1        AS id,
-        |                      tup._2id      AS parid,
-        |                      tup._2name    AS parname,
-        |                      tup._2embid   AS parembid,
-        |                      tup._2embname AS parembname
-        |      FROM (SELECT DISTINCT tup._1,
-        |                            tup._2     AS _2id,
-        |                            tup._3     AS _2name,
-        |                            tup._4id   AS _2embid,
-        |                            tup._4name AS _2embname
-        |            FROM (SELECT DISTINCT tup._1,
-        |                                  tup._2,
-        |                                  tup._3,
-        |                                  tup._4 AS _4id,
-        |                                  tup._5 AS _4name
-        |                  FROM (SELECT DISTINCT tup._1,
-        |                                        tup._2,
-        |                                        tup._3,
-        |                                        tup._4id   AS _4,
-        |                                        tup._4name AS _5
-        |                        FROM (SELECT DISTINCT p._1,
-        |                                              p._2id      AS _2,
-        |                                              p._2name    AS _3,
-        |                                              p._2embid   AS _4id,
-        |                                              p._2embname AS _4name
-        |                              FROM (SELECT DISTINCT g.id   AS _1,
-        |                                                    g.id   AS _2id,
-        |                                                    g.name AS _2name,
-        |                                                    g.id   AS _2embid,
-        |                                                    g.name AS _2embname
-        |                                    FROM GrandParent g) AS p) AS tup) AS tup) AS tup) AS tup) AS tup
+      """
+        | SELECT DISTINCT tup._1,
+        |                 tup._2id,
+        |                 tup._2name,
+        |                 tup._2embid,
+        |                 tup._2embname
+        | FROM (SELECT DISTINCT tup._1,
+        |                       tup._2     AS _2id,
+        |                       tup._3     AS _2name,
+        |                       tup._4id   AS _2embid,
+        |                       tup._4name AS _2embname
+        |       FROM (SELECT DISTINCT tup._1,
+        |                             tup._2,
+        |                             tup._3,
+        |                             tup._4 AS _4id,
+        |                             tup._5 AS _4name
+        |             FROM (SELECT DISTINCT tup._1,
+        |                                   tup._2,
+        |                                   tup._3,
+        |                                   tup._4id   AS _4,
+        |                                   tup._4name AS _5
+        |                   FROM (SELECT DISTINCT p._1,
+        |                                         p._2id      AS _2,
+        |                                         p._2name    AS _3,
+        |                                         p._2embid   AS _4id,
+        |                                         p._2embname AS _4name
+        |                         FROM (SELECT DISTINCT g.id   AS _1,
+        |                                               g.id   AS _2id,
+        |                                               g.name AS _2name,
+        |                                               g.id   AS _2embid,
+        |                                               g.name AS _2embname
+        |                               FROM GrandParent g) AS p) AS tup) AS tup) AS tup) AS tup
       """.collapseSpace
   }
 
@@ -312,54 +312,47 @@ class ExpandNestedQueriesSpec extends Spec {
     }
     testContext.run(q).string(true).collapseSpace mustEqual
       """
-        |SELECT
-        |  tup.bid,
-        |  tup.mammid,
-        |  tup.mamsimsid
-        |FROM
-        |  (
-        |    SELECT
-        |      DISTINCT tup._1 AS bid,
-        |      tup._2mid AS mammid,
-        |      tup._2simsid AS mamsimsid
-        |    FROM
-        |      (
-        |        SELECT
-        |          DISTINCT tup._1,
-        |          tup._2 AS _2mid,
-        |          tup._3sid AS _2simsid
-        |        FROM
-        |          (
-        |            SELECT
-        |              DISTINCT tup._1,
-        |              tup._2,
-        |              tup._3 AS _3sid
-        |            FROM
-        |              (
-        |                SELECT
-        |                  DISTINCT tup._1,
-        |                  tup._2,
-        |                  tup._3sid AS _3
-        |                FROM
-        |                  (
-        |                    SELECT
-        |                      DISTINCT p._1,
-        |                      p._2mid AS _2,
-        |                      p._2simsid AS _3sid
-        |                    FROM
-        |                      (
-        |                        SELECT
-        |                          DISTINCT g.bid AS _1,
-        |                          g.mid AS _2mid,
-        |                          g.sid AS _2simsid
-        |                        FROM
-        |                          Bim g
-        |                      ) AS p
-        |                  ) AS tup
-        |              ) AS tup
-        |          ) AS tup
-        |      ) AS tup
-        |  ) AS tup
+        | SELECT
+        |   DISTINCT tup._1,
+        |   tup._2mid,
+        |   tup._2simsid
+        | FROM
+        |   (
+        |     SELECT
+        |       DISTINCT tup._1,
+        |       tup._2 AS _2mid,
+        |       tup._3sid AS _2simsid
+        |     FROM
+        |       (
+        |         SELECT
+        |           DISTINCT tup._1,
+        |           tup._2,
+        |           tup._3 AS _3sid
+        |         FROM
+        |           (
+        |             SELECT
+        |               DISTINCT tup._1,
+        |               tup._2,
+        |               tup._3sid AS _3
+        |             FROM
+        |               (
+        |                 SELECT
+        |                   DISTINCT p._1,
+        |                   p._2mid AS _2,
+        |                   p._2simsid AS _3sid
+        |                 FROM
+        |                   (
+        |                     SELECT
+        |                       DISTINCT g.bid AS _1,
+        |                       g.mid AS _2mid,
+        |                       g.sid AS _2simsid
+        |                     FROM
+        |                       Bim g
+        |                   ) AS p
+        |               ) AS tup
+        |           ) AS tup
+        |       ) AS tup
+        |   ) AS tup
         |""".collapseSpace
   }
 
@@ -385,49 +378,42 @@ class ExpandNestedQueriesSpec extends Spec {
     testContext.run(q).string(true).collapseSpace mustEqual
       """
         |SELECT
-        |  tup.bid,
-        |  tup.mammid,
-        |  tup.mamsimsid
+        |  DISTINCT tup._1,
+        |  tup._2mid,
+        |  tup._2simsid
         |FROM
         |  (
         |    SELECT
-        |      DISTINCT tup._1 AS bid,
-        |      tup._2mid AS mammid,
-        |      tup._2simsid AS mamsimsid
+        |      DISTINCT tup._1,
+        |      tup._2 AS _2mid,
+        |      tup._3sid AS _2simsid
         |    FROM
         |      (
         |        SELECT
         |          DISTINCT tup._1,
-        |          tup._2 AS _2mid,
-        |          tup._3sid AS _2simsid
+        |          tup._2,
+        |          tup._3 AS _3sid
         |        FROM
         |          (
         |            SELECT
         |              DISTINCT tup._1,
         |              tup._2,
-        |              tup._3 AS _3sid
+        |              tup._3theSid AS _3
         |            FROM
         |              (
         |                SELECT
-        |                  DISTINCT tup._1,
-        |                  tup._2,
-        |                  tup._3theSid AS _3
+        |                  DISTINCT p._1,
+        |                  p._2mid AS _2,
+        |                  p._2simtheSid AS _3theSid
         |                FROM
         |                  (
         |                    SELECT
-        |                      DISTINCT p._1,
-        |                      p._2mid AS _2,
-        |                      p._2simtheSid AS _3theSid
+        |                      DISTINCT g.theBid AS _1,
+        |                      g.mid AS _2mid,
+        |                      g.theSid AS _2simtheSid
         |                    FROM
-        |                      (
-        |                        SELECT
-        |                          DISTINCT g.theBid AS _1,
-        |                          g.mid AS _2mid,
-        |                          g.theSid AS _2simtheSid
-        |                        FROM
-        |                          theBim g
-        |                      ) AS p
-        |                  ) AS tup
+        |                      theBim g
+        |                  ) AS p
         |              ) AS tup
         |          ) AS tup
         |      ) AS tup
@@ -457,49 +443,42 @@ class ExpandNestedQueriesSpec extends Spec {
     ctx.run(q).string(true).collapseSpace mustEqual
       """
         |SELECT
-        |  tup.bid,
-        |  tup.mammid,
-        |  tup.mamsimsid
+        |  DISTINCT tup._1,
+        |  tup._2mid,
+        |  tup._2simsid
         |FROM
         |  (
         |    SELECT
-        |      DISTINCT tup._1 AS bid,
-        |      tup._2mid AS mammid,
-        |      tup._2simsid AS mamsimsid
+        |      DISTINCT tup._1,
+        |      tup._2 AS _2mid,
+        |      tup._3sid AS _2simsid
         |    FROM
         |      (
         |        SELECT
         |          DISTINCT tup._1,
-        |          tup._2 AS _2mid,
-        |          tup._3sid AS _2simsid
+        |          tup._2,
+        |          tup._3 AS _3sid
         |        FROM
         |          (
         |            SELECT
         |              DISTINCT tup._1,
         |              tup._2,
-        |              tup._3 AS _3sid
+        |              tup._3theSid AS _3
         |            FROM
         |              (
         |                SELECT
-        |                  DISTINCT tup._1,
-        |                  tup._2,
-        |                  tup._3theSid AS _3
+        |                  DISTINCT p._1,
+        |                  p._2mid AS _2,
+        |                  p._2simtheSid AS _3theSid
         |                FROM
         |                  (
         |                    SELECT
-        |                      DISTINCT p._1,
-        |                      p._2mid AS _2,
-        |                      p._2simtheSid AS _3theSid
+        |                      DISTINCT g.theBid AS _1,
+        |                      g."MID" AS _2mid,
+        |                      g.theSid AS _2simtheSid
         |                    FROM
-        |                      (
-        |                        SELECT
-        |                          DISTINCT g.theBid AS _1,
-        |                          g."MID" AS _2mid,
-        |                          g.theSid AS _2simtheSid
-        |                        FROM
-        |                          theBim g
-        |                      ) AS p
-        |                  ) AS tup
+        |                      theBim g
+        |                  ) AS p
         |              ) AS tup
         |          ) AS tup
         |      ) AS tup
@@ -547,60 +526,53 @@ class ExpandNestedQueriesSpec extends Spec {
     ctx.run(q).string(true).collapseSpace mustEqual
       """
         |SELECT
-        |  tup.bid,
-        |  tup.mammid,
-        |  tup.mamsimsid
+        |  DISTINCT tup._1,
+        |  tup._2mid,
+        |  tup._2simsid
         |FROM
         |  (
         |    SELECT
-        |      DISTINCT tup._1 AS bid,
-        |      tup._2mid AS mammid,
-        |      tup._2simsid AS mamsimsid
+        |      DISTINCT tup._1,
+        |      tup._2 AS _2mid,
+        |      tup._3sid AS _2simsid
         |    FROM
         |      (
         |        SELECT
         |          DISTINCT tup._1,
-        |          tup._2 AS _2mid,
-        |          tup._3sid AS _2simsid
+        |          tup._2,
+        |          tup._3 AS _3sid
         |        FROM
         |          (
         |            SELECT
         |              DISTINCT tup._1,
         |              tup._2,
-        |              tup._3 AS _3sid
+        |              tup._3theSid AS _3
         |            FROM
         |              (
         |                SELECT
-        |                  DISTINCT tup._1,
-        |                  tup._2,
-        |                  tup._3theSid AS _3
+        |                  DISTINCT n._1,
+        |                  n._2,
+        |                  n._3theSid
         |                FROM
         |                  (
         |                    SELECT
-        |                      DISTINCT n._1,
-        |                      n._2,
-        |                      n._3theSid
+        |                      DISTINCT x10._1,
+        |                      x10._2mid AS _2,
+        |                      x10._2simtheSid AS _3theSid
         |                    FROM
         |                      (
         |                        SELECT
-        |                          DISTINCT x10._1,
-        |                          x10._2mid AS _2,
-        |                          x10._2simtheSid AS _3theSid
+        |                          DISTINCT g.theBid AS _1,
+        |                          g."MID" AS _2mid,
+        |                          g.theSid AS _2simtheSid
         |                        FROM
-        |                          (
-        |                            SELECT
-        |                              DISTINCT g.theBid AS _1,
-        |                              g."MID" AS _2mid,
-        |                              g.theSid AS _2simtheSid
-        |                            FROM
-        |                              theBim g
-        |                            ORDER BY
-        |                              g.theSid ASC NULLS FIRST
-        |                          ) AS x10
-        |                      ) AS n
-        |                    WHERE
-        |                      n._3theSid = 1
-        |                  ) AS tup
+        |                          theBim g
+        |                        ORDER BY
+        |                          g.theSid ASC NULLS FIRST
+        |                      ) AS x10
+        |                  ) AS n
+        |                WHERE
+        |                  n._3theSid = 1
         |              ) AS tup
         |          ) AS tup
         |      ) AS tup
@@ -626,42 +598,36 @@ class ExpandNestedQueriesSpec extends Spec {
     ctx.run(q).string(true).collapseSpace mustEqual
       """
         |SELECT
-        |  tup.mid,
-        |  tup.simsid
+        |  DISTINCT tup._1,
+        |  tup._2sid
         |FROM
         |  (
-        |    SELECT
-        |      DISTINCT tup._1 AS mid,
-        |      tup._2sid AS simsid
-        |    FROM
-        |      (
-        |        SELECT DISTINCT tup._1,
-        |          tup._2 AS _2sid
+        |    SELECT DISTINCT tup._1,
+        |      tup._2 AS _2sid
+        |   FROM
+        |     (
+        |       SELECT
+        |         DISTINCT tup._1,
+        |         tup._2sid AS _2
         |       FROM
         |         (
         |           SELECT
-        |             DISTINCT tup._1,
-        |             tup._2sid AS _2
+        |             DISTINCT x11._1,
+        |             x11._2sid
         |           FROM
         |             (
-        |               SELECT
-        |                 DISTINCT x11._1,
-        |                 x11._2sid
-        |               FROM
-        |                 (
-        |                  SELECT
-        |                    DISTINCT tup."MID" AS _1,
-        |                    tup."SID" AS _2sid
-        |                  FROM
-        |                    Mam tup
-        |                  ORDER BY
-        |                    tup."SID" ASC NULLS FIRST
-        |                ) AS x11
-        |              WHERE
-        |                x11._2sid = 1
-        |            ) AS tup
+        |              SELECT
+        |                DISTINCT tup."MID" AS _1,
+        |                tup."SID" AS _2sid
+        |              FROM
+        |                Mam tup
+        |              ORDER BY
+        |                tup."SID" ASC NULLS FIRST
+        |            ) AS x11
+        |          WHERE
+        |            x11._2sid = 1
         |        ) AS tup
-        |     ) AS tup
+        |    ) AS tup
         | ) AS tup
         |""".collapseSpace
   }
@@ -672,8 +638,21 @@ class ExpandNestedQueriesSpec extends Spec {
 
     "should be handled correctly in a regular schema" in {
       case class Person(firstName: String, lastName: String)
-      testContext.run(infix"fromSomewhere()".as[Query[Person]]).string mustEqual
+      val q = quote {
+        infix"fromSomewhere()".as[Query[Person]]
+      }
+      testContext.run(q).string mustEqual
         "SELECT x.first_name, x.last_name FROM (fromSomewhere()) AS x"
+    }
+
+    "should be handled correctly in a regular schema - nested" in {
+      case class Name(firstName: String, lastName: String) extends Embedded
+      case class Person(name: Name, theAge: Int)
+      val q = quote {
+        infix"fromSomewhere()".as[Query[Person]]
+      }
+      testContext.run(q).string mustEqual
+        "SELECT x.first_name, x.last_name, x.the_age FROM (fromSomewhere()) AS x"
     }
   }
 

@@ -10,7 +10,7 @@ class EncodingSpec extends EncodingSpecHelper with ZioCassandraSpec {
       val ret =
         for {
           _ <- testZioDB.run(query[EncodingTestEntity].delete)
-          _ <- testZioDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insert(e)))
+          _ <- testZioDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insertValue(e)))
           result <- testZioDB.run(query[EncodingTestEntity])
         } yield {
           result
@@ -30,7 +30,7 @@ class EncodingSpec extends EncodingSpecHelper with ZioCassandraSpec {
       val ret =
         for {
           _ <- testZioDB.run(query[EncodingTestEntity].delete)
-          _ <- testZioDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insert(e)))
+          _ <- testZioDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insertValue(e)))
           result <- testZioDB.run(q(liftQuery(insertValues.map(_.id))))
         } yield {
           result

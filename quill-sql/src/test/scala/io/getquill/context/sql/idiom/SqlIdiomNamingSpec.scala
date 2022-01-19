@@ -92,7 +92,7 @@ class SqlIdiomNamingSpec extends Spec {
         query[SomeEntity].distinct
       }
       db.run(q.dynamic).string mustEqual
-        "SELECT x.someColumn FROM (SELECT DISTINCT x.d_somecolumn AS someColumn FROM d_someentity x) AS x"
+        "SELECT DISTINCT x.d_somecolumn FROM d_someentity x"
     }
 
     val db = new SqlMirrorContext(MirrorSqlDialect, SnakeCase)
@@ -101,7 +101,7 @@ class SqlIdiomNamingSpec extends Spec {
 
     "actions" - {
       "insert" in {
-        db.run(query[SomeEntity].insert(lift(SomeEntity(1)))).string mustEqual
+        db.run(query[SomeEntity].insertValue(lift(SomeEntity(1)))).string mustEqual
           "INSERT INTO some_entity (some_column) VALUES (?)"
       }
       "update" in {

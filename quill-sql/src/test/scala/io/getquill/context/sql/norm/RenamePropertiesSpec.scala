@@ -26,6 +26,11 @@ class RenamePropertiesSpec extends Spec {
     qr1.filter(t => t.i == 1)
   }
 
+  // Tables for "nested flatMap in flatJoin" case
+  case class Table1(id: String, category: Int, active: Boolean)
+  case class Table2(id: String, name: String)
+  case class Table3(id: String, configurationId: String, name: String)
+
   "renames properties of a tuple" - {
     "body" in {
       val q = quote {
@@ -48,7 +53,7 @@ class RenamePropertiesSpec extends Spec {
     "action" - {
       "insert" in {
         val q = quote {
-          e.insert(lift(TestEntity("a", 1, 1L, None, true)))
+          e.insertValue(lift(TestEntity("a", 1, 1L, None, true)))
         }
         testContext.run(q).string mustEqual
           "INSERT INTO test_entity (field_s,field_i,l,o,b) VALUES (?, ?, ?, ?, ?)"
@@ -81,14 +86,14 @@ class RenamePropertiesSpec extends Spec {
             querySchema[TestEntity]("test_entity", _.s -> "field_s", _.i -> "field_i")
           }
           val q = quote {
-            e1.insert(lift(TestEntity("s", 1, 1L, None, true))).returning(_.i)
+            e1.insertValue(lift(TestEntity("s", 1, 1L, None, true))).returning(_.i)
           }
           val mirror = ctx.run(q)
           mirror.returningBehavior mustEqual ReturnRecord
         }
         "returning generated - alias" in {
           val q = quote {
-            e.insert(lift(TestEntity("s", 1, 1L, None, true))).returningGenerated(_.i)
+            e.insertValue(lift(TestEntity("s", 1, 1L, None, true))).returningGenerated(_.i)
           }
           val mirror = testContext.run(q)
           mirror.returningBehavior mustEqual ReturnColumns(List("field_i"))
@@ -174,14 +179,14 @@ class RenamePropertiesSpec extends Spec {
         e.filter(t => t.i == 1).union(e.filter(t => t.i != 1))
       }
       testContext.run(q).string mustEqual
-        "SELECT x.field_s, x.field_i, x.l, x.o, x.b FROM ((SELECT t.field_s, t.field_i, t.l, t.o, t.b FROM test_entity t WHERE t.field_i = 1) UNION (SELECT t1.field_s, t1.field_i, t1.l, t1.o, t1.b FROM test_entity t1 WHERE t1.field_i <> 1)) AS x"
+        "(SELECT t.field_s, t.field_i, t.l, t.o, t.b FROM test_entity t WHERE t.field_i = 1) UNION (SELECT t1.field_s, t1.field_i, t1.l, t1.o, t1.b FROM test_entity t1 WHERE t1.field_i <> 1)"
     }
     "unionAll" in {
       val q = quote {
         e.filter(t => t.i == 1).unionAll(e.filter(t => t.i != 1))
       }
       testContext.run(q).string mustEqual
-        "SELECT x.field_s, x.field_i, x.l, x.o, x.b FROM ((SELECT t.field_s, t.field_i, t.l, t.o, t.b FROM test_entity t WHERE t.field_i = 1) UNION ALL (SELECT t1.field_s, t1.field_i, t1.l, t1.o, t1.b FROM test_entity t1 WHERE t1.field_i <> 1)) AS x"
+        "(SELECT t.field_s, t.field_i, t.l, t.o, t.b FROM test_entity t WHERE t.field_i = 1) UNION ALL (SELECT t1.field_s, t1.field_i, t1.l, t1.o, t1.b FROM test_entity t1 WHERE t1.field_i <> 1)"
     }
     "filter" - {
       "body" in {
@@ -253,7 +258,7 @@ class RenamePropertiesSpec extends Spec {
           e.distinct
         }
         testContext.run(q).string mustEqual
-          "SELECT x.field_s, x.field_i, x.l, x.o, x.b FROM (SELECT DISTINCT x.field_s, x.field_i, x.l, x.o, x.b FROM test_entity x) AS x"
+          "SELECT DISTINCT x.field_s, x.field_i, x.l, x.o, x.b FROM test_entity x"
       }
       "transitive" in {
         val q = quote {
@@ -323,6 +328,28 @@ class RenamePropertiesSpec extends Spec {
         testContext.run(q).string mustEqual
           "SELECT b.field_i, b.field_s FROM TestEntity2 a RIGHT JOIN test_entity b ON a.s = b.field_s"
       }
+      "nested flatMap in flatJoin" in {
+
+        val table1Schema = quote {
+          querySchema[Table1]("settings", _.id -> "settings_id")
+        }
+
+        val table2Schema = quote {
+          for {
+            c <- querySchema[Table2]("configuration")
+            s <- table1Schema.join(st => st.id == c.id) if s.active
+          } yield c
+        }
+
+        val q = quote {
+          for {
+            t3 <- query[Table3]
+            c <- table2Schema.join(ct => ct.id == t3.configurationId)
+          } yield (t3, c)
+        }
+
+        testContext.run(q).string mustEqual "SELECT t3.id, t3.configurationId, t3.name, st.id, st.name FROM Table3 t3 INNER JOIN (SELECT c.id, c.name FROM configuration c INNER JOIN settings st ON st.settings_id = c.id WHERE st.active) AS st ON st.id = t3.configurationId"
+      }
     }
 
     "aggregation" - {
@@ -343,14 +370,14 @@ class RenamePropertiesSpec extends Spec {
           e.filter(a => e.filter(b => b.i > 0).isEmpty).map(_.i)
         }
         testContext.run(q).string mustEqual
-          "SELECT a.field_i FROM test_entity a WHERE NOT EXISTS (SELECT b.* FROM test_entity b WHERE b.field_i > 0)"
+          "SELECT a.field_i FROM test_entity a WHERE NOT EXISTS (SELECT b.field_s, b.field_i, b.l, b.o, b.b FROM test_entity b WHERE b.field_i > 0)"
       }
       "binary" in {
         val q = quote {
           e.filter(a => e.filter(b => b.i > 0).isEmpty && a.s == "test").map(_.i)
         }
         testContext.run(q).string mustEqual
-          "SELECT a.field_i FROM test_entity a WHERE NOT EXISTS (SELECT b.* FROM test_entity b WHERE b.field_i > 0) AND a.field_s = 'test'"
+          "SELECT a.field_i FROM test_entity a WHERE NOT EXISTS (SELECT b.field_s, b.field_i, b.l, b.o, b.b FROM test_entity b WHERE b.field_i > 0) AND a.field_s = 'test'"
       }
       "query body" in {
         val q = quote {

@@ -11,24 +11,22 @@ trait TranslateContext extends TranslateContextBase {
   this: Context[_ <: Idiom, _ <: NamingStrategy] =>
 
   override type TranslateResult[T] = T
-
-  override private[getquill] val translateEffect: ContextEffect[TranslateResult] = new ContextEffect[TranslateResult] {
-    override def wrap[T](t: => T): T = t
-    override def push[A, B](result: A)(f: A => B): B = f(result)
-    override def seq[A](list: List[A]): List[A] = list
-  }
+  override def wrap[T](t: => T): T = t
+  override def push[A, B](result: A)(f: A => B): B = f(result)
+  override def seq[A](list: List[A]): List[A] = list
 }
 
 trait TranslateContextBase extends TranslateContextMacro {
   this: Context[_ <: Idiom, _ <: NamingStrategy] =>
 
   type TranslateResult[T]
-  type DatasourceContext
+  type Runner
 
-  private[getquill] val translateEffect: ContextEffect[TranslateResult]
-  import translateEffect._
+  def wrap[T](t: => T): TranslateResult[T]
+  def push[A, B](result: TranslateResult[A])(f: A => B): TranslateResult[B]
+  def seq[A](list: List[TranslateResult[A]]): TranslateResult[List[A]]
 
-  def translateQuery[T](statement: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor, prettyPrint: Boolean = false)(executionInfo: ExecutionInfo, dc: DatasourceContext): TranslateResult[String] =
+  def translateQuery[T](statement: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor, prettyPrint: Boolean = false)(executionInfo: ExecutionInfo, dc: Runner): TranslateResult[String] =
     push(prepareParams(statement, prepare)) { params =>
       val query =
         if (params.nonEmpty) {
@@ -45,7 +43,7 @@ trait TranslateContextBase extends TranslateContextMacro {
         query
     }
 
-  def translateBatchQuery(groups: List[BatchGroup], prettyPrint: Boolean = false)(executionInfo: ExecutionInfo, dc: DatasourceContext): TranslateResult[List[String]] =
+  def translateBatchQuery(groups: List[BatchGroup], prettyPrint: Boolean = false)(executionInfo: ExecutionInfo, dc: Runner): TranslateResult[List[String]] =
     seq {
       groups.flatMap { group =>
         group.prepare.map { prepare =>
@@ -69,7 +67,7 @@ trait TranslateContextMacro {
   this: Context[_ <: Idiom, _ <: NamingStrategy] =>
 
   type TranslateResult[T]
-  type DatasourceContext
+  type Runner
 
   def translate[T](quoted: Quoted[T]): TranslateResult[String] = macro QueryMacro.translateQuery[T]
   def translate[T](quoted: Quoted[Query[T]]): TranslateResult[String] = macro QueryMacro.translateQuery[T]
@@ -81,6 +79,6 @@ trait TranslateContextMacro {
   def translate(quoted: Quoted[Action[_]], prettyPrint: Boolean): TranslateResult[String] = macro ActionMacro.translateQueryPrettyPrint
   def translate(quoted: Quoted[BatchAction[Action[_]]], prettyPrint: Boolean): TranslateResult[List[String]] = macro ActionMacro.translateBatchQueryPrettyPrint
 
-  def translateQuery[T](statement: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor, prettyPrint: Boolean = false)(executionInfo: ExecutionInfo, dc: DatasourceContext): TranslateResult[String]
-  def translateBatchQuery(groups: List[BatchGroup], prettyPrint: Boolean = false)(executionInfo: ExecutionInfo, dc: DatasourceContext): TranslateResult[List[String]]
+  def translateQuery[T](statement: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor, prettyPrint: Boolean = false)(executionInfo: ExecutionInfo, dc: Runner): TranslateResult[String]
+  def translateBatchQuery(groups: List[BatchGroup], prettyPrint: Boolean = false)(executionInfo: ExecutionInfo, dc: Runner): TranslateResult[List[String]]
 }

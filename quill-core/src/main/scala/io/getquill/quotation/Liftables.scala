@@ -68,8 +68,8 @@ trait Liftables extends QuatLiftable {
   }
 
   implicit val binaryOperatorLiftable: Liftable[BinaryOperator] = Liftable[BinaryOperator] {
-    case EqualityOperator.`==`       => q"$pack.EqualityOperator.`==`"
-    case EqualityOperator.`!=`       => q"$pack.EqualityOperator.`!=`"
+    case EqualityOperator.`_==`      => q"$pack.EqualityOperator.`_==`"
+    case EqualityOperator.`_!=`      => q"$pack.EqualityOperator.`_!=`"
     case BooleanOperator.`&&`        => q"$pack.BooleanOperator.`&&`"
     case BooleanOperator.`||`        => q"$pack.BooleanOperator.`||`"
     case StringOperator.`+`          => q"$pack.StringOperator.`+`"

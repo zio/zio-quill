@@ -53,7 +53,7 @@ class UdtEncodingSessionContextSpec extends UdtSpec with ZioCassandraSpec {
         Set(1, 2),
         Map(1 -> "1", 2 -> "2")),
         List(Name("first", None)))
-      ctx.run(query[WithEverything].insert(lift(e))).runSyncUnsafe()
+      ctx.run(query[WithEverything].insertValue(lift(e))).runSyncUnsafe()
       ctx.run(query[WithEverything].filter(_.id == 1)).runSyncUnsafe().headOption must contain(e)
     }
     "with meta" in {
@@ -62,7 +62,7 @@ class UdtEncodingSessionContextSpec extends UdtSpec with ZioCassandraSpec {
       implicit val myNameMeta = udtMeta[MyName]("Name", _.first -> "firstName")
 
       val e = WithEverything(2, MyName("first"), List(MyName("first")))
-      ctx.run(query[WithEverything].insert(lift(e))).runSyncUnsafe()
+      ctx.run(query[WithEverything].insertValue(lift(e))).runSyncUnsafe()
       ctx.run(query[WithEverything].filter(_.id == 2)).runSyncUnsafe().headOption must contain(e)
     }
   }
