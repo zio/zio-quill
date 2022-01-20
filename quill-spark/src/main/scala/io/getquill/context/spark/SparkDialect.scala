@@ -11,6 +11,7 @@ import io.getquill.idiom.Token
 import io.getquill.util.Messages.trace
 import io.getquill.context.CannotReturn
 import io.getquill.quat.Quat
+import io.getquill.sql.norm.TopLevelAliasBehavior
 
 class SparkDialect extends SparkIdiom
 
@@ -24,7 +25,7 @@ trait SparkIdiom extends SqlIdiom with CannotReturn { self =>
 
   override implicit def externalIdentTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[ExternalIdent] = super.externalIdentTokenizer
 
-  override def translate(ast: Ast)(implicit naming: NamingStrategy) = {
+  override def translate(ast: Ast, topLevel: TopLevelAliasBehavior = TopLevelAliasBehavior.RemoveAll)(implicit naming: NamingStrategy) = {
     val normalizedAst = EscapeQuestionMarks(SqlNormalize(ast))
 
     implicit val tokernizer = defaultTokenizer

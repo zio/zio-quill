@@ -2,11 +2,12 @@ package io.getquill
 
 import io.getquill.ast.Renameable.{ ByStrategy, Fixed }
 import io.getquill.ast.Visibility.Hidden
-import io.getquill.ast.{ Query => AstQuery, Action => AstAction, _ }
+import io.getquill.ast.{ Action => AstAction, Query => AstQuery, _ }
 import io.getquill.context.CanReturnClause
 import io.getquill.idiom.{ Idiom, SetContainsToken, Statement }
 import io.getquill.idiom.StatementInterpolator._
 import io.getquill.norm.{ Normalize, NormalizeCaching }
+import io.getquill.sql.norm.TopLevelAliasBehavior
 import io.getquill.util.Interleave
 
 object MirrorIdiom extends MirrorIdiom
@@ -24,12 +25,12 @@ trait MirrorIdiomBase extends Idiom {
 
   override def liftingPlaceholder(index: Int): String = "?"
 
-  override def translateCached(ast: Ast)(implicit naming: NamingStrategy): (Ast, Statement) = {
+  override def translateCached(ast: Ast, topLevel: TopLevelAliasBehavior = TopLevelAliasBehavior.RemoveAll)(implicit naming: NamingStrategy): (Ast, Statement) = {
     val normalizedAst = NormalizeCaching(Normalize.apply)(ast)
     (normalizedAst, stmt"${normalizedAst.token}")
   }
 
-  override def translate(ast: Ast)(implicit naming: NamingStrategy): (Ast, Statement) = {
+  override def translate(ast: Ast, topLevel: TopLevelAliasBehavior = TopLevelAliasBehavior.RemoveAll)(implicit naming: NamingStrategy): (Ast, Statement) = {
     val normalizedAst = Normalize(ast)
     (normalizedAst, stmt"${normalizedAst.token}")
   }

@@ -12,7 +12,7 @@ import io.getquill.idiom._
 import io.getquill.context.sql.norm.SqlNormalize
 import io.getquill.util.{ Interleave, Messages }
 import io.getquill.context.sql.idiom.VerifySqlQuery
-import io.getquill.sql.norm.{ RemoveExtraAlias, RemoveUnusedSelects }
+import io.getquill.sql.norm.{ RemoveExtraAlias, RemoveUnusedSelects, TopLevelAliasBehavior }
 
 object OrientDBIdiom extends OrientDBIdiom with CannotReturn
 
@@ -24,11 +24,11 @@ trait OrientDBIdiom extends Idiom {
 
   override def prepareForProbing(string: String): String = string
 
-  override def translate(ast: Ast)(implicit naming: NamingStrategy): (Ast, Statement) = {
+  override def translate(ast: Ast, topLevel: TopLevelAliasBehavior = TopLevelAliasBehavior.RemoveAll)(implicit naming: NamingStrategy): (Ast, Statement) = {
     doTranslate(ast, false)
   }
 
-  override def translateCached(ast: Ast)(implicit naming: NamingStrategy): (Ast, Statement) = {
+  override def translateCached(ast: Ast, topLevel: TopLevelAliasBehavior = TopLevelAliasBehavior.RemoveAll)(implicit naming: NamingStrategy): (Ast, Statement) = {
     doTranslate(ast, true)
   }
 
