@@ -3,19 +3,17 @@ package io.getquill.sql.norm
 import io.getquill.NamingStrategy
 import io.getquill.ast.{ Property, Renameable }
 import io.getquill.context.sql.{ FlattenSqlQuery, SelectValue }
-import io.getquill.sql.norm.RemoveExtraAlias.TopLevelRemove
+import io.getquill.sql.norm.TopLevelAliasBehavior
 
-object RemoveExtraAlias {
-  sealed trait TopLevelRemove
-  case object TopLevelRemove {
-    /**
-     * Remove all top-level aliases. This is for top-level queries where aliases are not needed at all
-     * since Quill extractors use the position value instead
-     */
-    case object All extends TopLevelRemove
-    /** Remove only aliases on the top level that match the column name (same as rest of the query) */
-    case object OnlyMatching extends TopLevelRemove
-  }
+sealed trait TopLevelAliasBehavior
+case object TopLevelAliasBehavior {
+  /**
+   * Remove all top-level aliases. This is for top-level queries where aliases are not needed at all
+   * since Quill extractors use the position value instead
+   */
+  case object RemoveAll extends TopLevelAliasBehavior
+  /** Remove only aliases on the top level that match the column name (same as rest of the query) */
+  case object RemoveOnlyMatching extends TopLevelAliasBehavior
 }
 
 /**
@@ -24,7 +22,7 @@ object RemoveExtraAlias {
  * as well as entities whose aliases are the same as their selection e.g. "select x.foo as foo"
  * since this just adds syntactic noise.
  */
-case class RemoveExtraAlias(strategy: NamingStrategy, topLevel: TopLevelRemove = TopLevelRemove.All) extends StatelessQueryTransformer {
+case class RemoveExtraAlias(strategy: NamingStrategy, topLevel: TopLevelAliasBehavior = TopLevelAliasBehavior.RemoveAll) extends StatelessQueryTransformer {
   // Remove aliases that are the same as as the select values. Since a strategy may change the name,
   // use a heuristic where if the column naming strategy make the property name be different from the
   // alias, keep the column property name.
@@ -56,7 +54,7 @@ case class RemoveExtraAlias(strategy: NamingStrategy, topLevel: TopLevelRemove =
         .map(removeUnneededAlias(_))
         .map { sv =>
           // If we are on the top-level query and instructed to remove all the aliases inside then do that
-          if (isTopLevel && topLevel == TopLevelRemove.All)
+          if (isTopLevel && topLevel == TopLevelAliasBehavior.RemoveAll)
             sv.copy(alias = None)
           else
             sv

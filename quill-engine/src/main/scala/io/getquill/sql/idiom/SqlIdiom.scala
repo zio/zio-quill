@@ -15,7 +15,7 @@ import io.getquill.norm.ConcatBehavior.AnsiConcat
 import io.getquill.norm.EqualityBehavior.AnsiEquality
 import io.getquill.norm.{ ConcatBehavior, EqualityBehavior, ExpandReturning, NormalizeCaching, ProductAggregationToken }
 import io.getquill.quat.Quat
-import io.getquill.sql.norm.RemoveExtraAlias.TopLevelRemove
+import io.getquill.sql.norm.TopLevelAliasBehavior
 import io.getquill.sql.norm.{ RemoveExtraAlias, RemoveUnusedSelects }
 import io.getquill.util.{ Interleave, Messages }
 import io.getquill.util.Messages.{ fail, trace }
@@ -38,7 +38,7 @@ trait SqlIdiom extends Idiom {
 
   def querifyAst(ast: Ast) = SqlQuery(ast)
 
-  private def doTranslate(ast: Ast, cached: Boolean)(implicit naming: NamingStrategy): (Ast, Statement) = {
+  private[getquill] def doTranslate(ast: Ast, cached: Boolean, topAlias: TopLevelAliasBehavior)(implicit naming: NamingStrategy): (Ast, Statement) = {
 
     val normalizedAst = {
       if (cached) {
@@ -58,7 +58,7 @@ trait SqlIdiom extends Idiom {
           trace("expanded sql")(expanded)
           val refined = if (Messages.pruneColumns) RemoveUnusedSelects(expanded) else expanded
           trace("filtered sql (only used selects)")(refined)
-          val cleaned = if (!Messages.alwaysAlias) RemoveExtraAlias(naming)(refined) else refined
+          val cleaned = if (!Messages.alwaysAlias) RemoveExtraAlias(naming, topAlias)(refined) else refined
           trace("cleaned sql")(cleaned)
           val tokenized = cleaned.token
           trace("tokenized sql")(tokenized)
@@ -70,12 +70,12 @@ trait SqlIdiom extends Idiom {
     (normalizedAst, stmt"$token")
   }
 
-  override def translate(ast: Ast)(implicit naming: NamingStrategy): (Ast, Statement) = {
-    doTranslate(ast, false)
+  override def translate(ast: Ast, topAlias: TopLevelAliasBehavior = TopLevelAliasBehavior.RemoveAll)(implicit naming: NamingStrategy): (Ast, Statement) = {
+    doTranslate(ast, false, topAlias)
   }
 
-  override def translateCached(ast: Ast)(implicit naming: NamingStrategy): (Ast, Statement) = {
-    doTranslate(ast, true)
+  override def translateCached(ast: Ast, topAlias: TopLevelAliasBehavior = TopLevelAliasBehavior.RemoveAll)(implicit naming: NamingStrategy): (Ast, Statement) = {
+    doTranslate(ast, true, topAlias)
   }
 
   def defaultTokenizer(implicit naming: NamingStrategy): Tokenizer[Ast] =
