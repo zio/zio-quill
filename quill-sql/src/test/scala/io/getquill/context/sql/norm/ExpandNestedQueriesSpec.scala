@@ -36,7 +36,7 @@ class ExpandNestedQueriesSpec extends Spec {
       query[MyPerson].nested.nested.map(p => (p.first, p.last))
     }
     testContext.run(q).string mustEqual
-      "SELECT p.first, p.last FROM (SELECT x.first, x.last FROM (SELECT x.first, x.last FROM MyPerson x) AS x) AS p"
+      "SELECT p.first AS _1, p.last AS _2 FROM (SELECT x.first, x.last FROM (SELECT x.first, x.last FROM MyPerson x) AS x) AS p"
   }
 
   "preserves order of selection" in {
@@ -77,7 +77,7 @@ class ExpandNestedQueriesSpec extends Spec {
         .map(e => (e, 1))
         .nested
     ).string mustEqual
-      "SELECT e.camelCase, 1 FROM (SELECT x.camel_case AS camelCase FROM entity x) AS e"
+      "SELECT e.camelCase, 1 AS _2 FROM (SELECT x.camel_case AS camelCase FROM entity x) AS e"
   }
 
   "expands nested tuple select" in {
@@ -89,7 +89,7 @@ class ExpandNestedQueriesSpec extends Spec {
       }
     }
     testContext.run(q).string mustEqual
-      "SELECT s.i, s.s, COUNT(s.*) FROM TestEntity s GROUP BY s.i, s.s"
+      "SELECT s.i AS _1, s.s AS _2, COUNT(s.*) AS _2 FROM TestEntity s GROUP BY s.i, s.s"
   }
 
   "expands nested distinct query" in {
@@ -110,7 +110,7 @@ class ExpandNestedQueriesSpec extends Spec {
     }
     println(testContext.run(q).string(true))
     testContext.run(q).string mustEqual
-      "SELECT x03._1i, x03._2i FROM (SELECT a.i AS _1i, b.i AS _2i FROM TestEntity a INNER JOIN TestEntity2 b ON a.i = b.i) AS x03"
+      "SELECT x03._1i AS _1, x03._2i AS _2 FROM (SELECT a.i AS _1i, b.i AS _2i FROM TestEntity a INNER JOIN TestEntity2 b ON a.i = b.i) AS x03"
   }
 
   "expands nested mapped entity correctly" in {
@@ -128,14 +128,14 @@ class ExpandNestedQueriesSpec extends Spec {
     }
     testContext.run(q).string(true).collapseSpace mustEqual
       """SELECT
-        |  both._1s,
-        |  both._1i,
-        |  both._1l,
-        |  both._1o,
-        |  both._2s,
-        |  both._2i,
-        |  both._2l,
-        |  both._2o
+        |  both._1s AS s,
+        |  both._1i AS i,
+        |  both._1l AS l,
+        |  both._1o AS o,
+        |  both._2s AS s,
+        |  both._2i AS i,
+        |  both._2l AS l,
+        |  both._2o AS o
         |FROM
         |  (
         |    SELECT
@@ -178,7 +178,7 @@ class ExpandNestedQueriesSpec extends Spec {
         query[Parent].map(p => (p.emb, 1)).distinct.map(e => (e._1.name, e._1.id))
       }
 
-      ctx.run(q).string mustEqual "SELECT p._1name, p._1id FROM (SELECT DISTINCT p.name AS _1name, p.id AS _1id, 1 AS _2 FROM Parent p) AS p"
+      ctx.run(q).string mustEqual "SELECT p._1name AS _1, p._1id AS _2 FROM (SELECT DISTINCT p.name AS _1name, p.id AS _1id, 1 AS _2 FROM Parent p) AS p"
     }
 
     "embedded, distinct entity in case class" in {
@@ -190,7 +190,7 @@ class ExpandNestedQueriesSpec extends Spec {
         query[Parent].map(p => SuperParent(p.emb, 1)).distinct.map(e => (e.emb.name, e.emb.id))
       }
 
-      ctx.run(q).string mustEqual "SELECT p.embname, p.embid FROM (SELECT DISTINCT p.name AS embname, p.id AS embid, 1 AS id FROM Parent p) AS p"
+      ctx.run(q).string mustEqual "SELECT p.embname AS _1, p.embid AS _2 FROM (SELECT DISTINCT p.name AS embname, p.id AS embid, 1 AS id FROM Parent p) AS p"
     }
 
     "can be propagated across nested query with naming intact" in {
@@ -200,7 +200,7 @@ class ExpandNestedQueriesSpec extends Spec {
       val q = quote {
         query[Parent].map(p => p.emb).nested.map(e => (e.name, e.id))
       }
-      ctx.run(q).string mustEqual "SELECT p.embname, p.embid FROM (SELECT x.name AS embname, x.id AS embid FROM Parent x) AS p"
+      ctx.run(q).string mustEqual "SELECT p.embname AS _1, p.embid AS _2 FROM (SELECT x.name AS embname, x.id AS embid FROM Parent x) AS p"
     }
 
     "can be propagated across distinct query with naming intact" in {
@@ -210,7 +210,7 @@ class ExpandNestedQueriesSpec extends Spec {
       val q = quote {
         query[Parent].map(p => p.emb).distinct.map(e => (e.name, e.id))
       }
-      ctx.run(q).string mustEqual "SELECT e.name, e.id FROM (SELECT DISTINCT p.name, p.id FROM Parent p) AS e"
+      ctx.run(q).string mustEqual "SELECT e.name AS _1, e.id AS _2 FROM (SELECT DISTINCT p.name, p.id FROM Parent p) AS e"
     }
 
     "can be propagated across distinct query with naming intact - double distinct" in {
@@ -220,7 +220,7 @@ class ExpandNestedQueriesSpec extends Spec {
       val q = quote {
         query[Parent].map(p => p.emb).distinct.map(e => (e.name, e.id)).distinct
       }
-      ctx.run(q).string mustEqual "SELECT DISTINCT e.name, e.id FROM (SELECT DISTINCT p.name, p.id FROM Parent p) AS e"
+      ctx.run(q).string mustEqual "SELECT DISTINCT e.name AS _1, e.id AS _2 FROM (SELECT DISTINCT p.name, p.id FROM Parent p) AS e"
     }
 
     "can be propagated across distinct query with naming intact then re-wrapped into the parent" in {
@@ -232,7 +232,7 @@ class ExpandNestedQueriesSpec extends Spec {
       }
       ctx.run(q).string.collapseSpace mustEqual
         """
-          | SELECT DISTINCT e._1, e._2
+          | SELECT DISTINCT e._1 AS name, e._2 AS id
           |      FROM (SELECT DISTINCT e.name AS _1, e.id AS _2
           |            FROM (SELECT DISTINCT p.name, p.id FROM Parent p) AS e) AS e
         """.stripMargin.collapseSpace
@@ -260,11 +260,11 @@ class ExpandNestedQueriesSpec extends Spec {
     println(str)
     testContext.run(q).string.collapseSpace mustEqual
       """
-        | SELECT DISTINCT tup._1,
-        |                 tup._2id,
-        |                 tup._2name,
-        |                 tup._2embid,
-        |                 tup._2embname
+        | SELECT DISTINCT tup._1 AS id,
+        |                 tup._2id AS id,
+        |                 tup._2name AS name,
+        |                 tup._2embid AS id,
+        |                 tup._2embname AS name
         | FROM (SELECT DISTINCT tup._1,
         |                       tup._2     AS _2id,
         |                       tup._3     AS _2name,
@@ -313,9 +313,9 @@ class ExpandNestedQueriesSpec extends Spec {
     testContext.run(q).string(true).collapseSpace mustEqual
       """
         | SELECT
-        |   DISTINCT tup._1,
-        |   tup._2mid,
-        |   tup._2simsid
+        |   DISTINCT tup._1 AS bid,
+        |   tup._2mid AS mid,
+        |   tup._2simsid AS sid
         | FROM
         |   (
         |     SELECT
@@ -378,9 +378,9 @@ class ExpandNestedQueriesSpec extends Spec {
     testContext.run(q).string(true).collapseSpace mustEqual
       """
         |SELECT
-        |  DISTINCT tup._1,
-        |  tup._2mid,
-        |  tup._2simsid
+        |  DISTINCT tup._1 AS bid,
+        |  tup._2mid AS mid,
+        |  tup._2simsid AS sid
         |FROM
         |  (
         |    SELECT
@@ -443,9 +443,9 @@ class ExpandNestedQueriesSpec extends Spec {
     ctx.run(q).string(true).collapseSpace mustEqual
       """
         |SELECT
-        |  DISTINCT tup._1,
-        |  tup._2mid,
-        |  tup._2simsid
+        |  DISTINCT tup._1 AS bid,
+        |  tup._2mid AS mid,
+        |  tup._2simsid AS sid
         |FROM
         |  (
         |    SELECT
@@ -526,9 +526,9 @@ class ExpandNestedQueriesSpec extends Spec {
     ctx.run(q).string(true).collapseSpace mustEqual
       """
         |SELECT
-        |  DISTINCT tup._1,
-        |  tup._2mid,
-        |  tup._2simsid
+        |  DISTINCT tup._1 AS bid,
+        |  tup._2mid AS mid,
+        |  tup._2simsid AS sid
         |FROM
         |  (
         |    SELECT
@@ -598,8 +598,8 @@ class ExpandNestedQueriesSpec extends Spec {
     ctx.run(q).string(true).collapseSpace mustEqual
       """
         |SELECT
-        |  DISTINCT tup._1,
-        |  tup._2sid
+        |  DISTINCT tup._1 AS mid,
+        |  tup._2sid AS sid
         |FROM
         |  (
         |    SELECT DISTINCT tup._1,
@@ -642,7 +642,7 @@ class ExpandNestedQueriesSpec extends Spec {
         infix"fromSomewhere()".as[Query[Person]]
       }
       testContext.run(q).string mustEqual
-        "SELECT x.first_name, x.last_name FROM (fromSomewhere()) AS x"
+        "SELECT x.first_name AS firstName, x.last_name AS lastName FROM (fromSomewhere()) AS x"
     }
 
     "should be handled correctly in a regular schema - nested" in {
@@ -652,7 +652,7 @@ class ExpandNestedQueriesSpec extends Spec {
         infix"fromSomewhere()".as[Query[Person]]
       }
       testContext.run(q).string mustEqual
-        "SELECT x.first_name, x.last_name, x.the_age FROM (fromSomewhere()) AS x"
+        "SELECT x.first_name AS firstName, x.last_name AS lastName, x.the_age AS theAge FROM (fromSomewhere()) AS x"
     }
   }
 
@@ -665,12 +665,12 @@ class ExpandNestedQueriesSpec extends Spec {
 
     "should be handled correctly in a regular schema" in {
       testContext.run(query[ThePerson].filter(p => query[TheBoss].filter(_.bossId == p.bossId).map(_ => 1).nonEmpty)).string mustEqual
-        "SELECT p.name, p.age, p.boss_id FROM the_person p WHERE EXISTS (SELECT 1 FROM the_boss x12 WHERE x12.boss_id = p.boss_id)"
+        "SELECT p.name, p.age, p.boss_id AS bossId FROM the_person p WHERE EXISTS (SELECT 1 FROM the_boss x12 WHERE x12.boss_id = p.boss_id)"
     }
     "should be handled correctly when using a schemameta" in {
       implicit val personSchema = schemaMeta[TheBoss]("theBossMan", _.bossId -> "bossman_id")
       testContext.run(query[ThePerson].filter(p => query[TheBoss].filter(_.bossId == p.bossId).map(_ => 1).nonEmpty)).string mustEqual
-        "SELECT p.name, p.age, p.boss_id FROM the_person p WHERE EXISTS (SELECT 1 FROM theBossMan x15 WHERE x15.bossman_id = p.boss_id)"
+        "SELECT p.name, p.age, p.boss_id AS bossId FROM the_person p WHERE EXISTS (SELECT 1 FROM theBossMan x15 WHERE x15.bossman_id = p.boss_id)"
     }
   }
 }

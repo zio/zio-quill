@@ -46,20 +46,20 @@ class SQLServerDialectSpec extends Spec {
     "boolean values" - {
       "uses 1 instead of true" in {
         ctx.run(qr4.map(t => (t.i, true))).string mustEqual
-          "SELECT t.i, 1 FROM TestEntity4 t"
+          "SELECT t.i AS _1, 1 AS _2 FROM TestEntity4 t"
       }
       "uses 0 instead of false" in {
         ctx.run(qr4.map(t => (t.i, false))).string mustEqual
-          "SELECT t.i, 0 FROM TestEntity4 t"
+          "SELECT t.i AS _1, 0 AS _2 FROM TestEntity4 t"
       }
       "uses 0 and 1 altogether" in {
         ctx.run(qr4.map(t => (t.i, true, false))).string mustEqual
-          "SELECT t.i, 1, 0 FROM TestEntity4 t"
+          "SELECT t.i AS _1, 1 AS _2, 0 AS _3 FROM TestEntity4 t"
       }
     }
     "boolean values and expressions together" in {
       ctx.run(qr4.filter(t => true).filter(t => false).map(t => (t.i, false, true))).string mustEqual
-        "SELECT t.i, 0, 1 FROM TestEntity4 t WHERE 1 = 1 AND 1 = 0"
+        "SELECT t.i AS _1, 0 AS _2, 1 AS _3 FROM TestEntity4 t WHERE 1 = 1 AND 1 = 0"
     }
     "if" - {
       "simple booleans" in {
