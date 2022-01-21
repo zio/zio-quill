@@ -6,7 +6,7 @@ import io.getquill.sql.norm.{ InContext, SelectPropertyProtractor, StatelessQuer
 import io.getquill.ast.PropertyOrCore
 import io.getquill.norm.PropertyMatroshka
 
-class ExpandSelection(from: List[FromContext]) {
+class ExpandSelection(from: List[FromContext], isTopLevel: Boolean) {
 
   def apply(values: List[SelectValue]): List[SelectValue] =
     values.flatMap(apply(_))
@@ -17,6 +17,12 @@ class ExpandSelection(from: List[FromContext]) {
   }
 
   private def apply(value: SelectValue): List[SelectValue] = {
+    def concatOr(concatA: Option[String], concatB: String)(or: Option[String]) =
+      if (!isTopLevel)
+        concatA.concatWith(concatB)
+      else
+        or
+
     value match {
       // Assuming there's no case class or tuple buried inside or a property i.e. if there were,
       // the beta reduction would have unrolled them already
@@ -36,20 +42,20 @@ class ExpandSelection(from: List[FromContext]) {
           case (p: Property, path) =>
             // Append alias headers (i.e. _1,_2 from tuples and field names foo,bar from case classes) to the
             // value of the Quat path
-            SelectValue(p, alias.concatWith(path.mkString), concat)
+            SelectValue(p, concatOr(alias, path.mkString)(path.lastOption), concat)
           case (other, _) =>
             SelectValue(other, alias, concat)
         }
       case SelectValue(Tuple(values), alias, concat) =>
         values.zipWithIndex.flatMap {
           case (ast, i) =>
-            apply(SelectValue(ast, alias.concatWith(s"_${i + 1}"), concat))
+            val label = s"_${i + 1}"
+            apply(SelectValue(ast, concatOr(alias, label)(Some(label)), concat))
         }
       case SelectValue(CaseClass(fields), alias, concat) =>
         fields.flatMap {
           case (name, ast) =>
-            val concated = SelectValue(ast, alias.concatWith(name), concat)
-            apply(SelectValue(ast, alias.concatWith(name), concat))
+            apply(SelectValue(ast, concatOr(alias, name)(Some(name)), concat))
         }
       // Direct infix select, etc...
       case other => List(other)
@@ -62,7 +68,7 @@ object ExpandNestedQueries extends StatelessQueryTransformer {
   protected override def apply(q: SqlQuery, isTopLevel: Boolean = false): SqlQuery =
     q match {
       case q: FlattenSqlQuery =>
-        val selection = new ExpandSelection(q.from)(q.select)
+        val selection = new ExpandSelection(q.from, isTopLevel)(q.select)
         val out = expandNested(q.copy(select = selection)(q.quat), isTopLevel)
         out
       case other =>
