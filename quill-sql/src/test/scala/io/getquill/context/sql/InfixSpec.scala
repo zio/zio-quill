@@ -27,7 +27,7 @@ class InfixSpec extends Spec { //hello
       val q = quote {
         query[Data].map(e => TwoValue(e.id, infix"SOMETHINGPURE()".pure.as[Int])).filter(r => r.value > 10)
       }
-      ctx.run(q).string mustEqual "SELECT e.id, SOMETHINGPURE() FROM Data e WHERE SOMETHINGPURE() > 10"
+      ctx.run(q).string mustEqual "SELECT e.id, SOMETHINGPURE() AS value FROM Data e WHERE SOMETHINGPURE() > 10"
     }
 
     "preserve nesting with single value" in {
@@ -41,7 +41,7 @@ class InfixSpec extends Spec { //hello
       val q = quote {
         query[Data].map(e => TwoValue(e.id, infix"RAND()".as[Int])).nested.filter(r => r.value > 10).map(r => (r.id, r.value + 1))
       }
-      ctx.run(q).string mustEqual "SELECT r.id, r.value + 1 FROM (SELECT e.id, RAND() AS value FROM Data e) AS r WHERE r.value > 10"
+      ctx.run(q).string mustEqual "SELECT r.id AS _1, r.value + 1 AS _2 FROM (SELECT e.id, RAND() AS value FROM Data e) AS r WHERE r.value > 10"
     }
 
     "preserve nesting with single value binary op" in {
@@ -62,14 +62,14 @@ class InfixSpec extends Spec { //hello
       val q = quote {
         query[Data].map(e => TwoValue(e.id, infix"RAND()".as[Int])).filter(r => r.value > 10).map(r => TwoValue(r.id, r.value + 1))
       }
-      ctx.run(q).string mustEqual "SELECT e.id, e.value + 1 FROM (SELECT e.id, RAND() AS value FROM Data e) AS e WHERE e.value > 10"
+      ctx.run(q).string mustEqual "SELECT e.id, e.value + 1 AS value FROM (SELECT e.id, RAND() AS value FROM Data e) AS e WHERE e.value > 10"
     }
 
     "preserve triple nesting with filter in between plus second filter" in {
       val q = quote {
         query[Data].map(e => TwoValue(e.id, infix"RAND()".as[Int])).filter(r => r.value > 10).map(r => TwoValue(r.id, r.value + 1)).filter(_.value > 111)
       }
-      ctx.run(q).string mustEqual "SELECT e.id, e.value + 1 FROM (SELECT e.id, RAND() AS value FROM Data e) AS e WHERE e.value > 10 AND (e.value + 1) > 111"
+      ctx.run(q).string mustEqual "SELECT e.id, e.value + 1 AS value FROM (SELECT e.id, RAND() AS value FROM Data e) AS e WHERE e.value > 10 AND (e.value + 1) > 111"
     }
 
     "preserve nesting of query in query" in {
@@ -106,7 +106,7 @@ class InfixSpec extends Spec { //hello
           query[Person].map(p => (p.name, p.id, infix"foo(${p.other})".pure.as[Int])).map(p => (p._1, p._2))
         }
 
-        ctx.run(q).string mustEqual "SELECT p.name, p.id FROM Person p"
+        ctx.run(q).string mustEqual "SELECT p.name AS _1, p.id AS _2 FROM Person p"
       }
 
       "should not be dropped in nested tuples" in {
@@ -114,7 +114,7 @@ class InfixSpec extends Spec { //hello
           query[Person].map(p => (p.name, (p.id, infix"foo(${p.other})".as[Int]))).map(p => (p._1, p._2._1))
         }
 
-        ctx.run(q).string mustEqual "SELECT p._1, p._2_1 FROM (SELECT p.name AS _1, p.id AS _2_1, foo(p.other) AS _2_2 FROM Person p) AS p"
+        ctx.run(q).string mustEqual "SELECT p._1, p._2_1 AS _2 FROM (SELECT p.name AS _1, p.id AS _2_1, foo(p.other) AS _2_2 FROM Person p) AS p"
       }
 
       "should not be selected twice if in sub-sub tuple" in {
@@ -122,7 +122,7 @@ class InfixSpec extends Spec { //hello
           query[Person].map(p => (p.name, (p.id, infix"foo(${p.other})".as[Int]))).map(p => (p._1, p._2))
         }
 
-        ctx.run(q).string mustEqual "SELECT p._1, p._2_1, p._2_2 FROM (SELECT p.name AS _1, p.id AS _2_1, foo(p.other) AS _2_2 FROM Person p) AS p"
+        ctx.run(q).string mustEqual "SELECT p._1, p._2_1 AS _1, p._2_2 AS _2 FROM (SELECT p.name AS _1, p.id AS _2_1, foo(p.other) AS _2_2 FROM Person p) AS p"
       }
 
       "should not be selected in sub-sub tuple if pure" in {
@@ -130,7 +130,7 @@ class InfixSpec extends Spec { //hello
           query[Person].map(p => (p.name, (p.id, infix"foo(${p.other})".pure.as[Int]))).map(p => (p._1, p._2))
         }
 
-        ctx.run(q).string mustEqual "SELECT p.name, p.id, foo(p.other) FROM Person p"
+        ctx.run(q).string mustEqual "SELECT p.name AS _1, p.id AS _1, foo(p.other) AS _2 FROM Person p"
       }
 
       "should not be selected twice in one field matched, one missing" in {
@@ -138,7 +138,7 @@ class InfixSpec extends Spec { //hello
           query[Person].map(p => (p.name, (p.id, infix"foo(${p.other}, ${p.other2})".as[Int], p.other))).map(p => (p._1, p._2._1, p._2._3))
         }
 
-        ctx.run(q).string mustEqual "SELECT p._1, p._2_1, p._2_3 FROM (SELECT p.name AS _1, p.id AS _2_1, foo(p.other, p.other2) AS _2_2, p.other AS _2_3 FROM Person p) AS p"
+        ctx.run(q).string mustEqual "SELECT p._1, p._2_1 AS _2, p._2_3 AS _3 FROM (SELECT p.name AS _1, p.id AS _2_1, foo(p.other, p.other2) AS _2_2, p.other AS _2_3 FROM Person p) AS p"
       }
 
       "distinct-on infix example" in {
@@ -146,7 +146,7 @@ class InfixSpec extends Spec { //hello
           query[Person].map(p => (infix"DISTINCT ON (${p.other})".as[Int], p.name, p.id)).map(t => (t._2, t._3))
         }
 
-        ctx.run(q).string mustEqual "SELECT p._2, p._3 FROM (SELECT DISTINCT ON (p.other) AS _1, p.name AS _2, p.id AS _3 FROM Person p) AS p"
+        ctx.run(q).string mustEqual "SELECT p._2 AS _1, p._3 AS _2 FROM (SELECT DISTINCT ON (p.other) AS _1, p.name AS _2, p.id AS _3 FROM Person p) AS p"
       }
     }
   }
