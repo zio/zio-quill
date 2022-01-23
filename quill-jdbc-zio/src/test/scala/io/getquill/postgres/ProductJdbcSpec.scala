@@ -2,11 +2,9 @@ package io.getquill.postgres
 
 import io.getquill.ZioSpec
 import io.getquill.context.sql.ProductSpec
-import io.getquill.Prefix
 
 class ProductJdbcSpec extends ProductSpec with ZioSpec {
 
-  override def prefix: Prefix = Prefix("testPostgresDB")
   val context = testContext
   import testContext._
 

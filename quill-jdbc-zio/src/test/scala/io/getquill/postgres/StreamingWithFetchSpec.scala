@@ -3,12 +3,9 @@ package io.getquill.postgres
 import io.getquill.ZioSpec
 import io.getquill.context.ZioJdbc._
 import org.scalatest.BeforeAndAfter
-import zio.{ Has, Runtime }
-import io.getquill.Prefix
 
 class StreamingWithFetchSpec extends ZioSpec with BeforeAndAfter {
 
-  override def prefix: Prefix = Prefix("testPostgresDB")
   val context = testContext
   import testContext._
 
@@ -18,7 +15,7 @@ class StreamingWithFetchSpec extends ZioSpec with BeforeAndAfter {
   val insert = quote { (p: Person) => query[Person].insertValue(p) }
 
   def result[T](qzio: QIO[T]): T =
-    Runtime.default.unsafeRun(qzio.provide(Has(pool)))
+    pool.env.unsafeRun(qzio)
 
   before {
     testContext.run(quote(query[Person].delete)).runSyncUnsafe()

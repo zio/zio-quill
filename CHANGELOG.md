@@ -183,7 +183,7 @@ memorialize this pattern.
   }
   
   MyPostgresContext.run(people).onDataSource
-    .tap(result => putStrLn(result.toString))
+    .tap(result => printLine(result.toString))
     .provideCustomLayer(zioDs)
   ```
   In 3.11.0 simply remove the `.onDataSource` in order to use the new context.
@@ -196,7 +196,7 @@ memorialize this pattern.
   }
   
   MyPostgresContext.run(people)  // Don't need `.onDataSource` anymore
-    .tap(result => putStrLn(result.toString))
+    .tap(result => printLine(result.toString))
     .provideCustomLayer(zioDs)
   ```
 
@@ -213,7 +213,7 @@ memorialize this pattern.
   
   
   MyPostgresContext.run(people)
-    .tap(result => putStrLn(result.toString))
+    .tap(result => printLine(result.toString))
     .provideCustomLayer(zioConn)
   ```
   To this:
@@ -225,7 +225,7 @@ memorialize this pattern.
     Task(hikariDataSource).toLayer // Don't need `>>> DataSourceLayer.live` anymore!
   
   MyPostgresContext.run(people)
-    .tap(result => putStrLn(result.toString))
+    .tap(result => printLine(result.toString))
     .provideCustomLayer(zioConn)
   ```
   

@@ -3,8 +3,9 @@ package io.getquill.integration
 import java.sql.{ Connection, ResultSet }
 import org.scalatest.matchers.should.Matchers._
 import io.getquill._
-import io.getquill.Prefix
+
 import io.getquill.context.ZioJdbc._
+import io.getquill.postgres._ // Implicitly use the postgres connection pool
 
 /**
  * This is a long-running test that will cause a OutOfMemory exception if
@@ -17,8 +18,6 @@ import io.getquill.context.ZioJdbc._
  * As a default, this test will run as part of the suite without blowing up.
  */
 class StreamResultsOrBlowUpSpec extends ZioSpec {
-
-  override def prefix = Prefix("testPostgresDB")
 
   case class Person(name: String, age: Int)
 
@@ -56,7 +55,7 @@ class StreamResultsOrBlowUpSpec extends ZioSpec {
     // not sure why but foreachL causes a OutOfMemory exception anyhow, and firstL causes a ResultSet Closed exception
     val result = stream(query[Person], 100)
       .zipWithIndex
-      .fold(0L)({
+      .runFold(0L)({
         case (totalYears, (person, index)) => {
           // Need to print something out as we stream or github actions will think the build is stalled and kill it with the following message:
           // "No output has been received in the last 10m0s..."
@@ -79,7 +78,7 @@ class StreamResultsOrBlowUpSpec extends ZioSpec {
     // not sure why but foreachL causes a OutOfMemory exception anyhow, and firstL causes a ResultSet Closed exception
     val result = stream(query[Person], 100)
       .zipWithIndex
-      .fold(0L)({
+      .runFold(0L)({
         case (totalYears, (person, index)) => {
           // Need to print something out as we stream or github actions will think the build is stalled and kill it with the following message:
           // "No output has been received in the last 10m0s..."

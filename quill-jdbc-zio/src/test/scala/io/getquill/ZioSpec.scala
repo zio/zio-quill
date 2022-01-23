@@ -1,51 +1,39 @@
 package io.getquill
 
-import io.getquill.util.LoadConfig
+import io.getquill.context.qzio.ImplicitSyntax._
 import org.scalatest.BeforeAndAfterAll
-import zio.{ Has, Runtime, ZIO }
 import zio.stream.{ Sink, ZStream }
+import zio.{ Runtime, ZIO }
 
-import java.io.Closeable
 import java.sql.Connection
 import javax.sql.DataSource
 
-case class Prefix(name: String)
-
 trait ZioSpec extends Spec with BeforeAndAfterAll {
-  def prefix: Prefix
 
-  var pool: DataSource with Closeable = _
+  //val runtime: zio.Runtime[DataSource] =
 
-  override def beforeAll = {
-    super.beforeAll()
-    pool = JdbcContextConfig(LoadConfig(prefix.name)).dataSource
-  }
-
-  override def afterAll(): Unit = {
-    pool.close()
-  }
-
-  def accumulateDS[T](stream: ZStream[Has[DataSource], Throwable, T]): ZIO[Has[DataSource], Throwable, List[T]] =
+  def accumulateDS[T](stream: ZStream[DataSource, Throwable, T]): ZIO[DataSource, Throwable, List[T]] =
     stream.run(Sink.collectAll).map(_.toList)
 
-  def accumulate[T](stream: ZStream[Has[Connection], Throwable, T]): ZIO[Has[Connection], Throwable, List[T]] =
+  def accumulate[T](stream: ZStream[Connection, Throwable, T]): ZIO[Connection, Throwable, List[T]] =
     stream.run(Sink.collectAll).map(_.toList)
 
-  def collect[T](stream: ZStream[Has[DataSource], Throwable, T]): List[T] =
-    Runtime.default.unsafeRun(stream.run(Sink.collectAll).map(_.toList).provide(Has(pool)))
+  def collect[T](stream: ZStream[DataSource, Throwable, T])(implicit runtime: Implicit[Runtime.Managed[DataSource]]): List[T] =
+    runtime.env.unsafeRun(stream.run(Sink.collectAll).map(_.toList))
 
-  def collect[T](qzio: ZIO[Has[DataSource], Throwable, T]): T =
-    Runtime.default.unsafeRun(qzio.provide(Has(pool)))
+  def collect[T](qzio: ZIO[DataSource, Throwable, T])(implicit runtime: Implicit[Runtime.Managed[DataSource]]): T =
+    runtime.env.unsafeRun(qzio)
 
+  // TODO Change to runUnsafe
   implicit class ZioAnyOps[T](qzio: ZIO[Any, Throwable, T]) {
     def runSyncUnsafe() = Runtime.default.unsafeRun(qzio)
   }
 
-  implicit class ZStreamTestExt[T](stream: ZStream[Has[DataSource], Throwable, T]) {
+  implicit class ZStreamTestExt[T](stream: ZStream[DataSource, Throwable, T])(implicit runtime: Implicit[Runtime.Managed[DataSource]]) {
     def runSyncUnsafe() = collect[T](stream)
   }
 
-  implicit class ZioTestExt[T](qzio: ZIO[Has[DataSource], Throwable, T]) {
+  implicit class ZioTestExt[T](qzio: ZIO[DataSource, Throwable, T])(implicit runtime: Implicit[Runtime.Managed[DataSource]]) {
     def runSyncUnsafe() = collect[T](qzio)
   }
 }

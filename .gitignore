@@ -43,3 +43,4 @@ project/.bloop/
 .jvmopts
 .DS_Store
 .vscode
+.history

@@ -301,7 +301,9 @@ lazy val `quill-core` =
     .settings(mimaSettings: _*)
     .settings(libraryDependencies ++= Seq(
       "com.typesafe"               %  "config"        % "1.4.2",
-      "dev.zio"                    %% "zio-logging"   % "0.5.14",
+      "dev.zio"                    %% "zio-logging"   % "2.0.0-RC5",
+      "dev.zio"                    %% "zio"           % Version.zio,
+      "dev.zio"                    %% "zio-streams"   % Version.zio,
       "com.typesafe.scala-logging" %% "scala-logging" % "3.9.4"
     ))
     .jvmSettings(
@@ -455,9 +457,8 @@ lazy val `quill-zio` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "io.github.kitlangton" %% "zio-magic" % "0.3.11" % Test,
-        "dev.zio" %% "zio" % "1.0.12",
-        "dev.zio" %% "zio-streams" % "1.0.12"
+        "dev.zio" %% "zio" % Version.zio,
+        "dev.zio" %% "zio-streams" % Version.zio
       )
     )
     .dependsOn(`quill-core-jvm` % "compile->compile;test->test")
@@ -476,7 +477,7 @@ lazy val `quill-jdbc-zio` =
               ForkOptions().withRunJVMOptions(Vector("-Xmx200m"))
             ))
           else
-            Tests.Group(name = test.name, tests = Seq(test), runPolicy = Tests.SubProcess(ForkOptions()))
+            Tests.Group(name = test.name, tests = Seq(test), runPolicy = Tests.SubProcess(ForkOptions())) // .withRunJVMOptions(Vector("-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005"))
         }
       }
     )
@@ -599,7 +600,9 @@ lazy val `quill-jasync-zio` =
       Test / fork := true,
       libraryDependencies ++= Seq(
         "com.github.jasync-sql" % "jasync-common" % "1.1.4",
-        "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.1"
+        "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.1",
+        "dev.zio" %% "zio" % Version.zio,
+        "dev.zio" %% "zio-streams" % Version.zio
       )
     )
     .dependsOn(`quill-zio` % "compile->compile;test->test")
@@ -679,8 +682,8 @@ lazy val `quill-cassandra-zio` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "dev.zio" %% "zio" % "1.0.12",
-        "dev.zio" %% "zio-streams" % "1.0.12"
+        "dev.zio" %% "zio" % Version.zio,
+        "dev.zio" %% "zio-streams" % Version.zio
       )
     )
     .dependsOn(`quill-cassandra` % "compile->compile;test->test")
@@ -938,6 +941,11 @@ lazy val commonNoLogSettings = ReleasePlugin.extraReleaseCommands ++ basicSettin
 lazy val commonSettings = ReleasePlugin.extraReleaseCommands ++ basicSettings ++ loggingSettings ++ releaseSettings
 
 lazy val releaseSettings = Seq(
+  resolvers ++= Seq(
+    Resolver.mavenLocal,
+    "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
+    "Sonatype OSS Releases" at "https://oss.sonatype.org/content/repositories/releases"
+  ),
   releasePublishArtifactsAction := PgpKeys.publishSigned.value,
   publishMavenStyle := true,
   publishTo := {

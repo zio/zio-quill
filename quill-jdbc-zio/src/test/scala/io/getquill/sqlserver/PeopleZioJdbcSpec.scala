@@ -1,12 +1,11 @@
 package io.getquill.sqlserver
 
 import io.getquill.PeopleZioSpec
-import io.getquill.Prefix
+
 import org.scalatest.matchers.should.Matchers._
 
 class PeopleZioJdbcSpec extends PeopleZioSpec {
 
-  override def prefix: Prefix = Prefix("testSqlServerDB")
   val context = testContext
   import testContext._
 

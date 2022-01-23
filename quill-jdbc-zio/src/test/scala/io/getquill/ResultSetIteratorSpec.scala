@@ -1,17 +1,13 @@
 package io.getquill
 
-import io.getquill.ZioTestUtil._
 import io.getquill.context.qzio.ResultSetIterator
-import io.getquill.util.LoadConfig
-import zio.{ Has, Task }
+import zio.{ Task, ZIO }
+import io.getquill.postgres._
 
+import javax.sql.DataSource
 import scala.collection.mutable.ArrayBuffer
 
 class ResultSetIteratorSpec extends ZioSpec {
-
-  override def prefix = Prefix("testPostgresDB")
-
-  val ds = JdbcContextConfig(LoadConfig("testPostgresDB")).dataSource
 
   val ctx = new PostgresZioJdbcContext(Literal)
   import ctx._
@@ -34,12 +30,12 @@ class ResultSetIteratorSpec extends ZioSpec {
         _ <- ctx.run(query[Person].delete)
         _ <- ctx.run(liftQuery(peopleEntries).foreach(p => peopleInsert(p)))
       } yield ()
-    }.provide(Has(pool)).defaultRun
+    }.runSyncUnsafe()
   }
 
   "traverses correctly" in {
     val results =
-      Task(ds.getConnection).bracketAuto { conn =>
+      ZIO.service[DataSource].mapAttempt(ds => ds.getConnection).acquireReleaseWithAuto { conn =>
         Task {
           val stmt = conn.prepareStatement("select * from person")
           val rs = new ResultSetIterator[String](stmt.executeQuery(), conn, extractor = (rs, conn) => { rs.getString(1) })
@@ -47,20 +43,20 @@ class ResultSetIteratorSpec extends ZioSpec {
           while (rs.hasNext) accum += rs.next()
           accum
         }
-      }.defaultRun
+      }.runSyncUnsafe()
 
     results must contain theSameElementsAs (peopleEntries.map(_.name))
   }
 
   "can take head element" in {
     val result =
-      Task(ds.getConnection).bracketAuto { conn =>
+      ZIO.service[DataSource].mapAttempt(ds => ds.getConnection).acquireReleaseWithAuto { conn =>
         Task {
           val stmt = conn.prepareStatement("select * from person where name = 'Alex'")
           val rs = new ResultSetIterator(stmt.executeQuery(), conn, extractor = (rs, conn) => { rs.getString(1) })
           rs.head
         }
-      }.defaultRun
+      }.runSyncUnsafe()
 
     result must equal("Alex")
   }

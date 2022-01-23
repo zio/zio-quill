@@ -6,36 +6,26 @@ import zio.logging._
 
 import java.nio.file.Paths
 import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 
 class QueryLogger(logToFile: LogToFile) {
 
-  def produceLoggerEnv(file: String) =
-    ZEnv.live >>>
-      Logging.file(
-        logLevel = LogLevel.Info,
-        format = LogFormat.fromFunction((ctx, str) => {
-          str
-        }),
-        destination = Paths.get(file)
-      ) >>> Logging.withRootLoggerName("query-logger")
-
-  lazy val env = {
+  val runtime =
     logToFile match {
-      case LogToFile.Enabled(file) => Some(produceLoggerEnv(file))
-      case LogToFile.Disabled      => None
+      case LogToFile.Enabled(logFile) => Some(Runtime.default.mapRuntimeConfig(_ @@ file(
+        format = LogFormat.line,
+        destination = Paths.get(logFile)
+      )))
+      case LogToFile.Disabled => None
     }
-  }
-
-  private[getquill] val runtime =
-    env.map(Runtime.unsafeFromLayer(_))
 
   def apply(queryString: String, sourcePath: String, line: Int, column: Int): Unit = {
     runtime match {
       case Some(runtimeValue) =>
-        runtimeValue.unsafeRunAsync_(log.info(
+        runtimeValue.unsafeRunSync(ZIO.logInfo(
           s"""
              |-- file: $sourcePath:$line:$column
-             |-- time: ${ZonedDateTime.now().format(LogDatetimeFormatter.isoLocalDateTimeFormatter)}
+             |-- time: ${ZonedDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)}
              |$queryString;
              |""".stripMargin
         ))

@@ -1,14 +1,13 @@
 package io.getquill.postgres
 
 import io.getquill.context.ZioJdbc._
-import io.getquill.{ Prefix, ZioSpec }
+import io.getquill.ZioSpec
 import zio.{ Task, ZIO, ZLayer }
 
 import javax.sql.DataSource
 
 class ZioJdbcUnderlyingContextSpec extends ZioSpec {
 
-  override def prefix: Prefix = Prefix("testPostgresDB")
   val context = testContext.underlying
   import testContext.underlying._
 

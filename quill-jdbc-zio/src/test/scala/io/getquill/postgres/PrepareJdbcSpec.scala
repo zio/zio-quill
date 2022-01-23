@@ -1,6 +1,5 @@
 package io.getquill.postgres
 
-import io.getquill.Prefix
 import io.getquill.{ PrepareZioJdbcSpecBase, ZioSpec }
 import org.scalatest.BeforeAndAfter
 
@@ -8,7 +7,6 @@ import java.sql.{ Connection, ResultSet }
 
 class PrepareJdbcSpec extends PrepareZioJdbcSpecBase with ZioSpec with BeforeAndAfter {
 
-  override def prefix: Prefix = Prefix("testPostgresDB")
   val context = testContext
   import context._
 
