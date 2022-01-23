@@ -1,17 +1,17 @@
 package io.getquill.postgres
 
-import io.getquill.{ JdbcContextConfig, PeopleZioSpec, Prefix }
+import io.getquill.{ JdbcContextConfig, PeopleZioSpec }
 
 import java.io.Closeable
 import javax.sql.DataSource
 import io.getquill.context.qzio.ImplicitSyntax._
 import io.getquill.util.LoadConfig
-import zio.{ Has, Task, ZManaged }
+import zio.{ Task, ZManaged }
 
 class ImplicitEnvPatternSpec extends PeopleZioSpec {
 
   // Need to specify prefix to use for the setup
-  override def prefix: Prefix = Prefix("testPostgresDB")
+
   val context = testContext
   import testContext._
 
@@ -28,7 +28,7 @@ class ImplicitEnvPatternSpec extends PeopleZioSpec {
   }
 
   case class MyService(ds: DataSource with Closeable) {
-    implicit val env = Implicit(Has(ds))
+    implicit val env = Implicit(ds)
 
     def alexes = testContext.run(query[Person].filter(p => p.name == "Alex"))
     def berts = testContext.run(query[Person].filter(p => p.name == "Bert"))

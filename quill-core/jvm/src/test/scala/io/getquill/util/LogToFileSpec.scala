@@ -6,7 +6,8 @@ import scala.io.Source
 
 class LogToFileSpec extends Spec {
 
-  "logs a query to file when enabled" in {
+  // TODO temporarily ignore this test, will release ZIO2 RC1 without query logging support
+  "logs a query to file when enabled" ignore {
     val queryLogName = "./LogToFileSpecQuery.sql"
     val mockLogger = new QueryLogger(LogToFile(queryLogName))
 

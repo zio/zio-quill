@@ -1,12 +1,11 @@
 package io.getquill.h2
 
-import io.getquill.{ Prefix, ZioSpec }
+import io.getquill.ZioSpec
 import zio.{ Task, ZIO }
 import io.getquill.context.ZioJdbc._
 
 class ZioJdbcContextSpec extends ZioSpec {
 
-  def prefix = Prefix("testH2DB")
   val context = testContext
   import testContext._
 

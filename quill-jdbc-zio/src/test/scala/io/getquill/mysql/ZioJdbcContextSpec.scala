@@ -1,6 +1,6 @@
 package io.getquill.mysql
 
-import io.getquill.{ Prefix, ZioSpec }
+import io.getquill.ZioSpec
 import zio.{ Task, ZIO, ZLayer }
 import io.getquill.context.ZioJdbc._
 
@@ -8,7 +8,6 @@ import javax.sql.DataSource
 
 class ZioJdbcContextSpec extends ZioSpec {
 
-  def prefix = Prefix("testMysqlDB")
   val context = testContext
   import testContext._
 

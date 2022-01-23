@@ -5,7 +5,7 @@ import io.getquill.context.{ ExecutionInfo, PrepareContext }
 import io.getquill.context.ZioJdbc._
 import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.util.ContextLogger
-import zio.{ Has, Task, ZIO }
+import zio.{ Task, ZIO }
 
 import java.sql.{ Connection, PreparedStatement, ResultSet, SQLException }
 
@@ -30,8 +30,7 @@ trait ZioPrepareContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] extends Z
   /** Execute SQL on connection and return prepared statement. Closes the statement in a bracket. */
   def prepareSingle(sql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: Runner): QCIO[PreparedStatement] = {
     (for {
-      bconn <- ZIO.environment[Has[Connection]]
-      conn = bconn.get[Connection]
+      conn <- ZIO.service[Session]
       stmt <- Task(conn.prepareStatement(sql))
       ps <- Task {
         val (params, ps) = prepare(stmt, conn)
@@ -42,7 +41,7 @@ trait ZioPrepareContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] extends Z
   }
 
   def prepareBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: Runner): PrepareBatchActionResult =
-    ZIO.collectAll[Has[Connection], Throwable, PrepareRow, List] {
+    ZIO.collectAll[Connection, Throwable, PrepareRow, List] {
       val batches = groups.flatMap {
         case BatchGroup(sql, prepares) =>
           prepares.map(sql -> _)

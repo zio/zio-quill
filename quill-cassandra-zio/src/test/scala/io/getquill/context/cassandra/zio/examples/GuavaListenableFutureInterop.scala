@@ -3,8 +3,7 @@ package io.getquill.context.cassandra.zio.examples
 import com.google.common.util.concurrent.ListenableFuture
 import io.getquill.CassandraZioContext.CIO
 import io.getquill.CassandraZioSession
-import zio.{ Has, ZIO }
-import zio.blocking.Blocking
+import zio.ZIO
 
 import java.util.concurrent.Executor
 import scala.concurrent.Promise
@@ -32,8 +31,9 @@ object GuavaListenableFutureInterop {
       }
 
       for {
-        env <- ZIO.environment[Has[CassandraZioSession]]
-        promise <- makePromise(Blocking.Service.live.blockingExecutor.asJava)
+        env <- ZIO.service[CassandraZioSession]
+        blockingExecutor <- ZIO.blockingExecutor
+        promise <- makePromise(blockingExecutor.asJava)
       } yield promise
     }
   }

@@ -2,10 +2,10 @@ package io.getquill.examples
 
 import io.getquill._
 import io.getquill.context.ZioJdbc._
-import zio.console.putStrLn
-import zio.{ App, ExitCode, URIO }
+import zio.Console.printLine
+import zio.ZIOAppDefault
 
-object ZioApp extends App {
+object ZioApp extends ZIOAppDefault {
 
   object MyPostgresContext extends PostgresZioJdbcContext(Literal)
   import MyPostgresContext._
@@ -14,12 +14,12 @@ object ZioApp extends App {
 
   val zioDS = DataSourceLayer.fromPrefix("testPostgresDB")
 
-  override def run(args: List[String]): URIO[zio.ZEnv, ExitCode] = {
+  override def run = {
     val people = quote {
       query[Person].filter(p => p.name == "Alex")
     }
     MyPostgresContext.run(people)
-      .tap(result => putStrLn(result.toString))
+      .tap(result => printLine(result.toString))
       .provideCustomLayer(zioDS)
       .exitCode
   }
