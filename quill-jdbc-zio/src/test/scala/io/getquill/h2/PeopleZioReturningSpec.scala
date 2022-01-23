@@ -1,11 +1,10 @@
 package io.getquill.h2
 
 import io.getquill.context.sql.PeopleReturningSpec
-import io.getquill.{ Prefix, ZioSpec }
+import io.getquill.ZioSpec
 
 class PeopleZioReturningSpec extends PeopleReturningSpec with ZioSpec {
 
-  override def prefix: Prefix = Prefix("testH2DB")
   val context: testContext.type = testContext
   import testContext._
 

@@ -7,8 +7,9 @@ import io.getquill.context.{ ContextVerbStream, ExecutionInfo }
 import io.getquill.util.ContextLogger
 import io.getquill.{ NamingStrategy, ReturnAction }
 import zio.Exit.{ Failure, Success }
+import zio.ZIO.blocking
 import zio.stream.{ Stream, ZStream }
-import zio.{ Cause, Has, Task, UIO, ZIO, ZManaged }
+import zio.{ Cause, Task, UIO, ZIO, ZManaged, ZTrace }
 
 import java.sql.{ Array => _, _ }
 import javax.sql.DataSource
@@ -24,7 +25,7 @@ abstract class ZioJdbcUnderlyingContext[Dialect <: SqlIdiom, Naming <: NamingStr
   override private[getquill] val logger = ContextLogger(classOf[ZioJdbcUnderlyingContext[_, _]])
 
   override type Error = SQLException
-  override type Environment = Has[Session]
+  override type Environment = Session
   override type PrepareRow = PreparedStatement
   override type ResultRow = ResultSet
   override type RunActionResult = Long
@@ -61,48 +62,52 @@ abstract class ZioJdbcUnderlyingContext[Dialect <: SqlIdiom, Naming <: NamingStr
 
   // Primary method used to actually run Quill context commands query, insert, update, delete and others
   override protected def withConnectionWrapped[T](f: Connection => T): QCIO[T] =
-    withBlocking {
+    blocking {
       for {
-        conn <- ZIO.environment[Has[Connection]]
-        result <- sqlEffect(f(conn.get[Connection]))
+        conn <- ZIO.service[Connection]
+        result <- sqlEffect(f(conn))
       } yield result
     }
 
-  private def sqlEffect[T](t: => T): QCIO[T] = ZIO.effect(t).refineToOrDie[SQLException]
+  private def sqlEffect[T](t: => T): QCIO[T] = ZIO.attempt(t).refineToOrDie[SQLException]
 
-  private[getquill] def withoutAutoCommit[R <: Has[Connection], A, E <: Throwable: ClassTag](f: ZIO[R, E, A]): ZIO[R, E, A] = {
+  /**
+   * Note that for ZIO 2.0 since the env is covariant, R can be a subtype of connection because if there are other with-clauses
+   * they can be generalized to Something <: Connection. E.g. `Connection with OtherStuff` generalizes to `Something <: Connection`.
+   */
+  private[getquill] def withoutAutoCommit[R <: Connection, A, E <: Throwable: ClassTag](f: ZIO[R, E, A]): ZIO[R, E, A] = {
     for {
-      blockingConn <- ZIO.environment[Has[Connection]]
-      conn = blockingConn.get[Connection]
+      conn <- ZIO.service[Connection]
       autoCommitPrev = conn.getAutoCommit
-      r <- sqlEffect(conn).bracket(conn => UIO(conn.setAutoCommit(autoCommitPrev))) { conn =>
+      r <- sqlEffect(conn).acquireReleaseWith(conn => UIO(conn.setAutoCommit(autoCommitPrev))) { conn =>
         sqlEffect(conn.setAutoCommit(false)).flatMap(_ => f)
       }.refineToOrDie[E]
     } yield r
   }
 
-  private[getquill] def streamWithoutAutoCommit[A](f: ZStream[Has[Connection], Throwable, A]): ZStream[Has[Connection], Throwable, A] = {
+  private[getquill] def streamWithoutAutoCommit[A](f: ZStream[Connection, Throwable, A]): ZStream[Connection, Throwable, A] = {
     for {
-      blockingConn <- ZStream.environment[Has[Connection]]
-      conn = blockingConn.get[Connection]
+      conn <- ZStream.service[Connection]
       autoCommitPrev = conn.getAutoCommit
-      r <- ZStream.bracket(Task(conn.setAutoCommit(false)))(_ => UIO(conn.setAutoCommit(autoCommitPrev))).flatMap(_ => f)
+      r <- ZStream.acquireReleaseWith(Task(conn.setAutoCommit(false)))(_ => {
+        UIO(conn.setAutoCommit(autoCommitPrev))
+      }).flatMap(_ => f)
     } yield r
   }
 
-  def transaction[R <: Has[Connection], A](f: ZIO[R, Throwable, A]): ZIO[R, Throwable, A] = {
+  def transaction[R <: Connection, A](f: ZIO[R, Throwable, A]): ZIO[R, Throwable, A] = {
     ZIO.environment[R].flatMap(env =>
-      withBlocking(withoutAutoCommit(
+      blocking(withoutAutoCommit(
         f.onExit {
           case Success(_) =>
             UIO(env.get[Connection].commit())
           case Failure(cause) =>
-            UIO(env.get[Connection].rollback()).foldCauseM(
+            UIO(env.get[Connection].rollback()).foldCauseZIO(
               // NOTE: cause.flatMap(Cause.die) means wrap up the throwable failures into die failures, can only do if E param is Throwable (can also do .orDie at the end)
-              rollbackFailCause => ZIO.halt(cause.flatMap(Cause.die) ++ rollbackFailCause),
-              _ => ZIO.halt(cause.flatMap(Cause.die)) // or ZIO.halt(cause).orDie
+              rollbackFailCause => ZIO.failCause(cause.flatMap(Cause.die(_, ZTrace.none)) ++ rollbackFailCause),
+              _ => ZIO.failCause(cause.flatMap(Cause.die(_, ZTrace.none))) // or ZIO.halt(cause).orDie
             )
-        }.provide(env)
+        }.provideEnvironment(env)
       )))
   }
 
@@ -143,14 +148,12 @@ abstract class ZioJdbcUnderlyingContext[Dialect <: SqlIdiom, Naming <: NamingStr
     }
 
     val managedEnv: ZStream[Connection, Throwable, (Connection, PrepareRow, ResultSet)] =
-      ZStream.environment[Connection].flatMap { conn =>
-        ZStream.managed {
-          for {
-            conn <- ZManaged.make(Task(conn))(c => Task.unit)
-            ps <- managedBestEffort(Task(prepareStatement(conn)))
-            rs <- managedBestEffort(Task(ps.executeQuery()))
-          } yield (conn, ps, rs)
-        }
+      ZStream.managed {
+        for {
+          conn <- ZManaged.service[Connection]
+          ps <- managedBestEffort(Task(prepareStatement(conn)))
+          rs <- managedBestEffort(Task(ps.executeQuery()))
+        } yield (conn, ps, rs)
       }
 
     val outStream: ZStream[Connection, Throwable, T] =
@@ -167,9 +170,8 @@ abstract class ZioJdbcUnderlyingContext[Dialect <: SqlIdiom, Naming <: NamingStr
           }
       }
 
-    val typedStream = outStream.provideSome((bc: Has[Connection]) => bc.get[Connection])
     // Run the chunked fetch on the blocking pool
-    streamBlocker *> streamWithoutAutoCommit(typedStream).refineToOrDie[SQLException]
+    streamBlocker *> streamWithoutAutoCommit(outStream).refineToOrDie[SQLException]
   }
 
   override private[getquill] def prepareParams(statement: String, prepare: Prepare): QCIO[Seq[String]] = {
@@ -179,7 +181,7 @@ abstract class ZioJdbcUnderlyingContext[Dialect <: SqlIdiom, Naming <: NamingStr
   }
 
   // Generally these are not used in the ZIO context but have implementations in case they are needed
-  override def wrap[T](t: => T): ZIO[Has[Connection], SQLException, T] = QCIO(t)
-  override def push[A, B](result: ZIO[Has[Connection], SQLException, A])(f: A => B): ZIO[Has[Connection], SQLException, B] = result.map(f)
-  override def seq[A](f: List[ZIO[Has[Connection], SQLException, A]]): ZIO[Has[Connection], SQLException, List[A]] = ZIO.collectAll(f)
+  override def wrap[T](t: => T): ZIO[Connection, SQLException, T] = QCIO(t)
+  override def push[A, B](result: ZIO[Connection, SQLException, A])(f: A => B): ZIO[Connection, SQLException, B] = result.map(f)
+  override def seq[A](f: List[ZIO[Connection, SQLException, A]]): ZIO[Connection, SQLException, List[A]] = ZIO.collectAll(f)
 }

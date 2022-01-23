@@ -3,23 +3,25 @@ package io.getquill.postgres
 import java.util.UUID
 import io.getquill.{ JdbcContextConfig, Literal, PostgresZioJdbcContext, ZioSpec }
 import io.getquill.context.sql.ProductSpec
-import io.getquill.Prefix
+
 import io.getquill.util.LoadConfig
 import io.getquill.context.ZioJdbc._
-import zio.{ Has, Runtime }
+import io.getquill.context.qzio.ImplicitSyntax.Implicit
+import zio.Runtime
 
 import scala.util.Random
 
 class ConnectionLeakTest extends ProductSpec with ZioSpec {
 
-  override def prefix: Prefix = Prefix("testPostgresLeakDB")
+  implicit val pool = Implicit(DataSourceLayer.fromPrefix("testPostgresDB"))
+
   val dataSource = JdbcContextConfig(LoadConfig("testPostgresLeakDB")).dataSource
   val context = new PostgresZioJdbcContext(Literal)
   import context._
 
   override def beforeAll = {
     super.beforeAll()
-    context.run(quote(query[Product].delete)).runSyncUnsafe()
+    context.run(quote(query[Product].delete)).provide(pool.env).runSyncUnsafe()
     ()
   }
 
@@ -42,7 +44,7 @@ class ConnectionLeakTest extends ProductSpec with ZioSpec {
       }
         .map(_.headOption.map(_.id))
         .onDataSource
-        .provide(Has(dataSource)))
+        .provide(pool.env))
 
     Thread.sleep(2000)
 

@@ -8,23 +8,14 @@ import io.getquill.context.qzio.ZioContext
 import io.getquill.util.Messages.fail
 import io.getquill.util.ContextLogger
 import zio.stream.ZStream
-import zio.{ Chunk, ChunkBuilder, Has, ZIO, ZManaged }
-import zio.blocking.Blocking
+import zio.{ Chunk, ChunkBuilder, ZEnvironment, ZIO, ZManaged }
 
 import scala.jdk.CollectionConverters._
 import scala.util.Try
 
-object CassandraZioContext extends CioOps {
-  type CIO[T] = ZIO[Has[CassandraZioSession], Throwable, T]
-  type CStream[T] = ZStream[Has[CassandraZioSession], Throwable, T]
-}
-
-trait CioOps {
-  implicit class CioExt[T](cio: CIO[T]) {
-    @deprecated("Use provide(Has(session)) instead", "3.7.1")
-    def provideSession(session: CassandraZioSession): ZIO[Has[CassandraZioSession], Throwable, T] =
-      cio.provide(Has(session))
-  }
+object CassandraZioContext {
+  type CIO[T] = ZIO[CassandraZioSession, Throwable, T]
+  type CStream[T] = ZStream[CassandraZioSession, Throwable, T]
 }
 
 /**
@@ -51,13 +42,12 @@ trait CioOps {
 class CassandraZioContext[N <: NamingStrategy](val naming: N)
   extends CassandraRowContext[N]
   with ZioContext[CqlIdiom, N]
-  with Context[CqlIdiom, N]
-  with CioOps {
+  with Context[CqlIdiom, N] {
 
   private val logger = ContextLogger(classOf[CassandraZioContext[_]])
 
   override type Error = Throwable
-  override type Environment = Has[CassandraZioSession]
+  override type Environment = CassandraZioSession
 
   override type StreamResult[T] = CStream[T]
   override type RunActionResult = Unit
@@ -82,7 +72,7 @@ class CassandraZioContext[N <: NamingStrategy](val naming: N)
   private[getquill] def execute(cql: String, prepare: Prepare, csession: CassandraZioSession, fetchSize: Option[Int]) =
     simpleBlocking {
       prepareRowAndLog(cql, prepare)
-        .mapEffect { p =>
+        .mapAttempt { p =>
           fetchSize match {
             case Some(value) => p.setPageSize(value)
             case None        => p
@@ -94,16 +84,16 @@ class CassandraZioContext[N <: NamingStrategy](val naming: N)
     }
 
   val streamBlocker: ZStream[Any, Nothing, Any] =
-    ZStream.managed(
-      ZManaged.lock(Blocking.Service.live.blockingExecutor)
-    )
+    ZStream.managed(ZIO.blockingExecutor.toManaged.flatMap { executor =>
+      ZManaged.lock(executor)
+    })
 
   def streamQuery[T](fetchSize: Option[Int], cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner) = {
     val stream =
       for {
         csession <- ZStream.service[CassandraZioSession]
-        rs <- ZStream.fromEffect(execute(cql, prepare, csession, fetchSize))
-        row <- ZStream.unfoldChunkM(rs) { rs =>
+        rs <- ZStream.fromZIO(execute(cql, prepare, csession, fetchSize))
+        row <- ZStream.unfoldChunkZIO(rs) { rs =>
           // keep taking pages while chunk sizes are non-zero
           page(rs).flatMap { chunk =>
             (chunk.nonEmpty, rs.hasMorePages) match {
@@ -119,8 +109,9 @@ class CassandraZioContext[N <: NamingStrategy](val naming: N)
     streamBlocker *> stream
   }
 
+  // TODO Get rid of since it's now one method
   private[getquill] def simpleBlocking[R, E, A](zio: ZIO[R, E, A]): ZIO[R, E, A] =
-    Blocking.Service.live.blocking(zio)
+    ZIO.blocking(zio)
 
   def executeQuery[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner): CIO[List[T]] = simpleBlocking {
     streamQuery[T](None, cql, prepare, extractor)(info, dc).runCollect.map(_.toList)
@@ -130,15 +121,15 @@ class CassandraZioContext[N <: NamingStrategy](val naming: N)
     for {
       csession <- ZIO.service[CassandraZioSession]
       rs <- execute(cql, prepare, csession, Some(1)) //pull only one record from the DB explicitly.
-      rows <- ZIO.effect(rs.currentPage())
-      singleRow <- ZIO.effect(handleSingleResult(cql, rows.asScala.map(row => extractor(row, csession)).toList))
+      rows <- ZIO.attempt(rs.currentPage())
+      singleRow <- ZIO.attempt(handleSingleResult(cql, rows.asScala.map(row => extractor(row, csession)).toList))
     } yield singleRow
   }
 
   def executeAction(cql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: Runner): CIO[Unit] = simpleBlocking {
     for {
       csession <- ZIO.service[CassandraZioSession]
-      r <- prepareRowAndLog(cql, prepare).provide(Has(csession))
+      r <- prepareRowAndLog(cql, prepare).provideEnvironment(ZEnvironment(csession))
       _ <- ZIO.fromCompletionStage(csession.session.executeAsync(r))
     } yield ()
   }
@@ -153,7 +144,7 @@ class CassandraZioContext[N <: NamingStrategy](val naming: N)
           groups.flatMap {
             case BatchGroup(cql, prepare) =>
               prepare
-                .map(prep => executeAction(cql, prep)(info, dc).provide(Has(env)))
+                .map(prep => executeAction(cql, prep)(info, dc).provideEnvironment(ZEnvironment(env)))
           }
         ZIO.collectAll(batchGroups)
       }
@@ -162,11 +153,11 @@ class CassandraZioContext[N <: NamingStrategy](val naming: N)
 
   private[getquill] def prepareRowAndLog(cql: String, prepare: Prepare = identityPrepare): CIO[PrepareRow] =
     for {
-      env <- ZIO.environment[Has[CassandraZioSession]]
+      env <- ZIO.environment[CassandraZioSession]
       csession = env.get[CassandraZioSession]
       boundStatement <- {
         ZIO.fromFuture { implicit ec => csession.prepareAsync(cql) }
-          .mapEffect(row => prepare(row, csession))
+          .mapAttempt(row => prepare(row, csession))
           .map(p => p._2)
       }
     } yield boundStatement

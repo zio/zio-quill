@@ -14,7 +14,7 @@ class TestContext extends PostgresZioJAsyncContext(Literal)
 
   val config: JAsyncContextConfig[PostgreSQLConnection] = PostgresJAsyncContextConfig(LoadConfig("testPostgresDB"))
 
-  val layer: TaskLayer[Has[ZioJAsyncConnection]] =
+  val layer: TaskLayer[ZioJAsyncConnection] =
     ZLayer.succeed(config) >>> ZioJAsyncConnection.live[PostgreSQLConnection]
 
 }

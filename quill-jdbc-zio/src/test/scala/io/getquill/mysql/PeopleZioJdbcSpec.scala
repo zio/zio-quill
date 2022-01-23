@@ -1,12 +1,11 @@
 package io.getquill.mysql
 
 import io.getquill.PeopleZioSpec
-import io.getquill.Prefix
+
 import org.scalatest.matchers.should.Matchers._
 
 class PeopleZioJdbcSpec extends PeopleZioSpec {
 
-  def prefix = Prefix("testMysqlDB")
   val context = testContext
   import testContext._
 

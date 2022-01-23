@@ -4,7 +4,7 @@ import com.zaxxer.hikari.HikariDataSource
 import io.getquill.context.ZioJdbc._
 import io.getquill.util.LoadConfig
 import io.getquill.{ JdbcContextConfig, Literal, PostgresZioJdbcContext }
-import zio.console.putStrLn
+import zio.Console.printLine
 import zio.Runtime
 
 object PlainAppDataSource {
@@ -24,7 +24,7 @@ object PlainAppDataSource {
     }
     val qzio =
       MyPostgresContext.run(people)
-        .tap(result => putStrLn(result.toString))
+        .tap(result => printLine(result.toString))
         .provideCustomLayer(zioDS)
 
     Runtime.default.unsafeRun(qzio)

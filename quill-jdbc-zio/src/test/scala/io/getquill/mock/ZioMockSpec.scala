@@ -1,11 +1,10 @@
 package io.getquill.mock
 
-import io.getquill.ZioTestUtil._
 import io.getquill.{ Literal, PostgresZioJdbcContext }
 import org.mockito.scalatest.MockitoSugar
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.must.Matchers._
-import zio.Has
+import zio.ZEnvironment
 
 import java.io.Closeable
 import java.sql._
@@ -55,6 +54,7 @@ class ZioMockSpec extends AnyFreeSpec with MockitoSugar { //with AsyncMockitoSug
     val rs = MockResultSet(people)
 
     when(ds.getConnection) thenReturn conn
+
     when(conn.prepareStatement(any[String], any[Int], any[Int])) thenReturn stmt
     when(stmt.executeQuery()) thenReturn rs
     when(conn.getAutoCommit) thenReturn true
@@ -63,10 +63,12 @@ class ZioMockSpec extends AnyFreeSpec with MockitoSugar { //with AsyncMockitoSug
     import ctx._
 
     val results =
-      stream(query[Person])
-        .fold(Seq[Person]())({ case (l, p) => p +: l })
-        .map(_.reverse)
-        .provide(Has(ds)).defaultRun
+      zio.Runtime.default.unsafeRun {
+        stream(query[Person])
+          .runFold(Seq[Person]())({ case (l, p) => p +: l })
+          .map(_.reverse)
+          .provideEnvironment(ZEnvironment(ds))
+      }
 
     results must equal(people)
 
@@ -103,8 +105,10 @@ class ZioMockSpec extends AnyFreeSpec with MockitoSugar { //with AsyncMockitoSug
     import ctx._
 
     val results =
-      ctx.run(query[Person])
-        .provide(Has(ds)).defaultRun
+      zio.Runtime.default.unsafeRun {
+        ctx.run(query[Person])
+          .provideEnvironment(ZEnvironment(ds))
+      }
 
     results must equal(people)
 
@@ -129,12 +133,14 @@ class ZioMockSpec extends AnyFreeSpec with MockitoSugar { //with AsyncMockitoSug
     import ctx._
 
     val resultMsg =
-      stream(query[Person])
-        .fold(Seq[Person]())({ case (l, p) => p +: l })
-        .map(_.reverse)
-        .provide(Has(ds)).foldCause(cause => cause.prettyPrint, _ => "").defaultRun
+      zio.Runtime.default.unsafeRun {
+        stream(query[Person])
+          .runFold(Seq[Person]())({ case (l, p) => p +: l })
+          .map(_.reverse)
+          .provideEnvironment(ZEnvironment(ds)).foldCause(cause => cause.prettyPrint, _ => "")
+      }
 
-    resultMsg.contains("Fiber failed.") mustBe true
+    resultMsg.contains("fiber") mustBe true
     resultMsg.contains(msg) mustBe true
 
     // In test suite verifications come after
@@ -164,12 +170,14 @@ class ZioMockSpec extends AnyFreeSpec with MockitoSugar { //with AsyncMockitoSug
     // In this case, instead of catching the error inside the observable, let it propogate to the top
     // and make sure that the connection is closed anyhow
     val resultMsg =
-      stream(query[Person])
-        .fold(Seq[Person]())({ case (l, p) => p +: l })
-        .map(_.reverse)
-        .provide(Has(ds)).foldCause(cause => cause.prettyPrint, _ => "").defaultRun
+      zio.Runtime.default.unsafeRun {
+        stream(query[Person])
+          .runFold(Seq[Person]())({ case (l, p) => p +: l })
+          .map(_.reverse)
+          .provideEnvironment(ZEnvironment(ds)).foldCause(cause => cause.prettyPrint, success => s"Query SUCCEEDED with $success. This should not happen!")
+      }
 
-    resultMsg.contains("Fiber failed.") mustBe true
+    resultMsg.contains("fiber") mustBe true
     resultMsg.contains(msg) mustBe true
 
     // In test suite verifications come after

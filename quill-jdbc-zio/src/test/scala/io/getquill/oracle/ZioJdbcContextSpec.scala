@@ -1,12 +1,11 @@
 package io.getquill.oracle
 
-import io.getquill.{ Prefix, ZioSpec }
+import io.getquill.ZioSpec
 import zio.{ Task, ZIO }
 import io.getquill.context.ZioJdbc._
 
 class ZioJdbcContextSpec extends ZioSpec {
 
-  def prefix = Prefix("testOracleDB")
   val context = testContext
   import testContext._
 
