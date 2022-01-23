@@ -96,8 +96,16 @@ object Messages {
     // Specifically for situations where what needs to be printed is a type of warning to the user as opposed to an expansion
     // This kind of trace is always on by default and does not need to be enabled by the user.
     case object Warning extends TraceType { val value = "warning" }
+    case object ExprModel extends TraceType { val value = "exprmodel" }
+    case object Meta extends TraceType { val value = "meta" }
+    case object Execution extends TraceType { val value = "exec" }
+    case object DynamicExecution extends TraceType { val value = "dynamicexec" }
+    case object Elaboration extends TraceType { val value = "elab" }
 
-    def values: List[TraceType] = List(Standard, SqlNormalizations, Normalizations, NestedQueryExpansion, AvoidAliasConflict, ReifyLiftings, PatMatch, Quotation, RepropagateQuats, RenameProperties, Warning, ShealthLeaf, ApplyMap, ExpandDistinct)
+    def values: List[TraceType] = List(
+      Standard, SqlNormalizations, Normalizations, NestedQueryExpansion, AvoidAliasConflict, ReifyLiftings, PatMatch, Quotation,
+      RepropagateQuats, RenameProperties, Warning, ShealthLeaf, ApplyMap, ExpandDistinct, ExprModel, Meta, Execution, DynamicExecution, Elaboration
+    )
   }
 
   val qprint = new AstPrinter(traceOpinions, traceAstSimple, Messages.traceQuats)
