@@ -4,7 +4,7 @@ import io.getquill.NamingStrategy
 import io.getquill.ast.{ Ast, BinaryOperation, CaseClass, Constant, ExternalIdent, Ident, Operation, Property, Query, StringOperator, Tuple, Value }
 import io.getquill.context.spark.norm.EscapeQuestionMarks
 import io.getquill.context.sql.{ FlattenSqlQuery, SelectValue, SetOperationSqlQuery, SqlQuery, UnaryOperationSqlQuery }
-import io.getquill.context.sql.idiom.SqlIdiom
+import io.getquill.context.sql.idiom.{ SqlIdiom }
 import io.getquill.context.sql.norm.SqlNormalize
 import io.getquill.idiom.StatementInterpolator._
 import io.getquill.idiom.Token

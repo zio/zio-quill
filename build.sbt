@@ -109,7 +109,7 @@ def isScala2 = {
   scalaVersion.map(_.startsWith("2")).getOrElse(false)
 }
 
-val filteredModules = {
+lazy val filteredModules = {
   val modulesStr = sys.props.get("modules")
   val moduleStrings =
     ListSet(
@@ -161,25 +161,30 @@ val filteredModules = {
         }
     }
 
-  val modules =
-    moduleStrings
-      .map(matchModules(_))
-      .map(seq => ListSet(seq: _*))
-      .flatMap(elem => elem)
+  val selectedModules = {
+    val modules =
+      moduleStrings
+        .map(matchModules(_))
+        .map(seq => ListSet(seq: _*))
+        .flatMap(elem => elem)
 
-  if(isScala213) {
-    println("SBT =:> Compiling 2.13 Modules Only")
-    modules.filter(scala213Modules.contains(_))
+    if(isScala213) {
+      println("SBT =:> Compiling 2.13 Modules Only")
+      modules.filter(scala213Modules.contains(_))
+    }
+    else if(isScala211) {
+      println("SBT =:> Compiling 2.11 Modules Only")
+      modules.filter(m => !notScala211Modules.contains(m))
+    }
+    else if(isScala3) {
+      println("SBT =:> Compiling 3 Modules Only")
+      modules.filter(scala3Modules.contains(_))
+    }
+    else modules
   }
-  else if(isScala211) {
-    println("SBT =:> Compiling 2.11 Modules Only")
-    modules.filter(m => !notScala211Modules.contains(m))
-  }
-  else if(isScala3) {
-    println("SBT =:> Compiling 3 Modules Only")
-    modules.filter(scala3Modules.contains(_))
-  }
-  else modules
+
+  println(s"=== Selected Modules ===\n${selectedModules.map(_.project.toString).toList.mkString("\n")}\n=== End Selected Modules ===")
+  selectedModules
 }
 
 lazy val `quill` =
@@ -946,6 +951,13 @@ lazy val releaseSettings = Seq(
         doOnPush   (setReleaseVersion) ++
         doOnDefault(publishArtifacts)
         //doOnPush   ("sonatypeReleaseAll") ++
+      case Some((3, _)) =>
+        doOnDefault(checkSnapshotDependencies) ++
+          doOnDefault(inquireVersions) ++
+          doOnDefault(runClean) ++
+          doOnPush   (setReleaseVersion) ++
+          doOnDefault(publishArtifacts)
+      //doOnPush   ("sonatypeReleaseAll") ++
       case _ => Seq[ReleaseStep]()
     }
   },

@@ -26,7 +26,7 @@ class OrientDBQuerySpec extends Spec {
         qr1.map(t => (t.i, t.s))
       }
       mirrorContext.run(q).string mustEqual
-        "SELECT i, s FROM TestEntity"
+        "SELECT i _1, s _2 FROM TestEntity"
     }
     "other" in {
       val q = quote {

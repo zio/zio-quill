@@ -15,7 +15,6 @@ import io.getquill.norm.ConcatBehavior.AnsiConcat
 import io.getquill.norm.EqualityBehavior.AnsiEquality
 import io.getquill.norm.{ ConcatBehavior, EqualityBehavior, ExpandReturning, NormalizeCaching, ProductAggregationToken }
 import io.getquill.quat.Quat
-import io.getquill.sql.norm.RemoveExtraAlias.TopLevelRemove
 import io.getquill.sql.norm.{ RemoveExtraAlias, RemoveUnusedSelects }
 import io.getquill.util.{ Interleave, Messages }
 import io.getquill.util.Messages.{ fail, trace }
@@ -233,10 +232,19 @@ trait SqlIdiom extends Idiom {
 
     def tokenizer(implicit astTokenizer: Tokenizer[Ast]) =
       Tokenizer[SelectValue] {
+
+        // ExpandNestedQuery should elaborate all Idents with Product quats so the only ones left are value quats
+        // treat them as a id.* because in most SQL dialects identifiers cannot be spliced in by themselves
+        case SelectValue(Ident("?", Quat.Value), _, _)  => "?".token
+        case SelectValue(Ident(name, Quat.Value), _, _) => stmt"${strategy.default(name).token}.*"
+
+        // Typically these next two will be for Ast Property
         case SelectValue(ast, Some(alias), false) => {
           stmt"${ast.token} AS ${tokenizeColumnAlias(strategy, alias).token}"
         }
         case SelectValue(ast, Some(alias), true) => stmt"${concatFunction.token}(${ast.token}) AS ${tokenizeColumnAlias(strategy, alias).token}"
+
+        // For situations where this is no alias etc...
         case selectValue =>
           val value =
             selectValue match {
