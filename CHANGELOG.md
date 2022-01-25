@@ -1,3 +1,8 @@
+# 3.14.0
+
+- [Single path-element alias in top-level selects](https://github.com/zio/zio-quill/pull/2393)
+- [Update zio-logging](https://github.com/zio/zio-quill/pull/2392)
+
 # 3.13.0
 
 - [JAsync ZIO implementation](https://github.com/zio/zio-quill/pull/2267)
