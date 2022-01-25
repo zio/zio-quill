@@ -74,6 +74,19 @@ class CassandraOpsSpec extends Spec {
           "UPDATE TestEntity USING TIMESTAMP 1 AND TTL 2 SET s = ?, i = ?, l = ?, o = ?, b = ?"
       }
     }
+    "ifExists" in {
+      val q = quote {
+        query[TestEntity].filter(t => t.s == "a").update(t => t.s -> "b").ifExists
+      }
+      mirrorContext.run(q).string mustEqual
+        "UPDATE TestEntity SET s = 'b' WHERE s = 'a' IF EXISTS"
+
+      val q2 = quote {
+        query[TestEntity].update(t => t.s -> "b").ifExists
+      }
+      mirrorContext.run(q2).string mustEqual
+        "UPDATE TestEntity SET s = 'b' IF EXISTS"
+    }
     "if" in {
 
       val q = quote {
