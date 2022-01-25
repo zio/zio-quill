@@ -84,6 +84,7 @@ object CqlQuery {
       case p: Property       => List(p)
       case i: Ident          => List()
       case l: Lift           => List(l)
+      case l: ScalarTag      => List(l)
       case other             => fail(s"Cql supports only properties as select elements. Found: $other")
     }
 

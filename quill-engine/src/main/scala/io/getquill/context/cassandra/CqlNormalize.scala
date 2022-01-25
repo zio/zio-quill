@@ -33,7 +33,7 @@ object CqlNormalize {
       .andThen(new SimplifyNullChecks(AnsiEquality).apply _)
       .andThen(Normalize.apply _)
       .andThen(RenameProperties.apply _)
-      .andThen(ExpandMappedInfix.apply _)
+      .andThen(ExpandMappedInfixCassandra.apply _)
       .andThen(ast => {
         // In the final stage of normalization, change all temporary aliases into
         // shorter ones of the form x[0-9]+.
