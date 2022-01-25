@@ -155,7 +155,7 @@ class JdbcContextSpec extends Spec {
       ctx.run(qr1.insertValue(lift(TestEntity("foo", 1, 18L, Some(123), true))))
 
       val updated = ctx.run {
-        qr1.update(lift(TestEntity("bar", 2, 42L, Some(321), true))).returning(r => (r.i, r.s, r.o))
+        qr1.updateValue(lift(TestEntity("bar", 2, 42L, Some(321), true))).returning(r => (r.i, r.s, r.o))
       }
       (2, "bar", Some(321)) mustBe updated
     }
@@ -165,7 +165,7 @@ class JdbcContextSpec extends Spec {
       ctx.run(qr1.insertValue(lift(TestEntity("foo", 1, 18L, Some(123), true))))
 
       val updated = ctx.run {
-        qr1.update(lift(TestEntity("bar", 2, 42L, Some(321), true))).returning(r => (r.i + 100, r.s, r.o.map(_ + 100)))
+        qr1.updateValue(lift(TestEntity("bar", 2, 42L, Some(321), true))).returning(r => (r.i + 100, r.s, r.o.map(_ + 100)))
       }
       (2 + 100, "bar", Some(321 + 100)) mustBe updated
     }
@@ -178,7 +178,7 @@ class JdbcContextSpec extends Spec {
       ctx.run(qr1.insertValue(lift(TestEntity("foo", 1, 18L, Some(123), true))))
 
       val updated = ctx.run {
-        qr1.update(lift(TestEntity("bar", 36, 42L, Some(321), true))).returning(r =>
+        qr1.updateValue(lift(TestEntity("bar", 36, 42L, Some(321), true))).returning(r =>
           (r.i, r.s + "_s", qr2.filter(rr => rr.i == r.i).map(_.s).max))
       }
       (36, "bar_s", Some("foobar")) mustBe updated
@@ -193,7 +193,7 @@ class JdbcContextSpec extends Spec {
       ctx.run(qr1.insertValue(lift(TestEntity("foo", 1, 18L, Some(123), true))))
 
       val updated = ctx.run {
-        qr1.update(lift(TestEntity("bar", 36, 42L, Some(321), true))).returning(r =>
+        qr1.updateValue(lift(TestEntity("bar", 36, 42L, Some(321), true))).returning(r =>
           (r.i, r.s + "_s", qr2.filter(rr => rr.i == r.i && rr.s == lift(value)).map(_.s).max))
       }
       (36, "bar_s", Some("foobar")) mustBe updated
@@ -204,7 +204,7 @@ class JdbcContextSpec extends Spec {
       ctx.run(qr1.insertValue(lift(TestEntity("one", 1, 18L, Some(1), true))))
 
       val updated = ctx.run {
-        qr1.update(lift(TestEntity("two", 2, 18L, Some(123), true))).returning(r =>
+        qr1.updateValue(lift(TestEntity("two", 2, 18L, Some(123), true))).returning(r =>
           (r.i, r.s + "_s", qr1.filter(rr => rr.o.exists(_ == r.i - 1)).map(_.s).max))
       }
       (2, "two_s", Some("one")) mustBe updated
@@ -215,7 +215,7 @@ class JdbcContextSpec extends Spec {
       ctx.run(qr1Emb.insertValue(lift(TestEntityEmb(Emb("one", 1), 18L, Some(123)))))
 
       val updated = ctx.run {
-        qr1Emb.update(lift(TestEntityEmb(Emb("two", 2), 18L, Some(123)))).returning(r => (r.emb.i, r.o))
+        qr1Emb.updateValue(lift(TestEntityEmb(Emb("two", 2), 18L, Some(123)))).returning(r => (r.emb.i, r.o))
       }
       (2, Some(123)) mustBe updated
     }
@@ -226,7 +226,7 @@ class JdbcContextSpec extends Spec {
       ctx.run(qr1.insertValue(lift(TestEntity("one", 1, 18L, Some(1), true))))
 
       val updated = ctx.run {
-        qr1.update(lift(TestEntity("foo", 1, 18L, Some(123), true))).returning(r => Return(r.i, r.s, r.o))
+        qr1.updateValue(lift(TestEntity("foo", 1, 18L, Some(123), true))).returning(r => Return(r.i, r.s, r.o))
       }
       Return(1, "foo", Some(123)) mustBe updated
     }
