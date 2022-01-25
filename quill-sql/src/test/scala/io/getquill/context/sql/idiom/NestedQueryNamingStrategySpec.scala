@@ -20,7 +20,7 @@ class NestedQueryNamingStrategySpec extends Spec { //hello
         }.filter(_._1.id == 1)
       }
       testContextEscape.run(q).string mustEqual
-        """SELECT p._1id, p._1name, p._2 FROM (SELECT p."id" AS _1id, p."name" AS _1name, foobar AS _2 FROM "Person" p) AS p WHERE p._1id = 1"""
+        """SELECT p._1id AS id, p._1name AS name, p._2 FROM (SELECT p."id" AS _1id, p."name" AS _1name, foobar AS _2 FROM "Person" p) AS p WHERE p._1id = 1"""
     }
 
     "inner aliases should use naming strategy only when instructed" in {
@@ -31,7 +31,7 @@ class NestedQueryNamingStrategySpec extends Spec { //hello
         }.filter(_._1.id == 1)
       }
       testContextEscapeElements.run(q).string mustEqual
-        """SELECT "p"."_1id", "p"."_1name", "p"."_2" FROM (SELECT "p"."id" AS "_1id", "p"."name" AS "_1name", foobar AS "_2" FROM "Person" "p") AS "p" WHERE "p"."_1id" = 1"""
+        """SELECT "p"."_1id" AS "id", "p"."_1name" AS "name", "p"."_2" FROM (SELECT "p"."id" AS "_1id", "p"."name" AS "_1name", foobar AS "_2" FROM "Person" "p") AS "p" WHERE "p"."_1id" = 1"""
     }
   }
 
@@ -46,7 +46,7 @@ class NestedQueryNamingStrategySpec extends Spec { //hello
         }.filter(_._1.id == 1)
       }
       testContextUpper.run(q).string mustEqual
-        "SELECT p._1id, p._1name, p._2 FROM (SELECT p.ID AS _1id, p.NAME AS _1name, foobar AS _2 FROM PERSON p) AS p WHERE p._1id = 1"
+        "SELECT p._1id AS id, p._1name AS name, p._2 FROM (SELECT p.ID AS _1id, p.NAME AS _1name, foobar AS _2 FROM PERSON p) AS p WHERE p._1id = 1"
     }
 
     "inner aliases should use naming strategy with override" in {
@@ -60,7 +60,7 @@ class NestedQueryNamingStrategySpec extends Spec { //hello
         }.filter(_._1.id == 1)
       }
       testContextUpper.run(q).string mustEqual
-        "SELECT p._1theId, p._1theName, p._2 FROM (SELECT p.theId AS _1theId, p.theName AS _1theName, foobar AS _2 FROM ThePerson p) AS p WHERE p._1theId = 1"
+        "SELECT p._1theId AS theId, p._1theName AS theName, p._2 FROM (SELECT p.theId AS _1theId, p.theName AS _1theName, foobar AS _2 FROM ThePerson p) AS p WHERE p._1theId = 1"
     }
 
     "inner aliases should use naming strategy with override - two tables" in {
@@ -79,7 +79,7 @@ class NestedQueryNamingStrategySpec extends Spec { //hello
         }.filter(_._1.id == 1)
       }
       testContextUpper.run(q).string mustEqual
-        "SELECT ab._1theId, ab._1theName, ab._2id, ab._2name, ab._3 FROM (SELECT a.theId AS _1theId, a.theName AS _1theName, b.ID AS _2id, b.NAME AS _2name, foobar AS _3 FROM ThePerson a INNER JOIN PERSON b ON a.theName = b.NAME) AS ab WHERE ab._1theId = 1"
+        "SELECT ab._1theId AS theId, ab._1theName AS theName, ab._2id AS id, ab._2name AS name, ab._3 FROM (SELECT a.theId AS _1theId, a.theName AS _1theName, b.ID AS _2id, b.NAME AS _2name, foobar AS _3 FROM ThePerson a INNER JOIN PERSON b ON a.theName = b.NAME) AS ab WHERE ab._1theId = 1"
     }
 
     "inner alias should nest properly in multiple levels" in {
@@ -92,7 +92,7 @@ class NestedQueryNamingStrategySpec extends Spec { //hello
       }
 
       testContextUpper.run(q).string mustEqual
-        "SELECT p._1_1id, p._1_1name, p._1_2, p._2 FROM (SELECT p._1id AS _1_1id, p._1name AS _1_1name, p._2 AS _1_2, barbaz AS _2 FROM (SELECT p.ID AS _1id, p.NAME AS _1name, foobar AS _2 FROM PERSON p) AS p WHERE p._1id = 1) AS p WHERE p._1_1id = 2"
+        "SELECT p._1_1id AS id, p._1_1name AS name, p._1_2 AS _2, p._2 FROM (SELECT p._1id AS _1_1id, p._1name AS _1_1name, p._2 AS _1_2, barbaz AS _2 FROM (SELECT p.ID AS _1id, p.NAME AS _1name, foobar AS _2 FROM PERSON p) AS p WHERE p._1id = 1) AS p WHERE p._1_1id = 2"
     }
 
     "inner alias should nest properly in multiple levels - with query schema" in {
@@ -110,7 +110,7 @@ class NestedQueryNamingStrategySpec extends Spec { //hello
       }
 
       testContextUpper.run(q).string mustEqual
-        "SELECT p._1_1theId, p._1_1theName, p._1_2, p._2 FROM (SELECT p._1theId AS _1_1theId, p._1theName AS _1_1theName, p._2 AS _1_2, barbaz AS _2 FROM (SELECT p.theId AS _1theId, p.theName AS _1theName, foobar AS _2 FROM ThePerson p) AS p WHERE p._1theId = 1) AS p WHERE p._1_1theId = 2"
+        "SELECT p._1_1theId AS theId, p._1_1theName AS theName, p._1_2 AS _2, p._2 FROM (SELECT p._1theId AS _1_1theId, p._1theName AS _1_1theName, p._2 AS _1_2, barbaz AS _2 FROM (SELECT p.theId AS _1theId, p.theName AS _1theName, foobar AS _2 FROM ThePerson p) AS p WHERE p._1theId = 1) AS p WHERE p._1_1theId = 2"
     }
   }
 }

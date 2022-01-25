@@ -3,7 +3,7 @@ package io.getquill.mock
 import java.io.Closeable
 import java.sql._
 
-import io.getquill.context.monix.MonixJdbcContext.Runner
+import io.getquill.context.monix.MonixJdbcContext.EffectWrapper
 import javax.sql.DataSource
 import io.getquill.{ Literal, PostgresMonixJdbcContext, Spec }
 import monix.eval.Task
@@ -62,7 +62,7 @@ class MockTests extends Spec with AsyncMockitoSugar {
     when(stmt.executeQuery()) thenReturn rs
     when(conn.getAutoCommit) thenReturn true
 
-    val ctx = new PostgresMonixJdbcContext(Literal, ds, Runner.using(scheduler))
+    val ctx = new PostgresMonixJdbcContext(Literal, ds, EffectWrapper.using(scheduler))
     import ctx._
 
     val results =
@@ -97,7 +97,7 @@ class MockTests extends Spec with AsyncMockitoSugar {
     when(ds.getConnection) thenReturn conn
     when(conn.getAutoCommit) thenThrow (new SQLException(msg))
 
-    val ctx = new PostgresMonixJdbcContext(Literal, ds, Runner.using(scheduler))
+    val ctx = new PostgresMonixJdbcContext(Literal, ds, EffectWrapper.using(scheduler))
     import ctx._
 
     val results =
@@ -132,7 +132,7 @@ class MockTests extends Spec with AsyncMockitoSugar {
     when(conn.getAutoCommit) thenReturn true
     when(conn.setAutoCommit(any[Boolean])) thenAnswer ((f: Boolean) => ()) andThenThrow (new SQLException(msg))
 
-    val ctx = new PostgresMonixJdbcContext(Literal, ds, Runner.using(scheduler))
+    val ctx = new PostgresMonixJdbcContext(Literal, ds, EffectWrapper.using(scheduler))
     import ctx._
 
     // In this case, instead of catching the error inside the observable, let it propogate to the top
@@ -177,7 +177,7 @@ class MockTests extends Spec with AsyncMockitoSugar {
     when(conn.getAutoCommit) thenReturn true
     when(conn.setAutoCommit(any[Boolean])) thenAnswer ((f: Boolean) => ()) andThenThrow (new SQLException(msg))
 
-    val runner = new Runner {
+    val runner = new EffectWrapper {
       override def schedule[T](t: Task[T]): Task[T] = t.executeOn(scheduler, true)
       override def boundary[T](t: Task[T]): Task[T] = t.executeOn(scheduler, true)
       override def wrapClose(t: => Unit): Task[Unit] =

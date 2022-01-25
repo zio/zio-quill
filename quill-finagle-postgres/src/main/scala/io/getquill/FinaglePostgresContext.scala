@@ -41,7 +41,7 @@ class FinaglePostgresContext[N <: NamingStrategy](val naming: N, client: Postgre
   override type RunActionReturningResult[T] = T
   override type RunBatchActionResult = List[Long]
   override type RunBatchActionReturningResult[T] = List[T]
-  type DatasourceContext = Unit
+  type Runner = Unit
 
   private val currentClient = new Local[PostgresClient]
 
@@ -75,22 +75,22 @@ class FinaglePostgresContext[N <: NamingStrategy](val naming: N, client: Postgre
       case true  => transaction(super.performIO(io))
     }
 
-  def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext): Future[List[T]] = {
+  def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner): Future[List[T]] = {
     val (params, prepared) = prepare(Nil, ())
     logger.logQuery(sql, params)
     withClient(_.prepareAndQuery(sql, prepared: _*)(row => extractor(row, ())).map(_.toList))
   }
 
-  def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext): Future[T] =
+  def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner): Future[T] =
     executeQuery(sql, prepare, extractor)(info, dc).map(handleSingleResult)
 
-  def executeAction[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext): Future[Long] = {
+  def executeAction(sql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: Runner): Future[Long] = {
     val (params, prepared) = prepare(Nil, ())
     logger.logQuery(sql, params)
     withClient(_.prepareAndExecute(sql, prepared: _*)).map(_.toLong)
   }
 
-  def executeBatchAction[B](groups: List[BatchGroup])(info: ExecutionInfo, dc: DatasourceContext): Future[List[Long]] = Future.collect {
+  def executeBatchAction[B](groups: List[BatchGroup])(info: ExecutionInfo, dc: Runner): Future[List[Long]] = Future.collect {
     groups.map {
       case BatchGroup(sql, prepare) =>
         prepare.foldLeft(Future.value(List.newBuilder[Long])) {
@@ -102,13 +102,13 @@ class FinaglePostgresContext[N <: NamingStrategy](val naming: N, client: Postgre
     }
   }.map(_.flatten.toList)
 
-  def executeActionReturning[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T], returningAction: ReturnAction)(info: ExecutionInfo, dc: DatasourceContext): Future[T] = {
+  def executeActionReturning[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T], returningAction: ReturnAction)(info: ExecutionInfo, dc: Runner): Future[T] = {
     val (params, prepared) = prepare(Nil, ())
     logger.logQuery(sql, params)
     withClient(_.prepareAndQuery(expandAction(sql, returningAction), prepared: _*)(row => extractor(row, ()))).map(v => handleSingleResult(v.toList))
   }
 
-  def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T])(info: ExecutionInfo, dc: DatasourceContext): Future[List[T]] =
+  def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T])(info: ExecutionInfo, dc: Runner): Future[List[T]] =
     Future.collect {
       groups.map {
         case BatchGroupReturning(sql, column, prepare) =>

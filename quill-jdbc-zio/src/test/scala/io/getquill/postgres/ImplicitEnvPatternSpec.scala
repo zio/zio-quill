@@ -4,11 +4,9 @@ import io.getquill.{ JdbcContextConfig, PeopleZioSpec, Prefix }
 
 import java.io.Closeable
 import javax.sql.DataSource
-import io.getquill.context.ZioJdbc._
 import io.getquill.context.qzio.ImplicitSyntax._
 import io.getquill.util.LoadConfig
 import zio.{ Has, Task, ZManaged }
-import io.getquill.context.ZioJdbc._
 
 class ImplicitEnvPatternSpec extends PeopleZioSpec {
 
@@ -19,15 +17,14 @@ class ImplicitEnvPatternSpec extends PeopleZioSpec {
 
   override def beforeAll = {
     super.beforeAll()
-    testContext.underlying.transaction {
-      import testContext.underlying._
+    testContext.transaction {
       for {
-        _ <- testContext.underlying.run(query[Couple].delete)
-        _ <- testContext.underlying.run(query[Person].filter(_.age > 0).delete)
-        _ <- testContext.underlying.run(liftQuery(peopleEntries).foreach(p => peopleInsert(p)))
-        _ <- testContext.underlying.run(liftQuery(couplesEntries).foreach(p => couplesInsert(p)))
+        _ <- testContext.run(query[Couple].delete)
+        _ <- testContext.run(query[Person].filter(_.age > 0).delete)
+        _ <- testContext.run(liftQuery(peopleEntries).foreach(p => peopleInsert(p)))
+        _ <- testContext.run(liftQuery(couplesEntries).foreach(p => couplesInsert(p)))
       } yield ()
-    }.onDataSource.runSyncUnsafe()
+    }.runSyncUnsafe()
   }
 
   case class MyService(ds: DataSource with Closeable) {

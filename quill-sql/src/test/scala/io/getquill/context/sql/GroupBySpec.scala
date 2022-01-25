@@ -22,7 +22,7 @@ class GroupBySpec extends Spec {
           .map { case (country, citiesInCountry) => (country, citiesInCountry.size) }
       )
       testContext.run(q.dynamic).string mustEqual
-        "SELECT x11.name, COUNT(*) FROM City x01 INNER JOIN Country x11 ON x01.countryId = x11.id GROUP BY x11.id, x11.name"
+        "SELECT x11.name AS _1, COUNT(x01.*) AS _2 FROM City x01 INNER JOIN Country x11 ON x01.countryId = x11.id GROUP BY x11.id, x11.name"
     }
     "with QuerySchema" in {
       implicit val citySchema = schemaMeta[City]("theCity", _.name -> "theCityName")
@@ -36,7 +36,7 @@ class GroupBySpec extends Spec {
           .map { case (country, citiesInCountry) => (country, citiesInCountry.size) }
       )
       testContext.run(q.dynamic).string mustEqual
-        "SELECT x12.theCountryName, COUNT(*) FROM theCity x05 INNER JOIN theCountry x12 ON x05.countryId = x12.id GROUP BY x12.id, x12.theCountryName"
+        "SELECT x12.theCountryName AS _1, COUNT(x05.*) AS _2 FROM theCity x05 INNER JOIN theCountry x12 ON x05.countryId = x12.id GROUP BY x12.id, x12.theCountryName"
     }
     "nested" in {
       val q = quote(
@@ -48,7 +48,7 @@ class GroupBySpec extends Spec {
           .map { case (country, citiesInCountry) => (country, citiesInCountry.size) }
       )
       testContext.run(q.dynamic).string mustEqual
-        "SELECT x010._2id, x010._2name, COUNT(*) FROM (SELECT x13.id AS _2id, x13.name AS _2name FROM City x09 INNER JOIN Country x13 ON x09.countryId = x13.id) AS x010 GROUP BY x010._2id, x010._2name"
+        "SELECT x010._2id AS id, x010._2name AS name, COUNT(x010.*) AS _2 FROM (SELECT x13.id AS _2id, x13.name AS _2name FROM City x09 INNER JOIN Country x13 ON x09.countryId = x13.id) AS x010 GROUP BY x010._2id, x010._2name"
     }
     "with QuerySchema nested" in {
       implicit val citySchema = schemaMeta[City]("theCity", _.name -> "theCityName")
@@ -62,7 +62,7 @@ class GroupBySpec extends Spec {
           .map { case (country, citiesInCountry) => (country, citiesInCountry.size) }
       )
       testContext.run(q.dynamic).string mustEqual
-        "SELECT x013._2id, x013._2theCountryName, COUNT(*) FROM (SELECT x14.id AS _2id, x14.theCountryName AS _2theCountryName FROM theCity x012 INNER JOIN theCountry x14 ON x012.countryId = x14.id) AS x013 GROUP BY x013._2id, x013._2theCountryName"
+        "SELECT x013._2id AS id, x013._2theCountryName AS theCountryName, COUNT(x013.*) AS _2 FROM (SELECT x14.id AS _2id, x14.theCountryName AS _2theCountryName FROM theCity x012 INNER JOIN theCountry x14 ON x012.countryId = x14.id) AS x013 GROUP BY x013._2id, x013._2theCountryName"
     }
 
   }
@@ -84,10 +84,10 @@ class GroupBySpec extends Spec {
       testContext.run(q).string.collapseSpace mustEqual
         """
           |SELECT
-          |  x15.countryCode,
+          |  x15.countryCode AS _1,
           |  x15.name,
           |  x15.dialect,
-          |  COUNT(*)
+          |  COUNT(x015.*) AS _2
           |FROM
           |  City x015
           |  INNER JOIN Country x15 ON x015.countryCode = x15.countryCode
@@ -109,10 +109,10 @@ class GroupBySpec extends Spec {
       testContext.run(q).string(true).collapseSpace mustEqual
         """
           |SELECT
-          |  x020._2countryCode,
-          |  x020._2languagename,
-          |  x020._2languagedialect,
-          |  COUNT(*)
+          |  x020._2countryCode AS countryCode,
+          |  x020._2languagename AS name,
+          |  x020._2languagedialect AS dialect,
+          |  COUNT(x020.*) AS _2
           |FROM
           |  (
           |    SELECT
@@ -143,10 +143,10 @@ class GroupBySpec extends Spec {
       )
       testContext.run(q).string(true).collapseSpace mustEqual
         """|SELECT
-            |  x17.theCountryCode,
+            |  x17.theCountryCode AS _1,
             |  x17.TheLanguageName,
             |  x17.dialect,
-            |  COUNT(*)
+            |  COUNT(x022.*) AS _2
             |FROM
             |  City x022
             |  INNER JOIN theCountry x17 ON x022.countryCode = x17.theCountryCode
@@ -171,10 +171,10 @@ class GroupBySpec extends Spec {
       testContext.run(q).string(true).collapseSpace mustEqual
         """
           |SELECT
-          |  x027._2theCountryCode,
-          |  x027._2languageTheLanguageName,
-          |  x027._2languagedialect,
-          |  COUNT(*)
+          |  x027._2theCountryCode AS theCountryCode,
+          |  x027._2languageTheLanguageName AS TheLanguageName,
+          |  x027._2languagedialect AS dialect,
+          |  COUNT(x027.*) AS _2
           |FROM
           |  (
           |    SELECT
@@ -205,7 +205,7 @@ class GroupBySpec extends Spec {
         .map { case (language, cityLanguages) => (language, cityLanguages.size) }
     )
     testContext.run(q.dynamic).string mustEqual
-      "SELECT x19.countryCode, x19.language, COUNT(*) FROM City x029 INNER JOIN CountryLanguage x19 ON x029.countryCode = x19.countryCode GROUP BY x19.countryCode, x19.language"
+      "SELECT x19.countryCode, x19.language, COUNT(*) AS _2 FROM City x029 INNER JOIN CountryLanguage x19 ON x029.countryCode = x19.countryCode GROUP BY x19.countryCode, x19.language"
   }
 
 }
