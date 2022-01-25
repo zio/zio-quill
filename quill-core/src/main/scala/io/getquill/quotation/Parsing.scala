@@ -320,17 +320,17 @@ trait Parsing extends ValueComputation with QuatMaking {
 
   val infixParser: Parser[Ast] = Parser[Ast] {
     case q"$infix.pure.asCondition" =>
-      combinedInfixParser(true, Quat.BooleanExpression)(infix)
+      Quat.improveInfixQuat(combinedInfixParser(true, Quat.BooleanExpression)(infix))
     case q"$infix.asCondition" =>
-      combinedInfixParser(false, Quat.BooleanExpression)(infix)
+      Quat.improveInfixQuat(combinedInfixParser(false, Quat.BooleanExpression)(infix))
     case q"$infix.generic.pure.as[$t]" =>
-      combinedInfixParser(true, Quat.Generic)(infix)
+      Quat.improveInfixQuat(combinedInfixParser(true, Quat.Generic)(infix))
     case q"$infix.pure.as[$t]" =>
-      combinedInfixParser(true, inferQuat(q"$t".tpe))(infix)
+      Quat.improveInfixQuat(combinedInfixParser(true, inferQuat(q"$t".tpe))(infix))
     case q"$infix.as[$t]" =>
-      combinedInfixParser(false, inferQuat(q"$t".tpe))(infix)
+      Quat.improveInfixQuat(combinedInfixParser(false, inferQuat(q"$t".tpe))(infix))
     case `impureInfixParser`(value) =>
-      value
+      Quat.improveInfixQuat(value)
   }
 
   val impureInfixParser = combinedInfixParser(false, Quat.Value) // TODO Verify Quat in what cases does this come up?

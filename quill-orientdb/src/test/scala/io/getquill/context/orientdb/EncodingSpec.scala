@@ -13,7 +13,7 @@ class EncodingSpec extends Spec {
       val ctx = orientdb.testSyncDB
       import ctx._
       ctx.run(query[EncodingTestEntity].delete)
-      ctx.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insert(e)))
+      ctx.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insertValue(e)))
       verify(ctx.run(query[EncodingTestEntity]))
       ctx.close()
     }
@@ -41,7 +41,7 @@ class EncodingSpec extends Spec {
           query[EncodingTestEntity].filter(t => list.contains(t.id))
       }
       ctx.run(query[EncodingTestEntity].delete)
-      ctx.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insert(e)))
+      ctx.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insertValue(e)))
       verify(ctx.run(q(liftQuery(insertValues.map(_.id)))))
       ctx.close()
     }

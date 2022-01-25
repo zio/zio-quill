@@ -72,6 +72,17 @@ object TakeDropFlatten {
   }
 }
 
+object CaseClassMake {
+  def fromQuat(quat: Quat)(idName: String) =
+    quat match {
+      case Quat.Product(fields) =>
+        CaseClass(fields.toList.map { case (name, _) => (name, Property(Ident(idName, quat), name)) })
+      // Figure out a way to test this case?
+      case _ =>
+        CaseClass(List((idName, Ident(idName, quat))))
+    }
+}
+
 object SqlQuery {
 
   def apply(query: Ast): SqlQuery =
@@ -94,6 +105,10 @@ object SqlQuery {
 
   private def flattenContexts(query: Ast): (List[FromContext], Ast) =
     query match {
+      // A flat-join query with no maps e.g: `qr1.flatMap(e1 => qr1.join(e2 => e1.i == e2.i))`
+      case FlatMap(q @ (_: Query | _: Infix), id: Ident, flatJoin @ FlatJoin(_, _, alias @ Ident(name, _), _)) =>
+        val cc = CaseClassMake.fromQuat(flatJoin.quat)(name)
+        flattenContexts(FlatMap(q, id, Map(flatJoin, alias, cc)))
       case FlatMap(q @ (_: Query | _: Infix), Ident(alias, _), p: Query) =>
         val source = this.source(q, alias)
         val (nestedContexts, finalFlatMapBody) = flattenContexts(p)
@@ -152,7 +167,7 @@ object SqlQuery {
       case Map(GroupBy(q, x @ Ident(alias, _), g), a, p) =>
         val b = base(q, alias)
         //use ExpandSelection logic to break down OrderBy clause
-        val flatGroupByAsts = new ExpandSelection(b.from).apply(List(SelectValue(g))).map(_.ast)
+        val flatGroupByAsts = new ExpandSelection(b.from, false).apply(List(SelectValue(g))).map(_.ast)
         val groupByClause =
           if (flatGroupByAsts.length > 1) Tuple(flatGroupByAsts)
           else flatGroupByAsts.head
@@ -266,7 +281,7 @@ object SqlQuery {
       case (Tuple(properties), ord: PropertyOrdering) => properties.flatMap(orderByCriterias(_, ord, from))
       case (Tuple(properties), TupleOrdering(ord))    => properties.zip(ord).flatMap { case (a, o) => orderByCriterias(a, o, from) }
       //if its a quat product, use ExpandSelection to break it down into its component fields and apply the ordering to all of them
-      case (id @ Ident(_, _: Quat.Product), ord)      => new ExpandSelection(from).apply(List(SelectValue(ast))).map(_.ast).flatMap(orderByCriterias(_, ord, from))
+      case (id @ Ident(_, _: Quat.Product), ord)      => new ExpandSelection(from, false).apply(List(SelectValue(ast))).map(_.ast).flatMap(orderByCriterias(_, ord, from))
       case (a, o: PropertyOrdering)                   => List(OrderByCriteria(a, o))
       case other                                      => fail(s"Invalid order by criteria $ast")
     }

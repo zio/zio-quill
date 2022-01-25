@@ -10,7 +10,7 @@ class EncodingSpec extends EncodingSpecHelper {
     "sync" in {
       import testSyncDB._
       testSyncDB.run(query[EncodingTestEntity].delete)
-      testSyncDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insert(e)))
+      testSyncDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insertValue(e)))
       verify(testSyncDB.run(query[EncodingTestEntity]))
     }
 
@@ -20,7 +20,7 @@ class EncodingSpec extends EncodingSpecHelper {
       await {
         for {
           _ <- testAsyncDB.run(query[EncodingTestEntity].delete)
-          _ <- testAsyncDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insert(e)))
+          _ <- testAsyncDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insertValue(e)))
           result <- testAsyncDB.run(query[EncodingTestEntity])
         } yield {
           verify(result)
@@ -37,7 +37,7 @@ class EncodingSpec extends EncodingSpecHelper {
           query[EncodingTestEntity].filter(t => list.contains(t.id))
       }
       testSyncDB.run(query[EncodingTestEntity])
-      testSyncDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insert(e)))
+      testSyncDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insertValue(e)))
       verify(testSyncDB.run(q(liftQuery(insertValues.map(_.id)))))
     }
 
@@ -51,7 +51,7 @@ class EncodingSpec extends EncodingSpecHelper {
       await {
         for {
           _ <- testAsyncDB.run(query[EncodingTestEntity].delete)
-          _ <- testAsyncDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insert(e)))
+          _ <- testAsyncDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insertValue(e)))
           r <- testAsyncDB.run(q(liftQuery(insertValues.map(_.id))))
         } yield {
           verify(r)
@@ -99,11 +99,11 @@ class EncodingSpec extends EncodingSpecHelper {
       val c = CasTypes(LocalDate.ofEpochDay(epohDay), Instant.ofEpochMilli(epoh), Some(zonedDateTime))
 
       ctx.run(jq.delete)
-      ctx.run(jq.insert(lift(j)))
+      ctx.run(jq.insertValue(lift(j)))
       ctx.run(cq).headOption mustBe Some(c)
 
       ctx.run(cq.delete)
-      ctx.run(cq.insert(lift(c)))
+      ctx.run(cq.insertValue(lift(c)))
       ctx.run(jq).headOption mustBe Some(j)
     }
   }

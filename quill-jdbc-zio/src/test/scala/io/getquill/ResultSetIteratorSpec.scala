@@ -19,7 +19,7 @@ class ResultSetIteratorSpec extends ZioSpec {
   case class Person(name: String, age: Int)
 
   val peopleInsert =
-    quote((p: Person) => query[Person].insert(p))
+    quote((p: Person) => query[Person].insertValue(p))
 
   val peopleEntries = List(
     Person("Alex", 60),

@@ -3,7 +3,7 @@ package io.getquill.context.cassandra
 import io.getquill.ast.StatelessTransformer
 import io.getquill.ast._
 
-object ExpandMappedInfix extends StatelessTransformer {
+object ExpandMappedInfixCassandra extends StatelessTransformer {
 
   override def apply(q: Ast) =
     q match {

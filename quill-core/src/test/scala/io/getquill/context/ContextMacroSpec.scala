@@ -170,7 +170,7 @@ class ContextMacroSpec extends Spec {
       "dynamic type param" in {
         def test[T: SchemaMeta] = quote(query[T])
         val r = testContext.run(test[TestEntity])
-        r.string mustEqual """querySchema("TestEntity").map(x => (x.s, x.i, x.l, x.o, x.b))"""
+        r.string mustEqual """querySchema("TestEntity")"""
       }
     }
     "parametrized" - {
@@ -179,7 +179,7 @@ class ContextMacroSpec extends Spec {
           qr1.filter(t => t.s == lift("a"))
         }
         val r = testContext.run(q)
-        r.string mustEqual """querySchema("TestEntity").filter(t => t.s == ?).map(t => (t.s, t.i, t.l, t.o, t.b))"""
+        r.string mustEqual """querySchema("TestEntity").filter(t => t.s == ?)"""
         r.prepareRow mustEqual Row("a")
       }
 
@@ -189,7 +189,7 @@ class ContextMacroSpec extends Spec {
           query[Entity].filter(t => t.x == lift(ValueClass(1)))
         }
         val r = testContext.run(q)
-        r.string mustEqual """querySchema("Entity").filter(t => t.x == ?).map(t => t.x)"""
+        r.string mustEqual """querySchema("Entity").filter(t => t.x == ?)"""
         r.prepareRow mustEqual Row(1)
       }
       "generic value class" in {
@@ -198,7 +198,7 @@ class ContextMacroSpec extends Spec {
           query[Entity].filter(t => t.x == lift(GenericValueClass(1)))
         }
         val r = testContext.run(q)
-        r.string mustEqual """querySchema("Entity").filter(t => t.x == ?).map(t => t.x)"""
+        r.string mustEqual """querySchema("Entity").filter(t => t.x == ?)"""
         r.prepareRow mustEqual Row(1)
       }
       "infix" in {
@@ -214,7 +214,7 @@ class ContextMacroSpec extends Spec {
           qr1.filter(t => t.s == lift("a"))
         }
         val r = testContext.run(q.dynamic)
-        r.string mustEqual """querySchema("TestEntity").filter(t => t.s == ?).map(t => (t.s, t.i, t.l, t.o, t.b))"""
+        r.string mustEqual """querySchema("TestEntity").filter(t => t.s == ?)"""
         r.prepareRow mustEqual Row("a")
       }
       "dynamic type param" in {
@@ -261,7 +261,7 @@ class ContextMacroSpec extends Spec {
       "dynamic type param" in {
         def test[T: SchemaMeta] = quote(query[T])
         testContext.translate(test[TestEntity]) mustEqual
-          """querySchema("TestEntity").map(x => (x.s, x.i, x.l, x.o, x.b))"""
+          """querySchema("TestEntity")"""
       }
     }
     "parametrized" - {
@@ -270,7 +270,7 @@ class ContextMacroSpec extends Spec {
           qr1.filter(t => t.s == lift("a"))
         }
         testContext.translate(q) mustEqual
-          """querySchema("TestEntity").filter(t => t.s == 'a').map(t => (t.s, t.i, t.l, t.o, t.b))"""
+          """querySchema("TestEntity").filter(t => t.s == 'a')"""
       }
 
       "value class" in {
@@ -279,7 +279,7 @@ class ContextMacroSpec extends Spec {
           query[Entity].filter(t => t.x == lift(ValueClass(1)))
         }
         testContext.translate(q) mustEqual
-          """querySchema("Entity").filter(t => t.x == 1).map(t => t.x)"""
+          """querySchema("Entity").filter(t => t.x == 1)"""
       }
       "generic value class" in {
         case class Entity(x: GenericValueClass[Int])
@@ -287,7 +287,7 @@ class ContextMacroSpec extends Spec {
           query[Entity].filter(t => t.x == lift(GenericValueClass(1)))
         }
         testContext.translate(q) mustEqual
-          """querySchema("Entity").filter(t => t.x == 1).map(t => t.x)"""
+          """querySchema("Entity").filter(t => t.x == 1)"""
       }
       "infix" in {
         val q = quote {
@@ -300,7 +300,7 @@ class ContextMacroSpec extends Spec {
           qr1.filter(t => t.s == lift("a"))
         }
         testContext.translate(q.dynamic) mustEqual
-          """querySchema("TestEntity").filter(t => t.s == 'a').map(t => (t.s, t.i, t.l, t.o, t.b))"""
+          """querySchema("TestEntity").filter(t => t.s == 'a')"""
       }
       "dynamic type param" in {
         def test[T: SchemaMeta: QueryMeta] = quote {
@@ -342,28 +342,28 @@ class ContextMacroSpec extends Spec {
       ctx.translate(query[TestEntity])
     }
 
-    test(testContext).string mustEqual """querySchema("TestEntity").map(x => (x.s, x.i, x.l, x.o, x.b))"""
-    translateTest(testContext) mustEqual """querySchema("TestEntity").map(x => (x.s, x.i, x.l, x.o, x.b))"""
+    test(testContext).string mustEqual """querySchema("TestEntity")"""
+    translateTest(testContext) mustEqual """querySchema("TestEntity")"""
   }
 
   "supports composite naming strategies" - {
     "two" in {
       object ctx extends MirrorContext(MirrorIdiom, NamingStrategy(Literal, Escape)) with TestEntities
       import ctx._
-      ctx.run(query[TestEntity]).string mustEqual """querySchema("TestEntity").map(x => (x.s, x.i, x.l, x.o, x.b))"""
-      ctx.translate(query[TestEntity]) mustEqual """querySchema("TestEntity").map(x => (x.s, x.i, x.l, x.o, x.b))"""
+      ctx.run(query[TestEntity]).string mustEqual """querySchema("TestEntity")"""
+      ctx.translate(query[TestEntity]) mustEqual """querySchema("TestEntity")"""
     }
     "three" in {
       object ctx extends MirrorContext(MirrorIdiom, NamingStrategy(Literal, Escape, UpperCase)) with TestEntities
       import ctx._
-      ctx.run(query[TestEntity]).string mustEqual """querySchema("TestEntity").map(x => (x.s, x.i, x.l, x.o, x.b))"""
-      ctx.translate(query[TestEntity]) mustEqual """querySchema("TestEntity").map(x => (x.s, x.i, x.l, x.o, x.b))"""
+      ctx.run(query[TestEntity]).string mustEqual """querySchema("TestEntity")"""
+      ctx.translate(query[TestEntity]) mustEqual """querySchema("TestEntity")"""
     }
     "four" in {
       object ctx extends MirrorContext(MirrorIdiom, NamingStrategy(Literal, Escape, UpperCase, SnakeCase)) with TestEntities
       import ctx._
-      ctx.run(query[TestEntity]).string mustEqual """querySchema("TestEntity").map(x => (x.s, x.i, x.l, x.o, x.b))"""
-      ctx.translate(query[TestEntity]) mustEqual """querySchema("TestEntity").map(x => (x.s, x.i, x.l, x.o, x.b))"""
+      ctx.run(query[TestEntity]).string mustEqual """querySchema("TestEntity")"""
+      ctx.translate(query[TestEntity]) mustEqual """querySchema("TestEntity")"""
     }
   }
 }
