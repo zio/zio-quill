@@ -32,7 +32,7 @@ class FinaglePostgresEncodingSpec extends EncodingSpec {
     val rez0 = Await.result(testContext.run(q0))
 
     //insert new uuid
-    val rez1 = Await.result(testContext.run(query[EncodingUUIDTestEntity].insert(lift(EncodingUUIDTestEntity(testUUID)))))
+    val rez1 = Await.result(testContext.run(query[EncodingUUIDTestEntity].insertValue(lift(EncodingUUIDTestEntity(testUUID)))))
 
     //verify you can get the uuid back from the db
     val q2 = quote(query[EncodingUUIDTestEntity].map(p => p.v1))
@@ -66,7 +66,7 @@ class FinaglePostgresEncodingSpec extends EncodingSpec {
     val fut =
       for {
         _ <- testContext.run(query[EncodingTestEntity].delete)
-        _ <- testContext.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insert(e)))
+        _ <- testContext.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insertValue(e)))
         r <- testContext.run(q(liftQuery(insertValues.map(_.v6))))
       } yield {
         r
@@ -89,7 +89,7 @@ class FinaglePostgresEncodingSpec extends EncodingSpec {
     val entity = DateEncodingTestEntity(LocalDate.now, LocalDate.now)
     val r = for {
       _ <- testContext.run(query[DateEncodingTestEntity].delete)
-      _ <- testContext.run(query[DateEncodingTestEntity].insert(lift(entity)))
+      _ <- testContext.run(query[DateEncodingTestEntity].insertValue(lift(entity)))
       result <- testContext.run(query[DateEncodingTestEntity])
     } yield result
     Await.result(r) must contain(entity)
@@ -100,7 +100,7 @@ class FinaglePostgresEncodingSpec extends EncodingSpec {
     val entity = DateEncodingTestEntity(LocalDateTime.now, LocalDateTime.now)
     val r = for {
       _ <- testContext.run(query[DateEncodingTestEntity].delete)
-      _ <- testContext.run(query[DateEncodingTestEntity].insert(lift(entity)))
+      _ <- testContext.run(query[DateEncodingTestEntity].insertValue(lift(entity)))
       result <- testContext.run(query[DateEncodingTestEntity])
     } yield result
     Await.result(r)

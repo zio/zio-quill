@@ -255,7 +255,7 @@ class OrientDBIdiomSpec extends Spec {
         qr1.map(t => (t.i, t.s))
       }
       ctx.run(q).string mustEqual
-        "SELECT i, s FROM TestEntity"
+        "SELECT i _1, s _2 FROM TestEntity"
     }
     "caseclass" in {
       case class IntString(intProp: Int, stringProp: String)
@@ -263,7 +263,7 @@ class OrientDBIdiomSpec extends Spec {
         qr1.map(t => new IntString(t.i, t.s))
       }
       ctx.run(q).string mustEqual
-        "SELECT i, s FROM TestEntity"
+        "SELECT i intProp, s stringProp FROM TestEntity"
     }
     "null" in {
       val q = quote {
@@ -277,7 +277,7 @@ class OrientDBIdiomSpec extends Spec {
   "action" - {
     "insert" in {
       val q = quote {
-        qr1.insert(lift(TestEntity("a", 1, 1L, None, true)))
+        qr1.insertValue(lift(TestEntity("a", 1, 1L, None, true)))
       }
       ctx.run(q).string mustEqual
         "INSERT INTO TestEntity (s, i, l, o, b) VALUES(?, ?, ?, ?, ?)"

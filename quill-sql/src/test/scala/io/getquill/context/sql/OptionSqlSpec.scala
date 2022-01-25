@@ -1,6 +1,6 @@
 package io.getquill.context.sql
 
-import io.getquill.{ MirrorSqlDialectWithBooleanLiterals, Spec }
+import io.getquill.{ MirrorSqlDialectWithBooleanLiterals, Query, Quoted, Spec }
 
 class OptionSqlSpec extends Spec {
   import testContext._
@@ -40,7 +40,14 @@ class OptionSqlSpec extends Spec {
   }
   "Should correctly express optional tables to SQL" - {
     "table flatMap" in {
-      testContext.run { query[Someone].map(q => Some(q)).flatMap(os => query[Someone].join(s1 => s1.name == os.flatMap(oss => oss.name))) }.string mustEqual
+      val q = quote {
+        query[Someone]
+          .map(q => Some(q))
+          .flatMap(os =>
+            query[Someone].join(s1 =>
+              s1.name == os.flatMap(oss => oss.name)))
+      }
+      testContext.run { q }.string mustEqual
         "SELECT s1.name FROM Someone q INNER JOIN Someone s1 ON s1.name IS NULL AND q.name IS NULL OR s1.name = q.name"
     }
 

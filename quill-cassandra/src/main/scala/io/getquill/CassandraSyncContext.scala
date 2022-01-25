@@ -33,24 +33,24 @@ class CassandraSyncContext[N <: NamingStrategy](
     super.performIO(io)
   }
 
-  def executeQuery[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext): List[T] = {
+  def executeQuery[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner): List[T] = {
     val (params, bs) = prepare(this.prepare(cql), this)
     logger.logQuery(cql, params)
     session.execute(bs)
       .all.asScala.toList.map(row => extractor(row, this))
   }
 
-  def executeQuerySingle[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext): T =
+  def executeQuerySingle[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner): T =
     handleSingleResult(executeQuery(cql, prepare, extractor)(info, dc))
 
-  def executeAction[T](cql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: DatasourceContext): Unit = {
+  def executeAction(cql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: Runner): Unit = {
     val (params, bs) = prepare(this.prepare(cql), this)
     logger.logQuery(cql, params)
     session.execute(bs)
     ()
   }
 
-  def executeBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: DatasourceContext): Unit =
+  def executeBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: Runner): Unit =
     groups.foreach {
       case BatchGroup(cql, prepare) =>
         prepare.foreach(executeAction(cql, _)(info, dc))

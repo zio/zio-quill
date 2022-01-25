@@ -32,7 +32,7 @@ class SqliteDialectSpec extends OnConflictSpec {
 
   "transforms boolean literals into 0/1" in {
     ctx.run(qr1.map(t => (true, false))).string mustEqual
-      "SELECT 1, 0 FROM TestEntity t"
+      "SELECT 1 AS _1, 0 AS _2 FROM TestEntity t"
   }
 
   "OnConflict" - {

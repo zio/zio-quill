@@ -46,20 +46,20 @@ class SQLServerDialectSpec extends Spec {
     "boolean values" - {
       "uses 1 instead of true" in {
         ctx.run(qr4.map(t => (t.i, true))).string mustEqual
-          "SELECT t.i, 1 FROM TestEntity4 t"
+          "SELECT t.i AS _1, 1 AS _2 FROM TestEntity4 t"
       }
       "uses 0 instead of false" in {
         ctx.run(qr4.map(t => (t.i, false))).string mustEqual
-          "SELECT t.i, 0 FROM TestEntity4 t"
+          "SELECT t.i AS _1, 0 AS _2 FROM TestEntity4 t"
       }
       "uses 0 and 1 altogether" in {
         ctx.run(qr4.map(t => (t.i, true, false))).string mustEqual
-          "SELECT t.i, 1, 0 FROM TestEntity4 t"
+          "SELECT t.i AS _1, 1 AS _2, 0 AS _3 FROM TestEntity4 t"
       }
     }
     "boolean values and expressions together" in {
       ctx.run(qr4.filter(t => true).filter(t => false).map(t => (t.i, false, true))).string mustEqual
-        "SELECT t.i, 0, 1 FROM TestEntity4 t WHERE 1 = 1 AND 1 = 0"
+        "SELECT t.i AS _1, 0 AS _2, 1 AS _3 FROM TestEntity4 t WHERE 1 = 1 AND 1 = 0"
     }
     "if" - {
       "simple booleans" in {
@@ -129,21 +129,21 @@ class SQLServerDialectSpec extends Spec {
     "returning" - {
       "with single column table" in {
         val q = quote {
-          qr4.insert(lift(TestEntity4(0))).returning(_.i)
+          qr4.insertValue(lift(TestEntity4(0))).returning(_.i)
         }
         ctx.run(q).string mustEqual
           "INSERT INTO TestEntity4 (i) OUTPUT INSERTED.i VALUES (?)"
       }
       "with multi column table" in {
         val q = quote {
-          qr1.insert(lift(TestEntity("s", 0, 0L, Some(3), true))).returning(r => (r.i, r.l))
+          qr1.insertValue(lift(TestEntity("s", 0, 0L, Some(3), true))).returning(r => (r.i, r.l))
         }
         ctx.run(q).string mustEqual
           "INSERT INTO TestEntity (s,i,l,o,b) OUTPUT INSERTED.i, INSERTED.l VALUES (?, ?, ?, ?, ?)"
       }
       "with multiple fields + operations" in {
         val q = quote {
-          qr1.insert(lift(TestEntity("s", 1, 2L, Some(3), true))).returning(r => (r.i, r.l + 1))
+          qr1.insertValue(lift(TestEntity("s", 1, 2L, Some(3), true))).returning(r => (r.i, r.l + 1))
         }
         ctx.run(q).string mustEqual
           "INSERT INTO TestEntity (s,i,l,o,b) OUTPUT INSERTED.i, INSERTED.l + 1 VALUES (?, ?, ?, ?, ?)"
@@ -156,21 +156,21 @@ class SQLServerDialectSpec extends Spec {
     "returningGenerated" - {
       "returning generated with single column table" in {
         val q = quote {
-          qr4.insert(lift(TestEntity4(0))).returningGenerated(_.i)
+          qr4.insertValue(lift(TestEntity4(0))).returningGenerated(_.i)
         }
         ctx.run(q).string mustEqual
           "INSERT INTO TestEntity4 OUTPUT INSERTED.i DEFAULT VALUES"
       }
       "with multi column table" in {
         val q = quote {
-          qr1.insert(lift(TestEntity("s", 0, 0L, Some(3), true))).returningGenerated(r => (r.i, r.l))
+          qr1.insertValue(lift(TestEntity("s", 0, 0L, Some(3), true))).returningGenerated(r => (r.i, r.l))
         }
         ctx.run(q).string mustEqual
           "INSERT INTO TestEntity (s,o,b) OUTPUT INSERTED.i, INSERTED.l VALUES (?, ?, ?)"
       }
       "with multiple fields + operations" in {
         val q = quote {
-          qr1.insert(lift(TestEntity("s", 0, 0L, Some(3), true))).returningGenerated(r => (r.i, r.l + 1))
+          qr1.insertValue(lift(TestEntity("s", 0, 0L, Some(3), true))).returningGenerated(r => (r.i, r.l + 1))
         }
         ctx.run(q).string mustEqual
           "INSERT INTO TestEntity (s,o,b) OUTPUT INSERTED.i, INSERTED.l + 1 VALUES (?, ?, ?)"

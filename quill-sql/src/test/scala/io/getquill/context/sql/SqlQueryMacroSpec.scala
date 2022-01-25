@@ -24,7 +24,7 @@ class SqlQueryMacroSpec extends Spec {
         val mirror = testContext.run(q)
         mirror.prepareRow mustEqual Row()
         mirror.extractor(Row("s", 1, 2L), MirrorSession.default) mustEqual (("s", 1, 2L))
-        mirror.string mustEqual "SELECT t.s, t.i, t.l FROM TestEntity t"
+        mirror.string mustEqual "SELECT t.s AS _1, t.i AS _2, t.l AS _3 FROM TestEntity t"
       }
       "with flatMap" in {
         val q = quote {
