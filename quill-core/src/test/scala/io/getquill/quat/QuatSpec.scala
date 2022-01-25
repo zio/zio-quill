@@ -1,7 +1,9 @@
 package io.getquill.quat
 
 import io.getquill._
+import io.getquill.norm.RepropagateQuats
 import io.getquill.quotation.QuatException
+
 import scala.language.reflectiveCalls
 
 class QuatSpec extends Spec {
@@ -28,6 +30,40 @@ class QuatSpec extends Spec {
     val MyPersonQuat = Quat.Product("name" -> Quat.LeafProduct("first", "last"), "age" -> Quat.Value)
 
     quote(query[MyPerson]).ast.quat mustEqual MyPersonQuat
+  }
+
+  "should refine quats from generic infixes" - {
+    case class MyPerson(name: String, age: Int)
+    val MyPersonQuat = Quat.Product("name" -> Quat.Value, "age" -> Quat.Value)
+
+    "from extension methods" in {
+      implicit class QueryOps[Q <: Query[_]](q: Q) {
+        def appendFoo = quote(infix"$q APPEND FOO".pure.as[Q])
+      }
+      val q = quote(query[MyPerson].appendFoo)
+      q.ast.quat mustEqual MyPersonQuat // I.e ReifyLiftings runs RepropagateQuats to take care of this
+    }
+
+    "from extension methods - generic marker" in {
+      implicit class QueryOps[Q <: Query[_]](q: Q) {
+        def appendFoo = quote(infix"$q APPEND FOO".generic.pure.as[Q])
+      }
+      val q = quote(query[MyPerson].appendFoo)
+      q.ast.quat mustEqual MyPersonQuat // I.e ReifyLiftings runs RepropagateQuats to take care of this
+    }
+
+    "should support query-ops function" in {
+      def appendFooFun[Q <: Query[_]] = quote { (q: Q) => infix"$q APPEND FOO".pure.as[Q] }
+      val q = quote(appendFooFun(query[MyPerson]))
+      q.ast.quat mustEqual MyPersonQuat
+    }
+
+    "should support query-ops function - dynamic function" in {
+      def appendFooFun[Q <: Query[_]]: Quoted[Q => Q] = quote { (q: Q) => infix"$q APPEND FOO".pure.as[Q] }
+      val q = quote(appendFooFun(query[MyPerson]))
+      q.ast.quat mustEqual Quat.Unknown
+      println(io.getquill.util.Messages.qprint(testContext.run(q)))
+    }
   }
 
   "should support multi-level embedded" in {
