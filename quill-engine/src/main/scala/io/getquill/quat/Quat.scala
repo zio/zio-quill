@@ -126,7 +126,7 @@ sealed trait Quat {
   def lookup(path: String, failNonExist: Boolean): Quat = (this, path) match {
     case (cc @ Quat.Product(fields), fieldName) =>
       fields.get(fieldName).getOrElse {
-        if (failNonExist)
+        if (failNonExist && cc.tpe == Quat.Product.Type.Concrete)
           throw new IllegalArgumentException(s"The field '${fieldName}' does not exist in an SQL-level type ${cc}")
         else {
           io.getquill.util.Messages.trace(s"The field '${fieldName}' does not exist in an SQL-level type ${cc}. Assuming it's type is Quat.Unknown", traceType = TraceType.Warning)
@@ -218,15 +218,19 @@ object Quat {
     }
 
     def leastUpperTypeProduct(other: Quat.Product): Option[Quat.Product] = {
+      val oneQuatIsAbstract = this.tpe == Product.Type.Abstract || other.tpe == Product.Type.Abstract
       val newFieldsIter =
         fields.zipWith(other.fields) {
+          // If one or both of the quats are abstract merge the values
+          // can't find a test to reproduce this. Don't think is needed
+          case (key, thisQuat, None) if (oneQuatIsAbstract) => (key, Some(thisQuat))
           case (key, thisQuat, Some(otherQuat)) => (key, thisQuat.leastUpperType(otherQuat))
         }.collect {
           case (key, Some(value)) => (key, value)
         }
       val newFields = mutable.LinkedHashMap(newFieldsIter.toList: _*)
       val newTpe =
-        if (this.tpe == Product.Type.Abstract || other.tpe == Product.Type.Abstract)
+        if (oneQuatIsAbstract)
           Product.Type.Abstract
         else
           Product.Type.Concrete

@@ -36,6 +36,20 @@ class QuatSpec extends Spec {
     case class MyPerson(name: String, age: Int)
     val MyPersonQuat = Quat.Product("name" -> Quat.Value, "age" -> Quat.Value)
 
+    "abstract quat" in {
+      trait AbstractPerson { def name: String }
+      case class MyPerson(name: String, age: Int) extends AbstractPerson
+      def personName = quote {
+        (p: AbstractPerson) => p.name
+      }
+      def passFilter = quote {
+        (q: Query[AbstractPerson], f: AbstractPerson => String) => q.filter(p => f(p) == "Joe")
+      }
+
+      val p = quote(passFilter(query[MyPerson], personName).map(p => infix"${p}".pure.as[{ def age: Int }].age))
+      println(p.ast.quat)
+    }
+
     "from extension methods" in {
       implicit class QueryOps[Q <: Query[_]](q: Q) {
         def appendFoo = quote(infix"$q APPEND FOO".pure.as[Q])

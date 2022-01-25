@@ -42,5 +42,25 @@ class QuatRunSpec extends Spec {
       q.ast.quat mustEqual MyPersonQuat
       testContext.run(q).string mustEqual "SELECT x.name, x.age FROM MyPerson x APPEND FOO"
     }
+
+    "merged with abstract quat" in {
+      trait AbstractPerson { def name: String }
+      case class MyPerson(name: String, age: Int) extends AbstractPerson
+      def filterPerson[P <: AbstractPerson] = quote {
+        (q: Query[P]) => q.filter(p => p.name == "Joe")
+      }
+      val p = quote(filterPerson(query[MyPerson]))
+      testContext.run(p).string mustEqual "SELECT p.name, p.age FROM MyPerson p WHERE p.name = 'Joe'"
+    }
+
+    "merged with abstract quat - dynamic" in {
+      trait AbstractPerson { def name: String }
+      case class MyPerson(name: String, age: Int) extends AbstractPerson
+      def filterPerson[P <: AbstractPerson]: Quoted[Query[P] => Query[P]] = quote {
+        (q: Query[P]) => q.filter(p => p.name == "Joe")
+      }
+      val p = quote(filterPerson(query[MyPerson]))
+      testContext.run(p) mustEqual "SELECT p.name, p.age FROM MyPerson p WHERE p.name = 'Joe'"
+    }
   }
 }
