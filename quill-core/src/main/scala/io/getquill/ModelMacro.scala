@@ -16,6 +16,8 @@ sealed trait EntityQuery[T]
   def insert(value: T): Insert[T] = macro QueryDslMacro.expandInsert[T]
   def insert(f: (T => (Any, Any)), f2: (T => (Any, Any))*): Insert[T]
 
+  def updateValue(value: T): Update[T] = macro QueryDslMacro.expandUpdate[T]
+  @deprecated("EntityQuery.update(value) is deprecated due to upstream Scala 3 requirements. Use EntityQuery.updateValue(value) instead.", "3.13.0")
   def update(value: T): Update[T] = macro QueryDslMacro.expandUpdate[T]
   def update(f: (T => (Any, Any)), f2: (T => (Any, Any))*): Update[T]
 

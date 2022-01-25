@@ -367,7 +367,7 @@ class QuotationSpec extends Spec {
         }
         "case class" in {
           val q = quote {
-            (t: TestEntity) => qr1.update(t)
+            (t: TestEntity) => qr1.updateValue(t)
           }
           val n = quote {
             (t: TestEntity) =>
@@ -1712,7 +1712,7 @@ class QuotationSpec extends Spec {
         }
         "action + beta reduction" in {
           val n = quote {
-            (t: TestEntity) => query[TestEntity].update(t)
+            (t: TestEntity) => query[TestEntity].updateValue(t)
           }
           val q = quote {
             n(lift(t))
