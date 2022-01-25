@@ -1,6 +1,6 @@
 package io.getquill.quat
 
-import io.getquill.ast.Ast
+import io.getquill.ast.{ Ast, Infix }
 import io.getquill.quotation.QuatException
 import io.getquill.util.Messages.TraceType
 
@@ -155,6 +155,21 @@ object Quat {
   object Is {
     def unapply(ast: Ast) = Some(ast.quat)
   }
+
+  def improveInfixQuat(ast: Ast) =
+    ast match {
+      case Infix(parts, params, pure, Quat.Generic | Quat.Unknown) =>
+        val possiblyBetterQuat = params.foldLeft(Quat.Generic: Quat)((currQuat, param) => currQuat.leastUpperType(param.quat).getOrElse(currQuat))
+        val bestQuat =
+          possiblyBetterQuat match {
+            case Quat.Unknown => Quat.Unknown
+            case Quat.Value   => Quat.Generic
+            case other        => other
+          }
+        Infix(parts, params, pure, bestQuat)
+      case _ =>
+        ast
+    }
 
   import LinkedHashMapOps._
 
