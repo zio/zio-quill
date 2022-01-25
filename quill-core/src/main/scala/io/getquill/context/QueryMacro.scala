@@ -63,7 +63,7 @@ class QueryMacro(val c: MacroContext) extends ContextMacro {
               expanded.string,
               expanded.prepare,
               (row, session) => $decoder(0, row, session)
-            )
+            )(io.getquill.context.ExecutionInfo.unknown, ())
            """
         case StreamQuery(UsesDefaultFetch) =>
           q"""
@@ -72,7 +72,7 @@ class QueryMacro(val c: MacroContext) extends ContextMacro {
               expanded.string,
               expanded.prepare,
               (row, session) => $decoder(0, row, session)
-            )
+            )(io.getquill.context.ExecutionInfo.unknown, ())
            """
         case StreamQuery(DoesNotUseFetch) =>
           q"""
@@ -80,7 +80,7 @@ class QueryMacro(val c: MacroContext) extends ContextMacro {
               expanded.string,
               expanded.prepare,
               (row, session) => $decoder(0, row, session)
-            )
+            )(io.getquill.context.ExecutionInfo.unknown, ())
            """
         case TranslateQuery(ExplicitPrettyPrint(argValue)) =>
           q"""
@@ -89,7 +89,7 @@ class QueryMacro(val c: MacroContext) extends ContextMacro {
               expanded.prepare,
               (row, session) => $decoder(0, row, session),
               prettyPrint = ${argValue}
-            )
+            )(io.getquill.context.ExecutionInfo.unknown, ())
            """
         case TranslateQuery(DefaultPrint) =>
           q"""
@@ -98,7 +98,14 @@ class QueryMacro(val c: MacroContext) extends ContextMacro {
               expanded.prepare,
               (row, session) => $decoder(0, row, session),
               prettyPrint = false
-            )
+            )(io.getquill.context.ExecutionInfo.unknown, ())
+           """
+        case PrepareQuery =>
+          q"""
+            ${c.prefix}.${TermName(method.name)}(
+              expanded.string,
+              expanded.prepare
+            )(io.getquill.context.ExecutionInfo.unknown, ())
            """
         case _ =>
           q"""
@@ -106,7 +113,7 @@ class QueryMacro(val c: MacroContext) extends ContextMacro {
               expanded.string,
               expanded.prepare,
               (row, session) => $decoder(0, row, session)
-            )
+            )(io.getquill.context.ExecutionInfo.unknown, ())
            """
       }
 
@@ -132,7 +139,7 @@ class QueryMacro(val c: MacroContext) extends ContextMacro {
               expanded.string,
               expanded.prepare,
               $meta.extract
-            )
+            )(io.getquill.context.ExecutionInfo.unknown, ())
            """
         case StreamQuery(UsesDefaultFetch) =>
           q"""
@@ -141,7 +148,7 @@ class QueryMacro(val c: MacroContext) extends ContextMacro {
               expanded.string,
               expanded.prepare,
               $meta.extract
-            )
+            )(io.getquill.context.ExecutionInfo.unknown, ())
            """
         case StreamQuery(DoesNotUseFetch) =>
           q"""
@@ -149,7 +156,7 @@ class QueryMacro(val c: MacroContext) extends ContextMacro {
               expanded.string,
               expanded.prepare,
               $meta.extract
-            )
+            )(io.getquill.context.ExecutionInfo.unknown, ())
            """
         case TranslateQuery(ExplicitPrettyPrint(argValue)) =>
           q"""
@@ -158,7 +165,7 @@ class QueryMacro(val c: MacroContext) extends ContextMacro {
               expanded.prepare,
               $meta.extract,
               prettyPrint = ${argValue}
-            )
+            )(io.getquill.context.ExecutionInfo.unknown, ())
            """
         case TranslateQuery(DefaultPrint) =>
           q"""
@@ -167,7 +174,14 @@ class QueryMacro(val c: MacroContext) extends ContextMacro {
               expanded.prepare,
               $meta.extract,
               prettyPrint = false
-            )
+            )(io.getquill.context.ExecutionInfo.unknown, ())
+           """
+        case PrepareQuery =>
+          q"""
+            ${c.prefix}.${TermName(method.name)}(
+              expanded.string,
+              expanded.prepare
+            )(io.getquill.context.ExecutionInfo.unknown, ())
            """
         case _ =>
           q"""
@@ -175,7 +189,7 @@ class QueryMacro(val c: MacroContext) extends ContextMacro {
               expanded.string,
               expanded.prepare,
               $meta.extract
-            )
+            )(io.getquill.context.ExecutionInfo.unknown, ())
            """
       }
 

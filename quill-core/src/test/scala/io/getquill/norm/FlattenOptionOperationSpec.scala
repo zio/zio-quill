@@ -23,7 +23,7 @@ class FlattenOptionOperationSpec extends Spec { //hello
         (o: Option[Int]) => o.getOrElse(1)
       }
       new FlattenOptionOperation(AnsiConcat)(q.ast.body: Ast) mustEqual
-        If(BinaryOperation(Ident("o"), EqualityOperator.`!=`, NullValue), Ident("o"), Constant.auto(1))
+        If(BinaryOperation(Ident("o"), EqualityOperator.`_!=`, NullValue), Ident("o"), Constant.auto(1))
     }
     "flatten" - {
       "regular operation" in {
@@ -223,7 +223,7 @@ class FlattenOptionOperationSpec extends Spec { //hello
         (o: Option[Int]) => o.contains(1)
       }
       new FlattenOptionOperation(AnsiConcat)(q.ast.body: Ast) mustEqual
-        BinaryOperation(Ident("o"), EqualityOperator.`==`, Constant.auto(1))
+        BinaryOperation(Ident("o"), EqualityOperator.`_==`, Constant.auto(1))
     }
   }
 }

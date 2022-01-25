@@ -1,12 +1,11 @@
 package io.getquill
 
 import java.util.concurrent.atomic.AtomicInteger
-
 import scala.util.Success
 import scala.util.Try
 import org.apache.spark.sql.{ Column, Dataset, SQLContext, Encoder => SparkEncoder }
 import org.apache.spark.sql.functions.{ col, struct }
-import io.getquill.context.Context
+import io.getquill.context.{ Context, ExecutionInfo }
 import io.getquill.context.spark.Encoders
 import io.getquill.context.spark.Decoders
 import io.getquill.context.spark.SparkDialect
@@ -14,9 +13,9 @@ import io.getquill.context.spark.Binding
 import io.getquill.context.spark.DatasetBinding
 import io.getquill.context.spark.ValueBinding
 import org.apache.spark.sql.types.{ StructField, StructType }
-
 import io.getquill.context.spark.norm.QuestionMarkEscaper._
 import org.apache.spark.sql.functions._
+
 import scala.reflect.runtime.universe.TypeTag
 
 object QuillSparkContext extends QuillSparkContext
@@ -30,6 +29,7 @@ trait QuillSparkContext
   type RunQuerySingleResult[T] = T
   type RunQueryResult[T] = T
   type Session = Unit
+  type Runner = Unit
 
   private[getquill] val queryCounter = new AtomicInteger(0)
 
@@ -132,12 +132,12 @@ trait QuillSparkContext
     }
   }
 
-  def executeQuery[T: TypeTag](string: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(implicit enc: SparkEncoder[T], spark: SQLContext) = {
+  def executeQuery[T: TypeTag](string: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner)(implicit enc: SparkEncoder[T], spark: SQLContext) = {
     val ds = spark.sql(prepareString(string, prepare))
     percolateNullArrays(ds.toDF(CaseAccessors[T](ds.schema): _*).as[T])
   }
 
-  def executeQuerySingle[T: TypeTag](string: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(implicit enc: SparkEncoder[T], spark: SQLContext) = {
+  def executeQuerySingle[T: TypeTag](string: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner)(implicit enc: SparkEncoder[T], spark: SQLContext) = {
     val ds = spark.sql(prepareString(string, prepare))
     percolateNullArrays(ds.toDF(CaseAccessors[T](ds.schema): _*).as[T])
   }

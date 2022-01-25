@@ -1,15 +1,15 @@
 package io.getquill.monad
 
 import io.getquill.context.Context
+
 import language.experimental.macros
 import language.higherKinds
 import scala.collection.compat._
 import scala.util.Failure
 import scala.util.Success
-
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext
-import io.getquill.{ Query, Action, BatchAction, ActionReturning }
+import io.getquill.{ Action, ActionReturning, BatchAction, Query, Quoted }
 
 trait ScalaFutureIOMonad extends IOMonad {
   this: Context[_, _] =>

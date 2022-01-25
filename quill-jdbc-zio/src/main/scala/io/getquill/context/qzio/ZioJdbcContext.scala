@@ -1,21 +1,17 @@
 package io.getquill.context.qzio
 
-import io.getquill.context.{ ContextEffect, StreamingContext }
 import io.getquill.context.ZioJdbc._
-import io.getquill.context.jdbc.JdbcRunContext
+import io.getquill.context.jdbc.JdbcComposition
 import io.getquill.context.sql.idiom.SqlIdiom
-import io.getquill.util.ContextLogger
+import io.getquill.context.{ ExecutionInfo, PrepareContext, ProtoContext, StreamingContext, TranslateContextMacro }
 import io.getquill.{ NamingStrategy, ReturnAction }
 import zio.Exit.{ Failure, Success }
-import zio.stream.{ Stream, ZStream }
-import zio.{ Cause, Has, Task, UIO, ZIO, ZManaged }
+import zio.stream.ZStream
+import zio.{ FiberRef, Has, Runtime, UIO, ZIO, ZManaged }
 
 import java.sql.{ Array => _, _ }
 import javax.sql.DataSource
 import scala.util.Try
-import zio.blocking.Blocking
-
-import scala.reflect.ClassTag
 
 /**
  * Quill context that executes JDBC queries inside of ZIO. Unlike most other contexts
@@ -27,7 +23,7 @@ import scala.reflect.ClassTag
  * The type `QIO[T]` i.e. Quill-IO has been defined as an alias for `ZIO[Has[Connection], SQLException, T]`.
  *
  * Since in most JDBC use-cases, a connection-pool datasource i.e. Hikari is used it would actually
- * be much more useful to interact with `ZIO[Has[DataSource with Closeable], SQLException, T]`.
+ * be much more useful to interact with `ZIO[Has[DataSource], SQLException, T]`.
  * The extension method `.onDataSource` in `io.getquill.context.ZioJdbc.QuillZioExt` will perform this conversion
  * (for even more brevity use `onDS` which is an alias for this method).
  * {{
@@ -40,228 +36,154 @@ import scala.reflect.ClassTag
  * {{
  *   Runtime.default.unsafeRun(MyZioContext.run(query[Person]).provideLayer(zioDS))
  * }}
+ *
+ * Note however that the one exception to these cases are the `prepare` methods where a `ZIO[Has[Connection], SQLException, PreparedStatement]`
+ * is being returned. In those situations the acquire-action-release pattern does not make any sense because the `PrepareStatement`
+ * is only held open while it's host-connection exists.
  */
 abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] extends ZioContext[Dialect, Naming]
-  with JdbcRunContext[Dialect, Naming]
+  with JdbcComposition[Dialect, Naming]
+  with ProtoContext[Dialect, Naming]
   with StreamingContext[Dialect, Naming]
-  with ZioPrepareContext[Dialect, Naming]
-  with ZioTranslateContext {
+  with PrepareContext
+  with TranslateContextMacro {
 
-  override private[getquill] val logger = ContextLogger(classOf[ZioJdbcContext[_, _]])
-
-  override type Error = SQLException
-  override type Environment = Has[Session]
-  override type PrepareRow = PreparedStatement
-  override type ResultRow = ResultSet
+  override type StreamResult[T] = ZStream[Environment, Error, T]
+  override type Result[T] = ZIO[Environment, Error, T]
+  override type RunQueryResult[T] = List[T]
+  override type RunQuerySingleResult[T] = T
   override type RunActionResult = Long
   override type RunActionReturningResult[T] = T
   override type RunBatchActionResult = List[Long]
   override type RunBatchActionReturningResult[T] = List[T]
 
-  // Need explicit return-type annotations due to scala/bug#8356. Otherwise macro system will not understand Result[Long]=Task[Long] etc...
-  override def executeAction[T](sql: String, prepare: Prepare = identityPrepare): QIO[Long] =
-    super.executeAction(sql, prepare)
-  override def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): QIO[List[T]] =
-    super.executeQuery(sql, prepare, extractor)
-  override def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): QIO[T] =
-    super.executeQuerySingle(sql, prepare, extractor)
-  override def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningBehavior: ReturnAction): QIO[O] =
-    super.executeActionReturning(sql, prepare, extractor, returningBehavior)
-  override def executeBatchAction(groups: List[BatchGroup]): QIO[List[Long]] =
-    super.executeBatchAction(groups)
-  override def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T]): QIO[List[T]] =
-    super.executeBatchActionReturning(groups, extractor)
-  override def prepareQuery[T](sql: String, prepare: Prepare, extractor: Extractor[T] = identityExtractor): QIO[PreparedStatement] =
-    super.prepareQuery(sql, prepare, extractor)
-  override def prepareAction(sql: String, prepare: Prepare): QIO[PreparedStatement] =
-    super.prepareAction(sql, prepare)
-  override def prepareBatchAction(groups: List[BatchGroup]): QIO[List[PreparedStatement]] =
-    super.prepareBatchAction(groups)
+  override type Error = SQLException
+  override type Environment = Has[DataSource]
+  override type PrepareRow = PreparedStatement
+  override type ResultRow = ResultSet
 
-  /** ZIO Contexts do not managed DB connections so this is a no-op */
-  override def close(): Unit = ()
+  override type TranslateResult[T] = ZIO[Environment, Error, T]
+  override type PrepareQueryResult = QCIO[PrepareRow]
+  override type PrepareActionResult = QCIO[PrepareRow]
+  override type PrepareBatchActionResult = QCIO[List[PrepareRow]]
+  override type Session = Connection
 
-  protected def withConnection[T](f: Connection => Result[T]): Result[T] = throw new IllegalArgumentException("Not Used")
+  val currentConnection: FiberRef[Option[Connection]] =
+    Runtime.default.unsafeRun(FiberRef.make(None))
 
-  private[getquill] def simpleBlocking[R, E, A](zio: ZIO[Has[R], E, A]): ZIO[Has[R], E, A] =
-    Blocking.Service.live.blocking(zio)
+  val underlying: ZioJdbcUnderlyingContext[Dialect, Naming]
 
-  // Primary method used to actually run Quill context commands query, insert, update, delete and others
-  override protected def withConnectionWrapped[T](f: Connection => T): QIO[T] =
-    simpleBlocking {
-      for {
-        conn <- ZIO.environment[Has[Connection]]
-        result <- sqlEffect(f(conn.get[Connection]))
-      } yield result
-    }
+  override def close() = ()
 
-  private def sqlEffect[T](t: => T): QIO[T] = ZIO.effect(t).refineToOrDie[SQLException]
+  override def probe(sql: String): Try[_] = underlying.probe(sql)
 
-  private[getquill] def withoutAutoCommit[A, E <: Throwable: ClassTag](f: ZIO[Has[Connection], E, A]): ZIO[Has[Connection], E, A] = {
-    for {
-      blockingConn <- ZIO.environment[Has[Connection]]
-      conn = blockingConn.get[Connection]
-      autoCommitPrev = conn.getAutoCommit
-      r <- sqlEffect(conn).bracket(conn => UIO(conn.setAutoCommit(autoCommitPrev))) { conn =>
-        sqlEffect(conn.setAutoCommit(false)).flatMap(_ => f)
-      }.refineToOrDie[E]
-    } yield r
-  }
+  def executeAction(sql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: Runner): QIO[Long] =
+    onConnection(underlying.executeAction(sql, prepare)(info, dc))
 
-  private[getquill] def streamWithoutAutoCommit[A](f: ZStream[Has[Connection], Throwable, A]): ZStream[Has[Connection], Throwable, A] = {
-    for {
-      blockingConn <- ZStream.environment[Has[Connection]]
-      conn = blockingConn.get[Connection]
-      autoCommitPrev = conn.getAutoCommit
-      r <- ZStream.bracket(Task(conn.setAutoCommit(false)))(_ => UIO(conn.setAutoCommit(autoCommitPrev))).flatMap(_ => f)
-    } yield r
-  }
+  def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner): QIO[List[T]] =
+    onConnection(underlying.executeQuery[T](sql, prepare, extractor)(info, dc))
 
-  def transaction[A](f: ZIO[Has[Connection], Throwable, A]): ZIO[Has[Connection], Throwable, A] = {
-    simpleBlocking(withoutAutoCommit(ZIO.environment[Has[Connection]].flatMap(conn =>
-      f.onExit {
-        case Success(_) =>
-          UIO(conn.get[Connection].commit())
-        case Failure(cause) =>
-          UIO(conn.get[Connection].rollback()).foldCauseM(
-            // NOTE: cause.flatMap(Cause.die) means wrap up the throwable failures into die failures, can only do if E param is Throwable (can also do .orDie at the end)
-            rollbackFailCause => ZIO.halt(cause.flatMap(Cause.die) ++ rollbackFailCause),
-            _ => ZIO.halt(cause.flatMap(Cause.die)) // or ZIO.halt(cause).orDie
-          )
-      })))
-  }
+  override def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner): QIO[T] =
+    onConnection(underlying.executeQuerySingle[T](sql, prepare, extractor)(info, dc))
 
-  def probingDataSource: Option[DataSource] = None
+  override def translateQuery[T](statement: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor, prettyPrint: Boolean = false)(executionInfo: ExecutionInfo, dc: Runner): TranslateResult[String] =
+    onConnection(underlying.translateQuery[T](statement, prepare, extractor, prettyPrint)(executionInfo, dc))
 
-  // Override with sync implementation so will actually be able to do it.
-  override def probe(sql: String): Try[_] =
-    probingDataSource match {
-      case Some(dataSource) =>
-        Try {
-          val c = dataSource.getConnection
-          try {
-            c.createStatement().execute(sql)
-          } finally {
-            c.close()
-          }
-        }
-      case None => Try[Unit](())
-    }
+  override def translateBatchQuery(groups: List[BatchGroup], prettyPrint: Boolean = false)(executionInfo: ExecutionInfo, dc: Runner): TranslateResult[List[String]] =
+    onConnection(underlying.translateBatchQuery(groups.asInstanceOf[List[ZioJdbcContext.this.underlying.BatchGroup]], prettyPrint)(executionInfo, dc))
+
+  def streamQuery[T](fetchSize: Option[Int], sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner): QStream[T] =
+    onConnectionStream(underlying.streamQuery[T](fetchSize, sql, prepare, extractor)(info, dc))
+
+  def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningBehavior: ReturnAction)(info: ExecutionInfo, dc: Runner): QIO[O] =
+    onConnection(underlying.executeActionReturning[O](sql, prepare, extractor, returningBehavior)(info, dc))
+
+  def executeBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: Runner): QIO[List[Long]] =
+    onConnection(underlying.executeBatchAction(groups.asInstanceOf[List[ZioJdbcContext.this.underlying.BatchGroup]])(info, dc))
+
+  def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T])(info: ExecutionInfo, dc: Runner): QIO[List[T]] =
+    onConnection(underlying.executeBatchActionReturning[T](groups.asInstanceOf[List[ZioJdbcContext.this.underlying.BatchGroupReturning]], extractor)(info, dc))
+
+  def prepareQuery(sql: String, prepare: Prepare)(info: ExecutionInfo, dc: Runner): QCIO[PreparedStatement] =
+    underlying.prepareQuery(sql, prepare)(info, dc)
+
+  def prepareAction(sql: String, prepare: Prepare)(info: ExecutionInfo, dc: Runner): QCIO[PreparedStatement] =
+    underlying.prepareAction(sql, prepare)(info, dc)
+
+  def prepareBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: Runner): QCIO[List[PreparedStatement]] =
+    underlying.prepareBatchAction(groups.asInstanceOf[List[ZioJdbcContext.this.underlying.BatchGroup]])(info, dc)
+
+  private[getquill] def prepareParams(statement: String, prepare: Prepare): QCIO[Seq[String]] =
+    underlying.prepareParams(statement, prepare)
 
   /**
-   * In order to allow a ResultSet to be consumed by an Observable, a ResultSet iterator must be created.
-   * Since Quill provides a extractor for an individual ResultSet row, a single row can easily be cached
-   * in memory. This allows for a straightforward implementation of a hasNext method.
+   * Execute instructions in a transaction. For example, to add a Person row to the database and return
+   * the contents of the Person table immediately after that:
+   * {{{
+   *   val a = run(query[Person].insert(Person(...)): ZIO[Has[DataSource], SQLException, Long]
+   *   val b = run(query[Person]): ZIO[Has[DataSource], SQLException, Person]
+   *   transaction(a *> b): ZIO[Has[DataSource], SQLException, Person]
+   * }}}
+   *
+   * The order of operations run in the case that a new connection needs to be aquired are as follows:
+   * <pre>
+   *   getDS from env,
+   *   acquire-connection,
+   *     set-no-autocommit(connection),
+   *       put-into-fiberref(connection),
+   *         op - the corresponding execute_ method which will execute and pull connection from the fiberref,
+   *       remove-from-fiberref(connection),
+   *     set-prev-autocommit(connection),
+   *   release-conn
+   * </pre>
    */
-  class ResultSetIterator[T](rs: ResultSet, conn: Connection, extractor: Extractor[T]) extends BufferedIterator[T] {
-
-    private[this] var state = 0 // 0: no data, 1: cached, 2: finished
-    private[this] var cached: T = null.asInstanceOf[T]
-
-    protected[this] final def finished(): T = {
-      state = 2
-      null.asInstanceOf[T]
-    }
-
-    /** Return a new value or call finished() */
-    protected def fetchNext(): T =
-      if (rs.next()) extractor(rs, conn)
-      else finished()
-
-    def head: T = {
-      prefetchIfNeeded()
-      if (state == 1) cached
-      else throw new NoSuchElementException("head on empty iterator")
-    }
-
-    private def prefetchIfNeeded(): Unit = {
-      if (state == 0) {
-        cached = fetchNext()
-        if (state == 0) state = 1
-      }
-    }
-
-    def hasNext: Boolean = {
-      prefetchIfNeeded()
-      state == 1
-    }
-
-    def next(): T = {
-      prefetchIfNeeded()
-      if (state == 1) {
-        state = 0
-        cached
-      } else throw new NoSuchElementException("next on empty iterator");
-    }
-  }
-
-  /**
-   * Override to enable specific vendor options needed for streaming
-   */
-  protected def prepareStatementForStreaming(sql: String, conn: Connection, fetchSize: Option[Int]) = {
-    val stmt = conn.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY)
-    fetchSize.foreach { size =>
-      stmt.setFetchSize(size)
-    }
-    stmt
-  }
-
-  def streamQuery[T](fetchSize: Option[Int], sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): QStream[T] = {
-    def prepareStatement(conn: Connection) = {
-      val stmt = prepareStatementForStreaming(sql, conn, fetchSize)
-      val (params, ps) = prepare(stmt, conn)
-      logger.logQuery(sql, params)
-      ps
-    }
-
-    val managedEnv: ZStream[Connection, Throwable, (Connection, PrepareRow, ResultSet)] =
-      ZStream.environment[Connection].flatMap { conn =>
-        ZStream.managed {
-          for {
-            conn <- ZManaged.make(Task(conn))(c => Task.unit)
-            ps <- managedBestEffort(Task(prepareStatement(conn)))
-            rs <- managedBestEffort(Task(ps.executeQuery()))
-          } yield (conn, ps, rs)
-        }
-      }
-
-    val outStream: ZStream[Connection, Throwable, T] =
-      managedEnv.flatMap {
-        case (conn, ps, rs) =>
-          val iter = new ResultSetIterator(rs, conn, extractor)
-          fetchSize match {
-            // TODO Assuming chunk size is fetch size. Not sure if this is optimal.
-            //      Maybe introduce some switches to control this?
-            case Some(size) =>
-              ZStream.fromIterator(iter, size)
-            case None =>
-              Stream.fromIterator(new ResultSetIterator(rs, conn, extractor))
+  def transaction[R <: Has[DataSource], A](op: ZIO[R, Throwable, A]): ZIO[R, Throwable, A] = {
+    withBlocking(currentConnection.get.flatMap {
+      // We can just return the op in the case that there is already a connection set on the fiber ref
+      // because the op is execute___ which will lookup the connection from the fiber ref via onConnection/onConnectionStream
+      // This will typically happen for nested transactions e.g. transaction(transaction(a *> b) *> c)
+      case Some(connection) => op
+      case None =>
+        val connection = for {
+          env <- ZIO.service[DataSource].toManaged_
+          connection <- managedBestEffort(blockingEffect(env.getConnection))
+          // Get the current value of auto-commit
+          prevAutoCommit <- blockingEffect(connection.getAutoCommit).toManaged_
+          // Disable auto-commit since we need to be able to roll back. Once everything is done, set it
+          // to whatever the previous value was.
+          _ <- ZManaged.make(blockingEffect(connection.setAutoCommit(false))) { _ =>
+            blockingEffect(connection.setAutoCommit(prevAutoCommit)).orDie
           }
-      }
+          _ <- ZManaged.make(currentConnection.set(Some(connection))) { _ =>
+            // Note. We are failing the fiber if auto-commit reset fails. For some circumstances this may be too aggresive.
+            // If the connection pool e.g. Hikari resets this property for a recycled connection anyway doing it here
+            // might not be necessary
+            currentConnection.set(None)
+          }
+          // Once the `use` of this outer-ZManaged is done, rollback the connection if needed
+          _ <- ZManaged.finalizerExit {
+            case Success(_)     => withBlocking(UIO(connection.commit()))
+            case Failure(cause) => withBlocking(UIO(connection.rollback()))
+          }
+        } yield ()
 
-    val typedStream = outStream.provideSome((bc: Has[Connection]) => bc.get[Connection])
-    // Run the chunked fetch on the blocking pool
-    streamBlocker *> streamWithoutAutoCommit(typedStream).refineToOrDie[SQLException]
+        connection.use_(op)
+    })
   }
 
-  val streamBlocker: ZStream[Any, Nothing, Any] =
-    ZStream.managed(zio.blocking.blockingExecutor.toManaged_.flatMap { executor =>
-      ZManaged.lock(executor)
-    }).provideLayer(Blocking.live)
-
-  override private[getquill] def prepareParams(statement: String, prepare: Prepare): QIO[Seq[String]] = {
-    withConnectionWrapped { conn =>
-      prepare(conn.prepareStatement(statement), conn)._1.reverse.map(prepareParam)
+  private def onConnection[T](qlio: ZIO[Has[Connection], SQLException, T]): ZIO[Has[DataSource], SQLException, T] =
+    currentConnection.get.flatMap {
+      case Some(connection) =>
+        withBlocking(qlio.provide(Has(connection)))
+      case None =>
+        withBlocking(qlio.provideLayer(DataSourceLayer.live))
     }
-  }
 
-  // Put this last since we want to be able to use zio 'effect' keyword in some places
-  override protected val effect = new ContextEffect[Result] {
-    override def wrap[T](t: => T): ZIO[Has[Connection], SQLException, T] =
-      throw new IllegalArgumentException("Runner not used for zio context.")
-    override def push[A, B](result: ZIO[Has[Connection], SQLException, A])(f: A => B): ZIO[Has[Connection], SQLException, B] =
-      throw new IllegalArgumentException("Runner not used for zio context.")
-    override def seq[A](f: List[ZIO[Has[Connection], SQLException, A]]): ZIO[Has[Connection], SQLException, List[A]] =
-      throw new IllegalArgumentException("Runner not used for zio context.")
-  }
+  private def onConnectionStream[T](qstream: ZStream[Has[Connection], SQLException, T]): ZStream[Has[DataSource], SQLException, T] =
+    streamBlocker *> ZStream.fromEffect(currentConnection.get).flatMap {
+      case Some(connection) =>
+        qstream.provide(Has(connection))
+      case None =>
+        qstream.provideLayer(DataSourceLayer.live).refineToOrDie[SQLException]
+    }
 }

@@ -61,17 +61,6 @@ class UnlimitedOptionalEmbeddedSpec extends Spec {
   }
 
   "meta" - {
-    "query" in {
-      materializeQueryMeta[OptEmd].expand.toString mustEqual "(q) => q.map(x => (" +
-        "x.e1.e1.e1.value, " +
-        "x.e1.e1.e2.map((v) => v.value), " +
-        "x.e1.e2.map((v) => v.e1.value), " +
-        "x.e1.e2.map((v) => v.e2.map((v) => v.value)), " +
-        "x.e2.map((v) => v.e1.e1.value), " +
-        "x.e2.map((v) => v.e1.e2.map((v) => v.value)), " +
-        "x.e2.map((v) => v.e2.map((v) => v.e1.value)), " +
-        "x.e2.map((v) => v.e2.map((v) => v.e2.map((v) => v.value)))))"
-    }
     "update" in {
       materializeUpdateMeta[OptEmd].expand.toString mustEqual "(q, value) => q.update(" +
         "v => v.e1.e1.e1.value -> value.e1.e1.e1.value, " +
@@ -120,13 +109,13 @@ class UnlimitedOptionalEmbeddedSpec extends Spec {
     )
 
     "non-batched" in {
-      val r = testContext.run(qrOptEmd.insert(lift(optEmdEnt)))
+      val r = testContext.run(qrOptEmd.insertValue(lift(optEmdEnt)))
       r.string mustEqual resultString
       r.prepareRow mustEqual resultRow
     }
     "batched" in {
       val r = testContext.run(
-        liftQuery(List(optEmdEnt)).foreach(e => qrOptEmd.insert(e))
+        liftQuery(List(optEmdEnt)).foreach(e => qrOptEmd.insertValue(e))
       )
       r.groups mustEqual List(resultString -> List(resultRow))
     }

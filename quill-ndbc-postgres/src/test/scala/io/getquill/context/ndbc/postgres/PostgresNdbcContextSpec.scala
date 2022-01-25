@@ -19,7 +19,7 @@ class PostgresNdbcContextSpec extends Spec {
   "insert with returning" - {
     "single column table" in {
       val inserted: Long = get(ctx.run {
-        qr4.insert(lift(TestEntity4(0))).returningGenerated(_.i)
+        qr4.insertValue(lift(TestEntity4(0))).returningGenerated(_.i)
       })
       get(ctx.run(qr4.filter(_.i == lift(inserted)))).head.i mustBe inserted
     }
@@ -27,7 +27,7 @@ class PostgresNdbcContextSpec extends Spec {
     "multiple columns" in {
       get(ctx.run(qr1.delete))
       val inserted = get(ctx.run {
-        qr1.insert(lift(TestEntity("foo", 1, 18L, Some(123), true))).returning(r => (r.i, r.s, r.o))
+        qr1.insertValue(lift(TestEntity("foo", 1, 18L, Some(123), true))).returning(r => (r.i, r.s, r.o))
       })
       (1, "foo", Some(123)) mustBe inserted
     }

@@ -17,6 +17,9 @@ export ORACLE_PORT=11521
 export CASSANDRA_HOST=127.0.0.1
 export CASSANDRA_PORT=19042
 
+export CASSANDRA_CONTACT_POINT_0=127.0.0.1:19042
+export CASSANDRA_DC=datacenter1
+
 export ORIENTDB_HOST=127.0.0.1
 export ORIENTDB_PORT=12424
 
@@ -73,7 +76,7 @@ function wait_for_databases() {
 
     # Start sbt compilation and database setup in parallel
     echo "build.sh =:> Base Compile in wait_for_databases"
-    sbt -Dmodules=base -Doracle=true $SBT_ARGS  test & COMPILE=$!
+    sbt -Dmodules=base $SBT_ARGS  test & COMPILE=$!
     ./build/setup_databases.sh & SETUP=$!
 
     # Wait on database setup. If it has failed then kill compilation process and exit with error
@@ -159,6 +162,13 @@ function wait_for_bigdata() {
     show_mem
 }
 
+function base_build() {
+    echo "build.sh =:> Base Build Specified"
+    export JVM_OPTS="-Dquill.macro.log=false -Dquill.scala.version=$SCALA_VERSION -Xms4g -Xmx4g -Xss10m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC"
+    echo "build.sh =:> Starting Base Build Primary"
+    sbt "sbt -Dmodules=base $SBT_ARGS test"
+}
+
 function db_build() {
     echo "build.sh =:> DB Build Specified"
     wait_for_databases
@@ -222,8 +232,11 @@ fi
 echo "Building cache:"
 find ~/.cache/sbt-build/ -type d || true
 
-if [[ $modules == "db" ]]; then
-    echo "build.sh =:> Build Script: Doing Database Build"
+if [[ $modules == "base" ]]; then
+    echo "build.sh =:> Build Script: Doing Base Build"
+    db_build
+elif [[ $modules == "db" ]]; then
+    echo "build.sh =:> Build Script: Doing Base + Database Build"
     db_build
 elif [[ $modules == "js" ]]; then
     echo "build.sh =:> Build Script: Doing JavaScript Build"
@@ -241,8 +254,8 @@ elif [[ $modules == "bigdata" ]]; then
     echo "build.sh =:> Build Script: Doing BigData Build"
     bigdata_build
 else
-    echo "build.sh =:> Build Script: Doing Full Build"
-    full_build
+    echo "build.sh =:> UNKNOWN MODULE: $modules"
+    exit 1
 fi
 
 show_mem

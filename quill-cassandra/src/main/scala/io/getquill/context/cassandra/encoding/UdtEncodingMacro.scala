@@ -1,6 +1,6 @@
 package io.getquill.context.cassandra.encoding
 
-import com.datastax.driver.core.UDTValue
+import com.datastax.oss.driver.api.core.data.UdtValue
 import io.getquill.util.MacroContextExt._
 import io.getquill.util.OptionalTypecheck
 
@@ -12,7 +12,7 @@ class UdtEncodingMacro(val c: MacroContext) {
   import c.universe._
 
   private val encoding = q"io.getquill.context.cassandra.encoding"
-  private val udtRaw = typeOf[UDTValue]
+  private val udtRaw = typeOf[UdtValue]
   private def prefix = c.prefix
   private def UdtValueOps = q"_root_.io.getquill.context.cassandra.encoding.UdtValueOps"
 
@@ -23,7 +23,7 @@ class UdtEncodingMacro(val c: MacroContext) {
          ${buildUdtMeta(t.tpe)}
          def udtdecoder[..$typeDefs](implicit ..$params): $prefix.Decoder[${t.tpe}] = {
            $prefix.decoder { (index, row, session) =>
-             val udt = row.getUDTValue(index)
+             val udt = row.getUdtValue(index)
              new ${t.tpe}(..$getters)
            }
          }
@@ -52,7 +52,7 @@ class UdtEncodingMacro(val c: MacroContext) {
         q"""
            ${buildUdtMeta(t.tpe)}
            def udtencoder[..$typeDefs](implicit ..$params): $prefix.Encoder[${t.tpe}] = {
-             $prefix.encoder[$t]((i: $prefix.Index, x: ${t.tpe}, row: $prefix.PrepareRow, session: Session) => row.setUDTValue(i, {..$body}))
+             $prefix.encoder[$t]((i: $prefix.Index, x: ${t.tpe}, row: $prefix.PrepareRow, session: Session) => row.setUdtValue(i, {..$body}))
            }
            udtencoder
          """

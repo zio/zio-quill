@@ -10,7 +10,7 @@ class PrepareJdbcSpec extends PrepareZioJdbcSpecBase with ZioSpec with BeforeAnd
 
   override def prefix: Prefix = Prefix("testPostgresDB")
   val context = testContext
-  import testContext._
+  import context._
 
   before {
     testContext.run(query[Product].delete).runSyncUnsafe()
@@ -20,14 +20,14 @@ class PrepareJdbcSpec extends PrepareZioJdbcSpecBase with ZioSpec with BeforeAnd
   val prepareQuery = prepare(query[Product])
 
   "single" in {
-    val prepareInsert = prepare(query[Product].insert(lift(productEntries.head)))
+    val prepareInsert = prepare(query[Product].insertValue(lift(productEntries.head)))
     singleInsert(prepareInsert) mustEqual false
     extractProducts(prepareQuery) === List(productEntries.head)
   }
 
   "batch" in {
     val prepareBatchInsert = prepare(
-      liftQuery(withOrderedIds(productEntries)).foreach(p => query[Product].insert(p))
+      liftQuery(withOrderedIds(productEntries)).foreach(p => query[Product].insertValue(p))
     )
 
     batchInsert(prepareBatchInsert).distinct mustEqual List(false)

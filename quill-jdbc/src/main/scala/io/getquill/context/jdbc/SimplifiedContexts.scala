@@ -1,13 +1,13 @@
 package io.getquill.context.jdbc
 
 import java.sql.Types
-
 import io.getquill._
+import io.getquill.context.ExecutionInfo
 
 trait PostgresJdbcContextSimplified[N <: NamingStrategy] extends JdbcContextSimplified[PostgresDialect, N]
-  with PostgresJdbcRunContext[N]
+  with PostgresJdbcComposition[N] with JdbcRunContext[PostgresDialect, N]
 
-trait PostgresJdbcRunContext[N <: NamingStrategy] extends JdbcRunContext[PostgresDialect, N]
+trait PostgresJdbcComposition[N <: NamingStrategy] extends JdbcComposition[PostgresDialect, N]
   with BooleanObjectEncoding
   with UUIDObjectEncoding
   with ArrayDecoders
@@ -24,9 +24,9 @@ trait PostgresJdbcRunContext[N <: NamingStrategy] extends JdbcRunContext[Postgre
 }
 
 trait H2JdbcContextSimplified[N <: NamingStrategy] extends JdbcContextSimplified[H2Dialect, N]
-  with H2JdbcRunContext[N]
+  with H2JdbcComposition[N] with JdbcRunContext[H2Dialect, N]
 
-trait H2JdbcRunContext[N <: NamingStrategy] extends JdbcRunContext[H2Dialect, N]
+trait H2JdbcComposition[N <: NamingStrategy] extends JdbcComposition[H2Dialect, N]
   with BooleanObjectEncoding
   with UUIDObjectEncoding {
 
@@ -34,9 +34,9 @@ trait H2JdbcRunContext[N <: NamingStrategy] extends JdbcRunContext[H2Dialect, N]
 }
 
 trait MysqlJdbcContextSimplified[N <: NamingStrategy] extends JdbcContextSimplified[MySQLDialect, N]
-  with MysqlJdbcRunContext[N]
+  with MysqlJdbcComposition[N] with JdbcRunContext[MySQLDialect, N]
 
-trait MysqlJdbcRunContext[N <: NamingStrategy] extends JdbcRunContext[MySQLDialect, N]
+trait MysqlJdbcComposition[N <: NamingStrategy] extends JdbcComposition[MySQLDialect, N]
   with BooleanObjectEncoding
   with UUIDStringEncoding {
 
@@ -44,9 +44,9 @@ trait MysqlJdbcRunContext[N <: NamingStrategy] extends JdbcRunContext[MySQLDiale
 }
 
 trait SqliteJdbcContextSimplified[N <: NamingStrategy] extends JdbcContextSimplified[SqliteDialect, N]
-  with SqliteJdbcRunContext[N]
+  with SqliteJdbcComposition[N] with JdbcRunContext[SqliteDialect, N]
 
-trait SqliteJdbcRunContext[N <: NamingStrategy] extends JdbcRunContext[SqliteDialect, N]
+trait SqliteJdbcComposition[N <: NamingStrategy] extends JdbcComposition[SqliteDialect, N]
   with BooleanObjectEncoding
   with UUIDObjectEncoding {
 
@@ -54,15 +54,14 @@ trait SqliteJdbcRunContext[N <: NamingStrategy] extends JdbcRunContext[SqliteDia
 }
 
 trait SqlServerJdbcContextSimplified[N <: NamingStrategy] extends JdbcContextSimplified[SQLServerDialect, N]
-  with SqlServerJdbcRunContext[N]
+  with SqlServerJdbcComposition[N]
+  with JdbcRunContext[SQLServerDialect, N]
+  with SqlServerExecuteOverride[N]
 
-trait SqlServerJdbcRunContext[N <: NamingStrategy] extends JdbcRunContext[SQLServerDialect, N]
-  with BooleanObjectEncoding
-  with UUIDStringEncoding {
+trait SqlServerExecuteOverride[N <: NamingStrategy] {
+  this: JdbcRunContext[SQLServerDialect, N] =>
 
-  val idiom = SQLServerDialect
-
-  override def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningBehavior: ReturnAction): Result[O] =
+  override def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningBehavior: ReturnAction)(executionInfo: ExecutionInfo, dc: Runner): Result[O] =
     withConnectionWrapped { conn =>
       val (params, ps) = prepare(prepareWithReturning(sql, conn, returningBehavior), conn)
       logger.logQuery(sql, params)
@@ -70,10 +69,17 @@ trait SqlServerJdbcRunContext[N <: NamingStrategy] extends JdbcRunContext[SQLSer
     }
 }
 
-trait OracleJdbcContextSimplified[N <: NamingStrategy] extends JdbcContextSimplified[OracleDialect, N]
-  with OracleJdbcRunContext[N]
+trait SqlServerJdbcComposition[N <: NamingStrategy] extends JdbcComposition[SQLServerDialect, N]
+  with BooleanObjectEncoding
+  with UUIDStringEncoding {
 
-trait OracleJdbcRunContext[N <: NamingStrategy] extends JdbcRunContext[OracleDialect, N]
+  val idiom = SQLServerDialect
+}
+
+trait OracleJdbcContextSimplified[N <: NamingStrategy] extends JdbcContextSimplified[OracleDialect, N]
+  with OracleJdbcComposition[N] with JdbcRunContext[OracleDialect, N]
+
+trait OracleJdbcComposition[N <: NamingStrategy] extends JdbcComposition[OracleDialect, N]
   with BooleanIntEncoding
   with UUIDStringEncoding {
 

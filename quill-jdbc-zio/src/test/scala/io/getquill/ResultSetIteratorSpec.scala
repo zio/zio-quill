@@ -1,7 +1,7 @@
 package io.getquill
 
 import io.getquill.ZioTestUtil._
-import io.getquill.context.ZioJdbc._
+import io.getquill.context.qzio.ResultSetIterator
 import io.getquill.util.LoadConfig
 import zio.{ Has, Task }
 
@@ -19,7 +19,7 @@ class ResultSetIteratorSpec extends ZioSpec {
   case class Person(name: String, age: Int)
 
   val peopleInsert =
-    quote((p: Person) => query[Person].insert(p))
+    quote((p: Person) => query[Person].insertValue(p))
 
   val peopleEntries = List(
     Person("Alex", 60),
@@ -34,7 +34,7 @@ class ResultSetIteratorSpec extends ZioSpec {
         _ <- ctx.run(query[Person].delete)
         _ <- ctx.run(liftQuery(peopleEntries).foreach(p => peopleInsert(p)))
       } yield ()
-    }.onDataSource.provide(Has(pool)).defaultRun
+    }.provide(Has(pool)).defaultRun
   }
 
   "traverses correctly" in {

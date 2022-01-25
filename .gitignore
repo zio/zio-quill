@@ -5,6 +5,9 @@ target
 .settings
 .bsp
 .cache*
+.jvmopts
+queries.sql
+LogToFileSpecQuery.sql
 **/bin
 **/.tmpBin
 local.*
@@ -17,12 +20,12 @@ Bug.scala
 quill-jdbc/io/
 quill-sql/io/
 MyTest.scala
+MyTest*.scala
 MySparkTest.scala
 MyTestJdbc.scala
 MyJdbcTest.scala
 MySqlTest*.scala
 MyCassandraTest*.scala
-MyTest.scala
 MyCqlTest.scala
 MySparkExample.scala
 quill-core/src/main/resources/logback.xml

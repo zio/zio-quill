@@ -1,7 +1,6 @@
-package io.getquill.context.monix
+package io.getquill
 
-import io.getquill.context.monix.MonixJdbcContext.Runner
-import io.getquill.Spec
+import io.getquill.context.monix.MonixJdbcContext.EffectWrapper
 import monix.eval.Task
 import monix.execution.Scheduler
 import monix.execution.schedulers.CanBlock
@@ -20,7 +19,7 @@ class RunnerSpec extends Spec {
   implicit val scheduler = Scheduler.global
 
   "plain runner" - {
-    val runner = Runner.default
+    val runner = EffectWrapper.default
     import runner._
 
     "should lazily evaluate" in {
@@ -62,7 +61,7 @@ class RunnerSpec extends Spec {
   "using scheduler runner" - {
     val prefix = "quill-test-pool"
     val customScheduler = Scheduler.io(prefix)
-    val runner = Runner.using(customScheduler)
+    val runner = EffectWrapper.using(customScheduler)
     import runner._
 
     "should run in specified scheduler" in {
