@@ -221,9 +221,6 @@ object Quat {
       val oneQuatIsAbstract = this.tpe == Product.Type.Abstract || other.tpe == Product.Type.Abstract
       val newFieldsIter =
         fields.zipWith(other.fields) {
-          // If one or both of the quats are abstract merge the values
-          // can't find a test to reproduce this. Don't think is needed
-          case (key, thisQuat, None) if (oneQuatIsAbstract) => (key, Some(thisQuat))
           case (key, thisQuat, Some(otherQuat)) => (key, thisQuat.leastUpperType(otherQuat))
         }.collect {
           case (key, Some(value)) => (key, value)
