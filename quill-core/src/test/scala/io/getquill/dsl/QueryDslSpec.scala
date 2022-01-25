@@ -40,7 +40,7 @@ class QueryDslSpec extends Spec {
   "expands updates" - {
     "default meta" in {
       val q = quote {
-        (t: TestEntity) => qr1.update(t)
+        (t: TestEntity) => qr1.updateValue(t)
       }
       val u = quote {
         (t: TestEntity) =>
@@ -59,7 +59,7 @@ class QueryDslSpec extends Spec {
         override val expand = quote((q: EntityQuery[TestEntity], value: TestEntity) => q.update(v => v.i -> value.i))
       }
       val q = quote {
-        (t: TestEntity) => qr1.update(t)
+        (t: TestEntity) => qr1.updateValue(t)
       }
       val u = quote {
         (t: TestEntity) => qr1.update(v => v.i -> t.i)

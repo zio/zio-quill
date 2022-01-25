@@ -190,7 +190,7 @@ class ActionMacroSpec extends Spec {
       }
       "case class lifting + returning value" in {
         val q = quote {
-          qr1.update(lift(TestEntity("s", 1, 2L, None, true))).returning(t => t.l)
+          qr1.updateValue(lift(TestEntity("s", 1, 2L, None, true))).returning(t => t.l)
         }
         val r = testContext.run(q)
         r.string mustEqual """querySchema("TestEntity").update(v => v.s -> ?, v => v.i -> ?, v => v.l -> ?, v => v.o -> ?, v => v.b -> ?).returning((t) => t.l)"""
@@ -199,7 +199,7 @@ class ActionMacroSpec extends Spec {
       }
       "case class lifting + returning multi value" in {
         val q = quote {
-          qr1.update(lift(TestEntity("s", 1, 2L, None, true))).returning(t => (t.l, t.i))
+          qr1.updateValue(lift(TestEntity("s", 1, 2L, None, true))).returning(t => (t.l, t.i))
         }
         val r = testContext.run(q)
         r.string mustEqual """querySchema("TestEntity").update(v => v.s -> ?, v => v.i -> ?, v => v.l -> ?, v => v.o -> ?, v => v.b -> ?).returning((t) => (t.l, t.i))"""
@@ -277,7 +277,7 @@ class ActionMacroSpec extends Spec {
     }
     "tuple + case class + nested action" in {
       val nested = quote {
-        (s: String, p: TestEntity) => qr1.filter(t => t.s == s).update(p)
+        (s: String, p: TestEntity) => qr1.filter(t => t.s == s).updateValue(p)
       }
       val q = quote {
         liftQuery(entities).foreach(p => nested(lift("s"), p))
@@ -290,7 +290,7 @@ class ActionMacroSpec extends Spec {
     }
     "zipWithIndex" in {
       val nested = quote {
-        (e: TestEntity, i: Int) => qr1.filter(t => t.i == i).update(e)
+        (e: TestEntity, i: Int) => qr1.filter(t => t.i == i).updateValue(e)
       }
       val q = quote {
         liftQuery(entities.zipWithIndex).foreach(p => nested(p._1, p._2))
@@ -464,7 +464,7 @@ class ActionMacroSpec extends Spec {
     }
     "tuple + case class + nested action" in {
       val nested = quote {
-        (s: String, p: TestEntity) => qr1.filter(t => t.s == s).update(p)
+        (s: String, p: TestEntity) => qr1.filter(t => t.s == s).updateValue(p)
       }
       val q = quote {
         liftQuery(entities).foreach(p => nested(lift("s"), p))
@@ -476,7 +476,7 @@ class ActionMacroSpec extends Spec {
     }
     "zipWithIndex" in {
       val nested = quote {
-        (e: TestEntity, i: Int) => qr1.filter(t => t.i == i).update(e)
+        (e: TestEntity, i: Int) => qr1.filter(t => t.i == i).updateValue(e)
       }
       val q = quote {
         liftQuery(entities.zipWithIndex).foreach(p => nested(p._1, p._2))
