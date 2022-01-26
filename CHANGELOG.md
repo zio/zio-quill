@@ -1,3 +1,12 @@
+# 3.15.0
+
+- [cassandra - update if exists](https://github.com/zio/zio-quill/pull/2359)
+- [Change update to updateValue](https://github.com/zio/zio-quill/pull/2405)
+
+#### Migration Notes
+* Similar to `EntityQuery.insert(CaseClass)`, the method `EntityQuery.update(CaseClass)` e.g. `query[Person].update(Person("Joe", 123))` has been replaced with `updateValue`.
+  The original `insert` method has been deprecated and will be removed in an upcoming Quill release.
+
 # 3.14.1
 
 - [Fix Infix Ast Quat issues](https://github.com/zio/zio-quill/pull/2403)
