@@ -1,3 +1,13 @@
+# 3.16.0
+
+- [Remove deprecated EntityQuery.update/insert APIs](https://github.com/zio/zio-quill/pull/2412)
+
+#### Migration Notes
+* This change removes the deprecated `EntityQuery.insert(CaseClass)` and `EntityQuery.update(CaseClass)` APIs that have been
+  updated to `EntityQuery.insertValue(CaseClass)` and `EntityQuery.updateValue(CaseClass)`. 
+  This is the only change in this release so that you can update when ready. 
+  This change is needed due to an upstream Dotty issue.
+
 # 3.15.0
 
 - [cassandra - update if exists](https://github.com/zio/zio-quill/pull/2359)
