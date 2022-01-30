@@ -6,7 +6,7 @@
 * This change removes the deprecated `EntityQuery.insert(CaseClass)` and `EntityQuery.update(CaseClass)` APIs that have been
   updated to `EntityQuery.insertValue(CaseClass)` and `EntityQuery.updateValue(CaseClass)`. 
   This is the only change in this release so that you can update when ready. 
-  This change is needed due to an upstream Dotty issue.
+  This change is needed due to the upstream Dotty issue: lampepfl/dotty#14043.
 
 # 3.15.0
 
