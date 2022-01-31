@@ -2,6 +2,8 @@ package io.getquill.context
 
 import io.getquill.{ NamingStrategy, ReturnAction }
 import io.getquill.ast.Ast
+import io.getquill.quat.Quat
+
 import scala.language.higherKinds
 
 /**
@@ -49,12 +51,13 @@ trait ProtoContext[Dialect <: io.getquill.idiom.Idiom, Naming <: NamingStrategy]
  * is being used only in ProtoQuill and only when a trait extends the trait AstSplicing.
  * In the future it might potentially be controlled by a compiler argument.
  */
-class ExecutionInfo(val executionType: ExecutionType, queryAst: => Ast) {
+class ExecutionInfo(val executionType: ExecutionType, queryAst: => Ast, queryTopLevelQuat: => Quat) {
   def ast: Ast = queryAst
+  def topLevelQuat: Quat = queryTopLevelQuat
 }
 object ExecutionInfo {
-  def apply(executionType: ExecutionType, ast: => Ast) = new ExecutionInfo(executionType, ast)
-  val unknown = ExecutionInfo(ExecutionType.Unknown, io.getquill.ast.NullValue)
+  def apply(executionType: ExecutionType, ast: => Ast, topLevelQuat: => Quat) = new ExecutionInfo(executionType, ast, topLevelQuat)
+  val unknown = ExecutionInfo(ExecutionType.Unknown, io.getquill.ast.NullValue, Quat.Unknown)
 }
 
 trait AstSplicing

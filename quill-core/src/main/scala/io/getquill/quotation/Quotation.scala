@@ -86,4 +86,11 @@ trait Quotation extends Parsing with ReifyLiftings {
       annotation <- method.annotations.headOption
       astTree <- annotation.tree.children.lastOption
     } yield astTree
+
+  def makeQuat[T: c.WeakTypeTag]: c.Tree = {
+    val quat = inferQuat(implicitly[c.WeakTypeTag[T]].tpe)
+    val liftUnlift = new { override val mctx: c.type = c } with LiftUnlift(quat.countFields)
+    val quatExpr: c.Tree = liftUnlift.quatLiftable(quat)
+    q"${quatExpr}"
+  }
 }
