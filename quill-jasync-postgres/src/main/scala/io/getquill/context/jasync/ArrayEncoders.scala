@@ -27,7 +27,12 @@ trait ArrayEncoders extends ArrayEncoding {
   implicit def arrayLocalDateEncoder[Col <: Seq[LocalDate]]: Encoder[Col] = arrayEncoder[LocalDate, Col](encodeLocalDate.f)
 
   def arrayEncoder[T, Col <: Seq[T]](mapper: T => Any): Encoder[Col] =
-    encoder[Col]((col: Col) => col.toIndexedSeq.map(mapper).mkString("{", ",", "}"), SqlTypes.ARRAY)
+    encoder[Col]((col: Col) =>
+      col
+        .toIndexedSeq
+        .map(mapper)
+        .map("\"" + _.toString.replace("\"", "\\\"") + "\"")
+        .mkString("{", ",", "}"), SqlTypes.ARRAY)
 
   def arrayRawEncoder[T, Col <: Seq[T]]: Encoder[Col] = arrayEncoder[T, Col](identity)
 
