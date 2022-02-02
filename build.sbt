@@ -265,7 +265,7 @@ lazy val `quill-engine` =
     .settings(mimaSettings: _*)
     .settings(
       libraryDependencies ++= Seq(
-        "com.typesafe"               %  "config"        % "1.4.1",
+        "com.typesafe"               %  "config"        % "1.4.2",
         "com.typesafe.scala-logging" %% "scala-logging" % "3.9.4",
         ("com.twitter"               %% "chill"         % "0.10.0").cross(CrossVersion.for3Use2_13),
         ("com.github.takayahilton"   %%% "sql-formatter" % "1.2.1").cross(CrossVersion.for3Use2_13)
@@ -299,7 +299,7 @@ lazy val `quill-core` =
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .settings(libraryDependencies ++= Seq(
-      "com.typesafe"               %  "config"        % "1.4.1",
+      "com.typesafe"               %  "config"        % "1.4.2",
       "dev.zio"                    %% "zio-logging"   % "0.5.14",
       "com.typesafe.scala-logging" %% "scala-logging" % "3.9.4"
     ))
