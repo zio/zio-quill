@@ -7,11 +7,12 @@ import io.getquill.NamingStrategy
 import io.getquill.idiom.Idiom
 
 case class Expand[C <: Context[_, _]](
-  val context: C,
-  val ast:     Ast,
-  statement:   Statement,
-  idiom:       Idiom,
-  naming:      NamingStrategy
+  val context:   C,
+  val ast:       Ast,
+  statement:     Statement,
+  idiom:         Idiom,
+  naming:        NamingStrategy,
+  executionType: ExecutionType
 ) {
 
   val (string, externals) =

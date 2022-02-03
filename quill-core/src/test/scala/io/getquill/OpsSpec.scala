@@ -52,7 +52,7 @@ class OpsSpec extends Spec {
         val q = quote {
           infix"true".as[Boolean]
         }
-        q.ast mustEqual Infix(List("true"), Nil, false, Quat.BooleanValue)
+        q.ast mustEqual Infix(List("true"), Nil, false, false, Quat.BooleanValue)
       }
     }
     "other values" - {
@@ -60,13 +60,13 @@ class OpsSpec extends Spec {
         val q = quote {
           infix"1".as[Int]
         }
-        q.ast mustEqual Infix(List("1"), Nil, false, Quat.Value)
+        q.ast mustEqual Infix(List("1"), Nil, false, false, Quat.Value)
       }
       "without `as`" in {
         val q = quote {
           infix"1"
         }
-        q.ast mustEqual Infix(List("1"), Nil, false, Quat.Value)
+        q.ast mustEqual Infix(List("1"), Nil, false, false, Quat.Value)
       }
     }
   }
