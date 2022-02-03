@@ -107,7 +107,7 @@ trait ReifyLiftings extends QuatMaking {
           // other kinds of constructs.
           val reparsedAst =
             (ref.tpe, refAst) match {
-              case (QuotedType(QueryType(tpe)), i @ Infix(_, _, _, Quat.Placeholder(_))) =>
+              case (QuotedType(QueryType(tpe)), i @ Infix(_, _, _, _, Quat.Placeholder(_))) =>
                 i.copy(quat = inferQuat(tpe))
               case _ => refAst
             }

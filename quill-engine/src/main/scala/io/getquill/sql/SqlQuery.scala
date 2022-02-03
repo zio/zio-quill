@@ -167,7 +167,7 @@ object SqlQuery {
       case Map(GroupBy(q, x @ Ident(alias, _), g), a, p) =>
         val b = base(q, alias)
         //use ExpandSelection logic to break down OrderBy clause
-        val flatGroupByAsts = new ExpandSelection(b.from, false).apply(List(SelectValue(g))).map(_.ast)
+        val flatGroupByAsts = new ExpandSelection(b.from).ofSubselect(List(SelectValue(g))).map(_.ast)
         val groupByClause =
           if (flatGroupByAsts.length > 1) Tuple(flatGroupByAsts)
           else flatGroupByAsts.head
@@ -281,7 +281,7 @@ object SqlQuery {
       case (Tuple(properties), ord: PropertyOrdering) => properties.flatMap(orderByCriterias(_, ord, from))
       case (Tuple(properties), TupleOrdering(ord))    => properties.zip(ord).flatMap { case (a, o) => orderByCriterias(a, o, from) }
       //if its a quat product, use ExpandSelection to break it down into its component fields and apply the ordering to all of them
-      case (id @ Ident(_, _: Quat.Product), ord)      => new ExpandSelection(from, false).apply(List(SelectValue(ast))).map(_.ast).flatMap(orderByCriterias(_, ord, from))
+      case (id @ Ident(_, _: Quat.Product), ord)      => new ExpandSelection(from).ofSubselect(List(SelectValue(ast))).map(_.ast).flatMap(orderByCriterias(_, ord, from))
       case (a, o: PropertyOrdering)                   => List(OrderByCriteria(a, o))
       case other                                      => fail(s"Invalid order by criteria $ast")
     }

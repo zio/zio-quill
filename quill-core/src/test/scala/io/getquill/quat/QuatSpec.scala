@@ -14,7 +14,9 @@ class QuatSpec extends Spec {
   "boolean and optional boolean" in {
     case class MyPerson(name: String, isHuman: Boolean, isRussian: Option[Boolean])
     val MyPersonQuat = Quat.Product("name" -> Quat.Value, "isHuman" -> Quat.BooleanValue, "isRussian" -> Quat.BooleanValue)
+
     quote(query[MyPerson]).ast.quat mustEqual MyPersonQuat
+    makeQuat[MyPerson] mustEqual MyPersonQuat
   }
 
   "should support standard case class" in {
@@ -22,6 +24,7 @@ class QuatSpec extends Spec {
     val MyPersonQuat = Quat.LeafProduct("firstName", "lastName", "age")
 
     quote(query[MyPerson]).ast.quat mustEqual MyPersonQuat
+    makeQuat[MyPerson] mustEqual MyPersonQuat
   }
 
   "should support embedded" in {
@@ -30,39 +33,53 @@ class QuatSpec extends Spec {
     val MyPersonQuat = Quat.Product("name" -> Quat.LeafProduct("first", "last"), "age" -> Quat.Value)
 
     quote(query[MyPerson]).ast.quat mustEqual MyPersonQuat
+    makeQuat[MyPerson] mustEqual MyPersonQuat
   }
 
   "should refine quats from generic infixes" - {
     case class MyPerson(name: String, age: Int)
     val MyPersonQuat = Quat.Product("name" -> Quat.Value, "age" -> Quat.Value)
 
-    "from extension methods" in {
+    "propagating from transparent infixes in: extension methods" in {
+      implicit class QueryOps[Q <: Query[_]](q: Q) {
+        def appendFoo = quote(infix"$q APPEND FOO".transparent.pure.as[Q])
+      }
+      val q = quote(query[MyPerson].appendFoo)
+      q.ast.quat mustEqual MyPersonQuat // I.e ReifyLiftings runs RepropagateQuats to take care of this
+    }
+
+    "not propagating from non-transparent infixes in: extension methods" in {
       implicit class QueryOps[Q <: Query[_]](q: Q) {
         def appendFoo = quote(infix"$q APPEND FOO".pure.as[Q])
       }
       val q = quote(query[MyPerson].appendFoo)
-      q.ast.quat mustEqual MyPersonQuat // I.e ReifyLiftings runs RepropagateQuats to take care of this
+      q.ast.quat mustEqual Quat.Unknown
     }
 
-    "from extension methods - generic marker" in {
-      implicit class QueryOps[Q <: Query[_]](q: Q) {
-        def appendFoo = quote(infix"$q APPEND FOO".generic.pure.as[Q])
-      }
-      val q = quote(query[MyPerson].appendFoo)
-      q.ast.quat mustEqual MyPersonQuat // I.e ReifyLiftings runs RepropagateQuats to take care of this
-    }
-
-    "should support query-ops function" in {
+    "not propagating from non-transparent infixes in: query-ops function" in {
       def appendFooFun[Q <: Query[_]] = quote { (q: Q) => infix"$q APPEND FOO".pure.as[Q] }
+      val q = quote(appendFooFun(query[MyPerson]))
+      q.ast.quat mustEqual Quat.Unknown
+      // TODO Should be Unknown here
+    }
+
+    "propagating from transparent infixes in: query-ops function" in {
+      def appendFooFun[Q <: Query[_]] = quote { (q: Q) => infix"$q APPEND FOO".transparent.pure.as[Q] }
       val q = quote(appendFooFun(query[MyPerson]))
       q.ast.quat mustEqual MyPersonQuat
     }
 
-    "should support query-ops function - dynamic function" in {
+    "not propagating from transparent infixes in (where >1 param in the infix) in: query-ops function" in {
+      def appendFooFun[Q <: Query[_]] = quote { (q: Q, i: Int) => infix"$q APPEND $i FOO".transparent.pure.as[Q] }
+      val q = quote(appendFooFun(query[MyPerson], 123))
+      q.ast.quat mustEqual Quat.Generic
+    }
+
+    "not propagating from transparent infixes where it is dynamic: query-ops function" in {
+      // I.e. can't propagate from a dynamic query since don't know the inside of the quat varaible
       def appendFooFun[Q <: Query[_]]: Quoted[Q => Q] = quote { (q: Q) => infix"$q APPEND FOO".pure.as[Q] }
       val q = quote(appendFooFun(query[MyPerson]))
       q.ast.quat mustEqual Quat.Unknown
-      println(io.getquill.util.Messages.qprint(testContext.run(q)))
     }
   }
 

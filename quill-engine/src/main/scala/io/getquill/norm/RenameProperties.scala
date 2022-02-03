@@ -110,7 +110,7 @@ object SeedRenames extends StatelessTransformer {
    */
   override def apply(e: Ast): Ast =
     e match {
-      case Infix(a, b, pure, qu) =>
+      case Infix(a, b, pure, tr, qu) =>
         // There could be an entity further in the AST of the elements, find them.
         val br = b.map(apply)
         br match {
@@ -129,7 +129,7 @@ object SeedRenames extends StatelessTransformer {
                 case _ =>
                   qu
               }
-            Infix(a, List(elem), pure, renamedQuat)
+            Infix(a, List(elem), pure, tr, renamedQuat)
 
           case _ =>
             // Check if there are any entities that have defined renames and warn them that renames cannot be applied
@@ -137,7 +137,7 @@ object SeedRenames extends StatelessTransformer {
             if (br.length > 1 && br.find { case e: Entity => e.properties.length > 0; case _ => false }.isDefined)
               println(s"Cannot propagate renames from the entity ${e} into Query since there are other AST elements in the infix: ${br}")
 
-            Infix(a, br, pure, qu)
+            Infix(a, br, pure, tr, qu)
         }
       case _ =>
         super.apply(e)

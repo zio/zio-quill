@@ -66,9 +66,9 @@ object RepropagateQuats extends StatelessTransformer {
 
   override def apply(e: Ast): Ast =
     e match {
-      case Infix(parts, params, pure, quat) =>
+      case i @ Infix(parts, params, pure, tr, quat) =>
         val newParams = params.map(apply)
-        Quat.improveInfixQuat(Infix(parts, newParams, pure, quat))
+        Quat.improveInfixQuat(Infix(parts, newParams, pure, tr, quat))
       case _ => super.apply(e)
     }
 
