@@ -598,8 +598,8 @@ case class CaseClass(values: List[(String, Ast)]) extends Value {
 }
 
 object CaseClass {
-  def apply(tup: (String, Ast)) = new CaseClass(List(tup))
   object Single {
+    def apply(tup: (String, Ast)) = new CaseClass(List(tup))
     def unapply(cc: CaseClass): Option[(String, Ast)] =
       cc.values match {
         case (name, property) :: Nil => Some((name, property))

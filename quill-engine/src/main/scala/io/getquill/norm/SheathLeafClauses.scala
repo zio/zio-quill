@@ -27,8 +27,8 @@ case class SheathLeafClauses(state: Option[String]) extends StatefulTransformerW
 
   def sheathLeaf(ast: Ast) =
     ast match {
-      case LeafQuat(p: Property) => (CaseClass(p.name -> p), Some(p.name))
-      case LeafQuat(body)        => (CaseClass("x" -> body), Some("x"))
+      case LeafQuat(p: Property) => (CaseClass.Single(p.name -> p), Some(p.name))
+      case LeafQuat(body)        => (CaseClass.Single("x" -> body), Some("x"))
       case other                 => (other, None)
     }
 
@@ -149,7 +149,7 @@ case class SheathLeafClauses(state: Option[String]) extends StatefulTransformerW
           // e.g. from Map(Grp(leaf,e,e),e,Agg(e)) should have changed to Map(Grp(M(leaf,e,CC(i->e)),e,e.i),e,Agg(M(e->e.i)))
           case infix: io.getquill.ast.Infix =>
             val newId = Ident("i", infix.quat)
-            Some((Map(infix, newId, CaseClass("i" -> newId)), Some("i")))
+            Some((Map(infix, newId, CaseClass.Single("i" -> newId)), Some("i")))
           // If it's a query inside e.g. Map(Grp(qry:Query),e,by) the higher-level apply should have changed it approporately
           // e.g. from Map(Grp(M(ent,e,e.v),e,e),e,Agg(e)) should have changed to Map(Grp(M(ent,e,CC(v->e.v)),e,e.v),e,Agg(M(e->e.v)))
           case _: Query =>
@@ -275,7 +275,7 @@ case class SheathLeafClauses(state: Option[String]) extends StatefulTransformerW
               val pl = Property(el, l)
               val er = Ident("e", right1.quat)
               val pr = Property(er, r)
-              (Map(left1, el, CaseClass("u" -> pl)), Map(right1, er, CaseClass("u" -> pr)), Some("u"))
+              (Map(left1, el, CaseClass.Single("u" -> pl)), Map(right1, er, CaseClass.Single("u" -> pr)), Some("u"))
             case (None, None) =>
               (left1, right1, None)
             // if only one side has a state etc... do not do anything, technically
