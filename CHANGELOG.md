@@ -1,3 +1,7 @@
+# 3.16.1
+
+- [Top-Level quat passing to query expansions](https://github.com/zio/zio-quill/pull/2420)
+
 # 3.16.0
 
 - [Remove deprecated EntityQuery.update/insert APIs](https://github.com/zio/zio-quill/pull/2412)
