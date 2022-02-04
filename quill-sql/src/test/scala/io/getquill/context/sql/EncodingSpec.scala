@@ -2,8 +2,8 @@ package io.getquill.context.sql
 
 import java.time.LocalDate
 import java.util.{ Date, UUID }
-
 import io.getquill.Spec
+import io.getquill.context.sql.encoding.ArrayEncoding
 
 case class EncodingTestType(value: String)
 
@@ -19,7 +19,7 @@ object Number {
 
 trait EncodingSpec extends Spec {
 
-  val context: SqlContext[_, _] with TestEncoders with TestDecoders
+  val context: SqlContext[_, _] with TestEncoders with TestDecoders with ArrayEncoding
 
   import context._
 
@@ -38,6 +38,21 @@ trait EncodingSpec extends Spec {
     v12: EncodingTestType,
     v13: LocalDate,
     v14: UUID,
+    vv1: Vector[String],
+    vv2: Vector[BigDecimal],
+    vv3: Vector[Boolean],
+    vv4: Vector[Byte],
+    vv5: Vector[Short],
+    vv6: Vector[Int],
+    vv7: Vector[Long],
+    vv8: Vector[Float],
+    vv9: Vector[Double],
+    //    vv10: Vector[Array[Byte]],
+    vv11: Vector[Date],
+    vv12: Vector[LocalDate],
+    //    vv13: Vector[JodaDateTime],
+    //    vv14: Vector[JodaLocalDateTime],
+    //    vv15: Vector[JodaLocalDate],
     o1:  Option[String],
     o2:  Option[BigDecimal],
     o3:  Option[Boolean],
@@ -80,6 +95,17 @@ trait EncodingSpec extends Spec {
         EncodingTestType("s"),
         LocalDate.of(2013, 11, 23),
         UUID.randomUUID(),
+        Vector("a", "", "\"", "b"),
+        Vector(BigDecimal(1.1)),
+        Vector(true),
+        Vector(11.toByte),
+        Vector(23.toShort),
+        Vector(33),
+        Vector(431L),
+        Vector(34.4f),
+        Vector(42d),
+        Vector(new Date(31200000)),
+        Vector(LocalDate.of(2013, 11, 23)),
         Some("s"),
         Some(BigDecimal(1.1)),
         Some(true),
@@ -111,6 +137,17 @@ trait EncodingSpec extends Spec {
         EncodingTestType(""),
         LocalDate.ofEpochDay(0),
         UUID.randomUUID(),
+        Vector.empty,
+        Vector.empty,
+        Vector.empty,
+        Vector.empty,
+        Vector.empty,
+        Vector.empty,
+        Vector.empty,
+        Vector.empty,
+        Vector.empty,
+        Vector.empty,
+        Vector.empty,
         None,
         None,
         None,
@@ -147,6 +184,19 @@ trait EncodingSpec extends Spec {
         e1.v12 mustEqual e2.v12
         e1.v13 mustEqual e2.v13
         e1.v14 mustEqual e2.v14
+
+        e1.vv1 mustEqual e2.vv1
+        e1.vv2 mustEqual e2.vv2
+        e1.vv3 mustEqual e2.vv3
+        e1.vv4 mustEqual e2.vv4
+        e1.vv5 mustEqual e2.vv5
+        e1.vv6 mustEqual e2.vv6
+        e1.vv7 mustEqual e2.vv7
+        e1.vv8 mustEqual e2.vv8
+        e1.vv9 mustEqual e2.vv9
+        //e1.vv10 mustEqual e2.vv10
+        e1.vv11 mustEqual e2.vv11
+        e1.vv12 mustEqual e2.vv12
 
         e1.o1 mustEqual e2.o1
         e1.o2 mustEqual e2.o2
