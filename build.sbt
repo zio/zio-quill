@@ -40,7 +40,8 @@ lazy val jsModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
 lazy val baseModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-engine-jvm`,
   `quill-core-jvm`,
-  `quill-sql-jvm`, `quill-monix`, `quill-zio`
+  `quill-sql-jvm`, `quill-monix`, `quill-zio`,
+  `quill-util`
 )
 
 lazy val dbModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
@@ -84,10 +85,10 @@ lazy val scala213Modules = baseModules ++ jsModules ++ dbModules ++ codegenModul
 )
 
 lazy val notScala211Modules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
-  `quill-cassandra-alpakka`
+  `quill-cassandra-alpakka`, `quill-util`
 )
 
-lazy val scala3Modules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](`quill-engine-jvm`)
+lazy val scala3Modules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](`quill-engine-jvm`, `quill-util`)
 
 def isScala213 = {
   val scalaVersion = sys.props.get("quill.scala.version")
@@ -195,6 +196,33 @@ lazy val `quill` =
 
 `quill` / publishArtifact := false
 
+lazy val `quill-util` =
+  (project in file("quill-util"))
+    .settings(commonSettings: _*)
+    .settings(mimaSettings: _*)
+    .settings(
+      Test / fork := true,
+      libraryDependencies ++= Seq(
+        ("org.scalameta" %% "scalafmt-core" % "3.1.0")
+          .excludeAll(
+            (Seq(
+              ExclusionRule(organization = "com.lihaoyi", name = "sourcecode_2.13"),
+              ExclusionRule(organization = "com.lihaoyi", name = "fansi_2.13"),
+              ExclusionRule(organization = "com.lihaoyi", name = "pprint_2.13"),
+            ) ++ {
+              if (isScala3)
+                Seq(
+                  ExclusionRule(organization = "org.scala-lang.modules")
+                )
+              else
+                Seq()
+            }): _*
+          )
+          .cross(CrossVersion.for3Use2_13)
+      )
+    )
+    .enablePlugins(MimaPlugin)
+
 lazy val superPure = new sbtcrossproject.CrossType {
   def projectDir(crossBase: File, projectType: String): File =
     projectType match {
@@ -228,6 +256,8 @@ lazy val ultraPure = new sbtcrossproject.CrossType {
       case JSPlatform  => crossBase / ".js"
     }
 }
+
+
 
 lazy val `quill-engine` =
   crossProject(JVMPlatform, JSPlatform).crossType(ultraPure)

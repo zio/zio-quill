@@ -13,7 +13,7 @@ class ArrayAsyncEncodingSpec extends ArrayEncodingBaseSpec with ZioSpec {
   val q = quote(query[ArraysTestEntity])
 
   "Support all sql base types and `Iterable` implementers" in {
-    runSyncUnsafe(context.run(q.insert(lift(e))))
+    runSyncUnsafe(context.run(q.insertValue(lift(e))))
     val actual = runSyncUnsafe(context.run(q)).head
     actual mustEqual e
     baseEntityDeepCheck(actual, e)
@@ -23,7 +23,7 @@ class ArrayAsyncEncodingSpec extends ArrayEncodingBaseSpec with ZioSpec {
     case class JodaTimes(timestamps: Seq[JodaLocalDateTime], dates: Seq[JodaLocalDate])
     val jE = JodaTimes(Seq(JodaLocalDateTime.now()), Seq(JodaLocalDate.now()))
     val jQ = quote(querySchema[JodaTimes]("ArraysTestEntity"))
-    runSyncUnsafe(context.run(jQ.insert(lift(jE))))
+    runSyncUnsafe(context.run(jQ.insertValue(lift(jE))))
     val actual = runSyncUnsafe(context.run(jQ)).head
     actual.timestamps mustBe jE.timestamps
     actual.dates mustBe jE.dates
@@ -33,7 +33,7 @@ class ArrayAsyncEncodingSpec extends ArrayEncodingBaseSpec with ZioSpec {
     case class JodaTimes(timestamps: Seq[JodaDateTime])
     val jE = JodaTimes(Seq(JodaDateTime.now()))
     val jQ = quote(querySchema[JodaTimes]("ArraysTestEntity"))
-    runSyncUnsafe(context.run(jQ.insert(lift(jE))))
+    runSyncUnsafe(context.run(jQ.insertValue(lift(jE))))
     val actual = runSyncUnsafe(context.run(jQ)).head
     actual.timestamps mustBe jE.timestamps
   }
@@ -42,7 +42,7 @@ class ArrayAsyncEncodingSpec extends ArrayEncodingBaseSpec with ZioSpec {
     case class Java8Times(timestamps: Seq[LocalDateTime], dates: Seq[LocalDate])
     val jE = Java8Times(Seq(LocalDateTime.now()), Seq(LocalDate.now()))
     val jQ = quote(querySchema[Java8Times]("ArraysTestEntity"))
-    runSyncUnsafe(context.run(jQ.insert(lift(jE))))
+    runSyncUnsafe(context.run(jQ.insertValue(lift(jE))))
     val actual = runSyncUnsafe(context.run(jQ)).head
     actual.timestamps mustBe jE.timestamps
     actual.dates mustBe jE.dates
@@ -50,7 +50,7 @@ class ArrayAsyncEncodingSpec extends ArrayEncodingBaseSpec with ZioSpec {
 
   "Support Iterable encoding basing on MappedEncoding" in {
     val wrapQ = quote(querySchema[WrapEntity]("ArraysTestEntity"))
-    runSyncUnsafe(context.run(wrapQ.insert(lift(wrapE))))
+    runSyncUnsafe(context.run(wrapQ.insertValue(lift(wrapE))))
     runSyncUnsafe(context.run(wrapQ)).head mustBe wrapE
   }
 
@@ -61,7 +61,7 @@ class ArrayAsyncEncodingSpec extends ArrayEncodingBaseSpec with ZioSpec {
         arrayDecoder[LocalDate, LocalDate, Col](identity)
     }
     import newCtx._
-    runSyncUnsafe(newCtx.run(query[ArraysTestEntity].insert(lift(e))))
+    runSyncUnsafe(newCtx.run(query[ArraysTestEntity].insertValue(lift(e))))
     intercept[FiberFailure] {
       runSyncUnsafe(newCtx.run(query[ArraysTestEntity])).head mustBe e
     }
@@ -69,7 +69,7 @@ class ArrayAsyncEncodingSpec extends ArrayEncodingBaseSpec with ZioSpec {
   }
 
   "Arrays in where clause" in {
-    runSyncUnsafe(context.run(q.insert(lift(e))))
+    runSyncUnsafe(context.run(q.insertValue(lift(e))))
     val actual1 = runSyncUnsafe(context.run(q.filter(_.texts == lift(List("test")))))
     val actual2 = runSyncUnsafe(context.run(q.filter(_.texts == lift(List("test2")))))
     baseEntityDeepCheck(actual1.head, e)
@@ -148,7 +148,7 @@ class ArrayAsyncEncodingSpec extends ArrayEncodingBaseSpec with ZioSpec {
     val realEntity = quote {
       querySchema[RealEncodingTestEntity]("EncodingTestEntity")
     }
-    runSyncUnsafe(context.run(realEntity.insert(lift(insertValue))))
+    runSyncUnsafe(context.run(realEntity.insertValue(lift(insertValue))))
 
     case class EncodingTestEntity(v1: List[String])
     intercept[FiberFailure](runSyncUnsafe(context.run(query[EncodingTestEntity])))

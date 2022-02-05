@@ -19,7 +19,7 @@ class PostgresJAsyncContextSpec extends Spec with ZioSpec {
 
   "Insert with returning with single column table" in {
     val inserted: Long = runSyncUnsafe(testContext.run {
-      qr4.insert(lift(TestEntity4(0))).returningGenerated(_.i)
+      qr4.insertValue(lift(TestEntity4(0))).returningGenerated(_.i)
     })
     runSyncUnsafe(testContext.run(qr4.filter(_.i == lift(inserted))))
       .head.i mustBe inserted
@@ -27,7 +27,7 @@ class PostgresJAsyncContextSpec extends Spec with ZioSpec {
   "Insert with returning with multiple columns" in {
     runSyncUnsafe(testContext.run(qr1.delete))
     val inserted = runSyncUnsafe(testContext.run {
-      qr1.insert(lift(TestEntity("foo", 1, 18L, Some(123), true))).returning(r => (r.i, r.s, r.o))
+      qr1.insertValue(lift(TestEntity("foo", 1, 18L, Some(123), true))).returning(r => (r.i, r.s, r.o))
     })
     (1, "foo", Some(123)) mustBe inserted
   }

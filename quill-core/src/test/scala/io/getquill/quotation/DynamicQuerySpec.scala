@@ -539,7 +539,7 @@ class DynamicQuerySpec extends Spec {
     "updateValue" in {
       test(
         dynamicQuery[TestEntity].updateValue(t),
-        query[TestEntity].update(lift(t))
+        query[TestEntity].updateValue(lift(t))
       )
     }
 

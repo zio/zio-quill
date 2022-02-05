@@ -262,10 +262,12 @@ case class Nested(a: Ast) extends Query {
 
 //************************************************************
 
-final class Infix(val parts: List[String], val params: List[Ast], val pure: Boolean)(theQuat: => Quat) extends Ast {
+final class Infix(val parts: List[String], val params: List[Ast], val pure: Boolean, val transparent: Boolean)(theQuat: => Quat) extends Ast {
   def quat: Quat = theQuat
   def bestQuat: Quat = quat
-  private def id = Infix.Id(parts, params, pure)
+  private def id = Infix.Id(parts, params, pure, transparent)
+
+  def asTransparent = new Infix(this.parts, this.params, this.pure, true)(theQuat)
 
   override def equals(that: Any) =
     that match {
@@ -274,16 +276,16 @@ final class Infix(val parts: List[String], val params: List[Ast], val pure: Bool
     }
 
   override def hashCode = id.hashCode()
-  def copy(parts: List[String] = this.parts, params: List[Ast] = this.params, pure: Boolean = this.pure, quat: Quat = this.quat) =
-    Infix(parts, params, pure, quat)
+  def copy(parts: List[String] = this.parts, params: List[Ast] = this.params, pure: Boolean = this.pure, transparent: Boolean = this.transparent, quat: Quat = this.quat) =
+    Infix(parts, params, pure, transparent, quat)
 }
 object Infix {
-  private case class Id(val parts: List[String], val params: List[Ast], val pure: Boolean)
+  private case class Id(val parts: List[String], val params: List[Ast], val pure: Boolean, val transparent: Boolean)
 
-  def apply(parts: List[String], params: List[Ast], pure: Boolean, quat: => Quat) =
-    new Infix(parts, params, pure)(quat)
+  def apply(parts: List[String], params: List[Ast], pure: Boolean, transparent: Boolean, quat: => Quat) =
+    new Infix(parts, params, pure, transparent)(quat)
 
-  def unapply(i: Infix) = Some((i.parts, i.params, i.pure, i.quat))
+  def unapply(i: Infix) = Some((i.parts, i.params, i.pure, i.transparent, i.quat))
 }
 
 case class Function(params: List[Ident], body: Ast) extends Ast {

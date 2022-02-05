@@ -2,11 +2,12 @@ package io.getquill
 
 import io.getquill.ast.Renameable.{ ByStrategy, Fixed }
 import io.getquill.ast.Visibility.Hidden
-import io.getquill.ast.{ Query => AstQuery, Action => AstAction, _ }
-import io.getquill.context.CanReturnClause
+import io.getquill.ast.{ Action => AstAction, Query => AstQuery, _ }
+import io.getquill.context.{ CanReturnClause, ExecutionType }
 import io.getquill.idiom.{ Idiom, SetContainsToken, Statement }
 import io.getquill.idiom.StatementInterpolator._
 import io.getquill.norm.{ Normalize, NormalizeCaching }
+import io.getquill.quat.Quat
 import io.getquill.util.Interleave
 
 object MirrorIdiom extends MirrorIdiom
@@ -24,14 +25,14 @@ trait MirrorIdiomBase extends Idiom {
 
   override def liftingPlaceholder(index: Int): String = "?"
 
-  override def translateCached(ast: Ast)(implicit naming: NamingStrategy): (Ast, Statement) = {
+  override def translateCached(ast: Ast, topLevelQuat: Quat, executionType: ExecutionType)(implicit naming: NamingStrategy): (Ast, Statement, ExecutionType) = {
     val normalizedAst = NormalizeCaching(Normalize.apply)(ast)
-    (normalizedAst, stmt"${normalizedAst.token}")
+    (normalizedAst, stmt"${normalizedAst.token}", executionType)
   }
 
-  override def translate(ast: Ast)(implicit naming: NamingStrategy): (Ast, Statement) = {
+  override def translate(ast: Ast, topLevelQuat: Quat, executionType: ExecutionType)(implicit naming: NamingStrategy): (Ast, Statement, ExecutionType) = {
     val normalizedAst = Normalize(ast)
-    (normalizedAst, stmt"${normalizedAst.token}")
+    (normalizedAst, stmt"${normalizedAst.token}", executionType)
   }
 
   implicit def astTokenizer(implicit externalTokenizer: Tokenizer[External]): Tokenizer[Ast] = Tokenizer[Ast] {
@@ -282,7 +283,7 @@ trait MirrorIdiomBase extends Idiom {
   }
 
   implicit def infixTokenizer(implicit externalTokenizer: Tokenizer[External]): Tokenizer[Infix] = Tokenizer[Infix] {
-    case Infix(parts, params, _, _) =>
+    case Infix(parts, params, _, _, _) =>
       def tokenParam(ast: Ast) =
         ast match {
           case ast: Ident => stmt"$$${ast.token}"
