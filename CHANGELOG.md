@@ -1,3 +1,7 @@
+# 3.16.2
+
+- [Remove second apply method on ast.CaseClass due to incremental-compile errors](https://github.com/zio/zio-quill/pull/2423)
+
 # 3.16.1
 
 - [Top-Level quat passing to query expansions](https://github.com/zio/zio-quill/pull/2420)
