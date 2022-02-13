@@ -1,25 +1,22 @@
 package io.getquill.context.jasync
 
-import java.util.concurrent.CompletableFuture
-import com.github.jasync.sql.db.{ ConcreteConnection, Connection, QueryResult, RowData }
 import com.github.jasync.sql.db.pool.ConnectionPool
-
-import scala.language.implicitConversions
-import scala.concurrent.Await
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
-import scala.concurrent.duration.Duration
-import scala.util.Try
+import com.github.jasync.sql.db._
 import io.getquill.context.sql.SqlContext
 import io.getquill.context.sql.idiom.SqlIdiom
-import io.getquill.{ NamingStrategy, ReturnAction }
-import io.getquill.util.ContextLogger
-import io.getquill.monad.ScalaFutureIOMonad
 import io.getquill.context.{ Context, ExecutionInfo, TranslateContext }
+import io.getquill.monad.ScalaFutureIOMonad
+import io.getquill.util.ContextLogger
+import io.getquill.{ NamingStrategy, ReturnAction }
 import kotlin.jvm.functions.Function1
 
+import java.util.concurrent.CompletableFuture
 import scala.compat.java8.FutureConverters
+import scala.concurrent.{ Await, ExecutionContext, Future }
+import scala.concurrent.duration.Duration
 import scala.jdk.CollectionConverters._
+import scala.language.implicitConversions
+import scala.util.Try
 
 abstract class JAsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: ConcreteConnection](val idiom: D, val naming: N, pool: ConnectionPool[C])
   extends Context[D, N]
@@ -71,9 +68,12 @@ abstract class JAsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: ConcreteCo
     }
 
   def transaction[T](f: TransactionalExecutionContext => Future[T])(implicit ec: ExecutionContext) =
-    pool.inTransaction({ c: Connection =>
-      toCompletableFuture(f(TransactionalExecutionContext(ec, c)))
-    })
+    ec match {
+      case tec: TransactionalExecutionContext => toCompletableFuture(f(tec))
+      case _ => pool.inTransaction { c =>
+        toCompletableFuture(f(TransactionalExecutionContext(ec, c)))
+      }
+    }
 
   override def performIO[T](io: IO[T, _], transactional: Boolean = false)(implicit ec: ExecutionContext): Result[T] =
     transactional match {
