@@ -170,6 +170,10 @@ object Quat {
     def unapply(quat: Quat): scala.Boolean = !quat.isAbstract
   }
 
+  /*
+   * This is needed to propagate the Quat of an Infix param to the infix quat itself.
+   * See here for more details: https://github.com/zio/zio-quill/pull/2420
+   */
   def improveInfixQuat(ast: Ast) = {
     ast match {
       // Possibly improve the quat if an infix clause if it has exactly one inner Ast element and the type of it's quat is Generic
