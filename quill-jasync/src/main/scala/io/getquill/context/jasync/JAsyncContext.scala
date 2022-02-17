@@ -21,7 +21,7 @@ import kotlin.jvm.functions.Function1
 import scala.compat.java8.FutureConverters
 import scala.jdk.CollectionConverters._
 
-abstract class JAsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: ConcreteConnection](val idiom: D, val naming: N, pool: ConnectionPool[C])
+abstract class JAsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: ConcreteConnection](val idiom: D, val naming: N, pool: ConnectionPool[C], release: Boolean = false)
   extends Context[D, N]
   with TranslateContext
   with SqlContext[D, N]
@@ -84,7 +84,7 @@ abstract class JAsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: ConcreteCo
   def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner)(implicit ec: ExecutionContext): Future[List[T]] = {
     val (params, values) = prepare(Nil, ())
     logger.logQuery(sql, params)
-    withConnection(_.sendPreparedStatement(sql, values.asJava))
+    withConnection(_.sendPreparedStatement(sql, values.asJava, release))
       .map(_.getRows.asScala.iterator.map(row => extractor(row, ())).toList)
   }
 
@@ -94,14 +94,14 @@ abstract class JAsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: ConcreteCo
   def executeAction(sql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: Runner)(implicit ec: ExecutionContext): Future[Long] = {
     val (params, values) = prepare(Nil, ())
     logger.logQuery(sql, params)
-    withConnection(_.sendPreparedStatement(sql, values.asJava)).map(_.getRowsAffected)
+    withConnection(_.sendPreparedStatement(sql, values.asJava, release)).map(_.getRowsAffected)
   }
 
   def executeActionReturning[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T], returningAction: ReturnAction)(info: ExecutionInfo, dc: Runner)(implicit ec: ExecutionContext): Future[T] = {
     val expanded = expandAction(sql, returningAction)
     val (params, values) = prepare(Nil, ())
     logger.logQuery(sql, params)
-    withConnection(_.sendPreparedStatement(expanded, values.asJava))
+    withConnection(_.sendPreparedStatement(expanded, values.asJava, release))
       .map(extractActionResult(returningAction, extractor))
   }
 
