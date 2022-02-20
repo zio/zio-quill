@@ -23,8 +23,8 @@ jobs:
 
    strategy:
      matrix:
-       scala: [2.11.12, 2.12.10, 2.13.2]
-       module: [db, js, async, codegen, bigdata]
+       scala: [2.11.12, 2.12.10, 2.13.2, 3.0.2]
+       module: [base, db, js, async, codegen, bigdata]
        include:
          - scala: 2.11.12
            scala_short: 211
@@ -35,6 +35,31 @@ jobs:
          - scala: 2.13.2
            scala_short: 213
            scala_short_dot: 2.13
+         - scala: 3.0.2
+           scala_short: 30
+           scala_short_dot: 3.0
+       exclude:
+         # For now, only do the `base` build for Scala 3
+         - scala: 3.0.2
+           module: db
+         - scala: 3.0.2
+           module: js
+         - scala: 3.0.2
+           module: async
+         - scala: 3.0.2
+           module: codegen
+         - scala: 3.0.2
+           module: bigdata
+         # For other modules, `base` build is already included
+         - scala: 2.11.12
+           module: base
+         - scala: 2.12.10
+           module: base
+         - scala: 2.13.2
+           module: base
+         # Do not build 2.11 Scala JS anymore since various modules such as scala-collection-compat are missing for it
+         - scala: 2.11.12
+           module: js
 
    name: Build ${{matrix.scala_short_dot}} - ${{matrix.module}}
 
@@ -67,7 +92,7 @@ jobs:
 
    strategy:
      matrix:
-       scala: [2.11.12, 2.12.10, 2.13.2]
+       scala: [2.11.12, 2.12.10, 2.13.2, 3.0.2]
        module: [base, db, js, async, codegen, bigdata]
        include:
          - scala: 2.11.12
@@ -79,6 +104,23 @@ jobs:
          - scala: 2.13.2
            scala_short: 213
            scala_short_dot: 2.13
+         - scala: 3.0.2
+           scala_short: 30
+           scala_short_dot: 3.0
+       exclude:
+         - scala: 3.0.2
+           module: db
+         - scala: 3.0.2
+           module: js
+         - scala: 3.0.2
+           module: async
+         - scala: 3.0.2
+           module: codegen
+         - scala: 3.0.2
+           module: bigdata
+         # Do not release 2.11 Scala JS anymore since various modules such as scala-collection-compat are missing for it
+         - scala: 2.11.12
+           module: js
 
    name: Release ${{matrix.scala_short_dot}} - ${{matrix.module}}
 

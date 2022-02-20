@@ -44,7 +44,7 @@ class CassandraLagomStreamContext[N <: NamingStrategy](
     executeQuery(cql, prepare, extractor)(info, dc).take(1)
   }
 
-  def executeAction[T](cql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: DatasourceContext)(
+  def executeAction(cql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: DatasourceContext)(
     implicit
     executionContext: ExecutionContext
   ): Result[RunActionResult] = {

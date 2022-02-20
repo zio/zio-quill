@@ -31,7 +31,7 @@ class NdbcPostgresEncodingSpec extends EncodingSpec {
     val rez0 = get(context.run(q0))
 
     // insert new uuid
-    val rez1 = get(context.run(query[EncodingUUIDTestEntity].insert(lift(EncodingUUIDTestEntity(testUUID)))))
+    val rez1 = get(context.run(query[EncodingUUIDTestEntity].insertValue(lift(EncodingUUIDTestEntity(testUUID)))))
 
     // verify you can get the uuid back from the db
     val q2 = quote(query[EncodingUUIDTestEntity].map(p => p.v1))
@@ -66,7 +66,7 @@ class NdbcPostgresEncodingSpec extends EncodingSpec {
     val fut =
       for {
         _ <- context.run(query[EncodingTestEntity].delete)
-        _ <- context.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insert(e)))
+        _ <- context.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insertValue(e)))
         r <- context.run(q(liftQuery(insertValues.map(_.v6))))
       } yield {
         r
@@ -89,7 +89,7 @@ class NdbcPostgresEncodingSpec extends EncodingSpec {
     val entity = DateEncodingTestEntity(LocalDate.now, LocalDate.now)
     val r = for {
       _ <- context.run(query[DateEncodingTestEntity].delete)
-      _ <- context.run(query[DateEncodingTestEntity].insert(lift(entity)))
+      _ <- context.run(query[DateEncodingTestEntity].insertValue(lift(entity)))
       result <- context.run(query[DateEncodingTestEntity])
     } yield result
     get(r) must contain(entity)
@@ -100,7 +100,7 @@ class NdbcPostgresEncodingSpec extends EncodingSpec {
     val entity = DateEncodingTestEntity(LocalDateTime.now, LocalDateTime.now)
     val r = for {
       _ <- context.run(query[DateEncodingTestEntity].delete)
-      _ <- context.run(query[DateEncodingTestEntity].insert(lift(entity)))
+      _ <- context.run(query[DateEncodingTestEntity].insertValue(lift(entity)))
       result <- context.run(query[DateEncodingTestEntity])
     } yield result
     get(r)

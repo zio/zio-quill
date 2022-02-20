@@ -15,7 +15,7 @@ class StreamingWithFetchSpec extends ZioSpec with BeforeAndAfter {
   case class Person(name: String, age: Int)
 
   val selectAll = quote(query[Person])
-  val insert = quote { (p: Person) => query[Person].insert(p) }
+  val insert = quote { (p: Person) => query[Person].insertValue(p) }
 
   def result[T](qzio: QIO[T]): T =
     Runtime.default.unsafeRun(qzio.provide(Has(pool)))

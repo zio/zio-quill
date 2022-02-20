@@ -26,7 +26,7 @@ class ActionMacroSpec extends Spec {
     }
     "case class lifting" in {
       val q = quote {
-        qr1.insert(lift(TestEntity("s", 1, 2L, None, true)))
+        qr1.insertValue(lift(TestEntity("s", 1, 2L, None, true)))
       }
       val r = testContext.run(q)
       r.string mustEqual """querySchema("TestEntity").insert(v => v.s -> ?, v => v.i -> ?, v => v.l -> ?, v => v.o -> ?, v => v.b -> ?)"""
@@ -34,7 +34,7 @@ class ActionMacroSpec extends Spec {
     }
     "nexted case class lifting" in {
       val q = quote {
-        t: TestEntity => qr1.insert(t)
+        t: TestEntity => qr1.insertValue(t)
       }
       val r = testContext.run(q(lift(TestEntity("s", 1, 2L, None, true))))
       r.string mustEqual """querySchema("TestEntity").insert(v => v.s -> ?, v => v.i -> ?, v => v.l -> ?, v => v.o -> ?, v => v.b -> ?)"""
@@ -120,7 +120,7 @@ class ActionMacroSpec extends Spec {
       }
       "case class lifting + returning value" in {
         val q = quote {
-          qr1.insert(lift(TestEntity("s", 1, 2L, None, true))).returning(t => t.l)
+          qr1.insertValue(lift(TestEntity("s", 1, 2L, None, true))).returning(t => t.l)
         }
         val r = testContext.run(q)
         r.string mustEqual """querySchema("TestEntity").insert(v => v.s -> ?, v => v.i -> ?, v => v.l -> ?, v => v.o -> ?, v => v.b -> ?).returning((t) => t.l)"""
@@ -129,7 +129,7 @@ class ActionMacroSpec extends Spec {
       }
       "case class lifting + returning generated value" in {
         val q = quote {
-          qr1.insert(lift(TestEntity("s", 1, 2L, None, true))).returningGenerated(t => t.l)
+          qr1.insertValue(lift(TestEntity("s", 1, 2L, None, true))).returningGenerated(t => t.l)
         }
         val r = testContext.run(q)
         r.string mustEqual """querySchema("TestEntity").insert(v => v.s -> ?, v => v.i -> ?, v => v.o -> ?, v => v.b -> ?).returningGenerated((t) => t.l)"""
@@ -138,7 +138,7 @@ class ActionMacroSpec extends Spec {
       }
       "case class lifting + returning multi value" in {
         val q = quote {
-          qr1.insert(lift(TestEntity("s", 1, 2L, None, true))).returning(t => (t.l, t.i, t.b))
+          qr1.insertValue(lift(TestEntity("s", 1, 2L, None, true))).returning(t => (t.l, t.i, t.b))
         }
         val r = testContext.run(q)
         r.string mustEqual """querySchema("TestEntity").insert(v => v.s -> ?, v => v.i -> ?, v => v.l -> ?, v => v.o -> ?, v => v.b -> ?).returning((t) => (t.l, t.i, t.b))"""
@@ -147,7 +147,7 @@ class ActionMacroSpec extends Spec {
       }
       "case class lifting + returning generated multi value" in {
         val q = quote {
-          qr1.insert(lift(TestEntity("s", 1, 2L, None, true))).returningGenerated(t => (t.l, t.i, t.b))
+          qr1.insertValue(lift(TestEntity("s", 1, 2L, None, true))).returningGenerated(t => (t.l, t.i, t.b))
         }
         val r = testContext.run(q)
         r.string mustEqual """querySchema("TestEntity").insert(v => v.s -> ?, v => v.o -> ?).returningGenerated((t) => (t.l, t.i, t.b))"""
@@ -190,7 +190,7 @@ class ActionMacroSpec extends Spec {
       }
       "case class lifting + returning value" in {
         val q = quote {
-          qr1.update(lift(TestEntity("s", 1, 2L, None, true))).returning(t => t.l)
+          qr1.updateValue(lift(TestEntity("s", 1, 2L, None, true))).returning(t => t.l)
         }
         val r = testContext.run(q)
         r.string mustEqual """querySchema("TestEntity").update(v => v.s -> ?, v => v.i -> ?, v => v.l -> ?, v => v.o -> ?, v => v.b -> ?).returning((t) => t.l)"""
@@ -199,7 +199,7 @@ class ActionMacroSpec extends Spec {
       }
       "case class lifting + returning multi value" in {
         val q = quote {
-          qr1.update(lift(TestEntity("s", 1, 2L, None, true))).returning(t => (t.l, t.i))
+          qr1.updateValue(lift(TestEntity("s", 1, 2L, None, true))).returning(t => (t.l, t.i))
         }
         val r = testContext.run(q)
         r.string mustEqual """querySchema("TestEntity").update(v => v.s -> ?, v => v.i -> ?, v => v.l -> ?, v => v.o -> ?, v => v.b -> ?).returning((t) => (t.l, t.i))"""
@@ -254,7 +254,7 @@ class ActionMacroSpec extends Spec {
     }
     "case class" in {
       val q = quote {
-        liftQuery(entities).foreach(p => qr1.insert(p))
+        liftQuery(entities).foreach(p => qr1.insertValue(p))
       }
       val r = testContext.run(q)
       r.groups mustEqual List(
@@ -264,7 +264,7 @@ class ActionMacroSpec extends Spec {
     }
     "case class + nested action" in {
       val nested = quote {
-        p: TestEntity => qr1.insert(p)
+        p: TestEntity => qr1.insertValue(p)
       }
       val q = quote {
         liftQuery(entities).foreach(p => nested(p))
@@ -277,7 +277,7 @@ class ActionMacroSpec extends Spec {
     }
     "tuple + case class + nested action" in {
       val nested = quote {
-        (s: String, p: TestEntity) => qr1.filter(t => t.s == s).update(p)
+        (s: String, p: TestEntity) => qr1.filter(t => t.s == s).updateValue(p)
       }
       val q = quote {
         liftQuery(entities).foreach(p => nested(lift("s"), p))
@@ -290,7 +290,7 @@ class ActionMacroSpec extends Spec {
     }
     "zipWithIndex" in {
       val nested = quote {
-        (e: TestEntity, i: Int) => qr1.filter(t => t.i == i).update(e)
+        (e: TestEntity, i: Int) => qr1.filter(t => t.i == i).updateValue(e)
       }
       val q = quote {
         liftQuery(entities.zipWithIndex).foreach(p => nested(p._1, p._2))
@@ -315,7 +315,7 @@ class ActionMacroSpec extends Spec {
     }
     "case class + returning" in {
       val q = quote {
-        liftQuery(entities).foreach(p => qr1.insert(p).returning(t => t.l))
+        liftQuery(entities).foreach(p => qr1.insertValue(p).returning(t => t.l))
       }
       val r = testContext.run(q)
       r.groups mustEqual List(
@@ -327,7 +327,7 @@ class ActionMacroSpec extends Spec {
     }
     "case class + returning generated" in {
       val q = quote {
-        liftQuery(entities).foreach(p => qr1.insert(p).returningGenerated(t => t.l))
+        liftQuery(entities).foreach(p => qr1.insertValue(p).returningGenerated(t => t.l))
       }
       val r = testContext.run(q)
       r.groups mustEqual List(
@@ -339,7 +339,7 @@ class ActionMacroSpec extends Spec {
     }
     "case class + returning + nested action" in {
       val insert = quote {
-        p: TestEntity => qr1.insert(p).returning(t => t.l)
+        p: TestEntity => qr1.insertValue(p).returning(t => t.l)
       }
       val r = testContext.run(liftQuery(entities).foreach(p => insert(p)))
       r.groups mustEqual List(
@@ -351,7 +351,7 @@ class ActionMacroSpec extends Spec {
     }
     "case class + returning generated + nested action" in {
       val insert = quote {
-        (p: TestEntity) => qr1.insert(p).returningGenerated(t => t.l)
+        (p: TestEntity) => qr1.insertValue(p).returningGenerated(t => t.l)
       }
       val r = testContext.run(liftQuery(entities).foreach(p => insert(p)))
       r.groups mustEqual List(
@@ -380,14 +380,14 @@ class ActionMacroSpec extends Spec {
     }
     "case class lifting" in {
       val q = quote {
-        qr1.insert(lift(TestEntity("s", 1, 2L, None, true)))
+        qr1.insertValue(lift(TestEntity("s", 1, 2L, None, true)))
       }
       testContext.translate(q) mustEqual
         """querySchema("TestEntity").insert(v => v.s -> 's', v => v.i -> 1, v => v.l -> 2, v => v.o -> null, v => v.b -> true)"""
     }
     "nested case class lifting" in {
       val q = quote {
-        t: TestEntity => qr1.insert(t)
+        t: TestEntity => qr1.insertValue(t)
       }
       testContext.translate(q(lift(TestEntity("s", 1, 2L, None, true)))) mustEqual
         """querySchema("TestEntity").insert(v => v.s -> 's', v => v.i -> 1, v => v.l -> 2, v => v.o -> null, v => v.b -> true)"""
@@ -408,14 +408,14 @@ class ActionMacroSpec extends Spec {
     }
     "case class lifting + returning value" in {
       val q = quote {
-        qr1.insert(lift(TestEntity("s", 1, 2L, None, true))).returning(t => t.l)
+        qr1.insertValue(lift(TestEntity("s", 1, 2L, None, true))).returning(t => t.l)
       }
       testContext.translate(q) mustEqual
         """querySchema("TestEntity").insert(v => v.s -> 's', v => v.i -> 1, v => v.l -> 2, v => v.o -> null, v => v.b -> true).returning((t) => t.l)"""
     }
     "case class lifting + returning generated value" in {
       val q = quote {
-        qr1.insert(lift(TestEntity("s", 1, 2L, None, true))).returningGenerated(t => t.l)
+        qr1.insertValue(lift(TestEntity("s", 1, 2L, None, true))).returningGenerated(t => t.l)
       }
       testContext.translate(q) mustEqual
         """querySchema("TestEntity").insert(v => v.s -> 's', v => v.i -> 1, v => v.o -> null, v => v.b -> true).returningGenerated((t) => t.l)"""
@@ -443,7 +443,7 @@ class ActionMacroSpec extends Spec {
     }
     "case class" in {
       val q = quote {
-        liftQuery(entities).foreach(p => qr1.insert(p))
+        liftQuery(entities).foreach(p => qr1.insertValue(p))
       }
       testContext.translate(q) mustEqual List(
         """querySchema("TestEntity").insert(v => v.s -> 's1', v => v.i -> 2, v => v.l -> 3, v => v.o -> 4, v => v.b -> true)""",
@@ -452,7 +452,7 @@ class ActionMacroSpec extends Spec {
     }
     "case class + nested action" in {
       val nested = quote {
-        p: TestEntity => qr1.insert(p)
+        p: TestEntity => qr1.insertValue(p)
       }
       val q = quote {
         liftQuery(entities).foreach(p => nested(p))
@@ -464,7 +464,7 @@ class ActionMacroSpec extends Spec {
     }
     "tuple + case class + nested action" in {
       val nested = quote {
-        (s: String, p: TestEntity) => qr1.filter(t => t.s == s).update(p)
+        (s: String, p: TestEntity) => qr1.filter(t => t.s == s).updateValue(p)
       }
       val q = quote {
         liftQuery(entities).foreach(p => nested(lift("s"), p))
@@ -476,7 +476,7 @@ class ActionMacroSpec extends Spec {
     }
     "zipWithIndex" in {
       val nested = quote {
-        (e: TestEntity, i: Int) => qr1.filter(t => t.i == i).update(e)
+        (e: TestEntity, i: Int) => qr1.filter(t => t.i == i).updateValue(e)
       }
       val q = quote {
         liftQuery(entities.zipWithIndex).foreach(p => nested(p._1, p._2))
@@ -500,7 +500,7 @@ class ActionMacroSpec extends Spec {
     }
     "case class + returning" in {
       val q = quote {
-        liftQuery(entities).foreach(p => qr1.insert(p).returning(t => t.l))
+        liftQuery(entities).foreach(p => qr1.insertValue(p).returning(t => t.l))
       }
       testContext.translate(q) mustEqual List(
         """querySchema("TestEntity").insert(v => v.s -> 's1', v => v.i -> 2, v => v.l -> 3, v => v.o -> 4, v => v.b -> true).returning((t) => t.l)""",
@@ -509,7 +509,7 @@ class ActionMacroSpec extends Spec {
     }
     "case class + returning + nested action" in {
       val insert = quote {
-        p: TestEntity => qr1.insert(p).returning(t => t.l)
+        p: TestEntity => qr1.insertValue(p).returning(t => t.l)
       }
       testContext.translate(liftQuery(entities).foreach(p => insert(p))) mustEqual List(
         """querySchema("TestEntity").insert(v => v.s -> 's1', v => v.i -> 2, v => v.l -> 3, v => v.o -> 4, v => v.b -> true).returning((t) => t.l)""",
@@ -518,7 +518,7 @@ class ActionMacroSpec extends Spec {
     }
     "case class + returning generated" in {
       val q = quote {
-        liftQuery(entities).foreach(p => qr1.insert(p).returningGenerated(t => t.l))
+        liftQuery(entities).foreach(p => qr1.insertValue(p).returningGenerated(t => t.l))
       }
       testContext.translate(q) mustEqual List(
         """querySchema("TestEntity").insert(v => v.s -> 's1', v => v.i -> 2, v => v.o -> 4, v => v.b -> true).returningGenerated((t) => t.l)""",
@@ -527,7 +527,7 @@ class ActionMacroSpec extends Spec {
     }
     "case class + returning generated + nested action" in {
       val insert = quote {
-        p: TestEntity => qr1.insert(p).returningGenerated(t => t.l)
+        p: TestEntity => qr1.insertValue(p).returningGenerated(t => t.l)
       }
       testContext.translate(liftQuery(entities).foreach(p => insert(p))) mustEqual List(
         """querySchema("TestEntity").insert(v => v.s -> 's1', v => v.i -> 2, v => v.o -> 4, v => v.b -> true).returningGenerated((t) => t.l)""",

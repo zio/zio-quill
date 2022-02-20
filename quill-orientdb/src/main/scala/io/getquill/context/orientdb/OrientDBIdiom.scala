@@ -1,16 +1,18 @@
 package io.getquill.context.orientdb
 
+import io.getquill.norm.NormalizeCaching
 import io.getquill.idiom.StatementInterpolator._
 import io.getquill.context.sql.norm._
 import io.getquill.ast.{ AggregationOperator, External, _ }
 import io.getquill.context.sql._
 import io.getquill.NamingStrategy
-import io.getquill.context.CannotReturn
+import io.getquill.context.{ CannotReturn, ExecutionType }
 import io.getquill.util.Messages.{ fail, trace }
 import io.getquill.idiom._
 import io.getquill.context.sql.norm.SqlNormalize
 import io.getquill.util.{ Interleave, Messages }
 import io.getquill.context.sql.idiom.VerifySqlQuery
+import io.getquill.quat.Quat
 import io.getquill.sql.norm.{ RemoveExtraAlias, RemoveUnusedSelects }
 
 object OrientDBIdiom extends OrientDBIdiom with CannotReturn
@@ -23,8 +25,20 @@ trait OrientDBIdiom extends Idiom {
 
   override def prepareForProbing(string: String): String = string
 
-  override def translate(ast: Ast)(implicit naming: NamingStrategy): (Ast, Statement) = {
-    val normalizedAst = SqlNormalize(ast)
+  override def translate(ast: Ast, topLevelQuat: Quat, executionType: ExecutionType)(implicit naming: NamingStrategy): (Ast, Statement, ExecutionType) = {
+    doTranslate(ast, false, executionType)
+  }
+
+  override def translateCached(ast: Ast, topLevelQuat: Quat, executionType: ExecutionType)(implicit naming: NamingStrategy): (Ast, Statement, ExecutionType) = {
+    doTranslate(ast, true, executionType)
+  }
+
+  private def doTranslate(ast: Ast, cached: Boolean, executionType: ExecutionType)(implicit naming: NamingStrategy): (Ast, Statement, ExecutionType) = {
+    val normalizedAst = {
+      if (cached)
+        NormalizeCaching { ast: Ast => SqlNormalize(ast) }(ast)
+      else SqlNormalize(ast)
+    }
     val token =
       normalizedAst match {
         case q: Query =>
@@ -43,7 +57,7 @@ trait OrientDBIdiom extends Idiom {
           other.token
       }
 
-    (normalizedAst, stmt"$token")
+    (normalizedAst, stmt"$token", executionType)
   }
 
   implicit def astTokenizer(implicit strategy: NamingStrategy, queryTokenizer: Tokenizer[Query]): Tokenizer[Ast] = {
@@ -162,12 +176,12 @@ trait OrientDBIdiom extends Idiom {
   }
 
   implicit def operationTokenizer(implicit propertyTokenizer: Tokenizer[Property], strategy: NamingStrategy): Tokenizer[Operation] = Tokenizer[Operation] {
-    case UnaryOperation(op, ast)                              => stmt"${op.token} (${ast.token})"
-    case BinaryOperation(a, EqualityOperator.`==`, NullValue) => stmt"${scopedTokenizer(a)} IS NULL"
-    case BinaryOperation(NullValue, EqualityOperator.`==`, b) => stmt"${scopedTokenizer(b)} IS NULL"
-    case BinaryOperation(a, EqualityOperator.`!=`, NullValue) => stmt"${scopedTokenizer(a)} IS NOT NULL"
-    case BinaryOperation(NullValue, EqualityOperator.`!=`, b) => stmt"${scopedTokenizer(b)} IS NOT NULL"
-    case BinaryOperation(a, op @ SetOperator.`contains`, b)   => SetContainsToken(scopedTokenizer(b), op.token, a.token)
+    case UnaryOperation(op, ast)                               => stmt"${op.token} (${ast.token})"
+    case BinaryOperation(a, EqualityOperator.`_==`, NullValue) => stmt"${scopedTokenizer(a)} IS NULL"
+    case BinaryOperation(NullValue, EqualityOperator.`_==`, b) => stmt"${scopedTokenizer(b)} IS NULL"
+    case BinaryOperation(a, EqualityOperator.`_!=`, NullValue) => stmt"${scopedTokenizer(a)} IS NOT NULL"
+    case BinaryOperation(NullValue, EqualityOperator.`_!=`, b) => stmt"${scopedTokenizer(b)} IS NOT NULL"
+    case BinaryOperation(a, op @ SetOperator.`contains`, b)    => SetContainsToken(scopedTokenizer(b), op.token, a.token)
     case BinaryOperation(a, op, b) =>
       stmt"${scopedTokenizer(a)} ${op.token} ${scopedTokenizer(b)}"
     case e: FunctionApply => fail(s"Can't translate the ast to sql: '$e'")
@@ -208,7 +222,7 @@ trait OrientDBIdiom extends Idiom {
   }
 
   implicit val binaryOperatorTokenizer: Tokenizer[BinaryOperator] = Tokenizer[BinaryOperator] {
-    case EqualityOperator.`==`  => stmt"="
+    case EqualityOperator.`_==` => stmt"="
     case BooleanOperator.`&&`   => stmt"AND"
     case NumericOperator.`>`    => stmt">"
     case NumericOperator.`>=`   => stmt">="
@@ -260,7 +274,7 @@ trait OrientDBIdiom extends Idiom {
   }
 
   implicit def infixTokenizer(implicit propertyTokenizer: Tokenizer[Property], strategy: NamingStrategy): Tokenizer[Infix] = Tokenizer[Infix] {
-    case Infix(parts, params, _, _) =>
+    case Infix(parts, params, _, _, _) =>
       val pt = parts.map(_.token)
       val pr = params.map(_.token)
       Statement(Interleave(pt, pr))

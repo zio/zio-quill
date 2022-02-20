@@ -15,14 +15,14 @@ You can import the Code Generator using maven:
 ````xml
 <dependency>
   <groupId>io.getquill</groupId>
-  <artifactId>quill-codegen-jdbc_2.11</artifactId>
-  <version>3.1.1-SNAPSHOT</version>
+  <artifactId>quill-codegen-jdbc_2.13</artifactId>
+  <version>3.10.0</version>
 </dependency>
 ```` 
 
 Or using sbt:
 ````scala
-libraryDependencies += "io.getquill" %% "quill-codegen-jdbc" % "3.1.1-SNAPSHOT"
+libraryDependencies += "io.getquill" %% "quill-codegen-jdbc" % "3.10.0"
 ````
 
 
@@ -56,7 +56,28 @@ create table public.Address (
 You can invoke the SimpleJdbcCodegen like so:
 
 ````scala
+// provide DB credentials with a com.typesafe.config.Config object
+// (under the hood the credentials are used to create a HikariPool DataSource)
+import io.getquill.codegen.jdbc.SimpleJdbcCodegen
+import io.getquill.util.LoadConfig
+
+val snakecaseConfig = LoadConfig(configPrefix: String)
 val gen = new SimpleJdbcCodegen(snakecaseConfig, "com.my.project") {
+    override def nameParser = SnakeCaseNames
+}
+gen.writeFiles("src/main/scala/com/my/project")
+
+// or, provide an initialized DataSource
+import io.getquill.codegen.jdbc.SimpleJdbcCodegen
+import org.postgresql.ds.PGSimpleDataSource
+
+val pgDataSource = new PGSimpleDataSource()
+pgDataSource.setURL(
+  "jdbc:postgresql://127.0.0.1:5432/quill_codegen_example?ssl=false",
+)
+pgDataSource.setUser("my_user")
+pgDataSource.setPassword("my_password")
+val gen = new SimpleJdbcCodegen(pgDataSource, "com.my.project") {
     override def nameParser = SnakeCaseNames
 }
 gen.writeFiles("src/main/scala/com/my/project")
@@ -86,8 +107,10 @@ in order to generate your schemas with `querySchema` objects.
 
 ## Composeable Traits Codegen
 
-The `ComposeableTraitsJdbcCodegen` allows you to customize table/column names in entity case classes
-and generates the necessary `querySchema` object in order to map the fields. 
+The `ComposeableTraitsJdbcCodegen` enables more customized code generation.
+It allows you to determine the tables to generate entity classes for,
+their naming stragety, the types for columns in Scala,
+and generates the necessary `querySchema` object in order to map the fields.
 Additionally, it generates a database-independent query schema trait which can be composed 
 with a `Context` object of your choice.
 
@@ -111,49 +134,61 @@ Here is a example of how you could use the `ComposeableTraitsJdbcCodegen` in ord
 `first_name` and `last_name` properties with `first` and `last`.
 
 ````scala
-val gen = new ComposeableTraitsJdbcCodegen(snakecaseConfig,"com.my.project") {
-  override def namingStrategy: EntityNamingStrategy =
-    CustomStrategy(
-      col => col.columnName.toLowerCase.replace("_name", "")
-    )
+val gen = new ComposeableTraitsJdbcCodegen(
+  configOrDataSource,
+  packagePrefix = "com.my.project",
+  nestedTrait = true) {
+
+  override def nameParser: NameParser = CustomNames(
+    columnParser = col => col.columnName.toLowerCase.replace("_name", "")
+  )
+
+
+  override def packagingStrategy: PackagingStrategy = PackagingStrategy.ByPackageHeader.TablePerSchema(packagePrefix)
 }
 gen.writeFiles("src/main/scala/com/my/project")
 ````
  
-
 The following schema should be generated as a result.
 ````scala
 package com.my.project.public
 
-case class Address(person_fk: Int, street: Option[String], zip: Option[Int])
 case class Person(id: Int, first: Option[String], last: Option[String], age: Int)
+
+case class Address(person_fk: Int, street: Option[String], zip: Option[Int])
 
 // Note that by default this is formatted as "${namespace}Extensions"
 trait PublicExtensions[Idiom <: io.getquill.idiom.Idiom, Naming <: io.getquill.NamingStrategy] {
   this:io.getquill.context.Context[Idiom, Naming] =>
 
-  object AddressDao {
-      def query = quote {
-          querySchema[Address](
-            "PUBLIC.ADDRESS",
-            _.person_fk -> "PERSON_FK",
-            _.street -> "STREET",
-            _.zip -> "ZIP"
-          )
-        }
-    }
-
+  object PublicSchema {
     object PersonDao {
-      def query = quote {
-          querySchema[Person](
-            "PUBLIC.PERSON",
-            _.id -> "ID",
-            _.first -> "FIRST_NAME",
-            _.last -> "LAST_NAME",
-            _.age -> "AGE"
-          )
-        }
-    }
+        def query = quote {
+            querySchema[Person](
+              "public.person",
+              _.id -> "id",
+              _.first -> "first_name",
+              _.last -> "last_name",
+              _.age -> "age"
+            )
+
+          }
+
+      }
+
+      object AddressDao {
+        def query = quote {
+            querySchema[Address](
+              "public.address",
+              _.person_fk -> "person_fk",
+              _.street -> "street",
+              _.zip -> "zip"
+            )
+
+          }
+
+      }
+  }
 }
 ````
 
@@ -164,6 +199,33 @@ object MyCustomContext extends SqlMirrorContext[H2Dialect, Literal](H2Dialect, L
   with PublicExtensions[H2Dialect, Literal]
 ````
 
+`ComposeableTraitsJdbcCodegen` is designed to be customizable via composition. This is a longer list of customizable strategies:
+
+```scala
+import io.getquill.codegen.jdbc.ComposeableTraitsJdbcCodegen
+import io.getquill.codegen.model._
+
+new ComposeableTraitsJdbcCodegen(...) {
+
+  // whether to generate Scala code for a table
+  override def filter(tc: RawSchema[JdbcTableMeta, JdbcColumnMeta]): Boolean = ???
+
+  // how to name table / columns in Scala
+  override def nameParser: NameParser = ???
+
+  // how to organize generated code into files / packages
+  override def packagingStrategy: PackagingStrategy = ???
+
+  // what JVM types (classes) to use for DB column
+  // e.g. one may want to translate Postgres `timestamptz` to java.time.OffsetDateTime
+  override def typer: Typer = ???
+
+  // what to do when `typer` above cannot find an appropriate type and returned None
+  override def unrecognizedTypeStrategy: UnrecognizedTypeStrategy = ???
+}
+
+
+```
 
 ## Stereotyping
 Frequently in corporate databases, the same kind of table is duplicated across multiple schemas, databases, etc...

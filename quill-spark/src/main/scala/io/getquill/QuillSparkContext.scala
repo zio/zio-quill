@@ -14,6 +14,7 @@ import io.getquill.context.spark.DatasetBinding
 import io.getquill.context.spark.ValueBinding
 import org.apache.spark.sql.types.{ StructField, StructType }
 import io.getquill.context.spark.norm.QuestionMarkEscaper._
+import io.getquill.quat.QuatMaking
 import org.apache.spark.sql.functions._
 
 import scala.reflect.runtime.universe.TypeTag
@@ -29,7 +30,9 @@ trait QuillSparkContext
   type RunQuerySingleResult[T] = T
   type RunQueryResult[T] = T
   type Session = Unit
-  type DatasourceContext = Unit
+  type Runner = Unit
+
+  implicit val ignoreDecoders: QuatMaking.IgnoreDecoders = QuatMaking.IgnoreDecoders
 
   private[getquill] val queryCounter = new AtomicInteger(0)
 
@@ -132,12 +135,12 @@ trait QuillSparkContext
     }
   }
 
-  def executeQuery[T: TypeTag](string: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext)(implicit enc: SparkEncoder[T], spark: SQLContext) = {
+  def executeQuery[T: TypeTag](string: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner)(implicit enc: SparkEncoder[T], spark: SQLContext) = {
     val ds = spark.sql(prepareString(string, prepare))
     percolateNullArrays(ds.toDF(CaseAccessors[T](ds.schema): _*).as[T])
   }
 
-  def executeQuerySingle[T: TypeTag](string: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext)(implicit enc: SparkEncoder[T], spark: SQLContext) = {
+  def executeQuerySingle[T: TypeTag](string: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner)(implicit enc: SparkEncoder[T], spark: SQLContext) = {
     val ds = spark.sql(prepareString(string, prepare))
     percolateNullArrays(ds.toDF(CaseAccessors[T](ds.schema): _*).as[T])
   }

@@ -41,54 +41,45 @@ class MetaDslSpec extends Spec {
       "simple" in {
         case class Entity(a: String, b: Int)
         val meta = materializeQueryMeta[Entity]
-        meta.expand.toString mustEqual "(q) => q.map(x => (x.a, x.b))"
         meta.extract(Row("1", 2), MirrorSession.default) mustEqual Entity("1", 2)
       }
       "with embedded" in {
         case class Nested(i: Int, l: Long) extends Embedded
         case class Entity(a: String, b: Nested)
         val meta = materializeQueryMeta[Entity]
-        meta.expand.toString mustEqual "(q) => q.map(x => (x.a, x.b.i, x.b.l))"
         meta.extract(Row("1", 2, 3L), MirrorSession.default) mustEqual Entity("1", Nested(2, 3L))
       }
       "tuple" in {
         val meta = materializeQueryMeta[(String, Int)]
-        meta.expand.toString mustEqual "(q) => q.map(x => (x._1, x._2))"
         meta.extract(Row("1", 2), MirrorSession.default) mustEqual (("1", 2))
       }
       "tuple + embedded" in {
         case class Nested(i: Int, l: Long) extends Embedded
         val meta = materializeQueryMeta[(String, Nested)]
-        meta.expand.toString mustEqual "(q) => q.map(x => (x._1, x._2.i, x._2.l))"
         meta.extract(Row("1", 2, 3L), MirrorSession.default) mustEqual (("1", Nested(2, 3L)))
       }
       "tuple + nested embedded" in {
         case class Nested(i: Int, l: Long) extends Embedded
         case class Entity(a: String, b: Nested)
         val meta = materializeQueryMeta[(String, Entity)]
-        meta.expand.toString mustEqual "(q) => q.map(x => (x._1, x._2.a, x._2.b.i, x._2.b.l))"
         meta.extract(Row("a", "1", 2, 3L), MirrorSession.default) mustEqual (("a", Entity("1", Nested(2, 3L))))
       }
       "optional nested" - {
         "extracts Some if all columns are defined" in {
           case class Entity(a: String, b: Int)
           val meta = materializeQueryMeta[(String, Option[Entity])]
-          meta.expand.toString mustEqual "(q) => q.map(x => (x._1, x._2.map((v) => v.a), x._2.map((v) => v.b)))"
           meta.extract(Row("a", Some("1"), Some(2)), MirrorSession.default) mustEqual (("a", Some(Entity("1", 2))))
         }
         "extracts None if one column is undefined" in {
           case class Entity(a: String, b: Int)
           val meta = materializeQueryMeta[(String, Option[Entity])]
-          meta.expand.toString mustEqual "(q) => q.map(x => (x._1, x._2.map((v) => v.a), x._2.map((v) => v.b)))"
           meta.extract(Row("a", Some("1"), None), MirrorSession.default) mustEqual (("a", None))
         }
       }
       "optional deep nested" - {
         case class Entity1(a: String, b: Int)
         case class Entity2(a: Option[Int])
-
         val meta = materializeQueryMeta[(String, Option[(Entity1, Entity2)])]
-        meta.expand.toString mustEqual "(q) => q.map(x => (x._1, x._2.map((v) => v._1.a), x._2.map((v) => v._1.b), x._2.map((v) => v._2.a)))"
 
         "extracts Some if all columns are defined" in {
           meta.extract(Row("a", Some("1"), Some(2), Some(3)), MirrorSession.default) mustEqual
@@ -105,7 +96,6 @@ class MetaDslSpec extends Spec {
       }
       "> 22 fields" in {
         val meta = materializeQueryMeta[MoreThan22]
-        meta.expand.toString mustEqual "(q) => q.map(x => (x.v0, x.v1, x.v2, x.v3, x.v4, x.v5, x.v6, x.v7, x.v8, x.v9, x.x0, x.x1, x.x2, x.x3, x.x4, x.x5, x.x6, x.x7, x.x8, x.x9, x.y0, x.y1, x.y2, x.y3, x.y4, x.y5, x.y6, x.y7, x.y8, x.y9))"
         meta.extract(Row(0 until 30: _*), MirrorSession.default) mustEqual
           MoreThan22(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29)
       }

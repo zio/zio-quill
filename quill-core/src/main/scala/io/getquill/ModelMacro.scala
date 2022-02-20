@@ -11,10 +11,10 @@ sealed trait EntityQuery[T]
   override def filter(f: T => Boolean): EntityQuery[T] = NonQuotedException()
   override def map[R](f: T => R): EntityQuery[R] = NonQuotedException()
 
-  def insert(value: T): Insert[T] = macro QueryDslMacro.expandInsert[T]
+  def insertValue(value: T): Insert[T] = macro QueryDslMacro.expandInsert[T]
   def insert(f: (T => (Any, Any)), f2: (T => (Any, Any))*): Insert[T]
 
-  def update(value: T): Update[T] = macro QueryDslMacro.expandUpdate[T]
+  def updateValue(value: T): Update[T] = macro QueryDslMacro.expandUpdate[T]
   def update(f: (T => (Any, Any)), f2: (T => (Any, Any))*): Update[T]
 
   def delete: Delete[T]
