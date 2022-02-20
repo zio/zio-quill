@@ -18,7 +18,7 @@ class JoinComplexSpec extends Spec {
       }
     }
     testContext.run(q).string mustEqual
-      "SELECT ab._1s, ab._1i, ab._1l, ab._1o, ab._1b, ab._2s, ab._2i, ab._2l, ab._2o, c.s, c.i, c.l, c.o FROM (SELECT DISTINCT a.s AS _1s, a.i AS _1i, a.l AS _1l, a.o AS _1o, a.b AS _1b, b.s AS _2s, b.i AS _2i, b.l AS _2l, b.o AS _2o FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i) AS ab LEFT JOIN TestEntity3 c ON ab._2i = ab._1i AND ab._2i = c.i"
+      "SELECT ab._1s AS s, ab._1i AS i, ab._1l AS l, ab._1o AS o, ab._1b AS b, ab._2s AS s, ab._2i AS i, ab._2l AS l, ab._2o AS o, c.s, c.i, c.l, c.o FROM (SELECT DISTINCT a.s AS _1s, a.i AS _1i, a.l AS _1l, a.o AS _1o, a.b AS _1b, b.s AS _2s, b.i AS _2i, b.l AS _2l, b.o AS _2o FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i) AS ab LEFT JOIN TestEntity3 c ON ab._2i = ab._1i AND ab._2i = c.i"
   }
 
   "ExpandJoin should behave normally with: join + distinct + leftjoin - with additional filter" in {
@@ -31,7 +31,7 @@ class JoinComplexSpec extends Spec {
       }
     }
     testContext.run(q).string mustEqual
-      "SELECT ab._1s, ab._1i, ab._1l, ab._1o, ab._1b, ab._2s, ab._2i, ab._2l, ab._2o, c.s, c.i, c.l, c.o FROM (SELECT DISTINCT a.s AS _1s, a.i AS _1i, a.l AS _1l, a.o AS _1o, a.b AS _1b, b.s AS _2s, b.i AS _2i, b.l AS _2l, b.o AS _2o FROM (SELECT a.s, a.i, a.l, a.o, a.b FROM TestEntity a WHERE a.i = 1) AS a LEFT JOIN TestEntity2 b ON a.i = b.i) AS ab LEFT JOIN TestEntity3 c ON ab._2i = ab._1i AND ab._2i = c.i"
+      "SELECT ab._1s AS s, ab._1i AS i, ab._1l AS l, ab._1o AS o, ab._1b AS b, ab._2s AS s, ab._2i AS i, ab._2l AS l, ab._2o AS o, c.s, c.i, c.l, c.o FROM (SELECT DISTINCT a.s AS _1s, a.i AS _1i, a.l AS _1l, a.o AS _1o, a.b AS _1b, b.s AS _2s, b.i AS _2i, b.l AS _2l, b.o AS _2o FROM (SELECT a.s, a.i, a.l, a.o, a.b FROM TestEntity a WHERE a.i = 1) AS a LEFT JOIN TestEntity2 b ON a.i = b.i) AS ab LEFT JOIN TestEntity3 c ON ab._2i = ab._1i AND ab._2i = c.i"
   }
 
   "FlatJoin should function properly when plugged in with a shadow" - {
@@ -52,7 +52,7 @@ class JoinComplexSpec extends Spec {
 
     "using map" in {
       testContext.run(first(query[FooEntity].map(a => TestEntity(a.fs, a.fi, a.fl, a.fo, a.fb)))).string mustEqual
-        "SELECT a.fs, a.fi, a.fl, a.fo, a.fb, a1.s, a1.i, a1.l, a1.o FROM FooEntity a INNER JOIN TestEntity3 a1 ON a1.i = a.fi"
+        "SELECT a.fs AS s, a.fi AS i, a.fl AS l, a.fo AS o, a.fb AS b, a1.s, a1.i, a1.l, a1.o FROM FooEntity a INNER JOIN TestEntity3 a1 ON a1.i = a.fi"
     }
 
     val second = quote {

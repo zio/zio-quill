@@ -32,7 +32,7 @@ object ApplyMap {
 
     def hasImpureInfix(ast: Ast) =
       CollectAst(ast) {
-        case i @ Infix(_, _, false, _) => i
+        case i @ Infix(_, _, false, _, _) => i
       }.nonEmpty
 
     def unapply(ast: Ast): Option[Ast] =
@@ -42,7 +42,7 @@ object ApplyMap {
         case p: Property if hasImpureInfix(p)        => Some(p)
         case b: BinaryOperation if hasImpureInfix(b) => Some(b)
         case u: UnaryOperation if hasImpureInfix(u)  => Some(u)
-        case i @ Infix(_, _, false, _)               => Some(i)
+        case i @ Infix(_, _, false, _, _)            => Some(i)
         case _                                       => None
       }
   }

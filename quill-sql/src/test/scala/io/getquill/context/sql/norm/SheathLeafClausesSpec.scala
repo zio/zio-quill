@@ -1,7 +1,7 @@
 package io.getquill.context.sql.norm
 
 import io.getquill.norm.SheathLeafClauses
-import io.getquill.{ MirrorSqlDialect, Query, SnakeCase, Spec, SqlMirrorContext }
+import io.getquill.{ MirrorSqlDialect, Query, Quoted, SnakeCase, Spec, SqlMirrorContext }
 
 class SheathLeafClausesSpec extends Spec {
 
@@ -101,12 +101,13 @@ class SheathLeafClausesSpec extends Spec {
 
       // Technically this worked before SheathLeafClauses was introduced but this kind of query is impacted so test it here
       "concatMap(leaf).join(concatMap(leaf))" in {
-        val q = quote(
+        val q: Quoted[Query[(String, String)]] = quote(
           query[Person]
             .concatMap(p => p.firstName.split(" "))
             .join(query[Person].concatMap(t => t.firstName.split(" ")))
             .on { case (a, b) => a == b }
         )
+        // TODO star idenfiers should not have aliases
         ctx.run(q).string mustEqual "SELECT x01.*, x11.* FROM (SELECT UNNEST(SPLIT(p.first_name, ' ')) AS x FROM person p) AS x01 INNER JOIN (SELECT UNNEST(SPLIT(t.first_name, ' ')) AS x FROM person t) AS x11 ON x01.x = x11.x"
       }
 

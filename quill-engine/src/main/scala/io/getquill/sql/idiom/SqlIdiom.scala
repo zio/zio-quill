@@ -8,7 +8,7 @@ import io.getquill.ast.Visibility.Hidden
 import io.getquill.ast._
 import io.getquill.context.sql._
 import io.getquill.context.sql.norm._
-import io.getquill.context.{ OutputClauseSupported, ReturningCapability, ReturningClauseSupported }
+import io.getquill.context.{ ExecutionType, OutputClauseSupported, ReturningCapability, ReturningClauseSupported }
 import io.getquill.idiom.StatementInterpolator._
 import io.getquill.idiom._
 import io.getquill.norm.ConcatBehavior.AnsiConcat
@@ -37,7 +37,7 @@ trait SqlIdiom extends Idiom {
 
   def querifyAst(ast: Ast) = SqlQuery(ast)
 
-  private def doTranslate(ast: Ast, cached: Boolean)(implicit naming: NamingStrategy): (Ast, Statement) = {
+  private def doTranslate(ast: Ast, cached: Boolean, topLevelQuat: Quat, executionType: ExecutionType)(implicit naming: NamingStrategy): (Ast, Statement, ExecutionType) = {
 
     val normalizedAst = {
       if (cached) {
@@ -53,11 +53,11 @@ trait SqlIdiom extends Idiom {
           val sql = querifyAst(q)
           trace("sql")(sql)
           VerifySqlQuery(sql).map(fail)
-          val expanded = ExpandNestedQueries(sql)
+          val expanded = ExpandNestedQueries(sql, topLevelQuat)
           trace("expanded sql")(expanded)
           val refined = if (Messages.pruneColumns) RemoveUnusedSelects(expanded) else expanded
           trace("filtered sql (only used selects)")(refined)
-          val cleaned = if (!Messages.alwaysAlias) RemoveExtraAlias(naming)(refined) else refined
+          val cleaned = if (!Messages.alwaysAlias) RemoveExtraAlias(naming)(refined, topLevelQuat) else refined
           trace("cleaned sql")(cleaned)
           val tokenized = cleaned.token
           trace("tokenized sql")(tokenized)
@@ -66,15 +66,15 @@ trait SqlIdiom extends Idiom {
           other.token
       }
 
-    (normalizedAst, stmt"$token")
+    (normalizedAst, stmt"$token", executionType)
   }
 
-  override def translate(ast: Ast)(implicit naming: NamingStrategy): (Ast, Statement) = {
-    doTranslate(ast, false)
+  override def translate(ast: Ast, topLevelQuat: Quat, executionType: ExecutionType)(implicit naming: NamingStrategy): (Ast, Statement, ExecutionType) = {
+    doTranslate(ast, false, topLevelQuat, executionType)
   }
 
-  override def translateCached(ast: Ast)(implicit naming: NamingStrategy): (Ast, Statement) = {
-    doTranslate(ast, true)
+  override def translateCached(ast: Ast, topLevelQuat: Quat, executionType: ExecutionType)(implicit naming: NamingStrategy): (Ast, Statement, ExecutionType) = {
+    doTranslate(ast, true, topLevelQuat, executionType)
   }
 
   def defaultTokenizer(implicit naming: NamingStrategy): Tokenizer[Ast] =
@@ -87,12 +87,17 @@ trait SqlIdiom extends Idiom {
   def astTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Ast] =
     Tokenizer[Ast] {
       case a: Query =>
-        // This case almost exclusively happens when you have a select inside of an insert.
+        // This case typically happens when you have a select inside of an insert
+        // infix or a set operation (e.g. query[Person].exists).
         // have a look at the SqlDslSpec `forUpdate` and `insert with subselects` tests
         // for more details.
         // Right now we are not removing extra select clauses here (via RemoveUnusedSelects) since I am not sure what
         // kind of impact that could have on selects. Can try to do that in the future.
-        RemoveExtraAlias(strategy)(ExpandNestedQueries(SqlQuery(a))).token
+        if (Messages.querySubexpand) {
+          val nestedExpanded = ExpandNestedQueries(SqlQuery(a))
+          RemoveExtraAlias(strategy)(nestedExpanded).token
+        } else
+          SqlQuery(a).token
 
       case a: Operation       => a.token
       case a: Infix           => a.token
@@ -227,10 +232,19 @@ trait SqlIdiom extends Idiom {
 
     def tokenizer(implicit astTokenizer: Tokenizer[Ast]) =
       Tokenizer[SelectValue] {
+
+        // ExpandNestedQuery should elaborate all Idents with Product quats so the only ones left are value quats
+        // treat them as a id.* because in most SQL dialects identifiers cannot be spliced in by themselves
+        case SelectValue(Ident("?", Quat.Value), _, _)  => "?".token
+        case SelectValue(Ident(name, Quat.Value), _, _) => stmt"${strategy.default(name).token}.*"
+
+        // Typically these next two will be for Ast Property
         case SelectValue(ast, Some(alias), false) => {
           stmt"${ast.token} AS ${tokenizeColumnAlias(strategy, alias).token}"
         }
         case SelectValue(ast, Some(alias), true) => stmt"${concatFunction.token}(${ast.token}) AS ${tokenizeColumnAlias(strategy, alias).token}"
+
+        // For situations where this is no alias etc...
         case selectValue =>
           val value =
             selectValue match {
@@ -448,7 +462,7 @@ trait SqlIdiom extends Idiom {
   }
 
   implicit def infixTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Infix] = Tokenizer[Infix] {
-    case Infix(parts, params, _, _) =>
+    case Infix(parts, params, _, _, _) =>
       val pt = parts.map(_.token)
       val pr = params.map(_.token)
       Statement(Interleave(pt, pr))

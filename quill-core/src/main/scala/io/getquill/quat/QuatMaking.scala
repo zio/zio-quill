@@ -10,6 +10,11 @@ import scala.reflect.ClassTag
 import scala.reflect.api.Universe
 import scala.reflect.macros.whitebox.Context
 
+object QuatMaking {
+  sealed trait IgnoreDecoders
+  case object IgnoreDecoders extends IgnoreDecoders
+}
+
 trait QuatMaking extends QuatMakingBase {
   val c: Context
   type Uni = c.universe.type
@@ -19,6 +24,8 @@ trait QuatMaking extends QuatMakingBase {
   import u.{ Block => _, Constant => _, Function => _, Ident => _, If => _, _ }
   import collection.mutable.HashMap;
 
+  def onlyDecoder: Boolean = true
+
   val cachedEncoderLookups: HashMap[Type, Boolean] = HashMap();
   def existsEncoderFor(tpe: Type): Boolean = {
     cachedEncoderLookups.get(tpe) match {
@@ -26,9 +33,12 @@ trait QuatMaking extends QuatMakingBase {
         value
       case None =>
         val lookup =
-          OptionalTypecheck(c)(q"implicitly[${c.prefix}.Encoder[$tpe]]") match {
-            case Some(enc) => true
-            case None      => false
+          (OptionalTypecheck(c)(q"implicitly[${c.prefix}.Encoder[$tpe]]"), OptionalTypecheck(c)(q"implicitly[${c.prefix}.Decoder[$tpe]]"), OptionalTypecheck(c)(q"implicitly[io.getquill.quat.QuatMaking.IgnoreDecoders]")) match {
+            case (Some(_), Some(_), _)    => true
+            case (Some(_), None, _)       => true
+            case (None, Some(_), None)    => true // if there is a only a decoder available if the switch to IgnoreDecoders is enabled...
+            case (None, Some(_), Some(_)) => false // don't use it (e.g. for spark where there is a decoder for everything)
+            case (None, None, _)          => false
           }
         cachedEncoderLookups.put(tpe, lookup)
         lookup

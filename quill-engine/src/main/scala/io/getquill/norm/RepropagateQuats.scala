@@ -1,6 +1,6 @@
 package io.getquill.norm
 
-import io.getquill.ast.{ Action, Assignment, AssignmentDual, Ast, ConcatMap, Filter, FlatJoin, FlatMap, GroupBy, Ident, Insert, Join, Map, OnConflict, Property, Query, Returning, ReturningGenerated, SortBy, StatelessTransformer, Update }
+import io.getquill.ast.{ Action, Assignment, AssignmentDual, Ast, ConcatMap, Filter, FlatJoin, FlatMap, GroupBy, Ident, Infix, Insert, Join, Map, OnConflict, Property, Query, Returning, ReturningGenerated, SortBy, StatelessTransformer, Update }
 import io.getquill.quat.Quat
 import io.getquill.quat.Quat.Product
 import io.getquill.util.Interpolator
@@ -63,6 +63,14 @@ object RepropagateQuats extends StatelessTransformer {
     val cr = BetaReduction(c, RWR, b -> br)
     trace"Repropagate ${a.quat.suppress(msg)} from ${a} into:" andReturn f(ar, br, apply(cr))
   }
+
+  override def apply(e: Ast): Ast =
+    e match {
+      case i @ Infix(parts, params, pure, tr, quat) =>
+        val newParams = params.map(apply)
+        Quat.improveInfixQuat(Infix(parts, newParams, pure, tr, quat))
+      case _ => super.apply(e)
+    }
 
   override def apply(e: Query): Query = {
     e match {
@@ -138,7 +146,7 @@ object RepropagateQuats extends StatelessTransformer {
             case OnConflict.Properties(props) =>
               val propsR = props.map {
                 // Recreate the assignment with new idents but only if we need to repropagate
-                case prop @ PropertyMatroshka(ident: Ident, _) =>
+                case prop @ PropertyMatroshka(ident: Ident, _, _) =>
                   trace"Repropagate OnConflict.Properties Quat ${oca.quat.suppress(msg)} from $oca into:" andReturn
                     BetaReduction(prop, RWR, ident -> ident.retypeQuatFrom(oca.quat)).asInstanceOf[Property]
                 case other =>
