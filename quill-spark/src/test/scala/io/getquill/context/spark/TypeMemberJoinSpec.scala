@@ -62,8 +62,8 @@ class TypeMemberJoinSpec extends Spec {
     object AnyInfix {
       def unapply(ast: Ast) =
         ast match {
-          case Infix(_, _, _, _) => true
-          case _                 => false
+          case Infix(_, _, _, _, _) => true
+          case _                    => false
         }
     }
 

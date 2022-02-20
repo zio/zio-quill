@@ -6,28 +6,28 @@ trait StatelessTransformer {
 
   def apply(e: Ast): Ast =
     e match {
-      case e: Query               => apply(e)
-      case e: Operation           => apply(e)
-      case e: Action              => apply(e)
-      case e: Value               => apply(e)
-      case e: Assignment          => apply(e)
-      case e: AssignmentDual      => apply(e)
-      case Function(params, body) => Function(params, apply(body))
-      case e: Ident               => applyIdent(e)
-      case e: ExternalIdent       => e
-      case e: Property            => apply(e)
-      case Infix(a, b, pure, qu)  => Infix(a, b.map(apply), pure, qu)
-      case e: OptionOperation     => apply(e)
-      case e: IterableOperation   => apply(e)
-      case If(a, b, c)            => If(apply(a), apply(b), apply(c))
-      case e: Dynamic             => e
-      case e: External            => e
-      case e: QuotedReference     => e
-      case Block(statements)      => Block(statements.map(apply))
-      case Val(name, body)        => Val(name, apply(body))
-      case o: Ordering            => o
-      case e: OnConflict.Excluded => apply(e)
-      case e: OnConflict.Existing => apply(e)
+      case e: Query                  => apply(e)
+      case e: Operation              => apply(e)
+      case e: Action                 => apply(e)
+      case e: Value                  => apply(e)
+      case e: Assignment             => apply(e)
+      case e: AssignmentDual         => apply(e)
+      case Function(params, body)    => Function(params, apply(body))
+      case e: Ident                  => applyIdent(e)
+      case e: ExternalIdent          => e
+      case e: Property               => apply(e)
+      case Infix(a, b, pure, tr, qu) => Infix(a, b.map(apply), pure, tr, qu)
+      case e: OptionOperation        => apply(e)
+      case e: IterableOperation      => apply(e)
+      case If(a, b, c)               => If(apply(a), apply(b), apply(c))
+      case e: Dynamic                => e
+      case e: External               => e
+      case e: QuotedReference        => e
+      case Block(statements)         => Block(statements.map(apply))
+      case Val(name, body)           => Val(name, apply(body))
+      case o: Ordering               => o
+      case e: OnConflict.Excluded    => apply(e)
+      case e: OnConflict.Existing    => apply(e)
     }
 
   def apply(e: OnConflict.Excluded): OnConflict.Excluded =

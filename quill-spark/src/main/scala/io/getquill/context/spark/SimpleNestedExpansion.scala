@@ -3,7 +3,7 @@ package io.getquill.context.spark
 import io.getquill.ast._
 import io.getquill.context.sql._
 import io.getquill.quat.Quat
-import io.getquill.sql.norm.StatelessQueryTransformer
+import io.getquill.sql.norm.{ QueryLevel, StatelessQueryTransformer }
 
 object TopLevelExpansion {
 
@@ -90,21 +90,21 @@ object SingleValuePrimitive {
 
 object SimpleNestedExpansion extends StatelessQueryTransformer {
 
-  protected override def apply(q: SqlQuery, isTopLevel: Boolean = false): SqlQuery =
+  protected override def apply(q: SqlQuery, level: QueryLevel): SqlQuery =
     q match {
       case q: FlattenSqlQuery => //if (isTopLevel) =>  //needs to be for all levels
-        expandNested(q.copy(select = TopLevelExpansion(q.select, q.select.length))(q.quat), isTopLevel)
+        expandNested(q.copy(select = TopLevelExpansion(q.select, q.select.length))(q.quat), level)
       case other =>
-        super.apply(q, isTopLevel)
+        super.apply(q, level)
     }
 
-  protected override def expandNested(q: FlattenSqlQuery, isTopLevel: Boolean): FlattenSqlQuery =
+  protected override def expandNested(q: FlattenSqlQuery, level: QueryLevel): FlattenSqlQuery =
     q match {
       case FlattenSqlQuery(from, where, groupBy, orderBy, limit, offset, select, distinct) =>
         val newFroms = q.from.map(expandContext(_))
 
         def distinctIfNotTopLevel(values: List[SelectValue]) =
-          if (isTopLevel)
+          if (level.isTop)
             values
           else
             values.distinct

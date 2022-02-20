@@ -1,3 +1,18 @@
+# 3.16.3
+
+- [Remove anonymous class made by Property.Opinionated and make NullValue case object](https://github.com/zio/zio-quill/pull/2426)
+
+#### Note 
+* This change is to allow ProtoQuill transition to BooPickle AST Serialization in https://github.com/zio/zio-protoquill/pull/72
+
+# 3.16.2
+
+- [Remove second apply method on ast.CaseClass due to incremental-compile errors](https://github.com/zio/zio-quill/pull/2423)
+
+# 3.16.1
+
+- [Top-Level quat passing to query expansions](https://github.com/zio/zio-quill/pull/2420)
+
 # 3.16.0
 
 - [Remove deprecated EntityQuery.update/insert APIs](https://github.com/zio/zio-quill/pull/2412)

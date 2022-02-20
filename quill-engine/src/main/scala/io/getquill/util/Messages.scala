@@ -15,6 +15,7 @@ object Messages {
 
   def quatKryoPoolSize = cache("quill.quat.kryoPool", variable("quill.quat.kryoPool", "quill_quat_kryoPool", "10").toInt)
   def maxQuatFields = cache("quill.quat.tooManyFields", variable("quill.quat.tooManyFields", "quill_quat_tooManyFields", "500").toInt)
+  def attachTopLevelQuats = cache("quill.quat.attachTopLevel", variable("quill.quat.attachTopLevel", "quill_quat_attachTopLevel", "true").toBoolean)
   def strictQuatChecking = cache("quill.quat.strict", variable("quill.quat.strict", "quill_quat_strict", "false").toBoolean)
   def prettyPrint = cache("quill.macro.log.pretty", variable("quill.macro.log.pretty", "quill_macro_log", "false").toBoolean)
   def alwaysAlias = cache("quill.query.alwaysAlias", variable("quill.query.alwaysAlias", "quill_query_alwaysAlias", "false").toBoolean)

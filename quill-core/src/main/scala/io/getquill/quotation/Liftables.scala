@@ -30,7 +30,7 @@ trait Liftables extends QuatLiftable {
     case FunctionApply(a, b) => q"$pack.FunctionApply($a, $b)"
     case BinaryOperation(a, b, c) => q"$pack.BinaryOperation($a, $b, $c)"
     case UnaryOperation(a, b) => q"$pack.UnaryOperation($a, $b)"
-    case Infix(a, b, pure, quat) => q"$pack.Infix($a, $b, $pure, $quat)"
+    case Infix(a, b, pure, transparent, quat) => q"$pack.Infix($a, $b, $pure, $transparent, $quat)"
     case If(a, b, c) => q"$pack.If($a, $b, $c)"
     case Dynamic(tree: Tree, _) if (tree.tpe <:< mctx.weakTypeOf[Quoted[Any]]) => q"$tree.ast"
     case Dynamic(tree: Tree, quat) => q"$pack.Constant($tree, $quat)"

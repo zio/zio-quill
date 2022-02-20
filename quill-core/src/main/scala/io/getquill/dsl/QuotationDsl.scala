@@ -1,6 +1,7 @@
 package io.getquill.dsl
 
 import io.getquill.Quoted
+import io.getquill.quat.Quat
 
 import scala.language.experimental.macros
 import scala.language.implicitConversions
@@ -29,6 +30,8 @@ private[getquill] trait QuotationDsl {
 
   @compileTimeOnly(NonQuotedException.message)
   implicit def unquote[T](quoted: Quoted[T]): T = NonQuotedException()
+
+  private[getquill] def makeQuat[T]: Quat = macro QuotationMacro.makeQuat[T]
 }
 
 private[dsl] class QuotationMacro(val c: Context) extends Quotation

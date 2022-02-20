@@ -1,6 +1,6 @@
 package io.getquill.sql.norm
 
-import io.getquill.ast.{ Ast, Core, Ident, Infix, Property, Renameable }
+import io.getquill.ast.{ Ast, Core, Ident, Property, Renameable }
 import io.getquill.ast.Visibility.{ Hidden, Visible }
 import io.getquill.context.sql.{ FlatJoinContext, FromContext, InfixContext, JoinContext, QueryContext, TableContext }
 import io.getquill.norm.PropertyMatroshka
@@ -92,14 +92,28 @@ case class SelectPropertyProtractor(from: List[FromContext]) {
     if (!isEntity) freezeEntityPropsRecurse(p) else p
   }
 
-  def apply(ast: Ast): List[(Ast, List[String])] = {
+  private def nonAbstractQuat(from: Quat, or: Option[Quat]) =
+    (from, or) match {
+      case (Quat.IsAbstract(), Some(value @ Quat.NotAbstract())) => value
+      case _ => from
+    }
+
+  /**
+   * Turn product quats into case class asts e.g. Quat.Product(name:V,age:V) => CaseClass(name->p.name,age->p.age)
+   * `alternateQuat` is there in case it's a top-level expansion and the identifier is generic or unknown (or an abstract product quat)
+   * so we want to try and get information from the quat from the [T] of the executeQuery[T] itself (similar to quatOf[T])
+   * this information is already supplied by higher level constructs.
+   */
+  def apply(ast: Ast, alternateQuat: Option[Quat]): List[(Ast, List[String])] = {
     ast match {
       case id @ Core() =>
         // The quat is considered to be an entity (i.e. thing whose fields need to be renamed) if it is either:
         // a) Found in the table references (i.e. it's an actual table in the subselect) or...
         // b) We are selecting fields from an infix e.g. `infix"selectPerson()".as[Query[Person]]`
         val isEntity = inContext.isEntityReference(id)
-        id.quat match {
+        val effectiveQuat = nonAbstractQuat(id.quat, alternateQuat)
+
+        effectiveQuat match {
           case p: Quat.Product =>
             ProtractQuat(isEntity)(p, id).map { case (prop, path) => (freezeNonEntityProps(prop, isEntity), path) }
           case _ =>
@@ -109,7 +123,9 @@ case class SelectPropertyProtractor(from: List[FromContext]) {
       // and all situations where there is a case-class, tuple, etc... inside have already been beta-reduced
       case prop @ PropertyMatroshka(id @ Core(), _, _) =>
         val isEntity = inContext.isEntityReference(id)
-        prop.quat match {
+        val effectiveQuat = nonAbstractQuat(prop.quat, alternateQuat)
+
+        effectiveQuat match {
           case p: Quat.Product =>
             ProtractQuat(isEntity)(p, prop).map { case (prop, path) => (freezeNonEntityProps(prop, isEntity), path) }
           case _ =>

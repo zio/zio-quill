@@ -16,30 +16,36 @@ class QuatRunSpec extends Spec {
         def appendFoo = quote(infix"$q APPEND FOO".pure.as[Q])
       }
       val q = quote(query[MyPerson].appendFoo)
-      q.ast.quat mustEqual MyPersonQuat // I.e ReifyLiftings runs RepropagateQuats to take care of this
-      testContext.run(q).string mustEqual "SELECT x.name, x.age FROM MyPerson x APPEND FOO"
+      q.ast.quat mustEqual Quat.Unknown // I.e ReifyLiftings runs RepropagateQuats to take care of this
+      val result = testContext.run(q)
+      result.info.topLevelQuat mustEqual MyPersonQuat
+      result.string mustEqual "SELECT x.name, x.age FROM MyPerson x APPEND FOO"
     }
 
     "from extension methods - generic marker" in {
       implicit class QueryOps[Q <: Query[_]](q: Q) {
-        def appendFoo = quote(infix"$q APPEND FOO".generic.pure.as[Q])
+        def appendFoo = quote(infix"$q APPEND FOO".transparent.pure.as[Q])
       }
       val q = quote(query[MyPerson].appendFoo)
       q.ast.quat mustEqual MyPersonQuat // I.e ReifyLiftings runs RepropagateQuats to take care of this
-      testContext.run(q).string mustEqual "SELECT x.name, x.age FROM MyPerson x APPEND FOO"
+      val result = testContext.run(q)
+      result.info.topLevelQuat mustEqual MyPersonQuat
+      result.string mustEqual "SELECT x.name, x.age FROM MyPerson x APPEND FOO"
     }
 
-    "should support query-ops function" in {
-      def appendFooFun[Q <: Query[_]]: Quoted[Q => Q] = quote { (q: Q) => infix"$q APPEND FOO".pure.as[Q] }
-      val q = quote(appendFooFun(query[MyPerson]))
-      q.ast.quat mustEqual Quat.Unknown
-      testContext.run(q).string mustEqual "SELECT x.name, x.age FROM MyPerson x APPEND FOO"
+    "should support query-ops function - multile var" in {
+      def appendFooFun[Q <: Query[_]] = quote { (q: Q, i: Int) => infix"$q APPEND $i FOO".transparent.pure.as[Q] }
+      val q = quote(appendFooFun(query[MyPerson], 123))
+      q.ast.quat mustEqual Quat.Generic // Is it unknown, how should the reducing work from an infix with multiple vars?
+      val result = testContext.run(q)
+      result.info.topLevelQuat mustEqual MyPersonQuat
+      result.string mustEqual "SELECT x.name, x.age FROM MyPerson x APPEND 123 FOO"
     }
 
     "should support query-ops function - dynamic function" in {
-      def appendFooFun[Q <: Query[_]] = quote { (q: Q) => infix"$q APPEND FOO".pure.as[Q] }
+      def appendFooFun[Q <: Query[_]]: Quoted[Q => Q] = quote { (q: Q) => infix"$q APPEND FOO".pure.as[Q] }
       val q = quote(appendFooFun(query[MyPerson]))
-      q.ast.quat mustEqual MyPersonQuat
+      q.ast.quat mustEqual Quat.Unknown
       testContext.run(q).string mustEqual "SELECT x.name, x.age FROM MyPerson x APPEND FOO"
     }
   }
