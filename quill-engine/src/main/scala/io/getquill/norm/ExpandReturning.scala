@@ -52,6 +52,10 @@ object ExpandReturning {
     }
 
     implicit val namingStrategy: NamingStrategy = naming
-    deTuplified.map(v => idiom.translate(v))
+    // TODO Should propagate ExecutionType from caller of this method. Need to trace
+    val outputs = deTuplified.map(v => idiom.translate(v, dePropertized.quat, ExecutionType.Unknown))
+    outputs.map {
+      case (a, b, _) => (a, b)
+    }
   }
 }

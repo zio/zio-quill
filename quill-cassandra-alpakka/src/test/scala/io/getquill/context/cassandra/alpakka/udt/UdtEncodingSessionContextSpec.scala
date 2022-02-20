@@ -57,7 +57,7 @@ class UdtEncodingSessionContextSpec extends UdtSpec with CassandraAlpakkaSpec {
 
       await {
         for {
-          _ <- ctx1.run(query[WithEverything].insert(lift(e)))
+          _ <- ctx1.run(query[WithEverything].insertValue(lift(e)))
           res <- ctx1.run(query[WithEverything].filter(_.id == 1))
         } yield {
           res.headOption must contain(e)
@@ -73,7 +73,7 @@ class UdtEncodingSessionContextSpec extends UdtSpec with CassandraAlpakkaSpec {
 
       await {
         for {
-          _ <- ctx1.run(query[WithEverything].insert(lift(e)))
+          _ <- ctx1.run(query[WithEverything].insertValue(lift(e)))
           res <- ctx1.run(query[WithEverything].filter(_.id == 2))
         } yield {
           res.headOption must contain(e)

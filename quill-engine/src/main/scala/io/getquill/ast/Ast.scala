@@ -83,6 +83,7 @@ object BottomTypedTerminal {
  * That means that even if the `NamingSchema` is `UpperCase`, the resulting query will select `t_person` as opposed
  * to `T_PERSON` or `Person`.
  */
+
 final class Entity(val name: String, val properties: List[PropertyAlias])(theQuat: => Quat.Product)(val renameable: Renameable) extends Query {
   private lazy val computedQuat: Quat.Product = theQuat
   def quat: Quat.Product = computedQuat
@@ -262,10 +263,12 @@ case class Nested(a: Ast) extends Query {
 
 //************************************************************
 
-final class Infix(val parts: List[String], val params: List[Ast], val pure: Boolean)(theQuat: => Quat) extends Ast {
+final class Infix(val parts: List[String], val params: List[Ast], val pure: Boolean, val transparent: Boolean)(theQuat: => Quat) extends Ast {
   def quat: Quat = theQuat
   def bestQuat: Quat = quat
-  private def id = Infix.Id(parts, params, pure)
+  private def id = Infix.Id(parts, params, pure, transparent)
+
+  def asTransparent = new Infix(this.parts, this.params, this.pure, true)(theQuat)
 
   override def equals(that: Any) =
     that match {
@@ -274,16 +277,16 @@ final class Infix(val parts: List[String], val params: List[Ast], val pure: Bool
     }
 
   override def hashCode = id.hashCode()
-  def copy(parts: List[String] = this.parts, params: List[Ast] = this.params, pure: Boolean = this.pure, quat: Quat = this.quat) =
-    Infix(parts, params, pure, quat)
+  def copy(parts: List[String] = this.parts, params: List[Ast] = this.params, pure: Boolean = this.pure, transparent: Boolean = this.transparent, quat: Quat = this.quat) =
+    Infix(parts, params, pure, transparent, quat)
 }
 object Infix {
-  private case class Id(val parts: List[String], val params: List[Ast], val pure: Boolean)
+  private case class Id(val parts: List[String], val params: List[Ast], val pure: Boolean, val transparent: Boolean)
 
-  def apply(parts: List[String], params: List[Ast], pure: Boolean, quat: => Quat) =
-    new Infix(parts, params, pure)(quat)
+  def apply(parts: List[String], params: List[Ast], pure: Boolean, transparent: Boolean, quat: => Quat) =
+    new Infix(parts, params, pure, transparent)(quat)
 
-  def unapply(i: Infix) = Some((i.parts, i.params, i.pure, i.quat))
+  def unapply(i: Infix) = Some((i.parts, i.params, i.pure, i.transparent, i.quat))
 }
 
 case class Function(params: List[Ident], body: Ast) extends Ast {
@@ -409,6 +412,7 @@ sealed trait Renameable extends Opinion[Renameable] {
       case _                => otherwise
     }
 }
+
 object Renameable extends OpinionValues[Renameable] {
   case object Fixed extends Renameable with Opinion[Renameable]
   case object ByStrategy extends Renameable with Opinion[Renameable]
@@ -428,25 +432,31 @@ object Renameable extends OpinionValues[Renameable] {
  * (whereas `Property(Ident(p), "s_name")` would become `p.S_NAME`). When Property is constructed without `Opinionated`
  * being used, the default opinion `ByStrategy` is used.
  */
-case class Property(ast: Ast, name: String) extends Ast {
-  // Technically this should be part of the Property case class but due to the limitations of how
-  // scala creates companion objects, the apply/unapply wouldn't be able to work correctly.
-  def renameable: Renameable = Renameable.neutral
-
+final class Property(val ast: Ast, val name: String)(val renameable: Renameable, val visibility: Visibility) extends Ast {
   def quat = ast.quat.lookup(name, Messages.strictQuatChecking)
   def bestQuat: Quat = ast.quat.lookup(name, false)
   def prevName = ast.quat.beforeRenamed(name)
 
-  // Properties that are 'Hidden' are used for embedded objects whose path should not be expressed
-  // during SQL Tokenization.
-  def visibility: Visibility = Visibility.Visible
+  private def id = Property.Id(ast, name)
 
   def copy(ast: Ast = this.ast, name: String = this.name): Property =
     Property.Opinionated(ast, name, this.renameable, this.visibility)
+
+  override def equals(that: Any) =
+    that match {
+      case e: Property => this.id == e.id
+      case _           => false
+    }
+
+  override def hashCode = id.hashCode()
 }
 
 object Property {
-  def apply(ast: Ast, name: String) = new Property(ast, name)
+  case class Id(ast: Ast, name: String)
+
+  // Properties that are 'Hidden' are used for embedded objects whose path should not be expressed
+  // during SQL Tokenization.
+  def apply(ast: Ast, name: String) = new Property(ast, name)(Renameable.neutral, Visibility.Visible)
   def unapply(p: Property) = Some((p.ast, p.name))
 
   object Opinionated {
@@ -455,11 +465,8 @@ object Property {
       name:          String,
       renameableNew: Renameable,
       visibilityNew: Visibility
-    ) =
-      new Property(ast, name) {
-        override def renameable: Renameable = renameableNew
-        override def visibility: Visibility = visibilityNew
-      }
+    ) = new Property(ast, name)(renameableNew, visibilityNew)
+
     def unapply(p: Property) =
       Some((p.ast, p.name, p.renameable, p.visibility))
   }
@@ -579,7 +586,7 @@ object Constant {
   }
 }
 
-object NullValue extends Value { def quat = Quat.Null; def bestQuat = quat }
+case object NullValue extends Value { def quat = Quat.Null; def bestQuat = quat }
 
 case class Tuple(values: List[Ast]) extends Value {
   private lazy val computedQuat = Quat.Tuple(values.map(_.quat))
@@ -596,8 +603,8 @@ case class CaseClass(values: List[(String, Ast)]) extends Value {
 }
 
 object CaseClass {
-  def apply(tup: (String, Ast)) = new CaseClass(List(tup))
   object Single {
+    def apply(tup: (String, Ast)) = new CaseClass(List(tup))
     def unapply(cc: CaseClass): Option[(String, Ast)] =
       cc.values match {
         case (name, property) :: Nil => Some((name, property))

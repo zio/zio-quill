@@ -25,7 +25,7 @@ class AstPrinter(traceOpinions: Boolean, traceAstSimple: Boolean, traceQuats: Qu
   val colorLiteral: fansi.Attrs = fansi.Color.Green
   val colorApplyPrefix: fansi.Attrs = fansi.Color.Yellow
   def escapeUnicode = false
-  def showFieldNames = false
+  override def showFieldNames = false
 
   val traceAllQuats = traceQuats == QuatTrace.All
 
@@ -53,6 +53,7 @@ class AstPrinter(traceOpinions: Boolean, traceAstSimple: Boolean, traceQuats: Qu
       }
     def withQuat(q: Quat): treemake = toContent.andWith(treemake.Quat(q))
     def withTree(t: pprint.Tree): treemake = toContent.andWith(treemake.Tree(t))
+    def withElem(a: Any): treemake = toContent.andWith(treemake.Elem(a))
     private def treeifyList: List[Tree] =
       toContent.list.flatMap {
         case e: treemake.Quat =>
@@ -61,11 +62,11 @@ class AstPrinter(traceOpinions: Boolean, traceAstSimple: Boolean, traceQuats: Qu
             case QuatTrace.Short                => List(Tree.Literal(e.q.shortString.take(10)))
             case QuatTrace.None                 => List()
           }
-        case treemake.Elem(value)   => List(pprint.treeify(value, escapeUnicode, showFieldNames))
+        case treemake.Elem(value)   => List(treeify(value))
         case treemake.Tree(value)   => List(value)
         case treemake.Content(list) => list.flatMap(_.treeifyList)
       }
-    def treeify: Iterator[Tree] = treeifyList.iterator
+    def make: Iterator[Tree] = treeifyList.iterator
   }
   private object treemake {
     private case class Quat(q: io.getquill.quat.Quat) extends treemake
@@ -82,7 +83,7 @@ class AstPrinter(traceOpinions: Boolean, traceAstSimple: Boolean, traceQuats: Qu
     def apply(list: Any*): treemake = Content(list.toList.map(Elem(_)))
   }
 
-  override def treeify(x: Any, escapeUnicode: Boolean, showFieldNames: Boolean): Tree =
+  override def treeify(x: Any): Tree =
     x match {
       case ast: Ast if (traceAstSimple) =>
         Tree.Literal("" + ast) // Do not blow up if it is null
@@ -91,17 +92,21 @@ class AstPrinter(traceOpinions: Boolean, traceAstSimple: Boolean, traceQuats: Qu
         Tree.Literal("" + past) // Do not blow up if it is null
 
       case i: Ident =>
-        Tree.Apply("Id", treemake(i.name).withQuat(i.bestQuat).treeify)
+        Tree.Apply("Id", treemake(i.name).withQuat(i.bestQuat).make)
+
+      case i: Infix =>
+        val content = List(i.parts.toList, i.params.toList) ++ (if (i.pure) List("pure") else List()) ++ (if (i.transparent) List("transparent") else List())
+        Tree.Apply("Infix", treemake(content: _*).withQuat(i.bestQuat).make)
 
       case e: Entity if (!traceOpinions) =>
-        Tree.Apply("Entity", treemake(e.name, e.properties).withQuat(e.bestQuat).treeify)
+        Tree.Apply("Entity", treemake(e.name, e.properties).withQuat(e.bestQuat).make)
 
       case q: Quat            => Tree.Literal(q.shortString)
 
-      case s: ScalarValueLift => Tree.Apply("ScalarValueLift", treemake("..." + s.name.reverse.take(15).reverse).withQuat(s.bestQuat).treeify)
+      case s: ScalarValueLift => Tree.Apply("ScalarValueLift", treemake("..." + s.name.reverse.take(15).reverse).withQuat(s.bestQuat).make)
 
       case p: Property if (traceOpinions) =>
-        TreeApplyList("Property", l(treeify(p.ast, escapeUnicode, showFieldNames)) ++ l(treeify(p.name, escapeUnicode, showFieldNames)) ++
+        TreeApplyList("Property", l(treeify(p.ast)) ++ l(treeify(p.name)) ++
           (
             if (traceOpinions)
               l(printRenameable(p.renameable), printVisibility(p.visibility))
@@ -110,25 +115,25 @@ class AstPrinter(traceOpinions: Boolean, traceAstSimple: Boolean, traceQuats: Qu
           ) ++
             (
               if (traceAllQuats)
-                l(treeify(p.bestQuat, escapeUnicode, showFieldNames))
+                l(treeify(p.bestQuat))
               else
                 List.empty[Tree]
             ))
 
       case e: Entity if (traceOpinions) =>
-        Tree.Apply("Entity", treemake(e.name, e.properties).withTree(printRenameable(e.renameable)).withQuat(e.bestQuat).treeify)
+        Tree.Apply("Entity", treemake(e.name, e.properties).withTree(printRenameable(e.renameable)).withQuat(e.bestQuat).make)
 
       case ast: Ast =>
         if (traceAllQuats)
-          super.treeify(ast, escapeUnicode, showFieldNames) match {
+          super.treeify(ast) match {
             case Tree.Apply(prefix, body) =>
-              TreeApplyList(prefix, body.toList :+ treeify(ast.bestQuat, escapeUnicode, showFieldNames))
+              TreeApplyList(prefix, body.toList :+ treeify(ast.bestQuat))
             case other => other
           }
         else
-          super.treeify(ast, escapeUnicode, showFieldNames)
+          super.treeify(ast)
 
-      case _ => super.treeify(x, escapeUnicode, showFieldNames)
+      case _ => super.treeify(x)
     }
 
   private def TreeApplyList(prefix: String, body: List[Tree]) = Tree.Apply(prefix, body.iterator)
@@ -136,11 +141,11 @@ class AstPrinter(traceOpinions: Boolean, traceAstSimple: Boolean, traceQuats: Qu
   private def l(trees: Tree*): List[Tree] = List[Tree](trees: _*)
 
   def apply(x: Any): fansi.Str = {
-    fansi.Str.join(this.tokenize(x).toSeq)
+    fansi.Str.join(this.tokenize(x).toSeq: _*)
   }
 
   def tokenize(x: Any): Iterator[fansi.Str] = {
-    val tree = this.treeify(x, escapeUnicode, showFieldNames)
+    val tree = this.treeify(x)
     val renderer = new Renderer(defaultWidth, colorApplyPrefix, colorLiteral, defaultIndent)
     val rendered = renderer.rec(tree, 0, 0).iter
     val truncated = new Truncated(rendered, defaultWidth, defaultHeight)

@@ -37,7 +37,7 @@ class RenamePropertiesSpec extends Spec {
         tup.map(t => (t._1, t._2))
       }
       testContext.run(q).string mustEqual
-        "SELECT t.field_s, t.field_i FROM test_tuple t"
+        "SELECT t.field_s AS _1, t.field_i AS _2 FROM test_tuple t"
     }
     "mapped to caseclass and filtered" in {
       case class StringInt(strProp: String, intProp: Int)
@@ -45,7 +45,7 @@ class RenamePropertiesSpec extends Spec {
         tup.map(t => new StringInt(t._1, t._2)).filter(_.strProp == "foo")
       }
       testContext.run(q).string mustEqual
-        "SELECT t.field_s, t.field_i FROM test_tuple t WHERE t.field_s = 'foo'"
+        "SELECT t.field_s AS strProp, t.field_i AS intProp FROM test_tuple t WHERE t.field_s = 'foo'"
     }
   }
 
@@ -67,7 +67,7 @@ class RenamePropertiesSpec extends Spec {
       }
       "update" in {
         val q = quote {
-          e.filter(_.i == 999).update(lift(TestEntity("a", 1, 1L, None, true)))
+          e.filter(_.i == 999).updateValue(lift(TestEntity("a", 1, 1L, None, true)))
         }
         testContext.run(q).string mustEqual
           "UPDATE test_entity SET field_s = ?, field_i = ?, l = ?, o = ?, b = ? WHERE field_i = 999"
@@ -141,7 +141,7 @@ class RenamePropertiesSpec extends Spec {
           e.map(t => (t.i, t.l))
         }
         testContext.run(q).string mustEqual
-          "SELECT t.field_i, t.l FROM test_entity t"
+          "SELECT t.field_i AS _1, t.l AS _2 FROM test_entity t"
       }
       "body with caseclass" in {
         case class IntLongCase(im: Int, lm: Long)
@@ -149,7 +149,7 @@ class RenamePropertiesSpec extends Spec {
           e.map(t => new IntLongCase(t.i, t.l))
         }
         testContext.run(q).string mustEqual
-          "SELECT t.field_i, t.l FROM test_entity t"
+          "SELECT t.field_i AS im, t.l AS lm FROM test_entity t"
       }
       "body with caseclass companion constructed" in {
         case class IntLongCase(im: Int, lm: Long)
@@ -157,14 +157,14 @@ class RenamePropertiesSpec extends Spec {
           e.map(t => IntLongCase(t.i, t.l))
         }
         testContext.run(q).string mustEqual
-          "SELECT t.field_i, t.l FROM test_entity t"
+          "SELECT t.field_i AS im, t.l AS lm FROM test_entity t"
       }
       "body with caseclass companion in class scope" in {
         val q = quote {
           e.map(t => IntLongCaseClassScope(t.i, t.l))
         }
         testContext.run(q).string mustEqual
-          "SELECT t.field_i, t.l FROM test_entity t"
+          "SELECT t.field_i AS im, t.l AS lm FROM test_entity t"
       }
       "transitive" in {
         val q = quote {
@@ -275,7 +275,7 @@ class RenamePropertiesSpec extends Spec {
           e.leftJoin(e).on((a, b) => a.s == b.s).map(t => (t._1.s, t._2.map(_.s)))
         }
         testContext.run(q).string mustEqual
-          "SELECT a.field_s, b.field_s FROM test_entity a LEFT JOIN test_entity b ON a.field_s = b.field_s"
+          "SELECT a.field_s AS _1, b.field_s AS _2 FROM test_entity a LEFT JOIN test_entity b ON a.field_s = b.field_s"
       }
       "inner" in {
         val q = quote {
@@ -306,7 +306,7 @@ class RenamePropertiesSpec extends Spec {
           } yield (x.s, x.i)
         }
         testContext.run(q).string mustEqual
-          "SELECT b.field_s, b.field_i FROM TestEntity2 a INNER JOIN test_entity b ON a.s = b.field_s"
+          "SELECT b.field_s AS _1, b.field_i AS _2 FROM TestEntity2 a INNER JOIN test_entity b ON a.s = b.field_s"
       }
       "flat left" in {
         val q = quote {
@@ -316,7 +316,7 @@ class RenamePropertiesSpec extends Spec {
           } yield x.map(x => x.i -> x.s)
         }
         testContext.run(q).string mustEqual
-          "SELECT b.field_i, b.field_s FROM TestEntity2 a LEFT JOIN test_entity b ON a.s = b.field_s"
+          "SELECT b.field_i AS _1, b.field_s AS _2 FROM TestEntity2 a LEFT JOIN test_entity b ON a.s = b.field_s"
       }
       "flat right" in {
         val q = quote {
@@ -326,7 +326,7 @@ class RenamePropertiesSpec extends Spec {
           } yield x.map(x => x.i -> x.s)
         }
         testContext.run(q).string mustEqual
-          "SELECT b.field_i, b.field_s FROM TestEntity2 a RIGHT JOIN test_entity b ON a.s = b.field_s"
+          "SELECT b.field_i AS _1, b.field_s AS _2 FROM TestEntity2 a RIGHT JOIN test_entity b ON a.s = b.field_s"
       }
       "nested flatMap in flatJoin" in {
 
@@ -360,7 +360,7 @@ class RenamePropertiesSpec extends Spec {
           }
         }
         testContext.run(q).string mustEqual
-          "SELECT a.field_s, SUM(a.field_i) FROM test_entity a GROUP BY a.field_s"
+          "SELECT a.field_s AS _1, SUM(a.field_i) AS _2 FROM test_entity a GROUP BY a.field_s"
       }
     }
 

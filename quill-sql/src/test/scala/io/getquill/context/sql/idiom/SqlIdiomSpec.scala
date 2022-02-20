@@ -125,7 +125,7 @@ class SqlIdiomSpec extends Spec {
             qr1.map(i => (i.i, i.l)).distinct
           }
           testContext.run(q).string mustEqual
-            "SELECT DISTINCT i.i, i.l FROM TestEntity i"
+            "SELECT DISTINCT i.i AS _1, i.l AS _2 FROM TestEntity i"
         }
 
         "caseclass constructor" in {
@@ -201,7 +201,7 @@ class SqlIdiomSpec extends Spec {
             }
           }
           testContext.run(q).string mustEqual
-            "SELECT t.s, t1.i FROM (SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t ORDER BY t.s ASC NULLS FIRST) AS t, (SELECT t1.s, t1.i, t1.l, t1.o FROM TestEntity2 t1 ORDER BY t1.i ASC NULLS FIRST) AS t1"
+            "SELECT t.s AS _1, t1.i AS _2 FROM (SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t ORDER BY t.s ASC NULLS FIRST) AS t, (SELECT t1.s, t1.i, t1.l, t1.o FROM TestEntity2 t1 ORDER BY t1.i ASC NULLS FIRST) AS t1"
         }
         "asc" in {
           val q = quote {
@@ -268,7 +268,7 @@ class SqlIdiomSpec extends Spec {
             }
           }
           testContext.run(q).string mustEqual
-            "SELECT t.i, COUNT(t.*) FROM TestEntity t GROUP BY t.i"
+            "SELECT t.i AS _1, COUNT(t.*) AS _2 FROM TestEntity t GROUP BY t.i"
         }
         "nested" in {
           val q = quote {
@@ -381,7 +381,7 @@ class SqlIdiomSpec extends Spec {
             }
           }
           testContext.run(q).string mustEqual
-            "SELECT t.i, (COUNT(t.*)) + 1 FROM TestEntity t GROUP BY t.i"
+            "SELECT t.i AS _1, (COUNT(t.*)) + 1 AS _2 FROM TestEntity t GROUP BY t.i"
         }
       }
       "unary operation" - {
@@ -412,7 +412,7 @@ class SqlIdiomSpec extends Spec {
             }
           }
           testContext.run(q).string mustEqual
-            "SELECT a.s, b.i FROM (SELECT x.s, x.i, x.l, x.o, x.b FROM TestEntity x LIMIT 1) AS a, (SELECT x.s, x.i, x.l, x.o FROM TestEntity2 x LIMIT 2) AS b"
+            "SELECT a.s AS _1, b.i AS _2 FROM (SELECT x.s, x.i, x.l, x.o, x.b FROM TestEntity x LIMIT 1) AS a, (SELECT x.s, x.i, x.l, x.o FROM TestEntity2 x LIMIT 2) AS b"
         }
       }
       "union" - {
@@ -443,7 +443,7 @@ class SqlIdiomSpec extends Spec {
             j.union(j).map(u => (u._1.s, u._2.i))
           }
           testContext.run(q).string mustEqual
-            "SELECT u._1s, u._2i FROM ((SELECT a.s AS _1s, b.i AS _2i FROM TestEntity a, TestEntity2 b) UNION (SELECT a1.s AS _1s, b1.i AS _2i FROM TestEntity a1, TestEntity2 b1)) AS u"
+            "SELECT u._1s AS _1, u._2i AS _2 FROM ((SELECT a.s AS _1s, b.i AS _2i FROM TestEntity a, TestEntity2 b) UNION (SELECT a1.s AS _1s, b1.i AS _2i FROM TestEntity a1, TestEntity2 b1)) AS u"
         }
       }
       "unionAll" - {
@@ -513,7 +513,7 @@ class SqlIdiomSpec extends Spec {
               qr1.map(y => y.s).join(qr2).on((a, b) => a == b.s)
             }
             testContext.run(q).string mustEqual
-              "SELECT y.s, b.s, b.i, b.l, b.o FROM TestEntity y INNER JOIN TestEntity2 b ON y.s = b.s"
+              "SELECT y.s AS _1, b.s, b.i, b.l, b.o FROM TestEntity y INNER JOIN TestEntity2 b ON y.s = b.s"
           }
         }
       }
@@ -938,7 +938,7 @@ class SqlIdiomSpec extends Spec {
           qr1.map(t => (1, 2))
         }
         testContext.run(q).string mustEqual
-          "SELECT 1, 2 FROM TestEntity t"
+          "SELECT 1 AS _1, 2 AS _2 FROM TestEntity t"
       }
       "caseclass" in {
         case class TwoInts(one: Int, two: Int)
@@ -946,7 +946,7 @@ class SqlIdiomSpec extends Spec {
           qr1.map(t => new TwoInts(1, 2))
         }
         testContext.run(q).string mustEqual
-          "SELECT 1, 2 FROM TestEntity t"
+          "SELECT 1 AS one, 2 AS two FROM TestEntity t"
       }
       "caseclass companion" in {
         case class TwoInts(one: Int, two: Int)
@@ -954,14 +954,14 @@ class SqlIdiomSpec extends Spec {
           qr1.map(t => TwoInts(1, 2))
         }
         testContext.run(q).string mustEqual
-          "SELECT 1, 2 FROM TestEntity t"
+          "SELECT 1 AS one, 2 AS two FROM TestEntity t"
       }
       "caseclass companion class scope" in {
         val q = quote {
           qr1.map(t => TwoIntsClassScope(1, 2))
         }
         testContext.run(q).string mustEqual
-          "SELECT 1, 2 FROM TestEntity t"
+          "SELECT 1 AS one, 2 AS two FROM TestEntity t"
       }
     }
     "property" - {
@@ -1145,7 +1145,7 @@ class SqlIdiomSpec extends Spec {
           }
         }
         testContext.run(q).string mustEqual
-          "SELECT x.i, x.l, x.i * x.l FROM TestEntity x"
+          "SELECT x.i AS _1, x.l AS _2, x.i * x.l AS _3 FROM TestEntity x"
       }
       "nested" in {
         val q = quote {
@@ -1162,7 +1162,7 @@ class SqlIdiomSpec extends Spec {
           } yield (a, b, c, inner)
         }
         testContext.run(q).string mustEqual
-          "SELECT a.s, a.i, a.l, a.o, a.b, b.s, b.i, b.l, b.o, t.s, t.i, t.l, t.o, 1 + t.i FROM TestEntity a, TestEntity2 b, TestEntity3 t WHERE a.i = b.i AND t.i = 1 AND b.i = t.i"
+          "SELECT a.s, a.i, a.l, a.o, a.b, b.s, b.i, b.l, b.o, t.s, t.i, t.l, t.o, 1 + t.i AS _4 FROM TestEntity a, TestEntity2 b, TestEntity3 t WHERE a.i = b.i AND t.i = 1 AND b.i = t.i"
       }
       "aggregated" in {
         val q = quote {
@@ -1175,7 +1175,7 @@ class SqlIdiomSpec extends Spec {
           }
         }
         testContext.run(q).string mustEqual
-          "SELECT (SELECT SUM(t.i) FROM TestEntity2 t), (SELECT SUM(t1.i) FROM TestEntity3 t1), (SELECT SUM((a.i + t2.i) + t3.i) FROM TestEntity2 t2, TestEntity3 t3) FROM TestEntity a"
+          "SELECT (SELECT SUM(t.i) FROM TestEntity2 t) AS _1, (SELECT SUM(t1.i) FROM TestEntity3 t1) AS _2, (SELECT SUM((a.i + t2.i) + t3.i) FROM TestEntity2 t2, TestEntity3 t3) AS _3 FROM TestEntity a"
       }
     }
   }

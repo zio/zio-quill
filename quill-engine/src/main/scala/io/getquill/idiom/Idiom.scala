@@ -2,7 +2,8 @@ package io.getquill.idiom
 
 import io.getquill.ast._
 import io.getquill.NamingStrategy
-import io.getquill.context.Capabilities
+import io.getquill.context.{ Capabilities, ExecutionType }
+import io.getquill.quat.Quat
 
 trait Idiom extends Capabilities {
 
@@ -12,9 +13,9 @@ trait Idiom extends Capabilities {
 
   def liftingPlaceholder(index: Int): String
 
-  def translate(ast: Ast)(implicit naming: NamingStrategy): (Ast, Statement)
+  def translate(ast: Ast, topLevelQuat: Quat, executionType: ExecutionType)(implicit naming: NamingStrategy): (Ast, Statement, ExecutionType)
 
-  def translateCached(ast: Ast)(implicit naming: NamingStrategy): (Ast, Statement)
+  def translateCached(ast: Ast, topLevelQuat: Quat, executionType: ExecutionType)(implicit naming: NamingStrategy): (Ast, Statement, ExecutionType)
 
   def format(queryString: String): String = queryString
 

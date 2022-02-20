@@ -497,7 +497,7 @@ class CompatibleDynamicQuerySpec extends Spec {
     "updateValue" in {
       test(
         quote(query[TestEntity]).dynamic.updateValue(t),
-        query[TestEntity].update(lift(t))
+        query[TestEntity].updateValue(lift(t))
       )
     }
 

@@ -1,11 +1,10 @@
 package io.getquill.sql.norm
 
-import io.getquill.ast.{ Ast, Ident, Property, Renameable }
+import io.getquill.ast.{ Ast, Core, Ident, Property, Renameable }
 import io.getquill.ast.Visibility.{ Hidden, Visible }
 import io.getquill.context.sql.{ FlatJoinContext, FromContext, InfixContext, JoinContext, QueryContext, TableContext }
 import io.getquill.norm.PropertyMatroshka
 import io.getquill.quat.Quat
-import io.getquill.ast.Core
 import io.getquill.sql.norm.InContext.{ InContextType, InInfixContext, InQueryContext, InTableContext }
 
 /**
@@ -44,15 +43,16 @@ case class InContext(from: List[FromContext]) {
   def isEntityReference(ast: Ast) =
     contextReferenceType(ast) match {
       case Some(InTableContext) => true
+      case Some(InInfixContext) => true
       case _                    => false
     }
 
   def contextReferenceType(ast: Ast) = {
     val references = collectTableAliases(from)
     ast match {
-      case Ident(v, _)                       => references.get(v)
-      case PropertyMatroshka(Ident(v, _), _) => references.get(v)
-      case _                                 => None
+      case Ident(v, _)                          => references.get(v)
+      case PropertyMatroshka(Ident(v, _), _, _) => references.get(v)
+      case _                                    => None
     }
   }
 
@@ -92,11 +92,28 @@ case class SelectPropertyProtractor(from: List[FromContext]) {
     if (!isEntity) freezeEntityPropsRecurse(p) else p
   }
 
-  def apply(ast: Ast): List[(Ast, List[String])] = {
+  private def nonAbstractQuat(from: Quat, or: Option[Quat]) =
+    (from, or) match {
+      case (Quat.IsAbstract(), Some(value @ Quat.NotAbstract())) => value
+      case _ => from
+    }
+
+  /**
+   * Turn product quats into case class asts e.g. Quat.Product(name:V,age:V) => CaseClass(name->p.name,age->p.age)
+   * `alternateQuat` is there in case it's a top-level expansion and the identifier is generic or unknown (or an abstract product quat)
+   * so we want to try and get information from the quat from the [T] of the executeQuery[T] itself (similar to quatOf[T])
+   * this information is already supplied by higher level constructs.
+   */
+  def apply(ast: Ast, alternateQuat: Option[Quat]): List[(Ast, List[String])] = {
     ast match {
       case id @ Core() =>
+        // The quat is considered to be an entity (i.e. thing whose fields need to be renamed) if it is either:
+        // a) Found in the table references (i.e. it's an actual table in the subselect) or...
+        // b) We are selecting fields from an infix e.g. `infix"selectPerson()".as[Query[Person]]`
         val isEntity = inContext.isEntityReference(id)
-        id.quat match {
+        val effectiveQuat = nonAbstractQuat(id.quat, alternateQuat)
+
+        effectiveQuat match {
           case p: Quat.Product =>
             ProtractQuat(isEntity)(p, id).map { case (prop, path) => (freezeNonEntityProps(prop, isEntity), path) }
           case _ =>
@@ -104,9 +121,11 @@ case class SelectPropertyProtractor(from: List[FromContext]) {
         }
       // Assuming a property contains only an Ident, Infix or Constant at this point
       // and all situations where there is a case-class, tuple, etc... inside have already been beta-reduced
-      case prop @ PropertyMatroshka(id @ Core(), _) =>
+      case prop @ PropertyMatroshka(id @ Core(), _, _) =>
         val isEntity = inContext.isEntityReference(id)
-        prop.quat match {
+        val effectiveQuat = nonAbstractQuat(prop.quat, alternateQuat)
+
+        effectiveQuat match {
           case p: Quat.Product =>
             ProtractQuat(isEntity)(p, prop).map { case (prop, path) => (freezeNonEntityProps(prop, isEntity), path) }
           case _ =>
@@ -122,8 +141,10 @@ case class SelectPropertyProtractor(from: List[FromContext]) {
 *   List( Prop(id,foo) [foo], Prop(Prop(id,bar),a) [bar.a], Prop(Prop(id,bar),b) [bar.b] )
 */
 case class ProtractQuat(refersToEntity: Boolean) {
-  def apply(quat: Quat.Product, core: Ast): List[(Property, List[String])] =
-    applyInner(quat, core)
+  def apply(quat: Quat.Product, core: Ast): List[(Property, List[String])] = {
+    val prot = applyInner(quat, core)
+    prot
+  }
 
   def applyInner(quat: Quat.Product, core: Ast): List[(Property, List[String])] = {
     // Property (and alias path) should be visible unless we are referring directly to a TableContext
