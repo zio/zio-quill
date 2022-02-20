@@ -12,7 +12,7 @@ class EncodingSpec extends EncodingSpecHelper with CassandraAlpakkaSpec {
       import testDB._
       for {
         _ <- testDB.run(query[EncodingTestEntity].delete)
-        _ <- testDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insert(e)))
+        _ <- testDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insertValue(e)))
         result <- testDB.run(query[EncodingTestEntity])
       } yield {
         verify(result)
@@ -29,7 +29,7 @@ class EncodingSpec extends EncodingSpecHelper with CassandraAlpakkaSpec {
     await {
       for {
         _ <- testDB.run(query[EncodingTestEntity].delete)
-        _ <- testDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insert(e)))
+        _ <- testDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insertValue(e)))
         r <- testDB.run(q(liftQuery(insertValues.map(_.id))))
       } yield {
         verify(r)
@@ -79,7 +79,7 @@ class EncodingSpec extends EncodingSpecHelper with CassandraAlpakkaSpec {
       await {
         for {
           _ <- ctx.run(jq.delete)
-          _ <- ctx.run(jq.insert(lift(j)))
+          _ <- ctx.run(jq.insertValue(lift(j)))
           r <- ctx.run(cq)
         } yield {
           r.headOption mustBe Some(c)
@@ -89,7 +89,7 @@ class EncodingSpec extends EncodingSpecHelper with CassandraAlpakkaSpec {
       await {
         for {
           _ <- ctx.run(cq.delete)
-          _ <- ctx.run(cq.insert(lift(c)))
+          _ <- ctx.run(cq.insertValue(lift(c)))
           r <- ctx.run(jq)
         } yield {
           r.headOption mustBe Some(j)

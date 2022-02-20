@@ -11,6 +11,7 @@ private[getquill] trait InfixDsl {
     def asCondition: Boolean
     def pure: InfixValue
     private[getquill] def generic: InfixValue
+    private[getquill] def transparent: InfixValue
   }
 
   implicit class InfixInterpolator(val sc: StringContext) {

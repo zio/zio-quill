@@ -26,7 +26,7 @@ class MapsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
   "Map encoders/decoders" in {
     await {
       for {
-        _ <- ctx.run(q.insert(lift(e)))
+        _ <- ctx.run(q.insertValue(lift(e)))
         res <- ctx.run(q.filter(_.id == 1))
       } yield {
         res.head mustBe e
@@ -46,7 +46,7 @@ class MapsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
 
     await {
       for {
-        _ <- ctx.run(q.insert(lift(e)))
+        _ <- ctx.run(q.insertValue(lift(e)))
         res <- ctx.run(q.filter(_.id == 1))
       } yield {
         res.head mustBe e
@@ -61,7 +61,7 @@ class MapsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
 
     await {
       for {
-        _ <- ctx.run(q.insert(lift(e)))
+        _ <- ctx.run(q.insertValue(lift(e)))
         res <- ctx.run(q.filter(_.id == 1))
       } yield {
         res.head mustBe e
@@ -76,7 +76,7 @@ class MapsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
 
     await {
       for {
-        _ <- ctx.run(q.insert(lift(e)))
+        _ <- ctx.run(q.insertValue(lift(e)))
         res <- ctx.run(q.filter(_.id == 1))
       } yield {
         res.head mustBe e
@@ -89,7 +89,7 @@ class MapsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
 
     await {
       for {
-        _ <- ctx.run(mapFroz.insert(lift(e)))
+        _ <- ctx.run(mapFroz.insertValue(lift(e)))
         res1 <- ctx.run(mapFroz.filter(_.id == lift(Map(1 -> true))))
         res2 <- ctx.run(mapFroz.filter(_.id == lift(Map(1 -> false))))
       } yield {
@@ -99,7 +99,7 @@ class MapsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
     }
     await {
       for {
-        _ <- ctx.run(mapFroz.insert(lift(e)))
+        _ <- ctx.run(mapFroz.insertValue(lift(e)))
         res1 <- ctx.run(mapFroz.filter(_.id.contains(1)).allowFiltering)
         res2 <- ctx.run(mapFroz.filter(_.id.contains(2)).allowFiltering)
       } yield {
@@ -114,7 +114,7 @@ class MapsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
 
     await {
       for {
-        _ <- ctx.run(mapFroz.insert(lift(e)))
+        _ <- ctx.run(mapFroz.insertValue(lift(e)))
         res1 <- ctx.run(mapFroz.filter(_.id.containsValue(true)).allowFiltering)
         res2 <- ctx.run(mapFroz.filter(_.id.containsValue(false)).allowFiltering)
       } yield {

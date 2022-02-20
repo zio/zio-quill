@@ -24,9 +24,9 @@ trait StatefulTransformer[T] {
         val (bt, btt) = apply(b)
         (Function(a, bt), btt)
 
-      case Infix(a, b, pure, quat) =>
+      case Infix(a, b, pure, transparent, quat) =>
         val (bt, btt) = apply(b)(_.apply)
-        (Infix(a, bt, pure, quat), btt)
+        (Infix(a, bt, pure, transparent, quat), btt)
 
       case If(a, b, c) =>
         val (at, att) = apply(a)

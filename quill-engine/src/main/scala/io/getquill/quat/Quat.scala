@@ -42,6 +42,13 @@ object LinkedHashMapOps {
  * all operations Quats have referential transparency.
  */
 sealed trait Quat {
+  def isAbstract =
+    this match {
+      case Quat.Generic => true
+      case Quat.Unknown => true
+      case _            => false
+    }
+
   def isPrimitive = false
   def applyRenames: Quat = this
   def withRenames(renames: mutable.LinkedHashMap[String, String]): Quat
@@ -156,20 +163,34 @@ object Quat {
     def unapply(ast: Ast) = Some(ast.quat)
   }
 
-  def improveInfixQuat(ast: Ast) =
+  object IsAbstract {
+    def unapply(quat: Quat): scala.Boolean = quat.isAbstract
+  }
+  object NotAbstract {
+    def unapply(quat: Quat): scala.Boolean = !quat.isAbstract
+  }
+
+  /*
+   * This is needed to propagate the Quat of an Infix param to the infix quat itself.
+   * See here for more details: https://github.com/zio/zio-quill/pull/2420
+   */
+  def improveInfixQuat(ast: Ast) = {
     ast match {
-      case Infix(parts, params, pure, Quat.Generic | Quat.Unknown) =>
-        val possiblyBetterQuat = params.foldLeft(Quat.Generic: Quat)((currQuat, param) => currQuat.leastUpperType(param.quat).getOrElse(currQuat))
-        val bestQuat =
+      // Possibly improve the quat if an infix clause if it has exactly one inner Ast element and the type of it's quat is Generic
+      case i @ Infix(parts, List(param), pure, transparent, _) if (transparent) =>
+        val possiblyBetterQuat = param.quat
+        val newQuat =
           possiblyBetterQuat match {
             case Quat.Unknown => Quat.Unknown
             case Quat.Value   => Quat.Generic
             case other        => other
           }
-        Infix(parts, params, pure, bestQuat)
+        Infix(parts, List(param), pure, transparent, newQuat)
+
       case _ =>
         ast
     }
+  }
 
   import LinkedHashMapOps._
 

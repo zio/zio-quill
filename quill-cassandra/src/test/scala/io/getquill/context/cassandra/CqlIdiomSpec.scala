@@ -5,6 +5,7 @@ import io.getquill.idiom.StatementInterpolator._
 import io.getquill.ast.{ Action => AstAction, Query => _, _ }
 import io.getquill.idiom.StringToken
 import io.getquill.Query
+import io.getquill.context.ExecutionType
 import io.getquill.quat.Quat
 
 class CqlIdiomSpec extends Spec {
@@ -379,15 +380,15 @@ class CqlIdiomSpec extends Spec {
 
     "ident" in {
       val a: Ast = Ident("a")
-      translate(a) mustBe (a -> stmt"a")
+      translate(a, Quat.Unknown, ExecutionType.Unknown) mustBe ((a, stmt"a", ExecutionType.Unknown))
     }
     "assignment" in {
       val a: Ast = Assignment(Ident("a"), Ident("b"), Ident("c"))
-      translate(a: Ast) mustBe (a -> stmt"b = c")
+      translate(a: Ast, Quat.Unknown, ExecutionType.Unknown) mustBe ((a, stmt"b = c", ExecutionType.Unknown))
     }
     "assignmentDual" in {
       val a: Ast = AssignmentDual(Ident("a1"), Ident("a2"), Ident("b"), Ident("c"))
-      translate(a: Ast) mustBe (a -> stmt"b = c")
+      translate(a: Ast, Quat.Unknown, ExecutionType.Unknown) mustBe ((a, stmt"b = c", ExecutionType.Unknown))
     }
     "aggregation" in {
       val t = implicitly[Tokenizer[AggregationOperator]]

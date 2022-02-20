@@ -14,6 +14,7 @@ import io.getquill.context.spark.DatasetBinding
 import io.getquill.context.spark.ValueBinding
 import org.apache.spark.sql.types.{ StructField, StructType }
 import io.getquill.context.spark.norm.QuestionMarkEscaper._
+import io.getquill.quat.QuatMaking
 import org.apache.spark.sql.functions._
 
 import scala.reflect.runtime.universe.TypeTag
@@ -30,6 +31,8 @@ trait QuillSparkContext
   type RunQueryResult[T] = T
   type Session = Unit
   type Runner = Unit
+
+  implicit val ignoreDecoders: QuatMaking.IgnoreDecoders = QuatMaking.IgnoreDecoders
 
   private[getquill] val queryCounter = new AtomicInteger(0)
 

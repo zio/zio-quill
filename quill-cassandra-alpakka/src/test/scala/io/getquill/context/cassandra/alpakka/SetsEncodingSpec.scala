@@ -31,7 +31,7 @@ class SetsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
   "Set encoders/decoders for CassandraTypes and CassandraMappers" in {
     await {
       for {
-        _ <- ctx.run(q.insert(lift(e)))
+        _ <- ctx.run(q.insertValue(lift(e)))
         res <- ctx.run(q.filter(_.id == 1))
       } yield {
         res.head mustBe e
@@ -46,7 +46,7 @@ class SetsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
 
     await {
       for {
-        _ <- ctx.run(q.insert(lift(e)))
+        _ <- ctx.run(q.insertValue(lift(e)))
         res <- ctx.run(q.filter(_.id == 1))
       } yield {
         res.head mustBe e
@@ -61,7 +61,7 @@ class SetsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
 
     await {
       for {
-        _ <- ctx.run(q.insert(lift(e)))
+        _ <- ctx.run(q.insertValue(lift(e)))
         res <- ctx.run(q.filter(_.id == 1))
       } yield {
         res.head mustBe e
@@ -76,7 +76,7 @@ class SetsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
 
     await {
       for {
-        _ <- ctx.run(q.insert(lift(e)))
+        _ <- ctx.run(q.insertValue(lift(e)))
         res <- ctx.run(q.filter(_.id == 1))
       } yield {
         res.head mustBe e
@@ -91,7 +91,7 @@ class SetsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
 
     await {
       for {
-        _ <- ctx.run(q.insert(lift(e)))
+        _ <- ctx.run(q.insertValue(lift(e)))
         res <- ctx.run(q.filter(_.id == 4))
       } yield {
         res.head.blobs.map(_.toSet) mustBe e.blobs.map(_.toSet)
@@ -103,7 +103,7 @@ class SetsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
     val e = SetFrozen(Set(1, 2))
     await {
       for {
-        _ <- ctx.run(setFroz.insert(lift(e)))
+        _ <- ctx.run(setFroz.insertValue(lift(e)))
         res1 <- ctx.run(setFroz.filter(_.id == lift(Set(1, 2))))
         res2 <- ctx.run(setFroz.filter(_.id == lift(Set(1))))
       } yield {
