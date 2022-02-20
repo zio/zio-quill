@@ -1,7 +1,8 @@
 package io.getquill.context
 
-import io.getquill.ast._ // Only .returning(r => r.prop) or .returning(r => OneElementCaseClass(r.prop)) is allowed.
+import io.getquill.ast._
 import io.getquill.norm.BetaReduction
+import io.getquill.quat.Quat
 import io.getquill.quotation.ReifyLiftings
 import io.getquill.util.MacroContextExt._
 
@@ -21,7 +22,7 @@ class ActionMacro(val c: MacroContext)
     c.untypecheck {
       q"""
         ..${EnableReflectiveCalls(c)}
-        val expanded = ${expand(extractAst(quoted))}
+        val expanded = ${expand(extractAst(quoted), inferQuat(quoted.tpe))}
         ${c.prefix}.translateQuery(
           expanded.string,
           expanded.prepare,
@@ -55,7 +56,7 @@ class ActionMacro(val c: MacroContext)
     c.untypecheck {
       q"""
         ..${EnableReflectiveCalls(c)}
-        val expanded = ${expand(extractAst(quoted))}
+        val expanded = ${expand(extractAst(quoted), Quat.Value)}
         ${c.prefix}.executeAction(
           expanded.string,
           expanded.prepare
@@ -67,7 +68,7 @@ class ActionMacro(val c: MacroContext)
     c.untypecheck {
       q"""
         ..${EnableReflectiveCalls(c)}
-        val expanded = ${expand(extractAst(quoted))}
+        val expanded = ${expand(extractAst(quoted), inferQuat(t.tpe))}
         ${c.prefix}.executeActionReturning(
           expanded.string,
           expanded.prepare,
@@ -134,7 +135,7 @@ class ActionMacro(val c: MacroContext)
               }
             val (ast, _) = reifyLiftings(BetaReduction(body, alias -> nestedLift))
             c.untypecheck {
-              call(batch, param, expand(ast))
+              call(batch, param, expand(ast, Quat.Unknown))
             }
         }
       case other =>
@@ -146,7 +147,7 @@ class ActionMacro(val c: MacroContext)
       (expanded.ast match {
         case ret: io.getquill.ast.ReturningAction =>
             io.getquill.norm.ExpandReturning.applyMap(ret)(
-              (ast, statement) => io.getquill.context.Expand(${c.prefix}, ast, statement, idiom, naming).string
+              (ast, statement) => io.getquill.context.Expand(${c.prefix}, ast, statement, idiom, naming, io.getquill.context.ExecutionType.Unknown).string
             )(idiom, naming)
         case ast =>
           io.getquill.util.Messages.fail(s"Can't find returning column. Ast: '$$ast'")
@@ -157,7 +158,7 @@ class ActionMacro(val c: MacroContext)
     c.untypecheck {
       q"""
         ..${EnableReflectiveCalls(c)}
-        val expanded = ${expand(extractAst(quoted))}
+        val expanded = ${expand(extractAst(quoted), Quat.Value)}
         ${c.prefix}.prepareAction(
           expanded.string,
           expanded.prepare

@@ -2,7 +2,7 @@ package io.getquill.context.cassandra
 
 import io.getquill.ast.{ IterableOperation, _ }
 import io.getquill.NamingStrategy
-import io.getquill.context.CannotReturn
+import io.getquill.context.{ CannotReturn, ExecutionType }
 import io.getquill.util.Messages.fail
 import io.getquill.idiom.Idiom
 import io.getquill.idiom.StatementInterpolator._
@@ -10,6 +10,7 @@ import io.getquill.idiom.Statement
 import io.getquill.idiom.SetContainsToken
 import io.getquill.idiom.Token
 import io.getquill.norm.NormalizeCaching
+import io.getquill.quat.Quat
 import io.getquill.util.Interleave
 
 object CqlIdiom extends CqlIdiom with CannotReturn
@@ -22,14 +23,14 @@ trait CqlIdiom extends Idiom {
 
   override def prepareForProbing(string: String) = string
 
-  override def translate(ast: Ast)(implicit naming: NamingStrategy) = {
+  override def translate(ast: Ast, topLevelQuat: Quat, executionType: ExecutionType)(implicit naming: NamingStrategy) = {
     val normalizedAst = CqlNormalize(ast)
-    (normalizedAst, stmt"${normalizedAst.token}")
+    (normalizedAst, stmt"${normalizedAst.token}", executionType)
   }
 
-  override def translateCached(ast: Ast)(implicit naming: NamingStrategy) = {
+  override def translateCached(ast: Ast, topLevelQuat: Quat, executionType: ExecutionType)(implicit naming: NamingStrategy) = {
     val normalizedAst = NormalizeCaching(CqlNormalize.apply)(ast)
-    (normalizedAst, stmt"${normalizedAst.token}")
+    (normalizedAst, stmt"${normalizedAst.token}", executionType)
   }
 
   implicit def astTokenizer(implicit strategy: NamingStrategy, queryTokenizer: Tokenizer[Query]): Tokenizer[Ast] =
@@ -137,7 +138,7 @@ trait CqlIdiom extends Idiom {
   }
 
   implicit def infixTokenizer(implicit propertyTokenizer: Tokenizer[Property], strategy: NamingStrategy, queryTokenizer: Tokenizer[Query]): Tokenizer[Infix] = Tokenizer[Infix] {
-    case Infix(parts, params, _, _) =>
+    case Infix(parts, params, _, _, _) =>
       val pt = parts.map(_.token)
       val pr = params.map(_.token)
       Statement(Interleave(pt, pr))
