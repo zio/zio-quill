@@ -82,6 +82,12 @@ class ExpandSelection(from: List[FromContext]) {
   }
 }
 
+/*
+ * Much of what this does is documented in PRs here:
+ * https://github.com/zio/zio-quill/pull/1920 and here:
+ * https://github.com/zio/zio-quill/pull/2381 and here:
+ * https://github.com/zio/zio-quill/pull/2420
+ */
 object ExpandNestedQueries extends StatelessQueryTransformer {
 
   protected override def apply(q: SqlQuery, level: QueryLevel): SqlQuery =

@@ -265,7 +265,7 @@ lazy val `quill-engine` =
     .settings(mimaSettings: _*)
     .settings(
       libraryDependencies ++= Seq(
-        "com.typesafe"               %  "config"        % "1.4.1",
+        "com.typesafe"               %  "config"        % "1.4.2",
         "com.typesafe.scala-logging" %% "scala-logging" % "3.9.4",
         ("com.twitter"               %% "chill"         % "0.10.0").cross(CrossVersion.for3Use2_13),
         ("com.github.takayahilton"   %%% "sql-formatter" % "1.2.1").cross(CrossVersion.for3Use2_13)
@@ -299,7 +299,7 @@ lazy val `quill-core` =
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .settings(libraryDependencies ++= Seq(
-      "com.typesafe"               %  "config"        % "1.4.1",
+      "com.typesafe"               %  "config"        % "1.4.2",
       "dev.zio"                    %% "zio-logging"   % "0.5.14",
       "com.typesafe.scala-logging" %% "scala-logging" % "3.9.4"
     ))
@@ -652,7 +652,7 @@ lazy val `quill-cassandra` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.datastax.oss" % "java-driver-core" % "4.13.0",
+        "com.datastax.oss" % "java-driver-core" % "4.14.0",
         "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.1"
       )
     )
@@ -791,7 +791,7 @@ lazy val jdbcTestingLibraries = Seq(
     "com.zaxxer"              %  "HikariCP"                % "3.4.5",
     "mysql"                   %  "mysql-connector-java"    % "8.0.27"             % Test,
     "com.h2database"          %  "h2"                      % "1.4.200"            % Test,
-    "org.postgresql"          %  "postgresql"              % "42.3.0"             % Test,
+    "org.postgresql"          %  "postgresql"              % "42.3.3"             % Test,
     "org.xerial"              %  "sqlite-jdbc"             % "3.36.0.3"             % Test,
     "com.microsoft.sqlserver" %  "mssql-jdbc"              % "7.1.1.jre8-preview" % Test,
     "com.oracle.ojdbc"        %  "ojdbc8"                  % "19.3.0.0"           % Test,
