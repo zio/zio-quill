@@ -1,9 +1,9 @@
 package io.getquill.context.sql.idiom
 
-import io.getquill.Spec
+import io.getquill.{ EntityQuery, Quoted, Spec }
 import io.getquill.context.sql.testContextEscapeElements
 
-class NestedQueryNamingStrategySpec extends Spec { //hello
+class NestedQueryNamingStrategySpec extends Spec {
 
   case class Person(id: Int, name: String)
 

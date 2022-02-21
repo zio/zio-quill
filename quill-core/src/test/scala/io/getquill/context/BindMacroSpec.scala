@@ -115,7 +115,7 @@ class BindMacroSpec extends Spec {
     }
     "tuple + case class + nested action" in {
       val nested = quote {
-        (s: String, p: TestEntity) => qr1.filter(t => t.s == s).update(p)
+        (s: String, p: TestEntity) => qr1.filter(t => t.s == s).updateValue(p)
       }
       val q = quote {
         liftQuery(entities).foreach(p => nested(lift("s"), p))
@@ -128,7 +128,7 @@ class BindMacroSpec extends Spec {
     }
     "zipWithIndex" in {
       val nested = quote {
-        (e: TestEntity, i: Int) => qr1.filter(t => t.i == i).update(e)
+        (e: TestEntity, i: Int) => qr1.filter(t => t.i == i).updateValue(e)
       }
       val q = quote {
         liftQuery(entities.zipWithIndex).foreach(p => nested(p._1, p._2))

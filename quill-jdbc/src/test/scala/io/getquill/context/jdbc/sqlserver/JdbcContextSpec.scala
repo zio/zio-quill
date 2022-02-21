@@ -109,7 +109,7 @@ class JdbcContextSpec extends Spec {
       ctx.run(qr1.insertValue(lift(TestEntity("baz", 6, 42L, Some(456), true))))
 
       val updated = ctx.run {
-        qr1.update(lift(TestEntity("foo", 1, 18L, Some(123), true))).returning(r => (r.i, r.s, r.o))
+        qr1.updateValue(lift(TestEntity("foo", 1, 18L, Some(123), true))).returning(r => (r.i, r.s, r.o))
       }
       (1, "foo", Some(123)) mustBe updated
     }
@@ -119,7 +119,7 @@ class JdbcContextSpec extends Spec {
       ctx.run(qr1.insertValue(lift(TestEntity("baz", 6, 42L, Some(456), true))))
 
       val updated = ctx.run {
-        qr1.update(lift(TestEntity("foo", 1, 18L, Some(123), true))).returning(r => (r.i + 100, r.s, r.o.map(_ + 100)))
+        qr1.updateValue(lift(TestEntity("foo", 1, 18L, Some(123), true))).returning(r => (r.i + 100, r.s, r.o.map(_ + 100)))
       }
       (1 + 100, "foo", Some(123 + 100)) mustBe updated
     }
@@ -129,7 +129,7 @@ class JdbcContextSpec extends Spec {
       ctx.run(qr1Emb.insertValue(lift(TestEntityEmb(Emb("one", 1), 42L, Some(456)))))
 
       val updated = ctx.run {
-        qr1Emb.update(lift(TestEntityEmb(Emb("two", 2), 18L, Some(123)))).returning(r => (r.emb.i, r.o))
+        qr1Emb.updateValue(lift(TestEntityEmb(Emb("two", 2), 18L, Some(123)))).returning(r => (r.emb.i, r.o))
       }
       (2, Some(123)) mustBe updated
     }
@@ -140,7 +140,7 @@ class JdbcContextSpec extends Spec {
       ctx.run(qr1.insertValue(lift(TestEntity("baz", 6, 42L, Some(456), true))))
 
       val updated = ctx.run {
-        qr1.update(lift(TestEntity("foo", 1, 18L, Some(123), true))).returning(r => Return(r.i, r.s, r.o))
+        qr1.updateValue(lift(TestEntity("foo", 1, 18L, Some(123), true))).returning(r => Return(r.i, r.s, r.o))
       }
       Return(1, "foo", Some(123)) mustBe updated
     }

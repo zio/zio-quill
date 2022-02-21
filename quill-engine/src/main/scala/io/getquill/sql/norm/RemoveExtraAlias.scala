@@ -35,7 +35,7 @@ case class RemoveExtraAlias(strategy: NamingStrategy) extends StatelessQueryTran
         value
     }
 
-  override protected def expandNested(q: FlattenSqlQuery, isTopLevel: Boolean): FlattenSqlQuery = {
+  override protected def expandNested(q: FlattenSqlQuery, level: QueryLevel): FlattenSqlQuery = {
     val from = q.from.map(expandContext(_))
     val select = q.select.map(removeUnneededAlias(_))
     q.copy(select = select, from = from)(q.quat)

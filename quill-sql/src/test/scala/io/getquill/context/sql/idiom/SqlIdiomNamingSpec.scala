@@ -105,7 +105,7 @@ class SqlIdiomNamingSpec extends Spec {
           "INSERT INTO some_entity (some_column) VALUES (?)"
       }
       "update" in {
-        db.run(query[SomeEntity].update(lift(SomeEntity(1)))).string mustEqual
+        db.run(query[SomeEntity].updateValue(lift(SomeEntity(1)))).string mustEqual
           "UPDATE some_entity SET some_column = ?"
       }
       "delete" in {
