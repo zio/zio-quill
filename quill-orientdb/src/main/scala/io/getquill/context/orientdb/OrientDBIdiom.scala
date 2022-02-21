@@ -6,12 +6,13 @@ import io.getquill.context.sql.norm._
 import io.getquill.ast.{ AggregationOperator, External, _ }
 import io.getquill.context.sql._
 import io.getquill.NamingStrategy
-import io.getquill.context.CannotReturn
+import io.getquill.context.{ CannotReturn, ExecutionType }
 import io.getquill.util.Messages.{ fail, trace }
 import io.getquill.idiom._
 import io.getquill.context.sql.norm.SqlNormalize
 import io.getquill.util.{ Interleave, Messages }
 import io.getquill.context.sql.idiom.VerifySqlQuery
+import io.getquill.quat.Quat
 import io.getquill.sql.norm.{ RemoveExtraAlias, RemoveUnusedSelects }
 
 object OrientDBIdiom extends OrientDBIdiom with CannotReturn
@@ -24,15 +25,15 @@ trait OrientDBIdiom extends Idiom {
 
   override def prepareForProbing(string: String): String = string
 
-  override def translate(ast: Ast)(implicit naming: NamingStrategy): (Ast, Statement) = {
-    doTranslate(ast, false)
+  override def translate(ast: Ast, topLevelQuat: Quat, executionType: ExecutionType)(implicit naming: NamingStrategy): (Ast, Statement, ExecutionType) = {
+    doTranslate(ast, false, executionType)
   }
 
-  override def translateCached(ast: Ast)(implicit naming: NamingStrategy): (Ast, Statement) = {
-    doTranslate(ast, true)
+  override def translateCached(ast: Ast, topLevelQuat: Quat, executionType: ExecutionType)(implicit naming: NamingStrategy): (Ast, Statement, ExecutionType) = {
+    doTranslate(ast, true, executionType)
   }
 
-  private def doTranslate(ast: Ast, cached: Boolean)(implicit naming: NamingStrategy): (Ast, Statement) = {
+  private def doTranslate(ast: Ast, cached: Boolean, executionType: ExecutionType)(implicit naming: NamingStrategy): (Ast, Statement, ExecutionType) = {
     val normalizedAst = {
       if (cached)
         NormalizeCaching { ast: Ast => SqlNormalize(ast) }(ast)
@@ -56,7 +57,7 @@ trait OrientDBIdiom extends Idiom {
           other.token
       }
 
-    (normalizedAst, stmt"$token")
+    (normalizedAst, stmt"$token", executionType)
   }
 
   implicit def astTokenizer(implicit strategy: NamingStrategy, queryTokenizer: Tokenizer[Query]): Tokenizer[Ast] = {
@@ -273,7 +274,7 @@ trait OrientDBIdiom extends Idiom {
   }
 
   implicit def infixTokenizer(implicit propertyTokenizer: Tokenizer[Property], strategy: NamingStrategy): Tokenizer[Infix] = Tokenizer[Infix] {
-    case Infix(parts, params, _, _) =>
+    case Infix(parts, params, _, _, _) =>
       val pt = parts.map(_.token)
       val pr = params.map(_.token)
       Statement(Interleave(pt, pr))

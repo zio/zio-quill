@@ -34,7 +34,7 @@ class ListsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
   "List encoders/decoders for CassandraTypes and CassandraMappers" in {
     await {
       for {
-        _ <- ctx.run(q.insert(lift(e)))
+        _ <- ctx.run(q.insertValue(lift(e)))
         res <- ctx.run(q.filter(_.id == 1))
       } yield {
         res.head mustBe e
@@ -49,7 +49,7 @@ class ListsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
 
     await {
       for {
-        _ <- ctx.run(q.insert(lift(e)))
+        _ <- ctx.run(q.insertValue(lift(e)))
         res <- ctx.run(q.filter(_.id == 1))
       } yield {
         res.head mustBe e
@@ -64,7 +64,7 @@ class ListsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
 
     await {
       for {
-        _ <- ctx.run(q.insert(lift(e)))
+        _ <- ctx.run(q.insertValue(lift(e)))
         res <- ctx.run(q.filter(_.id == 1))
       } yield {
         res.head mustBe e
@@ -79,7 +79,7 @@ class ListsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
 
     await {
       for {
-        _ <- ctx.run(q.insert(lift(e)))
+        _ <- ctx.run(q.insertValue(lift(e)))
         res <- ctx.run(q.filter(_.id == 1))
       } yield {
         res.head mustBe e
@@ -94,7 +94,7 @@ class ListsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
 
     await {
       for {
-        _ <- ctx.run(q.insert(lift(e)))
+        _ <- ctx.run(q.insertValue(lift(e)))
         res <- ctx.run(q.filter(_.id == 4))
       } yield {
         res.head.blobs.map(_.toList) mustBe e.blobs.map(_.toList)
@@ -106,7 +106,7 @@ class ListsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
     val e = ListFrozen(List(1, 2))
     await {
       for {
-        _ <- ctx.run(listFroz.insert(lift(e)))
+        _ <- ctx.run(listFroz.insertValue(lift(e)))
         res1 <- ctx.run(listFroz.filter(_.id == lift(List(1, 2))))
         res2 <- ctx.run(listFroz.filter(_.id == lift(List(1))))
       } yield {
@@ -116,7 +116,7 @@ class ListsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
     }
     await {
       for {
-        _ <- ctx.run(listFroz.insert(lift(e)))
+        _ <- ctx.run(listFroz.insertValue(lift(e)))
         res1 <- ctx.run(listFroz.filter(_.id.contains(2)).allowFiltering)
         res2 <- ctx.run(listFroz.filter(_.id.contains(3)).allowFiltering)
       } yield {

@@ -320,22 +320,24 @@ trait Parsing extends ValueComputation with QuatMaking {
 
   val infixParser: Parser[Ast] = Parser[Ast] {
     case q"$infix.pure.asCondition" =>
-      combinedInfixParser(true, Quat.BooleanExpression)(infix)
+      Quat.improveInfixQuat(combinedInfixParser(true, Quat.BooleanExpression)(infix))
     case q"$infix.asCondition" =>
-      combinedInfixParser(false, Quat.BooleanExpression)(infix)
+      Quat.improveInfixQuat(combinedInfixParser(false, Quat.BooleanExpression)(infix))
     case q"$infix.generic.pure.as[$t]" =>
-      combinedInfixParser(true, Quat.Generic)(infix)
+      Quat.improveInfixQuat(combinedInfixParser(true, Quat.Generic)(infix))
+    case q"$infix.transparent.pure.as[$t]" =>
+      Quat.improveInfixQuat(combinedInfixParser(true, Quat.Generic, true)(infix))
     case q"$infix.pure.as[$t]" =>
-      combinedInfixParser(true, inferQuat(q"$t".tpe))(infix)
+      Quat.improveInfixQuat(combinedInfixParser(true, inferQuat(q"$t".tpe))(infix))
     case q"$infix.as[$t]" =>
-      combinedInfixParser(false, inferQuat(q"$t".tpe))(infix)
+      Quat.improveInfixQuat(combinedInfixParser(false, inferQuat(q"$t".tpe))(infix))
     case `impureInfixParser`(value) =>
-      value
+      Quat.improveInfixQuat(value)
   }
 
   val impureInfixParser = combinedInfixParser(false, Quat.Value) // TODO Verify Quat in what cases does this come up?
 
-  def combinedInfixParser(infixIsPure: Boolean, quat: Quat): Parser[Ast] = Parser[Ast] {
+  def combinedInfixParser(infixIsPure: Boolean, quat: Quat, infixIsTransparent: Boolean = false): Parser[Ast] = Parser[Ast] {
     case q"$pack.InfixInterpolator(scala.StringContext.apply(..${ parts: List[String] })).infix(..$params)" =>
       // Parts that end with # indicate this is a dynamic infix.
       if (parts.find(_.endsWith("#")).isDefined) {
@@ -375,12 +377,12 @@ trait Parsing extends ValueComputation with QuatMaking {
         Dynamic {
           c.typecheck(q"""
             new io.getquill.Quoted[Any] {
-              override def ast = io.getquill.ast.Infix($newParts, $newParams, $infixIsPure, $quat)
+              override def ast = new io.getquill.ast.Infix($newParts, $newParams, $infixIsPure, $infixIsTransparent)($quat)
             }
           """)
         }
       } else
-        Infix(parts, params.map(astParser(_)), infixIsPure, quat)
+        new Infix(parts, params.map(astParser(_)), infixIsPure, infixIsTransparent)(quat)
   }
 
   val functionParser: Parser[Function] = Parser[Function] {

@@ -1,3 +1,46 @@
+# 3.16.3
+
+- [Remove anonymous class made by Property.Opinionated and make NullValue case object](https://github.com/zio/zio-quill/pull/2426)
+
+#### Note 
+* This change is to allow ProtoQuill transition to BooPickle AST Serialization in https://github.com/zio/zio-protoquill/pull/72
+
+# 3.16.2
+
+- [Remove second apply method on ast.CaseClass due to incremental-compile errors](https://github.com/zio/zio-quill/pull/2423)
+
+# 3.16.1
+
+- [Top-Level quat passing to query expansions](https://github.com/zio/zio-quill/pull/2420)
+
+# 3.16.0
+
+- [Remove deprecated EntityQuery.update/insert APIs](https://github.com/zio/zio-quill/pull/2412)
+
+#### Migration Notes
+* This change removes the deprecated `EntityQuery.insert(CaseClass)` and `EntityQuery.update(CaseClass)` APIs that have been
+  updated to `EntityQuery.insertValue(CaseClass)` and `EntityQuery.updateValue(CaseClass)`. 
+  This is the only change in this release so that you can update when ready. 
+  This change is needed due to the upstream Dotty issue: lampepfl/dotty#14043.
+
+# 3.15.0
+
+- [cassandra - update if exists](https://github.com/zio/zio-quill/pull/2359)
+- [Change update to updateValue](https://github.com/zio/zio-quill/pull/2405)
+
+#### Migration Notes
+* Similar to `EntityQuery.insert(CaseClass)`, the method `EntityQuery.update(CaseClass)` e.g. `query[Person].update(Person("Joe", 123))` has been replaced with `updateValue`.
+  The original `insert` method has been deprecated and will be removed in an upcoming Quill release.
+
+# 3.14.1
+
+- [Fix Infix Ast Quat issues](https://github.com/zio/zio-quill/pull/2403)
+
+# 3.14.0
+
+- [Single path-element alias in top-level selects](https://github.com/zio/zio-quill/pull/2393)
+- [Update zio-logging](https://github.com/zio/zio-quill/pull/2392)
+
 # 3.13.0
 
 - [JAsync ZIO implementation](https://github.com/zio/zio-quill/pull/2267)

@@ -40,7 +40,8 @@ lazy val jsModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
 lazy val baseModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-engine-jvm`,
   `quill-core-jvm`,
-  `quill-sql-jvm`, `quill-monix`, `quill-zio`
+  `quill-sql-jvm`, `quill-monix`, `quill-zio`,
+  `quill-util`
 )
 
 lazy val dbModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
@@ -84,10 +85,10 @@ lazy val scala213Modules = baseModules ++ jsModules ++ dbModules ++ codegenModul
 )
 
 lazy val notScala211Modules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
-  `quill-cassandra-alpakka`
+  `quill-cassandra-alpakka`, `quill-util`
 )
 
-lazy val scala3Modules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](`quill-engine-jvm`)
+lazy val scala3Modules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](`quill-engine-jvm`, `quill-util`)
 
 def isScala213 = {
   val scalaVersion = sys.props.get("quill.scala.version")
@@ -195,6 +196,33 @@ lazy val `quill` =
 
 `quill` / publishArtifact := false
 
+lazy val `quill-util` =
+  (project in file("quill-util"))
+    .settings(commonSettings: _*)
+    .settings(mimaSettings: _*)
+    .settings(
+      Test / fork := true,
+      libraryDependencies ++= Seq(
+        ("org.scalameta" %% "scalafmt-core" % "3.1.0")
+          .excludeAll(
+            (Seq(
+              ExclusionRule(organization = "com.lihaoyi", name = "sourcecode_2.13"),
+              ExclusionRule(organization = "com.lihaoyi", name = "fansi_2.13"),
+              ExclusionRule(organization = "com.lihaoyi", name = "pprint_2.13"),
+            ) ++ {
+              if (isScala3)
+                Seq(
+                  ExclusionRule(organization = "org.scala-lang.modules")
+                )
+              else
+                Seq()
+            }): _*
+          )
+          .cross(CrossVersion.for3Use2_13)
+      )
+    )
+    .enablePlugins(MimaPlugin)
+
 lazy val superPure = new sbtcrossproject.CrossType {
   def projectDir(crossBase: File, projectType: String): File =
     projectType match {
@@ -229,13 +257,15 @@ lazy val ultraPure = new sbtcrossproject.CrossType {
     }
 }
 
+
+
 lazy val `quill-engine` =
   crossProject(JVMPlatform, JSPlatform).crossType(ultraPure)
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .settings(
       libraryDependencies ++= Seq(
-        "com.typesafe"               %  "config"        % "1.4.1",
+        "com.typesafe"               %  "config"        % "1.4.2",
         "com.typesafe.scala-logging" %% "scala-logging" % "3.9.4",
         ("com.twitter"               %% "chill"         % "0.10.0").cross(CrossVersion.for3Use2_13),
         ("com.github.takayahilton"   %%% "sql-formatter" % "1.2.1").cross(CrossVersion.for3Use2_13)
@@ -269,7 +299,7 @@ lazy val `quill-core` =
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .settings(libraryDependencies ++= Seq(
-      "com.typesafe"               %  "config"        % "1.4.1",
+      "com.typesafe"               %  "config"        % "1.4.2",
       "dev.zio"                    %% "zio-logging"   % "0.5.14",
       "com.typesafe.scala-logging" %% "scala-logging" % "3.9.4"
     ))
@@ -622,7 +652,7 @@ lazy val `quill-cassandra` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.datastax.oss" % "java-driver-core" % "4.13.0",
+        "com.datastax.oss" % "java-driver-core" % "4.14.0",
         "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.1"
       )
     )
@@ -697,7 +727,7 @@ lazy val `quill-orientdb` =
       .settings(
         Test / fork := true,
         libraryDependencies ++= Seq(
-          "com.orientechnologies" % "orientdb-graphdb" % "3.0.39"
+          "com.orientechnologies" % "orientdb-graphdb" % "3.0.42"
         )
       )
       .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -761,7 +791,7 @@ lazy val jdbcTestingLibraries = Seq(
     "com.zaxxer"              %  "HikariCP"                % "3.4.5",
     "mysql"                   %  "mysql-connector-java"    % "8.0.27"             % Test,
     "com.h2database"          %  "h2"                      % "1.4.200"            % Test,
-    "org.postgresql"          %  "postgresql"              % "42.3.0"             % Test,
+    "org.postgresql"          %  "postgresql"              % "42.3.3"             % Test,
     "org.xerial"              %  "sqlite-jdbc"             % "3.36.0.3"             % Test,
     "com.microsoft.sqlserver" %  "mssql-jdbc"              % "7.1.1.jre8-preview" % Test,
     "com.oracle.ojdbc"        %  "ojdbc8"                  % "19.3.0.0"           % Test,
