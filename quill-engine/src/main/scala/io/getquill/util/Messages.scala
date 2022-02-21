@@ -15,6 +15,7 @@ object Messages {
 
   def quatKryoPoolSize = cache("quill.quat.kryoPool", variable("quill.quat.kryoPool", "quill_quat_kryoPool", "10").toInt)
   def maxQuatFields = cache("quill.quat.tooManyFields", variable("quill.quat.tooManyFields", "quill_quat_tooManyFields", "500").toInt)
+  def attachTopLevelQuats = cache("quill.quat.attachTopLevel", variable("quill.quat.attachTopLevel", "quill_quat_attachTopLevel", "true").toBoolean)
   def strictQuatChecking = cache("quill.quat.strict", variable("quill.quat.strict", "quill_quat_strict", "false").toBoolean)
   def prettyPrint = cache("quill.macro.log.pretty", variable("quill.macro.log.pretty", "quill_macro_log", "false").toBoolean)
   def alwaysAlias = cache("quill.query.alwaysAlias", variable("quill.query.alwaysAlias", "quill_query_alwaysAlias", "false").toBoolean)
@@ -27,6 +28,7 @@ object Messages {
   def traceAstSimple = cache("quill.trace.ast.simple", variable("quill.trace.ast.simple", "quill_trace_ast_simple", "false").toBoolean)
   def traceQuats = cache("quill.trace.quat", QuatTrace(variable("quill.trace.quat", "quill_trace_quat", QuatTrace.None.value)))
   def cacheDynamicQueries = cache("quill.query.cacheDaynamic", variable("quill.query.cacheDaynamic", "query_query_cacheDaynamic", "true").toBoolean)
+  def querySubexpand = cache("quill.query.subexpand", variable("quill.query.subexpand", "query_query_subexpand", "true").toBoolean)
   def quillLogFile = cache("quill.log.file", LogToFile(variable("quill.log.file", "quill_log_file", "false")))
 
   sealed trait LogToFile
@@ -95,8 +97,16 @@ object Messages {
     // Specifically for situations where what needs to be printed is a type of warning to the user as opposed to an expansion
     // This kind of trace is always on by default and does not need to be enabled by the user.
     case object Warning extends TraceType { val value = "warning" }
+    case object ExprModel extends TraceType { val value = "exprmodel" }
+    case object Meta extends TraceType { val value = "meta" }
+    case object Execution extends TraceType { val value = "exec" }
+    case object DynamicExecution extends TraceType { val value = "dynamicexec" }
+    case object Elaboration extends TraceType { val value = "elab" }
 
-    def values: List[TraceType] = List(Standard, SqlNormalizations, Normalizations, NestedQueryExpansion, AvoidAliasConflict, ReifyLiftings, PatMatch, Quotation, RepropagateQuats, RenameProperties, Warning, ShealthLeaf, ApplyMap, ExpandDistinct)
+    def values: List[TraceType] = List(
+      Standard, SqlNormalizations, Normalizations, NestedQueryExpansion, AvoidAliasConflict, ReifyLiftings, PatMatch, Quotation,
+      RepropagateQuats, RenameProperties, Warning, ShealthLeaf, ApplyMap, ExpandDistinct, ExprModel, Meta, Execution, DynamicExecution, Elaboration
+    )
   }
 
   val qprint = new AstPrinter(traceOpinions, traceAstSimple, Messages.traceQuats)

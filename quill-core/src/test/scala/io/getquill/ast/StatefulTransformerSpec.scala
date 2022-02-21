@@ -332,19 +332,28 @@ class StatefulTransformerSpec extends Spec {
     }
 
     "infix" in {
-      val ast: Ast = Infix(List("test"), List(Ident("a")), false, QV)
+      val ast: Ast = Infix(List("test"), List(Ident("a")), false, false, QV)
       Subject(Nil, Ident("a") -> Ident("a'"))(ast) match {
         case (at, att) =>
-          at mustEqual Infix(List("test"), List(Ident("a'")), false, QV)
+          at mustEqual Infix(List("test"), List(Ident("a'")), false, false, QV)
           att.state mustEqual List(Ident("a"))
       }
     }
 
     "infix - pure" in {
-      val ast: Ast = Infix(List("test"), List(Ident("a")), true, QV)
+      val ast: Ast = Infix(List("test"), List(Ident("a")), true, false, QV)
       Subject(Nil, Ident("a") -> Ident("a'"))(ast) match {
         case (at, att) =>
-          at mustEqual Infix(List("test"), List(Ident("a'")), true, QV)
+          at mustEqual Infix(List("test"), List(Ident("a'")), true, false, QV)
+          att.state mustEqual List(Ident("a"))
+      }
+    }
+
+    "infix - transparent" in {
+      val ast: Ast = Infix(List("test"), List(Ident("a")), false, true, QV)
+      Subject(Nil, Ident("a") -> Ident("a'"))(ast) match {
+        case (at, att) =>
+          at mustEqual Infix(List("test"), List(Ident("a'")), false, true, QV)
           att.state mustEqual List(Ident("a"))
       }
     }

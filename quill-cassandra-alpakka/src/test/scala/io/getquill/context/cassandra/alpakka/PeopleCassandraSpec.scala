@@ -22,7 +22,7 @@ class PeopleCassandraSpec extends CassandraAlpakkaSpec {
       testDB.run(query[Person].delete)
     }
     await {
-      testDB.run(liftQuery(entries).foreach(e => query[Person].insert(e)))
+      testDB.run(liftQuery(entries).foreach(e => query[Person].insertValue(e)))
     }
     ()
   }

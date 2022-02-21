@@ -65,7 +65,7 @@ object RemoveUnusedSelects {
 
   private def filterUnused(select: List[SelectValue], references: Set[Property]): List[SelectValue] = {
     val usedAliases = references.map {
-      case PropertyMatroshka(_, list) => list.mkString
+      case PropertyMatroshka(_, list, _) => list.mkString
     }.toSet
     select.filter(sv =>
       sv.alias.forall(aliasValue => usedAliases.contains(aliasValue)) ||

@@ -24,12 +24,12 @@ class DynamicQueryDslMacro(val c: MacroContext) {
 
   def insertValue(value: Tree): Tree =
     q"""
-      DynamicInsert(${c.prefix}.q.insert(lift($value)))
+      DynamicInsert(${c.prefix}.q.insertValue(lift($value)))
     """
 
   def updateValue(value: Tree): Tree =
     q"""
-      DynamicUpdate(${c.prefix}.q.update(lift($value)))
+      DynamicUpdate(${c.prefix}.q.updateValue(lift($value)))
     """
 }
 

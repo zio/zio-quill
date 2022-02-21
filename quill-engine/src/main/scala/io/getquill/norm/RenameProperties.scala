@@ -110,7 +110,7 @@ object SeedRenames extends StatelessTransformer {
    */
   override def apply(e: Ast): Ast =
     e match {
-      case Infix(a, b, pure, qu) =>
+      case Infix(a, b, pure, tr, qu) =>
         // There could be an entity further in the AST of the elements, find them.
         val br = b.map(apply)
         br match {
@@ -129,7 +129,7 @@ object SeedRenames extends StatelessTransformer {
                 case _ =>
                   qu
               }
-            Infix(a, List(elem), pure, renamedQuat)
+            Infix(a, List(elem), pure, tr, renamedQuat)
 
           case _ =>
             // Check if there are any entities that have defined renames and warn them that renames cannot be applied
@@ -137,7 +137,7 @@ object SeedRenames extends StatelessTransformer {
             if (br.length > 1 && br.find { case e: Entity => e.properties.length > 0; case _ => false }.isDefined)
               println(s"Cannot propagate renames from the entity ${e} into Query since there are other AST elements in the infix: ${br}")
 
-            Infix(a, br, pure, qu)
+            Infix(a, br, pure, tr, qu)
         }
       case _ =>
         super.apply(e)
@@ -153,20 +153,20 @@ object SeedRenames extends StatelessTransformer {
 // Represents a nested property path to an identity i.e. Property(Property(... Ident(), ...))
 object PropertyMatroshka {
 
-  def traverse(initial: Property): Option[(Ast, List[String])] =
+  def traverse(initial: Property): Option[(Ast, List[String], List[Renameable])] =
     initial match {
       // If it's a nested-property walk inside and append the name to the result (if something is returned)
-      case Property(inner: Property, name) =>
-        traverse(inner).map { case (id, list) => (id, list :+ name) }
+      case Property.Opinionated(inner: Property, name, ren, _) =>
+        traverse(inner).map { case (id, list, renameable) => (id, list :+ name, renameable :+ ren) }
       // If it's a property with ident in the core, return that
-      case Property(inner, name) if !inner.isInstanceOf[Property] =>
-        Some((inner, List(name)))
+      case Property.Opinionated(inner, name, ren, _) if !inner.isInstanceOf[Property] =>
+        Some((inner, List(name), List(ren)))
       // Otherwise an ident property is not inside so don't return anything
       case _ =>
         None
     }
 
-  def unapply(ast: Property): Option[(Ast, List[String])] =
+  def unapply(ast: Property): Option[(Ast, List[String], List[Renameable])] =
     ast match {
       case p: Property => traverse(p)
       case _           => None
