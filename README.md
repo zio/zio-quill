@@ -3993,11 +3993,11 @@ provide a `Config` object instead of a `CassandraZioSession` like this:
 
 ```scala
  val zioSessionLayer: ZLayer[Any, Throwable, Has[CassandraZioSession]] =
-   ZioCassandraSession.fromPrefix("testStreamDB")
+   CassandraZioSession.fromPrefix("testStreamDB")
 run(query[Person])
   .provideCustomLayer(zioSessionLayer)
 ```
-> (Note that the resulting ZioCassandraSession has a closing bracket)
+> (Note that the resulting CassandraZioSession has a closing bracket)
 
 
 If you are using a Plain Scala app, you will need to manually run it e.g. using zio.Runtime
