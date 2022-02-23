@@ -10,7 +10,8 @@ package object spark {
       .builder()
       .config("spark.sql.shuffle.partitions", 2) // Default shuffle partitions is 200, too much for tests
       .config("spark.ui.enabled", "false")
-      .master("local[1]")
+      .config("spark.driver.bindAddress", "127.0.0.1")
+      .master("local[*]")
       .appName("spark test")
       .getOrCreate()
 

@@ -532,14 +532,14 @@ class DynamicQuerySpec extends Spec {
     "insertValue" in {
       test(
         dynamicQuery[TestEntity].insertValue(t),
-        query[TestEntity].insert(lift(t))
+        query[TestEntity].insertValue(lift(t))
       )
     }
 
     "updateValue" in {
       test(
         dynamicQuery[TestEntity].updateValue(t),
-        query[TestEntity].update(lift(t))
+        query[TestEntity].updateValue(lift(t))
       )
     }
 

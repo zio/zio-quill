@@ -9,7 +9,7 @@ import io.getquill.context.sql.norm.SqlNormalize
 import io.getquill.idiom.StatementInterpolator._
 import io.getquill.idiom.Token
 import io.getquill.util.Messages.trace
-import io.getquill.context.CannotReturn
+import io.getquill.context.{ CannotReturn, ExecutionType }
 import io.getquill.quat.Quat
 
 class SparkDialect extends SparkIdiom
@@ -24,7 +24,7 @@ trait SparkIdiom extends SqlIdiom with CannotReturn { self =>
 
   override implicit def externalIdentTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[ExternalIdent] = super.externalIdentTokenizer
 
-  override def translate(ast: Ast)(implicit naming: NamingStrategy) = {
+  override def translate(ast: Ast, topLevelQuat: Quat, executionType: ExecutionType)(implicit naming: NamingStrategy) = {
     val normalizedAst = EscapeQuestionMarks(SqlNormalize(ast))
 
     implicit val tokernizer = defaultTokenizer
@@ -43,7 +43,7 @@ trait SparkIdiom extends SqlIdiom with CannotReturn { self =>
           other.token
       }
 
-    (normalizedAst, stmt"$token")
+    (normalizedAst, stmt"$token", executionType)
   }
 
   override def concatFunction = "explode"
@@ -56,7 +56,7 @@ trait SparkIdiom extends SqlIdiom with CannotReturn { self =>
     // Situations where a single ident arise with is a Quat.Value typically only happen when an operation yields a single SelectValue
     // e.g. a concatMap (or aggregation?)
     case Ident(name, Quat.Value) =>
-      stmt"${name.token}.single"
+      stmt"${name.token}.x"
     case Ident(name, _) =>
       stmt"${name.token}"
   }

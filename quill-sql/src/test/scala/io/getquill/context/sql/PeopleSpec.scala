@@ -15,7 +15,7 @@ trait PeopleSpec extends Spec {
   case class Couple(her: String, him: String)
 
   val peopleInsert =
-    quote((p: Person) => query[Person].insert(p))
+    quote((p: Person) => query[Person].insertValue(p))
 
   val peopleEntries = List(
     Person("Alex", 60),
@@ -27,7 +27,7 @@ trait PeopleSpec extends Spec {
   )
 
   val couplesInsert =
-    quote((c: Couple) => query[Couple].insert(c))
+    quote((c: Couple) => query[Couple].insertValue(c))
 
   val couplesEntries = List(
     Couple("Alex", "Bert"),

@@ -490,14 +490,14 @@ class CompatibleDynamicQuerySpec extends Spec {
     "insertValue" in {
       test(
         quote(query[TestEntity]).dynamic.insertValue(t),
-        query[TestEntity].insert(lift(t))
+        query[TestEntity].insertValue(lift(t))
       )
     }
 
     "updateValue" in {
       test(
         quote(query[TestEntity]).dynamic.updateValue(t),
-        query[TestEntity].update(lift(t))
+        query[TestEntity].updateValue(lift(t))
       )
     }
 
