@@ -2501,7 +2501,7 @@ Note that the parameter of `updateMeta` is called `exclude`, but it isn't possib
 
 ## Mapped Records
 
-This kind of meta instance customizes the expansion of query types and extraction of the final value. For instance, it's possible to use this feature to normalize values before reading them from the database:
+The QueryMeta customizes the expansion of query types and extraction of the final value. For instance, it's possible to use this feature to normalize values before reading them from the database:
 
 ```scala
 implicit val personQueryMeta = 
