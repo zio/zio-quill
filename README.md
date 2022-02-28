@@ -2454,13 +2454,13 @@ ctx.run(q)
 // SELECT u.id, u.name FROM User u WHERE (u.id = 1)
 ```
 
-## Meta DSL
+## Table/Column Customizations
 
-The meta DSL allows the user to customize how Quill handles the expansion and execution of quotations through implicit meta instances.
+The meta DSL allows the user to customize how Quill handles column/table naming and behavior.
 
-### Schema meta
+### Changing Table and Column Names
 
-By default, quill expands `query[Person]` to `querySchema[Person]("Person")`. It's possible to customize this behavior using an implicit instance of `SchemaMeta`:
+You can change how Quill queries handle table and column names for a record case class.
 
 ```scala
 def example = {
@@ -2471,9 +2471,11 @@ def example = {
 }
 ```
 
-### Insert meta
+By default, quill expands `query[Person]` to `querySchema[Person]("Person")`. It's possible to customize this behavior using an implicit instance of `SchemaMeta`:
 
-`InsertMeta` customizes the expansion of case classes for insert actions (`query[Person].insertValue(p)`). By default, all columns are expanded and through an implicit `InsertMeta`, it's possible to exclude columns from the expansion:
+### Excluding Columns from Insert
+
+You can exclude columns (e.g. Auto-Generated ones) from insertion in `q.insertValue(...)` by using an `InsertMeta`.
 
 ```scala
 implicit val personInsertMeta = insertMeta[Person](_.id)
@@ -2484,9 +2486,9 @@ ctx.run(query[Person].insertValue(lift(Person(-1, "John", 22))))
 
 Note that the parameter of `insertMeta` is called `exclude`, but it isn't possible to use named parameters for macro invocations.
 
-### Update meta
+### Excluding Columns from Update
 
-`UpdateMeta` customizes the expansion of case classes for update actions (`query[Person].updateValue(p)`). By default, all columns are expanded, and through an implicit `UpdateMeta`, it's possible to exclude columns from the expansion:
+You can exclude columns (e.g. Auto-Generated ones) from updates in `q.insertValue(...)` by using an `UpdateMeta`.
 
 ```scala
 implicit val personUpdateMeta = updateMeta[Person](_.id)
@@ -2497,7 +2499,7 @@ ctx.run(query[Person].filter(_.id == 1).updateValue(lift(Person(1, "John", 22)))
 
 Note that the parameter of `updateMeta` is called `exclude`, but it isn't possible to use named parameters for macro invocations.
 
-### Query meta
+## Mapped Records
 
 This kind of meta instance customizes the expansion of query types and extraction of the final value. For instance, it's possible to use this feature to normalize values before reading them from the database:
 
