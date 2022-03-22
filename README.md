@@ -2282,7 +2282,7 @@ def test(functionName: String) =
 ### Implicit Extensions
 
 You can use implicit extensions in quill in several ways.
-> NOTE. In ProtoQuill extensions must be written using the Scala 3 `extension` syntax and implicit class extensions are not supported. Please see below for more info.
+> NOTE. In ProtoQuill extensions must be written using the Scala 3 `extension` syntax and implicit class extensions are not supported. Please see [implicit-extensions](#extensions-in-protoquillscala3) below for more info.
 
 ##### Standard quoted extension:
 ```scala
