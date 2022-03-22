@@ -14,7 +14,8 @@
 
 Quill provides a Quoted Domain Specific Language ([QDSL](http://homepages.inf.ed.ac.uk/wadler/papers/qdsl/qdsl.pdf)) to express queries in Scala and execute them in a target language. The library's core is designed to support multiple target languages, currently featuring specializations for Structured Query Language ([SQL](https://en.wikipedia.org/wiki/SQL)) and Cassandra Query Language ([CQL](https://cassandra.apache.org/doc/latest/cql/)).
 
-> **Scala 3 Support**. [ProtoQuill](https://github.com/zio/zio-protoquill) provides Scala 3 support for Quill rebuilding on top of new metaprogramming capabilities from the ground up! It is published to maven-central as the `quill-<module>_3` line of artifacts.
+> ### Scala 3 Support 
+> [ProtoQuill](https://github.com/zio/zio-protoquill) provides Scala 3 support for Quill rebuilding on top of new metaprogramming capabilities from the ground > up! It is published to maven-central as the `quill-<module>_3` line of artifacts.
 
 ![example](https://raw.githubusercontent.com/getquill/quill/master/example.gif)
 
