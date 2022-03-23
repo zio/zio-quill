@@ -2569,6 +2569,8 @@ case class MyDao(c: MyContext, schema: MySchema) {
  cannot be applied to (MyDao.this.schema.c.Quoted[MyDao.this.schema.c.EntityQuery[Person]]{def quoted: io.getquill.ast.ConfiguredEntity; def ast: io.getquill.ast.ConfiguredEntity; def id1854281249(): Unit; val bindings: Object})
 }
 ```
+> In ProtoQuill/Scala3 the above pattern will work as expected because the types Quoted, EntityQuery, etc... are no longer path dependent.
+> Have a look at the following [scastie example](https://scastie.scala-lang.org/TO5dF87jQQegUGqmIQtbew).
 
 ### Context Traits
 
