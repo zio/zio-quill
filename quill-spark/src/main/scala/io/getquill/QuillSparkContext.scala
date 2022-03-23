@@ -38,7 +38,7 @@ trait QuillSparkContext
 
   def close() = {}
 
-  def probe(statement: String): Try[_] = Success(Unit)
+  def probe(statement: String): Try[_] = Success(())
 
   val idiom = SparkDialect
   val naming = Literal

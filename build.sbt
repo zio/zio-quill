@@ -511,7 +511,7 @@ lazy val `quill-spark` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "org.apache.spark" %% "spark-sql" % "2.4.4"
+        "org.apache.spark" %% "spark-sql" % "3.2.0"
       ),
       excludeDependencies ++= Seq(
         "ch.qos.logback"  % "logback-classic"
