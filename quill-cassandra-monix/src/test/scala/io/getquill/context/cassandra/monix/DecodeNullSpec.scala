@@ -8,7 +8,8 @@ class DecodeNullSpec extends Spec {
     "stream" in {
       import monix.execution.Scheduler.Implicits.global
       import testMonixDB._
-      val writeEntities = quote(querySchema[DecodeNullTestWriteEntity]("DecodeNullTestEntity"))
+      val writeEntities =
+        quote(querySchema[DecodeNullTestWriteEntity]("DecodeNullTestEntity"))
 
       val result =
         for {

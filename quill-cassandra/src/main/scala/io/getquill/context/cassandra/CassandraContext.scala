@@ -1,18 +1,18 @@
 package io.getquill.context.cassandra
 
-import java.util.{ Date, UUID }
+import java.util.{Date, UUID}
 import io.getquill.NamingStrategy
 import io.getquill.context.Context
-import io.getquill.context.cassandra.encoding.{ CassandraMapper, Encodings }
+import io.getquill.context.cassandra.encoding.{CassandraMapper, Encodings}
 
-import java.time.{ Instant, LocalDate }
+import java.time.{Instant, LocalDate}
 import scala.reflect.ClassTag
 
 trait CassandraContext[N <: NamingStrategy]
-  extends Context[CqlIdiom, N]
-  with Encodings
-  with UdtMetaDsl
-  with Ops {
+    extends Context[CqlIdiom, N]
+    with Encodings
+    with UdtMetaDsl
+    with Ops {
 
   implicit def optionDecoder[T](implicit d: Decoder[T]): Decoder[Option[T]]
   implicit def optionEncoder[T](implicit d: Encoder[T]): Encoder[Option[T]]
@@ -45,19 +45,25 @@ trait CassandraContext[N <: NamingStrategy]
   implicit val timestampEncoder: Encoder[Instant]
   implicit val cassandraLocalDateEncoder: Encoder[LocalDate]
 
-  implicit def listDecoder[T, Cas: ClassTag](implicit mapper: CassandraMapper[Cas, T]): Decoder[List[T]]
-  implicit def setDecoder[T, Cas: ClassTag](implicit mapper: CassandraMapper[Cas, T]): Decoder[Set[T]]
-  implicit def mapDecoder[K, V, KCas: ClassTag, VCas: ClassTag](
-    implicit
-    keyMapper: CassandraMapper[KCas, K],
-    valMapper: CassandraMapper[VCas, V]
+  implicit def listDecoder[T, Cas: ClassTag](implicit
+      mapper: CassandraMapper[Cas, T]
+  ): Decoder[List[T]]
+  implicit def setDecoder[T, Cas: ClassTag](implicit
+      mapper: CassandraMapper[Cas, T]
+  ): Decoder[Set[T]]
+  implicit def mapDecoder[K, V, KCas: ClassTag, VCas: ClassTag](implicit
+      keyMapper: CassandraMapper[KCas, K],
+      valMapper: CassandraMapper[VCas, V]
   ): Decoder[Map[K, V]]
 
-  implicit def listEncoder[T, Cas: ClassTag](implicit mapper: CassandraMapper[T, Cas]): Encoder[List[T]]
-  implicit def setEncoder[T, Cas: ClassTag](implicit mapper: CassandraMapper[T, Cas]): Encoder[Set[T]]
-  implicit def mapEncoder[K, V, KCas: ClassTag, VCas: ClassTag](
-    implicit
-    keyMapper: CassandraMapper[K, KCas],
-    valMapper: CassandraMapper[V, VCas]
+  implicit def listEncoder[T, Cas: ClassTag](implicit
+      mapper: CassandraMapper[T, Cas]
+  ): Encoder[List[T]]
+  implicit def setEncoder[T, Cas: ClassTag](implicit
+      mapper: CassandraMapper[T, Cas]
+  ): Encoder[Set[T]]
+  implicit def mapEncoder[K, V, KCas: ClassTag, VCas: ClassTag](implicit
+      keyMapper: CassandraMapper[K, KCas],
+      valMapper: CassandraMapper[V, VCas]
   ): Encoder[Map[K, V]]
 }

@@ -12,22 +12,30 @@ class SqliteCodegenTestCases extends CodegenSpec {
   val prefix = TestSqliteDB
 
   "trivial generator tests" - {
-    "use trivial snake case schema" in WithContext[Prefix, `1-simple-snake`].run { ctx =>
-      import `1-simple-snake-lib`.public._
-      import ctx._
+    "use trivial snake case schema" in WithContext[Prefix, `1-simple-snake`]
+      .run { ctx =>
+        import `1-simple-snake-lib`.public._
+        import ctx._
 
-      val results = ctx.run(query[Person].filter(_.age > 11)).toSeq
-      results should contain theSameElementsAs
-        (List(Person(1, "Joe", "Bloggs", 22), Person(2, "Jack", "Ripper", 33)))
-    }
-    "use trivial literal schema" in WithContext[Prefix, `2-simple-literal`].run { ctx =>
-      import `2-simple-literal-lib`.public._
-      import ctx._
+        val results = ctx.run(query[Person].filter(_.age > 11)).toSeq
+        results should contain theSameElementsAs
+          (List(
+            Person(1, "Joe", "Bloggs", 22),
+            Person(2, "Jack", "Ripper", 33)
+          ))
+      }
+    "use trivial literal schema" in WithContext[Prefix, `2-simple-literal`]
+      .run { ctx =>
+        import `2-simple-literal-lib`.public._
+        import ctx._
 
-      val results = ctx.run(query[Person].filter(_.age > 11)).toSeq
-      results should contain theSameElementsAs
-        (List(Person(1, "Joe", "Bloggs", 22), Person(2, "Jack", "Ripper", 33)))
-    }
+        val results = ctx.run(query[Person].filter(_.age > 11)).toSeq
+        results should contain theSameElementsAs
+          (List(
+            Person(1, "Joe", "Bloggs", 22),
+            Person(2, "Jack", "Ripper", 33)
+          ))
+      }
   }
 
   "composable generator" - {
@@ -35,20 +43,25 @@ class SqliteCodegenTestCases extends CodegenSpec {
     "1-comp-sanity" in WithContext[Prefix, `1-comp-sanity`].run { ctx =>
       import `1-comp-sanity-lib`.public._
       import ctx._
-      ctx.run(query[Person].filter(_.age > 11)) should contain theSameElementsAs List(
+      ctx.run(
+        query[Person].filter(_.age > 11)
+      ) should contain theSameElementsAs List(
         Person(1, "Joe", "Bloggs", 22),
         Person(2, "Jack", "Ripper", 33)
       )
     }
 
-    "2-comp-stereo-single" in WithContext[Prefix, `2-comp-stereo-single`].run { ctx =>
-      import `2-comp-stereo-single-lib`.public._
-      import ctx._
-      (ctx.run(PersonDao.query.filter(_.age > 11))) should contain theSameElementsAs
-        (List(
-          Person(1, "Joe", "Bloggs", 22),
-          Person(2, "Jack", "Ripper", 33)
-        ))
+    "2-comp-stereo-single" in WithContext[Prefix, `2-comp-stereo-single`].run {
+      ctx =>
+        import `2-comp-stereo-single-lib`.public._
+        import ctx._
+        (ctx.run(
+          PersonDao.query.filter(_.age > 11)
+        )) should contain theSameElementsAs
+          (List(
+            Person(1, "Joe", "Bloggs", 22),
+            Person(2, "Jack", "Ripper", 33)
+          ))
     }
   }
 }

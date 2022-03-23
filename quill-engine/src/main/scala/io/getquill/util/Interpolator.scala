@@ -11,12 +11,12 @@ import scala.collection.mutable
 import scala.util.matching.Regex
 
 class Interpolator(
-  traceType:     TraceType,
-  defaultIndent: Int                    = 0,
-  color:         Boolean                = Messages.traceColors,
-  qprint:        AstPrinter             = Messages.qprint,
-  out:           PrintStream            = System.out,
-  tracesEnabled: (TraceType) => Boolean = Messages.tracesEnabled(_)
+    traceType: TraceType,
+    defaultIndent: Int = 0,
+    color: Boolean = Messages.traceColors,
+    qprint: AstPrinter = Messages.qprint,
+    out: PrintStream = System.out,
+    tracesEnabled: (TraceType) => Boolean = Messages.tracesEnabled(_)
 ) {
   implicit class InterpolatorExt(sc: StringContext) {
     def trace(elements: Any*) = new Traceable(sc, elements)
@@ -51,8 +51,10 @@ class Interpolator(
 
     sealed trait Splice { def value: String }
     object Splice {
-      case class Simple(value: String) extends Splice // Simple splice into the string, don't indent etc...
-      case class Show(value: String) extends Splice // Indent, colorize the element etc...
+      case class Simple(value: String)
+          extends Splice // Simple splice into the string, don't indent etc...
+      case class Show(value: String)
+          extends Splice // Indent, colorize the element etc...
     }
 
     private def readBuffers() = {

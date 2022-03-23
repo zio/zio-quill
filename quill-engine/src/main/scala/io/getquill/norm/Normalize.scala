@@ -3,10 +3,10 @@ package io.getquill.norm
 import io.getquill.ast.Ast
 import io.getquill.ast.Query
 import io.getquill.ast.StatelessTransformer
-import io.getquill.norm.capture.{ AvoidAliasConflict, Dealias }
+import io.getquill.norm.capture.{AvoidAliasConflict, Dealias}
 import io.getquill.ast.Action
 import io.getquill.util.Interpolator
-import io.getquill.util.Messages.{ TraceType, title, trace }
+import io.getquill.util.Messages.{TraceType, title, trace}
 import io.getquill.util.Messages.TraceType.Normalizations
 
 import scala.annotation.tailrec
@@ -30,7 +30,10 @@ object Normalize extends StatelessTransformer {
     trace[T](s"${label} (Normalize)", 1, Normalizations)
 
   private def demarcate(heading: String) =
-    ((ast: Query) => title(s"(Normalize) $heading", TraceType.Normalizations)(ast))
+    (
+        (ast: Query) =>
+          title(s"(Normalize) $heading", TraceType.Normalizations)(ast)
+    )
 
   @tailrec
   private def norm(q: Query): Query =

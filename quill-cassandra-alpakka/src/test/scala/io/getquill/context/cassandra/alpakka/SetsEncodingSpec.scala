@@ -2,7 +2,7 @@ package io.getquill.context.cassandra.alpakka
 
 import io.getquill.context.cassandra.CollectionsSpec
 
-import java.time.{ Instant, LocalDate }
+import java.time.{Instant, LocalDate}
 import java.util.UUID
 
 class SetsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
@@ -11,21 +11,31 @@ class SetsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
   import ctx._
 
   case class SetsEntity(
-    id:         Int,
-    texts:      Set[String],
-    decimals:   Set[BigDecimal],
-    bools:      Set[Boolean],
-    ints:       Set[Int],
-    longs:      Set[Long],
-    floats:     Set[Float],
-    doubles:    Set[Double],
-    dates:      Set[LocalDate],
-    timestamps: Set[Instant],
-    uuids:      Set[UUID]
+      id: Int,
+      texts: Set[String],
+      decimals: Set[BigDecimal],
+      bools: Set[Boolean],
+      ints: Set[Int],
+      longs: Set[Long],
+      floats: Set[Float],
+      doubles: Set[Double],
+      dates: Set[LocalDate],
+      timestamps: Set[Instant],
+      uuids: Set[UUID]
   )
-  val e = SetsEntity(1, Set("c"), Set(BigDecimal(1.33)), Set(true), Set(1, 2), Set(2, 3), Set(1f, 3f),
-    Set(5d), Set(LocalDate.now()),
-    Set(Instant.now()), Set(UUID.randomUUID()))
+  val e = SetsEntity(
+    1,
+    Set("c"),
+    Set(BigDecimal(1.33)),
+    Set(true),
+    Set(1, 2),
+    Set(2, 3),
+    Set(1f, 3f),
+    Set(5d),
+    Set(LocalDate.now()),
+    Set(Instant.now()),
+    Set(UUID.randomUUID())
+  )
   val q = quote(query[SetsEntity])
 
   "Set encoders/decoders for CassandraTypes and CassandraMappers" in {
@@ -40,7 +50,12 @@ class SetsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
   }
 
   "Empty sets and optional fields" in {
-    case class Entity(id: Int, texts: Option[Set[String]], bools: Option[Set[Boolean]], ints: Set[Int])
+    case class Entity(
+        id: Int,
+        texts: Option[Set[String]],
+        bools: Option[Set[Boolean]],
+        ints: Set[Int]
+    )
     val e = Entity(1, Some(Set("1", "2")), None, Set.empty)
     val q = quote(querySchema[Entity]("SetsEntity"))
 

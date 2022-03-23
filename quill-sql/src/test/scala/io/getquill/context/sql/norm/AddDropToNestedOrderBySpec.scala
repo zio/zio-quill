@@ -1,11 +1,14 @@
 package io.getquill.context.sql.norm
 
 import io.getquill._
-import io.getquill.context.sql.{ TestDecoders, TestEncoders }
+import io.getquill.context.sql.{TestDecoders, TestEncoders}
 
 class AddDropToNestedOrderBySpec extends Spec {
 
-  val ctx = new SqlMirrorContext(SQLServerDialect, Literal) with TestEntities with TestEncoders with TestDecoders
+  val ctx = new SqlMirrorContext(SQLServerDialect, Literal)
+    with TestEntities
+    with TestEncoders
+    with TestDecoders
 
   import ctx._
   val q2Sorted = quote { qr2.sortBy(r => r.i) }
@@ -36,17 +39,23 @@ class AddDropToNestedOrderBySpec extends Spec {
         qr1.join(q2Sorted union q2Sorted).on((a, b) => a.i == b.i)
       }
       val n = quote {
-        qr1.join(q2Sorted.drop(0) union q2Sorted.drop(0)).on((a, b) => a.i == b.i)
+        qr1
+          .join(q2Sorted.drop(0) union q2Sorted.drop(0))
+          .on((a, b) => a.i == b.i)
       }
       translate(q) mustEqual translate(n)
     }
 
     "in join with external union" in {
       val q = quote {
-        qr1.join(q2Sorted).on((a, b) => a.i == b.i) union qr1.join(q2Sorted).on((a, b) => a.i == b.i)
+        qr1.join(q2Sorted).on((a, b) => a.i == b.i) union qr1
+          .join(q2Sorted)
+          .on((a, b) => a.i == b.i)
       }
       val n = quote {
-        qr1.join(q2Sorted.drop(0)).on((a, b) => a.i == b.i) union qr1.join(q2Sorted.drop(0)).on((a, b) => a.i == b.i)
+        qr1.join(q2Sorted.drop(0)).on((a, b) => a.i == b.i) union qr1
+          .join(q2Sorted.drop(0))
+          .on((a, b) => a.i == b.i)
       }
       translate(q) mustEqual translate(n)
     }

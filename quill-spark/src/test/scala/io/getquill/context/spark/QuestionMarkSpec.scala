@@ -20,49 +20,67 @@ class QuestionMarkSpec extends Spec {
   "simple variable usage must work" in {
     val q = quote {
       for {
-        p <- liftQuery(peopleList.toDS()) if p.extraInfo == "?" && p.firstName == lift("Alex")
+        p <- liftQuery(peopleList.toDS())
+        if p.extraInfo == "?" && p.firstName == lift("Alex")
       } yield p
     }
-    testContext.run(q).collect() should contain theSameElementsAs Seq(peopleList(0))
+    testContext.run(q).collect() should contain theSameElementsAs Seq(
+      peopleList(0)
+    )
   }
 
   "simple variable usage must work in the middle of a stirng" in {
-    val newContact = Contact("Moe", "Rabbenu", 123, 2, "Something ? Something ? Else")
+    val newContact =
+      Contact("Moe", "Rabbenu", 123, 2, "Something ? Something ? Else")
     val extraPeopleList = peopleList :+ newContact
 
     val q = quote {
       for {
-        p <- liftQuery(extraPeopleList.toDS()) if p.extraInfo == "Something ? Something ? Else" && p.firstName == lift("Moe")
+        p <- liftQuery(extraPeopleList.toDS())
+        if p.extraInfo == "Something ? Something ? Else" && p.firstName == lift(
+          "Moe"
+        )
       } yield p
     }
-    testContext.run(q).collect() should contain theSameElementsAs Seq(newContact)
+    testContext.run(q).collect() should contain theSameElementsAs Seq(
+      newContact
+    )
   }
 
   "lift usage" in {
     val q = quote {
       for {
-        p <- liftQuery(peopleList.toDS()) if p.extraInfo == lift("?") && p.firstName == lift("Alex")
+        p <- liftQuery(peopleList.toDS())
+        if p.extraInfo == lift("?") && p.firstName == lift("Alex")
       } yield p
     }
-    testContext.run(q).collect() should contain theSameElementsAs Seq(peopleList(0))
+    testContext.run(q).collect() should contain theSameElementsAs Seq(
+      peopleList(0)
+    )
   }
 
   "infix usage must work" in {
     val q = quote {
       for {
-        p <- liftQuery(peopleList.toDS()) if p.extraInfo == infix"'?'".as[String] && p.firstName == lift("Alex")
+        p <- liftQuery(peopleList.toDS())
+        if p.extraInfo == infix"'?'".as[String] && p.firstName == lift("Alex")
       } yield p
     }
-    testContext.run(q).collect() should contain theSameElementsAs Seq(peopleList(0))
+    testContext.run(q).collect() should contain theSameElementsAs Seq(
+      peopleList(0)
+    )
   }
 
   "simple join on question mark" in {
     val q = quote {
       for {
-        p <- liftQuery(peopleList.toDS()) if p.extraInfo == "?" && p.firstName == lift("Alex")
+        p <- liftQuery(peopleList.toDS())
+        if p.extraInfo == "?" && p.firstName == lift("Alex")
         a <- liftQuery(addressList.toDS()) if p.extraInfo == a.otherExtraInfo
       } yield (p, a)
     }
-    testContext.run(q).collect() should contain theSameElementsAs Seq((peopleList(0), addressList(0)))
+    testContext.run(q).collect() should contain theSameElementsAs Seq(
+      (peopleList(0), addressList(0))
+    )
   }
 }

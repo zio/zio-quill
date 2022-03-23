@@ -43,6 +43,8 @@ class QueryResultTypeCassandraSyncSpec extends QueryResultTypeCassandraSpec {
   }
 
   "io monad" in {
-    performIO(runIO(selectAll)) mustEqual performIO(runIO(selectAll).transactional)
+    performIO(runIO(selectAll)) mustEqual performIO(
+      runIO(selectAll).transactional
+    )
   }
 }

@@ -24,8 +24,7 @@ class ContextLogger(name: String) {
     }
   }
 
-  private def prepareParams(params: Seq[Any]): String = params
-    .reverse
+  private def prepareParams(params: Seq[Any]): String = params.reverse
     .map(prepareParam)
     .mkString("[", ", ", "]")
 
@@ -39,6 +38,7 @@ class ContextLogger(name: String) {
 }
 
 object ContextLogger {
-  def apply(ctxClass: Class[_]): ContextLogger = new ContextLogger(ctxClass.getName)
+  def apply(ctxClass: Class[_]): ContextLogger = new ContextLogger(
+    ctxClass.getName
+  )
 }
-

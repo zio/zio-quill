@@ -17,7 +17,12 @@ class ExpandDistinctSpec extends Spec { //hello
     }
     "aggregation" in {
       val q = quote {
-        qr1.map(e => (e.i, e.l)).groupBy(g => g._1).map(_._2.max).distinct.nested
+        qr1
+          .map(e => (e.i, e.l))
+          .groupBy(g => g._1)
+          .map(_._2.max)
+          .distinct
+          .nested
       }
       ExpandDistinct(q.ast).toString mustEqual
         """querySchema("TestEntity").map(e => (e.i, e.l)).groupBy(g => g._1).map(x1 => (x1._2.max)).distinct.map(x1 => x1._1).nested"""

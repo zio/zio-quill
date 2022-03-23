@@ -1,38 +1,56 @@
 package io.getquill.norm
 
-import io.getquill.ast.{ Aggregation, Ast, CaseClass, ConcatMap, Distinct, Filter, FlatMap, GroupBy, Ident, Join, Map, Property, Query, StatefulTransformerWithStack, Union, UnionAll }
+import io.getquill.ast.{
+  Aggregation,
+  Ast,
+  CaseClass,
+  ConcatMap,
+  Distinct,
+  Filter,
+  FlatMap,
+  GroupBy,
+  Ident,
+  Join,
+  Map,
+  Property,
+  Query,
+  StatefulTransformerWithStack,
+  Union,
+  UnionAll
+}
 import io.getquill.ast.Ast.LeafQuat
 import io.getquill.ast.StatefulTransformerWithStack.History
 import io.getquill.util.Interpolator
 import io.getquill.util.Messages.TraceType
 
-/**
- * The state produced in some child clause by the `sheathLeaf` function is essentially "consumed" by the
- * `elaborateSheath` function in the parent.
- *
- * Note that in the documentation is use a couple of shorthands:
- *
- * M - means Map
- * Fm - means FlatMap
- * ent - means a Ast Query. Typically just a Ast Entity
- * e.v - this dot-shorthand means Property(e, v) where e is an Ast Ident. This is essentially a scalar-projection
- *       from the entity e.
- * leaf - Typically this is a query-ast clause that results in a scalar type. It could be M(ent,e,e.v) or
- *        an `infix"stuff".as[Query[Int/String/Boolean/etc...] ]`
- */
-case class SheathLeafClauses(state: Option[String]) extends StatefulTransformerWithStack[Option[String]] {
+/** The state produced in some child clause by the `sheathLeaf` function is
+  * essentially "consumed" by the `elaborateSheath` function in the parent.
+  *
+  * Note that in the documentation is use a couple of shorthands:
+  *
+  * M - means Map Fm - means FlatMap ent - means a Ast Query. Typically just a
+  * Ast Entity e.v - this dot-shorthand means Property(e, v) where e is an Ast
+  * Ident. This is essentially a scalar-projection from the entity e. leaf -
+  * Typically this is a query-ast clause that results in a scalar type. It could
+  * be M(ent,e,e.v) or an `infix"stuff".as[Query[Int/String/Boolean/etc...] ]`
+  */
+case class SheathLeafClauses(state: Option[String])
+    extends StatefulTransformerWithStack[Option[String]] {
 
   val interp = new Interpolator(TraceType.ShealthLeaf, 3)
   import interp._
 
   def sheathLeaf(ast: Ast) =
     ast match {
-      case LeafQuat(p: Property) => (CaseClass.Single(p.name -> p), Some(p.name))
-      case LeafQuat(body)        => (CaseClass.Single("x" -> body), Some("x"))
-      case other                 => (other, None)
+      case LeafQuat(p: Property) =>
+        (CaseClass.Single(p.name -> p), Some(p.name))
+      case LeafQuat(body) => (CaseClass.Single("x" -> body), Some("x"))
+      case other          => (other, None)
     }
 
-  def elaborateSheath(ast: Ast)(state: Option[String], e: Ident, newIdent: Ident) =
+  def elaborateSheath(
+      ast: Ast
+  )(state: Option[String], e: Ident, newIdent: Ident) =
     state match {
       case Some(v) =>
         val e1 = newIdent
@@ -46,7 +64,9 @@ case class SheathLeafClauses(state: Option[String]) extends StatefulTransformerW
         ast
     }
 
-  def elaborateGroupSheath(ast: Ast)(state: Option[String], replace: Ident, newIdent: Ident) = {
+  def elaborateGroupSheath(
+      ast: Ast
+  )(state: Option[String], replace: Ident, newIdent: Ident) = {
     val e = replace
     val e1 = newIdent
     state match {
@@ -85,9 +105,10 @@ case class SheathLeafClauses(state: Option[String]) extends StatefulTransformerW
     }
     def unapply(ast: Ast) =
       ast match {
-        case Map(a, b, c)       => Some((a, b, c, new Remaker(MapClauseType.Map)))
-        case ConcatMap(a, b, c) => Some((a, b, c, new Remaker(MapClauseType.ConcatMap)))
-        case _                  => None
+        case Map(a, b, c) => Some((a, b, c, new Remaker(MapClauseType.Map)))
+        case ConcatMap(a, b, c) =>
+          Some((a, b, c, new Remaker(MapClauseType.ConcatMap)))
+        case _ => None
       }
   }
 
@@ -106,16 +127,21 @@ case class SheathLeafClauses(state: Option[String]) extends StatefulTransformerW
     }
     def unapply(ast: Ast) =
       ast match {
-        case Union(a, b)    => Some((a, b, new Remaker(UnionClauseType.Union)))
-        case UnionAll(a, b) => Some((a, b, new Remaker(UnionClauseType.UnionAll)))
-        case _              => None
+        case Union(a, b) => Some((a, b, new Remaker(UnionClauseType.Union)))
+        case UnionAll(a, b) =>
+          Some((a, b, new Remaker(UnionClauseType.UnionAll)))
+        case _ => None
       }
   }
 
-  override def apply(qq: Query)(implicit parent: History): (Query, StatefulTransformerWithStack[Option[String]]) = {
+  override def apply(qq: Query)(implicit
+      parent: History
+  ): (Query, StatefulTransformerWithStack[Option[String]]) = {
     implicit lazy val nextHistory = History.Child(qq, parent)
-    lazy val prevType = parent.ast.map(_.getClass.getSimpleName).getOrElse("Root")
-    lazy val stateInfo = s" [state:${state.toString},prev:${prevType.toString}] "
+    lazy val prevType =
+      parent.ast.map(_.getClass.getSimpleName).getOrElse("Root")
+    lazy val stateInfo =
+      s" [state:${state.toString},prev:${prevType.toString}] "
     lazy val parentShouldNeverHaveLeaves =
       parent.ast match {
         case Some(_: Aggregation) => false
@@ -133,8 +159,13 @@ case class SheathLeafClauses(state: Option[String]) extends StatefulTransformerW
         val (ast1, s) = apply(ast)
         val ast2 =
           s.state match {
-            case Some(prop) => Map(ast1, Ident("e", ast1.quat), Property(Ident("e", ast1.quat), prop))
-            case None       => ast1
+            case Some(prop) =>
+              Map(
+                ast1,
+                Ident("e", ast1.quat),
+                Property(Ident("e", ast1.quat), prop)
+              )
+            case None => ast1
           }
         trace"Sheath Agg(query) with $stateInfo in $qq becomes" andReturn {
           (Aggregation(op, ast2), SheathLeafClauses(None))
@@ -142,7 +173,11 @@ case class SheathLeafClauses(state: Option[String]) extends StatefulTransformerW
 
       // This is the entry-point for all groupBy nodes which all must be followed by a .map clause
       // Typically the body of a groupBy.map is an aggregation.
-      case Map(grpBy @ GroupBy(LeafQuat(query), eg, LeafQuat(by)), e, LeafQuat(body)) =>
+      case Map(
+            grpBy @ GroupBy(LeafQuat(query), eg, LeafQuat(by)),
+            e,
+            LeafQuat(body)
+          ) =>
         val innerState = query match {
           // If it's an infix inside e.g. Map(Grp(i:Infix),e,by) the higher-level apply should have changed it approporately
           // by adding an extra Map step inside which has a CaseClass that holds a new attribute that we will pass around
@@ -232,8 +267,10 @@ case class SheathLeafClauses(state: Option[String]) extends StatefulTransformerW
         val (b1, sb) = apply(b)
         val (iA1, iB1) = (Ident(iA.name, a1.quat), Ident(iB.name, b1.quat))
 
-        val a1m = sa.state.map(a => Map(a1, iA1, Property(iA1, a))).getOrElse(a1)
-        val b1m = sb.state.map(a => Map(b1, iB1, Property(iB1, a))).getOrElse(b1)
+        val a1m =
+          sa.state.map(a => Map(a1, iA1, Property(iA1, a))).getOrElse(a1)
+        val b1m =
+          sb.state.map(a => Map(b1, iB1, Property(iB1, a))).getOrElse(b1)
 
         trace"Sheath Join with $stateInfo in $qq becomes" andReturn {
           (Join(t, a1m, b1m, iA, iB, on), SheathLeafClauses(None))
@@ -275,7 +312,11 @@ case class SheathLeafClauses(state: Option[String]) extends StatefulTransformerW
               val pl = Property(el, l)
               val er = Ident("e", right1.quat)
               val pr = Property(er, r)
-              (Map(left1, el, CaseClass.Single("u" -> pl)), Map(right1, er, CaseClass.Single("u" -> pr)), Some("u"))
+              (
+                Map(left1, el, CaseClass.Single("u" -> pl)),
+                Map(right1, er, CaseClass.Single("u" -> pr)),
+                Some("u")
+              )
             case (None, None) =>
               (left1, right1, None)
             // if only one side has a state etc... do not do anything, technically

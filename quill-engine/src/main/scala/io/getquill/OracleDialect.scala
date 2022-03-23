@@ -5,20 +5,22 @@ import io.getquill.context.CanReturnMultiField
 import io.getquill.context.sql._
 import io.getquill.context.sql.idiom._
 import io.getquill.idiom.StatementInterpolator._
-import io.getquill.idiom.{ Statement, StringToken, Token }
+import io.getquill.idiom.{Statement, StringToken, Token}
 import io.getquill.norm.ConcatBehavior
 import io.getquill.norm.ConcatBehavior.NonAnsiConcat
 import io.getquill.sql.idiom.BooleanLiteralSupport
 
 trait OracleDialect
-  extends SqlIdiom
-  with QuestionMarkBindVariables
-  with ConcatSupport
-  with CanReturnMultiField
-  with BooleanLiteralSupport {
+    extends SqlIdiom
+    with QuestionMarkBindVariables
+    with ConcatSupport
+    with CanReturnMultiField
+    with BooleanLiteralSupport {
 
-  class OracleFlattenSqlQueryTokenizerHelper(q: FlattenSqlQuery)(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy)
-    extends FlattenSqlQueryTokenizerHelper(q)(astTokenizer, strategy) {
+  class OracleFlattenSqlQueryTokenizerHelper(q: FlattenSqlQuery)(implicit
+      astTokenizer: Tokenizer[Ast],
+      strategy: NamingStrategy
+  ) extends FlattenSqlQueryTokenizerHelper(q)(astTokenizer, strategy) {
     import q._
 
     override def withFrom: Statement = from match {
@@ -29,7 +31,10 @@ trait OracleDialect
     }
   }
 
-  override implicit def sqlQueryTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[SqlQuery] = Tokenizer[SqlQuery] {
+  override implicit def sqlQueryTokenizer(implicit
+      astTokenizer: Tokenizer[Ast],
+      strategy: NamingStrategy
+  ): Tokenizer[SqlQuery] = Tokenizer[SqlQuery] {
     case q: FlattenSqlQuery =>
       new OracleFlattenSqlQueryTokenizerHelper(q).apply
     case other =>
@@ -40,47 +45,79 @@ trait OracleDialect
 
   override def emptySetContainsToken(field: Token) = StringToken("1 <> 1")
 
-  override protected def limitOffsetToken(query: Statement)(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy) =
+  override protected def limitOffsetToken(
+      query: Statement
+  )(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy) =
     Tokenizer[(Option[Ast], Option[Ast])] {
-      case (Some(limit), None)         => stmt"$query FETCH FIRST ${limit.token} ROWS ONLY"
-      case (Some(limit), Some(offset)) => stmt"$query OFFSET ${offset.token} ROWS FETCH NEXT ${limit.token} ROWS ONLY"
-      case (None, Some(offset))        => stmt"$query OFFSET ${offset.token} ROWS"
-      case other                       => super.limitOffsetToken(query).token(other)
+      case (Some(limit), None) =>
+        stmt"$query FETCH FIRST ${limit.token} ROWS ONLY"
+      case (Some(limit), Some(offset)) =>
+        stmt"$query OFFSET ${offset.token} ROWS FETCH NEXT ${limit.token} ROWS ONLY"
+      case (None, Some(offset)) => stmt"$query OFFSET ${offset.token} ROWS"
+      case other                => super.limitOffsetToken(query).token(other)
     }
 
-  override implicit def operationTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Operation] =
+  override implicit def operationTokenizer(implicit
+      astTokenizer: Tokenizer[Ast],
+      strategy: NamingStrategy
+  ): Tokenizer[Operation] =
     Tokenizer[Operation] {
-      case BinaryOperation(a, NumericOperator.`%`, b) => stmt"MOD(${a.token}, ${b.token})"
-      case other                                      => super.operationTokenizer.token(other)
+      case BinaryOperation(a, NumericOperator.`%`, b) =>
+        stmt"MOD(${a.token}, ${b.token})"
+      case other => super.operationTokenizer.token(other)
     }
 
-  override implicit def sourceTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[FromContext] = Tokenizer[FromContext] {
-    case QueryContext(query, alias) => stmt"(${query.token}) ${strategy.default(alias).token}"
-    case other                      => super.sourceTokenizer.token(other)
+  override implicit def sourceTokenizer(implicit
+      astTokenizer: Tokenizer[Ast],
+      strategy: NamingStrategy
+  ): Tokenizer[FromContext] = Tokenizer[FromContext] {
+    case QueryContext(query, alias) =>
+      stmt"(${query.token}) ${strategy.default(alias).token}"
+    case other => super.sourceTokenizer.token(other)
   }
 
-  override protected def tokenizeColumn(strategy: NamingStrategy, column: String, renameable: Renameable): String =
+  override protected def tokenizeColumn(
+      strategy: NamingStrategy,
+      column: String,
+      renameable: Renameable
+  ): String =
     tokenizeEscapeUnderscores(strategy, column, Some(renameable))
 
-  override protected def tokenizeTable(strategy: NamingStrategy, table: String, renameable: Renameable): String =
+  override protected def tokenizeTable(
+      strategy: NamingStrategy,
+      table: String,
+      renameable: Renameable
+  ): String =
     tokenizeEscapeUnderscores(strategy, table, Some(renameable))
 
-  override protected def tokenizeColumnAlias(strategy: NamingStrategy, column: String): String =
+  override protected def tokenizeColumnAlias(
+      strategy: NamingStrategy,
+      column: String
+  ): String =
     tokenizeEscapeUnderscores(strategy, column, None)
 
-  override protected def tokenizeTableAlias(strategy: NamingStrategy, column: String): String =
+  override protected def tokenizeTableAlias(
+      strategy: NamingStrategy,
+      column: String
+  ): String =
     tokenizeEscapeUnderscores(strategy, column, None)
 
-  private def tokenizeEscapeUnderscores(strategy: NamingStrategy, columnOrTable: String, renameable: Option[Renameable]): String =
+  private def tokenizeEscapeUnderscores(
+      strategy: NamingStrategy,
+      columnOrTable: String,
+      renameable: Option[Renameable]
+  ): String =
     if (columnOrTable.startsWith("_"))
       Escape.column(columnOrTable)
     else
       renameable match {
-        case Some(renameable) => renameable.fixedOr(columnOrTable)(strategy.column(columnOrTable))
-        case None             => strategy.column(columnOrTable)
+        case Some(renameable) =>
+          renameable.fixedOr(columnOrTable)(strategy.column(columnOrTable))
+        case None => strategy.column(columnOrTable)
       }
 
-  override def defaultAutoGeneratedToken(field: Token) = stmt"($field) VALUES (DEFAULT)"
+  override def defaultAutoGeneratedToken(field: Token) =
+    stmt"($field) VALUES (DEFAULT)"
 
   override def prepareForProbing(string: String) = string
 }

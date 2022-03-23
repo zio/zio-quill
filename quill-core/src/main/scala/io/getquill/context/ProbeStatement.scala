@@ -2,7 +2,7 @@ package io.getquill.context
 
 import scala.concurrent.duration.DurationInt
 import scala.reflect.api.Types
-import scala.reflect.macros.whitebox.{ Context => MacroContext }
+import scala.reflect.macros.whitebox.{Context => MacroContext}
 import scala.util.Failure
 import scala.util.Success
 
@@ -17,7 +17,7 @@ object ProbeStatement {
   private val cache = new Cache[Types#Type, Context[Idiom, NamingStrategy]]
 
   def apply(statement: String, c: MacroContext) = {
-    import c.universe.{ Try => _, _ }
+    import c.universe.{Try => _, _}
 
     def resolveContext(tpe: Type) =
       tpe match {

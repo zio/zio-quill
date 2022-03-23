@@ -1,6 +1,6 @@
 package io.getquill
 
-import zio.{ RIO, Runtime }
+import zio.{RIO, Runtime}
 import zio.blocking.Blocking
 
 object ZioTestUtil {

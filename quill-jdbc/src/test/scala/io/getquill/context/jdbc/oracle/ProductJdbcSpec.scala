@@ -14,7 +14,9 @@ class ProductJdbcSpec extends ProductSpec {
 
   "Product" - {
     "Insert multiple products" in {
-      val inserted = testContext.run(liftQuery(productEntries).foreach(p => productInsert(p)))
+      val inserted = testContext.run(
+        liftQuery(productEntries).foreach(p => productInsert(p))
+      )
       val product = testContext.run(productById(lift(inserted(2)))).head
       product.description mustEqual productEntries(2).description
       product.id mustEqual inserted(2)
@@ -28,7 +30,12 @@ class ProductJdbcSpec extends ProductSpec {
     "Single insert with inlined free variable" in {
       val prd = Product(0L, "test1", 1L)
       val inserted = testContext.run {
-        product.insert(_.sku -> lift(prd.sku), _.description -> lift(prd.description)).returning(_.id)
+        product
+          .insert(
+            _.sku -> lift(prd.sku),
+            _.description -> lift(prd.description)
+          )
+          .returning(_.id)
       }
       val returnedProduct = testContext.run(productById(lift(inserted))).head
       returnedProduct.description mustEqual "test1"
@@ -39,7 +46,12 @@ class ProductJdbcSpec extends ProductSpec {
     "Single insert with free variable and explicit quotation" in {
       val prd = Product(0L, "test2", 2L)
       val q1 = quote {
-        product.insert(_.sku -> lift(prd.sku), _.description -> lift(prd.description)).returning(_.id)
+        product
+          .insert(
+            _.sku -> lift(prd.sku),
+            _.description -> lift(prd.description)
+          )
+          .returning(_.id)
       }
       val inserted = testContext.run(q1)
       val returnedProduct = testContext.run(productById(lift(inserted))).head

@@ -17,9 +17,11 @@ class QueryResultTypeNdbcPostgresSpec extends QueryResultTypeSpec {
 
   override def beforeAll = {
     get(context.run(deleteAll))
-    val ids = get(context.run(liftQuery(productEntries).foreach(e => productInsert(e))))
-    val inserted = (ids zip productEntries).map {
-      case (id, prod) => prod.copy(id = id)
+    val ids = get(
+      context.run(liftQuery(productEntries).foreach(e => productInsert(e)))
+    )
+    val inserted = (ids zip productEntries).map { case (id, prod) =>
+      prod.copy(id = id)
     }
     insertedProducts.addAll(inserted.asJava)
     ()
@@ -50,19 +52,27 @@ class QueryResultTypeNdbcPostgresSpec extends QueryResultTypeSpec {
       get(context.run(drop)) must contain theSameElementsAs (products.drop(1))
     }
     "++" in {
-      get(context.run(`++`)) must contain theSameElementsAs (products ++ products)
+      get(
+        context.run(`++`)
+      ) must contain theSameElementsAs (products ++ products)
     }
     "unionAll" in {
-      get(context.run(unionAll)) must contain theSameElementsAs (products ++ products)
+      get(
+        context.run(unionAll)
+      ) must contain theSameElementsAs (products ++ products)
     }
     "union" in {
       get(context.run(union)) must contain theSameElementsAs (products)
     }
     "join" in {
-      get(context.run(join)) must contain theSameElementsAs (products zip products)
+      get(
+        context.run(join)
+      ) must contain theSameElementsAs (products zip products)
     }
     "distinct" in {
-      get(context.run(distinct)) must contain theSameElementsAs (products.map(_.id).distinct)
+      get(context.run(distinct)) must contain theSameElementsAs (products
+        .map(_.id)
+        .distinct)
     }
   }
 
@@ -85,7 +95,9 @@ class QueryResultTypeNdbcPostgresSpec extends QueryResultTypeSpec {
     }
     "avg" - {
       "some" in {
-        get(context.run(avgExists)) mustBe Some(BigDecimal(products.map(_.sku).sum) / products.size)
+        get(context.run(avgExists)) mustBe Some(
+          BigDecimal(products.map(_.sku).sum) / products.size
+        )
       }
       "none" in {
         get(context.run(avgNonExists)) mustBe None

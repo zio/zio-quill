@@ -64,22 +64,24 @@ class SqlQuerySpec extends Spec {
         querySchema[TestEntity]("CustomEntity", _.i -> "field_i")
       }
       val q = quote {
-        qs1.leftJoin(qr2).on {
-          (a, b) =>
+        qs1
+          .leftJoin(qr2)
+          .on { (a, b) =>
             a.i == b.i
-        }.filter {
-          ab =>
+          }
+          .filter { ab =>
             {
               val (a, b) = ab
               b.map(bv => bv.l).contains(3L)
             }
-        }.leftJoin(qr3).on {
-          (ab, c) =>
+          }
+          .leftJoin(qr3)
+          .on { (ab, c) =>
             {
               val (a, b) = ab
               b.map(bv => bv.i).contains(a.i) && b.map(bv => bv.i).contains(c.i)
             }
-        }
+          }
       }
       testContext.run(q).string(true).collapseSpace mustEqual
         """
@@ -122,22 +124,24 @@ class SqlQuerySpec extends Spec {
 
     "nested join - named variables - map to case class" in {
       val q = quote {
-        qr1.leftJoin(qr2).on {
-          (a, b) =>
+        qr1
+          .leftJoin(qr2)
+          .on { (a, b) =>
             a.i == b.i // Map to case class CC(TestEntity, TestEntity) here
-        }.filter {
-          ab =>
+          }
+          .filter { ab =>
             {
               val (a, b) = ab
               b.map(bv => bv.l).contains(3L)
             }
-        }.leftJoin(qr3).on {
-          (ab, c) =>
+          }
+          .leftJoin(qr3)
+          .on { (ab, c) =>
             {
               val (a, b) = ab
               b.map(bv => bv.i).contains(a.i) && b.map(bv => bv.i).contains(c.i)
             }
-        }
+          }
       }
       testContext.run(q).string(true).collapseSpace mustEqual
         """SELECT
@@ -179,22 +183,24 @@ class SqlQuerySpec extends Spec {
 
     "nested join - named variables" in {
       val q = quote {
-        qr1.leftJoin(qr2).on {
-          (a, b) =>
+        qr1
+          .leftJoin(qr2)
+          .on { (a, b) =>
             a.i == b.i
-        }.filter {
-          ab =>
+          }
+          .filter { ab =>
             {
               val (a, b) = ab
               b.map(bv => bv.l).contains(3L)
             }
-        }.leftJoin(qr3).on {
-          (ab, c) =>
+          }
+          .leftJoin(qr3)
+          .on { (ab, c) =>
             {
               val (a, b) = ab
               b.map(bv => bv.i).contains(a.i) && b.map(bv => bv.i).contains(c.i)
             }
-        }
+          }
       }
       testContext.run(q).string(true).collapseSpace mustEqual
         """SELECT
@@ -236,16 +242,18 @@ class SqlQuerySpec extends Spec {
 
     "nested join" in {
       val q = quote {
-        qr1.leftJoin(qr2).on {
-          case (a, b) =>
+        qr1
+          .leftJoin(qr2)
+          .on { case (a, b) =>
             a.i == b.i
-        }.filter {
-          case (a, b) =>
+          }
+          .filter { case (a, b) =>
             b.map(_.l).contains(3L)
-        }.leftJoin(qr3).on {
-          case ((a, b), c) =>
+          }
+          .leftJoin(qr3)
+          .on { case ((a, b), c) =>
             b.map(_.i).contains(a.i) && b.map(_.i).contains(c.i)
-        }
+          }
       }
       testContext.run(q).string(true).collapseSpace mustEqual
         """SELECT
@@ -299,8 +307,7 @@ class SqlQuerySpec extends Spec {
 
       "flat join without map" in {
         val q: io.getquill.Quoted[Query[TestEntity]] = quote {
-          qr1.flatMap(e1 =>
-            qr1.join(e2 => e1.i == e2.i))
+          qr1.flatMap(e1 => qr1.join(e2 => e1.i == e2.i))
         }
         testContext.run(q).string mustEqual
           "SELECT e2.s, e2.i, e2.l, e2.o, e2.b FROM TestEntity e1 INNER JOIN TestEntity e2 ON e1.i = e2.i"
@@ -347,7 +354,8 @@ class SqlQuerySpec extends Spec {
     "raw queries with infix" - {
       "using tuples" in {
         val q = quote {
-          infix"""SELECT t.s AS "_1", t.i AS "_2" FROM TestEntity t""".as[Query[(String, Int)]]
+          infix"""SELECT t.s AS "_1", t.i AS "_2" FROM TestEntity t"""
+            .as[Query[(String, Int)]]
         }
         testContext.run(q).string mustEqual
           """SELECT x._1, x._2 FROM (SELECT t.s AS "_1", t.i AS "_2" FROM TestEntity t) AS x"""
@@ -364,14 +372,19 @@ class SqlQuerySpec extends Spec {
     "nested infix query" - {
       "as source" in {
         val q = quote {
-          infix"SELECT * FROM TestEntity".as[Query[TestEntity]].filter(t => t.i == 1)
+          infix"SELECT * FROM TestEntity"
+            .as[Query[TestEntity]]
+            .filter(t => t.i == 1)
         }
         testContext.run(q).string mustEqual
           "SELECT t.s, t.i, t.l, t.o, t.b FROM (SELECT * FROM TestEntity) AS t WHERE t.i = 1"
       }
       "fails if used as the flatMap body" in {
         val q = quote {
-          qr1.flatMap(a => infix"SELECT * FROM TestEntity2 t where t.s = ${a.s}".as[Query[TestEntity2]])
+          qr1.flatMap(a =>
+            infix"SELECT * FROM TestEntity2 t where t.s = ${a.s}"
+              .as[Query[TestEntity2]]
+          )
         }
         val e = intercept[IllegalStateException] {
           SqlQuery(q.ast)
@@ -503,8 +516,8 @@ class SqlQuerySpec extends Spec {
       "aggregated" - {
         "simple" in {
           val q = quote {
-            qr1.groupBy(t => t.i).map {
-              case (i, entities) => (i, entities.size)
+            qr1.groupBy(t => t.i).map { case (i, entities) =>
+              (i, entities.size)
             }
           }
           testContext.run(q).string mustEqual
@@ -512,8 +525,8 @@ class SqlQuerySpec extends Spec {
         }
         "mapped" in {
           val q = quote {
-            qr1.groupBy(t => t.i).map {
-              case (i, entities) => (i, entities.map(_.l).max)
+            qr1.groupBy(t => t.i).map { case (i, entities) =>
+              (i, entities.map(_.l).max)
             }
           }
           testContext.run(q).string mustEqual
@@ -521,8 +534,8 @@ class SqlQuerySpec extends Spec {
         }
         "distinct" in {
           val q = quote {
-            qr1.groupBy(t => t.s).map {
-              case (s, entities) => (s, entities.map(_.i).distinct.size)
+            qr1.groupBy(t => t.s).map { case (s, entities) =>
+              (s, entities.map(_.i).distinct.size)
             }
           }
           testContext.run(q).string mustEqual
@@ -532,11 +545,12 @@ class SqlQuerySpec extends Spec {
       "with map" - {
         "not nested" in {
           val q = quote {
-            qr1.join(qr2).on((a, b) => a.s == b.s)
+            qr1
+              .join(qr2)
+              .on((a, b) => a.s == b.s)
               .groupBy(t => t._2.i)
-              .map {
-                case (i, l) =>
-                  (i, l.map(_._1.i).sum)
+              .map { case (i, l) =>
+                (i, l.map(_._1.i).sum)
               }
           }
           testContext.run(q).string mustEqual
@@ -544,12 +558,13 @@ class SqlQuerySpec extends Spec {
         }
         "nested" in {
           val q = quote {
-            qr1.join(qr2).on((a, b) => a.s == b.s)
+            qr1
+              .join(qr2)
+              .on((a, b) => a.s == b.s)
               .nested
               .groupBy(t => t._2.i)
-              .map {
-                case (i, l) =>
-                  (i, l.map(_._1.i).sum)
+              .map { case (i, l) =>
+                (i, l.map(_._1.i).sum)
               }
           }
           testContext.run(q).string mustEqual
@@ -846,15 +861,21 @@ class SqlQuerySpec extends Spec {
         val q = quote {
           qr4.nested
         }
-        testContext.run(q).string mustEqual "SELECT x.i FROM (SELECT x.i FROM TestEntity4 x) AS x"
+        testContext
+          .run(q)
+          .string mustEqual "SELECT x.i FROM (SELECT x.i FROM TestEntity4 x) AS x"
         // not normalized
-        SqlQuery(q.ast).toString mustEqual "SELECT x.* FROM (SELECT x.* FROM TestEntity4 x) AS x"
+        SqlQuery(
+          q.ast
+        ).toString mustEqual "SELECT x.* FROM (SELECT x.* FROM TestEntity4 x) AS x"
       }
       "pointless nesting of single yielding element" in {
         val q = quote {
           qr1.map(x => x.i).nested
         }
-        testContext.run(q).string mustEqual "SELECT x.i FROM (SELECT x.i FROM TestEntity x) AS x"
+        testContext
+          .run(q)
+          .string mustEqual "SELECT x.i FROM (SELECT x.i FROM TestEntity x) AS x"
       }
       "pointless nesting in for-comp of single yielding element" in {
         val q = quote {
@@ -863,7 +884,9 @@ class SqlQuerySpec extends Spec {
             b <- qr2
           } yield a.i).nested
         }
-        testContext.run(q).string mustEqual "SELECT x.i FROM (SELECT a.i FROM TestEntity a, TestEntity2 b) AS x"
+        testContext
+          .run(q)
+          .string mustEqual "SELECT x.i FROM (SELECT a.i FROM TestEntity a, TestEntity2 b) AS x"
       }
       "mapped" in {
         val q = quote {
@@ -888,11 +911,19 @@ class SqlQuerySpec extends Spec {
           .map(sim => (sim.sid, sim.name))
           .sortBy(sim => sim._1)
       }
-      SqlQuery(q.ast).toString mustEqual "SELECT sim.sid, sim.name FROM Sim sim ORDER BY sim._1 ASC NULLS FIRST"
+      SqlQuery(
+        q.ast
+      ).toString mustEqual "SELECT sim.sid, sim.name FROM Sim sim ORDER BY sim._1 ASC NULLS FIRST"
     }
 
     "queries using options" - {
-      case class Entity(id: Int, s: String, o: Option[String], fk: Int, io: Option[Int])
+      case class Entity(
+          id: Int,
+          s: String,
+          o: Option[String],
+          fk: Int,
+          io: Option[Int]
+      )
       case class EntityA(id: Int, s: String, o: Option[String])
       case class EntityB(id: Int, s: String, o: Option[String])
 
@@ -918,7 +949,9 @@ class SqlQuerySpec extends Spec {
 
       "flatMap in left join with getOrElse" in {
         val q = quote {
-          e.leftJoin(ea).on((e, a) => e.fk == a.id).map(_._2.flatMap(_.o).getOrElse("alternative"))
+          e.leftJoin(ea)
+            .on((e, a) => e.fk == a.id)
+            .map(_._2.flatMap(_.o).getOrElse("alternative"))
         }
         testContext.run(q).string mustEqual
           "SELECT CASE WHEN a.o IS NOT NULL THEN a.o ELSE 'alternative' END FROM Entity e LEFT JOIN EntityA a ON e.fk = a.id"
@@ -934,7 +967,9 @@ class SqlQuerySpec extends Spec {
 
       "getOrElse should not produce null check for conditional" in {
         val q = quote {
-          e.map(em => em.o.map(v => if (v == "value") "foo" else "bar").getOrElse("baz"))
+          e.map(em =>
+            em.o.map(v => if (v == "value") "foo" else "bar").getOrElse("baz")
+          )
         }
         testContext.run(q).string mustEqual
           "SELECT CASE WHEN em.o IS NOT NULL AND CASE WHEN em.o = 'value' THEN 'foo' ELSE 'bar' END IS NOT NULL THEN CASE WHEN em.o = 'value' THEN 'foo' ELSE 'bar' END ELSE 'baz' END FROM Entity em"
@@ -969,7 +1004,9 @@ class SqlQuerySpec extends Spec {
         case class TrivialEntitySameField(s: String)
 
         val q = quote {
-          qr1.map(q => TrivialEntitySameField(q.s)) ++ qr1.map(q => TrivialEntitySameField(q.s))
+          qr1.map(q => TrivialEntitySameField(q.s)) ++ qr1.map(q =>
+            TrivialEntitySameField(q.s)
+          )
         }
         testContext.run(q).string mustEqual
           "(SELECT q.s FROM TestEntity q) UNION ALL (SELECT q1.s FROM TestEntity q1)"
@@ -984,7 +1021,9 @@ class SqlQuerySpec extends Spec {
       SqlQuery(qr4.ast).toString mustBe "SELECT x.* FROM TestEntity4 x"
     }
     "catch invalid" in {
-      intercept[IllegalStateException](SqlQuery(Ident("i"))).getMessage must startWith("Query not properly normalized.")
+      intercept[IllegalStateException](
+        SqlQuery(Ident("i"))
+      ).getMessage must startWith("Query not properly normalized.")
     }
   }
 }

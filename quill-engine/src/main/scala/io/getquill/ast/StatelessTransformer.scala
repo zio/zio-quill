@@ -32,35 +32,44 @@ trait StatelessTransformer {
 
   def apply(e: OnConflict.Excluded): OnConflict.Excluded =
     e match {
-      case OnConflict.Excluded(alias) => OnConflict.Excluded(apply(alias).asInstanceOf[Ident])
+      case OnConflict.Excluded(alias) =>
+        OnConflict.Excluded(apply(alias).asInstanceOf[Ident])
     }
 
   def apply(e: OnConflict.Existing): OnConflict.Existing =
     e match {
-      case OnConflict.Existing(alias) => OnConflict.Existing(apply(alias).asInstanceOf[Ident])
+      case OnConflict.Existing(alias) =>
+        OnConflict.Existing(apply(alias).asInstanceOf[Ident])
     }
 
   def apply(o: OptionOperation): OptionOperation =
     o match {
-      case OptionTableFlatMap(a, b, c) => OptionTableFlatMap(apply(a), applyIdent(b), apply(c))
-      case OptionTableMap(a, b, c)     => OptionTableMap(apply(a), applyIdent(b), apply(c))
-      case OptionTableExists(a, b, c)  => OptionTableExists(apply(a), applyIdent(b), apply(c))
-      case OptionTableForall(a, b, c)  => OptionTableForall(apply(a), applyIdent(b), apply(c))
-      case OptionFlatten(a)            => OptionFlatten(apply(a))
-      case OptionGetOrElse(a, b)       => OptionGetOrElse(apply(a), apply(b))
-      case OptionFlatMap(a, b, c)      => OptionFlatMap(apply(a), applyIdent(b), apply(c))
-      case OptionMap(a, b, c)          => OptionMap(apply(a), applyIdent(b), apply(c))
-      case OptionForall(a, b, c)       => OptionForall(apply(a), applyIdent(b), apply(c))
-      case OptionExists(a, b, c)       => OptionExists(apply(a), applyIdent(b), apply(c))
-      case OptionContains(a, b)        => OptionContains(apply(a), apply(b))
-      case OptionIsEmpty(a)            => OptionIsEmpty(apply(a))
-      case OptionNonEmpty(a)           => OptionNonEmpty(apply(a))
-      case OptionIsDefined(a)          => OptionIsDefined(apply(a))
-      case OptionSome(a)               => OptionSome(apply(a))
-      case OptionApply(a)              => OptionApply(apply(a))
-      case OptionOrNull(a)             => OptionOrNull(apply(a))
-      case OptionGetOrNull(a)          => OptionGetOrNull(apply(a))
-      case OptionNone(quat)            => OptionNone(quat)
+      case OptionTableFlatMap(a, b, c) =>
+        OptionTableFlatMap(apply(a), applyIdent(b), apply(c))
+      case OptionTableMap(a, b, c) =>
+        OptionTableMap(apply(a), applyIdent(b), apply(c))
+      case OptionTableExists(a, b, c) =>
+        OptionTableExists(apply(a), applyIdent(b), apply(c))
+      case OptionTableForall(a, b, c) =>
+        OptionTableForall(apply(a), applyIdent(b), apply(c))
+      case OptionFlatten(a)      => OptionFlatten(apply(a))
+      case OptionGetOrElse(a, b) => OptionGetOrElse(apply(a), apply(b))
+      case OptionFlatMap(a, b, c) =>
+        OptionFlatMap(apply(a), applyIdent(b), apply(c))
+      case OptionMap(a, b, c) => OptionMap(apply(a), applyIdent(b), apply(c))
+      case OptionForall(a, b, c) =>
+        OptionForall(apply(a), applyIdent(b), apply(c))
+      case OptionExists(a, b, c) =>
+        OptionExists(apply(a), applyIdent(b), apply(c))
+      case OptionContains(a, b) => OptionContains(apply(a), apply(b))
+      case OptionIsEmpty(a)     => OptionIsEmpty(apply(a))
+      case OptionNonEmpty(a)    => OptionNonEmpty(apply(a))
+      case OptionIsDefined(a)   => OptionIsDefined(apply(a))
+      case OptionSome(a)        => OptionSome(apply(a))
+      case OptionApply(a)       => OptionApply(apply(a))
+      case OptionOrNull(a)      => OptionOrNull(apply(a))
+      case OptionGetOrNull(a)   => OptionGetOrNull(apply(a))
+      case OptionNone(quat)     => OptionNone(quat)
     }
 
   def apply(o: IterableOperation): IterableOperation =
@@ -99,19 +108,22 @@ trait StatelessTransformer {
 
   def apply(e: AssignmentDual): AssignmentDual =
     e match {
-      case AssignmentDual(a1, a2, b, c) => AssignmentDual(applyIdent(a1), applyIdent(a2), apply(b), apply(c))
+      case AssignmentDual(a1, a2, b, c) =>
+        AssignmentDual(applyIdent(a1), applyIdent(a2), apply(b), apply(c))
     }
 
   def apply(e: Property): Property =
     e match {
-      case Property.Opinionated(a, name, renameable, visibility) => Property.Opinionated(apply(a), name, renameable, visibility)
+      case Property.Opinionated(a, name, renameable, visibility) =>
+        Property.Opinionated(apply(a), name, renameable, visibility)
     }
 
   def apply(e: Operation): Operation =
     e match {
-      case UnaryOperation(o, a)            => UnaryOperation(o, apply(a))
-      case BinaryOperation(a, b, c)        => BinaryOperation(apply(a), b, apply(c))
-      case FunctionApply(function, values) => FunctionApply(apply(function), values.map(apply))
+      case UnaryOperation(o, a)     => UnaryOperation(o, apply(a))
+      case BinaryOperation(a, b, c) => BinaryOperation(apply(a), b, apply(c))
+      case FunctionApply(function, values) =>
+        FunctionApply(apply(function), values.map(apply))
     }
 
   def apply(e: Value): Value =
@@ -127,19 +139,26 @@ trait StatelessTransformer {
 
   def apply(e: Action): Action =
     e match {
-      case Update(query, assignments)                 => Update(apply(query), assignments.map(apply))
-      case Insert(query, assignments)                 => Insert(apply(query), assignments.map(apply))
-      case Delete(query)                              => Delete(apply(query))
-      case Returning(query, alias, property)          => Returning(apply(query), applyIdent(alias), apply(property))
-      case ReturningGenerated(query, alias, property) => ReturningGenerated(apply(query), applyIdent(alias), apply(property))
-      case Foreach(query, alias, body)                => Foreach(apply(query), applyIdent(alias), apply(body))
-      case OnConflict(query, target, action)          => OnConflict(apply(query), apply(target), apply(action))
+      case Update(query, assignments) =>
+        Update(apply(query), assignments.map(apply))
+      case Insert(query, assignments) =>
+        Insert(apply(query), assignments.map(apply))
+      case Delete(query) => Delete(apply(query))
+      case Returning(query, alias, property) =>
+        Returning(apply(query), applyIdent(alias), apply(property))
+      case ReturningGenerated(query, alias, property) =>
+        ReturningGenerated(apply(query), applyIdent(alias), apply(property))
+      case Foreach(query, alias, body) =>
+        Foreach(apply(query), applyIdent(alias), apply(body))
+      case OnConflict(query, target, action) =>
+        OnConflict(apply(query), apply(target), apply(action))
     }
 
   def apply(e: OnConflict.Target): OnConflict.Target =
     e match {
-      case OnConflict.NoTarget          => e
-      case OnConflict.Properties(props) => OnConflict.Properties(props.map(apply))
+      case OnConflict.NoTarget => e
+      case OnConflict.Properties(props) =>
+        OnConflict.Properties(props.map(apply))
     }
 
   def apply(e: OnConflict.Action): OnConflict.Action =

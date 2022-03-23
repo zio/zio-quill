@@ -30,12 +30,18 @@ class QueryResultTypeCassandraAsyncSpec extends QueryResultTypeCassandraSpec {
   "bind" - {
     "action" - {
       "noArgs" in {
-        val bs = result(context.prepare(insert(OrderTestEntity(1, 2)))(context.wrappedSession))
+        val bs = result(
+          context.prepare(insert(OrderTestEntity(1, 2)))(context.wrappedSession)
+        )
         bs.preparedStatement().getVariables.size() mustEqual 0
       }
 
       "withArgs" in {
-        val bs = result(context.prepare(insert(lift(OrderTestEntity(1, 2))))(context.wrappedSession))
+        val bs = result(
+          context.prepare(insert(lift(OrderTestEntity(1, 2))))(
+            context.wrappedSession
+          )
+        )
         bs.preparedStatement().getVariables.size() mustEqual 2
         bs.getInt("id") mustEqual 1
         bs.getInt("i") mustEqual 2
@@ -49,7 +55,11 @@ class QueryResultTypeCassandraAsyncSpec extends QueryResultTypeCassandraSpec {
       }
 
       "withArgs" in {
-        val batches = result(context.prepare(liftQuery(List(OrderTestEntity(1, 2))).foreach(e => insert(e)))(context.wrappedSession))
+        val batches = result(
+          context.prepare(
+            liftQuery(List(OrderTestEntity(1, 2))).foreach(e => insert(e))
+          )(context.wrappedSession)
+        )
         batches.foreach { bs =>
           bs.preparedStatement().getVariables.size() mustEqual 2
           bs.getInt("id") mustEqual 1

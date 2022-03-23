@@ -8,7 +8,8 @@ class DecodeNullSpec extends Spec {
     "stream" in {
       import io.getquill.context.cassandra.utils.executionContext
       import testLagomAsyncDB._
-      val writeEntities = quote(querySchema[DecodeNullTestWriteEntity]("DecodeNullTestEntity"))
+      val writeEntities =
+        quote(querySchema[DecodeNullTestWriteEntity]("DecodeNullTestEntity"))
 
       val result =
         for {

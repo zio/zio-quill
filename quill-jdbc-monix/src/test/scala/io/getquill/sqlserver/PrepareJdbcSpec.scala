@@ -1,6 +1,6 @@
 package io.getquill.sqlserver
 
-import java.sql.{ Connection, ResultSet }
+import java.sql.{Connection, ResultSet}
 import io.getquill.PrepareMonixJdbcSpecBase
 import monix.execution.Scheduler
 import org.scalatest.BeforeAndAfter
@@ -15,22 +15,31 @@ class PrepareJdbcSpec extends PrepareMonixJdbcSpecBase with BeforeAndAfter {
     testContext.run(query[Product].delete).runSyncUnsafe()
   }
 
-  def productExtractor = (rs: ResultSet, conn: Connection) => materializeQueryMeta[Product].extract(rs, conn)
+  def productExtractor = (rs: ResultSet, conn: Connection) =>
+    materializeQueryMeta[Product].extract(rs, conn)
   val prepareQuery = prepare(query[Product])
   implicit val im = insertMeta[Product](_.id)
 
   "single" in {
-    val prepareInsert = prepare(query[Product].insertValue(lift(productEntries.head)))
-    singleInsert(dataSource.getConnection)(prepareInsert).runSyncUnsafe() mustEqual false
-    extractProducts(dataSource.getConnection)(prepareQuery).runSyncUnsafe() === List(productEntries.head)
+    val prepareInsert =
+      prepare(query[Product].insertValue(lift(productEntries.head)))
+    singleInsert(dataSource.getConnection)(prepareInsert)
+      .runSyncUnsafe() mustEqual false
+    extractProducts(dataSource.getConnection)(prepareQuery)
+      .runSyncUnsafe() === List(productEntries.head)
   }
 
   "batch" in {
     val prepareBatchInsert = prepare(
-      liftQuery(withOrderedIds(productEntries)).foreach(p => query[Product].insertValue(p))
+      liftQuery(withOrderedIds(productEntries)).foreach(p =>
+        query[Product].insertValue(p)
+      )
     )
 
-    batchInsert(dataSource.getConnection)(prepareBatchInsert).runSyncUnsafe().distinct mustEqual List(false)
-    extractProducts(dataSource.getConnection)(prepareQuery).runSyncUnsafe() === withOrderedIds(productEntries)
+    batchInsert(dataSource.getConnection)(prepareBatchInsert)
+      .runSyncUnsafe()
+      .distinct mustEqual List(false)
+    extractProducts(dataSource.getConnection)(prepareQuery)
+      .runSyncUnsafe() === withOrderedIds(productEntries)
   }
 }

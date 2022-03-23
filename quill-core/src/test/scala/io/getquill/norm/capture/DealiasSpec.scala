@@ -131,28 +131,46 @@ class DealiasSpec extends Spec {
     "join" - {
       "left" in {
         val q = quote {
-          qr1.filter(a => a.s == "s").map(b => b.s).fullJoin(qr1).on((a, b) => a == b.s)
+          qr1
+            .filter(a => a.s == "s")
+            .map(b => b.s)
+            .fullJoin(qr1)
+            .on((a, b) => a == b.s)
         }
         val n = quote {
-          qr1.filter(a => a.s == "s").map(a => a.s).fullJoin(qr1).on((a, b) => a == b.s)
+          qr1
+            .filter(a => a.s == "s")
+            .map(a => a.s)
+            .fullJoin(qr1)
+            .on((a, b) => a == b.s)
         }
         Dealias(q.ast) mustEqual n.ast
       }
       "right" in {
         val q = quote {
-          qr1.fullJoin(qr1.filter(a => a.s == "s").map(b => b.s)).on((x, y) => x.s == y)
+          qr1
+            .fullJoin(qr1.filter(a => a.s == "s").map(b => b.s))
+            .on((x, y) => x.s == y)
         }
         val n = quote {
-          qr1.fullJoin(qr1.filter(a => a.s == "s").map(a => a.s)).on((x, a) => x.s == a)
+          qr1
+            .fullJoin(qr1.filter(a => a.s == "s").map(a => a.s))
+            .on((x, a) => x.s == a)
         }
         Dealias(q.ast) mustEqual n.ast
       }
       "on" in {
         val q = quote {
-          qr1.filter(a => a.s == "s").leftJoin(qr1.filter(b => b.s == "s")).on((c, d) => c.s == d.s)
+          qr1
+            .filter(a => a.s == "s")
+            .leftJoin(qr1.filter(b => b.s == "s"))
+            .on((c, d) => c.s == d.s)
         }
         val n = quote {
-          qr1.filter(a => a.s == "s").leftJoin(qr1.filter(b => b.s == "s")).on((a, b) => a.s == b.s)
+          qr1
+            .filter(a => a.s == "s")
+            .leftJoin(qr1.filter(b => b.s == "s"))
+            .on((a, b) => a.s == b.s)
         }
         Dealias(q.ast) mustEqual n.ast
       }

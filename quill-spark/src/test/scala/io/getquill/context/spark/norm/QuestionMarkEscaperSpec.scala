@@ -6,7 +6,9 @@ import QuestionMarkEscaper._
 class QuestionMarkEscaperSpec extends Spec {
 
   "should escape strings with question marks and even ones with slashes already" in {
-    escape("foo ? bar \\? baz \\\\?") must equal("foo \\? bar \\\\? baz \\\\\\?")
+    escape("foo ? bar \\? baz \\\\?") must equal(
+      "foo \\? bar \\\\? baz \\\\\\?"
+    )
   }
 
   "should escape and then unescape going back to original form" in {

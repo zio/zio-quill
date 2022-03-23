@@ -1,24 +1,39 @@
 package io.getquill.sql.norm
 
-import io.getquill.ast.{ Ast, CollectAst, Ident, Property, StatefulTransformer }
-import io.getquill.context.sql.{ FlatJoinContext, FlattenSqlQuery, FromContext, InfixContext, JoinContext, QueryContext, SelectValue, SetOperationSqlQuery, SqlQuery, TableContext, UnaryOperationSqlQuery }
+import io.getquill.ast.{Ast, CollectAst, Ident, Property, StatefulTransformer}
+import io.getquill.context.sql.{
+  FlatJoinContext,
+  FlattenSqlQuery,
+  FromContext,
+  InfixContext,
+  JoinContext,
+  QueryContext,
+  SelectValue,
+  SetOperationSqlQuery,
+  SqlQuery,
+  TableContext,
+  UnaryOperationSqlQuery
+}
 import io.getquill.norm.PropertyMatroshka
 import io.getquill.quat.Quat
 
 import scala.collection.mutable
 import scala.collection.mutable.LinkedHashSet
 
-/**
- * Filter out unused subquery properties. This is safe to do after `ExpandNestedQueries`
- * now since all properties have been propagated from quats from parent to child
- * SQL select trees.
- */
+/** Filter out unused subquery properties. This is safe to do after
+  * `ExpandNestedQueries` now since all properties have been propagated from
+  * quats from parent to child SQL select trees.
+  */
 object RemoveUnusedSelects {
 
   def apply(q: SqlQuery): SqlQuery =
     apply(q, LinkedHashSet.empty, true)
 
-  private def apply(q: SqlQuery, references: LinkedHashSet[Property], isTopLevel: Boolean = false): SqlQuery =
+  private def apply(
+      q: SqlQuery,
+      references: LinkedHashSet[Property],
+      isTopLevel: Boolean = false
+  ): SqlQuery =
     q match {
       case q: FlattenSqlQuery =>
         // Filter the select values based on which references are used in the upper-level query
@@ -41,7 +56,8 @@ object RemoveUnusedSelects {
         // take the newly filtered selects instead of the ones in the query which are pre-filtered
         // ... unless we are on the top level query. Since in the top level query 'references'
         // will always be empty we need to copy through the entire select caluse
-        val asts = gatherAsts(q, if (doSelectFiltration) newSelect else q.select)
+        val asts =
+          gatherAsts(q, if (doSelectFiltration) newSelect else q.select)
 
         // recurse into the from clause with ExpandContext
         val fromContextsAndSuperProps = q.from.map(expandContext(_, asts))
@@ -58,30 +74,53 @@ object RemoveUnusedSelects {
         }
 
       case SetOperationSqlQuery(a, op, b) =>
-        SetOperationSqlQuery(apply(a, references), op, apply(b, references))(q.quat)
+        SetOperationSqlQuery(apply(a, references), op, apply(b, references))(
+          q.quat
+        )
       case UnaryOperationSqlQuery(op, q) =>
         UnaryOperationSqlQuery(op, apply(q, references))(q.quat)
     }
 
-  private def filterUnused(select: List[SelectValue], references: Set[Property]): List[SelectValue] = {
-    val usedAliases = references.map {
-      case PropertyMatroshka(_, list, _) => list.mkString
+  private def filterUnused(
+      select: List[SelectValue],
+      references: Set[Property]
+  ): List[SelectValue] = {
+    val usedAliases = references.map { case PropertyMatroshka(_, list, _) =>
+      list.mkString
     }.toSet
     select.filter(sv =>
       sv.alias.forall(aliasValue => usedAliases.contains(aliasValue)) ||
-        hasImpureInfix(sv.ast))
+        hasImpureInfix(sv.ast)
+    )
   }
 
   private def hasImpureInfix(ast: Ast) =
     CollectAst.byType[io.getquill.ast.Infix](ast).find(i => !i.pure).isDefined
 
-  private def gatherAsts(q: FlattenSqlQuery, newSelect: List[SelectValue]): List[Ast] =
+  private def gatherAsts(
+      q: FlattenSqlQuery,
+      newSelect: List[SelectValue]
+  ): List[Ast] =
     q match {
-      case FlattenSqlQuery(from, where, groupBy, orderBy, limit, offset, select, distinct) =>
-        Nil ++ newSelect.map(_.ast) ++ where ++ groupBy ++ orderBy.map(_.ast) ++ limit ++ offset
+      case FlattenSqlQuery(
+            from,
+            where,
+            groupBy,
+            orderBy,
+            limit,
+            offset,
+            select,
+            distinct
+          ) =>
+        Nil ++ newSelect.map(_.ast) ++ where ++ groupBy ++ orderBy.map(
+          _.ast
+        ) ++ limit ++ offset
     }
 
-  private def expandContext(s: FromContext, asts: List[Ast]): (FromContext, LinkedHashSet[Property]) =
+  private def expandContext(
+      s: FromContext,
+      asts: List[Ast]
+  ): (FromContext, LinkedHashSet[Property]) =
     s match {
       case QueryContext(q, alias) =>
         val refs = references(alias, asts)
@@ -94,17 +133,19 @@ object RemoveUnusedSelects {
       case FlatJoinContext(t, a, on) =>
         val (next, refs) = expandContext(a, asts :+ on)
         (FlatJoinContext(t, next, on), refs)
-      case _: TableContext | _: InfixContext => (s, new mutable.LinkedHashSet[Property]())
+      case _: TableContext | _: InfixContext =>
+        (s, new mutable.LinkedHashSet[Property]())
     }
 
   private def references(alias: String, asts: List[Ast]) =
-    LinkedHashSet.empty ++ (References(State(Ident(alias, Quat.Value), Nil))(asts)(_.apply)._2.state.references)
+    LinkedHashSet.empty ++ (References(State(Ident(alias, Quat.Value), Nil))(
+      asts
+    )(_.apply)._2.state.references)
 }
 
 case class State(ident: Ident, references: List[Property])
 
-case class References(val state: State)
-  extends StatefulTransformer[State] {
+case class References(val state: State) extends StatefulTransformer[State] {
 
   import state._
 
@@ -123,4 +164,3 @@ case class References(val state: State)
       }
   }
 }
-

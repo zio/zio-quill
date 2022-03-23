@@ -1,6 +1,6 @@
 package io.getquill.context.cassandra
 
-import io.getquill.{ Action, Delete, EntityQuery, Insert, Query, Update }
+import io.getquill.{Action, Delete, EntityQuery, Insert, Query, Update}
 
 trait Ops {
   this: CassandraContext[_] =>
@@ -8,28 +8,26 @@ trait Ops {
   abstract class Options[A](q: A) {
     def usingTimestamp(ts: Int) = quote(infix"$q USING TIMESTAMP $ts".as[A])
     def usingTtl(ttl: Int) = quote(infix"$q USING TTL $ttl".as[A])
-    def using(ts: Int, ttl: Int) = quote(infix"$q USING TIMESTAMP $ts AND TTL $ttl".as[A])
+    def using(ts: Int, ttl: Int) = quote(
+      infix"$q USING TIMESTAMP $ts AND TTL $ttl".as[A]
+    )
   }
 
   implicit class QueryOps[Q <: Query[_]](q: Q) {
     def allowFiltering = quote(infix"$q ALLOW FILTERING".transparent.pure.as[Q])
   }
 
-  implicit class EntityOps[A <: EntityQuery[_]](q: A)
-    extends Options(q)
+  implicit class EntityOps[A <: EntityQuery[_]](q: A) extends Options(q)
 
-  implicit class InsertOps[A <: Insert[_]](q: A)
-    extends Options(q) {
+  implicit class InsertOps[A <: Insert[_]](q: A) extends Options(q) {
     def ifNotExists = quote(infix"$q IF NOT EXISTS".as[A])
   }
 
-  implicit class UpdateOps[A <: Update[_]](q: A)
-    extends Options(q) {
+  implicit class UpdateOps[A <: Update[_]](q: A) extends Options(q) {
     def ifExists = quote(infix"$q IF EXISTS".as[A])
   }
 
-  implicit class DeleteOps[A <: Delete[_]](q: A)
-    extends Options(q) {
+  implicit class DeleteOps[A <: Delete[_]](q: A) extends Options(q) {
     def ifExists = quote(infix"$q IF EXISTS".as[A])
   }
 

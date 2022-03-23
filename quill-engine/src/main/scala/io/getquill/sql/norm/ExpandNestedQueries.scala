@@ -2,7 +2,12 @@ package io.getquill.context.sql.norm
 
 import io.getquill.ast._
 import io.getquill.context.sql._
-import io.getquill.sql.norm.{ InContext, QueryLevel, SelectPropertyProtractor, StatelessQueryTransformer }
+import io.getquill.sql.norm.{
+  InContext,
+  QueryLevel,
+  SelectPropertyProtractor,
+  StatelessQueryTransformer
+}
 import io.getquill.ast.PropertyOrCore
 import io.getquill.norm.PropertyMatroshka
 import io.getquill.quat.Quat
@@ -16,7 +21,10 @@ class ExpandSelection(from: List[FromContext]) {
   def ofSubselect(values: List[SelectValue]): List[SelectValue] =
     apply(values, QueryLevel.Inner)
 
-  private[norm] def apply(values: List[SelectValue], level: QueryLevel): List[SelectValue] =
+  private[norm] def apply(
+      values: List[SelectValue],
+      level: QueryLevel
+  ): List[SelectValue] =
     values.flatMap(apply(_, level))
 
   implicit class AliasOp(alias: Option[String]) {
@@ -24,7 +32,10 @@ class ExpandSelection(from: List[FromContext]) {
       alias.orElse(Some("")).map(v => s"${v}${str}")
   }
 
-  private[norm] def apply(value: SelectValue, level: QueryLevel): List[SelectValue] = {
+  private[norm] def apply(
+      value: SelectValue,
+      level: QueryLevel
+  ): List[SelectValue] = {
     def concatOr(concatA: Option[String], concatB: String)(or: Option[String]) =
       if (!level.isTop)
         concatA.concatWith(concatB)
@@ -57,24 +68,32 @@ class ExpandSelection(from: List[FromContext]) {
           case (p: Property, path) =>
             // Append alias headers (i.e. _1,_2 from tuples and field names foo,bar from case classes) to the
             // value of the Quat path
-            SelectValue(p, concatOr(alias, path.mkString)(path.lastOption), concat)
+            SelectValue(
+              p,
+              concatOr(alias, path.mkString)(path.lastOption),
+              concat
+            )
           case (other, _) =>
             SelectValue(other, alias, concat)
         }
       case SelectValue(Tuple(values), alias, concat) =>
-        values.zipWithIndex.flatMap {
-          case (ast, i) =>
-            val label = s"_${i + 1}"
-            // Go into the select values, if the level is Top we need to go TopUnwrapped since the top-level
-            // Quat doesn't count anymore. If level=Inner then it's the same.
-            apply(SelectValue(ast, concatOr(alias, label)(Some(label)), concat), level.withoutTopQuat)
+        values.zipWithIndex.flatMap { case (ast, i) =>
+          val label = s"_${i + 1}"
+          // Go into the select values, if the level is Top we need to go TopUnwrapped since the top-level
+          // Quat doesn't count anymore. If level=Inner then it's the same.
+          apply(
+            SelectValue(ast, concatOr(alias, label)(Some(label)), concat),
+            level.withoutTopQuat
+          )
         }
       case SelectValue(CaseClass(fields), alias, concat) =>
-        fields.flatMap {
-          case (name, ast) =>
-            // Go into the select values, if the level is Top we need to go TopUnwrapped since the top-level
-            // Quat doesn't count anymore. If level=Inner then it's the same.
-            apply(SelectValue(ast, concatOr(alias, name)(Some(name)), concat), level.withoutTopQuat)
+        fields.flatMap { case (name, ast) =>
+          // Go into the select values, if the level is Top we need to go TopUnwrapped since the top-level
+          // Quat doesn't count anymore. If level=Inner then it's the same.
+          apply(
+            SelectValue(ast, concatOr(alias, name)(Some(name)), concat),
+            level.withoutTopQuat
+          )
         }
       // Direct infix select, etc...
       case other => List(other)
@@ -117,25 +136,48 @@ object ExpandNestedQueries extends StatelessQueryTransformer {
 
           // If it is a sub-select or a renamed property, do not apply the strategy to the property
           if (isSubselect)
-            Property.Opinionated(inner, path.mkString, renameable, Visibility.Visible)
+            Property.Opinionated(
+              inner,
+              path.mkString,
+              renameable,
+              Visibility.Visible
+            )
           else
-            Property.Opinionated(inner, path.last, renameable, Visibility.Visible)
+            Property.Opinionated(
+              inner,
+              path.last,
+              renameable,
+              Visibility.Visible
+            )
 
         case other => other
       }
     }
 
     def inside(ast: Ast) =
-      Transform(ast) {
-        case p: Property => apply(p)
+      Transform(ast) { case p: Property =>
+        apply(p)
       }
   }
 
-  protected override def expandNested(q: FlattenSqlQuery, level: QueryLevel): FlattenSqlQuery =
+  protected override def expandNested(
+      q: FlattenSqlQuery,
+      level: QueryLevel
+  ): FlattenSqlQuery =
     q match {
-      case FlattenSqlQuery(from, where, groupBy, orderBy, limit, offset, select, distinct) =>
+      case FlattenSqlQuery(
+            from,
+            where,
+            groupBy,
+            orderBy,
+            limit,
+            offset,
+            select,
+            distinct
+          ) =>
         val flattenNestedProperty = FlattenNestedProperty(from)
-        val newFroms = q.from.map(expandContextFlattenOns(_, flattenNestedProperty))
+        val newFroms =
+          q.from.map(expandContextFlattenOns(_, flattenNestedProperty))
 
         def distinctIfNotTopLevel(values: List[SelectValue]) =
           if (level.isTop)
@@ -168,23 +210,35 @@ object ExpandNestedQueries extends StatelessQueryTransformer {
           distinctIfNotTopLevel(select)
 
         q.copy(
-          select = distinctSelects.map(sv => sv.copy(ast = flattenNestedProperty.inside(sv.ast))),
+          select = distinctSelects.map(sv =>
+            sv.copy(ast = flattenNestedProperty.inside(sv.ast))
+          ),
           from = newFroms,
           where = where.map(flattenNestedProperty.inside(_)),
           groupBy = groupBy.map(flattenNestedProperty.inside(_)),
-          orderBy = orderBy.map(ob => ob.copy(ast = flattenNestedProperty.inside(ob.ast))),
+          orderBy = orderBy.map(ob =>
+            ob.copy(ast = flattenNestedProperty.inside(ob.ast))
+          ),
           limit = limit.map(flattenNestedProperty.inside(_)),
           offset = offset.map(flattenNestedProperty.inside(_))
         )(q.quat)
     }
 
-  def expandContextFlattenOns(s: FromContext, flattenNested: FlattenNestedProperty): FromContext = {
+  def expandContextFlattenOns(
+      s: FromContext,
+      flattenNested: FlattenNestedProperty
+  ): FromContext = {
     def expandContextRec(s: FromContext): FromContext =
       s match {
         case QueryContext(q, alias) =>
           QueryContext(apply(q, QueryLevel.Inner), alias)
         case JoinContext(t, a, b, on) =>
-          JoinContext(t, expandContextRec(a), expandContextRec(b), flattenNested.inside(on))
+          JoinContext(
+            t,
+            expandContextRec(a),
+            expandContextRec(b),
+            flattenNested.inside(on)
+          )
         case FlatJoinContext(t, a, on) =>
           FlatJoinContext(t, expandContextRec(a), flattenNested.inside(on))
         case _: TableContext | _: InfixContext => s

@@ -3,7 +3,10 @@ package io.getquill.context.cassandra.zio
 import io.getquill.context.cassandra.QueryResultTypeCassandraSpec
 import org.scalatest.BeforeAndAfter
 
-class StreamingWithFetchSpec extends ZioCassandraSpec with QueryResultTypeCassandraSpec with BeforeAndAfter {
+class StreamingWithFetchSpec
+    extends ZioCassandraSpec
+    with QueryResultTypeCassandraSpec
+    with BeforeAndAfter {
 
   val context = testZioDB
 

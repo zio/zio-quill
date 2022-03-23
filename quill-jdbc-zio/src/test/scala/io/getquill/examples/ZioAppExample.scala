@@ -27,7 +27,8 @@ final case class DataServiceLive(dataSource: DataSource) {
   import QuillContext._
   val env = Has(dataSource)
   def getPeople = run(query[Person]).provide(env)
-  def getPeopleOlderThan(age: Int) = run(query[Person].filter(p => p.age > lift(age))).provide(env)
+  def getPeopleOlderThan(age: Int) =
+    run(query[Person].filter(p => p.age > lift(age))).provide(env)
 }
 
 object ZioAppExample extends App {

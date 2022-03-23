@@ -29,16 +29,25 @@ class QueryLogger(logToFile: LogToFile) {
   private[getquill] val runtime =
     env.map(Runtime.unsafeFromLayer(_))
 
-  def apply(queryString: String, sourcePath: String, line: Int, column: Int): Unit = {
+  def apply(
+      queryString: String,
+      sourcePath: String,
+      line: Int,
+      column: Int
+  ): Unit = {
     runtime match {
       case Some(runtimeValue) =>
-        runtimeValue.unsafeRunAsync_(log.info(
-          s"""
+        runtimeValue.unsafeRunAsync_(
+          log.info(
+            s"""
              |-- file: $sourcePath:$line:$column
-             |-- time: ${ZonedDateTime.now().format(LogDatetimeFormatter.isoLocalDateTimeFormatter)}
+             |-- time: ${ZonedDateTime
+              .now()
+              .format(LogDatetimeFormatter.isoLocalDateTimeFormatter)}
              |$queryString;
              |""".stripMargin
-        ))
+          )
+        )
       case None => // do nothing
     }
   }

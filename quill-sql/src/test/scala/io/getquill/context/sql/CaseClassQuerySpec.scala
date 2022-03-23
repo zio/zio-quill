@@ -8,7 +8,13 @@ trait CaseClassQuerySpec extends Spec {
 
   import context._
 
-  case class Contact(firstName: String, lastName: String, age: Int, addressFk: Int, extraInfo: String)
+  case class Contact(
+      firstName: String,
+      lastName: String,
+      age: Int,
+      addressFk: Int,
+      extraInfo: String
+  )
   case class Address(id: Int, street: String, zip: Int, otherExtraInfo: String)
   case class Nickname(nickname: String)
   case class NicknameSameField(firstName: String)
@@ -32,10 +38,18 @@ trait CaseClassQuerySpec extends Spec {
   )
 
   case class ContactSimplified(firstName: String, lastName: String, age: Int)
-  case class AddressableContact(firstName: String, lastName: String, age: Int, street: String, zip: Int)
+  case class AddressableContact(
+      firstName: String,
+      lastName: String,
+      age: Int,
+      street: String,
+      zip: Int
+  )
 
   val `Ex 1 CaseClass Record Output` = quote {
-    query[Contact].map(p => new ContactSimplified(p.firstName, p.lastName, p.age))
+    query[Contact].map(p =>
+      new ContactSimplified(p.firstName, p.lastName, p.age)
+    )
   }
 
   val `Ex 1A CaseClass Record Output` = quote {
@@ -43,7 +57,9 @@ trait CaseClassQuerySpec extends Spec {
   }
 
   val `Ex 1B CaseClass Record Output` = quote {
-    query[Contact].map(p => ContactSimplified.apply(p.firstName, p.lastName, p.age))
+    query[Contact].map(p =>
+      ContactSimplified.apply(p.firstName, p.lastName, p.age)
+    )
   }
 
   val `Ex 1 CaseClass Record Output expected result` = List(
@@ -69,7 +85,9 @@ trait CaseClassQuerySpec extends Spec {
 
   val `Ex 3 Inline Record Usage` = quote {
     val person = new ContactSimplified("Alex", "Jones", 44)
-    query[Contact].filter(p => p.firstName == person.firstName && person.lastName == person.lastName)
+    query[Contact].filter(p =>
+      p.firstName == person.firstName && person.lastName == person.lastName
+    )
   }
 
   val `Ex 3 Inline Record Usage exepected result` = List(
@@ -77,11 +95,15 @@ trait CaseClassQuerySpec extends Spec {
   )
 
   val `Ex 4 Mapped Union of Nicknames` = quote {
-    query[Contact].map(c => Nickname(c.firstName)) union query[Contact].map(c => Nickname(c.firstName))
+    query[Contact].map(c => Nickname(c.firstName)) union query[Contact].map(c =>
+      Nickname(c.firstName)
+    )
   }
 
   val `Ex 4 Mapped Union All of Nicknames` = quote {
-    query[Contact].map(c => Nickname(c.firstName)) ++ query[Contact].map(c => Nickname(c.firstName))
+    query[Contact].map(c => Nickname(c.firstName)) ++ query[Contact].map(c =>
+      Nickname(c.firstName)
+    )
   }
 
   val `Ex 4 Mapped Union All of Nicknames Filtered` = quote {
@@ -89,18 +111,28 @@ trait CaseClassQuerySpec extends Spec {
   }
 
   val `Ex 4 Mapped Union All of Nicknames Same Field` = quote {
-    query[Contact].map(c => NicknameSameField(c.firstName)) ++ query[Contact].map(c => NicknameSameField(c.firstName))
+    query[Contact].map(c => NicknameSameField(c.firstName)) ++ query[Contact]
+      .map(c => NicknameSameField(c.firstName))
   }
 
   val `Ex 4 Mapped Union All of Nicknames Same Field Filtered` = quote {
-    `Ex 4 Mapped Union All of Nicknames Same Field`.filter(_.firstName == "Alex")
+    `Ex 4 Mapped Union All of Nicknames Same Field`.filter(
+      _.firstName == "Alex"
+    )
   }
 
   val `Ex 4 Mapped Union of Nicknames expected result` =
     List(Nickname("Alex"), Nickname("Bert"), Nickname("Cora"))
 
   val `Ex 4 Mapped Union All of Nicknames expected result` =
-    List(Nickname("Alex"), Nickname("Bert"), Nickname("Cora"), Nickname("Alex"), Nickname("Bert"), Nickname("Cora"))
+    List(
+      Nickname("Alex"),
+      Nickname("Bert"),
+      Nickname("Cora"),
+      Nickname("Alex"),
+      Nickname("Bert"),
+      Nickname("Cora")
+    )
 
   val `Ex 4 Mapped Union All of Nicknames Same Field expected result` =
     List(

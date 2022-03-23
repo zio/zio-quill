@@ -292,7 +292,9 @@ class OrientDBIdiomSpec extends Spec {
       }
       "filtered" in {
         val q = quote {
-          qr1.filter(t => t.i == 1).updateValue(lift(TestEntity("a", 1, 1L, None, true)))
+          qr1
+            .filter(t => t.i == 1)
+            .updateValue(lift(TestEntity("a", 1, 1L, None, true)))
         }
         ctx.run(q).string mustEqual
           "UPDATE TestEntity SET s = ?, i = ?, l = ?, o = ?, b = ? WHERE i = 1"
@@ -336,7 +338,9 @@ class OrientDBIdiomSpec extends Spec {
     "action" - {
       "partial" in {
         val q = quote {
-          qr1.filter(t => infix"${t.i} = 1".as[Boolean]).updateValue(lift(TestEntity("a", 1, 1L, None, true)))
+          qr1
+            .filter(t => infix"${t.i} = 1".as[Boolean])
+            .updateValue(lift(TestEntity("a", 1, 1L, None, true)))
         }
         ctx.run(q).string mustEqual
           "UPDATE TestEntity SET s = ?, i = ?, l = ?, o = ?, b = ? WHERE i = 1"

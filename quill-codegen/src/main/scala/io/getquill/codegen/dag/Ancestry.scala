@@ -6,7 +6,7 @@ import io.getquill.codegen.util.MapExtensions._
 import org.slf4j.LoggerFactory
 
 import scala.language.implicitConversions
-import scala.reflect.{ ClassTag, classTag }
+import scala.reflect.{ClassTag, classTag}
 
 class DagNode(val cls: ClassTag[_], val parent: Option[DagNode])
 
@@ -31,7 +31,8 @@ object DefaultNodeCatalog extends NodeCatalog {
   object ByteNode extends DagNode(classTag[Byte], ShortNode)
   object BooleanNode extends DagNode(classTag[Boolean], ByteNode)
 
-  object TimestampNode extends DagNode(classTag[java.time.LocalDateTime], StringNode)
+  object TimestampNode
+      extends DagNode(classTag[java.time.LocalDateTime], StringNode)
   object DateNode extends DagNode(classTag[java.time.LocalDate], TimestampNode)
 
   protected[codegen] val nodeCatalogNodes: Seq[DagNode] = Seq(
@@ -48,17 +49,22 @@ object DefaultNodeCatalog extends NodeCatalog {
     DateNode
   )
 
-  override def lookup(cls: ClassTag[_]): DagNode = nodeCatalogNodes.find(_.cls == cls).getOrElse({
-    logger.warn(s"Could not find type hiearchy node for: ${cls} Must assume it's a string")
-    StringNode
-  })
+  override def lookup(cls: ClassTag[_]): DagNode = nodeCatalogNodes
+    .find(_.cls == cls)
+    .getOrElse({
+      logger.warn(
+        s"Could not find type hiearchy node for: ${cls} Must assume it's a string"
+      )
+      StringNode
+    })
 }
 
 package object dag {
   type ClassAncestry = (ClassTag[_], ClassTag[_]) => ClassTag[_]
 }
 
-class CatalogBasedAncestry(ancestryCatalog: NodeCatalog = DefaultNodeCatalog) extends ClassAncestry {
+class CatalogBasedAncestry(ancestryCatalog: NodeCatalog = DefaultNodeCatalog)
+    extends ClassAncestry {
 
   def apply(one: ClassTag[_], two: ClassTag[_]): ClassTag[_] = {
 
@@ -72,7 +78,8 @@ class CatalogBasedAncestry(ancestryCatalog: NodeCatalog = DefaultNodeCatalog) ex
       val twoAncestry = getAncestry(ancestryCatalog.lookup(two))
 
       val (node, _) =
-        oneAncestry.zipWithIndex.toMap.zipOnKeys(twoAncestry.zipWithIndex.toMap)
+        oneAncestry.zipWithIndex.toMap
+          .zipOnKeys(twoAncestry.zipWithIndex.toMap)
           .collect { case (key, (Some(i), Some(j))) => (key, i + j) }
           .toList
           .sortBy { case (node, order) => order }

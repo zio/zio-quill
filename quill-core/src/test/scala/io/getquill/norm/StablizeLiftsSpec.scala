@@ -4,7 +4,7 @@ import io.getquill.ast._
 import io.getquill.quat._
 import io.getquill.Spec
 import io.getquill.testContext._
-import scala.collection.immutable.{ Map => IMap }
+import scala.collection.immutable.{Map => IMap}
 
 class StablizeLiftsSpec extends Spec {
 
@@ -17,7 +17,12 @@ class StablizeLiftsSpec extends Spec {
       val astQuat = quatOf[Int]
       val (stablized, state) = StablizeLifts.stablize(ast)
       stablized must matchPattern {
-        case ScalarValueLift("scalarValue", StablizeLifts.Token(0), _, `astQuat`) =>
+        case ScalarValueLift(
+              "scalarValue",
+              StablizeLifts.Token(0),
+              _,
+              `astQuat`
+            ) =>
       }
       state.replaceTable mustEqual (IMap(StablizeLifts.Token(0) -> scalarValue))
       StablizeLifts.revert(stablized, state) mustEqual (ast)
@@ -28,7 +33,12 @@ class StablizeLiftsSpec extends Spec {
       val astQuat = ast.quat
       val (stablized, state) = StablizeLifts.stablize(ast)
       stablized must matchPattern {
-        case ScalarQueryLift("scalarQuery", StablizeLifts.Token(0), _, `astQuat`) =>
+        case ScalarQueryLift(
+              "scalarQuery",
+              StablizeLifts.Token(0),
+              _,
+              `astQuat`
+            ) =>
       }
       StablizeLifts.revert(stablized, state) mustEqual (ast)
     }
@@ -39,7 +49,11 @@ class StablizeLiftsSpec extends Spec {
       val astQuat = quatOf[Foo]
       val (stablized, state) = StablizeLifts.stablize(ast)
       stablized must matchPattern {
-        case CaseClassValueLift("caseClass", StablizeLifts.Token(0), `astQuat`) =>
+        case CaseClassValueLift(
+              "caseClass",
+              StablizeLifts.Token(0),
+              `astQuat`
+            ) =>
       }
       state.replaceTable mustEqual (IMap(StablizeLifts.Token(0) -> caseClass))
       StablizeLifts.revert(stablized, state) mustEqual (ast)
@@ -51,7 +65,11 @@ class StablizeLiftsSpec extends Spec {
       val astQuat = ast.quat
       val (stablized, state) = StablizeLifts.stablize(ast)
       stablized must matchPattern {
-        case CaseClassQueryLift("caseClasses", StablizeLifts.Token(0), `astQuat`) =>
+        case CaseClassQueryLift(
+              "caseClasses",
+              StablizeLifts.Token(0),
+              `astQuat`
+            ) =>
       }
       state.replaceTable mustEqual (IMap(StablizeLifts.Token(0) -> caseClasses))
       StablizeLifts.revert(stablized, state) mustEqual (ast)
@@ -66,10 +84,13 @@ class StablizeLiftsSpec extends Spec {
       val (stablized, state) = StablizeLifts.stablize(ast)
       stablized must matchPattern {
         case BinaryOperation(
-          ScalarValueLift("a", StablizeLifts.Token(0), _, `quatA`),
-          StringOperator.`+`, ScalarValueLift("b", StablizeLifts.Token(1), _, `quatB`)) =>
+              ScalarValueLift("a", StablizeLifts.Token(0), _, `quatA`),
+              StringOperator.`+`,
+              ScalarValueLift("b", StablizeLifts.Token(1), _, `quatB`)
+            ) =>
       }
-      val expectedTable = IMap(StablizeLifts.Token(0) -> a, StablizeLifts.Token(1) -> b)
+      val expectedTable =
+        IMap(StablizeLifts.Token(0) -> a, StablizeLifts.Token(1) -> b)
       state.replaceTable must contain theSameElementsAs (expectedTable)
       StablizeLifts.revert(stablized, state) mustEqual (ast)
     }

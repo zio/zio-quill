@@ -1,7 +1,6 @@
 package io.getquill.ast
 
-class Transform[T](p: PartialFunction[Ast, Ast])
-  extends StatelessTransformer {
+class Transform[T](p: PartialFunction[Ast, Ast]) extends StatelessTransformer {
 
   override def apply(a: Ast) =
     a match {

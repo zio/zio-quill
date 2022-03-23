@@ -1,6 +1,12 @@
 package io.getquill.context.sql
 
-import io.getquill.{ Literal, PostgresDialect, Spec, SqlMirrorContext, TestEntities }
+import io.getquill.{
+  Literal,
+  PostgresDialect,
+  Spec,
+  SqlMirrorContext,
+  TestEntities
+}
 
 class QuerySchemaSpec extends Spec {
 
@@ -21,7 +27,8 @@ class QuerySchemaSpec extends Spec {
     }
 
     "schemaMeta" in {
-      implicit val personSchemaMeta = schemaMeta[Person]("thePerson", _.id -> "theId", _.name -> "theName")
+      implicit val personSchemaMeta =
+        schemaMeta[Person]("thePerson", _.id -> "theId", _.name -> "theName")
       val q = quote {
         query[Person]
           .insertValue(lift(p))

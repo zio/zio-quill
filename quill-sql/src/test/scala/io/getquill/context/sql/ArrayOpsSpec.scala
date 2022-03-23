@@ -24,7 +24,9 @@ trait ArrayOpsSpec extends Spec {
   }
 
   object `contains` {
-    def idByContains(x: Int) = quote(entity.filter(_.numbers.contains(lift(x))).map(_.id))
+    def idByContains(x: Int) = quote(
+      entity.filter(_.numbers.contains(lift(x))).map(_.id)
+    )
 
     val `Ex 1 return all` = quote(idByContains(1))
     val `Ex 1 expected` = List(1, 2, 3)

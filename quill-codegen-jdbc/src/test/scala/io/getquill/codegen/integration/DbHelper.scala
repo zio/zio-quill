@@ -60,10 +60,14 @@ object DbHelper {
         List(createSchemas, rawSql).mkString("\n")
     }
 
-    if (sql.trim.isEmpty) throw new IllegalArgumentException("Cannot execute empty query")
+    if (sql.trim.isEmpty)
+      throw new IllegalArgumentException("Cannot execute empty query")
 
     val result = Manager { use =>
-      appendSequence(use(ds.getConnection), sql.split(";").toList.filter(!_.trim.isEmpty))
+      appendSequence(
+        use(ds.getConnection),
+        sql.split(";").toList.filter(!_.trim.isEmpty)
+      )
     }
 
     result.map(_ => ())
@@ -87,9 +91,15 @@ object DbHelper {
     val allTables = databaseType match {
       // For Oracle, need to connect to other schemas to get info
       case Oracle =>
-        new DefaultJdbcSchemaReader(databaseType).extractTables(() => ds.getConnection) ++
-          new DefaultJdbcSchemaReader(databaseType) { override def schemaPattern(schema: String) = "ALPHA" }.extractTables(() => ds.getConnection) ++
-          new DefaultJdbcSchemaReader(databaseType) { override def schemaPattern(schema: String) = "BRAVO" }.extractTables(() => ds.getConnection)
+        new DefaultJdbcSchemaReader(databaseType).extractTables(() =>
+          ds.getConnection
+        ) ++
+          new DefaultJdbcSchemaReader(databaseType) {
+            override def schemaPattern(schema: String) = "ALPHA"
+          }.extractTables(() => ds.getConnection) ++
+          new DefaultJdbcSchemaReader(databaseType) {
+            override def schemaPattern(schema: String) = "BRAVO"
+          }.extractTables(() => ds.getConnection)
 
       // For SQL Server need to run a manual query to get tables from alpha/bravo databases if they exist
       case SqlServer => {
@@ -104,16 +114,24 @@ object DbHelper {
             (select table_catalog as _1, table_schema as _2, table_name as _3, table_type as _4 from bravo.information_schema.tables)
             """.as[Query[(String, String, String, String)]]
           )
-        tables.map { case (cat, schem, name, tpe) => JdbcTableMeta(Option(cat), Option(schem), name, Option(tpe)) }
+        tables.map { case (cat, schem, name, tpe) =>
+          JdbcTableMeta(Option(cat), Option(schem), name, Option(tpe))
+        }
       }
 
       case _ =>
-        new DefaultJdbcSchemaReader(databaseType).extractTables(() => ds.getConnection)
+        new DefaultJdbcSchemaReader(databaseType).extractTables(() =>
+          ds.getConnection
+        )
     }
 
     val getSchema: JdbcTableMeta => Option[String] = databaseType match {
       case MySql => tm => tm.tableCat
-      case SqlServer => tm => tm.tableCat.flatMap(tc => tm.tableSchem.flatMap(ts => Some(s"${tc}.${ts}")))
+      case SqlServer =>
+        tm =>
+          tm.tableCat.flatMap(tc =>
+            tm.tableSchem.flatMap(ts => Some(s"${tc}.${ts}"))
+          )
       case _ => tm => tm.tableSchem
     }
 
@@ -122,7 +140,11 @@ object DbHelper {
         case MySql =>
           tm.tableCat.existsInSetNocase("codegen_test", "alpha", "bravo")
         case SqlServer =>
-          tm.tableCat.existsInSetNocase("codegen_test", "alpha", "bravo") && tm.tableSchem.exists(_.toLowerCase == "dbo")
+          tm.tableCat.existsInSetNocase(
+            "codegen_test",
+            "alpha",
+            "bravo"
+          ) && tm.tableSchem.exists(_.toLowerCase == "dbo")
         case Oracle =>
           tm.tableSchem.existsInSetNocase("codegen_test", "alpha", "bravo")
         case Sqlite => // SQLite does not have individual schemas at all.
@@ -135,7 +157,11 @@ object DbHelper {
       }
     }
 
-    val query = tables.map(t => s"drop table ${getSchema(t).map(_ + ".").getOrElse("") + s""""${t.tableName}""""};").mkString("\n")
+    val query = tables
+      .map(t =>
+        s"drop table ${getSchema(t).map(_ + ".").getOrElse("") + s""""${t.tableName}""""};"
+      )
+      .mkString("\n")
 
     logger.info("Cleanup:\n" + query)
 
@@ -145,7 +171,13 @@ object DbHelper {
 
 class DbHelper(config: SchemaConfig, dbPrefix: ConfigPrefix, ds: DataSource) {
   def setup(): Unit = Option(config.content).andNotEmpty.foreach(setupScript =>
-    DbHelper.syncDbRun(setupScript, ds).orThrow(
-      new IllegalArgumentException(s"Database Setup Failed for ${dbPrefix}. Could not execute DB config ${config} command:\n${config.content}", _)
-    ))
+    DbHelper
+      .syncDbRun(setupScript, ds)
+      .orThrow(
+        new IllegalArgumentException(
+          s"Database Setup Failed for ${dbPrefix}. Could not execute DB config ${config} command:\n${config.content}",
+          _
+        )
+      )
+  )
 }

@@ -2,8 +2,8 @@ package io.getquill.quat
 
 import java.lang.reflect.Method
 import io.getquill.Quoted
-import io.getquill.util.{ Messages, OptionalTypecheck }
-import io.getquill.{ Embedded, Udt }
+import io.getquill.util.{Messages, OptionalTypecheck}
+import io.getquill.{Embedded, Udt}
 
 import scala.annotation.tailrec
 import scala.reflect.ClassTag
@@ -21,7 +21,7 @@ trait QuatMaking extends QuatMakingBase {
   // NOTE: u needs to be lazy otherwise sets value from c before c can be initialized by higher level classes
   lazy val u: Uni = c.universe
 
-  import u.{ Block => _, Constant => _, Function => _, Ident => _, If => _, _ }
+  import u.{Block => _, Constant => _, Function => _, Ident => _, If => _, _}
   import collection.mutable.HashMap;
 
   def onlyDecoder: Boolean = true
@@ -33,12 +33,20 @@ trait QuatMaking extends QuatMakingBase {
         value
       case None =>
         val lookup =
-          (OptionalTypecheck(c)(q"implicitly[${c.prefix}.Encoder[$tpe]]"), OptionalTypecheck(c)(q"implicitly[${c.prefix}.Decoder[$tpe]]"), OptionalTypecheck(c)(q"implicitly[io.getquill.quat.QuatMaking.IgnoreDecoders]")) match {
-            case (Some(_), Some(_), _)    => true
-            case (Some(_), None, _)       => true
-            case (None, Some(_), None)    => true // if there is a only a decoder available if the switch to IgnoreDecoders is enabled...
-            case (None, Some(_), Some(_)) => false // don't use it (e.g. for spark where there is a decoder for everything)
-            case (None, None, _)          => false
+          (
+            OptionalTypecheck(c)(q"implicitly[${c.prefix}.Encoder[$tpe]]"),
+            OptionalTypecheck(c)(q"implicitly[${c.prefix}.Decoder[$tpe]]"),
+            OptionalTypecheck(c)(
+              q"implicitly[io.getquill.quat.QuatMaking.IgnoreDecoders]"
+            )
+          ) match {
+            case (Some(_), Some(_), _) => true
+            case (Some(_), None, _)    => true
+            case (None, Some(_), None) =>
+              true // if there is a only a decoder available if the switch to IgnoreDecoders is enabled...
+            case (None, Some(_), Some(_)) =>
+              false // don't use it (e.g. for spark where there is a decoder for everything)
+            case (None, None, _) => false
           }
         cachedEncoderLookups.put(tpe, lookup)
         lookup
@@ -58,11 +66,11 @@ trait QuatMaking extends QuatMakingBase {
   }
 }
 
-/**
- * Only runtime, only for Direct entity Types. Do not support things with generic parameters like Query[T] etc...
- * This is needed because the quill-core/quill-sql JS use Scala JS which does not support TypeTags via the Dynamic Query API,
- * (the Macro API is fine to use them).
- */
+/** Only runtime, only for Direct entity Types. Do not support things with
+  * generic parameters like Query[T] etc... This is needed because the
+  * quill-core/quill-sql JS use Scala JS which does not support TypeTags via the
+  * Dynamic Query API, (the Macro API is fine to use them).
+  */
 object RuntimeEntityQuat {
   def apply[T](implicit ct: ClassTag[T]): Quat =
     forClassTopLevel(ct.runtimeClass)
@@ -88,11 +96,18 @@ object RuntimeEntityQuat {
 
   object CaseClass {
     // Common methods to exclude from object fields
-    val exclude = classOf[Product].getMethods.map(_.getName).toSet ++ classOf[Object].getMethods.map(_.getName).toSet
+    val exclude = classOf[Product].getMethods
+      .map(_.getName)
+      .toSet ++ classOf[Object].getMethods.map(_.getName).toSet
 
     def unapply(cls: Class[_]): Option[List[Method]] =
       if (cls.getInterfaces.contains(classOf[Product])) {
-        val methods = cls.getMethods.filter(r => r.getName() != "copy" && !r.getName.startsWith("copy$default") && !exclude.contains(r.getName)).toList
+        val methods = cls.getMethods
+          .filter(r =>
+            r.getName() != "copy" && !r.getName
+              .startsWith("copy$default") && !exclude.contains(r.getName)
+          )
+          .toList
         Some(methods)
       } else {
         None
@@ -120,7 +135,9 @@ object RuntimeEntityQuat {
       case Embedded(methods) =>
         Quat.Product(methods.map(m => (m.getName, forClass(m.getReturnType))))
       case Tuple() =>
-        throw new IllegalArgumentException("Tuple are not supported with Dynamic Query Schemas.")
+        throw new IllegalArgumentException(
+          "Tuple are not supported with Dynamic Query Schemas."
+        )
       case CaseClass(methods) =>
         Quat.Product(methods.map(m => (m.getName, forClass(m.getReturnType))))
       case _ =>
@@ -135,14 +152,15 @@ abstract class TypeTaggedQuatMaking extends QuatMakingBase {
   // need to cast this to u.type otherwise 'existsEncoderFor' consumers will not be able to use scala.reflect.runtime.universe
   override val u: scala.reflect.runtime.universe.type = universe
 
-  def existsEncoderFor(tpe: universe.Type): Boolean = quatValueTypes.contains(tpe)
+  def existsEncoderFor(tpe: universe.Type): Boolean =
+    quatValueTypes.contains(tpe)
   def quatValueTypes: List[universe.Type]
 }
 
 trait QuatMakingBase {
   type Uni <: Universe
   val u: Uni
-  import u.{ Block => _, Constant => _, Function => _, Ident => _, If => _, _ }
+  import u.{Block => _, Constant => _, Function => _, Ident => _, If => _, _}
 
   def existsEncoderFor(tpe: Type): Boolean
 
@@ -150,15 +168,20 @@ trait QuatMakingBase {
 
     def nonGenericMethods(tpe: Type) = {
       tpe.members.sorted
-        .filter(m => m.isPublic
-          && m.owner.name.toString != "Any"
-          && m.owner.name.toString != "Object").map { param =>
+        .filter(m =>
+          m.isPublic
+            && m.owner.name.toString != "Any"
+            && m.owner.name.toString != "Object"
+        )
+        .map { param =>
           (
             param.name.toString,
             // Look up the parameter only if needed. This is typically an expensive operation
-            if (!param.isParameter) param.typeSignature else param.typeSignature.asSeenFrom(tpe, tpe.typeSymbol)
+            if (!param.isParameter) param.typeSignature
+            else param.typeSignature.asSeenFrom(tpe, tpe.typeSymbol)
           )
-        }.toList
+        }
+        .toList
     }
 
     def caseClassConstructorArgs(tpe: Type) = {
@@ -171,7 +194,8 @@ trait QuatMakingBase {
       constructor.paramLists(0).map { param =>
         (
           param.name.toString,
-          if (!param.isParameter) param.typeSignature else param.typeSignature.asSeenFrom(tpe, tpe.typeSymbol)
+          if (!param.isParameter) param.typeSignature
+          else param.typeSignature.asSeenFrom(tpe, tpe.typeSymbol)
         )
       }
     }
@@ -179,15 +203,24 @@ trait QuatMakingBase {
     object ArbitraryBaseType {
       def unapply(tpe: Type): Option[(String, List[(String, Type)])] =
         if (tpe.widen.typeSymbol.isClass)
-          Some((tpe.widen.typeSymbol.name.toString, nonGenericMethods(tpe.widen)))
+          Some(
+            (tpe.widen.typeSymbol.name.toString, nonGenericMethods(tpe.widen))
+          )
         else
           None
     }
 
     object CaseClassBaseType {
       def unapply(tpe: Type): Option[(String, List[(String, Type)])] =
-        if (tpe.widen.typeSymbol.isClass && tpe.widen.typeSymbol.asClass.isCaseClass)
-          Some((tpe.widen.typeSymbol.name.toString, caseClassConstructorArgs(tpe.widen)))
+        if (
+          tpe.widen.typeSymbol.isClass && tpe.widen.typeSymbol.asClass.isCaseClass
+        )
+          Some(
+            (
+              tpe.widen.typeSymbol.name.toString,
+              caseClassConstructorArgs(tpe.widen)
+            )
+          )
         else
           None
     }
@@ -224,7 +257,8 @@ trait QuatMakingBase {
     object RealTypeBounds {
       def unapply(tpe: Type) =
         tpe match {
-          case TypeBounds(lower, upper) if (upper != null && !(upper =:= typeOf[Any])) =>
+          case TypeBounds(lower, upper)
+              if (upper != null && !(upper =:= typeOf[Any])) =>
             Some((lower, upper))
           case _ =>
             None
@@ -278,13 +312,15 @@ trait QuatMakingBase {
         // def is80Prof[T <: Spirit] = quote { (spirit: Query[Spirit]) => spirit.filter(_.grade == 80) }
         // run(is80Proof(query[Gin]))
         // When processing is80Prof, we assume that Spirit is actually a base class to be extended
-        case Param(Signature(RealTypeBounds(lower, Deoption(upper)))) if (!upper.typeSymbol.isFinal && !existsEncoderFor(tpe)) =>
+        case Param(Signature(RealTypeBounds(lower, Deoption(upper))))
+            if (!upper.typeSymbol.isFinal && !existsEncoderFor(tpe)) =>
           parseType(upper, true) match {
             case p: Quat.Product => p.copy(tpe = Quat.Product.Type.Abstract)
             case other           => other
           }
 
-        case Param(RealTypeBounds(lower, Deoption(upper))) if (!upper.typeSymbol.isFinal && !existsEncoderFor(tpe)) =>
+        case Param(RealTypeBounds(lower, Deoption(upper)))
+            if (!upper.typeSymbol.isFinal && !existsEncoderFor(tpe)) =>
           parseType(upper, true) match {
             case p: Quat.Product => p.copy(tpe = Quat.Product.Type.Abstract)
             case other           => other
@@ -324,12 +360,17 @@ trait QuatMakingBase {
 
         // For other types of case classes (and if there does not exist an encoder for it)
         // the exception to that is a cassandra UDT that we treat like an encodeable entity even if it has a parsed type
-        case CaseClassBaseType(name, fields) if !existsEncoderFor(tpe) || tpe <:< typeOf[Udt] =>
-          Quat.Product(fields.map { case (fieldName, fieldType) => (fieldName, parseType(fieldType)) })
+        case CaseClassBaseType(name, fields)
+            if !existsEncoderFor(tpe) || tpe <:< typeOf[Udt] =>
+          Quat.Product(fields.map { case (fieldName, fieldType) =>
+            (fieldName, parseType(fieldType))
+          })
 
         // If we are already inside a bounded type, treat an arbitrary type as a interface list
         case ArbitraryBaseType(name, fields) if (boundedInterfaceType) =>
-          Quat.Product(fields.map { case (fieldName, fieldType) => (fieldName, parseType(fieldType)) })
+          Quat.Product(fields.map { case (fieldName, fieldType) =>
+            (fieldName, parseType(fieldType))
+          })
 
         // Is it a generic or does it have any generic parameters that have not been filled (e.g. is T not filled in Option[T] ?)
         case Param(tpe) =>
@@ -337,7 +378,9 @@ trait QuatMakingBase {
 
         // Otherwise it's a terminal value
         case _ =>
-          Messages.trace(s"Could not infer SQL-type of ${tpe}, assuming it is a Unknown Quat.")
+          Messages.trace(
+            s"Could not infer SQL-type of ${tpe}, assuming it is a Unknown Quat."
+          )
           Quat.Unknown
       }
 
@@ -366,7 +409,9 @@ trait QuatMakingBase {
     //println(s"### Attempting to check paramOf ${tpe} assuming it is a ${of}")
     tpe match {
       case _ if (maxDepth == 0) =>
-        throw new IllegalArgumentException(s"Max Depth reached with type: ${tpe}")
+        throw new IllegalArgumentException(
+          s"Max Depth reached with type: ${tpe}"
+        )
       case _ if (!(tpe <:< of)) =>
         //println(s"### ${tpe} is not a ${of}")
         None
@@ -387,13 +432,21 @@ trait QuatMakingBase {
   }
 
   @tailrec
-  private[getquill] final def innerOptionParam(tpe: Type, maxDepth: Option[Int]): Type = tpe match {
-    case TypeRef(_, cls, List(arg)) if (cls.isClass && cls.asClass.fullName == "scala.Option") && maxDepth.forall(_ > 0) =>
+  private[getquill] final def innerOptionParam(
+      tpe: Type,
+      maxDepth: Option[Int]
+  ): Type = tpe match {
+    case TypeRef(_, cls, List(arg))
+        if (cls.isClass && cls.asClass.fullName == "scala.Option") && maxDepth
+          .forall(_ > 0) =>
       innerOptionParam(arg, maxDepth.map(_ - 1))
     // If it's not a ref-type but an Option, convert to a ref-type and reprocess
     // also since Nothing is a subtype of everything need to know to stop searching once Nothing
     // has been reached (since we have not gone inside anything, do not decrement the depth here).
-    case _ if (isOptionType(tpe) && !(tpe =:= typeOf[Nothing])) && maxDepth.forall(_ > 0) =>
+    case _
+        if (isOptionType(tpe) && !(tpe =:= typeOf[Nothing])) && maxDepth.forall(
+          _ > 0
+        ) =>
       innerOptionParam(tpe.baseType(typeOf[Option[Any]].typeSymbol), maxDepth)
     // Otherwise we have gotten to the actual type inside the nesting. Check what it is.
     case other => other
@@ -407,7 +460,9 @@ trait QuatMakingBase {
   // Note. Used in other places beside here where None needs to be included in option type.
   def isOptionType(tpe: Type) = {
     val era = tpe.erasure
-    era =:= typeOf[Option[Any]] || era =:= typeOf[Some[Any]] || era =:= typeOf[None.type]
+    era =:= typeOf[Option[Any]] || era =:= typeOf[Some[Any]] || era =:= typeOf[
+      None.type
+    ]
   }
 
   private[getquill] def isType[T](tpe: Type)(implicit tt: TypeTag[T]) =

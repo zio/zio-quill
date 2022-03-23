@@ -5,19 +5,15 @@ import io.getquill.quat.Quat
 import io.getquill.util.Interpolator
 import io.getquill.util.Messages.TraceType
 
-/**
- * Notes for the conceptual examples below. Gin and Tonic were used as prototypical
- * examples of things that "are joined". In the table form, they are alude to the following
- * tonics is Query[Tonic], tonic is Tonic
- * gins is Query[Gin], is Gin
- * waters is Query[Water], water is Water
- *
- * ginifySpirit is some f:Spirit => Gin
- * tonicfyWater is some f:Tonic => Water
- * bottleGin is some f:Gin => Bottle
- * Additionally Map(a,b,c).quat is the same as c.quat. The former
- * is used in most examples with DetachableMap
- */
+/** Notes for the conceptual examples below. Gin and Tonic were used as
+  * prototypical examples of things that "are joined". In the table form, they
+  * are alude to the following tonics is Query[Tonic], tonic is Tonic gins is
+  * Query[Gin], is Gin waters is Query[Water], water is Water
+  *
+  * ginifySpirit is some f:Spirit => Gin tonicfyWater is some f:Tonic => Water
+  * bottleGin is some f:Gin => Bottle Additionally Map(a,b,c).quat is the same
+  * as c.quat. The former is used in most examples with DetachableMap
+  */
 object ApplyMap {
 
   val interp = new Interpolator(TraceType.ApplyMap, 3)
@@ -31,8 +27,8 @@ object ApplyMap {
   object InfixedTailOperation {
 
     def hasImpureInfix(ast: Ast) =
-      CollectAst(ast) {
-        case i @ Infix(_, _, false, _, _) => i
+      CollectAst(ast) { case i @ Infix(_, _, false, _, _) =>
+        i
       }.nonEmpty
 
     def unapply(ast: Ast): Option[Ast] =
@@ -59,8 +55,9 @@ object ApplyMap {
   object DetachableMap {
     def unapply(ast: Ast): Option[(Ast, Ident, Ast)] =
       ast match {
-        case Map(a: GroupBy, b, c)              => None
-        case Map(a: FlatJoin, b, c)             => None // FlatJoin should always be surrounded by a Map
+        case Map(a: GroupBy, b, c) => None
+        case Map(a: FlatJoin, b, c) =>
+          None // FlatJoin should always be surrounded by a Map
         case Map(a, b, InfixedTailOperation(c)) => None
         case Map(a, b, c)                       => Some((a, b, c))
         case _                                  => None
@@ -70,15 +67,18 @@ object ApplyMap {
   def unapply(q: Query): Option[Query] =
     q match {
 
-      case Map(a: GroupBy, b, c) if (b == c)    => None
-      case Map(a: Nested, b, c) if (b == c)     => None
-      case Map(a: FlatJoin, b, c) if (b == c)   => None // FlatJoin should always be surrounded by a Map
+      case Map(a: GroupBy, b, c) if (b == c) => None
+      case Map(a: Nested, b, c) if (b == c)  => None
+      case Map(a: FlatJoin, b, c) if (b == c) =>
+        None // FlatJoin should always be surrounded by a Map
       case Nested(DetachableMap(a: Join, b, c)) => None
 
       //  map(i => (i.i, i.l)).distinct.map(x => (x._1, x._2)) =>
       //    map(i => (i.i, i.l)).distinct
       case Map(Distinct(DetachableMap(a, b, c)), d, e) if isomorphic(e, c, d) =>
-        trace"ApplyMap on Distinct for $q" andReturn Some(Distinct(Map(a, b, c)))
+        trace"ApplyMap on Distinct for $q" andReturn Some(
+          Distinct(Map(a, b, c))
+        )
 
       // a.map(b => c).map(d => e) =>
       //    a.map(b => e[d := c])
@@ -101,19 +101,25 @@ object ApplyMap {
       //    a.filter(b => e[d := c]).map(b => c)
       case Filter(DetachableMap(a, b, c), d, e) =>
         val er = BetaReduction(e, d -> c)
-        trace"ApplyMap inside filter for $q" andReturn Some(Map(Filter(a, b, er), b, c))
+        trace"ApplyMap inside filter for $q" andReturn Some(
+          Map(Filter(a, b, er), b, c)
+        )
 
       // a.map(b => c).sortBy(d => e) =>
       //    a.sortBy(b => e[d := c]).map(b => c)
       case SortBy(DetachableMap(a, b, c), d, e, f) =>
         val er = BetaReduction(e, d -> c)
-        trace"ApplyMap inside sortBy for $q" andReturn Some(Map(SortBy(a, b, er, f), b, c))
+        trace"ApplyMap inside sortBy for $q" andReturn Some(
+          Map(SortBy(a, b, er, f), b, c)
+        )
 
       // a.map(b => c).sortBy(d => e).distinct =>
       //    a.sortBy(b => e[d := c]).map(b => c).distinct
       case SortBy(Distinct(DetachableMap(a, b, c)), d, e, f) =>
         val er = BetaReduction(e, d -> c)
-        trace"ApplyMap inside sortBy+distinct for $q" andReturn Some(Distinct(Map(SortBy(a, b, er, f), b, c)))
+        trace"ApplyMap inside sortBy+distinct for $q" andReturn Some(
+          Distinct(Map(SortBy(a, b, er, f), b, c))
+        )
 
       // === Conceptual Example ===
       // Instead of transforming spirit into gin and the bottling the join, bottle the
@@ -151,7 +157,9 @@ object ApplyMap {
       // a.map(b => c).nested =>
       //    a.nested.map(b => c)
       case Nested(DetachableMap(a, b, c)) =>
-        trace"ApplyMap inside nested for $q" andReturn Some(Map(Nested(a), b, c))
+        trace"ApplyMap inside nested for $q" andReturn Some(
+          Map(Nested(a), b, c)
+        )
 
       // === Conceptual Example ===
       // Instead of combining gin and tonic, pour spirit and water into a cup and transform both
@@ -162,7 +170,14 @@ object ApplyMap {
 
       // a.map(b => c).*join(d.map(e => f)).on((iA, iB) => on)
       //    a.*join(d).on((b, e) => on[iA := c, iB := f]).map(t => (c[b := t._1], f[e := t._2]))
-      case Join(tpe, DetachableMap(a, b, c), DetachableMap(d, e, f), iA, iB, on) =>
+      case Join(
+            tpe,
+            DetachableMap(a, b, c),
+            DetachableMap(d, e, f),
+            iA,
+            iB,
+            on
+          ) =>
         val onr = BetaReduction(on, iA -> c, iB -> f)
         val t = Ident("t", Quat.Tuple(b.quat, e.quat))
         val t1 = BetaReduction(c, b -> Property(t, "_1"))

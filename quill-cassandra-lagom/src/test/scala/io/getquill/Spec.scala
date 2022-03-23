@@ -1,6 +1,6 @@
 package io.getquill
 
-import io.getquill.ast.{ Ident, StatelessTransformer }
+import io.getquill.ast.{Ident, StatelessTransformer}
 import io.getquill.norm.capture.TemporaryIdent
 import io.getquill.quat.Quat
 import org.scalatest.BeforeAndAfterAll
@@ -8,7 +8,7 @@ import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.must.Matchers
 
 import scala.concurrent.duration.Duration
-import scala.concurrent.{ Await, Future }
+import scala.concurrent.{Await, Future}
 
 abstract class Spec extends AnyFreeSpec with Matchers with BeforeAndAfterAll {
   val QV = Quat.Value
@@ -30,7 +30,10 @@ abstract class Spec extends AnyFreeSpec with Matchers with BeforeAndAfterAll {
     def productOrFail() =
       quat match {
         case p: Quat.Product => p
-        case _               => throw new IllegalArgumentException(s"The quat ${quat} is expected to be a product but is not")
+        case _ =>
+          throw new IllegalArgumentException(
+            s"The quat ${quat} is expected to be a product but is not"
+          )
       }
   }
 

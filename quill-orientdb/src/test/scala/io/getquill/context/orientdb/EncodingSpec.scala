@@ -13,7 +13,11 @@ class EncodingSpec extends Spec {
       val ctx = orientdb.testSyncDB
       import ctx._
       ctx.run(query[EncodingTestEntity].delete)
-      ctx.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insertValue(e)))
+      ctx.run(
+        liftQuery(insertValues).foreach(e =>
+          query[EncodingTestEntity].insertValue(e)
+        )
+      )
       verify(ctx.run(query[EncodingTestEntity]))
       ctx.close()
     }
@@ -27,8 +31,10 @@ class EncodingSpec extends Spec {
     case class B()
     val a1: Encoder[A] = encoder((b, c, d) => d)
     val a2: Decoder[A] = decoder(b => c => A())
-    mappedDecoder(MappedEncoding[A, B](_ => B()), a2).isInstanceOf[OrientDBDecoder[B]] mustBe true
-    mappedEncoder(MappedEncoding[B, A](_ => A()), a1).isInstanceOf[OrientDBEncoder[B]] mustBe true
+    mappedDecoder(MappedEncoding[A, B](_ => B()), a2)
+      .isInstanceOf[OrientDBDecoder[B]] mustBe true
+    mappedEncoder(MappedEncoding[B, A](_ => A()), a1)
+      .isInstanceOf[OrientDBEncoder[B]] mustBe true
   }
 
   "encodes collections" - {
@@ -36,12 +42,15 @@ class EncodingSpec extends Spec {
     "sync" in {
       val ctx = orientdb.testSyncDB
       import ctx._
-      val q = quote {
-        (list: Query[Int]) =>
-          query[EncodingTestEntity].filter(t => list.contains(t.id))
+      val q = quote { (list: Query[Int]) =>
+        query[EncodingTestEntity].filter(t => list.contains(t.id))
       }
       ctx.run(query[EncodingTestEntity].delete)
-      ctx.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insertValue(e)))
+      ctx.run(
+        liftQuery(insertValues).foreach(e =>
+          query[EncodingTestEntity].insertValue(e)
+        )
+      )
       verify(ctx.run(q(liftQuery(insertValues.map(_.id)))))
       ctx.close()
     }
@@ -82,28 +91,28 @@ class EncodingSpec extends Spec {
   }
 
   case class EncodingTestEntity(
-    id:  Int,
-    v1:  String,
-    v2:  BigDecimal,
-    v3:  Boolean,
-    v4:  Int,
-    v5:  Long,
-    v6:  Float,
-    v7:  Double,
-    v8:  Array[Byte],
-    v11: Date,
-    v12: Short,
-    v13: Byte,
-    o1:  Option[String],
-    o2:  Option[BigDecimal],
-    o3:  Option[Boolean],
-    o4:  Option[Int],
-    o5:  Option[Long],
-    o6:  Option[Float],
-    o7:  Option[Double],
-    o8:  Option[Array[Byte]],
-    o9:  Option[Date],
-    o10: Option[Byte]
+      id: Int,
+      v1: String,
+      v2: BigDecimal,
+      v3: Boolean,
+      v4: Int,
+      v5: Long,
+      v6: Float,
+      v7: Double,
+      v8: Array[Byte],
+      v11: Date,
+      v12: Short,
+      v13: Byte,
+      o1: Option[String],
+      o2: Option[BigDecimal],
+      o3: Option[Boolean],
+      o4: Option[Int],
+      o5: Option[Long],
+      o6: Option[Float],
+      o7: Option[Double],
+      o8: Option[Array[Byte]],
+      o9: Option[Date],
+      o10: Option[Byte]
   )
 
   val insertValues =
@@ -139,8 +148,8 @@ class EncodingSpec extends Spec {
         v3 = false,
         v4 = 0,
         v5 = 0L,
-        v6 = 0.0F,
-        v7 = 0.0D,
+        v6 = 0.0f,
+        v7 = 0.0d,
         v8 = Array(),
         v11 = new Date(0),
         v12 = 2,

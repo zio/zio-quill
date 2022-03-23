@@ -1,13 +1,15 @@
 package io.getquill.norm
 
 import io.getquill.Spec
-import io.getquill.ast.{ AscNullsFirst, Constant, Ident, Map, SortBy }
+import io.getquill.ast.{AscNullsFirst, Constant, Ident, Map, SortBy}
 import io.getquill.testContext._
 import io.getquill.Query
 
 class AttachToEntitySpec extends Spec {
 
-  val attachToEntity = (AttachToEntity(SortBy(_, _, Constant.auto(1), AscNullsFirst)) _).andThen(replaceTempIdent.apply _)
+  val attachToEntity = (AttachToEntity(
+    SortBy(_, _, Constant.auto(1), AscNullsFirst)
+  ) _).andThen(replaceTempIdent.apply _)
 
   "attaches clause to the root of the query (entity)" - {
     "query is the entity" in {
@@ -40,7 +42,10 @@ class AttachToEntitySpec extends Spec {
           qr1.filter(t => t.i == 1).concatMap(t => t.s.split(" "))
         }
         val n = quote {
-          qr1.sortBy(t => 1).filter(t => t.i == 1).concatMap(t => t.s.split(" "))
+          qr1
+            .sortBy(t => 1)
+            .filter(t => t.i == 1)
+            .concatMap(t => t.s.split(" "))
         }
         attachToEntity(q.ast) mustEqual n.ast
       }
@@ -127,7 +132,10 @@ class AttachToEntitySpec extends Spec {
           iqr1.filter(t => t.i == 1).concatMap(t => t.s.split(" "))
         }
         val n = quote {
-          iqr1.sortBy(t => 1).filter(t => t.i == 1).concatMap(t => t.s.split(" "))
+          iqr1
+            .sortBy(t => 1)
+            .filter(t => t.i == 1)
+            .concatMap(t => t.s.split(" "))
         }
         attachToEntity(q.ast) mustEqual n.ast
       }

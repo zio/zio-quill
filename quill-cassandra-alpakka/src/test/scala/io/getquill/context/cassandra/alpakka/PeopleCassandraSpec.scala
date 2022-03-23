@@ -27,8 +27,8 @@ class PeopleCassandraSpec extends CassandraAlpakkaSpec {
     ()
   }
 
-  val qByIds = quote {
-    (ids: Query[Int]) => query[Person].filter(p => ids.contains(p.id))
+  val qByIds = quote { (ids: Query[Int]) =>
+    query[Person].filter(p => ids.contains(p.id))
   }
 
   val q = quote {
@@ -38,13 +38,18 @@ class PeopleCassandraSpec extends CassandraAlpakkaSpec {
   "Contains id" - {
     "query empty" in {
       await {
-        testDB.run(qByIds(liftQuery(Set.empty[Int]))).map(res => res mustEqual List.empty[Person])
+        testDB
+          .run(qByIds(liftQuery(Set.empty[Int])))
+          .map(res => res mustEqual List.empty[Person])
       }
     }
 
     "stream empty" in {
       await {
-        testDB.stream(qByIds(liftQuery(Set.empty[Int]))).runWith(Sink.seq).map(res => res mustEqual Seq.empty[Person])
+        testDB
+          .stream(qByIds(liftQuery(Set.empty[Int])))
+          .runWith(Sink.seq)
+          .map(res => res mustEqual Seq.empty[Person])
       }
     }
 
@@ -53,16 +58,25 @@ class PeopleCassandraSpec extends CassandraAlpakkaSpec {
 
     "query" in {
       await {
-        testDB.run(qByIds(liftQuery(evenIds))).map(res => res.toSet mustEqual evenEntries)
+        testDB
+          .run(qByIds(liftQuery(evenIds)))
+          .map(res => res.toSet mustEqual evenEntries)
       }
     }
 
     "stream" in {
       await {
-        testDB.stream(qByIds(liftQuery(evenIds))).runWith(Sink.seq).map(res => res.toSet mustEqual evenEntries)
+        testDB
+          .stream(qByIds(liftQuery(evenIds)))
+          .runWith(Sink.seq)
+          .map(res => res.toSet mustEqual evenEntries)
       }
       await {
-        testDB.stream(q).filter(e => evenIds.contains(e.id)).runWith(Sink.seq).map(res => res.toSet mustEqual evenEntries)
+        testDB
+          .stream(q)
+          .filter(e => evenIds.contains(e.id))
+          .runWith(Sink.seq)
+          .map(res => res.toSet mustEqual evenEntries)
       }
     }
   }
@@ -76,7 +90,10 @@ class PeopleCassandraSpec extends CassandraAlpakkaSpec {
 
     "stream" in {
       await {
-        testDB.stream(q).runWith(Sink.seq).map(res => res.toSet mustEqual entries.toSet)
+        testDB
+          .stream(q)
+          .runWith(Sink.seq)
+          .map(res => res.toSet mustEqual entries.toSet)
       }
     }
   }

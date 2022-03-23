@@ -9,8 +9,7 @@ import java.util.concurrent.Callable
 class PrepareStatementCache[V <: AnyRef](size: Long) {
 
   private val cache =
-    CacheBuilder
-      .newBuilder
+    CacheBuilder.newBuilder
       .maximumSize(size)
       .build[java.lang.Long, V]()
 

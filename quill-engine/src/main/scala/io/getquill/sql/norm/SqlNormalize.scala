@@ -4,15 +4,22 @@ import io.getquill.norm._
 import io.getquill.ast.Ast
 import io.getquill.norm.ConcatBehavior.AnsiConcat
 import io.getquill.norm.EqualityBehavior.AnsiEquality
-import io.getquill.norm.capture.{ AvoidAliasConflict, DemarcateExternalAliases }
-import io.getquill.util.Messages.{ TraceType, title }
+import io.getquill.norm.capture.{AvoidAliasConflict, DemarcateExternalAliases}
+import io.getquill.util.Messages.{TraceType, title}
 
 object SqlNormalize {
-  def apply(ast: Ast, concatBehavior: ConcatBehavior = AnsiConcat, equalityBehavior: EqualityBehavior = AnsiEquality) =
+  def apply(
+      ast: Ast,
+      concatBehavior: ConcatBehavior = AnsiConcat,
+      equalityBehavior: EqualityBehavior = AnsiEquality
+  ) =
     new SqlNormalize(concatBehavior, equalityBehavior)(ast)
 }
 
-class SqlNormalize(concatBehavior: ConcatBehavior, equalityBehavior: EqualityBehavior) {
+class SqlNormalize(
+    concatBehavior: ConcatBehavior,
+    equalityBehavior: EqualityBehavior
+) {
 
   private def demarcate(heading: String) =
     ((ast: Ast) => title(heading, TraceType.SqlNormalizations)(ast))
@@ -36,7 +43,9 @@ class SqlNormalize(concatBehavior: ConcatBehavior, equalityBehavior: EqualityBeh
       .andThen(ExpandDistinct.apply _)
       .andThen(demarcate("ExpandDistinct"))
       .andThen(Normalize.apply _)
-      .andThen(demarcate("Normalize")) // Needed only because ExpandDistinct introduces an alias.
+      .andThen(
+        demarcate("Normalize")
+      ) // Needed only because ExpandDistinct introduces an alias.
       .andThen(NestImpureMappedInfix.apply _)
       .andThen(demarcate("NestImpureMappedInfix"))
       .andThen(Normalize.apply _)

@@ -20,7 +20,9 @@ class ProductJdbcSpec extends ProductSpec with ZioSpec {
     "Insert multiple products" in {
       val (inserted, product) =
         (for {
-          i <- testContext.run(liftQuery(productEntries).foreach(e => productInsert(e)))
+          i <- testContext.run(
+            liftQuery(productEntries).foreach(e => productInsert(e))
+          )
           ps <- testContext.run(productById(lift(i(2))))
         } yield (i, ps.head)).runSyncUnsafe()
 
@@ -43,7 +45,12 @@ class ProductJdbcSpec extends ProductSpec with ZioSpec {
       val (inserted, returnedProduct) =
         (for {
           i <- testContext.run {
-            product.insert(_.sku -> lift(prd.sku), _.description -> lift(prd.description)).returningGenerated(_.id)
+            product
+              .insert(
+                _.sku -> lift(prd.sku),
+                _.description -> lift(prd.description)
+              )
+              .returningGenerated(_.id)
           }
           rps <- testContext.run(productById(lift(i)))
         } yield (i, rps.head)).runSyncUnsafe()
@@ -56,7 +63,12 @@ class ProductJdbcSpec extends ProductSpec with ZioSpec {
     "Single insert with free variable and explicit quotation" in {
       val prd = Product(0L, "test2", 2L)
       val q1 = quote {
-        product.insert(_.sku -> lift(prd.sku), _.description -> lift(prd.description)).returningGenerated(_.id)
+        product
+          .insert(
+            _.sku -> lift(prd.sku),
+            _.description -> lift(prd.description)
+          )
+          .returningGenerated(_.id)
       }
       val (inserted, returnedProduct) =
         (for {

@@ -1,8 +1,8 @@
 package io.getquill.context.cassandra.udt
 
 import com.datastax.oss.driver.api.core.CqlIdentifier
-import com.typesafe.config.{ ConfigValue, ConfigValueFactory }
-import io.getquill.{ CassandraContextConfig, CassandraSyncContext, SnakeCase }
+import com.typesafe.config.{ConfigValue, ConfigValueFactory}
+import io.getquill.{CassandraContextConfig, CassandraSyncContext, SnakeCase}
 import io.getquill.context.cassandra.testSyncDB
 import io.getquill.util.LoadConfig
 import io.getquill.Udt
@@ -10,8 +10,14 @@ import io.getquill.Udt
 class UdtEncodingSessionContextSpec extends UdtSpec {
 
   val ctx1 = testSyncDB
-  val config0 = CassandraContextConfig(LoadConfig("testSyncDB").withValue("keyspace", ConfigValueFactory.fromAnyRef("system")))
-  val config2 = CassandraContextConfig(LoadConfig("testSyncDB").withValue("keyspace", ConfigValueFactory.fromAnyRef("quill_test_2")))
+  val config0 = CassandraContextConfig(
+    LoadConfig("testSyncDB")
+      .withValue("keyspace", ConfigValueFactory.fromAnyRef("system"))
+  )
+  val config2 = CassandraContextConfig(
+    LoadConfig("testSyncDB")
+      .withValue("keyspace", ConfigValueFactory.fromAnyRef("quill_test_2"))
+  )
   val ctx2 = new CassandraSyncContext(SnakeCase, config2)
 
   "Provide encoding for UDT" - {
@@ -39,7 +45,8 @@ class UdtEncodingSessionContextSpec extends UdtSpec {
       case class MyName(firstName: FirstName) extends Udt
 
       implicit val encodeFirstName = MappedEncoding[FirstName, String](_.name)
-      implicit val decodeFirstName = MappedEncoding[String, FirstName](FirstName)
+      implicit val decodeFirstName =
+        MappedEncoding[String, FirstName](FirstName)
 
       implicitly[Encoder[MyName]]
       implicitly[Decoder[MyName]]
@@ -51,17 +58,29 @@ class UdtEncodingSessionContextSpec extends UdtSpec {
   "Complete examples" - {
     import ctx1._
     "without meta" in {
-      case class WithEverything(id: Int, personal: Personal, nameList: List[Name])
+      case class WithEverything(
+          id: Int,
+          personal: Personal,
+          nameList: List[Name]
+      )
 
-      val e = WithEverything(1, Personal(1, "strt",
-        Name("first", Some("last")),
-        Some(Name("f", None)),
-        List("e"),
-        Set(1, 2),
-        Map(1 -> "1", 2 -> "2")),
-        List(Name("first", None)))
+      val e = WithEverything(
+        1,
+        Personal(
+          1,
+          "strt",
+          Name("first", Some("last")),
+          Some(Name("f", None)),
+          List("e"),
+          Set(1, 2),
+          Map(1 -> "1", 2 -> "2")
+        ),
+        List(Name("first", None))
+      )
       ctx1.run(query[WithEverything].insertValue(lift(e)))
-      ctx1.run(query[WithEverything].filter(_.id == 1)).headOption must contain(e)
+      ctx1.run(query[WithEverything].filter(_.id == 1)).headOption must contain(
+        e
+      )
     }
     "with meta" in {
       case class MyName(first: String) extends Udt
@@ -70,23 +89,35 @@ class UdtEncodingSessionContextSpec extends UdtSpec {
 
       val e = WithEverything(2, MyName("first"), List(MyName("first")))
       ctx1.run(query[WithEverything].insertValue(lift(e)))
-      ctx1.run(query[WithEverything].filter(_.id == 2)).headOption must contain(e)
+      ctx1.run(query[WithEverything].filter(_.id == 2)).headOption must contain(
+        e
+      )
     }
   }
 
   "fail on inconsistent states" - {
     val ctx0 = new CassandraSyncContext(SnakeCase, config0)
     "found several UDT with the same name, but not in current session" in {
-      intercept[IllegalStateException](ctx0.udtValueOf("Name")).getMessage mustBe
+      intercept[IllegalStateException](
+        ctx0.udtValueOf("Name")
+      ).getMessage mustBe
         "Could not determine to which keyspace `Name` UDT belongs. Please specify desired keyspace using UdtMeta"
 
       // but ok when specified
-      ctx0.udtValueOf("Name", Some("quill_test")).getType.getKeyspace mustBe CqlIdentifier.fromCql("quill_test")
+      ctx0
+        .udtValueOf("Name", Some("quill_test"))
+        .getType
+        .getKeyspace mustBe CqlIdentifier.fromCql("quill_test")
       // "nAmE" - identifiers are case insensitive
-      ctx0.udtValueOf("nAmE", Some("quill_test_2")).getType.getKeyspace mustBe CqlIdentifier.fromCql("quill_test_2")
+      ctx0
+        .udtValueOf("nAmE", Some("quill_test_2"))
+        .getType
+        .getKeyspace mustBe CqlIdentifier.fromCql("quill_test_2")
     }
     "could not find UDT with given name" in {
-      intercept[IllegalStateException](ctx0.udtValueOf("Whatever")).getMessage mustBe
+      intercept[IllegalStateException](
+        ctx0.udtValueOf("Whatever")
+      ).getMessage mustBe
         "Could not find UDT `Whatever` in any keyspace"
     }
   }

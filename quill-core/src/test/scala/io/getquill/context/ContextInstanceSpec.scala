@@ -1,7 +1,7 @@
 package io.getquill.context
 
 import io.getquill.Spec
-import io.getquill.context.mirror.{ MirrorSession, Row }
+import io.getquill.context.mirror.{MirrorSession, Row}
 import io.getquill.testContext
 import io.getquill.testContext._
 
@@ -26,11 +26,16 @@ class ContextInstanceSpec extends Spec {
       }
 
       "decoding" in {
-        implicit val stringToTest = MappedEncoding[String, StringValue](StringValue)
+        implicit val stringToTest =
+          MappedEncoding[String, StringValue](StringValue)
         val q = quote {
           query[Entity]
         }
-        testContext.run(q).extractor(Row("s"), MirrorSession.default) mustEqual Entity(StringValue("s"))
+        testContext
+          .run(q)
+          .extractor(Row("s"), MirrorSession.default) mustEqual Entity(
+          StringValue("s")
+        )
       }
     }
     "package-based" - {
@@ -44,11 +49,16 @@ class ContextInstanceSpec extends Spec {
       }
 
       "decoding" in {
-        implicit val stringToTest = MappedEncoding[String, StringValue](StringValue)
+        implicit val stringToTest =
+          MappedEncoding[String, StringValue](StringValue)
         val q = quote {
           query[Entity]
         }
-        testContext.run(q).extractor(Row("s"), MirrorSession.default) mustEqual Entity(StringValue("s"))
+        testContext
+          .run(q)
+          .extractor(Row("s"), MirrorSession.default) mustEqual Entity(
+          StringValue("s")
+        )
       }
     }
   }
@@ -76,7 +86,9 @@ class ContextInstanceSpec extends Spec {
         query[Entity]
       }
       val v = ValueClass(1)
-      testContext.run(q).extractor(Row(1, "1"), MirrorSession.default) mustEqual Entity(v, "1")
+      testContext
+        .run(q)
+        .extractor(Row(1, "1"), MirrorSession.default) mustEqual Entity(v, "1")
     }
   }
 
@@ -95,7 +107,9 @@ class ContextInstanceSpec extends Spec {
         query[Entity]
       }
       val v = GenericValueClass(1)
-      testContext.run(q).extractor(Row(1, "1"), MirrorSession.default) mustEqual Entity(v, "1")
+      testContext
+        .run(q)
+        .extractor(Row(1, "1"), MirrorSession.default) mustEqual Entity(v, "1")
     }
   }
 }

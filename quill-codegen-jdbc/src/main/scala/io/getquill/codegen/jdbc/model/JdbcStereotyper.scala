@@ -15,10 +15,14 @@ trait JdbcStereotyper extends Stereotyper {
   def expresser: Expresser[JdbcTableMeta, JdbcColumnMeta] =
     new JdbcExpresser(nameParser, namespacer, typer)
 
-  type JdbcStereotypingFunction = (Seq[RawSchema[JdbcTableMeta, JdbcColumnMeta]]) => Seq[TableStereotype[JdbcTableMeta, JdbcColumnMeta]]
+  type JdbcStereotypingFunction = (
+      Seq[RawSchema[JdbcTableMeta, JdbcColumnMeta]]
+  ) => Seq[TableStereotype[JdbcTableMeta, JdbcColumnMeta]]
 
   class JdbcStereotypingHelper extends JdbcStereotypingFunction {
-    override def apply(schemaTables: Seq[RawSchema[JdbcTableMeta, JdbcColumnMeta]]): Seq[TableStereotype[JdbcTableMeta, JdbcColumnMeta]] = {
+    override def apply(
+        schemaTables: Seq[RawSchema[JdbcTableMeta, JdbcColumnMeta]]
+    ): Seq[TableStereotype[JdbcTableMeta, JdbcColumnMeta]] = {
 
       // convert description objects into expression objects
       val expressionTables = schemaTables.map(expresser(_))
@@ -34,6 +38,8 @@ trait JdbcStereotyper extends Stereotyper {
     }
   }
 
-  def stereotype(schemas: Seq[RawSchema[JdbcTableMeta, JdbcColumnMeta]]): Seq[TableStereotype[JdbcTableMeta, JdbcColumnMeta]] =
+  def stereotype(
+      schemas: Seq[RawSchema[JdbcTableMeta, JdbcColumnMeta]]
+  ): Seq[TableStereotype[JdbcTableMeta, JdbcColumnMeta]] =
     new JdbcStereotypingHelper().apply(schemas)
 }

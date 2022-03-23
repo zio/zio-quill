@@ -25,7 +25,12 @@ class UdtValueOps(val udt: UdtValue) extends AnyVal {
     udt.setSet(name, v.asJava, cls)
   }
 
-  def setScalaMap[K, V](name: String, v: Map[K, V], kcls: Class[K], vcls: Class[V]) = {
+  def setScalaMap[K, V](
+      name: String,
+      v: Map[K, V],
+      kcls: Class[K],
+      vcls: Class[V]
+  ) = {
     udt.setMap(name, v.asJava, kcls, vcls)
   }
 }

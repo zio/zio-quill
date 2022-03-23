@@ -1,20 +1,28 @@
 package io.getquill.context.sql
 
 import io.getquill.ast._
-import io.getquill.context.sql.norm.{ ExpandSelection, FlattenGroupByAggregation }
+import io.getquill.context.sql.norm.{ExpandSelection, FlattenGroupByAggregation}
 import io.getquill.norm.BetaReduction
 import io.getquill.quat.Quat
 import io.getquill.util.Messages.fail
-import io.getquill.{ Literal, PseudoAst }
+import io.getquill.{Literal, PseudoAst}
 
 case class OrderByCriteria(ast: Ast, ordering: PropertyOrdering)
 
 sealed trait FromContext { def quat: Quat }
-case class TableContext(entity: Entity, alias: String) extends FromContext { def quat = entity.quat }
-case class QueryContext(query: SqlQuery, alias: String) extends FromContext { def quat = query.quat }
-case class InfixContext(infix: Infix, alias: String) extends FromContext { def quat = infix.quat }
-case class JoinContext(t: JoinType, a: FromContext, b: FromContext, on: Ast) extends FromContext { def quat = Quat.Tuple(a.quat, b.quat) }
-case class FlatJoinContext(t: JoinType, a: FromContext, on: Ast) extends FromContext { def quat = a.quat }
+case class TableContext(entity: Entity, alias: String) extends FromContext {
+  def quat = entity.quat
+}
+case class QueryContext(query: SqlQuery, alias: String) extends FromContext {
+  def quat = query.quat
+}
+case class InfixContext(infix: Infix, alias: String) extends FromContext {
+  def quat = infix.quat
+}
+case class JoinContext(t: JoinType, a: FromContext, b: FromContext, on: Ast)
+    extends FromContext { def quat = Quat.Tuple(a.quat, b.quat) }
+case class FlatJoinContext(t: JoinType, a: FromContext, on: Ast)
+    extends FromContext { def quat = a.quat }
 
 sealed trait SqlQuery {
   def quat: Quat
@@ -33,34 +41,42 @@ case object UnionOperation extends SetOperation
 case object UnionAllOperation extends SetOperation
 
 case class SetOperationSqlQuery(
-  a:  SqlQuery,
-  op: SetOperation,
-  b:  SqlQuery
-)(quatType: Quat) extends SqlQuery {
+    a: SqlQuery,
+    op: SetOperation,
+    b: SqlQuery
+)(quatType: Quat)
+    extends SqlQuery {
   def quat = quatType
 }
 
 case class UnaryOperationSqlQuery(
-  op: UnaryOperator,
-  q:  SqlQuery
-)(quatType: Quat) extends SqlQuery {
+    op: UnaryOperator,
+    q: SqlQuery
+)(quatType: Quat)
+    extends SqlQuery {
   def quat = quatType
 }
 
-case class SelectValue(ast: Ast, alias: Option[String] = None, concat: Boolean = false) extends PseudoAst {
-  override def toString: String = s"${ast.toString}${alias.map("->" + _).getOrElse("")}"
+case class SelectValue(
+    ast: Ast,
+    alias: Option[String] = None,
+    concat: Boolean = false
+) extends PseudoAst {
+  override def toString: String =
+    s"${ast.toString}${alias.map("->" + _).getOrElse("")}"
 }
 
 case class FlattenSqlQuery(
-  from:     List[FromContext]     = List(),
-  where:    Option[Ast]           = None,
-  groupBy:  Option[Ast]           = None,
-  orderBy:  List[OrderByCriteria] = Nil,
-  limit:    Option[Ast]           = None,
-  offset:   Option[Ast]           = None,
-  select:   List[SelectValue],
-  distinct: Boolean               = false
-)(quatType: Quat) extends SqlQuery {
+    from: List[FromContext] = List(),
+    where: Option[Ast] = None,
+    groupBy: Option[Ast] = None,
+    orderBy: List[OrderByCriteria] = Nil,
+    limit: Option[Ast] = None,
+    offset: Option[Ast] = None,
+    select: List[SelectValue],
+    distinct: Boolean = false
+)(quatType: Quat)
+    extends SqlQuery {
   def quat = quatType
 }
 
@@ -76,7 +92,9 @@ object CaseClassMake {
   def fromQuat(quat: Quat)(idName: String) =
     quat match {
       case Quat.Product(fields) =>
-        CaseClass(fields.toList.map { case (name, _) => (name, Property(Ident(idName, quat), name)) })
+        CaseClass(fields.toList.map { case (name, _) =>
+          (name, Property(Ident(idName, quat), name))
+        })
       // Figure out a way to test this case?
       case _ =>
         CaseClass(List((idName, Ident(idName, quat))))
@@ -87,15 +105,23 @@ object SqlQuery {
 
   def apply(query: Ast): SqlQuery =
     query match {
-      case Union(a, b)                       => SetOperationSqlQuery(apply(a), UnionOperation, apply(b))(query.quat)
-      case UnionAll(a, b)                    => SetOperationSqlQuery(apply(a), UnionAllOperation, apply(b))(query.quat)
-      case UnaryOperation(op, q: Query)      => UnaryOperationSqlQuery(op, apply(q))(query.quat)
-      case _: Operation | _: Value           => FlattenSqlQuery(select = List(SelectValue(query)))(query.quat)
-      case Map(q, a, b) if a == b            => apply(q)
-      case TakeDropFlatten(q, limit, offset) => flatten(q, "x").copy(limit = limit, offset = offset)(q.quat)
-      case q: Query                          => flatten(q, "x")
-      case infix: Infix                      => flatten(infix, "x")
-      case other                             => fail(s"Query not properly normalized. Please open a bug report. Ast: '$other'")
+      case Union(a, b) =>
+        SetOperationSqlQuery(apply(a), UnionOperation, apply(b))(query.quat)
+      case UnionAll(a, b) =>
+        SetOperationSqlQuery(apply(a), UnionAllOperation, apply(b))(query.quat)
+      case UnaryOperation(op, q: Query) =>
+        UnaryOperationSqlQuery(op, apply(q))(query.quat)
+      case _: Operation | _: Value =>
+        FlattenSqlQuery(select = List(SelectValue(query)))(query.quat)
+      case Map(q, a, b) if a == b => apply(q)
+      case TakeDropFlatten(q, limit, offset) =>
+        flatten(q, "x").copy(limit = limit, offset = offset)(q.quat)
+      case q: Query     => flatten(q, "x")
+      case infix: Infix => flatten(infix, "x")
+      case other =>
+        fail(
+          s"Query not properly normalized. Please open a bug report. Ast: '$other'"
+        )
     }
 
   private def flatten(query: Ast, alias: String): FlattenSqlQuery = {
@@ -106,7 +132,11 @@ object SqlQuery {
   private def flattenContexts(query: Ast): (List[FromContext], Ast) =
     query match {
       // A flat-join query with no maps e.g: `qr1.flatMap(e1 => qr1.join(e2 => e1.i == e2.i))`
-      case FlatMap(q @ (_: Query | _: Infix), id: Ident, flatJoin @ FlatJoin(_, _, alias @ Ident(name, _), _)) =>
+      case FlatMap(
+            q @ (_: Query | _: Infix),
+            id: Ident,
+            flatJoin @ FlatJoin(_, _, alias @ Ident(name, _), _)
+          ) =>
         val cc = CaseClassMake.fromQuat(flatJoin.quat)(name)
         flattenContexts(FlatMap(q, id, Map(flatJoin, alias, cc)))
       case FlatMap(q @ (_: Query | _: Infix), Ident(alias, _), p: Query) =>
@@ -119,12 +149,20 @@ object SqlQuery {
         (List.empty, other)
     }
 
-  private def flatten(sources: List[FromContext], finalFlatMapBody: Ast, alias: String): FlattenSqlQuery = {
+  private def flatten(
+      sources: List[FromContext],
+      finalFlatMapBody: Ast,
+      alias: String
+  ): FlattenSqlQuery = {
 
-    def select(alias: String, quat: Quat) = SelectValue(Ident(alias, quat), None) :: Nil
+    def select(alias: String, quat: Quat) =
+      SelectValue(Ident(alias, quat), None) :: Nil
 
     def base(q: Ast, alias: String) = {
-      def nest(ctx: FromContext) = FlattenSqlQuery(from = sources :+ ctx, select = select(alias, q.quat))(q.quat)
+      def nest(ctx: FromContext) = FlattenSqlQuery(
+        from = sources :+ ctx,
+        select = select(alias, q.quat)
+      )(q.quat)
       q match {
         case Map(_: GroupBy, _, _) => nest(source(q, alias))
         case Nested(q)             => nest(QueryContext(apply(q), alias))
@@ -143,7 +181,9 @@ object SqlQuery {
           //      would that version actually produce more consistent results here?
           // TODO Quat Test in situations where you have more then two things. Would the subselect work properly?
           // Maybe prduce nested tuples here based on if it is a join context etc... in the recursive creation of the types
-          val collectedAliases = aliases(ctx).map { case (a, quat) => Ident(a, quat) }
+          val collectedAliases = aliases(ctx).map { case (a, quat) =>
+            Ident(a, quat)
+          }
           val select = Tuple(collectedAliases)
           FlattenSqlQuery(
             from = ctx :: Nil,
@@ -167,14 +207,19 @@ object SqlQuery {
       case Map(GroupBy(q, x @ Ident(alias, _), g), a, p) =>
         val b = base(q, alias)
         //use ExpandSelection logic to break down OrderBy clause
-        val flatGroupByAsts = new ExpandSelection(b.from).ofSubselect(List(SelectValue(g))).map(_.ast)
+        val flatGroupByAsts = new ExpandSelection(b.from)
+          .ofSubselect(List(SelectValue(g)))
+          .map(_.ast)
         val groupByClause =
           if (flatGroupByAsts.length > 1) Tuple(flatGroupByAsts)
           else flatGroupByAsts.head
 
         val select = BetaReduction(p, a -> Tuple(List(g, x)))
         val flattenSelect = FlattenGroupByAggregation(x)(select)
-        b.copy(groupBy = Some(groupByClause), select = this.selectValues(flattenSelect))(quat)
+        b.copy(
+          groupBy = Some(groupByClause),
+          select = this.selectValues(flattenSelect)
+        )(quat)
 
       case GroupBy(q, Ident(alias, _), p) =>
         fail("A `groupBy` clause must be followed by `map`.")
@@ -195,7 +240,12 @@ object SqlQuery {
       case Filter(q, Ident(alias, _), p) =>
         val b = base(q, alias)
         //If the filter body uses the filter alias, make sure it matches one of the aliases in the fromContexts
-        if (b.where.isEmpty && (!CollectAst.byType[Ident](p).map(_.name).contains(alias) || collectAliases(b.from).contains(alias)))
+        if (
+          b.where.isEmpty && (!CollectAst
+            .byType[Ident](p)
+            .map(_.name)
+            .contains(alias) || collectAliases(b.from).contains(alias))
+        )
           b.copy(where = Some(p))(quat)
         else
           FlattenSqlQuery(
@@ -208,7 +258,12 @@ object SqlQuery {
         val b = base(q, alias)
         val criterias = orderByCriterias(p, o, b.from)
         //If the sortBy body uses the filter alias, make sure it matches one of the aliases in the fromContexts
-        if (b.orderBy.isEmpty && (!CollectAst.byType[Ident](p).map(_.name).contains(alias) || collectAliases(b.from).contains(alias)))
+        if (
+          b.orderBy.isEmpty && (!CollectAst
+            .byType[Ident](p)
+            .map(_.name)
+            .contains(alias) || collectAliases(b.from).contains(alias))
+        )
           b.copy(orderBy = criterias)(quat)
         else
           FlattenSqlQuery(
@@ -221,11 +276,15 @@ object SqlQuery {
         val b = flatten(q, alias)
         b.select match {
           case head :: Nil if !b.distinct =>
-            b.copy(select = List(head.copy(ast = Aggregation(op, head.ast))))(quat)
+            b.copy(select = List(head.copy(ast = Aggregation(op, head.ast))))(
+              quat
+            )
           case other =>
             FlattenSqlQuery(
               from = QueryContext(apply(q), alias) :: Nil,
-              select = List(SelectValue(Aggregation(op, Ident("*", quat)))) // Quat of a * aggregation is same as for the entire query
+              select = List(
+                SelectValue(Aggregation(op, Ident("*", quat)))
+              ) // Quat of a * aggregation is same as for the entire query
             )(quat)
         }
 
@@ -256,7 +315,10 @@ object SqlQuery {
         b.copy(distinct = true)(quat)
 
       case other =>
-        FlattenSqlQuery(from = sources :+ source(other, alias), select = select(alias, quat))(quat)
+        FlattenSqlQuery(
+          from = sources :+ source(other, alias),
+          select = select(alias, quat)
+        )(quat)
     }
   }
 
@@ -268,43 +330,57 @@ object SqlQuery {
 
   private def source(ast: Ast, alias: String): FromContext =
     ast match {
-      case entity: Entity            => TableContext(entity, alias)
-      case infix: Infix              => InfixContext(infix, alias)
-      case Join(t, a, b, ia, ib, on) => JoinContext(t, source(a, ia.name), source(b, ib.name), on)
-      case FlatJoin(t, a, ia, on)    => FlatJoinContext(t, source(a, ia.name), on)
-      case Nested(q)                 => QueryContext(apply(q), alias)
-      case other                     => QueryContext(apply(other), alias)
+      case entity: Entity => TableContext(entity, alias)
+      case infix: Infix   => InfixContext(infix, alias)
+      case Join(t, a, b, ia, ib, on) =>
+        JoinContext(t, source(a, ia.name), source(b, ib.name), on)
+      case FlatJoin(t, a, ia, on) => FlatJoinContext(t, source(a, ia.name), on)
+      case Nested(q)              => QueryContext(apply(q), alias)
+      case other                  => QueryContext(apply(other), alias)
     }
 
-  private def orderByCriterias(ast: Ast, ordering: Ast, from: List[FromContext]): List[OrderByCriteria] =
+  private def orderByCriterias(
+      ast: Ast,
+      ordering: Ast,
+      from: List[FromContext]
+  ): List[OrderByCriteria] =
     (ast, ordering) match {
-      case (Tuple(properties), ord: PropertyOrdering) => properties.flatMap(orderByCriterias(_, ord, from))
-      case (Tuple(properties), TupleOrdering(ord))    => properties.zip(ord).flatMap { case (a, o) => orderByCriterias(a, o, from) }
+      case (Tuple(properties), ord: PropertyOrdering) =>
+        properties.flatMap(orderByCriterias(_, ord, from))
+      case (Tuple(properties), TupleOrdering(ord)) =>
+        properties.zip(ord).flatMap { case (a, o) =>
+          orderByCriterias(a, o, from)
+        }
       //if its a quat product, use ExpandSelection to break it down into its component fields and apply the ordering to all of them
-      case (id @ Ident(_, _: Quat.Product), ord)      => new ExpandSelection(from).ofSubselect(List(SelectValue(ast))).map(_.ast).flatMap(orderByCriterias(_, ord, from))
-      case (a, o: PropertyOrdering)                   => List(OrderByCriteria(a, o))
-      case other                                      => fail(s"Invalid order by criteria $ast")
+      case (id @ Ident(_, _: Quat.Product), ord) =>
+        new ExpandSelection(from)
+          .ofSubselect(List(SelectValue(ast)))
+          .map(_.ast)
+          .flatMap(orderByCriterias(_, ord, from))
+      case (a, o: PropertyOrdering) => List(OrderByCriteria(a, o))
+      case other                    => fail(s"Invalid order by criteria $ast")
     }
 
   private def collectAliases(contexts: List[FromContext]): List[String] = {
     contexts.flatMap {
-      case c: TableContext             => List(c.alias)
-      case c: QueryContext             => List(c.alias)
-      case c: InfixContext             => List(c.alias)
-      case JoinContext(_, a, b, _)     => collectAliases(List(a)) ++ collectAliases(List(b))
+      case c: TableContext => List(c.alias)
+      case c: QueryContext => List(c.alias)
+      case c: InfixContext => List(c.alias)
+      case JoinContext(_, a, b, _) =>
+        collectAliases(List(a)) ++ collectAliases(List(b))
       case FlatJoinContext(_, from, _) => collectAliases(List(from))
     }
   }
 
   private def collectTableAliases(contexts: List[FromContext]): List[String] = {
     contexts.flatMap {
-      case c: TableContext             => List(c.alias)
-      case c: QueryContext             => List()
-      case c: InfixContext             => List()
-      case JoinContext(_, a, b, _)     => collectAliases(List(a)) ++ collectAliases(List(b))
+      case c: TableContext => List(c.alias)
+      case c: QueryContext => List()
+      case c: InfixContext => List()
+      case JoinContext(_, a, b, _) =>
+        collectAliases(List(a)) ++ collectAliases(List(b))
       case FlatJoinContext(_, from, _) => collectAliases(List(from))
     }
   }
 
 }
-

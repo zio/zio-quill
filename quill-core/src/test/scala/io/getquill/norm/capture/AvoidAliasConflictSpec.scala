@@ -133,16 +133,24 @@ class AvoidAliasConflictSpec extends Spec {
       "nested unaliased" in {
         val q = quote {
           for {
-            a <- qr1.nested.groupBy(a => a.i).map(t => (t._1, t._2.map(v => v.i).sum))
-            b <- qr1.nested.groupBy(a => a.i).map(t => (t._1, t._2.map(v => v.i).sum))
+            a <- qr1.nested
+              .groupBy(a => a.i)
+              .map(t => (t._1, t._2.map(v => v.i).sum))
+            b <- qr1.nested
+              .groupBy(a => a.i)
+              .map(t => (t._1, t._2.map(v => v.i).sum))
           } yield {
             (a, b)
           }
         }
         val n = quote {
           for {
-            a <- qr1.nested.groupBy(a => a.i).map(t => (t._1, t._2.map(v => v.i).sum))
-            b <- qr1.nested.groupBy(a1 => a1.i).map(t1 => (t1._1, t1._2.map(v1 => v1.i).sum))
+            a <- qr1.nested
+              .groupBy(a => a.i)
+              .map(t => (t._1, t._2.map(v => v.i).sum))
+            b <- qr1.nested
+              .groupBy(a1 => a1.i)
+              .map(t1 => (t1._1, t1._2.map(v1 => v1.i).sum))
           } yield {
             (a, b)
           }
@@ -151,13 +159,19 @@ class AvoidAliasConflictSpec extends Spec {
       }
       "multiple" in {
         val q = quote {
-          qr1.leftJoin(qr2).on((a, b) => a.i == b.i)
-            .leftJoin(qr1).on((a, b) => a._2.forall(v => v.i == b.i))
+          qr1
+            .leftJoin(qr2)
+            .on((a, b) => a.i == b.i)
+            .leftJoin(qr1)
+            .on((a, b) => a._2.forall(v => v.i == b.i))
             .map(t => 1)
         }
         val n = quote {
-          qr1.leftJoin(qr2).on((a, b) => a.i == b.i)
-            .leftJoin(qr1).on((a1, b1) => a1._2.forall(v => v.i == b1.i))
+          qr1
+            .leftJoin(qr2)
+            .on((a, b) => a.i == b.i)
+            .leftJoin(qr1)
+            .on((a1, b1) => a1._2.forall(v => v.i == b1.i))
             .map(t => 1)
         }
         AvoidAliasConflict(q.ast) mustEqual n.ast
@@ -218,40 +232,62 @@ class AvoidAliasConflictSpec extends Spec {
     "outer join" - {
       "left" in {
         val q = quote {
-          qr1.fullJoin(qr2.filter(a => a.i == 1)).on((b, c) => b.s == c.s).flatMap(d => qr2.map(b => b.s))
+          qr1
+            .fullJoin(qr2.filter(a => a.i == 1))
+            .on((b, c) => b.s == c.s)
+            .flatMap(d => qr2.map(b => b.s))
         }
         val n = quote {
-          qr1.fullJoin(qr2.filter(a => a.i == 1)).on((b, c) => b.s == c.s).flatMap(d => qr2.map(b1 => b1.s))
+          qr1
+            .fullJoin(qr2.filter(a => a.i == 1))
+            .on((b, c) => b.s == c.s)
+            .flatMap(d => qr2.map(b1 => b1.s))
         }
         AvoidAliasConflict(q.ast) mustEqual n.ast
       }
       "right" in {
         val q = quote {
-          qr1.filter(a => a.i == 1).fullJoin(qr2).on((b, c) => b.s == c.s).flatMap(d => qr2.map(c => c.s))
+          qr1
+            .filter(a => a.i == 1)
+            .fullJoin(qr2)
+            .on((b, c) => b.s == c.s)
+            .flatMap(d => qr2.map(c => c.s))
         }
         val n = quote {
-          qr1.filter(a => a.i == 1).fullJoin(qr2).on((b, c) => b.s == c.s).flatMap(d => qr2.map(c1 => c1.s))
+          qr1
+            .filter(a => a.i == 1)
+            .fullJoin(qr2)
+            .on((b, c) => b.s == c.s)
+            .flatMap(d => qr2.map(c1 => c1.s))
         }
         AvoidAliasConflict(q.ast) mustEqual n.ast
       }
       "both" in {
         val q = quote {
-          qr1.fullJoin(qr2).on((a, b) => a.s == b.s).flatMap(c => qr1.flatMap(a => qr2.map(b => b.s)))
+          qr1
+            .fullJoin(qr2)
+            .on((a, b) => a.s == b.s)
+            .flatMap(c => qr1.flatMap(a => qr2.map(b => b.s)))
         }
         val n = quote {
-          qr1.fullJoin(qr2).on((a, b) => a.s == b.s).flatMap(c => qr1.flatMap(a1 => qr2.map(b1 => b1.s)))
+          qr1
+            .fullJoin(qr2)
+            .on((a, b) => a.s == b.s)
+            .flatMap(c => qr1.flatMap(a1 => qr2.map(b1 => b1.s)))
         }
         AvoidAliasConflict(q.ast) mustEqual n.ast
       }
     }
     "join + filter" in {
       val q = quote {
-        qr1.filter(x1 => x1.i == 1)
+        qr1
+          .filter(x1 => x1.i == 1)
           .join(qr2.filter(x1 => x1.i == 1))
           .on((a, b) => a.i == b.i)
       }
       val n = quote {
-        qr1.filter(x1 => x1.i == 1)
+        qr1
+          .filter(x1 => x1.i == 1)
           .join(qr2.filter(x11 => x11.i == 1))
           .on((a, b) => a.i == b.i)
       }
@@ -271,7 +307,9 @@ class AvoidAliasConflictSpec extends Spec {
 
   "doesn't change the query if it doesn't have conflicts" in {
     val q = quote {
-      qr1.flatMap(a => qr2.sortBy(b => b.s).filter(c => c.s == "s1")).flatMap(d => qr3.map(e => e.s))
+      qr1
+        .flatMap(a => qr2.sortBy(b => b.s).filter(c => c.s == "s1"))
+        .flatMap(d => qr3.map(e => e.s))
     }
     AvoidAliasConflict(q.ast) mustEqual q.ast
   }

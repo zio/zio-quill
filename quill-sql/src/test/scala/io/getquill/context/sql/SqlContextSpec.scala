@@ -1,7 +1,7 @@
 package io.getquill.context.sql
 
 import java.time.LocalDate
-import java.util.{ Date, UUID }
+import java.util.{Date, UUID}
 
 import io.getquill._
 import io.getquill.context.mirror.Row
@@ -9,7 +9,7 @@ import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.context.sql.testContext._
 
 import scala.util.Try
-import io.getquill.context.{ CanReturnField, Context }
+import io.getquill.context.{CanReturnField, Context}
 import io.getquill.context.sql.idiom.ConcatSupport
 
 class SqlContextSpec extends Spec {
@@ -38,12 +38,17 @@ class SqlContextSpec extends Spec {
 
     "testContext.run(qr1.delete)" mustNot compile
 
-    class EvilDBDialect extends SqlIdiom with ConcatSupport with CanReturnField {
+    class EvilDBDialect
+        extends SqlIdiom
+        with ConcatSupport
+        with CanReturnField {
       override def liftingPlaceholder(index: Int): String = "?"
 
       override def prepareForProbing(string: String) = string
     }
-    object testContext extends Context[MirrorSqlDialect, Literal] with SqlContext[MirrorSqlDialect, Literal] {
+    object testContext
+        extends Context[MirrorSqlDialect, Literal]
+        with SqlContext[MirrorSqlDialect, Literal] {
 
       val idiom = MirrorSqlDialect
       val naming = Literal
@@ -58,11 +63,16 @@ class SqlContextSpec extends Spec {
 
       def probe(sql: String): Try[Any] = null
 
-      def encoder[T]: Encoder[T] = (index: Index, value: T, row: PrepareRow, session: Session) => row
+      def encoder[T]: Encoder[T] =
+        (index: Index, value: T, row: PrepareRow, session: Session) => row
 
-      def decoder[T]: Decoder[T] = (index: Index, row: ResultRow, session: Session) => row(index).asInstanceOf[T]
+      def decoder[T]: Decoder[T] =
+        (index: Index, row: ResultRow, session: Session) =>
+          row(index).asInstanceOf[T]
 
-      implicit def optionEncoder[T](implicit d: Encoder[T]): Encoder[Option[T]] = encoder[Option[T]]
+      implicit def optionEncoder[T](implicit
+          d: Encoder[T]
+      ): Encoder[Option[T]] = encoder[Option[T]]
 
       implicit val stringEncoder: Encoder[String] = encoder[String]
       implicit val bigDecimalEncoder: Encoder[BigDecimal] = encoder[BigDecimal]
@@ -78,7 +88,9 @@ class SqlContextSpec extends Spec {
       implicit val localDateEncoder: Encoder[LocalDate] = encoder[LocalDate]
       implicit val uuidEncoder: Encoder[UUID] = encoder[UUID]
 
-      implicit def optionDecoder[T](implicit d: Decoder[T]): Decoder[Option[T]] = decoder[Option[T]]
+      implicit def optionDecoder[T](implicit
+          d: Decoder[T]
+      ): Decoder[Option[T]] = decoder[Option[T]]
 
       implicit val stringDecoder: Decoder[String] = decoder[String]
       implicit val bigDecimalDecoder: Decoder[BigDecimal] = decoder[BigDecimal]
@@ -94,10 +106,16 @@ class SqlContextSpec extends Spec {
       implicit val dateDecoder: Decoder[Date] = decoder[Date]
       implicit val uuidDecoder: Decoder[UUID] = decoder[UUID]
 
-      implicit def mappedEncoder[I, O](implicit mapped: MappedEncoding[I, O], e: Encoder[O]): Encoder[I] =
+      implicit def mappedEncoder[I, O](implicit
+          mapped: MappedEncoding[I, O],
+          e: Encoder[O]
+      ): Encoder[I] =
         encoder[I]
 
-      implicit def mappedDecoder[I, O](implicit mapped: MappedEncoding[I, O], d: Decoder[I]): Decoder[O] =
+      implicit def mappedDecoder[I, O](implicit
+          mapped: MappedEncoding[I, O],
+          d: Decoder[I]
+      ): Decoder[O] =
         decoder[O]
     }
   }

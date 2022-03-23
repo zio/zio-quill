@@ -23,12 +23,24 @@ sealed trait ConfigPrefix {
 }
 
 object ConfigPrefix {
-  sealed trait TestH2DB extends ConfigPrefix { val value = "testH2DB"; val packagePath = "h2" }
-  sealed trait TestMysqlDB extends ConfigPrefix { val value = "testMysqlDB"; val packagePath = "mysql" }
-  sealed trait TestOracleDB extends ConfigPrefix { val value = "testOracleDB"; val packagePath = "oracle" }
-  sealed trait TestPostgresDB extends ConfigPrefix { val value = "testPostgresDB"; val packagePath = "postgres" }
-  sealed trait TestSqliteDB extends ConfigPrefix { val value = "testSqliteDB"; val packagePath = "sqlite" }
-  sealed trait TestSqlServerDB extends ConfigPrefix { val value = "testSqlServerDB"; val packagePath = "sqlserver" }
+  sealed trait TestH2DB extends ConfigPrefix {
+    val value = "testH2DB"; val packagePath = "h2"
+  }
+  sealed trait TestMysqlDB extends ConfigPrefix {
+    val value = "testMysqlDB"; val packagePath = "mysql"
+  }
+  sealed trait TestOracleDB extends ConfigPrefix {
+    val value = "testOracleDB"; val packagePath = "oracle"
+  }
+  sealed trait TestPostgresDB extends ConfigPrefix {
+    val value = "testPostgresDB"; val packagePath = "postgres"
+  }
+  sealed trait TestSqliteDB extends ConfigPrefix {
+    val value = "testSqliteDB"; val packagePath = "sqlite"
+  }
+  sealed trait TestSqlServerDB extends ConfigPrefix {
+    val value = "testSqlServerDB"; val packagePath = "sqlserver"
+  }
 
   case object TestH2DB extends TestH2DB
   case object TestMysqlDB extends TestMysqlDB
@@ -47,5 +59,9 @@ object ConfigPrefix {
   )
 
   def fromValue(str: String): Try[ConfigPrefix] =
-    ConfigPrefix.all.find(_.value == str).toTry(new IllegalArgumentException(s"Could not find the value: '${str}'"))
+    ConfigPrefix.all
+      .find(_.value == str)
+      .toTry(
+        new IllegalArgumentException(s"Could not find the value: '${str}'")
+      )
 }

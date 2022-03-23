@@ -33,7 +33,13 @@ class QueryGenerator(seed: Int) {
     if (i <= 2) {
       val quat = Quat.Product()
       val s = string(3)
-      Entity(s, Nil, Quat.Product((1 to 20).map(i => (string(3), Quat.Value)).toList.distinct: _*))
+      Entity(
+        s,
+        Nil,
+        Quat.Product(
+          (1 to 20).map(i => (string(3), Quat.Value)).toList.distinct: _*
+        )
+      )
     } else {
       random.nextInt(8) match {
         case 0 => map(i)
@@ -69,7 +75,15 @@ class QueryGenerator(seed: Int) {
   private def filter(i: Int) = {
     val q = apply(i)
     val id = Ident(char, q.quat)
-    Filter(q, id, BinaryOperation(id.randomProperty, EqualityOperator.`_!=`, Constant.auto(1)))
+    Filter(
+      q,
+      id,
+      BinaryOperation(
+        id.randomProperty,
+        EqualityOperator.`_!=`,
+        Constant.auto(1)
+      )
+    )
   }
 
   private def sortBy(i: Int) = {
@@ -100,7 +114,8 @@ class QueryGenerator(seed: Int) {
   }
 }
 
-case class IsAggregated(state: Boolean = false) extends StatefulTransformer[Boolean] {
+case class IsAggregated(state: Boolean = false)
+    extends StatefulTransformer[Boolean] {
 
   override def apply(q: Query) =
     q match {

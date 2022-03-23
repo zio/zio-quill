@@ -4,7 +4,12 @@ import io.getquill.ast._
 import io.getquill.norm.ConcatBehavior.AnsiConcat
 import io.getquill.norm.EqualityBehavior.AnsiEquality
 import io.getquill.norm.capture.AvoidAliasConflict
-import io.getquill.norm.{ FlattenOptionOperation, Normalize, RenameProperties, SimplifyNullChecks }
+import io.getquill.norm.{
+  FlattenOptionOperation,
+  Normalize,
+  RenameProperties,
+  SimplifyNullChecks
+}
 import io.getquill.quat.Quat
 
 object CqlNormalize {
@@ -12,13 +17,13 @@ object CqlNormalize {
   def apply(ast: Ast) =
     normalize(ast)
 
-  /**
-   * Since tuple-elaboration has been removed, need to re-create a similar functionality
-   * for the cassandra context since the CqlQuery relies on this.
-   */
+  /** Since tuple-elaboration has been removed, need to re-create a similar
+    * functionality for the cassandra context since the CqlQuery relies on this.
+    */
   private[getquill] def elaborateWithQuat(qry: Ast) =
     qry match {
-      case Quat.Is(prodQuat @ Quat.Product(values)) if qry.isInstanceOf[Query] =>
+      case Quat.Is(prodQuat @ Quat.Product(values))
+          if qry.isInstanceOf[Query] =>
         val id = Ident("x", prodQuat)
         val tupleValues = values.map { case (k, _) => Property(id, k) }.toList
         Map(qry, id, Tuple(tupleValues))

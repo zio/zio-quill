@@ -1,7 +1,7 @@
 package io.getquill.context.monix
 
 import io.getquill.NamingStrategy
-import io.getquill.context.{ Context, TranslateContextBase }
+import io.getquill.context.{Context, TranslateContextBase}
 import io.getquill.idiom.Idiom
 import monix.eval.Task
 

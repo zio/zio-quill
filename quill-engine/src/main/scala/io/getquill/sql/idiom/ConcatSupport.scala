@@ -11,5 +11,7 @@ trait ConcatSupport {
 trait NoConcatSupport {
   this: SqlIdiom =>
 
-  override def concatFunction = Messages.fail(s"`concatMap` not supported by ${this.getClass.getSimpleName}")
+  override def concatFunction = Messages.fail(
+    s"`concatMap` not supported by ${this.getClass.getSimpleName}"
+  )
 }

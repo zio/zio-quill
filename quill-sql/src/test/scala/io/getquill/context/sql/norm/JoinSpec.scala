@@ -9,7 +9,8 @@ class JoinSpec extends Spec {
 
   "join + filter" in {
     val q = quote {
-      qr1.leftJoin(qr2)
+      qr1
+        .leftJoin(qr2)
         .on((a, b) => a.i == b.i)
         .filter(_._2.map(_.i).forall(_ == 1))
     }
@@ -19,7 +20,8 @@ class JoinSpec extends Spec {
 
   "join + filter with null-check" in {
     val q = quote {
-      qr1.leftJoin(qr2)
+      qr1
+        .leftJoin(qr2)
         .on((a, b) => a.i == b.i)
         .filter(_._2.map(_.i).forall(b => if (b == 1) true else false))
     }
@@ -29,7 +31,8 @@ class JoinSpec extends Spec {
 
   "join + map + filter" in {
     val q = quote {
-      qr1.leftJoin(qr2)
+      qr1
+        .leftJoin(qr2)
         .on((a, b) => a.i == b.i)
         .map(t => (t._1.i, t._2.map(_.i)))
         .filter(_._2.forall(_ == 1))
@@ -40,7 +43,8 @@ class JoinSpec extends Spec {
 
   "join + map + filter with null-check" in {
     val q = quote {
-      qr1.leftJoin(qr2)
+      qr1
+        .leftJoin(qr2)
         .on((a, b) => a.i == b.i)
         .map(t => (t._1.i, t._2.map(_.i)))
         .filter(_._2.forall(b => if (b == 1) true else false))
@@ -51,15 +55,18 @@ class JoinSpec extends Spec {
 
   "join + filter + leftjoin" in {
     val q = quote {
-      qr1.leftJoin(qr2).on {
-        (a, b) => a.i == b.i
-      }.filter {
-        ab =>
+      qr1
+        .leftJoin(qr2)
+        .on { (a, b) =>
+          a.i == b.i
+        }
+        .filter { ab =>
           ab._2.map(_.l).contains(3L)
-      }.leftJoin(qr3).on {
-        (ab, c) =>
+        }
+        .leftJoin(qr3)
+        .on { (ab, c) =>
           ab._2.map(_.i).contains(ab._1.i) && ab._2.map(_.i).contains(c.i)
-      }
+        }
     }
     testContext.run(q).string(true).collapseSpace mustEqual
       """SELECT
@@ -101,12 +108,16 @@ class JoinSpec extends Spec {
 
   "join + distinct + leftjoin" in {
     val q = quote {
-      qr1.leftJoin(qr2).on {
-        (a, b) => a.i == b.i
-      }.distinct.leftJoin(qr3).on {
-        (ab, c) =>
+      qr1
+        .leftJoin(qr2)
+        .on { (a, b) =>
+          a.i == b.i
+        }
+        .distinct
+        .leftJoin(qr3)
+        .on { (ab, c) =>
           ab._2.map(_.i).contains(ab._1.i) && ab._2.map(_.i).contains(c.i)
-      }
+        }
     }
     testContext.run(q).string(true).collapseSpace mustEqual
       """SELECT
@@ -146,7 +157,8 @@ class JoinSpec extends Spec {
 
   "multiple joins + filter + map + distinct" in {
     val q = quote {
-      qr1.join(qr2)
+      qr1
+        .join(qr2)
         .on { (d, a) => d.i == a.i }
         .join {
           qr3.filter(rp => rp.s == lift("a"))
@@ -163,7 +175,12 @@ class JoinSpec extends Spec {
 
   "multiple joins + map" in {
     val q = quote {
-      qr1.leftJoin(qr2).on((a, b) => a.s == b.s).leftJoin(qr2).on((a, b) => a._1.s == b.s).map(_._1._1)
+      qr1
+        .leftJoin(qr2)
+        .on((a, b) => a.s == b.s)
+        .leftJoin(qr2)
+        .on((a, b) => a._1.s == b.s)
+        .map(_._1._1)
     }
     testContext.run(q).string mustEqual
       "SELECT a.s, a.i, a.l, a.o, a.b FROM TestEntity a LEFT JOIN TestEntity2 b ON a.s = b.s LEFT JOIN TestEntity2 b1 ON a.s = b1.s"

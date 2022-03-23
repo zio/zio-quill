@@ -28,12 +28,17 @@ class AsyncMirrorContextSpec extends Spec {
 
   "executeBatchActionReturning" in {
     eval(ctx.run {
-      liftQuery(List(TestEntity4(0))).foreach(e => qr4.insertValue(e).returning(_.i))
+      liftQuery(List(TestEntity4(0))).foreach(e =>
+        qr4.insertValue(e).returning(_.i)
+      )
     })
   }
 
   "prepare" in {
-    ctx.prepareParams("", (ps, session) => (Nil, ps.add("Sarah").add(127))) mustEqual List("'Sarah'", "127")
+    ctx.prepareParams(
+      "",
+      (ps, session) => (Nil, ps.add("Sarah").add(127))
+    ) mustEqual List("'Sarah'", "127")
   }
 
   "probe" in {

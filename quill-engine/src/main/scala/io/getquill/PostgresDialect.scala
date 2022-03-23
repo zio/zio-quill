@@ -8,36 +8,48 @@ import io.getquill.idiom.StatementInterpolator._
 import io.getquill.norm.ProductAggregationToken
 
 trait PostgresDialect
-  extends SqlIdiom
-  with QuestionMarkBindVariables
-  with ConcatSupport
-  with OnConflictSupport
-  with CanReturnClause {
+    extends SqlIdiom
+    with QuestionMarkBindVariables
+    with ConcatSupport
+    with OnConflictSupport
+    with CanReturnClause {
 
-  override protected def productAggregationToken: ProductAggregationToken = ProductAggregationToken.VariableDotStar
+  override protected def productAggregationToken: ProductAggregationToken =
+    ProductAggregationToken.VariableDotStar
 
-  override def astTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Ast] =
+  override def astTokenizer(implicit
+      astTokenizer: Tokenizer[Ast],
+      strategy: NamingStrategy
+  ): Tokenizer[Ast] =
     Tokenizer[Ast] {
       case ListContains(ast, body) => stmt"${body.token} = ANY(${ast.token})"
       case c: OnConflict           => conflictTokenizer.token(c)
       case ast                     => super.astTokenizer.token(ast)
     }
 
-  override implicit def operationTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Operation] =
+  override implicit def operationTokenizer(implicit
+      astTokenizer: Tokenizer[Ast],
+      strategy: NamingStrategy
+  ): Tokenizer[Operation] =
     Tokenizer[Operation] {
-      case UnaryOperation(StringOperator.`toLong`, ast) => stmt"${scopedTokenizer(ast)}::bigint"
-      case UnaryOperation(StringOperator.`toInt`, ast)  => stmt"${scopedTokenizer(ast)}::integer"
-      case operation                                    => super.operationTokenizer.token(operation)
+      case UnaryOperation(StringOperator.`toLong`, ast) =>
+        stmt"${scopedTokenizer(ast)}::bigint"
+      case UnaryOperation(StringOperator.`toInt`, ast) =>
+        stmt"${scopedTokenizer(ast)}::integer"
+      case operation => super.operationTokenizer.token(operation)
     }
 
   private[getquill] val preparedStatementId = new AtomicInteger
 
   override def prepareForProbing(string: String) = {
     var i = 0
-    val query = string.flatMap(x => if (x != '?') s"$x" else {
-      i += 1
-      s"$$$i"
-    })
+    val query = string.flatMap(x =>
+      if (x != '?') s"$x"
+      else {
+        i += 1
+        s"$$$i"
+      }
+    )
     s"PREPARE p${preparedStatementId.incrementAndGet.toString.token} AS $query"
   }
 }

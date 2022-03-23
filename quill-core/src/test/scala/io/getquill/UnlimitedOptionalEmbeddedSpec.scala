@@ -1,7 +1,7 @@
 package io.getquill
 
 import io.getquill.ast.Renameable.Fixed
-import io.getquill.ast.{ Entity, PropertyAlias }
+import io.getquill.ast.{Entity, PropertyAlias}
 import io.getquill.context.mirror.Row
 import io.getquill.quat._
 
@@ -62,7 +62,9 @@ class UnlimitedOptionalEmbeddedSpec extends Spec {
 
   "meta" - {
     "update" in {
-      materializeUpdateMeta[OptEmd].expand.toString mustEqual "(q, value) => q.update(" +
+      materializeUpdateMeta[
+        OptEmd
+      ].expand.toString mustEqual "(q, value) => q.update(" +
         "v => v.e1.e1.e1.value -> value.e1.e1.e1.value, " +
         "v => v.e1.e1.e2.map((v) => v.value) -> value.e1.e1.e2.map((v) => v.value), " +
         "v => v.e1.e2.map((v) => v.e1.value) -> value.e1.e2.map((v) => v.e1.value), " +
@@ -73,7 +75,9 @@ class UnlimitedOptionalEmbeddedSpec extends Spec {
         "v => v.e2.map((v) => v.e2.map((v) => v.e2.map((v) => v.value))) -> value.e2.map((v) => v.e2.map((v) => v.e2.map((v) => v.value))))"
     }
     "insert" in {
-      materializeInsertMeta[OptEmd].expand.toString mustEqual "(q, value) => q.insert(" +
+      materializeInsertMeta[
+        OptEmd
+      ].expand.toString mustEqual "(q, value) => q.insert(" +
         "v => v.e1.e1.e1.value -> value.e1.e1.e1.value, " +
         "v => v.e1.e1.e2.map((v) => v.value) -> value.e1.e1.e2.map((v) => v.value), " +
         "v => v.e1.e2.map((v) => v.e1.value) -> value.e1.e2.map((v) => v.e1.value), " +
@@ -86,17 +90,18 @@ class UnlimitedOptionalEmbeddedSpec extends Spec {
   }
 
   "action" - {
-    val resultString = """`querySchema`("OptEmd", _.e1.e1.e1.value -> "value111", _.e1.e1.e2.value -> "value112", """ +
-      """_.e1.e2.e1.value -> "value121", _.e1.e2.e2.value -> "value122", _.e2.e1.e1.value -> "value211", """ +
-      """_.e2.e1.e2.value -> "value212", _.e2.e2.e1.value -> "value221", _.e2.e2.e2.value -> "value222").insert(""" +
-      "v => v.e1.e1.e1.value -> ?, " +
-      "v => v.e1.e1.e2.map((v) => v.value) -> ?, " +
-      "v => v.e1.e2.map((v) => v.e1.value) -> ?, " +
-      "v => v.e1.e2.map((v) => v.e2.map((v) => v.value)) -> ?, " +
-      "v => v.e2.map((v) => v.e1.e1.value) -> ?, " +
-      "v => v.e2.map((v) => v.e1.e2.map((v) => v.value)) -> ?, " +
-      "v => v.e2.map((v) => v.e2.map((v) => v.e1.value)) -> ?, " +
-      "v => v.e2.map((v) => v.e2.map((v) => v.e2.map((v) => v.value))) -> ?)"
+    val resultString =
+      """`querySchema`("OptEmd", _.e1.e1.e1.value -> "value111", _.e1.e1.e2.value -> "value112", """ +
+        """_.e1.e2.e1.value -> "value121", _.e1.e2.e2.value -> "value122", _.e2.e1.e1.value -> "value211", """ +
+        """_.e2.e1.e2.value -> "value212", _.e2.e2.e1.value -> "value221", _.e2.e2.e2.value -> "value222").insert(""" +
+        "v => v.e1.e1.e1.value -> ?, " +
+        "v => v.e1.e1.e2.map((v) => v.value) -> ?, " +
+        "v => v.e1.e2.map((v) => v.e1.value) -> ?, " +
+        "v => v.e1.e2.map((v) => v.e2.map((v) => v.value)) -> ?, " +
+        "v => v.e2.map((v) => v.e1.e1.value) -> ?, " +
+        "v => v.e2.map((v) => v.e1.e2.map((v) => v.value)) -> ?, " +
+        "v => v.e2.map((v) => v.e2.map((v) => v.e1.value)) -> ?, " +
+        "v => v.e2.map((v) => v.e2.map((v) => v.e2.map((v) => v.value))) -> ?)"
     val resultRow = Row(
       "111",
       Some("112"),

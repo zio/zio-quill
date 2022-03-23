@@ -53,8 +53,8 @@ class TypeMemberJoinSpec extends Spec {
   }
 
   "joins on type member objects" - {
-    import io.getquill.ast.{ Ident => Id, _ }
-    import io.getquill.ast.{ Ast, Infix }
+    import io.getquill.ast.{Ident => Id, _}
+    import io.getquill.ast.{Ast, Infix}
     import io.getquill.quat.Quat
     object QStr {
       def unapply(q: Quat) = Some(q.toString)
@@ -80,27 +80,42 @@ class TypeMemberJoinSpec extends Spec {
 
       q.ast match {
         case FlatMap(
-          AnyInfix(),
-          Id("p", QStr("CC(name:V,childId:V)")),
-          Map(
-            Map(
-              FlatJoin(
-                InnerJoin,
-                AnyInfix(),
-                Id("c", QStr("CCA(id:V)")), // This is important, since macro gets inferred from SomeChild, it only knows about the 'id' property
-                (Property(Id("c", QStr("CCA(id:V)")), "id") +==+ Property(Id("p", QStr("CC(name:V,childId:V)")), "childId"))
+              AnyInfix(),
+              Id("p", QStr("CC(name:V,childId:V)")),
+              Map(
+                Map(
+                  FlatJoin(
+                    InnerJoin,
+                    AnyInfix(),
+                    Id(
+                      "c",
+                      QStr("CCA(id:V)")
+                    ), // This is important, since macro gets inferred from SomeChild, it only knows about the 'id' property
+                    (Property(Id("c", QStr("CCA(id:V)")), "id") +==+ Property(
+                      Id("p", QStr("CC(name:V,childId:V)")),
+                      "childId"
+                    ))
+                  ),
+                  Id("c", QStr("CCA(id:V)")),
+                  Id("c", QStr("CCA(id:V)"))
                 ),
-              Id("c", QStr("CCA(id:V)")),
-              Id("c", QStr("CCA(id:V)"))
-              ),
-            Id("c", QStr("CCA(name:V,id:V)")),
-            Tuple(List(Id("p", QStr("CC(name:V,childId:V)")), Id("c", QStr("CCA(name:V,id:V)"))))
-            )
-          ) =>
+                Id("c", QStr("CCA(name:V,id:V)")),
+                Tuple(
+                  List(
+                    Id("p", QStr("CC(name:V,childId:V)")),
+                    Id("c", QStr("CCA(name:V,id:V)"))
+                  )
+                )
+              )
+            ) =>
         case _ =>
-          fail(s"Tree did not match:\n${io.getquill.util.Messages.qprint(q.ast).plainText}")
+          fail(
+            s"Tree did not match:\n${io.getquill.util.Messages.qprint(q.ast).plainText}"
+          )
       }
-      testContext.run(q).collect().toList mustEqual List((Data.parent, Data.child))
+      testContext.run(q).collect().toList mustEqual List(
+        (Data.parent, Data.child)
+      )
     }
 
     "should be possible on one single-return object" - {
@@ -197,9 +212,15 @@ class TypeMemberJoinSpec extends Spec {
           (c, g) <- p.joinChildAndGrandChild
         } yield (p, c, g)
       }
-      testContext.run(q).collect().toList mustEqual List((Data.parent, Data.child, Data.grandChild))
-      testContext.run(q.nested).collect().toList mustEqual List((Data.parent, Data.child, Data.grandChild))
-      testContext.run(q.nested.nested).collect().toList mustEqual List((Data.parent, Data.child, Data.grandChild))
+      testContext.run(q).collect().toList mustEqual List(
+        (Data.parent, Data.child, Data.grandChild)
+      )
+      testContext.run(q.nested).collect().toList mustEqual List(
+        (Data.parent, Data.child, Data.grandChild)
+      )
+      testContext.run(q.nested.nested).collect().toList mustEqual List(
+        (Data.parent, Data.child, Data.grandChild)
+      )
     }
 
     "should be possible on one multiple objects - yielding a field" in {
@@ -212,43 +233,74 @@ class TypeMemberJoinSpec extends Spec {
 
       q.ast match {
         case FlatMap(
-          AnyInfix(),
-          Id("p", QStr("CC(name:V,childId:V)")),
-          Map(
-            FlatMap(
-              FlatJoin(
-                InnerJoin,
-                AnyInfix(),
-                Id("c", QStr("CCA(id:V)")),
-                (Property(Id("c", QStr("CCA(id:V)")), "id") +==+ Property(Id("p", QStr("CC(name:V,childId:V)")), "childId"))
-                ),
-              Id("c", QStr("CCA(id:V)")),
-              Map(
-                FlatJoin(
-                  InnerJoin,
-                  AnyInfix(),
-                  Id("g", QStr("CCA(parentId:V)")),
-                  (Property(Id("g", QStr("CCA(parentId:V)")), "parentId") +==+ Property(Id("c", QStr("CCA(id:V)")), "id"))
-                  ),
-                Id("g", QStr("CCA(parentId:V)")),
-                Tuple(List(Id("c", QStr("CCA(id:V)")), Id("g", QStr("CCA(parentId:V)"))))
-                )
-              ),
-            Id("x2", QStr("CC(_1:CCA(name:V,id:V),_2:CCA(name:V,parentId:V))")),
-            Tuple(List(
+              AnyInfix(),
               Id("p", QStr("CC(name:V,childId:V)")),
-              // Note how here in the Quat of the inner ident, the _1 property representing 'child' has a 'name' and 'id' property
-              // while Child of the _1 property in the 'c' tuple (in the inner Map) only has an 'id' property. This is because
-              // when the quat of the _1 property above was synthesized, it was actually only the abstract property SomeChild
-              // (i.e. while only has a 'id' property and no others)
-              Property(Property(Id("x2", QStr("CC(_1:CCA(name:V,id:V),_2:CCA(name:V,parentId:V))")), "_1"), "name")
-              ))
-            )
-          ) =>
+              Map(
+                FlatMap(
+                  FlatJoin(
+                    InnerJoin,
+                    AnyInfix(),
+                    Id("c", QStr("CCA(id:V)")),
+                    (Property(Id("c", QStr("CCA(id:V)")), "id") +==+ Property(
+                      Id("p", QStr("CC(name:V,childId:V)")),
+                      "childId"
+                    ))
+                  ),
+                  Id("c", QStr("CCA(id:V)")),
+                  Map(
+                    FlatJoin(
+                      InnerJoin,
+                      AnyInfix(),
+                      Id("g", QStr("CCA(parentId:V)")),
+                      (Property(
+                        Id("g", QStr("CCA(parentId:V)")),
+                        "parentId"
+                      ) +==+ Property(Id("c", QStr("CCA(id:V)")), "id"))
+                    ),
+                    Id("g", QStr("CCA(parentId:V)")),
+                    Tuple(
+                      List(
+                        Id("c", QStr("CCA(id:V)")),
+                        Id("g", QStr("CCA(parentId:V)"))
+                      )
+                    )
+                  )
+                ),
+                Id(
+                  "x2",
+                  QStr("CC(_1:CCA(name:V,id:V),_2:CCA(name:V,parentId:V))")
+                ),
+                Tuple(
+                  List(
+                    Id("p", QStr("CC(name:V,childId:V)")),
+                    // Note how here in the Quat of the inner ident, the _1 property representing 'child' has a 'name' and 'id' property
+                    // while Child of the _1 property in the 'c' tuple (in the inner Map) only has an 'id' property. This is because
+                    // when the quat of the _1 property above was synthesized, it was actually only the abstract property SomeChild
+                    // (i.e. while only has a 'id' property and no others)
+                    Property(
+                      Property(
+                        Id(
+                          "x2",
+                          QStr(
+                            "CC(_1:CCA(name:V,id:V),_2:CCA(name:V,parentId:V))"
+                          )
+                        ),
+                        "_1"
+                      ),
+                      "name"
+                    )
+                  )
+                )
+              )
+            ) =>
         case _ =>
-          fail(s"Tree did not match:\n${io.getquill.util.Messages.qprint(q.ast).plainText}")
+          fail(
+            s"Tree did not match:\n${io.getquill.util.Messages.qprint(q.ast).plainText}"
+          )
       }
-      testContext.run(q).collect().toList mustEqual List((Data.parent, Data.child.name))
+      testContext.run(q).collect().toList mustEqual List(
+        (Data.parent, Data.child.name)
+      )
     }
 
     "should be possible on one multiple objects" - {
@@ -259,7 +311,9 @@ class TypeMemberJoinSpec extends Spec {
             (c, g) <- p.joinChildAndGrandChild
           } yield g.name
         }
-        testContext.run(q).collect().toList mustEqual List((Data.grandChild.name))
+        testContext.run(q).collect().toList mustEqual List(
+          (Data.grandChild.name)
+        )
       }
 
       "single field - child" in {
@@ -270,8 +324,12 @@ class TypeMemberJoinSpec extends Spec {
           } yield c.name
         }
         testContext.run(q).collect().toList mustEqual List((Data.child.name))
-        testContext.run(q.nested).collect().toList mustEqual List((Data.child.name))
-        testContext.run(q.nested.nested).collect().toList mustEqual List((Data.child.name))
+        testContext.run(q.nested).collect().toList mustEqual List(
+          (Data.child.name)
+        )
+        testContext.run(q.nested.nested).collect().toList mustEqual List(
+          (Data.child.name)
+        )
       }
 
       "child and grandchild fields" in {
@@ -281,9 +339,15 @@ class TypeMemberJoinSpec extends Spec {
             (c, g) <- p.joinChildAndGrandChild
           } yield (c.name, g.name)
         }
-        testContext.run(q).collect().toList mustEqual List((Data.child.name, Data.grandChild.name))
-        testContext.run(q.nested).collect().toList mustEqual List((Data.child.name, Data.grandChild.name))
-        testContext.run(q.nested.nested).collect().toList mustEqual List((Data.child.name, Data.grandChild.name))
+        testContext.run(q).collect().toList mustEqual List(
+          (Data.child.name, Data.grandChild.name)
+        )
+        testContext.run(q.nested).collect().toList mustEqual List(
+          (Data.child.name, Data.grandChild.name)
+        )
+        testContext.run(q.nested.nested).collect().toList mustEqual List(
+          (Data.child.name, Data.grandChild.name)
+        )
       }
 
       "only parent" in {
@@ -303,9 +367,15 @@ class TypeMemberJoinSpec extends Spec {
             (c, g) <- p.joinChildAndGrandChild
           } yield (p, c.name, g.name)
         }
-        testContext.run(q).collect().toList mustEqual List((Data.parent, Data.child.name, Data.grandChild.name))
-        testContext.run(q.nested).collect().toList mustEqual List((Data.parent, Data.child.name, Data.grandChild.name))
-        testContext.run(q.nested.nested).collect().toList mustEqual List((Data.parent, Data.child.name, Data.grandChild.name))
+        testContext.run(q).collect().toList mustEqual List(
+          (Data.parent, Data.child.name, Data.grandChild.name)
+        )
+        testContext.run(q.nested).collect().toList mustEqual List(
+          (Data.parent, Data.child.name, Data.grandChild.name)
+        )
+        testContext.run(q.nested.nested).collect().toList mustEqual List(
+          (Data.parent, Data.child.name, Data.grandChild.name)
+        )
       }
     }
   }

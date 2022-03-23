@@ -1,7 +1,7 @@
 package io.getquill.context.sql.norm
 
-import io.getquill.{ MirrorSqlDialectWithReturnClause, Spec }
-import io.getquill.ReturnAction.{ ReturnColumns, ReturnRecord }
+import io.getquill.{MirrorSqlDialectWithReturnClause, Spec}
+import io.getquill.ReturnAction.{ReturnColumns, ReturnRecord}
 import io.getquill.context.sql.testContext._
 import io.getquill.context.sql.testContext
 import io.getquill.Query
@@ -15,11 +15,19 @@ class RenamePropertiesSpec extends Spec {
   }
 
   val e2 = quote {
-    querySchema[TestEntity]("test_entity_2", _.s -> "field_s_2", _.i -> "field_i_2")
+    querySchema[TestEntity](
+      "test_entity_2",
+      _.s -> "field_s_2",
+      _.i -> "field_i_2"
+    )
   }
 
   val tup = quote {
-    querySchema[(String, Int)]("test_tuple", _._1 -> "field_s", _._2 -> "field_i")
+    querySchema[(String, Int)](
+      "test_tuple",
+      _._1 -> "field_s",
+      _._2 -> "field_i"
+    )
   }
 
   val f = quote {
@@ -60,14 +68,21 @@ class RenamePropertiesSpec extends Spec {
       }
       "insert assigned" in {
         val q = quote {
-          e.insert(_.i -> lift(1), _.l -> lift(1L), _.o -> lift(Option(1)), _.s -> lift("test"), _.b -> lift(true))
+          e.insert(
+            _.i -> lift(1),
+            _.l -> lift(1L),
+            _.o -> lift(Option(1)),
+            _.s -> lift("test"),
+            _.b -> lift(true)
+          )
         }
         testContext.run(q).string mustEqual
           "INSERT INTO test_entity (field_i,l,o,field_s,b) VALUES (?, ?, ?, ?, ?)"
       }
       "update" in {
         val q = quote {
-          e.filter(_.i == 999).updateValue(lift(TestEntity("a", 1, 1L, None, true)))
+          e.filter(_.i == 999)
+            .updateValue(lift(TestEntity("a", 1, 1L, None, true)))
         }
         testContext.run(q).string mustEqual
           "UPDATE test_entity SET field_s = ?, field_i = ?, l = ?, o = ?, b = ? WHERE field_i = 999"
@@ -80,20 +95,28 @@ class RenamePropertiesSpec extends Spec {
           "DELETE FROM test_entity WHERE field_i = 999"
       }
       "returning" - {
-        "returning - alias" in testContext.withDialect(MirrorSqlDialectWithReturnClause) { ctx =>
+        "returning - alias" in testContext.withDialect(
+          MirrorSqlDialectWithReturnClause
+        ) { ctx =>
           import ctx._
           val e1 = quote {
-            querySchema[TestEntity]("test_entity", _.s -> "field_s", _.i -> "field_i")
+            querySchema[TestEntity](
+              "test_entity",
+              _.s -> "field_s",
+              _.i -> "field_i"
+            )
           }
           val q = quote {
-            e1.insertValue(lift(TestEntity("s", 1, 1L, None, true))).returning(_.i)
+            e1.insertValue(lift(TestEntity("s", 1, 1L, None, true)))
+              .returning(_.i)
           }
           val mirror = ctx.run(q)
           mirror.returningBehavior mustEqual ReturnRecord
         }
         "returning generated - alias" in {
           val q = quote {
-            e.insertValue(lift(TestEntity("s", 1, 1L, None, true))).returningGenerated(_.i)
+            e.insertValue(lift(TestEntity("s", 1, 1L, None, true)))
+              .returningGenerated(_.i)
           }
           val mirror = testContext.run(q)
           mirror.returningBehavior mustEqual ReturnColumns(List("field_i"))
@@ -272,7 +295,9 @@ class RenamePropertiesSpec extends Spec {
     "join" - {
       "both sides" in {
         val q = quote {
-          e.leftJoin(e).on((a, b) => a.s == b.s).map(t => (t._1.s, t._2.map(_.s)))
+          e.leftJoin(e)
+            .on((a, b) => a.s == b.s)
+            .map(t => (t._1.s, t._2.map(_.s)))
         }
         testContext.run(q).string mustEqual
           "SELECT a.field_s AS _1, b.field_s AS _2 FROM test_entity a LEFT JOIN test_entity b ON a.field_s = b.field_s"
@@ -348,15 +373,17 @@ class RenamePropertiesSpec extends Spec {
           } yield (t3, c)
         }
 
-        testContext.run(q).string mustEqual "SELECT t3.id, t3.configurationId, t3.name, st.id, st.name FROM Table3 t3 INNER JOIN (SELECT c.id, c.name FROM configuration c INNER JOIN settings st ON st.settings_id = c.id WHERE st.active) AS st ON st.id = t3.configurationId"
+        testContext
+          .run(q)
+          .string mustEqual "SELECT t3.id, t3.configurationId, t3.name, st.id, st.name FROM Table3 t3 INNER JOIN (SELECT c.id, c.name FROM configuration c INNER JOIN settings st ON st.settings_id = c.id WHERE st.active) AS st ON st.id = t3.configurationId"
       }
     }
 
     "aggregation" - {
       "groupBy" in {
         val q = quote {
-          e.groupBy(a => a.s).map {
-            case (s, eq) => s -> eq.map(_.i).sum
+          e.groupBy(a => a.s).map { case (s, eq) =>
+            s -> eq.map(_.i).sum
           }
         }
         testContext.run(q).string mustEqual
@@ -374,7 +401,8 @@ class RenamePropertiesSpec extends Spec {
       }
       "binary" in {
         val q = quote {
-          e.filter(a => e.filter(b => b.i > 0).isEmpty && a.s == "test").map(_.i)
+          e.filter(a => e.filter(b => b.i > 0).isEmpty && a.s == "test")
+            .map(_.i)
         }
         testContext.run(q).string mustEqual
           "SELECT a.field_i FROM test_entity a WHERE NOT EXISTS (SELECT b.field_s, b.field_i, b.l, b.o, b.b FROM test_entity b WHERE b.field_i > 0) AND a.field_s = 'test'"
@@ -470,7 +498,8 @@ class RenamePropertiesSpec extends Spec {
       case class A(u: Long, v: Int, w: B)
       "does not break schema" in {
         val q = quote {
-          infix"${querySchema[A]("C", _.v -> "m", _.w.b -> "n")} LIMIT 10".as[Query[A]]
+          infix"${querySchema[A]("C", _.v -> "m", _.w.b -> "n")} LIMIT 10"
+            .as[Query[A]]
         }
 
         testContext.run(q).string mustEqual
@@ -478,7 +507,8 @@ class RenamePropertiesSpec extends Spec {
       }
       "with filter" in {
         val q = quote {
-          infix"${querySchema[A]("C", _.v -> "m", _.w.b -> "n").filter(x => x.v == 1)} LIMIT 10".as[Query[A]]
+          infix"${querySchema[A]("C", _.v -> "m", _.w.b -> "n").filter(x => x.v == 1)} LIMIT 10"
+            .as[Query[A]]
         }
 
         testContext.run(q).string mustEqual

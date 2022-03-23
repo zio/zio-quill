@@ -4,7 +4,14 @@ class CaseClassQueryCassandraSpec extends CassandraAlpakkaSpec {
 
   import testDB._
 
-  case class Contact(id: Int, firstName: String, lastName: String, age: Int, addressFk: Int, extraInfo: String)
+  case class Contact(
+      id: Int,
+      firstName: String,
+      lastName: String,
+      age: Int,
+      addressFk: Int,
+      extraInfo: String
+  )
   case class Address(id: Int, street: String, zip: Int, otherExtraInfo: String)
 
   val peopleInsert =
@@ -26,10 +33,18 @@ class CaseClassQueryCassandraSpec extends CassandraAlpakkaSpec {
   )
 
   case class ContactSimplified(firstName: String, lastName: String, age: Int)
-  case class AddressableContact(firstName: String, lastName: String, age: Int, street: String, zip: Int)
+  case class AddressableContact(
+      firstName: String,
+      lastName: String,
+      age: Int,
+      street: String,
+      zip: Int
+  )
 
   val `Ex 1 CaseClass Record Output` = quote {
-    query[Contact].map(p => new ContactSimplified(p.firstName, p.lastName, p.age))
+    query[Contact].map(p =>
+      new ContactSimplified(p.firstName, p.lastName, p.age)
+    )
   }
 
   val `Ex 1 CaseClass Record Output expected result` = List(
@@ -66,13 +81,19 @@ class CaseClassQueryCassandraSpec extends CassandraAlpakkaSpec {
 
   "Example 1 - Single Case Class Mapping" in {
     await {
-      testDB.run(`Ex 1 CaseClass Record Output`).map(res => res mustEqual `Ex 1 CaseClass Record Output expected result`)
+      testDB
+        .run(`Ex 1 CaseClass Record Output`)
+        .map(res =>
+          res mustEqual `Ex 1 CaseClass Record Output expected result`
+        )
     }
   }
 
   "Example 2 - Inline Record as Filter" in {
     await {
-      testDB.run(`Ex 3 Inline Record Usage`).map(res => res mustEqual `Ex 3 Inline Record Usage exepected result`)
+      testDB
+        .run(`Ex 3 Inline Record Usage`)
+        .map(res => res mustEqual `Ex 3 Inline Record Usage exepected result`)
     }
   }
 }

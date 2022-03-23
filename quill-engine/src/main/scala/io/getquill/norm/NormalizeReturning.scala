@@ -4,10 +4,10 @@ import io.getquill.ast._
 import io.getquill.ast.Implicits._
 import io.getquill.norm.capture.AvoidAliasConflict
 
-/**
- * When actions are used with a `.returning` clause, remove the columns used in the returning clause from the action.
- * E.g. for `insert(Person(id, name)).returning(_.id)` remove the `id` column from the original insert.
- */
+/** When actions are used with a `.returning` clause, remove the columns used in
+  * the returning clause from the action. E.g. for `insert(Person(id,
+  * name)).returning(_.id)` remove the `id` column from the original insert.
+  */
 object NormalizeReturning {
 
   def apply(e: Action): Action = {
@@ -38,30 +38,38 @@ object NormalizeReturning {
     }
   }
 
-  /**
-   * In some situations, a query can exist inside of a `returning` clause. In this case, we need to rename
-   * if the aliases used in that query override the alias used in the `returning` clause otherwise
-   * they will be treated as returning-clause aliases ExpandReturning (i.e. they will become ExternalAlias instances)
-   * and later be tokenized incorrectly.
-   */
+  /** In some situations, a query can exist inside of a `returning` clause. In
+    * this case, we need to rename if the aliases used in that query override
+    * the alias used in the `returning` clause otherwise they will be treated as
+    * returning-clause aliases ExpandReturning (i.e. they will become
+    * ExternalAlias instances) and later be tokenized incorrectly.
+    */
   private def dealiasBody(body: Ast, alias: Ident): Ast =
-    Transform(body) {
-      case q: Query => AvoidAliasConflict.sanitizeQuery(q, Set(alias.idName))
+    Transform(body) { case q: Query =>
+      AvoidAliasConflict.sanitizeQuery(q, Set(alias.idName))
     }
 
-  private def apply(e: Action, body: Ast, returningIdent: Ident): Action = e match {
-    case Insert(query, assignments)         => Insert(query, filterReturnedColumn(assignments, body, returningIdent))
-    case Update(query, assignments)         => Update(query, filterReturnedColumn(assignments, body, returningIdent))
-    case OnConflict(a: Action, target, act) => OnConflict(apply(a, body, returningIdent), target, act)
-    case _                                  => e
-  }
+  private def apply(e: Action, body: Ast, returningIdent: Ident): Action =
+    e match {
+      case Insert(query, assignments) =>
+        Insert(query, filterReturnedColumn(assignments, body, returningIdent))
+      case Update(query, assignments) =>
+        Update(query, filterReturnedColumn(assignments, body, returningIdent))
+      case OnConflict(a: Action, target, act) =>
+        OnConflict(apply(a, body, returningIdent), target, act)
+      case _ => e
+    }
 
-  private def filterReturnedColumn(assignments: List[Assignment], column: Ast, returningIdent: Ident): List[Assignment] =
+  private def filterReturnedColumn(
+      assignments: List[Assignment],
+      column: Ast,
+      returningIdent: Ident
+  ): List[Assignment] =
     assignments.flatMap(filterReturnedColumn(_, column, returningIdent))
 
-  /**
-   * In situations like Property(Property(ident, foo), bar) pull out the inner-most ident
-   */
+  /** In situations like Property(Property(ident, foo), bar) pull out the
+    * inner-most ident
+    */
   object NestedProperty {
     def unapply(ast: Property): Option[Ast] = {
       ast match {
@@ -76,13 +84,18 @@ object NormalizeReturning {
     }
   }
 
-  /**
-   * Remove the specified column from the assignment. For example, in a query like `insert(Person(id, name)).returning(r => r.id)`
-   * we need to remove the `id` column from the insertion. The value of the `column:Ast` in this case will be `Property(Ident(r), id)`
-   * and the values fo the assignment `p1` property will typically be `v.id` and `v.name` (the `v` variable is a default
-   * used for `insert` queries).
-   */
-  private def filterReturnedColumn(assignment: Assignment, body: Ast, returningIdent: Ident): Option[Assignment] =
+  /** Remove the specified column from the assignment. For example, in a query
+    * like `insert(Person(id, name)).returning(r => r.id)` we need to remove the
+    * `id` column from the insertion. The value of the `column:Ast` in this case
+    * will be `Property(Ident(r), id)` and the values fo the assignment `p1`
+    * property will typically be `v.id` and `v.name` (the `v` variable is a
+    * default used for `insert` queries).
+    */
+  private def filterReturnedColumn(
+      assignment: Assignment,
+      body: Ast,
+      returningIdent: Ident
+  ): Option[Assignment] =
     assignment match {
       case Assignment(_, p1: Property, _) => {
         // Pull out instance of the column usage. The `column` ast will typically be Property(table, field) but
@@ -94,11 +107,17 @@ object NormalizeReturning {
         val matchedProps =
           CollectAst(body) {
             //case prop @ NestedProperty(`returningIdent`) => prop
-            case prop @ NestedProperty(Ident(name, quat)) if (name == returningIdent.name)         => prop
-            case prop @ NestedProperty(ExternalIdent(name, quat)) if (name == returningIdent.name) => prop
+            case prop @ NestedProperty(Ident(name, quat))
+                if (name == returningIdent.name) =>
+              prop
+            case prop @ NestedProperty(ExternalIdent(name, quat))
+                if (name == returningIdent.name) =>
+              prop
           }
 
-        if (matchedProps.exists(matchedProp => isSameProperties(p1, matchedProp)))
+        if (
+          matchedProps.exists(matchedProp => isSameProperties(p1, matchedProp))
+        )
           None
         else
           Some(assignment)
@@ -115,17 +134,18 @@ object NormalizeReturning {
       }
   }
 
-  /**
-   * Is it the same property (but possibly of a different identity). E.g. `p.foo.bar` and `v.foo.bar`
-   */
-  private def isSameProperties(p1: Property, p2: Property): Boolean = (p1.ast, p2.ast) match {
-    case (SomeIdent(_), SomeIdent(_)) =>
-      p1.name == p2.name
-    // If it's Property(Property(Id), name) == Property(Property(Id), name) we need to check that the
-    // outer properties are the same before moving on to the inner ones.
-    case (pp1: Property, pp2: Property) if (p1.name == p2.name) =>
-      isSameProperties(pp1, pp2)
-    case _ =>
-      false
-  }
+  /** Is it the same property (but possibly of a different identity). E.g.
+    * `p.foo.bar` and `v.foo.bar`
+    */
+  private def isSameProperties(p1: Property, p2: Property): Boolean =
+    (p1.ast, p2.ast) match {
+      case (SomeIdent(_), SomeIdent(_)) =>
+        p1.name == p2.name
+      // If it's Property(Property(Id), name) == Property(Property(Id), name) we need to check that the
+      // outer properties are the same before moving on to the inner ones.
+      case (pp1: Property, pp2: Property) if (p1.name == p2.name) =>
+        isSameProperties(pp1, pp2)
+      case _ =>
+        false
+    }
 }

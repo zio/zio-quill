@@ -7,8 +7,8 @@ import io.getquill.context.Context
 import io.getquill.context.orientdb.dsl.OrientDBDsl
 
 trait OrientDBContext[Naming <: NamingStrategy]
-  extends Context[OrientDBIdiom, Naming]
-  with OrientDBDsl {
+    extends Context[OrientDBIdiom, Naming]
+    with OrientDBDsl {
 
   implicit def optionDecoder[T](implicit d: Decoder[T]): Decoder[Option[T]]
   implicit def optionEncoder[T](implicit d: Encoder[T]): Encoder[Option[T]]

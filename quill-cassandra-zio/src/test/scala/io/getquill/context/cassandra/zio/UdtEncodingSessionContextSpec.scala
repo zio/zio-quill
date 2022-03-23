@@ -32,7 +32,8 @@ class UdtEncodingSessionContextSpec extends UdtSpec with ZioCassandraSpec {
       case class MyName(firstName: FirstName) extends Udt
 
       implicit val encodeFirstName = MappedEncoding[FirstName, String](_.name)
-      implicit val decodeFirstName = MappedEncoding[String, FirstName](FirstName)
+      implicit val decodeFirstName =
+        MappedEncoding[String, FirstName](FirstName)
 
       implicitly[Encoder[MyName]]
       implicitly[Decoder[MyName]]
@@ -44,17 +45,30 @@ class UdtEncodingSessionContextSpec extends UdtSpec with ZioCassandraSpec {
   "Complete examples" - {
     import ctx._
     "without meta" in {
-      case class WithEverything(id: Int, personal: Personal, nameList: List[Name])
+      case class WithEverything(
+          id: Int,
+          personal: Personal,
+          nameList: List[Name]
+      )
 
-      val e = WithEverything(1, Personal(1, "strt",
-        Name("first", Some("last")),
-        Some(Name("f", None)),
-        List("e"),
-        Set(1, 2),
-        Map(1 -> "1", 2 -> "2")),
-        List(Name("first", None)))
+      val e = WithEverything(
+        1,
+        Personal(
+          1,
+          "strt",
+          Name("first", Some("last")),
+          Some(Name("f", None)),
+          List("e"),
+          Set(1, 2),
+          Map(1 -> "1", 2 -> "2")
+        ),
+        List(Name("first", None))
+      )
       ctx.run(query[WithEverything].insertValue(lift(e))).runSyncUnsafe()
-      ctx.run(query[WithEverything].filter(_.id == 1)).runSyncUnsafe().headOption must contain(e)
+      ctx
+        .run(query[WithEverything].filter(_.id == 1))
+        .runSyncUnsafe()
+        .headOption must contain(e)
     }
     "with meta" in {
       case class MyName(first: String) extends Udt
@@ -63,7 +77,10 @@ class UdtEncodingSessionContextSpec extends UdtSpec with ZioCassandraSpec {
 
       val e = WithEverything(2, MyName("first"), List(MyName("first")))
       ctx.run(query[WithEverything].insertValue(lift(e))).runSyncUnsafe()
-      ctx.run(query[WithEverything].filter(_.id == 2)).runSyncUnsafe().headOption must contain(e)
+      ctx
+        .run(query[WithEverything].filter(_.id == 2))
+        .runSyncUnsafe()
+        .headOption must contain(e)
     }
   }
 

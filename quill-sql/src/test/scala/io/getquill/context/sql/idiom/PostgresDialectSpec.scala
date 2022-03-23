@@ -37,7 +37,9 @@ class PostgresDialectSpec extends OnConflictSpec {
     import PostgresDialect._
     val id = preparedStatementId.get()
 
-    prepareForProbing("SELECT t.x1, t.x2 FROM tb t WHERE (t.x1 = ?) AND (t.x2 = ?)") mustEqual
+    prepareForProbing(
+      "SELECT t.x1, t.x2 FROM tb t WHERE (t.x1 = ?) AND (t.x2 = ?)"
+    ) mustEqual
       s"PREPARE p${id + 1} AS SELECT t.x1, t.x2 FROM tb t WHERE (t.x1 = $$1) AND (t.x2 = $$2)"
 
     prepareForProbing("INSERT INTO tb (x1,x2,x3) VALUES (?,?,?)") mustEqual

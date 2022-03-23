@@ -54,21 +54,27 @@ class CassandraOpsSpec extends Spec {
     "options" - {
       "timestamp" in {
         val q = quote {
-          query[TestEntity].usingTimestamp(99).updateValue(lift(TestEntity("s", 1, 2L, None, true)))
+          query[TestEntity]
+            .usingTimestamp(99)
+            .updateValue(lift(TestEntity("s", 1, 2L, None, true)))
         }
         mirrorContext.run(q).string mustEqual
           "UPDATE TestEntity USING TIMESTAMP 99 SET s = ?, i = ?, l = ?, o = ?, b = ?"
       }
       "ttl" in {
         val q = quote {
-          query[TestEntity].usingTtl(1).updateValue(lift(TestEntity("s", 1, 2L, None, true)))
+          query[TestEntity]
+            .usingTtl(1)
+            .updateValue(lift(TestEntity("s", 1, 2L, None, true)))
         }
         mirrorContext.run(q).string mustEqual
           "UPDATE TestEntity USING TTL 1 SET s = ?, i = ?, l = ?, o = ?, b = ?"
       }
       "both" in {
         val q = quote {
-          query[TestEntity].using(1, 2).updateValue(lift(TestEntity("s", 1, 2L, None, true)))
+          query[TestEntity]
+            .using(1, 2)
+            .updateValue(lift(TestEntity("s", 1, 2L, None, true)))
         }
         mirrorContext.run(q).string mustEqual
           "UPDATE TestEntity USING TIMESTAMP 1 AND TTL 2 SET s = ?, i = ?, l = ?, o = ?, b = ?"
@@ -76,7 +82,10 @@ class CassandraOpsSpec extends Spec {
     }
     "ifExists" in {
       val q = quote {
-        query[TestEntity].filter(t => t.s == "a").update(t => t.s -> "b").ifExists
+        query[TestEntity]
+          .filter(t => t.s == "a")
+          .update(t => t.s -> "b")
+          .ifExists
       }
       mirrorContext.run(q).string mustEqual
         "UPDATE TestEntity SET s = 'b' WHERE s = 'a' IF EXISTS"
@@ -146,7 +155,9 @@ class CassandraOpsSpec extends Spec {
 
   "collection" - {
     "map.containsValue" in {
-      mirrorContext.run(mapFroz.filter(x => x.id.containsValue(true))).string mustEqual
+      mirrorContext
+        .run(mapFroz.filter(x => x.id.containsValue(true)))
+        .string mustEqual
         "SELECT id FROM MapFrozen WHERE id CONTAINS true"
     }
   }

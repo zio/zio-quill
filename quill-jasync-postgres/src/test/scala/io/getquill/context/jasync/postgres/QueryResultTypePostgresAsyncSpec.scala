@@ -17,9 +17,11 @@ class QueryResultTypePostgresAsyncSpec extends QueryResultTypeSpec {
 
   override def beforeAll = {
     await(testContext.run(deleteAll))
-    val ids = await(testContext.run(liftQuery(productEntries).foreach(e => productInsert(e))))
-    val inserted = (ids zip productEntries).map {
-      case (id, prod) => prod.copy(id = id)
+    val ids = await(
+      testContext.run(liftQuery(productEntries).foreach(e => productInsert(e)))
+    )
+    val inserted = (ids zip productEntries).map { case (id, prod) =>
+      prod.copy(id = id)
     }
     insertedProducts.addAll(inserted.asJava)
     ()
@@ -29,47 +31,66 @@ class QueryResultTypePostgresAsyncSpec extends QueryResultTypeSpec {
 
   "return list" - {
     "select" in {
-      await(testContext.run(selectAll)) must contain theSameElementsAs (products)
+      await(
+        testContext.run(selectAll)
+      ) must contain theSameElementsAs (products)
     }
     "map" in {
-      await(testContext.run(map)) must contain theSameElementsAs (products.map(_.id))
+      await(testContext.run(map)) must contain theSameElementsAs (products.map(
+        _.id
+      ))
     }
     "filter" in {
       await(testContext.run(filter)) must contain theSameElementsAs (products)
     }
     "withFilter" in {
-      await(testContext.run(withFilter)) must contain theSameElementsAs (products)
+      await(
+        testContext.run(withFilter)
+      ) must contain theSameElementsAs (products)
     }
     "sortBy" in {
-      await(testContext.run(sortBy)) must contain theSameElementsInOrderAs (products)
+      await(
+        testContext.run(sortBy)
+      ) must contain theSameElementsInOrderAs (products)
     }
     "take" in {
       await(testContext.run(take)) must contain theSameElementsAs (products)
     }
     "drop" in {
-      await(testContext.run(drop)) must contain theSameElementsAs (products.drop(1))
+      await(testContext.run(drop)) must contain theSameElementsAs (products
+        .drop(1))
     }
     "++" in {
-      await(testContext.run(`++`)) must contain theSameElementsAs (products ++ products)
+      await(
+        testContext.run(`++`)
+      ) must contain theSameElementsAs (products ++ products)
     }
     "unionAll" in {
-      await(testContext.run(unionAll)) must contain theSameElementsAs (products ++ products)
+      await(
+        testContext.run(unionAll)
+      ) must contain theSameElementsAs (products ++ products)
     }
     "union" in {
       await(testContext.run(union)) must contain theSameElementsAs (products)
     }
     "join" in {
-      await(testContext.run(join)) must contain theSameElementsAs (products zip products)
+      await(
+        testContext.run(join)
+      ) must contain theSameElementsAs (products zip products)
     }
     "distinct" in {
-      await(testContext.run(distinct)) must contain theSameElementsAs (products.map(_.id).distinct)
+      await(testContext.run(distinct)) must contain theSameElementsAs (products
+        .map(_.id)
+        .distinct)
     }
   }
 
   "return single result" - {
     "min" - {
       "some" in {
-        await(testContext.run(minExists)) mustEqual Some(products.map(_.sku).min)
+        await(testContext.run(minExists)) mustEqual Some(
+          products.map(_.sku).min
+        )
       }
       "none" in {
         await(testContext.run(minNonExists)) mustBe None
@@ -85,7 +106,9 @@ class QueryResultTypePostgresAsyncSpec extends QueryResultTypeSpec {
     }
     "avg" - {
       "some" in {
-        await(testContext.run(avgExists)) mustBe Some(BigDecimal(products.map(_.sku).sum) / products.size)
+        await(testContext.run(avgExists)) mustBe Some(
+          BigDecimal(products.map(_.sku).sum) / products.size
+        )
       }
       "none" in {
         await(testContext.run(avgNonExists)) mustBe None

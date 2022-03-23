@@ -37,7 +37,12 @@ class MirrorIdiomSpec extends Spec {
   "shows queries" - {
     "complex" in {
       val q = quote {
-        query[TestEntity].filter(t => t.s == "test").flatMap(t => query[TestEntity]).drop(9).take(10).map(t => t)
+        query[TestEntity]
+          .filter(t => t.s == "test")
+          .flatMap(t => query[TestEntity])
+          .drop(9)
+          .take(10)
+          .map(t => t)
       }
       stmt"${(q.ast: Ast).token}" mustEqual
         stmt"""querySchema("TestEntity").filter(t => t.s == "test").flatMap(t => querySchema("TestEntity")).drop(9).take(10).map(t => t)"""
@@ -160,8 +165,8 @@ class MirrorIdiomSpec extends Spec {
   }
 
   "shows functions" in {
-    val q = quote {
-      (s: String) => s
+    val q = quote { (s: String) =>
+      s
     }
     stmt"${(q.ast: Ast).token}" mustEqual
       stmt"""(s) => s"""
@@ -169,23 +174,23 @@ class MirrorIdiomSpec extends Spec {
 
   "shows operations" - {
     "unary" in {
-      val q = quote {
-        (xs: Query[_]) => !xs.nonEmpty
+      val q = quote { (xs: Query[_]) =>
+        !xs.nonEmpty
       }
       stmt"${(q.ast: Ast).token}" mustEqual
         stmt"""(xs) => !xs.nonEmpty"""
     }
     "binary" in {
-      val q = quote {
-        (xs: Query[_]) => xs.nonEmpty && xs != null
+      val q = quote { (xs: Query[_]) =>
+        xs.nonEmpty && xs != null
       }
       stmt"${(q.ast: Ast).token}" mustEqual
         stmt"""(xs) => xs.nonEmpty && (xs != null)"""
     }
     "function apply" - {
       "function reference" in {
-        val q = quote {
-          (s: String => String) => s("a")
+        val q = quote { (s: String => String) =>
+          s("a")
         }
         stmt"${(q.ast: Ast).token}" mustEqual
           stmt"""(s) => s.apply("a")"""
@@ -241,8 +246,8 @@ class MirrorIdiomSpec extends Spec {
   "shows unary operators" - {
     "prefix" - {
       "!" in {
-        val q = quote {
-          (s: String) => !(s == "s")
+        val q = quote { (s: String) =>
+          !(s == "s")
         }
         stmt"${(q.ast: Ast).token}" mustEqual
           stmt"""(s) => !(s == "s")"""
@@ -250,15 +255,15 @@ class MirrorIdiomSpec extends Spec {
     }
     "prostfix" - {
       "isEmpty" in {
-        val q = quote {
-          (xs: Query[_]) => xs.isEmpty
+        val q = quote { (xs: Query[_]) =>
+          xs.isEmpty
         }
         stmt"${(q.ast: Ast).token}" mustEqual
           stmt"""(xs) => xs.isEmpty"""
       }
       "nonEmpty" in {
-        val q = quote {
-          (xs: Query[_]) => xs.nonEmpty
+        val q = quote { (xs: Query[_]) =>
+          xs.nonEmpty
         }
         stmt"${(q.ast: Ast).token}" mustEqual
           stmt"""(xs) => xs.nonEmpty"""
@@ -268,92 +273,92 @@ class MirrorIdiomSpec extends Spec {
 
   "shows binary operators" - {
     "-" in {
-      val q = quote {
-        (a: Int, b: Int) => a - b
+      val q = quote { (a: Int, b: Int) =>
+        a - b
       }
       stmt"${(q.ast: Ast).token}" mustEqual
         stmt"""(a, b) => a - b"""
     }
     "+" in {
-      val q = quote {
-        (a: Int, b: Int) => a + b
+      val q = quote { (a: Int, b: Int) =>
+        a + b
       }
       stmt"${(q.ast: Ast).token}" mustEqual
         stmt"""(a, b) => a + b"""
     }
     "*" in {
-      val q = quote {
-        (a: Int, b: Int) => a * b
+      val q = quote { (a: Int, b: Int) =>
+        a * b
       }
       stmt"${(q.ast: Ast).token}" mustEqual
         stmt"""(a, b) => a * b"""
     }
     "==" in {
-      val q = quote {
-        (a: Int, b: Int) => a == b
+      val q = quote { (a: Int, b: Int) =>
+        a == b
       }
       stmt"${(q.ast: Ast).token}" mustEqual
         stmt"""(a, b) => a == b"""
     }
     "!=" in {
-      val q = quote {
-        (a: Int, b: Int) => a != b
+      val q = quote { (a: Int, b: Int) =>
+        a != b
       }
       stmt"${(q.ast: Ast).token}" mustEqual
         stmt"""(a, b) => a != b"""
     }
     "&&" in {
-      val q = quote {
-        (a: Boolean, b: Boolean) => a && b
+      val q = quote { (a: Boolean, b: Boolean) =>
+        a && b
       }
       stmt"${(q.ast: Ast).token}" mustEqual
         stmt"""(a, b) => a && b"""
     }
     "||" in {
-      val q = quote {
-        (a: Boolean, b: Boolean) => a || b
+      val q = quote { (a: Boolean, b: Boolean) =>
+        a || b
       }
       stmt"${(q.ast: Ast).token}" mustEqual
         stmt"""(a, b) => a || b"""
     }
     ">" in {
-      val q = quote {
-        (a: Int, b: Int) => a > b
+      val q = quote { (a: Int, b: Int) =>
+        a > b
       }
       stmt"${(q.ast: Ast).token}" mustEqual
         stmt"""(a, b) => a > b"""
     }
     ">=" in {
-      val q = quote {
-        (a: Int, b: Int) => a >= b
+      val q = quote { (a: Int, b: Int) =>
+        a >= b
       }
       stmt"${(q.ast: Ast).token}" mustEqual
         stmt"""(a, b) => a >= b"""
     }
     "<" in {
-      val q = quote {
-        (a: Int, b: Int) => a < b
+      val q = quote { (a: Int, b: Int) =>
+        a < b
       }
       stmt"${(q.ast: Ast).token}" mustEqual
         stmt"""(a, b) => a < b"""
     }
     "<=" in {
-      val q = quote {
-        (a: Int, b: Int) => a <= b
+      val q = quote { (a: Int, b: Int) =>
+        a <= b
       }
       stmt"${(q.ast: Ast).token}" mustEqual
         stmt"""(a, b) => a <= b"""
     }
     "/" in {
-      val q = quote {
-        (a: Int, b: Int) => a / b
+      val q = quote { (a: Int, b: Int) =>
+        a / b
       }
       stmt"${(q.ast: Ast).token}" mustEqual
         stmt"""(a, b) => a / b"""
     }
     "%" in {
-      val q = quote {
-        (a: Int, b: Int) => a % b
+      val q = quote { (a: Int, b: Int) =>
+        a % b
       }
       stmt"${(q.ast: Ast).token}" mustEqual
         stmt"""(a, b) => a % b"""
@@ -361,8 +366,8 @@ class MirrorIdiomSpec extends Spec {
   }
 
   "shows properties" in {
-    val q = quote {
-      (e: TestEntity) => e.s
+    val q = quote { (e: TestEntity) =>
+      e.s
     }
     stmt"${(q.ast: Ast).token}" mustEqual
       stmt"""(e) => e.s"""
@@ -409,8 +414,8 @@ class MirrorIdiomSpec extends Spec {
   }
 
   "shows idents" in {
-    val q = quote {
-      (a: String) => a
+    val q = quote { (a: String) =>
+      a
     }
     stmt"${(q.ast: Ast).token}" mustEqual
       stmt"""(a) => a"""
@@ -514,30 +519,30 @@ class MirrorIdiomSpec extends Spec {
     case class Row(id: Int, value: String)
 
     "getOrElse" in {
-      val q = quote {
-        (o: Option[Int]) => o.getOrElse(1)
+      val q = quote { (o: Option[Int]) =>
+        o.getOrElse(1)
       }
       stmt"${(q.ast: Ast).token}" mustEqual
         stmt"(o) => o.getOrElse(1)"
     }
     "flatten" in {
-      val q = quote {
-        (o: Option[Option[Int]]) => o.flatten
+      val q = quote { (o: Option[Option[Int]]) =>
+        o.flatten
       }
       stmt"${(q.ast: Ast).token}" mustEqual
         stmt"(o) => o.flatten"
     }
     "flatMap" - {
       "regular" in {
-        val q = quote {
-          (o: Option[Option[Int]]) => o.flatMap(v => v)
+        val q = quote { (o: Option[Option[Int]]) =>
+          o.flatMap(v => v)
         }
         stmt"${(q.ast: Ast).token}" mustEqual
           stmt"(o) => o.flatMap((v) => v)"
       }
       "row" in {
-        val q = quote {
-          (o: Option[Option[Row]]) => o.flatMap(v => v)
+        val q = quote { (o: Option[Option[Row]]) =>
+          o.flatMap(v => v)
         }
         stmt"${(q.ast: Ast).token}" mustEqual
           stmt"(o) => o.flatMap((v) => v)"
@@ -545,15 +550,15 @@ class MirrorIdiomSpec extends Spec {
     }
     "map" - {
       "regular" in {
-        val q = quote {
-          (o: Option[Int]) => o.map(v => v)
+        val q = quote { (o: Option[Int]) =>
+          o.map(v => v)
         }
         stmt"${(q.ast: Ast).token}" mustEqual
           stmt"(o) => o.map((v) => v)"
       }
       "row" in {
-        val q = quote {
-          (o: Option[Row]) => o.map(v => v)
+        val q = quote { (o: Option[Row]) =>
+          o.map(v => v)
         }
         stmt"${(q.ast: Ast).token}" mustEqual
           stmt"(o) => o.map((v) => v)"
@@ -561,15 +566,15 @@ class MirrorIdiomSpec extends Spec {
     }
     "forall" - {
       "regular" in {
-        val q = quote {
-          (o: Option[Boolean]) => o.forall(v => v)
+        val q = quote { (o: Option[Boolean]) =>
+          o.forall(v => v)
         }
         stmt"${(q.ast: Ast).token}" mustEqual
           stmt"(o) => o.forall((v) => v)"
       }
       "row" in {
-        val q = quote {
-          (o: Option[Row]) => o.forall(v => v.id == 1)
+        val q = quote { (o: Option[Row]) =>
+          o.forall(v => v.id == 1)
         }
         stmt"${(q.ast: Ast).token}" mustEqual
           stmt"(o) => o.forall((v) => v.id == 1)"
@@ -577,44 +582,44 @@ class MirrorIdiomSpec extends Spec {
     }
     "exists" - {
       "regular" in {
-        val q = quote {
-          (o: Option[Boolean]) => o.exists(v => v)
+        val q = quote { (o: Option[Boolean]) =>
+          o.exists(v => v)
         }
         stmt"${(q.ast: Ast).token}" mustEqual
           stmt"(o) => o.exists((v) => v)"
       }
       "row" in {
-        val q = quote {
-          (o: Option[Row]) => o.exists(v => v.id == 1)
+        val q = quote { (o: Option[Row]) =>
+          o.exists(v => v.id == 1)
         }
         stmt"${(q.ast: Ast).token}" mustEqual
           stmt"(o) => o.exists((v) => v.id == 1)"
       }
     }
     "contains" in {
-      val q = quote {
-        (o: Option[Boolean]) => o.contains(true)
+      val q = quote { (o: Option[Boolean]) =>
+        o.contains(true)
       }
       stmt"${(q.ast: Ast).token}" mustEqual
         stmt"(o) => o.contains(true)"
     }
     "isEmpty" in {
-      val q = quote {
-        (o: Option[Boolean]) => o.isEmpty
+      val q = quote { (o: Option[Boolean]) =>
+        o.isEmpty
       }
       stmt"${(q.ast: Ast).token}" mustEqual
         stmt"(o) => o.isEmpty"
     }
     "nonEmpty" in {
-      val q = quote {
-        (o: Option[Boolean]) => o.nonEmpty
+      val q = quote { (o: Option[Boolean]) =>
+        o.nonEmpty
       }
       stmt"${(q.ast: Ast).token}" mustEqual
         stmt"(o) => o.nonEmpty"
     }
     "isDefined" in {
-      val q = quote {
-        (o: Option[Boolean]) => o.isDefined
+      val q = quote { (o: Option[Boolean]) =>
+        o.isDefined
       }
       stmt"${(q.ast: Ast).token}" mustEqual
         stmt"(o) => o.isDefined"
@@ -623,22 +628,22 @@ class MirrorIdiomSpec extends Spec {
 
   "show traversable operation" - {
     "MapContains" in {
-      val q = quote {
-        (m: Predef.Map[Int, Int]) => m.contains(1)
+      val q = quote { (m: Predef.Map[Int, Int]) =>
+        m.contains(1)
       }
       stmt"${(q.ast: Ast).token}" mustEqual
         stmt"(m) => m.contains(1)"
     }
     "SetContains" in {
-      val q = quote {
-        (s: Set[Int]) => s.contains(1)
+      val q = quote { (s: Set[Int]) =>
+        s.contains(1)
       }
       stmt"${(q.ast: Ast).token}" mustEqual
         stmt"(s) => s.contains(1)"
     }
     "ListContains" in {
-      val q = quote {
-        (l: List[Int]) => l.contains(1)
+      val q = quote { (l: List[Int]) =>
+        l.contains(1)
       }
       stmt"${(q.ast: Ast).token}" mustEqual
         stmt"(l) => l.contains(1)"
@@ -647,7 +652,8 @@ class MirrorIdiomSpec extends Spec {
 
   "shows bindings" - {
     "quotedReference" in {
-      val ast: Ast = QuotedReference("ignore", Filter(Ident("a"), Ident("b"), Ident("c")))
+      val ast: Ast =
+        QuotedReference("ignore", Filter(Ident("a"), Ident("b"), Ident("c")))
       stmt"${(ast: Ast).token}" mustEqual
         stmt"""a.filter(b => c)"""
     }
@@ -667,9 +673,8 @@ class MirrorIdiomSpec extends Spec {
   }
 
   "shows if" in {
-    val q = quote {
-      (i: Int) =>
-        if (i > 10) "a" else "b"
+    val q = quote { (i: Int) =>
+      if (i > 10) "a" else "b"
     }
     stmt"${(q.ast.body: Ast).token}" mustEqual
       stmt"""if(i > 10) "a" else "b""""

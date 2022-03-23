@@ -7,17 +7,24 @@ import io.getquill.Spec
 class SetsEncodingSpec extends Spec {
 
   case class SetsEntity(
-    id:         Int,
-    texts:      Set[String],
-    bools:      Set[Boolean],
-    ints:       Set[Int],
-    longs:      Set[Long],
-    doubles:    Set[Double],
-    timestamps: Set[Date]
+      id: Int,
+      texts: Set[String],
+      bools: Set[Boolean],
+      ints: Set[Int],
+      longs: Set[Long],
+      doubles: Set[Double],
+      timestamps: Set[Date]
   )
 
-  val e = SetsEntity(1, Set("c"), Set(true), Set(1), Set(2),
-    Set(5.5d), Set(new Date()))
+  val e = SetsEntity(
+    1,
+    Set("c"),
+    Set(true),
+    Set(1),
+    Set(2),
+    Set(5.5d),
+    Set(new Date())
+  )
 
   private def verify(expected: SetsEntity, actual: SetsEntity): Boolean = {
     expected.id mustEqual actual.id
@@ -49,7 +56,11 @@ class SetsEncodingSpec extends Spec {
   "Empty Lists and optional fields" in {
     val ctx = orientdb.testSyncDB
     import ctx._
-    case class Entity(id: Int, texts: Option[List[String]], bools: Option[List[String]])
+    case class Entity(
+        id: Int,
+        texts: Option[List[String]],
+        bools: Option[List[String]]
+    )
     val e = Entity(1, Some(List("1", "2")), None)
     val q = quote(querySchema[Entity]("ListEntity"))
 
@@ -67,8 +78,9 @@ class SetsEncodingSpec extends Spec {
 
     ctx.run(q.delete)
     ctx.run(q.insertValue(lift(e)))
-    ctx.run(q.filter(_.id == 1))
-      .head.blobs.map(_.toList) mustBe e.blobs.map(_.toList)
+    ctx.run(q.filter(_.id == 1)).head.blobs.map(_.toList) mustBe e.blobs.map(
+      _.toList
+    )
   }
 
   "Set in where clause" in {

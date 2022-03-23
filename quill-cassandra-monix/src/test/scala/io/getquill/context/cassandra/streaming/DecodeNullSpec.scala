@@ -9,12 +9,17 @@ class DecodeNullSpec extends Spec {
     "stream" in {
       import monix.execution.Scheduler.Implicits.global
       import testStreamDB._
-      val writeEntities = quote(querySchema[DecodeNullTestWriteEntity]("DecodeNullTestEntity"))
+      val writeEntities =
+        quote(querySchema[DecodeNullTestWriteEntity]("DecodeNullTestEntity"))
 
       val result =
         for {
           _ <- testStreamDB.run(writeEntities.delete)
-          _ <- Observable.fromTask(testStreamDB.run(writeEntities.insertValue(lift(insertValue))).countL)
+          _ <- Observable.fromTask(
+            testStreamDB
+              .run(writeEntities.insertValue(lift(insertValue)))
+              .countL
+          )
           result <- testStreamDB.run(query[DecodeNullTestEntity])
         } yield {
           result

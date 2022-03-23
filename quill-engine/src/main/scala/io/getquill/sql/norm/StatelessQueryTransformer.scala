@@ -1,6 +1,17 @@
 package io.getquill.sql.norm
 
-import io.getquill.context.sql.{ FlatJoinContext, FlattenSqlQuery, FromContext, InfixContext, JoinContext, QueryContext, SetOperationSqlQuery, SqlQuery, TableContext, UnaryOperationSqlQuery }
+import io.getquill.context.sql.{
+  FlatJoinContext,
+  FlattenSqlQuery,
+  FromContext,
+  InfixContext,
+  JoinContext,
+  QueryContext,
+  SetOperationSqlQuery,
+  SqlQuery,
+  TableContext,
+  UnaryOperationSqlQuery
+}
 import io.getquill.quat.Quat
 
 sealed trait QueryLevel {
@@ -13,10 +24,15 @@ sealed trait QueryLevel {
     }
 }
 object QueryLevel {
+
   /** Top-level externally-facing query */
   case class Top(topLevelQuat: Quat) extends QueryLevel { val isTop = true }
-  /** Top-level query that is not externally facing e.g. it's an unwrapped case class AST */
+
+  /** Top-level query that is not externally facing e.g. it's an unwrapped case
+    * class AST
+    */
   case object TopUnwrapped extends QueryLevel { val isTop = true }
+
   /** Not a Top-level query */
   case object Inner extends QueryLevel { val isTop = false }
 }
@@ -37,7 +53,10 @@ trait StatelessQueryTransformer {
         UnaryOperationSqlQuery(op, apply(q, level))(q.quat)
     }
 
-  protected def expandNested(q: FlattenSqlQuery, level: QueryLevel): FlattenSqlQuery
+  protected def expandNested(
+      q: FlattenSqlQuery,
+      level: QueryLevel
+  ): FlattenSqlQuery
 
   protected def expandContext(s: FromContext): FromContext =
     s match {

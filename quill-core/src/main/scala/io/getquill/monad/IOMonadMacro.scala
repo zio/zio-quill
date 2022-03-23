@@ -1,6 +1,6 @@
 package io.getquill.monad
 
-import scala.reflect.macros.blackbox.{ Context => MacroContext }
+import scala.reflect.macros.blackbox.{Context => MacroContext}
 import scala.concurrent.ExecutionContext
 
 class IOMonadMacro(val c: MacroContext) {
@@ -19,7 +19,8 @@ class IOMonadMacro(val c: MacroContext) {
           tree.symbol.name.decodedName.toString
       }
 
-    val v = q"implicit val ${TermName(ecName)}: scala.concurrent.ExecutionContext"
+    val v =
+      q"implicit val ${TermName(ecName)}: scala.concurrent.ExecutionContext"
     q"${c.prefix}.Run($v => ${c.prefix}.run($quoted))"
   }
 }

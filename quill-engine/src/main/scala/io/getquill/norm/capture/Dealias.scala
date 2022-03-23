@@ -5,7 +5,8 @@ import io.getquill.norm.BetaReduction
 import io.getquill.util.Interpolator
 import io.getquill.util.Messages.TraceType
 
-case class Dealias(state: Option[Ident]) extends StatefulTransformer[Option[Ident]] {
+case class Dealias(state: Option[Ident])
+    extends StatefulTransformer[Option[Ident]] {
 
   val interp = new Interpolator(TraceType.Standard, 3)
   import interp._

@@ -293,7 +293,9 @@ class ContextMacroSpec extends Spec {
         val q = quote {
           infix"SELECT ${lift("a")}".as[Query[String]]
         }
-        testContext.translate(q) mustEqual s"""infix"SELECT $${'a'}".map(x => x)"""
+        testContext.translate(
+          q
+        ) mustEqual s"""infix"SELECT $${'a'}".map(x => x)"""
       }
       "dynamic" in {
         val q = quote {
@@ -348,21 +350,39 @@ class ContextMacroSpec extends Spec {
 
   "supports composite naming strategies" - {
     "two" in {
-      object ctx extends MirrorContext(MirrorIdiom, NamingStrategy(Literal, Escape)) with TestEntities
+      object ctx
+          extends MirrorContext(MirrorIdiom, NamingStrategy(Literal, Escape))
+          with TestEntities
       import ctx._
-      ctx.run(query[TestEntity]).string mustEqual """querySchema("TestEntity")"""
+      ctx
+        .run(query[TestEntity])
+        .string mustEqual """querySchema("TestEntity")"""
       ctx.translate(query[TestEntity]) mustEqual """querySchema("TestEntity")"""
     }
     "three" in {
-      object ctx extends MirrorContext(MirrorIdiom, NamingStrategy(Literal, Escape, UpperCase)) with TestEntities
+      object ctx
+          extends MirrorContext(
+            MirrorIdiom,
+            NamingStrategy(Literal, Escape, UpperCase)
+          )
+          with TestEntities
       import ctx._
-      ctx.run(query[TestEntity]).string mustEqual """querySchema("TestEntity")"""
+      ctx
+        .run(query[TestEntity])
+        .string mustEqual """querySchema("TestEntity")"""
       ctx.translate(query[TestEntity]) mustEqual """querySchema("TestEntity")"""
     }
     "four" in {
-      object ctx extends MirrorContext(MirrorIdiom, NamingStrategy(Literal, Escape, UpperCase, SnakeCase)) with TestEntities
+      object ctx
+          extends MirrorContext(
+            MirrorIdiom,
+            NamingStrategy(Literal, Escape, UpperCase, SnakeCase)
+          )
+          with TestEntities
       import ctx._
-      ctx.run(query[TestEntity]).string mustEqual """querySchema("TestEntity")"""
+      ctx
+        .run(query[TestEntity])
+        .string mustEqual """querySchema("TestEntity")"""
       ctx.translate(query[TestEntity]) mustEqual """querySchema("TestEntity")"""
     }
   }

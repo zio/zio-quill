@@ -7,7 +7,9 @@ import scala.math.BigDecimal.int2bigDecimal
 
 import io.getquill.context.sql.QueryResultTypeSpec
 
-class QueryResultTypePostgresAsyncSpec extends QueryResultTypeSpec with ZioSpec {
+class QueryResultTypePostgresAsyncSpec
+    extends QueryResultTypeSpec
+    with ZioSpec {
 
   import context._
 
@@ -15,9 +17,11 @@ class QueryResultTypePostgresAsyncSpec extends QueryResultTypeSpec with ZioSpec 
 
   override def beforeAll = {
     runSyncUnsafe(testContext.run(deleteAll))
-    val ids = runSyncUnsafe(testContext.run(liftQuery(productEntries).foreach(e => productInsert(e))))
-    val inserted = (ids zip productEntries).map {
-      case (id, prod) => prod.copy(id = id)
+    val ids = runSyncUnsafe(
+      testContext.run(liftQuery(productEntries).foreach(e => productInsert(e)))
+    )
+    val inserted = (ids zip productEntries).map { case (id, prod) =>
+      prod.copy(id = id)
     }
     insertedProducts.addAll(inserted.asJava)
     ()
@@ -27,47 +31,73 @@ class QueryResultTypePostgresAsyncSpec extends QueryResultTypeSpec with ZioSpec 
 
   "return list" - {
     "select" in {
-      runSyncUnsafe(testContext.run(selectAll)) must contain theSameElementsAs (products)
+      runSyncUnsafe(
+        testContext.run(selectAll)
+      ) must contain theSameElementsAs (products)
     }
     "map" in {
-      runSyncUnsafe(testContext.run(map)) must contain theSameElementsAs (products.map(_.id))
+      runSyncUnsafe(
+        testContext.run(map)
+      ) must contain theSameElementsAs (products.map(_.id))
     }
     "filter" in {
-      runSyncUnsafe(testContext.run(filter)) must contain theSameElementsAs (products)
+      runSyncUnsafe(
+        testContext.run(filter)
+      ) must contain theSameElementsAs (products)
     }
     "withFilter" in {
-      runSyncUnsafe(testContext.run(withFilter)) must contain theSameElementsAs (products)
+      runSyncUnsafe(
+        testContext.run(withFilter)
+      ) must contain theSameElementsAs (products)
     }
     "sortBy" in {
-      runSyncUnsafe(testContext.run(sortBy)) must contain theSameElementsInOrderAs (products)
+      runSyncUnsafe(
+        testContext.run(sortBy)
+      ) must contain theSameElementsInOrderAs (products)
     }
     "take" in {
-      runSyncUnsafe(testContext.run(take)) must contain theSameElementsAs (products)
+      runSyncUnsafe(
+        testContext.run(take)
+      ) must contain theSameElementsAs (products)
     }
     "drop" in {
-      runSyncUnsafe(testContext.run(drop)) must contain theSameElementsAs (products.drop(1))
+      runSyncUnsafe(
+        testContext.run(drop)
+      ) must contain theSameElementsAs (products.drop(1))
     }
     "++" in {
-      runSyncUnsafe(testContext.run(`++`)) must contain theSameElementsAs (products ++ products)
+      runSyncUnsafe(
+        testContext.run(`++`)
+      ) must contain theSameElementsAs (products ++ products)
     }
     "unionAll" in {
-      runSyncUnsafe(testContext.run(unionAll)) must contain theSameElementsAs (products ++ products)
+      runSyncUnsafe(
+        testContext.run(unionAll)
+      ) must contain theSameElementsAs (products ++ products)
     }
     "union" in {
-      runSyncUnsafe(testContext.run(union)) must contain theSameElementsAs (products)
+      runSyncUnsafe(
+        testContext.run(union)
+      ) must contain theSameElementsAs (products)
     }
     "join" in {
-      runSyncUnsafe(testContext.run(join)) must contain theSameElementsAs (products zip products)
+      runSyncUnsafe(
+        testContext.run(join)
+      ) must contain theSameElementsAs (products zip products)
     }
     "distinct" in {
-      runSyncUnsafe(testContext.run(distinct)) must contain theSameElementsAs (products.map(_.id).distinct)
+      runSyncUnsafe(
+        testContext.run(distinct)
+      ) must contain theSameElementsAs (products.map(_.id).distinct)
     }
   }
 
   "return single result" - {
     "min" - {
       "some" in {
-        runSyncUnsafe(testContext.run(minExists)) mustEqual Some(products.map(_.sku).min)
+        runSyncUnsafe(testContext.run(minExists)) mustEqual Some(
+          products.map(_.sku).min
+        )
       }
       "none" in {
         runSyncUnsafe(testContext.run(minNonExists)) mustBe None
@@ -75,7 +105,9 @@ class QueryResultTypePostgresAsyncSpec extends QueryResultTypeSpec with ZioSpec 
     }
     "max" - {
       "some" in {
-        runSyncUnsafe(testContext.run(maxExists)) mustBe Some(products.map(_.sku).max)
+        runSyncUnsafe(testContext.run(maxExists)) mustBe Some(
+          products.map(_.sku).max
+        )
       }
       "none" in {
         runSyncUnsafe(testContext.run(maxNonExists)) mustBe None
@@ -83,7 +115,9 @@ class QueryResultTypePostgresAsyncSpec extends QueryResultTypeSpec with ZioSpec 
     }
     "avg" - {
       "some" in {
-        runSyncUnsafe(testContext.run(avgExists)) mustBe Some(BigDecimal(products.map(_.sku).sum) / products.size)
+        runSyncUnsafe(testContext.run(avgExists)) mustBe Some(
+          BigDecimal(products.map(_.sku).sum) / products.size
+        )
       }
       "none" in {
         runSyncUnsafe(testContext.run(avgNonExists)) mustBe None

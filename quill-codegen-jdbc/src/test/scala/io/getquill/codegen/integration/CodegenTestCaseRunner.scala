@@ -32,12 +32,15 @@ object CodegenTestCaseRunner {
   }
 
   def apply(dbPrefix: ConfigPrefix, path: String) = {
-    CodegenTestCases(dbPrefix).map(gen => {
-      logger.info(s"Generating files for: ${dbPrefix.value} (${dbPrefix.packagePath}) with ${gen}")
-      // Since auto-commit in enabled, need to wait for each test-case individually. Otherwise tests
-      // will step on each-other's toes.
-      Await.result(gen.generateWithSchema(dbPrefix, path), Duration.Inf).toSeq
-    }).flatten
+    CodegenTestCases(dbPrefix)
+      .map(gen => {
+        logger.info(
+          s"Generating files for: ${dbPrefix.value} (${dbPrefix.packagePath}) with ${gen}"
+        )
+        // Since auto-commit in enabled, need to wait for each test-case individually. Otherwise tests
+        // will step on each-other's toes.
+        Await.result(gen.generateWithSchema(dbPrefix, path), Duration.Inf).toSeq
+      })
+      .flatten
   }
 }
-

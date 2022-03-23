@@ -7,7 +7,13 @@ class JdbcContextSpec extends Spec {
   import testContext._
 
   val badEntity = quote {
-    querySchema[TestEntity]("TestEntity", _.s -> "a", _.i -> "i", _.l -> "l", _.o -> "o")
+    querySchema[TestEntity](
+      "TestEntity",
+      _.s -> "a",
+      _.i -> "i",
+      _.l -> "l",
+      _.o -> "o"
+    )
   }
 
   "provides transaction support" - {
@@ -39,7 +45,8 @@ class JdbcContextSpec extends Spec {
     }
     "prepare" in {
       testContext.prepareParams(
-        "select * from Person where name=? and age > ?", (ps, session) => (List("Sarah", 127), ps)
+        "select * from Person where name=? and age > ?",
+        (ps, session) => (List("Sarah", 127), ps)
       ) mustEqual List("127", "'Sarah'")
     }
   }

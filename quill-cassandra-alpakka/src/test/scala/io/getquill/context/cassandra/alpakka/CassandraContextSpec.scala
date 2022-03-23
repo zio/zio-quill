@@ -20,8 +20,12 @@ class CassandraContextSpec extends CassandraAlpakkaSpec {
     val p: Prepare = (x, session) => (Nil, x)
     val e: Extractor[Int] = (_, _) => 1
 
-    intercept[IllegalStateException](executeActionReturning("", p, e, "")(ExecutionInfo.unknown, ())).getMessage mustBe
-      intercept[IllegalStateException](executeBatchActionReturning(Nil, e)(ExecutionInfo.unknown, ())).getMessage
+    intercept[IllegalStateException](
+      executeActionReturning("", p, e, "")(ExecutionInfo.unknown, ())
+    ).getMessage mustBe
+      intercept[IllegalStateException](
+        executeBatchActionReturning(Nil, e)(ExecutionInfo.unknown, ())
+      ).getMessage
   }
 
   "return failed future on `prepare` error in async context" - {

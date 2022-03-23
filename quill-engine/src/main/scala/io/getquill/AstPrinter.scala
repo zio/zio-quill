@@ -1,12 +1,12 @@
 package io.getquill
 
 import fansi.Str
-import io.getquill.ast.Renameable.{ ByStrategy, Fixed }
-import io.getquill.ast.Visibility.{ Hidden, Visible }
+import io.getquill.ast.Renameable.{ByStrategy, Fixed}
+import io.getquill.ast.Visibility.{Hidden, Visible}
 import io.getquill.ast._
 import io.getquill.quat.Quat
 import io.getquill.util.Messages.QuatTrace
-import pprint.{ Renderer, Tree, Truncated }
+import pprint.{Renderer, Tree, Truncated}
 
 object AstPrinter {
   object Implicits {
@@ -18,7 +18,11 @@ object AstPrinter {
   }
 }
 
-class AstPrinter(traceOpinions: Boolean, traceAstSimple: Boolean, traceQuats: QuatTrace) extends pprint.Walker {
+class AstPrinter(
+    traceOpinions: Boolean,
+    traceAstSimple: Boolean,
+    traceQuats: QuatTrace
+) extends pprint.Walker {
   val defaultWidth: Int = 150
   val defaultHeight: Int = Integer.MAX_VALUE
   val defaultIndent: Int = 2
@@ -35,7 +39,8 @@ class AstPrinter(traceOpinions: Boolean, traceAstSimple: Boolean, traceQuats: Qu
       case Fixed      => Tree.Literal("Fix")
     }
 
-  override def additionalHandlers: PartialFunction[Any, Tree] = PartialFunction.empty
+  override def additionalHandlers: PartialFunction[Any, Tree] =
+    PartialFunction.empty
 
   private def printVisibility(v: Visibility) =
     v match {
@@ -58,9 +63,10 @@ class AstPrinter(traceOpinions: Boolean, traceAstSimple: Boolean, traceQuats: Qu
       toContent.list.flatMap {
         case e: treemake.Quat =>
           traceQuats match {
-            case QuatTrace.Full | QuatTrace.All => List(Tree.Literal(e.q.shortString))
-            case QuatTrace.Short                => List(Tree.Literal(e.q.shortString.take(10)))
-            case QuatTrace.None                 => List()
+            case QuatTrace.Full | QuatTrace.All =>
+              List(Tree.Literal(e.q.shortString))
+            case QuatTrace.Short => List(Tree.Literal(e.q.shortString.take(10)))
+            case QuatTrace.None  => List()
           }
         case treemake.Elem(value)   => List(treeify(value))
         case treemake.Tree(value)   => List(value)
@@ -95,33 +101,60 @@ class AstPrinter(traceOpinions: Boolean, traceAstSimple: Boolean, traceQuats: Qu
         Tree.Apply("Id", treemake(i.name).withQuat(i.bestQuat).make)
 
       case i: Infix =>
-        val content = List(i.parts.toList, i.params.toList) ++ (if (i.pure) List("pure") else List()) ++ (if (i.transparent) List("transparent") else List())
+        val content =
+          List(i.parts.toList, i.params.toList) ++ (if (i.pure) List("pure")
+                                                    else
+                                                      List()) ++ (if (
+                                                                    i.transparent
+                                                                  )
+                                                                    List(
+                                                                      "transparent"
+                                                                    )
+                                                                  else List())
         Tree.Apply("Infix", treemake(content: _*).withQuat(i.bestQuat).make)
 
       case e: Entity if (!traceOpinions) =>
-        Tree.Apply("Entity", treemake(e.name, e.properties).withQuat(e.bestQuat).make)
+        Tree.Apply(
+          "Entity",
+          treemake(e.name, e.properties).withQuat(e.bestQuat).make
+        )
 
-      case q: Quat            => Tree.Literal(q.shortString)
+      case q: Quat => Tree.Literal(q.shortString)
 
-      case s: ScalarValueLift => Tree.Apply("ScalarValueLift", treemake("..." + s.name.reverse.take(15).reverse).withQuat(s.bestQuat).make)
+      case s: ScalarValueLift =>
+        Tree.Apply(
+          "ScalarValueLift",
+          treemake("..." + s.name.reverse.take(15).reverse)
+            .withQuat(s.bestQuat)
+            .make
+        )
 
       case p: Property if (traceOpinions) =>
-        TreeApplyList("Property", l(treeify(p.ast)) ++ l(treeify(p.name)) ++
-          (
-            if (traceOpinions)
-              l(printRenameable(p.renameable), printVisibility(p.visibility))
-            else
-              List.empty[Tree]
-          ) ++
+        TreeApplyList(
+          "Property",
+          l(treeify(p.ast)) ++ l(treeify(p.name)) ++
+            (
+              if (traceOpinions)
+                l(printRenameable(p.renameable), printVisibility(p.visibility))
+              else
+                List.empty[Tree]
+            ) ++
             (
               if (traceAllQuats)
                 l(treeify(p.bestQuat))
               else
                 List.empty[Tree]
-            ))
+            )
+        )
 
       case e: Entity if (traceOpinions) =>
-        Tree.Apply("Entity", treemake(e.name, e.properties).withTree(printRenameable(e.renameable)).withQuat(e.bestQuat).make)
+        Tree.Apply(
+          "Entity",
+          treemake(e.name, e.properties)
+            .withTree(printRenameable(e.renameable))
+            .withQuat(e.bestQuat)
+            .make
+        )
 
       case ast: Ast =>
         if (traceAllQuats)
@@ -136,7 +169,8 @@ class AstPrinter(traceOpinions: Boolean, traceAstSimple: Boolean, traceQuats: Qu
       case _ => super.treeify(x)
     }
 
-  private def TreeApplyList(prefix: String, body: List[Tree]) = Tree.Apply(prefix, body.iterator)
+  private def TreeApplyList(prefix: String, body: List[Tree]) =
+    Tree.Apply(prefix, body.iterator)
 
   private def l(trees: Tree*): List[Tree] = List[Tree](trees: _*)
 
@@ -146,16 +180,17 @@ class AstPrinter(traceOpinions: Boolean, traceAstSimple: Boolean, traceQuats: Qu
 
   def tokenize(x: Any): Iterator[fansi.Str] = {
     val tree = this.treeify(x)
-    val renderer = new Renderer(defaultWidth, colorApplyPrefix, colorLiteral, defaultIndent)
+    val renderer =
+      new Renderer(defaultWidth, colorApplyPrefix, colorLiteral, defaultIndent)
     val rendered = renderer.rec(tree, 0, 0).iter
     val truncated = new Truncated(rendered, defaultWidth, defaultHeight)
     truncated
   }
 }
 
-/**
- * A trait to be used by elements that are not proper AST elements but should still be treated as though
- * they were in the case where `traceAstSimple` is enabled (i.e. their toString method should be
- * used instead of the standard qprint AST printing)
- */
+/** A trait to be used by elements that are not proper AST elements but should
+  * still be treated as though they were in the case where `traceAstSimple` is
+  * enabled (i.e. their toString method should be used instead of the standard
+  * qprint AST printing)
+  */
 trait PseudoAst

@@ -10,6 +10,5 @@ sealed trait NumericPreference
 case object PreferPrimitivesWhenPossible extends NumericPreference
 case object UseDefaults extends NumericPreference
 
-class TypingError(private val message: String) extends RuntimeException(message) {
-}
-
+class TypingError(private val message: String)
+    extends RuntimeException(message) {}

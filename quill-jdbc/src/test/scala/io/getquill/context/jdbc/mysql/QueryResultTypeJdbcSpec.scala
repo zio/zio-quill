@@ -15,9 +15,10 @@ class QueryResultTypeJdbcSpec extends QueryResultTypeSpec {
 
   override def beforeAll = {
     context.run(deleteAll)
-    val ids = context.run(liftQuery(productEntries).foreach(p => productInsert(p)))
-    val inserted = (ids zip productEntries).map {
-      case (id, prod) => prod.copy(id = id)
+    val ids =
+      context.run(liftQuery(productEntries).foreach(p => productInsert(p)))
+    val inserted = (ids zip productEntries).map { case (id, prod) =>
+      prod.copy(id = id)
     }
     insertedProducts.addAll(inserted.asJava)
     ()
@@ -30,7 +31,9 @@ class QueryResultTypeJdbcSpec extends QueryResultTypeSpec {
       await(context.run(selectAll)) must contain theSameElementsAs (products)
     }
     "map" in {
-      await(context.run(map)) must contain theSameElementsAs (products.map(_.id))
+      await(context.run(map)) must contain theSameElementsAs (products.map(
+        _.id
+      ))
     }
     "filter" in {
       await(context.run(filter)) must contain theSameElementsAs (products)
@@ -39,7 +42,9 @@ class QueryResultTypeJdbcSpec extends QueryResultTypeSpec {
       await(context.run(withFilter)) must contain theSameElementsAs (products)
     }
     "sortBy" in {
-      await(context.run(sortBy)) must contain theSameElementsInOrderAs (products)
+      await(
+        context.run(sortBy)
+      ) must contain theSameElementsInOrderAs (products)
     }
     "take" in {
       await(context.run(take)) must contain theSameElementsAs (products)
@@ -48,19 +53,27 @@ class QueryResultTypeJdbcSpec extends QueryResultTypeSpec {
       await(context.run(drop)) must contain theSameElementsAs (products.drop(1))
     }
     "++" in {
-      await(context.run(`++`)) must contain theSameElementsAs (products ++ products)
+      await(
+        context.run(`++`)
+      ) must contain theSameElementsAs (products ++ products)
     }
     "unionAll" in {
-      await(context.run(unionAll)) must contain theSameElementsAs (products ++ products)
+      await(
+        context.run(unionAll)
+      ) must contain theSameElementsAs (products ++ products)
     }
     "union" in {
       await(context.run(union)) must contain theSameElementsAs (products)
     }
     "join" in {
-      await(context.run(join)) must contain theSameElementsAs (products zip products)
+      await(
+        context.run(join)
+      ) must contain theSameElementsAs (products zip products)
     }
     "distinct" in {
-      await(context.run(distinct)) must contain theSameElementsAs (products.map(_.id).distinct)
+      await(context.run(distinct)) must contain theSameElementsAs (products
+        .map(_.id)
+        .distinct)
     }
   }
 
@@ -83,7 +96,9 @@ class QueryResultTypeJdbcSpec extends QueryResultTypeSpec {
     }
     "avg" - {
       "some" in {
-        await(context.run(avgExists)) mustBe Some(BigDecimal(products.map(_.sku).sum) / products.size)
+        await(context.run(avgExists)) mustBe Some(
+          BigDecimal(products.map(_.sku).sum) / products.size
+        )
       }
       "none" in {
         await(context.run(avgNonExists)) mustBe None

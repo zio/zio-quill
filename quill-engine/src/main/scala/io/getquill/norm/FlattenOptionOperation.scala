@@ -5,7 +5,8 @@ import io.getquill.ast.Implicits._
 import io.getquill.norm.ConcatBehavior.NonAnsiConcat
 import io.getquill.quat.QuatOps.HasBooleanQuat
 
-class FlattenOptionOperation(concatBehavior: ConcatBehavior) extends StatelessTransformer {
+class FlattenOptionOperation(concatBehavior: ConcatBehavior)
+    extends StatelessTransformer {
 
   private def emptyOrNot(b: Boolean, ast: Ast) =
     if (b) OptionIsEmpty(ast) else OptionNonEmpty(ast)
@@ -20,9 +21,11 @@ class FlattenOptionOperation(concatBehavior: ConcatBehavior) extends StatelessTr
 
   def containsNonFallthroughElement(ast: Ast) =
     CollectAst(ast) {
-      case If(_, _, _) => true
+      case If(_, _, _)          => true
       case Infix(_, _, _, _, _) => true
-      case BinaryOperation(_, StringOperator.`+`, _) if (concatBehavior == NonAnsiConcat) => true
+      case BinaryOperation(_, StringOperator.`+`, _)
+          if (concatBehavior == NonAnsiConcat) =>
+        true
     }.nonEmpty
 
   override def apply(ast: Ast): Ast =
@@ -55,9 +58,14 @@ class FlattenOptionOperation(concatBehavior: ConcatBehavior) extends StatelessTr
       case OptionGetOrNull(ast) =>
         apply(ast)
 
-      case OptionGetOrElse(HasBooleanQuat(OptionMap(ast, alias, body)), HasBooleanQuat(alternative)) =>
+      case OptionGetOrElse(
+            HasBooleanQuat(OptionMap(ast, alias, body)),
+            HasBooleanQuat(alternative)
+          ) =>
         val expr = BetaReduction(body, alias -> ast)
-        val output: Ast = (IsNotNullCheck(ast) +&&+ expr) +||+ (IsNullCheck(ast) +&&+ alternative)
+        val output: Ast = (IsNotNullCheck(ast) +&&+ expr) +||+ (IsNullCheck(
+          ast
+        ) +&&+ alternative)
         apply(output)
 
       case OptionGetOrElse(ast, body) =>
@@ -82,7 +90,9 @@ class FlattenOptionOperation(concatBehavior: ConcatBehavior) extends StatelessTr
       case OptionForall(ast, alias, body) =>
         if (containsNonFallthroughElement(body)) {
           val reduction = BetaReduction(body, alias -> ast)
-          apply((IsNullCheck(ast) +||+ (IsNotNullCheck(ast) +&&+ reduction)): Ast)
+          apply(
+            (IsNullCheck(ast) +||+ (IsNotNullCheck(ast) +&&+ reduction)): Ast
+          )
         } else {
           uncheckedForall(ast, alias, body)
         }

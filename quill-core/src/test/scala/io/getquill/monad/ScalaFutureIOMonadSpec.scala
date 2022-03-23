@@ -38,13 +38,17 @@ class ScalaFutureIOMonadSpec extends IOMonadSpec {
     }
     "RunBatchActionReturningResult" in {
       val l = List(TestEntity("1", 2, 3L, Some(4), true))
-      val q = quote(liftQuery(l).foreach(t => qr1.insertValue(t).returning(_.i)))
+      val q =
+        quote(liftQuery(l).foreach(t => qr1.insertValue(t).returning(_.i)))
       eval(ctx.runIO(q)).groups mustEqual ctx.eval(ctx.run(q)).groups
     }
     "transactional" in {
       val l = List(TestEntity("1", 2, 3L, Some(4), true))
-      val q = quote(liftQuery(l).foreach(t => qr1.insertValue(t).returning(_.i)))
-      eval(ctx.runIO(q).transactional).ec mustEqual TransactionalExecutionContext(implicitly[ExecutionContext])
+      val q =
+        quote(liftQuery(l).foreach(t => qr1.insertValue(t).returning(_.i)))
+      eval(
+        ctx.runIO(q).transactional
+      ).ec mustEqual TransactionalExecutionContext(implicitly[ExecutionContext])
     }
   }
 }

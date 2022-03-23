@@ -1,7 +1,7 @@
 package io.getquill.context.sql.idiom
 
 import io.getquill.ReturnAction.ReturnColumns
-import io.getquill.{ MirrorSqlDialectWithReturnMulti, Spec }
+import io.getquill.{MirrorSqlDialectWithReturnMulti, Spec}
 import io.getquill.context.mirror.Row
 import io.getquill.context.sql.testContext
 import io.getquill.context.sql.testContext._
@@ -14,7 +14,9 @@ class SqlIdiomSpec extends Spec {
   case class TwoIntsClassScope(one: Int, two: Int)
 
   // remove the === matcher from scalatest so that we can test === in Context.extra
-  override def convertToEqualizer[T](left: T): Equalizer[T] = new Equalizer(left)
+  override def convertToEqualizer[T](left: T): Equalizer[T] = new Equalizer(
+    left
+  )
 
   "shows the sql representation of normalized asts" - {
     "query" - {
@@ -32,7 +34,10 @@ class SqlIdiomSpec extends Spec {
       "multiple filters" - {
         "ANDs" in {
           val q = quote {
-            qr1.filter(t => t.s == "a").filter(t => t.i == 1).filter(t => t.l == 2L)
+            qr1
+              .filter(t => t.s == "a")
+              .filter(t => t.i == 1)
+              .filter(t => t.l == 2L)
           }
           testContext.run(q).string mustEqual
             "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.s = 'a' AND t.i = 1 AND t.l = 2"
@@ -55,21 +60,27 @@ class SqlIdiomSpec extends Spec {
         "ensure precedence" - {
           "OR AND OR" in {
             val q = quote {
-              qr1.filter(t => t.s == "a" || t.s == "x").filter(t => t.i == 1 || t.i == 2)
+              qr1
+                .filter(t => t.s == "a" || t.s == "x")
+                .filter(t => t.i == 1 || t.i == 2)
             }
             testContext.run(q).string mustEqual
               "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE (t.s = 'a' OR t.s = 'x') AND (t.i = 1 OR t.i = 2)"
           }
           "AND + scoped ORs" in {
             val q = quote {
-              qr1.filter(t => t.s == "s").filter(t => t.i == 1 || t.i == 2 || t.i == 3)
+              qr1
+                .filter(t => t.s == "s")
+                .filter(t => t.i == 1 || t.i == 2 || t.i == 3)
             }
             testContext.run(q).string mustEqual
               "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.s = 's' AND (t.i = 1 OR t.i = 2 OR t.i = 3)"
           }
           "scoped ORs + AND" in {
             val q = quote {
-              qr1.filter(t => t.i == 1 || t.i == 2 || t.i == 3).filter(t => t.s == "s")
+              qr1
+                .filter(t => t.i == 1 || t.i == 2 || t.i == 3)
+                .filter(t => t.s == "s")
             }
             testContext.run(q).string mustEqual
               "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE (t.i = 1 OR t.i = 2 OR t.i = 3) AND t.s = 's'"
@@ -263,8 +274,8 @@ class SqlIdiomSpec extends Spec {
       "grouped" - {
         "simple" in {
           val q = quote {
-            qr1.groupBy(t => t.i).map {
-              case (i, entities) => (i, entities.size)
+            qr1.groupBy(t => t.i).map { case (i, entities) =>
+              (i, entities.size)
             }
           }
           testContext.run(q).string mustEqual
@@ -273,8 +284,8 @@ class SqlIdiomSpec extends Spec {
         "nested" in {
           val q = quote {
             for {
-              (a, b) <- qr1.groupBy(t => t.i).map {
-                case (i, entities) => (i, entities.size)
+              (a, b) <- qr1.groupBy(t => t.i).map { case (i, entities) =>
+                (i, entities.size)
               }
               c <- qr2 if c.i == a
             } yield {
@@ -286,10 +297,12 @@ class SqlIdiomSpec extends Spec {
         }
         "limited" in {
           val q = quote {
-            qr1.groupBy(t => t.i).map {
-              case (i, e) =>
+            qr1
+              .groupBy(t => t.i)
+              .map { case (i, e) =>
                 (i, e.map(_.l).min)
-            }.take(10)
+              }
+              .take(10)
           }
 
           testContext.run(q).string mustEqual
@@ -345,8 +358,8 @@ class SqlIdiomSpec extends Spec {
           }
           "with groupBy" in {
             val q = quote {
-              qr1.map(t => (t.i, t.s)).groupBy(t => t._1).map {
-                case (i, l) => l.size
+              qr1.map(t => (t.i, t.s)).groupBy(t => t._1).map { case (i, l) =>
+                l.size
               }
             }
             testContext.run(q).string mustEqual
@@ -376,8 +389,8 @@ class SqlIdiomSpec extends Spec {
         }
         "group by + binary op select" in {
           val q = quote {
-            qr1.groupBy(t => t.i).map {
-              case (i, list) => (i, list.size + 1)
+            qr1.groupBy(t => t.i).map { case (i, list) =>
+              (i, list.size + 1)
             }
           }
           testContext.run(q).string mustEqual
@@ -425,7 +438,11 @@ class SqlIdiomSpec extends Spec {
         }
         "mapped" in {
           val q = quote {
-            qr1.filter(t => t.i > 10).map(u => u).union(qr1.filter(t => t.s == "s")).map(u => u.s)
+            qr1
+              .filter(t => t.i > 10)
+              .map(u => u)
+              .union(qr1.filter(t => t.s == "s"))
+              .map(u => u.s)
           }
           testContext.run(q).string mustEqual
             "SELECT u.s FROM ((SELECT t.s FROM TestEntity t WHERE t.i > 10) UNION (SELECT t1.s FROM TestEntity t1 WHERE t1.s = 's')) AS u"
@@ -486,7 +503,12 @@ class SqlIdiomSpec extends Spec {
         }
         "multiple outer joins" in {
           val q = quote {
-            qr1.leftJoin(qr2).on((a, b) => a.s == b.s).leftJoin(qr2).on((a, b) => a._1.s == b.s).map(_._1._1)
+            qr1
+              .leftJoin(qr2)
+              .on((a, b) => a.s == b.s)
+              .leftJoin(qr2)
+              .on((a, b) => a._1.s == b.s)
+              .map(_._1._1)
           }
           testContext.run(q).string mustEqual
             "SELECT a.s, a.i, a.l, a.o, a.b FROM TestEntity a LEFT JOIN TestEntity2 b ON a.s = b.s LEFT JOIN TestEntity2 b1 ON a.s = b1.s"
@@ -495,7 +517,11 @@ class SqlIdiomSpec extends Spec {
           "left" ignore {
             // TODO flatten left flatMaps
             val q = quote {
-              qr1.flatMap(a => qr2).leftJoin(qr3).on((b, c) => b.s == c.s).map(_._1)
+              qr1
+                .flatMap(a => qr2)
+                .leftJoin(qr3)
+                .on((b, c) => b.s == c.s)
+                .map(_._1)
             }
             testContext.run(q).string mustEqual ""
           }
@@ -537,13 +563,17 @@ class SqlIdiomSpec extends Spec {
           val q = quote {
             qr1.filter(t => liftQuery(Set(1, 2, 3)).contains(t.i))
           }
-          testContext.run(q).string mustEqual "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.i IN (?, ?, ?)"
+          testContext
+            .run(q)
+            .string mustEqual "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.i IN (?, ?, ?)"
         }
         "empty" in {
           val q = quote {
             qr1.filter(t => liftQuery(Set.empty[Int]).contains(t.i))
           }
-          testContext.run(q).string mustEqual "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE FALSE"
+          testContext
+            .run(q)
+            .string mustEqual "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE FALSE"
         }
       }
     }
@@ -760,47 +790,88 @@ class SqlIdiomSpec extends Spec {
               query[TestEntity].insertValue(v)
             }
             val v = TestEntity("s", 1, 2L, Some(1), true)
-            testContext.run(q(lift(v))).string mustEqual "INSERT INTO TestEntity (s,i,l,o,b) VALUES (?, ?, ?, ?, ?)"
+            testContext
+              .run(q(lift(v)))
+              .string mustEqual "INSERT INTO TestEntity (s,i,l,o,b) VALUES (?, ?, ?, ?, ?)"
           }
-          "returning" in testContext.withDialect(MirrorSqlDialectWithReturnMulti) { ctx =>
+          "returning" in testContext.withDialect(
+            MirrorSqlDialectWithReturnMulti
+          ) { ctx =>
             import ctx._
             val q = quote { (v: TestEntity) =>
               query[TestEntity].insertValue(v)
             }
             val v = TestEntity("s", 1, 2L, Some(1), true)
-            ctx.run(q(lift(v)).returning(v => v.i)).string mustEqual "INSERT INTO TestEntity (s,i,l,o,b) VALUES (?, ?, ?, ?, ?)"
+            ctx
+              .run(q(lift(v)).returning(v => v.i))
+              .string mustEqual "INSERT INTO TestEntity (s,i,l,o,b) VALUES (?, ?, ?, ?, ?)"
           }
           "returning generated" in {
             val q = quote { (v: TestEntity) =>
               query[TestEntity].insertValue(v)
             }
             val v = TestEntity("s", 1, 2L, Some(1), true)
-            testContext.run(q(lift(v)).returningGenerated(v => v.i)).string mustEqual "INSERT INTO TestEntity (s,l,o,b) VALUES (?, ?, ?, ?)"
+            testContext
+              .run(q(lift(v)).returningGenerated(v => v.i))
+              .string mustEqual "INSERT INTO TestEntity (s,l,o,b) VALUES (?, ?, ?, ?)"
           }
           "foreach" in {
             val v = TestEntity("s", 1, 2L, Some(1), true)
-            testContext.run(
-              liftQuery(List(v)).foreach(v => query[TestEntity].insertValue(v))
-            ).groups mustEqual List(("INSERT INTO TestEntity (s,i,l,o,b) VALUES (?, ?, ?, ?, ?)", List(Row(v.productIterator.toList: _*))))
+            testContext
+              .run(
+                liftQuery(List(v)).foreach(v =>
+                  query[TestEntity].insertValue(v)
+                )
+              )
+              .groups mustEqual List(
+              (
+                "INSERT INTO TestEntity (s,i,l,o,b) VALUES (?, ?, ?, ?, ?)",
+                List(Row(v.productIterator.toList: _*))
+              )
+            )
           }
-          "foreach returning" in testContext.withDialect(MirrorSqlDialectWithReturnMulti) { ctx =>
+          "foreach returning" in testContext.withDialect(
+            MirrorSqlDialectWithReturnMulti
+          ) { ctx =>
             import ctx._
             val v = TestEntity("s", 1, 2L, Some(1), true)
-            ctx.run(liftQuery(List(v)).foreach(v => query[TestEntity].insertValue(v).returning(v => v.i))).groups mustEqual
-              List(("INSERT INTO TestEntity (s,i,l,o,b) VALUES (?, ?, ?, ?, ?)",
-                ReturnColumns(List("i")),
-                List(Row(v.productIterator.toList: _*))
-              ))
+            ctx
+              .run(
+                liftQuery(List(v)).foreach(v =>
+                  query[TestEntity].insertValue(v).returning(v => v.i)
+                )
+              )
+              .groups mustEqual
+              List(
+                (
+                  "INSERT INTO TestEntity (s,i,l,o,b) VALUES (?, ?, ?, ?, ?)",
+                  ReturnColumns(List("i")),
+                  List(Row(v.productIterator.toList: _*))
+                )
+              )
           }
           "foreach returning generated" in {
             val v = TestEntity("s", 1, 2L, Some(1), true)
-            testContext.run(
-              liftQuery(List(v)).foreach(v => query[TestEntity].insertValue(v).returningGenerated(v => v.i))
-            ).groups mustEqual
-              List(("INSERT INTO TestEntity (s,l,o,b) VALUES (?, ?, ?, ?)",
-                ReturnColumns(List("i")),
-                List(Row(v.productIterator.toList.filter(m => !m.isInstanceOf[Int]): _*))
-              ))
+            testContext
+              .run(
+                liftQuery(List(v)).foreach(v =>
+                  query[TestEntity].insertValue(v).returningGenerated(v => v.i)
+                )
+              )
+              .groups mustEqual
+              List(
+                (
+                  "INSERT INTO TestEntity (s,l,o,b) VALUES (?, ?, ?, ?)",
+                  ReturnColumns(List("i")),
+                  List(
+                    Row(
+                      v.productIterator.toList.filter(m =>
+                        !m.isInstanceOf[Int]
+                      ): _*
+                    )
+                  )
+                )
+              )
           }
         }
         "simple" in {
@@ -817,22 +888,30 @@ class SqlIdiomSpec extends Spec {
           testContext.run(q).string mustEqual
             "INSERT INTO TestEntity (l,s) VALUES ((SELECT COUNT(t.i) FROM TestEntity2 t), 's')"
         }
-        "returning" in testContext.withDialect(MirrorSqlDialectWithReturnMulti) { ctx =>
+        "returning" in testContext.withDialect(
+          MirrorSqlDialectWithReturnMulti
+        ) { ctx =>
           import ctx._
           val q = quote {
-            query[TestEntity].insertValue(lift(TestEntity("s", 1, 2L, Some(1), true))).returning(_.l)
+            query[TestEntity]
+              .insertValue(lift(TestEntity("s", 1, 2L, Some(1), true)))
+              .returning(_.l)
           }
           val run = ctx.run(q).string mustEqual
             "INSERT INTO TestEntity (s,i,l,o,b) VALUES (?, ?, ?, ?, ?)"
         }
         "returning generated" in {
           val q = quote {
-            query[TestEntity].insertValue(lift(TestEntity("s", 1, 2L, Some(1), true))).returningGenerated(_.l)
+            query[TestEntity]
+              .insertValue(lift(TestEntity("s", 1, 2L, Some(1), true)))
+              .returningGenerated(_.l)
           }
           val run = testContext.run(q).string mustEqual
             "INSERT INTO TestEntity (s,i,o,b) VALUES (?, ?, ?, ?)"
         }
-        "returning with single column table" in testContext.withDialect(MirrorSqlDialectWithReturnMulti) { ctx =>
+        "returning with single column table" in testContext.withDialect(
+          MirrorSqlDialectWithReturnMulti
+        ) { ctx =>
           import ctx._
           val q = quote {
             qr4.insertValue(lift(TestEntity4(0))).returning(_.i)
@@ -1088,17 +1167,21 @@ class SqlIdiomSpec extends Spec {
           "SELECT a.i FROM (SELECT 1 i FROM DUAL) AS a"
       }
       "full infix query" in {
-        testContext.run(infix"SELECT * FROM TestEntity".as[Query[TestEntity]]).string mustEqual
+        testContext
+          .run(infix"SELECT * FROM TestEntity".as[Query[TestEntity]])
+          .string mustEqual
           "SELECT x.s, x.i, x.l, x.o, x.b FROM (SELECT * FROM TestEntity) AS x"
       }
       "full infix action" in {
-        testContext.run(infix"DELETE FROM TestEntity".as[Action[TestEntity]]).string mustEqual
+        testContext
+          .run(infix"DELETE FROM TestEntity".as[Action[TestEntity]])
+          .string mustEqual
           "DELETE FROM TestEntity"
       }
       "do not nest query if infix starts with input query" in {
         case class Entity(i: Int)
-        val forUpdate = quote {
-          q: Query[Entity] => infix"$q FOR UPDATE".as[Query[Entity]].map(a => a.i)
+        val forUpdate = quote { q: Query[Entity] =>
+          infix"$q FOR UPDATE".as[Query[Entity]].map(a => a.i)
         }
         testContext.run(forUpdate(query[Entity])).string mustEqual
           "SELECT a.i FROM Entity a FOR UPDATE"

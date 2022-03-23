@@ -6,15 +6,16 @@ import collection.immutable.Set
 
 case class State(seen: Set[IdentName], free: Set[IdentName])
 
-case class FreeVariables(state: State)
-  extends StatefulTransformer[State] {
+case class FreeVariables(state: State) extends StatefulTransformer[State] {
 
   override def apply(ast: Ast): (Ast, StatefulTransformer[State]) =
     ast match {
       case ident: Ident if (!state.seen.contains(ident.idName)) =>
         (ident, FreeVariables(State(state.seen, state.free + ident.idName)))
       case f @ Function(params, body) =>
-        val (_, t) = FreeVariables(State(state.seen ++ params.map(_.idName), state.free))(body)
+        val (_, t) = FreeVariables(
+          State(state.seen ++ params.map(_.idName), state.free)
+        )(body)
         (f, FreeVariables(State(state.seen, state.free ++ t.state.free)))
       case q @ Foreach(a, b, c) =>
         (q, free(a, b, c))
@@ -22,7 +23,9 @@ case class FreeVariables(state: State)
         super.apply(other)
     }
 
-  override def apply(o: OptionOperation): (OptionOperation, StatefulTransformer[State]) =
+  override def apply(
+      o: OptionOperation
+  ): (OptionOperation, StatefulTransformer[State]) =
     o match {
       case q @ OptionTableFlatMap(a, b, c) =>
         (q, free(a, b, c))
@@ -50,16 +53,30 @@ case class FreeVariables(state: State)
         val t = FreeVariables(State(state.seen + a.idName, state.free))
         val (bt, btt) = t(b)
         val (ct, ctt) = t(c)
-        (Assignment(a, bt, ct), FreeVariables(State(state.seen, state.free ++ btt.state.free ++ ctt.state.free)))
+        (
+          Assignment(a, bt, ct),
+          FreeVariables(
+            State(state.seen, state.free ++ btt.state.free ++ ctt.state.free)
+          )
+        )
     }
 
-  override def apply(e: AssignmentDual): (AssignmentDual, StatefulTransformer[State]) =
+  override def apply(
+      e: AssignmentDual
+  ): (AssignmentDual, StatefulTransformer[State]) =
     e match {
       case AssignmentDual(a1, a2, b, c) =>
-        val t = FreeVariables(State(state.seen + a1.idName + a2.idName, state.free))
+        val t = FreeVariables(
+          State(state.seen + a1.idName + a2.idName, state.free)
+        )
         val (bt, btt) = t(b)
         val (ct, ctt) = t(c)
-        (AssignmentDual(a1, a2, bt, ct), FreeVariables(State(state.seen, state.free ++ btt.state.free ++ ctt.state.free)))
+        (
+          AssignmentDual(a1, a2, bt, ct),
+          FreeVariables(
+            State(state.seen, state.free ++ btt.state.free ++ ctt.state.free)
+          )
+        )
     }
 
   override def apply(action: Action): (Action, StatefulTransformer[State]) =
@@ -72,7 +89,9 @@ case class FreeVariables(state: State)
         super.apply(other)
     }
 
-  override def apply(e: OnConflict.Target): (OnConflict.Target, StatefulTransformer[State]) = (e, this)
+  override def apply(
+      e: OnConflict.Target
+  ): (OnConflict.Target, StatefulTransformer[State]) = (e, this)
 
   override def apply(query: Query): (Query, StatefulTransformer[State]) =
     query match {
@@ -86,9 +105,20 @@ case class FreeVariables(state: State)
       case q @ Join(t, a, b, iA, iB, on) =>
         val (_, freeA) = apply(a)
         val (_, freeB) = apply(b)
-        val (_, freeOn) = FreeVariables(State(state.seen + iA.idName + iB.idName, Set.empty))(on)
-        (q, FreeVariables(State(state.seen, state.free ++ freeA.state.free ++ freeB.state.free ++ freeOn.state.free)))
-      case _: Entity | _: Take | _: Drop | _: Union | _: UnionAll | _: Aggregation | _: Distinct | _: Nested =>
+        val (_, freeOn) = FreeVariables(
+          State(state.seen + iA.idName + iB.idName, Set.empty)
+        )(on)
+        (
+          q,
+          FreeVariables(
+            State(
+              state.seen,
+              state.free ++ freeA.state.free ++ freeB.state.free ++ freeOn.state.free
+            )
+          )
+        )
+      case _: Entity | _: Take | _: Drop | _: Union | _: UnionAll |
+          _: Aggregation | _: Distinct | _: Nested =>
         super.apply(query)
     }
 
@@ -98,7 +128,9 @@ case class FreeVariables(state: State)
   private def free(a: Ast, ident: IdentName, c: Ast) = {
     val (_, ta) = apply(a)
     val (_, tc) = FreeVariables(State(state.seen + ident, state.free))(c)
-    FreeVariables(State(state.seen, state.free ++ ta.state.free ++ tc.state.free))
+    FreeVariables(
+      State(state.seen, state.free ++ ta.state.free ++ tc.state.free)
+    )
   }
 }
 
@@ -115,7 +147,9 @@ object FreeVariables {
       case free =>
         val firstVar = free.headOption.map(_.name).getOrElse("someVar")
         Left(s"""
-          |Found the following variables: ${free.map(_.name).toList} that seem to originate outside of a `quote {...}` or `run {...}` block.
+          |Found the following variables: ${free
+          .map(_.name)
+          .toList} that seem to originate outside of a `quote {...}` or `run {...}` block.
           |Quotes and run blocks cannot use values outside their scope directly (with the exception of inline expressions in Scala 3).
           |In order to use runtime values in a quotation, you need to lift them, so instead
           |of this `$firstVar` do this: `lift($firstVar)`.

@@ -1,11 +1,11 @@
 package io.getquill.norm
 
-import io.getquill.ReturnAction.{ ReturnColumns, ReturnRecord }
+import io.getquill.ReturnAction.{ReturnColumns, ReturnRecord}
 import io.getquill._
 import io.getquill.ast.Renameable.ByStrategy
 import io.getquill.ast.Visibility.Visible
 import io.getquill.ast._
-import io.getquill.context.{ ExecutionType, Expand }
+import io.getquill.context.{ExecutionType, Expand}
 import io.getquill.quat._
 
 class ExpandReturningSpec extends Spec {
@@ -21,23 +21,35 @@ class ExpandReturningSpec extends Spec {
 
     "should replace tuple clauses with ExternalIdent" in {
       val q = quote {
-        query[Person].insertValue(lift(Person("Joe", 123))).returning(p => (p.name, p.age))
+        query[Person]
+          .insertValue(lift(Person("Joe", 123)))
+          .returning(p => (p.name, p.age))
       }
       val list =
-        ExpandReturning.apply(q.ast.asInstanceOf[Returning])(MirrorIdiom, Literal)
+        ExpandReturning
+          .apply(q.ast.asInstanceOf[Returning])(MirrorIdiom, Literal)
       list must matchPattern {
-        case List((Property(ExternalIdent("p", `quat`), "name"), _), (Property(ExternalIdent("p", `quat`), "age"), _)) =>
+        case List(
+              (Property(ExternalIdent("p", `quat`), "name"), _),
+              (Property(ExternalIdent("p", `quat`), "age"), _)
+            ) =>
       }
     }
 
     "should replace case class clauses with ExternalIdent" in {
       val q = quote {
-        query[Person].insertValue(lift(Person("Joe", 123))).returning(p => Foo(p.name, p.age))
+        query[Person]
+          .insertValue(lift(Person("Joe", 123)))
+          .returning(p => Foo(p.name, p.age))
       }
       val list =
-        ExpandReturning.apply(q.ast.asInstanceOf[Returning])(MirrorIdiom, Literal)
+        ExpandReturning
+          .apply(q.ast.asInstanceOf[Returning])(MirrorIdiom, Literal)
       list must matchPattern {
-        case List((Property(ExternalIdent("p", `quat`), "name"), _), (Property(ExternalIdent("p", `quat`), "age"), _)) =>
+        case List(
+              (Property(ExternalIdent("p", `quat`), "name"), _),
+              (Property(ExternalIdent("p", `quat`), "age"), _)
+            ) =>
       }
     }
   }
@@ -48,23 +60,39 @@ class ExpandReturningSpec extends Spec {
 
     "replaces tuple clauses with ExternalIdent(newAlias)" in {
       val q = quote {
-        query[Person].insertValue(lift(Person("Joe", 123))).returning(p => (p.name, p.age))
+        query[Person]
+          .insertValue(lift(Person("Joe", 123)))
+          .returning(p => (p.name, p.age))
       }
       val list =
-        ExpandReturning.apply(q.ast.asInstanceOf[Returning], Some("OTHER"))(MirrorIdiom, SnakeCase)
+        ExpandReturning.apply(q.ast.asInstanceOf[Returning], Some("OTHER"))(
+          MirrorIdiom,
+          SnakeCase
+        )
       list must matchPattern {
-        case List((Property(ExternalIdent("OTHER", `quat`), "name"), _), (Property(ExternalIdent("OTHER", `quat`), "age"), _)) =>
+        case List(
+              (Property(ExternalIdent("OTHER", `quat`), "name"), _),
+              (Property(ExternalIdent("OTHER", `quat`), "age"), _)
+            ) =>
       }
     }
 
     "replaces case class clauses with ExternalIdent(newAlias)" in {
       val q = quote {
-        query[Person].insertValue(lift(Person("Joe", 123))).returning(p => Foo(p.name, p.age))
+        query[Person]
+          .insertValue(lift(Person("Joe", 123)))
+          .returning(p => Foo(p.name, p.age))
       }
       val list =
-        ExpandReturning.apply(q.ast.asInstanceOf[Returning], Some("OTHER"))(MirrorIdiom, SnakeCase)
+        ExpandReturning.apply(q.ast.asInstanceOf[Returning], Some("OTHER"))(
+          MirrorIdiom,
+          SnakeCase
+        )
       list must matchPattern {
-        case List((Property(ExternalIdent("OTHER", `quat`), "name"), _), (Property(ExternalIdent("OTHER", `quat`), "age"), _)) =>
+        case List(
+              (Property(ExternalIdent("OTHER", `quat`), "name"), _),
+              (Property(ExternalIdent("OTHER", `quat`), "age"), _)
+            ) =>
       }
     }
   }
@@ -79,7 +107,8 @@ class ExpandReturningSpec extends Spec {
       val qi = quote { q.returning(p => (p.name, p.age)) }
       val ret =
         ExpandReturning.applyMap(qi.ast.asInstanceOf[Returning]) {
-          case (ast, stmt) => fail("Should not use this method for the returning clause")
+          case (ast, stmt) =>
+            fail("Should not use this method for the returning clause")
         }(mi, Literal)
 
       ret mustBe ReturnRecord
@@ -88,7 +117,8 @@ class ExpandReturningSpec extends Spec {
       val qi = quote { q.returning(p => Foo(p.name, p.age)) }
       val ret =
         ExpandReturning.applyMap(qi.ast.asInstanceOf[Returning]) {
-          case (ast, stmt) => fail("Should not use this method for the returning clause")
+          case (ast, stmt) =>
+            fail("Should not use this method for the returning clause")
         }(mi, Literal)
 
       ret mustBe ReturnRecord
@@ -97,7 +127,8 @@ class ExpandReturningSpec extends Spec {
       val qi = quote { q.returning(p => p) }
       val ret =
         ExpandReturning.applyMap(qi.ast.asInstanceOf[Returning]) {
-          case (ast, stmt) => fail("Should not use this method for the returning clause")
+          case (ast, stmt) =>
+            fail("Should not use this method for the returning clause")
         }(mi, Literal)
 
       ret mustBe ReturnRecord
@@ -114,7 +145,8 @@ class ExpandReturningSpec extends Spec {
       val qi = quote { q.returning(p => (p.name, p.age)) }
       val ret =
         ExpandReturning.applyMap(qi.ast.asInstanceOf[Returning]) {
-          case (ast, stmt) => Expand(ctx, ast, stmt, mi, Literal, ExecutionType.Unknown).string
+          case (ast, stmt) =>
+            Expand(ctx, ast, stmt, mi, Literal, ExecutionType.Unknown).string
         }(mi, Literal)
       ret mustBe ReturnColumns(List("name", "age"))
     }
@@ -122,7 +154,8 @@ class ExpandReturningSpec extends Spec {
       val qi = quote { q.returning(p => Foo(p.name, p.age)) }
       val ret =
         ExpandReturning.applyMap(qi.ast.asInstanceOf[Returning]) {
-          case (ast, stmt) => Expand(ctx, ast, stmt, mi, Literal, ExecutionType.Unknown).string
+          case (ast, stmt) =>
+            Expand(ctx, ast, stmt, mi, Literal, ExecutionType.Unknown).string
         }(mi, Literal)
       ret mustBe ReturnColumns(List("name", "age"))
     }
@@ -130,7 +163,8 @@ class ExpandReturningSpec extends Spec {
       val qi = quote { q.returning(p => p) }
       val ret =
         ExpandReturning.applyMap(qi.ast.asInstanceOf[Returning]) {
-          case (ast, stmt) => Expand(ctx, ast, stmt, mi, Literal, ExecutionType.Unknown).string
+          case (ast, stmt) =>
+            Expand(ctx, ast, stmt, mi, Literal, ExecutionType.Unknown).string
         }(mi, Literal)
       ret mustBe ReturnColumns(List("name", "age"))
     }
@@ -144,14 +178,40 @@ class ExpandReturningSpec extends Spec {
       Map(
         Entity.Opinionated("Person", List(), QEP, renameable),
         Ident("p"),
-        Tuple(List(Property.Opinionated(Ident("p"), "name", renameable, Visible), Property.Opinionated(Ident("p"), "age", renameable, Visible)))
+        Tuple(
+          List(
+            Property.Opinionated(Ident("p"), "name", renameable, Visible),
+            Property.Opinionated(Ident("p"), "age", renameable, Visible)
+          )
+        )
       ),
-      List(Assignment(Ident("pp"), Property.Opinionated(Ident("pp"), "name", renameable, Visible), Constant.auto("Joe")))
+      List(
+        Assignment(
+          Ident("pp"),
+          Property.Opinionated(Ident("pp"), "name", renameable, Visible),
+          Constant.auto("Joe")
+        )
+      )
     )
     def retMulti =
-      Returning(insert, Ident("r"), Tuple(List(Property.Opinionated(Ident("r"), "name", renameable, Visible), Property.Opinionated(Ident("r"), "age", renameable, Visible))))
+      Returning(
+        insert,
+        Ident("r"),
+        Tuple(
+          List(
+            Property.Opinionated(Ident("r"), "name", renameable, Visible),
+            Property.Opinionated(Ident("r"), "age", renameable, Visible)
+          )
+        )
+      )
     def retSingle =
-      Returning(insert, Ident("r"), Tuple(List(Property.Opinionated(Ident("r"), "name", renameable, Visible))))
+      Returning(
+        insert,
+        Ident("r"),
+        Tuple(
+          List(Property.Opinionated(Ident("r"), "name", renameable, Visible))
+        )
+      )
 
     "returning single" - {
       val mi = MirrorIdiomReturningSingle
@@ -159,15 +219,15 @@ class ExpandReturningSpec extends Spec {
 
       "should fail if multiple fields encountered" in {
         assertThrows[IllegalArgumentException] {
-          ExpandReturning.applyMap(retMulti) {
-            case (ast, stmt) => Expand(ctx, ast, stmt, mi, Literal, ExecutionType.Unknown).string
+          ExpandReturning.applyMap(retMulti) { case (ast, stmt) =>
+            Expand(ctx, ast, stmt, mi, Literal, ExecutionType.Unknown).string
           }(mi, Literal)
         }
       }
       "should succeed if single field encountered" in {
         val ret =
-          ExpandReturning.applyMap(retSingle) {
-            case (ast, stmt) => Expand(ctx, ast, stmt, mi, Literal, ExecutionType.Unknown).string
+          ExpandReturning.applyMap(retSingle) { case (ast, stmt) =>
+            Expand(ctx, ast, stmt, mi, Literal, ExecutionType.Unknown).string
           }(mi, Literal)
         ret mustBe ReturnColumns(List("name"))
       }
@@ -178,15 +238,15 @@ class ExpandReturningSpec extends Spec {
 
       "should fail if multiple fields encountered" in {
         assertThrows[IllegalArgumentException] {
-          ExpandReturning.applyMap(retMulti) {
-            case (ast, stmt) => Expand(ctx, ast, stmt, mi, Literal, ExecutionType.Unknown).string
+          ExpandReturning.applyMap(retMulti) { case (ast, stmt) =>
+            Expand(ctx, ast, stmt, mi, Literal, ExecutionType.Unknown).string
           }(mi, Literal)
         }
       }
       "should fail if single field encountered" in {
         assertThrows[IllegalArgumentException] {
-          ExpandReturning.applyMap(retSingle) {
-            case (ast, stmt) => Expand(ctx, ast, stmt, mi, Literal, ExecutionType.Unknown).string
+          ExpandReturning.applyMap(retSingle) { case (ast, stmt) =>
+            Expand(ctx, ast, stmt, mi, Literal, ExecutionType.Unknown).string
           }(mi, Literal)
         }
       }

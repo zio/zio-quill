@@ -1,8 +1,8 @@
 package io.getquill.context.cassandra
 
-import io.getquill.ast.{ IterableOperation, _ }
+import io.getquill.ast.{IterableOperation, _}
 import io.getquill.NamingStrategy
-import io.getquill.context.{ CannotReturn, ExecutionType }
+import io.getquill.context.{CannotReturn, ExecutionType}
 import io.getquill.util.Messages.fail
 import io.getquill.idiom.Idiom
 import io.getquill.idiom.StatementInterpolator._
@@ -23,17 +23,28 @@ trait CqlIdiom extends Idiom {
 
   override def prepareForProbing(string: String) = string
 
-  override def translate(ast: Ast, topLevelQuat: Quat, executionType: ExecutionType)(implicit naming: NamingStrategy) = {
+  override def translate(
+      ast: Ast,
+      topLevelQuat: Quat,
+      executionType: ExecutionType
+  )(implicit naming: NamingStrategy) = {
     val normalizedAst = CqlNormalize(ast)
     (normalizedAst, stmt"${normalizedAst.token}", executionType)
   }
 
-  override def translateCached(ast: Ast, topLevelQuat: Quat, executionType: ExecutionType)(implicit naming: NamingStrategy) = {
+  override def translateCached(
+      ast: Ast,
+      topLevelQuat: Quat,
+      executionType: ExecutionType
+  )(implicit naming: NamingStrategy) = {
     val normalizedAst = NormalizeCaching(CqlNormalize.apply)(ast)
     (normalizedAst, stmt"${normalizedAst.token}", executionType)
   }
 
-  implicit def astTokenizer(implicit strategy: NamingStrategy, queryTokenizer: Tokenizer[Query]): Tokenizer[Ast] =
+  implicit def astTokenizer(implicit
+      strategy: NamingStrategy,
+      queryTokenizer: Tokenizer[Query]
+  ): Tokenizer[Ast] =
     Tokenizer[Ast] {
       case Aggregation(AggregationOperator.`size`, Constant(1, _)) =>
         "COUNT(1)".token
@@ -51,27 +62,32 @@ trait CqlIdiom extends Idiom {
       case a: AssignmentDual    => a.token
       case a: IterableOperation => a.token
       case a @ (
-        _: Function | _: FunctionApply | _: Dynamic | _: OptionOperation | _: Block |
-        _: Val | _: Ordering | _: QuotedReference | _: If | _: OnConflict.Excluded | _: OnConflict.Existing
-        ) =>
+            _: Function | _: FunctionApply | _: Dynamic | _: OptionOperation |
+            _: Block | _: Val | _: Ordering | _: QuotedReference | _: If |
+            _: OnConflict.Excluded | _: OnConflict.Existing
+          ) =>
         fail(s"Invalid cql: '$a'")
     }
 
-  implicit def queryTokenizer(implicit strategy: NamingStrategy): Tokenizer[Query] = Tokenizer[Query] {
-    case q => CqlQuery(q).token
+  implicit def queryTokenizer(implicit
+      strategy: NamingStrategy
+  ): Tokenizer[Query] = Tokenizer[Query] { case q =>
+    CqlQuery(q).token
   }
 
-  implicit def cqlQueryTokenizer(implicit strategy: NamingStrategy): Tokenizer[CqlQuery] = Tokenizer[CqlQuery] {
+  implicit def cqlQueryTokenizer(implicit
+      strategy: NamingStrategy
+  ): Tokenizer[CqlQuery] = Tokenizer[CqlQuery] {
 
     case CqlQuery(entity, filter, orderBy, limit, select, distinct) =>
-
       val distinctToken = if (distinct) " DISTINCT".token else "".token
 
       val withSelect =
         select match {
-          case Nil if distinct => fail(s"Cql only supports DISTINCT with a selection list.'")
-          case Nil             => stmt"SELECT *"
-          case s               => stmt"SELECT$distinctToken ${s.token}"
+          case Nil if distinct =>
+            fail(s"Cql only supports DISTINCT with a selection list.'")
+          case Nil => stmt"SELECT *"
+          case s   => stmt"SELECT$distinctToken ${s.token}"
         }
       val withEntity =
         stmt"$withSelect FROM ${entity.token}"
@@ -91,44 +107,60 @@ trait CqlIdiom extends Idiom {
       }
   }
 
-  implicit def orderByCriteriaTokenizer(implicit strategy: NamingStrategy): Tokenizer[OrderByCriteria] = Tokenizer[OrderByCriteria] {
-    case OrderByCriteria(prop, Asc | AscNullsFirst | AscNullsLast)    => stmt"${prop.token} ASC"
-    case OrderByCriteria(prop, Desc | DescNullsFirst | DescNullsLast) => stmt"${prop.token} DESC"
+  implicit def orderByCriteriaTokenizer(implicit
+      strategy: NamingStrategy
+  ): Tokenizer[OrderByCriteria] = Tokenizer[OrderByCriteria] {
+    case OrderByCriteria(prop, Asc | AscNullsFirst | AscNullsLast) =>
+      stmt"${prop.token} ASC"
+    case OrderByCriteria(prop, Desc | DescNullsFirst | DescNullsLast) =>
+      stmt"${prop.token} DESC"
   }
 
-  implicit def operationTokenizer(implicit strategy: NamingStrategy): Tokenizer[Operation] = Tokenizer[Operation] {
-    case BinaryOperation(a, op @ SetOperator.`contains`, b) => SetContainsToken(b.token, op.token, a.token)
-    case BinaryOperation(a, op, b)                          => stmt"${a.token} ${op.token} ${b.token}"
-    case e: UnaryOperation                                  => fail(s"Cql doesn't support unary operations. Found: '$e'")
-    case e: FunctionApply                                   => fail(s"Cql doesn't support functions. Found: '$e'")
+  implicit def operationTokenizer(implicit
+      strategy: NamingStrategy
+  ): Tokenizer[Operation] = Tokenizer[Operation] {
+    case BinaryOperation(a, op @ SetOperator.`contains`, b) =>
+      SetContainsToken(b.token, op.token, a.token)
+    case BinaryOperation(a, op, b) => stmt"${a.token} ${op.token} ${b.token}"
+    case e: UnaryOperation =>
+      fail(s"Cql doesn't support unary operations. Found: '$e'")
+    case e: FunctionApply => fail(s"Cql doesn't support functions. Found: '$e'")
   }
 
-  implicit val aggregationOperatorTokenizer: Tokenizer[AggregationOperator] = Tokenizer[AggregationOperator] {
-    case AggregationOperator.`size` => stmt"COUNT"
-    case o                          => fail(s"Cql doesn't support '$o' aggregations")
-  }
+  implicit val aggregationOperatorTokenizer: Tokenizer[AggregationOperator] =
+    Tokenizer[AggregationOperator] {
+      case AggregationOperator.`size` => stmt"COUNT"
+      case o => fail(s"Cql doesn't support '$o' aggregations")
+    }
 
-  implicit val binaryOperatorTokenizer: Tokenizer[BinaryOperator] = Tokenizer[BinaryOperator] {
-    case EqualityOperator.`_==` => stmt"="
-    case BooleanOperator.`&&`   => stmt"AND"
-    case NumericOperator.`>`    => stmt">"
-    case NumericOperator.`>=`   => stmt">="
-    case NumericOperator.`<`    => stmt"<"
-    case NumericOperator.`<=`   => stmt"<="
-    case NumericOperator.`+`    => stmt"+"
-    case SetOperator.`contains` => stmt"IN"
-    case other                  => fail(s"Cql doesn't support the '$other' operator.")
-  }
+  implicit val binaryOperatorTokenizer: Tokenizer[BinaryOperator] =
+    Tokenizer[BinaryOperator] {
+      case EqualityOperator.`_==` => stmt"="
+      case BooleanOperator.`&&`   => stmt"AND"
+      case NumericOperator.`>`    => stmt">"
+      case NumericOperator.`>=`   => stmt">="
+      case NumericOperator.`<`    => stmt"<"
+      case NumericOperator.`<=`   => stmt"<="
+      case NumericOperator.`+`    => stmt"+"
+      case SetOperator.`contains` => stmt"IN"
+      case other => fail(s"Cql doesn't support the '$other' operator.")
+    }
 
   // Note: The CqlIdiom does not support joins so there is no need for any complex un-nesting logic like in SqlIdiom
   // if there are Embedded classes, they will result in Property(Property(embedded, embeddedProp), actualProp)
   // and we only need to take the top-level property i.e. `actualProp`.
-  implicit def propertyTokenizer(implicit valueTokenizer: Tokenizer[Value], identTokenizer: Tokenizer[Ident], strategy: NamingStrategy): Tokenizer[Property] =
-    Tokenizer[Property] {
-      case Property.Opinionated(_, name, renameable, _) => renameable.fixedOr(name.token)(strategy.column(name).token)
+  implicit def propertyTokenizer(implicit
+      valueTokenizer: Tokenizer[Value],
+      identTokenizer: Tokenizer[Ident],
+      strategy: NamingStrategy
+  ): Tokenizer[Property] =
+    Tokenizer[Property] { case Property.Opinionated(_, name, renameable, _) =>
+      renameable.fixedOr(name.token)(strategy.column(name).token)
     }
 
-  implicit def valueTokenizer(implicit strategy: NamingStrategy): Tokenizer[Value] = Tokenizer[Value] {
+  implicit def valueTokenizer(implicit
+      strategy: NamingStrategy
+  ): Tokenizer[Value] = Tokenizer[Value] {
     case Constant(v: String, _) => stmt"'${v.token}'"
     case Constant((), _)        => stmt"1"
     case Constant(v, _)         => stmt"${v.toString.token}"
@@ -137,34 +169,51 @@ trait CqlIdiom extends Idiom {
     case NullValue              => fail("Cql doesn't support null values.")
   }
 
-  implicit def infixTokenizer(implicit propertyTokenizer: Tokenizer[Property], strategy: NamingStrategy, queryTokenizer: Tokenizer[Query]): Tokenizer[Infix] = Tokenizer[Infix] {
-    case Infix(parts, params, _, _, _) =>
-      val pt = parts.map(_.token)
-      val pr = params.map(_.token)
-      Statement(Interleave(pt, pr))
+  implicit def infixTokenizer(implicit
+      propertyTokenizer: Tokenizer[Property],
+      strategy: NamingStrategy,
+      queryTokenizer: Tokenizer[Query]
+  ): Tokenizer[Infix] = Tokenizer[Infix] { case Infix(parts, params, _, _, _) =>
+    val pt = parts.map(_.token)
+    val pr = params.map(_.token)
+    Statement(Interleave(pt, pr))
   }
 
-  implicit def identTokenizer(implicit strategy: NamingStrategy): Tokenizer[Ident] = Tokenizer[Ident] {
-    case e => strategy.default(e.name).token
+  implicit def identTokenizer(implicit
+      strategy: NamingStrategy
+  ): Tokenizer[Ident] = Tokenizer[Ident] { case e =>
+    strategy.default(e.name).token
   }
 
-  implicit def externalIdentTokenizer(implicit strategy: NamingStrategy): Tokenizer[ExternalIdent] = Tokenizer[ExternalIdent] {
-    case e => strategy.default(e.name).token
+  implicit def externalIdentTokenizer(implicit
+      strategy: NamingStrategy
+  ): Tokenizer[ExternalIdent] = Tokenizer[ExternalIdent] { case e =>
+    strategy.default(e.name).token
   }
 
-  implicit def assignmentTokenizer(implicit propertyTokenizer: Tokenizer[Property], strategy: NamingStrategy): Tokenizer[Assignment] = Tokenizer[Assignment] {
+  implicit def assignmentTokenizer(implicit
+      propertyTokenizer: Tokenizer[Property],
+      strategy: NamingStrategy
+  ): Tokenizer[Assignment] = Tokenizer[Assignment] {
     case Assignment(alias, prop, value) =>
       stmt"${prop.token} = ${value.token}"
   }
 
-  implicit def assignmentDualTokenizer(implicit propertyTokenizer: Tokenizer[Property], strategy: NamingStrategy): Tokenizer[AssignmentDual] = Tokenizer[AssignmentDual] {
+  implicit def assignmentDualTokenizer(implicit
+      propertyTokenizer: Tokenizer[Property],
+      strategy: NamingStrategy
+  ): Tokenizer[AssignmentDual] = Tokenizer[AssignmentDual] {
     case AssignmentDual(alias1, alias2, prop, value) =>
       stmt"${prop.token} = ${value.token}"
   }
 
-  implicit def actionTokenizer(implicit strategy: NamingStrategy): Tokenizer[Action] = {
+  implicit def actionTokenizer(implicit
+      strategy: NamingStrategy
+  ): Tokenizer[Action] = {
 
-    implicit def queryTokenizer(implicit strategy: NamingStrategy): Tokenizer[Query] = Tokenizer[Query] {
+    implicit def queryTokenizer(implicit
+        strategy: NamingStrategy
+    ): Tokenizer[Query] = Tokenizer[Query] {
       case q: Entity => q.token
       case other     => fail(s"Expected a table, got '$other'")
     }
@@ -202,14 +251,19 @@ trait CqlIdiom extends Idiom {
     }
   }
 
-  implicit def entityTokenizer(implicit strategy: NamingStrategy): Tokenizer[Entity] = Tokenizer[Entity] {
+  implicit def entityTokenizer(implicit
+      strategy: NamingStrategy
+  ): Tokenizer[Entity] = Tokenizer[Entity] {
     case Entity.Opinionated(name, properties, _, renameable) =>
       renameable.fixedOr(name.token)(strategy.table(name).token)
   }
 
-  implicit def traversableTokenizer(implicit strategy: NamingStrategy): Tokenizer[IterableOperation] =
+  implicit def traversableTokenizer(implicit
+      strategy: NamingStrategy
+  ): Tokenizer[IterableOperation] =
     Tokenizer[IterableOperation] {
-      case MapContains(ast, body)  => stmt"${ast.token} CONTAINS KEY ${body.token}"
+      case MapContains(ast, body) =>
+        stmt"${ast.token} CONTAINS KEY ${body.token}"
       case SetContains(ast, body)  => stmt"${ast.token} CONTAINS ${body.token}"
       case ListContains(ast, body) => stmt"${ast.token} CONTAINS ${body.token}"
     }

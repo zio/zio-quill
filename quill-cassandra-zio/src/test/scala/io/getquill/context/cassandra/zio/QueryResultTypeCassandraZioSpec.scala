@@ -2,7 +2,9 @@ package io.getquill.context.cassandra.zio
 
 import io.getquill.context.cassandra.QueryResultTypeCassandraSpec
 
-class QueryResultTypeCassandraZioSpec extends ZioCassandraSpec with QueryResultTypeCassandraSpec {
+class QueryResultTypeCassandraZioSpec
+    extends ZioCassandraSpec
+    with QueryResultTypeCassandraSpec {
 
   val context = testZioDB
 

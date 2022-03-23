@@ -138,49 +138,65 @@ class CqlQuerySpec extends Spec {
       val q = quote {
         qr1.flatMap(r1 => qr2.filter(_.i == r1.i))
       }
-      intercept[IllegalStateException](CqlQuery(q.ast)).getMessage mustEqual "Cql doesn't support flatMap."
+      intercept[IllegalStateException](
+        CqlQuery(q.ast)
+      ).getMessage mustEqual "Cql doesn't support flatMap."
     }
     "groupBy not supported" in {
       val q = quote {
         qr1.groupBy(t => t.i)
       }
-      intercept[IllegalStateException](CqlQuery(q.ast)).getMessage mustEqual "Cql doesn't support groupBy."
+      intercept[IllegalStateException](
+        CqlQuery(q.ast)
+      ).getMessage mustEqual "Cql doesn't support groupBy."
     }
     "union not supported" in {
       val q = quote {
         qr1.filter(_.i == 0).union(qr1.filter(_.i == 1))
       }
-      intercept[IllegalStateException](CqlQuery(q.ast)).getMessage mustEqual "Cql doesn't support union/unionAll."
+      intercept[IllegalStateException](
+        CqlQuery(q.ast)
+      ).getMessage mustEqual "Cql doesn't support union/unionAll."
     }
     "unionAll not supported" in {
       val q = quote {
         qr1.filter(_.i == 0).unionAll(qr1.filter(_.i == 1))
       }
-      intercept[IllegalStateException](CqlQuery(q.ast)).getMessage mustEqual "Cql doesn't support union/unionAll."
+      intercept[IllegalStateException](
+        CqlQuery(q.ast)
+      ).getMessage mustEqual "Cql doesn't support union/unionAll."
     }
     "join not supported" in {
       val q = quote {
         qr1.join(qr2).on((a, b) => a.i == b.i)
       }
-      intercept[IllegalStateException](CqlQuery(q.ast)).getMessage mustEqual "Cql doesn't support InnerJoin."
+      intercept[IllegalStateException](
+        CqlQuery(q.ast)
+      ).getMessage mustEqual "Cql doesn't support InnerJoin."
     }
     "leftJoin not supported" in {
       val q = quote {
         qr1.leftJoin(qr2).on((a, b) => a.i == b.i)
       }
-      intercept[IllegalStateException](CqlQuery(q.ast)).getMessage mustEqual "Cql doesn't support LeftJoin."
+      intercept[IllegalStateException](
+        CqlQuery(q.ast)
+      ).getMessage mustEqual "Cql doesn't support LeftJoin."
     }
     "rightJoin not supported" in {
       val q = quote {
         qr1.rightJoin(qr2).on((a, b) => a.i == b.i)
       }
-      intercept[IllegalStateException](CqlQuery(q.ast)).getMessage mustEqual "Cql doesn't support RightJoin."
+      intercept[IllegalStateException](
+        CqlQuery(q.ast)
+      ).getMessage mustEqual "Cql doesn't support RightJoin."
     }
     "fullJoin not supported" in {
       val q = quote {
         qr1.fullJoin(qr2).on((a, b) => a.i == b.i)
       }
-      intercept[IllegalStateException](CqlQuery(q.ast)).getMessage mustEqual "Cql doesn't support FullJoin."
+      intercept[IllegalStateException](
+        CqlQuery(q.ast)
+      ).getMessage mustEqual "Cql doesn't support FullJoin."
     }
     "sortBy after take" in {
       val q = quote {

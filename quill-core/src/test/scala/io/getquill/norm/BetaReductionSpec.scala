@@ -14,7 +14,8 @@ class BetaReductionSpec extends Spec {
       BetaReduction(ast) mustEqual Ident("a")
     }
     "tuple field - fixed property" in {
-      val ast: Ast = Property.Opinionated(Tuple(List(Ident("a"))), "_1", Fixed, Visible)
+      val ast: Ast =
+        Property.Opinionated(Tuple(List(Ident("a"))), "_1", Fixed, Visible)
       BetaReduction(ast) mustEqual Ident("a")
     }
     "caseclass field" in {
@@ -22,7 +23,12 @@ class BetaReductionSpec extends Spec {
       BetaReduction(ast) mustEqual Ident("a")
     }
     "caseclass field - fixed property" in {
-      val ast: Ast = Property.Opinionated(CaseClass(List(("foo", Ident("a")))), "foo", Fixed, Visible)
+      val ast: Ast = Property.Opinionated(
+        CaseClass(List(("foo", Ident("a")))),
+        "foo",
+        Fixed,
+        Visible
+      )
       BetaReduction(ast) mustEqual Ident("a")
     }
     "function apply" in {
@@ -51,48 +57,62 @@ class BetaReductionSpec extends Spec {
     "with inline" - {
       val entity = Entity("a", Nil, QEP)
       // Entity Idents
-      val (aE, bE, cE, dE) = (Ident("a", QEP), Ident("b", QEP), Ident("c", QEP), Ident("d", QEP))
+      val (aE, bE, cE, dE) =
+        (Ident("a", QEP), Ident("b", QEP), Ident("c", QEP), Ident("d", QEP))
       // Value Idents
-      val (a, b, c, d) = (Ident("a", QV), Ident("b", QV), Ident("c", QV), Ident("d", QV))
+      val (a, b, c, d) =
+        (Ident("a", QV), Ident("b", QV), Ident("c", QV), Ident("d", QV))
       val (c1, c2, c3) = (Constant.auto(1), Constant.auto(2), Constant.auto(3))
 
       "top level block" in {
-        val block = Block(List(
-          Val(aE, entity),
-          Val(bE, aE),
-          Map(bE, dE, c1)
-        ))
+        val block = Block(
+          List(
+            Val(aE, entity),
+            Val(bE, aE),
+            Map(bE, dE, c1)
+          )
+        )
         BetaReduction.AllowEmpty(block) mustEqual Map(entity, dE, c1)
       }
       "nested blocks" in {
-        val inner = Block(List(
-          Val(aE, entity),
-          Val(b, c2),
-          Val(c, c3),
-          Tuple(List(aE, bE, cE))
-        ))
-        val outer = Block(List(
-          Val(aE, inner),
-          Val(bE, aE),
-          Val(cE, bE),
-          cE
-        ))
+        val inner = Block(
+          List(
+            Val(aE, entity),
+            Val(b, c2),
+            Val(c, c3),
+            Tuple(List(aE, bE, cE))
+          )
+        )
+        val outer = Block(
+          List(
+            Val(aE, inner),
+            Val(bE, aE),
+            Val(cE, bE),
+            cE
+          )
+        )
         BetaReduction.AllowEmpty(outer) mustEqual Tuple(List(entity, c2, c3))
       }
       "nested blocks caseclass" in {
-        val inner = Block(List(
-          Val(aE, entity),
-          Val(b, c2),
-          Val(c, c3),
-          CaseClass(List(("foo", aE), ("bar", bE), ("baz", cE)))
-        ))
-        val outer = Block(List(
-          Val(aE, inner),
-          Val(bE, aE),
-          Val(cE, bE),
-          cE
-        ))
-        BetaReduction.AllowEmpty(outer) mustEqual CaseClass(List(("foo", entity), ("bar", c2), ("baz", c3)))
+        val inner = Block(
+          List(
+            Val(aE, entity),
+            Val(b, c2),
+            Val(c, c3),
+            CaseClass(List(("foo", aE), ("bar", bE), ("baz", cE)))
+          )
+        )
+        val outer = Block(
+          List(
+            Val(aE, inner),
+            Val(bE, aE),
+            Val(cE, bE),
+            cE
+          )
+        )
+        BetaReduction.AllowEmpty(outer) mustEqual CaseClass(
+          List(("foo", entity), ("bar", c2), ("baz", c3))
+        )
       }
     }
     "avoids replacing idents of an outer scope" - {
@@ -121,8 +141,19 @@ class BetaReductionSpec extends Spec {
         BetaReduction(ast, Ident("b") -> Ident("b'")) mustEqual ast
       }
       "outer join" in {
-        val ast: Ast = Join(LeftJoin, Ident("a"), Ident("b"), Ident("c"), Ident("d"), Tuple(List(Ident("c"), Ident("d"))))
-        BetaReduction(ast, Ident("c") -> Ident("c'"), Ident("d") -> Ident("d'")) mustEqual ast
+        val ast: Ast = Join(
+          LeftJoin,
+          Ident("a"),
+          Ident("b"),
+          Ident("c"),
+          Ident("d"),
+          Tuple(List(Ident("c"), Ident("d")))
+        )
+        BetaReduction(
+          ast,
+          Ident("c") -> Ident("c'"),
+          Ident("d") -> Ident("d'")
+        ) mustEqual ast
       }
       "option operation" - {
         "flatMap - Unchecked" in {
@@ -163,14 +194,32 @@ class BetaReductionSpec extends Spec {
 
   "doesn't shadow identifiers" - {
     "function apply" in {
-      val ast: Ast = FunctionApply(Function(List(Ident("a"), Ident("b")), BinaryOperation(Ident("a"), NumericOperator.`/`, Ident("b"))), List(Ident("b"), Ident("a")))
-      BetaReduction(ast) mustEqual BinaryOperation(Ident("b"), NumericOperator.`/`, Ident("a"))
+      val ast: Ast = FunctionApply(
+        Function(
+          List(Ident("a"), Ident("b")),
+          BinaryOperation(Ident("a"), NumericOperator.`/`, Ident("b"))
+        ),
+        List(Ident("b"), Ident("a"))
+      )
+      BetaReduction(ast) mustEqual BinaryOperation(
+        Ident("b"),
+        NumericOperator.`/`,
+        Ident("a")
+      )
     }
     "nested function apply" in {
-      val f1 = Function(List(Ident("b")), BinaryOperation(Ident("a"), NumericOperator.`/`, Ident("b")))
+      val f1 = Function(
+        List(Ident("b")),
+        BinaryOperation(Ident("a"), NumericOperator.`/`, Ident("b"))
+      )
       val f2 = Function(List(Ident("a")), f1)
-      val ast: Ast = FunctionApply(FunctionApply(f2, List(Ident("b"))), List(Ident("a")))
-      BetaReduction(ast) mustEqual BinaryOperation(Ident("b"), NumericOperator.`/`, Ident("a"))
+      val ast: Ast =
+        FunctionApply(FunctionApply(f2, List(Ident("b"))), List(Ident("a")))
+      BetaReduction(ast) mustEqual BinaryOperation(
+        Ident("b"),
+        NumericOperator.`/`,
+        Ident("a")
+      )
     }
   }
 
@@ -190,13 +239,20 @@ class BetaReductionSpec extends Spec {
   "reapplies the beta reduction if the structure changes caseclass" in {
     val quat = Quat.LeafProduct("foo")
     val ast: Ast = Property(Ident("a", quat), "foo")
-    BetaReduction(ast, Ident("a", quat) -> CaseClass(List(("foo", Ident("a'"))))) mustEqual
+    BetaReduction(
+      ast,
+      Ident("a", quat) -> CaseClass(List(("foo", Ident("a'"))))
+    ) mustEqual
       Ident("a'")
   }
 
   "applies reduction only once" in {
     val ast: Ast = Ident("a")
-    BetaReduction(ast, Ident("a") -> Ident("b"), Ident("b") -> Ident("c")) mustEqual
+    BetaReduction(
+      ast,
+      Ident("a") -> Ident("b"),
+      Ident("b") -> Ident("c")
+    ) mustEqual
       Ident("b")
   }
 }

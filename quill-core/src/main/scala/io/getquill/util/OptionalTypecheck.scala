@@ -1,6 +1,6 @@
 package io.getquill.util
 
-import scala.reflect.macros.blackbox.{ Context => MacroContext }
+import scala.reflect.macros.blackbox.{Context => MacroContext}
 
 object OptionalTypecheck {
 

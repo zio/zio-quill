@@ -34,7 +34,8 @@ class SyncIOMonadSpec extends IOMonadSpec {
     }
     "RunBatchActionReturningResult" in {
       val l = List(TestEntity("1", 2, 3L, Some(4), true))
-      val q = quote(liftQuery(l).foreach(t => qr1.insertValue(t).returning(_.i)))
+      val q =
+        quote(liftQuery(l).foreach(t => qr1.insertValue(t).returning(_.i)))
       eval(ctx.runIO(q)).groups mustEqual ctx.run(q).groups
     }
   }

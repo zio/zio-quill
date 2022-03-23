@@ -1,7 +1,7 @@
 package io.getquill.context.mirror
 
 import java.time.LocalDate
-import java.util.{ Date, UUID }
+import java.util.{Date, UUID}
 
 import io.getquill.context.Context
 
@@ -14,22 +14,37 @@ trait MirrorEncoders {
   override type Session = MirrorSession
 
   case class MirrorEncoder[T](encoder: BaseEncoder[T]) extends BaseEncoder[T] {
-    override def apply(index: Index, value: T, row: PrepareRow, session: Session) =
+    override def apply(
+        index: Index,
+        value: T,
+        row: PrepareRow,
+        session: Session
+    ) =
       encoder(index, value, row, session)
   }
 
-  def encoder[T]: Encoder[T] = MirrorEncoder((index: Index, value: T, row: PrepareRow, session: Session) => row.add(value))
+  def encoder[T]: Encoder[T] =
+    MirrorEncoder((index: Index, value: T, row: PrepareRow, session: Session) =>
+      row.add(value)
+    )
 
-  implicit def mappedEncoder[I, O](implicit mapped: MappedEncoding[I, O], e: Encoder[O]): Encoder[I] =
-    MirrorEncoder((index: Index, value: I, row: PrepareRow, session: Session) => e(index, mapped.f(value), row, session))
+  implicit def mappedEncoder[I, O](implicit
+      mapped: MappedEncoding[I, O],
+      e: Encoder[O]
+  ): Encoder[I] =
+    MirrorEncoder((index: Index, value: I, row: PrepareRow, session: Session) =>
+      e(index, mapped.f(value), row, session)
+    )
 
   implicit def optionEncoder[T](implicit d: Encoder[T]): Encoder[Option[T]] =
-    MirrorEncoder((index: Index, value: Option[T], row: PrepareRow, session: Session) => {
-      value match {
-        case None    => row.add(None)
-        case Some(v) => row.add(d(index, v, Row(), session).data.headOption)
+    MirrorEncoder(
+      (index: Index, value: Option[T], row: PrepareRow, session: Session) => {
+        value match {
+          case None    => row.add(None)
+          case Some(v) => row.add(d(index, v, Row(), session).data.headOption)
+        }
       }
-    })
+    )
 
   implicit val stringEncoder: Encoder[String] = encoder[String]
   implicit val bigDecimalEncoder: Encoder[BigDecimal] = encoder[BigDecimal]

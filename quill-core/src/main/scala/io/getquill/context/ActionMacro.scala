@@ -6,14 +6,12 @@ import io.getquill.quat.Quat
 import io.getquill.quotation.ReifyLiftings
 import io.getquill.util.MacroContextExt._
 
-import scala.reflect.macros.whitebox.{ Context => MacroContext }
-import io.getquill.util.{ EnableReflectiveCalls, OptionalTypecheck }
+import scala.reflect.macros.whitebox.{Context => MacroContext}
+import io.getquill.util.{EnableReflectiveCalls, OptionalTypecheck}
 
-class ActionMacro(val c: MacroContext)
-  extends ContextMacro
-  with ReifyLiftings {
+class ActionMacro(val c: MacroContext) extends ContextMacro with ReifyLiftings {
 
-  import c.universe.{ Function => _, Ident => _, _ }
+  import c.universe.{Function => _, Ident => _, _}
 
   def translateQuery(quoted: Tree): Tree =
     translateQueryPrettyPrint(quoted, q"false")
@@ -35,9 +33,8 @@ class ActionMacro(val c: MacroContext)
     translateBatchQueryPrettyPrint(quoted, q"false")
 
   def translateBatchQueryPrettyPrint(quoted: Tree, prettyPrint: Tree): Tree =
-    expandBatchAction(quoted) {
-      case (batch, param, expanded) =>
-        q"""
+    expandBatchAction(quoted) { case (batch, param, expanded) =>
+      q"""
           ..${EnableReflectiveCalls(c)}
           ${c.prefix}.translateBatchQuery(
             $batch.map { $param =>
@@ -85,9 +82,8 @@ class ActionMacro(val c: MacroContext)
     batchAction(quoted, "prepareBatchAction")
 
   def batchAction(quoted: Tree, method: String): Tree =
-    expandBatchAction(quoted) {
-      case (batch, param, expanded) =>
-        q"""
+    expandBatchAction(quoted) { case (batch, param, expanded) =>
+      q"""
           ..${EnableReflectiveCalls(c)}
           ${c.prefix}.${TermName(method)}(
             $batch.map { $param =>
@@ -101,10 +97,11 @@ class ActionMacro(val c: MacroContext)
         """
     }
 
-  def runBatchActionReturning[T](quoted: Tree)(implicit t: WeakTypeTag[T]): Tree =
-    expandBatchAction(quoted) {
-      case (batch, param, expanded) =>
-        q"""
+  def runBatchActionReturning[T](quoted: Tree)(implicit
+      t: WeakTypeTag[T]
+  ): Tree =
+    expandBatchAction(quoted) { case (batch, param, expanded) =>
+      q"""
           ..${EnableReflectiveCalls(c)}
           ${c.prefix}.executeBatchActionReturning(
             $batch.map { $param =>
@@ -133,7 +130,9 @@ class ActionMacro(val c: MacroContext)
                 case CaseClassQueryLift(name, batch: Tree, quat) =>
                   CaseClassValueLift("value", value, quat)
               }
-            val (ast, _) = reifyLiftings(BetaReduction(body, alias -> nestedLift))
+            val (ast, _) = reifyLiftings(
+              BetaReduction(body, alias -> nestedLift)
+            )
             c.untypecheck {
               call(batch, param, expand(ast, Quat.Unknown))
             }
@@ -172,7 +171,9 @@ class ActionMacro(val c: MacroContext)
         q"(row: ${c.prefix}.ResultRow, session: ${c.prefix}.Session) => $decoder.apply(0, row, session)"
       case None =>
         val metaTpe = c.typecheck(tq"${c.prefix}.QueryMeta[$t]", c.TYPEmode).tpe
-        val meta = c.inferImplicitValue(metaTpe).orElse(q"${c.prefix}.materializeQueryMeta[$t]")
+        val meta = c
+          .inferImplicitValue(metaTpe)
+          .orElse(q"${c.prefix}.materializeQueryMeta[$t]")
         q"$meta.extract"
     }
   }

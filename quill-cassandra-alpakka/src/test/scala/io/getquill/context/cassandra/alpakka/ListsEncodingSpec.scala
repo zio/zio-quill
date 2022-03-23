@@ -2,7 +2,7 @@ package io.getquill.context.cassandra.alpakka
 
 import io.getquill.context.cassandra.CollectionsSpec
 
-import java.time.{ Instant, LocalDate }
+import java.time.{Instant, LocalDate}
 import java.util.UUID
 
 class ListsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
@@ -10,24 +10,36 @@ class ListsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
   import ctx._
 
   case class ListsEntity(
-    id:         Int,
-    texts:      List[String],
-    decimals:   List[BigDecimal],
-    bools:      List[Boolean],
-    bytes:      List[Byte],
-    shorts:     List[Short],
-    ints:       List[Int],
-    longs:      List[Long],
-    floats:     List[Float],
-    doubles:    List[Double],
-    dates:      List[LocalDate],
-    timestamps: List[Instant],
-    uuids:      List[UUID]
+      id: Int,
+      texts: List[String],
+      decimals: List[BigDecimal],
+      bools: List[Boolean],
+      bytes: List[Byte],
+      shorts: List[Short],
+      ints: List[Int],
+      longs: List[Long],
+      floats: List[Float],
+      doubles: List[Double],
+      dates: List[LocalDate],
+      timestamps: List[Instant],
+      uuids: List[UUID]
   )
 
-  val e = ListsEntity(1, List("c"), List(BigDecimal(1.33)), List(true), List(0, 1), List(3, 2), List(1, 2), List(2, 3),
-    List(1f, 3f), List(5d), List(LocalDate.now()),
-    List(Instant.now()), List(UUID.randomUUID()))
+  val e = ListsEntity(
+    1,
+    List("c"),
+    List(BigDecimal(1.33)),
+    List(true),
+    List(0, 1),
+    List(3, 2),
+    List(1, 2),
+    List(2, 3),
+    List(1f, 3f),
+    List(5d),
+    List(LocalDate.now()),
+    List(Instant.now()),
+    List(UUID.randomUUID())
+  )
 
   val q = quote(query[ListsEntity])
 
@@ -43,7 +55,12 @@ class ListsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
   }
 
   "Empty lists and optional fields" in {
-    case class Entity(id: Int, texts: Option[List[String]], bools: Option[List[Boolean]], ints: List[Int])
+    case class Entity(
+        id: Int,
+        texts: Option[List[String]],
+        bools: Option[List[Boolean]],
+        ints: List[Int]
+    )
     val e = Entity(1, Some(List("1", "2")), None, Nil)
     val q = quote(querySchema[Entity]("ListsEntity"))
 

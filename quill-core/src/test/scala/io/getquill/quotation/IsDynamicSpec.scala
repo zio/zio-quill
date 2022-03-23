@@ -19,7 +19,9 @@ class IsDynamicSpec extends Spec {
         IsDynamic(Property(Dynamic(1), "a")) mustEqual true
       }
       "partially dynamic - fixed" in {
-        IsDynamic(Property.Opinionated(Dynamic(1), "a", Fixed, Visible)) mustEqual true
+        IsDynamic(
+          Property.Opinionated(Dynamic(1), "a", Fixed, Visible)
+        ) mustEqual true
       }
     }
     "false" in {

@@ -9,7 +9,8 @@ import io.getquill.testContext.unquote
 
 class SymbolicReductionSpec extends Spec { //hello
 
-  def symbolicReduction = (SymbolicReduction.unapply _).andThen(o => o.map(replaceTempIdent(_)))
+  def symbolicReduction =
+    (SymbolicReduction.unapply _).andThen(o => o.map(replaceTempIdent(_)))
 
   "a.filter(b => c).flatMap(d => e.$)" - {
     "e is an entity" in {
@@ -57,7 +58,9 @@ class SymbolicReductionSpec extends Spec { //hello
       qr1.unionAll(qr1.filter(t => t.i == 1)).flatMap(c => qr2)
     }
     val n = quote {
-      qr1.flatMap(c => qr2).unionAll(qr1.filter(t => t.i == 1).flatMap(c => qr2))
+      qr1
+        .flatMap(c => qr2)
+        .unionAll(qr1.filter(t => t.i == 1).flatMap(c => qr2))
     }
     symbolicReduction(q.ast) mustEqual Some(n.ast)
   }

@@ -30,15 +30,21 @@ class OrientDBContextSpec extends Spec {
     val ctx = orientdb.testSyncDB
     import ctx._
     case class TestEntity(id: Int)
-    performIO(runIO(quote(query[TestEntity].filter(_.id == lift(1)))).transactional)
+    performIO(
+      runIO(quote(query[TestEntity].filter(_.id == lift(1)))).transactional
+    )
   }
 
   "fail on returning" in {
     val ctx = orientdb.testSyncDB
     import ctx._
     val e: Extractor[Int] = (_, _) => 1
-    intercept[IllegalStateException](executeActionReturning("", (x, session) => (Nil, x), e, "")).getMessage mustBe
-      intercept[IllegalStateException](executeBatchActionReturning(Nil, e)).getMessage
+    intercept[IllegalStateException](
+      executeActionReturning("", (x, session) => (Nil, x), e, "")
+    ).getMessage mustBe
+      intercept[IllegalStateException](
+        executeBatchActionReturning(Nil, e)
+      ).getMessage
   }
 
   "probe" in {

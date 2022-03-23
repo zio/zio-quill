@@ -1,29 +1,39 @@
 package io.getquill.context.cassandra.encoding
 
-import com.datastax.oss.driver.internal.core.`type`.{ DefaultListType, PrimitiveType }
+import com.datastax.oss.driver.internal.core.`type`.{
+  DefaultListType,
+  PrimitiveType
+}
 import io.getquill.context.cassandra.CassandraRowContext
 import io.getquill.util.Messages.fail
 
-import java.time.{ Instant, LocalDate, LocalTime }
-import java.util.{ Date, UUID }
+import java.time.{Instant, LocalDate, LocalTime}
+import java.util.{Date, UUID}
 
 trait Decoders extends CollectionDecoders {
   this: CassandraRowContext[_] =>
 
   type Decoder[T] = CassandraDecoder[T]
 
-  case class CassandraDecoder[T](decoder: BaseDecoder[T]) extends BaseDecoder[T] {
+  case class CassandraDecoder[T](decoder: BaseDecoder[T])
+      extends BaseDecoder[T] {
     override def apply(index: Index, row: ResultRow, session: Session) =
       decoder(index, row, session)
   }
 
-  def decoder[T](d: BaseDecoder[T]): Decoder[T] = CassandraDecoder(
-    (index, row, session) =>
-      if (row.isNull(index) && row.getColumnDefinitions.get(index).getType.isInstanceOf[PrimitiveType])
-        fail(s"Expected column at index $index to be defined but is was empty or type is unknown ${row.getColumnDefinitions.get(index).getType.getClass}")
+  def decoder[T](d: BaseDecoder[T]): Decoder[T] =
+    CassandraDecoder((index, row, session) =>
+      if (
+        row.isNull(index) && row.getColumnDefinitions
+          .get(index)
+          .getType
+          .isInstanceOf[PrimitiveType]
+      )
+        fail(
+          s"Expected column at index $index to be defined but is was empty or type is unknown ${row.getColumnDefinitions.get(index).getType.getClass}"
+        )
       else d(index, row, session)
-
-  )
+    )
 
   def decoder[T](f: ResultRow => Index => T): Decoder[T] =
     decoder((index, row, session) => f(row)(index))
@@ -36,7 +46,10 @@ trait Decoders extends CollectionDecoders {
       }
     })
 
-  implicit def mappedDecoder[I, O](implicit mapped: MappedEncoding[I, O], decoder: Decoder[I]): Decoder[O] =
+  implicit def mappedDecoder[I, O](implicit
+      mapped: MappedEncoding[I, O],
+      decoder: Decoder[I]
+  ): Decoder[O] =
     CassandraDecoder(mappedBaseDecoder(mapped, decoder.decoder))
 
   implicit val stringDecoder: Decoder[String] = decoder(_.getString)
@@ -58,6 +71,10 @@ trait Decoders extends CollectionDecoders {
     })
   implicit val uuidDecoder: Decoder[UUID] = decoder(_.getUuid)
   implicit val timestampDecoder: Decoder[Instant] = decoder(_.getInstant)
-  implicit val cassandraLocalTimeDecoder: Decoder[LocalTime] = decoder(_.getLocalTime)
-  implicit val cassandraLocalDateDecoder: Decoder[LocalDate] = decoder(_.getLocalDate)
+  implicit val cassandraLocalTimeDecoder: Decoder[LocalTime] = decoder(
+    _.getLocalTime
+  )
+  implicit val cassandraLocalDateDecoder: Decoder[LocalDate] = decoder(
+    _.getLocalDate
+  )
 }

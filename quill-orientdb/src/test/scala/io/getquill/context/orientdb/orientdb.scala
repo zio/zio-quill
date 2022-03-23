@@ -20,7 +20,8 @@ object orientdb {
   private val conf = OrientDBContextConfig(LoadConfig("ctx"))
 
   private def setup(): Unit = {
-    val orientDB = new OrientDB(conf.dbUrl, "root", "root", OrientDBConfig.defaultConfig())
+    val orientDB =
+      new OrientDB(conf.dbUrl, "root", "root", OrientDBConfig.defaultConfig())
     orientDB.createIfNotExists(databaseName, ODatabaseType.MEMORY)
 
     val pool = new ODatabasePool(conf.dbUrl, "root", "root")

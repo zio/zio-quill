@@ -1,6 +1,6 @@
 package io.getquill.dsl
 
-import scala.reflect.macros.whitebox.{ Context => MacroContext }
+import scala.reflect.macros.whitebox.{Context => MacroContext}
 import io.getquill.Embedded
 import io.getquill.util.OptionalTypecheck
 import io.getquill.util.MacroContextExt._
@@ -13,17 +13,31 @@ trait ValueComputation {
     val term: Option[TermName]
     def nestedAndOptional: Boolean
   }
-  case class Nested(term: Option[TermName], tpe: Type, params: List[List[Value]], optional: Boolean) extends Value {
+  case class Nested(
+      term: Option[TermName],
+      tpe: Type,
+      params: List[List[Value]],
+      optional: Boolean
+  ) extends Value {
     def nestedAndOptional: Boolean = optional
   }
-  case class Scalar(term: Option[TermName], tpe: Type, decoder: Tree, optional: Boolean) extends Value {
+  case class Scalar(
+      term: Option[TermName],
+      tpe: Type,
+      decoder: Tree,
+      optional: Boolean
+  ) extends Value {
     def nestedAndOptional: Boolean = false
   }
 
   private def is[T](tpe: Type)(implicit t: TypeTag[T]) =
     tpe <:< t.tpe
 
-  private[getquill] def value(encoding: String, tpe: Type, exclude: Tree*): Value = {
+  private[getquill] def value(
+      encoding: String,
+      tpe: Type,
+      exclude: Tree*
+  ): Value = {
 
     def nest(tpe: Type, term: Option[TermName]): Nested =
       caseClassConstructor(tpe) match {
@@ -44,11 +58,12 @@ trait ValueComputation {
       }
 
     def apply(tpe: Type, term: Option[TermName], nested: Boolean): Value = {
-      OptionalTypecheck(c)(q"implicitly[${c.prefix}.${TypeName(encoding)}[$tpe]]") match {
+      OptionalTypecheck(c)(
+        q"implicitly[${c.prefix}.${TypeName(encoding)}[$tpe]]"
+      ) match {
         case Some(encoding) =>
           Scalar(term, tpe, encoding, optional = is[Option[Any]](tpe))
         case None =>
-
           def value(tpe: Type) =
             tpe match {
               case tpe if !is[Embedded](tpe) && nested =>
@@ -64,7 +79,9 @@ trait ValueComputation {
             }
 
           if (isNone(tpe)) {
-            c.fail("Cannot handle untyped `None` objects. Use a cast e.g. `None:Option[String]` or `Option.empty`.")
+            c.fail(
+              "Cannot handle untyped `None` objects. Use a cast e.g. `None:Option[String]` or `Option.empty`."
+            )
           } else if (is[Option[Any]](tpe)) {
             value(tpe.typeArgs.head).copy(optional = true)
           } else {
@@ -75,15 +92,14 @@ trait ValueComputation {
 
     def filterExcludes(value: Value) = {
       val paths =
-        exclude.map {
-          case f: Function =>
-            def path(tree: Tree): List[TermName] =
-              tree match {
-                case q"$a.$b"                => path(a) :+ b
-                case q"$a.map[$t]($b => $c)" => path(a) ++ path(c)
-                case _                       => Nil
-              }
-            path(f.body)
+        exclude.map { case f: Function =>
+          def path(tree: Tree): List[TermName] =
+            tree match {
+              case q"$a.$b"                => path(a) :+ b
+              case q"$a.map[$t]($b => $c)" => path(a) ++ path(c)
+              case _                       => Nil
+            }
+          path(f.body)
         }
 
       def filter(value: Value, path: List[TermName] = Nil): Option[Value] =
@@ -91,7 +107,14 @@ trait ValueComputation {
           case value if paths.contains(path ++ value.term) =>
             None
           case Nested(term, tpe, params, optional) =>
-            Some(Nested(term, tpe, params.map(_.flatMap(filter(_, path ++ term))), optional))
+            Some(
+              Nested(
+                term,
+                tpe,
+                params.map(_.flatMap(filter(_, path ++ term))),
+                optional
+              )
+            )
           case value =>
             Some(value)
         }

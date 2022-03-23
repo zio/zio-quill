@@ -11,8 +11,10 @@ object StringUtil {
   }
 
   implicit class StringExtensions(str: String) {
-    def snakeToUpperCamel = str.split("_").map(_.toLowerCase).map(_.capitalize).mkString
-    def snakeToLowerCamel = str.split("_").map(_.toLowerCase).map(_.capitalize).mkString.uncapitalize
+    def snakeToUpperCamel =
+      str.split("_").map(_.toLowerCase).map(_.capitalize).mkString
+    def snakeToLowerCamel =
+      str.split("_").map(_.toLowerCase).map(_.capitalize).mkString.uncapitalize
     def lowerCamelToSnake = str.split("(?=[A-Z])").mkString("_").toLowerCase
     def uncapitalize =
       new String(
@@ -30,6 +32,8 @@ object StringUtil {
 
   implicit class OptionStringExtensions(str: Option[String]) {
     def existsInSetNocase(seq: String*) =
-      str.map(_.toLowerCase).exists(value => seq.map(_.toLowerCase).toSeq.contains(value))
+      str
+        .map(_.toLowerCase)
+        .exists(value => seq.map(_.toLowerCase).toSeq.contains(value))
   }
 }

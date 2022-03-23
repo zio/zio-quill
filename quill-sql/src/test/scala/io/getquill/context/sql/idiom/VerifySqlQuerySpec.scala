@@ -11,7 +11,9 @@ class VerifySqlQuerySpec extends Spec {
   "fails if the query can't be translated to applicative joins" - {
     "sortBy" in {
       val q = quote {
-        qr1.flatMap(a => qr2.filter(b => b.s == a.s).sortBy(b => b.s).map(b => b.s))
+        qr1.flatMap(a =>
+          qr2.filter(b => b.s == a.s).sortBy(b => b.s).map(b => b.s)
+        )
       }
       VerifySqlQuery(SqlQuery(q.ast)).isDefined mustEqual true
     }
@@ -26,21 +28,27 @@ class VerifySqlQuerySpec extends Spec {
     "doesn't accept table reference" - {
       "with filter" in {
         val q = quote {
-          qr1.leftJoin(qr2).on((a, b) => a.i == b.i).filter {
-            case (a, b) => b.isDefined
+          qr1.leftJoin(qr2).on((a, b) => a.i == b.i).filter { case (a, b) =>
+            b.isDefined
           }
         }
 
-        an[IllegalArgumentException] should be thrownBy VerifySqlQuery(SqlQuery(SqlNormalize(q.ast)))
+        an[IllegalArgumentException] should be thrownBy VerifySqlQuery(
+          SqlQuery(SqlNormalize(q.ast))
+        )
       }
 
       "with map" in {
         val q = quote {
-          qr1.leftJoin(qr2).on((a, b) => a.i == b.i)
+          qr1
+            .leftJoin(qr2)
+            .on((a, b) => a.i == b.i)
             .map(pcTup => if (pcTup._2.isDefined) "bar" else "baz")
         }
 
-        an[IllegalArgumentException] should be thrownBy VerifySqlQuery(SqlQuery(SqlNormalize(q.ast)))
+        an[IllegalArgumentException] should be thrownBy VerifySqlQuery(
+          SqlQuery(SqlNormalize(q.ast))
+        )
       }
     }
 

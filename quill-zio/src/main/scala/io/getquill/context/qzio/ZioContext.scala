@@ -1,12 +1,13 @@
 package io.getquill.context.qzio
 
 import io.getquill.NamingStrategy
-import io.getquill.context.{ Context, ExecutionInfo, StreamingContext }
+import io.getquill.context.{Context, ExecutionInfo, StreamingContext}
 import zio.ZIO
 import zio.stream.ZStream
 
-trait ZioContext[Idiom <: io.getquill.idiom.Idiom, Naming <: NamingStrategy] extends Context[Idiom, Naming]
-  with StreamingContext[Idiom, Naming] {
+trait ZioContext[Idiom <: io.getquill.idiom.Idiom, Naming <: NamingStrategy]
+    extends Context[Idiom, Naming]
+    with StreamingContext[Idiom, Naming] {
 
   type Error
   type Environment
@@ -18,6 +19,14 @@ trait ZioContext[Idiom <: io.getquill.idiom.Idiom, Naming <: NamingStrategy] ext
   override type RunQuerySingleResult[T] = T
 
   // Need explicit return-type annotations due to scala/bug#8356. Otherwise macro system will not understand Result[Long]=Task[Long] etc...
-  def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner): ZIO[Environment, Error, List[T]]
-  def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner): ZIO[Environment, Error, T]
+  def executeQuery[T](
+      sql: String,
+      prepare: Prepare = identityPrepare,
+      extractor: Extractor[T] = identityExtractor
+  )(info: ExecutionInfo, dc: Runner): ZIO[Environment, Error, List[T]]
+  def executeQuerySingle[T](
+      sql: String,
+      prepare: Prepare = identityPrepare,
+      extractor: Extractor[T] = identityExtractor
+  )(info: ExecutionInfo, dc: Runner): ZIO[Environment, Error, T]
 }

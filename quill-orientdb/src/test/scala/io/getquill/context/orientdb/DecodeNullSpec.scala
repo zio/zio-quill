@@ -9,7 +9,8 @@ class DecodeNullSpec extends Spec {
     "sync" in {
       val ctx = orientdb.testSyncDB
       import ctx._
-      val writeEntities = quote(querySchema[DecodeNullTestWriteEntity]("DecodeNullTestEntity"))
+      val writeEntities =
+        quote(querySchema[DecodeNullTestWriteEntity]("DecodeNullTestEntity"))
 
       ctx.run(writeEntities.delete)
       ctx.run(writeEntities.insertValue(lift(insertValue)))

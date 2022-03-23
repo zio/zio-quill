@@ -31,7 +31,8 @@ class RunnerSpec extends Spec {
     }
 
     "should encapsulate exception throw" in {
-      wrap(throw new RuntimeException("Surprise!")).materialize.runSyncUnsafe() should matchPattern {
+      wrap(throw new RuntimeException("Surprise!")).materialize
+        .runSyncUnsafe() should matchPattern {
         case Failure(e) if (e.getMessage == "Surprise!") =>
       }
     }
@@ -41,7 +42,9 @@ class RunnerSpec extends Spec {
     }
 
     "should convert a sequence correctly" in {
-      seq(List(Task(1), Task(2), Task(3))).runSyncUnsafe() should equal(List(1, 2, 3))
+      seq(List(Task(1), Task(2), Task(3))).runSyncUnsafe() should equal(
+        List(1, 2, 3)
+      )
     }
 
     "plain schedule should be a no-op" in {
@@ -67,7 +70,8 @@ class RunnerSpec extends Spec {
     "should run in specified scheduler" in {
       // the global scheduler is imported but want to explicitly tell this to run on it, just for clarity
       val threadName =
-        schedule(Task(Thread.currentThread().getName)).runSyncUnsafe()(Scheduler.global, CanBlock.permit)
+        schedule(Task(Thread.currentThread().getName))
+          .runSyncUnsafe()(Scheduler.global, CanBlock.permit)
 
       threadName.startsWith(prefix) must equal(true)
     }
@@ -75,7 +79,8 @@ class RunnerSpec extends Spec {
     "should async-boundary in specified scheduler" in {
       // the global scheduler is imported but want to explicitly tell this to run on it, just for clarity
       val threadName =
-        boundary(Task(Thread.currentThread().getName)).runSyncUnsafe()(Scheduler.global, CanBlock.permit)
+        boundary(Task(Thread.currentThread().getName))
+          .runSyncUnsafe()(Scheduler.global, CanBlock.permit)
 
       threadName.startsWith(prefix) must equal(true)
     }
@@ -86,7 +91,9 @@ class RunnerSpec extends Spec {
       val (first, second) =
         Task(Thread.currentThread().getName)
           .executeOn(Scheduler.io(prefix2))
-          .flatMap(prevName => boundary(Task((prevName, Thread.currentThread().getName))))
+          .flatMap(prevName =>
+            boundary(Task((prevName, Thread.currentThread().getName)))
+          )
           .runSyncUnsafe()(Scheduler.global, CanBlock.permit)
 
       first.startsWith(prefix2) must equal(true)

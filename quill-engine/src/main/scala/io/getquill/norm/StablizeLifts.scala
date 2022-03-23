@@ -1,7 +1,7 @@
 package io.getquill.norm
 
 import io.getquill.ast._
-import scala.collection.immutable.{ Map => IMap }
+import scala.collection.immutable.{Map => IMap}
 
 private[getquill] object StablizeLifts {
 
@@ -15,8 +15,8 @@ private[getquill] object StablizeLifts {
   }
 
   case class State(
-    replaceTable: IMap[Token, Any],
-    nextToken:    Token
+      replaceTable: IMap[Token, Any],
+      nextToken: Token
   ) {
     def addReplace(t: Token, value: Any): State = {
       this.copy(

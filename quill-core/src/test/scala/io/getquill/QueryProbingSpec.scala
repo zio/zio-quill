@@ -3,7 +3,10 @@ package io.getquill
 class QueryProbingSpec extends Spec {
 
   "fails if the context can't be resolved at compile time" in {
-    object c extends MirrorContext(MirrorIdiom, Literal) with TestEntities with QueryProbing
+    object c
+        extends MirrorContext(MirrorIdiom, Literal)
+        with TestEntities
+        with QueryProbing
     import c._
     "c.run(qr1)" mustNot compile
   }

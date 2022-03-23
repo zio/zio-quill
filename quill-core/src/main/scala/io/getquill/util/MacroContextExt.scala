@@ -2,13 +2,15 @@ package io.getquill.util
 
 import io.getquill.idiom.Idiom
 import io.getquill.util.IndentUtil._
-import io.getquill.util.Messages.{ debugEnabled, prettyPrint }
+import io.getquill.util.Messages.{debugEnabled, prettyPrint}
 
-import scala.reflect.macros.blackbox.{ Context => MacroContext }
+import scala.reflect.macros.blackbox.{Context => MacroContext}
 
 object MacroContextExt {
 
-  private[getquill] val queryLogger: QueryLogger = new QueryLogger(Messages.quillLogFile)
+  private[getquill] val queryLogger: QueryLogger = new QueryLogger(
+    Messages.quillLogFile
+  )
 
   implicit class RichContext(c: MacroContext) {
 
@@ -30,7 +32,12 @@ object MacroContextExt {
         else
           "\n" + formatted.multiline(1, "| ") + "\n\n"
 
-      queryLogger(output, c.enclosingPosition.source.path, c.enclosingPosition.line, c.enclosingPosition.column)
+      queryLogger(
+        output,
+        c.enclosingPosition.source.path,
+        c.enclosingPosition.line,
+        c.enclosingPosition.column
+      )
 
       if (debugEnabled) c.info(c.enclosingPosition, output, force = true)
 

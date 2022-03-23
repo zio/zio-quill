@@ -11,7 +11,11 @@ class EncodingSpec extends EncodingSpecHelper {
       val result =
         for {
           _ <- testLagomAsyncDB.run(query[EncodingTestEntity].delete)
-          _ <- testLagomAsyncDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insert(e)))
+          _ <- testLagomAsyncDB.run(
+            liftQuery(insertValues).foreach(e =>
+              query[EncodingTestEntity].insert(e)
+            )
+          )
           result <- testLagomAsyncDB.run(query[EncodingTestEntity])
         } yield {
           result
@@ -25,14 +29,17 @@ class EncodingSpec extends EncodingSpecHelper {
     "stream" in {
       import io.getquill.context.cassandra.utils.executionContext
       import testLagomAsyncDB._
-      val q = quote {
-        (list: Query[Int]) =>
-          query[EncodingTestEntity].filter(t => list.contains(t.id))
+      val q = quote { (list: Query[Int]) =>
+        query[EncodingTestEntity].filter(t => list.contains(t.id))
       }
       val result =
         for {
           _ <- testLagomAsyncDB.run(query[EncodingTestEntity].delete)
-          _ <- testLagomAsyncDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insert(e)))
+          _ <- testLagomAsyncDB.run(
+            liftQuery(insertValues).foreach(e =>
+              query[EncodingTestEntity].insert(e)
+            )
+          )
           result <- testLagomAsyncDB.run(q(liftQuery(insertValues.map(_.id))))
         } yield {
           result

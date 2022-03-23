@@ -1,7 +1,14 @@
 package io.getquill.context.sql.norm
 
 import io.getquill.norm.SheathLeafClauses
-import io.getquill.{ MirrorSqlDialect, Query, Quoted, SnakeCase, Spec, SqlMirrorContext }
+import io.getquill.{
+  MirrorSqlDialect,
+  Query,
+  Quoted,
+  SnakeCase,
+  Spec,
+  SqlMirrorContext
+}
 
 class SheathLeafClausesSpec extends Spec {
 
@@ -30,7 +37,10 @@ class SheathLeafClausesSpec extends Spec {
       }
       val c = quote {
         // Note that the intermediate wrap.age is not needed but added during a Wrap-Sheaths phase. Should possibly remove it as an optimization.
-        query[Person].map(p => Wrap.Age(p.age)).groupBy(p => p.age).map(p => p._2.map(p => p.age).max)
+        query[Person]
+          .map(p => Wrap.Age(p.age))
+          .groupBy(p => p.age)
+          .map(p => p._2.map(p => p.age).max)
       }
       SheathLeafClauses.from(q.ast) mustEqual c.ast
       ctx.run(q).string mustEqual ctx.run(c).string
@@ -40,10 +50,16 @@ class SheathLeafClausesSpec extends Spec {
       // this works even without SheathLeafClauses but is good test of the SheathLeafClauses
       val q = quote {
         // also this works even without SheathLeafClauses but is good test of the SheathLeafClauses transformation
-        query[Person].map(p => p.age + infix"foo".as[Int]).groupBy(p => p).map(p => p._2.max)
+        query[Person]
+          .map(p => p.age + infix"foo".as[Int])
+          .groupBy(p => p)
+          .map(p => p._2.max)
       }
       val c = quote {
-        query[Person].map(p => Wrap.Int.X(p.age + infix"foo".as[Int])).groupBy(p => p.x).map(p => p._2.map(p => p.x).max)
+        query[Person]
+          .map(p => Wrap.Int.X(p.age + infix"foo".as[Int]))
+          .groupBy(p => p.x)
+          .map(p => p._2.map(p => p.x).max)
       }
       SheathLeafClauses.from(q.ast) mustEqual c.ast
       // TODO Replace all p.x with p._1 in c then can use this
@@ -55,7 +71,11 @@ class SheathLeafClausesSpec extends Spec {
         infix"leaf".as[Query[Int]].groupBy(p => p).map(p => p._2.max)
       }
       val c = quote {
-        infix"leaf".as[Query[Int]].map(i => Wrap.Int.I(i)).groupBy(p => p.i).map(p => p._2.map(p => p.i).max)
+        infix"leaf"
+          .as[Query[Int]]
+          .map(i => Wrap.Int.I(i))
+          .groupBy(p => p.i)
+          .map(p => p._2.map(p => p.i).max)
       }
       SheathLeafClauses.from(q.ast) mustEqual c.ast
       ctx.run(q).string mustEqual ctx.run(c).string
@@ -64,10 +84,17 @@ class SheathLeafClausesSpec extends Spec {
     // TODO This should actually live the quill-jdbc module and be executed since it should be a working example
     "(example) infix.as[Query[leaf]].groupBy.map" in {
       val q = quote {
-        infix"unnest(array['foo','bar'])".as[Query[Int]].groupBy(p => p).map(p => p._2.max)
+        infix"unnest(array['foo','bar'])"
+          .as[Query[Int]]
+          .groupBy(p => p)
+          .map(p => p._2.max)
       }
       val c = quote {
-        infix"unnest(array['foo','bar'])".as[Query[Int]].map(i => Wrap.Int.I(i)).groupBy(p => p.i).map(p => p._2.map(p => p.i).max)
+        infix"unnest(array['foo','bar'])"
+          .as[Query[Int]]
+          .map(i => Wrap.Int.I(i))
+          .groupBy(p => p.i)
+          .map(p => p._2.map(p => p.i).max)
       }
       SheathLeafClauses.from(q.ast) mustEqual c.ast
       ctx.run(q).string mustEqual ctx.run(c).string
@@ -80,7 +107,9 @@ class SheathLeafClausesSpec extends Spec {
         }
 
         val c = quote {
-          (query[Person].map(p => Wrap.Age(p.age)) ++ query[Person].map(p => Wrap.Age(p.age))).map(e => e.age).max
+          (query[Person].map(p => Wrap.Age(p.age)) ++ query[Person].map(p =>
+            Wrap.Age(p.age)
+          )).map(e => e.age).max
         }
         ctx.run(q).string mustEqual ctx.run(c).string
         SheathLeafClauses.from(q.ast) mustEqual c.ast
@@ -89,11 +118,15 @@ class SheathLeafClausesSpec extends Spec {
       // Same as before but union
       "(map(leaf) union map(leaf)).agg" in {
         val q = quote {
-          (query[Person].map(p => p.age) union query[Person].map(p => p.age)).max
+          (query[Person].map(p => p.age) union query[Person].map(p =>
+            p.age
+          )).max
         }
 
         val c = quote {
-          (query[Person].map(p => Wrap.Age(p.age)) union query[Person].map(p => Wrap.Age(p.age))).map(e => e.age).max
+          (query[Person].map(p => Wrap.Age(p.age)) union query[Person].map(p =>
+            Wrap.Age(p.age)
+          )).map(e => e.age).max
         }
         ctx.run(q).string mustEqual ctx.run(c).string
         SheathLeafClauses.from(q.ast) mustEqual c.ast
@@ -113,11 +146,17 @@ class SheathLeafClausesSpec extends Spec {
 
       "(map(leaf) union map(computed-leaf)).agg" in {
         val q = quote {
-          (query[Person].map(p => p.age) union query[Person].map(p => p.age + 123)).max
+          (query[Person].map(p => p.age) union query[Person].map(p =>
+            p.age + 123
+          )).max
         }
 
         val c = quote {
-          (query[Person].map(p => Wrap.Age(p.age)).map(e => Wrap.Int.U(e.age)) union query[Person].map(p => Wrap.Int.X(p.age + 123)).map(e => Wrap.Int.U(e.x))).map(e => e.u).max
+          (query[Person]
+            .map(p => Wrap.Age(p.age))
+            .map(e => Wrap.Int.U(e.age)) union query[Person]
+            .map(p => Wrap.Int.X(p.age + 123))
+            .map(e => Wrap.Int.U(e.x))).map(e => e.u).max
         }
         ctx.run(q).string mustEqual ctx.run(c).string
         SheathLeafClauses.from(q.ast) mustEqual c.ast
@@ -125,11 +164,15 @@ class SheathLeafClausesSpec extends Spec {
 
       "(map(computed-leaf) unionAll map(computed-leaf)).agg" in {
         val q = quote {
-          (query[Person].map(p => p.age + 123) ++ query[Person].map(p => p.age + 456)).max
+          (query[Person].map(p => p.age + 123) ++ query[Person].map(p =>
+            p.age + 456
+          )).max
         }
 
         val c = quote {
-          (query[Person].map(p => Wrap.Int.X(p.age + 123)) ++ query[Person].map(p => Wrap.Int.X(p.age + 456))).map(e => e.x).max
+          (query[Person].map(p => Wrap.Int.X(p.age + 123)) ++ query[Person].map(
+            p => Wrap.Int.X(p.age + 456)
+          )).map(e => e.x).max
         }
         ctx.run(q).string mustEqual ctx.run(c).string
         SheathLeafClauses.from(q.ast) mustEqual c.ast
@@ -138,27 +181,40 @@ class SheathLeafClausesSpec extends Spec {
       // new test
       "(map(=>node).groupBy.map(_1)) unionAll (map(=>node).groupBy.map(_1))" in {
         val q = quote {
-          query[Person].groupBy(p => p.age).map(ap => ap._1) ++ query[Person].groupBy(p => p.age).map(ap => ap._1)
+          query[Person].groupBy(p => p.age).map(ap => ap._1) ++ query[Person]
+            .groupBy(p => p.age)
+            .map(ap => ap._1)
         }
         ctx.run(q).string mustEqual "(SELECT p.age FROM person p GROUP BY p.age) UNION ALL (SELECT p1.age FROM person p1 GROUP BY p1.age)"
       }
       "(map(=>node).groupBy.map) unionAll (map(=>node).groupBy.map)" in {
         val q = quote {
-          query[Person].groupBy(p => p.age).map(ap => ap._2.max) ++ query[Person].groupBy(p => p.age).map(ap => ap._2.max)
+          query[Person]
+            .groupBy(p => p.age)
+            .map(ap => ap._2.max) ++ query[Person]
+            .groupBy(p => p.age)
+            .map(ap => ap._2.max)
         }
         ctx.run(q).string mustEqual "(SELECT MAX(p.*) FROM person p GROUP BY p.age) UNION ALL (SELECT MAX(p1.*) FROM person p1 GROUP BY p1.age)"
       }
 
       "(map(=>node).groupBy.map(Wrap)) unionAll (map(=>node).groupBy.map(Wrap))" in {
         val q = quote {
-          query[Person].groupBy(p => Wrap.Age(p.age)).map(ap => ap._2.map(p => Wrap.Age(p.age)).map(p => p.age).max) ++ query[Person].groupBy(p => p.age).map(ap => ap._2.map(p => Wrap.Age(p.age)).map(p => p.age).max)
+          query[Person]
+            .groupBy(p => Wrap.Age(p.age))
+            .map(ap =>
+              ap._2.map(p => Wrap.Age(p.age)).map(p => p.age).max
+            ) ++ query[Person]
+            .groupBy(p => p.age)
+            .map(ap => ap._2.map(p => Wrap.Age(p.age)).map(p => p.age).max)
         }
         ctx.run(q).string mustEqual "(SELECT MAX(p.age) FROM person p GROUP BY p.age) UNION ALL (SELECT MAX(p2.age) FROM person p2 GROUP BY p2.age)"
       }
 
       "(map(leaf).concatMap unionAll map(leaf).concatMap).agg" in {
         val q = quote {
-          (query[Person].concatMap(p => p.firstName.split("a")) ++ query[Person].concatMap(p => p.firstName.split("b"))).max
+          (query[Person].concatMap(p => p.firstName.split("a")) ++ query[Person]
+            .concatMap(p => p.firstName.split("b"))).max
         }
         ctx.run(q).string mustEqual "SELECT MAX(e.x) FROM ((SELECT UNNEST(SPLIT(p.first_name, 'a')) AS x FROM person p) UNION ALL (SELECT UNNEST(SPLIT(p1.first_name, 'b')) AS x FROM person p1)) AS e"
 
@@ -166,7 +222,11 @@ class SheathLeafClausesSpec extends Spec {
         implicit def iterableContainer: Wrap.Arr.X => Iterable[Wrap.Arr.X] = ???
 
         val c = quote {
-          (query[Person].concatMap(p => Wrap.Arr.X(p.firstName.split("a"))) ++ query[Person].concatMap(p => Wrap.Arr.X(p.firstName.split("b")))).map(e => e.x).max
+          (query[Person].concatMap(p =>
+            Wrap.Arr.X(p.firstName.split("a"))
+          ) ++ query[Person].concatMap(p => Wrap.Arr.X(p.firstName.split("b"))))
+            .map(e => e.x)
+            .max
         }
         SheathLeafClauses.from(q.ast) mustEqual c.ast
       }

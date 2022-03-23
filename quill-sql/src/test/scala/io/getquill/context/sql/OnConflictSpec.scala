@@ -1,6 +1,6 @@
 package io.getquill.context.sql
 
-import io.getquill.{ Spec, TestEntities }
+import io.getquill.{Spec, TestEntities}
 
 trait OnConflictSpec extends Spec {
   val ctx: SqlContext[_, _] with TestEntities
@@ -22,7 +22,9 @@ trait OnConflictSpec extends Spec {
   object `onConflictIgnore(_.i)` {
     val name = "ON CONFLICT (...) DO NOTHING"
     val testQuery1, testQuery2 = quote {
-      qr1.insertValue(lift(TestEntity("s", 2, 0, None, true))).onConflictIgnore(_.i)
+      qr1
+        .insertValue(lift(TestEntity("s", 2, 0, None, true)))
+        .onConflictIgnore(_.i)
     }
     val res1 = 1
     val res2 = 0
@@ -50,7 +52,10 @@ trait OnConflictSpec extends Spec {
     def testQuery(e: TestEntity) = quote {
       qr1
         .insertValue(lift(e))
-        .onConflictUpdate((t, e) => t.s -> (t.s + "-" + e.s), (t, _) => t.l -> (t.l + 1))
+        .onConflictUpdate(
+          (t, e) => t.s -> (t.s + "-" + e.s),
+          (t, _) => t.l -> (t.l + 1)
+        )
     }
   }
 
@@ -58,7 +63,10 @@ trait OnConflictSpec extends Spec {
     def testQuery(e: TestEntity) = quote {
       qr1
         .insertValue(lift(e))
-        .onConflictUpdate(_.i)((t, e) => t.s -> (t.s + "-" + e.s), (t, _) => t.l -> (t.l + 1))
+        .onConflictUpdate(_.i)(
+          (t, e) => t.s -> (t.s + "-" + e.s),
+          (t, _) => t.l -> (t.l + 1)
+        )
     }
   }
 

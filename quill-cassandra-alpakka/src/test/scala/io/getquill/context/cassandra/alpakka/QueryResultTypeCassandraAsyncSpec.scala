@@ -3,7 +3,9 @@ package io.getquill.context.cassandra.alpakka
 import akka.stream.scaladsl.Sink
 import io.getquill.context.cassandra.QueryResultTypeCassandraSpec
 
-class QueryResultTypeCassandraAsyncSpec extends QueryResultTypeCassandraSpec with CassandraAlpakkaSpec {
+class QueryResultTypeCassandraAsyncSpec
+    extends QueryResultTypeCassandraSpec
+    with CassandraAlpakkaSpec {
 
   val context = testDB
   import context._
@@ -46,26 +48,35 @@ class QueryResultTypeCassandraAsyncSpec extends QueryResultTypeCassandraSpec wit
 
   "stream" - {
     "select" in {
-      await(context.stream(selectAll).runWith(Sink.seq)) must contain theSameElementsAs (entries)
+      await(
+        context.stream(selectAll).runWith(Sink.seq)
+      ) must contain theSameElementsAs (entries)
     }
     "map" in {
-      await(context.stream(map).runWith(Sink.seq)) must contain theSameElementsAs (entries.map(_.id))
+      await(
+        context.stream(map).runWith(Sink.seq)
+      ) must contain theSameElementsAs (entries.map(_.id))
     }
     "filter" in {
       await(context.stream(filter).runWith(Sink.seq)) mustEqual entries.take(1)
     }
     "withFilter" in {
-      await(context.stream(withFilter).runWith(Sink.seq)) mustEqual entries.take(1)
+      await(context.stream(withFilter).runWith(Sink.seq)) mustEqual entries
+        .take(1)
     }
     "sortBy" in {
       await(context.stream(sortBy).runWith(Sink.seq)) mustEqual entries.take(1)
     }
     "take" in {
-      await(context.stream(take).runWith(Sink.seq)) must contain theSameElementsAs (entries)
+      await(
+        context.stream(take).runWith(Sink.seq)
+      ) must contain theSameElementsAs (entries)
     }
   }
 
   "io monad" in {
-    await(performIO(runIO(selectAll))) mustEqual await(performIO(runIO(selectAll).transactional))
+    await(performIO(runIO(selectAll))) mustEqual await(
+      performIO(runIO(selectAll).transactional)
+    )
   }
 }

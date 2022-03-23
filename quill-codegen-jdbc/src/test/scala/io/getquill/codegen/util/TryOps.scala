@@ -1,5 +1,5 @@
 package io.getquill.codegen.util
-import scala.util.{ Failure, Try }
+import scala.util.{Failure, Try}
 
 object TryOps {
   implicit class TryThrowExt[T](t: Try[T]) {

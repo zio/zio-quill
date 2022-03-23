@@ -1,9 +1,9 @@
 package io.getquill.sql.norm
 
 import io.getquill.ast.Implicits.AstOpsExt
-import io.getquill.ast.{ BooleanOperator, _ }
-import io.getquill.quat.QuatOps.{ HasBooleanQuat, HasBooleanValueQuat }
-import io.getquill.quat.Quat.{ BooleanExpression, BooleanValue }
+import io.getquill.ast.{BooleanOperator, _}
+import io.getquill.quat.QuatOps.{HasBooleanQuat, HasBooleanValueQuat}
+import io.getquill.quat.Quat.{BooleanExpression, BooleanValue}
 
 object VendorizeBooleans extends StatelessTransformer {
 
@@ -13,7 +13,9 @@ object VendorizeBooleans extends StatelessTransformer {
       case Map(q, alias, body) =>
         Map(apply(q), alias, valuefyExpression(apply(body)))
       case CaseClass(values) =>
-        CaseClass(values.map { case (name, value) => (name, valuefyExpression(apply(value))) })
+        CaseClass(values.map { case (name, value) =>
+          (name, valuefyExpression(apply(value)))
+        })
       case Tuple(values) =>
         Tuple(values.map(value => valuefyExpression(apply(value))))
 
@@ -21,9 +23,20 @@ object VendorizeBooleans extends StatelessTransformer {
       case Filter(q, alias, body) =>
         Filter(apply(q), alias, expressifyValue(apply(body)))
       case If(cond, t, e) =>
-        If(expressifyValue(apply(cond)), valuefyExpression(apply(t)), valuefyExpression(apply(e)))
+        If(
+          expressifyValue(apply(cond)),
+          valuefyExpression(apply(t)),
+          valuefyExpression(apply(e))
+        )
       case Join(typ, a, b, aliasA, aliasB, on: Constant) =>
-        Join(typ, apply(a), apply(b), aliasA, aliasB, expressifyValue(apply(on: Ast)))
+        Join(
+          typ,
+          apply(a),
+          apply(b),
+          aliasA,
+          aliasB,
+          expressifyValue(apply(on: Ast))
+        )
       case FlatJoin(typ, a, aliasA, on) =>
         FlatJoin(typ, a, aliasA, expressifyValue(apply(on)))
       case _ =>
@@ -45,7 +58,9 @@ object VendorizeBooleans extends StatelessTransformer {
 
     def unapply(op: BinaryOperator) =
       op match {
-        case `<` | `>` | `<=` | `>=` | EqualityOperator.`_==` | EqualityOperator.`_!=` => Some(op)
+        case `<` | `>` | `<=` | `>=` | EqualityOperator.`_==` |
+            EqualityOperator.`_!=` =>
+          Some(op)
         case _ => None
       }
   }
@@ -56,7 +71,7 @@ object VendorizeBooleans extends StatelessTransformer {
     def unapply(op: UnaryOperation) =
       op.operator match {
         case `toUpperCase` | `toLowerCase` | `toLong` | `toInt` => Some(op)
-        case _ => None
+        case _                                                  => None
       }
   }
 
@@ -68,7 +83,11 @@ object VendorizeBooleans extends StatelessTransformer {
       // need to be converted to "true == true || e.isSomething == true" so they are
       // tokenized as "1 == 1 || e.isSomething == 1"
       case BinaryOperation(a, OperatorOnExpressions(op), b) =>
-        BinaryOperation(expressifyValue(apply(a)), op, expressifyValue(apply(b)))
+        BinaryOperation(
+          expressifyValue(apply(a)),
+          op,
+          expressifyValue(apply(b))
+        )
 
       // Things that have ==,!=,<,>,<=,>= are typically values, things like "true == e.isSomething"
       // need to be converted to "if (true == e.isSomething) true else false" so they are
@@ -83,7 +102,11 @@ object VendorizeBooleans extends StatelessTransformer {
           case (_, StringTransformerOperation(_)) =>
             BinaryOperation(valuefyExpression(apply(a)), op, apply(b))
           case _ =>
-            BinaryOperation(valuefyExpression(apply(a)), op, valuefyExpression(apply(b)))
+            BinaryOperation(
+              valuefyExpression(apply(a)),
+              op,
+              valuefyExpression(apply(b))
+            )
         }
       }
 
@@ -107,11 +130,18 @@ object VendorizeBooleans extends StatelessTransformer {
    *   => SELECT ... WHERE (person.isSober && shouldDrinkMore) || (person.isSober && shouldNotDrinkMore)
    */
   def expressifyValue(ast: Ast): Ast = ast match {
-    case If(condition, HasBooleanQuat(thenClause), HasBooleanQuat(elseClause)) =>
+    case If(
+          condition,
+          HasBooleanQuat(thenClause),
+          HasBooleanQuat(elseClause)
+        ) =>
       val condExpr = expressifyValue(condition)
       val thenExpr = expressifyValue(thenClause)
       val elseExpr = expressifyValue(elseClause)
-      (condExpr +&&+ thenExpr) +||+ (UnaryOperation(BooleanOperator.`!`, condExpr) +&&+ elseExpr)
+      (condExpr +&&+ thenExpr) +||+ (UnaryOperation(
+        BooleanOperator.`!`,
+        condExpr
+      ) +&&+ elseExpr)
     case HasBooleanValueQuat(ast) =>
       Constant(true, BooleanValue) +==+ ast
     case _ =>
@@ -119,7 +149,8 @@ object VendorizeBooleans extends StatelessTransformer {
   }
 
   def valuefyExpression(ast: Ast): Ast = ast.quat match {
-    case BooleanExpression => If(ast, Constant(true, BooleanValue), Constant(false, BooleanValue))
-    case _                 => ast
+    case BooleanExpression =>
+      If(ast, Constant(true, BooleanValue), Constant(false, BooleanValue))
+    case _ => ast
   }
 }

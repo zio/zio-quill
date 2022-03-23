@@ -1,9 +1,15 @@
 package io.getquill.context.sql.norm
 
-import io.getquill.ReturnAction.{ ReturnColumns, ReturnRecord }
+import io.getquill.ReturnAction.{ReturnColumns, ReturnRecord}
 import io.getquill.context.sql.testContextUpper
 import io.getquill.context.sql.testContextUpper._
-import io.getquill.{ EntityQuery, MirrorSqlDialectWithReturnClause, Query, Quoted, Spec }
+import io.getquill.{
+  EntityQuery,
+  MirrorSqlDialectWithReturnClause,
+  Query,
+  Quoted,
+  Spec
+}
 
 class RenamePropertiesOverrideSpec extends Spec {
 
@@ -52,14 +58,21 @@ class RenamePropertiesOverrideSpec extends Spec {
       }
       "insert assigned" in {
         val q = quote {
-          e.insert(_.i -> lift(1), _.l -> lift(1L), _.o -> lift(Option(1)), _.s -> lift("test"), _.b -> lift(true))
+          e.insert(
+            _.i -> lift(1),
+            _.l -> lift(1L),
+            _.o -> lift(Option(1)),
+            _.s -> lift("test"),
+            _.b -> lift(true)
+          )
         }
         testContextUpper.run(q).string mustEqual
           "INSERT INTO test_entity (field_i,L,O,field_s,B) VALUES (?, ?, ?, ?, ?)"
       }
       "update" in {
         val q = quote {
-          e.filter(_.i == 999).updateValue(lift(TestEntity("a", 1, 1L, None, true)))
+          e.filter(_.i == 999)
+            .updateValue(lift(TestEntity("a", 1, 1L, None, true)))
         }
         testContextUpper.run(q).string mustEqual
           "UPDATE test_entity SET field_s = ?, field_i = ?, L = ?, O = ?, B = ? WHERE field_i = 999"
@@ -72,20 +85,28 @@ class RenamePropertiesOverrideSpec extends Spec {
           "DELETE FROM test_entity WHERE field_i = 999"
       }
       "returning" - {
-        "returning - alias" in testContextUpper.withDialect(MirrorSqlDialectWithReturnClause) { ctx =>
+        "returning - alias" in testContextUpper.withDialect(
+          MirrorSqlDialectWithReturnClause
+        ) { ctx =>
           import ctx._
           val e1 = quote {
-            querySchema[TestEntity]("test_entity", _.s -> "field_s", _.i -> "field_i")
+            querySchema[TestEntity](
+              "test_entity",
+              _.s -> "field_s",
+              _.i -> "field_i"
+            )
           }
           val q = quote {
-            e1.insertValue(lift(TestEntity("s", 1, 1L, None, true))).returning(_.i)
+            e1.insertValue(lift(TestEntity("s", 1, 1L, None, true)))
+              .returning(_.i)
           }
           val mirror = ctx.run(q)
           mirror.returningBehavior mustEqual ReturnRecord
         }
         "returning generated - alias" in {
           val q = quote {
-            e.insertValue(lift(TestEntity("s", 1, 1L, None, true))).returningGenerated(_.i)
+            e.insertValue(lift(TestEntity("s", 1, 1L, None, true)))
+              .returningGenerated(_.i)
           }
           val mirror = testContextUpper.run(q)
           mirror.returningBehavior mustEqual ReturnColumns(List("field_i"))
@@ -250,7 +271,9 @@ class RenamePropertiesOverrideSpec extends Spec {
     "join" - {
       "both sidess" in {
         val q = quote {
-          e.leftJoin(e).on((a, b) => a.s == b.s).map(t => (t._1.s, t._2.map(_.s)))
+          e.leftJoin(e)
+            .on((a, b) => a.s == b.s)
+            .map(t => (t._1.s, t._2.map(_.s)))
         }
         testContextUpper.run(q).string mustEqual
           "SELECT a.field_s AS _1, b.field_s AS _2 FROM test_entity a LEFT JOIN test_entity b ON a.field_s = b.field_s"
@@ -311,8 +334,8 @@ class RenamePropertiesOverrideSpec extends Spec {
     "aggregation" - {
       "groupBy" in {
         val q = quote {
-          e.groupBy(a => a.s).map {
-            case (s, eq) => s -> eq.map(_.i).sum
+          e.groupBy(a => a.s).map { case (s, eq) =>
+            s -> eq.map(_.i).sum
           }
         }
         testContextUpper.run(q).string mustEqual
@@ -330,7 +353,8 @@ class RenamePropertiesOverrideSpec extends Spec {
       }
       "binary" in {
         val q = quote {
-          e.filter(a => e.filter(b => b.i > 0).isEmpty && a.s == "test").map(_.i)
+          e.filter(a => e.filter(b => b.i > 0).isEmpty && a.s == "test")
+            .map(_.i)
         }
         testContextUpper.run(q).string mustEqual
           "SELECT a.field_i FROM test_entity a WHERE NOT EXISTS (SELECT b.field_s, b.field_i, b.L AS l, b.O AS o, b.B AS b FROM test_entity b WHERE b.field_i > 0) AND a.field_s = 'test'"
@@ -426,7 +450,8 @@ class RenamePropertiesOverrideSpec extends Spec {
       case class A(u: Long, v: Int, w: B)
       "does not break schema" in {
         val q = quote {
-          infix"${querySchema[A]("C", _.v -> "m", _.w.b -> "n")} LIMIT 10".as[Query[A]]
+          infix"${querySchema[A]("C", _.v -> "m", _.w.b -> "n")} LIMIT 10"
+            .as[Query[A]]
         }
 
         testContextUpper.run(q).string mustEqual
@@ -434,7 +459,8 @@ class RenamePropertiesOverrideSpec extends Spec {
       }
       "with filter" in {
         val q = quote {
-          infix"${querySchema[A]("C", _.v -> "m", _.w.b -> "n").filter(x => x.v == 1)} LIMIT 10".as[Query[A]]
+          infix"${querySchema[A]("C", _.v -> "m", _.w.b -> "n").filter(x => x.v == 1)} LIMIT 10"
+            .as[Query[A]]
         }
 
         testContextUpper.run(q).string mustEqual

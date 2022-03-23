@@ -2,29 +2,25 @@ package io.getquill.norm.capture
 
 import io.getquill.ast._
 
-/**
- * Walk through any Queries that a returning clause has and replace Ident
- * of the returning variable with ExternalIdent so that in later steps involving filter simplification,
- * it will not be mistakenly dealiased with a potential shadow.
- * Take this query for instance:
- * <pre>
- *   query[TestEntity]
- *     .insert(lift(TestEntity("s", 0, 1L, None)))
- *     .returningGenerated(
- *       r => (query[Dummy].filter(r => r.i == r.i).filter(d => d.i == r.i).max)
- *     )
- * </pre>
- * The returning clause has an alias `Ident("r")` as well as the first filter clause.
- * These two filters will be combined into one at which point the meaning of `r.i`
- * in the 2nd filter will be confused for the first filter's alias (i.e. the `r` in `filter(r => ...)`.
- * Therefore, we need to change this vunerable `r.i` in the second filter clause to an `ExternalIdent`
- * before any of the simplifications are done.
- *
- * Note that we only want to do this for Queries inside of a `Returning` clause body.
- * Other places where this needs to be done (e.g. in a Tuple that `Returning` returns)
- * are done in `ExpandReturning`.
- */
-private[getquill] case class DemarcateExternalAliases(externalIdent: Ident) extends StatelessTransformer {
+/** Walk through any Queries that a returning clause has and replace Ident of
+  * the returning variable with ExternalIdent so that in later steps involving
+  * filter simplification, it will not be mistakenly dealiased with a potential
+  * shadow. Take this query for instance: <pre> query[TestEntity]
+  * .insert(lift(TestEntity("s", 0, 1L, None))) .returningGenerated( r =>
+  * (query[Dummy].filter(r => r.i == r.i).filter(d => d.i == r.i).max) ) </pre>
+  * The returning clause has an alias `Ident("r")` as well as the first filter
+  * clause. These two filters will be combined into one at which point the
+  * meaning of `r.i` in the 2nd filter will be confused for the first filter's
+  * alias (i.e. the `r` in `filter(r => ...)`. Therefore, we need to change this
+  * vunerable `r.i` in the second filter clause to an `ExternalIdent` before any
+  * of the simplifications are done.
+  *
+  * Note that we only want to do this for Queries inside of a `Returning` clause
+  * body. Other places where this needs to be done (e.g. in a Tuple that
+  * `Returning` returns) are done in `ExpandReturning`.
+  */
+private[getquill] case class DemarcateExternalAliases(externalIdent: Ident)
+    extends StatelessTransformer {
 
   def applyNonOverride(idents: Ident*)(ast: Ast) =
     if (idents.forall(_ != externalIdent)) apply(ast)
@@ -56,9 +52,19 @@ private[getquill] case class DemarcateExternalAliases(externalIdent: Ident) exte
     case FlatJoin(t, a, iA, o) =>
       FlatJoin(t, a, iA, applyNonOverride(iA)(o))
 
-    case p @ Property.Opinionated(id @ Ident(_, quat), value, renameable, visibility) =>
+    case p @ Property.Opinionated(
+          id @ Ident(_, quat),
+          value,
+          renameable,
+          visibility
+        ) =>
       if (id.name == externalIdent.name)
-        Property.Opinionated(ExternalIdent(externalIdent.name, quat), value, renameable, visibility)
+        Property.Opinionated(
+          ExternalIdent(externalIdent.name, quat),
+          value,
+          renameable,
+          visibility
+        )
       else
         p
 
@@ -72,7 +78,8 @@ object DemarcateExternalAliases {
   private def demarcateQueriesInBody(id: Ident, body: Ast) =
     Transform(body) {
       // Apply to the AST defined apply method about, not to the superclass method that takes Query
-      case q: Query => new DemarcateExternalAliases(id).apply(q.asInstanceOf[Ast])
+      case q: Query =>
+        new DemarcateExternalAliases(id).apply(q.asInstanceOf[Ast])
     }
 
   def apply(ast: Ast): Ast = ast match {

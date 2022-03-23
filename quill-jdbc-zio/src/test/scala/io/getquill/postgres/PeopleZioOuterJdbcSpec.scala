@@ -1,7 +1,7 @@
 package io.getquill.postgres
 
 import io.getquill.util.LoadConfig
-import io.getquill.{ JdbcContextConfig, Literal, PostgresZioJdbcContext, Spec }
+import io.getquill.{JdbcContextConfig, Literal, PostgresZioJdbcContext, Spec}
 import zio.Has
 
 import java.io.Closeable
@@ -12,7 +12,9 @@ class PeopleZioOuterJdbcSpec extends Spec {
   import testContext._
   case class Person(name: String, age: Int)
 
-  def ds: DataSource with Closeable = JdbcContextConfig(LoadConfig("testPostgresDB")).dataSource
+  def ds: DataSource with Closeable = JdbcContextConfig(
+    LoadConfig("testPostgresDB")
+  ).dataSource
 
   "test query" in {
     val q = quote {

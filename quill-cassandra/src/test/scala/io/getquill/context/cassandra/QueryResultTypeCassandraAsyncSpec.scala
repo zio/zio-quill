@@ -45,6 +45,8 @@ class QueryResultTypeCassandraAsyncSpec extends QueryResultTypeCassandraSpec {
   }
 
   "io monad" in {
-    await(performIO(runIO(selectAll))) mustEqual await(performIO(runIO(selectAll).transactional))
+    await(performIO(runIO(selectAll))) mustEqual await(
+      performIO(runIO(selectAll).transactional)
+    )
   }
 }

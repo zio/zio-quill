@@ -36,7 +36,10 @@ class SqlIdiomNamingSpec extends Spec {
         "SELECT x.some_column AS someColumn FROM some_entity x"
     }
     "mutiple transformations" in {
-      val db = new SqlMirrorContext(MirrorSqlDialect, NamingStrategy(SnakeCase, UpperCase, Escape))
+      val db = new SqlMirrorContext(
+        MirrorSqlDialect,
+        NamingStrategy(SnakeCase, UpperCase, Escape)
+      )
       import db._
       db.run(query[SomeEntity]).string mustEqual
         """SELECT x."SOME_COLUMN" AS someColumn FROM "SOME_ENTITY" x"""
@@ -101,11 +104,13 @@ class SqlIdiomNamingSpec extends Spec {
 
     "actions" - {
       "insert" in {
-        db.run(query[SomeEntity].insertValue(lift(SomeEntity(1)))).string mustEqual
+        db.run(query[SomeEntity].insertValue(lift(SomeEntity(1))))
+          .string mustEqual
           "INSERT INTO some_entity (some_column) VALUES (?)"
       }
       "update" in {
-        db.run(query[SomeEntity].updateValue(lift(SomeEntity(1)))).string mustEqual
+        db.run(query[SomeEntity].updateValue(lift(SomeEntity(1))))
+          .string mustEqual
           "UPDATE some_entity SET some_column = ?"
       }
       "delete" in {
@@ -116,7 +121,8 @@ class SqlIdiomNamingSpec extends Spec {
     "queries" - {
       "property empty check" in {
         case class SomeEntity(optionValue: Option[Int])
-        db.run(query[SomeEntity].filter(t => t.optionValue.isEmpty)).string mustEqual
+        db.run(query[SomeEntity].filter(t => t.optionValue.isEmpty))
+          .string mustEqual
           "SELECT t.option_value AS optionValue FROM some_entity t WHERE t.option_value IS NULL"
       }
     }

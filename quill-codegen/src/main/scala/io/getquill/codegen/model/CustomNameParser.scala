@@ -23,8 +23,9 @@ object LiteralNames extends LiteralNames
 object SnakeCaseNames extends SnakeCaseNames
 
 case class CustomNames(
-  columnParser: JdbcColumnMeta => String = cm => cm.columnName.snakeToLowerCamel,
-  tableParser:  JdbcTableMeta => String  = tm => tm.tableName.snakeToUpperCamel
+    columnParser: JdbcColumnMeta => String = cm =>
+      cm.columnName.snakeToLowerCamel,
+    tableParser: JdbcTableMeta => String = tm => tm.tableName.snakeToUpperCamel
 ) extends NameParser {
   def generateQuerySchemas = true
   def parseColumn(cm: JdbcColumnMeta): String = columnParser(cm)
@@ -32,7 +33,7 @@ case class CustomNames(
 }
 
 case class SnakeCaseCustomTable(
-  tableParser: JdbcTableMeta => String
+    tableParser: JdbcTableMeta => String
 ) extends NameParser {
   def generateQuerySchemas = true
   def parseColumn(cm: JdbcColumnMeta): String = cm.columnName.snakeToLowerCamel

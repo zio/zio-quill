@@ -14,7 +14,10 @@ trait Encoders {
 
   private def toStringEncoder[T]: Encoder[T] = encoder((v: T) => s"$v")
 
-  implicit def mappedEncoder[I, O](implicit mapped: MappedEncoding[I, O], e: Encoder[O]): Encoder[I] =
+  implicit def mappedEncoder[I, O](implicit
+      mapped: MappedEncoding[I, O],
+      e: Encoder[O]
+  ): Encoder[I] =
     mappedBaseEncoder(mapped, e)
 
   implicit def optionEncoder[T](implicit d: Encoder[T]): Encoder[Option[T]] =
@@ -24,7 +27,8 @@ trait Encoders {
         case Some(v) => d(index, v, row, session)
       }
 
-  implicit val stringEncoder: Encoder[String] = encoder(v => s"'${v.replaceAll("""[\\']""", """\\$0""")}'")
+  implicit val stringEncoder: Encoder[String] =
+    encoder(v => s"'${v.replaceAll("""[\\']""", """\\$0""")}'")
   implicit val bigDecimalEncoder: Encoder[BigDecimal] = toStringEncoder
   implicit val booleanEncoder: Encoder[Boolean] = toStringEncoder
   implicit val byteEncoder: Encoder[Byte] = toStringEncoder

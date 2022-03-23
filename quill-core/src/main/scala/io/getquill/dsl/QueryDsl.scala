@@ -12,10 +12,16 @@ private[getquill] trait QueryDsl {
   def query[T]: EntityQuery[T] = macro QueryDslMacro.expandEntity[T]
 
   @compileTimeOnly(NonQuotedException.message)
-  def querySchema[T](entity: String, columns: (T => (Any, String))*): EntityQuery[T] = NonQuotedException()
+  def querySchema[T](
+      entity: String,
+      columns: (T => (Any, String))*
+  ): EntityQuery[T] = NonQuotedException()
 
   @compileTimeOnly(NonQuotedException.message)
-  def impliedQuerySchema[T](entity: String, columns: (T => (Any, String))*): EntityQuery[T] = NonQuotedException()
+  def impliedQuerySchema[T](
+      entity: String,
+      columns: (T => (Any, String))*
+  ): EntityQuery[T] = NonQuotedException()
 
   implicit class NullableColumnExtensions[A](o: Option[A]) {
     @compileTimeOnly(NonQuotedException.message)
@@ -27,9 +33,11 @@ private[getquill] trait QueryDsl {
 
   object extras extends LowPriorityExtras {
     implicit class NumericOptionOps[A: Numeric](a: Option[A]) {
-      def ===[B: Numeric](b: Option[B]): Boolean = a.exists(av => b.exists(bv => av == bv))
+      def ===[B: Numeric](b: Option[B]): Boolean =
+        a.exists(av => b.exists(bv => av == bv))
       def ===[B: Numeric](b: B): Boolean = a.exists(av => av == b)
-      def =!=[B: Numeric](b: Option[B]): Boolean = a.exists(av => b.exists(bv => av != bv))
+      def =!=[B: Numeric](b: Option[B]): Boolean =
+        a.exists(av => b.exists(bv => av != bv))
       def =!=[B: Numeric](b: B): Boolean = a.exists(av => av != b)
     }
     implicit class NumericRegOps[A: Numeric](a: A) {

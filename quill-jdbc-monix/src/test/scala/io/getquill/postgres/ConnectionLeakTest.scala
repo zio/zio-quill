@@ -3,7 +3,7 @@ package io.getquill.postgres
 import java.util.UUID
 
 import io.getquill.context.monix.MonixJdbcContext.EffectWrapper
-import io.getquill.{ JdbcContextConfig, Literal, PostgresMonixJdbcContext }
+import io.getquill.{JdbcContextConfig, Literal, PostgresMonixJdbcContext}
 import io.getquill.context.sql.ProductSpec
 import io.getquill.util.LoadConfig
 import monix.execution.Scheduler
@@ -14,9 +14,12 @@ class ConnectionLeakTest extends ProductSpec {
 
   implicit val scheduler = Scheduler.global
 
-  val dataSource = JdbcContextConfig(LoadConfig("testPostgresLeakDB")).dataSource
+  val dataSource = JdbcContextConfig(
+    LoadConfig("testPostgresLeakDB")
+  ).dataSource
 
-  val context = new PostgresMonixJdbcContext(Literal, dataSource, EffectWrapper.default)
+  val context =
+    new PostgresMonixJdbcContext(Literal, dataSource, EffectWrapper.default)
   import context._
 
   override def beforeAll = {
@@ -26,20 +29,25 @@ class ConnectionLeakTest extends ProductSpec {
 
   "insert and select without leaking" in {
     val result =
-      context.transaction {
-        for {
-          _ <- context.run {
-            quote {
-              query[Product].insertValue(
-                lift(Product(1, UUID.randomUUID().toString, Random.nextLong()))
+      context
+        .transaction {
+          for {
+            _ <- context.run {
+              quote {
+                query[Product].insertValue(
+                  lift(
+                    Product(1, UUID.randomUUID().toString, Random.nextLong())
+                  )
+                )
+              }
+            }
+            result <- context.run {
+              query[Product].filter(p =>
+                query[Product].map(_.id).max.exists(_ == p.id)
               )
             }
-          }
-          result <- context.run {
-            query[Product].filter(p => query[Product].map(_.id).max.exists(_ == p.id))
-          }
-        } yield (result)
-      }
+          } yield (result)
+        }
         .map(_.headOption.map(_.id))
         .runSyncUnsafe()
 

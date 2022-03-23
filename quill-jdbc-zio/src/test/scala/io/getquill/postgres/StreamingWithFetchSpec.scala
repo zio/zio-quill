@@ -3,7 +3,7 @@ package io.getquill.postgres
 import io.getquill.ZioSpec
 import io.getquill.context.ZioJdbc._
 import org.scalatest.BeforeAndAfter
-import zio.{ Has, Runtime }
+import zio.{Has, Runtime}
 import io.getquill.Prefix
 
 class StreamingWithFetchSpec extends ZioSpec with BeforeAndAfter {

@@ -8,10 +8,15 @@ import boopickle.Default._
 import scala.collection.mutable.LinkedHashMap
 
 object BooQuatSerializer {
-  case class ProductWithRenames(data: LinkedHashMap[String, Quat], renames: List[(String, String)])
+  case class ProductWithRenames(
+      data: LinkedHashMap[String, Quat],
+      renames: List[(String, String)]
+  )
 
   implicit object productPickler extends Pickler[Quat.Product] {
-    override def pickle(value: Quat.Product)(implicit state: PickleState): Unit = {
+    override def pickle(
+        value: Quat.Product
+    )(implicit state: PickleState): Unit = {
       state.pickle(value.tpe)
       state.pickle(value.fields)
       state.pickle(value.renames)
@@ -33,7 +38,10 @@ object BooQuatSerializer {
 
   implicit val quatProductPickler: Pickler[Quat] =
     compositePickler[Quat]
-      .addConcreteType[Quat.Product](productPickler, scala.reflect.classTag[Quat.Product])
+      .addConcreteType[Quat.Product](
+        productPickler,
+        scala.reflect.classTag[Quat.Product]
+      )
       .addConcreteType[Quat.Generic.type]
       .addConcreteType[Quat.Unknown.type]
       .addConcreteType[Quat.Value.type]

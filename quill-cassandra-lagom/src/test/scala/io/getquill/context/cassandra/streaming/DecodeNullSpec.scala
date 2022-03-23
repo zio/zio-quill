@@ -9,13 +9,18 @@ class DecodeNullSpec extends Spec {
   "no default values when reading null" - {
     "stream" in {
       import testStreamDB._
-      val writeEntities = quote(querySchema[DecodeNullTestWriteEntity]("DecodeNullTestEntity"))
+      val writeEntities =
+        quote(querySchema[DecodeNullTestWriteEntity]("DecodeNullTestEntity"))
 
       val result =
         for {
           _ <- testStreamDB.run(writeEntities.delete).runForeach(_ => ())
-          _ <- testStreamDB.run(writeEntities.insert(lift(insertValue))).runForeach(_ => ())
-          result <- testStreamDB.run(query[DecodeNullTestEntity]).runFold(List.empty[DecodeNullTestEntity])(_ :+ _)
+          _ <- testStreamDB
+            .run(writeEntities.insert(lift(insertValue)))
+            .runForeach(_ => ())
+          result <- testStreamDB
+            .run(query[DecodeNullTestEntity])
+            .runFold(List.empty[DecodeNullTestEntity])(_ :+ _)
         } yield {
           result
         }

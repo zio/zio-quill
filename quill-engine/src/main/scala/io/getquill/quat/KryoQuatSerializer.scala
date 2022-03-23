@@ -1,9 +1,9 @@
 package io.getquill.quat
 
 import java.util.Base64
-import com.esotericsoftware.kryo.io.{ Input, Output }
-import com.esotericsoftware.kryo.{ Kryo, Serializer }
-import com.twitter.chill.{ IKryoRegistrar, KryoPool, ScalaKryoInstantiator }
+import com.esotericsoftware.kryo.io.{Input, Output}
+import com.esotericsoftware.kryo.{Kryo, Serializer}
+import com.twitter.chill.{IKryoRegistrar, KryoPool, ScalaKryoInstantiator}
 import io.getquill.util.Messages
 
 import scala.collection.mutable
@@ -41,10 +41,18 @@ object KryoQuatSerializer {
       k.register(
         classOf[LinkedHashMap[String, Quat]],
         new Serializer[LinkedHashMap[String, Quat]]() {
-          override def write(kryo: Kryo, output: Output, `object`: mutable.LinkedHashMap[String, Quat]): Unit = {
+          override def write(
+              kryo: Kryo,
+              output: Output,
+              `object`: mutable.LinkedHashMap[String, Quat]
+          ): Unit = {
             kryo.writeObject(output, `object`.toList)
           }
-          override def read(kryo: Kryo, input: Input, `type`: Class[mutable.LinkedHashMap[String, Quat]]): mutable.LinkedHashMap[String, Quat] = {
+          override def read(
+              kryo: Kryo,
+              input: Input,
+              `type`: Class[mutable.LinkedHashMap[String, Quat]]
+          ): mutable.LinkedHashMap[String, Quat] = {
             val list = kryo.readObject(input, classOf[List[(String, Quat)]])
             LinkedHashMap(list: _*)
           }

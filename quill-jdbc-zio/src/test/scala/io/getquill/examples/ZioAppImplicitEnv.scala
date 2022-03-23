@@ -4,7 +4,7 @@ import io.getquill._
 import io.getquill.context.qzio.ImplicitSyntax._
 import io.getquill.util.LoadConfig
 import zio.console.putStrLn
-import zio.{ App, ExitCode, Has, URIO }
+import zio.{App, ExitCode, Has, URIO}
 import javax.sql.DataSource
 
 object ZioAppImplicitEnv extends App {
@@ -25,8 +25,7 @@ object ZioAppImplicitEnv extends App {
   }
 
   override def run(args: List[String]): URIO[zio.ZEnv, ExitCode] = {
-    MyQueryService(dataSource)
-      .joes
+    MyQueryService(dataSource).joes
       .tap(result => putStrLn(result.toString))
       .exitCode
   }

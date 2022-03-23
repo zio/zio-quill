@@ -7,7 +7,10 @@ import io.getquill.quat.Quat
 
 class DynamicQuerySpec extends Spec {
 
-  object testContext extends MirrorContext(MirrorIdiom, Literal) with TestEntities with DynamicQueryDsl
+  object testContext
+      extends MirrorContext(MirrorIdiom, Literal)
+      with TestEntities
+      with DynamicQueryDsl
   import testContext._
 
   "implicit classes" - {
@@ -75,7 +78,11 @@ class DynamicQuerySpec extends Spec {
 
     "simple dynamic query succeeds" in {
       val s = dynamicQuerySchema[Person2]("Person2")
-      s.ast mustEqual Entity("Person2", List(), Quat.LeafProduct("firstName", "lastName"))
+      s.ast mustEqual Entity(
+        "Person2",
+        List(),
+        Quat.LeafProduct("firstName", "lastName")
+      )
     }
 
     "dynamicQuery" in {
@@ -100,12 +107,17 @@ class DynamicQuerySpec extends Spec {
       }
       "multiple aliases" in {
         test(
-          dynamicQuerySchema[TestEntity]("test", alias(_.i, "ii"), alias(_.s, "ss")),
+          dynamicQuerySchema[TestEntity](
+            "test",
+            alias(_.i, "ii"),
+            alias(_.s, "ss")
+          ),
           querySchema[TestEntity]("test", _.i -> "ii", _.s -> "ss")
         )
       }
       "dynamic alias list" in {
-        val aliases = List[DynamicAlias[TestEntity]](alias(_.i, "ii"), alias(_.s, "ss"))
+        val aliases =
+          List[DynamicAlias[TestEntity]](alias(_.i, "ii"), alias(_.s, "ss"))
         test(
           dynamicQuerySchema[TestEntity]("test", aliases: _*),
           querySchema[TestEntity]("test", _.i -> "ii", _.s -> "ss")
@@ -129,13 +141,17 @@ class DynamicQuerySpec extends Spec {
       "dynamic" in {
         var cond = true
         test(
-          dynamicQuery[TestEntity].map(v0 => if (cond) quote(v0.i) else quote(1)),
+          dynamicQuery[TestEntity].map(v0 =>
+            if (cond) quote(v0.i) else quote(1)
+          ),
           query[TestEntity].map(v0 => v0.i)
         )
 
         cond = false
         test(
-          dynamicQuery[TestEntity].map(v0 => if (cond) quote(v0.i) else quote(1)),
+          dynamicQuery[TestEntity].map(v0 =>
+            if (cond) quote(v0.i) else quote(1)
+          ),
           query[TestEntity].map(v0 => 1)
         )
       }
@@ -161,7 +177,11 @@ class DynamicQuerySpec extends Spec {
       }
       "with map" in {
         test(
-          dynamicQuery[TestEntity].flatMap(v0 => dynamicQuery[TestEntity].map(v1 => quote((unquote(v0), unquote(v1))))),
+          dynamicQuery[TestEntity].flatMap(v0 =>
+            dynamicQuery[TestEntity].map(v1 =>
+              quote((unquote(v0), unquote(v1)))
+            )
+          ),
           query[TestEntity].flatMap(v0 => query[TestEntity].map(v1 => (v0, v1)))
         )
       }
@@ -214,14 +234,18 @@ class DynamicQuerySpec extends Spec {
       "true" in {
         val ids = Seq(1)
         test(
-          dynamicQuery[TestEntity].filterIf(ids.nonEmpty)(v0 => quote(liftQuery(ids).contains(v0.i))),
+          dynamicQuery[TestEntity].filterIf(ids.nonEmpty)(v0 =>
+            quote(liftQuery(ids).contains(v0.i))
+          ),
           query[TestEntity].filter(v0 => quote(liftQuery(ids).contains(v0.i)))
         )
       }
       "false" in {
         val ids = Seq.empty[Int]
         test(
-          dynamicQuery[TestEntity].filterIf(ids.nonEmpty)(v0 => quote(liftQuery(ids).contains(v0.i))),
+          dynamicQuery[TestEntity].filterIf(ids.nonEmpty)(v0 =>
+            quote(liftQuery(ids).contains(v0.i))
+          ),
           query[TestEntity]
         )
       }
@@ -229,8 +253,12 @@ class DynamicQuerySpec extends Spec {
 
     "concatMap" in {
       test(
-        dynamicQuery[TestEntity].concatMap[String, Array[String]](v0 => quote(v0.s.split(" "))),
-        query[TestEntity].concatMap[String, Array[String]](v0 => v0.s.split(" "))
+        dynamicQuery[TestEntity].concatMap[String, Array[String]](v0 =>
+          quote(v0.s.split(" "))
+        ),
+        query[TestEntity].concatMap[String, Array[String]](v0 =>
+          v0.s.split(" ")
+        )
       )
     }
 
@@ -306,21 +334,27 @@ class DynamicQuerySpec extends Spec {
 
     "++" in {
       test(
-        dynamicQuery[TestEntity] ++ dynamicQuery[TestEntity].filter(v0 => v0.i == 1),
+        dynamicQuery[TestEntity] ++ dynamicQuery[TestEntity].filter(v0 =>
+          v0.i == 1
+        ),
         query[TestEntity] ++ query[TestEntity].filter(v0 => v0.i == 1)
       )
     }
 
     "unionAll" in {
       test(
-        dynamicQuery[TestEntity].unionAll(dynamicQuery[TestEntity].filter(v0 => v0.i == 1)),
+        dynamicQuery[TestEntity].unionAll(
+          dynamicQuery[TestEntity].filter(v0 => v0.i == 1)
+        ),
         query[TestEntity].unionAll(query[TestEntity].filter(v0 => v0.i == 1))
       )
     }
 
     "union" in {
       test(
-        dynamicQuery[TestEntity].union(dynamicQuery[TestEntity].filter(v0 => v0.i == 1)),
+        dynamicQuery[TestEntity].union(
+          dynamicQuery[TestEntity].filter(v0 => v0.i == 1)
+        ),
         query[TestEntity].union(query[TestEntity].filter(v0 => v0.i == 1))
       )
     }
@@ -334,29 +368,45 @@ class DynamicQuerySpec extends Spec {
 
     "min" in {
       test(
-        dynamicQuery[TestEntity].map(v0 => dynamicQuery[TestEntity].map(v1 => v1.i).min.contains(v0.i)),
-        query[TestEntity].map(v0 => query[TestEntity].map(v1 => v1.i).min.contains(v0.i))
+        dynamicQuery[TestEntity].map(v0 =>
+          dynamicQuery[TestEntity].map(v1 => v1.i).min.contains(v0.i)
+        ),
+        query[TestEntity].map(v0 =>
+          query[TestEntity].map(v1 => v1.i).min.contains(v0.i)
+        )
       )
     }
 
     "max" in {
       test(
-        dynamicQuery[TestEntity].map(v0 => dynamicQuery[TestEntity].map(v1 => v1.i).max.contains(v0.i)),
-        query[TestEntity].map(v0 => query[TestEntity].map(v1 => v1.i).max.contains(v0.i))
+        dynamicQuery[TestEntity].map(v0 =>
+          dynamicQuery[TestEntity].map(v1 => v1.i).max.contains(v0.i)
+        ),
+        query[TestEntity].map(v0 =>
+          query[TestEntity].map(v1 => v1.i).max.contains(v0.i)
+        )
       )
     }
 
     "avg" in {
       test(
-        dynamicQuery[TestEntity].map(v0 => dynamicQuery[TestEntity].map(v1 => v1.i).avg.contains(v0.i)),
-        query[TestEntity].map(v0 => query[TestEntity].map(v1 => v1.i).avg.contains(v0.i))
+        dynamicQuery[TestEntity].map(v0 =>
+          dynamicQuery[TestEntity].map(v1 => v1.i).avg.contains(v0.i)
+        ),
+        query[TestEntity].map(v0 =>
+          query[TestEntity].map(v1 => v1.i).avg.contains(v0.i)
+        )
       )
     }
 
     "sum" in {
       test(
-        dynamicQuery[TestEntity].map(v0 => dynamicQuery[TestEntity].map(v1 => v1.i).sum.contains(v0.i)),
-        query[TestEntity].map(v0 => query[TestEntity].map(v1 => v1.i).sum.contains(v0.i))
+        dynamicQuery[TestEntity].map(v0 =>
+          dynamicQuery[TestEntity].map(v1 => v1.i).sum.contains(v0.i)
+        ),
+        query[TestEntity].map(v0 =>
+          query[TestEntity].map(v1 => v1.i).sum.contains(v0.i)
+        )
       )
     }
 
@@ -371,29 +421,43 @@ class DynamicQuerySpec extends Spec {
 
       "join" in {
         test(
-          dynamicQuery[TestEntity].join(dynamicQuery[TestEntity]).on((v0, v1) => v0.i == v1.i),
+          dynamicQuery[TestEntity]
+            .join(dynamicQuery[TestEntity])
+            .on((v0, v1) => v0.i == v1.i),
           query[TestEntity].join(query[TestEntity]).on((v0, v1) => v0.i == v1.i)
         )
       }
 
       "leftJoin" in {
         test(
-          dynamicQuery[TestEntity].leftJoin(dynamicQuery[TestEntity2]).on((v0, v1) => v0.i == v1.i),
-          query[TestEntity].leftJoin(query[TestEntity2]).on((v0, v1) => v0.i == v1.i)
+          dynamicQuery[TestEntity]
+            .leftJoin(dynamicQuery[TestEntity2])
+            .on((v0, v1) => v0.i == v1.i),
+          query[TestEntity]
+            .leftJoin(query[TestEntity2])
+            .on((v0, v1) => v0.i == v1.i)
         )
       }
 
       "rightJoin" in {
         test(
-          dynamicQuery[TestEntity].rightJoin(dynamicQuery[TestEntity2]).on((v0, v1) => v0.i == v1.i),
-          query[TestEntity].rightJoin(query[TestEntity2]).on((v0, v1) => v0.i == v1.i)
+          dynamicQuery[TestEntity]
+            .rightJoin(dynamicQuery[TestEntity2])
+            .on((v0, v1) => v0.i == v1.i),
+          query[TestEntity]
+            .rightJoin(query[TestEntity2])
+            .on((v0, v1) => v0.i == v1.i)
         )
       }
 
       "fullJoin" in {
         test(
-          dynamicQuery[TestEntity].fullJoin(dynamicQuery[TestEntity2]).on((v0, v1) => v0.i == v1.i),
-          query[TestEntity].fullJoin(query[TestEntity2]).on((v0, v1) => v0.i == v1.i)
+          dynamicQuery[TestEntity]
+            .fullJoin(dynamicQuery[TestEntity2])
+            .on((v0, v1) => v0.i == v1.i),
+          query[TestEntity]
+            .fullJoin(query[TestEntity2])
+            .on((v0, v1) => v0.i == v1.i)
         )
       }
 
@@ -457,14 +521,22 @@ class DynamicQuerySpec extends Spec {
     "contains" - {
       "quoted" in {
         test(
-          dynamicQuery[TestEntity].map(v0 => dynamicQuery[TestEntity].map(v1 => v1.i).contains(quote(v0.i))),
-          query[TestEntity].map(v0 => query[TestEntity].map(v1 => v1.i).contains(v0.i))
+          dynamicQuery[TestEntity].map(v0 =>
+            dynamicQuery[TestEntity].map(v1 => v1.i).contains(quote(v0.i))
+          ),
+          query[TestEntity].map(v0 =>
+            query[TestEntity].map(v1 => v1.i).contains(v0.i)
+          )
         )
       }
       "value" in {
         test(
-          dynamicQuery[TestEntity].map(v0 => dynamicQuery[TestEntity].map(v1 => v1.i).contains(1)),
-          query[TestEntity].map(v0 => query[TestEntity].map(v1 => v1.i).contains(lift(1)))
+          dynamicQuery[TestEntity].map(v0 =>
+            dynamicQuery[TestEntity].map(v1 => v1.i).contains(1)
+          ),
+          query[TestEntity].map(v0 =>
+            query[TestEntity].map(v1 => v1.i).contains(lift(1))
+          )
         )
       }
     }
@@ -485,7 +557,10 @@ class DynamicQuerySpec extends Spec {
   }
 
   "entityQuery" - {
-    def test[T: QueryMeta](d: Quoted[EntityQuery[T]], s: Quoted[EntityQuery[T]]) =
+    def test[T: QueryMeta](
+        d: Quoted[EntityQuery[T]],
+        s: Quoted[EntityQuery[T]]
+    ) =
       testContext.run(d).string mustEqual testContext.run(s).string
 
     "filter" in {
@@ -558,7 +633,8 @@ class DynamicQuerySpec extends Spec {
       }
       "setOpt" in {
         test(
-          dynamicQuery[TestEntity].insert(setOpt(_.i, None), setOpt(_.l, Some(2L))),
+          dynamicQuery[TestEntity]
+            .insert(setOpt(_.i, None), setOpt(_.l, Some(2L))),
           query[TestEntity].insert(v => v.l -> lift(2L))
         )
       }
@@ -570,16 +646,24 @@ class DynamicQuerySpec extends Spec {
       }
       "returning" in {
         test(
-          dynamicQuery[TestEntity].insert(set(_.i, 1)).returningGenerated(v0 => v0.l),
+          dynamicQuery[TestEntity]
+            .insert(set(_.i, 1))
+            .returningGenerated(v0 => v0.l),
           quote {
-            query[TestEntity].insert(v => v.i -> 1).returningGenerated(v0 => v0.l)
+            query[TestEntity]
+              .insert(v => v.i -> 1)
+              .returningGenerated(v0 => v0.l)
           }
         )
       }
       "returning non quoted" in {
         test(
-          dynamicQuery[TestEntity].insert(set(_.i, 1)).returningGenerated(v0 => v0.l),
-          query[TestEntity].insert(v => v.i -> 1).returningGenerated((v0: TestEntity) => v0.l)
+          dynamicQuery[TestEntity]
+            .insert(set(_.i, 1))
+            .returningGenerated(v0 => v0.l),
+          query[TestEntity]
+            .insert(v => v.i -> 1)
+            .returningGenerated((v0: TestEntity) => v0.l)
         )
       }
       "onConflictIgnore" - {

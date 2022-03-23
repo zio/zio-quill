@@ -7,11 +7,13 @@ class SqlIdiomOptionCompareSpec extends Spec {
   case class TwoIntsClassScope(one: Int, two: Int)
 
   // remove the === matcher from scalatest so that we can test === in Context.extra
-  override def convertToEqualizer[T](left: T): Equalizer[T] = new Equalizer(left)
+  override def convertToEqualizer[T](left: T): Equalizer[T] = new Equalizer(
+    left
+  )
 
   "strictly checks non-ansi option operation" - {
     import io.getquill.context.sql.nonAnsiTestContext._
-    import io.getquill.context.sql.{ nonAnsiTestContext => testContext }
+    import io.getquill.context.sql.{nonAnsiTestContext => testContext}
 
     "Option == Option(constant)" in {
       val q = quote {
@@ -118,7 +120,9 @@ class SqlIdiomOptionCompareSpec extends Spec {
     }
     "forall with null-check" in {
       val q = quote {
-        qr1.filter(t => t.i != 1 && t.o.forall(op => if (op != 1) false else true))
+        qr1.filter(t =>
+          t.i != 1 && t.o.forall(op => if (op != 1) false else true)
+        )
       }
       testContext.run(q).string mustEqual
         "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.i <> 1 AND (t.o IS NULL OR t.o IS NOT NULL AND CASE WHEN t.o <> 1 THEN false ELSE true END)"
@@ -145,7 +149,9 @@ class SqlIdiomOptionCompareSpec extends Spec {
 
       "contains" in {
         val q = quote {
-          query[TestEntity].filter(t => t.optionalEmbedded.exists(_.optionalValue.contains(1)))
+          query[TestEntity].filter(t =>
+            t.optionalEmbedded.exists(_.optionalValue.contains(1))
+          )
         }
 
         testContext.run(q).string mustEqual
@@ -153,7 +159,9 @@ class SqlIdiomOptionCompareSpec extends Spec {
       }
       "exists" in {
         val q = quote {
-          query[TestEntity].filter(t => t.optionalEmbedded.exists(_.optionalValue.exists(_ == 1)))
+          query[TestEntity].filter(t =>
+            t.optionalEmbedded.exists(_.optionalValue.exists(_ == 1))
+          )
         }
 
         testContext.run(q).string mustEqual
@@ -161,7 +169,11 @@ class SqlIdiomOptionCompareSpec extends Spec {
       }
       "exists with null-check" in {
         val q = quote {
-          query[TestEntity].filter(t => t.optionalEmbedded.exists(_.optionalValue.exists(v => if (v == 1) true else false)))
+          query[TestEntity].filter(t =>
+            t.optionalEmbedded.exists(
+              _.optionalValue.exists(v => if (v == 1) true else false)
+            )
+          )
         }
 
         testContext.run(q).string mustEqual
@@ -169,7 +181,9 @@ class SqlIdiomOptionCompareSpec extends Spec {
       }
       "forall" in {
         val q = quote {
-          query[TestEntity].filter(t => t.optionalEmbedded.exists(_.optionalValue.forall(_ == 1)))
+          query[TestEntity].filter(t =>
+            t.optionalEmbedded.exists(_.optionalValue.forall(_ == 1))
+          )
         }
 
         testContext.run(q).string mustEqual
@@ -177,7 +191,11 @@ class SqlIdiomOptionCompareSpec extends Spec {
       }
       "forall with null-check" in {
         val q = quote {
-          query[TestEntity].filter(t => t.optionalEmbedded.exists(_.optionalValue.forall(v => if (v == 1) true else false)))
+          query[TestEntity].filter(t =>
+            t.optionalEmbedded.exists(
+              _.optionalValue.forall(v => if (v == 1) true else false)
+            )
+          )
         }
 
         testContext.run(q).string mustEqual
@@ -295,7 +313,9 @@ class SqlIdiomOptionCompareSpec extends Spec {
     }
     "forall with null-check" in {
       val q = quote {
-        qr1.filter(t => t.i != 1 && t.o.forall(op => if (op != 1) false else true))
+        qr1.filter(t =>
+          t.i != 1 && t.o.forall(op => if (op != 1) false else true)
+        )
       }
       testContext.run(q).string mustEqual
         "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.i <> 1 AND (t.o IS NULL OR t.o IS NOT NULL AND CASE WHEN t.o <> 1 THEN false ELSE true END)"
@@ -322,7 +342,9 @@ class SqlIdiomOptionCompareSpec extends Spec {
 
       "contains" in {
         val q = quote {
-          query[TestEntity].filter(t => t.optionalEmbedded.exists(_.optionalValue.contains(1)))
+          query[TestEntity].filter(t =>
+            t.optionalEmbedded.exists(_.optionalValue.contains(1))
+          )
         }
 
         testContext.run(q).string mustEqual
@@ -330,7 +352,9 @@ class SqlIdiomOptionCompareSpec extends Spec {
       }
       "exists" in {
         val q = quote {
-          query[TestEntity].filter(t => t.optionalEmbedded.exists(_.optionalValue.exists(_ == 1)))
+          query[TestEntity].filter(t =>
+            t.optionalEmbedded.exists(_.optionalValue.exists(_ == 1))
+          )
         }
 
         testContext.run(q).string mustEqual
@@ -338,7 +362,11 @@ class SqlIdiomOptionCompareSpec extends Spec {
       }
       "exists with null-check" in {
         val q = quote {
-          query[TestEntity].filter(t => t.optionalEmbedded.exists(_.optionalValue.exists(v => if (v == 1) true else false)))
+          query[TestEntity].filter(t =>
+            t.optionalEmbedded.exists(
+              _.optionalValue.exists(v => if (v == 1) true else false)
+            )
+          )
         }
 
         testContext.run(q).string mustEqual
@@ -346,7 +374,9 @@ class SqlIdiomOptionCompareSpec extends Spec {
       }
       "forall" in {
         val q = quote {
-          query[TestEntity].filter(t => t.optionalEmbedded.exists(_.optionalValue.forall(_ == 1)))
+          query[TestEntity].filter(t =>
+            t.optionalEmbedded.exists(_.optionalValue.forall(_ == 1))
+          )
         }
 
         testContext.run(q).string mustEqual
@@ -354,7 +384,11 @@ class SqlIdiomOptionCompareSpec extends Spec {
       }
       "forall with null-check" in {
         val q = quote {
-          query[TestEntity].filter(t => t.optionalEmbedded.exists(_.optionalValue.forall(v => if (v == 1) true else false)))
+          query[TestEntity].filter(t =>
+            t.optionalEmbedded.exists(
+              _.optionalValue.forall(v => if (v == 1) true else false)
+            )
+          )
         }
 
         testContext.run(q).string mustEqual

@@ -35,14 +35,22 @@ class OpsSpec extends Spec {
         unquote(qr1).map(t => t)
       }
       val quat = TestEntityQuat
-      q.ast mustEqual Map(Entity("TestEntity", Nil, quat), Ident("t", quat), Ident("t", quat))
+      q.ast mustEqual Map(
+        Entity("TestEntity", Nil, quat),
+        Ident("t", quat),
+        Ident("t", quat)
+      )
     }
     "implicitly" in {
       val q = quote {
         qr1.map(t => t)
       }
       val quat = TestEntityQuat
-      q.ast mustEqual Map(Entity("TestEntity", Nil, quat), Ident("t", quat), Ident("t", quat))
+      q.ast mustEqual Map(
+        Entity("TestEntity", Nil, quat),
+        Ident("t", quat),
+        Ident("t", quat)
+      )
     }
   }
 
@@ -52,7 +60,13 @@ class OpsSpec extends Spec {
         val q = quote {
           infix"true".as[Boolean]
         }
-        q.ast mustEqual Infix(List("true"), Nil, false, false, Quat.BooleanValue)
+        q.ast mustEqual Infix(
+          List("true"),
+          Nil,
+          false,
+          false,
+          Quat.BooleanValue
+        )
       }
     }
     "other values" - {
@@ -87,13 +101,11 @@ class OpsSpec extends Spec {
 
   "unquotes quoted function bodies automatically" - {
     "one param" in {
-      val q: Quoted[Int => EntityQuery[TestEntity]] = quote {
-        (i: Int) =>
-          query[TestEntity].allowFiltering
+      val q: Quoted[Int => EntityQuery[TestEntity]] = quote { (i: Int) =>
+        query[TestEntity].allowFiltering
       }
-      val n = quote {
-        (i: Int) =>
-          unquote(query[TestEntity].allowFiltering)
+      val n = quote { (i: Int) =>
+        unquote(query[TestEntity].allowFiltering)
       }
       q.ast mustEqual n.ast
     }
@@ -102,9 +114,8 @@ class OpsSpec extends Spec {
         (i: Int, j: Int, k: Int) =>
           query[TestEntity].allowFiltering
       }
-      val n = quote {
-        (i: Int, j: Int, k: Int) =>
-          unquote(query[TestEntity].allowFiltering)
+      val n = quote { (i: Int, j: Int, k: Int) =>
+        unquote(query[TestEntity].allowFiltering)
       }
       q.ast mustEqual n.ast
     }

@@ -10,9 +10,11 @@ import io.getquill.Query
 trait LowPriorityImplicits {
   this: EncodingDsl =>
 
-  implicit def anyValEncoder[T <: AnyVal]: Encoder[T] = macro EncodingDslMacro.anyValEncoder[T]
+  implicit def anyValEncoder[T <: AnyVal]: Encoder[T] =
+    macro EncodingDslMacro.anyValEncoder[T]
 
-  implicit def anyValDecoder[T <: AnyVal]: Decoder[T] = macro EncodingDslMacro.anyValDecoder[T]
+  implicit def anyValDecoder[T <: AnyVal]: Decoder[T] =
+    macro EncodingDslMacro.anyValDecoder[T]
 }
 
 trait EncodingDsl extends LowPriorityImplicits {
@@ -43,31 +45,54 @@ trait EncodingDsl extends LowPriorityImplicits {
 
   /* ************************************************************************** */
 
-  def liftQuery[U[_] <: Iterable[_], T](v: U[T]): Query[T] = macro EncodingDslMacro.liftQuery[T]
+  def liftQuery[U[_] <: Iterable[_], T](v: U[T]): Query[T] =
+    macro EncodingDslMacro.liftQuery[T]
 
   @compileTimeOnly(NonQuotedException.message)
-  def liftQueryScalar[U[_] <: Iterable[_], T](v: U[T])(implicit e: Encoder[T]): Query[T] = NonQuotedException()
+  def liftQueryScalar[U[_] <: Iterable[_], T](v: U[T])(implicit
+      e: Encoder[T]
+  ): Query[T] = NonQuotedException()
 
   @compileTimeOnly(NonQuotedException.message)
-  def liftQueryCaseClass[U[_] <: Iterable[_], T](v: U[T]): Query[T] = NonQuotedException()
+  def liftQueryCaseClass[U[_] <: Iterable[_], T](v: U[T]): Query[T] =
+    NonQuotedException()
 
   /* ************************************************************************** */
 
   type MappedEncoding[I, O] = io.getquill.MappedEncoding[I, O]
   val MappedEncoding = io.getquill.MappedEncoding
 
-  implicit def anyValMappedEncoder[I <: AnyVal, O](implicit mapped: MappedEncoding[I, O], encoder: Encoder[O]): Encoder[I] = mappedEncoder
+  implicit def anyValMappedEncoder[I <: AnyVal, O](implicit
+      mapped: MappedEncoding[I, O],
+      encoder: Encoder[O]
+  ): Encoder[I] = mappedEncoder
 
-  implicit def anyValMappedDecoder[I, O <: AnyVal](implicit mapped: MappedEncoding[I, O], decoder: Decoder[I]): Decoder[O] = mappedDecoder
+  implicit def anyValMappedDecoder[I, O <: AnyVal](implicit
+      mapped: MappedEncoding[I, O],
+      decoder: Decoder[I]
+  ): Decoder[O] = mappedDecoder
 
-  implicit def mappedEncoder[I, O](implicit mapped: MappedEncoding[I, O], encoder: Encoder[O]): Encoder[I]
+  implicit def mappedEncoder[I, O](implicit
+      mapped: MappedEncoding[I, O],
+      encoder: Encoder[O]
+  ): Encoder[I]
 
-  implicit def mappedDecoder[I, O](implicit mapped: MappedEncoding[I, O], decoder: Decoder[I]): Decoder[O]
+  implicit def mappedDecoder[I, O](implicit
+      mapped: MappedEncoding[I, O],
+      decoder: Decoder[I]
+  ): Decoder[O]
 
-  protected def mappedBaseEncoder[I, O](mapped: MappedEncoding[I, O], encoder: BaseEncoder[O]): BaseEncoder[I] =
-    (index, value, row, session) => encoder(index, mapped.f(value), row, session)
+  protected def mappedBaseEncoder[I, O](
+      mapped: MappedEncoding[I, O],
+      encoder: BaseEncoder[O]
+  ): BaseEncoder[I] =
+    (index, value, row, session) =>
+      encoder(index, mapped.f(value), row, session)
 
-  protected def mappedBaseDecoder[I, O](mapped: MappedEncoding[I, O], decoder: BaseDecoder[I]): BaseDecoder[O] =
+  protected def mappedBaseDecoder[I, O](
+      mapped: MappedEncoding[I, O],
+      decoder: BaseDecoder[I]
+  ): BaseDecoder[O] =
     (index, row, session) => mapped.f(decoder(index, row, session))
 
   implicit def stringEncoder: Encoder[String]

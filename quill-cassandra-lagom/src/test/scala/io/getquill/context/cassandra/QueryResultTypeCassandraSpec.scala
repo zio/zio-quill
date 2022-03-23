@@ -24,7 +24,9 @@ trait QueryResultTypeCassandraSpec extends Spec {
   val map = quote(query[OrderTestEntity].map(_.id))
   val filter = quote(query[OrderTestEntity].filter(_.id == 1))
   val withFilter = quote(query[OrderTestEntity].withFilter(_.id == 1))
-  val sortBy = quote(query[OrderTestEntity].filter(_.id == 1).sortBy(_.i)(Ord.asc))
+  val sortBy = quote(
+    query[OrderTestEntity].filter(_.id == 1).sortBy(_.i)(Ord.asc)
+  )
   val take = quote(query[OrderTestEntity].take(10))
   val entitySize = quote(query[OrderTestEntity].size)
   val parametrizedSize = quote { (id: Int) =>

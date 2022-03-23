@@ -14,7 +14,10 @@ class ApplyMapSpec extends Spec {
   "avoids applying the intermmediate map after a groupBy" - {
     "flatMap" in {
       val q = quote {
-        qr1.groupBy(t => t.s).map(y => y._1).flatMap(s => qr2.filter(z => z.s == s))
+        qr1
+          .groupBy(t => t.s)
+          .map(y => y._1)
+          .flatMap(s => qr2.filter(z => z.s == s))
       }
       ApplyMap.unapply(q.ast) mustEqual None
     }
@@ -69,7 +72,11 @@ class ApplyMapSpec extends Spec {
       }
       "both" in {
         val q = quote {
-          qr1.groupBy(t => t.i).map(t => t._1).join(qr2.groupBy(t => t.i).map(t => t._1)).on((a, b) => a == b)
+          qr1
+            .groupBy(t => t.i)
+            .map(t => t._1)
+            .join(qr2.groupBy(t => t.i).map(t => t._1))
+            .on((a, b) => a == b)
         }
         ApplyMap.unapply(q.ast) mustEqual None
       }

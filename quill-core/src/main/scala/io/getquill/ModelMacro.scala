@@ -4,10 +4,10 @@ import scala.language.experimental.macros
 import io.getquill.dsl.QueryDslMacro
 import io.getquill.quotation.NonQuotedException
 
-sealed trait EntityQuery[T]
-  extends EntityQueryModel[T] {
+sealed trait EntityQuery[T] extends EntityQueryModel[T] {
 
-  override def withFilter(f: T => Boolean): EntityQuery[T] = NonQuotedException()
+  override def withFilter(f: T => Boolean): EntityQuery[T] =
+    NonQuotedException()
   override def filter(f: T => Boolean): EntityQuery[T] = NonQuotedException()
   override def map[R](f: T => R): EntityQuery[R] = NonQuotedException()
 

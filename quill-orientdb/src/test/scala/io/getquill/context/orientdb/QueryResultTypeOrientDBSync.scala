@@ -17,44 +17,57 @@ class QueryResultTypeOrientDBSync extends Spec {
     val ctx = orientdb.testSyncDB
     import ctx._
     ctx.run(quote(query[OrderTestEntity].delete))
-    entries.foreach(e => ctx.run(quote { query[OrderTestEntity].insertValue(lift(e)) }))
+    entries.foreach(e =>
+      ctx.run(quote { query[OrderTestEntity].insertValue(lift(e)) })
+    )
   }
 
   "return list" - {
     "select" in {
       val ctx = orientdb.testSyncDB
       import ctx._
-      ctx.run(quote(query[OrderTestEntity])) must contain theSameElementsAs (entries)
+      ctx.run(
+        quote(query[OrderTestEntity])
+      ) must contain theSameElementsAs (entries)
       ctx.close()
     }
     "map" in {
       val ctx = orientdb.testSyncDB
       import ctx._
-      ctx.run(quote(query[OrderTestEntity].map(_.id))) must contain theSameElementsAs (entries.map(_.id))
+      ctx.run(
+        quote(query[OrderTestEntity].map(_.id))
+      ) must contain theSameElementsAs (entries.map(_.id))
       ctx.close()
     }
     "filter" in {
       val ctx = orientdb.testSyncDB
       import ctx._
-      ctx.run(quote(query[OrderTestEntity].filter(_.id == 1))) mustEqual entries.take(1)
+      ctx.run(quote(query[OrderTestEntity].filter(_.id == 1))) mustEqual entries
+        .take(1)
       ctx.close()
     }
     "withFilter" in {
       val ctx = orientdb.testSyncDB
       import ctx._
-      ctx.run(quote(query[OrderTestEntity].withFilter(_.id == 1))) mustEqual entries.take(1)
+      ctx.run(
+        quote(query[OrderTestEntity].withFilter(_.id == 1))
+      ) mustEqual entries.take(1)
       ctx.close()
     }
     "sortBy" in {
       val ctx = orientdb.testSyncDB
       import ctx._
-      ctx.run(quote(query[OrderTestEntity].filter(_.id == 1).sortBy(_.i)(Ord.asc))) mustEqual entries.take(1)
+      ctx.run(
+        quote(query[OrderTestEntity].filter(_.id == 1).sortBy(_.i)(Ord.asc))
+      ) mustEqual entries.take(1)
       ctx.close()
     }
     "take" in {
       val ctx = orientdb.testSyncDB
       import ctx._
-      ctx.run(quote(query[OrderTestEntity].take(10))) must contain theSameElementsAs (entries)
+      ctx.run(
+        quote(query[OrderTestEntity].take(10))
+      ) must contain theSameElementsAs (entries)
       ctx.close()
     }
   }
@@ -68,7 +81,9 @@ class QueryResultTypeOrientDBSync extends Spec {
     "paramlize size" in {
       val ctx = orientdb.testSyncDB
       import ctx._
-      ctx.run(quote { query[OrderTestEntity].filter(_.id == lift(0)).size }) mustEqual 0
+      ctx.run(
+        quote { query[OrderTestEntity].filter(_.id == lift(0)).size }
+      ) mustEqual 0
     }
   }
 }

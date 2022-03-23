@@ -2,7 +2,7 @@ package io.getquill.context.cassandra
 
 import io.getquill._
 import io.getquill.idiom.StatementInterpolator._
-import io.getquill.ast.{ Action => AstAction, Query => _, _ }
+import io.getquill.ast.{Action => AstAction, Query => _, _}
 import io.getquill.idiom.StringToken
 import io.getquill.Query
 import io.getquill.context.ExecutionType
@@ -275,7 +275,9 @@ class CqlIdiomSpec extends Spec {
       }
       "filtered" in {
         val q = quote {
-          qr1.filter(t => t.i == 1).updateValue(lift(TestEntity("s", 1, 2L, None, true)))
+          qr1
+            .filter(t => t.i == 1)
+            .updateValue(lift(TestEntity("s", 1, 2L, None, true)))
         }
         mirrorContext.run(q).string mustEqual
           "UPDATE TestEntity SET s = ?, i = ?, l = ?, o = ?, b = ? WHERE i = 1"
@@ -326,7 +328,9 @@ class CqlIdiomSpec extends Spec {
     "action" - {
       "partial" in {
         val q = quote {
-          qr1.filter(t => infix"${t.i} = 1".as[Boolean]).updateValue(lift(TestEntity("s", 1, 2L, None, true)))
+          qr1
+            .filter(t => infix"${t.i} = 1".as[Boolean])
+            .updateValue(lift(TestEntity("s", 1, 2L, None, true)))
         }
         mirrorContext.run(q).string mustEqual
           "UPDATE TestEntity SET s = ?, i = ?, l = ?, o = ?, b = ? WHERE i = 1"
@@ -354,7 +358,9 @@ class CqlIdiomSpec extends Spec {
         querySchema[TestEntity]("CustomTestEntity", _.i -> "field_i")
       }
 
-      capsMirrorContext.run(qs.filter(r => r.i > 1 && r.l > 2L)).string mustEqual
+      capsMirrorContext
+        .run(qs.filter(r => r.i > 1 && r.l > 2L))
+        .string mustEqual
         "SELECT S, field_i, L, O, B FROM CustomTestEntity WHERE field_i > 1 AND L > 2"
     }
   }
@@ -380,15 +386,34 @@ class CqlIdiomSpec extends Spec {
 
     "ident" in {
       val a: Ast = Ident("a")
-      translate(a, Quat.Unknown, ExecutionType.Unknown) mustBe ((a, stmt"a", ExecutionType.Unknown))
+      translate(a, Quat.Unknown, ExecutionType.Unknown) mustBe (
+        (
+          a,
+          stmt"a",
+          ExecutionType.Unknown
+        )
+      )
     }
     "assignment" in {
       val a: Ast = Assignment(Ident("a"), Ident("b"), Ident("c"))
-      translate(a: Ast, Quat.Unknown, ExecutionType.Unknown) mustBe ((a, stmt"b = c", ExecutionType.Unknown))
+      translate(a: Ast, Quat.Unknown, ExecutionType.Unknown) mustBe (
+        (
+          a,
+          stmt"b = c",
+          ExecutionType.Unknown
+        )
+      )
     }
     "assignmentDual" in {
-      val a: Ast = AssignmentDual(Ident("a1"), Ident("a2"), Ident("b"), Ident("c"))
-      translate(a: Ast, Quat.Unknown, ExecutionType.Unknown) mustBe ((a, stmt"b = c", ExecutionType.Unknown))
+      val a: Ast =
+        AssignmentDual(Ident("a1"), Ident("a2"), Ident("b"), Ident("c"))
+      translate(a: Ast, Quat.Unknown, ExecutionType.Unknown) mustBe (
+        (
+          a,
+          stmt"b = c",
+          ExecutionType.Unknown
+        )
+      )
     }
     "aggregation" in {
       val t = implicitly[Tokenizer[AggregationOperator]]
@@ -397,18 +422,29 @@ class CqlIdiomSpec extends Spec {
     }
     "cql" in {
       val t = implicitly[Tokenizer[CqlQuery]]
-      val e = CqlQuery(Entity("name", Nil, QEP), None, Nil, None, Nil, distinct = true)
+      val e = CqlQuery(
+        Entity("name", Nil, QEP),
+        None,
+        Nil,
+        None,
+        Nil,
+        distinct = true
+      )
       intercept[IllegalStateException](t.token(e))
       t.token(e.copy(distinct = false)) mustBe stmt"SELECT * FROM name"
     }
     "fail on invalid" in {
-      intercept[IllegalStateException](implicitly[Tokenizer[Ast]].token(Block(Nil)))
+      intercept[IllegalStateException](
+        implicitly[Tokenizer[Ast]].token(Block(Nil))
+      )
     }
     "value" in {
       implicitly[Tokenizer[Value]].token(Tuple(List(Ident("a")))) mustBe stmt"a"
     }
     "value in caseclass" in {
-      implicitly[Tokenizer[Value]].token(CaseClass(List(("value", Ident("a"))))) mustBe stmt"a"
+      implicitly[Tokenizer[Value]].token(
+        CaseClass(List(("value", Ident("a"))))
+      ) mustBe stmt"a"
     }
     "action" in {
       val t = implicitly[Tokenizer[AstAction]]
@@ -418,7 +454,9 @@ class CqlIdiomSpec extends Spec {
     // not actually used anywhere but doing a sanity check here
     "external ident sanity check" in {
       val t = implicitly[Tokenizer[ExternalIdent]]
-      t.token(ExternalIdent("TestIdent", Quat.Value)) mustBe StringToken("TestIdent")
+      t.token(ExternalIdent("TestIdent", Quat.Value)) mustBe StringToken(
+        "TestIdent"
+      )
     }
   }
 }

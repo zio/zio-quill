@@ -1,6 +1,6 @@
 package io.getquill.context.sql.idiom
 
-import io.getquill.{ H2Dialect, Literal, SqlMirrorContext, TestEntities }
+import io.getquill.{H2Dialect, Literal, SqlMirrorContext, TestEntities}
 
 class H2DialectSpec extends OnConflictSpec {
   val ctx = new SqlMirrorContext(H2Dialect, Literal) with TestEntities

@@ -1,7 +1,7 @@
 package io.getquill.mock
 
 import io.getquill.ZioTestUtil._
-import io.getquill.{ Literal, PostgresZioJdbcContext }
+import io.getquill.{Literal, PostgresZioJdbcContext}
 import org.mockito.scalatest.MockitoSugar
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.must.Matchers._
@@ -13,7 +13,7 @@ import javax.sql.DataSource
 import scala.reflect.ClassTag
 
 class ZioMockSpec extends AnyFreeSpec with MockitoSugar { //with AsyncMockitoSugar
-  import scala.reflect.runtime.{ universe => ru }
+  import scala.reflect.runtime.{universe => ru}
 
   object MockResultSet {
     def apply[T: ClassTag: ru.TypeTag](data: Seq[T]) = {
@@ -33,7 +33,9 @@ class ZioMockSpec extends AnyFreeSpec with MockitoSugar { //with AsyncMockitoSug
         getIndex(i).asInstanceOf[String]
       })
 
-      when(rs.getInt(any[Int])) thenAnswer ((i: Int) => { getIndex(i).asInstanceOf[Int] })
+      when(rs.getInt(any[Int])) thenAnswer ((i: Int) => {
+        getIndex(i).asInstanceOf[Int]
+      })
 
       rs
     }
@@ -66,7 +68,8 @@ class ZioMockSpec extends AnyFreeSpec with MockitoSugar { //with AsyncMockitoSug
       stream(query[Person])
         .fold(Seq[Person]())({ case (l, p) => p +: l })
         .map(_.reverse)
-        .provide(Has(ds)).defaultRun
+        .provide(Has(ds))
+        .defaultRun
 
     results must equal(people)
 
@@ -97,14 +100,18 @@ class ZioMockSpec extends AnyFreeSpec with MockitoSugar { //with AsyncMockitoSug
     when(ds.getConnection) thenReturn conn
     when(conn.prepareStatement(any[String])) thenReturn stmt
     when(stmt.executeQuery()) thenReturn rs
-    when(conn.close()) thenThrow (new SQLException("Could not close the connection"))
+    when(conn.close()) thenThrow (new SQLException(
+      "Could not close the connection"
+    ))
 
     val ctx = new PostgresZioJdbcContext(Literal)
     import ctx._
 
     val results =
-      ctx.run(query[Person])
-        .provide(Has(ds)).defaultRun
+      ctx
+        .run(query[Person])
+        .provide(Has(ds))
+        .defaultRun
 
     results must equal(people)
 
@@ -132,7 +139,9 @@ class ZioMockSpec extends AnyFreeSpec with MockitoSugar { //with AsyncMockitoSug
       stream(query[Person])
         .fold(Seq[Person]())({ case (l, p) => p +: l })
         .map(_.reverse)
-        .provide(Has(ds)).foldCause(cause => cause.prettyPrint, _ => "").defaultRun
+        .provide(Has(ds))
+        .foldCause(cause => cause.prettyPrint, _ => "")
+        .defaultRun
 
     resultMsg.contains("Fiber failed.") mustBe true
     resultMsg.contains(msg) mustBe true
@@ -156,7 +165,9 @@ class ZioMockSpec extends AnyFreeSpec with MockitoSugar { //with AsyncMockitoSug
     when(conn.prepareStatement(any[String], any[Int], any[Int])) thenReturn stmt
     when(stmt.executeQuery()) thenReturn rs
     when(conn.getAutoCommit) thenReturn true
-    when(conn.setAutoCommit(any[Boolean])) thenAnswer ((f: Boolean) => ()) andThenThrow (new SQLException(msg))
+    when(conn.setAutoCommit(any[Boolean])) thenAnswer ((f: Boolean) =>
+      ()
+    ) andThenThrow (new SQLException(msg))
 
     val ctx = new PostgresZioJdbcContext(Literal)
     import ctx._
@@ -167,7 +178,9 @@ class ZioMockSpec extends AnyFreeSpec with MockitoSugar { //with AsyncMockitoSug
       stream(query[Person])
         .fold(Seq[Person]())({ case (l, p) => p +: l })
         .map(_.reverse)
-        .provide(Has(ds)).foldCause(cause => cause.prettyPrint, _ => "").defaultRun
+        .provide(Has(ds))
+        .foldCause(cause => cause.prettyPrint, _ => "")
+        .defaultRun
 
     resultMsg.contains("Fiber failed.") mustBe true
     resultMsg.contains(msg) mustBe true

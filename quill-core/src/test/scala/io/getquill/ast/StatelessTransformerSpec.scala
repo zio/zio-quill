@@ -19,32 +19,56 @@ class StatelessTransformerSpec extends Spec {
       }
       "filter" in {
         val ast: Ast = Filter(Ident("a"), Ident("b"), Ident("c"))
-        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) mustEqual
+        Subject(
+          Ident("a") -> Ident("a'"),
+          Ident("b") -> Ident("b'"),
+          Ident("c") -> Ident("c'")
+        )(ast) mustEqual
           Filter(Ident("a'"), Ident("b"), Ident("c'"))
       }
       "map" in {
         val ast: Ast = Map(Ident("a"), Ident("b"), Ident("c"))
-        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) mustEqual
+        Subject(
+          Ident("a") -> Ident("a'"),
+          Ident("b") -> Ident("b'"),
+          Ident("c") -> Ident("c'")
+        )(ast) mustEqual
           Map(Ident("a'"), Ident("b"), Ident("c'"))
       }
       "flatMap" in {
         val ast: Ast = FlatMap(Ident("a"), Ident("b"), Ident("c"))
-        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) mustEqual
+        Subject(
+          Ident("a") -> Ident("a'"),
+          Ident("b") -> Ident("b'"),
+          Ident("c") -> Ident("c'")
+        )(ast) mustEqual
           FlatMap(Ident("a'"), Ident("b"), Ident("c'"))
       }
       "concatMap" in {
         val ast: Ast = ConcatMap(Ident("a"), Ident("b"), Ident("c"))
-        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) mustEqual
+        Subject(
+          Ident("a") -> Ident("a'"),
+          Ident("b") -> Ident("b'"),
+          Ident("c") -> Ident("c'")
+        )(ast) mustEqual
           ConcatMap(Ident("a'"), Ident("b"), Ident("c'"))
       }
       "sortBy" in {
         val ast: Ast = SortBy(Ident("a"), Ident("b"), Ident("c"), AscNullsFirst)
-        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) mustEqual
+        Subject(
+          Ident("a") -> Ident("a'"),
+          Ident("b") -> Ident("b'"),
+          Ident("c") -> Ident("c'")
+        )(ast) mustEqual
           SortBy(Ident("a'"), Ident("b"), Ident("c'"), AscNullsFirst)
       }
       "groupBy" in {
         val ast: Ast = GroupBy(Ident("a"), Ident("b"), Ident("c"))
-        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) mustEqual
+        Subject(
+          Ident("a") -> Ident("a'"),
+          Ident("b") -> Ident("b'"),
+          Ident("c") -> Ident("c'")
+        )(ast) mustEqual
           GroupBy(Ident("a'"), Ident("b"), Ident("c'"))
       }
       "aggregation" in {
@@ -54,32 +78,60 @@ class StatelessTransformerSpec extends Spec {
       }
       "take" in {
         val ast: Ast = Take(Ident("a"), Ident("b"))
-        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"))(ast) mustEqual
+        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"))(
+          ast
+        ) mustEqual
           Take(Ident("a'"), Ident("b'"))
       }
       "drop" in {
         val ast: Ast = Drop(Ident("a"), Ident("b"))
-        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"))(ast) mustEqual
+        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"))(
+          ast
+        ) mustEqual
           Drop(Ident("a'"), Ident("b'"))
       }
       "union" in {
         val ast: Ast = Union(Ident("a"), Ident("b"))
-        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"))(ast) mustEqual
+        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"))(
+          ast
+        ) mustEqual
           Union(Ident("a'"), Ident("b'"))
       }
       "unionAll" in {
         val ast: Ast = UnionAll(Ident("a"), Ident("b"))
-        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"))(ast) mustEqual
+        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"))(
+          ast
+        ) mustEqual
           UnionAll(Ident("a'"), Ident("b'"))
       }
       "outer join" in {
-        val ast: Ast = Join(FullJoin, Ident("a"), Ident("b"), Ident("c"), Ident("d"), Ident("e"))
-        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("e") -> Ident("e'"))(ast) mustEqual
-          Join(FullJoin, Ident("a'"), Ident("b'"), Ident("c"), Ident("d"), Ident("e'"))
+        val ast: Ast = Join(
+          FullJoin,
+          Ident("a"),
+          Ident("b"),
+          Ident("c"),
+          Ident("d"),
+          Ident("e")
+        )
+        Subject(
+          Ident("a") -> Ident("a'"),
+          Ident("b") -> Ident("b'"),
+          Ident("e") -> Ident("e'")
+        )(ast) mustEqual
+          Join(
+            FullJoin,
+            Ident("a'"),
+            Ident("b'"),
+            Ident("c"),
+            Ident("d"),
+            Ident("e'")
+          )
       }
       "flat join" in {
         val ast: Ast = FlatJoin(InnerJoin, Ident("a"), Ident("b"), Ident("c"))
-        Subject(Ident("a") -> Ident("a'"), Ident("c") -> Ident("c'"))(ast) mustEqual
+        Subject(Ident("a") -> Ident("a'"), Ident("c") -> Ident("c'"))(
+          ast
+        ) mustEqual
           FlatJoin(InnerJoin, Ident("a'"), Ident("b"), Ident("c'"))
       }
 
@@ -96,13 +148,20 @@ class StatelessTransformerSpec extends Spec {
           UnaryOperation(BooleanOperator.`!`, Ident("a'"))
       }
       "binary" in {
-        val ast: Ast = BinaryOperation(Ident("a"), BooleanOperator.`&&`, Ident("b"))
-        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"))(ast) mustEqual
+        val ast: Ast =
+          BinaryOperation(Ident("a"), BooleanOperator.`&&`, Ident("b"))
+        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"))(
+          ast
+        ) mustEqual
           BinaryOperation(Ident("a'"), BooleanOperator.`&&`, Ident("b'"))
       }
       "function apply" in {
         val ast: Ast = FunctionApply(Ident("a"), List(Ident("b"), Ident("c")))
-        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) mustEqual
+        Subject(
+          Ident("a") -> Ident("a'"),
+          Ident("b") -> Ident("b'"),
+          Ident("c") -> Ident("c'")
+        )(ast) mustEqual
           FunctionApply(Ident("a'"), List(Ident("b'"), Ident("c'")))
       }
     }
@@ -118,32 +177,72 @@ class StatelessTransformerSpec extends Spec {
       }
       "tuple" in {
         val ast: Ast = Tuple(List(Ident("a"), Ident("b"), Ident("c")))
-        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) mustEqual
+        Subject(
+          Ident("a") -> Ident("a'"),
+          Ident("b") -> Ident("b'"),
+          Ident("c") -> Ident("c'")
+        )(ast) mustEqual
           Tuple(List(Ident("a'"), Ident("b'"), Ident("c'")))
       }
       "caseclass" in {
-        val ast: Ast = CaseClass(List(("foo", Ident("a")), ("bar", Ident("b")), ("baz", Ident("c"))))
-        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) mustEqual
-          CaseClass(List(("foo", Ident("a'")), ("bar", Ident("b'")), ("baz", Ident("c'"))))
+        val ast: Ast = CaseClass(
+          List(("foo", Ident("a")), ("bar", Ident("b")), ("baz", Ident("c")))
+        )
+        Subject(
+          Ident("a") -> Ident("a'"),
+          Ident("b") -> Ident("b'"),
+          Ident("c") -> Ident("c'")
+        )(ast) mustEqual
+          CaseClass(
+            List(
+              ("foo", Ident("a'")),
+              ("bar", Ident("b'")),
+              ("baz", Ident("c'"))
+            )
+          )
       }
     }
 
     "Assignment" in {
       val ast: Ast = Assignment(Ident("a"), Ident("b"), Ident("b"))
-      Subject(Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) mustEqual
+      Subject(Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(
+        ast
+      ) mustEqual
         Assignment(Ident("a"), Ident("b'"), Ident("b'"))
     }
 
     "action" - {
       "update" in {
-        val ast: Ast = Update(Ident("a"), List(Assignment(Ident("b"), Ident("c"), Ident("d"))))
-        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"), Ident("d") -> Ident("d'"))(ast) mustEqual
-          Update(Ident("a'"), List(Assignment(Ident("b"), Ident("c'"), Ident("d'"))))
+        val ast: Ast = Update(
+          Ident("a"),
+          List(Assignment(Ident("b"), Ident("c"), Ident("d")))
+        )
+        Subject(
+          Ident("a") -> Ident("a'"),
+          Ident("b") -> Ident("b'"),
+          Ident("c") -> Ident("c'"),
+          Ident("d") -> Ident("d'")
+        )(ast) mustEqual
+          Update(
+            Ident("a'"),
+            List(Assignment(Ident("b"), Ident("c'"), Ident("d'")))
+          )
       }
       "insert" in {
-        val ast: Ast = Insert(Ident("a"), List(Assignment(Ident("b"), Ident("c"), Ident("d"))))
-        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"), Ident("d") -> Ident("d'"))(ast) mustEqual
-          Insert(Ident("a'"), List(Assignment(Ident("b"), Ident("c'"), Ident("d'"))))
+        val ast: Ast = Insert(
+          Ident("a"),
+          List(Assignment(Ident("b"), Ident("c"), Ident("d")))
+        )
+        Subject(
+          Ident("a") -> Ident("a'"),
+          Ident("b") -> Ident("b'"),
+          Ident("c") -> Ident("c'"),
+          Ident("d") -> Ident("d'")
+        )(ast) mustEqual
+          Insert(
+            Ident("a'"),
+            List(Assignment(Ident("b"), Ident("c'"), Ident("d'")))
+          )
       }
       "delete" in {
         val ast: Ast = Delete(Ident("a"))
@@ -151,9 +250,17 @@ class StatelessTransformerSpec extends Spec {
           Delete(Ident("a'"))
       }
       "onConflict" in {
-        val ast: Ast = OnConflict(Insert(Ident("a"), Nil), OnConflict.NoTarget, OnConflict.Ignore)
+        val ast: Ast = OnConflict(
+          Insert(Ident("a"), Nil),
+          OnConflict.NoTarget,
+          OnConflict.Ignore
+        )
         Subject(Ident("a") -> Ident("a'"))(ast) mustEqual
-          OnConflict(Insert(Ident("a'"), Nil), OnConflict.NoTarget, OnConflict.Ignore)
+          OnConflict(
+            Insert(Ident("a'"), Nil),
+            OnConflict.NoTarget,
+            OnConflict.Ignore
+          )
       }
     }
 
@@ -163,14 +270,19 @@ class StatelessTransformerSpec extends Spec {
         Subject()(target) mustEqual target
       }
       "properties" in {
-        val target: OnConflict.Target = OnConflict.Properties(List(Property(Ident("a"), "b")))
+        val target: OnConflict.Target =
+          OnConflict.Properties(List(Property(Ident("a"), "b")))
         Subject(Ident("a") -> Ident("a'"))(target) mustEqual
           OnConflict.Properties(List(Property(Ident("a'"), "b")))
       }
       "properties - fixed" in {
-        val target: OnConflict.Target = OnConflict.Properties(List(Property.Opinionated(Ident("a"), "b", Fixed, Visible)))
+        val target: OnConflict.Target = OnConflict.Properties(
+          List(Property.Opinionated(Ident("a"), "b", Fixed, Visible))
+        )
         Subject(Ident("a") -> Ident("a'"))(target) mustEqual
-          OnConflict.Properties(List(Property.Opinionated(Ident("a'"), "b", Fixed, Visible)))
+          OnConflict.Properties(
+            List(Property.Opinionated(Ident("a'"), "b", Fixed, Visible))
+          )
       }
     }
 
@@ -180,9 +292,20 @@ class StatelessTransformerSpec extends Spec {
         Subject()(action) mustEqual action
       }
       "update" in {
-        val action: OnConflict.Action = OnConflict.Update(List(AssignmentDual(Ident("a1"), Ident("a2"), Ident("b"), Ident("c"))))
-        Subject(Ident("a1") -> Ident("a1'"), Ident("a2") -> Ident("a2'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(action) mustEqual
-          OnConflict.Update(List(AssignmentDual(Ident("a1"), Ident("a2"), Ident("b'"), Ident("c'"))))
+        val action: OnConflict.Action = OnConflict.Update(
+          List(AssignmentDual(Ident("a1"), Ident("a2"), Ident("b"), Ident("c")))
+        )
+        Subject(
+          Ident("a1") -> Ident("a1'"),
+          Ident("a2") -> Ident("a2'"),
+          Ident("b") -> Ident("b'"),
+          Ident("c") -> Ident("c'")
+        )(action) mustEqual
+          OnConflict.Update(
+            List(
+              AssignmentDual(Ident("a1"), Ident("a2"), Ident("b'"), Ident("c'"))
+            )
+          )
       }
     }
 
@@ -221,14 +344,20 @@ class StatelessTransformerSpec extends Spec {
     }
 
     "infix" in {
-      val ast: Ast = Infix(List("test"), List(Ident("a"), Ident("b")), false, false, QV)
-      Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"))(ast) mustEqual
+      val ast: Ast =
+        Infix(List("test"), List(Ident("a"), Ident("b")), false, false, QV)
+      Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"))(
+        ast
+      ) mustEqual
         Infix(List("test"), List(Ident("a'"), Ident("b'")), false, false, QV)
     }
 
     "infix - pure" in {
-      val ast: Ast = Infix(List("test"), List(Ident("a"), Ident("b")), true, false, QV)
-      Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"))(ast) mustEqual
+      val ast: Ast =
+        Infix(List("test"), List(Ident("a"), Ident("b")), true, false, QV)
+      Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"))(
+        ast
+      ) mustEqual
         Infix(List("test"), List(Ident("a'"), Ident("b'")), true, false, QV)
     }
 
@@ -264,52 +393,88 @@ class StatelessTransformerSpec extends Spec {
       }
       "getOrElse" in {
         val ast: Ast = OptionGetOrElse(Ident("a"), Ident("b"))
-        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"))(ast) mustEqual
+        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"))(
+          ast
+        ) mustEqual
           OptionGetOrElse(Ident("a'"), Ident("b'"))
       }
       "flatMap - Unchecked" in {
         val ast: Ast = OptionTableFlatMap(Ident("a"), Ident("b"), Ident("c"))
-        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) mustEqual
+        Subject(
+          Ident("a") -> Ident("a'"),
+          Ident("b") -> Ident("b'"),
+          Ident("c") -> Ident("c'")
+        )(ast) mustEqual
           OptionTableFlatMap(Ident("a'"), Ident("b"), Ident("c'"))
       }
       "map - Unchecked" in {
         val ast: Ast = OptionTableMap(Ident("a"), Ident("b"), Ident("c"))
-        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) mustEqual
+        Subject(
+          Ident("a") -> Ident("a'"),
+          Ident("b") -> Ident("b'"),
+          Ident("c") -> Ident("c'")
+        )(ast) mustEqual
           OptionTableMap(Ident("a'"), Ident("b"), Ident("c'"))
       }
       "flatMap" in {
         val ast: Ast = OptionFlatMap(Ident("a"), Ident("b"), Ident("c"))
-        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) mustEqual
+        Subject(
+          Ident("a") -> Ident("a'"),
+          Ident("b") -> Ident("b'"),
+          Ident("c") -> Ident("c'")
+        )(ast) mustEqual
           OptionFlatMap(Ident("a'"), Ident("b"), Ident("c'"))
       }
       "map" in {
         val ast: Ast = OptionMap(Ident("a"), Ident("b"), Ident("c"))
-        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) mustEqual
+        Subject(
+          Ident("a") -> Ident("a'"),
+          Ident("b") -> Ident("b'"),
+          Ident("c") -> Ident("c'")
+        )(ast) mustEqual
           OptionMap(Ident("a'"), Ident("b"), Ident("c'"))
       }
       "forall" in {
         val ast: Ast = OptionForall(Ident("a"), Ident("b"), Ident("c"))
-        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) mustEqual
+        Subject(
+          Ident("a") -> Ident("a'"),
+          Ident("b") -> Ident("b'"),
+          Ident("c") -> Ident("c'")
+        )(ast) mustEqual
           OptionForall(Ident("a'"), Ident("b"), Ident("c'"))
       }
       "forall - Unchecked" in {
         val ast: Ast = OptionTableForall(Ident("a"), Ident("b"), Ident("c"))
-        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) mustEqual
+        Subject(
+          Ident("a") -> Ident("a'"),
+          Ident("b") -> Ident("b'"),
+          Ident("c") -> Ident("c'")
+        )(ast) mustEqual
           OptionTableForall(Ident("a'"), Ident("b"), Ident("c'"))
       }
       "exists" in {
         val ast: Ast = OptionExists(Ident("a"), Ident("b"), Ident("c"))
-        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) mustEqual
+        Subject(
+          Ident("a") -> Ident("a'"),
+          Ident("b") -> Ident("b'"),
+          Ident("c") -> Ident("c'")
+        )(ast) mustEqual
           OptionExists(Ident("a'"), Ident("b"), Ident("c'"))
       }
       "exists - Unchecked" in {
         val ast: Ast = OptionTableExists(Ident("a"), Ident("b"), Ident("c"))
-        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) mustEqual
+        Subject(
+          Ident("a") -> Ident("a'"),
+          Ident("b") -> Ident("b'"),
+          Ident("c") -> Ident("c'")
+        )(ast) mustEqual
           OptionTableExists(Ident("a'"), Ident("b"), Ident("c'"))
       }
       "contains" in {
         val ast: Ast = OptionContains(Ident("a"), Ident("c"))
-        Subject(Ident("a") -> Ident("a'"), Ident("c") -> Ident("c'"))(ast) mustEqual
+        Subject(Ident("a") -> Ident("a'"), Ident("c") -> Ident("c'"))(
+          ast
+        ) mustEqual
           OptionContains(Ident("a'"), Ident("c'"))
       }
       "isEmpty" in {
@@ -332,24 +497,34 @@ class StatelessTransformerSpec extends Spec {
     "traversable operations" - {
       "map.contains" in {
         val ast: Ast = MapContains(Ident("a"), Ident("c"))
-        Subject(Ident("a") -> Ident("a'"), Ident("c") -> Ident("c'"))(ast) mustEqual
+        Subject(Ident("a") -> Ident("a'"), Ident("c") -> Ident("c'"))(
+          ast
+        ) mustEqual
           MapContains(Ident("a'"), Ident("c'"))
       }
       "set.contains" in {
         val ast: Ast = SetContains(Ident("a"), Ident("c"))
-        Subject(Ident("a") -> Ident("a'"), Ident("c") -> Ident("c'"))(ast) mustEqual
+        Subject(Ident("a") -> Ident("a'"), Ident("c") -> Ident("c'"))(
+          ast
+        ) mustEqual
           SetContains(Ident("a'"), Ident("c'"))
       }
       "list.contains" in {
         val ast: Ast = ListContains(Ident("a"), Ident("c"))
-        Subject(Ident("a") -> Ident("a'"), Ident("c") -> Ident("c'"))(ast) mustEqual
+        Subject(Ident("a") -> Ident("a'"), Ident("c") -> Ident("c'"))(
+          ast
+        ) mustEqual
           ListContains(Ident("a'"), Ident("c'"))
       }
     }
 
     "if" in {
       val ast: Ast = If(Ident("a"), Ident("b"), Ident("c"))
-      Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) mustEqual
+      Subject(
+        Ident("a") -> Ident("a'"),
+        Ident("b") -> Ident("b'"),
+        Ident("c") -> Ident("c'")
+      )(ast) mustEqual
         If(Ident("a'"), Ident("b'"), Ident("c'"))
     }
 
@@ -359,15 +534,22 @@ class StatelessTransformerSpec extends Spec {
     }
 
     "block" in {
-      val ast: Ast = Block(List(
-        Val(Ident("a"), Entity("a", Nil, QEP)),
-        Val(Ident("b"), Entity("b", Nil, QEP))
-      ))
-      Subject(Entity("a", Nil, QEP) -> Entity("b", Nil, QEP), Entity("b", Nil, QEP) -> Entity("c", Nil, QEP))(ast) mustEqual
-        Block(List(
-          Val(Ident("a"), Entity("b", Nil, QEP)),
-          Val(Ident("b"), Entity("c", Nil, QEP))
-        ))
+      val ast: Ast = Block(
+        List(
+          Val(Ident("a"), Entity("a", Nil, QEP)),
+          Val(Ident("b"), Entity("b", Nil, QEP))
+        )
+      )
+      Subject(
+        Entity("a", Nil, QEP) -> Entity("b", Nil, QEP),
+        Entity("b", Nil, QEP) -> Entity("c", Nil, QEP)
+      )(ast) mustEqual
+        Block(
+          List(
+            Val(Ident("a"), Entity("b", Nil, QEP)),
+            Val(Ident("b"), Entity("c", Nil, QEP))
+          )
+        )
     }
 
     "val" in {

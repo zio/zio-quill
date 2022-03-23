@@ -20,7 +20,9 @@ trait StatefulTransformerWithStack[T] {
 
   val state: T
 
-  def apply(e: Ast)(implicit parent: History): (Ast, StatefulTransformerWithStack[T]) =
+  def apply(
+      e: Ast
+  )(implicit parent: History): (Ast, StatefulTransformerWithStack[T]) =
     e match {
       case e: Query               => apply(e)
       case e: Operation           => apply(e)
@@ -50,7 +52,7 @@ trait StatefulTransformerWithStack[T] {
         val (ct, ctt) = btt.apply(c)(History(e))
         (If(at, bt, ct), ctt)
 
-      case l: Dynamic  => (l, this)
+      case l: Dynamic => (l, this)
 
       case l: External => (l, this)
 
@@ -69,7 +71,9 @@ trait StatefulTransformerWithStack[T] {
       case o: Ordering => (o, this)
     }
 
-  def apply(o: OptionOperation)(implicit parent: History): (OptionOperation, StatefulTransformerWithStack[T]) =
+  def apply(o: OptionOperation)(implicit
+      parent: History
+  ): (OptionOperation, StatefulTransformerWithStack[T]) =
     o match {
       case OptionTableFlatMap(a, b, c) =>
         val (at, att) = apply(a)(History(o))
@@ -138,7 +142,9 @@ trait StatefulTransformerWithStack[T] {
       case OptionNone(_) => (o, this)
     }
 
-  def apply(e: IterableOperation)(implicit parent: History): (IterableOperation, StatefulTransformerWithStack[T]) =
+  def apply(e: IterableOperation)(implicit
+      parent: History
+  ): (IterableOperation, StatefulTransformerWithStack[T]) =
     e match {
       case MapContains(a, c) =>
         val (at, att) = apply(a)(History(e))
@@ -154,7 +160,9 @@ trait StatefulTransformerWithStack[T] {
         (ListContains(at, ct), ctt)
     }
 
-  def apply(e: Query)(implicit parent: History): (Query, StatefulTransformerWithStack[T]) =
+  def apply(
+      e: Query
+  )(implicit parent: History): (Query, StatefulTransformerWithStack[T]) =
     e match {
       case e: Entity => (e, this)
       case Filter(a, b, c) =>
@@ -217,7 +225,9 @@ trait StatefulTransformerWithStack[T] {
         (Nested(at), att)
     }
 
-  def apply(e: Assignment)(implicit parent: History): (Assignment, StatefulTransformerWithStack[T]) =
+  def apply(
+      e: Assignment
+  )(implicit parent: History): (Assignment, StatefulTransformerWithStack[T]) =
     e match {
       case Assignment(a, b, c) =>
         val (bt, btt) = apply(b)(History(e))
@@ -225,7 +235,9 @@ trait StatefulTransformerWithStack[T] {
         (Assignment(a, bt, ct), ctt)
     }
 
-  def apply(e: AssignmentDual)(implicit parent: History): (AssignmentDual, StatefulTransformerWithStack[T]) =
+  def apply(e: AssignmentDual)(implicit
+      parent: History
+  ): (AssignmentDual, StatefulTransformerWithStack[T]) =
     e match {
       case AssignmentDual(a1, a2, b, c) =>
         val (bt, btt) = apply(b)(History(e))
@@ -233,14 +245,18 @@ trait StatefulTransformerWithStack[T] {
         (AssignmentDual(a1, a2, bt, ct), ctt)
     }
 
-  def apply(e: Property)(implicit parent: History): (Property, StatefulTransformerWithStack[T]) =
+  def apply(
+      e: Property
+  )(implicit parent: History): (Property, StatefulTransformerWithStack[T]) =
     e match {
       case Property.Opinionated(a, b, renameable, visibility) =>
         val (at, att) = apply(a)(History(e))
         (Property.Opinionated(at, b, renameable, visibility), att)
     }
 
-  def apply(e: Operation)(implicit parent: History): (Operation, StatefulTransformerWithStack[T]) =
+  def apply(
+      e: Operation
+  )(implicit parent: History): (Operation, StatefulTransformerWithStack[T]) =
     e match {
       case UnaryOperation(o, a) =>
         val (at, att) = apply(a)(History(e))
@@ -255,7 +271,9 @@ trait StatefulTransformerWithStack[T] {
         (FunctionApply(at, bt), btt)
     }
 
-  def apply(e: Value)(implicit parent: History): (Value, StatefulTransformerWithStack[T]) =
+  def apply(
+      e: Value
+  )(implicit parent: History): (Value, StatefulTransformerWithStack[T]) =
     e match {
       case e: Constant => (e, this)
       case NullValue   => (e, this)
@@ -268,7 +286,9 @@ trait StatefulTransformerWithStack[T] {
         (CaseClass(keys.zip(at)), att)
     }
 
-  def apply(e: Action)(implicit parent: History): (Action, StatefulTransformerWithStack[T]) =
+  def apply(
+      e: Action
+  )(implicit parent: History): (Action, StatefulTransformerWithStack[T]) =
     e match {
       case Insert(a, b) =>
         val (at, att) = apply(a)(History(e))
@@ -300,7 +320,9 @@ trait StatefulTransformerWithStack[T] {
         (OnConflict(at, bt, ct), ctt)
     }
 
-  def apply(e: OnConflict.Target)(implicit parent: History): (OnConflict.Target, StatefulTransformerWithStack[T]) =
+  def apply(e: OnConflict.Target)(implicit
+      parent: History
+  ): (OnConflict.Target, StatefulTransformerWithStack[T]) =
     e match {
       case OnConflict.NoTarget => (e, this)
       case OnConflict.Properties(a) =>
@@ -308,7 +330,9 @@ trait StatefulTransformerWithStack[T] {
         (OnConflict.Properties(at), att)
     }
 
-  def apply(e: OnConflict.Action)(implicit parent: History): (OnConflict.Action, StatefulTransformerWithStack[T]) =
+  def apply(e: OnConflict.Action)(implicit
+      parent: History
+  ): (OnConflict.Action, StatefulTransformerWithStack[T]) =
     e match {
       case OnConflict.Ignore => (e, this)
       case OnConflict.Update(a) =>
@@ -316,10 +340,14 @@ trait StatefulTransformerWithStack[T] {
         (OnConflict.Update(at), att)
     }
 
-  def apply[U, R](list: List[U])(f: StatefulTransformerWithStack[T] => U => (R, StatefulTransformerWithStack[T]))(implicit parent: History) =
-    list.foldLeft((List[R](), this)) {
-      case ((values, t), v) =>
-        val (vt, vtt) = f(t)(v)
-        (values :+ vt, vtt)
+  def apply[U, R](list: List[U])(
+      f: StatefulTransformerWithStack[T] => U => (
+          R,
+          StatefulTransformerWithStack[T]
+      )
+  )(implicit parent: History) =
+    list.foldLeft((List[R](), this)) { case ((values, t), v) =>
+      val (vt, vtt) = f(t)(v)
+      (values :+ vt, vtt)
     }
 }

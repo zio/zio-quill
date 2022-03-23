@@ -2,7 +2,7 @@ package io.getquill.context.cassandra.alpakka
 
 import io.getquill.context.cassandra.CollectionsSpec
 
-import java.time.{ Instant, LocalDate }
+import java.time.{Instant, LocalDate}
 import java.util.UUID
 
 class MapsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
@@ -10,17 +10,22 @@ class MapsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
   import ctx._
 
   case class MapsEntity(
-    id:            Int,
-    textDecimal:   Map[String, BigDecimal],
-    intDouble:     Map[Int, Double],
-    longFloat:     Map[Long, Float],
-    boolDate:      Map[Boolean, LocalDate],
-    uuidTimestamp: Map[UUID, Instant]
+      id: Int,
+      textDecimal: Map[String, BigDecimal],
+      intDouble: Map[Int, Double],
+      longFloat: Map[Long, Float],
+      boolDate: Map[Boolean, LocalDate],
+      uuidTimestamp: Map[UUID, Instant]
   )
 
-  val e = MapsEntity(1, Map("1" -> BigDecimal(1)), Map(1 -> 1d, 2 -> 2d, 3 -> 3d), Map(1L -> 3f),
+  val e = MapsEntity(
+    1,
+    Map("1" -> BigDecimal(1)),
+    Map(1 -> 1d, 2 -> 2d, 3 -> 3d),
+    Map(1L -> 3f),
     Map(true -> LocalDate.now()),
-    Map(UUID.randomUUID() -> Instant.now()))
+    Map(UUID.randomUUID() -> Instant.now())
+  )
   val q = quote(query[MapsEntity])
 
   "Map encoders/decoders" in {
@@ -36,10 +41,10 @@ class MapsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
 
   "Empty maps and optional fields" in {
     case class Entity(
-      id:          Int,
-      textDecimal: Option[Map[String, BigDecimal]],
-      intDouble:   Option[Map[Int, Double]],
-      longFloat:   Map[Long, Float]
+        id: Int,
+        textDecimal: Option[Map[String, BigDecimal]],
+        intDouble: Option[Map[Int, Double]],
+        longFloat: Map[Long, Float]
     )
     val e = Entity(1, Some(Map("1" -> BigDecimal(1))), None, Map())
     val q = quote(querySchema[Entity]("MapsEntity"))
@@ -116,7 +121,9 @@ class MapsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
       for {
         _ <- ctx.run(mapFroz.insertValue(lift(e)))
         res1 <- ctx.run(mapFroz.filter(_.id.containsValue(true)).allowFiltering)
-        res2 <- ctx.run(mapFroz.filter(_.id.containsValue(false)).allowFiltering)
+        res2 <- ctx.run(
+          mapFroz.filter(_.id.containsValue(false)).allowFiltering
+        )
       } yield {
         res1 mustBe List(e)
         res2 mustBe Nil

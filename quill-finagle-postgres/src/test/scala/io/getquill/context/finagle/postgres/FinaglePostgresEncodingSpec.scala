@@ -1,6 +1,6 @@
 package io.getquill.context.finagle.postgres
 
-import java.time.{ LocalDate, LocalDateTime }
+import java.time.{LocalDate, LocalDateTime}
 
 import io.getquill.context.sql.EncodingSpec
 import com.twitter.util.Await
@@ -32,7 +32,13 @@ class FinaglePostgresEncodingSpec extends EncodingSpec {
     val rez0 = Await.result(testContext.run(q0))
 
     //insert new uuid
-    val rez1 = Await.result(testContext.run(query[EncodingUUIDTestEntity].insertValue(lift(EncodingUUIDTestEntity(testUUID)))))
+    val rez1 = Await.result(
+      testContext.run(
+        query[EncodingUUIDTestEntity].insertValue(
+          lift(EncodingUUIDTestEntity(testUUID))
+        )
+      )
+    )
 
     //verify you can get the uuid back from the db
     val q2 = quote(query[EncodingUUIDTestEntity].map(p => p.v1))
@@ -43,14 +49,18 @@ class FinaglePostgresEncodingSpec extends EncodingSpec {
 
   "fails if the column has the wrong type" - {
     "numeric" in {
-      Await.result(testContext.run(liftQuery(insertValues).foreach(e => insert(e))))
+      Await.result(
+        testContext.run(liftQuery(insertValues).foreach(e => insert(e)))
+      )
       case class EncodingTestEntity(v1: Int)
       val e = intercept[IllegalStateException] {
         Await.result(testContext.run(query[EncodingTestEntity]))
       }
     }
     "non-numeric" in {
-      Await.result(testContext.run(liftQuery(insertValues).foreach(e => insert(e))))
+      Await.result(
+        testContext.run(liftQuery(insertValues).foreach(e => insert(e)))
+      )
       case class EncodingTestEntity(v1: Date)
       val e = intercept[IllegalStateException] {
         Await.result(testContext.run(query[EncodingTestEntity]))
@@ -59,14 +69,17 @@ class FinaglePostgresEncodingSpec extends EncodingSpec {
   }
 
   "encodes sets" in {
-    val q = quote {
-      (set: Query[Int]) =>
-        query[EncodingTestEntity].filter(t => set.contains(t.v6))
+    val q = quote { (set: Query[Int]) =>
+      query[EncodingTestEntity].filter(t => set.contains(t.v6))
     }
     val fut =
       for {
         _ <- testContext.run(query[EncodingTestEntity].delete)
-        _ <- testContext.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insertValue(e)))
+        _ <- testContext.run(
+          liftQuery(insertValues).foreach(e =>
+            query[EncodingTestEntity].insertValue(e)
+          )
+        )
         r <- testContext.run(q(liftQuery(insertValues.map(_.v6))))
       } yield {
         r
@@ -77,7 +90,9 @@ class FinaglePostgresEncodingSpec extends EncodingSpec {
   "returning UUID" in {
     val success = for {
       uuid <- Await.result(testContext.run(insertBarCode(lift(barCodeEntry))))
-      barCode <- Await.result(testContext.run(findBarCodeByUuid(uuid))).headOption
+      barCode <- Await
+        .result(testContext.run(findBarCodeByUuid(uuid)))
+        .headOption
     } yield {
       verifyBarcode(barCode)
     }
@@ -89,7 +104,9 @@ class FinaglePostgresEncodingSpec extends EncodingSpec {
     val entity = DateEncodingTestEntity(LocalDate.now, LocalDate.now)
     val r = for {
       _ <- testContext.run(query[DateEncodingTestEntity].delete)
-      _ <- testContext.run(query[DateEncodingTestEntity].insertValue(lift(entity)))
+      _ <- testContext.run(
+        query[DateEncodingTestEntity].insertValue(lift(entity))
+      )
       result <- testContext.run(query[DateEncodingTestEntity])
     } yield result
     Await.result(r) must contain(entity)
@@ -100,7 +117,9 @@ class FinaglePostgresEncodingSpec extends EncodingSpec {
     val entity = DateEncodingTestEntity(LocalDateTime.now, LocalDateTime.now)
     val r = for {
       _ <- testContext.run(query[DateEncodingTestEntity].delete)
-      _ <- testContext.run(query[DateEncodingTestEntity].insertValue(lift(entity)))
+      _ <- testContext.run(
+        query[DateEncodingTestEntity].insertValue(lift(entity))
+      )
       result <- testContext.run(query[DateEncodingTestEntity])
     } yield result
     Await.result(r)

@@ -40,33 +40,32 @@ trait PeopleSpec extends Spec {
       for {
         c <- query[Couple]
         w <- query[Person]
-        m <- query[Person] if (c.her == w.name && c.him == m.name && w.age > m.age)
+        m <- query[Person]
+        if (c.her == w.name && c.him == m.name && w.age > m.age)
       } yield {
         (w.name, w.age - m.age)
       }
     }
   val `Ex 1 expected result` = List(("Alex", 5), ("Cora", 2))
 
-  val `Ex 2 rangeSimple` = quote {
-    (a: Int, b: Int) =>
-      for {
-        u <- query[Person] if (a <= u.age && u.age < b)
-      } yield {
-        u
-      }
+  val `Ex 2 rangeSimple` = quote { (a: Int, b: Int) =>
+    for {
+      u <- query[Person] if (a <= u.age && u.age < b)
+    } yield {
+      u
+    }
   }
   val `Ex 2 param 1` = 30
   val `Ex 2 param 2` = 40
   val `Ex 2 expected result` = List(Person("Cora", 33), Person("Drew", 31))
 
   val satisfies =
-    quote {
-      (p: Int => Boolean) =>
-        for {
-          u <- query[Person] if (p(u.age))
-        } yield {
-          u
-        }
+    quote { (p: Int => Boolean) =>
+      for {
+        u <- query[Person] if (p(u.age))
+      } yield {
+        u
+      }
     }
   val `Ex 3 satisfies` = quote(satisfies((x: Int) => 20 <= x && x < 30))
   val `Ex 3 expected result` = List(Person("Edna", 21))
@@ -75,31 +74,28 @@ trait PeopleSpec extends Spec {
   val `Ex 4 expected result` = List(Person("Alex", 60), Person("Fred", 60))
 
   val `Ex 5 compose` = {
-    val range = quote {
-      (a: Int, b: Int) =>
-        for {
-          u <- query[Person] if (a <= u.age && u.age < b)
-        } yield {
-          u
-        }
+    val range = quote { (a: Int, b: Int) =>
+      for {
+        u <- query[Person] if (a <= u.age && u.age < b)
+      } yield {
+        u
+      }
     }
-    val ageFromName = quote {
-      (s: String) =>
-        for {
-          u <- query[Person] if (s == u.name)
-        } yield {
-          u.age
-        }
+    val ageFromName = quote { (s: String) =>
+      for {
+        u <- query[Person] if (s == u.name)
+      } yield {
+        u.age
+      }
     }
-    quote {
-      (s: String, t: String) =>
-        for {
-          a <- ageFromName(s)
-          b <- ageFromName(t)
-          r <- range(a, b)
-        } yield {
-          r
-        }
+    quote { (s: String, t: String) =>
+      for {
+        a <- ageFromName(s)
+        b <- ageFromName(t)
+        r <- range(a, b)
+      } yield {
+        r
+      }
     }
   }
   val `Ex 5 param 1` = "Drew"
@@ -129,9 +125,8 @@ trait PeopleSpec extends Spec {
   val `Ex 7 expected result` = List(Person("Edna", 21))
 
   val `Ex 8 and 9 contains` =
-    quote {
-      (set: Query[Int]) =>
-        query[Person].filter(p => set.contains(p.age))
+    quote { (set: Query[Int]) =>
+      query[Person].filter(p => set.contains(p.age))
     }
 
   val `Ex 8 param` = Set.empty[Int]

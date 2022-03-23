@@ -1,6 +1,6 @@
 package io.getquill.context.cassandra.zio.examples
 
-import io.getquill.{ CassandraZioContext, _ }
+import io.getquill.{CassandraZioContext, _}
 import zio.Runtime
 import zio.console.putStrLn
 
@@ -19,7 +19,8 @@ object PlainApp {
       query[Person]
     }
     val czio =
-      MyZioPostgresContext.run(people)
+      MyZioPostgresContext
+        .run(people)
         .tap(result => putStrLn(result.toString))
         .provideCustomLayer(zioSession)
 

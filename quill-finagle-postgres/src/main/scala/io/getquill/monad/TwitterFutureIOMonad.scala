@@ -8,19 +8,29 @@ import scala.util.Success
 import com.twitter.util.Throw
 import scala.util.Failure
 import com.twitter.util.Try
-import io.getquill.{ Query, Action, ActionReturning, BatchAction, Quoted }
+import io.getquill.{Query, Action, ActionReturning, BatchAction, Quoted}
 
 trait TwitterFutureIOMonad extends IOMonad {
   this: Context[_, _] =>
 
   type Result[T] = Future[T]
 
-  def runIO[T](quoted: Quoted[T]): IO[RunQuerySingleResult[T], Effect.Read] = macro IOMonadMacro.runIO
-  def runIO[T](quoted: Quoted[Query[T]]): IO[RunQueryResult[T], Effect.Read] = macro IOMonadMacro.runIO
-  def runIO(quoted: Quoted[Action[_]]): IO[RunActionResult, Effect.Write] = macro IOMonadMacro.runIO
-  def runIO[T](quoted: Quoted[ActionReturning[_, T]]): IO[RunActionReturningResult[T], Effect.Write] = macro IOMonadMacro.runIO
-  def runIO(quoted: Quoted[BatchAction[Action[_]]]): IO[RunBatchActionResult, Effect.Write] = macro IOMonadMacro.runIO
-  def runIO[T](quoted: Quoted[BatchAction[ActionReturning[_, T]]]): IO[RunBatchActionReturningResult[T], Effect.Write] = macro IOMonadMacro.runIO
+  def runIO[T](quoted: Quoted[T]): IO[RunQuerySingleResult[T], Effect.Read] =
+    macro IOMonadMacro.runIO
+  def runIO[T](quoted: Quoted[Query[T]]): IO[RunQueryResult[T], Effect.Read] =
+    macro IOMonadMacro.runIO
+  def runIO(quoted: Quoted[Action[_]]): IO[RunActionResult, Effect.Write] =
+    macro IOMonadMacro.runIO
+  def runIO[T](
+      quoted: Quoted[ActionReturning[_, T]]
+  ): IO[RunActionReturningResult[T], Effect.Write] = macro IOMonadMacro.runIO
+  def runIO(
+      quoted: Quoted[BatchAction[Action[_]]]
+  ): IO[RunBatchActionResult, Effect.Write] = macro IOMonadMacro.runIO
+  def runIO[T](
+      quoted: Quoted[BatchAction[ActionReturning[_, T]]]
+  ): IO[RunBatchActionReturningResult[T], Effect.Write] =
+    macro IOMonadMacro.runIO
 
   case class Run[T, E <: Effect](f: () => Result[T]) extends IO[T, E]
 
@@ -29,11 +39,12 @@ trait TwitterFutureIOMonad extends IOMonad {
       case FromTry(t) => Future.const(Try(t.get))
       case Run(f)     => f()
       case Sequence(in, cbf) =>
-        Future.collect(in.map(performIO(_)).toSeq)
+        Future
+          .collect(in.map(performIO(_)).toSeq)
           .map(r => cbf().++=(r).result)
       case TransformWith(a, fA) =>
-        performIO(a)
-          .liftToTry.map {
+        performIO(a).liftToTry
+          .map {
             case Return(v) => Success(v)
             case Throw(t)  => Failure(t)
           }

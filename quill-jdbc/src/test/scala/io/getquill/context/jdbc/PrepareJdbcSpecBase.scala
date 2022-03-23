@@ -1,10 +1,10 @@
 package io.getquill.context.jdbc
-import java.sql.{ Connection, PreparedStatement, ResultSet }
+import java.sql.{Connection, PreparedStatement, ResultSet}
 
 import io.getquill.context.sql.ProductSpec
 import io.getquill.util.Using.Manager
 import org.scalactic.Equality
-import scala.util.{ Success, Failure }
+import scala.util.{Success, Failure}
 
 trait PrepareJdbcSpecBase extends ProductSpec {
 
@@ -18,9 +18,13 @@ trait PrepareJdbcSpecBase extends ProductSpec {
   def productExtractor: (ResultSet, Connection) => Product
 
   def withOrderedIds(products: List[Product]) =
-    products.zipWithIndex.map { case (product, id) => product.copy(id = id.toLong + 1) }
+    products.zipWithIndex.map { case (product, id) =>
+      product.copy(id = id.toLong + 1)
+    }
 
-  def singleInsert(conn: => Connection)(prep: Connection => PreparedStatement) = {
+  def singleInsert(
+      conn: => Connection
+  )(prep: Connection => PreparedStatement) = {
     val flag = Manager { use =>
       val c = use(conn)
       val s = use(prep(c))
@@ -32,7 +36,9 @@ trait PrepareJdbcSpecBase extends ProductSpec {
     }
   }
 
-  def batchInsert(conn: => Connection)(prep: Connection => List[PreparedStatement]) = {
+  def batchInsert(
+      conn: => Connection
+  )(prep: Connection => List[PreparedStatement]) = {
     val r = Manager { use =>
       val c = use(conn)
       val st = prep(c)
@@ -44,7 +50,9 @@ trait PrepareJdbcSpecBase extends ProductSpec {
     }
   }
 
-  def extractResults[T](conn: => Connection)(prep: Connection => PreparedStatement)(extractor: (ResultSet, Connection) => T) = {
+  def extractResults[T](conn: => Connection)(
+      prep: Connection => PreparedStatement
+  )(extractor: (ResultSet, Connection) => T) = {
     val r = Manager { use =>
       val c = use(conn)
       val st = use(prep(c))
@@ -57,7 +65,9 @@ trait PrepareJdbcSpecBase extends ProductSpec {
     }
   }
 
-  def extractProducts(conn: => Connection)(prep: Connection => PreparedStatement): List[Product] =
+  def extractProducts(conn: => Connection)(
+      prep: Connection => PreparedStatement
+  ): List[Product] =
     extractResults(conn)(prep)(productExtractor)
 
   def appendExecuteSequence(actions: => List[PreparedStatement]) = {

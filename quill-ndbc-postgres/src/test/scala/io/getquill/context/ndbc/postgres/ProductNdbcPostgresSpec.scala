@@ -1,6 +1,6 @@
 package io.getquill.context.ndbc.postgres
 
-import io.getquill.context.sql.{ Id, ProductSpec }
+import io.getquill.context.sql.{Id, ProductSpec}
 import io.trane.future.scala.Future
 
 class ProductNdbcPostgresSpec extends ProductSpec {
@@ -15,7 +15,13 @@ class ProductNdbcPostgresSpec extends ProductSpec {
 
   "Product" - {
     "Insert multiple products" in {
-      val inserted = get(Future.sequence(productEntries.map(product => context.run(productInsert(lift(product))))))
+      val inserted = get(
+        Future.sequence(
+          productEntries.map(product =>
+            context.run(productInsert(lift(product)))
+          )
+        )
+      )
       val product = get(context.run(productById(lift(inserted(2))))).head
       product.description mustEqual productEntries(2).description
       product.id mustEqual inserted(2)
@@ -32,7 +38,12 @@ class ProductNdbcPostgresSpec extends ProductSpec {
       val prd = Product(0L, "test1", 1L)
       val inserted = get {
         context.run {
-          product.insert(_.sku -> lift(prd.sku), _.description -> lift(prd.description)).returning(_.id)
+          product
+            .insert(
+              _.sku -> lift(prd.sku),
+              _.description -> lift(prd.description)
+            )
+            .returning(_.id)
         }
       }
       val returnedProduct = get(context.run(productById(lift(inserted)))).head
@@ -44,7 +55,12 @@ class ProductNdbcPostgresSpec extends ProductSpec {
     "Single insert with free variable and explicit quotation" in {
       val prd = Product(0L, "test2", 2L)
       val q1 = quote {
-        product.insert(_.sku -> lift(prd.sku), _.description -> lift(prd.description)).returning(_.id)
+        product
+          .insert(
+            _.sku -> lift(prd.sku),
+            _.description -> lift(prd.description)
+          )
+          .returning(_.id)
       }
       val inserted = get(context.run(q1))
       val returnedProduct = get(context.run(productById(lift(inserted)))).head
@@ -66,7 +82,12 @@ class ProductNdbcPostgresSpec extends ProductSpec {
       case class Product(id: Id, description: String, sku: Long)
       val prd = Product(Id(0L), "test2", 2L)
       val q1 = quote {
-        query[Product].insert(_.sku -> lift(prd.sku), _.description -> lift(prd.description)).returning(_.id)
+        query[Product]
+          .insert(
+            _.sku -> lift(prd.sku),
+            _.description -> lift(prd.description)
+          )
+          .returning(_.id)
       }
       get(context.run(q1)) mustBe a[Id]
     }

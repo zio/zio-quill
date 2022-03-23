@@ -2,7 +2,7 @@ package io.getquill.context.ndbc
 
 import scala.concurrent.duration.Duration
 import io.getquill.Spec
-import io.trane.future.scala.{ Await, Future, Promise }
+import io.trane.future.scala.{Await, Future, Promise}
 
 import scala.util.Try
 
@@ -58,6 +58,9 @@ class NdbcContextEffectSpec extends Spec {
   }
 
   "runs blockingly" in {
-    runBlocking(Future { Thread.sleep(100); "foo" }, Duration.Inf) mustEqual "foo"
+    runBlocking(
+      Future { Thread.sleep(100); "foo" },
+      Duration.Inf
+    ) mustEqual "foo"
   }
 }

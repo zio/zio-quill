@@ -1,6 +1,6 @@
 package io.getquill.context.finagle.postgres
 
-import com.twitter.util.{ Await, Future, Throw }
+import com.twitter.util.{Await, Future, Throw}
 
 import io.getquill.context.sql.ProductSpec
 
@@ -20,9 +20,11 @@ class TransactionSpec extends ProductSpec {
             context.run(productInsert(lift(p)))
           }
           Throw(_) <- context.transaction {
-            context.run(quote {
-              query[Product].insertValue(lift(p.copy(id = id)))
-            }).liftToTry
+            context
+              .run(quote {
+                query[Product].insertValue(lift(p.copy(id = id)))
+              })
+              .liftToTry
           }
         } yield id
       }

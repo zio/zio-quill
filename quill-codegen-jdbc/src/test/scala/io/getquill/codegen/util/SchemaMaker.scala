@@ -18,11 +18,18 @@ abstract class CodegenSpec extends AnyFreeSpec with SchemaMaker {
 
 object SchemaMaker extends SchemaMaker
 
-case class SchemaMakerCoordinates(dbPrefix: ConfigPrefix, naming: NamingStrategy, schemaConfig: SchemaConfig)
+case class SchemaMakerCoordinates(
+    dbPrefix: ConfigPrefix,
+    naming: NamingStrategy,
+    schemaConfig: SchemaConfig
+)
 
 trait SchemaMaker {
 
-  private[getquill] def withDatasource[T](schemaConfig: SchemaConfig, dbPrefix: ConfigPrefix)(testCode: DataSource with Closeable => T): T = {
+  private[getquill] def withDatasource[T](
+      schemaConfig: SchemaConfig,
+      dbPrefix: ConfigPrefix
+  )(testCode: DataSource with Closeable => T): T = {
     val ds = dbPrefix.makeDatasource
     val helper = new DbHelper(schemaConfig, dbPrefix, ds)
     DbHelper.dropTables(ds)

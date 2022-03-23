@@ -18,10 +18,13 @@ class JdbcEncodingSpec extends EncodingSpec {
 
   "encodes sets" in {
     testContext.run(query[EncodingTestEntity].delete)
-    testContext.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insertValue(e)))
-    val q = quote {
-      (set: Query[Int]) =>
-        query[EncodingTestEntity].filter(t => set.contains(t.v6))
+    testContext.run(
+      liftQuery(insertValues).foreach(e =>
+        query[EncodingTestEntity].insertValue(e)
+      )
+    )
+    val q = quote { (set: Query[Int]) =>
+      query[EncodingTestEntity].filter(t => set.contains(t.v6))
     }
     verify(testContext.run(q(liftQuery(insertValues.map(_.v6)))))
   }

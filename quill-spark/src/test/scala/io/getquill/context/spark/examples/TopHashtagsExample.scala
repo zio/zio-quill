@@ -80,7 +80,8 @@ object TopHashtagsExample extends App {
       }
   }
 
-  val tweets = List(Tweet("some #hashTAG #h2"), Tweet("dds #h2 #hashtag #h2 #h3")).toDS()
+  val tweets =
+    List(Tweet("some #hashTAG #h2"), Tweet("dds #h2 #hashtag #h2 #h3")).toDS()
 
   val rddR = rdd.topHashtags(tweets.rdd, 10).toList
   val dfR = dataframe.topHashtags(tweets.toDF(), 10).rdd.toLocalIterator.toList

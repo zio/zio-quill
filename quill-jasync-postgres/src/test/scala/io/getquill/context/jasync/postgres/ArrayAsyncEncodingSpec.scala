@@ -1,11 +1,15 @@
 package io.getquill.context.jasync.postgres
 
-import java.time.{ LocalDate, LocalDateTime }
-import java.util.{ Date, UUID }
+import java.time.{LocalDate, LocalDateTime}
+import java.util.{Date, UUID}
 
 import io.getquill.context.sql.EncodingTestType
 import io.getquill.context.sql.encoding.ArrayEncodingBaseSpec
-import org.joda.time.{ DateTime => JodaDateTime, LocalDate => JodaLocalDate, LocalDateTime => JodaLocalDateTime }
+import org.joda.time.{
+  DateTime => JodaDateTime,
+  LocalDate => JodaLocalDate,
+  LocalDateTime => JodaLocalDateTime
+}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -23,7 +27,10 @@ class ArrayAsyncEncodingSpec extends ArrayEncodingBaseSpec {
   }
 
   "Joda times" in {
-    case class JodaTimes(timestamps: Seq[JodaLocalDateTime], dates: Seq[JodaLocalDate])
+    case class JodaTimes(
+        timestamps: Seq[JodaLocalDateTime],
+        dates: Seq[JodaLocalDate]
+    )
     val jE = JodaTimes(Seq(JodaLocalDateTime.now()), Seq(JodaLocalDate.now()))
     val jQ = quote(querySchema[JodaTimes]("ArraysTestEntity"))
     await(ctx.run(jQ.insertValue(lift(jE))))
@@ -60,7 +67,9 @@ class ArrayAsyncEncodingSpec extends ArrayEncodingBaseSpec {
   "Catch invalid decoders" in {
     val newCtx = new TestContext {
       // avoid transforming from org.joda.time.LocalDate to java.time.LocalDate
-      override implicit def arrayLocalDateDecoder[Col <: Seq[LocalDate]](implicit bf: CBF[LocalDate, Col]): Decoder[Col] =
+      override implicit def arrayLocalDateDecoder[Col <: Seq[LocalDate]](
+          implicit bf: CBF[LocalDate, Col]
+      ): Decoder[Col] =
         arrayDecoder[LocalDate, LocalDate, Col](identity)
     }
     import newCtx._
@@ -84,35 +93,35 @@ class ArrayAsyncEncodingSpec extends ArrayEncodingBaseSpec {
   // there was guarenteed to be information there due to ordering of build artifacts but not anymore.
   "fail if found not an array" in {
     case class RealEncodingTestEntity(
-      v1:  String,
-      v2:  BigDecimal,
-      v3:  Boolean,
-      v4:  Byte,
-      v5:  Short,
-      v6:  Int,
-      v7:  Long,
-      v8:  Float,
-      v9:  Double,
-      v10: Array[Byte],
-      v11: Date,
-      v12: EncodingTestType,
-      v13: LocalDate,
-      v14: UUID,
-      o1:  Option[String],
-      o2:  Option[BigDecimal],
-      o3:  Option[Boolean],
-      o4:  Option[Byte],
-      o5:  Option[Short],
-      o6:  Option[Int],
-      o7:  Option[Long],
-      o8:  Option[Float],
-      o9:  Option[Double],
-      o10: Option[Array[Byte]],
-      o11: Option[Date],
-      o12: Option[EncodingTestType],
-      o13: Option[LocalDate],
-      o14: Option[UUID],
-      o15: Option[io.getquill.context.sql.Number]
+        v1: String,
+        v2: BigDecimal,
+        v3: Boolean,
+        v4: Byte,
+        v5: Short,
+        v6: Int,
+        v7: Long,
+        v8: Float,
+        v9: Double,
+        v10: Array[Byte],
+        v11: Date,
+        v12: EncodingTestType,
+        v13: LocalDate,
+        v14: UUID,
+        o1: Option[String],
+        o2: Option[BigDecimal],
+        o3: Option[Boolean],
+        o4: Option[Byte],
+        o5: Option[Short],
+        o6: Option[Int],
+        o7: Option[Long],
+        o8: Option[Float],
+        o9: Option[Double],
+        o10: Option[Array[Byte]],
+        o11: Option[Date],
+        o12: Option[EncodingTestType],
+        o13: Option[LocalDate],
+        o14: Option[UUID],
+        o15: Option[io.getquill.context.sql.Number]
     )
 
     val insertValue =

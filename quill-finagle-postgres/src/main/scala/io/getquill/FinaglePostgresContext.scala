@@ -1,30 +1,35 @@
 package io.getquill
 
-import com.twitter.util.{ Await, Future, Local }
+import com.twitter.util.{Await, Future, Local}
 import com.twitter.finagle.postgres._
 import com.typesafe.config.Config
-import io.getquill.ReturnAction.{ ReturnColumns, ReturnNothing, ReturnRecord }
+import io.getquill.ReturnAction.{ReturnColumns, ReturnNothing, ReturnRecord}
 import io.getquill.context.finagle.postgres._
 import io.getquill.context.sql.SqlContext
-import io.getquill.util.{ ContextLogger, LoadConfig }
+import io.getquill.util.{ContextLogger, LoadConfig}
 
 import scala.util.Try
-import io.getquill.context.{ Context, ExecutionInfo, TranslateContext }
+import io.getquill.context.{Context, ExecutionInfo, TranslateContext}
 import io.getquill.monad.TwitterFutureIOMonad
 
-class FinaglePostgresContext[N <: NamingStrategy](val naming: N, client: PostgresClient)
-  extends Context[FinaglePostgresDialect, N]
-  with TranslateContext
-  with SqlContext[FinaglePostgresDialect, N]
-  with FinaglePostgresEncoders
-  with FinaglePostgresDecoders
-  with TwitterFutureIOMonad {
+class FinaglePostgresContext[N <: NamingStrategy](
+    val naming: N,
+    client: PostgresClient
+) extends Context[FinaglePostgresDialect, N]
+    with TranslateContext
+    with SqlContext[FinaglePostgresDialect, N]
+    with FinaglePostgresEncoders
+    with FinaglePostgresDecoders
+    with TwitterFutureIOMonad {
 
   import FinaglePostgresContext._
 
-  def this(naming: N, config: FinaglePostgresContextConfig) = this(naming, config.client)
-  def this(naming: N, config: Config) = this(naming, FinaglePostgresContextConfig(config))
-  def this(naming: N, configPrefix: String) = this(naming, LoadConfig(configPrefix))
+  def this(naming: N, config: FinaglePostgresContextConfig) =
+    this(naming, config.client)
+  def this(naming: N, config: Config) =
+    this(naming, FinaglePostgresContextConfig(config))
+  def this(naming: N, configPrefix: String) =
+    this(naming, LoadConfig(configPrefix))
 
   val idiom = FinaglePostgresDialect
 
@@ -50,7 +55,7 @@ class FinaglePostgresContext[N <: NamingStrategy](val naming: N, client: Postgre
   private def expandAction(sql: String, returningAction: ReturnAction): String =
     returningAction match {
       // The Postgres dialect will create SQL that has a 'RETURNING' clause so we don't have to add one.
-      case ReturnRecord           => s"$sql"
+      case ReturnRecord => s"$sql"
       // The Postgres dialect will not actually use these below variants but in case we decide to plug
       // in some other dialect into this context...
       case ReturnColumns(columns) => s"$sql RETURNING ${columns.mkString(", ")}"
@@ -69,59 +74,101 @@ class FinaglePostgresContext[N <: NamingStrategy](val naming: N, client: Postgre
       f
   }
 
-  override def performIO[T](io: IO[T, _], transactional: Boolean = false): Result[T] =
+  override def performIO[T](
+      io: IO[T, _],
+      transactional: Boolean = false
+  ): Result[T] =
     transactional match {
       case false => super.performIO(io)
       case true  => transaction(super.performIO(io))
     }
 
-  def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner): Future[List[T]] = {
+  def executeQuery[T](
+      sql: String,
+      prepare: Prepare = identityPrepare,
+      extractor: Extractor[T] = identityExtractor
+  )(info: ExecutionInfo, dc: Runner): Future[List[T]] = {
     val (params, prepared) = prepare(Nil, ())
     logger.logQuery(sql, params)
-    withClient(_.prepareAndQuery(sql, prepared: _*)(row => extractor(row, ())).map(_.toList))
+    withClient(
+      _.prepareAndQuery(sql, prepared: _*)(row => extractor(row, ()))
+        .map(_.toList)
+    )
   }
 
-  def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner): Future[T] =
+  def executeQuerySingle[T](
+      sql: String,
+      prepare: Prepare = identityPrepare,
+      extractor: Extractor[T] = identityExtractor
+  )(info: ExecutionInfo, dc: Runner): Future[T] =
     executeQuery(sql, prepare, extractor)(info, dc).map(handleSingleResult)
 
-  def executeAction(sql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: Runner): Future[Long] = {
+  def executeAction(
+      sql: String,
+      prepare: Prepare = identityPrepare
+  )(info: ExecutionInfo, dc: Runner): Future[Long] = {
     val (params, prepared) = prepare(Nil, ())
     logger.logQuery(sql, params)
     withClient(_.prepareAndExecute(sql, prepared: _*)).map(_.toLong)
   }
 
-  def executeBatchAction[B](groups: List[BatchGroup])(info: ExecutionInfo, dc: Runner): Future[List[Long]] = Future.collect {
-    groups.map {
-      case BatchGroup(sql, prepare) =>
-        prepare.foldLeft(Future.value(List.newBuilder[Long])) {
-          case (acc, prepare) =>
-            acc.flatMap { list =>
-              executeAction(sql, prepare)(info, dc).map(list += _)
-            }
-        }.map(_.result())
-    }
-  }.map(_.flatten.toList)
-
-  def executeActionReturning[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T], returningAction: ReturnAction)(info: ExecutionInfo, dc: Runner): Future[T] = {
-    val (params, prepared) = prepare(Nil, ())
-    logger.logQuery(sql, params)
-    withClient(_.prepareAndQuery(expandAction(sql, returningAction), prepared: _*)(row => extractor(row, ()))).map(v => handleSingleResult(v.toList))
-  }
-
-  def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T])(info: ExecutionInfo, dc: Runner): Future[List[T]] =
-    Future.collect {
-      groups.map {
-        case BatchGroupReturning(sql, column, prepare) =>
-          prepare.foldLeft(Future.value(List.newBuilder[T])) {
+  def executeBatchAction[B](
+      groups: List[BatchGroup]
+  )(info: ExecutionInfo, dc: Runner): Future[List[Long]] = Future
+    .collect {
+      groups.map { case BatchGroup(sql, prepare) =>
+        prepare
+          .foldLeft(Future.value(List.newBuilder[Long])) {
             case (acc, prepare) =>
               acc.flatMap { list =>
-                executeActionReturning(sql, prepare, extractor, column)(info, dc).map(list += _)
+                executeAction(sql, prepare)(info, dc).map(list += _)
               }
-          }.map(_.result())
+          }
+          .map(_.result())
       }
-    }.map(_.flatten.toList)
+    }
+    .map(_.flatten.toList)
 
-  override private[getquill] def prepareParams(statement: String, prepare: Prepare): Seq[String] = {
+  def executeActionReturning[T](
+      sql: String,
+      prepare: Prepare = identityPrepare,
+      extractor: Extractor[T],
+      returningAction: ReturnAction
+  )(info: ExecutionInfo, dc: Runner): Future[T] = {
+    val (params, prepared) = prepare(Nil, ())
+    logger.logQuery(sql, params)
+    withClient(
+      _.prepareAndQuery(expandAction(sql, returningAction), prepared: _*)(row =>
+        extractor(row, ())
+      )
+    ).map(v => handleSingleResult(v.toList))
+  }
+
+  def executeBatchActionReturning[T](
+      groups: List[BatchGroupReturning],
+      extractor: Extractor[T]
+  )(info: ExecutionInfo, dc: Runner): Future[List[T]] =
+    Future
+      .collect {
+        groups.map { case BatchGroupReturning(sql, column, prepare) =>
+          prepare
+            .foldLeft(Future.value(List.newBuilder[T])) { case (acc, prepare) =>
+              acc.flatMap { list =>
+                executeActionReturning(sql, prepare, extractor, column)(
+                  info,
+                  dc
+                ).map(list += _)
+              }
+            }
+            .map(_.result())
+        }
+      }
+      .map(_.flatten.toList)
+
+  override private[getquill] def prepareParams(
+      statement: String,
+      prepare: Prepare
+  ): Seq[String] = {
     prepare(Nil, ())._2.map(param => prepareParam(param.encode()))
   }
 

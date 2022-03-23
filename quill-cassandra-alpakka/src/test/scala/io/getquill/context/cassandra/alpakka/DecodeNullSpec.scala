@@ -5,7 +5,8 @@ class DecodeNullSpec extends CassandraAlpakkaSpec {
   "no default values when reading null" in {
 
     import testDB._
-    val writeEntities = quote(querySchema[DecodeNullTestWriteEntity]("DecodeNullTestEntity"))
+    val writeEntities =
+      quote(querySchema[DecodeNullTestWriteEntity]("DecodeNullTestEntity"))
 
     val result =
       for {

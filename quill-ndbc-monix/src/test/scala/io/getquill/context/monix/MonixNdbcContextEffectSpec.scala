@@ -2,7 +2,7 @@ package io.getquill.context.monix
 
 import scala.concurrent.duration.Duration
 import io.getquill.Spec
-import io.trane.future.scala.{ Await, Future }
+import io.trane.future.scala.{Await, Future}
 import io.getquill.ndbc.TraneFutureConverters._
 import monix.eval.Task
 import monix.execution.Scheduler.Implicits.global
@@ -49,7 +49,10 @@ class MonixNdbcContextEffectSpec extends Spec {
   }
 
   "converts to Scala Future correctly" in {
-    Await.result(toFuture(Task("hello"), monix.execution.Scheduler.Implicits.global), Duration.Inf) mustEqual "hello"
+    Await.result(
+      toFuture(Task("hello"), monix.execution.Scheduler.Implicits.global),
+      Duration.Inf
+    ) mustEqual "hello"
   }
 
   "creates Future from deferred Future" in {

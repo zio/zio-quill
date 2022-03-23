@@ -34,7 +34,7 @@ trait StatefulTransformer[T] {
         val (ct, ctt) = btt.apply(c)
         (If(at, bt, ct), ctt)
 
-      case l: Dynamic  => (l, this)
+      case l: Dynamic => (l, this)
 
       case l: External => (l, this)
 
@@ -300,10 +300,11 @@ trait StatefulTransformer[T] {
         (OnConflict.Update(at), att)
     }
 
-  def apply[U, R](list: List[U])(f: StatefulTransformer[T] => U => (R, StatefulTransformer[T])) =
-    list.foldLeft((List[R](), this)) {
-      case ((values, t), v) =>
-        val (vt, vtt) = f(t)(v)
-        (values :+ vt, vtt)
+  def apply[U, R](list: List[U])(
+      f: StatefulTransformer[T] => U => (R, StatefulTransformer[T])
+  ) =
+    list.foldLeft((List[R](), this)) { case ((values, t), v) =>
+      val (vt, vtt) = f(t)(v)
+      (values :+ vt, vtt)
     }
 }

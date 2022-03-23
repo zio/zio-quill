@@ -16,10 +16,12 @@ case class NdbcContextConfig(config: Config) {
   }
 
   def dataSource =
-    try
-      DataSource.fromProperties("ndbc", configProperties)
+    try DataSource.fromProperties("ndbc", configProperties)
     catch {
       case NonFatal(ex) =>
-        throw new IllegalStateException(s"Failed to load data source for config: '$config'", ex)
+        throw new IllegalStateException(
+          s"Failed to load data source for config: '$config'",
+          ex
+        )
     }
 }

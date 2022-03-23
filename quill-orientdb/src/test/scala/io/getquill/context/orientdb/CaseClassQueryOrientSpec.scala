@@ -7,7 +7,14 @@ class CaseClassQueryOrientSpec extends Spec {
   val testSyncDB = orientdb.testSyncDB
   import testSyncDB._
 
-  case class Contact(id: Int, firstName: String, lastName: String, age: Int, addressFk: Int, extraInfo: String)
+  case class Contact(
+      id: Int,
+      firstName: String,
+      lastName: String,
+      age: Int,
+      addressFk: Int,
+      extraInfo: String
+  )
   case class Address(id: Int, street: String, zip: Int, otherExtraInfo: String)
 
   val peopleInsert =
@@ -29,10 +36,18 @@ class CaseClassQueryOrientSpec extends Spec {
   )
 
   case class ContactSimplified(firstName: String, lastName: String, age: Int)
-  case class AddressableContact(firstName: String, lastName: String, age: Int, street: String, zip: Int)
+  case class AddressableContact(
+      firstName: String,
+      lastName: String,
+      age: Int,
+      street: String,
+      zip: Int
+  )
 
   val `Ex 1 CaseClass Record Output` = quote {
-    query[Contact].map(p => new ContactSimplified(p.firstName, p.lastName, p.age))
+    query[Contact].map(p =>
+      new ContactSimplified(p.firstName, p.lastName, p.age)
+    )
   }
 
   val `Ex 1 CaseClass Record Output expected result` = List(
@@ -60,10 +75,14 @@ class CaseClassQueryOrientSpec extends Spec {
   }
 
   "Example 1 - Single Case Class Mapping" in {
-    testSyncDB.run(`Ex 1 CaseClass Record Output`) must contain theSameElementsAs `Ex 1 CaseClass Record Output expected result`
+    testSyncDB.run(
+      `Ex 1 CaseClass Record Output`
+    ) must contain theSameElementsAs `Ex 1 CaseClass Record Output expected result`
   }
 
   "Example 2 - Inline Record as Filter" in {
-    testSyncDB.run(`Ex 3 Inline Record Usage`) must contain theSameElementsAs `Ex 3 Inline Record Usage exepected result`
+    testSyncDB.run(
+      `Ex 3 Inline Record Usage`
+    ) must contain theSameElementsAs `Ex 3 Inline Record Usage exepected result`
   }
 }

@@ -20,7 +20,7 @@ object +||+ {
   def unapply(a: Ast): Option[(Ast, Ast)] = {
     a match {
       case BinaryOperation(one, BooleanOperator.`||`, two) => Some((one, two))
-      case _ => None
+      case _                                               => None
     }
   }
 }
@@ -29,7 +29,7 @@ object +&&+ {
   def unapply(a: Ast): Option[(Ast, Ast)] = {
     a match {
       case BinaryOperation(one, BooleanOperator.`&&`, two) => Some((one, two))
-      case _ => None
+      case _                                               => None
     }
   }
 }
@@ -38,7 +38,7 @@ object +==+ {
   def unapply(a: Ast): Option[(Ast, Ast)] = {
     a match {
       case BinaryOperation(one, EqualityOperator.`_==`, two) => Some((one, two))
-      case _ => None
+      case _                                                 => None
     }
   }
 }
@@ -47,7 +47,7 @@ object +!=+ {
   def unapply(a: Ast): Option[(Ast, Ast)] = {
     a match {
       case BinaryOperation(one, EqualityOperator.`_!=`, two) => Some((one, two))
-      case _ => None
+      case _                                                 => None
     }
   }
 }
@@ -57,7 +57,8 @@ object IsNotNullCheck {
 
   def unapply(ast: Ast): Option[Ast] = {
     ast match {
-      case BinaryOperation(cond, EqualityOperator.`_!=`, NullValue) => Some(cond)
+      case BinaryOperation(cond, EqualityOperator.`_!=`, NullValue) =>
+        Some(cond)
       case _ => None
     }
   }
@@ -68,7 +69,8 @@ object IsNullCheck {
 
   def unapply(ast: Ast): Option[Ast] = {
     ast match {
-      case BinaryOperation(cond, EqualityOperator.`_==`, NullValue) => Some(cond)
+      case BinaryOperation(cond, EqualityOperator.`_==`, NullValue) =>
+        Some(cond)
       case _ => None
     }
   }
@@ -102,5 +104,6 @@ object PropertyOrCore {
 /* Things that can be on the inside of a series of nested properties */
 object Core {
   def unapply(ast: Ast): Boolean =
-    ast.isInstanceOf[Ident] || ast.isInstanceOf[Infix] || ast.isInstanceOf[Constant]
+    ast.isInstanceOf[Ident] || ast.isInstanceOf[Infix] || ast
+      .isInstanceOf[Constant]
 }

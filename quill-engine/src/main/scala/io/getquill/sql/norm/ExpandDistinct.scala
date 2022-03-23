@@ -26,10 +26,13 @@ object ExpandDistinct {
           case Distinct(Map(q, x, cc @ Tuple(values))) =>
             val newIdent = Ident(x.name, valueQuat(cc.quat))
             trace"ExpandDistinct Map(q, _, Tuple)" andReturn
-              Map(Distinct(Map(q, x, cc)), newIdent,
-                Tuple(values.zipWithIndex.map {
-                  case (_, i) => Property(newIdent, s"_${i + 1}")
-                }))
+              Map(
+                Distinct(Map(q, x, cc)),
+                newIdent,
+                Tuple(values.zipWithIndex.map { case (_, i) =>
+                  Property(newIdent, s"_${i + 1}")
+                })
+              )
 
           // Situations like this:
           //    case class AdHocCaseClass(id: Int, name: String)
@@ -40,16 +43,21 @@ object ExpandDistinct {
           case Distinct(Map(q, x, cc @ CaseClass(values))) =>
             val newIdent = Ident(x.name, valueQuat(cc.quat))
             trace"ExpandDistinct Distinct(Map(q, _, CaseClass))" andReturn
-              Map(Distinct(Map(q, x, cc)), newIdent,
-                CaseClass(values.map {
-                  case (name, _) => (name, Property(newIdent, name))
-                }))
+              Map(
+                Distinct(Map(q, x, cc)),
+                newIdent,
+                CaseClass(values.map { case (name, _) =>
+                  (name, Property(newIdent, name))
+                })
+              )
 
           // Need some special handling to address issues with distinct returning a single embedded entity i.e:
           // query[Parent].map(p => p.emb).distinct.map(e => (e.name, e.id))
           // cannot treat such a case normally or "confused" queries will result e.g:
           // SELECT p.embname, p.embid FROM (SELECT DISTINCT emb.name /* Where the heck is 'emb' coming from? */ AS embname, emb.id AS embid FROM Parent p) AS p
-          case d @ Distinct(Map(q, x, p @ Property.Opinionated(_, _, _, Hidden))) =>
+          case d @ Distinct(
+                Map(q, x, p @ Property.Opinionated(_, _, _, Hidden))
+              ) =>
             trace"ExpandDistinct Keep Distinct(Map(q, _, Property(Hidden)))" andReturn d
 
           // This was a buggy clause that was not well typed. Not needed anymore since we have SheathLeafClauses
@@ -69,7 +77,9 @@ object ExpandDistinct {
           // such as "ORDER BY tableIdent" etc...
           case Distinct(Map(q, x, p)) =>
             val newMap = Map(q, x, Tuple(List(p)))
-            val newQuat = Quat.Tuple(valueQuat(p.quat)) // force quat recomputation for perf purposes
+            val newQuat = Quat.Tuple(
+              valueQuat(p.quat)
+            ) // force quat recomputation for perf purposes
             val newIdent = Ident(x.name, newQuat)
             trace"ExpandDistinct Distinct(Map(other))" andReturn
               Map(Distinct(newMap), newIdent, Property(newIdent, "_1"))

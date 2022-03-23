@@ -45,7 +45,9 @@ class ComplexQuerySpec extends Spec with BeforeAndAfter {
       )
 
       testContext.run(liftQuery(testEntities).foreach(p => testEntityInsert(p)))
-      testContext.run(liftQuery(testEntities2).foreach(p => testEntity2Insert(p)))
+      testContext.run(
+        liftQuery(testEntities2).foreach(p => testEntity2Insert(p))
+      )
 
       val q = quote {
         query[TestEntity]

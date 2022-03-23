@@ -1,6 +1,6 @@
 package io.getquill.examples
 
-import io.getquill.{ Literal, PostgresZioJdbcContext }
+import io.getquill.{Literal, PostgresZioJdbcContext}
 import io.getquill.context.ZioJdbc._
 import zio.Runtime
 
@@ -18,7 +18,8 @@ object PlainApp {
       query[Person].filter(p => p.name == "Alex")
     }
     val qzio =
-      MyPostgresContext.run(people)
+      MyPostgresContext
+        .run(people)
         .tap(result => zio.Task(println(result.toString)))
         .provideLayer(zioDS)
 

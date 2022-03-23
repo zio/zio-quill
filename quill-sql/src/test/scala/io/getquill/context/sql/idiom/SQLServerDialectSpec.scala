@@ -6,7 +6,9 @@ import io.getquill.idiom.StringToken
 class SQLServerDialectSpec extends Spec {
 
   "emptySetContainsToken" in {
-    SQLServerDialect.emptySetContainsToken(StringToken("w/e")) mustBe StringToken("1 <> 1")
+    SQLServerDialect.emptySetContainsToken(
+      StringToken("w/e")
+    ) mustBe StringToken("1 <> 1")
   }
 
   val ctx = new SqlMirrorContext(SQLServerDialect, Literal) with TestEntities
@@ -58,7 +60,11 @@ class SQLServerDialectSpec extends Spec {
       }
     }
     "boolean values and expressions together" in {
-      ctx.run(qr4.filter(t => true).filter(t => false).map(t => (t.i, false, true))).string mustEqual
+      ctx
+        .run(
+          qr4.filter(t => true).filter(t => false).map(t => (t.i, false, true))
+        )
+        .string mustEqual
         "SELECT t.i AS _1, 0 AS _2, 1 AS _3 FROM TestEntity4 t WHERE 1 = 1 AND 1 = 0"
     }
     "if" - {
@@ -72,7 +78,10 @@ class SQLServerDialectSpec extends Spec {
       "nested conditions" - {
         "inside then" in {
           val q = quote {
-            qr1.map(t => if (true) { if (false) true else false } else true)
+            qr1.map(t =>
+              if (true) { if (false) true else false }
+              else true
+            )
           }
           ctx.run(q).string mustEqual
             "SELECT CASE WHEN 1 = 1 THEN CASE WHEN 1 = 0 THEN 1 ELSE 0 END ELSE 1 END FROM TestEntity t"
@@ -86,7 +95,10 @@ class SQLServerDialectSpec extends Spec {
         }
         "inside both" in {
           val q = quote {
-            qr1.map(t => if (true) { if (false) true else false } else { if (true) false else true })
+            qr1.map(t =>
+              if (true) { if (false) true else false }
+              else { if (true) false else true }
+            )
           }
           ctx.run(q).string mustEqual
             "SELECT CASE WHEN 1 = 1 THEN CASE WHEN 1 = 0 THEN 1 ELSE 0 END WHEN 1 = 1 THEN 0 ELSE 1 END FROM TestEntity t"
@@ -136,14 +148,18 @@ class SQLServerDialectSpec extends Spec {
       }
       "with multi column table" in {
         val q = quote {
-          qr1.insertValue(lift(TestEntity("s", 0, 0L, Some(3), true))).returning(r => (r.i, r.l))
+          qr1
+            .insertValue(lift(TestEntity("s", 0, 0L, Some(3), true)))
+            .returning(r => (r.i, r.l))
         }
         ctx.run(q).string mustEqual
           "INSERT INTO TestEntity (s,i,l,o,b) OUTPUT INSERTED.i, INSERTED.l VALUES (?, ?, ?, ?, ?)"
       }
       "with multiple fields + operations" in {
         val q = quote {
-          qr1.insertValue(lift(TestEntity("s", 1, 2L, Some(3), true))).returning(r => (r.i, r.l + 1))
+          qr1
+            .insertValue(lift(TestEntity("s", 1, 2L, Some(3), true)))
+            .returning(r => (r.i, r.l + 1))
         }
         ctx.run(q).string mustEqual
           "INSERT INTO TestEntity (s,i,l,o,b) OUTPUT INSERTED.i, INSERTED.l + 1 VALUES (?, ?, ?, ?, ?)"
@@ -163,14 +179,18 @@ class SQLServerDialectSpec extends Spec {
       }
       "with multi column table" in {
         val q = quote {
-          qr1.insertValue(lift(TestEntity("s", 0, 0L, Some(3), true))).returningGenerated(r => (r.i, r.l))
+          qr1
+            .insertValue(lift(TestEntity("s", 0, 0L, Some(3), true)))
+            .returningGenerated(r => (r.i, r.l))
         }
         ctx.run(q).string mustEqual
           "INSERT INTO TestEntity (s,o,b) OUTPUT INSERTED.i, INSERTED.l VALUES (?, ?, ?)"
       }
       "with multiple fields + operations" in {
         val q = quote {
-          qr1.insertValue(lift(TestEntity("s", 0, 0L, Some(3), true))).returningGenerated(r => (r.i, r.l + 1))
+          qr1
+            .insertValue(lift(TestEntity("s", 0, 0L, Some(3), true)))
+            .returningGenerated(r => (r.i, r.l + 1))
         }
         ctx.run(q).string mustEqual
           "INSERT INTO TestEntity (s,o,b) OUTPUT INSERTED.i, INSERTED.l + 1 VALUES (?, ?, ?)"

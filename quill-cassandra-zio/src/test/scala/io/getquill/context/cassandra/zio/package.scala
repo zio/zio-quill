@@ -1,7 +1,7 @@
 package io.getquill.context.cassandra
-import io.getquill.{ CassandraZioContext, Literal }
+import io.getquill.{CassandraZioContext, Literal}
 
 package object zio {
-  lazy val testZioDB = new CassandraZioContext(Literal) with CassandraTestEntities
+  lazy val testZioDB = new CassandraZioContext(Literal)
+    with CassandraTestEntities
 }
-

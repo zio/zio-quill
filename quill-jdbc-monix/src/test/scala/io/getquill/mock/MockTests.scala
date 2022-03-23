@@ -5,7 +5,7 @@ import java.sql._
 
 import io.getquill.context.monix.MonixJdbcContext.EffectWrapper
 import javax.sql.DataSource
-import io.getquill.{ Literal, PostgresMonixJdbcContext, Spec }
+import io.getquill.{Literal, PostgresMonixJdbcContext, Spec}
 import monix.eval.Task
 import monix.execution.Scheduler
 import org.mockito.scalatest.AsyncMockitoSugar
@@ -15,7 +15,7 @@ import scala.reflect.ClassTag
 import scala.util.Try
 
 class MockTests extends Spec with AsyncMockitoSugar {
-  import scala.reflect.runtime.{ universe => ru }
+  import scala.reflect.runtime.{universe => ru}
   implicit val scheduler = Scheduler.io()
 
   object MockResultSet {
@@ -36,7 +36,9 @@ class MockTests extends Spec with AsyncMockitoSugar {
         getIndex(i).asInstanceOf[String]
       })
 
-      when(rs.getInt(any[Int])) thenAnswer ((i: Int) => { getIndex(i).asInstanceOf[Int] })
+      when(rs.getInt(any[Int])) thenAnswer ((i: Int) => {
+        getIndex(i).asInstanceOf[Int]
+      })
 
       rs
     }
@@ -62,7 +64,8 @@ class MockTests extends Spec with AsyncMockitoSugar {
     when(stmt.executeQuery()) thenReturn rs
     when(conn.getAutoCommit) thenReturn true
 
-    val ctx = new PostgresMonixJdbcContext(Literal, ds, EffectWrapper.using(scheduler))
+    val ctx =
+      new PostgresMonixJdbcContext(Literal, ds, EffectWrapper.using(scheduler))
     import ctx._
 
     val results =
@@ -97,7 +100,8 @@ class MockTests extends Spec with AsyncMockitoSugar {
     when(ds.getConnection) thenReturn conn
     when(conn.getAutoCommit) thenThrow (new SQLException(msg))
 
-    val ctx = new PostgresMonixJdbcContext(Literal, ds, EffectWrapper.using(scheduler))
+    val ctx =
+      new PostgresMonixJdbcContext(Literal, ds, EffectWrapper.using(scheduler))
     import ctx._
 
     val results =
@@ -130,9 +134,12 @@ class MockTests extends Spec with AsyncMockitoSugar {
     when(conn.prepareStatement(any[String], any[Int], any[Int])) thenReturn stmt
     when(stmt.executeQuery()) thenReturn rs
     when(conn.getAutoCommit) thenReturn true
-    when(conn.setAutoCommit(any[Boolean])) thenAnswer ((f: Boolean) => ()) andThenThrow (new SQLException(msg))
+    when(conn.setAutoCommit(any[Boolean])) thenAnswer ((f: Boolean) =>
+      ()
+    ) andThenThrow (new SQLException(msg))
 
-    val ctx = new PostgresMonixJdbcContext(Literal, ds, EffectWrapper.using(scheduler))
+    val ctx =
+      new PostgresMonixJdbcContext(Literal, ds, EffectWrapper.using(scheduler))
     import ctx._
 
     // In this case, instead of catching the error inside the observable, let it propogate to the top
@@ -175,11 +182,15 @@ class MockTests extends Spec with AsyncMockitoSugar {
     when(conn.prepareStatement(any[String], any[Int], any[Int])) thenReturn stmt
     when(stmt.executeQuery()) thenReturn rs
     when(conn.getAutoCommit) thenReturn true
-    when(conn.setAutoCommit(any[Boolean])) thenAnswer ((f: Boolean) => ()) andThenThrow (new SQLException(msg))
+    when(conn.setAutoCommit(any[Boolean])) thenAnswer ((f: Boolean) =>
+      ()
+    ) andThenThrow (new SQLException(msg))
 
     val runner = new EffectWrapper {
-      override def schedule[T](t: Task[T]): Task[T] = t.executeOn(scheduler, true)
-      override def boundary[T](t: Task[T]): Task[T] = t.executeOn(scheduler, true)
+      override def schedule[T](t: Task[T]): Task[T] =
+        t.executeOn(scheduler, true)
+      override def boundary[T](t: Task[T]): Task[T] =
+        t.executeOn(scheduler, true)
       override def wrapClose(t: => Unit): Task[Unit] =
         Task(t).onErrorHandle[Unit](e => ())
     }
