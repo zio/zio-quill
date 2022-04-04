@@ -1,10 +1,10 @@
 package io.getquill.context.zio.jasync
 
-import java.time.{ LocalDate, LocalDateTime }
+import java.time.{LocalDate, LocalDateTime, ZoneId}
 import java.util
 import java.util.Date
 import io.getquill.context.sql.encoding.ArrayEncoding
-import io.getquill.context.zio.{ PostgresZioJAsyncContext, SqlTypes }
+import io.getquill.context.zio.{PostgresZioJAsyncContext, SqlTypes}
 import io.getquill.util.Messages.fail
 
 import scala.reflect.ClassTag
@@ -23,7 +23,7 @@ trait ArrayDecoders extends ArrayEncoding {
   implicit def arrayLongDecoder[Col <: Seq[Long]](implicit bf: CBF[Long, Col]): Decoder[Col] = arrayRawEncoder[Long, Col]
   implicit def arrayFloatDecoder[Col <: Seq[Float]](implicit bf: CBF[Float, Col]): Decoder[Col] = arrayDecoder[Double, Float, Col](_.toFloat)
   implicit def arrayDoubleDecoder[Col <: Seq[Double]](implicit bf: CBF[Double, Col]): Decoder[Col] = arrayRawEncoder[Double, Col]
-  implicit def arrayDateDecoder[Col <: Seq[Date]](implicit bf: CBF[Date, Col]): Decoder[Col] = arrayRawEncoder[Date, Col]
+  implicit def arrayDateDecoder[Col <: Seq[Date]](implicit bf: CBF[Date, Col]): Decoder[Col] = arrayDecoder[LocalDateTime, Date, Col](d => Date.from(d.atZone(ZoneId.systemDefault()).toInstant))
   implicit def arrayLocalDateDecoder[Col <: Seq[LocalDate]](implicit bf: CBF[LocalDate, Col]): Decoder[Col] = arrayRawEncoder[LocalDate, Col]
   implicit def arrayLocalDateTimeDecoder[Col <: Seq[LocalDateTime]](implicit bf: CBF[LocalDateTime, Col]): Decoder[Col] = arrayRawEncoder[LocalDateTime, Col]
 
