@@ -127,7 +127,7 @@ trait Decoders {
 
   implicit val dateDecoder: Decoder[Date] = decoder[Date]({
     case date: LocalDateTime => Date.from(date.toInstant(ZoneOffset.UTC))
-    case date: LocalDate => Date.from(date.atStartOfDay.toInstant(ZoneOffset.UTC))
+    case date: LocalDate     => Date.from(date.atStartOfDay.toInstant(ZoneOffset.UTC))
   }, SqlTypes.TIMESTAMP)
   implicit val localDateDecoder: Decoder[LocalDate] = decoder[LocalDate](PartialFunction.empty, SqlTypes.DATE)
   implicit val localDateTimeDecoder: Decoder[LocalDateTime] = decoder[LocalDateTime](PartialFunction.empty, SqlTypes.TIMESTAMP)
