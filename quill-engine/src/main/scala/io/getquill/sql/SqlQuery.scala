@@ -32,6 +32,13 @@ sealed trait SetOperation
 case object UnionOperation extends SetOperation
 case object UnionAllOperation extends SetOperation
 
+sealed trait DistinctKind { def isDistinct: Boolean }
+case object DistinctKind {
+  case object Distinct extends DistinctKind { val isDistinct: Boolean = true }
+  case class DistinctOn(props: List[Ast]) extends DistinctKind { val isDistinct: Boolean = true }
+  case object None extends DistinctKind { val isDistinct: Boolean = false }
+}
+
 case class SetOperationSqlQuery(
   a:  SqlQuery,
   op: SetOperation,
@@ -59,7 +66,7 @@ case class FlattenSqlQuery(
   limit:    Option[Ast]           = None,
   offset:   Option[Ast]           = None,
   select:   List[SelectValue],
-  distinct: Boolean               = false
+  distinct: DistinctKind          = DistinctKind.None
 )(quatType: Quat) extends SqlQuery {
   def quat = quatType
 }
@@ -184,7 +191,7 @@ object SqlQuery {
         val agg = b.select.collect {
           case s @ SelectValue(_: Aggregation, _, _) => s
         }
-        if (!b.distinct && agg.isEmpty)
+        if (!b.distinct.isDistinct && agg.isEmpty)
           b.copy(select = selectValues(p))(quat)
         else
           FlattenSqlQuery(
@@ -220,7 +227,7 @@ object SqlQuery {
       case Aggregation(op, q: Query) =>
         val b = flatten(q, alias)
         b.select match {
-          case head :: Nil if !b.distinct =>
+          case head :: Nil if !b.distinct.isDistinct =>
             b.copy(select = List(head.copy(ast = Aggregation(op, head.ast))))(quat)
           case other =>
             FlattenSqlQuery(
@@ -253,7 +260,17 @@ object SqlQuery {
 
       case Distinct(q) =>
         val b = base(q, alias)
-        b.copy(distinct = true)(quat)
+        b.copy(distinct = DistinctKind.Distinct)(quat)
+
+      case DistinctOn(q, _, fields) =>
+        val distinctList =
+          fields match {
+            case Tuple(values) => values
+            case other         => List(other)
+          }
+
+        val b = base(q, alias)
+        b.copy(distinct = DistinctKind.DistinctOn(distinctList))(quat)
 
       case other =>
         FlattenSqlQuery(from = sources :+ source(other, alias), select = select(alias, quat))(quat)

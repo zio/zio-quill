@@ -684,6 +684,26 @@ class SqlQuerySpec extends Spec {
       }
     }
 
+    "distinctOn" - {
+      "simple" in {
+        val q = quote {
+          qr1.distinctOn(e => e.s).sortBy(e => e.i)(Ord.asc).map(e => e.i)
+        }
+
+        testContext.run(q).string mustEqual
+          "SELECT e.i FROM (SELECT DISTINCT ON (e.s) e.s, e.i, e.l, e.o, e.b FROM TestEntity e ORDER BY e.i ASC) AS e"
+      }
+
+      "tuple" in {
+        val q = quote {
+          qr1.distinctOn(e => (e.s, e.i)).sortBy(e => e.i)(Ord.asc).map(e => e.i)
+        }
+
+        testContext.run(q).string mustEqual
+          "SELECT e.i FROM (SELECT DISTINCT ON (e.s, e.i) e.s, e.i, e.l, e.o, e.b FROM TestEntity e ORDER BY e.i ASC) AS e"
+      }
+    }
+
     "nested where" in {
       val q = quote {
         qr4.filter(t => t.i == 1).nested.filter(t => t.i == 2)

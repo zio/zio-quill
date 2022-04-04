@@ -132,6 +132,7 @@ trait Liftables extends QuatLiftable {
     case Join(a, b, c, d, e, f)                     => q"$pack.Join($a, $b, $c, $d, $e, $f)"
     case FlatJoin(a, b, c, d)                       => q"$pack.FlatJoin($a, $b, $c, $d)"
     case Distinct(a)                                => q"$pack.Distinct($a)"
+    case DistinctOn(a, b, c)                        => q"$pack.DistinctOn($a, $b, $c)"
     case Nested(a)                                  => q"$pack.Nested($a)"
   }
 

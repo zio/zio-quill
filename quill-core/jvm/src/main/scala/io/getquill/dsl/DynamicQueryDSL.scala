@@ -360,6 +360,9 @@ trait DynamicQueryDsl {
     def distinct: DynamicQuery[T] =
       dyn(Distinct(q.ast))
 
+    def distinctOn[R](f: Quoted[T] => Quoted[R]): DynamicQuery[R] =
+      transform(f, DistinctOn)
+
     def nested: DynamicQuery[T] =
       dyn(Nested(q.ast))
 

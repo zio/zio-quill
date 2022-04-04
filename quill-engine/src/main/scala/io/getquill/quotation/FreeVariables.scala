@@ -78,6 +78,7 @@ case class FreeVariables(state: State)
     query match {
       case q @ Filter(a, b, c)      => (q, free(a, b, c))
       case q @ Map(a, b, c)         => (q, free(a, b, c))
+      case q @ DistinctOn(a, b, c)  => (q, free(a, b, c))
       case q @ FlatMap(a, b, c)     => (q, free(a, b, c))
       case q @ ConcatMap(a, b, c)   => (q, free(a, b, c))
       case q @ SortBy(a, b, c, d)   => (q, free(a, b, c))

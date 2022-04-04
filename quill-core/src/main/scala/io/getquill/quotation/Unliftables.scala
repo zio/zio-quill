@@ -114,8 +114,9 @@ trait Unliftables extends QuatUnliftable {
       Join(t, a, b, iA, iB, on)
     case q"$pack.FlatJoin.apply(${ t: JoinType }, ${ a: Ast }, ${ iA: Ident }, ${ on: Ast })" =>
       FlatJoin(t, a, iA, on)
-    case q"$pack.Distinct.apply(${ a: Ast })" => Distinct(a)
-    case q"$pack.Nested.apply(${ a: Ast })"   => Nested(a)
+    case q"$pack.Distinct.apply(${ a: Ast })"                               => Distinct(a)
+    case q"$pack.DistinctOn.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => DistinctOn(a, b, c)
+    case q"$pack.Nested.apply(${ a: Ast })"                                 => Nested(a)
   }
 
   implicit val orderingUnliftable: Unliftable[Ordering] = Unliftable[Ordering] {

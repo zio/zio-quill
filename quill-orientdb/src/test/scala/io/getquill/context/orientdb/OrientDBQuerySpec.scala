@@ -202,11 +202,11 @@ class OrientDBQuerySpec extends Spec {
 
       t.token(e) mustBe stmt"SELECT *"
 
-      intercept[IllegalStateException](t.token(e.copy(distinct = true)(Quat.Value)))
+      intercept[IllegalStateException](t.token(e.copy(distinct = DistinctKind.Distinct)(Quat.Value)))
         .getMessage mustBe "OrientDB DISTINCT with multiple columns is not supported"
 
       val x = SelectValue(Ident("x"))
-      intercept[IllegalStateException](t.token(e.copy(select = List(x, x), distinct = true)(Quat.Value)))
+      intercept[IllegalStateException](t.token(e.copy(select = List(x, x), distinct = DistinctKind.Distinct)(Quat.Value)))
         .getMessage mustBe "OrientDB DISTINCT with multiple columns is not supported"
 
       val tb = TableContext(Entity("tb", Nil, QEP), "x1")
