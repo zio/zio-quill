@@ -324,18 +324,25 @@ object SqlQuery {
           trace"Flattening| Distinct" andReturn
             b.copy(distinct = DistinctKind.Distinct)(quat)
 
-        case DistinctOn(q, _, fields) =>
+        case DistinctOn(q, Ident(alias, _), fields) =>
           val distinctList =
             fields match {
               case Tuple(values) => values
               case other         => List(other)
             }
-          trace"Flattening| DistinctOn" andReturn
-            FlattenSqlQuery(
-              from = QueryContext(apply(q), alias) :: Nil,
-              select = select(alias, quat),
-              distinct = DistinctKind.DistinctOn(distinctList)
-            )(quat)
+
+          val b = base(q, alias)
+          b.from match {
+            case List(_: TableContext) =>
+              b.copy(distinct = DistinctKind.DistinctOn(distinctList))(quat)
+            case _ =>
+              trace"Flattening| DistinctOn" andReturn
+                FlattenSqlQuery(
+                  from = QueryContext(apply(q), alias) :: Nil,
+                  select = select(alias, quat),
+                  distinct = DistinctKind.DistinctOn(distinctList)
+                )(quat)
+          }
 
         case other =>
           trace"Flattening| Other" andReturn

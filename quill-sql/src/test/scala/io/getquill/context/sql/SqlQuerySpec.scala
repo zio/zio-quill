@@ -702,6 +702,22 @@ class SqlQuerySpec extends Spec {
         testContext.run(q).string mustEqual
           "SELECT e.i FROM (SELECT DISTINCT ON (e.s, e.i) e.s, e.i, e.l, e.o, e.b FROM TestEntity e ORDER BY e.i ASC) AS e"
       }
+
+      "joined" in {
+        case class Person(id: Int, name: String, age: Int)
+        case class Address(fk: Int, street: String)
+
+        val q = quote {
+          (for {
+            p <- query[Person]
+            a <- query[Address].join(a => a.fk == p.id)
+          } yield (p, a))
+            .distinctOn(e => e._1.name).sortBy(e => e._1.name)(Ord.asc)
+        }
+
+        testContext.run(q).string mustEqual
+          "SELECT DISTINCT ON (a._1name) a._1id AS id, a._1name AS name, a._1age AS age, a._2fk AS fk, a._2street AS street FROM (SELECT p.id AS _1id, p.name AS _1name, p.age AS _1age, a.fk AS _2fk, a.street AS _2street FROM Person p INNER JOIN Address a ON a.fk = p.id) AS a ORDER BY a._1name ASC"
+      }
     }
 
     "nested where" in {
