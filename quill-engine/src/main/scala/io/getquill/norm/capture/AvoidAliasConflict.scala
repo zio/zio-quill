@@ -109,6 +109,9 @@ private[getquill] case class AvoidAliasConflict(state: Set[IdentName], detemp: B
         case GroupBy(Unaliased(q), x, p) =>
           apply(x, p)(GroupBy(q, _, _))
 
+        case DistinctOn(Unaliased(q), x, p) =>
+          apply(x, p)(DistinctOn(q, _, _))
+
         case m @ FlatMap(CanRealias(), _, _) =>
           recurseAndApply(m)(m => (m.query, m.alias, m.body))(FlatMap(_, _, _))
 
@@ -123,6 +126,9 @@ private[getquill] case class AvoidAliasConflict(state: Set[IdentName], detemp: B
 
         case m @ GroupBy(CanRealias(), _, _) =>
           recurseAndApply(m)(m => (m.query, m.alias, m.body))(GroupBy(_, _, _))
+
+        case m @ DistinctOn(CanRealias(), _, _) =>
+          recurseAndApply(m)(m => (m.query, m.alias, m.body))(DistinctOn(_, _, _))
 
         case SortBy(Unaliased(q), x, p, o) =>
           trace"Unaliased $qq uncapturing $x" andReturn
@@ -159,7 +165,7 @@ private[getquill] case class AvoidAliasConflict(state: Set[IdentName], detemp: B
           }
 
         case _: Entity | _: FlatMap | _: ConcatMap | _: Map | _: Filter | _: SortBy | _: GroupBy |
-        _: Aggregation | _: Take | _: Drop | _: Union | _: UnionAll | _: Distinct | _: Nested =>
+        _: Aggregation | _: Take | _: Drop | _: Union | _: UnionAll | _: Distinct | _: DistinctOn | _: Nested =>
           super.apply(qq)
       }
 

@@ -256,6 +256,11 @@ case class Distinct(a: Ast) extends Query {
   def bestQuat: Quat = a.bestQuat
 }
 
+case class DistinctOn(query: Ast, alias: Ident, body: Ast) extends Query {
+  def quat = query.quat
+  def bestQuat: Quat = query.bestQuat
+}
+
 case class Nested(a: Ast) extends Query {
   def quat = a.quat
   def bestQuat: Quat = a.bestQuat

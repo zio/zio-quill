@@ -156,4 +156,38 @@ trait DistinctSpec extends Spec {
       (Person("B", 2), Couple("B", "Y")),
       (Person("B", 2), Couple("B", "Z"))
     )
+
+  val `Ex 9 DistinctOn With Sort` = quote {
+    query[Person].map(p => (p.name, p.age % 2)).distinctOn(_._2).sortBy(_._2)(Ord.desc)
+  }
+  val `Ex 9 DistinctOn With Sort Result` =
+    List(("A", 1), ("B", 0))
+
+  val `Ex 10 DistinctOn With Applicative Join` = quote {
+    query[Person]
+      .join(query[Couple]).on(_.name == _.him)
+      .distinctOn(_._1.name)
+      .sortBy(_._1.name)(Ord.asc)
+      .map(t => (t._1, t._2.him))
+  }
+  val `Ex 10 DistinctOn With Applicative Join Result` =
+    List(
+      (Person("A", 1), "A"),
+      (Person("B", 2), "B")
+    )
+
+  val `Ex 11 DistinctOn With Monadic Join` = quote {
+    (for {
+      p <- query[Person]
+      c <- query[Couple].join(c => c.him == p.name)
+    } yield (p, c))
+      .distinctOn(_._1.name)
+      .sortBy(_._1.name)(Ord.asc)
+      .map(t => (t._1, t._2.him))
+  }
+  val `Ex 11 DistinctOn With Monadic Join Result` =
+    List(
+      (Person("A", 1), "A"),
+      (Person("B", 2), "B")
+    )
 }

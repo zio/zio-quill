@@ -17,6 +17,7 @@ object ExpandDistinct {
       case Distinct(q) =>
         trace"ExpandDistinct Distinct(inside)" andReturn
           Distinct(apply(q))
+
       case q =>
         Transform(q) {
           case Aggregation(op, Distinct(q)) =>
@@ -25,7 +26,7 @@ object ExpandDistinct {
 
           case Distinct(Map(q, x, cc @ Tuple(values))) =>
             val newIdent = Ident(x.name, valueQuat(cc.quat))
-            trace"ExpandDistinct Map(q, _, Tuple)" andReturn
+            trace"ExpandDistinct Distinct(Map(q, _, Tuple))" andReturn
               Map(Distinct(Map(q, x, cc)), newIdent,
                 Tuple(values.zipWithIndex.map {
                   case (_, i) => Property(newIdent, s"_${i + 1}")
