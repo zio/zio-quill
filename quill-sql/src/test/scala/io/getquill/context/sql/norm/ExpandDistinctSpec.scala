@@ -1,12 +1,11 @@
 package io.getquill.context.sql.norm
 
-import io.getquill.Spec
+import io.getquill.{ Ord, Spec }
 import io.getquill.context.sql.testContext.qr1
 import io.getquill.context.sql.testContext.quote
 import io.getquill.context.sql.testContext.unquote
 
-class ExpandDistinctSpec extends Spec { //hello
-
+class ExpandDistinctSpec extends Spec { //hello, hey, how are you?
   "expands distinct map" - {
     "simple" in {
       val q = quote {
@@ -37,6 +36,5 @@ class ExpandDistinctSpec extends Spec { //hello
       ExpandDistinct(q.ast).toString mustEqual
         """querySchema("TestEntity").map(e => (e.i, e.l)).distinct.map(e => (e._1, e._2)).nested"""
     }
-
   }
 }

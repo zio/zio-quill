@@ -60,6 +60,7 @@ sealed trait Query[+T] extends QAC[Nothing, T] {
   def contains[B >: T](value: B): Boolean = NonQuotedException()
 
   def distinct: Query[T] = NonQuotedException()
+  def distinctOn[R](f: T => R): Query[T] = NonQuotedException()
 
   def nested: Query[T] = NonQuotedException()
 

@@ -60,6 +60,7 @@ object ApplyMap {
     def unapply(ast: Ast): Option[(Ast, Ident, Ast)] =
       ast match {
         case Map(a: GroupBy, b, c)              => None
+        case Map(a: DistinctOn, b, c)           => None
         case Map(a: FlatJoin, b, c)             => None // FlatJoin should always be surrounded by a Map
         case Map(a, b, InfixedTailOperation(c)) => None
         case Map(a, b, c)                       => Some((a, b, c))

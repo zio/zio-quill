@@ -152,7 +152,13 @@ trait SqlIdiom extends Idiom {
         case _   => select.token
       }
 
-    def distinctTokenizer = (if (distinct) "DISTINCT " else "").token
+    def distinctTokenizer = (
+      distinct match {
+        case DistinctKind.Distinct          => stmt"DISTINCT "
+        case DistinctKind.DistinctOn(props) => stmt"DISTINCT ON (${props.token}) "
+        case DistinctKind.None              => stmt""
+      }
+    )
 
     def withDistinct = stmt"$distinctTokenizer${selectTokenizer}"
 

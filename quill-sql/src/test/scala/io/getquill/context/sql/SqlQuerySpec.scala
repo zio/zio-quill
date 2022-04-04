@@ -684,6 +684,51 @@ class SqlQuerySpec extends Spec {
       }
     }
 
+    "distinctOn" - {
+      "simple" in {
+        val q = quote {
+          qr1.distinctOn(e => e.s).sortBy(e => e.i)(Ord.asc).map(e => e.i)
+        }
+
+        testContext.run(q).string mustEqual
+          "SELECT e.i FROM (SELECT DISTINCT ON (e.s) e.s, e.i, e.l, e.o, e.b FROM TestEntity e ORDER BY e.i ASC) AS e"
+      }
+
+      "tuple" in {
+        val q = quote {
+          qr1.distinctOn(e => (e.s, e.i)).sortBy(e => e.i)(Ord.asc).map(e => e.i)
+        }
+
+        testContext.run(q).string mustEqual
+          "SELECT e.i FROM (SELECT DISTINCT ON (e.s, e.i) e.s, e.i, e.l, e.o, e.b FROM TestEntity e ORDER BY e.i ASC) AS e"
+      }
+
+      "mapped" in {
+        case class Person(id: Int, name: String, age: Int)
+        val q = quote {
+          query[Person].map(e => (e.name, e.age % 2)).distinctOn(_._2).sortBy(_._2)(Ord.desc)
+        }
+        testContext.run(q).string mustEqual
+          "SELECT DISTINCT ON (e._2) e._1, e._2 FROM (SELECT e.name AS _1, e.age % 2 AS _2 FROM Person e) AS e ORDER BY e._2 DESC"
+      }
+
+      "joined" in {
+        case class Person(id: Int, name: String, age: Int)
+        case class Address(fk: Int, street: String)
+
+        val q = quote {
+          (for {
+            p <- query[Person]
+            a <- query[Address].join(a => a.fk == p.id)
+          } yield (p, a))
+            .distinctOn(e => e._1.name).sortBy(e => e._1.name)(Ord.asc)
+        }
+
+        testContext.run(q).string mustEqual
+          "SELECT DISTINCT ON (a._1name) a._1id AS id, a._1name AS name, a._1age AS age, a._2fk AS fk, a._2street AS street FROM (SELECT p.id AS _1id, p.name AS _1name, p.age AS _1age, a.fk AS _2fk, a.street AS _2street FROM Person p INNER JOIN Address a ON a.fk = p.id) AS a ORDER BY a._1name ASC"
+      }
+    }
+
     "nested where" in {
       val q = quote {
         qr4.filter(t => t.i == 1).nested.filter(t => t.i == 2)
