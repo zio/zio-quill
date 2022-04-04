@@ -53,7 +53,7 @@ trait Encoders {
   implicit val floatEncoder: Encoder[Float] = encoder[Float](SqlTypes.FLOAT)
   implicit val doubleEncoder: Encoder[Double] = encoder[Double](SqlTypes.DOUBLE)
   implicit val byteArrayEncoder: Encoder[Array[Byte]] = encoder[Array[Byte]](SqlTypes.VARBINARY)
-  implicit val dateEncoder: Encoder[Date] = encoder[Date](SqlTypes.DATE)
-  implicit val localDateEncoder: Encoder[LocalDate] = encoder[LocalDate](SqlTypes.TIMESTAMP)
+  implicit val dateEncoder: Encoder[Date] = encoder[Date](SqlTypes.TIMESTAMP)
+  implicit val localDateEncoder: Encoder[LocalDate] = encoder[LocalDate](SqlTypes.DATE)
   implicit val localDateTimeEncoder: Encoder[LocalDateTime] = encoder[LocalDateTime](SqlTypes.TIMESTAMP)
 }
