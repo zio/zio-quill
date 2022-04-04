@@ -1,6 +1,6 @@
 package io.getquill.context.jasync
 
-import java.time.{LocalDate, LocalDateTime, ZoneId}
+import java.time.{ LocalDate, LocalDateTime, ZoneId }
 import java.util
 import java.util.Date
 import io.getquill.PostgresJAsyncContext

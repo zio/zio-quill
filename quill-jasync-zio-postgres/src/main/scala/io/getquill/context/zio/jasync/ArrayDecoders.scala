@@ -1,10 +1,10 @@
 package io.getquill.context.zio.jasync
 
-import java.time.{LocalDate, LocalDateTime, ZoneId}
+import java.time.{ LocalDate, LocalDateTime, ZoneId }
 import java.util
 import java.util.Date
 import io.getquill.context.sql.encoding.ArrayEncoding
-import io.getquill.context.zio.{PostgresZioJAsyncContext, SqlTypes}
+import io.getquill.context.zio.{ PostgresZioJAsyncContext, SqlTypes }
 import io.getquill.util.Messages.fail
 
 import scala.reflect.ClassTag
