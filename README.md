@@ -5,7 +5,6 @@
 **Compile-time Language Integrated Query for Scala**
 
 [![Build Status](https://travis-ci.org/getquill/quill.svg?branch=master)](https://travis-ci.org/getquill/quill)
-[![Codacy Badge](https://api.codacy.com/project/badge/grade/36ab84c7ff43480489df9b7312a4bdc1)](https://www.codacy.com/app/fwbrasil/quill)
 [![codecov.io](https://codecov.io/github/getquill/quill/coverage.svg?branch=master)](https://codecov.io/github/getquill/quill?branch=master)
 [![Join the chat at https://gitter.im/getquill/quill](https://img.shields.io/badge/gitter-join%20chat-green.svg)](https://gitter.im/getquill/quill?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.getquill/quill-core_2.13/badge.svg)](https://maven-badges.herokuapp.com/maven-central/io.getquill/quill-core_2.13)
@@ -15,7 +14,8 @@
 
 Quill provides a Quoted Domain Specific Language ([QDSL](http://homepages.inf.ed.ac.uk/wadler/papers/qdsl/qdsl.pdf)) to express queries in Scala and execute them in a target language. The library's core is designed to support multiple target languages, currently featuring specializations for Structured Query Language ([SQL](https://en.wikipedia.org/wiki/SQL)) and Cassandra Query Language ([CQL](https://cassandra.apache.org/doc/latest/cql/)).
 
-> ### [Scastie](https://scastie.scala-lang.org/) is a great tool to try out Quill without having to prepare a local environment. It works with [mirror contexts](#mirror-context), see [this](https://scastie.scala-lang.org/QwOewNEiR3mFlKIM7v900A) snippet as an example.
+> ### Scala 3 Support 
+> [ProtoQuill](https://github.com/zio/zio-protoquill) provides Scala 3 support for Quill rebuilding on top of new metaprogramming capabilities from the ground > up! It is published to maven-central as the `quill-<module>_3` line of artifacts.
 
 ![example](https://raw.githubusercontent.com/getquill/quill/master/example.gif)
 
@@ -27,6 +27,8 @@ Quill provides a Quoted Domain Specific Language ([QDSL](http://homepages.inf.ed
 Note: The GIF example uses Eclipse, which shows compilation messages to the user.
 
 # Getting Started
+
+> ### [Scastie](https://scastie.scala-lang.org/) is a great tool to try out Quill without having to prepare a local environment. It works with [mirror contexts](#mirror-context), see [this](https://scastie.scala-lang.org/QwOewNEiR3mFlKIM7v900A) snippet as an example.
 
 Quill has integrations with many libraries. If you are using a regular RDBMS e.g. PostgreSQL
 and want to use Quill to query it with an asychronous, non-blocking, reactive application, the easiest way to get 
@@ -2280,6 +2282,7 @@ def test(functionName: String) =
 ### Implicit Extensions
 
 You can use implicit extensions in quill in several ways.
+> NOTE. In ProtoQuill extensions must be written using the Scala 3 `extension` syntax and implicit class extensions are not supported. Please see [Extensions in ProtoQuill/Scala3](#extensions-in-protoquillscala3) below for more info.
 
 ##### Standard quoted extension:
 ```scala
@@ -2320,6 +2323,19 @@ implicit class Ext(i: Int) {
 }
 run(query[Person].filter(p => p.age.between(33, 44)))
 // SELECT p.name, p.age FROM Person p WHERE p.age > 33 AND p.age < 44
+```
+
+##### Extensions in ProtoQuill/Scala3:
+In ProtoQuill, the implicit class pattern for extensions is not supported. Please switch to using Scala 3 extension methods combined with inline definitions to achieve the same functionality.
+
+```scala
+extension (q: Query[Person]) {
+  inline def olderThan(inline age: Int) = quote {
+    query[Person].filter(p => p.age > lift(age))
+  }
+}
+run(query[Person].olderThan(44))
+// SELECT p.name, p.age FROM Person p WHERE p.age > ?
 ```
 
 ### Raw SQL queries
@@ -2454,13 +2470,13 @@ ctx.run(q)
 // SELECT u.id, u.name FROM User u WHERE (u.id = 1)
 ```
 
-## Meta DSL
+## Table/Column Customizations
 
-The meta DSL allows the user to customize how Quill handles the expansion and execution of quotations through implicit meta instances.
+The meta DSL allows the user to customize how Quill handles column/table naming and behavior.
 
-### Schema meta
+### Changing Table and Column Names
 
-By default, quill expands `query[Person]` to `querySchema[Person]("Person")`. It's possible to customize this behavior using an implicit instance of `SchemaMeta`:
+You can change how Quill queries handle table and column names for a record case class.
 
 ```scala
 def example = {
@@ -2471,9 +2487,11 @@ def example = {
 }
 ```
 
-### Insert meta
+By default, quill expands `query[Person]` to `querySchema[Person]("Person")`. It's possible to customize this behavior using an implicit instance of `SchemaMeta`:
 
-`InsertMeta` customizes the expansion of case classes for insert actions (`query[Person].insertValue(p)`). By default, all columns are expanded and through an implicit `InsertMeta`, it's possible to exclude columns from the expansion:
+### Excluding Columns from Insert
+
+You can exclude columns (e.g. Auto-Generated ones) from insertion in `q.insertValue(...)` by using an `InsertMeta`.
 
 ```scala
 implicit val personInsertMeta = insertMeta[Person](_.id)
@@ -2484,9 +2502,9 @@ ctx.run(query[Person].insertValue(lift(Person(-1, "John", 22))))
 
 Note that the parameter of `insertMeta` is called `exclude`, but it isn't possible to use named parameters for macro invocations.
 
-### Update meta
+### Excluding Columns from Update
 
-`UpdateMeta` customizes the expansion of case classes for update actions (`query[Person].updateValue(p)`). By default, all columns are expanded, and through an implicit `UpdateMeta`, it's possible to exclude columns from the expansion:
+You can exclude columns (e.g. Auto-Generated ones) from updates in `q.insertValue(...)` by using an `UpdateMeta`.
 
 ```scala
 implicit val personUpdateMeta = updateMeta[Person](_.id)
@@ -2497,9 +2515,9 @@ ctx.run(query[Person].filter(_.id == 1).updateValue(lift(Person(1, "John", 22)))
 
 Note that the parameter of `updateMeta` is called `exclude`, but it isn't possible to use named parameters for macro invocations.
 
-### Query meta
+## Mapped Records
 
-This kind of meta instance customizes the expansion of query types and extraction of the final value. For instance, it's possible to use this feature to normalize values before reading them from the database:
+The QueryMeta customizes the expansion of query types and extraction of the final value. For instance, it's possible to use this feature to normalize values before reading them from the database:
 
 ```scala
 implicit val personQueryMeta = 
@@ -2551,6 +2569,8 @@ case class MyDao(c: MyContext, schema: MySchema) {
  cannot be applied to (MyDao.this.schema.c.Quoted[MyDao.this.schema.c.EntityQuery[Person]]{def quoted: io.getquill.ast.ConfiguredEntity; def ast: io.getquill.ast.ConfiguredEntity; def id1854281249(): Unit; val bindings: Object})
 }
 ```
+> In ProtoQuill/Scala3 the above pattern will work as expected because the types Quoted, EntityQuery, etc... are no longer path dependent.
+> Have a look at the following [scastie example](https://scastie.scala-lang.org/TO5dF87jQQegUGqmIQtbew).
 
 ### Context Traits
 
@@ -3993,11 +4013,11 @@ provide a `Config` object instead of a `CassandraZioSession` like this:
 
 ```scala
  val zioSessionLayer: ZLayer[Any, Throwable, Has[CassandraZioSession]] =
-   ZioCassandraSession.fromPrefix("testStreamDB")
+   CassandraZioSession.fromPrefix("testStreamDB")
 run(query[Person])
   .provideCustomLayer(zioSessionLayer)
 ```
-> (Note that the resulting ZioCassandraSession has a closing bracket)
+> (Note that the resulting CassandraZioSession has a closing bracket)
 
 
 If you are using a Plain Scala app, you will need to manually run it e.g. using zio.Runtime
