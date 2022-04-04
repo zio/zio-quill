@@ -6,8 +6,6 @@ addDependencyTreePlugin
 
 addSbtPlugin("org.scoverage" % "sbt-scoverage" % "1.9.2")
 
-addSbtPlugin("com.typesafe.sbteclipse" % "sbteclipse-plugin" % "5.2.4")
-
 addSbtPlugin("com.github.sbt" % "sbt-release" % "1.1.0")
 
 addSbtPlugin("com.jsuereth" % "sbt-pgp" % "2.0.1")
