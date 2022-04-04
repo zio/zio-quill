@@ -331,9 +331,19 @@ object SqlQuery {
               case other         => List(other)
             }
 
-          val b = base(q, alias)
-          b.from match {
-            case List(_: TableContext) =>
+          q match {
+            // Ideally we don't need to make an extra sub-query for every single case of
+            // distinct-on but it only works when the parent AST is an entity. That's because DistinctOn
+            // selects from an alias of an outer clause. For example, query[Person].map(p => Name(p.firstName, p.lastName)).distinctOn(_.name)
+            // (Let's say Person(firstName, lastName, age), Name(first, last)) will turn into
+            // SELECT DISTINCT ON (p.name), p.firstName AS first, p.lastName AS last, p.age FROM Person
+            // This doesn't work beause `name` in `p.name` doesn't exist yet. Therefore we have to nest this in a subquery:
+            // SELECT DISTINCT ON (p.name) FROM (SELECT p.firstName AS first, p.lastName AS last, p.age FROM Person p) AS p
+            // The only exception to this is if we are directly selecting from an entity:
+            // query[Person].distinctOn(_.firstName) which should be fine: SELECT (x.firstName), x.firstName, x.lastName, a.age FROM Person x
+            // since all the fields inside the (...) of the DISTINCT ON must be contained in the entity.
+            case _: Entity =>
+              val b = base(q, alias)
               b.copy(distinct = DistinctKind.DistinctOn(distinctList))(quat)
             case _ =>
               trace"Flattening| DistinctOn" andReturn

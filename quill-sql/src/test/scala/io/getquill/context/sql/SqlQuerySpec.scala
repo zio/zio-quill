@@ -703,6 +703,15 @@ class SqlQuerySpec extends Spec {
           "SELECT e.i FROM (SELECT DISTINCT ON (e.s, e.i) e.s, e.i, e.l, e.o, e.b FROM TestEntity e ORDER BY e.i ASC) AS e"
       }
 
+      "mapped" in {
+        case class Person(id: Int, name: String, age: Int)
+        val q = quote {
+          query[Person].map(e => (e.name, e.age % 2)).distinctOn(_._2).sortBy(_._2)(Ord.desc)
+        }
+        testContext.run(q).string mustEqual
+          "SELECT DISTINCT ON (e._2) e._1, e._2 FROM (SELECT e.name AS _1, e.age % 2 AS _2 FROM Person e) AS e ORDER BY e._2 DESC"
+      }
+
       "joined" in {
         case class Person(id: Int, name: String, age: Int)
         case class Address(fk: Int, street: String)
