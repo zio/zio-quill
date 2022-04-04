@@ -69,6 +69,7 @@ object AttachToEntity {
       case ConcatMap(IsEntity(a), b, c) => ConcatMap(f(a, b), b, c)
       case Filter(IsEntity(a), b, c) => Filter(f(a, b), b, c)
       case SortBy(IsEntity(a), b, c, d) => SortBy(f(a, b), b, c, d)
+      case DistinctOn(IsEntity(a), b, c) => DistinctOn(f(a, b), b, c)
 
       case Map(_: GroupBy, _, _) | _: Union | _: UnionAll | _: Join | _: FlatJoin => f(q, alias.getOrElse(Ident("x", q.quat)))
 
@@ -81,6 +82,7 @@ object AttachToEntity {
       case Drop(a: Query, b) => Drop(applyWithId(f, alias, nextId + 1)(a), b)
       case Aggregation(op, a: Query) => Aggregation(op, applyWithId(f, alias, nextId + 1)(a))
       case Distinct(a: Query) => Distinct(applyWithId(f, alias, nextId + 1)(a))
+      case DistinctOn(a: Query, b, c) => DistinctOn(applyWithId(f, Some(b), nextId + 1)(a), b, c)
 
       case IsEntity(q) => f(q, alias.getOrElse(Ident(s"[tmp_attachtoentity${nextId}]", q.quat)))
       case other => fail(s"Can't find an 'Entity' in '$q'")

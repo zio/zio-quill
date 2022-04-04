@@ -212,6 +212,10 @@ trait StatefulTransformerWithStack[T] {
       case Distinct(a) =>
         val (at, att) = apply(a)(History(e))
         (Distinct(at), att)
+      case DistinctOn(a, b, c) =>
+        val (at, att) = apply(a)(History(e))
+        val (ct, ctt) = att.apply(c)(History(e))
+        (DistinctOn(at, b, ct), ctt)
       case Nested(a) =>
         val (at, att) = apply(a)(History(e))
         (Nested(at), att)

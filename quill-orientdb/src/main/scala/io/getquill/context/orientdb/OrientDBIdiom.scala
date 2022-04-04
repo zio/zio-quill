@@ -120,13 +120,13 @@ trait OrientDBIdiom extends Idiom {
   implicit def orientDBQueryTokenizer(implicit strategy: NamingStrategy): Tokenizer[SqlQuery] = Tokenizer[SqlQuery] {
     case FlattenSqlQuery(from, where, groupBy, orderBy, limit, offset, select, distinct) =>
 
-      val distinctTokenizer = (if (distinct) "DISTINCT" else "").token
+      val distinctTokenizer = (if (distinct == DistinctKind.Distinct) "DISTINCT" else "").token
 
       val selectClause =
         select match {
-          case Nil => if (!distinct) stmt"SELECT *" else fail("OrientDB DISTINCT with multiple columns is not supported")
+          case Nil => if (!distinct.isDistinct) stmt"SELECT *" else fail("OrientDB DISTINCT with multiple columns is not supported")
           case _ =>
-            if (!distinct) stmt"SELECT ${select.token}"
+            if (!distinct.isDistinct) stmt"SELECT ${select.token}"
             else if (select.size == 1) stmt"SELECT $distinctTokenizer(${select.token})"
             else fail("OrientDB DISTINCT with multiple columns is not supported")
         }
