@@ -4,10 +4,10 @@ import com.github.jasync.sql.db.RowData
 import io.getquill.context.Context
 import io.getquill.util.Messages.fail
 
-import java.math.{ BigDecimal => JavaBigDecimal }
-import java.time.{ LocalDate, LocalDateTime }
+import java.math.{BigDecimal => JavaBigDecimal}
+import java.time.{LocalDate, LocalDateTime, ZoneId}
 import java.util.Date
-import scala.reflect.{ ClassTag, classTag }
+import scala.reflect.{ClassTag, classTag}
 
 trait Decoders {
   this: ZioJAsyncContext[_, _, _] =>
@@ -129,7 +129,10 @@ trait Decoders {
 
   implicit val byteArrayDecoder: Decoder[Array[Byte]] = decoder[Array[Byte]](PartialFunction.empty, SqlTypes.TINYINT)
 
-  implicit val dateDecoder: Decoder[Date] = decoder[Date](PartialFunction.empty, SqlTypes.TIMESTAMP)
-  implicit val localDateDecoder: Decoder[LocalDate] = decoder[LocalDate](PartialFunction.empty, SqlTypes.TIMESTAMP)
+  implicit val dateDecoder: Decoder[Date] = decoder[Date]({
+    case date: LocalDateTime => Date.from(date.atZone(ZoneId.systemDefault()).toInstant)
+    case date: LocalDate     => Date.from(date.atStartOfDay.atZone(ZoneId.systemDefault()).toInstant)
+  }, SqlTypes.TIMESTAMP)
+  implicit val localDateDecoder: Decoder[LocalDate] = decoder[LocalDate](PartialFunction.empty, SqlTypes.DATE)
   implicit val localDateTimeDecoder: Decoder[LocalDateTime] = decoder[LocalDateTime](PartialFunction.empty, SqlTypes.TIMESTAMP)
 }
