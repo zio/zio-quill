@@ -62,12 +62,12 @@ trait JdbcRunContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] extends Jdbc
   def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner): Result[T] =
     handleSingleWrappedResult(executeQuery(sql, prepare, extractor)(info, dc))
 
-  def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningBehavior: ReturnAction)(info: ExecutionInfo, dc: Runner): Result[O] =
+  def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningBehavior: ReturnAction)(info: ExecutionInfo, dc: Runner): Result[List[O]] =
     withConnectionWrapped { conn =>
       val (params, ps) = prepare(prepareWithReturning(sql, conn, returningBehavior), conn)
       logger.logQuery(sql, params)
       ps.executeUpdate()
-      handleSingleResult(extractResult(ps.getGeneratedKeys, conn, extractor))
+      extractResult(ps.getGeneratedKeys, conn, extractor)
     }
 
   protected def prepareWithReturning(sql: String, conn: Connection, returningBehavior: ReturnAction) =
