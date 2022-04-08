@@ -4,10 +4,10 @@ import com.github.jasync.sql.db.RowData
 import io.getquill.context.Context
 import io.getquill.util.Messages.fail
 
-import java.math.{BigDecimal => JavaBigDecimal}
-import java.time.{LocalDate, LocalDateTime, ZoneId}
+import java.math.{ BigDecimal => JavaBigDecimal }
+import java.time.{ LocalDate, LocalDateTime, ZoneId }
 import java.util.Date
-import scala.reflect.{ClassTag, classTag}
+import scala.reflect.{ ClassTag, classTag }
 
 trait Decoders {
   this: ZioJAsyncContext[_, _, _] =>
