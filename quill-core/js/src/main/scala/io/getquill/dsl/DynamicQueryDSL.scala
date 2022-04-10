@@ -72,7 +72,7 @@ trait DynamicQueryDsl {
   def dynamicQuery[T](implicit t: ClassTag[T]): DynamicEntityQuery[T] =
     DynamicEntityQuery(
       splice[EntityQuery[T]](
-        Entity(t.runtimeClass.getName.split('.').last.split('$').last, Nil, RuntimeEntityQuat[T].probit)
+        Entity(t.runtimeClass.getSimpleName, Nil, RuntimeEntityQuat[T].probit)
       )
     )
 
