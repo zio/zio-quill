@@ -8,6 +8,10 @@ import org.apache.spark.sql.SparkSession
 import io.getquill.Ord
 import io.getquill.QuillSparkContext._
 
+import scala.concurrent.ExecutionContext.Implicits._
+import scala.concurrent.duration._
+import scala.concurrent.{ Await, Future }
+
 case class User(
   id:          String,
   login:       String,
@@ -39,15 +43,19 @@ object GithubExample extends App {
       month <- 10 to 10
       day <- 22 to 22
       hour <- 0 to 23
-    } yield "%04d-%02d-%02d-%02d".format(year, month, day, hour)
+    } yield "%04d-%02d-%02d-%d".format(year, month, day, hour)
 
-  files.par.foreach { name =>
-    val file = new File(s"$name.json.gz")
-    if (!file.exists()) {
-      println(s"downloading missing file $name")
-      new URL(s"http://data.githubarchive.org/$name.json.gz") #> new File(s"$name.json.gz") !!
+  val f = Future.traverse(files) { name =>
+    Future {
+      val file = new File(s"$name.json.gz")
+      if (!file.exists()) {
+        println(s"downloading missing file $file")
+        new URL(s"https://data.gharchive.org/$file") #> file !!
+      }
     }
   }
+
+  Await.result(f, 30.seconds)
 
   implicit val sqlContext =
     SparkSession

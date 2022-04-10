@@ -38,7 +38,7 @@ trait QuillSparkContext
 
   def close() = {}
 
-  def probe(statement: String): Try[_] = Success(Unit)
+  def probe(statement: String): Try[_] = Success(())
 
   val idiom = SparkDialect
   val naming = Literal
@@ -84,7 +84,7 @@ trait QuillSparkContext
       node.structField.dataType match {
         case st: StructType =>
           // Recursively convert all parent array columns to single null values if all their children are null
-          val preculatedColumn = struct(node.children.map(percolateNullArraysRecursive(_)): _*)
+          val preculatedColumn = struct(node.children.map(percolateNullArraysRecursive(_)).toIndexedSeq: _*)
           // Then express that column back out the schema
 
           val mapped =
@@ -101,7 +101,7 @@ trait QuillSparkContext
       }
 
     ds.select(
-      ds.schema.fields.map(f => percolateNullArraysRecursive(StructElement(col(f.name), f))): _*
+      ds.schema.fields.map(f => percolateNullArraysRecursive(StructElement(col(f.name), f))).toIndexedSeq: _*
     ).as[T]
   }
 

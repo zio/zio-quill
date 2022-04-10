@@ -81,7 +81,8 @@ lazy val scala213Modules = baseModules ++ jsModules ++ dbModules ++ codegenModul
   `quill-jasync-postgres`,
   `quill-jasync-mysql`,
   `quill-jasync-zio`,
-  `quill-jasync-zio-postgres`
+  `quill-jasync-zio-postgres`,
+  `quill-spark`
 )
 
 lazy val notScala211Modules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
@@ -511,8 +512,9 @@ lazy val `quill-spark` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "org.apache.spark" %% "spark-sql" % "2.4.4"
-      ),
+          if (isScala211) "org.apache.spark" %% "spark-sql" % "2.4.4"
+          else "org.apache.spark" %% "spark-sql" % "3.2.1"
+        ),
       excludeDependencies ++= Seq(
         "ch.qos.logback"  % "logback-classic"
       )
