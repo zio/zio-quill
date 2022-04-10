@@ -625,7 +625,30 @@ class DynamicQuerySpec extends Spec {
         query[TestEntity].delete
       )
     }
+  }
 
+  "run dynamic query" - {
+    "select" in {
+      val q = dynamicQuery[TestEntity]
+      testContext.run(q).string mustEqual ("""querySchema("TestEntity")""")
+    }
+    "filterOpt" in {
+      val o = Some(1)
+      val q = dynamicQuery[TestEntity].filterOpt(o) { (t, i) => quote(t.i == i) }
+      testContext.run(q).string mustEqual ("""querySchema("TestEntity").filter(v0 => v0.i == ?)""")
+    }
+    "update" in {
+      val q = dynamicQuery[TestEntity].update(
+        set(_.i, 1),
+        setValue(_.s, "s"),
+        setOpt(_.l, None)
+      )
+      testContext.run(q).string mustEqual ("""querySchema("TestEntity").update(v => v.i -> 1, v => v.s -> ?)""")
+    }
+    "delete" in {
+      val q = dynamicQuery[TestEntity].filter(_.i == 1).delete
+      testContext.run(q).string mustEqual ("""querySchema("TestEntity").filter(v0 => v0.i == 1).delete""")
+    }
   }
 
 }
