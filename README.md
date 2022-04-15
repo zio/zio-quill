@@ -4190,8 +4190,8 @@ libraryDependencies ++= Seq(
 
 ## Logging to a File at Compile-Time
 
-To write queries produced at compile-time to a log, use the `-Dquill.log.file=queries.sql` and specify
-the file to write them to (e.g. `queries.sql`). The path is based on the build root (i.e. the current-working-directory).
+To write compile-time queries to a log, use the `-Dquill.log.file=queries.sql` and specify
+the file to be written (e.g. `queries.sql`). The path is based on the build root (i.e. the current-working-directory of the Java build).
 
 When using SBT, this parameter can be set either in your SBT_OPTS, the project-specific .sbtopts file or directly passed to the SBT command.
 In Intellij this can be set under settings -> sbt -> VM Parameters. 
