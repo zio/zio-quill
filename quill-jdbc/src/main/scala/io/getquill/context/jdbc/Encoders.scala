@@ -6,7 +6,7 @@ import java.util.Calendar
 import java.{ sql, util }
 
 trait Encoders {
-  this: JdbcComposition[_, _] =>
+  this: JdbcContextTypes[_, _] =>
 
   type Encoder[T] = JdbcEncoder[T]
 

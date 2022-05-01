@@ -5,7 +5,7 @@ import java.sql.{ Connection, PreparedStatement }
 import javax.sql.DataSource
 import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.{ NamingStrategy, ReturnAction }
-import io.getquill.context.{ ExecutionInfo, ProtoContext, TranslateContext }
+import io.getquill.context.{ ExecutionInfo, ProtoContext, ContextVerbTranslate }
 
 import scala.util.{ DynamicVariable, Try }
 import scala.util.control.NonFatal
@@ -14,7 +14,7 @@ import io.getquill.monad.SyncIOMonad
 abstract class JdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy]
   extends JdbcContextBase[Dialect, Naming]
   with ProtoContext[Dialect, Naming]
-  with TranslateContext
+  with ContextVerbTranslate
   with SyncIOMonad {
 
   // Need to override these with same values as JdbcRunContext because SyncIOMonad imports them. The imported values need to be overridden

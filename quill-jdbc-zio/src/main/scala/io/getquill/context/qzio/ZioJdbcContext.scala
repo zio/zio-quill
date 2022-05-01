@@ -1,9 +1,9 @@
 package io.getquill.context.qzio
 
 import io.getquill.context.ZioJdbc._
-import io.getquill.context.jdbc.JdbcComposition
+import io.getquill.context.jdbc.JdbcContextTypes
 import io.getquill.context.sql.idiom.SqlIdiom
-import io.getquill.context.{ ExecutionInfo, PrepareContext, ProtoContext, StreamingContext, TranslateContextMacro }
+import io.getquill.context._
 import io.getquill.{ NamingStrategy, ReturnAction }
 import zio.Exit.{ Failure, Success }
 import zio.stream.ZStream
@@ -42,11 +42,11 @@ import scala.util.Try
  * is only held open while it's host-connection exists.
  */
 abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] extends ZioContext[Dialect, Naming]
-  with JdbcComposition[Dialect, Naming]
+  with JdbcContextTypes[Dialect, Naming]
   with ProtoContext[Dialect, Naming]
-  with StreamingContext[Dialect, Naming]
-  with PrepareContext
-  with TranslateContextMacro {
+  with ContextVerbStream[Dialect, Naming]
+  with ContextVerbPrepare
+  with ZioTranslateContext {
 
   override type StreamResult[T] = ZStream[Environment, Error, T]
   override type Result[T] = ZIO[Environment, Error, T]
@@ -113,8 +113,9 @@ abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] ext
   def prepareBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: Runner): QCIO[List[PreparedStatement]] =
     underlying.prepareBatchAction(groups.asInstanceOf[List[ZioJdbcContext.this.underlying.BatchGroup]])(info, dc)
 
-  private[getquill] def prepareParams(statement: String, prepare: Prepare): QCIO[Seq[String]] =
-    underlying.prepareParams(statement, prepare)
+  // Used in translation functions
+  private[getquill] def prepareParams(statement: String, prepare: Prepare): QIO[Seq[String]] =
+    onConnection(underlying.prepareParams(statement, prepare))
 
   /**
    * Execute instructions in a transaction. For example, to add a Person row to the database and return

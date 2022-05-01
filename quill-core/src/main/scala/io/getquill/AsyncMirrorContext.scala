@@ -1,6 +1,6 @@
 package io.getquill
 
-import io.getquill.context.{ ExecutionInfo, RowContext, StandardContext, TranslateContext }
+import io.getquill.context.{ Context, ContextVerbTranslate, ExecutionInfo, RowContext }
 import io.getquill.context.mirror.{ MirrorDecoders, MirrorEncoders, MirrorSession, Row }
 
 import scala.concurrent.Future
@@ -14,9 +14,9 @@ import scala.util.Failure
 import scala.util.Success
 
 class AsyncMirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy](val idiom: Idiom, val naming: Naming, session: MirrorSession = MirrorSession("DefaultMirrorContextSession"))
-  extends StandardContext[Idiom, Naming]
+  extends Context[Idiom, Naming]
   with RowContext
-  with TranslateContext
+  with ContextVerbTranslate
   with MirrorEncoders
   with MirrorDecoders
   with ScalaFutureIOMonad {

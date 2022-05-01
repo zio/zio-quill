@@ -9,29 +9,6 @@ import java.io.Closeable
 import scala.util.Try
 import io.getquill.{ Action, ActionReturning, BatchAction, NamingStrategy, Query, Quoted }
 
-trait StagedPrepare extends PrepareContext {
-  type PrepareQueryResult = Session => Result[PrepareRow]
-  type PrepareActionResult = Session => Result[PrepareRow]
-  type PrepareBatchActionResult = Session => Result[List[PrepareRow]]
-}
-
-trait PrepareContext extends CoreDsl {
-  type Result[T]
-  type Session
-
-  type PrepareQueryResult //Usually: Session => Result[PrepareRow]
-  type PrepareActionResult //Usually: Session => Result[PrepareRow]
-  type PrepareBatchActionResult //Usually: Session => Result[List[PrepareRow]]
-
-  def prepare[T](quoted: Quoted[Query[T]]): PrepareQueryResult = macro QueryMacro.prepareQuery[T]
-  def prepare(quoted: Quoted[Action[_]]): PrepareActionResult = macro ActionMacro.prepareAction
-  def prepare(quoted: Quoted[BatchAction[Action[_]]]): PrepareBatchActionResult = macro ActionMacro.prepareBatchAction
-}
-
-trait StandardContext[Idiom <: io.getquill.idiom.Idiom, Naming <: NamingStrategy]
-  extends Context[Idiom, Naming]
-  with StagedPrepare
-
 trait Context[Idiom <: io.getquill.idiom.Idiom, Naming <: NamingStrategy] extends RowContext
   with Closeable
   with CoreDsl {

@@ -2,7 +2,6 @@ package io.getquill.h2
 
 import io.getquill.{ Prefix, ZioSpec }
 import zio.{ Task, ZIO }
-import io.getquill.context.ZioJdbc._
 
 class ZioJdbcContextSpec extends ZioSpec {
 
@@ -59,7 +58,7 @@ class ZioJdbcContextSpec extends ZioSpec {
     "prepare" in {
       testContext.prepareParams(
         "select * from Person where name=? and age > ?", (ps, session) => (List("Sarah", 127), ps)
-      ).onDataSource.runSyncUnsafe() mustEqual List("127", "'Sarah'")
+      ).runSyncUnsafe() mustEqual List("127", "'Sarah'")
     }
   }
 }
