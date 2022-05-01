@@ -6,7 +6,7 @@ import java.util.Calendar
 import scala.math.BigDecimal.javaBigDecimal2bigDecimal
 
 trait Decoders {
-  this: JdbcComposition[_, _] =>
+  this: JdbcContextTypes[_, _] =>
 
   type Decoder[T] = JdbcDecoder[T]
 

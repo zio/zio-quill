@@ -1,13 +1,13 @@
 package io.getquill.context.monix
 
 import io.getquill.NamingStrategy
-import io.getquill.context.{ Context, ExecutionInfo, StreamingContext }
+import io.getquill.context.{ Context, ExecutionInfo, ContextVerbStream }
 import io.getquill.mirrorContextWithQueryProbing.Runner
 import monix.eval.Task
 import monix.reactive.Observable
 
 trait MonixContext[Idiom <: io.getquill.idiom.Idiom, Naming <: NamingStrategy] extends Context[Idiom, Naming]
-  with StreamingContext[Idiom, Naming] {
+  with ContextVerbStream[Idiom, Naming] {
 
   override type StreamResult[T] = Observable[T]
   override type Result[T] = Task[T]

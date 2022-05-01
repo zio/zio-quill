@@ -1,11 +1,11 @@
 package io.getquill.context.monix
 
 import io.getquill.NamingStrategy
-import io.getquill.context.{ Context, TranslateContextBase }
+import io.getquill.context.{ Context, ContextTranslateProto }
 import io.getquill.idiom.Idiom
 import monix.eval.Task
 
-trait MonixTranslateContext extends TranslateContextBase {
+trait MonixTranslateContext extends ContextTranslateProto {
   this: Context[_ <: Idiom, _ <: NamingStrategy] =>
 
   override type TranslateResult[T] = Task[T]

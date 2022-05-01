@@ -7,7 +7,7 @@ import scala.annotation.tailrec
 import scala.language.experimental.macros
 import scala.language.higherKinds
 
-trait TranslateContext extends TranslateContextBase {
+trait ContextVerbTranslate extends ContextTranslateMacro {
   this: Context[_ <: Idiom, _ <: NamingStrategy] =>
 
   override type TranslateResult[T] = T
@@ -16,7 +16,24 @@ trait TranslateContext extends TranslateContextBase {
   override def seq[A](list: List[A]): List[A] = list
 }
 
-trait TranslateContextBase extends TranslateContextMacro {
+trait ContextTranslateMacro extends ContextTranslateProto {
+  this: Context[_ <: Idiom, _ <: NamingStrategy] =>
+
+  def translate[T](quoted: Quoted[T]): TranslateResult[String] = macro QueryMacro.translateQuery[T]
+  def translate[T](quoted: Quoted[Query[T]]): TranslateResult[String] = macro QueryMacro.translateQuery[T]
+  def translate(quoted: Quoted[Action[_]]): TranslateResult[String] = macro ActionMacro.translateQuery
+  def translate(quoted: Quoted[BatchAction[Action[_]]]): TranslateResult[List[String]] = macro ActionMacro.translateBatchQuery
+
+  def translate[T](quoted: Quoted[T], prettyPrint: Boolean): TranslateResult[String] = macro QueryMacro.translateQueryPrettyPrint[T]
+  def translate[T](quoted: Quoted[Query[T]], prettyPrint: Boolean): TranslateResult[String] = macro QueryMacro.translateQueryPrettyPrint[T]
+  def translate(quoted: Quoted[Action[_]], prettyPrint: Boolean): TranslateResult[String] = macro ActionMacro.translateQueryPrettyPrint
+  def translate(quoted: Quoted[BatchAction[Action[_]]], prettyPrint: Boolean): TranslateResult[List[String]] = macro ActionMacro.translateBatchQueryPrettyPrint
+
+  def translateQuery[T](statement: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor, prettyPrint: Boolean = false)(executionInfo: ExecutionInfo, dc: Runner): TranslateResult[String]
+  def translateBatchQuery(groups: List[BatchGroup], prettyPrint: Boolean = false)(executionInfo: ExecutionInfo, dc: Runner): TranslateResult[List[String]]
+}
+
+trait ContextTranslateProto {
   this: Context[_ <: Idiom, _ <: NamingStrategy] =>
 
   type TranslateResult[T]
@@ -61,24 +78,4 @@ trait TranslateContextBase extends TranslateContextMacro {
     case str: String => s"'$str'"
     case _           => param.toString
   }
-}
-
-trait TranslateContextMacro {
-  this: Context[_ <: Idiom, _ <: NamingStrategy] =>
-
-  type TranslateResult[T]
-  type Runner
-
-  def translate[T](quoted: Quoted[T]): TranslateResult[String] = macro QueryMacro.translateQuery[T]
-  def translate[T](quoted: Quoted[Query[T]]): TranslateResult[String] = macro QueryMacro.translateQuery[T]
-  def translate(quoted: Quoted[Action[_]]): TranslateResult[String] = macro ActionMacro.translateQuery
-  def translate(quoted: Quoted[BatchAction[Action[_]]]): TranslateResult[List[String]] = macro ActionMacro.translateBatchQuery
-
-  def translate[T](quoted: Quoted[T], prettyPrint: Boolean): TranslateResult[String] = macro QueryMacro.translateQueryPrettyPrint[T]
-  def translate[T](quoted: Quoted[Query[T]], prettyPrint: Boolean): TranslateResult[String] = macro QueryMacro.translateQueryPrettyPrint[T]
-  def translate(quoted: Quoted[Action[_]], prettyPrint: Boolean): TranslateResult[String] = macro ActionMacro.translateQueryPrettyPrint
-  def translate(quoted: Quoted[BatchAction[Action[_]]], prettyPrint: Boolean): TranslateResult[List[String]] = macro ActionMacro.translateBatchQueryPrettyPrint
-
-  def translateQuery[T](statement: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor, prettyPrint: Boolean = false)(executionInfo: ExecutionInfo, dc: Runner): TranslateResult[String]
-  def translateBatchQuery(groups: List[BatchGroup], prettyPrint: Boolean = false)(executionInfo: ExecutionInfo, dc: Runner): TranslateResult[List[String]]
 }

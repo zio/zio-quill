@@ -23,7 +23,7 @@ import io.getquill.context.sql.SqlContext
 import io.getquill.util.{ ContextLogger, LoadConfig }
 import io.getquill.util.Messages.fail
 import io.getquill.monad.TwitterFutureIOMonad
-import io.getquill.context.{ Context, ExecutionInfo, StreamingContext, TranslateContext }
+import io.getquill.context.{ Context, ExecutionInfo, ContextVerbStream, ContextVerbTranslate }
 
 sealed trait OperationType
 object OperationType {
@@ -38,9 +38,9 @@ class FinagleMysqlContext[N <: NamingStrategy](
   private[getquill] val extractionTimeZone: TimeZone
 )
   extends Context[MySQLDialect, N]
-  with TranslateContext
+  with ContextVerbTranslate
   with SqlContext[MySQLDialect, N]
-  with StreamingContext[MySQLDialect, N]
+  with ContextVerbStream[MySQLDialect, N]
   with FinagleMysqlDecoders
   with FinagleMysqlEncoders
   with TwitterFutureIOMonad {
