@@ -35,6 +35,17 @@ function setup_sqlite() {
    sqlite3 $DB_FILE < $1
    chmod a+rw $DB_FILE
 
+   # DB File in quill-jdbc-monix
+   DB_FILE=quill-codegen-tests/codegen_test.db
+   rm -f $DB_FILE
+   sqlite3 $DB_FILE < $1
+   chmod a+rw $DB_FILE
+
+   DB_FILE=codegen_test.db
+   rm -f $DB_FILE
+   sqlite3 $DB_FILE < $1
+   chmod a+rw $DB_FILE
+
     echo "Sqlite ready!"
 }
 

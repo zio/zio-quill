@@ -189,6 +189,8 @@ lazy val filteredModules = {
   selectedModules
 }
 
+val generateCodegenContexts = taskKey[Seq[File]]("Generate Contexts for Code Generator")
+
 lazy val `quill` =
   (project in file("."))
     .settings(commonSettings: _*)
@@ -364,7 +366,7 @@ lazy val `quill-codegen-tests` =
     .settings(
       libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test,
       Test / fork := true,
-      (Test / sourceGenerators) += Def.task {
+      generateCodegenContexts := Def.task {
         def recursiveList(file:JFile): List[JFile] = {
           if (file.isDirectory)
             Option(file.listFiles()).map(_.flatMap(child=> recursiveList(child)).toList).toList.flatten
@@ -387,8 +389,10 @@ lazy val `quill-codegen-tests` =
           fileDir.getAbsolutePath +: dbs,
           s
         )
-        recursiveList(fileDir)
-      }.tag(CodegenTag)
+        recursiveList(fileDir).toSeq
+      }.tag(CodegenTag).value,
+      (Test / sourceGenerators) += generateCodegenContexts,
+      (Test / compile) := (Test / compile).dependsOn(generateCodegenContexts).value
     )
     .dependsOn(`quill-codegen-jdbc` % "compile->test")
 
