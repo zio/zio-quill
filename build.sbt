@@ -392,6 +392,9 @@ lazy val `quill-codegen-tests` =
         recursiveList(fileDir).toSeq
       }.tag(CodegenTag).value,
       (Test / sourceGenerators) += generateCodegenContexts,
+      // Add this dependency so can do test:compile on the root project and the codegen contexts will be generated.
+      // Otherwise they are only generated when test sources are generated which typically does not happen
+      // when just test:compile is run.
       (Test / compile) := (Test / compile).dependsOn(generateCodegenContexts).value
     )
     .dependsOn(`quill-codegen-jdbc` % "compile->test")
