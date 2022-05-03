@@ -18,10 +18,10 @@ trait ZioSpec extends Spec with BeforeAndAfterAll {
   def accumulate[T](stream: ZStream[Connection, Throwable, T]): ZIO[Connection, Throwable, List[T]] =
     stream.run(Sink.collectAll).map(_.toList)
 
-  def collect[T](stream: ZStream[DataSource, Throwable, T])(implicit runtime: Implicit[Runtime.Managed[DataSource]]): List[T] =
+  def collect[T](stream: ZStream[DataSource, Throwable, T])(implicit runtime: Implicit[Runtime.Scoped[DataSource]]): List[T] =
     runtime.env.unsafeRun(stream.run(Sink.collectAll).map(_.toList))
 
-  def collect[T](qzio: ZIO[DataSource, Throwable, T])(implicit runtime: Implicit[Runtime.Managed[DataSource]]): T =
+  def collect[T](qzio: ZIO[DataSource, Throwable, T])(implicit runtime: Implicit[Runtime.Scoped[DataSource]]): T =
     runtime.env.unsafeRun(qzio)
 
   // TODO Change to runUnsafe
@@ -29,11 +29,11 @@ trait ZioSpec extends Spec with BeforeAndAfterAll {
     def runSyncUnsafe() = Runtime.default.unsafeRun(qzio)
   }
 
-  implicit class ZStreamTestExt[T](stream: ZStream[DataSource, Throwable, T])(implicit runtime: Implicit[Runtime.Managed[DataSource]]) {
+  implicit class ZStreamTestExt[T](stream: ZStream[DataSource, Throwable, T])(implicit runtime: Implicit[Runtime.Scoped[DataSource]]) {
     def runSyncUnsafe() = collect[T](stream)
   }
 
-  implicit class ZioTestExt[T](qzio: ZIO[DataSource, Throwable, T])(implicit runtime: Implicit[Runtime.Managed[DataSource]]) {
+  implicit class ZioTestExt[T](qzio: ZIO[DataSource, Throwable, T])(implicit runtime: Implicit[Runtime.Scoped[DataSource]]) {
     def runSyncUnsafe() = collect[T](qzio)
   }
 }

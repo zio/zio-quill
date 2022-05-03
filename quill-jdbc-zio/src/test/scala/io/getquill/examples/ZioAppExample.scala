@@ -19,7 +19,7 @@ object DataService {
 }
 
 object DataServiceLive {
-  val layer = (DataServiceLive.apply _).toLayer
+  val layer = ZLayer.fromFunction(DataServiceLive.apply _)
 }
 
 final case class DataServiceLive(dataSource: DataSource) {

@@ -6,7 +6,7 @@ import java.io.Closeable
 import javax.sql.DataSource
 import io.getquill.context.qzio.ImplicitSyntax._
 import io.getquill.util.LoadConfig
-import zio.{ Task, ZManaged }
+import zio.ZIO
 
 class ImplicitEnvPatternSpec extends PeopleZioSpec {
 
@@ -39,13 +39,15 @@ class ImplicitEnvPatternSpec extends PeopleZioSpec {
 
   "dataSource based context should fetch results" in {
     val (alexes, berts, coras) =
-      ZManaged.fromAutoCloseable(Task(makeDataSource())).use { ds =>
-        for {
-          svc <- Task(MyService(ds))
-          alexes <- svc.alexes
-          berts <- svc.berts
-          coras <- svc.coras
-        } yield (alexes, berts, coras)
+      ZIO.scoped {
+        ZIO.fromAutoCloseable(ZIO.attempt(makeDataSource())).flatMap { ds =>
+          for {
+            svc <- ZIO.attempt(MyService(ds))
+            alexes <- svc.alexes
+            berts <- svc.berts
+            coras <- svc.coras
+          } yield (alexes, berts, coras)
+        }
       }.runSyncUnsafe()
 
     alexes must contain theSameElementsAs (peopleEntries.filter(_.name == "Alex"))

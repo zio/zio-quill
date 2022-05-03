@@ -3,9 +3,8 @@ package io.getquill.context
 import com.typesafe.config.Config
 import io.getquill.JdbcContextConfig
 import io.getquill.util.{ ContextLogger, LoadConfig }
-import zio.{ Task, ZEnvironment, ZIO, ZLayer, ZManaged }
+import zio.{ Scope, ZEnvironment, ZIO, ZLayer }
 import zio.stream.ZStream
-import io.getquill.util.{ ContextLogger, LoadConfig }
 import izumi.reflect.Tag
 
 import java.io.Closeable
@@ -29,16 +28,16 @@ object ZioJdbc {
 
   object DataSourceLayer {
     val live: ZLayer[DataSource, SQLException, Connection] =
-      ZLayer {
+      ZLayer.scoped {
         for {
-          blockingExecutor <- ZIO.blockingExecutor.toManaged
-          ds <- ZManaged.service[DataSource]
-          r <- ZioJdbc.managedBestEffort(ZIO.attempt(ds.getConnection)).refineToOrDie[SQLException].onExecutor(blockingExecutor)
+          blockingExecutor <- ZIO.blockingExecutor
+          ds <- ZIO.service[DataSource]
+          r <- ZioJdbc.scopedBestEffort(ZIO.attempt(ds.getConnection)).refineToOrDie[SQLException].onExecutor(blockingExecutor)
         } yield r
       }
 
     def fromDataSource(ds: => DataSource): ZLayer[Any, Throwable, DataSource] =
-      ZLayer.fromZIO(Task(ds))
+      ZLayer.fromZIO(ZIO.attempt(ds))
 
     def fromConfig(config: => Config): ZLayer[Any, Throwable, DataSource] =
       fromConfigClosable(config)
@@ -56,10 +55,10 @@ object ZioJdbc {
       fromJdbcConfigClosable(JdbcContextConfig(LoadConfig(prefix)))
 
     def fromJdbcConfigClosable(jdbcContextConfig: => JdbcContextConfig): ZLayer[Any, Throwable, DataSource with Closeable] =
-      ZLayer {
+      ZLayer.scoped {
         for {
-          conf <- ZManaged.fromZIO(Task(jdbcContextConfig))
-          ds <- managedBestEffort(Task(conf.dataSource))
+          conf <- ZIO.attempt(jdbcContextConfig)
+          ds <- scopedBestEffort(ZIO.attempt(conf.dataSource))
         } yield ds
       }
   }
@@ -127,14 +126,18 @@ object ZioJdbc {
    * release a stale connection) which will eventually cause other operations (i.e. future reads/writes) to fail
    * that have not occurred yet.
    */
-  private[getquill] def managedBestEffort[R, E, A <: AutoCloseable](effect: ZIO[R, E, A]) =
-    ZManaged.acquireReleaseWith(effect)(resource =>
+  private[getquill] def scopedBestEffort[R, E, A <: AutoCloseable](effect: ZIO[R, E, A]): ZIO[R with Scope, E, A] =
+    ZIO.acquireRelease(effect)(resource =>
       ZIO.attemptBlocking(resource.close()).tapError(e => ZIO.attempt(logger.underlying.error(s"close() of resource failed", e)).ignore).ignore)
 
   private[getquill] val streamBlocker: ZStream[Any, Nothing, Any] =
-    ZStream.managed(ZIO.blockingExecutor.toManaged.flatMap { executor =>
-      ZManaged.lock(executor)
-    })
+    ZStream.scoped {
+      for {
+        executor <- ZIO.executor
+        blockingExecutor <- ZIO.blockingExecutor
+        _ <- ZIO.acquireRelease(ZIO.shift(blockingExecutor))(_ => ZIO.shift(executor))
+      } yield ()
+    }
 
   private[getquill] val logger = ContextLogger(ZioJdbc.getClass)
 }

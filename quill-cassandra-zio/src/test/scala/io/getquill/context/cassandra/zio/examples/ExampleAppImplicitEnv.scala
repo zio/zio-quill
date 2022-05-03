@@ -1,7 +1,7 @@
 package io.getquill.context.cassandra.zio.examples
 
 import io.getquill.{ CassandraZioContext, _ }
-import zio.ZIOAppDefault
+import zio.{ ZIO, ZIOAppDefault }
 import zio.Console.printLine
 import io.getquill.context.qzio.ImplicitSyntax._
 
@@ -26,7 +26,7 @@ object ExampleAppImplicitEnv extends ZIOAppDefault {
   override def run = {
     val result =
       for {
-        csession <- zioSessionLayer.build.useNow
+        csession <- ZIO.scoped(zioSessionLayer.build)
         joes <- MyQueryService(csession.get).joes
       } yield joes
 

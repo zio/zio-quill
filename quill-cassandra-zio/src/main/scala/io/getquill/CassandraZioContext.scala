@@ -8,7 +8,7 @@ import io.getquill.context.qzio.ZioContext
 import io.getquill.util.Messages.fail
 import io.getquill.util.ContextLogger
 import zio.stream.ZStream
-import zio.{ Chunk, ChunkBuilder, ZEnvironment, ZIO, ZManaged }
+import zio.{ Chunk, ChunkBuilder, ZEnvironment, ZIO }
 
 import scala.jdk.CollectionConverters._
 import scala.util.Try
@@ -42,8 +42,7 @@ object CassandraZioContext {
 class CassandraZioContext[N <: NamingStrategy](val naming: N)
   extends CassandraRowContext[N]
   with ZioContext[CqlIdiom, N]
-  with Context[CqlIdiom, N]
-  with CioOps {
+  with Context[CqlIdiom, N] {
 
   private val logger = ContextLogger(classOf[CassandraZioContext[_]])
 
@@ -85,9 +84,13 @@ class CassandraZioContext[N <: NamingStrategy](val naming: N)
     }
 
   val streamBlocker: ZStream[Any, Nothing, Any] =
-    ZStream.managed(ZIO.blockingExecutor.toManaged.flatMap { executor =>
-      ZManaged.lock(executor)
-    })
+    ZStream.scoped {
+      for {
+        executor <- ZIO.executor
+        blockingExecutor <- ZIO.blockingExecutor
+        _ <- ZIO.acquireRelease(ZIO.shift(blockingExecutor))(_ => ZIO.shift(executor))
+      } yield ()
+    }
 
   def streamQuery[T](fetchSize: Option[Int], cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner) = {
     val stream =

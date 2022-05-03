@@ -21,7 +21,7 @@ object ZioAppManual extends ZIOAppDefault {
     }
     MyPostgresContext.run(people)
       .tap(result => printLine(result.toString))
-      .provideCustomLayer(ZLayer.succeed(ds))
+      .provide(ZLayer.succeed(ds))
       .exitCode
   }
 }

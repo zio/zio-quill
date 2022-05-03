@@ -9,7 +9,7 @@ import io.getquill.{ NamingStrategy, ReturnAction }
 import zio.Exit.{ Failure, Success }
 import zio.ZIO.blocking
 import zio.stream.{ Stream, ZStream }
-import zio.{ Cause, Task, UIO, ZIO, ZManaged, ZTrace }
+import zio.{ Cause, ZIO, ZTrace }
 
 import java.sql.{ Array => _, _ }
 import javax.sql.DataSource
@@ -77,7 +77,7 @@ abstract class ZioJdbcUnderlyingContext[Dialect <: SqlIdiom, Naming <: NamingStr
     for {
       conn <- ZIO.service[Connection]
       autoCommitPrev = conn.getAutoCommit
-      r <- sqlEffect(conn).acquireReleaseWith(conn => UIO(conn.setAutoCommit(autoCommitPrev))) { conn =>
+      r <- sqlEffect(conn).acquireReleaseWith(conn => ZIO.succeed(conn.setAutoCommit(autoCommitPrev))) { conn =>
         sqlEffect(conn.setAutoCommit(false)).flatMap(_ => f)
       }.refineToOrDie[E]
     } yield r
@@ -87,8 +87,8 @@ abstract class ZioJdbcUnderlyingContext[Dialect <: SqlIdiom, Naming <: NamingStr
     for {
       conn <- ZStream.service[Connection]
       autoCommitPrev = conn.getAutoCommit
-      r <- ZStream.acquireReleaseWith(Task(conn.setAutoCommit(false)))(_ => {
-        UIO(conn.setAutoCommit(autoCommitPrev))
+      r <- ZStream.acquireReleaseWith(ZIO.attempt(conn.setAutoCommit(false)))(_ => {
+        ZIO.succeed(conn.setAutoCommit(autoCommitPrev))
       }).flatMap(_ => f)
     } yield r
   }
@@ -98,9 +98,9 @@ abstract class ZioJdbcUnderlyingContext[Dialect <: SqlIdiom, Naming <: NamingStr
       blocking(withoutAutoCommit(
         f.onExit {
           case Success(_) =>
-            UIO(env.get[Connection].commit())
+            ZIO.succeed(env.get[Connection].commit())
           case Failure(cause) =>
-            UIO(env.get[Connection].rollback()).foldCauseZIO(
+            ZIO.succeed(env.get[Connection].rollback()).foldCauseZIO(
               // NOTE: cause.flatMap(Cause.die) means wrap up the throwable failures into die failures, can only do if E param is Throwable (can also do .orDie at the end)
               rollbackFailCause => ZIO.failCause(cause.flatMap(Cause.die(_, ZTrace.none)) ++ rollbackFailCause),
               _ => ZIO.failCause(cause.flatMap(Cause.die(_, ZTrace.none))) // or ZIO.halt(cause).orDie
@@ -146,11 +146,11 @@ abstract class ZioJdbcUnderlyingContext[Dialect <: SqlIdiom, Naming <: NamingStr
     }
 
     val managedEnv: ZStream[Connection, Throwable, (Connection, PrepareRow, ResultSet)] =
-      ZStream.managed {
+      ZStream.scoped {
         for {
-          conn <- ZManaged.service[Connection]
-          ps <- managedBestEffort(Task(prepareStatement(conn)))
-          rs <- managedBestEffort(Task(ps.executeQuery()))
+          conn <- ZIO.service[Connection]
+          ps <- scopedBestEffort(ZIO.attempt(prepareStatement(conn)))
+          rs <- scopedBestEffort(ZIO.attempt(ps.executeQuery()))
         } yield (conn, ps, rs)
       }
 

@@ -21,7 +21,7 @@ object PlainApp {
     val czio =
       MyZioPostgresContext.run(people)
         .tap(result => printLine(result.toString))
-        .provideCustomLayer(zioSession)
+        .provide(zioSession)
 
     Runtime.default.unsafeRun(czio)
     ()

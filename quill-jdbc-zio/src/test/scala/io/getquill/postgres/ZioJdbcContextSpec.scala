@@ -1,7 +1,7 @@
 package io.getquill.postgres
 
 import io.getquill.ZioSpec
-import zio.{ Task, ZIO, ZLayer }
+import zio.{ ZIO, ZLayer }
 
 import javax.sql.DataSource
 
@@ -50,13 +50,13 @@ class ZioJdbcContextSpec extends ZioSpec {
             testContext.transaction {
               ZIO.collectAll(Seq(
                 testContext.run(qr1.insert(_.i -> 18)),
-                Task {
+                ZIO.attempt {
                   throw new IllegalStateException
                 }
               ))
             }
         }.catchSome {
-          case e: Exception => Task(e.getClass.getSimpleName)
+          case e: Exception => ZIO.attempt(e.getClass.getSimpleName)
         }
         r <- testContext.run(qr1)
       } yield (e, r.isEmpty)).runSyncUnsafe() mustEqual (("IllegalStateException", true))
