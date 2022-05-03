@@ -1,11 +1,11 @@
 package io.getquill.context.qzio
 
 import io.getquill.NamingStrategy
-import io.getquill.context.{ Context, TranslateContextBase }
+import io.getquill.context.{ Context, ContextTranslateMacro }
 import io.getquill.idiom.Idiom
 import zio.ZIO
 
-trait ZioTranslateContext extends TranslateContextBase {
+trait ZioTranslateContext extends ContextTranslateMacro {
   this: Context[_ <: Idiom, _ <: NamingStrategy] =>
 
   type Error

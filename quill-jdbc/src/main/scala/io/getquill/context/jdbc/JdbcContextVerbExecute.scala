@@ -1,40 +1,26 @@
 package io.getquill.context.jdbc
 
-import io.getquill.{ NamingStrategy, ReturnAction }
 import io.getquill.ReturnAction.{ ReturnColumns, ReturnNothing, ReturnRecord }
-import io.getquill.context.{ Context, ExecutionInfo }
-import io.getquill.context.sql.SqlContext
+import io.getquill.context.ExecutionInfo
 import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.util.ContextLogger
+import io.getquill.{ NamingStrategy, ReturnAction }
 
-import java.sql.{ Connection, JDBCType, PreparedStatement, ResultSet, Statement }
-import java.util.TimeZone
+import java.sql.{ Connection, ResultSet, Statement }
 
-trait JdbcComposition[Dialect <: SqlIdiom, Naming <: NamingStrategy] extends Context[Dialect, Naming]
-  with SqlContext[Dialect, Naming]
-  with Encoders
-  with Decoders {
+trait JdbcContextVerbExecute[Dialect <: SqlIdiom, Naming <: NamingStrategy] extends JdbcContextTypes[Dialect, Naming] {
 
-  type PrepareRow = PreparedStatement
-  type ResultRow = ResultSet
-  type Session = Connection
-  type Runner = Unit
+  // These type overrides are not required for JdbcRunContext in Scala2-Quill but it's a typing error. It only works
+  // because executeQuery is not actually defined in Context.scala therefore typing doesn't have
+  // to be correct on the base-level. Same issue with RunActionResult and others
+  override type RunQueryResult[T] = List[T]
+  override type RunQuerySingleResult[T] = T
+  override type RunActionResult = Long
+  override type RunActionReturningResult[T] = T
+  override type RunBatchActionResult = List[Long]
+  override type RunBatchActionReturningResult[T] = List[T]
 
-  protected val dateTimeZone = TimeZone.getDefault
-
-  /**
-   * Parses instances of java.sql.Types to string form so it can be used in creation of sql arrays.
-   * Some databases does not support each of generic types, hence it's welcome to override this method
-   * and provide alternatives to non-existent types.
-   *
-   * @param intType one of java.sql.Types
-   * @return JDBC type in string form
-   */
-  def parseJdbcType(intType: Int): String = JDBCType.valueOf(intType).getName
-}
-
-trait JdbcRunContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] extends JdbcComposition[Dialect, Naming] {
-  private[getquill] val logger = ContextLogger(classOf[JdbcContext[_, _]])
+  private val logger = ContextLogger(classOf[JdbcContextVerbExecute[_, _]])
 
   def wrap[T](t: => T): Result[T]
   def push[A, B](result: Result[A])(f: A => B): Result[B]
