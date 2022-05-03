@@ -456,8 +456,8 @@ lazy val `quill-zio` =
       Test / fork := true,
       libraryDependencies ++= Seq(
         "io.github.kitlangton" %% "zio-magic" % "0.3.11" % Test,
-        "dev.zio" %% "zio" % "1.0.12",
-        "dev.zio" %% "zio-streams" % "1.0.12"
+        "dev.zio" %% "zio" % "1.0.14",
+        "dev.zio" %% "zio-streams" % "1.0.14"
       )
     )
     .dependsOn(`quill-core-jvm` % "compile->compile;test->test")
@@ -679,8 +679,8 @@ lazy val `quill-cassandra-zio` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "dev.zio" %% "zio" % "1.0.12",
-        "dev.zio" %% "zio-streams" % "1.0.12"
+        "dev.zio" %% "zio" % "1.0.14",
+        "dev.zio" %% "zio-streams" % "1.0.14"
       )
     )
     .dependsOn(`quill-cassandra` % "compile->compile;test->test")
