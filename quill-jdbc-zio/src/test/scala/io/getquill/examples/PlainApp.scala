@@ -19,7 +19,7 @@ object PlainApp {
     }
     val qzio =
       MyPostgresContext.run(people)
-        .tap(result => zio.Task(println(result.toString)))
+        .tap(result => zio.ZIO.attempt(println(result.toString)))
         .provideLayer(zioDS)
 
     Runtime.default.unsafeRun(qzio)

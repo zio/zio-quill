@@ -5,7 +5,7 @@ import io.getquill.context.{ ExecutionInfo, ContextVerbPrepare }
 import io.getquill.context.ZioJdbc._
 import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.util.ContextLogger
-import zio.{ Task, ZIO }
+import zio.ZIO
 
 import java.sql.{ Connection, PreparedStatement, ResultSet, SQLException }
 
@@ -31,8 +31,8 @@ trait ZioPrepareContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] extends Z
   def prepareSingle(sql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: Runner): QCIO[PreparedStatement] = {
     (for {
       conn <- ZIO.service[Session]
-      stmt <- Task(conn.prepareStatement(sql))
-      ps <- Task {
+      stmt <- ZIO.attempt(conn.prepareStatement(sql))
+      ps <- ZIO.attempt {
         val (params, ps) = prepare(stmt, conn)
         logger.logQuery(sql, params)
         ps

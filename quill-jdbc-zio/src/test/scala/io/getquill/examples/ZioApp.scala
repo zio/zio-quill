@@ -20,7 +20,7 @@ object ZioApp extends ZIOAppDefault {
     }
     MyPostgresContext.run(people)
       .tap(result => printLine(result.toString))
-      .provideCustomLayer(zioDS)
+      .provide(zioDS)
       .exitCode
   }
 }

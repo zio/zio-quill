@@ -1,7 +1,7 @@
 package io.getquill.oracle
 
 import io.getquill.ZioSpec
-import zio.{ Task, ZIO }
+import zio.ZIO
 import io.getquill.context.ZioJdbc._
 
 class ZioJdbcContextSpec extends ZioSpec {
@@ -38,12 +38,12 @@ class ZioJdbcContextSpec extends ZioSpec {
           import testContext.underlying._
           ZIO.collectAll(Seq(
             testContext.underlying.run(qr1.insert(_.i -> 18)),
-            Task {
+            ZIO.attempt {
               throw new IllegalStateException
             }
           ))
         }.catchSome {
-          case e: Exception => Task(e.getClass.getSimpleName)
+          case e: Exception => ZIO.attempt(e.getClass.getSimpleName)
         }.onDataSource
         r <- testContext.run(qr1)
       } yield (e, r.isEmpty)).runSyncUnsafe() mustEqual (("IllegalStateException", true))
