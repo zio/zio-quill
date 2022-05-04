@@ -723,6 +723,38 @@ ctx.run(q)
 // SELECT DISTINCT p.age FROM Person p
 ```
 
+### distinct on
+
+> Note that `DISTINCT ON` is currently only supported in Postgres and H2.
+```scala
+val q = quote {
+  query[Person].distinctOn(p => p.name)
+}
+
+ctx.run(q)
+// SELECT DISTINCT ON (p.name) p.name, p.age FROM Person
+```
+
+Typically, `DISTINCT ON` is used with `SORT BY`.
+```scala
+val q = quote {
+  query[Person].distinctOn(p => p.name).sortBy(p => p.age)
+}
+
+ctx.run(q)
+// SELECT DISTINCT ON (p.name) p.name, p.age FROM Person ORDER BY p.age ASC NULLS FIRST
+```
+You can also use multiple fields in the `DISTINCT ON` criteria:
+```scala
+// case class Person(firstName: String, lastName: String, age: Int)
+val q = quote {
+  query[Person].distinctOn(p => (p.firstName, p.lastName))
+}
+
+ctx.run(q)
+// SELECT DISTINCT ON (p.firstName, p.lastName) p.firstName, p.lastName, p.age FROM Person p
+```
+
 ### nested
 ```scala
 val q = quote {
