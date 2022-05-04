@@ -792,7 +792,7 @@ lazy val jdbcTestingLibraries = Seq(
     "com.zaxxer"              %  "HikariCP"                % "3.4.5",
     "mysql"                   %  "mysql-connector-java"    % "8.0.28"             % Test,
     "com.h2database"          %  "h2"                      % "2.1.210"            % Test,
-    "org.postgresql"          %  "postgresql"              % "42.3.3"             % Test,
+    "org.postgresql"          %  "postgresql"              % "42.3.5"             % Test,
     "org.xerial"              %  "sqlite-jdbc"             % "3.36.0.3"             % Test,
     "com.microsoft.sqlserver" %  "mssql-jdbc"              % "7.1.1.jre8-preview" % Test,
     "com.oracle.ojdbc"        %  "ojdbc8"                  % "19.3.0.0"           % Test,
