@@ -726,6 +726,7 @@ ctx.run(q)
 ### distinct on
 
 > Note that `DISTINCT ON` is currently only supported in Postgres and H2.
+
 ```scala
 val q = quote {
   query[Person].distinctOn(p => p.name)
