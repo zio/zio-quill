@@ -680,8 +680,7 @@ lazy val `quill-cassandra-zio` =
       Test / fork := true,
       libraryDependencies ++= Seq(
         "dev.zio" %% "zio" % "1.0.12",
-        "dev.zio" %% "zio-streams" % "1.0.12",
-        "dev.zio" %% "zio-interop-guava" % "31.0.0.0"
+        "dev.zio" %% "zio-streams" % "1.0.12"
       )
     )
     .dependsOn(`quill-cassandra` % "compile->compile;test->test")
