@@ -1,7 +1,6 @@
 package io.getquill.context.qzio
 
-import izumi.reflect.Tag
-import zio.{ IO, IsNotIntersection, ZEnvironment, ZIO }
+import zio.{ IO, Tag, ZEnvironment, ZIO }
 
 /**
  * Use to provide `run(myQuery)` calls with a context implicitly saving the need to provide things multiple times.
@@ -42,6 +41,6 @@ object ImplicitSyntax {
   final case class Implicit[R](env: R)
 
   implicit final class ImplicitSyntaxOps[R, E, A](private val self: ZIO[R, E, A]) extends AnyVal {
-    def implicitly(implicit r: Implicit[R], tag: Tag[R], ev: IsNotIntersection[R]): IO[E, A] = self.provideEnvironment(ZEnvironment(r.env))
+    def implicitly(implicit r: Implicit[R], tag: Tag[R]): IO[E, A] = self.provideEnvironment(ZEnvironment(r.env))
   }
 }
