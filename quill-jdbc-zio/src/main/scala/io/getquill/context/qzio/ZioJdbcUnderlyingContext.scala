@@ -8,8 +8,8 @@ import io.getquill.util.ContextLogger
 import io.getquill.{ NamingStrategy, ReturnAction }
 import zio.Exit.{ Failure, Success }
 import zio.ZIO.blocking
-import zio.stream.{ Stream, ZStream }
-import zio.{ Cause, ZIO, ZTrace }
+import zio.stream.ZStream
+import zio.{ Cause, StackTrace, ZIO }
 
 import java.sql.{ Array => _, _ }
 import javax.sql.DataSource
@@ -77,7 +77,7 @@ abstract class ZioJdbcUnderlyingContext[Dialect <: SqlIdiom, Naming <: NamingStr
     for {
       conn <- ZIO.service[Connection]
       autoCommitPrev = conn.getAutoCommit
-      r <- sqlEffect(conn).acquireReleaseWith(conn => ZIO.succeed(conn.setAutoCommit(autoCommitPrev))) { conn =>
+      r <- ZIO.acquireReleaseWith(sqlEffect(conn))(conn => ZIO.succeed(conn.setAutoCommit(autoCommitPrev))) { conn =>
         sqlEffect(conn.setAutoCommit(false)).flatMap(_ => f)
       }.refineToOrDie[E]
     } yield r
@@ -102,8 +102,8 @@ abstract class ZioJdbcUnderlyingContext[Dialect <: SqlIdiom, Naming <: NamingStr
           case Failure(cause) =>
             ZIO.succeed(env.get[Connection].rollback()).foldCauseZIO(
               // NOTE: cause.flatMap(Cause.die) means wrap up the throwable failures into die failures, can only do if E param is Throwable (can also do .orDie at the end)
-              rollbackFailCause => ZIO.failCause(cause.flatMap(Cause.die(_, ZTrace.none)) ++ rollbackFailCause),
-              _ => ZIO.failCause(cause.flatMap(Cause.die(_, ZTrace.none))) // or ZIO.halt(cause).orDie
+              rollbackFailCause => ZIO.failCause(cause.flatMap(Cause.die(_, StackTrace.none)) ++ rollbackFailCause),
+              _ => ZIO.failCause(cause.flatMap(Cause.die(_, StackTrace.none))) // or ZIO.halt(cause).orDie
             )
         }.provideEnvironment(env)
       )))
@@ -164,7 +164,7 @@ abstract class ZioJdbcUnderlyingContext[Dialect <: SqlIdiom, Naming <: NamingStr
             case Some(size) =>
               ZStream.fromIterator(iter, size)
             case None =>
-              Stream.fromIterator(new ResultSetIterator(rs, conn, extractor))
+              ZStream.fromIterator(new ResultSetIterator(rs, conn, extractor))
           }
       }
 

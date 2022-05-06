@@ -185,7 +185,7 @@ abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] ext
   private def onConnectionStream[T](qstream: ZStream[Connection, SQLException, T]): ZStream[DataSource, SQLException, T] =
     streamBlocker *> ZStream.fromZIO(currentConnection.get).flatMap {
       case Some(connection) =>
-        qstream.provideService(connection)
+        qstream.provideEnvironment(ZEnvironment(connection))
       case None =>
         (for {
           env <- ZStream.scoped(DataSourceLayer.live.build)

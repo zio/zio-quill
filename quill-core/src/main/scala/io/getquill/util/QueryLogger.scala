@@ -12,7 +12,7 @@ class QueryLogger(logToFile: LogToFile) {
 
   val runtime =
     logToFile match {
-      case LogToFile.Enabled(logFile) => Some(Runtime.default.mapRuntimeConfig(_ @@ file(
+      case LogToFile.Enabled(logFile) => Some(Runtime.unsafeFromLayer(file(
         format = LogFormat.line,
         destination = Paths.get(logFile)
       )))
