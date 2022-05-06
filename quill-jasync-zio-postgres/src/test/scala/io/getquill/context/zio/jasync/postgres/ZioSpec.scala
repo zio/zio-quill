@@ -3,7 +3,7 @@ package io.getquill.context.zio.jasync.postgres
 import io.getquill.Spec
 import io.getquill.context.zio.ZioJAsyncConnection
 import org.scalatest.BeforeAndAfterAll
-import zio.stream.{ Sink, ZStream }
+import zio.stream.{ ZSink, ZStream }
 import zio.{ Runtime, ZIO }
 
 trait ZioSpec extends Spec with BeforeAndAfterAll {
@@ -12,10 +12,10 @@ trait ZioSpec extends Spec with BeforeAndAfterAll {
   val ctx = context
 
   def accumulate[T](stream: ZStream[ZioJAsyncConnection, Throwable, T]): ZIO[ZioJAsyncConnection, Throwable, List[T]] =
-    stream.run(Sink.collectAll).map(_.toList)
+    stream.run(ZSink.collectAll).map(_.toList)
 
   def collect[T](stream: ZStream[ZioJAsyncConnection, Throwable, T]): List[T] =
-    Runtime.default.unsafeRun(stream.run(Sink.collectAll).map(_.toList).provideLayer(testContext.layer))
+    Runtime.default.unsafeRun(stream.run(ZSink.collectAll).map(_.toList).provideLayer(testContext.layer))
 
   def runSyncUnsafe[T](qzio: ZIO[ZioJAsyncConnection, Throwable, T]): T =
     Runtime.default.unsafeRun(qzio.provideLayer(testContext.layer))
