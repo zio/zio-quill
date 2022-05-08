@@ -17,6 +17,10 @@ Quill provides a Quoted Domain Specific Language ([QDSL](http://homepages.inf.ed
 > ### Scala 3 Support 
 > [ProtoQuill](https://github.com/zio/zio-protoquill) provides Scala 3 support for Quill rebuilding on top of new metaprogramming capabilities from the ground > up! It is published to maven-central as the `quill-<module>_3` line of artifacts.
 
+
+> ### Doobie Support
+> See [here](#quill-doobie) for Doobie integration instructions.
+
 ![example](https://raw.githubusercontent.com/getquill/quill/master/example.gif)
 
 1. **Boilerplate-free mapping**: The database schema is mapped using simple case classes.
@@ -3892,6 +3896,118 @@ For `url` property use `postgresql` scheme:
 
 ```
 ctx.url=postgresql://host:5432/database?user=root&password=root
+```
+
+## quill-doobie
+
+Quill 3.16.5 and above supports Doobie starting 1.0.0-RC1. You can use quill quotes to construct `ConnectionIO` programs. 
+Quill provides statement construction and type mapping, and doobie takes care of statement execution.
+
+> Note that if you are migrating from the original `doobie-quill` integration (e.g. [here](https://search.maven.org/search?q=a:doobie-quill_2.12))
+just add the below dependency and replace the `doobie.quill` package with `io.getquill.doobie`.
+(If you are using the package provided by kubukoz (i.e. [here](https://github.com/polyvariant/doobie-quill)), then replace `org.polyvariant` with `io.getquill.doobie`.)
+
+In order to use this feature, add the following dependency.
+```
+libraryDependencies += "io.getquill" %% "quill-doobie" % "3.16.5"
+```
+
+The examples below require the following imports.
+
+```
+import io.getquill.{ idiom => _, _ }
+import io.getquill.DoobieContext
+```
+
+We can now construct a `DoobieContext` for our back-end database and import its members, as we would with a traditional Quill context. The options are `H2`, `MySQL`, `Oracle`, `Postgres`, `SQLite`, and `SQLServer`.
+
+```
+val dc = new DoobieContext.Postgres(Literal) // Literal naming scheme
+import dc._
+```
+
+We will be using the `country` table from our test database, so we need a data type of that name, with fields whose names and types line up with the table definition.
+
+```scala
+case class Country(code: String, name: String, population: Int)
+```
+
+We're now ready to construct doobie programs using Quill quotes. Note the return types from `run`, which are normal doobie types. You can freely mix Quill quotes into existing doobie programs.
+
+#### running and streaming
+
+
+```scala
+val q1 = quote { query[Country].filter(_.code == "GBR") }
+
+// Select all at once
+run(q1)
+
+// Stream in chunks of 16
+stream(q1, 16)
+```
+
+#### actions
+
+A simple update.
+
+```scala
+val u1 = quote { query[Country].filter(_.name like "U%").update(_.name -> "foo") }
+
+// Update yielding count of affected rows
+run(u1)
+```
+
+A batch update.
+
+```scala
+val u2 = quote {
+  liftQuery(List("U%", "A%")).foreach { pat =>
+    query[Country].filter(_.name like pat).update(_.name -> "foo")
+  }
+}
+
+// Update yielding list of counts of affected rows
+run(u2)
+```
+
+Now we will look at batch updates with generated keys. For this we will create a new table.
+
+```sql
+CREATE TABLE Foo (
+  id    SERIAL,
+  value VARCHAR(42)
+)
+```
+
+And a related data type.
+
+```scala
+case class Foo(id: Int, value: String)
+```
+
+We can now write an update returning generated keys.
+
+```scala
+val u3 = quote {
+  query[Foo].insert(lift(Foo(0, "Joe"))).returning(_.id)
+}
+
+// Update yielding a single id
+run(u3)
+```
+
+And a batch update returning generated keys.
+
+```scala
+val u4 = quote {
+  liftQuery(List(Foo(0, "Joe"), Foo(0, "Bob"))).foreach { a =>
+    query[Foo].insert(a).returning(_.id)
+  }
+}
+
+// Update yielding a list of ids
+run(u4)
 ```
 
 
