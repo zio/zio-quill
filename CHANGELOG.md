@@ -1,3 +1,7 @@
+# 3.16.5
+
+- [Re-integrating Doobie support](https://github.com/zio/zio-quill/pull/2478)
+
 # 3.16.4
 
 - [Support Spark 3.2.x and Scala 2.13 in quill-spark](https://github.com/zio/zio-quill/pull/2460)

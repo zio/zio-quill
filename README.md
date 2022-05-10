@@ -17,6 +17,10 @@ Quill provides a Quoted Domain Specific Language ([QDSL](http://homepages.inf.ed
 > ### Scala 3 Support 
 > [ProtoQuill](https://github.com/zio/zio-protoquill) provides Scala 3 support for Quill rebuilding on top of new metaprogramming capabilities from the ground > up! It is published to maven-central as the `quill-<module>_3` line of artifacts.
 
+
+> ### Doobie Support
+> See [here](#quill-doobie) for Doobie integration instructions.
+
 ![example](https://raw.githubusercontent.com/getquill/quill/master/example.gif)
 
 1. **Boilerplate-free mapping**: The database schema is mapped using simple case classes.
@@ -2688,7 +2692,7 @@ Quill provides a fully type-safe way to use Spark's highly-optimized SQL engine.
 ### Importing Quill Spark
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-spark" % "3.16.5-SNAPSHOT"
+  "io.getquill" %% "quill-spark" % "3.16.6-SNAPSHOT"
 )
 ```
 
@@ -2888,7 +2892,7 @@ The body of `transaction` can contain calls to other methods and multiple `run` 
 ```
 libraryDependencies ++= Seq(
   "mysql" % "mysql-connector-java" % "8.0.17",
-  "io.getquill" %% "quill-jdbc" % "3.16.5-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "3.16.6-SNAPSHOT"
 )
 ```
 
@@ -2915,7 +2919,7 @@ ctx.connectionTimeout=30000
 ```
 libraryDependencies ++= Seq(
   "org.postgresql" % "postgresql" % "42.2.8",
-  "io.getquill" %% "quill-jdbc" % "3.16.5-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "3.16.6-SNAPSHOT"
 )
 ```
 
@@ -2941,7 +2945,7 @@ ctx.connectionTimeout=30000
 ```
 libraryDependencies ++= Seq(
   "org.xerial" % "sqlite-jdbc" % "3.28.0",
-  "io.getquill" %% "quill-jdbc" % "3.16.5-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "3.16.6-SNAPSHOT"
 )
 ```
 
@@ -2962,7 +2966,7 @@ ctx.jdbcUrl=jdbc:sqlite:/path/to/db/file.db
 ```
 libraryDependencies ++= Seq(
   "com.h2database" % "h2" % "1.4.199",
-  "io.getquill" %% "quill-jdbc" % "3.16.5-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "3.16.6-SNAPSHOT"
 )
 ```
 
@@ -2984,7 +2988,7 @@ ctx.dataSource.user=sa
 ```
 libraryDependencies ++= Seq(
   "com.microsoft.sqlserver" % "mssql-jdbc" % "7.4.1.jre8",
-  "io.getquill" %% "quill-jdbc" % "3.16.5-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "3.16.6-SNAPSHOT"
 )
 ```
 
@@ -3006,7 +3010,7 @@ available for this situation [here](https://stackoverflow.com/questions/1074869/
 ```
 libraryDependencies ++= Seq(
   "com.oracle.jdbc" % "ojdbc8" % "18.3.0.0.0",
-  "io.getquill" %% "quill-jdbc" % "3.16.5-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "3.16.6-SNAPSHOT"
 )
 ```
 
@@ -3153,7 +3157,7 @@ val result = Runtime.default.unsafeRun(trans.onDataSource.provide(ds)) //returns
 ```
 libraryDependencies ++= Seq(
   "mysql" % "mysql-connector-java" % "8.0.17",
-  "io.getquill" %% "quill-jdbc-zio" % "3.16.5-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-zio" % "3.16.6-SNAPSHOT"
 )
 ```
 
@@ -3182,7 +3186,7 @@ ctx.connectionTimeout=30000
 ```
 libraryDependencies ++= Seq(
   "org.postgresql" % "postgresql" % "42.2.8",
-  "io.getquill" %% "quill-jdbc-zio" % "3.16.5-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-zio" % "3.16.6-SNAPSHOT"
 )
 ```
 
@@ -3210,7 +3214,7 @@ ctx.connectionTimeout=30000
 ```
 libraryDependencies ++= Seq(
   "org.xerial" % "sqlite-jdbc" % "3.28.0",
-  "io.getquill" %% "quill-jdbc-zio" % "3.16.5-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-zio" % "3.16.6-SNAPSHOT"
 )
 ```
 
@@ -3233,7 +3237,7 @@ ctx.jdbcUrl=jdbc:sqlite:/path/to/db/file.db
 ```
 libraryDependencies ++= Seq(
   "com.h2database" % "h2" % "1.4.199",
-  "io.getquill" %% "quill-jdbc-zio" % "3.16.5-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-zio" % "3.16.6-SNAPSHOT"
 )
 ```
 
@@ -3257,7 +3261,7 @@ ctx.dataSource.user=sa
 ```
 libraryDependencies ++= Seq(
   "com.microsoft.sqlserver" % "mssql-jdbc" % "7.4.1.jre8",
-  "io.getquill" %% "quill-jdbc-zio" % "3.16.5-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-zio" % "3.16.6-SNAPSHOT"
 )
 ```
 
@@ -3286,7 +3290,7 @@ Quill supports Oracle version 12c and up although due to licensing restrictions,
 ```
 libraryDependencies ++= Seq(
   "com.oracle.jdbc" % "ojdbc8" % "18.3.0.0.0",
-  "io.getquill" %% "quill-jdbc-zio" % "3.16.5-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-zio" % "3.16.6-SNAPSHOT"
 )
 ```
 
@@ -3388,7 +3392,7 @@ lazy val ctx = new MysqlMonixJdbcContext(SnakeCase, "ctx", Runner.using(Schedule
 ```
 libraryDependencies ++= Seq(
   "mysql" % "mysql-connector-java" % "8.0.17",
-  "io.getquill" %% "quill-jdbc-monix" % "3.16.5-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-monix" % "3.16.6-SNAPSHOT"
 )
 ```
 
@@ -3415,7 +3419,7 @@ ctx.connectionTimeout=30000
 ```
 libraryDependencies ++= Seq(
   "org.postgresql" % "postgresql" % "42.2.8",
-  "io.getquill" %% "quill-jdbc-monix" % "3.16.5-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-monix" % "3.16.6-SNAPSHOT"
 )
 ```
 
@@ -3441,7 +3445,7 @@ ctx.connectionTimeout=30000
 ```
 libraryDependencies ++= Seq(
   "org.xerial" % "sqlite-jdbc" % "3.28.0",
-  "io.getquill" %% "quill-jdbc-monix" % "3.16.5-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-monix" % "3.16.6-SNAPSHOT"
 )
 ```
 
@@ -3462,7 +3466,7 @@ ctx.jdbcUrl=jdbc:sqlite:/path/to/db/file.db
 ```
 libraryDependencies ++= Seq(
   "com.h2database" % "h2" % "1.4.199",
-  "io.getquill" %% "quill-jdbc-monix" % "3.16.5-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-monix" % "3.16.6-SNAPSHOT"
 )
 ```
 
@@ -3484,7 +3488,7 @@ ctx.dataSource.user=sa
 ```
 libraryDependencies ++= Seq(
   "com.microsoft.sqlserver" % "mssql-jdbc" % "7.4.1.jre8",
-  "io.getquill" %% "quill-jdbc-monix" % "3.16.5-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-monix" % "3.16.6-SNAPSHOT"
 )
 ```
 
@@ -3516,7 +3520,7 @@ available for this situation [here](https://stackoverflow.com/questions/1074869/
 ```
 libraryDependencies ++= Seq(
   "com.oracle.jdbc" % "ojdbc8" % "18.3.0.0.0",
-  "io.getquill" %% "quill-jdbc-monix" % "3.16.5-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-monix" % "3.16.6-SNAPSHOT"
 )
 ```
 
@@ -3558,7 +3562,7 @@ The body of transaction can contain calls to other methods and multiple run call
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-ndbc-postgres" % "3.16.5-SNAPSHOT"
+  "io.getquill" %% "quill-ndbc-postgres" % "3.16.6-SNAPSHOT"
 )
 ```
 
@@ -3665,7 +3669,7 @@ ctx.queryTimeout=10m
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async-mysql" % "3.16.5-SNAPSHOT"
+  "io.getquill" %% "quill-async-mysql" % "3.16.6-SNAPSHOT"
 )
 ```
 
@@ -3689,7 +3693,7 @@ ctx.url=mysql://host:3306/database?user=root&password=root
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async-postgres" % "3.16.5-SNAPSHOT"
+  "io.getquill" %% "quill-async-postgres" % "3.16.6-SNAPSHOT"
 )
 ```
 
@@ -3779,7 +3783,7 @@ ctx.sslrootcert=./path/to/cert/file # optional, required for sslmode=verify-ca o
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-jasync-mysql" % "3.16.5-SNAPSHOT"
+  "io.getquill" %% "quill-jasync-mysql" % "3.16.6-SNAPSHOT"
 )
 ```
 
@@ -3804,7 +3808,7 @@ ctx.url=mysql://host:3306/database?user=root&password=root
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-jasync-postgres" % "3.16.5-SNAPSHOT"
+  "io.getquill" %% "quill-jasync-postgres" % "3.16.6-SNAPSHOT"
 )
 ```
 
@@ -3857,7 +3861,7 @@ ctx.sslrootcert=./path/to/cert/file # optional, required for sslmode=verify-ca o
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-jasync-zio-postgres" % "3.16.5-SNAPSHOT"
+  "io.getquill" %% "quill-jasync-zio-postgres" % "3.16.6-SNAPSHOT"
 )
 ```
 
@@ -3894,6 +3898,118 @@ For `url` property use `postgresql` scheme:
 ctx.url=postgresql://host:5432/database?user=root&password=root
 ```
 
+## quill-doobie
+
+Quill 3.16.5 and above supports Doobie starting 1.0.0-RC1. You can use quill quotes to construct `ConnectionIO` programs. 
+Quill provides statement construction and type mapping, and doobie takes care of statement execution.
+
+> Note that if you are migrating from the original `doobie-quill` integration (e.g. [here](https://search.maven.org/search?q=a:doobie-quill_2.12))
+just add the below dependency and replace the `doobie.quill` package with `io.getquill.doobie`.
+(If you are using the package provided by kubukoz (i.e. [here](https://github.com/polyvariant/doobie-quill)), then replace `org.polyvariant` with `io.getquill.doobie`.)
+
+In order to use this feature, add the following dependency.
+```
+libraryDependencies += "io.getquill" %% "quill-doobie" % "3.16.6-SNAPSHOT"
+```
+
+The examples below require the following imports.
+
+```
+import io.getquill.{ idiom => _, _ }
+import io.getquill.DoobieContext
+```
+
+We can now construct a `DoobieContext` for our back-end database and import its members, as we would with a traditional Quill context. The options are `H2`, `MySQL`, `Oracle`, `Postgres`, `SQLite`, and `SQLServer`.
+
+```
+val dc = new DoobieContext.Postgres(Literal) // Literal naming scheme
+import dc._
+```
+
+We will be using the `country` table from our test database, so we need a data type of that name, with fields whose names and types line up with the table definition.
+
+```scala
+case class Country(code: String, name: String, population: Int)
+```
+
+We're now ready to construct doobie programs using Quill quotes. Note the return types from `run`, which are normal doobie types. You can freely mix Quill quotes into existing doobie programs.
+
+#### running and streaming
+
+
+```scala
+val q1 = quote { query[Country].filter(_.code == "GBR") }
+
+// Select all at once
+run(q1)
+
+// Stream in chunks of 16
+stream(q1, 16)
+```
+
+#### actions
+
+A simple update.
+
+```scala
+val u1 = quote { query[Country].filter(_.name like "U%").update(_.name -> "foo") }
+
+// Update yielding count of affected rows
+run(u1)
+```
+
+A batch update.
+
+```scala
+val u2 = quote {
+  liftQuery(List("U%", "A%")).foreach { pat =>
+    query[Country].filter(_.name like pat).update(_.name -> "foo")
+  }
+}
+
+// Update yielding list of counts of affected rows
+run(u2)
+```
+
+Now we will look at batch updates with generated keys. For this we will create a new table.
+
+```sql
+CREATE TABLE Foo (
+  id    SERIAL,
+  value VARCHAR(42)
+)
+```
+
+And a related data type.
+
+```scala
+case class Foo(id: Int, value: String)
+```
+
+We can now write an update returning generated keys.
+
+```scala
+val u3 = quote {
+  query[Foo].insert(lift(Foo(0, "Joe"))).returning(_.id)
+}
+
+// Update yielding a single id
+run(u3)
+```
+
+And a batch update returning generated keys.
+
+```scala
+val u4 = quote {
+  liftQuery(List(Foo(0, "Joe"), Foo(0, "Bob"))).foreach { a =>
+    query[Foo].insert(a).returning(_.id)
+  }
+}
+
+// Update yielding a list of ids
+run(u4)
+```
+
 
 ## Finagle Contexts
 
@@ -3926,7 +4042,7 @@ The body of `transaction` can contain calls to other methods and multiple `run` 
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-finagle-mysql" % "3.16.5-SNAPSHOT"
+  "io.getquill" %% "quill-finagle-mysql" % "3.16.6-SNAPSHOT"
 )
 ```
 
@@ -3966,7 +4082,7 @@ The body of `transaction` can contain calls to other methods and multiple `run` 
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-finagle-postgres" % "3.16.5-SNAPSHOT"
+  "io.getquill" %% "quill-finagle-postgres" % "3.16.6-SNAPSHOT"
 )
 ```
 
@@ -3993,7 +4109,7 @@ ctx.binaryParams=false
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-cassandra" % "3.16.5-SNAPSHOT"
+  "io.getquill" %% "quill-cassandra" % "3.16.6-SNAPSHOT"
 )
 ```
 
@@ -4082,7 +4198,7 @@ More examples of a Quill-Cassandra-ZIO app [quill-cassandra-zio/src/test/scala/i
 
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-cassandra-zio" % "3.16.5-SNAPSHOT"
+  "io.getquill" %% "quill-cassandra-zio" % "3.16.6-SNAPSHOT"
 )
 ```
 
@@ -4091,7 +4207,7 @@ libraryDependencies ++= Seq(
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-cassandra-monix" % "3.16.5-SNAPSHOT"
+  "io.getquill" %% "quill-cassandra-monix" % "3.16.6-SNAPSHOT"
 )
 ```
 
@@ -4110,7 +4226,7 @@ lazy val ctx = new CassandraStreamContext(SnakeCase, "ctx")
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-cassandra-alpakka" % "3.16.5-SNAPSHOT"
+  "io.getquill" %% "quill-cassandra-alpakka" % "3.16.6-SNAPSHOT"
 )
 ```
 
@@ -4152,7 +4268,7 @@ quill-test-datastax-java-driver {
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-orientdb" % "3.16.5-SNAPSHOT"
+  "io.getquill" %% "quill-orientdb" % "3.16.6-SNAPSHOT"
 )
 ```
 
@@ -4214,7 +4330,7 @@ Have a look at the [CODEGEN.md](https://github.com/getquill/quill/blob/master/CO
 
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-codegen-jdbc" % "3.16.5-SNAPSHOT"
+  "io.getquill" %% "quill-codegen-jdbc" % "3.16.6-SNAPSHOT"
 )
 ```
 

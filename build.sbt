@@ -45,7 +45,7 @@ lazy val baseModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
 )
 
 lazy val dbModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
-  `quill-jdbc`, `quill-jdbc-monix`, `quill-jdbc-zio`
+  `quill-jdbc`, `quill-doobie`, `quill-jdbc-monix`, `quill-jdbc-zio`
 )
 
 lazy val jasyncModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
@@ -86,7 +86,7 @@ lazy val scala213Modules = baseModules ++ jsModules ++ dbModules ++ codegenModul
 )
 
 lazy val notScala211Modules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
-  `quill-cassandra-alpakka`, `quill-util`
+  `quill-cassandra-alpakka`, `quill-util`, `quill-doobie`
 )
 
 lazy val scala3Modules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](`quill-engine-jvm`, `quill-util`)
@@ -410,6 +410,23 @@ lazy val `quill-jdbc` =
     .settings(mimaSettings: _*)
     .settings(jdbcTestingSettings: _*)
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
+    .enablePlugins(MimaPlugin)
+
+ThisBuild / libraryDependencySchemes += "org.typelevel" %% "cats-effect" % "always"
+lazy val `quill-doobie` =
+  (project in file("quill-doobie"))
+    .settings(commonSettings: _*)
+    .settings(mimaSettings: _*)
+    .settings(jdbcTestingSettings: _*)
+    .settings(
+      Compile / SbtScalariform.ScalariformKeys.format / sourceDirectories :=
+        (Compile / SbtScalariform.ScalariformKeys.format / sourceDirectories).value.filter(f => !f.getAbsolutePath.contains("quill-doobie")),
+      libraryDependencies ++= Seq(
+        "org.tpolecat" %% "doobie-core" % "1.0.0-RC2",
+        "org.tpolecat" %% "doobie-postgres" % "1.0.0-RC2" % Test
+      )
+    )
+    .dependsOn(`quill-jdbc` % "compile->compile;test->test")
     .enablePlugins(MimaPlugin)
 
 lazy val `quill-monix` =
