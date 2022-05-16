@@ -1476,6 +1476,56 @@ ctx.run(a) //: List[Long] size = 2. Contains 1 @ positions, where row was insert
 // INSERT INTO Person (id,name,age) VALUES (?, ?, ?)
 ```
 
+Just as in regular, queries us the extended insert/update syntaxes to finer-grained control of what is being inserted.
+For example if ID is a generated value you can skip ID insertion like this:
+(This can also be accomplied with an insert-meta).
+```scala
+// case class Person(id: Int, name: String, age: Int)
+val a = quote {
+  liftQuery(List(Person(0, "John", 31),Person(0, "name2", 32))).foreach(e => query[Person].insert(_.name -> p.name, _.age -> p.age))
+}
+
+ctx.run(a)
+// INSERT INTO Person (name,age) VALUES (?, ?)
+```
+
+Batch queries can also have a returning/returningGenerate clause:
+```scala
+// case class Person(id: Int, name: String, age: Int)
+val a = quote {
+  liftQuery(List(Person(0, "John", 31),Person(0, "name2", 32))).foreach(e => query[Person].insert(_.name -> p.name, _.age -> p.age)).returning(_.id)
+}
+
+ctx.run(a)
+// INSERT INTO Person (name,age) VALUES (?, ?) RETURNING id
+```
+
+
+Note that the `liftQuery[Something]` and the query[Something]` values do not necessarily need to be the same object. 
+(In fact the liftQuery value can even be a constant!)
+For example:
+```scala
+// case class Person(name: String, age: Int)
+// case class Vip(first: String, last: String, age: Int)
+// val vips: List[Vip] = ...
+val q = quote {
+  liftQuery(vips).foreach(v => query[Person].insertValue(Person(v.first + v.last, v.age)))
+}
+
+ctx.run(q)
+// INSERT INTO Person (name,age) VALUES ((? || ?), ?)
+```
+
+Note that UPDATE queries can also be done in batches (as well as DELETE queries).
+```scala
+val q = quote {
+  liftQuery(vips).foreach(v => query[Person].filter(p => p.age > 22).updateValue(Person(v.first + v.last, v.age)))
+}
+
+ctx.run(q)
+// UPDATE Person SET name = (? || ?), age = ? WHERE age > 22
+```
+
 ### updateValue / update
 ```scala
 val a = quote {
