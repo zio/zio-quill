@@ -134,6 +134,15 @@ trait PeopleSpec extends Spec {
         query[Person].filter(p => set.contains(p.age))
     }
 
+  def `Ex 11 contains`(set: Set[Int]) = quote {
+    query[Person].filter { p =>
+      if (liftQuery(set).isEmpty)
+        true
+      else
+        liftQuery(set).contains(p.age)
+    }
+  }
+
   val `Ex 8 param` = Set.empty[Int]
   val `Ex 8 expected result` = List.empty[Person]
 
