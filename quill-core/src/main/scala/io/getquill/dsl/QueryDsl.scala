@@ -45,9 +45,7 @@ private[getquill] trait QueryDsl {
 
   trait TemporalExtras {
     implicit class DateOps(a: Date) {
-      def ===(b: Option[Date]): Boolean = b.exists(bv => bv.getTime == a.getTime)
       def ===(b: Date): Boolean = a.getTime == b.getTime
-      def =!=(b: Option[Date]): Boolean = b.exists(bv => bv.getTime != a.getTime)
       def =!=(b: Date): Boolean = a.getTime != b.getTime
       def >(b: Date): Boolean = a.getTime > b.getTime
       def >=(b: Date): Boolean = a.getTime >= b.getTime
@@ -55,9 +53,7 @@ private[getquill] trait QueryDsl {
       def <=(b: Date): Boolean = a.getTime <= b.getTime
     }
     implicit class TimestampOps(a: Timestamp) {
-      def ===(b: Option[Timestamp]): Boolean = b.exists(bv => bv.getTime == a.getTime)
       def ===(b: Timestamp): Boolean = a.getTime == b.getTime
-      def =!=(b: Option[Timestamp]): Boolean = b.exists(bv => bv.getTime != a.getTime)
       def =!=(b: Timestamp): Boolean = a.getTime != b.getTime
       def >(b: Timestamp): Boolean = a.getTime > b.getTime
       def >=(b: Timestamp): Boolean = a.getTime >= b.getTime
@@ -65,9 +61,7 @@ private[getquill] trait QueryDsl {
       def <=(b: Timestamp): Boolean = a.getTime <= b.getTime
     }
     implicit class InstantOps(a: Instant) {
-      def ===(b: Option[Instant]): Boolean = b.exists(bv => bv.equals(a))
       def ===(b: Instant): Boolean = a.equals(b)
-      def =!=(b: Option[Instant]): Boolean = b.exists(bv => !bv.equals(a))
       def =!=(b: Instant): Boolean = !a.equals(b)
       def >(b: Instant): Boolean = a.isAfter(b)
       def >=(b: Instant): Boolean = a.equals(b) || a.isAfter(b)
@@ -75,9 +69,7 @@ private[getquill] trait QueryDsl {
       def <=(b: Instant): Boolean = a.equals(b) || a.isBefore(b)
     }
     implicit class LocalDateOps(a: LocalDate) {
-      def ===(b: Option[LocalDate]): Boolean = b.exists(bv => bv.equals(a))
       def ===(b: LocalDate): Boolean = a.equals(b)
-      def =!=(b: Option[LocalDate]): Boolean = b.exists(bv => !bv.equals(a))
       def =!=(b: LocalDate): Boolean = !a.equals(b)
       def >(b: LocalDate): Boolean = a.isAfter(b)
       def >=(b: LocalDate): Boolean = a.equals(b) || a.isAfter(b)
@@ -85,9 +77,7 @@ private[getquill] trait QueryDsl {
       def <=(b: LocalDate): Boolean = a.equals(b) || a.isBefore(b)
     }
     implicit class LocalDateTimeOps(a: LocalDateTime) {
-      def ===(b: Option[LocalDateTime]): Boolean = b.exists(bv => bv.equals(a))
       def ===(b: LocalDateTime): Boolean = a.equals(b)
-      def =!=(b: Option[LocalDateTime]): Boolean = b.exists(bv => !bv.equals(a))
       def =!=(b: LocalDateTime): Boolean = !a.equals(b)
       def >(b: LocalDateTime): Boolean = a.isAfter(b)
       def >=(b: LocalDateTime): Boolean = a.equals(b) || a.isAfter(b)
@@ -95,9 +85,7 @@ private[getquill] trait QueryDsl {
       def <=(b: LocalDateTime): Boolean = a.equals(b) || a.isBefore(b)
     }
     implicit class LocalTimeOps(a: LocalTime) {
-      def ===(b: Option[LocalTime]): Boolean = b.exists(bv => bv.equals(a))
       def ===(b: LocalTime): Boolean = a.equals(b)
-      def =!=(b: Option[LocalTime]): Boolean = b.exists(bv => !bv.equals(a))
       def =!=(b: LocalTime): Boolean = !a.equals(b)
       def >(b: LocalTime): Boolean = a.isAfter(b)
       def >=(b: LocalTime): Boolean = a.equals(b) || a.isAfter(b)
@@ -105,9 +93,7 @@ private[getquill] trait QueryDsl {
       def <=(b: LocalTime): Boolean = a.equals(b) || a.isBefore(b)
     }
     implicit class OffsetTimeOps(a: OffsetTime) {
-      def ===(b: Option[OffsetTime]): Boolean = b.exists(bv => bv.equals(a))
       def ===(b: OffsetTime): Boolean = a.equals(b)
-      def =!=(b: Option[OffsetTime]): Boolean = b.exists(bv => !bv.equals(a))
       def =!=(b: OffsetTime): Boolean = !a.equals(b)
       def >(b: OffsetTime): Boolean = a.isAfter(b)
       def >=(b: OffsetTime): Boolean = a.equals(b) || a.isAfter(b)
@@ -115,9 +101,7 @@ private[getquill] trait QueryDsl {
       def <=(b: OffsetTime): Boolean = a.equals(b) || a.isBefore(b)
     }
     implicit class OffsetDateTimeOps(a: OffsetDateTime) {
-      def ===(b: Option[OffsetDateTime]): Boolean = b.exists(bv => bv.equals(a))
       def ===(b: OffsetDateTime): Boolean = a.equals(b)
-      def =!=(b: Option[OffsetDateTime]): Boolean = b.exists(bv => !bv.equals(a))
       def =!=(b: OffsetDateTime): Boolean = !a.equals(b)
       def >(b: OffsetDateTime): Boolean = a.isAfter(b)
       def >=(b: OffsetDateTime): Boolean = a.equals(b) || a.isAfter(b)
@@ -125,9 +109,7 @@ private[getquill] trait QueryDsl {
       def <=(b: OffsetDateTime): Boolean = a.equals(b) || a.isBefore(b)
     }
     implicit class ZonedDateTimeOps(a: ZonedDateTime) {
-      def ===(b: Option[ZonedDateTime]): Boolean = b.exists(bv => bv.equals(a))
       def ===(b: ZonedDateTime): Boolean = a.equals(b)
-      def =!=(b: Option[ZonedDateTime]): Boolean = b.exists(bv => !bv.equals(a))
       def =!=(b: ZonedDateTime): Boolean = !a.equals(b)
       def >(b: ZonedDateTime): Boolean = a.isAfter(b)
       def >=(b: ZonedDateTime): Boolean = a.equals(b) || a.isAfter(b)
