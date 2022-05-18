@@ -578,6 +578,7 @@ trait Parsing extends ValueComputation with QuatMaking {
     case `numericOperationParser`(value)  => value
     case `setOperationParser`(value)      => value
     case `functionApplyParser`(value)     => value
+    case `temporalOperationParser`(value) => value
   }
 
   private def operationParser(cond: Tree => Boolean)(
@@ -666,6 +667,32 @@ trait Parsing extends ValueComputation with QuatMaking {
       equalityWithInnerTypechecksAnsi(a, b)(NotEqual)
     case q"$pack.extras.RegOps[$t]($a).=!=($b)" =>
       equalityWithInnerTypechecksAnsi(a, b)(NotEqual)
+  }
+
+  val temporalOperationParser: Parser[Operation] = {
+    object operator {
+      def unapply(t: TermName) =
+        f.lift(t.decodedName.toString)
+    }
+
+    case q"$pack.extras.DateOps($a).${ operator(op: BinaryOperator) }($b)" =>
+      BinaryOperation(astParser(a), op, astParser(b))
+    case q"$pack.extras.TimestampOps($a).${ operator(op: BinaryOperator) }($b)" =>
+      BinaryOperation(astParser(a), op, astParser(b))
+    case q"$pack.extras.InstantOps($a).${ operator(op: BinaryOperator) }($b)" =>
+      BinaryOperation(astParser(a), op, astParser(b))
+    case q"$pack.extras.LocalDateOps($a).${ operator(op: BinaryOperator) }($b)" =>
+      BinaryOperation(astParser(a), op, astParser(b))
+    case q"$pack.extras.LocalTimeOps($a).${ operator(op: BinaryOperator) }($b)" =>
+      BinaryOperation(astParser(a), op, astParser(b))
+    case q"$pack.extras.LocalDateTimeOps($a).${ operator(op: BinaryOperator) }($b)" =>
+      BinaryOperation(astParser(a), op, astParser(b))
+    case q"$pack.extras.OffsetTimeOps($a).${ operator(op: BinaryOperator) }($b)" =>
+      BinaryOperation(astParser(a), op, astParser(b))
+    case q"$pack.extras.OffsetDateTimeOps($a).${ operator(op: BinaryOperator) }($b)" =>
+      BinaryOperation(astParser(a), op, astParser(b))
+    case q"$pack.extras.ZonedDateTimeOps($a).${ operator(op: BinaryOperator) }($b)" =>
+      BinaryOperation(astParser(a), op, astParser(b))
   }
 
   val booleanOperationParser: Parser[Operation] =
