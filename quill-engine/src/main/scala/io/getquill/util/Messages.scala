@@ -1,6 +1,7 @@
 package io.getquill.util
 
 import io.getquill.AstPrinter
+
 import scala.collection.mutable.{ Map => MutableMap }
 
 object Messages {
@@ -34,12 +35,14 @@ object Messages {
 
   sealed trait LogToFile
   object LogToFile {
-    case class Enabled(file: String) extends LogToFile
+    final case class Full(file: String) extends LogToFile
+    final case class GitFriendly(file: String) extends LogToFile
     case object Disabled extends LogToFile
     def apply(switch: String): LogToFile =
       switch.trim match {
-        case "false" => Disabled
-        case other   => Enabled(other)
+        case "false"       => Disabled
+        case "gitFriendly" => GitFriendly("queries.sql")
+        case other         => Full(other)
       }
   }
 

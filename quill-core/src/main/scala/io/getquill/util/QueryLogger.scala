@@ -9,29 +9,29 @@ import java.time.ZonedDateTime
 
 class QueryLogger(logToFile: LogToFile) {
 
-  def produceLoggerEnv(file: String) =
+  private def produceLoggerEnv(file: String) =
     ZEnv.live >>>
       Logging.file(
         logLevel = LogLevel.Info,
-        format = LogFormat.fromFunction((ctx, str) => {
-          str
-        }),
+        format = LogFormat.fromFunction((_, str) => str),
         destination = Paths.get(file)
       ) >>> Logging.withRootLoggerName("query-logger")
 
-  lazy val env = {
+  private lazy val env = {
     logToFile match {
-      case LogToFile.Enabled(file) => Some(produceLoggerEnv(file))
-      case LogToFile.Disabled      => None
+      case LogToFile.Full(file)        => Some(produceLoggerEnv(file))
+      case LogToFile.GitFriendly(file) => Some(produceLoggerEnv(file))
+      case LogToFile.Disabled          => None
     }
   }
 
-  private[getquill] val runtime =
-    env.map(Runtime.unsafeFromLayer(_))
+  private[getquill] val runtime = env.map(Runtime.unsafeFromLayer(_))
+
+  private[getquill] lazy val userProjectRootPath = Paths.get("").toAbsolutePath.toString + "/"
 
   def apply(queryString: String, sourcePath: String, line: Int, column: Int): Unit = {
-    runtime match {
-      case Some(runtimeValue) =>
+    (logToFile, runtime) match {
+      case (_: LogToFile.Full, Some(runtimeValue)) =>
         runtimeValue.unsafeRunAsync_(log.info(
           s"""
              |-- file: $sourcePath:$line:$column
@@ -39,7 +39,16 @@ class QueryLogger(logToFile: LogToFile) {
              |$queryString;
              |""".stripMargin
         ))
-      case None => // do nothing
+      case (_: LogToFile.GitFriendly, Some(runtimeValue)) =>
+        @inline def relativePath: String = sourcePath.replace(userProjectRootPath, "")
+
+        runtimeValue.unsafeRunAsync_(log.info(
+          s"""
+             |-- file: $relativePath:$line:$column
+             |$queryString;
+             |""".stripMargin
+        ))
+      case (_, None) => // do nothing
     }
   }
 }
