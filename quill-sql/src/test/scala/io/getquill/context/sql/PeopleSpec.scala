@@ -148,4 +148,28 @@ trait PeopleSpec extends Spec {
     query[Person].sortBy(p => p.name)(Ord.asc).drop(3).take(3)
   }
   val `Ex 10 page 2 expected` = peopleEntries.sortBy(_.name).slice(3, 6)
+
+  val `Ex 11 filtered update` = quote {
+    query[Person].filter(p => p.name == "Bert").update(_.age -> 44)
+  }
+  val `Ex 11 filtered update get` = quote {
+    query[Person]
+  }
+  val `Ex 11 filtered update expected` =
+    peopleEntries.map {
+      case Person("Bert", age) => Person("Bert", 44)
+      case other               => other
+    }
+
+  val `Ex 12 filtered update co-related` = quote {
+    query[Person].filter(p => query[Couple].filter(c => c.her == "Alex" && c.him == p.name).nonEmpty).update(_.age -> 45)
+  }
+  val `Ex 12 filtered update co-related get` = quote {
+    query[Person]
+  }
+  val `Ex 12 filtered update co-related expected` =
+    peopleEntries.map {
+      case Person("Bert", age) => Person("Bert", 45)
+      case other               => other
+    }
 }
