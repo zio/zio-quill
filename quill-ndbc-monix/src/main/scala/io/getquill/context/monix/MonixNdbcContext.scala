@@ -1,7 +1,7 @@
 package io.getquill.context.monix
 
 import java.sql.{ Array => _ }
-import io.getquill.context.{ ExecutionInfo, StreamingContext }
+import io.getquill.context.{ ExecutionInfo, ContextVerbStream }
 import io.getquill.context.monix.MonixNdbcContext.Runner
 import io.getquill.context.ndbc.NdbcContextBase
 import io.getquill.context.sql.idiom.SqlIdiom
@@ -79,7 +79,7 @@ abstract class MonixNdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy, P
   runner:     Runner
 ) extends MonixContext[Dialect, Naming]
   with NdbcContextBase[Dialect, Naming, P, R]
-  with StreamingContext[Dialect, Naming]
+  with ContextVerbStream[Dialect, Naming]
   with MonixTranslateContext {
 
   import runner._
