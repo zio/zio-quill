@@ -125,6 +125,23 @@ class SQLServerDialectSpec extends Spec {
     }
   }
 
+  "No alias for filtered insert" - {
+    "filtered insert" in {
+      val q = quote {
+        qr1.filter(t => t.i == 123).update(_.l -> 456)
+      }
+      ctx.run(q).string mustEqual
+        "UPDATE TestEntity SET l = 456 WHERE i = 123"
+    }
+    "filtered insert with co-related subquery" in {
+      val q = quote {
+        qr1.filter(t => qr2.filter(tt => tt.i == t.i).nonEmpty).update(_.l -> 456)
+      }
+      ctx.run(q).string mustEqual
+        "UPDATE TestEntity SET l = 456 WHERE EXISTS (SELECT tt.s, tt.i, tt.l, tt.o FROM TestEntity2 tt WHERE tt.i = i)"
+    }
+  }
+
   "Insert with returning via OUTPUT" - {
     "returning" - {
       "with single column table" in {

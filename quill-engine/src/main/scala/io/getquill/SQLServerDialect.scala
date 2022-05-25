@@ -1,6 +1,6 @@
 package io.getquill
 
-import io.getquill.ast._
+import io.getquill.ast.{ Action => AstAction, _ }
 import io.getquill.context.CanOutputClause
 import io.getquill.context.sql.idiom._
 import io.getquill.context.sql.norm.AddDropToNestedOrderBy
@@ -9,7 +9,7 @@ import io.getquill.idiom.StatementInterpolator._
 import io.getquill.idiom.{ Statement, StringToken, Token }
 import io.getquill.norm.EqualityBehavior
 import io.getquill.norm.EqualityBehavior.NonAnsiEquality
-import io.getquill.sql.idiom.BooleanLiteralSupport
+import io.getquill.sql.idiom.{ BooleanLiteralSupport, NoActionAliases }
 import io.getquill.util.Messages.fail
 
 trait SQLServerDialect
@@ -17,9 +17,12 @@ trait SQLServerDialect
   with QuestionMarkBindVariables
   with ConcatSupport
   with CanOutputClause
-  with BooleanLiteralSupport {
+  with BooleanLiteralSupport
+  with NoActionAliases {
 
   override def querifyAst(ast: Ast) = AddDropToNestedOrderBy(SqlQuery(ast))
+
+  override def querifyAction(ast: AstAction) = HideTopLevelFilterAlias(super.querifyAction(ast))
 
   override def emptySetContainsToken(field: Token) = StringToken("1 <> 1")
 
@@ -48,6 +51,17 @@ trait SQLServerDialect
     Tokenizer[Operation] {
       case BinaryOperation(a, StringOperator.`+`, b) => stmt"${scopedTokenizer(a)} + ${scopedTokenizer(b)}"
       case other                                     => super.operationTokenizer.token(other)
+    }
+
+  override protected def actionTokenizer(insertEntityTokenizer: Tokenizer[Entity])(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[ast.Action] =
+    Tokenizer[ast.Action] {
+      // Update(Filter(...)) and Delete(Filter(...)) usually cause a table alias i.e. `UPDATE People <alias> SET ... WHERE ...` or `DELETE FROM People <alias> WHERE ...`
+      // since the alias is used in the WHERE clause. This functionality removes that because SQLServer doesn't support aliasing in actions.
+      case Update(Filter(table: Entity, x, where), assignments) =>
+        stmt"UPDATE ${table.token} SET ${assignments.token} WHERE ${where.token}"
+      case Delete(Filter(table: Entity, x, where)) =>
+        stmt"DELETE FROM ${table.token} WHERE ${where.token}"
+      case other => super.actionTokenizer(insertEntityTokenizer).token(other)
     }
 }
 
