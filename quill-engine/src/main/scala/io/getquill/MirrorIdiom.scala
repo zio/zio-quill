@@ -126,6 +126,9 @@ trait MirrorIdiomBase extends Idiom {
     case Distinct(a) =>
       stmt"${a.token}.distinct"
 
+    case DistinctOn(source, alias, body) =>
+      stmt"${source.token}.distinctOn(${alias.token} => ${body.token})"
+
     case Nested(a) =>
       stmt"${a.token}.nested"
   }

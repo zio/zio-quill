@@ -45,7 +45,7 @@ lazy val baseModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
 )
 
 lazy val dbModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
-  `quill-jdbc`, `quill-jdbc-monix`, `quill-jdbc-zio`
+  `quill-jdbc`, `quill-doobie`, `quill-jdbc-monix`, `quill-jdbc-zio`
 )
 
 lazy val jasyncModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
@@ -81,11 +81,12 @@ lazy val scala213Modules = baseModules ++ jsModules ++ dbModules ++ codegenModul
   `quill-jasync-postgres`,
   `quill-jasync-mysql`,
   `quill-jasync-zio`,
-  `quill-jasync-zio-postgres`
+  `quill-jasync-zio-postgres`,
+  `quill-spark`
 )
 
 lazy val notScala211Modules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
-  `quill-cassandra-alpakka`, `quill-util`
+  `quill-cassandra-alpakka`, `quill-util`, `quill-doobie`
 )
 
 lazy val scala3Modules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](`quill-engine-jvm`, `quill-util`)
@@ -411,6 +412,23 @@ lazy val `quill-jdbc` =
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
     .enablePlugins(MimaPlugin)
 
+ThisBuild / libraryDependencySchemes += "org.typelevel" %% "cats-effect" % "always"
+lazy val `quill-doobie` =
+  (project in file("quill-doobie"))
+    .settings(commonSettings: _*)
+    .settings(mimaSettings: _*)
+    .settings(jdbcTestingSettings: _*)
+    .settings(
+      Compile / SbtScalariform.ScalariformKeys.format / sourceDirectories :=
+        (Compile / SbtScalariform.ScalariformKeys.format / sourceDirectories).value.filter(f => !f.getAbsolutePath.contains("quill-doobie")),
+      libraryDependencies ++= Seq(
+        "org.tpolecat" %% "doobie-core" % "1.0.0-RC2",
+        "org.tpolecat" %% "doobie-postgres" % "1.0.0-RC2" % Test
+      )
+    )
+    .dependsOn(`quill-jdbc` % "compile->compile;test->test")
+    .enablePlugins(MimaPlugin)
+
 lazy val `quill-monix` =
   (project in file("quill-monix"))
     .settings(commonSettings: _*)
@@ -511,8 +529,9 @@ lazy val `quill-spark` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "org.apache.spark" %% "spark-sql" % "2.4.4"
-      ),
+          if (isScala211) "org.apache.spark" %% "spark-sql" % "2.4.4"
+          else "org.apache.spark" %% "spark-sql" % "3.2.1"
+        ),
       excludeDependencies ++= Seq(
         "ch.qos.logback"  % "logback-classic"
       )
@@ -678,8 +697,7 @@ lazy val `quill-cassandra-zio` =
       Test / fork := true,
       libraryDependencies ++= Seq(
         "dev.zio" %% "zio" % "1.0.12",
-        "dev.zio" %% "zio-streams" % "1.0.12",
-        "dev.zio" %% "zio-interop-guava" % "31.0.0.0"
+        "dev.zio" %% "zio-streams" % "1.0.12"
       )
     )
     .dependsOn(`quill-cassandra` % "compile->compile;test->test")
@@ -789,9 +807,9 @@ def updateWebsiteTag =
 lazy val jdbcTestingLibraries = Seq(
   libraryDependencies ++= Seq(
     "com.zaxxer"              %  "HikariCP"                % "3.4.5",
-    "mysql"                   %  "mysql-connector-java"    % "8.0.28"             % Test,
+    "mysql"                   %  "mysql-connector-java"    % "8.0.29"             % Test,
     "com.h2database"          %  "h2"                      % "2.1.210"            % Test,
-    "org.postgresql"          %  "postgresql"              % "42.3.3"             % Test,
+    "org.postgresql"          %  "postgresql"              % "42.3.6"             % Test,
     "org.xerial"              %  "sqlite-jdbc"             % "3.36.0.3"             % Test,
     "com.microsoft.sqlserver" %  "mssql-jdbc"              % "7.1.1.jre8-preview" % Test,
     "com.oracle.ojdbc"        %  "ojdbc8"                  % "19.3.0.0"           % Test,
@@ -827,7 +845,7 @@ def excludePaths(paths:Seq[String]) = {
 val scala_v_11 = "2.11.12"
 val scala_v_12 = "2.12.10"
 val scala_v_13 = "2.13.2"
-val scala_v_30 = "3.0.2"
+val scala_v_30 = "3.1.2"
 
 lazy val loggingSettings = Seq(
   libraryDependencies ++= Seq(
