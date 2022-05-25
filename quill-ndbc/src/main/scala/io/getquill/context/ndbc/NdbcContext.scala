@@ -1,6 +1,6 @@
 package io.getquill.context.ndbc
 
-import io.getquill.context.{ ExecutionInfo, TranslateContextBase }
+import io.getquill.context.{ ExecutionInfo, ContextTranslateProto }
 import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.{ NamingStrategy, ReturnAction }
 import io.trane.future.scala.{ Await, Future, Promise }
@@ -12,7 +12,7 @@ abstract class NdbcContext[I <: SqlIdiom, N <: NamingStrategy, P <: PreparedStat
   override val idiom: I, override val naming: N, val dataSource: DataSource[P, R]
 )
   extends NdbcContextBase[I, N, P, R]
-  with TranslateContextBase {
+  with ContextTranslateProto {
 
   override type Result[T] = Future[T]
   override type RunQueryResult[T] = List[T]

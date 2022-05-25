@@ -1,3 +1,15 @@
+# 3.16.5
+
+- [Re-integrating Doobie support](https://github.com/zio/zio-quill/pull/2478)
+
+# 3.16.4
+
+- [Support Spark 3.2.x and Scala 2.13 in quill-spark](https://github.com/zio/zio-quill/pull/2460)
+- [Fix dynamic query quat error](https://github.com/zio/zio-quill/pull/2458)
+- [Implement DistinctOn](https://github.com/zio/zio-quill/pull/2375)
+- [Sync Contexts with ProtoQuill and move out ProtoQuill conflicts](https://github.com/zio/zio-quill/pull/2472)
+- [Fix the typo `ZioCassandraSession`  in document.](https://github.com/zio/zio-quill/pull/2303)
+
 # 3.16.3
 
 - [Remove anonymous class made by Property.Opinionated and make NullValue case object](https://github.com/zio/zio-quill/pull/2426)
