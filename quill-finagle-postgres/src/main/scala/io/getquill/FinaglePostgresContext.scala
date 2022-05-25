@@ -9,12 +9,12 @@ import io.getquill.context.sql.SqlContext
 import io.getquill.util.{ ContextLogger, LoadConfig }
 
 import scala.util.Try
-import io.getquill.context.{ Context, ExecutionInfo, TranslateContext }
+import io.getquill.context.{ Context, ExecutionInfo, ContextVerbTranslate }
 import io.getquill.monad.TwitterFutureIOMonad
 
 class FinaglePostgresContext[N <: NamingStrategy](val naming: N, client: PostgresClient)
   extends Context[FinaglePostgresDialect, N]
-  with TranslateContext
+  with ContextVerbTranslate
   with SqlContext[FinaglePostgresDialect, N]
   with FinaglePostgresEncoders
   with FinaglePostgresDecoders

@@ -5,6 +5,7 @@ null
 .project
 .settings
 .bsp
+.history
 .cache*
 .jvmopts
 queries.sql
