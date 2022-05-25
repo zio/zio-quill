@@ -16,7 +16,7 @@ class SqlActionMacroSpec extends Spec {
           qr1.filter(t => t.s == null).update(_.s -> "s")
         }
         testContext.run(q).string mustEqual
-          "UPDATE TestEntity SET s = 's' WHERE s IS NULL"
+          "UPDATE TestEntity AS t SET s = 's' WHERE t.s IS NULL"
       }
       "insert" in {
         val q = quote {
@@ -30,7 +30,7 @@ class SqlActionMacroSpec extends Spec {
           qr1.filter(t => t.s == null).delete
         }
         testContext.run(q).string mustEqual
-          "DELETE FROM TestEntity WHERE s IS NULL"
+          "DELETE FROM TestEntity AS t WHERE t.s IS NULL"
       }
     }
     "with bindings" - {
