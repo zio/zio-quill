@@ -72,7 +72,7 @@ trait DynamicQueryDsl {
   def dynamicQuery[T](implicit t: ClassTag[T]): DynamicEntityQuery[T] =
     DynamicEntityQuery(
       splice[EntityQuery[T]](
-        Entity(t.runtimeClass.getName.split('.').last.split('$').last, Nil, RuntimeEntityQuat[T].probit)
+        Entity(t.runtimeClass.getSimpleName, Nil, RuntimeEntityQuat[T].probit)
       )
     )
 
@@ -339,6 +339,9 @@ trait DynamicQueryDsl {
 
     def distinct: DynamicQuery[T] =
       dyn(Distinct(q.ast))
+
+    def distinctOn[R](f: Quoted[T] => Quoted[R]): DynamicQuery[R] =
+      transform(f, DistinctOn)
 
     def nested: DynamicQuery[T] =
       dyn(Nested(q.ast))

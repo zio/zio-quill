@@ -6,7 +6,7 @@ import akka.{ Done, NotUsed }
 import com.datastax.oss.driver.api.core.CqlSession
 import com.datastax.oss.driver.api.core.cql.{ BoundStatement, PreparedStatement }
 import io.getquill.context.cassandra.{ CassandraSessionContext, CqlIdiom, PrepareStatementCache }
-import io.getquill.context.{ CassandraSession, ExecutionInfo, StreamingContext }
+import io.getquill.context.{ CassandraSession, ExecutionInfo, ContextVerbStream }
 import io.getquill.monad.ScalaFutureIOMonad
 import io.getquill.util.ContextLogger
 
@@ -20,7 +20,7 @@ class CassandraAlpakkaContext[N <: NamingStrategy](
   val preparedStatementCacheSize: Long
 ) extends CassandraSessionContext[N]
   with CassandraSession
-  with StreamingContext[CqlIdiom, N]
+  with ContextVerbStream[CqlIdiom, N]
   with ScalaFutureIOMonad {
 
   private val logger = ContextLogger(classOf[CassandraAlpakkaContext[_]])

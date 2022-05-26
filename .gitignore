@@ -1,9 +1,11 @@
 .idea
 target
+null
 .classpath
 .project
 .settings
 .bsp
+.history
 .cache*
 .jvmopts
 queries.sql

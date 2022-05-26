@@ -30,6 +30,7 @@ object Messages {
   def cacheDynamicQueries = cache("quill.query.cacheDaynamic", variable("quill.query.cacheDaynamic", "query_query_cacheDaynamic", "true").toBoolean)
   def querySubexpand = cache("quill.query.subexpand", variable("quill.query.subexpand", "query_query_subexpand", "true").toBoolean)
   def quillLogFile = cache("quill.log.file", LogToFile(variable("quill.log.file", "quill_log_file", "false")))
+  def errorDetail = cache("quill.error.detail", variable("quill.error.detail", "quill_error_detail", "false").toBoolean)
 
   sealed trait LogToFile
   object LogToFile {
@@ -102,10 +103,12 @@ object Messages {
     case object Execution extends TraceType { val value = "exec" }
     case object DynamicExecution extends TraceType { val value = "dynamicexec" }
     case object Elaboration extends TraceType { val value = "elab" }
+    case object SqlQueryConstruct extends TraceType { val value = "sqlquery" }
 
     def values: List[TraceType] = List(
       Standard, SqlNormalizations, Normalizations, NestedQueryExpansion, AvoidAliasConflict, ReifyLiftings, PatMatch, Quotation,
-      RepropagateQuats, RenameProperties, Warning, ShealthLeaf, ApplyMap, ExpandDistinct, ExprModel, Meta, Execution, DynamicExecution, Elaboration
+      RepropagateQuats, RenameProperties, Warning, ShealthLeaf, ApplyMap, ExpandDistinct, ExprModel, Meta, Execution, DynamicExecution,
+      Elaboration, SqlQueryConstruct
     )
   }
 

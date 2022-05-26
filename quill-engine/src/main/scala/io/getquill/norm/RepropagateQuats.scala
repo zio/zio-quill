@@ -1,6 +1,6 @@
 package io.getquill.norm
 
-import io.getquill.ast.{ Action, Assignment, AssignmentDual, Ast, ConcatMap, Filter, FlatJoin, FlatMap, GroupBy, Ident, Infix, Insert, Join, Map, OnConflict, Property, Query, Returning, ReturningGenerated, SortBy, StatelessTransformer, Update }
+import io.getquill.ast.{ Action, Assignment, AssignmentDual, Ast, ConcatMap, DistinctOn, Filter, FlatJoin, FlatMap, GroupBy, Ident, Infix, Insert, Join, Map, OnConflict, Property, Query, Returning, ReturningGenerated, SortBy, StatelessTransformer, Update }
 import io.getquill.quat.Quat
 import io.getquill.quat.Quat.Product
 import io.getquill.util.Interpolator
@@ -77,10 +77,11 @@ object RepropagateQuats extends StatelessTransformer {
       case Filter(a, b, c) => applyBody(a, b, c)(Filter)
       case Map(a, b, c) =>
         applyBody(a, b, c)(Map)
-      case FlatMap(a, b, c)   => applyBody(a, b, c)(FlatMap)
-      case ConcatMap(a, b, c) => applyBody(a, b, c)(ConcatMap)
-      case GroupBy(a, b, c)   => applyBody(a, b, c)(GroupBy)
-      case SortBy(a, b, c, d) => applyBody(a, b, c)(SortBy(_, _, _, d))
+      case FlatMap(a, b, c)    => applyBody(a, b, c)(FlatMap)
+      case ConcatMap(a, b, c)  => applyBody(a, b, c)(ConcatMap)
+      case GroupBy(a, b, c)    => applyBody(a, b, c)(GroupBy)
+      case DistinctOn(a, b, c) => applyBody(a, b, c)(DistinctOn)
+      case SortBy(a, b, c, d)  => applyBody(a, b, c)(SortBy(_, _, _, d))
       case Join(t, a, b, iA, iB, on) =>
         val ar = apply(a)
         val br = apply(b)

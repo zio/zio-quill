@@ -17,8 +17,8 @@ import io.getquill.ast.Renameable.Fixed
 import io.getquill.ast.Visibility.{ Hidden, Visible }
 import io.getquill.quat._
 import io.getquill.util.Messages.TraceType
-import io.getquill.util.{ Interleave, Interpolator }
-import io.getquill.{ Delete => DslDelete, Insert => DslInsert, Query => DslQuery, Update => DslUpdate, Quoted }
+import io.getquill.util.{ Interleave, Interpolator, Messages }
+import io.getquill.{ Quoted, Delete => DslDelete, Insert => DslInsert, Query => DslQuery, Update => DslUpdate }
 
 trait Parsing extends ValueComputation with QuatMaking {
   this: Quotation =>
@@ -33,7 +33,13 @@ trait Parsing extends ValueComputation with QuatMaking {
 
     def apply(tree: Tree) =
       unapply(tree).getOrElse {
-        c.fail(s"Tree '$tree' can't be parsed to '${ct.runtimeClass.getSimpleName}'")
+        lazy val errorDetail =
+          if (Messages.errorDetail)
+            "\n============ Raw Tree ===========\n" + showRaw(tree)
+          else
+            ""
+
+        c.fail(s"Tree '$tree' can't be parsed to '${ct.runtimeClass.getSimpleName}'" + errorDetail)
       }
 
     def unapply(tree: Tree): Option[T] =
@@ -265,6 +271,10 @@ trait Parsing extends ValueComputation with QuatMaking {
           Distinct(other)
       }
     }
+
+    case q"$source.distinctOn[$t](($alias) => $body)" if (is[DslQuery[Any]](source)) =>
+      DistinctOn(astParser(source), identParser(alias), astParser(body))
+
     // .distinct should not be allowed after a flatjoin
     case q"$source.nested" if (is[DslQuery[Any]](source)) => {
       astParser(source) match {
@@ -296,15 +306,25 @@ trait Parsing extends ValueComputation with QuatMaking {
       PropertyAlias(path(prop), alias)
   }
 
+  // It seems that in recent version of quasiquotes, things like Ord.asc are not the same io.getquill.Ord.asc
+  // which may not be the same as getquill.Ord.asc. Need to cover these cases separately.
   implicit val orderingParser: Parser[Ordering] = Parser[Ordering] {
     case q"$pack.implicitOrd[$t]"           => AscNullsFirst
+    case q"implicitOrd[$t]"                 => AscNullsFirst
     case q"$pack.Ord.apply[..$t](..$elems)" => TupleOrdering(elems.map(orderingParser(_)))
+    case q"Ord.apply[..$t](..$elems)"       => TupleOrdering(elems.map(orderingParser(_)))
     case q"$pack.Ord.asc[$t]"               => Asc
+    case q"Ord.asc[$t]"                     => Asc
     case q"$pack.Ord.desc[$t]"              => Desc
+    case q"Ord.desc[$t]"                    => Desc
     case q"$pack.Ord.ascNullsFirst[$t]"     => AscNullsFirst
+    case q"Ord.ascNullsFirst[$t]"           => AscNullsFirst
     case q"$pack.Ord.descNullsFirst[$t]"    => DescNullsFirst
+    case q"Ord.descNullsFirst[$t]"          => DescNullsFirst
     case q"$pack.Ord.ascNullsLast[$t]"      => AscNullsLast
+    case q"Ord.ascNullsLast[$t]"            => AscNullsLast
     case q"$pack.Ord.descNullsLast[$t]"     => DescNullsLast
+    case q"Ord.descNullsLast[$t]"           => DescNullsLast
   }
 
   val joinCallParser: Parser[(JoinType, Ast, Option[Ast])] = Parser[(JoinType, Ast, Option[Ast])] {

@@ -1,3 +1,15 @@
+# 3.16.5
+
+- [Re-integrating Doobie support](https://github.com/zio/zio-quill/pull/2478)
+
+# 3.16.4
+
+- [Support Spark 3.2.x and Scala 2.13 in quill-spark](https://github.com/zio/zio-quill/pull/2460)
+- [Fix dynamic query quat error](https://github.com/zio/zio-quill/pull/2458)
+- [Implement DistinctOn](https://github.com/zio/zio-quill/pull/2375)
+- [Sync Contexts with ProtoQuill and move out ProtoQuill conflicts](https://github.com/zio/zio-quill/pull/2472)
+- [Fix the typo `ZioCassandraSession`  in document.](https://github.com/zio/zio-quill/pull/2303)
+
 # 3.16.3
 
 - [Remove anonymous class made by Property.Opinionated and make NullValue case object](https://github.com/zio/zio-quill/pull/2426)
@@ -367,11 +379,11 @@ run(people)
   .provide(Has(session))
 ```
 
-The ZioCassandraSession constructors however are all still fine to use:
+The CassandraZioSession constructors however are all still fine to use:
 
 ```scala
  val zioSessionLayer: ZLayer[Any, Throwable, Has[CassandraZioSession]] =
-   ZioCassandraSession.fromPrefix("testStreamDB")
+   CassandraZioSession.fromPrefix("testStreamDB")
 run(query[Person])
   .provideCustomLayer(zioSessionLayer)
 ```
@@ -414,7 +426,7 @@ Similarly for quill-cassandra-zio
 - This state was pulled out as separate classes e.g. `SyncCache`, `AsyncFutureCache` (the ZIO equivalent of which is `AsyncZioCache`). 
 - Then a `CassandraZioSession` is created which extends these state-containers however, it is not directly a base-class of the `CassandraZioContext`.
 - Instead it is returned as a dependency from the CassandraZioContext run/prepare commands as part of the type 
-  `ZIO[Has[ZioCassandraSession] with Blocking, Throwable, T]` (a.k.a `CIO[T]`). This allows the primary context CassandraZioContext to be stateless.
+  `ZIO[Has[CassandraZioSession] with Blocking, Throwable, T]` (a.k.a `CIO[T]`). This allows the primary context CassandraZioContext to be stateless.
 
 # 3.6.1
 

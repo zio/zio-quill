@@ -2,7 +2,7 @@ package io.getquill
 
 import com.datastax.oss.driver.api.core.cql.{ AsyncResultSet, BoundStatement, Row }
 import io.getquill.CassandraZioContext._
-import io.getquill.context.{ ExecutionInfo, StandardContext }
+import io.getquill.context.{ Context, ExecutionInfo }
 import io.getquill.context.cassandra.{ CassandraRowContext, CqlIdiom }
 import io.getquill.context.qzio.ZioContext
 import io.getquill.util.Messages.fail
@@ -29,18 +29,18 @@ trait CioOps {
 
 /**
  * Quill context that executes Cassandra queries inside of ZIO. Unlike most other contexts
- * that require passing in a Data Source, this context takes in a `ZioCassandraSession`
- * as a resource dependency which can be provided later (see the `ZioCassandraSession` object for helper methods
+ * that require passing in a Data Source, this context takes in a `CassandraZioSession`
+ * as a resource dependency which can be provided later (see the `CassandraZioSession` object for helper methods
  * that assist in doing this).
  *
- * The resource dependency itself is just a Has[ZioCassandraSession]
+ * The resource dependency itself is just a Has[CassandraZioSession]
  *
- * Various methods in the `io.getquill.ZioCassandraSession` can assist in simplifying it's creation, for example, you can
- * provide a `Config` object instead of a `ZioCassandraSession` like this
- * (note that the resulting ZioCassandraSession has a closing bracket).
+ * Various methods in the `io.getquill.CassandraZioSession` can assist in simplifying it's creation, for example, you can
+ * provide a `Config` object instead of a `CassandraZioSession` like this
+ * (note that the resulting CassandraZioSession has a closing bracket).
  * {{
  *   val zioSession =
- *     ZioCassandraSession.fromPrefix("testStreamDB")
+ *     CassandraZioSession.fromPrefix("testStreamDB")
  * }}
  *
  * If you are using a Plain Scala app however, you will need to manually run it e.g. using zio.Runtime
@@ -51,7 +51,7 @@ trait CioOps {
 class CassandraZioContext[N <: NamingStrategy](val naming: N)
   extends CassandraRowContext[N]
   with ZioContext[CqlIdiom, N]
-  with StandardContext[CqlIdiom, N]
+  with Context[CqlIdiom, N]
   with CioOps {
 
   private val logger = ContextLogger(classOf[CassandraZioContext[_]])

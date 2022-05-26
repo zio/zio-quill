@@ -20,7 +20,7 @@ class QuillSparkContextSpec extends Spec {
   }
 
   "probe is a no-op" in {
-    testContext.probe("stmt") mustEqual Success(Unit)
+    testContext.probe("stmt") mustEqual Success(())
   }
 
   "decoders aren't used and throw an exception" - {

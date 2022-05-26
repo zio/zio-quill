@@ -3,7 +3,6 @@ package io.getquill.sqlserver
 import io.getquill.PeopleZioSpec
 import io.getquill.Prefix
 import org.scalatest.matchers.should.Matchers._
-import io.getquill.context.ZioJdbc._
 
 class PeopleZioJdbcSpec extends PeopleZioSpec {
 
