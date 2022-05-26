@@ -57,4 +57,14 @@ class PeopleJdbcSpec extends PeopleSpec {
     testContext.run(`Ex 10 page 1 query`) mustEqual `Ex 10 page 1 expected`
     testContext.run(`Ex 10 page 2 query`) mustEqual `Ex 10 page 2 expected`
   }
+
+  "Example 11 - filtered update" in {
+    testContext.run(`Ex 11 filtered update`)
+    testContext.run(`Ex 11 filtered update get`) must contain theSameElementsAs `Ex 11 filtered update expected`
+  }
+
+  "Example 12 - filtered update co-related" in {
+    testContext.run(`Ex 12 filtered update co-related`)
+    testContext.run(`Ex 12 filtered update co-related get`) must contain theSameElementsAs `Ex 12 filtered update co-related expected`
+  }
 }
