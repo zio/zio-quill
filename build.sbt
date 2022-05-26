@@ -268,7 +268,6 @@ lazy val `quill-engine` =
       libraryDependencies ++= Seq(
         "com.typesafe"               %  "config"        % "1.4.2",
         "com.typesafe.scala-logging" %% "scala-logging" % "3.9.4",
-        ("com.twitter"               %% "chill"         % "0.10.0").cross(CrossVersion.for3Use2_13),
         ("com.github.takayahilton"   %%% "sql-formatter" % "1.2.1").cross(CrossVersion.for3Use2_13)
       ) ++ {
         if (isScala211)

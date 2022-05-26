@@ -151,7 +151,7 @@ class QuatSpec extends Spec {
     import BooQuatSerializer._
     val example = Quat.Product("bv" -> Quat.BooleanValue, "be" -> Quat.BooleanExpression, "v" -> Quat.Value, "p" -> Quat.Product("vv" -> Quat.Value))
     "with boo" in {
-      Quat.fromSerializedJS(serialize(example)) mustEqual example
+      Quat.fromSerialized(serialize(example)) mustEqual example
     }
     // kryo tests are covered by standard JVM quill specs
   }

@@ -55,8 +55,7 @@ sealed trait Quat {
   def withRenames(renames: List[(String, String)]): Quat =
     withRenames(mutable.LinkedHashMap(renames: _*))
 
-  def serializeJVM = KryoQuatSerializer.serialize(this)
-  def serializeJS = BooQuatSerializer.serialize(this)
+  def serialize = BooQuatSerializer.serialize(this)
 
   /** Recursively count the fields of the Quat */
   def countFields: Int =
@@ -194,8 +193,7 @@ object Quat {
 
   import LinkedHashMapOps._
 
-  def fromSerializedJVM(serial: String): Quat = KryoQuatSerializer.deserialize(serial)
-  def fromSerializedJS(serial: String): Quat = BooQuatSerializer.deserialize(serial)
+  def fromSerialized(serial: String): Quat = BooQuatSerializer.deserialize(serial)
 
   class Product(val fields: mutable.LinkedHashMap[String, Quat], override val renames: mutable.LinkedHashMap[String, String], val tpe: Quat.Product.Type) extends Quat {
     private val id = Product.Id(fields)
@@ -288,8 +286,7 @@ object Quat {
   object Product {
     case class Id(fields: mutable.LinkedHashMap[String, Quat])
 
-    def fromSerializedJVM(serial: String): Quat.Product = KryoQuatSerializer.deserialize(serial).probit
-    def fromSerializedJS(serial: String): Quat.Product = BooQuatSerializer.deserialize(serial).probit
+    def fromSerialized(serial: String): Quat.Product = BooQuatSerializer.deserialize(serial).probit
 
     def empty = new Quat.Product(mutable.LinkedHashMap(), mutable.LinkedHashMap(), Type.Concrete)
 
