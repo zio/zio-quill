@@ -5,11 +5,6 @@ import io.getquill.quotation.NonQuotedException
 
 import scala.annotation.compileTimeOnly
 
-trait Quoted[+T] {
-  def ast: Ast
-  override def toString: String = ast.toString
-}
-
 /**
  * A Quill-Action-Concept centrally defines Quill Query, Insert, Update, Delete, etc... actions.
  * This ZIO-inspired construct makes it easier to reason about Quoted actions
@@ -60,6 +55,7 @@ sealed trait Query[+T] extends QAC[Nothing, T] {
   def contains[B >: T](value: B): Boolean = NonQuotedException()
 
   def distinct: Query[T] = NonQuotedException()
+  def distinctOn[R](f: T => R): Query[T] = NonQuotedException()
 
   def nested: Query[T] = NonQuotedException()
 

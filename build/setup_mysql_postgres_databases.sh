@@ -15,7 +15,7 @@ docker ps
 . build/setup_db_scripts.sh
 
 # run setup scripts for local databases
-time setup_mysql $MYSQL_SCRIPT 127.0.0.1 13306
-time setup_postgres $POSTGRES_SCRIPT 127.0.0.1 15432
+time setup_mysql 127.0.0.1 13306
+time setup_postgres 127.0.0.1 15432
 
 echo "Postgres and MySQL Databases are ready!"
