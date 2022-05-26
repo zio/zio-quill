@@ -48,4 +48,13 @@ class DistinctJdbcSpec extends DistinctSpec {
   "Ex 8 Distinct With Sort" in {
     testContext.run(`Ex 8 Distinct With Sort`) mustEqual `Ex 8 Distinct With Sort Result`
   }
+  "Ex 9 DistinctOn With Sort" in {
+    testContext.run(`Ex 9 DistinctOn With Sort`) mustEqual `Ex 9 DistinctOn With Sort Result`
+  }
+  "Ex 10 DistinctOn With Applicative Join" in { //
+    testContext.run(`Ex 10 DistinctOn With Applicative Join`) mustEqual `Ex 10 DistinctOn With Applicative Join Result`
+  }
+  "Ex 11 DistinctOn With Monadic Join" in {
+    testContext.run(`Ex 11 DistinctOn With Monadic Join`) mustEqual `Ex 11 DistinctOn With Monadic Join Result`
+  }
 }

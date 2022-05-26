@@ -15,7 +15,7 @@ import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.{ NamingStrategy, ReturnAction }
 import io.getquill.util.ContextLogger
 import io.getquill.monad.ScalaFutureIOMonad
-import io.getquill.context.{ Context, ExecutionInfo, TranslateContext }
+import io.getquill.context.{ Context, ExecutionInfo, ContextVerbTranslate }
 import kotlin.jvm.functions.Function1
 
 import scala.compat.java8.FutureConverters
@@ -23,7 +23,7 @@ import scala.jdk.CollectionConverters._
 
 abstract class JAsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: ConcreteConnection](val idiom: D, val naming: N, pool: ConnectionPool[C])
   extends Context[D, N]
-  with TranslateContext
+  with ContextVerbTranslate
   with SqlContext[D, N]
   with Decoders
   with Encoders
