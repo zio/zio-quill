@@ -59,6 +59,7 @@ trait OracleDialect
 
   override implicit def sourceTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[FromContext] = Tokenizer[FromContext] {
     case InfixContext(infix, alias) => stmt"(${(infix: Ast).token}) ${tokenizeTableAlias(strategy, alias).token}"
+    case QueryContext(query, alias) => stmt"(${query.token}) ${strategy.default(alias).token}"
     case other                      => super.sourceTokenizer.token(other)
   }
 
