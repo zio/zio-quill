@@ -1,7 +1,7 @@
 package io.getquill.sql.norm
 
 import io.getquill.ast.{ Ast, CollectAst, Ident, Property, StatefulTransformer }
-import io.getquill.context.sql.{ FlatJoinContext, FlattenSqlQuery, FromContext, InfixContext, JoinContext, QueryContext, SelectValue, SetOperationSqlQuery, SqlQuery, TableContext, UnaryOperationSqlQuery }
+import io.getquill.context.sql.{ DistinctKind, FlatJoinContext, FlattenSqlQuery, FromContext, InfixContext, JoinContext, QueryContext, SelectValue, SetOperationSqlQuery, SqlQuery, TableContext, UnaryOperationSqlQuery }
 import io.getquill.norm.PropertyMatroshka
 import io.getquill.quat.Quat
 
@@ -32,8 +32,8 @@ object RemoveUnusedSelects {
         // do not filter the selects either since the
         // alternative is to have a "select *" from having a concrete set of selects is almost always better then a "select *"
         val doSelectFiltration =
-          !isTopLevel && !q.distinct && q.groupBy.isEmpty && q.orderBy.isEmpty && q.limit.isEmpty &&
-            references.size != 0 && newSelect.size != 0
+          !isTopLevel && !q.distinct.isDistinct && q.groupBy.isEmpty && q.orderBy.isEmpty && q.limit.isEmpty &&
+            references.nonEmpty && newSelect.nonEmpty
 
         // Gather asts used here - i.e. push every property we are using to the From-Clause selects to make
         // sure that they in turn are using them.

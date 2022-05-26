@@ -4,7 +4,7 @@ import java.io.Closeable
 import java.sql.{ Array => _, _ }
 import cats.effect.ExitCase
 import io.getquill.{ NamingStrategy, ReturnAction }
-import io.getquill.context.{ ExecutionInfo, ProtoContext, StreamingContext }
+import io.getquill.context.{ ExecutionInfo, ProtoContext, ContextVerbStream }
 import io.getquill.context.jdbc.JdbcContextBase
 import io.getquill.context.monix.MonixJdbcContext.EffectWrapper
 import io.getquill.context.sql.idiom.SqlIdiom
@@ -28,7 +28,7 @@ abstract class MonixJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](
 ) extends MonixContext[Dialect, Naming]
   with ProtoContext[Dialect, Naming]
   with JdbcContextBase[Dialect, Naming]
-  with StreamingContext[Dialect, Naming]
+  with ContextVerbStream[Dialect, Naming]
   with MonixTranslateContext {
 
   override private[getquill] val logger = ContextLogger(classOf[MonixJdbcContext[_, _]])
