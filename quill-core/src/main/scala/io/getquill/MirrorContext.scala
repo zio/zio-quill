@@ -10,6 +10,15 @@ import scala.util.{ Failure, Success, Try }
 object mirrorContextWithQueryProbing
   extends MirrorContext(MirrorIdiom, Literal) with QueryProbing
 
+/**
+ * This is supposed to emulate how Row retrieval works in JDBC
+ * Int JDBC, ResultSet won't ever actually have Option values inside, so the actual option-decoder
+ * needs to understand that fact e.g. `Deocder[Option[Int]](java.sql.ResultSet(foo:1, etc)).getInt(1)`* and wrap it into a Optional value
+ * for the equivalent row implementation: `Deocder[Option[Int]](Row(foo:1, etc)).apply(1)`.
+ * (*note that java.sql.ResultSet actually doesn't have this syntax because it isn't a product).
+ * Similarly, when doing `ResultSet(foo:null /*Expecting an int*/, etc).getInt(1)` the result will be 0 as opposed to throwing
+ * a NPE as would be the scala expectation. So we need to do `Row(foo:null /*Expecting an int*/, etc).apply(1)` do the same thing.
+ */
 class MirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy](val idiom: Idiom, val naming: Naming, session: MirrorSession = MirrorSession("DefaultMirrorContextSession"))
   extends Context[Idiom, Naming]
   with ProtoContext[Idiom, Naming]
@@ -31,6 +40,11 @@ class MirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy](val idiom: Idi
   override type RunBatchActionResult = BatchActionMirror
   override type RunBatchActionReturningResult[T] = BatchActionReturningMirror[T]
   override type Session = MirrorSession
+  override type NullChecker = MirrorNullChecker
+  class MirrorNullChecker extends BaseNullChecker {
+    override def apply(index: Index, row: Row): Boolean = row.nullAt(index)
+  }
+  implicit val nullChecker: NullChecker = new MirrorNullChecker()
 
   override def close = ()
 

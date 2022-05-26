@@ -37,6 +37,13 @@ abstract class ZioJAsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: Concret
   override type DecoderSqlType = SqlTypes.SqlTypes
   type DatasourceContext = Unit
 
+  override type NullChecker = ZioJasyncNullChecker
+  class ZioJasyncNullChecker extends BaseNullChecker {
+    override def apply(index: Int, row: RowData): Boolean =
+      row.get(index) == null
+  }
+  implicit val nullChecker: NullChecker = new ZioJasyncNullChecker()
+
   implicit def toKotlinFunction[T, R](f: T => R): Function1[T, R] = new Function1[T, R] {
     override def invoke(t: T): R = f(t)
   }

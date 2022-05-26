@@ -32,6 +32,13 @@ trait QuillSparkContext
   type Session = Unit
   type Runner = Unit
 
+  override type NullChecker = DummyNullChecker
+  class DummyNullChecker extends BaseNullChecker {
+    // The Quill Spark contexts uses Spark's internal decoders val dataFrame.as[MyRecord] so this is not necessary
+    override def apply(index: Index, row: ResultRow): Boolean = false
+  }
+  implicit val nullChecker: NullChecker = new DummyNullChecker()
+
   implicit val ignoreDecoders: QuatMaking.IgnoreDecoders = QuatMaking.IgnoreDecoders
 
   private[getquill] val queryCounter = new AtomicInteger(0)

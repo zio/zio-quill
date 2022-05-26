@@ -11,6 +11,13 @@ trait PostgresNdbcContextBase[N <: NamingStrategy] extends NdbcContextBase[Postg
   with PostgresEncoders
   with PostgresDecoders {
 
+  override type NullChecker = PostgresNdbcNullChecker
+  class PostgresNdbcNullChecker extends BaseNullChecker {
+    override def apply(index: Index, row: ResultRow): Boolean =
+      row.column(index).isNull
+  }
+  implicit val nullChecker: NullChecker = new PostgresNdbcNullChecker()
+
   override val idiom = PostgresDialect
 
   override protected def createPreparedStatement(sql: String) = PostgresPreparedStatement.create(sql)

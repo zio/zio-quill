@@ -54,6 +54,12 @@ class SqlContextSpec extends Spec {
       type Encoder[T] = BaseEncoder[T]
       type Decoder[T] = BaseDecoder[T]
 
+      override type NullChecker = LocalNullChecker
+      class LocalNullChecker extends BaseNullChecker {
+        override def apply(index: Index, row: List[Any]): Boolean = row(index) == null
+      }
+      implicit val nullChecker: NullChecker = new LocalNullChecker()
+
       override def close = ()
 
       def probe(sql: String): Try[Any] = null
