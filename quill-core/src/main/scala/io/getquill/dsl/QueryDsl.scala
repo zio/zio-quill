@@ -23,6 +23,8 @@ private[getquill] trait QueryDsl {
       throw new IllegalArgumentException(
         "Cannot use getOrNull outside of database queries since only database value-types (e.g. Int, Double, etc...) can be null."
       )
+    @compileTimeOnly(NonQuotedException.message)
+    def filterIfDefined(f: A => Boolean): Boolean = NonQuotedException()
   }
 
   object extras extends LowPriorityExtras {

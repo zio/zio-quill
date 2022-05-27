@@ -1352,6 +1352,18 @@ class QuotationSpec extends Spec {
           "quote((o: Option[EmbeddedEntity]) => o.forall(v => v.id == 1))" mustNot compile
         }
       }
+      "filterIfDefined" - {
+        "simple" in {
+          val q = quote {
+            (o: Option[Boolean]) => o.forall(v => v)
+          }
+          quote(unquote(q)).ast.body mustEqual FilterIfDefined(Ident("o"), Ident("v"), Ident("v"))
+        }
+        "embedded" in {
+          case class EmbeddedEntity(id: Int) extends Embedded
+          "quote((o: Option[EmbeddedEntity]) => o.filterIfDefined(v => v.id == 1))" mustNot compile
+        }
+      }
       "exists" - {
         "simple" in {
           val q = quote {
