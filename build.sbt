@@ -833,7 +833,7 @@ def excludePaths(paths:Seq[String]) = {
   val excludeThisPath =
     (path: String) =>
       paths.exists { srcDir =>
-        (path contains srcDir)
+        (path contains srcDir) && (!path.contains("MyTest"))
       }
   new SimpleFileFilter(file => {
     if (excludeThisPath(file.getCanonicalPath))
