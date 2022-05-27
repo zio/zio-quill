@@ -1355,7 +1355,7 @@ class QuotationSpec extends Spec {
       "filterIfDefined" - {
         "simple" in {
           val q = quote {
-            (o: Option[Boolean]) => o.forall(v => v)
+            (o: Option[Boolean]) => o.filterIfDefined(v => v)
           }
           quote(unquote(q)).ast.body mustEqual FilterIfDefined(Ident("o"), Ident("v"), Ident("v"))
         }
