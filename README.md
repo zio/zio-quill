@@ -1116,14 +1116,28 @@ ctx.run(q)
 ```
 
 #### filterIfDefined
-This operation is performed over an optional field by applying an extra filter if the optional field is defined.
+Use this to filter by a optional field that you want to ignore when None.
+This is useful when you want to filter by a map-key that may or may not exist.
+
 ```scala
+val fieldFilters: Map[String, String] = Map("name" -> "Joe", "age" -> "123")
 val q = quote {
-  query[Person].filter(p => p.name.filterIfDefined(_ == "Joe"))
+  query[Person].filter(p => lift(fieldFilters.get("name)).filterIfDefined(_ == p.name))
 }
  
 ctx.run(q)
-// SELECT p.id, p.name FROM Person p WHERE p.name IS NULL OR p.name = 'Joe'
+// SELECT p.id, p.name, p.title FROM Person p WHERE p.title IS NULL OR p.title = 'The Honorable'
+```
+
+It also works for regular fields.
+```scala
+// case class Person(name: String, age: Int, title: Option[String])
+val q = quote {
+  query[Person].filter(p => p.title.filterIfDefined(_ == "The Honorable"))
+}
+ 
+ctx.run(q)
+// SELECT p.id, p.name, p.title FROM Person p WHERE p.title IS NULL OR p.title = 'The Honorable'
 ```
 
 #### map
