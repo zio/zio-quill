@@ -500,7 +500,7 @@ case class OptionTableExists(ast: Ast, alias: Ident, body: Ast)
 case class OptionTableForall(ast: Ast, alias: Ident, body: Ast)
   extends OptionOperation { def quat = body.quat; def bestQuat = body.bestQuat }
 case class FilterIfDefined(ast: Ast, alias: Ident, body: Ast)
-  extends OptionOperation { def quat = body.quat; def bestQuat: Quat = body.bestQuat}
+  extends OptionOperation { def quat = body.quat; def bestQuat: Quat = body.bestQuat }
 case object OptionNoneId
 final class OptionNone(theQuat: => Quat) extends OptionOperation with Terminal {
   private lazy val computedQuat = theQuat
