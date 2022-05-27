@@ -163,6 +163,7 @@ trait MirrorIdiomBase extends Idiom {
     case OptionOrNull(ast)                    => stmt"${ast.token}.orNull"
     case OptionGetOrNull(ast)                 => stmt"${ast.token}.getOrNull"
     case OptionNone(_)                        => stmt"None"
+    case FilterIfDefined(ast, alias, body)    => stmt"${ast.token}.filterIfDefined((${alias.token}) => ${body.token})"
   }
 
   implicit def traversableOperationTokenizer(implicit externalTokenizer: Tokenizer[External]): Tokenizer[IterableOperation] = Tokenizer[IterableOperation] {
