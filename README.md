@@ -1115,6 +1115,17 @@ ctx.run(q)
 // SELECT p.id, p.name FROM Person p WHERE p.name IS NULL OR p.name <> 'Joe'
 ```
 
+#### filterIfDefined
+This operation is performed over an optional field by applying an extra filter if the optional field is defined.
+```scala
+val q = quote {
+  query[Person].filter(p => p.name.filterIfDefined(_ == "Joe"))
+}
+ 
+ctx.run(q)
+// SELECT p.id, p.name FROM Person p WHERE p.name IS NULL OR p.name = 'Joe'
+```
+
 #### map
 As in regular Scala code, performing any operation on an optional value typically requires using the `map` function.
 ```scala
