@@ -33,8 +33,15 @@ class AsyncMirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy](val idiom
   override type RunBatchActionResult = BatchActionMirror
   override type RunBatchActionReturningResult[T] = BatchActionReturningMirror[T]
   override type Runner = Unit
+  override type NullChecker = MirrorNullChecker
 
   override def close = ()
+
+  class MirrorNullChecker extends BaseNullChecker {
+    override def apply(index: Index, row: Row): Boolean = row.nullAt(index)
+  }
+
+  implicit val nullChecker: NullChecker = new MirrorNullChecker()
 
   def probe(statement: String): Try[_] =
     if (statement.contains("Fail"))

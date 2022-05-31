@@ -27,6 +27,14 @@ abstract class OrientDBSessionContext[N <: NamingStrategy](
   override type RunActionReturningResult[T] = Unit
   override type RunBatchActionReturningResult[T] = Unit
 
+  override type NullChecker = OrientDBNullChecker
+  class OrientDBNullChecker extends BaseNullChecker {
+    // OrientDB ODocument does not support null columns so this check is irrelevant. Also since ODocument does not
+    // support null columns Option[Product] columns cannot be used in OrientDB.
+    override def apply(index: Index, row: ODocument): Boolean = false
+  }
+  implicit val nullChecker: NullChecker = new OrientDBNullChecker()
+
   protected val session = new OPartitionedDatabasePool(dbUrl, username, password)
   protected val oDatabase = session.acquire()
 

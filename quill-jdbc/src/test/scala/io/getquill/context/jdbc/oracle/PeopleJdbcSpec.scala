@@ -12,7 +12,7 @@ class PeopleJdbcSpec extends PeopleSpec {
     testContext.transaction {
       testContext.run(infix"alter session set current_schema=quill_test".as[Update[Unit]])
       testContext.run(query[Couple].delete)
-      testContext.run(query[Person].filter(_.age > 0).delete)
+      testContext.run(query[Person].delete)
       testContext.run(liftQuery(peopleEntries).foreach(p => peopleInsert(p)))
       testContext.run(liftQuery(couplesEntries).foreach(p => couplesInsert(p)))
     }

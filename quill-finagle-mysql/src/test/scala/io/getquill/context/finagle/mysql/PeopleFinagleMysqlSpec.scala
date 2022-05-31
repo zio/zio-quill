@@ -17,7 +17,7 @@ class PeopleFinagleMysqlSpec extends PeopleSpec {
       testContext.transaction {
         for {
           _ <- testContext.run(query[Couple].delete)
-          _ <- testContext.run(query[Person].filter(_.age > 0).delete)
+          _ <- testContext.run(query[Person].delete)
           _ <- testContext.run(liftQuery(peopleEntries).foreach(e => peopleInsert(e)))
           _ <- testContext.run(liftQuery(couplesEntries).foreach(e => couplesInsert(e)))
         } yield {}
