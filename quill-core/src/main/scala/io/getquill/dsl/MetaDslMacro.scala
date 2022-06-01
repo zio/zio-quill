@@ -104,9 +104,27 @@ class MetaDslMacro(val c: MacroContext) extends ValueComputation {
             val dualGroups: Seq[List[(FieldExpansion, Boolean)]] =
               params.map(_.map(v => expandRecurse(v) -> v.nestedAndOptional))
 
+            // E.g. for Person("Joe", 123) the decoder(0,row,session), decoder(1,row,session) columns
+            // that turn into Decoder[String]("Joe"), Decoder[Int](123) respectively.
+            // (or for Option[T] columns: Decoder[Option[String]]("Joe")))
+            // Once you are in a product that has a product inside e.g. Person(name: Name("Joe", "Bloggs"), age: 123)
+            // they will be the constructor and/or any other field-decoders:
+            // List((new Name(Decoder("Joe") || Decoder("Bloggs")), Decoder(123))
+            // This is what needs to be fed into the constructor of the outer-entity i.e.
+            // new Person((new Name(Decoder("Joe") || Decoder("Bloggs")), Decoder(123))
             val productElements: Seq[List[Tree]] = dualGroups.map(_.map { case (k, v) => (k.lookup) })
+            // E.g. for Person("Joe", 123) the List(q"!nullChecker(0,row)", q"!nullChecker(1,row)") columns
+            // that eventually turn into List(!NullChecker("Joe"), !NullChecker(123)) columns.
+            // Once you are in a product that has a product inside e.g. Person(name: Name("Joe", "Bloggs"), age: 123)
+            // they will be the concatonations of the Or-clauses e.g.
+            // List( (NullChecker("Joe") || NullChecker("Bloggs")), NullChecker(123))
+            // This is what needs to be the null-checker of the outer entity i.e.
+            // if ((NullChecker("Joe") || NullChecker("Bloggs")) || NullChecker(123)) Some(new Name(...)) else None
             val nullChecks: Seq[List[Tree]] = dualGroups.map(_.map { case (k, v) => (k.nullChecker) })
 
+            // Or-s together the NullChecker columns.
+            // E.g. for Person("Joe", 123)
+            // !NullChecker("Joe") || !NullChecker(123)
             val allColumnsNotNull = nullChecks.flatMap(v => v).reduce((a, b) => q"$a || $b")
             val newProductCreate = q"if ($allColumnsNotNull) Some(new $tpe(...${productElements})) else None"
 

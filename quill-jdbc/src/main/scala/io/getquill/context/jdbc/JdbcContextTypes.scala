@@ -22,6 +22,7 @@ trait JdbcContextTypes[Dialect <: SqlIdiom, Naming <: NamingStrategy] extends Co
   override type NullChecker = JdbcNullChecker
   class JdbcNullChecker extends BaseNullChecker {
     override def apply(index: Int, row: ResultSet): Boolean = {
+      // Note that JDBC-rows are 1-indexed
       row.getObject(index + 1) == null
     }
   }
