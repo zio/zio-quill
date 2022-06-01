@@ -4,6 +4,7 @@ import io.getquill.Spec
 import io.getquill.testContext._
 import io.getquill.context.mirror.{ MirrorSession, Row }
 import io.getquill.Query
+import io.getquill.util.PrintMac
 
 class MetaDslSpec extends Spec {
 
@@ -68,12 +69,22 @@ class MetaDslSpec extends Spec {
         "extracts Some if all columns are defined" in {
           case class Entity(a: String, b: Int)
           val meta = materializeQueryMeta[(String, Option[Entity])]
-          meta.extract(Row("a", Some("1"), Some(2)), MirrorSession.default) mustEqual (("a", Some(Entity("1", 2))))
+          meta.extract(Row("a", "1", 2), MirrorSession.default) mustEqual (("a", Some(Entity("1", 2))))
         }
-        "extracts None if one column is undefined" in {
+        "extracts Some if at least one column is defined" in {
           case class Entity(a: String, b: Int)
           val meta = materializeQueryMeta[(String, Option[Entity])]
-          meta.extract(Row("a", Some("1"), None), MirrorSession.default) mustEqual (("a", None))
+          meta.extract(Row("a", "1", null), MirrorSession.default) mustEqual (("a", Some(Entity("1", 0))))
+        }
+        "extracts Some if at least one column is defined - alternate" in {
+          case class Entity(a: String, b: Int)
+          val meta = materializeQueryMeta[(String, Option[Entity])]
+          meta.extract(Row("a", null, 2), MirrorSession.default) mustEqual (("a", Some(Entity(null, 2))))
+        }
+        "extracts None if no columns are defined" in {
+          case class Entity(a: String, b: Int)
+          val meta = materializeQueryMeta[(String, Option[Entity])]
+          meta.extract(Row("a", null, null), MirrorSession.default) mustEqual (("a", None))
         }
       }
       "optional deep nested" - {
@@ -82,15 +93,19 @@ class MetaDslSpec extends Spec {
         val meta = materializeQueryMeta[(String, Option[(Entity1, Entity2)])]
 
         "extracts Some if all columns are defined" in {
-          meta.extract(Row("a", Some("1"), Some(2), Some(3)), MirrorSession.default) mustEqual
+          meta.extract(Row("a", "1", 2, 3), MirrorSession.default) mustEqual
             (("a", Some((Entity1("1", 2), Entity2(Some(3))))))
         }
         "extracts Some if optional column is undefined" in {
-          meta.extract(Row("a", Some("1"), Some(2), None), MirrorSession.default) mustEqual
+          meta.extract(Row("a", "1", 2, null), MirrorSession.default) mustEqual
             (("a", Some((Entity1("1", 2), Entity2(None)))))
         }
-        "extracts None if one column is undefined" in {
-          meta.extract(Row("a", Some("1"), None, Some(3)), MirrorSession.default) mustEqual
+        "extracts Some at least one column is defined" in {
+          meta.extract(Row("a", "1", null, 3), MirrorSession.default) mustEqual
+            (("a", Some((Entity1("1", 0), Entity2(Some(3))))))
+        }
+        "extracts None if no columns are defined" in {
+          meta.extract(Row("a", null, null, null), MirrorSession.default) mustEqual
             (("a", None))
         }
       }
