@@ -16,7 +16,7 @@ After installing Docker and Docker Compose you have to setup databases:
 docker-compose run --rm setup
 ```
 
-After that you are ready to build and test the project. The following setp describes how to test the project with
+After that you are ready to build and test the project. The following steps describes how to test the project with
 sbt built within docker image. If you would like to use your local sbt,
 please visit [Building locally](#building-locally-using-docker-only-for-databases). This is highly recommended
 when running Docker on non-linux OS due to high IO overhead from running 

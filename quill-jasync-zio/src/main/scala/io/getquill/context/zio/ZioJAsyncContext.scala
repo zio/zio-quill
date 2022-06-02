@@ -3,7 +3,7 @@ package io.getquill.context.zio
 import com.github.jasync.sql.db.{ ConcreteConnection, QueryResult, RowData }
 import io.getquill.context.sql.SqlContext
 import io.getquill.context.sql.idiom.SqlIdiom
-import io.getquill.context.{ Context, ExecutionInfo, TranslateContext }
+import io.getquill.context.{ Context, ExecutionInfo, ContextVerbTranslate }
 import io.getquill.util.ContextLogger
 import io.getquill.{ NamingStrategy, ReturnAction }
 import kotlin.jvm.functions.Function1
@@ -15,7 +15,7 @@ import scala.util.Try
 
 abstract class ZioJAsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: ConcreteConnection](val idiom: D, val naming: N)
   extends Context[D, N]
-  with TranslateContext
+  with ContextVerbTranslate
   with SqlContext[D, N]
   with Decoders
   with Encoders
@@ -36,6 +36,13 @@ abstract class ZioJAsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: Concret
   override type RunBatchActionReturningResult[T] = Seq[T]
   override type DecoderSqlType = SqlTypes.SqlTypes
   type DatasourceContext = Unit
+
+  override type NullChecker = ZioJasyncNullChecker
+  class ZioJasyncNullChecker extends BaseNullChecker {
+    override def apply(index: Int, row: RowData): Boolean =
+      row.get(index) == null
+  }
+  implicit val nullChecker: NullChecker = new ZioJasyncNullChecker()
 
   implicit def toKotlinFunction[T, R](f: T => R): Function1[T, R] = new Function1[T, R] {
     override def invoke(t: T): R = f(t)

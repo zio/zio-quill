@@ -3,7 +3,6 @@ package io.getquill.sqlite
 import io.getquill.PeopleZioSpec
 import io.getquill.Prefix
 import org.scalatest.matchers.should.Matchers._
-import io.getquill.context.ZioJdbc._
 
 class PeopleZioJdbcSpec extends PeopleZioSpec {
 
@@ -16,7 +15,7 @@ class PeopleZioJdbcSpec extends PeopleZioSpec {
     testContext.transaction {
       for {
         _ <- testContext.run(query[Couple].delete)
-        _ <- testContext.run(query[Person].filter(_.age > 0).delete)
+        _ <- testContext.run(query[Person].delete)
         _ <- testContext.run(liftQuery(peopleEntries).foreach(p => peopleInsert(p)))
         _ <- testContext.run(liftQuery(couplesEntries).foreach(p => couplesInsert(p)))
       } yield ()

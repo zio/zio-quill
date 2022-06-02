@@ -516,6 +516,13 @@ trait Parsing extends ValueComputation with QuatMaking {
         warnConditionalsExist(OptionForall(astParser(o), identParser(alias), astParser(body)))
       }
 
+    case q"$prefix.NullableColumnExtensions[$nt]($o).filterIfDefined({($alias) => $body})" if is[Option[Any]](o) =>
+      if (isOptionEmbedded(o) || isOptionRowType(o)) {
+        c.fail("filterIfDefined only allowed on individual columns, not on case classes or tuples.")
+      } else {
+        warnConditionalsExist(FilterIfDefined(astParser(o), identParser(alias), astParser(body)))
+      }
+
     // For column values
     case q"$o.flatten[$t]($implicitBody)" if is[Option[Any]](o) =>
       OptionFlatten(astParser(o))

@@ -45,7 +45,7 @@ lazy val baseModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
 )
 
 lazy val dbModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
-  `quill-jdbc`, `quill-jdbc-monix`, `quill-jdbc-zio`
+  `quill-jdbc`, `quill-doobie`, `quill-jdbc-monix`, `quill-jdbc-zio`
 )
 
 lazy val jasyncModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
@@ -86,7 +86,7 @@ lazy val scala213Modules = baseModules ++ jsModules ++ dbModules ++ codegenModul
 )
 
 lazy val notScala211Modules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
-  `quill-cassandra-alpakka`, `quill-util`
+  `quill-cassandra-alpakka`, `quill-util`, `quill-doobie`
 )
 
 lazy val scala3Modules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](`quill-engine-jvm`, `quill-util`)
@@ -268,7 +268,6 @@ lazy val `quill-engine` =
       libraryDependencies ++= Seq(
         "com.typesafe"               %  "config"        % "1.4.2",
         "com.typesafe.scala-logging" %% "scala-logging" % "3.9.4",
-        ("com.twitter"               %% "chill"         % "0.10.0").cross(CrossVersion.for3Use2_13),
         ("com.github.takayahilton"   %%% "sql-formatter" % "1.2.1").cross(CrossVersion.for3Use2_13)
       ) ++ {
         if (isScala211)
@@ -412,6 +411,23 @@ lazy val `quill-jdbc` =
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
     .enablePlugins(MimaPlugin)
 
+ThisBuild / libraryDependencySchemes += "org.typelevel" %% "cats-effect" % "always"
+lazy val `quill-doobie` =
+  (project in file("quill-doobie"))
+    .settings(commonSettings: _*)
+    .settings(mimaSettings: _*)
+    .settings(jdbcTestingSettings: _*)
+    .settings(
+      Compile / SbtScalariform.ScalariformKeys.format / sourceDirectories :=
+        (Compile / SbtScalariform.ScalariformKeys.format / sourceDirectories).value.filter(f => !f.getAbsolutePath.contains("quill-doobie")),
+      libraryDependencies ++= Seq(
+        "org.tpolecat" %% "doobie-core" % "1.0.0-RC2",
+        "org.tpolecat" %% "doobie-postgres" % "1.0.0-RC2" % Test
+      )
+    )
+    .dependsOn(`quill-jdbc` % "compile->compile;test->test")
+    .enablePlugins(MimaPlugin)
+
 lazy val `quill-monix` =
   (project in file("quill-monix"))
     .settings(commonSettings: _*)
@@ -456,8 +472,8 @@ lazy val `quill-zio` =
       Test / fork := true,
       libraryDependencies ++= Seq(
         "io.github.kitlangton" %% "zio-magic" % "0.3.11" % Test,
-        "dev.zio" %% "zio" % "1.0.12",
-        "dev.zio" %% "zio-streams" % "1.0.12"
+        "dev.zio" %% "zio" % "1.0.14",
+        "dev.zio" %% "zio-streams" % "1.0.14"
       )
     )
     .dependsOn(`quill-core-jvm` % "compile->compile;test->test")
@@ -654,7 +670,7 @@ lazy val `quill-cassandra` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.datastax.oss" % "java-driver-core" % "4.14.0",
+        "com.datastax.oss" % "java-driver-core" % "4.14.1",
         "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.1"
       )
     )
@@ -679,9 +695,8 @@ lazy val `quill-cassandra-zio` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "dev.zio" %% "zio" % "1.0.12",
-        "dev.zio" %% "zio-streams" % "1.0.12",
-        "dev.zio" %% "zio-interop-guava" % "31.0.0.0"
+        "dev.zio" %% "zio" % "1.0.14",
+        "dev.zio" %% "zio-streams" % "1.0.14"
       )
     )
     .dependsOn(`quill-cassandra` % "compile->compile;test->test")
@@ -714,7 +729,7 @@ lazy val `quill-cassandra-lagom` =
         Seq(
           "com.lightbend.lagom" %% "lagom-scaladsl-persistence-cassandra" % lagomVersion % Provided,
           "com.lightbend.lagom" %% "lagom-scaladsl-testkit" % lagomVersion % Test,
-          "com.datastax.cassandra" %  "cassandra-driver-core" % "3.7.2",
+          "com.datastax.cassandra" %  "cassandra-driver-core" % "3.11.2",
           // lagom uses datastax 3.x driver - not compatible with 4.x in API level
           "io.getquill" %% "quill-cassandra" % "3.10.0" % "compile->compile"
         ) ++ versionSpecificDependencies
@@ -791,9 +806,9 @@ def updateWebsiteTag =
 lazy val jdbcTestingLibraries = Seq(
   libraryDependencies ++= Seq(
     "com.zaxxer"              %  "HikariCP"                % "3.4.5",
-    "mysql"                   %  "mysql-connector-java"    % "8.0.28"             % Test,
-    "com.h2database"          %  "h2"                      % "2.1.210"            % Test,
-    "org.postgresql"          %  "postgresql"              % "42.3.3"             % Test,
+    "mysql"                   %  "mysql-connector-java"    % "8.0.29"             % Test,
+    "com.h2database"          %  "h2"                      % "2.1.212"            % Test,
+    "org.postgresql"          %  "postgresql"              % "42.3.6"             % Test,
     "org.xerial"              %  "sqlite-jdbc"             % "3.36.0.3"             % Test,
     "com.microsoft.sqlserver" %  "mssql-jdbc"              % "7.1.1.jre8-preview" % Test,
     "com.oracle.ojdbc"        %  "ojdbc8"                  % "19.3.0.0"           % Test,
@@ -829,11 +844,11 @@ def excludePaths(paths:Seq[String]) = {
 val scala_v_11 = "2.11.12"
 val scala_v_12 = "2.12.10"
 val scala_v_13 = "2.13.2"
-val scala_v_30 = "3.0.2"
+val scala_v_30 = "3.1.2"
 
 lazy val loggingSettings = Seq(
   libraryDependencies ++= Seq(
-    "ch.qos.logback"  % "logback-classic" % "1.2.6" % Test
+    "ch.qos.logback"  % "logback-classic" % "1.2.11" % Test
   )
 )
 
@@ -859,7 +874,7 @@ lazy val basicSettings = Seq(
     )
     else Seq()
   } ++ {
-    Seq("org.scala-lang.modules" %% "scala-collection-compat" % "2.6.0")
+    Seq("org.scala-lang.modules" %% "scala-collection-compat" % "2.7.0")
   },
   ScalariformKeys.preferences := ScalariformKeys.preferences.value
     .setPreference(AlignParameters, true)

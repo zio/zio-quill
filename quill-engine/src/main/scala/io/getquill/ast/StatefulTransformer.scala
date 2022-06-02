@@ -119,6 +119,10 @@ trait StatefulTransformer[T] {
       case OptionGetOrNull(a) =>
         val (at, att) = apply(a)
         (OptionGetOrNull(at), att)
+      case FilterIfDefined(a, b, c) =>
+        val (at, att) = apply(a)
+        val (ct, ctt) = att.apply(c)
+        (FilterIfDefined(at, b, ct), ctt)
       case OptionNone(_) => (o, this)
     }
 

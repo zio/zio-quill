@@ -15,7 +15,7 @@ import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.{ NamingStrategy, ReturnAction }
 import io.getquill.util.ContextLogger
 import io.getquill.monad.ScalaFutureIOMonad
-import io.getquill.context.{ Context, ExecutionInfo, TranslateContext }
+import io.getquill.context.{ Context, ExecutionInfo, ContextVerbTranslate }
 import kotlin.jvm.functions.Function1
 
 import scala.compat.java8.FutureConverters
@@ -23,7 +23,7 @@ import scala.jdk.CollectionConverters._
 
 abstract class JAsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: ConcreteConnection](val idiom: D, val naming: N, pool: ConnectionPool[C])
   extends Context[D, N]
-  with TranslateContext
+  with ContextVerbTranslate
   with SqlContext[D, N]
   with Decoders
   with Encoders
@@ -42,7 +42,14 @@ abstract class JAsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: ConcreteCo
   override type RunActionReturningResult[T] = T
   override type RunBatchActionResult = Seq[Long]
   override type RunBatchActionReturningResult[T] = Seq[T]
+  override type NullChecker = JasyncNullChecker
   type Runner = Unit
+
+  class JasyncNullChecker extends BaseNullChecker {
+    override def apply(index: Int, row: RowData): Boolean =
+      row.get(index) == null
+  }
+  implicit val nullChecker: NullChecker = new JasyncNullChecker()
 
   implicit def toFuture[T](cf: CompletableFuture[T]): Future[T] = FutureConverters.toScala(cf)
   implicit def toCompletableFuture[T](f: Future[T]): CompletableFuture[T] = FutureConverters.toJava(f).asInstanceOf[CompletableFuture[T]]
