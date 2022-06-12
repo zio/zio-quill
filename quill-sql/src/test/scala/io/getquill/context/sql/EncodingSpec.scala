@@ -1,6 +1,6 @@
 package io.getquill.context.sql
 
-import java.time.{ LocalDate, ZoneId, ZoneOffset, ZonedDateTime }
+import java.time.{ LocalDate, LocalDateTime, ZoneId, ZoneOffset, ZonedDateTime }
 import java.util.{ Date, UUID }
 import io.getquill.Spec
 
@@ -75,7 +75,7 @@ trait EncodingSpec extends Spec {
         34.4f,
         42d,
         Array(1.toByte, 2.toByte),
-        Date.from(ZonedDateTime.of(2013, 11, 23, 0, 0, 0, 0, ZoneOffset.UTC).toInstant),
+        Date.from(LocalDateTime.of(2013, 11, 23, 0, 0, 0, 0).toInstant(ZoneOffset.UTC)),
         EncodingTestType("s"),
         LocalDate.of(2013, 11, 23),
         UUID.randomUUID(),
@@ -89,7 +89,7 @@ trait EncodingSpec extends Spec {
         Some(34.4f),
         Some(42d),
         Some(Array(1.toByte, 2.toByte)),
-        Some(Date.from(ZonedDateTime.of(2013, 11, 23, 0, 0, 0, 0, ZoneOffset.UTC).toInstant)),
+        Some(Date.from(LocalDateTime.of(2013, 11, 23, 0, 0, 0, 0).toInstant(ZoneOffset.UTC))),
         Some(EncodingTestType("s")),
         Some(LocalDate.of(2013, 11, 23)),
         Some(UUID.randomUUID()),
