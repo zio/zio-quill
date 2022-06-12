@@ -3,12 +3,13 @@ package io.getquill.context.zio
 import com.github.jasync.sql.db.{ ConcreteConnection, QueryResult, RowData }
 import io.getquill.context.sql.SqlContext
 import io.getquill.context.sql.idiom.SqlIdiom
-import io.getquill.context.{ Context, ExecutionInfo, ContextVerbTranslate }
+import io.getquill.context.{ Context, ContextVerbTranslate, ExecutionInfo }
 import io.getquill.util.ContextLogger
 import io.getquill.{ NamingStrategy, ReturnAction }
 import kotlin.jvm.functions.Function1
 import zio.{ Has, RIO, ZIO }
 
+import java.time.ZoneId
 import scala.jdk.CollectionConverters._
 import scala.language.implicitConversions
 import scala.util.Try
@@ -20,6 +21,8 @@ abstract class ZioJAsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: Concret
   with Decoders
   with Encoders
   with ZIOMonad {
+
+  protected val dateTimeZone = ZoneId.systemDefault()
 
   private val logger = ContextLogger(classOf[ZioJAsyncContext[_, _, _]])
 

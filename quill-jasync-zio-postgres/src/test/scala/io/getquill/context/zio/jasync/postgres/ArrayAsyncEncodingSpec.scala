@@ -4,7 +4,6 @@ import java.time.{ LocalDate, LocalDateTime }
 import java.util.{ Date, UUID }
 import io.getquill.context.sql.EncodingTestType
 import io.getquill.context.sql.encoding.ArrayEncodingBaseSpec
-import org.joda.time.{ DateTime => JodaDateTime, LocalDate => JodaLocalDate, LocalDateTime => JodaLocalDateTime }
 import zio.FiberFailure
 
 class ArrayAsyncEncodingSpec extends ArrayEncodingBaseSpec with ZioSpec {
@@ -17,25 +16,6 @@ class ArrayAsyncEncodingSpec extends ArrayEncodingBaseSpec with ZioSpec {
     val actual = runSyncUnsafe(context.run(q)).head
     actual mustEqual e
     baseEntityDeepCheck(actual, e)
-  }
-
-  "Joda times" in {
-    case class JodaTimes(timestamps: Seq[JodaLocalDateTime], dates: Seq[JodaLocalDate])
-    val jE = JodaTimes(Seq(JodaLocalDateTime.now()), Seq(JodaLocalDate.now()))
-    val jQ = quote(querySchema[JodaTimes]("ArraysTestEntity"))
-    runSyncUnsafe(context.run(jQ.insertValue(lift(jE))))
-    val actual = runSyncUnsafe(context.run(jQ)).head
-    actual.timestamps mustBe jE.timestamps
-    actual.dates mustBe jE.dates
-  }
-
-  "Joda times 2" in {
-    case class JodaTimes(timestamps: Seq[JodaDateTime])
-    val jE = JodaTimes(Seq(JodaDateTime.now()))
-    val jQ = quote(querySchema[JodaTimes]("ArraysTestEntity"))
-    runSyncUnsafe(context.run(jQ.insertValue(lift(jE))))
-    val actual = runSyncUnsafe(context.run(jQ)).head
-    actual.timestamps mustBe jE.timestamps
   }
 
   "Java8 times" in {
@@ -52,20 +32,6 @@ class ArrayAsyncEncodingSpec extends ArrayEncodingBaseSpec with ZioSpec {
     val wrapQ = quote(querySchema[WrapEntity]("ArraysTestEntity"))
     runSyncUnsafe(context.run(wrapQ.insertValue(lift(wrapE))))
     runSyncUnsafe(context.run(wrapQ)).head mustBe wrapE
-  }
-
-  "Catch invalid decoders" in {
-    val newCtx = new TestContext {
-      // avoid transforming from org.joda.time.LocalDate to java.time.LocalDate
-      override implicit def arrayLocalDateDecoder[Col <: Seq[LocalDate]](implicit bf: CBF[LocalDate, Col]): Decoder[Col] =
-        arrayDecoder[LocalDate, LocalDate, Col](identity)
-    }
-    import newCtx._
-    runSyncUnsafe(newCtx.run(query[ArraysTestEntity].insertValue(lift(e))))
-    intercept[FiberFailure] {
-      runSyncUnsafe(newCtx.run(query[ArraysTestEntity])).head mustBe e
-    }
-    newCtx.close()
   }
 
   "Arrays in where clause" in {
