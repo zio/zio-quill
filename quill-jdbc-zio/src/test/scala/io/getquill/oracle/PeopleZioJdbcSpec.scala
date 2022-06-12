@@ -17,7 +17,7 @@ class PeopleZioJdbcSpec extends PeopleZioSpec {
       import testContext.underlying._
       for {
         _ <- testContext.underlying.run(query[Couple].delete)
-        _ <- testContext.underlying.run(query[Person].filter(_.age > 0).delete)
+        _ <- testContext.underlying.run(query[Person].delete)
         _ <- testContext.underlying.run(liftQuery(peopleEntries).foreach(p => peopleInsert(p)))
         _ <- testContext.underlying.run(liftQuery(couplesEntries).foreach(p => couplesInsert(p)))
       } yield ()

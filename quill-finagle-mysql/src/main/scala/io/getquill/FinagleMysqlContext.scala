@@ -3,15 +3,7 @@ package io.getquill
 import java.util.TimeZone
 import scala.util.Try
 import com.twitter.concurrent.AsyncStream
-import com.twitter.finagle.mysql.Client
-import com.twitter.finagle.mysql.LongValue
-import com.twitter.finagle.mysql.OK
-import com.twitter.finagle.mysql.Parameter
-import com.twitter.finagle.mysql.{ Result => MysqlResult }
-import com.twitter.finagle.mysql.Row
-import com.twitter.finagle.mysql.Transactions
-import com.twitter.finagle.mysql.TimestampValue
-import com.twitter.finagle.mysql.IsolationLevel
+import com.twitter.finagle.mysql.{ Client, IsolationLevel, LongValue, NullValue, OK, Parameter, Row, TimestampValue, Transactions, Result => MysqlResult }
 import com.twitter.util.Await
 import com.twitter.util.Future
 import com.twitter.util.Local
@@ -23,7 +15,7 @@ import io.getquill.context.sql.SqlContext
 import io.getquill.util.{ ContextLogger, LoadConfig }
 import io.getquill.util.Messages.fail
 import io.getquill.monad.TwitterFutureIOMonad
-import io.getquill.context.{ Context, ExecutionInfo, ContextVerbStream, ContextVerbTranslate }
+import io.getquill.context.{ Context, ContextVerbStream, ContextVerbTranslate, ExecutionInfo }
 
 sealed trait OperationType
 object OperationType {
@@ -87,6 +79,13 @@ class FinagleMysqlContext[N <: NamingStrategy](
   override type StreamResult[T] = Future[AsyncStream[T]]
   override type Session = Unit
   type Runner = Unit
+  override type NullChecker = LocalNullChecker
+  class LocalNullChecker extends BaseNullChecker {
+    override def apply(index: Int, row: Row): Boolean = {
+      row.values(index) == NullValue
+    }
+  }
+  implicit val nullChecker: LocalNullChecker = new LocalNullChecker()
 
   protected val timestampValue =
     new TimestampValue(

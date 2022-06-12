@@ -18,7 +18,16 @@ trait MirrorDecoders {
       decoder(index, row, session)
   }
 
-  def decoder[T: ClassTag]: Decoder[T] = MirrorDecoder((index: Index, row: ResultRow, session: Session) => row[T](index))
+  def decoder[T: ClassTag]: Decoder[T] =
+    MirrorDecoder((index: Index, row: ResultRow, session: Session) => {
+      val cls = implicitly[ClassTag[T]].runtimeClass
+      if (cls.isPrimitive && row.nullAt(index))
+        0.asInstanceOf[T]
+      else if (row.nullAt(index))
+        null.asInstanceOf[T]
+      else
+        row[T](index)
+    })
 
   def decoderUnsafe[T]: Decoder[T] = MirrorDecoder((index: Index, row: ResultRow, session: Session) => row.data(index).asInstanceOf[T])
 
@@ -27,10 +36,10 @@ trait MirrorDecoders {
 
   implicit def optionDecoder[T](implicit d: Decoder[T]): Decoder[Option[T]] =
     MirrorDecoder((index: Index, row: ResultRow, session: Session) =>
-      row[Option[Any]](index) match {
-        case Some(v) => Some(d(0, Row(v), session))
-        case None    => None
-      })
+      if (row.nullAt(index))
+        None
+      else
+        Some(d(index, row, session)))
 
   implicit val stringDecoder: Decoder[String] = decoder[String]
   implicit val bigDecimalDecoder: Decoder[BigDecimal] = decoder[BigDecimal]
