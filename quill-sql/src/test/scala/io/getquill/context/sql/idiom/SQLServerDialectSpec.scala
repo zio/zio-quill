@@ -125,6 +125,23 @@ class SQLServerDialectSpec extends Spec {
     }
   }
 
+  "No alias for filtered insert" - {
+    "filtered insert" in {
+      val q = quote {
+        qr1.filter(t => t.i == 123).update(_.l -> 456)
+      }
+      ctx.run(q).string mustEqual
+        "UPDATE TestEntity SET l = 456 WHERE i = 123"
+    }
+    "filtered insert with co-related subquery" in {
+      val q = quote {
+        qr1.filter(t => qr2.filter(tt => tt.i == t.i).nonEmpty).update(_.l -> 456)
+      }
+      ctx.run(q).string mustEqual
+        "UPDATE TestEntity SET l = 456 WHERE EXISTS (SELECT tt.s, tt.i, tt.l, tt.o FROM TestEntity2 tt WHERE tt.i = i)"
+    }
+  }
+
   "Insert with returning via OUTPUT" - {
     "returning" - {
       "with single column table" in {
@@ -179,5 +196,12 @@ class SQLServerDialectSpec extends Spec {
         """import ctx._; quote { qr1.insert(lift(TestEntity("s", 0, 0L, Some(3)))).returningGenerated(r => query[TestEntity].filter(t => t.i == r.i)) }""" mustNot compile
       }
     }
+  }
+
+  case class Document(filename: String)
+  "Like operator should generate proper SQL" in {
+    val documents = quote(querySchema[Document]("document"))
+    ctx.run(documents.filter(d => d.filename like "A%")).string mustEqual
+      "SELECT d.filename FROM document d WHERE d.filename like 'A%'"
   }
 }

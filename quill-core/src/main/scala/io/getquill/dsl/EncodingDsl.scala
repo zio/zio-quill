@@ -23,6 +23,14 @@ trait EncodingDsl extends LowPriorityImplicits {
   type Session
   type Index = Int
 
+  // Make sure the signature of this is different then the decoder, otherwise in abstract contexts
+  // it can be implicitly summoned up as the decoder and you'll see something like this when doing PrintMac:
+  // implicitly[Decoder[Boolean]](nullChecker). If session needs to be included, add a argument to differentiate
+  // it from Decoder[T] or use a inner-trait.
+  type BaseNullChecker = (Index, ResultRow) => Boolean
+
+  type NullChecker <: BaseNullChecker
+
   type BaseEncoder[T] = (Index, T, PrepareRow, Session) => PrepareRow
 
   type Encoder[T] <: BaseEncoder[T]

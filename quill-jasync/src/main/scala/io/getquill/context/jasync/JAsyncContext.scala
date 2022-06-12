@@ -15,9 +15,11 @@ import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.{ NamingStrategy, ReturnAction }
 import io.getquill.util.ContextLogger
 import io.getquill.monad.ScalaFutureIOMonad
-import io.getquill.context.{ Context, ExecutionInfo, ContextVerbTranslate }
+import io.getquill.context.{ Context, ContextVerbTranslate, ExecutionInfo }
 import kotlin.jvm.functions.Function1
 
+import java.time.ZoneId
+import java.util.TimeZone
 import scala.compat.java8.FutureConverters
 import scala.jdk.CollectionConverters._
 
@@ -42,7 +44,16 @@ abstract class JAsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: ConcreteCo
   override type RunActionReturningResult[T] = T
   override type RunBatchActionResult = Seq[Long]
   override type RunBatchActionReturningResult[T] = Seq[T]
+  override type NullChecker = JasyncNullChecker
   type Runner = Unit
+
+  protected val dateTimeZone = ZoneId.systemDefault()
+
+  class JasyncNullChecker extends BaseNullChecker {
+    override def apply(index: Int, row: RowData): Boolean =
+      row.get(index) == null
+  }
+  implicit val nullChecker: NullChecker = new JasyncNullChecker()
 
   implicit def toFuture[T](cf: CompletableFuture[T]): Future[T] = FutureConverters.toScala(cf)
   implicit def toCompletableFuture[T](f: Future[T]): CompletableFuture[T] = FutureConverters.toJava(f).asInstanceOf[CompletableFuture[T]]

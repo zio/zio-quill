@@ -59,6 +59,7 @@ trait Liftables extends QuatLiftable {
     case OptionOrNull(a)             => q"$pack.OptionOrNull($a)"
     case OptionGetOrNull(a)          => q"$pack.OptionGetOrNull($a)"
     case OptionNone(quat)            => q"$pack.OptionNone($quat)"
+    case FilterIfDefined(a, b, c)    => q"$pack.FilterIfDefined($a,$b,$c)"
   }
 
   implicit val traversableOperationLiftable: Liftable[IterableOperation] = Liftable[IterableOperation] {

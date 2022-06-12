@@ -1,6 +1,6 @@
 package io.getquill
 
-import io.getquill.ast._
+import io.getquill.ast.{ Action => AstAction, _ }
 import io.getquill.context.CanReturnMultiField
 import io.getquill.context.sql._
 import io.getquill.context.sql.idiom._
@@ -8,14 +8,17 @@ import io.getquill.idiom.StatementInterpolator._
 import io.getquill.idiom.{ Statement, StringToken, Token }
 import io.getquill.norm.ConcatBehavior
 import io.getquill.norm.ConcatBehavior.NonAnsiConcat
-import io.getquill.sql.idiom.BooleanLiteralSupport
+import io.getquill.sql.idiom.{ BooleanLiteralSupport, NoActionAliases }
 
 trait OracleDialect
   extends SqlIdiom
   with QuestionMarkBindVariables
   with ConcatSupport
   with CanReturnMultiField
-  with BooleanLiteralSupport {
+  with BooleanLiteralSupport
+  with NoActionAliases {
+
+  override def querifyAction(ast: AstAction) = HideTopLevelFilterAlias(super.querifyAction(ast))
 
   class OracleFlattenSqlQueryTokenizerHelper(q: FlattenSqlQuery)(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy)
     extends FlattenSqlQueryTokenizerHelper(q)(astTokenizer, strategy) {
@@ -55,6 +58,7 @@ trait OracleDialect
     }
 
   override implicit def sourceTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[FromContext] = Tokenizer[FromContext] {
+    case InfixContext(infix, alias) => stmt"(${(infix: Ast).token}) ${tokenizeTableAlias(strategy, alias).token}"
     case QueryContext(query, alias) => stmt"(${query.token}) ${strategy.default(alias).token}"
     case other                      => super.sourceTokenizer.token(other)
   }

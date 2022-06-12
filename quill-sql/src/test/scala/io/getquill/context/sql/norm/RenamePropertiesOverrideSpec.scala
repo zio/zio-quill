@@ -59,17 +59,17 @@ class RenamePropertiesOverrideSpec extends Spec {
       }
       "update" in {
         val q = quote {
-          e.filter(_.i == 999).updateValue(lift(TestEntity("a", 1, 1L, None, true)))
+          e.filter(t => t.i == 999).updateValue(lift(TestEntity("a", 1, 1L, None, true)))
         }
         testContextUpper.run(q).string mustEqual
-          "UPDATE test_entity SET field_s = ?, field_i = ?, L = ?, O = ?, B = ? WHERE field_i = 999"
+          "UPDATE test_entity AS t SET field_s = ?, field_i = ?, L = ?, O = ?, B = ? WHERE t.field_i = 999"
       }
       "delete" in {
         val q = quote {
-          e.filter(_.i == 999).delete
+          e.filter(t => t.i == 999).delete
         }
         testContextUpper.run(q).string mustEqual
-          "DELETE FROM test_entity WHERE field_i = 999"
+          "DELETE FROM test_entity AS t WHERE t.field_i = 999"
       }
       "returning" - {
         "returning - alias" in testContextUpper.withDialect(MirrorSqlDialectWithReturnClause) { ctx =>
