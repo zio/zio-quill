@@ -1,7 +1,7 @@
 package io.getquill.context.zio.jasync
 
 import java.sql.Timestamp
-import java.time.{ LocalDate, LocalDateTime }
+import java.time.{ LocalDate, LocalDateTime, OffsetDateTime }
 import java.util.Date
 import io.getquill.context.sql.encoding.ArrayEncoding
 import io.getquill.context.zio.{ PostgresZioJAsyncContext, SqlTypes }
@@ -18,7 +18,7 @@ trait ArrayEncoders extends ArrayEncoding {
   implicit def arrayLongEncoder[Col <: Seq[Long]]: Encoder[Col] = arrayRawEncoder[Long, Col]
   implicit def arrayFloatEncoder[Col <: Seq[Float]]: Encoder[Col] = arrayRawEncoder[Float, Col]
   implicit def arrayDoubleEncoder[Col <: Seq[Double]]: Encoder[Col] = arrayRawEncoder[Double, Col]
-  implicit def arrayDateEncoder[Col <: Seq[Date]]: Encoder[Col] = arrayEncoder[Date, Col](d => Timestamp.from(d.toInstant))
+  implicit def arrayDateEncoder[Col <: Seq[Date]]: Encoder[Col] = arrayEncoder[Date, Col](date => OffsetDateTime.ofInstant(date.toInstant, dateTimeZone).toLocalDateTime)
   implicit def arrayLocalDateEncoder[Col <: Seq[LocalDate]]: Encoder[Col] = arrayRawEncoder[LocalDate, Col]
   implicit def arrayLocalDateTimeEncoder[Col <: Seq[LocalDateTime]]: Encoder[Col] = arrayRawEncoder[LocalDateTime, Col]
 
