@@ -280,7 +280,7 @@ lazy val `quill-engine` =
     .jsSettings(
       libraryDependencies ++= Seq(
         "com.lihaoyi" %%% "pprint" % "0.6.6",
-        "org.scala-js" %%% "scalajs-java-time" % "1.0.0",
+        "io.github.cquiroz" %%% "scala-java-time" % "2.2.2",
         "org.scala-lang.modules" %%% "scala-collection-compat" % "2.2.0"
       ) ++ {
         if (isScala211)
