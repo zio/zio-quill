@@ -52,7 +52,9 @@ abstract class JAsyncContextConfig[C <: ConcreteConnection](
     new SSLConfiguration(
       Map(
         "sslmode" -> getString("sslmode"),
-        "sslrootcert" -> getString("sslrootcert")
+        "sslrootcert" -> getString("sslrootcert"),
+        "sslcert" -> getString("sslcert"),
+        "sslkey" -> getString("sslkey")
       ).collect {
           case (key, Some(value)) => key -> value
         }.asJava
@@ -62,7 +64,8 @@ abstract class JAsyncContextConfig[C <: ConcreteConnection](
     urlConfiguration.getAllocator,
     getString("applicationName").orElse(Option(urlConfiguration.getApplicationName)).orNull,
     urlConfiguration.getInterceptors,
-    getLong("maxConnectionTtl").map(JavaLong.valueOf).orElse(Option(default.getMaxConnectionTtl)).orNull
+    getLong("maxConnectionTtl").map(JavaLong.valueOf).orElse(Option(default.getMaxConnectionTtl)).orNull,
+    getString("currentSchema").orElse(Option(urlConfiguration.getCurrentSchema)).orNull
   )
 
   def pool =
