@@ -52,7 +52,9 @@ abstract class JAsyncContextConfig[C <: ConcreteConnection](
     new SSLConfiguration(
       Map(
         "sslmode" -> getString("sslmode"),
-        "sslrootcert" -> getString("sslrootcert")
+        "sslrootcert" -> getString("sslrootcert"),
+        "sslcert" -> getString("sslcert"),
+        "sslkey" -> getString("sslkey")
       ).collect {
           case (key, Some(value)) => key -> value
         }.asJava
