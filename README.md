@@ -14,7 +14,7 @@
 
 Quill provides a Quoted Domain Specific Language ([QDSL](http://homepages.inf.ed.ac.uk/wadler/papers/qdsl/qdsl.pdf)) to express queries in Scala and execute them in a target language. The library's core is designed to support multiple target languages, currently featuring specializations for Structured Query Language ([SQL](https://en.wikipedia.org/wiki/SQL)) and Cassandra Query Language ([CQL](https://cassandra.apache.org/doc/latest/cql/)).
 
-> ### Scala 3 Support 
+> ### Scala 3 Support
 > [ProtoQuill](https://github.com/zio/zio-protoquill) provides Scala 3 support for Quill rebuilding on top of new metaprogramming capabilities from the ground > up! It is published to maven-central as the `quill-<module>_3` line of artifacts.
 
 
@@ -35,10 +35,10 @@ Note: The GIF example uses Eclipse, which shows compilation messages to the user
 > ### [Scastie](https://scastie.scala-lang.org/) is a great tool to try out Quill without having to prepare a local environment. It works with [mirror contexts](#mirror-context), see [this](https://scastie.scala-lang.org/QwOewNEiR3mFlKIM7v900A) snippet as an example.
 
 Quill has integrations with many libraries. If you are using a regular RDBMS e.g. PostgreSQL
-and want to use Quill to query it with an asychronous, non-blocking, reactive application, the easiest way to get 
+and want to use Quill to query it with an asychronous, non-blocking, reactive application, the easiest way to get
 started is by using an awesome library called ZIO.
 
-A simple ZIO + Quill application looks like this: 
+A simple ZIO + Quill application looks like this:
 ```scala
 case class Person(name: String, age: Int)
 
@@ -76,8 +76,8 @@ Choose the quill module that works for you!
 * If you are starting from scratch with a regular RDBMS try using the `quill-jdbc-zio` module as shown above.
 * If you are developing a legacy Java project and don't want/need reactive, use `quill-jdbc`.
 * If you are developing a project with Cats and/or Monix, try `quill-jdbc-monix`.
-* If you like to "live dangerously" and want to try a socket-level async library, try `quill-jasync-postgres` 
-  or `quill-jasync-mysql`. 
+* If you like to "live dangerously" and want to try a socket-level async library, try `quill-jasync-postgres`
+  or `quill-jasync-mysql`.
 * If you are using Cassandra, Spark, or OrientDB, try the corresponding modules for each of them.
 
 
@@ -227,7 +227,7 @@ A `Iterable` instance can be lifted as a `Query`. There are two main usages for 
 def find(radiusList: List[Float]) = quote {
   query[Circle].filter(r => liftQuery(radiusList).contains(r.radius))
 }
-ctx.run(find(List(1.1F, 1.2F))) 
+ctx.run(find(List(1.1F, 1.2F)))
 // SELECT r.radius FROM Circle r WHERE r.radius IN (?)
 ```
 
@@ -236,7 +236,7 @@ ctx.run(find(List(1.1F, 1.2F)))
 def insertValues(circles: List[Circle]) = quote {
   liftQuery(circles).foreach(c => query[Circle].insertValue(c))
 }
-ctx.run(insertValues(List(Circle(1.1F), Circle(1.2F)))) 
+ctx.run(insertValues(List(Circle(1.1F), Circle(1.2F))))
 // INSERT INTO Circle (radius) VALUES (?)
 ```
 
@@ -325,7 +325,7 @@ val returnedIds = ctx.run(q) //: List[(Int, Long)]
 
 #### returning
 
-In certain situations, we might want to return fields that are not auto generated as well. In this case we do not want 
+In certain situations, we might want to return fields that are not auto generated as well. In this case we do not want
 the fields to be automatically excluded from the insertion. The `returning` method is used for that.
 
 ```scala
@@ -389,7 +389,7 @@ Values returned can be further customized in some databases.
 
 ##### Postgres
 
-The `returning` and `returningGenerated` methods also support arithmetic operations, SQL UDFs and 
+The `returning` and `returningGenerated` methods also support arithmetic operations, SQL UDFs and
 even entire queries. These are inserted directly into the SQL `RETURNING` clause.
 
 Assuming this basic query:
@@ -415,8 +415,8 @@ ctx.run(q.returning(r => udf(r.id))) //: List[Int]
 Use the return value of `sku` to issue a query:
 ```scala
 case class Supplier(id: Int, clientSku: Long)
-ctx.run { 
-  q.returning(r => query[Supplier].filter(s => s.sku == r.sku).map(_.id).max) 
+ctx.run {
+  q.returning(r => query[Supplier].filter(s => s.sku == r.sku).map(_.id).max)
 } //: List[Option[Long]]
 // INSERT INTO Product (description,sku) VALUES ('My Product', 1011) RETURNING (SELECT MAX(s.id) FROM Supplier s WHERE s.sku = clientSku)
 ```
@@ -424,11 +424,11 @@ ctx.run {
 As is typically the case with Quill, you can use all of these features together.
 ```scala
 ctx.run {
-  q.returning(r => 
+  q.returning(r =>
     (r.id + 100, udf(r.id), query[Supplier].filter(s => s.sku == r.sku).map(_.id).max)
-  ) 
+  )
 } // List[(Int, Int, Option[Long])]
-// INSERT INTO Product (description,sku) VALUES ('My Product', 1011) 
+// INSERT INTO Product (description,sku) VALUES ('My Product', 1011)
 // RETURNING id + 100, myUdf(id), (SELECT MAX(s.id) FROM Supplier s WHERE s.sku = sku)
 ```
 
@@ -436,12 +436,12 @@ ctx.run {
 Otherwise, Postgres will throw:
 `ERROR: more than one row returned by a subquery used as an expression`. This is why is it strongly
 recommended that you use aggregators such as `max` or `min`inside of quill returning-clause queries.
-In the case that this is impossible (e.g. when using Postgres booleans), you can use the `.value` method: 
+In the case that this is impossible (e.g. when using Postgres booleans), you can use the `.value` method:
 `q.returning(r => query[Supplier].filter(s => s.sku == r.sku).map(_.id).value)`.
 
 ##### SQL Server
 
-The `returning` and `returningGenerated` methods are more restricted when using SQL Server; they only support 
+The `returning` and `returningGenerated` methods are more restricted when using SQL Server; they only support
 arithmetic operations. These are inserted directly into the SQL `OUTPUT INSERTED.*` or `OUTPUT DELETED.*` clauses.
 
 Assuming the query:
@@ -782,15 +782,15 @@ case class B(fk: Int)
 quote {
   query[A].join(query[B]).on(_.id == _.fk)
 }
- 
+
 // Implicit Joins:
 quote {
   for {
     a <- query[A]
-    b <- query[B] if (a.id == b.fk) 
+    b <- query[B] if (a.id == b.fk)
   } yield (a, b)
 }
- 
+
 // Flat Joins:
 quote {
   for {
@@ -818,40 +818,40 @@ Quill supports inner, left-outer, right-outer, and full-outer (i.e. cross) appli
 val q = quote {
   query[Person].join(query[Address]).on(_.id == _.fk)
 }
- 
+
 ctx.run(q) //: List[(Person, Address)]
-// SELECT x1.id, x1.name, x2.street, x2.zip, x2.fk 
+// SELECT x1.id, x1.name, x2.street, x2.zip, x2.fk
 // FROM Person x1 INNER JOIN Address x2 ON x1.id = x2.fk
- 
+
 // Left (Outer) Join
 val q = quote {
   query[Person].leftJoin(query[Address]).on((p, a) => p.id == a.fk)
 }
- 
+
 ctx.run(q) //: List[(Person, Option[Address])]
 // Note that when you use named-variables in your comprehension, Quill does its best to honor them in the query.
-// SELECT p.id, p.name, a.street, a.zip, a.fk 
+// SELECT p.id, p.name, a.street, a.zip, a.fk
 // FROM Person p LEFT JOIN Address a ON p.id = a.fk
- 
+
 // Right (Outer) Join
 val q = quote {
   query[Person].rightJoin(query[Address]).on((p, a) => p.id == a.fk)
 }
- 
+
 ctx.run(q) //: List[(Option[Person], Address)]
-// SELECT p.id, p.name, a.street, a.zip, a.fk 
+// SELECT p.id, p.name, a.street, a.zip, a.fk
 // FROM Person p RIGHT JOIN Address a ON p.id = a.fk
- 
+
 // Full (Outer) Join
 val q = quote {
   query[Person].fullJoin(query[Address]).on((p, a) => p.id == a.fk)
 }
- 
+
 ctx.run(q) //: List[(Option[Person], Option[Address])]
-// SELECT p.id, p.name, a.street, a.zip, a.fk 
+// SELECT p.id, p.name, a.street, a.zip, a.fk
 // FROM Person p FULL JOIN Address a ON p.id = a.fk
 ```
- 
+
 What about joining more than two tables with the applicative syntax?
 Here's how to do that:
 ```scala
@@ -863,10 +863,10 @@ val q = quote {
     .join(query[Address]).on({case (p, a) => p.id == a.fk}) // Let's use `case` here to stay consistent
     .join(query[Company]).on({case ((p, a), c) => a.zip == c.zip})
 }
- 
+
 ctx.run(q) //: List[((Person, Address), Company)]
 // (Unfortunately when you use `case` statements, Quill can't help you with the variables names either!)
-// SELECT x01.id, x01.name, x11.street, x11.zip, x11.fk, x12.name, x12.zip 
+// SELECT x01.id, x01.name, x11.street, x11.zip, x11.fk, x12.name, x12.zip
 // FROM Person x01 INNER JOIN Address x11 ON x01.id = x11.fk INNER JOIN Company x12 ON x11.zip = x12.zip
 ```
 No worries though, implicit joins and flat joins have your other use-cases covered!
@@ -875,7 +875,7 @@ No worries though, implicit joins and flat joins have your other use-cases cover
 
 Quill's implicit joins use a monadic syntax making them pleasant to use for joining many tables together.
 They look a lot like Scala collections when used in for-comprehensions
-making them familiar to a typical Scala developer. 
+making them familiar to a typical Scala developer.
 What's the catch? They can only do inner-joins.
 
 ```scala
@@ -885,12 +885,12 @@ val q = quote {
     a <- query[Address] if (p.id == a.fk)
   } yield (p, a)
 }
- 
+
 run(q) //: List[(Person, Address)]
-// SELECT p.id, p.name, a.street, a.zip, a.fk 
+// SELECT p.id, p.name, a.street, a.zip, a.fk
 // FROM Person p, Address a WHERE p.id = a.fk
 ```
- 
+
 Now, this is great because you can keep adding more and more joins
 without having to do any pesky nesting.
 ```scala
@@ -901,9 +901,9 @@ val q = quote {
     c <- query[Company] if (c.zip == a.zip)
   } yield (p, a, c)
 }
- 
+
 run(q) //: List[(Person, Address, Company)]
-// SELECT p.id, p.name, a.street, a.zip, a.fk, c.name, c.zip 
+// SELECT p.id, p.name, a.street, a.zip, a.fk, c.name, c.zip
 // FROM Person p, Address a, Company c WHERE p.id = a.fk AND c.zip = a.zip
 ```
 Well that looks nice but wait! What If I need to inner, **and** outer join lots of tables nicely?
@@ -917,43 +917,43 @@ and left-outer joins together without any of that pesky nesting.
 ```scala
 // Inner Join
 val q = quote {
-  for { 
+  for {
     p <- query[Person]
     a <- query[Address].join(a => a.fk == p.id)
   } yield (p,a)
 }
- 
+
 ctx.run(q) //: List[(Person, Address)]
 // SELECT p.id, p.name, a.street, a.zip, a.fk
 // FROM Person p INNER JOIN Address a ON a.fk = p.id
- 
+
 // Left (Outer) Join
 val q = quote {
-  for { 
+  for {
     p <- query[Person]
     a <- query[Address].leftJoin(a => a.fk == p.id)
   } yield (p,a)
 }
- 
+
 ctx.run(q) //: List[(Person, Option[Address])]
-// SELECT p.id, p.name, a.street, a.zip, a.fk 
+// SELECT p.id, p.name, a.street, a.zip, a.fk
 // FROM Person p LEFT JOIN Address a ON a.fk = p.id
 ```
- 
+
 Now you can keep adding both right and left joins without nesting!
 ```scala
 val q = quote {
-  for { 
+  for {
     p <- query[Person]
     a <- query[Address].join(a => a.fk == p.id)
     c <- query[Company].leftJoin(c => c.zip == a.zip)
   } yield (p,a,c)
 }
- 
+
 ctx.run(q) //: List[(Person, Address, Option[Company])]
-// SELECT p.id, p.name, a.street, a.zip, a.fk, c.name, c.zip 
-// FROM Person p 
-// INNER JOIN Address a ON a.fk = p.id 
+// SELECT p.id, p.name, a.street, a.zip, a.fk, c.name, c.zip
+// FROM Person p
+// INNER JOIN Address a ON a.fk = p.id
 // LEFT JOIN Company c ON c.zip = a.zip
 ```
 
@@ -998,17 +998,17 @@ val q = quote {
     c <- query[Contact].leftJoin(_.personId == p.id)
   } yield (p, c)
 }
- 
+
 // ctx.run(q)
-// java.lang.IllegalArgumentException: requirement failed: Found an `ON` table reference of a table that is 
+// java.lang.IllegalArgumentException: requirement failed: Found an `ON` table reference of a table that is
 // not available: Set(p). The `ON` condition can only use tables defined through explicit joins.
 ```
 This happens because an explicit join typically cannot be done after an implicit join in the same query.
- 
+
 A good guideline is in any query or subquery, choose one of the following:
  * Use flat-joins + applicative joins or
  * Use implicit joins
- 
+
 Also, note that not all Option operations are available on outer-joined tables (i.e. tables wrapped in an `Option` object),
 only a specific subset. This is mostly due to the inherent limitations of SQL itself. For more information, see the
 'Optional Tables' section.
@@ -1047,9 +1047,9 @@ Some important notes regarding Optionals and nullable fields.
 > In many cases, Quill tries to rely on the null-fallthrough behavior that is ANSI standard:
 >  * `null == null := false`
 >  * `null == [true | false] := false`
-> 
+>
 > This allows the generated SQL for most optional operations to be simple. For example, the expression
-> `Option[String].map(v => v + "foo")` can be expressed as the SQL `v || 'foo'` as opposed to 
+> `Option[String].map(v => v + "foo")` can be expressed as the SQL `v || 'foo'` as opposed to
 > `CASE IF (v is not null) v || 'foo' ELSE null END` so long as the concatenation operator `||`
 > "falls-through" and returns `null` when the input is null. This is not true of all databases (e.g. [Oracle](https://community.oracle.com/ideas/19866)),
 > forcing Quill to return the longer expression with explicit null-checking. Also, if there are conditionals inside
@@ -1078,7 +1078,7 @@ ctx.run(q)
 // SELECT a.fk, a.street, a.zip FROM Address a WHERE a.fk IS NULL
 ```
 
- 
+
 #### exists
 
 This method is typically used for inspecting nullable fields inside of boolean conditions, most notably joining!
@@ -1110,9 +1110,34 @@ Being `null` in this case is typically a matching result.
 val q = quote {
   query[Person].filter(p => p.name.forall(_ != "Joe"))
 }
- 
+
 ctx.run(q)
 // SELECT p.id, p.name FROM Person p WHERE p.name IS NULL OR p.name <> 'Joe'
+```
+
+#### filterIfDefined
+Use this to filter by a optional field that you want to ignore when None.
+This is useful when you want to filter by a map-key that may or may not exist.
+
+```scala
+val fieldFilters: Map[String, String] = Map("name" -> "Joe", "age" -> "123")
+val q = quote {
+  query[Person].filter(p => lift(fieldFilters.get("name)).filterIfDefined(_ == p.name))
+}
+ 
+ctx.run(q)
+// SELECT p.id, p.name, p.title FROM Person p WHERE p.title IS NULL OR p.title = 'The Honorable'
+```
+
+It also works for regular fields.
+```scala
+// case class Person(name: String, age: Int, title: Option[String])
+val q = quote {
+  query[Person].filter(p => p.title.filterIfDefined(_ == "The Honorable"))
+}
+ 
+ctx.run(q)
+// SELECT p.id, p.name, p.title FROM Person p WHERE p.title IS NULL OR p.title = 'The Honorable'
 ```
 
 #### map
@@ -1123,7 +1148,7 @@ val q = quote {
     p <- query[Person]
   } yield (p.id, p.name.map("Dear " + _))
 }
- 
+
 ctx.run(q)
 // SELECT p.id, 'Dear ' || p.name FROM Person p
 // * In Dialects where `||` does not fall-through for nulls (e.g. Oracle):
@@ -1141,7 +1166,7 @@ val q = quote {
       (c.name, a.map(_.street), a.map(_.zip))   // Use `Option.map` to get `street` and `zip` fields
     }
 }
- 
+
 run(q)
 // SELECT c.name, a.street, a.zip FROM Company c LEFT JOIN Address a ON c.zip = a.zip
 ```
@@ -1160,29 +1185,29 @@ val q = quote {
   } yield (
     // If this was `a.name.map`, resulting record type would be Option[Option[String]]
     a.name.flatMap(an =>
-      b.name.map(bn => 
+      b.name.map(bn =>
         an+" comes after "+bn)))
 }
- 
+
 ctx.run(q) //: List[Option[String]]
 // SELECT (a.name || ' comes after ') || b.name FROM Person a, Person b WHERE a.id > b.id
 // * In Dialects where `||` does not fall-through for nulls (e.g. Oracle):
 // * SELECT CASE WHEN a.name IS NOT NULL AND b.name IS NOT NULL THEN (a.name || ' comes after ') || b.name ELSE null END FROM Person a, Person b WHERE a.id > b.id
- 
+
 // Alternatively, you can use `flatten`
 val q = quote {
   for {
     a <- query[Person]
     b <- query[Person] if (a.id > b.id)
   } yield (
-    a.name.map(an => 
-      b.name.map(bn => 
+    a.name.map(an =>
+      b.name.map(bn =>
         an + " comes after " + bn)).flatten)
 }
- 
+
 ctx.run(q) //: List[Option[String]]
 // SELECT (a.name || ' comes after ') || b.name FROM Person a, Person b WHERE a.id > b.id
-``` 
+```
 This is also very useful when selecting from outer-joined tables i.e. where the entire table
 is inside of an `Option` object. Note how below we get the `fk` field from `Option[Address]`.
 
@@ -1192,7 +1217,7 @@ val q = quote {
     .on((p, a) => a.fk.exists(_ == p.id))
     .map {case (p /*Person*/, a /*Option[Address]*/) => (p.name, a.flatMap(_.fk))}
 }
- 
+
 ctx.run(q) //: List[(Option[String], Option[Int])]
 // SELECT p.name, a.fk FROM Person p LEFT JOIN Address a ON a.fk = p.id
 ```
@@ -1209,11 +1234,11 @@ you can use the `getOrNull` method inside of quoted blocks to do the same thing.
 val q = quote {
   query[Person].join(query[Address])
     .on((p, a) => a.fk.exists(_ == p.id))
-    .filter {case (p /*Person*/, a /*Option[Address]*/) => 
+    .filter {case (p /*Person*/, a /*Option[Address]*/) =>
       a.fk.getOrNull != 123 } // Exclude a particular value from the query.
                               // Since we already did an inner-join on this value, we know it is not null.
 }
- 
+
 ctx.run(q) //: List[(Address, Person)]
 // SELECT p.id, p.name, a.fk, a.street, a.zip FROM Person p INNER JOIN Address a ON a.fk IS NOT NULL AND a.fk = p.id WHERE a.fk <> 123
 ```
@@ -1226,9 +1251,9 @@ in order to do this.
 val q = quote {
   query[Person].map(p => Option(p.name.orNull + " suffix"))
 }
- 
+
 ctx.run(q)
-// SELECT p.name || ' suffix' FROM Person p 
+// SELECT p.name || ' suffix' FROM Person p
 // i.e. same as the previous behavior
 ```
 
@@ -1241,9 +1266,9 @@ However, since they may introduce behavior changes in your codebase, the followi
 val q = quote {
   query[Person].map(p => p.name.map(n => if (n == "Joe") "foo" else "bar").getOrElse("baz"))
 }
-// Information:(16, 15) Conditionals inside of Option.map will create a `CASE` statement in order to properly null-check the sub-query: `p.name.map((n) => if(n == "Joe") "foo" else "bar")`. 
+// Information:(16, 15) Conditionals inside of Option.map will create a `CASE` statement in order to properly null-check the sub-query: `p.name.map((n) => if(n == "Joe") "foo" else "bar")`.
 // Expressions like Option(if (v == "foo") else "bar").getOrElse("baz") will now work correctly, but expressions that relied on the broken behavior (where "bar" would be returned instead) need to be modified  (see the "orNull / getOrNull" section of the documentation of more detail).
- 
+
 ctx.run(a)
 // Used to be this:
 // SELECT CASE WHEN CASE WHEN p.name = 'Joe' THEN 'foo' ELSE 'bar' END IS NOT NULL THEN CASE WHEN p.name = 'Joe' THEN 'foo' ELSE 'bar' END ELSE 'baz' END FROM Person p
@@ -1292,7 +1317,7 @@ ctx.run(q)
 ```
 
 If you would like to use an equality operator that follows that ansi-idiomatic approach, failing
-the comparison if either side is null as well as the principle that `null = null := false`, you can import `===` (and `=!=`) 
+the comparison if either side is null as well as the principle that `null = null := false`, you can import `===` (and `=!=`)
 from `Context.extras`. These operators work across `T` and `Option[T]` allowing comparisons like `T === Option[T]`,
 `Option[T] == T` etc... to be made. You can use also `===`
 directly in Scala code and it will have the same behavior, returning `false` when other the left-hand
@@ -1320,7 +1345,7 @@ val q = run( query[Node].filter(n => n.status === "RUNNING") )
 
 As we have seen in the examples above, only the `map` and `flatMap` methods are available on outer-joined tables
 (i.e. tables wrapped in an `Option` object).
- 
+
 Since you cannot use `Option[Table].isDefined`, if you want to null-check a whole table
 (e.g. if a left-join was not matched), you have to `map` to a specific field on which you can do the null-check.
 
@@ -1331,7 +1356,7 @@ val q = quote {
     .filter({case(c,a) => a.isDefined})   // You cannot null-check a whole table!
 }
 ```
- 
+
 Instead, map the row-variable to a specific field and then check that field.
 ```scala
 val q = quote {
@@ -1340,12 +1365,12 @@ val q = quote {
     .filter({case(c,a) => a.map(_.street).isDefined}) // Null-check a non-nullable field instead
 }
 ctx.run(q)
-// SELECT c.name, c.zip, a.fk, a.street, a.zip 
-// FROM Company c 
-// LEFT JOIN Address a ON c.zip = a.zip 
+// SELECT c.name, c.zip, a.fk, a.street, a.zip
+// FROM Company c
+// LEFT JOIN Address a ON c.zip = a.zip
 // WHERE a.street IS NOT NULL
 ```
- 
+
 Finally, it is worth noting that a whole table can be wrapped into an `Option` object. This is particularly
 useful when doing a union on table-sets that are both right-joined and left-joined together.
 ```scala
@@ -1353,7 +1378,7 @@ val aCompanies = quote {
   for {
     c <- query[Company] if (c.name like "A%")
     a <- query[Address].join(_.zip == c.zip)
-  } yield (c, Option(a))  // change (Company, Address) to (Company, Option[Address]) 
+  } yield (c, Option(a))  // change (Company, Address) to (Company, Option[Address])
 }
 val bCompanies = quote {
   for {
@@ -1366,10 +1391,10 @@ val union = quote {
 }
 ctx.run(union)
 // SELECT x.name, x.zip, x.fk, x.street, x.zip FROM (
-// (SELECT c.name name, c.zip zip, x1.zip zip, x1.fk fk, x1.street street 
-// FROM Company c INNER JOIN Address x1 ON x1.zip = c.zip WHERE c.name like 'A%') 
-// UNION 
-// (SELECT c1.name name, c1.zip zip, x2.zip zip, x2.fk fk, x2.street street 
+// (SELECT c.name name, c.zip zip, x1.zip zip, x1.fk fk, x1.street street
+// FROM Company c INNER JOIN Address x1 ON x1.zip = c.zip WHERE c.name like 'A%')
+// UNION
+// (SELECT c1.name name, c1.zip zip, x2.zip zip, x2.fk fk, x2.street street
 // FROM Company c1 LEFT JOIN Address x2 ON x2.zip = c1.zip WHERE c1.name like 'A%')
 // ) x
 ```
@@ -1718,7 +1743,7 @@ ctx.run(query[Person].insertValue(lift(p))).flatMap { _ =>
   ctx.run(query[Person])
 }
 
-// isn't referentially transparent because if you refactor the second database 
+// isn't referentially transparent because if you refactor the second database
 // interaction into a value, the result will be different:
 
 val allPeople = ctx.run(query[Person])
@@ -1777,7 +1802,7 @@ performIO(a.transactional) // note: transactional can be used outside of `perfor
 ### Getting a ResultSet
 
 Quill JDBC Contexts allow you to use `prepare` in order to get a low-level `ResultSet` that is useful
-for interacting with legacy APIs. This function  returns a `f: (Connection) => (PreparedStatement)` 
+for interacting with legacy APIs. This function  returns a `f: (Connection) => (PreparedStatement)`
 closure as opposed to a `PreparedStatement` in order to guarantee that JDBC Exceptions are not
 thrown until you can wrap them into the appropriate Exception-handling mechanism (e.g.
 `try`/`catch`, `Try` etc...).
@@ -2019,7 +2044,7 @@ ctx.run(q2)
 val q3 = quote {
   query[Person].usingTtl(11).filter(_.name == "John").delete
 }
-ctx.run(q3)  
+ctx.run(q3)
 // DELETE FROM Person USING TTL 11 WHERE name = 'John'
 ```
 
@@ -2130,7 +2155,7 @@ ctx.run(people(Senior))
 
 ### Dynamic query API
 
-Additionally, Quill provides a separate query API to facilitate the creation of dynamic queries. This API allows users to easily manipulate quoted values instead of working only with quoted transformations. 
+Additionally, Quill provides a separate query API to facilitate the creation of dynamic queries. This API allows users to easily manipulate quoted values instead of working only with quoted transformations.
 
 **Important**: A few of the dynamic query methods accept runtime string values. It's important to keep in mind that these methods could be a vector for SQL injection.
 
@@ -2192,15 +2217,15 @@ def people(maxRecords: Option[Int]) =
 
 def people(dropFirst: Option[Int]) =
   dynamicQuery[Person].dropOpt(dropFirst)
-  
-// method with `If` suffix, for better chaining  
+
+// method with `If` suffix, for better chaining
 def people(userIds: Seq[Int]) =
   dynamicQuery[Person].filterIf(userIds.nonEmpty)(person => quote(liftQuery(userIds).contains(person.id)))
 ```
 
 **Actions**
 ```scala
-// actions use `set` 
+// actions use `set`
 dynamicQuery[Person].filter(_.id == 1).update(set(_.name, quote("John")))
 
 // or `setValue` if the value is not quoted
@@ -2303,7 +2328,7 @@ val q = quote {
 }
 // Copying SOME_UDF and SOME_OTHER_UDF allows the query to be completely flattened.
 run(q)
-// SELECT e.id, SOME_OTHER_UDF(SOME_UDF(e.id)) FROM Data e 
+// SELECT e.id, SOME_OTHER_UDF(SOME_UDF(e.id)) FROM Data e
 // WHERE SOME_UDF(e.id) <= 10 AND SOME_OTHER_UDF(SOME_UDF(e.id)) <= 100
 ```
 
@@ -2315,7 +2340,7 @@ Use `infix"...".asCondition` to express an infix that represents a conditional e
 #### Explination
 
 When synthesizing queries for databases which do not have proper boolean-type support (e.g. SQL Server,
-Oracle etc...) boolean infix clauses inside projections must become values. 
+Oracle etc...) boolean infix clauses inside projections must become values.
 Typically this requires a `CASE WHERE ... END`.
 
 Take the following example:
@@ -2385,8 +2410,8 @@ run(query[Person].olderThan(44))
 ##### Higher-order quoted extension:
 ```scala
 implicit class Ext(q: Query[Person]) {
-  def olderThan = quote { 
-    (age: Int) => 
+  def olderThan = quote {
+    (age: Int) =>
       query[Person].filter(p => p.age > lift(age))
   }
 }
@@ -2403,7 +2428,7 @@ The advantage of this approach is that you can choose to either lift or use a co
 Just as `Query` can be extended, scalar values can be similarly extended.
 ```scala
 implicit class Ext(i: Int) {
-  def between = quote { 
+  def between = quote {
     (a: Int, b:Int) =>
       i > a && i < b
   }
@@ -2527,7 +2552,7 @@ trait UUIDEncodingExample {
   implicit val uuidDecoder: Decoder[UUID] =
     decoder((index, row) =>
       UUID.fromString(row.getObject(index).toString)) // database-specific implementation
-    
+
   implicit val uuidEncoder: Encoder[UUID] =
     encoder(java.sql.Types.OTHER, (index, value, row) =>
         row.setObject(index, value, java.sql.Types.OTHER)) // database-specific implementation
@@ -2607,7 +2632,7 @@ Note that the parameter of `updateMeta` is called `exclude`, but it isn't possib
 The QueryMeta customizes the expansion of query types and extraction of the final value. For instance, it's possible to use this feature to normalize values before reading them from the database:
 
 ```scala
-implicit val personQueryMeta = 
+implicit val personQueryMeta =
   queryMeta(
     (q: Query[Person]) =>
       q.map(p => (p.id, infix"CONVERT(${p.name} USING utf8)".as[String], p.age))
@@ -2650,7 +2675,7 @@ case class MySchema(c: MyContext) {
 
 case class MyDao(c: MyContext, schema: MySchema) {
 
-  def allPeople = 
+  def allPeople =
     c.run(schema.people)
 // ERROR: [T](quoted: MyDao.this.c.Quoted[MyDao.this.c.Query[T]])MyDao.this.c.QueryResult[T]
  cannot be applied to (MyDao.this.schema.c.Quoted[MyDao.this.schema.c.EntityQuery[Person]]{def quoted: io.getquill.ast.ConfiguredEntity; def ast: io.getquill.ast.ConfiguredEntity; def id1854281249(): Unit; val bindings: Object})
@@ -2679,7 +2704,7 @@ trait MySchema {
 case class MyDao(c: MyContext) extends MySchema {
   import c._
 
-  def allPeople = 
+  def allPeople =
     c.run(people)
 }
 ```
@@ -2699,38 +2724,38 @@ trait ModularContext[I <: Idiom, N <: NamingStrategy] { this: Context[I, N] =>
   }
 }
 ```
- 
+
 Let's see how this can be used across different kinds of databases and Quill contexts.
- 
+
 #### Use `ModularContext` in a mirror context:
 
 ```scala
 // Note: In some cases need to explicitly specify [MirrorSqlDialect, Literal].
-val ctx = 
-  new SqlMirrorContext[MirrorSqlDialect, Literal](MirrorSqlDialect, Literal) 
+val ctx =
+  new SqlMirrorContext[MirrorSqlDialect, Literal](MirrorSqlDialect, Literal)
     with ModularContext[MirrorSqlDialect, Literal]
-  
-import ctx._ 
+
+import ctx._
 println( run(peopleOlderThan(22, query[Person])).string )
 ```
 
 #### Use `ModularContext` to query a Postgres Database
 
 ```scala
-val ctx = 
-  new PostgresJdbcContext[Literal](Literal, ds) 
+val ctx =
+  new PostgresJdbcContext[Literal](Literal, ds)
     with ModularContext[PostgresDialect, Literal]
-  
-import ctx._ 
+
+import ctx._
 val results = run(peopleOlderThan(22, query[Person]))
 ```
 
 #### Use `ModularContext` to query a Spark Dataset
 
 ```scala
-object CustomQuillSparkContext extends QuillSparkContext 
+object CustomQuillSparkContext extends QuillSparkContext
   with ModularContext[SparkDialect, Literal]
- 
+
 val results = run(peopleOlderThan(22, liftQuery(dataset)))
 ```
 
@@ -2742,7 +2767,7 @@ Quill provides a fully type-safe way to use Spark's highly-optimized SQL engine.
 ### Importing Quill Spark
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-spark" % "3.16.6-SNAPSHOT"
+  "io.getquill" %% "quill-spark" % "3.18.1-SNAPSHOT"
 )
 ```
 
@@ -2942,7 +2967,7 @@ The body of `transaction` can contain calls to other methods and multiple `run` 
 ```
 libraryDependencies ++= Seq(
   "mysql" % "mysql-connector-java" % "8.0.17",
-  "io.getquill" %% "quill-jdbc" % "3.16.6-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "3.18.1-SNAPSHOT"
 )
 ```
 
@@ -2969,7 +2994,7 @@ ctx.connectionTimeout=30000
 ```
 libraryDependencies ++= Seq(
   "org.postgresql" % "postgresql" % "42.2.8",
-  "io.getquill" %% "quill-jdbc" % "3.16.6-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "3.18.1-SNAPSHOT"
 )
 ```
 
@@ -2995,7 +3020,7 @@ ctx.connectionTimeout=30000
 ```
 libraryDependencies ++= Seq(
   "org.xerial" % "sqlite-jdbc" % "3.28.0",
-  "io.getquill" %% "quill-jdbc" % "3.16.6-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "3.18.1-SNAPSHOT"
 )
 ```
 
@@ -3016,7 +3041,7 @@ ctx.jdbcUrl=jdbc:sqlite:/path/to/db/file.db
 ```
 libraryDependencies ++= Seq(
   "com.h2database" % "h2" % "1.4.199",
-  "io.getquill" %% "quill-jdbc" % "3.16.6-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "3.18.1-SNAPSHOT"
 )
 ```
 
@@ -3038,7 +3063,7 @@ ctx.dataSource.user=sa
 ```
 libraryDependencies ++= Seq(
   "com.microsoft.sqlserver" % "mssql-jdbc" % "7.4.1.jre8",
-  "io.getquill" %% "quill-jdbc" % "3.16.6-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "3.18.1-SNAPSHOT"
 )
 ```
 
@@ -3060,7 +3085,7 @@ available for this situation [here](https://stackoverflow.com/questions/1074869/
 ```
 libraryDependencies ++= Seq(
   "com.oracle.jdbc" % "ojdbc8" % "18.3.0.0.0",
-  "io.getquill" %% "quill-jdbc" % "3.16.6-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "3.18.1-SNAPSHOT"
 )
 ```
 
@@ -3083,9 +3108,9 @@ ctx.dataSource.serverName=host
 ## ZIO (quill-jdbc-zio)
 
 Quill context that executes JDBC queries inside of ZIO. Unlike most other contexts
-that require passing in a `java.sql.DataSource` when the context is created, this context's 
+that require passing in a `java.sql.DataSource` when the context is created, this context's
 run methods return a ZIO that has a DataSource resource dependency.
-Naturally, this should be provided later on in your application 
+Naturally, this should be provided later on in your application
 (see `ZioJdbc` for helper methods that assist in doing this).
 
 Since resource dependency is `Has[DataSource]` the result of a `run` call is `ZIO[Has[DataSource], SQLException, T]`.
@@ -3096,10 +3121,10 @@ def ds: DataSource = _
 run(people).provide(Has(ds))
 ```
 
-> Since most quill-zio methods return `ZIO[Has[DataSource], SQLException, T]` 
+> Since most quill-zio methods return `ZIO[Has[DataSource], SQLException, T]`
 > the type `QIO[T]` i.e. Quill-IO has been defined as an alias.
-> 
-> For underlying-contexts (see below) that depend on `Has[Connection]`, 
+>
+> For underlying-contexts (see below) that depend on `Has[Connection]`,
 > the alias `QCIO[T]` (i.e. Quill-Connection-IO) has been defined
 > for `ZIO[Has[Connection], SQLException, T]`.
 
@@ -3130,7 +3155,7 @@ MyZioContext.underlying.run(people).provide(Has(conn))
 
 If you are working with an underlying-context and want to provide a DataSource instead of a connection,
 you can use the `onDataSource` method. Note however that this is *only* needed when working with an underlying-context.
-When working with a normal context, `onDataSource` is not available or necessary 
+When working with a normal context, `onDataSource` is not available or necessary
 (since for a  normal contexts `R` will be `Has[DataSource]`).
 
 ```scala
@@ -3207,7 +3232,7 @@ val result = Runtime.default.unsafeRun(trans.onDataSource.provide(ds)) //returns
 ```
 libraryDependencies ++= Seq(
   "mysql" % "mysql-connector-java" % "8.0.17",
-  "io.getquill" %% "quill-jdbc-zio" % "3.16.6-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-zio" % "3.18.1-SNAPSHOT"
 )
 ```
 
@@ -3236,7 +3261,7 @@ ctx.connectionTimeout=30000
 ```
 libraryDependencies ++= Seq(
   "org.postgresql" % "postgresql" % "42.2.8",
-  "io.getquill" %% "quill-jdbc-zio" % "3.16.6-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-zio" % "3.18.1-SNAPSHOT"
 )
 ```
 
@@ -3264,7 +3289,7 @@ ctx.connectionTimeout=30000
 ```
 libraryDependencies ++= Seq(
   "org.xerial" % "sqlite-jdbc" % "3.28.0",
-  "io.getquill" %% "quill-jdbc-zio" % "3.16.6-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-zio" % "3.18.1-SNAPSHOT"
 )
 ```
 
@@ -3287,7 +3312,7 @@ ctx.jdbcUrl=jdbc:sqlite:/path/to/db/file.db
 ```
 libraryDependencies ++= Seq(
   "com.h2database" % "h2" % "1.4.199",
-  "io.getquill" %% "quill-jdbc-zio" % "3.16.6-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-zio" % "3.18.1-SNAPSHOT"
 )
 ```
 
@@ -3311,7 +3336,7 @@ ctx.dataSource.user=sa
 ```
 libraryDependencies ++= Seq(
   "com.microsoft.sqlserver" % "mssql-jdbc" % "7.4.1.jre8",
-  "io.getquill" %% "quill-jdbc-zio" % "3.16.6-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-zio" % "3.18.1-SNAPSHOT"
 )
 ```
 
@@ -3340,7 +3365,7 @@ Quill supports Oracle version 12c and up although due to licensing restrictions,
 ```
 libraryDependencies ++= Seq(
   "com.oracle.jdbc" % "ojdbc8" % "18.3.0.0.0",
-  "io.getquill" %% "quill-jdbc-zio" % "3.16.6-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-zio" % "3.18.1-SNAPSHOT"
 )
 ```
 
@@ -3365,8 +3390,8 @@ ctx.dataSource.serverName=host
 ## quill-jdbc-monix
 
 The `quill-jdbc-monix` module integrates the Monix asynchronous programming framework with Quill,
-supporting all of the database vendors of the `quill-jdbc` module. 
-The Quill Monix contexts encapsulate JDBC Queries and Actions into Monix `Task`s 
+supporting all of the database vendors of the `quill-jdbc` module.
+The Quill Monix contexts encapsulate JDBC Queries and Actions into Monix `Task`s
 and also include support for streaming queries via `Observable`.
 
 #### streaming
@@ -3381,7 +3406,7 @@ ctx.stream(query[Person]) // returns: Observable[Person]
 
 #### transactions
 
-The `MonixJdbcContext` provides support for transactions by storing the connection into a Monix `Local`. 
+The `MonixJdbcContext` provides support for transactions by storing the connection into a Monix `Local`.
 This process is designed to be completely transparent to the user. As with the other contexts,
 if an exception is thrown anywhere inside a task or sub-task within a `transaction` block, the entire block
 will be rolled back by the database.
@@ -3417,7 +3442,7 @@ val result = trans.runSyncUnsafe() //returns: List[Person]
 
 #### runners
 
-Use a `Runner` object to create the different `MonixJdbcContext`s. 
+Use a `Runner` object to create the different `MonixJdbcContext`s.
 The Runner does the actual wrapping of JDBC calls into Monix Tasks.
 
 ```scala
@@ -3425,13 +3450,13 @@ The Runner does the actual wrapping of JDBC calls into Monix Tasks.
 import monix.execution.Scheduler
 import io.getquill.context.monix.Runner
 
-// You can use the default Runner when constructing a Monix jdbc contexts. 
-// The resulting tasks will be wrapped with whatever Scheduler is 
+// You can use the default Runner when constructing a Monix jdbc contexts.
+// The resulting tasks will be wrapped with whatever Scheduler is
 // defined when you do task.syncRunUnsafe(), typically a global implicit.
 lazy val ctx = new MysqlMonixJdbcContext(SnakeCase, "ctx", EffectWrapper.default)
 
 // However...
-// Monix strongly suggests that you use a separate thread pool for database IO 
+// Monix strongly suggests that you use a separate thread pool for database IO
 // operations. `Runner` provides a convenience method in order to do this.
 lazy val ctx = new MysqlMonixJdbcContext(SnakeCase, "ctx", Runner.using(Scheduler.io()))
 ```
@@ -3442,7 +3467,7 @@ lazy val ctx = new MysqlMonixJdbcContext(SnakeCase, "ctx", Runner.using(Schedule
 ```
 libraryDependencies ++= Seq(
   "mysql" % "mysql-connector-java" % "8.0.17",
-  "io.getquill" %% "quill-jdbc-monix" % "3.16.6-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-monix" % "3.18.1-SNAPSHOT"
 )
 ```
 
@@ -3469,7 +3494,7 @@ ctx.connectionTimeout=30000
 ```
 libraryDependencies ++= Seq(
   "org.postgresql" % "postgresql" % "42.2.8",
-  "io.getquill" %% "quill-jdbc-monix" % "3.16.6-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-monix" % "3.18.1-SNAPSHOT"
 )
 ```
 
@@ -3495,7 +3520,7 @@ ctx.connectionTimeout=30000
 ```
 libraryDependencies ++= Seq(
   "org.xerial" % "sqlite-jdbc" % "3.28.0",
-  "io.getquill" %% "quill-jdbc-monix" % "3.16.6-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-monix" % "3.18.1-SNAPSHOT"
 )
 ```
 
@@ -3516,7 +3541,7 @@ ctx.jdbcUrl=jdbc:sqlite:/path/to/db/file.db
 ```
 libraryDependencies ++= Seq(
   "com.h2database" % "h2" % "1.4.199",
-  "io.getquill" %% "quill-jdbc-monix" % "3.16.6-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-monix" % "3.18.1-SNAPSHOT"
 )
 ```
 
@@ -3538,7 +3563,7 @@ ctx.dataSource.user=sa
 ```
 libraryDependencies ++= Seq(
   "com.microsoft.sqlserver" % "mssql-jdbc" % "7.4.1.jre8",
-  "io.getquill" %% "quill-jdbc-monix" % "3.16.6-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-monix" % "3.18.1-SNAPSHOT"
 )
 ```
 
@@ -3570,7 +3595,7 @@ available for this situation [here](https://stackoverflow.com/questions/1074869/
 ```
 libraryDependencies ++= Seq(
   "com.oracle.jdbc" % "ojdbc8" % "18.3.0.0.0",
-  "io.getquill" %% "quill-jdbc-monix" % "3.16.6-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-monix" % "3.18.1-SNAPSHOT"
 )
 ```
 
@@ -3612,7 +3637,7 @@ The body of transaction can contain calls to other methods and multiple run call
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-ndbc-postgres" % "3.16.6-SNAPSHOT"
+  "io.getquill" %% "quill-ndbc-postgres" % "3.18.1-SNAPSHOT"
 )
 ```
 
@@ -3649,7 +3674,7 @@ ctx.transaction { implicit ec =>
 The body of `transaction` can contain calls to other methods and multiple `run` calls, but the transactional code must be done using the provided implicit execution context. For instance:
 
 ```
-def deletePerson(name: String)(implicit ec: ExecutionContext) = 
+def deletePerson(name: String)(implicit ec: ExecutionContext) =
   ctx.run(query[Person].filter(_.name == lift(name)).delete)
 
 ctx.transaction { implicit ec =>
@@ -3662,7 +3687,7 @@ Depending on how the main execution context is imported, it is possible to produ
 ```
 import scala.concurrent.ExecutionContext.Implicits.{ global => ec }
 
-def deletePerson(name: String)(implicit ec: ExecutionContext) = 
+def deletePerson(name: String)(implicit ec: ExecutionContext) =
   ctx.run(query[Person].filter(_.name == lift(name)).delete)
 
 ctx.transaction { implicit ec =>
@@ -3719,7 +3744,7 @@ ctx.queryTimeout=10m
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async-mysql" % "3.16.6-SNAPSHOT"
+  "io.getquill" %% "quill-async-mysql" % "3.18.1-SNAPSHOT"
 )
 ```
 
@@ -3743,7 +3768,7 @@ ctx.url=mysql://host:3306/database?user=root&password=root
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async-postgres" % "3.16.6-SNAPSHOT"
+  "io.getquill" %% "quill-async-postgres" % "3.18.1-SNAPSHOT"
 )
 ```
 
@@ -3780,7 +3805,7 @@ ctx.transaction { implicit ec =>
 The body of `transaction` can contain calls to other methods and multiple `run` calls, but the transactional code must be done using the provided implicit execution context. For instance:
 
 ```
-def deletePerson(name: String)(implicit ec: ExecutionContext) = 
+def deletePerson(name: String)(implicit ec: ExecutionContext) =
   ctx.run(query[Person].filter(_.name == lift(name)).delete)
 
 ctx.transaction { implicit ec =>
@@ -3793,7 +3818,7 @@ Depending on how the main execution context is imported, it is possible to produ
 ```
 import scala.concurrent.ExecutionContext.Implicits.{ global => ec }
 
-def deletePerson(name: String)(implicit ec: ExecutionContext) = 
+def deletePerson(name: String)(implicit ec: ExecutionContext) =
   ctx.run(query[Person].filter(_.name == lift(name)).delete)
 
 ctx.transaction { implicit ec =>
@@ -3833,7 +3858,7 @@ ctx.sslrootcert=./path/to/cert/file # optional, required for sslmode=verify-ca o
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-jasync-mysql" % "3.16.6-SNAPSHOT"
+  "io.getquill" %% "quill-jasync-mysql" % "3.18.1-SNAPSHOT"
 )
 ```
 
@@ -3858,7 +3883,7 @@ ctx.url=mysql://host:3306/database?user=root&password=root
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-jasync-postgres" % "3.16.6-SNAPSHOT"
+  "io.getquill" %% "quill-jasync-postgres" % "3.18.1-SNAPSHOT"
 )
 ```
 
@@ -3879,7 +3904,7 @@ ctx.url=postgresql://host:5432/database?user=root&password=root
 
 ## quill-jasync-zio
 
-The `quill-jasync-zio` module provides ZIO async support for Postgres databases. 
+The `quill-jasync-zio` module provides ZIO async support for Postgres databases.
 
 
 ##### connection configuration
@@ -3903,6 +3928,8 @@ Also see full settings `ConnectionPoolConfiguration` [documentation](https://git
 ```
 ctx.sslmode=disable # optional, one of [disable|prefer|require|verify-ca|verify-full]
 ctx.sslrootcert=./path/to/cert/file # optional, required for sslmode=verify-ca or verify-full
+ctx.sslcert=./path/to/cert/file # optional, required to only allow connections from trusted clients
+ctx.sslkey=./path/to/key/file # optional, required to only allow connections from trusted clients
 ```
 
 ### quill-jasync-zio-postgres
@@ -3911,7 +3938,7 @@ ctx.sslrootcert=./path/to/cert/file # optional, required for sslmode=verify-ca o
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-jasync-zio-postgres" % "3.16.6-SNAPSHOT"
+  "io.getquill" %% "quill-jasync-zio-postgres" % "3.18.1-SNAPSHOT"
 )
 ```
 
@@ -3928,12 +3955,12 @@ object MyApp extends zio.App {
   object DBContext extends PostgresZioJAsyncContext(Literal)
   import DBContext._
 
-  val dependencies = 
-    PostgresJAsyncContextConfig.loadConfig("testPostgresDB") >>> 
-    ZioJAsyncConnection.live[PostgreSQLConnection] 
+  val dependencies =
+    PostgresJAsyncContextConfig.loadConfig("testPostgresDB") >>>
+    ZioJAsyncConnection.live[PostgreSQLConnection]
 
   val program = run(query[Person])
-    
+
   def run(args: List[String]) = program.provideLayer(dependencies).exitCode
 }
 ```
@@ -3950,7 +3977,7 @@ ctx.url=postgresql://host:5432/database?user=root&password=root
 
 ## quill-doobie
 
-Quill 3.16.5 and above supports Doobie starting 1.0.0-RC1. You can use quill quotes to construct `ConnectionIO` programs. 
+Quill 3.16.5 and above supports Doobie starting 1.0.0-RC1. You can use quill quotes to construct `ConnectionIO` programs.
 Quill provides statement construction and type mapping, and doobie takes care of statement execution.
 
 > Note that if you are migrating from the original `doobie-quill` integration (e.g. [here](https://search.maven.org/search?q=a:doobie-quill_2.12))
@@ -3959,7 +3986,7 @@ just add the below dependency and replace the `doobie.quill` package with `io.ge
 
 In order to use this feature, add the following dependency.
 ```
-libraryDependencies += "io.getquill" %% "quill-doobie" % "3.16.6-SNAPSHOT"
+libraryDependencies += "io.getquill" %% "quill-doobie" % "3.18.1-SNAPSHOT"
 ```
 
 The examples below require the following imports.
@@ -4092,7 +4119,7 @@ The body of `transaction` can contain calls to other methods and multiple `run` 
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-finagle-mysql" % "3.16.6-SNAPSHOT"
+  "io.getquill" %% "quill-finagle-mysql" % "3.18.1-SNAPSHOT"
 )
 ```
 
@@ -4132,7 +4159,7 @@ The body of `transaction` can contain calls to other methods and multiple `run` 
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-finagle-postgres" % "3.16.6-SNAPSHOT"
+  "io.getquill" %% "quill-finagle-postgres" % "3.18.1-SNAPSHOT"
 )
 ```
 
@@ -4159,7 +4186,7 @@ ctx.binaryParams=false
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-cassandra" % "3.16.6-SNAPSHOT"
+  "io.getquill" %% "quill-cassandra" % "3.18.1-SNAPSHOT"
 )
 ```
 
@@ -4197,7 +4224,7 @@ that require passing in a Data Source, this context takes in a `CassandraZioSess
 as a resource dependency which can be provided later (see the `CassandraZioSession` object for helper methods
 that assist in doing this).
 
-The resource dependency itself is just a `Has[CassandraZioSession]` hence `run(qry)` and other methods in this context will return 
+The resource dependency itself is just a `Has[CassandraZioSession]` hence `run(qry)` and other methods in this context will return
 `ZIO[Has[CassandraZioSession], Throwable, T]`.  The type `CIO[T]` i.e. Cassandra-IO is an alias for this.
 Providing a `CassandraZioSession` dependency is now very simple:
 
@@ -4248,7 +4275,7 @@ More examples of a Quill-Cassandra-ZIO app [quill-cassandra-zio/src/test/scala/i
 
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-cassandra-zio" % "3.16.6-SNAPSHOT"
+  "io.getquill" %% "quill-cassandra-zio" % "3.18.1-SNAPSHOT"
 )
 ```
 
@@ -4257,7 +4284,7 @@ libraryDependencies ++= Seq(
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-cassandra-monix" % "3.16.6-SNAPSHOT"
+  "io.getquill" %% "quill-cassandra-monix" % "3.18.1-SNAPSHOT"
 )
 ```
 
@@ -4276,7 +4303,7 @@ lazy val ctx = new CassandraStreamContext(SnakeCase, "ctx")
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-cassandra-alpakka" % "3.16.6-SNAPSHOT"
+  "io.getquill" %% "quill-cassandra-alpakka" % "3.18.1-SNAPSHOT"
 )
 ```
 
@@ -4293,7 +4320,7 @@ import io.getquill.CassandraAlpakkaContext
 val system: ActorSystem = ???
 val alpakkaSessionSettings = CassandraSessionSettings("quill-test.alpakka.cassandra")
 val alpakkaSession: CassandraSession = CassandraSessionRegistry.get(system).sessionFor(alpakkaSessionSettings)
-  
+
 lazy val ctx = new CassandraAlpakkaContext(SnakeCase, alpakkaSession, preparedStatementCacheSize = 100)
 ```
 
@@ -4318,7 +4345,7 @@ quill-test-datastax-java-driver {
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-orientdb" % "3.16.6-SNAPSHOT"
+  "io.getquill" %% "quill-orientdb" % "3.18.1-SNAPSHOT"
 )
 ```
 
@@ -4363,14 +4390,14 @@ Producing objects like this:
 ```scala
 // src/main/scala/com/my/project/public/Person.scala
 package com.my.project.public
-  
+
 case class Person(id: Int, firstName: Option[String], lastName: Option[String], age: Int)
 ```
 
 ```scala
 // src/main/scala/com/my/project/public/Address.scala
 package com.my.project.public
-  
+
 case class Address(personFk: Int, street: Option[String], zip: Option[Int])
 ```
 
@@ -4380,7 +4407,7 @@ Have a look at the [CODEGEN.md](https://github.com/getquill/quill/blob/master/CO
 
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-codegen-jdbc" % "3.16.6-SNAPSHOT"
+  "io.getquill" %% "quill-codegen-jdbc" % "3.18.1-SNAPSHOT"
 )
 ```
 
@@ -4393,7 +4420,7 @@ To write compile-time queries to a log, use the `-Dquill.log.file=queries.sql` a
 the file to be written (e.g. `queries.sql`). The path is based on the build root (i.e. the current-working-directory of the Java build).
 
 When using SBT, this parameter can be set either in your SBT_OPTS, the project-specific .sbtopts file or directly passed to the SBT command.
-In Intellij this can be set under settings -> sbt -> VM Parameters. 
+In Intellij this can be set under settings -> sbt -> VM Parameters.
 
 (Also make sure that `use for: "Builds"` is selected otherwise Intellij will not use SBT for the build in the first place.)
 
@@ -4478,7 +4505,7 @@ Before:
 
 After:
 ```
-[info] /home/me/project/src/main/scala/io/getquill/MySqlTestPerson.scala:20:18: 
+[info] /home/me/project/src/main/scala/io/getquill/MySqlTestPerson.scala:20:18:
 [info]   | SELECT
 [info]   |   p.id,
 [info]   |   p.name,
@@ -4514,7 +4541,7 @@ Please refer to [CASSANDRA.md](https://github.com/getquill/quill/blob/master/CAS
  * [scala-db-codegen](https://github.com/olafurpg/scala-db-codegen) - Code/boilerplate generator from db schema
  * [quill-cache](https://github.com/mslinn/quill-cache/) - Caching layer for Quill
  * [quill-gen](https://github.com/mslinn/quill-gen/) - a DAO generator for `quill-cache`
- 
+
 ## External content
 
 ### Talks
@@ -4526,7 +4553,7 @@ Please refer to [CASSANDRA.md](https://github.com/getquill/quill/blob/master/CAS
  - BeeScala 2019 - [Quill + Spark = Better Together](https://www.youtube.com/watch?v=EXISmUXBXu8)
  - Scale By the Bay 2019 - [Quill + Doobie = Better Together](https://www.youtube.com/watch?v=1WVjkP_G2cA)
  - ScQuilL, Porting Quill to Dotty (Ongoing) - [Quill, Dotty, and Macros](https://www.youtube.com/playlist?list=PLqky8QybCVQYNZY_MNJpkjFKT-dAdHQDX)
- 
+
 ### Blog posts
 
  - **[Intro]** Haoyi's Programming Blog - [Working with Databases using Scala and Quill](http://www.lihaoyi.com/post/WorkingwithDatabasesusingScalaandQuill.html)

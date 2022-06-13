@@ -2,7 +2,6 @@ package io.getquill.context.zio.jasync.postgres
 
 import java.time.{ LocalDate, LocalDateTime, ZonedDateTime }
 import io.getquill.context.sql.EncodingSpec
-import org.joda.time.{ DateTime => JodaDateTime, LocalDate => JodaLocalDate, LocalDateTime => JodaLocalDateTime }
 
 import java.util.Date
 import java.util.UUID
@@ -83,20 +82,9 @@ class PostgresAsyncEncodingSpec extends EncodingSpec with ZioSpec {
     success must not be empty
   }
 
-  "decodes joda DateTime, LocalDate and LocalDateTime types" in {
-    case class DateEncodingTestEntity(v1: JodaLocalDate, v2: JodaLocalDateTime, v3: JodaDateTime)
-    val entity = DateEncodingTestEntity(JodaLocalDate.now, JodaLocalDateTime.now, JodaDateTime.now)
-    val r = for {
-      _ <- testContext.run(query[DateEncodingTestEntity].delete)
-      _ <- testContext.run(query[DateEncodingTestEntity].insertValue(lift(entity)))
-      result <- testContext.run(query[DateEncodingTestEntity])
-    } yield result
-    runSyncUnsafe(r) mustBe Seq(entity)
-  }
-
-  "decodes ZonedDateTime, LocalDate and LocalDateTime types" in {
-    case class DateEncodingTestEntity(v1: LocalDate, v2: LocalDateTime, v3: ZonedDateTime)
-    val entity = DateEncodingTestEntity(LocalDate.now, LocalDateTime.now, ZonedDateTime.now)
+  "decodes LocalDate and LocalDateTime types" in {
+    case class DateEncodingTestEntity(v1: LocalDate, v2: LocalDateTime)
+    val entity = DateEncodingTestEntity(LocalDate.now, LocalDateTime.now)
     val r = for {
       _ <- testContext.run(query[DateEncodingTestEntity].delete)
       _ <- testContext.run(query[DateEncodingTestEntity].insertValue(lift(entity)))

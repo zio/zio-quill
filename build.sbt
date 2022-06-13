@@ -268,7 +268,6 @@ lazy val `quill-engine` =
       libraryDependencies ++= Seq(
         "com.typesafe"               %  "config"        % "1.4.2",
         "com.typesafe.scala-logging" %% "scala-logging" % "3.9.4",
-        ("com.twitter"               %% "chill"         % "0.10.0").cross(CrossVersion.for3Use2_13),
         ("com.github.takayahilton"   %%% "sql-formatter" % "1.2.1").cross(CrossVersion.for3Use2_13)
       ) ++ {
         if (isScala211)
@@ -281,7 +280,7 @@ lazy val `quill-engine` =
     .jsSettings(
       libraryDependencies ++= Seq(
         "com.lihaoyi" %%% "pprint" % "0.6.6",
-        "org.scala-js" %%% "scalajs-java-time" % "1.0.0",
+        "io.github.cquiroz" %%% "scala-java-time" % "2.2.2",
         "org.scala-lang.modules" %%% "scala-collection-compat" % "2.2.0"
       ) ++ {
         if (isScala211)
@@ -473,8 +472,8 @@ lazy val `quill-zio` =
       Test / fork := true,
       libraryDependencies ++= Seq(
         "io.github.kitlangton" %% "zio-magic" % "0.3.11" % Test,
-        "dev.zio" %% "zio" % "1.0.12",
-        "dev.zio" %% "zio-streams" % "1.0.12"
+        "dev.zio" %% "zio" % "1.0.14",
+        "dev.zio" %% "zio-streams" % "1.0.14"
       )
     )
     .dependsOn(`quill-core-jvm` % "compile->compile;test->test")
@@ -575,7 +574,7 @@ lazy val `quill-jasync` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.github.jasync-sql" % "jasync-common" % "1.1.4",
+        "com.github.jasync-sql" % "jasync-common" % "2.0.6",
         "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.1"
       )
     )
@@ -589,7 +588,7 @@ lazy val `quill-jasync-postgres` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.github.jasync-sql" % "jasync-postgresql" % "1.1.4"
+        "com.github.jasync-sql" % "jasync-postgresql" % "2.0.6"
       )
     )
     .dependsOn(`quill-jasync` % "compile->compile;test->test")
@@ -602,7 +601,7 @@ lazy val `quill-jasync-mysql` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.github.jasync-sql" % "jasync-mysql" % "1.1.4"
+        "com.github.jasync-sql" % "jasync-mysql" % "2.0.6"
       )
     )
     .dependsOn(`quill-jasync` % "compile->compile;test->test")
@@ -615,7 +614,7 @@ lazy val `quill-jasync-zio` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.github.jasync-sql" % "jasync-common" % "1.1.4",
+        "com.github.jasync-sql" % "jasync-common" % "2.0.6",
         "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.1"
       )
     )
@@ -630,7 +629,7 @@ lazy val `quill-jasync-zio-postgres` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.github.jasync-sql" % "jasync-postgresql" % "1.1.4"
+        "com.github.jasync-sql" % "jasync-postgresql" % "2.0.6"
       )
     )
     .dependsOn(`quill-jasync-zio` % "compile->compile;test->test")
@@ -671,7 +670,7 @@ lazy val `quill-cassandra` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.datastax.oss" % "java-driver-core" % "4.14.0",
+        "com.datastax.oss" % "java-driver-core" % "4.14.1",
         "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.1"
       )
     )
@@ -696,8 +695,8 @@ lazy val `quill-cassandra-zio` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "dev.zio" %% "zio" % "1.0.12",
-        "dev.zio" %% "zio-streams" % "1.0.12"
+        "dev.zio" %% "zio" % "1.0.14",
+        "dev.zio" %% "zio-streams" % "1.0.14"
       )
     )
     .dependsOn(`quill-cassandra` % "compile->compile;test->test")
@@ -730,7 +729,7 @@ lazy val `quill-cassandra-lagom` =
         Seq(
           "com.lightbend.lagom" %% "lagom-scaladsl-persistence-cassandra" % lagomVersion % Provided,
           "com.lightbend.lagom" %% "lagom-scaladsl-testkit" % lagomVersion % Test,
-          "com.datastax.cassandra" %  "cassandra-driver-core" % "3.7.2",
+          "com.datastax.cassandra" %  "cassandra-driver-core" % "3.11.2",
           // lagom uses datastax 3.x driver - not compatible with 4.x in API level
           "io.getquill" %% "quill-cassandra" % "3.10.0" % "compile->compile"
         ) ++ versionSpecificDependencies
@@ -807,8 +806,8 @@ def updateWebsiteTag =
 lazy val jdbcTestingLibraries = Seq(
   libraryDependencies ++= Seq(
     "com.zaxxer"              %  "HikariCP"                % "3.4.5",
-    "mysql"                   %  "mysql-connector-java"    % "8.0.28"             % Test,
-    "com.h2database"          %  "h2"                      % "2.1.210"            % Test,
+    "mysql"                   %  "mysql-connector-java"    % "8.0.29"             % Test,
+    "com.h2database"          %  "h2"                      % "2.1.212"            % Test,
     "org.postgresql"          %  "postgresql"              % "42.3.6"             % Test,
     "org.xerial"              %  "sqlite-jdbc"             % "3.36.0.3"             % Test,
     "com.microsoft.sqlserver" %  "mssql-jdbc"              % "7.1.1.jre8-preview" % Test,
@@ -845,11 +844,11 @@ def excludePaths(paths:Seq[String]) = {
 val scala_v_11 = "2.11.12"
 val scala_v_12 = "2.12.10"
 val scala_v_13 = "2.13.2"
-val scala_v_30 = "3.0.2"
+val scala_v_30 = "3.1.2"
 
 lazy val loggingSettings = Seq(
   libraryDependencies ++= Seq(
-    "ch.qos.logback"  % "logback-classic" % "1.2.6" % Test
+    "ch.qos.logback"  % "logback-classic" % "1.2.11" % Test
   )
 )
 
@@ -875,7 +874,7 @@ lazy val basicSettings = Seq(
     )
     else Seq()
   } ++ {
-    Seq("org.scala-lang.modules" %% "scala-collection-compat" % "2.6.0")
+    Seq("org.scala-lang.modules" %% "scala-collection-compat" % "2.7.0")
   },
   ScalariformKeys.preferences := ScalariformKeys.preferences.value
     .setPreference(AlignParameters, true)

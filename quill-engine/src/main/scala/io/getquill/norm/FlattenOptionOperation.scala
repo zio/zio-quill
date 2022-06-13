@@ -10,13 +10,33 @@ class FlattenOptionOperation(concatBehavior: ConcatBehavior) extends StatelessTr
   private def emptyOrNot(b: Boolean, ast: Ast) =
     if (b) OptionIsEmpty(ast) else OptionNonEmpty(ast)
 
-  def uncheckedReduction(ast: Ast, alias: Ident, body: Ast) =
-    apply(BetaReduction(body, alias -> ast))
-
-  def uncheckedForall(ast: Ast, alias: Ident, body: Ast) = {
-    val reduced = BetaReduction(body, alias -> ast)
-    apply((IsNullCheck(ast) +||+ reduced): Ast)
+  def validateContainsOrElse(containsNon: Boolean, succeedWith: () => Ast, orElse: () => Ast) = {
+    if (containsNon) succeedWith()
+    else orElse()
   }
+
+  def uncheckedReduction(ast: Ast, alias: Ident, body: Ast, validateBody: Ast => Boolean) =
+    validateContainsOrElse(
+      validateBody(body),
+      () => {
+        val reduced = BetaReduction(body, alias -> ast)
+        apply(IfExistElseNull(ast, reduced))
+      },
+      () => apply(BetaReduction(body, alias -> ast))
+    )
+
+  def uncheckedForall(ast: Ast, alias: Ident, body: Ast, validateBody: Ast => Boolean) =
+    validateContainsOrElse(
+      validateBody(body),
+      () => {
+        val reduction = BetaReduction(body, alias -> ast)
+        apply((IsNullCheck(ast) +||+ (IsNotNullCheck(ast) +&&+ reduction)): Ast)
+      },
+      () => {
+        val reduced = BetaReduction(body, alias -> ast)
+        apply((IsNullCheck(ast) +||+ reduced): Ast)
+      }
+    )
 
   def containsNonFallthroughElement(ast: Ast) =
     CollectAst(ast) {
@@ -29,16 +49,16 @@ class FlattenOptionOperation(concatBehavior: ConcatBehavior) extends StatelessTr
     ast match {
 
       case OptionTableFlatMap(ast, alias, body) =>
-        uncheckedReduction(ast, alias, body)
+        uncheckedReduction(ast, alias, body, _ => false)
 
       case OptionTableMap(ast, alias, body) =>
-        uncheckedReduction(ast, alias, body)
+        uncheckedReduction(ast, alias, body, _ => false)
 
       case OptionTableExists(ast, alias, body) =>
-        uncheckedReduction(ast, alias, body)
+        uncheckedReduction(ast, alias, body, _ => false)
 
       case OptionTableForall(ast, alias, body) =>
-        uncheckedForall(ast, alias, body)
+        uncheckedForall(ast, alias, body, _ => false)
 
       case OptionFlatten(ast) =>
         apply(ast)
@@ -64,39 +84,29 @@ class FlattenOptionOperation(concatBehavior: ConcatBehavior) extends StatelessTr
         apply(If(IsNotNullCheck(ast), ast, body))
 
       case OptionFlatMap(ast, alias, body) =>
-        if (containsNonFallthroughElement(body)) {
-          val reduced = BetaReduction(body, alias -> ast)
-          apply(IfExistElseNull(ast, reduced))
-        } else {
-          uncheckedReduction(ast, alias, body)
-        }
+        uncheckedReduction(ast, alias, body, containsNonFallthroughElement)
 
       case OptionMap(ast, alias, body) =>
-        if (containsNonFallthroughElement(body)) {
-          val reduced = BetaReduction(body, alias -> ast)
-          apply(IfExistElseNull(ast, reduced))
-        } else {
-          uncheckedReduction(ast, alias, body)
-        }
+        uncheckedReduction(ast, alias, body, containsNonFallthroughElement)
 
       case OptionForall(ast, alias, body) =>
-        if (containsNonFallthroughElement(body)) {
-          val reduction = BetaReduction(body, alias -> ast)
-          apply((IsNullCheck(ast) +||+ (IsNotNullCheck(ast) +&&+ reduction)): Ast)
-        } else {
-          uncheckedForall(ast, alias, body)
-        }
+        uncheckedForall(ast, alias, body, containsNonFallthroughElement)
 
       case OptionExists(ast, alias, body) =>
-        if (containsNonFallthroughElement(body)) {
-          val reduction = BetaReduction(body, alias -> ast)
-          apply((IsNotNullCheck(ast) +&&+ reduction): Ast)
-        } else {
-          uncheckedReduction(ast, alias, body)
-        }
+        validateContainsOrElse(
+          containsNonFallthroughElement(body),
+          () => {
+            val reduction = BetaReduction(body, alias -> ast)
+            apply(IsNotNullCheck(ast) +&&+ reduction: Ast)
+          },
+          () => apply(BetaReduction(body, alias -> ast))
+        )
 
       case OptionContains(ast, body) =>
         apply((ast +==+ body): Ast)
+
+      case FilterIfDefined(ast, alias, body) =>
+        uncheckedForall(ast, alias, body, containsNonFallthroughElement)
 
       case other =>
         super.apply(other)

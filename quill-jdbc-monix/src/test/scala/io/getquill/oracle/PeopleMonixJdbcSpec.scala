@@ -12,7 +12,7 @@ class PeopleMonixJdbcSpec extends PeopleMonixSpec {
     testContext.transaction {
       for {
         _ <- testContext.run(query[Couple].delete)
-        _ <- testContext.run(query[Person].filter(_.age > 0).delete)
+        _ <- testContext.run(query[Person].delete)
         _ <- testContext.run(liftQuery(peopleEntries).foreach(p => peopleInsert(p)))
         _ <- testContext.run(liftQuery(couplesEntries).foreach(p => couplesInsert(p)))
       } yield ()

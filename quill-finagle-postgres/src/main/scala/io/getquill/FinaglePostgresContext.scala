@@ -42,6 +42,13 @@ class FinaglePostgresContext[N <: NamingStrategy](val naming: N, client: Postgre
   override type RunBatchActionResult = List[Long]
   override type RunBatchActionReturningResult[T] = List[T]
   type Runner = Unit
+  override type NullChecker = LocalNullChecker
+  class LocalNullChecker extends BaseNullChecker {
+    override def apply(index: Int, row: Row): Boolean = {
+      row.getAnyOption(index) == None
+    }
+  }
+  implicit val nullChecker: LocalNullChecker = new LocalNullChecker()
 
   private val currentClient = new Local[PostgresClient]
 

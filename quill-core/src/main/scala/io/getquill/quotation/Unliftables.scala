@@ -50,6 +50,7 @@ trait Unliftables extends QuatUnliftable {
     case q"$pack.OptionOrNull.apply(${ a: Ast })"                                   => OptionOrNull(a)
     case q"$pack.OptionGetOrNull.apply(${ a: Ast })"                                => OptionGetOrNull(a)
     case q"$pack.OptionNone.apply(${ q: Quat })"                                    => OptionNone(q)
+    case q"$pack.FilterIfDefined.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })"    => FilterIfDefined(a, b, c)
   }
 
   implicit val traversableOperationUnliftable: Unliftable[IterableOperation] = Unliftable[IterableOperation] {
