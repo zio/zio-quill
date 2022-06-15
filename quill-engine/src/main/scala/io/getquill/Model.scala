@@ -101,6 +101,9 @@ sealed trait Insert[E] extends QAC[E, Nothing] with Action[E] {
   def returningGenerated[R](f: E => R): ActionReturning[E, R] = NonQuotedException()
 
   @compileTimeOnly(NonQuotedException.message)
+  def returningMany[R](f: E => R): ActionReturning[E, List[R]] = NonQuotedException()
+
+  @compileTimeOnly(NonQuotedException.message)
   def onConflictIgnore: Insert[E] = NonQuotedException()
 
   @compileTimeOnly(NonQuotedException.message)
@@ -135,11 +138,17 @@ sealed trait ActionReturning[E, +Output] extends QAC[E, Output] with Action[E]
 sealed trait Update[E] extends QAC[E, Nothing] with Action[E] {
   @compileTimeOnly(NonQuotedException.message)
   def returning[R](f: E => R): ActionReturning[E, R] = NonQuotedException()
+
+  @compileTimeOnly(NonQuotedException.message)
+  def returningMany[R](f: E => R): ActionReturning[E, List[R]] = NonQuotedException()
 }
 
 sealed trait Delete[E] extends QAC[E, Nothing] with Action[E] {
   @compileTimeOnly(NonQuotedException.message)
   def returning[R](f: E => R): ActionReturning[E, R] = NonQuotedException()
+
+  @compileTimeOnly(NonQuotedException.message)
+  def returningMany[R](f: E => R): ActionReturning[E, List[R]] = NonQuotedException()
 }
 
 sealed trait BatchAction[+A <: QAC[_, _] with Action[_]]

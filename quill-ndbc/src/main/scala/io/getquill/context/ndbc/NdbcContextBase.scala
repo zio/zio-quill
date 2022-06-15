@@ -79,7 +79,7 @@ trait NdbcContextBase[Idiom <: SqlIdiom, Naming <: NamingStrategy, P <: Prepared
   }
 
   def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: (R, Session) => T = (r: R, s: Session) => r)(info: ExecutionInfo, dc: Runner): Result[T] =
-    push(executeQuery(sql, prepare, extractor)(info, dc))(handleSingleResult)
+    push(executeQuery(sql, prepare, extractor)(info, dc))(handleSingleResult(sql, _))
 
   def executeAction(sql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: Runner): Result[Long] = {
     withDataSourceFromFuture { ds =>
@@ -89,9 +89,12 @@ trait NdbcContextBase[Idiom <: SqlIdiom, Naming <: NamingStrategy, P <: Prepared
     }
   }
 
-  def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: (R, Session) => O, returningAction: ReturnAction)(info: ExecutionInfo, dc: Runner): Result[O] = {
+  def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: (R, Session) => O, returningAction: ReturnAction)(info: ExecutionInfo, dc: Runner): Result[O] =
+    push(executeActionReturningMany[O](sql, prepare, extractor, returningAction)(info, dc))(handleSingleResult(sql, _))
+
+  def executeActionReturningMany[O](sql: String, prepare: Prepare = identityPrepare, extractor: (R, Session) => O, returningAction: ReturnAction)(info: ExecutionInfo, dc: Runner): Result[List[O]] = {
     val expanded = expandAction(sql, returningAction)
-    executeQuerySingle(expanded, prepare, extractor)(info, dc)
+    executeQuery(expanded, prepare, extractor)(info, dc)
   }
 
   def executeBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: Runner): Result[List[Long]] =

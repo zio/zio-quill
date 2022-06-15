@@ -43,7 +43,7 @@ class OrientDBSyncContext[N <: NamingStrategy](
   }
 
   def executeQuerySingle[T](orientQl: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner): T =
-    handleSingleResult(executeQuery(orientQl, prepare, extractor)(info, dc))
+    handleSingleResult(orientQl, executeQuery(orientQl, prepare, extractor)(info, dc))
 
   def executeAction(orientQl: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: Runner): Unit = {
     val (params, objects) = prepare(super.prepare(), session)

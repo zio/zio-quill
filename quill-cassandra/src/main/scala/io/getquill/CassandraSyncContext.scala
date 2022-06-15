@@ -41,7 +41,7 @@ class CassandraSyncContext[N <: NamingStrategy](
   }
 
   def executeQuerySingle[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner): T =
-    handleSingleResult(executeQuery(cql, prepare, extractor)(info, dc))
+    handleSingleResult(cql, executeQuery(cql, prepare, extractor)(info, dc))
 
   def executeAction(cql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: Runner): Unit = {
     val (params, bs) = prepare(this.prepare(cql), this)

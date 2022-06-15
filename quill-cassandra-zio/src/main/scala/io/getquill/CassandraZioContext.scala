@@ -131,7 +131,7 @@ class CassandraZioContext[N <: NamingStrategy](val naming: N)
       csession <- ZIO.service[CassandraZioSession]
       rs <- execute(cql, prepare, csession, Some(1)) //pull only one record from the DB explicitly.
       rows <- ZIO.effect(rs.currentPage())
-      singleRow <- ZIO.effect(handleSingleResult(rows.asScala.map(row => extractor(row, csession)).toList))
+      singleRow <- ZIO.effect(handleSingleResult(cql, rows.asScala.map(row => extractor(row, csession)).toList))
     } yield singleRow
   }
 

@@ -151,6 +151,15 @@ class SqlActionMacroSpec extends Spec {
         mirror.string mustEqual "INSERT INTO TestEntity (s,i,l,o,b) VALUES (?, ?, ?, ?, ?) RETURNING s, i, l, o, b"
         mirror.returningBehavior mustEqual ReturnRecord
       }
+      "returning many clause - record" in testContext.withDialect(MirrorSqlDialectWithReturnClause) { ctx =>
+        import ctx._
+        val q = quote {
+          qr1.insertValue(lift(TestEntity("s", 0, 1L, None, true))).returningMany(r => r)
+        }
+        val mirror = ctx.run(q)
+        mirror.string mustEqual "INSERT INTO TestEntity (s,i,l,o,b) VALUES (?, ?, ?, ?, ?) RETURNING s, i, l, o, b"
+        mirror.returningBehavior mustEqual ReturnRecord
+      }
       "returning generated clause - record" in testContext.withDialect(MirrorSqlDialectWithReturnClause) { ctx =>
         import ctx._
         val q = quote {
@@ -733,6 +742,16 @@ class SqlActionMacroSpec extends Spec {
         mirror.string mustEqual "UPDATE TestEntity SET s = 's' RETURNING l"
         mirror.returningBehavior mustEqual ReturnRecord
       }
+      "returning many clause - single" in testContext.withDialect(MirrorSqlDialectWithReturnClause) { ctx =>
+        import ctx._
+        val q = quote {
+          qr1.update(_.s -> "s").returningMany(_.l)
+        }
+
+        val mirror = ctx.run(q)
+        mirror.string mustEqual "UPDATE TestEntity SET s = 's' RETURNING l"
+        mirror.returningBehavior mustEqual ReturnRecord
+      }
       "returning clause - multi" in testContext.withDialect(MirrorSqlDialectWithReturnClause) { ctx =>
         import ctx._
         val q = quote {
@@ -944,6 +963,16 @@ class SqlActionMacroSpec extends Spec {
         import ctx._
         val q = quote {
           qr1.delete.returning(_.l)
+        }
+
+        val mirror = ctx.run(q)
+        mirror.string mustEqual "DELETE FROM TestEntity RETURNING l"
+        mirror.returningBehavior mustEqual ReturnRecord
+      }
+      "returning many clause - single" in testContext.withDialect(MirrorSqlDialectWithReturnClause) { ctx =>
+        import ctx._
+        val q = quote {
+          qr1.delete.returningMany(_.l)
         }
 
         val mirror = ctx.run(q)
