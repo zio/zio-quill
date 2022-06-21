@@ -1,4 +1,4 @@
-package io.getquill.context.sql.norm
+package io.getquill.sql.norm
 
 import io.getquill.Spec
 import io.getquill.context.sql.testContext.qr1

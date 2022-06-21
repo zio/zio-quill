@@ -192,17 +192,17 @@ case class SheathLeafClauses(state: Option[String]) extends StatefulTransformerW
       //    Note that in certain phases that automatically expect a leaf-project e.g. aggregations we do not want to do this phase.
       //    that means that we need to track what the parent-ast (that contains this one) is.
       case MapClause(NotGroupBy(ent), e, LeafQuat(body), remake) =>
-        val (ent1, s) = apply(ent)
-        val e1 = Ident(e.name, ent1.quat)
-        val bodyA = elaborateSheath(body)(s.state, e, e1)
-        val (bodyB, s1) = {
-          if (parentShouldNeverHaveLeaves)
-            sheathLeaf(bodyA)
-          else
-            (bodyA, None)
-        }
-        val (bodyC, _) = apply(bodyB)
         trace"Sheath Map(qry) with $stateInfo in $qq becomes" andReturn {
+          val (ent1, s) = apply(ent)
+          val e1 = Ident(e.name, ent1.quat)
+          val bodyA = elaborateSheath(body)(s.state, e, e1)
+          val (bodyB, s1) = {
+            if (parentShouldNeverHaveLeaves)
+              sheathLeaf(bodyA)
+            else
+              (bodyA, None)
+          }
+          val (bodyC, _) = apply(bodyB)
           (remake(ent1, e1, bodyC), SheathLeafClauses(s1))
         }
 
@@ -212,6 +212,11 @@ case class SheathLeafClauses(state: Option[String]) extends StatefulTransformerW
         val bodyA = elaborateSheath(body)(s.state, e, e1)
         val (bodyB, s1) = s.apply(bodyA)
         trace"Sheath FlatMap(qry) with $stateInfo in $qq becomes" andReturn {
+          val (ent1, s) = apply(ent)
+          val e1 = Ident(e.name, ent1.quat)
+          // Produced state from the inner clause is 'consumed' by the elaborateSheath. No need to propagate it further.
+          val bodyA = elaborateSheath(body)(s.state, e, e1)
+          val (bodyB, s1) = apply(bodyA)
           (FlatMap(ent1, e1, bodyB), s1)
         }
 
@@ -228,25 +233,25 @@ case class SheathLeafClauses(state: Option[String]) extends StatefulTransformerW
       // Unfortunately however due to the ExpandJoin phase being non-well typed this would cause various kinds of queries to fail. Some
       // examples are in SqlQuerySpec. If ExpandJoin can be rewritten to be well-typed this approach can be re-examined.
       case Join(t, a, b, iA, iB, on) =>
-        val (a1, sa) = apply(a)
-        val (b1, sb) = apply(b)
-        val (iA1, iB1) = (Ident(iA.name, a1.quat), Ident(iB.name, b1.quat))
-
-        val a1m = sa.state.map(a => Map(a1, iA1, Property(iA1, a))).getOrElse(a1)
-        val b1m = sb.state.map(a => Map(b1, iB1, Property(iB1, a))).getOrElse(b1)
-
         trace"Sheath Join with $stateInfo in $qq becomes" andReturn {
+          val (a1, sa) = apply(a)
+          val (b1, sb) = apply(b)
+          val (iA1, iB1) = (Ident(iA.name, a1.quat), Ident(iB.name, b1.quat))
+
+          val a1m = sa.state.map(a => Map(a1, iA1, Property(iA1, a))).getOrElse(a1)
+          val b1m = sb.state.map(a => Map(b1, iB1, Property(iB1, a))).getOrElse(b1)
+
           (Join(t, a1m, b1m, iA, iB, on), SheathLeafClauses(None))
         }
 
       case Filter(ent, e, LeafQuat(body)) =>
-        val (ent1, s) = apply(ent)
-        val e1 = Ident(e.name, ent1.quat)
-        // For filter clauses we want to go from: Filter(M(ent,e,e.v),e == 123) to Filter(M(ent,e,CC(v->e.v)),e,e.v == 123)
-        // the body should not be re-sheathed since a body of CC(v->e.v == 123) would make no sense since
-        // that's not even a boolean. Instead we just need to do e.v == 123.
-        val bodyC = elaborateSheath(body)(s.state, e, e1)
         trace"Sheath Filter(qry) with $stateInfo in $qq becomes" andReturn {
+          val (ent1, s) = apply(ent)
+          val e1 = Ident(e.name, ent1.quat)
+          // For filter clauses we want to go from: Filter(M(ent,e,e.v),e == 123) to Filter(M(ent,e,CC(v->e.v)),e,e.v == 123)
+          // the body should not be re-sheathed since a body of CC(v->e.v == 123) would make no sense since
+          // that's not even a boolean. Instead we just need to do e.v == 123.
+          val bodyC = elaborateSheath(body)(s.state, e, e1)
           (Filter(ent1, e1, bodyC), s)
         }
 
