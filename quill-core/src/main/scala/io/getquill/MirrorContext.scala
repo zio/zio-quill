@@ -36,7 +36,7 @@ class MirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy](val idiom: Idi
   override type RunQueryResult[T] = QueryMirror[T]
   override type RunQuerySingleResult[T] = QueryMirror[T]
   override type RunActionResult = ActionMirror
-  override type RunActionReturningResult[T] = ActionReturningMirror[T]
+  override type RunActionReturningResult[T] = ActionReturningMirror[_, T]
   override type RunBatchActionResult = BatchActionMirror
   override type RunBatchActionReturningResult[T] = BatchActionReturningMirror[T]
   override type Session = MirrorSession
@@ -58,7 +58,7 @@ class MirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy](val idiom: Idi
 
   case class ActionMirror(string: String, prepareRow: PrepareRow, info: ExecutionInfo)
 
-  case class ActionReturningMirror[T](string: String, prepareRow: PrepareRow, extractor: Extractor[T], returningBehavior: ReturnAction, info: ExecutionInfo)
+  case class ActionReturningMirror[T, R](string: String, prepareRow: PrepareRow, extractor: Extractor[T], returningBehavior: ReturnAction, info: ExecutionInfo)
 
   case class BatchActionMirror(groups: List[(String, List[Row])], info: ExecutionInfo)
 
@@ -82,7 +82,10 @@ class MirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy](val idiom: Idi
     ActionMirror(string, prepare(Row(), session)._2, info)
 
   def executeActionReturning[O](string: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningBehavior: ReturnAction)(info: ExecutionInfo, dc: Runner) =
-    ActionReturningMirror[O](string, prepare(Row(), session)._2, extractor, returningBehavior, info)
+    ActionReturningMirror[O, O](string, prepare(Row(), session)._2, extractor, returningBehavior, info)
+
+  def executeActionReturningMany[O](string: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningBehavior: ReturnAction)(info: ExecutionInfo, dc: Runner) =
+    ActionReturningMirror[O, List[O]](string, prepare(Row(), session)._2, extractor, returningBehavior, info)
 
   def executeBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: Runner) =
     BatchActionMirror(

@@ -56,7 +56,7 @@ abstract class ZioJAsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: Concret
     ()
   }
 
-  protected def extractActionResult[O](returningAction: ReturnAction, extractor: Extractor[O])(result: QueryResult): O
+  protected def extractActionResult[O](returningAction: ReturnAction, extractor: Extractor[O])(result: QueryResult): List[O]
 
   protected def expandAction(sql: String, returningAction: ReturnAction): String = sql
 
@@ -82,7 +82,7 @@ abstract class ZioJAsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: Concret
   }
 
   def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: DatasourceContext): RIO[Has[ZioJAsyncConnection], T] =
-    executeQuery(sql, prepare, extractor)(info, dc).map(handleSingleResult)
+    executeQuery(sql, prepare, extractor)(info, dc).map(handleSingleResult(sql, _))
 
   def executeAction[T](sql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: DatasourceContext): Result[Long] = {
     val (params, values) = prepare(Nil, ())
@@ -90,7 +90,10 @@ abstract class ZioJAsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: Concret
     ZioJAsyncConnection.sendPreparedStatement(sql, values).map(_.getRowsAffected)
   }
 
-  def executeActionReturning[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T], returningAction: ReturnAction)(info: ExecutionInfo, dc: DatasourceContext): RIO[Has[ZioJAsyncConnection], T] = {
+  def executeActionReturning[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T], returningAction: ReturnAction)(info: ExecutionInfo, dc: DatasourceContext): RIO[Has[ZioJAsyncConnection], T] =
+    executeActionReturningMany[T](sql, prepare, extractor, returningAction)(info, dc).map(handleSingleResult(sql, _))
+
+  def executeActionReturningMany[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T], returningAction: ReturnAction)(info: ExecutionInfo, dc: DatasourceContext): RIO[Has[ZioJAsyncConnection], List[T]] = {
     val expanded = expandAction(sql, returningAction)
     val (params, values) = prepare(Nil, ())
     logger.logQuery(sql, params)

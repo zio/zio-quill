@@ -42,6 +42,8 @@ class PostgresJAsyncContextSpec extends Spec {
 
   "cannot extract" in {
     object ctx extends PostgresJAsyncContext(Literal, "testPostgresDB") {
+      override def handleSingleResult[T](sql: String, list: List[T]) = super.handleSingleResult(sql, list)
+
       override def extractActionResult[O](
         returningAction:    ReturnAction,
         returningExtractor: ctx.Extractor[O]
@@ -49,7 +51,8 @@ class PostgresJAsyncContextSpec extends Spec {
         super.extractActionResult(returningAction, returningExtractor)(result)
     }
     intercept[IllegalStateException] {
-      ctx.extractActionResult(ReturnColumns(List("w/e")), (row, session) => 1)(new QueryResult(0, "w/e", ResultSetKt.getEMPTY_RESULT_SET))
+      val v = ctx.extractActionResult(ReturnColumns(List("w/e")), (row, session) => 1)(new QueryResult(0, "w/e", ResultSetKt.getEMPTY_RESULT_SET))
+      ctx.handleSingleResult("<not used>", v)
     }
     ctx.close
   }

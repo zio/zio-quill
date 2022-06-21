@@ -92,7 +92,15 @@ class AstPrinter(traceOpinions: Boolean, traceAstSimple: Boolean, traceQuats: Qu
         Tree.Literal("" + past) // Do not blow up if it is null
 
       case i: Ident =>
-        Tree.Apply("Id", treemake(i.name).withQuat(i.bestQuat).make)
+        Tree.Apply(
+          "Id",
+          (treemake(i.name).withQuat(i.bestQuat).make.toList ++ (
+            if (traceOpinions)
+              List(printVisibility(i.visibility))
+            else
+              List()
+          )).iterator
+        )
 
       case i: Infix =>
         val content = List(i.parts.toList, i.params.toList) ++ (if (i.pure) List("pure") else List()) ++ (if (i.transparent) List("transparent") else List())

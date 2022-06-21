@@ -46,14 +46,17 @@ trait JdbcContextVerbExecute[Dialect <: SqlIdiom, Naming <: NamingStrategy] exte
     }
 
   def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner): Result[T] =
-    handleSingleWrappedResult(executeQuery(sql, prepare, extractor)(info, dc))
+    handleSingleWrappedResult(sql, executeQuery(sql, prepare, extractor)(info, dc))
 
   def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningBehavior: ReturnAction)(info: ExecutionInfo, dc: Runner): Result[O] =
+    push(executeActionReturningMany(sql, prepare, extractor, returningBehavior)(info, dc))(handleSingleResult(sql, _))
+
+  def executeActionReturningMany[O](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningBehavior: ReturnAction)(info: ExecutionInfo, dc: Runner): Result[List[O]] =
     withConnectionWrapped { conn =>
       val (params, ps) = prepare(prepareWithReturning(sql, conn, returningBehavior), conn)
       logger.logQuery(sql, params)
       ps.executeUpdate()
-      handleSingleResult(extractResult(ps.getGeneratedKeys, conn, extractor))
+      extractResult(ps.getGeneratedKeys, conn, extractor)
     }
 
   protected def prepareWithReturning(sql: String, conn: Connection, returningBehavior: ReturnAction) =
@@ -94,8 +97,8 @@ trait JdbcContextVerbExecute[Dialect <: SqlIdiom, Naming <: NamingStrategy] exte
       }
     }
 
-  protected def handleSingleWrappedResult[T](list: Result[List[T]]): Result[T] =
-    push(list)(handleSingleResult(_))
+  protected def handleSingleWrappedResult[T](sql: String, list: Result[List[T]]): Result[T] =
+    push(list)(handleSingleResult(sql, _))
 
   private[getquill] final def extractResult[T](rs: ResultSet, conn: Connection, extractor: Extractor[T]): List[T] =
     ResultSetExtractor(rs, conn, extractor)

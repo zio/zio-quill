@@ -20,10 +20,10 @@ class MysqlJAsyncContext[N <: NamingStrategy](naming: N, pool: ConnectionPool[My
   def this(naming: N, config: Config) = this(naming, MysqlJAsyncContextConfig(config))
   def this(naming: N, configPrefix: String) = this(naming, LoadConfig(configPrefix))
 
-  override protected def extractActionResult[O](returningAction: ReturnAction, returningExtractor: Extractor[O])(result: DBQueryResult): O = {
+  override protected def extractActionResult[O](returningAction: ReturnAction, returningExtractor: Extractor[O])(result: DBQueryResult): List[O] = {
     result match {
       case r: MySQLQueryResult =>
-        returningExtractor(new ArrayRowData(0, Map.empty[String, Integer].asJava, Array(JavaLong.valueOf(r.getLastInsertId))), ())
+        List(returningExtractor(new ArrayRowData(0, Map.empty[String, Integer].asJava, Array(JavaLong.valueOf(r.getLastInsertId))), ()))
       case _ =>
         fail("This is a bug. Cannot extract returning value.")
     }

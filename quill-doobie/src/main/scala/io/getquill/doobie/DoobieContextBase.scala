@@ -135,11 +135,22 @@ trait DoobieContextBase[Dialect <: SqlIdiom, Naming <: NamingStrategy]
     info: ExecutionInfo,
     dc: Runner,
   ): ConnectionIO[A] =
-    prepareConnections[A](returningBehavior)(sql) {
+    executeActionReturningMany[A](sql, prepare, extractor, returningBehavior)(info, dc).map(handleSingleResult(sql, _))
+
+  override def executeActionReturningMany[A](
+    sql: String,
+    prepare: Prepare = identityPrepare,
+    extractor: Extractor[A],
+    returningBehavior: ReturnAction,
+  )(
+    info: ExecutionInfo,
+    dc: Runner,
+  ): ConnectionIO[List[A]] =
+    prepareConnections[List[A]](returningBehavior)(sql) {
       useConnection { implicit connection =>
         prepareAndLog(sql, prepare) *>
           FPS.executeUpdate *>
-          HPS.getGeneratedKeys(HRS.getUnique(extractor))
+          HPS.getGeneratedKeys[List[A]](HRS.list(extractor))
       }
     }
 

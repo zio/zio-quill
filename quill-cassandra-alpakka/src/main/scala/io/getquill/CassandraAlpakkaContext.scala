@@ -73,7 +73,7 @@ class CassandraAlpakkaContext[N <: NamingStrategy](
     info: ExecutionInfo,
     dc:   Runner
   )(implicit executionContext: ExecutionContext): Result[RunQuerySingleResult[T]] = {
-    executeQuery(cql, prepare, extractor)(info, dc).map(handleSingleResult)
+    executeQuery(cql, prepare, extractor)(info, dc).map(handleSingleResult(cql, _))
   }
 
   def executeAction(cql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: Runner)(
