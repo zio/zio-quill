@@ -325,8 +325,147 @@ val returnedIds = ctx.run(q) //: List[(Int, Long)]
 
 #### returning
 
-In certain situations, we might want to return fields that are not auto generated as well. In this case we do not want
-the fields to be automatically excluded from the insertion. The `returning` method is used for that.
+In UPDATE and DELETE queries we frequently want to return the records that were modified/deleted.
+The `returning` method is used for that.
+
+> Note that most of these operations are only supported in Postgres and SQL Server
+
+For example when we want to return information from records that are being updated:
+
+```scala
+val desc = "Update Product"
+val sku = 2002L
+val q = quote {
+  query[Product].filter(p => p.id == 42).update(_.description = lift(desc), _.sku = lift(sku)).returning(r => (r.id, r.description))
+}
+val updated = ctx.run(q) //: (Int, String)
+// Postgres
+// UPDATE Product AS p SET description = ?, sku = ? WHERE p.id = 42 RETURNING p.id, p.description
+// SQL Server
+// UPDATE Product SET description = ?, sku = ? OUTPUT id, description WHERE id = 42
+```
+> When multiple records are updated using `update.returning` a warning will be issued and only the first result will be returned. Use `returningMany` to return all the updated records in this case.
+
+You can do the same thing with `updateValue` (use an UpdateMeta to exclude generated id columns).
+
+```scala
+implicit val productUpdateMeta = updateMeta[Product](_.id)
+val q = quote {
+  query[Product].filter(p => p.id == 42).updateValue(lift(Product(42, "Updated Product", 2022L))).returning(r => (r.id, r.description))
+}
+val updated = ctx.run(q) //: (Int, String)
+// Postgres
+// UPDATE Product AS p SET description = ?, sku = ? WHERE p.id = 42 RETURNING p.id, p.description
+// SQL Server
+// UPDATE Product SET description = ?, sku = ? OUTPUT INSERTED.id, INSERTED.description WHERE id = 42
+```
+
+You can also return information that is being deleted in a DELETE query. Or even the entire deleted record!
+
+```scala
+val q = quote {
+  query[Product].filter(p => p.id == 42).delete.returning(r => r)
+}
+
+val deleted = ctx.run(q) //: Product
+// Postgres
+// DELETE FROM Product AS p WHERE p.id = 42 RETURNING p.id, p.description, p.sku 
+// SQL Server
+// DELETE FROM Product OUTPUT DELETED.id, DELETED.description, DELETED.sku WHERE id = 42
+```
+> When multiple records are deleted using `delete.returning` a warning will be issued and only the first result will be returned. Use `returningMany` to return all the deleted records in this case.
+
+#### returningMany
+
+Similar to insert/update.returning, the returningMany function can be used to return all the values that were 
+updated/deleted from a query. Not just one.
+
+Return *all* the records that were updated.
+
+```scala
+val desc = "Update Product"
+val sku = 2002L
+val q = quote {
+  query[Product].filter(p => p.id == 42).update(_.description = lift(desc), _.sku = lift(sku)).returning(r => (r.id, r.description))
+}
+val updated = ctx.run(q) //: (Int, String)
+// Postgres
+// UPDATE Product AS p SET description = ?, sku = ? WHERE p.id = 42 RETURNING p.id, p.description
+// SQL Server
+// UPDATE Product SET description = ?, sku = ? OUTPUT id, description WHERE id = 42
+```
+
+Return *all* the records that were deleted.
+
+```scala
+val q = quote {
+  query[Product].filter(p => p.id == 42).delete.returning(r => r)
+}
+
+val deleted = ctx.run(q) //: Product
+// Postgres
+// DELETE FROM Product AS p WHERE p.id = 42 RETURNING p.id, p.description, p.sku 
+// SQL Server
+// DELETE FROM Product OUTPUT DELETED.id, DELETED.description, DELETED.sku WHERE id = 42
+```
+
+#### Postgres Customized returning
+
+Returning values returned can be further customized in some databases.
+
+In Postgres, the `returning` and `returningGenerated` methods also support arithmetic operations, SQL UDFs and
+even entire queries for INSERT, UPDATE, and DELETE actions. These are inserted directly into the SQL `RETURNING` clause.
+
+For example, assuming this basic query:
+```scala
+val q = quote {
+  query[Product].filter(p => p.id == 42).update(_.description -> "My Product", _.sku -> 1011L)
+}
+```
+
+Add 100 to the value of `id`:
+```scala
+ctx.run(q.returning(r => r.id + 100)) //: List[Int]
+// UPDATE Product AS p SET description = 'My Product', sku = 1011L WHERE p.id = 42 RETURNING p.id + 100
+```
+
+Pass the value of `id` into a UDF:
+```scala
+val udf = quote { (i: Long) => infix"myUdf($i)".as[Int] }
+ctx.run(q.returning(r => udf(r.id))) //: List[Int]
+// UPDATE Product AS p SET description = 'My Product', sku = 1011L WHERE p.id = 42 RETURNING myUdf(p.id)
+```
+
+Use the return value of `sku` to issue a query:
+```scala
+case class Supplier(id: Int, clientSku: Long)
+ctx.run {
+  q.returning(r => query[Supplier].filter(s => s.sku == r.sku).map(_.id).max)
+} //: List[Option[Long]]
+// UPDATE Product AS p SET description = 'My Product', sku = 1011L WHERE p.id = 42 RETURNING (SELECT MAX(s.id) FROM Supplier s WHERE s.sku = clientSku)
+```
+
+As is typically the case with Quill, you can use all of these features together.
+```scala
+ctx.run {
+  q.returning(r =>
+    (r.id + 100, udf(r.id), query[Supplier].filter(s => s.sku == r.sku).map(_.id).max)
+  )
+} // List[(Int, Int, Option[Long])]
+// UPDATE Product AS p SET description = 'My Product', sku = 1011L WHERE p.id = 42
+// RETURNING id + 100, myUdf(id), (SELECT MAX(s.id) FROM Supplier s WHERE s.sku = sku)
+```
+
+> NOTE: Queries used inside of return clauses can only return a single row per insert.
+Otherwise, Postgres will throw:
+`ERROR: more than one row returned by a subquery used as an expression`. This is why is it strongly
+recommended that you use aggregators such as `max` or `min`inside of quill returning-clause queries.
+In the case that this is impossible (e.g. when using Postgres booleans), you can use the `.value` method:
+`q.returning(r => query[Supplier].filter(s => s.sku == r.sku).map(_.id).value)`.
+
+#### insert.returning
+
+In certain situations we also may want to return information from inserted records.
 
 ```scala
 val q = quote {
@@ -361,121 +500,6 @@ val returnedIds = ctx.run(q) //: List[(Int, String)]
 // INSERT INTO Product (description, sku) VALUES (?, ?) RETURNING id, description
 ```
 
-`returning` can also be used after `updateValue`:
-
-```scala
-val q = quote {
-  query[Product].updateValue(lift(Product(42, "Updated Product", 2022L))).returning(r => (r.id, r.description))
-}
-
-val updated = ctx.run(q) //: List[(Int, String)]
-// UPDATE Product SET id = ?, description = ?, sku = ? RETURNING id, description
-```
-
-or even after `delete`:
-
-```scala
-val q = quote {
-  query[Product].delete.returning(r => (r.id, r.description))
-}
-
-val deleted = ctx.run(q) //: List[(Int, String)]
-// DELETE FROM Product RETURNING id, description
-```
-
-#### customized returning
-
-Values returned can be further customized in some databases.
-
-##### Postgres
-
-The `returning` and `returningGenerated` methods also support arithmetic operations, SQL UDFs and
-even entire queries. These are inserted directly into the SQL `RETURNING` clause.
-
-Assuming this basic query:
-```scala
-val q = quote {
-  query[Product].insert(_.description -> "My Product", _.sku -> 1011L)
-}
-```
-
-Add 100 to the value of `id`:
-```scala
-ctx.run(q.returning(r => r.id + 100)) //: List[Int]
-// INSERT INTO Product (description, sku) VALUES (?, ?) RETURNING id + 100
-```
-
-Pass the value of `id` into a UDF:
-```scala
-val udf = quote { (i: Long) => infix"myUdf($i)".as[Int] }
-ctx.run(q.returning(r => udf(r.id))) //: List[Int]
-// INSERT INTO Product (description, sku) VALUES (?, ?) RETURNING myUdf(id)
-```
-
-Use the return value of `sku` to issue a query:
-```scala
-case class Supplier(id: Int, clientSku: Long)
-ctx.run {
-  q.returning(r => query[Supplier].filter(s => s.sku == r.sku).map(_.id).max)
-} //: List[Option[Long]]
-// INSERT INTO Product (description,sku) VALUES ('My Product', 1011) RETURNING (SELECT MAX(s.id) FROM Supplier s WHERE s.sku = clientSku)
-```
-
-As is typically the case with Quill, you can use all of these features together.
-```scala
-ctx.run {
-  q.returning(r =>
-    (r.id + 100, udf(r.id), query[Supplier].filter(s => s.sku == r.sku).map(_.id).max)
-  )
-} // List[(Int, Int, Option[Long])]
-// INSERT INTO Product (description,sku) VALUES ('My Product', 1011)
-// RETURNING id + 100, myUdf(id), (SELECT MAX(s.id) FROM Supplier s WHERE s.sku = sku)
-```
-
-> NOTE: Queries used inside of return clauses can only return a single row per insert.
-Otherwise, Postgres will throw:
-`ERROR: more than one row returned by a subquery used as an expression`. This is why is it strongly
-recommended that you use aggregators such as `max` or `min`inside of quill returning-clause queries.
-In the case that this is impossible (e.g. when using Postgres booleans), you can use the `.value` method:
-`q.returning(r => query[Supplier].filter(s => s.sku == r.sku).map(_.id).value)`.
-
-##### SQL Server
-
-The `returning` and `returningGenerated` methods are more restricted when using SQL Server; they only support
-arithmetic operations. These are inserted directly into the SQL `OUTPUT INSERTED.*` or `OUTPUT DELETED.*` clauses.
-
-Assuming the query:
-```scala
-val q = quote {
-  query[Product].insert(_.description -> "My Product", _.sku -> 1011L)
-}
-```
-
-Add 100 to the value of `id`:
-```scala
-ctx.run(q.returning(r => id + 100)) //: List[Int]
-// INSERT INTO Product (description, sku) OUTPUT INSERTED.id + 100 VALUES (?, ?)
-```
-
-Update returning:
-```scala
-val q = quote {
-  query[Product].update(_.description -> "Updated Product", _.sku -> 2022L).returning(r => (r.id, r.description))
-}
-
-val updated = ctx.run(q)
-// UPDATE Product SET description = 'Updated Product', sku = 2022 OUTPUT INSERTED.id, INSERTED.description
-```
-
-Delete returning:
-```scala
-val q = quote {
-  query[Product].delete.returning(r => (r.id, r.description))
-}
-
-val updated = ctx.run(q)
-// DELETE FROM Product OUTPUT DELETED.id, DELETED.description
-```
 
 ### Embedded case classes
 
