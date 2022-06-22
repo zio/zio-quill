@@ -344,11 +344,13 @@ val updated = ctx.run(q) //: (Int, String)
 // SQL Server
 // UPDATE Product SET description = ?, sku = ? OUTPUT id, description WHERE id = 42
 ```
-> When multiple records are updated using `update.returning` a warning will be issued and only the first result will be returned. Use `returningMany` to return all the updated records in this case.
+> When multiple records are updated using `update.returning` a warning will be issued and only the first result will be returned. 
+> Use [`returningMany`](#returningmany) to return all the updated records in this case.
 
-You can do the same thing with `updateValue` (use an UpdateMeta to exclude generated id columns).
+You can do the same thing with `updateValue`.
 
 ```scala
+// (use an UpdateMeta to exclude generated id columns)
 implicit val productUpdateMeta = updateMeta[Product](_.id)
 val q = quote {
   query[Product].filter(p => p.id == 42).updateValue(lift(Product(42, "Updated Product", 2022L))).returning(r => (r.id, r.description))
@@ -373,7 +375,8 @@ val deleted = ctx.run(q) //: Product
 // SQL Server
 // DELETE FROM Product OUTPUT DELETED.id, DELETED.description, DELETED.sku WHERE id = 42
 ```
-> When multiple records are deleted using `delete.returning` a warning will be issued and only the first result will be returned. Use `returningMany` to return all the deleted records in this case.
+> When multiple records are deleted using `delete.returning` a warning will be issued and only the first result will be returned. 
+> Use [`returningMany`](#returningmany) to return all the deleted records in this case.
 
 #### returningMany
 
@@ -388,7 +391,7 @@ val sku = 2002L
 val q = quote {
   query[Product].filter(p => p.id == 42).update(_.description = lift(desc), _.sku = lift(sku)).returning(r => (r.id, r.description))
 }
-val updated = ctx.run(q) //: (Int, String)
+val updated = ctx.run(q) //: List[(Int, String)]
 // Postgres
 // UPDATE Product AS p SET description = ?, sku = ? WHERE p.id = 42 RETURNING p.id, p.description
 // SQL Server
@@ -402,7 +405,7 @@ val q = quote {
   query[Product].filter(p => p.id == 42).delete.returning(r => r)
 }
 
-val deleted = ctx.run(q) //: Product
+val deleted = ctx.run(q) //: List[Product]
 // Postgres
 // DELETE FROM Product AS p WHERE p.id = 42 RETURNING p.id, p.description, p.sku 
 // SQL Server
