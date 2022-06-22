@@ -1,3 +1,9 @@
+# 3.19.0
+
+- [Implementing insert/update/delete.returningMany](https://github.com/zio/zio-quill/pull/2509)
+- [Update jasync](https://github.com/zio/zio-quill/pull/2374)
+- [Add support for SSL Client connections](https://github.com/zio/zio-quill/pull/2491)
+
 # 3.18.0
 
 - [Check all columns for null-ness for Option[Product] to be None](https://github.com/zio/zio-quill/pull/2504)
