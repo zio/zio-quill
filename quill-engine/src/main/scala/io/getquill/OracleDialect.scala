@@ -57,12 +57,6 @@ trait OracleDialect
       case other                                      => super.operationTokenizer.token(other)
     }
 
-  override implicit def sourceTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[FromContext] = Tokenizer[FromContext] {
-    case InfixContext(infix, alias) => stmt"(${(infix: Ast).token}) ${tokenizeTableAlias(strategy, alias).token}"
-    case QueryContext(query, alias) => stmt"(${query.token}) ${strategy.default(alias).token}"
-    case other                      => super.sourceTokenizer.token(other)
-  }
-
   override protected def tokenizeColumn(strategy: NamingStrategy, column: String, renameable: Renameable): String =
     tokenizeEscapeUnderscores(strategy, column, Some(renameable))
 

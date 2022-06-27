@@ -40,6 +40,8 @@ abstract class JdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy]
     super.executeQuerySingle(sql, prepare, extractor)(executionInfo, dc)
   override def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningBehavior: ReturnAction)(executionInfo: ExecutionInfo, dc: Runner): O =
     super.executeActionReturning(sql, prepare, extractor, returningBehavior)(executionInfo, dc)
+  override def executeActionReturningMany[O](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningBehavior: ReturnAction)(executionInfo: ExecutionInfo, dc: Runner): List[O] =
+    super.executeActionReturningMany(sql, prepare, extractor, returningBehavior)(executionInfo, dc)
   override def executeBatchAction(groups: List[BatchGroup])(executionInfo: ExecutionInfo, dc: Runner): List[Long] =
     super.executeBatchAction(groups)(executionInfo, dc)
   override def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T])(executionInfo: ExecutionInfo, dc: Runner): List[T] =

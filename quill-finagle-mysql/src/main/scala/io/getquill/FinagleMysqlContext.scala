@@ -133,7 +133,7 @@ class FinagleMysqlContext[N <: NamingStrategy](
   }
 
   def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner): Future[T] =
-    executeQuery(sql, prepare, extractor)(info, dc).map(handleSingleResult)
+    executeQuery(sql, prepare, extractor)(info, dc).map(handleSingleResult(sql, _))
 
   def executeAction(sql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: Runner): Future[Long] = {
     val (params, prepared) = prepare(Nil, ())
@@ -147,6 +147,10 @@ class FinagleMysqlContext[N <: NamingStrategy](
     logger.logQuery(sql, params)
     withClient(Write)(_.prepare(sql)(prepared: _*))
       .map(extractReturningValue(_, extractor))
+  }
+
+  def executeActionReturningMany[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T], returningAction: ReturnAction)(info: ExecutionInfo, dc: Runner): Future[List[T]] = {
+    fail("returningMany is not supported in Finagle MySQL Context")
   }
 
   def executeBatchAction[B](groups: List[BatchGroup])(info: ExecutionInfo, dc: Runner): Future[List[Long]] =

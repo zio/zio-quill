@@ -62,7 +62,7 @@ class CassandraMonixContext[N <: NamingStrategy](
   }
 
   def executeQuerySingle[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner): Task[T] =
-    executeQuery(cql, prepare, extractor)(info, dc).map(handleSingleResult(_))
+    executeQuery(cql, prepare, extractor)(info, dc).map(handleSingleResult(cql, _))
 
   def executeAction(cql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: Runner): Task[Unit] = {
     prepareRowAndLog(cql, prepare)

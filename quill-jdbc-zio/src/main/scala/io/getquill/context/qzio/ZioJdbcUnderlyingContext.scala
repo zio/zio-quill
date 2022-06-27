@@ -41,6 +41,8 @@ abstract class ZioJdbcUnderlyingContext[Dialect <: SqlIdiom, Naming <: NamingStr
     super.executeQuerySingle(sql, prepare, extractor)(info, dc)
   override def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningBehavior: ReturnAction)(info: ExecutionInfo, dc: Runner): QCIO[O] =
     super.executeActionReturning(sql, prepare, extractor, returningBehavior)(info, dc)
+  override def executeActionReturningMany[O](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningBehavior: ReturnAction)(info: ExecutionInfo, dc: Runner): QCIO[List[O]] =
+    super.executeActionReturningMany(sql, prepare, extractor, returningBehavior)(info, dc)
   override def executeBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: Runner): QCIO[List[Long]] =
     super.executeBatchAction(groups)(info, dc)
   override def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T])(info: ExecutionInfo, dc: Runner): QCIO[List[T]] =

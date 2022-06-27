@@ -72,7 +72,7 @@ abstract class JAsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: ConcreteCo
       case other                                   => f(pool)
     }
 
-  protected def extractActionResult[O](returningAction: ReturnAction, extractor: Extractor[O])(result: QueryResult): O
+  protected def extractActionResult[O](returningAction: ReturnAction, extractor: Extractor[O])(result: QueryResult): List[O]
 
   protected def expandAction(sql: String, returningAction: ReturnAction) = sql
 
@@ -100,7 +100,7 @@ abstract class JAsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: ConcreteCo
   }
 
   def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner)(implicit ec: ExecutionContext): Future[T] =
-    executeQuery(sql, prepare, extractor)(info, dc).map(handleSingleResult)
+    executeQuery(sql, prepare, extractor)(info, dc).map(handleSingleResult(sql, _))
 
   def executeAction(sql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: Runner)(implicit ec: ExecutionContext): Future[Long] = {
     val (params, values) = prepare(Nil, ())
@@ -108,7 +108,10 @@ abstract class JAsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: ConcreteCo
     withConnection(_.sendPreparedStatement(sql, values.asJava)).map(_.getRowsAffected)
   }
 
-  def executeActionReturning[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T], returningAction: ReturnAction)(info: ExecutionInfo, dc: Runner)(implicit ec: ExecutionContext): Future[T] = {
+  def executeActionReturning[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T], returningAction: ReturnAction)(info: ExecutionInfo, dc: Runner)(implicit ec: ExecutionContext): Future[T] =
+    executeActionReturningMany[T](sql, prepare, extractor, returningAction)(info, dc).map(handleSingleResult(sql, _))
+
+  def executeActionReturningMany[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T], returningAction: ReturnAction)(info: ExecutionInfo, dc: Runner)(implicit ec: ExecutionContext): Future[List[T]] = {
     val expanded = expandAction(sql, returningAction)
     val (params, values) = prepare(Nil, ())
     logger.logQuery(sql, params)

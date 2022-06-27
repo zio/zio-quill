@@ -853,6 +853,7 @@ lazy val loggingSettings = Seq(
 )
 
 lazy val basicSettings = Seq(
+  Test / testOptions += Tests.Argument("-oI"),
   unmanagedSources / excludeFilter := {
     excludeTests match {
       case true  => excludePaths((Test / unmanagedSourceDirectories).value.map(dir => dir.getCanonicalPath))
