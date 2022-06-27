@@ -1,56 +1,65 @@
 package io.getquill.context.sql.norm
 
-import io.getquill.norm._
+import io.getquill.norm.{ SimplifyNullChecks, _ }
 import io.getquill.ast.Ast
 import io.getquill.norm.ConcatBehavior.AnsiConcat
 import io.getquill.norm.EqualityBehavior.AnsiEquality
 import io.getquill.norm.capture.{ AvoidAliasConflict, DemarcateExternalAliases }
 import io.getquill.util.Messages.{ TraceType, title }
+import io.getquill.util.TraceConfig
 
 object SqlNormalize {
-  def apply(ast: Ast, concatBehavior: ConcatBehavior = AnsiConcat, equalityBehavior: EqualityBehavior = AnsiEquality) =
-    new SqlNormalize(concatBehavior, equalityBehavior)(ast)
+  def apply(ast: Ast, transpileConfig: TranspileConfig, concatBehavior: ConcatBehavior = AnsiConcat, equalityBehavior: EqualityBehavior = AnsiEquality) =
+    new SqlNormalize(concatBehavior, equalityBehavior, transpileConfig)(ast)
 }
 
-class SqlNormalize(concatBehavior: ConcatBehavior, equalityBehavior: EqualityBehavior) {
+class SqlNormalize(concatBehavior: ConcatBehavior, equalityBehavior: EqualityBehavior, transpileConfig: TranspileConfig) {
+
+  val NormalizePhase = new Normalize(transpileConfig)
+  val traceConfig = transpileConfig.traceConfig
 
   private def demarcate(heading: String) =
     ((ast: Ast) => title(heading, TraceType.SqlNormalizations)(ast))
+
+  val ExpandJoinPhase = new ExpandJoin(NormalizePhase)
+  val RenamePropertiesPhase = new RenameProperties(traceConfig)
+  val ExpandDistinctPhase = new ExpandDistinct(traceConfig)
+  val SheathLeafClausesPhase = new SheathLeafClausesApply(traceConfig)
+  val FlattenOptionOperationPhase = new FlattenOptionOperation(concatBehavior, transpileConfig.traceConfig)
+  val SimplifyNullChecksPhase = new SimplifyNullChecks(equalityBehavior)
 
   private val normalize =
     (identity[Ast] _)
       .andThen(demarcate("original"))
       .andThen(DemarcateExternalAliases.apply _)
       .andThen(demarcate("DemarcateReturningAliases"))
-      .andThen(new FlattenOptionOperation(concatBehavior).apply _)
+      .andThen(FlattenOptionOperationPhase.apply _)
       .andThen(demarcate("FlattenOptionOperation"))
-      .andThen(new SimplifyNullChecks(equalityBehavior).apply _)
+      .andThen(SimplifyNullChecksPhase.apply _)
       .andThen(demarcate("SimplifyNullChecks"))
-      .andThen(Normalize.apply _)
+      .andThen(NormalizePhase.apply _)
       .andThen(demarcate("Normalize"))
       // Need to do RenameProperties before ExpandJoin which normalizes-out all the tuple indexes
       // on which RenameProperties relies
       //.andThen(RenameProperties.apply _)
-      .andThen(RenameProperties.apply _)
+      .andThen(RenamePropertiesPhase.apply _)
       .andThen(demarcate("RenameProperties"))
-      .andThen(ExpandDistinct.apply _)
+      .andThen(ExpandDistinctPhase.apply _)
       .andThen(demarcate("ExpandDistinct"))
-      .andThen(Normalize.apply _)
+      .andThen(NormalizePhase.apply _)
       .andThen(demarcate("Normalize")) // Needed only because ExpandDistinct introduces an alias.
-      .andThen(NestImpureMappedInfix.apply _)
-      .andThen(demarcate("NestImpureMappedInfix"))
-      .andThen(Normalize.apply _)
+      .andThen(NormalizePhase.apply _)
       .andThen(demarcate("Normalize"))
-      .andThen(ExpandJoin.apply _)
+      .andThen(ExpandJoinPhase.apply _)
       .andThen(demarcate("ExpandJoin"))
       .andThen(ExpandMappedInfix.apply _)
       .andThen(demarcate("ExpandMappedInfix"))
-      .andThen(SheathLeafClauses.from _)
+      .andThen(SheathLeafClausesPhase.apply _)
       .andThen(demarcate("SheathLeaves"))
       .andThen(ast => {
         // In the final stage of normalization, change all temporary aliases into
         // shorter ones of the form x[0-9]+.
-        Normalize.apply(AvoidAliasConflict.Ast(ast, true))
+        NormalizePhase.apply(AvoidAliasConflict.Ast(ast, true, transpileConfig.traceConfig))
       })
       .andThen(demarcate("Normalize"))
 

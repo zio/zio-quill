@@ -6,8 +6,11 @@ import io.getquill.testContext.qr1
 import io.getquill.testContext.qr2
 import io.getquill.testContext.quote
 import io.getquill.testContext.unquote
+import io.getquill.util.TraceConfig
 
 class DealiasSpec extends Spec {
+
+  val Dealias = new DealiasApply(TraceConfig.Empty)
 
   "ensures that each entity is referenced by the same alias" - {
     "flatMap" in {

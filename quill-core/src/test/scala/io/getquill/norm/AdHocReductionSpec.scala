@@ -5,8 +5,11 @@ import io.getquill.testContext.qr1
 import io.getquill.testContext.qr2
 import io.getquill.testContext.quote
 import io.getquill.testContext.unquote
+import io.getquill.util.TraceConfig
 
 class AdHocReductionSpec extends Spec {
+
+  val AdHocReduction = new AdHocReduction(TraceConfig.Empty)
 
   "*.filter" - {
     "a.filter(b => c).filter(d => e)" in {

@@ -178,6 +178,8 @@ case class BetaReduction(map: IMap[Ast, Ast], typeBehavior: TypeBehavior, emptyB
         SortBy(apply(a), b, BetaReduction(map - b, typeBehavior, emptyBehavior)(c), d)
       case GroupBy(a, b, c) =>
         GroupBy(apply(a), b, BetaReduction(map - b, typeBehavior, emptyBehavior)(c))
+      case GroupByMap(a, b, c, d, e) =>
+        GroupByMap(apply(a), b, BetaReduction(map - b, typeBehavior, emptyBehavior)(c), d, BetaReduction(map - d, typeBehavior, emptyBehavior)(e))
       case Join(t, a, b, iA, iB, on) =>
         Join(t, apply(a), apply(b), iA, iB, BetaReduction(map - iA - iB, typeBehavior, emptyBehavior)(on))
       case FlatJoin(t, a, iA, on) =>

@@ -6,8 +6,11 @@ import io.getquill.testContext.qr1
 import io.getquill.testContext.qr2
 import io.getquill.testContext.quote
 import io.getquill.testContext.unquote
+import io.getquill.util.TraceConfig
 
 class OrderTermsSpec extends Spec {
+
+  val OrderTerms = new OrderTerms(TraceConfig.Empty)
 
   "doesn't reorder groupBy.map" in {
     val q = quote {

@@ -169,6 +169,11 @@ trait StatefulTransformer[T] {
         val (at, att) = apply(a)
         val (ct, ctt) = att.apply(c)
         (GroupBy(at, b, ct), ctt)
+      case GroupByMap(a, b, c, d, e) =>
+        val (at, att) = apply(a)
+        val (ct, ctt) = att.apply(c)
+        val (et, ett) = ctt.apply(e)
+        (GroupByMap(at, b, ct, d, et), ett)
       case Aggregation(o, a) =>
         val (at, att) = apply(a)
         (Aggregation(o, at), att)

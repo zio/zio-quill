@@ -1,8 +1,10 @@
 package io.getquill.context.sql.norm
 
-import io.getquill.{ MirrorSqlDialect, Query, Quoted, SnakeCase, Spec, SqlMirrorContext }
+import io.getquill.{ MirrorSqlDialect, Query, SnakeCase, Spec, SqlMirrorContext }
 import io.getquill.context.sql.{ testContext, testContextUpperEscapeColumn }
 import io.getquill.context.sql.util.StringOps._
+import io.getquill.norm.EnableTrace
+import io.getquill.util.Messages.TraceType
 
 class ExpandNestedQueriesSpec extends Spec {
 
@@ -40,6 +42,10 @@ class ExpandNestedQueriesSpec extends Spec {
   }
 
   "preserves order of selection" in {
+    implicit val e = new EnableTrace {
+      import io.getquill.norm.ConfigList._
+      override type Trace = TraceType.AvoidAliasConflict :: HNil // // // // // //
+    }
     import testContext._
     val q = quote {
       query[TestEntity]
@@ -51,7 +57,7 @@ class ExpandNestedQueriesSpec extends Spec {
         .filter(_._2 == 123)
     }
     testContext.run(q).string mustEqual
-      "SELECT x1._1, x1._2 FROM (SELECT DISTINCT ON (x11.s) x11.s AS _1, x11.i AS _2 FROM TestEntity x01 INNER JOIN TestEntity2 x11 ON x01.i = x11.i WHERE x01.s = 'foo') AS x1 WHERE x1._2 = 123"
+      "SELECT x01x11._1, x01x11._2 FROM (SELECT DISTINCT ON (x11.s) x11.s AS _1, x11.i AS _2 FROM TestEntity x01 INNER JOIN TestEntity2 x11 ON x01.i = x11.i WHERE x01.s = 'foo') AS x01x11 WHERE x01x11._2 = 123"
   }
 
   "partial select" in {
@@ -77,7 +83,7 @@ class ExpandNestedQueriesSpec extends Spec {
         .map(e => (e, 1))
         .nested
     ).string mustEqual
-      "SELECT e.camelCase, 1 AS _2 FROM (SELECT x.camel_case AS camelCase FROM entity x) AS e"
+      "SELECT x._1camelCase AS camelCase, x._2 FROM (SELECT e.camel_case AS _1camelCase, 1 AS _2 FROM entity e) AS x"
   }
 
   "expands nested tuple select" in {
@@ -108,7 +114,6 @@ class ExpandNestedQueriesSpec extends Spec {
         case (a, b) => (a.i, b.i)
       }
     }
-    println(testContext.run(q).string(true))
     testContext.run(q).string mustEqual
       "SELECT x03._1i AS _1, x03._2i AS _2 FROM (SELECT a.i AS _1i, b.i AS _2i FROM TestEntity a INNER JOIN TestEntity2 b ON a.i = b.i) AS x03"
   }
@@ -127,26 +132,27 @@ class ExpandNestedQueriesSpec extends Spec {
       qr1.join(qr1).on((a, b) => a.i == b.i).nested.map(both => both match { case (a, b) => Dual(a, b) }).nested
     }
     testContext.run(q).string(true).collapseSpace mustEqual
-      """SELECT
-        |  both._1s AS s,
-        |  both._1i AS i,
-        |  both._1l AS l,
-        |  both._1o AS o,
-        |  both._2s AS s,
-        |  both._2i AS i,
-        |  both._2l AS l,
-        |  both._2o AS o
+      """
+        |SELECT
+        |  x.tas AS s,
+        |  x.tai AS i,
+        |  x.tal AS l,
+        |  x.tao AS o,
+        |  x.tbs AS s,
+        |  x.tbi AS i,
+        |  x.tbl AS l,
+        |  x.tbo AS o
         |FROM
         |  (
         |    SELECT
-        |      x._1s,
-        |      x._1i,
-        |      x._1l,
-        |      x._1o,
-        |      x._2s,
-        |      x._2i,
-        |      x._2l,
-        |      x._2o
+        |      both._1s AS tas,
+        |      both._1i AS tai,
+        |      both._1l AS tal,
+        |      both._1o AS tao,
+        |      both._2s AS tbs,
+        |      both._2i AS tbi,
+        |      both._2l AS tbl,
+        |      both._2o AS tbo
         |    FROM
         |      (
         |        SELECT
@@ -161,8 +167,8 @@ class ExpandNestedQueriesSpec extends Spec {
         |        FROM
         |          TestEntity a
         |          INNER JOIN TestEntity b ON a.i = b.i
-        |      ) AS x
-        |  ) AS both
+        |      ) AS both
+        |  ) AS x
         |""".collapseSpace
   }
 
@@ -200,7 +206,7 @@ class ExpandNestedQueriesSpec extends Spec {
       val q = quote {
         query[Parent].map(p => p.emb).nested.map(e => (e.name, e.id))
       }
-      ctx.run(q).string mustEqual "SELECT p.embname AS _1, p.embid AS _2 FROM (SELECT x.name AS embname, x.id AS embid FROM Parent x) AS p"
+      ctx.run(q).string mustEqual "SELECT e.name AS _1, e.id AS _2 FROM (SELECT p.name, p.id FROM Parent p) AS e"
     }
 
     "can be propagated across distinct query with naming intact" in {

@@ -50,6 +50,9 @@ private[getquill] case class DemarcateExternalAliases(externalIdent: Ident) exte
     case GroupBy(q, i, b) =>
       GroupBy(apply(q), i, applyNonOverride(i)(b))
 
+    case GroupByMap(q, i, b, i1, b1) =>
+      GroupByMap(apply(q), i, applyNonOverride(i)(b), i1, applyNonOverride(i1)(b1))
+
     case DistinctOn(q, i, b) =>
       DistinctOn(apply(q), i, applyNonOverride(i)(b))
 

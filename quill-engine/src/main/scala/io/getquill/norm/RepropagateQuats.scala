@@ -1,19 +1,19 @@
 package io.getquill.norm
 
-import io.getquill.ast.{ Action, Assignment, AssignmentDual, Ast, ConcatMap, DistinctOn, Filter, FlatJoin, FlatMap, GroupBy, Ident, Infix, Insert, Join, Map, OnConflict, Property, Query, Returning, ReturningGenerated, SortBy, StatelessTransformer, Update }
+import io.getquill.ast.{ Action, Assignment, AssignmentDual, Ast, ConcatMap, DistinctOn, Filter, FlatJoin, FlatMap, GroupBy, GroupByMap, Ident, Infix, Insert, Join, Map, OnConflict, Property, Query, Returning, ReturningGenerated, SortBy, StatelessTransformer, Update }
 import io.getquill.quat.Quat
 import io.getquill.quat.Quat.Product
-import io.getquill.util.Interpolator
+import io.getquill.util.{ Interpolator, TraceConfig }
 import io.getquill.util.Messages.TraceType
 import io.getquill.quotation.QuatExceptionOps._
 
 import scala.collection.mutable
 
-object RepropagateQuats extends StatelessTransformer {
+class RepropagateQuats(traceConfig: TraceConfig) extends StatelessTransformer {
   import TypeBehavior.{ ReplaceWithReduction => RWR }
   val msg = "This is acceptable from dynamic queries."
 
-  val interp = new Interpolator(TraceType.RepropagateQuats, 1)
+  val interp = new Interpolator(TraceType.RepropagateQuats, traceConfig, 1)
   import interp._
 
   implicit class QuatExt(q: Quat) {
@@ -77,9 +77,16 @@ object RepropagateQuats extends StatelessTransformer {
       case Filter(a, b, c) => applyBody(a, b, c)(Filter)
       case Map(a, b, c) =>
         applyBody(a, b, c)(Map)
-      case FlatMap(a, b, c)    => applyBody(a, b, c)(FlatMap)
-      case ConcatMap(a, b, c)  => applyBody(a, b, c)(ConcatMap)
-      case GroupBy(a, b, c)    => applyBody(a, b, c)(GroupBy)
+      case FlatMap(a, b, c)   => applyBody(a, b, c)(FlatMap)
+      case ConcatMap(a, b, c) => applyBody(a, b, c)(ConcatMap)
+      case GroupBy(a, b, c)   => applyBody(a, b, c)(GroupBy)
+      case GroupByMap(a, iA1, c, iA2, e) =>
+        val ar = apply(a)
+        val iA1r = iA1.retypeQuatFrom(ar.quat)
+        val iA2r = iA2.retypeQuatFrom(ar.quat)
+        val cr = BetaReduction(c, RWR, iA1 -> iA1r)
+        val er = BetaReduction(e, RWR, iA2 -> iA2r)
+        trace"Repropagate ${a.quat.suppress(msg)} from $a into:" andReturn GroupByMap(ar, iA1r, cr, iA2r, er)
       case DistinctOn(a, b, c) => applyBody(a, b, c)(DistinctOn)
       case SortBy(a, b, c, d)  => applyBody(a, b, c)(SortBy(_, _, _, d))
       case Join(t, a, b, iA, iB, on) =>

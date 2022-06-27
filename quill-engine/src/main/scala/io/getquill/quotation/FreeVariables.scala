@@ -78,13 +78,19 @@ case class FreeVariables(state: State)
 
   override def apply(query: Query): (Query, StatefulTransformer[State]) =
     query match {
-      case q @ Filter(a, b, c)      => (q, free(a, b, c))
-      case q @ Map(a, b, c)         => (q, free(a, b, c))
-      case q @ DistinctOn(a, b, c)  => (q, free(a, b, c))
-      case q @ FlatMap(a, b, c)     => (q, free(a, b, c))
-      case q @ ConcatMap(a, b, c)   => (q, free(a, b, c))
-      case q @ SortBy(a, b, c, d)   => (q, free(a, b, c))
-      case q @ GroupBy(a, b, c)     => (q, free(a, b, c))
+      case q @ Filter(a, b, c)     => (q, free(a, b, c))
+      case q @ Map(a, b, c)        => (q, free(a, b, c))
+      case q @ DistinctOn(a, b, c) => (q, free(a, b, c))
+      case q @ FlatMap(a, b, c)    => (q, free(a, b, c))
+      case q @ ConcatMap(a, b, c)  => (q, free(a, b, c))
+      case q @ SortBy(a, b, c, d)  => (q, free(a, b, c))
+      case q @ GroupBy(a, b, c)    => (q, free(a, b, c))
+      case q @ GroupByMap(a, b, c, d, e) =>
+        // First search for free variables in the groupBy's `by` clause, then search for them in the `to` clause
+        // if any were found int he `by` clause, propogate them forward to the to-clause
+        val s1 = free(a, b, c)
+        val s2 = new FreeVariables(s1.state).free(a, d, e)
+        (q, s2)
       case q @ FlatJoin(t, a, b, c) => (q, free(a, b, c))
       case q @ Join(t, a, b, iA, iB, on) =>
         val (_, freeA) = apply(a)

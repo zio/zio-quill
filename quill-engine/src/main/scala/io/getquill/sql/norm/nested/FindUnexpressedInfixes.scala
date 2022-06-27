@@ -1,7 +1,7 @@
 package io.getquill.context.sql.norm.nested
 
 import io.getquill.context.sql.norm.nested.Elements._
-import io.getquill.util.Interpolator
+import io.getquill.util.{ Interpolator, TraceConfig }
 import io.getquill.util.Messages.TraceType.NestedQueryExpansion
 import io.getquill.ast._
 import io.getquill.context.sql.SelectValue
@@ -30,8 +30,8 @@ import io.getquill.context.sql.SelectValue
  * has been selected, we know that any infixes inside of it e.g. `p._2._1` (ordering `List(1,0)`)
  * does not need to be.
  */
-class FindUnexpressedInfixes(select: List[OrderedSelect]) {
-  val interp = new Interpolator(NestedQueryExpansion, 3)
+class FindUnexpressedInfixes(select: List[OrderedSelect], traceConfig: TraceConfig) {
+  val interp = new Interpolator(NestedQueryExpansion, traceConfig, 3)
   import interp._
 
   def apply(refs: List[OrderedSelect]) = {

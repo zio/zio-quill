@@ -117,7 +117,7 @@ trait Parsing extends ValueComputation with QuatMaking {
       }
     }
 
-    val interp = new Interpolator(TraceType.PatMatch, 1)
+    val interp = new Interpolator(TraceType.PatMatch, transpileConfig.traceConfig, 1)
     import interp._
 
     val reductionTuples = reductions(fields)
@@ -224,6 +224,17 @@ trait Parsing extends ValueComputation with QuatMaking {
 
     case q"$source.groupBy[$t](($alias) => $body)" if (is[DslQuery[Any]](source)) =>
       GroupBy(astParser(source), identParser(alias), astParser(body))
+    case q"$source.groupByMap[$t, $t1](($byAlias) => $byBody)(($mapAlias) => $mapBody)" if (is[DslQuery[Any]](source)) =>
+      GroupByMap(astParser(source), identParser(byAlias), astParser(byBody), identParser(mapAlias), astParser(mapBody))
+
+    case q"$pack.min[$t]($a)" =>
+      Aggregation(AggregationOperator.`min`, astParser(a))
+    case q"$pack.max[$t]($a)" =>
+      Aggregation(AggregationOperator.`max`, astParser(a))
+    case q"$pack.avg[$t]($a)($imp)" =>
+      Aggregation(AggregationOperator.`avg`, astParser(a))
+    case q"$pack.sum[$t]($a)($imp)" =>
+      Aggregation(AggregationOperator.`sum`, astParser(a))
 
     case q"$a.value[$t]" if (is[DslQuery[Any]](a))   => astParser(a)
     case q"$a.min[$t]" if (is[DslQuery[Any]](a))     => Aggregation(AggregationOperator.`min`, astParser(a))
@@ -414,7 +425,7 @@ trait Parsing extends ValueComputation with QuatMaking {
       // If there are actions inside the subtree, we need to do some additional sanitizations
       // of the variables so that their content will not collide with code that we have generated.
       if (CollectAst.byType[Action](subtree).nonEmpty)
-        AvoidAliasConflict.sanitizeVariables(subtree, dangerousVariables)
+        AvoidAliasConflict.sanitizeVariables(subtree, dangerousVariables, transpileConfig.traceConfig)
       else
         subtree
     }
@@ -992,7 +1003,7 @@ trait Parsing extends ValueComputation with QuatMaking {
     case q"$query.foreach[$t1, $t2](($alias) => $body)($f)" if (is[DslQuery[Any]](query)) =>
       // If there are actions inside the subtree, we need to do some additional sanitizations
       // of the variables so that their content will not collide with code that we have generated.
-      AvoidAliasConflict.sanitizeVariables(Foreach(astParser(query), identParser(alias), astParser(body)), dangerousVariables)
+      AvoidAliasConflict.sanitizeVariables(Foreach(astParser(query), identParser(alias), astParser(body)), dangerousVariables, transpileConfig.traceConfig)
   }
 
   /**

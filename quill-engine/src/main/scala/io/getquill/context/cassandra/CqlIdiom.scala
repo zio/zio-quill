@@ -9,7 +9,7 @@ import io.getquill.idiom.StatementInterpolator._
 import io.getquill.idiom.Statement
 import io.getquill.idiom.SetContainsToken
 import io.getquill.idiom.Token
-import io.getquill.norm.NormalizeCaching
+import io.getquill.norm.{ NormalizeCaching, TranspileConfig }
 import io.getquill.quat.Quat
 import io.getquill.util.Interleave
 
@@ -23,13 +23,15 @@ trait CqlIdiom extends Idiom {
 
   override def prepareForProbing(string: String) = string
 
-  override def translate(ast: Ast, topLevelQuat: Quat, executionType: ExecutionType)(implicit naming: NamingStrategy) = {
-    val normalizedAst = CqlNormalize(ast)
+  override def translate(ast: Ast, topLevelQuat: Quat, executionType: ExecutionType, transpileConfig: TranspileConfig)(implicit naming: NamingStrategy) = {
+    val cqlNormalize = new CqlNormalize(transpileConfig)
+    val normalizedAst = cqlNormalize(ast)
     (normalizedAst, stmt"${normalizedAst.token}", executionType)
   }
 
-  override def translateCached(ast: Ast, topLevelQuat: Quat, executionType: ExecutionType)(implicit naming: NamingStrategy) = {
-    val normalizedAst = NormalizeCaching(CqlNormalize.apply)(ast)
+  override def translateCached(ast: Ast, topLevelQuat: Quat, executionType: ExecutionType, transpileConfig: TranspileConfig)(implicit naming: NamingStrategy) = {
+    val cqlNormalize = new CqlNormalize(transpileConfig)
+    val normalizedAst = NormalizeCaching(cqlNormalize.apply)(ast)
     (normalizedAst, stmt"${normalizedAst.token}", executionType)
   }
 

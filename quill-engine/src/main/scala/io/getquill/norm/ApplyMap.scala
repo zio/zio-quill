@@ -2,8 +2,9 @@ package io.getquill.norm
 
 import io.getquill.ast._
 import io.getquill.quat.Quat
-import io.getquill.util.Interpolator
+import io.getquill.util.{ Interpolator, TraceConfig }
 import io.getquill.util.Messages.TraceType
+import io.getquill.sql.Common.ContainsImpurities
 
 /**
  * Notes for the conceptual examples below. Gin and Tonic were used as prototypical
@@ -18,9 +19,9 @@ import io.getquill.util.Messages.TraceType
  * Additionally Map(a,b,c).quat is the same as c.quat. The former
  * is used in most examples with DetachableMap
  */
-object ApplyMap {
+class ApplyMap(traceConfig: TraceConfig) {
 
-  val interp = new Interpolator(TraceType.ApplyMap, 3)
+  val interp = new Interpolator(TraceType.ApplyMap, traceConfig, 3)
   import interp._
 
   // Note, since the purpose of this beta reduction is to check isomophism types should not actually be
@@ -56,9 +57,25 @@ object ApplyMap {
       }
   }
 
+  // What kind of map's can't have things inside of them extracted.
+  // For example:
+  //   query[Person].map(p => p.name).filter(n => n == "Joe")
+  //   (Given by the roughly the AST: Filter(Map(query[Person],p,p.name),n,n == "Joe")
+  //   (whose query is highly inefficient: SELECT n.name FROM (SELECT p.name FROM Person) AS n WHERE n.name == 'Joe'
+  // ...can typically be replaced with:
+  //   query[Person].filter(p => p.name == "Joe").map(p => p.name)
+  //   (whose query is much better: SELECT p.name FROM Person where p.name == 'Joe')
+  // However if there's a groupBy after the Map or an aggregation e.g:
+  //   query[Person].map(p => (p.name, p.age)).groupBy(t => t._1)...
+  //   query[Person].map(p => max(p.age))...
+  // then you cannot do this re-arrangement. DetachableMap
+  // does the determination of which one can and cannot be re-arranged by returning None or Some
+  // for these cases respectively.
   object DetachableMap {
     def unapply(ast: Ast): Option[(Ast, Ident, Ast)] =
       ast match {
+        // Maps that contains
+        case Map(_, _, ContainsImpurities())    => None
         case Map(a: GroupBy, b, c)              => None
         case Map(a: DistinctOn, b, c)           => None
         case Map(a: FlatJoin, b, c)             => None // FlatJoin should always be surrounded by a Map
@@ -72,9 +89,10 @@ object ApplyMap {
     q match {
 
       case Map(a: GroupBy, b, c) if (b == c)    => None
+      case Map(a: GroupByMap, b, c) if (b == c) => None
       case Map(a: Nested, b, c) if (b == c)     => None
       case Map(a: FlatJoin, b, c) if (b == c)   => None // FlatJoin should always be surrounded by a Map
-      case Nested(DetachableMap(a: Join, b, c)) => None
+      case Nested(DetachableMap(a, b, c))       => None
 
       //  map(i => (i.i, i.l)).distinct.map(x => (x._1, x._2)) =>
       //    map(i => (i.i, i.l)).distinct
@@ -117,7 +135,7 @@ object ApplyMap {
         trace"ApplyMap inside sortBy+distinct for $q" andReturn Some(Distinct(Map(SortBy(a, b, er, f), b, c)))
 
       // === Conceptual Example ===
-      // Instead of transforming spirit into gin and the bottling the join, bottle the
+      // Instead of transforming spirit into gin and the bottling the gin, bottle the
       // spirit first, then have the spirit transform into gin inside of the bottles.
       //
       // spirits.map(spirit => ginifySpirit).groupBy(gin => bottleGin) =>
@@ -125,7 +143,7 @@ object ApplyMap {
 
       // a.map(b => c).groupBy(d => e) =>
       //    a.groupBy(b => e[d := c]).map(x => (x._1, x._2.map(b => c)))
-      // x._2.map(b => c).type == d.type
+      // where: x._2.map(b => c).type == d.type
       case GroupBy(DetachableMap(a, b, c), d, e) =>
         val er = BetaReduction(e, d -> c)
         val grp = GroupBy(a, b, er)
@@ -138,6 +156,23 @@ object ApplyMap {
         val x2 = Property(x, "_2")
         val body = Tuple(List(x1, Map(x2, b, c)))
         trace"ApplyMap inside groupBy for $q" andReturn Some(Map(grp, x, body))
+
+      // === Conceptual Example (same as for groupBy.map) ===
+      // Instead of transforming spirit into gin and the bottling the gin, bottle the
+      // spirit first, then have the spirit transform into gin inside of the bottles.
+      // (The only differnce between this and groupByMap is that we have two kinds of bottles: A and B)
+      //
+      // spirits.map(spirit => ginifySpirit).groupByMap(gin => bottleGinA)(gin => bottleGinB) =>
+      //    spirits.groupByMap(spirit => bottleGinA[gin := ginifySpirit])(spirit => bottleGinB[gin := ginifySpirit])
+
+      // a.map(b => c).groupByMap(d => e)(d => f) =>
+      //    a.groupByMap(b => e[d := c])(b => f[d := c])
+      // where d := d1
+      case GroupByMap(DetachableMap(a, b, c), d, e, d1, f) =>
+        val er = BetaReduction(e, d -> c)
+        val fr = BetaReduction(f, d1 -> c)
+        val grp = GroupByMap(a, b, er, b, fr)
+        trace"ApplyMap inside groupByMap for $q" andReturn Some(grp)
 
       // a.map(b => c).drop(d) =>
       //    a.drop(d).map(b => c)

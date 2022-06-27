@@ -6,12 +6,16 @@ import io.getquill.idiom.StatementInterpolator._
 import io.getquill.idiom.StringToken
 import io.getquill.{ Literal, Spec }
 import io.getquill.Ord
+import io.getquill.norm.TranspileConfig
 import io.getquill.quat.Quat
+import io.getquill.util.TraceConfig
 
 class OrientDBQuerySpec extends Spec {
 
   val mirrorContext = orientdb.mirrorContext
   import mirrorContext._
+
+  implicit val transpileConfig = TranspileConfig.Empty
 
   "map" - {
     "property" in {
@@ -194,7 +198,7 @@ class OrientDBQuerySpec extends Spec {
     }
     "query" in {
       val t = implicitly[Tokenizer[AstQuery]]
-      t.token(Entity("name", Nil, QEP)) mustBe SqlQuery(Entity("name", Nil, QEP)).token
+      t.token(Entity("name", Nil, QEP)) mustBe new SqlQueryApply(TraceConfig.Empty)(Entity("name", Nil, QEP)).token
     }
     "sql query" in {
       val t = implicitly[Tokenizer[SqlQuery]]

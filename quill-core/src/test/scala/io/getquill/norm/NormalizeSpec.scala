@@ -9,6 +9,8 @@ import io.getquill.testContext.unquote
 
 class NormalizeSpec extends Spec {
 
+  val normalize = new Normalize(TranspileConfig.Empty)
+
   "normalizes random-generated queries" - {
     val gen = new QueryGenerator(1)
     for (i <- (3 to 15)) {
@@ -16,7 +18,7 @@ class NormalizeSpec extends Spec {
         val query = gen(i)
         s"$i levels ($j) - $query" in {
           //println("=================== Normalizing Query ==================\n" + query + "\n" + "=== Full ===" + "\n" + Messages.qprint(query).render)
-          Normalize(query)
+          normalize(query)
           ()
         }
       }
@@ -30,6 +32,6 @@ class NormalizeSpec extends Spec {
     val n = quote {
       qr1.sortBy(t => t.i).flatMap(t => qr2.map(t1 => 1))
     }
-    Normalize(q.ast) mustEqual n.ast
+    normalize(q.ast) mustEqual n.ast
   }
 }

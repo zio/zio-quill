@@ -2,6 +2,8 @@ package io.getquill.context.sql.idiom
 
 import io.getquill.{ MirrorSqlDialectWithBooleanLiterals, Spec }
 import io.getquill.context.sql.testContext
+import io.getquill.norm.EnableTrace
+import io.getquill.util.Messages.TraceType
 
 class BooleanLiteralSupportSpec extends Spec {
 
@@ -81,28 +83,25 @@ class BooleanLiteralSupportSpec extends Spec {
       "map-clause" in {
         val q = quote {
           query[Ent].map(e => infix"${e.i} > 123".asCondition) //hello
-        }.dynamic
-        println(io.getquill.util.Messages.qprint(q.ast))
+        }
         ctx.run(q).string mustEqual
-          "SELECT e._1 FROM (SELECT CASE WHEN e.i > 123 THEN 1 ELSE 0 END AS _1 FROM Ent e) AS e"
+          "SELECT CASE WHEN e.i > 123 THEN 1 ELSE 0 END FROM Ent e"
       }
 
       "distinct map-clause" in {
         val q = quote {
           query[Ent].map(e => ("foo", infix"${e.i} > 123".asCondition)).distinct.map(r => ("baz", r._2))
-        }.dynamic
-        println(io.getquill.util.Messages.qprint(q.ast))
+        }
         ctx.run(q).string mustEqual
-          "SELECT 'baz' AS _1, e._2 FROM (SELECT DISTINCT e._1, e._2 FROM (SELECT 'foo' AS _1, CASE WHEN e.i > 123 THEN 1 ELSE 0 END AS _2 FROM Ent e) AS e) AS e"
+          "SELECT 'baz' AS _1, e._2 FROM (SELECT DISTINCT x._1, x._2 FROM (SELECT 'foo' AS _1, CASE WHEN e.i > 123 THEN 1 ELSE 0 END AS _2 FROM Ent e) AS x) AS e"
       }
 
       "distinct tuple map-clause" in {
         val q = quote {
-          query[Ent].map(e => ("foo", infix"${e.i} > 123".asCondition)).distinct //hellooooooo
-        }.dynamic
-        println(io.getquill.util.Messages.qprint(q.ast))
+          query[Ent].map(e => ("foo", infix"${e.i} > 123".asCondition)).distinct
+        }
         ctx.run(q).string mustEqual
-          "SELECT DISTINCT e._1, e._2 FROM (SELECT 'foo' AS _1, CASE WHEN e.i > 123 THEN 1 ELSE 0 END AS _2 FROM Ent e) AS e"
+          "SELECT DISTINCT x._1, x._2 FROM (SELECT 'foo' AS _1, CASE WHEN e.i > 123 THEN 1 ELSE 0 END AS _2 FROM Ent e) AS x"
       }
 
       "pure map-clause" in {
@@ -152,18 +151,18 @@ class BooleanLiteralSupportSpec extends Spec {
 
       "map-clause" in {
         val q = quote {
-          query[Ent].map(e => infix"SomeUdf(${e.i})".as[Boolean])
+          query[Ent].map(e => infix"SomeUdf(${e.i})".as[Int]).map(x => x + 1)
         }
         ctx.run(q).string mustEqual
-          "SELECT e._1 FROM (SELECT SomeUdf(e.i) AS _1 FROM Ent e) AS e"
+          "SELECT e.x + 1 FROM (SELECT SomeUdf(e.i) AS x FROM Ent e) AS e"
       }
 
       "pure map-clause" in {
         val q = quote {
-          query[Ent].map(e => infix"SomeUdf(${e.i})".pure.as[Boolean])
+          query[Ent].map(e => infix"SomeUdf(${e.i})".pure.as[Int]).map(x => x + 1)
         }
         ctx.run(q).string mustEqual
-          "SELECT SomeUdf(e.i) FROM Ent e"
+          "SELECT SomeUdf(e.i) + 1 FROM Ent e"
       }
     }
   }

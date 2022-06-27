@@ -18,21 +18,11 @@ trait NoActionAliases extends SqlIdiom {
     }
 
     def hideAssignmentAlias(assignment: Assignment) = {
-      import io.getquill.util.Messages.qprint
       val alias = assignment.alias
       val newAlias = Ident.Opinionated(alias.name, alias.quat, Visibility.Hidden)
       val newValue = BetaReduction(assignment.value, alias -> newAlias)
       val newProperty = BetaReduction(assignment.property, alias -> newAlias)
       val newAssignment = Assignment(newAlias, newProperty, newValue)
-
-      println(
-        s"""=============== HIDING ALIAS =========
-           |${qprint(assignment.alias)}
-           |IN
-           |${qprint(assignment)}
-           |RESULT
-           |${qprint(newAssignment)}""".stripMargin
-      )
       newAssignment.asInstanceOf[Assignment]
     }
 

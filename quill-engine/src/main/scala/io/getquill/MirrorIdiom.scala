@@ -6,7 +6,7 @@ import io.getquill.ast.{ Action => AstAction, Query => AstQuery, _ }
 import io.getquill.context.{ CanReturnClause, ExecutionType }
 import io.getquill.idiom.{ Idiom, SetContainsToken, Statement }
 import io.getquill.idiom.StatementInterpolator._
-import io.getquill.norm.{ Normalize, NormalizeCaching }
+import io.getquill.norm.{ Normalize, NormalizeCaching, TranspileConfig }
 import io.getquill.quat.Quat
 import io.getquill.util.Interleave
 
@@ -25,13 +25,15 @@ trait MirrorIdiomBase extends Idiom {
 
   override def liftingPlaceholder(index: Int): String = "?"
 
-  override def translateCached(ast: Ast, topLevelQuat: Quat, executionType: ExecutionType)(implicit naming: NamingStrategy): (Ast, Statement, ExecutionType) = {
-    val normalizedAst = NormalizeCaching(Normalize.apply)(ast)
+  override def translateCached(ast: Ast, topLevelQuat: Quat, executionType: ExecutionType, transpileConfig: TranspileConfig)(implicit naming: NamingStrategy): (Ast, Statement, ExecutionType) = {
+    val normalize = new Normalize(transpileConfig)
+    val normalizedAst = NormalizeCaching(normalize.apply)(ast)
     (normalizedAst, stmt"${normalizedAst.token}", executionType)
   }
 
-  override def translate(ast: Ast, topLevelQuat: Quat, executionType: ExecutionType)(implicit naming: NamingStrategy): (Ast, Statement, ExecutionType) = {
-    val normalizedAst = Normalize(ast)
+  override def translate(ast: Ast, topLevelQuat: Quat, executionType: ExecutionType, transpileConfig: TranspileConfig)(implicit naming: NamingStrategy): (Ast, Statement, ExecutionType) = {
+    val normalize = new Normalize(transpileConfig)
+    val normalizedAst = normalize(ast)
     (normalizedAst, stmt"${normalizedAst.token}", executionType)
   }
 
@@ -101,6 +103,9 @@ trait MirrorIdiomBase extends Idiom {
 
     case GroupBy(source, alias, body) =>
       stmt"${source.token}.groupBy(${alias.token} => ${body.token})"
+
+    case GroupByMap(source, byAlias, byBody, mapAlias, mapBody) =>
+      stmt"${source.token}.groupByMap(${byAlias.token} => ${byBody.token})(${mapAlias.token} => ${mapBody.token})"
 
     case Aggregation(op, ast) =>
       stmt"${scopedTokenizer(ast)}.${op.token}"
