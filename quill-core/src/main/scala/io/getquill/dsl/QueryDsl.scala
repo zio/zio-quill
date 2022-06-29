@@ -4,6 +4,9 @@ import scala.language.experimental.macros
 import io.getquill.quotation.NonQuotedException
 import io.getquill.EntityQuery
 
+import java.util.Date
+import java.sql.Timestamp
+import java.time.{ Instant, LocalDate, LocalDateTime, LocalTime, OffsetDateTime, OffsetTime, ZonedDateTime }
 import scala.annotation.compileTimeOnly
 
 private[getquill] trait QueryDsl {
@@ -27,7 +30,7 @@ private[getquill] trait QueryDsl {
     def filterIfDefined(f: A => Boolean): Boolean = NonQuotedException()
   }
 
-  object extras extends LowPriorityExtras {
+  object extras extends LowPriorityExtras with TemporalExtras {
     implicit class NumericOptionOps[A: Numeric](a: Option[A]) {
       def ===[B: Numeric](b: Option[B]): Boolean = a.exists(av => b.exists(bv => av == bv))
       def ===[B: Numeric](b: B): Boolean = a.exists(av => av == b)
@@ -39,6 +42,81 @@ private[getquill] trait QueryDsl {
       def ===[B: Numeric](b: B): Boolean = a == b
       def =!=[B: Numeric](b: Option[B]): Boolean = b.exists(bv => bv != a)
       def =!=[B: Numeric](b: B): Boolean = a != b
+    }
+  }
+
+  trait TemporalExtras {
+    implicit class DateOps(a: Date) {
+      def ===(b: Date): Boolean = a.getTime == b.getTime
+      def =!=(b: Date): Boolean = a.getTime != b.getTime
+      def >(b: Date): Boolean = a.getTime > b.getTime
+      def >=(b: Date): Boolean = a.getTime >= b.getTime
+      def <(b: Date): Boolean = a.getTime < b.getTime
+      def <=(b: Date): Boolean = a.getTime <= b.getTime
+    }
+    implicit class TimestampOps(a: Timestamp) {
+      def ===(b: Timestamp): Boolean = a.getTime == b.getTime
+      def =!=(b: Timestamp): Boolean = a.getTime != b.getTime
+      def >(b: Timestamp): Boolean = a.getTime > b.getTime
+      def >=(b: Timestamp): Boolean = a.getTime >= b.getTime
+      def <(b: Timestamp): Boolean = a.getTime < b.getTime
+      def <=(b: Timestamp): Boolean = a.getTime <= b.getTime
+    }
+    implicit class InstantOps(a: Instant) {
+      def ===(b: Instant): Boolean = a.equals(b)
+      def =!=(b: Instant): Boolean = !a.equals(b)
+      def >(b: Instant): Boolean = a.isAfter(b)
+      def >=(b: Instant): Boolean = a.equals(b) || a.isAfter(b)
+      def <(b: Instant): Boolean = a.isBefore(b)
+      def <=(b: Instant): Boolean = a.equals(b) || a.isBefore(b)
+    }
+    implicit class LocalDateOps(a: LocalDate) {
+      def ===(b: LocalDate): Boolean = a.equals(b)
+      def =!=(b: LocalDate): Boolean = !a.equals(b)
+      def >(b: LocalDate): Boolean = a.isAfter(b)
+      def >=(b: LocalDate): Boolean = a.equals(b) || a.isAfter(b)
+      def <(b: LocalDate): Boolean = a.isBefore(b)
+      def <=(b: LocalDate): Boolean = a.equals(b) || a.isBefore(b)
+    }
+    implicit class LocalDateTimeOps(a: LocalDateTime) {
+      def ===(b: LocalDateTime): Boolean = a.equals(b)
+      def =!=(b: LocalDateTime): Boolean = !a.equals(b)
+      def >(b: LocalDateTime): Boolean = a.isAfter(b)
+      def >=(b: LocalDateTime): Boolean = a.equals(b) || a.isAfter(b)
+      def <(b: LocalDateTime): Boolean = a.isBefore(b)
+      def <=(b: LocalDateTime): Boolean = a.equals(b) || a.isBefore(b)
+    }
+    implicit class LocalTimeOps(a: LocalTime) {
+      def ===(b: LocalTime): Boolean = a.equals(b)
+      def =!=(b: LocalTime): Boolean = !a.equals(b)
+      def >(b: LocalTime): Boolean = a.isAfter(b)
+      def >=(b: LocalTime): Boolean = a.equals(b) || a.isAfter(b)
+      def <(b: LocalTime): Boolean = a.isBefore(b)
+      def <=(b: LocalTime): Boolean = a.equals(b) || a.isBefore(b)
+    }
+    implicit class OffsetTimeOps(a: OffsetTime) {
+      def ===(b: OffsetTime): Boolean = a.equals(b)
+      def =!=(b: OffsetTime): Boolean = !a.equals(b)
+      def >(b: OffsetTime): Boolean = a.isAfter(b)
+      def >=(b: OffsetTime): Boolean = a.equals(b) || a.isAfter(b)
+      def <(b: OffsetTime): Boolean = a.isBefore(b)
+      def <=(b: OffsetTime): Boolean = a.equals(b) || a.isBefore(b)
+    }
+    implicit class OffsetDateTimeOps(a: OffsetDateTime) {
+      def ===(b: OffsetDateTime): Boolean = a.equals(b)
+      def =!=(b: OffsetDateTime): Boolean = !a.equals(b)
+      def >(b: OffsetDateTime): Boolean = a.isAfter(b)
+      def >=(b: OffsetDateTime): Boolean = a.equals(b) || a.isAfter(b)
+      def <(b: OffsetDateTime): Boolean = a.isBefore(b)
+      def <=(b: OffsetDateTime): Boolean = a.equals(b) || a.isBefore(b)
+    }
+    implicit class ZonedDateTimeOps(a: ZonedDateTime) {
+      def ===(b: ZonedDateTime): Boolean = a.equals(b)
+      def =!=(b: ZonedDateTime): Boolean = !a.equals(b)
+      def >(b: ZonedDateTime): Boolean = a.isAfter(b)
+      def >=(b: ZonedDateTime): Boolean = a.equals(b) || a.isAfter(b)
+      def <(b: ZonedDateTime): Boolean = a.isBefore(b)
+      def <=(b: ZonedDateTime): Boolean = a.equals(b) || a.isBefore(b)
     }
   }
 
