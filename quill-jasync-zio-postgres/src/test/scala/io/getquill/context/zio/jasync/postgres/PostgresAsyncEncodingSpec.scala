@@ -45,14 +45,14 @@ class PostgresAsyncEncodingSpec extends EncodingSpec with ZioSpec {
     "numeric" in {
       runSyncUnsafe(testContext.run(liftQuery(insertValues).foreach(e => insert(e))))
       case class EncodingTestEntity(v1: Int)
-      val e = intercept[FiberFailure] {
+      val e = intercept[IllegalStateException] {
         runSyncUnsafe(testContext.run(query[EncodingTestEntity]))
       }
     }
     "non-numeric" in {
       runSyncUnsafe(testContext.run(liftQuery(insertValues).foreach(e => insert(e))))
       case class EncodingTestEntity(v1: Date)
-      val e = intercept[FiberFailure] {
+      val e = intercept[IllegalStateException] {
         runSyncUnsafe(testContext.run(query[EncodingTestEntity]))
       }
     }

@@ -1,13 +1,12 @@
 package io.getquill.sqlserver
 
 import io.getquill.ZioSpec
-import io.getquill.Prefix
+
 import io.getquill.context.sql.ProductSpec
 import zio.ZIO
 
 class ProductJdbcSpec extends ProductSpec with ZioSpec {
 
-  override def prefix: Prefix = Prefix("testSqlServerDB")
   val context = testContext
   import testContext._
 

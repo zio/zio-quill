@@ -1,6 +1,6 @@
 package io.getquill.context.qzio
 
-import zio.{ IO, ZIO }
+import zio.{ IO, Tag, ZEnvironment, ZIO }
 
 /**
  * Use to provide `run(myQuery)` calls with a context implicitly saving the need to provide things multiple times.
@@ -27,7 +27,7 @@ import zio.{ IO, ZIO }
  * {{{
  *   case class MyQueryService(cs: CassandraZioSession) {
  *     import Ctx._
- *     implicit val env = Implicit(Has(cs))
+ *     implicit val env = Implicit(cs)
  *
  *     def joes = Ctx.run { query[Person].filter(p => p.name == "Joe") }.implicitly
  *     def jills = Ctx.run { query[Person].filter(p => p.name == "Jill") }.implicitly
@@ -41,6 +41,6 @@ object ImplicitSyntax {
   final case class Implicit[R](env: R)
 
   implicit final class ImplicitSyntaxOps[R, E, A](private val self: ZIO[R, E, A]) extends AnyVal {
-    def implicitly(implicit r: Implicit[R]): IO[E, A] = self.provide(r.env)
+    def implicitly(implicit r: Implicit[R], tag: Tag[R]): IO[E, A] = self.provideEnvironment(ZEnvironment(r.env))
   }
 }

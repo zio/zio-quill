@@ -2,11 +2,13 @@ package io.getquill
 
 import io.getquill.context.ZioJdbc._
 import io.getquill.context.jdbc.ResultSetExtractor
+import io.getquill.context.qzio.ImplicitSyntax.Implicit
 import io.getquill.context.sql.ProductSpec
 import org.scalactic.Equality
-import zio.{ Has, Task, ZIO }
+import zio.{ Runtime, ZEnvironment, ZIO }
 
 import java.sql.{ Connection, PreparedStatement, ResultSet }
+import javax.sql.DataSource
 
 trait PrepareZioJdbcSpecBase extends ProductSpec with ZioSpec {
 
@@ -22,30 +24,28 @@ trait PrepareZioJdbcSpecBase extends ProductSpec with ZioSpec {
   def withOrderedIds(products: List[Product]) =
     products.zipWithIndex.map { case (product, id) => product.copy(id = id.toLong + 1) }
 
-  def singleInsert(prep: QCIO[PreparedStatement]) = {
+  def singleInsert(prep: QCIO[PreparedStatement])(implicit runtime: Implicit[Runtime.Scoped[DataSource]]) = {
     prep.flatMap(stmt =>
-      Task(stmt).bracketAuto { stmt => Task(stmt.execute()) }).onDataSource.provide(Has(pool)).runSyncUnsafe()
+      ZIO.attempt(stmt).acquireReleaseWithAuto { stmt => ZIO.attempt(stmt.execute()) }).onDataSource.runSyncUnsafe()
   }
 
-  def batchInsert(prep: QCIO[List[PreparedStatement]]) = {
+  def batchInsert(prep: QCIO[List[PreparedStatement]])(implicit runtime: Implicit[Runtime.Scoped[DataSource]]) =
     prep.flatMap(stmts =>
       ZIO.collectAll(
         stmts.map(stmt =>
-          Task(stmt).bracketAuto { stmt => Task(stmt.execute()) })
-      )).onDataSource.provide(Has(pool)).runSyncUnsafe()
-  }
+          ZIO.attempt(stmt).acquireReleaseWithAuto { stmt => ZIO.attempt(stmt.execute()) })
+      )).onDataSource.runSyncUnsafe()
 
-  def extractResults[T](prepareStatement: QCIO[PreparedStatement])(extractor: (ResultSet, Connection) => T) = {
+  def extractResults[T](prepareStatement: QCIO[PreparedStatement])(extractor: (ResultSet, Connection) => T)(implicit runtime: Implicit[Runtime.Scoped[DataSource]]) =
     (for {
       conn <- ZIO.service[Connection]
-      result <- prepareStatement.provide(Has(conn)).bracketAuto { stmt =>
-        Task(stmt.executeQuery()).bracketAuto { rs =>
-          Task(ResultSetExtractor(rs, stmt.getConnection, extractor))
+      result <- prepareStatement.provideEnvironment(ZEnvironment(conn)).acquireReleaseWithAuto { stmt =>
+        ZIO.attempt(stmt.executeQuery()).acquireReleaseWithAuto { rs =>
+          ZIO.attempt(ResultSetExtractor(rs, stmt.getConnection, extractor))
         }
       }
-    } yield result).onDataSource.provide(Has(pool)).runSyncUnsafe()
-  }
+    } yield result).onDataSource.runSyncUnsafe()
 
-  def extractProducts(prep: QCIO[PreparedStatement]) =
+  def extractProducts(prep: QCIO[PreparedStatement])(implicit runtime: Implicit[Runtime.Scoped[DataSource]]) =
     extractResults(prep)(productExtractor)
 }
