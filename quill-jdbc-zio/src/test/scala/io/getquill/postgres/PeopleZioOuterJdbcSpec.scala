@@ -2,7 +2,7 @@ package io.getquill.postgres
 
 import io.getquill.util.LoadConfig
 import io.getquill.{ JdbcContextConfig, Literal, PostgresZioJdbcContext, Spec }
-import zio.ZEnvironment
+import zio.{ Unsafe, ZEnvironment, Runtime }
 
 class PeopleZioOuterJdbcSpec extends Spec {
   val testContext = new PostgresZioJdbcContext(Literal)
@@ -16,7 +16,9 @@ class PeopleZioOuterJdbcSpec extends Spec {
       query[Person].filter(p => p.name == "Bert")
     }
     val exec = testContext.run(q).provideEnvironment(ZEnvironment(ds))
-    println(zio.Runtime.default.unsafeRunSync(exec))
+    println(Unsafe.unsafe { implicit u =>
+      Runtime.default.unsafe.run(exec).getOrThrow()
+    })
   }
 
   "test translate" in {
@@ -25,6 +27,8 @@ class PeopleZioOuterJdbcSpec extends Spec {
     }
     val a = testContext.translate(q)
     val exec = a.provideEnvironment(ZEnvironment(ds))
-    println(zio.Runtime.default.unsafeRunSync(exec))
+    println(Unsafe.unsafe { implicit u =>
+      Runtime.default.unsafe.run(exec).getOrThrow()
+    })
   }
 }

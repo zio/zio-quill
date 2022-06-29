@@ -3,11 +3,10 @@ package io.getquill.postgres
 import java.util.UUID
 import io.getquill.{ JdbcContextConfig, Literal, PostgresZioJdbcContext, ZioSpec }
 import io.getquill.context.sql.ProductSpec
-
 import io.getquill.util.LoadConfig
 import io.getquill.context.ZioJdbc._
 import io.getquill.context.qzio.ImplicitSyntax.Implicit
-import zio.Runtime
+import zio.{ Runtime, Unsafe }
 
 import scala.util.Random
 
@@ -27,24 +26,27 @@ class ConnectionLeakTest extends ProductSpec with ZioSpec {
 
   "insert and select without leaking" in {
     val result =
-      Runtime.default.unsafeRun(context.underlying.transaction {
-        import context.underlying._
-        for {
-          _ <- context.underlying.run {
-            quote {
-              query[Product].insertValue(
-                lift(Product(1, UUID.randomUUID().toString, Random.nextLong()))
-              )
+      Unsafe.unsafe { implicit u =>
+        Runtime.default.unsafe.run(context.underlying.transaction {
+          import context.underlying._
+          for {
+            _ <- context.underlying.run {
+              quote {
+                query[Product].insertValue(
+                  lift(Product(1, UUID.randomUUID().toString, Random.nextLong()))
+                )
+              }
             }
-          }
-          result <- context.underlying.run {
-            query[Product].filter(p => query[Product].map(_.id).max.exists(_ == p.id))
-          }
-        } yield (result)
+            result <- context.underlying.run {
+              query[Product].filter(p => query[Product].map(_.id).max.exists(_ == p.id))
+            }
+          } yield (result)
+        }
+          .map(_.headOption.map(_.id))
+          .onDataSource
+          .provide(pool.env))
+          .getOrThrow()
       }
-        .map(_.headOption.map(_.id))
-        .onDataSource
-        .provide(pool.env))
 
     Thread.sleep(2000)
 

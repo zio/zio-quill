@@ -7,7 +7,7 @@ import io.getquill.context._
 import io.getquill.{ NamingStrategy, ReturnAction }
 import zio.Exit.{ Failure, Success }
 import zio.stream.ZStream
-import zio.{ FiberRef, Runtime, Scope, ZEnvironment, ZIO }
+import zio.{ FiberRef, Runtime, Scope, Unsafe, ZEnvironment, ZIO }
 
 import java.sql.{ Array => _, _ }
 import javax.sql.DataSource
@@ -71,7 +71,9 @@ abstract class ZioJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] ext
   override type Session = Connection
 
   val currentConnection: FiberRef[Option[Connection]] =
-    Runtime.default.unsafeRun(zio.Scope.global.extend(FiberRef.make(Option.empty[java.sql.Connection])))
+    Unsafe.unsafe { implicit u =>
+      Runtime.default.unsafe.run(zio.Scope.global.extend(FiberRef.make(Option.empty[java.sql.Connection]))).getOrThrow()
+    }
 
   val underlying: ZioJdbcUnderlyingContext[Dialect, Naming]
 

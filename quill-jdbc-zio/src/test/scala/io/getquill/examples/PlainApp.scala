@@ -2,7 +2,7 @@ package io.getquill.examples
 
 import io.getquill.{ Literal, PostgresZioJdbcContext }
 import io.getquill.context.ZioJdbc._
-import zio.Runtime
+import zio.{ Runtime, Unsafe }
 
 object PlainApp {
 
@@ -22,7 +22,9 @@ object PlainApp {
         .tap(result => zio.ZIO.attempt(println(result.toString)))
         .provideLayer(zioDS)
 
-    Runtime.default.unsafeRun(qzio)
+    Unsafe.unsafe { implicit u =>
+      Runtime.default.unsafe.run(qzio).getOrThrow()
+    }
     ()
   }
 }

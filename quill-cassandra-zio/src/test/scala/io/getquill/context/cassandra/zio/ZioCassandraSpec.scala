@@ -2,7 +2,7 @@ package io.getquill.context.cassandra.zio
 
 import io.getquill.util.LoadConfig
 import io.getquill.{ CassandraContextConfig, CassandraZioSession, Spec }
-import zio.{ Runtime, ZEnvironment, ZIO }
+import zio.{ Runtime, Unsafe, ZEnvironment, ZIO }
 import zio.stream.{ ZSink, ZStream }
 
 trait ZioCassandraSpec extends Spec {
@@ -24,10 +24,14 @@ trait ZioCassandraSpec extends Spec {
     stream.run(ZSink.collectAll).map(_.toList)
 
   def result[T](stream: ZStream[CassandraZioSession, Throwable, T]): List[T] =
-    Runtime.default.unsafeRun(stream.run(ZSink.collectAll).map(_.toList).provideEnvironment(ZEnvironment(pool)))
+    Unsafe.unsafe { implicit u =>
+      Runtime.default.unsafe.run(stream.run(ZSink.collectAll).map(_.toList).provideEnvironment(ZEnvironment(pool))).getOrThrow()
+    }
 
   def result[T](qzio: ZIO[CassandraZioSession, Throwable, T]): T =
-    Runtime.default.unsafeRun(qzio.provideEnvironment(ZEnvironment(pool)))
+    Unsafe.unsafe { implicit u =>
+      Runtime.default.unsafe.run(qzio.provideEnvironment(ZEnvironment(pool))).getOrThrow()
+    }
 
   implicit class ZStreamTestExt[T](stream: ZStream[CassandraZioSession, Throwable, T]) {
     def runSyncUnsafe() = result[T](stream)

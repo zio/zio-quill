@@ -4,7 +4,7 @@ import io.getquill.Spec
 import io.getquill.context.zio.ZioJAsyncConnection
 import org.scalatest.BeforeAndAfterAll
 import zio.stream.{ ZSink, ZStream }
-import zio.{ Runtime, ZIO }
+import zio.{ Runtime, Unsafe, ZIO }
 
 trait ZioSpec extends Spec with BeforeAndAfterAll {
 
@@ -14,14 +14,22 @@ trait ZioSpec extends Spec with BeforeAndAfterAll {
   def accumulate[T](stream: ZStream[ZioJAsyncConnection, Throwable, T]): ZIO[ZioJAsyncConnection, Throwable, List[T]] =
     stream.run(ZSink.collectAll).map(_.toList)
 
-  def collect[T](stream: ZStream[ZioJAsyncConnection, Throwable, T]): List[T] =
-    Runtime.default.unsafeRun(stream.run(ZSink.collectAll).map(_.toList).provideLayer(testContext.layer))
+  def collect[T](stream: ZStream[ZioJAsyncConnection, Throwable, T]): List[T] = {
+    Unsafe.unsafe { implicit u =>
+      Runtime.default.unsafe.run(stream.run(ZSink.collectAll).map(_.toList).provideLayer(testContext.layer)).getOrThrow()
+    }
+  }
 
   def runSyncUnsafe[T](qzio: ZIO[ZioJAsyncConnection, Throwable, T]): T =
-    Runtime.default.unsafeRun(qzio.provideLayer(testContext.layer))
+    Unsafe.unsafe { implicit u =>
+      Runtime.default.unsafe.run(qzio.provideLayer(testContext.layer)).getOrThrow()
+    }
 
   implicit class ZioAnyOps[T](qzio: ZIO[Any, Throwable, T]) {
-    def runSyncUnsafe() = Runtime.default.unsafeRun(qzio)
+    def runSyncUnsafe() =
+      Unsafe.unsafe { implicit u =>
+        Runtime.default.unsafe.run(qzio).getOrThrow()
+      }
   }
 
   implicit class ZStreamTestExt[T](stream: ZStream[ZioJAsyncConnection, Throwable, T]) {
