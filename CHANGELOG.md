@@ -1,3 +1,7 @@
+# 4.0.0
+
+- [Bump to ZIO 2.0.0 Release Version](https://github.com/zio/zio-quill/pull/2511)
+
 # 3.19.0
 
 - [Implementing insert/update/delete.returningMany](https://github.com/zio/zio-quill/pull/2509)
