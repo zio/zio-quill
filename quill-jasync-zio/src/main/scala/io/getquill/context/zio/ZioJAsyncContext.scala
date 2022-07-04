@@ -63,7 +63,7 @@ abstract class ZioJAsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: Concret
   def probe(sql: String): Try[_] =
     Try(()) //need to address that
 
-  def transaction[T](action: Result[T]): RIO[ZioJAsyncConnection, T] = {
+  def transaction[R <: ZioJAsyncConnection, T](action: RIO[R, T]): RIO[R, T] = {
     ZIO.environmentWithZIO[ZioJAsyncConnection](_.get.transaction(action))
   }
 
