@@ -1,17 +1,17 @@
 package io.getquill.postgres
 
-import io.getquill.{ JdbcContextConfig, PeopleZioSpec, Prefix }
+import io.getquill.{ JdbcContextConfig, PeopleZioSpec }
 
 import java.io.Closeable
 import javax.sql.DataSource
 import io.getquill.context.qzio.ImplicitSyntax._
 import io.getquill.util.LoadConfig
-import zio.{ Has, Task, ZManaged }
+import zio.ZIO
 
 class ImplicitEnvPatternSpec extends PeopleZioSpec {
 
   // Need to specify prefix to use for the setup
-  override def prefix: Prefix = Prefix("testPostgresDB")
+
   val context = testContext
   import testContext._
 
@@ -28,7 +28,7 @@ class ImplicitEnvPatternSpec extends PeopleZioSpec {
   }
 
   case class MyService(ds: DataSource with Closeable) {
-    implicit val env = Implicit(Has(ds))
+    implicit val env = Implicit(ds)
 
     def alexes = testContext.run(query[Person].filter(p => p.name == "Alex"))
     def berts = testContext.run(query[Person].filter(p => p.name == "Bert"))
@@ -39,13 +39,15 @@ class ImplicitEnvPatternSpec extends PeopleZioSpec {
 
   "dataSource based context should fetch results" in {
     val (alexes, berts, coras) =
-      ZManaged.fromAutoCloseable(Task(makeDataSource())).use { ds =>
-        for {
-          svc <- Task(MyService(ds))
-          alexes <- svc.alexes
-          berts <- svc.berts
-          coras <- svc.coras
-        } yield (alexes, berts, coras)
+      ZIO.scoped {
+        ZIO.fromAutoCloseable(ZIO.attempt(makeDataSource())).flatMap { ds =>
+          for {
+            svc <- ZIO.attempt(MyService(ds))
+            alexes <- svc.alexes
+            berts <- svc.berts
+            coras <- svc.coras
+          } yield (alexes, berts, coras)
+        }
       }.runSyncUnsafe()
 
     alexes must contain theSameElementsAs (peopleEntries.filter(_.name == "Alex"))

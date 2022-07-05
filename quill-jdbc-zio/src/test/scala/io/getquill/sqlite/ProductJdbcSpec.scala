@@ -1,13 +1,12 @@
 package io.getquill.sqlite
 
 import io.getquill.ZioSpec
-import io.getquill.Prefix
+
 import io.getquill.context.sql.ProductSpec
 import zio.ZIO
 
 class ProductJdbcSpec extends ProductSpec with ZioSpec {
 
-  def prefix = Prefix("testSqliteDB")
   val context = testContext
   import testContext._
 

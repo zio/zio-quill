@@ -117,7 +117,7 @@ class ArrayAsyncEncodingSpec extends ArrayEncodingBaseSpec with ZioSpec {
     runSyncUnsafe(context.run(realEntity.insertValue(lift(insertValue))))
 
     case class EncodingTestEntity(v1: List[String])
-    intercept[FiberFailure](runSyncUnsafe(context.run(query[EncodingTestEntity])))
+    intercept[IllegalStateException](runSyncUnsafe(context.run(query[EncodingTestEntity])))
   }
 
   override protected def beforeEach(): Unit = {

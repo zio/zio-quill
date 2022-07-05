@@ -3,7 +3,6 @@ package io.getquill.examples
 import io.getquill._
 import io.getquill.context.ZioJdbc._
 import zio._
-import zio.magic._
 import javax.sql.DataSource
 
 case class Person(name: String, age: Int)
@@ -20,20 +19,19 @@ object DataService {
 }
 
 object DataServiceLive {
-  val layer = (DataServiceLive.apply _).toLayer
+  val layer = ZLayer.fromFunction(DataServiceLive.apply _)
 }
 
 final case class DataServiceLive(dataSource: DataSource) {
   import QuillContext._
-  val env = Has(dataSource)
-  def getPeople = run(query[Person]).provide(env)
-  def getPeopleOlderThan(age: Int) = run(query[Person].filter(p => p.age > lift(age))).provide(env)
+  def getPeople = run(query[Person]).provideEnvironment(ZEnvironment(dataSource))
+  def getPeopleOlderThan(age: Int) = run(query[Person].filter(p => p.age > lift(age))).provideEnvironment(ZEnvironment(dataSource))
 }
 
-object ZioAppExample extends App {
-  override def run(args: List[String]) =
+object ZioAppExample extends ZIOAppDefault {
+  override def run =
     DataService.getPeople
-      .inject(QuillContext.dataSourceLayer, DataServiceLive.layer)
+      .provide(QuillContext.dataSourceLayer, DataServiceLive.layer)
       .debug("Results")
       .exitCode
 }

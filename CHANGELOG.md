@@ -1,3 +1,7 @@
+# 4.0.0
+
+- [Bump to ZIO 2.0.0 Release Version](https://github.com/zio/zio-quill/pull/2511)
+
 # 3.19.0
 
 - [Implementing insert/update/delete.returningMany](https://github.com/zio/zio-quill/pull/2509)
@@ -220,7 +224,7 @@ memorialize this pattern.
   }
 
   MyPostgresContext.run(people).onDataSource
-    .tap(result => putStrLn(result.toString))
+    .tap(result => printLine(result.toString))
     .provideCustomLayer(zioDs)
   ```
   In 3.11.0 simply remove the `.onDataSource` in order to use the new context.
@@ -233,7 +237,7 @@ memorialize this pattern.
   }
 
   MyPostgresContext.run(people)  // Don't need `.onDataSource` anymore
-    .tap(result => putStrLn(result.toString))
+    .tap(result => printLine(result.toString))
     .provideCustomLayer(zioDs)
   ```
 
@@ -250,7 +254,7 @@ memorialize this pattern.
 
 
   MyPostgresContext.run(people)
-    .tap(result => putStrLn(result.toString))
+    .tap(result => printLine(result.toString))
     .provideCustomLayer(zioConn)
   ```
   To this:
@@ -262,7 +266,7 @@ memorialize this pattern.
     Task(hikariDataSource).toLayer // Don't need `>>> DataSourceLayer.live` anymore!
 
   MyPostgresContext.run(people)
-    .tap(result => putStrLn(result.toString))
+    .tap(result => printLine(result.toString))
     .provideCustomLayer(zioConn)
   ```
 
