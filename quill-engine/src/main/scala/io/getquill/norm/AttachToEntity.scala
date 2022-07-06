@@ -71,7 +71,7 @@ object AttachToEntity {
       case SortBy(IsEntity(a), b, c, d) => SortBy(f(a, b), b, c, d)
       case DistinctOn(IsEntity(a), b, c) => DistinctOn(f(a, b), b, c)
 
-      case Map(_: GroupBy, _, _) | _: Union | _: UnionAll | _: Join | _: FlatJoin => f(q, alias.getOrElse(Ident("x", q.quat)))
+      case Map(_: GroupBy, _, _) | _: GroupByMap | _: Union | _: UnionAll | _: Join | _: FlatJoin => f(q, alias.getOrElse(Ident("x", q.quat)))
 
       case Map(a: Query, b, c) => Map(applyWithId(f, Some(b), nextId + 1)(a), b, c)
       case FlatMap(a: Query, b, c) => FlatMap(applyWithId(f, Some(b), nextId + 1)(a), b, c)

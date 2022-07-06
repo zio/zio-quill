@@ -27,6 +27,15 @@ private[getquill] trait QueryDsl {
     def filterIfDefined(f: A => Boolean): Boolean = NonQuotedException()
   }
 
+  def max[A](a: A): A = NonQuotedException()
+  def min[A](a: A): A = NonQuotedException()
+  def avg[A](a: A)(implicit n: Numeric[A]): BigDecimal = NonQuotedException()
+  def sum[A](a: A)(implicit n: Numeric[A]): A = NonQuotedException()
+  // Don't need the min/max case for `sum` because A will be Option[MyColumn] when needed
+  // TODO Need to test these
+  def avg[A](a: Option[A])(implicit n: Numeric[A]): Option[BigDecimal] = NonQuotedException()
+  def sum[A](a: Option[A])(implicit n: Numeric[A]): Option[A] = NonQuotedException()
+
   object extras extends LowPriorityExtras {
     implicit class NumericOptionOps[A: Numeric](a: Option[A]) {
       def ===[B: Numeric](b: Option[B]): Boolean = a.exists(av => b.exists(bv => av == bv))

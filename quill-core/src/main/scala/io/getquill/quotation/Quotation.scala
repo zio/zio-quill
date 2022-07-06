@@ -22,7 +22,7 @@ trait Quotation extends Parsing with ReifyLiftings {
   private val quoted = TermName("quoted")
 
   def quote[T](body: Tree)(implicit t: WeakTypeTag[T]) = {
-    val interp = new Interpolator(TraceType.Quotation, 1)
+    val interp = new Interpolator(TraceType.Quotation, transpileConfig.traceConfig, 1)
     import interp._
 
     val ast = BetaReduction(trace"Parsing Quotation Body" andReturn (astParser(body)))

@@ -15,11 +15,11 @@ import io.getquill.util.Messages.TraceType
 case class ScalarValueLifting[T, U](value: T, encoder: EncodingDsl#Encoder[U])
 case class CaseClassValueLifting[T](value: T)
 
-trait ReifyLiftings extends QuatMaking {
+trait ReifyLiftings extends QuatMaking with TranspileConfigSummoning {
   val c: MacroContext
   import c.universe.{ Ident => _, _ }
 
-  val interp = new Interpolator(TraceType.ReifyLiftings, 1)
+  val interp = new Interpolator(TraceType.ReifyLiftings, transpileConfig.traceConfig, 1)
   import interp._
 
   private val liftings = TermName("liftings")
@@ -139,7 +139,8 @@ trait ReifyLiftings extends QuatMaking {
       case (ast, _) =>
         trace"ReifyLiftings Original AST: ${ast}".andLog()
         val reduced = trace"ReifyLiftings BetaReduction: " andReturn BetaReduction(ast, TypeBehavior.ReplaceWithReduction)
-        val retyped = trace"ReifyLiftings Retyped: " andReturn RepropagateQuats(reduced)
+        val RepropagateQuatsPhase = new RepropagateQuats(transpileConfig.traceConfig)
+        val retyped = trace"ReifyLiftings Retyped: " andReturn RepropagateQuatsPhase(reduced)
         // reify again with beta reduction, given that the first pass will remove `QuotedReference`s
         ReifyLiftings(Map.empty)(retyped) match {
           case (ast, transformer) =>

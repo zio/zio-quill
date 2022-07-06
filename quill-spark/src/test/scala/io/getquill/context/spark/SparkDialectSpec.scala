@@ -3,8 +3,9 @@ package io.getquill.context.spark
 import io.getquill.Spec
 import io.getquill.Literal
 import io.getquill.context.ExecutionType
-import io.getquill.norm.SheathLeafClauses
+import io.getquill.norm.{ SheathLeafClauses, SheathLeafClausesApply, TranspileConfig }
 import io.getquill.quat.Quat
+import io.getquill.util.TraceConfig
 
 class SparkDialectSpec extends Spec {
 
@@ -22,13 +23,13 @@ class SparkDialectSpec extends Spec {
   "translate" - {
     "query" in {
       val ast = query[Test].ast
-      val (norm, stmt, _) = SparkDialect.translate(ast, Quat.Unknown, ExecutionType.Unknown)(Literal)
+      val (norm, stmt, _) = SparkDialect.translate(ast, Quat.Unknown, ExecutionType.Unknown, TranspileConfig.Empty)(Literal)
       norm mustEqual ast
       stmt.toString mustEqual "SELECT x.i AS i, x.j AS j, x.s AS s FROM Test x"
     }
     "non-query" in {
       val ast = infix"SELECT 1".ast
-      val (norm, stmt, _) = SparkDialect.translate(ast, Quat.Unknown, ExecutionType.Unknown)(Literal)
+      val (norm, stmt, _) = SparkDialect.translate(ast, Quat.Unknown, ExecutionType.Unknown, TranspileConfig.Empty)(Literal)
       norm mustEqual ast
       stmt.toString mustEqual "SELECT 1"
     }
@@ -36,7 +37,7 @@ class SparkDialectSpec extends Spec {
 
   "escapes ' " in {
     val ast = query[Test].map(t => "test'").ast
-    val (norm, stmt, _) = SparkDialect.translate(ast, Quat.Unknown, ExecutionType.Unknown)(Literal)
+    val (norm, stmt, _) = SparkDialect.translate(ast, Quat.Unknown, ExecutionType.Unknown, TranspileConfig.Empty)(Literal)
     norm mustEqual ast
     stmt.toString mustEqual "SELECT 'test\\'' AS x FROM Test t"
   }
@@ -46,7 +47,7 @@ class SparkDialectSpec extends Spec {
     case class Inner(i: Int)
     case class Outer(inner: Inner)
     val ast = query[Outer].filter(t => t.inner.i == 1).ast
-    val (norm, stmt, _) = SparkDialect.translate(ast, Quat.Unknown, ExecutionType.Unknown)(Literal)
+    val (norm, stmt, _) = SparkDialect.translate(ast, Quat.Unknown, ExecutionType.Unknown, TranspileConfig.Empty)(Literal)
     norm mustEqual ast
     stmt.toString mustEqual "SELECT t.inner AS inner FROM Outer t WHERE t.inner.i = 1"
   }
@@ -54,14 +55,14 @@ class SparkDialectSpec extends Spec {
   // More comprehensive test in MiscQueriesSpec
   "nested tuple" in {
     val ast = query[Test].map(t => ((t.i, t.j), t.i + 1)).ast
-    val (norm, stmt, _) = SparkDialect.translate(ast, Quat.Unknown, ExecutionType.Unknown)(Literal)
+    val (norm, stmt, _) = SparkDialect.translate(ast, Quat.Unknown, ExecutionType.Unknown, TranspileConfig.Empty)(Literal)
     norm mustEqual ast
     stmt.toString mustEqual "SELECT struct(t.i AS _1, t.j AS _2) AS _1, t.i + 1 AS _2 FROM Test t"
   }
 
   "concatMap" in {
     val ast = query[Test].concatMap(t => t.s.split(" ")).ast
-    val (norm, stmt, _) = SparkDialect.translate(ast, Quat.Unknown, ExecutionType.Unknown)(Literal)
+    val (norm, stmt, _) = SparkDialect.translate(ast, Quat.Unknown, ExecutionType.Unknown, TranspileConfig.Empty)(Literal)
     norm mustEqual ast
     stmt.toString mustEqual "SELECT explode(SPLIT(t.s, ' ')) AS x FROM Test t"
   }
@@ -69,21 +70,21 @@ class SparkDialectSpec extends Spec {
   // More comprehensive test in MiscQueriesSpec
   "concatMap with filter" in {
     val ast = query[Test].concatMap(t => t.s.split(" ")).filter(s => s == "s").ast
-    val (norm, stmt, _) = SparkDialect.translate(ast, Quat.Unknown, ExecutionType.Unknown)(Literal)
-    norm mustEqual SheathLeafClauses.from(ast)
+    val (norm, stmt, _) = SparkDialect.translate(ast, Quat.Unknown, ExecutionType.Unknown, TranspileConfig.Empty)(Literal)
+    norm mustEqual new SheathLeafClausesApply(TraceConfig.Empty)(ast)
     stmt.toString mustEqual "SELECT s.x AS x FROM (SELECT explode(SPLIT(t.s, ' ')) AS x FROM Test t) AS s WHERE s.x = 's'"
   }
 
   "concat string" in {
     val ast = query[Test].map(t => t.s + " ").ast
-    val (norm, stmt, _) = SparkDialect.translate(ast, Quat.Unknown, ExecutionType.Unknown)(Literal)
+    val (norm, stmt, _) = SparkDialect.translate(ast, Quat.Unknown, ExecutionType.Unknown, TranspileConfig.Empty)(Literal)
     norm mustEqual ast
     stmt.toString mustEqual "SELECT concat(t.s, ' ') AS x FROM Test t"
   }
 
   "groupBy with multiple columns" in {
     val ast = query[Test].groupBy(t => (t.i, t.j)).map(t => t._2).ast
-    val (norm, stmt, _) = SparkDialect.translate(ast, Quat.Unknown, ExecutionType.Unknown)(Literal)
+    val (norm, stmt, _) = SparkDialect.translate(ast, Quat.Unknown, ExecutionType.Unknown, TranspileConfig.Empty)(Literal)
     norm mustEqual ast
     stmt.toString mustEqual "SELECT t.i AS i, t.j AS j, t.s AS s FROM Test t GROUP BY t.i, t.j"
   }

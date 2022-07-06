@@ -4,8 +4,11 @@ import io.getquill.{ Ord, Spec }
 import io.getquill.context.sql.testContext.qr1
 import io.getquill.context.sql.testContext.quote
 import io.getquill.context.sql.testContext.unquote
+import io.getquill.util.TraceConfig
 
-class ExpandDistinctSpec extends Spec { //hello, hey, how are you?
+class ExpandDistinctSpec extends Spec {
+  val ExpandDistinct = new ExpandDistinct(TraceConfig.Empty)
+
   "expands distinct map" - {
     "simple" in {
       val q = quote {

@@ -10,17 +10,25 @@ import io.getquill.util.IndentUtil._
 import scala.collection.mutable
 import scala.util.matching.Regex
 
+case class TraceConfig(enabledTraces: List[TraceType])
+object TraceConfig {
+  val Empty = new TraceConfig(List())
+}
+
 class Interpolator(
-  traceType:     TraceType,
-  defaultIndent: Int                    = 0,
-  color:         Boolean                = Messages.traceColors,
-  qprint:        AstPrinter             = Messages.qprint,
-  out:           PrintStream            = System.out,
-  tracesEnabled: (TraceType) => Boolean = Messages.tracesEnabled(_)
+  traceType:           TraceType,
+  traceConfig:         TraceConfig,
+  defaultIndent:       Int                    = 0,
+  color:               Boolean                = Messages.traceColors,
+  qprint:              AstPrinter             = Messages.qprint,
+  out:                 PrintStream            = System.out,
+  globalTracesEnabled: (TraceType) => Boolean = Messages.tracesEnabled(_)
 ) {
   implicit class InterpolatorExt(sc: StringContext) {
     def trace(elements: Any*) = new Traceable(sc, elements)
   }
+
+  def tracesEnabled(traceType: TraceType) = traceConfig.enabledTraces.contains(traceType) || globalTracesEnabled(traceType)
 
   class Traceable(sc: StringContext, elementsSeq: Seq[Any]) {
 
@@ -158,6 +166,27 @@ class Interpolator(
           // evaluate the command, this will activate any traces that were inside of it
           val result = command
           out.println(generateStringForCommand(result, indent))
+
+          result
+        case None =>
+          command
+      }
+    }
+
+    def andReturnIf[T](command: => T)(showIf: T => Boolean) = {
+      logIfEnabled() match {
+        case Some((output, indent)) =>
+          // Even though we usually want to evaluate the command after the initial log was done
+          // (so that future logs are nested under this one after the intro text but not
+          // before the return) but we cann't do that in this case because the switch indicating
+          // whether to output anything or not is dependant on the return value.
+          val result = command
+
+          if (showIf(result))
+            out.println(output)
+
+          if (showIf(result))
+            out.println(generateStringForCommand(result, indent))
 
           result
         case None =>

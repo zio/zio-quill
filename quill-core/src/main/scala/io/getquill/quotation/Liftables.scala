@@ -125,6 +125,7 @@ trait Liftables extends QuatLiftable {
     case ConcatMap(a, b, c)                         => q"$pack.ConcatMap($a, $b, $c)"
     case SortBy(a, b, c, d)                         => q"$pack.SortBy($a, $b, $c, $d)"
     case GroupBy(a, b, c)                           => q"$pack.GroupBy($a, $b, $c)"
+    case GroupByMap(a, b, c, d, e)                  => q"$pack.GroupByMap($a, $b, $c, $d, $e)"
     case Aggregation(a, b)                          => q"$pack.Aggregation($a, $b)"
     case Take(a, b)                                 => q"$pack.Take($a, $b)"
     case Drop(a, b)                                 => q"$pack.Drop($a, $b)"

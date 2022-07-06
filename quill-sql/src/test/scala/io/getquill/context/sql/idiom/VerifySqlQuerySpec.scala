@@ -2,11 +2,15 @@ package io.getquill.context.sql.idiom
 
 import io.getquill.Spec
 import io.getquill.context.sql.testContext._
-import io.getquill.context.sql.SqlQuery
+import io.getquill.context.sql.{ SqlQuery, SqlQueryApply }
+
 import scala.util.Try
 import io.getquill.context.sql.norm.SqlNormalize
+import io.getquill.norm.TranspileConfig
+import io.getquill.util.TraceConfig
 
 class VerifySqlQuerySpec extends Spec {
+  val SqlQuery = new SqlQueryApply(TraceConfig.Empty)
 
   "fails if the query can't be translated to applicative joins" - {
     "sortBy" in {
@@ -31,7 +35,7 @@ class VerifySqlQuerySpec extends Spec {
           }
         }
 
-        an[IllegalArgumentException] should be thrownBy VerifySqlQuery(SqlQuery(SqlNormalize(q.ast)))
+        an[IllegalArgumentException] should be thrownBy VerifySqlQuery(SqlQuery(SqlNormalize(q.ast, TranspileConfig.Empty)))
       }
 
       "with map" in {
@@ -40,7 +44,7 @@ class VerifySqlQuerySpec extends Spec {
             .map(pcTup => if (pcTup._2.isDefined) "bar" else "baz")
         }
 
-        an[IllegalArgumentException] should be thrownBy VerifySqlQuery(SqlQuery(SqlNormalize(q.ast)))
+        an[IllegalArgumentException] should be thrownBy VerifySqlQuery(SqlQuery(SqlNormalize(q.ast, TranspileConfig.Empty)))
       }
     }
 

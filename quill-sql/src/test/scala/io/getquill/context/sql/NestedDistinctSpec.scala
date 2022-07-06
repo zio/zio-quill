@@ -170,7 +170,8 @@ class NestedDistinctSpec extends Spec {
           .map(e => (e._1 + 2, infix"bar(${e._2})".as[String]))
       }
 
-      ctx.run(q).string mustEqual "SELECT e._1, e._2 FROM (SELECT e._1 + 2 AS _1, bar(e._2) AS _2 FROM (SELECT e.field_a + 1 AS _1, foo(e.b) AS _2 FROM CustomEnt e) AS e) AS e"
+      ctx.run(q).string mustEqual
+        "SELECT e._1 + 2 AS _1, bar(e._2) AS _2 FROM (SELECT e.field_a + 1 AS _1, foo(e.b) AS _2 FROM CustomEnt e) AS e"
     }
 
     "embedded entity from parent" - {
@@ -200,7 +201,14 @@ class NestedDistinctSpec extends Spec {
         val q = quote {
           query[Parent].map(p => p.emb).nested.map(e => (e.name, e.id))
         }
-        ctx.run(q).string mustEqual "SELECT p.embtheName AS _1, p.embid AS _2 FROM (SELECT x.id AS embid, x.theName AS embtheName FROM Parent x) AS p"
+        ctx.run(q).string mustEqual "SELECT e.theName AS _1, e.id AS _2 FROM (SELECT p.id, p.theName FROM Parent p) AS e"
+      }
+
+      "can be propagated across query with naming intact - embedded and column" in {
+        val q = quote {
+          query[Parent].map(p => (p.idP, p.emb)).nested.map(e => (e._1, e._2))
+        }
+        ctx.run(q).string mustEqual "SELECT e._1, e._2id AS id, e._2theName AS theName FROM (SELECT p.idP AS _1, p.id AS _2id, p.theName AS _2theName FROM Parent p) AS e"
       }
 
       "can be propogated across query with naming intact and then used further" in {
@@ -214,7 +222,7 @@ class NestedDistinctSpec extends Spec {
         val q = quote {
           query[Parent].map(p => p.emb).nested.map(e => (e.name, e.id)).nested.map(tup => (tup._1, tup._2)).nested
         }
-        ctx.run(q).string mustEqual "SELECT p.embtheName AS _1, p.embid AS _2 FROM (SELECT x.embid, x.embtheName FROM (SELECT x.embid, x.embtheName FROM (SELECT x.id AS embid, x.theName AS embtheName FROM Parent x) AS x) AS x) AS p"
+        ctx.run(q).string mustEqual "SELECT x._1, x._2 FROM (SELECT tup._1, tup._2 FROM (SELECT e.theName AS _1, e.id AS _2 FROM (SELECT p.id, p.theName FROM Parent p) AS e) AS tup) AS x"
       }
 
       "can be propogated across query with naming intact - returned as single property" in {
@@ -228,7 +236,7 @@ class NestedDistinctSpec extends Spec {
         val q = quote {
           query[Parent].map(p => p.emb).nested.map(e => e)
         }
-        ctx.run(q).string mustEqual "SELECT p.embid AS id, p.embtheName AS theName FROM (SELECT x.id AS embid, x.theName AS embtheName FROM Parent x) AS p"
+        ctx.run(q).string mustEqual "SELECT x.id, x.theName FROM (SELECT p.id, p.theName FROM Parent p) AS x"
       }
 
       "can be propogated across distinct with naming intact - and the immediately returned" in {
@@ -249,7 +257,7 @@ class NestedDistinctSpec extends Spec {
         val q = quote {
           query[Parent].map(p => p.emb).nested.map(e => Parent(1, e))
         }
-        ctx.run(q).string mustEqual "SELECT 1 AS idP, p.embid AS id, p.embtheName AS theName FROM (SELECT x.id AS embid, x.theName AS embtheName FROM Parent x) AS p"
+        ctx.run(q).string mustEqual "SELECT 1 AS idP, e.id, e.theName FROM (SELECT p.id, p.theName FROM Parent p) AS e"
       }
     }
 
@@ -286,35 +294,36 @@ class NestedDistinctSpec extends Spec {
             .map(p => (p.name, p.emb)).nested
             .map(tup => (tup._1, tup._2)).nested
         }
+        println(ctx.run(q).string(true))
         ctx.run(q).string(true).collapseSpace mustEqual
           """
             |SELECT
-            |  g.partheParentName AS _1,
-            |  g.parembid AS id,
-            |  g.parembtheName AS theName
+            |  x._1,
+            |  x._2id AS id,
+            |  x._2theName AS theName
             |FROM
             |  (
             |    SELECT
-            |      x.partheParentName,
-            |      x.parembid,
-            |      x.parembtheName
+            |      tup._1,
+            |      tup._2id,
+            |      tup._2theName
             |    FROM
             |      (
             |        SELECT
-            |          x.partheParentName,
-            |          x.parembid,
-            |          x.parembtheName
+            |          p.theParentName AS _1,
+            |          p.embid AS _2id,
+            |          p.embtheName AS _2theName
             |        FROM
             |          (
             |            SELECT
-            |              x.theParentName AS partheParentName,
-            |              x.id AS parembid,
-            |              x.theName AS parembtheName
+            |              g.theParentName,
+            |              g.id AS embid,
+            |              g.theName AS embtheName
             |            FROM
-            |              GrandParent x
-            |          ) AS x
-            |      ) AS x
-            |  ) AS g
+            |              GrandParent g
+            |          ) AS p
+            |      ) AS tup
+            |  ) AS x
             |""".collapseSpace
       }
 
@@ -459,39 +468,151 @@ class NestedDistinctSpec extends Spec {
             .map(tup => GrandParent(tup._1, tup._2))
 
         }
-        ctx.run(q).string.collapseSpace mustEqual
-          """SELECT g.id, g.parid AS id, g.partheParentName AS name, g.parembid AS id, g.parembtheName AS name FROM (SELECT x.id, x.parid, x.partheParentName, x.parembid, x.parembtheName FROM (SELECT x.id, x.parid, x.partheParentName, x.parembid, x.parembtheName FROM (SELECT x.id, x.parid, x.partheParentName, x.parembid, x.parembtheName FROM (SELECT x.id, x.parid, x.partheParentName, x.parembid, x.parembtheName FROM (SELECT x.id, x.parid, x.partheParentName, x.parembid, x.parembtheName FROM (SELECT x.id, x.id AS parid, x.theParentName AS partheParentName, x.id AS parembid, x.theName AS parembtheName FROM GrandParent x) AS x) AS x) AS x) AS x) AS x) AS g""".collapseSpace
+        println(ctx.run(q).string(true))
+        ctx.run(q).string(true).collapseSpace mustEqual
+          """|SELECT
+             |  tup._1 AS id,
+             |  tup._2id AS id,
+             |  tup._2name AS name,
+             |  tup._2embid AS id,
+             |  tup._2embname AS name
+             |FROM
+             |  (
+             |    SELECT
+             |      tup._1,
+             |      tup._2 AS _2id,
+             |      tup._3 AS _2name,
+             |      tup._4id AS _2embid,
+             |      tup._4name AS _2embname
+             |    FROM
+             |      (
+             |        SELECT
+             |          tup._1,
+             |          tup._2,
+             |          tup._3,
+             |          tup._4 AS _4id,
+             |          tup._5 AS _4name
+             |        FROM
+             |          (
+             |            SELECT
+             |              tup._1,
+             |              tup._2,
+             |              tup._3,
+             |              tup._4,
+             |              tup._5
+             |            FROM
+             |              (
+             |                SELECT
+             |                  tup._1,
+             |                  tup._2,
+             |                  tup._3,
+             |                  tup._4id AS _4,
+             |                  tup._4theName AS _5
+             |                FROM
+             |                  (
+             |                    SELECT
+             |                      p._1,
+             |                      p._2id AS _2,
+             |                      p._2theParentName AS _3,
+             |                      p._2embid AS _4id,
+             |                      p._2embtheName AS _4theName
+             |                    FROM
+             |                      (
+             |                        SELECT
+             |                          g.id AS _1,
+             |                          g.id AS _2id,
+             |                          g.theParentName AS _2theParentName,
+             |                          g.id AS _2embid,
+             |                          g.theName AS _2embtheName
+             |                        FROM
+             |                          GrandParent g
+             |                      ) AS p
+             |                  ) AS tup
+             |              ) AS tup
+             |          ) AS tup
+             |      ) AS tup
+             |  ) AS tup
+             |""".collapseSpace
       }
 
       "fully unwrapped and fully re-wrapped - nested and distinct" in {
         implicit val parentMeta = schemaMeta[GrandParent]("GrandParent", _.par.emb.name -> "theName", _.par.name -> "theParentName")
         val q = quote {
           query[GrandParent]
-            .map(g => (g.id, g.par)).nested
-            .map(p => (p._1, p._2.id, p._2.name, p._2.emb)).distinct
+            .map(g => (g.id, g.par /*_2id, _2theParentName, _2embid, _2embtheName*/ )).nested
+            .map(p => (p._1, p._2.id, p._2.name, p._2.emb /*_4id, _4theName*/ )).distinct
             .map(tup => (tup._1, tup._2, tup._3, tup._4.id, tup._4.name)).nested
             .map(tup => (tup._1, tup._2, tup._3, tup._4, tup._5)).distinct
-            .map(tup => (tup._1, tup._2, tup._3, Emb(tup._4, tup._5))).nested
-            .map(tup => (tup._1, Parent(tup._2, tup._3, tup._4))).distinct
+            .map(tup => (tup._1, tup._2, tup._3, Emb(tup._4, tup._5) /*_4id, _4name*/ )).nested
+            .map(tup => (tup._1, Parent(tup._2, tup._3, tup._4) /* _2id, _2name, _2embid, _2embname */ )).distinct
             .map(tup => GrandParent(tup._1, tup._2))
 
         }
-        ctx.run(q).string.collapseSpace mustEqual
-          """SELECT tup._1 AS id, tup._2id AS id, tup._2name AS name, tup._2embid AS id, tup._2embname AS name
-            |FROM (SELECT DISTINCT tup._1, tup._2 AS _2id, tup._3 AS _2name, tup._4 AS _2embid, tup._5 AS _2embname
-            |      FROM (SELECT DISTINCT tup._1, tup._2, tup._3, tup._4id AS _4, tup._4theName AS _5
-            |            FROM (SELECT DISTINCT g.id               AS _1,
-            |                                  g.parid            AS _2,
-            |                                  g.partheParentName AS _3,
-            |                                  g.parembid         AS _4id,
-            |                                  g.parembtheName    AS _4theName
-            |                  FROM (SELECT x.id,
-            |                               x.id            AS parid,
-            |                               x.theParentName AS partheParentName,
-            |                               x.id            AS parembid,
-            |                               x.theName       AS parembtheName
-            |                        FROM GrandParent x) AS g) AS tup) AS tup) AS tup
-          """.stripMargin.collapseSpace
+        println(ctx.run(q).string(true))
+        ctx.run(q).string(true).collapseSpace mustEqual
+          """|SELECT
+             |  tup._1 AS id,
+             |  tup._2id AS id,
+             |  tup._2name AS name,
+             |  tup._2embid AS id,
+             |  tup._2embname AS name
+             |FROM
+             |  (
+             |    SELECT
+             |      DISTINCT tup._1,
+             |      tup._2 AS _2id,
+             |      tup._3 AS _2name,
+             |      tup._4id AS _2embid,
+             |      tup._4name AS _2embname
+             |    FROM
+             |      (
+             |        SELECT
+             |          tup._1,
+             |          tup._2,
+             |          tup._3,
+             |          tup._4 AS _4id,
+             |          tup._5 AS _4name
+             |        FROM
+             |          (
+             |            SELECT
+             |              DISTINCT tup._1,
+             |              tup._2,
+             |              tup._3,
+             |              tup._4,
+             |              tup._5
+             |            FROM
+             |              (
+             |                SELECT
+             |                  tup._1,
+             |                  tup._2,
+             |                  tup._3,
+             |                  tup._4id AS _4,
+             |                  tup._4theName AS _5
+             |                FROM
+             |                  (
+             |                    SELECT
+             |                      DISTINCT p._1,
+             |                      p._2id AS _2,
+             |                      p._2theParentName AS _3,
+             |                      p._2embid AS _4id,
+             |                      p._2embtheName AS _4theName
+             |                    FROM
+             |                      (
+             |                        SELECT
+             |                          g.id AS _1,
+             |                          g.id AS _2id,
+             |                          g.theParentName AS _2theParentName,
+             |                          g.id AS _2embid,
+             |                          g.theName AS _2embtheName
+             |                        FROM
+             |                          GrandParent g
+             |                      ) AS p
+             |                  ) AS tup
+             |              ) AS tup
+             |          ) AS tup
+             |      ) AS tup
+             |  ) AS tup
+          """.collapseSpace
       }
     }
 
